@@ -3,9 +3,9 @@ import BuiltinSpellingPanel from './BuiltinSpellingPanel.jsx';
 import CautionChecklist from './CautionChecklist.jsx';
 
 const STORAGE_KEY = 'builtin-spelling-panel-height';
-const DEFAULT_HEIGHT = 320;
-const MIN_HEIGHT = 180;
-const MAX_HEIGHT = 560;
+const DEFAULT_HEIGHT = 420;
+const MIN_HEIGHT = 200;
+const MAX_HEIGHT = 720;
 
 function readStoredHeight() {
   try {
@@ -117,7 +117,6 @@ export default function ResizableBuiltinSpelling({
         <span className="builtin-spelling-resize-grip" aria-hidden>
           ⋮⋮
         </span>
-        <span className="builtin-spelling-resize-label">높이 조절</span>
       </div>
       <section
         className="panel-section panel-section--builtin-spelling"

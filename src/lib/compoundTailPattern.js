@@ -1,9 +1,10 @@
+import {
+  COMPOUND_PREFIX,
+  FLEX_SPACE,
+  tailRegexFragment,
+} from './compoundPatternCommon.js';
 import { parseCommaList } from './matchFilters.js';
-
-/** @param {string} s */
-function escapeRegex(s) {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
+import { formatCompoundTailLabel } from './patternDisplayLabels.js';
 
 /**
  * @param {string} tailWord
@@ -14,27 +15,28 @@ export function buildCompoundTailRules(tailWord, options = {}) {
   const tail = tailWord.trim();
   if (!tail) return [];
 
-  const esc = escapeRegex(tail);
+  const parts = tail.split(/\s+/).filter(Boolean);
+  const tailFrag = tailRegexFragment(tail);
+  if (!tailFrag) return [];
+
+  const glued = parts.join('');
   const { excludePrefixes = [] } = options;
 
   return [
     {
-      find: String.raw`([\uAC00-\uD7A3A-Za-z]{2,})[ \u00A0]+${esc}(?!으로)`,
-      replace: `$1${tail}`,
+      find: String.raw`${COMPOUND_PREFIX}${FLEX_SPACE}${tailFrag}(?!으로)`,
+      replace: `$1${glued}`,
       enabled: true,
       pattern: 'regex',
       patternKind: 'compound-tail',
       tailWord: tail,
       excludePrefixes,
-      label: `○○ ${tail} → ○○${tail}`,
+      label: formatCompoundTailLabel(tail),
     },
   ];
 }
 
-/**
- * @param {string} input — 꼬리 단어 여러 개: "정책, 상황"
- * @returns {string[]}
- */
+/** @param {string} input */
 export function parseTailWords(input) {
   return parseCommaList(input);
 }

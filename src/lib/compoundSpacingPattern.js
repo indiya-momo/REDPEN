@@ -1,12 +1,11 @@
+import {
+  COMPOUND_PREFIX,
+  escapeRegex,
+} from './compoundPatternCommon.js';
 import { parseCommaList } from './matchFilters.js';
-
-/** @param {string} s */
-function escapeRegex(s) {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
+import { formatCompoundSpacingLabel } from './patternDisplayLabels.js';
 
 /**
- * 붙임의 반대: ○○[단어] → ○○ [단어]
  * @param {string} tailWord
  * @returns {import('./ruleTypes.js').Rule[]}
  */
@@ -14,17 +13,20 @@ export function buildCompoundSpacingRules(tailWord) {
   const tail = tailWord.trim();
   if (!tail) return [];
 
-  const esc = escapeRegex(tail);
+  const parts = tail.split(/\s+/).filter(Boolean);
+  const glued = parts.join('');
+  const esc = escapeRegex(glued);
+  const spaced = parts.length >= 2 ? parts.join(' ') : tail;
 
   return [
     {
-      find: String.raw`(\S+)${esc}(?!\s)`,
-      replace: `$1 ${tail}`,
+      find: String.raw`${COMPOUND_PREFIX}${esc}(?!\s)`,
+      replace: `$1 ${spaced}`,
       enabled: true,
       pattern: 'regex',
       patternKind: 'compound-spacing',
       tailWord: tail,
-      label: `○○${tail} → ○○ ${tail}`,
+      label: formatCompoundSpacingLabel(tail),
     },
   ];
 }

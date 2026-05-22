@@ -10,6 +10,7 @@ import {
   builtInEnabledFromSheet,
   migrateBuiltInEnabled,
 } from './lib/builtInRules.js';
+import { applyCompoundRuleMigrations } from './lib/migrateCompoundRules.js';
 import {
   loadActiveSetId,
   loadRuleSets,
@@ -21,6 +22,11 @@ import {
 const RULE_SET_AUTOSAVE_MS = 400;
 
 function normalizeRuleSet(set) {
+  const { rules: customRules, version: compoundMigrateVersion } =
+    applyCompoundRuleMigrations(
+      set.customRules ?? [],
+      set.compoundMigrateVersion,
+    );
   return {
     ...set,
     builtInEnabled: migrateBuiltInEnabled(
@@ -28,7 +34,8 @@ function normalizeRuleSet(set) {
       set.spellingRulesFingerprint,
     ),
     spellingRulesFingerprint: SPELLING_RULES_FP,
-    customRules: set.customRules ?? [],
+    customRules,
+    compoundMigrateVersion,
     globalExcludePhrases: set.globalExcludePhrases ?? [],
     cautionEnabled: migrateCautionEnabled(set.cautionEnabled),
   };
