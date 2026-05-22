@@ -7,11 +7,11 @@ import ConsistencyPanel from './ConsistencyPanel.jsx';
 import RuleSetSaveBar from './RuleSetSaveBar.jsx';
 import CheckResultsPanel from './CheckResultsPanel.jsx';
 import PdfWorkSection from './PdfWorkSection.jsx';
-import { findResultSource } from '../lib/checkResultUtils.js';
 import { usePdfDocument } from '../hooks/usePdfDocument.js';
 import { useRuleCheck } from '../hooks/useRuleCheck.js';
 import { useWorkSession } from '../hooks/useWorkSession.js';
 import { useHighlights } from '../hooks/useHighlights.js';
+import { useResizablePanelWidth } from '../hooks/useResizablePanelWidth.js';
 
 /**
  * @param {{
@@ -47,6 +47,7 @@ export default function MainScreen({
 }) {
   const [workTab, setWorkTab] = useState(initialWorkTab);
   const afterCheckRef = useRef(async () => false);
+  const { panelStyle, handleRef, startDrag } = useResizablePanelWidth();
 
   const pdf = usePdfDocument();
   const ruleCheck = useRuleCheck({
@@ -114,25 +115,6 @@ export default function MainScreen({
   function switchTab(tab) {
     setWorkTab(tab);
     ruleCheck.syncSelectionForTab(tab);
-  }
-
-  function goToFinding(delta) {
-    if (!highlights.sortedFindings.length) return;
-    const base =
-      highlights.currentFindingIndex >= 0
-        ? highlights.currentFindingIndex
-        : delta > 0
-          ? -1
-          : highlights.sortedFindings.length;
-    const next = base + delta;
-    if (next < 0 || next >= highlights.sortedFindings.length) return;
-    const inst = highlights.sortedFindings[next];
-    const source = findResultSource(
-      ruleCheck.spellingResults,
-      ruleCheck.consistencyResults,
-      inst,
-    );
-    ruleCheck.selectInstance(inst, source);
   }
 
   const combinedResultsPanel = tabCheckDone ? (
@@ -219,7 +201,10 @@ export default function MainScreen({
 
   return (
     <div className="layout-main">
-      <aside className={`panel-left panel-left--${workTab}`}>
+      <aside
+        className={`panel-left panel-left--${workTab}`}
+        style={panelStyle}
+      >
         <header className="panel-header panel-header--tabs">
           <nav className="work-tabs" aria-label="검수 종류">
             <button
@@ -312,6 +297,23 @@ export default function MainScreen({
         <AppVersionBadge />
       </aside>
 
+      <div
+        ref={handleRef}
+        className="layout-col-resize-handle"
+        role="separator"
+        aria-orientation="vertical"
+        aria-valuenow={panelStyle.width}
+        aria-valuemin={280}
+        aria-valuemax={720}
+        aria-label="좌우 패널 너비 조절"
+        title="드래그하여 너비 조절"
+        onPointerDown={startDrag}
+      >
+        <span className="layout-col-resize-grip" aria-hidden>
+          ⋮
+        </span>
+      </div>
+
       <main className="panel-right">
         {workTab === 'consistency' && (
           <RuleSetSaveBar
@@ -331,66 +333,33 @@ export default function MainScreen({
         />
         {pdf.pdf && (
           <div className="pdf-toolbar">
-            {tabCheckDone && highlights.sortedFindings.length > 0 ? (
-              <>
-                <button
-                  type="button"
-                  className="btn-finding-nav"
-                  disabled={highlights.currentFindingIndex <= 0}
-                  onClick={() => goToFinding(-1)}
-                >
-                  ← 이전 발견
-                </button>
-                <span className="pdf-toolbar-page">
-                  발견{' '}
-                  {highlights.currentFindingIndex >= 0
-                    ? highlights.currentFindingIndex + 1
-                    : '—'}{' '}
-                  / {highlights.sortedFindings.length}
-                  <span className="pdf-toolbar-findings">
-                    · p.{pdf.currentPage}
-                  </span>
+            <button
+              type="button"
+              disabled={pdf.currentPage <= 1}
+              onClick={() => ruleCheck.goToPage(Math.max(1, pdf.currentPage - 1))}
+            >
+              ← 이전 페이지
+            </button>
+            <span className="pdf-toolbar-page">
+              {pdf.currentPage} / {pdf.pdf.numPages}
+              {tabCheckDone && visibleOnCurrentPage > 0 ? (
+                <span className="pdf-toolbar-findings">
+                  {' '}
+                  · 이 페이지 {visibleOnCurrentPage}곳 표시
                 </span>
-                <button
-                  type="button"
-                  className="btn-finding-nav btn-finding-nav--next"
-                  disabled={
-                    highlights.currentFindingIndex < 0 ||
-                    highlights.currentFindingIndex >=
-                      highlights.sortedFindings.length - 1
-                  }
-                  onClick={() => goToFinding(1)}
-                >
-                  다음 발견 →
-                </button>
-              </>
-            ) : (
-              <>
-                <button
-                  type="button"
-                  disabled={pdf.currentPage <= 1}
-                  onClick={() =>
-                    pdf.setCurrentPage((p) => Math.max(1, p - 1))
-                  }
-                >
-                  ← 이전 페이지
-                </button>
-                <span className="pdf-toolbar-page">
-                  {pdf.currentPage} / {pdf.pdf.numPages}
-                </span>
-                <button
-                  type="button"
-                  disabled={pdf.currentPage >= pdf.pdf.numPages}
-                  onClick={() =>
-                    pdf.setCurrentPage((p) =>
-                      Math.min(pdf.pdf.numPages, p + 1),
-                    )
-                  }
-                >
-                  다음 페이지 →
-                </button>
-              </>
-            )}
+              ) : null}
+            </span>
+            <button
+              type="button"
+              disabled={pdf.currentPage >= pdf.pdf.numPages}
+              onClick={() =>
+                ruleCheck.goToPage(
+                  Math.min(pdf.pdf.numPages, pdf.currentPage + 1),
+                )
+              }
+            >
+              다음 페이지 →
+            </button>
           </div>
         )}
       </main>

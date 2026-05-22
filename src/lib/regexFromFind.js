@@ -28,10 +28,21 @@ export function applyReplaceTemplate(template, match) {
   });
 }
 
+import {
+  formatCompoundSpacingLabel,
+  formatCompoundTailLabel,
+} from './patternDisplayLabels.js';
+
 /**
  * @param {import('./ruleTypes.js').Rule} rule
  */
 export function ruleDisplayLabel(rule) {
+  if (rule.patternKind === 'compound-tail' && rule.tailWord) {
+    return formatCompoundTailLabel(rule.tailWord);
+  }
+  if (rule.patternKind === 'compound-spacing' && rule.tailWord) {
+    return formatCompoundSpacingLabel(rule.tailWord);
+  }
   if (rule.label) return rule.label;
   return `${rule.find} → ${rule.replace}`;
 }

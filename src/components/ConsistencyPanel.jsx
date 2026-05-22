@@ -2,19 +2,22 @@ import { useEffect, useState } from 'react';
 import { Play, Plus, Trash2 } from 'lucide-react';
 import { BUILT_IN_RULES, MAX_RULES } from '../lib/builtInRules.js';
 import {
-  buildCompoundSpacingRules,
-  hasCompoundSpacing,
-  parseSpacingTailWords,
-  removeCompoundSpacing,
-} from '../lib/compoundSpacingPattern.js';
-import {
-  buildCompoundTailRules,
-  hasCompoundTail,
-  parseTailWords,
-  removeCompoundTail,
-} from '../lib/compoundTailPattern.js';
+  buildRulesForEntry,
+  isConsistencyEntryEnabled,
+  listConsistencyEntries,
+  parseConsistencyInput,
+  planConsistencyEntries,
+  removeConsistencyEntry,
+  toggleConsistencyEntry,
+} from '../lib/compoundPairRegister.js';
 import { parseCommaList } from '../lib/matchFilters.js';
 import { compileRuleRegex, ruleDisplayLabel } from '../lib/regexFromFind.js';
+import {
+  formatCompoundSpacingLabel,
+  formatCompoundTailLabel,
+} from '../lib/patternDisplayLabels.js';
+import { encodeSpacesVisible } from '../lib/spaceVisibleText.js';
+import SpaceVisibleInput from './SpaceVisibleInput.jsx';
 
 const COMPOUND_KINDS = new Set(['compound-tail', 'compound-spacing']);
 
@@ -44,8 +47,7 @@ export default function ConsistencyPanel({
   progress = null,
   progressLabel = null,
 }) {
-  const [tailWord, setTailWord] = useState('');
-  const [spacingTailWord, setSpacingTailWord] = useState('');
+  const [consistencyInput, setConsistencyInput] = useState('');
   const [globalExcludeInput, setGlobalExcludeInput] = useState('');
   const [newFind, setNewFind] = useState('');
   const [newReplace, setNewReplace] = useState('');
@@ -62,76 +64,44 @@ export default function ConsistencyPanel({
   const totalEnabled = enabledBuiltIn + enabledCustom;
   const slotsLeft = MAX_RULES - totalEnabled;
 
-  const registeredTails = [
-    ...new Set(
-      customRules
-        .filter((r) => r.patternKind === 'compound-tail' && r.tailWord)
-        .map((r) => r.tailWord),
-    ),
-  ];
-
-  const registeredSpacingTails = [
-    ...new Set(
-      customRules
-        .filter((r) => r.patternKind === 'compound-spacing' && r.tailWord)
-        .map((r) => r.tailWord),
-    ),
-  ];
+  const registeredEntries = listConsistencyEntries(customRules);
 
   const otherRules = customRules.filter(
     (r) => !COMPOUND_KINDS.has(r.patternKind ?? ''),
   );
 
-  function addCompoundTail() {
-    const tails = parseTailWords(tailWord);
-    if (!tails.length) {
-      alert('꼬리 단어를 입력하세요. (예: 정책, 상황 또는 정책,상황)');
+  function registerConsistency() {
+    const variants = parseConsistencyInput(consistencyInput);
+    if (!variants.length) {
+      alert('패턴을 입력하세요.');
       return;
     }
 
+    const entries = planConsistencyEntries(variants);
+    let merged = customRules;
+    /** @type {import('../lib/ruleTypes.js').Rule[]} */
     const toAdd = [];
-    for (const tail of tails) {
-      if (hasCompoundTail(customRules, tail)) {
-        alert(`「${tail}」은(는) 이미 등록되어 있어 건너뜁니다.`);
-        continue;
-      }
-      toAdd.push(...buildCompoundTailRules(tail));
+
+    for (const tailWord of entries) {
+      const batch = buildRulesForEntry(merged, tailWord);
+      if (!batch.length) continue;
+      toAdd.push(...batch);
+      merged = [...merged, ...batch];
     }
-    if (!toAdd.length) return;
+
+    if (!toAdd.length) {
+      alert('입력한 패턴은 모두 이미 등록되어 있습니다.');
+      return;
+    }
 
     const needSlots = toAdd.filter((r) => r.enabled).length;
     if (totalEnabled + needSlots > MAX_RULES) {
       alert(`활성 규칙은 최대 ${MAX_RULES}개입니다. (추가 시 ${needSlots}칸 필요)`);
       return;
     }
+
     onCustomRulesChange([...customRules, ...toAdd]);
-    setTailWord('');
-  }
-
-  function addCompoundSpacing() {
-    const tails = parseSpacingTailWords(spacingTailWord);
-    if (!tails.length) {
-      alert('꼬리 단어를 입력하세요. (예: 정책, 상황 또는 정책,상황)');
-      return;
-    }
-
-    const toAdd = [];
-    for (const tail of tails) {
-      if (hasCompoundSpacing(customRules, tail)) {
-        alert(`「${tail}」은(는) 이미 등록되어 있어 건너뜁니다.`);
-        continue;
-      }
-      toAdd.push(...buildCompoundSpacingRules(tail));
-    }
-    if (!toAdd.length) return;
-
-    const needSlots = toAdd.filter((r) => r.enabled).length;
-    if (totalEnabled + needSlots > MAX_RULES) {
-      alert(`활성 규칙은 최대 ${MAX_RULES}개입니다. (추가 시 ${needSlots}칸 필요)`);
-      return;
-    }
-    onCustomRulesChange([...customRules, ...toAdd]);
-    setSpacingTailWord('');
+    setConsistencyInput('');
   }
 
   function addGlobalExcludePhrases() {
@@ -152,41 +122,6 @@ export default function ConsistencyPanel({
     onGlobalExcludePhrasesChange(
       globalExcludePhrases.filter((p) => p !== phrase),
     );
-  }
-
-  function removeTailGroup(tail) {
-    onCustomRulesChange(removeCompoundTail(customRules, tail));
-  }
-
-  function removeSpacingTailGroup(tail) {
-    onCustomRulesChange(removeCompoundSpacing(customRules, tail));
-  }
-
-  function toggleTailGroup(tail, enabled) {
-    onCustomRulesChange(
-      customRules.map((r) =>
-        r.patternKind === 'compound-tail' && r.tailWord === tail
-          ? { ...r, enabled }
-          : r,
-      ),
-    );
-  }
-
-  function toggleSpacingTailGroup(tail, enabled) {
-    onCustomRulesChange(
-      customRules.map((r) =>
-        r.patternKind === 'compound-spacing' && r.tailWord === tail
-          ? { ...r, enabled }
-          : r,
-      ),
-    );
-  }
-
-  function isTailGroupEnabled(tail, kind) {
-    const group = customRules.filter(
-      (r) => r.patternKind === kind && r.tailWord === tail,
-    );
-    return group.length > 0 && group.every((r) => r.enabled);
   }
 
   function addCustomRule() {
@@ -221,7 +156,7 @@ export default function ConsistencyPanel({
     const rule = otherRules[index];
     const willEnable = !rule.enabled;
     if (willEnable && totalEnabled >= MAX_RULES) {
-      alert(`규칙은 최대 ${MAX_RULES}개까지 활성화할 수 있습니다.`);
+      alert(`규칙은 최대 ${MAX_RULES}개입니다.`);
       return;
     }
     onCustomRulesChange(
@@ -233,103 +168,74 @@ export default function ConsistencyPanel({
 
   return (
     <div className="consistency-embed">
-      <section className="consistency-section-box" aria-labelledby="consistency-tail-heading">
-        <p id="consistency-tail-heading" className="field-label">
-          붙임 패턴 — ○○ + [단어]
-        </p>
-        <p className="hint" style={{ marginTop: 4 }}>
-          앞말 + 띄어쓰기 + <strong>꼬리 단어</strong>를 찾습니다. 예: 「금융 정책」→「금융정책」
-        </p>
-        <div className="tail-form">
-          <div>
-            <label className="field-label">꼬리 단어 [단어]</label>
-            <input
-              className="field-input"
-              value={tailWord}
-              onChange={(e) => setTailWord(e.target.value)}
-              placeholder="예: 정책, 상황 (쉼표로 여러 개)"
-            />
-          </div>
-          <button type="button" className="btn-add" onClick={addCompoundTail}>
-            <Plus size={14} />
-            붙임 패턴 등록
-          </button>
-        </div>
-
-        {registeredTails.length > 0 && (
-          <ul className="tail-list">
-            {registeredTails.map((tail) => (
-              <li key={tail} className="rule-row">
-                <input
-                  type="checkbox"
-                  checked={isTailGroupEnabled(tail, 'compound-tail')}
-                  onChange={(e) => toggleTailGroup(tail, e.target.checked)}
-                />
-                <div className="rule-text">
-                  <span className="badge-regex">붙임</span>
-                  <span className="find">
-                    ○○ {tail} → ○○{tail}
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  className="btn-icon danger"
-                  onClick={() => removeTailGroup(tail)}
-                  aria-label="삭제"
-                >
-                  <Trash2 size={14} />
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-
       <section
         className="consistency-section-box"
-        aria-labelledby="consistency-spacing-heading"
+        aria-labelledby="consistency-register-heading"
       >
-        <p id="consistency-spacing-heading" className="field-label">
-          띄우기 패턴 — ○○[단어]
+        <p id="consistency-register-heading" className="field-label">
+          일관성 등록
         </p>
         <p className="hint" style={{ marginTop: 4 }}>
-          붙어 쓴 <strong>꼬리 단어</strong>를 찾습니다. 예: 「금융정책」→「금융 정책」
+          예: 빨간펜, 빨간˅펜, REDPEN, RED˅PEN, Red˅Pen
         </p>
         <div className="tail-form">
           <div>
-            <label className="field-label">꼬리 단어 [단어]</label>
-            <input
-              className="field-input"
-              value={spacingTailWord}
-              onChange={(e) => setSpacingTailWord(e.target.value)}
-              placeholder="예: 정책, 상황 (쉼표로 여러 개)"
+            <SpaceVisibleInput
+              value={consistencyInput}
+              onChange={setConsistencyInput}
+              placeholder="공백은 ˅로 표시됩니다"
+              aria-label="일관성 등록"
             />
           </div>
-          <button type="button" className="btn-add" onClick={addCompoundSpacing}>
+          <button type="button" className="btn-add" onClick={registerConsistency}>
             <Plus size={14} />
-            띄우기 패턴 등록
+            등록
           </button>
         </div>
 
-        {registeredSpacingTails.length > 0 && (
+        {registeredEntries.length > 0 && (
           <ul className="tail-list">
-            {registeredSpacingTails.map((tail) => (
-              <li key={tail} className="rule-row">
+            {registeredEntries.map((row) => (
+              <li key={row.tailWord} className="rule-row">
                 <input
                   type="checkbox"
-                  checked={isTailGroupEnabled(tail, 'compound-spacing')}
-                  onChange={(e) => toggleSpacingTailGroup(tail, e.target.checked)}
+                  checked={isConsistencyEntryEnabled(customRules, row.tailWord)}
+                  onChange={(e) =>
+                    onCustomRulesChange(
+                      toggleConsistencyEntry(
+                        customRules,
+                        row.tailWord,
+                        e.target.checked,
+                      ),
+                    )
+                  }
                 />
-                <div className="rule-text">
-                  <span className="badge-regex badge-spacing">띄움</span>
-                  <span className="find">
-                    ○○{tail} → ○○ {tail}
-                  </span>
+                <div className="rule-text consistency-pair-labels">
+                  {row.hasTail && (
+                    <span className="consistency-pair-line">
+                      <span className="badge-regex">붙임</span>
+                      <span className="find">
+                        {formatCompoundTailLabel(row.tailWord)}
+                      </span>
+                    </span>
+                  )}
+                  {row.hasSpacing && (
+                    <span className="consistency-pair-line">
+                      <span className="badge-regex badge-spacing">띄움</span>
+                      <span className="find">
+                        {formatCompoundSpacingLabel(row.tailWord)}
+                      </span>
+                    </span>
+                  )}
                 </div>
                 <button
                   type="button"
                   className="btn-icon danger"
-                  onClick={() => removeSpacingTailGroup(tail)}
+                  onClick={() =>
+                    onCustomRulesChange(
+                      removeConsistencyEntry(customRules, row.tailWord),
+                    )
+                  }
                   aria-label="삭제"
                 >
                   <Trash2 size={14} />
@@ -357,23 +263,41 @@ export default function ConsistencyPanel({
             <label className="field-label">
               {newPattern === 'regex' ? '정규식 (찾기)' : '찾기'}
             </label>
-            <input
-              className="field-input mono"
-              value={newFind}
-              onChange={(e) => setNewFind(e.target.value)}
-              placeholder={newPattern === 'regex' ? String.raw`예: (\S+)\s+정책` : '예: 우리 나라'}
-            />
+            {newPattern === 'regex' ? (
+              <input
+                className="field-input mono"
+                value={newFind}
+                onChange={(e) => setNewFind(e.target.value)}
+                placeholder={String.raw`예: (\S+)\s+정책`}
+              />
+            ) : (
+              <SpaceVisibleInput
+                className="field-input mono"
+                value={newFind}
+                onChange={setNewFind}
+                placeholder="예: 우리˅나라"
+              />
+            )}
           </div>
           <div>
             <label className="field-label">
               {newPattern === 'regex' ? '바꿀 표기 (안내)' : '변경'}
             </label>
-            <input
-              className="field-input mono"
-              value={newReplace}
-              onChange={(e) => setNewReplace(e.target.value)}
-              placeholder={newPattern === 'regex' ? '예: $1정책' : '예: 우리나라'}
-            />
+            {newPattern === 'regex' ? (
+              <input
+                className="field-input mono"
+                value={newReplace}
+                onChange={(e) => setNewReplace(e.target.value)}
+                placeholder="예: $1정책"
+              />
+            ) : (
+              <SpaceVisibleInput
+                className="field-input mono"
+                value={newReplace}
+                onChange={setNewReplace}
+                placeholder="예: 우리나라"
+              />
+            )}
           </div>
           <button type="button" className="btn-add" onClick={addCustomRule}>
             <Plus size={14} />
@@ -419,13 +343,12 @@ export default function ConsistencyPanel({
         </p>
         <p className="hint" style={{ marginTop: 4 }}>
           어떤 규칙이든 아래 문구는 <strong>검사하지 않음</strong>.
-          예: <code>경제 학자</code>
+          공백은 입력 시 <strong>˅</strong> 로 보입니다. 예: <code>경제˅학자</code>
         </p>
-        <input
-          className="field-input"
+        <SpaceVisibleInput
           value={globalExcludeInput}
-          onChange={(e) => setGlobalExcludeInput(e.target.value)}
-          placeholder="경제 학자, … (쉼표로 구분)"
+          onChange={setGlobalExcludeInput}
+          placeholder="경제˅학자, … (쉼표로 구분)"
         />
         <button type="button" className="btn-add" style={{ marginTop: 8 }} onClick={addGlobalExcludePhrases}>
           <Plus size={14} />
@@ -437,7 +360,7 @@ export default function ConsistencyPanel({
             {globalExcludePhrases.map((phrase) => (
               <li key={phrase} className="rule-row">
                 <div className="rule-text">
-                  <span className="find">{phrase}</span>
+                  <span className="find">{encodeSpacesVisible(phrase)}</span>
                 </div>
                 <button
                   type="button"

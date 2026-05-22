@@ -16,7 +16,7 @@ export function parseCommaList(input) {
 }
 
 /**
- * 붙임 패턴 등 제외 조건
+ * 일관성(붙임·띄움) 등 제외 조건
  * @param {import('./ruleTypes.js').Rule} rule
  * @param {RegExpExecArray} match
  */

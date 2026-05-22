@@ -68,7 +68,7 @@ export default function WelcomeScreen({ onStart, onOpenSettings }) {
               처리합니다. 출판사 원고를 외부 서버에 올리지 않습니다.
             </p>
             <p className="welcome-muted">
-              규칙 세트(맞춤법 ON/OFF, 붙임 패턴 등)만 브라우저에 저장됩니다.
+              규칙 세트(맞춤법 ON/OFF, 일관성 등록 등)만 브라우저에 저장됩니다.
               검사 결과는 새로고침 후 사라질 수 있으니, 필요하면 별도 메모에
               남기세요.
             </p>
@@ -103,7 +103,7 @@ export default function WelcomeScreen({ onStart, onOpenSettings }) {
               하단에서 현재 목록을 확인할 수 있습니다.
             </li>
             <li>
-              「○○ + 꼬리 단어」 붙임 패턴은 「일관성 확인」 탭에서 등록합니다.
+              표기 일관성(빨간펜·RED˅PEN 등)은 「일관성 확인」 탭에서 등록합니다.
             </li>
             <li>
               조판 PDF는 추출 텍스트가 어긋날 수 있어, 후보가 안 잡히면 규칙

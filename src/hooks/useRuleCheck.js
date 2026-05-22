@@ -215,8 +215,8 @@ export function useRuleCheck({
 
     if (first) {
       setActiveSource(firstSource);
-      setCurrentPage(first.pageNum);
     }
+    setCurrentPage(1);
     setIsProcessing(false);
     setProgress(null);
     await afterCheckRef.current?.();
