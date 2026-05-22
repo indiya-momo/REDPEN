@@ -1,0 +1,27 @@
+{
+  "name": "pdf-publish-proofread",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "start": "vite --host --open",
+    "start:win": "powershell -ExecutionPolicy Bypass -File scripts/Start-Dev.ps1",
+    "open:browser": "powershell -ExecutionPolicy Bypass -File scripts/Fix-Browser-Access.ps1",
+    "build": "vite build",
+    "preview": "vite preview --host --open",
+    "sync-spelling": "node scripts/sync-spelling.mjs",
+    "sync-caution": "node scripts/sync-caution.mjs",
+    "sync": "npm run sync-spelling && npm run sync-caution"
+  },
+  "dependencies": {
+    "lucide-react": "^0.511.0",
+    "pdfjs-dist": "^5.2.133",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.5.2",
+    "vite": "^6.3.5"
+  }
+}

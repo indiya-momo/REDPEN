@@ -1,0 +1,4 @@
+group_id,item_id,label,tip,enabled
+particle-josa,particle-man,만,"체언 뒤에 붙은 '만, 만큼, 지'는 조사로 붙여 쓴다. 용언 뒤에 쓰인 '만, 만큼, 지'는 의존명사로 띄어 쓴다.",FALSE
+particle-josa,particle-mankun,만큼,,FALSE
+particle-josa,particle-ji,지,,FALSE

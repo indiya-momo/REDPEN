@@ -1,0 +1,281 @@
+/**
+ * Google 시트 → 주의(검사·하이라이트) 규칙 JSON
+ *
+ * 시트 탭: caution_rules (또는 .env CAUTION_SHEET / CAUTION_GID)
+ *
+ * 표기 A — 그룹당 여러 행 (tip은 첫 행만 써도 됨, 아래 행은 비워도 forward-fill)
+ *   group_id | item_id (또는 id) | label | tip | enabled
+ *
+ * 표기 B — 한 행에 여러 label
+ *   group_id | labels | tip | enabled
+ *
+ * 사용:
+ *   npm run sync-caution
+ */
+
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const ROOT = path.resolve(__dirname, '..');
+
+const OUTPUTS = [
+  path.join(ROOT, 'src/data/caution-rules.json'),
+  path.join(ROOT, 'public/data/caution-rules.json'),
+];
+
+async function loadDotEnv() {
+  try {
+    const text = await readFile(path.join(ROOT, '.env'), 'utf8');
+    for (const line of text.split('\n')) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('#')) continue;
+      const eq = trimmed.indexOf('=');
+      if (eq === -1) continue;
+      const key = trimmed.slice(0, eq).trim();
+      const val = trimmed.slice(eq + 1).trim();
+      if (key && process.env[key] === undefined) {
+        process.env[key] = val;
+      }
+    }
+  } catch {
+    /* .env 없음 */
+  }
+}
+
+await loadDotEnv();
+
+function spreadsheetIdFromArg(arg) {
+  const trimmed = String(arg || '').trim();
+  if (!trimmed) return '';
+  if (trimmed.startsWith('--id=')) return trimmed.slice(5).trim();
+  const match = trimmed.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
+  return match ? match[1] : '';
+}
+
+const cliId = process.argv
+  .slice(2)
+  .map(spreadsheetIdFromArg)
+  .find((id) => id.length > 10);
+
+if (cliId) {
+  process.env.SPREADSHEET_ID = cliId;
+}
+
+const SPREADSHEET_ID = process.env.SPREADSHEET_ID?.trim();
+const SHEET_NAME = process.env.CAUTION_SHEET || 'caution_rules';
+const SHEET_GID = process.env.CAUTION_GID?.trim();
+
+function parseCsv(csv) {
+  const rows = [];
+  let row = [];
+  let cell = '';
+  let inQuotes = false;
+
+  for (let i = 0; i < csv.length; i += 1) {
+    const char = csv[i];
+    const next = csv[i + 1];
+
+    if (char === '"' && inQuotes && next === '"') {
+      cell += '"';
+      i += 1;
+      continue;
+    }
+    if (char === '"') {
+      inQuotes = !inQuotes;
+      continue;
+    }
+    if (char === ',' && !inQuotes) {
+      row.push(cell);
+      cell = '';
+      continue;
+    }
+    if ((char === '\n' || char === '\r') && !inQuotes) {
+      if (char === '\r' && next === '\n') i += 1;
+      row.push(cell);
+      rows.push(row);
+      row = [];
+      cell = '';
+      continue;
+    }
+    cell += char;
+  }
+  row.push(cell);
+  rows.push(row);
+  return rows.filter((items) => items.some((item) => item.trim() !== ''));
+}
+
+function rowsToObjects(rows) {
+  if (!rows.length) return [];
+
+  const firstCell = rows[0][0]?.trim().toLowerCase() ?? '';
+  if (firstCell === 'group_id' || firstCell === 'labels') {
+    const [headers, ...dataRows] = rows;
+    const cleanHeaders = headers.map((h) => h.trim().toLowerCase());
+
+    return dataRows
+      .map((row) =>
+        cleanHeaders.reduce((obj, header, index) => {
+          if (!header) return obj;
+          obj[header] = (row[index] || '').trim();
+          return obj;
+        }, {}),
+      )
+      .filter((obj) => Object.values(obj).some((v) => v !== ''));
+  }
+
+  return [];
+}
+
+function parseCommaList(input) {
+  if (!input?.trim()) return [];
+  return input
+    .split(/[,，\n]+/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+function parseEnabled(value) {
+  const v = String(value ?? 'false').trim().toLowerCase();
+  return v === 'true' || v === '1' || v === 'yes' || v === 'y';
+}
+
+/**
+ * @param {Record<string, string>[]} rows
+ */
+function rowsToCautionGroups(rows) {
+  if (!rows.length) return [];
+
+  const hasLabelsColumn = rows.some((r) => String(r.labels ?? '').trim());
+
+  if (hasLabelsColumn) {
+    return rows
+      .map((row) => {
+        const groupId = String(row.group_id || row.groupid || '').trim();
+        const tip = String(row.tip || '').trim();
+        const labels = parseCommaList(row.labels);
+        if (!groupId || !tip || !labels.length) return null;
+
+        const enabledDefault = parseEnabled(row.enabled);
+        return {
+          id: groupId,
+          tip,
+          items: labels.map((label) => ({
+            id: `${groupId}-${label}`,
+            label,
+            enabled: enabledDefault,
+          })),
+        };
+      })
+      .filter(Boolean);
+  }
+
+  const groups = new Map();
+  let curGroupId = '';
+  let curTip = '';
+
+  for (const row of rows) {
+    const groupId = String(row.group_id || row.groupid || curGroupId).trim();
+    if (groupId) curGroupId = groupId;
+    if (row.tip?.trim()) curTip = row.tip.trim();
+
+    const label = String(row.label || '').trim();
+    if (!label || !curGroupId) continue;
+
+    const itemId =
+      String(row.item_id || row.itemid || row.id || '').trim() ||
+      `${curGroupId}-${label}`;
+
+    if (!groups.has(curGroupId)) {
+      groups.set(curGroupId, { id: curGroupId, tip: curTip, items: [] });
+    }
+    const group = groups.get(curGroupId);
+    if (curTip) group.tip = curTip;
+
+    group.items.push({
+      id: itemId,
+      label,
+      enabled: parseEnabled(row.enabled),
+    });
+  }
+
+  return [...groups.values()].filter((g) => g.tip && g.items.length);
+}
+
+async function fetchSheetCsv(url, label) {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`${label} fetch failed: ${response.status} ${response.statusText}`);
+  }
+  const csv = await response.text();
+  if (csv.includes('<!DOCTYPE html>')) {
+    throw new Error(
+      `${label}: CSV 대신 HTML이 왔습니다. 시트를 「링크 있는 사용자 · 보기」로 공개했는지 확인하세요.`,
+    );
+  }
+  return csv;
+}
+
+async function fetchSheet() {
+  if (!SPREADSHEET_ID) {
+    throw new Error('SPREADSHEET_ID가 없습니다. .env에 시트 ID를 넣으세요.');
+  }
+
+  const cacheBust = Date.now().toString();
+  const exportUrl = new URL(
+    `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/export`,
+  );
+  exportUrl.searchParams.set('format', 'csv');
+  if (SHEET_GID) {
+    exportUrl.searchParams.set('gid', SHEET_GID);
+  }
+  exportUrl.searchParams.set('_', cacheBust);
+
+  const csv = await fetchSheetCsv(exportUrl.toString(), 'export');
+  return rowsToObjects(parseCsv(csv));
+}
+
+async function main() {
+  const csvArg = process.argv.slice(2).find((a) => a.startsWith('--csv='));
+  const rows = csvArg
+    ? rowsToObjects(parseCsv(await readFile(path.resolve(ROOT, csvArg.slice(6)), 'utf8')))
+    : await (async () => {
+        const tab = SHEET_GID ? `gid=${SHEET_GID}` : `sheet=${SHEET_NAME}`;
+        console.log(
+          `시트: https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/edit (${tab})`,
+        );
+        return fetchSheet();
+      })();
+
+  const groups = rowsToCautionGroups(rows);
+
+  if (!groups.length) {
+    throw new Error(
+      `${SHEET_NAME} 탭에 유효한 행이 없습니다. group_id·label(또는 labels)·tip 컬럼을 확인하세요.`,
+    );
+  }
+
+  const payload = { groups };
+  const json = `${JSON.stringify(payload, null, 2)}\n`;
+  const itemCount = groups.reduce((n, g) => n + g.items.length, 0);
+
+  console.log(`CSV ${rows.length}행 → 그룹 ${groups.length}개 · 항목 ${itemCount}개`);
+  for (const g of groups) {
+    const labels = g.items.map((i) => i.label).join(', ');
+    console.log(`  · ${g.id}: ${labels}`);
+  }
+
+  for (const out of OUTPUTS) {
+    await mkdir(path.dirname(out), { recursive: true });
+    await writeFile(out, json, 'utf8');
+    console.log(`→ ${path.relative(ROOT, out)}`);
+  }
+
+  console.log('Done. 브라우저 새로고침 후 주의 체크 상태를 확인하세요.');
+}
+
+main().catch((err) => {
+  console.error(err.message);
+  process.exitCode = 1;
+});
