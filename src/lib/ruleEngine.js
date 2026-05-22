@@ -30,6 +30,7 @@ import { isMatchSpatiallyCoherent } from './matchSpatial.js';
  * @property {string} replace
  * @property {string} label
  * @property {RuleCategory} [category]
+ * @property {string} [cautionId]
  * @property {string} [tip]
  * @property {MatchInstance[]} instances
  */
@@ -105,6 +106,7 @@ export function runRuleCheck(pages, rules, options = {}) {
             label: ruleDisplayLabel(rule),
             category:
               rule.category ?? (rule.builtIn ? 'spelling' : 'custom'),
+            ...(rule.cautionId ? { cautionId: rule.cautionId } : {}),
             ...(tip ? { tip } : {}),
             instances: [],
           });

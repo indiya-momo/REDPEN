@@ -25,7 +25,6 @@ const COMPOUND_KINDS = new Set(['compound-tail', 'compound-spacing']);
  *   globalExcludePhrases: string[],
  *   onGlobalExcludePhrasesChange: (phrases: string[]) => void,
  *   builtInEnabled: Record<string, boolean>,
- *   embedded?: boolean,
  *   onRunCheck?: () => void,
  *   isProcessing?: boolean,
  *   canRunCheck?: boolean,
@@ -39,7 +38,6 @@ export default function ConsistencyPanel({
   globalExcludePhrases,
   onGlobalExcludePhrasesChange,
   builtInEnabled,
-  embedded = false,
   onRunCheck,
   isProcessing = false,
   canRunCheck = false,
@@ -234,7 +232,7 @@ export default function ConsistencyPanel({
   const checking = isProcessing && progress?.phase === 'check';
 
   return (
-    <div className={embedded ? 'consistency-embed' : 'settings-panel'}>
+    <div className="consistency-embed">
       <section className="consistency-section-box" aria-labelledby="consistency-tail-heading">
         <p id="consistency-tail-heading" className="field-label">
           붙임 패턴 — ○○ + [단어]

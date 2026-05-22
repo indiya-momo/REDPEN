@@ -4,7 +4,10 @@
  * 시트 탭: caution_rules (또는 .env CAUTION_SHEET / CAUTION_GID)
  *
  * 표기 A — 그룹당 여러 행 (tip은 첫 행만 써도 됨, 아래 행은 비워도 forward-fill)
- *   group_id | item_id (또는 id) | label | tip | enabled
+ *   group_id | item_id (또는 id) | label | stems | tip | enabled | match_mode | display_label | inventory
+ *   stems: 쉼표 구분 어간 (예: 주,준 → ^주다 한 칸에 주다·준다)
+ *   inventory: TRUE = 시트 추적용 변이형(체크 없음). 비우면 stems 묶음에 포함된 어간 행은 자동 추적 처리
+ *   match_mode: spaced-before = 앞말+공백+label (예: 살아 있다). spaced-stem = 앞말+공백+label+어미 (예: 살아 있었다). 비우면 any-before
  *
  * 표기 B — 한 행에 여러 label
  *   group_id | labels | tip | enabled
@@ -141,6 +144,98 @@ function parseEnabled(value) {
   return v === 'true' || v === '1' || v === 'yes' || v === 'y';
 }
 
+/** @param {string} [value] */
+function parseMatchMode(value) {
+  const v = String(value ?? '').trim().toLowerCase();
+  if (v === 'spaced-stem' || v === 'stem' || v === 'spaced-compound') {
+    return 'spaced-stem';
+  }
+  if (v === 'spaced-before' || v === 'spaced' || v === 'space') {
+    return 'spaced-before';
+  }
+  return 'any-before';
+}
+
+/**
+ * @param {Record<string, string>} row
+ * @param {string} label
+ */
+function parseStems(row, label) {
+  const raw = String(row.stems ?? row.stem ?? '').trim();
+  if (!raw) return undefined;
+  const list = raw
+    .split(/[,，]+/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+  if (!list.length) return undefined;
+  if (list.length === 1 && list[0] === label) return undefined;
+  return list;
+}
+
+function parseInventoryOnly(row, matchMode) {
+  const v = String(
+    row.inventory ?? row.track ?? row.variant ?? row.inventory_only ?? '',
+  )
+    .trim()
+    .toLowerCase();
+  if (v === 'true' || v === '1' || v === 'y' || v === 'yes') return true;
+  const mode = String(matchMode ?? '').toLowerCase();
+  return mode === 'track' || mode === 'inventory' || mode === 'variant';
+}
+
+/** @param {ReturnType<typeof itemFromRow>[]} items */
+function markInventoryItems(items) {
+  const covered = new Set();
+  for (const it of items) {
+    if (it.inventoryOnly) continue;
+    const bundled =
+      Boolean(it.displayLabel?.trim()) ||
+      (Array.isArray(it.stems) && it.stems.length > 1);
+    if (!bundled) continue;
+    for (const s of it.stems?.length ? it.stems : [it.label]) {
+      covered.add(s);
+    }
+  }
+
+  return items.map((it) => {
+    if (it.inventoryOnly === true) return it;
+    const bundled =
+      Boolean(it.displayLabel?.trim()) ||
+      (Array.isArray(it.stems) && it.stems.length > 1);
+    if (bundled) return { ...it, inventoryOnly: false };
+
+    const label = String(it.label || '').trim();
+    let inventoryOnly = false;
+    if (covered.has(label)) inventoryOnly = true;
+    else {
+      for (const s of covered) {
+        if (label.startsWith(s)) {
+          inventoryOnly = true;
+          break;
+        }
+      }
+    }
+    return { ...it, inventoryOnly };
+  });
+}
+
+function itemFromRow(row, label, itemId) {
+  const rawMode = String(row.match_mode ?? row.matchmode ?? '').trim();
+  const inventoryOnly = parseInventoryOnly(row, rawMode);
+  const matchMode = inventoryOnly ? 'any-before' : parseMatchMode(rawMode);
+  const displayLabel = String(row.display_label ?? row.displaylabel ?? '').trim();
+  const stems = parseStems(row, label);
+  return {
+    id: itemId,
+    label,
+    enabled: parseEnabled(row.enabled),
+    matchMode,
+    inventoryOnly,
+    ...(stems ? { stems } : {}),
+    ...(displayLabel ? { displayLabel } : {}),
+  };
+}
+
 /**
  * @param {Record<string, string>[]} rows
  */
@@ -161,11 +256,9 @@ function rowsToCautionGroups(rows) {
         return {
           id: groupId,
           tip,
-          items: labels.map((label) => ({
-            id: `${groupId}-${label}`,
-            label,
-            enabled: enabledDefault,
-          })),
+          items: labels.map((label) =>
+            itemFromRow(row, label, `${groupId}-${label}`),
+          ),
         };
       })
       .filter(Boolean);
@@ -176,8 +269,13 @@ function rowsToCautionGroups(rows) {
   let curTip = '';
 
   for (const row of rows) {
-    const groupId = String(row.group_id || row.groupid || curGroupId).trim();
-    if (groupId) curGroupId = groupId;
+    const nextGroupId = String(row.group_id || row.groupid || '').trim();
+    if (nextGroupId && nextGroupId !== curGroupId) {
+      curGroupId = nextGroupId;
+      curTip = String(row.tip || '').trim();
+    } else if (nextGroupId) {
+      curGroupId = nextGroupId;
+    }
     if (row.tip?.trim()) curTip = row.tip.trim();
 
     const label = String(row.label || '').trim();
@@ -193,14 +291,17 @@ function rowsToCautionGroups(rows) {
     const group = groups.get(curGroupId);
     if (curTip) group.tip = curTip;
 
-    group.items.push({
-      id: itemId,
-      label,
-      enabled: parseEnabled(row.enabled),
-    });
+    group.items.push(itemFromRow(row, label, itemId));
   }
 
-  return [...groups.values()].filter((g) => g.tip && g.items.length);
+  return [...groups.values()]
+    .filter((g) => g.items.length)
+    .map((g) => ({
+      ...g,
+      tip: g.tip || '',
+      items: markInventoryItems(g.items),
+    }))
+    .filter((g) => g.items.length);
 }
 
 async function fetchSheetCsv(url, label) {
@@ -223,12 +324,26 @@ async function fetchSheet() {
   }
 
   const cacheBust = Date.now().toString();
+
+  if (!SHEET_GID && SHEET_NAME) {
+    const gvizUrl = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(SHEET_NAME)}&_=${cacheBust}`;
+    try {
+      const csv = await fetchSheetCsv(gvizUrl, `gviz(${SHEET_NAME})`);
+      const rows = rowsToObjects(parseCsv(csv));
+      if (rows.length) return rows;
+    } catch {
+      /* export URL로 재시도 */
+    }
+  }
+
   const exportUrl = new URL(
     `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/export`,
   );
   exportUrl.searchParams.set('format', 'csv');
   if (SHEET_GID) {
     exportUrl.searchParams.set('gid', SHEET_GID);
+  } else if (SHEET_NAME) {
+    exportUrl.searchParams.set('sheet', SHEET_NAME);
   }
   exportUrl.searchParams.set('_', cacheBust);
 
@@ -252,7 +367,7 @@ async function main() {
 
   if (!groups.length) {
     throw new Error(
-      `${SHEET_NAME} 탭에 유효한 행이 없습니다. group_id·label(또는 labels)·tip 컬럼을 확인하세요.`,
+      `${SHEET_NAME} 탭에 유효한 행이 없습니다. group_id·label(또는 labels) 컬럼을 확인하세요.`,
     );
   }
 

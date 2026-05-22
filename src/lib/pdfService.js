@@ -143,8 +143,12 @@ export function highlightRangeForInstance(pageData, instance) {
     return { start: index, end };
   }
 
-  const found = pageData.text.indexOf(matchedText);
-  if (found === -1) return null;
+  const found = pageData.text.indexOf(matchedText, Math.max(0, index - 80));
+  if (found === -1) {
+    const anywhere = pageData.text.indexOf(matchedText);
+    if (anywhere === -1) return null;
+    return { start: anywhere, end: anywhere + matchedText.length };
+  }
 
   return { start: found, end: found + matchedText.length };
 }

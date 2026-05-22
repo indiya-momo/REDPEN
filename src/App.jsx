@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import MainScreen from './components/MainScreen.jsx';
 import WelcomeScreen, { shouldShowWelcome } from './components/WelcomeScreen.jsx';
 import {
@@ -17,6 +17,8 @@ import {
   saveActiveSetId,
   saveRuleSets,
 } from './lib/ruleSetsStorage.js';
+
+const RULE_SET_AUTOSAVE_MS = 400;
 
 function normalizeRuleSet(set) {
   return {
@@ -51,6 +53,32 @@ export default function App() {
   const [ruleSets, setRuleSets] = useState([]);
   const [activeSetId, setActiveSetId] = useState(null);
 
+  const activeSetIdRef = useRef(activeSetId);
+  const ruleSetsRef = useRef(ruleSets);
+  const autosaveTimerRef = useRef(null);
+
+  activeSetIdRef.current = activeSetId;
+  ruleSetsRef.current = ruleSets;
+
+  const flushRuleSets = useCallback((sets, setId = activeSetIdRef.current) => {
+    saveRuleSets(sets);
+    if (setId) saveActiveSetId(setId);
+  }, []);
+
+  const scheduleRuleSetsSave = useCallback(
+    (sets) => {
+      ruleSetsRef.current = sets;
+      if (autosaveTimerRef.current) {
+        clearTimeout(autosaveTimerRef.current);
+      }
+      autosaveTimerRef.current = setTimeout(() => {
+        autosaveTimerRef.current = null;
+        flushRuleSets(sets, activeSetIdRef.current);
+      }, RULE_SET_AUTOSAVE_MS);
+    },
+    [flushRuleSets],
+  );
+
   useEffect(() => {
     let sets = loadRuleSets().map(normalizeRuleSet);
     if (!sets.length) {
@@ -69,6 +97,16 @@ export default function App() {
     );
   }, []);
 
+  useEffect(() => {
+    return () => {
+      if (autosaveTimerRef.current) {
+        clearTimeout(autosaveTimerRef.current);
+        autosaveTimerRef.current = null;
+        flushRuleSets(ruleSetsRef.current, activeSetIdRef.current);
+      }
+    };
+  }, [flushRuleSets]);
+
   const activeSet =
     ruleSets.find((s) => s.id === activeSetId) ?? ruleSets[0] ?? createDefaultSet();
 
@@ -78,25 +116,25 @@ export default function App() {
         const next = prev.map((s) =>
           s.id === activeSet.id ? { ...s, ...patch } : s,
         );
+        scheduleRuleSetsSave(next);
         return next;
       });
     },
-    [activeSet.id],
+    [activeSet.id, scheduleRuleSetsSave],
   );
 
-  function persistSets(nextSets, nextActiveId = activeSetId) {
-    saveRuleSets(nextSets);
-    if (nextActiveId) saveActiveSetId(nextActiveId);
-  }
-
   function handleSaveRules() {
+    if (autosaveTimerRef.current) {
+      clearTimeout(autosaveTimerRef.current);
+      autosaveTimerRef.current = null;
+    }
     const next = ruleSets.map((s) =>
       s.id === activeSet.id
         ? { ...s, spellingRulesFingerprint: SPELLING_RULES_FP }
         : s,
     );
     setRuleSets(next);
-    persistSets(next, activeSetId);
+    flushRuleSets(next, activeSetId);
     alert('규칙 세트가 저장되었습니다.');
   }
 

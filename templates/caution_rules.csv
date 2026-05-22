@@ -1,4 +1,11 @@
-group_id,item_id,label,tip,enabled
-particle-josa,particle-man,만,"체언 뒤에 붙은 '만, 만큼, 지'는 조사로 붙여 쓴다. 용언 뒤에 쓰인 '만, 만큼, 지'는 의존명사로 띄어 쓴다.",FALSE
-particle-josa,particle-mankun,만큼,,FALSE
-particle-josa,particle-ji,지,,FALSE
+group_id,item_id,label,stems,tip,enabled,match_mode,display_label
+particle-josa,particle-man,만,,"체언 뒤에 붙은 '만, 만큼, 지'는 조사로 붙여 쓴다. 용언 뒤에 쓰인 '만, 만큼, 지'는 의존명사로 띄어 쓴다.",FALSE,,
+particle-josa,particle-mankun,만큼,,,FALSE,,
+particle-josa,particle-ji,지,,,FALSE,,
+verb-bon,verb-boda1,보,,"본동사: group_id=verb-bon, item_id=verb-boda1·2·… (particle-man 과 같은 짝).",FALSE,spaced-stem,^보
+verb-bon,verb-boda2,본,,,FALSE,spaced-stem,^본다
+verb-bon,verb-boda3,있,,,FALSE,spaced-stem,^있다
+verb-bon,verb-boda4,주,"주,준",,FALSE,spaced-stem,^주다
+verb-bon,verb-boda5,하,"하,한",,FALSE,spaced-stem,^하다
+verb-bon,verb-boda6,두,,,FALSE,spaced-stem,^두다
+verb-bon,verb-boda7,놓,,,FALSE,spaced-stem,^놓다

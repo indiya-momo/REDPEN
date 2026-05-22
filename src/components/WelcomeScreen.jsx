@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ArrowRight, BookOpen, Settings, Shield } from 'lucide-react';
+import AppVersionBadge from './AppVersionBadge.jsx';
 
 const SKIP_KEY = 'pdf-proofread-skip-welcome';
 
@@ -80,8 +81,8 @@ export default function WelcomeScreen({ onStart, onOpenSettings }) {
           </h2>
           <ol className="welcome-steps">
             <li>
-              <strong>규칙 확인</strong> — 설정에서 맞춤법(시트 연동)과 일관성
-              규칙을 켭니다.
+              <strong>규칙 확인</strong> — 맞춤법·일관성 탭에서 규칙을 켭니다.
+              (맞춤법은 시트 연동)
             </li>
             <li>
               <strong>PDF 열기 (권장)</strong> — 100페이지 넘는 PDF는 「파일
@@ -98,11 +99,11 @@ export default function WelcomeScreen({ onStart, onOpenSettings }) {
           <h2>알아두면 좋은 점</h2>
           <ul className="welcome-list">
             <li>
-              맞춤법(내장) 규칙은 Google 시트에서 관리·갱신됩니다. 설정 화면에서
-              현재 목록을 확인할 수 있습니다.
+              맞춤법(내장) 규칙은 Google 시트에서 관리·갱신됩니다. 맞춤법 확인 탭
+              하단에서 현재 목록을 확인할 수 있습니다.
             </li>
             <li>
-              「○○ + 꼬리 단어」 붙임 패턴은 설정 → 일관성에서 등록합니다.
+              「○○ + 꼬리 단어」 붙임 패턴은 「일관성 확인」 탭에서 등록합니다.
             </li>
             <li>
               조판 PDF는 추출 텍스트가 어긋날 수 있어, 후보가 안 잡히면 규칙
@@ -132,6 +133,7 @@ export default function WelcomeScreen({ onStart, onOpenSettings }) {
           다음부터 이 안내 없이 바로 검수 화면으로
         </label>
       </div>
+      <AppVersionBadge />
     </div>
   );
 }

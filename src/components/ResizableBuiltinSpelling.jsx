@@ -3,9 +3,9 @@ import BuiltinSpellingPanel from './BuiltinSpellingPanel.jsx';
 import CautionChecklist from './CautionChecklist.jsx';
 
 const STORAGE_KEY = 'builtin-spelling-panel-height';
-const DEFAULT_HEIGHT = 220;
-const MIN_HEIGHT = 100;
-const MAX_HEIGHT = 520;
+const DEFAULT_HEIGHT = 320;
+const MIN_HEIGHT = 180;
+const MAX_HEIGHT = 560;
 
 function readStoredHeight() {
   try {
@@ -33,9 +33,11 @@ export default function ResizableBuiltinSpelling({
 }) {
   const [height, setHeight] = useState(readStoredHeight);
   const heightRef = useRef(height);
+  const handleRef = useRef(null);
   const dragging = useRef(false);
   const startY = useRef(0);
   const startH = useRef(0);
+  const activePointerId = useRef(null);
 
   heightRef.current = height;
 
@@ -52,6 +54,17 @@ export default function ResizableBuiltinSpelling({
   const endDrag = useCallback(() => {
     if (!dragging.current) return;
     dragging.current = false;
+    const handle = handleRef.current;
+    if (handle && activePointerId.current != null) {
+      try {
+        if (handle.hasPointerCapture(activePointerId.current)) {
+          handle.releasePointerCapture(activePointerId.current);
+        }
+      } catch {
+        /* ignore */
+      }
+    }
+    activePointerId.current = null;
     document.body.style.cursor = '';
     document.body.style.userSelect = '';
     try {
@@ -77,37 +90,54 @@ export default function ResizableBuiltinSpelling({
     dragging.current = true;
     startY.current = e.clientY;
     startH.current = height;
+    activePointerId.current = e.pointerId;
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {
+      /* ignore */
+    }
     document.body.style.cursor = 'row-resize';
     document.body.style.userSelect = 'none';
   }
 
   return (
-    <section
-      className="panel-section panel-section--builtin-spelling"
-      style={{ height, flexShrink: 0 }}
-    >
+    <>
       <div
+        ref={handleRef}
         className="builtin-spelling-resize-handle"
         role="separator"
         aria-orientation="horizontal"
         aria-valuenow={height}
         aria-valuemin={MIN_HEIGHT}
         aria-valuemax={MAX_HEIGHT}
-        aria-label="내장 맞춤법 규칙 영역 높이 조절"
+        aria-label="아래 패널 높이 조절 — 위로 끌면 주의·맞춤법 영역이 넓어집니다"
+        title="높이 조절 (드래그)"
         onPointerDown={startDrag}
-      />
-      <div className="builtin-spelling-resize-body">
-        <CautionChecklist
-          cautionEnabled={cautionEnabled}
-          onCautionToggle={onCautionToggle}
-        />
-        <div className="builtin-spelling-panel-scroll">
-          <BuiltinSpellingPanel
-            builtInEnabled={builtInEnabled}
-            onBuiltInToggle={onBuiltInToggle}
-          />
-        </div>
+      >
+        <span className="builtin-spelling-resize-grip" aria-hidden>
+          ⋮⋮
+        </span>
+        <span className="builtin-spelling-resize-label">높이 조절</span>
       </div>
-    </section>
+      <section
+        className="panel-section panel-section--builtin-spelling"
+        style={{ height }}
+      >
+        <div className="builtin-spelling-resize-body">
+          <div className="builtin-spelling-caution-scroll">
+            <CautionChecklist
+              cautionEnabled={cautionEnabled}
+              onCautionToggle={onCautionToggle}
+            />
+          </div>
+          <div className="builtin-spelling-rules-scroll">
+            <BuiltinSpellingPanel
+              builtInEnabled={builtInEnabled}
+              onBuiltInToggle={onBuiltInToggle}
+            />
+          </div>
+        </div>
+      </section>
+    </>
   );
 }

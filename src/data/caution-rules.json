@@ -2,22 +2,198 @@
   "groups": [
     {
       "id": "particle-josa",
-      "tip": "체언 뒤에 붙은 '만, 만큼, 지'는 조사로 붙여 쓴다. 용언 뒤에 쓰인 '만, 만큼, 지'는 의존명사로 띄어 쓴다.",
+      "tip": "체언(명사, 대명사, 수사) 뒤 '만, 만큼, 지'는 조사로 붙여 쓰고,\n용언(동사, 형용사) 뒤 '만, 만큼, 지'는 의존명사로 띄어 쓴다.",
       "items": [
         {
           "id": "particle-man",
           "label": "만",
-          "enabled": false
+          "enabled": false,
+          "matchMode": "any-before",
+          "inventoryOnly": false
         },
         {
           "id": "particle-mankun",
           "label": "만큼",
-          "enabled": false
+          "enabled": false,
+          "matchMode": "any-before",
+          "inventoryOnly": false
         },
         {
           "id": "particle-ji",
           "label": "지",
-          "enabled": false
+          "enabled": false,
+          "matchMode": "any-before",
+          "inventoryOnly": false
+        }
+      ]
+    },
+    {
+      "id": "verb-bon",
+      "tip": "본용언+보조용언",
+      "items": [
+        {
+          "id": "verb-boda1",
+          "label": "보",
+          "enabled": false,
+          "matchMode": "spaced-stem",
+          "inventoryOnly": false,
+          "stems": [
+            "보",
+            "본"
+          ],
+          "displayLabel": "^보(ㄴ)다"
+        },
+        {
+          "id": "verb-boda2",
+          "label": "본",
+          "enabled": false,
+          "matchMode": "any-before",
+          "inventoryOnly": true
+        },
+        {
+          "id": "verb-juda1",
+          "label": "주",
+          "enabled": false,
+          "matchMode": "spaced-stem",
+          "inventoryOnly": false,
+          "stems": [
+            "주",
+            "준"
+          ],
+          "displayLabel": "^주(ㄴ)다"
+        },
+        {
+          "id": "verb-juda2",
+          "label": "준",
+          "enabled": false,
+          "matchMode": "any-before",
+          "inventoryOnly": true
+        },
+        {
+          "id": "verb-duda",
+          "label": "두다",
+          "enabled": false,
+          "matchMode": "spaced-stem",
+          "inventoryOnly": false,
+          "stems": [
+            "두",
+            "둔"
+          ],
+          "displayLabel": "^두(ㄴ)다"
+        },
+        {
+          "id": "verb-duda2",
+          "label": "둔다",
+          "enabled": false,
+          "matchMode": "any-before",
+          "inventoryOnly": true
+        },
+        {
+          "id": "verb-notda",
+          "label": "놓다",
+          "enabled": false,
+          "matchMode": "any-before",
+          "inventoryOnly": true,
+          "displayLabel": "^놓다"
+        },
+        {
+          "id": "verv-gada",
+          "label": "가다",
+          "enabled": false,
+          "matchMode": "spaced-stem",
+          "inventoryOnly": false,
+          "stems": [
+            "가",
+            "갔"
+          ],
+          "displayLabel": "^가(ㅆ)다"
+        },
+        {
+          "id": "verv-gada2",
+          "label": "갔다",
+          "enabled": false,
+          "matchMode": "any-before",
+          "inventoryOnly": true
+        },
+        {
+          "id": "verv-oda",
+          "label": "오다",
+          "enabled": false,
+          "matchMode": "spaced-stem",
+          "inventoryOnly": false,
+          "stems": [
+            "오",
+            "온",
+            "왔"
+          ],
+          "displayLabel": "^오(ㄴ)왔+다"
+        },
+        {
+          "id": "verv-oda2",
+          "label": "온",
+          "enabled": false,
+          "matchMode": "any-before",
+          "inventoryOnly": true
+        },
+        {
+          "id": "verv-oda3",
+          "label": "왔다",
+          "enabled": false,
+          "matchMode": "any-before",
+          "inventoryOnly": true
+        }
+      ]
+    },
+    {
+      "id": "verb-special",
+      "tip": "",
+      "items": [
+        {
+          "id": "verb-itta",
+          "label": "있",
+          "enabled": false,
+          "matchMode": "spaced-stem",
+          "inventoryOnly": false
+        },
+        {
+          "id": "verb-hada1",
+          "label": "하다",
+          "enabled": false,
+          "matchMode": "spaced-stem",
+          "inventoryOnly": false,
+          "stems": [
+            "하",
+            "한",
+            "했"
+          ],
+          "displayLabel": "^하(ㄴ)했+다"
+        },
+        {
+          "id": "verb-hada2",
+          "label": "한다",
+          "enabled": false,
+          "matchMode": "spaced-stem",
+          "inventoryOnly": true
+        },
+        {
+          "id": "verb-hada3",
+          "label": "했다",
+          "enabled": false,
+          "matchMode": "spaced-stem",
+          "inventoryOnly": true
+        }
+      ]
+    },
+    {
+      "id": "particle-or",
+      "tip": "어떡해'는 '어떻게 해'의 줄임말, '어떻게'는 '어떠하게' 부사어",
+      "items": [
+        {
+          "id": "particle-udduk",
+          "label": "어떻해",
+          "enabled": false,
+          "matchMode": "any-before",
+          "inventoryOnly": false
         }
       ]
     }

@@ -82,21 +82,42 @@ npm run sync-spelling
 
 ### 표기 A — 그룹당 여러 행 (권장)
 
-**1행 헤더:** `group_id` · `item_id`(또는 `id`) · `label` · `tip` · `enabled`
+**1행 헤더:** `group_id` · `item_id`(또는 `id`) · `label` · `stems` · `tip` · `enabled` · `match_mode` · `display_label`
 
-| group_id | id | label | tip | enabled |
-|----------|---------|-------|-----|---------|
-| particle-josa | particle-man | 만 | 체언 뒤에 붙은 '만, 만큼, 지'는 조사로… (그룹 설명, 첫 행만) | FALSE |
-| particle-josa | particle-mankun | 만큼 | | FALSE |
-| particle-josa | particle-ji | 지 | | FALSE |
+| group_id | id | label | stems | tip | enabled | match_mode | display_label |
+|----------|---------|-------|-------|-----|---------|--------------|---------------|
+| particle-josa | particle-man | 만 | | 체언 뒤에 붙은… (첫 행만) | FALSE | | |
+| particle-josa | particle-mankun | 만큼 | | | FALSE | | |
+| particle-josa | particle-ji | 지 | | | FALSE | | |
+| verb-bon | verb-boda1 | 보 | | 본동사 붙임… | FALSE | spaced-stem | ^보 |
+| verb-bon | verb-boda2 | 본 | | | FALSE | spaced-stem | ^본다 |
+| verb-bon | verb-boda3 | 있 | | | FALSE | spaced-stem | ^있다 |
+| verb-bon | verb-boda4 | 주 | 주,준 | | FALSE | spaced-stem | ^주다 |
+| verb-bon | verb-boda5 | 하 | 하,한 | | FALSE | spaced-stem | ^하다 |
+| verb-bon | verb-boda6 | 두 | | | FALSE | spaced-stem | ^두다 |
+| verb-bon | verb-boda7 | 놓 | | | FALSE | spaced-stem | ^놓다 |
+
+**조사와 같은 짝:** `particle-josa` + `particle-man` ↔ **`verb-bon`** + **`verb-boda1`** … **`verb-boda7`** (그룹=종류, `item_id`=규칙 키).
+
+| 짝 | group_id (종류) | item_id (규칙) | label (검색 어간) |
+|----|-----------------|----------------|-------------------|
+| 조사 | particle-josa | particle-man | 만 |
+| 본동사 | verb-bon | verb-boda4 | 주 | `stems` **주,준** → 체크 **^주다** 한 칸 |
+
+`stems`에 **주,준**처럼 쉼표로 여러 어간을 넣으면 체크박스는 하나(`^주다`)인데 검사는 주다·준다 모두 합니다. **하,한** → **^하다** 한 칸.
+
+`verb-bon` = 본동사 **한 블록**. 설명(`tip`)은 첫 행에만 써도 됩니다.
 
 | 열 | 의미 |
 |----|------|
 | **group_id** | UI에서 설명·가로 배치를 묶는 그룹 키 |
 | **item_id** / **id** | 항목 고정 키 (바꾸지 않는 편이 좋음) |
-| **label** | 체크박스 옆 글자 (`만`, `만큼`, `지`) |
+| **label** | 대표 **어간** (체크 한 줄의 기본값) |
+| **stems** | 비우면 `label`만. **주,준**처럼 쉼표로 여러 어간 → 한 체크에 묶음 (`^주다` = 주+준) |
 | **tip** | 그룹 공통 설명 (첫 행만 써도 됨, 아래 행은 비워도 이어짐) |
 | **enabled** | `TRUE`/`FALSE` — sync 후 앱 **첫 반영·신규 항목** 체크 on 여부 (보통 `FALSE`) |
+| **match_mode** | 비우면 `any-before`. `spaced-before` = `앞말+공백+label`만 (`살아 있다`). `spaced-stem` = `앞말+공백+label+어미` (`살아 있었다`, `살아 있고` — `살아있다`·`살아있었다` X) |
+| **display_label** | 체크박스에 보일 이름 (비우면 `spaced-before`·`spaced-stem`일 때 `^{label}`) |
 
 ### 표기 B — 한 행에 여러 label
 
