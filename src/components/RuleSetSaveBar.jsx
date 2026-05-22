@@ -23,7 +23,7 @@ export default function RuleSetSaveBar({
         저장
       </button>
       <span className="hint ruleset-save-bar__hint">
-        일관성 규칙만 이 브라우저에 저장됩니다.
+        체크·규칙 변경은 자동 저장됩니다. 「저장」은 시트 sync 후 지문 갱신 확인용입니다.
       </span>
     </div>
   );

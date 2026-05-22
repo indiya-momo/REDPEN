@@ -6,100 +6,34 @@
     "tip": "과반수는 '반이 넘는 수'"
   },
   {
-    "find": "녹록치",
-    "replace": "녹록지",
-    "enabled": true,
-    "tip": "어간 끝 의 음절 '하'가 줄어든 대로 적는다"
-  },
-  {
-    "find": "거북치",
-    "replace": "거북지",
-    "enabled": true,
-    "tip": "어간 끝 의 음절 '하'가 줄어든 대로 적는다"
-  },
-  {
-    "find": "깨끗치",
-    "replace": "깨끗지",
-    "enabled": true,
-    "tip": "어간 끝 의 음절 '하'가 줄어든 대로 적는다"
-  },
-  {
-    "find": "넉넉치",
-    "replace": "넉넉지",
-    "enabled": true,
-    "tip": "어간 끝 의 음절 '하'가 줄어든 대로 적는다"
-  },
-  {
-    "find": "익숙케",
-    "replace": "익숙하게",
-    "enabled": true,
-    "tip": "어간 끝 의 음절 '하'가 줄어든 대로 적는다"
-  },
-  {
-    "find": "놀래키",
-    "replace": "놀래",
-    "enabled": true,
-    "tip": "놀래키다'는 사전에 없다"
-  },
-  {
-    "find": "높히",
-    "replace": "높이",
-    "enabled": true,
-    "tip": "높이다'의 과거형은 '높였다'"
-  },
-  {
-    "find": "덮히",
-    "replace": "덮이",
-    "enabled": true,
-    "tip": "덮이다'의 과거형은 '덮였다'"
-  },
-  {
-    "find": "담궈",
-    "replace": "담가",
-    "enabled": true,
-    "tip": "담그다'의 과거형은 '담갔다'"
-  },
-  {
-    "find": "치뤄",
-    "replace": "치러",
-    "enabled": true,
-    "tip": "치르다'의 과거형은 '치렀다'"
-  },
-  {
-    "find": "잠궈",
-    "replace": "잠가",
-    "enabled": true,
-    "tip": "잠그다'의 과거형은'잠갔다'"
-  },
-  {
-    "find": "갯수",
-    "replace": "개수",
-    "enabled": true,
-    "tip": "두 음절로 된 한자어 6개에만 사이시옷을 넣는다"
-  },
-  {
     "find": "설레이",
     "replace": "설레",
     "enabled": true,
-    "tip": "관형사형 '설레'"
+    "tip": "설레다'의 관형사형"
   },
   {
     "find": "되뇌이",
     "replace": "되뇌",
     "enabled": true,
-    "tip": "관형사형 '되뇌'"
+    "tip": "되뇌다'의 관형사형"
   },
   {
     "find": "개인",
     "replace": "갠",
     "enabled": true,
-    "tip": "관형사형 '갠'"
+    "tip": "개다'의 관형사형"
   },
   {
     "find": "헤메이",
     "replace": "헤메",
     "enabled": true,
-    "tip": "관형사형'헤메'"
+    "tip": "헤메다'의 관형사형"
+  },
+  {
+    "find": "갯수",
+    "replace": "개수",
+    "enabled": true,
+    "tip": "두 음절로 된 한자어 6개만 사이시옷을 넣는다"
   },
   {
     "find": "싯가",
@@ -195,7 +129,7 @@
     "find": "안절부절하",
     "replace": "안절부절못",
     "enabled": true,
-    "tip": "안절부절'에 '못하다'를 붙여야 '어쩔 줄 몰라 하다' 라는 뜻이 성립한다"
+    "tip": "안절부절'에 '못하다'를 붙여 '어쩔 줄 몰라 하다' 라는 뜻이 성립한다"
   },
   {
     "find": "쳐지",
@@ -204,36 +138,75 @@
     "tip": "처지다'의 잘못된 표현"
   },
   {
-    "find": "살아있",
-    "replace": "살아 있",
+    "find": "희노애락",
+    "replace": "희로애락",
     "enabled": true,
-    "tip": "살아 있다"
+    "tip": "怒(노)를 속음('로')으로 바뀌어 적고 발음하는 경우"
   },
   {
-    "find": "남아있",
-    "replace": "남아 있",
+    "find": "녹록치",
+    "replace": "녹록지",
     "enabled": true,
-    "tip": "남아 있다"
+    "tip": "어간 끝 음절 '하'가 줄어든 대로 적는다"
   },
   {
-    "find": "담겨있",
-    "replace": "담겨 있",
-    "enabled": true
-  },
-  {
-    "find": "보여 주",
-    "replace": "보여주",
+    "find": "거북치",
+    "replace": "거북지",
     "enabled": true,
-    "tip": "보여주다"
+    "tip": "어간 끝 음절 '하'가 줄어든 대로 적는다"
   },
   {
-    "find": "싶어하",
-    "replace": "싶어 하",
-    "enabled": true
+    "find": "깨끗치",
+    "replace": "깨끗지",
+    "enabled": true,
+    "tip": "어간 끝 음절 '하'가 줄어든 대로 적는다"
   },
   {
-    "find": "주목해 보",
-    "replace": "주목해보",
-    "enabled": true
+    "find": "넉넉치",
+    "replace": "넉넉지",
+    "enabled": true,
+    "tip": "어간 끝 음절 '하'가 줄어든 대로 적는다"
+  },
+  {
+    "find": "익숙케",
+    "replace": "익숙하게",
+    "enabled": true,
+    "tip": "어간 끝 음절 '하'가 줄어든 대로 적는다"
+  },
+  {
+    "find": "놀래키",
+    "replace": "놀래",
+    "enabled": true,
+    "tip": "놀래키다'는 사전 미등재"
+  },
+  {
+    "find": "높히",
+    "replace": "높이",
+    "enabled": true,
+    "tip": "높이다'의 과거형은 '높였다'"
+  },
+  {
+    "find": "덮히",
+    "replace": "덮이",
+    "enabled": true,
+    "tip": "덮이다'의 과거형은 '덮였다'"
+  },
+  {
+    "find": "담궈",
+    "replace": "담가",
+    "enabled": true,
+    "tip": "담그다'의 과거형은 '담갔다'"
+  },
+  {
+    "find": "치뤄",
+    "replace": "치러",
+    "enabled": true,
+    "tip": "치르다'의 과거형은 '치렀다'"
+  },
+  {
+    "find": "잠궈",
+    "replace": "잠가",
+    "enabled": true,
+    "tip": "잠그다'의 과거형은'잠갔다'"
   }
 ]

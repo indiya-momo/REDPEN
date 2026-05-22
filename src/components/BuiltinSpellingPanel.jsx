@@ -1,5 +1,5 @@
-import { useState } from 'react';
 import { BUILT_IN_RULES } from '../lib/builtInRules.js';
+import DetailsChevron from './DetailsChevron.jsx';
 
 /**
  * @param {{
@@ -9,11 +9,11 @@ import { BUILT_IN_RULES } from '../lib/builtInRules.js';
  */
 export default function BuiltinSpellingPanel({ builtInEnabled, onBuiltInToggle }) {
   const enabled = BUILT_IN_RULES.filter((r) => builtInEnabled[r.find] !== false).length;
-  const [openTipFind, setOpenTipFind] = useState(null);
 
   return (
-    <details className="builtin-spelling-details">
+    <details className="builtin-spelling-details" open>
       <summary className="builtin-spelling-summary">
+        <DetailsChevron />
         내장 맞춤법 규칙 ({enabled}/{BUILT_IN_RULES.length})
       </summary>
       <p className="hint" style={{ margin: '8px 0 10px' }}>
@@ -22,7 +22,6 @@ export default function BuiltinSpellingPanel({ builtInEnabled, onBuiltInToggle }
       <ul className="rule-list builtin-rule-list">
         {BUILT_IN_RULES.map((rule) => {
           const tip = (rule.tip || '').trim();
-          const tipOpen = openTipFind === rule.find;
           return (
             <li key={rule.find} className="builtin-rule-row-wrap">
               <div className="rule-row builtin-rule-row">
@@ -35,28 +34,11 @@ export default function BuiltinSpellingPanel({ builtInEnabled, onBuiltInToggle }
                   <span className="find">{rule.find}</span>
                   <span className="arrow">→</span>
                   <span className="replace">{rule.replace}</span>
+                  {tip ? (
+                    <span className="builtin-rule-tip-inline">{tip}</span>
+                  ) : null}
                 </div>
-                {tip ? (
-                  <button
-                    type="button"
-                    className={`tip-toggle-btn ${tipOpen ? 'tip-toggle-btn--open' : ''}`}
-                    aria-expanded={tipOpen}
-                    aria-label="규칙 설명 보기"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      e.preventDefault();
-                      setOpenTipFind((prev) =>
-                        prev === rule.find ? null : rule.find,
-                      );
-                    }}
-                  >
-                    설명
-                  </button>
-                ) : null}
               </div>
-              {tip && tipOpen && (
-                <p className="tip-toggle-body builtin-rule-tip-body">{tip}</p>
-              )}
             </li>
           );
         })}
