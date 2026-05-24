@@ -1,5 +1,8 @@
 ﻿# PDF 출판 교정 보조 툴
 
+> **배포 사이트:** https://indiya-momo.github.io/REDPEN/  
+> GitHub Pages는 **Settings → Pages → Source: GitHub Actions** 여야 앱이 표시됩니다.
+
 조판 PDF에서 맞춤법·표기 일관성 규칙을 **탐지**하고 위치를 **하이라이트**하는 브라우저 로컬 도구.
 
 **기획 뼈대:** [docs/product-spine.md](docs/product-spine.md)

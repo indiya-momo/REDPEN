@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
-const MOMO_VIDEO = '/momo/momo_front2.mp4';
-const MOMO_POSTER = '/momo/hero-open.png';
+const MOMO_VIDEO = `${import.meta.env.BASE_URL}momo/momo_front2.mp4`;
+const MOMO_POSTER = `${import.meta.env.BASE_URL}momo/hero-open.png`;
 
 export default function MomoHero() {
   const [reduceMotion, setReduceMotion] = useState(false);
