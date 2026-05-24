@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import MainScreen from './components/MainScreen.jsx';
-import WelcomeScreen, { shouldShowWelcome } from './components/WelcomeScreen.jsx';
+import WelcomeScreen from './components/WelcomeScreen.jsx';
 import {
   defaultCautionEnabled,
   migrateCautionEnabled,
@@ -68,7 +68,7 @@ export default function App() {
     ) {
       return 'main';
     }
-    return shouldShowWelcome() ? 'welcome' : 'main';
+    return 'welcome';
   });
   const [mainWorkTab, setMainWorkTab] = useState('spelling');
   const [ruleSets, setRuleSets] = useState([]);
@@ -240,10 +240,6 @@ export default function App() {
       <WelcomeScreen
         onStart={() => {
           setMainWorkTab('spelling');
-          setScreen('main');
-        }}
-        onOpenSettings={() => {
-          setMainWorkTab('consistency');
           setScreen('main');
         }}
       />

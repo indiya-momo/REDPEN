@@ -4,7 +4,11 @@ import { publicAssetUrl } from '../lib/publicAssetUrl.js';
 const MOMO_VIDEO = publicAssetUrl('momo/momo_front2.mp4');
 const MOMO_POSTER = publicAssetUrl('momo/hero-open.png');
 
-export default function MomoHero() {
+/**
+ * @param {{ variant?: 'default' | 'gate' }} props
+ */
+export default function MomoHero({ variant = 'default' }) {
+  const isGate = variant === 'gate';
   const videoRef = useRef(/** @type {HTMLVideoElement | null} */ (null));
   const [reduceMotion, setReduceMotion] = useState(false);
   const [usePoster, setUsePoster] = useState(false);
@@ -27,7 +31,7 @@ export default function MomoHero() {
   const showPoster = reduceMotion || usePoster;
 
   return (
-    <div className="momo-hero">
+    <div className={`momo-hero${isGate ? ' momo-hero--gate' : ''}`}>
       <div className="momo-stage">
         {showPoster ? (
           <img className="momo-video" src={MOMO_POSTER} alt="모모" />
@@ -47,7 +51,7 @@ export default function MomoHero() {
           />
         )}
       </div>
-      <p className="momo-caption">모모</p>
+      {isGate ? null : <p className="momo-caption">모모</p>}
     </div>
   );
 }
