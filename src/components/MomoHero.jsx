@@ -1,10 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { publicAssetUrl } from '../lib/publicAssetUrl.js';
 
-const MOMO_VIDEO = `${import.meta.env.BASE_URL}momo/momo_front2.mp4`;
-const MOMO_POSTER = `${import.meta.env.BASE_URL}momo/hero-open.png`;
+const MOMO_VIDEO = publicAssetUrl('momo/momo_front2.mp4');
+const MOMO_POSTER = publicAssetUrl('momo/hero-open.png');
 
 export default function MomoHero() {
+  const videoRef = useRef(/** @type {HTMLVideoElement | null} */ (null));
   const [reduceMotion, setReduceMotion] = useState(false);
+  const [usePoster, setUsePoster] = useState(false);
 
   useEffect(() => {
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -14,13 +17,23 @@ export default function MomoHero() {
     return () => mq.removeEventListener('change', update);
   }, []);
 
+  useEffect(() => {
+    if (reduceMotion || usePoster) return;
+    const video = videoRef.current;
+    if (!video) return;
+    video.play().catch(() => setUsePoster(true));
+  }, [reduceMotion, usePoster]);
+
+  const showPoster = reduceMotion || usePoster;
+
   return (
     <div className="momo-hero">
       <div className="momo-stage">
-        {reduceMotion ? (
-          <img className="momo-video" src={MOMO_POSTER} alt="" />
+        {showPoster ? (
+          <img className="momo-video" src={MOMO_POSTER} alt="모모" />
         ) : (
           <video
+            ref={videoRef}
             className="momo-video"
             src={MOMO_VIDEO}
             poster={MOMO_POSTER}
@@ -28,6 +41,8 @@ export default function MomoHero() {
             loop
             muted
             playsInline
+            preload="auto"
+            onError={() => setUsePoster(true)}
             aria-label="모모"
           />
         )}
