@@ -2,8 +2,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import BuiltinSpellingPanel from './BuiltinSpellingPanel.jsx';
 import CautionChecklist from './CautionChecklist.jsx';
 
-const STORAGE_KEY = 'builtin-spelling-panel-height';
-const DEFAULT_HEIGHT = 420;
+const STORAGE_KEY = 'builtin-spelling-panel-height-v2';
+const DEFAULT_BOTTOM_RATIO = 0.44;
+const HANDLE_HEIGHT = 10;
+const FALLBACK_HEIGHT = 340;
 const MIN_HEIGHT = 200;
 const MAX_HEIGHT = 720;
 
@@ -14,7 +16,14 @@ function readStoredHeight() {
   } catch {
     /* ignore */
   }
-  return DEFAULT_HEIGHT;
+  return null;
+}
+
+function computeDefaultHeight(layoutEl) {
+  const total = layoutEl.getBoundingClientRect().height;
+  if (total < MIN_HEIGHT + 100) return FALLBACK_HEIGHT;
+  const next = Math.round((total - HANDLE_HEIGHT) * DEFAULT_BOTTOM_RATIO);
+  return Math.min(MAX_HEIGHT, Math.max(MIN_HEIGHT, next));
 }
 
 /**
@@ -31,15 +40,39 @@ export default function ResizableBuiltinSpelling({
   cautionEnabled,
   onCautionToggle,
 }) {
-  const [height, setHeight] = useState(readStoredHeight);
+  const [height, setHeight] = useState(
+    () => readStoredHeight() ?? FALLBACK_HEIGHT,
+  );
   const heightRef = useRef(height);
   const handleRef = useRef(null);
   const dragging = useRef(false);
   const startY = useRef(0);
   const startH = useRef(0);
   const activePointerId = useRef(null);
+  const defaultApplied = useRef(Boolean(readStoredHeight()));
 
   heightRef.current = height;
+
+  useEffect(() => {
+    if (defaultApplied.current) return;
+
+    function applyDefault() {
+      const layout = document.querySelector('.spelling-tab-layout');
+      if (!layout) return;
+      const h = layout.getBoundingClientRect().height;
+      if (h < MIN_HEIGHT + 100) return;
+      defaultApplied.current = true;
+      setHeight(computeDefaultHeight(layout));
+    }
+
+    applyDefault();
+    const id = requestAnimationFrame(applyDefault);
+    const t = window.setTimeout(applyDefault, 80);
+    return () => {
+      cancelAnimationFrame(id);
+      window.clearTimeout(t);
+    };
+  }, []);
 
   const onPointerMove = useCallback((e) => {
     if (!dragging.current) return;
@@ -67,6 +100,7 @@ export default function ResizableBuiltinSpelling({
     activePointerId.current = null;
     document.body.style.cursor = '';
     document.body.style.userSelect = '';
+    defaultApplied.current = true;
     try {
       localStorage.setItem(STORAGE_KEY, String(heightRef.current));
     } catch {

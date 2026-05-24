@@ -66,7 +66,7 @@ export function usePdfDocument() {
       return `텍스트 추출 ${progress.current} / ${progress.total}`;
     }
     if (progress?.phase === 'check') {
-      return '검사 실행 중…';
+      return `검사 중 ${progress.current} / ${progress.total}페이지`;
     }
     return null;
   }, [progress]);

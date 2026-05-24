@@ -1,7 +1,7 @@
 /** @typedef {'literal' | 'regex'} RulePattern */
 
 /**
- * @typedef {'compound-tail' | 'compound-spacing' | 'custom-regex'} RuleKind
+ * @typedef {'compound-find' | 'compound-tail' | 'compound-spacing' | 'phrase-slot-find' | 'auxiliary-verb' | 'custom-regex'} RuleKind
  */
 
 /**

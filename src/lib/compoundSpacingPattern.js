@@ -1,6 +1,9 @@
 import {
   COMPOUND_PREFIX,
+  HANGUL_SUFFIX,
+  PHRASE_START,
   escapeRegex,
+  isHaeBoPattern,
 } from './compoundPatternCommon.js';
 import { parseCommaList } from './matchFilters.js';
 import { formatCompoundSpacingLabel } from './patternDisplayLabels.js';
@@ -18,17 +21,37 @@ export function buildCompoundSpacingRules(tailWord) {
   const esc = escapeRegex(glued);
   const spaced = parts.length >= 2 ? parts.join(' ') : tail;
 
-  return [
+  const base = {
+    enabled: true,
+    pattern: 'regex',
+    patternKind: 'compound-spacing',
+    tailWord: tail,
+    label: formatCompoundSpacingLabel(tail),
+  };
+
+  /** @type {import('./ruleTypes.js').Rule[]} */
+  const rules = [
     {
-      find: String.raw`${COMPOUND_PREFIX}${esc}(?!\s)`,
+      ...base,
+      find: String.raw`${PHRASE_START}${esc}${HANGUL_SUFFIX}(?!\S)`,
+      replace: spaced,
+    },
+    {
+      ...base,
+      find: String.raw`${COMPOUND_PREFIX}${esc}${HANGUL_SUFFIX}(?!\s)`,
       replace: `$1 ${spaced}`,
-      enabled: true,
-      pattern: 'regex',
-      patternKind: 'compound-spacing',
-      tailWord: tail,
-      label: formatCompoundSpacingLabel(tail),
     },
   ];
+
+  if (isHaeBoPattern(tail)) {
+    rules.push({
+      ...base,
+      find: String.raw`(\S*해)(보${HANGUL_SUFFIX})(?!\s)`,
+      replace: '$1 $2',
+    });
+  }
+
+  return rules;
 }
 
 /** @param {string} input */

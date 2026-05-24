@@ -86,10 +86,8 @@ npm run sync-spelling
 
 | group_id | id | label | stems | tip | enabled | match_mode | display_label |
 |----------|---------|-------|-------|-----|---------|--------------|---------------|
-| particle-josa | particle-man | 만 | | 체언 뒤에 붙은… (첫 행만) | FALSE | | |
-| particle-josa | particle-mankun | 만큼 | | | FALSE | | |
-| particle-josa | particle-ji | 지 | | | FALSE | | |
-| verb-bon | verb-boda1 | 보 | | 본동사 붙임… | FALSE | spaced-stem | ^보 |
+| particle-josa | particle-mankun | 만큼 | | 체언 뒤에 붙은… (첫 행만) | FALSE | | |
+| verb-bon | verb-boda1 | 해 보 | 해 보,해 본 | 본동사+보조 (좁게) | FALSE | fixed-phrase | 해 보·해 본 |
 | verb-bon | verb-boda2 | 본 | | | FALSE | spaced-stem | ^본다 |
 | verb-bon | verb-boda3 | 있 | | | FALSE | spaced-stem | ^있다 |
 | verb-bon | verb-boda4 | 주 | 주,준 | | FALSE | spaced-stem | ^주다 |
@@ -101,7 +99,7 @@ npm run sync-spelling
 
 | 짝 | group_id (종류) | item_id (규칙) | label (검색 어간) |
 |----|-----------------|----------------|-------------------|
-| 조사 | particle-josa | particle-man | 만 |
+| 조사 | particle-josa | particle-mankun | 만큼 |
 | 본동사 | verb-bon | verb-boda4 | 주 | `stems` **주,준** → 체크 **^주다** 한 칸 |
 
 `stems`에 **주,준**처럼 쉼표로 여러 어간을 넣으면 체크박스는 하나(`^주다`)인데 검사는 주다·준다 모두 합니다. **하,한** → **^하다** 한 칸.
@@ -116,7 +114,7 @@ npm run sync-spelling
 | **stems** | 비우면 `label`만. **주,준**처럼 쉼표로 여러 어간 → 한 체크에 묶음 (`^주다` = 주+준) |
 | **tip** | 그룹 공통 설명 (첫 행만 써도 됨, 아래 행은 비워도 이어짐) |
 | **enabled** | `TRUE`/`FALSE` — sync 후 앱 **첫 반영·신규 항목** 체크 on 여부 (보통 `FALSE`) |
-| **match_mode** | 비우면 `any-before`. `spaced-before` = `앞말+공백+label`만 (`살아 있다`). `spaced-stem` = `앞말+공백+label+어미` (`살아 있었다`, `살아 있고` — `살아있다`·`살아있었다` X) |
+| **match_mode** | 비우면 `any-before`. `spaced-before` = `앞말+공백+label`만 (`살아 있다`). `spaced-stem` = `앞말+공백+label+어미` (`살아 있었다` — 전 동사에 적용). `fixed-phrase` = `stems` 문구만 (`해 보,해 본` → `해 보다`·`해 본다`만, `읽어 보다` X) |
 | **display_label** | 체크박스에 보일 이름 (비우면 `spaced-before`·`spaced-stem`일 때 `^{label}`) |
 
 ### 표기 B — 한 행에 여러 label

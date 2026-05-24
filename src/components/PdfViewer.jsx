@@ -12,6 +12,7 @@ import {
  *   highlights?: Array<{ start: number, end: number, primary?: boolean }>,
  *   emptyTitle?: string,
  *   emptyHint?: string,
+ *   showPageMeta?: boolean,
  * }} props
  */
 export default function PdfViewer({
@@ -21,6 +22,7 @@ export default function PdfViewer({
   highlights = [],
   emptyTitle = 'PDF를 업로드하세요',
   emptyHint = '좌측 「PDF 업로드」 · 메모리에서만 처리',
+  showPageMeta = true,
 }) {
   const canvasRef = useRef(null);
   const wrapRef = useRef(null);
@@ -40,7 +42,7 @@ export default function PdfViewer({
           pdf,
           pageNum,
           canvasRef.current,
-          1.25,
+          1.4,
         );
 
         if (cancelled) return;
@@ -91,14 +93,16 @@ export default function PdfViewer({
 
   return (
     <div className="pdf-viewer" ref={wrapRef}>
-      <div className="pdf-page-meta">
-        페이지 {pageNum} / {pdf.numPages}
-        {highlights.length > 0 && (
-          <span className="pdf-page-meta-count">
-            · 이 페이지 {highlights.length}곳 표시
-          </span>
-        )}
-      </div>
+      {showPageMeta && (
+        <div className="pdf-page-meta">
+          페이지 {pageNum} / {pdf.numPages}
+          {highlights.length > 0 && (
+            <span className="pdf-page-meta-count">
+              · 이 페이지 {highlights.length}곳 표시
+            </span>
+          )}
+        </div>
+      )}
       <div className="pdf-canvas-wrap">
         <canvas ref={canvasRef} className="pdf-canvas" />
         <div className="pdf-highlight-layer">

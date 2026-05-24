@@ -1,6 +1,8 @@
 import { useState } from 'react';
-import { ArrowRight, BookOpen, Settings, Shield } from 'lucide-react';
+import { ArrowRight, BookOpen, MessageSquare, Settings, Shield } from 'lucide-react';
 import AppVersionBadge from './AppVersionBadge.jsx';
+import FeedbackModal from './FeedbackModal.jsx';
+import MomoHero from './MomoHero.jsx';
 
 const SKIP_KEY = 'pdf-proofread-skip-welcome';
 
@@ -11,6 +13,7 @@ export default function WelcomeScreen({ onStart, onOpenSettings }) {
   const [skipNext, setSkipNext] = useState(
     () => localStorage.getItem(SKIP_KEY) === '1',
   );
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   function handleStart() {
     if (skipNext) localStorage.setItem(SKIP_KEY, '1');
@@ -22,6 +25,7 @@ export default function WelcomeScreen({ onStart, onOpenSettings }) {
     <div className="welcome-page">
       <div className="welcome-inner">
         <header className="welcome-hero">
+          <MomoHero />
           <p className="welcome-eyebrow">PDF 출판 교정 보조</p>
           <h1>PDF 교정 도우미</h1>
           <p className="welcome-lead">
@@ -122,7 +126,17 @@ export default function WelcomeScreen({ onStart, onOpenSettings }) {
             <Settings size={16} />
             일관성 확인 먼저
           </button>
+          <button
+            type="button"
+            className="btn-welcome-feedback"
+            onClick={() => setFeedbackOpen(true)}
+          >
+            <MessageSquare size={16} aria-hidden />
+            피드백 보내기
+          </button>
         </div>
+
+        <FeedbackModal open={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
 
         <label className="welcome-skip">
           <input
