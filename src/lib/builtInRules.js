@@ -17,7 +17,7 @@ export function spellingRulesFingerprint(rows = spellingRulesJson) {
 export const BUILT_IN_RULES = spellingRulesJson.map((row) => ({
   find: row.find,
   replace: row.replace,
-  enabled: row.enabled !== false,
+  enabled: row.enabled === true,
   builtIn: true,
   tip: String(row.tip ?? '').trim(),
   memo: String(row.memo ?? '').trim(),
@@ -25,31 +25,34 @@ export const BUILT_IN_RULES = spellingRulesJson.map((row) => ({
 
 export const SPELLING_RULES_FP = spellingRulesFingerprint();
 
-/** 시트 enabled 열 → 체크박스·검사 on/off 초기값 */
+/** 맞춤법 체크 초기값 — 주의 규칙과 같이 기본은 모두 꺼짐 */
 export function builtInEnabledFromSheet() {
-  return Object.fromEntries(
-    BUILT_IN_RULES.map((r) => [r.find, r.enabled !== false]),
-  );
+  return Object.fromEntries(BUILT_IN_RULES.map((r) => [r.find, false]));
 }
 
 /**
- * 규칙 JSON(시트 동기화) 변경 시 enabled를 시트 기준으로 맞춤.
+ * 규칙 JSON(시트 동기화) 변경 시 enabled를 기본(전부 off)으로 맞춤.
  * 동일 fingerprint면 사용자가 바꾼 체크 상태는 유지.
  * @param {Record<string, boolean>} [saved]
  * @param {string | null | undefined} [savedFingerprint]
  */
 export function migrateBuiltInEnabled(saved = {}, savedFingerprint = null) {
-  const sheet = builtInEnabledFromSheet();
+  const defaults = builtInEnabledFromSheet();
   if (savedFingerprint !== SPELLING_RULES_FP) {
-    return sheet;
+    return defaults;
   }
-  const merged = { ...sheet };
+  const merged = { ...defaults };
   for (const r of BUILT_IN_RULES) {
     if (Object.prototype.hasOwnProperty.call(saved, r.find)) {
-      merged[r.find] = saved[r.find] !== false;
+      merged[r.find] = saved[r.find] === true;
     }
   }
   return merged;
+}
+
+/** @param {Record<string, boolean>} builtInEnabled */
+export function isBuiltInRuleEnabled(builtInEnabled, find) {
+  return builtInEnabled[find] === true;
 }
 
 const tipLookup = new Map(

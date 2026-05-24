@@ -4,8 +4,10 @@ import WelcomeScreen, { shouldShowWelcome } from './components/WelcomeScreen.jsx
 import {
   defaultCautionEnabled,
   migrateCautionEnabled,
+  CAUTION_SEARCH_RULES,
 } from './lib/cautionRules.js';
 import {
+  BUILT_IN_RULES,
   SPELLING_RULES_FP,
   builtInEnabledFromSheet,
   migrateBuiltInEnabled,
@@ -59,9 +61,15 @@ function createDefaultSet() {
 }
 
 export default function App() {
-  const [screen, setScreen] = useState(() =>
-    shouldShowWelcome() ? 'welcome' : 'main',
-  );
+  const [screen, setScreen] = useState(() => {
+    if (
+      import.meta.env.DEV &&
+      new URLSearchParams(window.location.search).get('devPdf')
+    ) {
+      return 'main';
+    }
+    return shouldShowWelcome() ? 'welcome' : 'main';
+  });
   const [mainWorkTab, setMainWorkTab] = useState('spelling');
   const [ruleSets, setRuleSets] = useState([]);
   const [activeSetId, setActiveSetId] = useState(null);
@@ -271,10 +279,30 @@ export default function App() {
       }
       onBuiltInToggle={(find) => {
         const prev = activeSet.builtInEnabled ?? builtInEnabledFromSheet();
-        const on = prev[find] !== false;
+        const on = prev[find] === true;
         const nextBuiltIn = { ...prev, [find]: !on };
         if (
           !on &&
+          isOverMaxRules(
+            countActiveRules({
+              builtInEnabled: nextBuiltIn,
+              cautionEnabled: activeSet.cautionEnabled,
+              customRules: activeSet.customRules,
+            }),
+          )
+        ) {
+          alert(maxRulesExceededMessage());
+          return;
+        }
+        updateActiveSet({ builtInEnabled: nextBuiltIn });
+      }}
+      onBuiltInSetAll={(enabled) => {
+        const prev = activeSet.builtInEnabled ?? builtInEnabledFromSheet();
+        const nextBuiltIn = Object.fromEntries(
+          BUILT_IN_RULES.map((r) => [r.find, enabled]),
+        );
+        if (
+          enabled &&
           isOverMaxRules(
             countActiveRules({
               builtInEnabled: nextBuiltIn,
@@ -294,6 +322,27 @@ export default function App() {
         const nextCaution = { ...prev, [id]: !on };
         if (
           !on &&
+          isOverMaxRules(
+            countActiveRules({
+              builtInEnabled: activeSet.builtInEnabled,
+              cautionEnabled: nextCaution,
+              customRules: activeSet.customRules,
+            }),
+          )
+        ) {
+          alert(maxRulesExceededMessage());
+          return;
+        }
+        updateActiveSet({ cautionEnabled: nextCaution });
+      }}
+      onCautionSetAll={(enabled) => {
+        const prev = activeSet.cautionEnabled ?? defaultCautionEnabled();
+        const nextCaution = { ...prev };
+        for (const rule of CAUTION_SEARCH_RULES) {
+          nextCaution[rule.id] = enabled;
+        }
+        if (
+          enabled &&
           isOverMaxRules(
             countActiveRules({
               builtInEnabled: activeSet.builtInEnabled,

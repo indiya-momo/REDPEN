@@ -30,15 +30,19 @@ function computeDefaultHeight(layoutEl) {
  * @param {{
  *   builtInEnabled: Record<string, boolean>,
  *   onBuiltInToggle: (find: string) => void,
+ *   onBuiltInSetAll: (enabled: boolean) => void,
  *   cautionEnabled: Record<string, boolean>,
  *   onCautionToggle: (id: string) => void,
+ *   onCautionSetAll: (enabled: boolean) => void,
  * }} props
  */
 export default function ResizableBuiltinSpelling({
   builtInEnabled,
   onBuiltInToggle,
+  onBuiltInSetAll,
   cautionEnabled,
   onCautionToggle,
+  onCautionSetAll,
 }) {
   const [height, setHeight] = useState(
     () => readStoredHeight() ?? FALLBACK_HEIGHT,
@@ -161,12 +165,14 @@ export default function ResizableBuiltinSpelling({
             <CautionChecklist
               cautionEnabled={cautionEnabled}
               onCautionToggle={onCautionToggle}
+              onCautionSetAll={onCautionSetAll}
             />
           </div>
           <div className="builtin-spelling-rules-scroll">
             <BuiltinSpellingPanel
               builtInEnabled={builtInEnabled}
               onBuiltInToggle={onBuiltInToggle}
+              onBuiltInSetAll={onBuiltInSetAll}
             />
           </div>
         </div>

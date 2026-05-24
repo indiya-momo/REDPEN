@@ -1,5 +1,5 @@
 import { buildCautionCheckRules, defaultCautionEnabled } from './cautionRules.js';
-import { BUILT_IN_RULES, builtInEnabledFromSheet } from './builtInRules.js';
+import { BUILT_IN_RULES, builtInEnabledFromSheet, isBuiltInRuleEnabled } from './builtInRules.js';
 import { MAX_RULES } from './ruleTypes.js';
 
 /**
@@ -13,8 +13,8 @@ export function countSpellingActiveRules(input = {}) {
   const builtInEnabled = input.builtInEnabled ?? builtInEnabledFromSheet();
   const cautionEnabled = input.cautionEnabled ?? defaultCautionEnabled();
 
-  const builtIn = BUILT_IN_RULES.filter(
-    (r) => builtInEnabled[r.find] !== false,
+  const builtIn = BUILT_IN_RULES.filter((r) =>
+    isBuiltInRuleEnabled(builtInEnabled, r.find),
   ).length;
   const caution = buildCautionCheckRules(cautionEnabled).length;
   return builtIn + caution;

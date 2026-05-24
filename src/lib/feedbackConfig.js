@@ -15,21 +15,64 @@ export const FEEDBACK_TYPES = [
 export function getFeedbackFormConfig() {
   return {
     actionUrl: String(import.meta.env.VITE_FEEDBACK_FORM_ACTION_URL ?? '').trim(),
+    viewUrl: String(import.meta.env.VITE_FEEDBACK_FORM_VIEW_URL ?? '').trim(),
     entryType: String(import.meta.env.VITE_FEEDBACK_FORM_ENTRY_TYPE ?? '').trim(),
     entryMessage: String(
       import.meta.env.VITE_FEEDBACK_FORM_ENTRY_MESSAGE ?? '',
     ).trim(),
+    entryInconvenient: String(
+      import.meta.env.VITE_FEEDBACK_FORM_ENTRY_INCONVENIENT ?? '',
+    ).trim(),
+    entryConvenient: String(
+      import.meta.env.VITE_FEEDBACK_FORM_ENTRY_CONVENIENT ?? '',
+    ).trim(),
   };
 }
 
-export function isFeedbackFormConfigured() {
+export function getFeedbackFormViewUrl() {
+  return getFeedbackFormConfig().viewUrl;
+}
+
+/** 단답·장문형 2필드 POST */
+export function isLegacyFeedbackFormConfigured() {
   const { actionUrl, entryType, entryMessage } = getFeedbackFormConfig();
   return Boolean(actionUrl && entryType && entryMessage);
+}
+
+/** 체크박스(기타) 2질문 POST — 불편한 점 / 편한 점 */
+export function isPairedFeedbackFormConfigured() {
+  const { actionUrl, entryInconvenient, entryConvenient } = getFeedbackFormConfig();
+  return Boolean(actionUrl && entryInconvenient && entryConvenient);
+}
+
+export function isFeedbackFormConfigured() {
+  return isLegacyFeedbackFormConfigured() || isPairedFeedbackFormConfigured();
+}
+
+export function isFeedbackFormLinked() {
+  return isFeedbackFormConfigured() || Boolean(getFeedbackFormViewUrl());
+}
+
+export function openFeedbackFormView() {
+  const url = getFeedbackFormViewUrl();
+  if (!url) return false;
+  window.open(url, '_blank', 'noopener,noreferrer');
+  return true;
 }
 
 /** @param {FeedbackType} type */
 export function feedbackTypeLabel(type) {
   return FEEDBACK_TYPES.find((t) => t.id === type)?.label ?? type;
+}
+
+/**
+ * @param {URLSearchParams} body
+ * @param {string} entryName
+ * @param {string} text
+ */
+function appendCheckboxOther(body, entryName, text) {
+  body.append(entryName, '__other_option__');
+  body.append(`${entryName}.other_option_response`, text);
 }
 
 /**
@@ -44,10 +87,26 @@ export async function submitFeedback({ type, message }) {
     return { ok: false, reason: 'not_configured' };
   }
 
-  const { actionUrl, entryType, entryMessage } = getFeedbackFormConfig();
+  const {
+    actionUrl,
+    entryType,
+    entryMessage,
+    entryInconvenient,
+    entryConvenient,
+  } = getFeedbackFormConfig();
   const body = new URLSearchParams();
-  body.append(entryType, feedbackTypeLabel(type));
-  body.append(entryMessage, text);
+
+  if (isPairedFeedbackFormConfigured()) {
+    appendCheckboxOther(
+      body,
+      entryInconvenient,
+      `[${feedbackTypeLabel(type)}] ${text}`,
+    );
+    appendCheckboxOther(body, entryConvenient, '앱에서 피드백 전송');
+  } else {
+    body.append(entryType, feedbackTypeLabel(type));
+    body.append(entryMessage, text);
+  }
 
   try {
     await fetch(actionUrl, {

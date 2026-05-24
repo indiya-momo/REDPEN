@@ -5,8 +5,8 @@ import AppVersionBadge from './AppVersionBadge.jsx';
 import ResizableBuiltinSpelling from './ResizableBuiltinSpelling.jsx';
 import ConsistencyPanel from './ConsistencyPanel.jsx';
 import RuleSetPanel from './RuleSetPanel.jsx';
+import FeedbackModal from './FeedbackModal.jsx';
 import PdfPreviewBar from './PdfPreviewBar.jsx';
-import PdfThumbnailStrip from './PdfThumbnailStrip.jsx';
 import CheckResultsPanel from './CheckResultsPanel.jsx';
 import PdfWorkSection from './PdfWorkSection.jsx';
 import { usePdfDocument } from '../hooks/usePdfDocument.js';
@@ -35,8 +35,10 @@ import {
  *   globalExcludePhrases: string[],
  *   onRuleSetNameChange: (name: string) => void,
  *   onBuiltInToggle: (find: string) => void,
+ *   onBuiltInSetAll: (enabled: boolean) => void,
  *   cautionEnabled: Record<string, boolean>,
  *   onCautionToggle: (id: string) => void,
+ *   onCautionSetAll: (enabled: boolean) => void,
  *   onCustomRulesChange: (rules: import('../lib/ruleTypes.js').Rule[]) => void,
  *   onGlobalExcludePhrasesChange: (phrases: string[]) => void,
  *   onSaveRules: () => void,
@@ -58,8 +60,10 @@ export default function MainScreen({
   globalExcludePhrases,
   onRuleSetNameChange,
   onBuiltInToggle,
+  onBuiltInSetAll,
   cautionEnabled,
   onCautionToggle,
+  onCautionSetAll,
   onCustomRulesChange,
   onGlobalExcludePhrasesChange,
   onSaveRules,
@@ -67,6 +71,7 @@ export default function MainScreen({
   initialWorkTab = 'spelling',
 }) {
   const [workTab, setWorkTab] = useState(initialWorkTab);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [thumbStripOpen, setThumbStripOpen] = useState(() => {
     try {
       return localStorage.getItem('pdf-proofread-thumb-strip-open') === '1';
@@ -169,6 +174,42 @@ export default function MainScreen({
     ruleCheck.goToPage(target);
   };
 
+  useEffect(() => {
+    if (!import.meta.env.DEV || pdf.pdf) return undefined;
+    const params = new URLSearchParams(window.location.search);
+    const devPdf = params.get('devPdf');
+    if (!devPdf) return undefined;
+
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await fetch(`/${devPdf}`);
+        if (!res.ok || cancelled) return;
+        const buf = await res.arrayBuffer();
+        const file = new File(
+          [buf],
+          devPdf.split('/').pop() ?? 'sample.pdf',
+          { type: 'application/pdf' },
+        );
+        const doc = await pdf.loadPdfFromFile(file);
+        if (cancelled) return;
+        setThumbStripOpen(true);
+        const devPage = Number.parseInt(params.get('devPage') ?? '', 10);
+        if (Number.isFinite(devPage) && devPage > 0) {
+          ruleCheck.goToPage(
+            Math.min(doc.numPages, Math.max(1, devPage)),
+          );
+        }
+      } catch {
+        /* ignore dev sample load */
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [pdf.pdf, pdf.loadPdfFromFile, ruleCheck]);
+
   const toggleThumbStrip = () => {
     setThumbStripOpen((open) => {
       const next = !open;
@@ -213,7 +254,11 @@ export default function MainScreen({
       onCalibrateFromInput={pageDisplay.calibrateFromInput}
       onClearPrintedPageOffset={pageDisplay.clearCalibration}
       currentPrintedLabel={pageDisplay.formatLabel(pdf.currentPage)}
-      previewPrintedLabel={pageDisplay.formatPageText(pdf.currentPage)}
+      previewPrintedLabel={
+        pageDisplay.active
+          ? pageDisplay.formatPageText(pdf.currentPage)
+          : pageDisplay.formatNaturalPreview(pdf.currentPage)
+      }
       spreadInput={pageDisplay.spreadInput}
       onSpreadInputChange={pageDisplay.setSpreadInput}
       firstPageSingle={pageDisplay.firstPageSingle}
@@ -331,8 +376,10 @@ export default function MainScreen({
             <ResizableBuiltinSpelling
               builtInEnabled={builtInEnabled}
               onBuiltInToggle={onBuiltInToggle}
+              onBuiltInSetAll={onBuiltInSetAll}
               cautionEnabled={cautionEnabled}
               onCautionToggle={onCautionToggle}
+              onCautionSetAll={onCautionSetAll}
             />
           </div>
         )}
@@ -403,6 +450,7 @@ export default function MainScreen({
             onDuplicateSet={onDuplicateRuleSet}
             onDeleteSet={onDeleteRuleSet}
             onSave={onSaveRules}
+            onOpenFeedback={() => setFeedbackOpen(true)}
             spellingRuleCount={spellingRuleCount}
             consistencyRuleCount={consistencyRuleCount}
           />
@@ -422,26 +470,23 @@ export default function MainScreen({
                 currentPage={pdf.currentPage}
                 numPages={pdf.pdf.numPages}
                 onGoToPage={goToPdfPage}
+                pdf={pdf.pdf}
+                formatPageLabel={pageDisplay.formatLabel}
                 findingsOnPage={tabCheckDone ? visibleOnCurrentPage : 0}
                 thumbStripOpen={thumbStripOpen}
                 onToggleThumbStrip={toggleThumbStrip}
-                printedPagesActive={pageDisplay.enabled}
+                printedPagesEnabled={pageDisplay.enabled}
+                printedPagesActive={pageDisplay.active}
                 printedPagesCalibrated={pageDisplay.active}
                 formatPageText={pageDisplay.formatPageText}
                 toSystemPageFromInput={pageDisplay.toSystemPageFromInput}
               />
-              {thumbStripOpen && (
-                <PdfThumbnailStrip
-                  pdf={pdf.pdf}
-                  currentPage={pdf.currentPage}
-                  onSelectPage={goToPdfPage}
-                  formatPageLabel={pageDisplay.formatLabel}
-                />
-              )}
             </>
           )}
         </div>
       </main>
+
+      <FeedbackModal open={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
     </div>
   );
 }

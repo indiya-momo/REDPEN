@@ -1,13 +1,17 @@
 import { useEffect, useState } from 'react';
+import PdfThumbnailStrip from './PdfThumbnailStrip.jsx';
 
 /**
  * @param {{
  *   currentPage: number,
  *   numPages: number,
  *   onGoToPage: (page: number) => void,
+ *   pdf?: import('pdfjs-dist').PDFDocumentProxy | null,
+ *   formatPageLabel?: (systemPage: number) => string,
  *   findingsOnPage?: number,
  *   thumbStripOpen?: boolean,
  *   onToggleThumbStrip?: () => void,
+ *   printedPagesEnabled?: boolean,
  *   printedPagesActive?: boolean,
  *   printedPagesCalibrated?: boolean,
  *   formatPageText?: (systemPage: number) => string,
@@ -18,9 +22,12 @@ export default function PdfPreviewBar({
   currentPage,
   numPages,
   onGoToPage,
+  pdf = null,
+  formatPageLabel = (n) => String(n),
   findingsOnPage = 0,
   thumbStripOpen = true,
   onToggleThumbStrip,
+  printedPagesEnabled = false,
   printedPagesActive = false,
   printedPagesCalibrated = false,
   formatPageText = (n) => String(n),
@@ -28,21 +35,20 @@ export default function PdfPreviewBar({
 }) {
   const displayCurrent = formatPageText(currentPage);
   const displayTotal = formatPageText(numPages);
-
   const [value, setValue] = useState(displayCurrent);
 
   useEffect(() => {
     setValue(displayCurrent);
   }, [displayCurrent]);
 
-  const submit = () => {
+  function submit() {
     const trimmed = value.trim();
     if (!trimmed) {
       setValue(displayCurrent);
       return;
     }
 
-    if (printedPagesActive) {
+    if (printedPagesEnabled) {
       const systemPage = toSystemPageFromInput(trimmed);
       if (systemPage == null) {
         setValue(displayCurrent);
@@ -61,11 +67,11 @@ export default function PdfPreviewBar({
     const page = Math.min(numPages, Math.max(1, parsed));
     onGoToPage(page);
     setValue(formatPageText(page));
-  };
+  }
 
   return (
     <div className="pdf-preview-bar">
-      <div className="pdf-preview-bar__nav-group">
+      <div className="pdf-preview-bar__pager">
         <button
           type="button"
           className="pdf-preview-bar__nav"
@@ -75,34 +81,51 @@ export default function PdfPreviewBar({
         >
           ←
         </button>
-        <form
-          className="pdf-preview-bar__jump"
-          onSubmit={(e) => {
-            e.preventDefault();
-            submit();
-          }}
-        >
-          <label className="sr-only" htmlFor="pdf-page-jump-input">
-            {printedPagesActive ? '현재 인쇄 쪽수' : '현재 페이지'}
-          </label>
-          <input
-            id="pdf-page-jump-input"
-            type={printedPagesActive ? 'text' : 'number'}
-            inputMode="numeric"
-            className={`pdf-preview-bar__input${
-              printedPagesActive ? ' pdf-preview-bar__input--spread' : ''
-            }`}
-            min={printedPagesActive ? undefined : 1}
-            max={printedPagesActive ? undefined : numPages}
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            onBlur={submit}
-            aria-label={
-              printedPagesActive ? '인쇄 쪽수 입력 (예: 6-7)' : `페이지 1–${numPages}`
-            }
-          />
-          <span className="pdf-preview-bar__total">/ {displayTotal}</span>
-        </form>
+
+        <div className="pdf-preview-bar__middle">
+          <form
+            className="pdf-preview-bar__jump"
+            onSubmit={(e) => {
+              e.preventDefault();
+              submit();
+            }}
+          >
+            <label className="sr-only" htmlFor="pdf-page-jump-input">
+              {printedPagesEnabled ? '현재 인쇄 쪽수' : '현재 페이지'}
+            </label>
+            <input
+              id="pdf-page-jump-input"
+              type={printedPagesEnabled ? 'text' : 'number'}
+              inputMode="numeric"
+              className={`pdf-preview-bar__input${
+                printedPagesEnabled ? ' pdf-preview-bar__input--spread' : ''
+              }`}
+              min={printedPagesEnabled ? undefined : 1}
+              max={printedPagesEnabled ? undefined : numPages}
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              onBlur={submit}
+              aria-label={
+                printedPagesEnabled
+                  ? printedPagesActive
+                    ? '인쇄 쪽수 입력 (예: 6-7)'
+                    : '인쇄 쪽수 입력 (보정 전: 6-7 등으로 이동 가능)'
+                  : `페이지 1–${numPages}`
+              }
+            />
+            <span className="pdf-preview-bar__total">/ {displayTotal}</span>
+          </form>
+
+          {thumbStripOpen && pdf ? (
+            <PdfThumbnailStrip
+              pdf={pdf}
+              currentPage={currentPage}
+              onSelectPage={onGoToPage}
+              formatPageLabel={formatPageLabel}
+            />
+          ) : null}
+        </div>
+
         <button
           type="button"
           className="pdf-preview-bar__nav"
@@ -114,7 +137,7 @@ export default function PdfPreviewBar({
         </button>
       </div>
 
-      <div className="pdf-preview-bar__aside">
+      <aside className="pdf-preview-bar__aside">
         {printedPagesCalibrated ? (
           <span className="pdf-preview-bar__mode" title="파일 기준 페이지">
             파일 {currentPage}P
@@ -125,7 +148,7 @@ export default function PdfPreviewBar({
             {findingsOnPage}곳 표시
           </span>
         ) : null}
-        {onToggleThumbStrip && (
+        {onToggleThumbStrip ? (
           <button
             type="button"
             className="pdf-preview-bar__toggle"
@@ -135,8 +158,8 @@ export default function PdfPreviewBar({
           >
             {thumbStripOpen ? '목록 숨기기' : '목록 보기'}
           </button>
-        )}
-      </div>
+        ) : null}
+      </aside>
     </div>
   );
 }
