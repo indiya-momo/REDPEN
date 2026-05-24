@@ -1,0 +1,18 @@
+/**
+ * 대문·브랜딩용 웹폰트 (public/fonts/)
+ */
+@font-face {
+  font-family: 'MapoDaCapo';
+  src: url('/fonts/MapoDacapo.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'RidiBatang';
+  src: url('/fonts/ridibatang.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}

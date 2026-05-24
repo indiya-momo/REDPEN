@@ -4,3 +4,5 @@ dist
 *.local
 .env
 _caution_export.csv
+public/test-pages.pdf
+scripts/browser-thumb-check.mjs
