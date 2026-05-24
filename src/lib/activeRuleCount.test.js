@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { buildCautionCheckRules } from './cautionRules.js';
-import { BUILT_IN_RULES } from './builtInRules.js';
+import { BUILT_IN_RULES, builtInEnabledFromSheet } from './builtInRules.js';
 import {
   countActiveRules,
   countConsistencyActiveRules,
@@ -10,6 +10,11 @@ import {
 import { MAX_RULES } from './ruleTypes.js';
 
 describe('activeRuleCount', () => {
+  it('내장 기본값은 모두 꺼짐', () => {
+    const defaults = builtInEnabledFromSheet();
+    expect(Object.values(defaults).every((v) => v === false)).toBe(true);
+  });
+
   it('내장 전부 ON + 일관성 없음 = 내장 개수', () => {
     const builtInOn = Object.fromEntries(
       BUILT_IN_RULES.map((r) => [r.find, true]),

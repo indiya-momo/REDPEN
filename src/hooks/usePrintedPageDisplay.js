@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   formatPageLabel,
   formatPrintedPageText,
+  formatSystemPageLabel,
   loadPageSettings,
   loadPrintedPagesEnabled,
   parsePrintedPageInput,
@@ -62,14 +63,8 @@ export function usePrintedPageDisplay({ pdfFileName, numPages, currentPage }) {
   const calibrateFromInput = useCallback(
     (raw, isSpread) => {
       if (!pdfKey) return;
-      let trimmed = raw.trim();
+      const trimmed = raw.trim();
       if (!trimmed) return;
-
-      if (!isSpread && /[-–—]/.test(trimmed)) {
-        const single = parsePrintedPageInput(trimmed);
-        if (!single) return;
-        trimmed = String(single.start);
-      }
 
       const parsed = parsePrintedPageInput(trimmed);
       if (!parsed) return;
@@ -108,11 +103,26 @@ export function usePrintedPageDisplay({ pdfFileName, numPages, currentPage }) {
   );
 
   const formatPageText = useCallback(
+    (systemPage) => {
+      if (!enabled || !active) return String(systemPage);
+      return formatPrintedPageText(
+        systemPage,
+        displayOpts.shift,
+        true,
+        displayOpts.numPages,
+        displayOpts.anchorPage,
+        displayOpts.firstPageSingle,
+      );
+    },
+    [enabled, active, displayOpts],
+  );
+
+  const formatNaturalPreview = useCallback(
     (systemPage) =>
       formatPrintedPageText(
         systemPage,
-        displayOpts.shift,
-        displayOpts.enabled,
+        null,
+        true,
         displayOpts.numPages,
         displayOpts.anchorPage,
         displayOpts.firstPageSingle,
@@ -123,23 +133,26 @@ export function usePrintedPageDisplay({ pdfFileName, numPages, currentPage }) {
   const formatPage = useCallback(
     (systemPage) => {
       if (!enabled) return systemPage;
+      if (!active) return systemPage;
       const parsed = parsePrintedPageInput(formatPageText(systemPage));
       return parsed?.start ?? systemPage;
     },
-    [enabled, formatPageText],
+    [enabled, active, formatPageText],
   );
 
   const formatLabel = useCallback(
-    (systemPage) =>
-      formatPageLabel(
+    (systemPage) => {
+      if (!enabled || !active) return formatSystemPageLabel(systemPage);
+      return formatPageLabel(
         systemPage,
         displayOpts.shift,
-        displayOpts.enabled,
+        true,
         displayOpts.numPages,
         displayOpts.anchorPage,
         displayOpts.firstPageSingle,
-      ),
-    [displayOpts],
+      );
+    },
+    [enabled, active, displayOpts],
   );
 
   const toSystemPage = useCallback(
@@ -180,6 +193,7 @@ export function usePrintedPageDisplay({ pdfFileName, numPages, currentPage }) {
     calibrateFromInput,
     clearCalibration,
     formatPageText,
+    formatNaturalPreview,
     formatPage,
     formatLabel,
     toSystemPage,

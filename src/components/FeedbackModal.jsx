@@ -1,9 +1,12 @@
 import { useEffect, useId, useRef, useState } from 'react';
-import { X } from 'lucide-react';
+import { ExternalLink, X } from 'lucide-react';
 import {
   FEEDBACK_TYPES,
   formatFeedbackDraft,
+  getFeedbackFormViewUrl,
   isFeedbackFormConfigured,
+  isFeedbackFormLinked,
+  openFeedbackFormView,
   submitFeedback,
 } from '../lib/feedbackConfig.js';
 
@@ -22,6 +25,8 @@ export default function FeedbackModal({ open, onClose }) {
   const [notice, setNotice] = useState('');
 
   const formReady = isFeedbackFormConfigured();
+  const formViewUrl = getFeedbackFormViewUrl();
+  const formLinked = isFeedbackFormLinked();
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -40,11 +45,28 @@ export default function FeedbackModal({ open, onClose }) {
     onClose();
   }
 
+  function handleOpenForm() {
+    openFeedbackFormView();
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
     const trimmed = message.trim();
     if (!trimmed) {
       setNotice('내용을 입력해 주세요.');
+      return;
+    }
+
+    if (!formReady && formViewUrl) {
+      try {
+        await navigator.clipboard.writeText(
+          formatFeedbackDraft({ type, message: trimmed }),
+        );
+        setNotice('내용을 클립보드에 복사했습니다. Google Form에 붙여 넣어 주세요.');
+      } catch {
+        setNotice('Google Form을 엽니다. 내용을 직접 입력해 주세요.');
+      }
+      openFeedbackFormView();
       return;
     }
 
@@ -117,14 +139,18 @@ export default function FeedbackModal({ open, onClose }) {
           </button>
         </header>
 
-        {!formReady ? (
+        {!formLinked ? (
           <p className="hint feedback-modal-hint">
             Google Form 연결 전입니다. 보내기를 누르면 내용이 클립보드에 복사됩니다.
           </p>
-        ) : (
+        ) : formReady ? (
           <p className="hint feedback-modal-hint">
             전송 후 Google Form 「응답」에 내용이 들어왔는지 확인해 주세요. (브라우저
             제한으로 앱에서는 수신 여부를 확인할 수 없습니다.)
+          </p>
+        ) : (
+          <p className="hint feedback-modal-hint">
+            보내기를 누르면 Google Form이 열립니다. 내용은 클립보드에 복사됩니다.
           </p>
         )}
 
@@ -170,6 +196,17 @@ export default function FeedbackModal({ open, onClose }) {
         ) : null}
 
         <footer className="feedback-modal-footer">
+          {formViewUrl ? (
+            <button
+              type="button"
+              className="btn-ghost feedback-modal-open-form"
+              onClick={handleOpenForm}
+              disabled={sending}
+            >
+              <ExternalLink size={16} aria-hidden />
+              Google Form에서 작성
+            </button>
+          ) : null}
           <button
             type="button"
             className="btn-ghost"
@@ -179,7 +216,13 @@ export default function FeedbackModal({ open, onClose }) {
             취소
           </button>
           <button type="submit" className="btn-run feedback-modal-submit" disabled={sending}>
-            {sending ? '보내는 중…' : '보내기'}
+            {sending
+              ? '보내는 중…'
+              : formReady
+                ? '보내기'
+                : formViewUrl
+                  ? 'Form 열기'
+                  : '보내기'}
           </button>
         </footer>
       </form>

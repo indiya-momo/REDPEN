@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { stripPageLabelPrefix } from '../lib/printedPageDisplay.js';
 import { renderPageToCanvas } from '../lib/pdfService.js';
+import { thumbSlotPages } from '../lib/thumbSlotPages.js';
 
 /** 저화질·저부하 썸네일 (표시만 확인용) */
-const THUMB_HEIGHT_PX = 52;
+const THUMB_HEIGHT_PX = 78;
 /** 공유 버퍼 없이 순차 렌더 — 동시 그리기 시 가로가 반으로 눌리는 현상 방지 */
 const RENDER_BATCH = 1;
 
@@ -33,7 +34,6 @@ function blitThumbCanvas(target, source, displayW, displayH, pageNum) {
  * @param {{
  *   pageNum: number,
  *   active: boolean,
- *   eager: boolean,
  *   onSelect: () => void,
  *   requestRender: (pageNum: number, canvas: HTMLCanvasElement, force?: boolean) => Promise<void>,
  *   label: string,
@@ -42,12 +42,10 @@ function blitThumbCanvas(target, source, displayW, displayH, pageNum) {
 function PdfThumbnailItem({
   pageNum,
   active,
-  eager,
   onSelect,
   requestRender,
   label,
 }) {
-  const rootRef = useRef(null);
   const canvasRef = useRef(null);
   const frameRef = useRef(null);
   const [loaded, setLoaded] = useState(false);
@@ -70,47 +68,11 @@ function PdfThumbnailItem({
   }, [pageNum]);
 
   useEffect(() => {
-    const root = rootRef.current;
-    const canvas = canvasRef.current;
-    if (!root || !canvas) return undefined;
-
-    let cancelled = false;
-
-    const run = (force = false) => {
-      void requestRender(pageNum, canvas, force).then((ok) => {
-        if (!cancelled && ok) setLoaded(true);
-      });
-    };
-
-    if (eager) {
-      run();
-      return () => {
-        cancelled = true;
-      };
-    }
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry?.isIntersecting) return;
-        observer.disconnect();
-        run();
-      },
-      { root: null, rootMargin: '200px 0px', threshold: 0.01 },
-    );
-
-    observer.observe(root);
-    return () => {
-      cancelled = true;
-      observer.disconnect();
-    };
-  }, [pageNum, eager, requestRender]);
-
-  useEffect(() => {
-    if (!active) return undefined;
     const canvas = canvasRef.current;
     if (!canvas) return undefined;
+
     let cancelled = false;
-    void requestRender(pageNum, canvas, true).then((ok) => {
+    void requestRender(pageNum, canvas, active).then((ok) => {
       if (!cancelled && ok) setLoaded(true);
     });
     return () => {
@@ -120,7 +82,6 @@ function PdfThumbnailItem({
 
   return (
     <button
-      ref={rootRef}
       type="button"
       className={`pdf-thumb${active ? ' pdf-thumb--active' : ''}`}
       onClick={onSelect}
@@ -154,14 +115,14 @@ export default function PdfThumbnailStrip({
   onSelectPage,
   formatPageLabel = (n) => String(n),
 }) {
-  const stripRef = useRef(null);
   const queueRef = useRef([]);
   const activeRef = useRef(0);
   const numPages = pdf.numPages;
 
-  const setStripRef = useCallback((node) => {
-    stripRef.current = node;
-  }, []);
+  const slots = useMemo(
+    () => thumbSlotPages(currentPage, numPages),
+    [currentPage, numPages],
+  );
 
   const pumpQueue = useCallback(() => {
     while (activeRef.current < RENDER_BATCH && queueRef.current.length > 0) {
@@ -233,38 +194,26 @@ export default function PdfThumbnailStrip({
     queueRef.current = [];
   }, [pdf]);
 
-  useEffect(() => {
-    const strip = stripRef.current;
-    if (!strip) return;
-    const active = strip.querySelector('.pdf-thumb--active');
-    active?.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
-  }, [currentPage, numPages]);
-
   return (
     <div
       id="pdf-thumb-strip"
-      ref={setStripRef}
       className="pdf-thumb-strip"
       role="navigation"
       aria-label="PDF 페이지 목록"
     >
-      {Array.from({ length: numPages }, (_, i) => i + 1).map((pageNum) => {
-        const eager =
-          pageNum === currentPage ||
-          pageNum === currentPage - 1 ||
-          pageNum === currentPage + 1;
-        return (
-          <PdfThumbnailItem
-            key={pageNum}
-            pageNum={pageNum}
-            active={pageNum === currentPage}
-            eager={eager}
-            onSelect={() => onSelectPage(pageNum)}
-            requestRender={requestRender}
-            label={stripPageLabelPrefix(formatPageLabel(pageNum))}
-          />
-        );
-      })}
+      {slots.map((pageNum, index) => (
+        <div key={index} className="pdf-thumb-slot">
+          {pageNum != null ? (
+            <PdfThumbnailItem
+              pageNum={pageNum}
+              active={pageNum === currentPage}
+              onSelect={() => onSelectPage(pageNum)}
+              requestRender={requestRender}
+              label={stripPageLabelPrefix(formatPageLabel(pageNum))}
+            />
+          ) : null}
+        </div>
+      ))}
     </div>
   );
 }

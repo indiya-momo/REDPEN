@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import {
   CAUTION_GROUPS,
   CAUTION_SEARCH_RULES,
@@ -30,17 +31,48 @@ function groupExplanation(group) {
  * @param {{
  *   cautionEnabled: Record<string, boolean>,
  *   onCautionToggle: (id: string) => void,
+ *   onCautionSetAll: (enabled: boolean) => void,
  * }} props
  */
-export default function CautionChecklist({ cautionEnabled, onCautionToggle }) {
+export default function CautionChecklist({
+  cautionEnabled,
+  onCautionToggle,
+  onCautionSetAll,
+}) {
+  const selectAllRef = useRef(/** @type {HTMLInputElement | null} */ (null));
+  const total = CAUTION_SEARCH_RULES.length;
   const activeCount = CAUTION_SEARCH_RULES.filter(
     (r) => cautionEnabled[r.id] === true,
   ).length;
+  const allChecked = total > 0 && activeCount === total;
+  const someChecked = activeCount > 0 && activeCount < total;
+
+  useEffect(() => {
+    if (selectAllRef.current) {
+      selectAllRef.current.indeterminate = someChecked;
+    }
+  }, [someChecked]);
+
   return (
     <details className="caution-checklist-details" open>
       <summary className="caution-checklist-summary">
         <DetailsChevron />
-        주의: 사용자 직접 판단 (검사 {activeCount}/{CAUTION_SEARCH_RULES.length})
+        <label
+          className="caution-checklist-select-all"
+          onClick={(e) => e.stopPropagation()}
+          onKeyDown={(e) => e.stopPropagation()}
+        >
+          <input
+            ref={selectAllRef}
+            type="checkbox"
+            checked={allChecked}
+            onChange={() => onCautionSetAll(!allChecked)}
+            aria-label="주의 규칙 전체 선택"
+          />
+        </label>
+        <span className="caution-checklist-summary-title">
+          주의: 사용자 직접 판단 (검사 {activeCount}/{total})
+        </span>
       </summary>
       <p className="hint caution-checklist-hint">
         체크한 항목만 PDF에 표시합니다. 붙임·띄움은 문맥에 맞게 직접 판단하세요.

@@ -1,3 +1,5 @@
+import { MessageSquare } from 'lucide-react';
+import TooltipGuide from './TooltipGuide.jsx';
 import {
   formatRuleSetSavedDate,
   formatRuleSetSummary,
@@ -14,6 +16,7 @@ import {
  *   onDuplicateSet: () => void,
  *   onDeleteSet: () => void,
  *   onSave: () => void,
+ *   onOpenFeedback?: () => void,
  *   ruleSetSavedAt?: string,
  *   spellingRuleCount?: number,
  *   consistencyRuleCount?: number,
@@ -30,6 +33,7 @@ export default function RuleSetPanel({
   onDuplicateSet,
   onDeleteSet,
   onSave,
+  onOpenFeedback,
   spellingRuleCount = 0,
   consistencyRuleCount = 0,
 }) {
@@ -105,6 +109,23 @@ export default function RuleSetPanel({
         <button type="button" className="btn-primary ruleset-panel__save" onClick={onSave}>
           저장
         </button>
+        {onOpenFeedback ? (
+          <TooltipGuide
+            storageKey="feedback-button"
+            title="피드백"
+            message="불편한 점이나 바라는 기능이 있으면 알려 주세요."
+            placement="left"
+          >
+            <button
+              type="button"
+              className="ruleset-panel__feedback"
+              onClick={onOpenFeedback}
+            >
+              <MessageSquare size={18} aria-hidden />
+              피드백 보내기
+            </button>
+          </TooltipGuide>
+        ) : null}
       </div>
     </section>
   );

@@ -6,11 +6,20 @@
 
 ---
 
-## 1. Form 만들기 (권장 필드)
+## 1. Form 필드 (현재 REDPEN Form)
+
+| 질문 | 유형 | entry ID | 앱에서 보내는 값 |
+|------|------|----------|------------------|
+| 어떤 부분이 **불편한가?** | 체크박스(기타) | `entry.2074090186` | `[버그/기능 요청/기타] {본문}` → **기타** |
+| 어떤 부분이 **편한가?** | 체크박스(기타) | `entry.944707313` | `앱에서 피드백 전송` → **기타** |
+
+공유 링크: https://forms.gle/f6FpybKZHC5yAR817
+
+### (참고) 단답·장문 2필드 Form
 
 | 순서 | 질문 유형 | 제목 예 | 앱에서 보내는 값 |
 |------|-----------|---------|------------------|
-| 1 | **단답형** 또는 **강조형** | 분류 | `버그` / `기능 요청` / `기타` (문자열) |
+| 1 | **단답형** 또는 **강조형** | 분류 | `버그` / `기능 요청` / `기타` |
 | 2 | **장문형** | 내용 | 사용자가 입력한 본문 |
 
 - Form 설정 → **응답** 탭 → **스프레드시트에 연결** (응답 확인용)
@@ -32,7 +41,22 @@
 
 > `/d/e/…/` 형태(게시 URL)를 쓰는 경우가 많습니다. `viewform`이 붙은 주소를 그대로 `formResponse`로만 바꾸면 됩니다.
 
-### 2-2. `VITE_FEEDBACK_FORM_ENTRY_TYPE` · `ENTRY_MESSAGE`
+### 2-2. 체크박스 2질문 (REDPEN Form)
+
+`.env` 예시:
+
+```env
+VITE_FEEDBACK_FORM_VIEW_URL=https://forms.gle/f6FpybKZHC5yAR817
+VITE_FEEDBACK_FORM_ACTION_URL=https://docs.google.com/forms/d/e/1FAIpQLSchUzVmBmu1zGiFH_tPDmiv0mY6C6oq-Y4ZxjCiU-oAoE5WPA/formResponse
+VITE_FEEDBACK_FORM_ENTRY_INCONVENIENT=entry.2074090186
+VITE_FEEDBACK_FORM_ENTRY_CONVENIENT=entry.944707313
+```
+
+- `VIEW_URL`만 있으면 모달에서 Form을 새 탭으로 엽니다.
+- `ACTION_URL` + `ENTRY_INCONVENIENT` + `ENTRY_CONVENIENT`가 모두 있으면 앱에서 **보내기**로 POST합니다.
+- entry ID는 Form HTML 또는 **⋮ → 미리 채운 URL**에서 확인합니다.
+
+### 2-3. 단답·장문 2필드 (`ENTRY_TYPE` · `ENTRY_MESSAGE`)
 
 **방법 A — 미리 채우기 링크 (가장 쉬움)**
 
@@ -51,7 +75,7 @@
 
 ---
 
-## 3. `.env` 예시
+## 3. `.env` 예시 (단답·장문)
 
 ```env
 VITE_FEEDBACK_FORM_ACTION_URL=https://docs.google.com/forms/d/e/1FAIpQLSxxxxxxxx/formResponse
@@ -59,7 +83,7 @@ VITE_FEEDBACK_FORM_ENTRY_TYPE=entry.1234567890
 VITE_FEEDBACK_FORM_ENTRY_MESSAGE=entry.0987654321
 ```
 
-세 값이 **모두 비어 있지 않으면** 대문 「피드백 보내기」에서 Form 전송 모드로 동작합니다.
+`VIEW_URL` 또는 POST용 entry 세트 중 **하나 이상**이 설정되면 대문 「피드백 보내기」가 Form과 연결됩니다.
 
 ---
 

@@ -44,10 +44,24 @@ describe('printedPageDisplay', () => {
     expect(formatPageLabel(4, 0, true, 200, 4, true)).toBe('6-7P');
   });
 
-  it('shows natural printed spreads when enabled but not yet calibrated', () => {
+  it('shows natural printed spreads when shift is null (preview only)', () => {
     expect(formatPrintedPageText(4, null, true, 200, 1, true)).toBe('6-7');
     expect(formatPageLabel(4, null, true, 200, 1, true)).toBe('6-7P');
     expect(systemPageFromDisplayInput('6-7', null, true, 200, 1, true)).toBe(4);
+  });
+
+  it('derives shift 30 when calibrating book spread 50-51 on file page 11', () => {
+    const parsed = { start: 50, end: 51 };
+    expect(shiftFromPrintedInput(parsed, 11, true)).toBe(30);
+    expect(formatPrintedPageText(11, 30, true, 200, 11, true)).toBe('50-51');
+    expect(formatPageLabel(11, 30, true, 200, 11, true)).toBe('50-51P');
+    expect(systemPageFromDisplayInput('50-51', 30, true, 200, 11, true)).toBe(11);
+  });
+
+  it('does not treat spread input as single-page offset', () => {
+    const parsed = { start: 50, end: 51 };
+    expect(shiftFromPrintedInput({ start: 50, end: 50 }, 11, true)).toBe(39);
+    expect(shiftFromPrintedInput(parsed, 11, true)).toBe(30);
   });
 
   it('converts spread input back to system page', () => {
