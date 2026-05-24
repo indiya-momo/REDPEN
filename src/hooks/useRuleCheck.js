@@ -8,7 +8,12 @@ import {
   isResultGroupVisible,
   resultVisibilityKey,
 } from '../lib/checkResultUtils.js';
-import { runRuleCheck } from '../lib/ruleEngine.js';
+import {
+  countActiveRules,
+  isOverMaxRules,
+  maxRulesExceededMessage,
+} from '../lib/activeRuleCount.js';
+import { runRuleCheckAsync } from '../lib/ruleEngine.js';
 
 /**
  * @param {{
@@ -77,8 +82,11 @@ export function useRuleCheck({
         .map((r) => ({
           ...r,
           category:
+            r.patternKind === 'compound-find' ||
             r.patternKind === 'compound-tail' ||
-            r.patternKind === 'compound-spacing'
+            r.patternKind === 'compound-spacing' ||
+            r.patternKind === 'phrase-slot-find' ||
+            r.patternKind === 'auxiliary-verb'
               ? 'consistency'
               : 'custom',
         })),
@@ -124,112 +132,137 @@ export function useRuleCheck({
     }
   }, []);
 
-  const runCheck = useCallback(async () => {
-    if (!pageTexts.length) {
-      alert('먼저 PDF를 업로드하세요.');
-      return;
-    }
-    const hasSpelling = spellingActiveRules.length > 0;
-    const hasConsistency = consistencyActiveRules.length > 0;
-    if (!hasSpelling && !hasConsistency) {
-      alert(
-        '활성화된 맞춤법·일관성 규칙이 없습니다. 규칙을 켠 뒤 다시 실행하세요.',
-      );
-      return;
-    }
-
-    setIsProcessing(true);
-    setProgress({
-      current: pageTexts.length,
-      total: pageTexts.length,
-      phase: 'check',
-    });
-
-    await new Promise((r) => setTimeout(r, 0));
-
-    const allErrors = [];
-    /** @type {Record<string, boolean>} */
-    let visibility = {};
-    /** @type {import('../lib/ruleEngine.js').MatchInstance | null} */
-    let first = null;
-    /** @type {'spelling' | 'consistency'} */
-    let firstSource = 'spelling';
-
-    if (hasSpelling) {
-      const { results: grouped, errors } = runRuleCheck(
-        pageTexts,
-        spellingActiveRules,
-        { globalExcludePhrases },
-      );
-      allErrors.push(...errors);
-      setSpellingResults(grouped);
-      setSpellingCheckDone(true);
-      visibility = {
-        ...visibility,
-        ...defaultVisibilityForGroups(grouped, 'spelling'),
-      };
-      const inst = grouped[0]?.instances[0] ?? null;
-      if (inst) {
-        first = inst;
-        firstSource = 'spelling';
-        setSpellingSelected(inst);
-      } else {
-        setSpellingSelected(null);
+  const runCheckScope = useCallback(
+    async (scope) => {
+      if (!pageTexts.length) {
+        alert('먼저 PDF를 업로드하세요.');
+        return;
       }
-    } else {
-      setSpellingResults([]);
-      setSpellingCheckDone(false);
-      setSpellingSelected(null);
-    }
 
-    if (hasConsistency) {
-      const { results: grouped, errors } = runRuleCheck(
-        pageTexts,
-        consistencyActiveRules,
-        { globalExcludePhrases },
-      );
-      allErrors.push(...errors);
-      setConsistencyResults(grouped);
-      setConsistencyCheckDone(true);
-      visibility = {
-        ...visibility,
-        ...defaultVisibilityForGroups(grouped, 'consistency'),
-      };
-      const inst = grouped[0]?.instances[0] ?? null;
-      if (!first && inst) {
-        first = inst;
-        firstSource = 'consistency';
+      const runSpelling = scope === 'spelling';
+      const runConsistency = scope === 'consistency';
+
+      if (runSpelling && spellingActiveRules.length === 0) {
+        alert('활성화된 맞춤법·주의 규칙이 없습니다. 규칙을 켠 뒤 다시 실행하세요.');
+        return;
       }
-      setConsistencySelected(inst);
-    } else {
-      setConsistencyResults([]);
-      setConsistencyCheckDone(false);
-      setConsistencySelected(null);
-    }
+      if (runConsistency && consistencyActiveRules.length === 0) {
+        alert('활성화된 일관성 규칙이 없습니다. 항목을 등록·켠 뒤 다시 실행하세요.');
+        return;
+      }
 
-    setResultVisibility(visibility);
+      const activeTotal = countActiveRules({
+        builtInEnabled,
+        cautionEnabled,
+        customRules,
+      });
+      if (isOverMaxRules(activeTotal)) {
+        alert(maxRulesExceededMessage(activeTotal));
+        return;
+      }
 
-    if (allErrors.length) {
-      alert(allErrors.join('\n'));
-    }
+      setIsProcessing(true);
+      setProgress({ current: 0, total: pageTexts.length, phase: 'check' });
 
-    if (first) {
-      setActiveSource(firstSource);
-    }
-    setCurrentPage(1);
-    setIsProcessing(false);
-    setProgress(null);
-    await afterCheckRef.current?.();
-  }, [
-    pageTexts,
-    spellingActiveRules,
-    consistencyActiveRules,
-    globalExcludePhrases,
-    setCurrentPage,
-    setIsProcessing,
-    setProgress,
-    afterCheckRef,
-  ]);
+      const reportCheckProgress = (current, total) => {
+        setProgress({ current, total, phase: 'check' });
+      };
+
+      const allErrors = [];
+      /** @type {Record<string, boolean>} */
+      let visibility = { ...resultVisibility };
+      /** @type {import('../lib/ruleEngine.js').MatchInstance | null} */
+      let first = null;
+
+      if (runSpelling) {
+        const { results: grouped, errors } = await runRuleCheckAsync(
+          pageTexts,
+          spellingActiveRules,
+          {
+            globalExcludePhrases,
+            onProgress: reportCheckProgress,
+          },
+        );
+        allErrors.push(...errors);
+        setSpellingResults(grouped);
+        setSpellingCheckDone(true);
+        visibility = {
+          ...visibility,
+          ...defaultVisibilityForGroups(grouped, 'spelling'),
+        };
+        const inst = grouped[0]?.instances[0] ?? null;
+        if (inst) {
+          first = inst;
+          setSpellingSelected(inst);
+        } else {
+          setSpellingSelected(null);
+        }
+      }
+
+      if (runConsistency) {
+        const { results: grouped, errors } = await runRuleCheckAsync(
+          pageTexts,
+          consistencyActiveRules,
+          {
+            globalExcludePhrases,
+            onProgress: reportCheckProgress,
+          },
+        );
+        allErrors.push(...errors);
+        setConsistencyResults(grouped);
+        setConsistencyCheckDone(true);
+        visibility = {
+          ...visibility,
+          ...defaultVisibilityForGroups(grouped, 'consistency'),
+        };
+        const inst = grouped[0]?.instances[0] ?? null;
+        if (inst) {
+          first = inst;
+          setConsistencySelected(inst);
+        } else {
+          setConsistencySelected(null);
+        }
+      }
+
+      setResultVisibility(visibility);
+
+      if (allErrors.length) {
+        alert(allErrors.join('\n'));
+      }
+
+      if (first) {
+        setActiveSource(scope);
+      }
+      setCurrentPage(1);
+      setIsProcessing(false);
+      setProgress(null);
+      await afterCheckRef.current?.();
+    },
+    [
+      pageTexts,
+      builtInEnabled,
+      cautionEnabled,
+      customRules,
+      spellingActiveRules,
+      consistencyActiveRules,
+      globalExcludePhrases,
+      resultVisibility,
+      setCurrentPage,
+      setIsProcessing,
+      setProgress,
+      afterCheckRef,
+    ],
+  );
+
+  const runSpellingCheck = useCallback(
+    () => runCheckScope('spelling'),
+    [runCheckScope],
+  );
+
+  const runConsistencyCheck = useCallback(
+    () => runCheckScope('consistency'),
+    [runCheckScope],
+  );
 
   const backToConsistencySetup = useCallback(() => {
     setConsistencyCheckDone(false);
@@ -410,7 +443,8 @@ export function useRuleCheck({
     clearAllCheckState,
     applyRestoredCheckState,
     setRestoredSelection,
-    runCheck,
+    runSpellingCheck,
+    runConsistencyCheck,
     backToConsistencySetup,
     selectInstance,
     goToPage,

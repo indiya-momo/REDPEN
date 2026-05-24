@@ -1,25 +1,90 @@
 import { useEffect, useState } from 'react';
-import { Play, Plus, Trash2 } from 'lucide-react';
-import { BUILT_IN_RULES, MAX_RULES } from '../lib/builtInRules.js';
+import { Plus, Trash2 } from 'lucide-react';
+import {
+  countActiveRules,
+  isOverMaxRules,
+  maxRulesExceededMessage,
+} from '../lib/activeRuleCount.js';
+import { MAX_RULES } from '../lib/builtInRules.js';
 import {
   buildRulesForEntry,
   isConsistencyEntryEnabled,
+  isLiteralConsistencyEntry,
   listConsistencyEntries,
   parseConsistencyInput,
   planConsistencyEntries,
   removeConsistencyEntry,
   toggleConsistencyEntry,
 } from '../lib/compoundPairRegister.js';
-import { parseCommaList } from '../lib/matchFilters.js';
-import { compileRuleRegex, ruleDisplayLabel } from '../lib/regexFromFind.js';
 import {
-  formatCompoundSpacingLabel,
-  formatCompoundTailLabel,
-} from '../lib/patternDisplayLabels.js';
+  buildRulesForAuxiliaryEntry,
+  isAuxiliaryVerbEntryEnabled,
+  listAuxiliaryVerbEntries,
+  parseAuxiliaryInput,
+  removeAuxiliaryVerbEntry,
+  toggleAuxiliaryVerbEntry,
+} from '../lib/auxiliaryVerbRegister.js';
+import {
+  buildRulesForPhraseSlot,
+  isPhraseSlotEntryEnabled,
+  isPhraseSlotPattern,
+  listPhraseSlotEntries,
+  parsePhraseSlotInput,
+  removePhraseSlotEntry,
+  togglePhraseSlotEntry,
+} from '../lib/phraseSlotRegister.js';
+import { isAuxiliaryStem, isHaeBoPattern } from '../lib/compoundPatternCommon.js';
+import { parseCommaList } from '../lib/matchFilters.js';
+import { formatConsistencyListLabel } from '../lib/patternDisplayLabels.js';
 import { encodeSpacesVisible } from '../lib/spaceVisibleText.js';
 import SpaceVisibleInput from './SpaceVisibleInput.jsx';
 
-const COMPOUND_KINDS = new Set(['compound-tail', 'compound-spacing']);
+const SPACE_INPUT_PLACEHOLDER = '공백은 ˅로 표시';
+
+/**
+ * @param {{
+ *   entries: { tailWord: string }[],
+ *   customRules: import('../lib/ruleTypes.js').Rule[],
+ *   isEnabled: (rules: import('../lib/ruleTypes.js').Rule[], tw: string) => boolean,
+ *   onToggle: (tw: string, enabled: boolean) => void,
+ *   onRemove: (tw: string) => void,
+ * }} props
+ */
+function RegisteredList({
+  entries,
+  customRules,
+  isEnabled,
+  onToggle,
+  onRemove,
+}) {
+  if (!entries.length) return null;
+  return (
+    <ul className="tail-list">
+      {entries.map((row) => (
+        <li key={row.tailWord} className="rule-row">
+          <input
+            type="checkbox"
+            checked={isEnabled(customRules, row.tailWord)}
+            onChange={(e) => onToggle(row.tailWord, e.target.checked)}
+          />
+          <div className="rule-text">
+            <span className="find">
+              {formatConsistencyListLabel(row.tailWord)}
+            </span>
+          </div>
+          <button
+            type="button"
+            className="btn-icon danger"
+            onClick={() => onRemove(row.tailWord)}
+            aria-label="삭제"
+          >
+            <Trash2 size={14} />
+          </button>
+        </li>
+      ))}
+    </ul>
+  );
+}
 
 /**
  * @param {{
@@ -28,11 +93,7 @@ const COMPOUND_KINDS = new Set(['compound-tail', 'compound-spacing']);
  *   globalExcludePhrases: string[],
  *   onGlobalExcludePhrasesChange: (phrases: string[]) => void,
  *   builtInEnabled: Record<string, boolean>,
- *   onRunCheck?: () => void,
- *   isProcessing?: boolean,
- *   canRunCheck?: boolean,
- *   progress?: { current: number, total: number, phase: string } | null,
- *   progressLabel?: string | null,
+ *   cautionEnabled: Record<string, boolean>,
  * }} props
  */
 export default function ConsistencyPanel({
@@ -41,67 +102,130 @@ export default function ConsistencyPanel({
   globalExcludePhrases,
   onGlobalExcludePhrasesChange,
   builtInEnabled,
-  onRunCheck,
-  isProcessing = false,
-  canRunCheck = false,
-  progress = null,
-  progressLabel = null,
+  cautionEnabled,
 }) {
-  const [consistencyInput, setConsistencyInput] = useState('');
+  const [literalInput, setLiteralInput] = useState('');
+  const [slotInput, setSlotInput] = useState('');
+  const [auxiliaryInput, setAuxiliaryInput] = useState('');
   const [globalExcludeInput, setGlobalExcludeInput] = useState('');
-  const [newFind, setNewFind] = useState('');
-  const [newReplace, setNewReplace] = useState('');
-  const [newPattern, setNewPattern] = useState('literal');
 
   useEffect(() => {
     setGlobalExcludeInput('');
   }, [globalExcludePhrases]);
 
-  const enabledBuiltIn = BUILT_IN_RULES.filter(
-    (r) => builtInEnabled[r.find] !== false,
-  ).length;
-  const enabledCustom = customRules.filter((r) => r.enabled).length;
-  const totalEnabled = enabledBuiltIn + enabledCustom;
+  const totalEnabled = countActiveRules({
+    builtInEnabled,
+    cautionEnabled,
+    customRules,
+  });
   const slotsLeft = MAX_RULES - totalEnabled;
 
-  const registeredEntries = listConsistencyEntries(customRules);
+  const literalEntries = listConsistencyEntries(customRules);
+  const slotEntries = listPhraseSlotEntries(customRules);
+  const auxiliaryEntries = listAuxiliaryVerbEntries(customRules);
 
-  const otherRules = customRules.filter(
-    (r) => !COMPOUND_KINDS.has(r.patternKind ?? ''),
-  );
+  function applyCustomRules(nextRules) {
+    const count = countActiveRules({
+      builtInEnabled,
+      cautionEnabled,
+      customRules: nextRules,
+    });
+    if (isOverMaxRules(count)) {
+      alert(maxRulesExceededMessage(count));
+      return false;
+    }
+    onCustomRulesChange(nextRules);
+    return true;
+  }
 
-  function registerConsistency() {
-    const variants = parseConsistencyInput(consistencyInput);
+  function assertSlots(toAdd) {
+    return applyCustomRules([...customRules, ...toAdd]);
+  }
+
+  function registerLiteral() {
+    const variants = parseConsistencyInput(literalInput);
     if (!variants.length) {
-      alert('패턴을 입력하세요.');
+      alert('문자열을 입력하세요.');
       return;
     }
-
-    const entries = planConsistencyEntries(variants);
     let merged = customRules;
     /** @type {import('../lib/ruleTypes.js').Rule[]} */
     const toAdd = [];
-
-    for (const tailWord of entries) {
-      const batch = buildRulesForEntry(merged, tailWord);
+    for (const raw of planConsistencyEntries(variants)) {
+      if (!isLiteralConsistencyEntry(raw)) {
+        if (isPhraseSlotPattern(raw)) {
+          alert(`「${raw}」은 공통 문자열 찾기에 등록하세요. (@)`);
+        } else if (isAuxiliaryStem(raw) || isHaeBoPattern(raw)) {
+          alert(`「${raw}」은 본용언+보조용언 찾기에 등록하세요.`);
+        } else {
+          const parts = raw.split(/\s+/).filter(Boolean);
+          if (parts.length === 2 && isAuxiliaryStem(parts[1])) {
+            alert(`「${raw}」은 본용언+보조용언 찾기에 등록하세요.`);
+          } else {
+            alert(`등록할 수 없는 형식입니다: ${raw}`);
+          }
+        }
+        continue;
+      }
+      const batch = buildRulesForEntry(merged, raw);
       if (!batch.length) continue;
       toAdd.push(...batch);
       merged = [...merged, ...batch];
     }
+    if (!toAdd.length) {
+      alert('입력한 항목은 모두 이미 등록되어 있거나 다른 칸에 넣어야 합니다.');
+      return;
+    }
+    if (!assertSlots(toAdd)) return;
+    setLiteralInput('');
+  }
 
+  function registerSlot() {
+    const variants = parsePhraseSlotInput(slotInput);
+    if (!variants.length) {
+      alert('패턴을 입력하세요. (예: @시대)');
+      return;
+    }
+    let merged = customRules;
+    const toAdd = [];
+    for (const raw of planConsistencyEntries(variants)) {
+      if (!isPhraseSlotPattern(raw)) {
+        alert(`「${raw}」에는 @가 필요합니다. (예: @시대)`);
+        continue;
+      }
+      const batch = buildRulesForPhraseSlot(merged, raw);
+      if (!batch.length) continue;
+      toAdd.push(...batch);
+      merged = [...merged, ...batch];
+    }
     if (!toAdd.length) {
       alert('입력한 패턴은 모두 이미 등록되어 있습니다.');
       return;
     }
+    if (!assertSlots(toAdd)) return;
+    setSlotInput('');
+  }
 
-    const needSlots = toAdd.filter((r) => r.enabled).length;
-    if (totalEnabled + needSlots > MAX_RULES) {
-      alert(`활성 규칙은 최대 ${MAX_RULES}개입니다. (추가 시 ${needSlots}칸 필요)`);
+  function registerAuxiliary() {
+    const variants = parseAuxiliaryInput(auxiliaryInput);
+    if (!variants.length) {
+      alert('보조용언 패턴을 입력하세요.');
       return;
     }
-
-    onCustomRulesChange([...customRules, ...toAdd]);
-    setConsistencyInput('');
+    let merged = customRules;
+    const toAdd = [];
+    for (const raw of planConsistencyEntries(variants)) {
+      const batch = buildRulesForAuxiliaryEntry(merged, raw);
+      if (!batch.length) continue;
+      toAdd.push(...batch);
+      merged = [...merged, ...batch];
+    }
+    if (!toAdd.length) {
+      alert('입력한 항목은 모두 이미 등록되어 있습니다.');
+      return;
+    }
+    if (!assertSlots(toAdd)) return;
+    setAuxiliaryInput('');
   }
 
   function addGlobalExcludePhrases() {
@@ -124,294 +248,150 @@ export default function ConsistencyPanel({
     );
   }
 
-  function addCustomRule() {
-    if (!newFind.trim() || !newReplace.trim()) return;
-    if (totalEnabled >= MAX_RULES) {
-      alert(`규칙은 최대 ${MAX_RULES}개까지 활성화할 수 있습니다.`);
-      return;
-    }
-    const rule = {
-      find: newFind.trim(),
-      replace: newReplace.trim(),
-      enabled: true,
-      pattern: newPattern,
-      patternKind: newPattern === 'regex' ? 'custom-regex' : undefined,
-    };
-    if (newPattern === 'regex' && !compileRuleRegex(rule)) {
-      alert('정규식 문법을 확인해 주세요.');
-      return;
-    }
-    onCustomRulesChange([...customRules, rule]);
-    setNewFind('');
-    setNewReplace('');
-    setNewPattern('literal');
-  }
-
-  function deleteOtherRule(index) {
-    const rule = otherRules[index];
-    onCustomRulesChange(customRules.filter((r) => r !== rule));
-  }
-
-  function toggleOtherRule(index) {
-    const rule = otherRules[index];
-    const willEnable = !rule.enabled;
-    if (willEnable && totalEnabled >= MAX_RULES) {
-      alert(`규칙은 최대 ${MAX_RULES}개입니다.`);
-      return;
-    }
-    onCustomRulesChange(
-      customRules.map((r) => (r === rule ? { ...r, enabled: willEnable } : r)),
-    );
-  }
-
-  const checking = isProcessing && progress?.phase === 'check';
-
   return (
     <div className="consistency-embed">
-      <section
-        className="consistency-section-box"
-        aria-labelledby="consistency-register-heading"
-      >
-        <p id="consistency-register-heading" className="field-label">
-          일관성 등록
-        </p>
-        <p className="hint" style={{ marginTop: 4 }}>
-          예: 빨간펜, 빨간˅펜, REDPEN, RED˅PEN, Red˅Pen
-        </p>
-        <div className="tail-form">
-          <div>
-            <SpaceVisibleInput
-              value={consistencyInput}
-              onChange={setConsistencyInput}
-              placeholder="공백은 ˅로 표시됩니다"
-              aria-label="일관성 등록"
-            />
-          </div>
-          <button type="button" className="btn-add" onClick={registerConsistency}>
-            <Plus size={14} />
-            등록
-          </button>
-        </div>
-
-        {registeredEntries.length > 0 && (
-          <ul className="tail-list">
-            {registeredEntries.map((row) => (
-              <li key={row.tailWord} className="rule-row">
-                <input
-                  type="checkbox"
-                  checked={isConsistencyEntryEnabled(customRules, row.tailWord)}
-                  onChange={(e) =>
-                    onCustomRulesChange(
-                      toggleConsistencyEntry(
-                        customRules,
-                        row.tailWord,
-                        e.target.checked,
-                      ),
-                    )
-                  }
-                />
-                <div className="rule-text consistency-pair-labels">
-                  {row.hasTail && (
-                    <span className="consistency-pair-line">
-                      <span className="badge-regex">붙임</span>
-                      <span className="find">
-                        {formatCompoundTailLabel(row.tailWord)}
-                      </span>
-                    </span>
-                  )}
-                  {row.hasSpacing && (
-                    <span className="consistency-pair-line">
-                      <span className="badge-regex badge-spacing">띄움</span>
-                      <span className="find">
-                        {formatCompoundSpacingLabel(row.tailWord)}
-                      </span>
-                    </span>
-                  )}
-                </div>
-                <button
-                  type="button"
-                  className="btn-icon danger"
-                  onClick={() =>
-                    onCustomRulesChange(
-                      removeConsistencyEntry(customRules, row.tailWord),
-                    )
-                  }
-                  aria-label="삭제"
-                >
-                  <Trash2 size={14} />
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-
-      <section className="consistency-section-box" aria-labelledby="consistency-rule-heading">
-        <div className="rule-form rule-form--boxed">
-          <p id="consistency-rule-heading" className="field-label">
-            문자열 / 정규식 규칙 (개별)
+      <section className="consistency-unified-box" aria-label="표기 일관성 찾기">
+        <div className="consistency-subsection consistency-subsection--first">
+          <p className="field-label">문자열 찾기</p>
+          <p className="hint">
+            한글과 영문 대소문자를 등록한 그대로 찾습니다 (예: 조선˅시대/조선시대,
+            RED˅PEN/Redpen)
           </p>
-          <label className="pattern-toggle">
-            <input
-              type="checkbox"
-              checked={newPattern === 'regex'}
-              onChange={(e) => setNewPattern(e.target.checked ? 'regex' : 'literal')}
+          <div className="tail-form">
+            <SpaceVisibleInput
+              value={literalInput}
+              onChange={setLiteralInput}
+              placeholder={SPACE_INPUT_PLACEHOLDER}
+              aria-label="문자열 찾기"
             />
-            정규식 직접 입력 ($1 = 앞의 한 덩어리)
-          </label>
-          <div>
-            <label className="field-label">
-              {newPattern === 'regex' ? '정규식 (찾기)' : '찾기'}
-            </label>
-            {newPattern === 'regex' ? (
-              <input
-                className="field-input mono"
-                value={newFind}
-                onChange={(e) => setNewFind(e.target.value)}
-                placeholder={String.raw`예: (\S+)\s+정책`}
-              />
-            ) : (
-              <SpaceVisibleInput
-                className="field-input mono"
-                value={newFind}
-                onChange={setNewFind}
-                placeholder="예: 우리˅나라"
-              />
-            )}
+            <button type="button" className="btn-add" onClick={registerLiteral}>
+              <Plus size={14} />
+              등록
+            </button>
           </div>
-          <div>
-            <label className="field-label">
-              {newPattern === 'regex' ? '바꿀 표기 (안내)' : '변경'}
-            </label>
-            {newPattern === 'regex' ? (
-              <input
-                className="field-input mono"
-                value={newReplace}
-                onChange={(e) => setNewReplace(e.target.value)}
-                placeholder="예: $1정책"
-              />
-            ) : (
-              <SpaceVisibleInput
-                className="field-input mono"
-                value={newReplace}
-                onChange={setNewReplace}
-                placeholder="예: 우리나라"
-              />
-            )}
-          </div>
-          <button type="button" className="btn-add" onClick={addCustomRule}>
-            <Plus size={14} />
-            규칙 추가
-          </button>
+          <RegisteredList
+            entries={literalEntries}
+            customRules={customRules}
+            isEnabled={isConsistencyEntryEnabled}
+            onToggle={(tw, on) =>
+              applyCustomRules(toggleConsistencyEntry(customRules, tw, on))
+            }
+            onRemove={(tw) =>
+              onCustomRulesChange(removeConsistencyEntry(customRules, tw))
+            }
+          />
         </div>
 
-        {otherRules.length > 0 && (
-          <ul className="rule-list">
-            {otherRules.map((rule, i) => (
-              <li key={`${rule.find}-${i}`} className="rule-row">
-                <input
-                  type="checkbox"
-                  checked={rule.enabled}
-                  onChange={() => toggleOtherRule(i)}
-                />
-                <div className="rule-text">
-                  {rule.pattern === 'regex' && (
-                    <span className="badge-regex">정규식</span>
-                  )}
-                  <span className="find">{ruleDisplayLabel(rule)}</span>
-                </div>
-                <button
-                  type="button"
-                  className="btn-icon danger"
-                  onClick={() => deleteOtherRule(i)}
-                  aria-label="삭제"
-                >
-                  <Trash2 size={14} />
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-        <p className="hint" style={{ marginTop: 8 }}>
+        <div className="consistency-subsection">
+          <p className="field-label">공통 문자열 찾기</p>
+          <p className="hint">
+            @을 포함한 공통 문자열을 모두 찾습니다 (예: @시대 → 조선시대, 고려시대,
+            신라시대 … / @˅PEN → RED PEN, BLUE PEN)
+          </p>
+          <div className="tail-form">
+            <SpaceVisibleInput
+              className="field-input mono"
+              value={slotInput}
+              onChange={setSlotInput}
+              placeholder={SPACE_INPUT_PLACEHOLDER}
+              aria-label="공통 문자열 찾기"
+            />
+            <button type="button" className="btn-add" onClick={registerSlot}>
+              <Plus size={14} />
+              등록
+            </button>
+          </div>
+          <RegisteredList
+            entries={slotEntries}
+            customRules={customRules}
+            isEnabled={isPhraseSlotEntryEnabled}
+            onToggle={(tw, on) =>
+              applyCustomRules(togglePhraseSlotEntry(customRules, tw, on))
+            }
+            onRemove={(tw) =>
+              onCustomRulesChange(removePhraseSlotEntry(customRules, tw))
+            }
+          />
+        </div>
+
+        <div className="consistency-subsection consistency-subsection--exclude">
+          <p className="field-label">검사 제외 문구</p>
+          <p className="hint">등록한 문구는 찾지 않습니다 (예: 소녀시대)</p>
+          <div className="tail-form">
+            <SpaceVisibleInput
+              value={globalExcludeInput}
+              onChange={setGlobalExcludeInput}
+              placeholder={SPACE_INPUT_PLACEHOLDER}
+            />
+            <button
+              type="button"
+              className="btn-add"
+              onClick={addGlobalExcludePhrases}
+            >
+              <Plus size={14} />
+              제외 추가
+            </button>
+          </div>
+          {globalExcludePhrases.length > 0 && (
+            <ul className="tail-list" style={{ marginTop: 10 }}>
+              {globalExcludePhrases.map((phrase) => (
+                <li key={phrase} className="rule-row">
+                  <div className="rule-text">
+                    <span className="find">{encodeSpacesVisible(phrase)}</span>
+                  </div>
+                  <button
+                    type="button"
+                    className="btn-icon danger"
+                    onClick={() => removeGlobalExclude(phrase)}
+                    aria-label="삭제"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        <p className="hint" style={{ marginTop: 10, marginBottom: 0 }}>
           남은 활성 슬롯: {Math.max(0, slotsLeft)} / {MAX_RULES}
         </p>
       </section>
 
-      <section className="consistency-section-box" aria-labelledby="consistency-exclude-heading">
-        <p id="consistency-exclude-heading" className="field-label">
-          검사 제외 구문 (전체)
+      <section
+        className="consistency-section-box"
+        aria-labelledby="consistency-aux-heading"
+      >
+        <p id="consistency-aux-heading" className="field-label">
+          본용언+보조용언 찾기
         </p>
-        <p className="hint" style={{ marginTop: 4 }}>
-          어떤 규칙이든 아래 문구는 <strong>검사하지 않음</strong>.
-          공백은 입력 시 <strong>˅</strong> 로 보입니다. 예: <code>경제˅학자</code>
+        <p className="hint">
+          앞말+보조용언+어미 (예: 보, 주, 준, 해˅보, 해보, 해˅준)
         </p>
-        <SpaceVisibleInput
-          value={globalExcludeInput}
-          onChange={setGlobalExcludeInput}
-          placeholder="경제˅학자, … (쉼표로 구분)"
-        />
-        <button type="button" className="btn-add" style={{ marginTop: 8 }} onClick={addGlobalExcludePhrases}>
-          <Plus size={14} />
-          제외목록 추가
-        </button>
-
-        {globalExcludePhrases.length > 0 && (
-          <ul className="tail-list" style={{ marginTop: 10 }}>
-            {globalExcludePhrases.map((phrase) => (
-              <li key={phrase} className="rule-row">
-                <div className="rule-text">
-                  <span className="find">{encodeSpacesVisible(phrase)}</span>
-                </div>
-                <button
-                  type="button"
-                  className="btn-icon danger"
-                  onClick={() => removeGlobalExclude(phrase)}
-                  aria-label="삭제"
-                >
-                  <Trash2 size={14} />
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-
-      {onRunCheck && (
-        <section className="consistency-section-box consistency-run-box">
-          <button
-            type="button"
-            className="btn-run"
-            onClick={onRunCheck}
-            disabled={isProcessing || !canRunCheck}
-          >
-            <Play size={16} />
-            {checking ? '검사 중…' : '검사 실행'}
+        <div className="tail-form">
+          <SpaceVisibleInput
+            value={auxiliaryInput}
+            onChange={setAuxiliaryInput}
+            placeholder={SPACE_INPUT_PLACEHOLDER}
+            aria-label="본용언 보조용언 찾기"
+          />
+          <button type="button" className="btn-add" onClick={registerAuxiliary}>
+            <Plus size={14} />
+            등록
           </button>
-          {isProcessing && progressLabel && progress?.phase !== 'check' && (
-            <>
-              <div className="progress-bar">
-                <div
-                  className="progress-fill"
-                  style={{
-                    width: `${(progress.current / progress.total) * 100}%`,
-                  }}
-                />
-              </div>
-              <p className="hint">{progressLabel}</p>
-            </>
-          )}
-          {isProcessing && progress?.phase === 'check' && (
-            <p className="hint" style={{ marginTop: 8 }}>
-              검사 실행 중…
-            </p>
-          )}
-          {!canRunCheck && (
-            <p className="hint" style={{ marginTop: 8 }}>
-              위에서 PDF를 연 뒤 검사할 수 있습니다.
-            </p>
-          )}
-        </section>
-      )}
+        </div>
+        <RegisteredList
+          entries={auxiliaryEntries}
+          customRules={customRules}
+          isEnabled={isAuxiliaryVerbEntryEnabled}
+          onToggle={(tw, on) =>
+            applyCustomRules(toggleAuxiliaryVerbEntry(customRules, tw, on))
+          }
+          onRemove={(tw) =>
+            onCustomRulesChange(removeAuxiliaryVerbEntry(customRules, tw))
+          }
+        />
+      </section>
     </div>
   );
 }

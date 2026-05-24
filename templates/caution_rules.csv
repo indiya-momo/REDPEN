@@ -1,8 +1,10 @@
 group_id,item_id,label,stems,tip,enabled,match_mode,display_label
-particle-josa,particle-man,만,,"체언 뒤에 붙은 '만, 만큼, 지'는 조사로 붙여 쓴다. 용언 뒤에 쓰인 '만, 만큼, 지'는 의존명사로 띄어 쓴다.",FALSE,,
-particle-josa,particle-mankun,만큼,,,FALSE,,
-particle-josa,particle-ji,지,,,FALSE,,
-verb-bon,verb-boda1,보,,"본동사: group_id=verb-bon, item_id=verb-boda1·2·… (particle-man 과 같은 짝).",FALSE,spaced-stem,^보
+particle-josa,particle-mankun,만큼,,"체언 뒤에 붙은 '만, 만큼, 지'는 조사로 붙여 쓴다. 용언 뒤에 쓰인 '만, 만큼, 지'는 의존명사로 띄어 쓴다.",FALSE,,
+verb-bon,verb-boda1,보,"보,본",전체 보조(넓음) — 켜면 읽어 보다 등 전부.,FALSE,spaced-stem,^보(ㄴ)다
+verb-bon,verb-haebo-sp,해 보,해 보,띄움만 (해 보다).,FALSE,fixed-phrase,해 보다
+verb-bon,verb-haebo-gl,해보,해보,붙음만 (해보다).,FALSE,fixed-phrase,해보다
+verb-bon,verb-haebon-sp,해 본,해 본,띄움만 (해 본다).,FALSE,fixed-phrase,해 본다
+verb-bon,verb-haebon-gl,해본,해본,붙음만 (해본다).,FALSE,fixed-phrase,해본다
 verb-bon,verb-boda2,본,,,FALSE,spaced-stem,^본다
 verb-bon,verb-boda3,있,,,FALSE,spaced-stem,^있다
 verb-bon,verb-boda4,주,"주,준",,FALSE,spaced-stem,^주다

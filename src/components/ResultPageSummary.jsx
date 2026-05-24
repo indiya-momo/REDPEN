@@ -1,13 +1,17 @@
+import { formatSystemPageLabel } from '../lib/printedPageDisplay.js';
+
 /**
  * @param {{
  *   instances: import('../lib/ruleEngine.js').MatchInstance[],
  *   currentPage: number,
+ *   formatPageLabel?: (systemPage: number) => string,
  *   onSelectPage: (pageNum: number) => void,
  * }} props
  */
 export default function ResultPageSummary({
   instances,
   currentPage,
+  formatPageLabel = formatSystemPageLabel,
   onSelectPage,
 }) {
   const byPage = new Map();
@@ -30,7 +34,7 @@ export default function ResultPageSummary({
             onSelectPage(pageNum);
           }}
         >
-          p.{pageNum}
+          {formatPageLabel(pageNum)}
           {count > 1 ? ` (${count})` : ''}
         </button>
       ))}

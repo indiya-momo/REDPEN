@@ -2,8 +2,42 @@ const STORAGE_KEY = 'pdf-proofread-rule-sets';
 const ACTIVE_KEY = 'pdf-proofread-active-set-id';
 
 /**
- * @typedef {{ id: string, name: string, builtInEnabled: Record<string, boolean>, customRules: import('./builtInRules.js').Rule[] }} RuleSet
+ * @typedef {{
+ *   id: string,
+ *   name: string,
+ *   builtInEnabled: Record<string, boolean>,
+ *   customRules: import('./ruleTypes.js').Rule[],
+ *   savedAt?: string,
+ * }} RuleSet
  */
+
+/**
+ * @param {string | undefined} iso
+ */
+export function formatRuleSetSavedDate(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  const y = d.getFullYear() % 100;
+  return `${y}년 ${d.getMonth() + 1}월 ${d.getDate()}일`;
+}
+
+/**
+ * @param {{
+ *   savedAt?: string,
+ *   spellingRuleCount: number,
+ *   consistencyRuleCount: number,
+ * }} input
+ */
+export function formatRuleSetSummary({
+  savedAt,
+  spellingRuleCount,
+  consistencyRuleCount,
+}) {
+  const date = formatRuleSetSavedDate(savedAt);
+  const counts = `맞춤법 규칙 ${spellingRuleCount}건 · 일관성 규칙 ${consistencyRuleCount}건`;
+  return date ? `${date} ${counts}` : counts;
+}
 
 /** @returns {RuleSet[]} */
 export function loadRuleSets() {
@@ -35,4 +69,25 @@ export function saveActiveSetId(id) {
 /** @returns {string} */
 export function newId() {
   return `set_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+}
+
+/**
+ * @param {RuleSet} source
+ * @returns {Omit<RuleSet, 'id'> & { id: string }}
+ */
+export function duplicateRuleSet(source) {
+  const baseName = (source.name || '규칙 세트').trim() || '규칙 세트';
+  return {
+    id: newId(),
+    name: `${baseName} (복사)`,
+    builtInEnabled: { ...(source.builtInEnabled ?? {}) },
+    customRules: structuredClone(source.customRules ?? []),
+    globalExcludePhrases: [...(source.globalExcludePhrases ?? [])],
+    cautionEnabled: source.cautionEnabled
+      ? { ...source.cautionEnabled }
+      : undefined,
+    compoundMigrateVersion: source.compoundMigrateVersion,
+    spellingRulesFingerprint: source.spellingRulesFingerprint,
+    savedAt: source.savedAt,
+  };
 }

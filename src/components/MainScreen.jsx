@@ -4,7 +4,9 @@ import PdfViewer from './PdfViewer.jsx';
 import AppVersionBadge from './AppVersionBadge.jsx';
 import ResizableBuiltinSpelling from './ResizableBuiltinSpelling.jsx';
 import ConsistencyPanel from './ConsistencyPanel.jsx';
-import RuleSetSaveBar from './RuleSetSaveBar.jsx';
+import RuleSetPanel from './RuleSetPanel.jsx';
+import PdfPreviewBar from './PdfPreviewBar.jsx';
+import PdfThumbnailStrip from './PdfThumbnailStrip.jsx';
 import CheckResultsPanel from './CheckResultsPanel.jsx';
 import PdfWorkSection from './PdfWorkSection.jsx';
 import { usePdfDocument } from '../hooks/usePdfDocument.js';
@@ -12,10 +14,22 @@ import { useRuleCheck } from '../hooks/useRuleCheck.js';
 import { useWorkSession } from '../hooks/useWorkSession.js';
 import { useHighlights } from '../hooks/useHighlights.js';
 import { useResizablePanelWidth } from '../hooks/useResizablePanelWidth.js';
+import { usePrintedPageDisplay } from '../hooks/usePrintedPageDisplay.js';
+import {
+  countConsistencyActiveRules,
+  countSpellingActiveRules,
+} from '../lib/activeRuleCount.js';
 
 /**
  * @param {{
+ *   ruleSets: { id: string, name: string }[],
+ *   activeSetId: string,
+ *   onSelectRuleSet: (id: string) => void,
+ *   onCreateRuleSet: () => void,
+ *   onDuplicateRuleSet: () => void,
+ *   onDeleteRuleSet: () => void,
  *   ruleSetName: string,
+ *   ruleSetSavedAt?: string,
  *   builtInEnabled: Record<string, boolean>,
  *   customRules: import('../lib/ruleTypes.js').Rule[],
  *   globalExcludePhrases: string[],
@@ -31,7 +45,14 @@ import { useResizablePanelWidth } from '../hooks/useResizablePanelWidth.js';
  * }} props
  */
 export default function MainScreen({
+  ruleSets,
+  activeSetId,
+  onSelectRuleSet,
+  onCreateRuleSet,
+  onDuplicateRuleSet,
+  onDeleteRuleSet,
   ruleSetName,
+  ruleSetSavedAt,
   builtInEnabled,
   customRules,
   globalExcludePhrases,
@@ -46,10 +67,35 @@ export default function MainScreen({
   initialWorkTab = 'spelling',
 }) {
   const [workTab, setWorkTab] = useState(initialWorkTab);
+  const [thumbStripOpen, setThumbStripOpen] = useState(() => {
+    try {
+      return localStorage.getItem('pdf-proofread-thumb-strip-open') === '1';
+    } catch {
+      return false;
+    }
+  });
   const afterCheckRef = useRef(async () => false);
   const { panelStyle, handleRef, startDrag } = useResizablePanelWidth();
 
   const pdf = usePdfDocument();
+  const spellingRuleCount = useMemo(
+    () =>
+      countSpellingActiveRules({
+        builtInEnabled,
+        cautionEnabled,
+      }),
+    [builtInEnabled, cautionEnabled],
+  );
+  const consistencyRuleCount = useMemo(
+    () => countConsistencyActiveRules(customRules),
+    [customRules],
+  );
+
+  const pageDisplay = usePrintedPageDisplay({
+    pdfFileName: pdf.pdfFileName,
+    numPages: pdf.pdf?.numPages ?? 0,
+    currentPage: pdf.currentPage,
+  });
   const ruleCheck = useRuleCheck({
     builtInEnabled,
     cautionEnabled,
@@ -117,6 +163,24 @@ export default function MainScreen({
     ruleCheck.syncSelectionForTab(tab);
   }
 
+  const goToPdfPage = (pageNum) => {
+    if (!pdf.pdf) return;
+    const target = Math.min(pdf.pdf.numPages, Math.max(1, pageNum));
+    ruleCheck.goToPage(target);
+  };
+
+  const toggleThumbStrip = () => {
+    setThumbStripOpen((open) => {
+      const next = !open;
+      try {
+        localStorage.setItem('pdf-proofread-thumb-strip-open', next ? '1' : '0');
+      } catch {
+        /* ignore */
+      }
+      return next;
+    });
+  };
+
   const combinedResultsPanel = tabCheckDone ? (
     <CheckResultsPanel
       entries={tabEntries}
@@ -142,6 +206,19 @@ export default function MainScreen({
       onAdditionalCheck={
         workTab === 'consistency' ? ruleCheck.backToConsistencySetup : undefined
       }
+      printedPagesEnabled={pageDisplay.enabled}
+      onPrintedPagesEnabledChange={pageDisplay.setEnabled}
+      printedPageOffset={pageDisplay.offset}
+      printedPagesActive={pageDisplay.active}
+      onCalibrateFromInput={pageDisplay.calibrateFromInput}
+      onClearPrintedPageOffset={pageDisplay.clearCalibration}
+      currentPrintedLabel={pageDisplay.formatLabel(pdf.currentPage)}
+      previewPrintedLabel={pageDisplay.formatPageText(pdf.currentPage)}
+      spreadInput={pageDisplay.spreadInput}
+      onSpreadInputChange={pageDisplay.setSpreadInput}
+      firstPageSingle={pageDisplay.firstPageSingle}
+      onFirstPageSingleChange={pageDisplay.setFirstPageSingle}
+      formatPageLabel={pageDisplay.formatLabel}
     />
   ) : null;
 
@@ -150,36 +227,38 @@ export default function MainScreen({
       <button
         type="button"
         className="btn-run"
-        onClick={ruleCheck.runCheck}
+        onClick={
+          workTab === 'spelling'
+            ? ruleCheck.runSpellingCheck
+            : ruleCheck.runConsistencyCheck
+        }
         disabled={pdf.isProcessing || !pdf.pageTexts.length}
       >
         <Play size={16} />
         {pdf.isProcessing && pdf.progress?.phase === 'check'
           ? '검사 중…'
-          : '검사 실행 (맞춤법·일관성)'}
+          : workTab === 'spelling'
+            ? '검사 실행 (맞춤법)'
+            : '검사 실행 (일관성)'}
       </button>
       <p className="hint" style={{ marginTop: 8 }}>
-        맞춤법 {ruleCheck.spellingActiveRules.length}개 · 일관성{' '}
-        {ruleCheck.consistencyActiveRules.length}개 동시 검사
+        {workTab === 'spelling'
+          ? `맞춤법·주의 ${ruleCheck.spellingActiveRules.length}개 규칙 검사`
+          : `일관성 ${ruleCheck.consistencyActiveRules.length}개 규칙 검사`}
       </p>
-      {pdf.isProcessing && pdf.progress?.phase === 'check' && (
-        <p className="hint">검사 실행 중…</p>
+      {pdf.isProcessing && pdf.progressLabel && (
+        <>
+          <div className="progress-bar">
+            <div
+              className="progress-fill"
+              style={{
+                width: `${pdf.progress.total ? (pdf.progress.current / pdf.progress.total) * 100 : 0}%`,
+              }}
+            />
+          </div>
+          <p className="hint">{pdf.progressLabel}</p>
+        </>
       )}
-      {pdf.isProcessing &&
-        pdf.progressLabel &&
-        pdf.progress?.phase !== 'check' && (
-          <>
-            <div className="progress-bar">
-              <div
-                className="progress-fill"
-                style={{
-                  width: `${(pdf.progress.current / pdf.progress.total) * 100}%`,
-                }}
-              />
-            </div>
-            <p className="hint">{pdf.progressLabel}</p>
-          </>
-        )}
     </section>
   );
 
@@ -206,42 +285,43 @@ export default function MainScreen({
         style={panelStyle}
       >
         <header className="panel-header panel-header--tabs">
-          <nav className="work-tabs" aria-label="검수 종류">
+          <div className="panel-header-tab-row">
             <button
               type="button"
-              className={`work-tab work-tab--spelling ${workTab === 'spelling' ? 'active' : ''}`}
-              onClick={() => switchTab('spelling')}
+              className="btn-ghost btn-ghost--compact panel-header-home"
+              onClick={onOpenWelcome}
+              title="대문화면"
+              aria-label="대문화면"
             >
-              맞춤법 확인
+              <BookOpen size={18} />
             </button>
-            <button
-              type="button"
-              className={`work-tab work-tab--consistency ${workTab === 'consistency' ? 'active' : ''}`}
-              onClick={() => switchTab('consistency')}
-            >
-              일관성 확인
-            </button>
-          </nav>
-          <button
-            type="button"
-            className="btn-ghost btn-ghost--compact"
-            onClick={onOpenWelcome}
-            title="사용 안내"
-          >
-            <BookOpen size={18} />
-          </button>
+            <nav className="work-tabs" aria-label="검수 종류">
+              <button
+                type="button"
+                className={`work-tab work-tab--spelling ${workTab === 'spelling' ? 'active' : ''}`}
+                onClick={() => switchTab('spelling')}
+              >
+                맞춤법 확인
+              </button>
+              <button
+                type="button"
+                className={`work-tab work-tab--consistency ${workTab === 'consistency' ? 'active' : ''}`}
+                onClick={() => switchTab('consistency')}
+              >
+                일관성 확인
+              </button>
+            </nav>
+          </div>
         </header>
 
         {workTab === 'spelling' && (
           <div className="spelling-tab-layout">
             <div className="spelling-tab-scroll">
-              <section className="panel-section">
-                <label className="field-label">규칙 세트</label>
-                <div className="rule-set-name">{ruleSetName}</div>
-                {session.sessionHint && (
-                  <p className="hint session-hint">{session.sessionHint}</p>
-                )}
-              </section>
+              {session.sessionHint && (
+                <p className="hint session-hint panel-section-hint">
+                  {session.sessionHint}
+                </p>
+              )}
 
               {pdfWorkSection}
               {runCheckSection}
@@ -283,11 +363,7 @@ export default function MainScreen({
                   globalExcludePhrases={globalExcludePhrases}
                   onGlobalExcludePhrasesChange={onGlobalExcludePhrasesChange}
                   builtInEnabled={builtInEnabled}
-                  onRunCheck={ruleCheck.runCheck}
-                  isProcessing={pdf.isProcessing}
-                  canRunCheck={!!pdf.pageTexts.length}
-                  progress={pdf.progress}
-                  progressLabel={pdf.progressLabel}
+                  cautionEnabled={cautionEnabled}
                 />
               </div>
             )}
@@ -315,53 +391,56 @@ export default function MainScreen({
       </div>
 
       <main className="panel-right">
-        {workTab === 'consistency' && (
-          <RuleSetSaveBar
+        <div className="pdf-work-pane">
+          <RuleSetPanel
+            ruleSets={ruleSets}
+            activeSetId={activeSetId}
             ruleSetName={ruleSetName}
+            ruleSetSavedAt={ruleSetSavedAt}
+            onSelectSet={onSelectRuleSet}
             onRuleSetNameChange={onRuleSetNameChange}
+            onCreateSet={onCreateRuleSet}
+            onDuplicateSet={onDuplicateRuleSet}
+            onDeleteSet={onDeleteRuleSet}
             onSave={onSaveRules}
+            spellingRuleCount={spellingRuleCount}
+            consistencyRuleCount={consistencyRuleCount}
           />
-        )}
-        <PdfViewer
-          key={pdf.pdf ? `pdf-${pdf.pdf.numPages}` : 'no-pdf'}
-          pdf={pdf.pdf}
-          pageNum={pdf.currentPage}
-          pageData={pdf.currentPageData}
-          highlights={highlights.pageHighlights}
-          emptyTitle="PDF를 업로드하세요"
-          emptyHint="좌측에서 PDF를 연결한 뒤 「검사 실행」을 누르세요"
-        />
-        {pdf.pdf && (
-          <div className="pdf-toolbar">
-            <button
-              type="button"
-              disabled={pdf.currentPage <= 1}
-              onClick={() => ruleCheck.goToPage(Math.max(1, pdf.currentPage - 1))}
-            >
-              ← 이전 페이지
-            </button>
-            <span className="pdf-toolbar-page">
-              {pdf.currentPage} / {pdf.pdf.numPages}
-              {tabCheckDone && visibleOnCurrentPage > 0 ? (
-                <span className="pdf-toolbar-findings">
-                  {' '}
-                  · 이 페이지 {visibleOnCurrentPage}곳 표시
-                </span>
-              ) : null}
-            </span>
-            <button
-              type="button"
-              disabled={pdf.currentPage >= pdf.pdf.numPages}
-              onClick={() =>
-                ruleCheck.goToPage(
-                  Math.min(pdf.pdf.numPages, pdf.currentPage + 1),
-                )
-              }
-            >
-              다음 페이지 →
-            </button>
-          </div>
-        )}
+          <PdfViewer
+            key={pdf.pdf ? `pdf-${pdf.pdf.numPages}` : 'no-pdf'}
+            pdf={pdf.pdf}
+            pageNum={pdf.currentPage}
+            pageData={pdf.currentPageData}
+            highlights={highlights.pageHighlights}
+            showPageMeta={false}
+            emptyTitle="PDF를 업로드하세요"
+            emptyHint="좌측에서 PDF를 연결한 뒤 「검사 실행」을 누르세요"
+          />
+          {pdf.pdf && (
+            <>
+              <PdfPreviewBar
+                currentPage={pdf.currentPage}
+                numPages={pdf.pdf.numPages}
+                onGoToPage={goToPdfPage}
+                findingsOnPage={tabCheckDone ? visibleOnCurrentPage : 0}
+                thumbStripOpen={thumbStripOpen}
+                onToggleThumbStrip={toggleThumbStrip}
+                printedPagesActive={pageDisplay.enabled}
+                printedPagesCalibrated={pageDisplay.active}
+                formatPageText={pageDisplay.formatPageText}
+                toSystemPageFromInput={pageDisplay.toSystemPageFromInput}
+              />
+              {thumbStripOpen && (
+                <PdfThumbnailStrip
+                  pdf={pdf.pdf}
+                  currentPage={pdf.currentPage}
+                  onSelectPage={goToPdfPage}
+                  formatPageLabel={pageDisplay.formatLabel}
+                />
+              )}
+            </>
+          )}
+        </div>
       </main>
     </div>
   );

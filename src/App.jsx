@@ -12,6 +12,12 @@ import {
 } from './lib/builtInRules.js';
 import { applyCompoundRuleMigrations } from './lib/migrateCompoundRules.js';
 import {
+  countActiveRules,
+  isOverMaxRules,
+  maxRulesExceededMessage,
+} from './lib/activeRuleCount.js';
+import {
+  duplicateRuleSet,
   loadActiveSetId,
   loadRuleSets,
   newId,
@@ -59,6 +65,7 @@ export default function App() {
   const [mainWorkTab, setMainWorkTab] = useState('spelling');
   const [ruleSets, setRuleSets] = useState([]);
   const [activeSetId, setActiveSetId] = useState(null);
+  const [rulesReady, setRulesReady] = useState(false);
 
   const activeSetIdRef = useRef(activeSetId);
   const ruleSetsRef = useRef(ruleSets);
@@ -102,6 +109,7 @@ export default function App() {
         ? savedActive
         : sets[0].id,
     );
+    setRulesReady(true);
   }, []);
 
   useEffect(() => {
@@ -114,34 +122,108 @@ export default function App() {
     };
   }, [flushRuleSets]);
 
-  const activeSet =
-    ruleSets.find((s) => s.id === activeSetId) ?? ruleSets[0] ?? createDefaultSet();
+  const activeSet = rulesReady
+    ? (ruleSets.find((s) => s.id === activeSetId) ?? ruleSets[0] ?? null)
+    : null;
 
   const updateActiveSet = useCallback(
     (patch) => {
+      const setId = activeSetIdRef.current;
+      if (!setId) return;
       setRuleSets((prev) => {
-        const next = prev.map((s) =>
-          s.id === activeSet.id ? { ...s, ...patch } : s,
-        );
+        const next = prev.map((s) => (s.id === setId ? { ...s, ...patch } : s));
         scheduleRuleSetsSave(next);
         return next;
       });
     },
-    [activeSet.id, scheduleRuleSetsSave],
+    [scheduleRuleSetsSave],
   );
 
-  function handleSaveRules() {
+  const flushPendingRuleSetsSave = useCallback(() => {
     if (autosaveTimerRef.current) {
       clearTimeout(autosaveTimerRef.current);
       autosaveTimerRef.current = null;
     }
+    flushRuleSets(ruleSetsRef.current, activeSetIdRef.current);
+  }, [flushRuleSets]);
+
+  const applyRuleSets = useCallback(
+    (next, nextActiveId = activeSetIdRef.current) => {
+      flushPendingRuleSetsSave();
+      ruleSetsRef.current = next;
+      setRuleSets(next);
+      setActiveSetId(nextActiveId);
+      activeSetIdRef.current = nextActiveId;
+      flushRuleSets(next, nextActiveId);
+    },
+    [flushPendingRuleSetsSave, flushRuleSets],
+  );
+
+  const handleSelectRuleSet = useCallback(
+    (id) => {
+      if (!id || id === activeSetIdRef.current) return;
+      if (!ruleSetsRef.current.some((s) => s.id === id)) return;
+      flushPendingRuleSetsSave();
+      setActiveSetId(id);
+      activeSetIdRef.current = id;
+      saveActiveSetId(id);
+    },
+    [flushPendingRuleSetsSave],
+  );
+
+  const handleCreateRuleSet = useCallback(() => {
+    const newSet = normalizeRuleSet({
+      id: newId(),
+      name: '',
+      builtInEnabled: builtInEnabledFromSheet(),
+      customRules: [],
+      globalExcludePhrases: [],
+      cautionEnabled: defaultCautionEnabled(),
+    });
+    applyRuleSets([...ruleSetsRef.current, newSet], newSet.id);
+  }, [applyRuleSets]);
+
+  const handleDuplicateRuleSet = useCallback(() => {
+    const source = ruleSetsRef.current.find(
+      (s) => s.id === activeSetIdRef.current,
+    );
+    if (!source) return;
+    const copy = normalizeRuleSet(duplicateRuleSet(source));
+    applyRuleSets([...ruleSetsRef.current, copy], copy.id);
+  }, [applyRuleSets]);
+
+  const handleDeleteRuleSet = useCallback(() => {
+    const sets = ruleSetsRef.current;
+    if (sets.length <= 1) {
+      alert('마지막 규칙 세트는 삭제할 수 없습니다.');
+      return;
+    }
+    const id = activeSetIdRef.current;
+    const current = sets.find((s) => s.id === id);
+    const label = (current?.name || '규칙 세트').trim() || '규칙 세트';
+    if (!window.confirm(`「${label}」 규칙 세트를 삭제할까요?`)) return;
+
+    const next = sets.filter((s) => s.id !== id);
+    const nextActive = next[0]?.id;
+    if (!nextActive) return;
+    applyRuleSets(next, nextActive);
+  }, [applyRuleSets]);
+
+  function handleSaveRules() {
+    const setId = activeSetIdRef.current;
+    if (!setId) return;
+    if (autosaveTimerRef.current) {
+      clearTimeout(autosaveTimerRef.current);
+      autosaveTimerRef.current = null;
+    }
+    const savedAt = new Date().toISOString();
     const next = ruleSets.map((s) =>
-      s.id === activeSet.id
-        ? { ...s, spellingRulesFingerprint: SPELLING_RULES_FP }
+      s.id === setId
+        ? { ...s, spellingRulesFingerprint: SPELLING_RULES_FP, savedAt }
         : s,
     );
     setRuleSets(next);
-    flushRuleSets(next, activeSetId);
+    flushRuleSets(next, setId);
     alert('규칙 세트가 저장되었습니다.');
   }
 
@@ -160,9 +242,24 @@ export default function App() {
     );
   }
 
+  if (!rulesReady || !activeSet) {
+    return (
+      <div className="app-loading" role="status" aria-live="polite">
+        <p>규칙 불러오는 중…</p>
+      </div>
+    );
+  }
+
   return (
     <MainScreen
+      ruleSets={ruleSets.map((s) => ({ id: s.id, name: s.name }))}
+      activeSetId={activeSetId}
+      onSelectRuleSet={handleSelectRuleSet}
+      onCreateRuleSet={handleCreateRuleSet}
+      onDuplicateRuleSet={handleDuplicateRuleSet}
+      onDeleteRuleSet={handleDeleteRuleSet}
       ruleSetName={activeSet.name}
+      ruleSetSavedAt={activeSet.savedAt}
       builtInEnabled={
         activeSet.builtInEnabled ?? builtInEnabledFromSheet()
       }
@@ -175,16 +272,40 @@ export default function App() {
       onBuiltInToggle={(find) => {
         const prev = activeSet.builtInEnabled ?? builtInEnabledFromSheet();
         const on = prev[find] !== false;
-        updateActiveSet({
-          builtInEnabled: { ...prev, [find]: !on },
-        });
+        const nextBuiltIn = { ...prev, [find]: !on };
+        if (
+          !on &&
+          isOverMaxRules(
+            countActiveRules({
+              builtInEnabled: nextBuiltIn,
+              cautionEnabled: activeSet.cautionEnabled,
+              customRules: activeSet.customRules,
+            }),
+          )
+        ) {
+          alert(maxRulesExceededMessage());
+          return;
+        }
+        updateActiveSet({ builtInEnabled: nextBuiltIn });
       }}
       onCautionToggle={(id) => {
         const prev = activeSet.cautionEnabled ?? defaultCautionEnabled();
         const on = prev[id] === true;
-        updateActiveSet({
-          cautionEnabled: { ...prev, [id]: !on },
-        });
+        const nextCaution = { ...prev, [id]: !on };
+        if (
+          !on &&
+          isOverMaxRules(
+            countActiveRules({
+              builtInEnabled: activeSet.builtInEnabled,
+              cautionEnabled: nextCaution,
+              customRules: activeSet.customRules,
+            }),
+          )
+        ) {
+          alert(maxRulesExceededMessage());
+          return;
+        }
+        updateActiveSet({ cautionEnabled: nextCaution });
       }}
       onCustomRulesChange={(customRules) => updateActiveSet({ customRules })}
       onGlobalExcludePhrasesChange={(globalExcludePhrases) =>

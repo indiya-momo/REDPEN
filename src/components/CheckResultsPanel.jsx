@@ -1,5 +1,7 @@
 import ResultPageSummary from './ResultPageSummary.jsx';
+import PrintedPageSetup from './PrintedPageSetup.jsx';
 import { getBuiltInTip } from '../lib/builtInRules.js';
+import { formatSystemPageLabel } from '../lib/printedPageDisplay.js';
 import { cautionResultChipLabel } from '../lib/cautionRules.js';
 
 /**
@@ -29,6 +31,19 @@ import { cautionResultChipLabel } from '../lib/cautionRules.js';
  *   onSelectPageInGroup: (pageNum: number, instances: import('../lib/ruleEngine.js').MatchInstance[], source: 'spelling' | 'consistency') => void,
  *   ruleSetName?: string,
  *   onAdditionalCheck?: () => void,
+ *   printedPagesEnabled?: boolean,
+ *   onPrintedPagesEnabledChange?: (v: boolean) => void,
+ *   printedPageOffset?: number | null,
+ *   printedPagesActive?: boolean,
+ *   onCalibrateFromInput?: (raw: string, isSpread: boolean) => void,
+ *   onClearPrintedPageOffset?: () => void,
+ *   currentPrintedLabel?: string,
+ *   previewPrintedLabel?: string,
+ *   spreadInput?: boolean,
+ *   onSpreadInputChange?: (v: boolean) => void,
+ *   firstPageSingle?: boolean,
+ *   onFirstPageSingleChange?: (v: boolean) => void,
+ *   formatPageLabel?: (systemPage: number) => string,
  * }} props
  */
 export default function CheckResultsPanel({
@@ -53,8 +68,22 @@ export default function CheckResultsPanel({
   onSelectPageInGroup,
   ruleSetName = '',
   onAdditionalCheck,
+  printedPagesEnabled = false,
+  onPrintedPagesEnabledChange,
+  printedPageOffset = null,
+  printedPagesActive = false,
+  onCalibrateFromInput,
+  onClearPrintedPageOffset,
+  currentPrintedLabel = '',
+  previewPrintedLabel = '',
+  spreadInput = false,
+  onSpreadInputChange,
+  firstPageSingle = true,
+  onFirstPageSingleChange,
+  formatPageLabel: formatPageLabelProp,
 }) {
   const setLabel = ruleSetName.trim() || '규칙 세트';
+  const pageLabel = formatPageLabelProp ?? formatSystemPageLabel;
 
   const spellingTone =
     viewSource === 'consistency'
@@ -67,17 +96,39 @@ export default function CheckResultsPanel({
     <section
       className={`results-panel results-panel--combined results-panel--tone-${spellingTone}`}
     >
+      {pdf && onPrintedPagesEnabledChange && onCalibrateFromInput && (
+        <PrintedPageSetup
+          enabled={printedPagesEnabled}
+          onEnabledChange={onPrintedPagesEnabledChange}
+          currentSystemPage={currentPage}
+          active={printedPagesActive}
+          currentPrintedLabel={currentPrintedLabel || pageLabel(currentPage)}
+          previewPrintedLabel={previewPrintedLabel}
+          spreadInput={spreadInput}
+          onSpreadInputChange={onSpreadInputChange ?? (() => {})}
+          firstPageSingle={firstPageSingle}
+          onFirstPageSingleChange={onFirstPageSingleChange ?? (() => {})}
+          onCalibrateFromInput={onCalibrateFromInput}
+          onClear={onClearPrintedPageOffset ?? (() => {})}
+        />
+      )}
       {pdf && (
         <p
           className={`current-page-status ${
             visibleOnCurrentPage > 0 ? 'current-page-status--has-findings' : ''
           } current-page-status--tone-${spellingTone}`}
         >
-          지금 보는 <strong>p.{currentPage}</strong>
+          지금 보는 <strong>{pageLabel(currentPage)}</strong>
+          {printedPagesActive && printedPageOffset != null ? (
+            <span className="current-page-status__system">
+              {' '}
+              (파일 {formatSystemPageLabel(currentPage)})
+            </span>
+          ) : null}
           {visibleOnCurrentPage > 0
-            ? ` · PDF 표시 ${visibleOnCurrentPage}곳${
+            ? ` · 표시 ${visibleOnCurrentPage}${
                 activeGroup && activeRuleOnPageCount > 0
-                  ? ` (선택 규칙 ${activeRuleOnPageCount}곳)`
+                  ? ` (선택 규칙 ${activeRuleOnPageCount})`
                   : ''
               }`
             : ' · 이 페이지 표시 없음'}
@@ -192,6 +243,7 @@ export default function CheckResultsPanel({
                     <ResultPageSummary
                       instances={group.instances}
                       currentPage={currentPage}
+                      formatPageLabel={pageLabel}
                       onSelectPage={(pageNum) =>
                         onSelectPageInGroup(pageNum, group.instances, source)
                       }

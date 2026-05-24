@@ -1,18 +1,20 @@
 import {
-  buildCompoundSpacingRules,
-  hasCompoundSpacing,
-  removeCompoundSpacing,
-} from './compoundSpacingPattern.js';
-import {
-  buildCompoundTailRules,
-  hasCompoundTail,
-  removeCompoundTail,
-} from './compoundTailPattern.js';
+  buildCompoundFindRules,
+  hasCompoundFind,
+  removeCompoundFind,
+} from './compoundFindPattern.js';
+import { isPhraseSlotPattern } from './phraseSlotPattern.js';
+import { isAuxiliaryStem, isHaeBoPattern } from './compoundPatternCommon.js';
 import { parseCommaList } from './matchFilters.js';
 
 /** @param {string} s */
 export function normalizeConsistencyVariant(s) {
   return s.trim().replace(/\s+/g, ' ');
+}
+
+/** @param {string} s */
+export function hasInternalSpace(s) {
+  return /\s/.test(normalizeConsistencyVariant(s));
 }
 
 /**
@@ -24,7 +26,7 @@ export function parseConsistencyInput(input) {
 }
 
 /**
- * 쉼표로 구분된 항목마다 그대로 tailWord로 붙임·띄움 규칙을 만든다 (묶음·추론 없음).
+ * 쉼표 항목마다 등록 문자열 그대로 검색 (묶음·반대 형태 추론 없음)
  * @param {string[]} variants
  * @returns {string[]}
  */
@@ -46,20 +48,22 @@ export function planConsistencyEntries(variants) {
  * @param {string} tailWord
  * @returns {import('./ruleTypes.js').Rule[]}
  */
+/** @param {string} tailWord */
+export function isLiteralConsistencyEntry(tailWord) {
+  const t = normalizeConsistencyVariant(tailWord);
+  if (!t || isPhraseSlotPattern(t)) return false;
+  if (isAuxiliaryStem(t) || isHaeBoPattern(t)) return false;
+  return true;
+}
+
 export function buildRulesForEntry(rules, tailWord) {
-  /** @type {import('./ruleTypes.js').Rule[]} */
-  const toAdd = [];
-  if (!hasCompoundTail(rules, tailWord)) {
-    toAdd.push(...buildCompoundTailRules(tailWord));
-  }
-  if (!hasCompoundSpacing(rules, tailWord)) {
-    toAdd.push(...buildCompoundSpacingRules(tailWord));
-  }
-  return toAdd;
+  const t = normalizeConsistencyVariant(tailWord);
+  if (!isLiteralConsistencyEntry(t) || hasCompoundFind(rules, t)) return [];
+  return buildCompoundFindRules(t);
 }
 
 /**
- * @typedef {{ tailWord: string, hasTail: boolean, hasSpacing: boolean }} ConsistencyEntryRow
+ * @typedef {{ tailWord: string }} ConsistencyEntryRow
  */
 
 /**
@@ -67,23 +71,23 @@ export function buildRulesForEntry(rules, tailWord) {
  * @returns {ConsistencyEntryRow[]}
  */
 export function listConsistencyEntries(customRules) {
-  /** @type {Map<string, ConsistencyEntryRow>} */
-  const map = new Map();
+  const kinds = new Set([
+    'compound-find',
+    'compound-tail',
+    'compound-spacing',
+  ]);
+  const seen = new Set();
+  /** @type {ConsistencyEntryRow[]} */
+  const entries = [];
 
   for (const r of customRules) {
     const tw = r.tailWord?.trim();
-    if (!tw) continue;
-    if (!map.has(tw)) {
-      map.set(tw, { tailWord: tw, hasTail: false, hasSpacing: false });
-    }
-    const row = map.get(tw);
-    if (r.patternKind === 'compound-tail') row.hasTail = true;
-    if (r.patternKind === 'compound-spacing') row.hasSpacing = true;
+    if (!tw || !kinds.has(r.patternKind ?? '') || seen.has(tw)) continue;
+    seen.add(tw);
+    entries.push({ tailWord: tw });
   }
 
-  return [...map.values()].sort((a, b) =>
-    a.tailWord.localeCompare(b.tailWord, 'ko'),
-  );
+  return entries.sort((a, b) => a.tailWord.localeCompare(b.tailWord, 'ko'));
 }
 
 /**
@@ -91,8 +95,7 @@ export function listConsistencyEntries(customRules) {
  * @param {string} tailWord
  */
 export function removeConsistencyEntry(rules, tailWord) {
-  const t = tailWord.trim();
-  return removeCompoundSpacing(removeCompoundTail(rules, t), t);
+  return removeCompoundFind(rules, tailWord.trim());
 }
 
 /**
@@ -102,12 +105,13 @@ export function removeConsistencyEntry(rules, tailWord) {
  */
 export function toggleConsistencyEntry(rules, tailWord, enabled) {
   const t = tailWord.trim();
+  const kinds = new Set([
+    'compound-find',
+    'compound-tail',
+    'compound-spacing',
+  ]);
   return rules.map((r) => {
-    if (
-      (r.patternKind === 'compound-tail' ||
-        r.patternKind === 'compound-spacing') &&
-      r.tailWord === t
-    ) {
+    if (kinds.has(r.patternKind ?? '') && r.tailWord === t) {
       return { ...r, enabled };
     }
     return r;
@@ -120,11 +124,13 @@ export function toggleConsistencyEntry(rules, tailWord, enabled) {
  */
 export function isConsistencyEntryEnabled(rules, tailWord) {
   const t = tailWord.trim();
+  const kinds = new Set([
+    'compound-find',
+    'compound-tail',
+    'compound-spacing',
+  ]);
   const group = rules.filter(
-    (r) =>
-      (r.patternKind === 'compound-tail' ||
-        r.patternKind === 'compound-spacing') &&
-      r.tailWord === t,
+    (r) => kinds.has(r.patternKind ?? '') && r.tailWord === t,
   );
   return group.length > 0 && group.every((r) => r.enabled);
 }

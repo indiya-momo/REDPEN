@@ -7,7 +7,7 @@
  *   group_id | item_id (또는 id) | label | stems | tip | enabled | match_mode | display_label | inventory
  *   stems: 쉼표 구분 어간 (예: 주,준 → ^주다 한 칸에 주다·준다)
  *   inventory: TRUE = 시트 추적용 변이형(체크 없음). 비우면 stems 묶음에 포함된 어간 행은 자동 추적 처리
- *   match_mode: spaced-before = 앞말+공백+label (예: 살아 있다). spaced-stem = 앞말+공백+label+어미 (예: 살아 있었다). 비우면 any-before
+ *   match_mode: spaced-before = 앞말+공백+label. spaced-stem = 앞말+공백+label+어미. fixed-phrase = 문구 그대로 (예: stems 해 보,해 본 → 해 보다·해 본다만). 비우면 any-before
  *
  * 표기 B — 한 행에 여러 label
  *   group_id | labels | tip | enabled
@@ -152,6 +152,14 @@ function parseMatchMode(value) {
   }
   if (v === 'spaced-before' || v === 'spaced' || v === 'space') {
     return 'spaced-before';
+  }
+  if (
+    v === 'fixed-phrase' ||
+    v === 'fixed' ||
+    v === 'phrase' ||
+    v === 'fixedphrase'
+  ) {
+    return 'fixed-phrase';
   }
   return 'any-before';
 }
@@ -304,6 +312,41 @@ function rowsToCautionGroups(rows) {
     .filter((g) => g.items.length);
 }
 
+/** @returns {Promise<Map<string, { title?: string, hideGroupTitle?: boolean, tipInline?: boolean }>>} */
+async function loadExistingGroupUiMeta() {
+  const map = new Map();
+  try {
+    const raw = await readFile(OUTPUTS[0], 'utf8');
+    const parsed = JSON.parse(raw);
+    for (const g of parsed.groups ?? []) {
+      if (!g?.id) continue;
+      /** @type {{ title?: string, hideGroupTitle?: boolean, tipInline?: boolean }} */
+      const meta = {};
+      if (typeof g.title === 'string' && g.title.trim()) {
+        meta.title = g.title.trim();
+      }
+      if (g.hideGroupTitle === true) meta.hideGroupTitle = true;
+      if (g.tipInline === true) meta.tipInline = true;
+      if (Object.keys(meta).length) map.set(g.id, meta);
+    }
+  } catch {
+    /* 첫 싱크 */
+  }
+  return map;
+}
+
+/**
+ * @param {ReturnType<typeof rowsToCautionGroups>} groups
+ * @param {Map<string, { title?: string, hideGroupTitle?: boolean, tipInline?: boolean }>} metaMap
+ */
+function mergeGroupUiMeta(groups, metaMap) {
+  return groups.map((g) => {
+    const prev = metaMap.get(g.id);
+    if (!prev) return g;
+    return { ...g, ...prev };
+  });
+}
+
 async function fetchSheetCsv(url, label) {
   const response = await fetch(url);
   if (!response.ok) {
@@ -363,7 +406,8 @@ async function main() {
         return fetchSheet();
       })();
 
-  const groups = rowsToCautionGroups(rows);
+  const uiMeta = await loadExistingGroupUiMeta();
+  const groups = mergeGroupUiMeta(rowsToCautionGroups(rows), uiMeta);
 
   if (!groups.length) {
     throw new Error(

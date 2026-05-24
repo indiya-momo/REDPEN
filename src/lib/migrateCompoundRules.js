@@ -1,14 +1,18 @@
-import {
-  buildCompoundSpacingRules,
-} from './compoundSpacingPattern.js';
-import {
-  buildCompoundTailRules,
-} from './compoundTailPattern.js';
+import { buildRulesForAuxiliaryEntry } from './auxiliaryVerbRegister.js';
+import { buildRulesForEntry, isLiteralConsistencyEntry } from './compoundPairRegister.js';
+import { isAuxiliaryStem, isHaeBoPattern } from './compoundPatternCommon.js';
+import { buildRulesForPhraseSlot, isPhraseSlotPattern } from './phraseSlotRegister.js';
 
-const COMPOUND_KINDS = new Set(['compound-tail', 'compound-spacing']);
+const COMPOUND_KINDS = new Set([
+  'compound-find',
+  'compound-tail',
+  'compound-spacing',
+  'phrase-slot-find',
+  'auxiliary-verb',
+]);
 
 /** 저장된 규칙 세트가 이 버전 미만이면 1회 재정리 */
-export const COMPOUND_MIGRATE_VERSION = 3;
+export const COMPOUND_MIGRATE_VERSION = 8;
 
 /** @param {string} tail */
 function isBadTail(tail) {
@@ -19,8 +23,16 @@ function isBadTail(tail) {
   return false;
 }
 
+/** @param {string} tail */
+function classifyTail(tail) {
+  if (isPhraseSlotPattern(tail)) return 'phrase-slot';
+  if (isAuxiliaryStem(tail) || isHaeBoPattern(tail)) return 'auxiliary';
+  const parts = tail.split(/\s+/).filter(Boolean);
+  if (parts.length === 2 && isAuxiliaryStem(parts[1])) return 'auxiliary';
+  return 'literal';
+}
+
 /**
- * 깨진 tailWord 규칙만 제거 (재빌드 없음)
  * @param {import('./ruleTypes.js').Rule[]} customRules
  */
 export function removeBadCompoundRules(customRules) {
@@ -33,9 +45,7 @@ export function removeBadCompoundRules(customRules) {
 }
 
 /**
- * tailWord 기준으로 붙임·띄움 규칙 find/label 재생성 (enabled·excludePrefixes 유지)
  * @param {import('./ruleTypes.js').Rule[]} customRules
- * @returns {import('./ruleTypes.js').Rule[]}
  */
 export function rebuildCompoundRules(customRules) {
   if (!Array.isArray(customRules) || !customRules.length) {
@@ -46,42 +56,51 @@ export function rebuildCompoundRules(customRules) {
     (r) => !COMPOUND_KINDS.has(r.patternKind ?? ''),
   );
 
-  /** @type {Map<string, boolean>} */
-  const tailEnabled = new Map();
-  /** @type {Map<string, string[]>} */
-  const tailExclude = new Map();
-  /** @type {Map<string, boolean>} */
-  const spacingEnabled = new Map();
+  /** @type {Set<string>} */
+  const tailWords = new Set();
+  /** @type {Map<string, { enabled: boolean, excludePrefixes: string[] }>} */
+  const meta = new Map();
 
   for (const r of customRules) {
     const raw = r.tailWord?.trim();
-    if (!raw || isBadTail(raw)) continue;
-
-    if (r.patternKind === 'compound-tail') {
-      tailEnabled.set(raw, r.enabled !== false);
-      if (r.excludePrefixes?.length) {
-        tailExclude.set(raw, r.excludePrefixes);
-      }
+    if (!raw || isBadTail(raw) || !COMPOUND_KINDS.has(r.patternKind ?? '')) {
+      continue;
     }
-    if (r.patternKind === 'compound-spacing') {
-      spacingEnabled.set(raw, r.enabled !== false);
+    tailWords.add(raw);
+    if (!meta.has(raw)) {
+      meta.set(raw, { enabled: true, excludePrefixes: [] });
+    }
+    const row = meta.get(raw);
+    if (r.enabled === false) row.enabled = false;
+    if (r.excludePrefixes?.length) {
+      row.excludePrefixes = r.excludePrefixes;
     }
   }
 
   /** @type {import('./ruleTypes.js').Rule[]} */
   const rebuilt = [];
 
-  for (const [tail, enabled] of tailEnabled) {
+  for (const tail of [...tailWords].sort((a, b) => a.localeCompare(b, 'ko'))) {
+    const { enabled, excludePrefixes } = meta.get(tail) ?? {
+      enabled: true,
+      excludePrefixes: [],
+    };
+    const kind = classifyTail(tail);
+    /** @type {import('./ruleTypes.js').Rule[]} */
+    let batch = [];
+    if (kind === 'phrase-slot') {
+      batch = buildRulesForPhraseSlot([], tail);
+    } else if (kind === 'auxiliary') {
+      batch = buildRulesForAuxiliaryEntry([], tail);
+    } else {
+      batch = buildRulesForEntry([], tail);
+    }
     rebuilt.push(
-      ...buildCompoundTailRules(tail, {
-        excludePrefixes: tailExclude.get(tail) ?? [],
-      }).map((rule) => ({ ...rule, enabled })),
-    );
-  }
-
-  for (const [tail, enabled] of spacingEnabled) {
-    rebuilt.push(
-      ...buildCompoundSpacingRules(tail).map((rule) => ({ ...rule, enabled })),
+      ...batch.map((rule) => ({
+        ...rule,
+        enabled,
+        excludePrefixes,
+      })),
     );
   }
 
@@ -91,7 +110,6 @@ export function rebuildCompoundRules(customRules) {
 /**
  * @param {import('./ruleTypes.js').Rule[]} customRules
  * @param {number} [storedVersion]
- * @returns {{ rules: import('./ruleTypes.js').Rule[], version: number }}
  */
 export function applyCompoundRuleMigrations(customRules, storedVersion = 0) {
   const version = storedVersion ?? 0;
@@ -107,7 +125,7 @@ export function applyCompoundRuleMigrations(customRules, storedVersion = 0) {
   };
 }
 
-/** @deprecated applyCompoundRuleMigrations 사용 */
+/** @deprecated */
 export function migrateCompoundRules(customRules) {
   return applyCompoundRuleMigrations(customRules, 0).rules;
 }

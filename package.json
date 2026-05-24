@@ -9,6 +9,8 @@
     "start:win": "powershell -ExecutionPolicy Bypass -File scripts/Start-Dev.ps1",
     "open:browser": "powershell -ExecutionPolicy Bypass -File scripts/Fix-Browser-Access.ps1",
     "build": "vite build",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "preview": "vite preview --host --open",
     "sync-spelling": "node scripts/sync-spelling.mjs",
     "sync-caution": "node scripts/sync-caution.mjs",
@@ -22,6 +24,7 @@
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.5.2",
-    "vite": "^6.3.5"
+    "vite": "^6.3.5",
+    "vitest": "^4.1.7"
   }
 }

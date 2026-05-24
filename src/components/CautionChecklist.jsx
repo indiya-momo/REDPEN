@@ -6,6 +6,26 @@ import {
 } from '../lib/cautionRules.js';
 import DetailsChevron from './DetailsChevron.jsx';
 
+/** @param {{ title?: string, tip?: string }} group */
+function groupHeading(group) {
+  const title = String(group.title ?? '').trim();
+  if (title) return title;
+  const tip = String(group.tip ?? '').trim();
+  if (tip && tip.length <= 20 && !tip.includes('\n')) return tip;
+  return '';
+}
+
+/** @param {{ title?: string, tip?: string }} group */
+function groupExplanation(group) {
+  const title = groupHeading(group);
+  const tip = String(group.tip ?? '').trim();
+  if (!tip) return '';
+  if (title && tip === title) return '';
+  if (title) return tip;
+  if (tip.includes('\n') || tip.length > 20) return tip;
+  return '';
+}
+
 /**
  * @param {{
  *   cautionEnabled: Record<string, boolean>,
@@ -23,18 +43,24 @@ export default function CautionChecklist({ cautionEnabled, onCautionToggle }) {
         주의: 사용자 직접 판단 (검사 {activeCount}/{CAUTION_SEARCH_RULES.length})
       </summary>
       <p className="hint caution-checklist-hint">
-        체크 후 「검사 실행」— 붙임/띄움 후보를 PDF에 표시합니다. 체언·용언은
-        직접 판단해야 합니다.
+        체크한 항목만 PDF에 표시합니다. 붙임·띄움은 문맥에 맞게 직접 판단하세요.
       </p>
       <ul className="caution-checklist">
         {CAUTION_GROUPS.map((group) => {
-          const tip = (group.tip || '').trim();
+          const heading = groupHeading(group);
+          const explanation = groupExplanation(group);
+          const items = group.items.filter(isCautionSearchItem);
+          if (!items.length) return null;
+          const showTitle = Boolean(heading) && group.hideGroupTitle !== true;
+          const tipInline = group.tipInline === true && Boolean(explanation);
           return (
             <li key={group.id} className="caution-group">
-              {tip ? <p className="caution-group-tip caution-group-tip--head">{tip}</p> : null}
-              <div className="caution-group-head">
+              <div className="caution-group-top">
+                {showTitle ? (
+                  <span className="caution-group-title">{heading}</span>
+                ) : null}
                 <div className="caution-group-items">
-                  {group.items.filter(isCautionSearchItem).map((item) => (
+                  {items.map((item) => (
                     <label key={item.id} className="caution-chip">
                       <input
                         type="checkbox"
@@ -47,7 +73,13 @@ export default function CautionChecklist({ cautionEnabled, onCautionToggle }) {
                     </label>
                   ))}
                 </div>
+                {tipInline ? (
+                  <span className="caution-tip-inline">{explanation}</span>
+                ) : null}
               </div>
+              {explanation && !tipInline ? (
+                <p className="caution-group-tip">{explanation}</p>
+              ) : null}
             </li>
           );
         })}

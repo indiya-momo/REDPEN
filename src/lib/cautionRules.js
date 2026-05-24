@@ -1,9 +1,9 @@
 import cautionRulesJson from '../data/caution-rules.json';
 
 /**
- * @typedef {'any-before' | 'spaced-before' | 'spaced-stem'} CautionMatchMode
+ * @typedef {'any-before' | 'spaced-before' | 'spaced-stem' | 'fixed-phrase'} CautionMatchMode
  * @typedef {{ id: string, label: string, stems?: string[], enabled?: boolean, matchMode?: CautionMatchMode, displayLabel?: string, inventoryOnly?: boolean }} CautionItem
- * @typedef {{ id: string, tip: string, items: CautionItem[] }} CautionGroup
+ * @typedef {{ id: string, title?: string, tip: string, hideGroupTitle?: boolean, tipInline?: boolean, items: CautionItem[] }} CautionGroup
  * @typedef {{ id: string, label: string, stems: string[], tip: string, groupId: string, enabled: boolean, matchMode: CautionMatchMode, displayLabel: string, inventoryOnly: boolean }} CautionRule
  */
 
@@ -89,7 +89,9 @@ function normalizeCautionItem(item) {
       ? 'spaced-before'
       : item.matchMode === 'spaced-stem'
         ? 'spaced-stem'
-        : 'any-before';
+        : item.matchMode === 'fixed-phrase'
+          ? 'fixed-phrase'
+          : 'any-before';
   const stems = cautionStemsFromItem(item);
   return {
     ...item,
@@ -104,6 +106,9 @@ function normalizeCautionItem(item) {
 /** @param {{ label: string, matchMode?: CautionMatchMode, displayLabel?: string }} item */
 export function cautionDisplayLabel(item) {
   if (item.displayLabel?.trim()) return item.displayLabel.trim();
+  if (item.matchMode === 'fixed-phrase') {
+    return item.label;
+  }
   if (item.matchMode === 'spaced-before' || item.matchMode === 'spaced-stem') {
     return `^${item.label}`;
   }
@@ -200,6 +205,14 @@ function cautionFindPattern(label, matchMode) {
   }
   if (matchMode === 'spaced-stem') {
     return String.raw`([^\s]{2,})[ \u00A0]+${esc}[\uAC00-\uD7A3]+(?!\S)`;
+  }
+  if (matchMode === 'fixed-phrase') {
+    const parts = label.trim().split(/\s+/).filter(Boolean);
+    if (parts.length >= 2) {
+      const core = parts.map(escapeRegex).join(String.raw`[ \u00A0]+`);
+      return core + String.raw`[\uAC00-\uD7A3]+(?!\S)`;
+    }
+    return esc + String.raw`[\uAC00-\uD7A3]+(?!\S)`;
   }
   return String.raw`([^\s]{2,})\s*${esc}`;
 }

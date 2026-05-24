@@ -13,6 +13,8 @@ npm install
 npm run dev
 ```
 
+터미널에 표시된 **Local** 주소로 접속하세요 (예: `http://localhost:5173/`). 포트가 이미 쓰이면 5174, 5175… 로 바뀝니다. 연결 거부면 서버가 꺼진 것이니 `npm run dev`를 다시 실행하세요.
+
 **Windows에서 브라우저가 연결 거부일 때** (탐색기에서 더블클릭 또는 PowerShell):
 
 ```powershell

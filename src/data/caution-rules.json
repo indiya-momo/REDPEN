@@ -2,25 +2,14 @@
   "groups": [
     {
       "id": "particle-josa",
-      "tip": "체언(명사, 대명사, 수사) 뒤 '만, 만큼, 지'는 조사로 붙여 쓰고,\n용언(동사, 형용사) 뒤 '만, 만큼, 지'는 의존명사로 띄어 쓴다.",
+      "title": "만 · 만큼 · 지",
+      "hideGroupTitle": true,
+      "tipInline": true,
+      "tip": "체언(명사·대명사·수사) 뒤 — 조사로 붙여 씁니다.\n용언(동사·형용사) 뒤 — 의존명사로 띄어 씁니다.",
       "items": [
-        {
-          "id": "particle-man",
-          "label": "만",
-          "enabled": false,
-          "matchMode": "any-before",
-          "inventoryOnly": false
-        },
         {
           "id": "particle-mankun",
           "label": "만큼",
-          "enabled": false,
-          "matchMode": "any-before",
-          "inventoryOnly": false
-        },
-        {
-          "id": "particle-ji",
-          "label": "지",
           "enabled": false,
           "matchMode": "any-before",
           "inventoryOnly": false
@@ -29,7 +18,8 @@
     },
     {
       "id": "verb-bon",
-      "tip": "본용언+보조용언",
+      "title": "본용언+보조용언",
+      "tip": "",
       "items": [
         {
           "id": "verb-boda1",
@@ -42,6 +32,50 @@
             "본"
           ],
           "displayLabel": "^보(ㄴ)다"
+        },
+        {
+          "id": "verb-haebo-sp",
+          "label": "해 보",
+          "enabled": false,
+          "matchMode": "fixed-phrase",
+          "inventoryOnly": false,
+          "stems": [
+            "해 보"
+          ],
+          "displayLabel": "해 보다"
+        },
+        {
+          "id": "verb-haebo-gl",
+          "label": "해보",
+          "enabled": false,
+          "matchMode": "fixed-phrase",
+          "inventoryOnly": false,
+          "stems": [
+            "해보"
+          ],
+          "displayLabel": "해보다"
+        },
+        {
+          "id": "verb-haebon-sp",
+          "label": "해 본",
+          "enabled": false,
+          "matchMode": "fixed-phrase",
+          "inventoryOnly": false,
+          "stems": [
+            "해 본"
+          ],
+          "displayLabel": "해 본다"
+        },
+        {
+          "id": "verb-haebon-gl",
+          "label": "해본",
+          "enabled": false,
+          "matchMode": "fixed-phrase",
+          "inventoryOnly": false,
+          "stems": [
+            "해본"
+          ],
+          "displayLabel": "해본다"
         },
         {
           "id": "verb-boda2",
@@ -181,19 +215,6 @@
           "enabled": false,
           "matchMode": "spaced-stem",
           "inventoryOnly": true
-        }
-      ]
-    },
-    {
-      "id": "particle-or",
-      "tip": "어떡해'는 '어떻게 해'의 줄임말, '어떻게'는 '어떠하게' 부사어",
-      "items": [
-        {
-          "id": "particle-udduk",
-          "label": "어떻해",
-          "enabled": false,
-          "matchMode": "any-before",
-          "inventoryOnly": false
         }
       ]
     }
