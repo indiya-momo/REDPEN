@@ -364,7 +364,7 @@ export default function MainScreen({
 
         {workTab === 'spelling' && (
           <div className="spelling-tab-layout">
-            <div className="spelling-tab-scroll">
+            <div className="spelling-tab-scroll custom-scrollbar">
               {session.sessionHint && (
                 <p className="hint session-hint panel-section-hint">
                   {session.sessionHint}
@@ -388,7 +388,7 @@ export default function MainScreen({
         )}
 
         {workTab === 'consistency' && (
-          <div className="panel-left-work-scroll">
+          <div className="panel-left-work-scroll custom-scrollbar">
             <PdfWorkSection
               fileRef={pdf.fileRef}
               onOpenPicker={session.openPdfWithPicker}
@@ -406,7 +406,7 @@ export default function MainScreen({
             {runCheckSection}
             {combinedResultsPanel}
             {!ruleCheck.consistencyCheckDone && (
-              <div className="consistency-rules-scroll">
+              <div className="consistency-rules-scroll custom-scrollbar">
                 <ConsistencyPanel
                   customRules={customRules}
                   onCustomRulesChange={onCustomRulesChange}
