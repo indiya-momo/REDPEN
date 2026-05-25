@@ -34,7 +34,7 @@ const GROUP_ID_ALIASES = {
   'particle-or': 'particle-josa',
 };
 
-/** 맞춤법 확인(caution) sync 제외 — 일관성 「본용언+보조용언 찾기」로 운영 */
+/** caution sync 제외 — 일관성 「본용언+보조용언 띄어쓰기」(bon-bojo) 로 운영 */
 const CAUTION_SYNC_SKIP_GROUP_IDS = new Set([
   'verb-bon',
   'verb-special',

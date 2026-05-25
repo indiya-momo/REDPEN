@@ -67,7 +67,7 @@ npm run sync-spelling
 
 **일관성(붙임 패턴)** 은 계속 앱·localStorage. **맞춤법·주의**는 각각 `spelling_rules` / `caution_rules` 탭이 소스입니다.
 
-**본용언+보조용언** (`verb-bon`, `verb-special`, `verb-or`)은 **`caution_rules` sync에서 제외**합니다. 대신 **`bon-bojo` 탭** → `npm run sync-bon-bojo` → 일관성 「본용언+보조용언 찾기」 시드.
+**본용언+보조용언** (`verb-bon`, `verb-special`, `verb-or`)은 **`caution_rules` sync에서 제외**합니다. 대신 **`bon-bojo` 탭** → `npm run sync-bon-bojo` → 일관성 「본용언+보조용언 띄어쓰기」 시드(개발중·규칙 수·검사 미포함).
 
 ---
 
@@ -89,7 +89,7 @@ npm run sync-spelling
 | 열 | bon-bojo에서 쓰는 방식 |
 |----|------------------------|
 | **label** | **tail_word** — `보`, `주`, `해 보` (어미 `보다` 말고 **어간·문구**) |
-| **stems** | 같은 `item_id`에 **추가 tail** (`해 보`, `해보` …) |
+| **stems** | 같은 행의 **추가 검색 변이** (`해 보`, `해 본` …). sync·목록은 **1칸**(`display_label`), 검사만 어간마다 regex |
 | **display_label** | 일관성 목록에 보이는 이름 (`(아/어) + 보다` 등) |
 | **match_mode** · **except** · **counts_in_quota** | **무시** (caution 전용) |
 
@@ -185,4 +185,4 @@ npm run sync
 | `src/lib/cautionRules.js` | JSON → CAUTION_RULES |
 | `scripts/sync-bon-bojo.mjs` | bon-bojo 탭 → JSON |
 | `src/data/bon-bojo-rules.json` | 일관성 보조용언 시드 |
-| `src/lib/bonBojoRules.js` | JSON → BON_BOJO_SEED_ENTRIES |
+| `src/lib/bonBojoRules.js` | JSON → BON_BOJO_LIST_ITEMS · tail 시드 |

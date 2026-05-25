@@ -48,6 +48,20 @@ describe('activeRuleCount', () => {
     expect(countConsistencyActiveRules(customRules)).toBe(1);
   });
 
+  it('본용언+보조용언(auxiliary-verb)은 일관성 규칙 수에서 제외한다', () => {
+    const customRules = [
+      { find: 'a', replace: 'b', enabled: true },
+      {
+        find: 'x',
+        replace: '$0',
+        enabled: true,
+        patternKind: 'auxiliary-verb',
+        tailWord: '보',
+      },
+    ];
+    expect(countConsistencyActiveRules(customRules)).toBe(1);
+  });
+
   it('isOverMaxRules는 MAX_RULES 초과만 true', () => {
     expect(isOverMaxRules(MAX_RULES)).toBe(false);
     expect(isOverMaxRules(MAX_RULES + 1)).toBe(true);

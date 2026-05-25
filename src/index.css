@@ -2441,6 +2441,56 @@ details[open] > summary .details-chevron {
   padding-top: 12px;
 }
 
+.tail-list--grid {
+  display: grid;
+  gap: 6px 10px;
+  align-items: start;
+}
+
+.tail-list--grid-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.tail-list--grid .tail-grid-item {
+  min-width: 0;
+  padding: 0;
+  border: none;
+}
+
+.auxiliary-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 4px 2px;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.auxiliary-chip .find {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.auxiliary-chip:has(input:checked) .find {
+  color: #1d4ed8;
+}
+
+.bon-bojo-checklist-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 4px;
+}
+
+.bon-bojo-checklist-title {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+}
+
 .consistency-pair-labels {
   display: flex;
   flex-direction: column;

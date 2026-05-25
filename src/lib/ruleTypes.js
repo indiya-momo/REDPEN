@@ -20,6 +20,7 @@
  * @property {string} [cautionId]
  * @property {string} [tip] — 시트 tip (맞춤법 결과 안내)
  * @property {string} [memo] — 시트 memo (관리용)
+ * @property {string} [bonBojoItemId] — bon-bojo 시트 item_id; 목록·체크는 항목 단위
  */
 
 export const MAX_RULES = 1000;

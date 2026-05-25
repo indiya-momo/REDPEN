@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
 import {
   countActiveRules,
@@ -17,11 +17,9 @@ import {
   toggleConsistencyEntry,
 } from '../lib/compoundPairRegister.js';
 import {
-  buildRulesForAuxiliaryEntry,
   isAuxiliaryVerbEntryEnabled,
   listAuxiliaryVerbEntries,
-  parseAuxiliaryInput,
-  removeAuxiliaryVerbEntry,
+  setAllAuxiliaryVerbEntries,
   toggleAuxiliaryVerbEntry,
 } from '../lib/auxiliaryVerbRegister.js';
 import {
@@ -45,9 +43,17 @@ const SPACE_INPUT_PLACEHOLDER = '공백은 ˅로 표시';
  * @param {{
  *   entries: { tailWord: string, displayLabel?: string }[],
  *   customRules: import('../lib/ruleTypes.js').Rule[],
- *   isEnabled: (rules: import('../lib/ruleTypes.js').Rule[], tw: string) => boolean,
- *   onToggle: (tw: string, enabled: boolean) => void,
- *   onRemove: (tw: string) => void,
+ *   isEnabled: (
+ *     rules: import('../lib/ruleTypes.js').Rule[],
+ *     row: { tailWord: string, displayLabel?: string, bonBojoItemId?: string },
+ *   ) => boolean,
+ *   onToggle: (
+ *     row: { tailWord: string, displayLabel?: string, bonBojoItemId?: string },
+ *     enabled: boolean,
+ *   ) => void,
+ *   onRemove?: (tw: string) => void,
+ *   columns?: number,
+ *   showRemove?: boolean,
  * }} props
  */
 function RegisteredList({
@@ -56,33 +62,59 @@ function RegisteredList({
   isEnabled,
   onToggle,
   onRemove,
+  columns = 1,
+  showRemove = true,
 }) {
   if (!entries.length) return null;
+  const gridCols = columns > 1 ? columns : 0;
+  const listClass = gridCols
+    ? `tail-list tail-list--grid tail-list--grid-${gridCols}`
+    : 'tail-list';
+
   return (
-    <ul className="tail-list">
-      {entries.map((row) => (
-        <li key={row.tailWord} className="rule-row">
-          <input
-            type="checkbox"
-            checked={isEnabled(customRules, row.tailWord)}
-            onChange={(e) => onToggle(row.tailWord, e.target.checked)}
-          />
-          <div className="rule-text">
-            <span className="find">
-              {row.displayLabel?.trim() ||
-                formatConsistencyListLabel(row.tailWord)}
-            </span>
-          </div>
-          <button
-            type="button"
-            className="btn-icon danger"
-            onClick={() => onRemove(row.tailWord)}
-            aria-label="삭제"
-          >
-            <Trash2 size={14} />
-          </button>
-        </li>
-      ))}
+    <ul className={listClass}>
+      {entries.map((row) => {
+        const rowKey = row.bonBojoItemId || row.tailWord;
+        const label =
+          row.displayLabel?.trim() ||
+          formatConsistencyListLabel(row.tailWord);
+        if (gridCols) {
+          return (
+            <li key={rowKey} className="tail-grid-item">
+              <label className="auxiliary-chip">
+                <input
+                  type="checkbox"
+                  checked={isEnabled(customRules, row)}
+                  onChange={(e) => onToggle(row, e.target.checked)}
+                />
+                <span className="find">{label}</span>
+              </label>
+            </li>
+          );
+        }
+        return (
+          <li key={rowKey} className="rule-row">
+            <input
+              type="checkbox"
+              checked={isEnabled(customRules, row)}
+              onChange={(e) => onToggle(row, e.target.checked)}
+            />
+            <div className="rule-text">
+              <span className="find">{label}</span>
+            </div>
+            {showRemove && onRemove ? (
+              <button
+                type="button"
+                className="btn-icon danger"
+                onClick={() => onRemove(row.tailWord)}
+                aria-label="삭제"
+              >
+                <Trash2 size={14} />
+              </button>
+            ) : null}
+          </li>
+        );
+      })}
     </ul>
   );
 }
@@ -107,7 +139,6 @@ export default function ConsistencyPanel({
 }) {
   const [literalInput, setLiteralInput] = useState('');
   const [slotInput, setSlotInput] = useState('');
-  const [auxiliaryInput, setAuxiliaryInput] = useState('');
   const [globalExcludeInput, setGlobalExcludeInput] = useState('');
 
   useEffect(() => {
@@ -124,6 +155,23 @@ export default function ConsistencyPanel({
   const literalEntries = listConsistencyEntries(customRules);
   const slotEntries = listPhraseSlotEntries(customRules);
   const auxiliaryEntries = listAuxiliaryVerbEntries(customRules);
+  const auxiliarySelectAllRef = useRef(
+    /** @type {HTMLInputElement | null} */ (null),
+  );
+  const auxiliaryTotal = auxiliaryEntries.length;
+  const auxiliaryActiveCount = auxiliaryEntries.filter((entry) =>
+    isAuxiliaryVerbEntryEnabled(customRules, entry),
+  ).length;
+  const auxiliaryAllChecked =
+    auxiliaryTotal > 0 && auxiliaryActiveCount === auxiliaryTotal;
+  const auxiliarySomeChecked =
+    auxiliaryActiveCount > 0 && auxiliaryActiveCount < auxiliaryTotal;
+
+  useEffect(() => {
+    if (auxiliarySelectAllRef.current) {
+      auxiliarySelectAllRef.current.indeterminate = auxiliarySomeChecked;
+    }
+  }, [auxiliarySomeChecked]);
 
   function applyCustomRules(nextRules) {
     const count = countActiveRules({
@@ -157,11 +205,11 @@ export default function ConsistencyPanel({
         if (isPhraseSlotPattern(raw)) {
           alert(`「${raw}」은 공통 문자열 찾기에 등록하세요. (@)`);
         } else if (isAuxiliaryStem(raw) || isHaeBoPattern(raw)) {
-          alert(`「${raw}」은 본용언+보조용언 찾기에 등록하세요.`);
+          alert(`「${raw}」은 본용언+보조용언 띄어쓰기에 등록하세요.`);
         } else {
           const parts = raw.split(/\s+/).filter(Boolean);
           if (parts.length === 2 && isAuxiliaryStem(parts[1])) {
-            alert(`「${raw}」은 본용언+보조용언 찾기에 등록하세요.`);
+            alert(`「${raw}」은 본용언+보조용언 띄어쓰기에 등록하세요.`);
           } else {
             alert(`등록할 수 없는 형식입니다: ${raw}`);
           }
@@ -205,28 +253,6 @@ export default function ConsistencyPanel({
     }
     if (!assertSlots(toAdd)) return;
     setSlotInput('');
-  }
-
-  function registerAuxiliary() {
-    const variants = parseAuxiliaryInput(auxiliaryInput);
-    if (!variants.length) {
-      alert('보조용언 패턴을 입력하세요.');
-      return;
-    }
-    let merged = customRules;
-    const toAdd = [];
-    for (const raw of planConsistencyEntries(variants)) {
-      const batch = buildRulesForAuxiliaryEntry(merged, raw);
-      if (!batch.length) continue;
-      toAdd.push(...batch);
-      merged = [...merged, ...batch];
-    }
-    if (!toAdd.length) {
-      alert('입력한 항목은 모두 이미 등록되어 있습니다.');
-      return;
-    }
-    if (!assertSlots(toAdd)) return;
-    setAuxiliaryInput('');
   }
 
   function addGlobalExcludePhrases() {
@@ -273,9 +299,13 @@ export default function ConsistencyPanel({
           <RegisteredList
             entries={literalEntries}
             customRules={customRules}
-            isEnabled={isConsistencyEntryEnabled}
-            onToggle={(tw, on) =>
-              applyCustomRules(toggleConsistencyEntry(customRules, tw, on))
+            isEnabled={(rules, row) =>
+              isConsistencyEntryEnabled(rules, row.tailWord)
+            }
+            onToggle={(row, on) =>
+              applyCustomRules(
+                toggleConsistencyEntry(customRules, row.tailWord, on),
+              )
             }
             onRemove={(tw) =>
               onCustomRulesChange(removeConsistencyEntry(customRules, tw))
@@ -305,9 +335,13 @@ export default function ConsistencyPanel({
           <RegisteredList
             entries={slotEntries}
             customRules={customRules}
-            isEnabled={isPhraseSlotEntryEnabled}
-            onToggle={(tw, on) =>
-              applyCustomRules(togglePhraseSlotEntry(customRules, tw, on))
+            isEnabled={(rules, row) =>
+              isPhraseSlotEntryEnabled(rules, row.tailWord)
+            }
+            onToggle={(row, on) =>
+              applyCustomRules(
+                togglePhraseSlotEntry(customRules, row.tailWord, on),
+              )
             }
             onRemove={(tw) =>
               onCustomRulesChange(removePhraseSlotEntry(customRules, tw))
@@ -363,36 +397,42 @@ export default function ConsistencyPanel({
         className="consistency-section-box"
         aria-labelledby="consistency-aux-heading"
       >
-        <p id="consistency-aux-heading" className="field-label">
-          본용언+보조용언 찾기
-        </p>
-        <p className="hint">
-          앞말+보조용언+어미 (예: 보, 주, 해˅보, 해보). 시트{' '}
-          <code>bon-bojo</code> · <code>npm run sync-bon-bojo</code> 후 목록·표시명
-          반영
-        </p>
-        <div className="tail-form">
-          <SpaceVisibleInput
-            value={auxiliaryInput}
-            onChange={setAuxiliaryInput}
-            placeholder={SPACE_INPUT_PLACEHOLDER}
-            aria-label="본용언 보조용언 찾기"
-          />
-          <button type="button" className="btn-add" onClick={registerAuxiliary}>
-            <Plus size={14} />
-            등록
-          </button>
+        <div className="bon-bojo-checklist-header">
+          <label className="caution-checklist-select-all">
+            <input
+              ref={auxiliarySelectAllRef}
+              type="checkbox"
+              checked={auxiliaryAllChecked}
+              disabled={auxiliaryTotal === 0}
+              onChange={() =>
+                applyCustomRules(
+                  setAllAuxiliaryVerbEntries(
+                    customRules,
+                    auxiliaryEntries,
+                    !auxiliaryAllChecked,
+                  ),
+                )
+              }
+              aria-label="본용언+보조용언 띄어쓰기 전체 선택"
+            />
+          </label>
+          <p id="consistency-aux-heading" className="field-label bon-bojo-checklist-title">
+            본용언+보조용언 띄어쓰기
+            {auxiliaryTotal > 0
+              ? ` (선택 ${auxiliaryActiveCount}/${auxiliaryTotal})`
+              : ''}
+          </p>
         </div>
+        <p className="hint">개발중으로 규칙 수에 포함되지 않습니다</p>
         <RegisteredList
           entries={auxiliaryEntries}
           customRules={customRules}
           isEnabled={isAuxiliaryVerbEntryEnabled}
-          onToggle={(tw, on) =>
-            applyCustomRules(toggleAuxiliaryVerbEntry(customRules, tw, on))
+          onToggle={(row, on) =>
+            applyCustomRules(toggleAuxiliaryVerbEntry(customRules, row, on))
           }
-          onRemove={(tw) =>
-            onCustomRulesChange(removeAuxiliaryVerbEntry(customRules, tw))
-          }
+          columns={3}
+          showRemove={false}
         />
       </section>
     </div>
