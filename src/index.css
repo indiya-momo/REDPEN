@@ -2651,6 +2651,11 @@ details[open] > summary .details-chevron {
   word-break: keep-all;
 }
 
+.welcome-gate__lead strong {
+  color: var(--welcome-text);
+  font-weight: 700;
+}
+
 .welcome-gate__panels {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -2698,9 +2703,17 @@ details[open] > summary .details-chevron {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.7rem;
-  margin-bottom: 1.35rem;
+  margin-bottom: 0.65rem;
   padding: 0.85rem 0 0;
   border-top: 1px solid var(--welcome-border-soft);
+}
+
+.welcome-gate__steps-note {
+  margin: 0 0 1.35rem;
+  font-size: 0.7rem;
+  line-height: 1.5;
+  color: var(--welcome-text-muted);
+  word-break: keep-all;
 }
 
 .welcome-gate__step {
@@ -2818,7 +2831,6 @@ details[open] > summary .details-chevron {
   width: var(--welcome-frame-width);
   margin-top: 1.1rem;
   margin-inline: auto;
-  gap: 0.55rem;
   transform: translateX(var(--welcome-frame-offset-x));
 }
 
@@ -2842,20 +2854,6 @@ details[open] > summary .details-chevron {
 
 .welcome-gate .btn-welcome-primary.welcome-gate__start:hover {
   background: var(--welcome-accent-hover);
-}
-
-.welcome-gate__cta-note {
-  margin: 0;
-  font-size: 0.7rem;
-  line-height: 1.5;
-  text-align: center;
-  color: var(--welcome-text-muted);
-  word-break: keep-all;
-}
-
-.welcome-gate__cta-note strong {
-  color: rgba(245, 240, 230, 0.85);
-  font-weight: 700;
 }
 
 .welcome-gate .app-version-badge {
