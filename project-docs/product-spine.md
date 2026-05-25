@@ -138,8 +138,9 @@
 - **일관성 등록 (표기 찾기 한 박스):**  
   - **문자열 찾기** — 등록한 그대로 (예: `조선˅시대`, `RED˅PEN`)  
   - **공통 문자열 찾기** — `@` 자리 (예: `@시대` 붙임 / `@˅시대` 띄움)  
-  - **검사 제외 문구** · **본용언+보조용언 찾기** (별도 입력)  
-- **주의(맞춤법 탭 하단):** 체크한 항목만 PDF 표시 · 붙임/띄움은 사용자 판단  
+  - **검사 제외 문구**  
+  - **본용언+보조용언 띄어쓰기** — `bon-bojo` 시트 sync · 전체 선택 체크 · **개발중**(규칙 수·일관성 검사 제외)  
+- **띄어쓰기 검토(맞춤법 탭 하단):** 체크한 항목만 PDF 표시 · 붙임/띄움은 사용자 판단  
 
 ### find → 검사용 regex (v1.0 필수)
 
@@ -322,6 +323,7 @@ p.12 (2), p.18 (1)
 | `project-docs/product-spine.md` | **이 파일** — 결정·범위·로드맵 |
 | `project-docs/wireframe-screens.html` | **와이어프레임 v0** — 메인·설정·흐름 (브라우저에서 열기) |
 | `project-docs/sheet-spelling.md` | **맞춤법 시트 → sync-spelling** 운영 |
+| `project-docs/caution-match-mode.md` | **주의 규칙 `match_mode`** 상세 가이드 |
 | `project-docs/templates/spelling_rules.csv` | 시트 붙여넣기용 템플릿 |
 | `project-docs/templates/caution_rules.csv` | 주의 규칙 시트 템플릿 |
 | `.env.example` | 시트 ID · **피드백 Form** 변수 |

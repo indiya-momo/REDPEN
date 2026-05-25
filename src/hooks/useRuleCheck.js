@@ -78,7 +78,7 @@ export function useRuleCheck({
   const consistencyActiveRules = useMemo(
     () =>
       customRules
-        .filter((r) => r.enabled)
+        .filter((r) => r.enabled && r.patternKind !== 'auxiliary-verb')
         .map((r) => ({
           ...r,
           category:
@@ -143,7 +143,9 @@ export function useRuleCheck({
       const runConsistency = scope === 'consistency';
 
       if (runSpelling && spellingActiveRules.length === 0) {
-        alert('활성화된 맞춤법·주의 규칙이 없습니다. 규칙을 켠 뒤 다시 실행하세요.');
+        alert(
+          '활성화된 자동 맞춤법·띄어쓰기 규칙이 없습니다. 규칙을 켠 뒤 다시 실행하세요.',
+        );
         return;
       }
       if (runConsistency && consistencyActiveRules.length === 0) {
@@ -464,9 +466,16 @@ export function useRuleCheck({
     countVisibleOnPage,
     syncSelectionForTab,
     getActiveOnPage,
-    spellingFindings: spellingResults
-      .filter((g) => g.category === 'spelling' || g.category === 'caution')
+    builtinFindings: spellingResults
+      .filter((g) => g.category === 'spelling')
       .reduce((n, g) => n + g.instances.length, 0),
+    spacingFindings: spellingResults
+      .filter((g) => g.category === 'caution')
+      .reduce((n, g) => n + g.instances.length, 0),
+    spellingFindings: spellingResults.reduce(
+      (n, g) => n + g.instances.length,
+      0,
+    ),
     consistencyFindings: consistencyResults.reduce(
       (n, g) => n + g.instances.length,
       0,

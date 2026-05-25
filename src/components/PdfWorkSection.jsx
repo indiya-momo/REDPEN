@@ -45,7 +45,7 @@ export default function PdfWorkSection({
         className="hidden"
         onChange={onFileChange}
       />
-      {supportsFilePicker() && (
+      {supportsFilePicker() ? (
         <button
           type="button"
           className="btn-upload"
@@ -55,16 +55,17 @@ export default function PdfWorkSection({
           <Upload size={16} />
           PDF 열기 (권장)
         </button>
+      ) : (
+        <button
+          type="button"
+          className="btn-upload"
+          onClick={() => fileRef.current?.click()}
+          disabled={isProcessing}
+        >
+          <Upload size={16} />
+          PDF 업로드
+        </button>
       )}
-      <button
-        type="button"
-        className={supportsFilePicker() ? 'btn-upload-secondary' : 'btn-upload'}
-        onClick={() => fileRef.current?.click()}
-        disabled={isProcessing}
-      >
-        <Upload size={16} />
-        {supportsFilePicker() ? '파일 선택 (보조)' : 'PDF 업로드'}
-      </button>
       {fileHandleActive && !pdf && (
         <button
           type="button"

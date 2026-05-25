@@ -67,9 +67,46 @@ npm run sync-spelling
 
 **일관성(붙임 패턴)** 은 계속 앱·localStorage. **맞춤법·주의**는 각각 `spelling_rules` / `caution_rules` 탭이 소스입니다.
 
+**본용언+보조용언** (`verb-bon`, `verb-special`, `verb-or`)은 **`caution_rules` sync에서 제외**합니다. 대신 **`bon-bojo` 탭** → `npm run sync-bon-bojo` → 일관성 「본용언+보조용언 띄어쓰기」 시드(개발중·규칙 수·검사 미포함).
+
 ---
 
-## 5. 주의(직접 검토) — `caution_rules` 탭
+## 5. 본용언+보조용언 — `bon-bojo` 탭
+
+**`caution_rules`와 같은 열**을 씁니다. (`find`/`replace` 없음)
+
+### 탭 이름
+
+- **`bon-bojo`** (기본)
+- 다른 이름이면 `.env`에 `BON_BOJO_SHEET=탭이름` 또는 `BON_BOJO_GID=시트gid`
+
+템플릿: [`templates/bon_bojo_rules.csv`](templates/bon_bojo_rules.csv)
+
+### 열 (caution과 동일)
+
+`group_id` · `item_id` · `label` · `stems` · `tip` · `enabled` · `match_mode` · `display_label` · `except` · `counts_in_quota` · `inventory`
+
+| 열 | bon-bojo에서 쓰는 방식 |
+|----|------------------------|
+| **label** | **tail_word** — `보`, `주`, `해 보` (어미 `보다` 말고 **어간·문구**) |
+| **stems** | 같은 행의 **추가 검색 변이** (`해 보`, `해 본` …). sync·목록은 **1칸**(`display_label`), 검사만 어간마다 regex |
+| **display_label** | 일관성 목록에 보이는 이름 (`(아/어) + 보다` 등) |
+| **match_mode** · **except** · **counts_in_quota** | **무시** (caution 전용) |
+
+### 싱크
+
+```bash
+npm run sync-bon-bojo
+# 맞춤법·띄어쓰기·보조용언 한 번에
+npm run sync
+```
+
+→ `src/data/bon-bojo-rules.json`, `public/data/bon-bojo-rules.json`  
+앱은 규칙 세트 로드 시 **없는 tail만** 추가(기본 체크 off). **이미 등록된 tail은 삭제·이름 자동 교체 안 함** — 표시명 갱신은 sync 후 규칙 세트 새로 만들거나 수동 정리.
+
+---
+
+## 6. 띄어쓰기 검토 — `caution_rules` 탭
 
 **맞춤법 탭과 분리**하세요. `find`/`replace` 열을 넣지 마세요.
 
@@ -82,31 +119,17 @@ npm run sync-spelling
 
 ### 표기 A — 그룹당 여러 행 (권장)
 
-**1행 헤더:** `group_id` · `item_id`(또는 `id`) · `label` · `stems` · `tip` · `enabled` · `match_mode` · `display_label`
+**1행 헤더:** `group_id` · `item_id`(또는 `id`) · `label` · `stems` · `tip` · `enabled` · `match_mode` · `display_label` · `except`
 
 | group_id | id | label | stems | tip | enabled | match_mode | display_label |
 |----------|---------|-------|-------|-----|---------|--------------|---------------|
-| particle-josa | particle-mankun | 만큼 | | 체언 뒤에 붙은… (첫 행만) | FALSE | | |
-| verb-bon | verb-boda1 | 해 보 | 해 보,해 본 | 본동사+보조 (좁게) | FALSE | fixed-phrase | 해 보·해 본 |
-| verb-bon | verb-boda2 | 본 | | | FALSE | spaced-stem | ^본다 |
-| verb-bon | verb-boda3 | 있 | | | FALSE | spaced-stem | ^있다 |
-| verb-bon | verb-boda4 | 주 | 주,준 | | FALSE | spaced-stem | ^주다 |
-| verb-bon | verb-boda5 | 하 | 하,한 | | FALSE | spaced-stem | ^하다 |
-| verb-bon | verb-boda6 | 두 | | | FALSE | spaced-stem | ^두다 |
-| verb-bon | verb-boda7 | 놓 | | | FALSE | spaced-stem | ^놓다 |
+| particle-josa | particle-man | 만 | | 체언 뒤에 붙은… (첫 행만) | FALSE | | |
+| particle-josa | particle-mankun | 만큼 | | | FALSE | | |
+| particle-josa | particle-ji | 지 | | | FALSE | | |
 
-**조사와 같은 짝:** `particle-josa` + `particle-man` ↔ **`verb-bon`** + **`verb-boda1`** … **`verb-boda9`** (그룹=종류, `item_id`=규칙 키).
+**그룹:** `group_id`로 UI 블록·`tip`을 묶습니다. 시트에 `particle-or` 등이 있으면 `npm run sync-caution`이 `particle-josa`로 합칠 수 있습니다. `item_id`는 `particle-*` 형식을 유지합니다.
 
-**그룹 이름 통일:** `group_id`는 **`particle-josa`** · **`verb-bon`** 두 종류만 씁니다. 시트에 `verb-special`, `verb-or`, `particle-or` 등이 있으면 `npm run sync-caution`이 각각 `verb-bon`, `particle-josa`로 합칩니다. `item_id`는 `particle-*` / `verb-boda*` / `verb-haebo-*` 형식을 유지하고, `verv-` 오타는 `verb-`로 고칩니다.
-
-| 짝 | group_id (종류) | item_id (규칙) | label (검색 어간) |
-|----|-----------------|----------------|-------------------|
-| 조사 | particle-josa | particle-mankun | 만큼 |
-| 본동사 | verb-bon | verb-boda4 | 주 | `stems` **주,준** → 체크 **^주다** 한 칸 |
-
-`stems`에 **주,준**처럼 쉼표로 여러 어간을 넣으면 체크박스는 하나(`^주다`)인데 검사는 주다·준다 모두 합니다. **하,한** → **^하다** 한 칸.
-
-`verb-bon` = 본동사 **한 블록**. 설명(`tip`)은 첫 행에만 써도 됩니다.
+`stems`에 여러 어간을 쉼표로 넣으면 체크는 한 칸인데 검사는 어간마다 regex가 생깁니다. 설명(`tip`)은 첫 행만 써도 아래 행에 이어집니다.
 
 | 열 | 의미 |
 |----|------|
@@ -116,8 +139,9 @@ npm run sync-spelling
 | **stems** | 비우면 `label`만. **주,준**처럼 쉼표로 여러 어간 → 한 체크에 묶음 (`^주다` = 주+준) |
 | **tip** | 그룹 공통 설명 (첫 행만 써도 됨, 아래 행은 비워도 이어짐) |
 | **enabled** | `TRUE`/`FALSE` — sync 후 앱 **첫 반영·신규 항목** 체크 on 여부 (보통 `FALSE`) |
-| **match_mode** | 비우면 `any-before`. `spaced-before` = `앞말+공백+label`만 (`살아 있다`). `spaced-stem` = `앞말+공백+label+어미` (`살아 있었다` — 전 동사에 적용). `fixed-phrase` = `stems` 문구만 (`해 보,해 본` → `해 보다`·`해 본다`만, `읽어 보다` X) |
+| **match_mode** | 비우면 `any-before`. 자세한 설명·표·예시: **[caution-match-mode.md](caution-match-mode.md)** |
 | **display_label** | 체크박스에 보일 이름 (비우면 `spaced-before`·`spaced-stem`일 때 `^{label}`) |
+| **except** | 검사에서 **빼는 문구** (쉼표 구분, **통째** 일치). 예: `여름가지,산가지` — 유저 설정 아님, 편집자가 시트에만 기록 |
 
 ### 표기 B — 한 행에 여러 label
 
@@ -135,11 +159,11 @@ npm run sync
 
 → `src/data/caution-rules.json`, `public/data/caution-rules.json`
 
-앱 새로고침 후 **주의** 체크 목록·설명이 갱신됩니다. 이미 켜 둔 체크 상태는 localStorage에 남습니다.
+앱 새로고침 후 **띄어쓰기 검토** 체크 목록·설명이 갱신됩니다. 이미 켜 둔 체크 상태는 localStorage에 남습니다.
 
 ---
 
-## 6. 문제 해결
+## 7. 문제 해결
 
 | 증상 | 확인 |
 |------|------|
@@ -149,7 +173,7 @@ npm run sync
 
 ---
 
-## 7. 관련 파일
+## 8. 관련 파일
 
 | 파일 | 역할 |
 |------|------|
@@ -157,5 +181,8 @@ npm run sync
 | `scripts/sync-spelling.mjs` | 시트 → JSON |
 | `src/data/spelling-rules.json` | 앱이 import |
 | `src/lib/builtInRules.js` | JSON → BUILT_IN_RULES |
-| `src/data/caution-rules.json` | 주의(직접 검토) 목록 |
+| `src/data/caution-rules.json` | 띄어쓰기 검토 목록 |
 | `src/lib/cautionRules.js` | JSON → CAUTION_RULES |
+| `scripts/sync-bon-bojo.mjs` | bon-bojo 탭 → JSON |
+| `src/data/bon-bojo-rules.json` | 일관성 보조용언 시드 |
+| `src/lib/bonBojoRules.js` | JSON → BON_BOJO_LIST_ITEMS · tail 시드 |

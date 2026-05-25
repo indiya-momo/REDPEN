@@ -14,11 +14,12 @@
     "preview": "vite preview --host --open",
     "sync-spelling": "node scripts/sync-spelling.mjs",
     "sync-caution": "node scripts/sync-caution.mjs",
-    "sync": "npm run sync-spelling && npm run sync-caution"
+    "sync-bon-bojo": "node scripts/sync-bon-bojo.mjs",
+    "sync": "npm run sync-spelling && npm run sync-caution && npm run sync-bon-bojo"
   },
   "dependencies": {
     "lucide-react": "^0.511.0",
-    "pdfjs-dist": "^5.2.133",
+    "pdfjs-dist": "5.2.133",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   },

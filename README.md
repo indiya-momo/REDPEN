@@ -10,7 +10,7 @@
 2. **Source: Deploy from a branch** (그대로)
 3. **Branch: `main`** · **Folder: `/docs`** → **Save**  
    (**`/(root)`가 아니라 `/docs`로 바꿔야 합니다.**)
-4. push 후 Actions **Deploy to GitHub Pages** 가 빌드 결과를 `docs/`에 올립니다.
+4. **`main` 브랜치에만** push 하세요. Actions가 빌드 결과를 `docs/`에 올립니다. (`master`는 쓰지 않습니다.)
 5. 1~2분 후 https://indiya-momo.github.io/REDPEN/ 에서 **Ctrl+Shift+R**. 페이지 소스에 `/REDPEN/assets/...js` 가 보이면 성공입니다.
 
 기획·시트 문서는 [`project-docs/`](project-docs/) 에 있습니다.
@@ -57,7 +57,7 @@ npm run open:browser
 2. `.env`에 `SPREADSHEET_ID` 설정 (`.env.example` 참고)  
 3. `npm run sync-spelling` → 앱 새로고침  
 
-자세한 절차: [`project-docs/sheet-spelling.md`](project-docs/sheet-spelling.md)
+자세한 절차: [`project-docs/sheet-spelling.md`](project-docs/sheet-spelling.md) · 주의 `match_mode`: [`project-docs/caution-match-mode.md`](project-docs/caution-match-mode.md)
 
 브라우저에서 표시된 주소로 접속합니다.
 
