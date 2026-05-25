@@ -698,19 +698,78 @@ button {
   padding: 7px 10px;
 }
 
-.ruleset-panel__action {
+.ruleset-panel__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   flex-shrink: 0;
+  margin-left: auto;
+}
+
+.ruleset-panel__manage {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.ruleset-panel__manage-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   font-size: 0.78rem;
-  padding: 6px 9px;
+  padding: 6px 10px;
   white-space: nowrap;
 }
 
-.ruleset-panel__action--danger:not(:disabled) {
+.ruleset-panel__chevron--open {
+  transform: rotate(180deg);
+}
+
+.ruleset-panel__menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 50;
+  min-width: 9.5rem;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+}
+
+.ruleset-panel__menu-item {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #374151;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.ruleset-panel__menu-item:hover:not(:disabled) {
+  background: #f3f4f6;
+}
+
+.ruleset-panel__menu-item--danger:not(:disabled) {
   color: #b91c1c;
 }
 
-.ruleset-panel__action--danger:not(:disabled):hover {
+.ruleset-panel__menu-item--danger:not(:disabled):hover {
   background: #fef2f2;
+}
+
+.ruleset-panel__menu-item:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .ruleset-panel__save {
@@ -770,10 +829,11 @@ button {
     order: 4;
   }
 
-  .ruleset-panel__action,
-  .ruleset-panel__save,
-  .ruleset-panel__feedback {
+  .ruleset-panel__actions {
     order: 5;
+    flex: 1 1 auto;
+    justify-content: flex-end;
+    margin-left: 0;
   }
 }
 
@@ -1993,8 +2053,11 @@ details[open] > summary .details-chevron {
 }
 
 .pdf-empty-icon {
-  font-size: 3rem;
+  display: block;
+  width: min(7.5rem, 40vw);
+  height: auto;
   margin-bottom: 12px;
+  object-fit: contain;
 }
 
 .pdf-empty-title {
@@ -2476,6 +2539,18 @@ details[open] > summary .details-chevron {
 
 .auxiliary-chip:has(input:checked) .find {
   color: #1d4ed8;
+}
+
+.bon-bojo-required-badge {
+  flex-shrink: 0;
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 1.2;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: #fef08a;
+  color: #854d0e;
+  border: 1px solid #eab308;
 }
 
 .bon-bojo-checklist-header {

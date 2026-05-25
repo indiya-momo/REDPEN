@@ -3,6 +3,7 @@ import {
   highlightRectsForTextRange,
   renderPageToCanvas,
 } from '../lib/pdfService.js';
+import pdfEmptyIcon from '../assets/momo/pdf-empty.png';
 
 /**
  * @param {{
@@ -21,7 +22,7 @@ export default function PdfViewer({
   pageData,
   highlights = [],
   emptyTitle = 'PDF를 업로드하세요',
-  emptyHint = '좌측 「PDF 업로드」 · 메모리에서만 처리',
+  emptyHint = '신국판 300페이지 내외 (50MB)를 권장합니다.',
   showPageMeta = true,
 }) {
   const canvasRef = useRef(null);
@@ -82,10 +83,16 @@ export default function PdfViewer({
     return (
       <div className="pdf-viewer pdf-viewer--empty">
         <div className="pdf-empty">
-        <div className="pdf-empty-icon">📄</div>
+        <img
+          className="pdf-empty-icon"
+          src={pdfEmptyIcon}
+          alt=""
+          aria-hidden
+          decoding="async"
+        />
         <p className="pdf-empty-title">{emptyTitle}</p>
         <p className="pdf-empty-hint">{emptyHint}</p>
-        <p className="pdf-empty-hint subtle">권장 ~150p · 스캔 PDF(OCR 없음) 미지원</p>
+        <p className="pdf-empty-hint subtle">스캔 PDF는 미지원합니다</p>
         </div>
       </div>
     );
