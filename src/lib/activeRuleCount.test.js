@@ -24,11 +24,11 @@ describe('activeRuleCount', () => {
     );
   });
 
-  it('주의만 켜면 맞춤법 규칙 수에 주의 regex 수가 더해짐', () => {
+  it('띄어쓰기만 켜면 활성 규칙 수에 caution regex 수가 더해짐', () => {
     const builtInOff = Object.fromEntries(
       BUILT_IN_RULES.map((r) => [r.find, false]),
     );
-    const cautionEnabled = { 'verb-boda1': true };
+    const cautionEnabled = { 'josa-uinoun-mankum': true };
     const cautionRules = buildCautionCheckRules(cautionEnabled);
     expect(cautionRules.length).toBeGreaterThanOrEqual(1);
     expect(

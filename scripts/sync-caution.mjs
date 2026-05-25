@@ -4,10 +4,11 @@
  * 시트 탭: caution_rules (또는 .env CAUTION_SHEET / CAUTION_GID)
  *
  * 표기 A — 그룹당 여러 행 (tip은 첫 행만 써도 됨, 아래 행은 비워도 forward-fill)
- *   group_id | item_id (또는 id) | label | stems | tip | enabled | match_mode | display_label | inventory
+ *   group_id | item_id (또는 id) | label | stems | tip | enabled | match_mode | display_label | inventory | except
+ *   except: 쉼표 구분 — 매칭된 문구 전체가 목록과 같으면 검사 제외 (예: 여름가지,산가지)
  *   stems: 쉼표 구분 어간 (예: 주,준 → ^주다 한 칸에 주다·준다)
  *   inventory: TRUE = 시트 추적용 변이형(체크 없음). 비우면 stems 묶음에 포함된 어간 행은 자동 추적 처리
- *   match_mode: spaced-before = 앞말+공백+label. spaced-stem = 앞말+공백+label+어미. fixed-phrase = 문구 그대로 (예: stems 해 보,해 본 → 해 보다·해 본다만). 비우면 any-before
+ *   match_mode: spaced-before = 붙여야 하는데 띄어 씀. attached-before = 띄어야 하는데 붙여 씀 (별칭 before-attached, ap-attached). spaced-stem = 앞말+공백+label+어미. fixed-phrase = 문구 그대로. 비우면 any-before
  *
  * 표기 B — 한 행에 여러 label
  *   group_id | labels | tip | enabled
@@ -30,14 +31,24 @@ const OUTPUTS = [
 
 /** 시트에 섞여 들어온 그룹 이름을 앱 규칙과 맞춤 */
 const GROUP_ID_ALIASES = {
-  'verb-special': 'verb-bon',
-  'verb-or': 'verb-bon',
   'particle-or': 'particle-josa',
 };
+
+/** 맞춤법 확인(caution) sync 제외 — 일관성 「본용언+보조용언 찾기」로 운영 */
+const CAUTION_SYNC_SKIP_GROUP_IDS = new Set([
+  'verb-bon',
+  'verb-special',
+  'verb-or',
+]);
 
 function normalizeGroupId(id) {
   const trimmed = String(id || '').trim();
   return GROUP_ID_ALIASES[trimmed] || trimmed;
+}
+
+/** @param {string} groupId */
+function isSkippedCautionGroupId(groupId) {
+  return CAUTION_SYNC_SKIP_GROUP_IDS.has(normalizeGroupId(groupId));
 }
 
 function normalizeItemId(id) {
@@ -165,11 +176,28 @@ function parseEnabled(value) {
 /** @param {string} [value] */
 function parseMatchMode(value) {
   const v = String(value ?? '').trim().toLowerCase();
-  if (v === 'spaced-stem' || v === 'stem' || v === 'spaced-compound') {
+  if (
+    v === 'spaced-stem' ||
+    v === 'space-stem' ||
+    v === 'stem' ||
+    v === 'spaced-compound'
+  ) {
     return 'spaced-stem';
   }
-  if (v === 'spaced-before' || v === 'spaced' || v === 'space') {
+  if (v === 'ap-space' || v === 'spaced-before' || v === 'spaced') {
     return 'spaced-before';
+  }
+  if (
+    v === 'ap-attach' ||
+    v === 'before-attached' ||
+    v === 'ap-attached' ||
+    v === 'attached-before' ||
+    v === 'attached' ||
+    v === 'glue' ||
+    v === 'glued' ||
+    v === '붙임'
+  ) {
+    return 'attached-before';
   }
   if (
     v === 'fixed-phrase' ||
@@ -179,6 +207,12 @@ function parseMatchMode(value) {
   ) {
     return 'fixed-phrase';
   }
+  if (v === 'ap-any' || v === 'any-before' || v === 'any') {
+    return 'any-before';
+  }
+  if (v === 'space') {
+    return 'spaced-before';
+  }
   return 'any-before';
 }
 
@@ -186,6 +220,13 @@ function parseMatchMode(value) {
  * @param {Record<string, string>} row
  * @param {string} label
  */
+function parseExcept(row) {
+  const raw = String(row.except ?? '').trim();
+  if (!raw) return undefined;
+  const list = parseCommaList(raw);
+  return list.length ? list : undefined;
+}
+
 function parseStems(row, label) {
   const raw = String(row.stems ?? row.stem ?? '').trim();
   if (!raw) return undefined;
@@ -251,6 +292,7 @@ function itemFromRow(row, label, itemId) {
   const matchMode = inventoryOnly ? 'any-before' : parseMatchMode(rawMode);
   const displayLabel = String(row.display_label ?? row.displaylabel ?? '').trim();
   const stems = parseStems(row, label);
+  const except = parseExcept(row);
   return {
     id: itemId,
     label,
@@ -259,6 +301,7 @@ function itemFromRow(row, label, itemId) {
     inventoryOnly,
     ...(stems ? { stems } : {}),
     ...(displayLabel ? { displayLabel } : {}),
+    ...(except ? { except } : {}),
   };
 }
 
@@ -277,6 +320,7 @@ function rowsToCautionGroups(rows) {
         const tip = String(row.tip || '').trim();
         const labels = parseCommaList(row.labels);
         if (!groupId || !tip || !labels.length) return null;
+        if (isSkippedCautionGroupId(groupId)) return null;
 
         const enabledDefault = parseEnabled(row.enabled);
         return {
@@ -306,6 +350,7 @@ function rowsToCautionGroups(rows) {
 
     const label = String(row.label || '').trim();
     if (!label || !curGroupId) continue;
+    if (isSkippedCautionGroupId(curGroupId)) continue;
 
     const itemId =
       normalizeItemId(row.item_id || row.itemid || row.id) ||
@@ -321,7 +366,7 @@ function rowsToCautionGroups(rows) {
   }
 
   return [...groups.values()]
-    .filter((g) => g.items.length)
+    .filter((g) => g.items.length && !isSkippedCautionGroupId(g.id))
     .map((g) => ({
       ...g,
       tip: g.tip || '',

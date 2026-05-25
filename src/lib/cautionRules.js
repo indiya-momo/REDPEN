@@ -1,10 +1,10 @@
 import cautionRulesJson from '../data/caution-rules.json';
 
 /**
- * @typedef {'any-before' | 'spaced-before' | 'spaced-stem' | 'fixed-phrase'} CautionMatchMode
- * @typedef {{ id: string, label: string, stems?: string[], enabled?: boolean, matchMode?: CautionMatchMode, displayLabel?: string, inventoryOnly?: boolean }} CautionItem
+ * @typedef {'any-before' | 'spaced-before' | 'attached-before' | 'spaced-stem' | 'fixed-phrase'} CautionMatchMode
+ * @typedef {{ id: string, label: string, stems?: string[], enabled?: boolean, matchMode?: CautionMatchMode, displayLabel?: string, inventoryOnly?: boolean, except?: string[] }} CautionItem
  * @typedef {{ id: string, title?: string, tip: string, hideGroupTitle?: boolean, tipInline?: boolean, items: CautionItem[] }} CautionGroup
- * @typedef {{ id: string, label: string, stems: string[], tip: string, groupId: string, enabled: boolean, matchMode: CautionMatchMode, displayLabel: string, inventoryOnly: boolean }} CautionRule
+ * @typedef {{ id: string, label: string, stems: string[], tip: string, groupId: string, enabled: boolean, matchMode: CautionMatchMode, displayLabel: string, inventoryOnly: boolean, except?: string[] }} CautionRule
  */
 
 /** @param {unknown} raw */
@@ -83,16 +83,72 @@ export function isCautionSearchItem(item) {
   return item.inventoryOnly !== true;
 }
 
+/** @param {string} [mode] */
+export function normalizeMatchMode(mode) {
+  const v = String(mode ?? '').trim().toLowerCase();
+  // 긴 이름 먼저 (space-stem ⊃ space)
+  if (
+    v === 'spaced-stem' ||
+    v === 'space-stem' ||
+    v === 'stem' ||
+    v === 'spaced-compound'
+  ) {
+    return 'spaced-stem';
+  }
+  if (v === 'ap-space' || v === 'spaced-before' || v === 'spaced') {
+    return 'spaced-before';
+  }
+  if (
+    v === 'ap-attach' ||
+    v === 'before-attached' ||
+    v === 'ap-attached' ||
+    v === 'attached-before' ||
+    v === 'attached' ||
+    v === 'glue' ||
+    v === 'glued' ||
+    v === '붙임'
+  ) {
+    return 'attached-before';
+  }
+  if (
+    v === 'fixed-phrase' ||
+    v === 'fixed' ||
+    v === 'phrase' ||
+    v === 'fixedphrase'
+  ) {
+    return 'fixed-phrase';
+  }
+  if (v === 'ap-any' || v === 'any-before' || v === 'any') {
+    return 'any-before';
+  }
+  // 레거시: space 단독 = ap-space 와 동일
+  if (v === 'space') {
+    return 'spaced-before';
+  }
+  return 'any-before';
+}
+
+/** @param {CautionItem} item */
+function parseExceptField(item) {
+  const raw = item.except;
+  if (Array.isArray(raw)) {
+    const list = raw.map((s) => String(s).trim()).filter(Boolean);
+    return list.length ? list : undefined;
+  }
+  if (typeof raw === 'string' && raw.trim()) {
+    const list = raw
+      .split(/[,，\n]+/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+    return list.length ? list : undefined;
+  }
+  return undefined;
+}
+
 function normalizeCautionItem(item) {
-  const matchMode =
-    item.matchMode === 'spaced-before'
-      ? 'spaced-before'
-      : item.matchMode === 'spaced-stem'
-        ? 'spaced-stem'
-        : item.matchMode === 'fixed-phrase'
-          ? 'fixed-phrase'
-          : 'any-before';
+  const matchMode = normalizeMatchMode(item.matchMode);
   const stems = cautionStemsFromItem(item);
+  const except = parseExceptField(item);
   return {
     ...item,
     label: stems[0] ?? item.label,
@@ -100,6 +156,7 @@ function normalizeCautionItem(item) {
     matchMode,
     displayLabel: item.displayLabel?.trim() || cautionDisplayLabel(item),
     inventoryOnly: item.inventoryOnly === true,
+    ...(except ? { except } : {}),
   };
 }
 
@@ -111,6 +168,9 @@ export function cautionDisplayLabel(item) {
   }
   if (item.matchMode === 'spaced-before' || item.matchMode === 'spaced-stem') {
     return `^${item.label}`;
+  }
+  if (item.matchMode === 'attached-before') {
+    return `∨${item.label}`;
   }
   return item.label;
 }
@@ -130,6 +190,7 @@ export const CAUTION_RULES = CAUTION_GROUPS.flatMap((group) =>
     matchMode: item.matchMode ?? 'any-before',
     displayLabel: item.displayLabel ?? cautionDisplayLabel(item),
     inventoryOnly: item.inventoryOnly === true,
+    ...(item.except?.length ? { except: item.except } : {}),
   })),
 );
 
@@ -209,10 +270,14 @@ export function migrateCautionEnabled(saved = {}) {
  * @param {Record<string, boolean>} cautionEnabled
  * @returns {import('./ruleTypes.js').Rule[]}
  */
-function cautionFindPattern(label, matchMode) {
+/** @internal 테스트·문서용 */
+export function cautionFindPattern(label, matchMode) {
   const esc = escapeRegex(label);
   if (matchMode === 'spaced-before') {
     return String.raw`([^\s]{2,})[ \u00A0]+${esc}(?!\S)`;
+  }
+  if (matchMode === 'attached-before') {
+    return String.raw`([^\s]{2,})${esc}(?!\S)`;
   }
   if (matchMode === 'spaced-stem') {
     return String.raw`([^\s]{2,})[ \u00A0]+${esc}[\uAC00-\uD7A3]+(?!\S)`;
@@ -234,7 +299,12 @@ export function cautionResultChipLabel(groupOrLabel) {
     typeof groupOrLabel === 'string'
       ? groupOrLabel
       : String(groupOrLabel?.label ?? '').trim();
-  return raw.replace(/^주의\s*·\s*/, '').trim() || raw;
+  return (
+    raw
+      .replace(/^주의\s*·\s*/, '')
+      .replace(/^띄어쓰기\s*·\s*/, '')
+      .trim() || raw
+  );
 }
 
 export function buildCautionCheckRules(cautionEnabled) {
@@ -251,6 +321,7 @@ export function buildCautionCheckRules(cautionEnabled) {
         cautionId: item.id,
         label: item.displayLabel,
         tip: item.tip,
+        ...(item.except?.length ? { excludePhrases: item.except } : {}),
       });
     }
   }

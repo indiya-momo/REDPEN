@@ -25,17 +25,19 @@ export function formatRuleSetSavedDate(iso) {
 /**
  * @param {{
  *   savedAt?: string,
- *   spellingRuleCount: number,
+ *   builtInRuleCount: number,
+ *   spacingRuleCount: number,
  *   consistencyRuleCount: number,
  * }} input
  */
 export function formatRuleSetSummary({
   savedAt,
-  spellingRuleCount,
+  builtInRuleCount,
+  spacingRuleCount,
   consistencyRuleCount,
 }) {
   const date = formatRuleSetSavedDate(savedAt);
-  const counts = `맞춤법 규칙 ${spellingRuleCount}건 · 일관성 규칙 ${consistencyRuleCount}건`;
+  const counts = `자동 맞춤법 ${builtInRuleCount} · 띄어쓰기 ${spacingRuleCount} · 일관성 ${consistencyRuleCount}`;
   return date ? `${date} ${counts}` : counts;
 }
 

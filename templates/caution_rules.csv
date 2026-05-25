@@ -1,17 +1,4 @@
-group_id,item_id,label,stems,tip,enabled,match_mode,display_label
+group_id,item_id,label,stems,tip,enabled,match_mode,display_label,except
 particle-josa,particle-man,만,,"체언(명사·대명사·수사) 뒤 — 조사로 붙여 씁니다. 용언(동사·형용사) 뒤 — 의존명사로 띄어 씁니다.",FALSE,,
 particle-josa,particle-mankun,만큼,,,FALSE,,
 particle-josa,particle-ji,지,,,FALSE,,
-verb-bon,verb-boda1,보,"보,본",본동사·보조용언 — 앞말과 어간 사이 공백만 표시.,FALSE,spaced-stem,^보(ㄴ)다
-verb-bon,verb-haebo-sp,해 보,해 보,,FALSE,fixed-phrase,해 보다
-verb-bon,verb-haebo-gl,해보,해보,,FALSE,fixed-phrase,해보다
-verb-bon,verb-haebon-sp,해 본,해 본,,FALSE,fixed-phrase,해 본다
-verb-bon,verb-haebon-gl,해본,해본,,FALSE,fixed-phrase,해본다
-verb-bon,verb-boda2,본,,,FALSE,any-before,
-verb-bon,verb-boda3,있,,,FALSE,spaced-stem,^있다
-verb-bon,verb-boda4,주,"주,준",,FALSE,spaced-stem,^주(ㄴ)다
-verb-bon,verb-boda5,하,"하,한,했",,FALSE,spaced-stem,^하(ㄴ)했+다
-verb-bon,verb-boda6,두,"두,둔",,FALSE,spaced-stem,^두(ㄴ)다
-verb-bon,verb-boda7,가,"가,갔",,FALSE,spaced-stem,^가(ㅆ)다
-verb-bon,verb-boda8,오,"오,온,왔",,FALSE,spaced-stem,^오(ㄴ)왔+다
-verb-bon,verb-boda9,놓,,,FALSE,spaced-stem,^놓다
