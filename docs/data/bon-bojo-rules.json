@@ -2,8 +2,59 @@
   "groups": [
     {
       "id": "verb-bon",
-      "tip": "본용언 +­ -아/­어 + 보조 용언은 붙여 씀을 허용한다",
+      "tip": "본용언 +­ -아/­어 + 지다(보조용언)은 붙여씀이 원칙이다",
       "items": [
+        {
+          "id": "verb-gada",
+          "label": "가",
+          "enabled": false,
+          "stems": [
+            "해 가",
+            "해 갔",
+            "해 간",
+            "려 간",
+            "져 간",
+            "러 간",
+            "어 간"
+          ],
+          "displayLabel": "(아/어) + 가다"
+        },
+        {
+          "id": "verb-naeda",
+          "label": "내",
+          "enabled": false,
+          "stems": [
+            "워 내",
+            "워 냈",
+            "워 낸"
+          ],
+          "displayLabel": "(아/어) + 내다"
+        },
+        {
+          "id": "verb-notda",
+          "label": "놓",
+          "enabled": false,
+          "stems": [
+            "해 놓",
+            "해 놨",
+            "해 놔"
+          ],
+          "displayLabel": "(아/어) + 놓다"
+        },
+        {
+          "id": "verb-duda",
+          "label": "두",
+          "enabled": false,
+          "stems": [
+            "해 두",
+            "해 둔",
+            "아 두",
+            "아 둔",
+            "어 두",
+            "어 둔"
+          ],
+          "displayLabel": "(아/어) + 두다"
+        },
         {
           "id": "verb-boda1",
           "label": "보",
@@ -35,41 +86,6 @@
           "displayLabel": "(아/어) + 주다"
         },
         {
-          "id": "verb-duda",
-          "label": "두",
-          "enabled": false,
-          "stems": [
-            "해 두",
-            "해 둔",
-            "아 두",
-            "아 둔",
-            "어 두",
-            "어 둔"
-          ],
-          "displayLabel": "(아/어) + 두다"
-        },
-        {
-          "id": "verb-notda",
-          "label": "놓",
-          "enabled": false,
-          "stems": [
-            "해 놓",
-            "해 놨",
-            "해 놔"
-          ],
-          "displayLabel": "(아/어) + 놓다"
-        },
-        {
-          "id": "verb-gada",
-          "label": "가",
-          "enabled": false,
-          "stems": [
-            "해 가",
-            "해 갔"
-          ],
-          "displayLabel": "(아/어) + 가다"
-        },
-        {
           "id": "verb-oda",
           "label": "오",
           "enabled": false,
@@ -83,15 +99,36 @@
           "displayLabel": "(아/어) + 오다"
         },
         {
-          "id": "verb-naeda",
-          "label": "내",
-          "enabled": false,
+          "id": "verb-hada",
+          "label": "하",
+          "enabled": true,
           "stems": [
-            "워 내",
-            "워 냈",
-            "워 낸"
+            "아 하",
+            "어 하",
+            "워 하",
+            "파 하",
+            "뻐 하",
+            "퍼 하",
+            "어 한",
+            "워 한",
+            "아 했",
+            "어 했"
           ],
-          "displayLabel": "(아/어) + 내다"
+          "displayLabel": "(아/어) + 하다"
+        },
+        {
+          "id": "verb-jida",
+          "label": "지",
+          "enabled": true,
+          "stems": [
+            "해 지",
+            "워 지",
+            "아 지",
+            "커 지",
+            "어 지",
+            "러"
+          ],
+          "displayLabel": "(아/어) + 지다"
         }
       ]
     }
