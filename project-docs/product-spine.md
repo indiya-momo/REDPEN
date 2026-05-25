@@ -322,6 +322,7 @@ p.12 (2), p.18 (1)
 | `project-docs/product-spine.md` | **이 파일** — 결정·범위·로드맵 |
 | `project-docs/wireframe-screens.html` | **와이어프레임 v0** — 메인·설정·흐름 (브라우저에서 열기) |
 | `project-docs/sheet-spelling.md` | **맞춤법 시트 → sync-spelling** 운영 |
+| `project-docs/caution-match-mode.md` | **주의 규칙 `match_mode`** 상세 가이드 |
 | `project-docs/templates/spelling_rules.csv` | 시트 붙여넣기용 템플릿 |
 | `project-docs/templates/caution_rules.csv` | 주의 규칙 시트 템플릿 |
 | `.env.example` | 시트 ID · **피드백 Form** 변수 |

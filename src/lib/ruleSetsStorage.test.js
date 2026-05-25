@@ -18,19 +18,21 @@ describe('formatRuleSetSummary', () => {
     expect(
       formatRuleSetSummary({
         savedAt: '2023-06-18T12:00:00.000Z',
-        spellingRuleCount: 13,
+        builtInRuleCount: 10,
+        spacingRuleCount: 3,
         consistencyRuleCount: 4,
       }),
-    ).toBe('23년 6월 18일 맞춤법 규칙 13건 · 일관성 규칙 4건');
+    ).toBe('23년 6월 18일 자동 맞춤법 10 · 띄어쓰기 3 · 일관성 4');
   });
 
   it('저장 전에는 건수만 표시한다', () => {
     expect(
       formatRuleSetSummary({
-        spellingRuleCount: 2,
+        builtInRuleCount: 2,
+        spacingRuleCount: 1,
         consistencyRuleCount: 0,
       }),
-    ).toBe('맞춤법 규칙 2건 · 일관성 규칙 0건');
+    ).toBe('자동 맞춤법 2 · 띄어쓰기 1 · 일관성 0');
   });
 });
 

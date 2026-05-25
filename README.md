@@ -57,7 +57,7 @@ npm run open:browser
 2. `.env`에 `SPREADSHEET_ID` 설정 (`.env.example` 참고)  
 3. `npm run sync-spelling` → 앱 새로고침  
 
-자세한 절차: [`project-docs/sheet-spelling.md`](project-docs/sheet-spelling.md)
+자세한 절차: [`project-docs/sheet-spelling.md`](project-docs/sheet-spelling.md) · 주의 `match_mode`: [`project-docs/caution-match-mode.md`](project-docs/caution-match-mode.md)
 
 브라우저에서 표시된 주소로 접속합니다.
 

@@ -2,22 +2,31 @@ import { buildCautionCheckRules, defaultCautionEnabled } from './cautionRules.js
 import { BUILT_IN_RULES, builtInEnabledFromSheet, isBuiltInRuleEnabled } from './builtInRules.js';
 import { MAX_RULES } from './ruleTypes.js';
 
+/** @param {{ builtInEnabled?: Record<string, boolean> }} [input] */
+export function countBuiltInActiveRules(input = {}) {
+  const builtInEnabled = input.builtInEnabled ?? builtInEnabledFromSheet();
+  return BUILT_IN_RULES.filter((r) =>
+    isBuiltInRuleEnabled(builtInEnabled, r.find),
+  ).length;
+}
+
+/** @param {{ cautionEnabled?: Record<string, boolean> }} [input] */
+export function countSpacingReviewActiveRules(input = {}) {
+  const cautionEnabled = input.cautionEnabled ?? defaultCautionEnabled();
+  return buildCautionCheckRules(cautionEnabled).length;
+}
+
 /**
- * 맞춤법 검사에 쓰이는 활성 규칙 수 (내장 + 주의)
+ * 맞춤법 탭 검사에 쓰이는 활성 규칙 수 (자동 맞춤법 + 띄어쓰기 검토)
  * @param {{
  *   builtInEnabled?: Record<string, boolean>,
  *   cautionEnabled?: Record<string, boolean>,
  * }} input
  */
 export function countSpellingActiveRules(input = {}) {
-  const builtInEnabled = input.builtInEnabled ?? builtInEnabledFromSheet();
-  const cautionEnabled = input.cautionEnabled ?? defaultCautionEnabled();
-
-  const builtIn = BUILT_IN_RULES.filter((r) =>
-    isBuiltInRuleEnabled(builtInEnabled, r.find),
-  ).length;
-  const caution = buildCautionCheckRules(cautionEnabled).length;
-  return builtIn + caution;
+  return (
+    countBuiltInActiveRules(input) + countSpacingReviewActiveRules(input)
+  );
 }
 
 /**
@@ -29,7 +38,7 @@ export function countConsistencyActiveRules(customRules = []) {
 }
 
 /**
- * 활성 규칙 합계 — 내장 맞춤법 + 주의 + 일관성(사용자)
+ * 활성 규칙 합계 — 자동 맞춤법 + 띄어쓰기 검토 + 일관성(사용자)
  * @param {{
  *   builtInEnabled?: Record<string, boolean>,
  *   cautionEnabled?: Record<string, boolean>,

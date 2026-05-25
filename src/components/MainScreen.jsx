@@ -16,8 +16,9 @@ import { useHighlights } from '../hooks/useHighlights.js';
 import { useResizablePanelWidth } from '../hooks/useResizablePanelWidth.js';
 import { usePrintedPageDisplay } from '../hooks/usePrintedPageDisplay.js';
 import {
+  countBuiltInActiveRules,
   countConsistencyActiveRules,
-  countSpellingActiveRules,
+  countSpacingReviewActiveRules,
 } from '../lib/activeRuleCount.js';
 
 /**
@@ -83,13 +84,13 @@ export default function MainScreen({
   const { panelStyle, handleRef, startDrag } = useResizablePanelWidth();
 
   const pdf = usePdfDocument();
-  const spellingRuleCount = useMemo(
-    () =>
-      countSpellingActiveRules({
-        builtInEnabled,
-        cautionEnabled,
-      }),
-    [builtInEnabled, cautionEnabled],
+  const builtInRuleCount = useMemo(
+    () => countBuiltInActiveRules({ builtInEnabled }),
+    [builtInEnabled],
+  );
+  const spacingRuleCount = useMemo(
+    () => countSpacingReviewActiveRules({ cautionEnabled }),
+    [cautionEnabled],
   );
   const consistencyRuleCount = useMemo(
     () => countConsistencyActiveRules(customRules),
@@ -235,6 +236,8 @@ export default function MainScreen({
       totalFindings={tabTotalFindings}
       ruleCount={tabEntries.length}
       spellingFindings={ruleCheck.spellingFindings}
+      builtinFindings={ruleCheck.builtinFindings}
+      spacingFindings={ruleCheck.spacingFindings}
       consistencyFindings={ruleCheck.consistencyFindings}
       spellingCheckDone={ruleCheck.spellingCheckDone}
       consistencyCheckDone={ruleCheck.consistencyCheckDone}
@@ -283,12 +286,12 @@ export default function MainScreen({
         {pdf.isProcessing && pdf.progress?.phase === 'check'
           ? '검사 중…'
           : workTab === 'spelling'
-            ? '검사 실행 (맞춤법)'
+            ? '검사 실행 (맞춤법·띄어쓰기)'
             : '검사 실행 (일관성)'}
       </button>
       <p className="hint" style={{ marginTop: 8 }}>
         {workTab === 'spelling'
-          ? `맞춤법·주의 ${ruleCheck.spellingActiveRules.length}개 규칙 검사`
+          ? `자동 맞춤법 ${builtInRuleCount} · 띄어쓰기 ${spacingRuleCount} · 합계 ${ruleCheck.spellingActiveRules.length}개 규칙`
           : `일관성 ${ruleCheck.consistencyActiveRules.length}개 규칙 검사`}
       </p>
       {pdf.isProcessing && pdf.progressLabel && (
@@ -451,7 +454,8 @@ export default function MainScreen({
             onDeleteSet={onDeleteRuleSet}
             onSave={onSaveRules}
             onOpenFeedback={() => setFeedbackOpen(true)}
-            spellingRuleCount={spellingRuleCount}
+            builtInRuleCount={builtInRuleCount}
+            spacingRuleCount={spacingRuleCount}
             consistencyRuleCount={consistencyRuleCount}
           />
           <PdfViewer

@@ -21,6 +21,8 @@ import { cautionResultChipLabel } from '../lib/cautionRules.js';
  *   ruleCount: number,
  *   viewSource: 'spelling' | 'consistency',
  *   spellingFindings: number,
+ *   builtinFindings?: number,
+ *   spacingFindings?: number,
  *   consistencyFindings: number,
  *   spellingCheckDone: boolean,
  *   consistencyCheckDone: boolean,
@@ -58,6 +60,8 @@ export default function CheckResultsPanel({
   ruleCount,
   viewSource,
   spellingFindings,
+  builtinFindings = 0,
+  spacingFindings = 0,
   consistencyFindings,
   spellingCheckDone,
   consistencyCheckDone,
@@ -136,7 +140,12 @@ export default function CheckResultsPanel({
       )}
       {viewSource === 'spelling' && spellingCheckDone && spellingFindings > 0 && (
         <p className="results-category-summary">
-          맞춤법 검사 {spellingFindings}건
+          {builtinFindings > 0 ? `자동 맞춤법 ${builtinFindings}건` : null}
+          {builtinFindings > 0 && spacingFindings > 0 ? ' · ' : null}
+          {spacingFindings > 0 ? `띄어쓰기 ${spacingFindings}건` : null}
+          {builtinFindings === 0 && spacingFindings === 0
+            ? `검사 ${spellingFindings}건`
+            : null}
         </p>
       )}
       {viewSource === 'consistency' &&
@@ -204,7 +213,7 @@ export default function CheckResultsPanel({
                             </>
                           ) : isCaution ? (
                             <>
-                              <span className="caution-badge-inline">주의</span>{' '}
+                              <span className="caution-badge-inline">띄어쓰기</span>{' '}
                               <span className="caution-result-chip">
                                 {cautionResultChipLabel(group)}
                               </span>

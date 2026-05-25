@@ -46,12 +46,12 @@ export default function BuiltinSpellingPanel({
           />
         </label>
         <span className="builtin-spelling-summary-title">
-          내장 맞춤법 규칙 ({enabled}/{total})
+          자동 맞춤법 ({enabled}/{total})
         </span>
       </summary>
       <p className="hint" style={{ margin: '8px 0 10px' }}>
-        체크한 규칙만 PDF 검사에 사용합니다. Google 시트에서 관리 ·{' '}
-        <code>npm run sync-spelling</code> 후 반영
+        틀린 표기 → 맞는 표기가 정해진 규칙입니다. 시트{' '}
+        <code>spelling_rules</code> · <code>npm run sync-spelling</code> 후 반영
       </p>
       <ul className="rule-list builtin-rule-list">
         {BUILT_IN_RULES.map((rule) => {

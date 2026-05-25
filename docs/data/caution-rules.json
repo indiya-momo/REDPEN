@@ -1,152 +1,80 @@
 {
   "groups": [
     {
-      "id": "particle-josa",
-      "title": "만 · 만큼 · 지",
-      "hideGroupTitle": true,
-      "tipInline": true,
-      "tip": "체언(명사·대명사·수사) 뒤 — 조사로 붙여 씁니다.\n용언(동사·형용사) 뒤 — 의존명사로 띄어 씁니다.",
+      "id": "josa-uinoun",
+      "tip": "만, 만큼, 지'는 체언(명사, 대명사, 수사) 뒤는 조사로 붙여 쓰고, 용언(동사, 형용사) 뒤는 의존명사로 띄어 쓴다.",
       "items": [
         {
-          "id": "particle-man",
-          "label": "만",
-          "enabled": false,
-          "matchMode": "any-before",
-          "inventoryOnly": false
-        },
-        {
-          "id": "particle-mankun",
+          "id": "josa-uinoun-mankum",
           "label": "만큼",
           "enabled": false,
           "matchMode": "any-before",
-          "inventoryOnly": false
-        },
-        {
-          "id": "particle-ji",
-          "label": "지",
-          "enabled": false,
-          "matchMode": "any-before",
-          "inventoryOnly": false
+          "inventoryOnly": false,
+          "displayLabel": "만큼(체연 또는 의존명사)"
         }
       ]
     },
     {
-      "id": "verb-bon",
-      "title": "본용언+보조용언",
-      "tip": "본동사·보조용언은 앞 용언과 붙여 쓰는 경우가 많습니다. 앞말과 어간 사이에만 공백이 있으면 표시합니다.",
+      "id": "josa-busa",
+      "tip": "같이'가 명사·대명사 뒤에서 비교(~처럼)나 동시(때)를 나타낼 때는 조사로 붙여 쓰고, 동반(함께)·동일의 뜻일 때는 부사로 띄어 쓴다.",
       "items": [
         {
-          "id": "verb-boda1",
-          "label": "보",
-          "enabled": false,
-          "matchMode": "spaced-stem",
-          "inventoryOnly": false,
-          "stems": ["보", "본"],
-          "displayLabel": "^보(ㄴ)다"
-        },
-        {
-          "id": "verb-haebo-sp",
-          "label": "해 보",
-          "enabled": false,
-          "matchMode": "fixed-phrase",
-          "inventoryOnly": false,
-          "stems": ["해 보"],
-          "displayLabel": "해 보다"
-        },
-        {
-          "id": "verb-haebo-gl",
-          "label": "해보",
-          "enabled": false,
-          "matchMode": "fixed-phrase",
-          "inventoryOnly": false,
-          "stems": ["해보"],
-          "displayLabel": "해보다"
-        },
-        {
-          "id": "verb-haebon-sp",
-          "label": "해 본",
-          "enabled": false,
-          "matchMode": "fixed-phrase",
-          "inventoryOnly": false,
-          "stems": ["해 본"],
-          "displayLabel": "해 본다"
-        },
-        {
-          "id": "verb-haebon-gl",
-          "label": "해본",
-          "enabled": false,
-          "matchMode": "fixed-phrase",
-          "inventoryOnly": false,
-          "stems": ["해본"],
-          "displayLabel": "해본다"
-        },
-        {
-          "id": "verb-boda2",
-          "label": "본",
+          "id": "josa-busa-gachi",
+          "label": "같이",
           "enabled": false,
           "matchMode": "any-before",
-          "inventoryOnly": true
+          "inventoryOnly": false,
+          "displayLabel": "같이(조사 또는 부사)"
+        }
+      ]
+    },
+    {
+      "id": "uinoun-space",
+      "tip": "정도'는 '그만큼의 분량이나 수준'을 뜻하는 의존명사로 앞말과 띄어 쓴다.",
+      "items": [
+        {
+          "id": "uinoun-jungdo",
+          "label": "정도",
+          "enabled": false,
+          "matchMode": "attached-before",
+          "inventoryOnly": false,
+          "displayLabel": "정도(의존명사)"
+        }
+      ]
+    },
+    {
+      "id": "jubsa-attach",
+      "tip": "쯤'은 수량을 나타내는 명사 뒤에 붙어 '정도'의 뜻을 더하는 접사",
+      "items": [
+        {
+          "id": "jubsa-garyang",
+          "label": "가량",
+          "enabled": false,
+          "matchMode": "spaced-before",
+          "inventoryOnly": false,
+          "displayLabel": "가량(접사)"
         },
         {
-          "id": "verb-boda3",
-          "label": "있",
+          "id": "jubsa-jjum",
+          "label": "쯤",
           "enabled": false,
-          "matchMode": "spaced-stem",
+          "matchMode": "spaced-before",
           "inventoryOnly": false,
-          "displayLabel": "^있다"
-        },
+          "displayLabel": "쯤(접사)"
+        }
+      ]
+    },
+    {
+      "id": "dannoun-space",
+      "tip": "수관형사+단위 명사 '가지' 띄어 쓰는 것이 원칙",
+      "items": [
         {
-          "id": "verb-boda4",
-          "label": "주",
+          "id": "dannoun-space-gaji",
+          "label": "가지",
           "enabled": false,
-          "matchMode": "spaced-stem",
+          "matchMode": "attached-before",
           "inventoryOnly": false,
-          "stems": ["주", "준"],
-          "displayLabel": "^주(ㄴ)다"
-        },
-        {
-          "id": "verb-boda5",
-          "label": "하",
-          "enabled": false,
-          "matchMode": "spaced-stem",
-          "inventoryOnly": false,
-          "stems": ["하", "한", "했"],
-          "displayLabel": "^하(ㄴ)했+다"
-        },
-        {
-          "id": "verb-boda6",
-          "label": "두",
-          "enabled": false,
-          "matchMode": "spaced-stem",
-          "inventoryOnly": false,
-          "stems": ["두", "둔"],
-          "displayLabel": "^두(ㄴ)다"
-        },
-        {
-          "id": "verb-boda7",
-          "label": "가",
-          "enabled": false,
-          "matchMode": "spaced-stem",
-          "inventoryOnly": false,
-          "stems": ["가", "갔"],
-          "displayLabel": "^가(ㅆ)다"
-        },
-        {
-          "id": "verb-boda8",
-          "label": "오",
-          "enabled": false,
-          "matchMode": "spaced-stem",
-          "inventoryOnly": false,
-          "stems": ["오", "온", "왔"],
-          "displayLabel": "^오(ㄴ)왔+다"
-        },
-        {
-          "id": "verb-boda9",
-          "label": "놓",
-          "enabled": false,
-          "matchMode": "spaced-stem",
-          "inventoryOnly": false,
-          "displayLabel": "^놓다"
+          "displayLabel": "가지(단위명사)"
         }
       ]
     }

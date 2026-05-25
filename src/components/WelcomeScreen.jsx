@@ -50,7 +50,7 @@ export default function WelcomeScreen({ onStart }) {
                 <span className="welcome-gate__step-num">01</span> 적용규칙 확인
               </h3>
               <p>
-                맞춤법·일관성 탭에서
+                맞춤법·띄어쓰기·일관성 탭에서
                 <br />
                 적용하려는 규칙을 켭니다
               </p>
