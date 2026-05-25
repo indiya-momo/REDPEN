@@ -2,7 +2,7 @@
   "groups": [
     {
       "id": "josa-uinoun",
-      "tip": "만, 만큼, 지'는 체언(명사, 대명사, 수사) 뒤는 조사로 붙여 쓰고, 용언(동사, 형용사) 뒤는 의존명사로 띄어 쓴다.",
+      "tip": "만, 만큼, 지'는 체언(명사, 대명사, 수사) 뒤는 조사로 붙여 쓰고, 용언(동사, 형용사) 뒤는 의존명사로 띄어 쓴다",
       "items": [
         {
           "id": "josa-uinoun-mankum",
@@ -10,13 +10,13 @@
           "enabled": false,
           "matchMode": "any-before",
           "inventoryOnly": false,
-          "displayLabel": "만큼(체연 또는 의존명사)"
+          "displayLabel": "만큼(체언 또는 의존명사)"
         }
       ]
     },
     {
       "id": "josa-busa",
-      "tip": "같이'가 명사·대명사 뒤에서 비교(~처럼)나 동시(때)를 나타낼 때는 조사로 붙여 쓰고, 동반(함께)·동일의 뜻일 때는 부사로 띄어 쓴다.",
+      "tip": "같이'가 명사·대명사 뒤에서 비교(~처럼)나 동시(때)를 나타낼 때는 조사로 붙여 쓰고, 동반(함께)·동일의 뜻일 때는 부사로 띄어 쓴다",
       "items": [
         {
           "id": "josa-busa-gachi",
@@ -30,7 +30,7 @@
     },
     {
       "id": "uinoun-space",
-      "tip": "정도'는 '그만큼의 분량이나 수준'을 뜻하는 의존명사로 앞말과 띄어 쓴다.",
+      "tip": "정도'는 '그만큼의 분량이나 수준'을 뜻하는 의존명사로 앞말과 띄어 쓴다",
       "items": [
         {
           "id": "uinoun-jungdo",
@@ -44,23 +44,19 @@
     },
     {
       "id": "jubsa-attach",
-      "tip": "쯤'은 수량을 나타내는 명사 뒤에 붙어 '정도'의 뜻을 더하는 접사",
+      "tip": "가량, 쯤'은  '정도'의 뜻을 더하는 접사로 수량을 나타내는 명사 뒤에 붙여 쓴다",
       "items": [
         {
           "id": "jubsa-garyang",
-          "label": "가량",
+          "label": "가량, 쯤",
           "enabled": false,
           "matchMode": "spaced-before",
           "inventoryOnly": false,
-          "displayLabel": "가량(접사)"
-        },
-        {
-          "id": "jubsa-jjum",
-          "label": "쯤",
-          "enabled": false,
-          "matchMode": "spaced-before",
-          "inventoryOnly": false,
-          "displayLabel": "쯤(접사)"
+          "stems": [
+            "가량",
+            "쯤"
+          ],
+          "displayLabel": "가량, 쯤(접사)"
         }
       ]
     },

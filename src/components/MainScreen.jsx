@@ -291,7 +291,7 @@ export default function MainScreen({
       </button>
       <p className="hint" style={{ marginTop: 8 }}>
         {workTab === 'spelling'
-          ? `자동 맞춤법 ${builtInRuleCount} · 띄어쓰기 ${spacingRuleCount} · 합계 ${ruleCheck.spellingActiveRules.length}개 규칙`
+          ? `맞춤법 확인 ${builtInRuleCount} · 편집자 검토 ${spacingRuleCount} · 합계 ${ruleCheck.spellingActiveRules.length}개 규칙`
           : `일관성 ${ruleCheck.consistencyActiveRules.length}개 규칙 검사`}
       </p>
       {pdf.isProcessing && pdf.progressLabel && (

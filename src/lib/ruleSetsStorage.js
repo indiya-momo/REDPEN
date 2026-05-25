@@ -37,7 +37,7 @@ export function formatRuleSetSummary({
   consistencyRuleCount,
 }) {
   const date = formatRuleSetSavedDate(savedAt);
-  const counts = `자동 맞춤법 ${builtInRuleCount} · 띄어쓰기 ${spacingRuleCount} · 일관성 ${consistencyRuleCount}`;
+  const counts = `맞춤법 확인 ${builtInRuleCount} · 편집자 검토 ${spacingRuleCount} · 일관성 ${consistencyRuleCount}`;
   return date ? `${date} ${counts}` : counts;
 }
 

@@ -364,7 +364,7 @@ export default function ConsistencyPanel({
               onClick={addGlobalExcludePhrases}
             >
               <Plus size={14} />
-              제외 추가
+              등록
             </button>
           </div>
           {globalExcludePhrases.length > 0 && (

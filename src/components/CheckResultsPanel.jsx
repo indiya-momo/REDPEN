@@ -140,9 +140,9 @@ export default function CheckResultsPanel({
       )}
       {viewSource === 'spelling' && spellingCheckDone && spellingFindings > 0 && (
         <p className="results-category-summary">
-          {builtinFindings > 0 ? `자동 맞춤법 ${builtinFindings}건` : null}
+          {builtinFindings > 0 ? `맞춤법 확인 ${builtinFindings}건` : null}
           {builtinFindings > 0 && spacingFindings > 0 ? ' · ' : null}
-          {spacingFindings > 0 ? `띄어쓰기 ${spacingFindings}건` : null}
+          {spacingFindings > 0 ? `편집자 검토 ${spacingFindings}건` : null}
           {builtinFindings === 0 && spacingFindings === 0
             ? `검사 ${spellingFindings}건`
             : null}
@@ -213,7 +213,7 @@ export default function CheckResultsPanel({
                             </>
                           ) : isCaution ? (
                             <>
-                              <span className="caution-badge-inline">띄어쓰기</span>{' '}
+                              <span className="caution-badge-inline">검토</span>{' '}
                               <span className="caution-result-chip">
                                 {cautionResultChipLabel(group)}
                               </span>
