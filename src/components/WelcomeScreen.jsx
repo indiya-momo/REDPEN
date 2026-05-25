@@ -23,7 +23,7 @@ export default function WelcomeScreen({ onStart }) {
             <p className="welcome-gate__lead">
               맞춤법·표기 일관성을 찾는 조판 PDF 검수 도구입니다
               <br />
-              원고와 검사 결과는 이 브라우저 안에서만 처리합니다
+              원고와 검사 결과는 <strong>이 브라우저 안에서만</strong> 처리합니다
             </p>
           </header>
 
@@ -76,6 +76,10 @@ export default function WelcomeScreen({ onStart }) {
               </p>
             </article>
           </div>
+
+          <p className="welcome-gate__steps-note">
+            시크릿 창에서 작업 시 복원 · 저장이 되지 않습니다
+          </p>
         </div>
 
         <aside className="welcome-gate__stage">
@@ -98,12 +102,9 @@ export default function WelcomeScreen({ onStart }) {
                 className="btn-welcome-primary welcome-gate__start"
                 onClick={onStart}
               >
-                여행 시작하기
+                검수 시작하기
                 <ArrowRight size={18} aria-hidden />
               </button>
-              <p className="welcome-gate__cta-note">
-                시크릿 창에서 작업 시 복원 · 저장이 되지 않습니다
-              </p>
             </div>
           </div>
         </aside>
