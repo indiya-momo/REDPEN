@@ -153,7 +153,7 @@ npm run sync
 
 | 파일 | 역할 |
 |------|------|
-| `docs/sheet-spelling.md` | 이 문서 |
+| `project-docs/sheet-spelling.md` | 이 문서 |
 | `scripts/sync-spelling.mjs` | 시트 → JSON |
 | `src/data/spelling-rules.json` | 앱이 import |
 | `src/lib/builtInRules.js` | JSON → BUILT_IN_RULES |

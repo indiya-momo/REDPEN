@@ -267,7 +267,7 @@ VITE_FEEDBACK_FORM_ENTRY_MESSAGE= # entry.yyyyy (본문 필드)
 ### 구현·운영 참고
 
 - `src/components/FeedbackModal.jsx` · `src/lib/feedbackConfig.js`  
-- **연동·제출 검증 절차:** [`docs/feedback-form.md`](feedback-form.md)  
+- **연동·제출 검증 절차:** [`project-docs/feedback-form.md`](feedback-form.md)  
 - 변수 이름: `.env.example`  
 
 ---
@@ -318,17 +318,17 @@ p.12 (2), p.18 (1)
 
 | 파일 | 용도 |
 |------|------|
-| `docs/PRD.md` | 원본 PRD 전문 (필요 시 복사) |
-| `docs/product-spine.md` | **이 파일** — 결정·범위·로드맵 |
-| `docs/wireframe-screens.html` | **와이어프레임 v0** — 메인·설정·흐름 (브라우저에서 열기) |
-| `docs/sheet-spelling.md` | **맞춤법 시트 → sync-spelling** 운영 |
-| `docs/templates/spelling_rules.csv` | 시트 붙여넣기용 템플릿 |
-| `docs/templates/caution_rules.csv` | 주의 규칙 시트 템플릿 |
+| `project-docs/PRD.md` | 원본 PRD 전문 (필요 시 복사) |
+| `project-docs/product-spine.md` | **이 파일** — 결정·범위·로드맵 |
+| `project-docs/wireframe-screens.html` | **와이어프레임 v0** — 메인·설정·흐름 (브라우저에서 열기) |
+| `project-docs/sheet-spelling.md` | **맞춤법 시트 → sync-spelling** 운영 |
+| `project-docs/templates/spelling_rules.csv` | 시트 붙여넣기용 템플릿 |
+| `project-docs/templates/caution_rules.csv` | 주의 규칙 시트 템플릿 |
 | `.env.example` | 시트 ID · **피드백 Form** 변수 |
-| `docs/feedback-form.md` | **Form 연동·entry ID·제출 검증** |
-| `docs/v1.0-checklist.md` | (선택) 완료 정의 10줄 |
-| `docs/momo-assets.md` | **모모 PNG 제작·전달 방법** |
-| `docs/momo-animation-workflow.md` | **모모 궤도 애니 작업 회고·에이전트 요청 가이드** |
+| `project-docs/feedback-form.md` | **Form 연동·entry ID·제출 검증** |
+| `project-docs/v1.0-checklist.md` | (선택) 완료 정의 10줄 |
+| `project-docs/momo-assets.md` | **모모 PNG 제작·전달 방법** |
+| `project-docs/momo-animation-workflow.md` | **모모 궤도 애니 작업 회고·에이전트 요청 가이드** |
 
 ---
 

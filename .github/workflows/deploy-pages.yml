@@ -1,7 +1,7 @@
 name: Deploy to GitHub Pages
 
-# dist만 gh-pages 브랜치에 올립니다. 저장소 루트(main) 소스가 배포되면 /src/main.jsx 만 보이고 앱이 깨집니다.
-# Settings → Pages → Build and deployment → Deploy from a branch → Branch: gh-pages / Folder: / (root)
+# 빌드 결과(dist)를 main 브랜치의 docs/ 폴더에 커밋합니다.
+# GitHub Settings → Pages → Branch: main · Folder: /docs  (/(root) 아님!)
 
 on:
   push:
@@ -46,10 +46,18 @@ jobs:
           grep -q '/REDPEN/assets/' dist/index.html
           ! grep -q '/src/main.jsx' dist/index.html
 
-      - name: Publish gh-pages branch
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist
-          publish_branch: gh-pages
-          force_orphan: true
+      - name: Publish dist to docs/
+        shell: bash
+        run: |
+          rm -rf docs
+          cp -r dist docs
+          touch docs/.nojekyll
+
+      - name: Commit and push docs/
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A docs/
+          git diff --staged --quiet && echo "No docs changes" && exit 0
+          git commit -m "chore(pages): deploy built app to docs/"
+          git push

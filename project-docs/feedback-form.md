@@ -157,4 +157,4 @@ fetch('https://docs.google.com/forms/d/e/…/formResponse', {
 | `src/lib/feedbackConfig.js` | env 읽기 · POST |
 | `src/components/FeedbackModal.jsx` | UI |
 | `.env.example` | 변수 이름 참고 |
-| `docs/product-spine.md` | 제품 정책 요약 |
+| `project-docs/product-spine.md` | 제품 정책 요약 |

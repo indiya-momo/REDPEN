@@ -9,7 +9,7 @@ export const FEEDBACK_TYPES = [
 /**
  * Google Form 연동 — .env에 값을 넣으면 submitFeedback이 POST합니다.
  * no-cors: 응답 본문을 읽을 수 없어 ok:true ≠ Form 수신 보장.
- * 연결 후 검증: docs/feedback-form.md
+ * 연결 후 검증: project-docs/feedback-form.md
  * @see .env.example
  */
 export function getFeedbackFormConfig() {
