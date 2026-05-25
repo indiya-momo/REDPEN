@@ -1,7 +1,17 @@
 ﻿# PDF 출판 교정 보조 툴
 
-> **배포 사이트:** https://indiya-momo.github.io/REDPEN/  
-> GitHub Pages는 **Settings → Pages → Source: GitHub Actions** 여야 앱이 표시됩니다.
+> **배포 사이트:** https://indiya-momo.github.io/REDPEN/
+
+### GitHub Pages 배포 (한 번만 설정)
+
+지금처럼 **제목만 바뀌고 화면이 안 뜨면** Pages가 **빌드 결과(`dist`)가 아니 저장소 소스(`index.html` + `/src/main.jsx`)** 를 올리고 있는 상태입니다.
+
+1. GitHub **REDPEN** → **Settings** → **Pages**
+2. **Build and deployment** → **Source: Deploy from a branch**
+3. **Branch: `gh-pages`** · **Folder: `/ (root)`** → Save  
+   (`main` / `master` 루트로 두면 앱이 깨집니다.)
+4. `main` 또는 `master`에 push → Actions **Deploy to GitHub Pages** 가 `dist`만 `gh-pages` 브랜치에 올립니다.
+5. 1~2분 후 사이트에서 **Ctrl+Shift+R** 새로고침. `index.html` 소스 보기에 `/REDPEN/assets/...js` 가 보이면 정상입니다.
 
 조판 PDF에서 맞춤법·표기 일관성 규칙을 **탐지**하고 위치를 **하이라이트**하는 브라우저 로컬 도구.
 
