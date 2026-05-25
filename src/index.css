@@ -2616,6 +2616,8 @@ details[open] > summary .details-chevron {
 
 /* —— 대문 (다크 레이아웃 + 모모 오브) —— */
 .welcome-gate {
+  display: flex;
+  flex-direction: column;
   --welcome-bg: #141210;
   --welcome-surface: rgba(255, 248, 235, 0.04);
   --welcome-border: rgba(212, 175, 90, 0.22);
@@ -2639,9 +2641,10 @@ details[open] > summary .details-chevron {
 .welcome-gate__layout {
   position: relative;
   z-index: 1;
+  flex: 1 0 auto;
   box-sizing: border-box;
   width: min(1180px, 100%);
-  min-height: 100vh;
+  min-height: 0;
   margin: 0 auto;
   padding: clamp(2rem, 4.5vw, 3.5rem) clamp(1.25rem, 4vw, 2.75rem)
     clamp(4.5rem, 8vw, 6rem);
@@ -2906,17 +2909,26 @@ details[open] > summary .details-chevron {
   background: var(--welcome-accent-hover);
 }
 
+.welcome-gate__version {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  width: min(1180px, 100%);
+  margin: 0 auto;
+  padding: 0 clamp(1.25rem, 4vw, 2.75rem) clamp(1.25rem, 3vw, 2rem);
+}
+
 .app-version-badge--prominent {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
   gap: 8px 12px;
-  margin: 0 0 12px;
+  margin: 0;
   padding: 8px 12px;
   border: 1px solid rgba(245, 200, 120, 0.45);
   border-radius: 8px;
   background: rgba(0, 0, 0, 0.35);
-  border-top: none;
 }
 
 .app-version-badge--prominent .app-version-badge__label {

@@ -36,6 +36,7 @@ jobs:
         env:
           VITE_BASE: /REDPEN/
           VITE_UI_BUILD_ID: ${{ github.sha }}
+          VITE_BUILD_TIME: ${{ github.event.head_commit.timestamp || github.run_started_at }}
           VITE_FEEDBACK_FORM_VIEW_URL: https://forms.gle/f6FpybKZHC5yAR817
           VITE_FEEDBACK_FORM_ACTION_URL: https://docs.google.com/forms/d/e/1FAIpQLSchUzVmBmu1zGiFH_tPDmiv0mY6C6oq-Y4ZxjCiU-oAoE5WPA/formResponse
           VITE_FEEDBACK_FORM_ENTRY_INCONVENIENT: entry.2074090186

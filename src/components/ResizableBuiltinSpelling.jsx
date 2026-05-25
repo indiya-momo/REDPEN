@@ -148,7 +148,7 @@ export default function ResizableBuiltinSpelling({
         aria-valuenow={height}
         aria-valuemin={MIN_HEIGHT}
         aria-valuemax={MAX_HEIGHT}
-        aria-label="아래 패널 높이 조절 — 위로 끌면 띄어쓰기·자동 맞춤법 영역이 넓어집니다"
+        aria-label="아래 패널 높이 조절 — 위로 끌면 편집자 검토·맞춤법 확인 영역이 넓어집니다"
         title="높이 조절 (드래그)"
         onPointerDown={startDrag}
       >

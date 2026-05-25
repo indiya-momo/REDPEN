@@ -42,17 +42,13 @@ export default function BuiltinSpellingPanel({
             type="checkbox"
             checked={allChecked}
             onChange={() => onBuiltInSetAll(!allChecked)}
-            aria-label="내장 맞춤법 규칙 전체 선택"
+            aria-label="맞춤법 확인 규칙 전체 선택"
           />
         </label>
         <span className="builtin-spelling-summary-title">
-          자동 맞춤법 ({enabled}/{total})
+          맞춤법 확인 ({enabled}/{total})
         </span>
       </summary>
-      <p className="hint" style={{ margin: '8px 0 10px' }}>
-        틀린 표기 → 맞는 표기가 정해진 규칙입니다. 시트{' '}
-        <code>spelling_rules</code> · <code>npm run sync-spelling</code> 후 반영
-      </p>
       <ul className="rule-list builtin-rule-list">
         {BUILT_IN_RULES.map((rule) => {
           const tip = (rule.tip || '').trim();

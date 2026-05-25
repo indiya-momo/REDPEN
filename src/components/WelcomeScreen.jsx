@@ -14,7 +14,6 @@ export default function WelcomeScreen({ onStart }) {
       <div className="welcome-gate__layout">
         <div className="welcome-gate__copy">
           <header className="welcome-gate__header">
-            <AppVersionBadge prominent />
             <p className="welcome-gate__eyebrow">조판 PDF 검수 도구</p>
             <h1>
               <span className="welcome-gate__title-main">인디야</span>
@@ -111,6 +110,9 @@ export default function WelcomeScreen({ onStart }) {
         </aside>
       </div>
 
+      <footer className="welcome-gate__version">
+        <AppVersionBadge prominent />
+      </footer>
     </div>
   );
 }

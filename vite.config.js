@@ -2,7 +2,11 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
 if (!process.env.VITE_UI_BUILD_ID) {
-  process.env.VITE_UI_BUILD_ID = `${new Date().toISOString().slice(0, 10)}-local`;
+  process.env.VITE_UI_BUILD_ID = 'dev-local';
+}
+
+if (!process.env.VITE_BUILD_TIME) {
+  process.env.VITE_BUILD_TIME = new Date().toISOString();
 }
 
 export default defineConfig({

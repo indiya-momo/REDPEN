@@ -59,7 +59,7 @@ export default function RuleSetPanel({
             <span className="ruleset-panel__summary-date">{savedDateLabel}</span>
           ) : null}
           {savedDateLabel ? ' ' : null}
-          자동 맞춤법 <strong>{builtInRuleCount}</strong> · 띄어쓰기{' '}
+          맞춤법 확인 <strong>{builtInRuleCount}</strong> · 편집자 검토{' '}
           <strong>{spacingRuleCount}</strong> · 일관성{' '}
           <strong>{consistencyRuleCount}</strong>
         </p>

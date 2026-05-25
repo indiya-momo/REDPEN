@@ -67,17 +67,13 @@ export default function CautionChecklist({
             type="checkbox"
             checked={allChecked}
             onChange={() => onCautionSetAll(!allChecked)}
-            aria-label="띄어쓰기 검토 규칙 전체 선택"
+            aria-label="편집자 검토 필요 규칙 전체 선택"
           />
         </label>
         <span className="caution-checklist-summary-title">
-          띄어쓰기 검토 (검사 {activeCount}/{total})
+          편집자 검토 필요 (검사 {activeCount}/{total})
         </span>
       </summary>
-      <p className="hint caution-checklist-hint">
-        체크한 항목만 PDF에 (검토)로 표시합니다. ap-attach·ap-space는 틀린 쪽만
-        잡습니다.
-      </p>
       <ul className="caution-checklist">
         {CAUTION_GROUPS.map((group) => {
           const heading = groupHeading(group);

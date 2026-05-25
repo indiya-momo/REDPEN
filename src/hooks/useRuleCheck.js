@@ -144,7 +144,7 @@ export function useRuleCheck({
 
       if (runSpelling && spellingActiveRules.length === 0) {
         alert(
-          '활성화된 자동 맞춤법·띄어쓰기 규칙이 없습니다. 규칙을 켠 뒤 다시 실행하세요.',
+          '활성화된 맞춤법 확인·편집자 검토 규칙이 없습니다. 규칙을 켠 뒤 다시 실행하세요.',
         );
         return;
       }
