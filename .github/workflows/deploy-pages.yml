@@ -1,11 +1,11 @@
 name: Deploy to GitHub Pages
 
-# 빌드 결과(dist)를 main 브랜치의 docs/ 폴더에 커밋합니다.
+# 빌드 결과(dist)를 docs/ 에 커밋합니다. 브랜치는 main 만 사용합니다.
 # GitHub Settings → Pages → Branch: main · Folder: /docs  (/(root) 아님!)
 
 on:
   push:
-    branches: [main, master]
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -35,6 +35,7 @@ jobs:
         run: npm run build
         env:
           VITE_BASE: /REDPEN/
+          VITE_UI_BUILD_ID: ${{ github.sha }}
           VITE_FEEDBACK_FORM_VIEW_URL: https://forms.gle/f6FpybKZHC5yAR817
           VITE_FEEDBACK_FORM_ACTION_URL: https://docs.google.com/forms/d/e/1FAIpQLSchUzVmBmu1zGiFH_tPDmiv0mY6C6oq-Y4ZxjCiU-oAoE5WPA/formResponse
           VITE_FEEDBACK_FORM_ENTRY_INCONVENIENT: entry.2074090186

@@ -2906,7 +2906,35 @@ details[open] > summary .details-chevron {
   background: var(--welcome-accent-hover);
 }
 
-.welcome-gate .app-version-badge {
+.app-version-badge--prominent {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 12px;
+  margin: 0 0 12px;
+  padding: 8px 12px;
+  border: 1px solid rgba(245, 200, 120, 0.45);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.35);
+  border-top: none;
+}
+
+.app-version-badge--prominent .app-version-badge__label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(245, 220, 160, 0.95);
+  font-family: inherit;
+}
+
+.app-version-badge--prominent .app-version-badge__code {
+  font-size: 0.72rem;
+  color: #f5f0e6;
+  word-break: break-all;
+}
+
+.welcome-gate .app-version-badge:not(.app-version-badge--prominent) {
   z-index: 2;
   color: rgba(245, 240, 230, 0.35);
 }
