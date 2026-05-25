@@ -21,6 +21,6 @@ export default defineConfig({
     strictPort: false,
   },
   optimizeDeps: {
-    include: ['pdfjs-dist'],
+    include: ['pdfjs-dist/legacy/build/pdf.mjs'],
   },
 });
