@@ -1,0 +1,212 @@
+[
+  {
+    "find": "과반수 이상",
+    "replace": "과반수",
+    "enabled": true,
+    "tip": "과반수는 '반이 넘는 수'"
+  },
+  {
+    "find": "설레이",
+    "replace": "설레",
+    "enabled": true,
+    "tip": "설레다'의 관형사형"
+  },
+  {
+    "find": "되뇌이",
+    "replace": "되뇌",
+    "enabled": true,
+    "tip": "되뇌다'의 관형사형"
+  },
+  {
+    "find": "개인",
+    "replace": "갠",
+    "enabled": true,
+    "tip": "개다'의 관형사형"
+  },
+  {
+    "find": "헤메이",
+    "replace": "헤메",
+    "enabled": true,
+    "tip": "헤메다'의 관형사형"
+  },
+  {
+    "find": "갯수",
+    "replace": "개수",
+    "enabled": true,
+    "tip": "두 음절로 된 한자어 6개만 사이시옷을 넣는다"
+  },
+  {
+    "find": "싯가",
+    "replace": "시가",
+    "enabled": true,
+    "tip": "두 음절로 된 한자어 6개만 사이시옷을 넣는다"
+  },
+  {
+    "find": "댓가",
+    "replace": "대가",
+    "enabled": true,
+    "tip": "두 음절로 된 한자어 6개만 사이시옷을 넣는다"
+  },
+  {
+    "find": "촛점",
+    "replace": "초점",
+    "enabled": true,
+    "tip": "두 음절로 된 한자어 6개만 사이시옷을 넣는다"
+  },
+  {
+    "find": "걸맞는",
+    "replace": "걸맞은",
+    "enabled": true,
+    "tip": "형용사에는 'ㄴ'을 붙일 수 없다"
+  },
+  {
+    "find": "알맞는",
+    "replace": "알맞은",
+    "enabled": true,
+    "tip": "형용사에는 'ㄴ'을 붙일 수 없다"
+  },
+  {
+    "find": "뒷처리",
+    "replace": "뒤처리",
+    "enabled": true,
+    "tip": "거센소리 ㅊ,ㅋ,ㅌ,ㅍ 앞에는 사이시옷이 붙지 않는다"
+  },
+  {
+    "find": "뒷풀이",
+    "replace": "뒤풀이",
+    "enabled": true,
+    "tip": "거센소리 ㅊ,ㅋ,ㅌ,ㅍ 앞에는 사이시옷이 붙지 않는다"
+  },
+  {
+    "find": "들어나",
+    "replace": "드러나",
+    "enabled": true,
+    "tip": "알려지지 않던 것이 알려지게 되는 것은 '드러나다', “물건을 밖으로 내놓는 것은 '들어내다'"
+  },
+  {
+    "find": "성장율",
+    "replace": "성장률",
+    "enabled": true,
+    "tip": "접미사 '-율率'은 모음이나 'ㄴ' 받침 뒤에서는 '-율' 그 외는 '률'로 표기"
+  },
+  {
+    "find": "합격율",
+    "replace": "합격률",
+    "enabled": true,
+    "tip": "접미사 '-율率'은 모음이나 'ㄴ' 받침 뒤에서는 '-율' 그 외는 '률'로 표기"
+  },
+  {
+    "find": "취업율",
+    "replace": "취업률",
+    "enabled": true,
+    "tip": "접미사 '-율率'은 모음이나 'ㄴ' 받침 뒤에서는 '-율' 그 외는 '률'로 표기"
+  },
+  {
+    "find": "머지 않",
+    "replace": "머지않",
+    "enabled": true,
+    "tip": "표준국어대사전 '머지않다' 등재"
+  },
+  {
+    "find": "빼곡이",
+    "replace": "빼곡히",
+    "enabled": true,
+    "tip": "표준국어대사전  '빼곡히' 등재"
+  },
+  {
+    "find": "되풀이 되",
+    "replace": "되풀이되",
+    "enabled": true,
+    "tip": "표준국어대사전  '되풀이되다' 등재"
+  },
+  {
+    "find": "가 닿",
+    "replace": "가닿",
+    "enabled": true,
+    "tip": "표준국어대사전  '가닿다' 등재"
+  },
+  {
+    "find": "안절부절하",
+    "replace": "안절부절못",
+    "enabled": true,
+    "tip": "안절부절'에 '못하다'를 붙여 '어쩔 줄 몰라 하다' 라는 뜻이 성립한다"
+  },
+  {
+    "find": "쳐지",
+    "replace": "처지",
+    "enabled": true,
+    "tip": "처지다'의 잘못된 표현"
+  },
+  {
+    "find": "희노애락",
+    "replace": "희로애락",
+    "enabled": true,
+    "tip": "怒(노)를 속음('로')으로 바뀌어 적고 발음하는 경우"
+  },
+  {
+    "find": "녹록치",
+    "replace": "녹록지",
+    "enabled": true,
+    "tip": "어간 끝 음절 '하'가 줄어든 대로 적는다"
+  },
+  {
+    "find": "거북치",
+    "replace": "거북지",
+    "enabled": true,
+    "tip": "어간 끝 음절 '하'가 줄어든 대로 적는다"
+  },
+  {
+    "find": "깨끗치",
+    "replace": "깨끗지",
+    "enabled": true,
+    "tip": "어간 끝 음절 '하'가 줄어든 대로 적는다"
+  },
+  {
+    "find": "넉넉치",
+    "replace": "넉넉지",
+    "enabled": true,
+    "tip": "어간 끝 음절 '하'가 줄어든 대로 적는다"
+  },
+  {
+    "find": "익숙케",
+    "replace": "익숙하게",
+    "enabled": true,
+    "tip": "어간 끝 음절 '하'가 줄어든 대로 적는다"
+  },
+  {
+    "find": "놀래키",
+    "replace": "놀래",
+    "enabled": true,
+    "tip": "놀래키다'는 사전 미등재"
+  },
+  {
+    "find": "높히",
+    "replace": "높이",
+    "enabled": true,
+    "tip": "높이다'의 과거형은 '높였다'"
+  },
+  {
+    "find": "덮히",
+    "replace": "덮이",
+    "enabled": true,
+    "tip": "덮이다'의 과거형은 '덮였다'"
+  },
+  {
+    "find": "담궈",
+    "replace": "담가",
+    "enabled": true,
+    "tip": "담그다'의 과거형은 '담갔다'"
+  },
+  {
+    "find": "치뤄",
+    "replace": "치러",
+    "enabled": true,
+    "tip": "치르다'의 과거형은 '치렀다'"
+  },
+  {
+    "find": "잠궈",
+    "replace": "잠가",
+    "enabled": true,
+    "tip": "잠그다'의 과거형은'잠갔다'"
+  }
+]
