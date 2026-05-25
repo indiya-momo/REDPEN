@@ -161,14 +161,14 @@ export default function ResizableBuiltinSpelling({
         style={{ height }}
       >
         <div className="builtin-spelling-resize-body">
-          <div className="builtin-spelling-caution-scroll">
+          <div className="builtin-spelling-caution-scroll custom-scrollbar">
             <CautionChecklist
               cautionEnabled={cautionEnabled}
               onCautionToggle={onCautionToggle}
               onCautionSetAll={onCautionSetAll}
             />
           </div>
-          <div className="builtin-spelling-rules-scroll">
+          <div className="builtin-spelling-rules-scroll custom-scrollbar">
             <BuiltinSpellingPanel
               builtInEnabled={builtInEnabled}
               onBuiltInToggle={onBuiltInToggle}

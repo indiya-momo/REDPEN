@@ -17,7 +17,7 @@ export function countSpacingReviewActiveRules(input = {}) {
 }
 
 /**
- * 맞춤법 탭 검사에 쓰이는 활성 규칙 수 (자동 맞춤법 + 띄어쓰기 검토)
+ * 맞춤법 탭 검사에 쓰이는 활성 규칙 수 (맞춤법 확인 + 편집자 검토)
  * @param {{
  *   builtInEnabled?: Record<string, boolean>,
  *   cautionEnabled?: Record<string, boolean>,
@@ -35,7 +35,7 @@ export function countsTowardConsistencyQuota(rule) {
 }
 
 /**
- * 일관성 탭 활성 규칙 수 (본용언+보조용언 띄어쓰기 제외)
+ * 일관성 탭 활성 규칙 수 (본용언+보조용언 붙이기 제외)
  * @param {import('./ruleTypes.js').Rule[]} [customRules]
  */
 export function countConsistencyActiveRules(customRules = []) {
@@ -44,7 +44,7 @@ export function countConsistencyActiveRules(customRules = []) {
 }
 
 /**
- * 활성 규칙 합계 — 자동 맞춤법 + 띄어쓰기 검토 + 일관성(사용자)
+ * 활성 규칙 합계 — 맞춤법 확인 + 편집자 검토 + 일관성(사용자)
  * @param {{
  *   builtInEnabled?: Record<string, boolean>,
  *   cautionEnabled?: Record<string, boolean>,

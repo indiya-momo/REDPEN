@@ -1,5 +1,6 @@
-/** package.json version */
-export const APP_VERSION = '0.1.0';
+import packageJson from '../../package.json';
+
+export const APP_VERSION = packageJson.version;
 
 /**
  * 화면에서 바로 확인하는 기능 표식 — UI를 바꿀 때마다 올리면 됩니다.
@@ -53,9 +54,4 @@ export function versionLabel() {
   }
   parts.push(UI_FEATURE_MARK, mode);
   return parts.join(' · ');
-}
-
-/** @deprecated versionLabel() 사용 */
-export function buildFingerprint() {
-  return versionLabel();
 }
