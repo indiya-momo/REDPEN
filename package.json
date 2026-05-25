@@ -14,7 +14,8 @@
     "preview": "vite preview --host --open",
     "sync-spelling": "node scripts/sync-spelling.mjs",
     "sync-caution": "node scripts/sync-caution.mjs",
-    "sync": "npm run sync-spelling && npm run sync-caution"
+    "sync-bon-bojo": "node scripts/sync-bon-bojo.mjs",
+    "sync": "npm run sync-spelling && npm run sync-caution && npm run sync-bon-bojo"
   },
   "dependencies": {
     "lucide-react": "^0.511.0",

@@ -19,13 +19,20 @@ export function buildRulesForAuxiliaryEntry(rules, tailWord) {
 /** @param {import('./ruleTypes.js').Rule[]} customRules */
 export function listAuxiliaryVerbEntries(customRules) {
   const seen = new Set();
-  /** @type {{ tailWord: string }[]} */
+  /** @type {{ tailWord: string, displayLabel?: string }[]} */
   const entries = [];
   for (const r of customRules) {
     const tw = r.tailWord?.trim();
     if (!tw || r.patternKind !== 'auxiliary-verb' || seen.has(tw)) continue;
     seen.add(tw);
-    entries.push({ tailWord: tw });
+    const group = customRules.filter(
+      (row) => row.patternKind === 'auxiliary-verb' && row.tailWord === tw,
+    );
+    const displayLabel = group[0]?.label?.trim() || undefined;
+    entries.push({
+      tailWord: tw,
+      ...(displayLabel ? { displayLabel } : {}),
+    });
   }
   return entries.sort((a, b) => a.tailWord.localeCompare(b.tailWord, 'ko'));
 }
