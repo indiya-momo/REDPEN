@@ -29,12 +29,18 @@ export function countSpellingActiveRules(input = {}) {
   );
 }
 
+/** @param {import('./ruleTypes.js').Rule} rule */
+export function countsTowardConsistencyQuota(rule) {
+  return rule.patternKind !== 'auxiliary-verb';
+}
+
 /**
- * 일관성 탭 활성 규칙 수
+ * 일관성 탭 활성 규칙 수 (본용언+보조용언 띄어쓰기 제외)
  * @param {import('./ruleTypes.js').Rule[]} [customRules]
  */
 export function countConsistencyActiveRules(customRules = []) {
-  return customRules.filter((r) => r.enabled).length;
+  return customRules.filter((r) => r.enabled && countsTowardConsistencyQuota(r))
+    .length;
 }
 
 /**

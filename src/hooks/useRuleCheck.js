@@ -78,7 +78,7 @@ export function useRuleCheck({
   const consistencyActiveRules = useMemo(
     () =>
       customRules
-        .filter((r) => r.enabled)
+        .filter((r) => r.enabled && r.patternKind !== 'auxiliary-verb')
         .map((r) => ({
           ...r,
           category:

@@ -2,7 +2,7 @@
   "groups": [
     {
       "id": "verb-bon",
-      "tip": "있다(앞말+공백+있+어미)",
+      "tip": "본용언 +­ -아/­어 + 보조 용언은 붙여 씀을 허용한다",
       "items": [
         {
           "id": "verb-boda1",
@@ -10,7 +10,12 @@
           "enabled": false,
           "stems": [
             "해 보",
-            "해보"
+            "해 본",
+            "해 봅",
+            "어 보",
+            "어 본",
+            "어 봅",
+            "어 봤"
           ],
           "displayLabel": "(아/어) + 보다"
         },
@@ -20,17 +25,26 @@
           "enabled": false,
           "stems": [
             "해 주",
-            "어 주"
+            "해 준",
+            "어 주",
+            "어 줄",
+            "껴 주",
+            "여 주",
+            "려 주"
           ],
           "displayLabel": "(아/어) + 주다"
         },
         {
-          "id": "verb-duda1",
+          "id": "verb-duda",
           "label": "두",
           "enabled": false,
           "stems": [
             "해 두",
-            "어 두"
+            "해 둔",
+            "아 두",
+            "아 둔",
+            "어 두",
+            "어 둔"
           ],
           "displayLabel": "(아/어) + 두다"
         },
@@ -39,7 +53,9 @@
           "label": "놓",
           "enabled": false,
           "stems": [
-            "해 놓"
+            "해 놓",
+            "해 놨",
+            "해 놔"
           ],
           "displayLabel": "(아/어) + 놓다"
         },
@@ -48,7 +64,8 @@
           "label": "가",
           "enabled": false,
           "stems": [
-            "해 가"
+            "해 가",
+            "해 갔"
           ],
           "displayLabel": "(아/어) + 가다"
         },
@@ -57,22 +74,24 @@
           "label": "오",
           "enabled": false,
           "stems": [
+            "켜 오",
+            "켜 왔",
             "해 오",
-            "켜 오"
+            "해 왔",
+            "해 온"
           ],
           "displayLabel": "(아/어) + 오다"
         },
         {
-          "id": "verb-itta",
-          "label": "있",
+          "id": "verb-naeda",
+          "label": "내",
           "enabled": false,
           "stems": [
-            "겨 있",
-            "고 있",
-            "어 있",
-            "아 있"
+            "워 내",
+            "워 냈",
+            "워 낸"
           ],
-          "displayLabel": "^있다"
+          "displayLabel": "(아/어) + 내다"
         }
       ]
     }

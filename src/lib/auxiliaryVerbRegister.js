@@ -5,6 +5,7 @@ import {
   removeAuxiliaryVerbFind,
 } from './auxiliaryVerbPattern.js';
 import { parseCommaList } from './matchFilters.js';
+import { bonBojoListItem } from './bonBojoRules.js';
 
 /**
  * @param {import('./ruleTypes.js').Rule[]} rules
@@ -16,15 +17,47 @@ export function buildRulesForAuxiliaryEntry(rules, tailWord) {
   return buildAuxiliaryVerbFindRules(t);
 }
 
+/**
+ * @param {import('./ruleTypes.js').Rule[]} rules
+ * @param {string} itemId
+ */
+function rulesForBonBojoItem(rules, itemId) {
+  return rules.filter(
+    (r) =>
+      r.patternKind === 'auxiliary-verb' && r.bonBojoItemId?.trim() === itemId,
+  );
+}
+
 /** @param {import('./ruleTypes.js').Rule[]} customRules */
 export function listAuxiliaryVerbEntries(customRules) {
-  const seen = new Set();
-  /** @type {{ tailWord: string, displayLabel?: string }[]} */
+  const seenTails = new Set();
+  const seenItems = new Set();
+  /** @type {{ tailWord: string, displayLabel?: string, bonBojoItemId?: string }[]} */
   const entries = [];
+
   for (const r of customRules) {
+    if (r.patternKind !== 'auxiliary-verb') continue;
+    const itemId = r.bonBojoItemId?.trim();
+    if (itemId) {
+      if (seenItems.has(itemId)) continue;
+      seenItems.add(itemId);
+      const group = rulesForBonBojoItem(customRules, itemId);
+      const primary =
+        bonBojoListItem(itemId)?.primaryTail ||
+        group[0]?.tailWord?.trim() ||
+        '';
+      const displayLabel = group[0]?.label?.trim() || undefined;
+      entries.push({
+        bonBojoItemId: itemId,
+        tailWord: primary,
+        ...(displayLabel ? { displayLabel } : {}),
+      });
+      continue;
+    }
+
     const tw = r.tailWord?.trim();
-    if (!tw || r.patternKind !== 'auxiliary-verb' || seen.has(tw)) continue;
-    seen.add(tw);
+    if (!tw || seenTails.has(tw)) continue;
+    seenTails.add(tw);
     const group = customRules.filter(
       (row) => row.patternKind === 'auxiliary-verb' && row.tailWord === tw,
     );
@@ -34,15 +67,33 @@ export function listAuxiliaryVerbEntries(customRules) {
       ...(displayLabel ? { displayLabel } : {}),
     });
   }
-  return entries.sort((a, b) => a.tailWord.localeCompare(b.tailWord, 'ko'));
+
+  return entries.sort((a, b) => {
+    const la = a.displayLabel || a.tailWord;
+    const lb = b.displayLabel || b.tailWord;
+    return la.localeCompare(lb, 'ko');
+  });
 }
 
 export function removeAuxiliaryVerbEntry(rules, tailWord) {
   return removeAuxiliaryVerbFind(rules, tailWord.trim());
 }
 
-export function toggleAuxiliaryVerbEntry(rules, tailWord, enabled) {
-  const t = tailWord.trim();
+/**
+ * @param {import('./ruleTypes.js').Rule[]} rules
+ * @param {{ tailWord: string, bonBojoItemId?: string }} entry
+ * @param {boolean} enabled
+ */
+export function toggleAuxiliaryVerbEntry(rules, entry, enabled) {
+  const itemId = entry.bonBojoItemId?.trim();
+  if (itemId) {
+    return rules.map((r) =>
+      r.patternKind === 'auxiliary-verb' && r.bonBojoItemId?.trim() === itemId
+        ? { ...r, enabled }
+        : r,
+    );
+  }
+  const t = entry.tailWord.trim();
   return rules.map((r) =>
     r.patternKind === 'auxiliary-verb' && r.tailWord === t
       ? { ...r, enabled }
@@ -50,12 +101,33 @@ export function toggleAuxiliaryVerbEntry(rules, tailWord, enabled) {
   );
 }
 
-export function isAuxiliaryVerbEntryEnabled(rules, tailWord) {
-  const t = tailWord.trim();
-  const group = rules.filter(
-    (r) => r.patternKind === 'auxiliary-verb' && r.tailWord === t,
-  );
+/**
+ * @param {import('./ruleTypes.js').Rule[]} rules
+ * @param {{ tailWord: string, bonBojoItemId?: string }} entry
+ */
+export function isAuxiliaryVerbEntryEnabled(rules, entry) {
+  const itemId = entry.bonBojoItemId?.trim();
+  const group = itemId
+    ? rulesForBonBojoItem(rules, itemId)
+    : rules.filter(
+        (r) =>
+          r.patternKind === 'auxiliary-verb' &&
+          r.tailWord === entry.tailWord.trim(),
+      );
   return group.length > 0 && group.every((r) => r.enabled);
+}
+
+/**
+ * @param {import('./ruleTypes.js').Rule[]} rules
+ * @param {{ tailWord: string, bonBojoItemId?: string }[]} entries
+ * @param {boolean} enabled
+ */
+export function setAllAuxiliaryVerbEntries(rules, entries, enabled) {
+  let next = rules;
+  for (const entry of entries) {
+    next = toggleAuxiliaryVerbEntry(next, entry, enabled);
+  }
+  return next;
 }
 
 export function parseAuxiliaryInput(input) {
