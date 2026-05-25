@@ -95,7 +95,9 @@ npm run sync-spelling
 | verb-bon | verb-boda6 | 두 | | | FALSE | spaced-stem | ^두다 |
 | verb-bon | verb-boda7 | 놓 | | | FALSE | spaced-stem | ^놓다 |
 
-**조사와 같은 짝:** `particle-josa` + `particle-man` ↔ **`verb-bon`** + **`verb-boda1`** … **`verb-boda7`** (그룹=종류, `item_id`=규칙 키).
+**조사와 같은 짝:** `particle-josa` + `particle-man` ↔ **`verb-bon`** + **`verb-boda1`** … **`verb-boda9`** (그룹=종류, `item_id`=규칙 키).
+
+**그룹 이름 통일:** `group_id`는 **`particle-josa`** · **`verb-bon`** 두 종류만 씁니다. 시트에 `verb-special`, `verb-or`, `particle-or` 등이 있으면 `npm run sync-caution`이 각각 `verb-bon`, `particle-josa`로 합칩니다. `item_id`는 `particle-*` / `verb-boda*` / `verb-haebo-*` 형식을 유지하고, `verv-` 오타는 `verb-`로 고칩니다.
 
 | 짝 | group_id (종류) | item_id (규칙) | label (검색 어간) |
 |----|-----------------|----------------|-------------------|

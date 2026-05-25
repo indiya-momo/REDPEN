@@ -28,6 +28,24 @@ const OUTPUTS = [
   path.join(ROOT, 'public/data/caution-rules.json'),
 ];
 
+/** 시트에 섞여 들어온 그룹 이름을 앱 규칙과 맞춤 */
+const GROUP_ID_ALIASES = {
+  'verb-special': 'verb-bon',
+  'verb-or': 'verb-bon',
+  'particle-or': 'particle-josa',
+};
+
+function normalizeGroupId(id) {
+  const trimmed = String(id || '').trim();
+  return GROUP_ID_ALIASES[trimmed] || trimmed;
+}
+
+function normalizeItemId(id) {
+  return String(id || '')
+    .trim()
+    .replace(/^verv-/, 'verb-');
+}
+
 async function loadDotEnv() {
   try {
     const text = await readFile(path.join(ROOT, '.env'), 'utf8');
@@ -255,7 +273,7 @@ function rowsToCautionGroups(rows) {
   if (hasLabelsColumn) {
     return rows
       .map((row) => {
-        const groupId = String(row.group_id || row.groupid || '').trim();
+        const groupId = normalizeGroupId(row.group_id || row.groupid);
         const tip = String(row.tip || '').trim();
         const labels = parseCommaList(row.labels);
         if (!groupId || !tip || !labels.length) return null;
@@ -277,7 +295,7 @@ function rowsToCautionGroups(rows) {
   let curTip = '';
 
   for (const row of rows) {
-    const nextGroupId = String(row.group_id || row.groupid || '').trim();
+    const nextGroupId = normalizeGroupId(row.group_id || row.groupid);
     if (nextGroupId && nextGroupId !== curGroupId) {
       curGroupId = nextGroupId;
       curTip = String(row.tip || '').trim();
@@ -290,7 +308,7 @@ function rowsToCautionGroups(rows) {
     if (!label || !curGroupId) continue;
 
     const itemId =
-      String(row.item_id || row.itemid || row.id || '').trim() ||
+      normalizeItemId(row.item_id || row.itemid || row.id) ||
       `${curGroupId}-${label}`;
 
     if (!groups.has(curGroupId)) {

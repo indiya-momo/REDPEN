@@ -1,21 +1,22 @@
 name: Deploy to GitHub Pages
 
+# dist만 gh-pages 브랜치에 올립니다. 저장소 루트(main) 소스가 배포되면 /src/main.jsx 만 보이고 앱이 깨집니다.
+# Settings → Pages → Build and deployment → Deploy from a branch → Branch: gh-pages / Folder: / (root)
+
 on:
   push:
     branches: [main, master]
   workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
 concurrency:
   group: pages
   cancel-in-progress: true
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -39,18 +40,16 @@ jobs:
           VITE_FEEDBACK_FORM_ENTRY_INCONVENIENT: entry.2074090186
           VITE_FEEDBACK_FORM_ENTRY_CONVENIENT: entry.944707313
 
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: dist
+      - name: Verify dist (not dev index)
+        shell: bash
+        run: |
+          grep -q '/REDPEN/assets/' dist/index.html
+          ! grep -q '/src/main.jsx' dist/index.html
 
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Publish gh-pages branch
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          publish_branch: gh-pages
+          force_orphan: true

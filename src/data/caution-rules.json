@@ -8,8 +8,22 @@
       "tip": "체언(명사·대명사·수사) 뒤 — 조사로 붙여 씁니다.\n용언(동사·형용사) 뒤 — 의존명사로 띄어 씁니다.",
       "items": [
         {
+          "id": "particle-man",
+          "label": "만",
+          "enabled": false,
+          "matchMode": "any-before",
+          "inventoryOnly": false
+        },
+        {
           "id": "particle-mankun",
           "label": "만큼",
+          "enabled": false,
+          "matchMode": "any-before",
+          "inventoryOnly": false
+        },
+        {
+          "id": "particle-ji",
+          "label": "지",
           "enabled": false,
           "matchMode": "any-before",
           "inventoryOnly": false
@@ -19,7 +33,7 @@
     {
       "id": "verb-bon",
       "title": "본용언+보조용언",
-      "tip": "",
+      "tip": "본동사·보조용언은 앞 용언과 붙여 쓰는 경우가 많습니다. 앞말과 어간 사이에만 공백이 있으면 표시합니다.",
       "items": [
         {
           "id": "verb-boda1",
@@ -27,10 +41,7 @@
           "enabled": false,
           "matchMode": "spaced-stem",
           "inventoryOnly": false,
-          "stems": [
-            "보",
-            "본"
-          ],
+          "stems": ["보", "본"],
           "displayLabel": "^보(ㄴ)다"
         },
         {
@@ -39,9 +50,7 @@
           "enabled": false,
           "matchMode": "fixed-phrase",
           "inventoryOnly": false,
-          "stems": [
-            "해 보"
-          ],
+          "stems": ["해 보"],
           "displayLabel": "해 보다"
         },
         {
@@ -50,9 +59,7 @@
           "enabled": false,
           "matchMode": "fixed-phrase",
           "inventoryOnly": false,
-          "stems": [
-            "해보"
-          ],
+          "stems": ["해보"],
           "displayLabel": "해보다"
         },
         {
@@ -61,9 +68,7 @@
           "enabled": false,
           "matchMode": "fixed-phrase",
           "inventoryOnly": false,
-          "stems": [
-            "해 본"
-          ],
+          "stems": ["해 본"],
           "displayLabel": "해 본다"
         },
         {
@@ -72,9 +77,7 @@
           "enabled": false,
           "matchMode": "fixed-phrase",
           "inventoryOnly": false,
-          "stems": [
-            "해본"
-          ],
+          "stems": ["해본"],
           "displayLabel": "해본다"
         },
         {
@@ -85,136 +88,65 @@
           "inventoryOnly": true
         },
         {
-          "id": "verb-juda1",
+          "id": "verb-boda3",
+          "label": "있",
+          "enabled": false,
+          "matchMode": "spaced-stem",
+          "inventoryOnly": false,
+          "displayLabel": "^있다"
+        },
+        {
+          "id": "verb-boda4",
           "label": "주",
           "enabled": false,
           "matchMode": "spaced-stem",
           "inventoryOnly": false,
-          "stems": [
-            "주",
-            "준"
-          ],
+          "stems": ["주", "준"],
           "displayLabel": "^주(ㄴ)다"
         },
         {
-          "id": "verb-juda2",
-          "label": "준",
-          "enabled": false,
-          "matchMode": "any-before",
-          "inventoryOnly": true
-        },
-        {
-          "id": "verb-duda",
-          "label": "두다",
+          "id": "verb-boda5",
+          "label": "하",
           "enabled": false,
           "matchMode": "spaced-stem",
           "inventoryOnly": false,
-          "stems": [
-            "두",
-            "둔"
-          ],
-          "displayLabel": "^두(ㄴ)다"
-        },
-        {
-          "id": "verb-duda2",
-          "label": "둔다",
-          "enabled": false,
-          "matchMode": "any-before",
-          "inventoryOnly": true
-        },
-        {
-          "id": "verb-notda",
-          "label": "놓다",
-          "enabled": false,
-          "matchMode": "any-before",
-          "inventoryOnly": true,
-          "displayLabel": "^놓다"
-        },
-        {
-          "id": "verv-gada",
-          "label": "가다",
-          "enabled": false,
-          "matchMode": "spaced-stem",
-          "inventoryOnly": false,
-          "stems": [
-            "가",
-            "갔"
-          ],
-          "displayLabel": "^가(ㅆ)다"
-        },
-        {
-          "id": "verv-gada2",
-          "label": "갔다",
-          "enabled": false,
-          "matchMode": "any-before",
-          "inventoryOnly": true
-        },
-        {
-          "id": "verv-oda",
-          "label": "오다",
-          "enabled": false,
-          "matchMode": "spaced-stem",
-          "inventoryOnly": false,
-          "stems": [
-            "오",
-            "온",
-            "왔"
-          ],
-          "displayLabel": "^오(ㄴ)왔+다"
-        },
-        {
-          "id": "verv-oda2",
-          "label": "온",
-          "enabled": false,
-          "matchMode": "any-before",
-          "inventoryOnly": true
-        },
-        {
-          "id": "verv-oda3",
-          "label": "왔다",
-          "enabled": false,
-          "matchMode": "any-before",
-          "inventoryOnly": true
-        }
-      ]
-    },
-    {
-      "id": "verb-special",
-      "tip": "",
-      "items": [
-        {
-          "id": "verb-itta",
-          "label": "있",
-          "enabled": false,
-          "matchMode": "spaced-stem",
-          "inventoryOnly": false
-        },
-        {
-          "id": "verb-hada1",
-          "label": "하다",
-          "enabled": false,
-          "matchMode": "spaced-stem",
-          "inventoryOnly": false,
-          "stems": [
-            "하",
-            "한",
-            "했"
-          ],
+          "stems": ["하", "한", "했"],
           "displayLabel": "^하(ㄴ)했+다"
         },
         {
-          "id": "verb-hada2",
-          "label": "한다",
+          "id": "verb-boda6",
+          "label": "두",
           "enabled": false,
           "matchMode": "spaced-stem",
-          "inventoryOnly": true
+          "inventoryOnly": false,
+          "stems": ["두", "둔"],
+          "displayLabel": "^두(ㄴ)다"
         },
         {
-          "id": "verb-hada3",
-          "label": "했다",
+          "id": "verb-boda7",
+          "label": "가",
           "enabled": false,
           "matchMode": "spaced-stem",
-          "inventoryOnly": true
+          "inventoryOnly": false,
+          "stems": ["가", "갔"],
+          "displayLabel": "^가(ㅆ)다"
+        },
+        {
+          "id": "verb-boda8",
+          "label": "오",
+          "enabled": false,
+          "matchMode": "spaced-stem",
+          "inventoryOnly": false,
+          "stems": ["오", "온", "왔"],
+          "displayLabel": "^오(ㄴ)왔+다"
+        },
+        {
+          "id": "verb-boda9",
+          "label": "놓",
+          "enabled": false,
+          "matchMode": "spaced-stem",
+          "inventoryOnly": false,
+          "displayLabel": "^놓다"
         }
       ]
     }
