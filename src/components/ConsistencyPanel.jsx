@@ -43,7 +43,7 @@ const SPACE_INPUT_PLACEHOLDER = '공백은 ˅로 표시';
 
 /**
  * @param {{
- *   entries: { tailWord: string }[],
+ *   entries: { tailWord: string, displayLabel?: string }[],
  *   customRules: import('../lib/ruleTypes.js').Rule[],
  *   isEnabled: (rules: import('../lib/ruleTypes.js').Rule[], tw: string) => boolean,
  *   onToggle: (tw: string, enabled: boolean) => void,
@@ -69,7 +69,8 @@ function RegisteredList({
           />
           <div className="rule-text">
             <span className="find">
-              {formatConsistencyListLabel(row.tailWord)}
+              {row.displayLabel?.trim() ||
+                formatConsistencyListLabel(row.tailWord)}
             </span>
           </div>
           <button
@@ -366,7 +367,9 @@ export default function ConsistencyPanel({
           본용언+보조용언 찾기
         </p>
         <p className="hint">
-          앞말+보조용언+어미 (예: 보, 주, 준, 해˅보, 해보, 해˅준)
+          앞말+보조용언+어미 (예: 보, 주, 해˅보, 해보). 시트{' '}
+          <code>bon-bojo</code> · <code>npm run sync-bon-bojo</code> 후 목록·표시명
+          반영
         </p>
         <div className="tail-form">
           <SpaceVisibleInput

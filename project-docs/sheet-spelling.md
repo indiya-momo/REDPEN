@@ -67,11 +67,46 @@ npm run sync-spelling
 
 **일관성(붙임 패턴)** 은 계속 앱·localStorage. **맞춤법·주의**는 각각 `spelling_rules` / `caution_rules` 탭이 소스입니다.
 
-**본용언+보조용언** (`verb-bon`, `verb-special`, `verb-or`)은 caution sync에서 **제외**합니다. 시트에 남아 있어도 JSON에 안 들어가며, 앱 **일관성 → 본용언+보조용언 찾기** + 새 규칙 세트 기본 등록 목록으로 씁니다.
+**본용언+보조용언** (`verb-bon`, `verb-special`, `verb-or`)은 **`caution_rules` sync에서 제외**합니다. 대신 **`bon-bojo` 탭** → `npm run sync-bon-bojo` → 일관성 「본용언+보조용언 찾기」 시드.
 
 ---
 
-## 5. 주의(직접 검토) — `caution_rules` 탭
+## 5. 본용언+보조용언 — `bon-bojo` 탭
+
+**`caution_rules`와 같은 열**을 씁니다. (`find`/`replace` 없음)
+
+### 탭 이름
+
+- **`bon-bojo`** (기본)
+- 다른 이름이면 `.env`에 `BON_BOJO_SHEET=탭이름` 또는 `BON_BOJO_GID=시트gid`
+
+템플릿: [`templates/bon_bojo_rules.csv`](templates/bon_bojo_rules.csv)
+
+### 열 (caution과 동일)
+
+`group_id` · `item_id` · `label` · `stems` · `tip` · `enabled` · `match_mode` · `display_label` · `except` · `counts_in_quota` · `inventory`
+
+| 열 | bon-bojo에서 쓰는 방식 |
+|----|------------------------|
+| **label** | **tail_word** — `보`, `주`, `해 보` (어미 `보다` 말고 **어간·문구**) |
+| **stems** | 같은 `item_id`에 **추가 tail** (`해 보`, `해보` …) |
+| **display_label** | 일관성 목록에 보이는 이름 (`(아/어) + 보다` 등) |
+| **match_mode** · **except** · **counts_in_quota** | **무시** (caution 전용) |
+
+### 싱크
+
+```bash
+npm run sync-bon-bojo
+# 맞춤법·띄어쓰기·보조용언 한 번에
+npm run sync
+```
+
+→ `src/data/bon-bojo-rules.json`, `public/data/bon-bojo-rules.json`  
+앱은 규칙 세트 로드 시 **없는 tail만** 추가(기본 체크 off). **이미 등록된 tail은 삭제·이름 자동 교체 안 함** — 표시명 갱신은 sync 후 규칙 세트 새로 만들거나 수동 정리.
+
+---
+
+## 6. 띄어쓰기 검토 — `caution_rules` 탭
 
 **맞춤법 탭과 분리**하세요. `find`/`replace` 열을 넣지 마세요.
 
@@ -124,11 +159,11 @@ npm run sync
 
 → `src/data/caution-rules.json`, `public/data/caution-rules.json`
 
-앱 새로고침 후 **주의** 체크 목록·설명이 갱신됩니다. 이미 켜 둔 체크 상태는 localStorage에 남습니다.
+앱 새로고침 후 **띄어쓰기 검토** 체크 목록·설명이 갱신됩니다. 이미 켜 둔 체크 상태는 localStorage에 남습니다.
 
 ---
 
-## 6. 문제 해결
+## 7. 문제 해결
 
 | 증상 | 확인 |
 |------|------|
@@ -138,7 +173,7 @@ npm run sync
 
 ---
 
-## 7. 관련 파일
+## 8. 관련 파일
 
 | 파일 | 역할 |
 |------|------|
@@ -146,5 +181,8 @@ npm run sync
 | `scripts/sync-spelling.mjs` | 시트 → JSON |
 | `src/data/spelling-rules.json` | 앱이 import |
 | `src/lib/builtInRules.js` | JSON → BUILT_IN_RULES |
-| `src/data/caution-rules.json` | 주의(직접 검토) 목록 |
+| `src/data/caution-rules.json` | 띄어쓰기 검토 목록 |
 | `src/lib/cautionRules.js` | JSON → CAUTION_RULES |
+| `scripts/sync-bon-bojo.mjs` | bon-bojo 탭 → JSON |
+| `src/data/bon-bojo-rules.json` | 일관성 보조용언 시드 |
+| `src/lib/bonBojoRules.js` | JSON → BON_BOJO_SEED_ENTRIES |

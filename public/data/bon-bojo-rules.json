@@ -1,0 +1,80 @@
+{
+  "groups": [
+    {
+      "id": "verb-bon",
+      "tip": "있다(앞말+공백+있+어미)",
+      "items": [
+        {
+          "id": "verb-boda1",
+          "label": "보",
+          "enabled": false,
+          "stems": [
+            "해 보",
+            "해보"
+          ],
+          "displayLabel": "(아/어) + 보다"
+        },
+        {
+          "id": "verb-juda1",
+          "label": "주",
+          "enabled": false,
+          "stems": [
+            "해 주",
+            "어 주"
+          ],
+          "displayLabel": "(아/어) + 주다"
+        },
+        {
+          "id": "verb-duda1",
+          "label": "두",
+          "enabled": false,
+          "stems": [
+            "해 두",
+            "어 두"
+          ],
+          "displayLabel": "(아/어) + 두다"
+        },
+        {
+          "id": "verb-notda",
+          "label": "놓",
+          "enabled": false,
+          "stems": [
+            "해 놓"
+          ],
+          "displayLabel": "(아/어) + 놓다"
+        },
+        {
+          "id": "verb-gada",
+          "label": "가",
+          "enabled": false,
+          "stems": [
+            "해 가"
+          ],
+          "displayLabel": "(아/어) + 가다"
+        },
+        {
+          "id": "verb-oda",
+          "label": "오",
+          "enabled": false,
+          "stems": [
+            "해 오",
+            "켜 오"
+          ],
+          "displayLabel": "(아/어) + 오다"
+        },
+        {
+          "id": "verb-itta",
+          "label": "있",
+          "enabled": false,
+          "stems": [
+            "겨 있",
+            "고 있",
+            "어 있",
+            "아 있"
+          ],
+          "displayLabel": "^있다"
+        }
+      ]
+    }
+  ]
+}

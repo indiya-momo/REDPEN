@@ -1,0 +1,8 @@
+group_id,item_id,label,stems,tip,enabled,match_mode,display_label,except
+verb-bon,verb-boda1,보,"해 보,해보",본용언 + -아/어 + 보조용언은 붙여 씀을 허용한다.,FALSE,,(아/어) + 보다,
+verb-bon,verb-juda1,주,"해 주,어 주",,FALSE,,(아/어) + 주다,
+verb-bon,verb-duda1,두,"해 두,어 두",,FALSE,,(아/어) + 두다,
+verb-bon,verb-notda,놓,"해 놓",,FALSE,,(아/어) + 놓다,
+verb-bon,verb-gada,가,"해 가",,FALSE,,(아/어) + 가다,
+verb-bon,verb-oda,오,"해 오,켜 오",,FALSE,,(아/어) + 오다,
+verb-bon,verb-itta,있,"겨 있,고 있,어 있,아 있",있다(앞말+공백+있+어미),FALSE,,^있다,
