@@ -18,7 +18,8 @@ import {
  *   onSave: () => void,
  *   onOpenFeedback?: () => void,
  *   ruleSetSavedAt?: string,
- *   spellingRuleCount?: number,
+ *   builtInRuleCount?: number,
+ *   spacingRuleCount?: number,
  *   consistencyRuleCount?: number,
  * }} props
  */
@@ -34,13 +35,15 @@ export default function RuleSetPanel({
   onDeleteSet,
   onSave,
   onOpenFeedback,
-  spellingRuleCount = 0,
+  builtInRuleCount = 0,
+  spacingRuleCount = 0,
   consistencyRuleCount = 0,
 }) {
   const canDelete = ruleSets.length > 1;
   const summaryText = formatRuleSetSummary({
     savedAt: ruleSetSavedAt,
-    spellingRuleCount,
+    builtInRuleCount,
+    spacingRuleCount,
     consistencyRuleCount,
   });
   const savedDateLabel = formatRuleSetSavedDate(ruleSetSavedAt);
@@ -56,8 +59,9 @@ export default function RuleSetPanel({
             <span className="ruleset-panel__summary-date">{savedDateLabel}</span>
           ) : null}
           {savedDateLabel ? ' ' : null}
-          맞춤법 규칙 <strong>{spellingRuleCount}</strong>건 · 일관성 규칙{' '}
-          <strong>{consistencyRuleCount}</strong>건
+          자동 맞춤법 <strong>{builtInRuleCount}</strong> · 띄어쓰기{' '}
+          <strong>{spacingRuleCount}</strong> · 일관성{' '}
+          <strong>{consistencyRuleCount}</strong>
         </p>
         <select
           id="ruleset-select"

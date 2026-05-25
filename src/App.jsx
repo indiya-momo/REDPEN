@@ -26,6 +26,7 @@ import {
   saveActiveSetId,
   saveRuleSets,
 } from './lib/ruleSetsStorage.js';
+import { ensureDefaultAuxiliaryVerbs } from './lib/defaultAuxiliaryVerbs.js';
 
 const RULE_SET_AUTOSAVE_MS = 400;
 
@@ -42,7 +43,7 @@ function normalizeRuleSet(set) {
       set.spellingRulesFingerprint,
     ),
     spellingRulesFingerprint: SPELLING_RULES_FP,
-    customRules,
+    customRules: ensureDefaultAuxiliaryVerbs(customRules),
     compoundMigrateVersion,
     globalExcludePhrases: set.globalExcludePhrases ?? [],
     cautionEnabled: migrateCautionEnabled(set.cautionEnabled),
