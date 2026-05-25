@@ -466,7 +466,7 @@ export default function MainScreen({
             highlights={highlights.pageHighlights}
             showPageMeta={false}
             emptyTitle="PDF를 업로드하세요"
-            emptyHint="좌측에서 PDF를 연결한 뒤 「검사 실행」을 누르세요"
+            emptyHint="신국판 300페이지 내외 (50MB)를 권장합니다."
           />
           {pdf.pdf && (
             <>

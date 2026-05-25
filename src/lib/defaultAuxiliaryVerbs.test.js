@@ -12,7 +12,9 @@ describe('ensureDefaultAuxiliaryVerbs', () => {
     expect(list.some((e) => e.tailWord === '해 보' && !e.bonBojoItemId)).toBe(
       false,
     );
-    expect(list.length).toBe(7);
+    expect(list.length).toBe(9);
+    expect(labels).toContain('(아/어) + 하다');
+    expect(labels).toContain('(아/어) + 지다');
     const withBon = rules.filter((r) => r.bonBojoItemId === 'verb-boda1');
     expect(withBon.length).toBeGreaterThan(1);
   });

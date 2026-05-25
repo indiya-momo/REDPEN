@@ -1,4 +1,5 @@
-import { MessageSquare } from 'lucide-react';
+import { useEffect, useId, useRef, useState } from 'react';
+import { ChevronDown, MessageSquare } from 'lucide-react';
 import TooltipGuide from './TooltipGuide.jsx';
 import {
   formatRuleSetSavedDate,
@@ -40,6 +41,10 @@ export default function RuleSetPanel({
   consistencyRuleCount = 0,
 }) {
   const canDelete = ruleSets.length > 1;
+  const menuId = useId();
+  const manageRef = useRef(/** @type {HTMLDivElement | null} */ (null));
+  const [manageOpen, setManageOpen] = useState(false);
+
   const summaryText = formatRuleSetSummary({
     savedAt: ruleSetSavedAt,
     builtInRuleCount,
@@ -47,6 +52,31 @@ export default function RuleSetPanel({
     consistencyRuleCount,
   });
   const savedDateLabel = formatRuleSetSavedDate(ruleSetSavedAt);
+
+  useEffect(() => {
+    if (!manageOpen) return undefined;
+    function close() {
+      setManageOpen(false);
+    }
+    function onKeyDown(e) {
+      if (e.key === 'Escape') close();
+    }
+    function onPointerDown(e) {
+      const el = manageRef.current;
+      if (el && !el.contains(/** @type {Node} */ (e.target))) close();
+    }
+    document.addEventListener('keydown', onKeyDown);
+    document.addEventListener('pointerdown', onPointerDown);
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      document.removeEventListener('pointerdown', onPointerDown);
+    };
+  }, [manageOpen]);
+
+  function runManageAction(action) {
+    action();
+    setManageOpen(false);
+  }
 
   return (
     <section className="ruleset-panel" aria-label="규칙 세트">
@@ -87,49 +117,97 @@ export default function RuleSetPanel({
           onChange={(e) => onRuleSetNameChange(e.target.value)}
           placeholder="제목을 입력하세요"
         />
-        <button
-          type="button"
-          className="btn-ghost ruleset-panel__action"
-          onClick={onCreateSet}
-        >
-          새 세트
-        </button>
-        <button
-          type="button"
-          className="btn-ghost ruleset-panel__action"
-          onClick={onDuplicateSet}
-        >
-          복제
-        </button>
-        <button
-          type="button"
-          className="btn-ghost ruleset-panel__action ruleset-panel__action--danger"
-          onClick={onDeleteSet}
-          disabled={!canDelete}
-          title={canDelete ? '현재 규칙 세트 삭제' : '마지막 세트는 삭제할 수 없습니다'}
-        >
-          삭제
-        </button>
-        <button type="button" className="btn-primary ruleset-panel__save" onClick={onSave}>
-          저장
-        </button>
-        {onOpenFeedback ? (
-          <TooltipGuide
-            storageKey="feedback-button"
-            title="피드백"
-            message="불편한 점이나 바라는 기능이 있으면 알려 주세요."
-            placement="left"
-          >
+
+        <div className="ruleset-panel__actions">
+          <div className="ruleset-panel__manage" ref={manageRef}>
             <button
               type="button"
-              className="ruleset-panel__feedback"
-              onClick={onOpenFeedback}
+              className="btn-ghost ruleset-panel__manage-trigger"
+              aria-expanded={manageOpen}
+              aria-haspopup="menu"
+              aria-controls={menuId}
+              onClick={() => setManageOpen((open) => !open)}
             >
-              <MessageSquare size={18} aria-hidden />
-              피드백 보내기
+              세트 관리
+              <ChevronDown
+                size={14}
+                aria-hidden
+                className={
+                  manageOpen ? 'ruleset-panel__chevron--open' : undefined
+                }
+              />
             </button>
-          </TooltipGuide>
-        ) : null}
+            {manageOpen ? (
+              <ul
+                id={menuId}
+                className="ruleset-panel__menu"
+                role="menu"
+                aria-label="규칙 세트 관리"
+              >
+                <li role="none">
+                  <button
+                    type="button"
+                    className="ruleset-panel__menu-item"
+                    role="menuitem"
+                    onClick={() => runManageAction(onCreateSet)}
+                  >
+                    새 세트
+                  </button>
+                </li>
+                <li role="none">
+                  <button
+                    type="button"
+                    className="ruleset-panel__menu-item"
+                    role="menuitem"
+                    onClick={() => runManageAction(onDuplicateSet)}
+                  >
+                    복제
+                  </button>
+                </li>
+                <li role="none">
+                  <button
+                    type="button"
+                    className="ruleset-panel__menu-item ruleset-panel__menu-item--danger"
+                    role="menuitem"
+                    disabled={!canDelete}
+                    title={
+                      canDelete
+                        ? '현재 규칙 세트 삭제'
+                        : '마지막 세트는 삭제할 수 없습니다'
+                    }
+                    onClick={() => runManageAction(onDeleteSet)}
+                  >
+                    삭제
+                  </button>
+                </li>
+              </ul>
+            ) : null}
+          </div>
+          <button
+            type="button"
+            className="btn-primary ruleset-panel__save"
+            onClick={onSave}
+          >
+            저장
+          </button>
+          {onOpenFeedback ? (
+            <TooltipGuide
+              storageKey="feedback-button"
+              title="피드백"
+              message="불편한 점이나 바라는 기능이 있으면 알려 주세요."
+              placement="left"
+            >
+              <button
+                type="button"
+                className="ruleset-panel__feedback"
+                onClick={onOpenFeedback}
+              >
+                <MessageSquare size={18} aria-hidden />
+                피드백 보내기
+              </button>
+            </TooltipGuide>
+          ) : null}
+        </div>
       </div>
     </section>
   );

@@ -1,5 +1,15 @@
+import fs from 'node:fs';
+import path from 'node:path';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+
+const pdfEmptyPublic = path.resolve('public/momo/pdf-empty.png');
+if (fs.existsSync(pdfEmptyPublic)) {
+  fs.copyFileSync(
+    pdfEmptyPublic,
+    path.resolve('src/assets/momo/pdf-empty.png'),
+  );
+}
 
 if (!process.env.VITE_UI_BUILD_ID) {
   process.env.VITE_UI_BUILD_ID = 'dev-local';

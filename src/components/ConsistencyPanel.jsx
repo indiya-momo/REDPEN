@@ -33,6 +33,7 @@ import {
 } from '../lib/phraseSlotRegister.js';
 import { isAuxiliaryStem, isHaeBoPattern } from '../lib/compoundPatternCommon.js';
 import { parseCommaList } from '../lib/matchFilters.js';
+import { isBonBojoRequiredItem } from '../lib/bonBojoRules.js';
 import { formatConsistencyListLabel } from '../lib/patternDisplayLabels.js';
 import { encodeSpacesVisible } from '../lib/spaceVisibleText.js';
 import SpaceVisibleInput from './SpaceVisibleInput.jsx';
@@ -54,6 +55,7 @@ const SPACE_INPUT_PLACEHOLDER = '공백은 ˅로 표시';
  *   onRemove?: (tw: string) => void,
  *   columns?: number,
  *   showRemove?: boolean,
+ *   isRequired?: (row: { bonBojoItemId?: string }) => boolean,
  * }} props
  */
 function RegisteredList({
@@ -64,6 +66,7 @@ function RegisteredList({
   onRemove,
   columns = 1,
   showRemove = true,
+  isRequired,
 }) {
   if (!entries.length) return null;
   const gridCols = columns > 1 ? columns : 0;
@@ -87,6 +90,9 @@ function RegisteredList({
                   checked={isEnabled(customRules, row)}
                   onChange={(e) => onToggle(row, e.target.checked)}
                 />
+                {isRequired?.(row) ? (
+                  <span className="bon-bojo-required-badge">필수</span>
+                ) : null}
                 <span className="find">{label}</span>
               </label>
             </li>
@@ -205,11 +211,11 @@ export default function ConsistencyPanel({
         if (isPhraseSlotPattern(raw)) {
           alert(`「${raw}」은 공통 문자열 찾기에 등록하세요. (@)`);
         } else if (isAuxiliaryStem(raw) || isHaeBoPattern(raw)) {
-          alert(`「${raw}」은 본용언+보조용언 띄어쓰기에 등록하세요.`);
+          alert(`「${raw}」은 본용언+보조용언 붙이기에 등록하세요.`);
         } else {
           const parts = raw.split(/\s+/).filter(Boolean);
           if (parts.length === 2 && isAuxiliaryStem(parts[1])) {
-            alert(`「${raw}」은 본용언+보조용언 띄어쓰기에 등록하세요.`);
+            alert(`「${raw}」은 본용언+보조용언 붙이기에 등록하세요.`);
           } else {
             alert(`등록할 수 없는 형식입니다: ${raw}`);
           }
@@ -413,17 +419,17 @@ export default function ConsistencyPanel({
                   ),
                 )
               }
-              aria-label="본용언+보조용언 띄어쓰기 전체 선택"
+              aria-label="본용언+보조용언 붙이기 전체 선택"
             />
           </label>
           <p id="consistency-aux-heading" className="field-label bon-bojo-checklist-title">
-            본용언+보조용언 띄어쓰기
+            본용언+보조용언 붙이기
             {auxiliaryTotal > 0
               ? ` (선택 ${auxiliaryActiveCount}/${auxiliaryTotal})`
               : ''}
           </p>
         </div>
-        <p className="hint">개발중으로 규칙 수에 포함되지 않습니다</p>
+        <p className="hint">띄어쓰기 찾기, 개발중, 규칙수 비포함</p>
         <RegisteredList
           entries={auxiliaryEntries}
           customRules={customRules}
@@ -433,6 +439,7 @@ export default function ConsistencyPanel({
           }
           columns={3}
           showRemove={false}
+          isRequired={(row) => isBonBojoRequiredItem(row.bonBojoItemId)}
         />
       </section>
     </div>
