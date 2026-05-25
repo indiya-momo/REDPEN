@@ -2054,7 +2054,7 @@ details[open] > summary .details-chevron {
 
 .pdf-empty-icon {
   display: block;
-  width: min(7.5rem, 40vw);
+  width: min(15rem, 80vw);
   height: auto;
   margin-bottom: 12px;
   object-fit: contain;
