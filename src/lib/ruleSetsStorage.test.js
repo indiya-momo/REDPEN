@@ -22,7 +22,9 @@ describe('formatRuleSetSummary', () => {
         spacingRuleCount: 3,
         consistencyRuleCount: 4,
       }),
-    ).toBe('23년 6월 18일 맞춤법 확인 10 · 편집자 검토 3 · 일관성 4');
+    ).toBe(
+      '23년 6월 18일 맞춤법 확인 10 · 규칙 제외 0 · 편집자 검토 3 · 일관성 4',
+    );
   });
 
   it('저장 전에는 건수만 표시한다', () => {
@@ -32,7 +34,7 @@ describe('formatRuleSetSummary', () => {
         spacingRuleCount: 1,
         consistencyRuleCount: 0,
       }),
-    ).toBe('맞춤법 확인 2 · 편집자 검토 1 · 일관성 0');
+    ).toBe('맞춤법 확인 2 · 규칙 제외 0 · 편집자 검토 1 · 일관성 0');
   });
 });
 

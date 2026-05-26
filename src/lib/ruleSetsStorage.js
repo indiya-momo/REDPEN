@@ -26,6 +26,7 @@ export function formatRuleSetSavedDate(iso) {
  * @param {{
  *   savedAt?: string,
  *   builtInRuleCount: number,
+ *   builtInGuideRuleCount?: number,
  *   spacingRuleCount: number,
  *   consistencyRuleCount: number,
  * }} input
@@ -33,11 +34,12 @@ export function formatRuleSetSavedDate(iso) {
 export function formatRuleSetSummary({
   savedAt,
   builtInRuleCount,
+  builtInGuideRuleCount = 0,
   spacingRuleCount,
   consistencyRuleCount,
 }) {
   const date = formatRuleSetSavedDate(savedAt);
-  const counts = `맞춤법 확인 ${builtInRuleCount} · 편집자 검토 ${spacingRuleCount} · 일관성 ${consistencyRuleCount}`;
+  const counts = `맞춤법 확인 ${builtInRuleCount} · 규칙 제외 ${builtInGuideRuleCount} · 편집자 검토 ${spacingRuleCount} · 일관성 ${consistencyRuleCount}`;
   return date ? `${date} ${counts}` : counts;
 }
 

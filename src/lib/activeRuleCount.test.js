@@ -1,8 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { buildCautionCheckRules } from './cautionRules.js';
-import { BUILT_IN_RULES, builtInEnabledFromSheet } from './builtInRules.js';
+import {
+  BUILT_IN_QUOTA_RULES,
+  BUILT_IN_RULES,
+  builtInEnabledFromSheet,
+} from './builtInRules.js';
 import {
   countActiveRules,
+  countBuiltInGuideActiveRules,
   countConsistencyActiveRules,
   countSpellingActiveRules,
   isOverMaxRules,
@@ -10,17 +15,32 @@ import {
 import { MAX_RULES } from './ruleTypes.js';
 
 describe('activeRuleCount', () => {
-  it('내장 기본값은 모두 꺼짐', () => {
+  it('내장 기본 체크는 시트 enabled 열과 같다', () => {
     const defaults = builtInEnabledFromSheet();
-    expect(Object.values(defaults).every((v) => v === false)).toBe(true);
+    for (const r of BUILT_IN_RULES) {
+      expect(defaults[r.find]).toBe(r.enabled === true);
+    }
   });
 
-  it('내장 전부 ON + 일관성 없음 = 내장 개수', () => {
+  it('규칙 제외(참고)는 한도 집계에서 빠지고 제외 수에만 잡힌다', () => {
+    const guideOnlyOn = Object.fromEntries(
+      BUILT_IN_RULES.filter((r) => r.countsInQuota === false).map((r) => [
+        r.find,
+        true,
+      ]),
+    );
+    expect(countSpellingActiveRules({ builtInEnabled: guideOnlyOn })).toBe(0);
+    expect(countBuiltInGuideActiveRules({ builtInEnabled: guideOnlyOn })).toBe(
+      BUILT_IN_RULES.filter((r) => r.countsInQuota === false).length,
+    );
+  });
+
+  it('내장 전부 ON + 일관성 없음 = 한도 포함 내장 개수', () => {
     const builtInOn = Object.fromEntries(
       BUILT_IN_RULES.map((r) => [r.find, true]),
     );
     expect(countSpellingActiveRules({ builtInEnabled: builtInOn })).toBe(
-      BUILT_IN_RULES.length,
+      BUILT_IN_QUOTA_RULES.length,
     );
   });
 

@@ -17,6 +17,7 @@ import { useResizablePanelWidth } from '../hooks/useResizablePanelWidth.js';
 import { usePrintedPageDisplay } from '../hooks/usePrintedPageDisplay.js';
 import {
   countBuiltInActiveRules,
+  countBuiltInGuideActiveRules,
   countConsistencyActiveRules,
   countSpacingReviewActiveRules,
 } from '../lib/activeRuleCount.js';
@@ -86,6 +87,10 @@ export default function MainScreen({
   const pdf = usePdfDocument();
   const builtInRuleCount = useMemo(
     () => countBuiltInActiveRules({ builtInEnabled }),
+    [builtInEnabled],
+  );
+  const builtInGuideRuleCount = useMemo(
+    () => countBuiltInGuideActiveRules({ builtInEnabled }),
     [builtInEnabled],
   );
   const spacingRuleCount = useMemo(
@@ -281,7 +286,7 @@ export default function MainScreen({
 
   const centerRuleHint =
     workTab === 'spelling'
-      ? `맞춤법 확인 ${builtInRuleCount} · 편집자 검토 ${spacingRuleCount} · 합계 ${ruleCheck.spellingActiveRules.length}개 규칙`
+      ? `맞춤법 확인 ${builtInRuleCount} · 규칙 제외 ${builtInGuideRuleCount} · 편집자 검토 ${spacingRuleCount} · 합계 ${ruleCheck.spellingActiveRules.length}개 규칙`
       : `일관성 ${ruleCheck.consistencyActiveRules.length}개 규칙 검사`;
 
   return (
@@ -395,6 +400,7 @@ export default function MainScreen({
             onSave={onSaveRules}
             onOpenFeedback={() => setFeedbackOpen(true)}
             builtInRuleCount={builtInRuleCount}
+            builtInGuideRuleCount={builtInGuideRuleCount}
             spacingRuleCount={spacingRuleCount}
             consistencyRuleCount={consistencyRuleCount}
           />

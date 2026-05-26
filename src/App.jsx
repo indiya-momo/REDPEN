@@ -9,6 +9,7 @@ import {
 } from './lib/cautionRules.js';
 import {
   BUILT_IN_RULES,
+  countsTowardSpellingQuota,
   SPELLING_RULES_FP,
   builtInEnabledFromSheet,
   migrateBuiltInEnabled,
@@ -301,9 +302,12 @@ export default function App() {
       }}
       onBuiltInSetAll={(enabled) => {
         const prev = activeSet.builtInEnabled ?? builtInEnabledFromSheet();
-        const nextBuiltIn = Object.fromEntries(
-          BUILT_IN_RULES.map((r) => [r.find, enabled]),
-        );
+        const nextBuiltIn = { ...prev };
+        for (const r of BUILT_IN_RULES) {
+          if (countsTowardSpellingQuota(r)) {
+            nextBuiltIn[r.find] = enabled;
+          }
+        }
         if (
           enabled &&
           isOverMaxRules(

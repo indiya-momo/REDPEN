@@ -1,11 +1,24 @@
 import { buildCautionCheckRules, defaultCautionEnabled } from './cautionRules.js';
-import { BUILT_IN_RULES, builtInEnabledFromSheet, isBuiltInRuleEnabled } from './builtInRules.js';
+import {
+  BUILT_IN_GUIDE_RULES,
+  BUILT_IN_QUOTA_RULES,
+  builtInEnabledFromSheet,
+  isBuiltInRuleEnabled,
+} from './builtInRules.js';
 import { MAX_RULES } from './ruleTypes.js';
 
 /** @param {{ builtInEnabled?: Record<string, boolean> }} [input] */
 export function countBuiltInActiveRules(input = {}) {
   const builtInEnabled = input.builtInEnabled ?? builtInEnabledFromSheet();
-  return BUILT_IN_RULES.filter((r) =>
+  return BUILT_IN_QUOTA_RULES.filter((r) =>
+    isBuiltInRuleEnabled(builtInEnabled, r.find),
+  ).length;
+}
+
+/** @param {{ builtInEnabled?: Record<string, boolean> }} [input] */
+export function countBuiltInGuideActiveRules(input = {}) {
+  const builtInEnabled = input.builtInEnabled ?? builtInEnabledFromSheet();
+  return BUILT_IN_GUIDE_RULES.filter((r) =>
     isBuiltInRuleEnabled(builtInEnabled, r.find),
   ).length;
 }
