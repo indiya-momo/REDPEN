@@ -34,6 +34,7 @@ function computeDefaultHeight(layoutEl) {
  *   cautionEnabled: Record<string, boolean>,
  *   onCautionToggle: (id: string) => void,
  *   onCautionSetAll: (enabled: boolean) => void,
+ *   fillPanel?: boolean,
  * }} props
  */
 export default function ResizableBuiltinSpelling({
@@ -43,6 +44,7 @@ export default function ResizableBuiltinSpelling({
   cautionEnabled,
   onCautionToggle,
   onCautionSetAll,
+  fillPanel = false,
 }) {
   const [height, setHeight] = useState(
     () => readStoredHeight() ?? FALLBACK_HEIGHT,
@@ -140,25 +142,27 @@ export default function ResizableBuiltinSpelling({
 
   return (
     <>
-      <div
-        ref={handleRef}
-        className="builtin-spelling-resize-handle"
-        role="separator"
-        aria-orientation="horizontal"
-        aria-valuenow={height}
-        aria-valuemin={MIN_HEIGHT}
-        aria-valuemax={MAX_HEIGHT}
-        aria-label="아래 패널 높이 조절 — 위로 끌면 편집자 검토·맞춤법 확인 영역이 넓어집니다"
-        title="높이 조절 (드래그)"
-        onPointerDown={startDrag}
-      >
-        <span className="builtin-spelling-resize-grip" aria-hidden>
-          ⋮⋮
-        </span>
-      </div>
+      {!fillPanel && (
+        <div
+          ref={handleRef}
+          className="builtin-spelling-resize-handle"
+          role="separator"
+          aria-orientation="horizontal"
+          aria-valuenow={height}
+          aria-valuemin={MIN_HEIGHT}
+          aria-valuemax={MAX_HEIGHT}
+          aria-label="아래 패널 높이 조절 — 위로 끌면 편집자 검토·맞춤법 확인 영역이 넓어집니다"
+          title="높이 조절 (드래그)"
+          onPointerDown={startDrag}
+        >
+          <span className="builtin-spelling-resize-grip" aria-hidden>
+            ⋮⋮
+          </span>
+        </div>
+      )}
       <section
-        className="panel-section panel-section--builtin-spelling"
-        style={{ height }}
+        className={`panel-section panel-section--builtin-spelling ${fillPanel ? 'panel-section--builtin-spelling--fill' : ''}`}
+        style={fillPanel ? undefined : { height }}
       >
         <div className="builtin-spelling-resize-body">
           <div className="builtin-spelling-caution-scroll custom-scrollbar">

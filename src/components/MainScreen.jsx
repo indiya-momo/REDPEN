@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Play, BookOpen } from 'lucide-react';
+import { BookOpen } from 'lucide-react';
 import PdfViewer from './PdfViewer.jsx';
 import AppVersionBadge from './AppVersionBadge.jsx';
 import ResizableBuiltinSpelling from './ResizableBuiltinSpelling.jsx';
@@ -8,7 +8,7 @@ import RuleSetPanel from './RuleSetPanel.jsx';
 import FeedbackModal from './FeedbackModal.jsx';
 import PdfPreviewBar from './PdfPreviewBar.jsx';
 import CheckResultsPanel from './CheckResultsPanel.jsx';
-import PdfWorkSection from './PdfWorkSection.jsx';
+import PdfCenterStage from './PdfCenterStage.jsx';
 import { usePdfDocument } from '../hooks/usePdfDocument.js';
 import { useRuleCheck } from '../hooks/useRuleCheck.js';
 import { useWorkSession } from '../hooks/useWorkSession.js';
@@ -270,61 +270,19 @@ export default function MainScreen({
     />
   ) : null;
 
-  const runCheckSection = (
-    <section className="panel-section">
-      <button
-        type="button"
-        className="btn-run"
-        onClick={
-          workTab === 'spelling'
-            ? ruleCheck.runSpellingCheck
-            : ruleCheck.runConsistencyCheck
-        }
-        disabled={pdf.isProcessing || !pdf.pageTexts.length}
-      >
-        <Play size={16} />
-        {pdf.isProcessing && pdf.progress?.phase === 'check'
-          ? '검사 중…'
-          : workTab === 'spelling'
-            ? '검사 실행 (맞춤법·띄어쓰기)'
-            : '검사 실행 (일관성)'}
-      </button>
-      <p className="hint" style={{ marginTop: 8 }}>
-        {workTab === 'spelling'
-          ? `맞춤법 확인 ${builtInRuleCount} · 편집자 검토 ${spacingRuleCount} · 합계 ${ruleCheck.spellingActiveRules.length}개 규칙`
-          : `일관성 ${ruleCheck.consistencyActiveRules.length}개 규칙 검사`}
-      </p>
-      {pdf.isProcessing && pdf.progressLabel && (
-        <>
-          <div className="progress-bar">
-            <div
-              className="progress-fill"
-              style={{
-                width: `${pdf.progress.total ? (pdf.progress.current / pdf.progress.total) * 100 : 0}%`,
-              }}
-            />
-          </div>
-          <p className="hint">{pdf.progressLabel}</p>
-        </>
-      )}
-    </section>
-  );
+  const showPdfViewer = Boolean(pdf.pdf) && tabCheckDone;
 
-  const pdfWorkSection = (
-    <PdfWorkSection
-      fileRef={pdf.fileRef}
-      onOpenPicker={session.openPdfWithPicker}
-      onFileChange={session.handleFileChange}
-      onReconnect={session.reconnectPdfFile}
-      onClearSession={session.handleClearSession}
-      isProcessing={pdf.isProcessing}
-      pdf={pdf.pdf}
-      pdfFileName={pdf.pdfFileName}
-      fileHandleActive={pdf.fileHandleActive}
-      loadError={pdf.loadError}
-      sessionHint={session.sessionHint}
-    />
-  );
+  const centerRunLabel =
+    pdf.isProcessing && pdf.progress?.phase === 'check'
+      ? '검사 중…'
+      : workTab === 'spelling'
+        ? '검사 실행 (맞춤법·띄어쓰기)'
+        : '검사 실행 (일관성)';
+
+  const centerRuleHint =
+    workTab === 'spelling'
+      ? `맞춤법 확인 ${builtInRuleCount} · 편집자 검토 ${spacingRuleCount} · 합계 ${ruleCheck.spellingActiveRules.length}개 규칙`
+      : `일관성 ${ruleCheck.consistencyActiveRules.length}개 규칙 검사`;
 
   return (
     <div className="layout-main">
@@ -363,18 +321,14 @@ export default function MainScreen({
         </header>
 
         {workTab === 'spelling' && (
-          <div className="spelling-tab-layout">
-            <div className="spelling-tab-scroll custom-scrollbar">
-              {session.sessionHint && (
-                <p className="hint session-hint panel-section-hint">
-                  {session.sessionHint}
-                </p>
-              )}
-
-              {pdfWorkSection}
-              {runCheckSection}
-              {combinedResultsPanel}
-            </div>
+          <div
+            className={`spelling-tab-layout ${tabCheckDone ? 'spelling-tab-layout--with-results' : 'spelling-tab-layout--rules-only'}`}
+          >
+            {tabCheckDone && (
+              <div className="spelling-tab-scroll custom-scrollbar">
+                {combinedResultsPanel}
+              </div>
+            )}
 
             <ResizableBuiltinSpelling
               builtInEnabled={builtInEnabled}
@@ -383,27 +337,13 @@ export default function MainScreen({
               cautionEnabled={cautionEnabled}
               onCautionToggle={onCautionToggle}
               onCautionSetAll={onCautionSetAll}
+              fillPanel={!tabCheckDone}
             />
           </div>
         )}
 
         {workTab === 'consistency' && (
           <div className="panel-left-work-scroll custom-scrollbar">
-            <PdfWorkSection
-              fileRef={pdf.fileRef}
-              onOpenPicker={session.openPdfWithPicker}
-              onFileChange={session.handleFileChange}
-              onReconnect={session.reconnectPdfFile}
-              onClearSession={session.handleClearSession}
-              isProcessing={pdf.isProcessing}
-              pdf={pdf.pdf}
-              pdfFileName={pdf.pdfFileName}
-              fileHandleActive={pdf.fileHandleActive}
-              loadError={pdf.loadError}
-              sessionHint={null}
-              compact
-            />
-            {runCheckSection}
             {combinedResultsPanel}
             {!ruleCheck.consistencyCheckDone && (
               <div className="consistency-rules-scroll custom-scrollbar">
@@ -458,25 +398,50 @@ export default function MainScreen({
             spacingRuleCount={spacingRuleCount}
             consistencyRuleCount={consistencyRuleCount}
           />
-          <PdfViewer
-            key={pdf.pdf ? `pdf-${pdf.pdf.numPages}` : 'no-pdf'}
-            pdf={pdf.pdf}
-            pageNum={pdf.currentPage}
-            pageData={pdf.currentPageData}
-            highlights={highlights.pageHighlights}
-            showPageMeta={false}
-            emptyTitle="PDF를 업로드하세요"
-            emptyHint="신국판 300페이지 내외 (50MB)를 권장합니다."
-          />
-          {pdf.pdf && (
+          {!showPdfViewer ? (
+            <PdfCenterStage
+              fileRef={pdf.fileRef}
+              onOpenPicker={session.openPdfWithPicker}
+              onFileChange={session.handleFileChange}
+              onLoadPdfFile={session.loadPdfFile}
+              onReconnect={session.reconnectPdfFile}
+              onClearSession={session.handleClearSession}
+              onRunCheck={
+                workTab === 'spelling'
+                  ? ruleCheck.runSpellingCheck
+                  : ruleCheck.runConsistencyCheck
+              }
+              isProcessing={pdf.isProcessing}
+              progressLabel={pdf.progressLabel}
+              progress={pdf.progress}
+              pdf={pdf.pdf}
+              pdfFileName={pdf.pdfFileName}
+              pdfByteLength={pdf.pdfByteLength ?? undefined}
+              pageTextsLength={pdf.pageTexts.length}
+              fileHandleActive={pdf.fileHandleActive}
+              loadError={pdf.loadError}
+              sessionHint={session.sessionHint}
+              runLabel={centerRunLabel}
+              ruleHint={centerRuleHint}
+              showReady={Boolean(pdf.pdf)}
+            />
+          ) : (
             <>
+              <PdfViewer
+                key={`pdf-${pdf.pdf.numPages}`}
+                pdf={pdf.pdf}
+                pageNum={pdf.currentPage}
+                pageData={pdf.currentPageData}
+                highlights={highlights.pageHighlights}
+                showPageMeta={false}
+              />
               <PdfPreviewBar
                 currentPage={pdf.currentPage}
                 numPages={pdf.pdf.numPages}
                 onGoToPage={goToPdfPage}
                 pdf={pdf.pdf}
                 formatPageLabel={pageDisplay.formatLabel}
-                findingsOnPage={tabCheckDone ? visibleOnCurrentPage : 0}
+                findingsOnPage={visibleOnCurrentPage}
                 thumbStripOpen={thumbStripOpen}
                 onToggleThumbStrip={toggleThumbStrip}
                 printedPagesEnabled={pageDisplay.enabled}

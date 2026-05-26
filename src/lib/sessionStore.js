@@ -336,6 +336,7 @@ export async function loadWorkSession() {
 
     const meta = {
       fileName: raw.fileName,
+      pdfByteLength: raw.pdfByteLength ?? null,
       groupedResults: raw.groupedResults ?? [],
       consistencyGroupedResults: raw.consistencyGroupedResults ?? [],
       spellingRulesFingerprint: raw.spellingRulesFingerprint ?? null,
@@ -374,7 +375,11 @@ export async function loadWorkSession() {
     db.close();
     if (!pdfBuffer?.byteLength) return null;
 
-    return { ...meta, pdfBuffer };
+    return {
+      ...meta,
+      pdfBuffer,
+      pdfByteLength: meta.pdfByteLength ?? pdfBuffer.byteLength,
+    };
   } catch (e) {
     console.error('작업 세션 불러오기 실패', e);
     return null;
