@@ -1251,6 +1251,18 @@ details[open] > summary .details-chevron {
   color: #0369a1;
 }
 
+.builtin-spelling-guide-heading {
+  margin: 0.65rem 0 0.35rem;
+  padding: 0 0.5rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.builtin-rule-list--guide .builtin-rule-row-wrap--no-quota {
+  opacity: 0.92;
+}
+
 .panel-right-placeholder {
   flex: 1;
   display: flex;
@@ -2173,7 +2185,7 @@ details[open] > summary .details-chevron {
 }
 
 .pdf-center-stage__momo--idle {
-  width: min(12.16rem, 72.93vw);
+  width: min(8.51rem, 51.05vw);
   filter: brightness(1.125);
 }
 
@@ -3351,7 +3363,7 @@ details[open] > summary .details-chevron {
 }
 
 .welcome-gate .app-version-badge--prominent {
-  border: 1px solid var(--welcome-border-strong);
+  border: none;
 }
 
 .app-version-badge--prominent {

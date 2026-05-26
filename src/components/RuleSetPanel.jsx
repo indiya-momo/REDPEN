@@ -20,6 +20,7 @@ import {
  *   onOpenFeedback?: () => void,
  *   ruleSetSavedAt?: string,
  *   builtInRuleCount?: number,
+ *   builtInGuideRuleCount?: number,
  *   spacingRuleCount?: number,
  *   consistencyRuleCount?: number,
  * }} props
@@ -37,6 +38,7 @@ export default function RuleSetPanel({
   onSave,
   onOpenFeedback,
   builtInRuleCount = 0,
+  builtInGuideRuleCount = 0,
   spacingRuleCount = 0,
   consistencyRuleCount = 0,
 }) {
@@ -89,7 +91,8 @@ export default function RuleSetPanel({
             <span className="ruleset-panel__summary-date">{savedDateLabel}</span>
           ) : null}
           {savedDateLabel ? ' ' : null}
-          맞춤법 확인 <strong>{builtInRuleCount}</strong> · 편집자 검토{' '}
+          맞춤법 확인 <strong>{builtInRuleCount}</strong> · 규칙 제외{' '}
+          <strong>{builtInGuideRuleCount}</strong> · 편집자 검토{' '}
           <strong>{spacingRuleCount}</strong> · 일관성{' '}
           <strong>{consistencyRuleCount}</strong>
         </p>

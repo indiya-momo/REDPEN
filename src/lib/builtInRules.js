@@ -13,25 +13,61 @@ export function spellingRulesFingerprint(rows = spellingRulesJson) {
   return `${rows.length}:${hash}`;
 }
 
+/**
+ * REDPEN 서비스 참고 맞춤법 — 1000개 한도·「맞춤법 확인 (N/M)」 집계 제외.
+ * 시트 counts_in_quota=FALSE 와 합쳐 적용(둘 중 하나만 맞아도 제외).
+ */
+export const SPELLING_SERVICE_NO_QUOTA_FINDS = new Set([
+  '구별',
+  '구분',
+  '과반수 이상',
+  '우리 나라',
+]);
+
+/** @param {import('./ruleTypes.js').Rule} rule */
+export function countsTowardSpellingQuota(rule) {
+  return rule.countsInQuota !== false;
+}
+
+/** @param {typeof spellingRulesJson[number]} row */
+function builtInRuleFromRow(row) {
+  const fromSheet = row.countsInQuota !== false;
+  const serviceExcluded = SPELLING_SERVICE_NO_QUOTA_FINDS.has(row.find);
+  return {
+    find: row.find,
+    replace: row.replace,
+    enabled: row.enabled === true,
+    builtIn: true,
+    tip: String(row.tip ?? '').trim(),
+    memo: String(row.memo ?? '').trim(),
+    countsInQuota: fromSheet && !serviceExcluded,
+  };
+}
+
 /** @type {import('./ruleTypes.js').Rule[]} */
-export const BUILT_IN_RULES = spellingRulesJson.map((row) => ({
-  find: row.find,
-  replace: row.replace,
-  enabled: row.enabled === true,
-  builtIn: true,
-  tip: String(row.tip ?? '').trim(),
-  memo: String(row.memo ?? '').trim(),
-}));
+export const BUILT_IN_RULES = spellingRulesJson.map(builtInRuleFromRow);
+
+export const BUILT_IN_QUOTA_RULES = BUILT_IN_RULES.filter(countsTowardSpellingQuota);
+
+/** 한도 제외(서비스·시트 참고) 맞춤법 규칙 */
+export const BUILT_IN_GUIDE_RULES = BUILT_IN_RULES.filter(
+  (r) => !countsTowardSpellingQuota(r),
+);
 
 export const SPELLING_RULES_FP = spellingRulesFingerprint();
 
-/** 맞춤법 체크 초기값 — 주의 규칙과 같이 기본은 모두 꺼짐 */
+/**
+ * 맞춤법 체크 초기값 — 시트·JSON `enabled`(TRUE/FALSE) 반영.
+ * 규칙 제외(서비스)는 시트에서 TRUE면 기본 체크.
+ */
 export function builtInEnabledFromSheet() {
-  return Object.fromEntries(BUILT_IN_RULES.map((r) => [r.find, false]));
+  return Object.fromEntries(
+    BUILT_IN_RULES.map((r) => [r.find, r.enabled === true]),
+  );
 }
 
 /**
- * 규칙 JSON(시트 동기화) 변경 시 enabled를 기본(전부 off)으로 맞춤.
+ * 규칙 JSON(시트 동기화) 변경 시 enabled 열 기준으로 초기화.
  * 동일 fingerprint면 사용자가 바꾼 체크 상태는 유지.
  * @param {Record<string, boolean>} [saved]
  * @param {string | null | undefined} [savedFingerprint]
@@ -42,7 +78,16 @@ export function migrateBuiltInEnabled(saved = {}, savedFingerprint = null) {
     return defaults;
   }
   const merged = { ...defaults };
-  for (const r of BUILT_IN_RULES) {
+  for (const r of BUILT_IN_QUOTA_RULES) {
+    if (Object.prototype.hasOwnProperty.call(saved, r.find)) {
+      merged[r.find] = saved[r.find] === true;
+    }
+  }
+  for (const r of BUILT_IN_GUIDE_RULES) {
+    if (r.enabled === true) {
+      merged[r.find] = true;
+      continue;
+    }
     if (Object.prototype.hasOwnProperty.call(saved, r.find)) {
       merged[r.find] = saved[r.find] === true;
     }
