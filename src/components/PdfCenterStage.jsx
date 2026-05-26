@@ -138,7 +138,6 @@ export default function PdfCenterStage({
             >
               <div className="pdf-dropzone__icon" aria-hidden>
                 <FileText size={32} strokeWidth={1.35} />
-                <Upload size={20} className="pdf-dropzone__icon-upload" />
               </div>
               <p className="pdf-dropzone__drag">PDF 파일을 드래그하거나</p>
               <button
@@ -148,7 +147,7 @@ export default function PdfCenterStage({
                 disabled={isProcessing}
               >
                 <Upload size={16} />
-                {supportsFilePicker() ? 'PDF 열기 (권장)' : 'PDF 업로드'}
+                {supportsFilePicker() ? 'PDF 열기' : 'PDF 업로드'}
               </button>
               {fileHandleActive && !pdf && (
                 <button
@@ -161,7 +160,7 @@ export default function PdfCenterStage({
                 </button>
               )}
               <footer className="pdf-dropzone__footer">
-                <p>신국판 300페이지 · 50MB 이하</p>
+                <p>신국판 300페이지 · 50MB 이하 권장</p>
                 <p className="subtle">스캔 PDF는 미지원합니다</p>
               </footer>
             </div>

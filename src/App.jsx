@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import MainScreen from './components/MainScreen.jsx';
 import WelcomeScreen from './components/WelcomeScreen.jsx';
+import MomoRoomScreen from './components/MomoRoomScreen.jsx';
 import {
   defaultCautionEnabled,
   migrateCautionEnabled,
@@ -236,6 +237,10 @@ export default function App() {
     alert('규칙 세트가 저장되었습니다.');
   }
 
+  if (screen === 'room') {
+    return <MomoRoomScreen onClose={() => setScreen('welcome')} />;
+  }
+
   if (screen === 'welcome') {
     return (
       <WelcomeScreen
@@ -243,6 +248,7 @@ export default function App() {
           setMainWorkTab('spelling');
           setScreen('main');
         }}
+        onOpenRoom={() => setScreen('room')}
       />
     );
   }

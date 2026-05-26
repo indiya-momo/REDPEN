@@ -1,4 +1,4 @@
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, BookOpen } from 'lucide-react';
 import AppVersionBadge from './AppVersionBadge.jsx';
 import MomoHero from './MomoHero.jsx';
 import { publicAssetUrl } from '../lib/publicAssetUrl.js';
@@ -6,9 +6,9 @@ import { publicAssetUrl } from '../lib/publicAssetUrl.js';
 const WELCOME_MOMO_FRAME = publicAssetUrl('welcome/welcome_momo_frame.png');
 
 /**
- * @param {{ onStart: () => void }} props
+ * @param {{ onStart: () => void, onOpenRoom: () => void }} props
  */
-export default function WelcomeScreen({ onStart }) {
+export default function WelcomeScreen({ onStart, onOpenRoom }) {
   return (
     <div className="welcome-gate">
       <div className="welcome-gate__layout">
@@ -111,7 +111,18 @@ export default function WelcomeScreen({ onStart }) {
       </div>
 
       <footer className="welcome-gate__version">
-        <AppVersionBadge prominent />
+        <div className="welcome-gate__version-row">
+          <AppVersionBadge prominent />
+          <button
+            type="button"
+            className="welcome-gate__room-entry"
+            onClick={onOpenRoom}
+            aria-label="모모의 방"
+            title="모모의 방"
+          >
+            <BookOpen size={17} strokeWidth={1.6} aria-hidden />
+          </button>
+        </div>
       </footer>
     </div>
   );
