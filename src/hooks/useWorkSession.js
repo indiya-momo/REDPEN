@@ -28,6 +28,7 @@ export function useWorkSession(pdf, ruleCheck) {
     currentPage,
     setPdf,
     setPdfFileName,
+    setPdfByteLength,
     setPageTexts,
     setCurrentPage,
     setIsProcessing,
@@ -66,11 +67,7 @@ export function useWorkSession(pdf, ruleCheck) {
     });
 
     if (result.ok) {
-      const hint =
-        result.mode === 'handle'
-          ? '연결됨 — 새로고침 후 「PDF 다시 연결」만 누르면 됩니다 (대용량 권장)'
-          : `저장됨 (${result.mode}) — 새로고침 시 복원`;
-      setSessionHint(hint);
+      setSessionHint(null);
       setLoadError(null);
     } else {
       const storageHint = await getStorageHint();
@@ -109,6 +106,7 @@ export function useWorkSession(pdf, ruleCheck) {
       if (saved.needFilePermission && saved.fileHandle) {
         fileHandleRef.current = saved.fileHandle;
         setPdfFileName(saved.fileName);
+        setPdfByteLength(saved.pdfByteLength ?? null);
         const { spelling, consistency, staleRules } = restoreCheckResults(saved);
         applyRestoredCheckState({ spelling, consistency });
         setRestoredSelection(saved);
@@ -130,6 +128,9 @@ export function useWorkSession(pdf, ruleCheck) {
         pdfBufferRef.current = saved.pdfBuffer;
         if (saved.fileHandle) fileHandleRef.current = saved.fileHandle;
         setPdfFileName(saved.fileName);
+        setPdfByteLength(
+          saved.pdfByteLength ?? saved.pdfBuffer?.byteLength ?? null,
+        );
         const { spelling, consistency, staleRules } = restoreCheckResults(saved);
         applyRestoredCheckState({ spelling, consistency });
         setRestoredSelection(saved);
@@ -306,10 +307,13 @@ export function useWorkSession(pdf, ruleCheck) {
     setProgress,
   ]);
 
-  const handleFileChange = useCallback(
-    async (e) => {
-      const file = e.target.files?.[0];
+  const loadPdfFile = useCallback(
+    async (file) => {
       if (!file) return;
+      if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+        setLoadError('PDF 파일만 업로드할 수 있습니다.');
+        return;
+      }
 
       clearAllCheckState();
       clearFileHandle();
@@ -323,7 +327,6 @@ export function useWorkSession(pdf, ruleCheck) {
       } finally {
         setIsProcessing(false);
         setProgress(null);
-        if (pdf.fileRef.current) pdf.fileRef.current.value = '';
       }
     },
     [
@@ -335,8 +338,16 @@ export function useWorkSession(pdf, ruleCheck) {
       setIsProcessing,
       setProgress,
       setLoadError,
-      pdf.fileRef,
     ],
+  );
+
+  const handleFileChange = useCallback(
+    async (e) => {
+      const file = e.target.files?.[0];
+      await loadPdfFile(file);
+      if (pdf.fileRef.current) pdf.fileRef.current.value = '';
+    },
+    [loadPdfFile, pdf.fileRef],
   );
 
   const handleClearSession = useCallback(async () => {
@@ -359,6 +370,7 @@ export function useWorkSession(pdf, ruleCheck) {
     persistSession,
     openPdfWithPicker,
     reconnectPdfFile,
+    loadPdfFile,
     handleFileChange,
     handleClearSession,
   };

@@ -3,12 +3,11 @@ import path from 'node:path';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
-const pdfEmptyPublic = path.resolve('public/momo/pdf-empty.png');
-if (fs.existsSync(pdfEmptyPublic)) {
-  fs.copyFileSync(
-    pdfEmptyPublic,
-    path.resolve('src/assets/momo/pdf-empty.png'),
-  );
+for (const name of ['pdf-empty.png', 'pdf-momo.png', 'pdf-full.png']) {
+  const fromPublic = path.resolve('public/momo', name);
+  if (fs.existsSync(fromPublic)) {
+    fs.copyFileSync(fromPublic, path.resolve('src/assets/momo', name));
+  }
 }
 
 if (!process.env.VITE_UI_BUILD_ID) {

@@ -15,6 +15,7 @@ export function usePdfDocument() {
 
   const [pdf, setPdf] = useState(null);
   const [pdfFileName, setPdfFileName] = useState(null);
+  const [pdfByteLength, setPdfByteLength] = useState(null);
   const [pageTexts, setPageTexts] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -24,6 +25,7 @@ export function usePdfDocument() {
   const loadPdfFromFile = useCallback(async (file) => {
     setLoadError(null);
     setPdfFileName(file.name);
+    setPdfByteLength(file.size);
 
     const buffer = await file.arrayBuffer();
     pdfBufferRef.current = buffer;
@@ -49,6 +51,7 @@ export function usePdfDocument() {
     fileHandleRef.current = null;
     setPdf(null);
     setPdfFileName(null);
+    setPdfByteLength(null);
     setPageTexts([]);
     setCurrentPage(1);
     setLoadError(null);
@@ -85,6 +88,8 @@ export function usePdfDocument() {
     fileHandleRef,
     pdf,
     pdfFileName,
+    pdfByteLength,
+    setPdfByteLength,
     pageTexts,
     currentPage,
     setCurrentPage,
