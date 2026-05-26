@@ -245,7 +245,7 @@ button {
   border: none;
   background: var(--color-surface-inset);
   font-weight: 700;
-  font-size: 0.85rem;
+  font-size: 1.275rem; /* 0.85rem × 1.5 */
   color: var(--color-text-muted);
 }
 
@@ -501,6 +501,8 @@ button {
 }
 
 .panel-left .consistency-embed {
+  flex: 1 1 0;
+  min-height: 0;
   padding: 16px 20px 24px;
   display: flex;
   flex-direction: column;
@@ -508,10 +510,65 @@ button {
 }
 
 .consistency-section-box {
+  flex-shrink: 0;
   padding: 14px 16px;
   border: 1px solid var(--color-scrollbar-thumb);
   border-radius: var(--radius-ui);
   background: var(--color-surface-inset);
+}
+
+.consistency-unified-box,
+.consistency-section-box:not(.consistency-toc-section) {
+  flex-shrink: 0;
+}
+
+.consistency-toc-section {
+  flex: 1 1 0;
+  min-height: 140px;
+  display: flex;
+  flex-direction: column;
+  border-color: #c4b5fd;
+  background: #f5f3ff;
+}
+
+.consistency-toc-section__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.consistency-toc-section__title {
+  margin: 0;
+}
+
+.consistency-toc-section__badge {
+  flex-shrink: 0;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #5b21b6;
+  background: #ede9fe;
+  border: 1px solid #c4b5fd;
+}
+
+.consistency-toc-section__body {
+  flex: 1 1 0;
+  min-height: 72px;
+  margin-top: 10px;
+  padding: 12px 14px;
+  border: 1px dashed #c4b5fd;
+  border-radius: calc(var(--radius-ui) - 2px);
+  background: rgba(255, 255, 255, 0.55);
+  display: flex;
+  align-items: flex-start;
+}
+
+.consistency-toc-section__hint {
+  margin: 0;
+  color: #6d28d9;
 }
 
 .consistency-unified-box {
@@ -542,8 +599,10 @@ button {
   margin-bottom: 0;
 }
 
-.consistency-unified-box .field-label {
+.consistency-unified-box .field-label,
+.consistency-section-box .field-label.bon-bojo-checklist-title {
   margin-bottom: 2px;
+  font-size: 1.05rem; /* .field-label 0.7rem × 1.5 */
 }
 
 .consistency-section-box .rule-form--boxed {
@@ -963,7 +1022,7 @@ button {
 
 .caution-checklist-summary {
   gap: 8px;
-  font-size: 0.78rem;
+  font-size: 1.05rem; /* 일관성 .field-label 과 동일 */
   font-weight: 600;
   color: #b45309;
   cursor: pointer;
@@ -1155,7 +1214,7 @@ details[open] > summary .details-chevron {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.78rem;
+  font-size: 1.05rem; /* 일관성 .field-label 과 동일 */
   font-weight: 600;
   color: #2563eb;
   cursor: pointer;

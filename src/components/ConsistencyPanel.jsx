@@ -442,6 +442,24 @@ export default function ConsistencyPanel({
           isRequired={(row) => isBonBojoRequiredItem(row.bonBojoItemId)}
         />
       </section>
+
+      <section
+        className="consistency-section-box consistency-toc-section"
+        aria-labelledby="consistency-toc-heading"
+      >
+        <div className="consistency-toc-section__header">
+          <p id="consistency-toc-heading" className="field-label consistency-toc-section__title">
+            목차 검사
+          </p>
+          <span className="consistency-toc-section__badge">개발중</span>
+        </div>
+        <div className="consistency-toc-section__body">
+          <p className="hint consistency-toc-section__hint">
+            목차의 장 제목·페이지와 본문 해당 쪽 제목을 맞춰 보는 검사입니다. 규칙
+            슬롯(1000개)에는 포함되지 않습니다.
+          </p>
+        </div>
+      </section>
     </div>
   );
 }
