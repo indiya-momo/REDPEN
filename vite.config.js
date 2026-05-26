@@ -10,6 +10,14 @@ for (const name of ['pdf-empty.png', 'pdf-momo.png', 'pdf-full.png']) {
   }
 }
 
+const welcomeLibraryPublic = path.resolve('public/welcome/welcome_library2.png');
+if (fs.existsSync(welcomeLibraryPublic)) {
+  fs.copyFileSync(
+    welcomeLibraryPublic,
+    path.resolve('src/assets/welcome/welcome_library2.png'),
+  );
+}
+
 if (!process.env.VITE_UI_BUILD_ID) {
   process.env.VITE_UI_BUILD_ID = 'dev-local';
 }

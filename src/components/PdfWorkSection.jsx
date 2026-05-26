@@ -53,7 +53,7 @@ export default function PdfWorkSection({
           disabled={isProcessing}
         >
           <Upload size={16} />
-          PDF 열기 (권장)
+          PDF 열기
         </button>
       ) : (
         <button
