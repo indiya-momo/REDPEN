@@ -4,6 +4,10 @@ import pdfMomoIcon from '../assets/momo/pdf-momo.png';
 import pdfFullIcon from '../assets/momo/pdf-full.png';
 import { supportsFilePicker } from '../lib/sessionStore.js';
 import { formatFileSizeMb } from '../lib/formatFileSize.js';
+import TooltipGuide from './TooltipGuide.jsx';
+import { publicAssetUrl } from '../lib/publicAssetUrl.js';
+
+const MOMO_TOOLTIP = publicAssetUrl('momo/bullon.png');
 
 /**
  * @param {{
@@ -241,7 +245,25 @@ export default function PdfCenterStage({
       </div>
 
       {loadError && (
-        <p className="error-text pdf-center-stage__error">{loadError}</p>
+        loadError.includes('텍스트를 추출하지 못했습니다') ? (
+          <TooltipGuide
+            storageKey="scan-pdf"
+            placement="top"
+            imageSrc={MOMO_TOOLTIP}
+            imageAlt="모모"
+            message={
+              <>
+                이 PDF는 스캔 이미지라 글자를 읽지 못했습니다.
+                <br />
+                텍스트가 들어있는 PDF로 다시 시도해 주세요.
+              </>
+            }
+          >
+            <p className="error-text pdf-center-stage__error">{loadError}</p>
+          </TooltipGuide>
+        ) : (
+          <p className="error-text pdf-center-stage__error">{loadError}</p>
+        )
       )}
     </div>
   );
