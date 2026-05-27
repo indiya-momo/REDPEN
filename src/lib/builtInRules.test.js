@@ -5,6 +5,7 @@ import {
   SPELLING_RULES_FP,
   SPELLING_SERVICE_NO_QUOTA_FINDS,
   countsTowardSpellingQuota,
+  isBuiltInRuleVisible,
   migrateBuiltInEnabled,
 } from './builtInRules.js';
 
@@ -20,6 +21,14 @@ describe('migrateBuiltInEnabled', () => {
     for (const r of BUILT_IN_GUIDE_RULES.filter((x) => x.enabled === true)) {
       expect(merged[r.find], r.find).toBe(true);
     }
+  });
+});
+
+describe('isBuiltInRuleVisible', () => {
+  it('visible이 false가 아니면 UI에 보인다', () => {
+    expect(isBuiltInRuleVisible({ visible: true })).toBe(true);
+    expect(isBuiltInRuleVisible({})).toBe(true);
+    expect(isBuiltInRuleVisible({ visible: false })).toBe(false);
   });
 });
 

@@ -41,7 +41,13 @@ function builtInRuleFromRow(row) {
     tip: String(row.tip ?? '').trim(),
     memo: String(row.memo ?? '').trim(),
     countsInQuota: fromSheet && !serviceExcluded,
+    visible: row.visible !== false,
   };
+}
+
+/** @param {import('./ruleTypes.js').Rule} rule */
+export function isBuiltInRuleVisible(rule) {
+  return rule.visible !== false;
 }
 
 /** @type {import('./ruleTypes.js').Rule[]} */
@@ -52,6 +58,15 @@ export const BUILT_IN_QUOTA_RULES = BUILT_IN_RULES.filter(countsTowardSpellingQu
 /** 한도 제외(서비스·시트 참고) 맞춤법 규칙 */
 export const BUILT_IN_GUIDE_RULES = BUILT_IN_RULES.filter(
   (r) => !countsTowardSpellingQuota(r),
+);
+
+/** UI 목록용 — visible=FALSE 행 제외 */
+export const BUILT_IN_QUOTA_RULES_UI = BUILT_IN_QUOTA_RULES.filter(
+  isBuiltInRuleVisible,
+);
+
+export const BUILT_IN_GUIDE_RULES_UI = BUILT_IN_GUIDE_RULES.filter(
+  isBuiltInRuleVisible,
 );
 
 export const SPELLING_RULES_FP = spellingRulesFingerprint();

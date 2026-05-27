@@ -5,9 +5,9 @@ import pdfFullIcon from '../assets/momo/pdf-full.png';
 import { supportsFilePicker } from '../lib/sessionStore.js';
 import { formatFileSizeMb } from '../lib/formatFileSize.js';
 import TooltipGuide from './TooltipGuide.jsx';
-import { publicAssetUrl } from '../lib/publicAssetUrl.js';
 
-const MOMO_TOOLTIP = publicAssetUrl('momo/bullon4.png');
+const MB = 1024 * 1024;
+const PDF_SIZE_MAX_BYTES = 50 * MB;
 
 /**
  * @param {{
@@ -29,7 +29,6 @@ const MOMO_TOOLTIP = publicAssetUrl('momo/bullon4.png');
  *   loadError: string | null,
  *   sessionHint: string | null,
  *   runLabel: string,
- *   ruleHint: string,
  *   showReady: boolean,
  * }} props
  */
@@ -52,7 +51,6 @@ export default function PdfCenterStage({
   loadError,
   sessionHint,
   runLabel,
-  ruleHint,
   showReady,
 }) {
   const [dragOver, setDragOver] = useState(false);
@@ -95,11 +93,16 @@ export default function PdfCenterStage({
   );
 
   const sizeLabel = formatFileSizeMb(pdfByteLength);
+  const isSizeExceeded =
+    Number.isFinite(pdfByteLength) && pdfByteLength > PDF_SIZE_MAX_BYTES;
   const extractBusy =
     isProcessing && progress?.phase === 'extract' && !pageTextsLength;
   const checkBusy = isProcessing && progress?.phase === 'check';
   const runDisabled =
-    isProcessing || !pdf || !pageTextsLength || extractBusy;
+    isProcessing || !pdf || !pageTextsLength || extractBusy || isSizeExceeded;
+  const scanPdfDetected =
+    typeof loadError === 'string' &&
+    loadError.includes('스캔 PDF는 문자를 읽을 수 없습니다');
   const momoSrc = showReady ? pdfFullIcon : pdfMomoIcon;
 
   return (
@@ -136,7 +139,14 @@ export default function PdfCenterStage({
         </div>
 
         {!showReady ? (
-          <>
+          <TooltipGuide
+            storageKey="pdf-upload-first-step"
+            placement="right"
+            offsetX={-52}
+            offsetY={44}
+            imageSrc={null}
+            message="처음 할 일은 이거다냥"
+          >
             <div
               className={`pdf-dropzone ${dragOver ? 'pdf-dropzone--dragover' : ''}`}
             >
@@ -165,10 +175,12 @@ export default function PdfCenterStage({
               )}
               <footer className="pdf-dropzone__footer">
                 <p>신국판 300페이지 · 50MB 이하 권장</p>
-                <p className="subtle">스캔 PDF는 미지원합니다</p>
+                <p className="subtle">
+                  텍스트 PDF만 지원(스캔 PDF 작업 불가)
+                </p>
               </footer>
             </div>
-          </>
+          </TooltipGuide>
         ) : (
           <div className="pdf-ready-panel">
             <div className="pdf-ready-file">
@@ -178,8 +190,19 @@ export default function PdfCenterStage({
               <div className="pdf-ready-file__meta">
                 <p className="pdf-ready-file__name">{pdfFileName}</p>
                 <p className="pdf-ready-file__detail">
-                  {sizeLabel ?? '—'}
-                  {extractBusy && ' · 텍스트 추출 중…'}
+                  {isSizeExceeded ? (
+                    <>
+                      파일: {sizeLabel ?? '—'}
+                      <span className="pdf-ready-file__overlimit">
+                        (50MB 초과 작업 불가)
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      {sizeLabel ?? '—'}
+                      {extractBusy && ' · 텍스트 추출 중…'}
+                    </>
+                  )}
                 </p>
               </div>
               <span
@@ -201,7 +224,19 @@ export default function PdfCenterStage({
               {checkBusy ? '검사 중…' : runLabel}
             </button>
 
-            <p className="pdf-ready-panel__stats">{ruleHint}</p>
+            {isSizeExceeded && (
+              <div className="pdf-ready-panel__overlimit-actions">
+                <p className="hint">PDF 파일을 나누어 작업할 것을 권장합니다</p>
+                <a
+                  className="link-btn"
+                  href="https://www.adobe.com/kr/acrobat/online/crop-pdf.html"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  PDF 나누기
+                </a>
+              </div>
+            )}
 
             {isProcessing && progressLabel && (
               <div className="pdf-ready-panel__progress-wrap">
@@ -245,25 +280,12 @@ export default function PdfCenterStage({
       </div>
 
       {loadError && (
-        loadError.includes('텍스트를 추출하지 못했습니다') ? (
-          <TooltipGuide
-            storageKey="scan-pdf"
-            placement="top"
-            imageSrc={MOMO_TOOLTIP}
-            imageAlt="모모"
-            message={
-              <>
-                이 PDF는 스캔 이미지라 글자를 읽지 못했습니다.
-                <br />
-                텍스트가 들어있는 PDF로 다시 시도해 주세요.
-              </>
-            }
-          >
-            <p className="error-text pdf-center-stage__error">{loadError}</p>
-          </TooltipGuide>
-        ) : (
-          <p className="error-text pdf-center-stage__error">{loadError}</p>
-        )
+        <p className="error-text pdf-center-stage__error">{loadError}</p>
+      )}
+      {scanPdfDetected && (
+        <p className="hint pdf-center-stage__scan-hint">
+          스캔 PDF는 용량이 커질 수 있습니다. 텍스트 PDF 권장
+        </p>
       )}
     </div>
   );

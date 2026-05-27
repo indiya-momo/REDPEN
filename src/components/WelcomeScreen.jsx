@@ -76,7 +76,7 @@ export default function WelcomeScreen({ onStart, onOpenRoom }) {
               <p>
                 파일을 선택합니다
                 <br />
-                (50MB 이하 권장, 스캔 PDF 제외)
+                (50MB 이하 권장, 텍스트 PDF만 지원(스캔 PDF 작업 불가))
               </p>
             </article>
             <article className="welcome-gate__step">

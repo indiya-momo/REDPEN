@@ -43,7 +43,9 @@ export function usePdfDocument() {
     setPageTexts(pages);
     const textExtracted = pages.some((p) => p.text.trim());
     if (!textExtracted) {
-      setLoadError('텍스트를 추출하지 못했습니다. 스캔 PDF는 지원하지 않습니다.');
+      setLoadError(
+        '스캔 PDF는 문자를 읽을 수 없습니다. 인디자인으로 만든 텍스트 PDF를 준비해 주세요.',
+      );
     }
     trackPdfOpened({
       pageCount: doc.numPages,

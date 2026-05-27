@@ -22,7 +22,7 @@ export default function PdfViewer({
   pageData,
   highlights = [],
   emptyTitle = 'PDF를 업로드하세요',
-  emptyHint = '신국판 300페이지 내외 (50MB)를 권장합니다.',
+  emptyHint = '용량 기준: 정상(<40MB) · 주의(40MB+) · 초과(50MB+)',
   showPageMeta = true,
 }) {
   const canvasRef = useRef(null);
@@ -92,7 +92,9 @@ export default function PdfViewer({
         />
         <p className="pdf-empty-title">{emptyTitle}</p>
         <p className="pdf-empty-hint">{emptyHint}</p>
-        <p className="pdf-empty-hint subtle">스캔 PDF는 미지원합니다</p>
+        <p className="pdf-empty-hint subtle">
+          텍스트 PDF만 지원(스캔 PDF 작업 불가)
+        </p>
         </div>
       </div>
     );

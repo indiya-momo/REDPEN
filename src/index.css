@@ -645,10 +645,12 @@ button {
   overflow: hidden;
 }
 
-.pdf-work-pane .ruleset-panel {
+.pdf-work-pane__topbar {
   flex-shrink: 0;
-  padding: 8px 14px;
-  border-bottom: 2px solid var(--color-border);
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 10px 14px 0;
   background: var(--color-surface-raised);
 }
 
@@ -751,6 +753,37 @@ button {
 
 .tooltip-guide--right {
   background-image: url('/momo/tooltip-bubble_left.png');
+}
+
+.tooltip-guide--no-momo {
+  min-width: calc(300px * var(--tooltip-scale));
+  max-width: min(calc(440px * var(--tooltip-scale)), calc(100vw - 20px));
+  padding-left: calc(34px * var(--tooltip-scale));
+  padding-right: calc(34px * var(--tooltip-scale));
+}
+
+.tooltip-guide--no-momo .tooltip-guide__body {
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: calc(10px * var(--tooltip-scale));
+  min-height: calc(72px * var(--tooltip-scale));
+}
+
+.tooltip-guide--no-momo .tooltip-guide__content {
+  grid-column: 1;
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+  padding: 0 calc(6px * var(--tooltip-scale));
+  margin-left: 55px;
+}
+
+.tooltip-guide--no-momo .tooltip-guide__message {
+  white-space: nowrap;
+}
+
+.tooltip-guide--no-momo .tooltip-guide__confirm {
+  grid-column: 2;
+  flex-shrink: 0;
 }
 
 .tooltip-guide__body {
@@ -2265,6 +2298,11 @@ details[open] > summary .details-chevron {
   align-items: center;
   width: min(22rem, 100%);
   text-align: center;
+  overflow: visible;
+}
+
+.pdf-center-stage__stack .tooltip-guide-anchor {
+  width: 100%;
 }
 
 .pdf-center-stage__hero {
@@ -2425,6 +2463,11 @@ details[open] > summary .details-chevron {
   color: var(--color-text-muted);
 }
 
+.pdf-ready-file__overlimit {
+  color: #b91c1c;
+  font-weight: 600;
+}
+
 .pdf-ready-file__status {
   flex-shrink: 0;
   color: #15803d;
@@ -2462,6 +2505,23 @@ details[open] > summary .details-chevron {
   gap: 10px 14px;
   margin-top: 4px;
   font-size: 0.78rem;
+}
+
+.pdf-ready-panel__overlimit-actions {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.pdf-ready-panel__overlimit-actions .btn-upload-secondary {
+  width: 100%;
+}
+
+.pdf-center-stage__scan-hint {
+  margin-top: 2px;
 }
 
 .pdf-work-pane .pdf-canvas-wrap {
