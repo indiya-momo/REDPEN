@@ -754,9 +754,11 @@ button {
 }
 
 .tooltip-guide__body {
-  position: relative;
   display: grid;
-  grid-template-columns: var(--tooltip-col-momo) var(--tooltip-col-text) var(--tooltip-col-confirm);
+  grid-template-columns:
+    minmax(calc(62px * var(--tooltip-scale)), var(--tooltip-col-momo))
+    minmax(max-content, 1fr)
+    minmax(calc(64px * var(--tooltip-scale)), var(--tooltip-col-confirm));
   align-items: center;
   justify-items: center;
   column-gap: var(--tooltip-side-gap-ratio);
@@ -784,19 +786,17 @@ button {
 }
 
 .tooltip-guide__content {
-  position: absolute;
-  left: 55%;
-  transform: translateX(-50%);
-  width: clamp(calc(180px * var(--tooltip-scale)), 56%, calc(340px * var(--tooltip-scale)));
-  min-width: calc(180px * var(--tooltip-scale));
-  max-width: none;
+  grid-column: 2;
+  width: auto;
+  min-width: max-content;
+  max-width: min(calc(360px * var(--tooltip-scale)), calc(100vw - 260px));
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 6px;
   margin: 0;
-  padding: 0;
+  padding: 0 2%;
   box-sizing: border-box;
   text-align: center;
   z-index: 1;
@@ -3163,9 +3163,33 @@ details[open] > summary .details-chevron {
 }
 
 .welcome-gate__copy {
+  position: relative;
   max-width: 38rem;
+  padding-bottom: 108px;
   font-family: var(--font-family-body-brand);
   word-break: keep-all;
+}
+
+.welcome-gate__bottom-notes {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 30px;
+}
+
+.welcome-gate__editor-note-anchor {
+  position: absolute;
+  top: clamp(5.9rem, 12vw, 7.4rem);
+  right: clamp(0.3rem, 1.6vw, 1.1rem);
+  z-index: 2;
+}
+
+.welcome-gate__editor-note-dot {
+  display: inline-block;
+  width: 2px;
+  height: 2px;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .welcome-gate__header {
@@ -3270,7 +3294,7 @@ details[open] > summary .details-chevron {
 }
 
 .welcome-gate__analytics-note {
-  margin: 0 0 0.75rem;
+  margin: 0 0 0.6rem;
   font-size: 0.72rem;
   line-height: 1.55;
   color: var(--welcome-text-muted);
@@ -3296,11 +3320,16 @@ details[open] > summary .details-chevron {
 }
 
 .welcome-gate__steps-note {
-  margin: 0 0 1.35rem;
+  margin: 0;
   font-size: 0.7rem;
   line-height: 1.5;
   color: var(--welcome-text-muted);
   word-break: keep-all;
+}
+
+.welcome-gate__steps-note--stage {
+  margin-top: 0.55rem;
+  text-align: center;
 }
 
 .welcome-gate__step {
