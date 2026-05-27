@@ -15,6 +15,7 @@ import { useWorkSession } from '../hooks/useWorkSession.js';
 import { useHighlights } from '../hooks/useHighlights.js';
 import { useResizablePanelWidth } from '../hooks/useResizablePanelWidth.js';
 import { usePrintedPageDisplay } from '../hooks/usePrintedPageDisplay.js';
+import { trackFeedbackOpened } from '../lib/analytics.js';
 import {
   countBuiltInActiveRules,
   countBuiltInGuideActiveRules,
@@ -398,7 +399,10 @@ export default function MainScreen({
             onDuplicateSet={onDuplicateRuleSet}
             onDeleteSet={onDeleteRuleSet}
             onSave={onSaveRules}
-            onOpenFeedback={() => setFeedbackOpen(true)}
+            onOpenFeedback={() => {
+              trackFeedbackOpened();
+              setFeedbackOpen(true);
+            }}
             builtInRuleCount={builtInRuleCount}
             builtInGuideRuleCount={builtInGuideRuleCount}
             spacingRuleCount={spacingRuleCount}

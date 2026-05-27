@@ -44,8 +44,12 @@ export function buildTimeLabel() {
   return formatBuildTimeKST(RAW_BUILD_TIME);
 }
 
+export function deployModeLabel() {
+  return import.meta.env.DEV ? 'dev' : 'pages';
+}
+
 export function versionLabel() {
-  const mode = import.meta.env.DEV ? 'dev' : 'pages';
+  const mode = deployModeLabel();
   const time = buildTimeLabel();
   const parts = [`v${APP_VERSION}`];
   if (time) parts.push(time);

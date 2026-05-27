@@ -41,6 +41,8 @@ jobs:
           VITE_FEEDBACK_FORM_ACTION_URL: https://docs.google.com/forms/d/e/1FAIpQLSchUzVmBmu1zGiFH_tPDmiv0mY6C6oq-Y4ZxjCiU-oAoE5WPA/formResponse
           VITE_FEEDBACK_FORM_ENTRY_INCONVENIENT: entry.2074090186
           VITE_FEEDBACK_FORM_ENTRY_CONVENIENT: entry.944707313
+          VITE_PUBLIC_POSTHOG_KEY: ${{ secrets.VITE_PUBLIC_POSTHOG_KEY }}
+          VITE_PUBLIC_POSTHOG_HOST: ${{ secrets.VITE_PUBLIC_POSTHOG_HOST }}
 
       - name: Verify dist (not dev index)
         shell: bash

@@ -9,6 +9,10 @@ import {
   resultVisibilityKey,
 } from '../lib/checkResultUtils.js';
 import {
+  trackCheckRun,
+  trackResultViewed,
+} from '../lib/analytics.js';
+import {
   countActiveRules,
   isOverMaxRules,
   maxRulesExceededMessage,
@@ -175,6 +179,8 @@ export function useRuleCheck({
       let visibility = { ...resultVisibility };
       /** @type {import('../lib/ruleEngine.js').MatchInstance | null} */
       let first = null;
+      /** @type {import('../lib/ruleEngine.js').RuleResultGroup[]} */
+      let scopeResults = [];
 
       if (runSpelling) {
         const { results: grouped, errors } = await runRuleCheckAsync(
@@ -186,6 +192,7 @@ export function useRuleCheck({
           },
         );
         allErrors.push(...errors);
+        scopeResults = grouped;
         setSpellingResults(grouped);
         setSpellingCheckDone(true);
         visibility = {
@@ -211,6 +218,7 @@ export function useRuleCheck({
           },
         );
         allErrors.push(...errors);
+        scopeResults = grouped;
         setConsistencyResults(grouped);
         setConsistencyCheckDone(true);
         visibility = {
@@ -235,6 +243,16 @@ export function useRuleCheck({
       if (first) {
         setActiveSource(scope);
       }
+      const findingCount = scopeResults.reduce(
+        (n, g) => n + g.instances.length,
+        0,
+      );
+      trackCheckRun({
+        scope,
+        findingCount,
+        activeRuleCount: activeTotal,
+      });
+      trackResultViewed({ scope, findingCount });
       setCurrentPage(1);
       setIsProcessing(false);
       setProgress(null);

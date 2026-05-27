@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
+import { trackPdfOpened } from '../lib/analytics.js';
 import {
   extractAllPagesText,
   loadPdfFromBuffer,
@@ -40,9 +41,15 @@ export function usePdfDocument() {
     });
 
     setPageTexts(pages);
-    if (pages.every((p) => !p.text.trim())) {
+    const textExtracted = pages.some((p) => p.text.trim());
+    if (!textExtracted) {
       setLoadError('텍스트를 추출하지 못했습니다. 스캔 PDF는 지원하지 않습니다.');
     }
+    trackPdfOpened({
+      pageCount: doc.numPages,
+      sizeBytes: file.size,
+      textExtracted,
+    });
     return doc;
   }, []);
 
