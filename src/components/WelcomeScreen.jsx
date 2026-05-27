@@ -1,6 +1,11 @@
+import { useState } from 'react';
 import { ArrowRight, BookOpen } from 'lucide-react';
 import AppVersionBadge from './AppVersionBadge.jsx';
 import MomoHero from './MomoHero.jsx';
+import {
+  isAnalyticsOptedOut,
+  setAnalyticsOptOut,
+} from '../lib/analytics.js';
 import { publicAssetUrl } from '../lib/publicAssetUrl.js';
 
 const WELCOME_MOMO_FRAME = publicAssetUrl('welcome/welcome_momo_frame.png');
@@ -9,6 +14,10 @@ const WELCOME_MOMO_FRAME = publicAssetUrl('welcome/welcome_momo_frame.png');
  * @param {{ onStart: () => void, onOpenRoom: () => void }} props
  */
 export default function WelcomeScreen({ onStart, onOpenRoom }) {
+  const [analyticsOptedOut, setAnalyticsOptedOut] = useState(() =>
+    isAnalyticsOptedOut(),
+  );
+
   return (
     <div className="welcome-gate">
       <div className="welcome-gate__layout">
@@ -76,6 +85,28 @@ export default function WelcomeScreen({ onStart, onOpenRoom }) {
               </p>
             </article>
           </div>
+
+          <p className="welcome-gate__analytics-note">
+            {analyticsOptedOut ? (
+              <>베타 통계 수집을 사용하지 않습니다.</>
+            ) : (
+              <>
+                베타 기간에는 <strong>이용 방식만 익명으로</strong> 수집합니다.
+                PDF 원고·검사 문구·규칙 내용은 전송하지 않습니다.
+              </>
+            )}{' '}
+            <button
+              type="button"
+              className="welcome-gate__analytics-toggle"
+              onClick={() => {
+                const next = !analyticsOptedOut;
+                setAnalyticsOptOut(next);
+                setAnalyticsOptedOut(next);
+              }}
+            >
+              {analyticsOptedOut ? '통계 수집 켜기' : '수집 안 함'}
+            </button>
+          </p>
 
           <p className="welcome-gate__steps-note">
             시크릿 창에서 작업 시 복원 · 저장이 되지 않습니다

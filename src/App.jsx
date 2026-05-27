@@ -17,9 +17,13 @@ import {
 import { applyCompoundRuleMigrations } from './lib/migrateCompoundRules.js';
 import {
   countActiveRules,
+  countBuiltInActiveRules,
+  countConsistencyActiveRules,
+  countSpacingReviewActiveRules,
   isOverMaxRules,
   maxRulesExceededMessage,
 } from './lib/activeRuleCount.js';
+import { trackRulesetSaved } from './lib/analytics.js';
 import {
   duplicateRuleSet,
   loadActiveSetId,
@@ -235,6 +239,18 @@ export default function App() {
     );
     setRuleSets(next);
     flushRuleSets(next, setId);
+    const saved = next.find((s) => s.id === setId);
+    if (saved) {
+      trackRulesetSaved({
+        builtinCount: countBuiltInActiveRules({
+          builtInEnabled: saved.builtInEnabled,
+        }),
+        spacingCount: countSpacingReviewActiveRules({
+          cautionEnabled: saved.cautionEnabled,
+        }),
+        consistencyCount: countConsistencyActiveRules(saved.customRules),
+      });
+    }
     alert('규칙 세트가 저장되었습니다.');
   }
 
