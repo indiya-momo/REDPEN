@@ -7,7 +7,7 @@ import { formatFileSizeMb } from '../lib/formatFileSize.js';
 import TooltipGuide from './TooltipGuide.jsx';
 import { publicAssetUrl } from '../lib/publicAssetUrl.js';
 
-const MOMO_TOOLTIP = publicAssetUrl('momo/bullon.png');
+const MOMO_TOOLTIP = publicAssetUrl('momo/bullon4.png');
 
 /**
  * @param {{

@@ -10,7 +10,7 @@ import {
 import { publicAssetUrl } from '../lib/publicAssetUrl.js';
 
 const WELCOME_MOMO_FRAME = publicAssetUrl('welcome/welcome_momo_frame.png');
-const MOMO_TOOLTIP = publicAssetUrl('momo/bullon.png');
+const MOMO_TOOLTIP = publicAssetUrl('momo/bullon4.png');
 
 /**
  * @param {{ onStart: () => void, onOpenRoom: () => void }} props
@@ -131,17 +131,13 @@ export default function WelcomeScreen({ onStart, onOpenRoom }) {
             </div>
             <div className="welcome-gate__stage-cta">
               <TooltipGuide
-                storageKey="welcome-start"
-                placement="left"
+                storageKey="welcome-start-v2"
+                placement="right"
+                offsetX={-69}
+                offsetY={-51}
                 imageSrc={MOMO_TOOLTIP}
                 imageAlt="모모"
-                message={
-                  <>
-                    먼저 왼쪽에서 규칙을 켠 뒤, PDF를 열고 검사 실행을 눌러 주세요.
-                    <br />
-                    원고 내용은 이 브라우저 안에서만 처리됩니다.
-                  </>
-                }
+                message="시작해보자냥!"
               >
                 <button
                   type="button"
