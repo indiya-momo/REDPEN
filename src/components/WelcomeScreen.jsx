@@ -37,19 +37,32 @@ export default function WelcomeScreen({ onStart, onOpenRoom }) {
               원고와 검사 결과는 <strong>이 브라우저 안에서만</strong> 처리합니다
             </p>
           </header>
+          <div className="welcome-gate__editor-note-anchor" aria-hidden>
+            <TooltipGuide
+              storageKey="welcome-editor-note"
+              placement="right"
+              offsetX={-292}
+              offsetY={0}
+              imageSrc={MOMO_TOOLTIP}
+              imageAlt="모모"
+              message="현직 편집자가 만들었다냥"
+            >
+              <span className="welcome-gate__editor-note-dot" />
+            </TooltipGuide>
+          </div>
 
           <div className="welcome-gate__panels">
             <section className="welcome-gate__panel welcome-gate__panel--do">
               <h2>하는 일</h2>
               <ul>
-                <li>규칙 기준으로 PDF 스캔</li>
+                <li>설정된 기준에 따라 PDF 스캔</li>
                 <li>발견 위치를 목록 + 하이라이트로 표시</li>
               </ul>
             </section>
             <section className="welcome-gate__panel welcome-gate__panel--dont">
               <h2>하지 않는 일</h2>
               <ul>
-                <li>자동 수정 · 문장 추천</li>
+                <li>원고 자동 수정 · AI 문장 추천</li>
                 <li>검사 결과 서버 저장</li>
               </ul>
             </section>
@@ -58,61 +71,59 @@ export default function WelcomeScreen({ onStart, onOpenRoom }) {
           <div className="welcome-gate__steps" aria-label="시작 방법">
             <article className="welcome-gate__step">
               <h3 className="welcome-gate__step-title">
-                <span className="welcome-gate__step-num">01</span> 적용규칙 확인
-              </h3>
-              <p>
-                맞춤법·띄어쓰기·일관성 탭에서
-                <br />
-                적용하려는 규칙을 켭니다
-              </p>
-            </article>
-            <article className="welcome-gate__step">
-              <h3 className="welcome-gate__step-title">
-                <span className="welcome-gate__step-num">02</span> PDF열기
+                <span className="welcome-gate__step-num">1 </span> 원고 PDF 열기
               </h3>
               <p>
                 파일을 선택합니다
                 <br />
-                (50MB 이하 권장)
+                (50MB 이하 권장, 스캔 PDF 제외)
               </p>
             </article>
             <article className="welcome-gate__step">
               <h3 className="welcome-gate__step-title">
-                <span className="welcome-gate__step-num">03</span> 검사 실행
+                <span className="welcome-gate__step-num">2 </span> 적용 기준 선택
               </h3>
               <p>
-                버튼을 누른 뒤 규칙이 적용된
+                맞춤법·띄어쓰기·일관성 탭에서
                 <br />
-                결과를 확인합니다
+                적용하려는 기준을 선택합니다
+              </p>
+            </article>
+            <article className="welcome-gate__step">
+              <h3 className="welcome-gate__step-title">
+                <span className="welcome-gate__step-num">3 </span> 검사 실행 및 확인
+              </h3>
+              <p>
+                검사 실행 버튼을 누른 뒤
+                <br />
+                기준이 적용된 결과를 확인합니다
               </p>
             </article>
           </div>
 
-          <p className="welcome-gate__analytics-note">
-            {analyticsOptedOut ? (
-              <>베타 통계 수집을 사용하지 않습니다.</>
-            ) : (
-              <>
-                베타 기간에는 <strong>이용 방식만 익명으로</strong> 수집합니다.
-                PDF 원고·검사 문구·규칙 내용은 전송하지 않습니다.
-              </>
-            )}{' '}
-            <button
-              type="button"
-              className="welcome-gate__analytics-toggle"
-              onClick={() => {
-                const next = !analyticsOptedOut;
-                setAnalyticsOptOut(next);
-                setAnalyticsOptedOut(next);
-              }}
-            >
-              {analyticsOptedOut ? '통계 수집 켜기' : '수집 안 함'}
-            </button>
-          </p>
+          <div className="welcome-gate__bottom-notes">
+            <p className="welcome-gate__analytics-note">
+              {analyticsOptedOut ? (
+                <>베타 통계 수집을 사용하지 않습니다.</>
+              ) : (
+                <>
+                  오픈 베타 기간에는 사용자의 이용 방식만 익명으로 수집합니다.
+                </>
+              )}{' '}
+              <button
+                type="button"
+                className="welcome-gate__analytics-toggle"
+                onClick={() => {
+                  const next = !analyticsOptedOut;
+                  setAnalyticsOptOut(next);
+                  setAnalyticsOptedOut(next);
+                }}
+              >
+                {analyticsOptedOut ? '통계 수집 켜기' : '수집 안 함'}
+              </button>
+            </p>
 
-          <p className="welcome-gate__steps-note">
-            시크릿 창에서 작업 시 복원 · 저장이 되지 않습니다
-          </p>
+          </div>
         </div>
 
         <aside className="welcome-gate__stage">
@@ -148,6 +159,9 @@ export default function WelcomeScreen({ onStart, onOpenRoom }) {
                   <ArrowRight size={18} aria-hidden />
                 </button>
               </TooltipGuide>
+              <p className="welcome-gate__steps-note welcome-gate__steps-note--stage">
+                시크릿 창에서 작업 시 복원 · 저장이 되지 않습니다
+              </p>
             </div>
           </div>
         </aside>
