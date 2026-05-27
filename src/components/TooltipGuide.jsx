@@ -1,14 +1,10 @@
-import { useState } from 'react';
 import { publicAssetUrl } from '../lib/publicAssetUrl.js';
-import {
-  dismissTooltipGuide,
-  isTooltipGuideDismissed,
-} from '../lib/tooltipGuideStorage.js';
 
-const DEFAULT_MOMO_IMAGE = publicAssetUrl('momo/bullon.png');
+const DEFAULT_MOMO_IMAGE = publicAssetUrl('momo/bullon4.png');
 
 /**
- * 처음 진입 시 대상 요소 옆에 말풍선을 띄우고, 확인 시 localStorage에 저장해 다시 표시하지 않습니다.
+ * 작업 중 말풍선을 항상 표시하는 가이드 UI.
+ * (현재 확인 버튼은 닫기 동작을 하지 않습니다.)
  *
  * @param {{
  *   storageKey: string,
@@ -17,6 +13,8 @@ const DEFAULT_MOMO_IMAGE = publicAssetUrl('momo/bullon.png');
  *   imageSrc?: string | null,
  *   imageAlt?: string,
  *   placement?: 'top' | 'bottom' | 'left' | 'right',
+ *   offsetX?: number,
+ *   offsetY?: number,
  *   children: import('react').ReactElement,
  * }} props
  */
@@ -27,16 +25,15 @@ export default function TooltipGuide({
   imageSrc = DEFAULT_MOMO_IMAGE,
   imageAlt = '모모',
   placement = 'bottom',
+  offsetX = 0,
+  offsetY = 0,
   children,
 }) {
-  const [visible, setVisible] = useState(
-    () => !isTooltipGuideDismissed(storageKey),
-  );
+  const visible = true;
   const showMomo = imageSrc != null && imageSrc !== '';
 
   function handleDismiss() {
-    dismissTooltipGuide(storageKey);
-    setVisible(false);
+    // 디자인 조정 작업 중에는 말풍선을 항상 유지합니다.
   }
 
   return (
@@ -44,13 +41,14 @@ export default function TooltipGuide({
       {children}
       {visible ? (
         <div
-          className={`tooltip-guide tooltip-guide--${placement}${
-            showMomo ? ' tooltip-guide--with-momo' : ''
-          }`}
+          style={{
+            '--tooltip-shift-x': `${offsetX}px`,
+            '--tooltip-shift-y': `${offsetY}px`,
+          }}
+          className={`tooltip-guide tooltip-guide--${placement}`}
           role="status"
           aria-live="polite"
         >
-          <span className="tooltip-guide__tail" aria-hidden />
           <div className="tooltip-guide__body">
             {showMomo ? (
               <div className="tooltip-guide__momo">
@@ -66,14 +64,14 @@ export default function TooltipGuide({
               {message ? (
                 <div className="tooltip-guide__message">{message}</div>
               ) : null}
-              <button
-                type="button"
-                className="tooltip-guide__confirm"
-                onClick={handleDismiss}
-              >
-                확인
-              </button>
             </div>
+            <button
+              type="button"
+              className="tooltip-guide__confirm"
+              onClick={handleDismiss}
+            >
+              확인
+            </button>
           </div>
         </div>
       ) : null}

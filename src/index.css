@@ -715,211 +715,143 @@ button {
 }
 
 .tooltip-guide {
-  --tooltip-guide-border: #1a1510;
+  --tooltip-scale: 1.2;
   --tooltip-guide-gap: 16px;
+  --tooltip-shift-x: 0px;
+  --tooltip-shift-y: 0px;
+  --tooltip-col-momo: 30%;
+  --tooltip-col-text: 42%;
+  --tooltip-col-confirm: 28%;
+  --tooltip-side-gap-ratio: 2.4%;
+  --tooltip-momo-inner-gap-ratio: 3%;
+  --tooltip-confirm-inner-gap-ratio: 8%;
   position: absolute;
   z-index: 60;
-  min-width: 260px;
-  max-width: 360px;
-  padding: 10px 0 10px 12px;
-  border: 3px solid var(--tooltip-guide-border);
-  /* 참고 시안처럼 가로로 긴 타원(캡슐) — 글 길이에 맞춰 늘어남 */
-  border-radius: 9999px;
-  background: #fff;
+  width: fit-content;
+  min-width: calc(220px * var(--tooltip-scale));
+  max-width: min(calc(460px * var(--tooltip-scale)), calc(100vw - 20px));
+  padding: calc(26px * var(--tooltip-scale)) calc(28px * var(--tooltip-scale))
+    calc(30px * var(--tooltip-scale)) calc(26px * var(--tooltip-scale));
+  border: none;
+  border-radius: 0;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100% 100%;
   color: var(--color-text);
-  box-shadow: 0 6px 18px rgba(26, 21, 16, 0.1);
+  box-shadow: none;
   overflow: visible;
 }
 
+.tooltip-guide--left,
+.tooltip-guide--top,
+.tooltip-guide--bottom {
+  background-image: url('/momo/tooltip-bubble_right.png');
+}
+
+.tooltip-guide--right {
+  background-image: url('/momo/tooltip-bubble_left.png');
+}
+
 .tooltip-guide__body {
-  display: flex;
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--tooltip-col-momo) var(--tooltip-col-text) var(--tooltip-col-confirm);
   align-items: center;
-  gap: 10px;
+  justify-items: center;
+  column-gap: var(--tooltip-side-gap-ratio);
+  width: 100%;
+  max-width: 100%;
+  min-height: calc(82px * var(--tooltip-scale));
 }
 
 .tooltip-guide__momo {
-  flex: 0 0 auto;
+  grid-column: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 72px;
+  width: 100%;
+  padding-right: var(--tooltip-momo-inner-gap-ratio);
+  box-sizing: border-box;
 }
 
 .tooltip-guide__image {
   display: block;
-  width: 72px;
+  width: clamp(calc(56px * var(--tooltip-scale)), 82%, calc(72px * var(--tooltip-scale)));
   height: auto;
-  max-height: 88px;
+  max-height: calc(86px * var(--tooltip-scale));
   object-fit: contain;
 }
 
 .tooltip-guide__content {
-  flex: 1 1 0;
-  min-width: 0;
+  position: absolute;
+  left: 55%;
+  transform: translateX(-50%);
+  width: clamp(calc(180px * var(--tooltip-scale)), 56%, calc(340px * var(--tooltip-scale)));
+  min-width: calc(180px * var(--tooltip-scale));
+  max-width: none;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 8px;
-  /* 본문·확인 버튼과 말풍선 오른쪽 테두리 사이 */
-  padding-right: 10%;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
   box-sizing: border-box;
+  text-align: center;
+  z-index: 1;
 }
 
 .tooltip-guide--bottom {
   top: calc(100% + var(--tooltip-guide-gap));
   left: 50%;
-  transform: translateX(-50%);
-  animation: tooltip-guide-in-bottom 0.2s ease-out;
+  transform: translate(
+    calc(-50% + var(--tooltip-shift-x)),
+    var(--tooltip-shift-y)
+  );
+  animation: tooltip-guide-in 0.2s ease-out;
 }
 
 .tooltip-guide--top {
   bottom: calc(100% + var(--tooltip-guide-gap));
   left: 50%;
-  transform: translateX(-50%);
-  animation: tooltip-guide-in-bottom 0.2s ease-out;
+  transform: translate(
+    calc(-50% + var(--tooltip-shift-x)),
+    var(--tooltip-shift-y)
+  );
+  animation: tooltip-guide-in 0.2s ease-out;
 }
 
 .tooltip-guide--left {
   right: calc(100% + var(--tooltip-guide-gap));
   top: 50%;
-  transform: translateY(-50%);
-  animation: tooltip-guide-in-side 0.2s ease-out;
+  transform: translate(
+    var(--tooltip-shift-x),
+    calc(-50% + var(--tooltip-shift-y))
+  );
+  animation: tooltip-guide-in 0.2s ease-out;
 }
 
 .tooltip-guide--right {
   left: calc(100% + var(--tooltip-guide-gap));
   top: 50%;
-  transform: translateY(-50%);
-  animation: tooltip-guide-in-side 0.2s ease-out;
+  transform: translate(
+    var(--tooltip-shift-x),
+    calc(-50% + var(--tooltip-shift-y))
+  );
+  animation: tooltip-guide-in 0.2s ease-out;
 }
 
-@keyframes tooltip-guide-in-bottom {
+@keyframes tooltip-guide-in {
   from {
     opacity: 0;
-    transform: translateX(-50%) scale(0.96);
+    transform: scale(0.96);
   }
 
   to {
     opacity: 1;
-    transform: translateX(-50%) scale(1);
+    transform: scale(1);
   }
-}
-
-@keyframes tooltip-guide-in-side {
-  from {
-    opacity: 0;
-    transform: translateY(-50%) scale(0.96);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(-50%) scale(1);
-  }
-}
-
-/* 말풍선 꼬리 — 대상(버튼) 쪽을 향하는 삼각형 */
-.tooltip-guide__tail {
-  position: absolute;
-  width: 0;
-  height: 0;
-  background: none;
-  box-shadow: none;
-  transform: none;
-  pointer-events: none;
-}
-
-.tooltip-guide__tail::before,
-.tooltip-guide__tail::after {
-  content: '';
-  position: absolute;
-  width: 0;
-  height: 0;
-  border-style: solid;
-}
-
-.tooltip-guide--bottom .tooltip-guide__tail {
-  top: -2px;
-  left: 78%;
-  transform: translateX(-50%);
-}
-
-.tooltip-guide--bottom .tooltip-guide__tail::before {
-  left: -12px;
-  top: 0;
-  border-width: 0 12px 13px;
-  border-color: transparent transparent var(--tooltip-guide-border);
-}
-
-.tooltip-guide--bottom .tooltip-guide__tail::after {
-  left: -9px;
-  top: 3px;
-  border-width: 0 9px 10px;
-  border-color: transparent transparent #fff;
-}
-
-.tooltip-guide--top .tooltip-guide__tail {
-  bottom: -2px;
-  left: 78%;
-  transform: translateX(-50%);
-}
-
-.tooltip-guide--top .tooltip-guide__tail::before {
-  left: -12px;
-  top: 0;
-  border-width: 13px 12px 0;
-  border-color: var(--tooltip-guide-border) transparent transparent;
-}
-
-.tooltip-guide--top .tooltip-guide__tail::after {
-  left: -9px;
-  top: -3px;
-  border-width: 10px 9px 0;
-  border-color: #fff transparent transparent;
-}
-
-/* 버튼이 오른쪽·아래에 있을 때 — 본체 하단에 붙여 아래로 */
-.tooltip-guide--left .tooltip-guide__tail {
-  top: auto;
-  right: auto;
-  bottom: -2px;
-  left: 78%;
-  transform: translateX(-50%);
-}
-
-.tooltip-guide--left .tooltip-guide__tail::before {
-  left: -12px;
-  top: 0;
-  border-width: 13px 12px 0;
-  border-color: var(--tooltip-guide-border) transparent transparent;
-}
-
-.tooltip-guide--left .tooltip-guide__tail::after {
-  left: -9px;
-  top: -3px;
-  border-width: 10px 9px 0;
-  border-color: #fff transparent transparent;
-}
-
-.tooltip-guide--right .tooltip-guide__tail {
-  top: auto;
-  left: 22%;
-  right: auto;
-  bottom: -2px;
-  transform: translateX(-50%);
-}
-
-.tooltip-guide--right .tooltip-guide__tail::before {
-  left: -12px;
-  top: 0;
-  border-width: 13px 12px 0;
-  border-color: var(--tooltip-guide-border) transparent transparent;
-}
-
-.tooltip-guide--right .tooltip-guide__tail::after {
-  left: -9px;
-  top: -3px;
-  border-width: 10px 9px 0;
-  border-color: #fff transparent transparent;
 }
 
 .tooltip-guide__title {
@@ -933,21 +865,35 @@ button {
 .tooltip-guide__message {
   margin: 0;
   font-family: var(--font-family-body-brand);
-  font-size: 0.84rem;
+  font-size: 1.008rem;
   line-height: 1.5;
   color: #6b3a32;
+  text-align: center;
+  white-space: normal;
+  overflow-wrap: break-word;
 }
 
 .tooltip-guide__confirm {
   display: inline-flex;
+  grid-column: 3;
   align-items: center;
   justify-content: center;
-  margin-top: 2px;
-  padding: 5px 12px;
+  justify-self: start;
+  align-self: center;
+  position: relative;
+  top: calc(8px * var(--tooltip-scale));
+  margin-left: var(--tooltip-confirm-inner-gap-ratio);
+  min-width: calc(56px * var(--tooltip-scale));
+  height: calc(36px * var(--tooltip-scale));
+  padding: 0 calc(14px * var(--tooltip-scale));
   border: none;
-  border-radius: var(--radius-ui-sm);
-  font-size: 0.78rem;
+  border-radius: calc(10px * var(--tooltip-scale));
+  font-size: calc(0.9rem * var(--tooltip-scale));
+  line-height: 1;
   font-weight: 700;
+  white-space: nowrap;
+  writing-mode: horizontal-tb;
+  text-orientation: mixed;
   cursor: pointer;
 }
 
@@ -3189,8 +3135,9 @@ details[open] > summary .details-chevron {
   --welcome-text-muted: rgba(245, 240, 230, 0.62);
   --welcome-stack-width: min(98vw, 29.62rem);
   --welcome-frame-width: 95%;
-  --welcome-frame-offset-x: 2%;
-  --welcome-frame-scale-y: 1.039;
+  --welcome-frame-offset-x: 1%;
+  --welcome-frame-offset-y: 0%;
+  --welcome-frame-scale-y: 1.019;
   position: relative;
   min-height: 100vh;
   overflow-x: hidden;
@@ -3410,6 +3357,9 @@ details[open] > summary .details-chevron {
 .welcome-gate__portrait {
   --welcome-frame-hole-inset: 22%;
   --welcome-frame-overlap: 20%;
+  --welcome-frame-top-fill: 5%;
+  --welcome-frame-bottom-fill: 6%;
+  --welcome-frame-media-shift-y: 0%;
   position: relative;
   width: 100%;
   line-height: 0;
@@ -3432,11 +3382,19 @@ details[open] > summary .details-chevron {
 .welcome-gate__portrait-media {
   position: absolute;
   inset: calc(var(--welcome-frame-hole-inset) - var(--welcome-frame-overlap));
+  top: calc(
+    (var(--welcome-frame-hole-inset) - var(--welcome-frame-overlap)) -
+      var(--welcome-frame-top-fill)
+  );
+  bottom: calc(
+    (var(--welcome-frame-hole-inset) - var(--welcome-frame-overlap)) -
+      var(--welcome-frame-bottom-fill)
+  );
   z-index: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  transform: scale(0.6);
+  transform: translateY(var(--welcome-frame-media-shift-y)) scale(0.6);
   transform-origin: center center;
 }
 
@@ -3450,7 +3408,7 @@ details[open] > summary .details-chevron {
   pointer-events: none;
   user-select: none;
   filter: brightness(0.9);
-  transform: translateX(var(--welcome-frame-offset-x))
+  transform: translate(var(--welcome-frame-offset-x), var(--welcome-frame-offset-y))
     scaleY(var(--welcome-frame-scale-y));
   transform-origin: center center;
 }
