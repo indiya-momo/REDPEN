@@ -64,4 +64,6 @@ jobs:
           git add -A docs/
           git diff --staged --quiet && echo "No docs changes" && exit 0
           git commit -m "chore(pages): deploy built app to docs/"
-          git push
+          # 다른 워크플로가 동시에 main에 반영되면 push가 non-fast-forward로 거절될 수 있음.
+          # 그 경우 최신 main을 rebase로 가져온 뒤 한 번 더 push 시도.
+          git push || (git pull --rebase origin main && git push)
