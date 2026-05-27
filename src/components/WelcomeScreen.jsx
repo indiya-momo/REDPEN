@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ArrowRight, BookOpen } from 'lucide-react';
 import AppVersionBadge from './AppVersionBadge.jsx';
 import MomoHero from './MomoHero.jsx';
+import TooltipGuide from './TooltipGuide.jsx';
 import {
   isAnalyticsOptedOut,
   setAnalyticsOptOut,
@@ -9,6 +10,7 @@ import {
 import { publicAssetUrl } from '../lib/publicAssetUrl.js';
 
 const WELCOME_MOMO_FRAME = publicAssetUrl('welcome/welcome_momo_frame.png');
+const MOMO_TOOLTIP = publicAssetUrl('momo/bullon.png');
 
 /**
  * @param {{ onStart: () => void, onOpenRoom: () => void }} props
@@ -128,14 +130,28 @@ export default function WelcomeScreen({ onStart, onOpenRoom }) {
               />
             </div>
             <div className="welcome-gate__stage-cta">
-              <button
-                type="button"
-                className="btn-welcome-primary welcome-gate__start"
-                onClick={onStart}
+              <TooltipGuide
+                storageKey="welcome-start"
+                placement="left"
+                imageSrc={MOMO_TOOLTIP}
+                imageAlt="모모"
+                message={
+                  <>
+                    먼저 왼쪽에서 규칙을 켠 뒤, PDF를 열고 검사 실행을 눌러 주세요.
+                    <br />
+                    원고 내용은 이 브라우저 안에서만 처리됩니다.
+                  </>
+                }
               >
-                검수 시작하기
-                <ArrowRight size={18} aria-hidden />
-              </button>
+                <button
+                  type="button"
+                  className="btn-welcome-primary welcome-gate__start"
+                  onClick={onStart}
+                >
+                  검수 시작하기
+                  <ArrowRight size={18} aria-hidden />
+                </button>
+              </TooltipGuide>
             </div>
           </div>
         </aside>
