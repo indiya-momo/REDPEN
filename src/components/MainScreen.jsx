@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { BookOpen } from 'lucide-react';
+import { BookOpen, MessageSquare } from 'lucide-react';
 import PdfViewer from './PdfViewer.jsx';
 import AppVersionBadge from './AppVersionBadge.jsx';
 import ResizableBuiltinSpelling from './ResizableBuiltinSpelling.jsx';
 import ConsistencyPanel from './ConsistencyPanel.jsx';
-import RuleSetPanel from './RuleSetPanel.jsx';
 import FeedbackModal from './FeedbackModal.jsx';
 import PdfPreviewBar from './PdfPreviewBar.jsx';
 import CheckResultsPanel from './CheckResultsPanel.jsx';
@@ -282,13 +281,8 @@ export default function MainScreen({
     pdf.isProcessing && pdf.progress?.phase === 'check'
       ? '검사 중…'
       : workTab === 'spelling'
-        ? '검사 실행 (맞춤법·띄어쓰기)'
+        ? '검수 실행'
         : '검사 실행 (일관성)';
-
-  const centerRuleHint =
-    workTab === 'spelling'
-      ? `맞춤법 확인 ${builtInRuleCount} · 규칙 제외 ${builtInGuideRuleCount} · 편집자 검토 ${spacingRuleCount} · 합계 ${ruleCheck.spellingActiveRules.length}개 규칙`
-      : `일관성 ${ruleCheck.consistencyActiveRules.length}개 규칙 검사`;
 
   return (
     <div className="layout-main">
@@ -388,26 +382,19 @@ export default function MainScreen({
 
       <main className="panel-right">
         <div className="pdf-work-pane">
-          <RuleSetPanel
-            ruleSets={ruleSets}
-            activeSetId={activeSetId}
-            ruleSetName={ruleSetName}
-            ruleSetSavedAt={ruleSetSavedAt}
-            onSelectSet={onSelectRuleSet}
-            onRuleSetNameChange={onRuleSetNameChange}
-            onCreateSet={onCreateRuleSet}
-            onDuplicateSet={onDuplicateRuleSet}
-            onDeleteSet={onDeleteRuleSet}
-            onSave={onSaveRules}
-            onOpenFeedback={() => {
-              trackFeedbackOpened();
-              setFeedbackOpen(true);
-            }}
-            builtInRuleCount={builtInRuleCount}
-            builtInGuideRuleCount={builtInGuideRuleCount}
-            spacingRuleCount={spacingRuleCount}
-            consistencyRuleCount={consistencyRuleCount}
-          />
+          <div className="pdf-work-pane__topbar">
+            <button
+              type="button"
+              className="ruleset-panel__feedback"
+              onClick={() => {
+                trackFeedbackOpened();
+                setFeedbackOpen(true);
+              }}
+            >
+              <MessageSquare size={18} aria-hidden />
+              피드백 보내기
+            </button>
+          </div>
           {!showPdfViewer ? (
             <PdfCenterStage
               fileRef={pdf.fileRef}
@@ -432,7 +419,6 @@ export default function MainScreen({
               loadError={pdf.loadError}
               sessionHint={session.sessionHint}
               runLabel={centerRunLabel}
-              ruleHint={centerRuleHint}
               showReady={Boolean(pdf.pdf)}
             />
           ) : (

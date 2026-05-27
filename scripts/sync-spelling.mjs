@@ -2,7 +2,7 @@
  * Google 시트 → 맞춤법 규칙 JSON
  *
  * 시트 탭 이름: spelling_rules
- * 컬럼: find | replace | enabled | tip | memo | counts_in_quota
+ * 컬럼: find | replace | enabled | tip | memo | counts_in_quota | visible
  *
  * 사용:
  *   SPREADSHEET_ID=xxx npm run sync-spelling
@@ -158,7 +158,12 @@ function parseCountsInQuota(value) {
   return v !== 'false' && v !== '0' && v !== 'no' && v !== 'n';
 }
 
-function expandBulkRow(find, replace, enabled, tip, memo, countsInQuota) {
+function parseVisible(value) {
+  const v = String(value ?? 'true').trim().toLowerCase();
+  return v !== 'false' && v !== '0' && v !== 'no' && v !== 'n';
+}
+
+function expandBulkRow(find, replace, enabled, tip, memo, countsInQuota, visible) {
   const findParts = find.split(/\s+/).filter(Boolean);
   const replaceParts = replace.split(/\s+/).filter(Boolean);
   if (findParts.length < 2 || findParts.length !== replaceParts.length) {
@@ -171,6 +176,7 @@ function expandBulkRow(find, replace, enabled, tip, memo, countsInQuota) {
     ...(tip ? { tip } : {}),
     ...(memo ? { memo } : {}),
     ...(countsInQuota === false ? { countsInQuota: false } : {}),
+    ...(visible === false ? { visible: false } : {}),
   }));
 }
 
@@ -184,8 +190,17 @@ function normalizeRow(row) {
   const tip = String(row.tip || '').trim();
   const memo = String(row.memo || '').trim();
   const countsInQuota = parseCountsInQuota(row.counts_in_quota);
+  const visible = parseVisible(row.visible);
 
-  const bulk = expandBulkRow(find, replace, enabled, tip, memo, countsInQuota);
+  const bulk = expandBulkRow(
+    find,
+    replace,
+    enabled,
+    tip,
+    memo,
+    countsInQuota,
+    visible,
+  );
   if (bulk) return bulk;
 
   if (find.split(/\s+/).length > 8) {
@@ -199,6 +214,7 @@ function normalizeRow(row) {
     ...(tip ? { tip } : {}),
     ...(memo ? { memo } : {}),
     ...(countsInQuota === false ? { countsInQuota: false } : {}),
+    ...(visible === false ? { visible: false } : {}),
   };
 }
 

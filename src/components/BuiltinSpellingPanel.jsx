@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import {
-  BUILT_IN_GUIDE_RULES,
-  BUILT_IN_QUOTA_RULES,
+  BUILT_IN_GUIDE_RULES_UI,
+  BUILT_IN_QUOTA_RULES_UI,
   countsTowardSpellingQuota,
   isBuiltInRuleEnabled,
 } from '../lib/builtInRules.js';
@@ -20,8 +20,8 @@ export default function BuiltinSpellingPanel({
   onBuiltInSetAll,
 }) {
   const selectAllRef = useRef(/** @type {HTMLInputElement | null} */ (null));
-  const quotaRules = BUILT_IN_QUOTA_RULES;
-  const guideRules = BUILT_IN_GUIDE_RULES;
+  const quotaRules = BUILT_IN_QUOTA_RULES_UI;
+  const guideRules = BUILT_IN_GUIDE_RULES_UI;
   const guideEnabled = guideRules.filter((r) =>
     isBuiltInRuleEnabled(builtInEnabled, r.find),
   ).length;
