@@ -92,17 +92,24 @@ export default function BuiltinSpellingPanel({
             onChange={() => onBuiltInToggle(rule.find)}
           />
           {useInlineTipToggle ? (
-            <button
-              type="button"
+            <div
               className={`rule-text builtin-rule-text builtin-inline-tip-hoverable${tipOpen ? ' builtin-inline-tip-hoverable--open' : ''}`}
               data-hover-tip="설명"
+              role="button"
+              tabIndex={0}
               onClick={onToggleTip}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  onToggleTip();
+                }
+              }}
               aria-expanded={tipOpen}
             >
               <span className="find">{rule.find}</span>
               <span className="arrow">→</span>
               <span className="replace builtin-inline-tip-trigger">{rule.replace}</span>
-            </button>
+            </div>
           ) : (
             <div className="rule-text builtin-rule-text">
               <span className="find">{rule.find}</span>
