@@ -364,6 +364,21 @@ export function useWorkSession(pdf, ruleCheck) {
     setSessionHint(null);
   }, [resetPdfDocument, clearAllCheckState]);
 
+  const handleEndWork = useCallback(async () => {
+    if (
+      !confirm(
+        '현재 작업을 종료하고 업로드 대기 화면으로 돌아가시겠습니까?\nPDF는 삭제되며 작업 내용은 저장되지 않습니다',
+      )
+    ) {
+      return;
+    }
+    await clearWorkSession();
+    resetPdfDocument();
+    clearAllCheckState();
+    setSessionHint(null);
+    setLoadError(null);
+  }, [resetPdfDocument, clearAllCheckState, setLoadError]);
+
   return {
     sessionHint,
     isRestoring,
@@ -373,5 +388,6 @@ export function useWorkSession(pdf, ruleCheck) {
     loadPdfFile,
     handleFileChange,
     handleClearSession,
+    handleEndWork,
   };
 }

@@ -122,7 +122,7 @@ export default function CheckResultsPanel({
             visibleOnCurrentPage > 0 ? 'current-page-status--has-findings' : ''
           } current-page-status--tone-${spellingTone}`}
         >
-          지금 보는 <strong>{pageLabel(currentPage)}</strong>
+          현재 <strong>{pageLabel(currentPage)}</strong>
           {printedPagesActive && printedPageOffset != null ? (
             <span className="current-page-status__system">
               {' '}
@@ -130,35 +130,58 @@ export default function CheckResultsPanel({
             </span>
           ) : null}
           {visibleOnCurrentPage > 0
-            ? ` · 표시 ${visibleOnCurrentPage}${
-                activeGroup && activeRuleOnPageCount > 0
-                  ? ` (선택 규칙 ${activeRuleOnPageCount})`
-                  : ''
-              }`
-            : ' · 이 페이지 표시 없음'}
-        </p>
-      )}
-      {viewSource === 'spelling' && spellingCheckDone && spellingFindings > 0 && (
-        <p className="results-category-summary">
-          {builtinFindings > 0 ? `맞춤법 확인 ${builtinFindings}건` : null}
-          {builtinFindings > 0 && spacingFindings > 0 ? ' · ' : null}
-          {spacingFindings > 0 ? `편집자 검토 ${spacingFindings}건` : null}
-          {builtinFindings === 0 && spacingFindings === 0
-            ? `검사 ${spellingFindings}건`
-            : null}
+            ? (
+              <>
+                에는 발견{' '}
+                <span className="current-page-status__count-underline">
+                  {visibleOnCurrentPage}개
+                </span>{' '}
+                가 있습니다
+              </>
+            )
+            : '에는 발견 항목이 없습니다'}
         </p>
       )}
       {viewSource === 'consistency' &&
         consistencyCheckDone &&
         consistencyFindings > 0 && (
           <p className="results-category-summary">
-            일관성 검사[{setLabel}] {consistencyFindings}건
+            일관성 검사[{setLabel}] {consistencyFindings}개
           </p>
         )}
       {entries.length > 0 ? (
         <>
           <div className="results-header">
-            전체 발견 {totalFindings}건 · {ruleCount}규칙
+            <span className="results-header__applied">
+              기준{' '}
+              <span className="results-header__rule-chip">
+                {ruleCount}
+              </span>{' '}
+              적용
+            </span>{' '}
+            전체 발견{' '}
+            <span className="results-category-summary__count-underline">
+              {totalFindings}개
+            </span>
+            {viewSource === 'spelling' && spellingCheckDone && spellingFindings > 0 ? (
+              <>
+                (
+                <span className="results-category-summary__builtin">
+                  맞춤법 기준{' '}
+                  <span className="results-category-summary__count-underline">
+                    {builtinFindings}개
+                  </span>
+                </span>{' '}
+                ·{' '}
+                <span className="results-category-summary__caution">
+                  검토 필요 기준{' '}
+                  <span className="results-category-summary__count-underline">
+                    {spacingFindings}개
+                  </span>
+                </span>
+                )
+              </>
+            ) : null}
           </div>
           <ul className="results-list">
             {entries.map(({ group, source }) => {
@@ -244,7 +267,7 @@ export default function CheckResultsPanel({
                           <span className="result-visibility-label">표시</span>
                         </label>
                         {count > 1 ? (
-                          <span className="result-count">{count}건</span>
+                          <span className="result-count">{count}개</span>
                         ) : null}
                       </div>
                     </div>
@@ -260,7 +283,7 @@ export default function CheckResultsPanel({
 
                     {isConsistency && first && (
                       <span className="result-detail">
-                        {count}건 · {first.matchedText} → {first.suggestedText}
+                        {count}개 · {first.matchedText} → {first.suggestedText}
                       </span>
                     )}
                   </div>

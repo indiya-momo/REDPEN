@@ -1,16 +1,21 @@
 import { useEffect, useRef, useState } from 'react';
 import {
+  cancelRenderTask,
   highlightRectsForTextRange,
   renderPageToCanvas,
+  scaleToFitContainer,
 } from '../lib/pdfService.js';
 import pdfEmptyIcon from '../assets/momo/pdf-empty.png';
+import PdfHighlightTipBubble from './PdfHighlightTipBubble.jsx';
 
 /**
+ * @typedef {import('../hooks/useHighlights.js').PageHighlight} PageHighlight
+ *
  * @param {{
  *   pdf: import('pdfjs-dist').PDFDocumentProxy | null,
  *   pageNum: number,
  *   pageData: import('../lib/pdfService.js').PageData | null,
- *   highlights?: Array<{ start: number, end: number, primary?: boolean }>,
+ *   highlights?: PageHighlight[],
  *   emptyTitle?: string,
  *   emptyHint?: string,
  *   showPageMeta?: boolean,
@@ -26,27 +31,84 @@ export default function PdfViewer({
   showPageMeta = true,
 }) {
   const canvasRef = useRef(null);
+  const stageRef = useRef(null);
   const wrapRef = useRef(null);
+  /** @type {React.MutableRefObject<import('pdfjs-dist').RenderTask | null>} */
+  const renderTaskRef = useRef(null);
+  const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
   const [rects, setRects] = useState([]);
   const [error, setError] = useState(null);
+  /** @type {{ id: string, tip: string, matchedText: string, left: number, top: number } | null} */
+  const [openTip, setOpenTip] = useState(null);
   const highlightsKey = JSON.stringify(highlights);
 
   useEffect(() => {
+    setOpenTip(null);
+  }, [pageNum, highlightsKey]);
+
+  useEffect(() => {
+    const stage = stageRef.current;
+    if (!stage) return undefined;
+
+    let timeoutId = 0;
+    let frameId = 0;
+
+    const updateSize = () => {
+      window.clearTimeout(timeoutId);
+      timeoutId = window.setTimeout(() => {
+        cancelAnimationFrame(frameId);
+        frameId = requestAnimationFrame(() => {
+          const { width, height } = stage.getBoundingClientRect();
+          setStageSize({
+            width: Math.floor(width),
+            height: Math.floor(height),
+          });
+        });
+      }, 80);
+    };
+
+    updateSize();
+    const observer = new ResizeObserver(updateSize);
+    observer.observe(stage);
+    return () => {
+      observer.disconnect();
+      window.clearTimeout(timeoutId);
+      cancelAnimationFrame(frameId);
+    };
+  }, [pdf]);
+
+  useEffect(() => {
     if (!pdf || !canvasRef.current) return;
+    if (stageSize.width < 8 || stageSize.height < 8) return;
 
     let cancelled = false;
     setError(null);
 
     (async () => {
       try {
-        const { page, viewport } = await renderPageToCanvas(
+        await cancelRenderTask(renderTaskRef.current);
+        renderTaskRef.current = null;
+        if (cancelled) return;
+
+        const page = await pdf.getPage(pageNum);
+        if (cancelled) return;
+
+        const baseViewport = page.getViewport({ scale: 1 });
+        const scale = scaleToFitContainer(baseViewport, stageSize);
+        const { viewport, renderTask } = await renderPageToCanvas(
           pdf,
           pageNum,
           canvasRef.current,
-          1.4,
+          scale,
+          page,
         );
+        renderTaskRef.current = renderTask;
 
-        if (cancelled) return;
+        if (cancelled) {
+          await cancelRenderTask(renderTask);
+          renderTaskRef.current = null;
+          return;
+        }
 
         if (highlights.length && pageData) {
           const allBoxes = [];
@@ -60,7 +122,13 @@ export default function PdfViewer({
               h.end,
             );
             for (const box of boxes) {
-              allBoxes.push({ ...box, primary: Boolean(h.primary) });
+              allBoxes.push({
+                ...box,
+                primary: Boolean(h.primary),
+                highlightId: h.id,
+                tip: h.tip ?? '',
+                matchedText: h.matchedText ?? '',
+              });
             }
           }
           setRects(allBoxes);
@@ -68,16 +136,77 @@ export default function PdfViewer({
           setRects([]);
         }
       } catch (e) {
-        if (!cancelled) {
-          setError(e instanceof Error ? e.message : '페이지 렌더 실패');
+        if (
+          cancelled ||
+          (e instanceof Error && e.code === 'RENDER_CANCELLED')
+        ) {
+          return;
         }
+        setError(e instanceof Error ? e.message : '페이지 렌더 실패');
       }
     })();
 
     return () => {
       cancelled = true;
+      void cancelRenderTask(renderTaskRef.current);
+      renderTaskRef.current = null;
     };
-  }, [pdf, pageNum, pageData, highlightsKey]);
+  }, [pdf, pageNum, pageData, highlightsKey, stageSize.width, stageSize.height]);
+
+  useEffect(() => {
+    if (!openTip) return undefined;
+
+    function onKeyDown(e) {
+      if (e.key === 'Escape') setOpenTip(null);
+    }
+
+    function onPointerDown(e) {
+      const target = e.target;
+      if (!(target instanceof Element)) return;
+      if (
+        target.closest('.pdf-highlight') ||
+        target.closest('.pdf-highlight-tip')
+      ) {
+        return;
+      }
+      setOpenTip(null);
+    }
+
+    document.addEventListener('keydown', onKeyDown);
+    document.addEventListener('pointerdown', onPointerDown, true);
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      document.removeEventListener('pointerdown', onPointerDown, true);
+    };
+  }, [openTip]);
+
+  function handleHighlightClick(rect, event) {
+    event.stopPropagation();
+    const tip = (rect.tip || '').trim();
+    if (!tip) return;
+
+    const wrap = wrapRef.current;
+    if (!wrap) return;
+
+    const wrapBox = wrap.getBoundingClientRect();
+    const el = event.currentTarget;
+    if (!(el instanceof HTMLElement)) return;
+    const hit = el.getBoundingClientRect();
+    const left = hit.left - wrapBox.left + hit.width / 2;
+    const top = hit.top - wrapBox.top - 6;
+
+    setOpenTip((prev) =>
+      prev?.id === rect.highlightId
+        ? null
+        : {
+            id: rect.highlightId,
+            tip,
+            matchedText: rect.matchedText ?? '',
+            left,
+            top,
+          },
+    );
+  }
 
   if (!pdf) {
     return (
@@ -101,7 +230,7 @@ export default function PdfViewer({
   }
 
   return (
-    <div className="pdf-viewer" ref={wrapRef}>
+    <div className="pdf-viewer pdf-viewer--fit">
       {showPageMeta && (
         <div className="pdf-page-meta">
           페이지 {pageNum} / {pdf.numPages}
@@ -112,21 +241,48 @@ export default function PdfViewer({
           )}
         </div>
       )}
-      <div className="pdf-canvas-wrap">
-        <canvas ref={canvasRef} className="pdf-canvas" />
-        <div className="pdf-highlight-layer">
-          {rects.map((r, i) => (
-            <div
-              key={i}
-              className={`pdf-highlight ${r.primary ? 'pdf-highlight--primary' : ''}`}
-              style={{
-                left: r.left,
-                top: r.top,
-                width: r.width,
-                height: r.height,
-              }}
+      <div className="pdf-canvas-stage" ref={stageRef}>
+        <div className="pdf-canvas-wrap" ref={wrapRef}>
+          <canvas ref={canvasRef} className="pdf-canvas" />
+          <div className="pdf-highlight-layer">
+            {rects.map((r, i) => (
+              <div
+                key={`${r.highlightId}-${i}`}
+                className={[
+                  'pdf-highlight',
+                  r.primary ? 'pdf-highlight--primary' : '',
+                  openTip?.id === r.highlightId ? 'pdf-highlight--tip-open' : '',
+                  (r.tip || '').trim() ? 'pdf-highlight--has-tip' : '',
+                ]
+                  .filter(Boolean)
+                  .join(' ')}
+                style={{
+                  left: r.left,
+                  top: r.top,
+                  width: r.width,
+                  height: r.height,
+                }}
+                role={(r.tip || '').trim() ? 'button' : undefined}
+                tabIndex={(r.tip || '').trim() ? 0 : undefined}
+                title={(r.tip || '').trim() ? '설명 보기' : undefined}
+                onClick={(e) => handleHighlightClick(r, e)}
+                onKeyDown={(e) => {
+                  if (e.key !== 'Enter' && e.key !== ' ') return;
+                  e.preventDefault();
+                  handleHighlightClick(r, e);
+                }}
+              />
+            ))}
+          </div>
+          {openTip ? (
+            <PdfHighlightTipBubble
+              tip={openTip.tip}
+              matchedText={openTip.matchedText}
+              left={openTip.left}
+              top={openTip.top}
+              onClose={() => setOpenTip(null)}
             />
-          ))}
+          ) : null}
         </div>
       </div>
       {error && <p className="pdf-error">{error}</p>}

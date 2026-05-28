@@ -15,7 +15,7 @@ export default function AppVersionBadge({ prominent = false }) {
     >
       {prominent ? (
         <>
-          <span className="app-version-badge__label">배포 버전</span>
+          <span className="app-version-badge__label">버전</span>
           <code className="app-version-badge__code">{label}</code>
         </>
       ) : (

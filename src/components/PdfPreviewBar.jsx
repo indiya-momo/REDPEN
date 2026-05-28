@@ -138,26 +138,23 @@ export default function PdfPreviewBar({
       </div>
 
       <aside className="pdf-preview-bar__aside">
-        {printedPagesCalibrated ? (
-          <span className="pdf-preview-bar__mode" title="파일 기준 페이지">
-            파일 {currentPage}P
-          </span>
-        ) : null}
-        {findingsOnPage > 0 ? (
-          <span className="pdf-preview-bar__findings">
-            {findingsOnPage}곳 표시
-          </span>
-        ) : null}
         {onToggleThumbStrip ? (
-          <button
-            type="button"
-            className="pdf-preview-bar__toggle"
-            onClick={onToggleThumbStrip}
-            aria-expanded={thumbStripOpen}
-            aria-controls="pdf-thumb-strip"
-          >
-            {thumbStripOpen ? '목록 숨기기' : '목록 보기'}
-          </button>
+          <div className="pdf-preview-bar__preview-controls">
+            <button
+              type="button"
+              className="pdf-preview-bar__toggle"
+              onClick={onToggleThumbStrip}
+              aria-expanded={thumbStripOpen}
+              aria-controls="pdf-thumb-strip"
+            >
+              {thumbStripOpen ? '미리보기 숨기기' : '미리보기 열기'}
+            </button>
+            {thumbStripOpen ? (
+              <p className="pdf-preview-bar__thumb-hint">
+                *네모가 보일 경우 클릭하면 미리보기 이미지로 표시됩니다
+              </p>
+            ) : null}
+          </div>
         ) : null}
       </aside>
     </div>

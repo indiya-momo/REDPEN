@@ -4,6 +4,10 @@ import {
   extractAllPagesText,
   loadPdfFromBuffer,
 } from '../lib/pdfService.js';
+import {
+  getPdfProducerHints,
+  validatePublishablePdf,
+} from '../lib/pdfPublishGate.js';
 
 /**
  * PDF 로드·텍스트 추출·현재 페이지
@@ -36,21 +40,23 @@ export function usePdfDocument() {
     setIsProcessing(true);
     setProgress({ current: 0, total: doc.numPages, phase: 'extract' });
 
+    const producerHints = await getPdfProducerHints(doc);
+
     const pages = await extractAllPagesText(doc, (current, total) => {
       setProgress({ current, total, phase: 'extract' });
     });
 
     setPageTexts(pages);
-    const textExtracted = pages.some((p) => p.text.trim());
-    if (!textExtracted) {
-      setLoadError(
-        '스캔 PDF는 문자를 읽을 수 없습니다. 인디자인으로 만든 텍스트 PDF를 준비해 주세요.',
-      );
+    const validation = validatePublishablePdf({ producerHints, pages });
+    const textExtracted = validation.ok;
+    if (!validation.ok) {
+      setLoadError(validation.message);
     }
     trackPdfOpened({
       pageCount: doc.numPages,
       sizeBytes: file.size,
       textExtracted,
+      publishGate: validation.reason,
     });
     return doc;
   }, []);
