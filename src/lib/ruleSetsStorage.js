@@ -49,7 +49,11 @@ export function loadRuleSets() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
+    if (!Array.isArray(parsed)) return [];
+    return parsed.map((set) => {
+      const { cautionEnabled, builtInEnabled, ...rest } = set ?? {};
+      return rest;
+    });
   } catch {
     return [];
   }
@@ -57,7 +61,11 @@ export function loadRuleSets() {
 
 /** @param {RuleSet[]} sets */
 export function saveRuleSets(sets) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(sets));
+  const payload = sets.map((set) => {
+    const { cautionEnabled, builtInEnabled, ...rest } = set ?? {};
+    return rest;
+  });
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
 }
 
 /** @returns {string | null} */
@@ -84,12 +92,9 @@ export function duplicateRuleSet(source) {
   return {
     id: newId(),
     name: `${baseName} (복사)`,
-    builtInEnabled: { ...(source.builtInEnabled ?? {}) },
     customRules: structuredClone(source.customRules ?? []),
     globalExcludePhrases: [...(source.globalExcludePhrases ?? [])],
-    cautionEnabled: source.cautionEnabled
-      ? { ...source.cautionEnabled }
-      : undefined,
+    cautionRulesFingerprint: source.cautionRulesFingerprint,
     compoundMigrateVersion: source.compoundMigrateVersion,
     spellingRulesFingerprint: source.spellingRulesFingerprint,
     savedAt: source.savedAt,

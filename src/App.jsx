@@ -4,7 +4,6 @@ import WelcomeScreen from './components/WelcomeScreen.jsx';
 import MomoRoomScreen from './components/MomoRoomScreen.jsx';
 import {
   defaultCautionEnabled,
-  migrateCautionEnabled,
   CAUTION_SEARCH_RULES,
 } from './lib/cautionRules.js';
 import {
@@ -12,7 +11,6 @@ import {
   countsTowardSpellingQuota,
   SPELLING_RULES_FP,
   builtInEnabledFromSheet,
-  migrateBuiltInEnabled,
 } from './lib/builtInRules.js';
 import { applyCompoundRuleMigrations } from './lib/migrateCompoundRules.js';
 import {
@@ -44,15 +42,12 @@ function normalizeRuleSet(set) {
     );
   return {
     ...set,
-    builtInEnabled: migrateBuiltInEnabled(
-      set.builtInEnabled,
-      set.spellingRulesFingerprint,
-    ),
+    builtInEnabled: builtInEnabledFromSheet(),
     spellingRulesFingerprint: SPELLING_RULES_FP,
     customRules: ensureDefaultAuxiliaryVerbs(customRules),
     compoundMigrateVersion,
     globalExcludePhrases: set.globalExcludePhrases ?? [],
-    cautionEnabled: migrateCautionEnabled(set.cautionEnabled),
+    cautionEnabled: defaultCautionEnabled(),
   };
 }
 

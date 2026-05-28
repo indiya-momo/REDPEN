@@ -51,8 +51,7 @@ describe('duplicateRuleSet', () => {
     const copy = duplicateRuleSet(source);
     expect(copy.id).not.toBe(source.id);
     expect(copy.name).toBe('경제서 (복사)');
-    expect(copy.builtInEnabled).toEqual({ foo: true });
-    expect(copy.builtInEnabled).not.toBe(source.builtInEnabled);
+    expect(copy.builtInEnabled).toBeUndefined();
     expect(copy.customRules).toEqual(source.customRules);
     expect(copy.customRules).not.toBe(source.customRules);
     expect(copy.globalExcludePhrases).toEqual(['테스트']);

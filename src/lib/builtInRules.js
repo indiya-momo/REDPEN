@@ -9,7 +9,7 @@ export function spellingRulesFingerprint(rows = spellingRulesJson) {
       (r) =>
         `${r.find}\0${r.replace}\0${r.tip ?? ''}\0${r.enabled === true ? 1 : 0}\0${
           r.countsInQuota === false ? 0 : 1
-        }\0${r.visible === false ? 0 : 1}`,
+        }\0${r.visible === false ? 0 : 1}\0${r.dividerGroup ?? ''}`,
     )
     .join('\n');
   for (let i = 0; i < payload.length; i += 1) {
@@ -17,17 +17,6 @@ export function spellingRulesFingerprint(rows = spellingRulesJson) {
   }
   return `${rows.length}:${hash}`;
 }
-
-/**
- * REDPEN 서비스 참고 맞춤법 — 1000개 한도·「맞춤법 확인 (N/M)」 집계 제외.
- * 시트 counts_in_quota=FALSE 와 합쳐 적용(둘 중 하나만 맞아도 제외).
- */
-export const SPELLING_SERVICE_NO_QUOTA_FINDS = new Set([
-  '구별',
-  '구분',
-  '과반수 이상',
-  '우리 나라',
-]);
 
 /** @param {import('./ruleTypes.js').Rule} rule */
 export function countsTowardSpellingQuota(rule) {
@@ -37,7 +26,6 @@ export function countsTowardSpellingQuota(rule) {
 /** @param {typeof spellingRulesJson[number]} row */
 function builtInRuleFromRow(row) {
   const fromSheet = row.countsInQuota !== false;
-  const serviceExcluded = SPELLING_SERVICE_NO_QUOTA_FINDS.has(row.find);
   return {
     find: row.find,
     replace: row.replace,
@@ -45,8 +33,9 @@ function builtInRuleFromRow(row) {
     builtIn: true,
     tip: String(row.tip ?? '').trim(),
     memo: String(row.memo ?? '').trim(),
-    countsInQuota: fromSheet && !serviceExcluded,
+    countsInQuota: fromSheet,
     visible: row.visible !== false,
+    dividerGroup: String(row.dividerGroup ?? '').trim() || undefined,
     // "펼쳐지다" 같은 합성어 오탐 방지: 단어 시작에서만 매칭
     ...(row.find === '쳐지' ? { requireLeadingBoundary: true } : {}),
   };

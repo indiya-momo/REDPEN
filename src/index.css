@@ -1249,8 +1249,32 @@ details[open] > summary .details-chevron {
   border-radius: var(--radius-ui);
 }
 
+.builtin-rule-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.1px 10px;
+  padding: 0.1px 8px;
+  border-bottom: none;
+  position: relative;
+  overflow: visible;
+}
+
+.builtin-rule-entry {
+  flex: 0 1 auto;
+}
+
+.builtin-rule-group--tip-open {
+  padding-bottom: 24px;
+}
+
+.builtin-rule-group--divider-after {
+  border-bottom: 1px solid var(--color-border);
+}
+
 .builtin-rule-row {
-  align-items: center;
+  align-items: flex-start;
+  border-bottom: none;
+  min-height: 28px;
 }
 
 .builtin-rule-text {
@@ -1260,13 +1284,28 @@ details[open] > summary .details-chevron {
   flex-wrap: wrap;
   align-items: baseline;
   gap: 4px 8px;
+  line-height: 1.2;
+}
+
+.builtin-rule-row > input[type='checkbox'] {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  flex: 0 0 auto;
+  margin-top: 1px;
 }
 
 .builtin-rule-row-wrap {
-  border-bottom: 1px solid var(--color-surface);
   transition:
     background 0.15s ease,
     box-shadow 0.15s ease;
+}
+
+.builtin-rule-item {
+  flex: 0 1 auto;
+  min-width: 0;
+  border-radius: 8px;
+  padding: 2px 4px;
 }
 
 .builtin-rule-row-wrap:hover {
@@ -1274,18 +1313,24 @@ details[open] > summary .details-chevron {
   box-shadow: var(--rule-hover-inset);
 }
 
-.builtin-rule-row-wrap:last-child {
-  border-bottom: none;
+.builtin-rule-row-wrap--inline-trigger:hover {
+  background: transparent;
+  box-shadow: none;
 }
 
 .builtin-rule-tip-inline {
-  flex: 1 1 100%;
-  min-width: 0;
-  margin-top: 4px;
+  position: absolute;
+  left: 37px;
+  bottom: 4px;
+  min-width: 180px;
+  max-width: calc(100% - 45px);
+  margin-top: 0;
+  margin-bottom: 0;
   font-size: 0.68rem;
   font-weight: 500;
   line-height: 1.45;
   color: #b91c1c;
+  z-index: 2;
 }
 
 .builtin-tip-toggle-btn {
@@ -3013,13 +3058,19 @@ details[open] > summary .details-chevron {
 .rule-row {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
+  gap: 5px;
   padding: 10px 8px;
   border-bottom: 1px solid var(--color-surface);
   font-size: 0.85rem;
   transition:
     background 0.15s ease,
     box-shadow 0.15s ease;
+}
+
+.builtin-rule-list .builtin-rule-row {
+  border-bottom: none;
+  padding-top: 5px;
+  padding-bottom: 5px;
 }
 
 .rule-list > .rule-row:hover {
@@ -3033,7 +3084,7 @@ details[open] > summary .details-chevron {
 
 .rule-text .arrow {
   color: var(--color-text-subtle);
-  margin: 0 4px;
+  margin: 0 1px;
 }
 
 .rule-text .replace {
@@ -3052,6 +3103,74 @@ details[open] > summary .details-chevron {
 .builtin-spelling-rules-scroll .rule-text .replace {
   color: #7f1d1d;
   font-weight: 800;
+}
+
+.builtin-inline-tip-trigger {
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  background-color: transparent;
+  padding: 0 2px;
+  margin: 0;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  line-height: inherit;
+  text-decoration: none;
+  outline: none;
+  box-shadow: none;
+  filter: none;
+  transform: none;
+  -webkit-tap-highlight-color: transparent;
+  position: relative;
+}
+
+.builtin-inline-tip-trigger:hover {
+  border-color: transparent;
+}
+
+.builtin-inline-tip-trigger:hover::after {
+  content: attr(data-hover-tip);
+  position: absolute;
+  left: calc(100% + 6px);
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.64rem;
+  font-weight: 600;
+  line-height: 1;
+  color: #1f2937;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 4px 6px;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+  pointer-events: none;
+  z-index: 3;
+}
+
+.builtin-inline-tip-trigger:focus,
+.builtin-inline-tip-trigger:focus-visible,
+.builtin-inline-tip-trigger:active {
+  border-color: transparent;
+  background: transparent;
+  background-color: transparent;
+  outline: none;
+  box-shadow: none;
+  filter: none;
+  transform: none;
+}
+
+.builtin-inline-tip-hoverable {
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  padding: 2px 6px;
+}
+
+.builtin-inline-tip-hoverable:not(.builtin-inline-tip-hoverable--open):hover {
+  border-color: #d1d5db;
+  background: #f8fafc;
 }
 
 .builtin-spelling-caution-scroll .caution-group-title {
@@ -3857,7 +3976,7 @@ details[open] > summary .details-chevron {
   position: relative;
   box-sizing: border-box;
   min-height: 100%;
-  padding: clamp(1.25rem, 4vw, 2.5rem);
+  padding: clamp(0.4rem, 1.6vw, 0.9rem) clamp(1rem, 2.4vw, 1.6rem);
   background: var(--momo-room-bg);
   color: var(--momo-room-text);
   overflow-x: auto;
@@ -3924,7 +4043,7 @@ details[open] > summary .details-chevron {
   width: var(--momo-room-layout-max);
   max-width: 100%;
   margin: 0 auto;
-  padding-top: 0.25rem;
+  padding-top: 0.15rem;
 }
 
 .momo-room__side {

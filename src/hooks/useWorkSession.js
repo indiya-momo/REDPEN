@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { restoreCheckResults } from '../lib/checkResultUtils.js';
 import { SPELLING_RULES_FP } from '../lib/builtInRules.js';
+import { CAUTION_RULES_FP } from '../lib/cautionRules.js';
 import {
   extractAllPagesText,
   loadPdfFromBuffer,
@@ -61,6 +62,7 @@ export function useWorkSession(pdf, ruleCheck) {
       groupedResults: spellingResults,
       consistencyGroupedResults: consistencyResults,
       spellingRulesFingerprint: SPELLING_RULES_FP,
+      cautionRulesFingerprint: CAUTION_RULES_FP,
       currentPage,
       selectedInstance: spellingSelected,
       consistencySelectedInstance: consistencySelected,
@@ -215,6 +217,7 @@ export function useWorkSession(pdf, ruleCheck) {
           groupedResults: spellingResults,
           consistencyGroupedResults: consistencyResults,
           spellingRulesFingerprint: SPELLING_RULES_FP,
+          cautionRulesFingerprint: CAUTION_RULES_FP,
           currentPage,
           selectedInstance: spellingSelected,
           consistencySelectedInstance: consistencySelected,
