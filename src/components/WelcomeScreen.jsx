@@ -25,16 +25,18 @@ export default function WelcomeScreen({ onStart, onOpenRoom }) {
       <div className="welcome-gate__layout">
         <div className="welcome-gate__copy">
           <header className="welcome-gate__header">
-            <p className="welcome-gate__eyebrow">조판 PDF 검수 도구</p>
+            <p className="welcome-gate__eyebrow">인디자인 텍스트 PDF 검수 도구</p>
             <h1>
               <span className="welcome-gate__title-main">인디야</span>
               <br />
               <span className="welcome-gate__title-sub">교정냥 모모의 여행</span>
             </h1>
             <p className="welcome-gate__lead">
-              맞춤법·표기 일관성을 찾는 조판 PDF 검수 도구입니다
+              맞춤법·표기 일관성을 찾는 <strong>인디자인 텍스트 PDF 검수 도구</strong>입니다
               <br />
-              원고와 검사 결과는 <strong>이 브라우저 안에서만</strong> 처리합니다
+              원고와 검사 결과는 <strong>이 브라우저 안에서만 처리</strong>합니다
+              <br />
+              PC버전 작동만 지원합니다
             </p>
           </header>
           <div className="welcome-gate__editor-note-anchor" aria-hidden>
@@ -74,9 +76,9 @@ export default function WelcomeScreen({ onStart, onOpenRoom }) {
                 <span className="welcome-gate__step-num">1 </span> 원고 PDF 열기
               </h3>
               <p>
-                파일을 선택합니다
+                텍스트 PDF 파일을 선택합니다
                 <br />
-                (50MB 이하 권장, 텍스트 PDF만 지원(스캔 PDF 작업 불가))
+                (스캔 PDF는 작업이 불가합니다)
               </p>
             </article>
             <article className="welcome-gate__step">
@@ -156,7 +158,7 @@ export default function WelcomeScreen({ onStart, onOpenRoom }) {
                   onClick={onStart}
                 >
                   검수 시작하기
-                  <ArrowRight size={18} aria-hidden />
+                  <ArrowRight size={23} aria-hidden />
                 </button>
               </TooltipGuide>
               <p className="welcome-gate__steps-note welcome-gate__steps-note--stage">
@@ -177,7 +179,7 @@ export default function WelcomeScreen({ onStart, onOpenRoom }) {
             aria-label="모모의 방"
             title="모모의 방"
           >
-            <BookOpen size={17} strokeWidth={1.6} aria-hidden />
+            <BookOpen size={22} strokeWidth={1.6} aria-hidden />
           </button>
         </div>
       </footer>

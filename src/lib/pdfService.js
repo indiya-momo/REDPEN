@@ -107,24 +107,67 @@ function buildPageText(items) {
 }
 
 /**
+ * @param {{ width: number, height: number }} pageSize — scale 1 viewport
+ * @param {{ width: number, height: number }} containerSize
+ * @param {number} [padding]
+ */
+export function scaleToFitContainer(pageSize, containerSize, padding = 4) {
+  const availW = Math.max(containerSize.width - padding * 2, 1);
+  const availH = Math.max(containerSize.height - padding * 2, 1);
+  const fit = Math.min(availW / pageSize.width, availH / pageSize.height);
+  return Math.max(0.25, Math.min(fit, 4));
+}
+
+/**
+ * @param {import('pdfjs-dist').RenderTask | null | undefined} renderTask
+ */
+export function cancelRenderTask(renderTask) {
+  if (!renderTask) return Promise.resolve();
+  renderTask.cancel();
+  return renderTask.promise.catch(() => {});
+}
+
+/**
  * @param {import('pdfjs-dist').PDFDocumentProxy} pdf
  * @param {number} pageNum
  * @param {HTMLCanvasElement} canvas
- * @param {number} scale
+ * @param {number} [scale]
+ * @param {import('pdfjs-dist').PDFPageProxy} [pageProxy]
  */
-export async function renderPageToCanvas(pdf, pageNum, canvas, scale = 1.2) {
-  const page = await pdf.getPage(pageNum);
+export async function renderPageToCanvas(
+  pdf,
+  pageNum,
+  canvas,
+  scale = 1.2,
+  pageProxy = null,
+) {
+  const page = pageProxy ?? (await pdf.getPage(pageNum));
   const viewport = page.getViewport({ scale });
   const ctx = canvas.getContext('2d');
+  if (!ctx) {
+    throw new Error('Canvas 2d context unavailable');
+  }
+
   canvas.width = viewport.width;
   canvas.height = viewport.height;
 
-  await page.render({
+  const renderTask = page.render({
     canvasContext: ctx,
     viewport,
-  }).promise;
+  });
 
-  return { page, viewport };
+  try {
+    await renderTask.promise;
+  } catch (error) {
+    if (renderTask.cancelled) {
+      const err = new Error('Render cancelled');
+      err.code = 'RENDER_CANCELLED';
+      throw err;
+    }
+    throw error;
+  }
+
+  return { page, viewport, renderTask };
 }
 
 /**

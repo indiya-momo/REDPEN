@@ -13,6 +13,15 @@ describe('cautionFindPattern', () => {
     expect(matches(find, '오른 정도')).toBe(false);
   });
 
+  it('attached-before: 가지는 토큰 끝만 (물가지수 제외, 여름가지 포함)', () => {
+    const find = cautionFindPattern('가지', 'attached-before');
+    expect(matches(find, '여름가지')).toBe(true);
+    expect(matches(find, '산가지')).toBe(true);
+    expect(matches(find, '두 가지')).toBe(false);
+    expect(matches(find, '물가지수')).toBe(false);
+    expect(matches(find, '소비자물가지수')).toBe(false);
+  });
+
   it('spaced-before: 붙여야 하는데 띄어 씀 (앞말 2글자+)', () => {
     const find = cautionFindPattern('만', 'spaced-before');
     expect(matches(find, '그때 만')).toBe(true);

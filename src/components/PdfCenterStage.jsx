@@ -99,7 +99,12 @@ export default function PdfCenterStage({
     isProcessing && progress?.phase === 'extract' && !pageTextsLength;
   const checkBusy = isProcessing && progress?.phase === 'check';
   const runDisabled =
-    isProcessing || !pdf || !pageTextsLength || extractBusy || isSizeExceeded;
+    isProcessing ||
+    !pdf ||
+    !pageTextsLength ||
+    extractBusy ||
+    isSizeExceeded ||
+    Boolean(loadError);
   const scanPdfDetected =
     typeof loadError === 'string' &&
     loadError.includes('스캔 PDF는 문자를 읽을 수 없습니다');

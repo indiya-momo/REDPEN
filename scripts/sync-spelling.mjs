@@ -316,7 +316,14 @@ async function main() {
   }
 
   let hash = 0;
-  const payload = rules.map((r) => `${r.find}\0${r.replace}`).join('\n');
+  const payload = rules
+    .map(
+      (r) =>
+        `${r.find}\0${r.replace}\0${r.tip ?? ''}\0${r.enabled === true ? 1 : 0}\0${
+          r.countsInQuota === false ? 0 : 1
+        }\0${r.visible === false ? 0 : 1}`,
+    )
+    .join('\n');
   for (let i = 0; i < payload.length; i += 1) {
     hash = (Math.imul(31, hash) + payload.charCodeAt(i)) | 0;
   }

@@ -277,7 +277,8 @@ export function cautionFindPattern(label, matchMode) {
     return String.raw`([^\s]{2,})[ \u00A0]+${esc}(?!\S)`;
   }
   if (matchMode === 'attached-before') {
-    return String.raw`([^\s]{2,})${esc}(?!\S)`;
+    // 앞말+label이 한 토큰이고 토큰 끝이 label(예: 여름가지 O, 물가지수 X)
+    return String.raw`([^\s]{1,}${esc})(?!\S)`;
   }
   if (matchMode === 'spaced-stem') {
     return String.raw`([^\s]{2,})[ \u00A0]+${esc}[\uAC00-\uD7A3]+(?!\S)`;

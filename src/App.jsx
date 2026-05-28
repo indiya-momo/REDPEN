@@ -174,6 +174,22 @@ export default function App() {
     [flushPendingRuleSetsSave, flushRuleSets],
   );
 
+  useEffect(() => {
+    if (!rulesReady || !ruleSets.length) return;
+    const needSheetResync = ruleSets.some(
+      (s) => s.spellingRulesFingerprint !== SPELLING_RULES_FP,
+    );
+    if (!needSheetResync) return;
+
+    const next = ruleSets.map(normalizeRuleSet);
+    const nextActive =
+      activeSetIdRef.current && next.some((s) => s.id === activeSetIdRef.current)
+        ? activeSetIdRef.current
+        : next[0]?.id;
+    if (!nextActive) return;
+    applyRuleSets(next, nextActive);
+  }, [rulesReady, ruleSets, applyRuleSets]);
+
   const handleSelectRuleSet = useCallback(
     (id) => {
       if (!id || id === activeSetIdRef.current) return;

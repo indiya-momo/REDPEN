@@ -70,7 +70,17 @@
           "enabled": false,
           "matchMode": "attached-before",
           "inventoryOnly": false,
-          "displayLabel": "가지(단위명사)"
+          "displayLabel": "가지(단위명사)",
+          "except": [
+            "따라가지",
+            "산가지",
+            "가지가지",
+            "갖가지",
+            "곁가지",
+            "바가지",
+            "나뭇가지",
+            "무가지"
+          ]
         }
       ]
     }

@@ -22,9 +22,6 @@ export default function BuiltinSpellingPanel({
   const selectAllRef = useRef(/** @type {HTMLInputElement | null} */ (null));
   const quotaRules = BUILT_IN_QUOTA_RULES_UI;
   const guideRules = BUILT_IN_GUIDE_RULES_UI;
-  const guideEnabled = guideRules.filter((r) =>
-    isBuiltInRuleEnabled(builtInEnabled, r.find),
-  ).length;
   const total = quotaRules.length;
   const enabled = quotaRules.filter((r) =>
     isBuiltInRuleEnabled(builtInEnabled, r.find),
@@ -84,14 +81,11 @@ export default function BuiltinSpellingPanel({
           />
         </label>
         <span className="builtin-spelling-summary-title">
-          맞춤법 확인 ({enabled}/{total})
+          맞춤법 기준 ({enabled}/{total})
         </span>
       </summary>
       {guideRules.length > 0 ? (
         <>
-          <p className="builtin-spelling-guide-heading">
-            규칙 제외 · 서비스 ({guideEnabled}/{guideRules.length})
-          </p>
           <ul className="rule-list builtin-rule-list builtin-rule-list--guide">
             {guideRules.map(renderRuleRow)}
           </ul>

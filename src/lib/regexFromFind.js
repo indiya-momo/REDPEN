@@ -1,16 +1,33 @@
+const GAP = '[\\s\\u00A0\\n\\r\\u200B\\uFEFF]*';
+const GAP_REQ = '[\\s\\u00A0\\n\\r\\u200B\\uFEFF]+';
+
+function escapeRegexLiteral(s) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 /**
  * @param {import('./ruleTypes.js').Rule} rule
  * @returns {RegExp | null}
  */
 export function compileRuleRegex(rule) {
-  const isRegex = rule.pattern === 'regex';
   try {
-    if (isRegex) {
+    if (rule.pattern === 'regex') {
       return new RegExp(rule.find, 'gu');
     }
-    const escaped = rule.find.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const flexible = escaped.replace(/\s+/g, '[ \\u00A0]+');
-    return new RegExp(flexible, 'gu');
+
+    const trimmed = rule.find.trim();
+    if (!trimmed) return null;
+
+    const wordParts = trimmed.split(/\s+/).filter(Boolean);
+    const body = wordParts
+      .map((word) => {
+        const esc = escapeRegexLiteral(word);
+        if (word.length <= 1) return esc;
+        return esc.split('').join(GAP);
+      })
+      .join(GAP_REQ);
+
+    return new RegExp(body, 'gu');
   } catch {
     return null;
   }

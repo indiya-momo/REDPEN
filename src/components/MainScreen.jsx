@@ -383,17 +383,31 @@ export default function MainScreen({
       <main className="panel-right">
         <div className="pdf-work-pane">
           <div className="pdf-work-pane__topbar">
-            <button
-              type="button"
-              className="ruleset-panel__feedback"
-              onClick={() => {
-                trackFeedbackOpened();
-                setFeedbackOpen(true);
-              }}
-            >
-              <MessageSquare size={18} aria-hidden />
-              피드백 보내기
-            </button>
+            <p className="pdf-work-pane__coming-soon">
+              *사용자의 기준을 저장하는 기능을 준비중입니다*
+            </p>
+            <div className="pdf-work-pane__topbar-actions">
+              <button
+                type="button"
+                className="pdf-work-pane__end-work"
+                onClick={() => {
+                  session.handleEndWork();
+                }}
+              >
+                작업 종료
+              </button>
+              <button
+                type="button"
+                className="ruleset-panel__feedback"
+                onClick={() => {
+                  trackFeedbackOpened();
+                  setFeedbackOpen(true);
+                }}
+              >
+                <MessageSquare size={18} aria-hidden />
+                피드백 보내기
+              </button>
+            </div>
           </div>
           {!showPdfViewer ? (
             <PdfCenterStage
