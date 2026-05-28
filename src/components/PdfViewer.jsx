@@ -222,7 +222,11 @@ export default function PdfViewer({
         <p className="pdf-empty-title">{emptyTitle}</p>
         <p className="pdf-empty-hint">{emptyHint}</p>
         <p className="pdf-empty-hint subtle">
-          텍스트 PDF만 지원(스캔 PDF 작업 불가)
+          스캔 PDF는 읽을 수 없어요ㅠ
+          <br />
+          인디자인 프로그램으로 만든
+          <br />
+          텍스트 선택 가능한 PDF만 지원합니다
         </p>
         </div>
       </div>

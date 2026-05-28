@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   CAUTION_GROUPS,
   CAUTION_SEARCH_RULES,
@@ -40,6 +40,9 @@ export default function CautionChecklist({
   onCautionSetAll,
 }) {
   const selectAllRef = useRef(/** @type {HTMLInputElement | null} */ (null));
+  const [openTips, setOpenTips] = useState(
+    /** @type {Record<string, boolean>} */ ({}),
+  );
   const total = CAUTION_SEARCH_RULES.length;
   const activeCount = CAUTION_SEARCH_RULES.filter(
     (r) => cautionEnabled[r.id] === true,
@@ -54,7 +57,7 @@ export default function CautionChecklist({
   }, [someChecked]);
 
   return (
-    <details className="caution-checklist-details" open>
+    <details className="caution-checklist-details">
       <summary className="caution-checklist-summary">
         <DetailsChevron />
         <label
@@ -71,7 +74,7 @@ export default function CautionChecklist({
           />
         </label>
         <span className="caution-checklist-summary-title">
-          검토 필요 기준 ({activeCount}/{total})
+          검토 필요 기준 (선택 {activeCount}/{total})
         </span>
       </summary>
       <ul className="caution-checklist">
@@ -81,7 +84,8 @@ export default function CautionChecklist({
           const items = group.items.filter(isCautionSearchItem);
           if (!items.length) return null;
           const showTitle = Boolean(heading) && group.hideGroupTitle !== true;
-          const tipInline = group.tipInline === true && Boolean(explanation);
+          const tipOpen = openTips[group.id] === true;
+          const showTipButton = Boolean(explanation);
           return (
             <li key={group.id} className="caution-group">
               <div className="caution-group-top">
@@ -102,13 +106,22 @@ export default function CautionChecklist({
                     </label>
                   ))}
                 </div>
-                {tipInline ? (
+                {showTipButton ? (
+                  <button
+                    type="button"
+                    className={`caution-tip-toggle-btn ${tipOpen ? 'caution-tip-toggle-btn--open' : ''}`}
+                    onClick={() =>
+                      setOpenTips((prev) => ({ ...prev, [group.id]: !tipOpen }))
+                    }
+                  >
+                    {tipOpen ? '설명 숨기기' : '설명 보기'}
+                  </button>
+                ) : null}
+                {tipOpen ? (
                   <span className="caution-tip-inline">{explanation}</span>
                 ) : null}
               </div>
-              {explanation && !tipInline ? (
-                <p className="caution-group-tip">{explanation}</p>
-              ) : null}
+              {tipOpen ? <p className="caution-group-tip">{explanation}</p> : null}
             </li>
           );
         })}
