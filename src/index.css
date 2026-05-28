@@ -1105,29 +1105,28 @@ details[open] > summary .details-chevron {
 .caution-tip-toggle-btn {
   flex-shrink: 0;
   padding: 4px 10px;
-  border: 1px solid #fcd34d;
+  border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-ui-sm);
-  background: #fef3c7;
-  color: #b45309;
-  font-size: 0.68rem;
-  font-weight: 700;
+  background: var(--color-surface-inset);
+  color: var(--color-text-secondary);
+  font-size: 0.72rem;
+  font-weight: 600;
   cursor: pointer;
   line-height: 1.2;
 }
 
 .caution-tip-toggle-btn:hover,
 .caution-tip-toggle-btn:focus-visible {
-  background: #fde68a;
-  border-color: #f59e0b;
-  color: #92400e;
+  background: #eff6ff;
+  border-color: #93c5fd;
+  color: #1d4ed8;
   outline: none;
 }
 
 .caution-tip-toggle-btn--open {
-  background: #f59e0b;
-  color: #fff;
-  border-color: #d97706;
-  box-shadow: 0 0 0 2px #fde68a;
+  background: #eff6ff;
+  color: #1d4ed8;
+  border-color: #93c5fd;
 }
 
 .caution-group-items {
@@ -1135,8 +1134,8 @@ details[open] > summary .details-chevron {
   flex-wrap: wrap;
   gap: 8px;
   align-items: center;
-  width: 100%;
-  max-width: 100%;
+  flex: 0 1 auto;
+  min-width: 0;
 }
 
 .caution-chip {
@@ -1162,8 +1161,10 @@ details[open] > summary .details-chevron {
 }
 
 .caution-tip-inline {
-  flex: 1 1 12rem;
-  min-width: 0;
+  flex: 1 1 100%;
+  width: 100%;
+  min-width: 100%;
+  margin-top: 4px;
   font-size: 0.68rem;
   font-weight: 500;
   line-height: 1.45;
@@ -1290,29 +1291,29 @@ details[open] > summary .details-chevron {
 
 .builtin-tip-toggle-btn {
   flex-shrink: 0;
-  padding: 3px 8px;
-  border: 1px solid #fca5a5;
+  padding: 4px 10px;
+  border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-ui-sm);
-  background: #fff1f2;
-  color: #9f1239;
-  font-size: 0.66rem;
-  font-weight: 700;
+  background: var(--color-surface-inset);
+  color: var(--color-text-secondary);
+  font-size: 0.72rem;
+  font-weight: 600;
   cursor: pointer;
   line-height: 1.2;
 }
 
 .builtin-tip-toggle-btn:hover,
 .builtin-tip-toggle-btn:focus-visible {
-  background: #ffe4e6;
-  border-color: #fb7185;
-  color: #881337;
+  background: #eff6ff;
+  border-color: #93c5fd;
+  color: #1d4ed8;
   outline: none;
 }
 
 .builtin-tip-toggle-btn--open {
-  background: #e11d48;
-  color: #fff;
-  border-color: #be123c;
+  background: #eff6ff;
+  color: #1d4ed8;
+  border-color: #93c5fd;
 }
 
 .builtin-spelling-guide-heading {
@@ -2250,6 +2251,28 @@ details[open] > summary .details-chevron {
   text-align: center;
 }
 
+.pdf-center-stage__upload-fail {
+  width: min(22rem, 100%);
+  margin: 0 0 12px;
+  padding: 9px 12px;
+  font-size: 1.14rem;
+  line-height: 1.45;
+  font-weight: 700;
+  color: #9f1239;
+  background: #fff1f2;
+  border: 1px solid #fbcfe8;
+  border-radius: var(--radius-ui);
+  text-align: center;
+}
+
+.pdf-center-stage__session-hint--upload-fail {
+  font-size: 1.125rem;
+  font-weight: 800;
+  color: #9f1239;
+  background: #fff1f2;
+  border-color: #fbcfe8;
+}
+
 .pdf-center-stage__error {
   width: min(22rem, 100%);
   margin-top: 12px;
@@ -2549,6 +2572,15 @@ details[open] > summary .details-chevron {
 
 .pdf-empty-hint.subtle {
   color: var(--color-text-subtle);
+}
+
+.pdf-support-msg__scan {
+  color: #dc2626;
+  font-weight: 700;
+}
+
+.pdf-support-msg__emph {
+  font-weight: 800;
 }
 
 .pdf-page-meta {

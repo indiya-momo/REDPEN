@@ -108,6 +108,8 @@ export default function PdfCenterStage({
   const scanPdfDetected =
     typeof loadError === 'string' &&
     loadError.includes('스캔 PDF는 문자를 읽을 수 없습니다');
+  const uploadFailed = Boolean(loadError) && !showReady;
+  const uploadFailedHint = sessionHint === '업로드 실패';
   const momoSrc = showReady ? pdfFullIcon : pdfMomoIcon;
 
   return (
@@ -127,7 +129,18 @@ export default function PdfCenterStage({
       />
 
       {sessionHint && (
-        <p className="pdf-center-stage__session-hint">{sessionHint}</p>
+        <p
+          className={`pdf-center-stage__session-hint ${uploadFailedHint ? 'pdf-center-stage__session-hint--upload-fail' : ''}`}
+        >
+          {sessionHint}
+        </p>
+      )}
+      {uploadFailed && (
+        <p className="pdf-center-stage__upload-fail">
+          텍스트 선택이 가능한
+          <br />
+          인디자인 PDF인지 확인해 주세요
+        </p>
       )}
 
       <div className="pdf-center-stage__stack">
@@ -190,11 +203,12 @@ export default function PdfCenterStage({
                 <strong>50MB이하(신국판 300페이지 내외, 이미지 포함)</strong>
               </p>
               <p className="subtle">
-                스캔 PDF는 읽을 수 없어요ㅠ
+                <span className="pdf-support-msg__scan">스캔 PDF는 읽을 수 없어요ㅠ</span>
                 <br />
                 인디자인 프로그램으로 만든
                 <br />
-                텍스트 선택 가능한 PDF만 지원합니다
+                <span className="pdf-support-msg__emph">텍스트 선택 가능한 PDF</span>
+                를 권장합니다
               </p>
             </footer>
           </div>

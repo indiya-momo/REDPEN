@@ -12,32 +12,6 @@
     "tip": "우리나라', '우리말' ,'우리글' 표준국어대사전 등재"
   },
   {
-    "find": "구별",
-    "replace": "구분/구별",
-    "enabled": true,
-    "tip": "구별(區別), 둘 이상의 대상을  차이에 따라 가르는 것(=분류) 예)남녀(男女) 구별"
-  },
-  {
-    "find": "구분",
-    "replace": "구별/구분",
-    "enabled": true,
-    "tip": "구분(區分), 어떤 기준에 따라 전체를 몇 개로 나누는 것  예)시대(時代) 구분"
-  },
-  {
-    "find": "든",
-    "replace": "던/든",
-    "enabled": false,
-    "countsInQuota": false,
-    "visible": false
-  },
-  {
-    "find": "던",
-    "replace": "든/던",
-    "enabled": false,
-    "countsInQuota": false,
-    "visible": false
-  },
-  {
     "find": "높히",
     "replace": "높이",
     "enabled": true,

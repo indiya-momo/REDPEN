@@ -114,14 +114,11 @@ export default function CautionChecklist({
                       setOpenTips((prev) => ({ ...prev, [group.id]: !tipOpen }))
                     }
                   >
-                    {tipOpen ? '설명 숨기기' : '설명 보기'}
+                    {tipOpen ? '숨기기' : '설명'}
                   </button>
                 ) : null}
-                {tipOpen ? (
-                  <span className="caution-tip-inline">{explanation}</span>
-                ) : null}
+                {tipOpen ? <span className="caution-tip-inline">{explanation}</span> : null}
               </div>
-              {tipOpen ? <p className="caution-group-tip">{explanation}</p> : null}
             </li>
           );
         })}

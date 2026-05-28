@@ -222,11 +222,12 @@ export default function PdfViewer({
         <p className="pdf-empty-title">{emptyTitle}</p>
         <p className="pdf-empty-hint">{emptyHint}</p>
         <p className="pdf-empty-hint subtle">
-          스캔 PDF는 읽을 수 없어요ㅠ
+          <span className="pdf-support-msg__scan">스캔 PDF는 읽을 수 없어요ㅠ</span>
           <br />
           인디자인 프로그램으로 만든
           <br />
-          텍스트 선택 가능한 PDF만 지원합니다
+          <span className="pdf-support-msg__emph">텍스트 선택 가능한 PDF</span>
+          를 권장합니다
         </p>
         </div>
       </div>
@@ -268,7 +269,7 @@ export default function PdfViewer({
                 }}
                 role={(r.tip || '').trim() ? 'button' : undefined}
                 tabIndex={(r.tip || '').trim() ? 0 : undefined}
-                title={(r.tip || '').trim() ? '설명 보기' : undefined}
+                title={(r.tip || '').trim() ? '설명' : undefined}
                 onClick={(e) => handleHighlightClick(r, e)}
                 onKeyDown={(e) => {
                   if (e.key !== 'Enter' && e.key !== ' ') return;

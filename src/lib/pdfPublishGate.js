@@ -7,7 +7,7 @@ export const SCAN_PDF_MESSAGE =
   '스캔 PDF는 문자를 읽을 수 없습니다. 인디자인으로 만든 텍스트 PDF를 준비해 주세요.';
 
 export const LOW_QUALITY_MESSAGE =
-  '이 PDF는 텍스트 추출 품질이 낮아 검수할 수 없습니다. 인디자인에서 텍스트가 유지된 PDF로 다시보내 주세요.';
+  '';
 
 export const PROBE_FAIL_MESSAGE =
   '이 PDF에서는 검수 규칙이 동작하지 않습니다. 인디자인 텍스트 PDF로 다시보내 주세요.';
@@ -170,31 +170,8 @@ export function validatePublishablePdf({ producerHints, pages }) {
     };
   }
 
-  const quality = assessExtractionQuality(pages);
-  if (!quality.ok) {
-    return {
-      ok: false,
-      reason: 'low_quality',
-      message: LOW_QUALITY_MESSAGE,
-      quality,
-    };
-  }
-
-  const probes = runProbeMatches(pages);
-  if (!probes.ok) {
-    return {
-      ok: false,
-      reason: 'probe',
-      message: PROBE_FAIL_MESSAGE,
-      quality,
-      probes,
-    };
-  }
-
   return {
     ok: true,
     reason: producerHints.looksInDesign ? 'ok' : 'ok_no_indesign_meta',
-    quality,
-    probes,
   };
 }

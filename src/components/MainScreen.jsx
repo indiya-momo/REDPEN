@@ -257,9 +257,7 @@ export default function MainScreen({
   const centerRunLabel =
     pdf.isProcessing && pdf.progress?.phase === 'check'
       ? '검사 중…'
-      : workTab === 'spelling'
-        ? '검수 실행'
-        : '검사 실행 (일관성)';
+      : '검수 실행';
 
   return (
     <div className="layout-main">
