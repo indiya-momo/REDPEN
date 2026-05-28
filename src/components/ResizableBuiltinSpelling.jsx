@@ -165,15 +165,15 @@ export default function ResizableBuiltinSpelling({
         className={`panel-section panel-section--builtin-spelling ${fillPanel ? 'panel-section--builtin-spelling--fill' : ''}`}
         style={fillPanel ? undefined : { height }}
       >
-        <div className="builtin-spelling-resize-body">
-          <div className="builtin-spelling-caution-scroll custom-scrollbar">
+        <div className="builtin-spelling-resize-body custom-scrollbar">
+          <div className="builtin-spelling-caution-scroll">
             <CautionChecklist
               cautionEnabled={cautionEnabled}
               onCautionToggle={onCautionToggle}
               onCautionSetAll={onCautionSetAll}
             />
           </div>
-          <div className="builtin-spelling-rules-scroll custom-scrollbar">
+          <div className="builtin-spelling-rules-scroll">
             <BuiltinSpellingPanel
               builtInEnabled={builtInEnabled}
               onBuiltInToggle={onBuiltInToggle}
