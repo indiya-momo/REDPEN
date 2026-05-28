@@ -15,12 +15,6 @@ import { useHighlights } from '../hooks/useHighlights.js';
 import { useResizablePanelWidth } from '../hooks/useResizablePanelWidth.js';
 import { usePrintedPageDisplay } from '../hooks/usePrintedPageDisplay.js';
 import { trackFeedbackOpened } from '../lib/analytics.js';
-import {
-  countBuiltInActiveRules,
-  countBuiltInGuideActiveRules,
-  countConsistencyActiveRules,
-  countSpacingReviewActiveRules,
-} from '../lib/activeRuleCount.js';
 
 /**
  * @param {{
@@ -85,22 +79,6 @@ export default function MainScreen({
   const { panelStyle, handleRef, startDrag } = useResizablePanelWidth();
 
   const pdf = usePdfDocument();
-  const builtInRuleCount = useMemo(
-    () => countBuiltInActiveRules({ builtInEnabled }),
-    [builtInEnabled],
-  );
-  const builtInGuideRuleCount = useMemo(
-    () => countBuiltInGuideActiveRules({ builtInEnabled }),
-    [builtInEnabled],
-  );
-  const spacingRuleCount = useMemo(
-    () => countSpacingReviewActiveRules({ cautionEnabled }),
-    [cautionEnabled],
-  );
-  const consistencyRuleCount = useMemo(
-    () => countConsistencyActiveRules(customRules),
-    [customRules],
-  );
 
   const pageDisplay = usePrintedPageDisplay({
     pdfFileName: pdf.pdfFileName,
