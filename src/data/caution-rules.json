@@ -2,12 +2,12 @@
   "groups": [
     {
       "id": "josa-uinoun",
-      "tip": "만, 만큼, 지'는 체언(명사, 대명사, 수사) 뒤는 조사로 붙여 쓰고, 용언(동사, 형용사) 뒤는 의존명사로 띄어 쓴다",
+      "tip": "'만, 만큼, 지'는 체언(명사, 대명사, 수사) 뒤는 조사로 붙여 쓰고, 용언(동사, 형용사) 뒤는 의존명사로 띄어 쓴다",
       "items": [
         {
           "id": "josa-uinoun-mankum",
           "label": "만큼",
-          "enabled": false,
+          "enabled": true,
           "matchMode": "any-before",
           "inventoryOnly": false,
           "displayLabel": "만큼(체언 또는 의존명사)"
@@ -16,12 +16,12 @@
     },
     {
       "id": "josa-busa",
-      "tip": "같이'가 명사·대명사 뒤에서 비교(~처럼)나 동시(때)를 나타낼 때는 조사로 붙여 쓰고, 동반(함께)·동일의 뜻일 때는 부사로 띄어 쓴다",
+      "tip": "'같이'가 명사·대명사 뒤에서 비교(~처럼)나 동시(때)를 나타낼 때는 조사로 붙여 쓰고, 동반(함께)·동일의 뜻일 때는 부사로 띄어 쓴다",
       "items": [
         {
           "id": "josa-busa-gachi",
           "label": "같이",
-          "enabled": false,
+          "enabled": true,
           "matchMode": "any-before",
           "inventoryOnly": false,
           "displayLabel": "같이(조사 또는 부사)"
@@ -30,12 +30,12 @@
     },
     {
       "id": "uinoun-space",
-      "tip": "정도'는 '그만큼의 분량이나 수준'을 뜻하는 의존명사로 앞말과 띄어 쓴다",
+      "tip": "'정도'는 '그만큼의 분량이나 수준'을 뜻하는 의존명사로 앞말과 띄어 쓴다",
       "items": [
         {
           "id": "uinoun-jungdo",
           "label": "정도",
-          "enabled": false,
+          "enabled": true,
           "matchMode": "attached-before",
           "inventoryOnly": false,
           "displayLabel": "정도(의존명사)"
@@ -44,12 +44,12 @@
     },
     {
       "id": "jubsa-attach",
-      "tip": "가량, 쯤'은  '정도'의 뜻을 더하는 접사로 수량을 나타내는 명사 뒤에 붙여 쓴다",
+      "tip": "'가량, 쯤'은  '정도'의 뜻을 더하는 접사로 수량을 나타내는 명사 뒤에 붙여 쓴다",
       "items": [
         {
           "id": "jubsa-garyang",
           "label": "가량, 쯤",
-          "enabled": false,
+          "enabled": true,
           "matchMode": "spaced-before",
           "inventoryOnly": false,
           "stems": [
@@ -62,12 +62,12 @@
     },
     {
       "id": "dannoun-space",
-      "tip": "수관형사+단위 명사 '가지' 띄어 쓰는 것이 원칙",
+      "tip": "수관형사+단위 명사 '가지'는 띄어 쓰는 것을 원칙으로 한다",
       "items": [
         {
           "id": "dannoun-space-gaji",
           "label": "가지",
-          "enabled": false,
+          "enabled": true,
           "matchMode": "attached-before",
           "inventoryOnly": false,
           "displayLabel": "가지(단위명사)",
@@ -81,6 +81,24 @@
             "나뭇가지",
             "무가지"
           ]
+        }
+      ]
+    },
+    {
+      "id": "noun-noun",
+      "tip": "구별(區別), 둘 이상의 대상을  차이에 따라 가르는 것(=분류), 보통 실존하는 것을 대상으로 한다 예)남녀(男女) 구별/ 구분(區分), 어떤 기준에 따라 전체를 몇 개로 나누는 것, 보통 추상적인 것을 대상으로 한다  예)시대(時代) 구분",
+      "items": [
+        {
+          "id": "noun-noun-gubun",
+          "label": "구별, 구분",
+          "enabled": true,
+          "matchMode": "spaced-before",
+          "inventoryOnly": false,
+          "stems": [
+            "구별",
+            "구분"
+          ],
+          "displayLabel": "구별, 구분(자주 틀리는 경우)"
         }
       ]
     }
