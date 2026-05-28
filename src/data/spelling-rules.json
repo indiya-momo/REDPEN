@@ -12,6 +12,42 @@
     "tip": "우리나라', '우리말' ,'우리글' 표준국어대사전 등재"
   },
   {
+    "find": "빼곡이",
+    "replace": "빼곡히",
+    "enabled": true,
+    "tip": "표준국어대사전  '빼곡히' 등재"
+  },
+  {
+    "find": "머지 않",
+    "replace": "머지않",
+    "enabled": true,
+    "tip": "표준국어대사전 '머지않다' 등재"
+  },
+  {
+    "find": "되풀이 되",
+    "replace": "되풀이되",
+    "enabled": true,
+    "tip": "표준국어대사전  '되풀이되다' 등재"
+  },
+  {
+    "find": "가 닿",
+    "replace": "가닿",
+    "enabled": true,
+    "tip": "표준국어대사전  '가닿다' 등재"
+  },
+  {
+    "find": "희노애락",
+    "replace": "희로애락",
+    "enabled": true,
+    "tip": "怒(노)를 속음(로)으로 바뀌어 적고 발음하는 경우로 등재"
+  },
+  {
+    "find": "놀래키",
+    "replace": "놀래",
+    "enabled": true,
+    "tip": "'놀래키다'는 표준국어대사전 미등재"
+  },
+  {
     "find": "높히",
     "replace": "높이",
     "enabled": true,
@@ -40,42 +76,6 @@
     "replace": "잠가",
     "enabled": true,
     "tip": "'잠그다'의 과거형은'잠갔다'"
-  },
-  {
-    "find": "머지 않",
-    "replace": "머지않",
-    "enabled": true,
-    "tip": "표준국어대사전 '머지않다' 등재"
-  },
-  {
-    "find": "빼곡이",
-    "replace": "빼곡히",
-    "enabled": true,
-    "tip": "표준국어대사전  '빼곡히' 등재"
-  },
-  {
-    "find": "되풀이 되",
-    "replace": "되풀이되",
-    "enabled": true,
-    "tip": "표준국어대사전  '되풀이되다' 등재"
-  },
-  {
-    "find": "가 닿",
-    "replace": "가닿",
-    "enabled": true,
-    "tip": "표준국어대사전  '가닿다' 등재"
-  },
-  {
-    "find": "희노애락",
-    "replace": "희로애락",
-    "enabled": true,
-    "tip": "怒(노)를 속음('로')으로 바뀌어 적고 발음하는 경우"
-  },
-  {
-    "find": "놀래키",
-    "replace": "놀래",
-    "enabled": true,
-    "tip": "'놀래키다'는 표준국어대사전 미등재"
   },
   {
     "find": "설레이",

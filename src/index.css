@@ -1142,17 +1142,16 @@ details[open] > summary .details-chevron {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 4px 10px;
-  border: 1px solid #fcd34d;
+  padding: 4px 2px;
+  border: none;
   border-radius: var(--radius-ui-sm);
-  background: var(--color-surface-raised);
+  background: transparent;
   cursor: pointer;
   font-size: 0.8rem;
 }
 
 .caution-chip:has(input:checked) {
-  background: #fef3c7;
-  border-color: #f59e0b;
+  background: transparent;
 }
 
 .caution-chip-label {
@@ -1843,7 +1842,7 @@ details[open] > summary .details-chevron {
 }
 
 .result-card--caution .result-card-tip-inline {
-  color: #9a3412;
+  color: #0369a1;
 }
 
 .result-card--builtin .result-card-tip-inline {
@@ -1855,13 +1854,13 @@ details[open] > summary .details-chevron {
 }
 
 .result-card--caution {
-  background: #fff7ed;
-  border-bottom-color: #fdba74;
+  background: #f0f9ff;
+  border-bottom-color: #7dd3fc;
 }
 
 .result-card--caution:hover,
 .result-card--caution.result-card--active {
-  background: #ffedd5;
+  background: #e0f2fe;
 }
 
 .caution-badge-inline {
@@ -1869,9 +1868,9 @@ details[open] > summary .details-chevron {
   padding: 1px 5px;
   margin-right: 2px;
   border-radius: var(--radius-ui-sm);
-  background: #fef3c7;
-  border: 1px solid #fcd34d;
-  color: #b45309;
+  background: #e0f2fe;
+  border: 1px solid #7dd3fc;
+  color: #0369a1;
   font-size: 0.62rem;
   font-weight: 800;
   vertical-align: middle;
@@ -1885,7 +1884,7 @@ details[open] > summary .details-chevron {
 
 .result-review-tag {
   font-weight: 600;
-  color: #c2410c;
+  color: #0369a1;
   font-size: 0.78rem;
 }
 
@@ -2146,7 +2145,7 @@ details[open] > summary .details-chevron {
 }
 
 .results-panel--spelling .result-card--caution.result-card--on-page:not(.result-card--active) {
-  box-shadow: inset 3px 0 0 #f97316;
+  box-shadow: inset 3px 0 0 #38bdf8;
 }
 
 .results-panel--consistency .result-card--on-page:not(.result-card--active) {
@@ -3045,23 +3044,28 @@ details[open] > summary .details-chevron {
   color: #9f1239;
 }
 
+.builtin-spelling-rules-scroll .rule-text .find {
+  color: #7f1d1d;
+  font-weight: 700;
+}
+
 .builtin-spelling-rules-scroll .rule-text .replace {
-  color: #dc2626;
+  color: #7f1d1d;
+  font-weight: 800;
 }
 
 .builtin-spelling-caution-scroll .caution-group-title {
-  background: #e0f2fe;
-  border-color: #7dd3fc;
+  background: transparent;
+  border: none;
   color: #0369a1;
 }
 
 .builtin-spelling-caution-scroll .caution-chip {
-  border-color: #7dd3fc;
+  background: transparent;
 }
 
 .builtin-spelling-caution-scroll .caution-chip:has(input:checked) {
-  background: #e0f2fe;
-  border-color: #38bdf8;
+  background: transparent;
 }
 
 .builtin-spelling-caution-scroll .caution-chip-label {
