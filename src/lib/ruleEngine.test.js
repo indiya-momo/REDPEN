@@ -25,4 +25,21 @@ describe('ruleEngine', () => {
     );
     expect(asyncFindings).toBe(syncFindings);
   });
+
+  it('requireLeadingBoundary=true면 앞글자 붙은 오탐을 제외', () => {
+    const pages = [{ pageNum: 1, text: '문장이 쳐지는 경우와 펼쳐지다 예시' }];
+    const rules = [
+      {
+        find: '쳐지',
+        replace: '처지',
+        enabled: true,
+        requireLeadingBoundary: true,
+      },
+    ];
+    const { results, errors } = runRuleCheck(pages, rules);
+    expect(errors).toEqual([]);
+    const hits = results.flatMap((g) => g.instances.map((i) => i.matchedText));
+    expect(hits).toContain('쳐지');
+    expect(hits.length).toBe(1);
+  });
 });

@@ -162,7 +162,6 @@ export default function MainScreen({
     pdf.currentPage,
     workTab,
   );
-  const activeRuleOnPageCount = ruleCheck.getActiveOnPage(pdf.currentPage);
 
   const tabCheckDone =
     workTab === 'spelling'
@@ -236,7 +235,6 @@ export default function MainScreen({
       pdf={pdf.pdf}
       activeGroup={ruleCheck.activeGroup}
       activeSource={ruleCheck.activeSource}
-      activeRuleOnPageCount={activeRuleOnPageCount}
       visibleOnCurrentPage={visibleOnCurrentPage}
       totalFindings={tabTotalFindings}
       ruleCount={tabEntries.length}
@@ -451,12 +449,10 @@ export default function MainScreen({
                 onGoToPage={goToPdfPage}
                 pdf={pdf.pdf}
                 formatPageLabel={pageDisplay.formatLabel}
-                findingsOnPage={visibleOnCurrentPage}
                 thumbStripOpen={thumbStripOpen}
                 onToggleThumbStrip={toggleThumbStrip}
                 printedPagesEnabled={pageDisplay.enabled}
                 printedPagesActive={pageDisplay.active}
-                printedPagesCalibrated={pageDisplay.active}
                 formatPageText={pageDisplay.formatPageText}
                 toSystemPageFromInput={pageDisplay.toSystemPageFromInput}
               />
