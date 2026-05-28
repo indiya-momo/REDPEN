@@ -58,23 +58,15 @@ function ResultHeaderSummary({
         {totalFindings}개
       </span>
       {viewSource === 'spelling' && spellingCheckDone && spellingFindings > 0 ? (
-        <>
-          (
+        <span className="results-header__breakdown">
           <span className="results-category-summary__builtin">
-            맞춤법 기준{' '}
-            <span className="results-category-summary__count-underline">
-              {builtinFindings}개
-            </span>
+            맞춤법 기준 <span>{builtinFindings}개</span>
           </span>{' '}
           ·{' '}
           <span className="results-category-summary__caution">
-            검토 필요 기준{' '}
-            <span className="results-category-summary__count-underline">
-              {spacingFindings}개
-            </span>
+            검토 필요 기준 <span>{spacingFindings}개</span>
           </span>
-          )
-        </>
+        </span>
       ) : null}
     </div>
   );

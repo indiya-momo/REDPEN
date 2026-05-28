@@ -28,7 +28,8 @@ export default function MomoHero({ variant = 'default' }) {
     video.play().catch(() => setUsePoster(true));
   }, [reduceMotion, usePoster]);
 
-  const showPoster = reduceMotion || usePoster;
+  // gate: momo_front2.mp4 중앙에 제작 이음 가로선이 보여 포스터 사용
+  const showPoster = reduceMotion || usePoster || isGate;
 
   return (
     <div className={`momo-hero${isGate ? ' momo-hero--gate' : ''}`}>

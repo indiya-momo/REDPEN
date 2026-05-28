@@ -6,10 +6,12 @@
 
 | 파일 | 용도 |
 |------|------|
-| `momo_front2.mp4` | 환영 화면 루프 영상 |
-| `hero-open.png` | poster · 동작 줄이기 시 정지 화면 |
+| `momo_front2.mp4` | 루프 영상 (대문 gate에서는 미사용 — 중앙 이음 가로선 있음) |
+| `hero-open.png` | poster · 대문 gate 정지 화면 · 동작 줄이기 시 |
 
-`MomoHero`는 `<video autoplay loop muted playsInline>`로 재생합니다. `prefers-reduced-motion: reduce`이면 poster만 표시합니다.
+`MomoHero`는 `<video autoplay loop muted playsInline>`로 재생합니다. `variant="gate"`(대문)는 이음선이 보이지 않도록 poster만 씁니다. `prefers-reduced-motion: reduce`이면 poster만 표시합니다.
+
+대문에서 영상 루프를 다시 쓰려면 `momo_front2.mp4`를 이음 없이 재인코딩한 뒤 `MomoHero.jsx`의 gate poster 고정을 해제하면 됩니다.
 
 ## 눈 깜박임
 
