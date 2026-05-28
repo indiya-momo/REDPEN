@@ -457,25 +457,79 @@ button {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
-  padding: 0;
-  gap: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-gutter: stable;
+  padding: 10px 12px 8px;
+  gap: 10px;
+  box-sizing: border-box;
   background: var(--color-surface-raised);
 }
 
 .builtin-spelling-caution-scroll,
 .builtin-spelling-rules-scroll {
   width: 100%;
-  min-height: 0;
-  overflow-y: auto;
-  overflow-x: hidden;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-gutter: stable;
+  min-width: 0;
+  box-sizing: border-box;
+  overflow: visible;
   margin: 0;
   border: none;
   border-radius: 0;
   box-shadow: none;
+}
+
+/* 아코디언 — 테두리·면은 details 한 겹 (바깥 padding 이중 링 제거) */
+.builtin-spelling-resize-body .caution-checklist-details,
+.builtin-spelling-resize-body .builtin-spelling-details {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  border-radius: var(--radius-ui-sm);
+  overflow: hidden;
+}
+
+.builtin-spelling-resize-body .caution-checklist-details {
+  border: 1px solid var(--panel-caution-border);
+  background: var(--panel-caution-surface);
+}
+
+.builtin-spelling-resize-body .builtin-spelling-details {
+  border: 1px solid var(--panel-spelling-border);
+  background: var(--panel-spelling-surface);
+}
+
+.builtin-spelling-resize-body .caution-checklist-summary,
+.builtin-spelling-resize-body .builtin-spelling-summary {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  border-radius: 0;
+}
+
+.builtin-spelling-resize-body .caution-checklist-details:not([open]) > .caution-checklist-summary {
+  background: var(--panel-caution-surface);
+}
+
+.builtin-spelling-resize-body .builtin-spelling-details:not([open]) > .builtin-spelling-summary {
+  background: var(--panel-spelling-surface);
+}
+
+.builtin-spelling-resize-body .caution-checklist-details[open] > .caution-checklist-summary,
+.builtin-spelling-resize-body .builtin-spelling-details[open] > .builtin-spelling-summary {
+  background: var(--panel-accordion-bg-open);
+}
+
+.builtin-spelling-resize-body .caution-checklist-details[open] .caution-checklist {
+  padding: 0 10px 10px;
+}
+
+.builtin-spelling-resize-body .builtin-spelling-details[open] .builtin-rule-list {
+  margin: 6px 10px 10px;
 }
 
 .custom-scrollbar {
@@ -500,28 +554,19 @@ button {
   background: var(--color-scrollbar-thumb-hover);
 }
 
-/* 편집자 검토 필요 — 패널 가로 전체, 웜 베이지 면 */
-.builtin-spelling-caution-scroll {
-  flex: 0 1 auto;
-  max-height: 42%;
-  padding: 10px 12px;
-  background: var(--panel-caution-surface);
-  border-bottom: 1px solid var(--panel-caution-border);
+/* 편집자 검토 필요 / 맞춤법 — 래퍼는 간격만 (면·테두리는 details) */
+.builtin-spelling-caution-scroll,
+.builtin-spelling-rules-scroll {
+  flex: 0 0 auto;
+  padding: 0;
+  background: transparent;
+  border: none;
 }
 
 .builtin-spelling-caution-scroll .caution-checklist-details {
   margin: 0;
   padding: 0;
   border-bottom: none;
-}
-
-/* 내장 맞춤법 — 남는 높이 전부, 패널 가로 전체, 크림 베이지 면 */
-.builtin-spelling-rules-scroll {
-  flex: 1 1 0;
-  min-height: 120px;
-  max-height: none;
-  padding: 10px 12px 6px;
-  background: var(--panel-spelling-surface);
 }
 
 .builtin-spelling-rules-scroll .builtin-spelling-details:not([open]) {
@@ -566,7 +611,7 @@ button {
   padding: 12px 24px;
   font-size: 0.8rem;
   font-weight: 700;
-  color: #6d28d9;
+  color: var(--accent-terracotta-deep);
   cursor: pointer;
   background: var(--color-surface-inset);
   border-bottom: 1px solid var(--color-border);
@@ -1075,7 +1120,7 @@ button {
 .builtin-spelling-summary {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 8px;
   padding: 8px 10px;
   border-radius: var(--radius-ui-sm);
   background: var(--panel-accordion-bg);
@@ -1823,10 +1868,12 @@ details[open] > summary .details-chevron {
   text-decoration-thickness: 2px;
 }
 
-.results-panel--consistency .results-category-summary {
-  color: #5b21b6;
-  background: #ede9fe;
-  border-bottom-color: #c4b5fd;
+.results-panel--consistency .results-category-summary,
+.results-panel--combined.results-panel--tone-consistency .results-category-summary {
+  color: var(--color-text);
+  font-weight: 800;
+  background: transparent;
+  border-bottom-color: var(--color-border);
 }
 
 .results-panel-footer {
@@ -1897,10 +1944,11 @@ details[open] > summary .details-chevron {
   color: var(--color-text-secondary);
 }
 
-.results-panel--consistency .results-header {
-  background: #f5f3ff;
-  border-bottom-color: #ddd6fe;
-  color: #5b21b6;
+.results-panel--consistency .results-header,
+.results-panel--combined.results-panel--tone-consistency .results-header {
+  background: var(--color-surface-raised);
+  border-bottom-color: var(--color-border-strong);
+  color: var(--color-text-secondary);
 }
 
 .results-list {
@@ -1920,30 +1968,26 @@ details[open] > summary .details-chevron {
 }
 
 .results-panel--spelling .result-card--builtin,
-.results-panel--spelling .result-card--caution {
+.results-panel--spelling .result-card--caution,
+.results-panel--consistency .result-card,
+.results-panel--consistency .result-card--consistency {
   background: var(--results-card-bg);
   border-bottom-color: var(--color-border);
 }
 
 .results-panel--spelling .result-card--builtin:hover,
-.results-panel--spelling .result-card--caution:hover {
+.results-panel--spelling .result-card--caution:hover,
+.results-panel--consistency .result-card:hover,
+.results-panel--consistency .result-card--consistency:hover {
   background: var(--results-card-bg);
 }
 
 .results-panel--spelling .result-card--builtin.result-card--active,
-.results-panel--spelling .result-card--caution.result-card--active {
+.results-panel--spelling .result-card--caution.result-card--active,
+.results-panel--consistency .result-card--active,
+.results-panel--consistency .result-card--consistency.result-card--active {
   background: var(--results-card-bg);
   box-shadow: inset 0 0 0 1px var(--color-border-strong);
-}
-
-.results-panel--consistency .result-card {
-  background: #faf5ff;
-  border-bottom-color: #e9d5ff;
-}
-
-.results-panel--consistency .result-card:hover,
-.results-panel--consistency .result-card--active {
-  background: #ede9fe;
 }
 
 .result-card-head {
@@ -2000,21 +2044,21 @@ details[open] > summary .details-chevron {
 }
 
 .result-source-badge--consistency {
-  background: #ede9fe;
-  border: 1px solid #c4b5fd;
-  color: #5b21b6;
+  background: var(--accent-terracotta);
+  border: 1px solid var(--accent-terracotta-deep);
+  color: var(--accent-on-terracotta);
 }
 
-.results-panel--combined.results-panel--tone-consistency .results-header {
-  background: #ede9fe;
-  border-bottom-color: #c4b5fd;
-  color: #5b21b6;
+.results-panel-footer .btn-additional-check {
+  color: var(--btn-secondary-text);
+  border-color: var(--btn-secondary-border);
+  background: var(--btn-secondary-bg);
 }
 
-.results-panel--combined.results-panel--tone-consistency .results-category-summary {
-  color: #5b21b6;
-  background: #f5f3ff;
-  border-bottom-color: #ddd6fe;
+.results-panel-footer .btn-additional-check:hover:not(:disabled) {
+  color: var(--btn-secondary-text);
+  border-color: var(--btn-secondary-hover-border);
+  background: var(--btn-secondary-hover-bg);
 }
 
 .result-card-head-main {
@@ -2351,8 +2395,9 @@ details[open] > summary .details-chevron {
   box-shadow: inset 3px 0 0 var(--accent-caution);
 }
 
-.results-panel--consistency .result-card--on-page:not(.result-card--active) {
-  box-shadow: inset 3px 0 0 #a78bfa;
+.results-panel--consistency .result-card--on-page:not(.result-card--active),
+.results-panel--consistency .result-card--consistency.result-card--on-page:not(.result-card--active) {
+  box-shadow: inset 3px 0 0 var(--accent-terracotta);
 }
 
 .pdf-toolbar-page {
