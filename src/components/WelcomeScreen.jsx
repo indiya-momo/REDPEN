@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowRight, BookOpen } from 'lucide-react';
+import { BookOpen } from 'lucide-react';
 import AppVersionBadge from './AppVersionBadge.jsx';
 import MomoHero from './MomoHero.jsx';
 import TooltipGuide from './TooltipGuide.jsx';
@@ -7,9 +7,10 @@ import {
   isAnalyticsOptedOut,
   setAnalyticsOptOut,
 } from '../lib/analytics.js';
+import welcomeMomoFrame from '../assets/welcome/welcome_momo_frame3.png';
 import { publicAssetUrl } from '../lib/publicAssetUrl.js';
 
-const WELCOME_MOMO_FRAME = publicAssetUrl('welcome/welcome_momo_frame.png');
+const WELCOME_MOMO_FRAME = welcomeMomoFrame;
 const MOMO_TOOLTIP = publicAssetUrl('momo/bullon4.png');
 
 /**
@@ -32,11 +33,12 @@ export default function WelcomeScreen({ onStart, onOpenRoom }) {
               <span className="welcome-gate__title-sub">교정냥 모모의 여행</span>
             </h1>
             <p className="welcome-gate__lead">
-              맞춤법·표기 일관성을 찾는 <strong>인디자인 텍스트 PDF 검수 도구</strong>입니다
-              <br />
-              원고와 검사 결과는 <strong>이 브라우저 안에서만 처리</strong>합니다
-              <br />
-              PC버전 작동만 지원합니다
+              <span className="welcome-gate__lead-line">
+                맞춤법·표기 일관성을 찾는 <strong>인디자인 텍스트 PDF 검수 도구</strong>입니다
+              </span>
+              <span className="welcome-gate__lead-line">
+                원고와 검사 결과는 <strong>이 브라우저 안에서만 처리</strong>합니다(PC버전만 지원)
+              </span>
             </p>
           </header>
           <div className="welcome-gate__editor-note-anchor" aria-hidden>
@@ -158,7 +160,6 @@ export default function WelcomeScreen({ onStart, onOpenRoom }) {
                   onClick={onStart}
                 >
                   검수 시작하기
-                  <ArrowRight size={23} aria-hidden />
                 </button>
               </TooltipGuide>
               <p className="welcome-gate__steps-note welcome-gate__steps-note--stage">
