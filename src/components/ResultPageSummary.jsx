@@ -23,11 +23,12 @@ export default function ResultPageSummary({
   if (!pages.length) return null;
 
   return (
-    <span className="result-pages">
+    <div className="result-pages" role="list">
       {pages.map(([pageNum, count]) => (
         <button
           key={pageNum}
           type="button"
+          role="listitem"
           className={`page-chip ${pageNum === currentPage ? 'page-chip--current' : ''}`}
           onClick={(e) => {
             e.stopPropagation();
@@ -38,6 +39,6 @@ export default function ResultPageSummary({
           {count > 1 ? ` (${count})` : ''}
         </button>
       ))}
-    </span>
+    </div>
   );
 }

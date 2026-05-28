@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, X } from 'lucide-react';
 import {
   countActiveRules,
   isOverMaxRules,
@@ -58,6 +58,24 @@ const SPACE_INPUT_PLACEHOLDER = '공백은 ˅로 표시';
  *   isRequired?: (row: { bonBojoItemId?: string }) => boolean,
  * }} props
  */
+function AuxiliaryGridChip({ row, customRules, isEnabled, onToggle, isRequired }) {
+  const label =
+    row.displayLabel?.trim() || formatConsistencyListLabel(row.tailWord);
+  return (
+    <label className="auxiliary-chip">
+      <input
+        type="checkbox"
+        checked={isEnabled(customRules, row)}
+        onChange={(e) => onToggle(row, e.target.checked)}
+      />
+      <span className="find">{label}</span>
+      {isRequired?.(row) ? (
+        <span className="bon-bojo-required-badge">필수</span>
+      ) : null}
+    </label>
+  );
+}
+
 function RegisteredList({
   entries,
   customRules,
@@ -74,6 +92,55 @@ function RegisteredList({
     ? `tail-list tail-list--grid tail-list--grid-${gridCols}`
     : 'tail-list';
 
+  if (gridCols && isRequired) {
+    const optionalEntries = entries.filter((row) => !isRequired(row));
+    const requiredEntries = entries.filter((row) => isRequired(row));
+
+    return (
+      <div className="auxiliary-checklist">
+        {optionalEntries.length > 0 ? (
+          <ul className={listClass}>
+            {optionalEntries.map((row) => {
+              const rowKey = row.bonBojoItemId || row.tailWord;
+              return (
+                <li key={rowKey} className="tail-grid-item">
+                  <AuxiliaryGridChip
+                    row={row}
+                    customRules={customRules}
+                    isEnabled={isEnabled}
+                    onToggle={onToggle}
+                    isRequired={isRequired}
+                  />
+                </li>
+              );
+            })}
+          </ul>
+        ) : null}
+        {requiredEntries.length > 0 ? (
+          <ul
+            className="tail-list tail-list--grid tail-list--grid-required"
+            aria-label="필수 본용언+보조용언"
+          >
+            {requiredEntries.map((row) => {
+              const rowKey = row.bonBojoItemId || row.tailWord;
+              return (
+                <li key={rowKey} className="tail-grid-item">
+                  <AuxiliaryGridChip
+                    row={row}
+                    customRules={customRules}
+                    isEnabled={isEnabled}
+                    onToggle={onToggle}
+                    isRequired={isRequired}
+                  />
+                </li>
+              );
+            })}
+          </ul>
+        ) : null}
+      </div>
+    );
+  }
+
   return (
     <ul className={listClass}>
       {entries.map((row) => {
@@ -84,38 +151,34 @@ function RegisteredList({
         if (gridCols) {
           return (
             <li key={rowKey} className="tail-grid-item">
-              <label className="auxiliary-chip">
-                <input
-                  type="checkbox"
-                  checked={isEnabled(customRules, row)}
-                  onChange={(e) => onToggle(row, e.target.checked)}
-                />
-                {isRequired?.(row) ? (
-                  <span className="bon-bojo-required-badge">필수</span>
-                ) : null}
-                <span className="find">{label}</span>
-              </label>
+              <AuxiliaryGridChip
+                row={row}
+                customRules={customRules}
+                isEnabled={isEnabled}
+                onToggle={onToggle}
+                isRequired={isRequired}
+              />
             </li>
           );
         }
         return (
-          <li key={rowKey} className="rule-row">
-            <input
-              type="checkbox"
-              checked={isEnabled(customRules, row)}
-              onChange={(e) => onToggle(row, e.target.checked)}
-            />
-            <div className="rule-text">
+          <li key={rowKey} className="registered-chip">
+            <label className="registered-chip__label">
+              <input
+                type="checkbox"
+                checked={isEnabled(customRules, row)}
+                onChange={(e) => onToggle(row, e.target.checked)}
+              />
               <span className="find">{label}</span>
-            </div>
+            </label>
             {showRemove && onRemove ? (
               <button
                 type="button"
-                className="btn-icon danger"
+                className="btn-icon btn-icon--dismiss"
                 onClick={() => onRemove(row.tailWord)}
-                aria-label="삭제"
+                aria-label={`${label} 제거`}
               >
-                <Trash2 size={14} />
+                <X size={14} strokeWidth={2.25} aria-hidden />
               </button>
             ) : null}
           </li>
@@ -376,17 +439,17 @@ export default function ConsistencyPanel({
           {globalExcludePhrases.length > 0 && (
             <ul className="tail-list" style={{ marginTop: 10 }}>
               {globalExcludePhrases.map((phrase) => (
-                <li key={phrase} className="rule-row">
-                  <div className="rule-text">
-                    <span className="find">{encodeSpacesVisible(phrase)}</span>
-                  </div>
+                <li key={phrase} className="registered-chip">
+                  <span className="find registered-chip__text">
+                    {encodeSpacesVisible(phrase)}
+                  </span>
                   <button
                     type="button"
-                    className="btn-icon danger"
+                    className="btn-icon btn-icon--dismiss"
                     onClick={() => removeGlobalExclude(phrase)}
-                    aria-label="삭제"
+                    aria-label={`${phrase} 제거`}
                   >
-                    <Trash2 size={14} />
+                    <X size={14} strokeWidth={2.25} aria-hidden />
                   </button>
                 </li>
               ))}

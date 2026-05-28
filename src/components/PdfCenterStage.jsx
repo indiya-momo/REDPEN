@@ -199,14 +199,17 @@ export default function PdfCenterStage({
               </button>
             )}
             <footer className="pdf-dropzone__footer">
-              <p>
-                <strong>50MB이하(신국판 300페이지 내외, 이미지 포함)</strong>
+              <p className="pdf-dropzone__limit">
+                <strong>50MB 이하</strong>
+                <span className="pdf-dropzone__limit-detail">
+                  (신국판 300페이지 내외, 이미지 포함)
+                </span>
               </p>
-              <p className="subtle">
+              <p className="pdf-dropzone__scan-note">
                 <span className="pdf-support-msg__scan">스캔 PDF는 읽을 수 없어요ㅠ</span>
-                <br />
-                인디자인 프로그램으로 만든
-                <br />
+              </p>
+              <p className="pdf-dropzone__recommend subtle">
+                인디자인 프로그램으로 만든{' '}
                 <span className="pdf-support-msg__emph">텍스트 선택 가능한 PDF</span>
                 를 권장합니다
               </p>
