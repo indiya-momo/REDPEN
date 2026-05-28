@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import { Plus, X } from 'lucide-react';
 import {
   countActiveRules,
   isOverMaxRules,
@@ -11,8 +10,8 @@ import {
   isConsistencyEntryEnabled,
   isLiteralConsistencyEntry,
   listConsistencyEntries,
-  parseConsistencyInput,
   planConsistencyEntries,
+  parseConsistencyInput,
   removeConsistencyEntry,
   toggleConsistencyEntry,
 } from '../lib/compoundPairRegister.js';
@@ -34,159 +33,10 @@ import {
 import { isAuxiliaryStem, isHaeBoPattern } from '../lib/compoundPatternCommon.js';
 import { parseCommaList } from '../lib/matchFilters.js';
 import { isBonBojoRequiredItem } from '../lib/bonBojoRules.js';
-import { formatConsistencyListLabel } from '../lib/patternDisplayLabels.js';
-import { encodeSpacesVisible } from '../lib/spaceVisibleText.js';
-import SpaceVisibleInput from './SpaceVisibleInput.jsx';
-
-const SPACE_INPUT_PLACEHOLDER = '공백은 ˅로 표시';
-
-/**
- * @param {{
- *   entries: { tailWord: string, displayLabel?: string }[],
- *   customRules: import('../lib/ruleTypes.js').Rule[],
- *   isEnabled: (
- *     rules: import('../lib/ruleTypes.js').Rule[],
- *     row: { tailWord: string, displayLabel?: string, bonBojoItemId?: string },
- *   ) => boolean,
- *   onToggle: (
- *     row: { tailWord: string, displayLabel?: string, bonBojoItemId?: string },
- *     enabled: boolean,
- *   ) => void,
- *   onRemove?: (tw: string) => void,
- *   columns?: number,
- *   showRemove?: boolean,
- *   isRequired?: (row: { bonBojoItemId?: string }) => boolean,
- * }} props
- */
-function AuxiliaryGridChip({ row, customRules, isEnabled, onToggle, isRequired }) {
-  const label =
-    row.displayLabel?.trim() || formatConsistencyListLabel(row.tailWord);
-  return (
-    <label className="auxiliary-chip">
-      <input
-        type="checkbox"
-        checked={isEnabled(customRules, row)}
-        onChange={(e) => onToggle(row, e.target.checked)}
-      />
-      <span className="find">{label}</span>
-      {isRequired?.(row) ? (
-        <span className="bon-bojo-required-badge">필수</span>
-      ) : null}
-    </label>
-  );
-}
-
-function RegisteredList({
-  entries,
-  customRules,
-  isEnabled,
-  onToggle,
-  onRemove,
-  columns = 1,
-  showRemove = true,
-  isRequired,
-}) {
-  if (!entries.length) return null;
-  const gridCols = columns > 1 ? columns : 0;
-  const listClass = gridCols
-    ? `tail-list tail-list--grid tail-list--grid-${gridCols}`
-    : 'tail-list';
-
-  if (gridCols && isRequired) {
-    const optionalEntries = entries.filter((row) => !isRequired(row));
-    const requiredEntries = entries.filter((row) => isRequired(row));
-
-    return (
-      <div className="auxiliary-checklist">
-        {optionalEntries.length > 0 ? (
-          <ul className={listClass}>
-            {optionalEntries.map((row) => {
-              const rowKey = row.bonBojoItemId || row.tailWord;
-              return (
-                <li key={rowKey} className="tail-grid-item">
-                  <AuxiliaryGridChip
-                    row={row}
-                    customRules={customRules}
-                    isEnabled={isEnabled}
-                    onToggle={onToggle}
-                    isRequired={isRequired}
-                  />
-                </li>
-              );
-            })}
-          </ul>
-        ) : null}
-        {requiredEntries.length > 0 ? (
-          <ul
-            className="tail-list tail-list--grid tail-list--grid-required"
-            aria-label="필수 본용언+보조용언"
-          >
-            {requiredEntries.map((row) => {
-              const rowKey = row.bonBojoItemId || row.tailWord;
-              return (
-                <li key={rowKey} className="tail-grid-item">
-                  <AuxiliaryGridChip
-                    row={row}
-                    customRules={customRules}
-                    isEnabled={isEnabled}
-                    onToggle={onToggle}
-                    isRequired={isRequired}
-                  />
-                </li>
-              );
-            })}
-          </ul>
-        ) : null}
-      </div>
-    );
-  }
-
-  return (
-    <ul className={listClass}>
-      {entries.map((row) => {
-        const rowKey = row.bonBojoItemId || row.tailWord;
-        const label =
-          row.displayLabel?.trim() ||
-          formatConsistencyListLabel(row.tailWord);
-        if (gridCols) {
-          return (
-            <li key={rowKey} className="tail-grid-item">
-              <AuxiliaryGridChip
-                row={row}
-                customRules={customRules}
-                isEnabled={isEnabled}
-                onToggle={onToggle}
-                isRequired={isRequired}
-              />
-            </li>
-          );
-        }
-        return (
-          <li key={rowKey} className="registered-chip">
-            <label className="registered-chip__label">
-              <input
-                type="checkbox"
-                checked={isEnabled(customRules, row)}
-                onChange={(e) => onToggle(row, e.target.checked)}
-              />
-              <span className="find">{label}</span>
-            </label>
-            {showRemove && onRemove ? (
-              <button
-                type="button"
-                className="btn-icon btn-icon--dismiss"
-                onClick={() => onRemove(row.tailWord)}
-                aria-label={`${label} 제거`}
-              >
-                <X size={14} strokeWidth={2.25} aria-hidden />
-              </button>
-            ) : null}
-          </li>
-        );
-      })}
-    </ul>
-  );
-}
+import ConsistencyRegisterField from './consistency/ConsistencyRegisterField.jsx';
+import ExcludePhraseList from './consistency/ExcludePhraseList.jsx';
+import RegisteredList from './consistency/RegisteredList.jsx';
+import { SPACE_INPUT_PLACEHOLDER } from './consistency/constants.js';
 
 /**
  * @param {{
@@ -353,18 +203,13 @@ export default function ConsistencyPanel({
             한글과 영문 대소문자를 등록한 그대로 찾습니다 (예: 조선˅시대/조선시대,
             RED˅PEN/Redpen)
           </p>
-          <div className="tail-form">
-            <SpaceVisibleInput
-              value={literalInput}
-              onChange={setLiteralInput}
-              placeholder={SPACE_INPUT_PLACEHOLDER}
-              aria-label="문자열 찾기"
-            />
-            <button type="button" className="btn-add" onClick={registerLiteral}>
-              <Plus size={14} />
-              등록
-            </button>
-          </div>
+          <ConsistencyRegisterField
+            value={literalInput}
+            onChange={setLiteralInput}
+            onRegister={registerLiteral}
+            placeholder={SPACE_INPUT_PLACEHOLDER}
+            ariaLabel="문자열 찾기"
+          />
           <RegisteredList
             entries={literalEntries}
             customRules={customRules}
@@ -388,19 +233,14 @@ export default function ConsistencyPanel({
             @을 포함한 공통 문자열을 모두 찾습니다 (예: @시대 → 조선시대, 고려시대,
             신라시대 … / @˅PEN → RED PEN, BLUE PEN)
           </p>
-          <div className="tail-form">
-            <SpaceVisibleInput
-              className="field-input mono"
-              value={slotInput}
-              onChange={setSlotInput}
-              placeholder={SPACE_INPUT_PLACEHOLDER}
-              aria-label="공통 문자열 찾기"
-            />
-            <button type="button" className="btn-add" onClick={registerSlot}>
-              <Plus size={14} />
-              등록
-            </button>
-          </div>
+          <ConsistencyRegisterField
+            value={slotInput}
+            onChange={setSlotInput}
+            onRegister={registerSlot}
+            placeholder={SPACE_INPUT_PLACEHOLDER}
+            ariaLabel="공통 문자열 찾기"
+            inputClassName="field-input mono"
+          />
           <RegisteredList
             entries={slotEntries}
             customRules={customRules}
@@ -421,43 +261,20 @@ export default function ConsistencyPanel({
         <div className="consistency-subsection consistency-subsection--exclude">
           <p className="field-label">검사 제외 문구</p>
           <p className="hint">등록한 문구는 찾지 않습니다 (예: 소녀시대)</p>
-          <div className="tail-form">
-            <SpaceVisibleInput
-              value={globalExcludeInput}
-              onChange={setGlobalExcludeInput}
-              placeholder={SPACE_INPUT_PLACEHOLDER}
-            />
-            <button
-              type="button"
-              className="btn-add"
-              onClick={addGlobalExcludePhrases}
-            >
-              <Plus size={14} />
-              등록
-            </button>
-          </div>
-          {globalExcludePhrases.length > 0 && (
-            <ul className="tail-list" style={{ marginTop: 10 }}>
-              {globalExcludePhrases.map((phrase) => (
-                <li key={phrase} className="registered-chip">
-                  <span className="find registered-chip__text">
-                    {encodeSpacesVisible(phrase)}
-                  </span>
-                  <button
-                    type="button"
-                    className="btn-icon btn-icon--dismiss"
-                    onClick={() => removeGlobalExclude(phrase)}
-                    aria-label={`${phrase} 제거`}
-                  >
-                    <X size={14} strokeWidth={2.25} aria-hidden />
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
+          <ConsistencyRegisterField
+            value={globalExcludeInput}
+            onChange={setGlobalExcludeInput}
+            onRegister={addGlobalExcludePhrases}
+            placeholder={SPACE_INPUT_PLACEHOLDER}
+            ariaLabel="검사 제외 문구"
+          />
+          <ExcludePhraseList
+            phrases={globalExcludePhrases}
+            onRemove={removeGlobalExclude}
+          />
         </div>
 
-        <p className="hint" style={{ marginTop: 10, marginBottom: 0 }}>
+        <p className="hint consistency-slots-hint">
           남은 활성 슬롯: {Math.max(0, slotsLeft)} / {MAX_RULES}
         </p>
       </section>
@@ -500,8 +317,7 @@ export default function ConsistencyPanel({
           onToggle={(row, on) =>
             applyCustomRules(toggleAuxiliaryVerbEntry(customRules, row, on))
           }
-          columns={3}
-          showRemove={false}
+          variant="auxiliary-grid"
           isRequired={(row) => isBonBojoRequiredItem(row.bonBojoItemId)}
         />
       </section>

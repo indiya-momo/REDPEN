@@ -671,6 +671,15 @@ button {
   padding-bottom: 4px;
 }
 
+.consistency-subsection--exclude .tail-list--exclude {
+  margin-top: 10px;
+}
+
+.consistency-slots-hint {
+  margin-top: 10px;
+  margin-bottom: 0;
+}
+
 .consistency-unified-box .hint {
   margin-top: 2px;
   margin-bottom: 0;
@@ -3460,10 +3469,6 @@ details[open] > summary .details-chevron {
   border: none;
   background: none;
   padding: 4px;
-}
-
-.btn-icon.danger {
-  color: #dc2626;
 }
 
 .btn-icon--dismiss {
