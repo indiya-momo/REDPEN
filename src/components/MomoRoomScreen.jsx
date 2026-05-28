@@ -6,6 +6,7 @@ import { momoRoomStoryPages } from '../data/momoRoomStory.js';
 const GUESTBOOK_KEY = 'momo-room-guestbook-v1';
 const GUESTBOOK_USER_KEY = 'momo-room-guestbook-user-id';
 const GUESTBOOK_MAX_CHARS = 50;
+const ROOM_EXIT_MS = 360;
 
 /** @returns {{ id: string, name: string, message: string, createdAt: string, authorId?: string }[]} */
 function loadGuestbook() {
@@ -50,6 +51,7 @@ function loadGuestbookUserId() {
  * @param {{ onClose: () => void }} props
  */
 export default function MomoRoomScreen({ onClose }) {
+  const [isClosing, setIsClosing] = useState(false);
   const [storyOpen, setStoryOpen] = useState(false);
   const [storyPage, setStoryPage] = useState(0);
   const [guestbookRows, setGuestbookRows] = useState(() => loadGuestbook());
@@ -142,8 +144,16 @@ export default function MomoRoomScreen({ onClose }) {
     setGuestbookRows((prev) => prev.filter((row) => row.id !== id));
   }, []);
 
+  const handleCloseRoom = useCallback(() => {
+    if (isClosing) return;
+    setIsClosing(true);
+    window.setTimeout(() => {
+      onClose();
+    }, ROOM_EXIT_MS);
+  }, [isClosing, onClose]);
+
   return (
-    <div className="momo-room">
+    <div className={`momo-room ${isClosing ? 'momo-room--closing' : ''}`}>
       <div className="momo-room__layout">
         <aside className="momo-room__side">
           <div className="momo-room__side-top">
@@ -154,7 +164,7 @@ export default function MomoRoomScreen({ onClose }) {
                 <button
                   type="button"
                   className="momo-room__close"
-                  onClick={onClose}
+                  onClick={handleCloseRoom}
                   aria-label="돌아가기"
                   title="돌아가기"
                 >
@@ -240,6 +250,8 @@ export default function MomoRoomScreen({ onClose }) {
             alt="밤, 책상과 창가가 있는 모모의 교정방"
             decoding="async"
           />
+          <span className="momo-room__light momo-room__light--candle" aria-hidden />
+          <span className="momo-room__light momo-room__light--lantern" aria-hidden />
           <button
             type="button"
             className="momo-room__book-hotspot"
