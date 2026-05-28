@@ -4,12 +4,10 @@ import {
   formatPrintedPageText,
   formatSystemPageLabel,
   loadPageSettings,
-  loadPrintedPagesEnabled,
   parsePrintedPageInput,
   pdfPageDisplayKey,
   savePageCalibration,
   savePageSettings,
-  savePrintedPagesEnabled,
   shiftFromPrintedInput,
   systemPageFromDisplay,
   systemPageFromDisplayInput,
@@ -19,7 +17,7 @@ import {
  * @param {{ pdfFileName: string | null, numPages: number, currentPage: number }} options
  */
 export function usePrintedPageDisplay({ pdfFileName, numPages, currentPage }) {
-  const [enabled, setEnabledState] = useState(loadPrintedPagesEnabled);
+  const enabled = true;
   const [shift, setShift] = useState(/** @type {number | null} */ (null));
   const [anchorPage, setAnchorPage] = useState(/** @type {number | null} */ (null));
   const [firstPageSingle, setFirstPageSingleState] = useState(true);
@@ -45,11 +43,6 @@ export function usePrintedPageDisplay({ pdfFileName, numPages, currentPage }) {
   }, [pdfKey]);
 
   const active = enabled && shift != null && anchorPage != null;
-
-  const setEnabled = useCallback((next) => {
-    setEnabledState(next);
-    savePrintedPagesEnabled(next);
-  }, []);
 
   const setFirstPageSingle = useCallback(
     (next) => {
@@ -182,7 +175,6 @@ export function usePrintedPageDisplay({ pdfFileName, numPages, currentPage }) {
 
   return {
     enabled,
-    setEnabled,
     shift,
     anchorPage,
     firstPageSingle,

@@ -15,14 +15,14 @@ import { cautionResultChipLabel } from '../lib/cautionRules.js';
  */
 function CurrentPageFindingText({ visibleOnCurrentPage }) {
   if (visibleOnCurrentPage <= 0) {
-    return <>에는 발견 항목이 없습니다</>;
+    return <>에는 발견한 기준이 없습니다</>;
   }
   return (
     <>
-      에는 발견{' '}
+      에는 발견한 기준{' '}
       <span className="current-page-status__count-underline">
         {visibleOnCurrentPage}개
-      </span>{' '}
+      </span>
       가 있습니다
     </>
   );
@@ -55,16 +55,16 @@ function ResultHeaderSummary({
       </span>{' '}
       전체 발견{' '}
       <span className="results-category-summary__count-underline">
-        {totalFindings}개
+        {totalFindings}
       </span>
       {viewSource === 'spelling' && spellingCheckDone && spellingFindings > 0 ? (
         <span className="results-header__breakdown">
           <span className="results-category-summary__builtin">
-            맞춤법 기준 <span>{builtinFindings}개</span>
+            맞춤법 기준 <span>{builtinFindings}</span>
           </span>{' '}
           ·{' '}
           <span className="results-category-summary__caution">
-            검토 필요 기준 <span>{spacingFindings}개</span>
+            검토 필요 기준 <span>{spacingFindings}</span>
           </span>
         </span>
       ) : null}
@@ -96,8 +96,6 @@ function ResultHeaderSummary({
  *   onSelectPageInGroup: (pageNum: number, instances: import('../lib/ruleEngine.js').MatchInstance[], source: 'spelling' | 'consistency') => void,
  *   ruleSetName?: string,
  *   onAdditionalCheck?: () => void,
- *   printedPagesEnabled?: boolean,
- *   onPrintedPagesEnabledChange?: (v: boolean) => void,
  *   printedPageOffset?: number | null,
  *   printedPagesActive?: boolean,
  *   onCalibrateFromInput?: (raw: string, isSpread: boolean) => void,
@@ -134,8 +132,6 @@ export default function CheckResultsPanel({
   onSelectPageInGroup,
   ruleSetName = '',
   onAdditionalCheck,
-  printedPagesEnabled = false,
-  onPrintedPagesEnabledChange,
   printedPageOffset = null,
   printedPagesActive = false,
   onCalibrateFromInput,
@@ -160,12 +156,10 @@ export default function CheckResultsPanel({
 
   return (
     <section
-      className={`results-panel results-panel--combined results-panel--tone-${spellingTone}`}
+      className={`results-panel results-panel--combined results-panel--${viewSource} results-panel--tone-${spellingTone}`}
     >
-      {pdf && onPrintedPagesEnabledChange && onCalibrateFromInput && (
+      {pdf && onCalibrateFromInput && (
         <PrintedPageSetup
-          enabled={printedPagesEnabled}
-          onEnabledChange={onPrintedPagesEnabledChange}
           currentSystemPage={currentPage}
           active={printedPagesActive}
           currentPrintedLabel={currentPrintedLabel || pageLabel(currentPage)}
