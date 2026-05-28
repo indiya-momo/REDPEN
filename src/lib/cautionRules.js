@@ -178,6 +178,19 @@ export function cautionDisplayLabel(item) {
 /** @type {CautionGroup[]} */
 export const CAUTION_GROUPS = normalizeGroups(cautionRulesJson);
 
+/** @param {typeof cautionRulesJson} raw */
+export function cautionRulesFingerprint(raw = cautionRulesJson) {
+  let hash = 0;
+  const payload = JSON.stringify(raw);
+  for (let i = 0; i < payload.length; i += 1) {
+    hash = (Math.imul(31, hash) + payload.charCodeAt(i)) | 0;
+  }
+  return `${payload.length}:${hash}`;
+}
+
+export const CAUTION_RULES_FP = cautionRulesFingerprint();
+export const CAUTION_ENABLED_POLICY_VERSION = 2;
+
 /** @type {CautionRule[]} */
 export const CAUTION_RULES = CAUTION_GROUPS.flatMap((group) =>
   group.items.map((item) => ({
@@ -209,8 +222,15 @@ export function defaultCautionEnabled() {
   );
 }
 
+/** @param {unknown} value */
+function toEnabledBool(value) {
+  return value === true || value === 'true' || value === 1 || value === '1';
+}
+
 /**
  * @param {Record<string, boolean>} [saved]
+ * @param {string | null | undefined} [savedFingerprint]
+ * @param {number | null | undefined} [savedPolicyVersion]
  * @returns {Record<string, boolean>}
  */
 const CAUTION_ID_ALIASES = {
@@ -241,7 +261,17 @@ const CAUTION_ID_ALIASES = {
   'verv-oda3': 'verb-boda8',
 };
 
-export function migrateCautionEnabled(saved = {}) {
+export function migrateCautionEnabled(
+  saved = {},
+  savedFingerprint,
+  savedPolicyVersion,
+) {
+  if (
+    savedPolicyVersion !== CAUTION_ENABLED_POLICY_VERSION ||
+    savedFingerprint !== CAUTION_RULES_FP
+  ) {
+    return defaultCautionEnabled();
+  }
   const migrated = { ...saved };
   for (const [oldId, newId] of Object.entries(CAUTION_ID_ALIASES)) {
     if (
@@ -258,7 +288,7 @@ export function migrateCautionEnabled(saved = {}) {
   const merged = {};
   for (const r of CAUTION_RULES) {
     if (Object.prototype.hasOwnProperty.call(migrated, r.id)) {
-      merged[r.id] = migrated[r.id] === true;
+      merged[r.id] = toEnabledBool(migrated[r.id]);
     } else {
       merged[r.id] = r.enabled === true;
     }
@@ -312,19 +342,25 @@ export function buildCautionCheckRules(cautionEnabled) {
   const rules = [];
   for (const item of CAUTION_SEARCH_RULES) {
     if (cautionEnabled[item.id] !== true) continue;
-    for (const stem of item.stems) {
-      rules.push({
-        find: cautionFindPattern(stem, item.matchMode),
-        replace: '(검토)',
-        enabled: true,
-        pattern: 'regex',
-        category: 'caution',
-        cautionId: item.id,
-        label: item.displayLabel,
-        tip: item.tip,
-        ...(item.except?.length ? { excludePhrases: item.except } : {}),
-      });
-    }
+    const stems = item.stems.filter(Boolean);
+    if (!stems.length) continue;
+    const findPattern =
+      stems.length === 1
+        ? cautionFindPattern(stems[0], item.matchMode)
+        : stems
+            .map((stem) => `(?:${cautionFindPattern(stem, item.matchMode)})`)
+            .join('|');
+    rules.push({
+      find: findPattern,
+      replace: '(검토)',
+      enabled: true,
+      pattern: 'regex',
+      category: 'caution',
+      cautionId: item.id,
+      label: item.displayLabel,
+      tip: item.tip,
+      ...(item.except?.length ? { excludePhrases: item.except } : {}),
+    });
   }
   return rules;
 }

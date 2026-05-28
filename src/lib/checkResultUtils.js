@@ -1,14 +1,18 @@
 import { SPELLING_RULES_FP } from './builtInRules.js';
+import { CAUTION_RULES_FP } from './cautionRules.js';
 
 /**
  * @param {{
  *   spellingRulesFingerprint?: string,
+ *   cautionRulesFingerprint?: string,
  *   groupedResults?: unknown[],
  *   consistencyGroupedResults?: unknown[],
  * }} saved
  */
 export function restoreCheckResults(saved) {
-  const rulesMatch = saved.spellingRulesFingerprint === SPELLING_RULES_FP;
+  const rulesMatch =
+    saved.spellingRulesFingerprint === SPELLING_RULES_FP &&
+    saved.cautionRulesFingerprint === CAUTION_RULES_FP;
   const spelling = rulesMatch ? (saved.groupedResults ?? []) : [];
   const consistency = saved.consistencyGroupedResults ?? [];
   const staleRules = !rulesMatch && (saved.groupedResults?.length ?? 0) > 0;

@@ -2,7 +2,7 @@
  * Google 시트 → 맞춤법 규칙 JSON
  *
  * 시트 탭 이름: spelling_rules
- * 컬럼: find | replace | enabled | tip | memo | counts_in_quota | visible
+ * 컬럼: find | replace | enabled | tip | memo | counts_in_quota | visible | divider_group
  *
  * 사용:
  *   SPREADSHEET_ID=xxx npm run sync-spelling
@@ -163,7 +163,21 @@ function parseVisible(value) {
   return v !== 'false' && v !== '0' && v !== 'no' && v !== 'n';
 }
 
-function expandBulkRow(find, replace, enabled, tip, memo, countsInQuota, visible) {
+function normalizeDividerGroup(value) {
+  const v = String(value ?? '').trim();
+  return v || undefined;
+}
+
+function expandBulkRow(
+  find,
+  replace,
+  enabled,
+  tip,
+  memo,
+  countsInQuota,
+  visible,
+  dividerGroup,
+) {
   const findParts = find.split(/\s+/).filter(Boolean);
   const replaceParts = replace.split(/\s+/).filter(Boolean);
   if (findParts.length < 2 || findParts.length !== replaceParts.length) {
@@ -177,6 +191,7 @@ function expandBulkRow(find, replace, enabled, tip, memo, countsInQuota, visible
     ...(memo ? { memo } : {}),
     ...(countsInQuota === false ? { countsInQuota: false } : {}),
     ...(visible === false ? { visible: false } : {}),
+    ...(dividerGroup ? { dividerGroup } : {}),
   }));
 }
 
@@ -191,6 +206,7 @@ function normalizeRow(row) {
   const memo = String(row.memo || '').trim();
   const countsInQuota = parseCountsInQuota(row.counts_in_quota);
   const visible = parseVisible(row.visible);
+  const dividerGroup = normalizeDividerGroup(row.divider_group);
 
   const bulk = expandBulkRow(
     find,
@@ -200,6 +216,7 @@ function normalizeRow(row) {
     memo,
     countsInQuota,
     visible,
+    dividerGroup,
   );
   if (bulk) return bulk;
 
@@ -215,6 +232,7 @@ function normalizeRow(row) {
     ...(memo ? { memo } : {}),
     ...(countsInQuota === false ? { countsInQuota: false } : {}),
     ...(visible === false ? { visible: false } : {}),
+    ...(dividerGroup ? { dividerGroup } : {}),
   };
 }
 
@@ -321,7 +339,7 @@ async function main() {
       (r) =>
         `${r.find}\0${r.replace}\0${r.tip ?? ''}\0${r.enabled === true ? 1 : 0}\0${
           r.countsInQuota === false ? 0 : 1
-        }\0${r.visible === false ? 0 : 1}`,
+        }\0${r.visible === false ? 0 : 1}\0${r.dividerGroup ?? ''}`,
     )
     .join('\n');
   for (let i = 0; i < payload.length; i += 1) {
