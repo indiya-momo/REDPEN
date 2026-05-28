@@ -10,6 +10,7 @@ const DEFAULT_MOMO_IMAGE = publicAssetUrl('momo/bullon4.png');
  *   imageSrc?: string | null,
  *   imageAlt?: string,
  *   placement?: 'top' | 'bottom' | 'left' | 'right',
+ *   bubbleType?: 'auto' | 'left' | 'right',
  *   offsetX?: number,
  *   offsetY?: number,
  *   children: import('react').ReactElement,
@@ -22,6 +23,7 @@ export default function TooltipGuide({
   imageSrc = DEFAULT_MOMO_IMAGE,
   imageAlt = '모모',
   placement = 'bottom',
+  bubbleType = 'auto',
   offsetX = 0,
   offsetY = 0,
   children,
@@ -40,6 +42,7 @@ export default function TooltipGuide({
         className={[
           'tooltip-guide',
           `tooltip-guide--${placement}`,
+          bubbleType !== 'auto' ? `tooltip-guide--bubble-${bubbleType}` : '',
           !showMomo ? 'tooltip-guide--no-momo' : '',
         ]
           .filter(Boolean)

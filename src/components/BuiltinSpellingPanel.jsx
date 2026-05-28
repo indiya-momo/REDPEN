@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   BUILT_IN_GUIDE_RULES_UI,
   BUILT_IN_QUOTA_RULES_UI,
@@ -20,6 +20,9 @@ export default function BuiltinSpellingPanel({
   onBuiltInSetAll,
 }) {
   const selectAllRef = useRef(/** @type {HTMLInputElement | null} */ (null));
+  const [openTips, setOpenTips] = useState(
+    /** @type {Record<string, boolean>} */ ({}),
+  );
   const quotaRules = BUILT_IN_QUOTA_RULES_UI;
   const guideRules = BUILT_IN_GUIDE_RULES_UI;
   const total = quotaRules.length;
@@ -39,6 +42,7 @@ export default function BuiltinSpellingPanel({
   function renderRuleRow(rule) {
     const tip = (rule.tip || '').trim();
     const noQuota = !countsTowardSpellingQuota(rule);
+    const tipOpen = openTips[rule.find] === true;
     return (
       <li
         key={rule.find}
@@ -55,7 +59,20 @@ export default function BuiltinSpellingPanel({
             <span className="arrow">→</span>
             <span className="replace">{rule.replace}</span>
             {tip ? (
-              <span className="builtin-rule-tip-inline">{tip}</span>
+              <>
+                <button
+                  type="button"
+                  className={`builtin-tip-toggle-btn ${tipOpen ? 'builtin-tip-toggle-btn--open' : ''}`}
+                  onClick={() =>
+                    setOpenTips((prev) => ({ ...prev, [rule.find]: !tipOpen }))
+                  }
+                >
+                  {tipOpen ? '설명 숨기기' : '설명 보기'}
+                </button>
+                {tipOpen ? (
+                  <span className="builtin-rule-tip-inline">{tip}</span>
+                ) : null}
+              </>
             ) : null}
           </div>
         </div>
@@ -64,7 +81,7 @@ export default function BuiltinSpellingPanel({
   }
 
   return (
-    <details className="builtin-spelling-details" open>
+    <details className="builtin-spelling-details">
       <summary className="builtin-spelling-summary">
         <DetailsChevron />
         <label
@@ -81,7 +98,7 @@ export default function BuiltinSpellingPanel({
           />
         </label>
         <span className="builtin-spelling-summary-title">
-          맞춤법 기준 ({enabled}/{total})
+          맞춤법 기준 (선택 {enabled}/{total})
         </span>
       </summary>
       {guideRules.length > 0 ? (

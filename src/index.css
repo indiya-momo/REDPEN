@@ -271,6 +271,24 @@ button {
   background: var(--color-surface-raised);
 }
 
+.panel-left__preupload-hint {
+  margin: 0;
+  padding: 8px 14px 10px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #9a3412;
+  background: #fff7ed;
+  border-bottom: 1px solid #fed7aa;
+}
+
+.panel-left--preupload .work-tabs,
+.panel-left--preupload .spelling-tab-layout,
+.panel-left--preupload .panel-left-work-scroll {
+  opacity: 0.42;
+  pointer-events: none;
+  filter: saturate(0.68);
+}
+
 .panel-section--compact {
   padding: 12px 20px;
   flex-shrink: 0;
@@ -799,6 +817,14 @@ button {
 
 .tooltip-guide--right {
   background-image: url('/momo/tooltip-bubble_left.png');
+}
+
+.tooltip-guide--bubble-left {
+  background-image: url('/momo/tooltip-bubble_left.png');
+}
+
+.tooltip-guide--bubble-right {
+  background-image: url('/momo/tooltip-bubble_right.png');
 }
 
 .tooltip-guide--no-momo {
@@ -1430,12 +1456,40 @@ details[open] > summary .details-chevron {
 }
 
 .builtin-rule-tip-inline {
-  flex: 1 1 8rem;
+  flex: 1 1 100%;
   min-width: 0;
+  margin-top: 4px;
   font-size: 0.68rem;
   font-weight: 500;
   line-height: 1.45;
   color: #b91c1c;
+}
+
+.builtin-tip-toggle-btn {
+  flex-shrink: 0;
+  padding: 3px 8px;
+  border: 1px solid #fca5a5;
+  border-radius: var(--radius-ui-sm);
+  background: #fff1f2;
+  color: #9f1239;
+  font-size: 0.66rem;
+  font-weight: 700;
+  cursor: pointer;
+  line-height: 1.2;
+}
+
+.builtin-tip-toggle-btn:hover,
+.builtin-tip-toggle-btn:focus-visible {
+  background: #ffe4e6;
+  border-color: #fb7185;
+  color: #881337;
+  outline: none;
+}
+
+.builtin-tip-toggle-btn--open {
+  background: #e11d48;
+  color: #fff;
+  border-color: #be123c;
 }
 
 .builtin-spelling-guide-heading {
@@ -2391,6 +2445,25 @@ details[open] > summary .details-chevron {
 
 .pdf-center-stage__stack .tooltip-guide-anchor {
   width: 100%;
+}
+
+.pdf-center-stage__hero-tooltip-anchor {
+  position: absolute;
+  right: -6px;
+  top: 44%;
+  z-index: 3;
+}
+
+.pdf-center-stage__hero-tooltip-anchor .tooltip-guide-anchor {
+  width: auto;
+}
+
+.pdf-center-stage__hero-tooltip-dot {
+  display: inline-block;
+  width: 2px;
+  height: 2px;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .pdf-center-stage__hero {
@@ -3932,16 +4005,12 @@ details[open] > summary .details-chevron {
 }
 
 .momo-room__close {
-  position: absolute;
-  top: clamp(1rem, 3vw, 1.5rem);
-  right: clamp(1rem, 3vw, 1.5rem);
-  z-index: 2;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 2.5rem;
-  min-height: 2.5rem;
-  padding: 0.35rem;
+  min-width: 2.1rem;
+  min-height: 2.1rem;
+  padding: 0.25rem;
   color: var(--momo-room-muted);
   background: rgba(0, 0, 0, 0.4);
   border: 1px solid var(--momo-room-border);
@@ -3955,6 +4024,28 @@ details[open] > summary .details-chevron {
 .momo-room__close:hover {
   color: var(--momo-room-text);
   border-color: rgba(221, 180, 108, 0.55);
+}
+
+.momo-room__title-row {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.momo-room__title-actions {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.momo-room__owner-delete-note {
+  font-size: calc(0.58rem * var(--momo-room-scale));
+  font-weight: 600;
+  color: var(--momo-room-muted);
+  white-space: nowrap;
 }
 
 .momo-room__layout {
@@ -4010,6 +4101,148 @@ details[open] > summary .details-chevron {
   font-size: calc(0.92rem * var(--momo-room-scale));
   line-height: 1.65;
   color: var(--momo-room-muted);
+}
+
+.momo-room__guestbook {
+  padding: calc(0.85rem * var(--momo-room-scale))
+    calc(0.95rem * var(--momo-room-scale));
+  background:
+    linear-gradient(
+      180deg,
+      rgba(216, 198, 162, 0.96) 0%,
+      rgba(198, 177, 136, 0.96) 100%
+    );
+  border: 1px solid rgba(96, 74, 45, 0.55);
+  border-radius: var(--radius-ui);
+  box-shadow:
+    inset 0 0 0 1px rgba(248, 236, 207, 0.35),
+    inset 0 8px 18px rgba(255, 248, 228, 0.22);
+}
+
+.momo-room__guestbook-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.momo-room__guestbook-title {
+  margin: 0;
+  font-size: calc(1.07rem * var(--momo-room-scale));
+  font-weight: 800;
+  font-family: var(--font-family-title);
+  letter-spacing: 0.04em;
+  color: rgba(55, 40, 20, 0.95);
+}
+
+.momo-room__guestbook-hint {
+  margin: 6px 0 8px;
+  font-size: calc(0.65rem * var(--momo-room-scale));
+  color: rgba(48, 35, 18, 0.72);
+}
+
+.momo-room__guestbook-form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.momo-room__guestbook-name,
+.momo-room__guestbook-input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid rgba(110, 86, 52, 0.46);
+  border-radius: var(--radius-ui-sm);
+  background: rgba(252, 244, 226, 0.92);
+  color: #3a2a15;
+  padding: 7px 8px;
+  font-size: calc(0.72rem * var(--momo-room-scale));
+}
+
+.momo-room__guestbook-input {
+  min-height: 58px;
+  resize: vertical;
+}
+
+.momo-room__guestbook-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.momo-room__guestbook-count {
+  font-size: calc(0.62rem * var(--momo-room-scale));
+  color: rgba(70, 52, 30, 0.64);
+}
+
+.momo-room__guestbook-submit {
+  border: 1px solid rgba(103, 79, 46, 0.58);
+  border-radius: var(--radius-ui-sm);
+  background: rgba(138, 104, 62, 0.92);
+  color: #f7ead2;
+  font-size: calc(0.68rem * var(--momo-room-scale));
+  font-weight: 700;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.momo-room__guestbook-submit:hover {
+  background: rgba(118, 88, 52, 0.94);
+}
+
+.momo-room__guestbook-notice {
+  margin: 8px 0 0;
+  font-size: calc(0.65rem * var(--momo-room-scale));
+  color: #facc15;
+}
+
+.momo-room__guestbook-list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 180px;
+  overflow: auto;
+}
+
+.momo-room__guestbook-item {
+  padding: 7px 8px;
+  border: 1px solid rgba(112, 88, 52, 0.4);
+  border-radius: var(--radius-ui-sm);
+  background: rgba(252, 245, 228, 0.78);
+}
+
+.momo-room__guestbook-item-name {
+  margin: 0 0 3px;
+  font-size: calc(0.66rem * var(--momo-room-scale));
+  font-weight: 700;
+  color: #6b4a20;
+}
+
+.momo-room__guestbook-item-message {
+  margin: 0;
+  font-size: calc(0.71rem * var(--momo-room-scale));
+  line-height: 1.45;
+  color: #3b2912;
+  word-break: break-word;
+}
+
+.momo-room__guestbook-delete {
+  margin-top: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 1px solid #fda4af;
+  border-radius: var(--radius-ui-sm);
+  background: rgba(127, 29, 29, 0.24);
+  color: #fecdd3;
+  padding: 0;
+  cursor: pointer;
 }
 
 .momo-room__journal {

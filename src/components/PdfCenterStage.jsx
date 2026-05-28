@@ -141,51 +141,63 @@ export default function PdfCenterStage({
             aria-hidden
             decoding="async"
           />
+          {!showReady ? (
+            <span className="pdf-center-stage__hero-tooltip-anchor" aria-hidden>
+              <TooltipGuide
+                storageKey="pdf-upload-first-step"
+                placement="left"
+                bubbleType="left"
+                offsetX={150}
+                offsetY={-50}
+                imageSrc={null}
+                message="처음 할 일은 이거다냥"
+              >
+                <span className="pdf-center-stage__hero-tooltip-dot" />
+              </TooltipGuide>
+            </span>
+          ) : null}
         </div>
 
         {!showReady ? (
-          <TooltipGuide
-            storageKey="pdf-upload-first-step"
-            placement="right"
-            offsetX={-52}
-            offsetY={44}
-            imageSrc={null}
-            message="처음 할 일은 이거다냥"
+          <div
+            className={`pdf-dropzone ${dragOver ? 'pdf-dropzone--dragover' : ''}`}
           >
-            <div
-              className={`pdf-dropzone ${dragOver ? 'pdf-dropzone--dragover' : ''}`}
+            <div className="pdf-dropzone__icon" aria-hidden>
+              <FileText size={32} strokeWidth={1.35} />
+            </div>
+            <p className="pdf-dropzone__drag">PDF 파일을 드래그하거나</p>
+            <button
+              type="button"
+              className="btn-upload pdf-dropzone__open"
+              onClick={openPicker}
+              disabled={isProcessing}
             >
-              <div className="pdf-dropzone__icon" aria-hidden>
-                <FileText size={32} strokeWidth={1.35} />
-              </div>
-              <p className="pdf-dropzone__drag">PDF 파일을 드래그하거나</p>
+              <Upload size={16} />
+              {supportsFilePicker() ? 'PDF 열기' : 'PDF 업로드'}
+            </button>
+            {fileHandleActive && !pdf && (
               <button
                 type="button"
-                className="btn-upload pdf-dropzone__open"
-                onClick={openPicker}
+                className="btn-upload-secondary pdf-dropzone__reconnect"
+                onClick={onReconnect}
                 disabled={isProcessing}
               >
-                <Upload size={16} />
-                {supportsFilePicker() ? 'PDF 열기' : 'PDF 업로드'}
+                PDF 다시 연결
               </button>
-              {fileHandleActive && !pdf && (
-                <button
-                  type="button"
-                  className="btn-upload-secondary pdf-dropzone__reconnect"
-                  onClick={onReconnect}
-                  disabled={isProcessing}
-                >
-                  PDF 다시 연결
-                </button>
-              )}
-              <footer className="pdf-dropzone__footer">
-                <p>신국판 300페이지 · 50MB 이하 권장</p>
-                <p className="subtle">
-                  텍스트 PDF만 지원(스캔 PDF 작업 불가)
-                </p>
-              </footer>
-            </div>
-          </TooltipGuide>
+            )}
+            <footer className="pdf-dropzone__footer">
+              <p>
+                <strong>50MB이하(신국판 300페이지 내외, 이미지 포함)</strong>
+              </p>
+              <p className="subtle">
+                스캔 PDF는 읽을 수 없어요ㅠ
+                <br />
+                인디자인 프로그램으로 만든
+                <br />
+                텍스트 선택 가능한 PDF만 지원합니다
+              </p>
+            </footer>
+          </div>
         ) : (
           <div className="pdf-ready-panel">
             <div className="pdf-ready-file">

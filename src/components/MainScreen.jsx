@@ -274,6 +274,7 @@ export default function MainScreen({
   ) : null;
 
   const showPdfViewer = Boolean(pdf.pdf) && tabCheckDone;
+  const isPreUpload = !pdf.pdf;
 
   const centerRunLabel =
     pdf.isProcessing && pdf.progress?.phase === 'check'
@@ -285,7 +286,7 @@ export default function MainScreen({
   return (
     <div className="layout-main">
       <aside
-        className={`panel-left panel-left--${workTab}`}
+        className={`panel-left panel-left--${workTab}${isPreUpload ? ' panel-left--preupload' : ''}`}
         style={panelStyle}
       >
         <header className="panel-header panel-header--tabs">
@@ -317,6 +318,11 @@ export default function MainScreen({
             </nav>
           </div>
         </header>
+        {isPreUpload ? (
+          <p className="panel-left__preupload-hint">
+            PDF 업로드 후 기준을 설정할 수 있습니다
+          </p>
+        ) : null}
 
         {workTab === 'spelling' && (
           <div
@@ -380,33 +386,35 @@ export default function MainScreen({
 
       <main className="panel-right">
         <div className="pdf-work-pane">
-          <div className="pdf-work-pane__topbar">
-            <p className="pdf-work-pane__coming-soon">
-              *사용자의 기준을 저장하는 기능을 준비중입니다*
-            </p>
-            <div className="pdf-work-pane__topbar-actions">
-              <button
-                type="button"
-                className="pdf-work-pane__end-work"
-                onClick={() => {
-                  session.handleEndWork();
-                }}
-              >
-                작업 종료
-              </button>
-              <button
-                type="button"
-                className="ruleset-panel__feedback"
-                onClick={() => {
-                  trackFeedbackOpened();
-                  setFeedbackOpen(true);
-                }}
-              >
-                <MessageSquare size={18} aria-hidden />
-                피드백 보내기
-              </button>
+          {!isPreUpload ? (
+            <div className="pdf-work-pane__topbar">
+              <p className="pdf-work-pane__coming-soon">
+                *사용자의 기준을 저장하는 기능을 준비중입니다*
+              </p>
+              <div className="pdf-work-pane__topbar-actions">
+                <button
+                  type="button"
+                  className="pdf-work-pane__end-work"
+                  onClick={() => {
+                    session.handleEndWork();
+                  }}
+                >
+                  작업 종료
+                </button>
+                <button
+                  type="button"
+                  className="ruleset-panel__feedback"
+                  onClick={() => {
+                    trackFeedbackOpened();
+                    setFeedbackOpen(true);
+                  }}
+                >
+                  <MessageSquare size={18} aria-hidden />
+                  피드백 보내기
+                </button>
+              </div>
             </div>
-          </div>
+          ) : null}
           {!showPdfViewer ? (
             <PdfCenterStage
               fileRef={pdf.fileRef}
