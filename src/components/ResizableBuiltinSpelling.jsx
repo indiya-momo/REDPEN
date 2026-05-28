@@ -3,9 +3,10 @@ import BuiltinSpellingPanel from './BuiltinSpellingPanel.jsx';
 import CautionChecklist from './CautionChecklist.jsx';
 
 const STORAGE_KEY = 'builtin-spelling-panel-height-v2';
-const DEFAULT_BOTTOM_RATIO = 0.44;
+// 기본 진입 시 맞춤법 기준 항목이 충분히 보이도록 하단 패널 비중을 높인다.
+const DEFAULT_BOTTOM_RATIO = 0.62;
 const HANDLE_HEIGHT = 10;
-const FALLBACK_HEIGHT = 340;
+const FALLBACK_HEIGHT = 460;
 const MIN_HEIGHT = 200;
 const MAX_HEIGHT = 720;
 
