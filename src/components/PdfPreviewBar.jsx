@@ -143,7 +143,7 @@ export default function PdfPreviewBar({
               aria-expanded={thumbStripOpen}
               aria-controls="pdf-thumb-strip"
             >
-              {thumbStripOpen ? '미리보기 숨기기' : '미리보기 열기'}
+              {thumbStripOpen ? '숨기기' : '미리보기'}
             </button>
             {thumbStripOpen ? (
               <p className="pdf-preview-bar__thumb-hint">

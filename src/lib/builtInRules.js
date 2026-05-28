@@ -100,16 +100,7 @@ export function migrateBuiltInEnabled(saved = {}, savedFingerprint = null) {
     return defaults;
   }
   const merged = { ...defaults };
-  for (const r of BUILT_IN_QUOTA_RULES) {
-    if (Object.prototype.hasOwnProperty.call(saved, r.find)) {
-      merged[r.find] = saved[r.find] === true;
-    }
-  }
-  for (const r of BUILT_IN_GUIDE_RULES) {
-    if (r.enabled === true) {
-      merged[r.find] = true;
-      continue;
-    }
+  for (const r of BUILT_IN_RULES) {
     if (Object.prototype.hasOwnProperty.call(saved, r.find)) {
       merged[r.find] = saved[r.find] === true;
     }

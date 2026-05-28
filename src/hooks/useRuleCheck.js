@@ -147,13 +147,11 @@ export function useRuleCheck({
       const runConsistency = scope === 'consistency';
 
       if (runSpelling && spellingActiveRules.length === 0) {
-        alert(
-          '활성화된 맞춤법 확인·편집자 검토 규칙이 없습니다. 규칙을 켠 뒤 다시 실행하세요.',
-        );
+        alert('맞춤법 확인을 진행할 기준을 등록해주세요');
         return;
       }
       if (runConsistency && consistencyActiveRules.length === 0) {
-        alert('활성화된 일관성 규칙이 없습니다. 항목을 등록·켠 뒤 다시 실행하세요.');
+        alert('일관성 확인을 진행할 기준을 등록해주세요');
         return;
       }
 

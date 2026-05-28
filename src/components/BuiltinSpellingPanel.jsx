@@ -67,7 +67,7 @@ export default function BuiltinSpellingPanel({
                     setOpenTips((prev) => ({ ...prev, [rule.find]: !tipOpen }))
                   }
                 >
-                  {tipOpen ? '설명 숨기기' : '설명 보기'}
+                  {tipOpen ? '숨기기' : '설명'}
                 </button>
                 {tipOpen ? (
                   <span className="builtin-rule-tip-inline">{tip}</span>

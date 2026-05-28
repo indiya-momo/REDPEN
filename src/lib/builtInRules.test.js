@@ -10,7 +10,7 @@ import {
 } from './builtInRules.js';
 
 describe('migrateBuiltInEnabled', () => {
-  it('규칙 제외·시트 enabled TRUE는 예전 저장(꺼짐)보다 켜진다', () => {
+  it('동일 fingerprint에서는 저장된 체크 상태를 우선한다', () => {
     const saved = {
       '과반수 이상': false,
       '우리 나라': false,
@@ -18,9 +18,10 @@ describe('migrateBuiltInEnabled', () => {
       구분: true,
     };
     const merged = migrateBuiltInEnabled(saved, SPELLING_RULES_FP);
-    for (const r of BUILT_IN_GUIDE_RULES.filter((x) => x.enabled === true)) {
-      expect(merged[r.find], r.find).toBe(true);
-    }
+    expect(merged['과반수 이상']).toBe(false);
+    expect(merged['우리 나라']).toBe(false);
+    expect(merged.구별).toBe(false);
+    expect(merged.구분).toBe(true);
   });
 });
 

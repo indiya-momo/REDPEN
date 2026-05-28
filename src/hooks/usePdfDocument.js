@@ -31,12 +31,13 @@ export function usePdfDocument() {
     setLoadError(null);
     setPdfFileName(file.name);
     setPdfByteLength(file.size);
+    setPdf(null);
+    setPageTexts([]);
+    setCurrentPage(1);
 
     const buffer = await file.arrayBuffer();
     pdfBufferRef.current = buffer;
     const doc = await loadPdfFromBuffer(buffer);
-    setPdf(doc);
-    setCurrentPage(1);
     setIsProcessing(true);
     setProgress({ current: 0, total: doc.numPages, phase: 'extract' });
 
@@ -51,6 +52,9 @@ export function usePdfDocument() {
     const textExtracted = validation.ok;
     if (!validation.ok) {
       setLoadError(validation.message);
+    } else {
+      setPdf(doc);
+      setPageTexts(pages);
     }
     trackPdfOpened({
       pageCount: doc.numPages,

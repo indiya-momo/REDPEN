@@ -68,14 +68,20 @@ export function useWorkSession(pdf, ruleCheck) {
 
     if (result.ok) {
       setSessionHint(null);
-      setLoadError(null);
     } else {
-      const storageHint = await getStorageHint();
-      setSessionHint('저장 실패');
-      setLoadError(
-        [result.error, storageHint].filter(Boolean).join(' · ') ||
-          'Chrome/Edge에서 「PDF 열기」를 사용해 보세요.',
-      );
+      setSessionHint('업로드 실패');
+      const missingPdfData =
+        typeof result.error === 'string' &&
+        result.error.includes('PDF 데이터가 없습니다');
+      if (missingPdfData) {
+        setLoadError(null);
+      } else {
+        const storageHint = await getStorageHint();
+        setLoadError(
+          [result.error, storageHint].filter(Boolean).join(' · ') ||
+            'Chrome/Edge에서 「PDF 열기」를 사용해 보세요.',
+        );
+      }
     }
     return result.ok;
   }, [
