@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import {
   BUILT_IN_GUIDE_RULES_UI,
   BUILT_IN_QUOTA_RULES_UI,
@@ -62,6 +62,15 @@ export default function BuiltinSpellingPanel({
     return groups;
   }
 
+  const groupedGuideRules = useMemo(
+    () => groupRulesByDivider(guideRules),
+    [guideRules],
+  );
+  const groupedQuotaRules = useMemo(
+    () => groupRulesByDivider(quotaRules),
+    [quotaRules],
+  );
+
   /**
    * @param {import('../lib/ruleTypes.js').Rule} rule
    * @param {boolean} tipOpen
@@ -82,31 +91,25 @@ export default function BuiltinSpellingPanel({
             checked={isBuiltInRuleEnabled(builtInEnabled, rule.find)}
             onChange={() => onBuiltInToggle(rule.find)}
           />
-          <div
-            className={`rule-text builtin-rule-text${useInlineTipToggle ? ' builtin-inline-tip-hoverable' : ''}${useInlineTipToggle && tipOpen ? ' builtin-inline-tip-hoverable--open' : ''}`}
-          >
-            <span className="find">{rule.find}</span>
-            <span className="arrow">→</span>
-            {useInlineTipToggle ? (
-              <span
-                className="replace builtin-inline-tip-trigger"
-                data-hover-tip="설명"
-                onClick={onToggleTip}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    onToggleTip();
-                  }
-                }}
-              >
-                {rule.replace}
-              </span>
-            ) : (
+          {useInlineTipToggle ? (
+            <button
+              type="button"
+              className={`rule-text builtin-rule-text builtin-inline-tip-hoverable${tipOpen ? ' builtin-inline-tip-hoverable--open' : ''}`}
+              data-hover-tip="설명"
+              onClick={onToggleTip}
+              aria-expanded={tipOpen}
+            >
+              <span className="find">{rule.find}</span>
+              <span className="arrow">→</span>
+              <span className="replace builtin-inline-tip-trigger">{rule.replace}</span>
+            </button>
+          ) : (
+            <div className="rule-text builtin-rule-text">
+              <span className="find">{rule.find}</span>
+              <span className="arrow">→</span>
               <span className="replace">{rule.replace}</span>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -130,29 +133,49 @@ export default function BuiltinSpellingPanel({
           ? group.rules.find((r) => r.find === activeFind) ?? null
           : null;
       const activeTip = String(activeRule?.tip ?? '').trim();
+      const cols = group.rules.length <= 2 ? 2 : 3;
+      const activeIndex = activeFind
+        ? group.rules.findIndex((r) => r.find === activeFind)
+        : -1;
+      const rowEndIndex =
+        activeIndex >= 0
+          ? Math.min(
+              group.rules.length - 1,
+              Math.floor(activeIndex / cols) * cols + (cols - 1),
+            )
+          : -1;
+      const afterFind = rowEndIndex >= 0 ? group.rules[rowEndIndex]?.find : null;
       return (
         <li
           key={group.key}
-          className={`builtin-rule-group${showDividerAfter ? ' builtin-rule-group--divider-after' : ''}${activeTip ? ' builtin-rule-group--tip-open' : ''}`}
+          className={`builtin-rule-group builtin-rule-group--cols-${cols}${showDividerAfter ? ' builtin-rule-group--divider-after' : ''}`}
         >
           {group.rules.map((rule) => {
             const tipOpen = activeFind === rule.find;
             return (
-              <div key={rule.find} className="builtin-rule-entry">
-                {renderRuleRow(
-                  rule,
-                  tipOpen,
-                  () =>
-                    setActiveTipByGroup((prev) => ({
-                      ...prev,
-                      [groupStateKey]:
-                        prev[groupStateKey] === rule.find ? null : rule.find,
-                    })),
-                )}
-              </div>
+              <Fragment key={rule.find}>
+                <div className="builtin-rule-entry-wrap">
+                  <div className="builtin-rule-entry">
+                    {renderRuleRow(
+                      rule,
+                      tipOpen,
+                      () =>
+                        setActiveTipByGroup((prev) => ({
+                          ...prev,
+                          [groupStateKey]:
+                            prev[groupStateKey] === rule.find ? null : rule.find,
+                        })),
+                    )}
+                  </div>
+                </div>
+                {activeTip && afterFind === rule.find ? (
+                  <div className="builtin-rule-tip-inline">
+                    {activeTip}
+                  </div>
+                ) : null}
+              </Fragment>
             );
           })}
-          {activeTip ? <div className="builtin-rule-tip-inline">{activeTip}</div> : null}
         </li>
       );
     });
@@ -182,12 +205,12 @@ export default function BuiltinSpellingPanel({
       {guideRules.length > 0 ? (
         <>
           <ul className="rule-list builtin-rule-list builtin-rule-list--guide">
-            {renderRuleGroups(groupRulesByDivider(guideRules), 'guide')}
+            {renderRuleGroups(groupedGuideRules, 'guide')}
           </ul>
         </>
       ) : null}
       <ul className="rule-list builtin-rule-list">
-        {renderRuleGroups(groupRulesByDivider(quotaRules), 'quota')}
+        {renderRuleGroups(groupedQuotaRules, 'quota')}
       </ul>
     </details>
   );
