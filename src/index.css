@@ -33,6 +33,7 @@ body,
   --color-surface-inverse: #1f2937;
   --color-scrollbar-thumb: #d4c8b4;
   --color-scrollbar-thumb-hover: #b8a890;
+  --rule-start-x: 30px;
 
   /* 모서리 — 부드러운 책 모서리 (인트로·작업 UI 공통) */
   --radius-ui: 12px;
@@ -1063,7 +1064,7 @@ details[open] > summary .details-chevron {
 }
 
 .caution-group {
-  padding: 10px 0;
+  padding: 2px 0 2px var(--rule-start-x);
   border-bottom: 1px solid #fde68a;
 }
 
@@ -1075,7 +1076,7 @@ details[open] > summary .details-chevron {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px 10px;
+  gap: 2px 1px;
 }
 
 .caution-group-title {
@@ -1142,12 +1143,19 @@ details[open] > summary .details-chevron {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 4px 2px;
+  padding: 2px 0;
   border: none;
   border-radius: var(--radius-ui-sm);
   background: transparent;
   cursor: pointer;
   font-size: 0.8rem;
+}
+
+.caution-chip > input[type='checkbox'] {
+  width: 15px;
+  height: 15px;
+  margin: 0;
+  flex: 0 0 auto;
 }
 
 .caution-chip:has(input:checked) {
@@ -1254,7 +1262,7 @@ details[open] > summary .details-chevron {
 .builtin-rule-group {
   display: grid;
   gap: 2px 1px;
-  padding: 0.5px 2px;
+  padding: 2px 0 2px var(--rule-start-x);
   border-bottom: none;
 }
 
@@ -1283,9 +1291,9 @@ details[open] > summary .details-chevron {
 }
 
 .builtin-rule-row {
-  align-items: flex-start;
+  align-items: center;
   border-bottom: none;
-  min-height: 28px;
+  min-height: 26px;
 }
 
 .builtin-rule-text {
@@ -1299,11 +1307,10 @@ details[open] > summary .details-chevron {
 }
 
 .builtin-rule-row > input[type='checkbox'] {
-  width: 14px;
-  height: 14px;
+  width: 15px;
+  height: 15px;
   margin: 0;
   flex: 0 0 auto;
-  margin-top: 1px;
 }
 
 .builtin-rule-row-wrap {
@@ -1316,7 +1323,7 @@ details[open] > summary .details-chevron {
   width: auto;
   min-width: 0;
   border-radius: 8px;
-  padding: 2px 2px;
+  padding: 2px 0;
 }
 
 .builtin-rule-row-wrap:hover {
@@ -3082,11 +3089,8 @@ details[open] > summary .details-chevron {
   border-bottom: none;
   padding-top: 5px;
   padding-bottom: 5px;
-  padding-left: 2px;
-  padding-right: 2px;
-}
-
-.builtin-rule-list .builtin-rule-row {
+  padding-left: 0;
+  padding-right: 0;
   gap: 5px;
 }
 
@@ -3146,26 +3150,6 @@ details[open] > summary .details-chevron {
   border-color: transparent;
 }
 
-.builtin-inline-tip-trigger:hover::after {
-  content: attr(data-hover-tip);
-  position: absolute;
-  left: calc(100% + 6px);
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 0.64rem;
-  font-weight: 600;
-  line-height: 1;
-  color: #1f2937;
-  background: #ffffff;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  padding: 4px 6px;
-  white-space: nowrap;
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
-  pointer-events: none;
-  z-index: 3;
-}
-
 .builtin-inline-tip-trigger:focus,
 .builtin-inline-tip-trigger:focus-visible,
 .builtin-inline-tip-trigger:active {
@@ -3188,6 +3172,8 @@ details[open] > summary .details-chevron {
   margin: 0;
   text-align: left;
   cursor: pointer;
+  position: relative;
+  display: inline-flex;
 }
 
 .builtin-inline-tip-hoverable:not(.builtin-inline-tip-hoverable--open):hover {
@@ -3203,7 +3189,7 @@ details[open] > summary .details-chevron {
 }
 
 .builtin-inline-tip-hoverable:hover::after {
-  content: attr(data-hover-tip);
+  content: '설명';
   position: absolute;
   left: calc(100% + 6px);
   top: 50%;
@@ -3236,7 +3222,7 @@ details[open] > summary .details-chevron {
 }
 
 .caution-inline-tip-trigger:hover::after {
-  content: attr(data-hover-tip);
+  content: '설명';
   position: absolute;
   left: calc(100% + 6px);
   top: 50%;
