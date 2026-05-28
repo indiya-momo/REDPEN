@@ -37,6 +37,11 @@ import { isMatchSpatiallyCoherent } from './matchSpatial.js';
 
 const DEFAULT_CHECK_CHUNK_PAGES = 10;
 
+/** @param {string} ch */
+function isLetterOrDigit(ch) {
+  return /\p{L}|\p{N}/u.test(ch);
+}
+
 function yieldToMain() {
   return new Promise((resolve) => {
     setTimeout(resolve, 0);
@@ -84,6 +89,12 @@ function applyRuleToPages(rule, pages, byKey, globalExcludePhrases, errors) {
         continue;
       }
       const matchEnd = match.index + match[0].length;
+      if (rule.requireLeadingBoundary && match.index > 0) {
+        const prevChar = text[match.index - 1] ?? '';
+        if (prevChar && isLetterOrDigit(prevChar)) {
+          continue;
+        }
+      }
       const matchSlice = text.slice(match.index, matchEnd);
       const isCompoundRule =
         rule.patternKind === 'compound-find' ||

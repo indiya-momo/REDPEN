@@ -47,6 +47,8 @@ function builtInRuleFromRow(row) {
     memo: String(row.memo ?? '').trim(),
     countsInQuota: fromSheet && !serviceExcluded,
     visible: row.visible !== false,
+    // "펼쳐지다" 같은 합성어 오탐 방지: 단어 시작에서만 매칭
+    ...(row.find === '쳐지' ? { requireLeadingBoundary: true } : {}),
   };
 }
 

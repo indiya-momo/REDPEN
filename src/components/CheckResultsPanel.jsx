@@ -10,12 +10,83 @@ import { cautionResultChipLabel } from '../lib/cautionRules.js';
 
 /**
  * @param {{
+ *   visibleOnCurrentPage: number,
+ * }} props
+ */
+function CurrentPageFindingText({ visibleOnCurrentPage }) {
+  if (visibleOnCurrentPage <= 0) {
+    return <>에는 발견 항목이 없습니다</>;
+  }
+  return (
+    <>
+      에는 발견{' '}
+      <span className="current-page-status__count-underline">
+        {visibleOnCurrentPage}개
+      </span>{' '}
+      가 있습니다
+    </>
+  );
+}
+
+/**
+ * @param {{
+ *   viewSource: 'spelling' | 'consistency',
+ *   spellingCheckDone: boolean,
+ *   spellingFindings: number,
+ *   ruleCount: number,
+ *   totalFindings: number,
+ *   builtinFindings: number,
+ *   spacingFindings: number,
+ * }} props
+ */
+function ResultHeaderSummary({
+  viewSource,
+  spellingCheckDone,
+  spellingFindings,
+  ruleCount,
+  totalFindings,
+  builtinFindings,
+  spacingFindings,
+}) {
+  return (
+    <div className="results-header">
+      <span className="results-header__applied">
+        기준 <span className="results-header__rule-chip">{ruleCount}</span> 적용
+      </span>{' '}
+      전체 발견{' '}
+      <span className="results-category-summary__count-underline">
+        {totalFindings}개
+      </span>
+      {viewSource === 'spelling' && spellingCheckDone && spellingFindings > 0 ? (
+        <>
+          (
+          <span className="results-category-summary__builtin">
+            맞춤법 기준{' '}
+            <span className="results-category-summary__count-underline">
+              {builtinFindings}개
+            </span>
+          </span>{' '}
+          ·{' '}
+          <span className="results-category-summary__caution">
+            검토 필요 기준{' '}
+            <span className="results-category-summary__count-underline">
+              {spacingFindings}개
+            </span>
+          </span>
+          )
+        </>
+      ) : null}
+    </div>
+  );
+}
+
+/**
+ * @param {{
  *   entries: ResultEntry[],
  *   currentPage: number,
  *   pdf: object | null,
  *   activeGroup: import('../lib/ruleEngine.js').GroupedResult | null,
  *   activeSource: 'spelling' | 'consistency',
- *   activeRuleOnPageCount: number,
  *   visibleOnCurrentPage: number,
  *   totalFindings: number,
  *   ruleCount: number,
@@ -54,7 +125,6 @@ export default function CheckResultsPanel({
   pdf,
   activeGroup,
   activeSource,
-  activeRuleOnPageCount,
   visibleOnCurrentPage,
   totalFindings,
   ruleCount,
@@ -129,17 +199,7 @@ export default function CheckResultsPanel({
               (파일 {formatSystemPageLabel(currentPage)})
             </span>
           ) : null}
-          {visibleOnCurrentPage > 0
-            ? (
-              <>
-                에는 발견{' '}
-                <span className="current-page-status__count-underline">
-                  {visibleOnCurrentPage}개
-                </span>{' '}
-                가 있습니다
-              </>
-            )
-            : '에는 발견 항목이 없습니다'}
+          <CurrentPageFindingText visibleOnCurrentPage={visibleOnCurrentPage} />
         </p>
       )}
       {viewSource === 'consistency' &&
@@ -151,38 +211,15 @@ export default function CheckResultsPanel({
         )}
       {entries.length > 0 ? (
         <>
-          <div className="results-header">
-            <span className="results-header__applied">
-              기준{' '}
-              <span className="results-header__rule-chip">
-                {ruleCount}
-              </span>{' '}
-              적용
-            </span>{' '}
-            전체 발견{' '}
-            <span className="results-category-summary__count-underline">
-              {totalFindings}개
-            </span>
-            {viewSource === 'spelling' && spellingCheckDone && spellingFindings > 0 ? (
-              <>
-                (
-                <span className="results-category-summary__builtin">
-                  맞춤법 기준{' '}
-                  <span className="results-category-summary__count-underline">
-                    {builtinFindings}개
-                  </span>
-                </span>{' '}
-                ·{' '}
-                <span className="results-category-summary__caution">
-                  검토 필요 기준{' '}
-                  <span className="results-category-summary__count-underline">
-                    {spacingFindings}개
-                  </span>
-                </span>
-                )
-              </>
-            ) : null}
-          </div>
+          <ResultHeaderSummary
+            viewSource={viewSource}
+            spellingCheckDone={spellingCheckDone}
+            spellingFindings={spellingFindings}
+            ruleCount={ruleCount}
+            totalFindings={totalFindings}
+            builtinFindings={builtinFindings}
+            spacingFindings={spacingFindings}
+          />
           <ul className="results-list">
             {entries.map(({ group, source }) => {
               const first = group.instances[0];

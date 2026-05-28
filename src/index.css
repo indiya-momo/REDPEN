@@ -1771,18 +1771,6 @@ details[open] > summary .details-chevron {
   text-decoration-thickness: 2px;
 }
 
-.results-panel--spelling.results-panel--tone-builtin .results-category-summary {
-  color: #0c4a6e;
-  background: #e0f2fe;
-  border-bottom-color: #7dd3fc;
-}
-
-.results-panel--spelling.results-panel--tone-caution .results-category-summary {
-  color: #9a3412;
-  background: #ffedd5;
-  border-bottom-color: #fdba74;
-}
-
 .results-panel--consistency .results-category-summary {
   color: #5b21b6;
   background: #ede9fe;
