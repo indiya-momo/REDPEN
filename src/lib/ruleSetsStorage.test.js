@@ -1,8 +1,10 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   duplicateRuleSet,
   formatRuleSetSavedDate,
   formatRuleSetSummary,
+  loadRuleSets,
+  saveRuleSets,
 } from './ruleSetsStorage.js';
 
 describe('formatRuleSetSavedDate', () => {
@@ -51,10 +53,48 @@ describe('duplicateRuleSet', () => {
     const copy = duplicateRuleSet(source);
     expect(copy.id).not.toBe(source.id);
     expect(copy.name).toBe('경제서 (복사)');
-    expect(copy.builtInEnabled).toBeUndefined();
+    expect(copy.builtInEnabled).toEqual({ foo: true });
+    expect(copy.builtInEnabled).not.toBe(source.builtInEnabled);
+    expect(copy.cautionEnabled).toEqual({ c1: true });
+    expect(copy.cautionEnabled).not.toBe(source.cautionEnabled);
     expect(copy.customRules).toEqual(source.customRules);
     expect(copy.customRules).not.toBe(source.customRules);
     expect(copy.globalExcludePhrases).toEqual(['테스트']);
     expect(copy.globalExcludePhrases).not.toBe(source.globalExcludePhrases);
+  });
+});
+
+describe('saveRuleSets / loadRuleSets', () => {
+  const store = new Map();
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    store.clear();
+  });
+
+  it('builtInEnabled·cautionEnabled를 localStorage에 유지한다', () => {
+    vi.stubGlobal('localStorage', {
+      getItem: (key) => store.get(key) ?? null,
+      setItem: (key, value) => {
+        store.set(key, value);
+      },
+      removeItem: (key) => {
+        store.delete(key);
+      },
+    });
+
+    const sets = [
+      {
+        id: 'set_1',
+        name: '테스트',
+        builtInEnabled: { '우리 나라': false },
+        cautionEnabled: { c1: false },
+        customRules: [],
+      },
+    ];
+    saveRuleSets(sets);
+    const loaded = loadRuleSets();
+    expect(loaded[0].builtInEnabled).toEqual({ '우리 나라': false });
+    expect(loaded[0].cautionEnabled).toEqual({ c1: false });
   });
 });

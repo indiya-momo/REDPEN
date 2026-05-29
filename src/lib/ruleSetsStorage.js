@@ -6,7 +6,13 @@ const ACTIVE_KEY = 'pdf-proofread-active-set-id';
  *   id: string,
  *   name: string,
  *   builtInEnabled: Record<string, boolean>,
+ *   cautionEnabled: Record<string, boolean>,
  *   customRules: import('./ruleTypes.js').Rule[],
+ *   globalExcludePhrases?: string[],
+ *   spellingRulesFingerprint?: string,
+ *   cautionRulesFingerprint?: string,
+ *   cautionEnabledPolicyVersion?: number,
+ *   compoundMigrateVersion?: number,
  *   savedAt?: string,
  * }} RuleSet
  */
@@ -50,10 +56,7 @@ export function loadRuleSets() {
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
-    return parsed.map((set) => {
-      const { cautionEnabled, builtInEnabled, ...rest } = set ?? {};
-      return rest;
-    });
+    return parsed.map((set) => ({ ...(set ?? {}) }));
   } catch {
     return [];
   }
@@ -61,11 +64,7 @@ export function loadRuleSets() {
 
 /** @param {RuleSet[]} sets */
 export function saveRuleSets(sets) {
-  const payload = sets.map((set) => {
-    const { cautionEnabled, builtInEnabled, ...rest } = set ?? {};
-    return rest;
-  });
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(sets));
 }
 
 /** @returns {string | null} */
@@ -92,9 +91,12 @@ export function duplicateRuleSet(source) {
   return {
     id: newId(),
     name: `${baseName} (복사)`,
+    builtInEnabled: structuredClone(source.builtInEnabled ?? {}),
+    cautionEnabled: structuredClone(source.cautionEnabled ?? {}),
     customRules: structuredClone(source.customRules ?? []),
     globalExcludePhrases: [...(source.globalExcludePhrases ?? [])],
     cautionRulesFingerprint: source.cautionRulesFingerprint,
+    cautionEnabledPolicyVersion: source.cautionEnabledPolicyVersion,
     compoundMigrateVersion: source.compoundMigrateVersion,
     spellingRulesFingerprint: source.spellingRulesFingerprint,
     savedAt: source.savedAt,
