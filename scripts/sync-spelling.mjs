@@ -11,6 +11,7 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { assertValidSpellingRules } from '../src/lib/validateDataJson.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
@@ -319,6 +320,8 @@ async function main() {
       `${SHEET_NAME} 탭에 유효한 행이 없습니다. find·replace 컬럼을 확인하세요.`,
     );
   }
+
+  assertValidSpellingRules(rules, 'sync-spelling output');
 
   const json = `${JSON.stringify(rules, null, 2)}\n`;
 

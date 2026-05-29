@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import MainScreen from './components/MainScreen.jsx';
 import WelcomeScreen from './components/WelcomeScreen.jsx';
 import MomoRoomScreen from './components/MomoRoomScreen.jsx';
@@ -9,58 +9,14 @@ import {
 import {
   BUILT_IN_RULES,
   countsTowardSpellingQuota,
-  SPELLING_RULES_FP,
   builtInEnabledFromSheet,
 } from './lib/builtInRules.js';
-import { applyCompoundRuleMigrations } from './lib/migrateCompoundRules.js';
 import {
   countActiveRules,
-  countBuiltInActiveRules,
-  countConsistencyActiveRules,
-  countSpacingReviewActiveRules,
   isOverMaxRules,
   maxRulesExceededMessage,
 } from './lib/activeRuleCount.js';
-import { trackRulesetSaved } from './lib/analytics.js';
-import {
-  duplicateRuleSet,
-  loadActiveSetId,
-  loadRuleSets,
-  newId,
-  saveActiveSetId,
-  saveRuleSets,
-} from './lib/ruleSetsStorage.js';
-import { ensureDefaultAuxiliaryVerbs } from './lib/defaultAuxiliaryVerbs.js';
-
-const RULE_SET_AUTOSAVE_MS = 400;
-
-function normalizeRuleSet(set) {
-  const { rules: customRules, version: compoundMigrateVersion } =
-    applyCompoundRuleMigrations(
-      set.customRules ?? [],
-      set.compoundMigrateVersion,
-    );
-  return {
-    ...set,
-    builtInEnabled: builtInEnabledFromSheet(),
-    spellingRulesFingerprint: SPELLING_RULES_FP,
-    customRules: ensureDefaultAuxiliaryVerbs(customRules),
-    compoundMigrateVersion,
-    globalExcludePhrases: set.globalExcludePhrases ?? [],
-    cautionEnabled: defaultCautionEnabled(),
-  };
-}
-
-function createDefaultSet() {
-  return normalizeRuleSet({
-    id: newId(),
-    name: '기본 규칙 세트',
-    builtInEnabled: builtInEnabledFromSheet(),
-    customRules: [],
-    globalExcludePhrases: [],
-    cautionEnabled: defaultCautionEnabled(),
-  });
-}
+import { useRuleSets } from './hooks/useRuleSets.js';
 
 export default function App() {
   const [screen, setScreen] = useState(() => {
@@ -73,197 +29,19 @@ export default function App() {
     return 'welcome';
   });
   const [mainWorkTab, setMainWorkTab] = useState('spelling');
-  const [ruleSets, setRuleSets] = useState([]);
-  const [activeSetId, setActiveSetId] = useState(null);
-  const [rulesReady, setRulesReady] = useState(false);
 
-  const activeSetIdRef = useRef(activeSetId);
-  const ruleSetsRef = useRef(ruleSets);
-  const autosaveTimerRef = useRef(null);
-
-  activeSetIdRef.current = activeSetId;
-  ruleSetsRef.current = ruleSets;
-
-  const flushRuleSets = useCallback((sets, setId = activeSetIdRef.current) => {
-    saveRuleSets(sets);
-    if (setId) saveActiveSetId(setId);
-  }, []);
-
-  const scheduleRuleSetsSave = useCallback(
-    (sets) => {
-      ruleSetsRef.current = sets;
-      if (autosaveTimerRef.current) {
-        clearTimeout(autosaveTimerRef.current);
-      }
-      autosaveTimerRef.current = setTimeout(() => {
-        autosaveTimerRef.current = null;
-        flushRuleSets(sets, activeSetIdRef.current);
-      }, RULE_SET_AUTOSAVE_MS);
-    },
-    [flushRuleSets],
-  );
-
-  useEffect(() => {
-    let sets = loadRuleSets().map(normalizeRuleSet);
-    if (!sets.length) {
-      sets = [createDefaultSet()];
-    }
-    saveRuleSets(sets);
-    if (!loadActiveSetId() || !sets.some((s) => s.id === loadActiveSetId())) {
-      saveActiveSetId(sets[0].id);
-    }
-    const savedActive = loadActiveSetId();
-    setRuleSets(sets);
-    setActiveSetId(
-      savedActive && sets.some((s) => s.id === savedActive)
-        ? savedActive
-        : sets[0].id,
-    );
-    setRulesReady(true);
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      if (autosaveTimerRef.current) {
-        clearTimeout(autosaveTimerRef.current);
-        autosaveTimerRef.current = null;
-        flushRuleSets(ruleSetsRef.current, activeSetIdRef.current);
-      }
-    };
-  }, [flushRuleSets]);
-
-  const activeSet = rulesReady
-    ? (ruleSets.find((s) => s.id === activeSetId) ?? ruleSets[0] ?? null)
-    : null;
-
-  const updateActiveSet = useCallback(
-    (patch) => {
-      const setId = activeSetIdRef.current;
-      if (!setId) return;
-      setRuleSets((prev) => {
-        const next = prev.map((s) => (s.id === setId ? { ...s, ...patch } : s));
-        scheduleRuleSetsSave(next);
-        return next;
-      });
-    },
-    [scheduleRuleSetsSave],
-  );
-
-  const flushPendingRuleSetsSave = useCallback(() => {
-    if (autosaveTimerRef.current) {
-      clearTimeout(autosaveTimerRef.current);
-      autosaveTimerRef.current = null;
-    }
-    flushRuleSets(ruleSetsRef.current, activeSetIdRef.current);
-  }, [flushRuleSets]);
-
-  const applyRuleSets = useCallback(
-    (next, nextActiveId = activeSetIdRef.current) => {
-      flushPendingRuleSetsSave();
-      ruleSetsRef.current = next;
-      setRuleSets(next);
-      setActiveSetId(nextActiveId);
-      activeSetIdRef.current = nextActiveId;
-      flushRuleSets(next, nextActiveId);
-    },
-    [flushPendingRuleSetsSave, flushRuleSets],
-  );
-
-  useEffect(() => {
-    if (!rulesReady || !ruleSets.length) return;
-    const needSheetResync = ruleSets.some(
-      (s) => s.spellingRulesFingerprint !== SPELLING_RULES_FP,
-    );
-    if (!needSheetResync) return;
-
-    const next = ruleSets.map(normalizeRuleSet);
-    const nextActive =
-      activeSetIdRef.current && next.some((s) => s.id === activeSetIdRef.current)
-        ? activeSetIdRef.current
-        : next[0]?.id;
-    if (!nextActive) return;
-    applyRuleSets(next, nextActive);
-  }, [rulesReady, ruleSets, applyRuleSets]);
-
-  const handleSelectRuleSet = useCallback(
-    (id) => {
-      if (!id || id === activeSetIdRef.current) return;
-      if (!ruleSetsRef.current.some((s) => s.id === id)) return;
-      flushPendingRuleSetsSave();
-      setActiveSetId(id);
-      activeSetIdRef.current = id;
-      saveActiveSetId(id);
-    },
-    [flushPendingRuleSetsSave],
-  );
-
-  const handleCreateRuleSet = useCallback(() => {
-    const newSet = normalizeRuleSet({
-      id: newId(),
-      name: '',
-      builtInEnabled: builtInEnabledFromSheet(),
-      customRules: [],
-      globalExcludePhrases: [],
-      cautionEnabled: defaultCautionEnabled(),
-    });
-    applyRuleSets([...ruleSetsRef.current, newSet], newSet.id);
-  }, [applyRuleSets]);
-
-  const handleDuplicateRuleSet = useCallback(() => {
-    const source = ruleSetsRef.current.find(
-      (s) => s.id === activeSetIdRef.current,
-    );
-    if (!source) return;
-    const copy = normalizeRuleSet(duplicateRuleSet(source));
-    applyRuleSets([...ruleSetsRef.current, copy], copy.id);
-  }, [applyRuleSets]);
-
-  const handleDeleteRuleSet = useCallback(() => {
-    const sets = ruleSetsRef.current;
-    if (sets.length <= 1) {
-      alert('마지막 규칙 세트는 삭제할 수 없습니다.');
-      return;
-    }
-    const id = activeSetIdRef.current;
-    const current = sets.find((s) => s.id === id);
-    const label = (current?.name || '규칙 세트').trim() || '규칙 세트';
-    if (!window.confirm(`「${label}」 규칙 세트를 삭제할까요?`)) return;
-
-    const next = sets.filter((s) => s.id !== id);
-    const nextActive = next[0]?.id;
-    if (!nextActive) return;
-    applyRuleSets(next, nextActive);
-  }, [applyRuleSets]);
-
-  function handleSaveRules() {
-    const setId = activeSetIdRef.current;
-    if (!setId) return;
-    if (autosaveTimerRef.current) {
-      clearTimeout(autosaveTimerRef.current);
-      autosaveTimerRef.current = null;
-    }
-    const savedAt = new Date().toISOString();
-    const next = ruleSets.map((s) =>
-      s.id === setId
-        ? { ...s, spellingRulesFingerprint: SPELLING_RULES_FP, savedAt }
-        : s,
-    );
-    setRuleSets(next);
-    flushRuleSets(next, setId);
-    const saved = next.find((s) => s.id === setId);
-    if (saved) {
-      trackRulesetSaved({
-        builtinCount: countBuiltInActiveRules({
-          builtInEnabled: saved.builtInEnabled,
-        }),
-        spacingCount: countSpacingReviewActiveRules({
-          cautionEnabled: saved.cautionEnabled,
-        }),
-        consistencyCount: countConsistencyActiveRules(saved.customRules),
-      });
-    }
-    alert('규칙 세트가 저장되었습니다.');
-  }
+  const {
+    rulesReady,
+    activeSet,
+    ruleSets,
+    activeSetId,
+    updateActiveSet,
+    handleSelectRuleSet,
+    handleCreateRuleSet,
+    handleDuplicateRuleSet,
+    handleDeleteRuleSet,
+    handleSaveRules,
+  } = useRuleSets();
 
   if (screen === 'room') {
     return <MomoRoomScreen onClose={() => setScreen('welcome')} />;

@@ -1,0 +1,35 @@
+/* 대문 모바일: git 5a5cb7a welcome @media 블록 (PC는 index.css) */
+
+@media (max-width: 960px) {
+  .welcome-gate__layout {
+    grid-template-columns: 1fr;
+    padding-top: calc(1.5rem * var(--welcome-scale));
+    padding-bottom: calc(3.5rem * var(--welcome-scale));
+  }
+
+  .welcome-gate__copy {
+    max-width: none;
+    order: 2;
+  }
+
+  .welcome-gate__stage {
+    order: 1;
+    min-height: auto;
+    padding: calc(1rem * var(--welcome-scale)) 0 calc(0.5rem * var(--welcome-scale));
+  }
+
+  .welcome-gate {
+    --welcome-stack-width: min(98vw, calc(26.75rem * var(--welcome-scale)));
+  }
+}
+
+@media (max-width: 640px) {
+  .welcome-gate__panels {
+    grid-template-columns: 1fr;
+  }
+
+  .welcome-gate__steps {
+    grid-template-columns: 1fr;
+  }
+}
+
