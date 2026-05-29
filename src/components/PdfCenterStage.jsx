@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Upload, FileText, CheckCircle2, Play, RotateCcw } from 'lucide-react';
 import pdfMomoIcon from '../assets/momo/pdf-momo.png';
 import pdfFullIcon from '../assets/momo/pdf-full.png';
@@ -27,6 +27,7 @@ const PDF_SIZE_MAX_BYTES = 50 * MB;
  *   pageTextsLength: number,
  *   fileHandleActive: boolean,
  *   loadError: string | null,
+ *   loadAdvisory?: string[] | null,
  *   sessionHint: string | null,
  *   runLabel: string,
  *   showReady: boolean,
@@ -49,6 +50,7 @@ export default function PdfCenterStage({
   pageTextsLength,
   fileHandleActive,
   loadError,
+  loadAdvisory = null,
   sessionHint,
   runLabel,
   showReady,
@@ -111,6 +113,14 @@ export default function PdfCenterStage({
   const uploadFailed = Boolean(loadError) && !showReady;
   const uploadFailedHint = sessionHint === '업로드 실패';
   const momoSrc = showReady ? pdfFullIcon : pdfMomoIcon;
+  const [advisoryDismissed, setAdvisoryDismissed] = useState(false);
+
+  useEffect(() => {
+    setAdvisoryDismissed(false);
+  }, [loadAdvisory]);
+
+  const showAdvisory =
+    Boolean(loadAdvisory?.length) && showReady && !advisoryDismissed;
 
   return (
     <div
@@ -217,6 +227,22 @@ export default function PdfCenterStage({
           </div>
         ) : (
           <div className="pdf-ready-panel">
+            {showAdvisory && (
+              <div className="pdf-center-stage__advisory" role="status">
+                {loadAdvisory.map((line) => (
+                  <p key={line} className="pdf-center-stage__advisory-line">
+                    {line}
+                  </p>
+                ))}
+                <button
+                  type="button"
+                  className="link-btn pdf-center-stage__advisory-dismiss"
+                  onClick={() => setAdvisoryDismissed(true)}
+                >
+                  확인
+                </button>
+              </div>
+            )}
             <div className="pdf-ready-file">
               <span className="pdf-ready-file__icon" aria-hidden>
                 <FileText size={24} strokeWidth={1.5} />
