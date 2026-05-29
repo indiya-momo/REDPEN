@@ -4,6 +4,33 @@ import pdfWorkerUrl from 'pdfjs-dist/legacy/build/pdf.worker.min.mjs?url';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 
+/** @param {string} relativePath public/ 기준 (끝 슬래시 없음) */
+export function resolvePdfJsPublicUrl(relativePath) {
+  const base = import.meta.env.BASE_URL || '/';
+  const trimmed = relativePath.replace(/^\/+/, '');
+  const joined = `${base}${trimmed}`;
+  if (/^https?:\/\//i.test(joined)) {
+    return joined.endsWith('/') ? joined : `${joined}/`;
+  }
+  const withSlash = joined.startsWith('/') ? joined : `/${joined}`;
+  return withSlash.endsWith('/') ? withSlash : `${withSlash}/`;
+}
+
+/**
+ * @param {ArrayBuffer | Uint8Array} buffer
+ */
+export function buildPdfDocumentInit(buffer) {
+  const data =
+    buffer instanceof Uint8Array
+      ? buffer
+      : new Uint8Array(buffer);
+  return {
+    data,
+    cMapUrl: resolvePdfJsPublicUrl('pdfjs/cmaps/'),
+    cMapPacked: true,
+  };
+}
+
 /**
  * @typedef {Object} TextItemRef
  * @property {number} start
@@ -23,7 +50,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
  * @param {ArrayBuffer} buffer
  */
 export async function loadPdfFromBuffer(buffer) {
-  const loadingTask = pdfjsLib.getDocument({ data: buffer });
+  const loadingTask = pdfjsLib.getDocument(buildPdfDocumentInit(buffer));
   const pdf = await loadingTask.promise;
   return pdf;
 }

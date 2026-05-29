@@ -26,6 +26,13 @@ if (!process.env.VITE_BUILD_TIME) {
   process.env.VITE_BUILD_TIME = new Date().toISOString();
 }
 
+const pdfjsCmapsSrc = path.resolve('node_modules/pdfjs-dist/cmaps');
+const pdfjsCmapsDest = path.resolve('public/pdfjs/cmaps');
+if (fs.existsSync(pdfjsCmapsSrc)) {
+  fs.mkdirSync(path.dirname(pdfjsCmapsDest), { recursive: true });
+  fs.cpSync(pdfjsCmapsSrc, pdfjsCmapsDest, { recursive: true });
+}
+
 export default defineConfig({
   base: process.env.VITE_BASE || '/',
   plugins: [react()],
