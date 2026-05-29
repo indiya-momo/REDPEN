@@ -67,6 +67,8 @@ export default function App() {
     );
   }
 
+  // MainScreen dead props: ruleSets·CRUD·onSaveRules 등 9개 — UI 미배선, 제거 금지.
+  // 계약 문서: project-docs/app-mainscreen-contract.md
   return (
     <MainScreen
       ruleSets={ruleSets.map((s) => ({ id: s.id, name: s.name }))}

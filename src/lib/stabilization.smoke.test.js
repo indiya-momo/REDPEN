@@ -6,7 +6,7 @@ import {
 } from './cautionRules.js';
 import { SPELLING_RULES_FP } from './builtInRules.js';
 import { restoreCheckResults } from './checkResultUtils.js';
-import { normalizeRuleSet } from '../hooks/useRuleSets.js';
+import { normalizeRuleSet } from './ruleSetNormalize.js';
 import {
   clearWorkSession,
   loadWorkSession,
@@ -256,5 +256,68 @@ describe('session store smoke', () => {
     await clearWorkSession();
     const loaded = await loadWorkSession();
     expect(loaded).toBeNull();
+  });
+
+  it('pdfBuffer는 OPFS/Cache 없을 때 청크 저장 후 바이트·일관성 결과를 복원한다', async () => {
+    const pdfBytes = new Uint8Array([0x25, 0x50, 0x44, 0x46, 0x2d, 0x31, 0x2e, 0x34]);
+    const consistency = [{ find: '본보', replace: '본·보', instances: [] }];
+
+    const saved = await saveWorkSession({
+      fileName: 'chunk-smoke.pdf',
+      pdfBuffer: pdfBytes.buffer,
+      pageTexts: [{ pageNum: 1, text: 'page one' }],
+      groupedResults: [],
+      consistencyGroupedResults: consistency,
+      spellingRulesFingerprint: SPELLING_RULES_FP,
+      cautionRulesFingerprint: CAUTION_RULES_FP,
+      currentPage: 1,
+    });
+    expect(saved.ok).toBe(true);
+    expect(saved.mode).toBe('chunks');
+
+    const loaded = await loadWorkSession();
+    expect(loaded).not.toBeNull();
+    expect(loaded?.fileName).toBe('chunk-smoke.pdf');
+    expect(loaded?.pdfBuffer?.byteLength).toBe(8);
+    expect(new Uint8Array(loaded?.pdfBuffer ?? [])).toEqual(pdfBytes);
+    expect(loaded?.consistencyGroupedResults).toEqual(consistency);
+    expect(loaded?.spellingRulesFingerprint).toBe(SPELLING_RULES_FP);
+  });
+
+  it('fileHandle 읽기 권한 거부 시 needFilePermission과 검사 메타만 반환한다', async () => {
+    let readDenied = false;
+    const fileHandle = {
+      queryPermission: async () => (readDenied ? 'denied' : 'granted'),
+      requestPermission: async () => 'granted',
+      getFile: async () => ({
+        name: 'perm.pdf',
+        arrayBuffer: async () => new ArrayBuffer(12),
+      }),
+    };
+    const grouped = [{ find: 'A', replace: 'B', instances: [{ pageNum: 3 }] }];
+
+    const saved = await saveWorkSession({
+      fileName: 'perm.pdf',
+      fileHandle,
+      pageTexts: [{ pageNum: 1, text: 'x' }],
+      groupedResults: grouped,
+      consistencyGroupedResults: [],
+      spellingRulesFingerprint: SPELLING_RULES_FP,
+      cautionRulesFingerprint: CAUTION_RULES_FP,
+      currentPage: 3,
+      selectedInstance: { pageNum: 3, index: 0 },
+    });
+    expect(saved.ok).toBe(true);
+
+    readDenied = true;
+    const loaded = await loadWorkSession();
+    expect(loaded).not.toBeNull();
+    expect(loaded?.needFilePermission).toBe(true);
+    expect(loaded?.fileHandle).toBe(fileHandle);
+    expect(loaded?.fileName).toBe('perm.pdf');
+    expect(loaded?.currentPage).toBe(3);
+    expect(loaded?.groupedResults).toEqual(grouped);
+    expect(loaded?.selectedInstance).toEqual({ pageNum: 3, index: 0 });
+    expect(loaded?.pdfBuffer).toBeUndefined();
   });
 });

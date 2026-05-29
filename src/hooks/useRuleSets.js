@@ -1,16 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import {
-  defaultCautionEnabled,
-  CAUTION_RULES_FP,
-  CAUTION_ENABLED_POLICY_VERSION,
-  migrateCautionEnabled,
-} from '../lib/cautionRules.js';
+import { defaultCautionEnabled } from '../lib/cautionRules.js';
 import {
   SPELLING_RULES_FP,
   builtInEnabledFromSheet,
-  migrateBuiltInEnabled,
 } from '../lib/builtInRules.js';
-import { applyCompoundRuleMigrations } from '../lib/migrateCompoundRules.js';
 import {
   countBuiltInActiveRules,
   countConsistencyActiveRules,
@@ -25,38 +18,9 @@ import {
   saveActiveSetId,
   saveRuleSets,
 } from '../lib/ruleSetsStorage.js';
-import { ensureDefaultAuxiliaryVerbs } from '../lib/defaultAuxiliaryVerbs.js';
+import { normalizeRuleSet } from '../lib/ruleSetNormalize.js';
 
 const RULE_SET_AUTOSAVE_MS = 400;
-
-/**
- * @param {Record<string, unknown>} set
- */
-export function normalizeRuleSet(set) {
-  const { rules: customRules, version: compoundMigrateVersion } =
-    applyCompoundRuleMigrations(
-      set.customRules ?? [],
-      set.compoundMigrateVersion,
-    );
-  return {
-    ...set,
-    builtInEnabled: migrateBuiltInEnabled(
-      set.builtInEnabled,
-      set.spellingRulesFingerprint,
-    ),
-    spellingRulesFingerprint: SPELLING_RULES_FP,
-    customRules: ensureDefaultAuxiliaryVerbs(customRules),
-    compoundMigrateVersion,
-    globalExcludePhrases: set.globalExcludePhrases ?? [],
-    cautionEnabled: migrateCautionEnabled(
-      set.cautionEnabled,
-      set.cautionRulesFingerprint,
-      set.cautionEnabledPolicyVersion,
-    ),
-    cautionRulesFingerprint: CAUTION_RULES_FP,
-    cautionEnabledPolicyVersion: CAUTION_ENABLED_POLICY_VERSION,
-  };
-}
 
 function createDefaultSet() {
   return normalizeRuleSet({
