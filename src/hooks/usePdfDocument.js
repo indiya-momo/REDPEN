@@ -29,6 +29,28 @@ export function usePdfDocument() {
   /** @type {[string[] | null, React.Dispatch<React.SetStateAction<string[] | null>>]} */
   const [loadAdvisory, setLoadAdvisory] = useState(null);
 
+  /**
+   * 추출 완료 후 게이트·advisory 반영. restore 경로와 loadPdfFromFile 공용.
+   * @param {import('pdfjs-dist').PDFDocumentProxy} doc
+   * @param {import('../lib/pdfService.js').PageData[]} pages
+   */
+  const applyExtractValidation = useCallback(async (doc, pages) => {
+    const producerHints = await getPdfProducerHints(doc);
+    const validation = validatePublishablePdf({ producerHints, pages });
+    if (!validation.ok) {
+      setLoadError(validation.message ?? null);
+      setLoadAdvisory(null);
+      setPdf(null);
+      setPageTexts([]);
+      return { ok: false, validation, producerHints };
+    }
+    setLoadError(null);
+    setPdf(doc);
+    setPageTexts(pages);
+    setLoadAdvisory(validation.advisory?.lines ?? null);
+    return { ok: true, validation, producerHints };
+  }, []);
+
   const loadPdfFromFile = useCallback(async (file) => {
     setLoadError(null);
     setLoadAdvisory(null);
@@ -44,31 +66,19 @@ export function usePdfDocument() {
     setIsProcessing(true);
     setProgress({ current: 0, total: doc.numPages, phase: 'extract' });
 
-    const producerHints = await getPdfProducerHints(doc);
-
     const pages = await extractAllPagesText(doc, (current, total) => {
       setProgress({ current, total, phase: 'extract' });
     });
 
-    setPageTexts(pages);
-    const validation = validatePublishablePdf({ producerHints, pages });
-    const textExtracted = validation.ok;
-    if (!validation.ok) {
-      setLoadError(validation.message);
-      setLoadAdvisory(null);
-    } else {
-      setPdf(doc);
-      setPageTexts(pages);
-      setLoadAdvisory(validation.advisory?.lines ?? null);
-    }
+    const { ok, validation } = await applyExtractValidation(doc, pages);
     trackPdfOpened({
       pageCount: doc.numPages,
       sizeBytes: file.size,
-      textExtracted,
+      textExtracted: ok,
       publishGate: validation.reason,
     });
-    return doc;
-  }, []);
+    return ok ? doc : null;
+  }, [applyExtractValidation]);
 
   const resetPdfDocument = useCallback(() => {
     pdfBufferRef.current = null;
@@ -130,6 +140,7 @@ export function usePdfDocument() {
     setPdfFileName,
     setPageTexts,
     loadPdfFromFile,
+    applyExtractValidation,
     resetPdfDocument,
     clearFileHandle,
     progressLabel,
