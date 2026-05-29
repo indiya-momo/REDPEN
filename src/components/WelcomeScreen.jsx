@@ -29,6 +29,9 @@ export default function WelcomeScreen({ onStart, onOpenRoom }) {
               <br />
               <span className="welcome-gate__title-sub">교정냥 모모의 여행</span>
             </h1>
+            <p className="welcome-gate__platform-badge" aria-label="이용 안내">
+              [모바일 전용 미리보기 페이지]
+            </p>
             <p className="welcome-gate__lead">
               <span className="welcome-gate__lead-line">
                 맞춤법·표기 일관성을 찾는 <strong>텍스트 PDF 검수 도구</strong>입니다
@@ -118,10 +121,13 @@ export default function WelcomeScreen({ onStart, onOpenRoom }) {
                 className="btn-welcome-primary welcome-gate__start"
                 onClick={onStart}
               >
-                살펴보기
+                인디야 살펴보기
               </button>
-              <p className="welcome-gate__steps-note welcome-gate__steps-note--stage">
+              <p className="welcome-gate__steps-note welcome-gate__steps-note--stage welcome-gate__steps-note--desktop">
                 현재 인디야는 <strong>PC버전만 지원</strong>합니다
+              </p>
+              <p className="welcome-gate__steps-note welcome-gate__steps-note--stage welcome-gate__steps-note--mobile">
+                PDF검수는 PC버전에서 가능합니다
               </p>
             </div>
           </div>
