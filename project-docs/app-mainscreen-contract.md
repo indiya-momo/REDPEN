@@ -24,16 +24,16 @@
 | `customRules` | `activeSet.customRules` | `useRuleCheck`, `ConsistencyPanel` |
 | `globalExcludePhrases` | `activeSet.globalExcludePhrases` | `useRuleCheck`, `ConsistencyPanel` |
 | `cautionEnabled` | `activeSet.cautionEnabled` | `useRuleCheck`, `ResizableBuiltinSpelling`, `ConsistencyPanel` |
-| `onBuiltInToggle` | quota 검사 후 `updateActiveSet({ builtInEnabled })` | `ResizableBuiltinSpelling` |
-| `onBuiltInSetAll` | quota 검사 후 `updateActiveSet({ builtInEnabled })` | `ResizableBuiltinSpelling` |
-| `onCautionToggle` | quota 검사 후 `updateActiveSet({ cautionEnabled })` | `ResizableBuiltinSpelling` |
-| `onCautionSetAll` | quota 검사 후 `updateActiveSet({ cautionEnabled })` | `ResizableBuiltinSpelling` |
+| `onBuiltInToggle` | quota 검사 후 `handleBuiltInToggle` → `updateActiveSet` | `ResizableBuiltinSpelling` |
+| `onBuiltInSetAll` | quota 검사 후 `handleBuiltInSetAll` → `updateActiveSet` | `ResizableBuiltinSpelling` |
+| `onCautionToggle` | quota 검사 후 `handleCautionToggle` → `updateActiveSet` | `ResizableBuiltinSpelling` |
+| `onCautionSetAll` | quota 검사 후 `handleCautionSetAll` → `updateActiveSet` | `ResizableBuiltinSpelling` |
 | `onCustomRulesChange` | `updateActiveSet({ customRules })` | `ConsistencyPanel` |
 | `onGlobalExcludePhrasesChange` | `updateActiveSet({ globalExcludePhrases })` | `ConsistencyPanel` |
 | `onOpenWelcome` | `setScreen('welcome')` | 대문(책) 버튼 |
 | `initialWorkTab` | `mainWorkTab` state | 탭 초기값 (`useState` + `useEffect`) |
 
-**데이터 흐름:** 토글·일관성 규칙 변경 → App inline handler → `updateActiveSet` → `useRuleSets.scheduleRuleSetsSave` → `localStorage` (400ms debounce).
+**데이터 흐름:** 토글·일관성 규칙 변경 → `useRuleSets` 토글 핸들러(`handleBuiltInToggle` 등) → `updateActiveSet` → `scheduleRuleSetsSave` → `localStorage` (400ms debounce).
 
 ---
 
@@ -78,7 +78,7 @@
 
 ```
 사용자 토글/규칙 편집
-  → App: onBuiltInToggle / onCautionToggle / onCustomRulesChange / …
+  → App: handleBuiltInToggle / handleCautionToggle / onCustomRulesChange / …
   → useRuleSets.updateActiveSet(patch)
   → scheduleRuleSetsSave (400ms)
   → ruleSetsStorage.saveRuleSets + saveActiveSetId
