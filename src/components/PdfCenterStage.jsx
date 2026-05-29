@@ -145,6 +145,22 @@ export default function PdfCenterStage({
           {sessionHint}
         </p>
       )}
+      {showAdvisory && (
+        <div className="pdf-center-stage__advisory" role="status">
+          {loadAdvisory.map((line) => (
+            <p key={line} className="pdf-center-stage__advisory-line">
+              {line}
+            </p>
+          ))}
+          <button
+            type="button"
+            className="link-btn pdf-center-stage__advisory-dismiss"
+            onClick={() => setAdvisoryDismissed(true)}
+          >
+            확인
+          </button>
+        </div>
+      )}
       {uploadFailed && (
         <p className="pdf-center-stage__upload-fail">
           텍스트 선택이 가능한
@@ -227,22 +243,6 @@ export default function PdfCenterStage({
           </div>
         ) : (
           <div className="pdf-ready-panel">
-            {showAdvisory && (
-              <div className="pdf-center-stage__advisory" role="status">
-                {loadAdvisory.map((line) => (
-                  <p key={line} className="pdf-center-stage__advisory-line">
-                    {line}
-                  </p>
-                ))}
-                <button
-                  type="button"
-                  className="link-btn pdf-center-stage__advisory-dismiss"
-                  onClick={() => setAdvisoryDismissed(true)}
-                >
-                  확인
-                </button>
-              </div>
-            )}
             <div className="pdf-ready-file">
               <span className="pdf-ready-file__icon" aria-hidden>
                 <FileText size={24} strokeWidth={1.5} />

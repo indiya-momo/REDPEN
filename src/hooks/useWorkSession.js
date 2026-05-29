@@ -45,7 +45,9 @@ export function useWorkSession(pdf, ruleCheck) {
     setIsProcessing,
     setProgress,
     setLoadError,
+    setLoadAdvisory,
     loadPdfFromFile,
+    applyExtractValidation,
     resetPdfDocument,
     clearFileHandle,
     canPersist,
@@ -157,8 +159,6 @@ export function useWorkSession(pdf, ruleCheck) {
         const doc = await loadPdfFromBuffer(saved.pdfBuffer);
         if (!mounted.current || isRestoreStale(generation)) return;
 
-        setPdf(doc);
-
         const page = Math.min(
           Math.max(1, saved.currentPage ?? 1),
           doc.numPages,
@@ -172,7 +172,14 @@ export function useWorkSession(pdf, ruleCheck) {
         });
         if (!mounted.current || isRestoreStale(generation)) return;
 
-        setPageTexts(pages);
+        const applied = await applyExtractValidation(doc, pages);
+        if (!mounted.current || isRestoreStale(generation)) return;
+        if (!applied.ok) {
+          setSessionHint(null);
+          await clearWorkSession();
+          return;
+        }
+
         setSessionHint(
           staleRules
             ? `복원됨 · ${saved.fileName} — 규칙이 바뀌어 맞춤법 결과는 비웠습니다. 「검사 실행」을 다시 누르세요.`
@@ -210,6 +217,7 @@ export function useWorkSession(pdf, ruleCheck) {
     setIsProcessing,
     setProgress,
     setLoadError,
+    applyExtractValidation,
     isRestoreStale,
   ]);
 
