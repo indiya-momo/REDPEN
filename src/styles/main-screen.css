@@ -689,7 +689,7 @@
 .panel-left input[type='checkbox'] {
   accent-color: var(--accent-terracotta);
 }
-.app-version-badge {
+.panel-left > .app-version-badge {
   flex-shrink: 0;
   padding: 8px 10px;
   font-size: 0.62rem;
