@@ -385,7 +385,8 @@ button {
   padding-right: 12px;
 }
 
-.spelling-tab-layout .results-panel--spelling {
+.spelling-tab-layout .results-panel--spelling,
+.panel-left-work-scroll .results-panel--consistency {
   --results-panel-inset-x: 18px;
   background: var(--results-stage-bg);
 }
@@ -396,11 +397,18 @@ button {
 .spelling-tab-layout .results-panel--spelling .results-panel-footer,
 .spelling-tab-layout .results-panel--spelling .results-empty-hint,
 .spelling-tab-layout .results-panel--spelling .current-page-status,
-.spelling-tab-layout .results-panel--spelling .printed-page-setup {
+.spelling-tab-layout .results-panel--spelling .printed-page-setup,
+.panel-left-work-scroll .results-panel--consistency .results-header,
+.panel-left-work-scroll .results-panel--consistency .result-card,
+.panel-left-work-scroll .results-panel--consistency .results-panel-footer,
+.panel-left-work-scroll .results-panel--consistency .results-empty-hint,
+.panel-left-work-scroll .results-panel--consistency .current-page-status,
+.panel-left-work-scroll .results-panel--consistency .printed-page-setup {
   padding-inline: var(--results-panel-inset-x);
 }
 
-.spelling-tab-layout .results-panel--spelling .printed-page-setup {
+.spelling-tab-layout .results-panel--spelling .printed-page-setup,
+.panel-left-work-scroll .results-panel--consistency .printed-page-setup {
   margin-inline: 0;
 }
 
@@ -2142,6 +2150,11 @@ details[open] > summary .details-chevron {
   padding: var(--space-3xs) var(--space-md-tight);
   border-radius: var(--radius-ui-sm);
   background: var(--color-surface);
+}
+
+.result-count--zero {
+  color: var(--color-text-subtle);
+  opacity: 0.85;
 }
 
 .result-detail {
@@ -3958,10 +3971,13 @@ details[open] > summary .details-chevron {
 
 .welcome-gate__bottom-notes {
   width: min(100%, var(--welcome-content-max));
+  margin-inline: auto;
   margin-top: calc(0.55rem * var(--welcome-scale));
   padding-top: calc(0.7rem * var(--welcome-scale));
   padding-left: var(--welcome-step-pad-x);
+  padding-right: var(--welcome-step-pad-x);
   border-top: 1px solid var(--welcome-border-soft);
+  text-align: center;
 }
 
 .welcome-gate__editor-note-anchor {
@@ -4043,7 +4059,8 @@ details[open] > summary .details-chevron {
   grid-template-columns: 1fr 1fr;
   gap: calc(0.75rem * var(--welcome-scale));
   width: min(100%, var(--welcome-content-max));
-  margin-bottom: calc(0.85rem * var(--welcome-scale));
+  margin-inline: auto;
+  margin-bottom: calc(0.425rem * var(--welcome-scale));
 }
 
 .welcome-gate__panel {
@@ -4051,6 +4068,7 @@ details[open] > summary .details-chevron {
   border-radius: var(--radius-ui);
   background: var(--welcome-surface);
   border: 1px solid var(--welcome-border-soft);
+  text-align: center;
 }
 
 .welcome-gate__panel--do {
@@ -4071,8 +4089,12 @@ details[open] > summary .details-chevron {
 }
 
 .welcome-gate__panel ul {
+  --welcome-panel-pad-x: calc(1rem * var(--welcome-scale));
   margin: 0;
-  padding-left: calc(1rem * var(--welcome-scale));
+  margin-inline: calc(var(--welcome-panel-pad-x) * -0.2);
+  padding-inline: calc(var(--welcome-panel-pad-x) * 0.2);
+  list-style-position: inside;
+  box-sizing: border-box;
   font-size: calc(0.78rem * var(--welcome-scale));
   line-height: 1.55;
   color: var(--welcome-text-muted);
@@ -4088,8 +4110,9 @@ details[open] > summary .details-chevron {
   align-items: stretch;
   gap: calc(0.7rem * var(--welcome-scale));
   width: min(100%, var(--welcome-content-max));
+  margin-inline: auto;
   margin-bottom: calc(0.65rem * var(--welcome-scale));
-  padding: calc(0.85rem * var(--welcome-scale)) 0 0;
+  padding: calc(0.425rem * var(--welcome-scale)) 0 0;
   border-top: 1px solid var(--welcome-border-soft);
 }
 
@@ -4135,29 +4158,34 @@ details[open] > summary .details-chevron {
 .welcome-gate__step {
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
   height: 100%;
-  padding: calc(0.72rem * var(--welcome-scale)) var(--welcome-step-pad-x);
+  min-height: calc(2.45rem * var(--welcome-scale));
+  padding-block: calc(0.36rem * var(--welcome-scale));
+  padding-inline: var(--welcome-step-pad-x);
   border-radius: var(--radius-ui);
   background: rgba(0, 0, 0, 0.22);
   border: 1px solid var(--welcome-border-soft);
   min-width: 0;
+  text-align: center;
 }
 
 .welcome-gate__step-title {
-  margin: 0 0 calc(0.35rem * var(--welcome-scale));
+  margin: 0;
   font-family: var(--font-family-body-brand);
-  font-size: calc(0.8rem * var(--welcome-scale));
-  font-weight: 700;
-  line-height: 1.25;
-  color: var(--welcome-text);
+  font-size: calc(0.7rem * var(--welcome-scale));
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--welcome-text-muted-strong);
   white-space: nowrap;
 }
 
 .welcome-gate__step-num {
-  font-family: var(--font-family-title);
-  font-size: 1.05em;
-  font-weight: normal;
-  color: var(--welcome-accent);
+  font-family: var(--font-family-body-brand);
+  font-size: 1em;
+  font-weight: 400;
+  color: var(--welcome-text-muted-strong);
 }
 
 .welcome-gate__step p {
@@ -4246,15 +4274,15 @@ details[open] > summary .details-chevron {
 .momo-hero--gate .momo-video {
   position: absolute;
   left: 50%;
-  top: 50%;
+  top: 0;
   width: 124%;
   height: 118%;
   max-width: none;
   max-height: none;
   margin: 0;
-  transform: translate(-50%, -50%);
+  transform: translateX(-50%);
   object-fit: cover;
-  object-position: center 40%;
+  object-position: center top;
   background: #1c1917;
 }
 
@@ -4278,7 +4306,7 @@ details[open] > summary .details-chevron {
   margin-inline: auto;
   flex: 0 0 auto;
   justify-content: center;
-  padding: calc(1rem * var(--welcome-scale)) calc(1.35rem * var(--welcome-scale));
+  padding: calc(0.5rem * var(--welcome-scale)) calc(1.35rem * var(--welcome-scale));
   border-radius: var(--radius-ui);
   font-family: var(--font-family-title);
   font-size: calc(0.95rem * 1.05 * 1.5 * var(--welcome-scale));
@@ -4348,6 +4376,12 @@ details[open] > summary .details-chevron {
   font-size: calc(0.72rem * var(--welcome-scale));
 }
 
+
+.welcome-gate__steps-note--stage strong {
+  color: var(--welcome-text-muted-strong);
+  font-weight: 700;
+}
+
 .app-version-badge--prominent {
   display: flex;
   flex-wrap: wrap;
@@ -4383,36 +4417,146 @@ details[open] > summary .details-chevron {
   color: rgba(245, 240, 230, 0.35);
 }
 
+/* 대문 — 모바일 목업 흐름: 제목 → 액자 → 카드 → 단계 → 안내 → CTA */
 @media (max-width: 960px) {
-  .welcome-gate__layout {
-    grid-template-columns: 1fr;
-    padding-top: calc(1.5rem * var(--welcome-scale));
-    padding-bottom: calc(3.5rem * var(--welcome-scale));
-  }
-
-  .welcome-gate__copy {
-    max-width: none;
-    order: 2;
-  }
-
-  .welcome-gate__stage {
-    order: 1;
-    min-height: auto;
-    padding: calc(1rem * var(--welcome-scale)) 0 calc(0.5rem * var(--welcome-scale));
-  }
-
   .welcome-gate {
-    --welcome-stack-width: min(98vw, calc(26.75rem * var(--welcome-scale)));
+    --welcome-scale: 1.05;
+    --welcome-gutter: max(16px, 1.25rem);
+    --welcome-stack-width: 100%;
+    --welcome-content-max: 100%;
+  }
+
+  .welcome-gate__layout {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: calc(0.85rem * var(--welcome-scale));
+    box-sizing: border-box;
+    width: 100%;
+    padding-top: calc(1.25rem * var(--welcome-scale));
+    padding-bottom: calc(0.7875rem * var(--welcome-scale));
+    padding-inline: var(--welcome-gutter);
+  }
+
+  .welcome-gate__copy,
+  .welcome-gate__stage,
+  .welcome-gate__stage-stack {
+    display: contents;
+  }
+
+  .welcome-gate__editor-note-anchor {
+    display: none;
+  }
+
+  .welcome-gate__header {
+    order: 1;
+    width: var(--welcome-content-max);
+    max-width: 100%;
+    text-align: center;
+    justify-items: center;
+  }
+
+  .welcome-gate__header h1 {
+    line-height: 1.48;
+    letter-spacing: 0.015em;
+  }
+
+  .welcome-gate__lead {
+    text-align: center;
+    line-height: 1.55;
+    gap: calc(0.21rem * var(--welcome-scale));
+  }
+
+  .welcome-gate__portrait {
+    order: 2;
+    width: var(--welcome-stack-width);
+    /* 리드 ↔ 액자: 레이아웃 gap(0.85rem) 보정해 총 0.5rem */
+    margin-top: calc(0.5rem - 0.85rem * var(--welcome-scale));
+  }
+
+  /* 본문(하는 일 ~ 3단계): 좌측 정렬 — 히어로(타이틀·액자·CTA)만 중앙 */
+  .welcome-gate__panels {
+    order: 3;
+    width: var(--welcome-content-max);
+    max-width: 100%;
+    margin-bottom: calc(0.25rem * var(--welcome-scale));
+  }
+
+  .welcome-gate__panel {
+    text-align: left;
+    padding: calc(1.05rem * var(--welcome-scale)) calc(0.9rem * var(--welcome-scale));
+    border-radius: var(--radius-ui-lg);
+  }
+
+  .welcome-gate__panel ul {
+    list-style-position: outside;
+    margin-inline: 0;
+    padding-inline: 0;
+    padding-left: calc(1.1rem * var(--welcome-scale));
+  }
+
+  .welcome-gate__steps {
+    order: 4;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: var(--welcome-content-max);
+    max-width: 100%;
+    margin-bottom: calc(0.105rem * var(--welcome-scale));
+    margin-top: calc(-0.425rem * var(--welcome-scale));
+    padding-top: calc(0.175rem * var(--welcome-scale));
+    gap: calc(0.35rem * var(--welcome-scale));
+  }
+
+  .welcome-gate__bottom-notes {
+    display: none;
+  }
+
+  .welcome-gate__stage-cta {
+    order: 6;
+    width: var(--welcome-content-max);
+    max-width: 100%;
+    /* 3번 박스 ↔ 입장하기: 이전 간격의 60% (gap 0.85rem + margin 보정) */
+    margin-top: calc(-0.4rem * var(--welcome-scale));
+    margin-bottom: max(5.6px, env(safe-area-inset-bottom, 0px));
+  }
+
+  .welcome-gate .btn-welcome-primary.welcome-gate__start {
+    width: 100%;
+    min-height: 48px;
+    padding-block: 12px;
+    padding-inline: calc(1.35rem * var(--welcome-scale));
+    font-size: calc(0.95rem * 1.15 * var(--welcome-scale));
+    line-height: 1.25;
+    align-items: center;
+  }
+
+  .welcome-gate__steps-note--stage {
+    margin-top: calc(0.45rem * var(--welcome-scale));
+  }
+
+  .welcome-gate__version {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: none;
+    padding-top: calc(0.2625rem * var(--welcome-scale));
+    padding-inline: var(--welcome-gutter);
+  }
+
+  .welcome-gate__version-row {
+    justify-content: center;
   }
 }
 
 @media (max-width: 640px) {
   .welcome-gate__panels {
-    grid-template-columns: 1fr;
+    gap: calc(0.55rem * var(--welcome-scale));
   }
 
-  .welcome-gate__steps {
-    grid-template-columns: 1fr;
+  .welcome-gate__panel ul {
+    font-size: calc(0.72rem * var(--welcome-scale));
+  }
+
+  .welcome-gate__step-title {
+    white-space: nowrap;
   }
 }
 

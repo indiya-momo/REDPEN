@@ -6,6 +6,7 @@ import {
   findActiveGroup,
   groupKey,
   isResultGroupVisible,
+  mergeConsistencyZeroFindGroups,
   resultVisibilityKey,
 } from '../lib/checkResultUtils.js';
 import {
@@ -216,14 +217,18 @@ export function useRuleCheck({
           },
         );
         allErrors.push(...errors);
-        scopeResults = grouped;
-        setConsistencyResults(grouped);
+        const withZeroRows = mergeConsistencyZeroFindGroups(
+          grouped,
+          consistencyActiveRules,
+        );
+        scopeResults = withZeroRows;
+        setConsistencyResults(withZeroRows);
         setConsistencyCheckDone(true);
         visibility = {
           ...visibility,
-          ...defaultVisibilityForGroups(grouped, 'consistency'),
+          ...defaultVisibilityForGroups(withZeroRows, 'consistency'),
         };
-        const inst = grouped[0]?.instances[0] ?? null;
+        const inst = withZeroRows.find((g) => g.instances.length > 0)?.instances[0] ?? null;
         if (inst) {
           first = inst;
           setConsistencySelected(inst);
