@@ -5325,8 +5325,8 @@ details[open] > summary .details-chevron {
     --momo-room-layout-max: 100%;
     --momo-room-guestbook-scale: 1;
     --momo-room-journal-box-scale: 1;
-    --momo-room-journal-v-scale: 1;
-    --momo-room-journal-text-scale: 1;
+    --momo-room-journal-v-scale: 0.75;
+    --momo-room-journal-text-scale: 0.75;
     padding-inline: var(--momo-room-gutter);
     overflow-x: hidden;
   }
@@ -5353,27 +5353,43 @@ details[open] > summary .details-chevron {
   }
 
   .momo-room__title-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
     justify-content: center;
+    gap: 0.35rem;
+    width: auto;
+    max-width: 100%;
+    margin-inline: auto;
+  }
+
+  .momo-room__title {
+    flex: 0 1 auto;
+  }
+
+  .momo-room__book-fallback {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    width: auto;
+    box-sizing: border-box;
+    min-width: 0;
+    min-height: 0;
+    margin: 0;
+    padding: 0.275rem;
+    gap: 0;
+  }
+
+  .momo-room__book-fallback svg {
+    width: 1.05rem;
+    height: 1.05rem;
   }
 
   .momo-room__scene {
     order: 2;
     width: 100%;
     align-self: center;
-  }
-
-  .momo-room__book-fallback {
-    order: 3;
-    display: inline-flex;
-    grid-column: unset;
-    align-self: center;
-    width: auto;
-    box-sizing: border-box;
-    min-width: 44px;
-    min-height: 44px;
-    margin-top: 0;
-    padding: 0.55rem;
-    gap: 0;
   }
 
   .momo-room__guestbook {
@@ -5399,6 +5415,8 @@ details[open] > summary .details-chevron {
     justify-content: center;
     width: 100%;
     margin-top: 0.15rem;
+    /* 홈 인디케이터·하단 스와이프와 겹치지 않도록 여유 확보 */
+    padding-bottom: max(1rem, calc(env(safe-area-inset-bottom, 0px) + 0.75rem));
   }
 
   .momo-room__book-hotspot {

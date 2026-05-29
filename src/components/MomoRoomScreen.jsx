@@ -280,6 +280,15 @@ export default function MomoRoomScreen({ onClose }) {
           <p className="momo-room__eyebrow">◆ 어서오세요 ◆</p>
           <div className="momo-room__title-row">
             <h1 className="momo-room__title">모모의 방</h1>
+            <button
+              type="button"
+              className="momo-room__book-fallback"
+              onClick={openStory}
+              aria-label="책장의 작은 책 — 이야기 읽기"
+              title="작은 책"
+            >
+              <BookOpen size={20} strokeWidth={2.2} aria-hidden />
+            </button>
           </div>
           <p className="momo-room__lead">
             이곳은 모모와 집사의 비밀 공간입니다
@@ -405,16 +414,6 @@ export default function MomoRoomScreen({ onClose }) {
             title="작은 책"
           />
         </figure>
-
-        <button
-          type="button"
-          className="momo-room__book-fallback"
-          onClick={openStory}
-          aria-label="책장의 작은 책 — 이야기 읽기"
-          title="작은 책"
-        >
-          <BookOpen size={20} strokeWidth={2.2} aria-hidden />
-        </button>
       </div>
 
       {storyOpen && page && (
