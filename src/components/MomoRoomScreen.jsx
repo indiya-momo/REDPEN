@@ -1,12 +1,32 @@
-import { useCallback, useEffect, useState } from 'react';
-import { ArrowLeft, BookOpen, X } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { ArrowLeft, BookOpen, Volume2, VolumeX, X } from 'lucide-react';
 import roomLibraryImg from '../assets/welcome/welcome_library2.png';
 import { momoRoomStoryPages } from '../data/momoRoomStory.js';
+import { publicAssetUrl } from '../lib/publicAssetUrl.js';
 
 const GUESTBOOK_KEY = 'momo-room-guestbook-v1';
 const GUESTBOOK_USER_KEY = 'momo-room-guestbook-user-id';
 const GUESTBOOK_MAX_CHARS = 50;
 const ROOM_EXIT_MS = 360;
+const AMBIENT_MUTED_KEY = 'momo-room-ambient-muted';
+const CANDLE_AMBIENT_VOLUME = 0.08;
+const BOOK_GLOW_WAIT_MIN_MS = 15_000;
+const BOOK_GLOW_WAIT_MAX_MS = 45_000;
+const BOOK_GLOW_FIRST_MIN_MS = 6_000;
+const BOOK_GLOW_FIRST_MAX_MS = 14_000;
+
+function loadAmbientMuted() {
+  try {
+    return localStorage.getItem(AMBIENT_MUTED_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+/** @returns {number} */
+function randomBetween(min, max) {
+  return min + Math.random() * (max - min);
+}
 
 /** @returns {{ id: string, name: string, message: string, createdAt: string, authorId?: string }[]} */
 function loadGuestbook() {
@@ -59,6 +79,9 @@ export default function MomoRoomScreen({ onClose }) {
   const [guestName, setGuestName] = useState('');
   const [guestMessage, setGuestMessage] = useState('');
   const [guestbookNotice, setGuestbookNotice] = useState('');
+  const [bookGlow, setBookGlow] = useState(null);
+  const [ambientMuted, setAmbientMuted] = useState(() => loadAmbientMuted());
+  const candleAudioRef = useRef(null);
 
   const page = momoRoomStoryPages[storyPage];
   const isLastPage = storyPage >= momoRoomStoryPages.length - 1;
@@ -108,6 +131,104 @@ export default function MomoRoomScreen({ onClose }) {
       return changed ? next : prev;
     });
   }, [guestbookUserId]);
+
+  // 의자 위 작은 책 — 아주 가끔 금박처럼 은은하게 반짝
+  useEffect(() => {
+    if (storyOpen) {
+      setBookGlow(null);
+      return undefined;
+    }
+
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reducedMotion) return undefined;
+
+    /** @type {number[]} */
+    const timers = [];
+    let cancelled = false;
+
+    const addTimer = (fn, ms) => {
+      timers.push(window.setTimeout(fn, ms));
+    };
+
+    const scheduleCycle = (firstRun) => {
+      if (cancelled) return;
+
+      const waitMs = firstRun
+        ? randomBetween(BOOK_GLOW_FIRST_MIN_MS, BOOK_GLOW_FIRST_MAX_MS)
+        : randomBetween(BOOK_GLOW_WAIT_MIN_MS, BOOK_GLOW_WAIT_MAX_MS);
+
+      addTimer(() => {
+        if (cancelled) return;
+
+        const strong = Math.random() < 0.3;
+        const holdMs = strong
+          ? randomBetween(2500, 4000)
+          : randomBetween(1500, 3000);
+
+        setBookGlow(strong ? 'warm' : 'soft');
+
+        addTimer(() => {
+          if (cancelled) return;
+          setBookGlow(null);
+          scheduleCycle(false);
+        }, holdMs);
+      }, waitMs);
+    };
+
+    scheduleCycle(true);
+
+    return () => {
+      cancelled = true;
+      timers.forEach((id) => window.clearTimeout(id));
+    };
+  }, [storyOpen]);
+
+  useEffect(() => {
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!candleAudioRef.current) {
+      candleAudioRef.current = new Audio(publicAssetUrl('welcome/crackling-candle.mp3'));
+      candleAudioRef.current.loop = true;
+      candleAudioRef.current.preload = 'auto';
+    }
+
+    const audio = candleAudioRef.current;
+    audio.volume = CANDLE_AMBIENT_VOLUME;
+
+    const tryPlay = () => {
+      if (ambientMuted || reducedMotion || document.hidden) return;
+      audio.play().catch(() => {});
+    };
+
+    tryPlay();
+
+    const onVisibilityChange = () => {
+      if (document.hidden) {
+        audio.pause();
+        return;
+      }
+      tryPlay();
+    };
+
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      audio.pause();
+      audio.currentTime = 0;
+    };
+  }, [ambientMuted]);
+
+  const toggleAmbient = useCallback(() => {
+    setAmbientMuted((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem(AMBIENT_MUTED_KEY, next ? '1' : '0');
+      } catch {
+        /* ignore */
+      }
+      return next;
+    });
+  }, []);
 
   const submitGuestbook = useCallback(() => {
     const name = guestName.trim();
@@ -163,17 +284,30 @@ export default function MomoRoomScreen({ onClose }) {
               <span className="momo-room__title-actions">
                 <button
                   type="button"
+                  className="momo-room__ambient-toggle"
+                  onClick={toggleAmbient}
+                  aria-label={ambientMuted ? '촛불 소리 켜기' : '촛불 소리 끄기'}
+                  title={ambientMuted ? '촛불 소리 켜기' : '촛불 소리 끄기'}
+                >
+                  {ambientMuted ? (
+                    <VolumeX size={18} strokeWidth={2.2} aria-hidden />
+                  ) : (
+                    <Volume2 size={18} strokeWidth={2.2} aria-hidden />
+                  )}
+                </button>
+                <button
+                  type="button"
                   className="momo-room__close"
                   onClick={handleCloseRoom}
                   aria-label="돌아가기"
                   title="돌아가기"
                 >
-                  <ArrowLeft size={18} strokeWidth={2.2} aria-hidden />
+                  <ArrowLeft size={20} strokeWidth={2.2} aria-hidden />
                 </button>
               </span>
             </div>
             <p className="momo-room__lead">
-              이곳은 모모와 집사가 문장을 살펴보는 비밀스러운 공간입니다
+              이곳은 모모와 집사의 비밀 공간입니다
             </p>
           </div>
 
@@ -250,8 +384,20 @@ export default function MomoRoomScreen({ onClose }) {
             alt="밤, 책상과 창가가 있는 모모의 교정방"
             decoding="async"
           />
+          <span className="momo-room__cloud" aria-hidden />
+          <img
+            className="momo-room__scene-window"
+            src={publicAssetUrl('welcome/welcome_library2_window_front.png')}
+            alt=""
+            aria-hidden
+            decoding="async"
+          />
           <span className="momo-room__light momo-room__light--candle" aria-hidden />
           <span className="momo-room__light momo-room__light--lantern" aria-hidden />
+          <span
+            className={`momo-room__book-glow${bookGlow ? ` momo-room__book-glow--${bookGlow}` : ''}`}
+            aria-hidden
+          />
           <button
             type="button"
             className="momo-room__book-hotspot"
