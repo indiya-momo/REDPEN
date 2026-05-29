@@ -16,7 +16,8 @@
     "sync-spelling": "node scripts/sync-spelling.mjs",
     "sync-caution": "node scripts/sync-caution.mjs",
     "sync-bon-bojo": "node scripts/sync-bon-bojo.mjs",
-    "sync": "npm run sync-spelling && npm run sync-caution && npm run sync-bon-bojo"
+    "sync": "npm run sync-spelling && npm run sync-caution && npm run sync-bon-bojo",
+    "prepare": "husky"
   },
   "dependencies": {
     "lucide-react": "^0.511.0",
@@ -27,6 +28,7 @@
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.5.2",
+    "husky": "^9.1.7",
     "vite": "^6.3.5",
     "vitest": "^4.1.7"
   }
