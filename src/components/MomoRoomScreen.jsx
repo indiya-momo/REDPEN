@@ -295,14 +295,14 @@ export default function MomoRoomScreen({ onClose }) {
               <input
                 type="text"
                 className="momo-room__guestbook-name"
-                placeholder="이름"
+                placeholder="방문자 이름"
                 value={guestName}
                 maxLength={20}
                 onChange={(e) => setGuestName(e.target.value)}
               />
               <textarea
                 className="momo-room__guestbook-input"
-                placeholder="50자까지 가능합니다"
+                placeholder="짧은 흔적을 남겨주세요"
                 value={guestMessage}
                 maxLength={GUESTBOOK_MAX_CHARS}
                 onChange={(e) => setGuestMessage(e.target.value)}
