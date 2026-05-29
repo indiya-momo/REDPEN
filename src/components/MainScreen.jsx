@@ -15,19 +15,54 @@ import { useHighlights } from '../hooks/useHighlights.js';
 import { useResizablePanelWidth } from '../hooks/useResizablePanelWidth.js';
 import { usePrintedPageDisplay } from '../hooks/usePrintedPageDisplay.js';
 import { trackFeedbackOpened } from '../lib/analytics.js';
+import {
+  buildTabEntries,
+  clampPageNumber,
+  countTabTotalFindings,
+  getCenterRunLabel,
+  getSpellingTabLayoutClassName,
+  isTabCheckDone,
+  persistThumbStripOpenPreference,
+  readThumbStripOpenPreference,
+  shouldShowPdfViewer,
+} from '../utils/main-screen-helpers.js';
 
 /**
+ * 검수 메인 화면 (좌측 규칙·결과 / 우측 PDF).
+ *
+ * ## App ↔ MainScreen 계약 — dead props (9개)
+ * 아래 props는 destructure만 하고 본문에서 사용하지 않는다.
+ * 규칙 세트 UI가 “준비 중”이므로 의도적 미배선이며, 안정화 기간 제거 금지.
+ * 상세: project-docs/app-mainscreen-contract.md
+ *
+ * | Dead prop | App 공급 |
+ * |-----------|----------|
+ * | ruleSets, activeSetId | useRuleSets 상태 |
+ * | onSelectRuleSet, onCreateRuleSet, onDuplicateRuleSet, onDeleteRuleSet | useRuleSets CRUD |
+ * | ruleSetSavedAt, onRuleSetNameChange, onSaveRules | 저장·이름 (UI 미연결) |
+ *
+ * **실제 persist:** builtInEnabled / cautionEnabled / customRules / globalExcludePhrases
+ * 변경은 App의 updateActiveSet → autosave 경로 (onSaveRules 불필요).
+ *
  * @param {{
+ *   /** @deadprop 규칙 세트 목록 — UI 미배선. project-docs/app-mainscreen-contract.md */
  *   ruleSets: { id: string, name: string }[],
+ *   /** @deadprop 활성 세트 ID — UI 미배선 */
  *   activeSetId: string,
+ *   /** @deadprop 세트 선택 — UI 미배선 */
  *   onSelectRuleSet: (id: string) => void,
+ *   /** @deadprop 세트 생성 — UI 미배선 */
  *   onCreateRuleSet: () => void,
+ *   /** @deadprop 세트 복제 — UI 미배선 */
  *   onDuplicateRuleSet: () => void,
+ *   /** @deadprop 세트 삭제 — UI 미배선 */
  *   onDeleteRuleSet: () => void,
+ *   /** @deadprop 마지막 명시 저장 시각 — UI 미배선 */
  *   ruleSetSavedAt?: string,
  *   builtInEnabled: Record<string, boolean>,
  *   customRules: import('../lib/ruleTypes.js').Rule[],
  *   globalExcludePhrases: string[],
+ *   /** @deadprop 세트 이름 변경 — UI 미배선 (autosave는 updateActiveSet 경로) */
  *   onRuleSetNameChange: (name: string) => void,
  *   onBuiltInToggle: (find: string) => void,
  *   onBuiltInSetAll: (enabled: boolean) => void,
@@ -36,6 +71,7 @@ import { trackFeedbackOpened } from '../lib/analytics.js';
  *   onCautionSetAll: (enabled: boolean) => void,
  *   onCustomRulesChange: (rules: import('../lib/ruleTypes.js').Rule[]) => void,
  *   onGlobalExcludePhrasesChange: (phrases: string[]) => void,
+ *   /** @deadprop 명시 저장 — UI 미배선 (autosave는 updateActiveSet 경로) */
  *   onSaveRules: () => void,
  *   onOpenWelcome: () => void,
  *   initialWorkTab?: 'spelling' | 'consistency',
@@ -66,13 +102,7 @@ export default function MainScreen({
 }) {
   const [workTab, setWorkTab] = useState(initialWorkTab);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
-  const [thumbStripOpen, setThumbStripOpen] = useState(() => {
-    try {
-      return localStorage.getItem('pdf-proofread-thumb-strip-open') === '1';
-    } catch {
-      return false;
-    }
-  });
+  const [thumbStripOpen, setThumbStripOpen] = useState(readThumbStripOpenPreference);
   const afterCheckRef = useRef(async () => false);
   const { panelStyle, handleRef, startDrag } = useResizablePanelWidth();
 
@@ -113,24 +143,18 @@ export default function MainScreen({
     setWorkTab(initialWorkTab);
   }, [initialWorkTab]);
 
-  const tabEntries = useMemo(() => {
-    /** @type {{ group: import('../lib/ruleEngine.js').GroupedResult, source: 'spelling' | 'consistency' }[]} */
-    const entries = [];
-    if (workTab === 'spelling') {
-      for (const group of ruleCheck.spellingResults) {
-        entries.push({ group, source: 'spelling' });
-      }
-    } else {
-      for (const group of ruleCheck.consistencyResults) {
-        entries.push({ group, source: 'consistency' });
-      }
-    }
-    return entries;
-  }, [workTab, ruleCheck.spellingResults, ruleCheck.consistencyResults]);
+  const tabEntries = useMemo(
+    () =>
+      buildTabEntries(
+        workTab,
+        ruleCheck.spellingResults,
+        ruleCheck.consistencyResults,
+      ),
+    [workTab, ruleCheck.spellingResults, ruleCheck.consistencyResults],
+  );
 
   const tabTotalFindings = useMemo(
-    () =>
-      tabEntries.reduce((n, { group }) => n + group.instances.length, 0),
+    () => countTabTotalFindings(tabEntries),
     [tabEntries],
   );
 
@@ -139,10 +163,19 @@ export default function MainScreen({
     workTab,
   );
 
-  const tabCheckDone =
-    workTab === 'spelling'
-      ? ruleCheck.spellingCheckDone
-      : ruleCheck.consistencyCheckDone;
+  const tabCheckDone = useMemo(
+    () =>
+      isTabCheckDone(
+        workTab,
+        ruleCheck.spellingCheckDone,
+        ruleCheck.consistencyCheckDone,
+      ),
+    [
+      workTab,
+      ruleCheck.spellingCheckDone,
+      ruleCheck.consistencyCheckDone,
+    ],
+  );
 
   function switchTab(tab) {
     setWorkTab(tab);
@@ -151,8 +184,7 @@ export default function MainScreen({
 
   const goToPdfPage = (pageNum) => {
     if (!pdf.pdf) return;
-    const target = Math.min(pdf.pdf.numPages, Math.max(1, pageNum));
-    ruleCheck.goToPage(target);
+    ruleCheck.goToPage(clampPageNumber(pageNum, pdf.pdf.numPages));
   };
 
   useEffect(() => {
@@ -194,11 +226,7 @@ export default function MainScreen({
   const toggleThumbStrip = () => {
     setThumbStripOpen((open) => {
       const next = !open;
-      try {
-        localStorage.setItem('pdf-proofread-thumb-strip-open', next ? '1' : '0');
-      } catch {
-        /* ignore */
-      }
+      persistThumbStripOpenPreference(next);
       return next;
     });
   };
@@ -244,13 +272,21 @@ export default function MainScreen({
     />
   ) : null;
 
-  const showPdfViewer = Boolean(pdf.pdf) && tabCheckDone;
+  const showPdfViewer = useMemo(
+    () => shouldShowPdfViewer(Boolean(pdf.pdf), tabCheckDone),
+    [pdf.pdf, tabCheckDone],
+  );
   const isPreUpload = !pdf.pdf;
 
-  const centerRunLabel =
-    pdf.isProcessing && pdf.progress?.phase === 'check'
-      ? '검사 중…'
-      : '검수 실행';
+  const centerRunLabel = useMemo(
+    () => getCenterRunLabel(pdf.isProcessing, pdf.progress),
+    [pdf.isProcessing, pdf.progress],
+  );
+
+  const spellingTabLayoutClassName = useMemo(
+    () => getSpellingTabLayoutClassName(tabCheckDone),
+    [tabCheckDone],
+  );
 
   return (
     <div className="layout-main">
@@ -295,7 +331,7 @@ export default function MainScreen({
 
         {workTab === 'spelling' && (
           <div
-            className={`spelling-tab-layout ${tabCheckDone ? 'spelling-tab-layout--with-results' : 'spelling-tab-layout--rules-only'}`}
+            className={spellingTabLayoutClassName}
           >
             {tabCheckDone && (
               <div className="spelling-tab-scroll custom-scrollbar">

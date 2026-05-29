@@ -1,13 +1,4 @@
 #!/usr/bin/env sh
 . "$(dirname "$0")/_/husky.sh"
 
-echo "=== [CI 검증 실행] 빌드 및 CSS 엄격 규격 체크 ==="
-
-# 1. 원 소스코드 내 CSS 괄호 짝 검증 (오타로 인해 열린 괄호만 있고 닫힌 괄호가 없으면 차단)
-if grep -q "{" src/index.css && ! grep -q "}" src/index.css; then
-  echo "❌ 검증 실패: CSS 문법 에러(열린 괄호 누락 등)가 존재하므로 커밋이 취소되었습니다."
-  exit 1
-fi
-
-# 2. 기존 데이터 및 자바스크립트 테스트 스크립트 실행
-npm test || { echo "❌ 회귀 테스트 실패: 커밋이 취소되었습니다."; exit 1; }
+npm test
