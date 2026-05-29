@@ -17,6 +17,7 @@
     "sync-caution": "node scripts/sync-caution.mjs",
     "sync-bon-bojo": "node scripts/sync-bon-bojo.mjs",
     "sync": "npm run sync-spelling && npm run sync-caution && npm run sync-bon-bojo",
+    "optimize-momo-room": "node scripts/optimize-momo-room-library.mjs && node scripts/generate-momo-room-window-front.mjs",
     "prepare": "husky"
   },
   "dependencies": {
@@ -30,6 +31,8 @@
     "@vitejs/plugin-react": "^4.5.2",
     "husky": "^9.1.7",
     "jsdom": "^29.1.1",
+    "pngjs": "^7.0.0",
+    "sharp": "^0.34.5",
     "vite": "^6.3.5",
     "vitest": "^4.1.7"
   }

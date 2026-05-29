@@ -1819,7 +1819,6 @@ details[open] > summary .details-chevron {
   margin-top: 8px;
   font-size: 0.72rem;
 }
-}
 
 /* 목업형 세로 스택 — 모모(위) · 본문(아래) */
 .pdf-center-stage__stack {
@@ -3207,10 +3206,10 @@ details[open] > summary .details-chevron {
    * (1090,300) ↔ (1450,300) 왕복
    */
   --momo-room-canvas-w: 1910;
-  --momo-room-canvas-h: 1310;
-  --momo-room-cloud-x1-px: 1090;
-  --momo-room-cloud-x2-px: 1450;
-  --momo-room-cloud-y-px: 300;
+  --momo-room-canvas-h: 1289;
+  --momo-room-cloud-x1-px: 430;
+  --momo-room-cloud-x2-px: 820;
+  --momo-room-cloud-y-px: 120;
   --momo-room-cloud-size: 6%;
   --momo-room-cloud-opacity: 0.42;
   --momo-room-cloud-drift-sec: 120s;
@@ -3612,6 +3611,7 @@ details[open] > summary .details-chevron {
   min-width: 0;
   align-self: start;
   overflow: hidden;
+  border: 1px solid var(--momo-room-border);
   border-radius: var(--radius-ui);
 }
 
@@ -3621,20 +3621,19 @@ details[open] > summary .details-chevron {
   display: block;
   width: 100%;
   height: auto;
-  border: 1px solid var(--momo-room-border);
-  border-radius: var(--radius-ui);
+  vertical-align: top;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
 }
 
 .momo-room__scene-window {
   position: absolute;
-  top: 0;
-  left: 0;
+  inset: 0;
   z-index: 2;
   display: block;
   width: 100%;
-  height: auto;
+  height: 100%;
+  object-fit: fill;
   pointer-events: none;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
