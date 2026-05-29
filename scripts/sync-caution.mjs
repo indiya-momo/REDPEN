@@ -20,6 +20,7 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { assertValidCautionRules } from '../src/lib/validateDataJson.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
@@ -479,6 +480,8 @@ async function main() {
   }
 
   const payload = { groups };
+  assertValidCautionRules(payload, 'sync-caution output');
+
   const json = `${JSON.stringify(payload, null, 2)}\n`;
   const itemCount = groups.reduce((n, g) => n + g.items.length, 0);
 

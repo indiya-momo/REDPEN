@@ -22,6 +22,7 @@ import {
   parseCsv,
   rowsToObjects,
 } from './sheet-csv.mjs';
+import { assertValidBonBojoRules } from '../src/lib/validateDataJson.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
@@ -155,6 +156,8 @@ if (!groups.length) {
 }
 
 const payload = { groups };
+assertValidBonBojoRules(payload, 'sync-bon-bojo output');
+
 const json = `${JSON.stringify(payload, null, 2)}\n`;
 let tailCount = 0;
 for (const g of groups) {
