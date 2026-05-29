@@ -45,24 +45,16 @@ import {
  * 변경은 App의 updateActiveSet → autosave 경로 (onSaveRules 불필요).
  *
  * @param {{
- *   /** @deadprop 규칙 세트 목록 — UI 미배선. project-docs/app-mainscreen-contract.md */
  *   ruleSets: { id: string, name: string }[],
- *   /** @deadprop 활성 세트 ID — UI 미배선 */
  *   activeSetId: string,
- *   /** @deadprop 세트 선택 — UI 미배선 */
  *   onSelectRuleSet: (id: string) => void,
- *   /** @deadprop 세트 생성 — UI 미배선 */
  *   onCreateRuleSet: () => void,
- *   /** @deadprop 세트 복제 — UI 미배선 */
  *   onDuplicateRuleSet: () => void,
- *   /** @deadprop 세트 삭제 — UI 미배선 */
  *   onDeleteRuleSet: () => void,
- *   /** @deadprop 마지막 명시 저장 시각 — UI 미배선 */
  *   ruleSetSavedAt?: string,
  *   builtInEnabled: Record<string, boolean>,
  *   customRules: import('../lib/ruleTypes.js').Rule[],
  *   globalExcludePhrases: string[],
- *   /** @deadprop 세트 이름 변경 — UI 미배선 (autosave는 updateActiveSet 경로) */
  *   onRuleSetNameChange: (name: string) => void,
  *   onBuiltInToggle: (find: string) => void,
  *   onBuiltInSetAll: (enabled: boolean) => void,
@@ -71,7 +63,6 @@ import {
  *   onCautionSetAll: (enabled: boolean) => void,
  *   onCustomRulesChange: (rules: import('../lib/ruleTypes.js').Rule[]) => void,
  *   onGlobalExcludePhrasesChange: (phrases: string[]) => void,
- *   /** @deadprop 명시 저장 — UI 미배선 (autosave는 updateActiveSet 경로) */
  *   onSaveRules: () => void,
  *   onOpenWelcome: () => void,
  *   initialWorkTab?: 'spelling' | 'consistency',
