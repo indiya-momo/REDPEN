@@ -44,8 +44,31 @@ export function buildTimeLabel() {
   return formatBuildTimeKST(RAW_BUILD_TIME);
 }
 
+/** KST 날짜만 (대문 푸터 등) */
+export function buildDateLabel() {
+  const iso = import.meta.env.DEV
+    ? new Date().toISOString()
+    : RAW_BUILD_TIME || new Date().toISOString();
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  return new Intl.DateTimeFormat('ko-KR', {
+    timeZone: 'Asia/Seoul',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(d);
+}
+
 export function deployModeLabel() {
   return import.meta.env.DEV ? 'dev' : 'pages';
+}
+
+/** v0.1.0 · 날짜 — 시각·빌드ID·기능표식·모드 제외 (대문 푸터) */
+export function versionDateLabel() {
+  const parts = [`v${APP_VERSION}`];
+  const date = buildDateLabel();
+  if (date) parts.push(date);
+  return parts.join(' · ');
 }
 
 export function versionLabel() {

@@ -297,7 +297,6 @@ export default function App() {
       onCreateRuleSet={handleCreateRuleSet}
       onDuplicateRuleSet={handleDuplicateRuleSet}
       onDeleteRuleSet={handleDeleteRuleSet}
-      ruleSetName={activeSet.name}
       ruleSetSavedAt={activeSet.savedAt}
       builtInEnabled={
         activeSet.builtInEnabled ?? builtInEnabledFromSheet()

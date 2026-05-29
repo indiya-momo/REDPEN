@@ -86,15 +86,12 @@ function ResultHeaderSummary({
  *   spellingFindings: number,
  *   builtinFindings?: number,
  *   spacingFindings?: number,
- *   consistencyFindings: number,
  *   spellingCheckDone: boolean,
- *   consistencyCheckDone: boolean,
  *   isGroupVisible: (source: 'spelling' | 'consistency', group: import('../lib/ruleEngine.js').GroupedResult) => boolean,
  *   onToggleVisibility: (source: 'spelling' | 'consistency', group: import('../lib/ruleEngine.js').GroupedResult) => void,
  *   isSameGroupAsSelected: (group: import('../lib/ruleEngine.js').GroupedResult, source: 'spelling' | 'consistency') => boolean,
  *   onSelectGroup: (group: import('../lib/ruleEngine.js').GroupedResult, source: 'spelling' | 'consistency') => void,
  *   onSelectPageInGroup: (pageNum: number, instances: import('../lib/ruleEngine.js').MatchInstance[], source: 'spelling' | 'consistency') => void,
- *   ruleSetName?: string,
  *   onAdditionalCheck?: () => void,
  *   printedPageOffset?: number | null,
  *   printedPagesActive?: boolean,
@@ -122,15 +119,12 @@ export default function CheckResultsPanel({
   spellingFindings,
   builtinFindings = 0,
   spacingFindings = 0,
-  consistencyFindings,
   spellingCheckDone,
-  consistencyCheckDone,
   isGroupVisible,
   onToggleVisibility,
   isSameGroupAsSelected,
   onSelectGroup,
   onSelectPageInGroup,
-  ruleSetName = '',
   onAdditionalCheck,
   printedPageOffset = null,
   printedPagesActive = false,
@@ -144,7 +138,6 @@ export default function CheckResultsPanel({
   onFirstPageSingleChange,
   formatPageLabel: formatPageLabelProp,
 }) {
-  const setLabel = ruleSetName.trim() || '규칙 세트';
   const pageLabel = formatPageLabelProp ?? formatSystemPageLabel;
 
   const spellingTone =
@@ -188,13 +181,6 @@ export default function CheckResultsPanel({
           <CurrentPageFindingText visibleOnCurrentPage={visibleOnCurrentPage} />
         </p>
       )}
-      {viewSource === 'consistency' &&
-        consistencyCheckDone &&
-        consistencyFindings > 0 && (
-          <p className="results-category-summary">
-            일관성 검사[{setLabel}] {consistencyFindings}개
-          </p>
-        )}
       {entries.length > 0 ? (
         <>
           <ResultHeaderSummary
@@ -289,8 +275,12 @@ export default function CheckResultsPanel({
                           />
                           <span className="result-visibility-label">표시</span>
                         </label>
-                        {count > 1 ? (
-                          <span className="result-count">{count}개</span>
+                        {isConsistency || count > 1 ? (
+                          <span
+                            className={`result-count${count === 0 ? ' result-count--zero' : ''}`}
+                          >
+                            {count}개
+                          </span>
                         ) : null}
                       </div>
                     </div>

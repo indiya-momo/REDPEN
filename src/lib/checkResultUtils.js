@@ -1,5 +1,17 @@
 import { SPELLING_RULES_FP } from './builtInRules.js';
 import { CAUTION_RULES_FP } from './cautionRules.js';
+import { ruleDisplayLabel } from './regexFromFind.js';
+
+/** 문자열 찾기·공통 문자열 찾기 — 발견 0건이어도 결과 목록에 표시 */
+const CONSISTENCY_ZERO_RESULT_KINDS = new Set([
+  'compound-find',
+  'phrase-slot-find',
+]);
+
+/** @param {{ find: string, replace: string }} row */
+function consistencyResultKey(row) {
+  return `${row.find}\0${row.replace}`;
+}
 
 /**
  * @param {{
@@ -96,4 +108,38 @@ export function findResultSource(spellingResults, consistencyResults, inst) {
     return 'consistency';
   }
   return 'spelling';
+}
+
+/**
+ * 일관성 검사 — 활성 문자열/공통문자열 규칙 중 매칭이 없으면 instances=[] 그룹 추가
+ * @param {import('./ruleEngine.js').GroupedResult[]} results
+ * @param {import('./ruleTypes.js').Rule[]} activeRules
+ */
+export function mergeConsistencyZeroFindGroups(results, activeRules) {
+  const merged = [...results];
+  const seen = new Set(merged.map((g) => consistencyResultKey(g)));
+
+  for (const rule of activeRules) {
+    if (!rule.enabled) continue;
+    if (!CONSISTENCY_ZERO_RESULT_KINDS.has(rule.patternKind ?? '')) continue;
+
+    const key = consistencyResultKey(rule);
+    if (seen.has(key)) continue;
+    seen.add(key);
+
+    merged.push({
+      find: rule.find,
+      replace: rule.replace,
+      label: rule.label?.trim() || ruleDisplayLabel(rule),
+      category: 'consistency',
+      instances: [],
+    });
+  }
+
+  return merged.sort((a, b) => {
+    const pa = a.instances[0]?.pageNum ?? Number.POSITIVE_INFINITY;
+    const pb = b.instances[0]?.pageNum ?? Number.POSITIVE_INFINITY;
+    if (pa !== pb) return pa - pb;
+    return a.label.localeCompare(b.label, 'ko');
+  });
 }

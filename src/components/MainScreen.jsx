@@ -24,7 +24,6 @@ import { trackFeedbackOpened } from '../lib/analytics.js';
  *   onCreateRuleSet: () => void,
  *   onDuplicateRuleSet: () => void,
  *   onDeleteRuleSet: () => void,
- *   ruleSetName: string,
  *   ruleSetSavedAt?: string,
  *   builtInEnabled: Record<string, boolean>,
  *   customRules: import('../lib/ruleTypes.js').Rule[],
@@ -49,7 +48,6 @@ export default function MainScreen({
   onCreateRuleSet,
   onDuplicateRuleSet,
   onDeleteRuleSet,
-  ruleSetName,
   ruleSetSavedAt,
   builtInEnabled,
   customRules,
@@ -219,15 +217,12 @@ export default function MainScreen({
       spellingFindings={ruleCheck.spellingFindings}
       builtinFindings={ruleCheck.builtinFindings}
       spacingFindings={ruleCheck.spacingFindings}
-      consistencyFindings={ruleCheck.consistencyFindings}
       spellingCheckDone={ruleCheck.spellingCheckDone}
-      consistencyCheckDone={ruleCheck.consistencyCheckDone}
       isGroupVisible={ruleCheck.isGroupVisible}
       onToggleVisibility={ruleCheck.toggleResultVisibility}
       isSameGroupAsSelected={ruleCheck.isSameGroupAsSelected}
       onSelectGroup={ruleCheck.selectGroup}
       onSelectPageInGroup={ruleCheck.selectPageInGroup}
-      ruleSetName={ruleSetName}
       onAdditionalCheck={
         workTab === 'consistency' ? ruleCheck.backToConsistencySetup : undefined
       }
