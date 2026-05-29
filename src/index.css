@@ -1794,6 +1794,33 @@ details[open] > summary .details-chevron {
   text-align: center;
 }
 
+.pdf-center-stage__advisory {
+  width: min(22rem, 100%);
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: #7a5c28;
+  background: #fff9ed;
+  border: 1px solid #e8d4a8;
+  border-radius: var(--radius-ui);
+  text-align: center;
+}
+
+.pdf-center-stage__advisory-line {
+  margin: 0;
+}
+
+.pdf-center-stage__advisory-line + .pdf-center-stage__advisory-line {
+  margin-top: 4px;
+}
+
+.pdf-center-stage__advisory-dismiss {
+  margin-top: 8px;
+  font-size: 0.72rem;
+}
+}
+
 /* 목업형 세로 스택 — 모모(위) · 본문(아래) */
 .pdf-center-stage__stack {
   display: flex;

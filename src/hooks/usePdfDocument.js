@@ -26,9 +26,12 @@ export function usePdfDocument() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(null);
   const [loadError, setLoadError] = useState(null);
+  /** @type {[string[] | null, React.Dispatch<React.SetStateAction<string[] | null>>]} */
+  const [loadAdvisory, setLoadAdvisory] = useState(null);
 
   const loadPdfFromFile = useCallback(async (file) => {
     setLoadError(null);
+    setLoadAdvisory(null);
     setPdfFileName(file.name);
     setPdfByteLength(file.size);
     setPdf(null);
@@ -52,9 +55,11 @@ export function usePdfDocument() {
     const textExtracted = validation.ok;
     if (!validation.ok) {
       setLoadError(validation.message);
+      setLoadAdvisory(null);
     } else {
       setPdf(doc);
       setPageTexts(pages);
+      setLoadAdvisory(validation.advisory?.lines ?? null);
     }
     trackPdfOpened({
       pageCount: doc.numPages,
@@ -74,6 +79,7 @@ export function usePdfDocument() {
     setPageTexts([]);
     setCurrentPage(1);
     setLoadError(null);
+    setLoadAdvisory(null);
   }, []);
 
   const clearFileHandle = useCallback(() => {
@@ -118,6 +124,8 @@ export function usePdfDocument() {
     setProgress,
     loadError,
     setLoadError,
+    loadAdvisory,
+    setLoadAdvisory,
     setPdf,
     setPdfFileName,
     setPageTexts,

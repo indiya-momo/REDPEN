@@ -435,6 +435,7 @@ export default function MainScreen({
               pageTextsLength={pdf.pageTexts.length}
               fileHandleActive={pdf.fileHandleActive}
               loadError={pdf.loadError}
+              loadAdvisory={pdf.loadAdvisory}
               sessionHint={session.sessionHint}
               runLabel={centerRunLabel}
               showReady={Boolean(pdf.pdf)}

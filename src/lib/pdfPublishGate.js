@@ -12,8 +12,12 @@ export const LOW_QUALITY_MESSAGE =
 export const PROBE_FAIL_MESSAGE =
   '이 PDF에서는 검수 규칙이 동작하지 않습니다. 인디자인 텍스트 PDF로 다시보내 주세요.';
 
-export const HANGUL_EXTRACTION_FAIL_MESSAGE =
-  '한글 본문을 읽지 못했습니다. 인디자인에서 직접 내보낸 텍스트 PDF인지 확인해 주세요. iOS·미리보기·인쇄→PDF로 다시 만든 파일은 검수가 되지 않을 수 있습니다.';
+/** @type {readonly [string, string, string]} */
+export const PDF_RESAVED_ADVISORY_LINES = [
+  '이 PDF는 다른 프로그램에서 재저장되었을 가능성이 있습니다',
+  '문자 읽기의 차이로 검수 품질이 저하될 수 있습니다',
+  '인디자인 원본 PDF로 교체를 권장드립니다',
+];
 
 const MIN_CHARS_FOR_PROBE = 800;
 const MIN_NON_WS_FOR_HANGUL_CHECK = 400;
@@ -204,14 +208,45 @@ export function assessHangulExtraction(pages) {
     return { ok: true, skipped: false, ...stats, reason: 'latin_primary' };
   }
   if (stats.hangul === 0) {
-    return { ok: false, skipped: false, ...stats, reason: 'hangul_missing' };
+    return { ok: true, skipped: false, ...stats, reason: 'hangul_missing' };
   }
   return { ok: true, skipped: false, ...stats, reason: 'ok' };
 }
 
 /**
+ * @param {{ looksInDesign: boolean, producer?: string, creator?: string }} producerHints
+ */
+export function looksResavedPdf(producerHints) {
+  const combined =
+    `${producerHints.producer ?? ''} ${producerHints.creator ?? ''}`.toLowerCase();
+  if (producerHints.looksInDesign && !/quartz pdfcontext|pdfkit|ios version/i.test(combined)) {
+    return false;
+  }
+  return /quartz pdfcontext|pdfkit|ios version|mac os x|preview|microsoft print|ghostscript|pdftools|pdf-xchange|skia\/pdf/i.test(
+    combined,
+  );
+}
+
+/**
+ * @param {{ looksInDesign: boolean, producer?: string, creator?: string }} producerHints
+ * @param {ReturnType<typeof assessHangulExtraction>} hangulCheck
+ */
+export function getPdfResaveAdvisory(producerHints, hangulCheck) {
+  const resaved = looksResavedPdf(producerHints);
+  const hangulRisk =
+    !hangulCheck.skipped &&
+    hangulCheck.hangul === 0 &&
+    hangulCheck.reason !== 'latin_primary';
+  if (!resaved && !hangulRisk) return null;
+  return {
+    reason: resaved ? 'resaved_pdf' : 'hangul_extraction',
+    lines: PDF_RESAVED_ADVISORY_LINES,
+  };
+}
+
+/**
  * @param {{
- *   producerHints: { looksInDesign: boolean },
+ *   producerHints: { looksInDesign: boolean, producer?: string, creator?: string },
  *   pages: PageData[],
  * }} input
  */
@@ -225,18 +260,16 @@ export function validatePublishablePdf({ producerHints, pages }) {
   }
 
   const hangulCheck = assessHangulExtraction(pages);
-  if (!hangulCheck.ok) {
-    return {
-      ok: false,
-      reason: 'hangul_extraction',
-      message: HANGUL_EXTRACTION_FAIL_MESSAGE,
-      hangulCheck,
-    };
-  }
+  const advisory = getPdfResaveAdvisory(producerHints, hangulCheck);
 
   return {
     ok: true,
-    reason: producerHints.looksInDesign ? 'ok' : 'ok_no_indesign_meta',
+    reason: advisory
+      ? advisory.reason
+      : producerHints.looksInDesign
+        ? 'ok'
+        : 'ok_no_indesign_meta',
     hangulCheck,
+    advisory,
   };
 }

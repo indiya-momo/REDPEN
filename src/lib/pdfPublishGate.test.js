@@ -3,10 +3,12 @@ import {
   assessExtractionQuality,
   assessHangulExtraction,
   countHangul,
+  getPdfResaveAdvisory,
+  looksResavedPdf,
+  PDF_RESAVED_ADVISORY_LINES,
   runProbeMatches,
   scorePageExtractionQuality,
   validatePublishablePdf,
-  HANGUL_EXTRACTION_FAIL_MESSAGE,
 } from './pdfPublishGate.js';
 
 describe('pdfPublishGate', () => {
@@ -90,7 +92,7 @@ describe('pdfPublishGate', () => {
     expect(result.reason).toBe('latin_primary');
   });
 
-  it('assessHangulExtraction flags broken Korean extraction', () => {
+  it('assessHangulExtraction flags broken Korean extraction without blocking', () => {
     const pages = [
       {
         pageNum: 1,
@@ -104,11 +106,33 @@ describe('pdfPublishGate', () => {
       },
     ];
     const result = assessHangulExtraction(pages);
-    expect(result.ok).toBe(false);
+    expect(result.ok).toBe(true);
     expect(result.reason).toBe('hangul_missing');
   });
 
-  it('validatePublishablePdf rejects PDF with no readable hangul in Korean-like corpus', () => {
+  it('looksResavedPdf detects iOS Quartz PDFContext', () => {
+    expect(
+      looksResavedPdf({
+        looksInDesign: false,
+        producer: 'iOS Version 26.3.1 (Build 23D8133) Quartz PDFContext',
+        creator: '',
+      }),
+    ).toBe(true);
+  });
+
+  it('getPdfResaveAdvisory returns user-facing lines for resaved PDF', () => {
+    const advisory = getPdfResaveAdvisory(
+      {
+        looksInDesign: false,
+        producer: 'iOS Version 26.3.1 Quartz PDFContext',
+        creator: '',
+      },
+      { skipped: false, hangul: 120, reason: 'hangul_ok' },
+    );
+    expect(advisory?.lines).toEqual(PDF_RESAVED_ADVISORY_LINES);
+  });
+
+  it('validatePublishablePdf allows PDF with advisory instead of rejection', () => {
     const pages = [
       {
         pageNum: 1,
@@ -117,11 +141,14 @@ describe('pdfPublishGate', () => {
       },
     ];
     const result = validatePublishablePdf({
-      producerHints: { looksInDesign: false },
+      producerHints: {
+        looksInDesign: false,
+        producer: 'iOS Version 26.3.1 Quartz PDFContext',
+        creator: '',
+      },
       pages,
     });
-    expect(result.ok).toBe(false);
-    expect(result.reason).toBe('hangul_extraction');
-    expect(result.message).toBe(HANGUL_EXTRACTION_FAIL_MESSAGE);
+    expect(result.ok).toBe(true);
+    expect(result.advisory?.lines).toEqual(PDF_RESAVED_ADVISORY_LINES);
   });
 });
