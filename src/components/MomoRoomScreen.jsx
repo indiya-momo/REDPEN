@@ -277,39 +277,13 @@ export default function MomoRoomScreen({ onClose }) {
     <div className={`momo-room ${isClosing ? 'momo-room--closing' : ''}`}>
       <div className="momo-room__layout">
         <aside className="momo-room__side">
-          <div className="momo-room__side-top">
-            <p className="momo-room__eyebrow">◆ 어서오세요 ◆</p>
-            <div className="momo-room__title-row">
-              <h1 className="momo-room__title">모모의 방</h1>
-              <span className="momo-room__title-actions">
-                <button
-                  type="button"
-                  className="momo-room__ambient-toggle"
-                  onClick={toggleAmbient}
-                  aria-label={ambientMuted ? '촛불 소리 켜기' : '촛불 소리 끄기'}
-                  title={ambientMuted ? '촛불 소리 켜기' : '촛불 소리 끄기'}
-                >
-                  {ambientMuted ? (
-                    <VolumeX size={18} strokeWidth={2.2} aria-hidden />
-                  ) : (
-                    <Volume2 size={18} strokeWidth={2.2} aria-hidden />
-                  )}
-                </button>
-                <button
-                  type="button"
-                  className="momo-room__close"
-                  onClick={handleCloseRoom}
-                  aria-label="돌아가기"
-                  title="돌아가기"
-                >
-                  <ArrowLeft size={20} strokeWidth={2.2} aria-hidden />
-                </button>
-              </span>
-            </div>
-            <p className="momo-room__lead">
-              이곳은 모모와 집사의 비밀 공간입니다
-            </p>
+          <p className="momo-room__eyebrow">◆ 어서오세요 ◆</p>
+          <div className="momo-room__title-row">
+            <h1 className="momo-room__title">모모의 방</h1>
           </div>
+          <p className="momo-room__lead">
+            이곳은 모모와 집사의 비밀 공간입니다
+          </p>
 
           <section className="momo-room__guestbook" aria-label="방명록">
             <div className="momo-room__guestbook-head">
@@ -375,6 +349,31 @@ export default function MomoRoomScreen({ onClose }) {
               <footer>-모모 집사-</footer>
             </blockquote>
           </div>
+
+          <span className="momo-room__title-actions">
+            <button
+              type="button"
+              className="momo-room__ambient-toggle"
+              onClick={toggleAmbient}
+              aria-label={ambientMuted ? '촛불 소리 켜기' : '촛불 소리 끄기'}
+              title={ambientMuted ? '촛불 소리 켜기' : '촛불 소리 끄기'}
+            >
+              {ambientMuted ? (
+                <VolumeX size={18} strokeWidth={2.2} aria-hidden />
+              ) : (
+                <Volume2 size={18} strokeWidth={2.2} aria-hidden />
+              )}
+            </button>
+            <button
+              type="button"
+              className="momo-room__close"
+              onClick={handleCloseRoom}
+              aria-label="돌아가기"
+              title="돌아가기"
+            >
+              <ArrowLeft size={20} strokeWidth={2.2} aria-hidden />
+            </button>
+          </span>
         </aside>
 
         <figure className="momo-room__scene">
@@ -411,9 +410,10 @@ export default function MomoRoomScreen({ onClose }) {
           type="button"
           className="momo-room__book-fallback"
           onClick={openStory}
+          aria-label="책장의 작은 책 — 이야기 읽기"
+          title="작은 책"
         >
-          <BookOpen size={16} aria-hidden />
-          책장의 작은 책
+          <BookOpen size={20} strokeWidth={2.2} aria-hidden />
         </button>
       </div>
 
