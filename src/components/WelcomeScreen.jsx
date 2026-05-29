@@ -56,22 +56,21 @@ export default function WelcomeScreen({ onStart, onOpenRoom }) {
             </section>
           </div>
 
-          <div className="welcome-gate__steps" aria-label="시작 방법">
-            <article className="welcome-gate__step">
-              <h3 className="welcome-gate__step-title">
-                <span className="welcome-gate__step-num">1.</span>원고 열기
-              </h3>
-            </article>
-            <article className="welcome-gate__step">
-              <h3 className="welcome-gate__step-title">
-                <span className="welcome-gate__step-num">2.</span>기준 선택
-              </h3>
-            </article>
-            <article className="welcome-gate__step">
-              <h3 className="welcome-gate__step-title">
-                <span className="welcome-gate__step-num">3.</span>검사 실행
-              </h3>
-            </article>
+          <div className="welcome-gate__steps" aria-label="이용 절차 안내">
+            <ol className="welcome-gate__step-flow">
+              <li className="welcome-gate__step">
+                <span className="welcome-gate__step-num">1</span>
+                <span className="welcome-gate__step-label">원고 열기</span>
+              </li>
+              <li className="welcome-gate__step">
+                <span className="welcome-gate__step-num">2</span>
+                <span className="welcome-gate__step-label">기준 선택</span>
+              </li>
+              <li className="welcome-gate__step">
+                <span className="welcome-gate__step-num">3</span>
+                <span className="welcome-gate__step-label">검사 실행</span>
+              </li>
+            </ol>
           </div>
 
           <div className="welcome-gate__bottom-notes">
@@ -119,7 +118,7 @@ export default function WelcomeScreen({ onStart, onOpenRoom }) {
                 className="btn-welcome-primary welcome-gate__start"
                 onClick={onStart}
               >
-                입장하기
+                살펴보기
               </button>
               <p className="welcome-gate__steps-note welcome-gate__steps-note--stage">
                 현재 인디야는 <strong>PC버전만 지원</strong>합니다

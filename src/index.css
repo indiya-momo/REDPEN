@@ -4105,15 +4105,25 @@ details[open] > summary .details-chevron {
 }
 
 .welcome-gate__steps {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  align-items: stretch;
-  gap: calc(0.7rem * var(--welcome-scale));
   width: min(100%, var(--welcome-content-max));
   margin-inline: auto;
   margin-bottom: calc(0.65rem * var(--welcome-scale));
-  padding: calc(0.425rem * var(--welcome-scale)) 0 0;
-  border-top: 1px solid var(--welcome-border-soft);
+  padding: 0;
+  border-top: none;
+}
+
+.welcome-gate__step-flow {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: center;
+  gap: calc(0.5rem * var(--welcome-scale));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.welcome-gate__step-flow .welcome-gate__step {
+  cursor: default;
 }
 
 .welcome-gate__analytics-note {
@@ -4156,45 +4166,38 @@ details[open] > summary .details-chevron {
 }
 
 .welcome-gate__step {
-  display: flex;
-  flex-direction: column;
+  display: inline-flex;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
-  height: 100%;
-  min-height: calc(2.45rem * var(--welcome-scale));
-  padding-block: calc(0.36rem * var(--welcome-scale));
-  padding-inline: var(--welcome-step-pad-x);
-  border-radius: var(--radius-ui);
-  background: rgba(0, 0, 0, 0.22);
-  border: 1px solid var(--welcome-border-soft);
+  gap: calc(0.2rem * var(--welcome-scale));
   min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
   text-align: center;
 }
 
-.welcome-gate__step-title {
-  margin: 0;
+.welcome-gate__step:not(:first-child)::before {
+  display: none;
+}
+
+.welcome-gate__step-num {
+  font-family: var(--font-family-title);
+  font-size: calc(0.82rem * var(--welcome-scale));
+  font-weight: normal;
+  line-height: 1;
+  color: var(--welcome-accent);
+}
+
+.welcome-gate__step-label {
   font-family: var(--font-family-body-brand);
   font-size: calc(0.7rem * var(--welcome-scale));
   font-weight: 400;
   line-height: 1.5;
   color: var(--welcome-text-muted-strong);
   white-space: nowrap;
-}
-
-.welcome-gate__step-num {
-  font-family: var(--font-family-body-brand);
-  font-size: 1em;
-  font-weight: 400;
-  color: var(--welcome-text-muted-strong);
-}
-
-.welcome-gate__step p {
-  margin: 0;
-  font-size: calc(0.7rem * var(--welcome-scale));
-  line-height: 1.48;
-  letter-spacing: -0.01em;
-  color: var(--welcome-text-muted);
-  word-break: keep-all;
 }
 
 .welcome-gate__stage {
@@ -4434,7 +4437,7 @@ details[open] > summary .details-chevron {
     box-sizing: border-box;
     width: 100%;
     padding-top: calc(1.25rem * var(--welcome-scale));
-    padding-bottom: calc(0.7875rem * var(--welcome-scale));
+    padding-bottom: calc(0.2375rem * var(--welcome-scale));
     padding-inline: var(--welcome-gutter);
   }
 
@@ -4497,13 +4500,28 @@ details[open] > summary .details-chevron {
 
   .welcome-gate__steps {
     order: 4;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
     width: var(--welcome-content-max);
     max-width: 100%;
-    margin-bottom: calc(0.105rem * var(--welcome-scale));
+    margin-bottom: calc(0.315rem * var(--welcome-scale));
     margin-top: calc(-0.425rem * var(--welcome-scale));
-    padding-top: calc(0.175rem * var(--welcome-scale));
-    gap: calc(0.35rem * var(--welcome-scale));
+    padding-top: 0;
+  }
+
+  .welcome-gate__step-flow {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: calc(0.3rem * var(--welcome-scale)) calc(0.4rem * var(--welcome-scale));
+  }
+
+  .welcome-gate__step:not(:first-child)::before {
+    display: inline;
+    margin-right: calc(0.35rem * var(--welcome-scale));
+    font-size: calc(0.65rem * var(--welcome-scale));
+    line-height: 1;
+    color: var(--welcome-accent-muted);
+    content: '→';
   }
 
   .welcome-gate__bottom-notes {
@@ -4514,9 +4532,9 @@ details[open] > summary .details-chevron {
     order: 6;
     width: var(--welcome-content-max);
     max-width: 100%;
-    /* 3번 박스 ↔ 입장하기: 이전 간격의 60% (gap 0.85rem + margin 보정) */
-    margin-top: calc(-0.4rem * var(--welcome-scale));
-    margin-bottom: max(5.6px, env(safe-area-inset-bottom, 0px));
+    /* 인디케이터 ↔ 살펴보기: 이전 대비 3배 (gap 0.85rem + margin 보정) */
+    margin-top: calc(0.5rem * var(--welcome-scale));
+    margin-bottom: max(2px, env(safe-area-inset-bottom, 0px));
   }
 
   .welcome-gate .btn-welcome-primary.welcome-gate__start {
@@ -4537,7 +4555,7 @@ details[open] > summary .details-chevron {
     box-sizing: border-box;
     width: 100%;
     max-width: none;
-    padding-top: calc(0.2625rem * var(--welcome-scale));
+    padding-top: 0;
     padding-inline: var(--welcome-gutter);
   }
 
@@ -4555,8 +4573,9 @@ details[open] > summary .details-chevron {
     font-size: calc(0.72rem * var(--welcome-scale));
   }
 
-  .welcome-gate__step-title {
+  .welcome-gate__step-label {
     white-space: nowrap;
+    font-size: calc(0.64rem * var(--welcome-scale));
   }
 }
 
