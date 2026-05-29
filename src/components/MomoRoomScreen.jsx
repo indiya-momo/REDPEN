@@ -118,20 +118,6 @@ export default function MomoRoomScreen({ onClose }) {
     saveGuestbook(guestbookRows);
   }, [guestbookRows]);
 
-  // 레거시 데이터(작성자 ID 없음)는 현재 브라우저 사용자 소유로 보정
-  // -> 기존에 본인이 남긴 글에도 삭제 버튼이 보이도록 함
-  useEffect(() => {
-    setGuestbookRows((prev) => {
-      let changed = false;
-      const next = prev.map((row) => {
-        if (row.authorId) return row;
-        changed = true;
-        return { ...row, authorId: guestbookUserId };
-      });
-      return changed ? next : prev;
-    });
-  }, [guestbookUserId]);
-
   // 의자 위 작은 책 — 아주 가끔 금박처럼 은은하게 반짝
   useEffect(() => {
     if (storyOpen) {
@@ -261,9 +247,16 @@ export default function MomoRoomScreen({ onClose }) {
     setGuestbookNotice('방명록이 등록되었습니다.');
   }, [guestName, guestMessage, guestbookRows, guestbookUserId]);
 
-  const removeGuestbookRow = useCallback((id) => {
-    setGuestbookRows((prev) => prev.filter((row) => row.id !== id));
-  }, []);
+  const removeGuestbookRow = useCallback(
+    (id) => {
+      setGuestbookRows((prev) =>
+        prev.filter(
+          (row) => !(row.id === id && row.authorId === guestbookUserId),
+        ),
+      );
+    },
+    [guestbookUserId],
+  );
 
   const handleCloseRoom = useCallback(() => {
     if (isClosing) return;
@@ -335,7 +328,7 @@ export default function MomoRoomScreen({ onClose }) {
                 <li key={row.id} className="momo-room__guestbook-item">
                   <p className="momo-room__guestbook-item-name">{row.name}</p>
                   <p className="momo-room__guestbook-item-message">{row.message}</p>
-                  {row.authorId === guestbookUserId ? (
+                  {row.authorId && row.authorId === guestbookUserId ? (
                     <button
                       type="button"
                       className="momo-room__guestbook-delete"

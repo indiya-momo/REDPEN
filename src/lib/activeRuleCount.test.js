@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildCautionCheckRules } from './cautionRules.js';
+import { buildCautionCheckRules, defaultCautionEnabled } from './cautionRules.js';
 import {
   BUILT_IN_QUOTA_RULES,
   BUILT_IN_RULES,
@@ -13,6 +13,13 @@ import {
   isOverMaxRules,
 } from './activeRuleCount.js';
 import { MAX_RULES } from './ruleTypes.js';
+
+/** 맞춤법 한도 테스트 — 기본 켜진 편집자 검토 규칙이 섞이지 않도록 */
+function allCautionDisabled() {
+  return Object.fromEntries(
+    Object.keys(defaultCautionEnabled()).map((id) => [id, false]),
+  );
+}
 
 describe('activeRuleCount', () => {
   it('내장 기본 체크는 시트 enabled 열과 같다', () => {
@@ -29,7 +36,12 @@ describe('activeRuleCount', () => {
         true,
       ]),
     );
-    expect(countSpellingActiveRules({ builtInEnabled: guideOnlyOn })).toBe(0);
+    expect(
+      countSpellingActiveRules({
+        builtInEnabled: guideOnlyOn,
+        cautionEnabled: allCautionDisabled(),
+      }),
+    ).toBe(0);
     expect(countBuiltInGuideActiveRules({ builtInEnabled: guideOnlyOn })).toBe(
       BUILT_IN_RULES.filter((r) => r.countsInQuota === false).length,
     );
@@ -39,9 +51,12 @@ describe('activeRuleCount', () => {
     const builtInOn = Object.fromEntries(
       BUILT_IN_RULES.map((r) => [r.find, true]),
     );
-    expect(countSpellingActiveRules({ builtInEnabled: builtInOn })).toBe(
-      BUILT_IN_QUOTA_RULES.length,
-    );
+    expect(
+      countSpellingActiveRules({
+        builtInEnabled: builtInOn,
+        cautionEnabled: allCautionDisabled(),
+      }),
+    ).toBe(BUILT_IN_QUOTA_RULES.length);
   });
 
   it('띄어쓰기만 켜면 활성 규칙 수에 caution regex 수가 더해짐', () => {

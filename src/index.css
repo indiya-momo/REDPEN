@@ -4932,12 +4932,25 @@ details[open] > summary .details-chevron {
   justify-content: center;
   width: 1.5rem;
   height: 1.5rem;
-  border: 1px solid #fda4af;
+  border: 1px solid rgba(103, 79, 46, 0.58);
   border-radius: var(--radius-ui-sm);
-  background: rgba(127, 29, 29, 0.24);
-  color: #fecdd3;
+  background: rgba(138, 104, 62, 0.92);
+  color: #fff;
   padding: 0;
   cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.momo-room__guestbook-delete:hover {
+  background: rgba(118, 88, 52, 0.94);
+  border-color: rgba(88, 66, 38, 0.72);
+}
+
+.momo-room__guestbook-delete:focus-visible {
+  outline: 2px solid rgba(138, 104, 62, 0.55);
+  outline-offset: 2px;
 }
 
 .momo-room__journal {
