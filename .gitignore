@@ -5,4 +5,5 @@ dist
 .env
 _caution_export.csv
 public/test-pages.pdf
+public/pdfjs/cmaps/
 scripts/browser-thumb-check.mjs

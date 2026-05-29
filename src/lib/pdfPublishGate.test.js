@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
   assessExtractionQuality,
+  assessHangulExtraction,
+  countHangul,
   runProbeMatches,
   scorePageExtractionQuality,
   validatePublishablePdf,
+  HANGUL_EXTRACTION_FAIL_MESSAGE,
 } from './pdfPublishGate.js';
 
 describe('pdfPublishGate', () => {
@@ -67,5 +70,58 @@ describe('pdfPublishGate', () => {
     expect(probes.skipped).toBe(false);
     expect(probes.ok).toBe(true);
     expect(probes.hits).toBeGreaterThanOrEqual(1);
+  });
+
+  it('countHangul counts syllables only', () => {
+    expect(countHangul('abc 우리나라 123')).toBe(4);
+    expect(countHangul('IN THIS ECONOMY')).toBe(0);
+  });
+
+  it('assessHangulExtraction passes Latin-primary PDF without hangul', () => {
+    const pages = [
+      {
+        pageNum: 1,
+        text: 'IN THIS ECONOMY? '.repeat(40) + 'Copyright by Kyla Scanlon.',
+        items: [],
+      },
+    ];
+    const result = assessHangulExtraction(pages);
+    expect(result.ok).toBe(true);
+    expect(result.reason).toBe('latin_primary');
+  });
+
+  it('assessHangulExtraction flags broken Korean extraction', () => {
+    const pages = [
+      {
+        pageNum: 1,
+        text: `${'کંѥં\u0001ࠓড়ɼԃ '.repeat(20)}GDP 2022 vibecession mild Fed`,
+        items: [],
+      },
+      {
+        pageNum: 2,
+        text: 'IN THIS ECONOMY? '.repeat(30),
+        items: [],
+      },
+    ];
+    const result = assessHangulExtraction(pages);
+    expect(result.ok).toBe(false);
+    expect(result.reason).toBe('hangul_missing');
+  });
+
+  it('validatePublishablePdf rejects PDF with no readable hangul in Korean-like corpus', () => {
+    const pages = [
+      {
+        pageNum: 1,
+        text: `${'کંѥં '.repeat(120)}2022 2023 chart label Fed GDP mortgage`,
+        items: [],
+      },
+    ];
+    const result = validatePublishablePdf({
+      producerHints: { looksInDesign: false },
+      pages,
+    });
+    expect(result.ok).toBe(false);
+    expect(result.reason).toBe('hangul_extraction');
+    expect(result.message).toBe(HANGUL_EXTRACTION_FAIL_MESSAGE);
   });
 });

@@ -12,7 +12,11 @@ export const LOW_QUALITY_MESSAGE =
 export const PROBE_FAIL_MESSAGE =
   '이 PDF에서는 검수 규칙이 동작하지 않습니다. 인디자인 텍스트 PDF로 다시보내 주세요.';
 
+export const HANGUL_EXTRACTION_FAIL_MESSAGE =
+  '한글 본문을 읽지 못했습니다. 인디자인에서 직접 내보낸 텍스트 PDF인지 확인해 주세요. iOS·미리보기·인쇄→PDF로 다시 만든 파일은 검수가 되지 않을 수 있습니다.';
+
 const MIN_CHARS_FOR_PROBE = 800;
+const MIN_NON_WS_FOR_HANGUL_CHECK = 400;
 const MIN_PROBE_HITS = 1;
 
 /**
@@ -156,6 +160,56 @@ export function runProbeMatches(pages) {
 }
 
 /**
+ * @param {string} text
+ */
+export function countHangul(text) {
+  return (text.match(/[\uAC00-\uD7A3]/g) ?? []).length;
+}
+
+/**
+ * @param {PageData[]} pages
+ */
+export function analyzeTextCorpus(pages) {
+  let corpus = '';
+  for (const page of pages) {
+    corpus += page.text ?? '';
+  }
+  const nonWs = corpus.replace(/\s/g, '').length;
+  const hangul = countHangul(corpus);
+  const letters = (corpus.match(/\p{L}/gu) ?? []).length;
+  const latin = (corpus.match(/[A-Za-z]/g) ?? []).length;
+  const latinRatio = latin / Math.max(letters, 1);
+  const mojibakeHints =
+    (corpus.match(/[\u0600-\u06FF\u0590-\u05FF]/g) ?? []).length;
+
+  return { nonWs, hangul, letters, latin, latinRatio, mojibakeHints };
+}
+
+/**
+ * @param {PageData[]} pages
+ */
+export function assessHangulExtraction(pages) {
+  const stats = analyzeTextCorpus(pages);
+  if (stats.nonWs < MIN_NON_WS_FOR_HANGUL_CHECK) {
+    return { ok: true, skipped: true, ...stats, reason: 'too_short' };
+  }
+  if (stats.hangul >= 1) {
+    return { ok: true, skipped: false, ...stats, reason: 'hangul_ok' };
+  }
+  if (
+    stats.hangul === 0 &&
+    stats.latinRatio >= 0.85 &&
+    stats.mojibakeHints < 15
+  ) {
+    return { ok: true, skipped: false, ...stats, reason: 'latin_primary' };
+  }
+  if (stats.hangul === 0) {
+    return { ok: false, skipped: false, ...stats, reason: 'hangul_missing' };
+  }
+  return { ok: true, skipped: false, ...stats, reason: 'ok' };
+}
+
+/**
  * @param {{
  *   producerHints: { looksInDesign: boolean },
  *   pages: PageData[],
@@ -170,8 +224,19 @@ export function validatePublishablePdf({ producerHints, pages }) {
     };
   }
 
+  const hangulCheck = assessHangulExtraction(pages);
+  if (!hangulCheck.ok) {
+    return {
+      ok: false,
+      reason: 'hangul_extraction',
+      message: HANGUL_EXTRACTION_FAIL_MESSAGE,
+      hangulCheck,
+    };
+  }
+
   return {
     ok: true,
     reason: producerHints.looksInDesign ? 'ok' : 'ok_no_indesign_meta',
+    hangulCheck,
   };
 }
