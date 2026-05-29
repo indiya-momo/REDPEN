@@ -362,6 +362,8 @@
 
 ### 7. 베타 운영 가능성
 
+> **테스터용 가이드:** [`private-beta-guide.md`](./private-beta-guide.md)
+
 **제한적 비공개 베타 가능** — 전제:
 
 - toggle persistence·JSON sync는 신뢰 가능

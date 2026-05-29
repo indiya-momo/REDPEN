@@ -1,13 +1,21 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { defaultCautionEnabled } from '../lib/cautionRules.js';
+import {
+  defaultCautionEnabled,
+  CAUTION_SEARCH_RULES,
+} from '../lib/cautionRules.js';
 import {
   SPELLING_RULES_FP,
+  BUILT_IN_RULES,
+  countsTowardSpellingQuota,
   builtInEnabledFromSheet,
 } from '../lib/builtInRules.js';
 import {
+  countActiveRules,
   countBuiltInActiveRules,
   countConsistencyActiveRules,
   countSpacingReviewActiveRules,
+  isOverMaxRules,
+  maxRulesExceededMessage,
 } from '../lib/activeRuleCount.js';
 import { trackRulesetSaved } from '../lib/analytics.js';
 import {
@@ -234,6 +242,120 @@ export function useRuleSets() {
     alert('규칙 세트가 저장되었습니다.');
   }, [flushRuleSets]);
 
+  const handleBuiltInToggle = useCallback(
+    (find) => {
+      const activeSet = ruleSetsRef.current.find(
+        (s) => s.id === activeSetIdRef.current,
+      );
+      if (!activeSet) return;
+      const prev = activeSet.builtInEnabled ?? builtInEnabledFromSheet();
+      const on = prev[find] === true;
+      const nextBuiltIn = { ...prev, [find]: !on };
+      if (
+        !on &&
+        isOverMaxRules(
+          countActiveRules({
+            builtInEnabled: nextBuiltIn,
+            cautionEnabled: activeSet.cautionEnabled,
+            customRules: activeSet.customRules,
+          }),
+        )
+      ) {
+        alert(maxRulesExceededMessage());
+        return;
+      }
+      updateActiveSet({ builtInEnabled: nextBuiltIn });
+    },
+    [updateActiveSet],
+  );
+
+  const handleBuiltInSetAll = useCallback(
+    (enabled) => {
+      const activeSet = ruleSetsRef.current.find(
+        (s) => s.id === activeSetIdRef.current,
+      );
+      if (!activeSet) return;
+      const prev = activeSet.builtInEnabled ?? builtInEnabledFromSheet();
+      const nextBuiltIn = { ...prev };
+      for (const r of BUILT_IN_RULES) {
+        if (countsTowardSpellingQuota(r)) {
+          nextBuiltIn[r.find] = enabled;
+        }
+      }
+      if (
+        enabled &&
+        isOverMaxRules(
+          countActiveRules({
+            builtInEnabled: nextBuiltIn,
+            cautionEnabled: activeSet.cautionEnabled,
+            customRules: activeSet.customRules,
+          }),
+        )
+      ) {
+        alert(maxRulesExceededMessage());
+        return;
+      }
+      updateActiveSet({ builtInEnabled: nextBuiltIn });
+    },
+    [updateActiveSet],
+  );
+
+  const handleCautionToggle = useCallback(
+    (id) => {
+      const activeSet = ruleSetsRef.current.find(
+        (s) => s.id === activeSetIdRef.current,
+      );
+      if (!activeSet) return;
+      const prev = activeSet.cautionEnabled ?? defaultCautionEnabled();
+      const on = prev[id] === true;
+      const nextCaution = { ...prev, [id]: !on };
+      if (
+        !on &&
+        isOverMaxRules(
+          countActiveRules({
+            builtInEnabled: activeSet.builtInEnabled,
+            cautionEnabled: nextCaution,
+            customRules: activeSet.customRules,
+          }),
+        )
+      ) {
+        alert(maxRulesExceededMessage());
+        return;
+      }
+      updateActiveSet({ cautionEnabled: nextCaution });
+    },
+    [updateActiveSet],
+  );
+
+  const handleCautionSetAll = useCallback(
+    (enabled) => {
+      const activeSet = ruleSetsRef.current.find(
+        (s) => s.id === activeSetIdRef.current,
+      );
+      if (!activeSet) return;
+      const prev = activeSet.cautionEnabled ?? defaultCautionEnabled();
+      const nextCaution = { ...prev };
+      for (const rule of CAUTION_SEARCH_RULES) {
+        nextCaution[rule.id] = enabled;
+      }
+      if (
+        enabled &&
+        isOverMaxRules(
+          countActiveRules({
+            builtInEnabled: activeSet.builtInEnabled,
+            cautionEnabled: nextCaution,
+            customRules: activeSet.customRules,
+          }),
+        )
+      ) {
+        alert(maxRulesExceededMessage());
+        return;
+      }
+      updateActiveSet({ cautionEnabled: nextCaution });
+    },
+    [updateActiveSet],
+  );
+
   return {
     rulesReady,
     activeSet,
@@ -245,5 +367,9 @@ export function useRuleSets() {
     handleDuplicateRuleSet,
     handleDeleteRuleSet,
     handleSaveRules,
+    handleBuiltInToggle,
+    handleBuiltInSetAll,
+    handleCautionToggle,
+    handleCautionSetAll,
   };
 }

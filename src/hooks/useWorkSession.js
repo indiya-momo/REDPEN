@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { restoreCheckResults } from '../lib/checkResultUtils.js';
 import { SPELLING_RULES_FP } from '../lib/builtInRules.js';
 import { CAUTION_RULES_FP } from '../lib/cautionRules.js';
@@ -20,6 +20,16 @@ import {
 export function useWorkSession(pdf, ruleCheck) {
   const [sessionHint, setSessionHint] = useState(null);
   const [isRestoring, setIsRestoring] = useState(true);
+  const restoreGenerationRef = useRef(0);
+
+  const invalidateRestore = useCallback(() => {
+    restoreGenerationRef.current += 1;
+  }, []);
+
+  const isRestoreStale = useCallback(
+    (generation) => generation !== restoreGenerationRef.current,
+    [],
+  );
 
   const {
     pdfBufferRef,
@@ -101,11 +111,12 @@ export function useWorkSession(pdf, ruleCheck) {
   ]);
 
   useEffect(() => {
+    const generation = restoreGenerationRef.current;
     const mounted = { current: true };
 
     (async () => {
       const saved = await loadWorkSession();
-      if (!mounted.current) return;
+      if (!mounted.current || isRestoreStale(generation)) return;
       if (!saved) {
         setIsRestoring(false);
         return;
@@ -144,7 +155,7 @@ export function useWorkSession(pdf, ruleCheck) {
         setRestoredSelection(saved);
 
         const doc = await loadPdfFromBuffer(saved.pdfBuffer);
-        if (!mounted.current) return;
+        if (!mounted.current || isRestoreStale(generation)) return;
 
         setPdf(doc);
 
@@ -155,11 +166,11 @@ export function useWorkSession(pdf, ruleCheck) {
         setCurrentPage(page);
 
         const pages = await extractAllPagesText(doc, (current, total) => {
-          if (mounted.current) {
+          if (mounted.current && !isRestoreStale(generation)) {
             setProgress({ current, total, phase: 'restore' });
           }
         });
-        if (!mounted.current) return;
+        if (!mounted.current || isRestoreStale(generation)) return;
 
         setPageTexts(pages);
         setSessionHint(
@@ -168,7 +179,7 @@ export function useWorkSession(pdf, ruleCheck) {
             : `복원됨 · ${saved.fileName} (${new Date(saved.savedAt).toLocaleString('ko-KR')})`,
         );
       } catch (err) {
-        if (mounted.current) {
+        if (mounted.current && !isRestoreStale(generation)) {
           setLoadError(
             err instanceof Error ? err.message : '이전 작업 복원 실패',
           );
@@ -176,7 +187,7 @@ export function useWorkSession(pdf, ruleCheck) {
         }
         await clearWorkSession();
       } finally {
-        if (mounted.current) {
+        if (mounted.current && !isRestoreStale(generation)) {
           setIsProcessing(false);
           setProgress(null);
           setIsRestoring(false);
@@ -199,6 +210,7 @@ export function useWorkSession(pdf, ruleCheck) {
     setIsProcessing,
     setProgress,
     setLoadError,
+    isRestoreStale,
   ]);
 
   useEffect(() => {
@@ -367,11 +379,21 @@ export function useWorkSession(pdf, ruleCheck) {
     ) {
       return;
     }
+    invalidateRestore();
+    setIsRestoring(false);
+    setIsProcessing(false);
+    setProgress(null);
     await clearWorkSession();
     resetPdfDocument();
     clearAllCheckState();
     setSessionHint(null);
-  }, [resetPdfDocument, clearAllCheckState]);
+  }, [
+    invalidateRestore,
+    resetPdfDocument,
+    clearAllCheckState,
+    setIsProcessing,
+    setProgress,
+  ]);
 
   const handleEndWork = useCallback(async () => {
     if (
@@ -381,12 +403,23 @@ export function useWorkSession(pdf, ruleCheck) {
     ) {
       return;
     }
+    invalidateRestore();
+    setIsRestoring(false);
+    setIsProcessing(false);
+    setProgress(null);
     await clearWorkSession();
     resetPdfDocument();
     clearAllCheckState();
     setSessionHint(null);
     setLoadError(null);
-  }, [resetPdfDocument, clearAllCheckState, setLoadError]);
+  }, [
+    invalidateRestore,
+    resetPdfDocument,
+    clearAllCheckState,
+    setLoadError,
+    setIsProcessing,
+    setProgress,
+  ]);
 
   return {
     sessionHint,

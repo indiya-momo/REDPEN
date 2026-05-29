@@ -4,18 +4,10 @@ import WelcomeScreen from './components/WelcomeScreen.jsx';
 import MomoRoomScreen from './components/MomoRoomScreen.jsx';
 import {
   defaultCautionEnabled,
-  CAUTION_SEARCH_RULES,
 } from './lib/cautionRules.js';
 import {
-  BUILT_IN_RULES,
-  countsTowardSpellingQuota,
   builtInEnabledFromSheet,
 } from './lib/builtInRules.js';
-import {
-  countActiveRules,
-  isOverMaxRules,
-  maxRulesExceededMessage,
-} from './lib/activeRuleCount.js';
 import { useRuleSets } from './hooks/useRuleSets.js';
 
 export default function App() {
@@ -41,6 +33,10 @@ export default function App() {
     handleDuplicateRuleSet,
     handleDeleteRuleSet,
     handleSaveRules,
+    handleBuiltInToggle,
+    handleBuiltInSetAll,
+    handleCautionToggle,
+    handleCautionSetAll,
   } = useRuleSets();
 
   if (screen === 'room') {
@@ -87,88 +83,10 @@ export default function App() {
       cautionEnabled={
         activeSet.cautionEnabled ?? defaultCautionEnabled()
       }
-      onBuiltInToggle={(find) => {
-        const prev = activeSet.builtInEnabled ?? builtInEnabledFromSheet();
-        const on = prev[find] === true;
-        const nextBuiltIn = { ...prev, [find]: !on };
-        if (
-          !on &&
-          isOverMaxRules(
-            countActiveRules({
-              builtInEnabled: nextBuiltIn,
-              cautionEnabled: activeSet.cautionEnabled,
-              customRules: activeSet.customRules,
-            }),
-          )
-        ) {
-          alert(maxRulesExceededMessage());
-          return;
-        }
-        updateActiveSet({ builtInEnabled: nextBuiltIn });
-      }}
-      onBuiltInSetAll={(enabled) => {
-        const prev = activeSet.builtInEnabled ?? builtInEnabledFromSheet();
-        const nextBuiltIn = { ...prev };
-        for (const r of BUILT_IN_RULES) {
-          if (countsTowardSpellingQuota(r)) {
-            nextBuiltIn[r.find] = enabled;
-          }
-        }
-        if (
-          enabled &&
-          isOverMaxRules(
-            countActiveRules({
-              builtInEnabled: nextBuiltIn,
-              cautionEnabled: activeSet.cautionEnabled,
-              customRules: activeSet.customRules,
-            }),
-          )
-        ) {
-          alert(maxRulesExceededMessage());
-          return;
-        }
-        updateActiveSet({ builtInEnabled: nextBuiltIn });
-      }}
-      onCautionToggle={(id) => {
-        const prev = activeSet.cautionEnabled ?? defaultCautionEnabled();
-        const on = prev[id] === true;
-        const nextCaution = { ...prev, [id]: !on };
-        if (
-          !on &&
-          isOverMaxRules(
-            countActiveRules({
-              builtInEnabled: activeSet.builtInEnabled,
-              cautionEnabled: nextCaution,
-              customRules: activeSet.customRules,
-            }),
-          )
-        ) {
-          alert(maxRulesExceededMessage());
-          return;
-        }
-        updateActiveSet({ cautionEnabled: nextCaution });
-      }}
-      onCautionSetAll={(enabled) => {
-        const prev = activeSet.cautionEnabled ?? defaultCautionEnabled();
-        const nextCaution = { ...prev };
-        for (const rule of CAUTION_SEARCH_RULES) {
-          nextCaution[rule.id] = enabled;
-        }
-        if (
-          enabled &&
-          isOverMaxRules(
-            countActiveRules({
-              builtInEnabled: activeSet.builtInEnabled,
-              cautionEnabled: nextCaution,
-              customRules: activeSet.customRules,
-            }),
-          )
-        ) {
-          alert(maxRulesExceededMessage());
-          return;
-        }
-        updateActiveSet({ cautionEnabled: nextCaution });
-      }}
+      onBuiltInToggle={handleBuiltInToggle}
+      onBuiltInSetAll={handleBuiltInSetAll}
+      onCautionToggle={handleCautionToggle}
+      onCautionSetAll={handleCautionSetAll}
       onCustomRulesChange={(customRules) => updateActiveSet({ customRules })}
       onGlobalExcludePhrasesChange={(globalExcludePhrases) =>
         updateActiveSet({ globalExcludePhrases })
