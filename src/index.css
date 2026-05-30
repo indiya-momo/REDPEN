@@ -3202,17 +3202,25 @@ details[open] > summary .details-chevron {
   --momo-room-side-w: calc(26.25rem * var(--momo-room-scale));
   --momo-room-layout-max: min(96vw, calc(2000px * var(--momo-room-scale)));
   /*
-   * ▼ 모모의 방 — 구름 (디자인 캔버스 1910×1310 px)
-   * (1090,300) ↔ (1450,300) 왕복
+   * ▼ 모모의 방 — welcome_library_16.png (1071×720)
+   * 창틀 가로폭 (607,182)~(829,182)
+   * 구름 (622,168) → (814,168) — 240s
    */
-  --momo-room-canvas-w: 1910;
-  --momo-room-canvas-h: 1289;
-  --momo-room-cloud-x1-px: 430;
-  --momo-room-cloud-x2-px: 820;
-  --momo-room-cloud-y-px: 120;
-  --momo-room-cloud-size: 6%;
-  --momo-room-cloud-opacity: 0.42;
-  --momo-room-cloud-drift-sec: 120s;
+  --momo-room-canvas-w: 1071;
+  --momo-room-canvas-h: 720;
+  --momo-room-cloud-x1-px: 622;
+  --momo-room-cloud-x2-px: 814;
+  --momo-room-cloud-y-px: 168;
+  --momo-room-cloud-size-a-px: 50;
+  --momo-room-cloud-size-b-px: 41;
+  --momo-room-cloud-b-offset-x-px: 10;
+  --momo-room-cloud-b-offset-y-px: 4;
+  --momo-room-cloud-drift-sec: 240s;
+  --momo-room-window-frame-left-px: 607;
+  --momo-room-window-frame-right-px: 829;
+  --momo-room-window-sky-y0-px: 45;
+  --momo-room-window-sky-y1-px: 210;
+  --momo-room-window-glass-inset-px: 5;
 
   position: relative;
   box-sizing: border-box;
@@ -3613,23 +3621,85 @@ details[open] > summary .details-chevron {
   overflow: hidden;
   border: 1px solid var(--momo-room-border);
   border-radius: var(--radius-ui);
+  aspect-ratio: var(--momo-room-canvas-w) / var(--momo-room-canvas-h);
+  width: 100%;
 }
 
 .momo-room__scene-img {
-  position: relative;
+  position: absolute;
+  inset: 0;
   z-index: 0;
   display: block;
   width: 100%;
-  height: auto;
-  vertical-align: top;
+  height: 100%;
+  object-fit: fill;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
+}
+
+.momo-room__cloud-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+  clip-path: inset(
+    calc(
+      (var(--momo-room-window-sky-y0-px) + var(--momo-room-window-glass-inset-px)) * 100% /
+        var(--momo-room-canvas-h)
+    )
+    calc(
+      (var(--momo-room-canvas-w) - var(--momo-room-window-frame-right-px) +
+        var(--momo-room-window-glass-inset-px)) * 100% / var(--momo-room-canvas-w)
+    )
+    calc(
+      (var(--momo-room-canvas-h) - var(--momo-room-window-sky-y1-px) +
+        var(--momo-room-window-glass-inset-px)) * 100% / var(--momo-room-canvas-h)
+    )
+    calc(
+      (var(--momo-room-window-frame-left-px) + var(--momo-room-window-glass-inset-px)) * 100% /
+        var(--momo-room-canvas-w)
+    )
+  );
+}
+
+/* puff A — cloud-layer(씬 전체) 기준 %, y=168 */
+.momo-room__cloud {
+  position: absolute;
+  display: block;
+  top: calc(var(--momo-room-cloud-y-px) * 100% / var(--momo-room-canvas-h));
+  left: 58.0766%;
+  width: calc(var(--momo-room-cloud-size-a-px) * 100% / var(--momo-room-canvas-w));
+  aspect-ratio: 1.65 / 1;
+  transform: translate(-50%, -50%);
+  border-radius: 46% 54% 52% 48% / 48% 46% 54% 52%;
+  background: rgba(210, 216, 228, 0.46);
+  filter: blur(1px);
+  pointer-events: none;
+  animation: momo-room-cloud-drift-v2 var(--momo-room-cloud-drift-sec) ease-in-out infinite
+    alternate;
+}
+
+/* puff B — A와 ~80% 겹침, 같은 blur로 합쳐짐 */
+.momo-room__cloud::after {
+  content: '';
+  position: absolute;
+  left: calc(var(--momo-room-cloud-b-offset-x-px) * 100% / var(--momo-room-cloud-size-a-px));
+  top: calc(
+    var(--momo-room-cloud-b-offset-y-px) * 100% /
+      (var(--momo-room-cloud-size-a-px) / 1.65)
+  );
+  width: calc(var(--momo-room-cloud-size-b-px) * 100% / var(--momo-room-cloud-size-a-px));
+  aspect-ratio: 1.15 / 1;
+  transform: translate(-50%, -50%);
+  border-radius: 55% 45% 48% 52% / 52% 48% 45% 55%;
+  background: rgba(218, 224, 236, 0.4);
 }
 
 .momo-room__scene-window {
   position: absolute;
   inset: 0;
-  z-index: 2;
+  z-index: 3;
   display: block;
   width: 100%;
   height: 100%;
@@ -3637,27 +3707,7 @@ details[open] > summary .details-chevron {
   pointer-events: none;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
-}
-
-/* 구름 — 창 유리 뒤(z1), 창틀 전면 레이어(z2) 아래 */
-.momo-room__cloud {
-  position: absolute;
-  top: calc(var(--momo-room-cloud-y-px) * 100% / var(--momo-room-canvas-h));
-  left: calc(var(--momo-room-cloud-x1-px) * 100% / var(--momo-room-canvas-w));
-  width: var(--momo-room-cloud-size);
-  aspect-ratio: 1.6 / 1;
-  transform: translate(-50%, -50%);
-  border-radius: 50%;
-  background: rgba(210, 216, 228, 0.34);
-  opacity: var(--momo-room-cloud-opacity);
-  filter: blur(1.5px);
-  pointer-events: none;
-  z-index: 1;
-  box-shadow:
-    1em -0.2em 0 0.3em rgba(210, 216, 228, 0.26),
-    1.85em 0.15em 0 0.18em rgba(210, 216, 228, 0.18);
-  animation: momo-room-cloud-drift var(--momo-room-cloud-drift-sec) ease-in-out infinite
-    alternate;
+  transform: translateZ(0);
 }
 
 .momo-room__light {
@@ -3668,7 +3718,7 @@ details[open] > summary .details-chevron {
   border-radius: 50%;
   overflow: hidden;
   filter: blur(8px);
-  z-index: 3;
+  z-index: 4;
 }
 
 .momo-room__light--candle {
@@ -3691,7 +3741,7 @@ details[open] > summary .details-chevron {
 .momo-room__light--lantern {
   left: 9.79%;
   top: 74.16%;
-  width: 22%;
+  width: 18.7%;
   aspect-ratio: 1 / 1;
   transform: translate(-50%, -50%);
   background: radial-gradient(
@@ -3715,7 +3765,7 @@ details[open] > summary .details-chevron {
   width: 5.2%;
   height: 4.4%;
   pointer-events: none;
-  z-index: 3;
+  z-index: 4;
   opacity: 0;
   border-radius: 2px;
   background: radial-gradient(
@@ -3854,13 +3904,14 @@ details[open] > summary .details-chevron {
   outline: none;
 }
 
-@keyframes momo-room-cloud-drift {
+/* 622/1071, 814/1071 — keyframes % (measure-momo-room-window.mjs) */
+@keyframes momo-room-cloud-drift-v2 {
   from {
-    left: calc(var(--momo-room-cloud-x1-px) * 100% / var(--momo-room-canvas-w));
+    left: 58.0766%;
   }
 
   to {
-    left: calc(var(--momo-room-cloud-x2-px) * 100% / var(--momo-room-canvas-w));
+    left: 76.0037%;
   }
 }
 
@@ -3901,17 +3952,17 @@ details[open] > summary .details-chevron {
 @keyframes momo-room-lantern-glow {
   0% {
     opacity: 0.88;
-    transform: translate(-50%, -50%) scale(0.9);
+    transform: translate(-50%, -50%) scale(0.765);
   }
 
   50% {
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1.08);
+    transform: translate(-50%, -50%) scale(0.918);
   }
 
   100% {
     opacity: 0.9;
-    transform: translate(-50%, -50%) scale(0.92);
+    transform: translate(-50%, -50%) scale(0.782);
   }
 }
 
@@ -3919,7 +3970,7 @@ details[open] > summary .details-chevron {
 @media (prefers-reduced-motion: reduce) {
   .momo-room__cloud {
     animation: none;
-    opacity: 0.32;
+    opacity: 0.36;
   }
 
   .momo-room__book-glow {

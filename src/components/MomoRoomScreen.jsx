@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ArrowLeft, BookOpen, Volume2, VolumeX, X } from 'lucide-react';
-import roomLibraryImg from '../assets/welcome/welcome_library2.png';
+import roomLibraryImg from '../assets/welcome/welcome_library_16.png';
 import { momoRoomStoryPages } from '../data/momoRoomStory.js';
 import { publicAssetUrl } from '../lib/publicAssetUrl.js';
 
@@ -385,10 +385,14 @@ export default function MomoRoomScreen({ onClose }) {
             alt="밤, 책상과 창가가 있는 모모의 교정방"
             decoding="async"
           />
-          <span className="momo-room__cloud" aria-hidden />
+          <div className="momo-room__cloud-layer" aria-hidden>
+            <div className="momo-room__cloud" />
+          </div>
           <img
             className="momo-room__scene-window"
-            src={publicAssetUrl('welcome/welcome_library2_window_front.png')}
+            src={publicAssetUrl('welcome/welcome_library_16_window_front.png', {
+              cacheBust: true,
+            })}
             alt=""
             aria-hidden
             decoding="async"

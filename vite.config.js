@@ -10,11 +10,11 @@ for (const name of ['pdf-empty.png', 'pdf-momo.png', 'pdf-full.png']) {
   }
 }
 
-const welcomeLibraryPublic = path.resolve('public/welcome/welcome_library2.png');
+const welcomeLibraryPublic = path.resolve('public/welcome/welcome_library_16.png');
 if (fs.existsSync(welcomeLibraryPublic)) {
   fs.copyFileSync(
     welcomeLibraryPublic,
-    path.resolve('src/assets/welcome/welcome_library2.png'),
+    path.resolve('src/assets/welcome/welcome_library_16.png'),
   );
 }
 

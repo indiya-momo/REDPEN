@@ -10,13 +10,13 @@ import { PNG } from 'pngjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 
-/** PC 그리드에서 scene 최대 ~1400px — 2x 여유 포함해 1910px 폭 (기존 캔버스와 동일) */
-const TARGET_W = 1910;
+/** welcome_library_16.png 디자인 캔버스 폭 */
+const TARGET_W = 1071;
 
 const inputPath =
-  process.argv[2] ?? join(root, 'public/welcome/welcome_library_15.png');
-const assetOut = join(root, 'src/assets/welcome/welcome_library2.png');
-const publicOut = join(root, 'public/welcome/welcome_library2.png');
+  process.argv[2] ?? join(root, 'public/welcome/welcome_library_16.png');
+const assetOut = join(root, 'src/assets/welcome/welcome_library_16.png');
+const publicOut = join(root, 'public/welcome/welcome_library_16.png');
 
 const meta = await sharp(inputPath).metadata();
 const targetH = Math.round((meta.height * TARGET_W) / meta.width);
