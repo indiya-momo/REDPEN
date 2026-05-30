@@ -48,7 +48,7 @@
 .welcome-pc__layout {
   position: relative;
   z-index: 1;
-  flex: 1 0 auto;
+  flex: 1;
   box-sizing: border-box;
   width: min(calc(1180px * var(--welcome-scale)), 100%);
   min-height: 0;
@@ -58,13 +58,16 @@
     clamp(calc(4.5rem * var(--welcome-scale)), 8vw, calc(6rem * var(--welcome-scale)));
   display: grid;
   grid-template-columns: minmax(0, 1.05fr) minmax(calc(280px * var(--welcome-scale)), 0.95fr);
-  align-items: start;
+  align-items: stretch;
   gap: clamp(calc(1.5rem * var(--welcome-scale)), 4vw, calc(3rem * var(--welcome-scale)));
 }
 
 .welcome-pc__copy {
   position: relative;
+  display: flex;
+  flex-direction: column;
   max-width: var(--welcome-content-max);
+  min-height: 100%;
   padding-bottom: 0;
   font-family: var(--font-family-body-brand);
   word-break: keep-all;
@@ -72,7 +75,7 @@
 
 .welcome-pc__bottom-notes {
   width: min(100%, var(--welcome-content-max));
-  margin-top: calc(0.55rem * var(--welcome-scale));
+  margin-top: auto;
   padding-top: calc(0.7rem * var(--welcome-scale));
   padding-left: var(--welcome-step-pad-x);
   border-top: 1px solid var(--welcome-border-soft);
@@ -208,7 +211,7 @@
 }
 
 .welcome-pc__analytics-note {
-  margin: 0 0 calc(0.6rem * var(--welcome-scale));
+  margin: 0 0 calc(0.35rem * var(--welcome-scale));
   font-size: calc(0.72rem * var(--welcome-scale));
   line-height: 1.55;
   color: var(--welcome-text-muted-strong);
@@ -288,8 +291,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  align-self: start;
-  min-height: 0;
+  min-height: 100%;
   padding: var(--welcome-frame-align-offset)
     clamp(calc(0.5rem * var(--welcome-scale)), 2vw, calc(1rem * var(--welcome-scale))) 0;
 }
