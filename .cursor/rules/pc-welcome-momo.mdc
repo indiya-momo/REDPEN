@@ -1,0 +1,19 @@
+---
+description: PC — welcome-pc·모모의방·MainScreen 허용 범위
+globs: src/welcome/pc/**,src/components/MomoRoomScreen.jsx,src/index.css,src/App.jsx,src/components/MainScreen.jsx,src/styles/main-screen.css
+alwaysApply: false
+---
+
+# PC worktree — 수정 범위
+
+## 허용
+
+- `src/welcome/pc/**` — PC 대문 전용
+- `src/components/MainScreen.jsx`, `src/styles/main-screen.css` — 검수 화면
+- `src/components/MomoRoomScreen.jsx`, `src/index.css` 내 momo-room 블록 (PC)
+- `src/App.jsx` — 화면 분기 변경 시 사용자에게 영향 설명
+
+## 주의
+
+- `index.css`에서 **모바일 welcome·welcome-mo 관련 `@media` 블록**은 건드리지 않는다.
+- 모모방 구름·창坐标는 `--momo-room-*` CSS 변수와 `scripts/momo-room-window-utils.mjs`를 함께 본다.

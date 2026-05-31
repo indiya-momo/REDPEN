@@ -4,6 +4,14 @@ body,
   height: 100%;
 }
 
+html:has(.welcome-pc) {
+  overflow: hidden;
+}
+
+body:has(.welcome-pc) {
+  overflow: hidden;
+}
+
 .app-loading {
   display: flex;
   align-items: center;
@@ -3204,13 +3212,13 @@ details[open] > summary .details-chevron {
   /*
    * ▼ 모모의 방 — welcome_library_16.png (1071×720)
    * 창틀 가로폭 (607,182)~(829,182)
-   * 구름 (622,168) → (814,168) — 240s
+   * 구름 (622,134) → (814,134) — 240s
    */
   --momo-room-canvas-w: 1071;
   --momo-room-canvas-h: 720;
   --momo-room-cloud-x1-px: 622;
   --momo-room-cloud-x2-px: 814;
-  --momo-room-cloud-y-px: 168;
+  --momo-room-cloud-y-px: 134;
   --momo-room-cloud-size-a-px: 50;
   --momo-room-cloud-size-b-px: 41;
   --momo-room-cloud-b-offset-x-px: 10;
@@ -3663,7 +3671,7 @@ details[open] > summary .details-chevron {
   );
 }
 
-/* puff A — cloud-layer(씬 전체) 기준 %, y=168 */
+/* puff A — cloud-layer(씬 전체) 기준 %, y=134 */
 .momo-room__cloud {
   position: absolute;
   display: block;

@@ -1,0 +1,23 @@
+---
+description: PC worktree — welcome-mo·모바일 전용 금지
+alwaysApply: true
+---
+
+# PC worktree — 모바일 금지
+
+사용자가 **「모바일」**이라고 명시하지 않는 한 아래는 **읽지도 수정하지도 않는다**.
+
+- `src/welcome/mobile/**`
+- `src/welcome/mobile/welcome-mo.css`
+- `src/welcome/mobile/WelcomeMoScreen.jsx`
+- `src/styles/momo-room-mobile.css`
+
+## 용어
+
+- 「메인화면」「대문」= **`welcome-pc`** (960px 이상). `welcome-mo`와 혼동 금지.
+- PC 대문 수정은 **`src/welcome/pc/**`** 와 `--welcome-scale`만 사용한다.
+- `welcome-pc` / `welcome-mo` 클래스·CSS를 공유·합치지 않는다.
+
+## 브라우저
+
+- 뷰포트 &lt; 960px이면 `welcome-mo`가 보인다. PC CSS 변경이 안 보이면 먼저 너비·worktree 경로를 알린다.
