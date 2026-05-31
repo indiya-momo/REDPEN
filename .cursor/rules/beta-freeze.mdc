@@ -1,0 +1,15 @@
+---
+description: 베타 freeze — 엔진·dead props·대규모 리팩터 금지
+alwaysApply: true
+---
+
+# 베타 freeze (사용자 승인 없이 금지)
+
+- `ruleEngine`, regex, spelling/caution 매칭 로직 변경
+- `MainScreen` dead props 제거·props 시그니처 변경
+- rule-set CRUD UI 복구·대규모 `index.css` monolith 분해
+- `docs/` 배포물 수동 수정 (CI push 후 갱신됨)
+
+## 허용 (낮은 위험)
+
+- `welcome-pc` UI/CSS, momo-room 시각 튜닝, smoke용 문서, husky/test 통과하는 작은 fix

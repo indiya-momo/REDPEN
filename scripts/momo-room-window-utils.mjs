@@ -6,7 +6,7 @@ export const MOMO_ROOM_CANVAS_H = 720;
 /** 구름 경로 — (622,168) → (814,168), 240s 왕복 */
 export const MOMO_ROOM_CLOUD_X1 = 622;
 export const MOMO_ROOM_CLOUD_X2 = 814;
-export const MOMO_ROOM_CLOUD_Y = 168;
+export const MOMO_ROOM_CLOUD_Y = 134;
 export const MOMO_ROOM_CLOUD_X1_PCT = `${((MOMO_ROOM_CLOUD_X1 / MOMO_ROOM_CANVAS_W) * 100).toFixed(4)}%`;
 export const MOMO_ROOM_CLOUD_X2_PCT = `${((MOMO_ROOM_CLOUD_X2 / MOMO_ROOM_CANVAS_W) * 100).toFixed(4)}%`;
 
