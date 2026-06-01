@@ -72,6 +72,14 @@ export function useRuleSets() {
     [flushRuleSets],
   );
 
+  const flushPendingRuleSetsSave = useCallback(() => {
+    if (autosaveTimerRef.current) {
+      clearTimeout(autosaveTimerRef.current);
+      autosaveTimerRef.current = null;
+    }
+    flushRuleSets(ruleSetsRef.current, activeSetIdRef.current);
+  }, [flushRuleSets]);
+
   useEffect(() => {
     let sets = loadRuleSets().map(normalizeRuleSet);
     if (!sets.length) {
@@ -93,13 +101,21 @@ export function useRuleSets() {
 
   useEffect(() => {
     return () => {
-      if (autosaveTimerRef.current) {
-        clearTimeout(autosaveTimerRef.current);
-        autosaveTimerRef.current = null;
-        flushRuleSets(ruleSetsRef.current, activeSetIdRef.current);
-      }
+      flushPendingRuleSetsSave();
     };
-  }, [flushRuleSets]);
+  }, [flushPendingRuleSetsSave]);
+
+  useEffect(() => {
+    const onPageLeave = () => {
+      flushPendingRuleSetsSave();
+    };
+    window.addEventListener('pagehide', onPageLeave);
+    window.addEventListener('beforeunload', onPageLeave);
+    return () => {
+      window.removeEventListener('pagehide', onPageLeave);
+      window.removeEventListener('beforeunload', onPageLeave);
+    };
+  }, [flushPendingRuleSetsSave]);
 
   const activeSet = rulesReady
     ? (ruleSets.find((s) => s.id === activeSetId) ?? ruleSets[0] ?? null)
@@ -117,14 +133,6 @@ export function useRuleSets() {
     },
     [scheduleRuleSetsSave],
   );
-
-  const flushPendingRuleSetsSave = useCallback(() => {
-    if (autosaveTimerRef.current) {
-      clearTimeout(autosaveTimerRef.current);
-      autosaveTimerRef.current = null;
-    }
-    flushRuleSets(ruleSetsRef.current, activeSetIdRef.current);
-  }, [flushRuleSets]);
 
   const applyRuleSets = useCallback(
     (next, nextActiveId = activeSetIdRef.current) => {

@@ -1,0 +1,13 @@
+---
+description: 모바일 작업은 모바일 worktree에서만 (PC에서 금지)
+alwaysApply: true
+---
+
+# 모바일 작업 위치
+
+모바일 대문(`welcome-mo`)·둘러보기 UI는 **이 PC worktree에서 하지 않는다.**
+
+- 모바일 전용: `Documents/pdf-publish-proofread-mobile` 또는 Cursor worktree `1hrd`
+- 그 폴더의 `.cursor/rules/mobile-whitelist.mdc` 화이트리스트를 따른다.
+
+사용자가 「모바일」을 요청해도 **메인 `pdf-publish-proofread`에서 `welcome/mobile`을 수정하지 말고**, 모바일 worktree로 옮기거나 사용자에게 폴더 전환을 안내한다.

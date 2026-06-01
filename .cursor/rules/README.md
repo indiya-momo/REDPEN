@@ -4,6 +4,7 @@
 |------|------|
 | `always-core.mdc` | 항상 |
 | `pc-forbid-mobile.mdc` | 항상 — welcome-mo 금지 |
+| `mobile-worktree-pointer.mdc` | 항상 — 모바일은 별도 worktree |
 | `beta-freeze.mdc` | 항상 — 베타 freeze |
 | `pc-welcome-momo.mdc` | welcome-pc·MainScreen·momo-room 파일 열 때 |
 
