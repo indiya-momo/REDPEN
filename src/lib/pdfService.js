@@ -147,7 +147,9 @@ export function scaleToFitContainer(pageSize, containerSize, padding = 4) {
 
 /** 패널 맞춤(100%) 대비 사용자 확대 배율 */
 export const PDF_ZOOM_FACTOR_MIN = 0.5;
-export const PDF_ZOOM_FACTOR_MAX = 3;
+export const PDF_ZOOM_FACTOR_MAX = 2.5;
+export const PDF_ZOOM_PERCENT_MIN = 50;
+export const PDF_ZOOM_PERCENT_MAX = 250;
 export const PDF_ZOOM_FACTOR_STEP = 0.25;
 export const PDF_RENDER_SCALE_MAX = 6;
 
@@ -182,6 +184,32 @@ export function computePdfRenderScale(fitScale, zoomFactor) {
 export function stepPdfZoomFactor(current, direction) {
   const next = clampPdfZoomFactor(current + direction * PDF_ZOOM_FACTOR_STEP);
   return Math.round(next * 100) / 100;
+}
+
+/**
+ * @param {number | string} percent — 정수 퍼센트 (예: 160)
+ * @returns {number | null}
+ */
+export function zoomFactorFromPercent(percent) {
+  const raw =
+    typeof percent === 'string' ? percent.trim() : String(percent);
+  if (!raw || !/^\d+$/.test(raw)) return null;
+  const parsed = Number.parseInt(raw, 10);
+  if (!Number.isFinite(parsed)) return null;
+  if (
+    parsed < PDF_ZOOM_PERCENT_MIN ||
+    parsed > PDF_ZOOM_PERCENT_MAX
+  ) {
+    return null;
+  }
+  return clampPdfZoomFactor(parsed / 100);
+}
+
+/**
+ * @param {number} factor
+ */
+export function zoomPercentFromFactor(factor) {
+  return Math.round(clampPdfZoomFactor(factor) * 100);
 }
 
 /**

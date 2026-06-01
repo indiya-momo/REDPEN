@@ -6,13 +6,19 @@ import ResizableBuiltinSpelling from './ResizableBuiltinSpelling.jsx';
 import ConsistencyPanel from './ConsistencyPanel.jsx';
 import FeedbackModal from './FeedbackModal.jsx';
 import PdfPreviewBar from './PdfPreviewBar.jsx';
+import PdfZoomBar from './PdfZoomBar.jsx';
 import CheckResultsPanel from './CheckResultsPanel.jsx';
 import PdfCenterStage from './PdfCenterStage.jsx';
 import { usePdfDocument } from '../hooks/usePdfDocument.js';
+import { usePdfZoom } from '../hooks/usePdfZoom.js';
 import { useRuleCheck } from '../hooks/useRuleCheck.js';
 import { useWorkSession } from '../hooks/useWorkSession.js';
 import { useHighlights } from '../hooks/useHighlights.js';
-import { useResizablePanelWidth } from '../hooks/useResizablePanelWidth.js';
+import {
+  PANEL_LEFT_MAX_WIDTH,
+  PANEL_LEFT_MIN_WIDTH,
+  useResizablePanelWidth,
+} from '../hooks/useResizablePanelWidth.js';
 import { usePrintedPageDisplay } from '../hooks/usePrintedPageDisplay.js';
 import { trackFeedbackOpened } from '../lib/analytics.js';
 import {
@@ -98,6 +104,7 @@ export default function MainScreen({
   const { panelStyle, handleRef, startDrag } = useResizablePanelWidth();
 
   const pdf = usePdfDocument();
+  const pdfZoom = usePdfZoom(pdf.pdf);
 
   const pageDisplay = usePrintedPageDisplay({
     pdfFileName: pdf.pdfFileName,
@@ -369,8 +376,8 @@ export default function MainScreen({
         role="separator"
         aria-orientation="vertical"
         aria-valuenow={panelStyle.width}
-        aria-valuemin={280}
-        aria-valuemax={720}
+        aria-valuemin={PANEL_LEFT_MIN_WIDTH}
+        aria-valuemax={PANEL_LEFT_MAX_WIDTH}
         aria-label="좌우 패널 너비 조절"
         title="드래그하여 너비 조절"
         onPointerDown={startDrag}
@@ -388,6 +395,18 @@ export default function MainScreen({
                 <p className="pdf-work-pane__notice" role="status">
                   사용자의 기준을 저장하는 기능을 준비 중입니다
                 </p>
+                {showPdfViewer ? (
+                  <div className="pdf-work-pane__zoom-axis">
+                    <PdfZoomBar
+                      zoomPercent={pdfZoom.zoomPercent}
+                      canZoomIn={pdfZoom.canZoomIn}
+                      canZoomOut={pdfZoom.canZoomOut}
+                      onZoomIn={pdfZoom.zoomIn}
+                      onZoomOut={pdfZoom.zoomOut}
+                      onZoomPercentChange={pdfZoom.setZoomFromPercent}
+                    />
+                  </div>
+                ) : null}
                 <div className="pdf-work-pane__topbar-actions">
                   <button
                     type="button"
@@ -449,6 +468,8 @@ export default function MainScreen({
                 pageData={pdf.currentPageData}
                 highlights={highlights.pageHighlights}
                 showPageMeta={false}
+                zoomFactor={pdfZoom.zoomFactor}
+                onZoomFactorChange={pdfZoom.setZoomFactor}
               />
               <PdfPreviewBar
                 currentPage={pdf.currentPage}

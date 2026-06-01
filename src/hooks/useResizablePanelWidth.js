@@ -1,10 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 const STORAGE_KEY = 'panel-left-width';
-const DEFAULT_WIDTH = 400;
-const MIN_WIDTH = 280;
-const MAX_WIDTH = 720;
+export const PANEL_LEFT_DEFAULT_WIDTH = 400;
+export const PANEL_LEFT_MIN_WIDTH = 140;
+export const PANEL_LEFT_MAX_WIDTH = 720;
 const RIGHT_MIN = 320;
+
+const DEFAULT_WIDTH = PANEL_LEFT_DEFAULT_WIDTH;
+const MIN_WIDTH = PANEL_LEFT_MIN_WIDTH;
+const MAX_WIDTH = PANEL_LEFT_MAX_WIDTH;
 
 function readStoredWidth() {
   try {
