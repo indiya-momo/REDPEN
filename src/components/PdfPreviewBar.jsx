@@ -69,52 +69,7 @@ export default function PdfPreviewBar({
     <div className="pdf-preview-bar">
       <div className="pdf-preview-bar__pager">
         <div className="pdf-preview-bar__jump-row">
-          <form
-            className="pdf-preview-bar__jump"
-            onSubmit={(e) => {
-              e.preventDefault();
-              submit();
-            }}
-          >
-            <label className="sr-only" htmlFor="pdf-page-jump-input">
-              {printedPagesEnabled ? '현재 인쇄 쪽수' : '현재 페이지'}
-            </label>
-            <span className="pdf-preview-bar__jump-axis">
-              <span className="pdf-preview-bar__jump-before">
-                <input
-                  id="pdf-page-jump-input"
-                  type={printedPagesEnabled ? 'text' : 'number'}
-                  inputMode="numeric"
-                  className={`pdf-preview-bar__input pdf-preview-bar__jump-input${
-                    printedPagesEnabled ? ' pdf-preview-bar__input--spread' : ''
-                  }`}
-                  min={printedPagesEnabled ? undefined : 1}
-                  max={printedPagesEnabled ? undefined : numPages}
-                  value={value}
-                  onChange={(e) => setValue(e.target.value)}
-                  onBlur={submit}
-                  aria-label={
-                    printedPagesEnabled
-                      ? printedPagesActive
-                        ? '인쇄 쪽수 입력 (예: 6-7)'
-                        : '인쇄 쪽수 입력 (보정 전: 6-7 등으로 이동 가능)'
-                      : `페이지 1–${numPages}`
-                  }
-                />
-              </span>
-              <span className="pdf-preview-bar__slash" aria-hidden="true">
-                /
-              </span>
-              <span className="pdf-preview-bar__total">{displayTotal}</span>
-            </span>
-          </form>
-          <p className="pdf-preview-bar__jump-hint">
-            *이동하려는 페이지 번호를 기입하고 엔터키를 누르면 이동합니다
-          </p>
-        </div>
-
-        {thumbStripOpen && pdf ? (
-          <div className="pdf-preview-bar__strip-row">
+          <div className="pdf-preview-bar__jump-wing pdf-preview-bar__jump-wing--before">
             <button
               type="button"
               className="pdf-preview-bar__nav pdf-preview-bar__nav--prev"
@@ -122,9 +77,62 @@ export default function PdfPreviewBar({
               onClick={() => onGoToPage(currentPage - 1)}
               aria-label="이전 페이지"
             >
-              ←
+              ◀
             </button>
+            <form
+              className="pdf-preview-bar__jump"
+              onSubmit={(e) => {
+                e.preventDefault();
+                submit();
+              }}
+            >
+              <label className="sr-only" htmlFor="pdf-page-jump-input">
+                {printedPagesEnabled ? '현재 인쇄 쪽수' : '현재 페이지'}
+              </label>
+              <input
+                id="pdf-page-jump-input"
+                type={printedPagesEnabled ? 'text' : 'number'}
+                inputMode="numeric"
+                className={`pdf-preview-bar__input pdf-preview-bar__jump-input${
+                  printedPagesEnabled ? ' pdf-preview-bar__input--spread' : ''
+                }`}
+                min={printedPagesEnabled ? undefined : 1}
+                max={printedPagesEnabled ? undefined : numPages}
+                value={value}
+                onChange={(e) => setValue(e.target.value)}
+                onBlur={submit}
+                aria-label={
+                  printedPagesEnabled
+                    ? printedPagesActive
+                      ? '인쇄 쪽수 입력 (예: 6-7)'
+                      : '인쇄 쪽수 입력 (보정 전: 6-7 등으로 이동 가능)'
+                    : `페이지 1–${numPages}`
+                }
+              />
+            </form>
+          </div>
+          <span className="pdf-preview-bar__slash" aria-hidden="true">
+            /
+          </span>
+          <div className="pdf-preview-bar__jump-wing pdf-preview-bar__jump-wing--after">
+            <span className="pdf-preview-bar__total">{displayTotal}</span>
+            <button
+              type="button"
+              className="pdf-preview-bar__nav pdf-preview-bar__nav--next"
+              disabled={currentPage >= numPages}
+              onClick={() => onGoToPage(currentPage + 1)}
+              aria-label="다음 페이지"
+            >
+              ▶
+            </button>
+            <p className="pdf-preview-bar__jump-hint">
+              *이동하려는 페이지 번호를 기입하고 엔터키를 누르면 이동합니다
+            </p>
+          </div>
+        </div>
 
+        {thumbStripOpen && pdf ? (
+          <div className="pdf-preview-bar__strip-row">
             <div className="pdf-preview-bar__middle">
               <PdfThumbnailStrip
                 pdf={pdf}
@@ -135,22 +143,8 @@ export default function PdfPreviewBar({
             </div>
 
             <div className="pdf-preview-bar__nav-col pdf-preview-bar__nav-col--next">
-              <button
-                type="button"
-                className="pdf-preview-bar__nav pdf-preview-bar__nav--next"
-                disabled={currentPage >= numPages}
-                onClick={() => onGoToPage(currentPage + 1)}
-                aria-label="다음 페이지"
-              >
-                →
-              </button>
               <p className="pdf-preview-bar__thumb-hint">
-                <span className="pdf-preview-bar__thumb-hint-line">
-                  *네모가 보일 경우 클릭하면
-                </span>
-                <span className="pdf-preview-bar__thumb-hint-line">
-                  미리보기 이미지로 표시됩니다
-                </span>
+                *네모가 보일 경우 클릭하면 미리보기 이미지로 표시됩니다
               </p>
             </div>
           </div>

@@ -62,6 +62,18 @@ body:has(.welcome-pc) {
   --color-accent-gold: #c8a96b;
   --color-accent-gold-hover: #d4b87a;
 
+  /* PDF 교정 하이라이트 — 금갈색(전체) + 빨간펜(선택 1건·말풍선) */
+  --editor-red: #b91c1c;
+  --editor-red-ink: #c62828;
+  --pdf-highlight-scale: 1.2;
+  --pdf-highlight-fill: rgb(140 98 46 / 40%);
+  --pdf-highlight-fill-hover: rgb(140 98 46 / 52%);
+  --pdf-highlight-border: #8c6428;
+  --pdf-highlight-shadow: 0 1px 2px rgb(58 42 18 / 16%);
+  --pdf-highlight-primary-fill: rgb(140 98 46 / 50%);
+  --pdf-highlight-primary-shadow: 0 1px 3px rgb(198 40 40 / 20%);
+  --pdf-highlight-red-underline: 2.6px;
+
   /* 워크스페이스 — 앤티크 브라운·베이지 (사이드바·칩·선택) */
   --panel-accordion-bg: #f4efea;
   --panel-accordion-bg-open: #eae1d7;
@@ -1776,15 +1788,13 @@ details[open] > summary .details-chevron {
   width: 32px;
   height: 32px;
   padding: 0;
-  border: 1px solid var(--color-border-strong);
-  border-radius: var(--radius-ui);
-  background: var(--color-surface-raised);
+  border: none;
+  background: transparent;
   color: var(--color-text-secondary);
   cursor: pointer;
 }
 
 .pdf-zoom-bar__btn:hover:not(:disabled) {
-  border-color: var(--accent-terracotta);
   color: var(--accent-terracotta-deep);
 }
 
@@ -2281,8 +2291,11 @@ details[open] > summary .details-chevron {
 
 .pdf-highlight {
   position: absolute;
-  background: rgb(255 235 59 / 55%);
-  border-bottom: 2px solid #f9a825;
+  background: var(--pdf-highlight-fill);
+  border-bottom: none;
+  box-shadow: var(--pdf-highlight-shadow);
+  transform: scale(var(--pdf-highlight-scale));
+  transform-origin: center;
   pointer-events: auto;
   cursor: default;
 }
@@ -2293,18 +2306,25 @@ details[open] > summary .details-chevron {
 
 .pdf-highlight--has-tip:hover,
 .pdf-highlight--tip-open {
-  background: rgb(255 213 79 / 75%);
-  outline: 1px solid #f57f17;
+  background: var(--pdf-highlight-fill-hover);
+  outline: 1px solid var(--pdf-highlight-border);
+  box-shadow: var(--pdf-highlight-shadow);
 }
 
+/* 편집자 빨간펜 — 왼쪽에서 선택한 1건만 */
 .pdf-highlight--primary {
-  background: rgb(255 193 7 / 70%);
-  outline: 2px solid #d97706;
+  background: var(--pdf-highlight-primary-fill);
+  border-bottom: var(--pdf-highlight-red-underline) solid var(--editor-red-ink);
+  box-shadow: var(--pdf-highlight-primary-shadow);
+  outline: none;
   z-index: 1;
 }
 
+.pdf-highlight--primary.pdf-highlight--has-tip:hover,
 .pdf-highlight--primary.pdf-highlight--tip-open {
-  outline: 2px solid #b45309;
+  background: var(--pdf-highlight-fill-hover);
+  outline: 1px solid var(--editor-red-ink);
+  border-bottom: var(--pdf-highlight-red-underline) solid var(--editor-red-ink);
   z-index: 2;
 }
 
@@ -2315,13 +2335,11 @@ details[open] > summary .details-chevron {
   width: max-content;
   max-width: min(22rem, calc(100% - 16px));
   padding: 12px 14px 10px;
-  border: 2px solid #dc2626;
+  border: 1.5px solid var(--editor-red-ink);
   border-radius: 10px;
   background: #fff;
-  color: #1f2937;
-  box-shadow:
-    0 8px 24px rgb(0 0 0 / 14%),
-    0 0 0 1px rgb(254 202 202 / 80%);
+  color: var(--color-text);
+  box-shadow: 0 6px 20px rgb(0 0 0 / 12%);
   pointer-events: auto;
 }
 
@@ -2334,23 +2352,24 @@ details[open] > summary .details-chevron {
   height: 14px;
   margin-left: -7px;
   background: #fff;
-  border-right: 2px solid #dc2626;
-  border-bottom: 2px solid #dc2626;
+  border-right: 1.5px solid var(--editor-red-ink);
+  border-bottom: 1.5px solid var(--editor-red-ink);
   transform: rotate(45deg);
-  box-shadow: 4px 4px 8px rgb(0 0 0 / 6%);
+  box-shadow: 2px 2px 6px rgb(0 0 0 / 6%);
 }
 
 .pdf-highlight-tip__match {
   margin: 0 0 6px;
   font-size: 0.82rem;
   font-weight: 800;
-  color: #b91c1c;
+  color: var(--editor-red);
 }
 
 .pdf-highlight-tip__body {
   margin: 0;
   font-size: 0.88rem;
   line-height: 1.5;
+  color: var(--color-text);
   word-break: keep-all;
   overflow-wrap: break-word;
 }
@@ -2359,18 +2378,18 @@ details[open] > summary .details-chevron {
   display: block;
   margin: 10px 0 0 auto;
   padding: 4px 12px;
-  border: 1px solid #fecaca;
+  border: 1px solid var(--color-border-strong);
   border-radius: 6px;
-  background: #fef2f2;
-  color: #b91c1c;
+  background: var(--color-surface-raised);
+  color: var(--editor-red);
   font-size: 0.78rem;
   font-weight: 700;
   cursor: pointer;
 }
 
 .pdf-highlight-tip__close:hover {
-  background: #fee2e2;
-  border-color: #fca5a5;
+  background: var(--panel-accordion-bg);
+  border-color: var(--editor-red-ink);
 }
 
 .pdf-error {
@@ -2380,6 +2399,9 @@ details[open] > summary .details-chevron {
 }
 
 .pdf-preview-bar {
+  --pdf-jump-scale: 1.3;
+  --pdf-jump-hint-scale: 0.8;
+  --pdf-thumb-scale: 0.8;
   flex-shrink: 0;
   position: relative;
   display: block;
@@ -2399,26 +2421,12 @@ details[open] > summary .details-chevron {
 }
 
 .pdf-preview-bar__thumb-hint {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 1px;
   margin: 0;
   font-size: 0.62rem;
   line-height: 1.35;
   color: var(--color-text-muted);
   text-align: left;
-  max-width: 7.25rem;
-}
-
-.pdf-preview-bar__thumb-hint-line {
-  display: block;
   white-space: nowrap;
-}
-
-/* → 버튼 translateY(20%)와 동일 오프셋 — 안내 문구 중점 = 화살표 중점 */
-.pdf-preview-bar__strip-row .pdf-preview-bar__nav-col--next .pdf-preview-bar__thumb-hint {
-  transform: translateY(0.6rem);
 }
 
 .pdf-preview-bar__pager {
@@ -2436,14 +2444,8 @@ details[open] > summary .details-chevron {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  column-gap: 2px;
+  column-gap: 4px;
   width: 100%;
-}
-
-.pdf-preview-bar__nav--prev {
-  grid-column: 1;
-  justify-self: end;
-  align-self: center;
 }
 
 .pdf-preview-bar__middle {
@@ -2463,8 +2465,8 @@ details[open] > summary .details-chevron {
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 12px;
-  min-width: 3rem;
+  padding-left: 4px;
+  min-width: 0;
 }
 
 .pdf-preview-bar__toggle {
@@ -2489,13 +2491,10 @@ details[open] > summary .details-chevron {
 .pdf-preview-bar__nav {
   flex-shrink: 0;
   box-sizing: border-box;
-  width: 3rem;
-  height: 3rem;
-  min-width: 3rem;
+  margin: 0;
   padding: 0;
-  border: 1px solid var(--chip-border);
-  border-radius: var(--radius-ui-sm);
-  background: var(--chip-bg);
+  border: none;
+  background: transparent;
   font-size: 1.5rem;
   font-weight: 700;
   line-height: 1;
@@ -2504,30 +2503,11 @@ details[open] > summary .details-chevron {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transform: translateY(20%);
-}
-
-.pdf-preview-bar__strip-row .pdf-preview-bar__nav--prev {
-  transform: translateY(20%) translateX(-15%);
-}
-
-.pdf-preview-bar__strip-row .pdf-preview-bar__nav--next {
-  transform: translateY(20%) translateX(15%);
 }
 
 .pdf-preview-bar__nav:hover:not(:disabled) {
-  background: var(--panel-accordion-bg);
-  border-color: var(--focus-border);
+  background: transparent;
   color: var(--accent-terracotta-deep);
-  transform: translateY(20%);
-}
-
-.pdf-preview-bar__strip-row .pdf-preview-bar__nav--prev:hover:not(:disabled) {
-  transform: translateY(20%) translateX(-15%);
-}
-
-.pdf-preview-bar__strip-row .pdf-preview-bar__nav--next:hover:not(:disabled) {
-  transform: translateY(20%) translateX(15%);
 }
 
 .pdf-preview-bar__nav:disabled {
@@ -2535,65 +2515,91 @@ details[open] > summary .details-chevron {
   cursor: not-allowed;
 }
 
-.pdf-preview-bar__strip-row .pdf-preview-bar__nav--prev:disabled {
-  transform: translateY(20%) translateX(-15%);
-}
-
-.pdf-preview-bar__strip-row .pdf-preview-bar__nav--next:disabled {
-  transform: translateY(20%) translateX(15%);
-}
-
-/* 원고(PDF) 가운데 접힘 = 패널 가로 50% */
+/* 원고(PDF) 가운데 접힘 = 패널 가로 50% — 썸네일 strip-row와 동일 1fr | auto | 1fr */
 .pdf-preview-bar__jump-row {
-  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  column-gap: calc(4px * var(--pdf-jump-scale));
   width: 100%;
-  min-height: 1.65rem;
+  min-height: calc(1.65rem * var(--pdf-jump-scale));
+}
+
+.pdf-preview-bar__jump-wing--before {
+  grid-column: 1;
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: calc(6px * var(--pdf-jump-scale));
+  min-width: 0;
+}
+
+.pdf-preview-bar__jump-row > .pdf-preview-bar__slash {
+  grid-column: 2;
+  justify-self: center;
+  font-size: calc(0.78rem * var(--pdf-jump-scale));
+  font-weight: 600;
+  color: var(--color-text-muted);
+  line-height: 1;
+}
+
+.pdf-preview-bar__jump-wing--after {
+  grid-column: 3;
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  align-items: center;
+  gap: calc(6px * var(--pdf-jump-scale));
+  min-width: 0;
+}
+
+.pdf-preview-bar__jump-row .pdf-preview-bar__total {
+  font-size: calc(0.78rem * var(--pdf-jump-scale));
+  font-weight: 600;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.pdf-preview-bar__jump-row .pdf-preview-bar__nav {
+  width: auto;
+  height: auto;
+  min-width: 0;
+  font-size: calc(1.05rem * var(--pdf-jump-scale));
+  line-height: 1;
+  align-self: center;
+  transform: none;
+}
+
+.pdf-preview-bar__jump-row .pdf-preview-bar__nav:hover:not(:disabled),
+.pdf-preview-bar__jump-row .pdf-preview-bar__nav:disabled {
+  transform: none;
 }
 
 .pdf-preview-bar__jump {
   margin: 0;
 }
 
-.pdf-preview-bar__jump-axis {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  display: inline-flex;
-  align-items: center;
-  transform: translate(-0.22em, -50%);
-  white-space: nowrap;
-}
-
-.pdf-preview-bar__jump-before {
-  position: absolute;
-  right: 100%;
-  margin-right: 4px;
-  top: 50%;
-  transform: translateY(-50%);
-}
-
-.pdf-preview-bar__slash {
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--color-text-muted);
-  line-height: 1;
-}
-
-.pdf-preview-bar__jump-axis .pdf-preview-bar__total {
-  margin-left: 4px;
-}
-
 .pdf-preview-bar__jump-hint {
-  position: absolute;
-  left: 50%;
-  top: 50%;
+  flex-shrink: 1;
+  min-width: 0;
   margin: 0;
-  padding-left: 4.125rem;
-  font-size: 0.65rem;
+  padding: 0;
+  font-size: calc(0.65rem * var(--pdf-jump-scale) * var(--pdf-jump-hint-scale));
   line-height: 1.45;
   color: var(--color-text-muted);
   white-space: nowrap;
-  transform: translateY(-50%);
+}
+
+.pdf-preview-bar__jump-row .pdf-preview-bar__input {
+  width: calc(2.75rem * var(--pdf-jump-scale));
+  padding: calc(2px * var(--pdf-jump-scale)) calc(4px * var(--pdf-jump-scale));
+  font-size: calc(0.8rem * var(--pdf-jump-scale));
+  line-height: 1.35;
+}
+
+.pdf-preview-bar__jump-row .pdf-preview-bar__input--spread {
+  width: calc(3.75rem * var(--pdf-jump-scale));
 }
 
 .pdf-preview-bar__input {
@@ -2642,7 +2648,7 @@ details[open] > summary .details-chevron {
 }
 
 .pdf-thumb-strip {
-  --pdf-thumb-slot-w: 3.85rem;
+  --pdf-thumb-slot-w: calc(3.85rem * var(--pdf-thumb-scale, 0.8));
   flex-shrink: 0;
   display: flex;
   justify-content: center;
@@ -2650,9 +2656,9 @@ details[open] > summary .details-chevron {
   gap: 0;
   width: calc(var(--pdf-thumb-slot-w) * 5);
   max-width: 100%;
-  height: 6.75rem;
+  height: calc(6.75rem * var(--pdf-thumb-scale, 0.8));
   box-sizing: border-box;
-  padding: 0 2px 6px;
+  padding: 0 2px calc(6px * var(--pdf-thumb-scale, 0.8));
   overflow: hidden;
   background: var(--color-surface-emphasis);
   border-radius: var(--radius-ui-sm);
@@ -2677,8 +2683,9 @@ details[open] > summary .details-chevron {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
-  padding: 6px 0 2px;
+  gap: calc(2px * var(--pdf-thumb-scale, 0.8));
+  padding: calc(6px * var(--pdf-thumb-scale, 0.8)) 0
+    calc(2px * var(--pdf-thumb-scale, 0.8));
   border: none;
   background: transparent;
   cursor: pointer;
@@ -2727,13 +2734,13 @@ details[open] > summary .details-chevron {
 
 .pdf-thumb__canvas--loading {
   display: block;
-  width: 3.375rem;
-  height: 4.875rem;
+  width: calc(3.375rem * var(--pdf-thumb-scale, 0.8));
+  height: calc(4.875rem * var(--pdf-thumb-scale, 0.8));
   background: var(--color-border);
 }
 
 .pdf-thumb__num {
-  font-size: 0.72rem;
+  font-size: calc(0.72rem * var(--pdf-thumb-scale, 0.8));
   font-weight: 600;
   line-height: 1;
   color: inherit;

@@ -4,7 +4,7 @@ import { renderPageToCanvas } from '../lib/pdfService.js';
 import { thumbSlotPages } from '../lib/thumbSlotPages.js';
 
 /** 저화질·저부하 썸네일 (표시만 확인용) */
-const THUMB_HEIGHT_PX = 78;
+const THUMB_HEIGHT_PX = 62;
 /** 공유 버퍼 없이 순차 렌더 — 동시 그리기 시 가로가 반으로 눌리는 현상 방지 */
 const RENDER_BATCH = 1;
 

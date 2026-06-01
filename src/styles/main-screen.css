@@ -735,14 +735,32 @@
   flex: 1;
   min-height: 0;
   width: 100%;
+  display: block;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+/* 100% 이하: 중앙 / 초과: flex-start로 전체 스크롤 (PdfViewer overflow 감지) */
+.pdf-viewer--fit .pdf-canvas-stage__align {
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: auto;
+  min-width: 100%;
+  min-height: 100%;
+  width: max-content;
+  max-width: none;
+}
+
+.pdf-viewer--fit .pdf-canvas-stage__align--overflow {
+  align-items: flex-start;
+  justify-content: flex-start;
 }
 
 .pdf-viewer--fit .pdf-canvas-wrap {
   flex-shrink: 0;
+  width: max-content;
+  max-width: none;
 }
 
 .pdf-work-pane .pdf-viewer--fit .pdf-canvas-stage {
