@@ -42,6 +42,7 @@ export default function PdfViewer({
   /** @type {React.MutableRefObject<import('pdfjs-dist').RenderTask | null>} */
   const renderTaskRef = useRef(null);
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
+  const [stageOverflows, setStageOverflows] = useState(false);
   const [rects, setRects] = useState([]);
   const [error, setError] = useState(null);
   /** @type {{ id: string, tip: string, matchedText: string, left: number, top: number } | null} */
@@ -82,6 +83,33 @@ export default function PdfViewer({
       cancelAnimationFrame(frameId);
     };
   }, [pdf]);
+
+  useEffect(() => {
+    const stage = stageRef.current;
+    const wrap = wrapRef.current;
+    if (!stage || !wrap) return undefined;
+
+    let frameId = 0;
+
+    const updateOverflow = () => {
+      cancelAnimationFrame(frameId);
+      frameId = requestAnimationFrame(() => {
+        setStageOverflows(
+          wrap.offsetWidth > stage.clientWidth + 1 ||
+            wrap.offsetHeight > stage.clientHeight + 1,
+        );
+      });
+    };
+
+    updateOverflow();
+    const observer = new ResizeObserver(updateOverflow);
+    observer.observe(stage);
+    observer.observe(wrap);
+    return () => {
+      observer.disconnect();
+      cancelAnimationFrame(frameId);
+    };
+  }, [pdf, pageNum, zoomFactor, stageSize.width, stageSize.height]);
 
   useEffect(() => {
     const stage = stageRef.current;
@@ -278,7 +306,12 @@ export default function PdfViewer({
         </div>
       )}
       <div className="pdf-canvas-stage" ref={stageRef}>
-        <div className="pdf-canvas-wrap" ref={wrapRef}>
+        <div
+          className={`pdf-canvas-stage__align${
+            stageOverflows ? ' pdf-canvas-stage__align--overflow' : ''
+          }`}
+        >
+          <div className="pdf-canvas-wrap" ref={wrapRef}>
           <canvas ref={canvasRef} className="pdf-canvas" />
           <div className="pdf-highlight-layer">
             {rects.map((r, i) => (
@@ -319,6 +352,7 @@ export default function PdfViewer({
               onClose={() => setOpenTip(null)}
             />
           ) : null}
+          </div>
         </div>
       </div>
       {error && <p className="pdf-error">{error}</p>}
