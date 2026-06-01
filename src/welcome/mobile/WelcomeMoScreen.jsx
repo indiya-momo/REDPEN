@@ -7,6 +7,9 @@ import {
   setAnalyticsOptOut,
 } from '../../lib/analytics.js';
 import welcomeMomoFrame from '../../assets/welcome/welcome_momo_frame3.png';
+import welcomeMoDemoBefore from '../../assets/welcome/welcome_mo_demo_before.png';
+import welcomeMoDemoAfter from '../../assets/welcome/welcome_mo_demo_after.png';
+import welcomeMoDemoConsistency from '../../assets/welcome/welcome_mo_demo_consistency.png';
 import './welcome-mo.css';
 
 const WELCOME_MOMO_FRAME = welcomeMomoFrame;
@@ -44,22 +47,70 @@ export default function WelcomeMoScreen({ onStart, onOpenRoom }) {
             </p>
           </header>
 
-          <div className="welcome-mo__panels">
-            <section className="welcome-mo__panel welcome-mo__panel--do">
-              <h2>하는 일</h2>
-              <ul>
-                <li>기준에 따라 PDF 스캔</li>
-                <li>발견 위치를 표시</li>
-              </ul>
-            </section>
-            <section className="welcome-mo__panel welcome-mo__panel--dont">
-              <h2>하지 않는 일</h2>
-              <ul>
-                <li>원고 수정 · 문장 추천</li>
-                <li>검사 결과 서버 저장</li>
-              </ul>
-            </section>
-          </div>
+          <section
+            id="welcome-mo-showcase"
+            className="welcome-mo__showcase"
+            aria-labelledby="welcome-mo-showcase-title"
+          >
+            <h2 id="welcome-mo-showcase-title" className="welcome-mo__showcase-title">
+              이렇게 작동합니다
+            </h2>
+            <ol className="welcome-mo__showcase-flow">
+              <li className="welcome-mo__showcase-item">
+                <p className="welcome-mo__showcase-step">
+                  <span className="welcome-mo__showcase-step-num">1</span>
+                  원고 열기
+                </p>
+                <figure className="welcome-mo__showcase-figure">
+                  <img
+                    src={welcomeMoDemoBefore}
+                    alt="PDF 업로드 화면 — 모모 안내와 PDF 열기 영역"
+                    width={1280}
+                    height={720}
+                    loading="lazy"
+                    decoding="async"
+                  />
+                  <figcaption>드래그하거나 PDF를 선택해 검수를 시작합니다</figcaption>
+                </figure>
+              </li>
+              <li className="welcome-mo__showcase-item">
+                <p className="welcome-mo__showcase-step">
+                  <span className="welcome-mo__showcase-step-num">2</span>
+                  검사 후
+                </p>
+                <figure className="welcome-mo__showcase-figure">
+                  <img
+                    src={welcomeMoDemoAfter}
+                    alt="검사 결과 화면 — 왼쪽 발견 목록과 오른쪽 PDF 하이라이트"
+                    width={1280}
+                    height={720}
+                    loading="lazy"
+                    decoding="async"
+                  />
+                  <figcaption>
+                    왼쪽 목록을 누르면 PDF에서 해당 위치가 표시됩니다
+                  </figcaption>
+                </figure>
+              </li>
+              <li className="welcome-mo__showcase-item">
+                <p className="welcome-mo__showcase-step">
+                  <span className="welcome-mo__showcase-step-num">3</span>
+                  일관성 확인
+                </p>
+                <figure className="welcome-mo__showcase-figure">
+                  <img
+                    src={welcomeMoDemoConsistency}
+                    alt="일관성 확인 화면 — 표기 일관성 발견 목록과 PDF 하이라이트"
+                    width={1280}
+                    height={720}
+                    loading="lazy"
+                    decoding="async"
+                  />
+                  <figcaption>일관성 확인도 같은 방식으로 가능합니다</figcaption>
+                </figure>
+              </li>
+            </ol>
+          </section>
 
           <div className="welcome-mo__steps" aria-label="이용 절차 안내">
             <ol className="welcome-mo__step-flow">
@@ -120,7 +171,7 @@ export default function WelcomeMoScreen({ onStart, onOpenRoom }) {
                 className="btn-welcome-primary welcome-mo__start"
                 onClick={onStart}
               >
-                인디야 살펴보기
+                검수 화면 미리보기
               </button>
               <p className="welcome-mo__steps-note welcome-mo__steps-note--stage welcome-mo__steps-note--desktop">
                 현재 인디야는 <strong>PC버전만 지원</strong>합니다
