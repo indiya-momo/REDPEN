@@ -152,6 +152,18 @@ export const PDF_ZOOM_PERCENT_MIN = 50;
 export const PDF_ZOOM_PERCENT_MAX = 250;
 export const PDF_ZOOM_FACTOR_STEP = 0.25;
 export const PDF_RENDER_SCALE_MAX = 6;
+/** HiDPI 캔버스 상한 — 4K·고배율 줌 시 메모리 폭주 방지 */
+export const PDF_OUTPUT_SCALE_MAX = 2.5;
+
+/**
+ * CSS 표시 크기 대비 실제 캔버스 해상도 배율 (Retina 등).
+ * @returns {number}
+ */
+export function getPdfOutputScale() {
+  if (typeof window === 'undefined') return 1;
+  const dpr = window.devicePixelRatio || 1;
+  return Math.min(Math.max(dpr, 1), PDF_OUTPUT_SCALE_MAX);
+}
 
 /**
  * @param {number} factor
@@ -237,17 +249,26 @@ export async function renderPageToCanvas(
 ) {
   const page = pageProxy ?? (await pdf.getPage(pageNum));
   const viewport = page.getViewport({ scale });
+  const outputScale = getPdfOutputScale();
   const ctx = canvas.getContext('2d');
   if (!ctx) {
     throw new Error('Canvas 2d context unavailable');
   }
 
-  canvas.width = viewport.width;
-  canvas.height = viewport.height;
+  const cssWidth = Math.floor(viewport.width);
+  const cssHeight = Math.floor(viewport.height);
+  canvas.width = Math.floor(viewport.width * outputScale);
+  canvas.height = Math.floor(viewport.height * outputScale);
+  canvas.style.width = `${cssWidth}px`;
+  canvas.style.height = `${cssHeight}px`;
+
+  const transform =
+    outputScale !== 1 ? [outputScale, 0, 0, outputScale, 0, 0] : undefined;
 
   const renderTask = page.render({
     canvasContext: ctx,
     viewport,
+    transform,
   });
 
   try {

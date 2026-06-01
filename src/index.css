@@ -1591,10 +1591,19 @@ details[open] > summary .details-chevron {
   color: var(--color-text-muted);
 }
 
-.current-page-status__count-underline {
-  text-decoration: underline;
-  text-underline-offset: 0.12em;
-  text-decoration-thickness: 2px;
+/* 원고 선택 하이라이트(.pdf-highlight--primary)와 동일 톤 */
+.current-page-status__criterion-hit {
+  display: inline;
+  border-bottom: var(--pdf-highlight-red-underline) solid var(--editor-red-ink);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.current-page-status__criterion-hit-num {
+  display: inline;
+  padding: 0 0.08em;
+  background: var(--pdf-highlight-primary-fill);
+  box-shadow: var(--pdf-highlight-primary-shadow);
 }
 
 .printed-page-setup {
@@ -2420,10 +2429,10 @@ details[open] > summary .details-chevron {
   gap: 8px;
 }
 
-.pdf-preview-bar__thumb-hint {
+.pdf-preview-bar__bar-hint {
   margin: 0;
-  font-size: 0.62rem;
-  line-height: 1.35;
+  font-size: calc(0.65rem * var(--pdf-jump-scale) * var(--pdf-jump-hint-scale));
+  line-height: 1.45;
   color: var(--color-text-muted);
   text-align: left;
   white-space: nowrap;
@@ -2467,6 +2476,10 @@ details[open] > summary .details-chevron {
   align-items: center;
   padding-left: 4px;
   min-width: 0;
+}
+
+.pdf-preview-bar__nav-col--hint {
+  align-self: start;
 }
 
 .pdf-preview-bar__toggle {
@@ -2583,12 +2596,7 @@ details[open] > summary .details-chevron {
 .pdf-preview-bar__jump-hint {
   flex-shrink: 1;
   min-width: 0;
-  margin: 0;
-  padding: 0;
-  font-size: calc(0.65rem * var(--pdf-jump-scale) * var(--pdf-jump-hint-scale));
-  line-height: 1.45;
-  color: var(--color-text-muted);
-  white-space: nowrap;
+  margin-left: calc(6px * var(--pdf-jump-scale));
 }
 
 .pdf-preview-bar__jump-row .pdf-preview-bar__input {
