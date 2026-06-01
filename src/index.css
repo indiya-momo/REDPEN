@@ -2058,8 +2058,9 @@ details[open] > summary .details-chevron {
   color: var(--color-text-muted);
 }
 
-.pdf-ready-file__overlimit {
-  color: #b91c1c;
+.pdf-ready-file__overlimit,
+.pdf-ready-file__size-warn {
+  color: #b45309;
   font-weight: 600;
 }
 
@@ -2102,7 +2103,8 @@ details[open] > summary .details-chevron {
   font-size: 0.78rem;
 }
 
-.pdf-ready-panel__overlimit-actions {
+.pdf-ready-panel__overlimit-actions,
+.pdf-ready-panel__size-warn-actions {
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -2111,8 +2113,14 @@ details[open] > summary .details-chevron {
   margin-bottom: 6px;
 }
 
-.pdf-ready-panel__overlimit-actions .btn-upload-secondary {
+.pdf-ready-panel__overlimit-actions .btn-upload-secondary,
+.pdf-ready-panel__size-warn-actions .btn-upload-secondary {
   width: 100%;
+}
+
+.pdf-ready-panel__size-warn-hint {
+  text-align: center;
+  color: #b45309;
 }
 
 .pdf-center-stage__scan-hint {

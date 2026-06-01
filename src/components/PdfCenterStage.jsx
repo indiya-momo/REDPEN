@@ -7,7 +7,8 @@ import { formatFileSizeMb } from '../lib/formatFileSize.js';
 import TooltipGuide from './TooltipGuide.jsx';
 
 const MB = 1024 * 1024;
-const PDF_SIZE_MAX_BYTES = 50 * MB;
+/** 50MB 초과 시 검수는 허용하고 UI 경고만 표시 (운영 권장 한도) */
+const PDF_SIZE_WARN_BYTES = 50 * MB;
 
 /**
  * @param {{
@@ -95,8 +96,8 @@ export default function PdfCenterStage({
   );
 
   const sizeLabel = formatFileSizeMb(pdfByteLength);
-  const isSizeExceeded =
-    Number.isFinite(pdfByteLength) && pdfByteLength > PDF_SIZE_MAX_BYTES;
+  const isSizeOverRecommended =
+    Number.isFinite(pdfByteLength) && pdfByteLength > PDF_SIZE_WARN_BYTES;
   const extractBusy =
     isProcessing && progress?.phase === 'extract' && !pageTextsLength;
   const checkBusy = isProcessing && progress?.phase === 'check';
@@ -105,7 +106,6 @@ export default function PdfCenterStage({
     !pdf ||
     !pageTextsLength ||
     extractBusy ||
-    isSizeExceeded ||
     Boolean(loadError);
   const scanPdfDetected =
     typeof loadError === 'string' &&
@@ -226,7 +226,7 @@ export default function PdfCenterStage({
             )}
             <footer className="pdf-dropzone__footer">
               <p className="pdf-dropzone__limit">
-                <strong>50MB 이하</strong>
+                <strong>50MB 이하 권장</strong>
                 <span className="pdf-dropzone__limit-detail">
                   (신국판 300페이지 내외, 이미지 포함)
                 </span>
@@ -250,11 +250,11 @@ export default function PdfCenterStage({
               <div className="pdf-ready-file__meta">
                 <p className="pdf-ready-file__name">{pdfFileName}</p>
                 <p className="pdf-ready-file__detail">
-                  {isSizeExceeded ? (
+                  {isSizeOverRecommended ? (
                     <>
                       파일: {sizeLabel ?? '—'}
-                      <span className="pdf-ready-file__overlimit">
-                        (50MB 초과 작업 불가)
+                      <span className="pdf-ready-file__size-warn">
+                        (50MB 초과 · 검수 가능, 느리거나 불안정할 수 있음)
                       </span>
                     </>
                   ) : (
@@ -284,12 +284,14 @@ export default function PdfCenterStage({
               {checkBusy ? '검사 중…' : runLabel}
             </button>
 
-            {isSizeExceeded && (
-              <div className="pdf-ready-panel__overlimit-actions">
-                <p className="hint">PDF 파일을 나누어 작업할 것을 권장합니다</p>
+            {isSizeOverRecommended && (
+              <div className="pdf-ready-panel__size-warn-actions">
+                <p className="hint pdf-ready-panel__size-warn-hint">
+                  용량이 큽니다. 가능하면 PDF를 나누어 작업하는 것을 권장합니다.
+                </p>
                 <a
                   className="link-btn"
-                  href="https://www.adobe.com/kr/acrobat/online/crop-pdf.html"
+                  href="https://www.ilovepdf.com/ko/split_pdf#split,range"
                   target="_blank"
                   rel="noreferrer"
                 >
