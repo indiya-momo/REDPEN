@@ -1,11 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { ZoomIn, ZoomOut } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import {
   cancelRenderTask,
   computePdfRenderScale,
   highlightRectsForTextRange,
-  PDF_ZOOM_FACTOR_MAX,
-  PDF_ZOOM_FACTOR_MIN,
   renderPageToCanvas,
   scaleToFitContainer,
   stepPdfZoomFactor,
@@ -24,6 +21,8 @@ import PdfHighlightTipBubble from './PdfHighlightTipBubble.jsx';
  *   emptyTitle?: string,
  *   emptyHint?: string,
  *   showPageMeta?: boolean,
+ *   zoomFactor?: number,
+ *   onZoomFactorChange?: (update: (prev: number) => number) => void,
  * }} props
  */
 export default function PdfViewer({
@@ -34,6 +33,8 @@ export default function PdfViewer({
   emptyTitle = 'PDF를 업로드하세요',
   emptyHint = '용량 기준: 정상(<40MB) · 주의(40MB+) · 초과(50MB+)',
   showPageMeta = true,
+  zoomFactor = 1,
+  onZoomFactorChange,
 }) {
   const canvasRef = useRef(null);
   const stageRef = useRef(null);
@@ -41,36 +42,15 @@ export default function PdfViewer({
   /** @type {React.MutableRefObject<import('pdfjs-dist').RenderTask | null>} */
   const renderTaskRef = useRef(null);
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
-  const [zoomFactor, setZoomFactor] = useState(1);
   const [rects, setRects] = useState([]);
   const [error, setError] = useState(null);
   /** @type {{ id: string, tip: string, matchedText: string, left: number, top: number } | null} */
   const [openTip, setOpenTip] = useState(null);
   const highlightsKey = JSON.stringify(highlights);
-  const zoomPercent = Math.round(zoomFactor * 100);
-  const atFitZoom = zoomFactor === 1;
-  const canZoomOut = zoomFactor > PDF_ZOOM_FACTOR_MIN;
-  const canZoomIn = zoomFactor < PDF_ZOOM_FACTOR_MAX;
 
   useEffect(() => {
     setOpenTip(null);
   }, [pageNum, highlightsKey]);
-
-  useEffect(() => {
-    setZoomFactor(1);
-  }, [pdf]);
-
-  const zoomIn = useCallback(() => {
-    setZoomFactor((z) => stepPdfZoomFactor(z, 1));
-  }, []);
-
-  const zoomOut = useCallback(() => {
-    setZoomFactor((z) => stepPdfZoomFactor(z, -1));
-  }, []);
-
-  const zoomFit = useCallback(() => {
-    setZoomFactor(1);
-  }, []);
 
   useEffect(() => {
     const stage = stageRef.current;
@@ -109,14 +89,15 @@ export default function PdfViewer({
 
     const onWheel = (e) => {
       if (!e.ctrlKey && !e.metaKey) return;
+      if (!onZoomFactorChange) return;
       e.preventDefault();
       const direction = e.deltaY > 0 ? -1 : 1;
-      setZoomFactor((z) => stepPdfZoomFactor(z, direction));
+      onZoomFactorChange((z) => stepPdfZoomFactor(z, direction));
     };
 
     stage.addEventListener('wheel', onWheel, { passive: false });
     return () => stage.removeEventListener('wheel', onWheel);
-  }, [pdf]);
+  }, [pdf, onZoomFactorChange]);
 
   useEffect(() => {
     if (!pdf || !canvasRef.current) return;
@@ -296,47 +277,7 @@ export default function PdfViewer({
           )}
         </div>
       )}
-      <div
-        className="pdf-zoom-bar"
-        role="toolbar"
-        aria-label="PDF 확대/축소"
-      >
-        <button
-          type="button"
-          className="pdf-zoom-bar__btn"
-          onClick={zoomOut}
-          disabled={!canZoomOut}
-          aria-label="축소"
-        >
-          <ZoomOut size={16} aria-hidden />
-        </button>
-        <span className="pdf-zoom-bar__percent" aria-live="polite">
-          {zoomPercent}%
-        </span>
-        <button
-          type="button"
-          className="pdf-zoom-bar__btn"
-          onClick={zoomIn}
-          disabled={!canZoomIn}
-          aria-label="확대"
-        >
-          <ZoomIn size={16} aria-hidden />
-        </button>
-        <button
-          type="button"
-          className={`pdf-zoom-bar__fit${atFitZoom ? ' pdf-zoom-bar__fit--active' : ''}`}
-          onClick={zoomFit}
-          disabled={atFitZoom}
-          aria-label="패널에 맞춤"
-        >
-          맞춤
-        </button>
-        <span className="pdf-zoom-bar__hint">Ctrl+휠</span>
-      </div>
-      <div
-        className={`pdf-canvas-stage${atFitZoom ? ' pdf-canvas-stage--fit-center' : ''}`}
-        ref={stageRef}
-      >
+      <div className="pdf-canvas-stage" ref={stageRef}>
         <div className="pdf-canvas-wrap" ref={wrapRef}>
           <canvas ref={canvasRef} className="pdf-canvas" />
           <div className="pdf-highlight-layer">

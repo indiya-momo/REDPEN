@@ -68,17 +68,7 @@ export default function PdfPreviewBar({
   return (
     <div className="pdf-preview-bar">
       <div className="pdf-preview-bar__pager">
-        <button
-          type="button"
-          className="pdf-preview-bar__nav"
-          disabled={currentPage <= 1}
-          onClick={() => onGoToPage(currentPage - 1)}
-          aria-label="이전 페이지"
-        >
-          ←
-        </button>
-
-        <div className="pdf-preview-bar__middle">
+        <div className="pdf-preview-bar__jump-row">
           <form
             className="pdf-preview-bar__jump"
             onSubmit={(e) => {
@@ -89,68 +79,95 @@ export default function PdfPreviewBar({
             <label className="sr-only" htmlFor="pdf-page-jump-input">
               {printedPagesEnabled ? '현재 인쇄 쪽수' : '현재 페이지'}
             </label>
-            <input
-              id="pdf-page-jump-input"
-              type={printedPagesEnabled ? 'text' : 'number'}
-              inputMode="numeric"
-              className={`pdf-preview-bar__input${
-                printedPagesEnabled ? ' pdf-preview-bar__input--spread' : ''
-              }`}
-              min={printedPagesEnabled ? undefined : 1}
-              max={printedPagesEnabled ? undefined : numPages}
-              value={value}
-              onChange={(e) => setValue(e.target.value)}
-              onBlur={submit}
-              aria-label={
-                printedPagesEnabled
-                  ? printedPagesActive
-                    ? '인쇄 쪽수 입력 (예: 6-7)'
-                    : '인쇄 쪽수 입력 (보정 전: 6-7 등으로 이동 가능)'
-                  : `페이지 1–${numPages}`
-              }
-            />
-            <span className="pdf-preview-bar__total">/ {displayTotal}</span>
+            <span className="pdf-preview-bar__jump-axis">
+              <span className="pdf-preview-bar__jump-before">
+                <input
+                  id="pdf-page-jump-input"
+                  type={printedPagesEnabled ? 'text' : 'number'}
+                  inputMode="numeric"
+                  className={`pdf-preview-bar__input pdf-preview-bar__jump-input${
+                    printedPagesEnabled ? ' pdf-preview-bar__input--spread' : ''
+                  }`}
+                  min={printedPagesEnabled ? undefined : 1}
+                  max={printedPagesEnabled ? undefined : numPages}
+                  value={value}
+                  onChange={(e) => setValue(e.target.value)}
+                  onBlur={submit}
+                  aria-label={
+                    printedPagesEnabled
+                      ? printedPagesActive
+                        ? '인쇄 쪽수 입력 (예: 6-7)'
+                        : '인쇄 쪽수 입력 (보정 전: 6-7 등으로 이동 가능)'
+                      : `페이지 1–${numPages}`
+                  }
+                />
+              </span>
+              <span className="pdf-preview-bar__slash" aria-hidden="true">
+                /
+              </span>
+              <span className="pdf-preview-bar__total">{displayTotal}</span>
+            </span>
           </form>
-
-          {thumbStripOpen && pdf ? (
-            <PdfThumbnailStrip
-              pdf={pdf}
-              currentPage={currentPage}
-              onSelectPage={onGoToPage}
-              formatPageLabel={formatPageLabel}
-            />
-          ) : null}
+          <p className="pdf-preview-bar__jump-hint">
+            *이동하려는 페이지 번호를 기입하고 엔터키를 누르면 이동합니다
+          </p>
         </div>
 
-        <button
-          type="button"
-          className="pdf-preview-bar__nav"
-          disabled={currentPage >= numPages}
-          onClick={() => onGoToPage(currentPage + 1)}
-          aria-label="다음 페이지"
-        >
-          →
-        </button>
+        {thumbStripOpen && pdf ? (
+          <div className="pdf-preview-bar__strip-row">
+            <button
+              type="button"
+              className="pdf-preview-bar__nav pdf-preview-bar__nav--prev"
+              disabled={currentPage <= 1}
+              onClick={() => onGoToPage(currentPage - 1)}
+              aria-label="이전 페이지"
+            >
+              ←
+            </button>
+
+            <div className="pdf-preview-bar__middle">
+              <PdfThumbnailStrip
+                pdf={pdf}
+                currentPage={currentPage}
+                onSelectPage={onGoToPage}
+                formatPageLabel={formatPageLabel}
+              />
+            </div>
+
+            <div className="pdf-preview-bar__nav-col pdf-preview-bar__nav-col--next">
+              <button
+                type="button"
+                className="pdf-preview-bar__nav pdf-preview-bar__nav--next"
+                disabled={currentPage >= numPages}
+                onClick={() => onGoToPage(currentPage + 1)}
+                aria-label="다음 페이지"
+              >
+                →
+              </button>
+              <p className="pdf-preview-bar__thumb-hint">
+                <span className="pdf-preview-bar__thumb-hint-line">
+                  *네모가 보일 경우 클릭하면
+                </span>
+                <span className="pdf-preview-bar__thumb-hint-line">
+                  미리보기 이미지로 표시됩니다
+                </span>
+              </p>
+            </div>
+          </div>
+        ) : null}
       </div>
 
       <aside className="pdf-preview-bar__aside">
         {onToggleThumbStrip ? (
-          <div className="pdf-preview-bar__preview-controls">
-            <button
-              type="button"
-              className="pdf-preview-bar__toggle"
-              onClick={onToggleThumbStrip}
-              aria-expanded={thumbStripOpen}
-              aria-controls="pdf-thumb-strip"
-            >
-              {thumbStripOpen ? '숨기기' : '미리보기'}
-            </button>
-            {thumbStripOpen ? (
-              <p className="pdf-preview-bar__thumb-hint">
-                *네모가 보일 경우 클릭하면 미리보기 이미지로 표시됩니다
-              </p>
-            ) : null}
-          </div>
+          <button
+            type="button"
+            className="pdf-preview-bar__toggle"
+            onClick={onToggleThumbStrip}
+            aria-expanded={thumbStripOpen}
+            aria-controls="pdf-thumb-strip"
+          >
+            {thumbStripOpen ? '숨기기' : '미리보기'}
+          </button>
         ) : null}
       </aside>
     </div>
