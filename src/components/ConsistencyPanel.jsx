@@ -4,7 +4,6 @@ import {
   isOverMaxRules,
   maxRulesExceededMessage,
 } from '../lib/activeRuleCount.js';
-import { MAX_RULES } from '../lib/builtInRules.js';
 import {
   buildRulesForEntry,
   isConsistencyEntryEnabled,
@@ -63,13 +62,6 @@ export default function ConsistencyPanel({
   useEffect(() => {
     setGlobalExcludeInput('');
   }, [globalExcludePhrases]);
-
-  const totalEnabled = countActiveRules({
-    builtInEnabled,
-    cautionEnabled,
-    customRules,
-  });
-  const slotsLeft = MAX_RULES - totalEnabled;
 
   const literalEntries = listConsistencyEntries(customRules);
   const slotEntries = listPhraseSlotEntries(customRules);
@@ -198,9 +190,9 @@ export default function ConsistencyPanel({
     <div className="consistency-embed">
       <section className="consistency-unified-box" aria-label="표기 일관성 찾기">
         <div className="consistency-subsection consistency-subsection--first">
-          <p className="field-label">문자열 찾기</p>
+          <p className="field-label">일관성 검색(1회 8개까지 가능)</p>
           <p className="hint">
-            한글과 영문 대소문자를 등록한 그대로 찾습니다 (예: 조선˅시대/조선시대,
+            한글 · 영문 대소문자 · 기호 · 띄어쓰기 등을 찾습니다 (예: 조선˅시대/조선시대,
             RED˅PEN/Redpen)
           </p>
           <ConsistencyRegisterField
@@ -208,7 +200,7 @@ export default function ConsistencyPanel({
             onChange={setLiteralInput}
             onRegister={registerLiteral}
             placeholder={SPACE_INPUT_PLACEHOLDER}
-            ariaLabel="문자열 찾기"
+            ariaLabel="일관성 검색(1회 8개까지 가능)"
           />
           <RegisteredList
             entries={literalEntries}
@@ -259,24 +251,20 @@ export default function ConsistencyPanel({
         </div>
 
         <div className="consistency-subsection consistency-subsection--exclude">
-          <p className="field-label">검사 제외 문구</p>
-          <p className="hint">등록한 문구는 찾지 않습니다 (예: 소녀시대)</p>
+          <p className="field-label">검수 제외 단어</p>
+          <p className="hint">등록한 단어는 찾지 않습니다 (예: 소녀시대)</p>
           <ConsistencyRegisterField
             value={globalExcludeInput}
             onChange={setGlobalExcludeInput}
             onRegister={addGlobalExcludePhrases}
             placeholder={SPACE_INPUT_PLACEHOLDER}
-            ariaLabel="검사 제외 문구"
+            ariaLabel="검수 제외 단어"
           />
           <ExcludePhraseList
             phrases={globalExcludePhrases}
             onRemove={removeGlobalExclude}
           />
         </div>
-
-        <p className="hint consistency-slots-hint">
-          남은 활성 슬롯: {Math.max(0, slotsLeft)} / {MAX_RULES}
-        </p>
       </section>
 
       <section
@@ -309,7 +297,7 @@ export default function ConsistencyPanel({
               : ''}
           </p>
         </div>
-        <p className="hint">띄어쓰기 찾기, 개발중, 규칙수 비포함</p>
+        <p className="hint">현재 개발중인 기능으로 부족한 점이 있을 수 있습니다</p>
         <RegisteredList
           entries={auxiliaryEntries}
           customRules={customRules}
@@ -328,14 +316,13 @@ export default function ConsistencyPanel({
       >
         <div className="consistency-toc-section__header">
           <p id="consistency-toc-heading" className="field-label consistency-toc-section__title">
-            목차 검사
+            목차 · 본문 일관성 검사
           </p>
           <span className="consistency-toc-section__badge">개발중</span>
         </div>
         <div className="consistency-toc-section__body">
           <p className="hint consistency-toc-section__hint">
-            목차의 장 제목·페이지와 본문 해당 쪽 제목을 맞춰 보는 검사입니다. 규칙
-            슬롯(1000개)에는 포함되지 않습니다.
+            목차와 본문의 일관성을 맞춰 보는 검사입니다.
           </p>
         </div>
       </section>

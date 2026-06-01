@@ -475,8 +475,9 @@
 }
 
 .consistency-toc-section {
-  flex: 1 1 0;
-  min-height: 140px;
+  flex: 0 0 auto;
+  min-height: 70px;
+  padding: 7px 16px;
   display: flex;
   flex-direction: column;
   border-color: var(--color-scrollbar-thumb);
@@ -507,10 +508,10 @@
 }
 
 .consistency-toc-section__body {
-  flex: 1 1 0;
-  min-height: 72px;
-  margin-top: 10px;
-  padding: 12px 14px;
+  flex: 0 0 auto;
+  min-height: 36px;
+  margin-top: 5px;
+  padding: 6px 14px;
   border: 1px dashed var(--color-border-strong);
   border-radius: calc(var(--radius-ui) - 2px);
   background: transparent;
@@ -548,11 +549,6 @@
 
 .consistency-subsection--exclude .tail-list--exclude {
   margin-top: 10px;
-}
-
-.consistency-slots-hint {
-  margin-top: 10px;
-  margin-bottom: 0;
 }
 
 .consistency-unified-box .hint {
