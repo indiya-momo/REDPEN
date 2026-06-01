@@ -145,6 +145,45 @@ export function scaleToFitContainer(pageSize, containerSize, padding = 4) {
   return Math.max(0.25, Math.min(fit, 4));
 }
 
+/** 패널 맞춤(100%) 대비 사용자 확대 배율 */
+export const PDF_ZOOM_FACTOR_MIN = 0.5;
+export const PDF_ZOOM_FACTOR_MAX = 3;
+export const PDF_ZOOM_FACTOR_STEP = 0.25;
+export const PDF_RENDER_SCALE_MAX = 6;
+
+/**
+ * @param {number} factor
+ */
+export function clampPdfZoomFactor(factor) {
+  if (!Number.isFinite(factor)) return 1;
+  return Math.min(
+    PDF_ZOOM_FACTOR_MAX,
+    Math.max(PDF_ZOOM_FACTOR_MIN, factor),
+  );
+}
+
+/**
+ * @param {number} fitScale
+ * @param {number} zoomFactor
+ */
+export function computePdfRenderScale(fitScale, zoomFactor) {
+  const fit = Number.isFinite(fitScale) ? fitScale : 1;
+  const zoom = clampPdfZoomFactor(zoomFactor);
+  return Math.min(
+    PDF_RENDER_SCALE_MAX,
+    Math.max(0.25, fit * zoom),
+  );
+}
+
+/**
+ * @param {number} current
+ * @param {number} direction — +1 확대, -1 축소
+ */
+export function stepPdfZoomFactor(current, direction) {
+  const next = clampPdfZoomFactor(current + direction * PDF_ZOOM_FACTOR_STEP);
+  return Math.round(next * 100) / 100;
+}
+
 /**
  * @param {import('pdfjs-dist').RenderTask | null | undefined} renderTask
  */

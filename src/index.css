@@ -1760,6 +1760,80 @@ details[open] > summary .details-chevron {
   align-items: center;
 }
 
+.pdf-zoom-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 6px 10px;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border-strong);
+  font-size: 0.78rem;
+}
+
+.pdf-zoom-bar__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-ui);
+  background: var(--color-surface-raised);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.pdf-zoom-bar__btn:hover:not(:disabled) {
+  border-color: var(--accent-terracotta);
+  color: var(--accent-terracotta-deep);
+}
+
+.pdf-zoom-bar__btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pdf-zoom-bar__percent {
+  min-width: 3.2rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  color: var(--color-text);
+}
+
+.pdf-zoom-bar__fit {
+  margin-left: 4px;
+  padding: 6px 12px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-ui);
+  background: var(--color-surface-raised);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.pdf-zoom-bar__fit:hover:not(:disabled) {
+  border-color: var(--accent-terracotta);
+  color: var(--accent-terracotta-deep);
+}
+
+.pdf-zoom-bar__fit--active,
+.pdf-zoom-bar__fit:disabled {
+  opacity: 0.65;
+  cursor: default;
+}
+
+.pdf-zoom-bar__hint {
+  margin-left: 6px;
+  font-size: 0.68rem;
+  color: var(--color-text-faint);
+  white-space: nowrap;
+}
+
 
 .pdf-center-stage__session-hint {
   width: min(22rem, 100%);

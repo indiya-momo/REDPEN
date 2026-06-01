@@ -721,14 +721,23 @@
   min-height: 0;
 }
 
+.pdf-viewer--fit .pdf-zoom-bar {
+  flex-shrink: 0;
+}
+
 .pdf-viewer--fit .pdf-canvas-stage {
   flex: 1;
   min-height: 0;
   width: 100%;
   display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  overflow: auto;
+}
+
+.pdf-viewer--fit .pdf-canvas-stage--fit-center {
   align-items: center;
   justify-content: center;
-  overflow: hidden;
 }
 
 .pdf-work-pane .pdf-viewer--fit .pdf-canvas-stage {
