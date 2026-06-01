@@ -28,21 +28,21 @@ export default function WelcomeMoScreen({ onStart, onOpenRoom }) {
       <div className="welcome-mo__layout">
         <div className="welcome-mo__copy">
           <header className="welcome-mo__header">
-            <p className="welcome-mo__eyebrow">텍스트 PDF 검수 도구</p>
+            <p className="welcome-mo__eyebrow">텍스트 PDF 검수</p>
             <h1>
               <span className="welcome-mo__title-main">인디야</span>
               <br />
               <span className="welcome-mo__title-sub">교정냥 모모의 여행</span>
             </h1>
             <p className="welcome-mo__platform-badge" aria-label="이용 안내">
-              [모바일 전용 미리보기 페이지]
+              [모바일 안내 페이지]
             </p>
             <p className="welcome-mo__lead">
               <span className="welcome-mo__lead-line">
-                맞춤법·표기 일관성을 찾는 <strong>텍스트 PDF 검수 도구</strong>입니다
+                PDF에서 맞춤법 · 일관성을 검수합니다
               </span>
               <span className="welcome-mo__lead-line">
-                원고와 검사 결과는 <strong>저장하지 않습니다</strong>
+                원고와 검사 결과는 서버에 <strong>저장하지 않습니다</strong>
               </span>
             </p>
           </header>
@@ -53,42 +53,44 @@ export default function WelcomeMoScreen({ onStart, onOpenRoom }) {
             aria-labelledby="welcome-mo-showcase-title"
           >
             <h2 id="welcome-mo-showcase-title" className="welcome-mo__showcase-title">
-              이렇게 작동합니다
+              검수 화면
             </h2>
             <ol className="welcome-mo__showcase-flow">
               <li className="welcome-mo__showcase-item">
                 <p className="welcome-mo__showcase-step">
                   <span className="welcome-mo__showcase-step-num">1</span>
-                  원고 열기
+                  업로드 · 기준 설정
                 </p>
                 <figure className="welcome-mo__showcase-figure">
                   <img
                     src={welcomeMoDemoBefore}
-                    alt="PDF 업로드 화면 — 모모 안내와 PDF 열기 영역"
-                    width={1280}
-                    height={720}
-                    loading="lazy"
-                    decoding="async"
-                  />
-                  <figcaption>드래그하거나 PDF를 선택해 검수를 시작합니다</figcaption>
-                </figure>
-              </li>
-              <li className="welcome-mo__showcase-item">
-                <p className="welcome-mo__showcase-step">
-                  <span className="welcome-mo__showcase-step-num">2</span>
-                  검사 후
-                </p>
-                <figure className="welcome-mo__showcase-figure">
-                  <img
-                    src={welcomeMoDemoAfter}
-                    alt="검사 결과 화면 — 왼쪽 발견 목록과 오른쪽 PDF 하이라이트"
+                    alt="PDF 업로드 및 맞춤법 기준 설정 화면"
                     width={1280}
                     height={720}
                     loading="lazy"
                     decoding="async"
                   />
                   <figcaption>
-                    왼쪽 목록을 누르면 PDF에서 해당 위치가 표시됩니다
+                    PDF 업로드 후 적용할 맞춤법 기준을 선택합니다
+                  </figcaption>
+                </figure>
+              </li>
+              <li className="welcome-mo__showcase-item">
+                <p className="welcome-mo__showcase-step">
+                  <span className="welcome-mo__showcase-step-num">2</span>
+                  결과 확인하기
+                </p>
+                <figure className="welcome-mo__showcase-figure">
+                  <img
+                    src={welcomeMoDemoAfter}
+                    alt="맞춤법 검수 결과 확인 화면"
+                    width={1280}
+                    height={720}
+                    loading="lazy"
+                    decoding="async"
+                  />
+                  <figcaption>
+                    본문에서 맞춤법 기준이 적용된 결과를 확인합니다
                   </figcaption>
                 </figure>
               </li>
@@ -106,7 +108,9 @@ export default function WelcomeMoScreen({ onStart, onOpenRoom }) {
                     loading="lazy"
                     decoding="async"
                   />
-                  <figcaption>일관성 확인도 같은 방식으로 가능합니다</figcaption>
+                  <figcaption>
+                    일관성도 동일한 방법으로 적용하여 결과를 확인합니다
+                  </figcaption>
                 </figure>
               </li>
             </ol>
@@ -171,13 +175,10 @@ export default function WelcomeMoScreen({ onStart, onOpenRoom }) {
                 className="btn-welcome-primary welcome-mo__start"
                 onClick={onStart}
               >
-                검수 화면 미리보기
+                화면 구성 보기
               </button>
-              <p className="welcome-mo__steps-note welcome-mo__steps-note--stage welcome-mo__steps-note--desktop">
-                현재 인디야는 <strong>PC버전만 지원</strong>합니다
-              </p>
               <p className="welcome-mo__steps-note welcome-mo__steps-note--stage welcome-mo__steps-note--mobile">
-                PDF검수는 PC버전에서 가능합니다
+                실제 PDF 검수·업로드는 <strong>PC 브라우저</strong>에서 이용하세요
               </p>
             </div>
           </div>

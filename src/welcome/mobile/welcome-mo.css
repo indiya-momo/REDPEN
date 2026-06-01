@@ -228,7 +228,7 @@
 }
 .welcome-mo__showcase-figure {
   margin: 0;
-  border-radius: var(--radius-ui);
+  border-radius: 0;
   overflow: hidden;
   border: 1px solid var(--welcome-border-soft);
   background: rgba(0, 0, 0, 0.25);
