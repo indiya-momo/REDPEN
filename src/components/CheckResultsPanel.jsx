@@ -19,9 +19,13 @@ function CurrentPageFindingText({ visibleOnCurrentPage }) {
   }
   return (
     <>
-      에는 발견한 기준{' '}
-      <span className="current-page-status__count-underline">
-        {visibleOnCurrentPage}개
+      에는 발견한{' '}
+      <span className="current-page-status__criterion-hit">
+        기준{' '}
+        <span className="current-page-status__criterion-hit-num">
+          {visibleOnCurrentPage}
+        </span>
+        개
       </span>
       가 있습니다
     </>

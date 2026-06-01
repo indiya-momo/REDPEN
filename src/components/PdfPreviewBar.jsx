@@ -125,8 +125,8 @@ export default function PdfPreviewBar({
             >
               ▶
             </button>
-            <p className="pdf-preview-bar__jump-hint">
-              *이동하려는 페이지 번호를 기입하고 엔터키를 누르면 이동합니다
+            <p className="pdf-preview-bar__bar-hint pdf-preview-bar__jump-hint">
+              *이동하려는 페이지 번호를 기입하고 엔터키를 누르세요
             </p>
           </div>
         </div>
@@ -142,8 +142,8 @@ export default function PdfPreviewBar({
               />
             </div>
 
-            <div className="pdf-preview-bar__nav-col pdf-preview-bar__nav-col--next">
-              <p className="pdf-preview-bar__thumb-hint">
+            <div className="pdf-preview-bar__nav-col pdf-preview-bar__nav-col--hint">
+              <p className="pdf-preview-bar__bar-hint">
                 *네모가 보일 경우 클릭하면 미리보기 이미지로 표시됩니다
               </p>
             </div>

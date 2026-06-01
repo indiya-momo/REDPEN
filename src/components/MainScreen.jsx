@@ -392,8 +392,8 @@ export default function MainScreen({
           {!isPreUpload ? (
             <header className="pdf-work-pane__header">
               <div className="pdf-work-pane__topbar">
-                <p className="pdf-work-pane__notice" role="status">
-                  사용자의 기준을 저장하는 기능을 준비 중입니다
+                <p className="pdf-work-pane__notice pdf-bar-hint" role="status">
+                  *편집 기준을 저장하는 기능을 준비하고 있습니다
                 </p>
                 {showPdfViewer ? (
                   <div className="pdf-work-pane__zoom-axis">
