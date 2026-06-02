@@ -1,0 +1,185 @@
+/* PDF 업로드 구역(#profile-onboarding-mount) 위에만 표시 */
+
+.profile-onboarding-host {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 100%;
+  padding: 0.25rem calc(0.35rem * 1.365) 0.35rem;
+  box-sizing: border-box;
+}
+
+.profile-onboarding__panel {
+  --po-pad-h: calc(0.7 * 1.365);
+  --po-pad-v: calc(0.7 * 1.8);
+  --po-text: calc(0.7 * 1.8);
+  --po-width: calc(22rem * 1.365);
+  display: flex;
+  flex-direction: column;
+  gap: calc(0.7rem * var(--po-pad-v));
+  width: 100%;
+  max-width: var(--po-width);
+  padding: calc(1.35rem * var(--po-pad-v)) calc(1.25rem * var(--po-pad-h));
+  border-radius: var(--radius-ui-lg);
+  background: var(--color-surface-overlay);
+  border: 1px solid var(--color-border-strong);
+  box-shadow:
+    0 12px 28px rgba(58, 42, 18, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.65);
+  font-family: var(--font-family-body-brand);
+  color: var(--color-text);
+}
+
+.profile-onboarding__intro {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(0.35rem * var(--po-pad-v));
+  width: 100%;
+  text-align: center;
+}
+
+.profile-onboarding__header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(0.5rem * var(--po-pad-h));
+  width: 100%;
+}
+
+.profile-onboarding__header h2 {
+  margin: 0;
+  font-family: var(--font-family-title);
+  font-size: calc(1.3rem * var(--po-text));
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--color-text);
+}
+
+.profile-onboarding__print {
+  flex-shrink: 0;
+  width: calc(1.92rem * var(--po-text) / 0.7);
+  height: calc(1.92rem * var(--po-text) / 0.7);
+  object-fit: contain;
+}
+
+.profile-onboarding__lead {
+  margin: 0;
+  width: 100%;
+  font-size: calc(0.88rem * var(--po-text));
+  line-height: 1.55;
+  color: var(--color-text-muted);
+  word-break: keep-all;
+}
+
+.profile-onboarding__label {
+  width: 100%;
+  font-size: calc(0.82rem * var(--po-text));
+  font-weight: 700;
+  color: var(--accent-terracotta);
+}
+
+.profile-onboarding__input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: calc(0.62rem * var(--po-pad-v)) calc(0.75rem * var(--po-pad-h));
+  border-radius: var(--radius-ui-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+  font: inherit;
+  font-size: calc(0.9rem * var(--po-text));
+  line-height: 1.4;
+}
+
+.profile-onboarding__input::placeholder {
+  color: var(--color-text-subtle);
+}
+
+.profile-onboarding__input:focus {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 1px;
+  border-color: var(--focus-border);
+}
+
+.profile-onboarding__consents {
+  margin: 0;
+  padding: 0;
+  border: none;
+  display: grid;
+  gap: calc(0.55rem * var(--po-pad-v));
+}
+
+.profile-onboarding__check {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45em;
+  font-size: calc(0.76rem * var(--po-text));
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  text-align: left;
+}
+
+.profile-onboarding__check input[type='checkbox'] {
+  box-sizing: border-box;
+  width: 1em;
+  height: 1em;
+  min-width: 1em;
+  min-height: 1em;
+  margin: 0.2em 0 0;
+  flex-shrink: 0;
+  accent-color: var(--accent-terracotta);
+  cursor: pointer;
+}
+
+.profile-onboarding__check > span {
+  flex: 1;
+  min-width: 0;
+}
+
+.profile-onboarding__check a,
+.profile-onboarding__doc {
+  color: var(--accent-spelling);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.profile-onboarding__check a:hover {
+  color: var(--accent-terracotta-deep);
+}
+
+.profile-onboarding__error {
+  margin: 0;
+  font-size: calc(0.76rem * var(--po-text));
+  line-height: 1.45;
+  color: var(--editor-red);
+}
+
+.profile-onboarding__actions {
+  margin-top: calc(0.25rem * var(--po-pad-v));
+}
+
+.profile-onboarding__submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: calc(2.75rem * var(--po-pad-v));
+  padding: calc(0.75rem * var(--po-pad-v)) calc(1rem * var(--po-pad-h));
+  border: none;
+  border-radius: var(--radius-ui);
+  font-family: var(--font-family-title);
+  font-size: calc(0.95rem * var(--po-text));
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+  -webkit-text-stroke: 0;
+  paint-order: unset;
+}
+
+.profile-onboarding__submit:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}

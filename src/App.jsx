@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import MainScreen from './components/MainScreen.jsx';
 import WelcomeScreen from './components/WelcomeScreen.jsx';
 import MomoRoomScreen from './components/MomoRoomScreen.jsx';
+import GuideWindowScreen from './components/GuideWindowScreen.jsx';
+import MyPageWindowScreen from './components/MyPageWindowScreen.jsx';
 import {
   defaultCautionEnabled,
 } from './lib/cautionRules.js';
@@ -16,8 +18,13 @@ import {
   signOutUser,
   subscribeAuthSession,
 } from './lib/firebaseAuth.js';
+import { consumeReturnToMainWorkspace, markReturnToMainWorkspace } from './lib/returnToWorkspace.js';
 
 export default function App() {
+  const auxWindow =
+    typeof window !== 'undefined'
+      ? new URLSearchParams(window.location.search).get('window')
+      : '';
   const [authSession, setAuthSession] = useState(() => getCurrentUserSession());
   const [authReady, setAuthReady] = useState(false);
   const [authBootstrapError, setAuthBootstrapError] = useState('');
@@ -31,6 +38,12 @@ export default function App() {
     return 'welcome';
   });
   const [mainWorkTab, setMainWorkTab] = useState('spelling');
+
+  useEffect(() => {
+    if (!auxWindow && consumeReturnToMainWorkspace()) {
+      setScreen('main');
+    }
+  }, [auxWindow]);
 
   useEffect(() => {
     const unsubscribe = subscribeAuthSession(setAuthSession);
@@ -56,11 +69,19 @@ export default function App() {
     handleDuplicateRuleSet,
     handleDeleteRuleSet,
     handleSaveRules,
+    handleSaveCriteriaPreset,
     handleBuiltInToggle,
     handleBuiltInSetAll,
     handleCautionToggle,
     handleCautionSetAll,
   } = useRuleSets();
+
+  if (auxWindow === 'mypage') {
+    return <MyPageWindowScreen />;
+  }
+  if (auxWindow === 'guide') {
+    return <GuideWindowScreen />;
+  }
 
   if (screen === 'room') {
     return <MomoRoomScreen onClose={() => setScreen('welcome')} />;
@@ -99,7 +120,11 @@ export default function App() {
   // 계약 문서: project-docs/app-mainscreen-contract.md
   return (
     <MainScreen
-      ruleSets={ruleSets.map((s) => ({ id: s.id, name: s.name }))}
+      ruleSets={ruleSets.map((s) => ({
+        id: s.id,
+        name: s.name,
+        savedAt: s.savedAt,
+      }))}
       activeSetId={activeSetId}
       onSelectRuleSet={handleSelectRuleSet}
       onCreateRuleSet={handleCreateRuleSet}
@@ -124,7 +149,24 @@ export default function App() {
         updateActiveSet({ globalExcludePhrases })
       }
       onSaveRules={handleSaveRules}
+      onSaveCriteriaPreset={handleSaveCriteriaPreset}
       onOpenWelcome={() => setScreen('welcome')}
+      onLogout={async () => {
+        await signOutUser();
+        setMainWorkTab('spelling');
+        setScreen('welcome');
+      }}
+      onOpenMyPageWindow={() => {
+        markReturnToMainWorkspace();
+        const url = new URL(import.meta.env.BASE_URL || '/', window.location.origin);
+        url.searchParams.set('window', 'mypage');
+        window.open(url.toString(), '_blank', 'noopener');
+      }}
+      onOpenGuideWindow={() => {
+        const url = new URL(import.meta.env.BASE_URL || '/', window.location.origin);
+        url.searchParams.set('window', 'guide');
+        window.open(url.toString(), '_blank', 'noopener,noreferrer');
+      }}
       initialWorkTab={mainWorkTab}
     />
   );

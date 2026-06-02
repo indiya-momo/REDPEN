@@ -204,7 +204,7 @@ export default function FeedbackModal({ open, onClose }) {
               disabled={sending}
             >
               <ExternalLink size={16} aria-hidden />
-              Google Form에서 작성
+              파일 첨부하기(구글 폼으로 작성)
             </button>
           ) : null}
           <button
