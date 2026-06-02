@@ -7,6 +7,12 @@ export const FLEX_SPACE = String.raw`[ \u00A0]+`;
 /** 보조용언·어미 (보면, 보여, 본다 …) */
 export const HANGUL_SUFFIX = String.raw`[\uAC00-\uD7A3]+`;
 
+/** stem 뒤 어미·문장 끝 (본 / 본다 / 본.) */
+export const STEM_TAIL_END = String.raw`(?:${HANGUL_SUFFIX})?`;
+
+/** stem 매칭 뒤 경계 */
+export const STEM_TAIL_BOUNDARY = String.raw`(?=$|[ \u00A0,.!?…「」『』\])\\n])`;
+
 /** 문장/어절 앞 경계 */
 export const PHRASE_START = String.raw`(?:^|[\s\u00A0])`;
 
@@ -39,4 +45,13 @@ export function tailRegexFragment(tailWord) {
   const parts = tailWord.trim().split(/\s+/).filter(Boolean);
   if (!parts.length) return '';
   return parts.map(escapeRegex).join(FLEX_SPACE);
+}
+
+/**
+ * bon-bojo stems — 앞말 유무: (\S*head)+공백+(tail+어미?)
+ * @param {string} head stem 앞절 (켜, 해, 어 …)
+ * @param {string} tailSyl stem 뒤절 (본, 보, 지 …)
+ */
+export function buildSpacedStemFindPattern(head, tailSyl) {
+  return String.raw`(\S*${escapeRegex(head)})${FLEX_SPACE}(${escapeRegex(tailSyl)}${STEM_TAIL_END})(?!으로)${STEM_TAIL_BOUNDARY}`;
 }

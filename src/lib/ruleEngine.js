@@ -32,6 +32,9 @@ import { isMatchSpatiallyCoherent } from './matchSpatial.js';
  * @property {RuleCategory} [category]
  * @property {string} [cautionId]
  * @property {string} [tip]
+ * @property {import('./ruleTypes.js').RuleKind} [patternKind]
+ * @property {string} [tailWord]
+ * @property {string} [groupDisplayLabel]
  * @property {MatchInstance[]} instances
  */
 
@@ -135,6 +138,15 @@ function applyRuleToPages(rule, pages, byKey, globalExcludePhrases, errors) {
           category: rule.category ?? (rule.builtIn ? 'spelling' : 'custom'),
           ...(rule.cautionId ? { cautionId: rule.cautionId } : {}),
           ...(tip ? { tip } : {}),
+          ...(rule.patternKind ? { patternKind: rule.patternKind } : {}),
+          ...(rule.patternKind === 'auxiliary-verb' && rule.tailWord
+            ? {
+                tailWord: rule.tailWord,
+                ...(rule.label?.trim()
+                  ? { groupDisplayLabel: rule.label.trim() }
+                  : {}),
+              }
+            : {}),
           instances: [],
         });
       }

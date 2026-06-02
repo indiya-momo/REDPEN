@@ -1374,6 +1374,36 @@ details[open] > summary .details-chevron {
   color: var(--accent-on-terracotta);
 }
 
+.result-card--consistency .result-aux-title {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4em 0.5em;
+  max-width: 100%;
+}
+
+.result-card--consistency .result-aux-stem {
+  font-weight: 800;
+  color: var(--color-surface-inverse);
+}
+
+.result-card--consistency .result-aux-group-tag {
+  display: inline-block;
+  padding: 0.2rem 0.55rem;
+  border: 2px solid var(--accent-terracotta-deep);
+  border-radius: var(--radius-ui-sm);
+  background: color-mix(in srgb, var(--accent-terracotta) 28%, #fff 72%);
+  font-size: 0.85em;
+  font-weight: 800;
+  line-height: 1.35;
+  color: var(--accent-terracotta-deep);
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--accent-terracotta) 35%, transparent),
+    0 1px 2px rgba(115, 75, 50, 0.18);
+}
+
 .results-panel-footer .btn-additional-check {
   color: var(--btn-secondary-text);
   border-color: var(--btn-secondary-border);
