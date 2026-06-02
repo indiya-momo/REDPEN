@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ChevronDown,
+  FilePlus,
   House,
   LogOut,
   MessageSquare,
@@ -620,6 +621,14 @@ export default function MainScreen({
                 >
                   <UserRound size={16} aria-hidden />
                   마이페이지
+                </button>
+                <button
+                  type="button"
+                  className="pdf-work-pane__aux-btn"
+                  onClick={() => void session.handleEndWork()}
+                >
+                  <FilePlus size={16} aria-hidden />
+                  새 작업
                 </button>
                 <button
                   type="button"

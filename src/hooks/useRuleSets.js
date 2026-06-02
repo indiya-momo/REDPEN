@@ -29,11 +29,12 @@ import {
 import { normalizeRuleSet } from '../lib/ruleSetNormalize.js';
 
 const RULE_SET_AUTOSAVE_MS = 400;
+const DEFAULT_SET_LABEL = '선택한 맞춤법 /일관성 기준을 저장합니다';
 
 function createDefaultSet() {
   return normalizeRuleSet({
     id: newId(),
-    name: '기본 규칙 세트',
+    name: DEFAULT_SET_LABEL,
     builtInEnabled: builtInEnabledFromSheet(),
     customRules: [],
     globalExcludePhrases: [],
@@ -81,7 +82,13 @@ export function useRuleSets() {
   }, [flushRuleSets]);
 
   useEffect(() => {
-    let sets = loadRuleSets().map(normalizeRuleSet);
+    let sets = loadRuleSets().map((set) => {
+      const normalized = normalizeRuleSet(set);
+      if ((normalized.name || '').trim() === '기본 규칙 세트') {
+        return normalizeRuleSet({ ...normalized, name: DEFAULT_SET_LABEL });
+      }
+      return normalized;
+    });
     if (!sets.length) {
       sets = [createDefaultSet()];
     }

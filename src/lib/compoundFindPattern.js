@@ -1,8 +1,4 @@
-import {
-  PHRASE_START,
-  escapeRegex,
-  tailRegexFragment,
-} from './compoundPatternCommon.js';
+import { escapeRegex, tailRegexFragment } from './compoundPatternCommon.js';
 import { encodeSpacesVisible } from './spaceVisibleText.js';
 
 /**
@@ -33,7 +29,8 @@ export function buildCompoundFindRules(tailWord, options = {}) {
     return [
       {
         ...base,
-        find: String.raw`${PHRASE_START}${tailFrag}`,
+        find: tailFrag,
+        requireLeadingBoundary: true,
       },
     ];
   }
@@ -41,7 +38,8 @@ export function buildCompoundFindRules(tailWord, options = {}) {
   return [
     {
       ...base,
-      find: String.raw`${PHRASE_START}${esc}`,
+      find: esc,
+      requireLeadingBoundary: true,
     },
   ];
 }

@@ -4,7 +4,7 @@ import {
   BON_BOJO_GROUPS,
   bonBojoDisplayLabelForItem,
   bonBojoItemIdForTail,
-  tailWordsFromBonBojoItem,
+  auxiliarySearchTailsFromBonBojoItem,
 } from './bonBojoRules.js';
 import { encodeSpacesVisible } from './spaceVisibleText.js';
 
@@ -24,6 +24,15 @@ const LEGACY_BUILTIN_AUXILIARY_TAILS = new Set([
   '해 보',
 ]);
 
+/** @param {string} itemId */
+function allowedSearchTailsForItem(itemId) {
+  for (const group of BON_BOJO_GROUPS) {
+    const item = group.items.find((i) => i.id === itemId);
+    if (item) return new Set(auxiliarySearchTailsFromBonBojoItem(item));
+  }
+  return new Set();
+}
+
 /**
  * @param {import('./ruleTypes.js').Rule[]} rules
  */
@@ -33,7 +42,12 @@ function pruneObsoleteAuxiliaryRules(rules) {
     if (r.patternKind !== 'auxiliary-verb') return true;
     const tw = r.tailWord?.trim();
     if (!tw) return false;
-    if (r.bonBojoItemId) return true;
+    const itemId = r.bonBojoItemId?.trim();
+    if (itemId) {
+      const allowed = allowedSearchTailsForItem(itemId);
+      if (allowed.size > 0 && !allowed.has(tw)) return false;
+      return true;
+    }
     if (bonTails.has(tw)) return false;
     if (LEGACY_BUILTIN_AUXILIARY_TAILS.has(tw)) return false;
     return true;
@@ -56,7 +70,7 @@ export function ensureDefaultAuxiliaryVerbs(customRules) {
         item.displayLabel?.trim() ||
         bonBojoDisplayLabelForItem(itemId) ||
         encodeSpacesVisible(item.label);
-      for (const tail of tailWordsFromBonBojoItem(item)) {
+      for (const tail of auxiliarySearchTailsFromBonBojoItem(item)) {
         const batch = buildRulesForAuxiliaryEntry(rules, tail);
         if (!batch.length) continue;
         rules = [

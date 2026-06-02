@@ -23,6 +23,19 @@ export function tailWordsFromBonBojoItem(item) {
   return tails;
 }
 
+/**
+ * 일관성 검사용 tail — stems가 있으면 stems만(시트와 동일), 없으면 label
+ * @param {BonBojoItem} item
+ */
+export function auxiliarySearchTailsFromBonBojoItem(item) {
+  const stems = Array.isArray(item.stems)
+    ? item.stems.map((s) => String(s).trim()).filter(Boolean)
+    : [];
+  if (stems.length > 0) return stems;
+  const label = String(item.label ?? '').trim();
+  return label ? [label] : [];
+}
+
 /** 일관성 목록·체크 단위 (시트 item 1행 = 1칸) */
 /** @type {BonBojoListItem[]} */
 export const BON_BOJO_LIST_ITEMS = BON_BOJO_GROUPS.flatMap((group) => {

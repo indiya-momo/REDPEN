@@ -3,16 +3,13 @@ import { BookOpen } from 'lucide-react';
 import AppVersionBadge from '../../components/AppVersionBadge.jsx';
 import MomoHero from '../../components/MomoHero.jsx';
 import TooltipGuide from '../../components/TooltipGuide.jsx';
-import {
-  isAnalyticsOptedOut,
-  setAnalyticsOptOut,
-} from '../../lib/analytics.js';
 import welcomeMomoFrame from '../../assets/welcome/welcome_momo_frame3.png';
 import {
   getCurrentUserSession,
   mapFirebaseAuthError,
 } from '../../lib/firebaseAuth.js';
 import { publicAssetUrl } from '../../lib/publicAssetUrl.js';
+import { getUserProfile } from '../../lib/userProfileStorage.js';
 import './welcome-pc.css';
 
 const WELCOME_MOMO_FRAME = welcomeMomoFrame;
@@ -40,9 +37,6 @@ export default function WelcomePcScreen({
   onGoogleSignIn,
   onLogout,
 }) {
-  const [analyticsOptedOut, setAnalyticsOptedOut] = useState(() =>
-    isAnalyticsOptedOut(),
-  );
   const [authError, setAuthError] = useState('');
   const [authPending, setAuthPending] = useState(false);
   const enterMainAfterLoginRef = useRef(false);
@@ -66,10 +60,16 @@ export default function WelcomePcScreen({
     onStart();
   }, [authReady, uid, onStart]);
 
-  const signedInLabel = useMemo(() => {
+  const signedInName = useMemo(() => {
     if (!session?.uid) return '';
-    const label = session.email || session.displayName || 'Google 계정';
-    return `${label}으로 로그인됨`;
+    const profile = getUserProfile(session.uid);
+    const nickname = profile?.nickname?.trim();
+    return (
+      nickname ||
+      session.displayName?.trim() ||
+      session.email?.trim() ||
+      '회원'
+    );
   }, [session]);
 
   async function handleGoogleAuth() {
@@ -113,7 +113,11 @@ export default function WelcomePcScreen({
                 맞춤법·표기 일관성을 찾는 <strong>인디자인 텍스트 PDF 검수 도구</strong>입니다
               </span>
               <span className="welcome-pc__lead-line">
-                원고와 검사 결과는 <strong>이 브라우저 안에서만 처리</strong>합니다(PC버전만 지원)
+                원고와 검사 결과는{' '}
+                <span className="welcome-pc__lead-emphasis">
+                  서버에 저장하지 않고, 이 브라우저 안에서만 처리
+                </span>
+                합니다
               </span>
             </p>
           </header>
@@ -184,7 +188,13 @@ export default function WelcomePcScreen({
           {loggedIn ? (
             <section className="welcome-pc__auth" aria-label="회원가입 및 로그인">
               <div className="welcome-pc__auth-signed">
-                <p>{signedInLabel}</p>
+                <p className="welcome-pc__auth-signed-text">
+                  <span className="welcome-pc__auth-nickname">{signedInName}</span>
+                  <span className="welcome-pc__auth-honorific">님이</span>
+                  <span className="welcome-pc__auth-message">
+                    모모와 원고를 검수 중입니다
+                  </span>
+                </p>
                 <button
                   type="button"
                   className="welcome-pc__auth-ghost"
@@ -197,24 +207,6 @@ export default function WelcomePcScreen({
           ) : null}
 
           <div className="welcome-pc__bottom-notes">
-            <p className="welcome-pc__analytics-note">
-              {analyticsOptedOut ? (
-                <>베타 통계 수집을 사용하지 않습니다.</>
-              ) : (
-                <>오픈 베타 기간에는 사용자의 이용 방식만 익명으로 수집합니다.</>
-              )}{' '}
-              <button
-                type="button"
-                className="welcome-pc__analytics-toggle"
-                onClick={() => {
-                  const next = !analyticsOptedOut;
-                  setAnalyticsOptOut(next);
-                  setAnalyticsOptedOut(next);
-                }}
-              >
-                {analyticsOptedOut ? '통계 수집 켜기' : '수집 안 함'}
-              </button>
-            </p>
             <div className="welcome-pc__bottom-meta">
               <AppVersionBadge dateOnly />
               <button
@@ -268,7 +260,7 @@ export default function WelcomePcScreen({
                     className="btn-welcome-primary welcome-pc__start"
                     onClick={onStart}
                   >
-                    검수 시작하기
+                    검수하기
                   </button>
                 ) : (
                   <button
