@@ -2,38 +2,42 @@
   "groups": [
     {
       "id": "verb-bon",
-      "tip": "본용언 +­ -아/­어 + 지다(보조용언)은 붙여씀이 원칙이다",
+      "tip": "본용언 +­ -아/­어 + 보조용언은 붙여 씀을 허용한다",
       "items": [
         {
           "id": "verb-gada",
           "label": "가",
-          "enabled": false,
+          "enabled": true,
           "stems": [
             "해 가",
             "해 갔",
             "해 간",
             "려 간",
             "져 간",
+            "져 가",
             "러 간",
-            "어 간"
+            "어 간",
+            "어"
           ],
           "displayLabel": "(아/어) + 가다"
         },
         {
           "id": "verb-naeda",
           "label": "내",
-          "enabled": false,
+          "enabled": true,
           "stems": [
             "워 내",
             "워 냈",
-            "워 낸"
+            "워 낸",
+            "어 낸",
+            "어 내"
           ],
           "displayLabel": "(아/어) + 내다"
         },
         {
           "id": "verb-notda",
           "label": "놓",
-          "enabled": false,
+          "enabled": true,
           "stems": [
             "해 놓",
             "해 놨",
@@ -44,7 +48,7 @@
         {
           "id": "verb-duda",
           "label": "두",
-          "enabled": false,
+          "enabled": true,
           "stems": [
             "해 두",
             "해 둔",
@@ -58,11 +62,12 @@
         {
           "id": "verb-boda1",
           "label": "보",
-          "enabled": false,
+          "enabled": true,
           "stems": [
             "해 보",
             "해 본",
             "해 봅",
+            "해 볼",
             "켜 본",
             "켜 보",
             "어 보",
@@ -75,7 +80,7 @@
         {
           "id": "verb-juda1",
           "label": "주",
-          "enabled": false,
+          "enabled": true,
           "stems": [
             "해 주",
             "해 준",
@@ -83,6 +88,8 @@
             "어 줄",
             "껴 주",
             "여 주",
+            "여 준",
+            "여 줄",
             "려 주"
           ],
           "displayLabel": "(아/어) + 주다"
@@ -90,7 +97,7 @@
         {
           "id": "verb-oda",
           "label": "오",
-          "enabled": false,
+          "enabled": true,
           "stems": [
             "켜 오",
             "켜 왔",
@@ -128,9 +135,31 @@
             "아 지",
             "커 지",
             "어 지",
-            "러"
+            "러 지"
           ],
           "displayLabel": "(아/어) + 지다"
+        },
+        {
+          "id": "verb-itta",
+          "label": "있",
+          "enabled": true,
+          "stems": [
+            "겨 있",
+            "고 있",
+            "어 있",
+            "아 있"
+          ],
+          "displayLabel": "(아/어) + 있다"
+        },
+        {
+          "id": "verb-eobta",
+          "label": "없",
+          "enabled": true,
+          "stems": [
+            "고 없",
+            "수 없"
+          ],
+          "displayLabel": "(아/어) + 없다"
         }
       ]
     }
