@@ -2,11 +2,26 @@ import { SPELLING_RULES_FP } from './builtInRules.js';
 import { CAUTION_RULES_FP } from './cautionRules.js';
 import { ruleDisplayLabel } from './regexFromFind.js';
 
-/** 문자열 찾기·공통 문자열 찾기 — 발견 0건이어도 결과 목록에 표시 */
-const CONSISTENCY_ZERO_RESULT_KINDS = new Set([
+/** 일관성 결과 목록 — 발견 0건이어도 표시 */
+const CONSISTENCY_LIST_PATTERN_KINDS = new Set([
   'compound-find',
+  'compound-tail',
+  'compound-spacing',
   'phrase-slot-find',
+  'auxiliary-verb',
 ]);
+
+/** @param {import('./ruleTypes.js').Rule} rule */
+function isConsistencyListRule(rule) {
+  return CONSISTENCY_LIST_PATTERN_KINDS.has(rule.patternKind ?? '');
+}
+
+/** @param {import('./ruleTypes.js').Rule} rule */
+function shouldShowZeroFindGroup(rule) {
+  return (
+    isConsistencyListRule(rule) && rule.patternKind !== 'auxiliary-verb'
+  );
+}
 
 /** @param {{ find: string, replace: string }} row */
 function consistencyResultKey(row) {
@@ -115,31 +130,89 @@ export function findResultSource(spellingResults, consistencyResults, inst) {
  * @param {import('./ruleEngine.js').GroupedResult[]} results
  * @param {import('./ruleTypes.js').Rule[]} activeRules
  */
+/** @param {import('./ruleTypes.js').Rule} rule */
+function zeroFindGroupFromRule(rule) {
+  return {
+    find: rule.find,
+    replace: rule.replace,
+    label: ruleDisplayLabel(rule),
+    category: 'consistency',
+    ...(rule.patternKind ? { patternKind: rule.patternKind } : {}),
+    ...(rule.patternKind === 'auxiliary-verb' && rule.tailWord
+      ? {
+          tailWord: rule.tailWord,
+          ...(rule.label?.trim()
+            ? { groupDisplayLabel: rule.label.trim() }
+            : {}),
+        }
+      : {}),
+    instances: [],
+  };
+}
+
+/**
+ * 일관성 결과 정렬 — 1) 일관성 찾기(등록 순) 2) 본용언+보조용언(등록 순)
+ * @param {import('./ruleTypes.js').Rule[]} activeRules
+ * @returns {Map<string, { tier: 0 | 1, index: number }>}
+ */
+function buildConsistencyResultOrder(activeRules) {
+  /** @type {Map<string, { tier: 0 | 1, index: number }>} */
+  const order = new Map();
+  let userIdx = 0;
+  let auxIdx = 0;
+  for (const rule of activeRules) {
+    if (!rule.enabled || !isConsistencyListRule(rule)) continue;
+    const key = consistencyResultKey(rule);
+    if (order.has(key)) continue;
+    const isAux = rule.patternKind === 'auxiliary-verb';
+    order.set(key, {
+      tier: isAux ? 1 : 0,
+      index: isAux ? auxIdx++ : userIdx++,
+    });
+  }
+  return order;
+}
+
+/** @param {import('./ruleEngine.js').GroupedResult} group */
+/** @param {Map<string, { tier: 0 | 1, index: number }>} order */
+function consistencyGroupSortRank(group, order) {
+  const mapped = order.get(consistencyResultKey(group));
+  if (mapped) return mapped;
+  if (group.patternKind === 'auxiliary-verb') {
+    return { tier: 1, index: Number.POSITIVE_INFINITY };
+  }
+  return { tier: 0, index: Number.POSITIVE_INFINITY };
+}
+
+/**
+ * @param {import('./ruleEngine.js').GroupedResult[]} results
+ * @param {import('./ruleTypes.js').Rule[]} activeRules
+ */
+export function sortConsistencyGroupedResults(results, activeRules) {
+  const order = buildConsistencyResultOrder(activeRules);
+  return [...results].sort((a, b) => {
+    const ra = consistencyGroupSortRank(a, order);
+    const rb = consistencyGroupSortRank(b, order);
+    if (ra.tier !== rb.tier) return ra.tier - rb.tier;
+    if (ra.index !== rb.index) return ra.index - rb.index;
+    return (a.label ?? '').localeCompare(b.label ?? '', 'ko');
+  });
+}
+
 export function mergeConsistencyZeroFindGroups(results, activeRules) {
   const merged = [...results];
   const seen = new Set(merged.map((g) => consistencyResultKey(g)));
 
   for (const rule of activeRules) {
     if (!rule.enabled) continue;
-    if (!CONSISTENCY_ZERO_RESULT_KINDS.has(rule.patternKind ?? '')) continue;
+    if (!shouldShowZeroFindGroup(rule)) continue;
 
     const key = consistencyResultKey(rule);
     if (seen.has(key)) continue;
     seen.add(key);
 
-    merged.push({
-      find: rule.find,
-      replace: rule.replace,
-      label: rule.label?.trim() || ruleDisplayLabel(rule),
-      category: 'consistency',
-      instances: [],
-    });
+    merged.push(zeroFindGroupFromRule(rule));
   }
 
-  return merged.sort((a, b) => {
-    const pa = a.instances[0]?.pageNum ?? Number.POSITIVE_INFINITY;
-    const pb = b.instances[0]?.pageNum ?? Number.POSITIVE_INFINITY;
-    if (pa !== pb) return pa - pb;
-    return a.label.localeCompare(b.label, 'ko');
-  });
+  return sortConsistencyGroupedResults(merged, activeRules);
 }

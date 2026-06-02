@@ -105,7 +105,7 @@
     },
     {
       "id": "eogan-eomi",
-      "tip": "한국어 어간(되-)은 홀로 문장 끝에 올 수 없으며, 어미(-어)와 결합해야 하므로 문장의 끝은 '돼'로 끝난다",
+      "tip": "'아니요'는 네/예의 반대말로 질문에 답할 때 쓴다. '아니오'는 아니다'의 어간 뒤에 하오체 어미 '-오'가 붙은 종결형이다",
       "items": [
         {
           "id": "eogan-eomi-doei",
@@ -121,6 +121,18 @@
           "except": [
             "돼지"
           ]
+        },
+        {
+          "id": "eogan-eomi-aniyo",
+          "label": "아니오, 아니요",
+          "enabled": false,
+          "matchMode": "spaced-before",
+          "inventoryOnly": false,
+          "stems": [
+            "아니오",
+            "아니요"
+          ],
+          "displayLabel": "아니오, 아니요(자주 틀리는 경우)"
         }
       ]
     },
