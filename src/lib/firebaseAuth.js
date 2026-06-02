@@ -48,10 +48,14 @@ if (isFirebaseAuthConfigured) {
 
 function toSession(user) {
   if (!user) return null;
+  const createdAtMs = user.metadata?.creationTime
+    ? Date.parse(user.metadata.creationTime)
+    : NaN;
   return {
     uid: user.uid,
     email: user.email ?? '',
     displayName: user.displayName ?? '',
+    createdAtMs: Number.isFinite(createdAtMs) ? createdAtMs : undefined,
   };
 }
 

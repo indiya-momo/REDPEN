@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { BookOpen } from 'lucide-react';
 import AppVersionBadge from '../../components/AppVersionBadge.jsx';
 import MomoHero from '../../components/MomoHero.jsx';
@@ -17,6 +17,7 @@ import './welcome-pc.css';
 
 const WELCOME_MOMO_FRAME = welcomeMomoFrame;
 const MOMO_TOOLTIP = publicAssetUrl('momo/bullon4.png');
+const ENTER_MAIN_AFTER_GOOGLE_KEY = 'indiya-enter-main-after-google';
 
 /**
  * PC 대문 — welcome-pc 전용 (모바일과 마크업·CSS 공유 없음)
@@ -44,19 +45,32 @@ export default function WelcomePcScreen({
   );
   const [authError, setAuthError] = useState('');
   const [authPending, setAuthPending] = useState(false);
+  const enterMainAfterLoginRef = useRef(false);
+
+  const session = authSession ?? getCurrentUserSession();
+  const uid = session?.uid ?? '';
+  const loggedIn = Boolean(uid);
 
   useEffect(() => {
     if (authBootstrapError) setAuthError(authBootstrapError);
   }, [authBootstrapError]);
-  const loggedIn = Boolean(
-    authSession?.uid || getCurrentUserSession()?.uid,
-  );
+
+  useEffect(() => {
+    if (!authReady || !uid) return;
+    const pending =
+      enterMainAfterLoginRef.current ||
+      sessionStorage.getItem(ENTER_MAIN_AFTER_GOOGLE_KEY) === '1';
+    if (!pending) return;
+    enterMainAfterLoginRef.current = false;
+    sessionStorage.removeItem(ENTER_MAIN_AFTER_GOOGLE_KEY);
+    onStart();
+  }, [authReady, uid, onStart]);
+
   const signedInLabel = useMemo(() => {
-    const session = authSession ?? getCurrentUserSession();
     if (!session?.uid) return '';
     const label = session.email || session.displayName || 'Google 계정';
     return `${label}으로 로그인됨`;
-  }, [authSession, loggedIn]);
+  }, [session]);
 
   async function handleGoogleAuth() {
     if (loggedIn) {
@@ -65,12 +79,21 @@ export default function WelcomePcScreen({
     }
     setAuthPending(true);
     setAuthError('');
+    enterMainAfterLoginRef.current = true;
+    sessionStorage.setItem(ENTER_MAIN_AFTER_GOOGLE_KEY, '1');
     try {
       await onGoogleSignIn();
-      setAuthPending(false);
+      if (getCurrentUserSession()?.uid && authReady) {
+        enterMainAfterLoginRef.current = false;
+        sessionStorage.removeItem(ENTER_MAIN_AFTER_GOOGLE_KEY);
+        onStart();
+      }
     } catch (error) {
-      setAuthPending(false);
+      enterMainAfterLoginRef.current = false;
+      sessionStorage.removeItem(ENTER_MAIN_AFTER_GOOGLE_KEY);
       setAuthError(mapFirebaseAuthError(error));
+    } finally {
+      setAuthPending(false);
     }
   }
 

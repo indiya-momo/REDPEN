@@ -1,5 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { BookOpen, MessageSquare } from 'lucide-react';
+import {
+  ChevronDown,
+  House,
+  LogOut,
+  MessageSquare,
+  Save,
+  UserRound,
+} from 'lucide-react';
 import PdfViewer from './PdfViewer.jsx';
 import AppVersionBadge from './AppVersionBadge.jsx';
 import ResizableBuiltinSpelling from './ResizableBuiltinSpelling.jsx';
@@ -21,6 +28,16 @@ import {
 } from '../hooks/useResizablePanelWidth.js';
 import { usePrintedPageDisplay } from '../hooks/usePrintedPageDisplay.js';
 import { trackFeedbackOpened } from '../lib/analytics.js';
+import {
+  getCurrentUserSession,
+  subscribeAuthSession,
+} from '../lib/firebaseAuth.js';
+import {
+  getUserProfile,
+  isOnboardingComplete,
+} from '../lib/userProfileStorage.js';
+import { formatRuleSetSavedDate } from '../lib/ruleSetsStorage.js';
+import WelcomeProfileOnboarding from '../welcome/pc/WelcomeProfileOnboarding.jsx';
 import {
   buildTabEntries,
   clampPageNumber,
@@ -51,7 +68,7 @@ import {
  * 변경은 App의 updateActiveSet → autosave 경로 (onSaveRules 불필요).
  *
  * @param {{
- *   ruleSets: { id: string, name: string }[],
+ *   ruleSets: { id: string, name: string, savedAt?: string }[],
  *   activeSetId: string,
  *   onSelectRuleSet: (id: string) => void,
  *   onCreateRuleSet: () => void,
@@ -70,7 +87,11 @@ import {
  *   onCustomRulesChange: (rules: import('../lib/ruleTypes.js').Rule[]) => void,
  *   onGlobalExcludePhrasesChange: (phrases: string[]) => void,
  *   onSaveRules: () => void,
+ *   onSaveCriteriaPreset: (name: string) => boolean,
  *   onOpenWelcome: () => void,
+ *   onLogout: () => void | Promise<void>,
+ *   onOpenMyPageWindow: () => void,
+ *   onOpenGuideWindow: () => void,
  *   initialWorkTab?: 'spelling' | 'consistency',
  * }} props
  */
@@ -94,14 +115,95 @@ export default function MainScreen({
   onCustomRulesChange,
   onGlobalExcludePhrasesChange,
   onSaveRules,
+  onSaveCriteriaPreset,
   onOpenWelcome,
+  onLogout,
+  onOpenMyPageWindow,
+  onOpenGuideWindow,
   initialWorkTab = 'spelling',
 }) {
+  void onOpenGuideWindow;
   const [workTab, setWorkTab] = useState(initialWorkTab);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [thumbStripOpen, setThumbStripOpen] = useState(readThumbStripOpenPreference);
+  const [authSession, setAuthSession] = useState(() => getCurrentUserSession());
+  const [profileOnboardingRev, setProfileOnboardingRev] = useState(0);
+  const [criteriaNameInput, setCriteriaNameInput] = useState('');
+  const [criteriaPickerOpen, setCriteriaPickerOpen] = useState(false);
+  const criteriaPickerRef = useRef(null);
   const afterCheckRef = useRef(async () => false);
   const { panelStyle, handleRef, startDrag } = useResizablePanelWidth();
+
+  const activeRuleSet = useMemo(
+    () => ruleSets.find((set) => set.id === activeSetId) ?? null,
+    [ruleSets, activeSetId],
+  );
+
+  const savedRuleSets = useMemo(() => {
+    return [...ruleSets]
+      .filter((set) => Boolean(set.savedAt))
+      .sort((a, b) => {
+        const timeA = Date.parse(a.savedAt);
+        const timeB = Date.parse(b.savedAt);
+        if (timeB !== timeA) return timeB - timeA;
+        return (a.name || '').localeCompare(b.name || '', 'ko');
+      });
+  }, [ruleSets]);
+
+  useEffect(() => {
+    setCriteriaNameInput(activeRuleSet?.name ?? '');
+  }, [activeRuleSet?.id, activeRuleSet?.name]);
+
+  useEffect(() => subscribeAuthSession(setAuthSession), []);
+
+  useEffect(() => {
+    if (!criteriaPickerOpen) return undefined;
+    function handlePointerDown(event) {
+      if (criteriaPickerRef.current?.contains(event.target)) return;
+      setCriteriaPickerOpen(false);
+    }
+    document.addEventListener('pointerdown', handlePointerDown);
+    return () => document.removeEventListener('pointerdown', handlePointerDown);
+  }, [criteriaPickerOpen]);
+
+  function handleSaveCriteria() {
+    onSaveCriteriaPreset(criteriaNameInput);
+    setCriteriaPickerOpen(false);
+  }
+
+  function selectSavedCriteria(set) {
+    onSelectRuleSet(set.id);
+    setCriteriaNameInput((set.name || '').trim());
+    setCriteriaPickerOpen(false);
+  }
+
+  const authUid = authSession?.uid ?? '';
+  void profileOnboardingRev;
+  const showProfileOnboarding =
+    Boolean(authUid) && !isOnboardingComplete(authUid);
+
+  const greetingName = useMemo(() => {
+    void profileOnboardingRev;
+    const profile = authUid ? getUserProfile(authUid) : null;
+    const nickname = profile?.nickname?.trim();
+    if (nickname) return nickname;
+    const name = authSession?.displayName?.trim();
+    if (name) return name;
+    return null;
+  }, [authUid, authSession?.displayName, profileOnboardingRev]);
+
+  const activeSavedRuleSetName = useMemo(() => {
+    const name = activeRuleSet?.name?.trim();
+    if (!name) return null;
+    if (!activeRuleSet?.savedAt) return null;
+    return name;
+  }, [activeRuleSet]);
+
+  const activeSavedRuleSetNameDisplay = useMemo(() => {
+    if (!activeSavedRuleSetName) return null;
+    if (activeSavedRuleSetName.length <= 15) return activeSavedRuleSetName;
+    return `${activeSavedRuleSetName.slice(0, 15)}...`;
+  }, [activeSavedRuleSetName]);
 
   const pdf = usePdfDocument();
   const pdfZoom = usePdfZoom(pdf.pdf);
@@ -301,8 +403,92 @@ export default function MainScreen({
               title="대문화면"
               aria-label="대문화면"
             >
-              <BookOpen size={18} />
+              <House size={18} />
             </button>
+            <div className="panel-left__criteria-save">
+              <div
+                className="panel-left__criteria-picker"
+                ref={criteriaPickerRef}
+              >
+                <label className="sr-only" htmlFor="panel-left-criteria-name">
+                  기준 이름
+                </label>
+                <div className="panel-left__criteria-picker-field">
+                  <input
+                    id="panel-left-criteria-name"
+                    type="text"
+                    className="panel-left__criteria-name"
+                    value={criteriaNameInput}
+                    onChange={(event) =>
+                      setCriteriaNameInput(event.target.value)
+                    }
+                    onFocus={() => {
+                      if (savedRuleSets.length > 0) setCriteriaPickerOpen(true);
+                    }}
+                    placeholder="기준 이름 입력·선택"
+                    maxLength={60}
+                    autoComplete="off"
+                    role="combobox"
+                    aria-expanded={criteriaPickerOpen}
+                    aria-controls="panel-left-criteria-picker-list"
+                    aria-autocomplete="list"
+                  />
+                  <button
+                    type="button"
+                    className="panel-left__criteria-picker-toggle"
+                    aria-label="저장한 기준 목록 열기"
+                    aria-expanded={criteriaPickerOpen}
+                    aria-controls="panel-left-criteria-picker-list"
+                    disabled={savedRuleSets.length === 0}
+                    onClick={() => setCriteriaPickerOpen((open) => !open)}
+                  >
+                    <ChevronDown size={16} aria-hidden />
+                  </button>
+                </div>
+                {criteriaPickerOpen && savedRuleSets.length > 0 ? (
+                  <ul
+                    id="panel-left-criteria-picker-list"
+                    className="panel-left__criteria-picker-menu custom-scrollbar"
+                    role="listbox"
+                    aria-label="저장한 기준"
+                  >
+                    {savedRuleSets.map((set) => {
+                      const isActive = set.id === activeSetId;
+                      const label = (set.name || '이름 없는 기준').trim();
+                      const savedLabel = formatRuleSetSavedDate(set.savedAt);
+                      return (
+                        <li key={set.id} role="presentation">
+                          <button
+                            type="button"
+                            role="option"
+                            aria-selected={isActive}
+                            className={`panel-left__criteria-picker-option${isActive ? ' panel-left__criteria-picker-option--active' : ''}`}
+                            onClick={() => selectSavedCriteria(set)}
+                          >
+                            <span className="panel-left__criteria-picker-option-name">
+                              {label}
+                            </span>
+                            {savedLabel ? (
+                              <span className="panel-left__criteria-picker-option-date">
+                                {savedLabel}
+                              </span>
+                            ) : null}
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                ) : null}
+              </div>
+              <button
+                type="button"
+                className="panel-left__save-rules"
+                onClick={handleSaveCriteria}
+              >
+                <Save size={16} aria-hidden />
+                기준 저장
+              </button>
+            </div>
           </div>
           <nav className="work-tabs" aria-label="검수 종류">
             <button
@@ -389,50 +575,85 @@ export default function MainScreen({
 
       <main className="panel-right">
         <div className="pdf-work-pane">
-          {!isPreUpload ? (
-            <header className="pdf-work-pane__header">
-              <div className="pdf-work-pane__topbar">
-                <p className="pdf-work-pane__notice pdf-bar-hint" role="status">
-                  *편집 기준을 저장하는 기능을 준비하고 있습니다
-                </p>
-                {showPdfViewer ? (
-                  <div className="pdf-work-pane__zoom-axis">
-                    <PdfZoomBar
-                      zoomPercent={pdfZoom.zoomPercent}
-                      canZoomIn={pdfZoom.canZoomIn}
-                      canZoomOut={pdfZoom.canZoomOut}
-                      onZoomIn={pdfZoom.zoomIn}
-                      onZoomOut={pdfZoom.zoomOut}
-                      onZoomPercentChange={pdfZoom.setZoomFromPercent}
-                    />
-                  </div>
-                ) : null}
-                <div className="pdf-work-pane__topbar-actions">
-                  <button
-                    type="button"
-                    className="pdf-work-pane__end-work"
-                    onClick={() => {
-                      session.handleEndWork();
-                    }}
-                  >
-                    작업 종료
-                  </button>
-                  <button
-                    type="button"
-                    className="ruleset-panel__feedback"
-                    onClick={() => {
-                      trackFeedbackOpened();
-                      setFeedbackOpen(true);
-                    }}
-                  >
-                    <MessageSquare size={18} aria-hidden />
-                    피드백 보내기
-                  </button>
+          <header className="pdf-work-pane__header">
+            <div className="pdf-work-pane__topbar">
+              <p className="pdf-work-pane__greeting">
+                {greetingName && activeSavedRuleSetNameDisplay ? (
+                  <>
+                    <span className="pdf-work-pane__greeting-name">
+                      {greetingName}
+                    </span>
+                    님{' '}
+                    <span className="pdf-work-pane__greeting-criteria">
+                      [{activeSavedRuleSetNameDisplay}]
+                    </span>{' '}
+                    기준을 적용하고 있습니다
+                  </>
+                ) : greetingName ? (
+                  <>
+                    <span className="pdf-work-pane__greeting-name">
+                      {greetingName}
+                    </span>
+                    님 안녕하세요
+                  </>
+                ) : (
+                  '안녕하세요'
+                )}
+              </p>
+              {showPdfViewer ? (
+                <div className="pdf-work-pane__zoom-axis">
+                  <PdfZoomBar
+                    zoomPercent={pdfZoom.zoomPercent}
+                    canZoomIn={pdfZoom.canZoomIn}
+                    canZoomOut={pdfZoom.canZoomOut}
+                    onZoomIn={pdfZoom.zoomIn}
+                    onZoomOut={pdfZoom.zoomOut}
+                    onZoomPercentChange={pdfZoom.setZoomFromPercent}
+                  />
                 </div>
+              ) : null}
+              <div className="pdf-work-pane__topbar-actions">
+                <button
+                  type="button"
+                  className="pdf-work-pane__aux-btn"
+                  onClick={onOpenMyPageWindow}
+                >
+                  <UserRound size={16} aria-hidden />
+                  마이페이지
+                </button>
+                <button
+                  type="button"
+                  className="pdf-work-pane__aux-btn"
+                  onClick={() => {
+                    void onLogout();
+                  }}
+                >
+                  <LogOut size={16} aria-hidden />
+                  로그아웃
+                </button>
+                <button
+                  type="button"
+                  className="ruleset-panel__feedback"
+                  onClick={() => {
+                    trackFeedbackOpened();
+                    setFeedbackOpen(true);
+                  }}
+                >
+                  <MessageSquare size={18} aria-hidden />
+                  피드백 보내기
+                </button>
               </div>
-            </header>
-          ) : null}
-          {!showPdfViewer ? (
+            </div>
+          </header>
+          <div className="pdf-work-pane__content">
+            {showProfileOnboarding ? (
+              <WelcomeProfileOnboarding
+                uid={authUid}
+                defaultNickname={authSession?.displayName ?? ''}
+                onComplete={() => setProfileOnboardingRev((n) => n + 1)}
+              />
+            ) : null}
+            {!showPdfViewer ? (
             <PdfCenterStage
               fileRef={pdf.fileRef}
               onOpenPicker={session.openPdfWithPicker}
@@ -486,6 +707,7 @@ export default function MainScreen({
               />
             </>
           )}
+          </div>
         </div>
       </main>
 

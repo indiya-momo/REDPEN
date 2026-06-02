@@ -250,6 +250,89 @@ export function useRuleSets() {
     alert('규칙 세트가 저장되었습니다.');
   }, [flushRuleSets]);
 
+  /** 현재 기준을 이름 붙여 목록에 저장(동일 이름이면 덮어쓰기) */
+  const handleSaveCriteriaPreset = useCallback(
+    (rawName) => {
+      const sourceId = activeSetIdRef.current;
+      const source = ruleSetsRef.current.find((s) => s.id === sourceId);
+      if (!source) return false;
+
+      const name = String(rawName ?? '').trim();
+      if (!name) {
+        alert('기준 이름을 입력해 주세요.');
+        return false;
+      }
+
+      if (autosaveTimerRef.current) {
+        clearTimeout(autosaveTimerRef.current);
+        autosaveTimerRef.current = null;
+      }
+
+      const savedAt = new Date().toISOString();
+      const config = {
+        builtInEnabled: structuredClone(source.builtInEnabled ?? {}),
+        cautionEnabled: structuredClone(source.cautionEnabled ?? {}),
+        customRules: structuredClone(source.customRules ?? []),
+        globalExcludePhrases: [...(source.globalExcludePhrases ?? [])],
+        spellingRulesFingerprint: SPELLING_RULES_FP,
+        cautionRulesFingerprint: source.cautionRulesFingerprint,
+        cautionEnabledPolicyVersion: source.cautionEnabledPolicyVersion,
+        compoundMigrateVersion: source.compoundMigrateVersion,
+      };
+
+      const existing = ruleSetsRef.current.find(
+        (s) => (s.name || '').trim() === name,
+      );
+
+      let next;
+      let targetId;
+      if (existing) {
+        targetId = existing.id;
+        next = ruleSetsRef.current.map((s) =>
+          s.id === existing.id
+            ? normalizeRuleSet({
+                ...s,
+                ...config,
+                name,
+                savedAt,
+              })
+            : s,
+        );
+      } else {
+        targetId = newId();
+        const created = normalizeRuleSet({
+          id: targetId,
+          name,
+          ...config,
+          savedAt,
+        });
+        next = [...ruleSetsRef.current, created];
+      }
+
+      ruleSetsRef.current = next;
+      setRuleSets(next);
+      flushRuleSets(next, targetId);
+      setActiveSetId(targetId);
+      activeSetIdRef.current = targetId;
+
+      const saved = next.find((s) => s.id === targetId);
+      if (saved) {
+        trackRulesetSaved({
+          builtinCount: countBuiltInActiveRules({
+            builtInEnabled: saved.builtInEnabled,
+          }),
+          spacingCount: countSpacingReviewActiveRules({
+            cautionEnabled: saved.cautionEnabled,
+          }),
+          consistencyCount: countConsistencyActiveRules(saved.customRules),
+        });
+      }
+      alert('기준이 저장되었습니다.');
+      return true;
+    },
+    [flushRuleSets],
+  );
+
   const handleBuiltInToggle = useCallback(
     (find) => {
       const activeSet = ruleSetsRef.current.find(
@@ -375,6 +458,7 @@ export function useRuleSets() {
     handleDuplicateRuleSet,
     handleDeleteRuleSet,
     handleSaveRules,
+    handleSaveCriteriaPreset,
     handleBuiltInToggle,
     handleBuiltInSetAll,
     handleCautionToggle,
