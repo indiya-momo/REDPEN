@@ -4,19 +4,7 @@ import { findActiveGroup, instancesMatch, isResultGroupVisible } from '../lib/ch
 import { highlightRangeForInstance } from '../lib/pdfService.js';
 
 /**
- * @typedef {import('../lib/ruleEngine.js').GroupedResult} GroupedResult
- * @typedef {import('../lib/ruleEngine.js').MatchInstance} MatchInstance
- *
- * @typedef {Object} PageHighlight
- * @property {number} start
- * @property {number} end
- * @property {boolean} [primary]
- * @property {string} id
- * @property {string} tip
- * @property {string} matchedText
- */
-
-/**
+ * 맞춤법·표기 일관성 PDF 하이라이트 (목차는 useTocBodyHighlights)
  * @param {{
  *   currentPage: number,
  *   currentPageData: import('../lib/pdfService.js').PageData | null,
@@ -45,6 +33,7 @@ export function useHighlights({
   const pageHighlights = useMemo(() => {
     if (!currentPageData) return [];
     const onPage = [];
+    /** @type {[import('../lib/checkResultUtils.js').ResultSource, import('../lib/ruleEngine.js').GroupedResult[]][]} */
     const sources =
       highlightTab === 'spelling'
         ? [['spelling', spellingResults]]
@@ -92,6 +81,7 @@ export function useHighlights({
 
   const sortedFindings = useMemo(() => {
     const all = [];
+    /** @type {[import('../lib/checkResultUtils.js').ResultSource, import('../lib/ruleEngine.js').GroupedResult[]][]} */
     const sources =
       highlightTab === 'spelling'
         ? [['spelling', spellingResults]]

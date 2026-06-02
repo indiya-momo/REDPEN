@@ -68,23 +68,30 @@ function createRuleCheckMock() {
     spellingSelected: null,
     consistencySelected: null,
     clearAllCheckState: vi.fn(),
-    applyRestoredCheckState: vi.fn(),
-    setRestoredSelection: vi.fn(),
+  };
+}
+
+function createTocCheckMock() {
+  return {
+    results: [],
+    selected: null,
+    clearAllCheckState: vi.fn(),
   };
 }
 
 /**
  * @param {ReturnType<typeof createPdfMock>} pdf
  * @param {ReturnType<typeof createRuleCheckMock>} ruleCheck
+ * @param {ReturnType<typeof createTocCheckMock>} [tocCheck]
  */
-function renderWorkSessionHarness(pdf, ruleCheck) {
+function renderWorkSessionHarness(pdf, ruleCheck, tocCheck = createTocCheckMock()) {
   const container = document.createElement('div');
   document.body.appendChild(container);
   const root = createRoot(container);
   const apiRef = { current: /** @type {ReturnType<typeof useWorkSession> | null} */ (null) };
 
   function Harness() {
-    const api = useWorkSession(pdf, ruleCheck);
+    const api = useWorkSession(pdf, ruleCheck, tocCheck);
     apiRef.current = api;
     return null;
   }

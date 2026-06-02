@@ -7,7 +7,7 @@
 /** @typedef {{ group: GroupedResult, source: 'spelling' | 'consistency' }} TabEntry */
 
 /**
- * 활성 작업 탭에 맞는 검사 결과 목록을 패널용 엔트리 배열로 만든다.
+ * 맞춤법·일관성 규칙 검사 결과 패널용 엔트리 (목차 검사는 TocBodyResultsPanel 전용)
  * @param {WorkTab} workTab
  * @param {GroupedResult[]} spellingResults
  * @param {GroupedResult[]} consistencyResults
@@ -16,14 +16,11 @@
 export function buildTabEntries(workTab, spellingResults, consistencyResults) {
   /** @type {TabEntry[]} */
   const entries = [];
-  if (workTab === 'spelling') {
-    for (const group of spellingResults) {
-      entries.push({ group, source: 'spelling' });
-    }
-  } else {
-    for (const group of consistencyResults) {
-      entries.push({ group, source: 'consistency' });
-    }
+  const results = workTab === 'spelling' ? spellingResults : consistencyResults;
+  const source = workTab === 'spelling' ? 'spelling' : 'consistency';
+  for (const group of results) {
+    if (group.patternKind === 'toc-body') continue;
+    entries.push({ group, source });
   }
   return entries;
 }
@@ -41,11 +38,11 @@ export function countTabTotalFindings(tabEntries) {
  * 현재 탭에서 검사가 완료되었는지 여부.
  * @param {WorkTab} workTab
  * @param {boolean} spellingCheckDone
- * @param {boolean} consistencyCheckDone
+ * @param {boolean} consistencyWorkDone 목차 또는 표기 일관성 검사 완료
  * @returns {boolean}
  */
-export function isTabCheckDone(workTab, spellingCheckDone, consistencyCheckDone) {
-  return workTab === 'spelling' ? spellingCheckDone : consistencyCheckDone;
+export function isTabCheckDone(workTab, spellingCheckDone, consistencyWorkDone) {
+  return workTab === 'spelling' ? spellingCheckDone : consistencyWorkDone;
 }
 
 /**

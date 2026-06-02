@@ -36,5 +36,14 @@ export function normalizeRuleSet(set) {
     ),
     cautionRulesFingerprint: CAUTION_RULES_FP,
     cautionEnabledPolicyVersion: CAUTION_ENABLED_POLICY_VERSION,
+    tocBodyText: typeof set.tocBodyText === 'string' ? set.tocBodyText : '',
+    tocBodyStartPage:
+      typeof set.tocBodyStartPage === 'number' &&
+      Number.isFinite(set.tocBodyStartPage) &&
+      set.tocBodyStartPage >= 1
+        ? Math.floor(set.tocBodyStartPage)
+        : null,
+    tocBodyExcludePages:
+      typeof set.tocBodyExcludePages === 'string' ? set.tocBodyExcludePages : '',
   };
 }

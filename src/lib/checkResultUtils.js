@@ -41,9 +41,17 @@ export function restoreCheckResults(saved) {
     saved.spellingRulesFingerprint === SPELLING_RULES_FP &&
     saved.cautionRulesFingerprint === CAUTION_RULES_FP;
   const spelling = rulesMatch ? (saved.groupedResults ?? []) : [];
-  const consistency = saved.consistencyGroupedResults ?? [];
+  const rawConsistency = saved.consistencyGroupedResults ?? [];
+  const tocFromLegacy = rawConsistency.filter(
+    (g) => g?.patternKind === 'toc-body',
+  );
+  const consistency = rawConsistency.filter((g) => g?.patternKind !== 'toc-body');
+  const tocBody =
+    (saved.tocBodyGroupedResults?.length ?? 0) > 0
+      ? saved.tocBodyGroupedResults
+      : tocFromLegacy;
   const staleRules = !rulesMatch && (saved.groupedResults?.length ?? 0) > 0;
-  return { spelling, consistency, staleRules };
+  return { spelling, consistency, tocBody, staleRules };
 }
 
 /** @param {import('./ruleEngine.js').GroupedResult} group */
@@ -52,7 +60,9 @@ export function groupKey(group) {
   return `${group.find}\0${group.replace}`;
 }
 
-/** @param {'spelling' | 'consistency'} source */
+/** @typedef {'spelling' | 'consistency' | 'toc-body'} ResultSource */
+
+/** @param {ResultSource} source */
 /** @param {import('./ruleEngine.js').GroupedResult} group */
 export function resultVisibilityKey(source, group) {
   return `${source}:${groupKey(group)}`;
@@ -60,7 +70,7 @@ export function resultVisibilityKey(source, group) {
 
 /**
  * @param {Record<string, boolean>} visibility
- * @param {'spelling' | 'consistency'} source
+ * @param {ResultSource} source
  * @param {import('./ruleEngine.js').GroupedResult} group
  */
 export function isResultGroupVisible(visibility, source, group) {
@@ -69,7 +79,7 @@ export function isResultGroupVisible(visibility, source, group) {
 
 /**
  * @param {import('./ruleEngine.js').GroupedResult[]} groups
- * @param {'spelling' | 'consistency'} source
+ * @param {ResultSource} source
  */
 export function defaultVisibilityForGroups(groups, source) {
   /** @type {Record<string, boolean>} */
@@ -115,9 +125,17 @@ export function findActiveGroup(results, inst) {
  * @param {import('./ruleEngine.js').MatchInstance} inst
  * @returns {'spelling' | 'consistency'}
  */
-export function findResultSource(spellingResults, consistencyResults, inst) {
+export function findResultSource(
+  spellingResults,
+  consistencyResults,
+  inst,
+  tocBodyResults = [],
+) {
   if (spellingResults.some((g) => groupContainsInstance(g, inst))) {
     return 'spelling';
+  }
+  if (tocBodyResults.some((g) => groupContainsInstance(g, inst))) {
+    return 'toc-body';
   }
   if (consistencyResults.some((g) => groupContainsInstance(g, inst))) {
     return 'consistency';

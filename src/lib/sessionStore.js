@@ -206,11 +206,13 @@ async function ensureFileReadPermission(handle) {
  *   pageTexts?: { pageNum: number, text: string }[],
  *   groupedResults?: unknown[],
  *   consistencyGroupedResults?: unknown[],
+ *   tocBodyGroupedResults?: unknown[],
  *   spellingRulesFingerprint?: string,
  *   cautionRulesFingerprint?: string,
  *   currentPage?: number,
  *   selectedInstance?: unknown,
  *   consistencySelectedInstance?: unknown,
+ *   tocBodySelectedInstance?: unknown,
  * }} data
  */
 export async function saveWorkSession(data) {
@@ -229,11 +231,13 @@ export async function saveWorkSession(data) {
         pageCount: data.pageTexts?.length ?? 0,
         groupedResults: trimResults(data.groupedResults),
         consistencyGroupedResults: trimResults(data.consistencyGroupedResults),
+        tocBodyGroupedResults: trimResults(data.tocBodyGroupedResults),
         spellingRulesFingerprint: data.spellingRulesFingerprint ?? null,
         cautionRulesFingerprint: data.cautionRulesFingerprint ?? null,
         currentPage: data.currentPage ?? 1,
         selectedInstance: data.selectedInstance ?? null,
         consistencySelectedInstance: data.consistencySelectedInstance ?? null,
+        tocBodySelectedInstance: data.tocBodySelectedInstance ?? null,
         savedAt: Date.now(),
       };
       const tx = db.transaction(STORE, 'readwrite');
@@ -298,11 +302,13 @@ export async function saveWorkSession(data) {
       pageCount: data.pageTexts?.length ?? 0,
       groupedResults: trimResults(data.groupedResults),
       consistencyGroupedResults: trimResults(data.consistencyGroupedResults),
+      tocBodyGroupedResults: trimResults(data.tocBodyGroupedResults),
       spellingRulesFingerprint: data.spellingRulesFingerprint ?? null,
       cautionRulesFingerprint: data.cautionRulesFingerprint ?? null,
       currentPage: data.currentPage ?? 1,
       selectedInstance: data.selectedInstance ?? null,
       consistencySelectedInstance: data.consistencySelectedInstance ?? null,
+      tocBodySelectedInstance: data.tocBodySelectedInstance ?? null,
       savedAt: Date.now(),
     };
 
@@ -342,11 +348,13 @@ export async function loadWorkSession() {
       pdfByteLength: raw.pdfByteLength ?? null,
       groupedResults: raw.groupedResults ?? [],
       consistencyGroupedResults: raw.consistencyGroupedResults ?? [],
+      tocBodyGroupedResults: raw.tocBodyGroupedResults ?? [],
       spellingRulesFingerprint: raw.spellingRulesFingerprint ?? null,
       cautionRulesFingerprint: raw.cautionRulesFingerprint ?? null,
       currentPage: raw.currentPage ?? 1,
       selectedInstance: raw.selectedInstance ?? null,
       consistencySelectedInstance: raw.consistencySelectedInstance ?? null,
+      tocBodySelectedInstance: raw.tocBodySelectedInstance ?? null,
       savedAt: raw.savedAt,
       pageTexts: [],
     };

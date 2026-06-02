@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ChevronDown,
   FilePlus,
@@ -17,6 +17,10 @@ import PdfPreviewBar from './PdfPreviewBar.jsx';
 import PdfZoomBar from './PdfZoomBar.jsx';
 import CheckResultsPanel from './CheckResultsPanel.jsx';
 import PdfCenterStage from './PdfCenterStage.jsx';
+import TocBodyResultsPanel from '../toc-body/components/TocBodyResultsPanel.jsx';
+import { useTocBodyCheck } from '../toc-body/hooks/useTocBodyCheck.js';
+import { useTocBodyHighlights } from '../toc-body/hooks/useTocBodyHighlights.js';
+import { buildTocBodyTabEntries } from '../toc-body/utils/toc-body-result-entries.js';
 import { usePdfDocument } from '../hooks/usePdfDocument.js';
 import { usePdfZoom } from '../hooks/usePdfZoom.js';
 import { useRuleCheck } from '../hooks/useRuleCheck.js';
@@ -79,6 +83,11 @@ import {
  *   builtInEnabled: Record<string, boolean>,
  *   customRules: import('../lib/ruleTypes.js').Rule[],
  *   globalExcludePhrases: string[],
+ *   tocBodyText?: string,
+ *   onTocBodyTextChange?: (text: string) => void,
+ *   tocBodyStartPage?: number | null,
+ *   tocBodyExcludePages?: string,
+ *   onTocBodyExcludePagesChange?: (value: string) => void,
  *   onRuleSetNameChange: (name: string) => void,
  *   onBuiltInToggle: (find: string) => void,
  *   onBuiltInSetAll: (enabled: boolean) => void,
@@ -107,6 +116,11 @@ export default function MainScreen({
   builtInEnabled,
   customRules,
   globalExcludePhrases,
+  tocBodyText = '',
+  onTocBodyTextChange = () => {},
+  tocBodyStartPage = null,
+  tocBodyExcludePages = '',
+  onTocBodyExcludePagesChange = () => {},
   onRuleSetNameChange,
   onBuiltInToggle,
   onBuiltInSetAll,
@@ -125,6 +139,12 @@ export default function MainScreen({
 }) {
   void onOpenGuideWindow;
   const [workTab, setWorkTab] = useState(initialWorkTab);
+  /** @type {['toc' | 'rules', import('react').Dispatch<import('react').SetStateAction<'toc' | 'rules'>>]} */
+  const [consistencyFocus, setConsistencyFocus] = useState('rules');
+  /** 목차·표기 결과가 둘 다 있을 때 어느 패널을 보여줄지 (겹쳐 쌓지 않음) */
+  const [lastConsistencyPane, setLastConsistencyPane] = useState(
+    /** @type {'toc' | 'rules'} */ ('rules'),
+  );
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [thumbStripOpen, setThumbStripOpen] = useState(readThumbStripOpenPreference);
   const [authSession, setAuthSession] = useState(() => getCurrentUserSession());
@@ -214,6 +234,15 @@ export default function MainScreen({
     numPages: pdf.pdf?.numPages ?? 0,
     currentPage: pdf.currentPage,
   });
+  const mapTocPrintPageToSystem = useCallback(
+    (printPage) => {
+      if (pageDisplay.active) {
+        return pageDisplay.toSystemPage(printPage);
+      }
+      return printPage;
+    },
+    [pageDisplay.active, pageDisplay.toSystemPage],
+  );
   const ruleCheck = useRuleCheck({
     builtInEnabled,
     cautionEnabled,
@@ -226,66 +255,167 @@ export default function MainScreen({
     setProgress: pdf.setProgress,
     afterCheckRef,
   });
-  const session = useWorkSession(pdf, ruleCheck);
+  const tocCheck = useTocBodyCheck({
+    tocBodyText,
+    tocBodyStartPage,
+    tocBodyExcludePages,
+    mapPrintPageToSystem: mapTocPrintPageToSystem,
+    printedPagesActive: pageDisplay.active,
+    pageTexts: pdf.pageTexts,
+    currentPage: pdf.currentPage,
+    setCurrentPage: pdf.setCurrentPage,
+    setIsProcessing: pdf.setIsProcessing,
+    setProgress: pdf.setProgress,
+    afterCheckRef,
+  });
+  const session = useWorkSession(pdf, ruleCheck, tocCheck);
   afterCheckRef.current = session.persistSession;
 
-  const highlights = useHighlights({
+  const clearConsistencyTabWork = useCallback(() => {
+    tocCheck.clearTocCheckState();
+    ruleCheck.clearConsistencyCheckState();
+    setConsistencyFocus('rules');
+    setLastConsistencyPane('rules');
+  }, [tocCheck, ruleCheck]);
+
+  const clearSpellingTabWork = useCallback(() => {
+    ruleCheck.clearSpellingCheckState();
+  }, [ruleCheck]);
+
+  const ruleHighlights = useHighlights({
     currentPage: pdf.currentPage,
     currentPageData: pdf.currentPageData,
     spellingResults: ruleCheck.spellingResults,
     consistencyResults: ruleCheck.consistencyResults,
     resultVisibility: ruleCheck.resultVisibility,
-    highlightTab: workTab,
+    highlightTab: workTab === 'spelling' ? 'spelling' : 'consistency',
     activeSource: ruleCheck.activeSource,
     selectedInstance: ruleCheck.selectedInstance,
   });
+
+  const tocHighlights = useTocBodyHighlights({
+    currentPage: pdf.currentPage,
+    currentPageData: pdf.currentPageData,
+    results: tocCheck.results,
+    resultVisibility: tocCheck.resultVisibility,
+    selectedInstance: tocCheck.selected,
+  });
+
+  const highlights =
+    workTab === 'consistency' &&
+    consistencyFocus === 'toc' &&
+    tocCheck.checkDone
+      ? tocHighlights
+      : ruleHighlights;
 
   useEffect(() => {
     setWorkTab(initialWorkTab);
   }, [initialWorkTab]);
 
-  const tabEntries = useMemo(
+  const spellingTabEntries = useMemo(
     () =>
       buildTabEntries(
-        workTab,
+        'spelling',
         ruleCheck.spellingResults,
         ruleCheck.consistencyResults,
       ),
-    [workTab, ruleCheck.spellingResults, ruleCheck.consistencyResults],
+    [ruleCheck.spellingResults, ruleCheck.consistencyResults],
   );
 
-  const tabTotalFindings = useMemo(
-    () => countTabTotalFindings(tabEntries),
-    [tabEntries],
+  const consistencyTabEntries = useMemo(
+    () =>
+      buildTabEntries(
+        'consistency',
+        ruleCheck.spellingResults,
+        ruleCheck.consistencyResults,
+      ),
+    [ruleCheck.spellingResults, ruleCheck.consistencyResults],
   );
 
-  const visibleOnCurrentPage = ruleCheck.countVisibleOnPage(
-    pdf.currentPage,
-    workTab,
+  const spellingTabTotalFindings = useMemo(
+    () => countTabTotalFindings(spellingTabEntries),
+    [spellingTabEntries],
   );
+
+  const consistencyTabTotalFindings = useMemo(
+    () => countTabTotalFindings(consistencyTabEntries),
+    [consistencyTabEntries],
+  );
+
+  const tocBodyTabEntries = useMemo(
+    () => buildTocBodyTabEntries(tocCheck.results),
+    [tocCheck.results],
+  );
+
+  const consistencyWorkDone =
+    tocCheck.checkDone || ruleCheck.consistencyCheckDone;
+
+  const showTocResultsPanel =
+    tocCheck.checkDone &&
+    (!ruleCheck.consistencyCheckDone || consistencyFocus === 'toc');
+
+  const showConsistencyResultsPanel =
+    ruleCheck.consistencyCheckDone &&
+    (!tocCheck.checkDone ||
+      (tocCheck.checkDone && consistencyFocus === 'rules'));
+
+  const visibleOnCurrentPage =
+    workTab === 'consistency' &&
+    consistencyFocus === 'toc' &&
+    tocCheck.checkDone
+      ? tocCheck.countVisibleOnPage(pdf.currentPage)
+      : ruleCheck.countVisibleOnPage(pdf.currentPage, workTab);
 
   const tabCheckDone = useMemo(
     () =>
       isTabCheckDone(
         workTab,
         ruleCheck.spellingCheckDone,
-        ruleCheck.consistencyCheckDone,
+        consistencyWorkDone,
       ),
-    [
-      workTab,
-      ruleCheck.spellingCheckDone,
-      ruleCheck.consistencyCheckDone,
-    ],
+    [workTab, ruleCheck.spellingCheckDone, consistencyWorkDone],
   );
 
+  const printedPagePanelProps = {
+    printedPageOffset: pageDisplay.offset,
+    printedPagesActive: pageDisplay.active,
+    onCalibrateFromInput: pageDisplay.calibrateFromInput,
+    onClearPrintedPageOffset: pageDisplay.clearCalibration,
+    currentPrintedLabel: pageDisplay.formatLabel(pdf.currentPage),
+    previewPrintedLabel: pageDisplay.active
+      ? pageDisplay.formatPageText(pdf.currentPage)
+      : pageDisplay.formatNaturalPreview(pdf.currentPage),
+    spreadInput: pageDisplay.spreadInput,
+    onSpreadInputChange: pageDisplay.setSpreadInput,
+    firstPageSingle: pageDisplay.firstPageSingle,
+    onFirstPageSingleChange: pageDisplay.setFirstPageSingle,
+    formatPageLabel: pageDisplay.formatLabel,
+  };
+
   function switchTab(tab) {
-    setWorkTab(tab);
-    ruleCheck.syncSelectionForTab(tab);
+    if (tab === 'spelling') {
+      clearSpellingTabWork();
+      setWorkTab('spelling');
+      ruleCheck.syncSelectionForTab('spelling');
+      return;
+    }
+    clearConsistencyTabWork();
+    setWorkTab('consistency');
+    ruleCheck.syncSelectionForTab('consistency');
   }
 
   const goToPdfPage = (pageNum) => {
     if (!pdf.pdf) return;
-    ruleCheck.goToPage(clampPageNumber(pageNum, pdf.pdf.numPages));
+    const page = clampPageNumber(pageNum, pdf.pdf.numPages);
+    if (
+      workTab === 'consistency' &&
+      consistencyFocus === 'toc' &&
+      tocCheck.checkDone
+    ) {
+      tocCheck.goToPage(page);
+    } else {
+      ruleCheck.goToPage(page);
+    }
   };
 
   useEffect(() => {
@@ -332,46 +462,30 @@ export default function MainScreen({
     });
   };
 
-  const combinedResultsPanel = tabCheckDone ? (
-    <CheckResultsPanel
-      entries={tabEntries}
-      viewSource={workTab}
-      currentPage={pdf.currentPage}
-      pdf={pdf.pdf}
-      activeGroup={ruleCheck.activeGroup}
-      activeSource={ruleCheck.activeSource}
-      visibleOnCurrentPage={visibleOnCurrentPage}
-      totalFindings={tabTotalFindings}
-      ruleCount={tabEntries.length}
-      spellingFindings={ruleCheck.spellingFindings}
-      builtinFindings={ruleCheck.builtinFindings}
-      spacingFindings={ruleCheck.spacingFindings}
-      spellingCheckDone={ruleCheck.spellingCheckDone}
-      isGroupVisible={ruleCheck.isGroupVisible}
-      onToggleVisibility={ruleCheck.toggleResultVisibility}
-      isSameGroupAsSelected={ruleCheck.isSameGroupAsSelected}
-      onSelectGroup={ruleCheck.selectGroup}
-      onSelectPageInGroup={ruleCheck.selectPageInGroup}
-      onAdditionalCheck={
-        workTab === 'consistency' ? ruleCheck.backToConsistencySetup : undefined
-      }
-      printedPageOffset={pageDisplay.offset}
-      printedPagesActive={pageDisplay.active}
-      onCalibrateFromInput={pageDisplay.calibrateFromInput}
-      onClearPrintedPageOffset={pageDisplay.clearCalibration}
-      currentPrintedLabel={pageDisplay.formatLabel(pdf.currentPage)}
-      previewPrintedLabel={
-        pageDisplay.active
-          ? pageDisplay.formatPageText(pdf.currentPage)
-          : pageDisplay.formatNaturalPreview(pdf.currentPage)
-      }
-      spreadInput={pageDisplay.spreadInput}
-      onSpreadInputChange={pageDisplay.setSpreadInput}
-      firstPageSingle={pageDisplay.firstPageSingle}
-      onFirstPageSingleChange={pageDisplay.setFirstPageSingle}
-      formatPageLabel={pageDisplay.formatLabel}
-    />
-  ) : null;
+  const spellingResultsPanel =
+    workTab === 'spelling' && ruleCheck.spellingCheckDone ? (
+      <CheckResultsPanel
+        entries={spellingTabEntries}
+        viewSource="spelling"
+        currentPage={pdf.currentPage}
+        pdf={pdf.pdf}
+        activeGroup={ruleCheck.activeGroup}
+        activeSource={ruleCheck.activeSource}
+        visibleOnCurrentPage={visibleOnCurrentPage}
+        totalFindings={spellingTabTotalFindings}
+        ruleCount={spellingTabEntries.length}
+        spellingFindings={ruleCheck.spellingFindings}
+        builtinFindings={ruleCheck.builtinFindings}
+        spacingFindings={ruleCheck.spacingFindings}
+        spellingCheckDone={ruleCheck.spellingCheckDone}
+        isGroupVisible={ruleCheck.isGroupVisible}
+        onToggleVisibility={ruleCheck.toggleResultVisibility}
+        isSameGroupAsSelected={ruleCheck.isSameGroupAsSelected}
+        onSelectGroup={ruleCheck.selectGroup}
+        onSelectPageInGroup={ruleCheck.selectPageInGroup}
+        {...printedPagePanelProps}
+      />
+    ) : null;
 
   const showPdfViewer = useMemo(
     () => shouldShowPdfViewer(Boolean(pdf.pdf), tabCheckDone),
@@ -504,7 +618,7 @@ export default function MainScreen({
               className={`work-tab work-tab--consistency ${workTab === 'consistency' ? 'active' : ''}`}
               onClick={() => switchTab('consistency')}
             >
-              일관성 확인
+              일관성 · 목차 확인
             </button>
           </nav>
         </header>
@@ -520,7 +634,7 @@ export default function MainScreen({
           >
             {tabCheckDone && (
               <div className="spelling-tab-scroll custom-scrollbar">
-                {combinedResultsPanel}
+                {spellingResultsPanel}
               </div>
             )}
 
@@ -538,8 +652,90 @@ export default function MainScreen({
 
         {workTab === 'consistency' && (
           <div className="panel-left-work-scroll custom-scrollbar">
-            {combinedResultsPanel}
-            {!ruleCheck.consistencyCheckDone && (
+            {tocCheck.checkDone && ruleCheck.consistencyCheckDone ? (
+              <nav
+                className="consistency-results-switch"
+                aria-label="검사 결과 종류"
+              >
+                <button
+                  type="button"
+                  className={`consistency-results-switch__btn ${consistencyFocus === 'toc' ? 'active' : ''}`}
+                  onClick={() => {
+                    setConsistencyFocus('toc');
+                    setLastConsistencyPane('toc');
+                    tocCheck.syncSelection();
+                  }}
+                >
+                  목차 · 본문 결과
+                </button>
+                <button
+                  type="button"
+                  className={`consistency-results-switch__btn ${consistencyFocus === 'rules' ? 'active' : ''}`}
+                  onClick={() => {
+                    setConsistencyFocus('rules');
+                    setLastConsistencyPane('rules');
+                    ruleCheck.syncSelectionForTab('consistency');
+                  }}
+                >
+                  표기 일관성 결과
+                </button>
+              </nav>
+            ) : null}
+            {showTocResultsPanel ? (
+              <TocBodyResultsPanel
+                entries={tocBodyTabEntries}
+                currentPage={pdf.currentPage}
+                pdf={pdf.pdf}
+                activeGroup={tocCheck.activeGroup}
+                visibleOnCurrentPage={visibleOnCurrentPage}
+                isGroupVisible={tocCheck.isGroupVisible}
+                onToggleVisibility={tocCheck.toggleGroupVisibility}
+                isSameGroupAsSelected={tocCheck.isGroupSelected}
+                onSelectGroup={(group) => {
+                  setConsistencyFocus('toc');
+                  setLastConsistencyPane('toc');
+                  tocCheck.selectGroup(group);
+                }}
+                onSelectPageInGroup={(pageNum, instances) => {
+                  setConsistencyFocus('toc');
+                  setLastConsistencyPane('toc');
+                  tocCheck.selectPageInGroup(pageNum, instances);
+                }}
+                onBackToSetup={clearConsistencyTabWork}
+                {...printedPagePanelProps}
+              />
+            ) : null}
+            {showConsistencyResultsPanel ? (
+              <CheckResultsPanel
+                entries={consistencyTabEntries}
+                viewSource="consistency"
+                currentPage={pdf.currentPage}
+                pdf={pdf.pdf}
+                activeGroup={ruleCheck.activeGroup}
+                activeSource={ruleCheck.activeSource}
+                visibleOnCurrentPage={visibleOnCurrentPage}
+                totalFindings={consistencyTabTotalFindings}
+                ruleCount={consistencyTabEntries.length}
+                spellingFindings={ruleCheck.consistencyFindings}
+                spellingCheckDone={ruleCheck.consistencyCheckDone}
+                isGroupVisible={ruleCheck.isGroupVisible}
+                onToggleVisibility={ruleCheck.toggleResultVisibility}
+                isSameGroupAsSelected={ruleCheck.isSameGroupAsSelected}
+                onSelectGroup={(group) => {
+                  setConsistencyFocus('rules');
+                  setLastConsistencyPane('rules');
+                  ruleCheck.selectGroup(group, 'consistency');
+                }}
+                onSelectPageInGroup={(pageNum, instances) => {
+                  setConsistencyFocus('rules');
+                  setLastConsistencyPane('rules');
+                  ruleCheck.selectPageInGroup(pageNum, instances, 'consistency');
+                }}
+                onAdditionalCheck={clearConsistencyTabWork}
+                {...printedPagePanelProps}
+              />
+            ) : null}
+            {!consistencyWorkDone ? (
               <div className="consistency-rules-scroll custom-scrollbar">
                 <ConsistencyPanel
                   customRules={customRules}
@@ -548,9 +744,36 @@ export default function MainScreen({
                   onGlobalExcludePhrasesChange={onGlobalExcludePhrasesChange}
                   builtInEnabled={builtInEnabled}
                   cautionEnabled={cautionEnabled}
+                  tocBodyText={tocBodyText}
+                  onTocBodyTextChange={onTocBodyTextChange}
+                  tocBodyExcludePages={tocBodyExcludePages}
+                  onTocBodyExcludePagesChange={onTocBodyExcludePagesChange}
+                  printedPagesActive={pageDisplay.active}
+                  currentSystemPage={pdf.currentPage}
+                  currentPrintedLabel={pageDisplay.formatLabel(pdf.currentPage)}
+                  previewPrintedLabel={
+                    pageDisplay.active
+                      ? pageDisplay.formatPageText(pdf.currentPage)
+                      : pageDisplay.formatNaturalPreview(pdf.currentPage)
+                  }
+                  spreadInput={pageDisplay.spreadInput}
+                  onSpreadInputChange={pageDisplay.setSpreadInput}
+                  firstPageSingle={pageDisplay.firstPageSingle}
+                  onFirstPageSingleChange={pageDisplay.setFirstPageSingle}
+                  onCalibrateFromInput={pageDisplay.calibrateFromInput}
+                  onClearPrintedPageOffset={pageDisplay.clearCalibration}
+                  onRunTocCheck={async () => {
+                    ruleCheck.clearConsistencyCheckState();
+                    tocCheck.clearTocCheckState();
+                    setConsistencyFocus('toc');
+                    setLastConsistencyPane('toc');
+                    await tocCheck.runCheck();
+                  }}
+                  hasPdf={pdf.pageTexts.length > 0}
+                  isProcessing={pdf.isProcessing}
                 />
               </div>
-            )}
+            ) : null}
           </div>
         )}
 
@@ -673,8 +896,15 @@ export default function MainScreen({
               onRunCheck={
                 workTab === 'spelling'
                   ? ruleCheck.runSpellingCheck
-                  : ruleCheck.runConsistencyCheck
+                  : async () => {
+                      tocCheck.clearTocCheckState();
+                      ruleCheck.clearConsistencyCheckState();
+                      setConsistencyFocus('rules');
+                      setLastConsistencyPane('rules');
+                      await ruleCheck.runConsistencyCheck();
+                    }
               }
+              showRunButton={workTab === 'spelling' || workTab === 'consistency'}
               isProcessing={pdf.isProcessing}
               progressLabel={pdf.progressLabel}
               progress={pdf.progress}
@@ -684,7 +914,6 @@ export default function MainScreen({
               pageTextsLength={pdf.pageTexts.length}
               fileHandleActive={pdf.fileHandleActive}
               loadError={pdf.loadError}
-              loadAdvisory={pdf.loadAdvisory}
               sessionHint={session.sessionHint}
               runLabel={centerRunLabel}
               showReady={Boolean(pdf.pdf)}

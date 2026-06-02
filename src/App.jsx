@@ -136,6 +136,9 @@ export default function App() {
       }
       customRules={activeSet.customRules ?? []}
       globalExcludePhrases={activeSet.globalExcludePhrases ?? []}
+      tocBodyText={activeSet.tocBodyText ?? ''}
+      tocBodyStartPage={activeSet.tocBodyStartPage ?? null}
+      tocBodyExcludePages={activeSet.tocBodyExcludePages ?? ''}
       onRuleSetNameChange={(name) => updateActiveSet({ name })}
       cautionEnabled={
         activeSet.cautionEnabled ?? defaultCautionEnabled()
@@ -147,6 +150,10 @@ export default function App() {
       onCustomRulesChange={(customRules) => updateActiveSet({ customRules })}
       onGlobalExcludePhrasesChange={(globalExcludePhrases) =>
         updateActiveSet({ globalExcludePhrases })
+      }
+      onTocBodyTextChange={(tocBodyText) => updateActiveSet({ tocBodyText })}
+      onTocBodyExcludePagesChange={(tocBodyExcludePages) =>
+        updateActiveSet({ tocBodyExcludePages })
       }
       onSaveRules={handleSaveRules}
       onSaveCriteriaPreset={handleSaveCriteriaPreset}

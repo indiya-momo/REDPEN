@@ -19,6 +19,27 @@ describe('buildTabEntries', () => {
     expect(entries).toHaveLength(1);
     expect(entries[0].source).toBe('spelling');
   });
+
+  it('일관성 탭에서 toc-body 항목은 제외한다', () => {
+    const entries = buildTabEntries('consistency', [], [
+      {
+        find: 't1',
+        replace: '',
+        patternKind: 'toc-body',
+        label: '목차',
+        instances: [],
+      },
+      {
+        find: 't2',
+        replace: '',
+        patternKind: 'compound-find',
+        label: '규칙',
+        instances: [{}],
+      },
+    ]);
+    expect(entries).toHaveLength(1);
+    expect(entries[0].group.label).toBe('규칙');
+  });
 });
 
 describe('countTabTotalFindings', () => {
@@ -34,7 +55,7 @@ describe('countTabTotalFindings', () => {
 describe('isTabCheckDone', () => {
   it('탭에 따라 완료 플래그를 고른다', () => {
     expect(isTabCheckDone('spelling', true, false)).toBe(true);
-    expect(isTabCheckDone('consistency', true, false)).toBe(false);
+    expect(isTabCheckDone('consistency', false, true)).toBe(true);
   });
 });
 
