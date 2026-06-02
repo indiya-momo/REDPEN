@@ -8,6 +8,10 @@ import {
   setAnalyticsOptOut,
 } from '../../lib/analytics.js';
 import welcomeMomoFrame from '../../assets/welcome/welcome_momo_frame3.png';
+import {
+  getCurrentUserSession,
+  mapFirebaseAuthError,
+} from '../../lib/firebaseAuth.js';
 import { publicAssetUrl } from '../../lib/publicAssetUrl.js';
 import './welcome-pc.css';
 
@@ -19,7 +23,8 @@ const MOMO_TOOLTIP = publicAssetUrl('momo/bullon4.png');
  * @param {{
  *   onStart: () => void,
  *   onOpenRoom: () => void,
- *   authSession: { email: string } | null,
+ *   authSession: { uid: string, email?: string, displayName?: string } | null,
+ *   authReady: boolean,
  *   onGoogleSignIn: () => Promise<void>,
  *   onLogout: () => void,
  * }} props
@@ -28,6 +33,7 @@ export default function WelcomePcScreen({
   onStart,
   onOpenRoom,
   authSession,
+  authReady,
   onGoogleSignIn,
   onLogout,
 }) {
@@ -36,21 +42,29 @@ export default function WelcomePcScreen({
   );
   const [authError, setAuthError] = useState('');
   const [authPending, setAuthPending] = useState(false);
-  const isSignedIn = Boolean(authSession?.email);
-  const signedInLabel = useMemo(
-    () => (authSession?.email ? `${authSession.email} 계정으로 로그인됨` : ''),
-    [authSession],
+  const loggedIn = Boolean(
+    authSession?.uid || getCurrentUserSession()?.uid,
   );
+  const signedInLabel = useMemo(() => {
+    const session = authSession ?? getCurrentUserSession();
+    if (!session?.uid) return '';
+    const label = session.email || session.displayName || 'Google 계정';
+    return `${label}으로 로그인됨`;
+  }, [authSession, loggedIn]);
 
   async function handleGoogleAuth() {
+    if (loggedIn) {
+      onStart();
+      return;
+    }
+    setAuthPending(true);
+    setAuthError('');
     try {
-      setAuthPending(true);
       await onGoogleSignIn();
-      setAuthError('');
-    } catch (error) {
-      setAuthError(error instanceof Error ? error.message : 'Google 로그인에 실패했습니다.');
-    } finally {
       setAuthPending(false);
+    } catch (error) {
+      setAuthPending(false);
+      setAuthError(mapFirebaseAuthError(error));
     }
   }
 
@@ -138,7 +152,7 @@ export default function WelcomePcScreen({
             </article>
           </div>
 
-          {isSignedIn ? (
+          {loggedIn ? (
             <section className="welcome-pc__auth" aria-label="회원가입 및 로그인">
               <div className="welcome-pc__auth-signed">
                 <p>{signedInLabel}</p>
@@ -211,7 +225,15 @@ export default function WelcomePcScreen({
                 imageAlt="모모"
                 message="시작해보자냥!"
               >
-                {isSignedIn ? (
+                {!authReady ? (
+                  <button
+                    type="button"
+                    className="btn-welcome-primary welcome-pc__start"
+                    disabled
+                  >
+                    로그인 확인 중…
+                  </button>
+                ) : loggedIn ? (
                   <button
                     type="button"
                     className="btn-welcome-primary welcome-pc__start"
@@ -232,7 +254,7 @@ export default function WelcomePcScreen({
                   </button>
                 )}
               </TooltipGuide>
-              {authError && !isSignedIn ? (
+              {authError && !loggedIn ? (
                 <p
                   className="welcome-pc__auth-error welcome-pc__auth-error--stage"
                   role="alert"

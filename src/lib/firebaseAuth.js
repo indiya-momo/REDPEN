@@ -1,9 +1,12 @@
 import { initializeApp } from 'firebase/app';
 import {
   GoogleAuthProvider,
+  browserLocalPersistence,
   getAuth,
+  getRedirectResult,
   onAuthStateChanged,
-  signInWithPopup,
+  setPersistence,
+  signInWithRedirect,
   signOut,
 } from 'firebase/auth';
 
@@ -18,11 +21,14 @@ const isFirebaseConfigured = Object.values(firebaseConfig).every(Boolean);
 
 let auth = null;
 let provider = null;
+let persistenceReady = false;
 
 if (isFirebaseConfigured) {
   const app = initializeApp(firebaseConfig);
   auth = getAuth(app);
   provider = new GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: 'select_account' });
+  persistenceReady = setPersistence(auth, browserLocalPersistence).catch(() => false);
 }
 
 function toSession(user) {
@@ -42,6 +48,24 @@ function assertConfigured() {
   }
 }
 
+export function mapFirebaseAuthError(error) {
+  const code = error?.code ?? '';
+  const messages = {
+    'auth/popup-closed-by-user': '로그인 창이 닫혔습니다.',
+    'auth/popup-blocked':
+      '팝업이 차단되었습니다. 브라우저 설정에서 팝업을 허용해 주세요.',
+    'auth/unauthorized-domain':
+      'Firebase 승인 도메인에 localhost와 indiya.vercel.app을 추가해 주세요.',
+    'auth/operation-not-allowed':
+      'Firebase 콘솔에서 Google 로그인을 활성화해 주세요.',
+    'auth/account-exists-with-different-credential':
+      '이미 다른 방식으로 가입된 계정입니다.',
+  };
+  if (messages[code]) return messages[code];
+  if (error instanceof Error && error.message) return error.message;
+  return '로그인에 실패했습니다.';
+}
+
 export function getCurrentUserSession() {
   if (!auth) return null;
   return toSession(auth.currentUser);
@@ -54,9 +78,26 @@ export function subscribeAuthSession(callback) {
   });
 }
 
-export async function signInWithGooglePopup() {
+/** Google 로그인 후 돌아온 경우 결과 처리 (리다이렉트 방식) */
+export async function completeGoogleRedirectIfNeeded() {
+  if (!auth) return null;
+  await persistenceReady;
+  try {
+    const result = await getRedirectResult(auth);
+    return toSession(result?.user ?? auth.currentUser);
+  } catch (error) {
+    throw new Error(mapFirebaseAuthError(error));
+  }
+}
+
+/** 팝업 대신 리다이렉트 — 계정 선택 후 멈춤 현상 방지 */
+export async function signInWithGoogleRedirect() {
   assertConfigured();
-  await signInWithPopup(auth, provider);
+  await persistenceReady;
+  if (auth.currentUser) {
+    return;
+  }
+  await signInWithRedirect(auth, provider);
 }
 
 export async function signOutUser() {
