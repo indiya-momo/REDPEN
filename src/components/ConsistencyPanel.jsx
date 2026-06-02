@@ -190,7 +190,7 @@ export default function ConsistencyPanel({
     <div className="consistency-embed">
       <section className="consistency-unified-box" aria-label="표기 일관성 찾기">
         <div className="consistency-subsection consistency-subsection--first">
-          <p className="field-label">일관성 검색(1회 8개까지 가능)</p>
+          <p className="field-label">일관성 찾기 (1회 검색 8개 이내 추천)</p>
           <p className="hint">
             한글 · 영문 대소문자 · 기호 · 띄어쓰기 등을 찾습니다 (예: 조선˅시대/조선시대,
             RED˅PEN/Redpen)
@@ -200,7 +200,7 @@ export default function ConsistencyPanel({
             onChange={setLiteralInput}
             onRegister={registerLiteral}
             placeholder={SPACE_INPUT_PLACEHOLDER}
-            ariaLabel="일관성 검색(1회 8개까지 가능)"
+            ariaLabel="일관성 찾기 (1회 검색 8개 이내 추천)"
           />
           <RegisteredList
             entries={literalEntries}

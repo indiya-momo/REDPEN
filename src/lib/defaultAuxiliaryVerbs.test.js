@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { isBonBojoRequiredItem } from './bonBojoRules.js';
 import { ensureDefaultAuxiliaryVerbs } from './defaultAuxiliaryVerbs.js';
 
 import { listAuxiliaryVerbEntries } from './auxiliaryVerbRegister.js';
@@ -9,6 +10,14 @@ import { ruleDisplayLabel } from './regexFromFind.js';
 import { matches } from '../test/matchText.js';
 
 
+
+describe('bonBojoRules', () => {
+  it('하다·지다는 필수 본조', () => {
+    expect(isBonBojoRequiredItem('verb-hada')).toBe(true);
+    expect(isBonBojoRequiredItem('verb-jida')).toBe(true);
+    expect(isBonBojoRequiredItem('verb-boda1')).toBe(false);
+  });
+});
 
 describe('ensureDefaultAuxiliaryVerbs', () => {
 
@@ -30,11 +39,15 @@ describe('ensureDefaultAuxiliaryVerbs', () => {
 
     );
 
-    expect(list.length).toBe(9);
+    expect(list.length).toBe(11);
 
     expect(labels).toContain('(아/어) + 하다');
 
     expect(labels).toContain('(아/어) + 지다');
+
+    expect(labels).toContain('(아/어) + 있다');
+
+    expect(labels).toContain('(아/어) + 없다');
 
     const withBon = rules.filter((r) => r.bonBojoItemId === 'verb-boda1');
 

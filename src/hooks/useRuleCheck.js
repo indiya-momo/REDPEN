@@ -8,6 +8,7 @@ import {
   isResultGroupVisible,
   mergeConsistencyZeroFindGroups,
   resultVisibilityKey,
+  sortConsistencyGroupedResults,
 } from '../lib/checkResultUtils.js';
 import {
   trackCheckRun,
@@ -111,16 +112,20 @@ export function useRuleCheck({
 
   const applyRestoredCheckState = useCallback(
     ({ spelling, consistency }) => {
+      const sortedConsistency = sortConsistencyGroupedResults(
+        consistency,
+        consistencyActiveRules,
+      );
       setSpellingResults(spelling);
-      setConsistencyResults(consistency);
+      setConsistencyResults(sortedConsistency);
       setSpellingCheckDone(spelling.length > 0);
       setConsistencyCheckDone(consistency.length > 0);
       setResultVisibility({
         ...defaultVisibilityForGroups(spelling, 'spelling'),
-        ...defaultVisibilityForGroups(consistency, 'consistency'),
+        ...defaultVisibilityForGroups(sortedConsistency, 'consistency'),
       });
     },
-    [],
+    [consistencyActiveRules],
   );
 
   const setRestoredSelection = useCallback((saved) => {

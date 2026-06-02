@@ -3220,9 +3220,6 @@ details[open] > summary .details-chevron {
 }
 
 .tail-list--grid-required {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 6px 10px;
   margin: 0;
   padding: 8px 0 0;
   border-top: 1px dashed var(--color-border-strong);
@@ -3259,15 +3256,16 @@ details[open] > summary .details-chevron {
   grid-column: 2;
   grid-row: 1;
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.35;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
 }
 
 .auxiliary-chip .bon-bojo-required-badge {
   grid-column: 3;
   grid-row: 1;
   justify-self: start;
+  margin-left: -5.4px;
 }
 
 .auxiliary-chip:has(input:checked) .find {

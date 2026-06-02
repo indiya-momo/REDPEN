@@ -60,7 +60,10 @@ const BON_BOJO_BY_ITEM_ID = new Map(
 );
 
 /** 시트·UI에서 기본 체크·「필수」 표시 대상 */
-export const BON_BOJO_REQUIRED_ITEM_IDS = new Set(['verb-hada']);
+/** 필수 본조 — UI 하단·필수 뱃지 (하다 → 지다 순) */
+export const BON_BOJO_REQUIRED_ITEM_IDS_LIST = ['verb-hada', 'verb-jida'];
+
+export const BON_BOJO_REQUIRED_ITEM_IDS = new Set(BON_BOJO_REQUIRED_ITEM_IDS_LIST);
 
 /** @param {string | undefined} itemId */
 export function isBonBojoRequiredItem(itemId) {

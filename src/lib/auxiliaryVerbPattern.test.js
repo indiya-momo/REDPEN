@@ -31,6 +31,32 @@ describe('auxiliaryVerbPattern', () => {
     expect(rules.some((r) => matches(r, '책장에서 지켜 본'))).toBe(false);
   });
 
+  it('여 준 — 보여 준다', () => {
+    const rules = buildAuxiliaryVerbFindRules('여 준');
+    const rule = rules[0];
+    expect(matches(rule, '보여 준다.')).toBe(true);
+    expect(matches(rule, '이 책을 보여 준다고')).toBe(true);
+    expect(matches(rule, '보여준다')).toBe(false);
+  });
+
+  it('여 줄 — 보여 줄·줄바꿈·얇은 공백', () => {
+    const rules = buildAuxiliaryVerbFindRules('여 줄');
+    const rule = rules[0];
+    expect(matches(rule, '보여 줄게')).toBe(true);
+    expect(matches(rule, '이걸 보여 줄')).toBe(true);
+    expect(matches(rule, '보여\n줄게')).toBe(true);
+    expect(matches(rule, '보여\u2009줄게')).toBe(true);
+    expect(matches(rule, '보여줄게')).toBe(false);
+  });
+
+  it('해 왔 — 줄바꿈 허용', () => {
+    const rules = buildAuxiliaryVerbFindRules('해 왔');
+    const rule = rules[0];
+    expect(matches(rule, '상상해 왔다')).toBe(true);
+    expect(matches(rule, '상상해\n왔다')).toBe(true);
+    expect(matches(rule, '해왔')).toBe(false);
+  });
+
   it('해보 — 붙임(해보+어미)과 띄움(*해+보+어미)', () => {
     const rules = buildAuxiliaryVerbFindRules('해보');
     expect(rules.length).toBeGreaterThanOrEqual(2);
