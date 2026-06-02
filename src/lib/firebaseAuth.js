@@ -11,11 +11,21 @@ import {
   signOut,
 } from 'firebase/auth';
 
+/** Firebase 웹 SDK 공개 설정 — 도메인 제한으로 보호됨(비밀키 아님). Vercel env 누락·캐시된 구버전 빌드 대비 */
+const FIREBASE_WEB_DEFAULTS = {
+  apiKey: 'AIzaSyA_K8yczBk4rzq-rvhoXt8fuZ-1-mZ3e8w',
+  authDomain: 'indiya-757ba.firebaseapp.com',
+  projectId: 'indiya-757ba',
+  appId: '1:997633908785:web:0ca96220aae36a2b187510',
+};
+
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || FIREBASE_WEB_DEFAULTS.apiKey,
+  authDomain:
+    import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || FIREBASE_WEB_DEFAULTS.authDomain,
+  projectId:
+    import.meta.env.VITE_FIREBASE_PROJECT_ID || FIREBASE_WEB_DEFAULTS.projectId,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || FIREBASE_WEB_DEFAULTS.appId,
 };
 
 export const isFirebaseAuthConfigured = Object.values(firebaseConfig).every(
@@ -46,9 +56,14 @@ function toSession(user) {
 }
 
 function assertConfigured() {
+  if (!isFirebaseAuthConfigured) {
+    throw new Error(
+      'Firebase 설정을 읽지 못했습니다. 페이지를 강력 새로고침(Ctrl+Shift+R)한 뒤 다시 시도해 주세요.',
+    );
+  }
   if (!auth || !provider) {
     throw new Error(
-      'Firebase 환경 변수가 비어 있습니다. 로컬은 .env.local에 VITE_FIREBASE_* 4개를 넣고 dev 서버를 재시작하세요. 배포 사이트는 Vercel Environment Variables를 확인하세요.',
+      'Firebase 로그인 초기화에 실패했습니다. 브라우저 캐시를 비우거나 시크릿 창에서 다시 시도해 주세요.',
     );
   }
 }
