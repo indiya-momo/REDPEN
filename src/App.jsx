@@ -12,7 +12,7 @@ import { useRuleSets } from './hooks/useRuleSets.js';
 import {
   completeGoogleRedirectIfNeeded,
   getCurrentUserSession,
-  signInWithGoogleRedirect,
+  signInWithGoogle,
   signOutUser,
   subscribeAuthSession,
 } from './lib/firebaseAuth.js';
@@ -20,6 +20,7 @@ import {
 export default function App() {
   const [authSession, setAuthSession] = useState(() => getCurrentUserSession());
   const [authReady, setAuthReady] = useState(false);
+  const [authBootstrapError, setAuthBootstrapError] = useState('');
   const [screen, setScreen] = useState(() => {
     if (
       import.meta.env.DEV &&
@@ -34,11 +35,9 @@ export default function App() {
   useEffect(() => {
     const unsubscribe = subscribeAuthSession(setAuthSession);
     completeGoogleRedirectIfNeeded()
-      .then((session) => {
+      .then(({ session, error }) => {
         if (session) setAuthSession(session);
-      })
-      .catch((error) => {
-        console.error('[auth] redirect result failed', error);
+        if (error) setAuthBootstrapError(error);
       })
       .finally(() => {
         setAuthReady(true);
@@ -72,8 +71,9 @@ export default function App() {
       <WelcomeScreen
         authSession={authSession}
         authReady={authReady}
+        authBootstrapError={authBootstrapError}
         onGoogleSignIn={async () => {
-          await signInWithGoogleRedirect();
+          await signInWithGoogle();
         }}
         onLogout={async () => {
           await signOutUser();

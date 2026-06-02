@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { BookOpen } from 'lucide-react';
 import AppVersionBadge from '../../components/AppVersionBadge.jsx';
 import MomoHero from '../../components/MomoHero.jsx';
@@ -25,6 +25,7 @@ const MOMO_TOOLTIP = publicAssetUrl('momo/bullon4.png');
  *   onOpenRoom: () => void,
  *   authSession: { uid: string, email?: string, displayName?: string } | null,
  *   authReady: boolean,
+ *   authBootstrapError?: string,
  *   onGoogleSignIn: () => Promise<void>,
  *   onLogout: () => void,
  * }} props
@@ -34,6 +35,7 @@ export default function WelcomePcScreen({
   onOpenRoom,
   authSession,
   authReady,
+  authBootstrapError = '',
   onGoogleSignIn,
   onLogout,
 }) {
@@ -42,6 +44,10 @@ export default function WelcomePcScreen({
   );
   const [authError, setAuthError] = useState('');
   const [authPending, setAuthPending] = useState(false);
+
+  useEffect(() => {
+    if (authBootstrapError) setAuthError(authBootstrapError);
+  }, [authBootstrapError]);
   const loggedIn = Boolean(
     authSession?.uid || getCurrentUserSession()?.uid,
   );

@@ -6,6 +6,7 @@ import {
   getRedirectResult,
   onAuthStateChanged,
   setPersistence,
+  signInWithPopup,
   signInWithRedirect,
   signOut,
 } from 'firebase/auth';
@@ -17,18 +18,22 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-const isFirebaseConfigured = Object.values(firebaseConfig).every(Boolean);
+export const isFirebaseAuthConfigured = Object.values(firebaseConfig).every(
+  Boolean,
+);
 
 let auth = null;
 let provider = null;
-let persistenceReady = false;
+let persistenceReady = Promise.resolve();
 
-if (isFirebaseConfigured) {
+if (isFirebaseAuthConfigured) {
   const app = initializeApp(firebaseConfig);
   auth = getAuth(app);
   provider = new GoogleAuthProvider();
   provider.setCustomParameters({ prompt: 'select_account' });
-  persistenceReady = setPersistence(auth, browserLocalPersistence).catch(() => false);
+  persistenceReady = setPersistence(auth, browserLocalPersistence).catch(
+    () => undefined,
+  );
 }
 
 function toSession(user) {
@@ -53,13 +58,17 @@ export function mapFirebaseAuthError(error) {
   const messages = {
     'auth/popup-closed-by-user': '로그인 창이 닫혔습니다.',
     'auth/popup-blocked':
-      '팝업이 차단되었습니다. 브라우저 설정에서 팝업을 허용해 주세요.',
+      '팝업이 차단되었습니다. 브라우저에서 팝업을 허용하거나, 시크릿 창이 아닌 일반 창에서 다시 시도해 주세요.',
+    'auth/cancelled-popup-request':
+      '로그인 창이 이미 열려 있습니다. 잠시 후 다시 시도해 주세요.',
     'auth/unauthorized-domain':
-      'Firebase 승인 도메인에 localhost와 indiya.vercel.app을 추가해 주세요.',
+      'Firebase → Authentication → Settings → Authorized domains에 이 사이트 주소(indiya.vercel.app, localhost)를 추가해 주세요.',
     'auth/operation-not-allowed':
-      'Firebase 콘솔에서 Google 로그인을 활성화해 주세요.',
+      'Firebase 콘솔에서 Google 로그인(Sign-in method)을 활성화해 주세요.',
     'auth/account-exists-with-different-credential':
       '이미 다른 방식으로 가입된 계정입니다.',
+    'auth/web-storage-unsupported':
+      '브라우저가 로그인 저장을 막고 있습니다. 시크릿 창을 끄거나 쿠키 차단을 해제해 주세요.',
   };
   if (messages[code]) return messages[code];
   if (error instanceof Error && error.message) return error.message;
@@ -78,26 +87,43 @@ export function subscribeAuthSession(callback) {
   });
 }
 
-/** Google 로그인 후 돌아온 경우 결과 처리 (리다이렉트 방식) */
+/** Google 로그인 후 돌아온 경우 결과 처리 (리다이렉트 fallback용) */
 export async function completeGoogleRedirectIfNeeded() {
-  if (!auth) return null;
+  if (!auth) return { session: null, error: null };
   await persistenceReady;
   try {
     const result = await getRedirectResult(auth);
-    return toSession(result?.user ?? auth.currentUser);
+    const session = toSession(result?.user ?? auth.currentUser);
+    return { session, error: null };
   } catch (error) {
-    throw new Error(mapFirebaseAuthError(error));
+    return { session: null, error: mapFirebaseAuthError(error) };
   }
 }
 
-/** 팝업 대신 리다이렉트 — 계정 선택 후 멈춤 현상 방지 */
-export async function signInWithGoogleRedirect() {
+const POPUP_FALLBACK_CODES = new Set([
+  'auth/popup-blocked',
+  'auth/popup-closed-by-user',
+  'auth/cancelled-popup-request',
+]);
+
+/** 팝업 우선, 실패 시 전체 페이지 리다이렉트 */
+export async function signInWithGoogle() {
   assertConfigured();
   await persistenceReady;
   if (auth.currentUser) {
     return;
   }
-  await signInWithRedirect(auth, provider);
+
+  try {
+    await signInWithPopup(auth, provider);
+  } catch (error) {
+    const code = error?.code ?? '';
+    if (POPUP_FALLBACK_CODES.has(code)) {
+      await signInWithRedirect(auth, provider);
+      return;
+    }
+    throw error;
+  }
 }
 
 export async function signOutUser() {
