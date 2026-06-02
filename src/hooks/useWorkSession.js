@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { restoreCheckResults } from '../lib/checkResultUtils.js';
 import { SPELLING_RULES_FP } from '../lib/builtInRules.js';
 import { CAUTION_RULES_FP } from '../lib/cautionRules.js';
 import {
@@ -16,8 +15,9 @@ import {
 /**
  * @param {ReturnType<import('./usePdfDocument.js').usePdfDocument>} pdf
  * @param {ReturnType<import('./useRuleCheck.js').useRuleCheck>} ruleCheck
+ * @param {ReturnType<import('../toc-body/hooks/useTocBodyCheck.js').useTocBodyCheck>} tocCheck
  */
-export function useWorkSession(pdf, ruleCheck) {
+export function useWorkSession(pdf, ruleCheck, tocCheck) {
   const [sessionHint, setSessionHint] = useState(null);
   const [isRestoring, setIsRestoring] = useState(true);
   const restoreGenerationRef = useRef(0);
@@ -45,7 +45,6 @@ export function useWorkSession(pdf, ruleCheck) {
     setIsProcessing,
     setProgress,
     setLoadError,
-    setLoadAdvisory,
     loadPdfFromFile,
     applyExtractValidation,
     resetPdfDocument,
@@ -58,10 +57,15 @@ export function useWorkSession(pdf, ruleCheck) {
     consistencyResults,
     spellingSelected,
     consistencySelected,
-    clearAllCheckState,
-    applyRestoredCheckState,
-    setRestoredSelection,
+    clearAllCheckState: clearRuleCheckState,
   } = ruleCheck;
+
+  const { clearAllCheckState: clearTocCheckState } = tocCheck;
+
+  const clearAllCheckState = useCallback(() => {
+    clearRuleCheckState();
+    clearTocCheckState();
+  }, [clearRuleCheckState, clearTocCheckState]);
 
   const persistSession = useCallback(async () => {
     if (!canPersist) return false;
@@ -71,13 +75,15 @@ export function useWorkSession(pdf, ruleCheck) {
       fileHandle: fileHandleRef.current,
       pdfBuffer: fileHandleRef.current ? undefined : pdfBufferRef.current,
       pageTexts: pageTexts.map((p) => ({ pageNum: p.pageNum, text: p.text })),
-      groupedResults: spellingResults,
-      consistencyGroupedResults: consistencyResults,
+      groupedResults: [],
+      consistencyGroupedResults: [],
+      tocBodyGroupedResults: [],
       spellingRulesFingerprint: SPELLING_RULES_FP,
       cautionRulesFingerprint: CAUTION_RULES_FP,
       currentPage,
-      selectedInstance: spellingSelected,
-      consistencySelectedInstance: consistencySelected,
+      selectedInstance: null,
+      consistencySelectedInstance: null,
+      tocBodySelectedInstance: null,
     });
 
     if (result.ok) {
@@ -102,11 +108,7 @@ export function useWorkSession(pdf, ruleCheck) {
     canPersist,
     pdfFileName,
     pageTexts,
-    spellingResults,
-    consistencyResults,
     currentPage,
-    spellingSelected,
-    consistencySelected,
     fileHandleRef,
     pdfBufferRef,
     setLoadError,
@@ -125,17 +127,11 @@ export function useWorkSession(pdf, ruleCheck) {
       }
 
       if (saved.needFilePermission && saved.fileHandle) {
+        clearAllCheckState();
         fileHandleRef.current = saved.fileHandle;
         setPdfFileName(saved.fileName);
         setPdfByteLength(saved.pdfByteLength ?? null);
-        const { spelling, consistency, staleRules } = restoreCheckResults(saved);
-        applyRestoredCheckState({ spelling, consistency });
-        setRestoredSelection(saved);
-        setSessionHint(
-          staleRules
-            ? '규칙이 바뀌어 이전 맞춤법 결과는 비웠습니다. PDF 연결 후 「검사 실행」을 다시 누르세요.'
-            : '이전 PDF — 아래 「PDF 다시 연결」을 누르세요',
-        );
+        setSessionHint('이전 PDF — 아래 「PDF 다시 연결」을 누르세요');
         setLoadError(null);
         setIsRestoring(false);
         return;
@@ -144,6 +140,7 @@ export function useWorkSession(pdf, ruleCheck) {
       setIsProcessing(true);
       setProgress({ current: 0, total: 1, phase: 'restore' });
       setSessionHint('이전 작업 복원 중…');
+      clearAllCheckState();
 
       try {
         pdfBufferRef.current = saved.pdfBuffer;
@@ -152,10 +149,6 @@ export function useWorkSession(pdf, ruleCheck) {
         setPdfByteLength(
           saved.pdfByteLength ?? saved.pdfBuffer?.byteLength ?? null,
         );
-        const { spelling, consistency, staleRules } = restoreCheckResults(saved);
-        applyRestoredCheckState({ spelling, consistency });
-        setRestoredSelection(saved);
-
         const doc = await loadPdfFromBuffer(saved.pdfBuffer);
         if (!mounted.current || isRestoreStale(generation)) return;
 
@@ -181,9 +174,7 @@ export function useWorkSession(pdf, ruleCheck) {
         }
 
         setSessionHint(
-          staleRules
-            ? `복원됨 · ${saved.fileName} — 규칙이 바뀌어 맞춤법 결과는 비웠습니다. 「검사 실행」을 다시 누르세요.`
-            : `복원됨 · ${saved.fileName} (${new Date(saved.savedAt).toLocaleString('ko-KR')})`,
+          `PDF 복원됨 · ${saved.fileName} (${new Date(saved.savedAt).toLocaleString('ko-KR')}) — 검사는 다시 실행하세요`,
         );
       } catch (err) {
         if (mounted.current && !isRestoreStale(generation)) {
@@ -206,8 +197,7 @@ export function useWorkSession(pdf, ruleCheck) {
       mounted.current = false;
     };
   }, [
-    applyRestoredCheckState,
-    setRestoredSelection,
+    clearAllCheckState,
     fileHandleRef,
     pdfBufferRef,
     setPdf,
@@ -234,13 +224,15 @@ export function useWorkSession(pdf, ruleCheck) {
           fileName: pdfFileName,
           fileHandle: fileHandleRef.current,
           pdfBuffer: fileHandleRef.current ? undefined : pdfBufferRef.current,
-          groupedResults: spellingResults,
-          consistencyGroupedResults: consistencyResults,
+          groupedResults: [],
+          consistencyGroupedResults: [],
+          tocBodyGroupedResults: [],
           spellingRulesFingerprint: SPELLING_RULES_FP,
           cautionRulesFingerprint: CAUTION_RULES_FP,
           currentPage,
-          selectedInstance: spellingSelected,
-          consistencySelectedInstance: consistencySelected,
+          selectedInstance: null,
+          consistencySelectedInstance: null,
+          tocBodySelectedInstance: null,
         });
       }
     };
@@ -256,11 +248,7 @@ export function useWorkSession(pdf, ruleCheck) {
     canPersist,
     pdfFileName,
     pageTexts,
-    spellingResults,
-    consistencyResults,
     currentPage,
-    spellingSelected,
-    consistencySelected,
     pdfBufferRef,
     fileHandleRef,
   ]);

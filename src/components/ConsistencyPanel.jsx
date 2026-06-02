@@ -36,6 +36,7 @@ import ConsistencyRegisterField from './consistency/ConsistencyRegisterField.jsx
 import ExcludePhraseList from './consistency/ExcludePhraseList.jsx';
 import RegisteredList from './consistency/RegisteredList.jsx';
 import { SPACE_INPUT_PLACEHOLDER } from './consistency/constants.js';
+import TocBodySetupPanel from '../toc-body/components/TocBodySetupPanel.jsx';
 
 /**
  * @param {{
@@ -45,6 +46,23 @@ import { SPACE_INPUT_PLACEHOLDER } from './consistency/constants.js';
  *   onGlobalExcludePhrasesChange: (phrases: string[]) => void,
  *   builtInEnabled: Record<string, boolean>,
  *   cautionEnabled: Record<string, boolean>,
+ *   tocBodyText?: string,
+ *   onTocBodyTextChange?: (text: string) => void,
+ *   tocBodyExcludePages?: string,
+ *   onTocBodyExcludePagesChange?: (value: string) => void,
+ *   printedPagesActive?: boolean,
+ *   currentSystemPage?: number,
+ *   currentPrintedLabel?: string,
+ *   previewPrintedLabel?: string,
+ *   spreadInput?: boolean,
+ *   onSpreadInputChange?: (v: boolean) => void,
+ *   firstPageSingle?: boolean,
+ *   onFirstPageSingleChange?: (v: boolean) => void,
+ *   onCalibrateFromInput?: (raw: string, isSpread: boolean) => void,
+ *   onClearPrintedPageOffset?: () => void,
+ *   onRunTocCheck?: () => void | Promise<void>,
+ *   hasPdf?: boolean,
+ *   isProcessing?: boolean,
  * }} props
  */
 export default function ConsistencyPanel({
@@ -54,6 +72,23 @@ export default function ConsistencyPanel({
   onGlobalExcludePhrasesChange,
   builtInEnabled,
   cautionEnabled,
+  tocBodyText = '',
+  onTocBodyTextChange = () => {},
+  tocBodyExcludePages = '',
+  onTocBodyExcludePagesChange = () => {},
+  printedPagesActive = false,
+  currentSystemPage = 1,
+  currentPrintedLabel = '',
+  previewPrintedLabel = '',
+  spreadInput = false,
+  onSpreadInputChange = () => {},
+  firstPageSingle = true,
+  onFirstPageSingleChange = () => {},
+  onCalibrateFromInput = () => {},
+  onClearPrintedPageOffset = () => {},
+  onRunTocCheck = () => {},
+  hasPdf = false,
+  isProcessing = false,
 }) {
   const [literalInput, setLiteralInput] = useState('');
   const [slotInput, setSlotInput] = useState('');
@@ -116,11 +151,11 @@ export default function ConsistencyPanel({
         if (isPhraseSlotPattern(raw)) {
           alert(`「${raw}」은 공통 문자열 찾기에 등록하세요. (@)`);
         } else if (isAuxiliaryStem(raw) || isHaeBoPattern(raw)) {
-          alert(`「${raw}」은 본용언+보조용언 붙이기에 등록하세요.`);
+          alert(`「${raw}」은 본용언+보조용언 표기에 등록하세요.`);
         } else {
           const parts = raw.split(/\s+/).filter(Boolean);
           if (parts.length === 2 && isAuxiliaryStem(parts[1])) {
-            alert(`「${raw}」은 본용언+보조용언 붙이기에 등록하세요.`);
+            alert(`「${raw}」은 본용언+보조용언 표기에 등록하세요.`);
           } else {
             alert(`등록할 수 없는 형식입니다: ${raw}`);
           }
@@ -287,11 +322,11 @@ export default function ConsistencyPanel({
                   ),
                 )
               }
-              aria-label="본용언+보조용언 붙이기 전체 선택"
+              aria-label="본용언+보조용언 표기 전체 선택"
             />
           </label>
           <p id="consistency-aux-heading" className="field-label bon-bojo-checklist-title">
-            본용언+보조용언 붙이기
+            본용언+보조용언 표기
             {auxiliaryTotal > 0
               ? ` (선택 ${auxiliaryActiveCount}/${auxiliaryTotal})`
               : ''}
@@ -310,22 +345,27 @@ export default function ConsistencyPanel({
         />
       </section>
 
-      <section
-        className="consistency-section-box consistency-toc-section"
-        aria-labelledby="consistency-toc-heading"
-      >
-        <div className="consistency-toc-section__header">
-          <p id="consistency-toc-heading" className="field-label consistency-toc-section__title">
-            목차 · 본문 일관성 검사
-          </p>
-          <span className="consistency-toc-section__badge">개발중</span>
-        </div>
-        <div className="consistency-toc-section__body">
-          <p className="hint consistency-toc-section__hint">
-            목차와 본문의 일관성을 맞춰 보는 검사입니다.
-          </p>
-        </div>
-      </section>
+      <TocBodySetupPanel
+        embedded
+        textareaRows={5}
+        tocBodyText={tocBodyText}
+        onTocBodyTextChange={onTocBodyTextChange}
+        tocBodyExcludePages={tocBodyExcludePages}
+        onTocBodyExcludePagesChange={onTocBodyExcludePagesChange}
+        printedPagesActive={printedPagesActive}
+        currentSystemPage={currentSystemPage}
+        currentPrintedLabel={currentPrintedLabel}
+        previewPrintedLabel={previewPrintedLabel}
+        spreadInput={spreadInput}
+        onSpreadInputChange={onSpreadInputChange}
+        firstPageSingle={firstPageSingle}
+        onFirstPageSingleChange={onFirstPageSingleChange}
+        onCalibrateFromInput={onCalibrateFromInput}
+        onClearPrintedPageOffset={onClearPrintedPageOffset}
+        onRunCheck={onRunTocCheck}
+        hasPdf={hasPdf}
+        isProcessing={isProcessing}
+      />
     </div>
   );
 }

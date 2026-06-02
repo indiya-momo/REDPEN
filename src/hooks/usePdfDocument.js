@@ -26,11 +26,9 @@ export function usePdfDocument() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(null);
   const [loadError, setLoadError] = useState(null);
-  /** @type {[string[] | null, React.Dispatch<React.SetStateAction<string[] | null>>]} */
-  const [loadAdvisory, setLoadAdvisory] = useState(null);
 
   /**
-   * 추출 완료 후 게이트·advisory 반영. restore 경로와 loadPdfFromFile 공용.
+   * 추출 완료 후 게이트 반영. restore 경로와 loadPdfFromFile 공용.
    * @param {import('pdfjs-dist').PDFDocumentProxy} doc
    * @param {import('../lib/pdfService.js').PageData[]} pages
    */
@@ -39,7 +37,6 @@ export function usePdfDocument() {
     const validation = validatePublishablePdf({ producerHints, pages });
     if (!validation.ok) {
       setLoadError(validation.message ?? null);
-      setLoadAdvisory(null);
       setPdf(null);
       setPageTexts([]);
       return { ok: false, validation, producerHints };
@@ -47,13 +44,11 @@ export function usePdfDocument() {
     setLoadError(null);
     setPdf(doc);
     setPageTexts(pages);
-    setLoadAdvisory(validation.advisory?.lines ?? null);
     return { ok: true, validation, producerHints };
   }, []);
 
   const loadPdfFromFile = useCallback(async (file) => {
     setLoadError(null);
-    setLoadAdvisory(null);
     setPdfFileName(file.name);
     setPdfByteLength(file.size);
     setPdf(null);
@@ -89,7 +84,6 @@ export function usePdfDocument() {
     setPageTexts([]);
     setCurrentPage(1);
     setLoadError(null);
-    setLoadAdvisory(null);
   }, []);
 
   const clearFileHandle = useCallback(() => {
@@ -134,8 +128,6 @@ export function usePdfDocument() {
     setProgress,
     loadError,
     setLoadError,
-    loadAdvisory,
-    setLoadAdvisory,
     setPdf,
     setPdfFileName,
     setPageTexts,

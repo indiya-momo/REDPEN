@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { Upload, FileText, CheckCircle2, Play, RotateCcw } from 'lucide-react';
 import pdfMomoIcon from '../assets/momo/pdf-momo.png';
 import pdfFullIcon from '../assets/momo/pdf-full.png';
@@ -17,7 +17,8 @@ const PDF_SIZE_WARN_BYTES = 50 * MB;
  *   onLoadPdfFile: (file: File) => void | Promise<void>,
  *   onReconnect: () => void,
  *   onClearSession: () => void,
- *   onRunCheck: () => void,
+ *   onRunCheck?: () => void,
+ *   showRunButton?: boolean,
  *   isProcessing: boolean,
  *   progressLabel: string | null,
  *   progress: { current: number; total: number; phase?: string } | null,
@@ -27,7 +28,6 @@ const PDF_SIZE_WARN_BYTES = 50 * MB;
  *   pageTextsLength: number,
  *   fileHandleActive: boolean,
  *   loadError: string | null,
- *   loadAdvisory?: string[] | null,
  *   sessionHint: string | null,
  *   runLabel: string,
  *   showReady: boolean,
@@ -40,7 +40,8 @@ export default function PdfCenterStage({
   onLoadPdfFile,
   onReconnect,
   onClearSession,
-  onRunCheck,
+  onRunCheck = () => {},
+  showRunButton = true,
   isProcessing,
   progressLabel,
   progress,
@@ -50,7 +51,6 @@ export default function PdfCenterStage({
   pageTextsLength,
   fileHandleActive,
   loadError,
-  loadAdvisory = null,
   sessionHint,
   runLabel,
   showReady,
@@ -112,14 +112,6 @@ export default function PdfCenterStage({
   const uploadFailed = Boolean(loadError) && !showReady;
   const uploadFailedHint = sessionHint === '업로드 실패';
   const momoSrc = showReady ? pdfFullIcon : pdfMomoIcon;
-  const [advisoryDismissed, setAdvisoryDismissed] = useState(false);
-
-  useEffect(() => {
-    setAdvisoryDismissed(false);
-  }, [loadAdvisory]);
-
-  const showAdvisory =
-    Boolean(loadAdvisory?.length) && showReady && !advisoryDismissed;
 
   return (
     <div
@@ -143,22 +135,6 @@ export default function PdfCenterStage({
         >
           {sessionHint}
         </p>
-      )}
-      {showAdvisory && (
-        <div className="pdf-center-stage__advisory" role="status">
-          {loadAdvisory.map((line) => (
-            <p key={line} className="pdf-center-stage__advisory-line">
-              {line}
-            </p>
-          ))}
-          <button
-            type="button"
-            className="link-btn pdf-center-stage__advisory-dismiss"
-            onClick={() => setAdvisoryDismissed(true)}
-          >
-            확인
-          </button>
-        </div>
       )}
       {uploadFailed && (
         <p className="pdf-center-stage__upload-fail">
@@ -281,15 +257,17 @@ export default function PdfCenterStage({
               </span>
             </div>
 
-            <button
-              type="button"
-              className="btn-run pdf-ready-panel__run"
-              onClick={onRunCheck}
-              disabled={runDisabled}
-            >
-              <Play size={16} />
-              {checkBusy ? '검사 중…' : runLabel}
-            </button>
+            {showRunButton ? (
+              <button
+                type="button"
+                className="btn-run pdf-ready-panel__run"
+                onClick={onRunCheck}
+                disabled={runDisabled}
+              >
+                <Play size={16} />
+                {checkBusy ? '검사 중…' : runLabel}
+              </button>
+            ) : null}
 
             {isSizeOverRecommended && (
               <div className="pdf-ready-panel__size-warn-actions">

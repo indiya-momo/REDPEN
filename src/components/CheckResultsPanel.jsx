@@ -6,7 +6,7 @@ import { cautionResultChipLabel } from '../lib/cautionRules.js';
 import { auxiliaryVerbResultParts } from '../lib/patternDisplayLabels.js';
 
 /**
- * @typedef {{ group: import('../lib/ruleEngine.js').GroupedResult, source: 'spelling' | 'consistency' }} ResultEntry
+ * @typedef {import('../utils/main-screen-helpers.js').TabEntry} ResultEntry
  */
 
 /**
@@ -328,7 +328,7 @@ export default function CheckResultsPanel({
       {onAdditionalCheck && (
         <div className="results-panel-footer">
           <button type="button" className="btn-additional-check" onClick={onAdditionalCheck}>
-            추가 검사
+            다시 검사
           </button>
         </div>
       )}
