@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { BookOpen } from 'lucide-react';
 import AppVersionBadge from '../../components/AppVersionBadge.jsx';
 import MomoHero from '../../components/MomoHero.jsx';
@@ -16,12 +16,43 @@ const MOMO_TOOLTIP = publicAssetUrl('momo/bullon4.png');
 
 /**
  * PC 대문 — welcome-pc 전용 (모바일과 마크업·CSS 공유 없음)
- * @param {{ onStart: () => void, onOpenRoom: () => void }} props
+ * @param {{
+ *   onStart: () => void,
+ *   onOpenRoom: () => void,
+ *   authSession: { email: string } | null,
+ *   onGoogleSignIn: () => Promise<void>,
+ *   onLogout: () => void,
+ * }} props
  */
-export default function WelcomePcScreen({ onStart, onOpenRoom }) {
+export default function WelcomePcScreen({
+  onStart,
+  onOpenRoom,
+  authSession,
+  onGoogleSignIn,
+  onLogout,
+}) {
   const [analyticsOptedOut, setAnalyticsOptedOut] = useState(() =>
     isAnalyticsOptedOut(),
   );
+  const [authError, setAuthError] = useState('');
+  const [authPending, setAuthPending] = useState(false);
+  const isSignedIn = Boolean(authSession?.email);
+  const signedInLabel = useMemo(
+    () => (authSession?.email ? `${authSession.email} 계정으로 로그인됨` : ''),
+    [authSession],
+  );
+
+  async function handleGoogleAuth() {
+    try {
+      setAuthPending(true);
+      await onGoogleSignIn();
+      setAuthError('');
+    } catch (error) {
+      setAuthError(error instanceof Error ? error.message : 'Google 로그인에 실패했습니다.');
+    } finally {
+      setAuthPending(false);
+    }
+  }
 
   return (
     <div className="welcome-pc">
@@ -107,6 +138,21 @@ export default function WelcomePcScreen({ onStart, onOpenRoom }) {
             </article>
           </div>
 
+          {isSignedIn ? (
+            <section className="welcome-pc__auth" aria-label="회원가입 및 로그인">
+              <div className="welcome-pc__auth-signed">
+                <p>{signedInLabel}</p>
+                <button
+                  type="button"
+                  className="welcome-pc__auth-ghost"
+                  onClick={onLogout}
+                >
+                  로그아웃
+                </button>
+              </div>
+            </section>
+          ) : null}
+
           <div className="welcome-pc__bottom-notes">
             <p className="welcome-pc__analytics-note">
               {analyticsOptedOut ? (
@@ -165,16 +211,37 @@ export default function WelcomePcScreen({ onStart, onOpenRoom }) {
                 imageAlt="모모"
                 message="시작해보자냥!"
               >
-                <button
-                  type="button"
-                  className="btn-welcome-primary welcome-pc__start"
-                  onClick={onStart}
-                >
-                  검수 시작하기
-                </button>
+                {isSignedIn ? (
+                  <button
+                    type="button"
+                    className="btn-welcome-primary welcome-pc__start"
+                    onClick={onStart}
+                  >
+                    검수 시작하기
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="btn-welcome-primary welcome-pc__start welcome-pc__auth-submit"
+                    onClick={handleGoogleAuth}
+                    disabled={authPending}
+                  >
+                    {authPending
+                      ? 'Google 로그인 연결 중…'
+                      : 'Google로 회원가입 / 로그인'}
+                  </button>
+                )}
               </TooltipGuide>
-              <p className="welcome-pc__steps-note welcome-pc__steps-note--stage">
-                시크릿 창에서 작업 시 복원 · 저장이 되지 않습니다
+              {authError && !isSignedIn ? (
+                <p
+                  className="welcome-pc__auth-error welcome-pc__auth-error--stage"
+                  role="alert"
+                >
+                  {authError}
+                </p>
+              ) : null}
+              <p className="welcome-pc__beta-note welcome-pc__steps-note--stage">
+                오픈베타 기간 동안 모든 기능을 제공합니다
               </p>
             </div>
           </div>

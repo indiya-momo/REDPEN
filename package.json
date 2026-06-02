@@ -21,6 +21,7 @@
     "prepare": "husky"
   },
   "dependencies": {
+    "firebase": "^12.14.0",
     "lucide-react": "^0.511.0",
     "pdfjs-dist": "5.2.133",
     "posthog-js": "^1.376.2",
