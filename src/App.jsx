@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import MainScreen from './components/MainScreen.jsx';
 import WelcomeScreen from './components/WelcomeScreen.jsx';
 import MomoRoomScreen from './components/MomoRoomScreen.jsx';
@@ -9,8 +9,15 @@ import {
   builtInEnabledFromSheet,
 } from './lib/builtInRules.js';
 import { useRuleSets } from './hooks/useRuleSets.js';
+import {
+  getCurrentUserSession,
+  signInWithGooglePopup,
+  signOutUser,
+  subscribeAuthSession,
+} from './lib/firebaseAuth.js';
 
 export default function App() {
+  const [authSession, setAuthSession] = useState(() => getCurrentUserSession());
   const [screen, setScreen] = useState(() => {
     if (
       import.meta.env.DEV &&
@@ -21,6 +28,8 @@ export default function App() {
     return 'welcome';
   });
   const [mainWorkTab, setMainWorkTab] = useState('spelling');
+
+  useEffect(() => subscribeAuthSession(setAuthSession), []);
 
   const {
     rulesReady,
@@ -46,6 +55,13 @@ export default function App() {
   if (screen === 'welcome') {
     return (
       <WelcomeScreen
+        authSession={authSession}
+        onGoogleSignIn={async () => {
+          await signInWithGooglePopup();
+        }}
+        onLogout={async () => {
+          await signOutUser();
+        }}
         onStart={() => {
           setMainWorkTab('spelling');
           setScreen('main');
