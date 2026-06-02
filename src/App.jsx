@@ -10,14 +10,16 @@ import {
 } from './lib/builtInRules.js';
 import { useRuleSets } from './hooks/useRuleSets.js';
 import {
+  completeGoogleRedirectIfNeeded,
   getCurrentUserSession,
-  signInWithGooglePopup,
+  signInWithGoogleRedirect,
   signOutUser,
   subscribeAuthSession,
 } from './lib/firebaseAuth.js';
 
 export default function App() {
   const [authSession, setAuthSession] = useState(() => getCurrentUserSession());
+  const [authReady, setAuthReady] = useState(false);
   const [screen, setScreen] = useState(() => {
     if (
       import.meta.env.DEV &&
@@ -29,7 +31,20 @@ export default function App() {
   });
   const [mainWorkTab, setMainWorkTab] = useState('spelling');
 
-  useEffect(() => subscribeAuthSession(setAuthSession), []);
+  useEffect(() => {
+    const unsubscribe = subscribeAuthSession(setAuthSession);
+    completeGoogleRedirectIfNeeded()
+      .then((session) => {
+        if (session) setAuthSession(session);
+      })
+      .catch((error) => {
+        console.error('[auth] redirect result failed', error);
+      })
+      .finally(() => {
+        setAuthReady(true);
+      });
+    return unsubscribe;
+  }, []);
 
   const {
     rulesReady,
@@ -56,8 +71,9 @@ export default function App() {
     return (
       <WelcomeScreen
         authSession={authSession}
+        authReady={authReady}
         onGoogleSignIn={async () => {
-          await signInWithGooglePopup();
+          await signInWithGoogleRedirect();
         }}
         onLogout={async () => {
           await signOutUser();
