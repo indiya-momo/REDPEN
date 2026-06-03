@@ -51,7 +51,6 @@
   display: grid;
   margin-bottom: clamp(calc(0.5rem * var(--welcome-scale)), 1.5vw, calc(0.75rem * var(--welcome-scale)));
   padding-bottom: calc(0.55rem * var(--welcome-scale));
-  border-bottom: 1px solid var(--welcome-border-soft);
 }
 .welcome-mo__eyebrow {
   display: inline-block;
@@ -239,11 +238,14 @@
   flex-direction: column;
   margin: 0;
 }
+.welcome-mo__compare-block:first-child {
+  margin-bottom: calc(-0.325rem * var(--welcome-scale));
+}
 .welcome-mo__compare-label {
   display: flex;
   align-items: center;
   gap: calc(0.45rem * var(--welcome-scale));
-  margin: 0 0 calc(0.45rem * var(--welcome-scale));
+  margin: 0 0 calc(2rem * 0.3);
   font-size: calc(0.8rem * var(--welcome-scale));
   font-weight: 700;
   color: var(--welcome-accent);
@@ -253,13 +255,57 @@
   flex-direction: column;
   align-items: center;
   align-self: center;
-  gap: calc(0.2rem * var(--welcome-scale));
+  gap: calc(0.45rem * var(--welcome-scale));
   width: fit-content;
   margin: 0 auto;
-  padding-top: calc(0.55rem * 2 * var(--welcome-scale));
-  padding-bottom: calc(0.35rem * 2 * var(--welcome-scale));
+  padding-top: calc(0.55rem * 2 * 1.5 * 0.5 * var(--welcome-scale));
+  padding-bottom: calc(0.35rem * 2 * 1.5 * var(--welcome-scale));
+}
+.welcome-mo__compare-dots {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(1.5rem * 0.6);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.welcome-mo__compare-bridge > .welcome-mo__compare-dots:first-child {
+  margin-bottom: calc(1.1rem * var(--welcome-scale));
+}
+.welcome-mo__compare-dot {
+  display: block;
+  width: calc(0.42rem * var(--welcome-scale));
+  height: calc(0.42rem * var(--welcome-scale));
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.35);
+}
+.welcome-mo__compare-momo-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+}
+.welcome-mo__compare-momo-wrap::before {
+  content: '';
+  position: absolute;
+  width: calc(4.75rem * 0.7 * 1.45);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.28) 0%,
+    rgba(255, 255, 255, 0.12) 55%,
+    rgba(255, 255, 255, 0) 72%
+  );
+  box-shadow: 0 0 28px rgba(255, 255, 255, 0.14);
+  z-index: 0;
 }
 .welcome-mo__compare-momo-img {
+  position: relative;
+  z-index: 1;
   display: block;
   width: calc(4.75rem * 0.7);
   height: auto;

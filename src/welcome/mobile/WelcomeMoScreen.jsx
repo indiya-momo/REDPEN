@@ -61,11 +61,8 @@ export default function WelcomeMoScreen({ onOpenRoom }) {
         <section
           id="welcome-mo-showcase"
           className="welcome-mo__showcase"
-          aria-labelledby="welcome-mo-showcase-title"
+          aria-label="검수 예시"
         >
-          <h2 id="welcome-mo-showcase-title" className="welcome-mo__showcase-title">
-            검수 예시
-          </h2>
           <ol className="welcome-mo__showcase-flow">
             <li className="welcome-mo__showcase-item welcome-mo__showcase-item--compare">
               <div className="welcome-mo__compare">
@@ -85,18 +82,28 @@ export default function WelcomeMoScreen({ onOpenRoom }) {
                   </figure>
                 </div>
                 <div className="welcome-mo__compare-bridge" aria-hidden="true">
-                  <img
-                    className="welcome-mo__compare-momo-img"
-                    src={PDF_MOMO}
-                    alt=""
-                    width={98}
-                    height={98}
-                    loading="lazy"
-                    decoding="async"
-                  />
+                  <div className="welcome-mo__compare-dots">
+                    <span className="welcome-mo__compare-dot" />
+                    <span className="welcome-mo__compare-dot" />
+                  </div>
+                  <div className="welcome-mo__compare-momo-wrap">
+                    <img
+                      className="welcome-mo__compare-momo-img"
+                      src={PDF_MOMO}
+                      alt=""
+                      width={98}
+                      height={98}
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  </div>
                   <p className="welcome-mo__showcase-title welcome-mo__compare-bridge-title">
                     모모가 살펴봅니다
                   </p>
+                  <div className="welcome-mo__compare-dots">
+                    <span className="welcome-mo__compare-dot" />
+                    <span className="welcome-mo__compare-dot" />
+                  </div>
                 </div>
                 <div className="welcome-mo__compare-block">
                   <p className="welcome-mo__compare-label">
