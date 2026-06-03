@@ -57,6 +57,12 @@ export function restoreCheckResults(saved) {
 /** @param {import('./ruleEngine.js').GroupedResult} group */
 export function groupKey(group) {
   if (group.cautionId) return `caution:${group.cautionId}`;
+  if (
+    group.patternKind === 'auxiliary-verb' &&
+    group.groupDisplayLabel?.trim()
+  ) {
+    return `auxiliary-item:${group.groupDisplayLabel.trim()}`;
+  }
   return `${group.find}\0${group.replace}`;
 }
 
@@ -215,6 +221,48 @@ export function sortConsistencyGroupedResults(results, activeRules) {
     if (ra.index !== rb.index) return ra.index - rb.index;
     return (a.label ?? '').localeCompare(b.label ?? '', 'ko');
   });
+}
+
+/**
+ * 본용언+보조용언 결과 — stem별 줄이 아니라 시트 11항목(displayLabel)당 1줄
+ * @param {import('./ruleEngine.js').GroupedResult[]} results
+ */
+export function mergeAuxiliaryResultsByBonBojoItem(results) {
+  /** @type {Map<string, import('./ruleEngine.js').GroupedResult>} */
+  const merged = new Map();
+  /** @type {import('./ruleEngine.js').GroupedResult[]} */
+  const rest = [];
+
+  for (const g of results) {
+    if (g.patternKind !== 'auxiliary-verb') {
+      rest.push(g);
+      continue;
+    }
+    const tag =
+      g.groupDisplayLabel?.trim() ||
+      g.label?.trim() ||
+      g.tailWord?.trim() ||
+      '';
+    if (!tag) {
+      rest.push(g);
+      continue;
+    }
+    const existing = merged.get(tag);
+    if (!existing) {
+      const { tailWord: _dropTail, ...base } = g;
+      merged.set(tag, {
+        ...base,
+        find: `auxiliary-item:${tag}`,
+        label: tag,
+        groupDisplayLabel: tag,
+        instances: [...g.instances],
+      });
+      continue;
+    }
+    existing.instances.push(...g.instances);
+  }
+
+  return [...rest, ...merged.values()];
 }
 
 export function mergeConsistencyZeroFindGroups(results, activeRules) {

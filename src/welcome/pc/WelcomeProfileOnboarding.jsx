@@ -7,8 +7,6 @@ import { publicAssetUrl } from '../../lib/publicAssetUrl.js';
 import './profile-onboarding.css';
 
 const NICKNAME_PRINT = publicAssetUrl('welcome/nickname_print.png');
-const TERMS_URL = import.meta.env.VITE_TERMS_URL || '';
-const PRIVACY_URL = import.meta.env.VITE_PRIVACY_URL || '';
 
 /**
  * PDF 작업 영역(상단 바 아래) 1회 프로필 입력
@@ -85,7 +83,7 @@ export default function WelcomeProfileOnboarding({
               htmlFor="profile-onboarding-nickname"
               className="profile-onboarding__label"
             >
-              닉네임(변경가능)
+              닉네임
             </label>
           </div>
           <input
@@ -104,47 +102,23 @@ export default function WelcomeProfileOnboarding({
               <input
                 type="checkbox"
                 checked={termsAccepted}
+                aria-label="이용약관 동의 (필수)"
                 onChange={(event) => {
                   setTermsAccepted(event.target.checked);
                   setOnboardingError('');
                 }}
               />
-              <span>
-                [필수]{' '}
-                {TERMS_URL ? (
-                  <a href={TERMS_URL} target="_blank" rel="noopener noreferrer">
-                    이용약관
-                  </a>
-                ) : (
-                  <span className="profile-onboarding__doc">이용약관</span>
-                )}
-                에 동의합니다. (약관 열람 후 동의 가능)
-              </span>
             </label>
             <label className="profile-onboarding__check">
               <input
                 type="checkbox"
                 checked={privacyAccepted}
+                aria-label="개인정보처리방침 동의 (필수)"
                 onChange={(event) => {
                   setPrivacyAccepted(event.target.checked);
                   setOnboardingError('');
                 }}
               />
-              <span>
-                [필수]{' '}
-                {PRIVACY_URL ? (
-                  <a
-                    href={PRIVACY_URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    개인정보처리방침
-                  </a>
-                ) : (
-                  <span className="profile-onboarding__doc">개인정보처리방침</span>
-                )}
-                에 동의합니다. (방침 열람 후 동의 가능)
-              </span>
             </label>
           </fieldset>
           {onboardingError ? (

@@ -1,35 +1,14 @@
 import { buildRulesForAuxiliaryEntry } from './auxiliaryVerbRegister.js';
+import { isAdjectiveCheHadaTail } from './adjectiveCheHadaPattern.js';
+import { AUXILIARY_FLEX_SPACE } from './compoundPatternCommon.js';
 import {
-  allBonBojoTailWords,
   BON_BOJO_GROUPS,
-  BON_BOJO_LIST_ITEMS,
   bonBojoDisplayLabelForItem,
-  bonBojoItemIdForTail,
+  bonBojoItemIdForSearchTail,
   auxiliarySearchTailsFromBonBojoItem,
+  isBonBojoLogicOnlyItem,
 } from './bonBojoRules.js';
-import { isAuxiliaryStem } from './compoundPatternCommon.js';
 import { encodeSpacesVisible } from './spaceVisibleText.js';
-
-/** bon-bojo 시트 item.label — 단독 보조용언 tail 허용 목록 */
-const BON_BOJO_PRIMARY_TAILS = new Set(
-  BON_BOJO_LIST_ITEMS.map((item) => item.primaryTail),
-);
-
-/** bon-bojo 도입 전 앱에 넣던 기본 tail (시트·JSON에는 없음) */
-const LEGACY_BUILTIN_AUXILIARY_TAILS = new Set([
-  '보',
-  '주',
-  '두',
-  '놓',
-  '가',
-  '오',
-  '내',
-  '지',
-  '하',
-  '있',
-  '해보',
-  '해 보',
-]);
 
 /** @param {string} itemId */
 function allowedSearchTailsForItem(itemId) {
@@ -41,36 +20,42 @@ function allowedSearchTailsForItem(itemId) {
 }
 
 /**
+ * bon-bojo 시트에 없는 보조용언 규칙 제거 — itemId·stem 모두 시트와 일치해야 함
  * @param {import('./ruleTypes.js').Rule[]} rules
  */
 function pruneObsoleteAuxiliaryRules(rules) {
-  const bonTails = allBonBojoTailWords();
   return rules.filter((r) => {
     if (r.patternKind !== 'auxiliary-verb') return true;
     const tw = r.tailWord?.trim();
-    if (!tw) return false;
     const itemId = r.bonBojoItemId?.trim();
-    if (itemId) {
-      const allowed = allowedSearchTailsForItem(itemId);
-      if (allowed.size > 0 && !allowed.has(tw)) return false;
-      return true;
-    }
-    if (bonTails.has(tw)) return false;
-    if (LEGACY_BUILTIN_AUXILIARY_TAILS.has(tw)) return false;
-    // stem 조각(러·려 등)이 tail만 단독으로 남은 잔여 규칙
-    if (isAuxiliaryStem(tw) && !BON_BOJO_PRIMARY_TAILS.has(tw)) return false;
+    if (!tw || !itemId) return false;
+    return allowedSearchTailsForItem(itemId).has(tw);
+  });
+}
+
+/** 예전 붙임 regex 제거 — 시트 stems는 띄움형만 */
+function pruneGluedAuxiliaryFindRules(rules) {
+  return rules.filter((r) => {
+    if (r.patternKind !== 'auxiliary-verb') return true;
+    const tw = r.tailWord?.trim();
+    if (!tw || isAdjectiveCheHadaTail(tw)) return true;
+    if (!/\s/.test(tw)) return r.find.includes(AUXILIARY_FLEX_SPACE);
+    const parts = tw.split(/\s+/).filter(Boolean);
+    if (parts.length === 2) return r.find.includes(AUXILIARY_FLEX_SPACE);
     return true;
   });
 }
 
 /**
  * 시트 bon-bojo 탭(sync-bon-bojo) 시드 → 규칙 세트에 없는 tail만 추가(기본 체크 off).
- * stems 변이는 검색용으로만 추가하고, 목록에는 item당 1칸.
+ * stems 변이는 검색용만 추가하고, 목록에는 item당 1칸.
  * @param {import('./ruleTypes.js').Rule[]} customRules
  * @returns {import('./ruleTypes.js').Rule[]}
  */
 export function ensureDefaultAuxiliaryVerbs(customRules) {
-  let rules = pruneObsoleteAuxiliaryRules([...(customRules ?? [])]);
+  let rules = pruneGluedAuxiliaryFindRules(
+    pruneObsoleteAuxiliaryRules([...(customRules ?? [])]),
+  );
 
   for (const group of BON_BOJO_GROUPS) {
     for (const item of group.items) {
@@ -86,7 +71,9 @@ export function ensureDefaultAuxiliaryVerbs(customRules) {
           ...rules,
           ...batch.map((r) => ({
             ...r,
-            enabled: item.enabled === true,
+            enabled: isBonBojoLogicOnlyItem(itemId)
+              ? true
+              : item.enabled === true,
             label: listLabel,
             bonBojoItemId: itemId,
           })),
@@ -95,26 +82,18 @@ export function ensureDefaultAuxiliaryVerbs(customRules) {
     }
   }
 
-  return applyBonBojoItemIds(applyBonBojoDisplayLabels(rules));
+  return applyBonBojoDisplayLabels(forceLogicOnlyAuxiliaryEnabled(rules));
 }
 
 /**
- * 예전 시드( tail마다 목록 1칸) → bonBojoItemId 묶음
  * @param {import('./ruleTypes.js').Rule[]} rules
  */
-function applyBonBojoItemIds(rules) {
+function forceLogicOnlyAuxiliaryEnabled(rules) {
   return rules.map((r) => {
-    if (r.patternKind !== 'auxiliary-verb' || r.bonBojoItemId || !r.tailWord) {
-      return r;
-    }
-    const itemId = bonBojoItemIdForTail(r.tailWord);
-    if (!itemId) return r;
-    const display = bonBojoDisplayLabelForItem(itemId);
-    return {
-      ...r,
-      bonBojoItemId: itemId,
-      ...(display ? { label: display } : {}),
-    };
+    if (r.patternKind !== 'auxiliary-verb') return r;
+    const itemId = r.bonBojoItemId?.trim();
+    if (itemId && isBonBojoLogicOnlyItem(itemId)) return { ...r, enabled: true };
+    return r;
   });
 }
 

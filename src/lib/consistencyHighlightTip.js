@@ -5,6 +5,10 @@ import {
 
 const LITERAL_PREFIX = '일관성 찾기 : ';
 const AUXILIARY_PREFIX = '본용언 + 보조용언 : ';
+/** @param {import('./ruleEngine.js').GroupedResult} group */
+function auxiliaryItemTitle(group) {
+  return group.groupDisplayLabel?.trim() || (group.label || '').trim();
+}
 
 /**
  * @param {import('./ruleEngine.js').GroupedResult} group
@@ -30,17 +34,22 @@ export function getConsistencyHighlightTip(group) {
   const explicit = (group.tip || '').trim();
   if (explicit) return explicit;
 
-  if (group.patternKind === 'auxiliary-verb' && group.tailWord) {
-    const { groupTag } = auxiliaryVerbResultParts(
-      group.tailWord,
-      group.groupDisplayLabel,
-      group.label,
-    );
-    const value =
-      groupTag?.trim() ||
-      group.groupDisplayLabel?.trim() ||
-      (group.label || '').trim();
+  if (group.patternKind === 'auxiliary-verb') {
+    const itemLabel = auxiliaryItemTitle(group);
+    if (itemLabel) return `${AUXILIARY_PREFIX}${itemLabel}`;
+    const value = (group.label || '').trim();
     if (!value) return '';
+    if (group.tailWord?.trim()) {
+      const { stem, groupTag } = auxiliaryVerbResultParts(
+        group.tailWord,
+        group.groupDisplayLabel,
+        group.label,
+      );
+      const tag = groupTag?.trim() || value;
+      return stem
+        ? `${AUXILIARY_PREFIX}${stem} ${tag}`
+        : `${AUXILIARY_PREFIX}${tag}`;
+    }
     return `${AUXILIARY_PREFIX}${value}`;
   }
 

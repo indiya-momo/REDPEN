@@ -7,6 +7,7 @@ import {
   findActiveGroup,
   groupKey,
   isResultGroupVisible,
+  mergeAuxiliaryResultsByBonBojoItem,
   mergeConsistencyZeroFindGroups,
   resultVisibilityKey,
 } from '../lib/checkResultUtils.js';
@@ -231,9 +232,8 @@ export function useRuleCheck({
           },
         );
         allErrors.push(...errors);
-        const withZeroRows = mergeConsistencyZeroFindGroups(
-          grouped,
-          consistencyActiveRules,
+        const withZeroRows = mergeAuxiliaryResultsByBonBojoItem(
+          mergeConsistencyZeroFindGroups(grouped, consistencyActiveRules),
         );
         scopeResults = withZeroRows;
         setConsistencyResults(withZeroRows);
@@ -346,11 +346,16 @@ export function useRuleCheck({
         },
       );
 
-      const withZeroRows = mergeConsistencyZeroFindGroups(grouped, rules);
+      const withZeroRows = mergeAuxiliaryResultsByBonBojoItem(
+        mergeConsistencyZeroFindGroups(grouped, rules),
+      );
 
       setConsistencyResults((prev) => {
         const kept = prev.filter((g) => consistencyGroupScope(g) !== subset);
-        return mergeConsistencyZeroFindGroups([...kept, ...withZeroRows], rules);
+        return mergeConsistencyZeroFindGroups(
+          mergeAuxiliaryResultsByBonBojoItem([...kept, ...withZeroRows]),
+          rules,
+        );
       });
       setConsistencyCheckDone(true);
       setResultVisibility((prev) => ({

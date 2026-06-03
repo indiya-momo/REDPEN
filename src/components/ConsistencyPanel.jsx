@@ -364,6 +364,9 @@ export default function ConsistencyPanel({
                 : ''}
             </span>
           </summary>
+          <p className="auxiliary-checklist-intro">
+            항목에서 본용언과 보조용언이 띄어서 표기된 경우만 찾습니다(개발중)
+          </p>
           <RegisteredList
             entries={auxiliaryEntries}
             customRules={customRules}

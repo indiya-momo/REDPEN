@@ -5,7 +5,7 @@ import {
   removeAuxiliaryVerbFind,
 } from './auxiliaryVerbPattern.js';
 import { parseCommaList } from './matchFilters.js';
-import { bonBojoListItem } from './bonBojoRules.js';
+import { bonBojoListItem, isBonBojoLogicOnlyItem } from './bonBojoRules.js';
 
 /**
  * @param {import('./ruleTypes.js').Rule[]} rules
@@ -39,6 +39,7 @@ export function listAuxiliaryVerbEntries(customRules) {
     if (r.patternKind !== 'auxiliary-verb') continue;
     const itemId = r.bonBojoItemId?.trim();
     if (itemId) {
+      if (isBonBojoLogicOnlyItem(itemId)) continue;
       if (seenItems.has(itemId)) continue;
       seenItems.add(itemId);
       const group = rulesForBonBojoItem(customRules, itemId);
@@ -86,6 +87,7 @@ export function removeAuxiliaryVerbEntry(rules, tailWord) {
  */
 export function toggleAuxiliaryVerbEntry(rules, entry, enabled) {
   const itemId = entry.bonBojoItemId?.trim();
+  if (itemId && isBonBojoLogicOnlyItem(itemId)) return rules;
   if (itemId) {
     return rules.map((r) =>
       r.patternKind === 'auxiliary-verb' && r.bonBojoItemId?.trim() === itemId
