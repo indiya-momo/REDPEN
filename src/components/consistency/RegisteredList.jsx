@@ -1,3 +1,4 @@
+import { BON_BOJO_REQUIRED_ITEM_IDS_LIST } from '../../lib/bonBojoRules.js';
 import { consistencyEntryKey, consistencyEntryLabel } from './entryLabel.js';
 import RegisteredChip from './RegisteredChip.jsx';
 
@@ -94,7 +95,17 @@ export default function RegisteredList({
   if (variant === 'auxiliary-grid') {
     const required = isRequired ?? (() => false);
     const optionalEntries = entries.filter((row) => !required(row));
-    const requiredEntries = entries.filter((row) => required(row));
+    const requiredEntries = entries
+      .filter((row) => required(row))
+      .sort((a, b) => {
+        const ia = BON_BOJO_REQUIRED_ITEM_IDS_LIST.indexOf(
+          a.bonBojoItemId ?? '',
+        );
+        const ib = BON_BOJO_REQUIRED_ITEM_IDS_LIST.indexOf(
+          b.bonBojoItemId ?? '',
+        );
+        return ia - ib;
+      });
     const itemProps = { customRules, isEnabled, onToggle, isRequired };
 
     return (
@@ -108,7 +119,7 @@ export default function RegisteredList({
         ) : null}
         {requiredEntries.length > 0 ? (
           <ul
-            className="tail-list tail-list--grid tail-list--grid-required"
+            className="tail-list tail-list--grid tail-list--grid-3 tail-list--grid-required"
             aria-label="필수 본용언+보조용언"
           >
             {requiredEntries.map((row) => (

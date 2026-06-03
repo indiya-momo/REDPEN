@@ -1,11 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { Upload, FileText, CheckCircle2, Play, RotateCcw } from 'lucide-react';
 import pdfMomoIcon from '../assets/momo/pdf-momo.png';
 import pdfFullIcon from '../assets/momo/pdf-full.png';
 import { supportsFilePicker } from '../lib/sessionStore.js';
 import { formatFileSizeMb } from '../lib/formatFileSize.js';
 import TooltipGuide from './TooltipGuide.jsx';
-
 const MB = 1024 * 1024;
 /** 50MB 초과 시 검수는 허용하고 UI 경고만 표시 (운영 권장 한도) */
 const PDF_SIZE_WARN_BYTES = 50 * MB;
@@ -18,7 +17,8 @@ const PDF_SIZE_WARN_BYTES = 50 * MB;
  *   onLoadPdfFile: (file: File) => void | Promise<void>,
  *   onReconnect: () => void,
  *   onClearSession: () => void,
- *   onRunCheck: () => void,
+ *   onRunCheck?: () => void,
+ *   showRunButton?: boolean,
  *   isProcessing: boolean,
  *   progressLabel: string | null,
  *   progress: { current: number; total: number; phase?: string } | null,
@@ -28,7 +28,6 @@ const PDF_SIZE_WARN_BYTES = 50 * MB;
  *   pageTextsLength: number,
  *   fileHandleActive: boolean,
  *   loadError: string | null,
- *   loadAdvisory?: string[] | null,
  *   sessionHint: string | null,
  *   runLabel: string,
  *   showReady: boolean,
@@ -41,7 +40,8 @@ export default function PdfCenterStage({
   onLoadPdfFile,
   onReconnect,
   onClearSession,
-  onRunCheck,
+  onRunCheck = () => {},
+  showRunButton = true,
   isProcessing,
   progressLabel,
   progress,
@@ -51,7 +51,6 @@ export default function PdfCenterStage({
   pageTextsLength,
   fileHandleActive,
   loadError,
-  loadAdvisory = null,
   sessionHint,
   runLabel,
   showReady,
@@ -113,14 +112,6 @@ export default function PdfCenterStage({
   const uploadFailed = Boolean(loadError) && !showReady;
   const uploadFailedHint = sessionHint === '업로드 실패';
   const momoSrc = showReady ? pdfFullIcon : pdfMomoIcon;
-  const [advisoryDismissed, setAdvisoryDismissed] = useState(false);
-
-  useEffect(() => {
-    setAdvisoryDismissed(false);
-  }, [loadAdvisory]);
-
-  const showAdvisory =
-    Boolean(loadAdvisory?.length) && showReady && !advisoryDismissed;
 
   return (
     <div
@@ -145,22 +136,6 @@ export default function PdfCenterStage({
           {sessionHint}
         </p>
       )}
-      {showAdvisory && (
-        <div className="pdf-center-stage__advisory" role="status">
-          {loadAdvisory.map((line) => (
-            <p key={line} className="pdf-center-stage__advisory-line">
-              {line}
-            </p>
-          ))}
-          <button
-            type="button"
-            className="link-btn pdf-center-stage__advisory-dismiss"
-            onClick={() => setAdvisoryDismissed(true)}
-          >
-            확인
-          </button>
-        </div>
-      )}
       {uploadFailed && (
         <p className="pdf-center-stage__upload-fail">
           텍스트 선택이 가능한
@@ -170,37 +145,33 @@ export default function PdfCenterStage({
       )}
 
       <div className="pdf-center-stage__stack">
-        <div
-          className={`pdf-center-stage__hero ${showReady ? 'pdf-center-stage__hero--ready' : 'pdf-center-stage__hero--idle'}`}
-        >
-          <img
-            className={`pdf-center-stage__momo ${showReady ? '' : 'pdf-center-stage__momo--idle'}`}
-            src={momoSrc}
-            alt=""
-            aria-hidden
-            decoding="async"
-          />
-          {!showReady ? (
-            <span className="pdf-center-stage__hero-tooltip-anchor" aria-hidden>
-              <TooltipGuide
-                storageKey="pdf-upload-first-step"
-                placement="left"
-                bubbleType="left"
-                offsetX={150}
-                offsetY={-50}
-                imageSrc={null}
-                message="처음 할 일은 이거다냥"
-              >
-                <span className="pdf-center-stage__hero-tooltip-dot" />
-              </TooltipGuide>
-            </span>
-          ) : null}
-        </div>
-
         {!showReady ? (
-          <div
-            className={`pdf-dropzone ${dragOver ? 'pdf-dropzone--dragover' : ''}`}
-          >
+          <div className="pdf-center-stage__preupload">
+            <div className="pdf-center-stage__hero pdf-center-stage__hero--idle">
+              <img
+                className="pdf-center-stage__momo pdf-center-stage__momo--idle"
+                src={momoSrc}
+                alt=""
+                aria-hidden
+                decoding="async"
+              />
+              <span className="pdf-center-stage__hero-tooltip-anchor" aria-hidden>
+                <TooltipGuide
+                  storageKey="pdf-upload-first-step"
+                  placement="left"
+                  bubbleType="left"
+                  offsetX={150}
+                  offsetY={-50}
+                  imageSrc={null}
+                  message="처음 할 일은 이거다냥"
+                >
+                  <span className="pdf-center-stage__hero-tooltip-dot" />
+                </TooltipGuide>
+              </span>
+            </div>
+            <div
+              className={`pdf-dropzone ${dragOver ? 'pdf-dropzone--dragover' : ''}`}
+            >
             <div className="pdf-dropzone__icon" aria-hidden>
               <FileText size={32} strokeWidth={1.35} />
             </div>
@@ -235,13 +206,25 @@ export default function PdfCenterStage({
                 <span className="pdf-support-msg__scan">스캔 PDF는 읽을 수 없어요ㅠ</span>
               </p>
               <p className="pdf-dropzone__recommend subtle">
-                인디자인 프로그램으로 만든{' '}
+                인디자인 · 한글 등으로 만든
+                <br />
                 <span className="pdf-support-msg__emph">텍스트 선택 가능한 PDF</span>
                 를 권장합니다
               </p>
             </footer>
+            </div>
           </div>
         ) : (
+          <>
+            <div className="pdf-center-stage__hero pdf-center-stage__hero--ready">
+              <img
+                className="pdf-center-stage__momo"
+                src={momoSrc}
+                alt=""
+                aria-hidden
+                decoding="async"
+              />
+            </div>
           <div className="pdf-ready-panel">
             <div className="pdf-ready-file">
               <span className="pdf-ready-file__icon" aria-hidden>
@@ -274,15 +257,17 @@ export default function PdfCenterStage({
               </span>
             </div>
 
-            <button
-              type="button"
-              className="btn-run pdf-ready-panel__run"
-              onClick={onRunCheck}
-              disabled={runDisabled}
-            >
-              <Play size={16} />
-              {checkBusy ? '검사 중…' : runLabel}
-            </button>
+            {showRunButton ? (
+              <button
+                type="button"
+                className="btn-run pdf-ready-panel__run"
+                onClick={onRunCheck}
+                disabled={runDisabled}
+              >
+                <Play size={16} />
+                {checkBusy ? '검사 중…' : runLabel}
+              </button>
+            ) : null}
 
             {isSizeOverRecommended && (
               <div className="pdf-ready-panel__size-warn-actions">
@@ -338,6 +323,7 @@ export default function PdfCenterStage({
               )}
             </div>
           </div>
+          </>
         )}
       </div>
 

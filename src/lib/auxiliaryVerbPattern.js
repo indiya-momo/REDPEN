@@ -1,13 +1,18 @@
 import {
+  AUXILIARY_FLEX_SPACE,
   COMPOUND_PREFIX,
-  FLEX_SPACE,
   HANGUL_SUFFIX,
   PHRASE_START,
+  buildSpacedStemFindPattern,
   escapeRegex,
   isAuxiliaryStem,
   isHaeBoPattern,
 } from './compoundPatternCommon.js';
 import { encodeSpacesVisible } from './spaceVisibleText.js';
+
+const AUX_SPACE = AUXILIARY_FLEX_SPACE;
+const auxStem = (head, tail) =>
+  buildSpacedStemFindPattern(head, tail, AUX_SPACE);
 
 /**
  * 본용언+보조용언 — 등록 형태 그대로 (보, 주, 해˅보, 해보 …)
@@ -35,7 +40,7 @@ export function buildAuxiliaryVerbFindRules(tailWord) {
   if (isAuxiliaryStem(tail)) {
     rules.push({
       ...base,
-      find: String.raw`${COMPOUND_PREFIX}${FLEX_SPACE}${escapeRegex(tail)}${HANGUL_SUFFIX}(?!으로)`,
+      find: String.raw`${COMPOUND_PREFIX}${AUX_SPACE}${escapeRegex(tail)}${HANGUL_SUFFIX}(?!으로)`,
     });
     return rules;
   }
@@ -44,7 +49,7 @@ export function buildAuxiliaryVerbFindRules(tailWord) {
     if (/\s/.test(tail)) {
       rules.push({
         ...base,
-        find: String.raw`(\S*해)${FLEX_SPACE}(보${HANGUL_SUFFIX})(?!으로)`,
+        find: auxStem('해', '보'),
       });
       return rules;
     }
@@ -52,27 +57,33 @@ export function buildAuxiliaryVerbFindRules(tailWord) {
       ...base,
       find: String.raw`${PHRASE_START}${escapeRegex(glued)}${HANGUL_SUFFIX}(?!\S)`,
     });
-    // *해 + 공백 + 보 + 어미 (상상해 보아요, 먹어 보자)
     rules.push({
       ...base,
-      find: String.raw`(\S*해)${FLEX_SPACE}(보${HANGUL_SUFFIX})(?!으로)`,
+      find: auxStem('해', '보'),
     });
     return rules;
   }
 
   if (/\s/.test(tail)) {
     const parts = tail.split(/\s+/).filter(Boolean);
-    const tailFrag = parts.map(escapeRegex).join(FLEX_SPACE);
+    if (parts.length === 2) {
+      rules.push({
+        ...base,
+        find: auxStem(parts[0], parts[1]),
+      });
+      return rules;
+    }
+    const tailFrag = parts.map(escapeRegex).join(AUX_SPACE);
     rules.push({
       ...base,
-      find: String.raw`${COMPOUND_PREFIX}${FLEX_SPACE}${tailFrag}${HANGUL_SUFFIX}(?!으로)`,
+      find: String.raw`${COMPOUND_PREFIX}${AUX_SPACE}${tailFrag}${HANGUL_SUFFIX}(?!으로)`,
     });
     return rules;
   }
 
   rules.push({
     ...base,
-    find: String.raw`${COMPOUND_PREFIX}${FLEX_SPACE}${esc}${HANGUL_SUFFIX}(?!으로)`,
+    find: String.raw`${COMPOUND_PREFIX}${AUX_SPACE}${esc}${HANGUL_SUFFIX}(?!으로)`,
   });
   return rules;
 }

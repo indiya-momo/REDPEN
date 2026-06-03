@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
+  appendPageLabelSuffix,
+  formatSystemPageLabel,
   stripPageLabelPrefix,
 } from '../lib/printedPageDisplay.js';
 
@@ -52,23 +54,29 @@ export default function PrintedPageSetup({
     onCalibrateFromInput(trimmed, spreadInput);
   };
 
+  const filePageLabel = formatSystemPageLabel(currentSystemPage);
+  const manuscriptPageLabel = active
+    ? currentPrintedLabel.trim() ||
+      (displayTarget !== '…' ? appendPageLabelSuffix(displayTarget) : '…')
+    : '';
+
   return (
-    <section className="printed-page-setup" aria-label="인쇄 쪽수 표시">
-      <p className="printed-page-setup__title">인쇄 쪽수로 표시</p>
+    <section className="printed-page-setup" aria-label="인쇄 쪽수 보정">
+      <p className="printed-page-setup__title">인쇄 쪽 보정</p>
 
       <div className="printed-page-setup__body">
         <p className="printed-page-setup__hint">
           {active ? (
             <>
-              현재 파일 <strong>{currentSystemPage}페이지</strong>가 인쇄 쪽수{' '}
-              <strong>{displayTarget}</strong>로 보정되어 있습니다.
+              현재 파일 <strong>{filePageLabel}</strong>가 원고 기준{' '}
+              <strong>{manuscriptPageLabel}</strong>로 보정되었습니다.
             </>
           ) : (
             <>
-              현재 파일 <strong>{currentSystemPage}페이지</strong>에 책에 보이는 쪽수(예:{' '}
-              <strong>50-51</strong>)를 입력한 뒤 <strong>보정</strong>을 누르세요. 미보정 시
-              하단·썸네일은 파일 순서 기준(
-              <strong>{displayTarget}</strong>)으로만 표시됩니다.
+              현재 파일 기준은 <strong>{filePageLabel}</strong>입니다.
+              <br />
+              원고에서 보이는 쪽수(예: <strong>50-51</strong>)를 입력한 뒤{' '}
+              <strong>보정</strong>을 누르세요.
             </>
           )}
         </p>

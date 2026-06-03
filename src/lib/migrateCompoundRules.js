@@ -12,7 +12,7 @@ const COMPOUND_KINDS = new Set([
 ]);
 
 /** 저장된 규칙 세트가 이 버전 미만이면 1회 재정리 */
-export const COMPOUND_MIGRATE_VERSION = 8;
+export const COMPOUND_MIGRATE_VERSION = 10;
 
 /** @param {string} tail */
 function isBadTail(tail) {

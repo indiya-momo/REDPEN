@@ -3,9 +3,11 @@ import PrintedPageSetup from './PrintedPageSetup.jsx';
 import { getBuiltInTip } from '../lib/builtInRules.js';
 import { formatSystemPageLabel } from '../lib/printedPageDisplay.js';
 import { cautionResultChipLabel } from '../lib/cautionRules.js';
+import { getConsistencyHighlightTip } from '../lib/consistencyHighlightTip.js';
+import { auxiliaryVerbResultParts } from '../lib/patternDisplayLabels.js';
 
 /**
- * @typedef {{ group: import('../lib/ruleEngine.js').GroupedResult, source: 'spelling' | 'consistency' }} ResultEntry
+ * @typedef {import('../utils/main-screen-helpers.js').TabEntry} ResultEntry
  */
 
 /**
@@ -68,7 +70,7 @@ function ResultHeaderSummary({
           </span>{' '}
           ·{' '}
           <span className="results-category-summary__caution">
-            검토 필요 기준 <span>{spacingFindings}</span>
+            검토필요 기준 <span>{spacingFindings}</span>
           </span>
         </span>
       ) : null}
@@ -155,7 +157,7 @@ export default function CheckResultsPanel({
     <section
       className={`results-panel results-panel--combined results-panel--${viewSource} results-panel--tone-${spellingTone}`}
     >
-      {pdf && onCalibrateFromInput && (
+      {pdf && onCalibrateFromInput && viewSource !== 'spelling' && (
         <PrintedPageSetup
           currentSystemPage={currentPage}
           active={printedPagesActive}
@@ -210,8 +212,20 @@ export default function CheckResultsPanel({
                 (group.tip || '').trim() ||
                 (source === 'spelling' && !isCaution
                   ? getBuiltInTip(group.find, group.replace)
-                  : '');
+                  : isConsistency
+                    ? getConsistencyHighlightTip(group)
+                    : '');
               const selected = isSameGroupAsSelected(group, source);
+              const auxParts =
+                isConsistency &&
+                group.patternKind === 'auxiliary-verb' &&
+                group.tailWord
+                  ? auxiliaryVerbResultParts(
+                      group.tailWord,
+                      group.groupDisplayLabel,
+                      group.label,
+                    )
+                  : null;
 
               return (
                 <li key={`${source}-${group.label}-${group.find}`}>
@@ -241,12 +255,20 @@ export default function CheckResultsPanel({
                       <div className="result-card-head-main">
                         <span className="result-rule">
                           {isConsistency ? (
-                            <>
-                              <span className="result-source-badge result-source-badge--consistency">
-                                일관성
-                              </span>{' '}
-                              {group.label}
-                            </>
+                            auxParts ? (
+                              <span className="result-aux-title">
+                                <span className="result-aux-stem">
+                                  {auxParts.stem}
+                                </span>
+                                {auxParts.groupTag ? (
+                                  <span className="result-aux-group-tag">
+                                    {auxParts.groupTag}
+                                  </span>
+                                ) : null}
+                              </span>
+                            ) : (
+                              group.label
+                            )
                           ) : isCaution ? (
                             <>
                               <span className="caution-badge-inline">검토</span>{' '}
@@ -297,12 +319,6 @@ export default function CheckResultsPanel({
                         onSelectPageInGroup(pageNum, group.instances, source)
                       }
                     />
-
-                    {isConsistency && first && (
-                      <span className="result-detail">
-                        {count}개 · {first.matchedText} → {first.suggestedText}
-                      </span>
-                    )}
                   </div>
                 </li>
               );
@@ -315,7 +331,7 @@ export default function CheckResultsPanel({
       {onAdditionalCheck && (
         <div className="results-panel-footer">
           <button type="button" className="btn-additional-check" onClick={onAdditionalCheck}>
-            추가 검사
+            다시 검사
           </button>
         </div>
       )}

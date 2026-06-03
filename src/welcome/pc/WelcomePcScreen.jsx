@@ -1,27 +1,101 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { BookOpen } from 'lucide-react';
 import AppVersionBadge from '../../components/AppVersionBadge.jsx';
 import MomoHero from '../../components/MomoHero.jsx';
 import TooltipGuide from '../../components/TooltipGuide.jsx';
-import {
-  isAnalyticsOptedOut,
-  setAnalyticsOptOut,
-} from '../../lib/analytics.js';
 import welcomeMomoFrame from '../../assets/welcome/welcome_momo_frame3.png';
+import {
+  getCurrentUserSession,
+  mapFirebaseAuthError,
+} from '../../lib/firebaseAuth.js';
 import { publicAssetUrl } from '../../lib/publicAssetUrl.js';
+import { getUserProfile } from '../../lib/userProfileStorage.js';
 import './welcome-pc.css';
 
 const WELCOME_MOMO_FRAME = welcomeMomoFrame;
 const MOMO_TOOLTIP = publicAssetUrl('momo/bullon4.png');
+const ENTER_MAIN_AFTER_GOOGLE_KEY = 'indiya-enter-main-after-google';
 
 /**
  * PC 대문 — welcome-pc 전용 (모바일과 마크업·CSS 공유 없음)
- * @param {{ onStart: () => void, onOpenRoom: () => void }} props
+ * @param {{
+ *   onStart: () => void,
+ *   onOpenRoom: () => void,
+ *   authSession: { uid: string, email?: string, displayName?: string } | null,
+ *   authReady: boolean,
+ *   authBootstrapError?: string,
+ *   onGoogleSignIn: () => Promise<void>,
+ *   onLogout: () => void,
+ * }} props
  */
-export default function WelcomePcScreen({ onStart, onOpenRoom }) {
-  const [analyticsOptedOut, setAnalyticsOptedOut] = useState(() =>
-    isAnalyticsOptedOut(),
-  );
+export default function WelcomePcScreen({
+  onStart,
+  onOpenRoom,
+  authSession,
+  authReady,
+  authBootstrapError = '',
+  onGoogleSignIn,
+  onLogout,
+}) {
+  const [authError, setAuthError] = useState('');
+  const [authPending, setAuthPending] = useState(false);
+  const enterMainAfterLoginRef = useRef(false);
+
+  const session = authSession ?? getCurrentUserSession();
+  const uid = session?.uid ?? '';
+  const loggedIn = Boolean(uid);
+
+  useEffect(() => {
+    if (authBootstrapError) setAuthError(authBootstrapError);
+  }, [authBootstrapError]);
+
+  useEffect(() => {
+    if (!authReady || !uid) return;
+    const pending =
+      enterMainAfterLoginRef.current ||
+      sessionStorage.getItem(ENTER_MAIN_AFTER_GOOGLE_KEY) === '1';
+    if (!pending) return;
+    enterMainAfterLoginRef.current = false;
+    sessionStorage.removeItem(ENTER_MAIN_AFTER_GOOGLE_KEY);
+    onStart();
+  }, [authReady, uid, onStart]);
+
+  const signedInName = useMemo(() => {
+    if (!session?.uid) return '';
+    const profile = getUserProfile(session.uid);
+    const nickname = profile?.nickname?.trim();
+    return (
+      nickname ||
+      session.displayName?.trim() ||
+      session.email?.trim() ||
+      '회원'
+    );
+  }, [session]);
+
+  async function handleGoogleAuth() {
+    if (loggedIn) {
+      onStart();
+      return;
+    }
+    setAuthPending(true);
+    setAuthError('');
+    enterMainAfterLoginRef.current = true;
+    sessionStorage.setItem(ENTER_MAIN_AFTER_GOOGLE_KEY, '1');
+    try {
+      await onGoogleSignIn();
+      if (getCurrentUserSession()?.uid && authReady) {
+        enterMainAfterLoginRef.current = false;
+        sessionStorage.removeItem(ENTER_MAIN_AFTER_GOOGLE_KEY);
+        onStart();
+      }
+    } catch (error) {
+      enterMainAfterLoginRef.current = false;
+      sessionStorage.removeItem(ENTER_MAIN_AFTER_GOOGLE_KEY);
+      setAuthError(mapFirebaseAuthError(error));
+    } finally {
+      setAuthPending(false);
+    }
+  }
 
   return (
     <div className="welcome-pc">
@@ -39,7 +113,11 @@ export default function WelcomePcScreen({ onStart, onOpenRoom }) {
                 맞춤법·표기 일관성을 찾는 <strong>인디자인 텍스트 PDF 검수 도구</strong>입니다
               </span>
               <span className="welcome-pc__lead-line">
-                원고와 검사 결과는 <strong>이 브라우저 안에서만 처리</strong>합니다(PC버전만 지원)
+                원고와 검사 결과는{' '}
+                <span className="welcome-pc__lead-emphasis">
+                  서버에 저장하지 않고, 이 브라우저 안에서만 처리
+                </span>
+                합니다
               </span>
             </p>
           </header>
@@ -107,25 +185,28 @@ export default function WelcomePcScreen({ onStart, onOpenRoom }) {
             </article>
           </div>
 
+          {loggedIn ? (
+            <section className="welcome-pc__auth" aria-label="회원가입 및 로그인">
+              <div className="welcome-pc__auth-signed">
+                <p className="welcome-pc__auth-signed-text">
+                  <span className="welcome-pc__auth-nickname">{signedInName}</span>
+                  <span className="welcome-pc__auth-honorific">님이</span>
+                  <span className="welcome-pc__auth-message">
+                    모모와 원고를 검수 중입니다
+                  </span>
+                </p>
+                <button
+                  type="button"
+                  className="welcome-pc__auth-ghost"
+                  onClick={onLogout}
+                >
+                  로그아웃
+                </button>
+              </div>
+            </section>
+          ) : null}
+
           <div className="welcome-pc__bottom-notes">
-            <p className="welcome-pc__analytics-note">
-              {analyticsOptedOut ? (
-                <>베타 통계 수집을 사용하지 않습니다.</>
-              ) : (
-                <>오픈 베타 기간에는 사용자의 이용 방식만 익명으로 수집합니다.</>
-              )}{' '}
-              <button
-                type="button"
-                className="welcome-pc__analytics-toggle"
-                onClick={() => {
-                  const next = !analyticsOptedOut;
-                  setAnalyticsOptOut(next);
-                  setAnalyticsOptedOut(next);
-                }}
-              >
-                {analyticsOptedOut ? '통계 수집 켜기' : '수집 안 함'}
-              </button>
-            </p>
             <div className="welcome-pc__bottom-meta">
               <AppVersionBadge dateOnly />
               <button
@@ -165,16 +246,45 @@ export default function WelcomePcScreen({ onStart, onOpenRoom }) {
                 imageAlt="모모"
                 message="시작해보자냥!"
               >
-                <button
-                  type="button"
-                  className="btn-welcome-primary welcome-pc__start"
-                  onClick={onStart}
-                >
-                  검수 시작하기
-                </button>
+                {!authReady ? (
+                  <button
+                    type="button"
+                    className="btn-welcome-primary welcome-pc__start"
+                    disabled
+                  >
+                    로그인 확인 중…
+                  </button>
+                ) : loggedIn ? (
+                  <button
+                    type="button"
+                    className="btn-welcome-primary welcome-pc__start"
+                    onClick={onStart}
+                  >
+                    검수하기
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="btn-welcome-primary welcome-pc__start welcome-pc__auth-submit"
+                    onClick={handleGoogleAuth}
+                    disabled={authPending}
+                  >
+                    {authPending
+                      ? 'Google 로그인 연결 중…'
+                      : 'Google로 회원가입 / 로그인'}
+                  </button>
+                )}
               </TooltipGuide>
-              <p className="welcome-pc__steps-note welcome-pc__steps-note--stage">
-                시크릿 창에서 작업 시 복원 · 저장이 되지 않습니다
+              {authError && !loggedIn ? (
+                <p
+                  className="welcome-pc__auth-error welcome-pc__auth-error--stage"
+                  role="alert"
+                >
+                  {authError}
+                </p>
+              ) : null}
+              <p className="welcome-pc__beta-note welcome-pc__steps-note--stage">
+                오픈베타 기간 동안 모든 기능을 제공합니다
               </p>
             </div>
           </div>

@@ -19,8 +19,13 @@ import {
   maxRulesExceededMessage,
 } from '../lib/activeRuleCount.js';
 import { runRuleCheckAsync } from '../lib/ruleEngine.js';
+import {
+  consistencyGroupScope,
+  filterCustomRulesByConsistencyScope,
+} from '../lib/consistencyCheckScopes.js';
 
 /**
+ * 맞춤법·표기 일관성 규칙 검사 (목차 검사는 useTocBodyCheck)
  * @param {{
  *   builtInEnabled: Record<string, boolean>,
  *   cautionEnabled: Record<string, boolean>,
@@ -83,7 +88,7 @@ export function useRuleCheck({
   const consistencyActiveRules = useMemo(
     () =>
       customRules
-        .filter((r) => r.enabled && r.patternKind !== 'auxiliary-verb')
+        .filter((r) => r.enabled)
         .map((r) => ({
           ...r,
           category:
@@ -109,32 +114,38 @@ export function useRuleCheck({
     setConsistencyCheckDone(false);
   }, []);
 
-  const applyRestoredCheckState = useCallback(
-    ({ spelling, consistency }) => {
-      setSpellingResults(spelling);
-      setConsistencyResults(consistency);
-      setSpellingCheckDone(spelling.length > 0);
-      setConsistencyCheckDone(consistency.length > 0);
-      setResultVisibility({
-        ...defaultVisibilityForGroups(spelling, 'spelling'),
-        ...defaultVisibilityForGroups(consistency, 'consistency'),
+  /** 맞춤법 검사 결과만 비움 */
+  const clearSpellingCheckState = useCallback(() => {
+    setSpellingResults((groups) => {
+      setResultVisibility((prev) => {
+        const next = { ...prev };
+        for (const group of groups) {
+          delete next[resultVisibilityKey('spelling', group)];
+        }
+        return next;
       });
-    },
-    [],
-  );
+      return [];
+    });
+    setSpellingSelected(null);
+    setSpellingCheckDone(false);
+    setActiveSource((src) => (src === 'spelling' ? 'consistency' : src));
+  }, []);
 
-  const setRestoredSelection = useCallback((saved) => {
-    const spelling = saved.groupedResults ?? [];
-    const consistency = saved.consistencyGroupedResults ?? [];
-    setSpellingSelected(spelling.length ? saved.selectedInstance ?? null : null);
-    setConsistencySelected(
-      consistency.length ? saved.consistencySelectedInstance ?? null : null,
-    );
-    if (spelling.length && saved.selectedInstance) {
-      setActiveSource('spelling');
-    } else if (consistency.length && saved.consistencySelectedInstance) {
-      setActiveSource('consistency');
-    }
+  /** 표기 일관성 검사 결과만 비움 (목차 검사와 분리) */
+  const clearConsistencyCheckState = useCallback(() => {
+    setConsistencyResults((groups) => {
+      setResultVisibility((prev) => {
+        const next = { ...prev };
+        for (const group of groups) {
+          delete next[resultVisibilityKey('consistency', group)];
+        }
+        return next;
+      });
+      return [];
+    });
+    setConsistencySelected(null);
+    setConsistencyCheckDone(false);
+    setActiveSource((src) => (src === 'consistency' ? 'spelling' : src));
   }, []);
 
   const runCheckScope = useCallback(
@@ -152,7 +163,9 @@ export function useRuleCheck({
         return;
       }
       if (runConsistency && consistencyActiveRules.length === 0) {
-        alert('일관성 확인을 진행할 기준을 등록해주세요');
+        alert(
+          '일관성 찾기·본용언+보조용언 표기에서 검사할 항목을 등록·선택하세요.',
+        );
         return;
       }
 
@@ -223,12 +236,13 @@ export function useRuleCheck({
         );
         scopeResults = withZeroRows;
         setConsistencyResults(withZeroRows);
-        setConsistencyCheckDone(true);
+        setConsistencyCheckDone(withZeroRows.length > 0);
         visibility = {
           ...visibility,
           ...defaultVisibilityForGroups(withZeroRows, 'consistency'),
         };
-        const inst = withZeroRows.find((g) => g.instances.length > 0)?.instances[0] ?? null;
+        const inst =
+          withZeroRows.find((g) => g.instances.length > 0)?.instances[0] ?? null;
         if (inst) {
           first = inst;
           setConsistencySelected(inst);
@@ -287,9 +301,112 @@ export function useRuleCheck({
     [runCheckScope],
   );
 
-  const backToConsistencySetup = useCallback(() => {
-    setConsistencyCheckDone(false);
-  }, []);
+  const runConsistencyScopeCheck = useCallback(
+    async (subset) => {
+      if (!pageTexts.length) {
+        alert('먼저 PDF를 업로드하세요.');
+        return;
+      }
+
+      const rules = filterCustomRulesByConsistencyScope(
+        consistencyActiveRules,
+        subset,
+      );
+      if (!rules.length) {
+        alert(
+          subset === 'auxiliary'
+            ? '본용언+보조용언 표기에서 검사할 항목을 선택하세요.'
+            : '일관성 찾기에서 검사할 항목을 등록·선택하세요.',
+        );
+        return;
+      }
+
+      const activeTotal = countActiveRules({
+        builtInEnabled,
+        cautionEnabled,
+        customRules,
+      });
+      if (isOverMaxRules(activeTotal)) {
+        alert(maxRulesExceededMessage(activeTotal));
+        return;
+      }
+
+      setIsProcessing(true);
+      setProgress({ current: 0, total: pageTexts.length, phase: 'check' });
+
+      const { results: grouped, errors } = await runRuleCheckAsync(
+        pageTexts,
+        rules,
+        {
+          globalExcludePhrases,
+          onProgress: (current, total) => {
+            setProgress({ current, total, phase: 'check' });
+          },
+        },
+      );
+
+      const withZeroRows = mergeConsistencyZeroFindGroups(grouped, rules);
+
+      setConsistencyResults((prev) => {
+        const kept = prev.filter((g) => consistencyGroupScope(g) !== subset);
+        return mergeConsistencyZeroFindGroups([...kept, ...withZeroRows], rules);
+      });
+      setConsistencyCheckDone(true);
+      setResultVisibility((prev) => ({
+        ...prev,
+        ...defaultVisibilityForGroups(withZeroRows, 'consistency'),
+      }));
+
+      const inst =
+        withZeroRows.find((g) => g.instances.length > 0)?.instances[0] ?? null;
+      if (inst) {
+        setActiveSource('consistency');
+        setConsistencySelected(inst);
+      }
+
+      if (errors.length) {
+        alert(errors.join('\n'));
+      }
+
+      const findingCount = withZeroRows.reduce(
+        (n, g) => n + g.instances.length,
+        0,
+      );
+      trackCheckRun({
+        scope: subset === 'auxiliary' ? 'consistency-aux' : 'consistency-literal',
+        findingCount,
+        activeRuleCount: rules.length,
+      });
+      trackResultViewed({ scope: 'consistency', findingCount });
+
+      setCurrentPage(inst?.pageNum ?? 1);
+      setIsProcessing(false);
+      setProgress(null);
+      await afterCheckRef.current?.();
+    },
+    [
+      pageTexts,
+      builtInEnabled,
+      cautionEnabled,
+      customRules,
+      consistencyActiveRules,
+      globalExcludePhrases,
+      setCurrentPage,
+      setIsProcessing,
+      setProgress,
+      afterCheckRef,
+    ],
+  );
+
+  const runConsistencyLiteralCheck = useCallback(
+    () => runConsistencyScopeCheck('literal-slot'),
+    [runConsistencyScopeCheck],
+  );
+
+  const runConsistencyAuxiliaryCheck = useCallback(
+    () => runConsistencyScopeCheck('auxiliary'),
+    [runConsistencyScopeCheck],
+  );
 
   const selectInstance = useCallback(
     (inst, source = activeSource) => {
@@ -394,20 +511,18 @@ export function useRuleCheck({
   const hasConsistencyRulesActive = consistencyActiveRules.length > 0;
 
   const countVisibleOnPage = useCallback(
-    (page, source) => {
+    (page, tab) => {
       let n = 0;
-      if (source !== 'consistency') {
+      if (tab === 'spelling') {
         for (const group of spellingResults) {
           if (!isResultGroupVisible(resultVisibility, 'spelling', group)) continue;
           n += group.instances.filter((i) => i.pageNum === page).length;
         }
+        return n;
       }
-      if (source !== 'spelling') {
-        for (const group of consistencyResults) {
-          if (!isResultGroupVisible(resultVisibility, 'consistency', group))
-            continue;
-          n += group.instances.filter((i) => i.pageNum === page).length;
-        }
+      for (const group of consistencyResults) {
+        if (!isResultGroupVisible(resultVisibility, 'consistency', group)) continue;
+        n += group.instances.filter((i) => i.pageNum === page).length;
       }
       return n;
     },
@@ -422,26 +537,31 @@ export function useRuleCheck({
           spellingSelected ?? spellingResults[0]?.instances[0] ?? null;
         setSpellingSelected(inst);
         if (inst) setCurrentPage(inst.pageNum);
-      } else {
-        setActiveSource('consistency');
-        const inst =
-          consistencySelected ?? consistencyResults[0]?.instances[0] ?? null;
-        setConsistencySelected(inst);
-        if (inst) setCurrentPage(inst.pageNum);
+        return;
       }
+      setActiveSource('consistency');
+      if (!consistencyCheckDone) return;
+      const inst =
+        consistencySelected ?? consistencyResults[0]?.instances[0] ?? null;
+      setConsistencySelected(inst);
+      if (inst) setCurrentPage(inst.pageNum);
     },
     [
       spellingSelected,
       consistencySelected,
       spellingResults,
       consistencyResults,
+      consistencyCheckDone,
       setCurrentPage,
     ],
   );
 
   const getActiveOnPage = useCallback(
     (page) => {
-      if (!activeGroup || !isResultGroupVisible(resultVisibility, activeSource, activeGroup)) {
+      if (
+        !activeGroup ||
+        !isResultGroupVisible(resultVisibility, activeSource, activeGroup)
+      ) {
         return 0;
       }
       return activeGroup.instances.filter((i) => i.pageNum === page).length;
@@ -464,11 +584,12 @@ export function useRuleCheck({
     spellingActiveRules,
     consistencyActiveRules,
     clearAllCheckState,
-    applyRestoredCheckState,
-    setRestoredSelection,
+    clearSpellingCheckState,
+    clearConsistencyCheckState,
     runSpellingCheck,
     runConsistencyCheck,
-    backToConsistencySetup,
+    runConsistencyLiteralCheck,
+    runConsistencyAuxiliaryCheck,
     selectInstance,
     goToPage,
     selectPageInGroup,
@@ -497,9 +618,6 @@ export function useRuleCheck({
       (n, g) => n + g.instances.length,
       0,
     ),
-    consistencyFindings: consistencyResults.reduce(
-      (n, g) => n + g.instances.length,
-      0,
-    ),
+    consistencyFindings: consistencyTotalFindings,
   };
 }

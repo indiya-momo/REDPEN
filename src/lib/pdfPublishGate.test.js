@@ -3,9 +3,7 @@ import {
   assessExtractionQuality,
   assessHangulExtraction,
   countHangul,
-  getPdfResaveAdvisory,
   looksResavedPdf,
-  PDF_RESAVED_ADVISORY_LINES,
   runProbeMatches,
   scorePageExtractionQuality,
   validatePublishablePdf,
@@ -120,19 +118,7 @@ describe('pdfPublishGate', () => {
     ).toBe(true);
   });
 
-  it('getPdfResaveAdvisory returns user-facing lines for resaved PDF', () => {
-    const advisory = getPdfResaveAdvisory(
-      {
-        looksInDesign: false,
-        producer: 'iOS Version 26.3.1 Quartz PDFContext',
-        creator: '',
-      },
-      { skipped: false, hangul: 120, reason: 'hangul_ok' },
-    );
-    expect(advisory?.lines).toEqual(PDF_RESAVED_ADVISORY_LINES);
-  });
-
-  it('validatePublishablePdf allows PDF with advisory instead of rejection', () => {
+  it('validatePublishablePdf allows resaved PDF without blocking', () => {
     const pages = [
       {
         pageNum: 1,
@@ -149,6 +135,6 @@ describe('pdfPublishGate', () => {
       pages,
     });
     expect(result.ok).toBe(true);
-    expect(result.advisory?.lines).toEqual(PDF_RESAVED_ADVISORY_LINES);
+    expect(result).not.toHaveProperty('advisory');
   });
 });
