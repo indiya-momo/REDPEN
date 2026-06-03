@@ -37,6 +37,7 @@ import ExcludePhraseList from './consistency/ExcludePhraseList.jsx';
 import RegisteredList from './consistency/RegisteredList.jsx';
 import { SPACE_INPUT_PLACEHOLDER } from './consistency/constants.js';
 import TocBodySetupPanel from '../toc-body/components/TocBodySetupPanel.jsx';
+import { isTocBodyCheckEnabled } from '../lib/featureFlags.js';
 import DetailsChevron from './DetailsChevron.jsx';
 import PanelSectionRunButton from './PanelSectionRunButton.jsx';
 
@@ -376,27 +377,44 @@ export default function ConsistencyPanel({
         </details>
       </section>
 
-      <TocBodySetupPanel
-        embedded
-        textareaRows={7}
-        tocBodyText={tocBodyText}
-        onTocBodyTextChange={onTocBodyTextChange}
-        tocBodyExcludePages={tocBodyExcludePages}
-        onTocBodyExcludePagesChange={onTocBodyExcludePagesChange}
-        printedPagesActive={printedPagesActive}
-        currentSystemPage={currentSystemPage}
-        currentPrintedLabel={currentPrintedLabel}
-        previewPrintedLabel={previewPrintedLabel}
-        spreadInput={spreadInput}
-        onSpreadInputChange={onSpreadInputChange}
-        firstPageSingle={firstPageSingle}
-        onFirstPageSingleChange={onFirstPageSingleChange}
-        onCalibrateFromInput={onCalibrateFromInput}
-        onClearPrintedPageOffset={onClearPrintedPageOffset}
-        onRunCheck={onRunTocCheck}
-        hasPdf={hasPdf}
-        isProcessing={isProcessing}
-      />
+      {isTocBodyCheckEnabled() ? (
+        <TocBodySetupPanel
+          embedded
+          textareaRows={7}
+          tocBodyText={tocBodyText}
+          onTocBodyTextChange={onTocBodyTextChange}
+          tocBodyExcludePages={tocBodyExcludePages}
+          onTocBodyExcludePagesChange={onTocBodyExcludePagesChange}
+          printedPagesActive={printedPagesActive}
+          currentSystemPage={currentSystemPage}
+          currentPrintedLabel={currentPrintedLabel}
+          previewPrintedLabel={previewPrintedLabel}
+          spreadInput={spreadInput}
+          onSpreadInputChange={onSpreadInputChange}
+          firstPageSingle={firstPageSingle}
+          onFirstPageSingleChange={onFirstPageSingleChange}
+          onCalibrateFromInput={onCalibrateFromInput}
+          onClearPrintedPageOffset={onClearPrintedPageOffset}
+          onRunCheck={onRunTocCheck}
+          hasPdf={hasPdf}
+          isProcessing={isProcessing}
+        />
+      ) : (
+        <section
+          className="consistency-section-box consistency-toc-section consistency-toc-section--disabled"
+          aria-labelledby="consistency-toc-heading"
+        >
+          <h3 id="consistency-toc-heading" className="field-label">
+            목차 · 본문 일치 확인
+          </h3>
+          <p className="hint consistency-toc-section__hint">
+            정확도를 높이는 중입니다. 곧 제공할 예정이에요.
+          </p>
+          <p className="hint consistency-toc-section__coming-soon">
+            표기 일관성·맞춤법 검수는 지금 이용할 수 있습니다.
+          </p>
+        </section>
+      )}
     </div>
   );
 }
