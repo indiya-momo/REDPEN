@@ -1,4 +1,3 @@
-import { Plus } from 'lucide-react';
 import SpaceVisibleInput from '../SpaceVisibleInput.jsx';
 
 /**
@@ -28,9 +27,13 @@ export default function ConsistencyRegisterField({
         placeholder={placeholder}
         aria-label={ariaLabel}
       />
-      <button type="button" className="btn-add" onClick={onRegister}>
-        <Plus size={14} aria-hidden />
-        등록
+      <button
+        type="button"
+        className="btn-add consistency-register-add-btn"
+        onClick={onRegister}
+        aria-label="등록"
+      >
+        +
       </button>
     </div>
   );

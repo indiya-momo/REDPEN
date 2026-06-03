@@ -79,6 +79,38 @@ export async function extractAllPagesText(pdf, onProgress) {
   return pages;
 }
 
+/** @param {string} s */
+function endsWithHangulSyllable(s) {
+  const t = String(s).trimEnd();
+  if (!t) return false;
+  const ch = t[t.length - 1];
+  return ch >= '\uAC00' && ch <= '\uD7A3';
+}
+
+/** @param {string} s */
+function startsWithHangulSyllable(s) {
+  const t = String(s).trimStart();
+  if (!t) return false;
+  const ch = t[0];
+  return ch >= '\uAC00' && ch <= '\uD7A3';
+}
+
+/**
+ * PDF 항목 사이 공백 삽입 — 넓은 gap 또는 한글 음절 경계(좁은 gap·띄어 보이는 조판)
+ * @param {number} gap
+ * @param {number} lineH
+ * @param {string} leftStr
+ * @param {string} rightStr
+ */
+export function shouldInsertSpaceBetweenPdfItems(gap, lineH, leftStr, rightStr) {
+  if (gap > lineH) return true;
+  return (
+    gap > 0 &&
+    endsWithHangulSyllable(leftStr) &&
+    startsWithHangulSyllable(rightStr)
+  );
+}
+
 /**
  * @param {import('pdfjs-dist').TextItem[]} items
  */
@@ -124,7 +156,10 @@ function buildPageText(items) {
             Math.hypot(item.transform?.[2] ?? 0, item.transform?.[3] ?? 0),
             8,
           ) * 0.35;
-        if (gap > lineH) text += ' ';
+        const nextStr = line.entries[i + 1].item.str ?? '';
+        if (shouldInsertSpaceBetweenPdfItems(gap, lineH, item.str, nextStr)) {
+          text += ' ';
+        }
       }
     }
     text += '\n';

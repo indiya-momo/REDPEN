@@ -46,6 +46,7 @@ export function applyReplaceTemplate(template, match) {
 }
 
 import {
+  formatAuxiliaryVerbResultLabel,
   formatCompoundSpacingLabel,
   formatCompoundTailLabel,
 } from './patternDisplayLabels.js';
@@ -62,6 +63,9 @@ export function ruleDisplayLabel(rule) {
       rule.patternKind === 'auxiliary-verb') &&
     rule.tailWord
   ) {
+    if (rule.patternKind === 'auxiliary-verb') {
+      return formatAuxiliaryVerbResultLabel(rule.tailWord, rule.label);
+    }
     return formatCompoundTailLabel(rule.tailWord);
   }
   if (rule.label) return rule.label;

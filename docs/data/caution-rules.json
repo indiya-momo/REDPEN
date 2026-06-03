@@ -79,7 +79,8 @@
             "곁가지",
             "바가지",
             "나뭇가지",
-            "무가지"
+            "무가지",
+            "어가지"
           ]
         }
       ]
@@ -99,6 +100,63 @@
             "구분"
           ],
           "displayLabel": "구별, 구분(자주 틀리는 경우)"
+        }
+      ]
+    },
+    {
+      "id": "eogan-eomi",
+      "tip": "'아니요'는 네/예의 반대말로 질문에 답할 때 쓴다. '아니오'는 아니다'의 어간 뒤에 하오체 어미 '-오'가 붙은 종결형이다",
+      "items": [
+        {
+          "id": "eogan-eomi-doei",
+          "label": "되, 돼",
+          "enabled": true,
+          "matchMode": "any-before",
+          "inventoryOnly": false,
+          "stems": [
+            "되",
+            "돼"
+          ],
+          "displayLabel": "되, 돼(자주 틀리는 경우)",
+          "except": [
+            "돼지"
+          ]
+        },
+        {
+          "id": "eogan-eomi-aniyo",
+          "label": "아니오, 아니요",
+          "enabled": false,
+          "matchMode": "spaced-before",
+          "inventoryOnly": false,
+          "stems": [
+            "아니오",
+            "아니요"
+          ],
+          "displayLabel": "아니오, 아니요(자주 틀리는 경우)"
+        }
+      ]
+    },
+    {
+      "id": "word-busa",
+      "tip": "'못하다''어떤 일을 일정한 수준에 못 미치게 하거나, 그 일을 할 능력이 없다(능력). \"못 하다\" (부정 부사 + 동사)상황이나 여건이 되지 않아 행동 자체를 하지 못할 때(상황)",
+      "items": [
+        {
+          "id": "word-busa-mot",
+          "label": "못하다, 못 하다",
+          "enabled": true,
+          "matchMode": "spaced-before",
+          "inventoryOnly": false,
+          "stems": [
+            "못 하",
+            "못하",
+            "못해",
+            "못 해",
+            "못 한",
+            "못한",
+            "못 할",
+            "못할"
+          ],
+          "displayLabel": "못하다, 못 하다(자주 틀리는 경우)"
         }
       ]
     }

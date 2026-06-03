@@ -23,6 +23,19 @@ export function tailWordsFromBonBojoItem(item) {
   return tails;
 }
 
+/**
+ * 일관성 검사용 tail — stems가 있으면 stems만(시트와 동일), 없으면 label
+ * @param {BonBojoItem} item
+ */
+export function auxiliarySearchTailsFromBonBojoItem(item) {
+  const stems = Array.isArray(item.stems)
+    ? item.stems.map((s) => String(s).trim()).filter(Boolean)
+    : [];
+  if (stems.length > 0) return stems;
+  const label = String(item.label ?? '').trim();
+  return label ? [label] : [];
+}
+
 /** 일관성 목록·체크 단위 (시트 item 1행 = 1칸) */
 /** @type {BonBojoListItem[]} */
 export const BON_BOJO_LIST_ITEMS = BON_BOJO_GROUPS.flatMap((group) => {
@@ -47,7 +60,10 @@ const BON_BOJO_BY_ITEM_ID = new Map(
 );
 
 /** 시트·UI에서 기본 체크·「필수」 표시 대상 */
-export const BON_BOJO_REQUIRED_ITEM_IDS = new Set(['verb-hada']);
+/** 필수 본조 — UI 하단·필수 뱃지 (하다 → 지다 순) */
+export const BON_BOJO_REQUIRED_ITEM_IDS_LIST = ['verb-hada', 'verb-jida'];
+
+export const BON_BOJO_REQUIRED_ITEM_IDS = new Set(BON_BOJO_REQUIRED_ITEM_IDS_LIST);
 
 /** @param {string | undefined} itemId */
 export function isBonBojoRequiredItem(itemId) {

@@ -1374,6 +1374,36 @@ details[open] > summary .details-chevron {
   color: var(--accent-on-terracotta);
 }
 
+.result-card--consistency .result-aux-title {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4em 0.5em;
+  max-width: 100%;
+}
+
+.result-card--consistency .result-aux-stem {
+  font-weight: 800;
+  color: var(--color-surface-inverse);
+}
+
+.result-card--consistency .result-aux-group-tag {
+  display: inline-block;
+  padding: 0.2rem 0.55rem;
+  border: 2px solid var(--accent-terracotta-deep);
+  border-radius: var(--radius-ui-sm);
+  background: color-mix(in srgb, var(--accent-terracotta) 28%, #fff 72%);
+  font-size: 0.85em;
+  font-weight: 800;
+  line-height: 1.35;
+  color: var(--accent-terracotta-deep);
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--accent-terracotta) 35%, transparent),
+    0 1px 2px rgba(115, 75, 50, 0.18);
+}
+
 .results-panel-footer .btn-additional-check {
   color: var(--btn-secondary-text);
   border-color: var(--btn-secondary-border);
@@ -1571,7 +1601,7 @@ details[open] > summary .details-chevron {
 }
 
 .current-page-status {
-  padding: var(--space-md) var(--space-xl);
+  padding: calc(var(--space-md) * 0.5) var(--space-xl);
   font-size: 1.17rem;
   line-height: 1.45;
   font-weight: 700;
@@ -1607,57 +1637,62 @@ details[open] > summary .details-chevron {
 }
 
 .printed-page-setup {
-  margin: var(--space-md-tight) var(--space-sm);
-  padding: var(--space-md-tight) var(--space-xs);
+  --pps-scale: 1.2;
+  margin: calc(var(--space-md-tight) * var(--pps-scale)) calc(var(--space-sm) * var(--pps-scale));
+  padding: calc(var(--space-md-tight) * var(--pps-scale)) calc(var(--space-xs) * var(--pps-scale));
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-ui-sm);
+  border-radius: calc(var(--radius-ui-sm) * var(--pps-scale));
   background: var(--color-surface-inset);
 }
 
 .printed-page-setup__title {
-  margin: 0 0 var(--space-md-tight);
-  font-size: 1.05rem;
+  margin: 0 0 calc(var(--space-md-tight) * var(--pps-scale));
+  font-size: calc(1.05rem * var(--pps-scale));
   font-weight: 600;
   line-height: 1.35;
   color: var(--color-text-secondary);
 }
 
 .printed-page-setup__body {
-  margin-top: var(--space-md-tight);
+  margin-top: calc(var(--space-md-tight) * var(--pps-scale));
 }
 
 .printed-page-setup__hint {
-  margin: 0 0 var(--space-sm-tight);
-  font-size: 0.85rem;
+  margin: 0 0 calc(var(--space-sm-tight) * var(--pps-scale));
+  font-size: calc(0.85rem * var(--pps-scale));
   line-height: 1.35;
   color: var(--color-text-faint);
+}
+
+.printed-page-setup__hint strong {
+  font-size: inherit;
 }
 
 .printed-page-setup__row {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-xs-tight) var(--space-md-tight);
+  gap: calc(var(--space-xs-tight) * var(--pps-scale)) calc(var(--space-md-tight) * var(--pps-scale));
   align-items: center;
 }
 
 .printed-page-setup__input {
-  width: 3.75rem;
-  padding: var(--space-2xs-tight) var(--space-md-tight);
+  width: calc(3.75rem * var(--pps-scale));
+  padding: calc(var(--space-2xs-tight) * var(--pps-scale)) calc(var(--space-md-tight) * var(--pps-scale));
   border: 1px solid var(--color-border-strong);
-  border-radius: var(--radius-ui-sm);
-  font-size: 0.75rem;
+  border-radius: calc(var(--radius-ui-sm) * var(--pps-scale));
+  font-size: calc(0.75rem * var(--pps-scale));
 }
 
 .printed-page-setup__input:focus {
-  outline: 2px solid var(--focus-ring);
+  outline: calc(2px * var(--pps-scale)) solid var(--focus-ring);
   border-color: var(--focus-border);
 }
 
 .printed-page-setup__inline-opt {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-2xs-tight);
-  font-size: 0.68rem;
+  gap: calc(var(--space-2xs-tight) * var(--pps-scale));
+  font-size: calc(0.68rem * var(--pps-scale));
   color: var(--color-text-faint);
   white-space: nowrap;
   cursor: pointer;
@@ -1666,31 +1701,33 @@ details[open] > summary .details-chevron {
 .printed-page-setup__inline-opt input {
   margin: 0;
   flex-shrink: 0;
+  width: 1.05em;
+  height: 1.05em;
 }
 
 .printed-page-setup__actions {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-3xs);
+  gap: calc(var(--space-3xs) * var(--pps-scale));
 }
 
 .printed-page-setup__save {
-  padding: var(--space-2xs-tight) var(--space-xs);
+  padding: calc(var(--space-2xs-tight) * var(--pps-scale)) calc(var(--space-xs) * var(--pps-scale));
   border: none;
-  border-radius: var(--radius-ui-sm);
-  font-size: 0.72rem;
+  border-radius: calc(var(--radius-ui-sm) * var(--pps-scale));
+  font-size: calc(0.72rem * var(--pps-scale));
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
 }
 
 .printed-page-setup__reset {
-  padding: var(--space-2xs-tight) var(--space-md-tight);
+  padding: calc(var(--space-2xs-tight) * var(--pps-scale)) calc(var(--space-md-tight) * var(--pps-scale));
   border: 1px solid var(--color-border-strong);
-  border-radius: var(--radius-ui-sm);
+  border-radius: calc(var(--radius-ui-sm) * var(--pps-scale));
   background: var(--color-surface-raised);
   color: var(--color-text-faint);
-  font-size: 0.72rem;
+  font-size: calc(0.72rem * var(--pps-scale));
   cursor: pointer;
   white-space: nowrap;
 }
@@ -1887,32 +1924,6 @@ details[open] > summary .details-chevron {
   text-align: center;
 }
 
-.pdf-center-stage__advisory {
-  width: min(22rem, 100%);
-  margin: 0 0 14px;
-  padding: 10px 12px;
-  font-size: 0.75rem;
-  line-height: 1.5;
-  color: #7a5c28;
-  background: #fff9ed;
-  border: 1px solid #e8d4a8;
-  border-radius: var(--radius-ui);
-  text-align: center;
-}
-
-.pdf-center-stage__advisory-line {
-  margin: 0;
-}
-
-.pdf-center-stage__advisory-line + .pdf-center-stage__advisory-line {
-  margin-top: 4px;
-}
-
-.pdf-center-stage__advisory-dismiss {
-  margin-top: 8px;
-  font-size: 0.72rem;
-}
-
 /* 목업형 세로 스택 — 모모(위) · 본문(아래) */
 .pdf-center-stage__stack {
   display: flex;
@@ -1921,6 +1932,29 @@ details[open] > summary .details-chevron {
   width: min(22rem, 100%);
   text-align: center;
   overflow: visible;
+}
+
+.pdf-center-stage__preupload {
+  position: relative;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.profile-onboarding-mount--pane {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  padding: clamp(0.5rem, 2vw, 1.25rem);
+  overflow: auto;
+  overscroll-behavior: contain;
+  background: rgba(253, 251, 247, 0.94);
+  pointer-events: auto;
 }
 
 .pdf-center-stage__stack .tooltip-guide-anchor {
@@ -3167,9 +3201,6 @@ details[open] > summary .details-chevron {
 }
 
 .tail-list--grid-required {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 6px 10px;
   margin: 0;
   padding: 8px 0 0;
   border-top: 1px dashed var(--color-border-strong);
@@ -3206,15 +3237,16 @@ details[open] > summary .details-chevron {
   grid-column: 2;
   grid-row: 1;
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.35;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
 }
 
 .auxiliary-chip .bon-bojo-required-badge {
   grid-column: 3;
   grid-row: 1;
   justify-self: start;
+  margin-left: -5.4px;
 }
 
 .auxiliary-chip:has(input:checked) .find {

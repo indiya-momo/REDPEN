@@ -5,6 +5,7 @@ import { initAnalytics } from './lib/analytics.js';
 import './styles/fonts.css';
 import './index.css';
 import './styles/main-screen.css';
+import './toc-body/toc-body.css';
 import './styles/momo-room-mobile.css';
 void initAnalytics();
 

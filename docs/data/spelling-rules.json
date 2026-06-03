@@ -17,14 +17,14 @@
     "find": "희노애락",
     "replace": "희로애락",
     "enabled": true,
-    "tip": "怒(노)를 속음(로)으로 바뀌어 적고 발음하는 경우로 등재",
-    "dividerGroup": "A"
+    "tip": "怒(노)를 속음(로)으로 바뀌어 적음",
+    "dividerGroup": "A1"
   },
   {
     "find": "우리 나라",
     "replace": "우리나라",
     "enabled": true,
-    "tip": "우리나라', '우리말' ,'우리글' 표준국어대사전 등재",
+    "tip": "'우리나라', '우리말' ,'우리글' 표준국어대사전 등재",
     "dividerGroup": "A"
   },
   {
@@ -59,8 +59,27 @@
     "find": "놀래키",
     "replace": "놀래",
     "enabled": true,
-    "tip": "'놀래키다'는 표준국어대사전 미등재",
+    "tip": "'놀래다'의 잘못된 표현('놀래키다'는 표준국어대사전 미등재)",
     "dividerGroup": "B"
+  },
+  {
+    "find": "쳐지",
+    "replace": "처지",
+    "enabled": true,
+    "tip": "'처지다'의 잘못된 표현",
+    "dividerGroup": "B"
+  },
+  {
+    "find": "전세계",
+    "replace": "전 세계",
+    "enabled": true,
+    "tip": "표준국어대사전 미등재"
+  },
+  {
+    "find": "먹고 사",
+    "replace": "먹고사",
+    "enabled": true,
+    "tip": "표준국어대사전 '먹고살다' 등재"
   },
   {
     "find": "높히",
@@ -186,13 +205,6 @@
     "replace": "어떡해 또는 어떻게",
     "enabled": true,
     "tip": "'어떡해'는 감정을 표현하는 '어떻게 해'의 줄임말, '어떻게'는 '어떠하게' 부사어",
-    "dividerGroup": "H"
-  },
-  {
-    "find": "쳐지",
-    "replace": "처지",
-    "enabled": true,
-    "tip": "'처지다'의 잘못된 표현",
     "dividerGroup": "H"
   },
   {

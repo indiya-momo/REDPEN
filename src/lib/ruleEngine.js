@@ -32,6 +32,9 @@ import { isMatchSpatiallyCoherent } from './matchSpatial.js';
  * @property {RuleCategory} [category]
  * @property {string} [cautionId]
  * @property {string} [tip]
+ * @property {import('./ruleTypes.js').RuleKind} [patternKind]
+ * @property {string} [tailWord]
+ * @property {string} [groupDisplayLabel]
  * @property {MatchInstance[]} instances
  */
 
@@ -96,23 +99,23 @@ function applyRuleToPages(rule, pages, byKey, globalExcludePhrases, errors) {
         }
       }
       const matchSlice = text.slice(match.index, matchEnd);
+      const isAuxiliaryVerb = rule.patternKind === 'auxiliary-verb';
       const isCompoundRule =
         rule.patternKind === 'compound-find' ||
         rule.patternKind === 'compound-tail' ||
         rule.patternKind === 'compound-spacing' ||
         rule.patternKind === 'phrase-slot-find' ||
-        rule.patternKind === 'auxiliary-verb';
-      if (isCompoundRule && matchSlice.includes('\n')) {
+        isAuxiliaryVerb;
+      if (isCompoundRule && matchSlice.includes('\n') && !isAuxiliaryVerb) {
         continue;
+      }
+      let maxLineGap = isCompoundRule ? 1.35 : 2.8;
+      if (isAuxiliaryVerb) {
+        maxLineGap = matchSlice.includes('\n') ? 6 : 2.5;
       }
       if (
         page.itemRefs?.length &&
-        !isMatchSpatiallyCoherent(
-          page,
-          match.index,
-          matchEnd,
-          isCompoundRule ? 1.35 : 2.8,
-        )
+        !isMatchSpatiallyCoherent(page, match.index, matchEnd, maxLineGap)
       ) {
         continue;
       }
@@ -135,6 +138,15 @@ function applyRuleToPages(rule, pages, byKey, globalExcludePhrases, errors) {
           category: rule.category ?? (rule.builtIn ? 'spelling' : 'custom'),
           ...(rule.cautionId ? { cautionId: rule.cautionId } : {}),
           ...(tip ? { tip } : {}),
+          ...(rule.patternKind ? { patternKind: rule.patternKind } : {}),
+          ...(rule.patternKind === 'auxiliary-verb' && rule.tailWord
+            ? {
+                tailWord: rule.tailWord,
+                ...(rule.label?.trim()
+                  ? { groupDisplayLabel: rule.label.trim() }
+                  : {}),
+              }
+            : {}),
           instances: [],
         });
       }
