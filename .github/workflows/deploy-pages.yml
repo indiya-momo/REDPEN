@@ -38,6 +38,7 @@ jobs:
         run: npm run build
         env:
           VITE_BASE: /REDPEN/
+          VITE_FEATURE_TOC_BODY_CHECK: 'true'
           VITE_UI_BUILD_ID: ${{ github.sha }}
           VITE_BUILD_TIME: ${{ github.event.head_commit.timestamp || github.run_started_at }}
           VITE_FEEDBACK_FORM_VIEW_URL: https://forms.gle/f6FpybKZHC5yAR817

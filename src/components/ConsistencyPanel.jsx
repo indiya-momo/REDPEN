@@ -379,7 +379,6 @@ export default function ConsistencyPanel({
 
       {isTocBodyCheckEnabled() ? (
         <TocBodySetupPanel
-          embedded
           textareaRows={7}
           tocBodyText={tocBodyText}
           onTocBodyTextChange={onTocBodyTextChange}
@@ -404,14 +403,14 @@ export default function ConsistencyPanel({
           className="consistency-section-box consistency-toc-section consistency-toc-section--disabled"
           aria-labelledby="consistency-toc-heading"
         >
-          <h3 id="consistency-toc-heading" className="field-label">
+          <p
+            id="consistency-toc-heading"
+            className="printed-page-setup__title consistency-panel-section-title"
+          >
             목차 · 본문 일치 확인
-          </h3>
-          <p className="hint consistency-toc-section__hint">
-            정확도를 높이는 중입니다. 곧 제공할 예정이에요.
           </p>
-          <p className="hint consistency-toc-section__coming-soon">
-            표기 일관성·맞춤법 검수는 지금 이용할 수 있습니다.
+          <p className="hint consistency-toc-section__hint">
+            현재 개발중인 기능입니다.
           </p>
         </section>
       )}

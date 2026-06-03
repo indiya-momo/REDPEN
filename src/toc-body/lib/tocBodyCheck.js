@@ -1,4 +1,11 @@
 import { escapeRegex } from '../../lib/compoundPatternCommon.js';
+import { isBodyMentionOnlyMatch } from '../../lib/pdfTextAudit.js';
+import {
+  collectTitleLineCandidates,
+  extractPdfHeadingLines,
+} from './pdfHeadingExtract.js';
+
+/** @typedef {import('./pdfHeadingExtract.js').PdfHeadingLine} PdfHeadingLine */
 
 /** 목차 제목 — 단어(어절) 사이: 공백·줄바꿈 1칸 이상 */
 const TOC_TITLE_FLEX_SPACE = String.raw`(?:[ \t\u00A0\u1680\u2000-\u200A\u202F\u205F\u3000\u200B\uFEFF]+|[\r\n])+`;
@@ -6,21 +13,32 @@ const TOC_TITLE_FLEX_SPACE = String.raw`(?:[ \t\u00A0\u1680\u2000-\u200A\u202F\u
 /** 같은 어절 안 음절 사이: 붙어 있거나(PDF 한 덩어리) 줄바꿈으로 쪼개진 경우 모두 */
 const TOC_SYLLABLE_GAP = String.raw`(?:[ \t\u00A0\u1680\u2000-\u200A\u202F\u205F\u3000\u200B\uFEFF]|[\r\n])*`;
 
-/** @typedef {'match' | 'missing' | 'mismatch'} TocBodyStatus */
+/** @typedef {'match' | 'missing' | 'mismatch' | 'outline-extra'} TocBodyStatus */
 
-/** @typedef {import('../../lib/ruleEngine.js').GroupedResult & { patternKind: 'toc-body', tocStatus: TocBodyStatus, tocLineIndex: number }} TocBodyGroup */
+/** @typedef {import('../../lib/ruleEngine.js').GroupedResult & {
+ *   patternKind: 'toc-body',
+ *   tocStatus: TocBodyStatus,
+ *   tocLineIndex: number,
+ *   outlineHint?: PdfHeadingLine | null,
+ *   tocMismatchReason?: 'body-mention-only',
+ * }} TocBodyGroup */
 
 const TOC_STATUS_ORDER = /** @type {const} */ ({
   match: 0,
   missing: 1,
   mismatch: 2,
+  'outline-extra': 3,
 });
 
 export const TOC_STATUS_LABELS = {
   match: '일치',
   missing: '누락',
-  mismatch: '불일치',
+  mismatch: '불일치 예상',
+  'outline-extra': 'PDF 제목만',
 };
+
+const OUTLINE_MATCH_THRESHOLD = 0.88;
+const OUTLINE_HINT_THRESHOLD = 0.72;
 
 /** 목차 조판용 세로선(│｜┃|) — 본문에는 없음 */
 const TOC_BAR_SPLIT = /[│｜┃|]/;
@@ -412,9 +430,27 @@ function buildLatinTokenPattern(token) {
  * PDF 추출 시 음절·줄이 쪼개져도 찾기 (감 / 수 / 의 / 글)
  * @param {string} word
  */
+function buildHangulSyllablePattern(word) {
+  return [...word].map((c) => escapeRegex(c)).join(TOC_SYLLABLE_GAP);
+}
+
+/**
+ * PDF에 `경제 왕국`처럼 띄어 쓴 경우 — 목차 `경제왕국`도 찾기
+ * @param {string} word
+ */
+function buildHangulWordPattern(word) {
+  const syllable = buildHangulSyllablePattern(word);
+  if (word.length < 4) return syllable;
+  const headLen = Math.min(2, word.length - 2);
+  const head = word.slice(0, headLen);
+  const tail = word.slice(headLen);
+  const split = `${buildHangulSyllablePattern(head)}${TOC_TITLE_FLEX_SPACE}${buildHangulSyllablePattern(tail)}`;
+  return `(?:${syllable}|${split})`;
+}
+
 function buildWordPattern(word) {
   if (isHangulWord(word)) {
-    return [...word].map((c) => escapeRegex(c)).join(TOC_SYLLABLE_GAP);
+    return buildHangulWordPattern(word);
   }
   return buildLatinTokenPattern(word);
 }
@@ -450,29 +486,14 @@ function buildTitleSearchRegex(title) {
 }
 
 /**
- * 목차 쪽수 페이지 우선, 없으면 본문 전체에서 검색 (인쇄 쪽수≠파일 페이지 대비)
- * @param {import('./pdfService.js').PageData[]} searchPages
- * @param {RegExp} re
- * @param {number | null} tocPage
- */
-function findInstancesForEntry(searchPages, re, tocPage) {
-  if (tocPage) {
-    const onPage = searchPages.filter((p) => p.pageNum === tocPage);
-    if (onPage.length) {
-      const preferred = findTitleInstances(onPage, re);
-      if (preferred.length) return preferred;
-    }
-  }
-  return findTitleInstances(searchPages, re);
-}
-
-/**
  * @param {import('./pdfService.js').PageData[]} pages
  * @param {RegExp} re
+ * @param {number} [maxCount]
  */
-function findTitleInstances(pages, re) {
+function findTitleInstances(pages, re, maxCount = 1) {
   /** @type {import('./ruleEngine.js').MatchInstance[]} */
   const instances = [];
+  const limit = Math.max(1, maxCount);
   for (const page of pages) {
     const text = page.text;
     const regex = new RegExp(re.source, re.flags);
@@ -490,9 +511,328 @@ function findTitleInstances(pages, re) {
         pageNum: page.pageNum,
         index: match.index,
       });
+      if (instances.length >= limit) return instances;
     }
   }
   return instances;
+}
+
+/**
+ * @param {import('../../lib/pdfService.js').PageData[]} pages
+ * @param {RegExp} re
+ * @param {PdfHeadingLine[]} headingLines
+ * @param {number} [maxCount]
+ */
+function findTitleInstancesOnHeadings(pages, re, headingLines, maxCount = 1) {
+  const pageSet = new Set(pages.map((p) => p.pageNum));
+  /** @type {import('./ruleEngine.js').MatchInstance[]} */
+  const instances = [];
+  const limit = Math.max(1, maxCount);
+  for (const line of headingLines) {
+    if (!pageSet.has(line.pageNum)) continue;
+    const regex = new RegExp(re.source, re.flags);
+    let match;
+    while ((match = regex.exec(line.text)) !== null) {
+      if (!match[0]) {
+        regex.lastIndex += 1;
+        continue;
+      }
+      instances.push({
+        find: `toc-body:${match[0]}`,
+        replace: match[0],
+        matchedText: match[0],
+        suggestedText: match[0],
+        pageNum: line.pageNum,
+        index: line.startIndex + match.index,
+      });
+      if (instances.length >= limit) return instances;
+    }
+  }
+  return instances;
+}
+
+/**
+ * @param {import('../../lib/pdfService.js').PageData[]} pages
+ * @param {RegExp} re
+ * @param {string} title
+ * @param {PdfHeadingLine[]} headingLines
+ * @returns {import('./ruleEngine.js').MatchInstance[]}
+ */
+function findFirstValidTitleOnPages(pages, re, title, headingLines) {
+  if (!pages.length) return [];
+
+  const pageSet = new Set(pages.map((p) => p.pageNum));
+  const headingsOnPages = headingLines.filter((h) => pageSet.has(h.pageNum));
+
+  /** @type {import('./ruleEngine.js').MatchInstance[]} */
+  const ordered = [];
+  const seen = new Set();
+
+  const pushUnique = (list) => {
+    for (const inst of list) {
+      const key = `${inst.pageNum}:${inst.index}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      ordered.push(inst);
+    }
+  };
+
+  if (headingsOnPages.length) {
+    pushUnique(
+      findTitleInstancesOnHeadings(pages, re, headingsOnPages, 12),
+    );
+  }
+
+  for (const row of collectTitleLineCandidates(pages, re)) {
+    pushUnique([row.inst]);
+  }
+
+  pushUnique(findTitleInstances(pages, re, 8));
+
+  for (const inst of ordered) {
+    if (classifyTocTitle(title, [inst]) !== 'missing') return [inst];
+  }
+  return [];
+}
+
+/**
+ * @param {string} title
+ * @param {TocBodyStatus} status
+ * @param {import('./ruleEngine.js').MatchInstance[]} found
+ * @param {import('./pdfService.js').PageData[]} searchPages
+ * @returns {{ status: TocBodyStatus, tocMismatchReason?: 'body-mention-only' }}
+ */
+export function resolveTocTitleStatus(title, status, found, searchPages) {
+  if (status !== 'match' || !found.length) {
+    return { status };
+  }
+  const inst = found[0];
+  const page = searchPages.find((p) => p.pageNum === inst.pageNum);
+  if (!page || !isBodyMentionOnlyMatch(page, inst)) {
+    return { status };
+  }
+  return { status: 'mismatch', tocMismatchReason: 'body-mention-only' };
+}
+
+/**
+ * @param {string} title
+ * @param {PdfHeadingLine[]} headings
+ * @param {Set<string>} usedIds
+ */
+function findBestOutlineMatch(title, headings, usedIds) {
+  let best = null;
+  let bestScore = 0;
+  for (const h of headings) {
+    if (usedIds.has(h.id)) continue;
+    const score = tocTitleSimilarity(title, h.text);
+    if (score > bestScore) {
+      bestScore = score;
+      best = h;
+    }
+  }
+  if (!best || bestScore < OUTLINE_MATCH_THRESHOLD) return null;
+  return best;
+}
+
+/**
+ * @param {TocBodyEntry[]} tocEntries
+ * @param {PdfHeadingLine[]} headings
+ */
+export function diffTocWithPdfOutline(tocEntries, headings) {
+  const used = new Set();
+  /** @type {Map<string, PdfHeadingLine>} */
+  const hints = new Map();
+
+  for (const entry of tocEntries) {
+    const paired = findBestOutlineMatch(entry.title, headings, used);
+    if (paired) {
+      used.add(paired.id);
+      continue;
+    }
+    let hint = null;
+    let hintScore = 0;
+    for (const h of headings) {
+      const score = tocTitleSimilarity(entry.title, h.text);
+      if (score > hintScore) {
+        hintScore = score;
+        hint = h;
+      }
+    }
+    if (hint && hintScore >= OUTLINE_HINT_THRESHOLD) {
+      hints.set(entry.title, hint);
+    }
+  }
+
+  const outlineOnly = headings.filter((h) => !used.has(h.id));
+  return { hints, outlineOnly };
+}
+
+/**
+ * 펼침면 6–7P에 목차 7쪽, 또는 30쪽 이후 본문
+ * @param {number} printLeft
+ * @param {number} listedPrintPage
+ */
+export function printPageReachesListedPrint(printLeft, listedPrintPage) {
+  if (!Number.isFinite(printLeft) || !Number.isFinite(listedPrintPage)) {
+    return false;
+  }
+  const left = Math.floor(printLeft);
+  const listed = Math.floor(listedPrintPage);
+  if (left <= listed && listed <= left + 1) return true;
+  return left >= listed;
+}
+
+/**
+ * @param {number} printLeft
+ * @param {number} listedPrintPage
+ */
+export function printPageCoversListedPrint(printLeft, listedPrintPage) {
+  const left = Math.floor(printLeft);
+  const listed = Math.floor(listedPrintPage);
+  return left <= listed && listed <= left + 1;
+}
+
+/**
+ * `PART Ⅰ. 경제는 분위기다` 안에 `경제는 분위기다`가 있을 때 앞쪽 오매칭 방지
+ * @param {string} title
+ * @param {TocBodyEntry[]} entries
+ */
+export function isTitleShadowedByLongerTocEntry(title, entries) {
+  const t = title.trim();
+  if (!t) return false;
+  return entries.some(
+    (e) =>
+      e.title !== t &&
+      e.title.length > t.length &&
+      e.title.includes(t),
+  );
+}
+
+/**
+ * @param {import('./pdfService.js').PageData[]} searchPages
+ * @param {RegExp} re
+ * @param {string} title
+ * @param {number | null} systemTocPage
+ * @param {boolean} allowBeforeListedFilePage
+ * @param {PdfHeadingLine[]} headingLines
+ */
+function findInstancesOnFilePages(
+  searchPages,
+  re,
+  title,
+  systemTocPage,
+  allowBeforeListedFilePage,
+  headingLines,
+) {
+  if (systemTocPage != null) {
+    /** @type {import('./pdfService.js').PageData[]} */
+    const ordered = [
+      ...searchPages.filter((p) => p.pageNum === systemTocPage),
+      ...searchPages
+        .filter((p) => p.pageNum > systemTocPage)
+        .sort((a, b) => a.pageNum - b.pageNum),
+    ];
+    if (allowBeforeListedFilePage) {
+      ordered.push(
+        ...searchPages
+          .filter((p) => p.pageNum < systemTocPage)
+          .sort((a, b) => b.pageNum - a.pageNum),
+      );
+    }
+    return findFirstValidTitleOnPages(ordered, re, title, headingLines);
+  }
+
+  return findFirstValidTitleOnPages(searchPages, re, title, headingLines);
+}
+
+/**
+ * @param {import('./pdfService.js').PageData[]} searchPages
+ * @param {RegExp} re
+ * @param {string} title
+ * @param {number} listedPrintPage
+ * @param {(systemPage: number) => number} mapSystemPageToPrint
+ * @param {PdfHeadingLine[]} headingLines
+ */
+function findInstancesOnPrintPages(
+  searchPages,
+  re,
+  title,
+  listedPrintPage,
+  mapSystemPageToPrint,
+  headingLines,
+) {
+  const listed = Math.floor(listedPrintPage);
+  const ranked = searchPages
+    .map((page) => ({
+      page,
+      printLeft: mapSystemPageToPrint(page.pageNum),
+    }))
+    .filter(
+      (row) =>
+        Number.isFinite(row.printLeft) &&
+        printPageReachesListedPrint(row.printLeft, listed),
+    )
+    .sort((a, b) => {
+      const aCover = printPageCoversListedPrint(a.printLeft, listed) ? 0 : 1;
+      const bCover = printPageCoversListedPrint(b.printLeft, listed) ? 0 : 1;
+      if (aCover !== bCover) return aCover - bCover;
+      const aOn = Math.floor(a.printLeft) === listed ? 0 : 1;
+      const bOn = Math.floor(b.printLeft) === listed ? 0 : 1;
+      if (aOn !== bOn) return aOn - bOn;
+      if (a.printLeft !== b.printLeft) return a.printLeft - b.printLeft;
+      return a.page.pageNum - b.page.pageNum;
+    });
+  return findFirstValidTitleOnPages(
+    ranked.map((row) => row.page),
+    re,
+    title,
+    headingLines,
+  );
+}
+
+/**
+ * 목차 줄 끝 쪽수(인쇄) 우선 · 항목당 1건
+ * @param {import('./pdfService.js').PageData[]} searchPages
+ * @param {RegExp} re
+ * @param {number | null} systemTocPage
+ * @param {string} title
+ * @param {number | null} listedPrintPage
+ * @param {(systemPage: number) => number} [mapSystemPageToPrint]
+ * @param {TocBodyEntry[]} tocEntries
+ * @param {PdfHeadingLine[]} headingLines
+ */
+function findInstancesForEntry(
+  searchPages,
+  re,
+  systemTocPage,
+  title,
+  listedPrintPage,
+  mapSystemPageToPrint,
+  tocEntries,
+  headingLines,
+) {
+  const shadowed = isTitleShadowedByLongerTocEntry(title, tocEntries);
+
+  if (listedPrintPage != null && mapSystemPageToPrint) {
+    const onPrint = findInstancesOnPrintPages(
+      searchPages,
+      re,
+      title,
+      listedPrintPage,
+      mapSystemPageToPrint,
+      headingLines,
+    );
+    if (onPrint.length) return onPrint;
+  }
+
+  return findInstancesOnFilePages(
+    searchPages,
+    re,
+    title,
+    systemTocPage,
+    !shadowed,
+    headingLines,
+  );
 }
 
 /**
@@ -642,6 +982,26 @@ export function resolveTocBodyExcludeSystemPages(
 }
 
 /**
+ * 인쇄(보정) 쪽 번호 기준 — 목차판 18–23만 빼고 28쪽 본문 파일 페이지는 남김
+ * @param {number} systemPage
+ * @param {Set<number>} excludePrintPages
+ * @param {(systemPage: number) => number} mapSystemPageToPrint
+ */
+export function isSystemPageInTocExcludePrintRange(
+  systemPage,
+  excludePrintPages,
+  mapSystemPageToPrint,
+) {
+  if (!excludePrintPages.size) return false;
+  const left = mapSystemPageToPrint(systemPage);
+  if (!Number.isFinite(left)) return false;
+  const l = Math.floor(left);
+  if (excludePrintPages.has(l)) return true;
+  if (excludePrintPages.has(l + 1)) return true;
+  return false;
+}
+
+/**
  * 목차 줄 끝 쪽수(인쇄 쪽) → 파일 페이지
  * @param {number | null} tocPage
  * @param {(printPage: number) => number} [mapPrintPageToSystem]
@@ -658,14 +1018,17 @@ export function resolveTocEntrySystemPage(tocPage, mapPrintPageToSystem) {
  * @param {number | null | undefined} startPage
  * @param {unknown} [excludePages]
  * @param {(printPage: number) => number} [mapPrintPageToSystem]
+ * @param {(systemPage: number) => number} [mapSystemPageToPrint] 보정된 인쇄 쪽(왼쪽)
  */
 export function filterPagesForTocBodyCheck(
   pages,
   startPage,
   excludePages,
   mapPrintPageToSystem,
+  mapSystemPageToPrint,
 ) {
-  const exclude = resolveTocBodyExcludeSystemPages(
+  const excludePrint = parseTocBodyExcludePages(excludePages);
+  const excludeSystem = resolveTocBodyExcludeSystemPages(
     excludePages,
     mapPrintPageToSystem,
   );
@@ -676,7 +1039,21 @@ export function filterPagesForTocBodyCheck(
       : null;
   return pages.filter((p) => {
     if (fromSystem && p.pageNum < fromSystem) return false;
-    if (exclude.size && exclude.has(p.pageNum)) return false;
+    if (excludePrint.size) {
+      if (mapSystemPageToPrint) {
+        if (
+          isSystemPageInTocExcludePrintRange(
+            p.pageNum,
+            excludePrint,
+            mapSystemPageToPrint,
+          )
+        ) {
+          return false;
+        }
+      } else if (excludeSystem.size && excludeSystem.has(p.pageNum)) {
+        return false;
+      }
+    }
     return true;
   });
 }
@@ -687,6 +1064,7 @@ export function filterPagesForTocBodyCheck(
  * @param {number | null | undefined} [bodyStartPage]
  * @param {unknown} [excludePdfTocPages] 목차 PDF 페이지(검색 제외, 인쇄 쪽 입력 가능)
  * @param {(printPage: number) => number} [mapPrintPageToSystem] 인쇄 쪽 → 파일 페이지
+ * @param {(systemPage: number) => number} [mapSystemPageToPrint] 파일 페이지 → 인쇄 쪽(왼쪽)
  * @returns {TocBodyGroup[]}
  */
 export function runTocBodyCheck(
@@ -695,6 +1073,7 @@ export function runTocBodyCheck(
   bodyStartPage = null,
   excludePdfTocPages = null,
   mapPrintPageToSystem = undefined,
+  mapSystemPageToPrint = undefined,
 ) {
   const entries = parseTocBodyEntries(tocBodyText);
   const searchPages = filterPagesForTocBodyCheck(
@@ -702,8 +1081,12 @@ export function runTocBodyCheck(
     bodyStartPage,
     excludePdfTocPages,
     mapPrintPageToSystem,
+    mapSystemPageToPrint,
   );
   if (!entries.length) return [];
+
+  const headingLines = extractPdfHeadingLines(searchPages);
+  const { hints } = diffTocWithPdfOutline(entries, headingLines);
 
   /** @type {TocBodyGroup[]} */
   const groups = [];
@@ -715,21 +1098,28 @@ export function runTocBodyCheck(
       tocPage,
       mapPrintPageToSystem,
     );
-    const all = findInstancesForEntry(searchPages, re, systemTocPage);
-    const status = classifyTocTitle(title, all);
-    let chosen = pickTocInstance(title, all, status);
-    if (chosen && systemTocPage && status !== 'missing') {
-      const onPage = all.filter(
-        (i) =>
-          i.pageNum === systemTocPage &&
-          classifyTocTitle(title, [i]) !== 'missing',
-      );
-      if (onPage.length) {
-        chosen = pickTocInstance(title, onPage, status) ?? chosen;
-      }
-    }
-    const instances =
-      status === 'missing' ? [] : chosen ? [chosen] : [];
+    const found = findInstancesForEntry(
+      searchPages,
+      re,
+      systemTocPage,
+      title,
+      tocPage,
+      mapSystemPageToPrint,
+      entries,
+      headingLines,
+    );
+    const rawStatus = classifyTocTitle(title, found);
+    const { status, tocMismatchReason } = resolveTocTitleStatus(
+      title,
+      rawStatus,
+      found,
+      searchPages,
+    );
+    const chosen =
+      status === 'missing' ? null : pickTocInstance(title, found, status);
+    const instances = chosen ? [chosen] : [];
+    const outlineHint =
+      status === 'missing' ? hints.get(title) ?? null : null;
 
     groups.push({
       find: `toc-body:${tocLineIndex}:${title}`,
@@ -741,6 +1131,8 @@ export function runTocBodyCheck(
       tocLineIndex,
       groupDisplayLabel: TOC_STATUS_LABELS[status],
       instances,
+      outlineHint,
+      tocMismatchReason,
     });
   });
 

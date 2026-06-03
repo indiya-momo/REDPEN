@@ -171,6 +171,7 @@ export default function PdfViewer({
               pageData.itemRefs,
               h.start,
               h.end,
+              pageData,
             );
             for (const box of boxes) {
               allBoxes.push({

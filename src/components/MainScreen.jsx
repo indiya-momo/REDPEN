@@ -737,7 +737,6 @@ export default function MainScreen({
                 entries={tocBodyTabEntries}
                 currentPage={pdf.currentPage}
                 pdf={pdf.pdf}
-                activeGroup={tocCheck.activeGroup}
                 visibleOnCurrentPage={visibleOnCurrentPage}
                 isGroupVisible={tocCheck.isGroupVisible}
                 onToggleVisibility={tocCheck.toggleGroupVisibility}

@@ -1,3 +1,5 @@
+import { getLineContextAtTextIndex } from '../toc-body/lib/pdfHeadingExtract.js';
+
 /**
  * @param {import('./pdfService.js').PageData} pageData
  * @param {number} matchStart
@@ -5,6 +7,15 @@
  * @param {number} [maxLineGap=2.8]
  */
 export function isMatchSpatiallyCoherent(pageData, matchStart, matchEnd, maxLineGap = 2.8) {
+  const ctx = getLineContextAtTextIndex(pageData, matchStart);
+  if (
+    ctx &&
+    matchStart >= ctx.lineStart &&
+    matchEnd <= ctx.lineEnd
+  ) {
+    return true;
+  }
+
   const refs = pageData.itemRefs?.filter(
     (ref) => ref.end > matchStart && ref.start < matchEnd,
   );
@@ -24,7 +35,13 @@ export function isMatchSpatiallyCoherent(pageData, matchStart, matchEnd, maxLine
 
   if (!ys.length) return true;
 
-  const span = Math.max(...ys) - Math.min(...ys);
   const avgH = heights.reduce((a, b) => a + b, 0) / heights.length;
+  const lineH = Math.max(avgH * 0.55, 8);
+  const anchorY = ys[0];
+  if (ys.every((y) => Math.abs(y - anchorY) <= lineH)) {
+    return true;
+  }
+
+  const span = Math.max(...ys) - Math.min(...ys);
   return span <= avgH * maxLineGap;
 }

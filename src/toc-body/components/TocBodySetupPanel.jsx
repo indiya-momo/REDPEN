@@ -5,6 +5,7 @@ import { formatSystemPageLabel } from '../../lib/printedPageDisplay.js';
 import { hasTocBodyEntries, parseTocBodyEntries } from '../lib/tocBodyCheck.js';
 
 /**
+ * 일관성 패널에 embedded 되는 목차 · 본문 설정 (standalone 탭 UI는 사용하지 않음)
  * @param {{
  *   tocBodyText: string,
  *   onTocBodyTextChange: (text: string) => void,
@@ -23,7 +24,6 @@ import { hasTocBodyEntries, parseTocBodyEntries } from '../lib/tocBodyCheck.js';
  *   onRunCheck: () => void | Promise<void>,
  *   hasPdf?: boolean,
  *   isProcessing?: boolean,
- *   embedded?: boolean,
  *   textareaRows?: number,
  * }} props
  */
@@ -45,61 +45,9 @@ export default function TocBodySetupPanel({
   onRunCheck,
   hasPdf = false,
   isProcessing = false,
-  embedded = false,
-  textareaRows = 10,
+  textareaRows = 7,
 }) {
   const tocFileInputRef = useRef(/** @type {HTMLInputElement | null} */ (null));
-
-  const sectionClass = embedded
-    ? 'consistency-section-box consistency-toc-section'
-    : 'toc-body-setup__section';
-  const titleClass = embedded
-    ? 'printed-page-setup__title consistency-panel-section-title'
-    : 'field-label toc-body-setup__title';
-  const hintClass = embedded
-    ? 'hint consistency-toc-section__hint'
-    : 'hint toc-body-setup__hint';
-  const tipClass = embedded
-    ? 'hint consistency-toc-section__tip'
-    : 'hint toc-body-setup__tip';
-  const actionsClass = embedded
-    ? 'consistency-toc-section__actions'
-    : 'toc-body-setup__actions';
-  const fileBtnClass = embedded
-    ? 'consistency-toc-section__file-btn'
-    : 'toc-body-setup__file-btn';
-  const clearBtnClass = embedded
-    ? 'consistency-toc-section__clear-btn'
-    : 'toc-body-setup__clear-btn';
-  const fileInputClass = embedded
-    ? 'consistency-toc-section__file-input'
-    : 'toc-body-setup__file-input';
-  const textareaClass = embedded
-    ? 'consistency-toc-section__textarea custom-scrollbar'
-    : 'toc-body-setup__textarea custom-scrollbar';
-  const runBtnClass = embedded
-    ? 'btn-add consistency-toc-section__run-btn'
-    : 'btn-add toc-body-setup__run-btn';
-  const runInHeader = embedded;
-  const runHintClass = embedded
-    ? 'hint consistency-toc-section__run-hint'
-    : 'hint toc-body-setup__run-hint';
-  const excludeRowClass = embedded
-    ? 'consistency-toc-section__exclude-pages'
-    : 'toc-body-setup__exclude-pages';
-  const excludeInputClass = embedded
-    ? 'consistency-toc-section__exclude-pages-input'
-    : 'toc-body-setup__exclude-pages-input';
-  const headingId = embedded ? 'consistency-toc-heading' : 'toc-body-setup-heading';
-  const stepClass = embedded
-    ? 'consistency-toc-section__step-label'
-    : 'toc-body-setup__step-label';
-  const calibrationDoneClass = embedded
-    ? 'consistency-toc-section__calibration-done'
-    : 'toc-body-setup__calibration-done';
-  const recalibrateBtnClass = embedded
-    ? 'consistency-toc-section__recalibrate-btn'
-    : 'toc-body-setup__recalibrate-btn';
 
   const [showCalibrationEditor, setShowCalibrationEditor] = useState(
     () => !printedPagesActive,
@@ -117,45 +65,51 @@ export default function TocBodySetupPanel({
   const canRunCheck =
     hasPdf && hasTocBodyEntries(tocBodyText) && printedPagesActive && !isProcessing;
 
-  const section = (
+  const loadTocFile = (file) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      onTocBodyTextChange(String(reader.result ?? ''));
+    };
+    reader.onerror = () => {
+      alert('목차 파일을 읽지 못했습니다.');
+    };
+    reader.readAsText(file, 'utf-8');
+  };
+
+  return (
     <section
-      className={sectionClass}
-      aria-labelledby={headingId}
+      className="consistency-section-box consistency-toc-section"
+      aria-labelledby="consistency-toc-heading"
     >
-      {embedded ? (
-        <div className="consistency-toc-section__header">
-          <p id={headingId} className={titleClass}>
-            목차 · 본문 일치 확인
-          </p>
-          <PanelSectionRunButton
-            label="검수"
-            processingLabel="검수 중…"
-            onClick={onRunCheck}
-            disabled={!canRunCheck}
-            isProcessing={isProcessing}
-          />
-        </div>
-      ) : (
-        <p id={headingId} className={titleClass}>
+      <div className="consistency-toc-section__header">
+        <p id="consistency-toc-heading" className="printed-page-setup__title consistency-panel-section-title">
           목차 · 본문 일치 확인
         </p>
-      )}
+        <PanelSectionRunButton
+          label="검수"
+          processingLabel="검수 중…"
+          onClick={onRunCheck}
+          disabled={!canRunCheck}
+          isProcessing={isProcessing}
+        />
+      </div>
+
       {!hasPdf ? (
-        <p className={runHintClass}>
+        <p className="hint consistency-toc-section__hint">
           가운데에서 PDF를 업로드하면 맞춤법·목차 검사에 함께 사용됩니다.
         </p>
       ) : null}
 
-      <p className={stepClass}>1. 인쇄 쪽 보정</p>
+      <p className="consistency-toc-section__step-label">1. 인쇄 쪽 보정</p>
       {printedPagesActive && !showCalibrationEditor ? (
-        <div className={calibrationDoneClass}>
+        <div className="consistency-toc-section__calibration-done">
           <p>
             현재 파일 <strong>{formatSystemPageLabel(currentSystemPage)}</strong>가
             원고 기준 <strong>{currentPrintedLabel}</strong>로 보정되었습니다.
           </p>
           <button
             type="button"
-            className={recalibrateBtnClass}
+            className="consistency-toc-section__recalibrate-btn"
             onClick={() => setShowCalibrationEditor(true)}
           >
             다시 보정
@@ -176,7 +130,7 @@ export default function TocBodySetupPanel({
             onClear={onClearPrintedPageOffset}
           />
           {hasPdf && !printedPagesActive ? (
-            <p className={tipClass}>
+            <p className="hint consistency-toc-section__tip">
               맞춤법 확인 검사 결과에서 보정했거나, 위에서 보정하면 목차 검사에도 적용됩니다.
               {firstTocPage ? (
                 <>
@@ -190,121 +144,75 @@ export default function TocBodySetupPanel({
         </>
       )}
 
-      <p className={stepClass}>2. 목차 입력</p>
-      <p className={hintClass}>
+      <p className="consistency-toc-section__step-label">2. 목차 입력</p>
+      <p className="hint consistency-toc-section__hint">
         목차를 메모장(TXT) 파일로 업로드하고{' '}
-        {embedded ? (
-          <span className="consistency-toc-section__start-chip">검수</span>
-        ) : (
-          '검수'
-        )}
-        를 누르세요 (구분기호 &apos;┃&apos;등도 그대로 넣습니다)
+        <span className="consistency-toc-section__start-chip">검수</span>를 누르세요
+        (구분기호 &apos;┃&apos;등도 그대로 넣습니다)
       </p>
       <p
-        className={`${hintClass}${
-          embedded
-            ? ' consistency-toc-section__page-range consistency-toc-section__page-range-row'
-            : ''
-        }`}
+        className={`hint consistency-toc-section__hint consistency-toc-section__page-range consistency-toc-section__page-range-row`}
       >
         <span className="consistency-toc-section__page-range-text">
           목차 페이지 범위{' '}
           <input
             type="text"
-            className={excludeInputClass}
+            className="consistency-toc-section__exclude-pages-input"
             value={tocBodyExcludePages}
             onChange={(e) => onTocBodyExcludePagesChange(e.target.value)}
-            placeholder="18-24"
-            aria-label="목차 페이지 범위, 일치 확인에서 제외"
+            placeholder="예: 18-24"
+            aria-label="인쇄 쪽 목차판 페이지 범위, 해당 구간만 일치 확인에서 제외"
             autoComplete="off"
           />
-          {' '}: 해당 범위는 일치 확인에서 제외됩니다
-        </span>
-        {embedded ? (
-          <>
+          {tocBodyExcludePages.trim() ? (
             <button
               type="button"
-              className={fileBtnClass}
-              onClick={() => tocFileInputRef.current?.click()}
+              className="consistency-toc-section__page-range-clear"
+              onClick={() => onTocBodyExcludePagesChange('')}
             >
-              메모장 업로드
+              지우기
             </button>
-            <input
-              ref={tocFileInputRef}
-              type="file"
-              accept=".txt,text/plain"
-              className={fileInputClass}
-              aria-hidden
-              tabIndex={-1}
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                e.target.value = '';
-                if (!file) return;
-                const reader = new FileReader();
-                reader.onload = () => {
-                  onTocBodyTextChange(String(reader.result ?? ''));
-                };
-                reader.onerror = () => {
-                  alert('목차 파일을 읽지 못했습니다.');
-                };
-                reader.readAsText(file, 'utf-8');
-              }}
-            />
-          </>
-        ) : null}
+          ) : null}{' '}
+          <span className="consistency-toc-section__page-range-hint">
+            (인쇄 쪽 · 목차판만 제외, 앞쪽 본문은 검색)
+          </span>
+          : 해당 범위는 일치 확인에서 제외됩니다
+        </span>
+        <button
+          type="button"
+          className="consistency-toc-section__file-btn"
+          onClick={() => tocFileInputRef.current?.click()}
+        >
+          메모장 업로드
+        </button>
+        <input
+          ref={tocFileInputRef}
+          type="file"
+          accept=".txt,text/plain"
+          className="consistency-toc-section__file-input"
+          aria-hidden
+          tabIndex={-1}
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            e.target.value = '';
+            if (file) loadTocFile(file);
+          }}
+        />
       </p>
-      <div
-        className={
-          embedded ? 'consistency-toc-section__txt-upload-zone' : 'toc-body-setup__txt-upload-zone'
-        }
-      >
-        {!embedded || tocBodyText.trim() ? (
-          <div className={actionsClass}>
-            {!embedded ? (
-              <>
-                <button
-                  type="button"
-                  className={fileBtnClass}
-                  onClick={() => tocFileInputRef.current?.click()}
-                >
-                  메모장 업로드
-                </button>
-                <input
-                  ref={tocFileInputRef}
-                  type="file"
-                  accept=".txt,text/plain"
-                  className={fileInputClass}
-                  aria-hidden
-                  tabIndex={-1}
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    e.target.value = '';
-                    if (!file) return;
-                    const reader = new FileReader();
-                    reader.onload = () => {
-                      onTocBodyTextChange(String(reader.result ?? ''));
-                    };
-                    reader.onerror = () => {
-                      alert('목차 파일을 읽지 못했습니다.');
-                    };
-                    reader.readAsText(file, 'utf-8');
-                  }}
-                />
-              </>
-            ) : null}
-            {tocBodyText.trim() ? (
-              <button
-                type="button"
-                className={clearBtnClass}
-                onClick={() => onTocBodyTextChange('')}
-              >
-                목차 지우기
-              </button>
-            ) : null}
+      <div className="consistency-toc-section__txt-upload-zone">
+        {tocBodyText.trim() ? (
+          <div className="consistency-toc-section__actions">
+            <button
+              type="button"
+              className="consistency-toc-section__clear-btn"
+              onClick={() => onTocBodyTextChange('')}
+            >
+              목차 지우기
+            </button>
           </div>
         ) : null}
         <textarea
-          className={textareaClass}
+          className="consistency-toc-section__textarea custom-scrollbar"
           value={tocBodyText}
           onChange={(e) => onTocBodyTextChange(e.target.value)}
           placeholder={
@@ -314,29 +222,11 @@ export default function TocBodySetupPanel({
           aria-label="목차 항목 목록"
         />
       </div>
-      {!runInHeader ? (
-        <button
-          type="button"
-          className={runBtnClass}
-          disabled={!canRunCheck}
-          onClick={() => onRunCheck()}
-        >
-          {isProcessing ? '검수 중…' : '검수'}
-        </button>
-      ) : null}
-      {!hasPdf ? (
-        <p className={runHintClass}>가운데에서 PDF를 업로드한 뒤 검사할 수 있습니다.</p>
-      ) : hasPdf && hasTocBodyEntries(tocBodyText) && !printedPagesActive ? (
-        <p className={runHintClass}>
+      {hasPdf && hasTocBodyEntries(tocBodyText) && !printedPagesActive ? (
+        <p className="hint consistency-toc-section__run-hint">
           맞춤법 확인에서 인쇄 쪽 보정을 하거나, 위에서 보정한 뒤 검수하세요.
         </p>
       ) : null}
     </section>
   );
-
-  if (embedded) {
-    return section;
-  }
-
-  return <div className="toc-body-setup">{section}</div>;
 }

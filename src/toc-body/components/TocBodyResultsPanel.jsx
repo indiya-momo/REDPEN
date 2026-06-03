@@ -8,7 +8,6 @@ import { countTocBodyTabFindings } from '../utils/toc-body-result-entries.js';
  *   entries: import('../utils/toc-body-result-entries.js').TocBodyTabEntry[],
  *   currentPage: number,
  *   pdf: object | null,
- *   activeGroup: import('../lib/tocBodyCheck.js').TocBodyGroup | null,
  *   visibleOnCurrentPage: number,
  *   isGroupVisible: (group: import('../lib/tocBodyCheck.js').TocBodyGroup) => boolean,
  *   onToggleVisibility: (group: import('../lib/tocBodyCheck.js').TocBodyGroup) => void,
@@ -16,7 +15,6 @@ import { countTocBodyTabFindings } from '../utils/toc-body-result-entries.js';
  *   onSelectGroup: (group: import('../lib/tocBodyCheck.js').TocBodyGroup) => void,
  *   onSelectPageInGroup: (pageNum: number, instances: import('../lib/ruleEngine.js').MatchInstance[]) => void,
  *   onBackToSetup?: () => void,
- *   printedPageOffset?: number | null,
  *   printedPagesActive?: boolean,
  *   onCalibrateFromInput?: (raw: string, isSpread: boolean) => void,
  *   onClearPrintedPageOffset?: () => void,
@@ -33,7 +31,6 @@ export default function TocBodyResultsPanel({
   entries,
   currentPage,
   pdf,
-  activeGroup,
   visibleOnCurrentPage,
   isGroupVisible,
   onToggleVisibility,
@@ -41,7 +38,6 @@ export default function TocBodyResultsPanel({
   onSelectGroup,
   onSelectPageInGroup,
   onBackToSetup,
-  printedPageOffset,
   printedPagesActive,
   onCalibrateFromInput,
   onClearPrintedPageOffset,
@@ -54,7 +50,9 @@ export default function TocBodyResultsPanel({
   formatPageLabel,
 }) {
   const pageLabel = formatPageLabel ?? ((p) => `${p}`);
-  const itemCount = entries.filter((e) => e.kind === 'entry').length;
+  const itemCount = entries.filter(
+    (e) => e.kind === 'entry' && e.group.tocStatus !== 'outline-extra',
+  ).length;
   const totalFindings = countTocBodyTabFindings(entries);
 
   return (
@@ -117,7 +115,6 @@ export default function TocBodyResultsPanel({
               }
               const { group } = entry;
               const first = group.instances[0];
-              const count = group.instances.length;
               const tocStatus = group.tocStatus;
               const hasOnCurrentPage = group.instances.some(
                 (i) => i.pageNum === currentPage,
@@ -175,21 +172,43 @@ export default function TocBodyResultsPanel({
                           <span className="result-visibility-label">표시</span>
                         </label>
                         <span className="result-count result-count--toc">
-                          {tocStatus === 'missing' ? '본문 없음' : `${count}곳`}
+                          {tocStatus === 'missing' ? '본문 없음' : '1곳'}
                         </span>
                       </div>
                     </div>
                     {tocStatus === 'missing' ? (
-                      <p className="toc-result-missing-hint">본문에서 찾지 못했습니다.</p>
+                      <p className="toc-result-missing-hint">
+                        본문에서 찾지 못했습니다.
+                        {group.outlineHint ? (
+                          <>
+                            {' '}
+                            PDF 제목 후보: 「{group.outlineHint.text}」 (
+                            {pageLabel(group.outlineHint.pageNum)}쪽)
+                          </>
+                        ) : null}
+                      </p>
+                    ) : tocStatus === 'outline-extra' ? (
+                      <p className="toc-result-outline-extra-hint">
+                        목차 TXT에는 없고, PDF 큰 글씨 제목으로만 보입니다.
+                      </p>
                     ) : (
-                      <ResultPageSummary
-                        instances={group.instances}
-                        currentPage={currentPage}
-                        formatPageLabel={pageLabel}
-                        onSelectPage={(pageNum) =>
-                          onSelectPageInGroup(pageNum, group.instances)
-                        }
-                      />
+                      <>
+                        {group.tocMismatchReason === 'body-mention-only' ? (
+                          <p className="toc-result-missing-hint">
+                            PDF에 소제목 줄 텍스트가 없거나, 본문·그림 라벨
+                            인용만 잡혔습니다. 빨간 동그라미 소제목이 벡터·
+                            이미지면 검수로는 확인할 수 없습니다.
+                          </p>
+                        ) : null}
+                        <ResultPageSummary
+                          instances={group.instances}
+                          currentPage={currentPage}
+                          formatPageLabel={pageLabel}
+                          onSelectPage={(pageNum) =>
+                            onSelectPageInGroup(pageNum, group.instances)
+                          }
+                        />
+                      </>
                     )}
                   </div>
                 </li>

@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { findActiveGroup, instancesMatch, isResultGroupVisible } from '../../lib/checkResultUtils.js';
+import { instancesMatch, isResultGroupVisible } from '../../lib/checkResultUtils.js';
 import { highlightRangeForInstance } from '../../lib/pdfService.js';
 import { TOC_BODY_RESULT_SOURCE } from './useTocBodyCheck.js';
 
@@ -20,8 +20,6 @@ export function useTocBodyHighlights({
   resultVisibility,
   selectedInstance,
 }) {
-  const activeGroup = findActiveGroup(results, selectedInstance);
-
   const pageHighlights = useMemo(() => {
     if (!currentPageData) return [];
     const onPage = [];
@@ -60,31 +58,5 @@ export function useTocBodyHighlights({
     selectedInstance,
   ]);
 
-  const sortedFindings = useMemo(() => {
-    const all = [];
-    for (const group of results) {
-      if (!isResultGroupVisible(resultVisibility, TOC_BODY_RESULT_SOURCE, group)) {
-        continue;
-      }
-      for (const inst of group.instances) {
-        all.push(inst);
-      }
-    }
-    return all.sort((a, b) => {
-      if (a.pageNum !== b.pageNum) return a.pageNum - b.pageNum;
-      return a.index - b.index;
-    });
-  }, [results, resultVisibility]);
-
-  const currentFindingIndex = useMemo(() => {
-    if (!selectedInstance || !sortedFindings.length) return -1;
-    return sortedFindings.findIndex((i) => instancesMatch(i, selectedInstance));
-  }, [selectedInstance, sortedFindings]);
-
-  return {
-    activeGroup,
-    pageHighlights,
-    sortedFindings,
-    currentFindingIndex,
-  };
+  return { pageHighlights };
 }

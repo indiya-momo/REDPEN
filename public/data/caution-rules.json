@@ -87,7 +87,7 @@
     },
     {
       "id": "noun-noun",
-      "tip": "구별(區別), 둘 이상의 대상을  차이에 따라 가르는 것(=분류), 보통 실존하는 것을 대상으로 한다 예)남녀(男女) 구별/ 구분(區分), 어떤 기준에 따라 전체를 몇 개로 나누는 것, 보통 추상적인 것을 대상으로 한다  예)시대(時代) 구분",
+      "tip": "구별(區別): 실존 대상을  차이에 따라 가르는 것(=분류) 예)남녀(男女) 구별, 구분(區分): 추상적인 것을 기준에 따라 몇 개로 나누는 것 예)시대(時代) 구분",
       "items": [
         {
           "id": "noun-noun-gubun",
@@ -105,12 +105,24 @@
     },
     {
       "id": "eogan-eomi",
-      "tip": "'아니요'는 네/예의 반대말로 질문에 답할 때 쓴다. '아니오'는 아니다'의 어간 뒤에 하오체 어미 '-오'가 붙은 종결형이다",
+      "tip": "'못하다''어떤 일을 일정한 수준에 못 미치게 하거나, 그 일을 할 능력이 없다(능력). \"못 하다\" (부정 부사 + 동사)상황이나 여건이 되지 않아 행동 자체를 하지 못할 때(상황)",
       "items": [
+        {
+          "id": "eogan-eomi-bara",
+          "label": "바라, 바래",
+          "enabled": true,
+          "matchMode": "any-before",
+          "inventoryOnly": false,
+          "stems": [
+            "바라",
+            "바래"
+          ],
+          "displayLabel": "바라다, 바래다(자주 틀리는 경우)"
+        },
         {
           "id": "eogan-eomi-doei",
           "label": "되, 돼",
-          "enabled": true,
+          "enabled": false,
           "matchMode": "any-before",
           "inventoryOnly": false,
           "stems": [
@@ -125,23 +137,17 @@
         {
           "id": "eogan-eomi-aniyo",
           "label": "아니오, 아니요",
-          "enabled": false,
-          "matchMode": "spaced-before",
+          "enabled": true,
+          "matchMode": "any-before",
           "inventoryOnly": false,
           "stems": [
             "아니오",
             "아니요"
           ],
           "displayLabel": "아니오, 아니요(자주 틀리는 경우)"
-        }
-      ]
-    },
-    {
-      "id": "word-busa",
-      "tip": "'못하다''어떤 일을 일정한 수준에 못 미치게 하거나, 그 일을 할 능력이 없다(능력). \"못 하다\" (부정 부사 + 동사)상황이나 여건이 되지 않아 행동 자체를 하지 못할 때(상황)",
-      "items": [
+        },
         {
-          "id": "word-busa-mot",
+          "id": "eogan-eomi-mot",
           "label": "못하다, 못 하다",
           "enabled": true,
           "matchMode": "spaced-before",

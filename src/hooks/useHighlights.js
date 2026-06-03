@@ -3,7 +3,6 @@ import { getBuiltInTip } from '../lib/builtInRules.js';
 import { getConsistencyHighlightTip } from '../lib/consistencyHighlightTip.js';
 import { findActiveGroup, instancesMatch, isResultGroupVisible } from '../lib/checkResultUtils.js';
 import { highlightRangeForInstance } from '../lib/pdfService.js';
-
 /**
  * 맞춤법·표기 일관성 PDF 하이라이트 (목차는 useTocBodyHighlights)
  * @param {{
