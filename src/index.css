@@ -3832,7 +3832,7 @@ details[open] > summary .details-chevron {
   min-width: 0;
   align-self: start;
   overflow: hidden;
-  border: 1px solid var(--momo-room-border);
+  border: none;
   border-radius: var(--radius-ui);
   aspect-ratio: var(--momo-room-canvas-w) / var(--momo-room-canvas-h);
   width: 100%;
@@ -4029,9 +4029,9 @@ details[open] > summary .details-chevron {
   padding: 0.5rem 0.75rem;
   font-family: var(--font-family-body-brand);
   font-size: 0.82rem;
-  color: var(--momo-room-muted);
+  color: var(--momo-room-accent);
   background: var(--momo-room-surface);
-  border: 1px solid var(--momo-room-border);
+  border: 1px solid var(--momo-room-accent);
   border-radius: var(--radius-ui);
   cursor: pointer;
   transition:
@@ -4040,8 +4040,8 @@ details[open] > summary .details-chevron {
 }
 
 .momo-room__book-fallback:hover {
-  color: var(--momo-room-text);
-  border-color: var(--momo-room-accent);
+  color: #ddc690;
+  border-color: #ddc690;
 }
 
 .momo-room__book-overlay {
