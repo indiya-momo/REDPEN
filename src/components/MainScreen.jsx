@@ -23,6 +23,7 @@ import TocBodyResultsPanel from '../toc-body/components/TocBodyResultsPanel.jsx'
 import { useTocBodyCheck } from '../toc-body/hooks/useTocBodyCheck.js';
 import { useTocBodyHighlights } from '../toc-body/hooks/useTocBodyHighlights.js';
 import { buildTocBodyTabEntries } from '../toc-body/utils/toc-body-result-entries.js';
+import { isTocBodyCheckEnabled } from '../lib/featureFlags.js';
 import { usePdfDocument } from '../hooks/usePdfDocument.js';
 import { usePdfZoom } from '../hooks/usePdfZoom.js';
 import { useRuleCheck } from '../hooks/useRuleCheck.js';
@@ -245,6 +246,15 @@ export default function MainScreen({
     },
     [pageDisplay.active, pageDisplay.toSystemPage],
   );
+  const mapTocSystemPageToPrint = useCallback(
+    (systemPage) => {
+      if (pageDisplay.active) {
+        return pageDisplay.formatPage(systemPage);
+      }
+      return systemPage;
+    },
+    [pageDisplay.active, pageDisplay.formatPage],
+  );
   const ruleCheck = useRuleCheck({
     builtInEnabled,
     cautionEnabled,
@@ -257,11 +267,13 @@ export default function MainScreen({
     setProgress: pdf.setProgress,
     afterCheckRef,
   });
+  const tocBodyCheckEnabled = isTocBodyCheckEnabled();
   const tocCheck = useTocBodyCheck({
     tocBodyText,
     tocBodyStartPage,
     tocBodyExcludePages,
     mapPrintPageToSystem: mapTocPrintPageToSystem,
+    mapSystemPageToPrint: mapTocSystemPageToPrint,
     printedPagesActive: pageDisplay.active,
     pageTexts: pdf.pageTexts,
     currentPage: pdf.currentPage,
@@ -304,6 +316,7 @@ export default function MainScreen({
   });
 
   const highlights =
+    tocBodyCheckEnabled &&
     workTab === 'consistency' &&
     consistencyFocus === 'toc' &&
     tocCheck.checkDone
@@ -350,9 +363,11 @@ export default function MainScreen({
   );
 
   const consistencyWorkDone =
-    tocCheck.checkDone || ruleCheck.consistencyCheckDone;
+    (tocBodyCheckEnabled && tocCheck.checkDone) ||
+    ruleCheck.consistencyCheckDone;
 
   const showTocResultsPanel =
+    tocBodyCheckEnabled &&
     tocCheck.checkDone &&
     (!ruleCheck.consistencyCheckDone || consistencyFocus === 'toc');
 
@@ -362,6 +377,7 @@ export default function MainScreen({
       (tocCheck.checkDone && consistencyFocus === 'rules'));
 
   const visibleOnCurrentPage =
+    tocBodyCheckEnabled &&
     workTab === 'consistency' &&
     consistencyFocus === 'toc' &&
     tocCheck.checkDone
@@ -410,6 +426,7 @@ export default function MainScreen({
     if (!pdf.pdf) return;
     const page = clampPageNumber(pageNum, pdf.pdf.numPages);
     if (
+      tocBodyCheckEnabled &&
       workTab === 'consistency' &&
       consistencyFocus === 'toc' &&
       tocCheck.checkDone
@@ -684,7 +701,9 @@ export default function MainScreen({
 
         {workTab === 'consistency' && (
           <div className="panel-left-work-scroll custom-scrollbar">
-            {tocCheck.checkDone && ruleCheck.consistencyCheckDone ? (
+            {tocBodyCheckEnabled &&
+            tocCheck.checkDone &&
+            ruleCheck.consistencyCheckDone ? (
               <nav
                 className="consistency-results-switch"
                 aria-label="검사 결과 종류"
@@ -794,13 +813,17 @@ export default function MainScreen({
                   onFirstPageSingleChange={pageDisplay.setFirstPageSingle}
                   onCalibrateFromInput={pageDisplay.calibrateFromInput}
                   onClearPrintedPageOffset={pageDisplay.clearCalibration}
-                  onRunTocCheck={async () => {
-                    ruleCheck.clearConsistencyCheckState();
-                    tocCheck.clearTocCheckState();
-                    setConsistencyFocus('toc');
-                    setLastConsistencyPane('toc');
-                    await tocCheck.runCheck();
-                  }}
+                  onRunTocCheck={
+                    tocBodyCheckEnabled
+                      ? async () => {
+                          ruleCheck.clearConsistencyCheckState();
+                          tocCheck.clearTocCheckState();
+                          setConsistencyFocus('toc');
+                          setLastConsistencyPane('toc');
+                          await tocCheck.runCheck();
+                        }
+                      : undefined
+                  }
                   onRunRulesCheck={async () => {
                     setConsistencyFocus('rules');
                     setLastConsistencyPane('rules');
