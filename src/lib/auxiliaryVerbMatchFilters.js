@@ -18,9 +18,6 @@ export const AUX_FALSE_HAE_HEAD_CAPTURES = new Set([
   '상해',
 ]);
 
-/** @deprecated {@link AUX_FALSE_HAE_HEAD_CAPTURES} */
-export const AUX_STEM_HAE_HEAD_BLOCKLIST = AUX_FALSE_HAE_HEAD_CAPTURES;
-
 /** stem `해 X` — 캡처가 2음절이고 `해`로 끝나면 관형어(통해·대해 등) */
 export function isLexicalHaeCompoundHead(headCapture) {
   const c = headCapture.trim();

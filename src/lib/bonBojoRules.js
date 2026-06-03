@@ -87,9 +87,6 @@ export function getBonBojoGroups() {
   return runtime.groups;
 }
 
-/** @deprecated {@link getBonBojoGroups} — dev 반영 전 초기 스냅샷 */
-export const BON_BOJO_GROUPS = runtime.groups;
-
 /**
  * sync 후 dev에서 반영 시 호출
  * @param {typeof bonBojoJson} data
@@ -145,19 +142,6 @@ export function auxiliarySearchTailsFromBonBojoItem(item) {
   return label ? [label] : [];
 }
 
-/** @returns {Set<string>} */
-export function allBonBojoSearchStems() {
-  const s = new Set();
-  for (const group of runtime.groups) {
-    for (const item of group.items) {
-      for (const tail of auxiliarySearchTailsFromBonBojoItem(item)) {
-        s.add(tail);
-      }
-    }
-  }
-  return s;
-}
-
 /** @param {string} tailWord */
 export function bonBojoItemIdForSearchTail(tailWord) {
   const t = tailWord.trim();
@@ -170,14 +154,6 @@ export function bonBojoItemIdForSearchTail(tailWord) {
   }
   return undefined;
 }
-
-/** @returns {BonBojoListItem[]} */
-export function getBonBojoListItems() {
-  return runtime.listItems;
-}
-
-/** @deprecated {@link getBonBojoListItems} */
-export const BON_BOJO_LIST_ITEMS = runtime.listItems;
 
 /** 시트·UI에서 기본 체크·「필수」 표시 대상 */
 export const BON_BOJO_REQUIRED_ITEM_IDS_LIST = ['verb-hada', 'verb-jida'];
@@ -223,19 +199,3 @@ export function bonBojoDisplayLabelForItem(itemId) {
   return bonBojoListItem(itemId)?.displayLabel;
 }
 
-/** @returns {Set<string>} */
-export function allBonBojoTailWords() {
-  const s = new Set();
-  for (const item of runtime.listItems) {
-    s.add(item.primaryTail);
-    for (const v of item.variantTails) s.add(v);
-  }
-  return s;
-}
-
-/** @param {string} tailWord */
-export function bonBojoDisplayLabelForTail(tailWord) {
-  const itemId = bonBojoItemIdForTail(tailWord);
-  if (itemId) return bonBojoDisplayLabelForItem(itemId);
-  return undefined;
-}
