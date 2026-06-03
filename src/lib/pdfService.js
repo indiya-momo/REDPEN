@@ -47,9 +47,11 @@ export function buildPdfDocumentInit(buffer) {
 /**
  * @typedef {Object} PageData
  * @property {number} pageNum
- * @property {string} text
+ * @property {string} text — 음절 경계 공백 포함(맞춤법·일관성 찾기·하이라이트)
+ * @property {string} [textLayout] — PDF 실제 띄움만(본용언+보조용언 검사)
  * @property {import('pdfjs-dist').TextItem[]} items
  * @property {TextItemRef[]} itemRefs
+ * @property {TextItemRef[]} [itemRefsLayout]
  */
 
 /**
@@ -74,12 +76,15 @@ export async function extractAllPagesText(pdf, onProgress) {
     const content = await page.getTextContent({
       disableCombineTextItems: true,
     });
-    const { text, itemRefs } = buildPageText(content.items);
+    const { text, itemRefs, textLayout, itemRefsLayout } =
+      buildPageText(content.items);
     pages.push({
       pageNum: i,
       text,
+      textLayout,
       items: content.items.filter((it) => 'str' in it),
       itemRefs,
+      itemRefsLayout,
     });
     onProgress?.(i, total);
   }
@@ -103,17 +108,26 @@ function startsWithHangulSyllable(s) {
   return ch >= '\uAC00' && ch <= '\uD7A3';
 }
 
+/** 조판 자간 수준 gap — 이보다 좁으면 같은 어절로 보고 공백을 넣지 않음 */
+const SYLLABLE_BOUNDARY_MIN_GAP_RATIO = 0.1;
+
 /**
- * PDF 항목 사이 공백 삽입 — 넓은 gap 또는 한글 음절 경계(좁은 gap·띄어 보이는 조판)
+ * PDF 항목 사이 공백 삽입 — 넓은 gap 또는 한글 음절 경계(의미 있는 좁은 gap만)
  * @param {number} gap
  * @param {number} lineH
  * @param {string} leftStr
  * @param {string} rightStr
  */
+/** 본용언+보조용언 — 넓은 gap(어절·칸)만 공백, 음절 자간 삽입 없음 */
+export function shouldInsertLayoutSpaceBetweenPdfItems(gap, lineH) {
+  return gap > lineH;
+}
+
 export function shouldInsertSpaceBetweenPdfItems(gap, lineH, leftStr, rightStr) {
-  if (gap > lineH) return true;
+  if (shouldInsertLayoutSpaceBetweenPdfItems(gap, lineH)) return true;
+  const minGap = lineH * SYLLABLE_BOUNDARY_MIN_GAP_RATIO;
   return (
-    gap > 0 &&
+    gap >= minGap &&
     endsWithHangulSyllable(leftStr) &&
     startsWithHangulSyllable(rightStr)
   );
@@ -172,8 +186,9 @@ function shouldStartNewTextLine(prev, item) {
  * @param {{ item: import('pdfjs-dist').TextItem, itemIndex: number }[]} entries
  * @param {string} text
  * @param {TextItemRef[]} itemRefs
+ * @param {(gap: number, lineH: number, left: string, right: string) => boolean} shouldGapSpace
  */
-function appendBuiltLine(entries, text, itemRefs) {
+function appendBuiltLine(entries, text, itemRefs, shouldGapSpace) {
   if (!entries.length) return text;
 
   entries.sort(
@@ -195,7 +210,7 @@ function appendBuiltLine(entries, text, itemRefs) {
           8,
         ) * 0.35;
       const nextStr = entries[i + 1].item.str ?? '';
-      if (shouldInsertSpaceBetweenPdfItems(gap, lineH, item.str, nextStr)) {
+      if (shouldGapSpace(gap, lineH, item.str, nextStr)) {
         text += ' ';
       }
     }
@@ -236,13 +251,27 @@ export function buildPageText(items) {
   builtLines.sort((a, b) => b.y - a.y);
 
   let text = '';
+  let textLayout = '';
   /** @type {TextItemRef[]} */
   const itemRefs = [];
+  /** @type {TextItemRef[]} */
+  const itemRefsLayout = [];
   for (const line of builtLines) {
-    text = appendBuiltLine(line.entries, text, itemRefs);
+    text = appendBuiltLine(
+      line.entries,
+      text,
+      itemRefs,
+      shouldInsertSpaceBetweenPdfItems,
+    );
+    textLayout = appendBuiltLine(
+      line.entries,
+      textLayout,
+      itemRefsLayout,
+      (gap, lineH) => shouldInsertLayoutSpaceBetweenPdfItems(gap, lineH),
+    );
   }
 
-  return { text, itemRefs };
+  return { text, itemRefs, textLayout, itemRefsLayout };
 }
 
 /**

@@ -15,12 +15,16 @@ export function parseCommaList(input) {
     .filter(Boolean);
 }
 
+import { shouldSkipAuxiliaryVerbMatch } from './auxiliaryVerbMatchFilters.js';
+
 /**
  * 일관성(붙임·띄움) 등 제외 조건
  * @param {import('./ruleTypes.js').Rule} rule
  * @param {RegExpExecArray} match
  */
 export function shouldSkipMatch(rule, match) {
+  if (shouldSkipAuxiliaryVerbMatch(rule, match)) return true;
+
   const prefix = match[1] ?? '';
   const matched = normalizeSpaces(match[0]);
 

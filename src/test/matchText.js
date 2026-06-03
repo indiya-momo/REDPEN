@@ -1,4 +1,5 @@
 import { compileRuleRegex } from '../lib/regexFromFind.js';
+import { shouldSkipMatch } from '../lib/matchFilters.js';
 
 /**
  * @param {import('../lib/ruleTypes.js').Rule} rule
@@ -17,7 +18,7 @@ export function matchAll(rule, text) {
       m = re.exec(text);
       continue;
     }
-    hits.push(m[0]);
+    if (!shouldSkipMatch(rule, m)) hits.push(m[0]);
     m = re.exec(text);
   }
   return hits;

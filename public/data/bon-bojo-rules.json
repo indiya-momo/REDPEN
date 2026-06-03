@@ -16,8 +16,7 @@
             "져 간",
             "져 가",
             "러 간",
-            "어 간",
-            "어"
+            "어 간"
           ],
           "displayLabel": "(아/어) + 가다"
         },
@@ -148,21 +147,10 @@
           "enabled": true,
           "stems": [
             "겨 있",
-            "고 있",
             "어 있",
             "아 있"
           ],
           "displayLabel": "(아/어) + 있다"
-        },
-        {
-          "id": "verb-eobta",
-          "label": "없",
-          "enabled": true,
-          "stems": [
-            "고 없",
-            "수 없"
-          ],
-          "displayLabel": "(아/어) + 없다"
         }
       ]
     }

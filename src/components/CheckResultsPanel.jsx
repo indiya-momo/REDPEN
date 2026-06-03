@@ -217,14 +217,20 @@ export default function CheckResultsPanel({
                     : '');
               const selected = isSameGroupAsSelected(group, source);
               const auxParts =
-                isConsistency &&
-                group.patternKind === 'auxiliary-verb' &&
-                group.tailWord
-                  ? auxiliaryVerbResultParts(
-                      group.tailWord,
-                      group.groupDisplayLabel,
-                      group.label,
-                    )
+                isConsistency && group.patternKind === 'auxiliary-verb'
+                  ? group.tailWord
+                    ? auxiliaryVerbResultParts(
+                        group.tailWord,
+                        group.groupDisplayLabel,
+                        group.label,
+                      )
+                    : {
+                        stem: '',
+                        groupTag:
+                          group.groupDisplayLabel?.trim() ||
+                          group.label?.trim() ||
+                          null,
+                      }
                   : null;
 
               return (
@@ -257,9 +263,11 @@ export default function CheckResultsPanel({
                           {isConsistency ? (
                             auxParts ? (
                               <span className="result-aux-title">
-                                <span className="result-aux-stem">
-                                  {auxParts.stem}
-                                </span>
+                                {auxParts.stem ? (
+                                  <span className="result-aux-stem">
+                                    {auxParts.stem}
+                                  </span>
+                                ) : null}
                                 {auxParts.groupTag ? (
                                   <span className="result-aux-group-tag">
                                     {auxParts.groupTag}

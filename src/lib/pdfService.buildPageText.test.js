@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { buildCompoundFindRules } from './compoundFindPattern.js';
-import { buildPageText, shouldInsertSpaceBetweenPdfItems } from './pdfService.js';
+import {
+  buildPageText,
+  shouldInsertLayoutSpaceBetweenPdfItems,
+  shouldInsertSpaceBetweenPdfItems,
+} from './pdfService.js';
+import { buildAuxiliaryVerbFindRules } from './auxiliaryVerbPattern.js';
 import { runRuleCheck } from './ruleEngine.js';
 
 describe('shouldInsertSpaceBetweenPdfItems', () => {
@@ -10,9 +15,14 @@ describe('shouldInsertSpaceBetweenPdfItems', () => {
     expect(shouldInsertSpaceBetweenPdfItems(5, lineH, '보여', '준다')).toBe(true);
   });
 
-  it('좁은 gap이라도 한글 음절 경계면 공백 (보여 준다)', () => {
+  it('의미 있는 좁은 gap이면 한글 음절 경계에 공백 (보여 준다)', () => {
     expect(shouldInsertSpaceBetweenPdfItems(1, lineH, '보여', '준다.')).toBe(true);
     expect(shouldInsertSpaceBetweenPdfItems(0.5, lineH, '상상해', '왔다')).toBe(true);
+  });
+
+  it('같은 어절 내 자간 수준 gap은 공백을 넣지 않음', () => {
+    expect(shouldInsertSpaceBetweenPdfItems(0.05, lineH, '보', '여')).toBe(false);
+    expect(shouldInsertSpaceBetweenPdfItems(0.08, lineH, '먹', '어')).toBe(false);
   });
 
   it('gap 0이면 삽입 안 함', () => {
@@ -20,7 +30,36 @@ describe('shouldInsertSpaceBetweenPdfItems', () => {
   });
 });
 
+describe('shouldInsertLayoutSpaceBetweenPdfItems', () => {
+  const lineH = 12 * 0.35;
+
+  it('넓은 gap만 layout 공백', () => {
+    expect(shouldInsertLayoutSpaceBetweenPdfItems(5, lineH)).toBe(true);
+    expect(shouldInsertLayoutSpaceBetweenPdfItems(1, lineH)).toBe(false);
+    expect(shouldInsertLayoutSpaceBetweenPdfItems(0.5, lineH)).toBe(false);
+  });
+});
+
 describe('buildPageText', () => {
+  it('textLayout — 음절 자간 공백만 text에 있고 layout에는 없음', () => {
+    const items = [
+      { str: '통해', transform: [10, 0, 0, 10, 0, 100], width: 22 },
+      { str: '보장', transform: [10, 0, 0, 10, 22.6, 100], width: 22 },
+    ];
+    const { text, textLayout } = buildPageText(items);
+    expect(text).toMatch(/통해\s+보장/);
+    expect(textLayout).toBe('통해보장\n');
+  });
+
+  it('textLayout — 실제 어절 gap은 text·layout 둘 다 공백', () => {
+    const items = [
+      { str: '상상해', transform: [10, 0, 0, 10, 0, 100], width: 40 },
+      { str: '보자', transform: [10, 0, 0, 10, 48, 100], width: 20 },
+    ];
+    const { text, textLayout } = buildPageText(items);
+    expect(text).toMatch(/상상해\s+보자/);
+    expect(textLayout).toMatch(/상상해\s+보자/);
+  });
   it('포인트가 다른 소제목은 본문 끝과 한 줄로 묶지 않는다', () => {
     const items = [
       { str: '경제', transform: [10, 0, 0, 10, 48, 270] },

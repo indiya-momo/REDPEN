@@ -17,6 +17,7 @@ describe('bonBojoRules', () => {
     expect(isBonBojoRequiredItem('verb-jida')).toBe(true);
     expect(isBonBojoRequiredItem('verb-boda1')).toBe(false);
   });
+
 });
 
 describe('ensureDefaultAuxiliaryVerbs', () => {
@@ -39,15 +40,14 @@ describe('ensureDefaultAuxiliaryVerbs', () => {
 
     );
 
-    expect(list.length).toBe(11);
+    expect(list.length).toBe(10);
 
     expect(labels).toContain('(아/어) + 하다');
+    expect(labels).not.toContain('아는체하다');
 
     expect(labels).toContain('(아/어) + 지다');
 
     expect(labels).toContain('(아/어) + 있다');
-
-    expect(labels).toContain('(아/어) + 없다');
 
     const withBon = rules.filter((r) => r.bonBojoItemId === 'verb-boda1');
 
@@ -193,6 +193,13 @@ describe('ensureDefaultAuxiliaryVerbs', () => {
 
 
 
+  it('verb-gada — 연결 어미 「어」 단독 stem 규칙을 만들지 않는다', () => {
+    const rules = ensureDefaultAuxiliaryVerbs([]);
+    const gada = rules.filter((r) => r.bonBojoItemId === 'verb-gada');
+    expect(gada.some((r) => r.tailWord === '어')).toBe(false);
+    expect(gada.some((r) => r.tailWord === '어 간')).toBe(true);
+  });
+
   it('orphan 단독 음절 러 보조용언 규칙은 제거한다', () => {
     const stale = [
       {
@@ -208,7 +215,40 @@ describe('ensureDefaultAuxiliaryVerbs', () => {
     expect(list.some((e) => (e.displayLabel || e.tailWord) === '러')).toBe(
       false,
     );
-    expect(list.length).toBe(11);
+    expect(list.length).toBe(10);
+  });
+
+  it('bon-bojo 본조 — stems마다 띄움 regex 1개(붙임 없음)', () => {
+    const rules = ensureDefaultAuxiliaryVerbs([]);
+    const aux = rules.filter((r) => r.patternKind === 'auxiliary-verb' && r.bonBojoItemId);
+    const byTail = new Map();
+    for (const r of aux) {
+      const key = `${r.bonBojoItemId}\0${r.tailWord}`;
+      byTail.set(key, (byTail.get(key) ?? 0) + 1);
+    }
+    expect([...byTail.values()].every((n) => n === 1)).toBe(true);
+    const arHaess = aux.find(
+      (r) => r.bonBojoItemId === 'verb-hada' && r.tailWord === '아 했',
+    );
+    expect(matches(arHaess, '좋아 했지만')).toBe(true);
+    expect(matches(arHaess, '좋아했지만')).toBe(false);
+    const kyeoBon = aux.find(
+      (r) => r.bonBojoItemId === 'verb-boda1' && r.tailWord === '켜 본',
+    );
+    expect(matches(kyeoBon, '지켜본')).toBe(false);
+  });
+
+  it('adj-che-hada — UI 제외, 아는체하다 붙임만 항상 검사', () => {
+    const rules = ensureDefaultAuxiliaryVerbs([]);
+    const list = listAuxiliaryVerbEntries(rules);
+    expect(list.some((e) => e.bonBojoItemId === 'adj-che-hada')).toBe(false);
+    const che = rules.filter((r) => r.bonBojoItemId === 'adj-che-hada');
+    expect(che.length).toBe(1);
+    expect(che[0].tailWord).toBe('체하');
+    expect(che[0].label).toBe('아는체하다');
+    expect(che.every((r) => r.enabled)).toBe(true);
+    expect(matches(che[0], '아는체하다')).toBe(true);
+    expect(matches(che[0], '아는 체 하다')).toBe(false);
   });
 
   it('이미 등록된 tailWord는 중복 추가하지 않는다', () => {

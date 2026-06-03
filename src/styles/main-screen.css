@@ -1155,6 +1155,14 @@
   margin: 0;
 }
 
+.consistency-section-box .auxiliary-checklist-intro {
+  margin: 4px 0 8px;
+  padding: 0 10px;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+}
+
 .consistency-section-box .consistency-auxiliary-details[open] .auxiliary-checklist {
   margin-top: 8px;
   padding-top: 4px;

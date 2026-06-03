@@ -52,7 +52,12 @@ export function rebuildCompoundRules(customRules) {
     return customRules ?? [];
   }
 
-  const others = customRules.filter(
+  /** 본용언+보조용언은 ensureDefaultAuxiliaryVerbs가 시트 stems만 시드 */
+  const withoutAuxiliary = customRules.filter(
+    (r) => r.patternKind !== 'auxiliary-verb',
+  );
+
+  const others = withoutAuxiliary.filter(
     (r) => !COMPOUND_KINDS.has(r.patternKind ?? ''),
   );
 
@@ -61,7 +66,7 @@ export function rebuildCompoundRules(customRules) {
   /** @type {Map<string, { enabled: boolean, excludePrefixes: string[] }>} */
   const meta = new Map();
 
-  for (const r of customRules) {
+  for (const r of withoutAuxiliary) {
     const raw = r.tailWord?.trim();
     if (!raw || isBadTail(raw) || !COMPOUND_KINDS.has(r.patternKind ?? '')) {
       continue;

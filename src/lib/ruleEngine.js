@@ -97,6 +97,9 @@ function pushCompoundFindInstance(rule, page, byKey, globalIndex, matchedText) {
       ...(tip ? { tip } : {}),
       patternKind: rule.patternKind,
       ...(rule.tailWord ? { tailWord: rule.tailWord } : {}),
+      ...(rule.patternKind === 'auxiliary-verb' && rule.label?.trim()
+        ? { groupDisplayLabel: rule.label.trim() }
+        : {}),
       instances: [],
     });
   }
@@ -117,19 +120,40 @@ function hasNearbyInstance(instances, pageNum, index) {
   );
 }
 
+/**
+ * @param {import('./pdfService.js').PageData} page
+ */
+function pageViewForCompoundFind(rule, page) {
+  if (rule.patternKind === 'auxiliary-verb' && page.textLayout != null) {
+    return {
+      text: page.textLayout,
+      itemRefs: page.itemRefsLayout ?? page.itemRefs,
+    };
+  }
+  return { text: page.text, itemRefs: page.itemRefs };
+}
+
 function applyCompoundFindByLines(rule, page, byKey, globalExcludePhrases) {
   const tail = String(rule.tailWord ?? '').trim();
+  // 본용언+보조용언은 rule.find(공백 1칸 이상)만 — loose는 붙임(만들어내)까지 허용해 오탐
   const loose =
-    /\s/.test(tail) && tailRegexFragmentForFind(tail);
+    rule.patternKind !== 'auxiliary-verb' &&
+    /\s/.test(tail) &&
+    tailRegexFragmentForFind(tail);
   const regex = loose
     ? new RegExp(loose, 'gu')
     : compileRuleRegex(rule);
   if (!regex) return;
 
-  const key = `${rule.find}\0${rule.replace}\0${rule.pattern ?? 'literal'}`;
+  const { text: searchText, itemRefs: searchRefs } = pageViewForCompoundFind(
+    rule,
+    page,
+  );
+  /** @type {import('./pdfService.js').PageData} */
+  const searchPage = { ...page, text: searchText, itemRefs: searchRefs };
 
   let offset = 0;
-  for (const line of page.text.split('\n')) {
+  for (const line of searchText.split('\n')) {
     const lineStart = offset;
     offset += line.length + 1;
     if (!line) continue;
@@ -150,8 +174,8 @@ function applyCompoundFindByLines(rule, page, byKey, globalExcludePhrases) {
       const globalIndex = lineStart + match.index;
       if (rule.requireLeadingBoundary && match.index > 0) {
         let atLineStart = false;
-        if (page.itemRefs?.length) {
-          const ctx = getLineContextAtTextIndex(page, globalIndex);
+        if (searchRefs?.length) {
+          const ctx = getLineContextAtTextIndex(searchPage, globalIndex);
           if (ctx && globalIndex <= ctx.lineStart + 2) {
             atLineStart = true;
           }
@@ -174,7 +198,10 @@ function applyRuleToPages(rule, pages, byKey, globalExcludePhrases, errors) {
     return;
   }
 
-  if (rule.patternKind === 'compound-find') {
+  if (
+    rule.patternKind === 'compound-find' ||
+    rule.patternKind === 'auxiliary-verb'
+  ) {
     for (const page of pages) {
       applyCompoundFindByLines(rule, page, byKey, globalExcludePhrases);
     }
