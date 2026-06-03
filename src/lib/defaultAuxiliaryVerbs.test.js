@@ -193,6 +193,24 @@ describe('ensureDefaultAuxiliaryVerbs', () => {
 
 
 
+  it('orphan 단독 음절 러 보조용언 규칙은 제거한다', () => {
+    const stale = [
+      {
+        find: 'x',
+        replace: '$0',
+        enabled: true,
+        patternKind: 'auxiliary-verb',
+        tailWord: '러',
+      },
+    ];
+    const rules = ensureDefaultAuxiliaryVerbs(stale);
+    const list = listAuxiliaryVerbEntries(rules);
+    expect(list.some((e) => (e.displayLabel || e.tailWord) === '러')).toBe(
+      false,
+    );
+    expect(list.length).toBe(11);
+  });
+
   it('이미 등록된 tailWord는 중복 추가하지 않는다', () => {
 
     const once = ensureDefaultAuxiliaryVerbs([]);
