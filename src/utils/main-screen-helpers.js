@@ -65,13 +65,12 @@ export function getSpellingTabLayoutClassName(tabCheckDone) {
 }
 
 /**
- * PDF 뷰어 영역 표시 여부.
+ * PDF 뷰어 영역 표시 여부 (맞춤법·일관성 탭 공통 — 업로드만 되면 펼침).
  * @param {boolean} hasPdf
- * @param {boolean} tabCheckDone
  * @returns {boolean}
  */
-export function shouldShowPdfViewer(hasPdf, tabCheckDone) {
-  return Boolean(hasPdf) && tabCheckDone;
+export function shouldShowPdfViewer(hasPdf) {
+  return Boolean(hasPdf);
 }
 
 /**

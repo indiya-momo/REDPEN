@@ -3,6 +3,7 @@ import PrintedPageSetup from './PrintedPageSetup.jsx';
 import { getBuiltInTip } from '../lib/builtInRules.js';
 import { formatSystemPageLabel } from '../lib/printedPageDisplay.js';
 import { cautionResultChipLabel } from '../lib/cautionRules.js';
+import { getConsistencyHighlightTip } from '../lib/consistencyHighlightTip.js';
 import { auxiliaryVerbResultParts } from '../lib/patternDisplayLabels.js';
 
 /**
@@ -69,7 +70,7 @@ function ResultHeaderSummary({
           </span>{' '}
           ·{' '}
           <span className="results-category-summary__caution">
-            검토 필요 기준 <span>{spacingFindings}</span>
+            검토필요 기준 <span>{spacingFindings}</span>
           </span>
         </span>
       ) : null}
@@ -156,7 +157,7 @@ export default function CheckResultsPanel({
     <section
       className={`results-panel results-panel--combined results-panel--${viewSource} results-panel--tone-${spellingTone}`}
     >
-      {pdf && onCalibrateFromInput && (
+      {pdf && onCalibrateFromInput && viewSource !== 'spelling' && (
         <PrintedPageSetup
           currentSystemPage={currentPage}
           active={printedPagesActive}
@@ -211,7 +212,9 @@ export default function CheckResultsPanel({
                 (group.tip || '').trim() ||
                 (source === 'spelling' && !isCaution
                   ? getBuiltInTip(group.find, group.replace)
-                  : '');
+                  : isConsistency
+                    ? getConsistencyHighlightTip(group)
+                    : '');
               const selected = isSameGroupAsSelected(group, source);
               const auxParts =
                 isConsistency &&

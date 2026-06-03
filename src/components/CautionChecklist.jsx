@@ -70,11 +70,11 @@ export default function CautionChecklist({
             type="checkbox"
             checked={allChecked}
             onChange={() => onCautionSetAll(!allChecked)}
-            aria-label="편집자 검토 필요 규칙 전체 선택"
+            aria-label="검토필요 기준 전체 선택"
           />
         </label>
         <span className="caution-checklist-summary-title">
-          검토 필요 기준 (선택 {activeCount}/{total})
+          검토필요 기준 (선택 {activeCount}/{total})
         </span>
       </summary>
       <ul className="caution-checklist">

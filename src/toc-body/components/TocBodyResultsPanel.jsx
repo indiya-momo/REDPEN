@@ -59,16 +59,17 @@ export default function TocBodyResultsPanel({
 
   return (
     <section className="results-panel results-panel--toc-body" aria-label="목차 · 본문 일치 확인 결과">
-      {pdf && printedPagesActive && onCalibrateFromInput ? (
+      {pdf && onCalibrateFromInput ? (
         <PrintedPageSetup
-          printedPageOffset={printedPageOffset ?? null}
+          currentSystemPage={currentPage}
+          active={Boolean(printedPagesActive)}
           currentPrintedLabel={currentPrintedLabel ?? ''}
           previewPrintedLabel={previewPrintedLabel ?? ''}
           spreadInput={spreadInput ?? false}
           onSpreadInputChange={onSpreadInputChange ?? (() => {})}
           firstPageSingle={firstPageSingle ?? false}
           onFirstPageSingleChange={onFirstPageSingleChange ?? (() => {})}
-          onCalibrate={onCalibrateFromInput}
+          onCalibrateFromInput={onCalibrateFromInput}
           onClear={onClearPrintedPageOffset ?? (() => {})}
         />
       ) : null}

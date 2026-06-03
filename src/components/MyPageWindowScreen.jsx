@@ -16,6 +16,45 @@ const SIDEBAR_NAV = [
   { id: 'inquiry', label: '문의 내역' },
 ];
 
+const FAQ_ITEMS = [
+  {
+    id: 'what',
+    question: '인디야는 어떤 서비스인가요?',
+    answer:
+      '인디자인 등에서 만든 조판 PDF에서 맞춤법·표기 일관성을 규칙으로 찾아 PDF 위에 표시하는 브라우저 도구입니다. AI가 문장을 고쳐 주지 않으며, 자동 탐지와 하이라이트만 제공합니다.',
+  },
+  {
+    id: 'privacy',
+    question: 'PDF가 서버로 올라가나요?',
+    answer:
+      '검수에 쓰는 PDF 본문은 브라우저 안에서만 처리됩니다. 원고를 서버에 업로드해 AI 교정을 받는 방식이 아닙니다.',
+  },
+  {
+    id: 'pdf-type',
+    question: '어떤 PDF를 지원하나요?',
+    answer:
+      '텍스트가 선택·추출되는 PDF를 권장합니다. 스캔(이미지) PDF는 지원하지 않으며, 50MB를 넘으면 검수를 실행할 수 없습니다.',
+  },
+  {
+    id: 'tabs',
+    question: '맞춤법과 일관성 검수는 무엇이 다른가요?',
+    answer:
+      '맞춤법 탭은 내장·주의 규칙으로 오탈자·띄어쓰기 후보를 찾습니다. 일관성 탭은 표기 통일 규칙·본보조·목차·본문 일치 등을 검수합니다.',
+  },
+  {
+    id: 'beta',
+    question: '오픈베타 기간 이용료가 있나요?',
+    answer:
+      '현재 오픈베타 기간에는 이용료 없이 제공됩니다. 베타 종료 후 요금·한도는 별도 안내할 예정입니다.',
+  },
+  {
+    id: 'device',
+    question: '모바일에서도 검수할 수 있나요?',
+    answer:
+      '본격 검수는 PC·Chrome/Edge 환경을 권장합니다. 모바일은 대문·둘러보기 수준으로, 세밀한 교열 작업에는 PC가 적합합니다.',
+  },
+];
+
 const SECTION_COPY = {
   profile: {
     title: '회원정보관리',
@@ -147,6 +186,36 @@ function InquiryHistorySection({ onNewInquiry }) {
   );
 }
 
+function MyPageFaq({ onInquiry }) {
+  return (
+    <aside className="mypage__faq" aria-labelledby="mypage-faq-title">
+      <section className="mypage__card mypage__faq-card">
+        <h2 id="mypage-faq-title" className="mypage__card-title">
+          자주 묻는 질문
+        </h2>
+        <p className="mypage__faq-lead">
+          인디야 이용 전에 자주 받는 질문을 모았습니다.
+        </p>
+        <div className="mypage__faq-list">
+          {FAQ_ITEMS.map((item) => (
+            <details key={item.id} className="mypage__faq-item">
+              <summary className="mypage__faq-question">{item.question}</summary>
+              <p className="mypage__faq-answer">{item.answer}</p>
+            </details>
+          ))}
+        </div>
+        <p className="mypage__faq-foot">
+          원하는 답이 없으면{' '}
+          <button type="button" className="mypage__faq-inquiry-link" onClick={onInquiry}>
+            문의하기
+          </button>
+          로 남겨 주세요.
+        </p>
+      </section>
+    </aside>
+  );
+}
+
 function SectionPlaceholder({ sectionId }) {
   const copy = SECTION_COPY[sectionId];
   if (!copy) return null;
@@ -267,7 +336,15 @@ export default function MyPageWindowScreen() {
 
       <main className="mypage__main">
         {activeNav === 'overview' ? (
-          <OverviewDashboard onViewAll={setActiveNav} />
+          <div className="mypage__overview-layout">
+            <OverviewDashboard onViewAll={setActiveNav} />
+            <MyPageFaq
+              onInquiry={() => {
+                setActiveNav('inquiry');
+                setInquiryModalOpen(true);
+              }}
+            />
+          </div>
         ) : activeNav === 'inquiry' ? (
           <InquiryHistorySection
             onNewInquiry={() => setInquiryModalOpen(true)}
