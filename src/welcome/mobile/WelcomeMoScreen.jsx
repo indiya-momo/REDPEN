@@ -146,8 +146,8 @@ export default function WelcomeMoScreen({ onOpenRoom }) {
                       className="welcome-mo__compare-momo-img"
                       src={PDF_BRIDGE_MOMO}
                       alt=""
-                      width={118}
-                      height={118}
+                      width={142}
+                      height={142}
                       loading="lazy"
                       decoding="async"
                     />
