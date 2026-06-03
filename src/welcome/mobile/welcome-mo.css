@@ -43,11 +43,7 @@
   padding-bottom: calc(0.2375rem * var(--welcome-scale));
   padding-inline: var(--welcome-gutter);
 }
-.welcome-mo__copy,.welcome-mo__stage,.welcome-mo__stage-stack {
-  display: contents;
-}
 .welcome-mo__header {
-  order: 1;
   width: var(--welcome-content-max);
   max-width: 100%;
   text-align: center;
@@ -115,7 +111,6 @@
   font-weight: 700;
 }
 .welcome-mo__portrait {
-  order: 2;
   position: relative;
   width: calc(var(--welcome-stack-width) * 0.85);
   max-width: 85%;
@@ -181,7 +176,6 @@
   background: #1c1917;
 }
 .welcome-mo__showcase {
-  order: 3;
   width: var(--welcome-content-max);
   max-width: 100%;
   margin-bottom: calc(0.5rem * var(--welcome-scale));
@@ -249,20 +243,20 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  align-self: flex-end;
+  align-self: center;
   gap: calc(0.2rem * var(--welcome-scale));
   width: fit-content;
-  margin: calc(-0.55rem * var(--welcome-scale)) 0 calc(-0.35rem * var(--welcome-scale));
-  margin-left: auto;
+  margin: calc(-0.55rem * var(--welcome-scale)) auto calc(-0.35rem * var(--welcome-scale));
 }
 .welcome-mo__compare-momo-img {
   display: block;
-  width: 4.75rem;
+  width: calc(4.75rem * 0.7);
   height: auto;
   margin: 0;
 }
 .welcome-mo__compare-bridge-title {
   margin: 0;
+  font-size: calc(1.05rem * 0.6 * var(--welcome-scale));
   white-space: nowrap;
 }
 .welcome-mo__showcase-step {
@@ -305,6 +299,7 @@
   position: relative;
   display: block;
   width: 100%;
+  aspect-ratio: 700 / 475;
   line-height: 0;
   font-size: 0;
 }
@@ -451,7 +446,6 @@
   display: none;
 }
 .welcome-mo__stage-cta {
-  order: 5;
   display: flex;
   flex-direction: column;
   align-items: center;
