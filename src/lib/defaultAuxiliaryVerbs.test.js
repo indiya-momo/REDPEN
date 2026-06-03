@@ -265,6 +265,37 @@ describe('ensureDefaultAuxiliaryVerbs', () => {
 
   });
 
+  it('저장된 본조 find가 구형(붙임)이면 재생성 후 역할을 해 왔다를 잡는다', () => {
+    const stale = ensureDefaultAuxiliaryVerbs([]).find(
+      (r) => r.tailWord === '해 왔',
+    );
+    expect(stale).toBeTruthy();
+    const gluedFind = String.raw`(\S*해)왔`;
+    const rules = ensureDefaultAuxiliaryVerbs([
+      { ...stale, find: gluedFind, enabled: true, bonBojoItemId: 'verb-oda' },
+    ]);
+    const haeWat = rules.filter(
+      (r) => r.tailWord === '해 왔' && r.bonBojoItemId === 'verb-oda',
+    );
+    expect(haeWat).toHaveLength(1);
+    expect(haeWat[0].find).not.toBe(gluedFind);
+    expect(haeWat[0].enabled).toBe(true);
+    expect(matches(haeWat[0], '역할을 해 왔다.')).toBe(true);
+  });
+
+  it('verb-oda 해 왔 — 재생성 규칙이 역할을 해 왔다를 잡는다', () => {
+    const rules = ensureDefaultAuxiliaryVerbs([]);
+    const haeWat = rules.find(
+      (r) =>
+        r.bonBojoItemId === 'verb-oda' &&
+        r.tailWord === '해 왔' &&
+        r.enabled,
+    );
+    expect(haeWat).toBeTruthy();
+    expect(haeWat.find).toContain('해');
+    expect(matches(haeWat, '역할을 해 왔다.')).toBe(true);
+  });
+
 });
 
 

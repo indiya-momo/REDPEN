@@ -7,8 +7,7 @@ import {
   findActiveGroup,
   groupKey,
   isResultGroupVisible,
-  mergeAuxiliaryResultsByBonBojoItem,
-  mergeConsistencyZeroFindGroups,
+  finalizeConsistencyCheckResults,
   resultVisibilityKey,
 } from '../lib/checkResultUtils.js';
 import {
@@ -87,9 +86,14 @@ export function useRuleCheck({
     return [...builtIn, ...caution];
   }, [builtInEnabled, cautionEnabled]);
 
+  const resolvedCustomRules = useMemo(
+    () => ensureDefaultAuxiliaryVerbs(customRules),
+    [customRules],
+  );
+
   const consistencyActiveRules = useMemo(
     () =>
-      customRules
+      resolvedCustomRules
         .filter((r) => r.enabled)
         .map((r) => ({
           ...r,
@@ -102,7 +106,7 @@ export function useRuleCheck({
               ? 'consistency'
               : 'custom',
         })),
-    [customRules],
+    [resolvedCustomRules],
   );
 
   const clearAllCheckState = useCallback(() => {
@@ -174,7 +178,7 @@ export function useRuleCheck({
       const activeTotal = countActiveRules({
         builtInEnabled,
         cautionEnabled,
-        customRules,
+        resolvedCustomRules,
       });
       if (isOverMaxRules(activeTotal)) {
         alert(maxRulesExceededMessage(activeTotal));
@@ -232,8 +236,9 @@ export function useRuleCheck({
           },
         );
         allErrors.push(...errors);
-        const withZeroRows = mergeAuxiliaryResultsByBonBojoItem(
-          mergeConsistencyZeroFindGroups(grouped, consistencyActiveRules),
+        const withZeroRows = finalizeConsistencyCheckResults(
+          grouped,
+          consistencyActiveRules,
         );
         scopeResults = withZeroRows;
         setConsistencyResults(withZeroRows);
@@ -325,7 +330,7 @@ export function useRuleCheck({
       const activeTotal = countActiveRules({
         builtInEnabled,
         cautionEnabled,
-        customRules,
+        resolvedCustomRules,
       });
       if (isOverMaxRules(activeTotal)) {
         alert(maxRulesExceededMessage(activeTotal));
@@ -346,16 +351,11 @@ export function useRuleCheck({
         },
       );
 
-      const withZeroRows = mergeAuxiliaryResultsByBonBojoItem(
-        mergeConsistencyZeroFindGroups(grouped, rules),
-      );
+      const withZeroRows = finalizeConsistencyCheckResults(grouped, rules);
 
       setConsistencyResults((prev) => {
         const kept = prev.filter((g) => consistencyGroupScope(g) !== subset);
-        return mergeConsistencyZeroFindGroups(
-          mergeAuxiliaryResultsByBonBojoItem([...kept, ...withZeroRows]),
-          rules,
-        );
+        return finalizeConsistencyCheckResults([...kept, ...withZeroRows], rules);
       });
       setConsistencyCheckDone(true);
       setResultVisibility((prev) => ({
@@ -394,8 +394,8 @@ export function useRuleCheck({
       pageTexts,
       builtInEnabled,
       cautionEnabled,
-      customRules,
-      consistencyActiveRules,
+        resolvedCustomRules,
+        consistencyActiveRules,
       globalExcludePhrases,
       setCurrentPage,
       setIsProcessing,

@@ -206,7 +206,7 @@ export default function BuiltinSpellingPanel({
           />
         </label>
         <span className="builtin-spelling-summary-title">
-          맞춤법 기준 (선택 {enabled}/{total})
+          맞춤법 기준(선택 {enabled}/{total})
         </span>
       </summary>
       {guideRules.length > 0 ? (

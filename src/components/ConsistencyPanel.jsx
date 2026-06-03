@@ -365,9 +365,11 @@ export default function ConsistencyPanel({
             </span>
           </summary>
           <p className="auxiliary-checklist-intro">
-            (개발중) 항목에서 본용언과 보조용언 사이가 띄어진 경우만 찾습니다
+            (개발중) 일관성 「문자열 찾기」와 별도입니다. 아래 항목을 켠 뒤 표기
+            일관성 검사를 다시 실행하세요.
             <br />
-            본용언이 3음절 이상의 복합어('생각하다' 등)이면 찾지 않습니다
+            stem(예: 해 왔)은 띄움만 찾습니다. 역할을 해 왔다처럼 명사+조사+해는
+            포함하고, 주장해·상상해·기다려(allow 제외) 등 3음절 본용언은 제외합니다.
           </p>
           <RegisteredList
             entries={auxiliaryEntries}

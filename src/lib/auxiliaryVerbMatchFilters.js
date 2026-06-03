@@ -27,6 +27,9 @@ export function isLexicalHaeCompoundHead(headCapture) {
 /** 본용언 3음절 이상은 표기 검사 제외(합성 동사는 추후 시트 except) */
 export const BON_VERB_HEAD_MAX_SYLLABLES = 2;
 
+/** 명사+조사 뒤 연결 `해`(역할을해) — 3음절 제한에서 제외 */
+const BON_PORTION_JOSA_BEFORE_HAE = /(?:을|를|에|도|만|와|과|로|으로|부터|까지|한테|에게|께|에서)$/u;
+
 /**
  * @param {string} headCapture
  */
@@ -47,15 +50,25 @@ export function bonVerbHeadStemPortion(headCapture, stemHead = '') {
 }
 
 /**
- * 본용언 3음절 이상 — 표기 검사 제외(매달려·기다려 등, 합성 동사는 추후 except)
+ * 본용언 3음절 이상인지(길면 표기 검사 대상에서 빼기 전 단계).
+ * 실제 포함 여부는 bon_allow — 기다려(있음)=포함, 매달려·주장해(없음)=제외.
+ * stem `해 …` — 캡처 전체(주장해·상상해)로 센다. `해`만 빼면 2음절로 오판.
+ * stem `어 …` 등 — 연결어미 제외 후(만들어→만들) 센다.
  * @param {string} headCapture
  * @param {string} [stemHead]
  */
 export function isBonVerbHeadTooLongForAuxiliary(headCapture, stemHead = '') {
-  return (
-    bonVerbHeadSyllableCount(bonVerbHeadStemPortion(headCapture, stemHead)) >
-    BON_VERB_HEAD_MAX_SYLLABLES
-  );
+  const c = headCapture.trim();
+  const head = stemHead.trim();
+  if (head === '해' && c.endsWith('해')) {
+    const portion = bonVerbHeadStemPortion(c, head);
+    if (portion && BON_PORTION_JOSA_BEFORE_HAE.test(portion)) {
+      return false;
+    }
+    return bonVerbHeadSyllableCount(c) > BON_VERB_HEAD_MAX_SYLLABLES;
+  }
+  const countTarget = bonVerbHeadStemPortion(c, stemHead);
+  return bonVerbHeadSyllableCount(countTarget) > BON_VERB_HEAD_MAX_SYLLABLES;
 }
 
 /**

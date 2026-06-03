@@ -1,61 +1,37 @@
-import { buildRulesForAuxiliaryEntry } from './auxiliaryVerbRegister.js';
-import { isAdjectiveCheHadaTail } from './adjectiveCheHadaPattern.js';
-import { AUXILIARY_FLEX_SPACE } from './compoundPatternCommon.js';
+import { buildAuxiliaryVerbFindRules } from './auxiliaryVerbPattern.js';
 import {
   getBonBojoGroups,
   bonBojoDisplayLabelForItem,
-  bonBojoItemIdForSearchTail,
   auxiliarySearchTailsFromBonBojoItem,
   isBonBojoLogicOnlyItem,
 } from './bonBojoRules.js';
 import { encodeSpacesVisible } from './spaceVisibleText.js';
 
-/** @param {string} itemId */
-function allowedSearchTailsForItem(itemId) {
-  for (const group of getBonBojoGroups()) {
-    const item = group.items.find((i) => i.id === itemId);
-    if (item) return new Set(auxiliarySearchTailsFromBonBojoItem(item));
-  }
-  return new Set();
-}
-
 /**
- * bon-bojo 시트에 없는 보조용언 규칙 제거 — itemId·stem 모두 시트와 일치해야 함
  * @param {import('./ruleTypes.js').Rule[]} rules
+ * @returns {Map<string, boolean>}
  */
-function pruneObsoleteAuxiliaryRules(rules) {
-  return rules.filter((r) => {
-    if (r.patternKind !== 'auxiliary-verb') return true;
-    const tw = r.tailWord?.trim();
-    const itemId = r.bonBojoItemId?.trim();
-    if (!tw || !itemId) return false;
-    return allowedSearchTailsForItem(itemId).has(tw);
-  });
-}
-
-/** 예전 붙임 regex 제거 — 시트 stems는 띄움형만 */
-function pruneGluedAuxiliaryFindRules(rules) {
-  return rules.filter((r) => {
-    if (r.patternKind !== 'auxiliary-verb') return true;
-    const tw = r.tailWord?.trim();
-    if (!tw || isAdjectiveCheHadaTail(tw)) return true;
-    if (!/\s/.test(tw)) return r.find.includes(AUXILIARY_FLEX_SPACE);
-    const parts = tw.split(/\s+/).filter(Boolean);
-    if (parts.length === 2) return r.find.includes(AUXILIARY_FLEX_SPACE);
-    return true;
-  });
+function enabledByItemIdFromRules(rules) {
+  /** @type {Map<string, boolean>} */
+  const map = new Map();
+  for (const r of rules) {
+    if (r.patternKind !== 'auxiliary-verb') continue;
+    const id = r.bonBojoItemId?.trim();
+    if (!id) continue;
+    if (r.enabled === true) map.set(id, true);
+    else if (!map.has(id)) map.set(id, false);
+  }
+  return map;
 }
 
 /**
- * 시트 bon-bojo 탭(sync-bon-bojo) 시드 → 규칙 세트에 없는 tail만 추가(기본 체크 off).
- * stems 변이는 검색용만 추가하고, 목록에는 item당 1칸.
- * @param {import('./ruleTypes.js').Rule[]} customRules
- * @returns {import('./ruleTypes.js').Rule[]}
+ * 본조 규칙을 시트 stems에서 매번 재생성 — 저장된 옛 find·tailWord(해왔 등)로 오다만 0건인 문제 방지
+ * @param {import('./ruleTypes.js').Rule[]} nonAux
+ * @param {Map<string, boolean>} enabledByItem
  */
-export function ensureDefaultAuxiliaryVerbs(customRules) {
-  let rules = pruneGluedAuxiliaryFindRules(
-    pruneObsoleteAuxiliaryRules([...(customRules ?? [])]),
-  );
+function rebuildAuxiliaryVerbRulesFromSheet(nonAux, enabledByItem) {
+  /** @type {import('./ruleTypes.js').Rule[]} */
+  const aux = [];
 
   for (const group of getBonBojoGroups()) {
     for (const item of group.items) {
@@ -64,25 +40,66 @@ export function ensureDefaultAuxiliaryVerbs(customRules) {
         item.displayLabel?.trim() ||
         bonBojoDisplayLabelForItem(itemId) ||
         encodeSpacesVisible(item.label);
+
+      const logicOnly = isBonBojoLogicOnlyItem(itemId);
+      const enabled = logicOnly
+        ? true
+        : enabledByItem.has(itemId)
+          ? enabledByItem.get(itemId)
+          : item.enabled === true;
+
       for (const tail of auxiliarySearchTailsFromBonBojoItem(item)) {
-        const batch = buildRulesForAuxiliaryEntry(rules, tail);
-        if (!batch.length) continue;
-        rules = [
-          ...rules,
-          ...batch.map((r) => ({
-            ...r,
-            enabled: isBonBojoLogicOnlyItem(itemId)
-              ? true
-              : item.enabled === true,
+        for (const row of buildAuxiliaryVerbFindRules(tail)) {
+          aux.push({
+            ...row,
+            enabled: Boolean(enabled),
             label: listLabel,
             bonBojoItemId: itemId,
-          })),
-        ];
+          });
+        }
       }
     }
   }
 
-  return applyBonBojoDisplayLabels(forceLogicOnlyAuxiliaryEnabled(rules));
+  return [...nonAux, ...aux];
+}
+
+/**
+ * @param {import('./ruleTypes.js').Rule[]} customRules
+ * @returns {import('./ruleTypes.js').Rule[]}
+ */
+export function ensureDefaultAuxiliaryVerbs(customRules) {
+  const rules = [...(customRules ?? [])];
+  const nonAux = rules.filter((r) => r.patternKind !== 'auxiliary-verb');
+  const enabledByItem = enabledByItemIdFromRules(rules);
+  let next = rebuildAuxiliaryVerbRulesFromSheet(nonAux, enabledByItem);
+
+  return applyBonBojoDisplayLabels(
+    syncBonBojoSheetEnabledFlags(forceLogicOnlyAuxiliaryEnabled(next)),
+  );
+}
+
+/**
+ * 시트 item.enabled=true인데 저장 규칙이 전부 꺼져 있으면 — 첫 실행 시 본조가 안 도는 경우 방지
+ * @param {import('./ruleTypes.js').Rule[]} rules
+ */
+function syncBonBojoSheetEnabledFlags(rules) {
+  let next = rules;
+  for (const group of getBonBojoGroups()) {
+    for (const item of group.items) {
+      if (!item.enabled) continue;
+      const id = item.id;
+      const groupRules = next.filter(
+        (r) =>
+          r.patternKind === 'auxiliary-verb' && r.bonBojoItemId?.trim() === id,
+      );
+      if (!groupRules.length || groupRules.some((r) => r.enabled)) continue;
+      next = next.map((r) =>
+        groupRules.includes(r) ? { ...r, enabled: true } : r,
+      );
+    }
+  }
+  return next;
 }
 
 /**

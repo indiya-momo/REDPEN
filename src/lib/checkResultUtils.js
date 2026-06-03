@@ -1,5 +1,10 @@
 import { SPELLING_RULES_FP } from './builtInRules.js';
 import { CAUTION_RULES_FP } from './cautionRules.js';
+import {
+  bonBojoDisplayLabelForItem,
+  getBonBojoGroups,
+  isBonBojoLogicOnlyItem,
+} from './bonBojoRules.js';
 import { ruleDisplayLabel } from './regexFromFind.js';
 
 /** 일관성 결과 목록 — 발견 0건이어도 표시 */
@@ -263,6 +268,77 @@ export function mergeAuxiliaryResultsByBonBojoItem(results) {
   }
 
   return [...rest, ...merged.values()];
+}
+
+/**
+ * @param {import('./ruleTypes.js').Rule[]} activeRules
+ * @param {string} itemId
+ */
+function isBonBojoItemActiveInCheck(activeRules, itemId) {
+  const id = itemId.trim();
+  const group = activeRules.filter(
+    (r) =>
+      r.enabled &&
+      r.patternKind === 'auxiliary-verb' &&
+      r.bonBojoItemId?.trim() === id,
+  );
+  return group.length > 0;
+}
+
+/**
+ * 일관성 검사 결과 — 0건 본조 줄 보강·항목별 병합·정렬
+ * @param {import('./ruleEngine.js').GroupedResult[]} grouped
+ * @param {import('./ruleTypes.js').Rule[]} activeRules
+ */
+export function finalizeConsistencyCheckResults(grouped, activeRules) {
+  return mergeAuxiliaryZeroFindByItem(
+    mergeAuxiliaryResultsByBonBojoItem(
+      mergeConsistencyZeroFindGroups(grouped, activeRules),
+    ),
+    activeRules,
+  );
+}
+
+/**
+ * 켠 본조 항목(시트 10칸) 중 발견 0건이면 목록에도 한 줄 — (아/어)+오다 누락 방지
+ * @param {import('./ruleEngine.js').GroupedResult[]} results
+ * @param {import('./ruleTypes.js').Rule[]} activeRules
+ */
+export function mergeAuxiliaryZeroFindByItem(results, activeRules) {
+  const merged = [...results];
+  const seen = new Set(
+    merged
+      .map((g) => (g.groupDisplayLabel || g.label || '').trim())
+      .filter(Boolean),
+  );
+
+  for (const group of getBonBojoGroups()) {
+    for (const item of group.items) {
+      const itemId = item.id;
+      if (isBonBojoLogicOnlyItem(itemId)) continue;
+      if (!isBonBojoItemActiveInCheck(activeRules, itemId)) continue;
+
+      const tag =
+        item.displayLabel?.trim() ||
+        bonBojoDisplayLabelForItem(itemId) ||
+        item.label?.trim() ||
+        itemId;
+      if (!tag || seen.has(tag)) continue;
+      seen.add(tag);
+
+      merged.push({
+        find: `auxiliary-item:${tag}`,
+        replace: '$0',
+        label: tag,
+        groupDisplayLabel: tag,
+        patternKind: 'auxiliary-verb',
+        category: 'consistency',
+        instances: [],
+      });
+    }
+  }
+
+  return sortConsistencyGroupedResults(merged, activeRules);
 }
 
 export function mergeConsistencyZeroFindGroups(results, activeRules) {

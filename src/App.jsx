@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import MainScreen from './components/MainScreen.jsx';
 import WelcomeScreen from './components/WelcomeScreen.jsx';
 import MomoRoomScreen from './components/MomoRoomScreen.jsx';
@@ -136,6 +136,31 @@ export default function App() {
     );
   }
 
+  const resolvedCustomRules = useMemo(
+    () => ensureDefaultAuxiliaryVerbs(activeSet?.customRules ?? []),
+    [activeSet?.customRules],
+  );
+
+  useEffect(() => {
+    if (!rulesReady || !activeSet) return;
+    const prev = activeSet.customRules ?? [];
+    const odaPrev = prev.some(
+      (r) =>
+        r.patternKind === 'auxiliary-verb' &&
+        r.bonBojoItemId === 'verb-oda' &&
+        r.tailWord === '해 왔',
+    );
+    if (
+      odaPrev &&
+      resolvedCustomRules.length === prev.length &&
+      resolvedCustomRules.filter((r) => r.patternKind === 'auxiliary-verb')
+        .length === prev.filter((r) => r.patternKind === 'auxiliary-verb').length
+    ) {
+      return;
+    }
+    updateActiveSet({ customRules: resolvedCustomRules });
+  }, [rulesReady, activeSetId, resolvedCustomRules, updateActiveSet, activeSet]);
+
   if (!rulesReady || !activeSet) {
     return (
       <div className="app-loading" role="status" aria-live="polite">
@@ -162,7 +187,7 @@ export default function App() {
       builtInEnabled={
         activeSet.builtInEnabled ?? builtInEnabledFromSheet()
       }
-      customRules={activeSet.customRules ?? []}
+      customRules={resolvedCustomRules}
       globalExcludePhrases={activeSet.globalExcludePhrases ?? []}
       tocBodyText={activeSet.tocBodyText ?? ''}
       tocBodyStartPage={activeSet.tocBodyStartPage ?? null}
@@ -175,7 +200,9 @@ export default function App() {
       onBuiltInSetAll={handleBuiltInSetAll}
       onCautionToggle={handleCautionToggle}
       onCautionSetAll={handleCautionSetAll}
-      onCustomRulesChange={(customRules) => updateActiveSet({ customRules })}
+      onCustomRulesChange={(customRules) =>
+        updateActiveSet({ customRules: ensureDefaultAuxiliaryVerbs(customRules) })
+      }
       onGlobalExcludePhrasesChange={(globalExcludePhrases) =>
         updateActiveSet({ globalExcludePhrases })
       }
