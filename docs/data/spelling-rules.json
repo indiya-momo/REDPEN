@@ -63,13 +63,6 @@
     "dividerGroup": "B"
   },
   {
-    "find": "쳐지",
-    "replace": "처지",
-    "enabled": true,
-    "tip": "'처지다'의 잘못된 표현",
-    "dividerGroup": "B"
-  },
-  {
     "find": "전세계",
     "replace": "전 세계",
     "enabled": true,
