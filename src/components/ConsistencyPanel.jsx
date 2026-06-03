@@ -358,14 +358,15 @@ export default function ConsistencyPanel({
               />
             </label>
             <span className="printed-page-setup__title bon-bojo-checklist-title consistency-panel-section-title consistency-auxiliary-summary-title">
-              본용언+보조용언 표기
+              본용언 + 보조용언 표기
               {auxiliaryTotal > 0
-                ? ` (선택 ${auxiliaryActiveCount}/${auxiliaryTotal})`
+                ? `(선택 ${auxiliaryActiveCount}/${auxiliaryTotal}) `
                 : ''}
+              - 개발중
             </span>
           </summary>
           <p className="auxiliary-checklist-intro">
-            항목에서 본용언과 보조용언 사이가 띄어진 경우만 찾습니다(개발중)
+            항목에서 본용언과 보조용언 사이가 띄어진 경우만 찾습니다
             <br />
             본용언이 3음절 이상의 복합어('생각하다' 등)이면 찾지 않습니다
           </p>
@@ -412,10 +413,10 @@ export default function ConsistencyPanel({
             id="consistency-toc-heading"
             className="printed-page-setup__title consistency-panel-section-title"
           >
-            목차 · 본문 일치 확인
+            목차 · 본문 일치 확인 🚧
           </p>
           <p className="hint consistency-toc-section__hint">
-            현재 개발중인 기능입니다.
+            열심히 준비하고 있어요 · ฅ•ω•ฅ
           </p>
         </section>
       )}
