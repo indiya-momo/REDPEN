@@ -298,11 +298,11 @@
   border-radius: 50%;
   background: radial-gradient(
     circle,
-    rgba(255, 255, 255, 0.28) 0%,
-    rgba(255, 255, 255, 0.12) 55%,
+    rgba(255, 255, 255, 0.546) 0%,
+    rgba(255, 255, 255, 0.156) 55%,
     rgba(255, 255, 255, 0) 72%
   );
-  box-shadow: 0 0 28px rgba(255, 255, 255, 0.14);
+  box-shadow: 0 0 28px rgba(255, 255, 255, 0.182);
   z-index: 0;
 }
 .welcome-mo__compare-momo-img {

@@ -14,7 +14,7 @@ import './welcome-mo.css';
 const WELCOME_MOMO_FRAME = welcomeMomoFrame;
 const WELCOME_MO_BEFORE = `${import.meta.env.BASE_URL}welcome/m_before.png`;
 const WELCOME_MO_AFTER = `${import.meta.env.BASE_URL}welcome/m_after3.png`;
-const PDF_MOMO = publicAssetUrl('momo/pdf-momo.png');
+const PDF_BRIDGE_MOMO = publicAssetUrl('momo/pdf-full.png');
 
 /**
  * 모바일 대문 — welcome-mo 전용 (PC와 마크업·CSS 공유 없음) — git 6b26b31
@@ -89,7 +89,7 @@ export default function WelcomeMoScreen({ onOpenRoom }) {
                   <div className="welcome-mo__compare-momo-wrap">
                     <img
                       className="welcome-mo__compare-momo-img"
-                      src={PDF_MOMO}
+                      src={PDF_BRIDGE_MOMO}
                       alt=""
                       width={98}
                       height={98}
