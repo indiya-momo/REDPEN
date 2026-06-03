@@ -55,22 +55,37 @@ describe('auxiliaryVerbMatchFilters', () => {
     expect(isBonVerbHeadOnAllowList('매달려', '어', allow)).toBe(false);
   });
 
+  it('역할을 해 왔다 — 명사+조사+해(역할을해)는 3음절 제한 제외', () => {
+    const rule = buildAuxiliaryVerbFindRules('해 왔')[0];
+    expect(isBonVerbHeadTooLongForAuxiliary('역할을해', '해')).toBe(false);
+    expect(ruleMatches(rule, '역할을 해 왔다.')).toBe(true);
+    expect(ruleMatches(rule, '역할을해 왔다.')).toBe(true);
+    expect(ruleMatches(rule, '역할을 해 왔다고')).toBe(true);
+    expect(isBonVerbHeadTooLongForAuxiliary('주장해', '해')).toBe(true);
+    expect(ruleMatches(rule, '주장해 왔다.')).toBe(false);
+  });
+
   it('명사 어근+해(생각해 보다) — 본조 검사 제외', () => {
     const haeBo = buildAuxiliaryVerbFindRules('해 보')[0];
     expect(ruleMatches(haeBo, '생각해 보았다')).toBe(false);
     expect(ruleMatches(haeBo, '사랑해 보았다')).toBe(false);
-    expect(ruleMatches(haeBo, '상상해 보았다')).toBe(true);
+    expect(ruleMatches(haeBo, '상상해 보았다')).toBe(false);
+    expect(ruleMatches(haeBo, '주장해 보았다')).toBe(false);
   });
 
-  it('본용언 3음절 이상 — 표기 제외(기다려·매달려 동일)', () => {
+  it('본용언 3음절 이상 — bon_allow만 포함(기다려), 나머지 제외(매달려·주장해)', () => {
     expect(isBonVerbHeadTooLongForAuxiliary('매달려', '어')).toBe(true);
     expect(isBonVerbHeadTooLongForAuxiliary('기다려', '어')).toBe(true);
-    expect(isBonVerbHeadTooLongForAuxiliary('상상해', '해')).toBe(false);
+    expect(isBonVerbHeadTooLongForAuxiliary('주장해', '해')).toBe(true);
+    expect(isBonVerbHeadTooLongForAuxiliary('상상해', '해')).toBe(true);
+    expect(isBonVerbHeadTooLongForAuxiliary('만들어', '어')).toBe(false);
+    expect(isBonVerbHeadTooLongForAuxiliary('먹어', '어')).toBe(false);
 
     const eoBo = buildAuxiliaryVerbFindRules('어 보')[0];
     const haeBo = buildAuxiliaryVerbFindRules('해 보')[0];
     expect(ruleMatches(eoBo, '먹어 보았다')).toBe(true);
-    expect(ruleMatches(haeBo, '상상해 보았다')).toBe(true);
+    expect(ruleMatches(haeBo, '상상해 보았다')).toBe(false);
+    expect(ruleMatches(haeBo, '주장해 왔다')).toBe(false);
 
     const allowRule = {
       patternKind: 'auxiliary-verb',

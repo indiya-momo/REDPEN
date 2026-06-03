@@ -7,6 +7,39 @@ import {
 } from './pdfService.js';
 import { buildAuxiliaryVerbFindRules } from './auxiliaryVerbPattern.js';
 import { runRuleCheck } from './ruleEngine.js';
+import { ensureDefaultAuxiliaryVerbs } from './defaultAuxiliaryVerbs.js';
+
+/** @param {{ str: string, x: number, w?: number, font?: number }[]} parts */
+function mockLineItems(parts, y = 200, font = 12) {
+  return parts.map((p) => {
+    const size = p.font ?? font;
+    return {
+      str: p.str,
+      transform: [size, 0, 0, size, p.x, y],
+      width: p.w ?? p.str.length * size * 0.48,
+    };
+  });
+}
+
+/** @param {import('./pdfService.js').PageData} page */
+function matchCountsOnPage(page) {
+  const literal = buildCompoundFindRules('역할을 해 왔다').map((r) => ({
+    ...r,
+    enabled: true,
+  }));
+  const haeWat = ensureDefaultAuxiliaryVerbs([]).filter(
+    (r) =>
+      r.enabled &&
+      r.patternKind === 'auxiliary-verb' &&
+      r.tailWord === '해 왔',
+  );
+  const lit = runRuleCheck([page], literal);
+  const aux = runRuleCheck([page], haeWat);
+  return {
+    literal: lit.results.reduce((n, g) => n + g.instances.length, 0),
+    auxiliary: aux.results.reduce((n, g) => n + g.instances.length, 0),
+  };
+}
 
 describe('shouldInsertSpaceBetweenPdfItems', () => {
   const lineH = 12 * 0.35;
@@ -126,5 +159,88 @@ describe('buildPageText', () => {
       rules,
     );
     expect(results[0]?.instances.length).toBeGreaterThanOrEqual(2);
+  });
+});
+
+describe('buildPageText — 역할을 해 왔다 추출·검사 (가설 검증)', () => {
+  it('PDF 항목에 공백 문자가 있으면 text에도 띄움 유지', () => {
+    const items = mockLineItems([
+      { str: '역할을', x: 0, w: 40 },
+      { str: ' ', x: 42, w: 4 },
+      { str: '해', x: 48, w: 14 },
+      { str: ' ', x: 64, w: 4 },
+      { str: '왔다.', x: 70, w: 28 },
+    ]);
+    const { text, textLayout } = buildPageText(items);
+    expect(text).toMatch(/역할을\s+해\s+왔다/);
+    expect(textLayout).toMatch(/역할을\s+해\s+왔다/);
+    const page = { pageNum: 99, text, items, itemRefs: [] };
+    expect(matchCountsOnPage(page)).toEqual({ literal: 1, auxiliary: 1 });
+  });
+
+  it('항목이 한 덩어리(역할을해왔다)면 text도 붙음 — 문자열찾기(loose)만 가능', () => {
+    const items = mockLineItems([{ str: '역할을해왔다.', x: 0, w: 90 }]);
+    const { text, textLayout } = buildPageText(items);
+    expect(text).toBe('역할을해왔다.\n');
+    expect(textLayout).toBe('역할을해왔다.\n');
+    const page = { pageNum: 99, text, items, itemRefs: [] };
+    expect(matchCountsOnPage(page)).toEqual({ literal: 1, auxiliary: 0 });
+  });
+
+  it('해·왔 항목 gap이 음절 경계(좁지만 10% 이상)면 text에 해↔왔 공백', () => {
+    const items = mockLineItems([
+      { str: '역할을', x: 0, w: 40 },
+      { str: '해', x: 44, w: 14 },
+      { str: '왔다.', x: 60, w: 28 },
+    ]);
+    const lineH = 12 * 0.35;
+    const gap =
+      items[2].transform[4] -
+      (items[1].transform[4] + (items[1].width ?? 0));
+    expect(shouldInsertSpaceBetweenPdfItems(gap, lineH, '해', '왔다.')).toBe(
+      true,
+    );
+    const { text } = buildPageText(items);
+    expect(text).toMatch(/역할을\s+해\s+왔다/);
+    const page = { pageNum: 99, text, items, itemRefs: [] };
+    expect(matchCountsOnPage(page)).toEqual({ literal: 1, auxiliary: 1 });
+  });
+
+  it('인용문(작은 글씨) — 본문과 줄 분리돼도 역할을 해 왔다·본조 둘 다', () => {
+    const items = [
+      ...mockLineItems([{ str: '본문 어절입니다.', x: 0 }], 220, 12),
+      ...mockLineItems(
+        [
+          { str: '역할을', x: 0, w: 40 },
+          { str: '해', x: 44, w: 14 },
+          { str: '왔다.', x: 60, w: 28 },
+        ],
+        200,
+        9,
+      ),
+    ];
+    const { text } = buildPageText(items);
+    const quoteLine = text.split('\n').find((l) => /역할을/.test(l)) ?? '';
+    expect(quoteLine).toMatch(/역할을\s+해\s+왔다/);
+    const page = { pageNum: 99, text, items, itemRefs: [] };
+    expect(matchCountsOnPage(page)).toEqual({ literal: 1, auxiliary: 1 });
+  });
+
+  it('해·왔 gap이 자간 수준이면 text는 해왔 붙임 — 본조만 빠질 수 있음', () => {
+    const items = mockLineItems([
+      { str: '역할을', x: 0, w: 40 },
+      { str: '해', x: 44, w: 14 },
+      { str: '왔다.', x: 45.5, w: 28 },
+    ]);
+    const lineH = 12 * 0.35;
+    const gap =
+      items[2].transform[4] - (items[1].transform[4] + items[1].width);
+    expect(shouldInsertSpaceBetweenPdfItems(gap, lineH, '해', '왔다.')).toBe(
+      false,
+    );
+    const { text } = buildPageText(items);
+    expect(text).toMatch(/역할을\s+해왔다/);
+    const page = { pageNum: 99, text, items, itemRefs: [] };
+    expect(matchCountsOnPage(page)).toEqual({ literal: 1, auxiliary: 0 });
   });
 });

@@ -121,21 +121,18 @@ function hasNearbyInstance(instances, pageNum, index) {
 }
 
 /**
+ * compound-find·본조 모두 page.text — PDF 추출 줄·어절 공백과 동일.
+ * textLayout은 좁은 음절 gap을 붙여 띄움 stem(해 왔 등)이 빠지므로 본조에 쓰지 않음.
+ * 관형어(통해 보) 오탐은 auxiliaryVerbMatchFilters로 제외.
  * @param {import('./pdfService.js').PageData} page
  */
-function pageViewForCompoundFind(rule, page) {
-  if (rule.patternKind === 'auxiliary-verb' && page.textLayout != null) {
-    return {
-      text: page.textLayout,
-      itemRefs: page.itemRefsLayout ?? page.itemRefs,
-    };
-  }
+function pageViewForCompoundFind(_rule, page) {
   return { text: page.text, itemRefs: page.itemRefs };
 }
 
 function applyCompoundFindByLines(rule, page, byKey, globalExcludePhrases) {
   const tail = String(rule.tailWord ?? '').trim();
-  // 본용언+보조용언은 rule.find(공백 1칸 이상)만 — loose는 붙임(만들어내)까지 허용해 오탐
+  // 본조 stem은 rule.find(선택적 공백). loose는 문자열 찾기(전 구간 0칸 허용) 전용
   const loose =
     rule.patternKind !== 'auxiliary-verb' &&
     /\s/.test(tail) &&
