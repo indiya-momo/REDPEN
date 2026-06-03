@@ -401,7 +401,11 @@ function buildLatinTokenPattern(token) {
     return `(?:${alts.join('|')})${punctPat}`;
   }
 
-  return `${escapeRegex(token).replace(/\.$/, '')}\\.?`;
+  if (punctMatch) {
+    return `${escapeRegex(core)}${punctPat}`;
+  }
+
+  return `${escapeRegex(token)}\\.?`;
 }
 
 /**
@@ -415,6 +419,10 @@ function buildWordPattern(word) {
   return buildLatinTokenPattern(word);
 }
 
+/** 목차·본문 제목 — 한글 어절 사이 조사·구둣점(분위기와 경제, 분위기·경제 등) */
+const TOC_HANGUL_PART_BRIDGE =
+  String.raw`(?:[와과]\s*|[·•・/]\s*|[,，]\s*)`;
+
 /**
  * 한글 어절 사이는 공백 없어도 검색 (띄어쓰기 불일치 검출용)
  * @param {string} left
@@ -422,7 +430,7 @@ function buildWordPattern(word) {
  */
 function buildTitlePartGap(left, right) {
   if (isHangulWord(left) && isHangulWord(right)) {
-    return `(?:${TOC_TITLE_FLEX_SPACE})?`;
+    return `(?:${TOC_TITLE_FLEX_SPACE}|${TOC_HANGUL_PART_BRIDGE})?`;
   }
   return TOC_TITLE_FLEX_SPACE;
 }
@@ -552,6 +560,8 @@ export function classifyTocTitle(title, instances) {
     best = Math.max(best, tocTitleSimilarity(title, inst.matchedText));
   }
   if (best >= TOC_MISMATCH_SIMILARITY_THRESHOLD) return 'mismatch';
+  // 후보는 잡혔으나 유사도만 낮을 때 — 누락 대신 불일치로 표시(위치 확인 가능)
+  if (instances.length) return 'mismatch';
   return 'missing';
 }
 

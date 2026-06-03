@@ -37,6 +37,8 @@ import ExcludePhraseList from './consistency/ExcludePhraseList.jsx';
 import RegisteredList from './consistency/RegisteredList.jsx';
 import { SPACE_INPUT_PLACEHOLDER } from './consistency/constants.js';
 import TocBodySetupPanel from '../toc-body/components/TocBodySetupPanel.jsx';
+import DetailsChevron from './DetailsChevron.jsx';
+import PanelSectionRunButton from './PanelSectionRunButton.jsx';
 
 /**
  * @param {{
@@ -61,6 +63,7 @@ import TocBodySetupPanel from '../toc-body/components/TocBodySetupPanel.jsx';
  *   onCalibrateFromInput?: (raw: string, isSpread: boolean) => void,
  *   onClearPrintedPageOffset?: () => void,
  *   onRunTocCheck?: () => void | Promise<void>,
+ *   onRunRulesCheck?: () => void | Promise<void>,
  *   hasPdf?: boolean,
  *   isProcessing?: boolean,
  * }} props
@@ -87,6 +90,7 @@ export default function ConsistencyPanel({
   onCalibrateFromInput = () => {},
   onClearPrintedPageOffset = () => {},
   onRunTocCheck = () => {},
+  onRunRulesCheck = () => {},
   hasPdf = false,
   isProcessing = false,
 }) {
@@ -223,19 +227,30 @@ export default function ConsistencyPanel({
 
   return (
     <div className="consistency-embed">
+      {hasPdf ? (
+        <div className="consistency-tab-layout__run-row">
+          <PanelSectionRunButton
+            label="일관성+용언 검수"
+            onClick={onRunRulesCheck}
+            disabled={!hasPdf}
+            isProcessing={isProcessing}
+          />
+        </div>
+      ) : null}
       <section className="consistency-unified-box" aria-label="표기 일관성 찾기">
+        <p className="printed-page-setup__title consistency-panel-section-title">
+          일관성 찾기(1회 검수 10개 이내 추천)
+        </p>
         <div className="consistency-subsection consistency-subsection--first">
-          <p className="field-label">일관성 찾기 (1회 검색 8개 이내 추천)</p>
           <p className="hint">
-            한글 · 영문 대소문자 · 기호 · 띄어쓰기 등을 찾습니다 (예: 조선˅시대/조선시대,
-            RED˅PEN/Redpen)
+            한글 · 영문 대소문자 · 띄어쓰기 등을 찾습니다(예: 조선˅시대/조선시대, RED˅PEN/Red˅pen)
           </p>
           <ConsistencyRegisterField
             value={literalInput}
             onChange={setLiteralInput}
             onRegister={registerLiteral}
             placeholder={SPACE_INPUT_PLACEHOLDER}
-            ariaLabel="일관성 찾기 (1회 검색 8개 이내 추천)"
+            ariaLabel="일관성 찾기(1회 검수 10개 이내 추천)"
           />
           <RegisteredList
             entries={literalEntries}
@@ -254,100 +269,116 @@ export default function ConsistencyPanel({
           />
         </div>
 
-        <div className="consistency-subsection">
-          <p className="field-label">공통 문자열 찾기</p>
-          <p className="hint">
-            @을 포함한 공통 문자열을 모두 찾습니다 (예: @시대 → 조선시대, 고려시대,
-            신라시대 … / @˅PEN → RED PEN, BLUE PEN)
-          </p>
-          <ConsistencyRegisterField
-            value={slotInput}
-            onChange={setSlotInput}
-            onRegister={registerSlot}
-            placeholder={SPACE_INPUT_PLACEHOLDER}
-            ariaLabel="공통 문자열 찾기"
-            inputClassName="field-input mono"
-          />
-          <RegisteredList
-            entries={slotEntries}
-            customRules={customRules}
-            isEnabled={(rules, row) =>
-              isPhraseSlotEntryEnabled(rules, row.tailWord)
-            }
-            onToggle={(row, on) =>
-              applyCustomRules(
-                togglePhraseSlotEntry(customRules, row.tailWord, on),
-              )
-            }
-            onRemove={(tw) =>
-              onCustomRulesChange(removePhraseSlotEntry(customRules, tw))
-            }
-          />
-        </div>
+        <div className="consistency-subsection-row">
+          <div className="consistency-subsection consistency-subsection--half">
+            <p className="printed-page-setup__title consistency-subsection-title">
+              공통 문자열 찾기
+            </p>
+            <div className="consistency-subsection__hints-area">
+              <p className="hint consistency-hint-block">
+                {`@을 포함한 공통 문자열을 모두 찾습니다
+(예: @시대 → 조선시대, 고려시대, 신라시대)`}
+              </p>
+            </div>
+            <ConsistencyRegisterField
+              value={slotInput}
+              onChange={setSlotInput}
+              onRegister={registerSlot}
+              placeholder={SPACE_INPUT_PLACEHOLDER}
+              ariaLabel="공통 문자열 찾기"
+              inputClassName="field-input mono"
+            />
+            <RegisteredList
+              entries={slotEntries}
+              customRules={customRules}
+              isEnabled={(rules, row) =>
+                isPhraseSlotEntryEnabled(rules, row.tailWord)
+              }
+              onToggle={(row, on) =>
+                applyCustomRules(
+                  togglePhraseSlotEntry(customRules, row.tailWord, on),
+                )
+              }
+              onRemove={(tw) =>
+                onCustomRulesChange(removePhraseSlotEntry(customRules, tw))
+              }
+            />
+          </div>
 
-        <div className="consistency-subsection consistency-subsection--exclude">
-          <p className="field-label">검수 제외 단어</p>
-          <p className="hint">등록한 단어는 찾지 않습니다 (예: 소녀시대)</p>
-          <ConsistencyRegisterField
-            value={globalExcludeInput}
-            onChange={setGlobalExcludeInput}
-            onRegister={addGlobalExcludePhrases}
-            placeholder={SPACE_INPUT_PLACEHOLDER}
-            ariaLabel="검수 제외 단어"
-          />
-          <ExcludePhraseList
-            phrases={globalExcludePhrases}
-            onRemove={removeGlobalExclude}
-          />
+          <div className="consistency-subsection consistency-subsection--half consistency-subsection--exclude">
+            <p className="printed-page-setup__title consistency-subsection-title">
+              검수 제외 단어
+            </p>
+            <div className="consistency-subsection__hints-area">
+              <p className="hint">등록한 단어는 찾지 않습니다 (예: 소녀시대)</p>
+            </div>
+            <ConsistencyRegisterField
+              value={globalExcludeInput}
+              onChange={setGlobalExcludeInput}
+              onRegister={addGlobalExcludePhrases}
+              placeholder={SPACE_INPUT_PLACEHOLDER}
+              ariaLabel="검수 제외 단어"
+            />
+            <ExcludePhraseList
+              phrases={globalExcludePhrases}
+              onRemove={removeGlobalExclude}
+            />
+          </div>
         </div>
       </section>
 
-      <section
-        className="consistency-section-box"
-        aria-labelledby="consistency-aux-heading"
-      >
-        <div className="bon-bojo-checklist-header">
-          <label className="caution-checklist-select-all">
-            <input
-              ref={auxiliarySelectAllRef}
-              type="checkbox"
-              checked={auxiliaryAllChecked}
-              disabled={auxiliaryTotal === 0}
-              onChange={() =>
-                applyCustomRules(
-                  setAllAuxiliaryVerbEntries(
-                    customRules,
-                    auxiliaryEntries,
-                    !auxiliaryAllChecked,
-                  ),
-                )
-              }
-              aria-label="본용언+보조용언 표기 전체 선택"
-            />
-          </label>
-          <p id="consistency-aux-heading" className="field-label bon-bojo-checklist-title">
-            본용언+보조용언 표기
-            {auxiliaryTotal > 0
-              ? ` (선택 ${auxiliaryActiveCount}/${auxiliaryTotal})`
-              : ''}
-          </p>
-        </div>
-        <p className="hint">현재 개발중인 기능으로 부족한 점이 있을 수 있습니다</p>
-        <RegisteredList
-          entries={auxiliaryEntries}
-          customRules={customRules}
-          isEnabled={isAuxiliaryVerbEntryEnabled}
-          onToggle={(row, on) =>
-            applyCustomRules(toggleAuxiliaryVerbEntry(customRules, row, on))
-          }
-          variant="auxiliary-grid"
-          isRequired={(row) => isBonBojoRequiredItem(row.bonBojoItemId)}
-        />
+      <section className="consistency-section-box">
+        <details className="consistency-auxiliary-details" open>
+          <summary
+            id="consistency-aux-heading"
+            className="consistency-section-head bon-bojo-checklist-header consistency-auxiliary-summary"
+          >
+            <DetailsChevron />
+            <label
+              className="caution-checklist-select-all"
+              onClick={(e) => e.stopPropagation()}
+              onKeyDown={(e) => e.stopPropagation()}
+            >
+              <input
+                ref={auxiliarySelectAllRef}
+                type="checkbox"
+                checked={auxiliaryAllChecked}
+                disabled={auxiliaryTotal === 0}
+                onChange={() =>
+                  applyCustomRules(
+                    setAllAuxiliaryVerbEntries(
+                      customRules,
+                      auxiliaryEntries,
+                      !auxiliaryAllChecked,
+                    ),
+                  )
+                }
+                aria-label="본용언+보조용언 표기 전체 선택"
+              />
+            </label>
+            <span className="printed-page-setup__title bon-bojo-checklist-title consistency-panel-section-title consistency-auxiliary-summary-title">
+              본용언+보조용언 표기
+              {auxiliaryTotal > 0
+                ? ` (선택 ${auxiliaryActiveCount}/${auxiliaryTotal})`
+                : ''}
+            </span>
+          </summary>
+          <RegisteredList
+            entries={auxiliaryEntries}
+            customRules={customRules}
+            isEnabled={isAuxiliaryVerbEntryEnabled}
+            onToggle={(row, on) =>
+              applyCustomRules(toggleAuxiliaryVerbEntry(customRules, row, on))
+            }
+            variant="auxiliary-grid"
+            isRequired={(row) => isBonBojoRequiredItem(row.bonBojoItemId)}
+          />
+        </details>
       </section>
 
       <TocBodySetupPanel
         embedded
-        textareaRows={5}
+        textareaRows={7}
         tocBodyText={tocBodyText}
         onTocBodyTextChange={onTocBodyTextChange}
         tocBodyExcludePages={tocBodyExcludePages}

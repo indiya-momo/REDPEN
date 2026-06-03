@@ -19,6 +19,10 @@ import {
   maxRulesExceededMessage,
 } from '../lib/activeRuleCount.js';
 import { runRuleCheckAsync } from '../lib/ruleEngine.js';
+import {
+  consistencyGroupScope,
+  filterCustomRulesByConsistencyScope,
+} from '../lib/consistencyCheckScopes.js';
 
 /**
  * 맞춤법·표기 일관성 규칙 검사 (목차 검사는 useTocBodyCheck)
@@ -159,7 +163,9 @@ export function useRuleCheck({
         return;
       }
       if (runConsistency && consistencyActiveRules.length === 0) {
-        alert('일관성 · 목차 확인을 진행할 기준을 등록해주세요');
+        alert(
+          '일관성 찾기·본용언+보조용언 표기에서 검사할 항목을 등록·선택하세요.',
+        );
         return;
       }
 
@@ -293,6 +299,113 @@ export function useRuleCheck({
   const runConsistencyCheck = useCallback(
     () => runCheckScope('consistency'),
     [runCheckScope],
+  );
+
+  const runConsistencyScopeCheck = useCallback(
+    async (subset) => {
+      if (!pageTexts.length) {
+        alert('먼저 PDF를 업로드하세요.');
+        return;
+      }
+
+      const rules = filterCustomRulesByConsistencyScope(
+        consistencyActiveRules,
+        subset,
+      );
+      if (!rules.length) {
+        alert(
+          subset === 'auxiliary'
+            ? '본용언+보조용언 표기에서 검사할 항목을 선택하세요.'
+            : '일관성 찾기에서 검사할 항목을 등록·선택하세요.',
+        );
+        return;
+      }
+
+      const activeTotal = countActiveRules({
+        builtInEnabled,
+        cautionEnabled,
+        customRules,
+      });
+      if (isOverMaxRules(activeTotal)) {
+        alert(maxRulesExceededMessage(activeTotal));
+        return;
+      }
+
+      setIsProcessing(true);
+      setProgress({ current: 0, total: pageTexts.length, phase: 'check' });
+
+      const { results: grouped, errors } = await runRuleCheckAsync(
+        pageTexts,
+        rules,
+        {
+          globalExcludePhrases,
+          onProgress: (current, total) => {
+            setProgress({ current, total, phase: 'check' });
+          },
+        },
+      );
+
+      const withZeroRows = mergeConsistencyZeroFindGroups(grouped, rules);
+
+      setConsistencyResults((prev) => {
+        const kept = prev.filter((g) => consistencyGroupScope(g) !== subset);
+        return mergeConsistencyZeroFindGroups([...kept, ...withZeroRows], rules);
+      });
+      setConsistencyCheckDone(true);
+      setResultVisibility((prev) => ({
+        ...prev,
+        ...defaultVisibilityForGroups(withZeroRows, 'consistency'),
+      }));
+
+      const inst =
+        withZeroRows.find((g) => g.instances.length > 0)?.instances[0] ?? null;
+      if (inst) {
+        setActiveSource('consistency');
+        setConsistencySelected(inst);
+      }
+
+      if (errors.length) {
+        alert(errors.join('\n'));
+      }
+
+      const findingCount = withZeroRows.reduce(
+        (n, g) => n + g.instances.length,
+        0,
+      );
+      trackCheckRun({
+        scope: subset === 'auxiliary' ? 'consistency-aux' : 'consistency-literal',
+        findingCount,
+        activeRuleCount: rules.length,
+      });
+      trackResultViewed({ scope: 'consistency', findingCount });
+
+      setCurrentPage(inst?.pageNum ?? 1);
+      setIsProcessing(false);
+      setProgress(null);
+      await afterCheckRef.current?.();
+    },
+    [
+      pageTexts,
+      builtInEnabled,
+      cautionEnabled,
+      customRules,
+      consistencyActiveRules,
+      globalExcludePhrases,
+      setCurrentPage,
+      setIsProcessing,
+      setProgress,
+      afterCheckRef,
+    ],
+  );
+
+  const runConsistencyLiteralCheck = useCallback(
+    () => runConsistencyScopeCheck('literal-slot'),
+    [runConsistencyScopeCheck],
+  );
+
+  const runConsistencyAuxiliaryCheck = useCallback(
+    () => runConsistencyScopeCheck('auxiliary'),
+    [runConsistencyScopeCheck],
   );
 
   const selectInstance = useCallback(
@@ -475,6 +588,8 @@ export function useRuleCheck({
     clearConsistencyCheckState,
     runSpellingCheck,
     runConsistencyCheck,
+    runConsistencyLiteralCheck,
+    runConsistencyAuxiliaryCheck,
     selectInstance,
     goToPage,
     selectPageInGroup,

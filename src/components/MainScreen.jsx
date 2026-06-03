@@ -12,10 +12,12 @@ import PdfViewer from './PdfViewer.jsx';
 import AppVersionBadge from './AppVersionBadge.jsx';
 import ResizableBuiltinSpelling from './ResizableBuiltinSpelling.jsx';
 import ConsistencyPanel from './ConsistencyPanel.jsx';
+import PanelSectionRunButton from './PanelSectionRunButton.jsx';
 import FeedbackModal from './FeedbackModal.jsx';
 import PdfPreviewBar from './PdfPreviewBar.jsx';
 import PdfZoomBar from './PdfZoomBar.jsx';
 import CheckResultsPanel from './CheckResultsPanel.jsx';
+import PrintedPageSetup from './PrintedPageSetup.jsx';
 import PdfCenterStage from './PdfCenterStage.jsx';
 import TocBodyResultsPanel from '../toc-body/components/TocBodyResultsPanel.jsx';
 import { useTocBodyCheck } from '../toc-body/hooks/useTocBodyCheck.js';
@@ -488,8 +490,8 @@ export default function MainScreen({
     ) : null;
 
   const showPdfViewer = useMemo(
-    () => shouldShowPdfViewer(Boolean(pdf.pdf), tabCheckDone),
-    [pdf.pdf, tabCheckDone],
+    () => shouldShowPdfViewer(Boolean(pdf.pdf)),
+    [pdf.pdf],
   );
   const isPreUpload = !pdf.pdf;
 
@@ -624,7 +626,7 @@ export default function MainScreen({
         </header>
         {isPreUpload ? (
           <p className="panel-left__preupload-hint">
-            PDF 업로드 후 기준을 설정할 수 있습니다
+            가운데에서 PDF를 업로드하면 맞춤법·일관성·목차 검사에 함께 사용됩니다
           </p>
         ) : null}
 
@@ -632,6 +634,36 @@ export default function MainScreen({
           <div
             className={spellingTabLayoutClassName}
           >
+            {pdf.pdf ? (
+              <div className="spelling-tab-layout__calibration">
+                <PrintedPageSetup
+                  currentSystemPage={pdf.currentPage}
+                  active={pageDisplay.active}
+                  currentPrintedLabel={pageDisplay.formatLabel(pdf.currentPage)}
+                  previewPrintedLabel={
+                    pageDisplay.active
+                      ? pageDisplay.formatPageText(pdf.currentPage)
+                      : pageDisplay.formatNaturalPreview(pdf.currentPage)
+                  }
+                  spreadInput={pageDisplay.spreadInput}
+                  onSpreadInputChange={pageDisplay.setSpreadInput}
+                  firstPageSingle={pageDisplay.firstPageSingle}
+                  onFirstPageSingleChange={pageDisplay.setFirstPageSingle}
+                  onCalibrateFromInput={pageDisplay.calibrateFromInput}
+                  onClear={pageDisplay.clearCalibration}
+                />
+              </div>
+            ) : null}
+            {pdf.pdf && !tabCheckDone ? (
+              <div className="spelling-tab-layout__run-row">
+                <PanelSectionRunButton
+                  label="기준 검수"
+                  onClick={ruleCheck.runSpellingCheck}
+                  disabled={pdf.pageTexts.length === 0}
+                  isProcessing={pdf.isProcessing}
+                />
+              </div>
+            ) : null}
             {tabCheckDone && (
               <div className="spelling-tab-scroll custom-scrollbar">
                 {spellingResultsPanel}
@@ -768,6 +800,11 @@ export default function MainScreen({
                     setConsistencyFocus('toc');
                     setLastConsistencyPane('toc');
                     await tocCheck.runCheck();
+                  }}
+                  onRunRulesCheck={async () => {
+                    setConsistencyFocus('rules');
+                    setLastConsistencyPane('rules');
+                    await ruleCheck.runConsistencyCheck();
                   }}
                   hasPdf={pdf.pageTexts.length > 0}
                   isProcessing={pdf.isProcessing}

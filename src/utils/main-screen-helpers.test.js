@@ -75,10 +75,9 @@ describe('clampPageNumber', () => {
 });
 
 describe('shouldShowPdfViewer', () => {
-  it('PDF와 검사 완료가 모두 필요하다', () => {
-    expect(shouldShowPdfViewer(true, true)).toBe(true);
-    expect(shouldShowPdfViewer(false, true)).toBe(false);
-    expect(shouldShowPdfViewer(true, false)).toBe(false);
+  it('PDF가 있으면 맞춤법·일관성 탭 모두 뷰어를 연다', () => {
+    expect(shouldShowPdfViewer(true)).toBe(true);
+    expect(shouldShowPdfViewer(false)).toBe(false);
   });
 });
 

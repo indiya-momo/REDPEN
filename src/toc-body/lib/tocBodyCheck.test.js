@@ -75,7 +75,7 @@ describe('tocBodyCheck', () => {
           index: 0,
         },
       ]),
-    ).toBe('missing');
+    ).toBe('mismatch');
   });
 
   it('parseTocBodyText — 빈 줄·중복 제거', () => {
@@ -89,6 +89,30 @@ describe('tocBodyCheck', () => {
     );
     expect(groups[0]?.tocStatus).toBe('mismatch');
     expect(groups[0]?.instances[0]?.matchedText).toBe('보여준다');
+  });
+
+  it('CHAPTER 2. — 본문에 와·가운뎃점이 있어도 분위기 경제를 찾는다', () => {
+    const pages = [
+      {
+        pageNum: 34,
+        text: 'CHAPTER 2.\n분위기와 경제\n본문',
+      },
+    ];
+    const groups = runTocBodyCheck(pages, 'CHAPTER 2. 분위기 경제', null, '18-24');
+    expect(groups[0]?.tocStatus).not.toBe('missing');
+    expect(groups[0]?.instances[0]?.pageNum).toBe(34);
+  });
+
+  it('CHAPTER 1. — 장 번호 마침표 토큰이 깨지지 않고 본문 2줄을 찾는다', () => {
+    const pages = [
+      {
+        pageNum: 27,
+        text: 'CHAPTER 1.\n경제왕국\n본문',
+      },
+    ];
+    const groups = runTocBodyCheck(pages, 'CHAPTER 1. 경제왕국', null, '18-24');
+    expect(groups[0]?.tocStatus).toBe('match');
+    expect(groups[0]?.instances[0]?.pageNum).toBe(27);
   });
 
   it('로마 숫자 Ⅰ(I)·마침표·줄바꿈 차이는 찾되 불일치로 표시한다', () => {

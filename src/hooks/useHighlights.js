@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { getBuiltInTip } from '../lib/builtInRules.js';
+import { getConsistencyHighlightTip } from '../lib/consistencyHighlightTip.js';
 import { findActiveGroup, instancesMatch, isResultGroupVisible } from '../lib/checkResultUtils.js';
 import { highlightRangeForInstance } from '../lib/pdfService.js';
 
@@ -45,7 +46,9 @@ export function useHighlights({
           (group.tip || '').trim() ||
           (source === 'spelling' && group.category !== 'caution'
             ? getBuiltInTip(group.find, group.replace)
-            : '');
+            : source === 'consistency'
+              ? getConsistencyHighlightTip(group)
+              : '');
         for (const inst of group.instances) {
           if (inst.pageNum === currentPage) {
             onPage.push({ inst, tip: tipText });
