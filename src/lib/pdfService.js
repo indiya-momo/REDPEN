@@ -1,6 +1,12 @@
 // legacy 빌드: Map.getOrInsertComputed 등 최신 JS API 폴리필 (구형 Chrome·Cursor 내장 브라우저)
 import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
 import pdfWorkerUrl from 'pdfjs-dist/legacy/build/pdf.worker.min.mjs?url';
+import { resolveHighlightRange } from './pdfHighlightRange.js';
+import {
+  findRefForTextIndex,
+  getLineContextAtTextIndex,
+  isStandaloneTitleOnLine,
+} from '../toc-body/lib/pdfHeadingExtract.js';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 
@@ -65,7 +71,9 @@ export async function extractAllPagesText(pdf, onProgress) {
 
   for (let i = 1; i <= total; i++) {
     const page = await pdf.getPage(i);
-    const content = await page.getTextContent();
+    const content = await page.getTextContent({
+      disableCombineTextItems: true,
+    });
     const { text, itemRefs } = buildPageText(content.items);
     pages.push({
       pageNum: i,
@@ -111,58 +119,127 @@ export function shouldInsertSpaceBetweenPdfItems(gap, lineH, leftStr, rightStr) 
   );
 }
 
+/** 소제목·본문이 비슷한 y인데 포인트만 다를 때 한 줄로 묶지 않음 */
+const FONT_LINE_SPLIT_RATIO = 1.18;
+/** 왼쪽 여백으로 다시 돌아오면 새 줄(인디자인 소제목) */
+const LINE_X_RESET_PT = 36;
+
+/**
+ * @param {import('pdfjs-dist').TextItem} item
+ */
+function pdfItemFontSize(item) {
+  const t = item.transform ?? [];
+  return Math.max(
+    Math.abs(t[0] ?? 0),
+    Math.abs(t[3] ?? 0),
+    Math.hypot(t[2] ?? 0, t[3] ?? 0),
+    8,
+  );
+}
+
+/**
+ * @param {{ item: import('pdfjs-dist').TextItem, itemIndex: number }} prev
+ * @param {import('pdfjs-dist').TextItem} item
+ */
+function shouldStartNewTextLine(prev, item) {
+  if (!prev) return false;
+  const prevItem = prev.item;
+  if (prevItem.hasEOL) return true;
+
+  const y0 = prevItem.transform?.[5] ?? 0;
+  const y1 = item.transform?.[5] ?? 0;
+  const s0 = pdfItemFontSize(prevItem);
+  const s1 = pdfItemFontSize(item);
+  const lineH = Math.max(s0, s1) * 0.55;
+  if (Math.abs(y0 - y1) > lineH) return true;
+
+  const ratio = Math.max(s0, s1) / Math.min(s0, s1);
+  if (ratio > FONT_LINE_SPLIT_RATIO) return true;
+
+  const f0 = prevItem.fontName ?? '';
+  const f1 = item.fontName ?? '';
+  if (f0 && f1 && f0 !== f1) return true;
+
+  const xEnd =
+    (prevItem.transform?.[4] ?? 0) + (prevItem.width ?? prevItem.str.length * s0 * 0.5);
+  const xStart = item.transform?.[4] ?? 0;
+  if (xStart < xEnd - LINE_X_RESET_PT) return true;
+
+  return false;
+}
+
+/**
+ * @param {{ item: import('pdfjs-dist').TextItem, itemIndex: number }[]} entries
+ * @param {string} text
+ * @param {TextItemRef[]} itemRefs
+ */
+function appendBuiltLine(entries, text, itemRefs) {
+  if (!entries.length) return text;
+
+  entries.sort(
+    (a, b) => (a.item.transform?.[4] ?? 0) - (b.item.transform?.[4] ?? 0),
+  );
+
+  for (let i = 0; i < entries.length; i++) {
+    const { item, itemIndex } = entries[i];
+    const start = text.length;
+    text += item.str;
+    itemRefs.push({ start, end: text.length, itemIndex });
+    if (i < entries.length - 1) {
+      const gap =
+        (entries[i + 1].item.transform?.[4] ?? 0) -
+        ((item.transform?.[4] ?? 0) + (item.width ?? 0));
+      const lineH =
+        Math.max(
+          Math.hypot(item.transform?.[2] ?? 0, item.transform?.[3] ?? 0),
+          8,
+        ) * 0.35;
+      const nextStr = entries[i + 1].item.str ?? '';
+      if (shouldInsertSpaceBetweenPdfItems(gap, lineH, item.str, nextStr)) {
+        text += ' ';
+      }
+    }
+  }
+  return `${text}\n`;
+}
+
 /**
  * @param {import('pdfjs-dist').TextItem[]} items
  */
-function buildPageText(items) {
-  /** @type {{ y: number, entries: { item: import('pdfjs-dist').TextItem, itemIndex: number }[] }[]} */
-  const lines = [];
+export function buildPageText(items) {
+  /** @type {{
+   *   y: number,
+   *   entries: { item: import('pdfjs-dist').TextItem, itemIndex: number }[],
+   * }[]} */
+  const builtLines = [];
+  /** @type {{ item: import('pdfjs-dist').TextItem, itemIndex: number }[]} */
+  let bucket = [];
+
+  const flush = () => {
+    if (!bucket.length) return;
+    const y = bucket[0].item.transform?.[5] ?? 0;
+    builtLines.push({ y, entries: bucket });
+    bucket = [];
+  };
 
   items.forEach((item, itemIndex) => {
     if (!('str' in item) || !item.str) return;
-    const y = item.transform?.[5] ?? 0;
-    const lineH =
-      Math.max(Math.hypot(item.transform?.[2] ?? 0, item.transform?.[3] ?? 0), 8) *
-      0.55;
-    let line = lines.find((l) => Math.abs(l.y - y) <= lineH);
-    if (!line) {
-      line = { y, entries: [] };
-      lines.push(line);
+    const row = { item, itemIndex };
+    if (bucket.length && shouldStartNewTextLine(bucket[bucket.length - 1], item)) {
+      flush();
     }
-    line.entries.push({ item, itemIndex });
+    bucket.push(row);
+    if (item.hasEOL) flush();
   });
+  flush();
 
-  lines.sort((a, b) => b.y - a.y);
+  builtLines.sort((a, b) => b.y - a.y);
 
   let text = '';
   /** @type {TextItemRef[]} */
   const itemRefs = [];
-
-  for (const line of lines) {
-    line.entries.sort(
-      (a, b) => (a.item.transform?.[4] ?? 0) - (b.item.transform?.[4] ?? 0),
-    );
-    for (let i = 0; i < line.entries.length; i++) {
-      const { item, itemIndex } = line.entries[i];
-      const start = text.length;
-      text += item.str;
-      itemRefs.push({ start, end: text.length, itemIndex });
-      if (i < line.entries.length - 1) {
-        const gap =
-          (line.entries[i + 1].item.transform?.[4] ?? 0) -
-          ((item.transform?.[4] ?? 0) + (item.width ?? 0));
-        const lineH =
-          Math.max(
-            Math.hypot(item.transform?.[2] ?? 0, item.transform?.[3] ?? 0),
-            8,
-          ) * 0.35;
-        const nextStr = line.entries[i + 1].item.str ?? '';
-        if (shouldInsertSpaceBetweenPdfItems(gap, lineH, item.str, nextStr)) {
-          text += ' ';
-        }
-      }
-    }
-    text += '\n';
+  for (const line of builtLines) {
+    text = appendBuiltLine(line.entries, text, itemRefs);
   }
 
   return { text, itemRefs };
@@ -329,22 +406,102 @@ export function highlightRangeForInstance(pageData, instance) {
   if (!pageData || !instance?.matchedText) return null;
   if (instance.pageNum !== pageData.pageNum) return null;
 
-  const { index, matchedText } = instance;
-  const end = index + matchedText.length;
-  const slice = pageData.text.slice(index, end);
+  return resolveHighlightRange(pageData, instance);
+}
 
-  if (slice === matchedText) {
-    return { start: index, end };
+/**
+ * @param {import('pdfjs-dist').PDFPageProxy} page
+ * @param {import('pdfjs-dist').PageViewport} viewport
+ * @param {import('pdfjs-dist').TextItem} item
+ * @param {number} localStart
+ * @param {number} localEnd
+ */
+function viewportBoxForTextItem(page, viewport, item, localStart, localEnd) {
+  const tx = pdfjsLib.Util.transform(viewport.transform, item.transform);
+  const fontHeight = Math.hypot(tx[2], tx[3]);
+  const scaledItemWidth = (item.width ?? 0) * viewport.scale;
+  const strLen = item.str.length || 1;
+  const charWidth =
+    scaledItemWidth > 0
+      ? scaledItemWidth / strLen
+      : Math.max(fontHeight * 0.52, 4);
+  const spanLen = Math.max(localEnd - localStart, 0);
+
+  return {
+    left: tx[4] + charWidth * localStart,
+    top: tx[5] - fontHeight,
+    width: Math.max(charWidth * spanLen, 4),
+    height: Math.max(fontHeight * 1.15, 6),
+  };
+}
+
+/**
+ * @param {Array<{ left: number, top: number, width: number, height: number }>} boxes
+ */
+function mergeHighlightBoxes(boxes) {
+  if (!boxes.length) return [];
+  let minL = Infinity;
+  let minT = Infinity;
+  let maxR = -Infinity;
+  let maxB = -Infinity;
+  for (const b of boxes) {
+    minL = Math.min(minL, b.left);
+    minT = Math.min(minT, b.top);
+    maxR = Math.max(maxR, b.left + b.width);
+    maxB = Math.max(maxB, b.top + b.height);
+  }
+  return [
+    {
+      left: minL,
+      top: minT,
+      width: Math.max(maxR - minL, 4),
+      height: Math.max(maxB - minT, 6),
+    },
+  ];
+}
+
+/**
+ * @param {PageData} pageData
+ * @param {import('pdfjs-dist').PDFPageProxy} page
+ * @param {import('pdfjs-dist').PageViewport} viewport
+ * @param {number} matchStart
+ * @param {number} matchEnd
+ */
+function highlightRectsFromLineContext(pageData, page, viewport, matchStart, matchEnd) {
+  const items = pageData.items ?? [];
+  const itemRefs = pageData.itemRefs ?? [];
+  const ctx = getLineContextAtTextIndex(pageData, matchStart);
+  if (!ctx) return [];
+
+  const onLineRefs = itemRefs.filter(
+    (ref) => ref.end > ctx.lineStart && ref.start < ctx.lineEnd,
+  );
+
+  const overlapping = onLineRefs.filter(
+    (ref) => ref.end > matchStart && ref.start < matchEnd,
+  );
+  const matchedSlice = pageData.text.slice(matchStart, matchEnd);
+  const standalone = isStandaloneTitleOnLine(ctx.lineText, matchedSlice);
+  const pool = standalone && onLineRefs.length ? onLineRefs : overlapping;
+
+  /** @type {Array<{ left: number, top: number, width: number, height: number }>} */
+  const boxes = [];
+  for (const ref of pool) {
+    const item = items[ref.itemIndex];
+    if (!item || !('str' in item) || !item.str) continue;
+
+    const localStart = Math.max(0, matchStart - ref.start);
+    const localEnd = Math.min(item.str.length, matchEnd - ref.start);
+    if (standalone) {
+      boxes.push(viewportBoxForTextItem(page, viewport, item, 0, item.str.length));
+      continue;
+    }
+    if (localEnd <= localStart) continue;
+    boxes.push(viewportBoxForTextItem(page, viewport, item, localStart, localEnd));
   }
 
-  const found = pageData.text.indexOf(matchedText, Math.max(0, index - 80));
-  if (found === -1) {
-    const anywhere = pageData.text.indexOf(matchedText);
-    if (anywhere === -1) return null;
-    return { start: anywhere, end: anywhere + matchedText.length };
-  }
-
-  return { start: found, end: found + matchedText.length };
+  if (!boxes.length) return [];
+  return standalone ? mergeHighlightBoxes(boxes) : boxes;
 }
 
 /**
@@ -355,6 +512,7 @@ export function highlightRangeForInstance(pageData, instance) {
  * @param {TextItemRef[]} itemRefs
  * @param {number} matchStart
  * @param {number} matchEnd
+ * @param {PageData} [pageData]
  * @returns {Array<{ left: number, top: number, width: number, height: number }>}
  */
 export function highlightRectsForTextRange(
@@ -364,7 +522,9 @@ export function highlightRectsForTextRange(
   itemRefs,
   matchStart,
   matchEnd,
+  pageData = null,
 ) {
+  /** @type {Array<{ left: number, top: number, width: number, height: number }>} */
   const rects = [];
 
   for (const ref of itemRefs) {
@@ -377,19 +537,42 @@ export function highlightRectsForTextRange(
     const localEnd = Math.min(item.str.length, matchEnd - ref.start);
     if (localEnd <= localStart) continue;
 
-    const tx = pdfjsLib.Util.transform(viewport.transform, item.transform);
-    const fontHeight = Math.hypot(tx[2], tx[3]);
-    const fullWidth = (item.width ?? 0) * viewport.scale;
-    const strLen = item.str.length || 1;
-    const ratioStart = localStart / strLen;
-    const ratioLen = (localEnd - localStart) / strLen;
+    rects.push(
+      viewportBoxForTextItem(page, viewport, item, localStart, localEnd),
+    );
+  }
 
-    rects.push({
-      left: tx[4] + fullWidth * ratioStart,
-      top: tx[5] - fontHeight,
-      width: Math.max(fullWidth * ratioLen, 3),
-      height: Math.max(fontHeight * 1.15, 6),
-    });
+  if (rects.length) return rects;
+
+  if (pageData) {
+    const fromLine = highlightRectsFromLineContext(
+      pageData,
+      page,
+      viewport,
+      matchStart,
+      matchEnd,
+    );
+    if (fromLine.length) return fromLine;
+  }
+
+  if (!itemRefs.length) return [];
+
+  const hit = findRefForTextIndex(itemRefs, matchStart);
+  const anchor = hit ? items[hit.itemIndex] : null;
+  const y = anchor?.transform?.[5] ?? 0;
+  const lineH =
+    Math.max(
+      Math.hypot(anchor?.transform?.[2] ?? 0, anchor?.transform?.[3] ?? 0),
+      8,
+    ) * 0.55;
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+    if (!item?.transform) continue;
+    const iy = item.transform[5] ?? 0;
+    if (Math.abs(iy - y) > lineH) continue;
+    rects.push(
+      viewportBoxForTextItem(page, viewport, item, 0, item.str?.length ?? 0),
+    );
   }
 
   return rects;

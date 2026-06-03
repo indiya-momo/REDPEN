@@ -7,6 +7,30 @@
 /** @typedef {{ group: GroupedResult, source: 'spelling' | 'consistency' }} TabEntry */
 
 /**
+ * 맞춤법 탭 결과 목록 — 맞춤법 기준 전부 먼저, 검토필요(주의) 기준 다음 (각각 쪽·라벨 순)
+ * @param {GroupedResult[]} groups
+ * @returns {GroupedResult[]}
+ */
+export function sortSpellingResultsForDisplay(groups) {
+  /** @type {GroupedResult[]} */
+  const builtin = [];
+  /** @type {GroupedResult[]} */
+  const caution = [];
+  for (const g of groups) {
+    if (g.category === 'caution') caution.push(g);
+    else builtin.push(g);
+  }
+  const cmp = (a, b) => {
+    const pa = a.instances[0]?.pageNum ?? 0;
+    const pb = b.instances[0]?.pageNum ?? 0;
+    return pa - pb || String(a.label ?? '').localeCompare(String(b.label ?? ''), 'ko');
+  };
+  builtin.sort(cmp);
+  caution.sort(cmp);
+  return [...builtin, ...caution];
+}
+
+/**
  * 맞춤법·일관성 규칙 검사 결과 패널용 엔트리 (목차 검사는 TocBodyResultsPanel 전용)
  * @param {WorkTab} workTab
  * @param {GroupedResult[]} spellingResults
@@ -16,7 +40,10 @@
 export function buildTabEntries(workTab, spellingResults, consistencyResults) {
   /** @type {TabEntry[]} */
   const entries = [];
-  const results = workTab === 'spelling' ? spellingResults : consistencyResults;
+  const results =
+    workTab === 'spelling'
+      ? sortSpellingResultsForDisplay(spellingResults)
+      : consistencyResults;
   const source = workTab === 'spelling' ? 'spelling' : 'consistency';
   for (const group of results) {
     if (group.patternKind === 'toc-body') continue;

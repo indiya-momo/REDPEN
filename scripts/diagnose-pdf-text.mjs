@@ -6,48 +6,12 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
+import { buildPageText } from '../src/lib/pdfService.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 pdfjsLib.GlobalWorkerOptions.workerSrc = pathToFileURL(
   path.resolve(__dirname, '../node_modules/pdfjs-dist/legacy/build/pdf.worker.min.mjs'),
 ).href;
-
-function buildPageText(items) {
-  const lines = [];
-  items.forEach((item, itemIndex) => {
-    if (!('str' in item) || !item.str) return;
-    const y = item.transform?.[5] ?? 0;
-    const lineH =
-      Math.max(Math.hypot(item.transform?.[2] ?? 0, item.transform?.[3] ?? 0), 8) * 0.55;
-    let line = lines.find((l) => Math.abs(l.y - y) <= lineH);
-    if (!line) {
-      line = { y, entries: [] };
-      lines.push(line);
-    }
-    line.entries.push({ item, itemIndex });
-  });
-  lines.sort((a, b) => b.y - a.y);
-  let text = '';
-  for (const line of lines) {
-    line.entries.sort(
-      (a, b) => (a.item.transform?.[4] ?? 0) - (b.item.transform?.[4] ?? 0),
-    );
-    for (let i = 0; i < line.entries.length; i++) {
-      const { item } = line.entries[i];
-      text += item.str;
-      if (i < line.entries.length - 1) {
-        const gap =
-          (line.entries[i + 1].item.transform?.[4] ?? 0) -
-          ((item.transform?.[4] ?? 0) + (item.width ?? 0));
-        const lineH =
-          Math.max(Math.hypot(item.transform?.[2] ?? 0, item.transform?.[3] ?? 0), 8) * 0.35;
-        if (gap > lineH) text += ' ';
-      }
-    }
-    text += '\n';
-  }
-  return text;
-}
 
 function scorePage(items, text) {
   let charCount = 0;
@@ -74,9 +38,19 @@ function scorePage(items, text) {
   };
 }
 
-const pdfPath = process.argv[2];
+const args = process.argv.slice(2);
+const pdfPath = args.find((a) => !a.startsWith('--'));
+const pageArg = args.find((a) => a.startsWith('--page='));
+const phraseArg = args.find((a) => a.startsWith('--phrase='));
+const targetPage = pageArg ? Number.parseInt(pageArg.split('=')[1], 10) : null;
+const targetPhrase = phraseArg
+  ? decodeURIComponent(phraseArg.split('=').slice(1).join('='))
+  : null;
+
 if (!pdfPath) {
-  console.error('Usage: node scripts/diagnose-pdf-text.mjs "<path>"');
+  console.error(
+    'Usage: node scripts/diagnose-pdf-text.mjs "<path>" [--page=42] [--phrase=불확실성의 케이크]',
+  );
   process.exit(1);
 }
 
@@ -99,10 +73,10 @@ console.log(JSON.stringify({ ...meta, pages: pdf.numPages, bytes: fileBuf.length
 const scored = [];
 for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
   const page = await pdf.getPage(pageNum);
-  const content = await page.getTextContent();
-  const items = content.items.filter((it) => 'str' in it);
-  const text = buildPageText(content.items);
-  scored.push({ pageNum, ...scorePage(items, text), text, items });
+  const content = await page.getTextContent({ disableCombineTextItems: true });
+  const items = content.items.filter((it) => 'str' in it && it.str);
+  const { text, itemRefs } = buildPageText(items);
+  scored.push({ pageNum, ...scorePage(items, text), text, items, itemRefs });
   if (pageNum <= 15) {
     console.log(`\n--- page ${pageNum} ---`);
     console.log(JSON.stringify({ pageNum, ...scorePage(items, text) }));
@@ -134,3 +108,66 @@ console.log(p1.text.slice(0, 1200));
 const ys = rawItems.map((it) => it.transform?.[5] ?? 0);
 const sortedY = [...new Set(ys.map((y) => Math.round(y * 10) / 10))].sort((a, b) => b - a);
 console.log(`\n=== Page 1 distinct Y bands (~0.1): ${sortedY.length} ===`);
+
+if (targetPage && targetPhrase) {
+  const row = scored.find((s) => s.pageNum === targetPage);
+  if (!row) {
+    console.error(`\nNo page ${targetPage}`);
+    process.exit(1);
+  }
+  const needle = targetPhrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const re = new RegExp(needle, 'gu');
+  console.log(`\n=== Phrase audit: page ${targetPage} "${targetPhrase}" ===`);
+  let n = 0;
+  let match;
+  while ((match = re.exec(row.text)) !== null) {
+    n += 1;
+    const idx = match.index;
+    const lineStart = row.text.lastIndexOf('\n', idx - 1) + 1;
+    const lineEnd = row.text.indexOf('\n', idx);
+    const lineText = row.text
+      .slice(lineStart, lineEnd === -1 ? undefined : lineEnd)
+      .trim();
+    const overlapping = [];
+    let cursor = 0;
+    for (let itemIndex = 0; itemIndex < row.items.length; itemIndex++) {
+      const it = row.items[itemIndex];
+      if (!it.str) continue;
+      const start = cursor;
+      const end = cursor + it.str.length;
+      if (end > idx && start < idx + match[0].length) {
+        const size = Math.max(
+          Math.abs(it.transform?.[0] ?? 0),
+          Math.abs(it.transform?.[3] ?? 0),
+        );
+        overlapping.push({
+          str: it.str,
+          x: Number((it.transform?.[4] ?? 0).toFixed(1)),
+          y: Number((it.transform?.[5] ?? 0).toFixed(1)),
+          pt: Number(size.toFixed(1)),
+        });
+      }
+      cursor = end + (it.hasEOL ? 1 : 0);
+    }
+    const standalone =
+      lineText === match[0] ||
+      (lineText.startsWith(match[0]) && lineText.length <= match[0].length + 12);
+    console.log(
+      JSON.stringify(
+        {
+          hit: n,
+          index: idx,
+          matched: match[0],
+          lineText: lineText.slice(0, 120),
+          standalone,
+          items: overlapping,
+        },
+        null,
+        2,
+      ),
+    );
+  }
+  if (!n) {
+    console.log('(no matches in assembled page.text — 소제목이 텍스트 레이어에 없을 수 있음)');
+  }
+}

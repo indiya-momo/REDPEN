@@ -1,8 +1,8 @@
 /** 붙임·띄움 공통 — 앞말 캡처 (공백 아닌 문자 2자 이상) */
 export const COMPOUND_PREFIX = String.raw`(\S{2,})`;
 
-/** 공백·NBSP 1칸 이상 */
-export const FLEX_SPACE = String.raw`[ \u00A0]+`;
+/** 공백·NBSP·조판용 공백 (인디자인 PDF) */
+export const FLEX_SPACE = String.raw`[ \t\u00A0\u1680\u2000-\u200A\u202F\u205F\u3000]+`;
 
 /** 본용언+보조용언 — 줄바꿈·조판용 공백 포함 */
 export const AUXILIARY_FLEX_SPACE = String.raw`(?:[ \t\u00A0\u1680\u2000-\u200A\u202F\u205F\u3000\u200B\uFEFF]+|[\r\n])+`;
@@ -48,6 +48,14 @@ export function tailRegexFragment(tailWord) {
   const parts = tailWord.trim().split(/\s+/).filter(Boolean);
   if (!parts.length) return '';
   return parts.map(escapeRegex).join(FLEX_SPACE);
+}
+
+/** 문자열 찾기 — 띄어쓰기 0칸(붙임)·다칸 모두 허용 */
+export function tailRegexFragmentForFind(tailWord) {
+  const parts = tailWord.trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return '';
+  const gap = String.raw`[ \t\u00A0\u1680\u2000-\u200A\u202F\u205F\u3000]*`;
+  return parts.map(escapeRegex).join(gap);
 }
 
 /**

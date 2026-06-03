@@ -7,9 +7,55 @@ import {
   getSpellingTabLayoutClassName,
   isTabCheckDone,
   shouldShowPdfViewer,
+  sortSpellingResultsForDisplay,
 } from './main-screen-helpers.js';
 
 describe('buildTabEntries', () => {
+  it('맞춤법 탭 — 맞춤법 기준 뒤 검토필요 기준', () => {
+    const entries = buildTabEntries(
+      'spelling',
+      [
+        {
+          category: 'caution',
+          label: 'z',
+          find: 'z',
+          replace: 'z',
+          instances: [{ pageNum: 1 }],
+        },
+        {
+          category: 'spelling',
+          label: 'b',
+          find: 'b',
+          replace: 'b',
+          instances: [{ pageNum: 5 }],
+        },
+        {
+          category: 'caution',
+          label: 'y',
+          find: 'y',
+          replace: 'y',
+          instances: [{ pageNum: 2 }],
+        },
+        {
+          category: 'spelling',
+          label: 'a',
+          find: 'a',
+          replace: 'a',
+          instances: [{ pageNum: 3 }],
+        },
+      ],
+      [],
+    );
+    expect(entries.map((e) => e.group.category)).toEqual([
+      'spelling',
+      'spelling',
+      'caution',
+      'caution',
+    ]);
+    expect(entries[0].group.label).toBe('a');
+    expect(entries[2].group.label).toBe('z');
+  });
+
   it('맞춤법 탭이면 spelling 결과만 묶는다', () => {
     const entries = buildTabEntries(
       'spelling',

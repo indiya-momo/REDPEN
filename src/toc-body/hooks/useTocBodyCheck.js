@@ -22,6 +22,7 @@ export const TOC_BODY_RESULT_SOURCE = 'toc-body';
  *   tocBodyStartPage?: number | null,
  *   tocBodyExcludePages?: string,
  *   mapPrintPageToSystem?: (printPage: number) => number,
+ *   mapSystemPageToPrint?: (systemPage: number) => number,
  *   printedPagesActive?: boolean,
  *   pageTexts: import('../../lib/pdfService.js').PageData[],
  *   currentPage: number,
@@ -36,6 +37,7 @@ export function useTocBodyCheck({
   tocBodyStartPage = null,
   tocBodyExcludePages = '',
   mapPrintPageToSystem,
+  mapSystemPageToPrint,
   printedPagesActive = false,
   pageTexts,
   currentPage,
@@ -108,6 +110,7 @@ export function useTocBodyCheck({
       tocBodyStartPage,
       tocBodyExcludePages,
       mapPrintPageToSystem,
+      mapSystemPageToPrint,
     );
     setResults(groups);
     setCheckDone(groups.length > 0);
@@ -138,6 +141,7 @@ export function useTocBodyCheck({
     tocBodyStartPage,
     tocBodyExcludePages,
     mapPrintPageToSystem,
+    mapSystemPageToPrint,
     printedPagesActive,
     setCurrentPage,
     setIsProcessing,

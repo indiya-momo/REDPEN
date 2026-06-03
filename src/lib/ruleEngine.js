@@ -4,6 +4,8 @@ import {
   ruleDisplayLabel,
 } from './regexFromFind.js';
 import { isGloballyExcluded, shouldSkipMatch } from './matchFilters.js';
+import { tailRegexFragmentForFind } from './compoundPatternCommon.js';
+import { getLineContextAtTextIndex } from '../toc-body/lib/pdfHeadingExtract.js';
 import { isMatchSpatiallyCoherent } from './matchSpatial.js';
 
 /**
@@ -69,10 +71,113 @@ function finalizeResults(byKey) {
  * @param {string[]} globalExcludePhrases
  * @param {string[]} errors
  */
+/**
+ * 문자열 찾기 — 줄 단위 검색(소제목·본문이 한 덩어리 page.text에 붙는 경우 방지)
+ * @param {import('./ruleTypes.js').Rule} rule
+ * @param {import('./pdfService.js').PageData} page
+ * @param {Map<string, GroupedResult>} byKey
+ * @param {string[]} globalExcludePhrases
+ */
+/**
+ * @param {import('./ruleTypes.js').Rule} rule
+ * @param {import('./pdfService.js').PageData} page
+ * @param {Map<string, GroupedResult>} byKey
+ * @param {number} globalIndex
+ * @param {string} matchedText
+ */
+function pushCompoundFindInstance(rule, page, byKey, globalIndex, matchedText) {
+  const key = `${rule.find}\0${rule.replace}\0${rule.pattern ?? 'literal'}`;
+  if (!byKey.has(key)) {
+    const tip = String(rule.tip ?? '').trim();
+    byKey.set(key, {
+      find: rule.find,
+      replace: rule.replace,
+      label: ruleDisplayLabel(rule),
+      category: rule.category ?? 'custom',
+      ...(tip ? { tip } : {}),
+      patternKind: rule.patternKind,
+      ...(rule.tailWord ? { tailWord: rule.tailWord } : {}),
+      instances: [],
+    });
+  }
+  byKey.get(key).instances.push({
+    find: rule.find,
+    replace: rule.replace,
+    matchedText,
+    suggestedText: matchedText,
+    pageNum: page.pageNum,
+    index: globalIndex,
+  });
+}
+
+/** @param {MatchInstance[]} instances @param {number} pageNum @param {number} index */
+function hasNearbyInstance(instances, pageNum, index) {
+  return instances.some(
+    (i) => i.pageNum === pageNum && Math.abs(i.index - index) <= 4,
+  );
+}
+
+function applyCompoundFindByLines(rule, page, byKey, globalExcludePhrases) {
+  const tail = String(rule.tailWord ?? '').trim();
+  const loose =
+    /\s/.test(tail) && tailRegexFragmentForFind(tail);
+  const regex = loose
+    ? new RegExp(loose, 'gu')
+    : compileRuleRegex(rule);
+  if (!regex) return;
+
+  const key = `${rule.find}\0${rule.replace}\0${rule.pattern ?? 'literal'}`;
+
+  let offset = 0;
+  for (const line of page.text.split('\n')) {
+    const lineStart = offset;
+    offset += line.length + 1;
+    if (!line) continue;
+
+    const re = new RegExp(regex.source, regex.flags);
+    let match;
+    while ((match = re.exec(line)) !== null) {
+      if (!match[0]) {
+        re.lastIndex += 1;
+        continue;
+      }
+      if (
+        isGloballyExcluded(match[0], globalExcludePhrases) ||
+        shouldSkipMatch(rule, match)
+      ) {
+        continue;
+      }
+      const globalIndex = lineStart + match.index;
+      if (rule.requireLeadingBoundary && match.index > 0) {
+        let atLineStart = false;
+        if (page.itemRefs?.length) {
+          const ctx = getLineContextAtTextIndex(page, globalIndex);
+          if (ctx && globalIndex <= ctx.lineStart + 2) {
+            atLineStart = true;
+          }
+        }
+        if (!atLineStart) {
+          const prevChar = line[match.index - 1] ?? '';
+          if (prevChar && isLetterOrDigit(prevChar)) continue;
+        }
+      }
+      pushCompoundFindInstance(rule, page, byKey, globalIndex, match[0]);
+    }
+  }
+
+}
+
 function applyRuleToPages(rule, pages, byKey, globalExcludePhrases, errors) {
   const regex = compileRuleRegex(rule);
   if (!regex) {
     errors.push(`규칙 문법 오류: ${ruleDisplayLabel(rule)}`);
+    return;
+  }
+
+  if (rule.patternKind === 'compound-find') {
+    for (const page of pages) {
+      applyCompoundFindByLines(rule, page, byKey, globalExcludePhrases);
+    }
     return;
   }
 
@@ -93,9 +198,18 @@ function applyRuleToPages(rule, pages, byKey, globalExcludePhrases, errors) {
       }
       const matchEnd = match.index + match[0].length;
       if (rule.requireLeadingBoundary && match.index > 0) {
-        const prevChar = text[match.index - 1] ?? '';
-        if (prevChar && isLetterOrDigit(prevChar)) {
-          continue;
+        let atLineStart = false;
+        if (page.itemRefs?.length) {
+          const ctx = getLineContextAtTextIndex(page, match.index);
+          if (ctx && match.index <= ctx.lineStart + 2) {
+            atLineStart = true;
+          }
+        }
+        if (!atLineStart) {
+          const prevChar = text[match.index - 1] ?? '';
+          if (prevChar && isLetterOrDigit(prevChar)) {
+            continue;
+          }
         }
       }
       const matchSlice = text.slice(match.index, matchEnd);

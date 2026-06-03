@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 import { buildCautionCheckRules } from '../lib/cautionRules.js';
+import { sortSpellingResultsForDisplay } from '../utils/main-screen-helpers.js';
 import { BUILT_IN_RULES, isBuiltInRuleEnabled } from '../lib/builtInRules.js';
 import {
   defaultVisibilityForGroups,
@@ -204,8 +205,8 @@ export function useRuleCheck({
           },
         );
         allErrors.push(...errors);
-        scopeResults = grouped;
-        setSpellingResults(grouped);
+        scopeResults = sortSpellingResultsForDisplay(grouped);
+        setSpellingResults(scopeResults);
         setSpellingCheckDone(true);
         visibility = {
           ...visibility,
