@@ -369,6 +369,7 @@
   box-shadow: 0 0 6px rgba(255, 255, 255, 0.35);
 }
 .welcome-mo__compare-momo-wrap {
+  --welcome-momo-bridge-size: calc(4.75rem * 0.7 * 1.2 * 1.2);
   position: relative;
   display: flex;
   align-items: center;
@@ -378,23 +379,24 @@
 .welcome-mo__compare-momo-wrap::before {
   content: '';
   position: absolute;
-  width: calc(4.75rem * 0.7 * 1.2 * 1.45);
-  aspect-ratio: 1;
+  left: 50%;
+  top: 50%;
+  box-sizing: border-box;
+  width: calc(var(--welcome-momo-bridge-size) * 1.155);
+  height: calc(var(--welcome-momo-bridge-size) * 1.155);
+  min-width: calc(var(--welcome-momo-bridge-size) * 1.155);
+  min-height: calc(var(--welcome-momo-bridge-size) * 1.155);
+  transform: translate(-50%, -50%);
   border-radius: 50%;
-  background: radial-gradient(
-    circle,
-    rgba(255, 255, 255, 0.546) 0%,
-    rgba(255, 255, 255, 0.156) 55%,
-    rgba(255, 255, 255, 0) 72%
-  );
-  box-shadow: 0 0 28px rgba(255, 255, 255, 0.182);
+  background: rgba(255, 255, 255, 0.95);
   z-index: 0;
+  pointer-events: none;
 }
 .welcome-mo__compare-momo-img {
   position: relative;
   z-index: 1;
   display: block;
-  width: calc(4.75rem * 0.7 * 1.2);
+  width: var(--welcome-momo-bridge-size);
   height: auto;
   margin: 0;
 }
