@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 
 for (const name of ['pdf-empty.png', 'pdf-momo.png', 'pdf-full.png']) {
@@ -33,7 +33,11 @@ if (fs.existsSync(pdfjsCmapsSrc)) {
   fs.cpSync(pdfjsCmapsSrc, pdfjsCmapsDest, { recursive: true });
 }
 
-export default defineConfig({
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '');
+  const devPort = Number(env.DEV_PORT) || 5173;
+
+  return {
   base: process.env.VITE_BASE || '/',
   plugins: [react()],
   test: {
@@ -42,9 +46,10 @@ export default defineConfig({
   },
   server: {
     // localhost(IPv6 ::1) + 127.0.0.1 + LAN — Windows 연결 거부 방지
+    // 워크트리별 구분: .env.local 에 DEV_PORT=5180 등 (gitignore *.local)
     host: true,
-    port: 5173,
-    strictPort: false,
+    port: devPort,
+    strictPort: Boolean(env.DEV_PORT),
     open: '/',
   },
   preview: {
@@ -55,4 +60,5 @@ export default defineConfig({
   optimizeDeps: {
     include: ['pdfjs-dist/legacy/build/pdf.mjs'],
   },
+};
 });
