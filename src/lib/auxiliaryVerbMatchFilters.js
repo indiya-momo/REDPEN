@@ -1,4 +1,6 @@
 import { isHaeBoPattern } from './compoundPatternCommon.js';
+import { bonVerbAllowForItemId } from './bonBojoRules.js';
+import { isNounRootHaeHead } from './bonNounHaeBlocklist.js';
 
 /**
  * stem 앞부 `(\S*해)` 캡처가 아래 전체일 때 — 관형어·부사(통해·대해 등), 본용언+보조 아님
@@ -59,6 +61,31 @@ export function isBonVerbHeadTooLongForAuxiliary(headCapture, stemHead = '') {
   );
 }
 
+/**
+ * 시트 bon_allow — 앞말·본용언 portion이 목록 항목으로 시작하면 3음절 제한 면제
+ * @param {string} headCapture
+ * @param {string} stemHead
+ * @param {readonly string[]} allowList
+ */
+export function isBonVerbHeadOnAllowList(headCapture, stemHead, allowList) {
+  if (!allowList?.length || !headCapture.trim()) return false;
+  if (isNounRootHaeHead(headCapture)) return false;
+
+  const head = headCapture.trim();
+  const portion = bonVerbHeadStemPortion(head, stemHead);
+
+  for (const raw of allowList) {
+    const a = String(raw ?? '').trim();
+    if (!a) continue;
+    if (head.startsWith(a) || portion.startsWith(a)) return true;
+    if (a.endsWith('다') && a.length > 1) {
+      const stem = a.slice(0, -1);
+      if (head.startsWith(stem) || portion.startsWith(stem)) return true;
+    }
+  }
+  return false;
+}
+
 /** @param {RegExpExecArray} match */
 export function isGluedAuxiliaryMatch(match) {
   const m = String(match[0] ?? '');
@@ -110,6 +137,8 @@ export function shouldSkipAuxiliaryVerbMatch(rule, match) {
   if (rule.patternKind !== 'auxiliary-verb') return false;
 
   const headCapture = String(match[1] ?? '').trim();
+  if (headCapture && isNounRootHaeHead(headCapture)) return true;
+
   const tailNorm = rule.tailWord?.trim().replace(/\s+/g, '') ?? '';
   const tail = rule.tailWord?.trim() ?? '';
   const parts = tail.split(/\s+/).filter(Boolean);
@@ -122,7 +151,8 @@ export function shouldSkipAuxiliaryVerbMatch(rule, match) {
     headCapture &&
     isBonVerbHeadTooLongForAuxiliary(headCapture, stemHead)
   ) {
-    return true;
+    const allow = bonVerbAllowForItemId(rule.bonBojoItemId);
+    if (!isBonVerbHeadOnAllowList(headCapture, stemHead, allow)) return true;
   }
 
   if (parts.length !== 2) return false;

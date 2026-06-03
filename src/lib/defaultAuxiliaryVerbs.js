@@ -2,7 +2,7 @@ import { buildRulesForAuxiliaryEntry } from './auxiliaryVerbRegister.js';
 import { isAdjectiveCheHadaTail } from './adjectiveCheHadaPattern.js';
 import { AUXILIARY_FLEX_SPACE } from './compoundPatternCommon.js';
 import {
-  BON_BOJO_GROUPS,
+  getBonBojoGroups,
   bonBojoDisplayLabelForItem,
   bonBojoItemIdForSearchTail,
   auxiliarySearchTailsFromBonBojoItem,
@@ -12,7 +12,7 @@ import { encodeSpacesVisible } from './spaceVisibleText.js';
 
 /** @param {string} itemId */
 function allowedSearchTailsForItem(itemId) {
-  for (const group of BON_BOJO_GROUPS) {
+  for (const group of getBonBojoGroups()) {
     const item = group.items.find((i) => i.id === itemId);
     if (item) return new Set(auxiliarySearchTailsFromBonBojoItem(item));
   }
@@ -57,7 +57,7 @@ export function ensureDefaultAuxiliaryVerbs(customRules) {
     pruneObsoleteAuxiliaryRules([...(customRules ?? [])]),
   );
 
-  for (const group of BON_BOJO_GROUPS) {
+  for (const group of getBonBojoGroups()) {
     for (const item of group.items) {
       const itemId = item.id;
       const listLabel =

@@ -9,6 +9,7 @@ import {
 } from './builtInRules.js';
 import { applyCompoundRuleMigrations } from './migrateCompoundRules.js';
 import { ensureDefaultAuxiliaryVerbs } from './defaultAuxiliaryVerbs.js';
+import { BON_BOJO_RULES_FP } from './bonBojoRules.js';
 
 /**
  * @param {Record<string, unknown>} set
@@ -36,6 +37,10 @@ export function normalizeRuleSet(set) {
     ),
     cautionRulesFingerprint: CAUTION_RULES_FP,
     cautionEnabledPolicyVersion: CAUTION_ENABLED_POLICY_VERSION,
+    bonBojoRulesFingerprint:
+      typeof set.bonBojoRulesFingerprint === 'string'
+        ? set.bonBojoRulesFingerprint
+        : BON_BOJO_RULES_FP,
     tocBodyText: typeof set.tocBodyText === 'string' ? set.tocBodyText : '',
     tocBodyStartPage:
       typeof set.tocBodyStartPage === 'number' &&

@@ -1,8 +1,10 @@
 import bonBojoJson from '../data/bon-bojo-rules.json';
+import { partitionBonVerbAllowPhrases } from './bonNounHaeBlocklist.js';
+import { assertValidBonBojoRules } from './validateDataJson.js';
 
 /**
  * @typedef {{ id: string, label: string, stems?: string[], enabled?: boolean, displayLabel?: string, except?: string[] }} BonBojoItem
- * @typedef {{ id: string, title?: string, tip: string, items: BonBojoItem[] }} BonBojoGroup
+ * @typedef {{ id: string, title?: string, tip: string, bonVerbAllow?: string[], items: BonBojoItem[] }} BonBojoGroup
  * @typedef {{ itemId: string, primaryTail: string, variantTails: string[], displayLabel?: string, enabled: boolean, tip?: string }} BonBojoListItem
  */
 
@@ -21,11 +23,88 @@ const BON_BOJO_LOGIC_ONLY_GROUP = {
   ],
 };
 
-/** @type {BonBojoGroup[]} */
-export const BON_BOJO_GROUPS = [
-  ...(bonBojoJson.groups ?? []),
-  BON_BOJO_LOGIC_ONLY_GROUP,
-];
+/** @param {typeof bonBojoJson} raw */
+export function bonBojoRulesFingerprint(raw) {
+  let hash = 0;
+  const payload = JSON.stringify(raw);
+  for (let i = 0; i < payload.length; i += 1) {
+    hash = (Math.imul(31, hash) + payload.charCodeAt(i)) | 0;
+  }
+  return `${payload.length}:${hash}`;
+}
+
+/** @param {typeof bonBojoJson} source */
+function buildRuntimeFromSource(source) {
+  /** @type {BonBojoGroup[]} */
+  const groups = [...(source.groups ?? []), BON_BOJO_LOGIC_ONLY_GROUP];
+
+  /** @type {Map<string, readonly string[]>} */
+  const allowByItemId = new Map();
+  for (const group of groups) {
+    const rawAllow = Array.isArray(group.bonVerbAllow)
+      ? group.bonVerbAllow.map((s) => String(s).trim()).filter(Boolean)
+      : [];
+    const { kept: allow } = partitionBonVerbAllowPhrases(rawAllow);
+    if (!allow.length) continue;
+    for (const item of group.items) {
+      allowByItemId.set(item.id, allow);
+    }
+  }
+
+  /** @type {BonBojoListItem[]} */
+  const listItems = groups.flatMap((group) => {
+    const tip = String(group.tip ?? '').trim();
+    return group.items.map((item) => {
+      const tails = tailWordsFromBonBojoItem(item);
+      const primaryTail = String(item.label ?? '').trim();
+      return {
+        itemId: item.id,
+        primaryTail,
+        variantTails: tails.filter((t) => t !== primaryTail),
+        displayLabel: item.displayLabel?.trim() || undefined,
+        enabled: item.enabled === true,
+        ...(tip ? { tip } : {}),
+      };
+    });
+  });
+
+  return {
+    groups,
+    allowByItemId,
+    listItems,
+    byItemId: new Map(listItems.map((item) => [item.itemId, item])),
+  };
+}
+
+/** @type {typeof bonBojoJson} */
+let bonBojoSource = bonBojoJson;
+let runtime = buildRuntimeFromSource(bonBojoSource);
+
+export const BON_BOJO_RULES_FP = bonBojoRulesFingerprint(bonBojoSource);
+
+/** @returns {BonBojoGroup[]} */
+export function getBonBojoGroups() {
+  return runtime.groups;
+}
+
+/** @deprecated {@link getBonBojoGroups} — dev 반영 전 초기 스냅샷 */
+export const BON_BOJO_GROUPS = runtime.groups;
+
+/**
+ * sync 후 dev에서 반영 시 호출
+ * @param {typeof bonBojoJson} data
+ */
+export function replaceBonBojoRulesData(data) {
+  assertValidBonBojoRules(data, 'replaceBonBojoRulesData');
+  bonBojoSource = data;
+  runtime = buildRuntimeFromSource(data);
+}
+
+/** @param {string | undefined} itemId */
+export function bonVerbAllowForItemId(itemId) {
+  if (itemId == null) return [];
+  return runtime.allowByItemId.get(String(itemId).trim()) ?? [];
+}
 
 /** @param {BonBojoItem} item */
 export function tailWordsFromBonBojoItem(item) {
@@ -43,7 +122,6 @@ export function tailWordsFromBonBojoItem(item) {
 
 /**
  * bon-bojo 1음절 stem — 항목 label(가·보·주…)와 같을 때만 허용.
- * 시트에 잘못 들어간 연결 어미(어·아·해 등) 단독은 검색 규칙에서 제외.
  * @param {BonBojoItem} item
  * @param {string} stem
  */
@@ -54,10 +132,7 @@ export function isAllowedBonBojoSearchStem(item, stem) {
   return s === label;
 }
 
-/**
- * 일관성 검사용 tail — stems가 있으면 stems만(시트와 동일), 없으면 label
- * @param {BonBojoItem} item
- */
+/** @param {BonBojoItem} item */
 export function auxiliarySearchTailsFromBonBojoItem(item) {
   const stems = Array.isArray(item.stems)
     ? item.stems
@@ -70,10 +145,10 @@ export function auxiliarySearchTailsFromBonBojoItem(item) {
   return label ? [label] : [];
 }
 
-/** @returns {Set<string>} 시트 bon-bojo 검색 stem 전체(11항목) */
+/** @returns {Set<string>} */
 export function allBonBojoSearchStems() {
   const s = new Set();
-  for (const group of BON_BOJO_GROUPS) {
+  for (const group of runtime.groups) {
     for (const item of group.items) {
       for (const tail of auxiliarySearchTailsFromBonBojoItem(item)) {
         s.add(tail);
@@ -83,10 +158,10 @@ export function allBonBojoSearchStems() {
   return s;
 }
 
-/** @param {string} tailWord 시트 stems·label( stems 없을 때)와 정확히 일치 */
+/** @param {string} tailWord */
 export function bonBojoItemIdForSearchTail(tailWord) {
   const t = tailWord.trim();
-  for (const group of BON_BOJO_GROUPS) {
+  for (const group of runtime.groups) {
     for (const item of group.items) {
       if (auxiliarySearchTailsFromBonBojoItem(item).includes(t)) {
         return item.id;
@@ -96,36 +171,19 @@ export function bonBojoItemIdForSearchTail(tailWord) {
   return undefined;
 }
 
-/** 일관성 목록·체크 단위 (시트 item 1행 = 1칸) */
-/** @type {BonBojoListItem[]} */
-export const BON_BOJO_LIST_ITEMS = BON_BOJO_GROUPS.flatMap((group) => {
-  const tip = String(group.tip ?? '').trim();
-  return group.items.map((item) => {
-    const tails = tailWordsFromBonBojoItem(item);
-    const primaryTail = String(item.label ?? '').trim();
-    return {
-      itemId: item.id,
-      primaryTail,
-      variantTails: tails.filter((t) => t !== primaryTail),
-      displayLabel: item.displayLabel?.trim() || undefined,
-      enabled: item.enabled === true,
-      ...(tip ? { tip } : {}),
-    };
-  });
-});
+/** @returns {BonBojoListItem[]} */
+export function getBonBojoListItems() {
+  return runtime.listItems;
+}
 
-/** @type {Map<string, BonBojoListItem>} */
-const BON_BOJO_BY_ITEM_ID = new Map(
-  BON_BOJO_LIST_ITEMS.map((item) => [item.itemId, item]),
-);
+/** @deprecated {@link getBonBojoListItems} */
+export const BON_BOJO_LIST_ITEMS = runtime.listItems;
 
 /** 시트·UI에서 기본 체크·「필수」 표시 대상 */
-/** 필수 본조 — UI 하단·필수 뱃지 (하다 → 지다 순) */
 export const BON_BOJO_REQUIRED_ITEM_IDS_LIST = ['verb-hada', 'verb-jida'];
 
 export const BON_BOJO_REQUIRED_ITEM_IDS = new Set(BON_BOJO_REQUIRED_ITEM_IDS_LIST);
 
-/** UI 체크박스 없이 검사만 수행 */
 export const BON_BOJO_LOGIC_ONLY_ITEM_IDS_LIST = ['adj-che-hada'];
 
 export const BON_BOJO_LOGIC_ONLY_ITEM_IDS = new Set(
@@ -146,13 +204,13 @@ export function isBonBojoRequiredItem(itemId) {
 
 /** @param {string} itemId */
 export function bonBojoListItem(itemId) {
-  return BON_BOJO_BY_ITEM_ID.get(itemId.trim());
+  return runtime.byItemId.get(itemId.trim());
 }
 
 /** @param {string} tailWord */
 export function bonBojoItemIdForTail(tailWord) {
   const t = tailWord.trim();
-  for (const item of BON_BOJO_LIST_ITEMS) {
+  for (const item of runtime.listItems) {
     if (item.primaryTail === t || item.variantTails.includes(t)) {
       return item.itemId;
     }
@@ -168,14 +226,14 @@ export function bonBojoDisplayLabelForItem(itemId) {
 /** @returns {Set<string>} */
 export function allBonBojoTailWords() {
   const s = new Set();
-  for (const item of BON_BOJO_LIST_ITEMS) {
+  for (const item of runtime.listItems) {
     s.add(item.primaryTail);
     for (const v of item.variantTails) s.add(v);
   }
   return s;
 }
 
-/** @param {string} tailWord @deprecated 목록은 itemId 기준 — 수동 등록 tail용 */
+/** @param {string} tailWord */
 export function bonBojoDisplayLabelForTail(tailWord) {
   const itemId = bonBojoItemIdForTail(tailWord);
   if (itemId) return bonBojoDisplayLabelForItem(itemId);

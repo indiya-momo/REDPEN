@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import MainScreen from './components/MainScreen.jsx';
 import WelcomeScreen from './components/WelcomeScreen.jsx';
 import MomoRoomScreen from './components/MomoRoomScreen.jsx';
@@ -11,6 +11,13 @@ import {
   builtInEnabledFromSheet,
 } from './lib/builtInRules.js';
 import { useRuleSets } from './hooks/useRuleSets.js';
+import { useBonBojoDevRefresh } from './hooks/useBonBojoDevRefresh.js';
+import { ensureDefaultAuxiliaryVerbs } from './lib/defaultAuxiliaryVerbs.js';
+import {
+  BON_BOJO_RULES_FP,
+  bonBojoRulesFingerprint,
+  replaceBonBojoRulesData,
+} from './lib/bonBojoRules.js';
 import {
   completeGoogleRedirectIfNeeded,
   getCurrentUserSession,
@@ -75,6 +82,27 @@ export default function App() {
     handleCautionToggle,
     handleCautionSetAll,
   } = useRuleSets();
+
+  const applyBonBojoSheetRefresh = useCallback(
+    async (data, remoteFp) => {
+      replaceBonBojoRulesData(data);
+      const fp = remoteFp ?? bonBojoRulesFingerprint(data);
+      const rules = activeSet?.customRules ?? [];
+      updateActiveSet({
+        customRules: ensureDefaultAuxiliaryVerbs(rules),
+        bonBojoRulesFingerprint: fp,
+      });
+    },
+    [activeSet?.customRules, updateActiveSet],
+  );
+
+  useBonBojoDevRefresh({
+    enabled: import.meta.env.DEV && screen === 'main',
+    ready: rulesReady && Boolean(activeSet),
+    appliedFingerprint:
+      activeSet?.bonBojoRulesFingerprint ?? BON_BOJO_RULES_FP,
+    onApply: applyBonBojoSheetRefresh,
+  });
 
   if (auxWindow === 'mypage') {
     return <MyPageWindowScreen />;
