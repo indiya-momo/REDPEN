@@ -6,13 +6,15 @@ import {
   isAnalyticsOptedOut,
   setAnalyticsOptOut,
 } from '../../lib/analytics.js';
+import { publicAssetUrl } from '../../lib/publicAssetUrl.js';
 import welcomeMomoFrame from '../../assets/welcome/welcome_momo_frame3.png';
-import welcomeMoDemoBefore from '../../assets/welcome/welcome_mo_demo_before.png';
-import welcomeMoDemoAfter from '../../assets/welcome/welcome_mo_demo_after.png';
-import welcomeMoDemoConsistency from '../../assets/welcome/welcome_mo_demo_consistency.png';
+import { WelcomeMoIllustrationFigure } from './WelcomeMoIllustrationCompare.jsx';
 import './welcome-mo.css';
 
 const WELCOME_MOMO_FRAME = welcomeMomoFrame;
+const WELCOME_MO_BEFORE = `${import.meta.env.BASE_URL}welcome/m_before.png`;
+const WELCOME_MO_AFTER = `${import.meta.env.BASE_URL}welcome/m_after3.png`;
+const PDF_MOMO = publicAssetUrl('momo/pdf-momo.png');
 
 /**
  * 모바일 대문 — welcome-mo 전용 (PC와 마크업·CSS 공유 없음) — git 6b26b31
@@ -56,62 +58,59 @@ export default function WelcomeMoScreen({ onStart, onOpenRoom }) {
               검수 화면
             </h2>
             <ol className="welcome-mo__showcase-flow">
-              <li className="welcome-mo__showcase-item">
-                <p className="welcome-mo__showcase-step">
-                  <span className="welcome-mo__showcase-step-num">1</span>
-                  업로드 · 기준 설정
-                </p>
-                <figure className="welcome-mo__showcase-figure">
-                  <img
-                    src={welcomeMoDemoBefore}
-                    alt="PDF 업로드 및 맞춤법 기준 설정 화면"
-                    width={1280}
-                    height={720}
-                    loading="lazy"
-                    decoding="async"
-                  />
-                  <figcaption>
-                    PDF 업로드 후 적용할 맞춤법 기준을 선택합니다
-                  </figcaption>
-                </figure>
+              <li className="welcome-mo__showcase-item welcome-mo__showcase-item--compare">
+                <div className="welcome-mo__compare">
+                  <div className="welcome-mo__compare-block">
+                    <p className="welcome-mo__compare-label">
+                      <span className="welcome-mo__showcase-step-num">1</span>
+                      검수 전
+                    </p>
+                    <figure className="welcome-mo__showcase-figure">
+                      <WelcomeMoIllustrationFigure
+                        src={WELCOME_MO_BEFORE}
+                        alt="검수 전 — 원고 본문"
+                      />
+                      <figcaption>
+                        적용할 맞춤법 · 일관성 기준을 선택합니다
+                      </figcaption>
+                    </figure>
+                  </div>
+                  <div className="welcome-mo__compare-bridge" aria-hidden="true">
+                    <img
+                      className="welcome-mo__compare-momo-img"
+                      src={PDF_MOMO}
+                      alt=""
+                      width={140}
+                      height={140}
+                      loading="lazy"
+                      decoding="async"
+                    />
+                    <p className="welcome-mo__showcase-title welcome-mo__compare-bridge-title">
+                      모모가 살펴봐요
+                    </p>
+                  </div>
+                  <div className="welcome-mo__compare-block">
+                    <p className="welcome-mo__compare-label">
+                      <span className="welcome-mo__showcase-step-num">2</span>
+                      검수 후
+                    </p>
+                    <figure className="welcome-mo__showcase-figure">
+                      <WelcomeMoIllustrationFigure
+                        src={WELCOME_MO_BEFORE}
+                        afterSrc={WELCOME_MO_AFTER}
+                        alt="검수 후 — 맞춤법 표시가 적용된 원고 본문"
+                      />
+                      <figcaption>
+                        기준이 적용된 결과를 확인합니다
+                      </figcaption>
+                    </figure>
+                  </div>
+                </div>
               </li>
-              <li className="welcome-mo__showcase-item">
-                <p className="welcome-mo__showcase-step">
-                  <span className="welcome-mo__showcase-step-num">2</span>
-                  결과 확인하기
+              <li className="welcome-mo__showcase-item welcome-mo__showcase-item--message">
+                <p className="welcome-mo__showcase-message">
+                  중요한 일에 집중하도록
                 </p>
-                <figure className="welcome-mo__showcase-figure">
-                  <img
-                    src={welcomeMoDemoAfter}
-                    alt="맞춤법 검수 결과 확인 화면"
-                    width={1280}
-                    height={720}
-                    loading="lazy"
-                    decoding="async"
-                  />
-                  <figcaption>
-                    본문에서 맞춤법 기준이 적용된 결과를 확인합니다
-                  </figcaption>
-                </figure>
-              </li>
-              <li className="welcome-mo__showcase-item">
-                <p className="welcome-mo__showcase-step">
-                  <span className="welcome-mo__showcase-step-num">3</span>
-                  일관성 확인
-                </p>
-                <figure className="welcome-mo__showcase-figure">
-                  <img
-                    src={welcomeMoDemoConsistency}
-                    alt="일관성 확인 화면 — 표기 일관성 발견 목록과 PDF 하이라이트"
-                    width={1280}
-                    height={720}
-                    loading="lazy"
-                    decoding="async"
-                  />
-                  <figcaption>
-                    일관성도 동일한 방법으로 적용하여 결과를 확인합니다
-                  </figcaption>
-                </figure>
               </li>
             </ol>
           </section>
