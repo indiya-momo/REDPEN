@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { BookOpen } from 'lucide-react';
+import { useCallback, useState } from 'react';
+import { BookOpen, Copy, Lock } from 'lucide-react';
 import AppVersionBadge from '../../components/AppVersionBadge.jsx';
 import MomoHero from '../../components/MomoHero.jsx';
 import {
@@ -20,16 +20,53 @@ const PDF_BRIDGE_MOMO = publicAssetUrl('momo/pdf-full.png');
  * 모바일 대문 — welcome-mo 전용 (PC와 마크업·CSS 공유 없음) — git 6b26b31
  * @param {{ onStart?: () => void, onOpenRoom: () => void }} props
  */
+async function copyTextToClipboard(text) {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(text);
+    return;
+  }
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.setAttribute('readonly', '');
+  textarea.style.position = 'fixed';
+  textarea.style.left = '-9999px';
+  document.body.appendChild(textarea);
+  textarea.select();
+  const ok = document.execCommand('copy');
+  document.body.removeChild(textarea);
+  if (!ok) throw new Error('copy failed');
+}
+
 export default function WelcomeMoScreen({ onOpenRoom }) {
   const [analyticsOptedOut, setAnalyticsOptedOut] = useState(() =>
     isAnalyticsOptedOut(),
   );
+  const [pcLinkCopyState, setPcLinkCopyState] = useState('idle');
+
+  const handleCopyPcLink = useCallback(async () => {
+    const url = window.location.href;
+    try {
+      await copyTextToClipboard(url);
+      setPcLinkCopyState('ok');
+      window.setTimeout(() => setPcLinkCopyState('idle'), 2500);
+    } catch {
+      setPcLinkCopyState('error');
+      window.setTimeout(() => setPcLinkCopyState('idle'), 3000);
+    }
+  }, []);
+
+  const pcLinkCopyLabel =
+    pcLinkCopyState === 'ok'
+      ? '복사했습니다'
+      : pcLinkCopyState === 'error'
+        ? '복사에 실패했습니다'
+        : '링크 복사';
 
   return (
     <div className="welcome-mo">
       <div className="welcome-mo__layout">
         <header className="welcome-mo__header">
-          <p className="welcome-mo__eyebrow">모바일 안내 페이지</p>
+          <p className="welcome-mo__eyebrow">모바일 안내 전용 페이지</p>
           <h1>
             <span className="welcome-mo__title-main">인디야</span>
             <br />
@@ -39,11 +76,29 @@ export default function WelcomeMoScreen({ onOpenRoom }) {
             <span className="welcome-mo__lead-line">
               PDF에서 맞춤법 · 일관성을 검수합니다
             </span>
-            <span className="welcome-mo__lead-line">
-              원고와 검사 결과는 서버에 <strong>저장하지 않습니다</strong>
-            </span>
           </p>
+          <div className="welcome-mo__trust" role="note" aria-label="개인정보·원고 보관 안내">
+            <Lock size={15} strokeWidth={2} aria-hidden className="welcome-mo__trust-icon" />
+            <p className="welcome-mo__trust-text">
+              원고와 검사 결과는 서버에 저장하지 않습니다
+            </p>
+          </div>
         </header>
+
+        <aside className="welcome-mo__pc-banner" aria-label="PC 이용 안내">
+          <p className="welcome-mo__pc-banner-text">
+            실제 검수는 PC 브라우저에서만 가능합니다
+          </p>
+          <button
+            type="button"
+            className="welcome-mo__pc-banner-copy"
+            onClick={handleCopyPcLink}
+            aria-live="polite"
+          >
+            <Copy size={16} strokeWidth={2} aria-hidden />
+            {pcLinkCopyLabel}
+          </button>
+        </aside>
 
         <div className="welcome-mo__portrait">
           <div className="welcome-mo__portrait-media">
@@ -91,8 +146,8 @@ export default function WelcomeMoScreen({ onOpenRoom }) {
                       className="welcome-mo__compare-momo-img"
                       src={PDF_BRIDGE_MOMO}
                       alt=""
-                      width={98}
-                      height={98}
+                      width={118}
+                      height={118}
                       loading="lazy"
                       decoding="async"
                     />
@@ -125,11 +180,16 @@ export default function WelcomeMoScreen({ onOpenRoom }) {
             </li>
             <li className="welcome-mo__showcase-item welcome-mo__showcase-item--message">
               <p className="welcome-mo__showcase-message">
-                <span className="welcome-mo__showcase-message-line">
-                  기계적인 부담은 줄이고
+                <span className="welcome-mo__showcase-message-lines">
+                  <span className="welcome-mo__showcase-message-line">
+                    기계적인 부담은 줄이고
+                  </span>
+                  <span className="welcome-mo__showcase-message-line">
+                    중요한 일에 집중하도록
+                  </span>
                 </span>
-                <span className="welcome-mo__showcase-message-line">
-                  중요한 일에 집중하도록
+                <span className="welcome-mo__showcase-message-credit">
+                  (현직 편집자가 만들었어요!)
                 </span>
               </p>
             </li>
@@ -176,7 +236,7 @@ export default function WelcomeMoScreen({ onOpenRoom }) {
 
         <div className="welcome-mo__stage-cta">
           <p className="welcome-mo__steps-note welcome-mo__steps-note--stage welcome-mo__steps-note--mobile">
-            실제 PDF 검수·업로드는 <strong>PC 브라우저</strong>에서 이용하세요
+            실제 PDF 검수는 <strong>PC환경</strong>에서 이용하세요
           </p>
         </div>
       </div>
@@ -191,7 +251,7 @@ export default function WelcomeMoScreen({ onOpenRoom }) {
             aria-label="모모의 방"
             title="모모의 방"
           >
-            <BookOpen size={22} strokeWidth={1.6} aria-hidden />
+            <BookOpen size={18} strokeWidth={1.6} aria-hidden />
           </button>
         </div>
       </footer>
