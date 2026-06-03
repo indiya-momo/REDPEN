@@ -2,11 +2,18 @@ import { buildRulesForAuxiliaryEntry } from './auxiliaryVerbRegister.js';
 import {
   allBonBojoTailWords,
   BON_BOJO_GROUPS,
+  BON_BOJO_LIST_ITEMS,
   bonBojoDisplayLabelForItem,
   bonBojoItemIdForTail,
   auxiliarySearchTailsFromBonBojoItem,
 } from './bonBojoRules.js';
+import { isAuxiliaryStem } from './compoundPatternCommon.js';
 import { encodeSpacesVisible } from './spaceVisibleText.js';
+
+/** bon-bojo 시트 item.label — 단독 보조용언 tail 허용 목록 */
+const BON_BOJO_PRIMARY_TAILS = new Set(
+  BON_BOJO_LIST_ITEMS.map((item) => item.primaryTail),
+);
 
 /** bon-bojo 도입 전 앱에 넣던 기본 tail (시트·JSON에는 없음) */
 const LEGACY_BUILTIN_AUXILIARY_TAILS = new Set([
@@ -50,6 +57,8 @@ function pruneObsoleteAuxiliaryRules(rules) {
     }
     if (bonTails.has(tw)) return false;
     if (LEGACY_BUILTIN_AUXILIARY_TAILS.has(tw)) return false;
+    // stem 조각(러·려 등)이 tail만 단독으로 남은 잔여 규칙
+    if (isAuxiliaryStem(tw) && !BON_BOJO_PRIMARY_TAILS.has(tw)) return false;
     return true;
   });
 }

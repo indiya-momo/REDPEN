@@ -6,7 +6,7 @@ export const APP_VERSION = packageJson.version;
  * 화면에서 바로 확인하는 기능 표식 — UI를 바꿀 때마다 올리면 됩니다.
  * (Pages·dev 공통. 최신이면 대문·메인 하단에 이 문자열이 보입니다.)
  */
-export const UI_FEATURE_MARK = 'no-aux-upload';
+export const UI_FEATURE_MARK = 'aux-prune-orphan';
 
 /** CI 빌드 시 VITE_UI_BUILD_ID(커밋 SHA), 로컬 dev는 dev-local */
 const RAW_BUILD_ID = import.meta.env.VITE_UI_BUILD_ID || 'dev-local';
