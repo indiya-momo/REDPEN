@@ -95,6 +95,7 @@ npm run sync-spelling
 | **label** | **tail_word** — `보`, `주`, `해 보` (어미 `보다` 말고 **어간·문구**) |
 | **stems** | 같은 행의 **추가 검색 변이** (`해 보`, `해 본` …). sync·목록은 **1칸**(`display_label`), 검사만 어간마다 regex |
 | **display_label** | 일관성 목록에 보이는 이름 (`(아/어) + 보다` 등) |
+| **bon_allow** | **그룹 공용** — 3음절+ **동사** 표면형만(`기다려`, `깨트려`). `생각해`·`사랑해` 등 **명사+해는 sync·검사에서 자동 제외** |
 | **match_mode** · **except** · **counts_in_quota** | **무시** (caution 전용) |
 
 ### 싱크

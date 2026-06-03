@@ -108,6 +108,16 @@ export function parseExcept(row) {
   return list.length ? list : undefined;
 }
 
+/** bon-bojo 그룹 — 3음절+ 단일어 본용언 화이트리스트 */
+export function parseBonAllow(row) {
+  const raw = String(
+    row.bon_allow ?? row.bonallow ?? row['bon allow'] ?? '',
+  ).trim();
+  if (!raw) return undefined;
+  const list = parseCommaList(raw);
+  return list.length ? list : undefined;
+}
+
 export function parseStems(row, label) {
   const raw = String(row.stems ?? row.stem ?? '').trim();
   if (!raw) return undefined;

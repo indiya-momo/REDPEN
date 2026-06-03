@@ -269,6 +269,22 @@ export function validateGroupedRulesDoc(data, label, options = {}) {
       pushIssue(issues, `${groupPath}.tip`, 'must be a string');
     }
 
+    if (group.bonVerbAllow !== undefined) {
+      if (!Array.isArray(group.bonVerbAllow)) {
+        pushIssue(issues, `${groupPath}.bonVerbAllow`, 'must be an array');
+      } else {
+        group.bonVerbAllow.forEach((phrase, pi) => {
+          if (!isNonEmptyString(phrase)) {
+            pushIssue(
+              issues,
+              `${groupPath}.bonVerbAllow[${pi}]`,
+              'must be a non-empty string',
+            );
+          }
+        });
+      }
+    }
+
     group.items.forEach((item, ii) => {
       const itemPath = `${groupPath}.items[${ii}]`;
       validateGroupItem(item, itemPath, issues, options);

@@ -2,8 +2,9 @@
  * Google 시트 bon-bojo 탭 → 본용언+보조용언 시드 JSON
  *
  * caution_rules 와 동일한 열: group_id | item_id | label | stems | tip | enabled
- *   | match_mode | display_label | inventory | except | counts_in_quota
- * match_mode · inventory · except · counts_in_quota 는 일관성 시드에 쓰지 않음(무시).
+ *   | match_mode | display_label | inventory | except | bon_allow | counts_in_quota
+ * match_mode · inventory · except · counts_in_quota 는 검사에 쓰지 않음.
+ * bon_allow — 같은 group_id 행을 합쳐 그룹 bonVerbAllow (3음절+ 본용언 허용).
  *
  * label / stems → tail_word (보, 해 보). display_label → 일관성 목록 표시명.
  *
@@ -18,11 +19,13 @@ import {
   loadDotEnv,
   parseEnabled,
   parseExcept,
+  parseBonAllow,
   parseStems,
   parseCsv,
   rowsToObjects,
 } from './sheet-csv.mjs';
 import { assertValidBonBojoRules } from '../src/lib/validateDataJson.js';
+import { partitionBonVerbAllowPhrases } from '../src/lib/bonNounHaeBlocklist.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
@@ -63,6 +66,8 @@ function rowsToBonBojoGroups(rows) {
   if (!rows.length) return [];
 
   const groups = new Map();
+  /** @type {Map<string, Set<string>>} */
+  const allowByGroup = new Map();
   let curGroupId = '';
   let curTip = '';
 
@@ -75,6 +80,12 @@ function rowsToBonBojoGroups(rows) {
       curGroupId = nextGroupId;
     }
     if (row.tip?.trim()) curTip = row.tip.trim();
+
+    const rowAllow = parseBonAllow(row);
+    if (rowAllow?.length && curGroupId) {
+      if (!allowByGroup.has(curGroupId)) allowByGroup.set(curGroupId, new Set());
+      for (const phrase of rowAllow) allowByGroup.get(curGroupId).add(phrase);
+    }
 
     const label = String(row.label || '').trim();
     if (!label || !curGroupId) continue;
@@ -94,7 +105,23 @@ function rowsToBonBojoGroups(rows) {
 
   return [...groups.values()]
     .filter((g) => g.items.length)
-    .map((g) => ({ ...g, tip: g.tip || '' }));
+    .map((g) => {
+      const allow = allowByGroup.get(g.id);
+      if (!allow?.size) {
+        return { ...g, tip: g.tip || '' };
+      }
+      const { kept, dropped } = partitionBonVerbAllowPhrases([...allow]);
+      if (dropped.length) {
+        console.warn(
+          `  ! ${g.id} bon_allow 명사+해 제외: ${dropped.join(', ')}`,
+        );
+      }
+      return {
+        ...g,
+        tip: g.tip || '',
+        ...(kept.length ? { bonVerbAllow: kept } : {}),
+      };
+    });
 }
 
 async function loadExistingGroupUiMeta() {
@@ -170,7 +197,12 @@ for (const g of groups) {
 console.log(`CSV ${rows.length}행 → 그룹 ${groups.length}개 · tail ${tailCount}개`);
 for (const g of groups) {
   const labels = g.items.map((i) => i.displayLabel || i.label).join(', ');
-  console.log(`  · ${g.id}: ${labels}`);
+  const allow =
+    g.bonVerbAllow?.length ? ` · allow ${g.bonVerbAllow.length}` : '';
+  console.log(`  · ${g.id}: ${labels}${allow}`);
+  if (g.bonVerbAllow?.length) {
+    console.log(`      ${g.bonVerbAllow.join(', ')}`);
+  }
 }
 
 for (const out of OUTPUTS) {

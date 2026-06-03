@@ -365,7 +365,9 @@ export default function ConsistencyPanel({
             </span>
           </summary>
           <p className="auxiliary-checklist-intro">
-            항목에서 본용언과 보조용언이 띄어서 표기된 경우만 찾습니다(개발중)
+            항목에서 본용언과 보조용언 사이가 띄어진 경우만 찾습니다(개발중)
+            <br />
+            본용언이 3음절 이상의 복합어('생각하다' 등)이면 찾지 않습니다
           </p>
           <RegisteredList
             entries={auxiliaryEntries}
