@@ -18,9 +18,9 @@ const PDF_MOMO = publicAssetUrl('momo/pdf-momo.png');
 
 /**
  * 모바일 대문 — welcome-mo 전용 (PC와 마크업·CSS 공유 없음) — git 6b26b31
- * @param {{ onStart: () => void, onOpenRoom: () => void }} props
+ * @param {{ onStart?: () => void, onOpenRoom: () => void }} props
  */
-export default function WelcomeMoScreen({ onStart, onOpenRoom }) {
+export default function WelcomeMoScreen({ onOpenRoom }) {
   const [analyticsOptedOut, setAnalyticsOptedOut] = useState(() =>
     isAnalyticsOptedOut(),
   );
@@ -29,15 +29,12 @@ export default function WelcomeMoScreen({ onStart, onOpenRoom }) {
     <div className="welcome-mo">
       <div className="welcome-mo__layout">
         <header className="welcome-mo__header">
-          <p className="welcome-mo__eyebrow">텍스트 PDF 검수</p>
+          <p className="welcome-mo__eyebrow">모바일 안내 페이지</p>
           <h1>
             <span className="welcome-mo__title-main">인디야</span>
             <br />
             <span className="welcome-mo__title-sub">교정냥 모모의 여행</span>
           </h1>
-          <p className="welcome-mo__platform-badge" aria-label="이용 안내">
-            [모바일 안내 페이지]
-          </p>
           <p className="welcome-mo__lead">
             <span className="welcome-mo__lead-line">
               PDF에서 맞춤법 · 일관성을 검수합니다
@@ -67,7 +64,7 @@ export default function WelcomeMoScreen({ onStart, onOpenRoom }) {
           aria-labelledby="welcome-mo-showcase-title"
         >
           <h2 id="welcome-mo-showcase-title" className="welcome-mo__showcase-title">
-            검수 화면
+            검수 예시
           </h2>
           <ol className="welcome-mo__showcase-flow">
             <li className="welcome-mo__showcase-item welcome-mo__showcase-item--compare">
@@ -92,13 +89,13 @@ export default function WelcomeMoScreen({ onStart, onOpenRoom }) {
                     className="welcome-mo__compare-momo-img"
                     src={PDF_MOMO}
                     alt=""
-                      width={98}
-                      height={98}
+                    width={98}
+                    height={98}
                     loading="lazy"
                     decoding="async"
                   />
                   <p className="welcome-mo__showcase-title welcome-mo__compare-bridge-title">
-                    모모가 살펴봐요
+                    모모가 살펴봅니다
                   </p>
                 </div>
                 <div className="welcome-mo__compare-block">
@@ -121,7 +118,12 @@ export default function WelcomeMoScreen({ onStart, onOpenRoom }) {
             </li>
             <li className="welcome-mo__showcase-item welcome-mo__showcase-item--message">
               <p className="welcome-mo__showcase-message">
-                중요한 일에 집중하도록
+                <span className="welcome-mo__showcase-message-line">
+                  기계적인 부담은 줄이고
+                </span>
+                <span className="welcome-mo__showcase-message-line">
+                  중요한 일에 집중하도록
+                </span>
               </p>
             </li>
           </ol>
@@ -166,13 +168,6 @@ export default function WelcomeMoScreen({ onStart, onOpenRoom }) {
         </div>
 
         <div className="welcome-mo__stage-cta">
-          <button
-            type="button"
-            className="btn-welcome-primary welcome-mo__start"
-            onClick={onStart}
-          >
-            화면 구성 보기
-          </button>
           <p className="welcome-mo__steps-note welcome-mo__steps-note--stage welcome-mo__steps-note--mobile">
             실제 PDF 검수·업로드는 <strong>PC 브라우저</strong>에서 이용하세요
           </p>

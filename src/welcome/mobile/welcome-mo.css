@@ -205,19 +205,28 @@
   justify-content: center;
   min-height: calc(4.5rem * var(--welcome-scale));
   padding: calc(1rem * var(--welcome-scale)) calc(0.75rem * var(--welcome-scale));
-  border: 1px solid var(--welcome-border-soft);
-  background: rgba(0, 0, 0, 0.2);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
 }
 .welcome-mo__showcase-message {
+  display: grid;
+  gap: calc(0.35rem * var(--welcome-scale));
   margin: 0;
   font-family: var(--font-family-title);
-  font-size: calc(1.05rem * var(--welcome-scale));
-  font-weight: normal;
   line-height: 1.55;
   text-align: center;
-  color: var(--welcome-text);
   letter-spacing: 0.02em;
+}
+.welcome-mo__showcase-message-line {
+  display: block;
+}
+.welcome-mo__showcase-message-line:first-child {
+  font-size: calc(0.88rem * var(--welcome-scale));
+  font-weight: 400;
+  color: var(--welcome-accent);
+}
+.welcome-mo__showcase-message-line:last-child {
+  font-size: calc(1.18rem * var(--welcome-scale));
+  font-weight: 600;
+  color: var(--welcome-accent);
 }
 .welcome-mo__compare {
   display: flex;
@@ -246,7 +255,9 @@
   align-self: center;
   gap: calc(0.2rem * var(--welcome-scale));
   width: fit-content;
-  margin: calc(-0.55rem * var(--welcome-scale)) auto calc(-0.35rem * var(--welcome-scale));
+  margin: 0 auto;
+  padding-top: calc(0.55rem * 2 * var(--welcome-scale));
+  padding-bottom: calc(0.35rem * 2 * var(--welcome-scale));
 }
 .welcome-mo__compare-momo-img {
   display: block;
@@ -282,11 +293,15 @@
 }
 .welcome-mo__showcase-figure {
   margin: 0;
-  border-radius: 0;
-  overflow: hidden;
+  border: none;
+  background: none;
+  box-shadow: none;
+}
+.welcome-mo__showcase-figure .welcome-mo__illus {
   border: 1px solid var(--welcome-border-soft);
   background: rgba(0, 0, 0, 0.25);
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
 }
 .welcome-mo__showcase-figure > img,
 .welcome-mo__showcase-figure > .welcome-mo__illus > .welcome-mo__illus-img {
@@ -370,8 +385,6 @@
   line-height: 1.5;
   text-align: center;
   color: var(--welcome-text-muted);
-  background: rgba(0, 0, 0, 0.2);
-  border-top: 1px solid var(--welcome-border-soft);
   margin: 0;
 }
 .welcome-mo__story-panel {
