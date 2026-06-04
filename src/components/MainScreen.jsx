@@ -13,7 +13,6 @@ import AppVersionBadge from './AppVersionBadge.jsx';
 import ResizableBuiltinSpelling from './ResizableBuiltinSpelling.jsx';
 import ConsistencyPanel from './ConsistencyPanel.jsx';
 import PanelSectionRunButton from './PanelSectionRunButton.jsx';
-import FeedbackModal from './FeedbackModal.jsx';
 import PdfPreviewBar from './PdfPreviewBar.jsx';
 import PdfZoomBar from './PdfZoomBar.jsx';
 import CheckResultsPanel from './CheckResultsPanel.jsx';
@@ -37,6 +36,7 @@ import {
 } from '../hooks/useResizablePanelWidth.js';
 import { usePrintedPageDisplay } from '../hooks/usePrintedPageDisplay.js';
 import { trackFeedbackOpened } from '../lib/analytics.js';
+import { openFeedbackFormView } from '../lib/feedbackConfig.js';
 import {
   getCurrentUserSession,
   subscribeAuthSession,
@@ -228,7 +228,6 @@ export default function MainScreen({
   const [lastConsistencyPane, setLastConsistencyPane] = useState(
     /** @type {'toc' | 'rules'} */ ('rules'),
   );
-  const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [thumbStripOpen, setThumbStripOpen] = useState(readThumbStripOpenPreference);
   const [authSession, setAuthSession] = useState(() => getCurrentUserSession());
   const [profileOnboardingRev, setProfileOnboardingRev] = useState(0);
@@ -1327,11 +1326,11 @@ export default function MainScreen({
                   className="ruleset-panel__feedback"
                   onClick={() => {
                     trackFeedbackOpened();
-                    setFeedbackOpen(true);
+                    openFeedbackFormView();
                   }}
                 >
                   <MessageSquare size={18} aria-hidden />
-                  피드백 보내기
+                  베타 소감 남기기
                 </button>
               </div>
             </div>
@@ -1410,7 +1409,6 @@ export default function MainScreen({
         </div>
       </main>
 
-      <FeedbackModal open={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
     </div>
   );
 }
