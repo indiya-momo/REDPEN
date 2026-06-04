@@ -7,6 +7,21 @@ const SESSION_SENT_KEY = 'pdf-proofread-analytics-session';
 /** @type {import('posthog-js').PostHog | null} */
 let posthogClient = null;
 
+/** initAnalytics 완료 전 capture — PDF가 빠르게 열릴 때 pdf_opened 유실 방지 */
+/** @type {{ event: string, properties: Record<string, string | number | boolean> }[]} */
+const pendingCaptures = [];
+
+function flushPendingCaptures() {
+  if (!posthogClient || isAnalyticsOptedOut()) {
+    pendingCaptures.length = 0;
+    return;
+  }
+  for (const item of pendingCaptures) {
+    posthogClient.capture(item.event, item.properties);
+  }
+  pendingCaptures.length = 0;
+}
+
 export function isAnalyticsOptedOut() {
   try {
     return localStorage.getItem(OPT_OUT_KEY) === '1';
@@ -23,8 +38,9 @@ export function setAnalyticsOptOut(optOut) {
   } catch {
     /* private mode */
   }
-  if (optOut && posthogClient) {
-    posthogClient.opt_out_capturing();
+  if (optOut) {
+    pendingCaptures.length = 0;
+    if (posthogClient) posthogClient.opt_out_capturing();
   }
 }
 
@@ -68,14 +84,24 @@ export function bucketFindingCount(n) {
  * @param {Record<string, string | number | boolean>} [properties]
  */
 export function captureAnalytics(event, properties = {}) {
-  if (!posthogClient || isAnalyticsOptedOut()) return;
+  if (isAnalyticsOptedOut()) return;
+  if (!posthogClient) {
+    pendingCaptures.push({ event, properties });
+    return;
+  }
   posthogClient.capture(event, properties);
 }
 
 export async function initAnalytics() {
-  if (isAnalyticsOptedOut()) return;
+  if (isAnalyticsOptedOut()) {
+    pendingCaptures.length = 0;
+    return;
+  }
   const key = resolvePostHogKey();
-  if (!key) return;
+  if (!key) {
+    pendingCaptures.length = 0;
+    return;
+  }
 
   const { default: posthog } = await import('posthog-js');
   const host = resolvePostHogHost();
@@ -108,6 +134,8 @@ export async function initAnalytics() {
       deploy_mode: deployModeLabel(),
     });
   }
+
+  flushPendingCaptures();
 }
 
 /**
