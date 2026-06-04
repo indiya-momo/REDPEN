@@ -65,12 +65,11 @@ export function usePdfDocument() {
       setProgress({ current, total, phase: 'extract' });
     });
 
-    const { ok, validation } = await applyExtractValidation(doc, pages);
+    const { ok } = await applyExtractValidation(doc, pages);
     trackPdfOpened({
       pageCount: doc.numPages,
       sizeBytes: file.size,
       textExtracted: ok,
-      publishGate: validation.reason,
     });
     return ok ? doc : null;
   }, [applyExtractValidation]);
