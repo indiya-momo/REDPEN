@@ -28,14 +28,21 @@ export function usePdfDocument() {
   const [loadError, setLoadError] = useState(null);
 
   /**
-   * 추출 완료 후 게이트 반영. restore 경로와 loadPdfFromFile 공용.
+   * 추출 완료 후 게이트 반영. restore·업로드 공용 — 여기서 pdf_opened 1회.
    * @param {import('pdfjs-dist').PDFDocumentProxy} doc
    * @param {import('../lib/pdfService.js').PageData[]} pages
+   * @param {{ sizeBytes?: number }} [meta]
    */
-  const applyExtractValidation = useCallback(async (doc, pages) => {
+  const applyExtractValidation = useCallback(async (doc, pages, meta = {}) => {
     const producerHints = await getPdfProducerHints(doc);
     const validation = validatePublishablePdf({ producerHints, pages });
-    if (!validation.ok) {
+    const ok = validation.ok;
+    trackPdfOpened({
+      pageCount: doc.numPages,
+      sizeBytes: meta.sizeBytes ?? 0,
+      textExtracted: ok,
+    });
+    if (!ok) {
       setLoadError(validation.message ?? null);
       setPdf(null);
       setPageTexts([]);
@@ -65,11 +72,8 @@ export function usePdfDocument() {
       setProgress({ current, total, phase: 'extract' });
     });
 
-    const { ok } = await applyExtractValidation(doc, pages);
-    trackPdfOpened({
-      pageCount: doc.numPages,
+    const { ok } = await applyExtractValidation(doc, pages, {
       sizeBytes: file.size,
-      textExtracted: ok,
     });
     return ok ? doc : null;
   }, [applyExtractValidation]);
