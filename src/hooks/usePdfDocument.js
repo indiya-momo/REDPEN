@@ -9,6 +9,13 @@ import {
   validatePublishablePdf,
 } from '../lib/pdfPublishGate.js';
 
+/** @param {import('pdfjs-dist').PDFDocumentProxy | null | undefined} doc */
+function destroyPdfDocument(doc) {
+  if (doc && typeof doc.destroy === 'function') {
+    void doc.destroy();
+  }
+}
+
 /**
  * PDF 로드·텍스트 추출·현재 페이지
  */
@@ -44,12 +51,18 @@ export function usePdfDocument() {
     });
     if (!ok) {
       setLoadError(validation.message ?? null);
-      setPdf(null);
+      setPdf((prev) => {
+        destroyPdfDocument(prev);
+        return null;
+      });
       setPageTexts([]);
       return { ok: false, validation, producerHints };
     }
     setLoadError(null);
-    setPdf(doc);
+    setPdf((prev) => {
+      destroyPdfDocument(prev);
+      return doc;
+    });
     setPageTexts(pages);
     return { ok: true, validation, producerHints };
   }, []);
@@ -58,7 +71,10 @@ export function usePdfDocument() {
     setLoadError(null);
     setPdfFileName(file.name);
     setPdfByteLength(file.size);
-    setPdf(null);
+    setPdf((prev) => {
+      destroyPdfDocument(prev);
+      return null;
+    });
     setPageTexts([]);
     setCurrentPage(1);
 
@@ -68,20 +84,28 @@ export function usePdfDocument() {
     setIsProcessing(true);
     setProgress({ current: 0, total: doc.numPages, phase: 'extract' });
 
-    const pages = await extractAllPagesText(doc, (current, total) => {
-      setProgress({ current, total, phase: 'extract' });
-    });
+    try {
+      const pages = await extractAllPagesText(doc, (current, total) => {
+        setProgress({ current, total, phase: 'extract' });
+      });
 
-    const { ok } = await applyExtractValidation(doc, pages, {
-      sizeBytes: file.size,
-    });
-    return ok ? doc : null;
+      const { ok } = await applyExtractValidation(doc, pages, {
+        sizeBytes: file.size,
+      });
+      return ok ? doc : null;
+    } finally {
+      setIsProcessing(false);
+      setProgress(null);
+    }
   }, [applyExtractValidation]);
 
   const resetPdfDocument = useCallback(() => {
     pdfBufferRef.current = null;
     fileHandleRef.current = null;
-    setPdf(null);
+    setPdf((prev) => {
+      destroyPdfDocument(prev);
+      return null;
+    });
     setPdfFileName(null);
     setPdfByteLength(null);
     setPageTexts([]);

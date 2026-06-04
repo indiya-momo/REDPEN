@@ -2041,6 +2041,81 @@ details[open] > summary .details-chevron {
   pointer-events: none;
 }
 
+/* PDF 업로드 — 대문 현직 편집자 말풍선과 동일 스타일 (문구·위치는 TooltipGuide props 유지) */
+.pdf-center-stage__hero-tooltip-anchor .tooltip-guide {
+  --tooltip-scale: 1.12;
+  --tooltip-surface: #fffdf6;
+  --tooltip-stroke: rgba(180, 152, 96, 0.72);
+  --tooltip-radius: calc(22px * var(--tooltip-scale));
+  --tooltip-stroke-w: calc(1.5px * var(--tooltip-scale));
+  --tooltip-pad-x: calc(10px * var(--tooltip-scale));
+  --tooltip-pad-x-right: 0;
+  --tooltip-pad-y: calc(2.5px * var(--tooltip-scale));
+  box-sizing: border-box;
+  width: max-content;
+  min-width: 0;
+  max-width: min(calc(440px * var(--tooltip-scale)), calc(100vw - 20px));
+  padding: var(--tooltip-pad-y) var(--tooltip-pad-x-right) var(--tooltip-pad-y)
+    var(--tooltip-pad-x);
+  z-index: 12;
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.38),
+    0 0 0 1px rgba(221, 180, 108, 0.14);
+}
+
+.pdf-center-stage__hero-tooltip-anchor .tooltip-guide--no-momo.tooltip-guide--no-confirm {
+  min-width: 0;
+  max-width: min(calc(440px * var(--tooltip-scale)), calc(100vw - 20px));
+}
+
+.pdf-center-stage__hero-tooltip-anchor
+  .tooltip-guide--no-momo.tooltip-guide--no-confirm
+  .tooltip-guide__body {
+  grid-template-columns: max-content;
+  column-gap: 0;
+  width: max-content;
+  min-height: 0;
+  justify-items: start;
+}
+
+.pdf-center-stage__hero-tooltip-anchor
+  .tooltip-guide--no-momo.tooltip-guide--no-confirm
+  .tooltip-guide__content {
+  width: auto;
+  max-width: none;
+  padding: 0;
+}
+
+.pdf-center-stage__hero-tooltip-anchor
+  .tooltip-guide--no-momo.tooltip-guide--no-confirm
+  .tooltip-guide__message {
+  width: auto;
+  max-width: none;
+}
+
+.pdf-center-stage__hero-tooltip-anchor .tooltip-guide--left::before {
+  content: '';
+  position: absolute;
+  left: calc(-7px * var(--tooltip-scale));
+  top: 50%;
+  width: calc(12px * var(--tooltip-scale));
+  height: calc(12px * var(--tooltip-scale));
+  transform: translateY(-50%) rotate(45deg);
+  background: var(--tooltip-surface);
+  border-left: var(--tooltip-stroke-w) solid var(--tooltip-stroke);
+  border-bottom: var(--tooltip-stroke-w) solid var(--tooltip-stroke);
+  box-sizing: border-box;
+}
+
+.pdf-center-stage__hero-tooltip-anchor .tooltip-guide__message {
+  font-family: var(--font-family-body-brand);
+  font-size: calc(1.02rem * var(--tooltip-scale));
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: -0.02em;
+  color: #5a382f;
+}
+
 .pdf-center-stage__hero {
   position: relative;
   width: 100%;

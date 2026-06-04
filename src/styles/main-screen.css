@@ -54,6 +54,10 @@
   overflow: visible;
 }
 
+.spelling-tab-layout__criteria-run-wrap {
+  display: inline-flex;
+}
+
 .spelling-tab-layout__run-row .tooltip-guide {
   z-index: 10002;
 }
@@ -61,6 +65,10 @@
 .spelling-tab-scroll .tooltip-guide,
 .work-guide-step-3 .tooltip-guide {
   z-index: 10003;
+}
+
+.tooltip-guide--fixed-layer[data-work-guide-bubble='2'] {
+  max-width: min(calc(400px * var(--tooltip-scale, 1)), calc(100vw - 28px));
 }
 
 .tooltip-guide--fixed-layer[data-work-guide-bubble='3'] {
@@ -222,7 +230,7 @@
   color: var(--color-text);
 }
 
-/* 4번 말풍선 — 좌측 「일관성 · 목차 확인」탭 칩 */
+/* 4번 말풍선 — 좌측 「일관성 확인」탭 칩 */
 .tooltip-guide__work-tab-chip {
   display: inline-block;
   margin: 0 2px;
@@ -636,6 +644,8 @@
   padding: 8px 14px 10px;
   font-size: 0.72rem;
   font-weight: 700;
+  line-height: 1.45;
+  text-align: center;
   color: #9a3412;
   background: #fff7ed;
   border-bottom: 1px solid #fed7aa;
@@ -670,6 +680,9 @@
 }
 
 .spelling-tab-layout__run-row {
+  position: relative;
+  z-index: 10020;
+  isolation: isolate;
   flex-shrink: 0;
   display: flex;
   align-items: center;

@@ -58,13 +58,20 @@ import {
   shouldShowPdfViewer,
 } from '../utils/main-screen-helpers.js';
 
-/** 2번 — 기준 검수 버튼 아래 10px */
+/** 2번 — 가로: 실행 행 왼쪽, 세로: 기준 검수 버튼 아래 (버튼과 겹치지 않음) */
 const WORK_GUIDE_2_ALIGN_CHAIN = [
   {
-    selector:
-      '.spelling-tab-layout__run-row-actions--end .panel-section-run-btn',
-    leftFromTargetLeft: 0,
-    topFromTargetBottom: 10,
+    alignSplit: {
+      horizontal: {
+        selector: '.spelling-tab-layout__run-row',
+        leftFromTargetLeft: 412,
+      },
+      vertical: {
+        selector:
+          '.spelling-tab-layout__run-row-actions--end .panel-section-run-btn',
+        topFromTargetBottom: 40,
+      },
+    },
   },
 ];
 
@@ -281,6 +288,7 @@ export default function MainScreen({
   }
 
   const authUid = authSession?.uid ?? '';
+  const authEmail = authSession?.email ?? '';
   void profileOnboardingRev;
   const greetingName = useMemo(() => {
     void profileOnboardingRev;
@@ -331,9 +339,54 @@ export default function MainScreen({
     },
     [pageDisplay.active, pageDisplay.formatPage],
   );
-  const betaQuota = useBetaDailyQuota(authUid);
+  const betaQuota = useBetaDailyQuota(authUid, authEmail);
   const checkQuotaBlocked =
     betaQuota.enforced && !betaQuota.loading && !betaQuota.canRunCheck;
+
+  const criteriaRunBlocked = useMemo(() => {
+    if (pdf.pageTexts.length === 0 || checkQuotaBlocked) return true;
+    if (
+      pdf.isProcessing &&
+      (pdf.progress?.phase === 'extract' || pdf.progress?.phase === 'restore')
+    ) {
+      return true;
+    }
+    return false;
+  }, [
+    pdf.pageTexts.length,
+    checkQuotaBlocked,
+    pdf.isProcessing,
+    pdf.progress?.phase,
+  ]);
+
+  const criteriaRunChecking =
+    pdf.isProcessing && pdf.progress?.phase === 'check';
+
+  const criteriaRunDisabledReason = useMemo(() => {
+    if (pdf.progress?.phase === 'restore') {
+      return '이전 작업 복원 중입니다. 잠시만 기다려 주세요.';
+    }
+    if (pdf.progress?.phase === 'extract') {
+      return 'PDF 텍스트 추출 중입니다.';
+    }
+    if (criteriaRunChecking) {
+      return '검사가 진행 중입니다.';
+    }
+    if (!pdf.pdf) return 'PDF를 업로드해 주세요.';
+    if (pdf.pageTexts.length === 0) {
+      return '텍스트 추출이 완료되지 않았습니다. PDF를 다시 올려 주세요.';
+    }
+    if (checkQuotaBlocked) {
+      return '오늘 무료 검수 한도를 모두 사용했습니다.';
+    }
+    return '';
+  }, [
+    pdf.progress?.phase,
+    criteriaRunChecking,
+    pdf.pdf,
+    pdf.pageTexts.length,
+    checkQuotaBlocked,
+  ]);
 
   const ruleCheck = useRuleCheck({
     builtInEnabled,
@@ -347,6 +400,7 @@ export default function MainScreen({
     setProgress: pdf.setProgress,
     afterCheckRef,
     authUid,
+    authEmail,
     onBetaQuotaConsumed: () => void betaQuota.refresh(),
   });
   const tocBodyCheckEnabled = isTocBodyCheckEnabled();
@@ -364,6 +418,7 @@ export default function MainScreen({
     setProgress: pdf.setProgress,
     afterCheckRef,
     authUid,
+    authEmail,
     onBetaQuotaConsumed: () => void betaQuota.refresh(),
   });
   const session = useWorkSession(pdf, ruleCheck, tocCheck);
@@ -691,13 +746,11 @@ export default function MainScreen({
         <>
           이제{' '}
           <span className="tooltip-guide__work-tab-chip tooltip-guide__work-tab-chip--consistency">
-            일관성 · 목차 확인
+            일관성 확인
           </span>
-          을 클릭해서 살펴보자냥
+          을 살펴볼 차례
           <br />
-          원고의 표현이 모두 같은지
-          <br />
-          여러 가지를 한 번에 입력해서 확인할 수 있다냥
+          한 번에 여러 요소를 검색할 수 있다냥!
         </>
       }
       onDismiss={() =>
@@ -775,6 +828,7 @@ export default function MainScreen({
                       alignToBubbleChain={WORK_GUIDE_2_ALIGN_CHAIN}
                       bubbleGuideStep="2"
                       pinned={workGuide.pinAll}
+                      showConfirm={false}
                       message={
                         <>
                           검수할 기준을 선택하자냥!
@@ -880,13 +934,13 @@ export default function MainScreen({
               className={`work-tab work-tab--consistency ${workTab === 'consistency' ? 'active' : ''}`}
               onClick={() => switchTab('consistency')}
             >
-              일관성 · 목차 확인
+              일관성 확인
             </button>
           </nav>
         </header>
         {isPreUpload ? (
           <p className="panel-left__preupload-hint">
-            가운데에서 PDF를 업로드하면 맞춤법·일관성·목차 검사에 함께 사용됩니다
+            PDF를 업로드한 뒤 사용 가능한 영역입니다
           </p>
         ) : null}
 
@@ -990,15 +1044,17 @@ export default function MainScreen({
                   />
                 </div>
                 <div className="spelling-tab-layout__run-row-actions spelling-tab-layout__run-row-actions--end">
-                  <PanelSectionRunButton
-                    label="기준 검수"
-                    onClick={handleCriteriaSpellingCheck}
-                    disabled={
-                      pdf.pageTexts.length === 0 ||
-                      checkQuotaBlocked
-                    }
-                    isProcessing={pdf.isProcessing}
-                  />
+                  <span
+                    className="spelling-tab-layout__criteria-run-wrap"
+                    title={criteriaRunDisabledReason || undefined}
+                  >
+                    <PanelSectionRunButton
+                      label="기준 검수"
+                      onClick={handleCriteriaSpellingCheck}
+                      disabled={criteriaRunBlocked}
+                      isProcessing={criteriaRunChecking}
+                    />
+                  </span>
                   {workGuide.showFirstResultGuide ? (
                     <div className="work-guide-step-3">
                       <TooltipGuide

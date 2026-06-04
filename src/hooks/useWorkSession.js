@@ -67,6 +67,26 @@ export function useWorkSession(pdf, ruleCheck, tocCheck) {
     clearTocCheckState();
   }, [clearRuleCheckState, clearTocCheckState]);
 
+  /** 탭·창 이탈 시 복원 데이터 제거 (PDF worker 복원 오류 방지) */
+  const discardWorkSessionOnLeave = useCallback(async () => {
+    invalidateRestore();
+    setIsRestoring(false);
+    setIsProcessing(false);
+    setProgress(null);
+    await clearWorkSession();
+    resetPdfDocument();
+    clearAllCheckState();
+    setSessionHint(null);
+    setLoadError(null);
+  }, [
+    invalidateRestore,
+    resetPdfDocument,
+    clearAllCheckState,
+    setIsProcessing,
+    setProgress,
+    setLoadError,
+  ]);
+
   const persistSession = useCallback(async () => {
     if (!canPersist) return false;
 
@@ -258,6 +278,7 @@ export function useWorkSession(pdf, ruleCheck, tocCheck) {
   const openPdfWithPicker = useCallback(async () => {
     clearAllCheckState();
     clearFileHandle();
+    invalidateRestore();
 
     try {
       const [handle] = await window.showOpenFilePicker({
@@ -284,6 +305,7 @@ export function useWorkSession(pdf, ruleCheck, tocCheck) {
   }, [
     clearAllCheckState,
     clearFileHandle,
+    invalidateRestore,
     fileHandleRef,
     loadPdfFromFile,
     persistSession,
@@ -299,6 +321,7 @@ export function useWorkSession(pdf, ruleCheck, tocCheck) {
       return;
     }
     setLoadError(null);
+    invalidateRestore();
     setIsProcessing(true);
     setProgress({ current: 0, total: 1, phase: 'restore' });
     try {
@@ -318,6 +341,7 @@ export function useWorkSession(pdf, ruleCheck, tocCheck) {
     }
   }, [
     fileHandleRef,
+    invalidateRestore,
     openPdfWithPicker,
     loadPdfFromFile,
     persistSession,
@@ -336,6 +360,7 @@ export function useWorkSession(pdf, ruleCheck, tocCheck) {
 
       clearAllCheckState();
       clearFileHandle();
+      invalidateRestore();
 
       try {
         await loadPdfFromFile(file);
@@ -351,6 +376,7 @@ export function useWorkSession(pdf, ruleCheck, tocCheck) {
     [
       clearAllCheckState,
       clearFileHandle,
+      invalidateRestore,
       loadPdfFromFile,
       persistSession,
       resetPdfDocument,
@@ -377,21 +403,8 @@ export function useWorkSession(pdf, ruleCheck, tocCheck) {
     ) {
       return;
     }
-    invalidateRestore();
-    setIsRestoring(false);
-    setIsProcessing(false);
-    setProgress(null);
-    await clearWorkSession();
-    resetPdfDocument();
-    clearAllCheckState();
-    setSessionHint(null);
-  }, [
-    invalidateRestore,
-    resetPdfDocument,
-    clearAllCheckState,
-    setIsProcessing,
-    setProgress,
-  ]);
+    await discardWorkSessionOnLeave();
+  }, [discardWorkSessionOnLeave]);
 
   const handleEndWork = useCallback(async () => {
     if (
@@ -401,23 +414,8 @@ export function useWorkSession(pdf, ruleCheck, tocCheck) {
     ) {
       return;
     }
-    invalidateRestore();
-    setIsRestoring(false);
-    setIsProcessing(false);
-    setProgress(null);
-    await clearWorkSession();
-    resetPdfDocument();
-    clearAllCheckState();
-    setSessionHint(null);
-    setLoadError(null);
-  }, [
-    invalidateRestore,
-    resetPdfDocument,
-    clearAllCheckState,
-    setLoadError,
-    setIsProcessing,
-    setProgress,
-  ]);
+    await discardWorkSessionOnLeave();
+  }, [discardWorkSessionOnLeave]);
 
   return {
     sessionHint,

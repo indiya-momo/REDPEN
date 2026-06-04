@@ -3,6 +3,7 @@ import {
   canRunBetaCheck,
   getKstDayId,
   isBetaDailyQuotaEnabled,
+  isBetaQuotaAdminExempt,
 } from './betaDailyQuota.js';
 
 describe('getKstDayId', () => {
@@ -45,5 +46,36 @@ describe('isBetaDailyQuotaEnabled', () => {
     vi.resetModules();
     const mod = await import('./betaDailyQuota.js');
     expect(mod.isBetaDailyQuotaEnabled()).toBe(false);
+  });
+});
+
+describe('isBetaQuotaAdminExempt', () => {
+  const prevUids = import.meta.env.VITE_BETA_QUOTA_ADMIN_UIDS;
+  const prevEmails = import.meta.env.VITE_BETA_QUOTA_ADMIN_EMAILS;
+
+  afterEach(() => {
+    import.meta.env.VITE_BETA_QUOTA_ADMIN_UIDS = prevUids;
+    import.meta.env.VITE_BETA_QUOTA_ADMIN_EMAILS = prevEmails;
+    vi.resetModules();
+  });
+
+  it('관리자 이메일 목록에 있으면 면제', async () => {
+    import.meta.env.VITE_BETA_QUOTA_ADMIN_EMAILS = 'Admin@Example.com, dev@test.io';
+    vi.resetModules();
+    const mod = await import('./betaDailyQuota.js');
+    expect(mod.isBetaQuotaAdminExempt('any-uid', 'dev@test.io')).toBe(true);
+    expect(mod.isBetaQuotaAdminExempt('any-uid', 'other@test.io')).toBe(false);
+  });
+
+  it('관리자 uid 목록에 있으면 면제', async () => {
+    import.meta.env.VITE_BETA_QUOTA_ADMIN_UIDS = 'uid-abc,uid-xyz';
+    vi.resetModules();
+    const mod = await import('./betaDailyQuota.js');
+    expect(mod.isBetaQuotaAdminExempt('uid-abc', '')).toBe(true);
+    if (mod.isBetaDailyQuotaEnabled()) {
+      expect(mod.isBetaDailyQuotaEnforcedForUser('uid-abc', 'x@y.z')).toBe(
+        false,
+      );
+    }
   });
 });

@@ -22,6 +22,60 @@ export function isBetaDailyQuotaEnabled() {
 }
 
 /**
+ * @param {string | undefined} raw
+ * @param {{ lowercase?: boolean }} [options]
+ */
+function parseAdminAllowlist(raw, options = {}) {
+  if (!raw || typeof raw !== 'string') return [];
+  return raw
+    .split(',')
+    .map((entry) => {
+      const trimmed = entry.trim();
+      return options.lowercase ? trimmed.toLowerCase() : trimmed;
+    })
+    .filter(Boolean);
+}
+
+/** @returns {Set<string>} */
+function getBetaQuotaAdminUidSet() {
+  return new Set(parseAdminAllowlist(import.meta.env.VITE_BETA_QUOTA_ADMIN_UIDS));
+}
+
+/** @returns {Set<string>} */
+function getBetaQuotaAdminEmailSet() {
+  return new Set(
+    parseAdminAllowlist(import.meta.env.VITE_BETA_QUOTA_ADMIN_EMAILS, {
+      lowercase: true,
+    }),
+  );
+}
+
+/**
+ * 오픈베타 1일 1회 한도 면제 — `VITE_BETA_QUOTA_ADMIN_UIDS` / `VITE_BETA_QUOTA_ADMIN_EMAILS`
+ * @param {string} uid
+ * @param {string} [email]
+ */
+export function isBetaQuotaAdminExempt(uid, email = '') {
+  const id = uid.trim();
+  const mail = email.trim().toLowerCase();
+  if (id && getBetaQuotaAdminUidSet().has(id)) return true;
+  if (mail && getBetaQuotaAdminEmailSet().has(mail)) return true;
+  return false;
+}
+
+/**
+ * @param {string} uid
+ * @param {string} [email]
+ */
+export function isBetaDailyQuotaEnforcedForUser(uid, email = '') {
+  return (
+    isBetaDailyQuotaEnabled() &&
+    Boolean(uid.trim()) &&
+    !isBetaQuotaAdminExempt(uid, email)
+  );
+}
+
+/**
  * KST 기준 yyyy-mm-dd (검수 일자 키)
  * @param {Date} [date]
  */
@@ -166,15 +220,19 @@ async function readQuotaFlags(uid, dayId) {
  *   source: 'none' | 'local' | 'firestore',
  * }>}
  */
-export async function getBetaDailyQuotaStatus(uid) {
+/**
+ * @param {string} uid
+ * @param {string} [email]
+ */
+export async function getBetaDailyQuotaStatus(uid, email = '') {
   const dayId = getKstDayId();
-  if (!isBetaDailyQuotaEnabled() || !uid.trim()) {
+  if (!isBetaDailyQuotaEnforcedForUser(uid, email)) {
     return {
       consumedToday: false,
       hasWelcomeRemaining: false,
       dayId,
       enforced: false,
-      source: 'none',
+      source: isBetaQuotaAdminExempt(uid, email) ? 'admin' : 'none',
     };
   }
 
@@ -192,9 +250,13 @@ export async function getBetaDailyQuotaStatus(uid) {
  * @param {string} uid
  * @returns {Promise<{ ok: boolean, dayId: string, alreadyUsed?: boolean, kind?: 'welcome' | 'daily' }>}
  */
-export async function consumeBetaDailyQuota(uid) {
+/**
+ * @param {string} uid
+ * @param {string} [email]
+ */
+export async function consumeBetaDailyQuota(uid, email = '') {
   const dayId = getKstDayId();
-  if (!isBetaDailyQuotaEnabled() || !uid.trim()) {
+  if (!isBetaDailyQuotaEnforcedForUser(uid, email)) {
     return { ok: true, dayId, kind: 'daily' };
   }
 
@@ -260,13 +322,14 @@ export async function consumeBetaDailyQuota(uid) {
 /**
  * 검수 실행 직전 호출 — 실패 시 alert 후 false
  * @param {string} uid
- * @param {{ onConsumed?: () => void }} [options]
+ * @param {{ onConsumed?: () => void, authEmail?: string }} [options]
  */
 export async function assertBetaDailyCheckOrAlert(uid, options = {}) {
-  if (!isBetaDailyQuotaEnabled() || !uid.trim()) {
+  const email = options.authEmail ?? '';
+  if (!isBetaDailyQuotaEnforcedForUser(uid, email)) {
     return true;
   }
-  const result = await consumeBetaDailyQuota(uid);
+  const result = await consumeBetaDailyQuota(uid, email);
   if (!result.ok) {
     alert(BETA_DAILY_QUOTA_ALERT);
     return false;
