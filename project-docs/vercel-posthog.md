@@ -64,14 +64,43 @@ VITE_PUBLIC_POSTHOG_HOST=https://eu.i.posthog.com
 
 ## 5. 확인 체크리스트
 
-- [ ] Vercel Production 배포 URL에서 앱 로드
-- [ ] PostHog Live events에 `session_start`, `deploy_mode: vercel`
+- [ ] PostHog 변수 추가 **이후** Production **Redeploy** 완료
+- [ ] 접속 URL이 **https://indiya.vercel.app** (GitHub Pages는 PostHog 키 없음 → Live에 안 뜸)
+- [ ] PostHog **같은 리전·같은 프로젝트**(EU 가입이면 `eu.posthog.com` 쪽 프로젝트)에서 Live events 열기
+- [ ] `session_start` + `deploy_mode: vercel`
 - [ ] PDF 열기 후 `pdf_opened` 유입
-- [ ] 키가 없으면 SDK 미로드 (오류 없이 동작)
 
 ---
 
-## 6. Feature flags (선택)
+## 6. Live에 Waiting만 보일 때
+
+| 원인 | 확인·조치 |
+|------|-----------|
+| **변수 추가 전 빌드** | Deployments → 최신 Production이 변수 추가 **이후**인지 확인 → **Redeploy** |
+| **GitHub Pages로 접속** | `github.io/REDPEN` 은 빌드에 키 없음 → **Vercel URL**로 테스트 |
+| **수집 거부** | 브라우저 개발자도구 → Application → Local Storage → `pdf-proofread-analytics-opt-out` 이 `1` 이면 삭제 후 새로고침 |
+| **광고 차단** | uBlock 등 끄거나 시크릿 창에서 재시도 |
+| **네트워크** | 개발자도구 Network에서 `eu.i.posthog.com` / `batch` 요청이 **204** 근처로 나가는지 확인. 없으면 SDK 미초기화(빌드에 키 없음) |
+| **PostHog 화면** | Live events에서 프로젝트·필터·시간 범위가 맞는지 확인 |
+
+빌드에 키가 들어갔는지(로컬 점검):
+
+```bash
+# PowerShell 예시
+$env:NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN="phc_test"
+$env:NEXT_PUBLIC_POSTHOG_HOST="https://eu.i.posthog.com"
+npm run build
+# dist/assets/index-*.js 안에 phc_test 문자열이 있어야 함
+```
+
+Vercel에 Marketplace 변수만 있고 계속 안 되면, **Production**에 아래를 **추가**한 뒤 Redeploy (값은 PostHog와 동일):
+
+- `VITE_PUBLIC_POSTHOG_KEY` = `phc_…`
+- `VITE_PUBLIC_POSTHOG_HOST` = `https://eu.i.posthog.com`
+
+---
+
+## 7. Feature flags (선택)
 
 Marketplace 연동은 **Feature flags ↔ Vercel Flags** 동기화도 지원합니다.  
 현재 앱은 flags 없이 이벤트만 씁니다. 나중에 쓰려면 PostHog 대시보드와 [Vercel Flags 문서](https://posthog.com/docs/integrations/vercel-marketplace)를 참고하세요.

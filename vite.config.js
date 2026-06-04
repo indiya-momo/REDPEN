@@ -33,18 +33,39 @@ if (fs.existsSync(pdfjsCmapsSrc)) {
   fs.cpSync(pdfjsCmapsSrc, pdfjsCmapsDest, { recursive: true });
 }
 
+/** Vercel Marketplace · .env.local PostHog 변수 → 빌드 시 클라이언트에 고정 */
+function pickPostHogBuildEnv(raw = {}) {
+  const key = String(
+    raw.VITE_PUBLIC_POSTHOG_KEY ||
+      raw.VITE_POSTHOG_PROJECT_TOKEN ||
+      raw.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN ||
+      '',
+  ).trim();
+  const host = String(
+    raw.VITE_PUBLIC_POSTHOG_HOST ||
+      raw.VITE_POSTHOG_HOST ||
+      raw.NEXT_PUBLIC_POSTHOG_HOST ||
+      'https://eu.i.posthog.com',
+  ).trim();
+  return { key, host };
+}
+
 export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd(), '');
-  const devPort = Number(env.DEV_PORT) || 5173;
-  const deployTarget = process.env.VERCEL
+  const fileEnv = loadEnv(mode, process.cwd(), '');
+  const buildEnv = { ...fileEnv, ...process.env };
+  const devPort = Number(buildEnv.DEV_PORT) || 5173;
+  const deployTarget = buildEnv.VERCEL
     ? 'vercel'
-    : process.env.VITE_DEPLOY_TARGET?.trim() || '';
+    : buildEnv.VITE_DEPLOY_TARGET?.trim() || '';
+  const posthog = pickPostHogBuildEnv(buildEnv);
 
   return {
   base: process.env.VITE_BASE || '/',
   envPrefix: ['VITE_', 'NEXT_PUBLIC_POSTHOG'],
   define: {
     'import.meta.env.VITE_DEPLOY_TARGET': JSON.stringify(deployTarget),
+    'import.meta.env.VITE_PUBLIC_POSTHOG_KEY': JSON.stringify(posthog.key),
+    'import.meta.env.VITE_PUBLIC_POSTHOG_HOST': JSON.stringify(posthog.host),
   },
   plugins: [react()],
   test: {
@@ -56,7 +77,7 @@ export default defineConfig(({ mode }) => {
     // 워크트리별 구분: .env.local 에 DEV_PORT=5180 등 (gitignore *.local)
     host: true,
     port: devPort,
-    strictPort: Boolean(env.DEV_PORT),
+    strictPort: Boolean(buildEnv.DEV_PORT),
     open: '/',
   },
   preview: {
