@@ -43,10 +43,6 @@ export function useBetaDailyQuota(uid, email = '') {
   return {
     loading,
     enforced,
-    adminExempt: !enforced && Boolean(uid.trim()),
-    consumedToday,
-    hasWelcomeRemaining,
-    dayId,
     canRunCheck,
     refresh,
   };

@@ -1,4 +1,3 @@
-import { getAuth } from 'firebase/auth';
 import {
   doc,
   getDoc,
@@ -6,7 +5,11 @@ import {
   runTransaction,
   serverTimestamp,
 } from 'firebase/firestore';
-import { firebaseApp, isFirebaseAuthConfigured } from './firebaseAuth.js';
+import {
+  firebaseApp,
+  isFirebaseAuthConfigured,
+  resolveSessionEmail,
+} from './firebaseAuth.js';
 
 const LOCAL_QUOTA_PREFIX = 'indiya-beta-quota-v2--';
 const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
@@ -65,16 +68,10 @@ function getBetaQuotaAdminEmailSet() {
  * @param {{ email?: string } | null | undefined} session
  */
 export function resolveQuotaAuthEmail(session) {
-  const fromSession = (session?.email ?? '').trim();
-  if (fromSession) return fromSession;
-  if (!isFirebaseAuthConfigured || !firebaseApp) return '';
-  const user = getAuth(firebaseApp).currentUser;
-  if (!user) return '';
-  if (user.email?.trim()) return user.email.trim();
-  for (const provider of user.providerData ?? []) {
-    if (provider.email?.trim()) return provider.email.trim();
+  if (!isFirebaseAuthConfigured || !firebaseApp) {
+    return (session?.email ?? '').trim();
   }
-  return '';
+  return resolveSessionEmail(session);
 }
 
 /**
@@ -240,17 +237,13 @@ async function readQuotaFlags(uid, dayId) {
 
 /**
  * @param {string} uid
+ * @param {string} [email]
  * @returns {Promise<{
  *   consumedToday: boolean,
  *   hasWelcomeRemaining: boolean,
  *   dayId: string,
  *   enforced: boolean,
- *   source: 'none' | 'local' | 'firestore',
  * }>}
- */
-/**
- * @param {string} uid
- * @param {string} [email]
  */
 export async function getBetaDailyQuotaStatus(uid, email = '') {
   const dayId = getKstDayId();
@@ -260,7 +253,6 @@ export async function getBetaDailyQuotaStatus(uid, email = '') {
       hasWelcomeRemaining: false,
       dayId,
       enforced: false,
-      source: isBetaQuotaAdminExempt(uid, email) ? 'admin' : 'none',
     };
   }
 
@@ -270,7 +262,6 @@ export async function getBetaDailyQuotaStatus(uid, email = '') {
     hasWelcomeRemaining: !flags.firstFreeUsed,
     dayId,
     enforced: true,
-    source: 'firestore',
   };
 }
 

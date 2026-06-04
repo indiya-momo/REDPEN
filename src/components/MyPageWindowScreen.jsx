@@ -4,6 +4,8 @@ import FeedbackModal from './FeedbackModal.jsx';
 import { returnToWorkspace } from '../lib/returnToWorkspace.js';
 import {
   getCurrentUserSession,
+  resolveSessionEmail,
+  resolveSessionEmailAsync,
   signOutUser,
   subscribeAuthSession,
 } from '../lib/firebaseAuth.js';
@@ -56,10 +58,6 @@ const FAQ_ITEMS = [
 ];
 
 const SECTION_COPY = {
-  profile: {
-    title: '회원정보관리',
-    desc: '닉네임·연락처 등 계정 정보를 관리하는 화면입니다. 준비 중입니다.',
-  },
   usage: {
     title: '이용 내역',
     desc: '검수 이용 기록을 날짜·내용·금액으로 확인할 수 있습니다. 준비 중입니다.',
@@ -218,6 +216,50 @@ function MyPageFaq({ onInquiry }) {
   );
 }
 
+function ProfileSection({ displayName, email, daysWithMomo, authUid }) {
+  return (
+    <div className="mypage__main-inner mypage__main-inner--section">
+      <h1 className="mypage__page-title">회원정보관리</h1>
+      <section
+        className="mypage__card mypage__profile-card"
+        aria-labelledby="mypage-profile-title"
+      >
+        <h2 id="mypage-profile-title" className="mypage__card-title">
+          계정 정보
+        </h2>
+        <dl className="mypage__profile-fields">
+          <div className="mypage__profile-row">
+            <dt>닉네임</dt>
+            <dd>{displayName}</dd>
+          </div>
+          <div className="mypage__profile-row">
+            <dt>이메일</dt>
+            <dd>
+              {email ? (
+                email
+              ) : (
+                <span className="mypage__profile-value--muted">
+                  Google 로그인 이메일을 불러오지 못했습니다. 로그아웃 후 다시
+                  로그인해 주세요.
+                </span>
+              )}
+            </dd>
+          </div>
+          {daysWithMomo != null ? (
+            <div className="mypage__profile-row">
+              <dt>이용 기간</dt>
+              <dd>모모와 함께한 {daysWithMomo}일</dd>
+            </div>
+          ) : null}
+        </dl>
+        <p className="mypage__profile-note">
+          이메일은 Google 로그인 계정이며, 인디야에서 변경할 수 없습니다.
+        </p>
+      </section>
+    </div>
+  );
+}
+
 function SectionPlaceholder({ sectionId }) {
   const copy = SECTION_COPY[sectionId];
   if (!copy) return null;
@@ -247,7 +289,20 @@ export default function MyPageWindowScreen() {
     return '게스트';
   }, [authSession?.displayName, profile?.nickname]);
 
-  const email = authSession?.email ?? '';
+  const [email, setEmail] = useState(() => resolveSessionEmail(authSession));
+
+  useEffect(() => {
+    const sync = resolveSessionEmail(authSession);
+    setEmail(sync);
+    if (sync || !authSession?.uid) return undefined;
+    let cancelled = false;
+    void resolveSessionEmailAsync(authSession).then((resolved) => {
+      if (!cancelled && resolved) setEmail(resolved);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [authSession]);
 
   const daysWithMomo = useMemo(() => {
     const joinedMs = authSession?.createdAtMs ?? profile?.completedAt ?? null;
@@ -314,7 +369,14 @@ export default function MyPageWindowScreen() {
               </span>
             ) : null}
           </p>
-          {email ? <p className="mypage__user-email">{email}</p> : null}
+          {email ? (
+            <p className="mypage__user-email">{email}</p>
+          ) : (
+            <p className="mypage__user-email mypage__user-email--missing">
+              로그인 이메일을 불러오지 못했습니다. 로그아웃 후 다시 로그인해
+              주세요.
+            </p>
+          )}
         </div>
         <nav aria-label="계정 메뉴">
           <ul className="mypage__nav">
@@ -347,6 +409,13 @@ export default function MyPageWindowScreen() {
               }}
             />
           </div>
+        ) : activeNav === 'profile' ? (
+          <ProfileSection
+            displayName={displayName}
+            email={email}
+            daysWithMomo={daysWithMomo}
+            authUid={authSession.uid}
+          />
         ) : activeNav === 'inquiry' ? (
           <InquiryHistorySection
             onNewInquiry={() => setInquiryModalOpen(true)}

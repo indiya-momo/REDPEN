@@ -31,8 +31,8 @@ export const WORK_GUIDE_KEYS = {
 };
 
 /**
- * `pinAll` 플래그만 켜는 개발용 옵션(표시 순서는 1→7 동일).
- * 기본 꺼짐. 켜려면 `VITE_WORK_GUIDE_PIN_ALL=true` 또는 URL `?workGuidePin=1`
+ * 말풍선 pin — 확인해도 숨김·체인 dismiss 안 함. localhost dev 기본 켜짐.
+ * `VITE_WORK_GUIDE_PIN_ALL=true|false`, URL `?workGuidePin=1|0`
  */
 export function isWorkGuidePinned() {
   if (import.meta.env.VITE_WORK_GUIDE_PIN_ALL === 'true') return true;
