@@ -60,7 +60,10 @@ export function buildDateLabel() {
 }
 
 export function deployModeLabel() {
-  return import.meta.env.DEV ? 'dev' : 'pages';
+  if (import.meta.env.DEV) return 'dev';
+  const target = import.meta.env.VITE_DEPLOY_TARGET?.trim();
+  if (target) return target;
+  return 'pages';
 }
 
 /** v0.1.0 · 날짜 — 시각·빌드ID·기능표식·모드 제외 (대문 푸터) */

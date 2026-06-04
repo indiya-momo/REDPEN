@@ -1,4 +1,5 @@
 import { APP_VERSION, UI_BUILD_ID, deployModeLabel } from './appVersion.js';
+import { resolvePostHogHost, resolvePostHogKey } from './posthogEnv.js';
 
 const OPT_OUT_KEY = 'pdf-proofread-analytics-opt-out';
 const SESSION_SENT_KEY = 'pdf-proofread-analytics-session';
@@ -73,13 +74,11 @@ export function captureAnalytics(event, properties = {}) {
 
 export async function initAnalytics() {
   if (isAnalyticsOptedOut()) return;
-  const key = import.meta.env.VITE_PUBLIC_POSTHOG_KEY?.trim();
+  const key = resolvePostHogKey();
   if (!key) return;
 
   const { default: posthog } = await import('posthog-js');
-  const host =
-    import.meta.env.VITE_PUBLIC_POSTHOG_HOST?.trim() ||
-    'https://eu.i.posthog.com';
+  const host = resolvePostHogHost();
 
   posthog.init(key, {
     api_host: host,
