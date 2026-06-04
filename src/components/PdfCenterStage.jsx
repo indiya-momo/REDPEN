@@ -31,6 +31,10 @@ const PDF_SIZE_WARN_BYTES = 50 * MB;
  *   sessionHint: string | null,
  *   runLabel: string,
  *   showReady: boolean,
+ *   showUploadGuide?: boolean,
+ *   uploadGuideStorageKey?: string,
+ *   uploadGuidePinned?: boolean,
+ *   onUploadGuideDismiss?: () => void,
  * }} props
  */
 export default function PdfCenterStage({
@@ -54,6 +58,10 @@ export default function PdfCenterStage({
   sessionHint,
   runLabel,
   showReady,
+  showUploadGuide = true,
+  uploadGuideStorageKey = 'pdf-upload-first-step',
+  uploadGuidePinned = false,
+  onUploadGuideDismiss,
 }) {
   const [dragOver, setDragOver] = useState(false);
   const dragDepth = useRef(0);
@@ -156,17 +164,23 @@ export default function PdfCenterStage({
                 decoding="async"
               />
               <span className="pdf-center-stage__hero-tooltip-anchor" aria-hidden>
-                <TooltipGuide
-                  storageKey="pdf-upload-first-step"
-                  placement="left"
-                  bubbleType="left"
-                  offsetX={150}
-                  offsetY={-50}
-                  imageSrc={null}
-                  message="처음 할 일은 이거다냥"
-                >
+                {showUploadGuide ? (
+                  <TooltipGuide
+                    storageKey={uploadGuideStorageKey}
+                    placement="left"
+                    bubbleType="left"
+                    offsetX={150}
+                    offsetY={-50}
+                    imageSrc={null}
+                    pinned={uploadGuidePinned}
+                    message="처음 할 일은 이거다냥"
+                    onDismiss={onUploadGuideDismiss}
+                  >
+                    <span className="pdf-center-stage__hero-tooltip-dot" />
+                  </TooltipGuide>
+                ) : (
                   <span className="pdf-center-stage__hero-tooltip-dot" />
-                </TooltipGuide>
+                )}
               </span>
             </div>
             <div

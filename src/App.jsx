@@ -104,6 +104,38 @@ export default function App() {
     onApply: applyBonBojoSheetRefresh,
   });
 
+  const resolvedCustomRules = useMemo(
+    () => ensureDefaultAuxiliaryVerbs(activeSet?.customRules ?? []),
+    [activeSet?.customRules],
+  );
+
+  useEffect(() => {
+    if (screen !== 'main' || !rulesReady || !activeSet) return;
+    const prev = activeSet.customRules ?? [];
+    const odaPrev = prev.some(
+      (r) =>
+        r.patternKind === 'auxiliary-verb' &&
+        r.bonBojoItemId === 'verb-oda' &&
+        r.tailWord === '해 왔',
+    );
+    if (
+      odaPrev &&
+      resolvedCustomRules.length === prev.length &&
+      resolvedCustomRules.filter((r) => r.patternKind === 'auxiliary-verb')
+        .length === prev.filter((r) => r.patternKind === 'auxiliary-verb').length
+    ) {
+      return;
+    }
+    updateActiveSet({ customRules: resolvedCustomRules });
+  }, [
+    screen,
+    rulesReady,
+    activeSetId,
+    resolvedCustomRules,
+    updateActiveSet,
+    activeSet,
+  ]);
+
   if (auxWindow === 'mypage') {
     return <MyPageWindowScreen />;
   }
@@ -135,31 +167,6 @@ export default function App() {
       />
     );
   }
-
-  const resolvedCustomRules = useMemo(
-    () => ensureDefaultAuxiliaryVerbs(activeSet?.customRules ?? []),
-    [activeSet?.customRules],
-  );
-
-  useEffect(() => {
-    if (!rulesReady || !activeSet) return;
-    const prev = activeSet.customRules ?? [];
-    const odaPrev = prev.some(
-      (r) =>
-        r.patternKind === 'auxiliary-verb' &&
-        r.bonBojoItemId === 'verb-oda' &&
-        r.tailWord === '해 왔',
-    );
-    if (
-      odaPrev &&
-      resolvedCustomRules.length === prev.length &&
-      resolvedCustomRules.filter((r) => r.patternKind === 'auxiliary-verb')
-        .length === prev.filter((r) => r.patternKind === 'auxiliary-verb').length
-    ) {
-      return;
-    }
-    updateActiveSet({ customRules: resolvedCustomRules });
-  }, [rulesReady, activeSetId, resolvedCustomRules, updateActiveSet, activeSet]);
 
   if (!rulesReady || !activeSet) {
     return (

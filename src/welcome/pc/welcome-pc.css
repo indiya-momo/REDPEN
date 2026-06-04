@@ -26,9 +26,12 @@
   --welcome-panel-body: rgba(245, 240, 230, 0.9);
   --welcome-content-max: calc(37rem * var(--welcome-scale));
   --welcome-step-pad-x: calc(0.85rem * var(--welcome-scale));
+  --welcome-eyebrow-scale: 1.5;
   /* eyebrow 블록 높이 — 액자 상단을 인디야(h1 첫 줄) 시작선에 맞춤 */
   --welcome-frame-align-offset: calc(
-    ((0.28rem * 2) + (0.68rem * 1.28) + 0.65rem) * var(--welcome-scale)
+    var(--welcome-eyebrow-scale) *
+      ((0.28rem * 2) + (0.68rem * 1.28) + 0.65rem) *
+      var(--welcome-scale)
   );
   --welcome-stack-width: min(98vw, calc(29.62rem * var(--welcome-scale)));
   --welcome-cta-btn-width: min(calc(22rem * var(--welcome-scale)), 100%);
@@ -111,11 +114,13 @@
 
 .welcome-pc__eyebrow {
   display: inline-block;
-  margin: 0 0 calc(0.65rem * var(--welcome-scale));
-  padding: calc(0.28rem * var(--welcome-scale)) calc(0.55rem * var(--welcome-scale));
-  font-size: calc(0.68rem * var(--welcome-scale));
+  margin: 0 0 calc(0.65rem * var(--welcome-eyebrow-scale) * var(--welcome-scale));
+  padding: calc(0.28rem * var(--welcome-eyebrow-scale) * var(--welcome-scale))
+    calc(0.55rem * var(--welcome-eyebrow-scale) * var(--welcome-scale));
+  font-size: calc(0.68rem * var(--welcome-eyebrow-scale) * var(--welcome-scale));
   font-weight: 700;
   letter-spacing: 0.06em;
+  line-height: 1.28;
   color: var(--welcome-accent);
   border: 1px solid var(--welcome-border);
   border-radius: var(--radius-ui-sm);
@@ -405,6 +410,18 @@
   max-height: 100%;
   padding: calc(var(--welcome-frame-align-offset) * 0.85)
     clamp(calc(0.5rem * var(--welcome-scale)), 2vw, calc(1rem * var(--welcome-scale))) 0;
+}
+
+/* 웰컴 메시지(닉네임·약관) — 대문 오른쪽 스테이지 */
+.welcome-pc__stage .profile-onboarding-mount--welcome-pc {
+  width: min(var(--welcome-stack-width), 90%);
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+.welcome-pc__stage .profile-onboarding-mount--welcome-pc .profile-onboarding-host {
+  min-height: auto;
+  padding: 0;
 }
 
 .welcome-pc__stage-stack {

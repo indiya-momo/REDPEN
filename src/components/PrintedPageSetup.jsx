@@ -16,6 +16,7 @@ import {
  *   firstPageSingle: boolean,
  *   onFirstPageSingleChange: (v: boolean) => void,
  *   onCalibrateFromInput: (raw: string, isSpread: boolean) => void,
+ *   onCalibratePress?: () => void,
  *   onClear: () => void,
  * }} props
  */
@@ -29,6 +30,7 @@ export default function PrintedPageSetup({
   firstPageSingle,
   onFirstPageSingleChange,
   onCalibrateFromInput,
+  onCalibratePress,
   onClear,
 }) {
   const [draft, setDraft] = useState('');
@@ -49,6 +51,7 @@ export default function PrintedPageSetup({
   }, [active, currentPrintedLabel]);
 
   const submitCalibration = () => {
+    onCalibratePress?.();
     const trimmed = draft.trim();
     if (!trimmed) return;
     onCalibrateFromInput(trimmed, spreadInput);

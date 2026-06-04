@@ -24,6 +24,7 @@ import {
   consistencyGroupScope,
   filterCustomRulesByConsistencyScope,
 } from '../lib/consistencyCheckScopes.js';
+import { ensureDefaultAuxiliaryVerbs } from '../lib/defaultAuxiliaryVerbs.js';
 
 /**
  * 맞춤법·표기 일관성 규칙 검사 (목차 검사는 useTocBodyCheck)

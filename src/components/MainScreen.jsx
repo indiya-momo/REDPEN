@@ -17,6 +17,7 @@ import FeedbackModal from './FeedbackModal.jsx';
 import PdfPreviewBar from './PdfPreviewBar.jsx';
 import PdfZoomBar from './PdfZoomBar.jsx';
 import CheckResultsPanel from './CheckResultsPanel.jsx';
+import TooltipGuide from './TooltipGuide.jsx';
 import PrintedPageSetup from './PrintedPageSetup.jsx';
 import PdfCenterStage from './PdfCenterStage.jsx';
 import TocBodyResultsPanel from '../toc-body/components/TocBodyResultsPanel.jsx';
@@ -40,12 +41,11 @@ import {
   getCurrentUserSession,
   subscribeAuthSession,
 } from '../lib/firebaseAuth.js';
-import {
-  getUserProfile,
-  isOnboardingComplete,
-} from '../lib/userProfileStorage.js';
+import { getUserProfile } from '../lib/userProfileStorage.js';
+import { WORK_GUIDE_KEYS } from '../lib/workGuideKeys.js';
+import { logWorkGuideDebug } from '../lib/workGuideDebug.js';
+import { useWorkGuideChain } from '../hooks/useWorkGuideChain.js';
 import { formatRuleSetSavedDate } from '../lib/ruleSetsStorage.js';
-import WelcomeProfileOnboarding from '../welcome/pc/WelcomeProfileOnboarding.jsx';
 import {
   buildTabEntries,
   clampPageNumber,
@@ -57,6 +57,86 @@ import {
   readThumbStripOpenPreference,
   shouldShowPdfViewer,
 } from '../utils/main-screen-helpers.js';
+
+/** 2번 — 기준 검수 버튼 아래 10px */
+const WORK_GUIDE_2_ALIGN_CHAIN = [
+  {
+    selector:
+      '.spelling-tab-layout__run-row-actions--end .panel-section-run-btn',
+    leftFromTargetLeft: 0,
+    topFromTargetBottom: 10,
+  },
+];
+
+/** 3번 — 가로: 인사말(○○님 안녕하세요) 왼쪽, 세로: 2번 아래 10px */
+/** 4·6번 — 우측 상단 인사말(○○님 안녕하세요) 위치 */
+const WORK_GUIDE_GREETING_ALIGN = {
+  selector: '.work-guide-anchor--greeting',
+  leftFromTargetLeft: 0,
+  topFromTargetTop: 20,
+};
+
+/** 7번 — 로그아웃 버튼 아래 */
+const WORK_GUIDE_7_ALIGN = {
+  selector: '.work-guide-anchor--logout',
+  leftFromTargetLeft: 0,
+  topFromTargetBottom: 10,
+};
+
+/** 5번 — 가로 4번, 세로 본용언+보조용언 박스 상단 */
+const WORK_GUIDE_5_ALIGN_CHAIN = [
+  {
+    alignSplit: {
+      horizontal: {
+        selector: '[data-work-guide-bubble="4"]',
+        leftFromTargetLeft: 0,
+      },
+      vertical: {
+        selector: '[data-work-guide-step="auxiliary-box"]',
+        topFromTargetTop: 0,
+      },
+    },
+  },
+  {
+    alignSplit: {
+      horizontal: {
+        selector: '.pdf-work-pane__greeting',
+        leftFromTargetLeft: 0,
+      },
+      vertical: {
+        selector: '[data-work-guide-step="auxiliary-box"]',
+        topFromTargetTop: 0,
+      },
+    },
+  },
+];
+
+const WORK_GUIDE_3_ALIGN_CHAIN = [
+  {
+    alignSplit: {
+      horizontal: {
+        selector: '.pdf-work-pane__greeting',
+        leftFromTargetLeft: 0,
+      },
+      vertical: {
+        selector: '[data-work-guide-bubble="2"]',
+        topFromTargetBottom: 10,
+      },
+    },
+  },
+  {
+    alignSplit: {
+      horizontal: {
+        selector: '.pdf-work-pane__greeting',
+        leftFromTargetLeft: 0,
+      },
+      vertical: {
+        selector: '.spelling-tab-layout__run-row',
+        topFromTargetBottom: 10,
+      },
+    },
+  },
+];
 
 /**
  * 검수 메인 화면 (좌측 규칙·결과 / 우측 PDF).
@@ -203,9 +283,6 @@ export default function MainScreen({
 
   const authUid = authSession?.uid ?? '';
   void profileOnboardingRev;
-  const showProfileOnboarding =
-    Boolean(authUid) && !isOnboardingComplete(authUid);
-
   const greetingName = useMemo(() => {
     void profileOnboardingRev;
     const profile = authUid ? getUserProfile(authUid) : null;
@@ -394,6 +471,63 @@ export default function MainScreen({
     [workTab, ruleCheck.spellingCheckDone, consistencyWorkDone],
   );
 
+  const workGuide = useWorkGuideChain(authUid, {
+    hasPdf: Boolean(pdf.pdf),
+    pageTextsReady: pdf.pageTexts.length > 0,
+    workTab,
+    spellingCheckDone: ruleCheck.spellingCheckDone,
+    spellingTotalFindings: spellingTabTotalFindings,
+  });
+
+  useEffect(() => {
+    logWorkGuideDebug('chain', {
+      authUid: authUid || '(비로그인)',
+      hasPdf: Boolean(pdf.pdf),
+      pageTextsReady: pdf.pageTexts.length > 0,
+      workTab,
+      spellingCheckDone: ruleCheck.spellingCheckDone,
+      pinAll: workGuide.pinAll,
+      showPdfOpenedGuide: workGuide.showPdfOpenedGuide,
+      showLeftCriteriaGuide: workGuide.showLeftCriteriaGuide,
+      showFirstResultGuide: workGuide.showFirstResultGuide,
+      showConsistencyGuide: workGuide.showConsistencyGuide,
+      showAuxiliaryVerbGuide: workGuide.showAuxiliaryVerbGuide,
+      showRuleSetSaveGuide: workGuide.showRuleSetSaveGuide,
+      showWorkExitGuide: workGuide.showWorkExitGuide,
+      storageKey1: workGuide.storageKey(WORK_GUIDE_KEYS.PDF_OPENED),
+      tooltipKeys: Object.keys(localStorage).filter((k) =>
+        k.includes('pdf-proofread-tooltip-guide'),
+      ),
+    });
+  }, [
+    authUid,
+    pdf.pdf,
+    pdf.pageTexts.length,
+    workTab,
+    ruleCheck.spellingCheckDone,
+    workGuide.pinAll,
+    workGuide.showPdfOpenedGuide,
+    workGuide.showLeftCriteriaGuide,
+    workGuide.showFirstResultGuide,
+    workGuide.showConsistencyGuide,
+    workGuide.showRuleSetSaveGuide,
+    workGuide.showWorkExitGuide,
+    workGuide.storageKey,
+  ]);
+
+  const showSpellingRunRow = Boolean(pdf.pdf);
+  const showSpellingResultsSlot = tabCheckDone;
+
+  const handleCriteriaSpellingCheck = useCallback(() => {
+    workGuide.dismiss(WORK_GUIDE_KEYS.LEFT_CRITERIA);
+    void ruleCheck.runSpellingCheck();
+  }, [workGuide.dismiss, ruleCheck.runSpellingCheck]);
+
+  /** 다시 검수 — 결과 비우고 맞춤법 탭 검수 항목·기준 설정으로 복귀 */
+  const handleSpellingRecheckFromScratch = useCallback(() => {
+    clearSpellingTabWork();
+  }, [clearSpellingTabWork]);
+
   const printedPagePanelProps = {
     printedPageOffset: pageDisplay.offset,
     printedPagesActive: pageDisplay.active,
@@ -522,10 +656,101 @@ export default function MainScreen({
     [tabCheckDone],
   );
 
+  const greetingInner = (
+    <>
+      {greetingName && activeSavedRuleSetNameDisplay ? (
+        <>
+          <span className="pdf-work-pane__greeting-name">{greetingName}</span>
+          님{' '}
+          <span className="pdf-work-pane__greeting-criteria">
+            [{activeSavedRuleSetNameDisplay}]
+          </span>{' '}
+          기준을 적용하고 있습니다
+        </>
+      ) : greetingName ? (
+        <>
+          <span className="pdf-work-pane__greeting-name">{greetingName}</span>
+          님 안녕하세요
+        </>
+      ) : (
+        '안녕하세요'
+      )}
+    </>
+  );
+
+  const greetingAnchor = (
+    <span className="work-guide-anchor work-guide-anchor--greeting">
+      <p className="pdf-work-pane__greeting">{greetingInner}</p>
+    </span>
+  );
+
+  const greetingParagraph = workGuide.showRuleSetSaveGuide ? (
+    <TooltipGuide
+      storageKey={workGuide.storageKey(WORK_GUIDE_KEYS.RULE_SET_SAVE)}
+      placement="bottom"
+      bubbleType="left"
+      useFixedLayer
+      alignToBubble={WORK_GUIDE_GREETING_ALIGN}
+      bubbleGuideStep="6"
+      offsetX={0}
+      offsetY={8}
+      pinned={workGuide.pinAll}
+      message={
+        <>
+          이때까지 설정한 기준을 저장할 수 있다냥
+          <br />
+          멋진 이름도 붙여보라냥
+        </>
+      }
+      onDismiss={() => workGuide.dismiss(WORK_GUIDE_KEYS.RULE_SET_SAVE)}
+    >
+      {greetingAnchor}
+    </TooltipGuide>
+  ) : workGuide.showConsistencyGuide ? (
+    <TooltipGuide
+      storageKey={workGuide.storageKey(WORK_GUIDE_KEYS.CONSISTENCY_INTRO)}
+      placement="bottom"
+      bubbleType="left"
+      useFixedLayer
+      alignToBubble={WORK_GUIDE_GREETING_ALIGN}
+      bubbleGuideStep="4"
+      offsetX={0}
+      offsetY={8}
+      pinned={workGuide.pinAll}
+      message={
+        <>
+          이제{' '}
+          <span className="tooltip-guide__work-tab-chip tooltip-guide__work-tab-chip--consistency">
+            일관성 · 목차 확인
+          </span>
+          을 클릭해서 살펴보자냥
+          <br />
+          원고의 표현이 모두 같은지
+          <br />
+          여러 가지를 한 번에 입력해서 확인할 수 있다냥
+        </>
+      }
+      onDismiss={() =>
+        workGuide.dismiss(WORK_GUIDE_KEYS.CONSISTENCY_INTRO)
+      }
+    >
+      {greetingAnchor}
+    </TooltipGuide>
+  ) : (
+    <p className="pdf-work-pane__greeting">{greetingInner}</p>
+  );
+
   return (
     <div className="layout-main">
       <aside
-        className={`panel-left panel-left--${workTab}${isPreUpload ? ' panel-left--preupload' : ''}`}
+        className={[
+          'panel-left',
+          `panel-left--${workTab}`,
+          isPreUpload ? 'panel-left--preupload' : '',
+          workGuide.workGuideOpen ? 'panel-left--work-guide' : '',
+        ]
+          .filter(Boolean)
+          .join(' ')}
         style={panelStyle}
       >
         <header className="panel-header panel-header--tabs">
@@ -567,17 +792,65 @@ export default function MainScreen({
                     aria-controls="panel-left-criteria-picker-list"
                     aria-autocomplete="list"
                   />
-                  <button
-                    type="button"
-                    className="panel-left__criteria-picker-toggle"
-                    aria-label="저장한 기준 목록 열기"
-                    aria-expanded={criteriaPickerOpen}
-                    aria-controls="panel-left-criteria-picker-list"
-                    disabled={savedRuleSets.length === 0}
-                    onClick={() => setCriteriaPickerOpen((open) => !open)}
-                  >
-                    <ChevronDown size={16} aria-hidden />
-                  </button>
+                  {workGuide.showLeftCriteriaGuide ? (
+                    <TooltipGuide
+                      storageKey={workGuide.storageKey(
+                        WORK_GUIDE_KEYS.LEFT_CRITERIA,
+                      )}
+                      placement="bottom"
+                      bubbleType="left"
+                      useFixedLayer
+                      offsetX={0}
+                      offsetY={0}
+                      alignToBubbleChain={WORK_GUIDE_2_ALIGN_CHAIN}
+                      bubbleGuideStep="2"
+                      pinned={workGuide.pinAll}
+                      message={
+                        <>
+                          검수할 기준을 선택하자냥!
+                          <br />
+                          〉 를 누르면 기준 항목을 볼 수 있다냥
+                          <br />
+                          모두 선택했으면{' '}
+                          <span className="tooltip-guide__run-btn-look">
+                            기준 검수
+                          </span>
+                          를 누르라냥
+                        </>
+                      }
+                      onDismiss={() =>
+                        workGuide.dismiss(WORK_GUIDE_KEYS.LEFT_CRITERIA)
+                      }
+                    >
+                      <span className="work-guide-anchor work-guide-anchor--criteria-toggle">
+                        <button
+                          type="button"
+                          className="panel-left__criteria-picker-toggle"
+                          aria-label="저장한 기준 목록 열기"
+                          aria-expanded={criteriaPickerOpen}
+                          aria-controls="panel-left-criteria-picker-list"
+                          disabled={savedRuleSets.length === 0}
+                          onClick={() =>
+                            setCriteriaPickerOpen((open) => !open)
+                          }
+                        >
+                          <ChevronDown size={16} aria-hidden />
+                        </button>
+                      </span>
+                    </TooltipGuide>
+                  ) : (
+                    <button
+                      type="button"
+                      className="panel-left__criteria-picker-toggle"
+                      aria-label="저장한 기준 목록 열기"
+                      aria-expanded={criteriaPickerOpen}
+                      aria-controls="panel-left-criteria-picker-list"
+                      disabled={savedRuleSets.length === 0}
+                      onClick={() => setCriteriaPickerOpen((open) => !open)}
+                    >
+                      <ChevronDown size={16} aria-hidden />
+                    </button>
+                  )}
                 </div>
                 {criteriaPickerOpen && savedRuleSets.length > 0 ? (
                   <ul
@@ -652,40 +925,153 @@ export default function MainScreen({
             className={spellingTabLayoutClassName}
           >
             {pdf.pdf ? (
-              <div className="spelling-tab-layout__calibration">
-                <PrintedPageSetup
-                  currentSystemPage={pdf.currentPage}
-                  active={pageDisplay.active}
-                  currentPrintedLabel={pageDisplay.formatLabel(pdf.currentPage)}
-                  previewPrintedLabel={
-                    pageDisplay.active
-                      ? pageDisplay.formatPageText(pdf.currentPage)
-                      : pageDisplay.formatNaturalPreview(pdf.currentPage)
-                  }
-                  spreadInput={pageDisplay.spreadInput}
-                  onSpreadInputChange={pageDisplay.setSpreadInput}
-                  firstPageSingle={pageDisplay.firstPageSingle}
-                  onFirstPageSingleChange={pageDisplay.setFirstPageSingle}
-                  onCalibrateFromInput={pageDisplay.calibrateFromInput}
-                  onClear={pageDisplay.clearCalibration}
-                />
+              <div
+                className="spelling-tab-layout__calibration"
+                data-work-guide-step="1"
+              >
+                {/* 1번 말풍선 — 인쇄 쪽 보정 */}
+                {workGuide.showPdfOpenedGuide ? (
+                  <TooltipGuide
+                    storageKey={workGuide.storageKey(
+                      WORK_GUIDE_KEYS.PDF_OPENED,
+                    )}
+                    placement="right"
+                    bubbleType="left"
+                    offsetX={0}
+                    offsetY={0}
+                    pinned={workGuide.pinAll}
+                    message={
+                      <>
+                        PDF파일과 원고의 페이지를 맞춰보자냥
+                        <br />
+                        (필수)오른쪽의 원고 화면을 보면서
+                        <br />
+                        체크박스에 표시하고{' '}
+                        <span className="tooltip-guide__calibrate-btn-look">
+                          보정
+                        </span>
+                        을 누르라냥
+                      </>
+                    }
+                    onDismiss={() =>
+                      workGuide.dismiss(WORK_GUIDE_KEYS.PDF_OPENED)
+                    }
+                  >
+                    <span className="work-guide-anchor work-guide-anchor--calibration">
+                      <PrintedPageSetup
+                        currentSystemPage={pdf.currentPage}
+                        active={pageDisplay.active}
+                        currentPrintedLabel={pageDisplay.formatLabel(
+                          pdf.currentPage,
+                        )}
+                        previewPrintedLabel={
+                          pageDisplay.active
+                            ? pageDisplay.formatPageText(pdf.currentPage)
+                            : pageDisplay.formatNaturalPreview(pdf.currentPage)
+                        }
+                        spreadInput={pageDisplay.spreadInput}
+                        onSpreadInputChange={pageDisplay.setSpreadInput}
+                        firstPageSingle={pageDisplay.firstPageSingle}
+                        onFirstPageSingleChange={pageDisplay.setFirstPageSingle}
+                        onCalibrateFromInput={pageDisplay.calibrateFromInput}
+                        onCalibratePress={() =>
+                          workGuide.dismiss(WORK_GUIDE_KEYS.PDF_OPENED)
+                        }
+                        onClear={pageDisplay.clearCalibration}
+                      />
+                    </span>
+                  </TooltipGuide>
+                ) : (
+                  <PrintedPageSetup
+                    currentSystemPage={pdf.currentPage}
+                    active={pageDisplay.active}
+                    currentPrintedLabel={pageDisplay.formatLabel(pdf.currentPage)}
+                    previewPrintedLabel={
+                      pageDisplay.active
+                        ? pageDisplay.formatPageText(pdf.currentPage)
+                        : pageDisplay.formatNaturalPreview(pdf.currentPage)
+                    }
+                    spreadInput={pageDisplay.spreadInput}
+                    onSpreadInputChange={pageDisplay.setSpreadInput}
+                    firstPageSingle={pageDisplay.firstPageSingle}
+                    onFirstPageSingleChange={pageDisplay.setFirstPageSingle}
+                    onCalibrateFromInput={pageDisplay.calibrateFromInput}
+                    onCalibratePress={() =>
+                      workGuide.dismiss(WORK_GUIDE_KEYS.PDF_OPENED)
+                    }
+                    onClear={pageDisplay.clearCalibration}
+                  />
+                )}
               </div>
             ) : null}
-            {pdf.pdf && !tabCheckDone ? (
+            {showSpellingRunRow ? (
               <div className="spelling-tab-layout__run-row">
-                <PanelSectionRunButton
-                  label="기준 검수"
-                  onClick={ruleCheck.runSpellingCheck}
-                  disabled={pdf.pageTexts.length === 0}
-                  isProcessing={pdf.isProcessing}
-                />
+                <div className="spelling-tab-layout__run-row-actions">
+                  <PanelSectionRunButton
+                    label="다시 검수"
+                    onClick={handleSpellingRecheckFromScratch}
+                    disabled={
+                      pdf.pageTexts.length === 0 ||
+                      !ruleCheck.spellingCheckDone ||
+                      pdf.isProcessing
+                    }
+                    isProcessing={pdf.isProcessing}
+                  />
+                </div>
+                <div className="spelling-tab-layout__run-row-actions spelling-tab-layout__run-row-actions--end">
+                  <PanelSectionRunButton
+                    label="기준 검수"
+                    onClick={handleCriteriaSpellingCheck}
+                    disabled={pdf.pageTexts.length === 0}
+                    isProcessing={pdf.isProcessing}
+                  />
+                  {workGuide.showFirstResultGuide ? (
+                    <div className="work-guide-step-3">
+                      <TooltipGuide
+                        storageKey={workGuide.storageKey(
+                          WORK_GUIDE_KEYS.FIRST_RESULT,
+                        )}
+                        placement="left"
+                        bubbleType="left"
+                        useFixedLayer
+                        alignToBubbleChain={WORK_GUIDE_3_ALIGN_CHAIN}
+                        bubbleGuideStep="3"
+                        offsetX={0}
+                        offsetY={0}
+                        pinned={workGuide.pinAll}
+                        message={
+                          <>
+                            검수는 아직 부족한 점도 있다냥
+                            <br />
+                            <span className="tooltip-guide__feedback-btn-look">
+                              피드백 보내기
+                            </span>
+                            는 언제나 환영이다냥
+                            <br />
+                            원고의 표시를 클릭하면 설명을 볼 수 있다냥
+                          </>
+                        }
+                        onDismiss={() =>
+                          workGuide.dismiss(WORK_GUIDE_KEYS.FIRST_RESULT)
+                        }
+                      >
+                        <span
+                          className="work-guide-anchor work-guide-anchor--guide-result"
+                          aria-hidden
+                        />
+                      </TooltipGuide>
+                    </div>
+                  ) : null}
+                </div>
               </div>
             ) : null}
-            {tabCheckDone && (
+            {showSpellingResultsSlot ? (
               <div className="spelling-tab-scroll custom-scrollbar">
-                {spellingResultsPanel}
+                <div className="spelling-tab-scroll__results">
+                  {spellingResultsPanel}
+                </div>
               </div>
-            )}
+            ) : null}
 
             <ResizableBuiltinSpelling
               builtInEnabled={builtInEnabled}
@@ -788,6 +1174,21 @@ export default function MainScreen({
             {!consistencyWorkDone ? (
               <div className="consistency-rules-scroll custom-scrollbar">
                 <ConsistencyPanel
+                  auxiliaryVerbGuide={
+                    workGuide.showAuxiliaryVerbGuide
+                      ? {
+                          storageKey: workGuide.storageKey(
+                            WORK_GUIDE_KEYS.AUXILIARY_VERB_INTRO,
+                          ),
+                          alignToBubbleChain: WORK_GUIDE_5_ALIGN_CHAIN,
+                          pinned: workGuide.pinAll,
+                          onDismiss: () =>
+                            workGuide.dismiss(
+                              WORK_GUIDE_KEYS.AUXILIARY_VERB_INTRO,
+                            ),
+                        }
+                      : null
+                  }
                   customRules={customRules}
                   onCustomRulesChange={onCustomRulesChange}
                   globalExcludePhrases={globalExcludePhrases}
@@ -860,29 +1261,7 @@ export default function MainScreen({
         <div className="pdf-work-pane">
           <header className="pdf-work-pane__header">
             <div className="pdf-work-pane__topbar">
-              <p className="pdf-work-pane__greeting">
-                {greetingName && activeSavedRuleSetNameDisplay ? (
-                  <>
-                    <span className="pdf-work-pane__greeting-name">
-                      {greetingName}
-                    </span>
-                    님{' '}
-                    <span className="pdf-work-pane__greeting-criteria">
-                      [{activeSavedRuleSetNameDisplay}]
-                    </span>{' '}
-                    기준을 적용하고 있습니다
-                  </>
-                ) : greetingName ? (
-                  <>
-                    <span className="pdf-work-pane__greeting-name">
-                      {greetingName}
-                    </span>
-                    님 안녕하세요
-                  </>
-                ) : (
-                  '안녕하세요'
-                )}
-              </p>
+              {greetingParagraph}
               {showPdfViewer ? (
                 <div className="pdf-work-pane__zoom-axis">
                   <PdfZoomBar
@@ -912,16 +1291,61 @@ export default function MainScreen({
                   <FilePlus size={16} aria-hidden />
                   새 작업
                 </button>
-                <button
-                  type="button"
-                  className="pdf-work-pane__aux-btn"
-                  onClick={() => {
-                    void onLogout();
-                  }}
-                >
-                  <LogOut size={16} aria-hidden />
-                  로그아웃
-                </button>
+                {workGuide.showWorkExitGuide ? (
+                  <TooltipGuide
+                    storageKey={workGuide.storageKey(WORK_GUIDE_KEYS.WORK_EXIT)}
+                    placement="bottom"
+                    bubbleType="left"
+                    useFixedLayer
+                    alignToBubble={WORK_GUIDE_7_ALIGN}
+                    bubbleGuideStep="7"
+                    offsetX={0}
+                    offsetY={8}
+                    pinned={workGuide.pinAll}
+                    message={
+                      <>
+                        여기서 작업을 다시 선택하거나
+                        <br />
+                        로그아웃을 할 수 있다냥
+                        <br />
+                        어려운 점은 없었는지 궁금하다냥(
+                        <span className="tooltip-guide__feedback-btn-look">
+                          피드백
+                        </span>
+                        ﾐචᆽචﾐ)
+                        <br />
+                        만나서 반가웠고, 또 보자냥!
+                      </>
+                    }
+                    onDismiss={() =>
+                      workGuide.dismiss(WORK_GUIDE_KEYS.WORK_EXIT)
+                    }
+                  >
+                    <span className="work-guide-anchor work-guide-anchor--logout">
+                      <button
+                        type="button"
+                        className="pdf-work-pane__aux-btn"
+                        onClick={() => {
+                          void onLogout();
+                        }}
+                      >
+                        <LogOut size={16} aria-hidden />
+                        로그아웃
+                      </button>
+                    </span>
+                  </TooltipGuide>
+                ) : (
+                  <button
+                    type="button"
+                    className="pdf-work-pane__aux-btn"
+                    onClick={() => {
+                      void onLogout();
+                    }}
+                  >
+                    <LogOut size={16} aria-hidden />
+                    로그아웃
+                  </button>
+                )}
                 <button
                   type="button"
                   className="ruleset-panel__feedback"
@@ -937,13 +1361,6 @@ export default function MainScreen({
             </div>
           </header>
           <div className="pdf-work-pane__content">
-            {showProfileOnboarding ? (
-              <WelcomeProfileOnboarding
-                uid={authUid}
-                defaultNickname={authSession?.displayName ?? ''}
-                onComplete={() => setProfileOnboardingRev((n) => n + 1)}
-              />
-            ) : null}
             {!showPdfViewer ? (
             <PdfCenterStage
               fileRef={pdf.fileRef}
@@ -976,6 +1393,14 @@ export default function MainScreen({
               sessionHint={session.sessionHint}
               runLabel={centerRunLabel}
               showReady={Boolean(pdf.pdf)}
+              showUploadGuide={workGuide.showPreUploadGuide}
+              uploadGuideStorageKey={workGuide.storageKey(
+                WORK_GUIDE_KEYS.PRE_UPLOAD,
+              )}
+              uploadGuidePinned={workGuide.pinAll}
+              onUploadGuideDismiss={() =>
+                workGuide.dismiss(WORK_GUIDE_KEYS.PRE_UPLOAD)
+              }
             />
           ) : (
             <>

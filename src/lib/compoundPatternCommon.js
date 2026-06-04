@@ -13,8 +13,8 @@ export const HANGUL_SUFFIX = String.raw`[\uAC00-\uD7A3]+`;
 /** stem 뒤 어미·문장 끝 (본 / 본다 / 본.) */
 export const STEM_TAIL_END = String.raw`(?:${HANGUL_SUFFIX})?`;
 
-/** stem 매칭 뒤 경계 */
-export const STEM_TAIL_BOUNDARY = String.raw`(?=$|[ \u00A0,.!?…「」『』\]\r\n])`;
+/** stem 매칭 뒤 경계 — 왔다"고·왔다'고 등 인용 직후 */
+export const STEM_TAIL_BOUNDARY = String.raw`(?=$|[ \u00A0,.!?…「」『』\]"'\u2018\u2019\u201C\u201D\r\n])`;
 
 /** 문장/어절 앞 경계 */
 export const PHRASE_START = String.raw`(?:^|[\s\u00A0])`;

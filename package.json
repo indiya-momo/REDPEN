@@ -8,6 +8,7 @@
     "start": "vite --host --open",
     "start:win": "powershell -ExecutionPolicy Bypass -File scripts/Start-Dev.ps1",
     "open:browser": "powershell -ExecutionPolicy Bypass -File scripts/Fix-Browser-Access.ps1",
+    "open:dev": "powershell -ExecutionPolicy Bypass -File scripts/Open-Dev-Browser.ps1",
     "build": "vite build",
     "test": "vitest run && npm run validate-data",
     "test:watch": "vitest",

@@ -61,6 +61,12 @@ describe('auxiliaryVerbMatchFilters', () => {
     expect(ruleMatches(rule, '역할을 해 왔다.')).toBe(true);
     expect(ruleMatches(rule, '역할을해 왔다.')).toBe(true);
     expect(ruleMatches(rule, '역할을 해 왔다고')).toBe(true);
+    expect(
+      ruleMatches(
+        rule,
+        'slack adjuster 같은 역할을 해 왔다"고 말한다.',
+      ),
+    ).toBe(true);
     expect(isBonVerbHeadTooLongForAuxiliary('주장해', '해')).toBe(true);
     expect(ruleMatches(rule, '주장해 왔다.')).toBe(false);
   });
