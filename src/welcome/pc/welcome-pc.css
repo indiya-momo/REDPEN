@@ -395,19 +395,6 @@
   box-shadow: 0 2px 6px rgba(58, 42, 18, 0.14);
 }
 
-.welcome-pc__steps-note {
-  margin: 0;
-  font-size: calc(0.7rem * var(--welcome-scale));
-  line-height: 1.5;
-  color: var(--welcome-text-muted-strong);
-  word-break: keep-all;
-}
-
-.welcome-pc__steps-note--stage {
-  margin-top: calc(0.55rem * var(--welcome-scale));
-  text-align: center;
-}
-
 .welcome-pc__beta-note {
   line-height: 1.55;
   margin: 0;
@@ -437,25 +424,6 @@
   color: var(--welcome-text-muted-strong);
   text-align: center;
   word-break: keep-all;
-}
-
-.welcome-pc__feedback-link {
-  display: block;
-  width: var(--welcome-cta-btn-width);
-  margin: calc(0.45rem * var(--welcome-scale)) auto 0;
-  padding: calc(0.35rem * var(--welcome-scale)) 0;
-  border: none;
-  background: none;
-  color: var(--welcome-text-muted-strong);
-  font-size: calc(0.78rem * var(--welcome-scale));
-  text-decoration: underline;
-  text-underline-offset: 0.15em;
-  cursor: pointer;
-  word-break: keep-all;
-}
-
-.welcome-pc__feedback-link:hover {
-  color: var(--welcome-accent-muted);
 }
 
 .welcome-pc__step {
@@ -638,7 +606,7 @@
   padding: calc(1rem * var(--welcome-scale)) calc(1.35rem * var(--welcome-scale));
   border-radius: var(--radius-ui);
   font-family: var(--font-family-body-brand);
-  font-size: calc(1.08rem * var(--welcome-scale));
+  font-size: calc(1.08rem * 1.5 * var(--welcome-scale));
   font-weight: 700;
   letter-spacing: -0.02em;
   -webkit-text-stroke: 0;

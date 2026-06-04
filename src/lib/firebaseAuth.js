@@ -3,6 +3,7 @@ import {
   GoogleAuthProvider,
   browserLocalPersistence,
   getAuth,
+  getAdditionalUserInfo,
   getRedirectResult,
   onAuthStateChanged,
   setPersistence,
@@ -10,6 +11,11 @@ import {
   signInWithRedirect,
   signOut,
 } from 'firebase/auth';
+import {
+  clearRememberedAuthEmail,
+  getRememberedAuthEmail,
+  rememberAuthEmail,
+} from './authEmailCache.js';
 
 /** Firebase 웹 SDK 공개 설정 — 도메인 제한으로 보호됨(비밀키 아님). Vercel env 누락·캐시된 구버전 빌드 대비 */
 const FIREBASE_WEB_DEFAULTS = {
@@ -42,10 +48,117 @@ if (isFirebaseAuthConfigured) {
   firebaseApp = initializeApp(firebaseConfig);
   auth = getAuth(firebaseApp);
   provider = new GoogleAuthProvider();
+  provider.addScope('email');
+  provider.addScope('profile');
   provider.setCustomParameters({ prompt: 'select_account' });
   persistenceReady = setPersistence(auth, browserLocalPersistence).catch(
     () => undefined,
   );
+}
+
+/**
+ * Google 등 providerData에만 이메일이 있는 경우 보완
+ * @param {import('firebase/auth').User | null | undefined} user
+ */
+export function resolveUserEmail(user) {
+  if (!user) return '';
+  if (user.email?.trim()) return user.email.trim();
+  for (const provider of user.providerData ?? []) {
+    if (provider.email?.trim()) return provider.email.trim();
+  }
+  const cached = getRememberedAuthEmail(user.uid);
+  if (cached) return cached;
+  return '';
+}
+
+/**
+ * @param {import('firebase/auth').UserCredential | null | undefined} result
+ */
+function emailFromSignInResult(result) {
+  if (!result?.user) return '';
+  const direct = resolveUserEmail(result.user);
+  if (direct) return direct;
+  const info = getAdditionalUserInfo(result);
+  const profile = info?.profile;
+  if (profile && typeof profile === 'object' && 'email' in profile) {
+    const profileEmail = profile.email;
+    if (typeof profileEmail === 'string' && profileEmail.trim()) {
+      return profileEmail.trim();
+    }
+  }
+  return '';
+}
+
+/**
+ * @param {import('firebase/auth').User} user
+ * @param {import('firebase/auth').UserCredential | null} [signInResult]
+ */
+async function hydrateUserEmail(user, signInResult = null) {
+  const fromSignIn = signInResult ? emailFromSignInResult(signInResult) : '';
+  if (fromSignIn) {
+    rememberAuthEmail(user.uid, fromSignIn);
+    return fromSignIn;
+  }
+
+  let email = resolveUserEmail(user);
+  if (email) {
+    rememberAuthEmail(user.uid, email);
+    return email;
+  }
+
+  try {
+    await user.reload();
+  } catch {
+    /* offline 등 */
+  }
+
+  email = resolveUserEmail(user);
+  if (email) {
+    rememberAuthEmail(user.uid, email);
+    return email;
+  }
+
+  try {
+    const token = await user.getIdTokenResult();
+    const fromClaim =
+      typeof token.claims.email === 'string' ? token.claims.email.trim() : '';
+    if (fromClaim) {
+      rememberAuthEmail(user.uid, fromClaim);
+      return fromClaim;
+    }
+  } catch {
+    /* ignore */
+  }
+
+  return '';
+}
+
+/**
+ * @param {{ uid?: string, email?: string } | null | undefined} session
+ */
+export function resolveSessionEmail(session) {
+  const fromSession = (session?.email ?? '').trim();
+  if (fromSession) return fromSession;
+  const uid = session?.uid?.trim() ?? '';
+  if (uid) {
+    const cached = getRememberedAuthEmail(uid);
+    if (cached) return cached;
+  }
+  if (!auth) return '';
+  const user = auth.currentUser;
+  if (!user || (uid && user.uid !== uid)) return '';
+  return resolveUserEmail(user);
+}
+
+/**
+ * @param {{ uid?: string, email?: string } | null | undefined} session
+ */
+export async function resolveSessionEmailAsync(session) {
+  const sync = resolveSessionEmail(session);
+  if (sync) return sync;
+  const uid = session?.uid?.trim() ?? '';
+  if (!uid || !auth?.currentUser || auth.currentUser.uid !== uid) return '';
+  return hydrateUserEmail(auth.currentUser);
 }
 
 function toSession(user) {
@@ -55,7 +168,7 @@ function toSession(user) {
     : NaN;
   return {
     uid: user.uid,
-    email: user.email ?? '',
+    email: resolveUserEmail(user),
     displayName: user.displayName ?? '',
     createdAtMs: Number.isFinite(createdAtMs) ? createdAtMs : undefined,
   };
@@ -112,7 +225,21 @@ export function getCurrentUserSession() {
 export function subscribeAuthSession(callback) {
   if (!auth) return () => {};
   return onAuthStateChanged(auth, (user) => {
-    callback(toSession(user));
+    if (!user) {
+      callback(null);
+      return;
+    }
+    const session = toSession(user);
+    if (session.email) {
+      rememberAuthEmail(user.uid, session.email);
+    }
+    callback(session);
+    if (!session.email) {
+      void hydrateUserEmail(user).then((email) => {
+        if (!email || auth.currentUser?.uid !== user.uid) return;
+        callback({ ...session, email });
+      });
+    }
   });
 }
 
@@ -122,8 +249,11 @@ export async function completeGoogleRedirectIfNeeded() {
   await persistenceReady;
   try {
     const result = await getRedirectResult(auth);
-    const session = toSession(result?.user ?? auth.currentUser);
-    return { session, error: null };
+    const user = result?.user ?? auth.currentUser;
+    if (user) {
+      await hydrateUserEmail(user, result);
+    }
+    return { session: toSession(user), error: null };
   } catch (error) {
     return { session: null, error: mapFirebaseAuthError(error) };
   }
@@ -140,11 +270,15 @@ export async function signInWithGoogle() {
   assertConfigured();
   await persistenceReady;
   if (auth.currentUser) {
+    await hydrateUserEmail(auth.currentUser);
     return;
   }
 
   try {
-    await signInWithPopup(auth, provider);
+    const result = await signInWithPopup(auth, provider);
+    if (result.user) {
+      await hydrateUserEmail(result.user, result);
+    }
   } catch (error) {
     const code = error?.code ?? '';
     if (POPUP_FALLBACK_CODES.has(code)) {
@@ -157,5 +291,7 @@ export async function signInWithGoogle() {
 
 export async function signOutUser() {
   assertConfigured();
+  const uid = auth.currentUser?.uid;
   await signOut(auth);
+  if (uid) clearRememberedAuthEmail(uid);
 }
