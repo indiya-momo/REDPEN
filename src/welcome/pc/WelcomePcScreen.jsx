@@ -106,7 +106,7 @@ export default function WelcomePcScreen({
             <h1>
               <span className="welcome-pc__title-main">인디야</span>
               <br />
-              <span className="welcome-pc__title-sub">교정냥 모모의 여행</span>
+              <span className="welcome-pc__title-sub">검수냥 모모 이야기</span>
             </h1>
             <p className="welcome-pc__lead">
               <span className="welcome-pc__lead-line">

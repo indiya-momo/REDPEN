@@ -70,7 +70,7 @@ export default function WelcomeMoScreen({ onOpenRoom }) {
           <h1>
             <span className="welcome-mo__title-main">인디야</span>
             <br />
-            <span className="welcome-mo__title-sub">교정냥 모모의 여행</span>
+            <span className="welcome-mo__title-sub">검수냥 모모 이야기</span>
           </h1>
           <p className="welcome-mo__lead">
             <span className="welcome-mo__lead-line">
