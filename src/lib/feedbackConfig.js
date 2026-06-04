@@ -1,5 +1,9 @@
 /** @typedef {'bug' | 'feature' | 'other'} FeedbackType */
 
+/** 오픈베타 Google Form — env 미설정 시에도 앱에서 열림 */
+export const DEFAULT_FEEDBACK_FORM_VIEW_URL =
+  'https://forms.gle/XGxKjjyWZiYDnqrm8';
+
 export const FEEDBACK_TYPES = [
   { id: /** @type {FeedbackType} */ ('bug'), label: '버그' },
   { id: /** @type {FeedbackType} */ ('feature'), label: '기능 요청' },
@@ -30,7 +34,13 @@ export function getFeedbackFormConfig() {
 }
 
 export function getFeedbackFormViewUrl() {
-  return getFeedbackFormConfig().viewUrl;
+  const fromEnv = getFeedbackFormConfig().viewUrl;
+  return fromEnv || DEFAULT_FEEDBACK_FORM_VIEW_URL;
+}
+
+/** 베타: Google Form이 기본 채널 (항상 view URL 있음) */
+export function isBetaFeedbackFormPrimary() {
+  return Boolean(getFeedbackFormViewUrl());
 }
 
 /** 단답·장문형 2필드 POST */

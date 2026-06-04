@@ -1101,6 +1101,40 @@ details[open] > summary .details-chevron {
   font-size: 0.72rem;
 }
 
+.feedback-modal-lead {
+  margin: 0 0 12px;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--color-text);
+}
+
+.feedback-modal-list {
+  margin: 0 0 12px;
+  padding-left: 1.15rem;
+  font-size: 0.82rem;
+  line-height: 1.55;
+  color: var(--color-text-muted);
+}
+
+.feedback-modal-privacy {
+  margin-bottom: 0;
+}
+
+.feedback-modal-footer--primary {
+  flex-wrap: wrap;
+}
+
+.feedback-modal-submit--wide {
+  flex: 1 1 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 0;
+  width: 100%;
+  margin-top: 4px;
+}
+
 .feedback-type-field {
   margin: 0 0 14px;
   padding: 0;

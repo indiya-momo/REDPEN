@@ -8,6 +8,8 @@ import {
   getCurrentUserSession,
   mapFirebaseAuthError,
 } from '../../lib/firebaseAuth.js';
+import { trackFeedbackOpened } from '../../lib/analytics.js';
+import { openFeedbackFormView } from '../../lib/feedbackConfig.js';
 import { publicAssetUrl } from '../../lib/publicAssetUrl.js';
 import {
   getUserProfile,
@@ -299,6 +301,16 @@ export default function WelcomePcScreen({
                   <br />
                   이후 회원당 하루 1회 전 기능 검수
                 </p>
+                <button
+                  type="button"
+                  className="welcome-pc__feedback-link"
+                  onClick={() => {
+                    trackFeedbackOpened();
+                    openFeedbackFormView();
+                  }}
+                >
+                  베타 소감 남기기 (Google Form · 약 3분)
+                </button>
               </div>
             </div>
           )}
