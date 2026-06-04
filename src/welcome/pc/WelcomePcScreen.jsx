@@ -140,8 +140,8 @@ export default function WelcomePcScreen({
             <TooltipGuide
               storageKey="welcome-editor-note"
               placement="right"
-              offsetX={-292}
-              offsetY={0}
+              offsetX={-352}
+              offsetY={-30}
               imageSrc={MOMO_TOOLTIP}
               imageAlt="모모"
               message="현직 편집자가 만들었다냥"
@@ -260,6 +260,13 @@ export default function WelcomePcScreen({
                 />
               </div>
               <div className="welcome-pc__stage-cta">
+                {!loggedIn ? (
+                  <p className="welcome-pc__beta-note welcome-pc__beta-note--above-cta">
+                    오픈베타 서비스 중 : 첫 검수 무료,
+                    <br />
+                    이후 회원은 하루 1회 전 기능 사용 가능
+                  </p>
+                ) : null}
                 {!authReady ? (
                   <button
                     type="button"
@@ -284,10 +291,15 @@ export default function WelcomePcScreen({
                     disabled={authPending}
                   >
                     {authPending
-                      ? 'Google 로그인 연결 중…'
-                      : '구글 회원가입 · 로그인'}
+                      ? '구글 로그인 연결 중…'
+                      : '구글로 시작하기'}
                   </button>
                 )}
+                {!loggedIn && authReady ? (
+                  <p className="welcome-pc__auth-hint">
+                    처음이면 Google 계정으로 자동 가입됩니다.
+                  </p>
+                ) : null}
                 {authError && !loggedIn ? (
                   <p
                     className="welcome-pc__auth-error welcome-pc__auth-error--stage"
@@ -296,11 +308,6 @@ export default function WelcomePcScreen({
                     {authError}
                   </p>
                 ) : null}
-                <p className="welcome-pc__beta-note welcome-pc__steps-note--stage">
-                  오픈베타: 첫 검수는 무료,
-                  <br />
-                  이후 회원당 하루 1회 전 기능 검수
-                </p>
                 <button
                   type="button"
                   className="welcome-pc__feedback-link"
