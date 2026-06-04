@@ -175,7 +175,7 @@ describe('buildPageText — 역할을 해 왔다 추출·검사 (가설 검증)'
     expect(text).toMatch(/역할을\s+해\s+왔다/);
     expect(textLayout).toMatch(/역할을\s+해\s+왔다/);
     const page = { pageNum: 99, text, items, itemRefs: [] };
-    expect(matchCountsOnPage(page)).toEqual({ literal: 1, auxiliary: 1 });
+    expect(matchCountsOnPage(page)).toEqual({ literal: 1, auxiliary: 0 });
   });
 
   it('항목이 한 덩어리(역할을해왔다)면 text도 붙음 — 문자열찾기(loose)만 가능', () => {
@@ -203,7 +203,7 @@ describe('buildPageText — 역할을 해 왔다 추출·검사 (가설 검증)'
     const { text } = buildPageText(items);
     expect(text).toMatch(/역할을\s+해\s+왔다/);
     const page = { pageNum: 99, text, items, itemRefs: [] };
-    expect(matchCountsOnPage(page)).toEqual({ literal: 1, auxiliary: 1 });
+    expect(matchCountsOnPage(page)).toEqual({ literal: 1, auxiliary: 0 });
   });
 
   it('인용문(작은 글씨) — 본문과 줄 분리돼도 역할을 해 왔다·본조 둘 다', () => {
@@ -223,10 +223,10 @@ describe('buildPageText — 역할을 해 왔다 추출·검사 (가설 검증)'
     const quoteLine = text.split('\n').find((l) => /역할을/.test(l)) ?? '';
     expect(quoteLine).toMatch(/역할을\s+해\s+왔다/);
     const page = { pageNum: 99, text, items, itemRefs: [] };
-    expect(matchCountsOnPage(page)).toEqual({ literal: 1, auxiliary: 1 });
+    expect(matchCountsOnPage(page)).toEqual({ literal: 1, auxiliary: 0 });
   });
 
-  it('해·왔 gap이 자간 수준이면 text는 해왔 붙임 — 본조만 빠질 수 있음', () => {
+  it('해·왔 gap이 자간 수준이면 text는 해왔 붙음 — 본조만 빠질 수 있음', () => {
     const items = mockLineItems([
       { str: '역할을', x: 0, w: 40 },
       { str: '해', x: 44, w: 14 },

@@ -1350,13 +1350,10 @@ export default function MainScreen({
                     message={
                       <>
                         <span className="tooltip-guide__message-line">
-                          여기서 새 작업이나 로그아웃을 할 수 있다냥
+                          새 작업, 로그아웃 등을 할 수 있는 곳
                         </span>
                         <span className="tooltip-guide__message-line">
-                          어떤 느낌이었는지 궁금한데...(ﾐචᆽචﾐ)
-                        </span>
-                        <span className="tooltip-guide__message-line">
-                          만나서 반가웠고, 또 보자냥!
+                          앞으로 또 보자냥(ﾐචᆽචﾐ)
                         </span>
                       </>
                     }
