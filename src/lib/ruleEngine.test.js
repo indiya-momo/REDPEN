@@ -109,13 +109,14 @@ describe('ruleEngine', () => {
       items: [],
       itemRefs: [],
     };
-    const ryoWat = ensureDefaultAuxiliaryVerbs([]).filter(
-      (r) =>
-        r.enabled &&
-        r.patternKind === 'auxiliary-verb' &&
-        r.bonBojoItemId === 'verb-oda' &&
-        r.tailWord === '려 왔',
-    );
+    const ryoWat = ensureDefaultAuxiliaryVerbs([])
+      .filter(
+        (r) =>
+          r.patternKind === 'auxiliary-verb' &&
+          r.bonBojoItemId === 'verb-oda' &&
+          r.tailWord === '려 왔',
+      )
+      .map((r) => ({ ...r, enabled: true }));
     const { results } = runRuleCheck([page], ryoWat);
     const hits = results.flatMap((g) => g.instances.map((i) => i.matchedText));
     expect(hits.some((h) => /달려\s+왔/.test(h))).toBe(true);
@@ -128,12 +129,13 @@ describe('ruleEngine', () => {
       items: [],
       itemRefs: [],
     };
-    const haeWat = ensureDefaultAuxiliaryVerbs([]).filter(
-      (r) =>
-        r.enabled &&
-        r.patternKind === 'auxiliary-verb' &&
-        r.tailWord === '해 왔',
-    );
+    const haeWat = ensureDefaultAuxiliaryVerbs([])
+      .filter(
+        (r) =>
+          r.patternKind === 'auxiliary-verb' &&
+          r.tailWord === '해 왔',
+      )
+      .map((r) => ({ ...r, enabled: true }));
     const literal = buildCompoundFindRules('역할을 해 왔다').map((r) => ({
       ...r,
       enabled: true,

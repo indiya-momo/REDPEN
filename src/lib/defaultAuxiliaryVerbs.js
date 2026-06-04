@@ -4,6 +4,7 @@ import {
   bonBojoDisplayLabelForItem,
   auxiliarySearchTailsFromBonBojoItem,
   isBonBojoLogicOnlyItem,
+  isBonBojoRequiredItem,
 } from './bonBojoRules.js';
 import { encodeSpacesVisible } from './spaceVisibleText.js';
 
@@ -46,7 +47,7 @@ function rebuildAuxiliaryVerbRulesFromSheet(nonAux, enabledByItem) {
         ? true
         : enabledByItem.has(itemId)
           ? enabledByItem.get(itemId)
-          : item.enabled === true;
+          : isBonBojoRequiredItem(itemId);
 
       for (const tail of auxiliarySearchTailsFromBonBojoItem(item)) {
         for (const row of buildAuxiliaryVerbFindRules(tail)) {
@@ -87,8 +88,8 @@ function syncBonBojoSheetEnabledFlags(rules) {
   let next = rules;
   for (const group of getBonBojoGroups()) {
     for (const item of group.items) {
-      if (!item.enabled) continue;
       const id = item.id;
+      if (!isBonBojoRequiredItem(id)) continue;
       const groupRules = next.filter(
         (r) =>
           r.patternKind === 'auxiliary-verb' && r.bonBojoItemId?.trim() === id,

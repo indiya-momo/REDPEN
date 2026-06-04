@@ -7,7 +7,7 @@ import {
 
 /**
  * @param {{ prominent?: boolean, dateOnly?: boolean }} props
- * dateOnly — v0.1.0 · 날짜까지만 (시각·빌드ID 등 생략)
+ * dateOnly — v0.7.0 · 날짜까지만 (시각·빌드ID 등 생략)
  */
 export default function AppVersionBadge({ prominent = false, dateOnly = false }) {
   const label = dateOnly ? versionDateLabel() : versionLabel();

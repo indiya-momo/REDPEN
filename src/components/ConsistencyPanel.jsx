@@ -32,6 +32,12 @@ import {
 import { isAuxiliaryStem, isHaeBoPattern } from '../lib/compoundPatternCommon.js';
 import { parseCommaList } from '../lib/matchFilters.js';
 import { isBonBojoRequiredItem } from '../lib/bonBojoRules.js';
+import {
+  canAddPhraseSlotRegisteredEntries,
+  countPhraseSlotRegisteredEntries,
+  MAX_PHRASE_SLOT_REGISTERED_ENTRIES,
+  phraseSlotRegistrationBlockedMessage,
+} from '../lib/consistencyRuleLimit.js';
 import ConsistencyRegisterField from './consistency/ConsistencyRegisterField.jsx';
 import ExcludePhraseList from './consistency/ExcludePhraseList.jsx';
 import RegisteredList from './consistency/RegisteredList.jsx';
@@ -115,6 +121,9 @@ export default function ConsistencyPanel({
 
   const literalEntries = listConsistencyEntries(customRules);
   const slotEntries = listPhraseSlotEntries(customRules);
+  const phraseSlotRegisteredCount = countPhraseSlotRegisteredEntries(customRules);
+  const phraseSlotRegisterFull =
+    phraseSlotRegisteredCount >= MAX_PHRASE_SLOT_REGISTERED_ENTRIES;
   const auxiliaryEntries = listAuxiliaryVerbEntries(customRules);
   const auxiliarySelectAllRef = useRef(
     /** @type {HTMLInputElement | null} */ (null),
@@ -198,6 +207,7 @@ export default function ConsistencyPanel({
     }
     let merged = customRules;
     const toAdd = [];
+    let newEntryCount = 0;
     for (const raw of planConsistencyEntries(variants)) {
       if (!isPhraseSlotPattern(raw)) {
         alert(`「${raw}」에는 @가 필요합니다. (예: @시대)`);
@@ -205,11 +215,21 @@ export default function ConsistencyPanel({
       }
       const batch = buildRulesForPhraseSlot(merged, raw);
       if (!batch.length) continue;
+      newEntryCount += 1;
       toAdd.push(...batch);
       merged = [...merged, ...batch];
     }
     if (!toAdd.length) {
       alert('입력한 패턴은 모두 이미 등록되어 있습니다.');
+      return;
+    }
+    if (!canAddPhraseSlotRegisteredEntries(customRules, newEntryCount)) {
+      alert(
+        phraseSlotRegistrationBlockedMessage(
+          phraseSlotRegisteredCount,
+          newEntryCount,
+        ),
+      );
       return;
     }
     if (!assertSlots(toAdd)) return;
@@ -250,7 +270,7 @@ export default function ConsistencyPanel({
       ) : null}
       <section className="consistency-unified-box" aria-label="표기 일관성 찾기">
         <p className="printed-page-setup__title consistency-panel-section-title">
-          일관성 찾기(1회 검수 10개 이내 추천)
+          일관성 찾기(1회 검수 8개 이내 추천)
         </p>
         <div className="consistency-subsection consistency-subsection--first">
           <p className="hint">
@@ -261,7 +281,7 @@ export default function ConsistencyPanel({
             onChange={setLiteralInput}
             onRegister={registerLiteral}
             placeholder={SPACE_INPUT_PLACEHOLDER}
-            ariaLabel="일관성 찾기(1회 검수 10개 이내 추천)"
+            ariaLabel="일관성 찾기"
           />
           <RegisteredList
             entries={literalEntries}
@@ -283,7 +303,7 @@ export default function ConsistencyPanel({
         <div className="consistency-subsection-row">
           <div className="consistency-subsection consistency-subsection--half">
             <p className="printed-page-setup__title consistency-subsection-title">
-              공통 문자열 찾기
+              공통 문자열 찾기(1회 검수 8개 이내 추천)
             </p>
             <div className="consistency-subsection__hints-area">
               <p className="hint consistency-hint-block">
@@ -296,8 +316,9 @@ export default function ConsistencyPanel({
               onChange={setSlotInput}
               onRegister={registerSlot}
               placeholder={SPACE_INPUT_PLACEHOLDER}
-              ariaLabel="공통 문자열 찾기"
+              ariaLabel="공통 문자열 찾기(1회 검수 8개 이내 추천)"
               inputClassName="field-input mono"
+              registerDisabled={phraseSlotRegisterFull}
             />
             <RegisteredList
               entries={slotEntries}

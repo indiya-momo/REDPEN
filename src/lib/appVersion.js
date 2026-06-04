@@ -66,7 +66,7 @@ export function deployModeLabel() {
   return 'pages';
 }
 
-/** v0.1.0 · 날짜 — 시각·빌드ID·기능표식·모드 제외 (대문 푸터) */
+/** v0.7.0 · 날짜 — 시각·빌드ID·기능표식·모드 제외 (대문 푸터) */
 export function versionDateLabel() {
   const parts = [`v${APP_VERSION}`];
   const date = buildDateLabel();

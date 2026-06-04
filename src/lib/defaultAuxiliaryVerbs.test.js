@@ -3,7 +3,10 @@ import { describe, expect, it } from 'vitest';
 import { isBonBojoRequiredItem } from './bonBojoRules.js';
 import { ensureDefaultAuxiliaryVerbs } from './defaultAuxiliaryVerbs.js';
 
-import { listAuxiliaryVerbEntries } from './auxiliaryVerbRegister.js';
+import {
+  isAuxiliaryVerbEntryEnabled,
+  listAuxiliaryVerbEntries,
+} from './auxiliaryVerbRegister.js';
 
 import { ruleDisplayLabel } from './regexFromFind.js';
 
@@ -21,6 +24,19 @@ describe('bonBojoRules', () => {
 });
 
 describe('ensureDefaultAuxiliaryVerbs', () => {
+
+  it('기본 선택은 필수 본조(하다·지다)만 켜진다', () => {
+    const rules = ensureDefaultAuxiliaryVerbs([]);
+    const list = listAuxiliaryVerbEntries(rules);
+    for (const entry of list) {
+      const on = isAuxiliaryVerbEntryEnabled(rules, entry);
+      if (isBonBojoRequiredItem(entry.bonBojoItemId)) {
+        expect(on).toBe(true);
+      } else {
+        expect(on).toBe(false);
+      }
+    }
+  });
 
   it('빈 규칙에 bon-bojo 시드 — 목록은 item당 1칸, stems는 검색용만', () => {
 
@@ -286,26 +302,22 @@ describe('ensureDefaultAuxiliaryVerbs', () => {
   it('verb-oda 해 왔 — 재생성 규칙이 역할을 해 왔다를 잡는다', () => {
     const rules = ensureDefaultAuxiliaryVerbs([]);
     const haeWat = rules.find(
-      (r) =>
-        r.bonBojoItemId === 'verb-oda' &&
-        r.tailWord === '해 왔' &&
-        r.enabled,
+      (r) => r.bonBojoItemId === 'verb-oda' && r.tailWord === '해 왔',
     );
     expect(haeWat).toBeTruthy();
+    expect(haeWat.enabled).toBe(false);
     expect(haeWat.find).toContain('해');
-    expect(matches(haeWat, '역할을 해 왔다.')).toBe(true);
+    expect(matches({ ...haeWat, enabled: true }, '역할을 해 왔다.')).toBe(true);
   });
 
   it('verb-oda 려 왔 — 달려 왔다(ㄹ 본용언+오다)', () => {
     const rules = ensureDefaultAuxiliaryVerbs([]);
     const ryoWat = rules.find(
-      (r) =>
-        r.bonBojoItemId === 'verb-oda' &&
-        r.tailWord === '려 왔' &&
-        r.enabled,
+      (r) => r.bonBojoItemId === 'verb-oda' && r.tailWord === '려 왔',
     );
     expect(ryoWat).toBeTruthy();
-    expect(matches(ryoWat, '달려 왔다.')).toBe(true);
+    expect(ryoWat.enabled).toBe(false);
+    expect(matches({ ...ryoWat, enabled: true }, '달려 왔다.')).toBe(true);
   });
 
 });

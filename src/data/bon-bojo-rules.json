@@ -2,12 +2,12 @@
   "groups": [
     {
       "id": "verb-bon",
-      "tip": "본용언 +­ -아/­어 + 보조용언은 붙여 씀을 허용한다",
+      "tip": "본용언 +­ -아/­어 + 지다(보조용언)은 붙여씀이 원칙이다",
       "items": [
         {
           "id": "verb-gada",
           "label": "가",
-          "enabled": true,
+          "enabled": false,
           "stems": [
             "해 가",
             "해 갔",
@@ -23,7 +23,7 @@
         {
           "id": "verb-naeda",
           "label": "내",
-          "enabled": true,
+          "enabled": false,
           "stems": [
             "워 내",
             "워 냈",
@@ -36,7 +36,7 @@
         {
           "id": "verb-notda",
           "label": "놓",
-          "enabled": true,
+          "enabled": false,
           "stems": [
             "해 놓",
             "해 놨",
@@ -48,7 +48,7 @@
         {
           "id": "verb-duda",
           "label": "두",
-          "enabled": true,
+          "enabled": false,
           "stems": [
             "해 두",
             "해 둔",
@@ -63,28 +63,33 @@
         {
           "id": "verb-boda1",
           "label": "보",
-          "enabled": true,
+          "enabled": false,
           "stems": [
             "해 보",
             "해 본",
             "해 봅",
             "해 볼",
+            "해 봤",
             "켜 본",
             "켜 보",
+            "켜 봤",
             "어 보",
             "어 본",
             "어 봅",
             "어 봤",
             "가 보",
             "가 봤",
-            "가 본"
+            "가 본",
+            "려 보",
+            "려 본",
+            "려 봤"
           ],
           "displayLabel": "(아/어) + 보다"
         },
         {
           "id": "verb-juda1",
           "label": "주",
-          "enabled": true,
+          "enabled": false,
           "stems": [
             "해 주",
             "해 준",
@@ -101,7 +106,7 @@
         {
           "id": "verb-oda",
           "label": "오",
-          "enabled": true,
+          "enabled": false,
           "stems": [
             "켜 오",
             "켜 왔",
@@ -112,6 +117,17 @@
             "려 왔"
           ],
           "displayLabel": "(아/어) + 오다"
+        },
+        {
+          "id": "verb-itta",
+          "label": "있",
+          "enabled": false,
+          "stems": [
+            "겨 있",
+            "어 있",
+            "아 있"
+          ],
+          "displayLabel": "(아/어) + 있다"
         },
         {
           "id": "verb-hada",
@@ -144,22 +160,12 @@
             "러 지"
           ],
           "displayLabel": "(아/어) + 지다"
-        },
-        {
-          "id": "verb-itta",
-          "label": "있",
-          "enabled": true,
-          "stems": [
-            "겨 있",
-            "어 있",
-            "아 있"
-          ],
-          "displayLabel": "(아/어) + 있다"
         }
       ],
       "bonVerbAllow": [
         "기다려",
-        "깨트려"
+        "깨트려",
+        "만들어"
       ]
     }
   ]

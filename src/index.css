@@ -2314,6 +2314,10 @@ details[open] > summary .details-chevron {
   font-weight: 600;
 }
 
+.pdf-ready-file__size-warn--blocked {
+  color: #b91c1c;
+}
+
 .pdf-ready-file__status {
   flex-shrink: 0;
   color: #15803d;

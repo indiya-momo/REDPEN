@@ -31,7 +31,7 @@ export default function PdfViewer({
   pageData,
   highlights = [],
   emptyTitle = 'PDF를 업로드하세요',
-  emptyHint = '용량 기준: 정상(<40MB) · 주의(40MB+) · 초과(50MB+)',
+  emptyHint = '용량: 50MB 이하 권장 · 100MB 초과 시 검수 불가',
   showPageMeta = true,
   zoomFactor = 1,
   onZoomFactorChange,

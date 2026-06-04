@@ -4,10 +4,12 @@ import pdfMomoIcon from '../assets/momo/pdf-momo.png';
 import pdfFullIcon from '../assets/momo/pdf-full.png';
 import { supportsFilePicker } from '../lib/sessionStore.js';
 import { formatFileSizeMb } from '../lib/formatFileSize.js';
+import {
+  isPdfSizeOverMax,
+  isPdfSizeOverWarn,
+  PDF_SIZE_MAX_MESSAGE,
+} from '../lib/pdfSizeLimits.js';
 import TooltipGuide from './TooltipGuide.jsx';
-const MB = 1024 * 1024;
-/** 50MB 초과 시 검수는 허용하고 UI 경고만 표시 (운영 권장 한도) */
-const PDF_SIZE_WARN_BYTES = 50 * MB;
 
 /**
  * @param {{
@@ -110,8 +112,8 @@ export default function PdfCenterStage({
   );
 
   const sizeLabel = formatFileSizeMb(pdfByteLength);
-  const isSizeOverRecommended =
-    Number.isFinite(pdfByteLength) && pdfByteLength > PDF_SIZE_WARN_BYTES;
+  const isSizeBlocked = isPdfSizeOverMax(pdfByteLength);
+  const isSizeOverRecommended = isPdfSizeOverWarn(pdfByteLength);
   const extractBusy =
     isProcessing && progress?.phase === 'extract' && !pageTextsLength;
   const checkBusy = isProcessing && progress?.phase === 'check';
@@ -220,9 +222,9 @@ export default function PdfCenterStage({
             )}
             <footer className="pdf-dropzone__footer">
               <p className="pdf-dropzone__limit">
-                <strong>50MB 이하 권장</strong>
+                <strong>100MB 이하</strong>
                 <span className="pdf-dropzone__limit-detail">
-                  (신국판 300페이지 내외, 이미지 포함)
+                  (50MB 이하 권장 · 신국판 300페이지 내외)
                 </span>
               </p>
               <p className="pdf-dropzone__scan-note">
@@ -250,7 +252,14 @@ export default function PdfCenterStage({
               <div className="pdf-ready-file__meta">
                 <p className="pdf-ready-file__name">{pdfFileName}</p>
                 <p className="pdf-ready-file__detail">
-                  {isSizeOverRecommended ? (
+                  {isSizeBlocked ? (
+                    <>
+                      파일: {sizeLabel ?? '—'}
+                      <span className="pdf-ready-file__size-warn pdf-ready-file__size-warn--blocked">
+                        (100MB 초과 · 검수 불가)
+                      </span>
+                    </>
+                  ) : isSizeOverRecommended ? (
                     <>
                       파일: {sizeLabel ?? '—'}
                       <span className="pdf-ready-file__size-warn">
@@ -285,6 +294,12 @@ export default function PdfCenterStage({
                 {checkBusy ? '검사 중…' : runLabel}
               </button>
             ) : null}
+
+            {isSizeBlocked && (
+              <p className="error-text pdf-ready-panel__size-block">
+                {PDF_SIZE_MAX_MESSAGE}
+              </p>
+            )}
 
             {isSizeOverRecommended && (
               <div className="pdf-ready-panel__size-warn-actions">

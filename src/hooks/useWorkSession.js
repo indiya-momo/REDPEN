@@ -6,6 +6,10 @@ import {
   loadPdfFromBuffer,
 } from '../lib/pdfService.js';
 import {
+  isPdfSizeOverMax,
+  PDF_SIZE_MAX_MESSAGE,
+} from '../lib/pdfSizeLimits.js';
+import {
   clearWorkSession,
   getStorageHint,
   loadWorkSession,
@@ -153,6 +157,16 @@ export function useWorkSession(pdf, ruleCheck, tocCheck) {
         setPdfByteLength(saved.pdfByteLength ?? null);
         setSessionHint('이전 PDF — 아래 「PDF 다시 연결」을 누르세요');
         setLoadError(null);
+        setIsRestoring(false);
+        return;
+      }
+
+      const savedSize =
+        saved.pdfByteLength ?? saved.pdfBuffer?.byteLength ?? 0;
+      if (isPdfSizeOverMax(savedSize)) {
+        setLoadError(PDF_SIZE_MAX_MESSAGE);
+        setSessionHint(null);
+        await clearWorkSession();
         setIsRestoring(false);
         return;
       }
@@ -355,6 +369,10 @@ export function useWorkSession(pdf, ruleCheck, tocCheck) {
       if (!file) return;
       if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
         setLoadError('PDF 파일만 업로드할 수 있습니다.');
+        return;
+      }
+      if (isPdfSizeOverMax(file.size)) {
+        setLoadError(PDF_SIZE_MAX_MESSAGE);
         return;
       }
 
