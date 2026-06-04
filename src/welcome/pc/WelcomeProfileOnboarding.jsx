@@ -25,34 +25,21 @@ export default function WelcomeProfileOnboarding({
 }) {
   const titleId = useId();
   const [nicknameInput, setNicknameInput] = useState(defaultNickname);
-  const [termsAccepted, setTermsAccepted] = useState(false);
-  const [privacyAccepted, setPrivacyAccepted] = useState(false);
-  const [onboardingError, setOnboardingError] = useState('');
 
   useEffect(() => {
     setNicknameInput(defaultNickname);
-    setTermsAccepted(false);
-    setPrivacyAccepted(false);
-    setOnboardingError('');
   }, [uid, defaultNickname]);
-
-  const canCompleteOnboarding = termsAccepted && privacyAccepted;
 
   function handleSubmit(event) {
     event.preventDefault();
     if (!uid) return;
-    if (!termsAccepted || !privacyAccepted) {
-      setOnboardingError('필수 약관에 동의해 주세요.');
-      return;
-    }
     const nickname = nicknameInput.trim() || createRandomNickname();
     saveUserProfile(uid, {
       nickname,
-      termsAccepted,
-      privacyAccepted,
+      termsAccepted: false,
+      privacyAccepted: false,
       marketingOptIn: false,
     });
-    setOnboardingError('');
     onComplete();
   }
 
@@ -86,12 +73,6 @@ export default function WelcomeProfileOnboarding({
             <p className="profile-onboarding__lead">
               인디야에서 사용하실 닉네임을 입력해주세요
             </p>
-            <label
-              htmlFor="profile-onboarding-nickname"
-              className="profile-onboarding__label"
-            >
-              닉네임
-            </label>
           </div>
           <input
             id="profile-onboarding-nickname"
@@ -102,42 +83,12 @@ export default function WelcomeProfileOnboarding({
             placeholder="닉네임을 입력해 주세요"
             maxLength={40}
             autoFocus
+            aria-label="닉네임"
           />
-          <fieldset className="profile-onboarding__consents">
-            <legend className="sr-only">약관 동의</legend>
-            <label className="profile-onboarding__check">
-              <input
-                type="checkbox"
-                checked={termsAccepted}
-                aria-label="이용약관 동의 (필수)"
-                onChange={(event) => {
-                  setTermsAccepted(event.target.checked);
-                  setOnboardingError('');
-                }}
-              />
-            </label>
-            <label className="profile-onboarding__check">
-              <input
-                type="checkbox"
-                checked={privacyAccepted}
-                aria-label="개인정보처리방침 동의 (필수)"
-                onChange={(event) => {
-                  setPrivacyAccepted(event.target.checked);
-                  setOnboardingError('');
-                }}
-              />
-            </label>
-          </fieldset>
-          {onboardingError ? (
-            <p className="profile-onboarding__error" role="alert">
-              {onboardingError}
-            </p>
-          ) : null}
           <div className="profile-onboarding__actions">
             <button
               type="submit"
               className="btn-primary profile-onboarding__submit"
-              disabled={!canCompleteOnboarding}
             >
               시작하기
             </button>

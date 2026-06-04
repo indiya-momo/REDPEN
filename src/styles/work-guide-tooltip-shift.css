@@ -1,5 +1,5 @@
 /**
- * 123번 말풍선 위치 — 사용자가 말하는 방향과 CSS translate 부호를 맞춤.
+ * 1~7번 말풍선(비 fixed) 위치 — CSS translate 부호 보정.
  *
  * 지시할 때 (main-screen.css에서 --wg-shift-x / --wg-shift-y):
  * - 왼쪽 N%  → --wg-shift-x: N%

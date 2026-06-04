@@ -296,12 +296,6 @@ button {
   animation: tooltip-guide-fade-in 0.2s ease-out;
 }
 
-/* 뷰포트 좌표 고정 — placement transform 무시 */
-.tooltip-guide--viewport-coords {
-  right: auto;
-  bottom: auto;
-}
-
 @keyframes tooltip-guide-fade-in {
   from {
     opacity: 0;
@@ -2145,11 +2139,6 @@ details[open] > summary .details-chevron {
   font-size: 0.78rem;
   font-weight: 800;
   line-height: 1.4;
-}
-
-.pdf-dropzone__recommend {
-  line-height: 1.55;
-  color: var(--color-text-subtle);
 }
 
 .pdf-dropzone__footer .subtle {

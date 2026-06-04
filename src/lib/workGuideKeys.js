@@ -3,7 +3,7 @@ import { clearTooltipGuideDismissed } from './tooltipGuideStorage.js';
 /**
  * 작업 화면 말풍선 storageKey (tooltipGuideStorage 접두사와 결합)
  *
- * 통칭 **123번 말풍선** = PDF 업로드·추출 이후 체인만 (맞춤법 탭).
+ * 통칭 **1~7번 말풍선** = PDF 업로드·추출 이후 체인 (맞춤법·일관성·종료).
  * - **1번**: 인쇄 쪽 보정 — PDF·원고 페이지 맞추기 (`PDF_OPENED`)
  * - **2번**: 검수 기준 선택·목록 (`LEFT_CRITERIA`)
  * - **3번**: 검수 결과 안내 (`FIRST_RESULT`)
@@ -12,7 +12,7 @@ import { clearTooltipGuideDismissed } from './tooltipGuideStorage.js';
  * - **6번**: 기준 저장 안내 (`RULE_SET_SAVE`) — 우측 인사말 영역
  * - **7번**: 작업 종료·로그아웃 안내 (`WORK_EXIT`) — 로그아웃 버튼 아래
  *
- * 업로드 전 「처음 할 일은 이거다냥」(`PRE_UPLOAD`)은 123에 포함하지 않음.
+ * 업로드 전 「처음 할 일은 이거다냥」(`PRE_UPLOAD`)은 1~7 체인에 포함하지 않음.
  *
  * 말풍선 위치: UI 앵커 기준 (`TooltipGuide` placement + offset px). 뷰포트 x,y 숫자는
  * 브라우저 창 기준이라 인디야 작업면만의 2880×1454 좌표와 1:1로 안 맞음.
@@ -30,19 +30,8 @@ export const WORK_GUIDE_KEYS = {
   WORK_EXIT: 'work-exit-v1',
 };
 
-/** @type {Record<1 | 2 | 3 | 4 | 5 | 6 | 7, string>} */
-export const WORK_GUIDE_KEY_BY_STEP = {
-  1: WORK_GUIDE_KEYS.PDF_OPENED,
-  2: WORK_GUIDE_KEYS.LEFT_CRITERIA,
-  3: WORK_GUIDE_KEYS.FIRST_RESULT,
-  4: WORK_GUIDE_KEYS.CONSISTENCY_INTRO,
-  5: WORK_GUIDE_KEYS.AUXILIARY_VERB_INTRO,
-  6: WORK_GUIDE_KEYS.RULE_SET_SAVE,
-  7: WORK_GUIDE_KEYS.WORK_EXIT,
-};
-
 /**
- * `pinAll` 플래그만 켜는 개발용 옵션(표시 순서는 1→5 동일).
+ * `pinAll` 플래그만 켜는 개발용 옵션(표시 순서는 1→7 동일).
  * 기본 꺼짐. 켜려면 `VITE_WORK_GUIDE_PIN_ALL=true` 또는 URL `?workGuidePin=1`
  */
 export function isWorkGuidePinned() {
@@ -71,5 +60,4 @@ export function clearAllWorkGuideDismissals(uid) {
   for (const key of Object.values(WORK_GUIDE_KEYS)) {
     clearTooltipGuideDismissed(workGuideStorageKey(id, key));
   }
-  clearTooltipGuideDismissed(workGuideStorageKey(id, WORK_GUIDE_KEYS.PRE_UPLOAD));
 }

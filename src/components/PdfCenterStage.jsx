@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Upload, FileText, CheckCircle2, Play, RotateCcw } from 'lucide-react';
 import pdfMomoIcon from '../assets/momo/pdf-momo.png';
 import pdfFullIcon from '../assets/momo/pdf-full.png';
@@ -35,6 +35,7 @@ const PDF_SIZE_WARN_BYTES = 50 * MB;
  *   uploadGuideStorageKey?: string,
  *   uploadGuidePinned?: boolean,
  *   onUploadGuideDismiss?: () => void,
+ *   checkQuotaBlocked?: boolean,
  * }} props
  */
 export default function PdfCenterStage({
@@ -62,14 +63,20 @@ export default function PdfCenterStage({
   uploadGuideStorageKey = 'pdf-upload-first-step',
   uploadGuidePinned = false,
   onUploadGuideDismiss,
+  checkQuotaBlocked = false,
 }) {
   const [dragOver, setDragOver] = useState(false);
   const dragDepth = useRef(0);
 
   const openPicker = useCallback(() => {
+    onUploadGuideDismiss?.();
     if (supportsFilePicker()) onOpenPicker();
     else fileRef.current?.click();
-  }, [fileRef, onOpenPicker]);
+  }, [fileRef, onOpenPicker, onUploadGuideDismiss]);
+
+  useEffect(() => {
+    if (showReady) onUploadGuideDismiss?.();
+  }, [showReady, onUploadGuideDismiss]);
 
   const onDragEnter = useCallback((e) => {
     e.preventDefault();
@@ -113,7 +120,8 @@ export default function PdfCenterStage({
     !pdf ||
     !pageTextsLength ||
     extractBusy ||
-    Boolean(loadError);
+    Boolean(loadError) ||
+    checkQuotaBlocked;
   const scanPdfDetected =
     typeof loadError === 'string' &&
     loadError.includes('스캔 PDF는 문자를 읽을 수 없습니다');
@@ -218,12 +226,6 @@ export default function PdfCenterStage({
               </p>
               <p className="pdf-dropzone__scan-note">
                 <span className="pdf-support-msg__scan">스캔 PDF는 읽을 수 없어요ㅠ</span>
-              </p>
-              <p className="pdf-dropzone__recommend subtle">
-                인디자인 · 한글 등으로 만든
-                <br />
-                <span className="pdf-support-msg__emph">텍스트 선택 가능한 PDF</span>
-                를 권장합니다
               </p>
             </footer>
             </div>

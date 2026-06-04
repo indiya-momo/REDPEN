@@ -43,8 +43,8 @@ import {
 } from '../lib/firebaseAuth.js';
 import { getUserProfile } from '../lib/userProfileStorage.js';
 import { WORK_GUIDE_KEYS } from '../lib/workGuideKeys.js';
-import { logWorkGuideDebug } from '../lib/workGuideDebug.js';
 import { useWorkGuideChain } from '../hooks/useWorkGuideChain.js';
+import { useBetaDailyQuota } from '../hooks/useBetaDailyQuota.js';
 import { formatRuleSetSavedDate } from '../lib/ruleSetsStorage.js';
 import {
   buildTabEntries,
@@ -332,6 +332,10 @@ export default function MainScreen({
     },
     [pageDisplay.active, pageDisplay.formatPage],
   );
+  const betaQuota = useBetaDailyQuota(authUid);
+  const checkQuotaBlocked =
+    betaQuota.enforced && !betaQuota.loading && !betaQuota.canRunCheck;
+
   const ruleCheck = useRuleCheck({
     builtInEnabled,
     cautionEnabled,
@@ -343,6 +347,8 @@ export default function MainScreen({
     setIsProcessing: pdf.setIsProcessing,
     setProgress: pdf.setProgress,
     afterCheckRef,
+    authUid,
+    onBetaQuotaConsumed: () => void betaQuota.refresh(),
   });
   const tocBodyCheckEnabled = isTocBodyCheckEnabled();
   const tocCheck = useTocBodyCheck({
@@ -358,6 +364,8 @@ export default function MainScreen({
     setIsProcessing: pdf.setIsProcessing,
     setProgress: pdf.setProgress,
     afterCheckRef,
+    authUid,
+    onBetaQuotaConsumed: () => void betaQuota.refresh(),
   });
   const session = useWorkSession(pdf, ruleCheck, tocCheck);
   afterCheckRef.current = session.persistSession;
@@ -476,44 +484,7 @@ export default function MainScreen({
     pageTextsReady: pdf.pageTexts.length > 0,
     workTab,
     spellingCheckDone: ruleCheck.spellingCheckDone,
-    spellingTotalFindings: spellingTabTotalFindings,
   });
-
-  useEffect(() => {
-    logWorkGuideDebug('chain', {
-      authUid: authUid || '(비로그인)',
-      hasPdf: Boolean(pdf.pdf),
-      pageTextsReady: pdf.pageTexts.length > 0,
-      workTab,
-      spellingCheckDone: ruleCheck.spellingCheckDone,
-      pinAll: workGuide.pinAll,
-      showPdfOpenedGuide: workGuide.showPdfOpenedGuide,
-      showLeftCriteriaGuide: workGuide.showLeftCriteriaGuide,
-      showFirstResultGuide: workGuide.showFirstResultGuide,
-      showConsistencyGuide: workGuide.showConsistencyGuide,
-      showAuxiliaryVerbGuide: workGuide.showAuxiliaryVerbGuide,
-      showRuleSetSaveGuide: workGuide.showRuleSetSaveGuide,
-      showWorkExitGuide: workGuide.showWorkExitGuide,
-      storageKey1: workGuide.storageKey(WORK_GUIDE_KEYS.PDF_OPENED),
-      tooltipKeys: Object.keys(localStorage).filter((k) =>
-        k.includes('pdf-proofread-tooltip-guide'),
-      ),
-    });
-  }, [
-    authUid,
-    pdf.pdf,
-    pdf.pageTexts.length,
-    workTab,
-    ruleCheck.spellingCheckDone,
-    workGuide.pinAll,
-    workGuide.showPdfOpenedGuide,
-    workGuide.showLeftCriteriaGuide,
-    workGuide.showFirstResultGuide,
-    workGuide.showConsistencyGuide,
-    workGuide.showRuleSetSaveGuide,
-    workGuide.showWorkExitGuide,
-    workGuide.storageKey,
-  ]);
 
   const showSpellingRunRow = Boolean(pdf.pdf);
   const showSpellingResultsSlot = tabCheckDone;
@@ -1013,7 +984,8 @@ export default function MainScreen({
                     disabled={
                       pdf.pageTexts.length === 0 ||
                       !ruleCheck.spellingCheckDone ||
-                      pdf.isProcessing
+                      pdf.isProcessing ||
+                      checkQuotaBlocked
                     }
                     isProcessing={pdf.isProcessing}
                   />
@@ -1022,7 +994,10 @@ export default function MainScreen({
                   <PanelSectionRunButton
                     label="기준 검수"
                     onClick={handleCriteriaSpellingCheck}
-                    disabled={pdf.pageTexts.length === 0}
+                    disabled={
+                      pdf.pageTexts.length === 0 ||
+                      checkQuotaBlocked
+                    }
                     isProcessing={pdf.isProcessing}
                   />
                   {workGuide.showFirstResultGuide ? (
@@ -1231,6 +1206,7 @@ export default function MainScreen({
                   }}
                   hasPdf={pdf.pageTexts.length > 0}
                   isProcessing={pdf.isProcessing}
+                  checkQuotaBlocked={checkQuotaBlocked}
                 />
               </div>
             ) : null}
@@ -1393,6 +1369,7 @@ export default function MainScreen({
               sessionHint={session.sessionHint}
               runLabel={centerRunLabel}
               showReady={Boolean(pdf.pdf)}
+              checkQuotaBlocked={checkQuotaBlocked}
               showUploadGuide={workGuide.showPreUploadGuide}
               uploadGuideStorageKey={workGuide.storageKey(
                 WORK_GUIDE_KEYS.PRE_UPLOAD,

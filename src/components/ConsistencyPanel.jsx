@@ -68,6 +68,7 @@ import TooltipGuide from './TooltipGuide.jsx';
  *   onRunRulesCheck?: () => void | Promise<void>,
  *   hasPdf?: boolean,
  *   isProcessing?: boolean,
+ *   checkQuotaBlocked?: boolean,
  *   auxiliaryVerbGuide?: {
  *     storageKey: string,
  *     alignToBubbleChain: readonly object[],
@@ -101,6 +102,7 @@ export default function ConsistencyPanel({
   onRunRulesCheck = () => {},
   hasPdf = false,
   isProcessing = false,
+  checkQuotaBlocked = false,
   auxiliaryVerbGuide = null,
 }) {
   const [literalInput, setLiteralInput] = useState('');
@@ -241,7 +243,7 @@ export default function ConsistencyPanel({
           <PanelSectionRunButton
             label="일관성+용언 검수"
             onClick={onRunRulesCheck}
-            disabled={!hasPdf}
+            disabled={!hasPdf || checkQuotaBlocked}
             isProcessing={isProcessing}
           />
         </div>
@@ -442,6 +444,7 @@ export default function ConsistencyPanel({
           onRunCheck={onRunTocCheck}
           hasPdf={hasPdf}
           isProcessing={isProcessing}
+          checkQuotaBlocked={checkQuotaBlocked}
         />
       ) : (
         <section
