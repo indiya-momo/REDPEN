@@ -38,7 +38,7 @@ export default function FeedbackModal({ open, onClose }) {
       <div className="feedback-modal-panel">
         <header className="feedback-modal-header">
           <h2 id={titleId} className="feedback-modal-title">
-            베타 소감 남기기
+            피드백 남기기
           </h2>
           <button
             type="button"
