@@ -32,13 +32,15 @@ export const isFirebaseAuthConfigured = Object.values(firebaseConfig).every(
   Boolean,
 );
 
+/** @type {import('firebase/app').FirebaseApp | null} */
+export let firebaseApp = null;
 let auth = null;
 let provider = null;
 let persistenceReady = Promise.resolve();
 
 if (isFirebaseAuthConfigured) {
-  const app = initializeApp(firebaseConfig);
-  auth = getAuth(app);
+  firebaseApp = initializeApp(firebaseConfig);
+  auth = getAuth(firebaseApp);
   provider = new GoogleAuthProvider();
   provider.setCustomParameters({ prompt: 'select_account' });
   persistenceReady = setPersistence(auth, browserLocalPersistence).catch(

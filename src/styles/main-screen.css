@@ -122,12 +122,6 @@
   min-width: 0;
 }
 
-/* 3번: 5시(오른쪽·아래) 50% */
-.work-guide-step-3 .tooltip-guide--right {
-  --wg-shift-x: -50%;
-  --wg-shift-y: -50%;
-}
-
 .panel-left.panel-left--work-guide .spelling-tab-scroll {
   position: relative;
   overflow-x: hidden;
@@ -138,28 +132,6 @@
   display: inline-flex;
   flex-shrink: 0;
   overflow: visible;
-}
-
-/* 3번 — 결과창과 분리(포털), 스크롤 가로 늘어남 방지 */
-.work-guide-step-3--results-tip {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  width: 1px;
-  height: 1px;
-  z-index: 10003;
-  pointer-events: none;
-  overflow: visible;
-}
-
-.work-guide-step-3--results-tip .tooltip-guide-anchor {
-  display: block;
-  width: 1px;
-  height: 1px;
-}
-
-.work-guide-step-3--results-tip .tooltip-guide__confirm {
-  pointer-events: auto;
 }
 
 .spelling-tab-scroll .spelling-tab-scroll__results {
@@ -183,18 +155,8 @@
   min-width: 0;
 }
 
-.work-guide-anchor--run {
-  display: inline-block;
-  width: auto;
-}
-
 .work-guide-anchor--criteria-toggle {
   display: inline-flex;
-}
-
-.work-guide-anchor--results {
-  display: block;
-  min-height: 0;
 }
 
 .spelling-tab-layout__run-row .tooltip-guide-anchor {

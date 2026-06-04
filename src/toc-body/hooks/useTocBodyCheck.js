@@ -11,6 +11,7 @@ import {
   hasTocBodyEntries,
   runTocBodyCheck,
 } from '../lib/tocBodyCheck.js';
+import { assertBetaDailyCheckOrAlert } from '../../lib/betaDailyQuota.js';
 
 /** @type {'toc-body'} */
 export const TOC_BODY_RESULT_SOURCE = 'toc-body';
@@ -30,6 +31,8 @@ export const TOC_BODY_RESULT_SOURCE = 'toc-body';
  *   setIsProcessing: (v: boolean) => void,
  *   setProgress: (v: { current: number, total: number, phase: string } | null) => void,
  *   afterCheckRef: React.MutableRefObject<() => Promise<boolean>>,
+ *   authUid?: string,
+ *   onBetaQuotaConsumed?: () => void,
  * }} options
  */
 export function useTocBodyCheck({
@@ -45,6 +48,8 @@ export function useTocBodyCheck({
   setIsProcessing,
   setProgress,
   afterCheckRef,
+  authUid = '',
+  onBetaQuotaConsumed,
 }) {
   const [results, setResults] = useState([]);
   const [selected, setSelected] = useState(null);
@@ -101,6 +106,14 @@ export function useTocBodyCheck({
       return;
     }
 
+    if (
+      !(await assertBetaDailyCheckOrAlert(authUid, {
+        onConsumed: onBetaQuotaConsumed,
+      }))
+    ) {
+      return;
+    }
+
     setIsProcessing(true);
     setProgress({ current: 0, total: pageTexts.length, phase: 'check' });
 
@@ -147,6 +160,8 @@ export function useTocBodyCheck({
     setIsProcessing,
     setProgress,
     afterCheckRef,
+    authUid,
+    onBetaQuotaConsumed,
   ]);
 
   const backToSetup = useCallback(() => {

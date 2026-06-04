@@ -45,7 +45,7 @@ const FAQ_ITEMS = [
     id: 'beta',
     question: '오픈베타 기간 이용료가 있나요?',
     answer:
-      '현재 오픈베타 기간에는 이용료 없이 제공됩니다. 베타 종료 후 요금·한도는 별도 안내할 예정입니다.',
+      '오픈베타 기간에는 첫 검수 1회가 무료이며, 이후 로그인 회원당 하루 1회 전체 기능 검수를 제공합니다(한국 시간 기준). 베타 종료 후 요금·한도는 별도 안내할 예정입니다.',
   },
   {
     id: 'device',
@@ -80,7 +80,9 @@ function OverviewDashboard({ onViewAll }) {
   return (
     <div className="mypage__main-inner">
       <section className="mypage__balance" aria-label="서비스 안내">
-        <p className="mypage__balance-beta">현재 오픈베타 서비스 중입니다</p>
+        <p className="mypage__balance-beta">
+          오픈베타 — 첫 검수 무료, 이후 1일 1회
+        </p>
       </section>
 
       <section className="mypage__card" aria-labelledby="mypage-usage-title">

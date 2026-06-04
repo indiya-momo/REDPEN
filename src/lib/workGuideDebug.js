@@ -1,4 +1,4 @@
-/** URL `?workGuideDebug=1` — 123번 말풍선 표시 조건·앵커 위치 콘솔 로그 */
+/** URL `?workGuideDebug=1` — 말풍선 앵커 위치 콘솔 로그 (TooltipGuide) */
 export function isWorkGuideDebug() {
   if (typeof window === 'undefined') return false;
   return new URLSearchParams(window.location.search).get('workGuideDebug') === '1';

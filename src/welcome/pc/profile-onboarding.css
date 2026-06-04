@@ -73,13 +73,6 @@
   word-break: keep-all;
 }
 
-.profile-onboarding__label {
-  width: 100%;
-  font-size: calc(0.82rem * var(--po-text));
-  font-weight: 700;
-  color: var(--accent-terracotta);
-}
-
 .profile-onboarding__input {
   width: 100%;
   box-sizing: border-box;
@@ -101,60 +94,6 @@
   outline: 2px solid var(--focus-ring);
   outline-offset: 1px;
   border-color: var(--focus-border);
-}
-
-.profile-onboarding__consents {
-  margin: 0;
-  padding: 0;
-  border: none;
-  display: grid;
-  gap: calc(0.55rem * var(--po-pad-v));
-}
-
-.profile-onboarding__check {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.45em;
-  font-size: calc(0.76rem * var(--po-text));
-  line-height: 1.5;
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  text-align: left;
-}
-
-.profile-onboarding__check input[type='checkbox'] {
-  box-sizing: border-box;
-  width: 1em;
-  height: 1em;
-  min-width: 1em;
-  min-height: 1em;
-  margin: 0.2em 0 0;
-  flex-shrink: 0;
-  accent-color: var(--accent-terracotta);
-  cursor: pointer;
-}
-
-.profile-onboarding__check > span {
-  flex: 1;
-  min-width: 0;
-}
-
-.profile-onboarding__check a,
-.profile-onboarding__doc {
-  color: var(--accent-spelling);
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-
-.profile-onboarding__check a:hover {
-  color: var(--accent-terracotta-deep);
-}
-
-.profile-onboarding__error {
-  margin: 0;
-  font-size: calc(0.76rem * var(--po-text));
-  line-height: 1.45;
-  color: var(--editor-red);
 }
 
 .profile-onboarding__actions {
@@ -179,7 +118,3 @@
   paint-order: unset;
 }
 
-.profile-onboarding__submit:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}

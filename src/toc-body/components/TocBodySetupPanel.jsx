@@ -24,6 +24,7 @@ import { hasTocBodyEntries, parseTocBodyEntries } from '../lib/tocBodyCheck.js';
  *   onRunCheck: () => void | Promise<void>,
  *   hasPdf?: boolean,
  *   isProcessing?: boolean,
+ *   checkQuotaBlocked?: boolean,
  *   textareaRows?: number,
  * }} props
  */
@@ -63,7 +64,11 @@ export default function TocBodySetupPanel({
   }, [tocBodyText]);
 
   const canRunCheck =
-    hasPdf && hasTocBodyEntries(tocBodyText) && printedPagesActive && !isProcessing;
+    hasPdf &&
+    hasTocBodyEntries(tocBodyText) &&
+    printedPagesActive &&
+    !isProcessing &&
+    !checkQuotaBlocked;
 
   const loadTocFile = (file) => {
     const reader = new FileReader();

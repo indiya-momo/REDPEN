@@ -11,12 +11,6 @@ const DEFAULT_MOMO_IMAGE = publicAssetUrl('momo/bullon4.png');
 const TOOLTIP_GAP = 16;
 
 /**
- * @param {DOMRect} rect
- * @param {'top' | 'bottom' | 'left' | 'right'} placement
- * @param {number} offsetX
- * @param {number} offsetY
- */
-/**
  * @param {{
  *   selector: string,
  *   leftFromTargetLeft?: number,
@@ -154,7 +148,6 @@ function fixedTooltipPosition(rect, placement, offsetX, offsetY) {
  *   offsetY?: number,
  *   onDismiss?: () => void,
  *   useFixedLayer?: boolean,
- *   fixedViewportPosition?: { left: number, top: number } | null,
  *   alignToBubble?: {
  *     selector: string,
  *     leftFromTargetLeft?: number,
@@ -193,7 +186,6 @@ export default function TooltipGuide({
   offsetY = 0,
   onDismiss,
   useFixedLayer = false,
-  fixedViewportPosition = null,
   alignToBubble = null,
   alignToBubbleChain = null,
   bubbleGuideStep = null,
@@ -216,18 +208,10 @@ export default function TooltipGuide({
     setDismissed(isTooltipGuideDismissed(storageKey));
   }, [storageKey, pinned]);
 
-  const usePortalFixed = useFixedLayer || fixedViewportPosition != null;
+  const usePortalFixed = useFixedLayer;
 
   const syncFixedPosition = useCallback(() => {
     if (!usePortalFixed || dismissed) return;
-    if (fixedViewportPosition) {
-      setFixedStyle({
-        left: fixedViewportPosition.left,
-        top: fixedViewportPosition.top,
-        transform: 'none',
-      });
-      return;
-    }
     const aligned = resolveAlignToStyle(alignToBubble, alignToBubbleChain);
     if (aligned) {
       setFixedStyle(aligned.style);
@@ -263,7 +247,6 @@ export default function TooltipGuide({
   }, [
     usePortalFixed,
     dismissed,
-    fixedViewportPosition,
     alignToBubble,
     alignToBubbleChain,
     placement,
@@ -306,7 +289,6 @@ export default function TooltipGuide({
     'tooltip-guide',
     `tooltip-guide--${placement}`,
     usePortalFixed ? 'tooltip-guide--fixed-layer' : '',
-    fixedViewportPosition ? 'tooltip-guide--viewport-coords' : '',
     bubbleType !== 'auto' ? `tooltip-guide--bubble-${bubbleType}` : '',
     !showMomo ? 'tooltip-guide--no-momo' : '',
   ]

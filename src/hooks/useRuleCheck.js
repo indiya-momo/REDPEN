@@ -25,6 +25,7 @@ import {
   filterCustomRulesByConsistencyScope,
 } from '../lib/consistencyCheckScopes.js';
 import { ensureDefaultAuxiliaryVerbs } from '../lib/defaultAuxiliaryVerbs.js';
+import { assertBetaDailyCheckOrAlert } from '../lib/betaDailyQuota.js';
 
 /**
  * 맞춤법·표기 일관성 규칙 검사 (목차 검사는 useTocBodyCheck)
@@ -39,6 +40,8 @@ import { ensureDefaultAuxiliaryVerbs } from '../lib/defaultAuxiliaryVerbs.js';
  *   setIsProcessing: (v: boolean) => void,
  *   setProgress: (v: { current: number, total: number, phase: string } | null) => void,
  *   afterCheckRef: React.MutableRefObject<() => Promise<boolean>>,
+ *   authUid?: string,
+ *   onBetaQuotaConsumed?: () => void,
  * }} options
  */
 export function useRuleCheck({
@@ -52,6 +55,8 @@ export function useRuleCheck({
   setIsProcessing,
   setProgress,
   afterCheckRef,
+  authUid = '',
+  onBetaQuotaConsumed,
 }) {
   const [spellingResults, setSpellingResults] = useState([]);
   const [consistencyResults, setConsistencyResults] = useState([]);
@@ -183,6 +188,14 @@ export function useRuleCheck({
       });
       if (isOverMaxRules(activeTotal)) {
         alert(maxRulesExceededMessage(activeTotal));
+        return;
+      }
+
+      if (
+        !(await assertBetaDailyCheckOrAlert(authUid, {
+          onConsumed: onBetaQuotaConsumed,
+        }))
+      ) {
         return;
       }
 
@@ -338,6 +351,14 @@ export function useRuleCheck({
         return;
       }
 
+      if (
+        !(await assertBetaDailyCheckOrAlert(authUid, {
+          onConsumed: onBetaQuotaConsumed,
+        }))
+      ) {
+        return;
+      }
+
       setIsProcessing(true);
       setProgress({ current: 0, total: pageTexts.length, phase: 'check' });
 
@@ -402,6 +423,8 @@ export function useRuleCheck({
       setIsProcessing,
       setProgress,
       afterCheckRef,
+      authUid,
+      onBetaQuotaConsumed,
     ],
   );
 

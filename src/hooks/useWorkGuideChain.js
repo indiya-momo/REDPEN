@@ -7,24 +7,17 @@ import {
 import { dismissTooltipGuide } from '../lib/tooltipGuideStorage.js';
 
 /**
- * 업로드 이후 **123번 말풍선** 체인 (uid별 1회 dismiss)
+ * 업로드 이후 **1~7번 말풍선** 체인 (uid별 dismiss)
  * @param {string} uid
  * @param {{
  *   hasPdf: boolean,
  *   pageTextsReady: boolean,
  *   workTab: 'spelling' | 'consistency',
  *   spellingCheckDone: boolean,
- *   spellingTotalFindings: number,
  * }} ctx
  */
 export function useWorkGuideChain(uid, ctx) {
-  const {
-    hasPdf,
-    pageTextsReady,
-    workTab,
-    spellingCheckDone,
-    spellingTotalFindings,
-  } = ctx;
+  const { hasPdf, pageTextsReady, workTab, spellingCheckDone } = ctx;
   const [rev, setRev] = useState(0);
   const bump = useCallback(() => setRev((n) => n + 1), []);
 
@@ -65,13 +58,9 @@ export function useWorkGuideChain(uid, ctx) {
     ],
   );
 
-  const firstResultVariant =
-    spellingTotalFindings <= 0 ? 'empty' : 'hasFindings';
-
   return {
     storageKey,
     dismiss,
-    firstResultVariant,
     ...chain,
   };
 }

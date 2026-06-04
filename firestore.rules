@@ -1,0 +1,26 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /betaDailyUsage/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null
+        && request.auth.uid == userId
+        && request.resource.data.firstFreeUsed == true
+        && request.resource.data.firstFreeAt is timestamp;
+      allow update: if request.auth != null
+        && request.auth.uid == userId
+        && resource.data.firstFreeUsed == false
+        && request.resource.data.firstFreeUsed == true
+        && request.resource.data.firstFreeAt is timestamp;
+      allow delete: if false;
+    }
+    match /betaDailyUsage/{userId}/days/{dayId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null
+        && request.auth.uid == userId
+        && request.resource.data.count == 1
+        && request.resource.data.usedAt is timestamp;
+      allow update, delete: if false;
+    }
+  }
+}

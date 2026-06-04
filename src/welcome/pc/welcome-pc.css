@@ -357,6 +357,7 @@
 }
 
 .welcome-pc__beta-note {
+  line-height: 1.55;
   margin: calc(0.55rem * var(--welcome-scale)) 0 0;
   font-size: calc(0.88rem * var(--welcome-scale));
   font-weight: 700;

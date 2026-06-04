@@ -258,44 +258,34 @@ export default function WelcomePcScreen({
                 />
               </div>
               <div className="welcome-pc__stage-cta">
-                <TooltipGuide
-                  storageKey="welcome-start-v2"
-                  placement="right"
-                  offsetX={-69}
-                  offsetY={-51}
-                  imageSrc={MOMO_TOOLTIP}
-                  imageAlt="모모"
-                  message="시작해보자냥!"
-                >
-                  {!authReady ? (
-                    <button
-                      type="button"
-                      className="btn-welcome-primary welcome-pc__start"
-                      disabled
-                    >
-                      로그인 확인 중…
-                    </button>
-                  ) : loggedIn ? (
-                    <button
-                      type="button"
-                      className="btn-welcome-primary welcome-pc__start"
-                      onClick={onStart}
-                    >
-                      검수하기
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      className="btn-welcome-primary welcome-pc__start welcome-pc__auth-submit"
-                      onClick={handleGoogleAuth}
-                      disabled={authPending}
-                    >
-                      {authPending
-                        ? 'Google 로그인 연결 중…'
-                        : '구글 회원가입 · 로그인'}
-                    </button>
-                  )}
-                </TooltipGuide>
+                {!authReady ? (
+                  <button
+                    type="button"
+                    className="btn-welcome-primary welcome-pc__start"
+                    disabled
+                  >
+                    로그인 확인 중…
+                  </button>
+                ) : loggedIn ? (
+                  <button
+                    type="button"
+                    className="btn-welcome-primary welcome-pc__start"
+                    onClick={onStart}
+                  >
+                    검수하기
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="btn-welcome-primary welcome-pc__start welcome-pc__auth-submit"
+                    onClick={handleGoogleAuth}
+                    disabled={authPending}
+                  >
+                    {authPending
+                      ? 'Google 로그인 연결 중…'
+                      : '구글 회원가입 · 로그인'}
+                  </button>
+                )}
                 {authError && !loggedIn ? (
                   <p
                     className="welcome-pc__auth-error welcome-pc__auth-error--stage"
@@ -305,7 +295,9 @@ export default function WelcomePcScreen({
                   </p>
                 ) : null}
                 <p className="welcome-pc__beta-note welcome-pc__steps-note--stage">
-                  오픈베타 기간 동안 모든 기능을 제공합니다
+                  오픈베타: 첫 검수는 무료,
+                  <br />
+                  이후 회원당 하루 1회 전 기능 검수
                 </p>
               </div>
             </div>
