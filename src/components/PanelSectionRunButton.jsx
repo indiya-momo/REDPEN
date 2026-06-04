@@ -6,6 +6,7 @@
  *   label?: string,
  *   processingLabel?: string,
  *   className?: string,
+ *   title?: string,
  * }} props
  */
 export default function PanelSectionRunButton({
@@ -15,12 +16,14 @@ export default function PanelSectionRunButton({
   label = '시작',
   processingLabel = '검사 중…',
   className = '',
+  title,
 }) {
   return (
     <button
       type="button"
       className={`btn-add panel-section-run-btn ${className}`.trim()}
       disabled={disabled || isProcessing}
+      title={title}
       onClick={() => onClick()}
     >
       {isProcessing ? processingLabel : label}

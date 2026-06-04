@@ -74,8 +74,16 @@ function assertConfigured() {
   }
 }
 
+const PUBLIC_APP_URL = 'https://indiya.vercel.app';
+
 export function mapFirebaseAuthError(error) {
   const code = error?.code ?? '';
+  if (code === 'auth/unauthorized-domain' && import.meta.env.DEV) {
+    console.warn(
+      '[auth] unauthorized-domain — Firebase Console → Authentication → Authorized domains에 추가:',
+      typeof window !== 'undefined' ? window.location.host : '',
+    );
+  }
   const messages = {
     'auth/popup-closed-by-user': '로그인 창이 닫혔습니다.',
     'auth/popup-blocked':
@@ -83,9 +91,9 @@ export function mapFirebaseAuthError(error) {
     'auth/cancelled-popup-request':
       '로그인 창이 이미 열려 있습니다. 잠시 후 다시 시도해 주세요.',
     'auth/unauthorized-domain':
-      'Firebase → Authentication → Settings → Authorized domains에 이 사이트 주소(indiya.vercel.app, localhost)를 추가해 주세요.',
+      `이 주소에서는 로그인을 할 수 없습니다.\n\n공식 사이트 ${PUBLIC_APP_URL} 에서 「구글로 시작하기」를 다시 시도해 주세요.`,
     'auth/operation-not-allowed':
-      'Firebase 콘솔에서 Google 로그인(Sign-in method)을 활성화해 주세요.',
+      '지금은 Google 로그인을 사용할 수 없습니다. 잠시 후 다시 시도해 주세요.',
     'auth/account-exists-with-different-credential':
       '이미 다른 방식으로 가입된 계정입니다.',
     'auth/web-storage-unsupported':

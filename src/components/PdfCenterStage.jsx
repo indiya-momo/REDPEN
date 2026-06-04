@@ -177,10 +177,11 @@ export default function PdfCenterStage({
                     storageKey={uploadGuideStorageKey}
                     placement="left"
                     bubbleType="left"
-                    offsetX={150}
+                    offsetX={60}
                     offsetY={-50}
                     imageSrc={null}
                     pinned={uploadGuidePinned}
+                    showConfirm={false}
                     message="처음 할 일은 이거다냥"
                     onDismiss={onUploadGuideDismiss}
                   >

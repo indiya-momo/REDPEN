@@ -171,6 +171,7 @@ function fixedTooltipPosition(rect, placement, offsetX, offsetY) {
  *   })[] | null,
  *   bubbleGuideStep?: string | number | null,
  *   pinned?: boolean,
+ *   showConfirm?: boolean,
  *   children: import('react').ReactElement,
  * }} props
  */
@@ -190,6 +191,7 @@ export default function TooltipGuide({
   alignToBubbleChain = null,
   bubbleGuideStep = null,
   pinned = false,
+  showConfirm = true,
   children,
 }) {
   const anchorRef = useRef(/** @type {HTMLSpanElement | null} */ (null));
@@ -333,13 +335,15 @@ export default function TooltipGuide({
             <div className="tooltip-guide__message">{message}</div>
           ) : null}
         </div>
-        <button
-          type="button"
-          className="tooltip-guide__confirm"
-          onClick={handleConfirm}
-        >
-          확인
-        </button>
+        {showConfirm ? (
+          <button
+            type="button"
+            className="tooltip-guide__confirm"
+            onClick={handleConfirm}
+          >
+            확인
+          </button>
+        ) : null}
       </div>
     </div>
   ) : null;

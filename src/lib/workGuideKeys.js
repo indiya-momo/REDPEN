@@ -16,7 +16,7 @@ import { clearTooltipGuideDismissed } from './tooltipGuideStorage.js';
  *
  * 말풍선 위치: UI 앵커 기준 (`TooltipGuide` placement + offset px). 뷰포트 x,y 숫자는
  * 브라우저 창 기준이라 인디야 작업면만의 2880×1454 좌표와 1:1로 안 맞음.
- * - **2번** 앵커: 좌패널 기준 이름 옆 `>` (`panel-left__criteria-picker-toggle`)
+ * - **2번** 앵커: 기준 이름 옆 `>` · 말풍선 위치: 실행 행(`spelling-tab-layout__run-row`) 아래
  */
 
 export const WORK_GUIDE_KEYS = {

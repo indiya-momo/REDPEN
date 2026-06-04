@@ -41,6 +41,7 @@ import { assertBetaDailyCheckOrAlert } from '../lib/betaDailyQuota.js';
  *   setProgress: (v: { current: number, total: number, phase: string } | null) => void,
  *   afterCheckRef: React.MutableRefObject<() => Promise<boolean>>,
  *   authUid?: string,
+ *   authEmail?: string,
  *   onBetaQuotaConsumed?: () => void,
  * }} options
  */
@@ -56,6 +57,7 @@ export function useRuleCheck({
   setProgress,
   afterCheckRef,
   authUid = '',
+  authEmail = '',
   onBetaQuotaConsumed,
 }) {
   const [spellingResults, setSpellingResults] = useState([]);
@@ -193,6 +195,7 @@ export function useRuleCheck({
 
       if (
         !(await assertBetaDailyCheckOrAlert(authUid, {
+          authEmail,
           onConsumed: onBetaQuotaConsumed,
         }))
       ) {
@@ -353,6 +356,7 @@ export function useRuleCheck({
 
       if (
         !(await assertBetaDailyCheckOrAlert(authUid, {
+          authEmail,
           onConsumed: onBetaQuotaConsumed,
         }))
       ) {
@@ -424,6 +428,7 @@ export function useRuleCheck({
       setProgress,
       afterCheckRef,
       authUid,
+      authEmail,
       onBetaQuotaConsumed,
     ],
   );

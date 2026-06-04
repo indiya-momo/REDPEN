@@ -32,6 +32,7 @@ export const TOC_BODY_RESULT_SOURCE = 'toc-body';
  *   setProgress: (v: { current: number, total: number, phase: string } | null) => void,
  *   afterCheckRef: React.MutableRefObject<() => Promise<boolean>>,
  *   authUid?: string,
+ *   authEmail?: string,
  *   onBetaQuotaConsumed?: () => void,
  * }} options
  */
@@ -49,6 +50,7 @@ export function useTocBodyCheck({
   setProgress,
   afterCheckRef,
   authUid = '',
+  authEmail = '',
   onBetaQuotaConsumed,
 }) {
   const [results, setResults] = useState([]);
@@ -108,6 +110,7 @@ export function useTocBodyCheck({
 
     if (
       !(await assertBetaDailyCheckOrAlert(authUid, {
+        authEmail,
         onConsumed: onBetaQuotaConsumed,
       }))
     ) {
@@ -161,6 +164,7 @@ export function useTocBodyCheck({
     setProgress,
     afterCheckRef,
     authUid,
+    authEmail,
     onBetaQuotaConsumed,
   ]);
 

@@ -26,6 +26,7 @@ import {
   subscribeAuthSession,
 } from './lib/firebaseAuth.js';
 import { consumeReturnToMainWorkspace, markReturnToMainWorkspace } from './lib/returnToWorkspace.js';
+import { clearWorkSession } from './lib/sessionStore.js';
 
 export default function App() {
   const auxWindow =
@@ -219,8 +220,13 @@ export default function App() {
       }
       onSaveRules={handleSaveRules}
       onSaveCriteriaPreset={handleSaveCriteriaPreset}
-      onOpenWelcome={() => setScreen('welcome')}
+      onOpenWelcome={() => {
+        void clearWorkSession();
+        setMainWorkTab('spelling');
+        setScreen('welcome');
+      }}
       onLogout={async () => {
+        await clearWorkSession();
         await signOutUser();
         setMainWorkTab('spelling');
         setScreen('welcome');
