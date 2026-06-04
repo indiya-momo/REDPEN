@@ -8,8 +8,6 @@ import {
   getCurrentUserSession,
   mapFirebaseAuthError,
 } from '../../lib/firebaseAuth.js';
-import { trackFeedbackOpened } from '../../lib/analytics.js';
-import { openFeedbackFormView } from '../../lib/feedbackConfig.js';
 import { publicAssetUrl } from '../../lib/publicAssetUrl.js';
 import {
   getUserProfile,
@@ -295,11 +293,6 @@ export default function WelcomePcScreen({
                       : '구글로 시작하기'}
                   </button>
                 )}
-                {!loggedIn && authReady ? (
-                  <p className="welcome-pc__auth-hint">
-                    처음이면 Google 계정으로 자동 가입됩니다.
-                  </p>
-                ) : null}
                 {authError && !loggedIn ? (
                   <p
                     className="welcome-pc__auth-error welcome-pc__auth-error--stage"
@@ -308,16 +301,7 @@ export default function WelcomePcScreen({
                     {authError}
                   </p>
                 ) : null}
-                <button
-                  type="button"
-                  className="welcome-pc__feedback-link"
-                  onClick={() => {
-                    trackFeedbackOpened();
-                    openFeedbackFormView();
-                  }}
-                >
-                  베타 소감 남기기 (Google Form · 약 3분)
-                </button>
+                <p className="welcome-pc__auth-hint">크롬 브라우저 사용을 권장합니다</p>
               </div>
             </div>
           )}

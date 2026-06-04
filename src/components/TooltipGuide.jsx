@@ -278,11 +278,12 @@ export default function TooltipGuide({
       event.preventDefault();
       event.stopPropagation();
       if (dismissed) return;
+      if (pinned) return;
       dismissTooltipGuide(storageKey);
       setDismissed(true);
       onDismiss?.();
     },
-    [dismissed, storageKey, onDismiss],
+    [dismissed, storageKey, onDismiss, pinned],
   );
 
   const showMomo = imageSrc != null && imageSrc !== '';

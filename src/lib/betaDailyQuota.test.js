@@ -79,3 +79,35 @@ describe('isBetaQuotaAdminExempt', () => {
     }
   });
 });
+
+describe('isBetaDailyQuotaEnforcedForUser localhost dev', () => {
+  const prevDev = import.meta.env.DEV;
+  const prevForce = import.meta.env.VITE_BETA_QUOTA_FORCE_LOCAL;
+
+  afterEach(() => {
+    import.meta.env.DEV = prevDev;
+    import.meta.env.VITE_BETA_QUOTA_FORCE_LOCAL = prevForce;
+    vi.unstubAllGlobals();
+    vi.resetModules();
+  });
+
+  it('localhost dev면 한도 미적용', async () => {
+    import.meta.env.DEV = true;
+    import.meta.env.VITE_BETA_QUOTA_FORCE_LOCAL = 'false';
+    vi.stubGlobal('window', { location: { hostname: 'localhost' } });
+    vi.resetModules();
+    const mod = await import('./betaDailyQuota.js');
+    expect(mod.isBetaDailyQuotaEnforcedForUser('uid-1', 'a@b.c')).toBe(false);
+  });
+
+  it('FORCE_LOCAL이면 localhost dev에서도 한도 적용', async () => {
+    import.meta.env.DEV = true;
+    import.meta.env.VITE_BETA_QUOTA_FORCE_LOCAL = 'true';
+    vi.stubGlobal('window', { location: { hostname: 'localhost' } });
+    vi.resetModules();
+    const mod = await import('./betaDailyQuota.js');
+    if (mod.isBetaDailyQuotaEnabled()) {
+      expect(mod.isBetaDailyQuotaEnforcedForUser('uid-1', 'a@b.c')).toBe(true);
+    }
+  });
+});

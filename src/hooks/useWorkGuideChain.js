@@ -1,7 +1,12 @@
-import { useCallback, useLayoutEffect, useMemo, useState } from 'react';
-import { getWorkGuideChainState } from '../lib/workGuideChainState.js';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react';
+import {
+  devWorkGuideStepFromChain,
+  getWorkGuideChainState,
+} from '../lib/workGuideChainState.js';
 import {
   clearAllWorkGuideDismissals,
+  isWorkGuidePinned,
+  setDevWorkGuideForceStep,
   workGuideStorageKey,
 } from '../lib/workGuideKeys.js';
 import { dismissTooltipGuide } from '../lib/tooltipGuideStorage.js';
@@ -21,8 +26,9 @@ export function useWorkGuideChain(uid, ctx) {
   const [rev, setRev] = useState(0);
   const bump = useCallback(() => setRev((n) => n + 1), []);
 
-  /** 이 화면에 들어올 때마다 1번부터 말풍선 재표시 (일단 임시 동작) */
+  /** 작업 화면 진입 시 1번부터 재표시 — 로컬 dev/HMR에서는 초기화하지 않음(말풍선 튜닝 유지) */
   useLayoutEffect(() => {
+    if (import.meta.env.DEV) return;
     clearAllWorkGuideDismissals(uid);
     setRev((n) => n + 1);
   }, [uid]);
@@ -34,6 +40,7 @@ export function useWorkGuideChain(uid, ctx) {
 
   const dismiss = useCallback(
     (key) => {
+      if (isWorkGuidePinned()) return;
       dismissTooltipGuide(storageKey(key));
       bump();
     },
@@ -57,6 +64,12 @@ export function useWorkGuideChain(uid, ctx) {
       rev,
     ],
   );
+
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+    const step = devWorkGuideStepFromChain(chain);
+    if (step != null) setDevWorkGuideForceStep(step);
+  }, [chain]);
 
   return {
     storageKey,

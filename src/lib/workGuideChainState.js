@@ -1,5 +1,64 @@
-import { WORK_GUIDE_KEYS, isWorkGuidePinned } from './workGuideKeys.js';
+import {
+  WORK_GUIDE_KEYS,
+  getDevWorkGuideForceStep,
+  isWorkGuidePinned,
+} from './workGuideKeys.js';
 import { isTooltipGuideDismissed } from './tooltipGuideStorage.js';
+
+/**
+ * @param {ReturnType<typeof getWorkGuideChainState>} chain
+ * @returns {number | null}
+ */
+export function devWorkGuideStepFromChain(chain) {
+  if (chain.showPreUploadGuide) return 0;
+  if (chain.showPdfOpenedGuide) return 1;
+  if (chain.showLeftCriteriaGuide) return 2;
+  if (chain.showFirstResultGuide) return 3;
+  if (chain.showConsistencyGuide) return 4;
+  if (chain.showAuxiliaryVerbGuide) return 5;
+  if (chain.showRuleSetSaveGuide) return 6;
+  if (chain.showWorkExitGuide) return 7;
+  return null;
+}
+
+/**
+ * @param {number} step
+ * @param {ReturnType<typeof getWorkGuideChainState>} empty
+ * @param {{
+ *   hasPdf: boolean,
+ *   pageTextsReady: boolean,
+ *   workTab: 'spelling' | 'consistency',
+ *   spellingCheckDone: boolean,
+ * }} ctx
+ * @param {boolean} pinAll
+ */
+function getDevForcedWorkGuideChain(step, empty, ctx, pinAll) {
+  const { hasPdf, pageTextsReady } = ctx;
+  const base = { ...empty, pinAll, workGuideOpen: true };
+  if (step === 0) {
+    if (!hasPdf) return { ...base, showPreUploadGuide: true };
+    return null;
+  }
+  if (!hasPdf) return null;
+  switch (step) {
+    case 1:
+      return pageTextsReady ? { ...base, showPdfOpenedGuide: true } : null;
+    case 2:
+      return pageTextsReady ? { ...base, showLeftCriteriaGuide: true } : null;
+    case 3:
+      return pageTextsReady ? { ...base, showFirstResultGuide: true } : null;
+    case 4:
+      return { ...base, showConsistencyGuide: true };
+    case 5:
+      return { ...base, showAuxiliaryVerbGuide: true };
+    case 6:
+      return { ...base, showRuleSetSaveGuide: true };
+    case 7:
+      return { ...base, showWorkExitGuide: true };
+    default:
+      return null;
+  }
+}
 
 /**
  * @param {string} storageKey
@@ -58,6 +117,12 @@ export function getWorkGuideChainState(
     showWorkExitGuide: false,
     workGuideOpen: false,
   };
+
+  const devForceStep = getDevWorkGuideForceStep();
+  if (devForceStep != null) {
+    const forced = getDevForcedWorkGuideChain(devForceStep, empty, ctx, pinAll);
+    if (forced) return forced;
+  }
 
   if (!hasPdf) {
     const showPreUploadGuide = !d(WORK_GUIDE_KEYS.PRE_UPLOAD);

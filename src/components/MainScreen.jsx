@@ -45,6 +45,7 @@ import { getUserProfile } from '../lib/userProfileStorage.js';
 import { WORK_GUIDE_KEYS } from '../lib/workGuideKeys.js';
 import { useWorkGuideChain } from '../hooks/useWorkGuideChain.js';
 import { useBetaDailyQuota } from '../hooks/useBetaDailyQuota.js';
+import { resolveQuotaAuthEmail } from '../lib/betaDailyQuota.js';
 import { formatRuleSetSavedDate } from '../lib/ruleSetsStorage.js';
 import {
   buildTabEntries,
@@ -76,17 +77,24 @@ const WORK_GUIDE_2_ALIGN_CHAIN = [
 ];
 
 /** 3번 — 가로: 인사말(○○님 안녕하세요) 왼쪽, 세로: 2번 아래 10px */
-/** 4·6번 — 우측 상단 인사말(○○님 안녕하세요) 위치 */
+/** 4번 — 우측 상단 인사말(○○님 안녕하세요) 위치 */
 const WORK_GUIDE_GREETING_ALIGN = {
   selector: '.work-guide-anchor--greeting',
   leftFromTargetLeft: 0,
   topFromTargetTop: 20,
 };
 
-/** 7번 — 로그아웃 버튼 아래 */
+/** 6번 — 4번과 동일 앵커, 위로 15px */
+const WORK_GUIDE_6_ALIGN = {
+  selector: '.work-guide-anchor--greeting',
+  leftFromTargetLeft: 0,
+  topFromTargetTop: 5,
+};
+
+/** 7번 — 로그아웃 버튼 아래, 왼쪽 350px */
 const WORK_GUIDE_7_ALIGN = {
   selector: '.work-guide-anchor--logout',
-  leftFromTargetLeft: 0,
+  leftFromTargetLeft: -350,
   topFromTargetBottom: 10,
 };
 
@@ -288,7 +296,7 @@ export default function MainScreen({
   }
 
   const authUid = authSession?.uid ?? '';
-  const authEmail = authSession?.email ?? '';
+  const authEmail = resolveQuotaAuthEmail(authSession);
   void profileOnboardingRev;
   const greetingName = useMemo(() => {
     void profileOnboardingRev;
@@ -715,16 +723,23 @@ export default function MainScreen({
       placement="bottom"
       bubbleType="left"
       useFixedLayer
-      alignToBubble={WORK_GUIDE_GREETING_ALIGN}
+      alignToBubble={WORK_GUIDE_6_ALIGN}
       bubbleGuideStep="6"
       offsetX={0}
       offsetY={8}
       pinned={workGuide.pinAll}
       message={
         <>
-          이때까지 설정한 기준을 저장할 수 있다냥
-          <br />
-          멋진 이름도 붙여보라냥
+          <span className="tooltip-guide__message-line">
+            이때까지 작업한 내용을{' '}
+            <span className="tooltip-guide__save-rules-btn-look">
+              기준 저장
+            </span>
+            으로{' '}
+          </span>
+          <span className="tooltip-guide__message-line">
+            남기고 이름도 붙여보라냥
+          </span>
         </>
       }
       onDismiss={() => workGuide.dismiss(WORK_GUIDE_KEYS.RULE_SET_SAVE)}
@@ -828,7 +843,6 @@ export default function MainScreen({
                       alignToBubbleChain={WORK_GUIDE_2_ALIGN_CHAIN}
                       bubbleGuideStep="2"
                       pinned={workGuide.pinAll}
-                      showConfirm={false}
                       message={
                         <>
                           검수할 기준을 선택하자냥!
@@ -1074,7 +1088,7 @@ export default function MainScreen({
                             검수는 아직 부족한 점도 있다냥
                             <br />
                             <span className="tooltip-guide__feedback-btn-look">
-                              피드백 보내기
+                              피드백 남기기
                             </span>
                             는 언제나 환영이다냥
                             <br />
@@ -1335,17 +1349,15 @@ export default function MainScreen({
                     pinned={workGuide.pinAll}
                     message={
                       <>
-                        여기서 작업을 다시 선택하거나
-                        <br />
-                        로그아웃을 할 수 있다냥
-                        <br />
-                        어려운 점은 없었는지 궁금하다냥(
-                        <span className="tooltip-guide__feedback-btn-look">
-                          피드백
+                        <span className="tooltip-guide__message-line">
+                          여기서 새 작업이나 로그아웃을 할 수 있다냥
                         </span>
-                        ﾐචᆽචﾐ)
-                        <br />
-                        만나서 반가웠고, 또 보자냥!
+                        <span className="tooltip-guide__message-line">
+                          어떤 느낌이었는지 궁금한데...(ﾐචᆽචﾐ)
+                        </span>
+                        <span className="tooltip-guide__message-line">
+                          만나서 반가웠고, 또 보자냥!
+                        </span>
                       </>
                     }
                     onDismiss={() =>
@@ -1386,7 +1398,7 @@ export default function MainScreen({
                   }}
                 >
                   <MessageSquare size={18} aria-hidden />
-                  베타 소감 남기기
+                  피드백 남기기
                 </button>
               </div>
             </div>

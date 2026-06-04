@@ -85,10 +85,24 @@
 
 .tooltip-guide--fixed-layer[data-work-guide-bubble='6'] {
   z-index: 10014;
+  --tooltip-text-max: calc(400px * var(--tooltip-scale, 1));
+  max-width: min(calc(440px * var(--tooltip-scale, 1)), calc(100vw - 28px));
+}
+
+.tooltip-guide--fixed-layer[data-work-guide-bubble='6'] .tooltip-guide__message-line {
+  display: block;
+  white-space: nowrap;
 }
 
 .tooltip-guide--fixed-layer[data-work-guide-bubble='7'] {
   z-index: 10015;
+  --tooltip-text-max: calc(420px * var(--tooltip-scale, 1));
+  max-width: min(calc(460px * var(--tooltip-scale, 1)), calc(100vw - 28px));
+}
+
+.tooltip-guide--fixed-layer[data-work-guide-bubble='7'] .tooltip-guide__message-line {
+  display: block;
+  white-space: nowrap;
 }
 
 .consistency-section-box[data-work-guide-step='auxiliary-box'] {
@@ -255,23 +269,46 @@
     var(--accent-terracotta);
 }
 
-/* 3번 말풍선 — 「피드백 보내기」= 우측 상단 보조 버튼 */
+/* 6번 말풍선 — 「기준 저장」= 좌측 패널 저장 버튼과 동일 톤 */
+.tooltip-guide__save-rules-btn-look {
+  display: inline-flex;
+  align-items: center;
+  margin: 0 1px;
+  padding: calc(4px * var(--tooltip-scale, 1))
+    calc(8px * var(--tooltip-scale, 1));
+  border: 1px solid var(--accent-terracotta);
+  border-radius: calc(var(--radius-ui) * var(--tooltip-scale, 1));
+  font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+  font-size: calc(0.78rem * var(--tooltip-scale, 1));
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  vertical-align: middle;
+  white-space: nowrap;
+  background: var(--color-surface);
+  color: var(--accent-terracotta);
+}
+
+/* 3·7번 말풍선 — 「피드백 남기기」= 우측 상단 피드백 버튼과 동일 톤 */
 .tooltip-guide__feedback-btn-look {
   display: inline-flex;
   align-items: center;
   margin: 0 1px;
   padding: calc(5px * var(--tooltip-scale, 1))
-    calc(8px * var(--tooltip-scale, 1));
-  border: 1px solid var(--color-border-strong);
+    calc(10px * var(--tooltip-scale, 1));
+  border: none;
   border-radius: calc(var(--radius-ui) * var(--tooltip-scale, 1));
-  font-family: inherit;
+  font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
   font-size: calc(0.78rem * var(--tooltip-scale, 1));
   font-weight: 700;
   line-height: 1.2;
+  letter-spacing: -0.02em;
   vertical-align: middle;
   white-space: nowrap;
-  background: var(--color-surface);
-  color: var(--color-text-muted);
+  background: var(--accent-terracotta-deep);
+  color: var(--accent-on-terracotta);
+  box-shadow: 0 calc(2px * var(--tooltip-scale, 1))
+    calc(6px * var(--tooltip-scale, 1)) rgba(115, 75, 50, 0.22);
 }
 
 .panel-left .panel-guide-text,

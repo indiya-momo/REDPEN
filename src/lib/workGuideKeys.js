@@ -41,6 +41,12 @@ export function isWorkGuidePinned() {
     const q = new URLSearchParams(window.location.search);
     if (q.get('workGuidePin') === '1') return true;
     if (q.get('workGuidePin') === '0') return false;
+    if (import.meta.env.DEV) {
+      const host = window.location.hostname;
+      if (host === 'localhost' || host === '127.0.0.1' || host === '[::1]') {
+        return true;
+      }
+    }
   }
   return false;
 }
@@ -52,6 +58,52 @@ export function isWorkGuidePinned() {
 export function workGuideStorageKey(uid, key) {
   const id = typeof uid === 'string' ? uid.trim() : '';
   return id ? `${key}--${id}` : key;
+}
+
+const DEV_WORK_GUIDE_FORCE_KEY = 'indiya-dev-work-guide-force';
+
+/** @returns {boolean} */
+function isLocalDevBrowser() {
+  if (!import.meta.env.DEV || typeof window === 'undefined') return false;
+  const host = window.location.hostname;
+  return host === 'localhost' || host === '127.0.0.1' || host === '[::1]';
+}
+
+/**
+ * 로컬 dev — 마지막으로 본 1~7번(0=업로드 전) 고정. `?workGuide=7` 이 우선.
+ * @returns {number | null}
+ */
+export function getDevWorkGuideForceStep() {
+  if (!isLocalDevBrowser()) return null;
+  const q = new URLSearchParams(window.location.search).get('workGuide');
+  if (q != null && q !== '') {
+    const n = Number(q);
+    if (Number.isInteger(n) && n >= 0 && n <= 7) return n;
+  }
+  try {
+    const stored = sessionStorage.getItem(DEV_WORK_GUIDE_FORCE_KEY);
+    if (stored != null && stored !== '') {
+      const n = Number(stored);
+      if (Number.isInteger(n) && n >= 0 && n <= 7) return n;
+    }
+  } catch {
+    /* ignore */
+  }
+  return null;
+}
+
+/** @param {number | null} step */
+export function setDevWorkGuideForceStep(step) {
+  if (!isLocalDevBrowser()) return;
+  try {
+    if (step == null) {
+      sessionStorage.removeItem(DEV_WORK_GUIDE_FORCE_KEY);
+      return;
+    }
+    sessionStorage.setItem(DEV_WORK_GUIDE_FORCE_KEY, String(step));
+  } catch {
+    /* ignore */
+  }
 }
 
 /** 작업 화면 진입 시 말풍선을 처음부터 다시 보이게 할 때 호출 */

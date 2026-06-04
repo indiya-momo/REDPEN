@@ -1,3 +1,4 @@
+import { getAuth } from 'firebase/auth';
 import {
   doc,
   getDoc,
@@ -9,6 +10,15 @@ import { firebaseApp, isFirebaseAuthConfigured } from './firebaseAuth.js';
 
 const LOCAL_QUOTA_PREFIX = 'indiya-beta-quota-v2--';
 const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
+
+/** @returns {boolean} */
+function isLocalDevQuotaRelaxed() {
+  if (!import.meta.env.DEV) return false;
+  if (import.meta.env.VITE_BETA_QUOTA_FORCE_LOCAL === 'true') return false;
+  if (typeof window === 'undefined') return false;
+  const host = window.location.hostname;
+  return host === 'localhost' || host === '127.0.0.1' || host === '[::1]';
+}
 
 export const BETA_DAILY_QUOTA_ALERT =
   '오늘 무료 검수 1회를 모두 사용했습니다.\n\n' +
@@ -51,6 +61,23 @@ function getBetaQuotaAdminEmailSet() {
 }
 
 /**
+ * 한도 면제·검수 차단에 쓸 로그인 이메일 (session.email 비어 있으면 Firebase user에서 보완)
+ * @param {{ email?: string } | null | undefined} session
+ */
+export function resolveQuotaAuthEmail(session) {
+  const fromSession = (session?.email ?? '').trim();
+  if (fromSession) return fromSession;
+  if (!isFirebaseAuthConfigured || !firebaseApp) return '';
+  const user = getAuth(firebaseApp).currentUser;
+  if (!user) return '';
+  if (user.email?.trim()) return user.email.trim();
+  for (const provider of user.providerData ?? []) {
+    if (provider.email?.trim()) return provider.email.trim();
+  }
+  return '';
+}
+
+/**
  * 오픈베타 1일 1회 한도 면제 — `VITE_BETA_QUOTA_ADMIN_UIDS` / `VITE_BETA_QUOTA_ADMIN_EMAILS`
  * @param {string} uid
  * @param {string} [email]
@@ -68,6 +95,7 @@ export function isBetaQuotaAdminExempt(uid, email = '') {
  * @param {string} [email]
  */
 export function isBetaDailyQuotaEnforcedForUser(uid, email = '') {
+  if (isLocalDevQuotaRelaxed()) return false;
   return (
     isBetaDailyQuotaEnabled() &&
     Boolean(uid.trim()) &&
