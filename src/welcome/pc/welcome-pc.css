@@ -104,6 +104,58 @@
   pointer-events: none;
 }
 
+/* 대문 — 현직 편집자 말풍선 (TooltipGuide 공통 외형만 welcome-pc에서 보정) */
+.welcome-pc__editor-note-anchor .tooltip-guide {
+  --tooltip-scale: 1.12;
+  --tooltip-surface: #fffdf6;
+  --tooltip-stroke: rgba(180, 152, 96, 0.72);
+  --tooltip-radius: calc(22px * var(--tooltip-scale));
+  --tooltip-stroke-w: calc(1.5px * var(--tooltip-scale));
+  --tooltip-pad-x: calc(12px * var(--tooltip-scale));
+  --tooltip-pad-y: calc(10px * var(--tooltip-scale));
+  z-index: 12;
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.38),
+    0 0 0 1px rgba(221, 180, 108, 0.14);
+}
+
+.welcome-pc__editor-note-anchor .tooltip-guide--right::before {
+  content: '';
+  position: absolute;
+  left: calc(-7px * var(--tooltip-scale));
+  top: 50%;
+  width: calc(12px * var(--tooltip-scale));
+  height: calc(12px * var(--tooltip-scale));
+  transform: translateY(-50%) rotate(45deg);
+  background: var(--tooltip-surface);
+  border-left: var(--tooltip-stroke-w) solid var(--tooltip-stroke);
+  border-bottom: var(--tooltip-stroke-w) solid var(--tooltip-stroke);
+  box-sizing: border-box;
+}
+
+.welcome-pc__editor-note-anchor .tooltip-guide__image {
+  width: clamp(calc(52px * var(--tooltip-scale)), 78%, calc(68px * var(--tooltip-scale)));
+  max-height: calc(76px * var(--tooltip-scale));
+}
+
+.welcome-pc__editor-note-anchor .tooltip-guide__message {
+  font-family: var(--font-family-body-brand);
+  font-size: calc(1.02rem * var(--tooltip-scale));
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: -0.02em;
+  color: #5a382f;
+}
+
+.welcome-pc__editor-note-anchor .tooltip-guide__confirm {
+  min-width: calc(52px * var(--tooltip-scale));
+  height: calc(34px * var(--tooltip-scale));
+  border-radius: calc(9px * var(--tooltip-scale));
+  font-family: var(--font-family-body-brand);
+  font-size: calc(0.86rem * var(--tooltip-scale));
+  font-weight: 700;
+}
+
 .welcome-pc__header {
   display: grid;
   justify-items: start;
@@ -358,10 +410,32 @@
 
 .welcome-pc__beta-note {
   line-height: 1.55;
-  margin: calc(0.55rem * var(--welcome-scale)) 0 0;
+  margin: 0;
   font-size: calc(0.88rem * var(--welcome-scale));
   font-weight: 700;
   color: var(--welcome-accent);
+  word-break: keep-all;
+}
+
+.welcome-pc__beta-note--above-cta {
+  box-sizing: border-box;
+  width: var(--welcome-cta-btn-width);
+  max-width: 100%;
+  margin-bottom: calc(0.75rem * var(--welcome-scale));
+  text-align: center;
+}
+
+.welcome-pc__auth-hint {
+  box-sizing: border-box;
+  width: var(--welcome-cta-btn-width);
+  max-width: 100%;
+  margin: calc(0.5rem * var(--welcome-scale)) 0 0;
+  font-family: var(--font-family-body-brand);
+  font-size: calc(0.68rem * var(--welcome-scale));
+  line-height: 1.45;
+  font-weight: 500;
+  color: var(--welcome-text-muted-strong);
+  text-align: center;
   word-break: keep-all;
 }
 
@@ -533,8 +607,7 @@
   margin-inline: auto;
 }
 
-.welcome-pc .btn-welcome-primary.welcome-pc__start,
-.welcome-pc .btn-welcome-primary.welcome-pc__auth-submit {
+.welcome-pc .btn-welcome-primary.welcome-pc__start {
   display: flex;
   box-sizing: border-box;
   width: var(--welcome-cta-btn-width);
@@ -551,6 +624,25 @@
   font-synthesis: weight;
   -webkit-text-stroke: 0.035em currentColor;
   paint-order: stroke fill;
+}
+
+.welcome-pc .btn-welcome-primary.welcome-pc__auth-submit {
+  display: flex;
+  box-sizing: border-box;
+  width: var(--welcome-cta-btn-width);
+  min-width: 0;
+  max-width: var(--welcome-cta-btn-width);
+  margin-inline: auto;
+  flex: 0 0 auto;
+  justify-content: center;
+  padding: calc(1rem * var(--welcome-scale)) calc(1.35rem * var(--welcome-scale));
+  border-radius: var(--radius-ui);
+  font-family: var(--font-family-body-brand);
+  font-size: calc(1.08rem * var(--welcome-scale));
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  -webkit-text-stroke: 0;
+  paint-order: unset;
 }
 
 
