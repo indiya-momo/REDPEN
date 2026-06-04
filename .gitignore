@@ -9,3 +9,13 @@ public/pdfjs/cmaps/
 scripts/browser-thumb-check.mjs
 
 .vercel
+
+# 로컬 메모·mock (저장소에 올리지 않음)
+commits.csv
+
+# welcome-mo 생성·실험용 PNG (배포 에셋: m_before, m_after3, m_diff_*.png)
+public/welcome/m_before_aligned.png
+public/welcome/m_after.png
+public/welcome/m_after2.png
+public/welcome/m_*_mo.png
+public/welcome/m_marks_diff.png

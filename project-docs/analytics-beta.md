@@ -49,6 +49,8 @@ npx -y @posthog/wizard@latest --region eu
 
 키가 없으면 SDK는 **로드하지 않습니다** (로컬·Pages 빌드 그대로 동작).
 
+**Vercel 배포:** Marketplace에서 PostHog를 연결하면 `NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN` · `NEXT_PUBLIC_POSTHOG_HOST` 가 들어가며, 앱이 자동으로 읽습니다. 절차는 `project-docs/vercel-posthog.md`.
+
 ---
 
 ## 이벤트 6개 (수동 capture만, autocapture OFF)

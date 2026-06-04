@@ -36,9 +36,16 @@ if (fs.existsSync(pdfjsCmapsSrc)) {
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
   const devPort = Number(env.DEV_PORT) || 5173;
+  const deployTarget = process.env.VERCEL
+    ? 'vercel'
+    : process.env.VITE_DEPLOY_TARGET?.trim() || '';
 
   return {
   base: process.env.VITE_BASE || '/',
+  envPrefix: ['VITE_', 'NEXT_PUBLIC_POSTHOG'],
+  define: {
+    'import.meta.env.VITE_DEPLOY_TARGET': JSON.stringify(deployTarget),
+  },
   plugins: [react()],
   test: {
     environment: 'node',
