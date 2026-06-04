@@ -165,7 +165,9 @@ export function useWorkSession(pdf, ruleCheck, tocCheck) {
         });
         if (!mounted.current || isRestoreStale(generation)) return;
 
-        const applied = await applyExtractValidation(doc, pages);
+        const applied = await applyExtractValidation(doc, pages, {
+          sizeBytes: saved.pdfByteLength ?? saved.pdfBuffer?.byteLength ?? 0,
+        });
         if (!mounted.current || isRestoreStale(generation)) return;
         if (!applied.ok) {
           setSessionHint(null);
