@@ -25,7 +25,14 @@ export default function MomoHero({ variant = 'default' }) {
     if (reduceMotion || usePoster) return;
     const video = videoRef.current;
     if (!video) return;
-    video.play().catch(() => setUsePoster(true));
+    try {
+      const playResult = video.play();
+      if (playResult && typeof playResult.catch === 'function') {
+        playResult.catch(() => setUsePoster(true));
+      }
+    } catch {
+      setUsePoster(true);
+    }
   }, [reduceMotion, usePoster]);
 
   const showPoster = reduceMotion || usePoster;

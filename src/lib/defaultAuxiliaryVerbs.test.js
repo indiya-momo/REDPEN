@@ -296,6 +296,18 @@ describe('ensureDefaultAuxiliaryVerbs', () => {
     expect(matches(haeWat, '역할을 해 왔다.')).toBe(true);
   });
 
+  it('verb-oda 려 왔 — 달려 왔다(ㄹ 본용언+오다)', () => {
+    const rules = ensureDefaultAuxiliaryVerbs([]);
+    const ryoWat = rules.find(
+      (r) =>
+        r.bonBojoItemId === 'verb-oda' &&
+        r.tailWord === '려 왔' &&
+        r.enabled,
+    );
+    expect(ryoWat).toBeTruthy();
+    expect(matches(ryoWat, '달려 왔다.')).toBe(true);
+  });
+
 });
 
 

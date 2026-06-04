@@ -40,6 +40,7 @@ import TocBodySetupPanel from '../toc-body/components/TocBodySetupPanel.jsx';
 import { isTocBodyCheckEnabled } from '../lib/featureFlags.js';
 import DetailsChevron from './DetailsChevron.jsx';
 import PanelSectionRunButton from './PanelSectionRunButton.jsx';
+import TooltipGuide from './TooltipGuide.jsx';
 
 /**
  * @param {{
@@ -67,6 +68,12 @@ import PanelSectionRunButton from './PanelSectionRunButton.jsx';
  *   onRunRulesCheck?: () => void | Promise<void>,
  *   hasPdf?: boolean,
  *   isProcessing?: boolean,
+ *   auxiliaryVerbGuide?: {
+ *     storageKey: string,
+ *     alignToBubbleChain: readonly object[],
+ *     pinned: boolean,
+ *     onDismiss: () => void,
+ *   } | null,
  * }} props
  */
 export default function ConsistencyPanel({
@@ -94,6 +101,7 @@ export default function ConsistencyPanel({
   onRunRulesCheck = () => {},
   hasPdf = false,
   isProcessing = false,
+  auxiliaryVerbGuide = null,
 }) {
   const [literalInput, setLiteralInput] = useState('');
   const [slotInput, setSlotInput] = useState('');
@@ -328,7 +336,10 @@ export default function ConsistencyPanel({
         </div>
       </section>
 
-      <section className="consistency-section-box">
+      <section
+        className="consistency-section-box"
+        data-work-guide-step="auxiliary-box"
+      >
         <details className="consistency-auxiliary-details" open>
           <summary
             id="consistency-aux-heading"
@@ -365,11 +376,9 @@ export default function ConsistencyPanel({
             </span>
           </summary>
           <p className="auxiliary-checklist-intro">
-            (개발중) 일관성 「문자열 찾기」와 별도입니다. 아래 항목을 켠 뒤 표기
-            일관성 검사를 다시 실행하세요.
+            (개발중) ‘본용언+보조용언’ 붙여 쓸 수 있는 표기를 찾습니다
             <br />
-            stem(예: 해 왔)은 띄움만 찾습니다. 역할을 해 왔다처럼 명사+조사+해는
-            포함하고, 주장해·상상해·기다려(allow 제외) 등 3음절 본용언은 제외합니다.
+            본용언이 3음절 이상 복합어(예:생각하다)이면 검색에서 제외됩니다
           </p>
           <RegisteredList
             entries={auxiliaryEntries}
@@ -382,6 +391,35 @@ export default function ConsistencyPanel({
             isRequired={(row) => isBonBojoRequiredItem(row.bonBojoItemId)}
           />
         </details>
+        {auxiliaryVerbGuide ? (
+          <TooltipGuide
+            storageKey={auxiliaryVerbGuide.storageKey}
+            placement="right"
+            bubbleType="left"
+            useFixedLayer
+            alignToBubbleChain={auxiliaryVerbGuide.alignToBubbleChain}
+            bubbleGuideStep="5"
+            offsetX={0}
+            offsetY={0}
+            pinned={auxiliaryVerbGuide.pinned}
+            message={
+              <>
+                <span className="tooltip-guide__gothic-label">
+                  본용언+보조용언 표기
+                </span>
+                를 검색한다냥
+                <br />
+                아직 개발중이라 부족한 점도 있다냥
+              </>
+            }
+            onDismiss={auxiliaryVerbGuide.onDismiss}
+          >
+            <span
+              className="work-guide-anchor work-guide-anchor--auxiliary"
+              aria-hidden
+            />
+          </TooltipGuide>
+        ) : null}
       </section>
 
       {isTocBodyCheckEnabled() ? (

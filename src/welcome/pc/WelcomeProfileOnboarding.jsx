@@ -14,12 +14,14 @@ const NICKNAME_PRINT = publicAssetUrl('welcome/nickname_print.png');
  *   uid: string,
  *   defaultNickname?: string,
  *   onComplete: () => void,
+ *   surface?: 'work-pane' | 'welcome-pc',
  * }} props
  */
 export default function WelcomeProfileOnboarding({
   uid,
   defaultNickname = '',
   onComplete,
+  surface = 'work-pane',
 }) {
   const titleId = useId();
   const [nicknameInput, setNicknameInput] = useState(defaultNickname);
@@ -54,9 +56,14 @@ export default function WelcomeProfileOnboarding({
     onComplete();
   }
 
+  const mountClass =
+    surface === 'welcome-pc'
+      ? 'profile-onboarding-mount--welcome-pc'
+      : 'profile-onboarding-mount--pane';
+
   return (
     <div
-      className="profile-onboarding-mount profile-onboarding-mount--open profile-onboarding-mount--pane"
+      className={`profile-onboarding-mount profile-onboarding-mount--open ${mountClass}`}
       role="presentation"
     >
       <div

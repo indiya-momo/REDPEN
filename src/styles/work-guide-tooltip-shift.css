@@ -1,0 +1,20 @@
+/**
+ * 123번 말풍선 위치 — 사용자가 말하는 방향과 CSS translate 부호를 맞춤.
+ *
+ * 지시할 때 (main-screen.css에서 --wg-shift-x / --wg-shift-y):
+ * - 왼쪽 N%  → --wg-shift-x: N%
+ * - 오른쪽 N% → --wg-shift-x: -N%
+ * - 아래 N%  → --wg-shift-y: -N%
+ * - 위 N%    → --wg-shift-y: +N%
+ * - 시계: 5시=우하(x-,y-), 7시=좌하(x+,y-), 10시=좌상(x+,y+)
+ *
+ * transform: X는 calc(-1 * x), Y는 calc(-50% - y) (아래=음수).
+ */
+
+.spelling-tab-layout__calibration .tooltip-guide--right,
+.work-guide-step-3 .tooltip-guide--right {
+  transform: translate(
+    calc(-1 * var(--wg-shift-x, 0)),
+    calc(-50% - var(--wg-shift-y, 0))
+  ) !important;
+}

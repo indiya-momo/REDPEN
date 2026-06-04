@@ -102,6 +102,25 @@ describe('ruleEngine', () => {
     expect(results[0]?.instances.length ?? 0).toBeGreaterThan(0);
   });
 
+  it('auxiliary-verb — 달려 왔다(려 왔 stem)', () => {
+    const page = {
+      pageNum: 380,
+      text: '그는 달려 왔다.\n',
+      items: [],
+      itemRefs: [],
+    };
+    const ryoWat = ensureDefaultAuxiliaryVerbs([]).filter(
+      (r) =>
+        r.enabled &&
+        r.patternKind === 'auxiliary-verb' &&
+        r.bonBojoItemId === 'verb-oda' &&
+        r.tailWord === '려 왔',
+    );
+    const { results } = runRuleCheck([page], ryoWat);
+    const hits = results.flatMap((g) => g.instances.map((i) => i.matchedText));
+    expect(hits.some((h) => /달려\s+왔/.test(h))).toBe(true);
+  });
+
   it('auxiliary-verb — 역할을 해 왔다(일관성 문자열 찾기와 동일 문장)', () => {
     const page = {
       pageNum: 99,

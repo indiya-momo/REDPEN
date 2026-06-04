@@ -22,6 +22,288 @@
   overflow: hidden;
 }
 
+/* 2·3번 말풍선 — 좌패널 밖으로 말풍선이 나갈 수 있게 */
+.panel-left.panel-left--work-guide {
+  overflow: visible;
+  z-index: 4;
+}
+
+.panel-left.panel-left--work-guide .spelling-tab-layout {
+  overflow: visible;
+}
+
+.spelling-tab-layout__calibration {
+  position: relative;
+  overflow: visible;
+  z-index: 2;
+}
+
+.spelling-tab-layout__calibration .tooltip-guide {
+  z-index: 10001;
+}
+
+/* 1번: 왼쪽 30px (--wg-shift-x 양수) */
+.spelling-tab-layout__calibration .tooltip-guide--right {
+  --wg-shift-x: 30px;
+  --wg-shift-y: 0%;
+}
+
+.panel-left.panel-left--work-guide .panel-header--tabs,
+.panel-left.panel-left--work-guide .panel-header-toolbar,
+.panel-left.panel-left--work-guide .panel-left__criteria-picker {
+  overflow: visible;
+}
+
+.spelling-tab-layout__run-row .tooltip-guide {
+  z-index: 10002;
+}
+
+.spelling-tab-scroll .tooltip-guide,
+.work-guide-step-3 .tooltip-guide {
+  z-index: 10003;
+}
+
+.tooltip-guide--fixed-layer[data-work-guide-bubble='3'] {
+  z-index: 10011;
+}
+
+.tooltip-guide--fixed-layer[data-work-guide-bubble='4'] {
+  z-index: 10012;
+}
+
+.tooltip-guide--fixed-layer[data-work-guide-bubble='5'] {
+  z-index: 10013;
+}
+
+.tooltip-guide--fixed-layer[data-work-guide-bubble='6'] {
+  z-index: 10014;
+}
+
+.tooltip-guide--fixed-layer[data-work-guide-bubble='7'] {
+  z-index: 10015;
+}
+
+.consistency-section-box[data-work-guide-step='auxiliary-box'] {
+  position: relative;
+}
+
+.consistency-section-box[data-work-guide-step='auxiliary-box'] > .tooltip-guide-anchor {
+  position: absolute;
+  width: 0;
+  height: 0;
+  margin: 0;
+  padding: 0;
+  display: block;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.work-guide-anchor--auxiliary {
+  position: absolute;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.work-guide-anchor--greeting {
+  display: block;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.work-guide-anchor--greeting .pdf-work-pane__greeting {
+  margin: 0;
+}
+
+.pdf-work-pane__topbar .tooltip-guide-anchor {
+  display: block;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* 3번: 5시(오른쪽·아래) 50% */
+.work-guide-step-3 .tooltip-guide--right {
+  --wg-shift-x: -50%;
+  --wg-shift-y: -50%;
+}
+
+.panel-left.panel-left--work-guide .spelling-tab-scroll {
+  position: relative;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.work-guide-step-3 {
+  display: inline-flex;
+  flex-shrink: 0;
+  overflow: visible;
+}
+
+/* 3번 — 결과창과 분리(포털), 스크롤 가로 늘어남 방지 */
+.work-guide-step-3--results-tip {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 1px;
+  height: 1px;
+  z-index: 10003;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.work-guide-step-3--results-tip .tooltip-guide-anchor {
+  display: block;
+  width: 1px;
+  height: 1px;
+}
+
+.work-guide-step-3--results-tip .tooltip-guide__confirm {
+  pointer-events: auto;
+}
+
+.spelling-tab-scroll .spelling-tab-scroll__results {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.work-guide-anchor--guide-result {
+  display: inline-block;
+  width: 0;
+  height: 0;
+  overflow: visible;
+}
+
+.work-guide-anchor {
+  position: relative;
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.work-guide-anchor--run {
+  display: inline-block;
+  width: auto;
+}
+
+.work-guide-anchor--criteria-toggle {
+  display: inline-flex;
+}
+
+.work-guide-anchor--results {
+  display: block;
+  min-height: 0;
+}
+
+.spelling-tab-layout__run-row .tooltip-guide-anchor {
+  display: inline-flex;
+}
+
+.work-guide-anchor--calibration {
+  display: block;
+  width: 100%;
+}
+
+.spelling-tab-layout__calibration .tooltip-guide-anchor {
+  display: block;
+  width: 100%;
+}
+
+/* 1번: 3줄 — 텍스트 열 폭만 조정 (말풍선 여백은 border-image) */
+.spelling-tab-layout__calibration .tooltip-guide {
+  --tooltip-text-max: calc(240px * var(--tooltip-scale));
+}
+
+/* 1번 말풍선 — 「보정」을 실제 보정 버튼과 같은 느낌 */
+.tooltip-guide__calibrate-btn-look {
+  display: inline-block;
+  margin: 0 1px;
+  padding: calc(3px * var(--tooltip-scale, 1))
+    calc(9px * var(--tooltip-scale, 1));
+  border: none;
+  border-radius: calc(var(--radius-ui-sm) * var(--tooltip-scale, 1));
+  font-family: inherit;
+  font-size: calc(0.72rem * var(--tooltip-scale, 1));
+  font-weight: 600;
+  line-height: 1.2;
+  vertical-align: middle;
+  white-space: nowrap;
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+}
+
+/* 2번 말풍선 — 「기준 검수」를 실행 행 버튼과 같은 느낌 */
+.tooltip-guide__run-btn-look {
+  display: inline-block;
+  margin: 0 1px;
+  padding: calc(4.8px * var(--tooltip-scale, 1))
+    calc(12.8px * var(--tooltip-scale, 1));
+  border: 1px solid var(--btn-primary-bg);
+  border-radius: calc(var(--radius-ui-sm) * var(--tooltip-scale, 1));
+  font-family: inherit;
+  font-size: calc(0.936rem * var(--tooltip-scale, 1));
+  font-weight: 700;
+  line-height: 1.2;
+  vertical-align: middle;
+  white-space: nowrap;
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+}
+
+/* 5번·패널 제목 — 고딕 강조 */
+.tooltip-guide__gothic-label {
+  font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--color-text);
+}
+
+/* 4번 말풍선 — 좌측 「일관성 · 목차 확인」탭 칩 */
+.tooltip-guide__work-tab-chip {
+  display: inline-block;
+  margin: 0 2px;
+  padding: calc(5px * var(--tooltip-scale, 1)) calc(8px * var(--tooltip-scale, 1));
+  border: none;
+  border-radius: calc(2px * var(--tooltip-scale, 1))
+    calc(2px * var(--tooltip-scale, 1)) 0 0;
+  font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+  font-size: calc(1.275rem * var(--tooltip-scale, 1));
+  font-weight: 700;
+  line-height: 1.15;
+  vertical-align: middle;
+  white-space: nowrap;
+  background: var(--color-surface-inset);
+  color: var(--color-text-muted);
+}
+
+.tooltip-guide__work-tab-chip--consistency {
+  background: var(--color-surface-raised);
+  color: var(--accent-terracotta-deep);
+  box-shadow: inset 0 calc(-2px * var(--tooltip-scale, 1)) 0
+    var(--accent-terracotta);
+}
+
+/* 3번 말풍선 — 「피드백 보내기」= 우측 상단 보조 버튼 */
+.tooltip-guide__feedback-btn-look {
+  display: inline-flex;
+  align-items: center;
+  margin: 0 1px;
+  padding: calc(5px * var(--tooltip-scale, 1))
+    calc(8px * var(--tooltip-scale, 1));
+  border: 1px solid var(--color-border-strong);
+  border-radius: calc(var(--radius-ui) * var(--tooltip-scale, 1));
+  font-family: inherit;
+  font-size: calc(0.78rem * var(--tooltip-scale, 1));
+  font-weight: 700;
+  line-height: 1.2;
+  vertical-align: middle;
+  white-space: nowrap;
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+}
+
 .panel-left .panel-guide-text,
 .panel-left .consistency-unified-box .hint,
 .panel-left .consistency-toc-section .hint,
@@ -428,8 +710,22 @@
 .spelling-tab-layout__run-row {
   flex-shrink: 0;
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   padding: 4px var(--spelling-block-inset-x) 0;
+}
+
+.spelling-tab-layout__run-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.spelling-tab-layout__run-row-actions--end {
+  margin-left: auto;
+  flex-shrink: 0;
 }
 
 .consistency-embed > .consistency-tab-layout__run-row {
@@ -1143,6 +1439,8 @@
 
 .consistency-section-box .consistency-auxiliary-summary .caution-checklist-select-all {
   grid-column: 2;
+  justify-self: start;
+  min-width: 15px;
 }
 
 .consistency-section-box .consistency-auxiliary-summary::-webkit-details-marker {
@@ -1444,7 +1742,8 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  /* 1번 말풍선이 헤더 아래로 내려와도 잘리지 않게 — 스크롤은 __content에만 */
+  overflow: visible;
 }
 
 .pdf-work-pane__content {

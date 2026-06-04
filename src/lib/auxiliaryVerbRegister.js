@@ -125,11 +125,27 @@ export function isAuxiliaryVerbEntryEnabled(rules, entry) {
  * @param {boolean} enabled
  */
 export function setAllAuxiliaryVerbEntries(rules, entries, enabled) {
-  let next = rules;
+  /** @type {Set<string>} */
+  const itemIds = new Set();
+  /** @type {Set<string>} */
+  const tailWords = new Set();
   for (const entry of entries) {
-    next = toggleAuxiliaryVerbEntry(next, entry, enabled);
+    const itemId = entry.bonBojoItemId?.trim();
+    if (itemId) {
+      if (!isBonBojoLogicOnlyItem(itemId)) itemIds.add(itemId);
+      continue;
+    }
+    const tail = entry.tailWord?.trim();
+    if (tail) tailWords.add(tail);
   }
-  return next;
+  return rules.map((r) => {
+    if (r.patternKind !== 'auxiliary-verb') return r;
+    const itemId = r.bonBojoItemId?.trim();
+    if (itemId && itemIds.has(itemId)) return { ...r, enabled };
+    const tail = r.tailWord?.trim();
+    if (!itemId && tail && tailWords.has(tail)) return { ...r, enabled };
+    return r;
+  });
 }
 
 export function parseAuxiliaryInput(input) {

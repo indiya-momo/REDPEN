@@ -9,7 +9,11 @@ import {
   mapFirebaseAuthError,
 } from '../../lib/firebaseAuth.js';
 import { publicAssetUrl } from '../../lib/publicAssetUrl.js';
-import { getUserProfile } from '../../lib/userProfileStorage.js';
+import {
+  getUserProfile,
+  isOnboardingComplete,
+} from '../../lib/userProfileStorage.js';
+import WelcomeProfileOnboarding from './WelcomeProfileOnboarding.jsx';
 import './welcome-pc.css';
 
 const WELCOME_MOMO_FRAME = welcomeMomoFrame;
@@ -39,11 +43,14 @@ export default function WelcomePcScreen({
 }) {
   const [authError, setAuthError] = useState('');
   const [authPending, setAuthPending] = useState(false);
+  const [profileRev, setProfileRev] = useState(0);
   const enterMainAfterLoginRef = useRef(false);
 
   const session = authSession ?? getCurrentUserSession();
   const uid = session?.uid ?? '';
   const loggedIn = Boolean(uid);
+  const needsWelcomeMessage =
+    loggedIn && authReady && !isOnboardingComplete(uid);
 
   useEffect(() => {
     if (authBootstrapError) setAuthError(authBootstrapError);
@@ -55,6 +62,11 @@ export default function WelcomePcScreen({
       enterMainAfterLoginRef.current ||
       sessionStorage.getItem(ENTER_MAIN_AFTER_GOOGLE_KEY) === '1';
     if (!pending) return;
+    if (!isOnboardingComplete(uid)) {
+      enterMainAfterLoginRef.current = false;
+      sessionStorage.removeItem(ENTER_MAIN_AFTER_GOOGLE_KEY);
+      return;
+    }
     enterMainAfterLoginRef.current = false;
     sessionStorage.removeItem(ENTER_MAIN_AFTER_GOOGLE_KEY);
     onStart();
@@ -70,11 +82,11 @@ export default function WelcomePcScreen({
       session.email?.trim() ||
       '회원'
     );
-  }, [session]);
+  }, [session, profileRev]);
 
   async function handleGoogleAuth() {
     if (loggedIn) {
-      onStart();
+      if (isOnboardingComplete(uid)) onStart();
       return;
     }
     setAuthPending(true);
@@ -86,7 +98,7 @@ export default function WelcomePcScreen({
       if (getCurrentUserSession()?.uid && authReady) {
         enterMainAfterLoginRef.current = false;
         sessionStorage.removeItem(ENTER_MAIN_AFTER_GOOGLE_KEY);
-        onStart();
+        if (isOnboardingComplete(getCurrentUserSession().uid)) onStart();
       }
     } catch (error) {
       enterMainAfterLoginRef.current = false;
@@ -102,7 +114,7 @@ export default function WelcomePcScreen({
       <div className="welcome-pc__layout">
         <div className="welcome-pc__copy">
           <header className="welcome-pc__header">
-            <p className="welcome-pc__eyebrow">인디자인 텍스트 PDF 검수 도구</p>
+            <p className="welcome-pc__eyebrow">텍스트 PDF 검수 서비스</p>
             <h1>
               <span className="welcome-pc__title-main">인디야</span>
               <br />
@@ -110,7 +122,8 @@ export default function WelcomePcScreen({
             </h1>
             <p className="welcome-pc__lead">
               <span className="welcome-pc__lead-line">
-                맞춤법·표기 일관성을 찾는 <strong>인디자인 텍스트 PDF 검수 도구</strong>입니다
+                맞춤법·표기 일관성을 찾는{' '}
+                <strong>텍스트 PDF 검수 서비스</strong>입니다
               </span>
               <span className="welcome-pc__lead-line">
                 원고와 검사 결과는{' '}
@@ -223,71 +236,80 @@ export default function WelcomePcScreen({
         </div>
 
         <aside className="welcome-pc__stage">
-          <div className="welcome-pc__stage-stack">
-            <div className="welcome-pc__portrait">
-              <div className="welcome-pc__portrait-media">
-                <MomoHero variant="gate" />
+          {needsWelcomeMessage ? (
+            <WelcomeProfileOnboarding
+              uid={uid}
+              defaultNickname={session?.displayName ?? ''}
+              surface="welcome-pc"
+              onComplete={() => setProfileRev((n) => n + 1)}
+            />
+          ) : (
+            <div className="welcome-pc__stage-stack">
+              <div className="welcome-pc__portrait">
+                <div className="welcome-pc__portrait-media">
+                  <MomoHero variant="gate" />
+                </div>
+                <img
+                  className="welcome-pc__portrait-frame"
+                  src={WELCOME_MOMO_FRAME}
+                  alt=""
+                  aria-hidden
+                  decoding="async"
+                />
               </div>
-              <img
-                className="welcome-pc__portrait-frame"
-                src={WELCOME_MOMO_FRAME}
-                alt=""
-                aria-hidden
-                decoding="async"
-              />
-            </div>
-            <div className="welcome-pc__stage-cta">
-              <TooltipGuide
-                storageKey="welcome-start-v2"
-                placement="right"
-                offsetX={-69}
-                offsetY={-51}
-                imageSrc={MOMO_TOOLTIP}
-                imageAlt="모모"
-                message="시작해보자냥!"
-              >
-                {!authReady ? (
-                  <button
-                    type="button"
-                    className="btn-welcome-primary welcome-pc__start"
-                    disabled
-                  >
-                    로그인 확인 중…
-                  </button>
-                ) : loggedIn ? (
-                  <button
-                    type="button"
-                    className="btn-welcome-primary welcome-pc__start"
-                    onClick={onStart}
-                  >
-                    검수하기
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    className="btn-welcome-primary welcome-pc__start welcome-pc__auth-submit"
-                    onClick={handleGoogleAuth}
-                    disabled={authPending}
-                  >
-                    {authPending
-                      ? 'Google 로그인 연결 중…'
-                      : 'Google로 회원가입 / 로그인'}
-                  </button>
-                )}
-              </TooltipGuide>
-              {authError && !loggedIn ? (
-                <p
-                  className="welcome-pc__auth-error welcome-pc__auth-error--stage"
-                  role="alert"
+              <div className="welcome-pc__stage-cta">
+                <TooltipGuide
+                  storageKey="welcome-start-v2"
+                  placement="right"
+                  offsetX={-69}
+                  offsetY={-51}
+                  imageSrc={MOMO_TOOLTIP}
+                  imageAlt="모모"
+                  message="시작해보자냥!"
                 >
-                  {authError}
+                  {!authReady ? (
+                    <button
+                      type="button"
+                      className="btn-welcome-primary welcome-pc__start"
+                      disabled
+                    >
+                      로그인 확인 중…
+                    </button>
+                  ) : loggedIn ? (
+                    <button
+                      type="button"
+                      className="btn-welcome-primary welcome-pc__start"
+                      onClick={onStart}
+                    >
+                      검수하기
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      className="btn-welcome-primary welcome-pc__start welcome-pc__auth-submit"
+                      onClick={handleGoogleAuth}
+                      disabled={authPending}
+                    >
+                      {authPending
+                        ? 'Google 로그인 연결 중…'
+                        : '구글 회원가입 · 로그인'}
+                    </button>
+                  )}
+                </TooltipGuide>
+                {authError && !loggedIn ? (
+                  <p
+                    className="welcome-pc__auth-error welcome-pc__auth-error--stage"
+                    role="alert"
+                  >
+                    {authError}
+                  </p>
+                ) : null}
+                <p className="welcome-pc__beta-note welcome-pc__steps-note--stage">
+                  오픈베타 기간 동안 모든 기능을 제공합니다
                 </p>
-              ) : null}
-              <p className="welcome-pc__beta-note welcome-pc__steps-note--stage">
-                오픈베타 기간 동안 모든 기능을 제공합니다
-              </p>
+              </div>
             </div>
-          </div>
+          )}
         </aside>
       </div>
     </div>
