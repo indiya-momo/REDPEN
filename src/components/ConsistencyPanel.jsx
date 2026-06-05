@@ -270,11 +270,14 @@ export default function ConsistencyPanel({
       ) : null}
       <section className="consistency-unified-box" aria-label="표기 일관성 찾기">
         <p className="printed-page-setup__title consistency-panel-section-title">
-          일관성 찾기(1회 검수 8개 이내 추천)
+          일관성 찾기(1회 검수 8개 이내 추천)⭐
         </p>
         <div className="consistency-subsection consistency-subsection--first">
           <p className="hint">
-            한글 · 영문 대소문자 · 띄어쓰기 등을 찾습니다(예: 조선˅시대/조선시대, RED˅PEN/Red˅pen)
+            한글 · 영문 대소문자 · 띄어쓰기 등을 찾습니다 예: 조선˅시대, 조선시대 →
+            '조선시대' 통일
+            <br />
+            (색인 넣기 전 확인 · 넣는 중 위치 찾기에도 편리합니다)
           </p>
           <ConsistencyRegisterField
             value={literalInput}
