@@ -165,6 +165,7 @@ describe('ruleEngine', () => {
     const rules = buildAuxiliaryVerbFindRules('어 내').map((r) => ({
       ...r,
       label: '(아/어) + 내다',
+      bonBojoItemId: 'verb-naeda',
     }));
     const page = {
       pageNum: 1,

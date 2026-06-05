@@ -84,14 +84,20 @@ describe('auxiliaryVerbMatchFilters', () => {
     expect(isBonVerbHeadTooLongForAuxiliary('기다려', '어')).toBe(true);
     expect(isBonVerbHeadTooLongForAuxiliary('주장해', '해')).toBe(true);
     expect(isBonVerbHeadTooLongForAuxiliary('상상해', '해')).toBe(true);
-    expect(isBonVerbHeadTooLongForAuxiliary('만들어', '어')).toBe(false);
+    expect(isBonVerbHeadTooLongForAuxiliary('만들어', '어')).toBe(true); // bon_allow에 있으면 검사 포함
     expect(isBonVerbHeadTooLongForAuxiliary('먹어', '어')).toBe(false);
+    expect(isBonVerbHeadTooLongForAuxiliary('가져다', '다')).toBe(true);
 
     const eoBo = buildAuxiliaryVerbFindRules('어 보')[0];
     const haeBo = buildAuxiliaryVerbFindRules('해 보')[0];
     expect(ruleMatches(eoBo, '먹어 보았다')).toBe(true);
     expect(ruleMatches(haeBo, '상상해 보았다')).toBe(false);
     expect(ruleMatches(haeBo, '주장해 왔다')).toBe(false);
+
+    const daNoh = buildAuxiliaryVerbFindRules('다 놓')[0];
+    daNoh.bonBojoItemId = 'verb-notda';
+    expect(ruleMatches(daNoh, '가져다 놓았다')).toBe(false);
+    expect(ruleMatches(daNoh, '가져다 놓다')).toBe(false);
 
     const allowRule = {
       patternKind: 'auxiliary-verb',
