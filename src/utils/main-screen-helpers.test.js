@@ -117,6 +117,8 @@ describe('clampPageNumber', () => {
     expect(clampPageNumber(0, 10)).toBe(1);
     expect(clampPageNumber(99, 10)).toBe(10);
     expect(clampPageNumber(5, 10)).toBe(5);
+    expect(clampPageNumber(Number.NaN, 10)).toBe(1);
+    expect(clampPageNumber(5, 0)).toBe(1);
   });
 });
 

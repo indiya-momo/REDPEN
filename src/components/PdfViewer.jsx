@@ -134,13 +134,22 @@ export default function PdfViewer({
     let cancelled = false;
     setError(null);
 
+    const safePageNum = Math.min(
+      pdf.numPages,
+      Math.max(1, Math.floor(Number(pageNum))),
+    );
+    if (!Number.isFinite(safePageNum) || safePageNum < 1) {
+      setError('유효하지 않은 페이지 번호입니다.');
+      return undefined;
+    }
+
     (async () => {
       try {
         await cancelRenderTask(renderTaskRef.current);
         renderTaskRef.current = null;
         if (cancelled) return;
 
-        const page = await pdf.getPage(pageNum);
+        const page = await pdf.getPage(safePageNum);
         if (cancelled) return;
 
         const baseViewport = page.getViewport({ scale: 1 });
@@ -148,7 +157,7 @@ export default function PdfViewer({
         const scale = computePdfRenderScale(fitScale, zoomFactor);
         const { viewport, renderTask } = await renderPageToCanvas(
           pdf,
-          pageNum,
+          safePageNum,
           canvasRef.current,
           scale,
           page,

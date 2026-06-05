@@ -16,6 +16,7 @@ const TOOLTIP_GAP = 16;
  *   leftFromTargetLeft?: number,
  *   topFromTargetBottom?: number,
  *   topFromTargetTop?: number,
+ *   fixedTransform?: string,
  * }} spec
  * @returns {import('react').CSSProperties | null}
  */
@@ -30,7 +31,7 @@ function fixedStyleFromAlignSpec(spec) {
     top: useTop
       ? rect.top + spec.topFromTargetTop
       : rect.bottom + (spec.topFromTargetBottom ?? 0),
-    transform: 'none',
+    transform: spec.fixedTransform ?? 'none',
   };
 }
 

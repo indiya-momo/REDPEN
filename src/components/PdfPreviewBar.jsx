@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import PdfThumbnailStrip from './PdfThumbnailStrip.jsx';
 
 /**
@@ -100,7 +100,12 @@ export default function PdfPreviewBar({
                 max={printedPagesEnabled ? undefined : numPages}
                 value={value}
                 onChange={(e) => setValue(e.target.value)}
-                onBlur={submit}
+                onFocus={() => {
+                  jumpInputFocusedRef.current = true;
+                }}
+                onBlur={() => {
+                  jumpInputFocusedRef.current = false;
+                }}
                 aria-label={
                   printedPagesEnabled
                     ? printedPagesActive

@@ -16,6 +16,11 @@ import {
   getRememberedAuthEmail,
   rememberAuthEmail,
 } from './authEmailCache.js';
+import { clearReturnToMainWorkspace } from './returnToWorkspace.js';
+import {
+  clearWorkGuideAuthBound,
+  syncWorkGuideOnAuthChange,
+} from './workGuideLoginSession.js';
 
 /** Firebase 웹 SDK 공개 설정 — 도메인 제한으로 보호됨(비밀키 아님). Vercel env 누락·캐시된 구버전 빌드 대비 */
 const FIREBASE_WEB_DEFAULTS = {
@@ -292,6 +297,8 @@ export async function signInWithGoogle() {
 export async function signOutUser() {
   assertConfigured();
   const uid = auth.currentUser?.uid;
+  clearReturnToMainWorkspace();
+  clearWorkGuideAuthBound();
   await signOut(auth);
   if (uid) clearRememberedAuthEmail(uid);
 }

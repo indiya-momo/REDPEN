@@ -1,18 +1,18 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   devWorkGuideStepFromChain,
   getWorkGuideChainState,
 } from '../lib/workGuideChainState.js';
 import {
-  clearAllWorkGuideDismissals,
   isWorkGuidePinned,
   setDevWorkGuideForceStep,
   workGuideStorageKey,
 } from '../lib/workGuideKeys.js';
+import { syncWorkGuideOnAuthChange } from '../lib/workGuideLoginSession.js';
 import { dismissTooltipGuide } from '../lib/tooltipGuideStorage.js';
 
 /**
- * 업로드 이후 **1~7번 말풍선** 체인 (uid별 dismiss)
+ * 업로드 이후 **1~7번 말풍선** 체인 (uid별 dismiss, 로그인마다 초기화)
  * @param {string} uid
  * @param {{
  *   hasPdf: boolean,
@@ -26,12 +26,10 @@ export function useWorkGuideChain(uid, ctx) {
   const [rev, setRev] = useState(0);
   const bump = useCallback(() => setRev((n) => n + 1), []);
 
-  /** 작업 화면 진입 시 1번부터 재표시 — 로컬 dev/HMR에서는 초기화하지 않음(말풍선 튜닝 유지) */
-  useLayoutEffect(() => {
-    if (import.meta.env.DEV) return;
-    clearAllWorkGuideDismissals(uid);
-    setRev((n) => n + 1);
-  }, [uid]);
+  /** auth 구독보다 늦게 마운트될 때 로그인 직후 dismiss 초기화 반영 */
+  useEffect(() => {
+    if (syncWorkGuideOnAuthChange(uid)) bump();
+  }, [uid, bump]);
 
   const storageKey = useCallback(
     (key) => workGuideStorageKey(uid, key),

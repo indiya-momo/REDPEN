@@ -5,6 +5,7 @@ import {
   runTransaction,
   serverTimestamp,
 } from 'firebase/firestore';
+import { assertLoggedInForCheckOrAlert } from './checkAuthGate.js';
 import {
   firebaseApp,
   isFirebaseAuthConfigured,
@@ -344,6 +345,9 @@ export async function consumeBetaDailyQuota(uid, email = '') {
  * @param {{ onConsumed?: () => void, authEmail?: string }} [options]
  */
 export async function assertBetaDailyCheckOrAlert(uid, options = {}) {
+  if (!assertLoggedInForCheckOrAlert(uid)) {
+    return false;
+  }
   const email = options.authEmail ?? '';
   if (!isBetaDailyQuotaEnforcedForUser(uid, email)) {
     return true;

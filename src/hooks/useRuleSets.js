@@ -26,15 +26,19 @@ import {
   saveActiveSetId,
   saveRuleSets,
 } from '../lib/ruleSetsStorage.js';
+import {
+  criteriaNameForSave,
+  LEGACY_DEFAULT_CRITERIA_HINT,
+} from '../lib/criteriaName.js';
+import { planCriteriaPresetDelete } from '../lib/criteriaPresetDelete.js';
 import { normalizeRuleSet } from '../lib/ruleSetNormalize.js';
 
 const RULE_SET_AUTOSAVE_MS = 400;
-const DEFAULT_SET_LABEL = '선택한 맞춤법 /일관성 기준을 저장합니다';
 
 function createDefaultSet() {
   return normalizeRuleSet({
     id: newId(),
-    name: DEFAULT_SET_LABEL,
+    name: '',
     builtInEnabled: builtInEnabledFromSheet(),
     customRules: [],
     globalExcludePhrases: [],
@@ -84,8 +88,12 @@ export function useRuleSets() {
   useEffect(() => {
     let sets = loadRuleSets().map((set) => {
       const normalized = normalizeRuleSet(set);
-      if ((normalized.name || '').trim() === '기본 규칙 세트') {
-        return normalizeRuleSet({ ...normalized, name: DEFAULT_SET_LABEL });
+      const trimmedName = (normalized.name || '').trim();
+      if (
+        trimmedName === '기본 규칙 세트' ||
+        trimmedName === LEGACY_DEFAULT_CRITERIA_HINT
+      ) {
+        return normalizeRuleSet({ ...normalized, name: '' });
       }
       return normalized;
     });
@@ -264,7 +272,7 @@ export function useRuleSets() {
       const source = ruleSetsRef.current.find((s) => s.id === sourceId);
       if (!source) return false;
 
-      const name = String(rawName ?? '').trim();
+      const name = criteriaNameForSave(rawName);
       if (!name) {
         alert('기준 이름을 입력해 주세요.');
         return false;
@@ -338,6 +346,45 @@ export function useRuleSets() {
       return true;
     },
     [flushRuleSets],
+  );
+
+  /** 저장한 기준 프리셋 삭제(목록·localStorage) */
+  const handleDeleteCriteriaPreset = useCallback(
+    (targetId) => {
+      const sets = ruleSetsRef.current;
+      const plan = planCriteriaPresetDelete(
+        sets,
+        activeSetIdRef.current,
+        targetId,
+      );
+      if (!plan.ok) {
+        if (plan.reason === 'not_saved') {
+          alert('저장된 기준만 삭제할 수 있습니다.');
+        }
+        return false;
+      }
+
+      if (!window.confirm(`「${plan.label}」 기준을 삭제할까요?`)) {
+        return false;
+      }
+
+      if (autosaveTimerRef.current) {
+        clearTimeout(autosaveTimerRef.current);
+        autosaveTimerRef.current = null;
+      }
+
+      let next = plan.next;
+      let nextActiveId = plan.nextActiveId;
+      if (plan.needsDefault) {
+        const fresh = createDefaultSet();
+        next = [fresh];
+        nextActiveId = fresh.id;
+      }
+
+      applyRuleSets(next, nextActiveId);
+      return true;
+    },
+    [applyRuleSets],
   );
 
   const handleBuiltInToggle = useCallback(
@@ -466,6 +513,7 @@ export function useRuleSets() {
     handleDeleteRuleSet,
     handleSaveRules,
     handleSaveCriteriaPreset,
+    handleDeleteCriteriaPreset,
     handleBuiltInToggle,
     handleBuiltInSetAll,
     handleCautionToggle,

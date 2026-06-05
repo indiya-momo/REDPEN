@@ -8,6 +8,7 @@ import {
   pdfPageDisplayKey,
   savePageCalibration,
   savePageSettings,
+  shiftAfterFirstPageSingleChange,
   shiftFromPrintedInput,
   systemPageFromDisplay,
   systemPageFromDisplayInput,
@@ -46,11 +47,27 @@ export function usePrintedPageDisplay({ pdfFileName, numPages, currentPage }) {
 
   const setFirstPageSingle = useCallback(
     (next) => {
+      const prev = firstPageSingle;
       setFirstPageSingleState(next);
       if (!pdfKey) return;
+      if (shift != null && anchorPage != null) {
+        const nextShift = shiftAfterFirstPageSingleChange(
+          shift,
+          anchorPage,
+          prev,
+          next,
+        );
+        setShift(nextShift);
+        savePageCalibration(pdfKey, {
+          shift: nextShift,
+          anchorPage,
+          firstPageSingle: next,
+        });
+        return;
+      }
       savePageSettings(pdfKey, { firstPageSingle: next });
     },
-    [pdfKey],
+    [pdfKey, shift, anchorPage, firstPageSingle],
   );
 
   const calibrateFromInput = useCallback(

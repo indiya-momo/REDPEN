@@ -107,7 +107,10 @@ export function shouldShowPdfViewer(hasPdf) {
  * @returns {number}
  */
 export function clampPageNumber(pageNum, numPages) {
-  return Math.min(numPages, Math.max(1, pageNum));
+  if (!Number.isFinite(numPages) || numPages < 1) return 1;
+  const n = Number(pageNum);
+  if (!Number.isFinite(n)) return 1;
+  return Math.min(numPages, Math.max(1, Math.round(n)));
 }
 
 /**
