@@ -30,7 +30,7 @@ export function buildCompoundFindRules(tailWord, options = {}) {
       {
         ...base,
         find: tailFrag,
-        requireLeadingBoundary: true,
+        requireLeadingBoundary: false,
       },
     ];
   }
@@ -39,7 +39,7 @@ export function buildCompoundFindRules(tailWord, options = {}) {
     {
       ...base,
       find: esc,
-      requireLeadingBoundary: true,
+      requireLeadingBoundary: false,
     },
   ];
 }

@@ -4,17 +4,12 @@ import {
   removeCompoundFind,
 } from './compoundFindPattern.js';
 import { isPhraseSlotPattern } from './phraseSlotPattern.js';
-import { isAuxiliaryStem, isHaeBoPattern } from './compoundPatternCommon.js';
 import { parseCommaList } from './matchFilters.js';
+import { decodeSpacesVisible } from './spaceVisibleText.js';
 
 /** @param {string} s */
 export function normalizeConsistencyVariant(s) {
-  return s.trim().replace(/\s+/g, ' ');
-}
-
-/** @param {string} s */
-export function hasInternalSpace(s) {
-  return /\s/.test(normalizeConsistencyVariant(s));
+  return decodeSpacesVisible(s).trim().replace(/\s+/g, ' ');
 }
 
 /**
@@ -52,7 +47,6 @@ export function planConsistencyEntries(variants) {
 export function isLiteralConsistencyEntry(tailWord) {
   const t = normalizeConsistencyVariant(tailWord);
   if (!t || isPhraseSlotPattern(t)) return false;
-  if (isAuxiliaryStem(t) || isHaeBoPattern(t)) return false;
   return true;
 }
 

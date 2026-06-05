@@ -243,4 +243,36 @@ describe('buildPageText — 역할을 해 왔다 추출·검사 (가설 검증)'
     const page = { pageNum: 99, text, items, itemRefs: [] };
     expect(matchCountsOnPage(page)).toEqual({ literal: 1, auxiliary: 0 });
   });
+
+  it('Hancom PDF — 공백 항목 bbox가 넓어도 같은 줄 어절로 묶음', () => {
+    const y = 801.7;
+    const font = 13;
+    const items = [
+      { str: '문장을', transform: [font, 0, 0, font, 140.5, y], width: 37.75 },
+      { str: ' ', transform: [font, 0, 0, font, 178.3, y], width: 54.14 },
+      { str: '살펴', transform: [font, 0, 0, font, 185.3, y], width: 25.16 },
+      { str: ' ', transform: [font, 0, 0, font, 210.4, y], width: 54.14 },
+      { str: '주길', transform: [font, 0, 0, font, 217.4, y], width: 25.16 },
+      { str: ' ', transform: [font, 0, 0, font, 242.5, y], width: 54.14 },
+      { str: '소망했어요.', transform: [font, 0, 0, font, 249.5, y], width: 75.5 },
+    ];
+    const { text } = buildPageText(items);
+    const line = text.split('\n').find((l) => /살펴/.test(l)) ?? '';
+    expect(line).toMatch(/문장을\s+살펴\s+주길\s+소망했어요/);
+    expect(text.split('\n').filter((l) => l.trim() === '살펴').length).toBe(0);
+
+    const rules = buildCompoundFindRules('아 두');
+    const page = { pageNum: 1, text, items, itemRefs: [] };
+    const 담아Items = [
+      { str: '담아', transform: [font, 0, 0, font, 100, 700], width: 25 },
+      { str: ' ', transform: [font, 0, 0, font, 126, 700], width: 54 },
+      { str: '두어요.', transform: [font, 0, 0, font, 133, 700], width: 50 },
+    ];
+    const { text: text2 } = buildPageText([...items, ...담아Items]);
+    const { results } = runRuleCheck(
+      [{ pageNum: 1, text: text2, items: [...items, ...담아Items], itemRefs: [] }],
+      rules,
+    );
+    expect(results[0]?.instances.length).toBeGreaterThanOrEqual(1);
+  });
 });

@@ -26,6 +26,7 @@ import {
   subscribeAuthSession,
 } from './lib/firebaseAuth.js';
 import { isLoginRequiredForChecks } from './lib/checkAuthGate.js';
+import { resolveQuotaAuthEmail } from './lib/betaDailyQuota.js';
 import { consumeReturnToMainWorkspace, markReturnToMainWorkspace } from './lib/returnToWorkspace.js';
 import { clearWorkSession } from './lib/sessionStore.js';
 
@@ -96,7 +97,10 @@ export default function App() {
     handleBuiltInSetAll,
     handleCautionToggle,
     handleCautionSetAll,
-  } = useRuleSets();
+  } = useRuleSets(
+    authSession?.uid ?? '',
+    resolveQuotaAuthEmail(authSession),
+  );
 
   const applyBonBojoSheetRefresh = useCallback(
     async (data, remoteFp) => {

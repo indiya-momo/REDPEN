@@ -1761,6 +1761,11 @@
   margin-top: 2px;
 }
 
+/* 좌·우 열 힌트 높이를 맞춰 등록 입력창(tail-form) 세로 위치 통일 */
+.consistency-subsection-row .consistency-subsection__hints-area {
+  flex: 1 1 0;
+}
+
 .consistency-subsection--half {
   flex: 1 1 0;
   min-width: 0;
@@ -1795,13 +1800,13 @@
   margin: 0 0 2px;
 }
 
-.consistency-subsection--exclude .consistency-subsection__hints-area .hint {
-  margin-top: 0;
-  padding-top: 8px;
-}
-
 .consistency-hint-block {
   white-space: pre-line;
+}
+
+.consistency-hint-example {
+  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  letter-spacing: 0.02em;
 }
 
 .consistency-section-box .auxiliary-chip {

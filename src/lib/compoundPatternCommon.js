@@ -50,11 +50,11 @@ export function tailRegexFragment(tailWord) {
   return parts.map(escapeRegex).join(FLEX_SPACE);
 }
 
-/** 문자열 찾기 — 띄어쓰기 0칸(붙임)·다칸 모두 허용 */
+/** 문자열 찾기 — 띄어쓰기 0칸(붙임)·다칸·ZWSP 모두 허용 */
 export function tailRegexFragmentForFind(tailWord) {
   const parts = tailWord.trim().split(/\s+/).filter(Boolean);
   if (!parts.length) return '';
-  const gap = String.raw`[ \t\u00A0\u1680\u2000-\u200A\u202F\u205F\u3000]*`;
+  const gap = String.raw`[ \t\u00A0\u1680\u2000-\u200A\u202F\u205F\u3000\u200B\uFEFF]*`;
   return parts.map(escapeRegex).join(gap);
 }
 
