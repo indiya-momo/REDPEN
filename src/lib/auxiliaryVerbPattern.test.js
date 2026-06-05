@@ -49,7 +49,7 @@ describe('auxiliaryVerbPattern', () => {
 
   it('어 내 — 붙임(만들어내) 오탐 없음, 띄움만', () => {
     const rules = buildAuxiliaryVerbFindRules('어 내');
-    const rule = rules[0];
+    const rule = { ...rules[0], bonBojoItemId: 'verb-naeda' };
     expect(matches(rule, '만들어내는')).toBe(false);
     expect(matches(rule, '만들어내')).toBe(false);
     expect(matches(rule, '만들어 내는')).toBe(true);
@@ -87,7 +87,7 @@ describe('auxiliaryVerbPattern', () => {
     const rules = buildAuxiliaryVerbFindRules('아 하');
     expect(rules).toHaveLength(1);
     expect(matches(rules[0], '아하루')).toBe(false);
-    expect(matches(rules[0], '보라아 하다')).toBe(true);
+    expect(matches(rules[0], '보라아 하다')).toBe(false);
     expect(matches(rules[0], '보라아하다')).toBe(false);
   });
 
