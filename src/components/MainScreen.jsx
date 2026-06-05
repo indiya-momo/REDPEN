@@ -1028,6 +1028,8 @@ export default function MainScreen({
                     )}
                     placement="right"
                     bubbleType="left"
+                    useFixedLayer
+                    bubbleGuideStep="1"
                     offsetX={0}
                     offsetY={0}
                     pinned={workGuide.pinAll}
