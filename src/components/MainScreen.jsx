@@ -44,6 +44,7 @@ import {
 } from '../lib/firebaseAuth.js';
 import { criteriaNameForInput } from '../lib/criteriaName.js';
 import { getUserProfile } from '../lib/userProfileStorage.js';
+import { useUserProfileSync } from '../hooks/useUserProfileSync.js';
 import { WORK_GUIDE_KEYS } from '../lib/workGuideKeys.js';
 import { useWorkGuideChain } from '../hooks/useWorkGuideChain.js';
 import { useBetaDailyQuota } from '../hooks/useBetaDailyQuota.js';
@@ -68,12 +69,12 @@ const WORK_GUIDE_1_ALIGN_CHAIN = [
     alignSplit: {
       horizontal: {
         selector: '.spelling-tab-layout__run-row',
-        leftFromTargetLeft: 412,
+        leftFromTargetLeft: 512,
       },
       vertical: {
         selector:
           '.spelling-tab-layout__run-row-actions--end .panel-section-run-btn',
-        topFromTargetBottom: 40,
+        topFromTargetBottom: 170,
       },
     },
   },
@@ -251,7 +252,6 @@ export default function MainScreen({
   );
   const [thumbStripOpen, setThumbStripOpen] = useState(readThumbStripOpenPreference);
   const [authSession, setAuthSession] = useState(() => getCurrentUserSession());
-  const [profileOnboardingRev, setProfileOnboardingRev] = useState(0);
   const [criteriaNameInput, setCriteriaNameInput] = useState('');
   const [criteriaPickerOpen, setCriteriaPickerOpen] = useState(false);
   const criteriaPickerRef = useRef(null);
@@ -311,16 +311,16 @@ export default function MainScreen({
 
   const authUid = authSession?.uid ?? '';
   const authEmail = resolveQuotaAuthEmail(authSession);
-  void profileOnboardingRev;
+  const { profileRev } = useUserProfileSync(authUid);
   const greetingName = useMemo(() => {
-    void profileOnboardingRev;
+    void profileRev;
     const profile = authUid ? getUserProfile(authUid) : null;
     const nickname = profile?.nickname?.trim();
     if (nickname) return nickname;
     const name = authSession?.displayName?.trim();
     if (name) return name;
     return null;
-  }, [authUid, authSession?.displayName, profileOnboardingRev]);
+  }, [authUid, authSession?.displayName, profileRev]);
 
   const activeSavedRuleSetName = useMemo(() => {
     const name = activeRuleSet?.name?.trim();
@@ -758,8 +758,11 @@ export default function MainScreen({
             선택한 항목에 이름을 붙이고
           </span>
           <span className="tooltip-guide__message-line">
-            <span className="tooltip-guide__save-rules-btn-look">
-              기준 저장
+            <span
+              className="tooltip-guide__save-rules-btn-look"
+              aria-hidden
+            >
+              <Save size={14} strokeWidth={2} />
             </span>
             으로 남겨보라냥
           </span>
@@ -847,7 +850,7 @@ export default function MainScreen({
                     onFocus={() => {
                       if (savedRuleSets.length > 0) setCriteriaPickerOpen(true);
                     }}
-                    placeholder="기준 이름 입력·선택"
+                    placeholder="기준 이름"
                     maxLength={60}
                     autoComplete="off"
                     role="combobox"
@@ -967,23 +970,24 @@ export default function MainScreen({
                 ) : null}
               </div>
               <div className="panel-left__criteria-actions">
-                {activeRuleSet?.savedAt ? (
-                  <button
-                    type="button"
-                    className="panel-left__delete-rules"
-                    onClick={() => handleDeleteCriteria(activeSetId)}
-                  >
-                    <Trash2 size={16} aria-hidden />
-                    기준 삭제
-                  </button>
-                ) : null}
+                <button
+                  type="button"
+                  className="panel-left__delete-rules"
+                  onClick={() => handleDeleteCriteria(activeSetId)}
+                  aria-label="기준 삭제"
+                  title="기준 삭제"
+                  disabled={!activeRuleSet?.savedAt}
+                >
+                  <Trash2 size={16} aria-hidden />
+                </button>
                 <button
                   type="button"
                   className="panel-left__save-rules"
                   onClick={handleSaveCriteria}
+                  aria-label="기준 저장"
+                  title="기준 저장"
                 >
                   <Save size={16} aria-hidden />
-                  기준 저장
                 </button>
               </div>
             </div>

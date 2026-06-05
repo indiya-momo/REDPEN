@@ -13,6 +13,7 @@ import {
   getUserProfile,
   isOnboardingComplete,
 } from '../../lib/userProfileStorage.js';
+import { useUserProfileSync } from '../../hooks/useUserProfileSync.js';
 import WelcomeProfileOnboarding from './WelcomeProfileOnboarding.jsx';
 import './welcome-pc.css';
 
@@ -43,14 +44,19 @@ export default function WelcomePcScreen({
 }) {
   const [authError, setAuthError] = useState('');
   const [authPending, setAuthPending] = useState(false);
-  const [profileRev, setProfileRev] = useState(0);
   const enterMainAfterLoginRef = useRef(false);
 
   const session = authSession ?? getCurrentUserSession();
   const uid = session?.uid ?? '';
   const loggedIn = Boolean(uid);
-  const needsWelcomeMessage =
-    loggedIn && authReady && !isOnboardingComplete(uid);
+  const { profileRev, bumpProfileRev, onboardingComplete } =
+    useUserProfileSync(uid);
+  const needsWelcomeMessage = loggedIn && authReady && !onboardingComplete;
+
+  function handleStart() {
+    if (loggedIn && uid && !isOnboardingComplete(uid)) return;
+    onStart();
+  }
 
   useEffect(() => {
     if (authBootstrapError) setAuthError(authBootstrapError);
@@ -62,15 +68,15 @@ export default function WelcomePcScreen({
       enterMainAfterLoginRef.current ||
       sessionStorage.getItem(ENTER_MAIN_AFTER_GOOGLE_KEY) === '1';
     if (!pending) return;
-    if (!isOnboardingComplete(uid)) {
+    if (!onboardingComplete) {
       enterMainAfterLoginRef.current = false;
       sessionStorage.removeItem(ENTER_MAIN_AFTER_GOOGLE_KEY);
       return;
     }
     enterMainAfterLoginRef.current = false;
     sessionStorage.removeItem(ENTER_MAIN_AFTER_GOOGLE_KEY);
-    onStart();
-  }, [authReady, uid, onStart]);
+    handleStart();
+  }, [authReady, uid, onboardingComplete, onStart]);
 
   const signedInName = useMemo(() => {
     if (!session?.uid) return '';
@@ -86,7 +92,7 @@ export default function WelcomePcScreen({
 
   async function handleGoogleAuth() {
     if (loggedIn) {
-      if (isOnboardingComplete(uid)) onStart();
+      handleStart();
       return;
     }
     setAuthPending(true);
@@ -98,7 +104,7 @@ export default function WelcomePcScreen({
       if (getCurrentUserSession()?.uid && authReady) {
         enterMainAfterLoginRef.current = false;
         sessionStorage.removeItem(ENTER_MAIN_AFTER_GOOGLE_KEY);
-        if (isOnboardingComplete(getCurrentUserSession().uid)) onStart();
+        handleStart();
       }
     } catch (error) {
       enterMainAfterLoginRef.current = false;
@@ -241,7 +247,10 @@ export default function WelcomePcScreen({
               uid={uid}
               defaultNickname={session?.displayName ?? ''}
               surface="welcome-pc"
-              onComplete={() => setProfileRev((n) => n + 1)}
+              onComplete={() => {
+                bumpProfileRev();
+                handleStart();
+              }}
             />
           ) : (
             <div className="welcome-pc__stage-stack">
@@ -277,7 +286,7 @@ export default function WelcomePcScreen({
                   <button
                     type="button"
                     className="btn-welcome-primary welcome-pc__start"
-                    onClick={onStart}
+                    onClick={handleStart}
                   >
                     검수하기
                   </button>

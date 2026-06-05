@@ -322,22 +322,18 @@
     var(--accent-terracotta);
 }
 
-/* 6번 말풍선 — 「기준 저장」= 좌측 패널 저장 버튼과 동일 톤 */
+/* 6번 말풍선 — 저장(디스크) 아이콘 = 좌측 패널 저장 버튼과 동일 톤 */
 .tooltip-guide__save-rules-btn-look {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   margin: 0 1px;
-  padding: calc(4px * var(--tooltip-scale, 1))
-    calc(8px * var(--tooltip-scale, 1));
+  width: calc(1.65rem * var(--tooltip-scale, 1));
+  height: calc(1.65rem * var(--tooltip-scale, 1));
+  padding: 0;
   border: 1px solid var(--accent-terracotta);
   border-radius: calc(var(--radius-ui) * var(--tooltip-scale, 1));
-  font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
-  font-size: calc(0.78rem * var(--tooltip-scale, 1));
-  font-weight: 700;
-  line-height: 1.2;
-  letter-spacing: -0.02em;
   vertical-align: middle;
-  white-space: nowrap;
   background: var(--color-surface);
   color: var(--accent-terracotta);
 }
@@ -425,7 +421,7 @@
 .panel-header-toolbar {
   display: flex;
   flex-wrap: nowrap;
-  align-items: flex-start;
+  align-items: center;
   gap: 8px;
   width: 100%;
   min-width: 0;
@@ -440,8 +436,8 @@
 .panel-left__criteria-save {
   display: flex;
   flex: 1 1 auto;
-  flex-direction: column;
-  align-items: stretch;
+  flex-direction: row;
+  align-items: center;
   gap: 6px;
   min-width: 0;
   width: 100%;
@@ -452,7 +448,7 @@
   position: relative;
   flex: 1 1 auto;
   min-width: 0;
-  width: 100%;
+  width: auto;
   max-width: none;
   overflow: visible;
 }
@@ -607,10 +603,11 @@
 
 .panel-left__criteria-actions {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  flex-shrink: 0;
   align-items: center;
   justify-content: flex-end;
-  gap: 8px;
+  gap: 4px;
 }
 
 .panel-left__save-rules,
@@ -618,8 +615,12 @@
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 7px 12px;
+  justify-content: center;
+  gap: 0;
+  width: 2.1rem;
+  height: 2.1rem;
+  padding: 0;
+  box-sizing: border-box;
   border-radius: var(--radius-ui);
   font-size: 0.78rem;
   font-weight: 700;
@@ -649,10 +650,15 @@
   color: var(--color-text-muted);
 }
 
-.panel-left__delete-rules:hover {
+.panel-left__delete-rules:hover:not(:disabled) {
   border-color: var(--accent-terracotta);
   background: var(--panel-accordion-bg);
   color: var(--accent-terracotta-deep);
+}
+
+.panel-left__delete-rules:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .panel-header-home {
