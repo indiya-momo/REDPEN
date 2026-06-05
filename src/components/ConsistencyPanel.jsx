@@ -124,10 +124,6 @@ export default function ConsistencyPanel({
 
   const literalEntries = listConsistencyEntries(customRules);
   const slotEntries = listPhraseSlotEntries(customRules);
-  const literalRegisteredCount =
-    countConsistencyLiteralRegisteredEntries(customRules);
-  const literalRegisterFull =
-    literalRegisteredCount >= MAX_CONSISTENCY_CRITERIA_SLOTS;
   const phraseSlotRegisteredCount = countPhraseSlotRegisteredEntries(customRules);
   const phraseSlotRegisterFull =
     phraseSlotRegisteredCount >= MAX_PHRASE_SLOT_REGISTERED_ENTRIES;
@@ -169,8 +165,13 @@ export default function ConsistencyPanel({
   }
 
   function registerLiteral() {
+    const currentCount = countConsistencyLiteralRegisteredEntries(customRules);
     const variants = parseConsistencyInput(literalInput);
     if (!variants.length) {
+      if (currentCount >= MAX_CONSISTENCY_CRITERIA_SLOTS) {
+        alert(consistencyLiteralRegistrationBlockedMessage(currentCount, 0));
+        return;
+      }
       alert('문자열을 입력하세요.');
       return;
     }
@@ -200,7 +201,7 @@ export default function ConsistencyPanel({
     if (!canAddConsistencyLiteralRegisteredEntries(customRules, newEntryCount)) {
       alert(
         consistencyLiteralRegistrationBlockedMessage(
-          literalRegisteredCount,
+          currentCount,
           newEntryCount,
         ),
       );
@@ -302,7 +303,6 @@ export default function ConsistencyPanel({
             onRegister={registerLiteral}
             placeholder={SPACE_INPUT_PLACEHOLDER}
             ariaLabel="일관성 찾기"
-            registerDisabled={literalRegisterFull}
           />
           <RegisteredList
             entries={literalEntries}
