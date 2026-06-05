@@ -1412,7 +1412,7 @@ export default function MainScreen({
                     message={
                       <>
                         <span className="tooltip-guide__message-line">
-                          새 업로드, 로그아웃 등을 할 수 있는 곳
+                          새 업로드, 로그아웃, 피드백은 여기
                         </span>
                         <span className="tooltip-guide__message-line">
                           앞으로 또 보자냥(ﾐචᆽචﾐ)

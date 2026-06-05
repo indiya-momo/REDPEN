@@ -457,7 +457,7 @@ export function useRuleSets(authUid = '', authEmail = '') {
           consistencyCount: countConsistencyActiveRules(saved.customRules),
         });
       }
-      alert('기준이 저장되었습니다.');
+      alert(`「${name}」 프로젝트가 저장되었습니다.`);
       return true;
     },
     [flushRuleSets, flushCloudRuleSetsImmediate],
