@@ -12,7 +12,7 @@
  */
 
 .spelling-tab-layout__calibration .tooltip-guide--right,
-.work-guide-step-3 .tooltip-guide--right {
+.work-guide-step-2 .tooltip-guide--right {
   transform: translate(
     calc(-1 * var(--wg-shift-x, 0)),
     calc(-50% - var(--wg-shift-y, 0))

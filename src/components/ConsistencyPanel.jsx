@@ -432,7 +432,9 @@ export default function ConsistencyPanel({
                 </span>
                 를 검색한다냥
                 <br />
-                아직 개발중이라 부족한 점도 있다냥
+                아직 개발중이라 부족한 점이 많은데
+                <br />
+                공부 많이 되고 자기 전에 생각난다냥...
               </>
             }
             onDismiss={auxiliaryVerbGuide.onDismiss}

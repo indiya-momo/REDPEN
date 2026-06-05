@@ -32,24 +32,61 @@ const baseCtx = {
 const keyFor = (key) => workGuideStorageKey('u1', key);
 
 describe('getWorkGuideChainState', () => {
-  it('PDF 열림 후 1단만 보인다', () => {
+  it('PDF 열림 후 1단(기준 선택)만 보인다', () => {
     const chain = getWorkGuideChainState('u1', baseCtx, keyFor, null, {
       pinAll: false,
     });
-    expect(chain.showPdfOpenedGuide).toBe(true);
-    expect(chain.showLeftCriteriaGuide).toBe(false);
+    expect(chain.showLeftCriteriaGuide).toBe(true);
+    expect(chain.showPdfOpenedGuide).toBe(false);
     expect(chain.showFirstResultGuide).toBe(false);
   });
 
-  it('1단 확인 후 2단이 보인다', () => {
+  it('1단 확인 후 검수 전에는 2·3단이 없다', () => {
     const dismissedMap = {
-      [keyFor(WORK_GUIDE_KEYS.PDF_OPENED)]: true,
+      [keyFor(WORK_GUIDE_KEYS.LEFT_CRITERIA)]: true,
     };
     const chain = getWorkGuideChainState('u1', baseCtx, keyFor, dismissedMap, {
       pinAll: false,
     });
+    expect(chain.showLeftCriteriaGuide).toBe(false);
+    expect(chain.showFirstResultGuide).toBe(false);
     expect(chain.showPdfOpenedGuide).toBe(false);
-    expect(chain.showLeftCriteriaGuide).toBe(true);
+    expect(chain.workGuideOpen).toBe(false);
+  });
+
+  it('1단 확인·검수 완료 후 2단(결과)이 보인다', () => {
+    const dismissedMap = {
+      [keyFor(WORK_GUIDE_KEYS.LEFT_CRITERIA)]: true,
+    };
+    const chain = getWorkGuideChainState(
+      'u1',
+      { ...baseCtx, spellingCheckDone: true },
+      keyFor,
+      dismissedMap,
+      { pinAll: false },
+    );
+    expect(chain.showFirstResultGuide).toBe(true);
+    expect(chain.showPdfOpenedGuide).toBe(false);
+  });
+
+  it('dev force 1이어도 1단 dismiss면 2·3단이 안 보인다', () => {
+    vi.stubGlobal('sessionStorage', {
+      getItem: () => '1',
+      setItem: () => {},
+      removeItem: () => {},
+    });
+    vi.stubGlobal('window', {
+      location: { hostname: 'localhost', search: '' },
+    });
+    const dismissedMap = {
+      [keyFor(WORK_GUIDE_KEYS.LEFT_CRITERIA)]: true,
+    };
+    const chain = getWorkGuideChainState('u1', baseCtx, keyFor, dismissedMap, {
+      pinAll: false,
+    });
+    expect(chain.showLeftCriteriaGuide).toBe(false);
+    expect(chain.showFirstResultGuide).toBe(false);
+    expect(chain.showPdfOpenedGuide).toBe(false);
   });
 
   it('4단 확인·일관성 탭에서 5단이 보인다', () => {
@@ -87,9 +124,9 @@ describe('getWorkGuideChainState', () => {
     expect(chain.showFirstResultGuide).toBe(false);
   });
 
-  it('검수 완료 후 3단이 보인다', () => {
+  it('2단 확인 후 3단(보정)이 보인다', () => {
     const dismissedMap = {
-      [keyFor(WORK_GUIDE_KEYS.PDF_OPENED)]: true,
+      [keyFor(WORK_GUIDE_KEYS.FIRST_RESULT)]: true,
       [keyFor(WORK_GUIDE_KEYS.LEFT_CRITERIA)]: true,
     };
     const chain = getWorkGuideChainState(
@@ -99,7 +136,8 @@ describe('getWorkGuideChainState', () => {
       dismissedMap,
       { pinAll: false },
     );
-    expect(chain.showFirstResultGuide).toBe(true);
+    expect(chain.showPdfOpenedGuide).toBe(true);
+    expect(chain.showFirstResultGuide).toBe(false);
     expect(chain.showLeftCriteriaGuide).toBe(false);
   });
 
@@ -163,18 +201,18 @@ describe('getWorkGuideChainState', () => {
     expect(chain.showRuleSetSaveGuide).toBe(false);
   });
 
-  it('pin 모드여도 1단만 보인다', () => {
+  it('pin 모드여도 1단(기준)만 보인다', () => {
     const chain = getWorkGuideChainState('u1', baseCtx, keyFor, null, {
       pinAll: true,
     });
-    expect(chain.showPdfOpenedGuide).toBe(true);
-    expect(chain.showLeftCriteriaGuide).toBe(false);
+    expect(chain.showLeftCriteriaGuide).toBe(true);
+    expect(chain.showPdfOpenedGuide).toBe(false);
     expect(chain.pinAll).toBe(true);
   });
 
-  it('검수 완료여도 2단 미확인이면 3단 대신 2단', () => {
+  it('검수 완료여도 2단(결과) 미확인이면 3단 대신 2단', () => {
     const dismissedMap = {
-      [keyFor(WORK_GUIDE_KEYS.PDF_OPENED)]: true,
+      [keyFor(WORK_GUIDE_KEYS.LEFT_CRITERIA)]: true,
     };
     const chain = getWorkGuideChainState(
       'u1',
@@ -183,8 +221,8 @@ describe('getWorkGuideChainState', () => {
       dismissedMap,
       { pinAll: false },
     );
-    expect(chain.showLeftCriteriaGuide).toBe(true);
-    expect(chain.showFirstResultGuide).toBe(false);
+    expect(chain.showFirstResultGuide).toBe(true);
+    expect(chain.showPdfOpenedGuide).toBe(false);
   });
 
   it('업로드 전에는 pre-upload만 대상이다', () => {

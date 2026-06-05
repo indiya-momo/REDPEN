@@ -64,8 +64,8 @@ export default function PrintedPageSetup({
     : '';
 
   return (
-    <section className="printed-page-setup" aria-label="인쇄 쪽수 보정">
-      <p className="printed-page-setup__title">인쇄 쪽 보정</p>
+    <section className="printed-page-setup" aria-label="파일 - 원고 페이지 맞추기">
+      <p className="printed-page-setup__title">파일 - 원고 페이지 맞추기</p>
 
       <div className="printed-page-setup__body">
         <p className="printed-page-setup__hint">
