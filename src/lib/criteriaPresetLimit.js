@@ -4,8 +4,7 @@ import { isBetaQuotaAdminExempt } from './betaDailyQuota.js';
 export const MAX_CRITERIA_PRESETS = 1;
 
 export const CRITERIA_PRESET_LIMIT_MESSAGE =
-  '기준은 계정당 1개만 저장할 수 있습니다.\n\n' +
-  '다른 이름으로 저장하려면 기존 기준을 삭제하거나, 같은 이름으로 저장해 덮어쓰세요.';
+  '프로젝트는 계정당 1개만 저장할 수 있습니다.';
 
 /**
  * @param {import('./ruleSetsStorage.js').RuleSet[]} ruleSets
