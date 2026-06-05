@@ -755,7 +755,7 @@ export default function MainScreen({
       message={
         <>
           <span className="tooltip-guide__message-line">
-            선택한 항목에 이름을 붙이고
+            선택한 기준 리스트를
           </span>
           <span className="tooltip-guide__message-line">
             <span
@@ -764,7 +764,7 @@ export default function MainScreen({
             >
               <Save size={14} strokeWidth={2} />
             </span>
-            으로 남겨보라냥
+            해서 프로젝트로 관리해보라냥
           </span>
         </>
       }
@@ -836,7 +836,7 @@ export default function MainScreen({
                 ref={criteriaPickerRef}
               >
                 <label className="sr-only" htmlFor="panel-left-criteria-name">
-                  기준 이름
+                  프로젝트 이름
                 </label>
                 <div className="panel-left__criteria-picker-field">
                   <input
@@ -850,7 +850,7 @@ export default function MainScreen({
                     onFocus={() => {
                       if (savedRuleSets.length > 0) setCriteriaPickerOpen(true);
                     }}
-                    placeholder="기준 이름"
+                    placeholder="프로젝트 이름"
                     maxLength={60}
                     autoComplete="off"
                     role="combobox"
@@ -972,6 +972,15 @@ export default function MainScreen({
               <div className="panel-left__criteria-actions">
                 <button
                   type="button"
+                  className="panel-left__save-rules"
+                  onClick={handleSaveCriteria}
+                  aria-label="기준 저장"
+                  title="기준 저장"
+                >
+                  <Save size={16} aria-hidden />
+                </button>
+                <button
+                  type="button"
                   className="panel-left__delete-rules"
                   onClick={() => handleDeleteCriteria(activeSetId)}
                   aria-label="기준 삭제"
@@ -979,15 +988,6 @@ export default function MainScreen({
                   disabled={!activeRuleSet?.savedAt}
                 >
                   <Trash2 size={16} aria-hidden />
-                </button>
-                <button
-                  type="button"
-                  className="panel-left__save-rules"
-                  onClick={handleSaveCriteria}
-                  aria-label="기준 저장"
-                  title="기준 저장"
-                >
-                  <Save size={16} aria-hidden />
                 </button>
               </div>
             </div>
@@ -1396,7 +1396,7 @@ export default function MainScreen({
                   onClick={() => void session.handleEndWork()}
                 >
                   <FilePlus size={16} aria-hidden />
-                  새 작업
+                  새 업로드
                 </button>
                 {workGuide.showWorkExitGuide ? (
                   <TooltipGuide
@@ -1412,7 +1412,7 @@ export default function MainScreen({
                     message={
                       <>
                         <span className="tooltip-guide__message-line">
-                          새 작업, 로그아웃 등을 할 수 있는 곳
+                          새 업로드, 로그아웃 등을 할 수 있는 곳
                         </span>
                         <span className="tooltip-guide__message-line">
                           앞으로 또 보자냥(ﾐචᆽචﾐ)
