@@ -101,6 +101,12 @@
   z-index: 10003;
 }
 
+.tooltip-guide--fixed-layer[data-work-guide-bubble='1'] {
+  z-index: 10010;
+  --tooltip-text-max: calc(240px * var(--tooltip-scale, 1));
+  max-width: min(calc(300px * var(--tooltip-scale, 1)), calc(100vw - 28px));
+}
+
 .tooltip-guide--fixed-layer[data-work-guide-bubble='2'] {
   max-width: min(calc(400px * var(--tooltip-scale, 1)), calc(100vw - 28px));
 }

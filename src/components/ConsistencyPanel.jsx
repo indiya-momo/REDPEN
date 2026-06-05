@@ -303,7 +303,7 @@ export default function ConsistencyPanel({
         <div className="consistency-subsection-row">
           <div className="consistency-subsection consistency-subsection--half">
             <p className="printed-page-setup__title consistency-subsection-title">
-              공통 문자열 찾기(1회 검수 8개 이내 추천)
+              공통 문자열 찾기
             </p>
             <div className="consistency-subsection__hints-area">
               <p className="hint consistency-hint-block">
@@ -316,7 +316,7 @@ export default function ConsistencyPanel({
               onChange={setSlotInput}
               onRegister={registerSlot}
               placeholder={SPACE_INPUT_PLACEHOLDER}
-              ariaLabel="공통 문자열 찾기(1회 검수 8개 이내 추천)"
+              ariaLabel="공통 문자열 찾기"
               inputClassName="field-input mono"
               registerDisabled={phraseSlotRegisterFull}
             />
