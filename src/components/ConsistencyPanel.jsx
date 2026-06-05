@@ -29,7 +29,6 @@ import {
   removePhraseSlotEntry,
   togglePhraseSlotEntry,
 } from '../lib/phraseSlotRegister.js';
-import { isAuxiliaryStem, isHaeBoPattern } from '../lib/compoundPatternCommon.js';
 import { parseCommaList } from '../lib/matchFilters.js';
 import { isBonBojoRequiredItem } from '../lib/bonBojoRules.js';
 import {
@@ -174,15 +173,8 @@ export default function ConsistencyPanel({
       if (!isLiteralConsistencyEntry(raw)) {
         if (isPhraseSlotPattern(raw)) {
           alert(`「${raw}」은 공통 문자열 찾기에 등록하세요. (@)`);
-        } else if (isAuxiliaryStem(raw) || isHaeBoPattern(raw)) {
-          alert(`「${raw}」은 본용언+보조용언 표기에 등록하세요.`);
         } else {
-          const parts = raw.split(/\s+/).filter(Boolean);
-          if (parts.length === 2 && isAuxiliaryStem(parts[1])) {
-            alert(`「${raw}」은 본용언+보조용언 표기에 등록하세요.`);
-          } else {
-            alert(`등록할 수 없는 형식입니다: ${raw}`);
-          }
+          alert(`등록할 수 없는 형식입니다: ${raw}`);
         }
         continue;
       }
@@ -274,10 +266,7 @@ export default function ConsistencyPanel({
         </p>
         <div className="consistency-subsection consistency-subsection--first">
           <p className="hint">
-            한글 · 영문 대소문자 · 띄어쓰기 등을 찾습니다 예: 조선˅시대, 조선시대 →
-            '조선시대' 통일
-            <br />
-            (색인 넣기 전 확인 · 넣는 중 위치 찾기에도 편리합니다)
+            한글 · 영문 대소문자 · 띄어쓰기 등을 찾습니다 항목이 여럿이면 항목 사이에 ,를 넣어보세요 ('조선시대' 일관성 확인 → <span className="consistency-hint-example">[조선˅시대, 조선시대, 조˅선˅시대]</span> 한꺼번에 입력 후 +버튼)  색인 작업에도 유용합니다
           </p>
           <ConsistencyRegisterField
             value={literalInput}
@@ -310,8 +299,7 @@ export default function ConsistencyPanel({
             </p>
             <div className="consistency-subsection__hints-area">
               <p className="hint consistency-hint-block">
-                {`@을 포함한 공통 문자열을 모두 찾습니다
-(예: @시대 → 조선시대, 고려시대, 신라시대)`}
+                @을 포함한 요소를 모두 찾습니다('@시대' 입력 → <span className="consistency-hint-example">'조선시대, 고려시대, 신라시대'</span> 출력)
               </p>
             </div>
             <ConsistencyRegisterField

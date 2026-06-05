@@ -6,7 +6,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
-import { buildPageText } from '../src/lib/pdfService.js';
+import { buildPageText } from '../src/lib/pdfPageText.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 pdfjsLib.GlobalWorkerOptions.workerSrc = pathToFileURL(
@@ -49,12 +49,19 @@ const targetPhrase = phraseArg
 
 if (!pdfPath) {
   console.error(
-    'Usage: node scripts/diagnose-pdf-text.mjs "<path>" [--page=42] [--phrase=불확실성의 케이크]',
+    'Usage: node scripts/diagnose-pdf-text.mjs "C:\\path\\to\\file.pdf" [--page=1] [--phrase=담아]',
   );
+  console.error('예: node scripts/diagnose-pdf-text.mjs ".\\momo.pdf" --page=1 --phrase=살펴');
   process.exit(1);
 }
 
-const fileBuf = fs.readFileSync(pdfPath);
+const resolvedPdf = path.resolve(pdfPath);
+if (!fs.existsSync(resolvedPdf)) {
+  console.error(`PDF 파일을 찾을 수 없습니다: ${resolvedPdf}`);
+  process.exit(1);
+}
+
+const fileBuf = fs.readFileSync(resolvedPdf);
 const data = new Uint8Array(fileBuf.buffer, fileBuf.byteOffset, fileBuf.byteLength);
 const loadingTask = pdfjsLib.getDocument({ data });
 const pdf = await loadingTask.promise;
@@ -109,15 +116,16 @@ const ys = rawItems.map((it) => it.transform?.[5] ?? 0);
 const sortedY = [...new Set(ys.map((y) => Math.round(y * 10) / 10))].sort((a, b) => b - a);
 console.log(`\n=== Page 1 distinct Y bands (~0.1): ${sortedY.length} ===`);
 
-if (targetPage && targetPhrase) {
-  const row = scored.find((s) => s.pageNum === targetPage);
+if (targetPhrase) {
+  const pageNum = targetPage && Number.isFinite(targetPage) ? targetPage : 1;
+  const row = scored.find((s) => s.pageNum === pageNum);
   if (!row) {
-    console.error(`\nNo page ${targetPage}`);
+    console.error(`\nNo page ${pageNum}`);
     process.exit(1);
   }
   const needle = targetPhrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const re = new RegExp(needle, 'gu');
-  console.log(`\n=== Phrase audit: page ${targetPage} "${targetPhrase}" ===`);
+  console.log(`\n=== Phrase audit: page ${pageNum} "${targetPhrase}" ===`);
   let n = 0;
   let match;
   while ((match = re.exec(row.text)) !== null) {

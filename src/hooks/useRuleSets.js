@@ -32,8 +32,20 @@ import {
 } from '../lib/criteriaName.js';
 import { planCriteriaPresetDelete } from '../lib/criteriaPresetDelete.js';
 import { normalizeRuleSet } from '../lib/ruleSetNormalize.js';
+import {
+  isRuleSetsCloudEnabled,
+  loadRuleSetsCloud,
+  resolveCloudActiveSetId,
+  saveRuleSetsCloud,
+} from '../lib/ruleSetsCloud.js';
+import {
+  canAddCriteriaPreset,
+  CRITERIA_PRESET_LIMIT_MESSAGE,
+  enforceMaxCriteriaPresets,
+} from '../lib/criteriaPresetLimit.js';
 
 const RULE_SET_AUTOSAVE_MS = 400;
+const RULE_SET_CLOUD_SYNC_MS = 800;
 
 function createDefaultSet() {
   return normalizeRuleSet({
@@ -46,22 +58,78 @@ function createDefaultSet() {
   });
 }
 
-export function useRuleSets() {
+/** @param {import('../lib/ruleSetsStorage.js').RuleSet[]} rawSets */
+function normalizeLoadedRuleSets(rawSets) {
+  let sets = (rawSets ?? []).map((set) => {
+    const normalized = normalizeRuleSet(set);
+    const trimmedName = (normalized.name || '').trim();
+    if (
+      trimmedName === '기본 규칙 세트' ||
+      trimmedName === LEGACY_DEFAULT_CRITERIA_HINT
+    ) {
+      return normalizeRuleSet({ ...normalized, name: '' });
+    }
+    return normalized;
+  });
+  if (!sets.length) {
+    sets = [createDefaultSet()];
+  }
+  return sets;
+}
+
+/** @param {string} [authUid] @param {string} [authEmail] */
+export function useRuleSets(authUid = '', authEmail = '') {
   const [ruleSets, setRuleSets] = useState([]);
   const [activeSetId, setActiveSetId] = useState(null);
   const [rulesReady, setRulesReady] = useState(false);
 
   const activeSetIdRef = useRef(activeSetId);
   const ruleSetsRef = useRef(ruleSets);
+  const authUidRef = useRef(authUid);
+  const authEmailRef = useRef(authEmail);
   const autosaveTimerRef = useRef(null);
+  const cloudSyncTimerRef = useRef(null);
+  const cloudHydratedUidRef = useRef('');
 
   activeSetIdRef.current = activeSetId;
   ruleSetsRef.current = ruleSets;
+  authUidRef.current = authUid;
+  authEmailRef.current = authEmail;
 
-  const flushRuleSets = useCallback((sets, setId = activeSetIdRef.current) => {
-    saveRuleSets(sets);
-    if (setId) saveActiveSetId(setId);
+  const flushCloudRuleSetsImmediate = useCallback(async () => {
+    if (cloudSyncTimerRef.current) {
+      clearTimeout(cloudSyncTimerRef.current);
+      cloudSyncTimerRef.current = null;
+    }
+    const uid = String(authUidRef.current ?? '').trim();
+    if (!uid || !isRuleSetsCloudEnabled()) return;
+    try {
+      await saveRuleSetsCloud(uid, ruleSetsRef.current, activeSetIdRef.current);
+    } catch (e) {
+      console.warn('기준 클라우드 저장 실패', e);
+    }
   }, []);
+
+  const scheduleCloudRuleSetsSync = useCallback(() => {
+    const uid = String(authUidRef.current ?? '').trim();
+    if (!uid || !isRuleSetsCloudEnabled()) return;
+    if (cloudSyncTimerRef.current) {
+      clearTimeout(cloudSyncTimerRef.current);
+    }
+    cloudSyncTimerRef.current = setTimeout(() => {
+      cloudSyncTimerRef.current = null;
+      void flushCloudRuleSetsImmediate();
+    }, RULE_SET_CLOUD_SYNC_MS);
+  }, [flushCloudRuleSetsImmediate]);
+
+  const flushRuleSets = useCallback(
+    (sets, setId = activeSetIdRef.current) => {
+      saveRuleSets(sets);
+      if (setId) saveActiveSetId(setId);
+      scheduleCloudRuleSetsSync();
+    },
+    [scheduleCloudRuleSetsSync],
+  );
 
   const scheduleRuleSetsSave = useCallback(
     (sets) => {
@@ -83,23 +151,11 @@ export function useRuleSets() {
       autosaveTimerRef.current = null;
     }
     flushRuleSets(ruleSetsRef.current, activeSetIdRef.current);
-  }, [flushRuleSets]);
+    void flushCloudRuleSetsImmediate();
+  }, [flushRuleSets, flushCloudRuleSetsImmediate]);
 
   useEffect(() => {
-    let sets = loadRuleSets().map((set) => {
-      const normalized = normalizeRuleSet(set);
-      const trimmedName = (normalized.name || '').trim();
-      if (
-        trimmedName === '기본 규칙 세트' ||
-        trimmedName === LEGACY_DEFAULT_CRITERIA_HINT
-      ) {
-        return normalizeRuleSet({ ...normalized, name: '' });
-      }
-      return normalized;
-    });
-    if (!sets.length) {
-      sets = [createDefaultSet()];
-    }
+    const sets = normalizeLoadedRuleSets(loadRuleSets());
     saveRuleSets(sets);
     if (!loadActiveSetId() || !sets.some((s) => s.id === loadActiveSetId())) {
       saveActiveSetId(sets[0].id);
@@ -151,14 +207,18 @@ export function useRuleSets() {
 
   const applyRuleSets = useCallback(
     (next, nextActiveId = activeSetIdRef.current) => {
-      flushPendingRuleSetsSave();
+      if (autosaveTimerRef.current) {
+        clearTimeout(autosaveTimerRef.current);
+        autosaveTimerRef.current = null;
+      }
       ruleSetsRef.current = next;
       setRuleSets(next);
       setActiveSetId(nextActiveId);
       activeSetIdRef.current = nextActiveId;
       flushRuleSets(next, nextActiveId);
+      void flushCloudRuleSetsImmediate();
     },
-    [flushPendingRuleSetsSave, flushRuleSets],
+    [flushRuleSets, flushCloudRuleSetsImmediate],
   );
 
   // 시트 sync 후 지문이 안 맞는 저장분만 1회 보정. ruleSets는 deps에 넣지 않음
@@ -184,6 +244,47 @@ export function useRuleSets() {
     applyRuleSets(next, nextActive);
   }, [rulesReady, applyRuleSets]);
 
+  useEffect(() => {
+    const uid = String(authUid ?? '').trim();
+    if (!uid) {
+      cloudHydratedUidRef.current = '';
+      return undefined;
+    }
+    if (!isRuleSetsCloudEnabled() || !rulesReady) return undefined;
+    if (cloudHydratedUidRef.current === uid) return undefined;
+
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const cloud = await loadRuleSetsCloud(uid);
+        if (cancelled) return;
+
+        if (cloud?.ruleSets?.length) {
+          const sets = normalizeLoadedRuleSets(cloud.ruleSets);
+          const activeId = resolveCloudActiveSetId(cloud.activeSetId, sets);
+          if (!activeId) return;
+          applyRuleSets(sets, activeId);
+        } else {
+          flushPendingRuleSetsSave();
+          await saveRuleSetsCloud(
+            uid,
+            ruleSetsRef.current,
+            activeSetIdRef.current,
+          );
+        }
+        cloudHydratedUidRef.current = uid;
+      } catch (e) {
+        console.warn('기준 클라우드 불러오기 실패', e);
+        cloudHydratedUidRef.current = uid;
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authUid, rulesReady, applyRuleSets, flushPendingRuleSetsSave]);
+
   const handleSelectRuleSet = useCallback(
     (id) => {
       if (!id || id === activeSetIdRef.current) return;
@@ -192,8 +293,9 @@ export function useRuleSets() {
       setActiveSetId(id);
       activeSetIdRef.current = id;
       saveActiveSetId(id);
+      scheduleCloudRuleSetsSync();
     },
-    [flushPendingRuleSetsSave],
+    [flushPendingRuleSetsSave, scheduleCloudRuleSetsSync],
   );
 
   const handleCreateRuleSet = useCallback(() => {
@@ -278,6 +380,18 @@ export function useRuleSets() {
         return false;
       }
 
+      if (
+        !canAddCriteriaPreset(
+          ruleSetsRef.current,
+          name,
+          authUidRef.current,
+          authEmailRef.current,
+        )
+      ) {
+        alert(CRITERIA_PRESET_LIMIT_MESSAGE);
+        return false;
+      }
+
       if (autosaveTimerRef.current) {
         clearTimeout(autosaveTimerRef.current);
         autosaveTimerRef.current = null;
@@ -329,6 +443,7 @@ export function useRuleSets() {
       flushRuleSets(next, targetId);
       setActiveSetId(targetId);
       activeSetIdRef.current = targetId;
+      void flushCloudRuleSetsImmediate();
 
       const saved = next.find((s) => s.id === targetId);
       if (saved) {
@@ -345,7 +460,7 @@ export function useRuleSets() {
       alert('기준이 저장되었습니다.');
       return true;
     },
-    [flushRuleSets],
+    [flushRuleSets, flushCloudRuleSetsImmediate],
   );
 
   /** 저장한 기준 프리셋 삭제(목록·localStorage) */
