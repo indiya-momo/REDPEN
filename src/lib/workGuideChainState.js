@@ -11,9 +11,9 @@ import { isTooltipGuideDismissed } from './tooltipGuideStorage.js';
  */
 export function devWorkGuideStepFromChain(chain) {
   if (chain.showPreUploadGuide) return 0;
-  if (chain.showPdfOpenedGuide) return 1;
-  if (chain.showLeftCriteriaGuide) return 2;
-  if (chain.showFirstResultGuide) return 3;
+  if (chain.showLeftCriteriaGuide) return 1;
+  if (chain.showFirstResultGuide) return 2;
+  if (chain.showPdfOpenedGuide) return 3;
   if (chain.showConsistencyGuide) return 4;
   if (chain.showAuxiliaryVerbGuide) return 5;
   if (chain.showRuleSetSaveGuide) return 6;
@@ -31,29 +31,40 @@ export function devWorkGuideStepFromChain(chain) {
  *   spellingCheckDone: boolean,
  * }} ctx
  * @param {boolean} pinAll
+ * @param {(key: string) => string} keyFor
+ * @param {Record<string, boolean> | null} dismissedMap
  */
-function getDevForcedWorkGuideChain(step, empty, ctx, pinAll) {
+function getDevForcedWorkGuideChain(step, empty, ctx, pinAll, keyFor, dismissedMap) {
   const { hasPdf, pageTextsReady } = ctx;
+  const d = (key) => dismissed(keyFor(key), dismissedMap);
   const base = { ...empty, pinAll, workGuideOpen: true };
   if (step === 0) {
+    if (d(WORK_GUIDE_KEYS.PRE_UPLOAD)) return null;
     if (!hasPdf) return { ...base, showPreUploadGuide: true };
     return null;
   }
   if (!hasPdf) return null;
   switch (step) {
     case 1:
-      return pageTextsReady ? { ...base, showPdfOpenedGuide: true } : null;
-    case 2:
+      if (d(WORK_GUIDE_KEYS.LEFT_CRITERIA)) return null;
       return pageTextsReady ? { ...base, showLeftCriteriaGuide: true } : null;
-    case 3:
+    case 2:
+      if (d(WORK_GUIDE_KEYS.FIRST_RESULT)) return null;
       return pageTextsReady ? { ...base, showFirstResultGuide: true } : null;
+    case 3:
+      if (d(WORK_GUIDE_KEYS.PDF_OPENED)) return null;
+      return pageTextsReady ? { ...base, showPdfOpenedGuide: true } : null;
     case 4:
+      if (d(WORK_GUIDE_KEYS.CONSISTENCY_INTRO)) return null;
       return { ...base, showConsistencyGuide: true };
     case 5:
+      if (d(WORK_GUIDE_KEYS.AUXILIARY_VERB_INTRO)) return null;
       return { ...base, showAuxiliaryVerbGuide: true };
     case 6:
+      if (d(WORK_GUIDE_KEYS.RULE_SET_SAVE)) return null;
       return { ...base, showRuleSetSaveGuide: true };
     case 7:
+      if (d(WORK_GUIDE_KEYS.WORK_EXIT)) return null;
       return { ...base, showWorkExitGuide: true };
     default:
       return null;
@@ -120,7 +131,14 @@ export function getWorkGuideChainState(
 
   const devForceStep = getDevWorkGuideForceStep();
   if (devForceStep != null) {
-    const forced = getDevForcedWorkGuideChain(devForceStep, empty, ctx, pinAll);
+    const forced = getDevForcedWorkGuideChain(
+      devForceStep,
+      empty,
+      ctx,
+      pinAll,
+      keyFor,
+      dismissedMap,
+    );
     if (forced) return forced;
   }
 
@@ -134,13 +152,6 @@ export function getWorkGuideChainState(
   }
 
   if (spellingActive && pageTextsReady) {
-    if (!d(WORK_GUIDE_KEYS.PDF_OPENED)) {
-      return {
-        ...empty,
-        showPdfOpenedGuide: true,
-        workGuideOpen: true,
-      };
-    }
     if (!d(WORK_GUIDE_KEYS.LEFT_CRITERIA)) {
       return {
         ...empty,
@@ -152,6 +163,13 @@ export function getWorkGuideChainState(
       return {
         ...empty,
         showFirstResultGuide: true,
+        workGuideOpen: true,
+      };
+    }
+    if (d(WORK_GUIDE_KEYS.FIRST_RESULT) && !d(WORK_GUIDE_KEYS.PDF_OPENED)) {
+      return {
+        ...empty,
+        showPdfOpenedGuide: true,
         workGuideOpen: true,
       };
     }

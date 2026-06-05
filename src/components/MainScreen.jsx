@@ -62,8 +62,8 @@ import {
   shouldShowPdfViewer,
 } from '../utils/main-screen-helpers.js';
 
-/** 2번 — 가로: 실행 행 왼쪽, 세로: 기준 검수 버튼 아래 (버튼과 겹치지 않음) */
-const WORK_GUIDE_2_ALIGN_CHAIN = [
+/** 1번 — 가로: 실행 행 왼쪽, 세로: 기준 검수 버튼 아래 (버튼과 겹치지 않음) */
+const WORK_GUIDE_1_ALIGN_CHAIN = [
   {
     alignSplit: {
       horizontal: {
@@ -79,12 +79,11 @@ const WORK_GUIDE_2_ALIGN_CHAIN = [
   },
 ];
 
-/** 3번 — 가로: 인사말(○○님 안녕하세요) 왼쪽, 세로: 2번 아래 10px */
-/** 4번 — 우측 상단 인사말(○○님 안녕하세요) 위치 */
+/** 4번 — 우측 상단 인사말(○○님 안녕하세요) 아래 120px */
 const WORK_GUIDE_GREETING_ALIGN = {
   selector: '.work-guide-anchor--greeting',
   leftFromTargetLeft: 0,
-  topFromTargetTop: 20,
+  topFromTargetTop: 120,
 };
 
 /** 6번 — 4번과 동일 앵커, 위로 15px */
@@ -97,7 +96,7 @@ const WORK_GUIDE_6_ALIGN = {
 /** 7번 — 로그아웃 버튼 아래, 버튼 오른쪽 끝 기준으로 말풍선을 왼쪽으로 펼침 */
 const WORK_GUIDE_7_ALIGN = {
   selector: '.work-guide-anchor--logout',
-  leftFromTargetLeft: 0,
+  leftFromTargetLeft: 100,
   topFromTargetBottom: 8,
   fixedTransform: 'translate(-100%, 0)',
 };
@@ -130,7 +129,8 @@ const WORK_GUIDE_5_ALIGN_CHAIN = [
   },
 ];
 
-const WORK_GUIDE_3_ALIGN_CHAIN = [
+/** 2번 — 가로: 인사말 왼쪽, 세로: 3번(보정) 아래 또는 실행 행 */
+const WORK_GUIDE_2_ALIGN_CHAIN = [
   {
     alignSplit: {
       horizontal: {
@@ -138,7 +138,7 @@ const WORK_GUIDE_3_ALIGN_CHAIN = [
         leftFromTargetLeft: 0,
       },
       vertical: {
-        selector: '[data-work-guide-bubble="2"]',
+        selector: '[data-work-guide-step="3"]',
         topFromTargetBottom: 10,
       },
     },
@@ -755,14 +755,13 @@ export default function MainScreen({
       message={
         <>
           <span className="tooltip-guide__message-line">
-            이때까지 작업한 내용을{' '}
+            선택한 항목에 이름을 붙이고
+          </span>
+          <span className="tooltip-guide__message-line">
             <span className="tooltip-guide__save-rules-btn-look">
               기준 저장
             </span>
-            으로{' '}
-          </span>
-          <span className="tooltip-guide__message-line">
-            남기고 이름도 붙여보라냥
+            으로 남겨보라냥
           </span>
         </>
       }
@@ -783,13 +782,14 @@ export default function MainScreen({
       pinned={workGuide.pinAll}
       message={
         <>
-          이제{' '}
           <span className="tooltip-guide__work-tab-chip tooltip-guide__work-tab-chip--consistency">
             일관성 확인
           </span>
-          을 살펴볼 차례
+          을 살보면
           <br />
-          한 번에 여러 요소를 검색할 수 있다냥!
+          한 번에 여러 요소를 검색할 수 있는데
+          <br />
+          하나씩 찾기 힘들어서 만들었다냥!!
         </>
       }
       onDismiss={() =>
@@ -865,16 +865,16 @@ export default function MainScreen({
                       useFixedLayer
                       offsetX={0}
                       offsetY={0}
-                      alignToBubbleChain={WORK_GUIDE_2_ALIGN_CHAIN}
-                      bubbleGuideStep="2"
+                      alignToBubbleChain={WORK_GUIDE_1_ALIGN_CHAIN}
+                      bubbleGuideStep="1"
                       pinned={workGuide.pinAll}
                       message={
                         <>
-                          검수할 기준을 선택하자냥!
+                          검수할 항목을 선택하자냥!
                           <br />
                           〉 를 누르면 기준 항목을 볼 수 있다냥
                           <br />
-                          모두 선택했으면{' '}
+                          선택했으면{' '}
                           <span className="tooltip-guide__run-btn-look">
                             기준 검수
                           </span>
@@ -1015,12 +1015,83 @@ export default function MainScreen({
           <div
             className={spellingTabLayoutClassName}
           >
+            {showSpellingRunRow ? (
+              <div
+                className="spelling-tab-layout__run-row"
+                data-work-guide-step="2"
+              >
+                <div className="spelling-tab-layout__run-row-actions">
+                  <PanelSectionRunButton
+                    label="다시 검수"
+                    onClick={handleSpellingRecheckFromScratch}
+                    disabled={
+                      pdf.pageTexts.length === 0 ||
+                      !ruleCheck.spellingCheckDone ||
+                      pdf.isProcessing ||
+                      checkSessionBlocked
+                    }
+                    isProcessing={pdf.isProcessing}
+                  />
+                </div>
+                <div className="spelling-tab-layout__run-row-actions spelling-tab-layout__run-row-actions--end">
+                  <span
+                    className="spelling-tab-layout__criteria-run-wrap"
+                    title={criteriaRunDisabledReason || undefined}
+                  >
+                    <PanelSectionRunButton
+                      label="기준 검수"
+                      onClick={handleCriteriaSpellingCheck}
+                      disabled={criteriaRunBlocked}
+                      isProcessing={criteriaRunChecking}
+                    />
+                  </span>
+                  {/* 2번 말풍선 — 검수 결과 안내 */}
+                  {workGuide.showFirstResultGuide ? (
+                    <div className="work-guide-step-2">
+                      <TooltipGuide
+                        storageKey={workGuide.storageKey(
+                          WORK_GUIDE_KEYS.FIRST_RESULT,
+                        )}
+                        placement="left"
+                        bubbleType="left"
+                        useFixedLayer
+                        alignToBubbleChain={WORK_GUIDE_2_ALIGN_CHAIN}
+                        bubbleGuideStep="2"
+                        offsetX={0}
+                        offsetY={0}
+                        pinned={workGuide.pinAll}
+                        message={
+                          <>
+                            검수는 아직 부족한 점도 있다냥
+                            <br />
+                            <span className="tooltip-guide__feedback-btn-look">
+                              피드백 남기기
+                            </span>
+                            는 언제나 환영이다냥
+                            <br />
+                            원고의 표시를 클릭하면 설명을 볼 수 있다냥
+                          </>
+                        }
+                        onDismiss={() =>
+                          workGuide.dismiss(WORK_GUIDE_KEYS.FIRST_RESULT)
+                        }
+                      >
+                        <span
+                          className="work-guide-anchor work-guide-anchor--guide-result"
+                          aria-hidden
+                        />
+                      </TooltipGuide>
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            ) : null}
             {pdf.pdf ? (
               <div
                 className="spelling-tab-layout__calibration"
-                data-work-guide-step="1"
+                data-work-guide-step="3"
               >
-                {/* 1번 말풍선 — 인쇄 쪽 보정 */}
+                {/* 3번 말풍선 — 파일 - 원고 페이지 맞추기 */}
                 {workGuide.showPdfOpenedGuide ? (
                   <TooltipGuide
                     storageKey={workGuide.storageKey(
@@ -1029,21 +1100,21 @@ export default function MainScreen({
                     placement="right"
                     bubbleType="left"
                     useFixedLayer
-                    bubbleGuideStep="1"
+                    bubbleGuideStep="3"
                     offsetX={0}
                     offsetY={0}
                     pinned={workGuide.pinAll}
                     message={
                       <>
-                        PDF파일과 원고의 페이지를 맞춰보자냥
+                        원고 페이지 번호와 PDF가 다르면
                         <br />
-                        (필수)오른쪽의 원고 화면을 보면서
+                        원고 페이지 번호(예: 50-51)을 넣고
                         <br />
-                        체크박스에 표시하고{' '}
+                        체크박스를 확인 후{' '}
                         <span className="tooltip-guide__calibrate-btn-look">
                           보정
                         </span>
-                        을 누르라냥
+                        을 눌러보라냥
                       </>
                     }
                     onDismiss={() =>
@@ -1095,73 +1166,6 @@ export default function MainScreen({
                     onClear={pageDisplay.clearCalibration}
                   />
                 )}
-              </div>
-            ) : null}
-            {showSpellingRunRow ? (
-              <div className="spelling-tab-layout__run-row">
-                <div className="spelling-tab-layout__run-row-actions">
-                  <PanelSectionRunButton
-                    label="다시 검수"
-                    onClick={handleSpellingRecheckFromScratch}
-                    disabled={
-                      pdf.pageTexts.length === 0 ||
-                      !ruleCheck.spellingCheckDone ||
-                      pdf.isProcessing ||
-                      checkSessionBlocked
-                    }
-                    isProcessing={pdf.isProcessing}
-                  />
-                </div>
-                <div className="spelling-tab-layout__run-row-actions spelling-tab-layout__run-row-actions--end">
-                  <span
-                    className="spelling-tab-layout__criteria-run-wrap"
-                    title={criteriaRunDisabledReason || undefined}
-                  >
-                    <PanelSectionRunButton
-                      label="기준 검수"
-                      onClick={handleCriteriaSpellingCheck}
-                      disabled={criteriaRunBlocked}
-                      isProcessing={criteriaRunChecking}
-                    />
-                  </span>
-                  {workGuide.showFirstResultGuide ? (
-                    <div className="work-guide-step-3">
-                      <TooltipGuide
-                        storageKey={workGuide.storageKey(
-                          WORK_GUIDE_KEYS.FIRST_RESULT,
-                        )}
-                        placement="left"
-                        bubbleType="left"
-                        useFixedLayer
-                        alignToBubbleChain={WORK_GUIDE_3_ALIGN_CHAIN}
-                        bubbleGuideStep="3"
-                        offsetX={0}
-                        offsetY={0}
-                        pinned={workGuide.pinAll}
-                        message={
-                          <>
-                            검수는 아직 부족한 점도 있다냥
-                            <br />
-                            <span className="tooltip-guide__feedback-btn-look">
-                              피드백 남기기
-                            </span>
-                            는 언제나 환영이다냥
-                            <br />
-                            원고의 표시를 클릭하면 설명을 볼 수 있다냥
-                          </>
-                        }
-                        onDismiss={() =>
-                          workGuide.dismiss(WORK_GUIDE_KEYS.FIRST_RESULT)
-                        }
-                      >
-                        <span
-                          className="work-guide-anchor work-guide-anchor--guide-result"
-                          aria-hidden
-                        />
-                      </TooltipGuide>
-                    </div>
-                  ) : null}
-                </div>
               </div>
             ) : null}
             {showSpellingResultsSlot ? (

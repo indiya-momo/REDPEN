@@ -40,6 +40,7 @@ export function useWorkGuideChain(uid, ctx) {
     (key) => {
       if (isWorkGuidePinned()) return;
       dismissTooltipGuide(storageKey(key));
+      setDevWorkGuideForceStep(null);
       bump();
     },
     [storageKey, bump],
@@ -66,7 +67,7 @@ export function useWorkGuideChain(uid, ctx) {
   useEffect(() => {
     if (!import.meta.env.DEV) return;
     const step = devWorkGuideStepFromChain(chain);
-    if (step != null) setDevWorkGuideForceStep(step);
+    setDevWorkGuideForceStep(step);
   }, [chain]);
 
   return {

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { buildAuxiliaryVerbFindRules } from './auxiliaryVerbPattern.js';
 import {
+  bonVerbHeadForSyllableLimit,
   isBonVerbHeadOnAllowList,
   isBonVerbHeadTooLongForAuxiliary,
   shouldSkipAuxiliaryVerbMatch,
@@ -55,16 +56,17 @@ describe('auxiliaryVerbMatchFilters', () => {
     expect(isBonVerbHeadOnAllowList('매달려', '어', allow)).toBe(false);
   });
 
-  it('역할을해 — 3음절 초과, bon_allow 없으면 제외(띄움 해 왔은 캡처 해만)', () => {
+  it('역할을 해 오다 — 명사+조사 뒤 해는 길이 검사에서 해만 본다', () => {
     const rule = {
       ...buildAuxiliaryVerbFindRules('해 왔')[0],
       bonBojoItemId: 'verb-oda',
     };
-    expect(isBonVerbHeadTooLongForAuxiliary('역할을해', '해')).toBe(true);
+    expect(bonVerbHeadForSyllableLimit('역할을해', '해')).toBe('해');
+    expect(isBonVerbHeadTooLongForAuxiliary('역할을해', '해')).toBe(false);
     expect(ruleMatches(rule, '역할을 해 왔다.')).toBe(true);
-    expect(ruleMatches(rule, '역할을해 왔다.')).toBe(false);
-    expect(ruleMatches(rule, '역할을해왔다.')).toBe(false);
+    expect(ruleMatches(rule, '역할을해 왔다.')).toBe(true);
     expect(isBonVerbHeadTooLongForAuxiliary('주장해', '해')).toBe(true);
+    expect(bonVerbHeadForSyllableLimit('주장해', '해')).toBe('주장해');
     expect(ruleMatches(rule, '주장해 왔다.')).toBe(false);
   });
 

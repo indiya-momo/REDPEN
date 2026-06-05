@@ -105,7 +105,7 @@ export default function TocBodySetupPanel({
         </p>
       ) : null}
 
-      <p className="consistency-toc-section__step-label">1. 인쇄 쪽 보정</p>
+      <p className="consistency-toc-section__step-label">1. 파일 - 원고 페이지 맞추기</p>
       {printedPagesActive && !showCalibrationEditor ? (
         <div className="consistency-toc-section__calibration-done">
           <p>
@@ -229,7 +229,7 @@ export default function TocBodySetupPanel({
       </div>
       {hasPdf && hasTocBodyEntries(tocBodyText) && !printedPagesActive ? (
         <p className="hint consistency-toc-section__run-hint">
-          맞춤법 확인에서 인쇄 쪽 보정을 하거나, 위에서 보정한 뒤 검수하세요.
+          맞춤법 확인에서 파일 - 원고 페이지 맞추기를 하거나, 위에서 맞춘 뒤 검수하세요.
         </p>
       ) : null}
     </section>

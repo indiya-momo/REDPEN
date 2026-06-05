@@ -97,22 +97,22 @@
 }
 
 .spelling-tab-scroll .tooltip-guide,
-.work-guide-step-3 .tooltip-guide {
+.work-guide-step-2 .tooltip-guide {
   z-index: 10003;
 }
 
 .tooltip-guide--fixed-layer[data-work-guide-bubble='1'] {
   z-index: 10010;
-  --tooltip-text-max: calc(240px * var(--tooltip-scale, 1));
-  max-width: min(calc(300px * var(--tooltip-scale, 1)), calc(100vw - 28px));
-}
-
-.tooltip-guide--fixed-layer[data-work-guide-bubble='2'] {
   max-width: min(calc(400px * var(--tooltip-scale, 1)), calc(100vw - 28px));
 }
 
-.tooltip-guide--fixed-layer[data-work-guide-bubble='3'] {
+.tooltip-guide--fixed-layer[data-work-guide-bubble='2'] {
   z-index: 10011;
+}
+
+.tooltip-guide--fixed-layer[data-work-guide-bubble='3'] {
+  --tooltip-text-max: calc(360px * var(--tooltip-scale, 1));
+  max-width: min(calc(450px * var(--tooltip-scale, 1)), calc(100vw - 28px));
 }
 
 .tooltip-guide--fixed-layer[data-work-guide-bubble='4'] {
@@ -202,6 +202,7 @@
   overflow-y: auto;
 }
 
+.work-guide-step-2,
 .work-guide-step-3 {
   display: inline-flex;
   flex-shrink: 0;
@@ -247,12 +248,12 @@
   width: 100%;
 }
 
-/* 1번: 3줄 — 텍스트 열 폭만 조정 (말풍선 여백은 border-image) */
+/* 3번(보정) — 텍스트 열 폭 */
 .spelling-tab-layout__calibration .tooltip-guide {
-  --tooltip-text-max: calc(240px * var(--tooltip-scale));
+  --tooltip-text-max: calc(360px * var(--tooltip-scale));
 }
 
-/* 1번 말풍선 — 「보정」을 실제 보정 버튼과 같은 느낌 */
+/* 3번 말풍선 — 「보정」을 실제 보정 버튼과 같은 느낌 */
 .tooltip-guide__calibrate-btn-look {
   display: inline-block;
   margin: 0 1px;

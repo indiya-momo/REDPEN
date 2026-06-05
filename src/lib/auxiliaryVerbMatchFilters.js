@@ -27,6 +27,10 @@ export function isLexicalHaeCompoundHead(headCapture) {
 /** 본용언 3음절 이상은 표기 검사 제외(합성 동사는 추후 시트 except) */
 export const BON_VERB_HEAD_MAX_SYLLABLES = 2;
 
+/** 명사+조사 직후 연결 `해`(역할을+해 오다) — 앞말은 목적어, 본용언 길이는 `해`만 */
+const BON_NOUN_JOSA_BEFORE_HAE =
+  /(?:을|를|에|도|만|와|과|로|으로|부터|까지|한테|에게|께|에서)$/u;
+
 /**
  * @param {string} headCapture
  */
@@ -47,15 +51,33 @@ export function bonVerbHeadStemPortion(headCapture, stemHead = '') {
 }
 
 /**
+ * 3음절 제한에 쓸 본용언 표면.
+ * stem `해 …`이고 캡처 앞이 명사+조사(역할을 등)면 연결어미 `해`만 센다.
+ * 그 외(상상해·가져다·만들어 등)는 캡처 전체. 면제는 bon_allow만.
+ * @param {string} headCapture
+ * @param {string} [stemHead]
+ */
+export function bonVerbHeadForSyllableLimit(headCapture, stemHead = '') {
+  const c = headCapture.trim();
+  const head = stemHead.trim();
+  if (head === '해' && c.endsWith('해')) {
+    const portion = bonVerbHeadStemPortion(c, head);
+    if (portion && BON_NOUN_JOSA_BEFORE_HAE.test(portion)) {
+      return head;
+    }
+  }
+  return c;
+}
+
+/**
  * 본용언 3음절 이상인지(길면 표기 검사 대상에서 빼기 전 단계).
  * 실제 포함 여부는 bon_allow — 기다려(있음)=포함, 매달려·주장해(없음)=제외.
- * 음절 수는 regex 캡처 전체(가져다·만들어·역할을해 등)로 센다. 면제는 bon_allow만.
  * @param {string} headCapture
  * @param {string} [stemHead]
  */
 export function isBonVerbHeadTooLongForAuxiliary(headCapture, stemHead = '') {
-  void stemHead;
-  return bonVerbHeadSyllableCount(headCapture.trim()) > BON_VERB_HEAD_MAX_SYLLABLES;
+  const countTarget = bonVerbHeadForSyllableLimit(headCapture, stemHead);
+  return bonVerbHeadSyllableCount(countTarget) > BON_VERB_HEAD_MAX_SYLLABLES;
 }
 
 /**
