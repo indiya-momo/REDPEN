@@ -1748,28 +1748,30 @@
 }
 
 .consistency-subsection-row {
-  display: flex;
-  align-items: stretch;
-  gap: 12px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto auto auto auto;
+  column-gap: 12px;
   margin-top: 10px;
   padding-top: 10px;
   border-top: 1px solid var(--color-border);
 }
 
-.consistency-subsection-row .consistency-subsection--half {
-  display: flex;
-  flex-direction: column;
+/* 설명은 각 열에서 입력창 바로 위에 붙이고, 등록 입력창 행만 좌·우 정렬 */
+.consistency-subsection-row > .consistency-subsection--half {
+  display: grid;
+  grid-template-rows: subgrid;
+  grid-row: span 4;
+  min-width: 0;
 }
 
 .consistency-subsection__hints-area {
   box-sizing: border-box;
-  min-height: calc(var(--panel-guide-font-size) * var(--panel-guide-line-height) * 2);
   margin-top: 2px;
 }
 
-/* 좌·우 열 힌트 높이를 맞춰 등록 입력창(tail-form) 세로 위치 통일 */
 .consistency-subsection-row .consistency-subsection__hints-area {
-  flex: 1 1 0;
+  align-self: end;
 }
 
 .consistency-subsection--half {
@@ -1778,10 +1780,6 @@
   margin-top: 0;
   padding-top: 0;
   border-top: none;
-}
-
-.consistency-subsection--exclude {
-  padding-bottom: 4px;
 }
 
 .consistency-subsection--exclude .tail-list--exclude {
