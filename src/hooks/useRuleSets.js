@@ -376,7 +376,7 @@ export function useRuleSets(authUid = '', authEmail = '') {
 
       const name = criteriaNameForSave(rawName);
       if (!name) {
-        alert('기준 이름을 입력해 주세요.');
+        alert('프로젝트 이름을 입력해 주세요.');
         return false;
       }
 

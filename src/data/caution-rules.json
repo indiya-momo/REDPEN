@@ -38,7 +38,10 @@
           "enabled": true,
           "matchMode": "attached-before",
           "inventoryOnly": false,
-          "displayLabel": "정도(의존명사)"
+          "displayLabel": "정도(의존명사)",
+          "except": [
+            "결정도"
+          ]
         }
       ]
     },
@@ -80,7 +83,9 @@
             "바가지",
             "나뭇가지",
             "무가지",
-            "어가지"
+            "들어가지",
+            "내어가지",
+            "따라가지"
           ]
         }
       ]
@@ -117,7 +122,10 @@
             "바라",
             "바래"
           ],
-          "displayLabel": "바라다, 바래다(자주 틀리는 경우)"
+          "displayLabel": "바라다, 바래다(자주 틀리는 경우)",
+          "except": [
+            "바라"
+          ]
         },
         {
           "id": "eogan-eomi-doei",

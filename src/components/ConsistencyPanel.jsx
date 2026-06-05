@@ -265,8 +265,17 @@ export default function ConsistencyPanel({
           일관성 찾기(1회 검수 8개 이내 추천)⭐
         </p>
         <div className="consistency-subsection consistency-subsection--first">
-          <p className="hint">
-            한글 · 영문 대소문자 · 띄어쓰기 등을 찾습니다 항목이 여럿이면 항목 사이에 ,를 넣어보세요 ('조선시대' 일관성 확인 → <span className="consistency-hint-example">[조선˅시대, 조선시대, 조˅선˅시대]</span> 한꺼번에 입력 후 +버튼)  색인 작업에도 유용합니다
+          <p className="hint consistency-hint-block">
+            한글 · 영문 대소문자 등을 찾습니다. 여러 항목은 사이에 , 를 넣어 한 번에 입력하세요
+            <br />
+            ('조선시대' 일관성 확인 →{' '}
+            <span className="consistency-hint-example">
+              '조선˅시대,조선시대'
+            </span>{' '}
+            <span className="consistency-hint-example">'Riftan,riftan'</span> →{' '}
+            <span className="consistency-hint-example">'Riftan'</span> 일관화)
+            <br />
+            ✅색인 작업에도 유용합니다
           </p>
           <ConsistencyRegisterField
             value={literalInput}
@@ -299,7 +308,7 @@ export default function ConsistencyPanel({
             </p>
             <div className="consistency-subsection__hints-area">
               <p className="hint consistency-hint-block">
-                @을 포함한 요소를 모두 찾습니다('@시대' 입력 → <span className="consistency-hint-example">'조선시대, 고려시대, 신라시대'</span> 출력)
+                @을 포함한 항목을 모두 찾습니다('@시대' → <span className="consistency-hint-example">'조선시대,고려시대,신라시대'...</span>)
               </p>
             </div>
             <ConsistencyRegisterField
@@ -390,7 +399,7 @@ export default function ConsistencyPanel({
             </span>
           </summary>
           <p className="auxiliary-checklist-intro">
-            (개발중) ‘본용언+보조용언’ 붙여 쓸 수 있는 표기를 찾습니다
+            (개발중) ｢한글맞춤법｣을 토대로 ‘본용언+보조용언’ 붙여 쓸 수 있는 경우를 찾습니다
             <br />
             본용언이 3음절 이상 복합어(예:생각하다)이면 검색에서 제외됩니다
           </p>
