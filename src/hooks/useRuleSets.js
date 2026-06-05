@@ -479,7 +479,7 @@ export function useRuleSets(authUid = '', authEmail = '') {
         return false;
       }
 
-      if (!window.confirm(`「${plan.label}」 기준을 삭제할까요?`)) {
+      if (!window.confirm(`「${plan.label}」 프로젝트를 삭제할까요?`)) {
         return false;
       }
 
