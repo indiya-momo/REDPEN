@@ -297,6 +297,26 @@ export function shiftFromPrintedInput(parsed, systemPage, firstPageSingle = true
 }
 
 /**
+ * 1P로 시작 토글 시 앵커 쪽의 인쇄 쪽수는 유지하고 shift만 재계산
+ * @param {number} shift
+ * @param {number} anchorPage
+ * @param {boolean} oldFirstPageSingle
+ * @param {boolean} newFirstPageSingle
+ */
+export function shiftAfterFirstPageSingleChange(
+  shift,
+  anchorPage,
+  oldFirstPageSingle,
+  newFirstPageSingle,
+) {
+  if (!Number.isFinite(shift) || !Number.isFinite(anchorPage)) return shift;
+  if (oldFirstPageSingle === newFirstPageSingle) return shift;
+  const printedLeft =
+    naturalPrintedLeft(anchorPage, oldFirstPageSingle) + shift;
+  return printedLeft - naturalPrintedLeft(anchorPage, newFirstPageSingle);
+}
+
+/**
  * @param {number} systemPage
  * @param {number | null} shift
  * @param {boolean} enabled

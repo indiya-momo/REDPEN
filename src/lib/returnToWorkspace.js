@@ -18,6 +18,14 @@ export function consumeReturnToMainWorkspace() {
   }
 }
 
+export function clearReturnToMainWorkspace() {
+  try {
+    sessionStorage.removeItem(REOPEN_MAIN_KEY);
+  } catch {
+    /* private mode */
+  }
+}
+
 /** 마이페이지·안내 창 → 맞춤법/일관성 검수 화면으로 복귀 */
 export function returnToWorkspace() {
   markReturnToMainWorkspace();

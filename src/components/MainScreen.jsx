@@ -6,6 +6,7 @@ import {
   LogOut,
   MessageSquare,
   Save,
+  Trash2,
   UserRound,
 } from 'lucide-react';
 import PdfViewer from './PdfViewer.jsx';
@@ -41,10 +42,12 @@ import {
   getCurrentUserSession,
   subscribeAuthSession,
 } from '../lib/firebaseAuth.js';
+import { criteriaNameForInput } from '../lib/criteriaName.js';
 import { getUserProfile } from '../lib/userProfileStorage.js';
 import { WORK_GUIDE_KEYS } from '../lib/workGuideKeys.js';
 import { useWorkGuideChain } from '../hooks/useWorkGuideChain.js';
 import { useBetaDailyQuota } from '../hooks/useBetaDailyQuota.js';
+import { isLoginRequiredForChecks } from '../lib/checkAuthGate.js';
 import { resolveQuotaAuthEmail } from '../lib/betaDailyQuota.js';
 import { formatRuleSetSavedDate } from '../lib/ruleSetsStorage.js';
 import {
@@ -91,11 +94,12 @@ const WORK_GUIDE_6_ALIGN = {
   topFromTargetTop: 5,
 };
 
-/** 7번 — 로그아웃 버튼 아래, 왼쪽 350px */
+/** 7번 — 로그아웃 버튼 아래, 버튼 오른쪽 끝 기준으로 말풍선을 왼쪽으로 펼침 */
 const WORK_GUIDE_7_ALIGN = {
   selector: '.work-guide-anchor--logout',
-  leftFromTargetLeft: -350,
-  topFromTargetBottom: 10,
+  leftFromTargetLeft: 0,
+  topFromTargetBottom: 8,
+  fixedTransform: 'translate(-100%, 0)',
 };
 
 /** 5번 — 가로 4번, 세로 본용언+보조용언 박스 상단 */
@@ -196,6 +200,7 @@ const WORK_GUIDE_3_ALIGN_CHAIN = [
  *   onGlobalExcludePhrasesChange: (phrases: string[]) => void,
  *   onSaveRules: () => void,
  *   onSaveCriteriaPreset: (name: string) => boolean,
+ *   onDeleteCriteriaPreset: (setId: string) => boolean,
  *   onOpenWelcome: () => void,
  *   onLogout: () => void | Promise<void>,
  *   onOpenMyPageWindow: () => void,
@@ -229,6 +234,7 @@ export default function MainScreen({
   onGlobalExcludePhrasesChange,
   onSaveRules,
   onSaveCriteriaPreset,
+  onDeleteCriteriaPreset,
   onOpenWelcome,
   onLogout,
   onOpenMyPageWindow,
@@ -289,9 +295,17 @@ export default function MainScreen({
     setCriteriaPickerOpen(false);
   }
 
+  function handleDeleteCriteria(setId) {
+    const deleted = onDeleteCriteriaPreset(setId);
+    if (!deleted) return;
+    if (savedRuleSets.length <= 1) {
+      setCriteriaPickerOpen(false);
+    }
+  }
+
   function selectSavedCriteria(set) {
     onSelectRuleSet(set.id);
-    setCriteriaNameInput((set.name || '').trim());
+    setCriteriaNameInput(criteriaNameForInput(set.name));
     setCriteriaPickerOpen(false);
   }
 
@@ -348,11 +362,16 @@ export default function MainScreen({
     [pageDisplay.active, pageDisplay.formatPage],
   );
   const betaQuota = useBetaDailyQuota(authUid, authEmail);
+  const loginRequiredForChecks = isLoginRequiredForChecks();
+  const checkAuthBlocked = loginRequiredForChecks && !authUid;
   const checkQuotaBlocked =
     betaQuota.enforced && !betaQuota.loading && !betaQuota.canRunCheck;
+  const checkSessionBlocked = checkAuthBlocked || checkQuotaBlocked;
 
   const criteriaRunBlocked = useMemo(() => {
-    if (pdf.pageTexts.length === 0 || checkQuotaBlocked) return true;
+    if (pdf.pageTexts.length === 0 || checkAuthBlocked || checkQuotaBlocked) {
+      return true;
+    }
     if (
       pdf.isProcessing &&
       (pdf.progress?.phase === 'extract' || pdf.progress?.phase === 'restore')
@@ -362,6 +381,7 @@ export default function MainScreen({
     return false;
   }, [
     pdf.pageTexts.length,
+    checkAuthBlocked,
     checkQuotaBlocked,
     pdf.isProcessing,
     pdf.progress?.phase,
@@ -384,6 +404,9 @@ export default function MainScreen({
     if (pdf.pageTexts.length === 0) {
       return '텍스트 추출이 완료되지 않았습니다. PDF를 다시 올려 주세요.';
     }
+    if (checkAuthBlocked) {
+      return '로그인 후 검수할 수 있습니다.';
+    }
     if (checkQuotaBlocked) {
       return '오늘 무료 검수 한도를 모두 사용했습니다.';
     }
@@ -393,6 +416,7 @@ export default function MainScreen({
     criteriaRunChecking,
     pdf.pdf,
     pdf.pageTexts.length,
+    checkAuthBlocked,
     checkQuotaBlocked,
   ]);
 
@@ -780,6 +804,7 @@ export default function MainScreen({
 
   return (
     <div className="layout-main">
+      <div className="layout-main__workspace">
       <aside
         className={[
           'panel-left',
@@ -902,7 +927,11 @@ export default function MainScreen({
                       const label = (set.name || '이름 없는 기준').trim();
                       const savedLabel = formatRuleSetSavedDate(set.savedAt);
                       return (
-                        <li key={set.id} role="presentation">
+                        <li
+                          key={set.id}
+                          role="presentation"
+                          className="panel-left__criteria-picker-item"
+                        >
                           <button
                             type="button"
                             role="option"
@@ -919,20 +948,44 @@ export default function MainScreen({
                               </span>
                             ) : null}
                           </button>
+                          <button
+                            type="button"
+                            className="panel-left__criteria-picker-delete"
+                            aria-label={`${label} 삭제`}
+                            title="기준 삭제"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              handleDeleteCriteria(set.id);
+                            }}
+                          >
+                            <Trash2 size={14} aria-hidden />
+                          </button>
                         </li>
                       );
                     })}
                   </ul>
                 ) : null}
               </div>
-              <button
-                type="button"
-                className="panel-left__save-rules"
-                onClick={handleSaveCriteria}
-              >
-                <Save size={16} aria-hidden />
-                기준 저장
-              </button>
+              <div className="panel-left__criteria-actions">
+                {activeRuleSet?.savedAt ? (
+                  <button
+                    type="button"
+                    className="panel-left__delete-rules"
+                    onClick={() => handleDeleteCriteria(activeSetId)}
+                  >
+                    <Trash2 size={16} aria-hidden />
+                    기준 삭제
+                  </button>
+                ) : null}
+                <button
+                  type="button"
+                  className="panel-left__save-rules"
+                  onClick={handleSaveCriteria}
+                >
+                  <Save size={16} aria-hidden />
+                  기준 저장
+                </button>
+              </div>
             </div>
           </div>
           <nav className="work-tabs" aria-label="검수 종류">
@@ -1052,7 +1105,7 @@ export default function MainScreen({
                       pdf.pageTexts.length === 0 ||
                       !ruleCheck.spellingCheckDone ||
                       pdf.isProcessing ||
-                      checkQuotaBlocked
+                      checkSessionBlocked
                     }
                     isProcessing={pdf.isProcessing}
                   />
@@ -1275,14 +1328,13 @@ export default function MainScreen({
                   }}
                   hasPdf={pdf.pageTexts.length > 0}
                   isProcessing={pdf.isProcessing}
-                  checkQuotaBlocked={checkQuotaBlocked}
+                  checkQuotaBlocked={checkSessionBlocked}
                 />
               </div>
             ) : null}
           </div>
         )}
 
-        <AppVersionBadge />
       </aside>
 
       <div
@@ -1433,7 +1485,7 @@ export default function MainScreen({
               sessionHint={session.sessionHint}
               runLabel={centerRunLabel}
               showReady={Boolean(pdf.pdf)}
-              checkQuotaBlocked={checkQuotaBlocked}
+              checkQuotaBlocked={checkSessionBlocked}
               showUploadGuide={workGuide.showPreUploadGuide}
               uploadGuideStorageKey={workGuide.storageKey(
                 WORK_GUIDE_KEYS.PRE_UPLOAD,
@@ -1473,7 +1525,11 @@ export default function MainScreen({
           </div>
         </div>
       </main>
+      </div>
 
+      <footer className="layout-main__footer" aria-label="앱 버전">
+        <AppVersionBadge />
+      </footer>
     </div>
   );
 }

@@ -25,6 +25,7 @@ import {
   signOutUser,
   subscribeAuthSession,
 } from './lib/firebaseAuth.js';
+import { isLoginRequiredForChecks } from './lib/checkAuthGate.js';
 import { consumeReturnToMainWorkspace, markReturnToMainWorkspace } from './lib/returnToWorkspace.js';
 import { clearWorkSession } from './lib/sessionStore.js';
 
@@ -48,10 +49,22 @@ export default function App() {
   const [mainWorkTab, setMainWorkTab] = useState('spelling');
 
   useEffect(() => {
-    if (!auxWindow && consumeReturnToMainWorkspace()) {
+    if (!authReady || auxWindow) return;
+    if (!consumeReturnToMainWorkspace()) return;
+    if (!isLoginRequiredForChecks() || authSession?.uid) {
       setScreen('main');
     }
-  }, [auxWindow]);
+  }, [authReady, auxWindow, authSession]);
+
+  useEffect(() => {
+    if (!authReady || auxWindow) return;
+    if (screen !== 'main') return;
+    if (!isLoginRequiredForChecks()) return;
+    if (!authSession?.uid) {
+      void clearWorkSession();
+      setScreen('welcome');
+    }
+  }, [authReady, auxWindow, screen, authSession]);
 
   useEffect(() => {
     const unsubscribe = subscribeAuthSession(setAuthSession);
@@ -78,6 +91,7 @@ export default function App() {
     handleDeleteRuleSet,
     handleSaveRules,
     handleSaveCriteriaPreset,
+    handleDeleteCriteriaPreset,
     handleBuiltInToggle,
     handleBuiltInSetAll,
     handleCautionToggle,
@@ -220,6 +234,7 @@ export default function App() {
       }
       onSaveRules={handleSaveRules}
       onSaveCriteriaPreset={handleSaveCriteriaPreset}
+      onDeleteCriteriaPreset={handleDeleteCriteriaPreset}
       onOpenWelcome={() => {
         void clearWorkSession();
         setMainWorkTab('spelling');

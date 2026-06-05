@@ -1,10 +1,13 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 const STORAGE_KEY = 'panel-left-width';
+const RESIZE_HANDLE_WIDTH = 8;
+
 export const PANEL_LEFT_DEFAULT_WIDTH = 420;
-export const PANEL_LEFT_MIN_WIDTH = 320;
+/** 기준 이름·저장·탭이 한 줄에 들어갈 최소 폭 */
+export const PANEL_LEFT_MIN_WIDTH = 400;
 export const PANEL_LEFT_MAX_WIDTH = 720;
-const RIGHT_MIN = 320;
+const RIGHT_MIN = 360;
 
 const DEFAULT_WIDTH = PANEL_LEFT_DEFAULT_WIDTH;
 const MIN_WIDTH = PANEL_LEFT_MIN_WIDTH;
@@ -14,22 +17,34 @@ function readStoredWidth() {
   try {
     const n = Number(localStorage.getItem(STORAGE_KEY));
     if (Number.isFinite(n) && n >= MIN_WIDTH && n <= MAX_WIDTH) return n;
+    if (Number.isFinite(n) && n < MIN_WIDTH) return DEFAULT_WIDTH;
   } catch {
     /* ignore */
   }
   return DEFAULT_WIDTH;
 }
 
-function clampWidth(next) {
+/**
+ * @param {number} preferred
+ * @param {number} [viewportWidth]
+ */
+export function clampPanelLeftWidth(preferred, viewportWidth = window.innerWidth) {
   const max = Math.min(
     MAX_WIDTH,
-    Math.max(MIN_WIDTH, window.innerWidth - RIGHT_MIN),
+    Math.max(MIN_WIDTH, viewportWidth - RIGHT_MIN - RESIZE_HANDLE_WIDTH),
   );
-  return Math.min(max, Math.max(MIN_WIDTH, next));
+  return Math.min(max, Math.max(MIN_WIDTH, preferred));
 }
 
 export function useResizablePanelWidth() {
-  const [width, setWidth] = useState(readStoredWidth);
+  const [preferredWidth, setPreferredWidth] = useState(readStoredWidth);
+  const [viewportWidth, setViewportWidth] = useState(
+    () => (typeof window !== 'undefined' ? window.innerWidth : 1280),
+  );
+  const width = useMemo(
+    () => clampPanelLeftWidth(preferredWidth, viewportWidth),
+    [preferredWidth, viewportWidth],
+  );
   const widthRef = useRef(width);
   const handleRef = useRef(null);
   const dragging = useRef(false);
@@ -42,8 +57,9 @@ export function useResizablePanelWidth() {
   const onPointerMove = useCallback((e) => {
     if (!dragging.current) return;
     const delta = e.clientX - startX.current;
-    setWidth(clampWidth(startW.current + delta));
-  }, []);
+    const next = clampPanelLeftWidth(startW.current + delta, viewportWidth);
+    setPreferredWidth(next);
+  }, [viewportWidth]);
 
   const endDrag = useCallback(() => {
     if (!dragging.current) return;
@@ -81,7 +97,7 @@ export function useResizablePanelWidth() {
 
   useEffect(() => {
     function onResize() {
-      setWidth((w) => clampWidth(w));
+      setViewportWidth(window.innerWidth);
     }
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
@@ -104,8 +120,9 @@ export function useResizablePanelWidth() {
 
   const panelStyle = {
     width,
-    minWidth: width,
+    minWidth: MIN_WIDTH,
     maxWidth: width,
+    flexShrink: 0,
   };
 
   return {

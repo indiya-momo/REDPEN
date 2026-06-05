@@ -10,7 +10,7 @@ import { clearTooltipGuideDismissed } from './tooltipGuideStorage.js';
  * - **4번**: 일관성 탭 안내 (`CONSISTENCY_INTRO`) — 우측 상단 인사 영역
  * - **5번**: 본용언+보조용언 표기 (`AUXILIARY_VERB_INTRO`) — 4번 가로·박스 상단 높이
  * - **6번**: 기준 저장 안내 (`RULE_SET_SAVE`) — 우측 인사말 영역
- * - **7번**: 작업 종료·로그아웃 안내 (`WORK_EXIT`) — 로그아웃 버튼 아래
+ * - **7번**: 작업 종료·로그아웃 안내 (`WORK_EXIT`) — 로그아웃 버튼 아래·오른쪽 정렬
  *
  * 업로드 전 「처음 할 일은 이거다냥」(`PRE_UPLOAD`)은 1~7 체인에 포함하지 않음.
  *

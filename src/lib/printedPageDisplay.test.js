@@ -3,6 +3,7 @@ import {
   formatPageLabel,
   formatPrintedPageText,
   naturalPrintedLeft,
+  shiftAfterFirstPageSingleChange,
   shiftFromPrintedInput,
   systemPageFromDisplayInput,
 } from './printedPageDisplay.js';
@@ -72,6 +73,19 @@ describe('printedPageDisplay', () => {
     );
     expect(systemPageFromDisplayInput('146P', -16, true, 200, 82, true)).toBe(
       82,
+    );
+  });
+
+  it('1P로 시작 토글 시 앵커 인쇄 쪽수를 유지하며 shift를 재계산한다', () => {
+    const anchor = 4;
+    const shift = shiftFromPrintedInput({ start: 6, end: 7 }, anchor, true);
+    expect(shift).toBe(0);
+    const nextShift = shiftAfterFirstPageSingleChange(shift, anchor, true, false);
+    expect(formatPrintedPageText(anchor, nextShift, true, 200, anchor, false)).toBe(
+      '6-7',
+    );
+    expect(systemPageFromDisplayInput('6-7', nextShift, true, 200, anchor, false)).toBe(
+      anchor,
     );
   });
 });
