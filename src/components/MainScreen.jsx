@@ -785,7 +785,7 @@ export default function MainScreen({
           <span className="tooltip-guide__work-tab-chip tooltip-guide__work-tab-chip--consistency">
             일관성 확인
           </span>
-          을 살보면
+          에서는
           <br />
           한 번에 여러 요소를 검색할 수 있는데
           <br />
