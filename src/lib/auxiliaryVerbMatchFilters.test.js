@@ -55,18 +55,15 @@ describe('auxiliaryVerbMatchFilters', () => {
     expect(isBonVerbHeadOnAllowList('매달려', '어', allow)).toBe(false);
   });
 
-  it('역할을 해 왔다 — 명사+조사+해(역할을해)는 3음절 제한 제외', () => {
-    const rule = buildAuxiliaryVerbFindRules('해 왔')[0];
-    expect(isBonVerbHeadTooLongForAuxiliary('역할을해', '해')).toBe(false);
+  it('역할을해 — 3음절 초과, bon_allow 없으면 제외(띄움 해 왔은 캡처 해만)', () => {
+    const rule = {
+      ...buildAuxiliaryVerbFindRules('해 왔')[0],
+      bonBojoItemId: 'verb-oda',
+    };
+    expect(isBonVerbHeadTooLongForAuxiliary('역할을해', '해')).toBe(true);
     expect(ruleMatches(rule, '역할을 해 왔다.')).toBe(true);
-    expect(ruleMatches(rule, '역할을해 왔다.')).toBe(true);
-    expect(ruleMatches(rule, '역할을 해 왔다고')).toBe(true);
-    expect(
-      ruleMatches(
-        rule,
-        'slack adjuster 같은 역할을 해 왔다"고 말한다.',
-      ),
-    ).toBe(true);
+    expect(ruleMatches(rule, '역할을해 왔다.')).toBe(false);
+    expect(ruleMatches(rule, '역할을해왔다.')).toBe(false);
     expect(isBonVerbHeadTooLongForAuxiliary('주장해', '해')).toBe(true);
     expect(ruleMatches(rule, '주장해 왔다.')).toBe(false);
   });
