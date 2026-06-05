@@ -7,11 +7,17 @@ import {
   getLineContextAtTextIndex,
   isStandaloneTitleOnLine,
 } from '../toc-body/lib/pdfHeadingExtract.js';
-export {
+import {
   buildPageText,
   shouldInsertLayoutSpaceBetweenPdfItems,
   shouldInsertSpaceBetweenPdfItems,
 } from './pdfPageText.js';
+
+export {
+  buildPageText,
+  shouldInsertLayoutSpaceBetweenPdfItems,
+  shouldInsertSpaceBetweenPdfItems,
+};
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 

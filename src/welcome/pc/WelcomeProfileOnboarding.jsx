@@ -3,6 +3,7 @@ import {
   createRandomNickname,
   saveUserProfile,
 } from '../../lib/userProfileStorage.js';
+import { saveUserProfileCloud } from '../../lib/userProfileCloud.js';
 import { publicAssetUrl } from '../../lib/publicAssetUrl.js';
 import './profile-onboarding.css';
 
@@ -30,15 +31,19 @@ export default function WelcomeProfileOnboarding({
     setNicknameInput(defaultNickname);
   }, [uid, defaultNickname]);
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
     if (!uid) return;
     const nickname = nicknameInput.trim() || createRandomNickname();
-    saveUserProfile(uid, {
+    const saved = saveUserProfile(uid, {
       nickname,
       termsAccepted: false,
       privacyAccepted: false,
       marketingOptIn: false,
+    });
+    if (!saved) return;
+    void saveUserProfileCloud(uid, saved).catch(() => {
+      /* localStorage 저장은 완료 — 클라우드는 다음 로그인 때 재시도 */
     });
     onComplete();
   }

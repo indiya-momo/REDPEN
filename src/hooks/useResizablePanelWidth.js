@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-const STORAGE_KEY = 'panel-left-width';
 const RESIZE_HANDLE_WIDTH = 8;
 
-export const PANEL_LEFT_DEFAULT_WIDTH = 420;
+export const PANEL_LEFT_DEFAULT_WIDTH = 680;
 /** 기준 이름·저장·탭이 한 줄에 들어갈 최소 폭 */
 export const PANEL_LEFT_MIN_WIDTH = 400;
 export const PANEL_LEFT_MAX_WIDTH = 720;
@@ -12,17 +11,6 @@ const RIGHT_MIN = 360;
 const DEFAULT_WIDTH = PANEL_LEFT_DEFAULT_WIDTH;
 const MIN_WIDTH = PANEL_LEFT_MIN_WIDTH;
 const MAX_WIDTH = PANEL_LEFT_MAX_WIDTH;
-
-function readStoredWidth() {
-  try {
-    const n = Number(localStorage.getItem(STORAGE_KEY));
-    if (Number.isFinite(n) && n >= MIN_WIDTH && n <= MAX_WIDTH) return n;
-    if (Number.isFinite(n) && n < MIN_WIDTH) return DEFAULT_WIDTH;
-  } catch {
-    /* ignore */
-  }
-  return DEFAULT_WIDTH;
-}
 
 /**
  * @param {number} preferred
@@ -37,7 +25,7 @@ export function clampPanelLeftWidth(preferred, viewportWidth = window.innerWidth
 }
 
 export function useResizablePanelWidth() {
-  const [preferredWidth, setPreferredWidth] = useState(readStoredWidth);
+  const [preferredWidth, setPreferredWidth] = useState(DEFAULT_WIDTH);
   const [viewportWidth, setViewportWidth] = useState(
     () => (typeof window !== 'undefined' ? window.innerWidth : 1280),
   );
@@ -77,11 +65,6 @@ export function useResizablePanelWidth() {
     activePointerId.current = null;
     document.body.style.cursor = '';
     document.body.style.userSelect = '';
-    try {
-      localStorage.setItem(STORAGE_KEY, String(widthRef.current));
-    } catch {
-      /* ignore */
-    }
   }, []);
 
   useEffect(() => {
