@@ -25,10 +25,11 @@ export function countPhraseSlotRegisteredEntries(customRules) {
  * @param {number} current
  * @param {number} adding
  */
-export function consistencyLiteralRegistrationBlockedMessage(current, adding = 1) {
+export function consistencyLiteralRegistrationBlockedMessage(current, adding = 0) {
   const max = MAX_CONSISTENCY_CRITERIA_SLOTS;
-  const over = current + adding - max;
-  return `일관성 찾기는 ${max}개까지 등록할 수 있습니다(현재 ${current}개, ${over}개 초과)`;
+  const total = current + adding;
+  const over = Math.max(0, total - max);
+  return `일관성 찾기는 ${max}개까지 등록할 수 있습니다(현재 ${total}개, ${over}개 초과)`;
 }
 
 /**
