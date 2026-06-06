@@ -1,7 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, Plus } from 'lucide-react';
-import FeedbackModal from './FeedbackModal.jsx';
-import { openFeedbackFormForUser } from '../lib/feedbackConfig.js';
+import { ArrowLeft } from 'lucide-react';
 import { returnToWorkspace } from '../lib/returnToWorkspace.js';
 import {
   getCurrentUserSession,
@@ -11,16 +9,51 @@ import {
   subscribeAuthSession,
 } from '../lib/firebaseAuth.js';
 import { getUserProfile } from '../lib/userProfileStorage.js';
-import { getUserBadgeCollection } from '../lib/userBadges.js';
+import {
+  daysSinceJoin,
+  syncProfileBadges,
+} from '../lib/badgeGrants.js';
+import {
+  getBadgeCollectionStats,
+  getUserBadgeCollection,
+  syncBadgeShowcase,
+} from '../lib/userBadges.js';
+import { resolveQuotaAuthEmail } from '../lib/betaDailyQuota.js';
+import { clearRewardNotice } from '../lib/rewardNotice.js';
+import { useBetaDailyQuota } from '../hooks/useBetaDailyQuota.js';
 import BadgeCollectionGrid from './BadgeCollectionGrid.jsx';
 import './my-page.css';
 
 const SIDEBAR_NAV = [
   { id: 'profile', label: '회원정보관리' },
-  { id: 'badges', label: '배지' },
-  { id: 'usage', label: '이용 내역' },
-  { id: 'inquiry', label: '문의 내역' },
+  { id: 'usage', label: '최근 이용 내역' },
+  { id: 'inquiry', label: '최근 문의 내역', disabled: true },
+  { id: 'badges', label: '배지 모음집' },
 ];
+
+/** @type {ReadonlyArray<{ name: string, description: string, tabLimit: number }>} */
+const MEMBER_BENEFIT_TIERS = [
+  {
+    name: '오픈베타 테스터',
+    description:
+      '오픈베타 기간 동안 매일 맞춤법 검수 1회, 일관성 검수 1회 제공',
+    tabLimit: 1,
+  },
+  {
+    name: '비밀 연구원',
+    description:
+      '오픈베타 기간 동안 매일 맞춤법 검수 2회, 일관성 검수 2회 제공',
+    tabLimit: 2,
+  },
+  {
+    name: '수석 검증관',
+    description:
+      '오픈베타 기간 동안 매일 맞춤법 검수 3회, 일관성 검수 3회 제공',
+    tabLimit: 3,
+  },
+];
+
+const RECENT_USAGE_LIMIT = 1;
 
 const FAQ_ITEMS = [
   {
@@ -51,7 +84,7 @@ const FAQ_ITEMS = [
     id: 'beta',
     question: '오픈베타 기간 이용료가 있나요?',
     answer:
-      '오픈베타 기간에는 로그인 회원당 맞춤법·일관성 각 2회 검수를 제공합니다(한국 시간 기준). Google Form 피드백을 남기면 당일 각 3회까지 이용할 수 있습니다. 베타 종료 후 요금·한도는 별도 안내할 예정입니다.',
+      '오픈베타 기간에는 회원에게 매일 맞춤법·일관성 각 1회 검수를 제공합니다(한국 시간 기준). 피드백을 남기면 각 2회, 우수 피드백으로 선정되면 각 3회까지 이용할 수 있습니다.',
   },
   {
     id: 'device',
@@ -61,42 +94,186 @@ const FAQ_ITEMS = [
   },
 ];
 
-const SECTION_COPY = {
-  usage: {
-    title: '이용 내역',
-    desc: '검수 이용 기록을 날짜·내용·금액으로 확인할 수 있습니다. 준비 중입니다.',
-  },
-};
-
-function daysSinceJoin(timestampMs) {
-  if (!timestampMs || !Number.isFinite(timestampMs)) return null;
-  const dayMs = 86_400_000;
-  const start = new Date(timestampMs);
-  start.setHours(0, 0, 0, 0);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  return Math.max(1, Math.floor((today.getTime() - start.getTime()) / dayMs) + 1);
+/**
+ * @param {number | null | undefined} loginAtMs
+ */
+function getRecentUsageEntries(loginAtMs) {
+  /** @type {Array<{ atMs: number, label: string }>} */
+  const entries = [];
+  if (loginAtMs && Number.isFinite(loginAtMs)) {
+    entries.push({ atMs: loginAtMs, label: '로그인' });
+  }
+  return entries
+    .sort((a, b) => b.atMs - a.atMs)
+    .slice(0, RECENT_USAGE_LIMIT);
 }
 
-function BadgeCollectionSection({ badges }) {
-  const earnedCount = badges.filter((badge) => badge.earned).length;
+function RecentUsageTable({ entries }) {
+  if (!entries.length) {
+    return (
+      <p className="mypage__empty-desc mypage__usage-empty">
+        최근 이용 내역이 없습니다.
+      </p>
+    );
+  }
 
+  return (
+    <table className="mypage__table">
+      <thead>
+        <tr>
+          <th scope="col">날짜</th>
+          <th scope="col">내용</th>
+        </tr>
+      </thead>
+      <tbody>
+        {entries.map((entry) => (
+          <tr key={`${entry.atMs}-${entry.label}`}>
+            <td>{formatMypageUsageDate(entry.atMs)}</td>
+            <td>{entry.label}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
+function UsageHistorySection({ loginAtMs }) {
+  const recentUsage = useMemo(
+    () => getRecentUsageEntries(loginAtMs),
+    [loginAtMs],
+  );
+
+  return (
+    <div className="mypage__main-inner mypage__main-inner--section">
+      <h1 className="mypage__page-title">최근 이용 내역</h1>
+      <section className="mypage__card" aria-labelledby="mypage-usage-page-title">
+        <h2 id="mypage-usage-page-title" className="mypage__card-subtitle">
+          이용 기록
+        </h2>
+        <RecentUsageTable entries={recentUsage} />
+      </section>
+    </div>
+  );
+}
+
+function formatMypageUsageDate(timestampMs) {
+  if (!timestampMs || !Number.isFinite(timestampMs)) return '—';
+  return new Date(timestampMs).toLocaleDateString('ko-KR', {
+    timeZone: 'Asia/Seoul',
+    year: '2-digit',
+    month: 'numeric',
+    day: 'numeric',
+  });
+}
+
+/**
+ * @param {{ tabLimit: number }} quota
+ */
+function resolveMemberBenefitTier(quota) {
+  const match =
+    MEMBER_BENEFIT_TIERS.find((tier) => tier.tabLimit === quota.tabLimit) ??
+    MEMBER_BENEFIT_TIERS[0];
+  if (quota.hasBoostApprovedToday) return MEMBER_BENEFIT_TIERS[2];
+  if (quota.hasFeedbackBonusToday) return MEMBER_BENEFIT_TIERS[1];
+  return match;
+}
+
+/**
+ * @param {{ quota: ReturnType<typeof useBetaDailyQuota> }} props
+ */
+function MemberBenefitTierBanner({ quota }) {
+  if (quota.loading) {
+    return (
+      <p className="mypage__member-tier mypage__member-tier--loading">
+        오늘 남은 검수 횟수를 불러오는 중…
+      </p>
+    );
+  }
+
+  const tier = resolveMemberBenefitTier(quota);
+
+  return (
+    <p className="mypage__member-tier" aria-label={`${tier.name}. ${tier.description}`}>
+      <strong className="mypage__member-tier-name">{tier.name}</strong>
+      <span className="mypage__member-tier-sep" aria-hidden>
+        {' '}
+        :{' '}
+      </span>
+      <span className="mypage__member-tier-desc">{tier.description}</span>
+    </p>
+  );
+}
+
+/**
+ * @param {{ quota: ReturnType<typeof useBetaDailyQuota> }} props
+ */
+function MyBenefitsSection({ quota }) {
+  return (
+    <section
+      className="mypage__card mypage__benefits-card"
+      aria-labelledby="mypage-benefits-title"
+    >
+      <h2 id="mypage-benefits-title" className="mypage__card-title">
+        회원정보관리
+      </h2>
+      {quota.loading ? null : !quota.enforced ? (
+        <p className="mypage__benefits-note">
+          개발 환경 — 검수 한도가 적용되지 않습니다.
+        </p>
+      ) : (
+        <dl className="mypage__benefits-grid">
+          <div className="mypage__benefits-row">
+            <dt>맞춤법 검수</dt>
+            <dd>
+              <strong>{quota.spellingRemaining}회</strong> 남음
+              <span className="mypage__benefits-used">
+                (사용 {quota.spellingCount}/{quota.tabLimit})
+              </span>
+            </dd>
+          </div>
+          <div className="mypage__benefits-row">
+            <dt>일관성 검수</dt>
+            <dd>
+              <strong>{quota.consistencyRemaining}회</strong> 남음
+              <span className="mypage__benefits-used">
+                (사용 {quota.consistencyCount}/{quota.tabLimit})
+              </span>
+            </dd>
+          </div>
+        </dl>
+      )}
+    </section>
+  );
+}
+
+function BadgeCollectionTitleRow({ titleId, titleClassName, earnedCount, totalLabel }) {
+  return (
+    <div className="mypage__badge-title-row">
+      <h2 id={titleId} className={titleClassName}>
+        배지 모음집
+      </h2>
+      <p className="mypage__badge-count" aria-live="polite">
+        획득 {earnedCount}/{totalLabel}
+      </p>
+    </div>
+  );
+}
+
+function BadgeCollectionSection({ badges, earnedCount, totalLabel }) {
   return (
     <section
       className="mypage__card mypage__badge-card"
       aria-labelledby="mypage-badge-title"
     >
-      <div className="mypage__card-head">
-        <div>
-          <h2 id="mypage-badge-title" className="mypage__page-title mypage__page-title--in-card">
-            배지 컬렉션
-          </h2>
-          <p className="mypage__badge-lead">
-            이벤트·활동으로 모은 배지를 확인할 수 있습니다.
-          </p>
-        </div>
-        <p className="mypage__badge-count" aria-live="polite">
-          {earnedCount}/{badges.length}
+      <div className="mypage__badge-head">
+        <BadgeCollectionTitleRow
+          titleId="mypage-badge-title"
+          titleClassName="mypage__page-title mypage__page-title--in-card"
+          earnedCount={earnedCount}
+          totalLabel={totalLabel}
+        />
+        <p className="mypage__badge-lead">
+          이벤트·활동으로 모은 배지를 확인할 수 있습니다.
         </p>
       </div>
       <BadgeCollectionGrid badges={badges} />
@@ -104,57 +281,38 @@ function BadgeCollectionSection({ badges }) {
   );
 }
 
-function OverviewDashboard({ onViewAll, badges }) {
+function OverviewDashboard({ badges, earnedCount, totalLabel, loginAtMs, quota }) {
+  const recentUsage = useMemo(
+    () => getRecentUsageEntries(loginAtMs),
+    [loginAtMs],
+  );
+
   return (
     <div className="mypage__main-inner">
-      <section className="mypage__balance" aria-label="서비스 안내">
-        <p className="mypage__balance-beta">
-          오픈베타 — 첫 검수 무료, 이후 1일 1회
-        </p>
-      </section>
+      <div className="mypage__member-head">
+        <MemberBenefitTierBanner quota={quota} />
+        <MyBenefitsSection quota={quota} />
+      </div>
 
       <section className="mypage__card" aria-labelledby="mypage-usage-title">
         <div className="mypage__card-head">
           <h2 id="mypage-usage-title" className="mypage__card-title">
             최근 이용 내역
           </h2>
-          <button
-            type="button"
-            className="mypage__card-link"
-            onClick={() => onViewAll('usage')}
-          >
-            전체 보기 →
-          </button>
         </div>
-        <table className="mypage__table">
-          <thead>
-            <tr>
-              <th scope="col">날짜</th>
-              <th scope="col">내용</th>
-              <th scope="col">금액</th>
-            </tr>
-          </thead>
-        </table>
-        <div className="mypage__empty">
-          <p className="mypage__empty-title">아직 이용 내역이 없습니다.</p>
-          <p className="mypage__empty-desc">
-            검토를 진행하면 자동으로 기록됩니다.
-          </p>
-        </div>
+        <RecentUsageTable entries={recentUsage} />
       </section>
 
-      <section className="mypage__card" aria-labelledby="mypage-inquiry-title">
+      <section
+        className="mypage__card mypage__card--disabled"
+        aria-labelledby="mypage-inquiry-title"
+        aria-disabled="true"
+      >
         <div className="mypage__card-head">
           <h2 id="mypage-inquiry-title" className="mypage__card-title">
             최근 문의 내역
           </h2>
-          <button
-            type="button"
-            className="mypage__card-link"
-            onClick={() => onViewAll('inquiry')}
-          >
-            전체 보기 →
-          </button>
+          <span className="mypage__card-soon">준비 중</span>
         </div>
         <table className="mypage__table">
           <thead>
@@ -165,86 +323,36 @@ function OverviewDashboard({ onViewAll, badges }) {
             </tr>
           </thead>
         </table>
-        <div className="mypage__empty">
-          <p className="mypage__empty-title">문의 내역이 없습니다.</p>
+        <div className="mypage__empty mypage__empty--disabled">
+          <p className="mypage__empty-title">문의 내역 기능을 준비 중입니다.</p>
           <p className="mypage__empty-desc">
-            궁금한 점은 문의하기로 남겨 주세요.
+            궁금한 점은 자주 묻는 질문을 먼저 확인해 주세요.
           </p>
         </div>
       </section>
 
       <section className="mypage__card mypage__card--badge-preview" aria-labelledby="mypage-badge-overview-title">
-        <div className="mypage__card-head">
-          <h2 id="mypage-badge-overview-title" className="mypage__card-title">
-            배지 컬렉션
-          </h2>
-          <button
-            type="button"
-            className="mypage__card-link"
-            onClick={() => onViewAll('badges')}
-          >
-            전체 보기 →
-          </button>
+        <div className="mypage__badge-head">
+          <BadgeCollectionTitleRow
+            titleId="mypage-badge-overview-title"
+            titleClassName="mypage__card-title"
+            earnedCount={earnedCount}
+            totalLabel={totalLabel}
+          />
         </div>
-        <p className="mypage__badge-count mypage__badge-count--inline">
-          획득 {badges.filter((badge) => badge.earned).length}/{badges.length}
-        </p>
         <BadgeCollectionGrid badges={badges} />
       </section>
     </div>
   );
 }
 
-function InquiryHistorySection({ onNewInquiry }) {
-  return (
-    <div className="mypage__main-inner mypage__main-inner--section">
-      <h1 className="mypage__page-title">문의 내역</h1>
-      <section
-        className="mypage__card mypage__inquiry-card"
-        aria-labelledby="mypage-inquiry-my-title"
-      >
-        <div className="mypage__card-head">
-          <h2 id="mypage-inquiry-my-title" className="mypage__card-subtitle">
-            내 문의
-          </h2>
-          <button
-            type="button"
-            className="mypage__inquiry-new"
-            onClick={onNewInquiry}
-          >
-            <Plus size={16} aria-hidden />
-            문의하기
-          </button>
-        </div>
-        <table className="mypage__table mypage__table--inquiry">
-          <thead>
-            <tr>
-              <th scope="col">날짜</th>
-              <th scope="col">제목</th>
-              <th scope="col">상태</th>
-            </tr>
-          </thead>
-        </table>
-        <div className="mypage__empty mypage__empty--inquiry">
-          <p className="mypage__empty-desc">
-            문의 내역이 없습니다. 궁금한 점은 문의하기로 남겨 주세요.
-          </p>
-        </div>
-      </section>
-    </div>
-  );
-}
-
-function MyPageFaq({ onInquiry }) {
+function MyPageFaq() {
   return (
     <aside className="mypage__faq" aria-labelledby="mypage-faq-title">
       <section className="mypage__card mypage__faq-card">
         <h2 id="mypage-faq-title" className="mypage__card-title">
           자주 묻는 질문
         </h2>
-        <p className="mypage__faq-lead">
-          인디야 이용 전에 자주 받는 질문을 모았습니다.
-        </p>
         <div className="mypage__faq-list">
           {FAQ_ITEMS.map((item) => (
             <details key={item.id} className="mypage__faq-item">
@@ -253,13 +361,6 @@ function MyPageFaq({ onInquiry }) {
             </details>
           ))}
         </div>
-        <p className="mypage__faq-foot">
-          원하는 답이 없으면{' '}
-          <button type="button" className="mypage__faq-inquiry-link" onClick={onInquiry}>
-            문의하기
-          </button>
-          로 남겨 주세요.
-        </p>
       </section>
     </aside>
   );
@@ -309,23 +410,10 @@ function ProfileSection({ displayName, email, daysWithMomo, authUid }) {
   );
 }
 
-function SectionPlaceholder({ sectionId }) {
-  const copy = SECTION_COPY[sectionId];
-  if (!copy) return null;
-  return (
-    <div className="mypage__main-inner">
-      <div className="mypage__section-placeholder">
-        <h2>{copy.title}</h2>
-        <p>{copy.desc}</p>
-      </div>
-    </div>
-  );
-}
-
 export default function MyPageWindowScreen() {
   const [authSession, setAuthSession] = useState(() => getCurrentUserSession());
   const [activeNav, setActiveNav] = useState('overview');
-  const [inquiryModalOpen, setInquiryModalOpen] = useState(false);
+  const [badgeRev, setBadgeRev] = useState(0);
 
   useEffect(() => subscribeAuthSession(setAuthSession), []);
 
@@ -360,8 +448,50 @@ export default function MyPageWindowScreen() {
 
   const badges = useMemo(
     () => getUserBadgeCollection(authSession?.uid ?? ''),
-    [authSession?.uid],
+    [authSession?.uid, badgeRev],
   );
+
+  const badgeStats = useMemo(
+    () => getBadgeCollectionStats(authSession?.uid ?? ''),
+    [authSession?.uid, badgeRev],
+  );
+
+  const loginAtMs = useMemo(
+    () =>
+      authSession?.lastSignInMs ??
+      authSession?.createdAtMs ??
+      profile?.completedAt ??
+      null,
+    [authSession?.lastSignInMs, authSession?.createdAtMs, profile?.completedAt],
+  );
+
+  const quotaEmail = useMemo(
+    () => resolveQuotaAuthEmail(authSession),
+    [authSession],
+  );
+  const quota = useBetaDailyQuota(authSession?.uid ?? '', quotaEmail);
+
+  useEffect(() => {
+    const uid = authSession?.uid?.trim();
+    if (uid) clearRewardNotice(uid);
+  }, [authSession?.uid]);
+
+  useEffect(() => {
+    const uid = authSession?.uid?.trim();
+    if (!uid || quota.loading) return;
+    let changed = syncProfileBadges(uid, {
+      tenureDays: daysWithMomo,
+      hasBoostApprovedToday: quota.hasBoostApprovedToday,
+    });
+    if (syncBadgeShowcase(uid, quotaEmail)) changed = true;
+    if (changed) setBadgeRev((rev) => rev + 1);
+  }, [
+    authSession?.uid,
+    daysWithMomo,
+    quota.loading,
+    quota.hasBoostApprovedToday,
+    quotaEmail,
+  ]);
 
   async function handleLogout() {
     await signOutUser();
@@ -438,8 +568,13 @@ export default function MyPageWindowScreen() {
               <li key={item.id}>
                 <button
                   type="button"
-                  className={`mypage__nav-btn${activeNav === item.id ? ' mypage__nav-btn--active' : ''}`}
-                  onClick={() => setActiveNav(item.id)}
+                  className={`mypage__nav-btn${activeNav === item.id ? ' mypage__nav-btn--active' : ''}${item.disabled ? ' mypage__nav-btn--disabled' : ''}`}
+                  onClick={() => {
+                    if (item.disabled) return;
+                    setActiveNav(item.id);
+                  }}
+                  disabled={item.disabled}
+                  aria-disabled={item.disabled || undefined}
                 >
                   {item.label}
                 </button>
@@ -455,13 +590,14 @@ export default function MyPageWindowScreen() {
       <main className="mypage__main">
         {activeNav === 'overview' ? (
           <div className="mypage__overview-layout">
-            <OverviewDashboard onViewAll={setActiveNav} badges={badges} />
-            <MyPageFaq
-              onInquiry={() => {
-                setActiveNav('inquiry');
-                setInquiryModalOpen(true);
-              }}
+            <OverviewDashboard
+              badges={badges}
+              earnedCount={badgeStats.earnedCount}
+              totalLabel={badgeStats.totalLabel}
+              loginAtMs={loginAtMs}
+              quota={quota}
             />
+            <MyPageFaq />
           </div>
         ) : activeNav === 'profile' ? (
           <ProfileSection
@@ -470,25 +606,18 @@ export default function MyPageWindowScreen() {
             daysWithMomo={daysWithMomo}
             authUid={authSession.uid}
           />
+        ) : activeNav === 'usage' ? (
+          <UsageHistorySection loginAtMs={loginAtMs} />
         ) : activeNav === 'badges' ? (
           <div className="mypage__main-inner mypage__main-inner--section">
-            <BadgeCollectionSection badges={badges} />
+            <BadgeCollectionSection
+              badges={badges}
+              earnedCount={badgeStats.earnedCount}
+              totalLabel={badgeStats.totalLabel}
+            />
           </div>
-        ) : activeNav === 'inquiry' ? (
-          <InquiryHistorySection
-            onNewInquiry={() => setInquiryModalOpen(true)}
-          />
-        ) : (
-          <SectionPlaceholder sectionId={activeNav} />
-        )}
+        ) : null}
       </main>
-      <FeedbackModal
-        open={inquiryModalOpen}
-        onClose={() => setInquiryModalOpen(false)}
-        onOpenForm={() => {
-          openFeedbackFormForUser(authSession.uid);
-        }}
-      />
     </div>
   );
 }

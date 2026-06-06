@@ -19,6 +19,7 @@
     "sync-bon-bojo": "node scripts/sync-bon-bojo.mjs",
     "sync": "npm run sync-spelling && npm run sync-caution && npm run sync-bon-bojo",
     "optimize-momo-room": "node scripts/optimize-momo-room-library.mjs && node scripts/generate-momo-room-window-front.mjs",
+    "trim:badges": "node scripts/trim-welcome-badges.mjs",
     "firebase:firestore:deploy": "npx --yes firebase-tools@14.2.1 deploy --only firestore:rules --project indiya-757ba",
     "firebase:firestore:setup": "powershell -ExecutionPolicy Bypass -File scripts/Deploy-FirestoreBetaQuota.ps1",
     "prepare": "husky"

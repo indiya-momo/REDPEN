@@ -47,6 +47,95 @@ export function shouldInsertSpaceBetweenPdfItems(gap, lineH, leftStr, rightStr) 
 const FONT_LINE_SPLIT_RATIO = 1.18;
 /** 왼쪽 여백으로 다시 돌아오면 새 줄(인디자인 소제목) */
 const LINE_X_RESET_PT = 36;
+/** 조판 PDF 검색·출력 이중 레이어 — 좌표 양자화(한컴 등 x·y 1~2pt 흔들림) */
+const OVERLAY_POS_BUCKET_PT = 2;
+
+/**
+ * Hancom·인디자인 등 — 동일 (x,y)에 같은 str이 2번 들어오면 검수 건수가 2배로 늘어남
+ * @param {import('pdfjs-dist').TextItem[]} items
+ */
+export function dedupeOverlayTextItems(items) {
+  const seen = new Set();
+  /** @type {import('pdfjs-dist').TextItem[]} */
+  const out = [];
+  for (const item of items) {
+    if (!('str' in item) || !item.str) continue;
+    const t = item.transform ?? [];
+    const x =
+      Math.round(((t[4] ?? 0) / OVERLAY_POS_BUCKET_PT)) *
+      OVERLAY_POS_BUCKET_PT;
+    const y =
+      Math.round(((t[5] ?? 0) / OVERLAY_POS_BUCKET_PT)) *
+      OVERLAY_POS_BUCKET_PT;
+    const key = `${item.str}\0${x}\0${y}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(item);
+  }
+  return out;
+}
+
+/**
+ * @param {{ item: import('pdfjs-dist').TextItem, itemIndex: number }[]} entries
+ */
+function builtLineSignature(entries) {
+  return [...entries]
+    .sort(
+      (a, b) =>
+        (a.item.transform?.[4] ?? 0) - (b.item.transform?.[4] ?? 0),
+    )
+    .map(({ item }) => item.str ?? '')
+    .join('');
+}
+
+/**
+ * @param {{ item: import('pdfjs-dist').TextItem, itemIndex: number }[]} entries
+ */
+function normalizeBuiltLineSignature(entries) {
+  return builtLineSignature(entries).replace(/\s+/g, ' ').trim();
+}
+
+/**
+ * 페이지 전체가 [A,B,C,A,B,C]처럼 반복되면 앞 절반만 유지
+ * @param {typeof builtLines} builtLines
+ */
+function dedupeMirroredPageBlock(builtLines) {
+  const sigs = builtLines.map((line) =>
+    normalizeBuiltLineSignature(line.entries),
+  );
+  const n = sigs.length;
+  if (n < 2 || n % 2 !== 0) return builtLines;
+  const half = n / 2;
+  for (let i = 0; i < half; i++) {
+    if (sigs[i] !== sigs[i + half]) return builtLines;
+  }
+  return builtLines.slice(0, half);
+}
+
+/**
+ * 같은 줄 문장이 다른 y(검색·출력 레이어)로 한 번 더 들어온 경우 — 첫 줄만
+ * @param {typeof builtLines} builtLines — y 내림차순(위→아래)
+ */
+function dedupeRepeatedBuiltLines(builtLines) {
+  const seen = new Set();
+  /** @type {typeof builtLines} */
+  const kept = [];
+  for (const line of builtLines) {
+    const sig = normalizeBuiltLineSignature(line.entries);
+    if (!sig) continue;
+    if (seen.has(sig)) continue;
+    seen.add(sig);
+    kept.push(line);
+  }
+  return kept;
+}
+
+/**
+ * @param {typeof builtLines} builtLines
+ */
+function dedupeOverlayBuiltLines(builtLines) {
+  return dedupeRepeatedBuiltLines(dedupeMirroredPageBlock(builtLines));
+}
 
 /**
  * @param {import('pdfjs-dist').TextItem} item
@@ -137,6 +226,7 @@ function appendBuiltLine(entries, text, itemRefs, shouldGapSpace) {
  * @param {import('pdfjs-dist').TextItem[]} items
  */
 export function buildPageText(items) {
+  const sourceItems = dedupeOverlayTextItems(items);
   /** @type {{
    *   y: number,
    *   entries: { item: import('pdfjs-dist').TextItem, itemIndex: number }[],
@@ -152,7 +242,7 @@ export function buildPageText(items) {
     bucket = [];
   };
 
-  items.forEach((item, itemIndex) => {
+  sourceItems.forEach((item, itemIndex) => {
     if (!('str' in item) || !item.str) return;
     const row = { item, itemIndex };
     if (bucket.length && shouldStartNewTextLine(bucket[bucket.length - 1], item)) {
@@ -164,6 +254,7 @@ export function buildPageText(items) {
   flush();
 
   builtLines.sort((a, b) => b.y - a.y);
+  const uniqueLines = dedupeOverlayBuiltLines(builtLines);
 
   let text = '';
   let textLayout = '';
@@ -171,7 +262,7 @@ export function buildPageText(items) {
   const itemRefs = [];
   /** @type {TextItemRef[]} */
   const itemRefsLayout = [];
-  for (const line of builtLines) {
+  for (const line of uniqueLines) {
     text = appendBuiltLine(
       line.entries,
       text,

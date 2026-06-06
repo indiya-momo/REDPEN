@@ -1,4 +1,6 @@
 import { grantFeedbackDailyQuotaBonus } from './betaDailyQuota.js';
+import { queueEventReward } from './eventRewardQueue.js';
+import { markRewardNotice } from './rewardNotice.js';
 
 const DEFAULT_FEEDBACK_FORM_VIEW_URL =
   'https://forms.gle/XGxKjjyWZiYDnqrm8';
@@ -31,7 +33,7 @@ export function markFeedbackFormSubmitPending(uid) {
   const id = uid.trim();
   if (!id || typeof window === 'undefined') return;
   try {
-    sessionStorage.setItem(
+    localStorage.setItem(
       PENDING_KEY,
       JSON.stringify({ uid: id, at: Date.now() }),
     );
@@ -45,7 +47,7 @@ export function markFeedbackFormSubmitPending(uid) {
  */
 function readFeedbackFormSubmitPending() {
   try {
-    const raw = sessionStorage.getItem(PENDING_KEY);
+    const raw = localStorage.getItem(PENDING_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     const uid = typeof parsed?.uid === 'string' ? parsed.uid.trim() : '';
@@ -59,7 +61,7 @@ function readFeedbackFormSubmitPending() {
 
 function clearFeedbackFormSubmitPending() {
   try {
-    sessionStorage.removeItem(PENDING_KEY);
+    localStorage.removeItem(PENDING_KEY);
   } catch {
     /* ignore */
   }
@@ -138,10 +140,16 @@ export async function consumeFeedbackFormSubmitReturn(uid, email = '') {
 
   clearFeedbackFormSubmitPending();
   const result = await grantFeedbackDailyQuotaBonus(id, email);
+  const showThankYou = result.granted && !result.alreadyHadBonus;
+  if (showThankYou) {
+    queueEventReward(id, 'beta-feedback');
+    markRewardNotice(id);
+  }
   return {
     handled: true,
     granted: result.granted,
     alreadyHadBonus: result.alreadyHadBonus,
-    showThankYou: result.granted && !result.alreadyHadBonus,
+    showThankYou,
+    showEventReward: showThankYou,
   };
 }

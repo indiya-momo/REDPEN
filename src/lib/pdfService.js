@@ -9,12 +9,14 @@ import {
 } from '../toc-body/lib/pdfHeadingExtract.js';
 import {
   buildPageText,
+  dedupeOverlayTextItems,
   shouldInsertLayoutSpaceBetweenPdfItems,
   shouldInsertSpaceBetweenPdfItems,
 } from './pdfPageText.js';
 
 export {
   buildPageText,
+  dedupeOverlayTextItems,
   shouldInsertLayoutSpaceBetweenPdfItems,
   shouldInsertSpaceBetweenPdfItems,
 };
@@ -87,13 +89,16 @@ export async function extractAllPagesText(pdf, onProgress) {
     const content = await page.getTextContent({
       disableCombineTextItems: true,
     });
+    const items = dedupeOverlayTextItems(
+      content.items.filter((it) => 'str' in it),
+    );
     const { text, itemRefs, textLayout, itemRefsLayout } =
-      buildPageText(content.items);
+      buildPageText(items);
     pages.push({
       pageNum: i,
       text,
       textLayout,
-      items: content.items.filter((it) => 'str' in it),
+      items,
       itemRefs,
       itemRefsLayout,
     });

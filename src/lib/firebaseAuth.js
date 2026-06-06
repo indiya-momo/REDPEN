@@ -171,11 +171,15 @@ function toSession(user) {
   const createdAtMs = user.metadata?.creationTime
     ? Date.parse(user.metadata.creationTime)
     : NaN;
+  const lastSignInMs = user.metadata?.lastSignInTime
+    ? Date.parse(user.metadata.lastSignInTime)
+    : NaN;
   return {
     uid: user.uid,
     email: resolveUserEmail(user),
     displayName: user.displayName ?? '',
     createdAtMs: Number.isFinite(createdAtMs) ? createdAtMs : undefined,
+    lastSignInMs: Number.isFinite(lastSignInMs) ? lastSignInMs : undefined,
   };
 }
 
@@ -194,6 +198,32 @@ function assertConfigured() {
 
 const PUBLIC_APP_URL = 'https://indiya.vercel.app';
 
+function isLocalDevHost() {
+  if (typeof window === 'undefined') return false;
+  const host = window.location.hostname;
+  return host === 'localhost' || host === '127.0.0.1';
+}
+
+/** Vite network URL(192.168.x.x) 등 — Firebase Authorized domains 미등록 → internal-error 유발 */
+function getUnsupportedAuthHostMessage() {
+  if (typeof window === 'undefined') return '';
+  const { hostname, host, protocol, port } = window.location;
+  if (!/^\d+\.\d+\.\d+\.\d+$/.test(hostname) || hostname === '127.0.0.1') {
+    return '';
+  }
+  const localPort = port || '5173';
+  return (
+    `이 주소(${host})에서는 Google 로그인이 되지 않습니다.\n\n` +
+    `아래 주소로 접속한 뒤 다시 시도해 주세요.\n` +
+    `· ${protocol}//localhost:${localPort}\n` +
+    `· ${PUBLIC_APP_URL}`
+  );
+}
+
+function shouldPreferGoogleRedirect() {
+  return import.meta.env.DEV && isLocalDevHost();
+}
+
 export function mapFirebaseAuthError(error) {
   const code = error?.code ?? '';
   if (code === 'auth/unauthorized-domain' && import.meta.env.DEV) {
@@ -201,6 +231,9 @@ export function mapFirebaseAuthError(error) {
       '[auth] unauthorized-domain — Firebase Console → Authentication → Authorized domains에 추가:',
       typeof window !== 'undefined' ? window.location.host : '',
     );
+  }
+  if (code === 'app/unsupported-auth-host' && error instanceof Error && error.message) {
+    return error.message;
   }
   const messages = {
     'auth/popup-closed-by-user': '로그인 창이 닫혔습니다.',
@@ -216,8 +249,23 @@ export function mapFirebaseAuthError(error) {
       '이미 다른 방식으로 가입된 계정입니다.',
     'auth/web-storage-unsupported':
       '브라우저가 로그인 저장을 막고 있습니다. 시크릿 창을 끄거나 쿠키 차단을 해제해 주세요.',
+    'auth/internal-error': (() => {
+      const lanHint = getUnsupportedAuthHostMessage();
+      if (lanHint) return lanHint;
+      const loginUrl = isLocalDevHost()
+        ? `http://localhost:${window.location.port || '5173'}`
+        : PUBLIC_APP_URL;
+      return (
+        'Google 로그인에 실패했습니다.\n\n' +
+        `Chrome 일반 창에서 ${loginUrl} 로 접속해 주세요.\n` +
+        '(팝업·서드파티 쿠키 차단을 해제한 뒤 다시 시도)'
+      );
+    })(),
   };
   if (messages[code]) return messages[code];
+  if (import.meta.env.DEV && code) {
+    console.warn('[auth]', code, error);
+  }
   if (error instanceof Error && error.message) return error.message;
   return '로그인에 실패했습니다.';
 }
@@ -260,22 +308,39 @@ export async function completeGoogleRedirectIfNeeded() {
     }
     return { session: toSession(user), error: null };
   } catch (error) {
+    const code = error?.code ?? '';
+    if (code === 'auth/internal-error' && !auth.currentUser) {
+      if (import.meta.env.DEV) {
+        console.warn('[auth] getRedirectResult internal-error (no session, ignored)', error);
+      }
+      return { session: null, error: null };
+    }
     return { session: null, error: mapFirebaseAuthError(error) };
   }
 }
 
-const POPUP_FALLBACK_CODES = new Set([
+const POPUP_REDIRECT_FALLBACK_CODES = new Set([
   'auth/popup-blocked',
-  'auth/popup-closed-by-user',
-  'auth/cancelled-popup-request',
+  'auth/internal-error',
 ]);
 
 /** 팝업 우선, 실패 시 전체 페이지 리다이렉트 */
 export async function signInWithGoogle() {
   assertConfigured();
+  const unsupportedHost = getUnsupportedAuthHostMessage();
+  if (unsupportedHost) {
+    throw Object.assign(new Error(unsupportedHost), {
+      code: 'app/unsupported-auth-host',
+    });
+  }
   await persistenceReady;
   if (auth.currentUser) {
     await hydrateUserEmail(auth.currentUser);
+    return;
+  }
+
+  if (shouldPreferGoogleRedirect()) {
+    await signInWithRedirect(auth, provider);
     return;
   }
 
@@ -286,7 +351,10 @@ export async function signInWithGoogle() {
     }
   } catch (error) {
     const code = error?.code ?? '';
-    if (POPUP_FALLBACK_CODES.has(code)) {
+    if (import.meta.env.DEV) {
+      console.warn('[auth] signInWithPopup failed:', code, error);
+    }
+    if (POPUP_REDIRECT_FALLBACK_CODES.has(code)) {
       await signInWithRedirect(auth, provider);
       return;
     }

@@ -269,9 +269,9 @@ export default function WelcomePcScreen({
               <div className="welcome-pc__stage-cta">
                 {!loggedIn ? (
                   <p className="welcome-pc__beta-note welcome-pc__beta-note--above-cta">
-                    오픈베타 서비스 중 : 첫 검수 무료,
+                    오픈베타 서비스 중
                     <br />
-                    이후 회원은 하루 1회 전 기능 사용 가능
+                    매일 맞춤법·일관성 확인 각 1회 사용 가능
                   </p>
                 ) : null}
                 {!authReady ? (

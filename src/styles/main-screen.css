@@ -1973,6 +1973,24 @@
   margin-left: auto;
 }
 
+.pdf-work-pane__aux-btn-wrap {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.pdf-work-pane__aux-notice {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent-spelling);
+  border: 1.5px solid var(--color-surface);
+  pointer-events: none;
+}
+
 .pdf-work-pane__aux-btn {
   flex-shrink: 0;
   display: inline-flex;

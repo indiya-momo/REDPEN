@@ -57,20 +57,15 @@ export default function FeedbackModal({ open, onClose, onOpenForm }) {
         </header>
 
         <p className="feedback-modal-lead">
-          오픈베타 동안 쓰신 소감을 <strong>Google Form</strong>으로 받고 있습니다.
-          불편한 점·좋았던 점·버그·원하시는 기능을 편하게 적어 주세요.
+          불편한 점·좋았던 점·버그·원하시는 기능을 편하게 적어 주시면 오늘
+          맞춤법·일관성 각 2회까지 검수할 수 있습니다
         </p>
 
         <ul className="feedback-modal-list">
-          <li>사용 맥락·만족도</li>
-          <li>맞춤법·일관성 등 어디가 도움이 됐는지 / 막혔는지</li>
+          <li>사용 만족도</li>
+          <li>무엇이 도움이 됐는지 / 막혔는지</li>
           <li>자유롭게 남기는 한마디</li>
-          <li>화면 캡처·파일 첨부 (선택 — Google 로그인 필요할 수 있음)</li>
         </ul>
-
-        <p className="hint feedback-modal-hint feedback-modal-privacy">
-          원고·PDF 본문·검사 문구는 올리지 말아 주세요. 익명으로 받습니다.
-        </p>
 
         <footer className="feedback-modal-footer feedback-modal-footer--primary">
           <button type="button" className="btn-ghost" onClick={onClose}>
