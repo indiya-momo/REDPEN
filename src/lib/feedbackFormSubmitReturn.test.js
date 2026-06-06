@@ -18,17 +18,17 @@ import {
 } from './feedbackFormSubmitReturn.js';
 
 /** @type {Record<string, string>} */
-const sessionStore = {};
+const localStore = {};
 
 beforeEach(() => {
-  for (const key of Object.keys(sessionStore)) delete sessionStore[key];
-  vi.stubGlobal('sessionStorage', {
-    getItem: (key) => sessionStore[key] ?? null,
+  for (const key of Object.keys(localStore)) delete localStore[key];
+  vi.stubGlobal('localStorage', {
+    getItem: (key) => localStore[key] ?? null,
     setItem: (key, value) => {
-      sessionStore[key] = String(value);
+      localStore[key] = String(value);
     },
     removeItem: (key) => {
-      delete sessionStore[key];
+      delete localStore[key];
     },
   });
   const replaceState = vi.fn();

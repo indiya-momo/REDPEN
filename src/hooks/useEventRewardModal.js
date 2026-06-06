@@ -3,10 +3,11 @@ import { consumePendingEventReward } from '../lib/eventRewardQueue.js';
 import { earnBadge } from '../lib/userBadges.js';
 
 /**
- * 대기열에 쌓인 이벤트 보상 팝업 — 이미지·트리거 연결 전 골격
+ * 대기열에 쌓인 이벤트 보상 팝업
  * @param {string | undefined} authUid
+ * @param {number} [checkTick] — 피드백 복귀 등 직후 재조회
  */
-export function useEventRewardModal(authUid) {
+export function useEventRewardModal(authUid, checkTick = 0) {
   const [reward, setReward] = useState(
     /** @type {import('../lib/eventRewardCatalog.js').EventRewardDefinition | null} */ (
       null
@@ -22,7 +23,7 @@ export function useEventRewardModal(authUid) {
       earnBadge(uid, pending.badgeId);
     }
     setReward(pending);
-  }, [authUid]);
+  }, [authUid, checkTick]);
 
   const close = useCallback(() => setReward(null), []);
 

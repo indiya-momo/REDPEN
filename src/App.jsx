@@ -51,6 +51,8 @@ export default function App() {
   });
   const [mainWorkTab, setMainWorkTab] = useState('spelling');
   const [feedbackThankYouOpen, setFeedbackThankYouOpen] = useState(false);
+  const [eventRewardTick, setEventRewardTick] = useState(0);
+  const [rewardNoticeTick, setRewardNoticeTick] = useState(0);
 
   useEffect(() => {
     if (!authReady || auxWindow || !authSession?.uid) return;
@@ -61,6 +63,10 @@ export default function App() {
       if (!result.handled || !result.granted) return;
       if (result.showThankYou) {
         setFeedbackThankYouOpen(true);
+        setRewardNoticeTick((tick) => tick + 1);
+      }
+      if (result.showEventReward) {
+        setEventRewardTick((tick) => tick + 1);
       }
       if (isLoginRequiredForChecks()) {
         setScreen('main');
@@ -178,7 +184,10 @@ export default function App() {
     return (
       <>
         <MyPageWindowScreen />
-        <EventRewardLayer authUid={authSession?.uid} />
+        <EventRewardLayer
+          authUid={authSession?.uid}
+          checkTick={eventRewardTick}
+        />
       </>
     );
   }
@@ -187,7 +196,12 @@ export default function App() {
   }
 
   if (screen === 'room') {
-    return <MomoRoomScreen onClose={() => setScreen('welcome')} />;
+    return (
+      <MomoRoomScreen
+        onClose={() => setScreen('welcome')}
+        authUid={authSession?.uid ?? ''}
+      />
+    );
   }
 
   if (screen === 'welcome') {
@@ -289,8 +303,12 @@ export default function App() {
       initialWorkTab={mainWorkTab}
       feedbackThankYouOpen={feedbackThankYouOpen}
       onFeedbackThankYouDismiss={() => setFeedbackThankYouOpen(false)}
+      rewardNoticeTick={rewardNoticeTick}
     />
-    <EventRewardLayer authUid={authSession?.uid} />
+    <EventRewardLayer
+      authUid={authSession?.uid}
+      checkTick={eventRewardTick}
+    />
     </>
   );
 }

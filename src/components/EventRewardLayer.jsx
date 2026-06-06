@@ -2,10 +2,10 @@ import EventRewardModal from './EventRewardModal.jsx';
 import { useEventRewardModal } from '../hooks/useEventRewardModal.js';
 
 /**
- * @param {{ authUid?: string }} props
+ * @param {{ authUid?: string, checkTick?: number }} props
  */
-export default function EventRewardLayer({ authUid }) {
-  const { open, reward, close } = useEventRewardModal(authUid);
+export default function EventRewardLayer({ authUid, checkTick = 0 }) {
+  const { open, reward, close } = useEventRewardModal(authUid, checkTick);
 
   return (
     <EventRewardModal

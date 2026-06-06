@@ -6,6 +6,7 @@ import {
   serverTimestamp,
   setDoc,
 } from 'firebase/firestore';
+import { syncFirstCheckBadge } from './badgeGrants.js';
 import { assertLoggedInForCheckOrAlert } from './checkAuthGate.js';
 import {
   firebaseApp,
@@ -27,25 +28,29 @@ function isLocalDevQuotaRelaxed() {
   return host === 'localhost' || host === '127.0.0.1' || host === '[::1]';
 }
 
-/** 베타 기본 — 탭당 하루 2회 (맞춤법 2 + 일관성 2) */
-export const BETA_TAB_LIMIT_DEFAULT = 2;
-/** 피드백·승인 보너스 — 탭당 하루 3회 */
+/** 베타 기본 — 탭당 하루 1회 */
+export const BETA_TAB_LIMIT_DEFAULT = 1;
+/** 피드백 보너스 — 탭당 하루 2회 */
+export const BETA_TAB_LIMIT_FEEDBACK = 2;
+/** 우수 피드백 선정 — 탭당 하루 3회 */
 export const BETA_TAB_LIMIT_BOOSTED = 3;
+
+const BETA_QUOTA_POLICY_SUMMARY =
+  '오픈베타 기간에는 회원에게 매일 맞춤법·일관성 각 1회 검수를 제공합니다(한국 시간 기준). ' +
+  '피드백을 남기면 각 2회, 우수 피드백으로 선정되면 각 3회까지 이용할 수 있습니다. ';
 
 export const BETA_DAILY_QUOTA_ALERT_SPELLING =
   '오늘 맞춤법 검수 한도를 모두 사용했습니다.\n\n' +
-  '오픈베타 기간에는 로그인 회원당 맞춤법·일관성 각 2회(한국 시간) 검수를 이용할 수 있습니다. ' +
-  'Google Form 피드백을 남기면 당일 각 3회까지 이용할 수 있습니다. ' +
+  BETA_QUOTA_POLICY_SUMMARY +
   '내일 0시 이후 다시 시도해 주세요.';
 
 export const BETA_DAILY_QUOTA_ALERT_CONSISTENCY =
   '오늘 일관성 검수 한도를 모두 사용했습니다.\n\n' +
-  '오픈베타 기간에는 로그인 회원당 맞춤법·일관성 각 2회(한국 시간) 검수를 이용할 수 있습니다. ' +
-  'Google Form 피드백을 남기면 당일 각 3회까지 이용할 수 있습니다. ' +
+  BETA_QUOTA_POLICY_SUMMARY +
   '내일 0시 이후 다시 시도해 주세요.';
 
 export const FEEDBACK_DAILY_BONUS_GRANTED_ALERT =
-  '피드백 감사합니다. 오늘은 맞춤법·일관성 각 3회까지 이용할 수 있습니다.';
+  '피드백 감사합니다. 오늘은 맞춤법·일관성 각 2회까지 이용할 수 있습니다.';
 
 /** @returns {boolean} */
 export function isBetaDailyQuotaEnabled() {
@@ -134,11 +139,11 @@ export function getKstDayId(date = new Date()) {
  * @param {string} dayId
  */
 export function getTabCheckLimit(feedbackBonusDayId, boostApprovedDayId, dayId) {
-  if (
-    feedbackBonusDayId === dayId ||
-    boostApprovedDayId === dayId
-  ) {
+  if (boostApprovedDayId === dayId) {
     return BETA_TAB_LIMIT_BOOSTED;
+  }
+  if (feedbackBonusDayId === dayId) {
+    return BETA_TAB_LIMIT_FEEDBACK;
   }
   return BETA_TAB_LIMIT_DEFAULT;
 }
@@ -398,7 +403,7 @@ export async function getBetaDailyQuotaStatus(uid, email = '') {
 }
 
 /**
- * Google Form 피드백 — 당일 탭당 3회 (KST)
+ * Google Form 피드백 — 당일 탭당 2회 (KST)
  * @param {string} uid
  * @param {string} [email]
  */
@@ -455,6 +460,8 @@ export async function consumeBetaDailyQuota(uid, email = '', tab = 'spelling') {
   }
 
   const flags = await readQuotaFlags(uid, dayId);
+  const isFirstEverCheck =
+    flags.spellingCount === 0 && flags.consistencyCount === 0;
   const tabCount =
     tab === 'spelling' ? flags.spellingCount : flags.consistencyCount;
   if (!canRunTabCheck(tabCount, flags.tabLimit)) {
@@ -512,6 +519,7 @@ export async function consumeBetaDailyQuota(uid, email = '', tab = 'spelling') {
       feedbackBonusDayId: flags.feedbackBonusDayId,
       boostApprovedDayId: flags.boostApprovedDayId,
     });
+    if (isFirstEverCheck) syncFirstCheckBadge(uid);
     return { ok: true, dayId, tab };
   } catch (error) {
     if (
@@ -547,6 +555,7 @@ export async function consumeBetaDailyQuota(uid, email = '', tab = 'spelling') {
       feedbackBonusDayId: local.feedbackBonusDayId,
       boostApprovedDayId: local.boostApprovedDayId,
     });
+    if (isFirstEverCheck) syncFirstCheckBadge(uid);
     return { ok: true, dayId, tab };
   }
 }

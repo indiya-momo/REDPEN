@@ -41,6 +41,56 @@ function matchCountsOnPage(page) {
   };
 }
 
+describe('dedupeOverlayTextItems', () => {
+  it('다른 y에 같은 줄이 한 번 더 있어도 한 줄만 조립', () => {
+    const items = [
+      ...mockLineItems([{ str: '안녕하세요.', x: 48, w: 80 }], 420),
+      ...mockLineItems([{ str: '안녕하세요.', x: 48, w: 80 }], 140),
+    ];
+    const { text } = buildPageText(items);
+    expect(text.split('\n').filter(Boolean)).toEqual(['안녕하세요.']);
+  });
+
+  it('페이지 블록이 [A,B,A,B]로 반복되면 절반만 유지', () => {
+    const items = [
+      ...mockLineItems([{ str: '첫', x: 0 }], 400),
+      ...mockLineItems([{ str: '둘', x: 0 }], 380),
+      ...mockLineItems([{ str: '첫', x: 0 }], 200),
+      ...mockLineItems([{ str: '둘', x: 0 }], 180),
+    ];
+    const { text } = buildPageText(items);
+    expect(text.split('\n').filter(Boolean)).toEqual(['첫', '둘']);
+  });
+
+  it('같은 좌표·문자열 이중 레이어는 한 줄로만 조립', () => {
+    const items = mockLineItems([{ str: '모모는', x: 100, w: 40 }], 200);
+    const doubled = [...items, ...items];
+    const { text: once } = buildPageText(items);
+    const { text: twice } = buildPageText(doubled);
+    expect(twice).toBe(once);
+    const rules = buildCompoundFindRules('모모').map((r) => ({
+      ...r,
+      enabled: true,
+    }));
+    const pageOnce = { pageNum: 1, text: once, items, itemRefs: [] };
+    const pageTwice = {
+      pageNum: 1,
+      text: twice,
+      items: doubled,
+      itemRefs: [],
+    };
+    const countOnce = runRuleCheck([pageOnce], rules).results.reduce(
+      (s, g) => s + g.instances.length,
+      0,
+    );
+    const countTwice = runRuleCheck([pageTwice], rules).results.reduce(
+      (s, g) => s + g.instances.length,
+      0,
+    );
+    expect(countTwice).toBe(countOnce);
+  });
+});
+
 describe('shouldInsertSpaceBetweenPdfItems', () => {
   const lineH = 12 * 0.35;
 

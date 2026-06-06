@@ -49,6 +49,8 @@ import { useUserProfileSync } from '../hooks/useUserProfileSync.js';
 import { WORK_GUIDE_KEYS } from '../lib/workGuideKeys.js';
 import { useWorkGuideChain } from '../hooks/useWorkGuideChain.js';
 import { useBetaDailyQuota } from '../hooks/useBetaDailyQuota.js';
+import { useRewardNotice } from '../hooks/useRewardNotice.js';
+import { daysSinceJoin, syncProfileBadges } from '../lib/badgeGrants.js';
 import { isLoginRequiredForChecks } from '../lib/checkAuthGate.js';
 import { resolveQuotaAuthEmail } from '../lib/betaDailyQuota.js';
 import { formatRuleSetSavedDate } from '../lib/ruleSetsStorage.js';
@@ -210,6 +212,7 @@ const WORK_GUIDE_2_ALIGN_CHAIN = [
  *   initialWorkTab?: 'spelling' | 'consistency',
  *   feedbackThankYouOpen?: boolean,
  *   onFeedbackThankYouDismiss?: () => void,
+ *   rewardNoticeTick?: number,
  * }} props
  */
 export default function MainScreen({
@@ -246,6 +249,7 @@ export default function MainScreen({
   initialWorkTab = 'spelling',
   feedbackThankYouOpen = false,
   onFeedbackThankYouDismiss = () => {},
+  rewardNoticeTick = 0,
 }) {
   void onOpenGuideWindow;
   const [workTab, setWorkTab] = useState(initialWorkTab);
@@ -367,12 +371,35 @@ export default function MainScreen({
     [pageDisplay.active, pageDisplay.formatPage],
   );
   const betaQuota = useBetaDailyQuota(authUid, authEmail);
+  const rewardNotice = useRewardNotice(authUid, rewardNoticeTick);
+
+  const daysWithMomo = useMemo(() => {
+    void profileRev;
+    const profile = authUid ? getUserProfile(authUid) : null;
+    const joinedMs = authSession?.createdAtMs ?? profile?.completedAt ?? null;
+    return daysSinceJoin(joinedMs);
+  }, [authUid, authSession?.createdAtMs, profileRev]);
 
   useEffect(() => {
     if (feedbackThankYouOpen) {
       void betaQuota.refresh();
     }
   }, [feedbackThankYouOpen, betaQuota.refresh]);
+
+  useEffect(() => {
+    if (!authUid || betaQuota.loading) return;
+    const changed = syncProfileBadges(authUid, {
+      tenureDays: daysWithMomo,
+      hasBoostApprovedToday: betaQuota.hasBoostApprovedToday,
+    });
+    if (changed) rewardNotice.refresh();
+  }, [
+    authUid,
+    betaQuota.loading,
+    betaQuota.hasBoostApprovedToday,
+    daysWithMomo,
+    rewardNotice,
+  ]);
   const loginRequiredForChecks = isLoginRequiredForChecks();
   const checkAuthBlocked = loginRequiredForChecks && !authUid;
   const checkQuotaBlocked =
@@ -1400,14 +1427,25 @@ export default function MainScreen({
                 </div>
               ) : null}
               <div className="pdf-work-pane__topbar-actions">
-                <button
-                  type="button"
-                  className="pdf-work-pane__aux-btn"
-                  onClick={onOpenMyPageWindow}
-                >
-                  <UserRound size={16} aria-hidden />
-                  마이페이지
-                </button>
+                <span className="pdf-work-pane__aux-btn-wrap">
+                  <button
+                    type="button"
+                    className="pdf-work-pane__aux-btn"
+                    onClick={() => {
+                      rewardNotice.dismiss();
+                      onOpenMyPageWindow();
+                    }}
+                  >
+                    <UserRound size={16} aria-hidden />
+                    마이페이지
+                  </button>
+                  {rewardNotice.visible ? (
+                    <span
+                      className="pdf-work-pane__aux-notice"
+                      aria-label="새 선물·배지 확인"
+                    />
+                  ) : null}
+                </span>
                 <button
                   type="button"
                   className="pdf-work-pane__aux-btn"

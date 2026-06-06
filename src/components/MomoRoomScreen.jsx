@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ArrowLeft, BookOpen, Volume2, VolumeX, X } from 'lucide-react';
 import roomLibraryImg from '../assets/welcome/welcome_library_16.png';
+import EventRewardLayer from './EventRewardLayer.jsx';
 import { momoRoomStoryPages } from '../data/momoRoomStory.js';
+import { syncMomoRoomBadge } from '../lib/badgeGrants.js';
 import { publicAssetUrl } from '../lib/publicAssetUrl.js';
 
 const GUESTBOOK_KEY = 'momo-room-guestbook-v1';
@@ -68,9 +70,10 @@ function loadGuestbookUserId() {
 }
 
 /**
- * @param {{ onClose: () => void }} props
+ * @param {{ onClose: () => void, authUid?: string }} props
  */
-export default function MomoRoomScreen({ onClose }) {
+export default function MomoRoomScreen({ onClose, authUid = '' }) {
+  const [eventRewardTick, setEventRewardTick] = useState(0);
   const [isClosing, setIsClosing] = useState(false);
   const [storyOpen, setStoryOpen] = useState(false);
   const [storyPage, setStoryPage] = useState(0);
@@ -85,6 +88,14 @@ export default function MomoRoomScreen({ onClose }) {
 
   const page = momoRoomStoryPages[storyPage];
   const isLastPage = storyPage >= momoRoomStoryPages.length - 1;
+
+  useEffect(() => {
+    const uid = authUid.trim();
+    if (!uid) return;
+    if (syncMomoRoomBadge(uid)) {
+      setEventRewardTick((tick) => tick + 1);
+    }
+  }, [authUid]);
 
   const openStory = useCallback(() => {
     setStoryPage(0);
@@ -267,6 +278,7 @@ export default function MomoRoomScreen({ onClose }) {
   }, [isClosing, onClose]);
 
   return (
+    <>
     <div className={`momo-room ${isClosing ? 'momo-room--closing' : ''}`}>
       <div className="momo-room__layout">
         <aside className="momo-room__side">
@@ -446,5 +458,7 @@ export default function MomoRoomScreen({ onClose }) {
         </div>
       )}
     </div>
+    <EventRewardLayer authUid={authUid} checkTick={eventRewardTick} />
+    </>
   );
 }
