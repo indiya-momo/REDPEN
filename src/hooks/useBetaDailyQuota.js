@@ -5,28 +5,28 @@ import {
 } from '../lib/betaDailyQuota.js';
 
 /**
- * 오픈베타 검수 한도 — 첫 1회 무료, 이후 1일 1회 (로그인 uid)
+ * 오픈베타 검수 한도 — 맞춤법·일관성 탭별 하루 2회 (피드백 시 각 3회)
  * @param {string} uid
  * @param {string} [email]
  */
 export function useBetaDailyQuota(uid, email = '') {
   const [loading, setLoading] = useState(true);
-  const [consumedToday, setConsumedToday] = useState(false);
-  const [hasWelcomeRemaining, setHasWelcomeRemaining] = useState(false);
+  const [spellingConsumed, setSpellingConsumed] = useState(false);
+  const [consistencyConsumed, setConsistencyConsumed] = useState(false);
   const [dayId, setDayId] = useState('');
 
   const refresh = useCallback(async () => {
     if (!isBetaDailyQuotaEnforcedForUser(uid, email)) {
       setLoading(false);
-      setConsumedToday(false);
-      setHasWelcomeRemaining(false);
+      setSpellingConsumed(false);
+      setConsistencyConsumed(false);
       setDayId('');
       return;
     }
     setLoading(true);
     const status = await getBetaDailyQuotaStatus(uid, email);
-    setConsumedToday(status.consumedToday);
-    setHasWelcomeRemaining(status.hasWelcomeRemaining);
+    setSpellingConsumed(status.spellingConsumed);
+    setConsistencyConsumed(status.consistencyConsumed);
     setDayId(status.dayId);
     setLoading(false);
   }, [uid, email]);
@@ -36,14 +36,18 @@ export function useBetaDailyQuota(uid, email = '') {
   }, [refresh]);
 
   const enforced = isBetaDailyQuotaEnforcedForUser(uid, email);
-  const canRunCheck =
-    !enforced ||
-    (!loading && (hasWelcomeRemaining || !consumedToday));
+  const canRunSpellingCheck = !enforced || (!loading && !spellingConsumed);
+  const canRunConsistencyCheck =
+    !enforced || (!loading && !consistencyConsumed);
 
   return {
     loading,
     enforced,
-    canRunCheck,
+    canRunSpellingCheck,
+    canRunConsistencyCheck,
+    spellingConsumed,
+    consistencyConsumed,
+    dayId,
     refresh,
   };
 }

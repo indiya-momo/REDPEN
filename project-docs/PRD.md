@@ -55,6 +55,13 @@
 
 ## 5. 기능 요구사항
 
+### 5.0 기준 산정 (2026-06)
+
+- **프로젝트:** 저장 단위 1개(일반 베타) — [`criteria-count-model.md`](criteria-count-model.md)  
+- **맞춤법 기준:** 1묶음 (맞춤법·주의 토글 전체)  
+- **일관성 기준:** 1묶음 (일관성 탭 전체)  
+- **일관성 검색:** 일관성 찾기 **기준 슬롯 5**(쉼표 항목마다 1), 공통 문자열(`@`) **5개**  
+
 ### 5.1 v1.0 / 오픈 베타 (구현·운영 중)
 
 | # | 기능 | 상태 |
@@ -88,12 +95,13 @@
 | | 무료/베타 | 7,900원 | 10,900원 팀 |
 |--|-----------|---------|-------------|
 | 프로젝트 슬롯 | 1 | 2 | 3 |
+| 기준 슬롯 (일관성 검색 등록) | 베타 고정 5+5 | 플랜별 | 플랜별 |
 | 검수/일 (KST) | 1 | 3~5 | 5~10 |
 | 마이페이지 프로젝트 목록·세부 | 기본 | ✅ | ✅ |
 | 공유 링크 **발급** | ❌ | ❌ | ✅ |
 | 링크 **가져오기** | ✅ | ✅ | ✅ |
 
-**슬롯:** 플랜별 `projectSlots` + `dailyCheckSlots` 단일 테이블로 관리 (구현 예정).
+**슬롯:** 유료 시 `projectSlots`(프로젝트 개수) + `criteriaSlots`(기준 슬롯) + `dailyCheckSlots`(일 검수) 단일 플랜 테이블. **베타는 결제 미연동** — 상한만 코드 고정 ([`criteria-count-model.md`](criteria-count-model.md) §5).
 
 **공유:** 실시간 협업 없음. 링크 = 읽기 전용 스냅샷 → 수신자 프로젝트 슬롯에 **복사**.
 
@@ -219,6 +227,7 @@
 |------|------|
 | [`product-spine.md`](product-spine.md) | 결정·범위·이력 |
 | [`strategy-decisions-2026-06.md`](strategy-decisions-2026-06.md) | 2026-06 전략 대화 전문 |
+| [`criteria-count-model.md`](criteria-count-model.md) | 맞춤법·일관성·검색 기준 산정 |
 | [`input-format-strategy.md`](input-format-strategy.md) | PDF / HWPX |
 | [`private-beta-guide.md`](private-beta-guide.md) | 테스터 FAQ |
 | [`app-mainscreen-contract.md`](app-mainscreen-contract.md) | MainScreen 계약 |

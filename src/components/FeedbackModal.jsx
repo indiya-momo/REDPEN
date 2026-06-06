@@ -7,9 +7,10 @@ import { openFeedbackFormView } from '../lib/feedbackConfig.js';
  * @param {{
  *   open: boolean,
  *   onClose: () => void,
+ *   onOpenForm?: () => void | Promise<void>,
  * }} props
  */
-export default function FeedbackModal({ open, onClose }) {
+export default function FeedbackModal({ open, onClose, onOpenForm }) {
   const titleId = useId();
   const dialogRef = useRef(/** @type {HTMLDialogElement | null} */ (null));
   useEffect(() => {
@@ -20,8 +21,13 @@ export default function FeedbackModal({ open, onClose }) {
   }, [open]);
 
   function handleOpenForm() {
-    openFeedbackFormView();
-    onClose();
+    void (async () => {
+      await onOpenForm?.();
+      if (!onOpenForm) {
+        openFeedbackFormView();
+      }
+      onClose();
+    })();
   }
 
   return (

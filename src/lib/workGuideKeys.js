@@ -30,6 +30,8 @@ export const WORK_GUIDE_KEYS = {
   AUXILIARY_VERB_INTRO: 'work-auxiliary-verb-intro-v1',
   RULE_SET_SAVE: 'work-rule-set-save-v1',
   WORK_EXIT: 'work-exit-v1',
+  /** 피드백 제출 보너스 감사 말풍선 (온보딩 5회와 별도) */
+  FEEDBACK_QUOTA_THANK: 'feedback-quota-thank-v1',
 };
 
 /**

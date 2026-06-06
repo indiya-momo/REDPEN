@@ -602,6 +602,122 @@
   margin: 0 auto;
 }
 
+/* 배지 컬렉션 */
+.mypage__badge-card {
+  padding-bottom: 1.35rem;
+}
+
+.mypage__card--badge-preview .mypage-badge-grid {
+  margin-top: 0.35rem;
+}
+
+.mypage__badge-lead {
+  margin: 0.35rem 0 0;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+}
+
+.mypage__badge-count {
+  margin: 0;
+  flex-shrink: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--color-text-subtle);
+}
+
+.mypage__badge-count--inline {
+  margin: 0 0 0.65rem;
+}
+
+.mypage__page-title--in-card {
+  margin: 0;
+  font-size: 1.35rem;
+}
+
+.mypage-badge-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.85rem 0.65rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mypage-badge-grid__item {
+  margin: 0;
+  min-width: 0;
+}
+
+.mypage-badge-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  text-align: center;
+}
+
+.mypage-badge-card__frame {
+  width: 100%;
+  max-width: 5.5rem;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mypage-badge-card__image,
+.mypage-badge-card__placeholder {
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius-ui-md, 10px);
+}
+
+.mypage-badge-card__image {
+  object-fit: contain;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.mypage-badge-card__placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed var(--color-border-strong);
+  background: var(--color-surface-overlay);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-text-subtle);
+}
+
+.mypage-badge-card--locked .mypage-badge-card__placeholder {
+  opacity: 0.55;
+}
+
+.mypage-badge-card--earned .mypage-badge-card__placeholder {
+  border-style: solid;
+  color: var(--accent-spelling);
+}
+
+.mypage-badge-card__name {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--color-text);
+}
+
+.mypage-badge-card--locked .mypage-badge-card__name {
+  color: var(--color-text-muted);
+}
+
+.mypage-badge-card__desc {
+  margin: 0;
+  font-size: 0.65rem;
+  line-height: 1.4;
+  color: var(--color-text-subtle);
+}
+
 @media (max-width: 1020px) {
   .mypage__overview-layout {
     grid-template-columns: 1fr;
@@ -635,5 +751,9 @@
   .mypage__balance {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .mypage-badge-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

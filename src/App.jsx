@@ -27,8 +27,10 @@ import {
 } from './lib/firebaseAuth.js';
 import { isLoginRequiredForChecks } from './lib/checkAuthGate.js';
 import { resolveQuotaAuthEmail } from './lib/betaDailyQuota.js';
+import { consumeFeedbackFormSubmitReturn } from './lib/feedbackFormSubmitReturn.js';
 import { consumeReturnToMainWorkspace, markReturnToMainWorkspace } from './lib/returnToWorkspace.js';
 import { clearWorkSession } from './lib/sessionStore.js';
+import EventRewardLayer from './components/EventRewardLayer.jsx';
 
 export default function App() {
   const auxWindow =
@@ -48,6 +50,23 @@ export default function App() {
     return 'welcome';
   });
   const [mainWorkTab, setMainWorkTab] = useState('spelling');
+  const [feedbackThankYouOpen, setFeedbackThankYouOpen] = useState(false);
+
+  useEffect(() => {
+    if (!authReady || auxWindow || !authSession?.uid) return;
+    void consumeFeedbackFormSubmitReturn(
+      authSession.uid,
+      resolveQuotaAuthEmail(authSession),
+    ).then((result) => {
+      if (!result.handled || !result.granted) return;
+      if (result.showThankYou) {
+        setFeedbackThankYouOpen(true);
+      }
+      if (isLoginRequiredForChecks()) {
+        setScreen('main');
+      }
+    });
+  }, [authReady, auxWindow, authSession]);
 
   useEffect(() => {
     if (!authReady || auxWindow) return;
@@ -156,7 +175,12 @@ export default function App() {
   ]);
 
   if (auxWindow === 'mypage') {
-    return <MyPageWindowScreen />;
+    return (
+      <>
+        <MyPageWindowScreen />
+        <EventRewardLayer authUid={authSession?.uid} />
+      </>
+    );
   }
   if (auxWindow === 'guide') {
     return <GuideWindowScreen />;
@@ -198,6 +222,7 @@ export default function App() {
   // MainScreen dead props: ruleSets·CRUD·onSaveRules 등 9개 — UI 미배선, 제거 금지.
   // 계약 문서: project-docs/app-mainscreen-contract.md
   return (
+    <>
     <MainScreen
       ruleSets={ruleSets.map((s) => ({
         id: s.id,
@@ -262,6 +287,10 @@ export default function App() {
         window.open(url.toString(), '_blank', 'noopener,noreferrer');
       }}
       initialWorkTab={mainWorkTab}
+      feedbackThankYouOpen={feedbackThankYouOpen}
+      onFeedbackThankYouDismiss={() => setFeedbackThankYouOpen(false)}
     />
+    <EventRewardLayer authUid={authSession?.uid} />
+    </>
   );
 }
