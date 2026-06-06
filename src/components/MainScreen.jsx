@@ -37,7 +37,8 @@ import {
 } from '../hooks/useResizablePanelWidth.js';
 import { usePrintedPageDisplay } from '../hooks/usePrintedPageDisplay.js';
 import { trackFeedbackOpened } from '../lib/analytics.js';
-import { openFeedbackFormView } from '../lib/feedbackConfig.js';
+import { openFeedbackFormForUser } from '../lib/feedbackConfig.js';
+import { FEEDBACK_DAILY_BONUS_GRANTED_ALERT } from '../lib/betaDailyQuota.js';
 import {
   getCurrentUserSession,
   subscribeAuthSession,
@@ -207,6 +208,8 @@ const WORK_GUIDE_2_ALIGN_CHAIN = [
  *   onOpenMyPageWindow: () => void,
  *   onOpenGuideWindow: () => void,
  *   initialWorkTab?: 'spelling' | 'consistency',
+ *   feedbackThankYouOpen?: boolean,
+ *   onFeedbackThankYouDismiss?: () => void,
  * }} props
  */
 export default function MainScreen({
@@ -241,6 +244,8 @@ export default function MainScreen({
   onOpenMyPageWindow,
   onOpenGuideWindow,
   initialWorkTab = 'spelling',
+  feedbackThankYouOpen = false,
+  onFeedbackThankYouDismiss = () => {},
 }) {
   void onOpenGuideWindow;
   const [workTab, setWorkTab] = useState(initialWorkTab);
@@ -362,10 +367,20 @@ export default function MainScreen({
     [pageDisplay.active, pageDisplay.formatPage],
   );
   const betaQuota = useBetaDailyQuota(authUid, authEmail);
+
+  useEffect(() => {
+    if (feedbackThankYouOpen) {
+      void betaQuota.refresh();
+    }
+  }, [feedbackThankYouOpen, betaQuota.refresh]);
   const loginRequiredForChecks = isLoginRequiredForChecks();
   const checkAuthBlocked = loginRequiredForChecks && !authUid;
   const checkQuotaBlocked =
-    betaQuota.enforced && !betaQuota.loading && !betaQuota.canRunCheck;
+    betaQuota.enforced &&
+    !betaQuota.loading &&
+    (workTab === 'spelling'
+      ? !betaQuota.canRunSpellingCheck
+      : !betaQuota.canRunConsistencyCheck);
   const checkSessionBlocked = checkAuthBlocked || checkQuotaBlocked;
 
   const criteriaRunBlocked = useMemo(() => {
@@ -408,7 +423,9 @@ export default function MainScreen({
       return '로그인 후 검수할 수 있습니다.';
     }
     if (checkQuotaBlocked) {
-      return '오늘 무료 검수 한도를 모두 사용했습니다.';
+      return workTab === 'spelling'
+        ? '오늘 맞춤법 검수 한도를 모두 사용했습니다.'
+        : '오늘 일관성 검수 한도를 모두 사용했습니다.';
     }
     return '';
   }, [
@@ -418,6 +435,7 @@ export default function MainScreen({
     pdf.pageTexts.length,
     checkAuthBlocked,
     checkQuotaBlocked,
+    workTab,
   ]);
 
   const ruleCheck = useRuleCheck({
@@ -1412,10 +1430,13 @@ export default function MainScreen({
                     message={
                       <>
                         <span className="tooltip-guide__message-line">
-                          새 업로드, 로그아웃, 피드백은 여기
+                          새 업로드와 로그아웃은 여기,
                         </span>
                         <span className="tooltip-guide__message-line">
-                          앞으로 또 보자냥(ﾐචᆽචﾐ)
+                          피드백 보내기를 하고 돌아오면
+                        </span>
+                        <span className="tooltip-guide__message-line">
+                          여기서 곧바로 선물을 받을 수 있다냥
                         </span>
                       </>
                     }
@@ -1448,17 +1469,51 @@ export default function MainScreen({
                     로그아웃
                   </button>
                 )}
-                <button
-                  type="button"
-                  className="ruleset-panel__feedback"
-                  onClick={() => {
-                    trackFeedbackOpened();
-                    openFeedbackFormView();
-                  }}
-                >
-                  <MessageSquare size={18} aria-hidden />
-                  피드백 남기기
-                </button>
+                {feedbackThankYouOpen ? (
+                  <TooltipGuide
+                    storageKey={workGuide.storageKey(
+                      WORK_GUIDE_KEYS.FEEDBACK_QUOTA_THANK,
+                    )}
+                    placement="bottom"
+                    bubbleType="left"
+                    useFixedLayer
+                    alignToBubble={WORK_GUIDE_7_ALIGN}
+                    offsetX={0}
+                    offsetY={8}
+                    message={
+                      <span className="tooltip-guide__message-line">
+                        {FEEDBACK_DAILY_BONUS_GRANTED_ALERT}
+                      </span>
+                    }
+                    onDismiss={() => {
+                      onFeedbackThankYouDismiss();
+                    }}
+                  >
+                    <button
+                      type="button"
+                      className="ruleset-panel__feedback"
+                      onClick={() => {
+                        trackFeedbackOpened();
+                        openFeedbackFormForUser(authUid);
+                      }}
+                    >
+                      <MessageSquare size={18} aria-hidden />
+                      피드백 남기기
+                    </button>
+                  </TooltipGuide>
+                ) : (
+                  <button
+                    type="button"
+                    className="ruleset-panel__feedback"
+                    onClick={() => {
+                      trackFeedbackOpened();
+                      openFeedbackFormForUser(authUid);
+                    }}
+                  >
+                    <MessageSquare size={18} aria-hidden />
+                    피드백 남기기
+                  </button>
+                )}
               </div>
             </div>
           </header>

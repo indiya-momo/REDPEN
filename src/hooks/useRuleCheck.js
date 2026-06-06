@@ -196,6 +196,7 @@ export function useRuleCheck({
       if (
         !(await assertBetaDailyCheckOrAlert(authUid, {
           authEmail,
+          checkTab: scope,
           onConsumed: onBetaQuotaConsumed,
         }))
       ) {
@@ -357,6 +358,7 @@ export function useRuleCheck({
       if (
         !(await assertBetaDailyCheckOrAlert(authUid, {
           authEmail,
+          checkTab: 'consistency',
           onConsumed: onBetaQuotaConsumed,
         }))
       ) {

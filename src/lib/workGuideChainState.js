@@ -4,6 +4,23 @@ import {
   isWorkGuidePinned,
 } from './workGuideKeys.js';
 import { isTooltipGuideDismissed } from './tooltipGuideStorage.js';
+import { isWorkGuideOnboardingExposureAllowed } from './workGuideOnboardingExposure.js';
+
+/**
+ * @param {ReturnType<typeof getWorkGuideChainState>} chain
+ * @returns {string | null}
+ */
+export function activeWorkGuideKeyFromChain(chain) {
+  if (chain.showPreUploadGuide) return WORK_GUIDE_KEYS.PRE_UPLOAD;
+  if (chain.showLeftCriteriaGuide) return WORK_GUIDE_KEYS.LEFT_CRITERIA;
+  if (chain.showFirstResultGuide) return WORK_GUIDE_KEYS.FIRST_RESULT;
+  if (chain.showPdfOpenedGuide) return WORK_GUIDE_KEYS.PDF_OPENED;
+  if (chain.showConsistencyGuide) return WORK_GUIDE_KEYS.CONSISTENCY_INTRO;
+  if (chain.showAuxiliaryVerbGuide) return WORK_GUIDE_KEYS.AUXILIARY_VERB_INTRO;
+  if (chain.showRuleSetSaveGuide) return WORK_GUIDE_KEYS.RULE_SET_SAVE;
+  if (chain.showWorkExitGuide) return WORK_GUIDE_KEYS.WORK_EXIT;
+  return null;
+}
 
 /**
  * @param {ReturnType<typeof getWorkGuideChainState>} chain
@@ -73,7 +90,7 @@ function getDevForcedWorkGuideChain(step, empty, ctx, pinAll, keyFor, dismissedM
 
 /**
  * @param {string} storageKey
- * @param {boolean} dismissed
+ * @param {Record<string, boolean> | null} dismissedMap
  */
 function dismissed(storageKey, dismissedMap) {
   if (dismissedMap && storageKey in dismissedMap) {
@@ -82,10 +99,7 @@ function dismissed(storageKey, dismissedMap) {
   return isTooltipGuideDismissed(storageKey);
 }
 
-/** 1~7번 말풍선 — 한 번에 하나만, 확인 후 다음 단계 */
-
 /**
- * @param {string} uid
  * @param {{
  *   hasPdf: boolean,
  *   pageTextsReady: boolean,
@@ -93,17 +107,10 @@ function dismissed(storageKey, dismissedMap) {
  *   spellingCheckDone: boolean,
  * }} ctx
  * @param {(key: string) => string} keyFor
- * @param {Record<string, boolean> | null} [dismissedMap]
- * @param {{ pinAll?: boolean }} [options]
+ * @param {Record<string, boolean> | null} dismissedMap
+ * @param {{ pinAll?: boolean }} options
  */
-export function getWorkGuideChainState(
-  uid,
-  ctx,
-  keyFor,
-  dismissedMap = null,
-  options = {},
-) {
-  void uid;
+function computeWorkGuideChainState(ctx, keyFor, dismissedMap, options) {
   const {
     hasPdf,
     pageTextsReady,
@@ -128,19 +135,6 @@ export function getWorkGuideChainState(
     showWorkExitGuide: false,
     workGuideOpen: false,
   };
-
-  const devForceStep = getDevWorkGuideForceStep();
-  if (devForceStep != null) {
-    const forced = getDevForcedWorkGuideChain(
-      devForceStep,
-      empty,
-      ctx,
-      pinAll,
-      keyFor,
-      dismissedMap,
-    );
-    if (forced) return forced;
-  }
 
   if (!hasPdf) {
     const showPreUploadGuide = !d(WORK_GUIDE_KEYS.PRE_UPLOAD);
@@ -234,4 +228,82 @@ export function getWorkGuideChainState(
   }
 
   return empty;
+}
+
+/**
+ * @param {ReturnType<typeof getWorkGuideChainState>} empty
+ * @param {ReturnType<typeof getWorkGuideChainState>} chain
+ * @param {string} uid
+ * @param {(key: string) => string} keyFor
+ * @param {Record<string, boolean> | null} dismissedMap
+ */
+function applyOnboardingExposureGate(empty, chain, uid, keyFor, dismissedMap) {
+  if (!chain.workGuideOpen) return chain;
+  const guideKey = activeWorkGuideKeyFromChain(chain);
+  const guideDismissed = guideKey
+    ? dismissed(keyFor(guideKey), dismissedMap)
+    : true;
+  if (
+    !isWorkGuideOnboardingExposureAllowed(
+      uid,
+      chain,
+      guideKey,
+      guideDismissed,
+    )
+  ) {
+    return { ...empty, pinAll: chain.pinAll };
+  }
+  return chain;
+}
+
+/** 1~7번 말풍선 — 한 번에 하나만, 확인 후 다음 단계 */
+
+/**
+ * @param {string} uid
+ * @param {{
+ *   hasPdf: boolean,
+ *   pageTextsReady: boolean,
+ *   workTab: 'spelling' | 'consistency',
+ *   spellingCheckDone: boolean,
+ * }} ctx
+ * @param {(key: string) => string} keyFor
+ * @param {Record<string, boolean> | null} [dismissedMap]
+ * @param {{ pinAll?: boolean }} [options]
+ */
+export function getWorkGuideChainState(
+  uid,
+  ctx,
+  keyFor,
+  dismissedMap = null,
+  options = {},
+) {
+  const pinAll = options.pinAll ?? isWorkGuidePinned();
+  const empty = {
+    pinAll,
+    showPreUploadGuide: false,
+    showPdfOpenedGuide: false,
+    showLeftCriteriaGuide: false,
+    showFirstResultGuide: false,
+    showConsistencyGuide: false,
+    showAuxiliaryVerbGuide: false,
+    showRuleSetSaveGuide: false,
+    showWorkExitGuide: false,
+    workGuideOpen: false,
+  };
+
+  const devForceStep = getDevWorkGuideForceStep();
+  if (devForceStep != null) {
+    const forced = getDevForcedWorkGuideChain(
+      devForceStep,
+      empty,
+      ctx,
+      pinAll,
+      keyFor,
+      dismissedMap,
+    );
+    if (forced) return forced;
+  }
+
+  const chain = computeWorkGuideChainState(ctx, keyFor, dismissedMap, options);
+  return applyOnboardingExposureGate(empty, chain, uid, keyFor, dismissedMap);
 }

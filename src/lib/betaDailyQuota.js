@@ -4,6 +4,7 @@ import {
   getFirestore,
   runTransaction,
   serverTimestamp,
+  setDoc,
 } from 'firebase/firestore';
 import { assertLoggedInForCheckOrAlert } from './checkAuthGate.js';
 import {
@@ -12,8 +13,10 @@ import {
   resolveSessionEmail,
 } from './firebaseAuth.js';
 
-const LOCAL_QUOTA_PREFIX = 'indiya-beta-quota-v2--';
+const LOCAL_QUOTA_PREFIX = 'indiya-beta-quota-v3--';
 const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
+
+/** @typedef {'spelling' | 'consistency'} BetaQuotaTab */
 
 /** @returns {boolean} */
 function isLocalDevQuotaRelaxed() {
@@ -24,10 +27,25 @@ function isLocalDevQuotaRelaxed() {
   return host === 'localhost' || host === '127.0.0.1' || host === '[::1]';
 }
 
-export const BETA_DAILY_QUOTA_ALERT =
-  '오늘 무료 검수 1회를 모두 사용했습니다.\n\n' +
-  '첫 검수는 무료로 제공했습니다. 이후에는 로그인 회원당 하루 1회(한국 시간) ' +
-  '전체 기능 검수를 이용할 수 있습니다. 내일 0시 이후 다시 시도해 주세요.';
+/** 베타 기본 — 탭당 하루 2회 (맞춤법 2 + 일관성 2) */
+export const BETA_TAB_LIMIT_DEFAULT = 2;
+/** 피드백·승인 보너스 — 탭당 하루 3회 */
+export const BETA_TAB_LIMIT_BOOSTED = 3;
+
+export const BETA_DAILY_QUOTA_ALERT_SPELLING =
+  '오늘 맞춤법 검수 한도를 모두 사용했습니다.\n\n' +
+  '오픈베타 기간에는 로그인 회원당 맞춤법·일관성 각 2회(한국 시간) 검수를 이용할 수 있습니다. ' +
+  'Google Form 피드백을 남기면 당일 각 3회까지 이용할 수 있습니다. ' +
+  '내일 0시 이후 다시 시도해 주세요.';
+
+export const BETA_DAILY_QUOTA_ALERT_CONSISTENCY =
+  '오늘 일관성 검수 한도를 모두 사용했습니다.\n\n' +
+  '오픈베타 기간에는 로그인 회원당 맞춤법·일관성 각 2회(한국 시간) 검수를 이용할 수 있습니다. ' +
+  'Google Form 피드백을 남기면 당일 각 3회까지 이용할 수 있습니다. ' +
+  '내일 0시 이후 다시 시도해 주세요.';
+
+export const FEEDBACK_DAILY_BONUS_GRANTED_ALERT =
+  '피드백 감사합니다. 오늘은 맞춤법·일관성 각 3회까지 이용할 수 있습니다.';
 
 /** @returns {boolean} */
 export function isBetaDailyQuotaEnabled() {
@@ -65,7 +83,6 @@ function getBetaQuotaAdminEmailSet() {
 }
 
 /**
- * 한도 면제·검수 차단에 쓸 로그인 이메일 (session.email 비어 있으면 Firebase user에서 보완)
  * @param {{ email?: string } | null | undefined} session
  */
 export function resolveQuotaAuthEmail(session) {
@@ -76,7 +93,6 @@ export function resolveQuotaAuthEmail(session) {
 }
 
 /**
- * 오픈베타 1일 1회 한도 면제 — `VITE_BETA_QUOTA_ADMIN_UIDS` / `VITE_BETA_QUOTA_ADMIN_EMAILS`
  * @param {string} uid
  * @param {string} [email]
  */
@@ -102,7 +118,6 @@ export function isBetaDailyQuotaEnforcedForUser(uid, email = '') {
 }
 
 /**
- * KST 기준 yyyy-mm-dd (검수 일자 키)
  * @param {Date} [date]
  */
 export function getKstDayId(date = new Date()) {
@@ -114,16 +129,49 @@ export function getKstDayId(date = new Date()) {
 }
 
 /**
- * @param {boolean} firstFreeUsed
- * @param {boolean} consumedToday
+ * @param {string | null | undefined} feedbackBonusDayId
+ * @param {string | null | undefined} boostApprovedDayId
+ * @param {string} dayId
  */
-export function canRunBetaCheck(firstFreeUsed, consumedToday) {
-  return !firstFreeUsed || !consumedToday;
+export function getTabCheckLimit(feedbackBonusDayId, boostApprovedDayId, dayId) {
+  if (
+    feedbackBonusDayId === dayId ||
+    boostApprovedDayId === dayId
+  ) {
+    return BETA_TAB_LIMIT_BOOSTED;
+  }
+  return BETA_TAB_LIMIT_DEFAULT;
+}
+
+/**
+ * @param {number} tabCount
+ * @param {number} tabLimit
+ */
+export function canRunTabCheck(tabCount, tabLimit) {
+  return tabCount < tabLimit;
+}
+
+/**
+ * @param {BetaQuotaTab} tab
+ */
+export function betaQuotaAlertForTab(tab) {
+  return tab === 'spelling'
+    ? BETA_DAILY_QUOTA_ALERT_SPELLING
+    : BETA_DAILY_QUOTA_ALERT_CONSISTENCY;
+}
+
+/**
+ * @param {Record<string, unknown> | undefined} data
+ */
+function readDayTabCounts(data) {
+  return {
+    spellingCount: Math.max(0, Number(data?.spellingCount) || 0),
+    consistencyCount: Math.max(0, Number(data?.consistencyCount) || 0),
+  };
 }
 
 /**
  * @param {string} uid
- * @returns {string}
  */
 function localQuotaKey(uid) {
   return `${LOCAL_QUOTA_PREFIX}${uid.trim()}`;
@@ -132,55 +180,115 @@ function localQuotaKey(uid) {
 /**
  * @param {string} uid
  * @param {string} dayId
+ * @param {string | null} feedbackBonusDayId
+ * @param {string | null} boostApprovedDayId
+ * @param {{ spellingCount: number, consistencyCount: number }} counts
+ */
+function buildTabQuotaView(
+  uid,
+  dayId,
+  feedbackBonusDayId,
+  boostApprovedDayId,
+  counts,
+) {
+  const tabLimit = getTabCheckLimit(
+    feedbackBonusDayId,
+    boostApprovedDayId,
+    dayId,
+  );
+  const enforced = Boolean(uid.trim());
+  return {
+    dayId,
+    enforced,
+    feedbackBonusDayId,
+    boostApprovedDayId,
+    tabLimit,
+    spellingCount: counts.spellingCount,
+    consistencyCount: counts.consistencyCount,
+    spellingConsumed: counts.spellingCount >= tabLimit,
+    consistencyConsumed: counts.consistencyCount >= tabLimit,
+  };
+}
+
+/**
+ * @param {string} uid
+ * @param {string} dayId
  */
 function readLocalQuota(uid, dayId) {
   if (!uid.trim()) {
-    return {
-      firstFreeUsed: false,
-      consumedToday: false,
-      dayId,
-      enforced: false,
-    };
+    return buildTabQuotaView(uid, dayId, null, null, {
+      spellingCount: 0,
+      consistencyCount: 0,
+    });
   }
   try {
     const raw = localStorage.getItem(localQuotaKey(uid));
     if (!raw) {
-      return {
-        firstFreeUsed: false,
-        consumedToday: false,
-        dayId,
-        enforced: true,
-      };
+      return buildTabQuotaView(uid, dayId, null, null, {
+        spellingCount: 0,
+        consistencyCount: 0,
+      });
     }
     const parsed = JSON.parse(raw);
-    const firstFreeUsed = Boolean(parsed?.firstFreeUsed);
-    return {
-      firstFreeUsed,
-      consumedToday: firstFreeUsed && parsed?.dayId === dayId,
+    const feedbackBonusDayId =
+      typeof parsed?.feedbackBonusDayId === 'string'
+        ? parsed.feedbackBonusDayId
+        : null;
+    const boostApprovedDayId =
+      typeof parsed?.boostApprovedDayId === 'string'
+        ? parsed.boostApprovedDayId
+        : null;
+    const storedDayId =
+      typeof parsed?.dayId === 'string' ? parsed.dayId : null;
+    const counts =
+      storedDayId === dayId
+        ? {
+            spellingCount: Math.max(0, Number(parsed?.spellingCount) || 0),
+            consistencyCount: Math.max(0, Number(parsed?.consistencyCount) || 0),
+          }
+        : { spellingCount: 0, consistencyCount: 0 };
+    return buildTabQuotaView(
+      uid,
       dayId,
-      enforced: true,
-    };
+      feedbackBonusDayId,
+      boostApprovedDayId,
+      counts,
+    );
   } catch {
-    return {
-      firstFreeUsed: false,
-      consumedToday: false,
-      dayId,
-      enforced: true,
-    };
+    return buildTabQuotaView(uid, dayId, null, null, {
+      spellingCount: 0,
+      consistencyCount: 0,
+    });
   }
 }
 
 /**
  * @param {string} uid
- * @param {{ firstFreeUsed: boolean, dayId?: string }} state
+ * @param {{
+ *   dayId: string,
+ *   spellingCount: number,
+ *   consistencyCount: number,
+ *   feedbackBonusDayId?: string | null,
+ *   boostApprovedDayId?: string | null,
+ * }} state
  */
 function writeLocalQuota(uid, state) {
   try {
+    const prev = readLocalQuota(uid, state.dayId);
     localStorage.setItem(
       localQuotaKey(uid),
       JSON.stringify({
-        firstFreeUsed: state.firstFreeUsed,
-        dayId: state.dayId ?? null,
+        dayId: state.dayId,
+        spellingCount: state.spellingCount,
+        consistencyCount: state.consistencyCount,
+        feedbackBonusDayId:
+          state.feedbackBonusDayId !== undefined
+            ? state.feedbackBonusDayId
+            : prev.feedbackBonusDayId,
+        boostApprovedDayId:
+          state.boostApprovedDayId !== undefined
+            ? state.boostApprovedDayId
+            : prev.boostApprovedDayId,
         updatedAt: Date.now(),
       }),
     );
@@ -205,9 +313,23 @@ function dayDocRef(uid, dayId) {
 }
 
 /**
+ * @param {Record<string, unknown> | undefined} userData
+ */
+function readUserBonusDayIds(userData) {
+  const feedbackBonusDayId =
+    typeof userData?.feedbackBonusDayId === 'string'
+      ? userData.feedbackBonusDayId
+      : null;
+  const boostApprovedDayId =
+    typeof userData?.boostApprovedDayId === 'string'
+      ? userData.boostApprovedDayId
+      : null;
+  return { feedbackBonusDayId, boostApprovedDayId };
+}
+
+/**
  * @param {string} uid
  * @param {string} dayId
- * @returns {Promise<{ firstFreeUsed: boolean, consumedToday: boolean }>}
  */
 async function readQuotaFlags(uid, dayId) {
   try {
@@ -215,146 +337,236 @@ async function readQuotaFlags(uid, dayId) {
       getDoc(userDocRef(uid)),
       getDoc(dayDocRef(uid, dayId)),
     ]);
-    const firstFreeUsed =
-      userSnap.exists() && userSnap.data()?.firstFreeUsed === true;
-    const consumedToday =
-      firstFreeUsed &&
-      daySnap.exists() &&
-      Number(daySnap.data()?.count) >= 1;
-    if (firstFreeUsed && consumedToday) {
-      writeLocalQuota(uid, { firstFreeUsed: true, dayId });
-    } else if (firstFreeUsed) {
-      writeLocalQuota(uid, { firstFreeUsed: true, dayId: null });
-    }
-    return { firstFreeUsed, consumedToday };
+    const { feedbackBonusDayId, boostApprovedDayId } = readUserBonusDayIds(
+      userSnap.exists() ? userSnap.data() : undefined,
+    );
+    const counts = daySnap.exists()
+      ? readDayTabCounts(daySnap.data())
+      : { spellingCount: 0, consistencyCount: 0 };
+    const view = buildTabQuotaView(
+      uid,
+      dayId,
+      feedbackBonusDayId,
+      boostApprovedDayId,
+      counts,
+    );
+    writeLocalQuota(uid, {
+      dayId,
+      spellingCount: counts.spellingCount,
+      consistencyCount: counts.consistencyCount,
+      feedbackBonusDayId,
+      boostApprovedDayId,
+    });
+    return view;
   } catch {
-    const local = readLocalQuota(uid, dayId);
-    return {
-      firstFreeUsed: local.firstFreeUsed,
-      consumedToday: local.consumedToday,
-    };
+    return readLocalQuota(uid, dayId);
   }
 }
 
 /**
  * @param {string} uid
  * @param {string} [email]
- * @returns {Promise<{
- *   consumedToday: boolean,
- *   hasWelcomeRemaining: boolean,
- *   dayId: string,
- *   enforced: boolean,
- * }>}
  */
 export async function getBetaDailyQuotaStatus(uid, email = '') {
   const dayId = getKstDayId();
   if (!isBetaDailyQuotaEnforcedForUser(uid, email)) {
     return {
-      consumedToday: false,
-      hasWelcomeRemaining: false,
       dayId,
       enforced: false,
+      tabLimit: BETA_TAB_LIMIT_DEFAULT,
+      spellingCount: 0,
+      consistencyCount: 0,
+      spellingConsumed: false,
+      consistencyConsumed: false,
+      hasFeedbackBonusToday: false,
+      hasBoostApprovedToday: false,
     };
   }
 
   const flags = await readQuotaFlags(uid, dayId);
   return {
-    consumedToday: flags.consumedToday,
-    hasWelcomeRemaining: !flags.firstFreeUsed,
     dayId,
     enforced: true,
+    tabLimit: flags.tabLimit,
+    spellingCount: flags.spellingCount,
+    consistencyCount: flags.consistencyCount,
+    spellingConsumed: flags.spellingConsumed,
+    consistencyConsumed: flags.consistencyConsumed,
+    hasFeedbackBonusToday: flags.feedbackBonusDayId === dayId,
+    hasBoostApprovedToday: flags.boostApprovedDayId === dayId,
   };
 }
 
 /**
- * @param {string} uid
- * @returns {Promise<{ ok: boolean, dayId: string, alreadyUsed?: boolean, kind?: 'welcome' | 'daily' }>}
- */
-/**
+ * Google Form 피드백 — 당일 탭당 3회 (KST)
  * @param {string} uid
  * @param {string} [email]
  */
-export async function consumeBetaDailyQuota(uid, email = '') {
+export async function grantFeedbackDailyQuotaBonus(uid, email = '') {
   const dayId = getKstDayId();
+  if (!uid.trim()) {
+    return { ok: false, dayId, granted: false, alreadyHadBonus: false };
+  }
   if (!isBetaDailyQuotaEnforcedForUser(uid, email)) {
-    return { ok: true, dayId, kind: 'daily' };
+    return { ok: true, dayId, granted: false, alreadyHadBonus: false };
   }
 
   const flags = await readQuotaFlags(uid, dayId);
-  if (!canRunBetaCheck(flags.firstFreeUsed, flags.consumedToday)) {
-    return { ok: false, dayId, alreadyUsed: true, kind: 'daily' };
+  const alreadyHadBonus = flags.feedbackBonusDayId === dayId;
+  if (alreadyHadBonus) {
+    return { ok: true, dayId, granted: true, alreadyHadBonus: true };
   }
 
-  const useWelcomeSlot = !flags.firstFreeUsed;
+  try {
+    await setDoc(
+      userDocRef(uid),
+      { feedbackBonusDayId: dayId },
+      { merge: true },
+    );
+    writeLocalQuota(uid, {
+      dayId,
+      spellingCount: flags.spellingCount,
+      consistencyCount: flags.consistencyCount,
+      feedbackBonusDayId: dayId,
+      boostApprovedDayId: flags.boostApprovedDayId,
+    });
+    return { ok: true, dayId, granted: true, alreadyHadBonus: false };
+  } catch {
+    writeLocalQuota(uid, {
+      dayId,
+      spellingCount: flags.spellingCount,
+      consistencyCount: flags.consistencyCount,
+      feedbackBonusDayId: dayId,
+      boostApprovedDayId: flags.boostApprovedDayId,
+    });
+    return { ok: true, dayId, granted: true, alreadyHadBonus: false };
+  }
+}
+
+/**
+ * @param {string} uid
+ * @param {string} [email]
+ * @param {BetaQuotaTab} tab
+ */
+export async function consumeBetaDailyQuota(uid, email = '', tab = 'spelling') {
+  const dayId = getKstDayId();
+  if (!isBetaDailyQuotaEnforcedForUser(uid, email)) {
+    return { ok: true, dayId, tab };
+  }
+
+  const flags = await readQuotaFlags(uid, dayId);
+  const tabCount =
+    tab === 'spelling' ? flags.spellingCount : flags.consistencyCount;
+  if (!canRunTabCheck(tabCount, flags.tabLimit)) {
+    return { ok: false, dayId, alreadyUsed: true, tab };
+  }
+
+  const countField = tab === 'spelling' ? 'spellingCount' : 'consistencyCount';
 
   try {
     await runTransaction(getFirestore(firebaseApp), async (tx) => {
       const userRef = userDocRef(uid);
       const userSnap = await tx.get(userRef);
-      const firstFreeUsed =
-        userSnap.exists() && userSnap.data()?.firstFreeUsed === true;
-
-      if (!firstFreeUsed) {
-        tx.set(
-          userRef,
-          { firstFreeUsed: true, firstFreeAt: serverTimestamp() },
-          { merge: true },
-        );
-        return;
-      }
+      const { feedbackBonusDayId, boostApprovedDayId } = readUserBonusDayIds(
+        userSnap.exists() ? userSnap.data() : undefined,
+      );
+      const tabLimit = getTabCheckLimit(
+        feedbackBonusDayId,
+        boostApprovedDayId,
+        dayId,
+      );
 
       const dayRef = dayDocRef(uid, dayId);
       const daySnap = await tx.get(dayRef);
-      if (daySnap.exists() && Number(daySnap.data()?.count) >= 1) {
+      const counts = daySnap.exists()
+        ? readDayTabCounts(daySnap.data())
+        : { spellingCount: 0, consistencyCount: 0 };
+      const currentCount =
+        tab === 'spelling' ? counts.spellingCount : counts.consistencyCount;
+      if (currentCount >= tabLimit) {
         throw new Error('beta-quota-exceeded');
       }
-      tx.set(dayRef, { count: 1, usedAt: serverTimestamp() });
+      const nextCount = currentCount + 1;
+      const nextData = {
+        ...counts,
+        [countField]: nextCount,
+        usedAt: serverTimestamp(),
+      };
+      if (!daySnap.exists()) {
+        tx.set(dayRef, nextData);
+      } else {
+        tx.update(dayRef, nextData);
+      }
     });
 
-    if (useWelcomeSlot) {
-      writeLocalQuota(uid, { firstFreeUsed: true });
-      return { ok: true, dayId, kind: 'welcome' };
-    }
-    writeLocalQuota(uid, { firstFreeUsed: true, dayId });
-    return { ok: true, dayId, kind: 'daily' };
+    const nextSpelling =
+      tab === 'spelling' ? flags.spellingCount + 1 : flags.spellingCount;
+    const nextConsistency =
+      tab === 'consistency'
+        ? flags.consistencyCount + 1
+        : flags.consistencyCount;
+    writeLocalQuota(uid, {
+      dayId,
+      spellingCount: nextSpelling,
+      consistencyCount: nextConsistency,
+      feedbackBonusDayId: flags.feedbackBonusDayId,
+      boostApprovedDayId: flags.boostApprovedDayId,
+    });
+    return { ok: true, dayId, tab };
   } catch (error) {
     if (
       error instanceof Error &&
       error.message === 'beta-quota-exceeded'
     ) {
-      writeLocalQuota(uid, { firstFreeUsed: true, dayId });
-      return { ok: false, dayId, alreadyUsed: true, kind: 'daily' };
+      writeLocalQuota(uid, {
+        dayId,
+        spellingCount: flags.spellingCount,
+        consistencyCount: flags.consistencyCount,
+        feedbackBonusDayId: flags.feedbackBonusDayId,
+        boostApprovedDayId: flags.boostApprovedDayId,
+      });
+      return { ok: false, dayId, alreadyUsed: true, tab };
     }
 
     const local = readLocalQuota(uid, dayId);
-    if (!canRunBetaCheck(local.firstFreeUsed, local.consumedToday)) {
-      return { ok: false, dayId, alreadyUsed: true, kind: 'daily' };
+    const localTabCount =
+      tab === 'spelling' ? local.spellingCount : local.consistencyCount;
+    if (!canRunTabCheck(localTabCount, local.tabLimit)) {
+      return { ok: false, dayId, alreadyUsed: true, tab };
     }
-    if (!local.firstFreeUsed) {
-      writeLocalQuota(uid, { firstFreeUsed: true });
-      return { ok: true, dayId, kind: 'welcome' };
-    }
-    writeLocalQuota(uid, { firstFreeUsed: true, dayId });
-    return { ok: true, dayId, kind: 'daily' };
+    const nextSpelling =
+      tab === 'spelling' ? local.spellingCount + 1 : local.spellingCount;
+    const nextConsistency =
+      tab === 'consistency'
+        ? local.consistencyCount + 1
+        : local.consistencyCount;
+    writeLocalQuota(uid, {
+      dayId,
+      spellingCount: nextSpelling,
+      consistencyCount: nextConsistency,
+      feedbackBonusDayId: local.feedbackBonusDayId,
+      boostApprovedDayId: local.boostApprovedDayId,
+    });
+    return { ok: true, dayId, tab };
   }
 }
 
 /**
- * 검수 실행 직전 호출 — 실패 시 alert 후 false
  * @param {string} uid
- * @param {{ onConsumed?: () => void, authEmail?: string }} [options]
+ * @param {{ onConsumed?: () => void, authEmail?: string, checkTab?: BetaQuotaTab }} [options]
  */
 export async function assertBetaDailyCheckOrAlert(uid, options = {}) {
   if (!assertLoggedInForCheckOrAlert(uid)) {
     return false;
   }
   const email = options.authEmail ?? '';
+  const tab = options.checkTab ?? 'spelling';
   if (!isBetaDailyQuotaEnforcedForUser(uid, email)) {
     return true;
   }
-  const result = await consumeBetaDailyQuota(uid, email);
+  const result = await consumeBetaDailyQuota(uid, email, tab);
   if (!result.ok) {
-    alert(BETA_DAILY_QUOTA_ALERT);
+    alert(betaQuotaAlertForTab(tab));
     return false;
   }
   options.onConsumed?.();

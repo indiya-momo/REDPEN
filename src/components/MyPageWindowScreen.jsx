@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, Plus } from 'lucide-react';
 import FeedbackModal from './FeedbackModal.jsx';
+import { openFeedbackFormForUser } from '../lib/feedbackConfig.js';
 import { returnToWorkspace } from '../lib/returnToWorkspace.js';
 import {
   getCurrentUserSession,
@@ -10,10 +11,13 @@ import {
   subscribeAuthSession,
 } from '../lib/firebaseAuth.js';
 import { getUserProfile } from '../lib/userProfileStorage.js';
+import { getUserBadgeCollection } from '../lib/userBadges.js';
+import BadgeCollectionGrid from './BadgeCollectionGrid.jsx';
 import './my-page.css';
 
 const SIDEBAR_NAV = [
   { id: 'profile', label: '회원정보관리' },
+  { id: 'badges', label: '배지' },
   { id: 'usage', label: '이용 내역' },
   { id: 'inquiry', label: '문의 내역' },
 ];
@@ -47,7 +51,7 @@ const FAQ_ITEMS = [
     id: 'beta',
     question: '오픈베타 기간 이용료가 있나요?',
     answer:
-      '오픈베타 기간에는 첫 검수 1회가 무료이며, 이후 로그인 회원당 하루 1회 전체 기능 검수를 제공합니다(한국 시간 기준). 베타 종료 후 요금·한도는 별도 안내할 예정입니다.',
+      '오픈베타 기간에는 로그인 회원당 맞춤법·일관성 각 2회 검수를 제공합니다(한국 시간 기준). Google Form 피드백을 남기면 당일 각 3회까지 이용할 수 있습니다. 베타 종료 후 요금·한도는 별도 안내할 예정입니다.',
   },
   {
     id: 'device',
@@ -74,7 +78,33 @@ function daysSinceJoin(timestampMs) {
   return Math.max(1, Math.floor((today.getTime() - start.getTime()) / dayMs) + 1);
 }
 
-function OverviewDashboard({ onViewAll }) {
+function BadgeCollectionSection({ badges }) {
+  const earnedCount = badges.filter((badge) => badge.earned).length;
+
+  return (
+    <section
+      className="mypage__card mypage__badge-card"
+      aria-labelledby="mypage-badge-title"
+    >
+      <div className="mypage__card-head">
+        <div>
+          <h2 id="mypage-badge-title" className="mypage__page-title mypage__page-title--in-card">
+            배지 컬렉션
+          </h2>
+          <p className="mypage__badge-lead">
+            이벤트·활동으로 모은 배지를 확인할 수 있습니다.
+          </p>
+        </div>
+        <p className="mypage__badge-count" aria-live="polite">
+          {earnedCount}/{badges.length}
+        </p>
+      </div>
+      <BadgeCollectionGrid badges={badges} />
+    </section>
+  );
+}
+
+function OverviewDashboard({ onViewAll, badges }) {
   return (
     <div className="mypage__main-inner">
       <section className="mypage__balance" aria-label="서비스 안내">
@@ -141,6 +171,25 @@ function OverviewDashboard({ onViewAll }) {
             궁금한 점은 문의하기로 남겨 주세요.
           </p>
         </div>
+      </section>
+
+      <section className="mypage__card mypage__card--badge-preview" aria-labelledby="mypage-badge-overview-title">
+        <div className="mypage__card-head">
+          <h2 id="mypage-badge-overview-title" className="mypage__card-title">
+            배지 컬렉션
+          </h2>
+          <button
+            type="button"
+            className="mypage__card-link"
+            onClick={() => onViewAll('badges')}
+          >
+            전체 보기 →
+          </button>
+        </div>
+        <p className="mypage__badge-count mypage__badge-count--inline">
+          획득 {badges.filter((badge) => badge.earned).length}/{badges.length}
+        </p>
+        <BadgeCollectionGrid badges={badges} />
       </section>
     </div>
   );
@@ -309,6 +358,11 @@ export default function MyPageWindowScreen() {
     return daysSinceJoin(joinedMs);
   }, [authSession?.createdAtMs, profile?.completedAt]);
 
+  const badges = useMemo(
+    () => getUserBadgeCollection(authSession?.uid ?? ''),
+    [authSession?.uid],
+  );
+
   async function handleLogout() {
     await signOutUser();
     const url = new URL(import.meta.env.BASE_URL || '/', window.location.origin);
@@ -401,7 +455,7 @@ export default function MyPageWindowScreen() {
       <main className="mypage__main">
         {activeNav === 'overview' ? (
           <div className="mypage__overview-layout">
-            <OverviewDashboard onViewAll={setActiveNav} />
+            <OverviewDashboard onViewAll={setActiveNav} badges={badges} />
             <MyPageFaq
               onInquiry={() => {
                 setActiveNav('inquiry');
@@ -416,6 +470,10 @@ export default function MyPageWindowScreen() {
             daysWithMomo={daysWithMomo}
             authUid={authSession.uid}
           />
+        ) : activeNav === 'badges' ? (
+          <div className="mypage__main-inner mypage__main-inner--section">
+            <BadgeCollectionSection badges={badges} />
+          </div>
         ) : activeNav === 'inquiry' ? (
           <InquiryHistorySection
             onNewInquiry={() => setInquiryModalOpen(true)}
@@ -427,6 +485,9 @@ export default function MyPageWindowScreen() {
       <FeedbackModal
         open={inquiryModalOpen}
         onClose={() => setInquiryModalOpen(false)}
+        onOpenForm={() => {
+          openFeedbackFormForUser(authSession.uid);
+        }}
       />
     </div>
   );

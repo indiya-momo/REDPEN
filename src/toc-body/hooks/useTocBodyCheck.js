@@ -111,6 +111,7 @@ export function useTocBodyCheck({
     if (
       !(await assertBetaDailyCheckOrAlert(authUid, {
         authEmail,
+        checkTab: 'consistency',
         onConsumed: onBetaQuotaConsumed,
       }))
     ) {

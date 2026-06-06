@@ -225,6 +225,18 @@ describe('getWorkGuideChainState', () => {
     expect(chain.showPdfOpenedGuide).toBe(false);
   });
 
+  it('온보딩 5회 소진 후 말풍선이 뜨지 않는다', () => {
+    localStorage.setItem(
+      'indiya-work-guide-onboarding-exposure--u1',
+      JSON.stringify({ count: 5, lastDayId: '2026-06-01' }),
+    );
+    const chain = getWorkGuideChainState('u1', baseCtx, keyFor, null, {
+      pinAll: false,
+    });
+    expect(chain.workGuideOpen).toBe(false);
+    expect(chain.showLeftCriteriaGuide).toBe(false);
+  });
+
   it('업로드 전에는 pre-upload만 대상이다', () => {
     const chain = getWorkGuideChainState(
       'u1',

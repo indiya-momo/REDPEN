@@ -1,3 +1,8 @@
+import {
+  buildFeedbackFormOpenUrl,
+  markFeedbackFormSubmitPending,
+} from './feedbackFormSubmitReturn.js';
+
 /** @typedef {'bug' | 'feature' | 'other'} FeedbackType */
 
 /** 오픈베타 Google Form — env 미설정 시에도 앱에서 열림 */
@@ -20,6 +25,10 @@ export function getFeedbackFormConfig() {
   return {
     actionUrl: String(import.meta.env.VITE_FEEDBACK_FORM_ACTION_URL ?? '').trim(),
     viewUrl: String(import.meta.env.VITE_FEEDBACK_FORM_VIEW_URL ?? '').trim(),
+    prefillViewUrl: String(
+      import.meta.env.VITE_FEEDBACK_FORM_PREFILL_VIEW_URL ?? '',
+    ).trim(),
+    entryUid: String(import.meta.env.VITE_FEEDBACK_FORM_ENTRY_UID ?? '').trim(),
     entryType: String(import.meta.env.VITE_FEEDBACK_FORM_ENTRY_TYPE ?? '').trim(),
     entryMessage: String(
       import.meta.env.VITE_FEEDBACK_FORM_ENTRY_MESSAGE ?? '',
@@ -68,6 +77,20 @@ export function openFeedbackFormView() {
   if (!url) return false;
   window.open(url, '_blank', 'noopener,noreferrer');
   return true;
+}
+
+/**
+ * Google Form 열기 — 제출 후 리다이렉트 시에만 검수 보너스 (session pending)
+ * @param {string} uid
+ */
+export function openFeedbackFormForUser(uid) {
+  const id = uid.trim();
+  if (!id) return { opened: false };
+  const url = buildFeedbackFormOpenUrl(id);
+  if (!url) return { opened: false };
+  markFeedbackFormSubmitPending(id);
+  window.open(url, '_blank', 'noopener,noreferrer');
+  return { opened: true };
 }
 
 /** @param {FeedbackType} type */
