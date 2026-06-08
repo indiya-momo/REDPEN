@@ -1,4 +1,5 @@
 import { APP_VERSION, UI_BUILD_ID, deployModeLabel } from './appVersion.js';
+import { isBetaQuotaAdminExempt } from './betaDailyQuota.js';
 import { resolvePostHogHost, resolvePostHogKey } from './posthogEnv.js';
 
 const OPT_OUT_KEY = 'pdf-proofread-analytics-opt-out';
@@ -11,6 +12,10 @@ let posthogClient = null;
 /** @type {{ event: string, properties: Record<string, string | number | boolean> }[]} */
 const pendingCaptures = [];
 
+/** initAnalytics 완료 전 identify — 로그인 직후 person 속성 유실 방지 */
+/** @type {{ uid: string, properties: Record<string, boolean> } | null} */
+let pendingIdentify = null;
+
 function flushPendingCaptures() {
   if (!posthogClient || isAnalyticsOptedOut()) {
     pendingCaptures.length = 0;
@@ -20,6 +25,51 @@ function flushPendingCaptures() {
     posthogClient.capture(item.event, item.properties);
   }
   pendingCaptures.length = 0;
+}
+
+function flushPendingIdentify() {
+  if (!posthogClient || isAnalyticsOptedOut() || !pendingIdentify) {
+    pendingIdentify = null;
+    return;
+  }
+  posthogClient.identify(pendingIdentify.uid, pendingIdentify.properties);
+  pendingIdentify = null;
+}
+
+/**
+ * PostHog person — 이메일 없이 uid + 내부 테스트 여부만 (VITE_BETA_QUOTA_ADMIN_*)
+ * @param {string} uid
+ * @param {string} [email]
+ */
+export function buildAnalyticsPersonProperties(uid, email = '') {
+  return {
+    is_internal: isBetaQuotaAdminExempt(uid, email),
+  };
+}
+
+/**
+ * @param {string} uid Firebase uid (distinct_id)
+ * @param {string} [email] env 면제 목록 비교용 — PostHog로 전송하지 않음
+ */
+export function identifyAnalyticsUser(uid, email = '') {
+  if (isAnalyticsOptedOut()) return;
+  const id = uid.trim();
+  if (!id) {
+    resetAnalyticsUser();
+    return;
+  }
+  const properties = buildAnalyticsPersonProperties(id, email);
+  if (!posthogClient) {
+    pendingIdentify = { uid: id, properties };
+    return;
+  }
+  posthogClient.identify(id, properties);
+}
+
+export function resetAnalyticsUser() {
+  pendingIdentify = null;
+  if (!posthogClient) return;
+  posthogClient.reset();
 }
 
 export function isAnalyticsOptedOut() {
@@ -40,6 +90,7 @@ export function setAnalyticsOptOut(optOut) {
   }
   if (optOut) {
     pendingCaptures.length = 0;
+    pendingIdentify = null;
     if (posthogClient) posthogClient.opt_out_capturing();
   }
 }
@@ -136,6 +187,7 @@ export async function initAnalytics() {
   }
 
   flushPendingCaptures();
+  flushPendingIdentify();
 }
 
 /**
