@@ -28,7 +28,11 @@ import {
 } from './lib/firebaseAuth.js';
 import { isLoginRequiredForChecks } from './lib/checkAuthGate.js';
 import { isOnboardingComplete } from './lib/userProfileStorage.js';
-import { identifyAnalyticsUser, resetAnalyticsUser } from './lib/analytics.js';
+import {
+  identifyAnalyticsUser,
+  resetAnalyticsUser,
+  waitForAnalyticsReady,
+} from './lib/analytics.js';
 import { resolveQuotaAuthEmail } from './lib/betaDailyQuota.js';
 import {
   hasValidFeedbackFormSubmitPending,
@@ -118,14 +122,21 @@ export default function App() {
 
   useEffect(() => {
     if (!authReady || auxWindow) return;
-    if (authSession?.uid) {
-      identifyAnalyticsUser(
-        authSession.uid,
-        resolveQuotaAuthEmail(authSession),
-      );
-      return;
-    }
-    resetAnalyticsUser();
+    let cancelled = false;
+    void waitForAnalyticsReady().then(() => {
+      if (cancelled) return;
+      if (authSession?.uid) {
+        identifyAnalyticsUser(
+          authSession.uid,
+          resolveQuotaAuthEmail(authSession),
+        );
+        return;
+      }
+      resetAnalyticsUser();
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [authReady, auxWindow, authSession]);
 
   useEffect(() => {

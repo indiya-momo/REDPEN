@@ -27,13 +27,39 @@ function flushPendingCaptures() {
   pendingCaptures.length = 0;
 }
 
+function applyIdentify(id, properties) {
+  if (!posthogClient || isAnalyticsOptedOut()) return;
+  posthogClient.identify(id, properties);
+  // Live events에서 $identify 대신 확인하기 쉬운 커스텀 이벤트 (uid·이메일 없음)
+  posthogClient.capture('user_identified', {
+    is_internal: properties.is_internal,
+  });
+}
+
 function flushPendingIdentify() {
   if (!posthogClient || isAnalyticsOptedOut() || !pendingIdentify) {
     pendingIdentify = null;
     return;
   }
-  posthogClient.identify(pendingIdentify.uid, pendingIdentify.properties);
+  const { uid, properties } = pendingIdentify;
   pendingIdentify = null;
+  applyIdentify(uid, properties);
+}
+
+/** @type {Promise<void> | null} */
+let analyticsInitPromise = null;
+
+/** PostHog init 완료까지 대기 (identify 타이밍 보장) */
+export function waitForAnalyticsReady() {
+  if (!analyticsInitPromise) {
+    analyticsInitPromise = initAnalytics();
+  }
+  return analyticsInitPromise;
+}
+
+/** @returns {boolean} */
+export function isAnalyticsConfigured() {
+  return Boolean(resolvePostHogKey());
 }
 
 /**
@@ -63,7 +89,7 @@ export function identifyAnalyticsUser(uid, email = '') {
     pendingIdentify = { uid: id, properties };
     return;
   }
-  posthogClient.identify(id, properties);
+  applyIdentify(id, properties);
 }
 
 export function resetAnalyticsUser() {
@@ -151,6 +177,7 @@ export async function initAnalytics() {
   const key = resolvePostHogKey();
   if (!key) {
     pendingCaptures.length = 0;
+    pendingIdentify = null;
     return;
   }
 
