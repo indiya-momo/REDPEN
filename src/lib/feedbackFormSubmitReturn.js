@@ -108,13 +108,18 @@ export function buildFeedbackFormOpenUrl(uid) {
 /**
  * @param {string} id
  * @param {string} email
+ * @param {{ acknowledgeSubmission?: boolean }} [options]
  */
-async function finalizeFeedbackThankYou(id, email) {
+async function finalizeFeedbackThankYou(id, email, options = {}) {
   const result = await grantFeedbackDailyQuotaBonus(id, email);
   const localRewardOnly =
     isLocalDevQuotaRelaxed() && !result.alreadyHadBonus;
+  const acknowledgeSubmission =
+    Boolean(options.acknowledgeSubmission) && !result.alreadyHadBonus;
   const showThankYou =
-    (result.granted && !result.alreadyHadBonus) || localRewardOnly;
+    (result.granted && !result.alreadyHadBonus) ||
+    localRewardOnly ||
+    acknowledgeSubmission;
   if (showThankYou) {
     markRewardNotice(id);
     publishFeedbackThankYouSignal(id);
@@ -170,7 +175,9 @@ export async function consumeFeedbackFormSubmitReturn(uid, email = '') {
   }
 
   clearFeedbackFormSubmitPending();
-  const finalized = await finalizeFeedbackThankYou(id, email);
+  const finalized = await finalizeFeedbackThankYou(id, email, {
+    acknowledgeSubmission: true,
+  });
   return {
     handled: true,
     ...finalized,
@@ -178,7 +185,37 @@ export async function consumeFeedbackFormSubmitReturn(uid, email = '') {
 }
 
 /**
- * 페이지 로드·새로고침 — URL 리다이렉트, 탭 간 신호, 로컬 pending 순으로 감사 UI
+ * @param {string} id
+ * @param {string} email
+ */
+async function resolveFeedbackThankYouFromPending(id, email) {
+  const pending = readFeedbackFormSubmitPending();
+  if (!pending || pending.uid !== id) {
+    return null;
+  }
+  if (Date.now() - pending.at > PENDING_MAX_AGE_MS) {
+    clearFeedbackFormSubmitPending();
+    return {
+      handled: true,
+      granted: false,
+      showThankYou: false,
+      reason: 'expired',
+    };
+  }
+
+  clearFeedbackFormSubmitPending();
+  const finalized = await finalizeFeedbackThankYou(id, email, {
+    acknowledgeSubmission: true,
+  });
+  return {
+    handled: true,
+    ...finalized,
+    fromPendingRefresh: true,
+  };
+}
+
+/**
+ * 페이지 로드·새로고침 — URL 리다이렉트, 탭 간 신호, pending 새로고침 순으로 감사 UI
  * @param {string} uid
  * @param {string} [email]
  */
@@ -204,33 +241,12 @@ export async function resolveFeedbackThankYouOnLoad(uid, email = '') {
     };
   }
 
-  if (!isLocalDevQuotaRelaxed()) {
-    return redirect.handled
-      ? redirect
-      : { handled: false, granted: false, showThankYou: false };
+  const pendingRefresh = await resolveFeedbackThankYouFromPending(id, email);
+  if (pendingRefresh) {
+    return pendingRefresh;
   }
 
-  const pending = readFeedbackFormSubmitPending();
-  if (!pending || pending.uid !== id) {
-    return redirect.handled
-      ? redirect
-      : { handled: false, granted: false, showThankYou: false };
-  }
-  if (Date.now() - pending.at > PENDING_MAX_AGE_MS) {
-    clearFeedbackFormSubmitPending();
-    return {
-      handled: true,
-      granted: false,
-      showThankYou: false,
-      reason: 'expired',
-    };
-  }
-
-  clearFeedbackFormSubmitPending();
-  const finalized = await finalizeFeedbackThankYou(id, email);
-  return {
-    handled: true,
-    ...finalized,
-    fromLocalRefresh: true,
-  };
+  return redirect.handled
+    ? redirect
+    : { handled: false, granted: false, showThankYou: false };
 }

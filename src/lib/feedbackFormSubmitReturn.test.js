@@ -111,7 +111,22 @@ describe('consumeFeedbackFormSubmitReturn', () => {
 });
 
 describe('resolveFeedbackThankYouOnLoad', () => {
-  it('로컬에서 URL 없이 pending만 있으면 새로고침 시 감사 UI를 연다', async () => {
+  it('URL 없이 pending만 있으면 새로고침 시 감사 UI를 연다', async () => {
+    vi.mocked(isLocalDevQuotaRelaxed).mockReturnValue(false);
+    vi.mocked(grantFeedbackDailyQuotaBonus).mockResolvedValue({
+      ok: true,
+      granted: false,
+      alreadyHadBonus: false,
+    });
+    window.location.search = '';
+    markFeedbackFormSubmitPending('u1');
+    const result = await resolveFeedbackThankYouOnLoad('u1');
+    expect(result.fromPendingRefresh).toBe(true);
+    expect(result.showThankYou).toBe(true);
+    expect(grantFeedbackDailyQuotaBonus).toHaveBeenCalledWith('u1', '');
+  });
+
+  it('로컬 dev에서 한도 미지급이어도 pending 새로고침 시 감사 UI를 연다', async () => {
     vi.mocked(isLocalDevQuotaRelaxed).mockReturnValue(true);
     vi.mocked(grantFeedbackDailyQuotaBonus).mockResolvedValue({
       ok: true,
@@ -121,9 +136,9 @@ describe('resolveFeedbackThankYouOnLoad', () => {
     window.location.search = '';
     markFeedbackFormSubmitPending('u1');
     const result = await resolveFeedbackThankYouOnLoad('u1');
-    expect(result.fromLocalRefresh).toBe(true);
+    expect(result.fromPendingRefresh).toBe(true);
     expect(result.showThankYou).toBe(true);
-    expect(grantFeedbackDailyQuotaBonus).toHaveBeenCalledWith('u1', '');
+    expect(result.localRewardOnly).toBe(true);
   });
 
   it('탭 간 신호만 있어도 감사 UI를 연다', async () => {
