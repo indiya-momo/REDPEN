@@ -229,6 +229,12 @@ export default function WelcomePcScreen({
           ) : null}
 
           <div className="welcome-pc__bottom-notes">
+            <p className="welcome-pc__privacy-note">
+              오픈베타 기간 동안 사용자의 이용 데이터를 익명으로 수집합니다.
+              <br />
+              원고는 서버에 저장되지 않으며 수집한 이용 데이터는 기능 향상을 위해
+              사용됩니다.
+            </p>
             <div className="welcome-pc__bottom-meta">
               <AppVersionBadge dateOnly />
               <button
@@ -272,9 +278,9 @@ export default function WelcomePcScreen({
               <div className="welcome-pc__stage-cta">
                 {!loggedIn ? (
                   <p className="welcome-pc__beta-note welcome-pc__beta-note--above-cta">
-                    오픈베타 서비스 중
+                    무료 오픈베타 서비스 중
                     <br />
-                    매일 맞춤법·일관성 확인 각 1회 사용 가능
+                    회원은 매일 맞춤법·일관성 검수 기능 사용 가능
                   </p>
                 ) : null}
                 {!authReady ? (

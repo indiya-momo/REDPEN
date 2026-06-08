@@ -118,26 +118,31 @@ export default function App() {
     }
   }, [authReady, auxWindow, screen, authSession]);
 
-  useEffect(() => subscribeAuthSession(setAuthSession), []);
-
-  useEffect(() => {
-    if (!authReady || auxWindow) return;
-    let cancelled = false;
+  const syncPostHogIdentity = useCallback((session) => {
     void waitForAnalyticsReady().then(() => {
-      if (cancelled) return;
-      if (authSession?.uid) {
+      if (session?.uid) {
         identifyAnalyticsUser(
-          authSession.uid,
-          resolveQuotaAuthEmail(authSession),
+          session.uid,
+          resolveQuotaAuthEmail(session),
         );
         return;
       }
       resetAnalyticsUser();
     });
-    return () => {
-      cancelled = true;
-    };
-  }, [authReady, auxWindow, authSession]);
+  }, []);
+
+  useEffect(() => {
+    if (auxWindow) return;
+    return subscribeAuthSession((session) => {
+      setAuthSession(session);
+      syncPostHogIdentity(session);
+    });
+  }, [auxWindow, syncPostHogIdentity]);
+
+  useEffect(() => {
+    if (!authReady || auxWindow) return;
+    syncPostHogIdentity(authSession);
+  }, [authReady, auxWindow, authSession, syncPostHogIdentity]);
 
   useEffect(() => {
     let cancelled = false;
@@ -277,6 +282,7 @@ export default function App() {
         authBootstrapError={authBootstrapError}
         onGoogleSignIn={async () => {
           await signInWithGoogle();
+          syncPostHogIdentity(getCurrentUserSession());
         }}
         onLogout={async () => {
           await signOutUser();

@@ -141,11 +141,14 @@ export function useTocBodyCheck({
     setSelected(inst);
 
     const findingCount = groups.reduce((n, g) => n + g.instances.length, 0);
-    trackCheckRun({
-      scope: 'toc-body',
-      findingCount,
-      activeRuleCount: 0,
-    });
+    await trackCheckRun(
+      {
+        scope: 'toc-body',
+        findingCount,
+        activeRuleCount: 0,
+      },
+      { uid: authUid, email: authEmail },
+    );
     trackResultViewed({ scope: 'toc-body', findingCount });
 
     setCurrentPage(1);

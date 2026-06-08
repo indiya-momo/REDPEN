@@ -34,6 +34,34 @@ describe('buildAnalyticsPersonProperties', () => {
   });
 });
 
+describe('identifyAnalyticsUser', () => {
+  it('opt-out 복구 시 PostHog opt_in_capturing 호출', async () => {
+    const optIn = vi.fn();
+    const optOut = vi.fn();
+    vi.doMock('posthog-js', () => ({
+      default: {
+        init: vi.fn(),
+        identify: vi.fn(),
+        capture: vi.fn(),
+        opt_in_capturing: optIn,
+        opt_out_capturing: optOut,
+        reset: vi.fn(),
+      },
+    }));
+    vi.resetModules();
+    import.meta.env.VITE_PUBLIC_POSTHOG_KEY = 'phc_test';
+    const mod = await import('./analytics.js');
+    await mod.initAnalytics();
+    mod.setAnalyticsOptOut(true);
+    mod.setAnalyticsOptOut(false);
+    expect(optOut).toHaveBeenCalled();
+    expect(optIn).toHaveBeenCalled();
+    vi.doUnmock('posthog-js');
+    vi.resetModules();
+    delete import.meta.env.VITE_PUBLIC_POSTHOG_KEY;
+  });
+});
+
 describe('analytics buckets', () => {
   it('bucketPageCount', () => {
     expect(bucketPageCount(30)).toBe('1-50');

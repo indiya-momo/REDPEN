@@ -288,11 +288,14 @@ export function useRuleCheck({
         (n, g) => n + g.instances.length,
         0,
       );
-      trackCheckRun({
-        scope,
-        findingCount,
-        activeRuleCount: activeTotal,
-      });
+      await trackCheckRun(
+        {
+          scope,
+          findingCount,
+          activeRuleCount: activeTotal,
+        },
+        { uid: authUid, email: authEmail },
+      );
       trackResultViewed({ scope, findingCount });
       setCurrentPage(1);
       setIsProcessing(false);
@@ -406,11 +409,14 @@ export function useRuleCheck({
         (n, g) => n + g.instances.length,
         0,
       );
-      trackCheckRun({
-        scope: subset === 'auxiliary' ? 'consistency-aux' : 'consistency-literal',
-        findingCount,
-        activeRuleCount: rules.length,
-      });
+      await trackCheckRun(
+        {
+          scope: subset === 'auxiliary' ? 'consistency-aux' : 'consistency-literal',
+          findingCount,
+          activeRuleCount: rules.length,
+        },
+        { uid: authUid, email: authEmail },
+      );
       trackResultViewed({ scope: 'consistency', findingCount });
 
       setCurrentPage(inst?.pageNum ?? 1);
