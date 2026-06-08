@@ -36,5 +36,5 @@ Write-Host ""
 Write-Host "Chrome이 안 되면: 설정 > 시스템 > 프록시 끄기, 또는 localhost 예외"
 Write-Host ""
 
-Start-Process "http://127.0.0.1:$port/"
+Start-Process "http://localhost:$port/"
 npx --yes vite preview --host --port $port --strictPort

@@ -38,7 +38,7 @@ import {
 import { usePrintedPageDisplay } from '../hooks/usePrintedPageDisplay.js';
 import { trackFeedbackOpened } from '../lib/analytics.js';
 import { openFeedbackFormForUser } from '../lib/feedbackConfig.js';
-import { FEEDBACK_DAILY_BONUS_GRANTED_ALERT } from '../lib/betaDailyQuota.js';
+import { FEEDBACK_SUBMIT_THANK_BUBBLE_LINES } from '../lib/betaDailyQuota.js';
 import {
   getCurrentUserSession,
   subscribeAuthSession,
@@ -66,22 +66,12 @@ import {
   shouldShowPdfViewer,
 } from '../utils/main-screen-helpers.js';
 
-/** 1번 — 가로: 실행 행 왼쪽, 세로: 기준 검수 버튼 아래 (버튼과 겹치지 않음) */
-const WORK_GUIDE_1_ALIGN_CHAIN = [
-  {
-    alignSplit: {
-      horizontal: {
-        selector: '.spelling-tab-layout__run-row',
-        leftFromTargetLeft: 512,
-      },
-      vertical: {
-        selector:
-          '.spelling-tab-layout__run-row-actions--end .panel-section-run-btn',
-        topFromTargetBottom: 170,
-      },
-    },
-  },
-];
+/** 1번 — 기준 검수 버튼 바로 아래 (좌측 패널 안에 보이도록) */
+const WORK_GUIDE_1_ALIGN = {
+  selector: '[data-work-guide-criteria-run]',
+  leftFromTargetLeft: 0,
+  topFromTargetBottom: 10,
+};
 
 /** 4번 — 우측 상단 인사말(○○님 안녕하세요) 아래 120px */
 const WORK_GUIDE_GREETING_ALIGN = {
@@ -621,9 +611,15 @@ export default function MainScreen({
   const showSpellingResultsSlot = tabCheckDone;
 
   const handleCriteriaSpellingCheck = useCallback(() => {
-    workGuide.dismiss(WORK_GUIDE_KEYS.LEFT_CRITERIA);
+    if (workGuide.showLeftCriteriaGuide) {
+      workGuide.dismiss(WORK_GUIDE_KEYS.LEFT_CRITERIA);
+    }
     void ruleCheck.runSpellingCheck();
-  }, [workGuide.dismiss, ruleCheck.runSpellingCheck]);
+  }, [
+    workGuide.dismiss,
+    workGuide.showLeftCriteriaGuide,
+    ruleCheck.runSpellingCheck,
+  ]);
 
   /** 다시 검수 — 결과 비우고 맞춤법 탭 검수 항목·기준 설정으로 복귀 */
   const handleSpellingRecheckFromScratch = useCallback(() => {
@@ -746,7 +742,6 @@ export default function MainScreen({
     () => shouldShowPdfViewer(Boolean(pdf.pdf)),
     [pdf.pdf],
   );
-  const isPreUpload = !pdf.pdf;
 
   const centerRunLabel = useMemo(
     () => getCenterRunLabel(pdf.isProcessing, pdf.progress),
@@ -857,7 +852,6 @@ export default function MainScreen({
         className={[
           'panel-left',
           `panel-left--${workTab}`,
-          isPreUpload ? 'panel-left--preupload' : '',
           workGuide.workGuideOpen ? 'panel-left--work-guide' : '',
         ]
           .filter(Boolean)
@@ -903,65 +897,17 @@ export default function MainScreen({
                     aria-controls="panel-left-criteria-picker-list"
                     aria-autocomplete="list"
                   />
-                  {workGuide.showLeftCriteriaGuide ? (
-                    <TooltipGuide
-                      storageKey={workGuide.storageKey(
-                        WORK_GUIDE_KEYS.LEFT_CRITERIA,
-                      )}
-                      placement="bottom"
-                      bubbleType="left"
-                      useFixedLayer
-                      offsetX={0}
-                      offsetY={0}
-                      alignToBubbleChain={WORK_GUIDE_1_ALIGN_CHAIN}
-                      bubbleGuideStep="1"
-                      pinned={workGuide.pinAll}
-                      message={
-                        <>
-                          검수할 항목을 선택하자냥!
-                          <br />
-                          〉 를 누르면 기준 항목을 볼 수 있다냥
-                          <br />
-                          선택했으면{' '}
-                          <span className="tooltip-guide__run-btn-look">
-                            기준 검수
-                          </span>
-                          를 누르라냥
-                        </>
-                      }
-                      onDismiss={() =>
-                        workGuide.dismiss(WORK_GUIDE_KEYS.LEFT_CRITERIA)
-                      }
-                    >
-                      <span className="work-guide-anchor work-guide-anchor--criteria-toggle">
-                        <button
-                          type="button"
-                          className="panel-left__criteria-picker-toggle"
-                          aria-label="저장한 기준 목록 열기"
-                          aria-expanded={criteriaPickerOpen}
-                          aria-controls="panel-left-criteria-picker-list"
-                          disabled={savedRuleSets.length === 0}
-                          onClick={() =>
-                            setCriteriaPickerOpen((open) => !open)
-                          }
-                        >
-                          <ChevronDown size={16} aria-hidden />
-                        </button>
-                      </span>
-                    </TooltipGuide>
-                  ) : (
-                    <button
-                      type="button"
-                      className="panel-left__criteria-picker-toggle"
-                      aria-label="저장한 기준 목록 열기"
-                      aria-expanded={criteriaPickerOpen}
-                      aria-controls="panel-left-criteria-picker-list"
-                      disabled={savedRuleSets.length === 0}
-                      onClick={() => setCriteriaPickerOpen((open) => !open)}
-                    >
-                      <ChevronDown size={16} aria-hidden />
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    className="panel-left__criteria-picker-toggle"
+                    aria-label="저장한 기준 목록 열기"
+                    aria-expanded={criteriaPickerOpen}
+                    aria-controls="panel-left-criteria-picker-list"
+                    disabled={savedRuleSets.length === 0}
+                    onClick={() => setCriteriaPickerOpen((open) => !open)}
+                  >
+                    <ChevronDown size={16} aria-hidden />
+                  </button>
                 </div>
                 {criteriaPickerOpen && savedRuleSets.length > 0 ? (
                   <ul
@@ -1054,11 +1000,6 @@ export default function MainScreen({
             </button>
           </nav>
         </header>
-        {isPreUpload ? (
-          <p className="panel-left__preupload-hint">
-            PDF를 업로드한 뒤 사용 가능한 영역입니다
-          </p>
-        ) : null}
 
         {workTab === 'spelling' && (
           <div
@@ -1085,14 +1026,54 @@ export default function MainScreen({
                 <div className="spelling-tab-layout__run-row-actions spelling-tab-layout__run-row-actions--end">
                   <span
                     className="spelling-tab-layout__criteria-run-wrap"
+                    data-work-guide-criteria-run
                     title={criteriaRunDisabledReason || undefined}
                   >
-                    <PanelSectionRunButton
-                      label="기준 검수"
-                      onClick={handleCriteriaSpellingCheck}
-                      disabled={criteriaRunBlocked}
-                      isProcessing={criteriaRunChecking}
-                    />
+                    {workGuide.showLeftCriteriaGuide ? (
+                      <TooltipGuide
+                        storageKey={workGuide.storageKey(
+                          WORK_GUIDE_KEYS.LEFT_CRITERIA,
+                        )}
+                        placement="bottom"
+                        bubbleType="left"
+                        useFixedLayer
+                        offsetX={0}
+                        offsetY={0}
+                        alignToBubble={WORK_GUIDE_1_ALIGN}
+                        bubbleGuideStep="1"
+                        pinned={workGuide.pinAll}
+                        message={
+                          <>
+                            검수할 기준을 선택하자냥!
+                            <br />
+                            〉 를 누르면 기준 항목을 볼 수 있다냥
+                            <br />
+                            선택했으면{' '}
+                            <span className="tooltip-guide__run-btn-look">
+                              기준 검수
+                            </span>
+                            를 누르라냥
+                          </>
+                        }
+                        onDismiss={() =>
+                          workGuide.dismiss(WORK_GUIDE_KEYS.LEFT_CRITERIA)
+                        }
+                      >
+                        <PanelSectionRunButton
+                          label="기준 검수"
+                          onClick={handleCriteriaSpellingCheck}
+                          disabled={criteriaRunBlocked}
+                          isProcessing={criteriaRunChecking}
+                        />
+                      </TooltipGuide>
+                    ) : (
+                      <PanelSectionRunButton
+                        label="기준 검수"
+                        onClick={handleCriteriaSpellingCheck}
+                        disabled={criteriaRunBlocked}
+                        isProcessing={criteriaRunChecking}
+                      />
+                    )}
                   </span>
                   {/* 2번 말풍선 — 검수 결과 안내 */}
                   {workGuide.showFirstResultGuide ? (
@@ -1515,13 +1496,19 @@ export default function MainScreen({
                     placement="bottom"
                     bubbleType="left"
                     useFixedLayer
-                    alignToBubble={WORK_GUIDE_7_ALIGN}
-                    offsetX={0}
+                    offsetX={-100}
                     offsetY={8}
                     message={
-                      <span className="tooltip-guide__message-line">
-                        {FEEDBACK_DAILY_BONUS_GRANTED_ALERT}
-                      </span>
+                      <>
+                        {FEEDBACK_SUBMIT_THANK_BUBBLE_LINES.map((line) => (
+                          <span
+                            key={line}
+                            className="tooltip-guide__message-line tooltip-guide__message-line--stacked"
+                          >
+                            {line}
+                          </span>
+                        ))}
+                      </>
                     }
                     onDismiss={() => {
                       onFeedbackThankYouDismiss();

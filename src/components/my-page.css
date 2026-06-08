@@ -589,6 +589,7 @@
   color: var(--color-text-muted);
 }
 
+.mypage--boot .mypage__main,
 .mypage--guest .mypage__main {
   display: flex;
   align-items: center;

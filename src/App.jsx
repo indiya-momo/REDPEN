@@ -24,12 +24,20 @@ import {
   signInWithGoogle,
   signOutUser,
   subscribeAuthSession,
+  waitForAuthInitialization,
 } from './lib/firebaseAuth.js';
 import { isLoginRequiredForChecks } from './lib/checkAuthGate.js';
+import { isOnboardingComplete } from './lib/userProfileStorage.js';
 import { resolveQuotaAuthEmail } from './lib/betaDailyQuota.js';
-import { consumeFeedbackFormSubmitReturn } from './lib/feedbackFormSubmitReturn.js';
+import { resolveFeedbackThankYouOnLoad } from './lib/feedbackFormSubmitReturn.js';
+import {
+  FEEDBACK_THANK_SIGNAL_KEY,
+  takeFeedbackThankYouSignal,
+} from './lib/feedbackThankYouSignal.js';
+import { WORK_GUIDE_KEYS, workGuideStorageKey } from './lib/workGuideKeys.js';
 import { consumeReturnToMainWorkspace, markReturnToMainWorkspace } from './lib/returnToWorkspace.js';
 import { clearWorkSession } from './lib/sessionStore.js';
+import { clearTooltipGuideDismissed } from './lib/tooltipGuideStorage.js';
 import EventRewardLayer from './components/EventRewardLayer.jsx';
 
 export default function App() {
@@ -54,16 +62,30 @@ export default function App() {
   const [eventRewardTick, setEventRewardTick] = useState(0);
   const [rewardNoticeTick, setRewardNoticeTick] = useState(0);
 
+  const applyFeedbackThankYouUi = useCallback((uid) => {
+    const id = uid.trim();
+    if (!id) return;
+    clearTooltipGuideDismissed(
+      workGuideStorageKey(id, WORK_GUIDE_KEYS.FEEDBACK_QUOTA_THANK),
+    );
+    setFeedbackThankYouOpen(true);
+    setRewardNoticeTick((tick) => tick + 1);
+    if (isLoginRequiredForChecks()) {
+      setScreen('main');
+    }
+  }, []);
+
   useEffect(() => {
     if (!authReady || auxWindow || !authSession?.uid) return;
-    void consumeFeedbackFormSubmitReturn(
+    void resolveFeedbackThankYouOnLoad(
       authSession.uid,
       resolveQuotaAuthEmail(authSession),
     ).then((result) => {
-      if (!result.handled || !result.granted) return;
+      if (!result.handled) return;
+      if (!result.granted && !result.showThankYou) return;
       if (result.showThankYou) {
-        setFeedbackThankYouOpen(true);
-        setRewardNoticeTick((tick) => tick + 1);
+        applyFeedbackThankYouUi(authSession.uid);
+        return;
       }
       if (result.showEventReward) {
         setEventRewardTick((tick) => tick + 1);
@@ -72,7 +94,33 @@ export default function App() {
         setScreen('main');
       }
     });
-  }, [authReady, auxWindow, authSession]);
+  }, [authReady, auxWindow, authSession, applyFeedbackThankYouUi]);
+
+  useEffect(() => {
+    const uid = authSession?.uid?.trim() ?? '';
+    if (!uid || auxWindow) return undefined;
+
+    const syncFromSignal = () => {
+      const signal = takeFeedbackThankYouSignal(uid);
+      if (signal) applyFeedbackThankYouUi(signal.uid);
+    };
+
+    const onStorage = (event) => {
+      if (event.key === FEEDBACK_THANK_SIGNAL_KEY) syncFromSignal();
+    };
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') syncFromSignal();
+    };
+
+    window.addEventListener('storage', onStorage);
+    window.addEventListener('focus', syncFromSignal);
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      window.removeEventListener('storage', onStorage);
+      window.removeEventListener('focus', syncFromSignal);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [authSession?.uid, auxWindow, applyFeedbackThankYouUi]);
 
   useEffect(() => {
     if (!authReady || auxWindow) return;
@@ -92,18 +140,38 @@ export default function App() {
     }
   }, [authReady, auxWindow, screen, authSession]);
 
+  useEffect(() => subscribeAuthSession(setAuthSession), []);
+
   useEffect(() => {
-    const unsubscribe = subscribeAuthSession(setAuthSession);
-    completeGoogleRedirectIfNeeded()
-      .then(({ session, error }) => {
+    let cancelled = false;
+
+    void (async () => {
+      try {
+        const { session, error } = await completeGoogleRedirectIfNeeded();
+        if (cancelled) return;
         if (session) setAuthSession(session);
         if (error) setAuthBootstrapError(error);
-      })
-      .finally(() => {
-        setAuthReady(true);
-      });
-    return unsubscribe;
+
+        const initializedSession = await waitForAuthInitialization();
+        if (cancelled) return;
+        if (initializedSession) setAuthSession(initializedSession);
+      } finally {
+        if (!cancelled) setAuthReady(true);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
+
+  useEffect(() => {
+    if (!authReady || auxWindow || screen !== 'welcome') return;
+    const uid = authSession?.uid?.trim();
+    if (!uid || !isOnboardingComplete(uid)) return;
+    setMainWorkTab('spelling');
+    setScreen('main');
+  }, [authReady, auxWindow, screen, authSession?.uid]);
 
   const {
     rulesReady,
@@ -183,7 +251,7 @@ export default function App() {
   if (auxWindow === 'mypage') {
     return (
       <>
-        <MyPageWindowScreen />
+        <MyPageWindowScreen authSession={authSession} authReady={authReady} />
         <EventRewardLayer
           authUid={authSession?.uid}
           checkTick={eventRewardTick}

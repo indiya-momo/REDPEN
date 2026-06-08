@@ -101,10 +101,13 @@ export default function WelcomePcScreen({
     sessionStorage.setItem(ENTER_MAIN_AFTER_GOOGLE_KEY, '1');
     try {
       await onGoogleSignIn();
-      if (getCurrentUserSession()?.uid && authReady) {
+      const uidAfterSignIn = getCurrentUserSession()?.uid;
+      if (uidAfterSignIn) {
         enterMainAfterLoginRef.current = false;
         sessionStorage.removeItem(ENTER_MAIN_AFTER_GOOGLE_KEY);
-        handleStart();
+        if (isOnboardingComplete(uidAfterSignIn)) {
+          handleStart();
+        }
       }
     } catch (error) {
       enterMainAfterLoginRef.current = false;
@@ -302,7 +305,7 @@ export default function WelcomePcScreen({
                       : '구글로 시작하기'}
                   </button>
                 )}
-                {authError && !loggedIn ? (
+                {authError && !loggedIn && authReady ? (
                   <p
                     className="welcome-pc__auth-error welcome-pc__auth-error--stage"
                     role="alert"
