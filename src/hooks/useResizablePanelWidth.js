@@ -11,6 +11,32 @@ const RIGHT_MIN = 360;
 const DEFAULT_WIDTH = PANEL_LEFT_DEFAULT_WIDTH;
 const MIN_WIDTH = PANEL_LEFT_MIN_WIDTH;
 const MAX_WIDTH = PANEL_LEFT_MAX_WIDTH;
+const STORAGE_KEY = 'pdf-proofread-panel-left-width-v1';
+
+/**
+ * 작업 화면에서 저장된 왼쪽 패널 선호 폭 (없으면 null → 기본 680px).
+ */
+export function readStoredPanelLeftWidth() {
+  try {
+    const n = Number(localStorage.getItem(STORAGE_KEY));
+    if (Number.isFinite(n) && n >= MIN_WIDTH && n <= MAX_WIDTH) return n;
+  } catch {
+    /* ignore */
+  }
+  return null;
+}
+
+/**
+ * @param {number} width
+ */
+export function persistPanelLeftWidthPreference(width) {
+  const clamped = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, width));
+  try {
+    localStorage.setItem(STORAGE_KEY, String(clamped));
+  } catch {
+    /* ignore */
+  }
+}
 
 /**
  * @param {number} preferred
@@ -25,7 +51,9 @@ export function clampPanelLeftWidth(preferred, viewportWidth = window.innerWidth
 }
 
 export function useResizablePanelWidth() {
-  const [preferredWidth, setPreferredWidth] = useState(DEFAULT_WIDTH);
+  const [preferredWidth, setPreferredWidth] = useState(
+    () => readStoredPanelLeftWidth() ?? DEFAULT_WIDTH,
+  );
   const [viewportWidth, setViewportWidth] = useState(
     () => (typeof window !== 'undefined' ? window.innerWidth : 1280),
   );
@@ -34,6 +62,7 @@ export function useResizablePanelWidth() {
     [preferredWidth, viewportWidth],
   );
   const widthRef = useRef(width);
+  const preferredWidthRef = useRef(preferredWidth);
   const handleRef = useRef(null);
   const dragging = useRef(false);
   const startX = useRef(0);
@@ -41,17 +70,20 @@ export function useResizablePanelWidth() {
   const activePointerId = useRef(null);
 
   widthRef.current = width;
+  preferredWidthRef.current = preferredWidth;
 
   const onPointerMove = useCallback((e) => {
     if (!dragging.current) return;
     const delta = e.clientX - startX.current;
     const next = clampPanelLeftWidth(startW.current + delta, viewportWidth);
+    preferredWidthRef.current = next;
     setPreferredWidth(next);
   }, [viewportWidth]);
 
   const endDrag = useCallback(() => {
     if (!dragging.current) return;
     dragging.current = false;
+    persistPanelLeftWidthPreference(preferredWidthRef.current);
     const handle = handleRef.current;
     if (handle && activePointerId.current != null) {
       try {

@@ -528,6 +528,14 @@ button {
   min-width: 0;
 }
 
+.criteria-summary-note {
+  margin-left: 0.35em;
+  font-size: 0.72em;
+  font-weight: 400;
+  color: var(--color-text-faint);
+  white-space: nowrap;
+}
+
 .caution-checklist-summary::-webkit-details-marker,
 .builtin-spelling-summary::-webkit-details-marker {
   display: none;

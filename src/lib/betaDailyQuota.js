@@ -49,11 +49,9 @@ export const BETA_DAILY_QUOTA_ALERT_CONSISTENCY =
   BETA_QUOTA_POLICY_SUMMARY +
   '내일 0시 이후 다시 시도해 주세요.';
 
-/** 피드백 제출 복귀 — 「피드백 남기기」 버튼 앵커 모모 말풍선 */
-export const FEEDBACK_SUBMIT_THANK_BUBBLE_LINES = [
-  '피드백 보내기 고맙다냥',
-  '마이페이지에 선물이 있다냥!',
-];
+/** 피드백 제출 후 작업 탭 새로고침 — 선물 말풍선 (돌아오기만으로는 안 뜸) */
+export const FEEDBACK_SUBMIT_THANK_MESSAGE =
+  '곧바로 선물을 받을 수 있다냥!';
 
 /** @returns {boolean} */
 export function isBetaDailyQuotaEnabled() {
