@@ -64,8 +64,9 @@ function getDevForcedWorkGuideChain(step, empty, ctx, pinAll, keyFor, dismissedM
   switch (step) {
     case 1:
       if (d(WORK_GUIDE_KEYS.LEFT_CRITERIA)) return null;
-      return pageTextsReady ? { ...base, showLeftCriteriaGuide: true } : null;
+      return { ...base, showLeftCriteriaGuide: true };
     case 2:
+      if (!d(WORK_GUIDE_KEYS.LEFT_CRITERIA)) return null;
       if (d(WORK_GUIDE_KEYS.FIRST_RESULT)) return null;
       return pageTextsReady ? { ...base, showFirstResultGuide: true } : null;
     case 3:
@@ -145,14 +146,15 @@ function computeWorkGuideChainState(ctx, keyFor, dismissedMap, options) {
     };
   }
 
+  if (spellingActive && hasPdf && !d(WORK_GUIDE_KEYS.LEFT_CRITERIA)) {
+    return {
+      ...empty,
+      showLeftCriteriaGuide: true,
+      workGuideOpen: true,
+    };
+  }
+
   if (spellingActive && pageTextsReady) {
-    if (!d(WORK_GUIDE_KEYS.LEFT_CRITERIA)) {
-      return {
-        ...empty,
-        showLeftCriteriaGuide: true,
-        workGuideOpen: true,
-      };
-    }
     if (spellingCheckDone && !d(WORK_GUIDE_KEYS.FIRST_RESULT)) {
       return {
         ...empty,

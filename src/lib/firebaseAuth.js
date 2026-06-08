@@ -204,24 +204,43 @@ function isLocalDevHost() {
   return host === 'localhost' || host === '127.0.0.1';
 }
 
+function getLocalhostAuthRedirectHint(hostname, port) {
+  const localPort = port || '5173';
+  return `http://localhost:${localPort}`;
+}
+
+/** 127.0.0.1 — Firebase Authorized domains 기본 목록에 없음 */
+function getLoopback127AuthHostMessage() {
+  if (typeof window === 'undefined') return '';
+  const { hostname, host, port } = window.location;
+  if (hostname !== '127.0.0.1') return '';
+  return (
+    `이 주소(${host})에서는 Google 로그인이 되지 않습니다.\n\n` +
+    `아래 주소로 접속한 뒤 다시 시도해 주세요.\n` +
+    `· ${getLocalhostAuthRedirectHint(hostname, port)}`
+  );
+}
+
 /** Vite network URL(192.168.x.x) 등 — Firebase Authorized domains 미등록 → internal-error 유발 */
 function getUnsupportedAuthHostMessage() {
   if (typeof window === 'undefined') return '';
-  const { hostname, host, protocol, port } = window.location;
-  if (!/^\d+\.\d+\.\d+\.\d+$/.test(hostname) || hostname === '127.0.0.1') {
+  const { hostname, host, port } = window.location;
+  const loopbackHint = getLoopback127AuthHostMessage();
+  if (loopbackHint) return loopbackHint;
+  if (!/^\d+\.\d+\.\d+\.\d+$/.test(hostname)) {
     return '';
   }
   const localPort = port || '5173';
   return (
     `이 주소(${host})에서는 Google 로그인이 되지 않습니다.\n\n` +
     `아래 주소로 접속한 뒤 다시 시도해 주세요.\n` +
-    `· ${protocol}//localhost:${localPort}\n` +
+    `· ${getLocalhostAuthRedirectHint(hostname, localPort)}\n` +
     `· ${PUBLIC_APP_URL}`
   );
 }
 
 function shouldPreferGoogleRedirect() {
-  return import.meta.env.DEV && isLocalDevHost();
+  return false;
 }
 
 export function mapFirebaseAuthError(error) {
@@ -241,8 +260,25 @@ export function mapFirebaseAuthError(error) {
       '팝업이 차단되었습니다. 브라우저에서 팝업을 허용하거나, 시크릿 창이 아닌 일반 창에서 다시 시도해 주세요.',
     'auth/cancelled-popup-request':
       '로그인 창이 이미 열려 있습니다. 잠시 후 다시 시도해 주세요.',
-    'auth/unauthorized-domain':
-      `이 주소에서는 로그인을 할 수 없습니다.\n\n공식 사이트 ${PUBLIC_APP_URL} 에서 「구글로 시작하기」를 다시 시도해 주세요.`,
+    'auth/unauthorized-domain': (() => {
+      const loopbackHint = getLoopback127AuthHostMessage();
+      if (loopbackHint) return loopbackHint;
+      const lanHint = getUnsupportedAuthHostMessage();
+      if (lanHint) return lanHint;
+      if (import.meta.env.DEV && typeof window !== 'undefined') {
+        const { hostname, port } = window.location;
+        if (hostname === 'localhost') {
+          return (
+            '이 주소에서 로그인이 거부되었습니다.\n\n' +
+            'Firebase Console → Authentication → Authorized domains에 localhost가 있는지 확인해 주세요.'
+          );
+        }
+      }
+      return (
+        `이 주소에서는 로그인을 할 수 없습니다.\n\n` +
+        `공식 사이트 ${PUBLIC_APP_URL} 에서 「구글로 시작하기」를 다시 시도해 주세요.`
+      );
+    })(),
     'auth/operation-not-allowed':
       '지금은 Google 로그인을 사용할 수 없습니다. 잠시 후 다시 시도해 주세요.',
     'auth/account-exists-with-different-credential':
@@ -273,6 +309,23 @@ export function mapFirebaseAuthError(error) {
 export function getCurrentUserSession() {
   if (!auth) return null;
   return toSession(auth.currentUser);
+}
+
+/**
+ * persistence·리다이렉트 처리 후 Auth 초기화 완료까지 대기
+ * @returns {Promise<ReturnType<typeof toSession>>}
+ */
+export async function waitForAuthInitialization() {
+  if (!auth) return null;
+  await persistenceReady;
+  const immediate = toSession(auth.currentUser);
+  if (immediate) return immediate;
+  return new Promise((resolve) => {
+    const unsub = onAuthStateChanged(auth, (user) => {
+      unsub();
+      resolve(toSession(user));
+    });
+  });
 }
 
 export function subscribeAuthSession(callback) {
@@ -327,6 +380,12 @@ const POPUP_REDIRECT_FALLBACK_CODES = new Set([
 /** 팝업 우선, 실패 시 전체 페이지 리다이렉트 */
 export async function signInWithGoogle() {
   assertConfigured();
+  const loopbackHost = getLoopback127AuthHostMessage();
+  if (loopbackHost) {
+    throw Object.assign(new Error(loopbackHost), {
+      code: 'app/unsupported-auth-host',
+    });
+  }
   const unsupportedHost = getUnsupportedAuthHostMessage();
   if (unsupportedHost) {
     throw Object.assign(new Error(unsupportedHost), {

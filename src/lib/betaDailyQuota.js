@@ -20,7 +20,7 @@ const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
 /** @typedef {'spelling' | 'consistency'} BetaQuotaTab */
 
 /** @returns {boolean} */
-function isLocalDevQuotaRelaxed() {
+export function isLocalDevQuotaRelaxed() {
   if (!import.meta.env.DEV) return false;
   if (import.meta.env.VITE_BETA_QUOTA_FORCE_LOCAL === 'true') return false;
   if (typeof window === 'undefined') return false;
@@ -49,8 +49,11 @@ export const BETA_DAILY_QUOTA_ALERT_CONSISTENCY =
   BETA_QUOTA_POLICY_SUMMARY +
   '내일 0시 이후 다시 시도해 주세요.';
 
-export const FEEDBACK_DAILY_BONUS_GRANTED_ALERT =
-  '피드백 감사합니다. 오늘은 맞춤법·일관성 각 2회까지 이용할 수 있습니다.';
+/** 피드백 제출 복귀 — 「피드백 남기기」 버튼 앵커 모모 말풍선 */
+export const FEEDBACK_SUBMIT_THANK_BUBBLE_LINES = [
+  '피드백 보내기 고맙다냥',
+  '마이페이지에 선물이 있다냥!',
+];
 
 /** @returns {boolean} */
 export function isBetaDailyQuotaEnabled() {
@@ -375,6 +378,20 @@ async function readQuotaFlags(uid, dayId) {
 export async function getBetaDailyQuotaStatus(uid, email = '') {
   const dayId = getKstDayId();
   if (!isBetaDailyQuotaEnforcedForUser(uid, email)) {
+    if (isLocalDevQuotaRelaxed() && uid.trim()) {
+      const flags = readLocalQuota(uid, dayId);
+      return {
+        dayId,
+        enforced: false,
+        tabLimit: flags.tabLimit,
+        spellingCount: flags.spellingCount,
+        consistencyCount: flags.consistencyCount,
+        spellingConsumed: flags.spellingConsumed,
+        consistencyConsumed: flags.consistencyConsumed,
+        hasFeedbackBonusToday: flags.feedbackBonusDayId === dayId,
+        hasBoostApprovedToday: flags.boostApprovedDayId === dayId,
+      };
+    }
     return {
       dayId,
       enforced: false,
@@ -413,7 +430,22 @@ export async function grantFeedbackDailyQuotaBonus(uid, email = '') {
     return { ok: false, dayId, granted: false, alreadyHadBonus: false };
   }
   if (!isBetaDailyQuotaEnforcedForUser(uid, email)) {
-    return { ok: true, dayId, granted: false, alreadyHadBonus: false };
+    if (!isLocalDevQuotaRelaxed()) {
+      return { ok: true, dayId, granted: false, alreadyHadBonus: false };
+    }
+    const local = readLocalQuota(uid, dayId);
+    const alreadyHadBonus = local.feedbackBonusDayId === dayId;
+    if (alreadyHadBonus) {
+      return { ok: true, dayId, granted: true, alreadyHadBonus: true };
+    }
+    writeLocalQuota(uid, {
+      dayId,
+      spellingCount: local.spellingCount,
+      consistencyCount: local.consistencyCount,
+      feedbackBonusDayId: dayId,
+      boostApprovedDayId: local.boostApprovedDayId,
+    });
+    return { ok: true, dayId, granted: true, alreadyHadBonus: false };
   }
 
   const flags = await readQuotaFlags(uid, dayId);

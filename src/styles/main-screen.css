@@ -145,6 +145,15 @@
   white-space: nowrap;
 }
 
+.tooltip-guide__message-line--stacked {
+  display: block;
+  white-space: nowrap;
+}
+
+.tooltip-guide__message-line--stacked + .tooltip-guide__message-line--stacked {
+  margin-top: 0.2em;
+}
+
 .consistency-section-box[data-work-guide-step='auxiliary-box'] {
   position: relative;
 }
@@ -794,27 +803,6 @@
 .panel-left--spelling,
 .panel-left--consistency {
   background: var(--color-surface-raised);
-}
-
-.panel-left__preupload-hint {
-  margin: 0;
-  padding: 8px 14px 10px;
-  font-size: 0.72rem;
-  font-weight: 700;
-  line-height: 1.45;
-  text-align: center;
-  color: #9a3412;
-  background: #fff7ed;
-  border-bottom: 1px solid #fed7aa;
-}
-
-.panel-left--preupload .work-tabs,
-.panel-left--preupload .consistency-subtabs,
-.panel-left--preupload .spelling-tab-layout,
-.panel-left--preupload .panel-left-work-scroll {
-  opacity: 0.42;
-  pointer-events: none;
-  filter: saturate(0.68);
 }
 
 .spelling-tab-layout {

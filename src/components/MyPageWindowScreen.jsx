@@ -2,11 +2,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { returnToWorkspace } from '../lib/returnToWorkspace.js';
 import {
-  getCurrentUserSession,
   resolveSessionEmail,
   resolveSessionEmailAsync,
   signOutUser,
-  subscribeAuthSession,
 } from '../lib/firebaseAuth.js';
 import { getUserProfile } from '../lib/userProfileStorage.js';
 import {
@@ -20,6 +18,7 @@ import {
 } from '../lib/userBadges.js';
 import { resolveQuotaAuthEmail } from '../lib/betaDailyQuota.js';
 import { clearRewardNotice } from '../lib/rewardNotice.js';
+import { getEarnedBadgeIds } from '../lib/userBadges.js';
 import { useBetaDailyQuota } from '../hooks/useBetaDailyQuota.js';
 import BadgeCollectionGrid from './BadgeCollectionGrid.jsx';
 import './my-page.css';
@@ -167,21 +166,27 @@ function formatMypageUsageDate(timestampMs) {
 }
 
 /**
- * @param {{ tabLimit: number }} quota
+ * @param {ReturnType<typeof useBetaDailyQuota>} quota
+ * @param {string} [uid]
  */
-function resolveMemberBenefitTier(quota) {
+function resolveMemberBenefitTier(quota, uid = '') {
+  if (quota.hasBoostApprovedToday) return MEMBER_BENEFIT_TIERS[2];
+  if (quota.hasFeedbackBonusToday) return MEMBER_BENEFIT_TIERS[1];
+
+  const earned = getEarnedBadgeIds(uid.trim());
+  if (earned.has('slot-3')) return MEMBER_BENEFIT_TIERS[2];
+  if (earned.has('slot-2')) return MEMBER_BENEFIT_TIERS[1];
+
   const match =
     MEMBER_BENEFIT_TIERS.find((tier) => tier.tabLimit === quota.tabLimit) ??
     MEMBER_BENEFIT_TIERS[0];
-  if (quota.hasBoostApprovedToday) return MEMBER_BENEFIT_TIERS[2];
-  if (quota.hasFeedbackBonusToday) return MEMBER_BENEFIT_TIERS[1];
   return match;
 }
 
 /**
- * @param {{ quota: ReturnType<typeof useBetaDailyQuota> }} props
+ * @param {{ quota: ReturnType<typeof useBetaDailyQuota>, authUid?: string }} props
  */
-function MemberBenefitTierBanner({ quota }) {
+function MemberBenefitTierBanner({ quota, authUid = '' }) {
   if (quota.loading) {
     return (
       <p className="mypage__member-tier mypage__member-tier--loading">
@@ -190,7 +195,7 @@ function MemberBenefitTierBanner({ quota }) {
     );
   }
 
-  const tier = resolveMemberBenefitTier(quota);
+  const tier = resolveMemberBenefitTier(quota, authUid);
 
   return (
     <p className="mypage__member-tier" aria-label={`${tier.name}. ${tier.description}`}>
@@ -281,7 +286,14 @@ function BadgeCollectionSection({ badges, earnedCount, totalLabel }) {
   );
 }
 
-function OverviewDashboard({ badges, earnedCount, totalLabel, loginAtMs, quota }) {
+function OverviewDashboard({
+  badges,
+  earnedCount,
+  totalLabel,
+  loginAtMs,
+  quota,
+  authUid = '',
+}) {
   const recentUsage = useMemo(
     () => getRecentUsageEntries(loginAtMs),
     [loginAtMs],
@@ -290,7 +302,7 @@ function OverviewDashboard({ badges, earnedCount, totalLabel, loginAtMs, quota }
   return (
     <div className="mypage__main-inner">
       <div className="mypage__member-head">
-        <MemberBenefitTierBanner quota={quota} />
+        <MemberBenefitTierBanner quota={quota} authUid={authUid} />
         <MyBenefitsSection quota={quota} />
       </div>
 
@@ -410,12 +422,15 @@ function ProfileSection({ displayName, email, daysWithMomo, authUid }) {
   );
 }
 
-export default function MyPageWindowScreen() {
-  const [authSession, setAuthSession] = useState(() => getCurrentUserSession());
+/**
+ * @param {{
+ *   authSession: ReturnType<import('../lib/firebaseAuth.js').getCurrentUserSession>,
+ *   authReady: boolean,
+ * }} props
+ */
+export default function MyPageWindowScreen({ authSession, authReady }) {
   const [activeNav, setActiveNav] = useState('overview');
   const [badgeRev, setBadgeRev] = useState(0);
-
-  useEffect(() => subscribeAuthSession(setAuthSession), []);
 
   const profile = authSession?.uid ? getUserProfile(authSession.uid) : null;
   const displayName = useMemo(() => {
@@ -497,6 +512,18 @@ export default function MyPageWindowScreen() {
     await signOutUser();
     const url = new URL(import.meta.env.BASE_URL || '/', window.location.origin);
     window.location.replace(url.toString());
+  }
+
+  if (!authReady) {
+    return (
+      <div className="mypage mypage--boot">
+        <main className="mypage__main">
+          <div className="app-loading" role="status" aria-live="polite">
+            <p>로그인 정보를 확인하는 중…</p>
+          </div>
+        </main>
+      </div>
+    );
   }
 
   if (!authSession?.uid) {
@@ -596,6 +623,7 @@ export default function MyPageWindowScreen() {
               totalLabel={badgeStats.totalLabel}
               loginAtMs={loginAtMs}
               quota={quota}
+              authUid={authSession.uid}
             />
             <MyPageFaq />
           </div>

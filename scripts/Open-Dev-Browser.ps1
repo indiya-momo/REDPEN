@@ -30,5 +30,6 @@ if (-not $ok) {
   exit 1
 }
 
-Write-Host "브라우저 열기: $($urls[0])"
-Start-Process $urls[0]
+$openUrl = "http://localhost:$port/"
+Write-Host "브라우저 열기: $openUrl"
+Start-Process $openUrl

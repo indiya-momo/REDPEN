@@ -41,6 +41,19 @@ describe('getWorkGuideChainState', () => {
     expect(chain.showFirstResultGuide).toBe(false);
   });
 
+  it('텍스트 추출 전에도 PDF만 있으면 1단이 보인다', () => {
+    const chain = getWorkGuideChainState(
+      'u1',
+      { ...baseCtx, pageTextsReady: false },
+      keyFor,
+      null,
+      { pinAll: false },
+    );
+    expect(chain.showLeftCriteriaGuide).toBe(true);
+    expect(chain.showFirstResultGuide).toBe(false);
+    expect(chain.showPdfOpenedGuide).toBe(false);
+  });
+
   it('1단 확인 후 검수 전에는 2·3단이 없다', () => {
     const dismissedMap = {
       [keyFor(WORK_GUIDE_KEYS.LEFT_CRITERIA)]: true,

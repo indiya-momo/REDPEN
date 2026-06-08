@@ -1,5 +1,12 @@
-import { grantFeedbackDailyQuotaBonus } from './betaDailyQuota.js';
-import { queueEventReward } from './eventRewardQueue.js';
+import {
+  grantFeedbackDailyQuotaBonus,
+  isLocalDevQuotaRelaxed,
+} from './betaDailyQuota.js';
+import {
+  publishFeedbackThankYouSignal,
+  takeFeedbackThankYouSignal,
+} from './feedbackThankYouSignal.js';
+import { grantBadgeIfNew } from './badgeGrants.js';
 import { markRewardNotice } from './rewardNotice.js';
 
 const DEFAULT_FEEDBACK_FORM_VIEW_URL =
@@ -99,6 +106,30 @@ export function buildFeedbackFormOpenUrl(uid) {
 }
 
 /**
+ * @param {string} id
+ * @param {string} email
+ */
+async function finalizeFeedbackThankYou(id, email) {
+  const result = await grantFeedbackDailyQuotaBonus(id, email);
+  const localRewardOnly =
+    isLocalDevQuotaRelaxed() && !result.alreadyHadBonus;
+  const showThankYou =
+    (result.granted && !result.alreadyHadBonus) || localRewardOnly;
+  if (showThankYou) {
+    markRewardNotice(id);
+    publishFeedbackThankYouSignal(id);
+    grantBadgeIfNew(id, 'slot-2', { notify: false });
+  }
+  return {
+    granted: result.granted,
+    alreadyHadBonus: result.alreadyHadBonus,
+    showThankYou,
+    showEventReward: false,
+    localRewardOnly,
+  };
+}
+
+/**
  * Google Form 제출 후 리다이렉트 — pending uid와 일치할 때만 혜택
  * @param {string} uid
  * @param {string} [email]
@@ -139,17 +170,67 @@ export async function consumeFeedbackFormSubmitReturn(uid, email = '') {
   }
 
   clearFeedbackFormSubmitPending();
-  const result = await grantFeedbackDailyQuotaBonus(id, email);
-  const showThankYou = result.granted && !result.alreadyHadBonus;
-  if (showThankYou) {
-    queueEventReward(id, 'beta-feedback');
-    markRewardNotice(id);
-  }
+  const finalized = await finalizeFeedbackThankYou(id, email);
   return {
     handled: true,
-    granted: result.granted,
-    alreadyHadBonus: result.alreadyHadBonus,
-    showThankYou,
-    showEventReward: showThankYou,
+    ...finalized,
+  };
+}
+
+/**
+ * 페이지 로드·새로고침 — URL 리다이렉트, 탭 간 신호, 로컬 pending 순으로 감사 UI
+ * @param {string} uid
+ * @param {string} [email]
+ */
+export async function resolveFeedbackThankYouOnLoad(uid, email = '') {
+  const id = uid.trim();
+  if (!id || typeof window === 'undefined') {
+    return { handled: false, granted: false, showThankYou: false };
+  }
+
+  const redirect = await consumeFeedbackFormSubmitReturn(id, email);
+  if (redirect.showThankYou) {
+    return redirect;
+  }
+
+  const signal = takeFeedbackThankYouSignal(id);
+  if (signal) {
+    return {
+      handled: true,
+      granted: false,
+      showThankYou: true,
+      showEventReward: false,
+      fromSignal: true,
+    };
+  }
+
+  if (!isLocalDevQuotaRelaxed()) {
+    return redirect.handled
+      ? redirect
+      : { handled: false, granted: false, showThankYou: false };
+  }
+
+  const pending = readFeedbackFormSubmitPending();
+  if (!pending || pending.uid !== id) {
+    return redirect.handled
+      ? redirect
+      : { handled: false, granted: false, showThankYou: false };
+  }
+  if (Date.now() - pending.at > PENDING_MAX_AGE_MS) {
+    clearFeedbackFormSubmitPending();
+    return {
+      handled: true,
+      granted: false,
+      showThankYou: false,
+      reason: 'expired',
+    };
+  }
+
+  clearFeedbackFormSubmitPending();
+  const finalized = await finalizeFeedbackThankYou(id, email);
+  return {
+    handled: true,
+    ...finalized,
+    fromLocalRefresh: true,
   };
 }

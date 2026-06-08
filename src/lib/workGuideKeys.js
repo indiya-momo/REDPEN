@@ -23,7 +23,7 @@ export const WORK_GUIDE_KEYS = {
   PRE_UPLOAD: 'pdf-upload-first-step',
   /** 3번 — 순서 교체(2026-06)로 v2 (v1 dismiss는 체인에 반영 안 됨) */
   PDF_OPENED: 'work-pdf-opened-v2',
-  LEFT_CRITERIA: 'work-left-criteria-v1',
+  LEFT_CRITERIA: 'work-left-criteria-v2',
   /** 2번 — 순서 교체(2026-06)로 v2 */
   FIRST_RESULT: 'work-first-result-v2',
   CONSISTENCY_INTRO: 'work-consistency-intro-v1',
@@ -31,7 +31,7 @@ export const WORK_GUIDE_KEYS = {
   RULE_SET_SAVE: 'work-rule-set-save-v1',
   WORK_EXIT: 'work-exit-v1',
   /** 피드백 제출 보너스 감사 말풍선 (온보딩 5회와 별도) */
-  FEEDBACK_QUOTA_THANK: 'feedback-quota-thank-v1',
+  FEEDBACK_QUOTA_THANK: 'feedback-quota-thank-v2',
 };
 
 /**

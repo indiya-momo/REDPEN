@@ -3,6 +3,7 @@ import { syncBoostApprovedBadge } from '../lib/badgeGrants.js';
 import {
   getBetaDailyQuotaStatus,
   isBetaDailyQuotaEnforcedForUser,
+  isLocalDevQuotaRelaxed,
 } from '../lib/betaDailyQuota.js';
 
 /**
@@ -22,7 +23,8 @@ export function useBetaDailyQuota(uid, email = '') {
   const [dayId, setDayId] = useState('');
 
   const refresh = useCallback(async () => {
-    if (!isBetaDailyQuotaEnforcedForUser(uid, email)) {
+    const enforced = isBetaDailyQuotaEnforcedForUser(uid, email);
+    if (!enforced && !(isLocalDevQuotaRelaxed() && uid.trim())) {
       setLoading(false);
       setSpellingConsumed(false);
       setConsistencyConsumed(false);
