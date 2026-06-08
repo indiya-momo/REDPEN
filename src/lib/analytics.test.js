@@ -1,10 +1,38 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
+  buildAnalyticsPersonProperties,
   bucketFileSizeMb,
   bucketFindingCount,
   bucketPageCount,
   bucketRuleCount,
 } from './analytics.js';
+
+describe('buildAnalyticsPersonProperties', () => {
+  const prevEmails = import.meta.env.VITE_BETA_QUOTA_ADMIN_EMAILS;
+
+  afterEach(() => {
+    import.meta.env.VITE_BETA_QUOTA_ADMIN_EMAILS = prevEmails;
+    vi.resetModules();
+  });
+
+  it('면제 이메일이면 is_internal true (이메일은 PostHog로 안 감)', async () => {
+    import.meta.env.VITE_BETA_QUOTA_ADMIN_EMAILS = 'dev@test.io';
+    vi.resetModules();
+    const mod = await import('./analytics.js');
+    expect(mod.buildAnalyticsPersonProperties('any-uid', 'dev@test.io')).toEqual({
+      is_internal: true,
+    });
+  });
+
+  it('일반 회원은 is_internal false', async () => {
+    import.meta.env.VITE_BETA_QUOTA_ADMIN_EMAILS = 'dev@test.io';
+    vi.resetModules();
+    const mod = await import('./analytics.js');
+    expect(mod.buildAnalyticsPersonProperties('uid-1', 'beta@test.io')).toEqual({
+      is_internal: false,
+    });
+  });
+});
 
 describe('analytics buckets', () => {
   it('bucketPageCount', () => {
