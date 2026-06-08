@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   BETA_TAB_LIMIT_BOOSTED,
   BETA_TAB_LIMIT_DEFAULT,
@@ -8,6 +8,11 @@ import {
   getTabCheckLimit,
   isBetaDailyQuotaEnabled,
   isBetaQuotaAdminExempt,
+  consumeLocalDevQuotaPreview,
+  formatBetaQuotaConsumedAlert,
+  isLocalDevQuotaRelaxed,
+  mergeTabQuotaCounts,
+  mergeUserBonusDayIds,
 } from './betaDailyQuota.js';
 
 describe('getKstDayId', () => {
@@ -49,6 +54,54 @@ describe('getTabCheckLimit', () => {
 
   it('보너스가 다른 날이면 1회', () => {
     expect(getTabCheckLimit('2026-06-04', null, '2026-06-05')).toBe(1);
+  });
+});
+
+describe('formatBetaQuotaConsumedAlert', () => {
+  it('맞춤법 차감 후 사용·남은 횟수를 표시한다', () => {
+    expect(formatBetaQuotaConsumedAlert('spelling', 1, 2)).toBe(
+      '오늘 맞춤법 검수 횟수가 1회 차감되었습니다.\n\n사용: 1/2회\n남음: 1회',
+    );
+  });
+
+  it('일관성 한도 소진 시 남음 0회', () => {
+    expect(formatBetaQuotaConsumedAlert('consistency', 3, 3)).toBe(
+      '오늘 일관성 검수 횟수가 1회 차감되었습니다.\n\n사용: 3/3회\n남음: 0회',
+    );
+  });
+});
+
+describe('mergeTabQuotaCounts', () => {
+  it('Firestore가 0이고 local이 있으면 local을 유지한다', () => {
+    expect(
+      mergeTabQuotaCounts(
+        { spellingCount: 0, consistencyCount: 0 },
+        { spellingCount: 1, consistencyCount: 0 },
+      ),
+    ).toEqual({ spellingCount: 1, consistencyCount: 0 });
+  });
+
+  it('Firestore가 더 크면 Firestore를 따른다', () => {
+    expect(
+      mergeTabQuotaCounts(
+        { spellingCount: 2, consistencyCount: 1 },
+        { spellingCount: 1, consistencyCount: 0 },
+      ),
+    ).toEqual({ spellingCount: 2, consistencyCount: 1 });
+  });
+});
+
+describe('mergeUserBonusDayIds', () => {
+  it('Firestore 보너스가 없으면 local 보너스를 쓴다', () => {
+    expect(
+      mergeUserBonusDayIds(
+        { feedbackBonusDayId: null, boostApprovedDayId: null },
+        { feedbackBonusDayId: '2026-06-05', boostApprovedDayId: null },
+      ),
+    ).toEqual({
+      feedbackBonusDayId: '2026-06-05',
+      boostApprovedDayId: null,
+    });
   });
 });
 
@@ -113,34 +166,73 @@ describe('isBetaQuotaAdminExempt', () => {
   });
 });
 
-describe('isBetaDailyQuotaEnforcedForUser localhost dev', () => {
+describe('consumeLocalDevQuotaPreview', () => {
   const prevDev = import.meta.env.DEV;
-  const prevForce = import.meta.env.VITE_BETA_QUOTA_FORCE_LOCAL;
+  const prevRelax = import.meta.env.VITE_BETA_QUOTA_RELAX_LOCAL;
+  const localStore = {};
+
+  beforeEach(() => {
+    import.meta.env.DEV = true;
+    import.meta.env.VITE_BETA_QUOTA_RELAX_LOCAL = 'true';
+    for (const key of Object.keys(localStore)) delete localStore[key];
+    vi.stubGlobal('localStorage', {
+      getItem: (key) => localStore[key] ?? null,
+      setItem: (key, value) => {
+        localStore[key] = String(value);
+      },
+      removeItem: (key) => {
+        delete localStore[key];
+      },
+    });
+    vi.stubGlobal('window', { location: { hostname: 'localhost' } });
+  });
 
   afterEach(() => {
     import.meta.env.DEV = prevDev;
-    import.meta.env.VITE_BETA_QUOTA_FORCE_LOCAL = prevForce;
+    import.meta.env.VITE_BETA_QUOTA_RELAX_LOCAL = prevRelax;
+    vi.unstubAllGlobals();
+  });
+
+  it('RELAX_LOCAL일 때 맞춤법 검수 횟수를 local에 누적한다', () => {
+    const first = consumeLocalDevQuotaPreview('uid-1', 'spelling', '2026-06-08');
+    expect(first.tabCount).toBe(1);
+    expect(first.tabLimit).toBe(1);
+    expect(first.tabRemaining).toBe(0);
+
+    const second = consumeLocalDevQuotaPreview('uid-1', 'spelling', '2026-06-08');
+    expect(second.tabCount).toBe(2);
+    expect(isLocalDevQuotaRelaxed()).toBe(true);
+  });
+});
+
+describe('isBetaDailyQuotaEnforcedForUser localhost dev', () => {
+  const prevDev = import.meta.env.DEV;
+  const prevRelax = import.meta.env.VITE_BETA_QUOTA_RELAX_LOCAL;
+
+  afterEach(() => {
+    import.meta.env.DEV = prevDev;
+    import.meta.env.VITE_BETA_QUOTA_RELAX_LOCAL = prevRelax;
     vi.unstubAllGlobals();
     vi.resetModules();
   });
 
-  it('localhost dev면 한도 미적용', async () => {
+  it('localhost dev 기본은 배포와 같이 한도 적용', async () => {
     import.meta.env.DEV = true;
-    import.meta.env.VITE_BETA_QUOTA_FORCE_LOCAL = 'false';
-    vi.stubGlobal('window', { location: { hostname: 'localhost' } });
-    vi.resetModules();
-    const mod = await import('./betaDailyQuota.js');
-    expect(mod.isBetaDailyQuotaEnforcedForUser('uid-1', 'a@b.c')).toBe(false);
-  });
-
-  it('FORCE_LOCAL이면 localhost dev에서도 한도 적용', async () => {
-    import.meta.env.DEV = true;
-    import.meta.env.VITE_BETA_QUOTA_FORCE_LOCAL = 'true';
+    import.meta.env.VITE_BETA_QUOTA_RELAX_LOCAL = 'false';
     vi.stubGlobal('window', { location: { hostname: 'localhost' } });
     vi.resetModules();
     const mod = await import('./betaDailyQuota.js');
     if (mod.isBetaDailyQuotaEnabled()) {
       expect(mod.isBetaDailyQuotaEnforcedForUser('uid-1', 'a@b.c')).toBe(true);
     }
+  });
+
+  it('RELAX_LOCAL이면 localhost dev에서 한도 미적용', async () => {
+    import.meta.env.DEV = true;
+    import.meta.env.VITE_BETA_QUOTA_RELAX_LOCAL = 'true';
+    vi.stubGlobal('window', { location: { hostname: 'localhost' } });
+    vi.resetModules();
+    const mod = await import('./betaDailyQuota.js');
+    expect(mod.isBetaDailyQuotaEnforcedForUser('uid-1', 'a@b.c')).toBe(false);
   });
 });

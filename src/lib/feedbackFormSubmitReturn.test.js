@@ -9,14 +9,11 @@ vi.mock('./betaDailyQuota.js', () => ({
 }));
 
 vi.mock('./badgeGrants.js', () => ({
-  grantBadgeIfNew: vi.fn(),
-}));
-
-vi.mock('./rewardNotice.js', () => ({
-  markRewardNotice: vi.fn(),
+  grantBadgeIfNew: vi.fn(() => true),
 }));
 
 import { grantFeedbackDailyQuotaBonus } from './betaDailyQuota.js';
+import { grantBadgeIfNew } from './badgeGrants.js';
 import {
   FEEDBACK_SUBMITTED_QUERY,
   buildFeedbackFormOpenUrl,
@@ -93,6 +90,9 @@ describe('consumeFeedbackFormSubmitReturn', () => {
     expect(result.granted).toBe(true);
     expect(result.showThankYou).toBe(false);
     expect(grantFeedbackDailyQuotaBonus).toHaveBeenCalledWith('u1', 'a@b.c');
+    expect(grantBadgeIfNew).toHaveBeenCalledWith('u1', 'slot-2', {
+      notify: true,
+    });
     expect(localStorage.getItem(PENDING_KEY)).not.toBeNull();
     expect(window.history.replaceState).toHaveBeenCalled();
   });

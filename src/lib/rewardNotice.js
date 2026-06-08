@@ -8,7 +8,7 @@ function storageKey(uid) {
 }
 
 /**
- * 마이페이지 배지·선물 확인 유도 — 검수 화면 버튼 점 표시
+ * 새 배지 획득 알림 — 작업 화면 마이페이지 버튼 빨간 점 (grantBadgeIfNew notify 시만)
  * @param {string} uid
  */
 export function markRewardNotice(uid) {

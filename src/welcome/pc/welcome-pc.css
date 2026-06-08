@@ -89,6 +89,16 @@
   padding-left: var(--welcome-step-pad-x);
 }
 
+.welcome-pc__privacy-note {
+  margin: 0 0 calc(0.65rem * var(--welcome-scale));
+  font-family: var(--font-family-body-brand);
+  font-size: calc(0.68rem * var(--welcome-scale));
+  line-height: 1.55;
+  font-weight: 500;
+  color: var(--welcome-text-muted);
+  word-break: keep-all;
+}
+
 .welcome-pc__editor-note-anchor {
   position: absolute;
   top: clamp(calc(5.9rem * var(--welcome-scale)), 12vw, calc(7.4rem * var(--welcome-scale)));

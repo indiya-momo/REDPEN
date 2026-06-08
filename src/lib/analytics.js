@@ -30,9 +30,15 @@ function flushPendingCaptures() {
 function applyIdentify(id, properties) {
   if (!posthogClient || isAnalyticsOptedOut()) return;
   posthogClient.identify(id, properties);
+  posthogClient.register({
+    is_internal: properties.is_internal,
+    is_logged_in: true,
+  });
   // Live events에서 $identify 대신 확인하기 쉬운 커스텀 이벤트 (uid·이메일 없음)
   posthogClient.capture('user_identified', {
     is_internal: properties.is_internal,
+    deploy_mode: deployModeLabel(),
+    build_id: UI_BUILD_ID,
   });
 }
 
@@ -92,6 +98,18 @@ export function identifyAnalyticsUser(uid, email = '') {
   applyIdentify(id, properties);
 }
 
+/**
+ * check_run 등 로그인 필수 이벤트 직전 — PostHog identify 타이밍 보장
+ * @param {string} uid
+ * @param {string} [email]
+ */
+export async function ensureAnalyticsIdentified(uid, email = '') {
+  if (isAnalyticsOptedOut()) return;
+  if (!uid.trim()) return;
+  await waitForAnalyticsReady();
+  identifyAnalyticsUser(uid, email);
+}
+
 export function resetAnalyticsUser() {
   pendingIdentify = null;
   if (!posthogClient) return;
@@ -118,6 +136,12 @@ export function setAnalyticsOptOut(optOut) {
     pendingCaptures.length = 0;
     pendingIdentify = null;
     if (posthogClient) posthogClient.opt_out_capturing();
+    return;
+  }
+  if (posthogClient) {
+    posthogClient.opt_in_capturing();
+    flushPendingCaptures();
+    flushPendingIdentify();
   }
 }
 
@@ -195,6 +219,7 @@ export async function initAnalytics() {
   });
 
   posthogClient = posthog;
+  posthog.opt_in_capturing();
 
   try {
     if (!sessionStorage.getItem(SESSION_SENT_KEY)) {
@@ -230,12 +255,14 @@ export function trackPdfOpened(input) {
 
 /**
  * @param {{
- *   scope: 'spelling' | 'consistency',
+ *   scope: 'spelling' | 'consistency' | 'toc-body',
  *   findingCount: number,
  *   activeRuleCount: number,
  * }} input
+ * @param {{ uid?: string, email?: string }} [identity]
  */
-export function trackCheckRun(input) {
+export async function trackCheckRun(input, identity = {}) {
+  await ensureAnalyticsIdentified(identity.uid ?? '', identity.email ?? '');
   captureAnalytics('check_run', {
     scope: input.scope,
     finding_count_bucket: bucketFindingCount(input.findingCount),

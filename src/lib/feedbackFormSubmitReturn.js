@@ -1,6 +1,5 @@
 import { grantFeedbackDailyQuotaBonus } from './betaDailyQuota.js';
 import { grantBadgeIfNew } from './badgeGrants.js';
-import { markRewardNotice } from './rewardNotice.js';
 
 const DEFAULT_FEEDBACK_FORM_VIEW_URL =
   'https://forms.gle/XGxKjjyWZiYDnqrm8';
@@ -117,8 +116,7 @@ export function buildFeedbackFormOpenUrl(uid) {
 async function applyFeedbackRewards(id, email) {
   const result = await grantFeedbackDailyQuotaBonus(id, email);
   if (result.granted && !result.alreadyHadBonus) {
-    markRewardNotice(id);
-    grantBadgeIfNew(id, 'slot-2', { notify: false });
+    grantBadgeIfNew(id, 'slot-2', { notify: true });
   }
   return result;
 }

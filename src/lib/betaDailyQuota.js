@@ -22,7 +22,7 @@ const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
 /** @returns {boolean} */
 export function isLocalDevQuotaRelaxed() {
   if (!import.meta.env.DEV) return false;
-  if (import.meta.env.VITE_BETA_QUOTA_FORCE_LOCAL === 'true') return false;
+  if (import.meta.env.VITE_BETA_QUOTA_RELAX_LOCAL !== 'true') return false;
   if (typeof window === 'undefined') return false;
   const host = window.location.hostname;
   return host === 'localhost' || host === '127.0.0.1' || host === '[::1]';
@@ -167,6 +167,54 @@ export function betaQuotaAlertForTab(tab) {
   return tab === 'spelling'
     ? BETA_DAILY_QUOTA_ALERT_SPELLING
     : BETA_DAILY_QUOTA_ALERT_CONSISTENCY;
+}
+
+/**
+ * @param {BetaQuotaTab} tab
+ */
+export function betaQuotaTabLabel(tab) {
+  return tab === 'spelling' ? '맞춤법 검수' : '일관성 검수';
+}
+
+/**
+ * 검수 차감 직후 안내 (alert)
+ * @param {BetaQuotaTab} tab
+ * @param {number} tabCount 차감 후 해당 탭 사용 횟수
+ * @param {number} tabLimit 해당 탭 일일 한도
+ */
+export function formatBetaQuotaConsumedAlert(tab, tabCount, tabLimit) {
+  const label = betaQuotaTabLabel(tab);
+  const remaining = Math.max(0, tabLimit - tabCount);
+  return (
+    `오늘 ${label} 횟수가 1회 차감되었습니다.\n\n` +
+    `사용: ${tabCount}/${tabLimit}회\n` +
+    `남음: ${remaining}회`
+  );
+}
+
+/**
+ * @param {BetaQuotaTab} tab
+ * @param {string} dayId
+ * @param {number} tabLimit
+ * @param {number} nextSpelling
+ * @param {number} nextConsistency
+ */
+function buildConsumeSuccessResult(
+  tab,
+  dayId,
+  tabLimit,
+  nextSpelling,
+  nextConsistency,
+) {
+  const tabCount = tab === 'spelling' ? nextSpelling : nextConsistency;
+  return {
+    ok: true,
+    dayId,
+    tab,
+    tabCount,
+    tabLimit,
+    tabRemaining: Math.max(0, tabLimit - tabCount),
+  };
 }
 
 /**
@@ -337,21 +385,61 @@ function readUserBonusDayIds(userData) {
 }
 
 /**
+ * Firestore·localStorage 탭 사용 횟수 — 큰 값을 신뢰 (쓰기 실패 후 refresh 시 0으로 덮이지 않게)
+ * @param {{ spellingCount: number, consistencyCount: number }} firestoreCounts
+ * @param {{ spellingCount: number, consistencyCount: number }} localCounts
+ */
+export function mergeTabQuotaCounts(firestoreCounts, localCounts) {
+  return {
+    spellingCount: Math.max(
+      firestoreCounts.spellingCount,
+      localCounts.spellingCount,
+    ),
+    consistencyCount: Math.max(
+      firestoreCounts.consistencyCount,
+      localCounts.consistencyCount,
+    ),
+  };
+}
+
+/**
+ * @param {{ feedbackBonusDayId: string | null, boostApprovedDayId: string | null }} firestoreBonus
+ * @param {{ feedbackBonusDayId: string | null, boostApprovedDayId: string | null }} localBonus
+ */
+export function mergeUserBonusDayIds(firestoreBonus, localBonus) {
+  return {
+    feedbackBonusDayId:
+      firestoreBonus.feedbackBonusDayId ?? localBonus.feedbackBonusDayId,
+    boostApprovedDayId:
+      firestoreBonus.boostApprovedDayId ?? localBonus.boostApprovedDayId,
+  };
+}
+
+/**
  * @param {string} uid
  * @param {string} dayId
  */
 async function readQuotaFlags(uid, dayId) {
+  const local = readLocalQuota(uid, dayId);
   try {
     const [userSnap, daySnap] = await Promise.all([
       getDoc(userDocRef(uid)),
       getDoc(dayDocRef(uid, dayId)),
     ]);
-    const { feedbackBonusDayId, boostApprovedDayId } = readUserBonusDayIds(
-      userSnap.exists() ? userSnap.data() : undefined,
+    const { feedbackBonusDayId, boostApprovedDayId } = mergeUserBonusDayIds(
+      readUserBonusDayIds(userSnap.exists() ? userSnap.data() : undefined),
+      {
+        feedbackBonusDayId: local.feedbackBonusDayId,
+        boostApprovedDayId: local.boostApprovedDayId,
+      },
     );
-    const counts = daySnap.exists()
+    const firestoreCounts = daySnap.exists()
       ? readDayTabCounts(daySnap.data())
       : { spellingCount: 0, consistencyCount: 0 };
+    const counts = mergeTabQuotaCounts(firestoreCounts, {
+      spellingCount: local.spellingCount,
+      consistencyCount: local.consistencyCount,
+    });
     const view = buildTabQuotaView(
       uid,
       dayId,
@@ -368,7 +456,7 @@ async function readQuotaFlags(uid, dayId) {
     });
     return view;
   } catch {
-    return readLocalQuota(uid, dayId);
+    return local;
   }
 }
 
@@ -482,6 +570,36 @@ export async function grantFeedbackDailyQuotaBonus(uid, email = '') {
 }
 
 /**
+ * localhost dev — 한도 차단 없이 localStorage만 갱신·안내 문구용 횟수 반환
+ * @param {string} uid
+ * @param {BetaQuotaTab} tab
+ * @param {string} dayId
+ */
+export function consumeLocalDevQuotaPreview(uid, tab, dayId = getKstDayId()) {
+  const local = readLocalQuota(uid, dayId);
+  const nextSpelling =
+    tab === 'spelling' ? local.spellingCount + 1 : local.spellingCount;
+  const nextConsistency =
+    tab === 'consistency'
+      ? local.consistencyCount + 1
+      : local.consistencyCount;
+  writeLocalQuota(uid, {
+    dayId,
+    spellingCount: nextSpelling,
+    consistencyCount: nextConsistency,
+    feedbackBonusDayId: local.feedbackBonusDayId,
+    boostApprovedDayId: local.boostApprovedDayId,
+  });
+  return buildConsumeSuccessResult(
+    tab,
+    dayId,
+    local.tabLimit,
+    nextSpelling,
+    nextConsistency,
+  );
+}
+
+/**
  * @param {string} uid
  * @param {string} [email]
  * @param {BetaQuotaTab} tab
@@ -489,6 +607,9 @@ export async function grantFeedbackDailyQuotaBonus(uid, email = '') {
 export async function consumeBetaDailyQuota(uid, email = '', tab = 'spelling') {
   const dayId = getKstDayId();
   if (!isBetaDailyQuotaEnforcedForUser(uid, email)) {
+    if (isLocalDevQuotaRelaxed() && uid.trim()) {
+      return consumeLocalDevQuotaPreview(uid, tab, dayId);
+    }
     return { ok: true, dayId, tab };
   }
 
@@ -553,7 +674,13 @@ export async function consumeBetaDailyQuota(uid, email = '', tab = 'spelling') {
       boostApprovedDayId: flags.boostApprovedDayId,
     });
     if (isFirstEverCheck) syncFirstCheckBadge(uid);
-    return { ok: true, dayId, tab };
+    return buildConsumeSuccessResult(
+      tab,
+      dayId,
+      flags.tabLimit,
+      nextSpelling,
+      nextConsistency,
+    );
   } catch (error) {
     if (
       error instanceof Error &&
@@ -589,7 +716,13 @@ export async function consumeBetaDailyQuota(uid, email = '', tab = 'spelling') {
       boostApprovedDayId: local.boostApprovedDayId,
     });
     if (isFirstEverCheck) syncFirstCheckBadge(uid);
-    return { ok: true, dayId, tab };
+    return buildConsumeSuccessResult(
+      tab,
+      dayId,
+      local.tabLimit,
+      nextSpelling,
+      nextConsistency,
+    );
   }
 }
 
@@ -610,6 +743,12 @@ export async function assertBetaDailyCheckOrAlert(uid, options = {}) {
   if (!result.ok) {
     alert(betaQuotaAlertForTab(tab));
     return false;
+  }
+  if (
+    typeof result.tabCount === 'number' &&
+    typeof result.tabLimit === 'number'
+  ) {
+    alert(formatBetaQuotaConsumedAlert(tab, result.tabCount, result.tabLimit));
   }
   options.onConsumed?.();
   return true;

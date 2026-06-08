@@ -1423,7 +1423,7 @@ export default function MainScreen({
                   {rewardNotice.visible ? (
                     <span
                       className="pdf-work-pane__aux-notice"
-                      aria-label="새 선물·배지 확인"
+                      aria-label="새 배지 확인"
                     />
                   ) : null}
                 </span>
