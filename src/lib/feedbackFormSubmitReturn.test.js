@@ -6,17 +6,17 @@ vi.mock('./betaDailyQuota.js', () => ({
     granted: true,
     alreadyHadBonus: false,
   })),
-  isLocalDevQuotaRelaxed: vi.fn(() => false),
+}));
+
+vi.mock('./badgeGrants.js', () => ({
+  grantBadgeIfNew: vi.fn(),
 }));
 
 vi.mock('./rewardNotice.js', () => ({
   markRewardNotice: vi.fn(),
 }));
 
-import {
-  grantFeedbackDailyQuotaBonus,
-  isLocalDevQuotaRelaxed,
-} from './betaDailyQuota.js';
+import { grantFeedbackDailyQuotaBonus } from './betaDailyQuota.js';
 import {
   FEEDBACK_SUBMITTED_QUERY,
   buildFeedbackFormOpenUrl,
@@ -25,7 +25,8 @@ import {
   resolveFeedbackThankYouOnLoad,
   stripFeedbackSubmittedFromUrl,
 } from './feedbackFormSubmitReturn.js';
-import { publishFeedbackThankYouSignal } from './feedbackThankYouSignal.js';
+
+const PENDING_KEY = 'indiya-feedback-submit-pending';
 
 /** @type {Record<string, string>} */
 const localStore = {};
@@ -82,71 +83,49 @@ describe('consumeFeedbackFormSubmitReturn', () => {
     const result = await consumeFeedbackFormSubmitReturn('u1');
     expect(result.handled).toBe(true);
     expect(result.granted).toBe(false);
+    expect(result.showThankYou).toBe(false);
     expect(grantFeedbackDailyQuotaBonus).not.toHaveBeenCalled();
   });
 
-  it('pending uid 일치 시 제출 보너스를 준다', async () => {
+  it('pending uid 일치 시 보너스만 주고 pending은 유지한다', async () => {
     markFeedbackFormSubmitPending('u1');
     const result = await consumeFeedbackFormSubmitReturn('u1', 'a@b.c');
     expect(result.granted).toBe(true);
-    expect(result.showThankYou).toBe(true);
+    expect(result.showThankYou).toBe(false);
     expect(grantFeedbackDailyQuotaBonus).toHaveBeenCalledWith('u1', 'a@b.c');
+    expect(localStorage.getItem(PENDING_KEY)).not.toBeNull();
     expect(window.history.replaceState).toHaveBeenCalled();
-  });
-
-  it('로컬 dev에서는 한도 미지급이어도 선물 UI를 연다', async () => {
-    vi.mocked(isLocalDevQuotaRelaxed).mockReturnValue(true);
-    vi.mocked(grantFeedbackDailyQuotaBonus).mockResolvedValue({
-      ok: true,
-      granted: false,
-      alreadyHadBonus: false,
-    });
-    markFeedbackFormSubmitPending('u1');
-    const result = await consumeFeedbackFormSubmitReturn('u1');
-    expect(result.granted).toBe(false);
-    expect(result.localRewardOnly).toBe(true);
-    expect(result.showThankYou).toBe(true);
-    expect(result.showEventReward).toBe(false);
   });
 });
 
 describe('resolveFeedbackThankYouOnLoad', () => {
   it('URL 없이 pending만 있으면 새로고침 시 감사 UI를 연다', async () => {
-    vi.mocked(isLocalDevQuotaRelaxed).mockReturnValue(false);
-    vi.mocked(grantFeedbackDailyQuotaBonus).mockResolvedValue({
-      ok: true,
-      granted: false,
-      alreadyHadBonus: false,
-    });
     window.location.search = '';
     markFeedbackFormSubmitPending('u1');
     const result = await resolveFeedbackThankYouOnLoad('u1');
     expect(result.fromPendingRefresh).toBe(true);
     expect(result.showThankYou).toBe(true);
     expect(grantFeedbackDailyQuotaBonus).toHaveBeenCalledWith('u1', '');
+    expect(localStorage.getItem(PENDING_KEY)).toBeNull();
   });
 
-  it('로컬 dev에서 한도 미지급이어도 pending 새로고침 시 감사 UI를 연다', async () => {
-    vi.mocked(isLocalDevQuotaRelaxed).mockReturnValue(true);
-    vi.mocked(grantFeedbackDailyQuotaBonus).mockResolvedValue({
-      ok: true,
-      granted: false,
-      alreadyHadBonus: false,
-    });
+  it('Form 리다이렉트 후 작업 탭 새로고침 시 감사 UI를 연다', async () => {
+    markFeedbackFormSubmitPending('u1');
+    const redirect = await resolveFeedbackThankYouOnLoad('u1');
+    expect(redirect.showThankYou).toBe(false);
+    expect(localStorage.getItem(PENDING_KEY)).not.toBeNull();
+
     window.location.search = '';
+    const refresh = await resolveFeedbackThankYouOnLoad('u1');
+    expect(refresh.fromPendingRefresh).toBe(true);
+    expect(refresh.showThankYou).toBe(true);
+    expect(localStorage.getItem(PENDING_KEY)).toBeNull();
+  });
+
+  it('리다이렉트 탭에서는 말풍선을 띄우지 않는다', async () => {
     markFeedbackFormSubmitPending('u1');
     const result = await resolveFeedbackThankYouOnLoad('u1');
-    expect(result.fromPendingRefresh).toBe(true);
-    expect(result.showThankYou).toBe(true);
-    expect(result.localRewardOnly).toBe(true);
-  });
-
-  it('탭 간 신호만 있어도 감사 UI를 연다', async () => {
-    publishFeedbackThankYouSignal('u1');
-    const result = await resolveFeedbackThankYouOnLoad('u1');
-    expect(result.fromSignal).toBe(true);
-    expect(result.showThankYou).toBe(true);
-    expect(grantFeedbackDailyQuotaBonus).not.toHaveBeenCalled();
+    expect(result.showThankYou).toBe(false);
   });
 });
 

@@ -1,10 +1,28 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   clampPanelLeftWidth,
+  persistPanelLeftWidthPreference,
+  readStoredPanelLeftWidth,
   PANEL_LEFT_DEFAULT_WIDTH,
   PANEL_LEFT_MIN_WIDTH,
   PANEL_LEFT_MAX_WIDTH,
 } from './useResizablePanelWidth.js';
+
+/** @type {Record<string, string>} */
+const localStore = {};
+
+beforeEach(() => {
+  for (const key of Object.keys(localStore)) delete localStore[key];
+  vi.stubGlobal('localStorage', {
+    getItem: (key) => localStore[key] ?? null,
+    setItem: (key, value) => {
+      localStore[key] = String(value);
+    },
+    removeItem: (key) => {
+      delete localStore[key];
+    },
+  });
+});
 
 describe('clampPanelLeftWidth', () => {
   it('창이 넓을 때 저장 폭을 유지한다', () => {
@@ -29,5 +47,23 @@ describe('clampPanelLeftWidth', () => {
   it('최소·최대 폭을 넘지 않는다', () => {
     expect(clampPanelLeftWidth(200, 2000)).toBe(PANEL_LEFT_MIN_WIDTH);
     expect(clampPanelLeftWidth(900, 2000)).toBe(PANEL_LEFT_MAX_WIDTH);
+  });
+});
+
+describe('panel left width preference', () => {
+  it('저장·복원한다', () => {
+    persistPanelLeftWidthPreference(520);
+    expect(readStoredPanelLeftWidth()).toBe(520);
+  });
+
+  it('범위 밖 값은 클램프해 저장한다', () => {
+    persistPanelLeftWidthPreference(900);
+    expect(readStoredPanelLeftWidth()).toBe(PANEL_LEFT_MAX_WIDTH);
+    persistPanelLeftWidthPreference(200);
+    expect(readStoredPanelLeftWidth()).toBe(PANEL_LEFT_MIN_WIDTH);
+  });
+
+  it('저장값이 없으면 null이다', () => {
+    expect(readStoredPanelLeftWidth()).toBeNull();
   });
 });

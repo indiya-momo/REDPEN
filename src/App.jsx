@@ -29,11 +29,10 @@ import {
 import { isLoginRequiredForChecks } from './lib/checkAuthGate.js';
 import { isOnboardingComplete } from './lib/userProfileStorage.js';
 import { resolveQuotaAuthEmail } from './lib/betaDailyQuota.js';
-import { resolveFeedbackThankYouOnLoad } from './lib/feedbackFormSubmitReturn.js';
 import {
-  FEEDBACK_THANK_SIGNAL_KEY,
-  takeFeedbackThankYouSignal,
-} from './lib/feedbackThankYouSignal.js';
+  hasValidFeedbackFormSubmitPending,
+  resolveFeedbackThankYouOnLoad,
+} from './lib/feedbackFormSubmitReturn.js';
 import { WORK_GUIDE_KEYS, workGuideStorageKey } from './lib/workGuideKeys.js';
 import { consumeReturnToMainWorkspace, markReturnToMainWorkspace } from './lib/returnToWorkspace.js';
 import { clearWorkSession } from './lib/sessionStore.js';
@@ -95,32 +94,6 @@ export default function App() {
       }
     });
   }, [authReady, auxWindow, authSession, applyFeedbackThankYouUi]);
-
-  useEffect(() => {
-    const uid = authSession?.uid?.trim() ?? '';
-    if (!uid || auxWindow) return undefined;
-
-    const syncFromSignal = () => {
-      const signal = takeFeedbackThankYouSignal(uid);
-      if (signal) applyFeedbackThankYouUi(signal.uid);
-    };
-
-    const onStorage = (event) => {
-      if (event.key === FEEDBACK_THANK_SIGNAL_KEY) syncFromSignal();
-    };
-    const onVisible = () => {
-      if (document.visibilityState === 'visible') syncFromSignal();
-    };
-
-    window.addEventListener('storage', onStorage);
-    window.addEventListener('focus', syncFromSignal);
-    document.addEventListener('visibilitychange', onVisible);
-    return () => {
-      window.removeEventListener('storage', onStorage);
-      window.removeEventListener('focus', syncFromSignal);
-      document.removeEventListener('visibilitychange', onVisible);
-    };
-  }, [authSession?.uid, auxWindow, applyFeedbackThankYouUi]);
 
   useEffect(() => {
     if (!authReady || auxWindow) return;

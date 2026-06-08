@@ -75,6 +75,7 @@ export default function CautionChecklist({
         </label>
         <span className="caution-checklist-summary-title">
           편집자 검토 기준(선택 {activeCount}/{total})
+          <span className="criteria-summary-note">*계속 추가됩니다</span>
         </span>
       </summary>
       <ul className="caution-checklist">

@@ -1,11 +1,4 @@
-import {
-  grantFeedbackDailyQuotaBonus,
-  isLocalDevQuotaRelaxed,
-} from './betaDailyQuota.js';
-import {
-  publishFeedbackThankYouSignal,
-  takeFeedbackThankYouSignal,
-} from './feedbackThankYouSignal.js';
+import { grantFeedbackDailyQuotaBonus } from './betaDailyQuota.js';
 import { grantBadgeIfNew } from './badgeGrants.js';
 import { markRewardNotice } from './rewardNotice.js';
 
@@ -31,6 +24,18 @@ export function getFeedbackFormReturnUrl() {
   url.hash = '';
   url.searchParams.set(FEEDBACK_SUBMITTED_QUERY, '1');
   return url.toString();
+}
+
+/**
+ * @param {string} uid
+ * @returns {boolean}
+ */
+export function hasValidFeedbackFormSubmitPending(uid) {
+  const pending = readFeedbackFormSubmitPending();
+  const id = uid.trim();
+  if (!id || !pending || pending.uid !== id) return false;
+  if (Date.now() - pending.at > PENDING_MAX_AGE_MS) return false;
+  return true;
 }
 
 /**
@@ -108,34 +113,18 @@ export function buildFeedbackFormOpenUrl(uid) {
 /**
  * @param {string} id
  * @param {string} email
- * @param {{ acknowledgeSubmission?: boolean }} [options]
  */
-async function finalizeFeedbackThankYou(id, email, options = {}) {
+async function applyFeedbackRewards(id, email) {
   const result = await grantFeedbackDailyQuotaBonus(id, email);
-  const localRewardOnly =
-    isLocalDevQuotaRelaxed() && !result.alreadyHadBonus;
-  const acknowledgeSubmission =
-    Boolean(options.acknowledgeSubmission) && !result.alreadyHadBonus;
-  const showThankYou =
-    (result.granted && !result.alreadyHadBonus) ||
-    localRewardOnly ||
-    acknowledgeSubmission;
-  if (showThankYou) {
+  if (result.granted && !result.alreadyHadBonus) {
     markRewardNotice(id);
-    publishFeedbackThankYouSignal(id);
     grantBadgeIfNew(id, 'slot-2', { notify: false });
   }
-  return {
-    granted: result.granted,
-    alreadyHadBonus: result.alreadyHadBonus,
-    showThankYou,
-    showEventReward: false,
-    localRewardOnly,
-  };
+  return result;
 }
 
 /**
- * Google Form 제출 후 리다이렉트 — pending uid와 일치할 때만 혜택
+ * Form 리다이렉트 탭 — 보너스만 지급, pending은 작업 탭 새로고침까지 유지
  * @param {string} uid
  * @param {string} [email]
  */
@@ -174,17 +163,17 @@ export async function consumeFeedbackFormSubmitReturn(uid, email = '') {
     };
   }
 
-  clearFeedbackFormSubmitPending();
-  const finalized = await finalizeFeedbackThankYou(id, email, {
-    acknowledgeSubmission: true,
-  });
+  const result = await applyFeedbackRewards(id, email);
   return {
     handled: true,
-    ...finalized,
+    granted: result.granted,
+    alreadyHadBonus: result.alreadyHadBonus,
+    showThankYou: false,
   };
 }
 
 /**
+ * 작업 탭 새로고침(F5) — pending이 있으면 선물 말풍선 (탭 복귀만으로는 안 뜸)
  * @param {string} id
  * @param {string} email
  */
@@ -204,18 +193,18 @@ async function resolveFeedbackThankYouFromPending(id, email) {
   }
 
   clearFeedbackFormSubmitPending();
-  const finalized = await finalizeFeedbackThankYou(id, email, {
-    acknowledgeSubmission: true,
-  });
+  const result = await applyFeedbackRewards(id, email);
   return {
     handled: true,
-    ...finalized,
+    granted: result.granted,
+    alreadyHadBonus: result.alreadyHadBonus,
+    showThankYou: true,
     fromPendingRefresh: true,
   };
 }
 
 /**
- * 페이지 로드·새로고침 — URL 리다이렉트, 탭 간 신호, pending 새로고침 순으로 감사 UI
+ * 페이지 로드 — Form 리다이렉트는 보너스만, 말풍선은 작업 탭 새로고침 때만
  * @param {string} uid
  * @param {string} [email]
  */
@@ -225,20 +214,9 @@ export async function resolveFeedbackThankYouOnLoad(uid, email = '') {
     return { handled: false, granted: false, showThankYou: false };
   }
 
-  const redirect = await consumeFeedbackFormSubmitReturn(id, email);
-  if (redirect.showThankYou) {
-    return redirect;
-  }
-
-  const signal = takeFeedbackThankYouSignal(id);
-  if (signal) {
-    return {
-      handled: true,
-      granted: false,
-      showThankYou: true,
-      showEventReward: false,
-      fromSignal: true,
-    };
+  const params = new URLSearchParams(window.location.search);
+  if (params.get(FEEDBACK_SUBMITTED_QUERY) === '1') {
+    return consumeFeedbackFormSubmitReturn(id, email);
   }
 
   const pendingRefresh = await resolveFeedbackThankYouFromPending(id, email);
@@ -246,7 +224,5 @@ export async function resolveFeedbackThankYouOnLoad(uid, email = '') {
     return pendingRefresh;
   }
 
-  return redirect.handled
-    ? redirect
-    : { handled: false, granted: false, showThankYou: false };
+  return { handled: false, granted: false, showThankYou: false };
 }
