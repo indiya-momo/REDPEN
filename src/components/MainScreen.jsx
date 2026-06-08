@@ -38,7 +38,7 @@ import {
 import { usePrintedPageDisplay } from '../hooks/usePrintedPageDisplay.js';
 import { trackFeedbackOpened } from '../lib/analytics.js';
 import { openFeedbackFormForUser } from '../lib/feedbackConfig.js';
-import { FEEDBACK_SUBMIT_THANK_MESSAGE } from '../lib/betaDailyQuota.js';
+import { FEEDBACK_SUBMIT_THANK_BUBBLE_LINES } from '../lib/betaDailyQuota.js';
 import {
   getCurrentUserSession,
   subscribeAuthSession,
@@ -1447,9 +1447,17 @@ export default function MainScreen({
                     offsetY={8}
                     pinned={workGuide.pinAll}
                     message={
-                      <span className="tooltip-guide__message-line">
-                        새 업로드와 로그아웃은 여기,
-                      </span>
+                      <>
+                        <span className="tooltip-guide__message-line">
+                          새 업로드와 로그아웃은 여기,
+                        </span>
+                        <span className="tooltip-guide__message-line">
+                          피드백 보내기를 하고 화면을 새로고침하면
+                        </span>
+                        <span className="tooltip-guide__message-line">
+                          곧바로 선물을 받을 수 있다냥!
+                        </span>
+                      </>
                     }
                     onDismiss={() =>
                       workGuide.dismiss(WORK_GUIDE_KEYS.WORK_EXIT)
@@ -1491,9 +1499,16 @@ export default function MainScreen({
                     offsetX={-100}
                     offsetY={8}
                     message={
-                      <span className="tooltip-guide__message-line tooltip-guide__message-line--stacked">
-                        {FEEDBACK_SUBMIT_THANK_MESSAGE}
-                      </span>
+                      <>
+                        {FEEDBACK_SUBMIT_THANK_BUBBLE_LINES.map((line) => (
+                          <span
+                            key={line}
+                            className="tooltip-guide__message-line tooltip-guide__message-line--stacked"
+                          >
+                            {line}
+                          </span>
+                        ))}
+                      </>
                     }
                     onDismiss={() => {
                       onFeedbackThankYouDismiss();
