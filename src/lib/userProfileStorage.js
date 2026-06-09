@@ -1,3 +1,8 @@
+/**
+ * uid별 닉네임·온보딩 완료 플래그 localStorage.
+ * 대문 온보딩·MainScreen 인사말·isOnboardingComplete 판단.
+ * userProfileCloud와 병행; 오프라인·즉시 반영용.
+ */
 const STORAGE_KEY = 'indiya-user-profile-v1';
 
 const NICKNAME_PREFIXES = ['편집자', '교정인', '인디독자', '모모친구'];

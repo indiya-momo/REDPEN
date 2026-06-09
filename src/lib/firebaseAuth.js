@@ -1,3 +1,8 @@
+/**
+ * Firebase App/Auth 초기화, Google popup/redirect 로그인·로그아웃.
+ * subscribeAuthSession/getCurrentUserSession으로 앱 전역 세션 스냅샷.
+ * redirect 복귀·persistence·작업 가이드 세션 연동.
+ */
 import { initializeApp } from 'firebase/app';
 import {
   GoogleAuthProvider,

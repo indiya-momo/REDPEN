@@ -1,3 +1,8 @@
+/**
+ * ?window=mypage 보조 창: 프로필·배지·베타 안내.
+ * App이 authSession·authReady만 전달.
+ * 메인 작업창과 분리된 읽기·설정 UI (검수 플로우 끝단).
+ */
 import { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { returnToWorkspace } from '../lib/returnToWorkspace.js';

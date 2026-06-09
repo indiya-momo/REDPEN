@@ -1,3 +1,8 @@
+/**
+ * Firebase가 켜져 있으면 검수는 로그인 필수 (isLoginRequiredForChecks).
+ * uid 없을 때 alert와 assertLoggedInForCheckOrAlert로 검수 직전 차단.
+ * App·MainScreen·useRuleCheck·betaDailyQuota에서 공통 정책.
+ */
 import { firebaseApp, isFirebaseAuthConfigured } from './firebaseAuth.js';
 
 export const CHECK_LOGIN_REQUIRED_ALERT =

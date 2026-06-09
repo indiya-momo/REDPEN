@@ -1,3 +1,8 @@
+/**
+ * PDF 업로드·탭(맞춤법/일관성)·검수 실행·결과·하이라이트 작업 화면 전체.
+ * subscribeAuthSession으로 uid·이메일·한도·인사말 처리 (App과 별도 구독).
+ * useRuleCheck/usePdfDocument/useBetaDailyQuota 조합; 마이페이지·피드백은 App 콜백.
+ */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ChevronDown,

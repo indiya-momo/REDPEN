@@ -1,3 +1,8 @@
+/**
+ * 오픈베타 일일 검수 한도(탭별 1/2/3회) 정책·Firestore 트랜잭션·로컬 dev 완화.
+ * 검수 직전 assertBetaDailyCheckOrAlert, 소비 후 배지·피드백 보너스 연동.
+ * resolveQuotaAuthEmail로 관리자 면제·이메일 키 해석.
+ */
 import {
   doc,
   getDoc,
