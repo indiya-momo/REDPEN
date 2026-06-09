@@ -1,3 +1,8 @@
+/**
+ * 앱 최상위: screen(welcome/main/room)과 보조 창(?window=mypage|guide) 분기.
+ * Firebase auth 부트스트랩·subscribeAuthSession·PostHog syncPostHogIdentity.
+ * useRuleSets 로드 후 MainScreen에 props 주입; 로그인 필수인데 uid 없으면 welcome 복귀.
+ */
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import MainScreen from './components/MainScreen.jsx';
 import WelcomeScreen from './components/WelcomeScreen.jsx';

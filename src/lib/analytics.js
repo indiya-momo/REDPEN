@@ -1,3 +1,8 @@
+/**
+ * PostHog 초기화·opt-out·pending capture/identify 큐.
+ * identifyAnalyticsUser/ensureAnalyticsIdentified — 로그인 uid와 check_run 연결.
+ * session_start, pdf_opened, check_run, user_identified 등 제품 이벤트.
+ */
 import { APP_VERSION, UI_BUILD_ID, deployModeLabel } from './appVersion.js';
 import { isBetaQuotaAdminExempt } from './betaDailyQuota.js';
 import { resolvePostHogHost, resolvePostHogKey } from './posthogEnv.js';

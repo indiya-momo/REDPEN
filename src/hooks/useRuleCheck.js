@@ -1,3 +1,8 @@
+/**
+ * 맞춤법·일관성 탭 검수 오케스트레이션: 규칙 집계 → ruleEngine → 결과·가시성.
+ * 실행 전 로그인·베타 일일 한도(assertBetaDailyCheckOrAlert)·규칙 개수 상한 검사.
+ * trackCheckRun/trackResultViewed로 PostHog에 검수·결과 열람 기록.
+ */
 import { useCallback, useMemo, useState } from 'react';
 import { buildCautionCheckRules } from '../lib/cautionRules.js';
 import { sortSpellingResultsForDisplay } from '../utils/main-screen-helpers.js';
@@ -27,9 +32,7 @@ import {
 import { ensureDefaultAuxiliaryVerbs } from '../lib/defaultAuxiliaryVerbs.js';
 import { assertBetaDailyCheckOrAlert } from '../lib/betaDailyQuota.js';
 
-/**
- * 맞춤법·표기 일관성 규칙 검사 (목차 검사는 useTocBodyCheck)
- * @param {{
+/** @param {{
  *   builtInEnabled: Record<string, boolean>,
  *   cautionEnabled: Record<string, boolean>,
  *   customRules: import('../lib/ruleTypes.js').Rule[],

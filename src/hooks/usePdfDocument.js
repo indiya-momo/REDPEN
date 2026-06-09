@@ -1,3 +1,8 @@
+/**
+ * PDF 파일/버퍼 로드, 페이지 텍스트 추출, 현재 페이지·진행률 상태.
+ * 출판 가능 PDF 게이트(pdfPublishGate) 통과 후에만 본문 사용.
+ * 최초 유효 오픈 시 trackPdfOpened 1회.
+ */
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { trackPdfOpened } from '../lib/analytics.js';
 import {
@@ -16,9 +21,6 @@ function destroyPdfDocument(doc) {
   }
 }
 
-/**
- * PDF 로드·텍스트 추출·현재 페이지
- */
 export function usePdfDocument() {
   const fileRef = useRef(null);
   const pdfBufferRef = useRef(null);

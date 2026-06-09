@@ -1,3 +1,8 @@
+/**
+ * MainScreen용 한도 UI 상태: 로딩·소비 여부·탭별 count·보너스 플래그.
+ * getBetaDailyQuotaStatus 주기적/수동 refresh (onBetaQuotaConsumed).
+ * 검수 버튼 비활성·안내 문구의 데이터 소스.
+ */
 import { useCallback, useEffect, useState } from 'react';
 import { syncBoostApprovedBadge } from '../lib/badgeGrants.js';
 import {
@@ -6,11 +11,7 @@ import {
   isLocalDevQuotaRelaxed,
 } from '../lib/betaDailyQuota.js';
 
-/**
- * 오픈베타 검수 한도 — 탭별 1회 / 피드백 2회 / 우수 선정 3회
- * @param {string} uid
- * @param {string} [email]
- */
+/** @param {string} uid @param {string} [email] */
 export function useBetaDailyQuota(uid, email = '') {
   const [loading, setLoading] = useState(true);
   const [spellingConsumed, setSpellingConsumed] = useState(false);

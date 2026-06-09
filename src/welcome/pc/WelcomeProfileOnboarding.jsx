@@ -1,3 +1,8 @@
+/**
+ * 최초 1회 닉네임 입력 (대문 또는 작업창 surface).
+ * userProfileStorage + cloud 저장 후 onComplete.
+ * 베타 마이페이지·인사말에 쓰이는 표시 이름의 출처.
+ */
 import { useEffect, useId, useState } from 'react';
 import {
   createRandomNickname,
@@ -9,9 +14,7 @@ import './profile-onboarding.css';
 
 const NICKNAME_PRINT = publicAssetUrl('welcome/nickname_print.png');
 
-/**
- * PDF 작업 영역(상단 바 아래) 1회 프로필 입력
- * @param {{
+/** @param {{
  *   uid: string,
  *   defaultNickname?: string,
  *   onComplete: () => void,
