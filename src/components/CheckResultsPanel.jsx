@@ -18,6 +18,8 @@ import { auxiliaryVerbResultParts } from '../lib/patternDisplayLabels.js';
  *   totalFindings: number,
  *   cautionWithFindingsCount?: number,
  *   builtinWithFindingsCount?: number,
+ *   literalWithFindingsCount?: number,
+ *   auxiliaryWithFindingsCount?: number,
  * }} props
  */
 function ResultHeaderSummary({
@@ -27,6 +29,8 @@ function ResultHeaderSummary({
   totalFindings,
   cautionWithFindingsCount = 0,
   builtinWithFindingsCount = 0,
+  literalWithFindingsCount = 0,
+  auxiliaryWithFindingsCount = 0,
 }) {
   if (viewSource === 'spelling' && spellingCheckDone) {
     return (
@@ -39,8 +43,28 @@ function ResultHeaderSummary({
           맞춤법 기준{' '}
           <span className="results-header__rule-chip results-category-summary__builtin">
             {builtinWithFindingsCount}
+          </span>
+        </span>
+        , 전체 발견{' '}
+        <span className="results-category-summary__count-underline">
+          {totalFindings}
+        </span>
+      </div>
+    );
+  }
+
+  if (viewSource === 'consistency' && spellingCheckDone) {
+    return (
+      <div className="results-header">
+        <span className="results-header__applied">
+          일관성 찾기{' '}
+          <span className="results-header__rule-chip results-category-summary__builtin">
+            {literalWithFindingsCount}
           </span>{' '}
-          해당
+          본용언 + 보조용언 표기{' '}
+          <span className="results-header__rule-chip results-category-summary__caution">
+            {auxiliaryWithFindingsCount}
+          </span>
         </span>
         , 전체 발견{' '}
         <span className="results-category-summary__count-underline">
@@ -77,6 +101,8 @@ function ResultHeaderSummary({
  *   spellingFindings?: number,
  *   cautionWithFindingsCount?: number,
  *   builtinWithFindingsCount?: number,
+ *   literalWithFindingsCount?: number,
+ *   auxiliaryWithFindingsCount?: number,
  *   spellingCheckDone: boolean,
  *   isGroupVisible: (source: 'spelling' | 'consistency', group: import('../lib/ruleEngine.js').GroupedResult) => boolean,
  *   onToggleVisibility: (source: 'spelling' | 'consistency', group: import('../lib/ruleEngine.js').GroupedResult) => void,
@@ -109,6 +135,8 @@ export default function CheckResultsPanel({
   viewSource,
   cautionWithFindingsCount = 0,
   builtinWithFindingsCount = 0,
+  literalWithFindingsCount = 0,
+  auxiliaryWithFindingsCount = 0,
   spellingCheckDone,
   isGroupVisible,
   onToggleVisibility,
@@ -164,6 +192,8 @@ export default function CheckResultsPanel({
             totalFindings={totalFindings}
             cautionWithFindingsCount={cautionWithFindingsCount}
             builtinWithFindingsCount={builtinWithFindingsCount}
+            literalWithFindingsCount={literalWithFindingsCount}
+            auxiliaryWithFindingsCount={auxiliaryWithFindingsCount}
           />
           <ul className="results-list">
             {entries.map(({ group, source }) => {

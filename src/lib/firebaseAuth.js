@@ -21,6 +21,7 @@ import {
   getRememberedAuthEmail,
   rememberAuthEmail,
 } from './authEmailCache.js';
+import { clearSessionPanelLeftWidth } from './panelLeftWidthSession.js';
 import { clearReturnToMainWorkspace } from './returnToWorkspace.js';
 import {
   clearWorkGuideAuthBound,
@@ -431,6 +432,7 @@ export async function signOutUser() {
   const uid = auth.currentUser?.uid;
   clearReturnToMainWorkspace();
   clearWorkGuideAuthBound();
+  if (uid) clearSessionPanelLeftWidth(uid);
   await signOut(auth);
   if (uid) clearRememberedAuthEmail(uid);
 }

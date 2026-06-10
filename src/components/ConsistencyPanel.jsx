@@ -370,10 +370,10 @@ export default function ConsistencyPanel({
         className="consistency-section-box"
         data-work-guide-step="auxiliary-box"
       >
-        <details className="consistency-auxiliary-details" open>
+        <details className="caution-checklist-details consistency-auxiliary-details" open>
           <summary
             id="consistency-aux-heading"
-            className="consistency-section-head bon-bojo-checklist-header consistency-auxiliary-summary"
+            className="caution-checklist-summary panel-criteria-heading"
           >
             <DetailsChevron />
             <label
@@ -398,7 +398,7 @@ export default function ConsistencyPanel({
                 aria-label="본용언+보조용언 표기 전체 선택"
               />
             </label>
-            <span className="printed-page-setup__title bon-bojo-checklist-title consistency-panel-section-title consistency-auxiliary-summary-title panel-criteria-heading">
+            <span className="caution-checklist-summary-title">
               본용언 + 보조용언 표기
               {auxiliaryTotal > 0
                 ? ` (선택 ${auxiliaryActiveCount}/${auxiliaryTotal})`

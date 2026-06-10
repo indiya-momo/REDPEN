@@ -58,6 +58,7 @@ import { useRewardNotice } from '../hooks/useRewardNotice.js';
 import { daysSinceJoin, syncProfileBadges } from '../lib/badgeGrants.js';
 import { isLoginRequiredForChecks } from '../lib/checkAuthGate.js';
 import { resolveQuotaAuthEmail } from '../lib/betaDailyQuota.js';
+import { countConsistencyGroupsWithFindings } from '../lib/consistencyCheckConfirm.js';
 import { countSpellingGroupsWithFindings } from '../lib/spellingCheckConfirm.js';
 import { formatRuleSetSavedDate } from '../lib/ruleSetsStorage.js';
 import {
@@ -261,7 +262,9 @@ export default function MainScreen({
   const [criteriaPickerOpen, setCriteriaPickerOpen] = useState(false);
   const criteriaPickerRef = useRef(null);
   const afterCheckRef = useRef(async () => false);
-  const { panelStyle, handleRef, startDrag } = useResizablePanelWidth();
+  const { panelStyle, handleRef, startDrag } = useResizablePanelWidth(
+    authSession?.uid ?? '',
+  );
 
   const activeRuleSet = useMemo(
     () => ruleSets.find((set) => set.id === activeSetId) ?? null,
@@ -567,6 +570,11 @@ export default function MainScreen({
   const spellingGroupsWithFindings = useMemo(
     () => countSpellingGroupsWithFindings(ruleCheck.spellingResults),
     [ruleCheck.spellingResults],
+  );
+
+  const consistencyGroupsWithFindings = useMemo(
+    () => countConsistencyGroupsWithFindings(ruleCheck.consistencyResults),
+    [ruleCheck.consistencyResults],
   );
 
   const consistencyTabTotalFindings = useMemo(
@@ -1378,6 +1386,12 @@ export default function MainScreen({
                 visibleOnCurrentPage={visibleOnCurrentPage}
                 totalFindings={consistencyTabTotalFindings}
                 ruleCount={consistencyTabEntries.length}
+                literalWithFindingsCount={
+                  consistencyGroupsWithFindings.literalWithFindings
+                }
+                auxiliaryWithFindingsCount={
+                  consistencyGroupsWithFindings.auxiliaryWithFindings
+                }
                 spellingFindings={ruleCheck.consistencyFindings}
                 spellingCheckDone={ruleCheck.consistencyCheckDone}
                 isGroupVisible={ruleCheck.isGroupVisible}
