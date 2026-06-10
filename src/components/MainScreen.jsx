@@ -58,6 +58,7 @@ import { useRewardNotice } from '../hooks/useRewardNotice.js';
 import { daysSinceJoin, syncProfileBadges } from '../lib/badgeGrants.js';
 import { isLoginRequiredForChecks } from '../lib/checkAuthGate.js';
 import { resolveQuotaAuthEmail } from '../lib/betaDailyQuota.js';
+import { countSpellingGroupsWithFindings } from '../lib/spellingCheckConfirm.js';
 import { formatRuleSetSavedDate } from '../lib/ruleSetsStorage.js';
 import {
   buildTabEntries,
@@ -563,6 +564,11 @@ export default function MainScreen({
     [spellingTabEntries],
   );
 
+  const spellingGroupsWithFindings = useMemo(
+    () => countSpellingGroupsWithFindings(ruleCheck.spellingResults),
+    [ruleCheck.spellingResults],
+  );
+
   const consistencyTabTotalFindings = useMemo(
     () => countTabTotalFindings(consistencyTabEntries),
     [consistencyTabEntries],
@@ -652,6 +658,7 @@ export default function MainScreen({
   });
 
   const showSpellingRunRow = Boolean(pdf.pdf);
+  const showConsistencyRunRow = Boolean(pdf.pdf);
   const showSpellingResultsSlot = tabCheckDone;
 
   const handleCriteriaSpellingCheck = useCallback(() => {
@@ -669,6 +676,17 @@ export default function MainScreen({
   const handleSpellingRecheckFromScratch = useCallback(() => {
     clearSpellingTabWork();
   }, [clearSpellingTabWork]);
+
+  /** 다시 검수 — 일관성·목차 결과 비우고 기준 설정으로 복귀 */
+  const handleConsistencyRecheckFromScratch = useCallback(() => {
+    clearConsistencyTabWork();
+  }, [clearConsistencyTabWork]);
+
+  const handleRunConsistencyRulesCheck = useCallback(async () => {
+    setConsistencyFocus('rules');
+    setLastConsistencyPane('rules');
+    await ruleCheck.runConsistencyCheck();
+  }, [ruleCheck.runConsistencyCheck]);
 
   const printedPagePanelProps = {
     printedPageOffset: pageDisplay.offset,
@@ -769,9 +787,8 @@ export default function MainScreen({
         visibleOnCurrentPage={visibleOnCurrentPage}
         totalFindings={spellingTabTotalFindings}
         ruleCount={spellingTabEntries.length}
-        spellingFindings={ruleCheck.spellingFindings}
-        builtinFindings={ruleCheck.builtinFindings}
-        spacingFindings={ruleCheck.spacingFindings}
+        cautionWithFindingsCount={spellingGroupsWithFindings.cautionWithFindings}
+        builtinWithFindingsCount={spellingGroupsWithFindings.builtinWithFindings}
         spellingCheckDone={ruleCheck.spellingCheckDone}
         isGroupVisible={ruleCheck.isGroupVisible}
         onToggleVisibility={ruleCheck.toggleResultVisibility}
@@ -1264,6 +1281,38 @@ export default function MainScreen({
 
         {workTab === 'consistency' && (
           <div className="panel-left-work-scroll custom-scrollbar">
+            {showConsistencyRunRow ? (
+              <div
+                className="consistency-tab-layout__run-row spelling-tab-layout__run-row"
+                data-work-guide-step="2"
+              >
+                <div className="spelling-tab-layout__run-row-actions">
+                  <PanelSectionRunButton
+                    label="다시 검수"
+                    onClick={handleConsistencyRecheckFromScratch}
+                    disabled={
+                      pdf.pageTexts.length === 0 ||
+                      !consistencyWorkDone ||
+                      pdf.isProcessing ||
+                      checkSessionBlocked
+                    }
+                    isProcessing={pdf.isProcessing}
+                  />
+                </div>
+                <div className="spelling-tab-layout__run-row-actions spelling-tab-layout__run-row-actions--end">
+                  <PanelSectionRunButton
+                    label="일관성+용언 검수"
+                    onClick={handleRunConsistencyRulesCheck}
+                    disabled={
+                      pdf.pageTexts.length === 0 ||
+                      pdf.isProcessing ||
+                      checkSessionBlocked
+                    }
+                    isProcessing={pdf.isProcessing}
+                  />
+                </div>
+              </div>
+            ) : null}
             {tocBodyCheckEnabled &&
             tocCheck.checkDone &&
             ruleCheck.consistencyCheckDone ? (
@@ -1344,7 +1393,6 @@ export default function MainScreen({
                   setLastConsistencyPane('rules');
                   ruleCheck.selectPageInGroup(pageNum, instances, 'consistency');
                 }}
-                onAdditionalCheck={clearConsistencyTabWork}
                 {...printedPagePanelProps}
               />
             ) : null}
@@ -1401,11 +1449,6 @@ export default function MainScreen({
                         }
                       : undefined
                   }
-                  onRunRulesCheck={async () => {
-                    setConsistencyFocus('rules');
-                    setLastConsistencyPane('rules');
-                    await ruleCheck.runConsistencyCheck();
-                  }}
                   hasPdf={pdf.pageTexts.length > 0}
                   isProcessing={pdf.isProcessing}
                   checkQuotaBlocked={checkSessionBlocked}

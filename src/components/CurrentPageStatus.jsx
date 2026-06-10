@@ -56,7 +56,7 @@ export default function CurrentPageStatus({
         .filter(Boolean)
         .join(' ')}
     >
-      현재 <strong>{pageLabel}</strong>
+      현재 <strong className="manuscript-page-label">{pageLabel}</strong>
       {printedPagesActive ? (
         <span className="current-page-status__system">
           {' '}

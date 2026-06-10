@@ -74,7 +74,8 @@ export default function PrintedPageSetup({
           {active ? (
             <>
               현재 파일 <strong>{filePageLabel}</strong>가 원고 기준{' '}
-              <strong>{manuscriptPageLabel}</strong>로 보정되었습니다.
+              <strong className="manuscript-page-label">{manuscriptPageLabel}</strong>
+              로 보정되었습니다.
             </>
           ) : (
             <>

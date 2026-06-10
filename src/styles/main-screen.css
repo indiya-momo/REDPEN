@@ -802,11 +802,11 @@
 
 .panel-left--spelling,
 .panel-left--consistency {
+  --spelling-block-inset-x: 12px;
   background: var(--color-surface-raised);
 }
 
 .spelling-tab-layout {
-  --spelling-block-inset-x: 12px;
   flex: 1 1 0;
   min-height: 0;
   overflow: hidden;
@@ -848,15 +848,11 @@
   flex-shrink: 0;
 }
 
-.consistency-embed > .consistency-tab-layout__run-row {
+.panel-left-work-scroll > .consistency-tab-layout__run-row {
   flex-shrink: 0;
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  width: 100%;
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+  position: relative;
+  z-index: 10020;
+  isolation: isolate;
 }
 
 .consistency-section-head,
@@ -1215,8 +1211,10 @@
   gap: var(--consistency-embed-gap);
 }
 
-.consistency-embed > .consistency-tab-layout__run-row + .consistency-unified-box {
-  margin-top: calc(var(--consistency-embed-gap) * -0.75);
+.panel-left-work-scroll > .consistency-tab-layout__run-row + .consistency-results-switch,
+.panel-left-work-scroll > .consistency-tab-layout__run-row + .results-panel,
+.panel-left-work-scroll > .consistency-tab-layout__run-row + .consistency-rules-scroll {
+  margin-top: 0;
 }
 
 /* 일관성 찾기 ↔ 본용언+보조용언: 기본 간격의 60% */

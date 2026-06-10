@@ -48,7 +48,6 @@ import { SPACE_INPUT_PLACEHOLDER } from './consistency/constants.js';
 import TocBodySetupPanel from '../toc-body/components/TocBodySetupPanel.jsx';
 import { isTocBodyCheckEnabled } from '../lib/featureFlags.js';
 import DetailsChevron from './DetailsChevron.jsx';
-import PanelSectionRunButton from './PanelSectionRunButton.jsx';
 import TooltipGuide from './TooltipGuide.jsx';
 
 /**
@@ -74,7 +73,6 @@ import TooltipGuide from './TooltipGuide.jsx';
  *   onCalibrateFromInput?: (raw: string, isSpread: boolean) => void,
  *   onClearPrintedPageOffset?: () => void,
  *   onRunTocCheck?: () => void | Promise<void>,
- *   onRunRulesCheck?: () => void | Promise<void>,
  *   hasPdf?: boolean,
  *   isProcessing?: boolean,
  *   checkQuotaBlocked?: boolean,
@@ -108,7 +106,6 @@ export default function ConsistencyPanel({
   onCalibrateFromInput = () => {},
   onClearPrintedPageOffset = () => {},
   onRunTocCheck = () => {},
-  onRunRulesCheck = () => {},
   hasPdf = false,
   isProcessing = false,
   checkQuotaBlocked = false,
@@ -270,16 +267,6 @@ export default function ConsistencyPanel({
 
   return (
     <div className="consistency-embed">
-      {hasPdf ? (
-        <div className="consistency-tab-layout__run-row">
-          <PanelSectionRunButton
-            label="일관성+용언 검수"
-            onClick={onRunRulesCheck}
-            disabled={!hasPdf || checkQuotaBlocked}
-            isProcessing={isProcessing}
-          />
-        </div>
-      ) : null}
       <section className="consistency-unified-box" aria-label="표기 일관성 찾기">
         <p className="printed-page-setup__title consistency-panel-section-title panel-criteria-heading">
           일관성 찾기(1회 검수 8개 이내 추천)⭐

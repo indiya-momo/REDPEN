@@ -14,22 +14,42 @@ import { auxiliaryVerbResultParts } from '../lib/patternDisplayLabels.js';
  * @param {{
  *   viewSource: 'spelling' | 'consistency',
  *   spellingCheckDone: boolean,
- *   spellingFindings: number,
  *   ruleCount: number,
  *   totalFindings: number,
- *   builtinFindings: number,
- *   spacingFindings: number,
+ *   cautionWithFindingsCount?: number,
+ *   builtinWithFindingsCount?: number,
  * }} props
  */
 function ResultHeaderSummary({
   viewSource,
   spellingCheckDone,
-  spellingFindings,
   ruleCount,
   totalFindings,
-  builtinFindings,
-  spacingFindings,
+  cautionWithFindingsCount = 0,
+  builtinWithFindingsCount = 0,
 }) {
+  if (viewSource === 'spelling' && spellingCheckDone) {
+    return (
+      <div className="results-header">
+        <span className="results-header__applied">
+          편집자 검토 필요 기준{' '}
+          <span className="results-header__rule-chip results-category-summary__caution">
+            {cautionWithFindingsCount}
+          </span>{' '}
+          맞춤법 기준{' '}
+          <span className="results-header__rule-chip results-category-summary__builtin">
+            {builtinWithFindingsCount}
+          </span>{' '}
+          해당
+        </span>
+        , 전체 발견{' '}
+        <span className="results-category-summary__count-underline">
+          {totalFindings}
+        </span>
+      </div>
+    );
+  }
+
   return (
     <div className="results-header">
       <span className="results-header__applied">
@@ -39,17 +59,6 @@ function ResultHeaderSummary({
       <span className="results-category-summary__count-underline">
         {totalFindings}
       </span>
-      {viewSource === 'spelling' && spellingCheckDone && spellingFindings > 0 ? (
-        <span className="results-header__breakdown">
-          <span className="results-category-summary__builtin">
-            맞춤법 기준 <span>{builtinFindings}</span>
-          </span>{' '}
-          ·{' '}
-          <span className="results-category-summary__caution">
-            검토필요 기준 <span>{spacingFindings}</span>
-          </span>
-        </span>
-      ) : null}
     </div>
   );
 }
@@ -65,9 +74,9 @@ function ResultHeaderSummary({
  *   totalFindings: number,
  *   ruleCount: number,
  *   viewSource: 'spelling' | 'consistency',
- *   spellingFindings: number,
- *   builtinFindings?: number,
- *   spacingFindings?: number,
+ *   spellingFindings?: number,
+ *   cautionWithFindingsCount?: number,
+ *   builtinWithFindingsCount?: number,
  *   spellingCheckDone: boolean,
  *   isGroupVisible: (source: 'spelling' | 'consistency', group: import('../lib/ruleEngine.js').GroupedResult) => boolean,
  *   onToggleVisibility: (source: 'spelling' | 'consistency', group: import('../lib/ruleEngine.js').GroupedResult) => void,
@@ -98,9 +107,8 @@ export default function CheckResultsPanel({
   totalFindings,
   ruleCount,
   viewSource,
-  spellingFindings,
-  builtinFindings = 0,
-  spacingFindings = 0,
+  cautionWithFindingsCount = 0,
+  builtinWithFindingsCount = 0,
   spellingCheckDone,
   isGroupVisible,
   onToggleVisibility,
@@ -152,11 +160,10 @@ export default function CheckResultsPanel({
           <ResultHeaderSummary
             viewSource={viewSource}
             spellingCheckDone={spellingCheckDone}
-            spellingFindings={spellingFindings}
             ruleCount={ruleCount}
             totalFindings={totalFindings}
-            builtinFindings={builtinFindings}
-            spacingFindings={spacingFindings}
+            cautionWithFindingsCount={cautionWithFindingsCount}
+            builtinWithFindingsCount={builtinWithFindingsCount}
           />
           <ul className="results-list">
             {entries.map(({ group, source }) => {

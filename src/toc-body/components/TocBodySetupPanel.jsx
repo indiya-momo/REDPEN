@@ -113,7 +113,9 @@ export default function TocBodySetupPanel({
         <div className="consistency-toc-section__calibration-done">
           <p>
             현재 파일 <strong>{formatSystemPageLabel(currentSystemPage)}</strong>가
-            원고 기준 <strong>{currentPrintedLabel}</strong>로 보정되었습니다.
+            원고 기준{' '}
+            <strong className="manuscript-page-label">{currentPrintedLabel}</strong>
+            로 보정되었습니다.
           </p>
           <button
             type="button"

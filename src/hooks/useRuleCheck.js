@@ -31,7 +31,14 @@ import {
 } from '../lib/consistencyCheckScopes.js';
 import { ensureDefaultAuxiliaryVerbs } from '../lib/defaultAuxiliaryVerbs.js';
 import { assertBetaDailyCheckOrAlert } from '../lib/betaDailyQuota.js';
-import { confirmSpellingCheckBeforeRun } from '../lib/spellingCheckConfirm.js';
+import {
+  alertConsistencyCheckAfterRun,
+  confirmConsistencyCheckBeforeRun,
+} from '../lib/consistencyCheckConfirm.js';
+import {
+  alertSpellingCheckAfterRun,
+  confirmSpellingCheckBeforeRun,
+} from '../lib/spellingCheckConfirm.js';
 
 /** @param {{
  *   builtInEnabled: Record<string, boolean>,
@@ -208,12 +215,24 @@ export function useRuleCheck({
         }
       }
 
+      if (runConsistency) {
+        if (
+          !(await confirmConsistencyCheckBeforeRun(
+            authUid,
+            authEmail,
+            resolvedCustomRules,
+          ))
+        ) {
+          return;
+        }
+      }
+
       if (
         !(await assertBetaDailyCheckOrAlert(authUid, {
           authEmail,
           checkTab: scope,
           onConsumed: onBetaQuotaConsumed,
-          skipConsumedAlert: runSpelling,
+          skipConsumedAlert: runSpelling || runConsistency,
         }))
       ) {
         return;
@@ -316,6 +335,12 @@ export function useRuleCheck({
       setCurrentPage(1);
       setIsProcessing(false);
       setProgress(null);
+      if (runSpelling) {
+        alertSpellingCheckAfterRun(scopeResults, findingCount);
+      }
+      if (runConsistency) {
+        alertConsistencyCheckAfterRun(scopeResults, findingCount);
+      }
       await afterCheckRef.current?.();
     },
     [
