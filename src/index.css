@@ -1684,6 +1684,7 @@ details[open] > summary .details-chevron {
   border-bottom: 1px solid var(--color-border);
 }
 
+.manuscript-page-label,
 .current-page-status strong {
   font-weight: 800;
   color: var(--accent-terracotta);
@@ -1745,6 +1746,10 @@ details[open] > summary .details-chevron {
 }
 
 .printed-page-setup__hint strong {
+  font-size: inherit;
+}
+
+.printed-page-setup__hint .manuscript-page-label {
   font-size: inherit;
 }
 
