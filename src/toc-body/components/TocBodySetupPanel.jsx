@@ -87,7 +87,10 @@ export default function TocBodySetupPanel({
       aria-labelledby="consistency-toc-heading"
     >
       <div className="consistency-toc-section__header">
-        <p id="consistency-toc-heading" className="printed-page-setup__title consistency-panel-section-title">
+        <p
+          id="consistency-toc-heading"
+          className="printed-page-setup__title consistency-panel-section-title panel-criteria-heading"
+        >
           목차 · 본문 일치 확인
         </p>
         <PanelSectionRunButton

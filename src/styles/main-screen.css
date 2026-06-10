@@ -1573,6 +1573,26 @@
   margin: 0;
 }
 
+/* 본용언+보조용언 — 편집자 검토 필요 기준과 동일 제목·항목 타이포 */
+.consistency-section-box .consistency-auxiliary-summary-title.panel-criteria-heading {
+  color: var(--accent-caution);
+}
+
+.consistency-section-box .auxiliary-chip {
+  font-size: 0.8rem;
+}
+
+.consistency-section-box .auxiliary-chip .find {
+  font-size: 0.85rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--color-text-secondary);
+}
+
+.consistency-section-box .auxiliary-chip:has(input:checked) .find {
+  color: var(--color-text-secondary);
+}
+
 .consistency-section-box .auxiliary-checklist-intro {
   margin: 4px 0 8px;
   padding: 0 10px;
@@ -1811,7 +1831,6 @@
   width: max-content;
   max-width: 100%;
   padding: 4px 2px 4px 0;
-  font-size: 0.85rem;
 }
 
 .consistency-section-box .auxiliary-chip > input[type='checkbox'] {
@@ -1820,17 +1839,11 @@
 
 .consistency-section-box .auxiliary-chip .find {
   grid-column: 3;
+  margin-right: 0;
 }
 
 .consistency-section-box .auxiliary-chip .bon-bojo-required-badge {
   grid-column: 4;
-}
-
-.consistency-section-box .auxiliary-chip .find {
-  margin-right: 0;
-  font-weight: 700;
-  line-height: 1.2;
-  color: #7f1d1d;
 }
 
 .consistency-section-box .auxiliary-chip .bon-bojo-required-badge {

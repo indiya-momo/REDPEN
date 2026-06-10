@@ -58,7 +58,7 @@ export default function CautionChecklist({
 
   return (
     <details className="caution-checklist-details">
-      <summary className="caution-checklist-summary">
+      <summary className="caution-checklist-summary panel-criteria-heading">
         <DetailsChevron />
         <label
           className="caution-checklist-select-all"
@@ -70,11 +70,11 @@ export default function CautionChecklist({
             type="checkbox"
             checked={allChecked}
             onChange={() => onCautionSetAll(!allChecked)}
-            aria-label="편집자 검토 기준 전체 선택"
+            aria-label="편집자 검토 필요 기준 전체 선택"
           />
         </label>
         <span className="caution-checklist-summary-title">
-          편집자 검토 기준(선택 {activeCount}/{total})
+          편집자 검토 필요 기준(선택 {activeCount}/{total})
           <span className="criteria-summary-note">*계속 추가됩니다</span>
         </span>
       </summary>

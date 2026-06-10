@@ -498,10 +498,15 @@ button {
   background: var(--panel-accordion-bg-open);
 }
 
+/* 좌측 패널 기준 블록 제목 — 편집자 검토 필요 기준과 동일 층위 */
+.panel-criteria-heading {
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
 .caution-checklist-summary {
   gap: 8px;
-  font-size: 1.05rem; /* 일관성 .field-label 과 동일 */
-  font-weight: 600;
   color: var(--accent-caution);
   cursor: pointer;
   list-style: none;
@@ -1671,7 +1676,7 @@ details[open] > summary .details-chevron {
 
 .current-page-status {
   padding: calc(var(--space-md) * 0.5) var(--space-xl);
-  font-size: 1.17rem;
+  font-size: 0.98rem;
   line-height: 1.45;
   font-weight: 700;
   color: var(--color-text-secondary);
@@ -1716,10 +1721,16 @@ details[open] > summary .details-chevron {
 
 .printed-page-setup__title {
   margin: 0 0 calc(var(--space-md-tight) * var(--pps-scale));
-  font-size: calc(1.05rem * var(--pps-scale));
+  font-size: 0.98rem;
+  font-weight: 700;
+  line-height: 1.45;
+  color: var(--color-text-secondary);
+}
+
+.printed-page-setup__title.panel-criteria-heading {
+  font-size: 1.05rem;
   font-weight: 600;
   line-height: 1.35;
-  color: var(--color-text-secondary);
 }
 
 .printed-page-setup__body {
@@ -1728,7 +1739,7 @@ details[open] > summary .details-chevron {
 
 .printed-page-setup__hint {
   margin: 0 0 calc(var(--space-sm-tight) * var(--pps-scale));
-  font-size: calc(0.85rem * var(--pps-scale));
+  font-size: 0.85rem;
   line-height: 1.35;
   color: var(--color-text-faint);
 }
@@ -2723,6 +2734,33 @@ details[open] > summary .details-chevron {
   align-items: center;
   gap: calc(6px * var(--pdf-jump-scale));
   min-width: 0;
+}
+
+/* 상태 문구는 왼쪽 1fr 공백 가운데, 이전·쪽 입력은 오른쪽 끝 */
+.pdf-preview-bar__jump-wing--before:has(.current-page-status--in-preview-bar) {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+}
+
+.pdf-preview-bar__jump-wing--before .current-page-status--in-preview-bar {
+  grid-column: 1;
+  justify-self: center;
+  align-self: center;
+  min-width: 0;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  font-size: 0.98rem;
+  font-weight: 700;
+  line-height: 1.45;
+  color: var(--color-text-secondary);
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .pdf-preview-bar__jump-row > .pdf-preview-bar__slash {

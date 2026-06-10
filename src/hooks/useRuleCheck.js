@@ -31,6 +31,7 @@ import {
 } from '../lib/consistencyCheckScopes.js';
 import { ensureDefaultAuxiliaryVerbs } from '../lib/defaultAuxiliaryVerbs.js';
 import { assertBetaDailyCheckOrAlert } from '../lib/betaDailyQuota.js';
+import { confirmSpellingCheckBeforeRun } from '../lib/spellingCheckConfirm.js';
 
 /** @param {{
  *   builtInEnabled: Record<string, boolean>,
@@ -196,11 +197,23 @@ export function useRuleCheck({
         return;
       }
 
+      if (runSpelling) {
+        if (
+          !(await confirmSpellingCheckBeforeRun(authUid, authEmail, {
+            builtInEnabled,
+            cautionEnabled,
+          }))
+        ) {
+          return;
+        }
+      }
+
       if (
         !(await assertBetaDailyCheckOrAlert(authUid, {
           authEmail,
           checkTab: scope,
           onConsumed: onBetaQuotaConsumed,
+          skipConsumedAlert: runSpelling,
         }))
       ) {
         return;

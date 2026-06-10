@@ -65,7 +65,9 @@ export default function PrintedPageSetup({
 
   return (
     <section className="printed-page-setup" aria-label="파일 - 원고 페이지 맞추기">
-      <p className="printed-page-setup__title">파일 - 원고 페이지 맞추기</p>
+      <p className="printed-page-setup__title panel-criteria-heading">
+        파일 - 원고 페이지 맞추기
+      </p>
 
       <div className="printed-page-setup__body">
         <p className="printed-page-setup__hint">
@@ -76,10 +78,8 @@ export default function PrintedPageSetup({
             </>
           ) : (
             <>
-              현재 파일은 <strong>{filePageLabel}</strong>입니다 화면에서 실제
-              페이지를 확인하고
-              <br />
-              보이는 페이지(예: <strong>50-51</strong>)를 입력한 뒤{' '}
+              현재 파일은 <strong>{filePageLabel}</strong>입니다 화면에서 원고의
+              실제 페이지 (예: <strong>50-51</strong>)를 입력한 뒤{' '}
               <strong>보정</strong>을 누르세요.
             </>
           )}
