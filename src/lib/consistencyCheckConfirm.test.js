@@ -32,14 +32,33 @@ afterEach(() => {
 });
 
 describe('countConsistencyCheckActiveRules', () => {
-  it('일관성 찾기·본용언 항목을 각각 센다', () => {
+  it('UI에 보이는 등록 항목(켜진 것)만 센다', () => {
     expect(
       countConsistencyCheckActiveRules([
-        { enabled: true, patternKind: 'compound-find' },
-        { enabled: false, patternKind: 'compound-find' },
-        { enabled: true, patternKind: 'auxiliary-verb' },
+        { enabled: true, patternKind: 'compound-find', tailWord: '조선시대' },
+        { enabled: true, patternKind: 'compound-find', tailWord: '조선시대' },
+        { enabled: false, patternKind: 'compound-find', tailWord: '고려시대' },
+        { enabled: true, patternKind: 'phrase-slot-find', tailWord: '@시대' },
+        {
+          enabled: true,
+          patternKind: 'auxiliary-verb',
+          bonBojoItemId: 'verb-oda',
+          tailWord: '오다',
+        },
+        {
+          enabled: true,
+          patternKind: 'auxiliary-verb',
+          bonBojoItemId: 'verb-oda',
+          tailWord: '오다',
+        },
+        {
+          enabled: true,
+          patternKind: 'auxiliary-verb',
+          bonBojoItemId: 'verb-gada',
+          tailWord: '가다',
+        },
       ]),
-    ).toEqual({ literalActive: 1, auxiliaryActive: 1 });
+    ).toEqual({ literalActive: 2, auxiliaryActive: 2 });
   });
 });
 
@@ -49,9 +68,19 @@ describe('confirmConsistencyCheckBeforeRun', () => {
     vi.stubGlobal('confirm', confirmMock);
 
     await confirmConsistencyCheckBeforeRun('uid-1', 'a@b.c', [
-      { enabled: true, patternKind: 'phrase-slot-find' },
-      { enabled: true, patternKind: 'auxiliary-verb' },
-      { enabled: true, patternKind: 'auxiliary-verb' },
+      { enabled: true, patternKind: 'phrase-slot-find', tailWord: '@시대' },
+      {
+        enabled: true,
+        patternKind: 'auxiliary-verb',
+        bonBojoItemId: 'verb-oda',
+        tailWord: '오다',
+      },
+      {
+        enabled: true,
+        patternKind: 'auxiliary-verb',
+        bonBojoItemId: 'verb-oda',
+        tailWord: '오다',
+      },
     ]);
 
     expect(confirmMock).toHaveBeenCalledWith(
@@ -59,7 +88,7 @@ describe('confirmConsistencyCheckBeforeRun', () => {
         remaining: 1,
         tabLimit: 2,
         literalActive: 1,
-        auxiliaryActive: 2,
+        auxiliaryActive: 1,
       }),
     );
   });

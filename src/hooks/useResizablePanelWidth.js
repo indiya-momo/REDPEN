@@ -1,4 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  clearLegacyPanelLeftWidthLocalStorage,
+  persistSessionPanelLeftWidth,
+  readSessionPanelLeftWidth,
+} from '../lib/panelLeftWidthSession.js';
 
 const RESIZE_HANDLE_WIDTH = 8;
 
@@ -11,32 +16,6 @@ const RIGHT_MIN = 360;
 const DEFAULT_WIDTH = PANEL_LEFT_DEFAULT_WIDTH;
 const MIN_WIDTH = PANEL_LEFT_MIN_WIDTH;
 const MAX_WIDTH = PANEL_LEFT_MAX_WIDTH;
-const STORAGE_KEY = 'pdf-proofread-panel-left-width-v1';
-
-/**
- * 작업 화면에서 저장된 왼쪽 패널 선호 폭 (없으면 null → 기본 680px).
- */
-export function readStoredPanelLeftWidth() {
-  try {
-    const n = Number(localStorage.getItem(STORAGE_KEY));
-    if (Number.isFinite(n) && n >= MIN_WIDTH && n <= MAX_WIDTH) return n;
-  } catch {
-    /* ignore */
-  }
-  return null;
-}
-
-/**
- * @param {number} width
- */
-export function persistPanelLeftWidthPreference(width) {
-  const clamped = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, width));
-  try {
-    localStorage.setItem(STORAGE_KEY, String(clamped));
-  } catch {
-    /* ignore */
-  }
-}
 
 /**
  * @param {number} preferred
@@ -50,9 +29,17 @@ export function clampPanelLeftWidth(preferred, viewportWidth = window.innerWidth
   return Math.min(max, Math.max(MIN_WIDTH, preferred));
 }
 
-export function useResizablePanelWidth() {
+/**
+ * 로그인 uid 기준 sessionStorage — F5·대문 왕복 유지, 로그아웃 시 초기화.
+ * @param {string} [authUid]
+ */
+export function useResizablePanelWidth(authUid = '') {
+  const uid = String(authUid ?? '').trim();
+  const uidRef = useRef(uid);
+  uidRef.current = uid;
+
   const [preferredWidth, setPreferredWidth] = useState(
-    () => readStoredPanelLeftWidth() ?? DEFAULT_WIDTH,
+    () => readSessionPanelLeftWidth(uid) ?? DEFAULT_WIDTH,
   );
   const [viewportWidth, setViewportWidth] = useState(
     () => (typeof window !== 'undefined' ? window.innerWidth : 1280),
@@ -72,6 +59,14 @@ export function useResizablePanelWidth() {
   widthRef.current = width;
   preferredWidthRef.current = preferredWidth;
 
+  useEffect(() => {
+    clearLegacyPanelLeftWidthLocalStorage();
+  }, []);
+
+  useEffect(() => {
+    setPreferredWidth(readSessionPanelLeftWidth(uid) ?? DEFAULT_WIDTH);
+  }, [uid]);
+
   const onPointerMove = useCallback((e) => {
     if (!dragging.current) return;
     const delta = e.clientX - startX.current;
@@ -83,7 +78,10 @@ export function useResizablePanelWidth() {
   const endDrag = useCallback(() => {
     if (!dragging.current) return;
     dragging.current = false;
-    persistPanelLeftWidthPreference(preferredWidthRef.current);
+    persistSessionPanelLeftWidth(
+      uidRef.current,
+      preferredWidthRef.current,
+    );
     const handle = handleRef.current;
     if (handle && activePointerId.current != null) {
       try {

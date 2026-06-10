@@ -156,6 +156,10 @@
 
 .consistency-section-box[data-work-guide-step='auxiliary-box'] {
   position: relative;
+  padding: 0;
+  border: none;
+  background: transparent;
+  border-radius: 0;
 }
 
 .consistency-section-box[data-work-guide-step='auxiliary-box'] > .tooltip-guide-anchor {
@@ -853,6 +857,8 @@
   position: relative;
   z-index: 10020;
   isolation: isolate;
+  /* 아래 consistency-rules-scroll 스크롤바 폭만큼 내용이 좁아지므로 버튼 끝선 맞춤 */
+  padding-right: calc(var(--spelling-block-inset-x) + var(--custom-scrollbar-size, 6px));
 }
 
 .consistency-section-head,
@@ -1111,12 +1117,13 @@
 }
 
 .custom-scrollbar {
+  --custom-scrollbar-size: 6px;
   scrollbar-width: thin;
   scrollbar-color: var(--color-scrollbar-thumb) transparent;
 }
 
 .custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
+  width: var(--custom-scrollbar-size);
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
@@ -1203,9 +1210,10 @@
 .panel-left .consistency-embed {
   --pps-scale: 1.2;
   --consistency-embed-gap: calc(12px * 0.8 * 2);
+  --consistency-box-padding-y: calc(14px * 0.8);
   flex: 1 1 0;
   min-height: 0;
-  padding: 16px 20px 24px;
+  padding: 12px var(--spelling-block-inset-x) 24px;
   display: flex;
   flex-direction: column;
   gap: var(--consistency-embed-gap);
@@ -1241,14 +1249,15 @@
 }
 
 .consistency-section-box:not(.consistency-toc-section) {
-  padding: calc(14px * 0.8) calc(16px * 0.8);
+  padding-block: var(--consistency-box-padding-y);
+  padding-inline: 0;
 }
 
 .consistency-toc-section {
   --pps-scale: 1.2;
   flex: 0 0 auto;
   min-height: 70px;
-  padding: 10px 16px 12px;
+  padding: 10px 0 12px;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -1525,73 +1534,41 @@
   margin-top: 2px;
 }
 
-.consistency-section-box .consistency-auxiliary-details {
-  --consistency-aux-chevron-col: calc(0.42em + 5px);
-  --consistency-aux-header-gap: calc(8px * 0.8);
+/* 본용언+보조용언 — 맞춤법 탭 편집자 검토 필요 기준과 동일 박스·헤더 */
+.consistency-section-box[data-work-guide-step='auxiliary-box'] .caution-checklist-details {
   width: 100%;
+  max-width: 100%;
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  border-radius: var(--radius-ui-sm);
+  overflow: hidden;
+  border: 1px solid var(--panel-caution-border);
+  background: var(--panel-caution-surface);
+  border-bottom: none;
 }
 
-.consistency-section-box .consistency-auxiliary-summary.consistency-section-head {
-  display: grid;
-  grid-template-columns: var(--consistency-aux-chevron-col) 15px 1fr;
-  column-gap: var(--consistency-aux-header-gap);
-  align-items: center;
-  list-style: none;
-  cursor: pointer;
-  user-select: none;
-  margin: 0 0 2px;
-  gap: 0;
-  padding: 8px 10px 8px 0;
-  border-radius: 0;
-  background: transparent;
-}
-
-.consistency-section-box .consistency-auxiliary-summary .details-chevron {
-  grid-column: 1;
-  margin-right: 0;
-  justify-self: start;
-}
-
-.consistency-section-box .consistency-auxiliary-summary .caution-checklist-select-all {
-  grid-column: 2;
-  justify-self: start;
-  min-width: 15px;
-}
-
-.consistency-section-box .consistency-auxiliary-summary::-webkit-details-marker {
-  display: none;
-}
-
-.consistency-section-box .consistency-auxiliary-summary-title {
-  grid-column: 3;
-  min-width: 0;
+.consistency-section-box[data-work-guide-step='auxiliary-box'] .caution-checklist-summary {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   margin: 0;
+  border-radius: 0;
 }
 
-/* 본용언+보조용언 — 편집자 검토 필요 기준과 동일 제목·항목 타이포 */
-.consistency-section-box .consistency-auxiliary-summary-title.panel-criteria-heading {
-  color: var(--accent-caution);
+.consistency-section-box[data-work-guide-step='auxiliary-box']
+  .caution-checklist-details:not([open])
+  > .caution-checklist-summary {
+  background: var(--panel-caution-surface);
 }
 
-.consistency-section-box .auxiliary-chip {
-  font-size: 0.8rem;
+.consistency-section-box[data-work-guide-step='auxiliary-box']
+  .caution-checklist-details[open]
+  > .caution-checklist-summary {
+  background: var(--panel-accordion-bg-open);
 }
 
-.consistency-section-box .auxiliary-chip .find {
-  font-size: 0.85rem;
-  font-weight: 700;
-  line-height: 1.2;
-  color: var(--color-text-secondary);
-}
-
-.consistency-section-box .auxiliary-chip:has(input:checked) .find {
-  color: var(--color-text-secondary);
-}
-
-.consistency-section-box .auxiliary-checklist-intro {
+.consistency-section-box[data-work-guide-step='auxiliary-box'] .auxiliary-checklist-intro {
   margin: 4px 0 8px;
   padding: 0 10px;
   font-size: 0.8125rem;
@@ -1599,32 +1576,44 @@
   color: var(--color-text-muted);
 }
 
-.consistency-section-box .consistency-auxiliary-details[open] .auxiliary-checklist {
-  margin-top: 8px;
-  padding-top: 4px;
-  padding-left: 0;
+.consistency-section-box[data-work-guide-step='auxiliary-box']
+  .caution-checklist-details[open]
+  .auxiliary-checklist {
+  margin-top: 0;
+  padding: 0 10px 10px;
   box-sizing: border-box;
 }
 
-.consistency-section-box .consistency-section-head.bon-bojo-checklist-header {
-  margin: 0 0 2px;
-  gap: calc(8px * 0.8);
-  border-bottom: none;
+.consistency-section-box[data-work-guide-step='auxiliary-box'] .auxiliary-chip {
+  font-size: 0.8rem;
 }
 
-.consistency-section-box .auxiliary-checklist {
+.consistency-section-box[data-work-guide-step='auxiliary-box'] .auxiliary-chip .find {
+  font-size: 0.85rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--color-text-secondary);
+}
+
+.consistency-section-box[data-work-guide-step='auxiliary-box']
+  .auxiliary-chip:has(input:checked)
+  .find {
+  color: var(--color-text-secondary);
+}
+
+.consistency-section-box[data-work-guide-step='auxiliary-box'] .auxiliary-checklist {
   gap: 6px;
   margin-top: 0;
   padding-top: 0;
 }
 
-.consistency-section-box .auxiliary-checklist .tail-list--grid {
+.consistency-section-box[data-work-guide-step='auxiliary-box'] .auxiliary-checklist .tail-list--grid {
   margin-top: 0;
   padding-top: 0;
   border-top: none;
 }
 
-.consistency-section-box .tail-list--grid-required {
+.consistency-section-box[data-work-guide-step='auxiliary-box'] .tail-list--grid-required {
   margin-top: 0;
   padding-top: 0;
   border-top: none;
@@ -1735,10 +1724,20 @@
 }
 
 .consistency-unified-box {
-  padding: 14px 16px;
+  padding: 14px 0;
   border: none;
   border-radius: var(--radius-ui);
   background: var(--color-surface-raised);
+}
+
+/* 일관성 찾기·검색창 — 다시 검수 행·아래 섹션 박스와 동일 좌우 폭 */
+.consistency-unified-box .consistency-subsection--first > .tail-form,
+.consistency-unified-box
+  .consistency-subsection-row
+  > .consistency-subsection--half
+  > .tail-form {
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .consistency-subsection {
@@ -1819,36 +1818,9 @@
   letter-spacing: 0.02em;
 }
 
-.consistency-section-box .auxiliary-chip {
-  grid-template-columns: var(--consistency-aux-chevron-col) var(
-      --auxiliary-chip-checkbox,
-      15px
-    )
-    auto auto;
-  column-gap: var(--consistency-aux-header-gap);
+.consistency-section-box[data-work-guide-step='auxiliary-box'] .auxiliary-chip {
   width: max-content;
   max-width: 100%;
-  padding: 4px 2px 4px 0;
-}
-
-.consistency-section-box .auxiliary-chip > input[type='checkbox'] {
-  grid-column: 2;
-}
-
-.consistency-section-box .auxiliary-chip .find {
-  grid-column: 3;
-  margin-right: 0;
-}
-
-.consistency-section-box .auxiliary-chip .bon-bojo-required-badge {
-  grid-column: 4;
-}
-
-.consistency-section-box .auxiliary-chip .bon-bojo-required-badge {
-  margin-left: 0;
-  justify-self: start;
-  font-size: 0.65rem;
-  font-weight: 800;
 }
 
 .consistency-section-box .rule-form--boxed {

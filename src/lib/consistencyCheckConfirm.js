@@ -1,7 +1,16 @@
 import {
-  consistencyGroupScope,
-  filterCustomRulesByConsistencyScope,
-} from './consistencyCheckScopes.js';
+  isAuxiliaryVerbEntryEnabled,
+  listAuxiliaryVerbEntries,
+} from './auxiliaryVerbRegister.js';
+import {
+  isConsistencyEntryEnabled,
+  listConsistencyEntries,
+} from './compoundPairRegister.js';
+import { consistencyGroupScope } from './consistencyCheckScopes.js';
+import {
+  isPhraseSlotEntryEnabled,
+  listPhraseSlotEntries,
+} from './phraseSlotRegister.js';
 import { assertLoggedInForCheckOrAlert } from './checkAuthGate.js';
 import {
   betaQuotaAlertForTab,
@@ -15,16 +24,19 @@ import {
  * @param {import('./ruleTypes.js').Rule[]} [customRules]
  */
 export function countConsistencyCheckActiveRules(customRules = []) {
-  return {
-    literalActive: filterCustomRulesByConsistencyScope(
-      customRules,
-      'literal-slot',
-    ).length,
-    auxiliaryActive: filterCustomRulesByConsistencyScope(
-      customRules,
-      'auxiliary',
-    ).length,
-  };
+  const literalActive =
+    listConsistencyEntries(customRules).filter((entry) =>
+      isConsistencyEntryEnabled(customRules, entry.tailWord),
+    ).length +
+    listPhraseSlotEntries(customRules).filter((entry) =>
+      isPhraseSlotEntryEnabled(customRules, entry.tailWord),
+    ).length;
+
+  const auxiliaryActive = listAuxiliaryVerbEntries(customRules).filter(
+    (entry) => isAuxiliaryVerbEntryEnabled(customRules, entry),
+  ).length;
+
+  return { literalActive, auxiliaryActive };
 }
 
 /**
