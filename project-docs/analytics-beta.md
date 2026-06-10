@@ -68,11 +68,27 @@ npx -y @posthog/wizard@latest --region eu
 
 ---
 
-## PostHog 대시보드 (처음에 만들 것)
+## PostHog 대시보드 (자동 생성)
 
-1. **퍼널:** `session_start` → `pdf_opened` → `check_run`  
-2. **이탈:** `pdf_opened` 있는데 `check_run` 없음  
-3. **탭:** `check_run` by `scope` (spelling / consistency)
+한 번만 실행하면 **코호트(내부 제외) + 인사이트 4개 + 대시보드**가 만들어집니다.
+
+1. [PostHog](https://us.posthog.com) → **Settings → Personal API keys** → `phx_…` 발급 (`cohort:write`, `insight:write`)
+2. 브라우저 주소 `https://us.posthog.com/project/12345/…` 의 **숫자** = project id
+3. PowerShell:
+
+```powershell
+$env:POSTHOG_PERSONAL_API_KEY="phx_여기"
+$env:POSTHOG_HOST="https://us.posthog.com"
+$env:POSTHOG_PROJECT_ID="12345"
+npm run posthog:setup-beta
+```
+
+`project:read` 권한이 없으면 **2번 PROJECT_ID는 필수**입니다.
+
+생성물: 대시보드 **「인디야 오픈베타」** — 방문 / 로그인 전환 / 로그인 후 검수 / `check_run` identify 연결.  
+필터: Person **`is_internal` is not true** (내부 테스트 계정 제외).
+
+**6/9 이후** 로그인·검수 지표만 제품 판단에 쓰세요. 그 이전은 identify 미연결로 참고만.
 
 ---
 

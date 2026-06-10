@@ -12,30 +12,6 @@ import { auxiliaryVerbResultParts } from '../lib/patternDisplayLabels.js';
 
 /**
  * @param {{
- *   visibleOnCurrentPage: number,
- * }} props
- */
-function CurrentPageFindingText({ visibleOnCurrentPage }) {
-  if (visibleOnCurrentPage <= 0) {
-    return <>에는 발견한 기준이 없습니다</>;
-  }
-  return (
-    <>
-      에는 발견한{' '}
-      <span className="current-page-status__criterion-hit">
-        기준{' '}
-        <span className="current-page-status__criterion-hit-num">
-          {visibleOnCurrentPage}
-        </span>
-        개
-      </span>
-      가 있습니다
-    </>
-  );
-}
-
-/**
- * @param {{
  *   viewSource: 'spelling' | 'consistency',
  *   spellingCheckDone: boolean,
  *   spellingFindings: number,
@@ -170,22 +146,6 @@ export default function CheckResultsPanel({
           onCalibrateFromInput={onCalibrateFromInput}
           onClear={onClearPrintedPageOffset ?? (() => {})}
         />
-      )}
-      {pdf && (
-        <p
-          className={`current-page-status ${
-            visibleOnCurrentPage > 0 ? 'current-page-status--has-findings' : ''
-          } current-page-status--tone-${spellingTone}`}
-        >
-          현재 <strong>{pageLabel(currentPage)}</strong>
-          {printedPagesActive && printedPageOffset != null ? (
-            <span className="current-page-status__system">
-              {' '}
-              (파일 {formatSystemPageLabel(currentPage)})
-            </span>
-          ) : null}
-          <CurrentPageFindingText visibleOnCurrentPage={visibleOnCurrentPage} />
-        </p>
       )}
       {entries.length > 0 ? (
         <>

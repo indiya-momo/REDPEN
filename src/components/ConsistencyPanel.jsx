@@ -281,7 +281,7 @@ export default function ConsistencyPanel({
         </div>
       ) : null}
       <section className="consistency-unified-box" aria-label="표기 일관성 찾기">
-        <p className="printed-page-setup__title consistency-panel-section-title">
+        <p className="printed-page-setup__title consistency-panel-section-title panel-criteria-heading">
           일관성 찾기(1회 검수 8개 이내 추천)⭐
         </p>
         <div className="consistency-subsection consistency-subsection--first">
@@ -323,7 +323,7 @@ export default function ConsistencyPanel({
 
         <div className="consistency-subsection-row">
           <div className="consistency-subsection consistency-subsection--half">
-            <p className="printed-page-setup__title consistency-subsection-title">
+            <p className="printed-page-setup__title consistency-subsection-title panel-criteria-heading">
               공통 문자열 찾기(1개)
             </p>
             <div className="consistency-subsection__hints-area">
@@ -411,7 +411,7 @@ export default function ConsistencyPanel({
                 aria-label="본용언+보조용언 표기 전체 선택"
               />
             </label>
-            <span className="printed-page-setup__title bon-bojo-checklist-title consistency-panel-section-title consistency-auxiliary-summary-title">
+            <span className="printed-page-setup__title bon-bojo-checklist-title consistency-panel-section-title consistency-auxiliary-summary-title panel-criteria-heading">
               본용언 + 보조용언 표기
               {auxiliaryTotal > 0
                 ? ` (선택 ${auxiliaryActiveCount}/${auxiliaryTotal})`
@@ -496,7 +496,7 @@ export default function ConsistencyPanel({
         >
           <p
             id="consistency-toc-heading"
-            className="printed-page-setup__title consistency-panel-section-title"
+            className="printed-page-setup__title consistency-panel-section-title panel-criteria-heading"
           >
             목차 · 본문 일치 확인 🚧
           </p>

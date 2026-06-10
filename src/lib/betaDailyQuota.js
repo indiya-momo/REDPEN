@@ -733,7 +733,12 @@ export async function consumeBetaDailyQuota(uid, email = '', tab = 'spelling') {
 
 /**
  * @param {string} uid
- * @param {{ onConsumed?: () => void, authEmail?: string, checkTab?: BetaQuotaTab }} [options]
+ * @param {{
+ *   onConsumed?: () => void,
+ *   authEmail?: string,
+ *   checkTab?: BetaQuotaTab,
+ *   skipConsumedAlert?: boolean,
+ * }} [options]
  */
 export async function assertBetaDailyCheckOrAlert(uid, options = {}) {
   if (!assertLoggedInForCheckOrAlert(uid)) {
@@ -750,6 +755,7 @@ export async function assertBetaDailyCheckOrAlert(uid, options = {}) {
     return false;
   }
   if (
+    !options.skipConsumedAlert &&
     typeof result.tabCount === 'number' &&
     typeof result.tabLimit === 'number'
   ) {

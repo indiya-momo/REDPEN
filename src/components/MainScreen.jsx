@@ -605,6 +605,45 @@ export default function MainScreen({
     [workTab, ruleCheck.spellingCheckDone, consistencyWorkDone],
   );
 
+  const pdfPageStatus = useMemo(() => {
+    if (!pdf.pdf || !tabCheckDone) return null;
+    const isToc =
+      tocBodyCheckEnabled &&
+      workTab === 'consistency' &&
+      consistencyFocus === 'toc' &&
+      tocCheck.checkDone;
+    const tone =
+      workTab === 'consistency'
+        ? isToc
+          ? 'consistency'
+          : ruleCheck.activeGroup?.category === 'caution'
+            ? 'caution'
+            : 'builtin'
+        : ruleCheck.activeGroup?.category === 'caution'
+          ? 'caution'
+          : 'builtin';
+    return {
+      currentPage: pdf.currentPage,
+      visibleOnCurrentPage,
+      formatPageLabel: pageDisplay.formatLabel,
+      tone,
+      mode: isToc ? 'toc' : 'criteria',
+      printedPagesActive: pageDisplay.active,
+    };
+  }, [
+    pdf.pdf,
+    pdf.currentPage,
+    tabCheckDone,
+    visibleOnCurrentPage,
+    pageDisplay.formatLabel,
+    pageDisplay.active,
+    tocBodyCheckEnabled,
+    workTab,
+    consistencyFocus,
+    tocCheck.checkDone,
+    ruleCheck.activeGroup?.category,
+  ]);
+
   const workGuide = useWorkGuideChain(authUid, {
     hasPdf: Boolean(pdf.pdf),
     pageTextsReady: pdf.pageTexts.length > 0,
@@ -1614,6 +1653,7 @@ export default function MainScreen({
                 printedPagesActive={pageDisplay.active}
                 formatPageText={pageDisplay.formatPageText}
                 toSystemPageFromInput={pageDisplay.toSystemPageFromInput}
+                pageStatus={pdfPageStatus}
               />
             </>
           )}

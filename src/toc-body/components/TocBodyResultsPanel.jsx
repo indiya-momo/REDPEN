@@ -71,26 +71,6 @@ export default function TocBodyResultsPanel({
           onClear={onClearPrintedPageOffset ?? (() => {})}
         />
       ) : null}
-      {pdf ? (
-        <p
-          className={`current-page-status ${
-            visibleOnCurrentPage > 0 ? 'current-page-status--has-findings' : ''
-          }`}
-        >
-          현재 <strong>{pageLabel(currentPage)}</strong>
-          {visibleOnCurrentPage <= 0 ? (
-            <>에는 목차 항목이 없습니다</>
-          ) : (
-            <>
-              에 목차 항목{' '}
-              <span className="current-page-status__criterion-hit-num">
-                {visibleOnCurrentPage}
-              </span>
-              건
-            </>
-          )}
-        </p>
-      ) : null}
       {entries.length > 0 ? (
         <>
           <div className="results-header">

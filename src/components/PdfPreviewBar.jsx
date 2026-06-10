@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import CurrentPageStatus from './CurrentPageStatus.jsx';
 import PdfThumbnailStrip from './PdfThumbnailStrip.jsx';
 
 /**
@@ -14,6 +15,14 @@ import PdfThumbnailStrip from './PdfThumbnailStrip.jsx';
  *   printedPagesActive?: boolean,
  *   formatPageText?: (systemPage: number) => string,
  *   toSystemPageFromInput?: (raw: string) => number | null,
+ *   pageStatus?: {
+ *     currentPage: number,
+ *     visibleOnCurrentPage: number,
+ *     formatPageLabel?: (systemPage: number) => string,
+ *     tone?: 'builtin' | 'caution' | 'consistency',
+ *     mode?: 'criteria' | 'toc',
+ *     printedPagesActive?: boolean,
+ *   } | null,
  * }} props
  */
 export default function PdfPreviewBar({
@@ -28,7 +37,9 @@ export default function PdfPreviewBar({
   printedPagesActive = false,
   formatPageText = (n) => String(n),
   toSystemPageFromInput = () => null,
+  pageStatus = null,
 }) {
+  const jumpInputFocusedRef = useRef(false);
   const displayCurrent = formatPageText(currentPage);
   const displayTotal = formatPageText(numPages);
   const [value, setValue] = useState(displayCurrent);
@@ -70,6 +81,12 @@ export default function PdfPreviewBar({
       <div className="pdf-preview-bar__pager">
         <div className="pdf-preview-bar__jump-row">
           <div className="pdf-preview-bar__jump-wing pdf-preview-bar__jump-wing--before">
+            {pageStatus ? (
+              <CurrentPageStatus
+                {...pageStatus}
+                className="current-page-status--in-preview-bar"
+              />
+            ) : null}
             <button
               type="button"
               className="pdf-preview-bar__nav pdf-preview-bar__nav--prev"
