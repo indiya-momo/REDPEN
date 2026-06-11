@@ -1,4 +1,5 @@
 import ResultPageSummary from '../../components/ResultPageSummary.jsx';
+import GroupVisibilityCheckbox from '../../components/GroupVisibilityCheckbox.jsx';
 import PrintedPageSetup from '../../components/PrintedPageSetup.jsx';
 import { TOC_STATUS_LABELS } from '../lib/tocBodyCheck.js';
 import { countTocBodyTabFindings } from '../utils/toc-body-result-entries.js';
@@ -10,7 +11,12 @@ import { countTocBodyTabFindings } from '../utils/toc-body-result-entries.js';
  *   pdf: object | null,
  *   visibleOnCurrentPage: number,
  *   isGroupVisible: (group: import('../lib/tocBodyCheck.js').TocBodyGroup) => boolean,
+ *   groupVisibilityMode?: (group: import('../lib/tocBodyCheck.js').TocBodyGroup) => 'visible' | 'partial' | 'hidden',
+ *   visibleInstanceCount?: (group: import('../lib/tocBodyCheck.js').TocBodyGroup) => number,
+ *   isInstanceVisible?: (group: import('../lib/tocBodyCheck.js').TocBodyGroup, inst: import('../lib/ruleEngine.js').MatchInstance) => boolean,
  *   onToggleVisibility: (group: import('../lib/tocBodyCheck.js').TocBodyGroup) => void,
+ *   onToggleInstanceVisibility?: (group: import('../lib/tocBodyCheck.js').TocBodyGroup, inst: import('../lib/ruleEngine.js').MatchInstance) => void,
+ *   onSelectInstance?: (inst: import('../lib/ruleEngine.js').MatchInstance) => void,
  *   isSameGroupAsSelected: (group: import('../lib/tocBodyCheck.js').TocBodyGroup) => boolean,
  *   onSelectGroup: (group: import('../lib/tocBodyCheck.js').TocBodyGroup) => void,
  *   onSelectPageInGroup: (pageNum: number, instances: import('../lib/ruleEngine.js').MatchInstance[]) => void,
@@ -33,7 +39,12 @@ export default function TocBodyResultsPanel({
   pdf,
   visibleOnCurrentPage,
   isGroupVisible,
+  groupVisibilityMode,
+  visibleInstanceCount,
+  isInstanceVisible,
   onToggleVisibility,
+  onToggleInstanceVisibility,
+  onSelectInstance,
   isSameGroupAsSelected,
   onSelectGroup,
   onSelectPageInGroup,
@@ -100,6 +111,15 @@ export default function TocBodyResultsPanel({
                 (i) => i.pageNum === currentPage,
               );
               const visible = isGroupVisible(group);
+              const count = group.instances.length;
+              const visMode = groupVisibilityMode
+                ? groupVisibilityMode(group)
+                : visible
+                  ? 'visible'
+                  : 'hidden';
+              const shownCount = visibleInstanceCount
+                ? visibleInstanceCount(group)
+                : count;
               const selected = isSameGroupAsSelected(group);
 
               return (
@@ -143,16 +163,21 @@ export default function TocBodyResultsPanel({
                           onClick={(e) => e.stopPropagation()}
                           onKeyDown={(e) => e.stopPropagation()}
                         >
-                          <input
-                            type="checkbox"
-                            checked={visible}
-                            aria-label={`${group.label} PDF 표시`}
-                            onChange={() => onToggleVisibility(group)}
+                          <GroupVisibilityCheckbox
+                            mode={visMode}
+                            label={group.label}
+                            onToggle={() => onToggleVisibility(group)}
                           />
                           <span className="result-visibility-label">표시</span>
                         </label>
                         <span className="result-count result-count--toc">
-                          {tocStatus === 'missing' ? '본문 없음' : '1곳'}
+                          {tocStatus === 'missing'
+                            ? '본문 없음'
+                            : shownCount < count
+                              ? `표시 ${shownCount} / ${count}`
+                              : count > 1
+                                ? `${count}곳`
+                                : '1곳'}
                         </span>
                       </div>
                     </div>
@@ -186,6 +211,17 @@ export default function TocBodyResultsPanel({
                           formatPageLabel={pageLabel}
                           onSelectPage={(pageNum) =>
                             onSelectPageInGroup(pageNum, group.instances)
+                          }
+                          onSelectInstance={onSelectInstance}
+                          isInstanceVisible={
+                            isInstanceVisible
+                              ? (inst) => isInstanceVisible(group, inst)
+                              : undefined
+                          }
+                          onToggleInstanceVisibility={
+                            onToggleInstanceVisibility
+                              ? (inst) => onToggleInstanceVisibility(group, inst)
+                              : undefined
                           }
                         />
                       </>

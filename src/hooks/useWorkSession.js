@@ -2,6 +2,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { SPELLING_RULES_FP } from '../lib/builtInRules.js';
 import { CAUTION_RULES_FP } from '../lib/cautionRules.js';
 import {
+  restoreCheckResults,
+  serializeResultVisibility,
+} from '../lib/checkResultUtils.js';
+import {
   extractAllPagesText,
   loadPdfFromBuffer,
 } from '../lib/pdfService.js';
@@ -61,10 +65,22 @@ export function useWorkSession(pdf, ruleCheck, tocCheck) {
     consistencyResults,
     spellingSelected,
     consistencySelected,
+    resultVisibility,
+    spellingCheckDone,
+    consistencyCheckDone,
+    activeSource,
+    restoreFromSession: restoreRuleCheckFromSession,
     clearAllCheckState: clearRuleCheckState,
   } = ruleCheck;
 
-  const { clearAllCheckState: clearTocCheckState } = tocCheck;
+  const {
+    results: tocBodyResults,
+    selected: tocBodySelected,
+    resultVisibility: tocBodyResultVisibility,
+    checkDone: tocBodyCheckDone,
+    restoreFromSession: restoreTocCheckFromSession,
+    clearAllCheckState: clearTocCheckState,
+  } = tocCheck;
 
   const clearAllCheckState = useCallback(() => {
     clearRuleCheckState();
@@ -99,15 +115,21 @@ export function useWorkSession(pdf, ruleCheck, tocCheck) {
       fileHandle: fileHandleRef.current,
       pdfBuffer: fileHandleRef.current ? undefined : pdfBufferRef.current,
       pageTexts: pageTexts.map((p) => ({ pageNum: p.pageNum, text: p.text })),
-      groupedResults: [],
-      consistencyGroupedResults: [],
-      tocBodyGroupedResults: [],
+      groupedResults: spellingResults,
+      consistencyGroupedResults: consistencyResults,
+      tocBodyGroupedResults: tocBodyResults,
       spellingRulesFingerprint: SPELLING_RULES_FP,
       cautionRulesFingerprint: CAUTION_RULES_FP,
       currentPage,
-      selectedInstance: null,
-      consistencySelectedInstance: null,
-      tocBodySelectedInstance: null,
+      selectedInstance: spellingSelected,
+      consistencySelectedInstance: consistencySelected,
+      tocBodySelectedInstance: tocBodySelected,
+      spellingCheckDone,
+      consistencyCheckDone,
+      tocBodyCheckDone,
+      activeCheckSource: activeSource,
+      resultVisibility: serializeResultVisibility(resultVisibility),
+      tocBodyResultVisibility: serializeResultVisibility(tocBodyResultVisibility),
     });
 
     if (result.ok) {
@@ -136,6 +158,18 @@ export function useWorkSession(pdf, ruleCheck, tocCheck) {
     fileHandleRef,
     pdfBufferRef,
     setLoadError,
+    spellingResults,
+    consistencyResults,
+    tocBodyResults,
+    spellingSelected,
+    consistencySelected,
+    tocBodySelected,
+    spellingCheckDone,
+    consistencyCheckDone,
+    tocBodyCheckDone,
+    activeSource,
+    resultVisibility,
+    tocBodyResultVisibility,
   ]);
 
   useEffect(() => {
@@ -209,8 +243,48 @@ export function useWorkSession(pdf, ruleCheck, tocCheck) {
           return;
         }
 
+        const restoredChecks = restoreCheckResults({
+          spellingRulesFingerprint: saved.spellingRulesFingerprint,
+          cautionRulesFingerprint: saved.cautionRulesFingerprint,
+          groupedResults: saved.groupedResults,
+          consistencyGroupedResults: saved.consistencyGroupedResults,
+          tocBodyGroupedResults: saved.tocBodyGroupedResults,
+        });
+
+        if (!restoredChecks.staleRules) {
+          restoreRuleCheckFromSession({
+            spellingResults: restoredChecks.spelling,
+            consistencyResults: restoredChecks.consistency,
+            resultVisibility: saved.resultVisibility ?? undefined,
+            spellingSelected: saved.selectedInstance ?? null,
+            consistencySelected: saved.consistencySelectedInstance ?? null,
+            spellingCheckDone: saved.spellingCheckDone,
+            consistencyCheckDone: saved.consistencyCheckDone,
+            activeSource:
+              saved.activeCheckSource === 'consistency'
+                ? 'consistency'
+                : 'spelling',
+          });
+          if (restoredChecks.tocBody.length > 0 || saved.tocBodyCheckDone) {
+            restoreTocCheckFromSession({
+              results: restoredChecks.tocBody,
+              resultVisibility: saved.tocBodyResultVisibility ?? undefined,
+              selected: saved.tocBodySelectedInstance ?? null,
+              checkDone: saved.tocBodyCheckDone,
+            });
+          }
+        }
+
+        const hasCheckWork =
+          !restoredChecks.staleRules &&
+          (saved.spellingCheckDone ||
+            saved.consistencyCheckDone ||
+            saved.tocBodyCheckDone);
+        const savedAtLabel = new Date(saved.savedAt).toLocaleString('ko-KR');
         setSessionHint(
-          `PDF 복원됨 · ${saved.fileName} (${new Date(saved.savedAt).toLocaleString('ko-KR')}) — 검사는 다시 실행하세요`,
+          hasCheckWork
+            ? `PDF·검수 결과 복원됨 · ${saved.fileName} (${savedAtLabel})`
+            : `PDF 복원됨 · ${saved.fileName} (${savedAtLabel}) — 검사는 다시 실행하세요`,
         );
       } catch (err) {
         if (mounted.current && !isRestoreStale(generation)) {
@@ -234,6 +308,8 @@ export function useWorkSession(pdf, ruleCheck, tocCheck) {
     };
   }, [
     clearAllCheckState,
+    restoreRuleCheckFromSession,
+    restoreTocCheckFromSession,
     fileHandleRef,
     pdfBufferRef,
     setPdf,
@@ -251,25 +327,12 @@ export function useWorkSession(pdf, ruleCheck, tocCheck) {
     if (isRestoring || !pdfBufferRef.current || !pageTexts.length) return;
 
     const t = setTimeout(() => {
-      persistSession();
+      void persistSession();
     }, 300);
 
     const onHide = () => {
       if (canPersist) {
-        void saveWorkSession({
-          fileName: pdfFileName,
-          fileHandle: fileHandleRef.current,
-          pdfBuffer: fileHandleRef.current ? undefined : pdfBufferRef.current,
-          groupedResults: [],
-          consistencyGroupedResults: [],
-          tocBodyGroupedResults: [],
-          spellingRulesFingerprint: SPELLING_RULES_FP,
-          cautionRulesFingerprint: CAUTION_RULES_FP,
-          currentPage,
-          selectedInstance: null,
-          consistencySelectedInstance: null,
-          tocBodySelectedInstance: null,
-        });
+        void persistSession();
       }
     };
     window.addEventListener('pagehide', onHide);
@@ -282,11 +345,17 @@ export function useWorkSession(pdf, ruleCheck, tocCheck) {
     isRestoring,
     persistSession,
     canPersist,
-    pdfFileName,
-    pageTexts,
-    currentPage,
     pdfBufferRef,
-    fileHandleRef,
+    pageTexts.length,
+    spellingResults,
+    consistencyResults,
+    tocBodyResults,
+    resultVisibility,
+    tocBodyResultVisibility,
+    spellingCheckDone,
+    consistencyCheckDone,
+    tocBodyCheckDone,
+    currentPage,
   ]);
 
   const openPdfWithPicker = useCallback(async () => {

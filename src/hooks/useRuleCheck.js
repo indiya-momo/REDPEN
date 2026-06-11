@@ -8,12 +8,20 @@ import { buildCautionCheckRules } from '../lib/cautionRules.js';
 import { sortSpellingResultsForDisplay } from '../utils/main-screen-helpers.js';
 import { BUILT_IN_RULES, isBuiltInRuleEnabled } from '../lib/builtInRules.js';
 import {
-  defaultVisibilityForGroups,
+  clearVisibilityForGroup,
+  clearVisibilityForSource,
+  countVisibleInstances,
+  emptyResultVisibilityState,
   findActiveGroup,
+  getGroupVisibilityMode,
   groupKey,
+  isInstanceVisible,
   isResultGroupVisible,
   finalizeConsistencyCheckResults,
-  resultVisibilityKey,
+  normalizeResultVisibilityState,
+  pruneResultVisibility,
+  toggleGroupVisibilityState,
+  toggleInstanceVisibilityState,
 } from '../lib/checkResultUtils.js';
 import {
   trackCheckRun,
@@ -79,7 +87,7 @@ export function useRuleCheck({
     /** @type {'spelling' | 'consistency'} */ ('spelling'),
   );
   const [resultVisibility, setResultVisibility] = useState(
-    /** @type {Record<string, boolean>} */ ({}),
+    emptyResultVisibilityState,
   );
   const [spellingCheckDone, setSpellingCheckDone] = useState(false);
   const [consistencyCheckDone, setConsistencyCheckDone] = useState(false);
@@ -128,13 +136,47 @@ export function useRuleCheck({
     [resolvedCustomRules],
   );
 
+  const restoreFromSession = useCallback(
+    /**
+     * @param {{
+     *   spellingResults?: import('../lib/ruleEngine.js').GroupedResult[],
+     *   consistencyResults?: import('../lib/ruleEngine.js').GroupedResult[],
+     *   resultVisibility?: import('../lib/checkResultUtils.js').ResultVisibilityState,
+     *   spellingSelected?: import('../lib/ruleEngine.js').MatchInstance | null,
+     *   consistencySelected?: import('../lib/ruleEngine.js').MatchInstance | null,
+     *   spellingCheckDone?: boolean,
+     *   consistencyCheckDone?: boolean,
+     *   activeSource?: 'spelling' | 'consistency',
+     * }} payload
+     */
+    (payload) => {
+      const spelling = payload.spellingResults ?? [];
+      const consistency = payload.consistencyResults ?? [];
+      setSpellingResults(spelling);
+      setConsistencyResults(consistency);
+      setSpellingCheckDone(Boolean(payload.spellingCheckDone));
+      setConsistencyCheckDone(Boolean(payload.consistencyCheckDone));
+      setSpellingSelected(payload.spellingSelected ?? null);
+      setConsistencySelected(payload.consistencySelected ?? null);
+      setActiveSource(payload.activeSource === 'consistency' ? 'consistency' : 'spelling');
+      setResultVisibility(
+        pruneResultVisibility(
+          normalizeResultVisibilityState(payload.resultVisibility),
+          spelling,
+          consistency,
+        ),
+      );
+    },
+    [],
+  );
+
   const clearAllCheckState = useCallback(() => {
     setSpellingResults([]);
     setConsistencyResults([]);
     setSpellingSelected(null);
     setConsistencySelected(null);
     setActiveSource('spelling');
-    setResultVisibility({});
+    setResultVisibility(emptyResultVisibilityState());
     setSpellingCheckDone(false);
     setConsistencyCheckDone(false);
   }, []);
@@ -143,9 +185,9 @@ export function useRuleCheck({
   const clearSpellingCheckState = useCallback(() => {
     setSpellingResults((groups) => {
       setResultVisibility((prev) => {
-        const next = { ...prev };
+        let next = normalizeResultVisibilityState(prev);
         for (const group of groups) {
-          delete next[resultVisibilityKey('spelling', group)];
+          next = clearVisibilityForGroup(next, 'spelling', group);
         }
         return next;
       });
@@ -160,9 +202,9 @@ export function useRuleCheck({
   const clearConsistencyCheckState = useCallback(() => {
     setConsistencyResults((groups) => {
       setResultVisibility((prev) => {
-        const next = { ...prev };
+        let next = normalizeResultVisibilityState(prev);
         for (const group of groups) {
-          delete next[resultVisibilityKey('consistency', group)];
+          next = clearVisibilityForGroup(next, 'consistency', group);
         }
         return next;
       });
@@ -246,8 +288,6 @@ export function useRuleCheck({
       };
 
       const allErrors = [];
-      /** @type {Record<string, boolean>} */
-      let visibility = { ...resultVisibility };
       /** @type {import('../lib/ruleEngine.js').MatchInstance | null} */
       let first = null;
       /** @type {import('../lib/ruleEngine.js').RuleResultGroup[]} */
@@ -266,10 +306,6 @@ export function useRuleCheck({
         scopeResults = sortSpellingResultsForDisplay(grouped);
         setSpellingResults(scopeResults);
         setSpellingCheckDone(true);
-        visibility = {
-          ...visibility,
-          ...defaultVisibilityForGroups(grouped, 'spelling'),
-        };
         const inst = grouped[0]?.instances[0] ?? null;
         if (inst) {
           first = inst;
@@ -296,10 +332,6 @@ export function useRuleCheck({
         scopeResults = withZeroRows;
         setConsistencyResults(withZeroRows);
         setConsistencyCheckDone(withZeroRows.length > 0);
-        visibility = {
-          ...visibility,
-          ...defaultVisibilityForGroups(withZeroRows, 'consistency'),
-        };
         const inst =
           withZeroRows.find((g) => g.instances.length > 0)?.instances[0] ?? null;
         if (inst) {
@@ -310,7 +342,12 @@ export function useRuleCheck({
         }
       }
 
-      setResultVisibility(visibility);
+      setResultVisibility((prev) => {
+        let next = normalizeResultVisibilityState(prev);
+        if (runSpelling) next = clearVisibilityForSource(next, 'spelling');
+        if (runConsistency) next = clearVisibilityForSource(next, 'consistency');
+        return next;
+      });
 
       if (allErrors.length) {
         alert(allErrors.join('\n'));
@@ -430,10 +467,13 @@ export function useRuleCheck({
         return finalizeConsistencyCheckResults([...kept, ...withZeroRows], rules);
       });
       setConsistencyCheckDone(true);
-      setResultVisibility((prev) => ({
-        ...prev,
-        ...defaultVisibilityForGroups(withZeroRows, 'consistency'),
-      }));
+      setResultVisibility((prev) => {
+        let next = normalizeResultVisibilityState(prev);
+        for (const row of withZeroRows) {
+          next = clearVisibilityForGroup(next, 'consistency', row);
+        }
+        return next;
+      });
 
       const inst =
         withZeroRows.find((g) => g.instances.length > 0)?.instances[0] ?? null;
@@ -553,15 +593,40 @@ export function useRuleCheck({
   );
 
   const toggleResultVisibility = useCallback((source, group) => {
-    const key = resultVisibilityKey(source, group);
-    setResultVisibility((prev) => ({
-      ...prev,
-      [key]: prev[key] === false,
-    }));
+    setResultVisibility((prev) =>
+      toggleGroupVisibilityState(normalizeResultVisibilityState(prev), source, group),
+    );
+  }, []);
+
+  const toggleInstanceVisibility = useCallback((source, group, inst) => {
+    setResultVisibility((prev) =>
+      toggleInstanceVisibilityState(
+        normalizeResultVisibilityState(prev),
+        source,
+        group,
+        inst,
+      ),
+    );
   }, []);
 
   const isGroupVisible = useCallback(
     (source, group) => isResultGroupVisible(resultVisibility, source, group),
+    [resultVisibility],
+  );
+
+  const checkInstanceVisible = useCallback(
+    (source, group, inst) =>
+      isInstanceVisible(resultVisibility, source, group, inst),
+    [resultVisibility],
+  );
+
+  const groupVisibilityMode = useCallback(
+    (source, group) => getGroupVisibilityMode(resultVisibility, source, group),
+    [resultVisibility],
+  );
+
+  const visibleInstanceCount = useCallback(
+    (source, group) => countVisibleInstances(resultVisibility, source, group),
     [resultVisibility],
   );
 
@@ -599,14 +664,24 @@ export function useRuleCheck({
       let n = 0;
       if (tab === 'spelling') {
         for (const group of spellingResults) {
-          if (!isResultGroupVisible(resultVisibility, 'spelling', group)) continue;
-          n += group.instances.filter((i) => i.pageNum === page).length;
+          for (const inst of group.instances) {
+            if (inst.pageNum !== page) continue;
+            if (!isInstanceVisible(resultVisibility, 'spelling', group, inst)) {
+              continue;
+            }
+            n += 1;
+          }
         }
         return n;
       }
       for (const group of consistencyResults) {
-        if (!isResultGroupVisible(resultVisibility, 'consistency', group)) continue;
-        n += group.instances.filter((i) => i.pageNum === page).length;
+        for (const inst of group.instances) {
+          if (inst.pageNum !== page) continue;
+          if (!isInstanceVisible(resultVisibility, 'consistency', group, inst)) {
+            continue;
+          }
+          n += 1;
+        }
       }
       return n;
     },
@@ -642,13 +717,12 @@ export function useRuleCheck({
 
   const getActiveOnPage = useCallback(
     (page) => {
-      if (
-        !activeGroup ||
-        !isResultGroupVisible(resultVisibility, activeSource, activeGroup)
-      ) {
-        return 0;
-      }
-      return activeGroup.instances.filter((i) => i.pageNum === page).length;
+      if (!activeGroup) return 0;
+      return activeGroup.instances.filter(
+        (i) =>
+          i.pageNum === page &&
+          isInstanceVisible(resultVisibility, activeSource, activeGroup, i),
+      ).length;
     },
     [activeGroup, activeSource, resultVisibility],
   );
@@ -668,6 +742,7 @@ export function useRuleCheck({
     spellingActiveRules,
     consistencyActiveRules,
     clearAllCheckState,
+    restoreFromSession,
     clearSpellingCheckState,
     clearConsistencyCheckState,
     runSpellingCheck,
@@ -680,7 +755,11 @@ export function useRuleCheck({
     selectGroup,
     isSameGroupAsSelected,
     toggleResultVisibility,
+    toggleInstanceVisibility,
     isGroupVisible,
+    isInstanceVisible: checkInstanceVisible,
+    groupVisibilityMode,
+    visibleInstanceCount,
     spellingActiveGroup,
     consistencyActiveGroup,
     spellingTotalFindings,

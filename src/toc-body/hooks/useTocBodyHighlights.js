@@ -1,5 +1,8 @@
 import { useMemo } from 'react';
-import { instancesMatch, isResultGroupVisible } from '../../lib/checkResultUtils.js';
+import {
+  instancesMatch,
+  isInstanceVisible,
+} from '../../lib/checkResultUtils.js';
 import { highlightRangeForInstance } from '../../lib/pdfService.js';
 import { TOC_BODY_RESULT_SOURCE } from './useTocBodyCheck.js';
 
@@ -24,14 +27,15 @@ export function useTocBodyHighlights({
     if (!currentPageData) return [];
     const onPage = [];
     for (const group of results) {
-      if (!isResultGroupVisible(resultVisibility, TOC_BODY_RESULT_SOURCE, group)) {
-        continue;
-      }
       const tipText = (group.tip || '').trim();
       for (const inst of group.instances) {
-        if (inst.pageNum === currentPage) {
-          onPage.push({ inst, tip: tipText });
+        if (inst.pageNum !== currentPage) continue;
+        if (
+          !isInstanceVisible(resultVisibility, TOC_BODY_RESULT_SOURCE, group, inst)
+        ) {
+          continue;
         }
+        onPage.push({ inst, tip: tipText });
       }
     }
     onPage.sort((a, b) => a.inst.index - b.inst.index);

@@ -1,7 +1,11 @@
 import { useMemo } from 'react';
 import { getBuiltInTip } from '../lib/builtInRules.js';
 import { getConsistencyHighlightTip } from '../lib/consistencyHighlightTip.js';
-import { findActiveGroup, instancesMatch, isResultGroupVisible } from '../lib/checkResultUtils.js';
+import {
+  findActiveGroup,
+  instancesMatch,
+  isInstanceVisible,
+} from '../lib/checkResultUtils.js';
 import { highlightRangeForInstance } from '../lib/pdfService.js';
 /**
  * 맞춤법·표기 일관성 PDF 하이라이트 (목차는 useTocBodyHighlights)
@@ -40,7 +44,6 @@ export function useHighlights({
         : [['consistency', consistencyResults]];
     for (const [source, results] of sources) {
       for (const group of results) {
-        if (!isResultGroupVisible(resultVisibility, source, group)) continue;
         const tipText =
           (group.tip || '').trim() ||
           (source === 'spelling' && group.category !== 'caution'
@@ -49,9 +52,9 @@ export function useHighlights({
               ? getConsistencyHighlightTip(group)
               : '');
         for (const inst of group.instances) {
-          if (inst.pageNum === currentPage) {
-            onPage.push({ inst, tip: tipText });
-          }
+          if (inst.pageNum !== currentPage) continue;
+          if (!isInstanceVisible(resultVisibility, source, group, inst)) continue;
+          onPage.push({ inst, tip: tipText });
         }
       }
     }
@@ -90,8 +93,8 @@ export function useHighlights({
         : [['consistency', consistencyResults]];
     for (const [source, results] of sources) {
       for (const group of results) {
-        if (!isResultGroupVisible(resultVisibility, source, group)) continue;
         for (const inst of group.instances) {
+          if (!isInstanceVisible(resultVisibility, source, group, inst)) continue;
           all.push(inst);
         }
       }

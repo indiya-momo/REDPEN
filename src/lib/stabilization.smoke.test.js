@@ -206,6 +206,58 @@ describe('session store smoke', () => {
     expect(result.error).toMatch(/PDF 데이터/);
   });
 
+  it('fileHandle 경로로 표시 제외 상태를 저장하고 다시 불러온다', async () => {
+    const grouped = [
+      {
+        find: 'F1',
+        replace: 'R1',
+        label: '먹고사',
+        instances: [
+          {
+            find: 'F1',
+            replace: 'R1',
+            matchedText: '먹고 사',
+            suggestedText: '먹고사',
+            pageNum: 8,
+            index: 1,
+          },
+        ],
+      },
+    ];
+    const resultVisibility = {
+      hiddenGroups: {},
+      hiddenInstances: {
+        'spelling:F1\0R1': { '8:1:먹고 사': true },
+      },
+    };
+    const fileHandle = {
+      queryPermission: async () => 'granted',
+      requestPermission: async () => 'granted',
+      getFile: async () => ({
+        name: 'vis.pdf',
+        arrayBuffer: async () => new ArrayBuffer(16),
+      }),
+    };
+
+    const saved = await saveWorkSession({
+      fileName: 'vis.pdf',
+      fileHandle,
+      pageTexts: [{ pageNum: 1, text: 'hello' }],
+      groupedResults: grouped,
+      consistencyGroupedResults: [],
+      spellingRulesFingerprint: SPELLING_RULES_FP,
+      cautionRulesFingerprint: CAUTION_RULES_FP,
+      currentPage: 1,
+      spellingCheckDone: true,
+      resultVisibility,
+    });
+    expect(saved.ok).toBe(true);
+
+    const loaded = await loadWorkSession();
+    expect(loaded?.resultVisibility).toEqual(resultVisibility);
+    expect(loaded?.spellingCheckDone).toBe(true);
+  });
+
   it('fileHandle 경로로 메타·결과를 저장하고 다시 불러온다', async () => {
     const grouped = [{ find: 'X', replace: 'Y', instances: [] }];
     const fileHandle = {

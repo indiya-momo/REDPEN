@@ -7,7 +7,7 @@
 /** @typedef {{ group: GroupedResult, source: 'spelling' | 'consistency' }} TabEntry */
 
 /**
- * 맞춤법 탭 결과 목록 — 맞춤법 기준 전부 먼저, 검토필요(주의) 기준 다음 (각각 쪽·라벨 순)
+ * 맞춤법 탭 결과 목록 — 편집자 검토 필요 기준 먼저, 맞춤법 기준 다음 (각각 쪽·라벨 순)
  * @param {GroupedResult[]} groups
  * @returns {GroupedResult[]}
  */
@@ -27,7 +27,7 @@ export function sortSpellingResultsForDisplay(groups) {
   };
   builtin.sort(cmp);
   caution.sort(cmp);
-  return [...builtin, ...caution];
+  return [...caution, ...builtin];
 }
 
 /**

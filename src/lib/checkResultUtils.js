@@ -80,23 +80,280 @@ export function resultVisibilityKey(source, group) {
 }
 
 /**
- * @param {Record<string, boolean>} visibility
+ * @typedef {Object} ResultVisibilityState
+ * @property {Record<string, true>} hiddenGroups
+ * @property {Record<string, Record<string, true>>} hiddenInstances
+ */
+
+/** @returns {ResultVisibilityState} */
+export function emptyResultVisibilityState() {
+  return { hiddenGroups: {}, hiddenInstances: {} };
+}
+
+/** @param {import('./ruleEngine.js').MatchInstance} inst */
+export function instanceVisibilityKey(inst) {
+  return `${inst.pageNum}:${inst.index}:${inst.matchedText}`;
+}
+
+/**
+ * @param {ResultVisibilityState | Record<string, boolean> | null | undefined} visibility
+ * @returns {ResultVisibilityState}
+ */
+export function normalizeResultVisibilityState(visibility) {
+  if (
+    visibility &&
+    typeof visibility === 'object' &&
+    'hiddenGroups' in visibility &&
+    'hiddenInstances' in visibility
+  ) {
+    return /** @type {ResultVisibilityState} */ (visibility);
+  }
+  /** @type {Record<string, boolean>} */
+  const legacy = visibility && typeof visibility === 'object' ? visibility : {};
+  /** @type {Record<string, true>} */
+  const hiddenGroups = {};
+  for (const [key, val] of Object.entries(legacy)) {
+    if (val === false) hiddenGroups[key] = true;
+  }
+  return { hiddenGroups, hiddenInstances: {} };
+}
+
+/**
+ * @param {ResultVisibilityState | Record<string, boolean> | null | undefined} visibility
+ * @param {ResultSource} source
+ * @param {import('./ruleEngine.js').GroupedResult} group
+ * @param {import('./ruleEngine.js').MatchInstance} inst
+ */
+export function isInstanceVisible(visibility, source, group, inst) {
+  const state = normalizeResultVisibilityState(visibility);
+  const gKey = resultVisibilityKey(source, group);
+  if (state.hiddenGroups[gKey]) return false;
+  const iKey = instanceVisibilityKey(inst);
+  return !state.hiddenInstances[gKey]?.[iKey];
+}
+
+/**
+ * @param {ResultVisibilityState | Record<string, boolean> | null | undefined} visibility
+ * @param {ResultSource} source
+ * @param {import('./ruleEngine.js').GroupedResult} group
+ * @returns {'visible' | 'partial' | 'hidden'}
+ */
+export function getGroupVisibilityMode(visibility, source, group) {
+  const state = normalizeResultVisibilityState(visibility);
+  const gKey = resultVisibilityKey(source, group);
+  if (state.hiddenGroups[gKey]) return 'hidden';
+  const { instances } = group;
+  if (!instances.length) return 'visible';
+  const visibleCount = instances.filter((inst) =>
+    isInstanceVisible(state, source, group, inst),
+  ).length;
+  if (visibleCount === 0) return 'hidden';
+  if (visibleCount < instances.length) return 'partial';
+  return 'visible';
+}
+
+/**
+ * @param {ResultVisibilityState | Record<string, boolean> | null | undefined} visibility
  * @param {ResultSource} source
  * @param {import('./ruleEngine.js').GroupedResult} group
  */
 export function isResultGroupVisible(visibility, source, group) {
-  return visibility[resultVisibilityKey(source, group)] !== false;
+  return getGroupVisibilityMode(visibility, source, group) !== 'hidden';
 }
 
 /**
- * @param {import('./ruleEngine.js').GroupedResult[]} groups
+ * @param {ResultVisibilityState | Record<string, boolean> | null | undefined} visibility
+ * @param {ResultSource} source
+ * @param {import('./ruleEngine.js').GroupedResult} group
+ */
+export function countVisibleInstances(visibility, source, group) {
+  return group.instances.filter((inst) =>
+    isInstanceVisible(visibility, source, group, inst),
+  ).length;
+}
+
+/**
+ * @param {ResultVisibilityState} state
  * @param {ResultSource} source
  */
-export function defaultVisibilityForGroups(groups, source) {
-  /** @type {Record<string, boolean>} */
-  const next = {};
-  for (const group of groups) {
-    next[resultVisibilityKey(source, group)] = true;
+export function clearVisibilityForSource(state, source) {
+  const prefix = `${source}:`;
+  const next = {
+    hiddenGroups: { ...state.hiddenGroups },
+    hiddenInstances: { ...state.hiddenInstances },
+  };
+  for (const key of Object.keys(next.hiddenGroups)) {
+    if (key.startsWith(prefix)) delete next.hiddenGroups[key];
+  }
+  for (const key of Object.keys(next.hiddenInstances)) {
+    if (key.startsWith(prefix)) delete next.hiddenInstances[key];
+  }
+  return next;
+}
+
+/**
+ * @param {ResultVisibilityState} state
+ * @param {ResultSource} source
+ * @param {import('./ruleEngine.js').GroupedResult} group
+ */
+export function clearVisibilityForGroup(state, source, group) {
+  const gKey = resultVisibilityKey(source, group);
+  const next = {
+    hiddenGroups: { ...state.hiddenGroups },
+    hiddenInstances: { ...state.hiddenInstances },
+  };
+  delete next.hiddenGroups[gKey];
+  delete next.hiddenInstances[gKey];
+  return next;
+}
+
+/**
+ * @param {ResultVisibilityState} state
+ * @param {ResultSource} source
+ * @param {import('./ruleEngine.js').GroupedResult} group
+ */
+export function toggleGroupVisibilityState(state, source, group) {
+  const mode = getGroupVisibilityMode(state, source, group);
+  const gKey = resultVisibilityKey(source, group);
+  const next = {
+    hiddenGroups: { ...state.hiddenGroups },
+    hiddenInstances: { ...state.hiddenInstances },
+  };
+  if (mode === 'visible') {
+    next.hiddenGroups[gKey] = true;
+    delete next.hiddenInstances[gKey];
+    return next;
+  }
+  delete next.hiddenGroups[gKey];
+  delete next.hiddenInstances[gKey];
+  return next;
+}
+
+/**
+ * @param {ResultVisibilityState} state
+ * @param {ResultSource} source
+ * @param {import('./ruleEngine.js').GroupedResult} group
+ * @param {import('./ruleEngine.js').MatchInstance} inst
+ */
+export function toggleInstanceVisibilityState(state, source, group, inst) {
+  const gKey = resultVisibilityKey(source, group);
+  const iKey = instanceVisibilityKey(inst);
+  const next = {
+    hiddenGroups: { ...state.hiddenGroups },
+    hiddenInstances: { ...state.hiddenInstances },
+  };
+  delete next.hiddenGroups[gKey];
+  const hidden = { ...(next.hiddenInstances[gKey] ?? {}) };
+  if (hidden[iKey]) delete hidden[iKey];
+  else hidden[iKey] = true;
+  if (Object.keys(hidden).length === 0) delete next.hiddenInstances[gKey];
+  else next.hiddenInstances[gKey] = hidden;
+  return next;
+}
+
+/**
+ * @param {import('./ruleEngine.js').GroupedResult[]} _groups
+ * @param {ResultSource} _source
+ */
+export function defaultVisibilityForGroups(_groups, _source) {
+  return emptyResultVisibilityState();
+}
+
+/**
+ * 저장·복원용 — 빈 상태면 null(세션 payload 생략)
+ * @param {ResultVisibilityState | Record<string, boolean> | null | undefined} visibility
+ * @returns {ResultVisibilityState | null}
+ */
+export function serializeResultVisibility(visibility) {
+  const state = normalizeResultVisibilityState(visibility);
+  const hasGroups = Object.keys(state.hiddenGroups).length > 0;
+  const hasInstances = Object.keys(state.hiddenInstances).length > 0;
+  if (!hasGroups && !hasInstances) return null;
+  return state;
+}
+
+/**
+ * @param {unknown} raw
+ * @returns {ResultVisibilityState}
+ */
+export function parseStoredResultVisibility(raw) {
+  if (!raw || typeof raw !== 'object') return emptyResultVisibilityState();
+  return normalizeResultVisibilityState(/** @type {ResultVisibilityState} */ (raw));
+}
+
+/**
+ * 복원 시 없어진 그룹·instance 키 제거
+ * @param {ResultVisibilityState} state
+ * @param {import('./ruleEngine.js').GroupedResult[]} spellingResults
+ * @param {import('./ruleEngine.js').GroupedResult[]} consistencyResults
+ */
+export function pruneResultVisibility(state, spellingResults, consistencyResults) {
+  const normalized = normalizeResultVisibilityState(state);
+  /** @type {ResultVisibilityState} */
+  const next = emptyResultVisibilityState();
+  /** @type {{ source: ResultSource, group: import('./ruleEngine.js').GroupedResult }[]} */
+  const rows = [
+    ...spellingResults.map((group) => ({ source: /** @type {const} */ ('spelling'), group })),
+    ...consistencyResults.map((group) => ({
+      source: /** @type {const} */ ('consistency'),
+      group,
+    })),
+  ];
+
+  for (const { source, group } of rows) {
+    const gKey = resultVisibilityKey(source, group);
+    if (normalized.hiddenGroups[gKey]) {
+      next.hiddenGroups[gKey] = true;
+    }
+    const hiddenInst = normalized.hiddenInstances[gKey];
+    if (!hiddenInst) continue;
+    for (const inst of group.instances) {
+      const iKey = instanceVisibilityKey(inst);
+      if (!hiddenInst[iKey]) continue;
+      if (!next.hiddenInstances[gKey]) next.hiddenInstances[gKey] = {};
+      next.hiddenInstances[gKey][iKey] = true;
+    }
+  }
+
+  return next;
+}
+
+/**
+ * @param {ResultVisibilityState} state
+ * @param {import('./ruleEngine.js').GroupedResult[]} results
+ * @param {ResultSource} source
+ */
+export function pruneResultVisibilityForSource(state, results, source) {
+  if (source === 'spelling') {
+    return pruneResultVisibility(state, results, []);
+  }
+  if (source === 'consistency') {
+    return pruneResultVisibility(state, [], results);
+  }
+  return pruneResultVisibilityForToc(state, results);
+}
+
+/**
+ * @param {ResultVisibilityState} state
+ * @param {import('./ruleEngine.js').GroupedResult[]} results
+ */
+export function pruneResultVisibilityForToc(state, results) {
+  const normalized = normalizeResultVisibilityState(state);
+  /** @type {ResultVisibilityState} */
+  const next = emptyResultVisibilityState();
+  for (const group of results) {
+    const gKey = resultVisibilityKey('toc-body', group);
+    if (normalized.hiddenGroups[gKey]) {
+      next.hiddenGroups[gKey] = true;
+    }
+    const hiddenInst = normalized.hiddenInstances[gKey];
+    if (!hiddenInst) continue;
+    for (const inst of group.instances) {
+      const iKey = instanceVisibilityKey(inst);
+      if (!hiddenInst[iKey]) continue;
+      if (!next.hiddenInstances[gKey]) next.hiddenInstances[gKey] = {};
+      next.hiddenInstances[gKey][iKey] = true;
+    }
   }
   return next;
 }
