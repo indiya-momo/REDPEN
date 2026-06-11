@@ -1,10 +1,18 @@
 import { useCallback, useMemo, useState } from 'react';
 import {
-  defaultVisibilityForGroups,
+  clearVisibilityForGroup,
+  clearVisibilityForSource,
+  countVisibleInstances,
+  emptyResultVisibilityState,
   findActiveGroup,
+  getGroupVisibilityMode,
   groupKey,
+  isInstanceVisible,
   isResultGroupVisible,
-  resultVisibilityKey,
+  normalizeResultVisibilityState,
+  pruneResultVisibilityForToc,
+  toggleGroupVisibilityState,
+  toggleInstanceVisibilityState,
 } from '../../lib/checkResultUtils.js';
 import { trackCheckRun, trackResultViewed } from '../../lib/analytics.js';
 import {
@@ -56,7 +64,7 @@ export function useTocBodyCheck({
   const [results, setResults] = useState([]);
   const [selected, setSelected] = useState(null);
   const [resultVisibility, setResultVisibility] = useState(
-    /** @type {Record<string, boolean>} */ ({}),
+    emptyResultVisibilityState,
   );
   const [checkDone, setCheckDone] = useState(false);
 
@@ -73,16 +81,16 @@ export function useTocBodyCheck({
   const clearAllCheckState = useCallback(() => {
     setResults([]);
     setSelected(null);
-    setResultVisibility({});
+    setResultVisibility(emptyResultVisibilityState());
     setCheckDone(false);
   }, []);
 
   const clearTocCheckState = useCallback(() => {
     setResults((groups) => {
       setResultVisibility((prev) => {
-        const next = { ...prev };
+        let next = normalizeResultVisibilityState(prev);
         for (const group of groups) {
-          delete next[resultVisibilityKey(TOC_BODY_RESULT_SOURCE, group)];
+          next = clearVisibilityForGroup(next, TOC_BODY_RESULT_SOURCE, group);
         }
         return next;
       });
@@ -131,10 +139,9 @@ export function useTocBodyCheck({
     );
     setResults(groups);
     setCheckDone(groups.length > 0);
-    setResultVisibility((prev) => ({
-      ...prev,
-      ...defaultVisibilityForGroups(groups, TOC_BODY_RESULT_SOURCE),
-    }));
+    setResultVisibility((prev) =>
+      clearVisibilityForSource(normalizeResultVisibilityState(prev), TOC_BODY_RESULT_SOURCE),
+    );
 
     const inst =
       groups.find((g) => g.instances.length > 0)?.instances[0] ?? null;
@@ -211,6 +218,14 @@ export function useTocBodyCheck({
     [goToPage, setCurrentPage],
   );
 
+  const selectInstance = useCallback(
+    (inst) => {
+      setSelected(inst);
+      setCurrentPage(inst.pageNum);
+    },
+    [setCurrentPage],
+  );
+
   const isGroupVisible = useCallback(
     (group) =>
       isResultGroupVisible(resultVisibility, TOC_BODY_RESULT_SOURCE, group),
@@ -218,11 +233,24 @@ export function useTocBodyCheck({
   );
 
   const toggleGroupVisibility = useCallback((group) => {
-    const key = resultVisibilityKey(TOC_BODY_RESULT_SOURCE, group);
-    setResultVisibility((prev) => ({
-      ...prev,
-      [key]: prev[key] === false,
-    }));
+    setResultVisibility((prev) =>
+      toggleGroupVisibilityState(
+        normalizeResultVisibilityState(prev),
+        TOC_BODY_RESULT_SOURCE,
+        group,
+      ),
+    );
+  }, []);
+
+  const toggleInstanceVisibility = useCallback((group, inst) => {
+    setResultVisibility((prev) =>
+      toggleInstanceVisibilityState(
+        normalizeResultVisibilityState(prev),
+        TOC_BODY_RESULT_SOURCE,
+        group,
+        inst,
+      ),
+    );
   }, []);
 
   const isGroupSelected = useCallback(
@@ -235,14 +263,36 @@ export function useTocBodyCheck({
     (page) => {
       let n = 0;
       for (const group of results) {
-        if (!isResultGroupVisible(resultVisibility, TOC_BODY_RESULT_SOURCE, group)) {
-          continue;
+        for (const inst of group.instances) {
+          if (inst.pageNum !== page) continue;
+          if (
+            !isInstanceVisible(resultVisibility, TOC_BODY_RESULT_SOURCE, group, inst)
+          ) {
+            continue;
+          }
+          n += 1;
         }
-        n += group.instances.filter((i) => i.pageNum === page).length;
       }
       return n;
     },
     [results, resultVisibility],
+  );
+
+  const checkInstanceVisible = useCallback(
+    (group, inst) =>
+      isInstanceVisible(resultVisibility, TOC_BODY_RESULT_SOURCE, group, inst),
+    [resultVisibility],
+  );
+
+  const groupVisibilityMode = useCallback(
+    (group) => getGroupVisibilityMode(resultVisibility, TOC_BODY_RESULT_SOURCE, group),
+    [resultVisibility],
+  );
+
+  const visibleInstanceCount = useCallback(
+    (group) =>
+      countVisibleInstances(resultVisibility, TOC_BODY_RESULT_SOURCE, group),
+    [resultVisibility],
   );
 
   const syncSelection = useCallback(() => {
@@ -252,6 +302,30 @@ export function useTocBodyCheck({
     if (inst) setCurrentPage(inst.pageNum);
   }, [checkDone, selected, results, setCurrentPage]);
 
+  const restoreFromSession = useCallback(
+    /**
+     * @param {{
+     *   results?: import('../lib/tocBodyCheck.js').TocBodyGroup[],
+     *   resultVisibility?: import('../../lib/checkResultUtils.js').ResultVisibilityState,
+     *   selected?: import('../../lib/ruleEngine.js').MatchInstance | null,
+     *   checkDone?: boolean,
+     * }} payload
+     */
+    (payload) => {
+      const restoredResults = payload.results ?? [];
+      setResults(restoredResults);
+      setCheckDone(Boolean(payload.checkDone));
+      setSelected(payload.selected ?? null);
+      setResultVisibility(
+        pruneResultVisibilityForToc(
+          normalizeResultVisibilityState(payload.resultVisibility),
+          restoredResults,
+        ),
+      );
+    },
+    [],
+  );
+
   return {
     results,
     selected,
@@ -260,13 +334,19 @@ export function useTocBodyCheck({
     checkDone,
     totalFindings,
     clearAllCheckState,
+    restoreFromSession,
     clearTocCheckState,
     runCheck,
     goToPage,
     selectGroup,
     selectPageInGroup,
+    selectInstance,
     isGroupVisible,
     toggleGroupVisibility,
+    toggleInstanceVisibility,
+    isInstanceVisible: checkInstanceVisible,
+    groupVisibilityMode,
+    visibleInstanceCount,
     isGroupSelected,
     countVisibleOnPage,
     syncSelection,

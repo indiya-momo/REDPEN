@@ -11,7 +11,7 @@ import {
 } from './main-screen-helpers.js';
 
 describe('buildTabEntries', () => {
-  it('맞춤법 탭 — 맞춤법 기준 뒤 검토필요 기준', () => {
+  it('맞춤법 탭 — 편집자 검토 필요 기준 뒤 맞춤법 기준', () => {
     const entries = buildTabEntries(
       'spelling',
       [
@@ -47,13 +47,13 @@ describe('buildTabEntries', () => {
       [],
     );
     expect(entries.map((e) => e.group.category)).toEqual([
-      'spelling',
-      'spelling',
       'caution',
       'caution',
+      'spelling',
+      'spelling',
     ]);
-    expect(entries[0].group.label).toBe('a');
-    expect(entries[2].group.label).toBe('z');
+    expect(entries[0].group.label).toBe('z');
+    expect(entries[2].group.label).toBe('a');
   });
 
   it('맞춤법 탭이면 spelling 결과만 묶는다', () => {

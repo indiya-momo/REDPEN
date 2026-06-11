@@ -1,4 +1,5 @@
 import ResultPageSummary from './ResultPageSummary.jsx';
+import GroupVisibilityCheckbox from './GroupVisibilityCheckbox.jsx';
 import PrintedPageSetup from './PrintedPageSetup.jsx';
 import { getBuiltInTip } from '../lib/builtInRules.js';
 import { formatSystemPageLabel } from '../lib/printedPageDisplay.js';
@@ -7,6 +8,7 @@ import { getConsistencyHighlightTip } from '../lib/consistencyHighlightTip.js';
 import { auxiliaryVerbResultParts } from '../lib/patternDisplayLabels.js';
 
 /**
+
  * @typedef {import('../utils/main-screen-helpers.js').TabEntry} ResultEntry
  */
 
@@ -105,7 +107,12 @@ function ResultHeaderSummary({
  *   auxiliaryWithFindingsCount?: number,
  *   spellingCheckDone: boolean,
  *   isGroupVisible: (source: 'spelling' | 'consistency', group: import('../lib/ruleEngine.js').GroupedResult) => boolean,
+ *   groupVisibilityMode?: (source: 'spelling' | 'consistency', group: import('../lib/ruleEngine.js').GroupedResult) => 'visible' | 'partial' | 'hidden',
+ *   visibleInstanceCount?: (source: 'spelling' | 'consistency', group: import('../lib/ruleEngine.js').GroupedResult) => number,
+ *   isInstanceVisible?: (source: 'spelling' | 'consistency', group: import('../lib/ruleEngine.js').GroupedResult, inst: import('../lib/ruleEngine.js').MatchInstance) => boolean,
  *   onToggleVisibility: (source: 'spelling' | 'consistency', group: import('../lib/ruleEngine.js').GroupedResult) => void,
+ *   onToggleInstanceVisibility?: (source: 'spelling' | 'consistency', group: import('../lib/ruleEngine.js').GroupedResult, inst: import('../lib/ruleEngine.js').MatchInstance) => void,
+ *   onSelectInstance?: (inst: import('../lib/ruleEngine.js').MatchInstance, source: 'spelling' | 'consistency') => void,
  *   isSameGroupAsSelected: (group: import('../lib/ruleEngine.js').GroupedResult, source: 'spelling' | 'consistency') => boolean,
  *   onSelectGroup: (group: import('../lib/ruleEngine.js').GroupedResult, source: 'spelling' | 'consistency') => void,
  *   onSelectPageInGroup: (pageNum: number, instances: import('../lib/ruleEngine.js').MatchInstance[], source: 'spelling' | 'consistency') => void,
@@ -139,7 +146,12 @@ export default function CheckResultsPanel({
   auxiliaryWithFindingsCount = 0,
   spellingCheckDone,
   isGroupVisible,
+  groupVisibilityMode,
+  visibleInstanceCount,
+  isInstanceVisible,
   onToggleVisibility,
+  onToggleInstanceVisibility,
+  onSelectInstance,
   isSameGroupAsSelected,
   onSelectGroup,
   onSelectPageInGroup,
@@ -205,6 +217,14 @@ export default function CheckResultsPanel({
               const isCaution = group.category === 'caution';
               const isConsistency = source === 'consistency';
               const visible = isGroupVisible(source, group);
+              const visMode = groupVisibilityMode
+                ? groupVisibilityMode(source, group)
+                : visible
+                  ? 'visible'
+                  : 'hidden';
+              const shownCount = visibleInstanceCount
+                ? visibleInstanceCount(source, group)
+                : count;
               const tipText =
                 (group.tip || '').trim() ||
                 (source === 'spelling' && !isCaution
@@ -298,19 +318,24 @@ export default function CheckResultsPanel({
                           onClick={(e) => e.stopPropagation()}
                           onKeyDown={(e) => e.stopPropagation()}
                         >
-                          <input
-                            type="checkbox"
-                            checked={visible}
-                            aria-label={`${group.label} PDF 표시`}
-                            onChange={() => onToggleVisibility(source, group)}
+                          <GroupVisibilityCheckbox
+                            mode={visMode}
+                            label={group.label}
+                            onToggle={() => onToggleVisibility(source, group)}
                           />
                           <span className="result-visibility-label">표시</span>
                         </label>
                         {isConsistency || count > 1 ? (
                           <span
-                            className={`result-count${count === 0 ? ' result-count--zero' : ''}`}
+                            className={`result-count${count === 0 ? ' result-count--zero' : ''}${
+                              shownCount < count ? ' result-count--partial' : ''
+                            }`}
                           >
-                            {count}개
+                            {count === 0
+                              ? '0개'
+                              : shownCount < count
+                                ? `표시 ${shownCount} / ${count}`
+                                : `${count}개`}
                           </span>
                         ) : null}
                       </div>
@@ -322,6 +347,22 @@ export default function CheckResultsPanel({
                       formatPageLabel={pageLabel}
                       onSelectPage={(pageNum) =>
                         onSelectPageInGroup(pageNum, group.instances, source)
+                      }
+                      onSelectInstance={
+                        onSelectInstance
+                          ? (inst) => onSelectInstance(inst, source)
+                          : undefined
+                      }
+                      isInstanceVisible={
+                        isInstanceVisible
+                          ? (inst) => isInstanceVisible(source, group, inst)
+                          : undefined
+                      }
+                      onToggleInstanceVisibility={
+                        onToggleInstanceVisibility
+                          ? (inst) =>
+                              onToggleInstanceVisibility(source, group, inst)
+                          : undefined
                       }
                     />
                   </div>

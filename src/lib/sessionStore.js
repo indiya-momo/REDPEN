@@ -213,6 +213,12 @@ async function ensureFileReadPermission(handle) {
  *   selectedInstance?: unknown,
  *   consistencySelectedInstance?: unknown,
  *   tocBodySelectedInstance?: unknown,
+ *   spellingCheckDone?: boolean,
+ *   consistencyCheckDone?: boolean,
+ *   tocBodyCheckDone?: boolean,
+ *   activeCheckSource?: 'spelling' | 'consistency',
+ *   resultVisibility?: import('./checkResultUtils.js').ResultVisibilityState | null,
+ *   tocBodyResultVisibility?: import('./checkResultUtils.js').ResultVisibilityState | null,
  * }} data
  */
 export async function saveWorkSession(data) {
@@ -238,6 +244,12 @@ export async function saveWorkSession(data) {
         selectedInstance: data.selectedInstance ?? null,
         consistencySelectedInstance: data.consistencySelectedInstance ?? null,
         tocBodySelectedInstance: data.tocBodySelectedInstance ?? null,
+        spellingCheckDone: Boolean(data.spellingCheckDone),
+        consistencyCheckDone: Boolean(data.consistencyCheckDone),
+        tocBodyCheckDone: Boolean(data.tocBodyCheckDone),
+        activeCheckSource: data.activeCheckSource ?? null,
+        resultVisibility: data.resultVisibility ?? null,
+        tocBodyResultVisibility: data.tocBodyResultVisibility ?? null,
         savedAt: Date.now(),
       };
       const tx = db.transaction(STORE, 'readwrite');
@@ -309,6 +321,12 @@ export async function saveWorkSession(data) {
       selectedInstance: data.selectedInstance ?? null,
       consistencySelectedInstance: data.consistencySelectedInstance ?? null,
       tocBodySelectedInstance: data.tocBodySelectedInstance ?? null,
+      spellingCheckDone: Boolean(data.spellingCheckDone),
+      consistencyCheckDone: Boolean(data.consistencyCheckDone),
+      tocBodyCheckDone: Boolean(data.tocBodyCheckDone),
+      activeCheckSource: data.activeCheckSource ?? null,
+      resultVisibility: data.resultVisibility ?? null,
+      tocBodyResultVisibility: data.tocBodyResultVisibility ?? null,
       savedAt: Date.now(),
     };
 
@@ -355,6 +373,12 @@ export async function loadWorkSession() {
       selectedInstance: raw.selectedInstance ?? null,
       consistencySelectedInstance: raw.consistencySelectedInstance ?? null,
       tocBodySelectedInstance: raw.tocBodySelectedInstance ?? null,
+      spellingCheckDone: Boolean(raw.spellingCheckDone),
+      consistencyCheckDone: Boolean(raw.consistencyCheckDone),
+      tocBodyCheckDone: Boolean(raw.tocBodyCheckDone),
+      activeCheckSource: raw.activeCheckSource ?? null,
+      resultVisibility: raw.resultVisibility ?? null,
+      tocBodyResultVisibility: raw.tocBodyResultVisibility ?? null,
       savedAt: raw.savedAt,
       pageTexts: [],
     };
