@@ -714,15 +714,8 @@ export default function MainScreen({
   };
 
   function switchTab(tab) {
-    if (tab === 'spelling') {
-      clearSpellingTabWork();
-      setWorkTab('spelling');
-      ruleCheck.syncSelectionForTab('spelling');
-      return;
-    }
-    clearConsistencyTabWork();
-    setWorkTab('consistency');
-    ruleCheck.syncSelectionForTab('consistency');
+    setWorkTab(tab);
+    ruleCheck.syncSelectionForTab(tab);
   }
 
   const goToPdfPage = (pageNum) => {

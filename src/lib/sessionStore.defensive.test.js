@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
   clearWorkSession,
   loadWorkSession,
+  markTabSessionActive,
   saveWorkSession,
 } from './sessionStore.js';
 import {
@@ -73,6 +74,7 @@ describe('sessionStore defensive', () => {
       consistencyGroupedResults: null,
       currentPage: 2,
     });
+    markTabSessionActive();
 
     const loaded = await loadWorkSession();
     expect(loaded).not.toBeNull();
@@ -107,8 +109,22 @@ describe('sessionStore defensive', () => {
       fileName: 'gone.pdf',
       pdfStorage: 'opfs',
     });
+    markTabSessionActive();
 
     await clearWorkSession();
+    await expect(loadWorkSession()).resolves.toBeNull();
+  });
+
+  it('탭 sessionStorage 마커가 없으면 IndexedDB 데이터도 복원하지 않는다', async () => {
+    await seedSessionRow({
+      id: 'current',
+      fileName: 'stale.pdf',
+      pdfStorage: 'opfs',
+      groupedResults: [],
+    });
+
+    await expect(loadWorkSession()).resolves.toBeNull();
+    markTabSessionActive();
     await expect(loadWorkSession()).resolves.toBeNull();
   });
 
