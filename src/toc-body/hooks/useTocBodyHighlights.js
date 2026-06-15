@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
 import {
-  findActiveGroup,
-  groupContainsInstance,
+  instancesMatch,
   isInstanceVisible,
 } from '../../lib/checkResultUtils.js';
 import { highlightRangeForInstance } from '../../lib/pdfService.js';
@@ -24,8 +23,6 @@ export function useTocBodyHighlights({
   resultVisibility,
   selectedInstance,
 }) {
-  const activeGroup = findActiveGroup(results, selectedInstance);
-
   const pageHighlights = useMemo(() => {
     if (!currentPageData) return [];
     const onPage = [];
@@ -46,11 +43,8 @@ export function useTocBodyHighlights({
       .map(({ inst, tip }) => {
         const range = highlightRangeForInstance(currentPageData, inst);
         if (!range) return null;
-        const primary = Boolean(
-          activeGroup &&
-            groupContainsInstance(activeGroup, inst) &&
-            inst.pageNum === currentPage,
-        );
+        const primary =
+          selectedInstance != null && instancesMatch(inst, selectedInstance);
         return {
           ...range,
           primary: Boolean(primary),
@@ -65,7 +59,7 @@ export function useTocBodyHighlights({
     resultVisibility,
     currentPage,
     currentPageData,
-    activeGroup,
+    selectedInstance,
   ]);
 
   return { pageHighlights };
