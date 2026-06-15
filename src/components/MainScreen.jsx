@@ -30,7 +30,6 @@ import { useTocBodyCheck } from '../toc-body/hooks/useTocBodyCheck.js';
 import { useTocBodyHighlights } from '../toc-body/hooks/useTocBodyHighlights.js';
 import { buildTocBodyTabEntries } from '../toc-body/utils/toc-body-result-entries.js';
 import { isTocBodyCheckEnabled } from '../lib/featureFlags.js';
-import { INSTANCE_RESULT_VISIBILITY_ENABLED } from '../lib/devFeatureFlags.js';
 import { usePdfDocument } from '../hooks/usePdfDocument.js';
 import { usePdfZoom } from '../hooks/usePdfZoom.js';
 import { useRuleCheck } from '../hooks/useRuleCheck.js';
@@ -777,40 +776,39 @@ export default function MainScreen({
     });
   };
 
-  /** instance 단위 표시 제외 — npm run dev 전용, build/배포에는 미포함 */
-  const ruleCheckInstanceVisibilityDevProps = useMemo(() => {
-    if (!INSTANCE_RESULT_VISIBILITY_ENABLED) return {};
-    return {
+  const ruleCheckInstanceVisibilityProps = useMemo(
+    () => ({
       groupVisibilityMode: ruleCheck.groupVisibilityMode,
       visibleInstanceCount: ruleCheck.visibleInstanceCount,
       isInstanceVisible: ruleCheck.isInstanceVisible,
       onToggleInstanceVisibility: ruleCheck.toggleInstanceVisibility,
       onSelectInstance: ruleCheck.selectInstance,
-    };
-  }, [
-    ruleCheck.groupVisibilityMode,
-    ruleCheck.visibleInstanceCount,
-    ruleCheck.isInstanceVisible,
-    ruleCheck.toggleInstanceVisibility,
-    ruleCheck.selectInstance,
-  ]);
+    }),
+    [
+      ruleCheck.groupVisibilityMode,
+      ruleCheck.visibleInstanceCount,
+      ruleCheck.isInstanceVisible,
+      ruleCheck.toggleInstanceVisibility,
+      ruleCheck.selectInstance,
+    ],
+  );
 
-  const tocInstanceVisibilityDevProps = useMemo(() => {
-    if (!INSTANCE_RESULT_VISIBILITY_ENABLED) return {};
-    return {
+  const tocInstanceVisibilityProps = useMemo(
+    () => ({
       groupVisibilityMode: tocCheck.groupVisibilityMode,
       visibleInstanceCount: tocCheck.visibleInstanceCount,
       isInstanceVisible: tocCheck.isInstanceVisible,
       onToggleInstanceVisibility: tocCheck.toggleInstanceVisibility,
       onSelectInstance: tocCheck.selectInstance,
-    };
-  }, [
-    tocCheck.groupVisibilityMode,
-    tocCheck.visibleInstanceCount,
-    tocCheck.isInstanceVisible,
-    tocCheck.toggleInstanceVisibility,
-    tocCheck.selectInstance,
-  ]);
+    }),
+    [
+      tocCheck.groupVisibilityMode,
+      tocCheck.visibleInstanceCount,
+      tocCheck.isInstanceVisible,
+      tocCheck.toggleInstanceVisibility,
+      tocCheck.selectInstance,
+    ],
+  );
 
   const spellingResultsPanel =
     workTab === 'spelling' && ruleCheck.spellingCheckDone ? (
@@ -829,7 +827,7 @@ export default function MainScreen({
         spellingCheckDone={ruleCheck.spellingCheckDone}
         isGroupVisible={ruleCheck.isGroupVisible}
         onToggleVisibility={ruleCheck.toggleResultVisibility}
-        {...ruleCheckInstanceVisibilityDevProps}
+        {...ruleCheckInstanceVisibilityProps}
         isSameGroupAsSelected={ruleCheck.isSameGroupAsSelected}
         onSelectGroup={ruleCheck.selectGroup}
         onSelectPageInGroup={ruleCheck.selectPageInGroup}
@@ -1390,7 +1388,7 @@ export default function MainScreen({
                 visibleOnCurrentPage={visibleOnCurrentPage}
                 isGroupVisible={tocCheck.isGroupVisible}
                 onToggleVisibility={tocCheck.toggleGroupVisibility}
-                {...tocInstanceVisibilityDevProps}
+                {...tocInstanceVisibilityProps}
                 isSameGroupAsSelected={tocCheck.isGroupSelected}
                 onSelectGroup={(group) => {
                   setConsistencyFocus('toc');
@@ -1427,7 +1425,7 @@ export default function MainScreen({
                 spellingCheckDone={ruleCheck.consistencyCheckDone}
                 isGroupVisible={ruleCheck.isGroupVisible}
                 onToggleVisibility={ruleCheck.toggleResultVisibility}
-                {...ruleCheckInstanceVisibilityDevProps}
+                {...ruleCheckInstanceVisibilityProps}
                 isSameGroupAsSelected={ruleCheck.isSameGroupAsSelected}
                 onSelectGroup={(group) => {
                   setConsistencyFocus('rules');
