@@ -1679,6 +1679,11 @@ details[open] > summary .details-chevron {
   text-decoration: line-through;
 }
 
+.page-chip--on-page:not(.page-chip--current) {
+  border-color: var(--chip-active-border);
+  color: var(--color-text-primary);
+}
+
 .page-chip--partial-instance {
   opacity: 0.82;
 }

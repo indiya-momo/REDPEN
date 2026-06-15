@@ -20,6 +20,7 @@ import { countTocBodyTabFindings } from '../utils/toc-body-result-entries.js';
  *   isSameGroupAsSelected: (group: import('../lib/tocBodyCheck.js').TocBodyGroup) => boolean,
  *   onSelectGroup: (group: import('../lib/tocBodyCheck.js').TocBodyGroup) => void,
  *   onSelectPageInGroup: (pageNum: number, instances: import('../lib/ruleEngine.js').MatchInstance[]) => void,
+ *   selectedInstance?: import('../lib/ruleEngine.js').MatchInstance | null,
  *   onBackToSetup?: () => void,
  *   printedPagesActive?: boolean,
  *   onCalibrateFromInput?: (raw: string, isSpread: boolean) => void,
@@ -48,6 +49,7 @@ export default function TocBodyResultsPanel({
   isSameGroupAsSelected,
   onSelectGroup,
   onSelectPageInGroup,
+  selectedInstance = null,
   onBackToSetup,
   printedPagesActive,
   onCalibrateFromInput,
@@ -208,6 +210,7 @@ export default function TocBodyResultsPanel({
                         <ResultPageSummary
                           instances={group.instances}
                           currentPage={currentPage}
+                          selectedInstance={selectedInstance}
                           formatPageLabel={pageLabel}
                           onSelectPage={(pageNum) =>
                             onSelectPageInGroup(pageNum, group.instances)

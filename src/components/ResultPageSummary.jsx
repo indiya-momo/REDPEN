@@ -1,20 +1,53 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { formatSystemPageLabel } from '../lib/printedPageDisplay.js';
-import { instanceVisibilityKey } from '../lib/checkResultUtils.js';
+import { instanceVisibilityKey, instancesMatch } from '../lib/checkResultUtils.js';
 
 /**
  * @typedef {{
- *   pageNum: number,
- *   pageInstances: import('../lib/ruleEngine.js').MatchInstance[],
+ *   inst: import('../lib/ruleEngine.js').MatchInstance,
+ *   indexOnPage: number,
+ *   totalOnPage: number,
+ * }} InstanceChipEntry
+ */
+
+/**
+ * @typedef {{
+ *   inst: import('../lib/ruleEngine.js').MatchInstance,
  *   x: number,
  *   y: number,
- * }} PageChipContextMenu
+ * }} InstanceContextMenu
  */
+
+/**
+ * @param {import('../lib/ruleEngine.js').MatchInstance[]} instances
+ * @returns {InstanceChipEntry[]}
+ */
+function buildInstanceChips(instances) {
+  const byPage = new Map();
+  for (const inst of instances) {
+    const list = byPage.get(inst.pageNum) ?? [];
+    list.push(inst);
+    byPage.set(inst.pageNum, list);
+  }
+
+  /** @type {InstanceChipEntry[]} */
+  const chips = [];
+  for (const pageNum of [...byPage.keys()].sort((a, b) => a - b)) {
+    const pageInstances = byPage.get(pageNum) ?? [];
+    pageInstances.sort((a, b) => a.index - b.index);
+    const totalOnPage = pageInstances.length;
+    pageInstances.forEach((inst, i) => {
+      chips.push({ inst, indexOnPage: i + 1, totalOnPage });
+    });
+  }
+  return chips;
+}
 
 /**
  * @param {{
  *   instances: import('../lib/ruleEngine.js').MatchInstance[],
  *   currentPage: number,
+ *   selectedInstance?: import('../lib/ruleEngine.js').MatchInstance | null,
  *   formatPageLabel?: (systemPage: number) => string,
  *   onSelectPage: (pageNum: number) => void,
  *   onSelectInstance?: (inst: import('../lib/ruleEngine.js').MatchInstance) => void,
@@ -25,94 +58,71 @@ import { instanceVisibilityKey } from '../lib/checkResultUtils.js';
 export default function ResultPageSummary({
   instances,
   currentPage,
+  selectedInstance = null,
   formatPageLabel = formatSystemPageLabel,
   onSelectPage,
   onSelectInstance,
   isInstanceVisible = () => true,
   onToggleInstanceVisibility,
 }) {
-  const [pickerPage, setPickerPage] = useState(
-    /** @type {number | null} */ (null),
-  );
   const [contextMenu, setContextMenu] = useState(
-    /** @type {PageChipContextMenu | null} */ (null),
+    /** @type {InstanceContextMenu | null} */ (null),
   );
-  const pickerRef = useRef(/** @type {HTMLDivElement | null} */ (null));
   const contextMenuRef = useRef(/** @type {HTMLDivElement | null} */ (null));
+  const chips = buildInstanceChips(instances);
 
-  const byPage = new Map();
-  for (const inst of instances) {
-    const list = byPage.get(inst.pageNum) ?? [];
-    list.push(inst);
-    byPage.set(inst.pageNum, list);
-  }
-  const pages = [...byPage.entries()].sort((a, b) => a[0] - b[0]);
-
-  const closeOverlays = useCallback(() => {
-    setPickerPage(null);
+  const closeContextMenu = useCallback(() => {
     setContextMenu(null);
   }, []);
 
   useEffect(() => {
-    if (pickerPage == null && contextMenu == null) return undefined;
+    if (contextMenu == null) return undefined;
 
     const onDocPointerDown = (event) => {
       const target = /** @type {Node} */ (event.target);
-      if (pickerRef.current?.contains(target)) return;
       if (contextMenuRef.current?.contains(target)) return;
-      closeOverlays();
-    };
-    const onDocContextMenu = () => {
-      closeOverlays();
+      closeContextMenu();
     };
     const onKeyDown = (event) => {
-      if (event.key === 'Escape') closeOverlays();
+      if (event.key === 'Escape') closeContextMenu();
     };
 
     document.addEventListener('pointerdown', onDocPointerDown);
-    document.addEventListener('contextmenu', onDocContextMenu);
     document.addEventListener('keydown', onKeyDown);
     return () => {
       document.removeEventListener('pointerdown', onDocPointerDown);
-      document.removeEventListener('contextmenu', onDocContextMenu);
       document.removeEventListener('keydown', onKeyDown);
     };
-  }, [pickerPage, contextMenu, closeOverlays]);
+  }, [contextMenu, closeContextMenu]);
 
-  const openContextMenu = useCallback(
-    (pageNum, pageInstances, x, y) => {
-      if (!onToggleInstanceVisibility) return;
-      setPickerPage(null);
-      setContextMenu({ pageNum, pageInstances, x, y });
-    },
-    [onToggleInstanceVisibility],
-  );
-
-  const openPicker = useCallback((pageNum) => {
-    setContextMenu(null);
-    setPickerPage(pageNum);
-  }, []);
-
-  if (!pages.length) return null;
+  if (!chips.length) return null;
 
   return (
     <>
       <div className="result-pages" role="list">
-        {pages.map(([pageNum, pageInstances]) => (
-          <PageChip
-            key={pageNum}
-            pageNum={pageNum}
-            pageInstances={pageInstances}
+        {chips.map(({ inst, indexOnPage, totalOnPage }) => (
+          <InstanceChip
+            key={instanceVisibilityKey(inst)}
+            inst={inst}
+            indexOnPage={indexOnPage}
+            totalOnPage={totalOnPage}
             currentPage={currentPage}
+            selectedInstance={selectedInstance}
             formatPageLabel={formatPageLabel}
             isInstanceVisible={isInstanceVisible}
             onSelectPage={onSelectPage}
             onSelectInstance={onSelectInstance}
             onToggleInstanceVisibility={onToggleInstanceVisibility}
-            onOpenContextMenu={openContextMenu}
-            pickerOpen={pickerPage === pageNum}
-            pickerRef={pickerPage === pageNum ? pickerRef : null}
-            onClosePicker={closeOverlays}
+            onOpenContextMenu={(event, instance) => {
+              if (!onToggleInstanceVisibility) return;
+              event.preventDefault();
+              event.stopPropagation();
+              setContextMenu({
+                inst: instance,
+                x: event.clientX,
+                y: event.clientY,
+              });
+            }}
           />
         ))}
       </div>
@@ -122,36 +132,20 @@ export default function ResultPageSummary({
           className="result-instance-context-menu"
           style={{ left: contextMenu.x, top: contextMenu.y }}
           role="menu"
-          aria-label={`${formatPageLabel(contextMenu.pageNum)} 발견 건`}
+          aria-label="발견 건 표시"
         >
-          {contextMenu.pageInstances.length === 1 ? (
-            <button
-              type="button"
-              role="menuitem"
-              className="result-instance-context-menu__item"
-              onClick={(event) => {
-                event.stopPropagation();
-                onToggleInstanceVisibility(contextMenu.pageInstances[0]);
-                closeOverlays();
-              }}
-            >
-              {isInstanceVisible(contextMenu.pageInstances[0])
-                ? '표시 제외'
-                : '표시 복원'}
-            </button>
-          ) : (
-            <button
-              type="button"
-              role="menuitem"
-              className="result-instance-context-menu__item"
-              onClick={(event) => {
-                event.stopPropagation();
-                openPicker(contextMenu.pageNum);
-              }}
-            >
-              발견 건 선택…
-            </button>
-          )}
+          <button
+            type="button"
+            role="menuitem"
+            className="result-instance-context-menu__item"
+            onClick={(event) => {
+              event.stopPropagation();
+              onToggleInstanceVisibility(contextMenu.inst);
+              closeContextMenu();
+            }}
+          >
+            {isInstanceVisible(contextMenu.inst) ? '표시 제외' : '표시 복원'}
+          </button>
         </div>
       ) : null}
     </>
@@ -160,124 +154,61 @@ export default function ResultPageSummary({
 
 /**
  * @param {{
- *   pageNum: number,
- *   pageInstances: import('../lib/ruleEngine.js').MatchInstance[],
+ *   inst: import('../lib/ruleEngine.js').MatchInstance,
+ *   indexOnPage: number,
+ *   totalOnPage: number,
  *   currentPage: number,
+ *   selectedInstance: import('../lib/ruleEngine.js').MatchInstance | null,
  *   formatPageLabel: (systemPage: number) => string,
  *   isInstanceVisible: (inst: import('../lib/ruleEngine.js').MatchInstance) => boolean,
  *   onSelectPage: (pageNum: number) => void,
  *   onSelectInstance?: (inst: import('../lib/ruleEngine.js').MatchInstance) => void,
  *   onToggleInstanceVisibility?: (inst: import('../lib/ruleEngine.js').MatchInstance) => void,
- *   onOpenContextMenu: (pageNum: number, pageInstances: import('../lib/ruleEngine.js').MatchInstance[], x: number, y: number) => void,
- *   pickerOpen: boolean,
- *   pickerRef: React.RefObject<HTMLDivElement | null> | null,
- *   onClosePicker: () => void,
+ *   onOpenContextMenu: (event: React.MouseEvent, inst: import('../lib/ruleEngine.js').MatchInstance) => void,
  * }} props
  */
-function PageChip({
-  pageNum,
-  pageInstances,
+function InstanceChip({
+  inst,
+  indexOnPage,
+  totalOnPage,
   currentPage,
+  selectedInstance,
   formatPageLabel,
   isInstanceVisible,
   onSelectPage,
   onSelectInstance,
   onToggleInstanceVisibility,
   onOpenContextMenu,
-  pickerOpen,
-  pickerRef,
-  onClosePicker,
 }) {
-  const visibleCount = pageInstances.filter((inst) => isInstanceVisible(inst)).length;
-  const allHidden = visibleCount === 0;
-  const partial = visibleCount > 0 && visibleCount < pageInstances.length;
-
+  const visible = isInstanceVisible(inst);
+  const selected =
+    selectedInstance != null && instancesMatch(inst, selectedInstance);
+  const onPage = inst.pageNum === currentPage;
   const countLabel =
-    pageInstances.length > 1
-      ? partial || allHidden
-        ? ` (${visibleCount}/${pageInstances.length})`
-        : ` (${pageInstances.length})`
-      : '';
+    totalOnPage > 1 ? ` (${indexOnPage}/${totalOnPage})` : '';
 
   return (
     <div className="result-page-chip-wrap" role="listitem">
       <button
         type="button"
-        className={`page-chip ${pageNum === currentPage ? 'page-chip--current' : ''}${
-          allHidden ? ' page-chip--hidden-instance' : ''
-        }${partial ? ' page-chip--partial-instance' : ''}`}
+        className={`page-chip${onPage ? ' page-chip--on-page' : ''}${
+          selected ? ' page-chip--current' : ''
+        }${!visible ? ' page-chip--hidden-instance' : ''}`}
         title={
           onToggleInstanceVisibility
-            ? '클릭: 페이지 이동 · 우클릭: 표시 제외'
+            ? '클릭: 해당 위치로 이동 · 우클릭: 표시 제외'
             : undefined
         }
         onClick={(event) => {
           event.stopPropagation();
-          onSelectPage(pageNum);
+          if (onSelectInstance) onSelectInstance(inst);
+          else onSelectPage(inst.pageNum);
         }}
-        onContextMenu={(event) => {
-          if (!onToggleInstanceVisibility) return;
-          event.preventDefault();
-          event.stopPropagation();
-          onOpenContextMenu(pageNum, pageInstances, event.clientX, event.clientY);
-        }}
+        onContextMenu={(event) => onOpenContextMenu(event, inst)}
       >
-        {formatPageLabel(pageNum)}
+        {formatPageLabel(inst.pageNum)}
         {countLabel}
       </button>
-      {pickerOpen && onToggleInstanceVisibility ? (
-        <div
-          ref={pickerRef}
-          className="result-instance-picker"
-          role="menu"
-          aria-label={`${formatPageLabel(pageNum)} 발견 건`}
-        >
-          {pageInstances.map((inst) => {
-            const visible = isInstanceVisible(inst);
-            return (
-              <button
-                key={instanceVisibilityKey(inst)}
-                type="button"
-                role="menuitemcheckbox"
-                aria-checked={visible}
-                className={`result-instance-picker__row${
-                  visible ? '' : ' result-instance-picker__row--hidden'
-                }`}
-                title="클릭: 해당 위치로 이동"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  if (onSelectInstance) onSelectInstance(inst);
-                  else onSelectPage(pageNum);
-                  onClosePicker();
-                }}
-                onPointerDown={(event) => event.stopPropagation()}
-              >
-                <span className="result-instance-picker__text">
-                  {inst.matchedText}
-                  {inst.suggestedText && inst.suggestedText !== inst.matchedText
-                    ? ` → ${inst.suggestedText}`
-                    : ''}
-                </span>
-                <span
-                  className="result-instance-picker__toggle"
-                  role="presentation"
-                  onPointerDown={(event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                  }}
-                  onClick={(event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    onToggleInstanceVisibility(inst);
-                  }}
-                >
-                  {visible ? '표시' : '제외'}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      ) : null}
     </div>
   );
 }

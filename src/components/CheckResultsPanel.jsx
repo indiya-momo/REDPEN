@@ -116,6 +116,7 @@ function ResultHeaderSummary({
  *   isSameGroupAsSelected: (group: import('../lib/ruleEngine.js').GroupedResult, source: 'spelling' | 'consistency') => boolean,
  *   onSelectGroup: (group: import('../lib/ruleEngine.js').GroupedResult, source: 'spelling' | 'consistency') => void,
  *   onSelectPageInGroup: (pageNum: number, instances: import('../lib/ruleEngine.js').MatchInstance[], source: 'spelling' | 'consistency') => void,
+ *   selectedInstance?: import('../lib/ruleEngine.js').MatchInstance | null,
  *   onAdditionalCheck?: () => void,
  *   printedPageOffset?: number | null,
  *   printedPagesActive?: boolean,
@@ -155,6 +156,7 @@ export default function CheckResultsPanel({
   isSameGroupAsSelected,
   onSelectGroup,
   onSelectPageInGroup,
+  selectedInstance = null,
   onAdditionalCheck,
   printedPageOffset = null,
   printedPagesActive = false,
@@ -344,6 +346,7 @@ export default function CheckResultsPanel({
                     <ResultPageSummary
                       instances={group.instances}
                       currentPage={currentPage}
+                      selectedInstance={selectedInstance}
                       formatPageLabel={pageLabel}
                       onSelectPage={(pageNum) =>
                         onSelectPageInGroup(pageNum, group.instances, source)
