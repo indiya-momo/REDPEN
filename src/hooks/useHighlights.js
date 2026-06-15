@@ -3,7 +3,6 @@ import { getBuiltInTip } from '../lib/builtInRules.js';
 import { getConsistencyHighlightTip } from '../lib/consistencyHighlightTip.js';
 import {
   findActiveGroup,
-  groupContainsInstance,
   instancesMatch,
   isInstanceVisible,
 } from '../lib/checkResultUtils.js';
@@ -64,11 +63,8 @@ export function useHighlights({
       .map(({ inst, tip }) => {
         const range = highlightRangeForInstance(currentPageData, inst);
         if (!range) return null;
-        const primary = Boolean(
-          activeGroup &&
-            groupContainsInstance(activeGroup, inst) &&
-            inst.pageNum === currentPage,
-        );
+        const primary =
+          selectedInstance != null && instancesMatch(inst, selectedInstance);
         return {
           ...range,
           primary: Boolean(primary),
@@ -85,7 +81,7 @@ export function useHighlights({
     resultVisibility,
     currentPage,
     currentPageData,
-    activeGroup,
+    selectedInstance,
   ]);
 
   const sortedFindings = useMemo(() => {
