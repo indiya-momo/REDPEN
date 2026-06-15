@@ -829,6 +829,7 @@ export default function MainScreen({
         onToggleVisibility={ruleCheck.toggleResultVisibility}
         {...ruleCheckInstanceVisibilityProps}
         isSameGroupAsSelected={ruleCheck.isSameGroupAsSelected}
+        selectedInstance={ruleCheck.spellingSelected}
         onSelectGroup={ruleCheck.selectGroup}
         onSelectPageInGroup={ruleCheck.selectPageInGroup}
         {...printedPagePanelProps}
@@ -1390,6 +1391,7 @@ export default function MainScreen({
                 onToggleVisibility={tocCheck.toggleGroupVisibility}
                 {...tocInstanceVisibilityProps}
                 isSameGroupAsSelected={tocCheck.isGroupSelected}
+                selectedInstance={tocCheck.selected}
                 onSelectGroup={(group) => {
                   setConsistencyFocus('toc');
                   setLastConsistencyPane('toc');
@@ -1427,6 +1429,7 @@ export default function MainScreen({
                 onToggleVisibility={ruleCheck.toggleResultVisibility}
                 {...ruleCheckInstanceVisibilityProps}
                 isSameGroupAsSelected={ruleCheck.isSameGroupAsSelected}
+                selectedInstance={ruleCheck.consistencySelected}
                 onSelectGroup={(group) => {
                   setConsistencyFocus('rules');
                   setLastConsistencyPane('rules');
