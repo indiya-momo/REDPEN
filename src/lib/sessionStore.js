@@ -14,6 +14,33 @@ const CACHE_KEY = 'https://pdf-proofread.local/session.pdf';
 const CHUNK_PREFIX = 'pdf-chunk-';
 const CHUNK_SIZE = 512 * 1024;
 
+/** 같은 탭·F5 동안만 복원. 탭/브라우저를 닫으면 sessionStorage가 비워져 복원하지 않음 */
+export const WORK_TAB_SESSION_KEY = 'pdf-proofread-work-tab';
+
+export function isTabSessionActive() {
+  try {
+    return sessionStorage.getItem(WORK_TAB_SESSION_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+export function markTabSessionActive() {
+  try {
+    sessionStorage.setItem(WORK_TAB_SESSION_KEY, '1');
+  } catch {
+    /* ignore */
+  }
+}
+
+export function clearTabSessionMarker() {
+  try {
+    sessionStorage.removeItem(WORK_TAB_SESSION_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
 export function supportsFilePicker() {
   return typeof window.showOpenFilePicker === 'function';
 }
@@ -256,6 +283,7 @@ export async function saveWorkSession(data) {
       tx.objectStore(STORE).put(payload);
       await txComplete(tx);
       db.close();
+      markTabSessionActive();
       return { ok: true, mode: 'handle' };
     }
 
@@ -335,6 +363,7 @@ export async function saveWorkSession(data) {
     await txComplete(tx);
     db.close();
 
+    markTabSessionActive();
     return { ok: true, mode: pdfStorage };
   } catch (e) {
     console.error('작업 세션 저장 실패', e);
@@ -347,6 +376,11 @@ export async function saveWorkSession(data) {
 
 /** @returns {Promise<object | null>} */
 export async function loadWorkSession() {
+  if (!isTabSessionActive()) {
+    await clearWorkSession();
+    return null;
+  }
+
   try {
     const db = await openDb();
     const raw = await new Promise((resolve, reject) => {
@@ -423,6 +457,7 @@ export async function loadWorkSession() {
 }
 
 export async function clearWorkSession() {
+  clearTabSessionMarker();
   try {
     const db = await openDb();
     await removeBlobStores(db);

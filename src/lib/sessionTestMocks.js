@@ -6,6 +6,9 @@ import { vi } from 'vitest';
 /** @type {Record<string, string>} */
 export const localStore = {};
 
+/** @type {Record<string, string>} */
+export const sessionTabStore = {};
+
 /** @type {Map<string, Map<string, Map<string, unknown>>>} */
 export const idbRegistry = new Map();
 
@@ -101,6 +104,7 @@ export async function seedSessionRow(row) {
 
 export function installSessionTestGlobals() {
   for (const key of Object.keys(localStore)) delete localStore[key];
+  for (const key of Object.keys(sessionTabStore)) delete sessionTabStore[key];
   idbRegistry.clear();
 
   vi.stubGlobal('localStorage', {
@@ -110,6 +114,16 @@ export function installSessionTestGlobals() {
     },
     removeItem: (key) => {
       delete localStore[key];
+    },
+  });
+
+  vi.stubGlobal('sessionStorage', {
+    getItem: (key) => sessionTabStore[key] ?? null,
+    setItem: (key, value) => {
+      sessionTabStore[key] = String(value);
+    },
+    removeItem: (key) => {
+      delete sessionTabStore[key];
     },
   });
 
