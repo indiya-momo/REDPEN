@@ -10,6 +10,9 @@ import {
 import pdfEmptyIcon from '../assets/momo/pdf-empty.png';
 import PdfHighlightTipBubble from './PdfHighlightTipBubble.jsx';
 
+/** 하이라이트 높이 대비 오버레이↔원문 위·아래 패딩 (기준 0.05 → ×1.8, index.css 변수와 동일) */
+const PDF_OVERLAY_PAD_Y_RATIO = 0.09;
+
 /**
  * @typedef {import('../hooks/useHighlights.js').PageHighlight} PageHighlight
  *
@@ -360,6 +363,7 @@ export default function PdfViewer({
                       className="pdf-highlight__overlay-replace builtin-rule-tip-inline"
                       style={{
                         fontSize: `${Math.max(5, Math.round(r.height * 0.69))}px`,
+                        ['--pdf-overlay-pad-y']: `${Math.max(1, Math.round(r.height * PDF_OVERLAY_PAD_Y_RATIO))}px`,
                       }}
                       aria-hidden
                     >

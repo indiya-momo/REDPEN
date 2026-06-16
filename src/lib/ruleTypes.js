@@ -18,6 +18,7 @@
  * @property {string[]} [excludePhrases] — 이 구문 전체가 매칭되면 제외
  * @property {'spelling' | 'consistency' | 'caution' | 'custom'} [category]
  * @property {string} [cautionId]
+ * @property {string[]} [cautionStems]
  * @property {string} [tip] — 시트 tip (맞춤법 결과 안내)
  * @property {string} [memo] — 시트 memo (관리용)
  * @property {boolean} [countsInQuota] — false면 1000개 한도·맞춤법 확인 (N/M) 집계에서 제외

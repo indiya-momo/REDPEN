@@ -107,6 +107,8 @@ body:has(.welcome-pc) {
   --pdf-highlight-primary-fill: rgb(140 98 46 / 50%);
   --pdf-highlight-primary-shadow: 0 1px 3px rgb(198 40 40 / 20%);
   --pdf-highlight-red-underline: 2.6px;
+  /* 오버레이 교정문 ↔ 원문 세로 패딩 (기준 0.05 × 1.8) */
+  --pdf-overlay-pad-y-ratio: 0.09;
 
   /* 워크스페이스 — 앤티크 브라운·베이지 (사이드바·칩·선택) */
   --panel-accordion-bg: #f4efea;
@@ -597,7 +599,7 @@ details[open] > summary .details-chevron {
 .caution-group-top {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: flex-start;
   gap: 6px 1px;
 }
 
@@ -653,33 +655,49 @@ details[open] > summary .details-chevron {
 }
 
 .caution-group-items {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: flex-start;
-  flex: 0 1 auto;
+  display: grid;
+  row-gap: 8px;
+  column-gap: 6px;
+  align-items: start;
+  flex: 1 1 100%;
+  width: 100%;
   min-width: 0;
+}
+
+.caution-group-items--cols-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.caution-group-items--cols-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.caution-chip-entry-wrap {
+  min-width: 0;
+  width: 100%;
+  justify-self: stretch;
 }
 
 .caution-chip-entry {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
   max-width: 100%;
+  width: 100%;
 }
 
-.caution-chip-entry .caution-tip-inline {
-  flex: none;
-  width: auto;
+.caution-group-items .caution-tip-inline {
+  grid-column: 1 / -1;
+  width: 100%;
   min-width: 0;
   max-width: 100%;
+  margin-top: 0.5px;
+  margin-bottom: 8px;
+  box-sizing: border-box;
 }
 
 .caution-chip {
-  display: inline-flex;
-  align-items: center;
+  display: flex;
+  align-items: flex-start;
   gap: 5px;
+  width: 100%;
   padding: 5px 0;
   border: none;
   border-radius: var(--radius-ui-sm);
@@ -691,7 +709,7 @@ details[open] > summary .details-chevron {
 .caution-chip > input[type='checkbox'] {
   width: 15px;
   height: 15px;
-  margin: 0;
+  margin: 2px 0 0;
   flex: 0 0 auto;
 }
 
@@ -700,22 +718,25 @@ details[open] > summary .details-chevron {
 }
 
 .caution-chip-label {
+  flex: 1;
+  min-width: 0;
   font-size: 0.85rem;
   font-weight: 700;
   line-height: 1.2;
   color: var(--color-text-secondary);
+  word-break: keep-all;
+  overflow-wrap: break-word;
 }
 
 .caution-tip-inline {
-  flex: 1 1 100%;
-  width: 100%;
-  min-width: 100%;
-  margin-top: 4px;
   font-size: 0.68rem;
   font-weight: 500;
   line-height: 1.45;
   color: #92400e;
   white-space: pre-line;
+  text-align: center;
+  overflow-wrap: break-word;
+  word-break: keep-all;
 }
 
 .caution-group-tip {
@@ -2650,14 +2671,17 @@ details[open] > summary .details-chevron {
   left: 0;
   top: 0;
   max-width: calc(100% + 4px);
-  padding: 0;
+  padding: var(--pdf-overlay-pad-y, 0px) 0;
   margin: 0;
-  transform: translateY(-50%);
+  line-height: 1;
+  transform: translateY(-100%);
   background: transparent;
   box-shadow: none;
   white-space: nowrap;
   pointer-events: none;
   text-align: left;
+  grid-column: unset;
+  min-width: 0;
 }
 
 /* 편집자 빨간펜 — 왼쪽에서 선택한 1건만 */

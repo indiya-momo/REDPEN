@@ -27,6 +27,36 @@ function startsWithHangulSyllable(s) {
 
 /** 조판 자간 수준 gap — 이보다 좁으면 같은 어절로 보고 공백을 넣지 않음 */
 const SYLLABLE_BOUNDARY_MIN_GAP_RATIO = 0.1;
+/** 본용언+보조용언 경계는 PDF 추출에서 붙는 경우가 많아 기준을 완화 */
+const AUX_BOUNDARY_MIN_GAP_RATIO = 0.015;
+
+const AUXILIARY_LEAD_SYLLABLES = new Set([
+  '주',
+  '줄',
+  '보',
+  '본',
+  '지',
+  '하',
+  '가',
+  '오',
+  '있',
+  '두',
+  '내',
+  '놓',
+]);
+
+/** @param {string} leftStr @param {string} rightStr */
+function isLikelyAuxiliaryBoundary(leftStr, rightStr) {
+  const left = String(leftStr ?? '').trimEnd();
+  const right = String(rightStr ?? '').trimStart();
+  if (!left || !right) return false;
+  const leftLast = left[left.length - 1];
+  const rightLead = right[0];
+  return (
+    (leftLast === '어' || leftLast === '아' || leftLast === '해') &&
+    AUXILIARY_LEAD_SYLLABLES.has(rightLead)
+  );
+}
 
 /** 본용언+보조용언 — 넓은 gap(어절·칸)만 공백, 음절 자간 삽입 없음 */
 export function shouldInsertLayoutSpaceBetweenPdfItems(gap, lineH) {
@@ -35,7 +65,11 @@ export function shouldInsertLayoutSpaceBetweenPdfItems(gap, lineH) {
 
 export function shouldInsertSpaceBetweenPdfItems(gap, lineH, leftStr, rightStr) {
   if (shouldInsertLayoutSpaceBetweenPdfItems(gap, lineH)) return true;
-  const minGap = lineH * SYLLABLE_BOUNDARY_MIN_GAP_RATIO;
+  const minGap =
+    lineH *
+    (isLikelyAuxiliaryBoundary(leftStr, rightStr)
+      ? AUX_BOUNDARY_MIN_GAP_RATIO
+      : SYLLABLE_BOUNDARY_MIN_GAP_RATIO);
   return (
     gap >= minGap &&
     endsWithHangulSyllable(leftStr) &&

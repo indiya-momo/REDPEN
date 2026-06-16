@@ -59,13 +59,6 @@ export function useHighlights({
         for (const inst of group.instances) {
           if (inst.pageNum !== currentPage) continue;
           if (!isInstanceVisible(resultVisibility, source, group, inst)) continue;
-          if (
-            isActiveGroup &&
-            selectedInstance &&
-            !instancesMatch(inst, selectedInstance)
-          ) {
-            continue;
-          }
           onPage.push({ inst, tip: tipText, isActiveGroup });
         }
       }

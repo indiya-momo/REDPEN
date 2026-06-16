@@ -1,4 +1,3 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
 import { formatSystemPageLabel } from '../lib/printedPageDisplay.js';
 import { instanceVisibilityKey, instancesMatch } from '../lib/checkResultUtils.js';
 
@@ -8,14 +7,6 @@ import { instanceVisibilityKey, instancesMatch } from '../lib/checkResultUtils.j
  *   indexOnPage: number,
  *   totalOnPage: number,
  * }} InstanceChipEntry
- */
-
-/**
- * @typedef {{
- *   inst: import('../lib/ruleEngine.js').MatchInstance,
- *   x: number,
- *   y: number,
- * }} InstanceContextMenu
  */
 
 /**
@@ -65,90 +56,28 @@ export default function ResultPageSummary({
   isInstanceVisible = () => true,
   onToggleInstanceVisibility,
 }) {
-  const [contextMenu, setContextMenu] = useState(
-    /** @type {InstanceContextMenu | null} */ (null),
-  );
-  const contextMenuRef = useRef(/** @type {HTMLDivElement | null} */ (null));
   const chips = buildInstanceChips(instances);
-
-  const closeContextMenu = useCallback(() => {
-    setContextMenu(null);
-  }, []);
-
-  useEffect(() => {
-    if (contextMenu == null) return undefined;
-
-    const onDocPointerDown = (event) => {
-      const target = /** @type {Node} */ (event.target);
-      if (contextMenuRef.current?.contains(target)) return;
-      closeContextMenu();
-    };
-    const onKeyDown = (event) => {
-      if (event.key === 'Escape') closeContextMenu();
-    };
-
-    document.addEventListener('pointerdown', onDocPointerDown);
-    document.addEventListener('keydown', onKeyDown);
-    return () => {
-      document.removeEventListener('pointerdown', onDocPointerDown);
-      document.removeEventListener('keydown', onKeyDown);
-    };
-  }, [contextMenu, closeContextMenu]);
 
   if (!chips.length) return null;
 
   return (
-    <>
-      <div className="result-pages" role="list">
-        {chips.map(({ inst, indexOnPage, totalOnPage }) => (
-          <InstanceChip
-            key={instanceVisibilityKey(inst)}
-            inst={inst}
-            indexOnPage={indexOnPage}
-            totalOnPage={totalOnPage}
-            currentPage={currentPage}
-            selectedInstance={selectedInstance}
-            formatPageLabel={formatPageLabel}
-            isInstanceVisible={isInstanceVisible}
-            onSelectPage={onSelectPage}
-            onSelectInstance={onSelectInstance}
-            onToggleInstanceVisibility={onToggleInstanceVisibility}
-            onOpenContextMenu={(event, instance) => {
-              if (!onToggleInstanceVisibility) return;
-              event.preventDefault();
-              event.stopPropagation();
-              setContextMenu({
-                inst: instance,
-                x: event.clientX,
-                y: event.clientY,
-              });
-            }}
-          />
-        ))}
-      </div>
-      {contextMenu && onToggleInstanceVisibility ? (
-        <div
-          ref={contextMenuRef}
-          className="result-instance-context-menu"
-          style={{ left: contextMenu.x, top: contextMenu.y }}
-          role="menu"
-          aria-label="발견 건 표시"
-        >
-          <button
-            type="button"
-            role="menuitem"
-            className="result-instance-context-menu__item"
-            onClick={(event) => {
-              event.stopPropagation();
-              onToggleInstanceVisibility(contextMenu.inst);
-              closeContextMenu();
-            }}
-          >
-            {isInstanceVisible(contextMenu.inst) ? '표시 제외' : '표시 복원'}
-          </button>
-        </div>
-      ) : null}
-    </>
+    <div className="result-pages" role="list">
+      {chips.map(({ inst, indexOnPage, totalOnPage }) => (
+        <InstanceChip
+          key={instanceVisibilityKey(inst)}
+          inst={inst}
+          indexOnPage={indexOnPage}
+          totalOnPage={totalOnPage}
+          currentPage={currentPage}
+          selectedInstance={selectedInstance}
+          formatPageLabel={formatPageLabel}
+          isInstanceVisible={isInstanceVisible}
+          onSelectPage={onSelectPage}
+          onSelectInstance={onSelectInstance}
+          onToggleInstanceVisibility={onToggleInstanceVisibility}
+        />
+      ))}
+    </div>
   );
 }
 
@@ -164,7 +93,6 @@ export default function ResultPageSummary({
  *   onSelectPage: (pageNum: number) => void,
  *   onSelectInstance?: (inst: import('../lib/ruleEngine.js').MatchInstance) => void,
  *   onToggleInstanceVisibility?: (inst: import('../lib/ruleEngine.js').MatchInstance) => void,
- *   onOpenContextMenu: (event: React.MouseEvent, inst: import('../lib/ruleEngine.js').MatchInstance) => void,
  * }} props
  */
 function InstanceChip({
@@ -178,13 +106,17 @@ function InstanceChip({
   onSelectPage,
   onSelectInstance,
   onToggleInstanceVisibility,
-  onOpenContextMenu,
 }) {
   const visible = isInstanceVisible(inst);
   const selected =
     selectedInstance != null && instancesMatch(inst, selectedInstance);
   const countLabel =
     totalOnPage > 1 ? `(${indexOnPage}/${totalOnPage})` : '';
+
+  function navigateToInstance() {
+    if (onSelectInstance) onSelectInstance(inst);
+    else onSelectPage(inst.pageNum);
+  }
 
   return (
     <div className="result-page-chip-wrap" role="listitem">
@@ -195,15 +127,22 @@ function InstanceChip({
         }`}
         title={
           onToggleInstanceVisibility
-            ? '클릭: 해당 위치로 이동 · 우클릭: 표시 제외'
+            ? visible
+              ? '좌클릭: 해당 위치로 이동 · 우클릭: 표시 제외'
+              : '좌클릭: 해당 위치로 이동 · 우클릭: 표시 복원'
             : undefined
         }
         onClick={(event) => {
           event.stopPropagation();
-          if (onSelectInstance) onSelectInstance(inst);
-          else onSelectPage(inst.pageNum);
+          navigateToInstance();
         }}
-        onContextMenu={(event) => onOpenContextMenu(event, inst)}
+        onContextMenu={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          if (onToggleInstanceVisibility) {
+            onToggleInstanceVisibility(inst);
+          }
+        }}
       >
         {formatPageLabel(inst.pageNum)}
         {countLabel}
