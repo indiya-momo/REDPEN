@@ -56,6 +56,14 @@
     "overlayReplace": "→그럴⁀싸"
   },
   {
+    "find": "뭐 하",
+    "replace": "뭐하",
+    "enabled": true,
+    "tip": "표준국어대사전 '뭐하다' 등재",
+    "dividerGroup": "A",
+    "overlayReplace": "→뭐⁀하"
+  },
+  {
     "find": "머지 않",
     "replace": "머지않",
     "enabled": true,
@@ -168,12 +176,12 @@
     "overlayReplace": "→잠가"
   },
   {
-    "find": "끼어들",
-    "replace": "끼여들",
+    "find": "끼여들",
+    "replace": "끼어들",
     "enabled": true,
     "tip": "'끼어들다'의 잘못된 표현('끼어 있다'는 가능)",
     "dividerGroup": "B",
-    "overlayReplace": "→끼여들"
+    "overlayReplace": "→끼어들"
   },
   {
     "find": "깔대기",
@@ -211,7 +219,9 @@
     "find": "우겨넣",
     "replace": "욱여넣",
     "enabled": true,
-    "tip": "'욱여넣다'의 잘못된 표현"
+    "tip": "'욱여넣다'의 잘못된 표현",
+    "dividerGroup": "B",
+    "overlayReplace": "→욱여넣"
   },
   {
     "find": "빨강색",
