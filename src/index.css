@@ -99,7 +99,7 @@ body:has(.welcome-pc) {
   /* PDF 교정 하이라이트 — 금갈색(전체) + 빨간펜(선택 1건·말풍선) */
   --editor-red: #b91c1c;
   --editor-red-ink: #c62828;
-  --pdf-highlight-scale: 1.2;
+  --pdf-highlight-scale: 1;
   --pdf-highlight-fill: rgb(140 98 46 / 40%);
   --pdf-highlight-fill-hover: rgb(140 98 46 / 52%);
   --pdf-highlight-border: #8c6428;
@@ -656,9 +656,24 @@ details[open] > summary .details-chevron {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  align-items: center;
+  align-items: flex-start;
   flex: 0 1 auto;
   min-width: 0;
+}
+
+.caution-chip-entry {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  max-width: 100%;
+}
+
+.caution-chip-entry .caution-tip-inline {
+  flex: none;
+  width: auto;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .caution-chip {
@@ -1262,9 +1277,11 @@ details[open] > summary .details-chevron {
 }
 
 .results-category-summary__count-underline {
-  text-decoration: underline;
-  text-underline-offset: 0.12em;
-  text-decoration-thickness: 2px;
+  text-decoration: none;
+  display: inline;
+  padding: 0 0.08em;
+  background: var(--pdf-highlight-primary-fill);
+  box-shadow: var(--pdf-highlight-primary-shadow);
 }
 
 .results-panel--consistency .results-category-summary,
@@ -1316,24 +1333,18 @@ details[open] > summary .details-chevron {
   font-weight: 800;
 }
 
+.results-header__total {
+  white-space: nowrap;
+}
+
 .results-header__rule-chip {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
-  width: 1.75em;
-  height: 1.75em;
-  min-width: 1.75em;
-  min-height: 1.75em;
-  padding: 0;
-  border-radius: 50%;
-  background: var(--accent-terracotta);
-  color: var(--accent-on-terracotta);
-  font-size: 0.9em;
+  display: inline;
+  background: transparent;
+  font-size: 1em;
   font-weight: 800;
-  line-height: 1;
-  vertical-align: -0.12em;
-  text-align: center;
+  line-height: inherit;
+  vertical-align: baseline;
+  color: #b45309;
 }
 
 .results-panel--spelling.results-panel--tone-builtin .results-header,
@@ -2627,6 +2638,26 @@ details[open] > summary .details-chevron {
   background: var(--pdf-highlight-fill-hover);
   outline: 1px solid var(--pdf-highlight-border);
   box-shadow: var(--pdf-highlight-shadow);
+}
+
+/* PDF 교정문 오버레이 — 하이라이트 톤 유지, 글씨는 .builtin-rule-tip-inline */
+.pdf-highlight--overlay-replace {
+  overflow: visible;
+}
+
+.pdf-highlight__overlay-replace {
+  position: absolute;
+  left: 0;
+  top: 0;
+  max-width: calc(100% + 4px);
+  padding: 0;
+  margin: 0;
+  transform: translateY(-50%);
+  background: transparent;
+  box-shadow: none;
+  white-space: nowrap;
+  pointer-events: none;
+  text-align: left;
 }
 
 /* 편집자 빨간펜 — 왼쪽에서 선택한 1건만 */

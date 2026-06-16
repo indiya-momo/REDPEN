@@ -6,6 +6,8 @@ import {
   formatSpellingCheckCompleteMessage,
   formatSpellingCheckConfirmMessage,
 } from './spellingCheckConfirm.js';
+import { BUILT_IN_QUOTA_RULES } from './builtInRules.js';
+import { CAUTION_SEARCH_RULES } from './cautionRules.js';
 
 vi.mock('./checkAuthGate.js', () => ({
   assertLoggedInForCheckOrAlert: () => true,
@@ -47,7 +49,9 @@ describe('confirmSpellingCheckBeforeRun', () => {
         remaining: 1,
         tabLimit: 2,
         builtinActive: 12,
+        builtinTotal: BUILT_IN_QUOTA_RULES.length,
         cautionActive: 5,
+        cautionTotal: CAUTION_SEARCH_RULES.length,
       }),
     );
   });
@@ -58,13 +62,15 @@ describe('formatSpellingCheckConfirmMessage', () => {
     expect(
       formatSpellingCheckConfirmMessage({
         remaining: 1,
-        tabLimit: 2,
-        builtinActive: 12,
-        cautionActive: 5,
+        tabLimit: 1,
+        builtinActive: 30,
+        builtinTotal: 60,
+        cautionActive: 16,
+        cautionTotal: 18,
       }),
     ).toBe(
-      '오늘 맞춤법 검수는 1회 (한도 2회) 가능합니다\n' +
-        '맞춤법 기준 12개, 편집자 검토 필요 기준 5개\n' +
+      '오늘 맞춤법 확인은 1회(한도 1회) 가능합니다\n' +
+        '편집자 검토 필요 기준(16/18), 맞춤법 기준(60/30)\n' +
         '검수를 진행할까요?',
     );
   });
@@ -95,8 +101,9 @@ describe('formatSpellingCheckCompleteMessage', () => {
         totalFindings: 128,
       }),
     ).toBe(
-      '검수에서 발견한 편집자 검토 필요 기준은 1개, 맞춤법 기준은 2개\n' +
-        '원고에 표시된 내용은 총 128개입니다.',
+      '검수를 진행했습니다\n' +
+        '편집자 검토 기준 {1}, 맞춤법 기준 {2}이 해당되어\n' +
+        '전체 발견은 [128]입니다',
     );
   });
 });

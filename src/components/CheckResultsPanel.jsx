@@ -40,16 +40,16 @@ function ResultHeaderSummary({
         <span className="results-header__applied">
           편집자 검토 필요 기준{' '}
           <span className="results-header__rule-chip results-category-summary__caution">
-            {cautionWithFindingsCount}
+            {`{${cautionWithFindingsCount}}`}
           </span>{' '}
           맞춤법 기준{' '}
           <span className="results-header__rule-chip results-category-summary__builtin">
-            {builtinWithFindingsCount}
+            {`{${builtinWithFindingsCount}}`}
           </span>
         </span>
-        , 전체 발견{' '}
+        {' '}전체 발견{' '}
         <span className="results-category-summary__count-underline">
-          {totalFindings}
+          {`[${totalFindings}]`}
         </span>
       </div>
     );
@@ -61,16 +61,16 @@ function ResultHeaderSummary({
         <span className="results-header__applied">
           일관성 찾기{' '}
           <span className="results-header__rule-chip results-category-summary__builtin">
-            {literalWithFindingsCount}
+            {`{${literalWithFindingsCount}}`}
           </span>{' '}
           본용언 + 보조용언 표기{' '}
           <span className="results-header__rule-chip results-category-summary__caution">
-            {auxiliaryWithFindingsCount}
+            {`{${auxiliaryWithFindingsCount}}`}
           </span>
         </span>
         , 전체 발견{' '}
         <span className="results-category-summary__count-underline">
-          {totalFindings}
+          {`[${totalFindings}]`}
         </span>
       </div>
     );

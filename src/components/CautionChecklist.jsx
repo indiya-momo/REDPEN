@@ -3,6 +3,7 @@ import {
   CAUTION_GROUPS,
   CAUTION_SEARCH_RULES,
   cautionDisplayLabel,
+  cautionItemTip,
   isCautionSearchItem,
 } from '../lib/cautionRules.js';
 import DetailsChevron from './DetailsChevron.jsx';
@@ -16,15 +17,12 @@ function groupHeading(group) {
   return '';
 }
 
-/** @param {{ title?: string, tip?: string }} group */
-function groupExplanation(group) {
-  const title = groupHeading(group);
-  const tip = String(group.tip ?? '').trim();
-  if (!tip) return '';
-  if (title && tip === title) return '';
-  if (title) return tip;
-  if (tip.includes('\n') || tip.length > 20) return tip;
-  return '';
+/**
+ * @param {import('../lib/cautionRules.js').CautionItem} item
+ * @param {import('../lib/cautionRules.js').CautionGroup} group
+ */
+function itemExplanation(item, group) {
+  return cautionItemTip(item, group);
 }
 
 /**
@@ -81,12 +79,9 @@ export default function CautionChecklist({
       <ul className="caution-checklist">
         {CAUTION_GROUPS.map((group) => {
           const heading = groupHeading(group);
-          const explanation = groupExplanation(group);
           const items = group.items.filter(isCautionSearchItem);
           if (!items.length) return null;
           const showTitle = Boolean(heading) && group.hideGroupTitle !== true;
-          const tipOpen = openTips[group.id] === true;
-          const canShowTip = Boolean(explanation);
           return (
             <li key={group.id} className="caution-group">
               <div className="caution-group-top">
@@ -96,45 +91,52 @@ export default function CautionChecklist({
                 <div className="caution-group-items">
                   {items.map((item) => {
                     const label = cautionDisplayLabel(item);
+                    const explanation = itemExplanation(item, group);
+                    const tipOpen = openTips[item.id] === true;
+                    const canShowTip = Boolean(explanation);
                     return (
-                      <div key={item.id} className="caution-chip">
-                        <input
-                          type="checkbox"
-                          checked={cautionEnabled[item.id] === true}
-                          onChange={() => onCautionToggle(item.id)}
-                        />
-                        {canShowTip ? (
-                          <span
-                            className={`caution-chip-label caution-inline-tip-trigger${tipOpen ? ' caution-inline-tip-trigger--open' : ''}`}
-                            data-hover-tip="설명"
-                            role="button"
-                            tabIndex={0}
-                            onClick={() =>
-                              setOpenTips((prev) => ({
-                                ...prev,
-                                [group.id]: !tipOpen,
-                              }))
-                            }
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter' || e.key === ' ') {
-                                e.preventDefault();
+                      <div key={item.id} className="caution-chip-entry">
+                        <div className="caution-chip">
+                          <input
+                            type="checkbox"
+                            checked={cautionEnabled[item.id] === true}
+                            onChange={() => onCautionToggle(item.id)}
+                          />
+                          {canShowTip ? (
+                            <span
+                              className={`caution-chip-label caution-inline-tip-trigger${tipOpen ? ' caution-inline-tip-trigger--open' : ''}`}
+                              data-hover-tip="설명"
+                              role="button"
+                              tabIndex={0}
+                              onClick={() =>
                                 setOpenTips((prev) => ({
                                   ...prev,
-                                  [group.id]: !tipOpen,
-                                }));
+                                  [item.id]: !tipOpen,
+                                }))
                               }
-                            }}
-                          >
-                            {label}
-                          </span>
-                        ) : (
-                          <span className="caution-chip-label">{label}</span>
-                        )}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                  e.preventDefault();
+                                  setOpenTips((prev) => ({
+                                    ...prev,
+                                    [item.id]: !tipOpen,
+                                  }));
+                                }
+                              }}
+                            >
+                              {label}
+                            </span>
+                          ) : (
+                            <span className="caution-chip-label">{label}</span>
+                          )}
+                        </div>
+                        {tipOpen && canShowTip ? (
+                          <span className="caution-tip-inline">{explanation}</span>
+                        ) : null}
                       </div>
                     );
                   })}
                 </div>
-                {tipOpen ? <span className="caution-tip-inline">{explanation}</span> : null}
               </div>
             </li>
           );

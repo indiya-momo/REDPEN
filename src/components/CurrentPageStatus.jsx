@@ -5,19 +5,17 @@ import { formatSystemPageLabel } from '../lib/printedPageDisplay.js';
  */
 export function CurrentPageFindingText({ visibleOnCurrentPage }) {
   if (visibleOnCurrentPage <= 0) {
-    return <>에는 발견한 기준이 없습니다</>;
+    return <>에서 발견한 기준 [0]</>;
   }
   return (
     <>
-      에는 발견한{' '}
+      {' '}에서 발견한{' '}
       <span className="current-page-status__criterion-hit">
         기준{' '}
         <span className="current-page-status__criterion-hit-num">
-          {visibleOnCurrentPage}
+          [{visibleOnCurrentPage}]
         </span>
-        개
       </span>
-      가 있습니다
     </>
   );
 }

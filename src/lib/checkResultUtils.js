@@ -361,10 +361,13 @@ export function pruneResultVisibilityForToc(state, results) {
 /** @param {import('./ruleEngine.js').MatchInstance} a */
 /** @param {import('./ruleEngine.js').MatchInstance} b */
 export function instancesMatch(a, b) {
+  if (!a || !b) return false;
   return (
     a.pageNum === b.pageNum &&
     a.index === b.index &&
-    a.matchedText === b.matchedText
+    a.matchedText === b.matchedText &&
+    a.find === b.find &&
+    a.replace === b.replace
   );
 }
 

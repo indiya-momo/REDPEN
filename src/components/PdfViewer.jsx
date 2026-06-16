@@ -189,6 +189,7 @@ export default function PdfViewer({
                 highlightId: h.id,
                 tip: h.tip ?? '',
                 matchedText: h.matchedText ?? '',
+                overlayReplace: h.overlayReplace ?? '',
               });
             }
           }
@@ -324,34 +325,50 @@ export default function PdfViewer({
           <div className="pdf-canvas-wrap" ref={wrapRef}>
           <canvas ref={canvasRef} className="pdf-canvas" />
           <div className="pdf-highlight-layer">
-            {rects.map((r, i) => (
-              <div
-                key={`${r.highlightId}-${i}`}
-                className={[
-                  'pdf-highlight',
-                  r.primary ? 'pdf-highlight--primary' : '',
-                  openTip?.id === r.highlightId ? 'pdf-highlight--tip-open' : '',
-                  (r.tip || '').trim() ? 'pdf-highlight--has-tip' : '',
-                ]
-                  .filter(Boolean)
-                  .join(' ')}
-                style={{
-                  left: r.left,
-                  top: r.top,
-                  width: r.width,
-                  height: r.height,
-                }}
-                role={(r.tip || '').trim() ? 'button' : undefined}
-                tabIndex={(r.tip || '').trim() ? 0 : undefined}
-                title={(r.tip || '').trim() ? '설명' : undefined}
-                onClick={(e) => handleHighlightClick(r, e)}
-                onKeyDown={(e) => {
-                  if (e.key !== 'Enter' && e.key !== ' ') return;
-                  e.preventDefault();
-                  handleHighlightClick(r, e);
-                }}
-              />
-            ))}
+            {rects.map((r, i) => {
+              const overlayReplace = (r.overlayReplace || '').trim();
+              return (
+                <div
+                  key={`${r.highlightId}-${i}`}
+                  className={[
+                    'pdf-highlight',
+                    r.primary ? 'pdf-highlight--primary' : '',
+                    openTip?.id === r.highlightId ? 'pdf-highlight--tip-open' : '',
+                    (r.tip || '').trim() ? 'pdf-highlight--has-tip' : '',
+                    overlayReplace ? 'pdf-highlight--overlay-replace' : '',
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
+                  style={{
+                    left: r.left,
+                    top: r.top,
+                    width: r.width,
+                    height: r.height,
+                  }}
+                  role={(r.tip || '').trim() ? 'button' : undefined}
+                  tabIndex={(r.tip || '').trim() ? 0 : undefined}
+                  title={(r.tip || '').trim() ? '설명' : undefined}
+                  onClick={(e) => handleHighlightClick(r, e)}
+                  onKeyDown={(e) => {
+                    if (e.key !== 'Enter' && e.key !== ' ') return;
+                    e.preventDefault();
+                    handleHighlightClick(r, e);
+                  }}
+                >
+                  {overlayReplace ? (
+                    <span
+                      className="pdf-highlight__overlay-replace builtin-rule-tip-inline"
+                      style={{
+                        fontSize: `${Math.max(5, Math.round(r.height * 0.69))}px`,
+                      }}
+                      aria-hidden
+                    >
+                      {overlayReplace}
+                    </span>
+                  ) : null}
+                </div>
+              );
+            })}
           </div>
           {openTip ? (
             <PdfHighlightTipBubble

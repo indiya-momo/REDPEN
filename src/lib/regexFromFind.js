@@ -1,8 +1,33 @@
 const GAP = '[\\s\\u00A0\\n\\r\\u200B\\uFEFF]*';
 const GAP_REQ = '[\\s\\u00A0\\n\\r\\u200B\\uFEFF]+';
+/** find에 띄어쓰기 없음 — PDF 줄바꿈만 허용(일반 공백은 시트 find와 불일치) */
+const LINE_BREAK_GAP = '[\\n\\r]*';
 
 function escapeRegexLiteral(s) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * @param {string} trimmed
+ */
+function compileLiteralFindBody(trimmed) {
+  const wordParts = trimmed.split(/\s+/).filter(Boolean);
+  if (!wordParts.length) return null;
+
+  if (wordParts.length === 1) {
+    const word = wordParts[0];
+    const esc = escapeRegexLiteral(word);
+    if (word.length <= 1) return esc;
+    return esc.split('').join(LINE_BREAK_GAP);
+  }
+
+  return wordParts
+    .map((word) => {
+      const esc = escapeRegexLiteral(word);
+      if (word.length <= 1) return esc;
+      return esc.split('').join(GAP);
+    })
+    .join(GAP_REQ);
 }
 
 /**
@@ -18,14 +43,8 @@ export function compileRuleRegex(rule) {
     const trimmed = rule.find.trim();
     if (!trimmed) return null;
 
-    const wordParts = trimmed.split(/\s+/).filter(Boolean);
-    const body = wordParts
-      .map((word) => {
-        const esc = escapeRegexLiteral(word);
-        if (word.length <= 1) return esc;
-        return esc.split('').join(GAP);
-      })
-      .join(GAP_REQ);
+    const body = compileLiteralFindBody(trimmed);
+    if (!body) return null;
 
     return new RegExp(body, 'gu');
   } catch {

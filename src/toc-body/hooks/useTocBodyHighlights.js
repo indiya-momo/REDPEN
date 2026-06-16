@@ -1,5 +1,7 @@
 import { useMemo } from 'react';
 import {
+  findActiveGroup,
+  groupKey,
   instancesMatch,
   isInstanceVisible,
 } from '../../lib/checkResultUtils.js';
@@ -23,11 +25,16 @@ export function useTocBodyHighlights({
   resultVisibility,
   selectedInstance,
 }) {
+  const activeGroup = findActiveGroup(results, selectedInstance);
+  const activeGroupKey = activeGroup ? groupKey(activeGroup) : null;
+
   const pageHighlights = useMemo(() => {
     if (!currentPageData) return [];
     const onPage = [];
     for (const group of results) {
       const tipText = (group.tip || '').trim();
+      const isActiveGroup =
+        activeGroupKey != null && groupKey(group) === activeGroupKey;
       for (const inst of group.instances) {
         if (inst.pageNum !== currentPage) continue;
         if (
@@ -35,19 +42,29 @@ export function useTocBodyHighlights({
         ) {
           continue;
         }
-        onPage.push({ inst, tip: tipText });
+        if (
+          isActiveGroup &&
+          selectedInstance &&
+          !instancesMatch(inst, selectedInstance)
+        ) {
+          continue;
+        }
+        onPage.push({ inst, tip: tipText, isActiveGroup });
       }
     }
     onPage.sort((a, b) => a.inst.index - b.inst.index);
     return onPage
-      .map(({ inst, tip }) => {
+      .map(({ inst, tip, isActiveGroup }) => {
         const range = highlightRangeForInstance(currentPageData, inst);
         if (!range) return null;
-        const primary =
-          selectedInstance != null && instancesMatch(inst, selectedInstance);
+        const primary = Boolean(
+          isActiveGroup &&
+            selectedInstance != null &&
+            instancesMatch(inst, selectedInstance),
+        );
         return {
           ...range,
-          primary: Boolean(primary),
+          primary,
           id: `${inst.pageNum}-${inst.index}-${inst.find}`,
           tip,
           matchedText: inst.matchedText,
@@ -60,6 +77,7 @@ export function useTocBodyHighlights({
     currentPage,
     currentPageData,
     selectedInstance,
+    activeGroupKey,
   ]);
 
   return { pageHighlights };
