@@ -919,6 +919,11 @@
   flex-direction: column;
 }
 
+.spelling-tab-layout--with-results .spelling-tab-scroll {
+  flex: 1 1 0;
+  min-height: 0;
+}
+
 .spelling-tab-layout--rules-only .panel-section--builtin-spelling--fill,
 .spelling-tab-layout--with-results .panel-section--builtin-spelling--fill {
   flex: 1 1 0;

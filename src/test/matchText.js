@@ -46,7 +46,7 @@ export function matchAll(rule, text) {
       m = re.exec(text);
       continue;
     }
-    if (!shouldSkipMatch(rule, m)) hits.push(m[0]);
+    if (!shouldSkipMatch(rule, m, text)) hits.push(m[0]);
     m = re.exec(text);
   }
   return hits;

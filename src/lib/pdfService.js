@@ -281,7 +281,8 @@ export function highlightRangeForInstance(pageData, instance) {
  */
 function viewportBoxForTextItem(page, viewport, item, localStart, localEnd) {
   const tx = pdfjsLib.Util.transform(viewport.transform, item.transform);
-  const fontHeight = Math.hypot(tx[2], tx[3]);
+  const scaleX = Math.hypot(tx[0], tx[1]);
+  const fontHeight = Math.hypot(tx[2], tx[3]) || scaleX;
   const verticalOffset = fontHeight * 0.09;
   const scaledItemWidth = (item.width ?? 0) * viewport.scale;
   const strLen = item.str.length || 1;
@@ -290,9 +291,22 @@ function viewportBoxForTextItem(page, viewport, item, localStart, localEnd) {
   const startIdx = Math.max(0, Math.min(localStart, strLen));
   const endIdx = Math.max(startIdx, Math.min(localEnd, strLen));
 
-  /** @type {number[]} */
-  const advances = new Array(strLen).fill(0);
-  if (scaledItemWidth > 0) {
+  let leftOffset = 0;
+  let rightOffset = 0;
+
+  const uniformAdvance =
+    scaleX > 0 ? scaleX : scaledItemWidth > 0 ? scaledItemWidth / strLen : fallbackCharWidth;
+  const expectedUniformWidth = uniformAdvance * strLen;
+  const useUniformAdvance =
+    scaleX > 0 &&
+    (scaledItemWidth <= 0 ||
+      Math.abs(expectedUniformWidth - scaledItemWidth) / Math.max(scaledItemWidth, 1) <
+        0.2);
+
+  if (useUniformAdvance) {
+    leftOffset = startIdx * uniformAdvance;
+    rightOffset = endIdx * uniformAdvance;
+  } else if (scaledItemWidth > 0) {
     let spaceCount = 0;
     for (let i = 0; i < strLen; i += 1) {
       if (item.str[i] === ' ') spaceCount += 1;
@@ -307,24 +321,28 @@ function viewportBoxForTextItem(page, viewport, item, localStart, localEnd) {
       nonSpaceCount > 0 && nonSpaceTotal > 0
         ? nonSpaceTotal / nonSpaceCount
         : scaledItemWidth / strLen;
+    /** @type {number[]} */
+    const advances = new Array(strLen).fill(0);
     for (let i = 0; i < strLen; i += 1) {
       advances[i] =
         item.str[i] === ' ' ? tentativeSpaceWidth : Math.max(nonSpaceWidth, 0.5);
     }
-  } else {
-    for (let i = 0; i < strLen; i += 1) {
-      advances[i] = fallbackCharWidth;
+    /** @type {number[]} */
+    const offsets = [0];
+    for (let i = 0; i < advances.length; i += 1) {
+      offsets.push(offsets[i] + advances[i]);
     }
+    leftOffset = offsets[startIdx] ?? 0;
+    rightOffset = offsets[endIdx] ?? leftOffset;
+  } else {
+    leftOffset = startIdx * fallbackCharWidth;
+    rightOffset = endIdx * fallbackCharWidth;
   }
 
-  /** @type {number[]} */
-  const offsets = [0];
-  for (let i = 0; i < advances.length; i += 1) {
-    offsets.push(offsets[i] + advances[i]);
+  if (scaledItemWidth > 0) {
+    rightOffset = Math.min(rightOffset, scaledItemWidth);
+    leftOffset = Math.min(leftOffset, rightOffset);
   }
-
-  const leftOffset = offsets[startIdx] ?? 0;
-  const rightOffset = offsets[endIdx] ?? leftOffset;
 
   return {
     left: tx[4] + leftOffset,

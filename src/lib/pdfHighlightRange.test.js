@@ -1,8 +1,31 @@
 import { describe, expect, it } from 'vitest';
 import { buildCompoundFindRules } from './compoundFindPattern.js';
-import { findPhraseRangeOnLine } from './pdfHighlightRange.js';
-import { buildPageText, highlightRangeForInstance } from './pdfService.js';
+import {
+  findPhraseInSpan,
+  findPhraseRangeOnLine,
+} from './pdfHighlightRange.js';
+import {
+  buildPageText,
+  highlightRangeForInstance,
+  highlightRectsForTextRange,
+} from './pdfService.js';
 import { runRuleCheck } from './ruleEngine.js';
+import { buildCautionCheckRules, CAUTION_RULES } from './cautionRules.js';
+
+describe('findPhraseInSpan', () => {
+  it('합성 공백(음절 경계)을 무시하고 만큼을 찾는다', () => {
+    expect(findPhraseInSpan('회상할 만 큼', '만큼')).toEqual({
+      start: 4,
+      end: 7,
+    });
+  });
+
+  it('같이 — 줄 안에서 가장 가까운 후보를 고른다', () => {
+    const line = '날같이 골프를 같이 친다';
+    const nearGachi = findPhraseRangeOnLine(line, '같이', line.indexOf('같이 친'));
+    expect(line.slice(nearGachi?.start, nearGachi?.end)).toBe('같이');
+  });
+});
 
 describe('pdfHighlightRange', () => {
   it('findPhraseRangeOnLine — 붙여 쓴 줄', () => {
@@ -83,5 +106,96 @@ describe('pdfHighlightRange', () => {
     const range = highlightRangeForInstance(page, instAtGap);
     expect(range).not.toBeNull();
     expect(text.slice(range.start, range.end)).toMatch(/^불확실성의\s+케이크$/);
+  });
+
+  it('편집자 검토 만큼 — PDF 항목 기준으로 만큼만 하이라이트', () => {
+    const items = [
+      {
+        str: '회상할',
+        transform: [12, 0, 0, 12, 48, 200],
+        width: 48,
+      },
+      {
+        str: '만큼',
+        transform: [12, 0, 0, 12, 100, 200],
+        width: 24,
+        hasEOL: true,
+      },
+      {
+        str: '강한',
+        transform: [12, 0, 0, 12, 130, 200],
+        width: 24,
+        hasEOL: true,
+      },
+    ];
+    const { text, itemRefs } = buildPageText(items);
+    const page = { pageNum: 245, text, items, itemRefs };
+    const enabled = Object.fromEntries(
+      CAUTION_RULES.map((r) => [r.id, r.id === 'josa-uinoun-mankum']),
+    );
+    const { results } = runRuleCheck([page], buildCautionCheckRules(enabled));
+    const inst = results[0]?.instances[0];
+    expect(inst?.matchedText).toBe('회상할 만큼');
+    expect(inst?.highlightText).toBe('만큼');
+    expect(inst?.index).toBe(0);
+    const range = highlightRangeForInstance(page, inst);
+    expect(range).not.toBeNull();
+    expect(text.slice(range.start, range.end)).toBe('만큼');
+
+    const viewport = { transform: [1.2, 0, 0, 1.2, 0, 0], scale: 1.2 };
+    const rects = highlightRectsForTextRange(
+      /** @type {*} */ ({}),
+      viewport,
+      items,
+      itemRefs,
+      range.start,
+      range.end,
+      page,
+    );
+    expect(rects.length).toBe(1);
+    expect(rects[0].width).toBeGreaterThan(0);
+    expect(rects[0].width).toBeLessThanOrEqual(24 * 1.2 + 2);
+  });
+
+  it('바라/바래 — 같은 줄에 바라보셨습니다가 있어도 그는 바라다는 바라만 칠함', () => {
+    const items = [
+      {
+        str: '하나님께',
+        transform: [12, 0, 0, 12, 48, 220],
+        width: 48,
+      },
+      {
+        str: '바라보셨습니다.',
+        transform: [12, 0, 0, 12, 100, 220],
+        width: 96,
+        hasEOL: true,
+      },
+      {
+        str: '그는',
+        transform: [12, 0, 0, 12, 48, 200],
+        width: 24,
+      },
+      {
+        str: '바라다.',
+        transform: [12, 0, 0, 12, 76, 200],
+        width: 36,
+        hasEOL: true,
+      },
+    ];
+    const { text, itemRefs } = buildPageText(items);
+    const page = { pageNum: 216, text, items, itemRefs };
+    const rules = buildCautionCheckRules({ 'verb-verb-bara': true });
+    const { results } = runRuleCheck([page], rules);
+    const inst = results[0]?.instances.find((i) => i.matchedText === '그는 바라');
+    expect(inst).toBeTruthy();
+    expect(inst?.highlightText).toBe('바라');
+    expect(inst?.highlightIndex).toBe(inst.index + 3);
+
+    const range = highlightRangeForInstance(page, inst);
+    expect(range).not.toBeNull();
+    const highlighted = text.slice(range.start, range.end);
+    expect(highlighted).toBe('바라');
+    expect(highlighted).not.toBe('습니다');
+    expect(text.slice(range.start, range.end + 1)).not.toMatch(/^습니다/);
   });
 });

@@ -7,6 +7,7 @@ import { isGloballyExcluded, shouldSkipMatch } from './matchFilters.js';
 import { tailRegexFragmentForFind } from './compoundPatternCommon.js';
 import { getLineContextAtTextIndex } from '../toc-body/lib/pdfHeadingExtract.js';
 import { isMatchSpatiallyCoherent } from './matchSpatial.js';
+import { cautionHighlightSpan } from './cautionRules.js';
 
 /**
  * @typedef {Object} PageText
@@ -20,6 +21,8 @@ import { isMatchSpatiallyCoherent } from './matchSpatial.js';
  * @property {string} replace
  * @property {string} matchedText
  * @property {string} suggestedText
+ * @property {string} [highlightText] — PDF 하이라이트만 이 구간 (matchedText는 결과 표시용)
+ * @property {number} [highlightIndex] — highlightText 시작 위치 (없으면 matchedText 안에서 유도)
  * @property {number} pageNum
  * @property {number} index
  */
@@ -164,7 +167,7 @@ function applyCompoundFindByLines(rule, page, byKey, globalExcludePhrases) {
       }
       if (
         isGloballyExcluded(match[0], globalExcludePhrases) ||
-        shouldSkipMatch(rule, match)
+        shouldSkipMatch(rule, match, line)
       ) {
         continue;
       }
@@ -216,7 +219,7 @@ function applyRuleToPages(rule, pages, byKey, globalExcludePhrases, errors) {
       }
       if (
         isGloballyExcluded(match[0], globalExcludePhrases) ||
-        shouldSkipMatch(rule, match)
+        shouldSkipMatch(rule, match, text)
       ) {
         continue;
       }
@@ -288,6 +291,13 @@ function applyRuleToPages(rule, pages, byKey, globalExcludePhrases, errors) {
           instances: [],
         });
       }
+      let highlightText;
+      let highlightIndex;
+      if (rule.category === 'caution' && rule.cautionStems?.length) {
+        const span = cautionHighlightSpan(match[0], rule.cautionStems);
+        highlightText = span.text;
+        highlightIndex = match.index + span.indexOffset;
+      }
       byKey.get(key).instances.push({
         find: rule.find,
         replace: rule.replace,
@@ -295,6 +305,7 @@ function applyRuleToPages(rule, pages, byKey, globalExcludePhrases, errors) {
         suggestedText: suggested,
         pageNum: page.pageNum,
         index: match.index,
+        ...(highlightText ? { highlightText, highlightIndex } : {}),
       });
     }
   }

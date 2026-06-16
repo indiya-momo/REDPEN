@@ -313,7 +313,9 @@ export function migrateCautionEnabled(
 export function cautionFindPattern(label, matchMode) {
   const esc = escapeRegex(label);
   if (matchMode === 'spaced-before') {
-    return String.raw`([^\s]{2,})[ \u00A0]+${esc}(?!\S)`;
+    // 붙여 써야 하는데 앞말+공백+label — 뒤에 조사·어미가 와도 잡음
+    // 줄/문서 시작의 label+공백(다음 어절)도 포함 — 예: "이중 사람들에게"
+    return String.raw`(?:^|(?<=\r?\n))${esc}[ \u00A0]+|([^\s]{1,})[ \u00A0]+${esc}`;
   }
   if (matchMode === 'attached-before') {
     // 앞말+label이 한 토큰이고 토큰 끝이 label(예: 여름가지 O, 물가지수 X)
@@ -330,7 +332,7 @@ export function cautionFindPattern(label, matchMode) {
     }
     return esc + String.raw`[\uAC00-\uD7A3]+(?!\S)`;
   }
-  return String.raw`([^\s]{2,})\s*${esc}`;
+  return String.raw`(?<![^\s])([^\s]{2,})\s*${esc}`;
 }
 
 /** 검사 결과 카드에 쓸 체크 항목 이름 (^주다, 만 …) */
@@ -345,6 +347,21 @@ export function cautionResultChipLabel(groupOrLabel) {
       .replace(/^띄어쓰기\s*·\s*/, '')
       .trim() || raw
   );
+}
+
+/** @param {string} matchedText @param {string[]} stems */
+export function cautionHighlightSpan(matchedText, stems) {
+  const text = String(matchedText ?? '');
+  if (!text || !stems?.length) {
+    return { indexOffset: 0, text };
+  }
+  const ordered = [...stems].sort((a, b) => b.length - a.length);
+  for (const stem of ordered) {
+    if (stem && text.endsWith(stem)) {
+      return { indexOffset: text.length - stem.length, text: stem };
+    }
+  }
+  return { indexOffset: 0, text };
 }
 
 export function buildCautionCheckRules(cautionEnabled) {
@@ -368,6 +385,7 @@ export function buildCautionCheckRules(cautionEnabled) {
       cautionId: item.id,
       label: item.displayLabel,
       tip: item.tip,
+      cautionStems: stems,
       ...(item.except?.length ? { excludePhrases: item.except } : {}),
     });
   }

@@ -108,6 +108,15 @@ describe('shouldInsertSpaceBetweenPdfItems', () => {
     expect(shouldInsertSpaceBetweenPdfItems(0.08, lineH, '먹', '어')).toBe(false);
   });
 
+  it('본용언+보조용언 경계(만들어 줄)는 좁은 gap도 공백으로 본다', () => {
+    expect(shouldInsertSpaceBetweenPdfItems(0.08, lineH, '만들어', '줄')).toBe(
+      true,
+    );
+    expect(shouldInsertSpaceBetweenPdfItems(0.08, lineH, '만들어', '주십니다')).toBe(
+      true,
+    );
+  });
+
   it('gap 0이면 삽입 안 함', () => {
     expect(shouldInsertSpaceBetweenPdfItems(0, lineH, '보여', '준다')).toBe(false);
   });

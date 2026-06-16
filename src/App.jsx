@@ -3,7 +3,7 @@
  * Firebase auth 부트스트랩·subscribeAuthSession·PostHog syncPostHogIdentity.
  * useRuleSets 로드 후 MainScreen에 props 주입; 로그인 필수인데 uid 없으면 welcome 복귀.
  */
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import MainScreen from './components/MainScreen.jsx';
 import WelcomeScreen from './components/WelcomeScreen.jsx';
 import MomoRoomScreen from './components/MomoRoomScreen.jsx';
@@ -70,6 +70,8 @@ export default function App() {
   const [feedbackThankYouOpen, setFeedbackThankYouOpen] = useState(false);
   const [eventRewardTick, setEventRewardTick] = useState(0);
   const [rewardNoticeTick, setRewardNoticeTick] = useState(0);
+  /** 집 아이콘 등 사용자가 명시적으로 대문으로 돌아온 경우 welcome→main 자동 전환 억제 */
+  const welcomeManualReturnRef = useRef(false);
 
   const applyFeedbackThankYouUi = useCallback((uid) => {
     const id = uid.trim();
@@ -173,7 +175,14 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    if (screen === 'main') {
+      welcomeManualReturnRef.current = false;
+    }
+  }, [screen]);
+
+  useEffect(() => {
     if (!authReady || auxWindow || screen !== 'welcome') return;
+    if (welcomeManualReturnRef.current) return;
     const uid = authSession?.uid?.trim();
     if (!uid || !isOnboardingComplete(uid)) return;
     setMainWorkTab('spelling');
@@ -290,6 +299,7 @@ export default function App() {
           syncPostHogIdentity(getCurrentUserSession());
         }}
         onLogout={async () => {
+          welcomeManualReturnRef.current = false;
           await signOutUser();
         }}
         onStart={() => {
@@ -355,11 +365,13 @@ export default function App() {
       onSaveCriteriaPreset={handleSaveCriteriaPreset}
       onDeleteCriteriaPreset={handleDeleteCriteriaPreset}
       onOpenWelcome={() => {
+        welcomeManualReturnRef.current = true;
         void clearWorkSession();
         setMainWorkTab('spelling');
         setScreen('welcome');
       }}
       onLogout={async () => {
+        welcomeManualReturnRef.current = false;
         await clearWorkSession();
         await signOutUser();
         setMainWorkTab('spelling');

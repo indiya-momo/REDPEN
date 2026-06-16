@@ -42,13 +42,6 @@ export function useTocBodyHighlights({
         ) {
           continue;
         }
-        if (
-          isActiveGroup &&
-          selectedInstance &&
-          !instancesMatch(inst, selectedInstance)
-        ) {
-          continue;
-        }
         onPage.push({ inst, tip: tipText, isActiveGroup });
       }
     }

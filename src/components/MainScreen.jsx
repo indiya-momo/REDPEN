@@ -1304,15 +1304,17 @@ export default function MainScreen({
               </div>
             ) : null}
 
-            <ResizableBuiltinSpelling
-              builtInEnabled={builtInEnabled}
-              onBuiltInToggle={onBuiltInToggle}
-              onBuiltInSetAll={onBuiltInSetAll}
-              cautionEnabled={cautionEnabled}
-              onCautionToggle={onCautionToggle}
-              onCautionSetAll={onCautionSetAll}
-              fillPanel={!tabCheckDone}
-            />
+            {!tabCheckDone ? (
+              <ResizableBuiltinSpelling
+                builtInEnabled={builtInEnabled}
+                onBuiltInToggle={onBuiltInToggle}
+                onBuiltInSetAll={onBuiltInSetAll}
+                cautionEnabled={cautionEnabled}
+                onCautionToggle={onCautionToggle}
+                onCautionSetAll={onCautionSetAll}
+                fillPanel
+              />
+            ) : null}
           </div>
         )}
 
