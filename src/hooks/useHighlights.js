@@ -3,9 +3,11 @@ import { getBuiltInTip } from '../lib/builtInRules.js';
 import { getConsistencyHighlightTip } from '../lib/consistencyHighlightTip.js';
 import {
   findActiveGroup,
+  groupKey,
   instancesMatch,
   isInstanceVisible,
 } from '../lib/checkResultUtils.js';
+import { getHighlightOverlayReplace } from '../lib/highlightOverlayReplace.js';
 import { highlightRangeForInstance } from '../lib/pdfService.js';
 /**
  * 맞춤법·표기 일관성 PDF 하이라이트 (목차는 useTocBodyHighlights)
@@ -33,6 +35,7 @@ export function useHighlights({
   const activeResults =
     activeSource === 'spelling' ? spellingResults : consistencyResults;
   const activeGroup = findActiveGroup(activeResults, selectedInstance);
+  const activeGroupKey = activeGroup ? groupKey(activeGroup) : null;
 
   const pageHighlights = useMemo(() => {
     if (!currentPageData) return [];
@@ -51,26 +54,40 @@ export function useHighlights({
             : source === 'consistency'
               ? getConsistencyHighlightTip(group)
               : '');
+        const isActiveGroup =
+          activeGroupKey != null && groupKey(group) === activeGroupKey;
         for (const inst of group.instances) {
           if (inst.pageNum !== currentPage) continue;
           if (!isInstanceVisible(resultVisibility, source, group, inst)) continue;
-          onPage.push({ inst, tip: tipText });
+          if (
+            isActiveGroup &&
+            selectedInstance &&
+            !instancesMatch(inst, selectedInstance)
+          ) {
+            continue;
+          }
+          onPage.push({ inst, tip: tipText, isActiveGroup });
         }
       }
     }
     onPage.sort((a, b) => a.inst.index - b.inst.index);
     return onPage
-      .map(({ inst, tip }) => {
+      .map(({ inst, tip, isActiveGroup }) => {
         const range = highlightRangeForInstance(currentPageData, inst);
         if (!range) return null;
-        const primary =
-          selectedInstance != null && instancesMatch(inst, selectedInstance);
+        const primary = Boolean(
+          isActiveGroup &&
+            selectedInstance != null &&
+            instancesMatch(inst, selectedInstance),
+        );
+        const overlayReplace = getHighlightOverlayReplace(inst);
         return {
           ...range,
-          primary: Boolean(primary),
+          primary,
           id: `${inst.pageNum}-${inst.index}-${inst.find}`,
           tip,
           matchedText: inst.matchedText,
+          ...(overlayReplace ? { overlayReplace } : {}),
         };
       })
       .filter(Boolean);
@@ -82,6 +99,7 @@ export function useHighlights({
     currentPage,
     currentPageData,
     selectedInstance,
+    activeGroupKey,
   ]);
 
   const sortedFindings = useMemo(() => {

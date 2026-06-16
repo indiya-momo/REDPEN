@@ -58,7 +58,7 @@ describe('countConsistencyCheckActiveRules', () => {
           tailWord: '가다',
         },
       ]),
-    ).toEqual({ literalActive: 2, auxiliaryActive: 2 });
+    ).toEqual({ literalActive: 1, commonStringActive: 1, auxiliaryActive: 2 });
   });
 });
 
@@ -87,8 +87,12 @@ describe('confirmConsistencyCheckBeforeRun', () => {
       formatConsistencyCheckConfirmMessage({
         remaining: 1,
         tabLimit: 2,
-        literalActive: 1,
+        literalActive: 0,
+        literalTotal: 0,
+        commonStringActive: 1,
+        commonStringTotal: 1,
         auxiliaryActive: 1,
+        auxiliaryTotal: 1,
       }),
     );
   });
@@ -104,8 +108,30 @@ describe('countConsistencyGroupsWithFindings', () => {
       ]),
     ).toEqual({
       literalWithFindings: 1,
+      commonStringWithFindings: 0,
       auxiliaryWithFindings: 1,
     });
+  });
+});
+
+describe('formatConsistencyCheckConfirmMessage', () => {
+  it('시작 confirm 문구를 새 형식으로 만든다', () => {
+    expect(
+      formatConsistencyCheckConfirmMessage({
+        remaining: 1,
+        tabLimit: 1,
+        literalActive: 3,
+        literalTotal: 8,
+        commonStringActive: 1,
+        commonStringTotal: 4,
+        auxiliaryActive: 2,
+        auxiliaryTotal: 10,
+      }),
+    ).toBe(
+      '오늘 일관성 확인은 1회(한도 1회) 가능합니다\n' +
+        '일관성 찾기(3/8), 공통 문자열 찾기(1/4), 본용언 + 보조용언 표기 (2/10)\n' +
+        '검수를 진행할까요?',
+    );
   });
 });
 
@@ -114,12 +140,14 @@ describe('formatConsistencyCheckCompleteMessage', () => {
     expect(
       formatConsistencyCheckCompleteMessage({
         literalWithFindings: 2,
+        commonStringWithFindings: 1,
         auxiliaryWithFindings: 1,
         totalFindings: 40,
       }),
     ).toBe(
-      '검수에서 발견한 일관성 찾기는 2개, 본용언 + 보조용언 표기는 1개\n' +
-        '원고에 표시된 내용은 총 40개입니다.',
+      '검수를 진행했습니다\n' +
+        '일관성 찾기{2} 공통 문자열 찾기{1} 본용언 + 보조용언 표기 {1}\n' +
+        '전체 발견은 [40]입니다',
     );
   });
 });
@@ -139,7 +167,8 @@ describe('alertConsistencyCheckAfterRun', () => {
 
     expect(alertMock).toHaveBeenCalledWith(
       formatConsistencyCheckCompleteMessage({
-        literalWithFindings: 1,
+        literalWithFindings: 0,
+        commonStringWithFindings: 1,
         auxiliaryWithFindings: 1,
         totalFindings: 3,
       }),

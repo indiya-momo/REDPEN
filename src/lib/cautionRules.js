@@ -2,8 +2,8 @@ import cautionRulesJson from '../data/caution-rules.json';
 
 /**
  * @typedef {'any-before' | 'spaced-before' | 'attached-before' | 'spaced-stem' | 'fixed-phrase'} CautionMatchMode
- * @typedef {{ id: string, label: string, stems?: string[], enabled?: boolean, matchMode?: CautionMatchMode, displayLabel?: string, inventoryOnly?: boolean, except?: string[] }} CautionItem
- * @typedef {{ id: string, title?: string, tip: string, hideGroupTitle?: boolean, tipInline?: boolean, items: CautionItem[] }} CautionGroup
+ * @typedef {{ id: string, label: string, stems?: string[], tip?: string, enabled?: boolean, matchMode?: CautionMatchMode, displayLabel?: string, inventoryOnly?: boolean, except?: string[] }} CautionItem
+ * @typedef {{ id: string, title?: string, tip?: string, hideGroupTitle?: boolean, tipInline?: boolean, items: CautionItem[] }} CautionGroup
  * @typedef {{ id: string, label: string, stems: string[], tip: string, groupId: string, enabled: boolean, matchMode: CautionMatchMode, displayLabel: string, inventoryOnly: boolean, except?: string[] }} CautionRule
  */
 
@@ -149,6 +149,7 @@ function normalizeCautionItem(item) {
   const matchMode = normalizeMatchMode(item.matchMode);
   const stems = cautionStemsFromItem(item);
   const except = parseExceptField(item);
+  const tip = String(item.tip ?? '').trim();
   return {
     ...item,
     label: stems[0] ?? item.label,
@@ -157,7 +158,15 @@ function normalizeCautionItem(item) {
     displayLabel: item.displayLabel?.trim() || cautionDisplayLabel(item),
     inventoryOnly: item.inventoryOnly === true,
     ...(except ? { except } : {}),
+    ...(tip ? { tip } : {}),
   };
+}
+
+/** @param {CautionItem} item @param {CautionGroup} [group] */
+export function cautionItemTip(item, group) {
+  const itemTip = String(item.tip ?? '').trim();
+  if (itemTip) return itemTip;
+  return String(group?.tip ?? '').trim();
 }
 
 /** @param {{ label: string, matchMode?: CautionMatchMode, displayLabel?: string }} item */
@@ -197,7 +206,7 @@ export const CAUTION_RULES = CAUTION_GROUPS.flatMap((group) =>
     id: item.id,
     label: item.label,
     stems: item.stems ?? cautionStemsFromItem(item),
-    tip: group.tip,
+    tip: cautionItemTip(item, group),
     groupId: group.id,
     enabled: item.enabled === true,
     matchMode: item.matchMode ?? 'any-before',

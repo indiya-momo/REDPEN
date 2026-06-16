@@ -119,6 +119,9 @@ export function validateSpellingRules(data, label = 'spelling-rules.json') {
     ) {
       pushIssue(issues, `${base}.dividerGroup`, 'must be a string');
     }
+    if (row.overlayReplace !== undefined && typeof row.overlayReplace !== 'string') {
+      pushIssue(issues, `${base}.overlayReplace`, 'must be a string');
+    }
 
     if (isNonEmptyString(row.find) && isNonEmptyString(row.replace)) {
       const key = `${row.find.trim()}\0${row.replace.trim()}`;
@@ -210,6 +213,9 @@ function validateGroupItem(item, itemPath, issues, options = {}) {
   }
   if (item.displayLabel !== undefined && typeof item.displayLabel !== 'string') {
     pushIssue(issues, `${itemPath}.displayLabel`, 'must be a string');
+  }
+  if (item.tip !== undefined && typeof item.tip !== 'string') {
+    pushIssue(issues, `${itemPath}.tip`, 'must be a string');
   }
 }
 

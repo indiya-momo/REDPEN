@@ -282,19 +282,55 @@ export function highlightRangeForInstance(pageData, instance) {
 function viewportBoxForTextItem(page, viewport, item, localStart, localEnd) {
   const tx = pdfjsLib.Util.transform(viewport.transform, item.transform);
   const fontHeight = Math.hypot(tx[2], tx[3]);
+  const verticalOffset = fontHeight * 0.09;
   const scaledItemWidth = (item.width ?? 0) * viewport.scale;
   const strLen = item.str.length || 1;
-  const charWidth =
-    scaledItemWidth > 0
-      ? scaledItemWidth / strLen
-      : Math.max(fontHeight * 0.52, 4);
+  const fallbackCharWidth = Math.max(fontHeight * 0.52, 4);
   const spanLen = Math.max(localEnd - localStart, 0);
+  const startIdx = Math.max(0, Math.min(localStart, strLen));
+  const endIdx = Math.max(startIdx, Math.min(localEnd, strLen));
+
+  /** @type {number[]} */
+  const advances = new Array(strLen).fill(0);
+  if (scaledItemWidth > 0) {
+    let spaceCount = 0;
+    for (let i = 0; i < strLen; i += 1) {
+      if (item.str[i] === ' ') spaceCount += 1;
+    }
+    const nonSpaceCount = Math.max(strLen - spaceCount, 0);
+    const tentativeSpaceWidth = Math.min(
+      Math.max(fontHeight * 0.22, 1),
+      scaledItemWidth / Math.max(strLen + 1, 1),
+    );
+    const nonSpaceTotal = scaledItemWidth - tentativeSpaceWidth * spaceCount;
+    const nonSpaceWidth =
+      nonSpaceCount > 0 && nonSpaceTotal > 0
+        ? nonSpaceTotal / nonSpaceCount
+        : scaledItemWidth / strLen;
+    for (let i = 0; i < strLen; i += 1) {
+      advances[i] =
+        item.str[i] === ' ' ? tentativeSpaceWidth : Math.max(nonSpaceWidth, 0.5);
+    }
+  } else {
+    for (let i = 0; i < strLen; i += 1) {
+      advances[i] = fallbackCharWidth;
+    }
+  }
+
+  /** @type {number[]} */
+  const offsets = [0];
+  for (let i = 0; i < advances.length; i += 1) {
+    offsets.push(offsets[i] + advances[i]);
+  }
+
+  const leftOffset = offsets[startIdx] ?? 0;
+  const rightOffset = offsets[endIdx] ?? leftOffset;
 
   return {
-    left: tx[4] + charWidth * localStart,
-    top: tx[5] - fontHeight,
-    width: Math.max(charWidth * spanLen, 4),
-    height: Math.max(fontHeight * 1.15, 6),
+    left: tx[4] + leftOffset,
+    top: tx[5] - fontHeight + verticalOffset,
+    width: Math.max(rightOffset - leftOffset, spanLen > 0 ? 2 : 4),
+    height: Math.max(fontHeight * 1.05, 6),
   };
 }
 

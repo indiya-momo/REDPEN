@@ -287,13 +287,14 @@ function markInventoryItems(items) {
   });
 }
 
-function itemFromRow(row, label, itemId) {
+function itemFromRow(row, label, itemId, tip = '') {
   const rawMode = String(row.match_mode ?? row.matchmode ?? '').trim();
   const inventoryOnly = parseInventoryOnly(row, rawMode);
   const matchMode = inventoryOnly ? 'any-before' : parseMatchMode(rawMode);
   const displayLabel = String(row.display_label ?? row.displaylabel ?? '').trim();
   const stems = parseStems(row, label);
   const except = parseExcept(row);
+  const tipText = String(tip ?? '').trim();
   return {
     id: itemId,
     label,
@@ -303,6 +304,7 @@ function itemFromRow(row, label, itemId) {
     ...(stems ? { stems } : {}),
     ...(displayLabel ? { displayLabel } : {}),
     ...(except ? { except } : {}),
+    ...(tipText ? { tip: tipText } : {}),
   };
 }
 
@@ -328,7 +330,7 @@ function rowsToCautionGroups(rows) {
           id: groupId,
           tip,
           items: labels.map((label) =>
-            itemFromRow(row, label, `${groupId}-${label}`),
+            itemFromRow(row, label, `${groupId}-${label}`, tip),
           ),
         };
       })
@@ -361,18 +363,20 @@ function rowsToCautionGroups(rows) {
       groups.set(curGroupId, { id: curGroupId, tip: curTip, items: [] });
     }
     const group = groups.get(curGroupId);
-    if (curTip) group.tip = curTip;
 
-    group.items.push(itemFromRow(row, label, itemId));
+    group.items.push(itemFromRow(row, label, itemId, curTip));
   }
 
   return [...groups.values()]
     .filter((g) => g.items.length && !isSkippedCautionGroupId(g.id))
-    .map((g) => ({
-      ...g,
-      tip: g.tip || '',
-      items: markInventoryItems(g.items),
-    }))
+    .map((g) => {
+      const firstItemTip = String(g.items.find((it) => it.tip)?.tip ?? '').trim();
+      return {
+        ...g,
+        tip: firstItemTip || String(g.tip ?? '').trim(),
+        items: markInventoryItems(g.items),
+      };
+    })
     .filter((g) => g.items.length);
 }
 

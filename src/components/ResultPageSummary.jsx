@@ -183,17 +183,16 @@ function InstanceChip({
   const visible = isInstanceVisible(inst);
   const selected =
     selectedInstance != null && instancesMatch(inst, selectedInstance);
-  const onPage = inst.pageNum === currentPage;
   const countLabel =
-    totalOnPage > 1 ? ` (${indexOnPage}/${totalOnPage})` : '';
+    totalOnPage > 1 ? `(${indexOnPage}/${totalOnPage})` : '';
 
   return (
     <div className="result-page-chip-wrap" role="listitem">
       <button
         type="button"
-        className={`page-chip${onPage ? ' page-chip--on-page' : ''}${
-          selected ? ' page-chip--current' : ''
-        }${!visible ? ' page-chip--hidden-instance' : ''}`}
+        className={`page-chip${selected ? ' page-chip--current' : ''}${
+          !visible ? ' page-chip--hidden-instance' : ''
+        }`}
         title={
           onToggleInstanceVisibility
             ? '클릭: 해당 위치로 이동 · 우클릭: 표시 제외'

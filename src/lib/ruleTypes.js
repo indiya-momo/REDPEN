@@ -23,6 +23,7 @@
  * @property {boolean} [countsInQuota] — false면 1000개 한도·맞춤법 확인 (N/M) 집계에서 제외
  * @property {boolean} [visible] — false면 규칙 목록 UI에만 숨김(검사는 enabled로 제어)
  * @property {string} [dividerGroup] — 맞춤법 목록 구분선 묶음 키(같은 값끼리는 구분선 없음)
+ * @property {string} [overlayReplace] — 시트 overlay_replace: PDF 하이라이트 위 표시 문구
  * @property {boolean} [requireLeadingBoundary] — true면 앞에 글자/숫자가 붙은 매칭은 제외
  * @property {string} [bonBojoItemId] — bon-bojo 시트 item_id; 목록·체크는 항목 단위
  */

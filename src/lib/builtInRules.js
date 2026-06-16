@@ -9,7 +9,7 @@ export function spellingRulesFingerprint(rows = spellingRulesJson) {
       (r) =>
         `${r.find}\0${r.replace}\0${r.tip ?? ''}\0${r.enabled === true ? 1 : 0}\0${
           r.countsInQuota === false ? 0 : 1
-        }\0${r.visible === false ? 0 : 1}\0${r.dividerGroup ?? ''}`,
+        }\0${r.visible === false ? 0 : 1}\0${r.dividerGroup ?? ''}\0${r.overlayReplace ?? ''}`,
     )
     .join('\n');
   for (let i = 0; i < payload.length; i += 1) {
@@ -36,6 +36,9 @@ function builtInRuleFromRow(row) {
     countsInQuota: fromSheet,
     visible: row.visible !== false,
     dividerGroup: String(row.dividerGroup ?? '').trim() || undefined,
+    ...(row.overlayReplace
+      ? { overlayReplace: String(row.overlayReplace).trim() }
+      : {}),
     // "펼쳐지다" 같은 합성어 오탐 방지: 단어 시작에서만 매칭
     ...(row.find === '쳐지' ? { requireLeadingBoundary: true } : {}),
   };
@@ -112,6 +115,19 @@ const tipLookup = new Map(
 /** @param {string} find @param {string} replace */
 export function getBuiltInTip(find, replace) {
   return tipLookup.get(`${find}\0${replace}`) ?? '';
+}
+
+const overlayReplaceLookup = new Map(
+  spellingRulesJson.flatMap((row) => {
+    const text = String(row.overlayReplace ?? '').trim();
+    if (!text) return [];
+    return [[`${row.find}\0${row.replace}`, text]];
+  }),
+);
+
+/** @param {string} find @param {string} replace */
+export function getBuiltInOverlayReplace(find, replace) {
+  return overlayReplaceLookup.get(`${find}\0${replace}`) ?? null;
 }
 
 export { MAX_RULES };

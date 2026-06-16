@@ -24,19 +24,18 @@ import {
  * @param {import('./ruleTypes.js').Rule[]} [customRules]
  */
 export function countConsistencyCheckActiveRules(customRules = []) {
-  const literalActive =
-    listConsistencyEntries(customRules).filter((entry) =>
-      isConsistencyEntryEnabled(customRules, entry.tailWord),
-    ).length +
-    listPhraseSlotEntries(customRules).filter((entry) =>
-      isPhraseSlotEntryEnabled(customRules, entry.tailWord),
-    ).length;
+  const literalActive = listConsistencyEntries(customRules).filter((entry) =>
+    isConsistencyEntryEnabled(customRules, entry.tailWord),
+  ).length;
+  const commonStringActive = listPhraseSlotEntries(customRules).filter((entry) =>
+    isPhraseSlotEntryEnabled(customRules, entry.tailWord),
+  ).length;
 
   const auxiliaryActive = listAuxiliaryVerbEntries(customRules).filter(
     (entry) => isAuxiliaryVerbEntryEnabled(customRules, entry),
   ).length;
 
-  return { literalActive, auxiliaryActive };
+  return { literalActive, commonStringActive, auxiliaryActive };
 }
 
 /**
@@ -44,18 +43,26 @@ export function countConsistencyCheckActiveRules(customRules = []) {
  *   remaining: number,
  *   tabLimit: number,
  *   literalActive: number,
+ *   literalTotal: number,
+ *   commonStringActive: number,
+ *   commonStringTotal: number,
  *   auxiliaryActive: number,
+ *   auxiliaryTotal: number,
  * }} input
  */
 export function formatConsistencyCheckConfirmMessage({
   remaining,
   tabLimit,
   literalActive,
+  literalTotal,
+  commonStringActive,
+  commonStringTotal,
   auxiliaryActive,
+  auxiliaryTotal,
 }) {
   return (
-    `오늘 일관성 검수는 ${remaining}회 (한도 ${tabLimit}회) 가능합니다\n` +
-    `일관성 찾기 ${literalActive}개, 본용언 + 보조용언 표기 ${auxiliaryActive}개\n` +
+    `오늘 일관성 확인은 ${remaining}회(한도 ${tabLimit}회) 가능합니다\n` +
+    `일관성 찾기(${literalActive}/${literalTotal}), 공통 문자열 찾기(${commonStringActive}/${commonStringTotal}), 본용언 + 보조용언 표기 (${auxiliaryActive}/${auxiliaryTotal})\n` +
     '검수를 진행할까요?'
   );
 }
@@ -63,12 +70,16 @@ export function formatConsistencyCheckConfirmMessage({
 /**
  * @param {{
  *   literalActive: number,
+ *   literalTotal: number,
+ *   commonStringActive: number,
+ *   commonStringTotal: number,
  *   auxiliaryActive: number,
+ *   auxiliaryTotal: number,
  * }} counts
  */
 export function formatConsistencyCheckConfirmMessageWithoutQuota(counts) {
   return (
-    `일관성 찾기 ${counts.literalActive}개, 본용언 + 보조용언 표기 ${counts.auxiliaryActive}개\n` +
+    `일관성 찾기(${counts.literalActive}/${counts.literalTotal}), 공통 문자열 찾기(${counts.commonStringActive}/${counts.commonStringTotal}), 본용언 + 보조용언 표기 (${counts.auxiliaryActive}/${counts.auxiliaryTotal})\n` +
     '검수를 진행할까요?'
   );
 }
@@ -88,8 +99,11 @@ export async function confirmConsistencyCheckBeforeRun(
     return false;
   }
 
-  const { literalActive, auxiliaryActive } =
+  const { literalActive, commonStringActive, auxiliaryActive } =
     countConsistencyCheckActiveRules(customRules);
+  const literalTotal = listConsistencyEntries(customRules).length;
+  const commonStringTotal = listPhraseSlotEntries(customRules).length;
+  const auxiliaryTotal = listAuxiliaryVerbEntries(customRules).length;
 
   const quotaDisplayEnabled =
     isBetaDailyQuotaEnabled() && Boolean(uid.trim());
@@ -111,12 +125,20 @@ export async function confirmConsistencyCheckBeforeRun(
       remaining,
       tabLimit,
       literalActive,
+      literalTotal,
+      commonStringActive,
+      commonStringTotal,
       auxiliaryActive,
+      auxiliaryTotal,
     });
   } else {
     message = formatConsistencyCheckConfirmMessageWithoutQuota({
       literalActive,
+      literalTotal,
+      commonStringActive,
+      commonStringTotal,
       auxiliaryActive,
+      auxiliaryTotal,
     });
   }
 
@@ -129,9 +151,14 @@ export async function confirmConsistencyCheckBeforeRun(
  */
 export function countConsistencyGroupsWithFindings(groups) {
   let literalWithFindings = 0;
+  let commonStringWithFindings = 0;
   let auxiliaryWithFindings = 0;
   for (const group of groups) {
     if (group.instances.length <= 0) continue;
+    if (group.patternKind === 'phrase-slot-find') {
+      commonStringWithFindings += 1;
+      continue;
+    }
     const scope = consistencyGroupScope(group);
     if (scope === 'literal-slot') {
       literalWithFindings += 1;
@@ -139,24 +166,27 @@ export function countConsistencyGroupsWithFindings(groups) {
       auxiliaryWithFindings += 1;
     }
   }
-  return { literalWithFindings, auxiliaryWithFindings };
+  return { literalWithFindings, commonStringWithFindings, auxiliaryWithFindings };
 }
 
 /**
  * @param {{
  *   literalWithFindings: number,
+ *   commonStringWithFindings: number,
  *   auxiliaryWithFindings: number,
  *   totalFindings: number,
  * }} input
  */
 export function formatConsistencyCheckCompleteMessage({
   literalWithFindings,
+  commonStringWithFindings,
   auxiliaryWithFindings,
   totalFindings,
 }) {
   return (
-    `검수에서 발견한 일관성 찾기는 ${literalWithFindings}개, 본용언 + 보조용언 표기는 ${auxiliaryWithFindings}개\n` +
-    `원고에 표시된 내용은 총 ${totalFindings}개입니다.`
+    `검수를 진행했습니다\n` +
+    `일관성 찾기{${literalWithFindings}} 공통 문자열 찾기{${commonStringWithFindings}} 본용언 + 보조용언 표기 {${auxiliaryWithFindings}}\n` +
+    `전체 발견은 [${totalFindings}]입니다`
   );
 }
 
