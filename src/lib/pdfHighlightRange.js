@@ -6,6 +6,38 @@ import {
 
 const FIND_GAP = String.raw`[ \t\u00A0\u1680\u2000-\u200A\u202F\u205F\u3000]*`;
 
+/**
+ * find 매칭 구간을 page.text에서 그대로 찾는다
+ * @param {string} pageText
+ * @param {string} matchedText
+ * @param {number} [preferIndex]
+ * @returns {{ start: number, end: number } | null}
+ */
+export function relocateMatchedTextRange(pageText, matchedText, preferIndex = 0) {
+  const phrase = String(matchedText ?? '');
+  if (!phrase || !pageText) return null;
+
+  const prefer = Math.max(0, preferIndex);
+  if (pageText.slice(prefer, prefer + phrase.length) === phrase) {
+    return { start: prefer, end: prefer + phrase.length };
+  }
+
+  let best = null;
+  let bestDist = Infinity;
+  let pos = 0;
+  while (pos <= pageText.length - phrase.length) {
+    const idx = pageText.indexOf(phrase, pos);
+    if (idx < 0) break;
+    const dist = Math.abs(idx - prefer);
+    if (dist < bestDist) {
+      bestDist = dist;
+      best = { start: idx, end: idx + phrase.length };
+    }
+    pos = idx + 1;
+  }
+  return best;
+}
+
 /** @param {string} ch */
 function isSpaceChar(ch) {
   return /\s/.test(ch);
@@ -199,44 +231,86 @@ function pickHighlightRange(pageData, index, matchedText, ranges) {
 }
 
 /**
+ * 편집자 검토: 검사 시 확정한 stem만 — matchedText 슬라이스 안에서만 재계산, 페이지 전체 재탐색 없음
  * @param {import('./pdfService.js').PageData} pageData
- * @param {{ index: number, matchedText: string, highlightText?: string, highlightIndex?: number }} instance
+ * @param {{ pageNum: number, index: number, matchedText: string, highlightText?: string, highlightIndex?: number }} instance
+ * @returns {{ start: number, end: number } | null}
+ */
+export function highlightRangeForCaution(pageData, instance) {
+  if (!pageData?.text || !instance?.matchedText) return null;
+  if (instance.pageNum !== pageData.pageNum) return null;
+
+  const stem = String(instance.highlightText ?? '').trim();
+  const matchIndex = instance.index ?? 0;
+  const { matchedText } = instance;
+
+  if (stem && typeof instance.highlightIndex === 'number') {
+    const start = instance.highlightIndex;
+    const end = start + stem.length;
+    if (pageData.text.slice(start, end) === stem) {
+      return { start, end };
+    }
+  }
+
+  const matchRange = relocateMatchedTextRange(
+    pageData.text,
+    matchedText,
+    matchIndex,
+  );
+  if (!matchRange) return null;
+
+  if (!stem) return matchRange;
+
+  const slice = pageData.text.slice(matchRange.start, matchRange.end);
+  const inSlice = findPhraseInSpan(slice, stem);
+  if (inSlice) {
+    return {
+      start: matchRange.start + inSlice.start,
+      end: matchRange.start + inSlice.end,
+    };
+  }
+
+  return null;
+}
+
+/**
+ * 맞춤법·일관성: find 매칭 구간 — literal은 정확 일치, compound는 느슨한 재탐색
+ * @param {import('./pdfService.js').PageData} pageData
+ * @param {{ pageNum: number, index: number, matchedText: string }} instance
+ * @returns {{ start: number, end: number } | null}
+ */
+export function highlightRangeForSpelling(pageData, instance) {
+  if (!pageData?.text || !instance?.matchedText) return null;
+  if (instance.pageNum !== pageData.pageNum) return null;
+
+  const exact = relocateMatchedTextRange(
+    pageData.text,
+    instance.matchedText,
+    instance.index ?? 0,
+  );
+  if (exact) return exact;
+
+  return resolveHighlightRange(pageData, instance);
+}
+
+/**
+ * @param {import('./pdfService.js').PageData} pageData
+ * @param {{ index: number, matchedText: string }} instance
  * @returns {{ start: number, end: number } | null}
  */
 export function resolveHighlightRange(pageData, instance) {
   if (!pageData?.text || !instance?.matchedText) return null;
 
   const matchIndex = instance.index ?? 0;
-  const { matchedText } = instance;
-  const phrase = String(instance.highlightText ?? matchedText).trim();
+  const phrase = String(instance.matchedText).trim();
   if (!phrase) return null;
-
-  const matchEnd = matchIndex + matchedText.length;
-
-  // 편집자 검토: 매칭된 구간 안의 어간(highlightText)만 — 페이지 전체 재검색 없음
-  if (instance.highlightText?.trim()) {
-    const withinMatch = findPhraseInSpan(
-      pageData.text.slice(matchIndex, matchEnd),
-      phrase,
-    );
-    if (withinMatch) {
-      return {
-        start: matchIndex + withinMatch.start,
-        end: matchIndex + withinMatch.end,
-      };
-    }
-    const anchorIndex =
-      instance.highlightIndex ??
-      matchIndex + Math.max(0, matchedText.length - phrase.length);
-    return { start: anchorIndex, end: anchorIndex + phrase.length };
-  }
 
   const phraseEnd = matchIndex + phrase.length;
   if (pageData.text.slice(matchIndex, phraseEnd) === phrase) {
     return { start: matchIndex, end: phraseEnd };
   }
 
-  const matchSpanLen = Math.max(matchedText.length, phrase.length);
+  const matchSpanLen = Math.max(instance.matchedText.length, phrase.length);
   const pageSpan = pageData.text.slice(matchIndex, matchIndex + matchSpanLen);
   const inSpan = findPhraseInSpan(pageSpan, phrase);
   if (inSpan) {

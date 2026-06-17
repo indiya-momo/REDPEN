@@ -24,6 +24,8 @@ import './welcome-pc.css';
 
 const WELCOME_MOMO_FRAME = welcomeMomoFrame;
 const MOMO_TOOLTIP = publicAssetUrl('momo/bullon4.png');
+const WELCOME_PC_BEFORE = `${import.meta.env.BASE_URL}welcome/m_before.png`;
+const WELCOME_PC_AFTER = `${import.meta.env.BASE_URL}welcome/m_after3.png`;
 const ENTER_MAIN_AFTER_GOOGLE_KEY = 'indiya-enter-main-after-google';
 
 /** @param {{
@@ -177,38 +179,44 @@ export default function WelcomePcScreen({
             </section>
           </div>
 
-          <div className="welcome-pc__steps" aria-label="시작 방법">
-            <article className="welcome-pc__step">
-              <h3 className="welcome-pc__step-title">
-                <span className="welcome-pc__step-num">1 </span> 원고 PDF 열기
-              </h3>
-              <p>
-                텍스트 PDF 파일을 선택합니다
-                <br />
-                (스캔 PDF는 작업이 불가합니다)
-              </p>
-            </article>
-            <article className="welcome-pc__step">
-              <h3 className="welcome-pc__step-title">
-                <span className="welcome-pc__step-num">2 </span> 적용 기준 선택
-              </h3>
-              <p>
-                맞춤법·띄어쓰기·일관성 탭에서
-                <br />
-                적용하려는 기준을 선택합니다
-              </p>
-            </article>
-            <article className="welcome-pc__step">
-              <h3 className="welcome-pc__step-title">
-                <span className="welcome-pc__step-num">3 </span> 검사 실행 및 확인
-              </h3>
-              <p>
-                검사 실행 버튼을 누른 뒤
-                <br />
-                기준이 적용된 결과를 확인합니다
-              </p>
-            </article>
-          </div>
+          <section className="welcome-pc__showcase" aria-label="검수 예시">
+            <div className="welcome-pc__compare">
+              <figure className="welcome-pc__compare-figure">
+                <figcaption className="welcome-pc__compare-label">검수 전</figcaption>
+                <img
+                  className="welcome-pc__compare-img"
+                  src={WELCOME_PC_BEFORE}
+                  alt="검수 전 — 원고 본문 예시"
+                  width={700}
+                  height={475}
+                  loading="lazy"
+                  decoding="async"
+                />
+              </figure>
+              <div className="welcome-pc__compare-bridge" aria-hidden="true">
+                <div className="welcome-pc__compare-chevrons">
+                  <span className="welcome-pc__compare-chevron" />
+                  <span className="welcome-pc__compare-chevron" />
+                  <span className="welcome-pc__compare-chevron" />
+                </div>
+              </div>
+              <figure className="welcome-pc__compare-figure">
+                <figcaption className="welcome-pc__compare-label">검수 후</figcaption>
+                <img
+                  className="welcome-pc__compare-img"
+                  src={WELCOME_PC_AFTER}
+                  alt="검수 후 — 맞춤법·일관성 표시 예시"
+                  width={700}
+                  height={475}
+                  loading="lazy"
+                  decoding="async"
+                />
+              </figure>
+            </div>
+            <p className="welcome-pc__showcase-caption">
+              실제 검수 화면 예시 · 자동 수정이 아니라 발견 위치 표시 · 텍스트 PDF만 가능
+            </p>
+          </section>
 
           {loggedIn ? (
             <section className="welcome-pc__auth" aria-label="회원가입 및 로그인">
