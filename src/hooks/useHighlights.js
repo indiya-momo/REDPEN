@@ -8,7 +8,10 @@ import {
   isInstanceVisible,
 } from '../lib/checkResultUtils.js';
 import { getHighlightOverlayReplace } from '../lib/highlightOverlayReplace.js';
-import { highlightRangeForInstance } from '../lib/pdfService.js';
+import {
+  highlightRangeForCaution,
+  highlightRangeForSpelling,
+} from '../lib/pdfService.js';
 /**
  * 맞춤법·표기 일관성 PDF 하이라이트 (목차는 useTocBodyHighlights)
  * @param {{
@@ -59,14 +62,21 @@ export function useHighlights({
         for (const inst of group.instances) {
           if (inst.pageNum !== currentPage) continue;
           if (!isInstanceVisible(resultVisibility, source, group, inst)) continue;
-          onPage.push({ inst, tip: tipText, isActiveGroup });
+          onPage.push({
+            inst,
+            tip: tipText,
+            isActiveGroup,
+            isCaution: group.category === 'caution',
+          });
         }
       }
     }
     onPage.sort((a, b) => a.inst.index - b.inst.index);
     return onPage
-      .map(({ inst, tip, isActiveGroup }) => {
-        const range = highlightRangeForInstance(currentPageData, inst);
+      .map(({ inst, tip, isActiveGroup, isCaution }) => {
+        const range = isCaution
+          ? highlightRangeForCaution(currentPageData, inst)
+          : highlightRangeForSpelling(currentPageData, inst);
         if (!range) return null;
         const primary = Boolean(
           isActiveGroup &&

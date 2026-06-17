@@ -1,7 +1,11 @@
 // legacy 빌드: Map.getOrInsertComputed 등 최신 JS API 폴리필 (구형 Chrome·Cursor 내장 브라우저)
 import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
 import pdfWorkerUrl from 'pdfjs-dist/legacy/build/pdf.worker.min.mjs?url';
-import { resolveHighlightRange } from './pdfHighlightRange.js';
+import {
+  highlightRangeForCaution,
+  highlightRangeForSpelling,
+  resolveHighlightRange,
+} from './pdfHighlightRange.js';
 import {
   findRefForTextIndex,
   getLineContextAtTextIndex,
@@ -260,17 +264,10 @@ export async function renderPageToCanvas(
   return { page, viewport, renderTask };
 }
 
-/**
- * @param {PageData} pageData
- * @param {{ pageNum: number, index: number, matchedText: string }} instance
- * @returns {{ start: number, end: number } | null}
- */
-export function highlightRangeForInstance(pageData, instance) {
-  if (!pageData || !instance?.matchedText) return null;
-  if (instance.pageNum !== pageData.pageNum) return null;
+export { highlightRangeForCaution, highlightRangeForSpelling };
 
-  return resolveHighlightRange(pageData, instance);
-}
+/** @deprecated 맞춤법·일관성·목차 — {@link highlightRangeForSpelling} 과 동일 */
+export const highlightRangeForInstance = highlightRangeForSpelling;
 
 /**
  * @param {import('pdfjs-dist').PDFPageProxy} page
@@ -475,22 +472,15 @@ export function highlightRectsForTextRange(
   if (!itemRefs.length) return [];
 
   const hit = findRefForTextIndex(itemRefs, matchStart);
-  const anchor = hit ? items[hit.itemIndex] : null;
-  const y = anchor?.transform?.[5] ?? 0;
-  const lineH =
-    Math.max(
-      Math.hypot(anchor?.transform?.[2] ?? 0, anchor?.transform?.[3] ?? 0),
-      8,
-    ) * 0.55;
-  for (let i = 0; i < items.length; i++) {
-    const item = items[i];
-    if (!item?.transform) continue;
-    const iy = item.transform[5] ?? 0;
-    if (Math.abs(iy - y) > lineH) continue;
-    rects.push(
-      viewportBoxForTextItem(page, viewport, item, 0, item.str?.length ?? 0),
-    );
-  }
+  if (!hit) return [];
+  const anchor = items[hit.itemIndex];
+  if (!anchor || !('str' in anchor) || !anchor.str) return [];
 
-  return rects;
+  const localStart = Math.max(0, matchStart - hit.start);
+  const localEnd = Math.min(anchor.str.length, matchEnd - hit.start);
+  if (localEnd <= localStart) return [];
+
+  return [
+    viewportBoxForTextItem(page, viewport, anchor, localStart, localEnd),
+  ];
 }

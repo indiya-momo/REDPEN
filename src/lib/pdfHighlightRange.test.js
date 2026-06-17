@@ -6,7 +6,9 @@ import {
 } from './pdfHighlightRange.js';
 import {
   buildPageText,
+  highlightRangeForCaution,
   highlightRangeForInstance,
+  highlightRangeForSpelling,
   highlightRectsForTextRange,
 } from './pdfService.js';
 import { runRuleCheck } from './ruleEngine.js';
@@ -138,7 +140,7 @@ describe('pdfHighlightRange', () => {
     expect(inst?.matchedText).toBe('회상할 만큼');
     expect(inst?.highlightText).toBe('만큼');
     expect(inst?.index).toBe(0);
-    const range = highlightRangeForInstance(page, inst);
+    const range = highlightRangeForCaution(page, inst);
     expect(range).not.toBeNull();
     expect(text.slice(range.start, range.end)).toBe('만큼');
 
@@ -191,11 +193,48 @@ describe('pdfHighlightRange', () => {
     expect(inst?.highlightText).toBe('바라');
     expect(inst?.highlightIndex).toBe(inst.index + 3);
 
-    const range = highlightRangeForInstance(page, inst);
+    const range = highlightRangeForCaution(page, inst);
     expect(range).not.toBeNull();
     const highlighted = text.slice(range.start, range.end);
     expect(highlighted).toBe('바라');
     expect(highlighted).not.toBe('습니다');
     expect(text.slice(range.start, range.end + 1)).not.toMatch(/^습니다/);
+  });
+
+  it('편집자 검토 — index가 어긋나도 matchedText 안에서만 stem 재계산 (페이지 전체 stem 검색 없음)', () => {
+    const text = '<세한도>만큼은 일 년 쯤을 더 고민하시다가\n';
+    const page = { pageNum: 226, text, items: [], itemRefs: [] };
+    const enabled = Object.fromEntries(
+      CAUTION_RULES.map((r) => [r.id, r.id === 'jubsa-garyang']),
+    );
+    const { results } = runRuleCheck([page], buildCautionCheckRules(enabled));
+    const inst = results[0]?.instances[0];
+    expect(inst?.highlightText).toBe('쯤');
+
+    const wrongInst = { ...inst, index: text.indexOf('고민') };
+    const spellingRange = highlightRangeForSpelling(page, wrongInst);
+    expect(spellingRange).not.toBeNull();
+    expect(text.slice(spellingRange.start, spellingRange.end)).toBe('년 쯤');
+
+    const range = highlightRangeForCaution(page, wrongInst);
+    expect(range).not.toBeNull();
+    expect(text.slice(range.start, range.end)).toBe('쯤');
+  });
+
+  it('맞춤법 뭐 하 — matchedText 그대로 (stem 없음)', () => {
+    const text = '뭐 하러 새것을 사냐고\n';
+    const page = { pageNum: 1, text, items: [], itemRefs: [] };
+    const inst = {
+      pageNum: 1,
+      index: text.indexOf('뭐 하'),
+      matchedText: '뭐 하',
+      find: '뭐 하',
+      replace: '뭐하',
+      suggestedText: '뭐하',
+    };
+    const wrongInst = { ...inst, index: text.indexOf('사냐') };
+    const range = highlightRangeForSpelling(page, wrongInst);
+    expect(range).not.toBeNull();
+    expect(text.slice(range.start, range.end)).toBe('뭐 하');
   });
 });
