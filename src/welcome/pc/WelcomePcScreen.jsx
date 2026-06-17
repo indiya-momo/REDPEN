@@ -206,7 +206,7 @@ export default function WelcomePcScreen({
               <div className="welcome-pc__cta-bar-copy">
                 <div className="welcome-pc__perf-headline-row">
                   <p className="welcome-pc__perf-headline">
-                    -신국판 300 페이지. 검수 시간 2.4초
+                    신국판 <strong>300페이지</strong>, <strong>2.4초</strong>에 검수합니다
                   </p>
                 </div>
                 <ul className="welcome-pc__perf-specs">
@@ -229,6 +229,9 @@ export default function WelcomePcScreen({
                     <span className="welcome-pc__perf-pill-desc">일관성 검수</span>
                   </li>
                 </ul>
+                <p className="welcome-pc__cta-beta-note">
+                  무료 오픈베타 서비스 중 · 회원은 매일 맞춤법·일관성 검수 기능 사용 가능
+                </p>
                 {authError && authReady ? (
                   <p className="welcome-pc__auth-error welcome-pc__auth-error--bar" role="alert">
                     {authError}
@@ -307,7 +310,7 @@ export default function WelcomePcScreen({
               </figure>
             </div>
             <p className="welcome-pc__showcase-caption">
-              검수 기능을 알리기 위한 예시 화면입니다.
+              실제 검수 화면 예시 · 자동 수정이 아니라 발견 위치 표시 · 텍스트 PDF만 가능
             </p>
           </div>
         </section>
@@ -328,13 +331,6 @@ export default function WelcomePcScreen({
                 <li>검사 결과 서버 저장</li>
               </ul>
             </section>
-            {!loggedIn ? (
-              <section className="welcome-pc__panel welcome-pc__panel--beta">
-                <p className="welcome-pc__panel-beta-text">
-                  무료 오픈베타 서비스 중 · 회원은 매일 맞춤법·일관성 검수 기능 사용 가능
-                </p>
-              </section>
-            ) : null}
           </div>
         ) : null}
 
