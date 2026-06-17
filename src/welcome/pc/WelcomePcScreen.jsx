@@ -22,7 +22,6 @@ import { useUserProfileSync } from '../../hooks/useUserProfileSync.js';
 import WelcomeProfileOnboarding from './WelcomeProfileOnboarding.jsx';
 import './welcome-pc.css';
 
-const WELCOME_MOMO_FRAME = welcomeMomoFrame;
 const MOMO_TOOLTIP = publicAssetUrl('momo/bullon4.png');
 const WELCOME_PC_BEFORE = `${import.meta.env.BASE_URL}welcome/m_before.png`;
 const WELCOME_PC_AFTER = `${import.meta.env.BASE_URL}welcome/m_after3.png`;
@@ -132,43 +131,162 @@ export default function WelcomePcScreen({
         : 'welcome-pc__layout--guest',
   ].join(' ');
 
+  const isGuestLanding = !needsWelcomeMessage && !loggedIn;
+
+  const headerBlock = (
+    <header className="welcome-pc__header">
+      <p className="welcome-pc__eyebrow">텍스트 PDF 검수 서비스</p>
+      <h1 className="welcome-pc__title-row">
+        <span className="welcome-pc__title-main">인디야</span>
+        <span className="welcome-pc__title-sub">검수냥 모모 이야기</span>
+      </h1>
+      {isGuestLanding ? (
+        <p className="welcome-pc__lead welcome-pc__lead--guest">
+          <span className="welcome-pc__lead-line">
+            <strong className="welcome-pc__lead-do">
+              맞춤법·일관성 검수 결과를 표시
+            </strong>
+            하며,{' '}
+            <span className="welcome-pc__lead-dont">AI 자동 수정은 하지 않습니다</span>
+          </span>
+          <span className="welcome-pc__lead-line">
+            원고와 검사 결과는{' '}
+            <strong className="welcome-pc__lead-do">이 브라우저 안에서만 처리</strong>
+            하며,{' '}
+            <span className="welcome-pc__lead-dont">서버에 저장하지 않습니다</span>
+          </span>
+        </p>
+      ) : (
+        <p className="welcome-pc__lead">
+          <span className="welcome-pc__lead-line">
+            맞춤법·표기 일관성을 찾는{' '}
+            <strong>텍스트 PDF 검수 서비스</strong>입니다
+          </span>
+          <span className="welcome-pc__lead-line">
+            원고와 검사 결과는{' '}
+            <span className="welcome-pc__lead-emphasis">
+              서버에 저장하지 않고, 이 브라우저 안에서만 처리
+            </span>
+            합니다
+          </span>
+        </p>
+      )}
+      <div className="welcome-pc__editor-note-anchor" aria-hidden>
+        <TooltipGuide
+          storageKey="welcome-editor-note"
+          placement="right"
+          offsetX={-352}
+          offsetY={-30}
+          imageSrc={MOMO_TOOLTIP}
+          imageAlt="모모"
+          message="현직 편집자가 만들었다냥"
+        >
+          <span className="welcome-pc__editor-note-dot" />
+        </TooltipGuide>
+      </div>
+    </header>
+  );
+
+  const portraitBlock = (
+    <div className="welcome-pc__portrait">
+      <div className="welcome-pc__portrait-media">
+        <MomoHero variant="gate" />
+      </div>
+      <img
+        className="welcome-pc__portrait-frame"
+        src={welcomeMomoFrame}
+        alt=""
+        aria-hidden
+        decoding="async"
+      />
+    </div>
+  );
+
+  const guestAuthButton = (
+    <div className="welcome-pc__cta-bar-action">
+      {!authReady ? (
+        <button
+          type="button"
+          className="btn-welcome-primary welcome-pc__start welcome-pc__auth-submit"
+          disabled
+        >
+          <span className="welcome-pc__auth-submit-label">로그인 확인 중…</span>
+        </button>
+      ) : (
+        <button
+          type="button"
+          className="btn-welcome-primary welcome-pc__start welcome-pc__auth-submit"
+          onClick={handleGoogleAuth}
+          disabled={authPending}
+        >
+          <span className="welcome-pc__auth-submit-label">
+            {authPending ? '구글 로그인 연결 중…' : '구글로 시작하기'}
+          </span>
+          {!authPending ? (
+            <span className="welcome-pc__auth-submit-hint">
+              크롬 브라우저 사용을 권장합니다
+            </span>
+          ) : null}
+        </button>
+      )}
+    </div>
+  );
+
+  const guestPerfBlock = (
+    <div className="welcome-pc__cta-group welcome-pc__cta-group--in-top">
+      <div className="welcome-pc__cta-bar welcome-pc__cta-bar--top">
+        <div className="welcome-pc__cta-bar-copy">
+          <div className="welcome-pc__perf-headline-row">
+            <p className="welcome-pc__perf-headline">
+              신국판 <strong>300페이지</strong>, <strong>2.4초</strong>에 검수합니다
+            </p>
+          </div>
+          <ul className="welcome-pc__perf-specs">
+            <li className="welcome-pc__perf-pill">
+              <strong className="welcome-pc__perf-pill-num">80개+</strong>
+              <span className="welcome-pc__perf-pill-meta">
+                <span className="welcome-pc__perf-pill-cat">맞춤법</span>
+                <span className="welcome-pc__perf-pill-sep" aria-hidden="true">
+                  ·
+                </span>
+                <span className="welcome-pc__perf-pill-desc">오류 탐지</span>
+              </span>
+            </li>
+            <li className="welcome-pc__perf-pill">
+              <strong className="welcome-pc__perf-pill-num">20개+</strong>
+              <span className="welcome-pc__perf-pill-meta">
+                <span className="welcome-pc__perf-pill-cat">문체</span>
+                <span className="welcome-pc__perf-pill-sep" aria-hidden="true">
+                  ·
+                </span>
+                <span className="welcome-pc__perf-pill-desc">일관성 검수</span>
+              </span>
+            </li>
+          </ul>
+          <p className="welcome-pc__cta-beta-note">
+            무료 오픈베타 · 회원은 매일 사용 가능
+          </p>
+          {authError && authReady ? (
+            <p className="welcome-pc__auth-error welcome-pc__auth-error--bar" role="alert">
+              {authError}
+            </p>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="welcome-pc">
       <div className={layoutClassName}>
-        {/* 1단: 히어로 — 소개(좌) + 액자(우) */}
-        <header className="welcome-pc__header">
-          <p className="welcome-pc__eyebrow">텍스트 PDF 검수 서비스</p>
-          <h1 className="welcome-pc__title-row">
-            <span className="welcome-pc__title-main">인디야</span>
-            <span className="welcome-pc__title-sub">검수냥 모모 이야기</span>
-          </h1>
-          <p className="welcome-pc__lead">
-            <span className="welcome-pc__lead-line">
-              맞춤법·표기 일관성을 찾는{' '}
-              <strong>텍스트 PDF 검수 서비스</strong>입니다
-            </span>
-            <span className="welcome-pc__lead-line">
-              원고와 검사 결과는{' '}
-              <span className="welcome-pc__lead-emphasis">
-                서버에 저장하지 않고, 이 브라우저 안에서만 처리
-              </span>
-              합니다
-            </span>
-          </p>
-          <div className="welcome-pc__editor-note-anchor" aria-hidden>
-            <TooltipGuide
-              storageKey="welcome-editor-note"
-              placement="right"
-              offsetX={-352}
-              offsetY={-30}
-              imageSrc={MOMO_TOOLTIP}
-              imageAlt="모모"
-              message="현직 편집자가 만들었다냥"
-            >
-              <span className="welcome-pc__editor-note-dot" />
-            </TooltipGuide>
+        {isGuestLanding ? (
+          <div className="welcome-pc__top-band">
+            {headerBlock}
+            {guestPerfBlock}
           </div>
-        </header>
+        ) : (
+          headerBlock
+        )}
 
         {needsWelcomeMessage ? (
           <aside className="welcome-pc__hero-aside welcome-pc__hero-aside--onboarding">
@@ -182,98 +300,16 @@ export default function WelcomePcScreen({
               }}
             />
           </aside>
-        ) : (
-          <div className="welcome-pc__hero-aside">
-            <div className="welcome-pc__portrait">
-              <div className="welcome-pc__portrait-media">
-                <MomoHero variant="gate" />
-              </div>
-              <img
-                className="welcome-pc__portrait-frame"
-                src={WELCOME_MOMO_FRAME}
-                alt=""
-                aria-hidden
-                decoding="async"
-              />
-            </div>
+        ) : isGuestLanding ? (
+          <div className="welcome-pc__hero-aside welcome-pc__hero-aside--guest-rail">
+            {portraitBlock}
+            {guestAuthButton}
           </div>
+        ) : (
+          <div className="welcome-pc__hero-aside">{portraitBlock}</div>
         )}
 
-        {/* 비로그인: 히어로 직후 통합 CTA */}
-        {!needsWelcomeMessage && !loggedIn ? (
-          <div className="welcome-pc__cta-group">
-            <div className="welcome-pc__cta-bar">
-              <div className="welcome-pc__cta-bar-copy">
-                <div className="welcome-pc__perf-headline-row">
-                  <p className="welcome-pc__perf-headline">
-                    신국판 <strong>300페이지</strong>, <strong>2.4초</strong>에 검수합니다
-                  </p>
-                </div>
-                <ul className="welcome-pc__perf-specs">
-                  <li className="welcome-pc__perf-pill">
-                    <span className="welcome-pc__perf-pill-metric">
-                      맞춤법 <strong>80개+</strong>
-                    </span>
-                    <span className="welcome-pc__perf-pill-sep" aria-hidden="true">
-                      ·
-                    </span>
-                    <span className="welcome-pc__perf-pill-desc">오류 탐지</span>
-                  </li>
-                  <li className="welcome-pc__perf-pill">
-                    <span className="welcome-pc__perf-pill-metric">
-                      문체 <strong>20개+</strong>
-                    </span>
-                    <span className="welcome-pc__perf-pill-sep" aria-hidden="true">
-                      ·
-                    </span>
-                    <span className="welcome-pc__perf-pill-desc">일관성 검수</span>
-                  </li>
-                </ul>
-                <p className="welcome-pc__cta-beta-note">
-                  무료 오픈베타 서비스 중 · 회원은 매일 맞춤법·일관성 검수 기능 사용 가능
-                </p>
-                {authError && authReady ? (
-                  <p className="welcome-pc__auth-error welcome-pc__auth-error--bar" role="alert">
-                    {authError}
-                  </p>
-                ) : null}
-              </div>
-              <div className="welcome-pc__cta-bar-action">
-                {!authReady ? (
-                  <button
-                    type="button"
-                    className="btn-welcome-primary welcome-pc__start welcome-pc__auth-submit"
-                    disabled
-                  >
-                    <span className="welcome-pc__auth-submit-label">로그인 확인 중…</span>
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    className="btn-welcome-primary welcome-pc__start welcome-pc__auth-submit"
-                    onClick={handleGoogleAuth}
-                    disabled={authPending}
-                  >
-                    <span className="welcome-pc__auth-submit-label">
-                      {authPending ? '구글 로그인 연결 중…' : '구글로 시작하기'}
-                    </span>
-                    {!authPending ? (
-                      <span className="welcome-pc__auth-submit-hint">
-                        크롬 브라우저 사용을 권장합니다
-                      </span>
-                    ) : null}
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-        ) : null}
-
-        {!needsWelcomeMessage && !loggedIn ? (
-          <div className="welcome-pc__section-divider" aria-hidden="true" />
-        ) : null}
-
-        {/* 2단: 비포/애프터(좌) + 하는 일/하지 않는 일(우) */}
+        {/* 2단: 비포/애프터(좌) — 비로그인은 우측 패널 없음 */}
         <section className="welcome-pc__showcase" aria-label="검수 예시">
           <div className="welcome-pc__compare-wrap">
             <div className="welcome-pc__compare">
@@ -315,7 +351,7 @@ export default function WelcomePcScreen({
           </div>
         </section>
 
-        {!needsWelcomeMessage ? (
+        {!needsWelcomeMessage && loggedIn ? (
           <div className="welcome-pc__panels">
             <section className="welcome-pc__panel welcome-pc__panel--do">
               <h2>하는 일</h2>
