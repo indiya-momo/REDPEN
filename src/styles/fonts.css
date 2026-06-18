@@ -16,3 +16,11 @@
   font-style: normal;
   font-display: swap;
 }
+
+@font-face {
+  font-family: 'GanaChocolate';
+  src: url('/fonts/Ghanachocolate.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
