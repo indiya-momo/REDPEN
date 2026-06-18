@@ -16,30 +16,6 @@
   overflow: hidden;
 }
 
-.layout-main__footer {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  width: 100%;
-  box-sizing: border-box;
-  padding: 8px 14px;
-  border-top: 1px solid var(--color-border-strong);
-  background: var(--color-surface);
-  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
-}
-
-.layout-main__footer .app-version-badge {
-  margin: 0;
-  padding: 0;
-  border: none;
-  background: transparent;
-  font-size: 0.62rem;
-  line-height: 1.4;
-  color: var(--color-text-faint);
-  letter-spacing: 0.02em;
-}
-
 .panel-left {
   /* 패널 안내 문구 (panel-guide-text): 설명·예시·보정·목차 안내 — 0.72rem 대비 +15% */
   --panel-guide-font-size: calc(0.72rem * 1.15);

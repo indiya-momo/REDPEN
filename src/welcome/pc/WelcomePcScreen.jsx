@@ -7,13 +7,11 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { BookOpen } from 'lucide-react';
 import AppVersionBadge from '../../components/AppVersionBadge.jsx';
 import MomoHero from '../../components/MomoHero.jsx';
-import TooltipGuide from '../../components/TooltipGuide.jsx';
 import welcomeMomoFrame from '../../assets/welcome/welcome_momo_frame3.png';
 import {
   getCurrentUserSession,
   mapFirebaseAuthError,
 } from '../../lib/firebaseAuth.js';
-import { publicAssetUrl } from '../../lib/publicAssetUrl.js';
 import {
   getUserProfile,
   isOnboardingComplete,
@@ -22,7 +20,6 @@ import { useUserProfileSync } from '../../hooks/useUserProfileSync.js';
 import WelcomeProfileOnboarding from './WelcomeProfileOnboarding.jsx';
 import './welcome-pc.css';
 
-const MOMO_TOOLTIP = publicAssetUrl('momo/bullon4.png');
 const WELCOME_PC_BEFORE = `${import.meta.env.BASE_URL}welcome/m_before.png`;
 const WELCOME_PC_AFTER = `${import.meta.env.BASE_URL}welcome/m_after3.png`;
 const ENTER_MAIN_AFTER_GOOGLE_KEY = 'indiya-enter-main-after-google';
@@ -141,15 +138,16 @@ export default function WelcomePcScreen({
         <span className="welcome-pc__title-sub">검수냥 모모 이야기</span>
       </h1>
       {isGuestLanding ? (
-        <p className="welcome-pc__lead welcome-pc__lead--guest">
+        <p className="welcome-pc__lead welcome-pc__lead--guest welcome-pc__lead--inline">
           <span className="welcome-pc__lead-line">
             <strong className="welcome-pc__lead-do">
               맞춤법·일관성 검수 결과를 표시
             </strong>
             하며,{' '}
             <span className="welcome-pc__lead-dont">AI 자동 수정은 하지 않습니다</span>
-          </span>
-          <span className="welcome-pc__lead-line">
+            <span className="welcome-pc__lead-sep" aria-hidden="true">
+              |
+            </span>
             원고와 검사 결과는{' '}
             <strong className="welcome-pc__lead-do">이 브라우저 안에서만 처리</strong>
             하며,{' '}
@@ -171,19 +169,6 @@ export default function WelcomePcScreen({
           </span>
         </p>
       )}
-      <div className="welcome-pc__editor-note-anchor" aria-hidden>
-        <TooltipGuide
-          storageKey="welcome-editor-note"
-          placement="right"
-          offsetX={-352}
-          offsetY={-30}
-          imageSrc={MOMO_TOOLTIP}
-          imageAlt="모모"
-          message="현직 편집자가 만들었다냥"
-        >
-          <span className="welcome-pc__editor-note-dot" />
-        </TooltipGuide>
-      </div>
     </header>
   );
 
@@ -232,7 +217,7 @@ export default function WelcomePcScreen({
     </div>
   );
 
-  const guestPerfBlock = (
+  const perfBlock = (
     <div className="welcome-pc__cta-group welcome-pc__cta-group--in-top">
       <div className="welcome-pc__cta-bar welcome-pc__cta-bar--top">
         <div className="welcome-pc__cta-bar-copy">
@@ -266,7 +251,7 @@ export default function WelcomePcScreen({
           <p className="welcome-pc__cta-beta-note">
             무료 오픈베타 · 회원은 매일 사용 가능
           </p>
-          {authError && authReady ? (
+          {authError && authReady && isGuestLanding ? (
             <p className="welcome-pc__auth-error welcome-pc__auth-error--bar" role="alert">
               {authError}
             </p>
@@ -276,20 +261,133 @@ export default function WelcomePcScreen({
     </div>
   );
 
+  const signedInStartButton = (
+    <div className="welcome-pc__cta-bar-action">
+      {!authReady ? (
+        <button
+          type="button"
+          className="btn-welcome-primary welcome-pc__start welcome-pc__start--rail"
+          disabled
+        >
+          로그인 확인 중…
+        </button>
+      ) : (
+        <button
+          type="button"
+          className="btn-welcome-primary welcome-pc__start welcome-pc__start--rail"
+          onClick={handleStart}
+        >
+          검수하기
+        </button>
+      )}
+    </div>
+  );
+
+  const signedInAuthRail = (
+    <section className="welcome-pc__auth welcome-pc__auth--rail" aria-label="회원 정보">
+      <div className="welcome-pc__auth-signed">
+        <p className="welcome-pc__auth-signed-text">
+          <span className="welcome-pc__auth-nickname">{signedInName}</span>
+          <span className="welcome-pc__auth-honorific">님이</span>
+          <span className="welcome-pc__auth-message">모모와 원고를 검수 중입니다</span>
+        </p>
+        <button type="button" className="welcome-pc__auth-ghost" onClick={onLogout}>
+          로그아웃
+        </button>
+      </div>
+    </section>
+  );
+
+  const stageRailClassName = [
+    'welcome-pc__stage-rail',
+    needsWelcomeMessage
+      ? 'welcome-pc__stage-rail--onboarding'
+      : 'welcome-pc__stage-rail--action',
+  ].join(' ');
+
   return (
     <div className="welcome-pc">
       <div className={layoutClassName}>
-        {isGuestLanding ? (
-          <div className="welcome-pc__top-band">
-            {headerBlock}
-            {guestPerfBlock}
-          </div>
-        ) : (
-          headerBlock
-        )}
+        <div
+          className={[
+            'welcome-pc__top-band',
+            needsWelcomeMessage ? 'welcome-pc__top-band--onboarding' : '',
+          ]
+            .filter(Boolean)
+            .join(' ')}
+        >
+          {headerBlock}
+          {!needsWelcomeMessage ? perfBlock : null}
+        </div>
 
-        {needsWelcomeMessage ? (
-          <aside className="welcome-pc__hero-aside welcome-pc__hero-aside--onboarding">
+        <div className="welcome-pc__stage-main">
+          <section className="welcome-pc__showcase" aria-label="검수 예시">
+            <div className="welcome-pc__compare-wrap">
+              <div className="welcome-pc__compare">
+                <figure className="welcome-pc__compare-figure">
+                  <figcaption className="welcome-pc__compare-label">검수 전</figcaption>
+                  <div className="welcome-pc__compare-img-crop">
+                    <img
+                      className="welcome-pc__compare-img"
+                      src={WELCOME_PC_BEFORE}
+                      alt="검수 전 — 원고 본문 예시"
+                      width={700}
+                      height={475}
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  </div>
+                </figure>
+                <div className="welcome-pc__compare-bridge" aria-hidden="true">
+                  <div className="welcome-pc__compare-chevrons">
+                    <span className="welcome-pc__compare-chevron" />
+                    <span className="welcome-pc__compare-chevron" />
+                    <span className="welcome-pc__compare-chevron" />
+                  </div>
+                </div>
+                <figure className="welcome-pc__compare-figure">
+                  <figcaption className="welcome-pc__compare-label">검수 후</figcaption>
+                  <div className="welcome-pc__compare-img-crop">
+                    <img
+                      className="welcome-pc__compare-img"
+                      src={WELCOME_PC_AFTER}
+                      alt="검수 후 — 맞춤법·일관성 표시 예시"
+                      width={700}
+                      height={475}
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  </div>
+                </figure>
+              </div>
+              <p className="welcome-pc__showcase-caption">
+                실제 검수 화면 예시 · 자동 수정이 아니라 발견 위치 표시 · 텍스트 PDF만 가능
+              </p>
+            </div>
+          </section>
+
+          {!needsWelcomeMessage && loggedIn ? (
+            <div className="welcome-pc__panels">
+              <section className="welcome-pc__panel welcome-pc__panel--do">
+                <h2>하는 일</h2>
+                <ul>
+                  <li>설정된 기준에 따라 PDF 스캔</li>
+                  <li>발견 위치를 목록 + 하이라이트로 표시</li>
+                </ul>
+              </section>
+              <section className="welcome-pc__panel welcome-pc__panel--dont">
+                <h2>하지 않는 일</h2>
+                <ul>
+                  <li>원고 자동 수정 · AI 문장 추천</li>
+                  <li>검사 결과 서버 저장</li>
+                </ul>
+              </section>
+            </div>
+          ) : null}
+        </div>
+
+        <aside className={stageRailClassName}>
+          {needsWelcomeMessage ? (
             <WelcomeProfileOnboarding
               uid={uid}
               defaultNickname={session?.displayName ?? ''}
@@ -299,122 +397,14 @@ export default function WelcomePcScreen({
                 handleStart();
               }}
             />
-          </aside>
-        ) : isGuestLanding ? (
-          <div className="welcome-pc__hero-aside welcome-pc__hero-aside--guest-rail">
-            {portraitBlock}
-            {guestAuthButton}
-          </div>
-        ) : (
-          <div className="welcome-pc__hero-aside">{portraitBlock}</div>
-        )}
-
-        {/* 2단: 비포/애프터(좌) — 비로그인은 우측 패널 없음 */}
-        <section className="welcome-pc__showcase" aria-label="검수 예시">
-          <div className="welcome-pc__compare-wrap">
-            <div className="welcome-pc__compare">
-              <figure className="welcome-pc__compare-figure">
-                <figcaption className="welcome-pc__compare-label">검수 전</figcaption>
-                <img
-                  className="welcome-pc__compare-img"
-                  src={WELCOME_PC_BEFORE}
-                  alt="검수 전 — 원고 본문 예시"
-                  width={700}
-                  height={475}
-                  loading="lazy"
-                  decoding="async"
-                />
-              </figure>
-              <div className="welcome-pc__compare-bridge" aria-hidden="true">
-                <div className="welcome-pc__compare-chevrons">
-                  <span className="welcome-pc__compare-chevron" />
-                  <span className="welcome-pc__compare-chevron" />
-                  <span className="welcome-pc__compare-chevron" />
-                </div>
-              </div>
-              <figure className="welcome-pc__compare-figure">
-                <figcaption className="welcome-pc__compare-label">검수 후</figcaption>
-                <img
-                  className="welcome-pc__compare-img"
-                  src={WELCOME_PC_AFTER}
-                  alt="검수 후 — 맞춤법·일관성 표시 예시"
-                  width={700}
-                  height={475}
-                  loading="lazy"
-                  decoding="async"
-                />
-              </figure>
-            </div>
-            <p className="welcome-pc__showcase-caption">
-              실제 검수 화면 예시 · 자동 수정이 아니라 발견 위치 표시 · 텍스트 PDF만 가능
-            </p>
-          </div>
-        </section>
-
-        {!needsWelcomeMessage && loggedIn ? (
-          <div className="welcome-pc__panels">
-            <section className="welcome-pc__panel welcome-pc__panel--do">
-              <h2>하는 일</h2>
-              <ul>
-                <li>설정된 기준에 따라 PDF 스캔</li>
-                <li>발견 위치를 목록 + 하이라이트로 표시</li>
-              </ul>
-            </section>
-            <section className="welcome-pc__panel welcome-pc__panel--dont">
-              <h2>하지 않는 일</h2>
-              <ul>
-                <li>원고 자동 수정 · AI 문장 추천</li>
-                <li>검사 결과 서버 저장</li>
-              </ul>
-            </section>
-          </div>
-        ) : null}
-
-        {/* 로그인: 하단 검수하기 CTA 유지 */}
-        {!needsWelcomeMessage && loggedIn ? (
-          <div className="welcome-pc__cta">
-            <div className="welcome-pc__stage-cta">
-              {!authReady ? (
-                <button
-                  type="button"
-                  className="btn-welcome-primary welcome-pc__start"
-                  disabled
-                >
-                  로그인 확인 중…
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  className="btn-welcome-primary welcome-pc__start"
-                  onClick={handleStart}
-                >
-                  검수하기
-                </button>
-              )}
-            </div>
-          </div>
-        ) : null}
-
-        {loggedIn ? (
-          <section className="welcome-pc__auth" aria-label="회원가입 및 로그인">
-            <div className="welcome-pc__auth-signed">
-              <p className="welcome-pc__auth-signed-text">
-                <span className="welcome-pc__auth-nickname">{signedInName}</span>
-                <span className="welcome-pc__auth-honorific">님이</span>
-                <span className="welcome-pc__auth-message">
-                  모모와 원고를 검수 중입니다
-                </span>
-              </p>
-              <button
-                type="button"
-                className="welcome-pc__auth-ghost"
-                onClick={onLogout}
-              >
-                로그아웃
-              </button>
-            </div>
-          </section>
-        ) : null}
+          ) : (
+            <>
+              {portraitBlock}
+              {isGuestLanding ? guestAuthButton : signedInStartButton}
+              {loggedIn ? signedInAuthRail : null}
+            </>
+          )}
+        </aside>
 
         <div className="welcome-pc__bottom-notes">
           <p className="welcome-pc__footer-line">

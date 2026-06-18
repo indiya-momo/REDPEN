@@ -35,8 +35,9 @@
   --right-col-width: min(280px, 100%);
   --welcome-cta-btn-width: var(--right-col-width);
   --welcome-portrait-width: var(--right-col-width);
+  --welcome-portrait-scale: 1.5;
   --welcome-compare-label-scale: 1.8;
-  --welcome-compare-img-x: 90%;
+  --welcome-compare-crop-left: 0.2;
   --welcome-frame-width: 100%;
   --welcome-frame-aspect: 1305 / 1211;
   --welcome-hole-left: 21.1%;
@@ -76,22 +77,18 @@
     clamp(calc(1.1rem * var(--welcome-scale)), 3.5vw, calc(2.5rem * var(--welcome-scale)))
     clamp(calc(1rem * var(--welcome-scale)), 2vw, calc(1.75rem * var(--welcome-scale)));
   display: grid;
-  grid-template-columns: minmax(0, 1.48fr) minmax(calc(270px * var(--welcome-scale)), 0.52fr);
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) var(--right-col-width);
+  grid-template-areas:
+    'top top'
+    'stage-main stage-rail'
+    'footer footer';
   align-items: stretch;
   gap:
     clamp(calc(0.5rem * var(--welcome-scale)), 1.2vw, calc(0.75rem * var(--welcome-scale)))
     clamp(calc(0.85rem * var(--welcome-scale)), 2vw, calc(1.6rem * var(--welcome-scale)));
   font-family: var(--font-family-body-brand);
   word-break: keep-all;
-}
-
-.welcome-pc__layout--guest {
-  grid-template-rows: auto minmax(0, 1fr) auto;
-  grid-template-columns: minmax(0, 1fr) var(--right-col-width);
-  grid-template-areas:
-    'top top'
-    'showcase hero-aside'
-    'footer footer';
 }
 
 .welcome-pc__top-band {
@@ -122,11 +119,6 @@
   text-align: center;
 }
 
-.welcome-pc__top-band .welcome-pc__editor-note-anchor {
-  top: clamp(calc(4.5rem * var(--welcome-scale)), 9vw, calc(5.75rem * var(--welcome-scale)));
-  right: clamp(calc(0.5rem * var(--welcome-scale)), 2vw, calc(1.5rem * var(--welcome-scale)));
-}
-
 .welcome-pc__cta-group--in-top {
   width: 100%;
   padding: 0;
@@ -149,11 +141,11 @@
   width: 100%;
 }
 
-.welcome-pc__layout--guest .welcome-pc__perf-headline-row {
+.welcome-pc__top-band .welcome-pc__perf-headline-row {
   width: 100%;
 }
 
-.welcome-pc__layout--guest .welcome-pc__perf-specs {
+.welcome-pc__top-band .welcome-pc__perf-specs {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
@@ -161,60 +153,57 @@
   width: 100%;
 }
 
-.welcome-pc__layout--guest .welcome-pc__perf-pill {
+.welcome-pc__top-band .welcome-pc__perf-pill {
   flex: 0 1 auto;
 }
 
-.welcome-pc__layout--guest .welcome-pc__cta-beta-note,
-.welcome-pc__layout--guest .welcome-pc__auth-error--bar {
+.welcome-pc__top-band .welcome-pc__cta-beta-note,
+.welcome-pc__top-band .welcome-pc__auth-error--bar {
   text-align: center;
 }
 
-.welcome-pc__hero-aside--guest-rail {
+.welcome-pc__stage-main {
+  grid-area: stage-main;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(calc(0.45rem * var(--welcome-scale)), 1vw, calc(0.65rem * var(--welcome-scale)));
+  min-width: 0;
+  min-height: 0;
+}
+
+.welcome-pc__stage-rail {
+  grid-area: stage-rail;
+  display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: clamp(calc(0.85rem * var(--welcome-scale)), 1.5vw, calc(1.15rem * var(--welcome-scale)));
+  min-width: 0;
+  min-height: 0;
   padding-top: 0;
   align-self: stretch;
 }
 
-.welcome-pc__hero-aside--guest-rail .welcome-pc__portrait {
+.welcome-pc__stage-rail--action .welcome-pc__portrait {
   box-sizing: border-box;
-  width: var(--right-col-width);
-  max-width: var(--right-col-width);
+  width: calc(var(--right-col-width) * var(--welcome-portrait-scale));
+  max-width: calc(var(--right-col-width) * var(--welcome-portrait-scale));
   height: auto;
   aspect-ratio: 1 / 1;
   transform: none;
   margin-inline: auto;
 }
 
-.welcome-pc__hero-aside--guest-rail .welcome-pc__cta-bar-action {
+.welcome-pc__stage-rail--action .welcome-pc__cta-bar-action {
   width: var(--right-col-width);
   max-width: 100%;
 }
 
-.welcome-pc__layout--signed-in {
-  grid-template-rows: auto minmax(0, 1fr) auto auto auto;
-  grid-template-areas:
-    'header hero-aside'
-    'showcase panels'
-    'cta cta'
-    'auth auth'
-    'footer footer';
-}
-
-.welcome-pc__layout--onboarding {
-  grid-template-rows: auto minmax(0, 1fr) auto auto;
-  grid-template-areas:
-    'header hero-aside'
-    'showcase panels'
-    'auth auth'
-    'footer footer';
+.welcome-pc__stage-rail--onboarding {
+  justify-content: center;
 }
 
 .welcome-pc__header {
-  grid-area: header;
   position: relative;
   min-width: 0;
   display: grid;
@@ -278,6 +267,17 @@
   display: block;
 }
 
+.welcome-pc__lead--inline .welcome-pc__lead-line {
+  display: inline;
+}
+
+.welcome-pc__lead-sep {
+  display: inline-block;
+  margin: 0 calc(0.55rem * var(--welcome-scale));
+  color: rgba(245, 240, 230, 0.28);
+  user-select: none;
+}
+
 .welcome-pc__lead strong {
   color: var(--welcome-text);
   font-weight: 700;
@@ -297,11 +297,16 @@
   text-decoration-color: rgba(245, 240, 230, 0.38);
 }
 
-.welcome-pc__layout--guest .welcome-pc__lead--guest {
+.welcome-pc__top-band .welcome-pc__lead {
+  justify-items: center;
+  text-align: center;
+}
+
+.welcome-pc__top-band .welcome-pc__lead--guest {
   gap: calc(0.28rem * var(--welcome-scale));
 }
 
-.welcome-pc__layout--guest .welcome-pc__top-band .welcome-pc__title-row {
+.welcome-pc__top-band .welcome-pc__title-row {
   margin-bottom: calc(0.65rem * var(--welcome-scale));
 }
 
@@ -314,110 +319,22 @@
   text-decoration-color: var(--welcome-accent);
 }
 
-.welcome-pc__editor-note-anchor {
-  position: absolute;
-  top: clamp(calc(5.5rem * var(--welcome-scale)), 11vw, calc(7rem * var(--welcome-scale)));
-  right: 0;
-  z-index: 2;
-}
-
-.welcome-pc__editor-note-dot {
-  display: inline-block;
-  width: 2px;
-  height: 2px;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.welcome-pc__editor-note-anchor .tooltip-guide {
-  --tooltip-scale: 1.12;
-  --tooltip-surface: #fffdf6;
-  --tooltip-stroke: rgba(180, 152, 96, 0.72);
-  --tooltip-radius: calc(22px * var(--tooltip-scale));
-  --tooltip-stroke-w: calc(1.5px * var(--tooltip-scale));
-  --tooltip-pad-x: calc(12px * var(--tooltip-scale));
-  --tooltip-pad-y: calc(10px * var(--tooltip-scale));
-  z-index: 12;
-  box-shadow:
-    0 8px 24px rgba(0, 0, 0, 0.38),
-    0 0 0 1px rgba(221, 180, 108, 0.14);
-}
-
-.welcome-pc__editor-note-anchor .tooltip-guide--right::before {
-  content: '';
-  position: absolute;
-  left: calc(-7px * var(--tooltip-scale));
-  top: 50%;
-  width: calc(12px * var(--tooltip-scale));
-  height: calc(12px * var(--tooltip-scale));
-  transform: translateY(-50%) rotate(45deg);
-  background: var(--tooltip-surface);
-  border-left: var(--tooltip-stroke-w) solid var(--tooltip-stroke);
-  border-bottom: var(--tooltip-stroke-w) solid var(--tooltip-stroke);
-  box-sizing: border-box;
-}
-
-.welcome-pc__editor-note-anchor .tooltip-guide__image {
-  width: clamp(calc(52px * var(--tooltip-scale)), 78%, calc(68px * var(--tooltip-scale)));
-  max-height: calc(76px * var(--tooltip-scale));
-}
-
-.welcome-pc__editor-note-anchor .tooltip-guide__message {
-  font-family: var(--font-family-body-brand);
-  font-size: calc(1.02rem * var(--tooltip-scale));
-  font-weight: 700;
-  line-height: 1.4;
-  color: #5a382f;
-}
-
-.welcome-pc__editor-note-anchor .tooltip-guide__confirm {
-  min-width: calc(52px * var(--tooltip-scale));
-  height: calc(34px * var(--tooltip-scale));
-  border-radius: calc(9px * var(--tooltip-scale));
-  font-family: var(--font-family-body-brand);
-  font-size: calc(0.86rem * var(--tooltip-scale));
-  font-weight: 700;
-}
-
-/* —— 우측: 액자 —— */
-.welcome-pc__hero-aside {
-  grid-area: hero-aside;
-  display: flex;
-  align-items: flex-start;
-  justify-content: flex-end;
-  min-width: 0;
-  min-height: 0;
-  padding-top: var(--welcome-portrait-anchor);
-}
-
-.welcome-pc__hero-aside--onboarding {
-  grid-row: 1 / 3;
-  align-items: center;
-  justify-content: center;
-  padding-top: 0;
-}
-
-.welcome-pc__hero-aside:not(.welcome-pc__hero-aside--onboarding):not(.welcome-pc__hero-aside--guest-rail)
-  .welcome-pc__portrait {
-  transform: translateY(-50%);
-}
-
-.welcome-pc__hero-aside .welcome-pc__portrait {
+/* —— 우측 rail: 액자 / 온보딩 —— */
+.welcome-pc__stage-rail .welcome-pc__portrait {
   width: var(--welcome-portrait-width);
   max-width: 100%;
-  margin-left: auto;
-  margin-right: 0;
+  margin-inline: auto;
   flex: none;
   aspect-ratio: var(--welcome-frame-aspect);
 }
 
-.welcome-pc__hero-aside .profile-onboarding-mount--welcome-pc {
+.welcome-pc__stage-rail .profile-onboarding-mount--welcome-pc {
   width: min(var(--welcome-stack-width), 100%);
   max-width: 100%;
   margin: 0 auto;
 }
 
-.welcome-pc__hero-aside .profile-onboarding-mount--welcome-pc .profile-onboarding-host {
+.welcome-pc__stage-rail .profile-onboarding-mount--welcome-pc .profile-onboarding-host {
   min-height: auto;
   padding: 0;
 }
@@ -460,7 +377,7 @@
   color: var(--welcome-perf-gold);
 }
 
-.welcome-pc__layout--guest .welcome-pc__perf-headline {
+.welcome-pc__top-band .welcome-pc__perf-headline {
   font-size: clamp(
     calc(1.18rem * var(--welcome-scale)),
     2.35vw,
@@ -471,7 +388,7 @@
   color: var(--welcome-perf-gold-bright);
 }
 
-.welcome-pc__layout--guest .welcome-pc__perf-headline strong {
+.welcome-pc__top-band .welcome-pc__perf-headline strong {
   font-weight: 800;
   color: #ebd08f;
 }
@@ -528,7 +445,7 @@
   color: var(--welcome-text-muted);
 }
 
-.welcome-pc__layout--guest .welcome-pc__perf-pill {
+.welcome-pc__top-band .welcome-pc__perf-pill {
   align-items: center;
   padding: calc(0.38rem * var(--welcome-scale)) calc(0.72rem * var(--welcome-scale));
   border: 1px solid rgba(180, 152, 96, 0.28);
@@ -536,24 +453,24 @@
   background: rgba(184, 148, 62, 0.1);
 }
 
-.welcome-pc__layout--guest .welcome-pc__perf-pill-num {
+.welcome-pc__top-band .welcome-pc__perf-pill-num {
   font-size: calc(1.02rem * var(--welcome-scale));
   color: #f0d49a;
 }
 
-.welcome-pc__layout--guest .welcome-pc__perf-pill-cat,
-.welcome-pc__layout--guest .welcome-pc__perf-pill-desc {
+.welcome-pc__top-band .welcome-pc__perf-pill-cat,
+.welcome-pc__top-band .welcome-pc__perf-pill-desc {
   font-size: calc(0.72rem * var(--welcome-scale));
   color: rgba(245, 240, 230, 0.46);
   font-weight: 400;
 }
 
-.welcome-pc__layout--guest .welcome-pc__perf-pill-sep {
+.welcome-pc__top-band .welcome-pc__perf-pill-sep {
   color: rgba(245, 240, 230, 0.32);
   opacity: 1;
 }
 
-.welcome-pc__layout--guest .welcome-pc__cta-beta-note {
+.welcome-pc__top-band .welcome-pc__cta-beta-note {
   margin-top: calc(0.38rem * var(--welcome-scale));
   font-size: calc(0.66rem * var(--welcome-scale));
   color: rgba(245, 240, 230, 0.44);
@@ -575,7 +492,8 @@
   flex: 0 0 auto;
 }
 
-.welcome-pc__layout--guest .welcome-pc__cta-bar-action .btn-welcome-primary.welcome-pc__auth-submit {
+.welcome-pc__stage-rail--action .welcome-pc__cta-bar-action .btn-welcome-primary.welcome-pc__auth-submit,
+.welcome-pc__stage-rail--action .welcome-pc__cta-bar-action .btn-welcome-primary.welcome-pc__start--rail {
   flex-direction: column;
   align-items: center;
   gap: calc(0.12rem * var(--welcome-scale));
@@ -589,7 +507,7 @@
     0 4px 12px rgba(0, 0, 0, 0.32);
 }
 
-.welcome-pc__layout--guest .welcome-pc__auth-submit-label {
+.welcome-pc__stage-rail--action .welcome-pc__auth-submit-label {
   font-family: var(--font-family-title);
   font-size: calc(1.15rem * 1.45 * var(--welcome-scale));
   font-weight: 800;
@@ -598,7 +516,7 @@
   paint-order: stroke fill;
 }
 
-.welcome-pc__layout--guest .welcome-pc__auth-submit-hint {
+.welcome-pc__stage-rail--action .welcome-pc__auth-submit-hint {
   font-family: var(--font-family-body-brand);
   font-size: calc(0.56rem * 1.5 * 0.6 * var(--welcome-scale));
   font-weight: 400;
@@ -613,7 +531,7 @@
 
 /* —— 비포/애프터 —— */
 .welcome-pc__showcase {
-  grid-area: showcase;
+  flex: 1 1 auto;
   min-width: 0;
   min-height: 0;
   display: flex;
@@ -655,18 +573,28 @@
   flex: 0 0 auto;
 }
 
-.welcome-pc__compare-img {
-  display: block;
-  width: 100%;
-  height: auto;
-  max-height: 100%;
-  aspect-ratio: 700 / 475;
-  object-fit: cover;
-  object-position: var(--welcome-compare-img-x) top;
+.welcome-pc__compare-img-crop {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
   border: 1px solid var(--welcome-border-soft);
   border-radius: var(--radius-ui-sm);
   background: rgba(0, 0, 0, 0.25);
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.32);
+}
+
+.welcome-pc__compare-img {
+  display: block;
+  width: calc(100% / (1 - var(--welcome-compare-crop-left)));
+  max-width: none;
+  height: auto;
+  max-height: none;
+  aspect-ratio: 700 / 475;
+  object-fit: cover;
+  object-position: left top;
+  margin-left: calc(
+    -1 * var(--welcome-compare-crop-left) / (1 - var(--welcome-compare-crop-left)) * 100%
+  );
 }
 
 .welcome-pc__compare-bridge {
@@ -720,14 +648,22 @@
 
 /* —— 우측 패널 —— */
 .welcome-pc__panels {
-  grid-area: panels;
+  flex: 0 0 auto;
   min-width: 0;
-  min-height: 0;
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 0;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: calc(0.45rem * var(--welcome-scale));
   align-content: start;
-  height: 100%;
+}
+
+.welcome-pc__stage-main .welcome-pc__panel--do {
+  border-bottom: 1px solid rgba(180, 152, 96, 0.22);
+  border-radius: var(--radius-ui);
+}
+
+.welcome-pc__stage-main .welcome-pc__panel--dont {
+  border-top: 1px solid rgba(180, 152, 96, 0.2);
+  border-radius: var(--radius-ui);
 }
 
 .welcome-pc__panel {
@@ -775,21 +711,29 @@
   margin-top: calc(0.18rem * var(--welcome-scale));
 }
 
-/* —— 로그인 CTA / auth —— */
-.welcome-pc__cta {
-  grid-area: cta;
-  min-width: 0;
+/* —— 로그인 rail auth —— */
+.welcome-pc__auth--rail {
+  width: var(--right-col-width);
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  box-shadow: none;
 }
 
-.welcome-pc__cta .welcome-pc__stage-cta {
-  margin-top: 0;
-  width: 100%;
-  display: flex;
-  justify-content: center;
+.welcome-pc__auth--rail .welcome-pc__auth-signed {
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: calc(0.35rem * var(--welcome-scale));
+}
+
+.welcome-pc__auth--rail .welcome-pc__auth-signed-text {
+  font-size: calc(0.72rem * var(--welcome-scale));
 }
 
 .welcome-pc__auth {
-  grid-area: auth;
   margin: 0;
   padding: calc(0.35rem * var(--welcome-scale)) 0;
   border: none;
@@ -1025,35 +969,12 @@
 
 /* —— 좁은 PC —— */
 @media (max-width: 1100px) {
-  .welcome-pc__layout--signed-in {
-    grid-template-columns: 1fr;
-    grid-template-areas:
-      'header'
-      'hero-aside'
-      'showcase'
-      'panels'
-      'cta'
-      'auth'
-      'footer';
-  }
-
-  .welcome-pc__layout--onboarding {
-    grid-template-columns: 1fr;
-    grid-template-areas:
-      'header'
-      'hero-aside'
-      'showcase'
-      'panels'
-      'auth'
-      'footer';
-  }
-
-  .welcome-pc__layout--guest:not(.welcome-pc__layout--onboarding) {
+  .welcome-pc__layout {
     grid-template-columns: 1fr;
     grid-template-areas:
       'top'
-      'hero-aside'
-      'showcase'
+      'stage-rail'
+      'stage-main'
       'footer';
   }
 
@@ -1062,37 +983,21 @@
     padding-bottom: calc(0.35rem * var(--welcome-scale));
   }
 
-  .welcome-pc__hero-aside,
-  .welcome-pc__layout--guest
-    .welcome-pc__hero-aside:not(.welcome-pc__hero-aside--onboarding):not(.welcome-pc__hero-aside--guest-rail) {
-    grid-row: auto;
-    padding-top: 0;
-    justify-content: center;
+  .welcome-pc__stage-rail--action .welcome-pc__portrait {
+    width: calc(var(--right-col-width) * var(--welcome-portrait-scale));
+    max-width: calc(var(--right-col-width) * var(--welcome-portrait-scale));
   }
 
-  .welcome-pc__hero-aside--guest-rail {
-    padding-top: 0;
-    justify-content: center;
-  }
-
-  .welcome-pc__hero-aside:not(.welcome-pc__hero-aside--onboarding):not(.welcome-pc__hero-aside--guest-rail)
-    .welcome-pc__portrait {
-    transform: none;
-    margin-inline: auto;
-    width: min(var(--welcome-portrait-width), 100%);
-  }
-
-  .welcome-pc__hero-aside--guest-rail .welcome-pc__portrait {
-    width: var(--right-col-width);
-    max-width: var(--right-col-width);
-  }
-
-  .welcome-pc__layout--guest .welcome-pc__perf-specs {
+  .welcome-pc__top-band .welcome-pc__perf-specs {
     flex-direction: column;
     align-items: center;
   }
 
-  .welcome-pc__hero-aside--guest-rail .welcome-pc__cta-bar-action {
+  .welcome-pc__stage-rail--action .welcome-pc__cta-bar-action {
+    width: 100%;
+  }
+
+  .welcome-pc__auth--rail {
     width: 100%;
   }
 
@@ -1105,10 +1010,15 @@
     grid-template-columns: 1fr;
   }
 
-  .welcome-pc__layout--guest .welcome-pc__cta-bar-action .btn-welcome-primary.welcome-pc__auth-submit {
+  .welcome-pc__stage-rail--action .welcome-pc__cta-bar-action .btn-welcome-primary.welcome-pc__auth-submit,
+  .welcome-pc__stage-rail--action .welcome-pc__cta-bar-action .btn-welcome-primary.welcome-pc__start--rail {
     width: 100%;
     min-width: 0;
     max-width: none;
+  }
+
+  .welcome-pc__stage-main .welcome-pc__panels {
+    grid-template-columns: 1fr;
   }
 
   .welcome-pc__showcase-caption {
