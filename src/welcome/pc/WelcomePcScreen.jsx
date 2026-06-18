@@ -238,11 +238,7 @@ export default function WelcomePcScreen({
         </p>
 
         <p className="welcome-pc__perf-l2">
-          <span className="welcome-pc__perf-anc welcome-pc__perf-anc--left">
-            <WelcomePcSparkle className="welcome-pc__perf-spk welcome-pc__perf-spk--big" />
-            <WelcomePcSparkle className="welcome-pc__perf-spk welcome-pc__perf-spk--sm" />
-            신국판
-          </span>
+          신국판
           {' 300페이지 '}
           <span className="welcome-pc__perf-underline">
             3
@@ -252,12 +248,7 @@ export default function WelcomePcScreen({
             </span>
             만에
           </span>
-          {' 검수 '}
-          <span className="welcome-pc__perf-anc welcome-pc__perf-anc--right">
-            완료
-            <WelcomePcSparkle className="welcome-pc__perf-spk welcome-pc__perf-spk--big" />
-            <WelcomePcSparkle className="welcome-pc__perf-spk welcome-pc__perf-spk--sm" />
-          </span>
+          {' 검수 완료'}
         </p>
 
         <div className="welcome-pc__perf-beta">
@@ -334,6 +325,11 @@ export default function WelcomePcScreen({
         >
           {headerBlock}
           {!needsWelcomeMessage ? perfBlock : null}
+          {isGuestLanding ? (
+            <div className="welcome-pc__cta-top" aria-label="시작하기">
+              {guestAuthButton}
+            </div>
+          ) : null}
         </div>
 
         <div
@@ -359,9 +355,11 @@ export default function WelcomePcScreen({
                 {!needsWelcomeMessage ? (
                   <div className="welcome-pc__rail-stack">
                     {portraitBlock}
-                    <div className="welcome-pc__stage-rail__cta-foot">
-                      {isGuestLanding ? guestAuthButton : signedInStartButton}
-                    </div>
+                    {!isGuestLanding ? (
+                      <div className="welcome-pc__stage-rail__cta-foot">
+                        {signedInStartButton}
+                      </div>
+                    ) : null}
                   </div>
                 ) : null}
               </div>
