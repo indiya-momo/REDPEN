@@ -52,7 +52,7 @@
   /* 3순위 분리·간격 — 섹션 macro / 컨테이너 surface / 디바이더 */
   --panel-surface-group: #f6f1e7;
   --panel-border-soft: #dcd2bf;
-  --panel-gap-section: 22px;
+  --panel-gap-section: 14px;
   /* 4순위 간격 — 위계용 여백 (블록 내부 micro) */
   --panel-gap-title-body: 6px;
   --panel-gap-block: 8px;
@@ -302,12 +302,10 @@
 .panel-left .builtin-spelling-rules-scroll .builtin-rule-group {
   row-gap: var(--panel-gap-group);
   column-gap: 6px;
+  justify-items: stretch;
 }
 
-.panel-left .builtin-spelling-rules-scroll .builtin-rule-group--cols-2 {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
+.panel-left .caution-group-items--cols-3,
 .panel-left .builtin-spelling-rules-scroll .builtin-rule-group--cols-3 {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
@@ -330,6 +328,8 @@
   border-radius: 0;
   background: transparent;
   box-shadow: none;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .panel-left .builtin-spelling-rules-scroll .builtin-rule-item {
@@ -343,42 +343,41 @@
   align-items: flex-start;
   padding: 0;
   gap: 5px;
+  width: 100%;
+}
+
+.panel-left .builtin-spelling-rules-scroll .builtin-rule-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px;
+  line-height: 1.2;
+}
+
+.panel-left .builtin-spelling-rules-scroll .builtin-rule-label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
 }
 
 .panel-left .builtin-spelling-rules-scroll .builtin-rule-row > input[type='checkbox'] {
   margin-top: 2px;
+  flex: 0 0 auto;
 }
 
 .panel-left .builtin-spelling-rules-scroll .rule-list > .rule-row:hover,
 .panel-left .builtin-spelling-rules-scroll .builtin-rule-row:hover {
   box-shadow: none;
-}
-
-.panel-left .builtin-spelling-rules-scroll .builtin-inline-tip-hoverable {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  align-content: flex-start;
-  width: 100%;
-  min-width: 0;
-  padding: 0;
-  margin: 0;
-  border: none;
-  border-radius: 0;
-  background: transparent;
-  gap: 4px;
-  cursor: pointer;
-}
-
-.panel-left .builtin-spelling-rules-scroll .builtin-inline-tip-hoverable:hover,
-.panel-left .builtin-spelling-rules-scroll .builtin-inline-tip-hoverable:focus,
-.panel-left .builtin-spelling-rules-scroll .builtin-inline-tip-hoverable:focus-visible,
-.panel-left .builtin-spelling-rules-scroll .builtin-inline-tip-hoverable:active,
-.panel-left .builtin-spelling-rules-scroll .builtin-inline-tip-hoverable--open {
-  border: none;
-  background: transparent;
-  box-shadow: none;
-  outline: none;
 }
 
 .panel-left .builtin-spelling-caution-scroll .caution-chip:hover,
@@ -387,9 +386,19 @@
   box-shadow: none;
 }
 
+.panel-left .builtin-spelling-caution-scroll .caution-inline-tip-trigger,
+.panel-left .builtin-spelling-rules-scroll .caution-inline-tip-trigger {
+  padding: 0;
+  border: none;
+  border-radius: 0;
+}
+
 .panel-left .builtin-spelling-caution-scroll .caution-inline-tip-trigger:hover,
 .panel-left .builtin-spelling-caution-scroll .caution-inline-tip-trigger:focus,
-.panel-left .builtin-spelling-caution-scroll .caution-inline-tip-trigger:focus-visible {
+.panel-left .builtin-spelling-caution-scroll .caution-inline-tip-trigger:focus-visible,
+.panel-left .builtin-spelling-rules-scroll .caution-inline-tip-trigger:hover,
+.panel-left .builtin-spelling-rules-scroll .caution-inline-tip-trigger:focus,
+.panel-left .builtin-spelling-rules-scroll .caution-inline-tip-trigger:focus-visible {
   border-color: transparent;
   background: transparent;
   box-shadow: none;
@@ -2185,7 +2194,7 @@
 
 .consistency-section-box[data-work-guide-step='auxiliary-box'] .auxiliary-checklist-intro {
   margin: 4px 0 8px;
-  padding: 0 var(--criteria-pad-inline, 10px);
+  padding: 0 var(--criteria-pad-inline, 10px) 0 var(--criteria-check-rail);
   font-size: 0.8125rem;
   line-height: 1.5;
   color: var(--color-text-muted);
