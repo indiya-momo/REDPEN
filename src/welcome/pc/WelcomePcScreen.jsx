@@ -301,16 +301,22 @@ export default function WelcomePcScreen({
           className={[
             'welcome-pc__top-band',
             needsWelcomeMessage ? 'welcome-pc__top-band--onboarding' : '',
+            isGuestLanding ? 'welcome-pc__top-band--guest-vertical' : '',
           ]
             .filter(Boolean)
             .join(' ')}
         >
           {headerBlock}
-          {!needsWelcomeMessage ? perfBlock : null}
           {isGuestLanding ? (
-            <div className="welcome-pc__cta-top" aria-label="시작하기">
-              {guestAuthButton}
+            <div className="welcome-pc__guest-hero">
+              <div className="welcome-pc__guest-portrait-wrap">{portraitBlock}</div>
+              {perfBlock}
+              <div className="welcome-pc__cta-top" aria-label="시작하기">
+                {guestAuthButton}
+              </div>
             </div>
+          ) : !needsWelcomeMessage ? (
+            perfBlock
           ) : null}
         </div>
 
@@ -323,31 +329,57 @@ export default function WelcomePcScreen({
             .join(' ')}
         >
           <section className="welcome-pc__showcase" aria-label="검수 예시">
-            <div className="welcome-pc__compare-body">
-              <div className="welcome-pc__compare-row">
-                <img
-                  className="welcome-pc__before-after-img"
-                  src={WELCOME_PC_BEFORE_AFTER}
-                  alt="검수 전·후 예시 — 왼쪽 원고, 오른쪽 맞춤법·일관성·본용언+보조용언 표기 하이라이트"
-                  width={1698}
-                  height={746}
-                  loading="lazy"
-                  decoding="async"
-                />
-                {!needsWelcomeMessage ? (
-                  <div className="welcome-pc__rail-stack">
-                    {portraitBlock}
-                    {!isGuestLanding ? (
-                      <div className="welcome-pc__stage-rail__cta-foot">
-                        {signedInStartButton}
+            <div
+              className={[
+                'welcome-pc__compare-body',
+                isGuestLanding ? 'welcome-pc__compare-body--guest' : '',
+              ]
+                .filter(Boolean)
+                .join(' ')}
+            >
+              {isGuestLanding ? (
+                <>
+                  <img
+                    className="welcome-pc__before-after-img"
+                    src={WELCOME_PC_BEFORE_AFTER}
+                    alt="검수 전·후 예시 — 왼쪽 원고, 오른쪽 맞춤법·일관성·본용언+보조용언 표기 하이라이트"
+                    width={1698}
+                    height={746}
+                    loading="lazy"
+                    decoding="async"
+                  />
+                  <p className="welcome-pc__showcase-caption">
+                    사용자의 이해를 돕고자 재구성한 화면입니다 · 맞춤법과 일관성 검수는 각각
+                    진행됩니다 · 크롬 브라우저 사용을 권장합니다
+                  </p>
+                </>
+              ) : (
+                <>
+                  <div className="welcome-pc__compare-row">
+                    <img
+                      className="welcome-pc__before-after-img"
+                      src={WELCOME_PC_BEFORE_AFTER}
+                      alt="검수 전·후 예시 — 왼쪽 원고, 오른쪽 맞춤법·일관성·본용언+보조용언 표기 하이라이트"
+                      width={1698}
+                      height={746}
+                      loading="lazy"
+                      decoding="async"
+                    />
+                    {!needsWelcomeMessage ? (
+                      <div className="welcome-pc__rail-stack">
+                        {portraitBlock}
+                        <div className="welcome-pc__stage-rail__cta-foot">
+                          {signedInStartButton}
+                        </div>
                       </div>
                     ) : null}
                   </div>
-                ) : null}
-              </div>
-              <p className="welcome-pc__showcase-caption">
-                사용자의 이해를 돕고자 재구성한 화면입니다 · 맞춤법과 일관성 검수는 각각 진행됩니다 · 크롬 브라우저 사용을 권장합니다
-              </p>
+                  <p className="welcome-pc__showcase-caption">
+                    사용자의 이해를 돕고자 재구성한 화면입니다 · 맞춤법과 일관성 검수는 각각
+                    진행됩니다 · 크롬 브라우저 사용을 권장합니다
+                  </p>
+                </>
+              )}
             </div>
           </section>
 
