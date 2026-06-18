@@ -192,26 +192,19 @@ export default function WelcomePcScreen({
       {!authReady ? (
         <button
           type="button"
-          className="btn-welcome-primary welcome-pc__start welcome-pc__auth-submit"
+          className="btn-welcome-primary welcome-pc__start welcome-pc__auth-submit welcome-pc__auth-submit--single"
           disabled
         >
-          <span className="welcome-pc__auth-submit-label">로그인 확인 중…</span>
+          로그인 확인 중…
         </button>
       ) : (
         <button
           type="button"
-          className="btn-welcome-primary welcome-pc__start welcome-pc__auth-submit"
+          className="btn-welcome-primary welcome-pc__start welcome-pc__auth-submit welcome-pc__auth-submit--single"
           onClick={handleGoogleAuth}
           disabled={authPending}
         >
-          <span className="welcome-pc__auth-submit-label">
-            {authPending ? '구글 로그인 연결 중…' : '구글로 시작하기'}
-          </span>
-          {!authPending ? (
-            <span className="welcome-pc__auth-submit-hint">
-              크롬 브라우저 사용을 권장합니다
-            </span>
-          ) : null}
+          {authPending ? '구글 로그인 연결 중…' : '구글로 시작하기'}
         </button>
       )}
     </div>
@@ -219,44 +212,40 @@ export default function WelcomePcScreen({
 
   const perfBlock = (
     <div className="welcome-pc__cta-group welcome-pc__cta-group--in-top">
-      <div className="welcome-pc__cta-bar welcome-pc__cta-bar--top">
-        <div className="welcome-pc__cta-bar-copy">
-          <div className="welcome-pc__perf-headline-row">
-            <p className="welcome-pc__perf-headline">
-              신국판 <strong>300페이지</strong>, <strong>2.4초</strong>에 검수합니다
-            </p>
-          </div>
-          <ul className="welcome-pc__perf-specs">
-            <li className="welcome-pc__perf-pill">
-              <strong className="welcome-pc__perf-pill-num">80개+</strong>
-              <span className="welcome-pc__perf-pill-meta">
-                <span className="welcome-pc__perf-pill-cat">맞춤법</span>
-                <span className="welcome-pc__perf-pill-sep" aria-hidden="true">
-                  ·
-                </span>
-                <span className="welcome-pc__perf-pill-desc">오류 탐지</span>
+      <div className="welcome-pc__perf-ribbon">
+        <p className="welcome-pc__perf-headline">
+          신국판 <strong>300페이지</strong>, <strong>2.4초</strong>에 검수합니다
+        </p>
+        <ul className="welcome-pc__perf-specs">
+          <li className="welcome-pc__perf-pill">
+            <strong className="welcome-pc__perf-pill-num">80개+</strong>
+            <span className="welcome-pc__perf-pill-meta">
+              <span className="welcome-pc__perf-pill-cat">맞춤법</span>
+              <span className="welcome-pc__perf-pill-sep" aria-hidden="true">
+                ·
               </span>
-            </li>
-            <li className="welcome-pc__perf-pill">
-              <strong className="welcome-pc__perf-pill-num">20개+</strong>
-              <span className="welcome-pc__perf-pill-meta">
-                <span className="welcome-pc__perf-pill-cat">문체</span>
-                <span className="welcome-pc__perf-pill-sep" aria-hidden="true">
-                  ·
-                </span>
-                <span className="welcome-pc__perf-pill-desc">일관성 검수</span>
+              <span className="welcome-pc__perf-pill-desc">오류 탐지</span>
+            </span>
+          </li>
+          <li className="welcome-pc__perf-pill">
+            <strong className="welcome-pc__perf-pill-num">20개+</strong>
+            <span className="welcome-pc__perf-pill-meta">
+              <span className="welcome-pc__perf-pill-cat">문체</span>
+              <span className="welcome-pc__perf-pill-sep" aria-hidden="true">
+                ·
               </span>
-            </li>
-          </ul>
-          <p className="welcome-pc__cta-beta-note">
-            무료 오픈베타 · 회원은 매일 사용 가능
+              <span className="welcome-pc__perf-pill-desc">일관성 검수</span>
+            </span>
+          </li>
+        </ul>
+        <p className="welcome-pc__cta-beta-note">
+          무료 오픈베타 · 회원은 매일 사용 가능
+        </p>
+        {authError && authReady && isGuestLanding ? (
+          <p className="welcome-pc__auth-error welcome-pc__auth-error--bar" role="alert">
+            {authError}
           </p>
-          {authError && authReady && isGuestLanding ? (
-            <p className="welcome-pc__auth-error welcome-pc__auth-error--bar" role="alert">
-              {authError}
-            </p>
-          ) : null}
-        </div>
+        ) : null}
       </div>
     </div>
   );
@@ -320,50 +309,56 @@ export default function WelcomePcScreen({
           {!needsWelcomeMessage ? perfBlock : null}
         </div>
 
-        <div className="welcome-pc__stage-main">
+        <div
+          className={[
+            'welcome-pc__stage',
+            loggedIn && !needsWelcomeMessage ? 'welcome-pc__stage--signed-in' : '',
+          ]
+            .filter(Boolean)
+            .join(' ')}
+        >
           <section className="welcome-pc__showcase" aria-label="검수 예시">
-            <div className="welcome-pc__compare-wrap">
-              <div className="welcome-pc__compare">
-                <figure className="welcome-pc__compare-figure">
-                  <figcaption className="welcome-pc__compare-label">검수 전</figcaption>
-                  <div className="welcome-pc__compare-img-crop">
-                    <img
-                      className="welcome-pc__compare-img"
-                      src={WELCOME_PC_BEFORE}
-                      alt="검수 전 — 원고 본문 예시"
-                      width={700}
-                      height={475}
-                      loading="lazy"
-                      decoding="async"
-                    />
-                  </div>
-                </figure>
-                <div className="welcome-pc__compare-bridge" aria-hidden="true">
-                  <div className="welcome-pc__compare-chevrons">
-                    <span className="welcome-pc__compare-chevron" />
-                    <span className="welcome-pc__compare-chevron" />
-                    <span className="welcome-pc__compare-chevron" />
-                  </div>
-                </div>
-                <figure className="welcome-pc__compare-figure">
-                  <figcaption className="welcome-pc__compare-label">검수 후</figcaption>
-                  <div className="welcome-pc__compare-img-crop">
-                    <img
-                      className="welcome-pc__compare-img"
-                      src={WELCOME_PC_AFTER}
-                      alt="검수 후 — 맞춤법·일관성 표시 예시"
-                      width={700}
-                      height={475}
-                      loading="lazy"
-                      decoding="async"
-                    />
-                  </div>
-                </figure>
-              </div>
-              <p className="welcome-pc__showcase-caption">
-                실제 검수 화면 예시 · 자동 수정이 아니라 발견 위치 표시 · 텍스트 PDF만 가능
-              </p>
+            <div className="welcome-pc__compare-labels-row">
+              <p className="welcome-pc__compare-label">검수 전</p>
+              <div className="welcome-pc__compare-bridge welcome-pc__compare-bridge--labels" aria-hidden="true" />
+              <p className="welcome-pc__compare-label">검수 후</p>
             </div>
+
+            <div className="welcome-pc__compare-visuals-row">
+              <div className="welcome-pc__compare-img-crop">
+                <img
+                  className="welcome-pc__compare-img"
+                  src={WELCOME_PC_BEFORE}
+                  alt="검수 전 — 원고 본문 예시"
+                  width={700}
+                  height={475}
+                  loading="lazy"
+                  decoding="async"
+                />
+              </div>
+              <div className="welcome-pc__compare-bridge" aria-hidden="true">
+                <div className="welcome-pc__compare-chevrons">
+                  <span className="welcome-pc__compare-chevron" />
+                  <span className="welcome-pc__compare-chevron" />
+                  <span className="welcome-pc__compare-chevron" />
+                </div>
+              </div>
+              <div className="welcome-pc__compare-img-crop">
+                <img
+                  className="welcome-pc__compare-img"
+                  src={WELCOME_PC_AFTER}
+                  alt="검수 후 — 맞춤법·일관성 표시 예시"
+                  width={700}
+                  height={475}
+                  loading="lazy"
+                  decoding="async"
+                />
+              </div>
+            </div>
+
+            <p className="welcome-pc__showcase-caption">
+              실제 검수 화면 예시 · 자동 수정이 아니라 발견 위치 표시 · 텍스트 PDF만 가능
+            </p>
           </section>
 
           {!needsWelcomeMessage && loggedIn ? (
@@ -384,27 +379,38 @@ export default function WelcomePcScreen({
               </section>
             </div>
           ) : null}
-        </div>
 
-        <aside className={stageRailClassName}>
-          {needsWelcomeMessage ? (
-            <WelcomeProfileOnboarding
-              uid={uid}
-              defaultNickname={session?.displayName ?? ''}
-              surface="welcome-pc"
-              onComplete={() => {
-                bumpProfileRev();
-                handleStart();
-              }}
-            />
-          ) : (
-            <>
-              {portraitBlock}
-              {isGuestLanding ? guestAuthButton : signedInStartButton}
-              {loggedIn ? signedInAuthRail : null}
-            </>
-          )}
-        </aside>
+          <div className="welcome-pc__stage-rail-spacer" aria-hidden="true" />
+
+          <aside className={stageRailClassName}>
+            {needsWelcomeMessage ? (
+              <WelcomeProfileOnboarding
+                uid={uid}
+                defaultNickname={session?.displayName ?? ''}
+                surface="welcome-pc"
+                onComplete={() => {
+                  bumpProfileRev();
+                  handleStart();
+                }}
+              />
+            ) : (
+              <>
+                <div className="welcome-pc__stage-rail__align">
+                  {portraitBlock}
+                  <div className="welcome-pc__stage-rail__cta-foot">
+                    {isGuestLanding ? guestAuthButton : signedInStartButton}
+                  </div>
+                </div>
+                {isGuestLanding && authReady && !authPending ? (
+                  <p className="welcome-pc__auth-submit-hint welcome-pc__auth-submit-hint--below">
+                    크롬 브라우저 사용을 권장합니다
+                  </p>
+                ) : null}
+                {loggedIn ? signedInAuthRail : null}
+              </>
+            )}
+          </aside>
+        </div>
 
         <div className="welcome-pc__bottom-notes">
           <p className="welcome-pc__footer-line">
