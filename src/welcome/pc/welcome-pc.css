@@ -95,6 +95,11 @@
   word-break: keep-all;
 }
 
+.welcome-pc__layout--guest {
+  grid-template-rows: auto auto auto;
+  min-height: auto;
+}
+
 .welcome-pc__top-band {
   grid-area: top;
   display: flex;
@@ -121,6 +126,60 @@
 .welcome-pc__top-band .welcome-pc__lead--guest {
   justify-items: center;
   text-align: center;
+}
+
+.welcome-pc__top-band--guest-vertical .welcome-pc__lead--guest {
+  display: none;
+}
+
+.welcome-pc__guest-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: min(100%, calc(40rem * var(--welcome-scale)));
+  gap: clamp(calc(0.55rem * var(--welcome-scale)), 1.2vw, calc(0.9rem * var(--welcome-scale)));
+}
+
+.welcome-pc__guest-portrait-wrap {
+  width: min(100%, calc(17.5rem * var(--welcome-scale)));
+  max-width: 300px;
+  margin-inline: auto;
+}
+
+.welcome-pc__guest-portrait-wrap .welcome-pc__portrait {
+  width: 100%;
+  max-width: none;
+  aspect-ratio: var(--welcome-frame-aspect);
+}
+
+.welcome-pc__top-band--guest-vertical .welcome-pc__cta-top {
+  margin-top: calc(0.15rem * var(--welcome-scale));
+  max-width: min(100%, calc(26rem * var(--welcome-scale)));
+}
+
+.welcome-pc__compare-body--guest {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--welcome-compare-caption-gap);
+  width: 100%;
+  max-width: min(100%, calc(52rem * var(--welcome-scale)));
+  margin-inline: auto;
+  margin-top: clamp(calc(0.85rem * var(--welcome-scale)), 2vw, calc(1.35rem * var(--welcome-scale)));
+}
+
+.welcome-pc__compare-body--guest .welcome-pc__before-after-img {
+  width: 100%;
+}
+
+.welcome-pc__compare-body--guest .welcome-pc__showcase-caption {
+  width: 100%;
+  text-align: center;
+}
+
+.welcome-pc__layout--guest .welcome-pc__stage {
+  align-self: start;
 }
 
 .welcome-pc__cta-group--in-top {
