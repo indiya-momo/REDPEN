@@ -324,41 +324,43 @@ export default function WelcomePcScreen({
               <p className="welcome-pc__compare-label">검수 후</p>
             </div>
 
-            <div className="welcome-pc__compare-visuals-row">
-              <div className="welcome-pc__compare-img-crop">
-                <img
-                  className="welcome-pc__compare-img"
-                  src={WELCOME_PC_BEFORE}
-                  alt="검수 전 — 원고 본문 예시"
-                  width={700}
-                  height={475}
-                  loading="lazy"
-                  decoding="async"
-                />
-              </div>
-              <div className="welcome-pc__compare-bridge" aria-hidden="true">
-                <div className="welcome-pc__compare-chevrons">
-                  <span className="welcome-pc__compare-chevron" />
-                  <span className="welcome-pc__compare-chevron" />
-                  <span className="welcome-pc__compare-chevron" />
+            <div className="welcome-pc__compare-body">
+              <div className="welcome-pc__compare-visuals-row">
+                <div className="welcome-pc__compare-img-crop">
+                  <img
+                    className="welcome-pc__compare-img"
+                    src={WELCOME_PC_BEFORE}
+                    alt="검수 전 — 원고 본문 예시"
+                    width={700}
+                    height={475}
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </div>
+                <div className="welcome-pc__compare-bridge" aria-hidden="true">
+                  <div className="welcome-pc__compare-chevrons">
+                    <span className="welcome-pc__compare-chevron" />
+                    <span className="welcome-pc__compare-chevron" />
+                    <span className="welcome-pc__compare-chevron" />
+                  </div>
+                </div>
+                <div className="welcome-pc__compare-img-crop">
+                  <img
+                    className="welcome-pc__compare-img"
+                    src={WELCOME_PC_AFTER}
+                    alt="검수 후 — 맞춤법·일관성 표시 예시"
+                    width={700}
+                    height={475}
+                    loading="lazy"
+                    decoding="async"
+                  />
                 </div>
               </div>
-              <div className="welcome-pc__compare-img-crop">
-                <img
-                  className="welcome-pc__compare-img"
-                  src={WELCOME_PC_AFTER}
-                  alt="검수 후 — 맞춤법·일관성 표시 예시"
-                  width={700}
-                  height={475}
-                  loading="lazy"
-                  decoding="async"
-                />
-              </div>
-            </div>
 
-            <p className="welcome-pc__showcase-caption">
-              실제 검수 화면 예시 · 자동 수정이 아니라 발견 위치 표시 · 텍스트 PDF만 가능
-            </p>
+              <p className="welcome-pc__showcase-caption">
+                사용자의 이해를 돕고자 재구성한 화면입니다 ·맞춤법과 일관성 검수는 각각 진행됩니다· 검수 위치를 표시하며 원고 자동 수정은 하지 않습니다
+              </p>
+            </div>
           </section>
 
           {!needsWelcomeMessage && loggedIn ? (

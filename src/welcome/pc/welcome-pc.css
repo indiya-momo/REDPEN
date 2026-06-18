@@ -35,9 +35,13 @@
   --right-col-width: min(280px, 100%);
   --welcome-cta-btn-width: var(--right-col-width);
   --welcome-portrait-width: var(--right-col-width);
-  --welcome-portrait-scale: 1.5;
+  --welcome-portrait-scale: 1.7;
+  --welcome-rail-cta-gap: calc(0.42rem * var(--welcome-scale));
   --welcome-compare-label-scale: 1.8;
   --welcome-compare-crop-left: 0.2;
+  --welcome-compare-crop-bottom: 0.05;
+  --welcome-stage-row-gap: calc(0.12rem * var(--welcome-scale));
+  --welcome-compare-caption-gap: calc(0.12rem * 0.3 * var(--welcome-scale));
   --welcome-frame-width: 100%;
   --welcome-frame-aspect: 1305 / 1211;
   --welcome-hole-left: 21.1%;
@@ -286,21 +290,19 @@
   grid-template-areas:
     'labels rail-spacer'
     'visuals rail'
-    'caption rail-extra';
-  gap:
-    calc(0.12rem * var(--welcome-scale))
-    clamp(calc(0.85rem * var(--welcome-scale)), 2vw, calc(1.6rem * var(--welcome-scale)));
+    '. rail-extra';
+  row-gap: var(--welcome-stage-row-gap);
+  column-gap: clamp(calc(0.85rem * var(--welcome-scale)), 2vw, calc(1.6rem * var(--welcome-scale)));
   min-width: 0;
   min-height: 0;
   align-items: stretch;
 }
 
 .welcome-pc__stage--signed-in {
-  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  grid-template-rows: auto minmax(0, 1fr) auto;
   grid-template-areas:
     'labels rail-spacer'
     'visuals rail'
-    'caption rail-extra'
     'panels rail-extra';
 }
 
@@ -317,14 +319,22 @@
   min-width: 0;
 }
 
-.welcome-pc__compare-visuals-row {
+.welcome-pc__compare-body {
   grid-area: visuals;
+  display: flex;
+  flex-direction: column;
+  gap: var(--welcome-compare-caption-gap);
+  align-self: start;
+  min-width: 0;
+  width: 100%;
+}
+
+.welcome-pc__compare-visuals-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  align-items: stretch;
+  align-items: start;
   gap: calc(0.3rem * var(--welcome-scale));
   min-width: 0;
-  min-height: 0;
 }
 
 .welcome-pc__stage-rail-spacer {
@@ -338,6 +348,7 @@
   align-items: center;
   min-width: 0;
   min-height: 0;
+  overflow: visible;
 }
 
 .welcome-pc__stage-rail--action {
@@ -346,14 +357,15 @@
 
 .welcome-pc__stage-rail--action .welcome-pc__stage-rail__align {
   grid-area: rail;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  align-items: center;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  align-content: stretch;
+  justify-items: center;
   width: 100%;
   min-width: 0;
   min-height: 0;
-  gap: calc(0.35rem * var(--welcome-scale));
+  height: 100%;
+  gap: var(--welcome-rail-cta-gap);
 }
 
 .welcome-pc__stage-rail__align {
@@ -371,10 +383,7 @@
   flex: 0 0 auto;
   width: var(--right-col-width);
   max-width: 100%;
-}
-
-.welcome-pc__showcase-caption {
-  grid-area: caption;
+  margin-top: 0;
 }
 
 .welcome-pc__panels {
@@ -419,16 +428,15 @@
 
 .welcome-pc__stage-rail--action .welcome-pc__portrait {
   box-sizing: border-box;
-  flex: 1 1 auto;
-  width: min(calc(var(--right-col-width) * var(--welcome-portrait-scale)), 100%);
+  place-self: center start;
+  width: min(100%, calc(var(--right-col-width) * var(--welcome-portrait-scale)));
   max-width: calc(var(--right-col-width) * var(--welcome-portrait-scale));
-  min-height: 0;
+  height: 100%;
   max-height: 100%;
-  height: auto;
+  min-height: 0;
   aspect-ratio: 1 / 1;
   transform: none;
   margin-inline: auto;
-  align-self: center;
 }
 
 .welcome-pc__stage-rail--action .welcome-pc__cta-bar-action {
@@ -785,8 +793,7 @@
 
 .welcome-pc__compare-img-crop {
   min-width: 0;
-  min-height: 0;
-  height: 100%;
+  height: auto;
   overflow: hidden;
   border: 1px solid var(--welcome-border-soft);
   border-radius: var(--radius-ui-sm);
@@ -806,6 +813,7 @@
   margin-left: calc(
     -1 * var(--welcome-compare-crop-left) / (1 - var(--welcome-compare-crop-left)) * 100%
   );
+  clip-path: inset(0 0 calc(var(--welcome-compare-crop-bottom) * 100%) 0);
 }
 
 .welcome-pc__compare-bridge {
@@ -849,7 +857,7 @@
 }
 
 .welcome-pc__showcase-caption {
-  margin: calc(0.12rem * var(--welcome-scale)) 0 0;
+  margin: 0;
   font-family: var(--font-family-body-brand);
   font-size: calc(0.68rem * 1.5 * var(--welcome-scale));
   line-height: 1.55;
@@ -1173,21 +1181,19 @@
 
   .welcome-pc__stage {
     grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+    grid-template-areas:
+      'labels'
+      'rail'
+      'visuals';
+  }
+
+  .welcome-pc__stage--signed-in {
     grid-template-rows: auto auto auto auto;
     grid-template-areas:
       'labels'
       'rail'
       'visuals'
-      'caption';
-  }
-
-  .welcome-pc__stage--signed-in {
-    grid-template-rows: auto auto auto auto auto;
-    grid-template-areas:
-      'labels'
-      'rail'
-      'visuals'
-      'caption'
       'panels';
   }
 
