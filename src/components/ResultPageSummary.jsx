@@ -1,19 +1,29 @@
+import { useEffect, useMemo, useState } from 'react';
 import { formatSystemPageLabel } from '../lib/printedPageDisplay.js';
 import { instanceVisibilityKey, instancesMatch } from '../lib/checkResultUtils.js';
+
+export const RESULT_PILL_COLLAPSE_THRESHOLD = 15;
+
+/**
+ * @typedef {{
+ *   pageNum: number,
+ *   instances: import('../lib/ruleEngine.js').MatchInstance[],
+ * }} PageGroupEntry
+ */
 
 /**
  * @typedef {{
  *   inst: import('../lib/ruleEngine.js').MatchInstance,
  *   indexOnPage: number,
  *   totalOnPage: number,
- * }} InstanceChipEntry
+ * }} InstancePillEntry
  */
 
 /**
  * @param {import('../lib/ruleEngine.js').MatchInstance[]} instances
- * @returns {InstanceChipEntry[]}
+ * @returns {PageGroupEntry[]}
  */
-function buildInstanceChips(instances) {
+export function buildPageGroups(instances) {
   const byPage = new Map();
   for (const inst of instances) {
     const list = byPage.get(inst.pageNum) ?? [];
@@ -21,17 +31,44 @@ function buildInstanceChips(instances) {
     byPage.set(inst.pageNum, list);
   }
 
-  /** @type {InstanceChipEntry[]} */
-  const chips = [];
+  /** @type {PageGroupEntry[]} */
+  const groups = [];
   for (const pageNum of [...byPage.keys()].sort((a, b) => a - b)) {
-    const pageInstances = byPage.get(pageNum) ?? [];
-    pageInstances.sort((a, b) => a.index - b.index);
-    const totalOnPage = pageInstances.length;
-    pageInstances.forEach((inst, i) => {
-      chips.push({ inst, indexOnPage: i + 1, totalOnPage });
+    const pageInstances = (byPage.get(pageNum) ?? []).sort(
+      (a, b) => a.index - b.index,
+    );
+    groups.push({ pageNum, instances: pageInstances });
+  }
+  return groups;
+}
+
+/**
+ * @param {import('../lib/ruleEngine.js').MatchInstance[]} instances
+ * @returns {InstancePillEntry[]}
+ */
+export function buildInstancePills(instances) {
+  const pills = [];
+  for (const group of buildPageGroups(instances)) {
+    const totalOnPage = group.instances.length;
+    group.instances.forEach((inst, index) => {
+      pills.push({
+        inst,
+        indexOnPage: index + 1,
+        totalOnPage,
+      });
     });
   }
-  return chips;
+  return pills;
+}
+
+/**
+ * @param {number} indexOnPage
+ * @param {number} totalOnPage
+ * @returns {string | null}
+ */
+export function getInstanceFragmentLabel(indexOnPage, totalOnPage) {
+  if (totalOnPage <= 1) return null;
+  return `${indexOnPage}/${totalOnPage}`;
 }
 
 /**
@@ -56,18 +93,49 @@ export default function ResultPageSummary({
   isInstanceVisible = () => true,
   onToggleInstanceVisibility,
 }) {
-  const chips = buildInstanceChips(instances);
+  const pills = useMemo(() => buildInstancePills(instances), [instances]);
+  const pillsSignature = useMemo(
+    () => pills.map((entry) => instanceVisibilityKey(entry.inst)).join('\0'),
+    [pills],
+  );
+  const [expanded, setExpanded] = useState(false);
 
-  if (!chips.length) return null;
+  useEffect(() => {
+    setExpanded(false);
+  }, [pillsSignature]);
+
+  useEffect(() => {
+    if (expanded) return;
+    if (!selectedInstance || pills.length <= RESULT_PILL_COLLAPSE_THRESHOLD) {
+      return;
+    }
+    const selectedIndex = pills.findIndex((entry) =>
+      instancesMatch(entry.inst, selectedInstance),
+    );
+    if (selectedIndex >= RESULT_PILL_COLLAPSE_THRESHOLD) {
+      setExpanded(true);
+    }
+  }, [pills, selectedInstance, expanded]);
+
+  if (!pills.length) return null;
+
+  const needsCollapse = pills.length > RESULT_PILL_COLLAPSE_THRESHOLD;
+  const visiblePills =
+    needsCollapse && !expanded
+      ? pills.slice(0, RESULT_PILL_COLLAPSE_THRESHOLD)
+      : pills;
+  const hiddenPills =
+    needsCollapse && !expanded
+      ? pills.slice(RESULT_PILL_COLLAPSE_THRESHOLD)
+      : [];
+  const hiddenCount = hiddenPills.length;
 
   return (
     <div className="result-pages" role="list">
-      {chips.map(({ inst, indexOnPage, totalOnPage }) => (
-        <InstanceChip
-          key={instanceVisibilityKey(inst)}
-          inst={inst}
-          indexOnPage={indexOnPage}
-          totalOnPage={totalOnPage}
+      {visiblePills.map((entry) => (
+        <InstancePill
+          key={instanceVisibilityKey(entry.inst)}
+          entry={entry}
           currentPage={currentPage}
           selectedInstance={selectedInstance}
           formatPageLabel={formatPageLabel}
@@ -77,15 +145,31 @@ export default function ResultPageSummary({
           onToggleInstanceVisibility={onToggleInstanceVisibility}
         />
       ))}
+      {needsCollapse ? (
+        <div
+          className="result-page-chip-wrap result-page-chip-wrap--expand"
+          role="listitem"
+        >
+          <button
+            type="button"
+            className="result-pages-expand-btn"
+            aria-expanded={expanded}
+            onClick={(event) => {
+              event.stopPropagation();
+              setExpanded((open) => !open);
+            }}
+          >
+            {expanded ? '접기' : `＋ ${hiddenCount}개 더 보기`}
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }
 
 /**
  * @param {{
- *   inst: import('../lib/ruleEngine.js').MatchInstance,
- *   indexOnPage: number,
- *   totalOnPage: number,
+ *   entry: InstancePillEntry,
  *   currentPage: number,
  *   selectedInstance: import('../lib/ruleEngine.js').MatchInstance | null,
  *   formatPageLabel: (systemPage: number) => string,
@@ -95,10 +179,8 @@ export default function ResultPageSummary({
  *   onToggleInstanceVisibility?: (inst: import('../lib/ruleEngine.js').MatchInstance) => void,
  * }} props
  */
-function InstanceChip({
-  inst,
-  indexOnPage,
-  totalOnPage,
+function InstancePill({
+  entry,
   currentPage,
   selectedInstance,
   formatPageLabel,
@@ -107,11 +189,12 @@ function InstanceChip({
   onSelectInstance,
   onToggleInstanceVisibility,
 }) {
+  const { inst, indexOnPage, totalOnPage } = entry;
+  const fragmentLabel = getInstanceFragmentLabel(indexOnPage, totalOnPage);
   const visible = isInstanceVisible(inst);
   const selected =
     selectedInstance != null && instancesMatch(inst, selectedInstance);
-  const countLabel =
-    totalOnPage > 1 ? `(${indexOnPage}/${totalOnPage})` : '';
+  const onCurrentPage = inst.pageNum === currentPage;
 
   function navigateToInstance() {
     if (onSelectInstance) onSelectInstance(inst);
@@ -123,8 +206,8 @@ function InstanceChip({
       <button
         type="button"
         className={`page-chip${selected ? ' page-chip--current' : ''}${
-          !visible ? ' page-chip--hidden-instance' : ''
-        }`}
+          onCurrentPage && !selected ? ' page-chip--on-page' : ''
+        }${!visible ? ' page-chip--hidden-instance' : ''}`}
         title={
           onToggleInstanceVisibility
             ? visible
@@ -144,8 +227,12 @@ function InstanceChip({
           }
         }}
       >
-        {formatPageLabel(inst.pageNum)}
-        {countLabel}
+        <span className="page-chip__page">{formatPageLabel(inst.pageNum)}</span>
+        {fragmentLabel ? (
+          <span className="page-chip__bundle page-chip__bundle--fragment">
+            {fragmentLabel}
+          </span>
+        ) : null}
       </button>
     </div>
   );

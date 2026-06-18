@@ -116,16 +116,24 @@ body:has(.welcome-pc) {
   --color-accent-gold: #c8a96b;
   --color-accent-gold-hover: #d4b87a;
 
-  /* PDF 교정 하이라이트 — 금갈색(전체) + 빨간펜(선택 1건·말풍선) */
+  /* 검수 결과 pill · PDF 하이라이트 공통 베이지 */
+  --result-pill: #e2d7c2;
+  /* pill 톤 + 형광펜 — 색 자체는 선명, PDF 위는 낮은 불투명도로 얹음 */
+  --result-pill-marker: color-mix(in srgb, var(--result-pill) 20%, #ffea4d 80%);
+  /* PDF 교정 하이라이트 — 형광펜 틴트 + 빨간펜(선택 1건) */
   --editor-red: #b91c1c;
   --editor-red-ink: #c62828;
   --pdf-highlight-scale: 1;
-  --pdf-highlight-fill: rgb(140 98 46 / 40%);
-  --pdf-highlight-fill-hover: rgb(140 98 46 / 52%);
-  --pdf-highlight-border: #8c6428;
-  --pdf-highlight-shadow: 0 1px 2px rgb(58 42 18 / 16%);
-  --pdf-highlight-primary-fill: rgb(140 98 46 / 50%);
-  --pdf-highlight-primary-shadow: 0 1px 3px rgb(198 40 40 / 20%);
+  --pdf-highlight-fill: color-mix(in srgb, var(--result-pill-marker) 38%, transparent);
+  --pdf-highlight-fill-hover: color-mix(in srgb, var(--result-pill-marker) 50%, transparent);
+  --pdf-highlight-border: color-mix(in srgb, var(--result-pill-marker) 82%, var(--accent-terracotta) 18%);
+  --pdf-highlight-shadow:
+    0 0 0 1px color-mix(in srgb, var(--result-pill-marker) 24%, transparent),
+    0 1px 3px rgb(210 168 48 / 16%);
+  --pdf-highlight-primary-fill: color-mix(in srgb, var(--result-pill-marker) 46%, transparent);
+  --pdf-highlight-primary-shadow:
+    0 0 0 1px color-mix(in srgb, var(--result-pill-marker) 28%, transparent),
+    0 1px 4px rgb(198 40 40 / 20%);
   --pdf-highlight-red-underline: 2.6px;
   /* 오버레이 교정문 ↔ 원문 세로 패딩 (기준 0.05 × 1.8) */
   --pdf-overlay-pad-y-ratio: 0.09;
@@ -1701,10 +1709,38 @@ details[open] > summary .details-chevron {
   line-height: 1;
 }
 
+.result-pages-expand-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  box-sizing: border-box;
+  min-height: 1.625rem;
+  margin: 0;
+  padding: var(--space-xs-tight) var(--space-md-tight);
+  border: 1px solid var(--chip-border);
+  border-radius: var(--radius-ui-sm);
+  background: var(--chip-bg);
+  color: var(--color-text-muted);
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.result-pages-expand-btn:hover {
+  background: var(--panel-accordion-bg);
+  border-color: var(--focus-border);
+  color: var(--color-text-secondary);
+}
+
 .page-chip {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 4px;
   flex: 0 0 auto;
   box-sizing: border-box;
   min-height: 1.625rem;
@@ -1724,6 +1760,22 @@ details[open] > summary .details-chevron {
   vertical-align: top;
 }
 
+.page-chip__page {
+  line-height: 1.2;
+}
+
+.page-chip__bundle {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: rgb(0 0 0 / 6%);
+  font-size: 0.68rem;
+  font-weight: 600;
+  line-height: 1.2;
+  color: inherit;
+}
+
 .page-chip:hover {
   background: var(--panel-accordion-bg);
   border-color: var(--focus-border);
@@ -1734,6 +1786,11 @@ details[open] > summary .details-chevron {
   color: var(--chip-active-text);
   border-color: var(--chip-active-border);
   box-shadow: 0 0 0 var(--space-3xs) var(--focus-ring);
+}
+
+.page-chip--current .page-chip__bundle {
+  background: rgb(255 255 255 / 20%);
+  color: inherit;
 }
 
 .page-chip--current:hover {
