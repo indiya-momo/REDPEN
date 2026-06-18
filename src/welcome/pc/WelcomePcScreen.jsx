@@ -132,12 +132,11 @@ export default function WelcomePcScreen({
     'welcome-pc__layout',
     needsWelcomeMessage
       ? 'welcome-pc__layout--onboarding'
-      : loggedIn
-        ? 'welcome-pc__layout--signed-in'
-        : 'welcome-pc__layout--guest',
+      : 'welcome-pc__layout--guest',
   ].join(' ');
 
   const isGuestLanding = !needsWelcomeMessage && !loggedIn;
+  const isHeroLanding = !needsWelcomeMessage;
 
   const headerBlock = (
     <header className="welcome-pc__header">
@@ -145,27 +144,13 @@ export default function WelcomePcScreen({
         <span className="welcome-pc__title-main">인디야</span>
         <span className="welcome-pc__title-sub">검수냥 모모 이야기</span>
       </h1>
-      {isGuestLanding ? (
+      {!needsWelcomeMessage ? (
         <p className="welcome-pc__privacy-starline">
           <WelcomePcSparkle className="welcome-pc__privacy-starline__spk" />
           <span>원고와 검사 결과는 서버에 저장하지 않습니다</span>
           <WelcomePcSparkle className="welcome-pc__privacy-starline__spk" />
         </p>
-      ) : (
-        <p className="welcome-pc__lead">
-          <span className="welcome-pc__lead-line">
-            맞춤법·표기 일관성을 찾는{' '}
-            <strong>텍스트 PDF 검수 서비스</strong>입니다
-          </span>
-          <span className="welcome-pc__lead-line">
-            원고와 검사 결과는{' '}
-            <span className="welcome-pc__lead-emphasis">
-              서버에 저장하지 않고, 이 브라우저 안에서만 처리
-            </span>
-            합니다
-          </span>
-        </p>
-      )}
+      ) : null}
     </header>
   );
 
@@ -216,6 +201,18 @@ export default function WelcomePcScreen({
     </div>
   );
 
+  const signedInStatusBlock = (
+    <p className="welcome-pc__hero-signed-status">
+      [
+      <span className="welcome-pc__auth-nickname">{signedInName}</span>
+      <span className="welcome-pc__auth-honorific">님이</span>
+      <span className="welcome-pc__auth-message"> 모모와 원고를 검수 중입니다</span>
+      ]
+    </p>
+  );
+
+  const heroStatusBlock = isGuestLanding ? perfBetaBlock : signedInStatusBlock;
+
   const perfBlock = (
     <div className="welcome-pc__cta-group welcome-pc__cta-group--in-top">
       <div className="welcome-pc__perf-ribbon">
@@ -234,14 +231,6 @@ export default function WelcomePcScreen({
           </span>
           만에 검수!
         </p>
-
-        {!isGuestLanding ? perfBetaBlock : null}
-
-        {authError && authReady && !isGuestLanding ? (
-          <p className="welcome-pc__auth-error welcome-pc__auth-error--bar" role="alert">
-            {authError}
-          </p>
-        ) : null}
       </div>
     </div>
   );
@@ -251,7 +240,7 @@ export default function WelcomePcScreen({
       {!authReady ? (
         <button
           type="button"
-          className="btn-welcome-primary welcome-pc__start welcome-pc__start--rail"
+          className="btn-welcome-primary welcome-pc__start welcome-pc__auth-submit welcome-pc__auth-submit--single"
           disabled
         >
           로그인 확인 중…
@@ -259,7 +248,7 @@ export default function WelcomePcScreen({
       ) : (
         <button
           type="button"
-          className="btn-welcome-primary welcome-pc__start welcome-pc__start--rail"
+          className="btn-welcome-primary welcome-pc__start welcome-pc__auth-submit welcome-pc__auth-submit--single"
           onClick={handleStart}
         >
           검수하기
@@ -268,26 +257,52 @@ export default function WelcomePcScreen({
     </div>
   );
 
-  const signedInAuthRail = (
-    <section className="welcome-pc__auth welcome-pc__auth--rail" aria-label="회원 정보">
-      <div className="welcome-pc__auth-signed">
-        <p className="welcome-pc__auth-signed-text">
-          <span className="welcome-pc__auth-nickname">{signedInName}</span>
-          <span className="welcome-pc__auth-honorific">님이</span>
-          <span className="welcome-pc__auth-message">모모와 원고를 검수 중입니다</span>
-        </p>
-        <button type="button" className="welcome-pc__auth-ghost" onClick={onLogout}>
-          로그아웃
-        </button>
+  const heroCtaButton = isGuestLanding ? guestAuthButton : signedInStartButton;
+
+  const heroBlock = (
+    <div className="welcome-pc__guest-hero">
+      <div className="welcome-pc__guest-portrait-wrap">{portraitBlock}</div>
+      {perfBlock}
+      <div className="welcome-pc__guest-cta-match">
+        {heroStatusBlock}
+        <div
+          className="welcome-pc__cta-top"
+          aria-label={isGuestLanding ? '시작하기' : '검수 시작'}
+        >
+          {heroCtaButton}
+        </div>
+        {authError && authReady && isGuestLanding ? (
+          <p className="welcome-pc__auth-error welcome-pc__auth-error--bar" role="alert">
+            {authError}
+          </p>
+        ) : null}
       </div>
-    </section>
+    </div>
+  );
+
+  const compareShowcaseBlock = (
+    <>
+      <figure className="welcome-pc__compare-figure">
+        <img
+          className="welcome-pc__before-after-img"
+          src={WELCOME_PC_BEFORE_AFTER}
+          alt="검수 전·후 예시 — 왼쪽 원고, 오른쪽 맞춤법·일관성·본용언+보조용언 표기 하이라이트"
+          width={1698}
+          height={746}
+          loading="lazy"
+          decoding="async"
+        />
+      </figure>
+      <p className="welcome-pc__showcase-caption">
+        사용자의 이해를 돕고자 재구성한 화면입니다 · 맞춤법과 일관성 검수는 각각 진행됩니다 ·
+        크롬 브라우저 사용을 권장합니다
+      </p>
+    </>
   );
 
   const stageRailClassName = [
     'welcome-pc__stage-rail',
-    needsWelcomeMessage
-      ? 'welcome-pc__stage-rail--onboarding'
-      : 'welcome-pc__stage-rail--action',
+    'welcome-pc__stage-rail--onboarding',
   ].join(' ');
 
   return (
@@ -297,119 +312,24 @@ export default function WelcomePcScreen({
           className={[
             'welcome-pc__top-band',
             needsWelcomeMessage ? 'welcome-pc__top-band--onboarding' : '',
-            isGuestLanding ? 'welcome-pc__top-band--guest-vertical' : '',
+            isHeroLanding ? 'welcome-pc__top-band--guest-vertical' : '',
           ]
             .filter(Boolean)
             .join(' ')}
         >
           {headerBlock}
-          {isGuestLanding ? (
-            <div className="welcome-pc__guest-hero">
-              <div className="welcome-pc__guest-portrait-wrap">{portraitBlock}</div>
-              {perfBlock}
-              <div className="welcome-pc__guest-cta-match">
-                {perfBetaBlock}
-                <div className="welcome-pc__cta-top" aria-label="시작하기">
-                  {guestAuthButton}
-                </div>
-                {authError && authReady ? (
-                  <p className="welcome-pc__auth-error welcome-pc__auth-error--bar" role="alert">
-                    {authError}
-                  </p>
-                ) : null}
-              </div>
-            </div>
-          ) : !needsWelcomeMessage ? (
-            perfBlock
-          ) : null}
+          {isHeroLanding ? heroBlock : null}
         </div>
 
-        <div
-          className={[
-            'welcome-pc__stage',
-            loggedIn && !needsWelcomeMessage ? 'welcome-pc__stage--signed-in' : '',
-          ]
-            .filter(Boolean)
-            .join(' ')}
-        >
+        <div className="welcome-pc__stage">
           <section className="welcome-pc__showcase" aria-label="검수 예시">
-            <div
-              className={[
-                'welcome-pc__compare-body',
-                isGuestLanding ? 'welcome-pc__compare-body--guest' : '',
-              ]
-                .filter(Boolean)
-                .join(' ')}
-            >
-              {isGuestLanding ? (
-                <>
-                  <figure className="welcome-pc__compare-figure">
-                    <img
-                      className="welcome-pc__before-after-img"
-                      src={WELCOME_PC_BEFORE_AFTER}
-                      alt="검수 전·후 예시 — 왼쪽 원고, 오른쪽 맞춤법·일관성·본용언+보조용언 표기 하이라이트"
-                      width={1698}
-                      height={746}
-                      loading="lazy"
-                      decoding="async"
-                    />
-                  </figure>
-                  <p className="welcome-pc__showcase-caption">
-                    사용자의 이해를 돕고자 재구성한 화면입니다 · 맞춤법과 일관성 검수는 각각
-                    진행됩니다 · 크롬 브라우저 사용을 권장합니다
-                  </p>
-                </>
-              ) : (
-                <>
-                  <div className="welcome-pc__compare-row">
-                    <img
-                      className="welcome-pc__before-after-img"
-                      src={WELCOME_PC_BEFORE_AFTER}
-                      alt="검수 전·후 예시 — 왼쪽 원고, 오른쪽 맞춤법·일관성·본용언+보조용언 표기 하이라이트"
-                      width={1698}
-                      height={746}
-                      loading="lazy"
-                      decoding="async"
-                    />
-                    {!needsWelcomeMessage ? (
-                      <div className="welcome-pc__rail-stack welcome-pc__rail-stack--cta-only">
-                        <div className="welcome-pc__stage-rail__cta-foot">
-                          {signedInStartButton}
-                        </div>
-                      </div>
-                    ) : null}
-                  </div>
-                  <p className="welcome-pc__showcase-caption">
-                    사용자의 이해를 돕고자 재구성한 화면입니다 · 맞춤법과 일관성 검수는 각각
-                    진행됩니다 · 크롬 브라우저 사용을 권장합니다
-                  </p>
-                </>
-              )}
+            <div className="welcome-pc__compare-body welcome-pc__compare-body--guest">
+              {isHeroLanding ? compareShowcaseBlock : null}
             </div>
           </section>
 
-          {!needsWelcomeMessage && loggedIn ? (
-            <div className="welcome-pc__panels">
-              <section className="welcome-pc__panel welcome-pc__panel--do">
-                <h2>하는 일</h2>
-                <ul>
-                  <li>설정된 기준에 따라 PDF 스캔</li>
-                  <li>발견 위치를 목록 + 하이라이트로 표시</li>
-                </ul>
-              </section>
-              <section className="welcome-pc__panel welcome-pc__panel--dont">
-                <h2>하지 않는 일</h2>
-                <ul>
-                  <li>원고 자동 수정 · AI 문장 추천</li>
-                  <li>검사 결과 서버 저장</li>
-                </ul>
-              </section>
-            </div>
-          ) : null}
-
-          {needsWelcomeMessage || loggedIn ? (
-          <aside className={stageRailClassName}>
-            {needsWelcomeMessage ? (
+          {needsWelcomeMessage ? (
+            <aside className={stageRailClassName}>
               <WelcomeProfileOnboarding
                 uid={uid}
                 defaultNickname={session?.displayName ?? ''}
@@ -419,10 +339,7 @@ export default function WelcomePcScreen({
                   handleStart();
                 }}
               />
-            ) : (
-              loggedIn ? signedInAuthRail : null
-            )}
-          </aside>
+            </aside>
           ) : null}
         </div>
 
