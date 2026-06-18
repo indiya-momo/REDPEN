@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { formatSystemPageLabel } from '../lib/printedPageDisplay.js';
 import { instanceVisibilityKey, instancesMatch } from '../lib/checkResultUtils.js';
 
-export const RESULT_PILL_COLLAPSE_THRESHOLD = 15;
+const RESULT_PILL_COLLAPSE_THRESHOLD = 15;
 
 /**
  * @typedef {{
@@ -23,7 +23,7 @@ export const RESULT_PILL_COLLAPSE_THRESHOLD = 15;
  * @param {import('../lib/ruleEngine.js').MatchInstance[]} instances
  * @returns {PageGroupEntry[]}
  */
-export function buildPageGroups(instances) {
+function buildPageGroups(instances) {
   const byPage = new Map();
   for (const inst of instances) {
     const list = byPage.get(inst.pageNum) ?? [];
@@ -147,7 +147,7 @@ export default function ResultPageSummary({
       ))}
       {needsCollapse ? (
         <div
-          className="result-page-chip-wrap result-page-chip-wrap--expand"
+          className="result-page-chip-wrap"
           role="listitem"
         >
           <button

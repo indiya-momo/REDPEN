@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildInstancePills,
-  buildPageGroups,
   getInstanceFragmentLabel,
 } from './ResultPageSummary.jsx';
 
@@ -16,19 +15,6 @@ function inst(pageNum, index) {
     index,
   };
 }
-
-describe('buildPageGroups', () => {
-  it('merges multiple instances on the same page into one group', () => {
-    const groups = buildPageGroups([
-      inst(6, 10),
-      inst(6, 20),
-      inst(6, 30),
-    ]);
-    expect(groups).toHaveLength(1);
-    expect(groups[0].pageNum).toBe(6);
-    expect(groups[0].instances).toHaveLength(3);
-  });
-});
 
 describe('buildInstancePills', () => {
   it('emits one pill per instance with fragment labels on the same page', () => {

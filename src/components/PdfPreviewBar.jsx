@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import CurrentPageStatus from './CurrentPageStatus.jsx';
 import PdfThumbnailStrip from './PdfThumbnailStrip.jsx';
 
@@ -39,7 +39,6 @@ export default function PdfPreviewBar({
   toSystemPageFromInput = () => null,
   pageStatus = null,
 }) {
-  const jumpInputFocusedRef = useRef(false);
   const displayCurrent = formatPageText(currentPage);
   const displayTotal = formatPageText(numPages);
   const [value, setValue] = useState(displayCurrent);
@@ -123,12 +122,6 @@ export default function PdfPreviewBar({
               max={printedPagesEnabled ? undefined : numPages}
               value={value}
               onChange={(e) => setValue(e.target.value)}
-              onFocus={() => {
-                jumpInputFocusedRef.current = true;
-              }}
-              onBlur={() => {
-                jumpInputFocusedRef.current = false;
-              }}
               aria-label={
                 printedPagesEnabled
                   ? printedPagesActive
