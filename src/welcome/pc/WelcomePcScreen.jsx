@@ -141,7 +141,6 @@ export default function WelcomePcScreen({
 
   const headerBlock = (
     <header className="welcome-pc__header">
-      <p className="welcome-pc__eyebrow">텍스트 PDF 검수 서비스</p>
       <h1 className="welcome-pc__title-row">
         <span className="welcome-pc__title-main">인디야</span>
         <span className="welcome-pc__title-sub">검수냥 모모 이야기</span>
@@ -217,24 +216,7 @@ export default function WelcomePcScreen({
     <div className="welcome-pc__cta-group welcome-pc__cta-group--in-top">
       <div className="welcome-pc__perf-ribbon">
         <p className="welcome-pc__perf-l1">
-          <span className="welcome-pc__perf-anc">
-            <span className="welcome-pc__perf-cap">
-              규칙 <strong>80+</strong>
-            </span>
-            맞춤법
-          </span>
-          {' · '}
-          <span className="welcome-pc__perf-anc">
-            <span className="welcome-pc__perf-cap">
-              한 번에 <strong>10개</strong> 검색 가능
-            </span>
-            일관성 찾기
-          </span>
-          {' · '}
-          <span className="welcome-pc__perf-anc">
-            <span className="welcome-pc__perf-cap">(아/어) + 본용언 10</span>
-            보조용언 + 본용언
-          </span>
+          맞춤법 · 일관성 찾기 · 보조용언 + 본용언
         </p>
 
         <p className="welcome-pc__perf-l2">
