@@ -59,6 +59,21 @@ body:has(.welcome-pc) {
   --font-family-title: 'MapoDaCapo', 'Malgun Gothic', 'Apple SD Gothic Neo', serif;
   --font-family-body-brand: 'RidiBatang', 'Malgun Gothic', 'Apple SD Gothic Neo', serif;
 
+  /* 좌측 리스트 본문 — ink 2단계 (텍스트 가독성) */
+  --ink: #1a1a1a;
+  --ink-soft: #6b5d4c;
+
+  /* 패널 UI 타이포 — weight 2단(맑은고딕 inherit 전용) + 색 alias */
+  --w-strong: 700;
+  --w-regular: 400;
+  --w-header: var(--w-strong);
+  --w-step: var(--w-strong);
+  --w-item: var(--w-regular);
+  --w-body: var(--w-regular);
+  --c-ink: var(--ink);
+  --c-soft: var(--ink-soft);
+  --c-faint: #9a8c77;
+
   /* 종이·서재 (검수 화면·패널) */
   --color-text: #1a1510;
   --color-text-secondary: #3a2a2a;
@@ -75,7 +90,12 @@ body:has(.welcome-pc) {
   --color-surface-inverse: #1f2937;
   --color-scrollbar-thumb: #d4c8b4;
   --color-scrollbar-thumb-hover: #b8a890;
-  --rule-start-x: 30px;
+  /* 체크리스트: 제목 줄 체크박스 열( rail ) — summary chevron·gap과 동기화 */
+  --criteria-pad-inline: 10px;
+  --criteria-chevron-inset: calc(0.42em + 5px + 8px);
+  --criteria-check-rail: calc(var(--criteria-pad-inline) + var(--criteria-chevron-inset));
+  --criteria-checkbox-size: 15px;
+  --rule-start-x: var(--criteria-check-rail);
   --rule-text-start-offset: 20px;
 
   /* 모서리 — 부드러운 책 모서리 (인트로·작업 UI 공통) */
@@ -165,6 +185,8 @@ body:has(.welcome-pc) {
   line-height: 1.5;
   color: var(--color-text);
   background: var(--color-surface);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 * {
@@ -478,6 +500,10 @@ button {
 }
 
 .caution-checklist-details {
+  --criteria-pad-inline: 10px;
+  font-size: 1.05rem;
+  --criteria-chevron-inset: calc(0.42em + 5px + 8px);
+  --criteria-check-rail: calc(var(--criteria-pad-inline) + var(--criteria-chevron-inset));
   flex-shrink: 0;
   margin: 0 0 10px;
   padding: 0 0 10px;
@@ -489,7 +515,7 @@ button {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 10px;
+  padding: 8px var(--criteria-pad-inline, 10px);
   border-radius: var(--radius-ui-sm);
   background: var(--panel-accordion-bg);
   transition: background 0.12s ease;
@@ -577,8 +603,13 @@ details[open] > summary .details-chevron {
   padding: 0;
 }
 
+.caution-checklist-details[open] > .caution-checklist {
+  padding: 0 var(--criteria-pad-inline) 10px;
+  box-sizing: border-box;
+}
+
 .caution-group {
-  padding: 6px 0 6px var(--rule-start-x);
+  padding: 6px 0 6px var(--criteria-chevron-inset);
   border-bottom: none;
   position: relative;
 }
@@ -586,7 +617,7 @@ details[open] > summary .details-chevron {
 .caution-group::after {
   content: '';
   position: absolute;
-  left: calc(var(--rule-start-x) + var(--rule-text-start-offset));
+  left: calc(var(--criteria-chevron-inset) + var(--rule-text-start-offset));
   right: 0;
   bottom: 0;
   border-bottom: 1px solid var(--color-border);
@@ -734,7 +765,7 @@ details[open] > summary .details-chevron {
   line-height: 1.45;
   color: #92400e;
   white-space: pre-line;
-  text-align: center;
+  text-align: start;
   overflow-wrap: break-word;
   word-break: keep-all;
 }
@@ -752,6 +783,10 @@ details[open] > summary .details-chevron {
 }
 
 .builtin-spelling-details {
+  --criteria-pad-inline: 10px;
+  font-size: 1.05rem;
+  --criteria-chevron-inset: calc(0.42em + 5px + 8px);
+  --criteria-check-rail: calc(var(--criteria-pad-inline) + var(--criteria-chevron-inset));
   margin-top: 0;
 }
 
@@ -810,7 +845,7 @@ details[open] > summary .details-chevron {
   display: grid;
   row-gap: 8px;
   column-gap: 6px;
-  padding: 4px 0 8px var(--rule-start-x);
+  padding: 4px 0 8px var(--criteria-chevron-inset);
   border-bottom: none;
 }
 
@@ -842,7 +877,7 @@ details[open] > summary .details-chevron {
 .builtin-rule-group--divider-after::after {
   content: '';
   position: absolute;
-  left: calc(var(--rule-start-x) + var(--rule-text-start-offset));
+  left: calc(var(--criteria-chevron-inset) + var(--rule-text-start-offset));
   right: 0;
   bottom: 0;
   border-bottom: 1px solid var(--color-border);
@@ -906,7 +941,7 @@ details[open] > summary .details-chevron {
   font-weight: 500;
   line-height: 1.45;
   color: #b91c1c;
-  text-align: center;
+  text-align: start;
 }
 
 .builtin-tip-toggle-btn {
@@ -3571,15 +3606,19 @@ details[open] > summary .details-chevron {
 }
 
 .auxiliary-chip {
-  --auxiliary-chip-checkbox: 15px;
+  --auxiliary-chip-checkbox: var(--criteria-checkbox-size, 15px);
   display: grid;
   grid-template-columns: var(--auxiliary-chip-checkbox) minmax(0, 1fr) auto;
   align-items: center;
   column-gap: 6px;
   min-width: 0;
-  padding: 4px 2px;
+  padding: 4px 2px 4px 0;
   font-size: 0.8rem;
   cursor: pointer;
+}
+
+.caution-checklist-details .auxiliary-chip {
+  padding-left: var(--criteria-chevron-inset);
 }
 
 .auxiliary-chip > input[type='checkbox'] {
