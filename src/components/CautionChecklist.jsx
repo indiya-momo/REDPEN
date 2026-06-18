@@ -111,7 +111,7 @@ export default function CautionChecklist({
    */
   function renderCautionItems(items, group) {
     const activeId = activeTipByGroup[group.id] ?? null;
-    const cols = items.length <= 2 ? 2 : 3;
+    const cols = 3;
     const activeItem =
       activeId && items.some((item) => item.id === activeId)
         ? items.find((item) => item.id === activeId) ?? null

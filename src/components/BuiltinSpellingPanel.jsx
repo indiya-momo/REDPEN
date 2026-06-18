@@ -80,10 +80,17 @@ export default function BuiltinSpellingPanel({
     const tip = (rule.tip || '').trim();
     const noQuota = !countsTowardSpellingQuota(rule);
     const useInlineTipToggle = Boolean(tip);
+    const ruleLine = (
+      <>
+        <span className="find">{rule.find}</span>
+        <span className="arrow">→</span>
+        <span className="replace">{rule.replace}</span>
+      </>
+    );
     return (
       <div
         key={rule.find}
-        className={`builtin-rule-row-wrap builtin-rule-item${noQuota ? ' builtin-rule-row-wrap--no-quota' : ''}${useInlineTipToggle ? ' builtin-rule-row-wrap--inline-trigger' : ''}`}
+        className={`builtin-rule-row-wrap builtin-rule-item${noQuota ? ' builtin-rule-row-wrap--no-quota' : ''}`}
       >
         <div className="rule-row builtin-rule-row">
           <input
@@ -91,32 +98,28 @@ export default function BuiltinSpellingPanel({
             checked={isBuiltInRuleEnabled(builtInEnabled, rule.find)}
             onChange={() => onBuiltInToggle(rule.find)}
           />
-          {useInlineTipToggle ? (
-            <div
-              className={`rule-text builtin-rule-text builtin-inline-tip-hoverable${tipOpen ? ' builtin-inline-tip-hoverable--open' : ''}`}
-              data-hover-tip="설명"
-              role="button"
-              tabIndex={0}
-              onClick={onToggleTip}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  onToggleTip();
-                }
-              }}
-              aria-expanded={tipOpen}
-            >
-              <span className="find">{rule.find}</span>
-              <span className="arrow">→</span>
-              <span className="replace builtin-inline-tip-trigger">{rule.replace}</span>
-            </div>
-          ) : (
-            <div className="rule-text builtin-rule-text">
-              <span className="find">{rule.find}</span>
-              <span className="arrow">→</span>
-              <span className="replace">{rule.replace}</span>
-            </div>
-          )}
+          <div className="rule-text builtin-rule-text">
+            {useInlineTipToggle ? (
+              <span
+                className={`builtin-rule-label caution-inline-tip-trigger${tipOpen ? ' caution-inline-tip-trigger--open' : ''}`}
+                data-hover-tip="설명"
+                role="button"
+                tabIndex={0}
+                onClick={onToggleTip}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    onToggleTip();
+                  }
+                }}
+                aria-expanded={tipOpen}
+              >
+                {ruleLine}
+              </span>
+            ) : (
+              ruleLine
+            )}
+          </div>
         </div>
       </div>
     );
@@ -140,7 +143,7 @@ export default function BuiltinSpellingPanel({
           ? group.rules.find((r) => r.find === activeFind) ?? null
           : null;
       const activeTip = String(activeRule?.tip ?? '').trim();
-      const cols = group.rules.length <= 2 ? 2 : 3;
+      const cols = 3;
       const activeIndex = activeFind
         ? group.rules.findIndex((r) => r.find === activeFind)
         : -1;
