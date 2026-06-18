@@ -134,7 +134,8 @@ body:has(.welcome-pc) {
   --pdf-highlight-primary-shadow:
     0 0 0 1px color-mix(in srgb, var(--result-pill-marker) 28%, transparent),
     0 1px 4px rgb(198 40 40 / 20%);
-  --pdf-highlight-red-underline: 2.6px;
+  --pdf-highlight-red-underline: 2px;
+  --pdf-highlight-red-underline-gap: clamp(2px, 11%, 4px);
   /* 오버레이 교정문 ↔ 원문 세로 패딩 (기준 0.05 × 1.8) */
   --pdf-overlay-pad-y-ratio: 0.09;
 
@@ -2729,6 +2730,7 @@ details[open] > summary .details-chevron {
   right: 0;
   bottom: 0;
   pointer-events: none;
+  overflow: visible;
 }
 
 .pdf-highlight {
@@ -2776,20 +2778,33 @@ details[open] > summary .details-chevron {
   min-width: 0;
 }
 
-/* 편집자 빨간펜 — 왼쪽에서 선택한 1건만 */
+/* 편집자 빨간펜 — 선택 1건: 박스 밖 하단에 밑줄(글씨·받침 비침) */
 .pdf-highlight--primary {
   background: var(--pdf-highlight-primary-fill);
-  border-bottom: var(--pdf-highlight-red-underline) solid var(--editor-red-ink);
+  border-bottom: none;
   box-shadow: var(--pdf-highlight-primary-shadow);
   outline: none;
+  overflow: visible;
   z-index: 1;
+}
+
+.pdf-highlight--primary::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: var(--pdf-highlight-red-underline);
+  top: calc(100% + var(--pdf-highlight-red-underline-gap));
+  background: var(--editor-red-ink);
+  border-radius: 1px;
+  pointer-events: none;
 }
 
 .pdf-highlight--primary.pdf-highlight--has-tip:hover,
 .pdf-highlight--primary.pdf-highlight--tip-open {
   background: var(--pdf-highlight-fill-hover);
   outline: 1px solid var(--editor-red-ink);
-  border-bottom: var(--pdf-highlight-red-underline) solid var(--editor-red-ink);
+  border-bottom: none;
   z-index: 2;
 }
 
@@ -2864,97 +2879,136 @@ details[open] > summary .details-chevron {
 }
 
 .pdf-preview-bar {
+  /* 3순위 토큰 alias — 하단 바·미리보기 스트립 */
+  --surface: var(--color-surface);
+  --border-soft: var(--color-border);
+  --pill: var(--result-pill);
+  --pill-muted: rgb(42 33 24 / 6%);
+  --accent: var(--accent-terracotta);
+  --accent-deep: var(--accent-terracotta-deep);
+  --accent-on: var(--accent-on-terracotta);
+  --bg: var(--color-surface-inset);
+
   --pdf-jump-scale: 1.3;
-  --pdf-jump-hint-scale: 0.8;
   --pdf-thumb-scale: 0.8;
   flex-shrink: 0;
-  position: relative;
-  display: block;
-  padding: 4px 10px 0;
-  background: var(--color-surface-raised);
-  border-top: 1px solid var(--color-border);
-}
-
-.pdf-preview-bar__aside {
-  position: absolute;
-  top: 4px;
-  right: 10px;
-  z-index: 3;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.pdf-preview-bar__bar-hint {
-  margin: 0;
-  font-size: calc(0.65rem * var(--pdf-jump-scale) * var(--pdf-jump-hint-scale));
-  line-height: 1.45;
-  color: var(--color-text-muted);
-  text-align: left;
-  white-space: nowrap;
-}
-
-.pdf-preview-bar__pager {
   display: flex;
   flex-direction: column;
   align-items: stretch;
+  gap: 6px;
+  padding: 8px 12px 6px;
+  background: var(--surface);
+  border-top: 1px solid var(--border-soft);
+}
+
+.pdf-preview-bar__toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  column-gap: 10px;
   width: 100%;
   min-width: 0;
-  box-sizing: border-box;
-  gap: 4px;
+  min-height: calc(1.75rem * var(--pdf-jump-scale));
 }
 
-/* 썸네일 가운데 칸(3번) = 패널 50% = / 축 (1fr | auto | 1fr) */
-.pdf-preview-bar__strip-row {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
+.pdf-preview-bar__status-col {
+  grid-column: 1;
+  justify-self: start;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.pdf-preview-bar__status-col .current-page-status--in-preview-bar {
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  font-size: calc(0.76rem * var(--pdf-jump-scale));
+  font-weight: var(--w-body);
+  line-height: 1.4;
+  color: var(--c-soft);
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pdf-preview-bar__status-col .current-page-status--in-preview-bar .manuscript-page-label {
+  font-weight: var(--w-header);
+  color: var(--c-ink);
+}
+
+.pdf-preview-bar__status-col .current-page-status--in-preview-bar .current-page-status__system {
+  font-weight: var(--w-body);
+  color: var(--c-soft);
+}
+
+.pdf-preview-bar__status-col .current-page-status__criterion-hit {
+  border-bottom: none;
+}
+
+.pdf-preview-bar__status-col .current-page-status__criterion-hit-num {
+  display: inline-flex;
   align-items: center;
-  column-gap: 4px;
-  width: 100%;
+  padding: 1px 6px;
+  margin: 0;
+  border: none;
+  border-radius: 4px;
+  background: var(--pill);
+  box-shadow: none;
+  font-weight: var(--w-header);
+  color: var(--c-ink);
 }
 
-.pdf-preview-bar__middle {
+.pdf-preview-bar__jump-row {
   grid-column: 2;
   justify-self: center;
-  min-width: 0;
   display: flex;
-  flex-direction: column;
+  flex-wrap: nowrap;
   align-items: center;
   justify-content: center;
-}
-
-.pdf-preview-bar__nav-col {
-  grid-column: 3;
-  justify-self: start;
-  align-self: center;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  padding-left: 4px;
+  gap: calc(6px * var(--pdf-jump-scale));
   min-width: 0;
 }
 
-.pdf-preview-bar__nav-col--hint {
-  align-self: start;
+.pdf-preview-bar__actions-col {
+  grid-column: 3;
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 0;
 }
 
 .pdf-preview-bar__toggle {
   flex-shrink: 0;
-  padding: 4px 10px;
-  border: 1px solid var(--color-border-strong);
+  padding: 5px 11px;
+  border: 1px solid var(--border-soft);
   border-radius: var(--radius-ui-sm);
-  background: var(--color-surface-inset);
+  background: var(--bg);
   font-size: 0.72rem;
-  font-weight: 600;
-  color: var(--color-text-secondary);
+  font-weight: var(--w-header);
+  color: var(--c-ink);
   white-space: nowrap;
   cursor: pointer;
 }
 
 .pdf-preview-bar__toggle:hover {
-  background: var(--panel-accordion-bg);
-  border-color: var(--focus-border);
-  color: var(--accent-terracotta-deep);
+  background: color-mix(in srgb, var(--bg) 82%, var(--pill) 18%);
+  border-color: var(--border-soft);
+  color: var(--c-ink);
+}
+
+.pdf-preview-bar__toggle--open {
+  background: var(--accent);
+  border-color: var(--accent-deep);
+  color: var(--accent-on);
+}
+
+.pdf-preview-bar__toggle--open:hover {
+  background: var(--accent-deep);
+  border-color: var(--accent-deep);
+  color: var(--accent-on);
 }
 
 .pdf-preview-bar__nav {
@@ -2964,10 +3018,10 @@ details[open] > summary .details-chevron {
   padding: 0;
   border: none;
   background: transparent;
-  font-size: 1.5rem;
-  font-weight: 700;
+  font-size: calc(1.05rem * var(--pdf-jump-scale));
+  font-weight: var(--w-header);
   line-height: 1;
-  color: var(--accent-terracotta);
+  color: var(--accent);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -2975,8 +3029,7 @@ details[open] > summary .details-chevron {
 }
 
 .pdf-preview-bar__nav:hover:not(:disabled) {
-  background: transparent;
-  color: var(--accent-terracotta-deep);
+  color: var(--accent-deep);
 }
 
 .pdf-preview-bar__nav:disabled {
@@ -2984,108 +3037,29 @@ details[open] > summary .details-chevron {
   cursor: not-allowed;
 }
 
-/* 원고(PDF) 가운데 접힘 = 패널 가로 50% — 썸네일 strip-row와 동일 1fr | auto | 1fr */
-.pdf-preview-bar__jump-row {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  column-gap: calc(4px * var(--pdf-jump-scale));
-  width: 100%;
-  min-height: calc(1.65rem * var(--pdf-jump-scale));
-}
-
-.pdf-preview-bar__jump-wing--before {
-  grid-column: 1;
-  display: flex;
-  flex-wrap: nowrap;
-  justify-content: flex-end;
-  align-items: center;
-  gap: calc(6px * var(--pdf-jump-scale));
-  min-width: 0;
-}
-
-/* 상태 문구는 왼쪽 1fr 공백 가운데, 이전·쪽 입력은 오른쪽 끝 */
-.pdf-preview-bar__jump-wing--before:has(.current-page-status--in-preview-bar) {
-  display: grid;
-  grid-template-columns: 1fr auto auto;
-  align-items: center;
-}
-
-.pdf-preview-bar__jump-wing--before .current-page-status--in-preview-bar {
-  grid-column: 1;
-  justify-self: center;
-  align-self: center;
-  min-width: 0;
-  max-width: 100%;
-  margin: 0;
-  padding: 0;
-  border: none;
-  background: transparent;
-  font-size: 0.98rem;
-  font-weight: 700;
-  line-height: 1.45;
-  color: var(--color-text-secondary);
-  text-align: center;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.pdf-preview-bar__jump-row > .pdf-preview-bar__slash {
-  grid-column: 2;
-  justify-self: center;
-  font-size: calc(0.78rem * var(--pdf-jump-scale));
-  font-weight: 600;
-  color: var(--color-text-muted);
-  line-height: 1;
-}
-
-.pdf-preview-bar__jump-wing--after {
-  grid-column: 3;
-  display: flex;
-  flex-wrap: nowrap;
-  justify-content: flex-start;
-  align-items: center;
-  gap: calc(6px * var(--pdf-jump-scale));
-  min-width: 0;
-}
-
-.pdf-preview-bar__jump-row .pdf-preview-bar__total {
-  font-size: calc(0.78rem * var(--pdf-jump-scale));
-  font-weight: 600;
-  color: var(--color-text-muted);
-  white-space: nowrap;
-}
-
-.pdf-preview-bar__jump-row .pdf-preview-bar__nav {
-  width: auto;
-  height: auto;
-  min-width: 0;
-  font-size: calc(1.05rem * var(--pdf-jump-scale));
-  line-height: 1;
-  align-self: center;
-  transform: none;
-}
-
-.pdf-preview-bar__jump-row .pdf-preview-bar__nav:hover:not(:disabled),
-.pdf-preview-bar__jump-row .pdf-preview-bar__nav:disabled {
-  transform: none;
-}
-
 .pdf-preview-bar__jump {
   margin: 0;
 }
 
-.pdf-preview-bar__jump-hint {
-  flex-shrink: 1;
-  min-width: 0;
-  margin-left: calc(6px * var(--pdf-jump-scale));
+.pdf-preview-bar__jump-row .pdf-preview-bar__slash {
+  font-size: calc(0.78rem * var(--pdf-jump-scale));
+  font-weight: var(--w-body);
+  color: var(--c-soft);
+  line-height: 1;
+}
+
+.pdf-preview-bar__jump-row .pdf-preview-bar__total {
+  font-size: calc(0.78rem * var(--pdf-jump-scale));
+  font-weight: var(--w-body);
+  color: var(--c-soft);
+  white-space: nowrap;
 }
 
 .pdf-preview-bar__jump-row .pdf-preview-bar__input {
   width: calc(2.75rem * var(--pdf-jump-scale));
   padding: calc(2px * var(--pdf-jump-scale)) calc(4px * var(--pdf-jump-scale));
   font-size: calc(0.8rem * var(--pdf-jump-scale));
+  font-weight: var(--w-header);
   line-height: 1.35;
 }
 
@@ -3097,13 +3071,14 @@ details[open] > summary .details-chevron {
   width: 2.75rem;
   margin: 0;
   padding: 2px 4px;
-  border: 1px solid var(--color-border-strong);
+  border: 1px solid var(--border-soft);
   border-radius: var(--radius-ui-sm);
   font-size: 0.8rem;
-  font-weight: 600;
+  font-weight: var(--w-header);
   line-height: 1.35;
   text-align: center;
-  background: var(--color-surface-raised);
+  color: var(--c-ink);
+  background: var(--color-surface-overlay);
 }
 
 .pdf-preview-bar__input:focus {
@@ -3112,30 +3087,17 @@ details[open] > summary .details-chevron {
   border-color: var(--focus-border);
 }
 
-.pdf-preview-bar__total {
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--color-text-muted);
-  white-space: nowrap;
+.pdf-preview-bar__strip-shell {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  min-height: calc(6.75rem * var(--pdf-thumb-scale, 0.8) + 4px);
+  box-sizing: border-box;
 }
 
-.pdf-preview-bar__mode {
-  flex-shrink: 0;
-  font-size: 0.72rem;
-  color: var(--color-text-subtle);
-  white-space: nowrap;
-}
-
-.pdf-preview-bar__input--spread {
-  width: 3.75rem;
-}
-
-.pdf-preview-bar__findings {
-  flex-shrink: 0;
-  font-size: 0.72rem;
-  font-weight: 600;
-  color: var(--accent-terracotta);
-  white-space: nowrap;
+.pdf-preview-bar__strip-shell--collapsed .pdf-thumb-strip {
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .pdf-thumb-strip {
@@ -3151,7 +3113,7 @@ details[open] > summary .details-chevron {
   box-sizing: border-box;
   padding: 0 2px calc(6px * var(--pdf-thumb-scale, 0.8));
   overflow: hidden;
-  background: var(--color-surface-emphasis);
+  background: color-mix(in srgb, var(--surface) 88%, var(--pill) 12%);
   border-radius: var(--radius-ui-sm);
 }
 
@@ -3164,8 +3126,39 @@ details[open] > summary .details-chevron {
   min-width: 0;
 }
 
-.pdf-thumb-slot:not(:has(.pdf-thumb)) {
-  visibility: hidden;
+.pdf-thumb-slot__ghost {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: calc(2px * var(--pdf-thumb-scale, 0.8));
+  width: 100%;
+  padding: calc(6px * var(--pdf-thumb-scale, 0.8)) 0
+    calc(2px * var(--pdf-thumb-scale, 0.8));
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.pdf-thumb-slot__ghost-frame {
+  display: block;
+  box-sizing: border-box;
+  width: calc(3.375rem * var(--pdf-thumb-scale, 0.8));
+  height: calc(4.875rem * var(--pdf-thumb-scale, 0.8));
+  border-radius: var(--radius-ui-sm);
+  background:
+    repeating-linear-gradient(
+      -45deg,
+      color-mix(in srgb, var(--pill) 55%, transparent) 0 4px,
+      color-mix(in srgb, var(--pill-muted) 80%, transparent) 4px 8px
+    );
+}
+
+.pdf-thumb-slot__ghost-label {
+  display: block;
+  width: calc(2rem * var(--pdf-thumb-scale, 0.8));
+  height: calc(0.72rem * var(--pdf-thumb-scale, 0.8));
+  border-radius: 4px;
+  background: var(--pill-muted);
 }
 
 .pdf-thumb {
@@ -3180,12 +3173,12 @@ details[open] > summary .details-chevron {
   border: none;
   background: transparent;
   cursor: pointer;
-  color: var(--color-text-subtle);
+  color: var(--c-soft);
 }
 
 .pdf-thumb--active {
   z-index: 1;
-  color: var(--color-accent-gold);
+  color: var(--accent-on);
 }
 
 .pdf-thumb__frame {
@@ -3194,27 +3187,23 @@ details[open] > summary .details-chevron {
   justify-content: center;
   box-sizing: border-box;
   padding: 2px;
-  border: 4px solid transparent;
+  border: 3px solid transparent;
   border-radius: var(--radius-ui-sm);
-  background: var(--color-surface-raised);
+  background: var(--color-surface-overlay);
   line-height: 0;
   overflow: hidden;
   transition:
     border-color 0.15s ease,
-    box-shadow 0.15s ease,
-    transform 0.15s ease;
+    box-shadow 0.15s ease;
 }
 
 .pdf-thumb:hover .pdf-thumb__frame {
-  border-color: var(--chip-border);
+  border-color: color-mix(in srgb, var(--accent) 35%, transparent);
 }
 
 .pdf-thumb--active .pdf-thumb__frame {
-  border-color: var(--color-accent-gold);
-  box-shadow:
-    0 0 0 1px rgba(200, 169, 107, 0.45),
-    0 2px 10px rgb(26 21 16 / 22%);
-  transform: scale(1.03);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 40%, transparent);
 }
 
 .pdf-thumb__canvas {
@@ -3227,19 +3216,25 @@ details[open] > summary .details-chevron {
   display: block;
   width: calc(3.375rem * var(--pdf-thumb-scale, 0.8));
   height: calc(4.875rem * var(--pdf-thumb-scale, 0.8));
-  background: var(--color-border);
+  background: var(--pill-muted);
 }
 
 .pdf-thumb__num {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 6px;
+  border: none;
+  border-radius: 4px;
+  background: var(--pill);
   font-size: calc(0.72rem * var(--pdf-thumb-scale, 0.8));
-  font-weight: 600;
-  line-height: 1;
-  color: inherit;
+  font-weight: var(--w-header);
+  line-height: 1.2;
+  color: var(--c-ink);
 }
 
 .pdf-thumb--active .pdf-thumb__num {
-  font-weight: 800;
-  color: var(--color-accent-gold);
+  background: var(--accent);
+  color: var(--accent-on);
 }
 
 .field-input {

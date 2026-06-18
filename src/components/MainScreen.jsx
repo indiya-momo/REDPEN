@@ -15,7 +15,6 @@ import {
   UserRound,
 } from 'lucide-react';
 import PdfViewer from './PdfViewer.jsx';
-import AppVersionBadge from './AppVersionBadge.jsx';
 import ResizableBuiltinSpelling from './ResizableBuiltinSpelling.jsx';
 import ConsistencyPanel from './ConsistencyPanel.jsx';
 import PanelSectionRunButton from './PanelSectionRunButton.jsx';
@@ -1754,9 +1753,6 @@ export default function MainScreen({
       </main>
       </div>
 
-      <footer className="layout-main__footer" aria-label="앱 버전">
-        <AppVersionBadge />
-      </footer>
     </div>
   );
 }

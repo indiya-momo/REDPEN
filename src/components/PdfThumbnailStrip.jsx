@@ -45,6 +45,7 @@ function PdfThumbnailItem({
   onSelect,
   requestRender,
   label,
+  idle = false,
 }) {
   const canvasRef = useRef(null);
   const frameRef = useRef(null);
@@ -69,7 +70,7 @@ function PdfThumbnailItem({
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return undefined;
+    if (!canvas || idle) return undefined;
 
     let cancelled = false;
     void requestRender(pageNum, canvas, active).then((ok) => {
@@ -78,7 +79,7 @@ function PdfThumbnailItem({
     return () => {
       cancelled = true;
     };
-  }, [active, pageNum, requestRender]);
+  }, [active, idle, pageNum, requestRender]);
 
   return (
     <button
@@ -107,6 +108,7 @@ function PdfThumbnailItem({
  *   currentPage: number,
  *   onSelectPage: (page: number) => void,
  *   formatPageLabel?: (systemPage: number) => string,
+ *   idle?: boolean,
  * }} props
  */
 export default function PdfThumbnailStrip({
@@ -114,6 +116,7 @@ export default function PdfThumbnailStrip({
   currentPage,
   onSelectPage,
   formatPageLabel = (n) => String(n),
+  idle = false,
 }) {
   const queueRef = useRef([]);
   const activeRef = useRef(0);
@@ -210,8 +213,14 @@ export default function PdfThumbnailStrip({
               onSelect={() => onSelectPage(pageNum)}
               requestRender={requestRender}
               label={stripPageLabelPrefix(formatPageLabel(pageNum))}
+              idle={idle}
             />
-          ) : null}
+          ) : (
+            <div className="pdf-thumb-slot__ghost" aria-hidden="true">
+              <span className="pdf-thumb-slot__ghost-frame" />
+              <span className="pdf-thumb-slot__ghost-label" />
+            </div>
+          )}
         </div>
       ))}
     </div>
