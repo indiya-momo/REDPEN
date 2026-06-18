@@ -44,6 +44,23 @@
   /* 패널 안내 문구 (panel-guide-text): 설명·예시·보정·목차 안내 — 0.72rem 대비 +15% */
   --panel-guide-font-size: calc(0.72rem * 1.15);
   --panel-guide-line-height: 1.35;
+  /* 3순위 figure-ground — 트레이(어둡게) vs 종이(밝게) */
+  --panel-surface-stage: #e5ddd0;
+  --panel-surface-sheet: #ffffff;
+  --panel-sheet-border: #d9cfc1;
+  --panel-sheet-shadow: 0 1px 3px rgb(42 33 24 / 6%);
+  /* 3순위 분리·간격 — 섹션 macro / 컨테이너 surface / 디바이더 */
+  --panel-surface-group: #f6f1e7;
+  --panel-border-soft: #dcd2bf;
+  --panel-gap-section: 22px;
+  /* 4순위 간격 — 위계용 여백 (블록 내부 micro) */
+  --panel-gap-title-body: 6px;
+  --panel-gap-block: 8px;
+  --panel-gap-section-list: 10px;
+  --panel-gap-group: 10px;
+  /* 5순위 accent — 패널 내 단일 강조(선택·CTA) */
+  --panel-accent: var(--accent-terracotta);
+  --panel-accent-deep: var(--accent-terracotta-deep);
   flex-shrink: 0;
   height: 100%;
   min-width: 400px;
@@ -54,6 +71,605 @@
   flex-direction: column;
   min-height: 0;
   overflow: hidden;
+}
+
+/* ── 좌측 패널 타이포: 역할→토큰 (weight 400/700 · 색 3단 · UI face만) ── */
+
+/* header / step — 700 + ink */
+.panel-left .results-category-summary,
+.panel-left .results-header,
+.panel-left .results-header__applied,
+.panel-left .results-header__total,
+.panel-left .results-header__breakdown,
+.panel-left .results-panel--spelling.results-panel--tone-builtin .results-header,
+.panel-left .results-panel--spelling.results-panel--tone-caution .results-header,
+.panel-left .results-panel--consistency .results-header,
+.panel-left .results-panel--combined.results-panel--tone-consistency .results-header,
+.panel-left .result-rule,
+.panel-left .caution-result-chip,
+.panel-left .result-card--consistency .result-aux-stem,
+.panel-left .toc-result-title,
+.panel-left .panel-criteria-heading,
+.panel-left .caution-checklist-summary,
+.panel-left .caution-checklist-summary-title,
+.panel-left .builtin-spelling-summary,
+.panel-left .builtin-spelling-summary-title,
+.panel-left .printed-page-setup__title,
+.panel-left .consistency-panel-section-title,
+.panel-left .consistency-subsection-title,
+.panel-left .caution-group-title,
+.panel-left .consistency-toc-section__step-label,
+.panel-left .current-page-status {
+  font-weight: var(--w-header);
+  color: var(--c-ink);
+}
+
+/* item — 400 + ink */
+.panel-left .work-tab,
+.panel-left .results-header__rule-chip,
+.panel-left .results-category-summary__builtin,
+.panel-left .results-category-summary__caution,
+.panel-left .results-category-summary__count-underline,
+.panel-left .caution-chip-label,
+.panel-left .builtin-spelling-rules-scroll .rule-text .find,
+.panel-left .builtin-spelling-rules-scroll .rule-text .replace,
+.panel-left .page-chip:not(.page-chip--current),
+.panel-left .registered-chip .find,
+.panel-left .registered-chip__text,
+.panel-left .auxiliary-chip .find,
+.panel-left .panel-left__criteria-name,
+.panel-left .field-input,
+.panel-left .printed-page-setup__input,
+.panel-left .consistency-toc-section__start-page-input,
+.panel-left .consistency-toc-section__exclude-pages-input,
+.panel-left .consistency-toc-section__textarea,
+.panel-left .result-card--consistency .result-aux-group-tag,
+.panel-left .caution-badge {
+  font-weight: var(--w-item);
+  color: var(--c-ink);
+}
+
+/* body — 400 + soft */
+.panel-left .result-detail,
+.panel-left .result-card-tip-inline,
+.panel-left .result-card--caution .result-card-tip-inline,
+.panel-left .result-card--builtin .result-card-tip-inline,
+.panel-left .criteria-summary-note,
+.panel-left .caution-tip-inline,
+.panel-left .caution-group-tip,
+.panel-left .builtin-rule-tip-inline,
+.panel-left .caution-checklist-hint,
+.panel-left .result-count,
+.panel-left .result-count--zero,
+.panel-left .result-visibility-toggle,
+.panel-left .result-visibility-label,
+.panel-left .current-page-status__system,
+.panel-left .printed-page-setup__hint,
+.panel-left .printed-page-setup__inline-opt,
+.panel-left .builtin-spelling-rules-scroll .rule-text .arrow,
+.panel-left .builtin-spelling-guide-heading,
+.panel-left .consistency-subtab,
+.panel-left .consistency-results-switch__btn,
+.panel-left .result-review-tag,
+.panel-left .hint,
+.panel-left .panel-guide-text,
+.panel-left .consistency-unified-box .hint,
+.panel-left .consistency-hint-block,
+.panel-left .consistency-hint-example,
+.panel-left .auxiliary-checklist-intro,
+.panel-left .consistency-toc-section .hint,
+.panel-left .consistency-toc-section__calibration-done,
+.panel-left .consistency-toc-section__calibration-done p,
+.panel-left .consistency-toc-section__run-hint,
+.panel-left .consistency-toc-section__page-range-hint,
+.panel-left .toc-result-missing-hint,
+.panel-left .toc-result-outline-extra-hint,
+.panel-left .results-empty-hint,
+.panel-left .caution-tip-toggle-btn,
+.panel-left .builtin-tip-toggle-btn,
+.panel-left .tip-toggle-body {
+  font-weight: var(--w-body);
+  color: var(--c-soft);
+}
+
+/* 인라인 칩 버튼 — 본문 두께 유지 */
+.panel-left .consistency-toc-section__start-chip,
+.panel-left .consistency-toc-section__recalibrate-btn,
+.panel-left .consistency-toc-section__file-btn,
+.panel-left .consistency-toc-section__clear-btn,
+.panel-left .consistency-toc-section__page-range-clear {
+  font-weight: var(--w-body);
+}
+
+/* placeholder — 400 + faint */
+.panel-left .panel-left__criteria-name::placeholder,
+.panel-left .field-input::placeholder,
+.panel-left .printed-page-setup__input::placeholder,
+.panel-left .consistency-toc-section__exclude-pages-input::placeholder,
+.panel-left .consistency-toc-section__start-page-input::placeholder,
+.panel-left .consistency-toc-section__textarea::placeholder {
+  font-weight: var(--w-body);
+  color: var(--c-faint);
+  opacity: 1;
+}
+
+/* 활성 탭·선택 pill — weight 변경 없음, 색만 기존 규칙 */
+.panel-left .work-tab.active {
+  font-weight: var(--w-item);
+}
+
+.panel-left .current-page-status strong,
+.panel-left .current-page-status__criterion-hit-num {
+  font-weight: var(--w-step);
+}
+
+.panel-left .bon-bojo-required-badge,
+.panel-left .caution-badge-inline {
+  font-weight: var(--w-body);
+}
+
+/* ── 좌측 패널 figure-ground: 카드·행 띄우기 (배경·테두리만) ── */
+
+.panel-left .spelling-tab-layout .results-panel--spelling,
+.panel-left .panel-left-work-scroll .results-panel--consistency,
+.panel-left .results-panel--toc-body {
+  --results-stage-bg: var(--panel-surface-stage);
+  background: var(--panel-surface-stage);
+}
+
+.panel-left .spelling-tab-scroll .results-list,
+.panel-left .panel-left-work-scroll .results-list,
+.panel-left .results-panel--toc-body .results-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 0 12px;
+}
+
+.panel-left .spelling-tab-layout .results-panel--spelling .result-card,
+.panel-left .panel-left-work-scroll .results-panel--consistency .result-card,
+.panel-left .results-panel--toc-body .result-card {
+  --results-card-bg: var(--panel-surface-sheet);
+  width: auto;
+  margin-inline: var(--results-panel-inset-x, 18px);
+  border: 1px solid var(--panel-sheet-border);
+  border-radius: var(--radius-ui-sm);
+  box-shadow: var(--panel-sheet-shadow);
+  background: var(--panel-surface-sheet);
+}
+
+.panel-left .results-panel--spelling .result-card--builtin.result-card--active,
+.panel-left .results-panel--spelling .result-card--caution.result-card--active,
+.panel-left .results-panel--consistency .result-card--active,
+.panel-left .results-panel--consistency .result-card--consistency.result-card--active,
+.panel-left .results-panel--toc-body .result-card--active {
+  box-shadow:
+    var(--panel-sheet-shadow),
+    inset 0 0 0 1px var(--color-border-strong);
+}
+
+.panel-left .results-panel--spelling .result-card--builtin.result-card--on-page:not(.result-card--active),
+.panel-left .results-panel--spelling .result-card--caution.result-card--on-page:not(.result-card--active),
+.panel-left .results-panel--consistency .result-card--on-page:not(.result-card--active),
+.panel-left .results-panel--consistency .result-card--consistency.result-card--on-page:not(.result-card--active),
+.panel-left .results-panel--toc-body .result-card--on-page:not(.result-card--active) {
+  box-shadow:
+    var(--panel-sheet-shadow),
+    inset 3px 0 0 var(--panel-accent);
+}
+
+.panel-left .builtin-spelling-resize-body {
+  background: var(--panel-surface-stage);
+}
+
+/* 접이식 그룹 컨테이너만 박스(면+테두리) — 항목은 plain */
+.panel-left .builtin-spelling-resize-body .caution-checklist-details,
+.panel-left .builtin-spelling-resize-body .builtin-spelling-details,
+.panel-left
+  .consistency-section-box[data-work-guide-step='auxiliary-box']
+  .caution-checklist-details {
+  border: 1px solid var(--panel-border-soft);
+  border-radius: var(--radius-ui-sm);
+  background: var(--panel-surface-group);
+  box-shadow: none;
+}
+
+/* 체크리스트 항목 — 박스·짧은 구분선 금지, 여백·hover만 (편집자·맞춤법 동일) */
+.panel-left .builtin-spelling-caution-scroll,
+.panel-left .builtin-spelling-rules-scroll {
+  --criteria-item-pad-y: 5px;
+}
+
+.panel-left .caution-checklist-details[open] > .caution-checklist,
+.panel-left .builtin-spelling-resize-body .builtin-spelling-details[open] .builtin-rule-list {
+  padding: var(--panel-gap-section-list) var(--criteria-pad-inline, 10px) 10px;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+.panel-left .caution-group,
+.panel-left .builtin-spelling-rules-scroll .builtin-rule-group {
+  padding: var(--panel-gap-block) 0 calc(var(--panel-gap-group) + 2px) var(--criteria-chevron-inset);
+  margin-bottom: 0;
+}
+
+.panel-left .caution-group-top {
+  margin-bottom: 0;
+  gap: 6px 1px;
+}
+
+.panel-left .caution-group-items,
+.panel-left .builtin-spelling-rules-scroll .builtin-rule-group {
+  row-gap: var(--panel-gap-group);
+  column-gap: 6px;
+}
+
+.panel-left .builtin-spelling-rules-scroll .builtin-rule-group--cols-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.panel-left .builtin-spelling-rules-scroll .builtin-rule-group--cols-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.panel-left .builtin-spelling-rules-scroll .builtin-rule-entry-wrap {
+  width: 100%;
+  min-width: 0;
+  justify-self: stretch;
+}
+
+.panel-left .builtin-spelling-rules-scroll .builtin-rule-entry {
+  width: 100%;
+  max-width: 100%;
+}
+
+.panel-left .builtin-spelling-caution-scroll .caution-chip,
+.panel-left .builtin-spelling-rules-scroll .builtin-rule-row-wrap {
+  padding: var(--criteria-item-pad-y) 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.panel-left .builtin-spelling-rules-scroll .builtin-rule-item {
+  padding: 0;
+  border-radius: 0;
+  width: 100%;
+}
+
+.panel-left .builtin-spelling-rules-scroll .builtin-rule-row {
+  min-height: 0;
+  align-items: flex-start;
+  padding: 0;
+  gap: 5px;
+}
+
+.panel-left .builtin-spelling-rules-scroll .builtin-rule-row > input[type='checkbox'] {
+  margin-top: 2px;
+}
+
+.panel-left .builtin-spelling-rules-scroll .rule-list > .rule-row:hover,
+.panel-left .builtin-spelling-rules-scroll .builtin-rule-row:hover {
+  box-shadow: none;
+}
+
+.panel-left .builtin-spelling-rules-scroll .builtin-inline-tip-hoverable {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  align-content: flex-start;
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.panel-left .builtin-spelling-rules-scroll .builtin-inline-tip-hoverable:hover,
+.panel-left .builtin-spelling-rules-scroll .builtin-inline-tip-hoverable:focus,
+.panel-left .builtin-spelling-rules-scroll .builtin-inline-tip-hoverable:focus-visible,
+.panel-left .builtin-spelling-rules-scroll .builtin-inline-tip-hoverable:active,
+.panel-left .builtin-spelling-rules-scroll .builtin-inline-tip-hoverable--open {
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  outline: none;
+}
+
+.panel-left .builtin-spelling-caution-scroll .caution-chip:hover,
+.panel-left .builtin-spelling-rules-scroll .builtin-rule-row-wrap:hover {
+  background: var(--rule-hover-bg);
+  box-shadow: none;
+}
+
+.panel-left .builtin-spelling-caution-scroll .caution-inline-tip-trigger:hover,
+.panel-left .builtin-spelling-caution-scroll .caution-inline-tip-trigger:focus,
+.panel-left .builtin-spelling-caution-scroll .caution-inline-tip-trigger:focus-visible {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+  outline: none;
+}
+
+.panel-left .registered-chip {
+  padding: 3px 4px 3px 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}
+
+.panel-left .registered-chip:hover {
+  background: var(--rule-hover-bg);
+}
+
+.panel-left .registered-chip:has(input:checked) {
+  background: var(--panel-accordion-bg);
+}
+
+.panel-left .page-chip:not(.page-chip--current) {
+  background: var(--panel-surface-sheet);
+  border-color: var(--panel-sheet-border);
+  box-shadow: 0 1px 2px rgb(42 33 24 / 4%);
+}
+
+/* 기능 섹션(보정·일관성 찾기) — 접이식이 아닌 설정 블록 1겹 */
+.panel-left .spelling-tab-layout__calibration .printed-page-setup,
+.panel-left .consistency-unified-box {
+  border: 1px solid var(--panel-border-soft);
+  border-radius: var(--radius-ui-sm);
+  background: var(--color-surface-inset);
+  box-shadow: none;
+}
+
+/* ── 좌측 패널 간격: 제목↔설명 · 요약↔목록 · 그룹↔항목 ── */
+
+/* 결과 카드 — 제목 줄 ↔ 설명 */
+.panel-left .result-card-head-main {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--panel-gap-title-body);
+}
+
+.panel-left .result-card-head {
+  margin-bottom: var(--panel-gap-block);
+}
+
+.panel-left .result-card-tip-inline,
+.panel-left .result-detail,
+.panel-left .tip-toggle-body {
+  line-height: 1.5;
+}
+
+.panel-left .result-pages {
+  margin-top: 0;
+  margin-bottom: var(--panel-gap-block);
+}
+
+.panel-left .result-detail {
+  margin-top: var(--panel-gap-title-body);
+}
+
+.panel-left .toc-result-missing-hint,
+.panel-left .toc-result-outline-extra-hint {
+  margin-top: var(--panel-gap-title-body);
+}
+
+/* 요약 줄 ↔ 결과 목록 */
+.panel-left .results-header,
+.panel-left .results-category-summary,
+.panel-left .current-page-status {
+  padding-bottom: calc(var(--space-sm) + 2px);
+}
+
+.panel-left .spelling-tab-scroll .results-list,
+.panel-left .panel-left-work-scroll .results-list,
+.panel-left .results-panel--toc-body .results-list {
+  padding-top: var(--panel-gap-section-list);
+}
+
+/* 체크리스트 — 그룹 긴 구분선만 (항목별 짧은 선 없음) */
+.panel-left .caution-group-items .caution-tip-inline {
+  margin-top: 4px;
+  margin-bottom: var(--panel-gap-group);
+  padding-top: 2px;
+}
+
+.panel-left .builtin-spelling-details[open] .builtin-spelling-caution-scroll,
+.panel-left .builtin-spelling-details[open] .builtin-spelling-rules-scroll {
+  padding-top: 0;
+}
+
+.panel-left .builtin-spelling-rules-scroll .builtin-rule-entry-wrap + .builtin-rule-tip-inline {
+  margin-top: 4px;
+  margin-bottom: var(--panel-gap-group);
+}
+
+/* 일관성 — 설명 ↔ 입력·칩 */
+.panel-left .consistency-hint-block,
+.panel-left .printed-page-setup__hint {
+  margin-bottom: var(--panel-gap-block);
+}
+
+.panel-left .printed-page-setup__body {
+  margin-top: var(--panel-gap-block);
+}
+
+.panel-left .printed-page-setup__row {
+  gap: var(--panel-gap-block) 10px;
+}
+
+.panel-left .printed-page-setup__input,
+.panel-left .field-input,
+.panel-left .consistency-toc-section__start-page-input,
+.panel-left .consistency-toc-section__exclude-pages-input,
+.panel-left .consistency-toc-section__textarea {
+  border-color: var(--panel-border-soft);
+}
+
+.panel-left .spelling-tab-layout__calibration .printed-page-setup {
+  margin: 0;
+  padding: 9px 10px;
+}
+
+.panel-left .consistency-unified-box {
+  padding: 12px 14px;
+}
+
+.panel-left .consistency-embed .tail-form {
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.panel-left .consistency-embed .field-input {
+  margin-top: 0;
+  padding-block: 9px;
+}
+
+.panel-left .consistency-toc-section__step-label {
+  margin-top: var(--panel-gap-block);
+  margin-bottom: var(--panel-gap-title-body);
+}
+
+.panel-left .auxiliary-checklist-intro {
+  margin-bottom: var(--panel-gap-group);
+}
+
+.panel-left .tail-list:not(.tail-list--grid) {
+  margin-top: var(--panel-gap-group);
+  padding-top: var(--panel-gap-group);
+}
+
+/* ── 좌측 패널 accent 정리: 테라코타 = 선택·CTA만, 나머지는 ink/soft ── */
+
+.panel-left .caution-group-title,
+.panel-left .caution-badge {
+  background: var(--color-surface-inset);
+  border: 1px solid var(--panel-border-soft);
+  color: var(--c-ink);
+}
+
+.panel-left .caution-group::after,
+.panel-left .builtin-spelling-rules-scroll .builtin-rule-group--divider-after::after {
+  border-bottom-color: var(--panel-border-soft);
+}
+
+.panel-left .consistency-subsection,
+.panel-left .consistency-subsection-row {
+  border-top-color: var(--panel-border-soft);
+}
+
+.panel-left .consistency-embed .tail-list {
+  border-top-color: var(--panel-border-soft);
+}
+
+.panel-left .caution-group-tip {
+  background: var(--color-surface-inset);
+  border-left-color: var(--panel-border-soft);
+  color: var(--c-soft);
+}
+
+.panel-left .caution-badge-inline {
+  background: var(--panel-surface-sheet);
+  border: 1px solid var(--panel-sheet-border);
+  color: var(--c-ink);
+}
+
+.panel-left .result-card--consistency .result-aux-group-tag {
+  border: 1px solid var(--panel-sheet-border);
+  background: var(--color-surface-inset);
+  color: var(--c-ink);
+  box-shadow: none;
+}
+
+.panel-left .builtin-spelling-rules-scroll .rule-text .find,
+.panel-left .builtin-spelling-rules-scroll .rule-text .replace,
+.panel-left .builtin-spelling-rules-scroll .rule-text .arrow {
+  color: var(--c-ink);
+}
+
+.panel-left .builtin-spelling-rules-scroll .rule-text .arrow {
+  color: var(--c-soft);
+}
+
+.panel-left .bon-bojo-required-badge {
+  background: var(--color-surface-inset);
+  border: 1px solid var(--panel-sheet-border);
+  color: var(--c-soft);
+}
+
+.panel-left .badge-spacing {
+  background: var(--color-surface-inset);
+  color: var(--c-soft);
+}
+
+.panel-left .current-page-status strong,
+.panel-left .current-page-status--has-findings strong,
+.panel-left .current-page-status--tone-caution.current-page-status--has-findings strong,
+.panel-left .current-page-status--tone-builtin.current-page-status--has-findings strong,
+.panel-left .current-page-status--tone-consistency.current-page-status--has-findings strong {
+  color: var(--c-ink);
+}
+
+.panel-left .tip-toggle-body {
+  border-left-color: var(--panel-sheet-border);
+}
+
+.panel-left .caution-tip-toggle-btn--open,
+.panel-left .builtin-tip-toggle-btn--open {
+  background: var(--panel-accent);
+  border-color: var(--panel-accent-deep);
+  color: var(--accent-on-terracotta);
+}
+
+.panel-left .caution-tip-toggle-btn:hover,
+.panel-left .caution-tip-toggle-btn:focus-visible,
+.panel-left .builtin-tip-toggle-btn:hover,
+.panel-left .builtin-tip-toggle-btn:focus-visible {
+  border-color: var(--panel-accent-deep);
+  color: var(--panel-accent-deep);
+}
+
+.panel-left .work-tab--spelling.active,
+.panel-left .work-tab--consistency.active {
+  color: var(--panel-accent-deep);
+  box-shadow: inset 0 -2px 0 var(--panel-accent);
+}
+
+.panel-left .consistency-subtab.active {
+  color: var(--panel-accent-deep);
+  border-bottom-color: var(--panel-accent);
+}
+
+.panel-left .consistency-results-switch__btn.active {
+  color: var(--panel-accent-deep);
+  border-color: var(--panel-accent);
+}
+
+.panel-left .page-chip--current {
+  background: var(--panel-accent);
+  border-color: var(--panel-accent-deep);
+}
+
+.panel-left .page-chip--current:hover {
+  background: var(--panel-accent-deep);
+  border-color: var(--panel-accent-deep);
+}
+
+.panel-left .registered-chip:has(input:checked) {
+  border-color: var(--panel-accent);
+}
+
+.panel-left .registered-chip:has(input:checked) .find {
+  color: var(--panel-accent-deep);
+}
+
+.panel-left .auxiliary-chip:has(input:checked) .find {
+  color: var(--panel-accent-deep);
 }
 
 /* 작업 가이드 — 말풍선은 하위 영역 overflow만 열고 패널 폭은 유지 */
@@ -380,7 +996,6 @@
 .panel-left .consistency-toc-section__calibration-done p {
   font-size: var(--panel-guide-font-size);
   line-height: var(--panel-guide-line-height);
-  color: var(--color-text-muted);
 }
 
 .layout-col-resize-handle {
@@ -819,6 +1434,7 @@
 .spelling-tab-layout__calibration {
   flex-shrink: 0;
   padding: 8px var(--spelling-block-inset-x) 0;
+  margin-bottom: var(--panel-gap-section);
 }
 
 .spelling-tab-layout__calibration .printed-page-setup {
@@ -1043,6 +1659,7 @@
 .spelling-tab-layout .builtin-spelling-resize-body {
   scrollbar-gutter: auto;
   padding: 8px var(--spelling-block-inset-x) 8px;
+  gap: var(--panel-gap-section);
 }
 
 .spelling-tab-layout .builtin-spelling-caution-scroll,
@@ -1082,13 +1699,15 @@
 }
 
 .builtin-spelling-resize-body .caution-checklist-details {
-  border: 1px solid var(--panel-caution-border);
-  background: var(--panel-caution-surface);
+  border: 1px solid var(--panel-border-soft, var(--panel-caution-border));
+  background: var(--panel-surface-group, var(--panel-caution-surface));
+  box-shadow: none;
 }
 
 .builtin-spelling-resize-body .builtin-spelling-details {
-  border: 1px solid var(--panel-spelling-border);
-  background: var(--panel-spelling-surface);
+  border: 1px solid var(--panel-border-soft, var(--panel-spelling-border));
+  background: var(--panel-surface-group, var(--panel-spelling-surface));
+  box-shadow: none;
 }
 
 .builtin-spelling-resize-body .caution-checklist-summary,
@@ -1101,11 +1720,11 @@
 }
 
 .builtin-spelling-resize-body .caution-checklist-details:not([open]) > .caution-checklist-summary {
-  background: var(--panel-caution-surface);
+  background: var(--panel-surface-group, var(--panel-caution-surface));
 }
 
 .builtin-spelling-resize-body .builtin-spelling-details:not([open]) > .builtin-spelling-summary {
-  background: var(--panel-spelling-surface);
+  background: var(--panel-surface-group, var(--panel-spelling-surface));
 }
 
 .builtin-spelling-resize-body .caution-checklist-details[open] > .caution-checklist-summary,
@@ -1114,11 +1733,12 @@
 }
 
 .builtin-spelling-resize-body .caution-checklist-details[open] .caution-checklist {
-  padding: 0 10px 10px;
+  padding-bottom: 10px;
 }
 
 .builtin-spelling-resize-body .builtin-spelling-details[open] .builtin-rule-list {
-  margin: 6px 10px 10px;
+  margin: 0;
+  padding-bottom: 10px;
 }
 
 .custom-scrollbar {
@@ -1214,30 +1834,19 @@
 
 .panel-left .consistency-embed {
   --pps-scale: 1.2;
-  --consistency-embed-gap: calc(12px * 0.8 * 2);
   --consistency-box-padding-y: calc(14px * 0.8);
   flex: 1 1 0;
   min-height: 0;
   padding: 12px var(--spelling-block-inset-x) 24px;
   display: flex;
   flex-direction: column;
-  gap: var(--consistency-embed-gap);
+  gap: var(--panel-gap-section);
 }
 
 .panel-left-work-scroll > .consistency-tab-layout__run-row + .consistency-results-switch,
 .panel-left-work-scroll > .consistency-tab-layout__run-row + .results-panel,
 .panel-left-work-scroll > .consistency-tab-layout__run-row + .consistency-rules-scroll {
   margin-top: 0;
-}
-
-/* 일관성 찾기 ↔ 본용언+보조용언: 기본 간격의 60% */
-.consistency-embed > .consistency-unified-box + .consistency-section-box {
-  margin-top: calc(var(--consistency-embed-gap) * -0.4);
-}
-
-/* 본용언+보조용언 ↔ 목차: 기본 간격의 130% */
-.consistency-embed > .consistency-section-box + .consistency-toc-section {
-  margin-top: calc(var(--consistency-embed-gap) * 0.3);
 }
 
 .consistency-section-box {
@@ -1548,8 +2157,9 @@
   box-sizing: border-box;
   border-radius: var(--radius-ui-sm);
   overflow: hidden;
-  border: 1px solid var(--panel-caution-border);
-  background: var(--panel-caution-surface);
+  border: 1px solid var(--panel-border-soft, var(--panel-caution-border));
+  background: var(--panel-surface-group, var(--panel-caution-surface));
+  box-shadow: none;
   border-bottom: none;
 }
 
@@ -1564,7 +2174,7 @@
 .consistency-section-box[data-work-guide-step='auxiliary-box']
   .caution-checklist-details:not([open])
   > .caution-checklist-summary {
-  background: var(--panel-caution-surface);
+  background: var(--panel-surface-group, var(--panel-caution-surface));
 }
 
 .consistency-section-box[data-work-guide-step='auxiliary-box']
@@ -1575,7 +2185,7 @@
 
 .consistency-section-box[data-work-guide-step='auxiliary-box'] .auxiliary-checklist-intro {
   margin: 4px 0 8px;
-  padding: 0 10px;
+  padding: 0 var(--criteria-pad-inline, 10px);
   font-size: 0.8125rem;
   line-height: 1.5;
   color: var(--color-text-muted);
@@ -1585,7 +2195,7 @@
   .caution-checklist-details[open]
   .auxiliary-checklist {
   margin-top: 0;
-  padding: 0 10px 10px;
+  padding: 0 var(--criteria-pad-inline, 10px) 10px;
   box-sizing: border-box;
 }
 
@@ -1729,7 +2339,7 @@
 }
 
 .consistency-unified-box {
-  padding: 14px 0;
+  padding: 12px 14px;
   border: none;
   border-radius: var(--radius-ui);
   background: var(--color-surface-raised);
