@@ -3095,9 +3095,13 @@ details[open] > summary .details-chevron {
   box-sizing: border-box;
 }
 
+.pdf-preview-bar__strip-shell--collapsed {
+  min-height: 0;
+  overflow: hidden;
+}
+
 .pdf-preview-bar__strip-shell--collapsed .pdf-thumb-strip {
-  visibility: hidden;
-  pointer-events: none;
+  display: none;
 }
 
 .pdf-thumb-strip {

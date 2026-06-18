@@ -887,7 +887,6 @@
 
 .work-guide-anchor--greeting {
   display: block;
-  flex: 1 1 auto;
   min-width: 0;
 }
 
@@ -897,8 +896,12 @@
 
 .pdf-work-pane__topbar > .tooltip-guide-anchor {
   display: block;
-  flex: 1 1 auto;
+  grid-column: 1;
   min-width: 0;
+}
+
+.pdf-work-pane__topbar > .pdf-work-pane__greeting {
+  grid-column: 1;
 }
 
 .pdf-work-pane__topbar-actions .tooltip-guide-anchor {
@@ -2574,9 +2577,8 @@
 
 .pdf-work-pane__topbar {
   position: relative;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
   align-items: center;
   gap: 8px 12px;
   padding: 10px 14px;
@@ -2586,7 +2588,6 @@
 .pdf-work-pane__greeting {
   position: relative;
   z-index: 1;
-  flex: 1 1 auto;
   min-width: 0;
   margin: 0;
   padding-right: 0.5rem;
@@ -2616,12 +2617,36 @@
 }
 
 .pdf-work-pane__zoom-axis {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  z-index: 2;
-  transform: translate(-50%, -50%);
+  position: static;
+  grid-column: 2;
+  justify-self: center;
+  z-index: 1;
+  transform: none;
   pointer-events: auto;
+}
+
+@media (max-width: 900px) {
+  .pdf-work-pane__topbar {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: auto auto;
+  }
+
+  .pdf-work-pane__topbar > .tooltip-guide-anchor,
+  .pdf-work-pane__topbar > .pdf-work-pane__greeting {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .pdf-work-pane__topbar-actions {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .pdf-work-pane__zoom-axis {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-self: center;
+  }
 }
 
 .pdf-work-pane__notice {
@@ -2644,7 +2669,8 @@
   flex-shrink: 0;
   align-items: center;
   gap: 8px;
-  margin-left: auto;
+  grid-column: 3;
+  justify-self: end;
 }
 
 .pdf-work-pane__aux-btn-wrap {
