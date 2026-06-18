@@ -42,9 +42,11 @@
   --welcome-rail-cta-gap: calc(0.42rem * var(--welcome-scale));
   --welcome-stage-row-gap: calc(0.12rem * var(--welcome-scale));
   --welcome-compare-caption-gap: calc(0.65rem * var(--welcome-scale));
+  --welcome-compare-img-brightness: 0.9;
   --welcome-perf-l2-scale: 0.9;
   --welcome-header-title-scale: 1.2;
   --welcome-privacy-line-scale: 1.2;
+  --welcome-privacy-line-color: #b8a878;
   --welcome-guest-frame-scale: 1.2;
   --welcome-perf-font-info: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
   --welcome-frame-width: 100%;
@@ -146,7 +148,7 @@
   font-weight: 600;
   line-height: 1.45;
   letter-spacing: 0.02em;
-  color: #b8a878;
+  color: var(--welcome-privacy-line-color);
   text-align: center;
 }
 
@@ -201,6 +203,28 @@
   margin-top: 0;
   justify-content: center;
   width: 100%;
+}
+
+.welcome-pc__hero-signed-status {
+  margin: 0;
+  width: 100%;
+  font-family: var(--welcome-perf-font-info);
+  font-size: calc(25px * var(--welcome-scale));
+  font-weight: 600;
+  line-height: 1.45;
+  letter-spacing: 0.02em;
+  color: #ffffff;
+  text-align: center;
+}
+
+.welcome-pc__hero-signed-status .welcome-pc__auth-nickname {
+  font-family: var(--font-family-title);
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.welcome-pc__hero-signed-status .welcome-pc__auth-honorific {
+  margin-right: calc(0.3em * var(--welcome-scale));
 }
 
 .welcome-pc__guest-cta-match .welcome-pc__cta-top {
@@ -304,15 +328,9 @@
   font-weight: normal;
   line-height: 1.15;
   letter-spacing: 0.5px;
-  color: #ecd6a6;
+  color: var(--welcome-privacy-line-color);
   white-space: nowrap;
   overflow: visible;
-  -webkit-text-stroke: calc(6px * var(--welcome-scale) * var(--welcome-perf-l2-decor)) #34230f;
-  paint-order: stroke fill;
-  text-shadow:
-    0 calc(5px * var(--welcome-scale) * var(--welcome-perf-l2-decor)) 0 rgba(40, 26, 12, 0.45),
-    0 calc(13px * var(--welcome-scale) * var(--welcome-perf-l2-decor))
-      calc(24px * var(--welcome-scale) * var(--welcome-perf-l2-decor)) rgba(0, 0, 0, 0.55);
 }
 
 .welcome-pc__perf-l2 .welcome-pc__perf-underline::after {
@@ -494,6 +512,7 @@
   max-width: 100%;
   display: flex;
   justify-content: center;
+  filter: brightness(var(--welcome-compare-img-brightness));
 }
 
 .welcome-pc__compare-body--guest .welcome-pc__compare-figure {
@@ -527,6 +546,20 @@
   width: 100%;
   align-self: stretch;
   justify-self: center;
+}
+
+.welcome-pc__auth-rail-wrap {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-top: clamp(calc(0.75rem * var(--welcome-scale)), 1.5vw, calc(1.1rem * var(--welcome-scale)));
+}
+
+.welcome-pc__auth-rail-wrap .welcome-pc__auth--rail {
+  grid-area: unset;
+  width: auto;
+  max-width: 100%;
+  margin: 0;
 }
 
 .welcome-pc__compare-row {
