@@ -146,15 +146,10 @@ export default function WelcomePcScreen({
         <span className="welcome-pc__title-sub">검수냥 모모 이야기</span>
       </h1>
       {isGuestLanding ? (
-        <p className="welcome-pc__lead welcome-pc__lead--guest">
-          <span className="welcome-pc__lead-line">
-            맞춤법 · 일관성 검수 결과를 표시하며,{' '}
-            <span className="welcome-pc__lead-dont">AI 자동 수정은 하지 않습니다</span>
-          </span>
-          <span className="welcome-pc__lead-line">
-            원고와 검사 결과는 이 브라우저 안에서만 처리하며,{' '}
-            <span className="welcome-pc__lead-dont">서버에 저장하지 않습니다</span>
-          </span>
+        <p className="welcome-pc__privacy-starline">
+          <WelcomePcSparkle className="welcome-pc__privacy-starline__spk" />
+          <span>원고와 검사 결과는 서버에 저장하지 않습니다</span>
+          <WelcomePcSparkle className="welcome-pc__privacy-starline__spk" />
         </p>
       ) : (
         <p className="welcome-pc__lead">
@@ -212,36 +207,37 @@ export default function WelcomePcScreen({
     </div>
   );
 
+  const perfBetaBlock = (
+    <div className="welcome-pc__perf-beta">
+      <span className="welcome-pc__perf-badge-beta">오픈베타 서비스 중</span>
+      <span className="welcome-pc__perf-quota">
+        회원은 <strong>1일</strong> 맞춤법 <strong>1회</strong> · 일관성 <strong>1회</strong> 검수 무료
+      </span>
+    </div>
+  );
+
   const perfBlock = (
     <div className="welcome-pc__cta-group welcome-pc__cta-group--in-top">
       <div className="welcome-pc__perf-ribbon">
         <p className="welcome-pc__perf-l1">
-          맞춤법 · 일관성 찾기 · 보조용언 + 본용언
+          맞춤법 · 일관성 찾기 · 보조용언 + 본용언 표기
         </p>
 
         <p className="welcome-pc__perf-l2">
           신국판
-          {' 300페이지 '}
-          <span className="welcome-pc__perf-underline">
-            3
-            <span className="welcome-pc__perf-anc welcome-pc__perf-anc--cho">
-              초
-              <WelcomePcSparkle className="welcome-pc__perf-spk welcome-pc__perf-spk--orange" />
-            </span>
-            만에
+          {' 300페이지 PDF '}
+          <span className="welcome-pc__perf-underline">3시간</span>
+          {' → 3'}
+          <span className="welcome-pc__perf-anc welcome-pc__perf-anc--cho">
+            초
+            <WelcomePcSparkle className="welcome-pc__perf-spk welcome-pc__perf-spk--orange" />
           </span>
-          {' 검수 완료'}
+          만에 검수!
         </p>
 
-        <div className="welcome-pc__perf-beta">
-          <span className="welcome-pc__perf-badge-beta">오픈베타 서비스 중</span>
-          <span className="welcome-pc__perf-quota">
-            회원은 <strong>1일</strong> 맞춤법 <strong>1회</strong> · 일관성 <strong>1회</strong>{' '}
-            무료 검수
-          </span>
-        </div>
+        {!isGuestLanding ? perfBetaBlock : null}
 
-        {authError && authReady && isGuestLanding ? (
+        {authError && authReady && !isGuestLanding ? (
           <p className="welcome-pc__auth-error welcome-pc__auth-error--bar" role="alert">
             {authError}
           </p>
@@ -311,8 +307,16 @@ export default function WelcomePcScreen({
             <div className="welcome-pc__guest-hero">
               <div className="welcome-pc__guest-portrait-wrap">{portraitBlock}</div>
               {perfBlock}
-              <div className="welcome-pc__cta-top" aria-label="시작하기">
-                {guestAuthButton}
+              <div className="welcome-pc__guest-cta-match">
+                {perfBetaBlock}
+                <div className="welcome-pc__cta-top" aria-label="시작하기">
+                  {guestAuthButton}
+                </div>
+                {authError && authReady ? (
+                  <p className="welcome-pc__auth-error welcome-pc__auth-error--bar" role="alert">
+                    {authError}
+                  </p>
+                ) : null}
               </div>
             </div>
           ) : !needsWelcomeMessage ? (
@@ -339,15 +343,17 @@ export default function WelcomePcScreen({
             >
               {isGuestLanding ? (
                 <>
-                  <img
-                    className="welcome-pc__before-after-img"
-                    src={WELCOME_PC_BEFORE_AFTER}
-                    alt="검수 전·후 예시 — 왼쪽 원고, 오른쪽 맞춤법·일관성·본용언+보조용언 표기 하이라이트"
-                    width={1698}
-                    height={746}
-                    loading="lazy"
-                    decoding="async"
-                  />
+                  <figure className="welcome-pc__compare-figure">
+                    <img
+                      className="welcome-pc__before-after-img"
+                      src={WELCOME_PC_BEFORE_AFTER}
+                      alt="검수 전·후 예시 — 왼쪽 원고, 오른쪽 맞춤법·일관성·본용언+보조용언 표기 하이라이트"
+                      width={1698}
+                      height={746}
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  </figure>
                   <p className="welcome-pc__showcase-caption">
                     사용자의 이해를 돕고자 재구성한 화면입니다 · 맞춤법과 일관성 검수는 각각
                     진행됩니다 · 크롬 브라우저 사용을 권장합니다
@@ -366,8 +372,7 @@ export default function WelcomePcScreen({
                       decoding="async"
                     />
                     {!needsWelcomeMessage ? (
-                      <div className="welcome-pc__rail-stack">
-                        {portraitBlock}
+                      <div className="welcome-pc__rail-stack welcome-pc__rail-stack--cta-only">
                         <div className="welcome-pc__stage-rail__cta-foot">
                           {signedInStartButton}
                         </div>
