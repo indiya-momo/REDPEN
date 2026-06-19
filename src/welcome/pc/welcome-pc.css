@@ -46,6 +46,13 @@
   --welcome-compare-caption-gap: calc(0.5rem * var(--welcome-scale));
   --welcome-compare-img-brightness: 0.9;
   --welcome-ba-img-scale: 0.9;
+  --welcome-page-max-width: calc(77.5rem * var(--welcome-scale));
+  --welcome-page-padding-inline: clamp(
+    calc(2rem * var(--welcome-scale)),
+    3.4vw,
+    calc(2.75rem * var(--welcome-scale))
+  );
+  --welcome-room-book-icon-scale: 0.7;
   /* B안: ba·fold-cap 너비 + 액자 우측 끝선 (page 좌측 기준 scale 지점) */
   --welcome-ba-track-width: calc(100% * var(--welcome-ba-img-scale));
   --welcome-ba-split-gap: calc(10px * var(--welcome-scale));
@@ -173,15 +180,47 @@
 
 .welcome-pc__layout--guest .welcome-pc__bottom-notes {
   grid-area: footer;
-  padding-inline: clamp(calc(1.1rem * var(--welcome-scale)), 3.5vw, calc(2.75rem * var(--welcome-scale)));
+  box-sizing: border-box;
+  width: 100%;
+  max-width: var(--welcome-page-max-width);
+  margin-inline: auto;
+  padding-inline: var(--welcome-page-padding-inline);
   padding-bottom: clamp(calc(0.35rem * var(--welcome-scale)), 0.8vw, calc(0.65rem * var(--welcome-scale)));
+  text-align: left;
+}
+
+.welcome-pc__layout--guest .welcome-pc__footer-line {
+  justify-content: space-between;
+  flex-wrap: nowrap;
+  width: var(--welcome-ba-track-width);
+  max-width: var(--welcome-ba-track-width);
+  gap: 0;
+}
+
+.welcome-pc__layout--guest .welcome-pc__footer-sep {
+  flex-shrink: 0;
+  padding-inline: clamp(
+    calc(0.45rem * var(--welcome-scale)),
+    1.1vw,
+    calc(0.7rem * var(--welcome-scale))
+  );
+}
+
+.welcome-pc__layout--guest .welcome-pc__footer-part {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.welcome-pc__layout--guest .welcome-pc__footer-meta {
+  flex-shrink: 0;
 }
 
 /* B안: page · hero · ba · fold-cap */
 .welcome-pc__page {
-  --welcome-fold-cap-text-scale: 1.3;
+  --welcome-fold-cap-text-scale: 1.69;
   --welcome-page-beta-cta-gap-ratio: 0.6;
   --welcome-page-hero-ba-gap-ratio: 0.6;
+  --welcome-page-ba-fold-gap-ratio: 0.7;
   --welcome-page-section-gap: clamp(
     calc(0.765rem * var(--welcome-scale)),
     1.26vw,
@@ -202,13 +241,13 @@
   --welcome-hero-bottom-align-nudge: -10px; /* 오픈베타·CTA 위로 (-값) */
   box-sizing: border-box;
   width: 100%;
-  max-width: calc(77.5rem * var(--welcome-scale));
+  max-width: var(--welcome-page-max-width);
   height: auto;
   min-height: 0;
   margin-inline: auto;
   padding:
     clamp(calc(1.75rem * var(--welcome-scale)), 2.8vw, calc(2.25rem * var(--welcome-scale)))
-    clamp(calc(2rem * var(--welcome-scale)), 3.4vw, calc(2.75rem * var(--welcome-scale)))
+    var(--welcome-page-padding-inline)
     clamp(calc(0.65rem * var(--welcome-scale)), 1vw, calc(0.875rem * var(--welcome-scale)));
   display: flex;
   flex-direction: column;
@@ -323,11 +362,11 @@
   justify-content: center;
   flex: none;
   flex-shrink: 0;
-  width: calc(16px * var(--welcome-scale));
-  height: calc(16px * var(--welcome-scale));
+  width: calc(12px * var(--welcome-scale));
+  height: calc(12px * var(--welcome-scale));
   margin-right: 0;
   border-radius: 50%;
-  font-size: calc(10px * var(--welcome-scale));
+  font-size: calc(7px * var(--welcome-scale));
   font-weight: 800;
   line-height: 1;
   color: #fff;
@@ -338,7 +377,16 @@
 }
 
 .welcome-pc__page .welcome-pc__desc-icon--no {
-  background: #c4544e;
+  border-radius: 0;
+  background: none;
+  font-size: calc(12px * var(--welcome-scale));
+  font-weight: normal;
+  line-height: 1;
+}
+
+.welcome-pc__page .welcome-pc__perf-l1-num {
+  font-size: 0.72em;
+  vertical-align: 0.1em;
 }
 
 .welcome-pc__page .welcome-pc__perf-l2 {
@@ -367,17 +415,63 @@
   max-width: none;
 }
 
-.welcome-pc__page .welcome-pc__perf-beta {
-  justify-content: flex-start;
-  width: 100%;
+.welcome-pc__page .welcome-pc__desc-emphasis {
+  text-decoration: underline;
+  text-underline-offset: calc(0.12em * var(--welcome-scale));
+  text-decoration-thickness: 1px;
 }
 
-.welcome-pc__page .welcome-pc__hero-cta {
-  margin-top: calc(var(--welcome-page-beta-cta-gap) - var(--welcome-page-hero-gap));
+.welcome-pc__page .welcome-pc__guest-cta-match {
+  display: inline-grid;
+  grid-auto-flow: row;
+  justify-items: stretch;
+  width: max-content;
+  max-width: 100%;
+  margin-inline: 0;
+  gap: var(--welcome-page-beta-cta-gap);
+}
+
+.welcome-pc__page .welcome-pc__guest-cta-match .welcome-pc__perf-beta {
+  margin-top: 0;
+  width: 100%;
+  justify-content: flex-start;
+}
+
+.welcome-pc__page .welcome-pc__guest-cta-match .welcome-pc__perf-beta--signed-in {
+  margin-top: 0;
+}
+
+.welcome-pc__perf-quota--signed-in .welcome-pc__auth-nickname {
+  font-weight: 600;
+  color: color-mix(in srgb, #ffffff 72%, #a8a4a0);
+}
+
+.welcome-pc__page--signed-in .welcome-pc__guest-cta-match {
+  width: min(100%, var(--welcome-proto-cta-max));
+  max-width: 100%;
+}
+
+.welcome-pc__page--signed-in .welcome-pc__hero-cta {
+  width: 100%;
+  max-width: none;
+}
+
+.welcome-pc__page .welcome-pc__guest-cta-match .welcome-pc__hero-cta {
+  width: 100%;
+  max-width: none;
+  margin-top: 0;
+}
+
+.welcome-pc__page .welcome-pc__perf-beta {
+  justify-content: flex-start;
 }
 
 .welcome-pc__page .welcome-pc__ba {
   margin-top: calc(var(--welcome-page-section-gap) * (var(--welcome-page-hero-ba-gap-ratio) - 1));
+}
+
+.welcome-pc__page .welcome-pc__fold-cap {
+  margin-top: calc(var(--welcome-page-section-gap) * (var(--welcome-page-ba-fold-gap-ratio) - 1));
 }
 
 .welcome-pc__page .welcome-pc__hero-signed-status {
@@ -814,12 +908,8 @@
     min-height: 100%;
   }
 
-  .welcome-pc__page .welcome-pc__perf-beta {
+  .welcome-pc__page .welcome-pc__guest-cta-match {
     margin-top: auto;
-    transform: translateY(var(--welcome-hero-bottom-align-nudge));
-  }
-
-  .welcome-pc__page .welcome-pc__hero-cta {
     transform: translateY(var(--welcome-hero-bottom-align-nudge));
   }
 
@@ -1974,6 +2064,11 @@
   cursor: pointer;
 }
 
+.welcome-pc__footer-meta .welcome-pc__room-entry svg {
+  width: calc(24px * var(--welcome-room-book-icon-scale, 0.7) * var(--welcome-scale));
+  height: calc(24px * var(--welcome-room-book-icon-scale, 0.7) * var(--welcome-scale));
+}
+
 .welcome-pc__footer-meta .welcome-pc__room-entry:hover {
   color: var(--welcome-text);
 }
@@ -2183,14 +2278,14 @@
   box-sizing: border-box;
   width: 100%;
   min-width: 0;
-  max-width: var(--welcome-proto-cta-max);
+  max-width: 100%;
   margin-top: 0;
   padding:
     calc(0.875rem * var(--welcome-scale) * var(--welcome-ba-img-scale))
     calc(1.375rem * var(--welcome-scale) * var(--welcome-ba-img-scale));
   border-radius: calc(0.8125rem * var(--welcome-scale) * var(--welcome-ba-img-scale));
   font-family: 'Gowun Batang', var(--font-family-body-brand);
-  font-weight: 700;
+  font-weight: 800;
   font-synthesis: weight;
   font-size: calc(1.5rem * var(--welcome-scale) * var(--welcome-ba-img-scale));
   letter-spacing: 0.125em;
@@ -2210,5 +2305,37 @@
 .welcome-pc__page .welcome-pc__hero-cta .btn-welcome-primary.welcome-pc__auth-submit--single:hover:not(:disabled) {
   background: linear-gradient(180deg, #e04a66 0%, #b32f52 100%);
   color: #f6ead4;
+  transform: translateY(-2px);
+}
+
+.welcome-pc__page .welcome-pc__hero-cta .welcome-pc__cta-bar-action--pair {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: calc(0.5rem * var(--welcome-scale) * var(--welcome-ba-img-scale));
+  width: 100%;
+}
+
+.welcome-pc__page .welcome-pc__hero-cta .welcome-pc__cta-bar-action--pair .welcome-pc__auth-submit--single {
+  flex: 1 1 0;
+  width: auto;
+  min-width: 0;
+  max-width: none;
+}
+
+.welcome-pc__page .welcome-pc__hero-cta .btn-welcome-primary.welcome-pc__auth-logout--single {
+  color: #ececec;
+  background: linear-gradient(180deg, #6e6e6e 0%, #4f4f4f 100%);
+  border: 1px solid #8a8a8a;
+  box-shadow:
+    0 8px 26px rgba(0, 0, 0, 0.35),
+    0 0 18px rgba(120, 120, 120, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16);
+}
+
+.welcome-pc__page .welcome-pc__hero-cta .btn-welcome-primary.welcome-pc__auth-logout--single:hover:not(:disabled) {
+  background: linear-gradient(180deg, #7a7a7a 0%, #5a5a5a 100%);
+  color: #f5f5f5;
   transform: translateY(-2px);
 }
