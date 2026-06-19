@@ -220,12 +220,11 @@ export default function WelcomePcScreen({
     <div className="welcome-pc__cta-group welcome-pc__cta-group--in-top">
       <div className="welcome-pc__perf-ribbon">
         <p className="welcome-pc__perf-l1">
-          맞춤법 · 일관성 찾기 · 보조용언 + 본용언 표기
+          맞춤법 · 일관성 찾기 · 보조용언 + 본용언
         </p>
 
         <p className="welcome-pc__perf-l2">
-          신국판
-          {' 300페이지 PDF '}
+          신국판 300페이지 PDF{' '}
           <span className="welcome-pc__perf-l2__gold">3초만</span>에 검수!
         </p>
       </div>
@@ -257,23 +256,28 @@ export default function WelcomePcScreen({
   const heroCtaButton = isGuestLanding ? guestAuthButton : signedInStartButton;
 
   const heroBlock = (
-    <div className="welcome-pc__guest-hero">
-      <div className="welcome-pc__guest-portrait-wrap">{portraitBlock}</div>
-      {perfBlock}
-      <div className="welcome-pc__guest-cta-match">
-        {heroStatusBlock}
-        <div
-          className="welcome-pc__cta-top"
-          aria-label={isGuestLanding ? '시작하기' : '검수 시작'}
-        >
-          {heroCtaButton}
+    <div className="welcome-pc__guest-hero welcome-pc__guest-hero--layout-b">
+      <div className="welcome-pc__guest-hero-copy">
+        {perfBlock}
+        <div className="welcome-pc__guest-cta-match">
+          {heroStatusBlock}
+          <div
+            className="welcome-pc__cta-top"
+            aria-label={isGuestLanding ? '시작하기' : '검수 시작'}
+          >
+            {heroCtaButton}
+          </div>
+          {authError && authReady && isGuestLanding ? (
+            <p className="welcome-pc__auth-error welcome-pc__auth-error--bar" role="alert">
+              {authError}
+            </p>
+          ) : null}
         </div>
-        {authError && authReady && isGuestLanding ? (
-          <p className="welcome-pc__auth-error welcome-pc__auth-error--bar" role="alert">
-            {authError}
-          </p>
-        ) : null}
       </div>
+      <aside className="welcome-pc__guest-hero-side" aria-label="검수냥 모모">
+        <p className="welcome-pc__guest-hero-bubble">현직 편집자가 만들었다냥🐾</p>
+        <div className="welcome-pc__guest-portrait-wrap">{portraitBlock}</div>
+      </aside>
     </div>
   );
 
@@ -297,6 +301,15 @@ export default function WelcomePcScreen({
     </>
   );
 
+  const guestAnchorBlock = (
+    <div className="welcome-pc__guest-anchor">
+      {heroBlock}
+      <div className="welcome-pc__guest-anchor-compare welcome-pc__compare-body welcome-pc__compare-body--guest">
+        {compareShowcaseBlock}
+      </div>
+    </div>
+  );
+
   const stageRailClassName = [
     'welcome-pc__stage-rail',
     'welcome-pc__stage-rail--onboarding',
@@ -315,30 +328,32 @@ export default function WelcomePcScreen({
             .join(' ')}
         >
           {headerBlock}
-          {isHeroLanding ? heroBlock : null}
+          {isGuestLanding ? guestAnchorBlock : isHeroLanding ? heroBlock : null}
         </div>
 
-        <div className="welcome-pc__stage">
-          <section className="welcome-pc__showcase" aria-label="검수 예시">
-            <div className="welcome-pc__compare-body welcome-pc__compare-body--guest">
-              {isHeroLanding ? compareShowcaseBlock : null}
-            </div>
-          </section>
+        {needsWelcomeMessage || (isHeroLanding && !isGuestLanding) ? (
+          <div className="welcome-pc__stage">
+            <section className="welcome-pc__showcase" aria-label="검수 예시">
+              <div className="welcome-pc__compare-body welcome-pc__compare-body--guest">
+                {isHeroLanding && !isGuestLanding ? compareShowcaseBlock : null}
+              </div>
+            </section>
 
-          {needsWelcomeMessage ? (
-            <aside className={stageRailClassName}>
-              <WelcomeProfileOnboarding
-                uid={uid}
-                defaultNickname={session?.displayName ?? ''}
-                surface="welcome-pc"
-                onComplete={() => {
-                  bumpProfileRev();
-                  handleStart();
-                }}
-              />
-            </aside>
-          ) : null}
-        </div>
+            {needsWelcomeMessage ? (
+              <aside className={stageRailClassName}>
+                <WelcomeProfileOnboarding
+                  uid={uid}
+                  defaultNickname={session?.displayName ?? ''}
+                  surface="welcome-pc"
+                  onComplete={() => {
+                    bumpProfileRev();
+                    handleStart();
+                  }}
+                />
+              </aside>
+            ) : null}
+          </div>
+        ) : null}
 
         <div className="welcome-pc__bottom-notes">
           <p className="welcome-pc__footer-line">
