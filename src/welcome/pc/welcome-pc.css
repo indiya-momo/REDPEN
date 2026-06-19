@@ -43,8 +43,8 @@
   --welcome-stage-row-gap: calc(0.12rem * var(--welcome-scale));
   --welcome-compare-caption-gap: calc(0.5rem * var(--welcome-scale));
   --welcome-compare-img-brightness: 0.9;
-  --welcome-compare-img-width: 65%;
-  --welcome-showcase-caption-scale: 0.9;
+  --welcome-compare-img-width: calc(65% * 0.9);
+  --welcome-showcase-caption-scale: 0.72;
   --welcome-perf-l1-scale: 0.9;
   --welcome-perf-l2-scale: 0.8;
   --welcome-header-title-scale: 1;
@@ -264,6 +264,7 @@
     3.7vw,
     calc(2.44rem * var(--welcome-scale))
   );
+  padding: calc(1.2rem * 0.6 * var(--welcome-scale)) calc(1.35rem * var(--welcome-scale));
 }
 
 .welcome-pc__guest-cta-match .welcome-pc__auth-error--bar {
