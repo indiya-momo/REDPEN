@@ -151,11 +151,10 @@
 }
 
 .welcome-pc__privacy-starline {
-  display: inline-flex;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: calc(0.45rem * var(--welcome-scale));
+  gap: calc(0.15rem * var(--welcome-scale));
   margin: 0;
   font-family: var(--welcome-perf-font-info);
   font-size: calc(13px * var(--welcome-privacy-line-scale) * var(--welcome-scale));
@@ -166,15 +165,8 @@
   text-align: center;
 }
 
-.welcome-pc__top-band .welcome-pc__privacy-starline {
-  width: 100%;
-}
-
-.welcome-pc__privacy-starline__spk {
-  flex-shrink: 0;
-  width: calc(0.9rem * var(--welcome-privacy-line-scale) * var(--welcome-scale));
-  height: calc(0.9rem * var(--welcome-privacy-line-scale) * var(--welcome-scale));
-  color: #c9a85a;
+.welcome-pc__privacy-starline__line {
+  display: block;
 }
 
 .welcome-pc__guest-hero {
@@ -401,9 +393,9 @@
   font-size: calc(11px * var(--welcome-scale));
   font-weight: 600;
   letter-spacing: 0.03em;
-  color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  background: rgba(255, 255, 255, 0.06);
+  color: color-mix(in srgb, #ffffff 62%, #a8a4a0);
+  border: 1px solid color-mix(in srgb, #ffffff 18%, transparent);
+  background: color-mix(in srgb, #ffffff 4%, transparent);
   border-radius: 999px;
   padding: calc(4px * var(--welcome-scale)) calc(12px * var(--welcome-scale));
 }
@@ -412,11 +404,11 @@
   font-family: var(--welcome-perf-font-info);
   font-size: calc(13px * var(--welcome-scale));
   line-height: 1.45;
-  color: #ffffff;
+  color: color-mix(in srgb, #ffffff 58%, #a8a4a0);
 }
 
 .welcome-pc__perf-quota strong {
-  color: #ffffff;
+  color: color-mix(in srgb, #ffffff 72%, #a8a4a0);
   font-weight: 600;
 }
 
@@ -902,19 +894,21 @@
   align-items: center;
   justify-content: center;
   text-align: center;
-  background: linear-gradient(180deg, #f0d888 0%, #e0bc62 42%, #c9a044 100%);
-  color: #2a1a08;
-  border: 1px solid rgba(255, 236, 180, 0.62);
+  background: linear-gradient(180deg, #d83f5c 0%, #a8284a 100%);
+  color: #f6ead4;
+  border: 1px solid #e76d85;
   box-shadow:
-    0 10px 32px rgba(200, 160, 60, 0.48),
-    0 4px 14px rgba(0, 0, 0, 0.34),
-    inset 0 1px 0 rgba(255, 250, 230, 0.45);
+    0 8px 26px rgba(168, 40, 74, 0.5),
+    0 0 22px rgba(216, 63, 92, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  transition: transform 0.15s ease;
 }
 
 .welcome-pc .btn-welcome-primary.welcome-pc__auth-submit--single:hover:not(:disabled),
 .welcome-pc .btn-welcome-primary.welcome-pc__start--rail:hover:not(:disabled) {
-  background: linear-gradient(180deg, #f5e4a0 0%, #e8c86a 55%, #d4ad50 100%);
-  color: #1a1006;
+  background: linear-gradient(180deg, #d83f5c 0%, #a8284a 100%);
+  color: #f6ead4;
+  transform: translateY(-2px);
 }
 
 .welcome-pc__cta-top .btn-welcome-primary.welcome-pc__auth-submit--single {
@@ -1184,6 +1178,7 @@
   box-sizing: border-box;
   aspect-ratio: var(--welcome-frame-aspect);
   line-height: 0;
+  overflow: hidden;
 }
 
 .welcome-pc__portrait-media {
@@ -1198,13 +1193,15 @@
   background: #1c1917;
 }
 
+/* 영상 구멍은 그대로 — 액자 PNG만 아래로 내리고 높이만 살짝 줄여 상단 틈을 덮음 */
 .welcome-pc__portrait-frame {
   position: absolute;
-  inset: 0;
+  left: 0;
+  top: 4.2%;
+  width: 100%;
+  height: 95.8%;
   z-index: 1;
   display: block;
-  width: 100%;
-  height: 100%;
   object-fit: fill;
   pointer-events: none;
   user-select: none;
