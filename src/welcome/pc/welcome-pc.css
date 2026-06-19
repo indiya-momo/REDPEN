@@ -44,6 +44,8 @@
   --welcome-compare-caption-gap: calc(0.5rem * var(--welcome-scale));
   --welcome-compare-img-brightness: 0.9;
   --welcome-compare-img-width: calc(65% * 0.9);
+  --welcome-compare-before-width: calc(var(--welcome-compare-img-width) / 2);
+  --welcome-compare-before-right: 50%;
   --welcome-showcase-caption-scale: 0.72;
   --welcome-perf-l1-scale: 0.9;
   --welcome-perf-l2-scale: 0.8;
@@ -113,7 +115,7 @@
   padding-top: clamp(calc(0.85rem * var(--welcome-scale)), 1.6vw, calc(1.35rem * var(--welcome-scale)));
   padding-bottom: clamp(calc(0.65rem * var(--welcome-scale)), 1.2vw, calc(1rem * var(--welcome-scale)));
   gap:
-    clamp(calc(0.35rem * var(--welcome-scale)), 0.8vw, calc(0.55rem * var(--welcome-scale)))
+    clamp(calc(0.175rem * var(--welcome-scale)), 0.4vw, calc(0.275rem * var(--welcome-scale)))
     clamp(calc(0.65rem * var(--welcome-scale)), 1.4vw, calc(1.1rem * var(--welcome-scale)));
 }
 
@@ -130,7 +132,7 @@
 
 .welcome-pc__top-band--guest-vertical {
   gap: clamp(calc(0.5rem * var(--welcome-scale)), 1vw, calc(0.75rem * var(--welcome-scale)));
-  padding-bottom: calc(0.25rem * var(--welcome-scale));
+  padding-bottom: calc(0.125rem * var(--welcome-scale));
 }
 
 .welcome-pc__top-band .welcome-pc__header {
@@ -178,6 +180,301 @@
   gap: clamp(calc(0.4rem * var(--welcome-scale)), 0.9vw, calc(0.65rem * var(--welcome-scale)));
 }
 
+/* Layout B 스케치: 1100px+ 에서 카피+CTA | 액자 2열 */
+.welcome-pc__guest-hero--layout-b {
+  max-width: min(100%, calc(54rem * var(--welcome-scale)));
+}
+
+.welcome-pc__guest-hero-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: max-content;
+  max-width: 100%;
+  gap: clamp(calc(0.2rem * var(--welcome-scale)), 0.45vw, calc(0.325rem * var(--welcome-scale)));
+}
+
+.welcome-pc__guest-hero--layout-b .welcome-pc__cta-group--in-top,
+.welcome-pc__guest-hero--layout-b .welcome-pc__guest-cta-match {
+  width: 100%;
+  margin-inline: 0;
+  display: grid;
+  justify-items: stretch;
+  box-sizing: border-box;
+}
+
+.welcome-pc__guest-hero--layout-b .welcome-pc__perf-ribbon {
+  align-items: flex-end;
+  text-align: right;
+  width: 100%;
+  max-width: 100%;
+}
+
+.welcome-pc__guest-hero--layout-b .welcome-pc__perf-l1,
+.welcome-pc__guest-hero--layout-b .welcome-pc__perf-l2 {
+  text-align: right;
+  margin-inline: 0;
+}
+
+.welcome-pc__guest-hero--layout-b .welcome-pc__perf-l1 {
+  max-width: 100%;
+}
+
+.welcome-pc__guest-hero--layout-b .welcome-pc__perf-beta {
+  justify-content: flex-end;
+  width: 100%;
+}
+
+.welcome-pc__guest-hero--layout-b .welcome-pc__guest-hero-copy {
+  margin-inline: auto;
+}
+
+/* 게스트: 카피·CTA·버튼 우측 = 검수 전 패널 우측(가운데 정렬 비교 이미지 50% 지점) */
+.welcome-pc__guest-anchor {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.welcome-pc__guest-anchor-compare {
+  width: 100%;
+}
+
+.welcome-pc__guest-anchor .welcome-pc__guest-hero-copy {
+  width: 100%;
+  max-width: 100%;
+  margin-inline: 0;
+}
+
+.welcome-pc__guest-anchor .welcome-pc__cta-group--in-top,
+.welcome-pc__guest-anchor .welcome-pc__guest-cta-match {
+  width: var(--welcome-compare-before-width);
+  max-width: none;
+  margin-left: auto;
+  margin-right: var(--welcome-compare-before-right);
+  box-sizing: border-box;
+}
+
+.welcome-pc__guest-anchor .welcome-pc__guest-cta-match .welcome-pc__perf-beta {
+  justify-content: flex-end;
+  width: 100%;
+}
+
+.welcome-pc__guest-anchor .welcome-pc__perf-ribbon {
+  align-items: flex-end;
+  text-align: right;
+  width: 100%;
+  max-width: 100%;
+}
+
+.welcome-pc__guest-hero-side {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  order: -1;
+}
+
+.welcome-pc__guest-hero-bubble {
+  display: none;
+}
+
+@media (min-width: 1100px) {
+  .welcome-pc__top-band--guest-vertical {
+    align-items: stretch;
+  }
+
+  .welcome-pc__guest-anchor .welcome-pc__guest-hero--layout-b {
+    width: 100%;
+    max-width: none;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .welcome-pc__guest-anchor .welcome-pc__cta-group--in-top,
+  .welcome-pc__guest-anchor .welcome-pc__guest-cta-match {
+    /* 그리드 1열(50%) 기준 — 앵커 대비 검수 전 패널 너비와 동일 */
+    width: calc(65% * 0.9);
+    margin-left: 0;
+    margin-right: 0;
+    justify-self: end;
+  }
+
+  .welcome-pc__guest-hero--layout-b {
+    display: grid;
+    grid-template-columns: minmax(0, max-content) auto;
+    grid-template-areas:
+      'perf side'
+      'cta side';
+    justify-content: center;
+    justify-items: stretch;
+    align-items: end;
+    column-gap: clamp(calc(0.75rem * var(--welcome-scale)), 1.8vw, calc(1.5rem * var(--welcome-scale)));
+    row-gap: clamp(calc(0.225rem * var(--welcome-scale)), 0.5vw, calc(0.375rem * var(--welcome-scale)));
+    width: 100%;
+    max-width: min(100%, calc(58rem * var(--welcome-scale)));
+    margin-inline: auto;
+  }
+
+  .welcome-pc__guest-hero--layout-b .welcome-pc__guest-hero-copy {
+    display: contents;
+  }
+
+  .welcome-pc__guest-hero--layout-b .welcome-pc__guest-hero-copy > .welcome-pc__cta-group--in-top {
+    grid-area: perf;
+    width: 100%;
+    justify-self: stretch;
+  }
+
+  .welcome-pc__guest-hero--layout-b .welcome-pc__guest-hero-copy > .welcome-pc__guest-cta-match {
+    grid-area: cta;
+    align-self: end;
+    width: 100%;
+    max-width: none;
+    margin-inline: 0;
+  }
+
+  .welcome-pc__guest-hero-side {
+    grid-area: side;
+    grid-row: 1 / span 2;
+    flex: unset;
+    order: unset;
+    align-self: end;
+    justify-self: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    width: min(100%, calc(13.75rem * var(--welcome-scale)));
+    max-width: calc(220px * var(--welcome-scale));
+    min-height: 0;
+    gap: calc(0.18rem * var(--welcome-scale));
+    overflow: visible;
+  }
+
+  .welcome-pc__guest-hero-bubble {
+    display: block;
+    position: relative;
+    align-self: flex-end;
+    margin: 0;
+    margin-right: calc(-0.35rem * var(--welcome-scale));
+    transform: translateX(50%);
+    padding: calc(0.32rem * var(--welcome-scale)) calc(0.7rem * var(--welcome-scale));
+    font-family: var(--welcome-perf-font-info);
+    font-size: calc(0.72rem * var(--welcome-scale));
+    font-weight: 600;
+    line-height: 1.35;
+    letter-spacing: 0.01em;
+    color: #2a1a08;
+    background: #f3ece0;
+    border: 1px solid rgba(180, 152, 96, 0.35);
+    border-radius: 999px;
+    white-space: nowrap;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28);
+  }
+
+  .welcome-pc__guest-hero-bubble::after {
+    content: '';
+    position: absolute;
+    left: 28%;
+    bottom: calc(-5px * var(--welcome-scale));
+    width: calc(10px * var(--welcome-scale));
+    height: calc(10px * var(--welcome-scale));
+    background: #f3ece0;
+    border-right: 1px solid rgba(180, 152, 96, 0.28);
+    border-bottom: 1px solid rgba(180, 152, 96, 0.28);
+    transform: translateX(-50%) rotate(45deg);
+  }
+
+  .welcome-pc__guest-hero--layout-b .welcome-pc__guest-portrait-wrap {
+    order: unset;
+    flex: 0 0 auto;
+    width: 100%;
+    max-width: calc(220px * var(--welcome-scale));
+    margin-inline: 0;
+  }
+
+  .welcome-pc__guest-hero--layout-b .welcome-pc__guest-portrait-wrap .welcome-pc__portrait {
+    width: 100%;
+    height: auto;
+    max-width: 100%;
+    aspect-ratio: var(--welcome-frame-aspect);
+  }
+
+  .welcome-pc__guest-hero--layout-b .welcome-pc__cta-group--in-top {
+    width: 100%;
+  }
+
+  .welcome-pc__guest-hero--layout-b .welcome-pc__perf-ribbon {
+    align-items: flex-end;
+    text-align: right;
+  }
+
+  .welcome-pc__guest-hero--layout-b .welcome-pc__perf-l1 {
+    text-align: right;
+    white-space: normal;
+    max-width: 100%;
+    margin-inline: 0;
+    font-size: clamp(
+      calc(1.05rem * var(--welcome-scale) * var(--welcome-perf-l1-decor)),
+      1.75vw,
+      calc(1.55rem * var(--welcome-scale) * var(--welcome-perf-l1-decor))
+    );
+    line-height: 1.35;
+  }
+
+  .welcome-pc__guest-hero--layout-b .welcome-pc__perf-l2 {
+    text-align: right;
+    white-space: nowrap;
+    max-width: 100%;
+    font-size: clamp(
+      calc(1.5rem * var(--welcome-scale) * var(--welcome-perf-l2-decor)),
+      2.35vw,
+      calc(2.2rem * var(--welcome-scale) * var(--welcome-perf-l2-decor))
+    );
+  }
+
+  .welcome-pc__guest-hero--layout-b .welcome-pc__guest-cta-match {
+    width: 100%;
+    max-width: none;
+    margin-top: 0;
+    margin-inline: 0;
+    justify-items: stretch;
+  }
+
+  .welcome-pc__guest-anchor .welcome-pc__guest-hero--layout-b .welcome-pc__cta-group--in-top,
+  .welcome-pc__guest-anchor .welcome-pc__guest-hero--layout-b .welcome-pc__guest-cta-match {
+    width: calc(65% * 0.9);
+    margin-inline: 0;
+    justify-self: end;
+    justify-items: stretch;
+  }
+
+  .welcome-pc__guest-anchor .welcome-pc__guest-hero--layout-b .welcome-pc__perf-beta {
+    justify-content: flex-end;
+  }
+
+  .welcome-pc__guest-hero--layout-b .welcome-pc__perf-beta {
+    justify-content: flex-end;
+    width: 100%;
+  }
+
+  .welcome-pc__layout--guest
+    .welcome-pc__guest-hero--layout-b
+    .welcome-pc__guest-cta-match
+    .welcome-pc__cta-top
+    .btn-welcome-primary.welcome-pc__start.welcome-pc__auth-submit--single {
+    font-size: clamp(
+      calc(2rem * 0.8 * var(--welcome-scale)),
+      calc(3.7vw * 0.8),
+      calc(2.44rem * 0.8 * var(--welcome-scale))
+    );
+    padding: calc(1.2rem * 0.6 * 0.8 * var(--welcome-scale)) calc(1.35rem * 0.8 * var(--welcome-scale));
+  }
+
+  .welcome-pc__guest-hero--layout-b .welcome-pc__hero-signed-status {
+    text-align: center;
+  }
+}
+
 .welcome-pc__guest-portrait-wrap {
   width: min(100%, calc(15.5rem * var(--welcome-guest-frame-scale) * var(--welcome-scale)));
   max-width: calc(260px * var(--welcome-guest-frame-scale));
@@ -201,8 +498,8 @@
   width: max-content;
   max-width: 100%;
   margin-inline: auto;
-  margin-top: calc(1rem * var(--welcome-scale));
-  gap: calc(0.4rem * var(--welcome-scale));
+  margin-top: calc(0.5rem * var(--welcome-scale));
+  gap: calc(0.2rem * var(--welcome-scale));
 }
 
 .welcome-pc__guest-cta-match .welcome-pc__perf-beta {
@@ -273,7 +570,7 @@
 }
 
 .welcome-pc__compare-body--guest {
-  margin-top: clamp(calc(0.45rem * var(--welcome-scale)), 1.1vw, calc(0.75rem * var(--welcome-scale)));
+  margin-top: clamp(calc(0.225rem * var(--welcome-scale)), 0.55vw, calc(0.375rem * var(--welcome-scale)));
 }
 
 .welcome-pc__cta-group--in-top {
