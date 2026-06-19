@@ -2,9 +2,8 @@
 $ErrorActionPreference = 'SilentlyContinue'
 $root = Split-Path $PSScriptRoot -Parent
 Set-Location $root
-. (Join-Path $PSScriptRoot '_dev-port.ps1')
 
-$port = Get-DevPortFromEnv $root
+$port = 5173
 
 Write-Host "기존 ${port} 포트 프로세스 정리..."
 Get-NetTCPConnection -LocalPort $port -ErrorAction SilentlyContinue |

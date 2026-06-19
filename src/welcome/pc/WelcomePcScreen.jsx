@@ -467,19 +467,17 @@ export default function WelcomePcScreen({
 
         {needsWelcomeMessage ? (
           <div className="welcome-pc__stage">
-            {needsWelcomeMessage ? (
-              <aside className={stageRailClassName}>
-                <WelcomeProfileOnboarding
-                  uid={uid}
-                  defaultNickname={session?.displayName ?? ''}
-                  surface="welcome-pc"
-                  onComplete={() => {
-                    bumpProfileRev();
-                    handleStart();
-                  }}
-                />
-              </aside>
-            ) : null}
+            <aside className={stageRailClassName}>
+              <WelcomeProfileOnboarding
+                uid={uid}
+                defaultNickname={session?.displayName ?? ''}
+                surface="welcome-pc"
+                onComplete={() => {
+                  bumpProfileRev();
+                  handleStart();
+                }}
+              />
+            </aside>
           </div>
         ) : null}
 
