@@ -23,6 +23,8 @@ import './welcome-pc.css';
 const WELCOME_PC_BEFORE = `${import.meta.env.BASE_URL}welcome/before_after22-crop1.png`;
 const WELCOME_PC_AFTER = `${import.meta.env.BASE_URL}welcome/before_after22-crop2.png`;
 const WELCOME_PC_PDF_FULL = `${import.meta.env.BASE_URL}welcome/pdf-full.png`;
+const BA_BRIDGE_ARC_PATH_ID = 'welcome-pc-ba-bridge-arc';
+const BA_BRIDGE_ARC_LABEL = '모모가 살펴봅니다';
 const ENTER_MAIN_AFTER_GOOGLE_KEY = 'indiya-enter-main-after-google';
 
 const SPARKLE_PATH = 'M12 0l2.4 9.6L24 12l-9.6 2.4L12 24l-2.4-9.6L0 12l9.6-2.4z';
@@ -346,8 +348,26 @@ export default function WelcomePcScreen({
               decoding="async"
             />
           </figure>
-          <div className="welcome-pc__ba-bridge">
+          <div className="welcome-pc__ba-bridge" aria-label={BA_BRIDGE_ARC_LABEL}>
             <div className="welcome-pc__ba-bridge-momo-wrap">
+              <svg
+                className="welcome-pc__ba-bridge-arc"
+                viewBox="0 0 160 160"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <defs>
+                  <path
+                    id={BA_BRIDGE_ARC_PATH_ID}
+                    d="M 8 84 A 72 72 0 0 1 152 84"
+                  />
+                </defs>
+                <text className="welcome-pc__ba-bridge-arc-text">
+                  <textPath href={`#${BA_BRIDGE_ARC_PATH_ID}`} startOffset="50%" textAnchor="middle">
+                    {BA_BRIDGE_ARC_LABEL}
+                  </textPath>
+                </text>
+              </svg>
               <img
                 className="welcome-pc__ba-bridge-img"
                 src={WELCOME_PC_PDF_FULL}
@@ -358,7 +378,6 @@ export default function WelcomePcScreen({
                 decoding="async"
               />
             </div>
-            <p className="welcome-pc__ba-bridge-title">모모가 살펴봅니다</p>
           </div>
           <figure className="welcome-pc__ba-pane welcome-pc__ba-pane--after">
             <img
