@@ -341,6 +341,14 @@
   overflow: visible;
 }
 
+.welcome-pc__perf-l2__gold {
+  color: var(--welcome-perf-gold-bright);
+  -webkit-text-stroke: calc(1px * var(--welcome-scale) * var(--welcome-perf-l2-decor, 1)) #4a3010;
+  paint-order: stroke fill;
+  text-shadow: 0 calc(1px * var(--welcome-perf-l2-decor, 1)) calc(4px * var(--welcome-perf-l2-decor, 1))
+    rgba(0, 0, 0, 0.42);
+}
+
 .welcome-pc__perf-l2 .welcome-pc__perf-underline::after {
   left: calc(-3px * var(--welcome-scale) * var(--welcome-perf-l2-decor));
   right: calc(-3px * var(--welcome-scale) * var(--welcome-perf-l2-decor));
@@ -890,23 +898,24 @@
   font-family: var(--welcome-perf-font-info);
   font-weight: 800;
   font-synthesis: weight;
+  letter-spacing: 0.01em;
   display: flex;
   align-items: center;
   justify-content: center;
   text-align: center;
-  background: linear-gradient(180deg, #d83f5c 0%, #a8284a 100%);
+  background: linear-gradient(180deg, #e85a42 0%, #c9442e 100%);
   color: #f6ead4;
-  border: 1px solid #e76d85;
+  border: 1px solid color-mix(in srgb, #ddb46c 28%, #e0634a);
   box-shadow:
-    0 8px 26px rgba(168, 40, 74, 0.5),
-    0 0 22px rgba(216, 63, 92, 0.28),
+    0 8px 26px rgba(201, 68, 46, 0.46),
+    0 0 20px rgba(232, 90, 66, 0.22),
     inset 0 1px 0 rgba(255, 255, 255, 0.22);
   transition: transform 0.15s ease;
 }
 
 .welcome-pc .btn-welcome-primary.welcome-pc__auth-submit--single:hover:not(:disabled),
 .welcome-pc .btn-welcome-primary.welcome-pc__start--rail:hover:not(:disabled) {
-  background: linear-gradient(180deg, #d83f5c 0%, #a8284a 100%);
+  background: linear-gradient(180deg, #ec6448 0%, #cf4a32 100%);
   color: #f6ead4;
   transform: translateY(-2px);
 }
@@ -922,9 +931,9 @@
   font-weight: 800;
   font-synthesis: weight;
   font-size: clamp(
-    calc(2rem * var(--welcome-scale)),
-    3.7vw,
-    calc(2.44rem * var(--welcome-scale))
+    calc(1.88rem * var(--welcome-scale)),
+    3.45vw,
+    calc(2.29rem * var(--welcome-scale))
   );
   padding: calc(1.2rem * var(--welcome-scale)) calc(1.35rem * var(--welcome-scale));
 }

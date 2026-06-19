@@ -226,8 +226,7 @@ export default function WelcomePcScreen({
         <p className="welcome-pc__perf-l2">
           신국판
           {' 300페이지 PDF '}
-          <span className="welcome-pc__perf-underline">3초</span>
-          만에 검수!
+          <span className="welcome-pc__perf-l2__gold">3초만</span>에 검수!
         </p>
       </div>
     </div>
