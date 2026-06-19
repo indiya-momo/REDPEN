@@ -55,7 +55,10 @@
   --welcome-room-book-icon-scale: 0.7;
   /* B안: ba·fold-cap 너비 + 액자 우측 끝선 (page 좌측 기준 scale 지점) */
   --welcome-ba-track-width: calc(100% * var(--welcome-ba-img-scale));
-  --welcome-ba-split-gap: calc(10px * var(--welcome-scale));
+  --welcome-ba-pane-scale: 0.9;
+  --welcome-ba-split-gap: calc(16px * var(--welcome-scale));
+  --welcome-ba-bridge-scale: 0.9;
+  --welcome-ba-bridge-size: calc(5.625rem * var(--welcome-scale) * var(--welcome-ba-bridge-scale));
   --welcome-hero-frame-end-inset: calc((1 - var(--welcome-ba-img-scale)) * 100%);
   --welcome-hero-frame-end-nudge-left: 65px; /* 액자를 왼쪽으로 (고정 px) */
   --welcome-hero-frame-end-shift: 0rem; /* +값: 오른쪽, -값: 왼쪽 (inset·nudge에 추가) */
@@ -63,6 +66,8 @@
     var(--welcome-hero-frame-end-inset) + var(--welcome-hero-frame-end-nudge-left) -
       var(--welcome-hero-frame-end-shift)
   );
+  --welcome-hero-portrait-lift: 10px; /* 액자 위로 · 말풍선 간격 축소 */
+  --welcome-hero-cta-lift: 5px; /* CTA 버튼 위로 */
   --welcome-compare-img-width: calc(65% * 0.9);
   --welcome-proto-frame-width: calc(20.75rem * var(--welcome-scale) * var(--welcome-ba-img-scale));
   --welcome-proto-cta-max: calc(20.625rem * var(--welcome-scale) * var(--welcome-ba-img-scale));
@@ -219,7 +224,7 @@
 .welcome-pc__page {
   --welcome-fold-cap-text-scale: 1.69;
   --welcome-page-beta-cta-gap-ratio: 0.6;
-  --welcome-page-hero-ba-gap-ratio: 0.6;
+  --welcome-page-hero-ba-gap-ratio: 0.216;
   --welcome-page-ba-fold-gap-ratio: 0.7;
   --welcome-page-section-gap: clamp(
     calc(0.765rem * var(--welcome-scale)),
@@ -460,6 +465,7 @@
   width: 100%;
   max-width: none;
   margin-top: 0;
+  transform: translateY(calc(-1 * var(--welcome-hero-cta-lift)));
 }
 
 .welcome-pc__page .welcome-pc__perf-beta {
@@ -529,27 +535,96 @@
 
 .welcome-pc__ba-split {
   display: grid;
-  grid-template-columns: minmax(0, 999fr) minmax(0, 1056fr);
+  grid-template-columns: minmax(0, 999fr) auto minmax(0, 1056fr);
   gap: var(--welcome-ba-split-gap);
   align-items: end;
   width: 100%;
-  filter: brightness(var(--welcome-compare-img-brightness));
+}
+
+.welcome-pc__ba-bridge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  place-self: center;
+  gap: calc(1.1rem * var(--welcome-scale));
+  flex-shrink: 0;
+  width: fit-content;
+  line-height: normal;
+}
+
+.welcome-pc__ba-bridge-momo-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+}
+
+.welcome-pc__ba-bridge-momo-wrap::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  box-sizing: border-box;
+  width: calc(var(--welcome-ba-bridge-size) * 1.155);
+  height: calc(var(--welcome-ba-bridge-size) * 1.155);
+  min-width: calc(var(--welcome-ba-bridge-size) * 1.155);
+  min-height: calc(var(--welcome-ba-bridge-size) * 1.155);
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.95);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.welcome-pc__ba-bridge-img {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: var(--welcome-ba-bridge-size);
+  height: auto;
+  max-width: var(--welcome-ba-bridge-size);
+  margin: 0;
+}
+
+.welcome-pc__ba-bridge-title {
+  margin: 0;
+  padding-top: calc(0.4rem * var(--welcome-scale));
+  font-family: var(--font-family-title);
+  font-size: calc(0.9rem * 0.8 * var(--welcome-scale));
+  font-weight: normal;
+  line-height: 1.35;
+  text-align: center;
+  white-space: nowrap;
+  color: #ffffff;
 }
 
 .welcome-pc__ba-pane {
+  display: flex;
+  align-items: flex-end;
   margin: 0;
   padding: 0;
   overflow: visible;
   line-height: 0;
 }
 
+.welcome-pc__ba-pane--before {
+  justify-content: flex-start;
+}
+
+.welcome-pc__ba-pane--after {
+  justify-content: flex-end;
+}
+
 .welcome-pc__ba-img {
   display: block;
-  width: 100%;
+  width: calc(100% * var(--welcome-ba-pane-scale));
   height: auto;
-  max-width: 100%;
+  max-width: calc(100% * var(--welcome-ba-pane-scale));
   border: none;
   vertical-align: top;
+  filter: brightness(var(--welcome-compare-img-brightness));
 }
 
 .welcome-pc__ba-figure {
@@ -915,6 +990,7 @@
 
   .welcome-pc__page .welcome-pc__hero-right .welcome-pc__guest-portrait-wrap {
     margin-top: auto;
+    transform: translateY(calc(-1 * var(--welcome-hero-portrait-lift)));
   }
 
   .welcome-pc__page .welcome-pc__hero-right {

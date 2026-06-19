@@ -1,0 +1,10 @@
+﻿python :   File "<string>", line 15
+위치 C:\Users\gikan\AppData\Local\Temp\ps-script-bccc9392-1249-4575-89ae-a8009fda5779.ps1:79 문자:1
++ python -c "
++ ~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (  File "<string>", line 15:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+    idx = html.find('class=" ph\')
+                    ^
+SyntaxError: unterminated string literal (detected at line 15); perhaps you escaped the end quote?
