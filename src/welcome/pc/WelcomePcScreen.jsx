@@ -136,8 +136,8 @@ export default function WelcomePcScreen({
       : 'welcome-pc__layout--guest',
   ].join(' ');
 
-  const isGuestLanding = !needsWelcomeMessage && !loggedIn;
   const isHeroLanding = !needsWelcomeMessage;
+  const showSignedInLanding = loggedIn && isHeroLanding;
 
   const headerBlock = (
     <header className="welcome-pc__header">
@@ -156,9 +156,10 @@ export default function WelcomePcScreen({
             </p>
             <p className="welcome-pc__desc-line">
               <span className="welcome-pc__desc-icon welcome-pc__desc-icon--no" aria-hidden>
-                −
+                🚫
               </span>
-              AI 자동 수정은 하지 않으며, 원고는 서버에 저장되지 않습니다
+              AI 자동 수정은 하지 않으며,{' '}
+              <span className="welcome-pc__desc-emphasis">원고는 서버에 저장되지 않습니다</span>
             </p>
           </div>
         ) : null}
@@ -198,7 +199,7 @@ export default function WelcomePcScreen({
           onClick={handleGoogleAuth}
           disabled={authPending}
         >
-          {authPending ? '구글 로그인 연결 중…' : '구글로 시작하기'}
+          {authPending ? '구글 로그인 연결 중…' : '계속하기'}
         </button>
       )}
     </div>
@@ -214,16 +215,16 @@ export default function WelcomePcScreen({
   );
 
   const signedInStatusBlock = (
-    <p className="welcome-pc__hero-signed-status">
-      [
-      <span className="welcome-pc__auth-nickname">{signedInName}</span>
-      <span className="welcome-pc__auth-honorific">님이</span>
-      <span className="welcome-pc__auth-message"> 모모와 원고를 검수 중입니다</span>
-      ]
-    </p>
+    <div className="welcome-pc__perf-beta welcome-pc__perf-beta--signed-in">
+      <span className="welcome-pc__perf-badge-beta">로그인 중</span>
+      <span className="welcome-pc__perf-quota welcome-pc__perf-quota--signed-in">
+        <span className="welcome-pc__auth-nickname">{signedInName}</span>
+        님이 모모와 작업 중입니다
+      </span>
+    </div>
   );
 
-  const heroStatusBlock = isGuestLanding ? perfBetaBlock : signedInStatusBlock;
+  const heroStatusBlock = showSignedInLanding ? signedInStatusBlock : perfBetaBlock;
 
   const perfBlock = (
     <div className="welcome-pc__cta-group welcome-pc__cta-group--in-top">
@@ -262,7 +263,7 @@ export default function WelcomePcScreen({
   );
 
   const signedInStartButton = (
-    <div className="welcome-pc__cta-bar-action">
+    <div className="welcome-pc__cta-bar-action welcome-pc__cta-bar-action--pair">
       {!authReady ? (
         <button
           type="button"
@@ -272,39 +273,57 @@ export default function WelcomePcScreen({
           로그인 확인 중…
         </button>
       ) : (
-        <button
-          type="button"
-          className="btn-welcome-primary welcome-pc__start welcome-pc__auth-submit welcome-pc__auth-submit--single"
-          onClick={handleStart}
-        >
-          검수하기
-        </button>
+        <>
+          <button
+            type="button"
+            className="btn-welcome-primary welcome-pc__start welcome-pc__auth-submit welcome-pc__auth-submit--single"
+            onClick={handleStart}
+          >
+            계속하기
+          </button>
+          <button
+            type="button"
+            className="btn-welcome-primary welcome-pc__start welcome-pc__auth-submit welcome-pc__auth-submit--single welcome-pc__auth-logout--single"
+            onClick={() => void onLogout()}
+          >
+            로그아웃
+          </button>
+        </>
       )}
     </div>
   );
 
-  const heroCtaButton = isGuestLanding ? guestAuthButton : signedInStartButton;
+  const heroCtaButton = showSignedInLanding ? signedInStartButton : guestAuthButton;
 
   const foldCapText =
-    '실제 검수 화면 예시 · 사용자의 이해를 돕고자 재구성한 화면입니다 · 맞춤법과 일관성 검수는 각각 진행됩니다 · 크롬 브라우저 사용을 권장합니다';
+    '사용자의 이해를 돕고자 검수 과정을 재구성한 장면입니다 · 맞춤법과 일관성 검수는 각각 진행합니다 · 크롬 브라우저를 통한 인디자인 PDF 사용을 권장합니다';
 
   const landingPageBlock = (
-    <div className="welcome-pc__page">
+    <div
+      className={[
+        'welcome-pc__page',
+        showSignedInLanding ? 'welcome-pc__page--signed-in' : '',
+      ]
+        .filter(Boolean)
+        .join(' ')}
+    >
       <section className="welcome-pc__hero" aria-label="서비스 소개">
         <div className="welcome-pc__hero-left">
           {headerBlock}
           {perfBlock}
-          {heroStatusBlock}
-          <div
-            className="welcome-pc__hero-cta"
-            aria-label={isGuestLanding ? '시작하기' : '검수 시작'}
-          >
-            {heroCtaButton}
-            {authError && authReady && isGuestLanding ? (
-              <p className="welcome-pc__auth-error welcome-pc__auth-error--bar" role="alert">
-                {authError}
-              </p>
-            ) : null}
+          <div className="welcome-pc__guest-cta-match">
+            {heroStatusBlock}
+            <div
+              className="welcome-pc__hero-cta"
+              aria-label={showSignedInLanding ? '검수 계속' : '시작하기'}
+            >
+              {heroCtaButton}
+              {authError && authReady && !showSignedInLanding ? (
+                <p className="welcome-pc__auth-error welcome-pc__auth-error--bar" role="alert">
+                  {authError}
+                </p>
+              ) : null}
+            </div>
           </div>
         </div>
         <aside className="welcome-pc__hero-right" aria-label="검수냥 모모">
@@ -386,14 +405,13 @@ export default function WelcomePcScreen({
         <div className="welcome-pc__bottom-notes">
           <p className="welcome-pc__footer-line">
             <span className="welcome-pc__footer-part">
-              오픈베타 기간 동안 사용자의 이용 데이터를 익명으로 수집합니다.
+              오픈베타 기간 동안 사용자의 이용 데이터를 익명으로 수집합니다
             </span>
             <span className="welcome-pc__footer-sep" aria-hidden="true">
               |
             </span>
             <span className="welcome-pc__footer-part">
-              원고는 서버에 저장되지 않으며 수집한 이용 데이터는 기능 향상을 위해
-              사용됩니다.
+              원고는 서버에 저장되지 않으며 수집한 이용 데이터는 기능 향상을 위해 사용됩니다
             </span>
             <span className="welcome-pc__footer-sep" aria-hidden="true">
               |

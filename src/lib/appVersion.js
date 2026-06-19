@@ -56,7 +56,9 @@ export function buildDateLabel() {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
-  }).format(d);
+  })
+    .format(d)
+    .replace(/\.$/, '');
 }
 
 export function deployModeLabel() {
@@ -66,9 +68,9 @@ export function deployModeLabel() {
   return 'pages';
 }
 
-/** v0.7.0 · 날짜 — 시각·빌드ID·기능표식·모드 제외 (대문 푸터) */
+/** 0.72 · 날짜 — 시각·빌드ID·기능표식·모드 제외 (대문 푸터) */
 export function versionDateLabel() {
-  const parts = [`v${APP_VERSION}`];
+  const parts = [APP_VERSION];
   const date = buildDateLabel();
   if (date) parts.push(date);
   return parts.join(' · ');
