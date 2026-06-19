@@ -22,6 +22,7 @@ import './welcome-pc.css';
 
 const WELCOME_PC_BEFORE = `${import.meta.env.BASE_URL}welcome/before_after22-crop1.png`;
 const WELCOME_PC_AFTER = `${import.meta.env.BASE_URL}welcome/before_after22-crop2.png`;
+const WELCOME_PC_PDF_FULL = `${import.meta.env.BASE_URL}welcome/pdf-full.png`;
 const ENTER_MAIN_AFTER_GOOGLE_KEY = 'indiya-enter-main-after-google';
 
 const SPARKLE_PATH = 'M12 0l2.4 9.6L24 12l-9.6 2.4L12 24l-2.4-9.6L0 12l9.6-2.4z';
@@ -345,6 +346,20 @@ export default function WelcomePcScreen({
               decoding="async"
             />
           </figure>
+          <div className="welcome-pc__ba-bridge">
+            <div className="welcome-pc__ba-bridge-momo-wrap">
+              <img
+                className="welcome-pc__ba-bridge-img"
+                src={WELCOME_PC_PDF_FULL}
+                width={142}
+                height={142}
+                alt=""
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
+            <p className="welcome-pc__ba-bridge-title">모모가 살펴봅니다</p>
+          </div>
           <figure className="welcome-pc__ba-pane welcome-pc__ba-pane--after">
             <img
               className="welcome-pc__ba-img"
