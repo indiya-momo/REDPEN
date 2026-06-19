@@ -46,6 +46,16 @@
   --welcome-compare-caption-gap: calc(0.5rem * var(--welcome-scale));
   --welcome-compare-img-brightness: 0.9;
   --welcome-ba-img-scale: 0.9;
+  /* B안: ba·fold-cap 너비 + 액자 우측 끝선 (page 좌측 기준 scale 지점) */
+  --welcome-ba-track-width: calc(100% * var(--welcome-ba-img-scale));
+  --welcome-ba-split-gap: calc(10px * var(--welcome-scale));
+  --welcome-hero-frame-end-inset: calc((1 - var(--welcome-ba-img-scale)) * 100%);
+  --welcome-hero-frame-end-nudge-left: 65px; /* 액자를 왼쪽으로 (고정 px) */
+  --welcome-hero-frame-end-shift: 0rem; /* +값: 오른쪽, -값: 왼쪽 (inset·nudge에 추가) */
+  --welcome-hero-frame-end-offset: calc(
+    var(--welcome-hero-frame-end-inset) + var(--welcome-hero-frame-end-nudge-left) -
+      var(--welcome-hero-frame-end-shift)
+  );
   --welcome-compare-img-width: calc(65% * 0.9);
   --welcome-proto-frame-width: calc(20.75rem * var(--welcome-scale) * var(--welcome-ba-img-scale));
   --welcome-proto-cta-max: calc(20.625rem * var(--welcome-scale) * var(--welcome-ba-img-scale));
@@ -169,6 +179,27 @@
 
 /* B안: page · hero · ba · fold-cap */
 .welcome-pc__page {
+  --welcome-fold-cap-text-scale: 1.3;
+  --welcome-page-beta-cta-gap-ratio: 0.6;
+  --welcome-page-hero-ba-gap-ratio: 0.6;
+  --welcome-page-section-gap: clamp(
+    calc(0.765rem * var(--welcome-scale)),
+    1.26vw,
+    calc(1.0125rem * var(--welcome-scale))
+  );
+  --welcome-page-hero-gap: clamp(
+    calc(0.65rem * var(--welcome-scale)),
+    1vw,
+    calc(0.875rem * var(--welcome-scale))
+  );
+  --welcome-page-cta-btn-margin: calc(4px * var(--welcome-scale) * var(--welcome-ba-img-scale));
+  --welcome-page-beta-cta-gap-full: calc(
+    var(--welcome-page-hero-gap) + var(--welcome-page-cta-btn-margin)
+  );
+  --welcome-page-beta-cta-gap: calc(
+    var(--welcome-page-beta-cta-gap-full) * var(--welcome-page-beta-cta-gap-ratio)
+  );
+  --welcome-hero-bottom-align-nudge: -10px; /* 오픈베타·CTA 위로 (-값) */
   box-sizing: border-box;
   width: 100%;
   max-width: calc(77.5rem * var(--welcome-scale));
@@ -182,11 +213,7 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: clamp(
-    calc(0.765rem * var(--welcome-scale)),
-    1.26vw,
-    calc(1.0125rem * var(--welcome-scale))
-  );
+  gap: var(--welcome-page-section-gap);
   overflow: visible;
 }
 
@@ -230,7 +257,7 @@
 .welcome-pc__page .welcome-pc__brand-row {
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
+  align-items: flex-end;
   gap: 0 calc(0.8rem * var(--welcome-scale));
   width: 100%;
   margin: 0;
@@ -291,12 +318,16 @@
 }
 
 .welcome-pc__page .welcome-pc__desc-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   flex: none;
-  width: calc(1rem * var(--welcome-scale));
-  height: calc(1rem * var(--welcome-scale));
+  flex-shrink: 0;
+  width: calc(16px * var(--welcome-scale));
+  height: calc(16px * var(--welcome-scale));
   margin-right: 0;
   border-radius: 50%;
-  font-size: calc(0.62rem * var(--welcome-scale));
+  font-size: calc(10px * var(--welcome-scale));
   font-weight: 800;
   line-height: 1;
   color: #fff;
@@ -315,6 +346,20 @@
   color: #ecd6a6;
 }
 
+.welcome-pc__page .welcome-pc__perf-l2 .welcome-pc__perf-l2__gold {
+  color: #ffc94d;
+  -webkit-text-stroke: calc(4px * var(--welcome-scale) * var(--welcome-perf-l2-decor)) #5c3a0c;
+  paint-order: stroke fill;
+  text-shadow:
+    0 calc(2px * var(--welcome-perf-l2-decor)) 0 rgba(80, 50, 10, 0.55),
+    0 calc(6px * var(--welcome-perf-l2-decor)) calc(12px * var(--welcome-perf-l2-decor))
+      rgba(255, 180, 40, 0.45);
+}
+
+.welcome-pc__page .welcome-pc__hero {
+  width: 100%;
+}
+
 .welcome-pc__page .welcome-pc__perf-ribbon {
   align-items: flex-start;
   text-align: left;
@@ -325,6 +370,14 @@
 .welcome-pc__page .welcome-pc__perf-beta {
   justify-content: flex-start;
   width: 100%;
+}
+
+.welcome-pc__page .welcome-pc__hero-cta {
+  margin-top: calc(var(--welcome-page-beta-cta-gap) - var(--welcome-page-hero-gap));
+}
+
+.welcome-pc__page .welcome-pc__ba {
+  margin-top: calc(var(--welcome-page-section-gap) * (var(--welcome-page-hero-ba-gap-ratio) - 1));
 }
 
 .welcome-pc__page .welcome-pc__hero-signed-status {
@@ -375,9 +428,34 @@
 .welcome-pc__ba {
   flex: 0 0 auto;
   display: block;
-  width: calc(100% * var(--welcome-ba-img-scale));
-  max-width: calc(100% * var(--welcome-ba-img-scale));
+  width: var(--welcome-ba-track-width);
+  max-width: var(--welcome-ba-track-width);
   overflow: visible;
+}
+
+.welcome-pc__ba-split {
+  display: grid;
+  grid-template-columns: minmax(0, 999fr) minmax(0, 1056fr);
+  gap: var(--welcome-ba-split-gap);
+  align-items: end;
+  width: 100%;
+  filter: brightness(var(--welcome-compare-img-brightness));
+}
+
+.welcome-pc__ba-pane {
+  margin: 0;
+  padding: 0;
+  overflow: visible;
+  line-height: 0;
+}
+
+.welcome-pc__ba-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  border: none;
+  vertical-align: top;
 }
 
 .welcome-pc__ba-figure {
@@ -400,11 +478,12 @@
 .welcome-pc__fold-cap {
   margin: 0;
   flex-shrink: 0;
-  width: calc(100% * var(--welcome-ba-img-scale));
-  max-width: calc(100% * var(--welcome-ba-img-scale));
+  width: var(--welcome-ba-track-width);
+  max-width: var(--welcome-ba-track-width);
   font-family: var(--welcome-perf-font-info);
   font-size: calc(
-    0.68rem * var(--welcome-scale) * var(--welcome-showcase-caption-scale) * var(--welcome-ba-img-scale)
+    0.68rem * var(--welcome-scale) * var(--welcome-showcase-caption-scale) * var(--welcome-ba-img-scale) *
+      var(--welcome-fold-cap-text-scale, 1)
   );
   font-weight: 500;
   line-height: 1.45;
@@ -432,6 +511,7 @@
     width: min(100%, var(--welcome-proto-frame-width));
     margin-inline: auto;
     justify-self: center;
+    transform: none;
   }
 }
 
@@ -726,9 +806,31 @@
     -webkit-text-stroke: calc(5px * var(--welcome-scale) * var(--welcome-perf-l2-decor)) #34230f;
   }
 
+  .welcome-pc__page .welcome-pc__hero {
+    align-items: stretch;
+  }
+
+  .welcome-pc__page .welcome-pc__hero-left {
+    min-height: 100%;
+  }
+
+  .welcome-pc__page .welcome-pc__perf-beta {
+    margin-top: auto;
+    transform: translateY(var(--welcome-hero-bottom-align-nudge));
+  }
+
+  .welcome-pc__page .welcome-pc__hero-cta {
+    transform: translateY(var(--welcome-hero-bottom-align-nudge));
+  }
+
+  .welcome-pc__page .welcome-pc__hero-right .welcome-pc__guest-portrait-wrap {
+    margin-top: auto;
+  }
+
   .welcome-pc__page .welcome-pc__hero-right {
     justify-self: end;
-    margin-inline-end: calc(100% * (1 - var(--welcome-ba-img-scale)));
+    margin-inline-end: var(--welcome-hero-frame-end-offset);
+    min-height: 100%;
   }
 
   .welcome-pc__guest-stack-side .welcome-pc__guest-portrait-wrap,
@@ -1034,13 +1136,6 @@
     rgba(0, 0, 0, 0.42);
 }
 
-.welcome-pc__perf-l2 .welcome-pc__perf-underline::after {
-  left: calc(-2px * var(--welcome-scale) * var(--welcome-perf-l2-decor));
-  right: calc(-2px * var(--welcome-scale) * var(--welcome-perf-l2-decor));
-  bottom: calc(2px * var(--welcome-scale) * var(--welcome-perf-l2-decor));
-  height: calc(5px * var(--welcome-scale) * var(--welcome-perf-l2-decor));
-}
-
 .welcome-pc__perf-l2 .welcome-pc__perf-anc--left .welcome-pc__perf-spk--big {
   left: calc(-1.625rem * var(--welcome-scale) * var(--welcome-perf-l2-decor));
   top: calc(-0.5rem * var(--welcome-scale) * var(--welcome-perf-l2-decor));
@@ -1069,13 +1164,6 @@
   width: calc(0.8125rem * var(--welcome-scale) * var(--welcome-perf-l2-decor));
   color: #e9dcc2;
   opacity: 0.85;
-}
-
-.welcome-pc__perf-l2 .welcome-pc__perf-anc--cho .welcome-pc__perf-spk--orange {
-  right: calc(-0.44rem * var(--welcome-scale) * var(--welcome-perf-l2-decor));
-  top: calc(-0.375rem * var(--welcome-scale) * var(--welcome-perf-l2-decor));
-  width: calc(1.25rem * var(--welcome-scale) * var(--welcome-perf-l2-decor));
-  color: #f0a23c;
 }
 
 .welcome-pc__perf-spk {
@@ -2096,7 +2184,7 @@
   width: 100%;
   min-width: 0;
   max-width: var(--welcome-proto-cta-max);
-  margin-top: calc(4px * var(--welcome-scale) * var(--welcome-ba-img-scale));
+  margin-top: 0;
   padding:
     calc(0.875rem * var(--welcome-scale) * var(--welcome-ba-img-scale))
     calc(1.375rem * var(--welcome-scale) * var(--welcome-ba-img-scale));

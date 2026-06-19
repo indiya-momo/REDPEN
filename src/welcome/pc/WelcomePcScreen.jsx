@@ -20,7 +20,8 @@ import { useUserProfileSync } from '../../hooks/useUserProfileSync.js';
 import WelcomeProfileOnboarding from './WelcomeProfileOnboarding.jsx';
 import './welcome-pc.css';
 
-const WELCOME_PC_BEFORE_AFTER = `${import.meta.env.BASE_URL}welcome/before_after22.png`;
+const WELCOME_PC_BEFORE = `${import.meta.env.BASE_URL}welcome/before_after22-crop1.png`;
+const WELCOME_PC_AFTER = `${import.meta.env.BASE_URL}welcome/before_after22-crop2.png`;
 const ENTER_MAIN_AFTER_GOOGLE_KEY = 'indiya-enter-main-after-google';
 
 const SPARKLE_PATH = 'M12 0l2.4 9.6L24 12l-9.6 2.4L12 24l-2.4-9.6L0 12l9.6-2.4z';
@@ -231,15 +232,15 @@ export default function WelcomePcScreen({
           <span className="welcome-pc__perf-l1-num" aria-hidden>
             ❶
           </span>
-          맞춤법{'  '}
+          맞춤법 규칙{' '}
           <span className="welcome-pc__perf-l1-num" aria-hidden>
             ❷
           </span>
-          일관성 찾기{'  '}
+          {' '}일관성 확인{' '}
           <span className="welcome-pc__perf-l1-num" aria-hidden>
             ❸
           </span>
-          보조용언 + 본용언 표기
+          보조용언 + 본용언 표기 확인
         </p>
 
         <p className="welcome-pc__perf-l2">
@@ -248,18 +249,10 @@ export default function WelcomePcScreen({
             <WelcomePcSparkle className="welcome-pc__perf-spk welcome-pc__perf-spk--sm" />
             신국판
           </span>
-          {' '}300페이지 PDF{' '}
-          <span className="welcome-pc__perf-underline">
-            3
-            <span className="welcome-pc__perf-anc welcome-pc__perf-anc--cho">
-              초
-              <WelcomePcSparkle className="welcome-pc__perf-spk welcome-pc__perf-spk--orange" />
-            </span>
-            만에
-          </span>
-          {' '}
+          {' '}300페이지 PDF 검수에 단{' '}
+          <span className="welcome-pc__perf-l2__gold">3초</span>
           <span className="welcome-pc__perf-anc welcome-pc__perf-anc--right">
-            검수!
+            !
             <WelcomePcSparkle className="welcome-pc__perf-spk welcome-pc__perf-spk--big" />
             <WelcomePcSparkle className="welcome-pc__perf-spk welcome-pc__perf-spk--sm" />
           </span>
@@ -295,14 +288,6 @@ export default function WelcomePcScreen({
   const foldCapText =
     '실제 검수 화면 예시 · 사용자의 이해를 돕고자 재구성한 화면입니다 · 맞춤법과 일관성 검수는 각각 진행됩니다 · 크롬 브라우저 사용을 권장합니다';
 
-  const beforeAfterImgProps = {
-    src: WELCOME_PC_BEFORE_AFTER,
-    width: 2077,
-    height: 736,
-    loading: 'lazy',
-    decoding: 'async',
-  };
-
   const landingPageBlock = (
     <div className="welcome-pc__page">
       <section className="welcome-pc__hero" aria-label="서비스 소개">
@@ -329,13 +314,30 @@ export default function WelcomePcScreen({
       </section>
 
       <section className="welcome-pc__ba" aria-label="검수 전·후 예시">
-        <figure className="welcome-pc__ba-figure">
-          <img
-            className="welcome-pc__ba-img welcome-pc__ba-img--full"
-            alt="검수 전·후 예시 — 왼쪽 원고, 오른쪽 맞춤법·일관성·본용언+보조용언 표기 하이라이트"
-            {...beforeAfterImgProps}
-          />
-        </figure>
+        <div className="welcome-pc__ba-split">
+          <figure className="welcome-pc__ba-pane welcome-pc__ba-pane--before">
+            <img
+              className="welcome-pc__ba-img"
+              src={WELCOME_PC_BEFORE}
+              width={999}
+              height={736}
+              alt="검수 전 예시 — 원고"
+              loading="lazy"
+              decoding="async"
+            />
+          </figure>
+          <figure className="welcome-pc__ba-pane welcome-pc__ba-pane--after">
+            <img
+              className="welcome-pc__ba-img"
+              src={WELCOME_PC_AFTER}
+              width={1056}
+              height={726}
+              alt="검수 후 예시 — 맞춤법·일관성·본용언+보조용언 표기 하이라이트"
+              loading="lazy"
+              decoding="async"
+            />
+          </figure>
+        </div>
       </section>
 
       <p className="welcome-pc__fold-cap">{foldCapText}</p>
