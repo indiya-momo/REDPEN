@@ -20,7 +20,7 @@ import { useUserProfileSync } from '../../hooks/useUserProfileSync.js';
 import WelcomeProfileOnboarding from './WelcomeProfileOnboarding.jsx';
 import './welcome-pc.css';
 
-const WELCOME_PC_BEFORE_AFTER = `${import.meta.env.BASE_URL}welcome/before_after.png`;
+const WELCOME_PC_BEFORE_AFTER = `${import.meta.env.BASE_URL}welcome/before_after22.png`;
 const ENTER_MAIN_AFTER_GOOGLE_KEY = 'indiya-enter-main-after-google';
 
 const SPARKLE_PATH = 'M12 0l2.4 9.6L24 12l-9.6 2.4L12 24l-2.4-9.6L0 12l9.6-2.4z';
@@ -140,20 +140,28 @@ export default function WelcomePcScreen({
 
   const headerBlock = (
     <header className="welcome-pc__header">
-      <h1 className="welcome-pc__title-row">
-        <span className="welcome-pc__title-main">인디야</span>
-        <span className="welcome-pc__title-sub">검수냥 모모 이야기</span>
-      </h1>
-      {!needsWelcomeMessage ? (
-        <p className="welcome-pc__privacy-starline">
-          <span className="welcome-pc__privacy-starline__line">
-            🟢선택한 맞춤법 · 일관성 규칙에 따라 PDF 원고를 검수합니다
-          </span>
-          <span className="welcome-pc__privacy-starline__line">
-            ⛔AI 자동 수정은 하지 않으며, 원고는 서버에 저장되지 않습니다
-          </span>
-        </p>
-      ) : null}
+      <div className="welcome-pc__brand-block">
+        <h1 className="welcome-pc__brand-row">
+          <span className="welcome-pc__title-main">인디야</span>
+          <span className="welcome-pc__title-sub">검수냥 모모 이야기</span>
+        </h1>
+        {!needsWelcomeMessage ? (
+          <div className="welcome-pc__desc">
+            <p className="welcome-pc__desc-line">
+              <span className="welcome-pc__desc-icon welcome-pc__desc-icon--ok" aria-hidden>
+                ✓
+              </span>
+              선택한 맞춤법 · 일관성 규칙에 따라 PDF 원고를 검수합니다
+            </p>
+            <p className="welcome-pc__desc-line">
+              <span className="welcome-pc__desc-icon welcome-pc__desc-icon--no" aria-hidden>
+                −
+              </span>
+              AI 자동 수정은 하지 않으며, 원고는 서버에 저장되지 않습니다
+            </p>
+          </div>
+        ) : null}
+      </div>
     </header>
   );
 
@@ -220,12 +228,41 @@ export default function WelcomePcScreen({
     <div className="welcome-pc__cta-group welcome-pc__cta-group--in-top">
       <div className="welcome-pc__perf-ribbon">
         <p className="welcome-pc__perf-l1">
-          맞춤법 · 일관성 찾기 · 보조용언 + 본용언
+          <span className="welcome-pc__perf-l1-num" aria-hidden>
+            ❶
+          </span>
+          맞춤법{'  '}
+          <span className="welcome-pc__perf-l1-num" aria-hidden>
+            ❷
+          </span>
+          일관성 찾기{'  '}
+          <span className="welcome-pc__perf-l1-num" aria-hidden>
+            ❸
+          </span>
+          보조용언 + 본용언 표기
         </p>
 
         <p className="welcome-pc__perf-l2">
-          신국판 300페이지 PDF{' '}
-          <span className="welcome-pc__perf-l2__gold">3초만</span>에 검수!
+          <span className="welcome-pc__perf-anc welcome-pc__perf-anc--left">
+            <WelcomePcSparkle className="welcome-pc__perf-spk welcome-pc__perf-spk--big" />
+            <WelcomePcSparkle className="welcome-pc__perf-spk welcome-pc__perf-spk--sm" />
+            신국판
+          </span>
+          {' '}300페이지 PDF{' '}
+          <span className="welcome-pc__perf-underline">
+            3
+            <span className="welcome-pc__perf-anc welcome-pc__perf-anc--cho">
+              초
+              <WelcomePcSparkle className="welcome-pc__perf-spk welcome-pc__perf-spk--orange" />
+            </span>
+            만에
+          </span>
+          {' '}
+          <span className="welcome-pc__perf-anc welcome-pc__perf-anc--right">
+            검수!
+            <WelcomePcSparkle className="welcome-pc__perf-spk welcome-pc__perf-spk--big" />
+            <WelcomePcSparkle className="welcome-pc__perf-spk welcome-pc__perf-spk--sm" />
+          </span>
         </p>
       </div>
     </div>
@@ -255,58 +292,53 @@ export default function WelcomePcScreen({
 
   const heroCtaButton = isGuestLanding ? guestAuthButton : signedInStartButton;
 
-  const heroBlock = (
-    <div className="welcome-pc__guest-hero welcome-pc__guest-hero--layout-b">
-      <div className="welcome-pc__guest-hero-copy">
-        {perfBlock}
-        <div className="welcome-pc__guest-cta-match">
+  const foldCapText =
+    '실제 검수 화면 예시 · 사용자의 이해를 돕고자 재구성한 화면입니다 · 맞춤법과 일관성 검수는 각각 진행됩니다 · 크롬 브라우저 사용을 권장합니다';
+
+  const beforeAfterImgProps = {
+    src: WELCOME_PC_BEFORE_AFTER,
+    width: 2077,
+    height: 736,
+    loading: 'lazy',
+    decoding: 'async',
+  };
+
+  const landingPageBlock = (
+    <div className="welcome-pc__page">
+      <section className="welcome-pc__hero" aria-label="서비스 소개">
+        <div className="welcome-pc__hero-left">
+          {headerBlock}
+          {perfBlock}
           {heroStatusBlock}
           <div
-            className="welcome-pc__cta-top"
+            className="welcome-pc__hero-cta"
             aria-label={isGuestLanding ? '시작하기' : '검수 시작'}
           >
             {heroCtaButton}
+            {authError && authReady && isGuestLanding ? (
+              <p className="welcome-pc__auth-error welcome-pc__auth-error--bar" role="alert">
+                {authError}
+              </p>
+            ) : null}
           </div>
-          {authError && authReady && isGuestLanding ? (
-            <p className="welcome-pc__auth-error welcome-pc__auth-error--bar" role="alert">
-              {authError}
-            </p>
-          ) : null}
         </div>
-      </div>
-      <aside className="welcome-pc__guest-hero-side" aria-label="검수냥 모모">
-        <p className="welcome-pc__guest-hero-bubble">현직 편집자가 만들었다냥🐾</p>
-        <div className="welcome-pc__guest-portrait-wrap">{portraitBlock}</div>
-      </aside>
-    </div>
-  );
+        <aside className="welcome-pc__hero-right" aria-label="검수냥 모모">
+          <p className="welcome-pc__guest-hero-bubble">현직 편집자가 만들었다냥🐾</p>
+          <div className="welcome-pc__guest-portrait-wrap">{portraitBlock}</div>
+        </aside>
+      </section>
 
-  const compareShowcaseBlock = (
-    <>
-      <figure className="welcome-pc__compare-figure">
-        <img
-          className="welcome-pc__before-after-img"
-          src={WELCOME_PC_BEFORE_AFTER}
-          alt="검수 전·후 예시 — 왼쪽 원고, 오른쪽 맞춤법·일관성·본용언+보조용언 표기 하이라이트"
-          width={1698}
-          height={746}
-          loading="lazy"
-          decoding="async"
-        />
-      </figure>
-      <p className="welcome-pc__showcase-caption">
-        사용자의 이해를 돕고자 재구성한 화면입니다 · 맞춤법과 일관성 검수는 각각 진행됩니다 ·
-        크롬 브라우저 사용을 권장합니다
-      </p>
-    </>
-  );
+      <section className="welcome-pc__ba" aria-label="검수 전·후 예시">
+        <figure className="welcome-pc__ba-figure">
+          <img
+            className="welcome-pc__ba-img welcome-pc__ba-img--full"
+            alt="검수 전·후 예시 — 왼쪽 원고, 오른쪽 맞춤법·일관성·본용언+보조용언 표기 하이라이트"
+            {...beforeAfterImgProps}
+          />
+        </figure>
+      </section>
 
-  const guestAnchorBlock = (
-    <div className="welcome-pc__guest-anchor">
-      {heroBlock}
-      <div className="welcome-pc__guest-anchor-compare welcome-pc__compare-body welcome-pc__compare-body--guest">
-        {compareShowcaseBlock}
-      </div>
+      <p className="welcome-pc__fold-cap">{foldCapText}</p>
     </div>
   );
 
@@ -327,18 +359,12 @@ export default function WelcomePcScreen({
             .filter(Boolean)
             .join(' ')}
         >
-          {headerBlock}
-          {isGuestLanding ? guestAnchorBlock : isHeroLanding ? heroBlock : null}
+          {!isHeroLanding ? headerBlock : null}
+          {isHeroLanding ? landingPageBlock : null}
         </div>
 
-        {needsWelcomeMessage || (isHeroLanding && !isGuestLanding) ? (
+        {needsWelcomeMessage ? (
           <div className="welcome-pc__stage">
-            <section className="welcome-pc__showcase" aria-label="검수 예시">
-              <div className="welcome-pc__compare-body welcome-pc__compare-body--guest">
-                {isHeroLanding && !isGuestLanding ? compareShowcaseBlock : null}
-              </div>
-            </section>
-
             {needsWelcomeMessage ? (
               <aside className={stageRailClassName}>
                 <WelcomeProfileOnboarding
