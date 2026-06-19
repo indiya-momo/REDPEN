@@ -60,8 +60,20 @@
   --welcome-ba-bridge-scale: 0.9;
   --welcome-ba-bridge-size: calc(5.625rem * var(--welcome-scale) * var(--welcome-ba-bridge-scale));
   --welcome-ba-bridge-disc: calc(var(--welcome-ba-bridge-size) * 1.155);
-  --welcome-ba-bridge-arc-text-size: calc(0.9rem * 0.8 * 1.1 * var(--welcome-scale));
-  --welcome-ba-bridge-arc-gap: calc(var(--welcome-ba-bridge-arc-text-size) * 0.405);
+  /* SVG viewBox 100 — 원 r=50, 글 r=53, font 6.8 (WelcomePcScreen.jsx 상수와 맞출 것) */
+  --welcome-ba-bridge-svg-r-disc: 50;
+  --welcome-ba-bridge-svg-r-text: 68;
+  --welcome-ba-bridge-svg-font: 10.66;
+  --welcome-ba-bridge-svg-text-dy: 8.4;
+  --welcome-ba-bridge-arc-span: calc(
+    var(--welcome-ba-bridge-disc) * var(--welcome-ba-bridge-svg-r-text) /
+      var(--welcome-ba-bridge-svg-r-disc)
+  );
+  --welcome-ba-bridge-arc-overhang: calc(
+    var(--welcome-ba-bridge-disc) *
+      (var(--welcome-ba-bridge-svg-r-text) - var(--welcome-ba-bridge-svg-r-disc) +
+        var(--welcome-ba-bridge-svg-font) + var(--welcome-ba-bridge-svg-text-dy)) / 100
+  );
   --welcome-hero-frame-end-inset: calc((1 - var(--welcome-ba-img-scale)) * 100%);
   --welcome-hero-frame-end-nudge-left: 65px; /* 액자를 왼쪽으로 (고정 px) */
   --welcome-hero-frame-end-shift: 0rem; /* +값: 오른쪽, -값: 왼쪽 (inset·nudge에 추가) */
@@ -546,13 +558,14 @@
 
 .welcome-pc__ba-bridge {
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
   place-self: center;
   flex-shrink: 0;
-  width: fit-content;
+  width: var(--welcome-ba-bridge-arc-span);
+  padding-top: var(--welcome-ba-bridge-arc-overhang);
   line-height: normal;
+  overflow: visible;
 }
 
 .welcome-pc__ba-bridge-momo-wrap {
@@ -562,47 +575,33 @@
   justify-content: center;
   width: var(--welcome-ba-bridge-disc);
   height: var(--welcome-ba-bridge-disc);
-  margin-top: var(--welcome-ba-bridge-arc-gap);
+  margin-inline: auto;
   line-height: 0;
   overflow: visible;
 }
 
-.welcome-pc__ba-bridge-momo-wrap::before {
-  content: '';
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  box-sizing: border-box;
-  width: var(--welcome-ba-bridge-disc);
-  height: var(--welcome-ba-bridge-disc);
-  min-width: var(--welcome-ba-bridge-disc);
-  min-height: var(--welcome-ba-bridge-disc);
-  transform: translate(-50%, -50%);
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.95);
-  z-index: 0;
-  pointer-events: none;
+.welcome-pc__ba-bridge-disc-fill {
+  fill: rgba(255, 255, 255, 0.95);
 }
 
 .welcome-pc__ba-bridge-arc {
   position: absolute;
   left: 50%;
   top: 0;
-  width: calc(var(--welcome-ba-bridge-disc) * 1.38);
-  height: auto;
-  aspect-ratio: 160 / 36;
-  transform: translate(-50%, -100%);
+  z-index: 0;
+  display: block;
+  width: var(--welcome-ba-bridge-arc-span);
+  height: var(--welcome-ba-bridge-disc);
+  transform: translateX(-50%);
   overflow: visible;
-  z-index: 3;
   pointer-events: none;
 }
 
 .welcome-pc__ba-bridge-arc-text {
   fill: #ffffff;
-  font-family: var(--font-family-title);
-  font-size: var(--welcome-ba-bridge-arc-text-size);
-  font-weight: normal;
-  letter-spacing: 0.04em;
+  font-family: var(--welcome-perf-font-info);
+  font-weight: 500;
+  letter-spacing: 0.01em;
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.45));
 }
 

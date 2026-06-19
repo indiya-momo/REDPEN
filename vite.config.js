@@ -74,10 +74,9 @@ export default defineConfig(({ mode }) => {
   },
   server: {
     // localhost(IPv6 ::1) + 127.0.0.1 + LAN — Windows 연결 거부 방지
-    // 워크트리별 구분: .env.local 에 DEV_PORT=5180 등 (gitignore *.local)
     host: true,
     port: devPort,
-    strictPort: Boolean(buildEnv.DEV_PORT),
+    strictPort: true,
     open: '/',
   },
   preview: {

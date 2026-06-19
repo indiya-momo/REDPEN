@@ -11,4 +11,5 @@ alwaysApply: true
 - `git commit`, `git push`, `git worktree add/remove/move`는 사용자가 명시적으로 요청할 때만 한다.
 - `.env`, secrets, API 키는 커밋하지 않는다.
 - worktree 폴더 rename은 Explorer F2 금지 → `git worktree move` 안내.
-- CSS/UI 확인은 `npm run dev`(5173) 권장. `preview`는 `npm run build` 후 dist 기준.
+- CSS/UI 확인은 `npm run dev` → **`http://127.0.0.1:5173` 고정**. 에이전트 브라우저도 5173만. `DEV_PORT`는 이 worktree에서 쓰지 않음(7777 등 다른 용도 예약). `preview`는 `npm run build` 후 dist 기준.
+- 사용자 요청 없이 `.env.local`·`vite.config.js`를 바꾸지 않는다 — Vite **전체 재시작**되면 열어 둔 브라우저가 잠깐 끊긴다.
