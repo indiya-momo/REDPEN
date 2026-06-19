@@ -59,6 +59,8 @@
   --welcome-ba-split-gap: calc(16px * var(--welcome-scale));
   --welcome-ba-bridge-scale: 0.9;
   --welcome-ba-bridge-size: calc(5.625rem * var(--welcome-scale) * var(--welcome-ba-bridge-scale));
+  --welcome-ba-bridge-disc: calc(var(--welcome-ba-bridge-size) * 1.155);
+  --welcome-ba-bridge-arc-text-size: calc(0.9rem * 0.8 * var(--welcome-scale));
   --welcome-hero-frame-end-inset: calc((1 - var(--welcome-ba-img-scale)) * 100%);
   --welcome-hero-frame-end-nudge-left: 65px; /* 액자를 왼쪽으로 (고정 px) */
   --welcome-hero-frame-end-shift: 0rem; /* +값: 오른쪽, -값: 왼쪽 (inset·nudge에 추가) */
@@ -547,7 +549,6 @@
   align-items: center;
   justify-content: center;
   place-self: center;
-  gap: calc(1.1rem * var(--welcome-scale));
   flex-shrink: 0;
   width: fit-content;
   line-height: normal;
@@ -558,6 +559,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  width: var(--welcome-ba-bridge-disc);
+  height: var(--welcome-ba-bridge-disc);
   line-height: 0;
 }
 
@@ -567,15 +570,33 @@
   left: 50%;
   top: 50%;
   box-sizing: border-box;
-  width: calc(var(--welcome-ba-bridge-size) * 1.155);
-  height: calc(var(--welcome-ba-bridge-size) * 1.155);
-  min-width: calc(var(--welcome-ba-bridge-size) * 1.155);
-  min-height: calc(var(--welcome-ba-bridge-size) * 1.155);
+  width: var(--welcome-ba-bridge-disc);
+  height: var(--welcome-ba-bridge-disc);
+  min-width: var(--welcome-ba-bridge-disc);
+  min-height: var(--welcome-ba-bridge-disc);
   transform: translate(-50%, -50%);
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.95);
   z-index: 0;
   pointer-events: none;
+}
+
+.welcome-pc__ba-bridge-arc {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.welcome-pc__ba-bridge-arc-text {
+  fill: #ffffff;
+  font-family: var(--font-family-title);
+  font-size: var(--welcome-ba-bridge-arc-text-size);
+  font-weight: normal;
+  letter-spacing: 0.02em;
 }
 
 .welcome-pc__ba-bridge-img {
@@ -586,18 +607,6 @@
   height: auto;
   max-width: var(--welcome-ba-bridge-size);
   margin: 0;
-}
-
-.welcome-pc__ba-bridge-title {
-  margin: 0;
-  padding-top: calc(0.4rem * var(--welcome-scale));
-  font-family: var(--font-family-title);
-  font-size: calc(0.9rem * 0.8 * var(--welcome-scale));
-  font-weight: normal;
-  line-height: 1.35;
-  text-align: center;
-  white-space: nowrap;
-  color: #ffffff;
 }
 
 .welcome-pc__ba-pane {
