@@ -60,7 +60,8 @@
   --welcome-ba-bridge-scale: 0.9;
   --welcome-ba-bridge-size: calc(5.625rem * var(--welcome-scale) * var(--welcome-ba-bridge-scale));
   --welcome-ba-bridge-disc: calc(var(--welcome-ba-bridge-size) * 1.155);
-  --welcome-ba-bridge-arc-text-size: calc(0.9rem * 0.8 * var(--welcome-scale));
+  --welcome-ba-bridge-arc-text-size: calc(0.9rem * 0.8 * 1.1 * var(--welcome-scale));
+  --welcome-ba-bridge-arc-gap: calc(var(--welcome-ba-bridge-arc-text-size) * 0.405);
   --welcome-hero-frame-end-inset: calc((1 - var(--welcome-ba-img-scale)) * 100%);
   --welcome-hero-frame-end-nudge-left: 65px; /* 액자를 왼쪽으로 (고정 px) */
   --welcome-hero-frame-end-shift: 0rem; /* +값: 오른쪽, -값: 왼쪽 (inset·nudge에 추가) */
@@ -561,7 +562,9 @@
   justify-content: center;
   width: var(--welcome-ba-bridge-disc);
   height: var(--welcome-ba-bridge-disc);
+  margin-top: var(--welcome-ba-bridge-arc-gap);
   line-height: 0;
+  overflow: visible;
 }
 
 .welcome-pc__ba-bridge-momo-wrap::before {
@@ -583,11 +586,14 @@
 
 .welcome-pc__ba-bridge-arc {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+  left: 50%;
+  top: 0;
+  width: calc(var(--welcome-ba-bridge-disc) * 1.38);
+  height: auto;
+  aspect-ratio: 160 / 36;
+  transform: translate(-50%, -100%);
   overflow: visible;
-  z-index: 2;
+  z-index: 3;
   pointer-events: none;
 }
 
@@ -596,7 +602,8 @@
   font-family: var(--font-family-title);
   font-size: var(--welcome-ba-bridge-arc-text-size);
   font-weight: normal;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.04em;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.45));
 }
 
 .welcome-pc__ba-bridge-img {

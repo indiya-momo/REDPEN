@@ -24,7 +24,9 @@ const WELCOME_PC_BEFORE = `${import.meta.env.BASE_URL}welcome/before_after22-cro
 const WELCOME_PC_AFTER = `${import.meta.env.BASE_URL}welcome/before_after22-crop2.png`;
 const WELCOME_PC_PDF_FULL = `${import.meta.env.BASE_URL}welcome/pdf-full.png`;
 const BA_BRIDGE_ARC_PATH_ID = 'welcome-pc-ba-bridge-arc';
-const BA_BRIDGE_ARC_LABEL = '모모가 살펴봅니다';
+const BA_BRIDGE_ARC_LABEL = '모모가 빨간펜을 들고 살펴봅니다';
+/** 원 상단 바깥 곡선 — viewBox 상단에 arc만 두어 어두운 배경 위에 흰 글씨 */
+const BA_BRIDGE_ARC_PATH = 'M 6 30 A 74 74 0 0 1 154 30';
 const ENTER_MAIN_AFTER_GOOGLE_KEY = 'indiya-enter-main-after-google';
 
 const SPARKLE_PATH = 'M12 0l2.4 9.6L24 12l-9.6 2.4L12 24l-2.4-9.6L0 12l9.6-2.4z';
@@ -202,7 +204,7 @@ export default function WelcomePcScreen({
           onClick={handleGoogleAuth}
           disabled={authPending}
         >
-          {authPending ? '구글 로그인 연결 중…' : '계속하기'}
+          {authPending ? '구글 로그인 연결 중…' : '구글로 시작하기'}
         </button>
       )}
     </div>
@@ -352,18 +354,20 @@ export default function WelcomePcScreen({
             <div className="welcome-pc__ba-bridge-momo-wrap">
               <svg
                 className="welcome-pc__ba-bridge-arc"
-                viewBox="0 0 160 160"
+                viewBox="0 0 160 36"
                 aria-hidden="true"
                 focusable="false"
               >
                 <defs>
-                  <path
-                    id={BA_BRIDGE_ARC_PATH_ID}
-                    d="M 8 84 A 72 72 0 0 1 152 84"
-                  />
+                  <path id={BA_BRIDGE_ARC_PATH_ID} d={BA_BRIDGE_ARC_PATH} />
                 </defs>
                 <text className="welcome-pc__ba-bridge-arc-text">
-                  <textPath href={`#${BA_BRIDGE_ARC_PATH_ID}`} startOffset="50%" textAnchor="middle">
+                  <textPath
+                    href={`#${BA_BRIDGE_ARC_PATH_ID}`}
+                    xlinkHref={`#${BA_BRIDGE_ARC_PATH_ID}`}
+                    startOffset="50%"
+                    textAnchor="middle"
+                  >
                     {BA_BRIDGE_ARC_LABEL}
                   </textPath>
                 </text>
