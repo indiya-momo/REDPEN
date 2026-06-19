@@ -227,7 +227,7 @@
     "find": "빨강색",
     "replace": "빨간색",
     "enabled": true,
-    "tip": "'빨간색'의 잘못된 표현, 빨강(○)",
+    "tip": "'빨간색'의 잘못된 표현, 참고: 빨강,빨간빛,빨간불(○),",
     "dividerGroup": "B",
     "overlayReplace": "→빨간색"
   },
@@ -235,7 +235,7 @@
     "find": "파랑색",
     "replace": "파란색",
     "enabled": true,
-    "tip": "'파란색'의 잘못된 표현, 파랑(○)",
+    "tip": "'파란색'의 잘못된 표현, 참고: 파랑, 파란빛,푸른빛,파란불(○)",
     "dividerGroup": "B",
     "overlayReplace": "→파란색"
   },
@@ -243,7 +243,7 @@
     "find": "노랑색",
     "replace": "노란색",
     "enabled": true,
-    "tip": "'노란색'의 잘못된 표현, 노랑(○)",
+    "tip": "'노란색'의 잘못된 표현, 참고: 노랑, 노란빛,노란불(○)",
     "dividerGroup": "B",
     "overlayReplace": "→노란색"
   },
@@ -252,21 +252,24 @@
     "replace": "설레",
     "enabled": true,
     "tip": "자동사에 불필요한 사동 접미사 '-이'삽입",
-    "dividerGroup": "D"
+    "dividerGroup": "D",
+    "overlayReplace": "→설레"
   },
   {
     "find": "되뇌이",
     "replace": "되뇌",
     "enabled": true,
     "tip": "자동사에 불필요한 사동 접미사 '-이'삽입",
-    "dividerGroup": "D"
+    "dividerGroup": "D",
+    "overlayReplace": "→되뇌"
   },
   {
     "find": "헤메이",
     "replace": "헤메",
     "enabled": true,
     "tip": "자동사에 불필요한 사동 접미사 '-이'삽입",
-    "dividerGroup": "D"
+    "dividerGroup": "D",
+    "overlayReplace": "→헤메"
   },
   {
     "find": "갯수",
@@ -354,14 +357,15 @@
     "enabled": true,
     "tip": "'어떡해'는 감정을 표현하는 '어떻게 해'의 줄임말, '어떻게'는 '어떠하게' 부사어",
     "dividerGroup": "H",
-    "overlayReplace": "→"
+    "overlayReplace": "→어떡해 또는 어떻게"
   },
   {
     "find": "그을은",
     "replace": "그은 또는 그을린",
     "enabled": true,
     "tip": "'그을다'의 피동사, 사동사는 '그을리다', '그을다'의 탈락형은 '그은'",
-    "overlayReplace": "→"
+    "dividerGroup": "H",
+    "overlayReplace": "→그은 또는 그을린"
   },
   {
     "find": "성장율",

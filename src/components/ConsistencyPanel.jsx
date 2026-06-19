@@ -275,14 +275,11 @@ export default function ConsistencyPanel({
           <p className="hint consistency-hint-block">
             한글 · 영문 대소문자 등을 찾습니다. 여러 항목은 사이에 , 를 넣어 한 번에 입력하세요
             <br />
-            ('조선시대' 일관성 확인 →{' '}
+            예: 원고 내 '조선시대' 일관성 확인 →{' '}
             <span className="consistency-hint-example">
               '조선˅시대,조선시대'
             </span>{' '}
-            <span className="consistency-hint-example">'Riftan,riftan'</span> →{' '}
-            <span className="consistency-hint-example">'Riftan'</span> 일관화)
-            <br />
-            ✅색인 작업에도 유용합니다
+            입력 후 검수하세요
           </p>
           <ConsistencyRegisterField
             value={literalInput}
@@ -315,7 +312,13 @@ export default function ConsistencyPanel({
             </p>
             <div className="consistency-subsection__hints-area">
               <p className="hint consistency-hint-block">
-                @을 포함한 항목을 모두 찾습니다('@시대' → <span className="consistency-hint-example">'조선시대,고려시대,신라시대'...</span>)
+                @을 포함한 항목을 모두 찾습니다
+                <br />
+                예: <span className="consistency-hint-example">'@시대'</span> 검색→{' '}
+                <span className="consistency-hint-example">
+                  '조선시대, 고려시대, 신라시대'
+                </span>{' '}
+                표시
               </p>
             </div>
             <ConsistencyRegisterField
@@ -349,7 +352,11 @@ export default function ConsistencyPanel({
               검수 제외 단어
             </p>
             <div className="consistency-subsection__hints-area">
-              <p className="hint">등록한 단어는 찾지 않습니다 (예: 소녀시대)</p>
+              <p className="hint">
+                등록한 단어는 찾지 않습니다
+                <br />
+                예: <span className="consistency-hint-example">'소녀시대'</span>
+              </p>
             </div>
             <ConsistencyRegisterField
               value={globalExcludeInput}

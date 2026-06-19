@@ -260,16 +260,24 @@
   overflow: auto;
 }
 
+.mypage__overview {
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+  width: 100%;
+  max-width: 98rem;
+}
+
 .mypage__overview-layout {
   display: grid;
   grid-template-columns: minmax(0, 52rem) minmax(31rem, 44rem);
   gap: clamp(1.25rem, 2.5vw, 2.25rem);
   align-items: start;
   width: 100%;
-  max-width: 98rem;
 }
 
-.mypage__overview-layout .mypage__main-inner {
+.mypage__overview-layout .mypage__main-inner,
+.mypage__overview-layout .mypage__overview-primary {
   max-width: none;
 }
 
@@ -877,9 +885,12 @@
 }
 
 @media (max-width: 1020px) {
+  .mypage__overview {
+    max-width: 52rem;
+  }
+
   .mypage__overview-layout {
     grid-template-columns: 1fr;
-    max-width: 52rem;
   }
 
   .mypage__faq-card {

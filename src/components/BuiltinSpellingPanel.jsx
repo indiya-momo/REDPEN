@@ -193,7 +193,7 @@ export default function BuiltinSpellingPanel({
 
   return (
     <details className="builtin-spelling-details">
-      <summary className="builtin-spelling-summary">
+      <summary className="builtin-spelling-summary panel-criteria-heading">
         <DetailsChevron />
         <label
           className="builtin-spelling-select-all"

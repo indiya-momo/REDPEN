@@ -296,8 +296,6 @@ function OverviewDashboard({
   earnedCount,
   totalLabel,
   loginAtMs,
-  quota,
-  authUid = '',
 }) {
   const recentUsage = useMemo(
     () => getRecentUsageEntries(loginAtMs),
@@ -305,12 +303,7 @@ function OverviewDashboard({
   );
 
   return (
-    <div className="mypage__main-inner">
-      <div className="mypage__member-head">
-        <MemberBenefitTierBanner quota={quota} authUid={authUid} />
-        <MyBenefitsSection quota={quota} />
-      </div>
-
+    <div className="mypage__main-inner mypage__overview-primary">
       <section className="mypage__card" aria-labelledby="mypage-usage-title">
         <div className="mypage__card-head">
           <h2 id="mypage-usage-title" className="mypage__card-title">
@@ -621,16 +614,20 @@ export default function MyPageWindowScreen({ authSession, authReady }) {
 
       <main className="mypage__main">
         {activeNav === 'overview' ? (
-          <div className="mypage__overview-layout">
-            <OverviewDashboard
-              badges={badges}
-              earnedCount={badgeStats.earnedCount}
-              totalLabel={badgeStats.totalLabel}
-              loginAtMs={loginAtMs}
-              quota={quota}
-              authUid={authSession.uid}
-            />
-            <MyPageFaq />
+          <div className="mypage__overview">
+            <div className="mypage__member-head">
+              <MemberBenefitTierBanner quota={quota} authUid={authSession.uid} />
+              <MyBenefitsSection quota={quota} />
+            </div>
+            <div className="mypage__overview-layout">
+              <OverviewDashboard
+                badges={badges}
+                earnedCount={badgeStats.earnedCount}
+                totalLabel={badgeStats.totalLabel}
+                loginAtMs={loginAtMs}
+              />
+              <MyPageFaq />
+            </div>
           </div>
         ) : activeNav === 'profile' ? (
           <ProfileSection

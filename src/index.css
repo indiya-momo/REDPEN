@@ -568,6 +568,9 @@ button {
 .caution-checklist-summary-title {
   flex: 1;
   min-width: 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
 .criteria-summary-note {
@@ -585,15 +588,15 @@ button {
 
 .details-chevron {
   flex-shrink: 0;
-  display: inline-block;
+  display: block;
   width: 0.42em;
   height: 0.42em;
-  margin-right: 5px;
+  margin: 0;
   border-right: 2px solid currentColor;
   border-bottom: 2px solid currentColor;
   transform: rotate(-45deg);
   transition: transform 0.12s ease;
-  vertical-align: middle;
+  align-self: center;
 }
 
 details[open] > summary .details-chevron {
@@ -735,7 +738,7 @@ details[open] > summary .details-chevron {
 
 .caution-chip {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 5px;
   width: 100%;
   padding: 5px 0;
@@ -749,7 +752,7 @@ details[open] > summary .details-chevron {
 .caution-chip > input[type='checkbox'] {
   width: 15px;
   height: 15px;
-  margin: 2px 0 0;
+  margin: 0;
   flex: 0 0 auto;
 }
 
@@ -801,8 +804,6 @@ details[open] > summary .details-chevron {
 
 .builtin-spelling-summary {
   gap: 8px;
-  font-size: 1.05rem; /* 일관성 .field-label 과 동일 */
-  font-weight: 600;
   color: var(--accent-spelling);
   cursor: pointer;
   list-style: none;
@@ -828,6 +829,9 @@ details[open] > summary .details-chevron {
 .builtin-spelling-summary-title {
   flex: 1;
   min-width: 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
 
@@ -3319,12 +3323,16 @@ details[open] > summary .details-chevron {
 
 .builtin-spelling-rules-scroll .rule-text .find {
   color: #7f1d1d;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .builtin-spelling-rules-scroll .rule-text .replace {
-  color: #7f1d1d;
-  font-weight: 800;
+  color: color-mix(
+    in srgb,
+    color-mix(in srgb, var(--c-ink) 86%, var(--accent-spelling) 14%) 50%,
+    color-mix(in srgb, var(--editor-red) 62%, #f05252 38%) 50%
+  );
+  font-weight: inherit;
 }
 
 .builtin-inline-tip-trigger {
@@ -3674,7 +3682,7 @@ details[open] > summary .details-chevron {
 }
 
 .caution-checklist-details .auxiliary-chip {
-  padding-left: var(--criteria-chevron-inset);
+  padding-left: 0;
 }
 
 .auxiliary-chip > input[type='checkbox'] {

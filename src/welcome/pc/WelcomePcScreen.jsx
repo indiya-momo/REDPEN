@@ -146,9 +146,12 @@ export default function WelcomePcScreen({
       </h1>
       {!needsWelcomeMessage ? (
         <p className="welcome-pc__privacy-starline">
-          <WelcomePcSparkle className="welcome-pc__privacy-starline__spk" />
-          <span>원고와 검사 결과는 서버에 저장하지 않습니다</span>
-          <WelcomePcSparkle className="welcome-pc__privacy-starline__spk" />
+          <span className="welcome-pc__privacy-starline__line">
+            🟢선택한 맞춤법 · 일관성 규칙에 따라 PDF 원고를 검수합니다
+          </span>
+          <span className="welcome-pc__privacy-starline__line">
+            ⛔AI 자동 수정은 하지 않으며, 원고는 서버에 저장되지 않습니다
+          </span>
         </p>
       ) : null}
     </header>
@@ -194,9 +197,9 @@ export default function WelcomePcScreen({
 
   const perfBetaBlock = (
     <div className="welcome-pc__perf-beta">
-      <span className="welcome-pc__perf-badge-beta">오픈베타 서비스 중</span>
+      <span className="welcome-pc__perf-badge-beta">오픈베타 중</span>
       <span className="welcome-pc__perf-quota">
-        회원은 <strong>1일</strong> 맞춤법 <strong>1회</strong> · 일관성 <strong>1회</strong> 검수 무료
+        매일 맞춤법 <strong>1회</strong> · 일관성 <strong>1회</strong> 검수 가능
       </span>
     </div>
   );
@@ -223,12 +226,7 @@ export default function WelcomePcScreen({
         <p className="welcome-pc__perf-l2">
           신국판
           {' 300페이지 PDF '}
-          <span className="welcome-pc__perf-underline">3시간</span>
-          {' → 3'}
-          <span className="welcome-pc__perf-anc welcome-pc__perf-anc--cho">
-            초
-            <WelcomePcSparkle className="welcome-pc__perf-spk welcome-pc__perf-spk--orange" />
-          </span>
+          <span className="welcome-pc__perf-underline">3초</span>
           만에 검수!
         </p>
       </div>
