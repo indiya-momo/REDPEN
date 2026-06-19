@@ -2,16 +2,19 @@
 $ErrorActionPreference = 'SilentlyContinue'
 $root = Split-Path $PSScriptRoot -Parent
 Set-Location $root
+. (Join-Path $PSScriptRoot '_dev-port.ps1')
 
-Write-Host "기존 5173 포트 프로세스 정리..."
-Get-NetTCPConnection -LocalPort 5173 -ErrorAction SilentlyContinue |
+$port = Get-DevPortFromEnv $root
+
+Write-Host "기존 ${port} 포트 프로세스 정리..."
+Get-NetTCPConnection -LocalPort $port -ErrorAction SilentlyContinue |
   ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }
 Start-Sleep -Seconds 2
 
 Write-Host ""
-Write-Host "  http://localhost:5173"
-Write-Host "  http://127.0.0.1:5173"
+Write-Host "  http://127.0.0.1:$port"
+Write-Host "  http://localhost:$port"
 Write-Host ""
 
-Start-Process "http://localhost:5173/"
+Start-Process "http://127.0.0.1:$port/"
 npm run dev

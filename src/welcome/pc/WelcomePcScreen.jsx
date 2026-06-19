@@ -25,8 +25,40 @@ const WELCOME_PC_AFTER = `${import.meta.env.BASE_URL}welcome/before_after22-crop
 const WELCOME_PC_PDF_FULL = `${import.meta.env.BASE_URL}welcome/pdf-full.png`;
 const BA_BRIDGE_ARC_PATH_ID = 'welcome-pc-ba-bridge-arc';
 const BA_BRIDGE_ARC_LABEL = '모모가 빨간펜을 들고 살펴봅니다';
-/** 원 상단 바깥 곡선 — viewBox 상단에 arc만 두어 어두운 배경 위에 흰 글씨 */
-const BA_BRIDGE_ARC_PATH = 'M 6 30 A 74 74 0 0 1 154 30';
+
+/** 브릿지 SVG 좌표계 — viewBox 100×100, 흰 원·글 호가 같은 중심·비율 */
+const BA_BRIDGE_CX = 50;
+const BA_BRIDGE_CY = 50;
+const BA_BRIDGE_R_DISC = 50;
+const BA_BRIDGE_R_TEXT = 68;
+const BA_BRIDGE_ARC_VIEWBOX = '0 0 100 100';
+const BA_BRIDGE_ARC_DEG_START = 168;
+const BA_BRIDGE_ARC_DEG_END = 12;
+const BA_BRIDGE_ARC_FONT_SIZE = 10.66;
+const BA_BRIDGE_ARC_TEXT_DY = 8.4;
+
+function bridgePolarPoint(cx, cy, r, deg) {
+  const rad = (deg * Math.PI) / 180;
+  return {
+    x: cx + r * Math.cos(rad),
+    y: cy - r * Math.sin(rad),
+  };
+}
+
+/** 원(r=50)과 동심인 원호 — 각도만 바꿔 글 길이·범위 조절 */
+function buildBridgeArcPath(cx, cy, r, degStart, degEnd) {
+  const start = bridgePolarPoint(cx, cy, r, degStart);
+  const end = bridgePolarPoint(cx, cy, r, degEnd);
+  return `M ${start.x.toFixed(1)} ${start.y.toFixed(1)} A ${r} ${r} 0 0 1 ${end.x.toFixed(1)} ${end.y.toFixed(1)}`;
+}
+
+const BA_BRIDGE_ARC_PATH = buildBridgeArcPath(
+  BA_BRIDGE_CX,
+  BA_BRIDGE_CY,
+  BA_BRIDGE_R_TEXT,
+  BA_BRIDGE_ARC_DEG_START,
+  BA_BRIDGE_ARC_DEG_END,
+);
 const ENTER_MAIN_AFTER_GOOGLE_KEY = 'indiya-enter-main-after-google';
 
 const SPARKLE_PATH = 'M12 0l2.4 9.6L24 12l-9.6 2.4L12 24l-2.4-9.6L0 12l9.6-2.4z';
@@ -354,19 +386,30 @@ export default function WelcomePcScreen({
             <div className="welcome-pc__ba-bridge-momo-wrap">
               <svg
                 className="welcome-pc__ba-bridge-arc"
-                viewBox="0 0 160 36"
+                viewBox={BA_BRIDGE_ARC_VIEWBOX}
+                overflow="visible"
                 aria-hidden="true"
                 focusable="false"
               >
+                <circle
+                  className="welcome-pc__ba-bridge-disc-fill"
+                  cx={BA_BRIDGE_CX}
+                  cy={BA_BRIDGE_CY}
+                  r={BA_BRIDGE_R_DISC}
+                />
                 <defs>
                   <path id={BA_BRIDGE_ARC_PATH_ID} d={BA_BRIDGE_ARC_PATH} />
                 </defs>
-                <text className="welcome-pc__ba-bridge-arc-text">
+                <text
+                  className="welcome-pc__ba-bridge-arc-text"
+                  fontSize={BA_BRIDGE_ARC_FONT_SIZE}
+                >
                   <textPath
                     href={`#${BA_BRIDGE_ARC_PATH_ID}`}
                     xlinkHref={`#${BA_BRIDGE_ARC_PATH_ID}`}
                     startOffset="50%"
                     textAnchor="middle"
+                    dy={BA_BRIDGE_ARC_TEXT_DY}
                   >
                     {BA_BRIDGE_ARC_LABEL}
                   </textPath>
