@@ -84,6 +84,7 @@
   --welcome-header-title-scale: 1;
 
   --welcome-guest-frame-scale: 1;
+  --welcome-guest-portrait-size-scale: 0.9;
   --welcome-hero-status-size: 18px;
   --welcome-perf-font-info: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
   --welcome-frame-width: 100%;
@@ -290,7 +291,8 @@
       var(--welcome-ba-panel-pad-inline)
   );
   --welcome-hero-frame-visual-width: calc(
-    var(--welcome-proto-frame-width) * var(--welcome-hero-portrait-width-scale)
+    var(--welcome-proto-frame-width) * var(--welcome-hero-portrait-width-scale) *
+      var(--welcome-guest-portrait-size-scale)
   );
   --welcome-compare-img-brightness-panel: 1;
   /* 검수 전·후 PNG 실제 크기 — before_after22-crop1/2 */
@@ -640,8 +642,14 @@
 }
 
 .welcome-pc__hero-right .welcome-pc__guest-portrait-wrap {
-  width: calc(var(--welcome-proto-frame-width) * var(--welcome-hero-portrait-width-scale));
-  max-width: calc(var(--welcome-proto-frame-width) * var(--welcome-hero-portrait-width-scale));
+  width: calc(
+    var(--welcome-proto-frame-width) * var(--welcome-hero-portrait-width-scale) *
+      var(--welcome-guest-portrait-size-scale)
+  );
+  max-width: calc(
+    var(--welcome-proto-frame-width) * var(--welcome-hero-portrait-width-scale) *
+      var(--welcome-guest-portrait-size-scale)
+  );
   margin-inline: 0;
 }
 
