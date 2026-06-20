@@ -1582,6 +1582,12 @@
   flex-shrink: 0;
 }
 
+.spelling-tab-layout__run-row-actions--export {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
 .panel-left-work-scroll > .consistency-tab-layout__run-row {
   flex-shrink: 0;
   position: relative;
@@ -1629,6 +1635,18 @@
   background: var(--btn-primary-bg);
   border: 1px solid var(--btn-primary-bg);
   color: var(--btn-primary-text);
+}
+
+.btn-add.panel-section-run-btn.btn-export-results {
+  background: #D7CCC8;
+  border-color: #BCAAA4;
+  color: #3E2723;
+}
+
+.btn-add.panel-section-run-btn.btn-export-results:hover:not(:disabled) {
+  background: #BCAAA4;
+  border-color: #A1887F;
+  color: #3E2723;
 }
 
 .btn-add.panel-section-run-btn:hover:not(:disabled) {

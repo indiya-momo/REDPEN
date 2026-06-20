@@ -854,7 +854,6 @@ export default function MainScreen({
         selectedInstance={ruleCheck.spellingSelected}
         onSelectGroup={ruleCheck.selectGroup}
         onSelectPageInGroup={ruleCheck.selectPageInGroup}
-        onExport={handleSpellingExport}
         {...printedPagePanelProps}
       />
     ) : null;
@@ -1143,6 +1142,16 @@ export default function MainScreen({
                     }
                     isProcessing={pdf.isProcessing}
                   />
+                </div>
+                <div className="spelling-tab-layout__run-row-actions--export">
+                  <button
+                    type="button"
+                    className="btn-add panel-section-run-btn btn-export-results"
+                    onClick={handleSpellingExport}
+                    disabled={!ruleCheck.spellingCheckDone}
+                  >
+                    검수 결과 내보내기(엑셀)
+                  </button>
                 </div>
                 <div className="spelling-tab-layout__run-row-actions spelling-tab-layout__run-row-actions--end">
                   <span
