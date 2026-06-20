@@ -29,7 +29,7 @@ import { useTocBodyCheck } from '../toc-body/hooks/useTocBodyCheck.js';
 import { useTocBodyHighlights } from '../toc-body/hooks/useTocBodyHighlights.js';
 import { buildTocBodyTabEntries } from '../toc-body/utils/toc-body-result-entries.js';
 import { exportSpellingResults } from '../lib/exportResults.js';
-import { isTocBodyCheckEnabled } from '../lib/featureFlags.js';
+import { isSpellingExportEnabled, isTocBodyCheckEnabled } from '../lib/featureFlags.js';
 import { usePdfDocument } from '../hooks/usePdfDocument.js';
 import { usePdfZoom } from '../hooks/usePdfZoom.js';
 import { useRuleCheck } from '../hooks/useRuleCheck.js';
@@ -480,6 +480,7 @@ export default function MainScreen({
     onBetaQuotaConsumed: () => void betaQuota.refresh(),
   });
   const tocBodyCheckEnabled = isTocBodyCheckEnabled();
+  const spellingExportEnabled = isSpellingExportEnabled();
   const tocCheck = useTocBodyCheck({
     tocBodyText,
     tocBodyStartPage,
@@ -811,6 +812,7 @@ export default function MainScreen({
   );
 
   const handleSpellingExport = useCallback(() => {
+    if (!spellingExportEnabled) return;
     exportSpellingResults({
       entries: spellingTabEntries,
       formatPageLabel: pageDisplay.formatLabel,
@@ -823,6 +825,7 @@ export default function MainScreen({
       filename: '맞춤법_검사결과.xlsx',
     }).catch((err) => console.error('엑셀 내보내기 오류:', err));
   }, [
+    spellingExportEnabled,
     spellingTabEntries,
     pageDisplay.formatLabel,
     ruleCheck.isInstanceVisible,
@@ -1143,6 +1146,7 @@ export default function MainScreen({
                     isProcessing={pdf.isProcessing}
                   />
                 </div>
+                {spellingExportEnabled ? (
                 <div className="spelling-tab-layout__run-row-actions--export">
                   <button
                     type="button"
@@ -1153,6 +1157,7 @@ export default function MainScreen({
                     검수 결과 내보내기(엑셀)
                   </button>
                 </div>
+                ) : null}
                 <div className="spelling-tab-layout__run-row-actions spelling-tab-layout__run-row-actions--end">
                   <span
                     className="spelling-tab-layout__criteria-run-wrap"
