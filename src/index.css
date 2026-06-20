@@ -2905,6 +2905,22 @@ details[open] > summary .details-chevron {
   border-top: 1px solid var(--border-soft);
 }
 
+/* 미리보기 스트립 닫힘 — 상단 헤더(.pdf-work-pane__topbar)와 동일 높이·패딩 */
+.pdf-preview-bar--chrome-only {
+  gap: 0;
+  padding: var(--pdf-work-pane-chrome-pad-block) var(--pdf-work-pane-chrome-pad-inline);
+  background: var(--color-surface-raised);
+  border-top-color: var(--color-border);
+}
+
+.pdf-preview-bar--chrome-only .pdf-preview-bar__toolbar {
+  min-height: var(--pdf-work-pane-chrome-row-min);
+}
+
+.pdf-preview-bar--chrome-only .pdf-preview-bar__strip-shell {
+  display: none;
+}
+
 .pdf-preview-bar__toolbar {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
@@ -2947,21 +2963,8 @@ details[open] > summary .details-chevron {
   color: var(--c-soft);
 }
 
-.pdf-preview-bar__status-col .current-page-status__criterion-hit {
-  border-bottom: none;
-}
-
-.pdf-preview-bar__status-col .current-page-status__criterion-hit-num {
-  display: inline-flex;
-  align-items: center;
-  padding: 1px 6px;
-  margin: 0;
-  border: none;
-  border-radius: 4px;
-  background: var(--pill);
-  box-shadow: none;
+.pdf-preview-bar__status-col .current-page-status .results-category-summary__count-underline {
   font-weight: var(--w-header);
-  color: var(--c-ink);
 }
 
 .pdf-preview-bar__jump-row {
