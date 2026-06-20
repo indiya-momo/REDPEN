@@ -1369,29 +1369,12 @@ details[open] > summary .details-chevron {
   background: var(--color-surface-raised);
 }
 
-.btn-additional-check,
-.btn-export-results {
+.btn-additional-check {
   flex: 1;
   padding: var(--space-sm-plus) var(--space-md-plus);
   border-radius: var(--radius-ui);
   font-weight: 700;
   font-size: 0.85rem;
-}
-
-.btn-export-results {
-  background: var(--btn-primary-bg);
-  border: 1px solid var(--btn-primary-bg);
-  color: var(--btn-primary-text);
-  transition:
-    background 0.15s ease,
-    color 0.15s ease,
-    border-color 0.15s ease;
-}
-
-.btn-export-results:hover:not(:disabled) {
-  background: var(--accent-terracotta-deep);
-  border-color: var(--accent-terracotta-deep);
-  color: var(--btn-primary-text);
 }
 
 .results-empty-hint {
@@ -1587,12 +1570,6 @@ details[open] > summary .details-chevron {
   color: var(--btn-secondary-text);
   border-color: var(--btn-secondary-hover-border);
   background: var(--btn-secondary-hover-bg);
-}
-
-.results-panel-footer .btn-export-results {
-  background: var(--btn-primary-bg);
-  border-color: var(--btn-primary-bg);
-  color: var(--btn-primary-text);
 }
 
 .result-card-head-main {
@@ -2954,10 +2931,12 @@ details[open] > summary .details-chevron {
   display: none;
 }
 
+/* 툴바: 대칭 1fr | auto | 1fr — 가운데 열이 패널 정중앙, 좌·우는 각자 열 안에서만 */
 .pdf-preview-bar__toolbar {
-  position: relative;
+  container-type: inline-size;
+  container-name: preview-toolbar;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
   gap: 8px 12px;
   width: 100%;
@@ -2966,13 +2945,12 @@ details[open] > summary .details-chevron {
 }
 
 .pdf-preview-bar__status-col {
-  position: relative;
-  z-index: 2;
   grid-column: 1;
   grid-row: 1;
   justify-self: start;
+  align-self: center;
   min-width: 0;
-  max-width: 42%;
+  max-width: 100%;
   overflow: hidden;
 }
 
@@ -3006,69 +2984,37 @@ details[open] > summary .details-chevron {
 }
 
 .pdf-preview-bar__jump-row {
-  grid-column: 1 / -1;
-  grid-row: 1;
-  z-index: 1;
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  column-gap: calc(6px * var(--pdf-jump-scale));
-  width: 100%;
-  min-width: 0;
-  pointer-events: none;
-}
-
-.pdf-preview-bar__jump-lead,
-.pdf-preview-bar__jump-trail,
-.pdf-preview-bar__slash {
-  pointer-events: auto;
-}
-
-.pdf-preview-bar__jump-lead {
-  display: flex;
-  flex-wrap: nowrap;
-  align-items: center;
-  justify-content: flex-end;
-  gap: calc(6px * var(--pdf-jump-scale));
-  flex-shrink: 0;
-}
-
-.pdf-preview-bar__jump-trail {
-  display: flex;
-  flex-wrap: nowrap;
-  align-items: center;
-  justify-content: flex-start;
-  gap: calc(6px * var(--pdf-jump-scale));
-  flex-shrink: 0;
-}
-
-.pdf-preview-bar__slash {
   grid-column: 2;
+  grid-row: 1;
   justify-self: center;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: calc(6px * var(--pdf-jump-scale));
+  flex-shrink: 0;
 }
 
 .pdf-preview-bar__actions-col {
-  position: relative;
-  z-index: 2;
-  grid-column: 2;
+  grid-column: 3;
   grid-row: 1;
   justify-self: end;
   display: flex;
   flex-shrink: 0;
   align-items: center;
   justify-content: flex-end;
+  min-width: 0;
 }
 
-@media (max-width: 900px) {
+@container preview-toolbar (max-width: 720px) {
   .pdf-preview-bar__toolbar {
     grid-template-columns: minmax(0, 1fr) auto;
     grid-template-rows: auto auto;
+    row-gap: 6px;
   }
 
   .pdf-preview-bar__status-col {
     grid-column: 1;
     grid-row: 1;
-    max-width: 100%;
   }
 
   .pdf-preview-bar__actions-col {
@@ -3079,6 +3025,7 @@ details[open] > summary .details-chevron {
   .pdf-preview-bar__jump-row {
     grid-column: 1 / -1;
     grid-row: 2;
+    justify-self: center;
   }
 }
 
