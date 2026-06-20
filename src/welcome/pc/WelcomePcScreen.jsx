@@ -24,45 +24,16 @@ import './welcome-pc.css';
 const WELCOME_PC_BEFORE = `${import.meta.env.BASE_URL}welcome/before_after22-crop1.png`;
 const WELCOME_PC_AFTER = `${import.meta.env.BASE_URL}welcome/before_after22-crop2.png`;
 const WELCOME_PC_PDF_FULL = `${import.meta.env.BASE_URL}welcome/pdf-full.png`;
-const BA_BRIDGE_ARC_PATH_ID = 'welcome-pc-ba-bridge-arc';
-const BA_BRIDGE_ARC_LABEL = '모모가 빨간펜을 들고 살펴봅니다';
+const BA_BRIDGE_LABEL = '모모가 빨간펜을 들고 살펴봅니다';
 
-/** 검수 전·후 ↔ 원 사이 빨간펜 일러스트 (momo/6.png, 원 disc 지름의 30%) */
-const BA_GAP_ILLUS = publicAssetUrl('momo/6.png');
+/** 검수 전·후 ↔ 원 사이 빨간펜 (가로형 투명 PNG, width 기준) */
+const BA_GAP_PEN = publicAssetUrl('momo/pen_transparent.png');
 
-/** 브릿지 SVG 좌표계 — viewBox 100×100, 흰 원·글 호가 같은 중심·비율 */
+/** 브릿지 SVG — 흰 원(disc)만 */
+const BA_BRIDGE_DISC_VIEWBOX = '0 0 100 100';
 const BA_BRIDGE_CX = 50;
 const BA_BRIDGE_CY = 50;
 const BA_BRIDGE_R_DISC = 50;
-const BA_BRIDGE_R_TEXT = 68;
-const BA_BRIDGE_ARC_VIEWBOX = '0 0 100 100';
-const BA_BRIDGE_ARC_DEG_START = 168;
-const BA_BRIDGE_ARC_DEG_END = 12;
-const BA_BRIDGE_ARC_FONT_SIZE = 10.66;
-const BA_BRIDGE_ARC_TEXT_DY = 8.4;
-
-function bridgePolarPoint(cx, cy, r, deg) {
-  const rad = (deg * Math.PI) / 180;
-  return {
-    x: cx + r * Math.cos(rad),
-    y: cy - r * Math.sin(rad),
-  };
-}
-
-/** 원(r=50)과 동심인 원호 — 각도만 바꿔 글 길이·범위 조절 */
-function buildBridgeArcPath(cx, cy, r, degStart, degEnd) {
-  const start = bridgePolarPoint(cx, cy, r, degStart);
-  const end = bridgePolarPoint(cx, cy, r, degEnd);
-  return `M ${start.x.toFixed(1)} ${start.y.toFixed(1)} A ${r} ${r} 0 0 1 ${end.x.toFixed(1)} ${end.y.toFixed(1)}`;
-}
-
-const BA_BRIDGE_ARC_PATH = buildBridgeArcPath(
-  BA_BRIDGE_CX,
-  BA_BRIDGE_CY,
-  BA_BRIDGE_R_TEXT,
-  BA_BRIDGE_ARC_DEG_START,
-  BA_BRIDGE_ARC_DEG_END,
-);
 const ENTER_MAIN_AFTER_GOOGLE_KEY = 'indiya-enter-main-after-google';
 
 const SPARKLE_PATH = 'M12 0l2.4 9.6L24 12l-9.6 2.4L12 24l-2.4-9.6L0 12l9.6-2.4z';
@@ -340,6 +311,7 @@ export default function WelcomePcScreen({
     '사용자의 이해를 돕고자 검수 과정을 재구성한 장면입니다 · 맞춤법과 일관성 검수는 각각 진행합니다 · 크롬 브라우저를 통한 인디자인 PDF 사용을 권장합니다';
 
   const landingPageBlock = (
+    <div className="welcome-pc__landing">
     <div
       className={[
         'welcome-pc__page',
@@ -373,75 +345,64 @@ export default function WelcomePcScreen({
         </aside>
       </section>
 
-      <section className="welcome-pc__ba" aria-label="검수 전·후 예시">
+    </div>
+
+      <div className="welcome-pc__ba-showcase-bleed">
+      <div className="welcome-pc__ba-showcase">
+        <section className="welcome-pc__ba" aria-label="검수 전·후 예시">
         <div className="welcome-pc__ba-split">
           <figure className="welcome-pc__ba-pane welcome-pc__ba-pane--before">
             <img
               className="welcome-pc__ba-img"
               src={WELCOME_PC_BEFORE}
-              width={999}
-              height={736}
+              width={986}
+              height={709}
               alt="검수 전 예시 — 원고"
               loading="lazy"
               decoding="async"
             />
           </figure>
-          <div className="welcome-pc__ba-bridge" aria-label={BA_BRIDGE_ARC_LABEL}>
+          <div className="welcome-pc__ba-bridge" aria-label={BA_BRIDGE_LABEL}>
             <div className="welcome-pc__ba-gap welcome-pc__ba-gap--before" aria-hidden="true">
               <img
                 className="welcome-pc__ba-gap-illus"
-                src={BA_GAP_ILLUS}
+                src={BA_GAP_PEN}
                 alt=""
                 loading="lazy"
                 decoding="async"
               />
             </div>
-            <div className="welcome-pc__ba-bridge-momo-wrap">
-              <svg
-                className="welcome-pc__ba-bridge-arc"
-                viewBox={BA_BRIDGE_ARC_VIEWBOX}
-                overflow="visible"
-                aria-hidden="true"
-                focusable="false"
-              >
-                <circle
-                  className="welcome-pc__ba-bridge-disc-fill"
-                  cx={BA_BRIDGE_CX}
-                  cy={BA_BRIDGE_CY}
-                  r={BA_BRIDGE_R_DISC}
-                />
-                <defs>
-                  <path id={BA_BRIDGE_ARC_PATH_ID} d={BA_BRIDGE_ARC_PATH} />
-                </defs>
-                <text
-                  className="welcome-pc__ba-bridge-arc-text"
-                  fontSize={BA_BRIDGE_ARC_FONT_SIZE}
+            <div className="welcome-pc__ba-bridge-mid">
+              <div className="welcome-pc__ba-bridge-momo-wrap">
+                <svg
+                  className="welcome-pc__ba-bridge-disc"
+                  viewBox={BA_BRIDGE_DISC_VIEWBOX}
+                  aria-hidden="true"
+                  focusable="false"
                 >
-                  <textPath
-                    href={`#${BA_BRIDGE_ARC_PATH_ID}`}
-                    xlinkHref={`#${BA_BRIDGE_ARC_PATH_ID}`}
-                    startOffset="50%"
-                    textAnchor="middle"
-                    dy={BA_BRIDGE_ARC_TEXT_DY}
-                  >
-                    {BA_BRIDGE_ARC_LABEL}
-                  </textPath>
-                </text>
-              </svg>
-              <img
-                className="welcome-pc__ba-bridge-img"
-                src={WELCOME_PC_PDF_FULL}
-                width={142}
-                height={142}
-                alt=""
-                loading="lazy"
-                decoding="async"
-              />
+                  <circle
+                    className="welcome-pc__ba-bridge-disc-fill"
+                    cx={BA_BRIDGE_CX}
+                    cy={BA_BRIDGE_CY}
+                    r={BA_BRIDGE_R_DISC}
+                  />
+                </svg>
+                <img
+                  className="welcome-pc__ba-bridge-img"
+                  src={WELCOME_PC_PDF_FULL}
+                  width={142}
+                  height={142}
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                />
+              </div>
+              <p className="welcome-pc__ba-bridge-caption">{BA_BRIDGE_LABEL}</p>
             </div>
             <div className="welcome-pc__ba-gap welcome-pc__ba-gap--after" aria-hidden="true">
               <img
-                className="welcome-pc__ba-gap-illus"
-                src={BA_GAP_ILLUS}
+                className="welcome-pc__ba-gap-illus welcome-pc__ba-gap-illus--flip"
+                src={BA_GAP_PEN}
                 alt=""
                 loading="lazy"
                 decoding="async"
@@ -452,17 +413,19 @@ export default function WelcomePcScreen({
             <img
               className="welcome-pc__ba-img"
               src={WELCOME_PC_AFTER}
-              width={1056}
-              height={726}
+              width={1028}
+              height={713}
               alt="검수 후 예시 — 맞춤법·일관성·본용언+보조용언 표기 하이라이트"
               loading="lazy"
               decoding="async"
             />
           </figure>
         </div>
-      </section>
+        </section>
 
-      <p className="welcome-pc__fold-cap">{foldCapText}</p>
+        <p className="welcome-pc__fold-cap">{foldCapText}</p>
+      </div>
+      </div>
     </div>
   );
 
