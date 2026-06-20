@@ -7,7 +7,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { BookOpen } from 'lucide-react';
 import AppVersionBadge from '../../components/AppVersionBadge.jsx';
 import MomoHero from '../../components/MomoHero.jsx';
-import welcomeMomoFrame from '../../assets/welcome/welcome_momo_frame3.png';
+import welcomeMomoFramePc from '../../assets/welcome/welcome_momo_frame_pc.png';
 import {
   getCurrentUserSession,
   mapFirebaseAuthError,
@@ -17,6 +17,7 @@ import {
   isOnboardingComplete,
 } from '../../lib/userProfileStorage.js';
 import { useUserProfileSync } from '../../hooks/useUserProfileSync.js';
+import { publicAssetUrl } from '../../lib/publicAssetUrl.js';
 import WelcomeProfileOnboarding from './WelcomeProfileOnboarding.jsx';
 import './welcome-pc.css';
 
@@ -25,6 +26,9 @@ const WELCOME_PC_AFTER = `${import.meta.env.BASE_URL}welcome/before_after22-crop
 const WELCOME_PC_PDF_FULL = `${import.meta.env.BASE_URL}welcome/pdf-full.png`;
 const BA_BRIDGE_ARC_PATH_ID = 'welcome-pc-ba-bridge-arc';
 const BA_BRIDGE_ARC_LABEL = '모모가 빨간펜을 들고 살펴봅니다';
+
+/** 검수 전·후 ↔ 원 사이 빨간펜 일러스트 (momo/6.png, 원 disc 지름의 30%) */
+const BA_GAP_ILLUS = publicAssetUrl('momo/6.png');
 
 /** 브릿지 SVG 좌표계 — viewBox 100×100, 흰 원·글 호가 같은 중심·비율 */
 const BA_BRIDGE_CX = 50;
@@ -211,7 +215,7 @@ export default function WelcomePcScreen({
       </div>
       <img
         className="welcome-pc__portrait-frame"
-        src={welcomeMomoFrame}
+        src={welcomeMomoFramePc}
         alt=""
         aria-hidden
         decoding="async"
@@ -243,10 +247,10 @@ export default function WelcomePcScreen({
   );
 
   const perfBetaBlock = (
-    <div className="welcome-pc__perf-beta">
+    <div className="welcome-pc__perf-beta welcome-pc__perf-beta--guest">
       <span className="welcome-pc__perf-badge-beta">오픈베타 중</span>
       <span className="welcome-pc__perf-quota">
-        매일 맞춤법 <strong>1회</strong> · 일관성 <strong>1회</strong> 검수 가능
+        회원은 매일 맞춤법 · 일관성 규칙 검수 가능
       </span>
     </div>
   );
@@ -383,6 +387,15 @@ export default function WelcomePcScreen({
             />
           </figure>
           <div className="welcome-pc__ba-bridge" aria-label={BA_BRIDGE_ARC_LABEL}>
+            <div className="welcome-pc__ba-gap welcome-pc__ba-gap--before" aria-hidden="true">
+              <img
+                className="welcome-pc__ba-gap-illus"
+                src={BA_GAP_ILLUS}
+                alt=""
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
             <div className="welcome-pc__ba-bridge-momo-wrap">
               <svg
                 className="welcome-pc__ba-bridge-arc"
@@ -420,6 +433,15 @@ export default function WelcomePcScreen({
                 src={WELCOME_PC_PDF_FULL}
                 width={142}
                 height={142}
+                alt=""
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
+            <div className="welcome-pc__ba-gap welcome-pc__ba-gap--after" aria-hidden="true">
+              <img
+                className="welcome-pc__ba-gap-illus"
+                src={BA_GAP_ILLUS}
                 alt=""
                 loading="lazy"
                 decoding="async"
