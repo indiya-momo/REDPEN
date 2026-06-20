@@ -45,29 +45,20 @@
   --welcome-room-book-icon-scale: 0.7;
   /* B안: ba·fold-cap 너비 + 액자 우측 끝선 (page 좌측 기준 scale 지점) */
   --welcome-ba-track-width: calc(100% * var(--welcome-ba-img-scale));
-  --welcome-ba-pane-scale: 0.9;
-  --welcome-ba-split-gap: calc(16px * var(--welcome-scale));
+  --welcome-ba-pane-scale: 0.93;
+  --welcome-ba-split-gap: calc(28px * var(--welcome-scale));
+  --welcome-ba-bridge-mid-pad-x: calc(14px * var(--welcome-scale));
+  --welcome-ba-gap-pen-width: calc(27px * var(--welcome-scale));
   --welcome-ba-bridge-scale: 0.9;
   --welcome-ba-bridge-size: calc(5.625rem * var(--welcome-scale) * var(--welcome-ba-bridge-scale));
   --welcome-ba-bridge-disc: calc(var(--welcome-ba-bridge-size) * 1.155);
-  --welcome-ba-gap-illus-size: calc(var(--welcome-ba-bridge-disc) * 0.3);
-  /* SVG viewBox 100 — WelcomePcScreen.jsx BA_BRIDGE_* 상수와 동기화 */
-  --welcome-ba-bridge-svg-r-disc: 50;
-  --welcome-ba-bridge-svg-r-text: 68;
-  --welcome-ba-bridge-svg-font: 10.66;
-  --welcome-ba-bridge-svg-text-dy: 8.4;
-  --welcome-ba-bridge-arc-span: calc(
-    var(--welcome-ba-bridge-disc) * var(--welcome-ba-bridge-svg-r-text) /
-      var(--welcome-ba-bridge-svg-r-disc)
-  );
-  /* arc-span 박스 안에서 disc 좌·우 여백 (호 텍스트 폭) */
+  --welcome-ba-bridge-col-width: calc(7.5rem * var(--welcome-scale));
   --welcome-ba-bridge-disc-inset-x: calc(
-    (var(--welcome-ba-bridge-arc-span) - var(--welcome-ba-bridge-disc)) / 2
-  );
-  --welcome-ba-bridge-arc-overhang: calc(
-    var(--welcome-ba-bridge-disc) *
-      (var(--welcome-ba-bridge-svg-r-text) - var(--welcome-ba-bridge-svg-r-disc) +
-        var(--welcome-ba-bridge-svg-font) + var(--welcome-ba-bridge-svg-text-dy)) / 100
+    var(--welcome-ba-bridge-mid-pad-x) +
+      (
+        var(--welcome-ba-bridge-col-width) - 2 * var(--welcome-ba-bridge-mid-pad-x) -
+          var(--welcome-ba-bridge-disc)
+      ) / 2
   );
   --welcome-hero-frame-end-inset: calc((1 - var(--welcome-ba-img-scale)) * 100%);
   --welcome-hero-frame-end-nudge-left: 80px; /* 액자를 왼쪽으로 (고정 px) */
@@ -196,7 +187,7 @@
   align-items: stretch;
   min-height: 0;
   height: 100%;
-  overflow-x: hidden;
+  overflow-x: clip;
   overflow-y: auto;
 }
 
@@ -241,7 +232,67 @@
   flex-shrink: 0;
 }
 
-/* B안: page · hero · ba · fold-cap */
+/* B안: landing · page · hero · ba · fold-cap */
+.welcome-pc__landing {
+  container-type: inline-size;
+  container-name: welcome-page;
+  width: 100%;
+  --welcome-ba-fold-shift-y: 13px; /* 검수 전·후 + 하단 설명 블록만 아래로 (20px − 7px) */
+  /* 크림 전시 패널 (비포·애프터 묶음) */
+  --welcome-ba-panel-cream: #f2e9d2;
+  --welcome-ba-panel-cream-top: var(--welcome-ba-panel-cream);
+  --welcome-ba-panel-cream-bottom: var(--welcome-ba-panel-cream);
+  --welcome-ba-panel-caption: #3d3428;
+  --welcome-ba-panel-caption-muted: rgba(61, 52, 40, 0.78);
+  --welcome-ba-panel-radius: 0;
+  --welcome-ba-panel-pad-top: calc(5.5px * var(--welcome-scale));
+  --welcome-ba-panel-pad-inline: calc(22px * var(--welcome-scale));
+  --welcome-ba-panel-pad-bottom: calc(9.6px * var(--welcome-scale));
+  --welcome-ba-panel-pad: var(--welcome-ba-panel-pad-top) var(--welcome-ba-panel-pad-inline)
+    var(--welcome-ba-panel-pad-bottom);
+  --welcome-ba-showcase-inset-left: calc(
+    max(0px, (100cqw - var(--welcome-page-max-width)) / 2) + var(--welcome-page-padding-inline)
+  );
+  --welcome-ba-showcase-width: calc(
+    min(100cqw, var(--welcome-page-max-width)) - 2 * var(--welcome-page-padding-inline)
+  );
+  --welcome-ba-showcase-inner-width: calc(
+    var(--welcome-ba-showcase-width) - var(--welcome-ba-panel-pad-inline)
+  );
+  --welcome-ba-band-shadow-top: 0 -10px 28px -14px rgba(0, 0, 0, 0.45);
+  --welcome-ba-band-fade-height: calc(14px * var(--welcome-scale));
+  --welcome-ba-bridge-caption-scale: 1.3;
+  --welcome-compare-img-brightness-panel: 1;
+  /* 검수 전·후 PNG 실제 크기 — before_after22-crop1/2 */
+  --welcome-ba-shot-w-before: 986;
+  --welcome-ba-shot-h-before: 709;
+  --welcome-ba-shot-w-after: 1028;
+  --welcome-ba-shot-h-after: 713;
+  --welcome-ba-split-inner: calc(
+    var(--welcome-ba-showcase-inner-width) - 2 * var(--welcome-ba-split-gap) -
+      var(--welcome-ba-bridge-col-width)
+  );
+  --welcome-ba-shot-ratio-sum: calc(
+    var(--welcome-ba-shot-w-before) + var(--welcome-ba-shot-w-after)
+  );
+  --welcome-ba-col-width-before: calc(
+    var(--welcome-ba-split-inner) * var(--welcome-ba-shot-w-before) / var(--welcome-ba-shot-ratio-sum)
+  );
+  --welcome-ba-col-width-after: calc(
+    var(--welcome-ba-split-inner) * var(--welcome-ba-shot-w-after) / var(--welcome-ba-shot-ratio-sum)
+  );
+  --welcome-ba-col-width: var(--welcome-ba-col-width-before);
+  --welcome-ba-shot-height: calc(
+    var(--welcome-ba-col-width-before) * var(--welcome-ba-pane-scale) * var(--welcome-ba-shot-h-before) /
+      var(--welcome-ba-shot-w-before)
+  );
+  /* 검수 전 열 이미지 너비 — CTA·검수 전 열 정렬 */
+  --welcome-ba-before-img-width: calc(
+    var(--welcome-ba-col-width-before) * var(--welcome-ba-pane-scale)
+  );
+  --welcome-proto-cta-max: var(--welcome-ba-before-img-width);
+}
+
 .welcome-pc__page {
   --welcome-fold-cap-text-scale: 1.69;
   --welcome-page-beta-cta-gap-ratio: 0.6;
@@ -264,18 +315,7 @@
   --welcome-page-beta-cta-gap: calc(
     var(--welcome-page-beta-cta-gap-full) * var(--welcome-page-beta-cta-gap-ratio)
   );
-  --welcome-ba-fold-shift-y: 13px; /* 검수 전·후 + 하단 설명 블록만 아래로 (20px − 7px) */
   --welcome-hero-bottom-align-nudge: -10px; /* 오픈베타·CTA 위로 (-값) */
-  container-type: inline-size;
-  container-name: welcome-page;
-  /* 검수 전 열 이미지 너비 — page(cqw) 기준, hero-left % 오류 방지 */
-  --welcome-ba-before-img-width: calc(
-    (
-      100cqw * var(--welcome-ba-img-scale) - 2 * var(--welcome-ba-split-gap) -
-        var(--welcome-ba-bridge-arc-span)
-    ) * 999 / 2055 * var(--welcome-ba-pane-scale)
-  );
-  --welcome-proto-cta-max: var(--welcome-ba-before-img-width);
   box-sizing: border-box;
   width: 100%;
   max-width: var(--welcome-page-max-width);
@@ -511,15 +551,19 @@
   justify-content: flex-start;
 }
 
-.welcome-pc__page .welcome-pc__ba {
+.welcome-pc__landing .welcome-pc__ba-showcase-bleed {
   margin-top: calc(
     var(--welcome-page-section-gap) * (var(--welcome-page-hero-ba-gap-ratio) - 1) +
       var(--welcome-ba-fold-shift-y)
   );
 }
 
-.welcome-pc__page .welcome-pc__fold-cap {
-  margin-top: calc(var(--welcome-page-section-gap) * (var(--welcome-page-ba-fold-gap-ratio) - 1));
+.welcome-pc__landing .welcome-pc__ba {
+  margin-top: 0;
+}
+
+.welcome-pc__landing .welcome-pc__fold-cap {
+  margin-top: calc(0.45rem * var(--welcome-scale) * 0.6);
 }
 
 .welcome-pc__hero-cta {
@@ -563,6 +607,74 @@
   aspect-ratio: var(--welcome-frame-aspect);
 }
 
+.welcome-pc__ba-showcase-bleed {
+  position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  margin-inline: 0;
+  background: var(--welcome-ba-panel-cream);
+  box-shadow: var(--welcome-ba-band-shadow-top);
+}
+
+.welcome-pc__ba-showcase-bleed::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: var(--welcome-ba-band-fade-height);
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.14), transparent);
+  pointer-events: none;
+}
+
+.welcome-pc__ba-showcase {
+  position: relative;
+  z-index: 1;
+  box-sizing: border-box;
+  width: var(--welcome-ba-showcase-width);
+  max-width: var(--welcome-ba-showcase-width);
+  margin-left: var(--welcome-ba-showcase-inset-left);
+  margin-right: auto;
+  padding: var(--welcome-ba-panel-pad-top) var(--welcome-ba-panel-pad-inline)
+    var(--welcome-ba-panel-pad-bottom) 0;
+  background: transparent;
+  border-radius: var(--welcome-ba-panel-radius);
+  overflow: visible;
+}
+
+.welcome-pc__ba-showcase .welcome-pc__ba {
+  width: 100%;
+  max-width: 100%;
+}
+
+.welcome-pc__ba-showcase .welcome-pc__ba-pane {
+  border: none;
+  border-radius: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+  background: var(--welcome-ba-panel-cream);
+  height: var(--welcome-ba-shot-height);
+  align-items: flex-end;
+}
+
+.welcome-pc__ba-showcase .welcome-pc__ba-img {
+  filter: brightness(var(--welcome-compare-img-brightness-panel));
+  width: 100%;
+  max-width: 100%;
+  height: var(--welcome-ba-shot-height);
+  object-fit: cover;
+  object-position: bottom center;
+}
+
+.welcome-pc__ba-showcase .welcome-pc__ba-pane--after .welcome-pc__ba-img {
+  object-fit: contain;
+}
+
+.welcome-pc__ba-showcase .welcome-pc__fold-cap {
+  width: 100%;
+  max-width: 100%;
+  color: var(--welcome-ba-panel-caption-muted);
+}
+
 .welcome-pc__ba {
   flex: 0 0 auto;
   display: block;
@@ -573,7 +685,9 @@
 
 .welcome-pc__ba-split {
   display: grid;
-  grid-template-columns: minmax(0, 999fr) auto minmax(0, 1056fr);
+  grid-template-columns:
+    minmax(0, var(--welcome-ba-col-width-before)) auto
+    minmax(0, var(--welcome-ba-col-width-after));
   gap: var(--welcome-ba-split-gap);
   align-items: end;
   width: 100%;
@@ -581,46 +695,62 @@
 
 .welcome-pc__ba-gap {
   position: absolute;
-  top: calc(var(--welcome-ba-bridge-arc-overhang) + var(--welcome-ba-bridge-disc) * 0.5);
-  width: var(--welcome-ba-gap-illus-size);
+  top: calc(var(--welcome-ba-bridge-disc) * 0.5);
+  width: auto;
+  background: none;
+  border: none;
   line-height: 0;
   pointer-events: none;
   z-index: 2;
 }
 
 .welcome-pc__ba-gap--before {
-  /* 그리드 gap 끝 ↔ disc 왼쪽 사이 중점 */
   left: calc(
-    -1 * var(--welcome-ba-split-gap) / 2 - var(--welcome-ba-bridge-disc-inset-x) / 2
+    (var(--welcome-ba-bridge-disc-inset-x) - var(--welcome-ba-split-gap)) / 2
   );
   transform: translate(-50%, -50%);
 }
 
 .welcome-pc__ba-gap--after {
   left: calc(
-    100% + var(--welcome-ba-split-gap) / 2 + var(--welcome-ba-bridge-disc-inset-x) / 2
+    100% - (var(--welcome-ba-bridge-disc-inset-x) - var(--welcome-ba-split-gap)) / 2
   );
   transform: translate(-50%, -50%);
 }
 
 .welcome-pc__ba-gap-illus {
   display: block;
-  width: var(--welcome-ba-gap-illus-size);
+  width: var(--welcome-ba-gap-pen-width);
   height: auto;
-  max-width: 100%;
+  max-width: none;
+  background: none;
+  border: none;
+}
+
+.welcome-pc__ba-gap-illus--flip {
+  transform: scaleX(-1);
 }
 
 .welcome-pc__ba-bridge {
   position: relative;
   display: flex;
-  align-items: flex-end;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
   place-self: center;
   flex-shrink: 0;
-  width: var(--welcome-ba-bridge-arc-span);
-  padding-top: var(--welcome-ba-bridge-arc-overhang);
+  width: var(--welcome-ba-bridge-col-width);
   line-height: normal;
   overflow: visible;
+}
+
+.welcome-pc__ba-bridge-mid {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  padding-inline: var(--welcome-ba-bridge-mid-pad-x);
+  box-sizing: border-box;
 }
 
 .welcome-pc__ba-bridge-momo-wrap {
@@ -635,29 +765,37 @@
   overflow: visible;
 }
 
-.welcome-pc__ba-bridge-disc-fill {
-  fill: rgba(255, 255, 255, 0.95);
-}
-
-.welcome-pc__ba-bridge-arc {
+.welcome-pc__ba-bridge-disc {
   position: absolute;
   left: 50%;
   top: 0;
   z-index: 0;
   display: block;
-  width: var(--welcome-ba-bridge-arc-span);
+  width: var(--welcome-ba-bridge-disc);
   height: var(--welcome-ba-bridge-disc);
   transform: translateX(-50%);
   overflow: visible;
   pointer-events: none;
 }
 
-.welcome-pc__ba-bridge-arc-text {
-  fill: #ffffff;
+.welcome-pc__ba-bridge-disc-fill {
+  fill: rgba(255, 255, 255, 0.95);
+}
+
+.welcome-pc__ba-bridge-caption {
+  margin: calc(6px * var(--welcome-scale)) 0 0;
+  padding: 0;
+  width: 100%;
+  text-align: center;
+  color: #1c1712;
   font-family: var(--welcome-perf-font-info);
+  font-size: calc(
+    0.68rem * var(--welcome-scale) * var(--welcome-showcase-caption-scale) *
+      var(--welcome-ba-img-scale) * var(--welcome-ba-bridge-caption-scale, 1)
+  );
   font-weight: 500;
+  line-height: 1.35;
   letter-spacing: 0.01em;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.45));
 }
 
 .welcome-pc__ba-bridge-img {
