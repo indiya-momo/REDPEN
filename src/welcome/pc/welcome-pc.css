@@ -60,6 +60,10 @@
     var(--welcome-ba-bridge-disc) * var(--welcome-ba-bridge-svg-r-text) /
       var(--welcome-ba-bridge-svg-r-disc)
   );
+  /* arc-span 박스 안에서 disc 좌·우 여백 (호 텍스트 폭) */
+  --welcome-ba-bridge-disc-inset-x: calc(
+    (var(--welcome-ba-bridge-arc-span) - var(--welcome-ba-bridge-disc)) / 2
+  );
   --welcome-ba-bridge-arc-overhang: calc(
     var(--welcome-ba-bridge-disc) *
       (var(--welcome-ba-bridge-svg-r-text) - var(--welcome-ba-bridge-svg-r-disc) +
@@ -581,12 +585,17 @@
 }
 
 .welcome-pc__ba-gap--before {
-  left: calc(-1 * var(--welcome-ba-split-gap) / 2);
+  /* 그리드 gap 끝 ↔ disc 왼쪽 사이 중점 */
+  left: calc(
+    -1 * var(--welcome-ba-split-gap) / 2 - var(--welcome-ba-bridge-disc-inset-x) / 2
+  );
   transform: translate(-50%, -50%);
 }
 
 .welcome-pc__ba-gap--after {
-  left: calc(100% + var(--welcome-ba-split-gap) / 2);
+  left: calc(
+    100% + var(--welcome-ba-split-gap) / 2 + var(--welcome-ba-bridge-disc-inset-x) / 2
+  );
   transform: translate(-50%, -50%);
 }
 
