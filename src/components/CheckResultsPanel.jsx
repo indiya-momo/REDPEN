@@ -118,6 +118,7 @@ function ResultHeaderSummary({
  *   onSelectPageInGroup: (pageNum: number, instances: import('../lib/ruleEngine.js').MatchInstance[], source: 'spelling' | 'consistency') => void,
  *   selectedInstance?: import('../lib/ruleEngine.js').MatchInstance | null,
  *   onAdditionalCheck?: () => void,
+ *   onExport?: () => void,
  *   printedPageOffset?: number | null,
  *   printedPagesActive?: boolean,
  *   onCalibrateFromInput?: (raw: string, isSpread: boolean) => void,
@@ -158,6 +159,7 @@ export default function CheckResultsPanel({
   onSelectPageInGroup,
   selectedInstance = null,
   onAdditionalCheck,
+  onExport,
   printedPageOffset = null,
   printedPagesActive = false,
   onCalibrateFromInput,
@@ -377,11 +379,18 @@ export default function CheckResultsPanel({
       ) : (
         <p className="hint results-empty-hint">발견된 항목이 없습니다.</p>
       )}
-      {onAdditionalCheck && (
+      {(onAdditionalCheck || onExport) && (
         <div className="results-panel-footer">
-          <button type="button" className="btn-additional-check" onClick={onAdditionalCheck}>
-            다시 검사
-          </button>
+          {onAdditionalCheck && (
+            <button type="button" className="btn-additional-check" onClick={onAdditionalCheck}>
+              다시 검사
+            </button>
+          )}
+          {onExport && (
+            <button type="button" className="btn-export-results" onClick={onExport}>
+              엑셀 내보내기
+            </button>
+          )}
         </div>
       )}
     </section>

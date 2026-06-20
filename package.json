@@ -1,7 +1,7 @@
 {
   "name": "pdf-publish-proofread",
   "private": true,
-  "version": "0.72",
+  "version": "0.75",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -26,6 +26,7 @@
     "prepare": "husky"
   },
   "dependencies": {
+    "exceljs": "^4.4.0",
     "firebase": "^12.14.0",
     "lucide-react": "^0.511.0",
     "pdfjs-dist": "5.2.133",

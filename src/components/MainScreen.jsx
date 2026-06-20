@@ -28,6 +28,7 @@ import TocBodyResultsPanel from '../toc-body/components/TocBodyResultsPanel.jsx'
 import { useTocBodyCheck } from '../toc-body/hooks/useTocBodyCheck.js';
 import { useTocBodyHighlights } from '../toc-body/hooks/useTocBodyHighlights.js';
 import { buildTocBodyTabEntries } from '../toc-body/utils/toc-body-result-entries.js';
+import { exportSpellingResults } from '../lib/exportResults.js';
 import { isTocBodyCheckEnabled } from '../lib/featureFlags.js';
 import { usePdfDocument } from '../hooks/usePdfDocument.js';
 import { usePdfZoom } from '../hooks/usePdfZoom.js';
@@ -809,6 +810,28 @@ export default function MainScreen({
     ],
   );
 
+  const handleSpellingExport = useCallback(() => {
+    exportSpellingResults({
+      entries: spellingTabEntries,
+      formatPageLabel: pageDisplay.formatLabel,
+      isInstanceVisible: ruleCheck.isInstanceVisible,
+      groupVisibilityMode: ruleCheck.groupVisibilityMode,
+      visibleInstanceCount: ruleCheck.visibleInstanceCount,
+      cautionCount: spellingGroupsWithFindings.cautionWithFindings,
+      builtinCount: spellingGroupsWithFindings.builtinWithFindings,
+      totalFindings: spellingTabTotalFindings,
+      filename: '맞춤법_검사결과.xlsx',
+    }).catch((err) => console.error('엑셀 내보내기 오류:', err));
+  }, [
+    spellingTabEntries,
+    pageDisplay.formatLabel,
+    ruleCheck.isInstanceVisible,
+    ruleCheck.groupVisibilityMode,
+    ruleCheck.visibleInstanceCount,
+    spellingGroupsWithFindings,
+    spellingTabTotalFindings,
+  ]);
+
   const spellingResultsPanel =
     workTab === 'spelling' && ruleCheck.spellingCheckDone ? (
       <CheckResultsPanel
@@ -831,6 +854,7 @@ export default function MainScreen({
         selectedInstance={ruleCheck.spellingSelected}
         onSelectGroup={ruleCheck.selectGroup}
         onSelectPageInGroup={ruleCheck.selectPageInGroup}
+        onExport={handleSpellingExport}
         {...printedPagePanelProps}
       />
     ) : null;
