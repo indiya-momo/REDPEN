@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * PostHog 베타 대시보드 일괄 생성 (코호트 + 인사이트 4개 + 대시보드)
+ * PostHog 베타 대시보드 일괄 생성 (코호트 + 인사이트 + 대시보드)
  *
  * 사용 (PowerShell):
  *   $env:POSTHOG_PERSONAL_API_KEY="phx_…"
@@ -19,6 +19,7 @@ const HOST = (process.env.POSTHOG_HOST?.trim() || 'https://us.posthog.com').repl
 const PROJECT_ID = process.env.POSTHOG_PROJECT_ID?.trim() ?? '';
 
 const COHORT_NAME = '베타 실사용자 (내부 제외)';
+const RETURN_UPLOADER_COHORT_NAME = '재업로드 2회+ (로그인)';
 const DASHBOARD_NAME = '인디야 오픈베타';
 const TAG = 'indiya-beta';
 
@@ -153,6 +154,63 @@ async function ensureCohort(projectId) {
   return created.id;
 }
 
+async function ensureReturnUploaderCohort(projectId) {
+  const existing = await findByName(
+    `/api/projects/${projectId}/cohorts/?limit=200`,
+    RETURN_UPLOADER_COHORT_NAME,
+  );
+  if (existing) {
+    console.log(
+      `[posthog-setup] cohort exists: ${existing.id} ${RETURN_UPLOADER_COHORT_NAME}`,
+    );
+    return existing.id;
+  }
+  const created = await api(`/api/projects/${projectId}/cohorts/`, {
+    method: 'POST',
+    body: {
+      name: RETURN_UPLOADER_COHORT_NAME,
+      description:
+        '로그인 사용자 중 pdf_upload_count person 속성이 2 이상 (재업로드 경험)',
+      is_static: false,
+      filters: {
+        properties: {
+          type: 'AND',
+          values: [
+            {
+              type: 'AND',
+              values: [
+                {
+                  key: 'pdf_upload_count',
+                  operator: 'gte',
+                  value: 2,
+                  type: 'person',
+                },
+                {
+                  key: 'is_internal',
+                  operator: 'is_not',
+                  value: true,
+                  type: 'person',
+                },
+              ],
+            },
+          ],
+        },
+      },
+    },
+  });
+  console.log(`[posthog-setup] cohort created: ${created.id}`);
+  return created.id;
+}
+
+function eventPropertyFilter(key, value) {
+  return {
+    key,
+    operator: 'exact',
+    value: [String(value)],
+    type: 'event',
+  };
+}
+
 function insightQuery(source, cohortId) {
   return {
     kind: 'InsightVizNode',
@@ -164,7 +222,7 @@ function insightQuery(source, cohortId) {
   };
 }
 
-function buildInsightSpecs(cohortId) {
+function buildInsightSpecs(cohortId, returnUploaderCohortId) {
   return [
   {
     name: '[베타] 방문 — session_start',
@@ -243,6 +301,106 @@ function buildInsightSpecs(cohortId) {
       version: 2,
     }, cohortId),
   },
+  {
+    name: '[베타] PDF 업로드 건수',
+    description: 'pdf_opened 총 건수 (주간, 내부 제외)',
+    query: insightQuery({
+      kind: 'TrendsQuery',
+      interval: 'day',
+      dateRange: DATE_7D,
+      series: [
+        {
+          kind: 'EventsNode',
+          event: 'pdf_opened',
+          name: 'pdf_opened',
+          math: 'total',
+        },
+      ],
+      trendsFilter: {},
+      version: 2,
+    }, cohortId),
+  },
+  {
+    name: '[베타] PDF 재업로드 사용자',
+    description:
+      'is_return_upload=true 인 pdf_opened 유니크 사용자 (2번째 이상 업로드, 내부 제외)',
+    query: insightQuery({
+      kind: 'TrendsQuery',
+      interval: 'day',
+      dateRange: DATE_7D,
+      series: [
+        {
+          kind: 'EventsNode',
+          event: 'pdf_opened',
+          name: '재업로드',
+          math: 'dau',
+          properties: [eventPropertyFilter('is_return_upload', true)],
+        },
+      ],
+      trendsFilter: {},
+      version: 2,
+    }, cohortId),
+  },
+  {
+    name: '[베타] PDF 업로드 순번 분포',
+    description: 'upload_index_bucket breakdown — 1·2·3·4+ (내부 제외)',
+    query: insightQuery({
+      kind: 'TrendsQuery',
+      interval: 'day',
+      dateRange: DATE_7D,
+      series: [
+        {
+          kind: 'EventsNode',
+          event: 'pdf_opened',
+          name: 'pdf_opened',
+          math: 'total',
+        },
+      ],
+      breakdownFilter: {
+        breakdown: 'upload_index_bucket',
+        breakdown_type: 'event',
+      },
+      trendsFilter: {},
+      version: 2,
+    }, cohortId),
+  },
+  {
+    name: '[베타] 재방문 후 업로드',
+    description:
+      'session_start → pdf_opened (7일 창). 재방문 세션에서 다시 업로드한 비율, 내부 제외',
+    query: insightQuery({
+      kind: 'FunnelsQuery',
+      dateRange: DATE_7D,
+      series: [
+        { kind: 'EventsNode', event: 'session_start', name: '방문(세션)' },
+        { kind: 'EventsNode', event: 'pdf_opened', name: 'PDF 업로드' },
+      ],
+      funnelsFilter: {
+        funnelWindowInterval: 7,
+        funnelWindowIntervalUnit: 'day',
+      },
+      version: 2,
+    }, cohortId),
+  },
+  {
+    name: '[베타] 재업로드 2회+ 코호트 — 업로드',
+    description: `재업로드 2회+ 코호트의 pdf_opened (주간, 내부·첫방문 제외)`,
+    query: insightQuery({
+      kind: 'TrendsQuery',
+      interval: 'day',
+      dateRange: DATE_7D,
+      series: [
+        {
+          kind: 'EventsNode',
+          event: 'pdf_opened',
+          name: 'pdf_opened',
+          math: 'total',
+        },
+      ],
+      trendsFilter: {},
+      version: 2,
+    }, returnUploaderCohortId),
+  },
 ];
 }
 
@@ -319,8 +477,9 @@ async function main() {
   console.log(`[posthog-setup] host=${HOST}`);
   const projectId = await resolveProjectId();
   const cohortId = await ensureCohort(projectId);
+  const returnUploaderCohortId = await ensureReturnUploaderCohort(projectId);
   const dashboardId = await ensureDashboard(projectId);
-  const insightSpecs = buildInsightSpecs(cohortId);
+  const insightSpecs = buildInsightSpecs(cohortId, returnUploaderCohortId);
   /** @type {{ id: number, shortId?: string, name: string }[]} */
   const insights = [];
   for (const spec of insightSpecs) {
@@ -333,7 +492,7 @@ async function main() {
     console.log(`  대시보드: ${HOST}/project/${projectId}/dashboard/${dashboardId}`);
   } else {
     console.log(`  인사이트 목록: ${HOST}/project/${projectId}/insights`);
-    console.log('  (대시보드는 UI에서 New dashboard → 위 인사이트 4개 추가)');
+    console.log('  (대시보드는 UI에서 New dashboard → 위 인사이트 추가)');
   }
   for (const row of insights) {
     const path = row.shortId
