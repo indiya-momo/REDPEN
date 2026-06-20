@@ -96,58 +96,62 @@ export default function PdfPreviewBar({
           role="navigation"
           aria-label="페이지 이동"
         >
-          <button
-            type="button"
-            className="pdf-preview-bar__nav pdf-preview-bar__nav--prev"
-            disabled={currentPage <= 1}
-            onClick={() => onGoToPage(currentPage - 1)}
-            aria-label="이전 페이지"
-          >
-            ◀
-          </button>
-          <form
-            className="pdf-preview-bar__jump"
-            onSubmit={(e) => {
-              e.preventDefault();
-              submit();
-            }}
-          >
-            <label className="sr-only" htmlFor="pdf-page-jump-input">
-              {printedPagesEnabled ? '현재 인쇄 쪽수' : '현재 페이지'}
-            </label>
-            <input
-              id="pdf-page-jump-input"
-              type={printedPagesEnabled ? 'text' : 'number'}
-              inputMode="numeric"
-              className={`pdf-preview-bar__input pdf-preview-bar__jump-input${
-                printedPagesEnabled ? ' pdf-preview-bar__input--spread' : ''
-              }`}
-              min={printedPagesEnabled ? undefined : 1}
-              max={printedPagesEnabled ? undefined : numPages}
-              value={value}
-              onChange={(e) => setValue(e.target.value)}
-              aria-label={
-                printedPagesEnabled
-                  ? printedPagesActive
-                    ? '인쇄 쪽수 입력 (예: 6-7). 입력 후 엔터로 이동'
-                    : '인쇄 쪽수 입력 (보정 전: 6-7 등으로 이동 가능). 입력 후 엔터로 이동'
-                  : `페이지 1–${numPages}. 입력 후 엔터로 이동`
-              }
-            />
-          </form>
+          <div className="pdf-preview-bar__jump-lead">
+            <button
+              type="button"
+              className="pdf-preview-bar__nav pdf-preview-bar__nav--prev"
+              disabled={currentPage <= 1}
+              onClick={() => onGoToPage(currentPage - 1)}
+              aria-label="이전 페이지"
+            >
+              ◀
+            </button>
+            <form
+              className="pdf-preview-bar__jump"
+              onSubmit={(e) => {
+                e.preventDefault();
+                submit();
+              }}
+            >
+              <label className="sr-only" htmlFor="pdf-page-jump-input">
+                {printedPagesEnabled ? '현재 인쇄 쪽수' : '현재 페이지'}
+              </label>
+              <input
+                id="pdf-page-jump-input"
+                type={printedPagesEnabled ? 'text' : 'number'}
+                inputMode="numeric"
+                className={`pdf-preview-bar__input pdf-preview-bar__jump-input${
+                  printedPagesEnabled ? ' pdf-preview-bar__input--spread' : ''
+                }`}
+                min={printedPagesEnabled ? undefined : 1}
+                max={printedPagesEnabled ? undefined : numPages}
+                value={value}
+                onChange={(e) => setValue(e.target.value)}
+                aria-label={
+                  printedPagesEnabled
+                    ? printedPagesActive
+                      ? '인쇄 쪽수 입력 (예: 6-7). 입력 후 엔터로 이동'
+                      : '인쇄 쪽수 입력 (보정 전: 6-7 등으로 이동 가능). 입력 후 엔터로 이동'
+                    : `페이지 1–${numPages}. 입력 후 엔터로 이동`
+                }
+              />
+            </form>
+          </div>
           <span className="pdf-preview-bar__slash" aria-hidden="true">
             /
           </span>
-          <span className="pdf-preview-bar__total">{displayTotal}</span>
-          <button
-            type="button"
-            className="pdf-preview-bar__nav pdf-preview-bar__nav--next"
-            disabled={currentPage >= numPages}
-            onClick={() => onGoToPage(currentPage + 1)}
-            aria-label="다음 페이지"
-          >
-            ▶
-          </button>
+          <div className="pdf-preview-bar__jump-trail">
+            <span className="pdf-preview-bar__total">{displayTotal}</span>
+            <button
+              type="button"
+              className="pdf-preview-bar__nav pdf-preview-bar__nav--next"
+              disabled={currentPage >= numPages}
+              onClick={() => onGoToPage(currentPage + 1)}
+              aria-label="다음 페이지"
+            >
+              ▶
+            </button>
+          </div>
         </div>
 
         <div className="pdf-preview-bar__actions-col">

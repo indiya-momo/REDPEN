@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { stripPageLabelPrefix } from '../lib/printedPageDisplay.js';
 import { renderPageToCanvas } from '../lib/pdfService.js';
+import { thumbFitInBox, THUMB_HEIGHT_PX } from '../lib/thumbDisplaySize.js';
 import { thumbSlotPages } from '../lib/thumbSlotPages.js';
 
-/** 저화질·저부하 썸네일 (표시만 확인용) */
-const THUMB_HEIGHT_PX = 62;
 /** 공유 버퍼 없이 순차 렌더 — 동시 그리기 시 가로가 반으로 눌리는 현상 방지 */
 const RENDER_BATCH = 1;
 
@@ -25,8 +24,6 @@ function blitThumbCanvas(target, source, displayW, displayH, pageNum) {
   }
   target.style.width = `${displayW}px`;
   target.style.height = `${displayH}px`;
-  target.style.maxWidth = 'none';
-  target.style.maxHeight = 'none';
   target.dataset.renderedPage = String(pageNum);
 }
 
@@ -35,8 +32,9 @@ function blitThumbCanvas(target, source, displayW, displayH, pageNum) {
  *   pageNum: number,
  *   active: boolean,
  *   onSelect: () => void,
- *   requestRender: (pageNum: number, canvas: HTMLCanvasElement, force?: boolean) => Promise<void>,
+ *   requestRender: (pageNum: number, canvas: HTMLCanvasElement, force?: boolean) => Promise<boolean>,
  *   label: string,
+ *   idle?: boolean,
  * }} props
  */
 function PdfThumbnailItem({
@@ -48,23 +46,17 @@ function PdfThumbnailItem({
   idle = false,
 }) {
   const canvasRef = useRef(null);
-  const frameRef = useRef(null);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     setLoaded(false);
     const canvas = canvasRef.current;
-    const frame = frameRef.current;
     if (canvas) {
       canvas.width = 0;
       canvas.height = 0;
       canvas.style.width = '';
       canvas.style.height = '';
       delete canvas.dataset.renderedPage;
-    }
-    if (frame) {
-      frame.style.width = '';
-      frame.style.height = '';
     }
   }, [pageNum]);
 
@@ -89,7 +81,7 @@ function PdfThumbnailItem({
       aria-label={`${label}페이지`}
       aria-current={active ? 'page' : undefined}
     >
-      <span ref={frameRef} className="pdf-thumb__frame">
+      <span className="pdf-thumb__frame">
         <canvas
           ref={canvasRef}
           className={
@@ -165,20 +157,13 @@ export default function PdfThumbnailStrip({
           try {
             const page = await pdf.getPage(pageNum);
             const base = page.getViewport({ scale: 1 });
+            const aspect = base.width / base.height;
             const scale = THUMB_HEIGHT_PX / base.height;
-            const viewport = page.getViewport({ scale });
 
             await renderPageToCanvas(pdf, pageNum, offscreen, scale);
 
-            const displayW = Math.max(1, Math.round(viewport.width));
-            const displayH = THUMB_HEIGHT_PX;
+            const { displayW, displayH } = thumbFitInBox(aspect);
             blitThumbCanvas(canvas, offscreen, displayW, displayH, pageNum);
-
-            const frame = canvas.parentElement;
-            if (frame instanceof HTMLElement) {
-              frame.style.width = `${displayW + 4}px`;
-              frame.style.height = `${displayH + 4}px`;
-            }
 
             resolve(true);
           } catch {
