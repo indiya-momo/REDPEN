@@ -361,15 +361,6 @@ export default function WelcomePcScreen({
             />
           </figure>
           <div className="welcome-pc__ba-bridge" aria-label={BA_BRIDGE_LABEL}>
-            <div className="welcome-pc__ba-gap welcome-pc__ba-gap--before" aria-hidden="true">
-              <img
-                className="welcome-pc__ba-gap-illus"
-                src={BA_GAP_PEN}
-                alt=""
-                loading="lazy"
-                decoding="async"
-              />
-            </div>
             <div className="welcome-pc__ba-bridge-mid">
               <div className="welcome-pc__ba-bridge-momo-wrap">
                 <svg
@@ -397,15 +388,6 @@ export default function WelcomePcScreen({
               </div>
               <p className="welcome-pc__ba-bridge-caption">{BA_BRIDGE_LABEL}</p>
             </div>
-            <div className="welcome-pc__ba-gap welcome-pc__ba-gap--after" aria-hidden="true">
-              <img
-                className="welcome-pc__ba-gap-illus welcome-pc__ba-gap-illus--flip"
-                src={BA_GAP_PEN}
-                alt=""
-                loading="lazy"
-                decoding="async"
-              />
-            </div>
           </div>
           <figure className="welcome-pc__ba-pane welcome-pc__ba-pane--after">
             <img
@@ -418,6 +400,26 @@ export default function WelcomePcScreen({
               decoding="async"
             />
           </figure>
+          <div className="welcome-pc__ba-gaps" aria-hidden="true">
+            <div className="welcome-pc__ba-gap welcome-pc__ba-gap--before">
+              <img
+                className="welcome-pc__ba-gap-illus"
+                src={BA_GAP_PEN}
+                alt=""
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
+            <div className="welcome-pc__ba-gap welcome-pc__ba-gap--after">
+              <img
+                className="welcome-pc__ba-gap-illus welcome-pc__ba-gap-illus--flip"
+                src={BA_GAP_PEN}
+                alt=""
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
+          </div>
         </div>
         </section>
 
