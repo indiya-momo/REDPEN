@@ -1,7 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { stripPageLabelPrefix } from '../lib/printedPageDisplay.js';
 import { renderPageToCanvas } from '../lib/pdfService.js';
-import { thumbFitInBox, THUMB_HEIGHT_PX } from '../lib/thumbDisplaySize.js';
+import { resolveThumbAspect } from '../lib/thumbAspect.js';
+import { DEFAULT_THUMB_ASPECT } from '../lib/thumbDisplaySize.js';
+import {
+  computeThumbLayout,
+  thumbStripCssVars,
+} from '../lib/thumbLayout.js';
 import { thumbSlotPages } from '../lib/thumbSlotPages.js';
 
 /** 공유 버퍼 없이 순차 렌더 — 동시 그리기 시 가로가 반으로 눌리는 현상 방지 */
@@ -34,6 +39,8 @@ function blitThumbCanvas(target, source, displayW, displayH, pageNum) {
  *   onSelect: () => void,
  *   requestRender: (pageNum: number, canvas: HTMLCanvasElement, force?: boolean) => Promise<boolean>,
  *   label: string,
+ *   displayW: number,
+ *   displayH: number,
  *   idle?: boolean,
  * }} props
  */
@@ -43,6 +50,8 @@ function PdfThumbnailItem({
   onSelect,
   requestRender,
   label,
+  displayW,
+  displayH,
   idle = false,
 }) {
   const canvasRef = useRef(null);
@@ -54,11 +63,11 @@ function PdfThumbnailItem({
     if (canvas) {
       canvas.width = 0;
       canvas.height = 0;
-      canvas.style.width = '';
-      canvas.style.height = '';
+      canvas.style.width = `${displayW}px`;
+      canvas.style.height = `${displayH}px`;
       delete canvas.dataset.renderedPage;
     }
-  }, [pageNum]);
+  }, [displayH, displayW, pageNum]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -71,7 +80,7 @@ function PdfThumbnailItem({
     return () => {
       cancelled = true;
     };
-  }, [active, idle, pageNum, requestRender]);
+  }, [active, displayH, displayW, idle, pageNum, requestRender]);
 
   return (
     <button
@@ -81,14 +90,13 @@ function PdfThumbnailItem({
       aria-label={`${label}페이지`}
       aria-current={active ? 'page' : undefined}
     >
-      <span className="pdf-thumb__frame">
-        <canvas
-          ref={canvasRef}
-          className={
-            loaded ? 'pdf-thumb__canvas' : 'pdf-thumb__canvas pdf-thumb__canvas--loading'
-          }
-        />
-      </span>
+      <canvas
+        ref={canvasRef}
+        className={
+          loaded ? 'pdf-thumb__canvas' : 'pdf-thumb__canvas pdf-thumb__canvas--loading'
+        }
+        style={{ width: `${displayW}px`, height: `${displayH}px` }}
+      />
       <span className="pdf-thumb__num">{label}</span>
     </button>
   );
@@ -112,12 +120,31 @@ export default function PdfThumbnailStrip({
 }) {
   const queueRef = useRef([]);
   const activeRef = useRef(0);
+  const [pageAspect, setPageAspect] = useState(DEFAULT_THUMB_ASPECT);
   const numPages = pdf.numPages;
 
   const slots = useMemo(
     () => thumbSlotPages(currentPage, numPages),
     [currentPage, numPages],
   );
+
+  const slotPageNums = useMemo(
+    () => slots.filter((pageNum) => pageNum != null),
+    [slots],
+  );
+
+  const layout = useMemo(() => computeThumbLayout(pageAspect), [pageAspect]);
+  const stripStyle = useMemo(() => thumbStripCssVars(pageAspect), [pageAspect]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void resolveThumbAspect(pdf, slotPageNums).then((aspect) => {
+      if (!cancelled) setPageAspect(aspect);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [pdf, slotPageNums]);
 
   const pumpQueue = useCallback(() => {
     while (activeRef.current < RENDER_BATCH && queueRef.current.length > 0) {
@@ -153,16 +180,15 @@ export default function PdfThumbnailStrip({
           }
 
           const offscreen = document.createElement('canvas');
+          const { displayW, displayH } = layout;
 
           try {
             const page = await pdf.getPage(pageNum);
             const base = page.getViewport({ scale: 1 });
-            const aspect = base.width / base.height;
-            const scale = THUMB_HEIGHT_PX / base.height;
+            const scale = displayH / base.height;
 
             await renderPageToCanvas(pdf, pageNum, offscreen, scale);
 
-            const { displayW, displayH } = thumbFitInBox(aspect);
             blitThumbCanvas(canvas, offscreen, displayW, displayH, pageNum);
 
             resolve(true);
@@ -175,7 +201,7 @@ export default function PdfThumbnailStrip({
         pumpQueue();
       });
     },
-    [pdf, pumpQueue],
+    [layout, pdf, pumpQueue],
   );
 
   useEffect(() => {
@@ -186,28 +212,30 @@ export default function PdfThumbnailStrip({
     <div
       id="pdf-thumb-strip"
       className="pdf-thumb-strip"
+      style={stripStyle}
       role="navigation"
       aria-label="PDF 페이지 목록"
     >
-      {slots.map((pageNum, index) => (
-        <div key={index} className="pdf-thumb-slot">
-          {pageNum != null ? (
-            <PdfThumbnailItem
-              pageNum={pageNum}
-              active={pageNum === currentPage}
-              onSelect={() => onSelectPage(pageNum)}
-              requestRender={requestRender}
-              label={stripPageLabelPrefix(formatPageLabel(pageNum))}
-              idle={idle}
-            />
-          ) : (
-            <div className="pdf-thumb-slot__ghost" aria-hidden="true">
-              <span className="pdf-thumb-slot__ghost-frame" />
-              <span className="pdf-thumb-slot__ghost-label" />
-            </div>
-          )}
-        </div>
-      ))}
+      {slots.map((pageNum, index) =>
+        pageNum != null ? (
+          <PdfThumbnailItem
+            key={pageNum}
+            pageNum={pageNum}
+            active={pageNum === currentPage}
+            onSelect={() => onSelectPage(pageNum)}
+            requestRender={requestRender}
+            label={stripPageLabelPrefix(formatPageLabel(pageNum))}
+            displayW={layout.displayW}
+            displayH={layout.displayH}
+            idle={idle}
+          />
+        ) : (
+          <div key={`ghost-${index}`} className="pdf-thumb pdf-thumb--ghost" aria-hidden="true">
+            <span className="pdf-thumb__canvas pdf-thumb__canvas--ghost" />
+            <span className="pdf-thumb__num pdf-thumb__num--ghost" />
+          </div>
+        ),
+      )}
     </div>
   );
 }
