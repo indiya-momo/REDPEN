@@ -50,6 +50,7 @@
   --welcome-ba-bridge-scale: 0.9;
   --welcome-ba-bridge-size: calc(5.625rem * var(--welcome-scale) * var(--welcome-ba-bridge-scale));
   --welcome-ba-bridge-disc: calc(var(--welcome-ba-bridge-size) * 1.155);
+  --welcome-ba-gap-illus-size: calc(var(--welcome-ba-bridge-disc) * 0.3);
   /* SVG viewBox 100 — WelcomePcScreen.jsx BA_BRIDGE_* 상수와 동기화 */
   --welcome-ba-bridge-svg-r-disc: 50;
   --welcome-ba-bridge-svg-r-text: 68;
@@ -65,7 +66,7 @@
         var(--welcome-ba-bridge-svg-font) + var(--welcome-ba-bridge-svg-text-dy)) / 100
   );
   --welcome-hero-frame-end-inset: calc((1 - var(--welcome-ba-img-scale)) * 100%);
-  --welcome-hero-frame-end-nudge-left: 65px; /* 액자를 왼쪽으로 (고정 px) */
+  --welcome-hero-frame-end-nudge-left: 80px; /* 액자를 왼쪽으로 (고정 px) */
   --welcome-hero-frame-end-shift: 0rem; /* +값: 오른쪽, -값: 왼쪽 (inset·nudge에 추가) */
   --welcome-hero-frame-end-offset: calc(
     var(--welcome-hero-frame-end-inset) + var(--welcome-hero-frame-end-nudge-left) -
@@ -90,12 +91,26 @@
   --welcome-hero-status-size: 18px;
   --welcome-perf-font-info: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
   --welcome-frame-width: 100%;
-  --welcome-frame-aspect: 1305 / 1211;
-  --welcome-hole-left: 21.1%;
-  --welcome-hole-top: 20.7%;
-  --welcome-hole-right: 23.2%;
-  --welcome-hole-bottom: 18%;
-  --welcome-hole-radius: 2.4% / 2.8%;
+  /* Gemini_Generated_Image2-crop1 — build-welcome-momo-frame-pc.py */
+  --welcome-frame-aspect: 937 / 1097;
+  --welcome-hole-left: 13.87%;
+  --welcome-hole-top: 12.58%;
+  --welcome-hole-right: 14.51%;
+  --welcome-hole-bottom: 12.4%;
+  /* 84c97e8 frame3 대비 동일 높이 */
+  --welcome-hero-portrait-width-scale: calc((1211 / 1305) * (937 / 1097));
+  /* 타원 액자: 가로 늘임 · 세로 압축 (홀·PNG 동시 변형) */
+  --welcome-frame-stretch-x: 1.12;
+  --welcome-frame-stretch-y: 0.86;
+  --welcome-frame-scale: 1.144;
+  --welcome-frame-shift-y: 3%;
+  /* 액자 홀 안 동영상 — zoom·초점·들어올림 (clip-path 미사용) */
+  --welcome-video-zoom: 1.292;
+  --welcome-video-focus-y: 22%;
+  --welcome-video-lift: 7%;
+  /* 홀 마스크 — 타원(액자 PNG 홀 형태, 끝 라운드) */
+  --welcome-hole-radius-x: 50%;
+  --welcome-hole-radius-y: 50%;
   --welcome-portrait-anchor: calc(
     var(--welcome-frame-align-offset) +
       clamp(calc(1.65rem * var(--welcome-scale)), 3.6vw, calc(2.35rem * var(--welcome-scale))) *
@@ -246,6 +261,16 @@
     var(--welcome-page-beta-cta-gap-full) * var(--welcome-page-beta-cta-gap-ratio)
   );
   --welcome-hero-bottom-align-nudge: -10px; /* 오픈베타·CTA 위로 (-값) */
+  container-type: inline-size;
+  container-name: welcome-page;
+  /* 검수 전 열 이미지 너비 — page(cqw) 기준, hero-left % 오류 방지 */
+  --welcome-ba-before-img-width: calc(
+    (
+      100cqw * var(--welcome-ba-img-scale) - 2 * var(--welcome-ba-split-gap) -
+        var(--welcome-ba-bridge-arc-span)
+    ) * 999 / 2055 * var(--welcome-ba-pane-scale)
+  );
+  --welcome-proto-cta-max: var(--welcome-ba-before-img-width);
   box-sizing: border-box;
   width: 100%;
   max-width: var(--welcome-page-max-width);
@@ -278,6 +303,7 @@
   align-items: flex-start;
   gap: clamp(calc(0.65rem * var(--welcome-scale)), 1vw, calc(0.875rem * var(--welcome-scale)));
   min-width: 0;
+  overflow: visible;
 }
 
 .welcome-pc__page .welcome-pc__header {
@@ -432,10 +458,16 @@
   display: inline-grid;
   grid-auto-flow: row;
   justify-items: stretch;
-  width: max-content;
-  max-width: 100%;
+  width: var(--welcome-ba-before-img-width);
+  max-width: none;
   margin-inline: 0;
   gap: var(--welcome-page-beta-cta-gap);
+}
+
+.welcome-pc__page .welcome-pc__guest-cta-match .welcome-pc__perf-beta--guest {
+  flex-wrap: nowrap;
+  width: 100%;
+  white-space: nowrap;
 }
 
 .welcome-pc__page .welcome-pc__guest-cta-match .welcome-pc__perf-beta {
@@ -511,8 +543,8 @@
 }
 
 .welcome-pc__hero-right .welcome-pc__guest-portrait-wrap {
-  width: 100%;
-  max-width: var(--welcome-proto-frame-width);
+  width: calc(var(--welcome-proto-frame-width) * var(--welcome-hero-portrait-width-scale));
+  max-width: calc(var(--welcome-proto-frame-width) * var(--welcome-hero-portrait-width-scale));
   margin-inline: 0;
 }
 
@@ -539,7 +571,34 @@
   width: 100%;
 }
 
+.welcome-pc__ba-gap {
+  position: absolute;
+  top: calc(var(--welcome-ba-bridge-arc-overhang) + var(--welcome-ba-bridge-disc) * 0.5);
+  width: var(--welcome-ba-gap-illus-size);
+  line-height: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.welcome-pc__ba-gap--before {
+  left: calc(-1 * var(--welcome-ba-split-gap) / 2);
+  transform: translate(-50%, -50%);
+}
+
+.welcome-pc__ba-gap--after {
+  left: calc(100% + var(--welcome-ba-split-gap) / 2);
+  transform: translate(-50%, -50%);
+}
+
+.welcome-pc__ba-gap-illus {
+  display: block;
+  width: var(--welcome-ba-gap-illus-size);
+  height: auto;
+  max-width: 100%;
+}
+
 .welcome-pc__ba-bridge {
+  position: relative;
   display: flex;
   align-items: flex-end;
   justify-content: center;
@@ -1288,7 +1347,7 @@
   outline-offset: 2px;
 }
 
-/* —— 액자 / 모모 —— */
+/* —— 액자 / 모모 (사용자 제공 PNG 오버레이) —— */
 .welcome-pc__portrait {
   position: relative;
   width: var(--welcome-frame-width);
@@ -1297,7 +1356,11 @@
   box-sizing: border-box;
   aspect-ratio: var(--welcome-frame-aspect);
   line-height: 0;
-  overflow: hidden;
+  overflow: visible;
+  transform: translateY(var(--welcome-frame-shift-y))
+    scaleX(calc(var(--welcome-frame-stretch-x) * var(--welcome-frame-scale)))
+    scaleY(calc(var(--welcome-frame-stretch-y) * var(--welcome-frame-scale)));
+  transform-origin: center center;
 }
 
 .welcome-pc__portrait-media {
@@ -1308,19 +1371,17 @@
   bottom: var(--welcome-hole-bottom);
   z-index: 0;
   overflow: hidden;
-  border-radius: var(--welcome-hole-radius);
-  background: #1c1917;
+  border-radius: var(--welcome-hole-radius-y) / var(--welcome-hole-radius-x);
+  background: transparent;
 }
 
-/* 영상 구멍은 그대로 — 액자 PNG만 아래로 내리고 높이만 살짝 줄여 상단 틈을 덮음 */
 .welcome-pc__portrait-frame {
   position: absolute;
-  left: 0;
-  top: 4.2%;
-  width: 100%;
-  height: 95.8%;
+  inset: 0;
   z-index: 1;
   display: block;
+  width: 100%;
+  height: 100%;
   object-fit: fill;
   pointer-events: none;
   user-select: none;
@@ -1345,22 +1406,22 @@
   border: none;
   box-shadow: none;
   filter: none;
-  background: #1c1917;
+  background: transparent;
 }
 
 .momo-hero--gate .momo-video {
   position: absolute;
   left: 50%;
-  top: 50%;
-  width: 124%;
-  height: 118%;
+  top: calc(50% - var(--welcome-video-lift));
+  width: calc(100% * var(--welcome-video-zoom));
+  height: calc(100% * var(--welcome-video-zoom));
   max-width: none;
   max-height: none;
   margin: 0;
   transform: translate(-50%, -50%);
   object-fit: cover;
-  object-position: center 40%;
-  background: #1c1917;
+  object-position: center var(--welcome-video-focus-y);
+  background: transparent;
 }
 
 .welcome-pc .btn-welcome-primary.welcome-pc__start:not(.welcome-pc__auth-submit--single) {

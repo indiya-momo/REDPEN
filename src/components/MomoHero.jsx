@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { publicAssetUrl } from '../lib/publicAssetUrl.js';
 
 const MOMO_VIDEO = publicAssetUrl('momo/momo_front2.mp4');
+const GATE_MOMO_VIDEO = publicAssetUrl('momo/momo-gate.mp4');
 const MOMO_POSTER = publicAssetUrl('momo/hero-open.png');
 
 /**
@@ -36,6 +37,7 @@ export default function MomoHero({ variant = 'default' }) {
   }, [reduceMotion, usePoster]);
 
   const showPoster = reduceMotion || usePoster;
+  const videoSrc = isGate ? GATE_MOMO_VIDEO : MOMO_VIDEO;
 
   return (
     <div className={`momo-hero${isGate ? ' momo-hero--gate' : ''}`}>
@@ -46,8 +48,8 @@ export default function MomoHero({ variant = 'default' }) {
           <video
             ref={videoRef}
             className="momo-video"
-            src={MOMO_VIDEO}
-            poster={MOMO_POSTER}
+            src={videoSrc}
+            poster={isGate ? undefined : MOMO_POSTER}
             autoPlay
             loop
             muted
