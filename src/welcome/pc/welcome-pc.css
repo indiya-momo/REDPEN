@@ -85,6 +85,14 @@
 
   --welcome-guest-frame-scale: 1;
   --welcome-guest-portrait-size-scale: 0.9;
+  --welcome-desc-scale: 0.9;
+  --welcome-hero-desc-perf-gap-ratio: 1.5;
+  --welcome-hero-perf-beta-gap-ratio: 0.8;
+  --welcome-hero-perf-beta-gap: clamp(
+    calc(0.65rem * var(--welcome-scale)),
+    1vw,
+    calc(0.875rem * var(--welcome-scale))
+  );
   --welcome-hero-status-size: 18px;
   --welcome-perf-font-info: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
   --welcome-frame-width: 100%;
@@ -165,6 +173,7 @@
     min(100cqw, var(--welcome-page-max-width)) - 2 * var(--welcome-page-padding-inline) -
       var(--welcome-ba-footer-pad-inline)
   );
+  --welcome-ba-cream-outer-gap: calc(0.5rem * var(--welcome-scale));
   grid-template-rows: minmax(0, 1fr) auto;
   grid-template-columns: minmax(0, 1fr);
   grid-template-areas:
@@ -201,6 +210,8 @@
   height: 100%;
   overflow-x: clip;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 .welcome-pc__layout--guest .welcome-pc__top-band--guest-vertical {
@@ -214,6 +225,7 @@
   max-width: none;
   margin-inline: 0;
   padding-inline: 0;
+  padding-top: var(--welcome-ba-cream-outer-gap);
   padding-bottom: clamp(calc(0.35rem * var(--welcome-scale)), 0.8vw, calc(0.65rem * var(--welcome-scale)));
   text-align: left;
 }
@@ -251,6 +263,11 @@
   container-type: inline-size;
   container-name: welcome-page;
   width: 100%;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--welcome-ba-cream-outer-gap);
   --welcome-ba-fold-shift-y: 0;
   /* 크림 전시 패널 (비포·애프터 묶음) */
   --welcome-ba-panel-cream: #f2e9d2;
@@ -259,9 +276,9 @@
   --welcome-ba-panel-caption: #3d3428;
   --welcome-ba-panel-caption-muted: rgba(61, 52, 40, 0.78);
   --welcome-ba-panel-radius: 0;
-  /* 배경↔그림 = 1, CTA↔배경 = 1.5 */
+  /* 배경↔그림 = inner-pad, 버튼·푸터↔배경 = outer-gap */
   --welcome-ba-cream-inner-pad: calc(9.6px * var(--welcome-scale));
-  --welcome-ba-cta-to-cream-gap: calc(var(--welcome-ba-cream-inner-pad) * 1.5);
+  --welcome-ba-cta-to-cream-gap: var(--welcome-ba-cream-outer-gap);
   --welcome-ba-panel-pad-top: var(--welcome-ba-cream-inner-pad);
   --welcome-ba-panel-pad-inline: calc(22px * var(--welcome-scale));
   --welcome-ba-panel-pad-bottom: var(--welcome-ba-cream-inner-pad);
@@ -385,7 +402,7 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: clamp(calc(0.65rem * var(--welcome-scale)), 1vw, calc(0.875rem * var(--welcome-scale)));
+  gap: var(--welcome-hero-perf-beta-gap);
   min-width: 0;
   overflow: visible;
 }
@@ -447,7 +464,7 @@
   font-style: normal;
   font-weight: 400;
   letter-spacing: 0.125em;
-  line-height: 1.35;
+  line-height: 1;
   color: #a4937f;
 }
 
@@ -463,10 +480,10 @@
 .welcome-pc__page .welcome-pc__desc-line {
   display: flex;
   align-items: center;
-  gap: calc(0.44rem * var(--welcome-scale));
+  gap: calc(0.44rem * var(--welcome-scale) * var(--welcome-desc-scale));
   margin: 0;
   font-family: var(--welcome-perf-font-info);
-  font-size: calc(13px * var(--welcome-scale));
+  font-size: calc(13px * var(--welcome-scale) * var(--welcome-desc-scale));
   font-weight: 400;
   line-height: 1.45;
   letter-spacing: 0.01em;
@@ -480,11 +497,11 @@
   justify-content: center;
   flex: none;
   flex-shrink: 0;
-  width: calc(12px * var(--welcome-scale));
-  height: calc(12px * var(--welcome-scale));
+  width: calc(12px * var(--welcome-scale) * var(--welcome-desc-scale));
+  height: calc(12px * var(--welcome-scale) * var(--welcome-desc-scale));
   margin-right: 0;
   border-radius: 50%;
-  font-size: calc(7px * var(--welcome-scale));
+  font-size: calc(7px * var(--welcome-scale) * var(--welcome-desc-scale));
   font-weight: 800;
   line-height: 1;
   color: #fff;
@@ -497,7 +514,7 @@
 .welcome-pc__page .welcome-pc__desc-icon--no {
   border-radius: 0;
   background: none;
-  font-size: calc(12px * var(--welcome-scale));
+  font-size: calc(12px * var(--welcome-scale) * var(--welcome-desc-scale));
   font-weight: normal;
   line-height: 1;
 }
@@ -546,6 +563,9 @@
   width: var(--welcome-ba-before-img-width);
   max-width: none;
   margin-inline: 0;
+  margin-top: calc(
+    var(--welcome-hero-perf-beta-gap) * 2 * var(--welcome-hero-perf-beta-gap-ratio)
+  );
   gap: var(--welcome-page-beta-cta-gap);
 }
 
@@ -593,20 +613,18 @@
 
 .welcome-pc__landing > .welcome-pc__page {
   padding-bottom: 0;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.welcome-pc__landing > .welcome-pc__page > .welcome-pc__hero {
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .welcome-pc__landing .welcome-pc__ba-showcase-bleed {
-  margin-top: var(--welcome-ba-cta-to-cream-gap);
-}
-
-@media (min-width: 1100px) {
-  /* CTA translate 보정 — 버튼 하단~크림 상단 시각 간격을 1.5 유지 */
-  .welcome-pc__landing .welcome-pc__ba-showcase-bleed {
-    margin-top: calc(
-      var(--welcome-ba-cta-to-cream-gap) + var(--welcome-hero-bottom-align-nudge, -10px) -
-        var(--welcome-hero-cta-lift)
-    );
-  }
+  flex: 0 0 auto;
+  margin-top: 0;
 }
 
 .welcome-pc__landing .welcome-pc__ba {
@@ -997,7 +1015,12 @@
     position: relative;
     align-self: center;
     margin: 0;
-    transform: translateY(calc(-1 * var(--welcome-hero-momo-nudge-y)));
+    margin-top: calc(
+      clamp(calc(2rem * var(--welcome-scale)), 3.2vw, calc(2.75rem * var(--welcome-scale))) -
+        clamp(calc(1rem * var(--welcome-scale)), 1.4vw, calc(1.125rem * var(--welcome-scale))) -
+        12px
+    );
+    transform: none;
     padding: calc(0.44rem * var(--welcome-scale)) calc(0.94rem * var(--welcome-scale));
     font-family: var(--welcome-perf-font-info);
     font-size: calc(0.78rem * var(--welcome-scale));
@@ -1053,6 +1076,9 @@
 
   .welcome-pc__page .welcome-pc__guest-cta-match {
     margin-top: auto;
+    padding-top: calc(
+      var(--welcome-hero-perf-beta-gap) * 2 * var(--welcome-hero-perf-beta-gap-ratio)
+    );
     transform: translateY(var(--welcome-hero-bottom-align-nudge));
   }
 
@@ -1118,6 +1144,9 @@
 .welcome-pc__cta-group--in-top {
   width: 100%;
   padding: 0;
+  margin-top: calc(
+    var(--welcome-hero-perf-beta-gap) * (var(--welcome-hero-desc-perf-gap-ratio) - 1)
+  );
 }
 
 .welcome-pc__perf-ribbon {

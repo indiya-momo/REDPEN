@@ -259,7 +259,6 @@ export default function WelcomePcScreen({
         <p className="welcome-pc__perf-l2">
           <span className="welcome-pc__perf-anc welcome-pc__perf-anc--left">
             <WelcomePcSparkle className="welcome-pc__perf-spk welcome-pc__perf-spk--big" />
-            <WelcomePcSparkle className="welcome-pc__perf-spk welcome-pc__perf-spk--sm" />
             신국판
           </span>
           {' '}300페이지 PDF 검수에 단{' '}
@@ -267,7 +266,6 @@ export default function WelcomePcScreen({
           <span className="welcome-pc__perf-anc welcome-pc__perf-anc--right">
             !
             <WelcomePcSparkle className="welcome-pc__perf-spk welcome-pc__perf-spk--big" />
-            <WelcomePcSparkle className="welcome-pc__perf-spk welcome-pc__perf-spk--sm" />
           </span>
         </p>
       </div>
