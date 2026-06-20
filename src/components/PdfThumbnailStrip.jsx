@@ -1,25 +1,21 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { stripPageLabelPrefix } from '../lib/printedPageDisplay.js';
 import { renderPageToCanvas } from '../lib/pdfService.js';
-import { resolveThumbAspect } from '../lib/thumbAspect.js';
-import { DEFAULT_THUMB_ASPECT } from '../lib/thumbDisplaySize.js';
 import {
-  computeThumbLayout,
-  thumbStripCssVars,
+  buildThumbStrip,
+  DEFAULT_THUMB_ASPECT,
+  resolveThumbAspect,
 } from '../lib/thumbLayout.js';
 import { thumbSlotPages } from '../lib/thumbSlotPages.js';
 
-/** 공유 버퍼 없이 순차 렌더 — 동시 그리기 시 가로가 반으로 눌리는 현상 방지 */
 const RENDER_BATCH = 1;
 
 /**
  * @param {HTMLCanvasElement} target
  * @param {HTMLCanvasElement} source
- * @param {number} displayW
- * @param {number} displayH
  * @param {number} pageNum
  */
-function blitThumbCanvas(target, source, displayW, displayH, pageNum) {
+function blitThumbCanvas(target, source, pageNum) {
   target.width = source.width;
   target.height = source.height;
   const ctx = target.getContext('2d');
@@ -27,8 +23,6 @@ function blitThumbCanvas(target, source, displayW, displayH, pageNum) {
     ctx.clearRect(0, 0, target.width, target.height);
     ctx.drawImage(source, 0, 0);
   }
-  target.style.width = `${displayW}px`;
-  target.style.height = `${displayH}px`;
   target.dataset.renderedPage = String(pageNum);
 }
 
@@ -39,8 +33,6 @@ function blitThumbCanvas(target, source, displayW, displayH, pageNum) {
  *   onSelect: () => void,
  *   requestRender: (pageNum: number, canvas: HTMLCanvasElement, force?: boolean) => Promise<boolean>,
  *   label: string,
- *   displayW: number,
- *   displayH: number,
  *   idle?: boolean,
  * }} props
  */
@@ -50,8 +42,6 @@ function PdfThumbnailItem({
   onSelect,
   requestRender,
   label,
-  displayW,
-  displayH,
   idle = false,
 }) {
   const canvasRef = useRef(null);
@@ -60,14 +50,11 @@ function PdfThumbnailItem({
   useEffect(() => {
     setLoaded(false);
     const canvas = canvasRef.current;
-    if (canvas) {
-      canvas.width = 0;
-      canvas.height = 0;
-      canvas.style.width = `${displayW}px`;
-      canvas.style.height = `${displayH}px`;
-      delete canvas.dataset.renderedPage;
-    }
-  }, [displayH, displayW, pageNum]);
+    if (!canvas) return;
+    canvas.width = 0;
+    canvas.height = 0;
+    delete canvas.dataset.renderedPage;
+  }, [pageNum]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -80,7 +67,7 @@ function PdfThumbnailItem({
     return () => {
       cancelled = true;
     };
-  }, [active, displayH, displayW, idle, pageNum, requestRender]);
+  }, [active, idle, pageNum, requestRender]);
 
   return (
     <button
@@ -95,7 +82,6 @@ function PdfThumbnailItem({
         className={
           loaded ? 'pdf-thumb__canvas' : 'pdf-thumb__canvas pdf-thumb__canvas--loading'
         }
-        style={{ width: `${displayW}px`, height: `${displayH}px` }}
       />
       <span className="pdf-thumb__num">{label}</span>
     </button>
@@ -128,23 +114,20 @@ export default function PdfThumbnailStrip({
     [currentPage, numPages],
   );
 
-  const slotPageNums = useMemo(
-    () => slots.filter((pageNum) => pageNum != null),
-    [slots],
+  const { layout, style: stripStyle } = useMemo(
+    () => buildThumbStrip(pageAspect),
+    [pageAspect],
   );
-
-  const layout = useMemo(() => computeThumbLayout(pageAspect), [pageAspect]);
-  const stripStyle = useMemo(() => thumbStripCssVars(pageAspect), [pageAspect]);
 
   useEffect(() => {
     let cancelled = false;
-    void resolveThumbAspect(pdf, slotPageNums).then((aspect) => {
+    void resolveThumbAspect(pdf, slots).then((aspect) => {
       if (!cancelled) setPageAspect(aspect);
     });
     return () => {
       cancelled = true;
     };
-  }, [pdf, slotPageNums]);
+  }, [pdf, slots]);
 
   const pumpQueue = useCallback(() => {
     while (activeRef.current < RENDER_BATCH && queueRef.current.length > 0) {
@@ -170,27 +153,15 @@ export default function PdfThumbnailStrip({
 
       return new Promise((resolve) => {
         const job = async () => {
-          if (
-            !force &&
-            canvas.dataset.renderedPage === String(pageNum) &&
-            canvas.width > 0
-          ) {
-            resolve(true);
-            return;
-          }
-
           const offscreen = document.createElement('canvas');
-          const { displayW, displayH } = layout;
 
           try {
             const page = await pdf.getPage(pageNum);
             const base = page.getViewport({ scale: 1 });
-            const scale = displayH / base.height;
+            const scale = layout.displayH / base.height;
 
             await renderPageToCanvas(pdf, pageNum, offscreen, scale);
-
-            blitThumbCanvas(canvas, offscreen, displayW, displayH, pageNum);
-
+            blitThumbCanvas(canvas, offscreen, pageNum);
             resolve(true);
           } catch {
             resolve(false);
@@ -201,7 +172,7 @@ export default function PdfThumbnailStrip({
         pumpQueue();
       });
     },
-    [layout, pdf, pumpQueue],
+    [layout.displayH, pdf, pumpQueue],
   );
 
   useEffect(() => {
@@ -225,8 +196,6 @@ export default function PdfThumbnailStrip({
             onSelect={() => onSelectPage(pageNum)}
             requestRender={requestRender}
             label={stripPageLabelPrefix(formatPageLabel(pageNum))}
-            displayW={layout.displayW}
-            displayH={layout.displayH}
             idle={idle}
           />
         ) : (
