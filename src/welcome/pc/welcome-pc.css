@@ -264,6 +264,7 @@
   --welcome-page-beta-cta-gap: calc(
     var(--welcome-page-beta-cta-gap-full) * var(--welcome-page-beta-cta-gap-ratio)
   );
+  --welcome-ba-fold-shift-y: 13px; /* 검수 전·후 + 하단 설명 블록만 아래로 (20px − 7px) */
   --welcome-hero-bottom-align-nudge: -10px; /* 오픈베타·CTA 위로 (-값) */
   container-type: inline-size;
   container-name: welcome-page;
@@ -511,7 +512,10 @@
 }
 
 .welcome-pc__page .welcome-pc__ba {
-  margin-top: calc(var(--welcome-page-section-gap) * (var(--welcome-page-hero-ba-gap-ratio) - 1));
+  margin-top: calc(
+    var(--welcome-page-section-gap) * (var(--welcome-page-hero-ba-gap-ratio) - 1) +
+      var(--welcome-ba-fold-shift-y)
+  );
 }
 
 .welcome-pc__page .welcome-pc__fold-cap {
