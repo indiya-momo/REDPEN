@@ -43,6 +43,7 @@ import {
   CRITERIA_PRESET_LIMIT_MESSAGE,
   enforceMaxCriteriaPresets,
 } from '../lib/criteriaPresetLimit.js';
+import { mergeRuleSetsOnLogin } from '../lib/ruleSetsMerge.js';
 
 const RULE_SET_AUTOSAVE_MS = 400;
 const RULE_SET_CLOUD_SYNC_MS = 800;
@@ -261,8 +262,17 @@ export function useRuleSets(authUid = '', authEmail = '') {
         if (cancelled) return;
 
         if (cloud?.ruleSets?.length) {
-          const sets = normalizeLoadedRuleSets(cloud.ruleSets);
-          const activeId = resolveCloudActiveSetId(cloud.activeSetId, sets);
+          const localSets = normalizeLoadedRuleSets(loadRuleSets());
+          const merged = mergeRuleSetsOnLogin(localSets, cloud.ruleSets);
+          let sets = normalizeLoadedRuleSets(merged);
+          sets = enforceMaxCriteriaPresets(
+            sets,
+            authUidRef.current,
+            authEmailRef.current,
+          );
+          const activeId =
+            resolveCloudActiveSetId(cloud.activeSetId, sets) ??
+            resolveCloudActiveSetId(loadActiveSetId(), sets);
           if (!activeId) return;
           applyRuleSets(sets, activeId);
         } else {
