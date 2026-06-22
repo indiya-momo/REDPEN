@@ -65,8 +65,8 @@ export const BETA_DAILY_QUOTA_ALERT_EXPORT =
 export function buildProofreadExportConfirmMessage(exportTab = 'spelling') {
   const tabLabel = exportTab === 'consistency' ? '일관성' : '맞춤법';
   return (
-    `오늘 ${tabLabel} 검수 결과보내기는 1회(한도 1회)가능합니다\n` +
-    '보내기를 진행할까요?\n\n' +
+    `오늘 ${tabLabel} 검수 결과 다운로드는 1회 가능합니다.\n` +
+    '다운로드를 진행할까요?\n\n' +
     '※ 엑셀(.xlsx)형식으로 진행되며, PDF보내기가 준비 중입니다'
   );
 }

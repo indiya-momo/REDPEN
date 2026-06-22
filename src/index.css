@@ -3766,11 +3766,16 @@ details[open] > summary .details-chevron {
   overflow-wrap: anywhere;
 }
 
+.auxiliary-chip:has(.bon-bojo-required-badge) {
+  grid-template-columns: var(--auxiliary-chip-checkbox) max-content auto;
+  column-gap: 3px;
+}
+
 .auxiliary-chip .bon-bojo-required-badge {
   grid-column: 3;
   grid-row: 1;
   justify-self: start;
-  margin-left: -5.4px;
+  margin-left: -2.7px;
 }
 
 .auxiliary-chip:has(input:checked) .find {

@@ -414,9 +414,9 @@ export default function ConsistencyPanel({
             </span>
           </summary>
           <p className="auxiliary-checklist-intro">
-            ｢한글맞춤법｣을 토대로 ‘본용언+보조용언’ 붙여 쓸 수 있는 경우를 찾습니다
+            ｢한글맞춤법｣을 바탕으로 붙여쓸 수 있는 ‘본용언 (아/어)+보조용언’ 형태를 찾습니다
             <br />
-            본용언이 3음절 이상 복합어(예:생각하다)이면 검색에서 제외됩니다
+            본용언이 3음절 이상 복합어이면(예:생각하다) 검색에서 제외됩니다
           </p>
           <RegisteredList
             entries={auxiliaryEntries}
