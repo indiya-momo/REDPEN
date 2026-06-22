@@ -1540,6 +1540,9 @@ export default function MainScreen({
                 literalWithFindingsCount={
                   consistencyGroupsWithFindings.literalWithFindings
                 }
+                commonStringWithFindingsCount={
+                  consistencyGroupsWithFindings.commonStringWithFindings
+                }
                 auxiliaryWithFindingsCount={
                   consistencyGroupsWithFindings.auxiliaryWithFindings
                 }

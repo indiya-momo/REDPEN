@@ -57,3 +57,68 @@ export function getConsistencyHighlightTip(group) {
   if (!registered) return '';
   return `${LITERAL_PREFIX}${registered}`;
 }
+
+/**
+ * 결과 카드 한 줄 — 배지(일관성·공통 문자열·본용언 + 보조용언) + 등록 문자열
+ * @param {import('./ruleEngine.js').GroupedResult} group
+ * @returns {{ badge: string, label: string }}
+ */
+export function getConsistencyResultCardParts(group) {
+  if (group.patternKind === 'phrase-slot-find') {
+    return {
+      badge: '공통 문자열',
+      label: consistencyFindDisplayLabel(group),
+    };
+  }
+
+  if (group.patternKind === 'auxiliary-verb') {
+    return {
+      badge: '본용언 + 보조용언',
+      label: auxiliaryItemTitle(group),
+    };
+  }
+
+  return {
+    badge: '일관성',
+    label: consistencyFindDisplayLabel(group),
+  };
+}
+
+/**
+ * @deprecated 카드 UI는 getConsistencyResultCardParts + 배지 컴포넌트 사용
+ * @param {import('./ruleEngine.js').GroupedResult} group
+ * @param {number} [_itemIndex]
+ */
+export function getConsistencyResultCardTitle(group, _itemIndex = 1) {
+  const { badge, label } = getConsistencyResultCardParts(group);
+  if (group.patternKind === 'auxiliary-verb') {
+    return label ? `${badge} ${label}` : badge;
+  }
+  return label ? `${badge} ${label}` : badge;
+}
+
+/** @param {import('./ruleEngine.js').GroupedResult} group @param {string} source */
+export function consistencyResultCardKey(group, source) {
+  return `${source}-${group.label}-${group.find}`;
+}
+
+/**
+ * @param {Array<{ group: import('./ruleEngine.js').GroupedResult, source: string }>} entries
+ */
+export function buildConsistencyItemIndexMap(entries) {
+  const next = { literal: 0, commonString: 0, auxiliary: 0 };
+  /** @type {Map<string, number>} */
+  const map = new Map();
+  for (const { group, source } of entries) {
+    if (source !== 'consistency') continue;
+    const bucket =
+      group.patternKind === 'phrase-slot-find'
+        ? 'commonString'
+        : group.patternKind === 'auxiliary-verb'
+          ? 'auxiliary'
+          : 'literal';
+    next[bucket] += 1;
+    map.set(consistencyResultCardKey(group, source), next[bucket]);
+  }
+  return map;
+}

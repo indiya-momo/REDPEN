@@ -408,12 +408,13 @@ export default function ConsistencyPanel({
             <span className="caution-checklist-summary-title">
               본용언 + 보조용언 표기
               {auxiliaryTotal > 0
-                ? ` (선택 ${auxiliaryActiveCount}/${auxiliaryTotal})`
-                : ''}
+                ? `(선택 ${auxiliaryActiveCount}/${auxiliaryTotal})`
+                : ''}{' '}
+              <span className="criteria-summary-note">※개발 중</span>
             </span>
           </summary>
           <p className="auxiliary-checklist-intro">
-            (개발중) ｢한글맞춤법｣을 토대로 ‘본용언+보조용언’ 붙여 쓸 수 있는 경우를 찾습니다
+            ｢한글맞춤법｣을 토대로 ‘본용언+보조용언’ 붙여 쓸 수 있는 경우를 찾습니다
             <br />
             본용언이 3음절 이상 복합어(예:생각하다)이면 검색에서 제외됩니다
           </p>

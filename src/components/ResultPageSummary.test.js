@@ -17,21 +17,34 @@ function inst(pageNum, index) {
 }
 
 describe('buildInstancePills', () => {
-  it('emits one pill per instance with fragment labels on the same page', () => {
-    const pills = buildInstancePills([inst(6, 1), inst(6, 2)]);
-    expect(pills).toHaveLength(2);
-    expect(pills[0].indexOnPage).toBe(1);
-    expect(pills[1].indexOnPage).toBe(2);
-    expect(pills[0].totalOnPage).toBe(2);
-    expect(getInstanceFragmentLabel(pills[0].indexOnPage, pills[0].totalOnPage)).toBe(
+  it('omits fragment on pages with a single hit', () => {
+    const pills = buildInstancePills([
+      inst(40, 1),
+      inst(62, 1),
+      inst(88, 1),
+      inst(88, 2),
+    ]);
+    expect(pills.map((p) => p.inst.pageNum)).toEqual([40, 62, 88, 88]);
+    expect(getInstanceFragmentLabel(pills[0].indexOnPage, pills[0].totalOnPage)).toBeNull();
+    expect(getInstanceFragmentLabel(pills[1].indexOnPage, pills[1].totalOnPage)).toBeNull();
+    expect(getInstanceFragmentLabel(pills[2].indexOnPage, pills[2].totalOnPage)).toBe(
       '1/2',
     );
-    expect(getInstanceFragmentLabel(pills[1].indexOnPage, pills[1].totalOnPage)).toBe(
+    expect(getInstanceFragmentLabel(pills[3].indexOnPage, pills[3].totalOnPage)).toBe(
       '2/2',
     );
   });
 
-  it('omits fragment label when only one instance is on the page', () => {
+  it('orders pills by page then index within page', () => {
+    const pills = buildInstancePills([inst(6, 2), inst(4, 1), inst(6, 1)]);
+    expect(pills.map((p) => [p.inst.pageNum, p.inst.index])).toEqual([
+      [4, 1],
+      [6, 1],
+      [6, 2],
+    ]);
+  });
+
+  it('omits fragment label when the group has only one instance', () => {
     const pills = buildInstancePills([inst(4, 1)]);
     expect(getInstanceFragmentLabel(pills[0].indexOnPage, pills[0].totalOnPage)).toBeNull();
   });

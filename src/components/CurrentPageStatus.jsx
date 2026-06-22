@@ -6,8 +6,8 @@ import { formatSystemPageLabel } from '../lib/printedPageDisplay.js';
 export function CurrentPageFindingText({ visibleOnCurrentPage }) {
   return (
     <>
-      {' '}의 발견 기준{' '}
-      <span className="results-category-summary__count-underline">
+      {' '}의 발견{' '}
+      <span className="result-card-findings-count">
         [{visibleOnCurrentPage}]
       </span>
     </>

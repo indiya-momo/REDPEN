@@ -79,6 +79,8 @@
 .panel-left .results-panel--consistency .results-header,
 .panel-left .results-panel--combined.results-panel--tone-consistency .results-header,
 .panel-left .result-rule,
+.panel-left .consistency-result-chip,
+.panel-left .result-card-findings-count,
 .panel-left .caution-result-chip,
 .panel-left .result-card--consistency .result-aux-stem,
 .panel-left .toc-result-title,
@@ -191,7 +193,7 @@
 }
 
 .panel-left .current-page-status strong,
-.panel-left .current-page-status .results-category-summary__count-underline {
+.panel-left .current-page-status .result-card-findings-count {
   font-weight: var(--w-step);
 }
 
@@ -315,7 +317,8 @@
 }
 
 .panel-left .results-panel--spelling .caution-badge-inline,
-.panel-left .results-panel--consistency .caution-badge-inline {
+.panel-left .results-panel--consistency .caution-badge-inline,
+.panel-left .results-panel--consistency .consistency-badge-inline {
   border: none;
   background: var(--panel-result-pill-muted);
   color: var(--c-ink);
@@ -561,14 +564,22 @@
 /* ── 좌측 패널 간격: 제목↔설명 · 요약↔목록 · 그룹↔항목 ── */
 
 /* 결과 카드 — 제목 줄 ↔ 설명 */
-.panel-left .result-card-head-main {
-  flex-direction: column;
-  align-items: flex-start;
+.panel-left .result-card {
   gap: var(--panel-gap-title-body);
 }
 
+.panel-left .result-card-head-main {
+  flex-direction: row;
+  align-items: baseline;
+  gap: var(--space-xs-tight) var(--space-md-tight);
+}
+
 .panel-left .result-card-head {
-  margin-bottom: var(--panel-gap-block);
+  margin-bottom: 0;
+}
+
+.panel-left .result-card-detail {
+  gap: var(--panel-gap-title-body);
 }
 
 .panel-left .result-card-tip-inline,
@@ -579,7 +590,7 @@
 
 .panel-left .result-pages {
   margin-top: 0;
-  margin-bottom: var(--panel-gap-block);
+  margin-bottom: 0;
 }
 
 .panel-left .result-detail {

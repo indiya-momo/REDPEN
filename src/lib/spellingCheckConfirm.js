@@ -6,6 +6,9 @@ import { BUILT_IN_QUOTA_RULES } from './builtInRules.js';
 import { CAUTION_SEARCH_RULES } from './cautionRules.js';
 import { assertLoggedInForCheckOrAlert } from './checkAuthGate.js';
 import {
+  formatSpellingResultsSummaryLine,
+} from './checkResultSummaryFormat.js';
+import {
   betaQuotaAlertForTab,
   canRunTabCheck,
   getBetaDailyQuotaStatus,
@@ -34,7 +37,7 @@ export function formatSpellingCheckConfirmMessage({
 }) {
   return (
     `오늘 맞춤법 검수는 ${remaining}회(한도 ${tabLimit}회) 가능합니다\n` +
-    `편집자 검토 필요 기준(${cautionActive}/${cautionTotal}), 맞춤법 기준(${builtinTotal}/${builtinActive})\n` +
+    `편집자 검토 필요(${cautionActive}/${cautionTotal}), 맞춤법 규칙(${builtinTotal}/${builtinActive})\n` +
     '검수를 진행할까요?'
   );
 }
@@ -49,7 +52,7 @@ export function formatSpellingCheckConfirmMessage({
  */
 export function formatSpellingCheckConfirmMessageWithoutQuota(counts) {
   return (
-    `편집자 검토 필요 기준(${counts.cautionActive}/${counts.cautionTotal}), 맞춤법 기준(${counts.builtinTotal}/${counts.builtinActive})\n` +
+    `편집자 검토 필요(${counts.cautionActive}/${counts.cautionTotal}), 맞춤법 규칙(${counts.builtinTotal}/${counts.builtinActive})\n` +
     '검수를 진행할까요?'
   );
 }
@@ -145,8 +148,11 @@ export function formatSpellingCheckCompleteMessage({
 }) {
   return (
     `검수를 진행했습니다\n` +
-    `편집자 검토 기준 {${cautionWithFindings}}, 맞춤법 기준 {${builtinWithFindings}}이 해당되어\n` +
-    `전체 발견은 [${totalFindings}]입니다`
+    formatSpellingResultsSummaryLine({
+      cautionWithFindings,
+      builtinWithFindings,
+      totalFindings,
+    })
   );
 }
 

@@ -58,7 +58,7 @@ function estimateLines(text, colWidth) {
 
 /**
  * 페이지 레이블 텍스트 줄 수 추정 — Excel과 동일하게 공백(space) 기준 단어 단위 줄바꿈.
- * "280-281P 9/9" 같은 레이블은 중간에 잘리지 않고 통째로 다음 줄로 이동.
+ * "78-79P 122-123P" 또는 "174-175P 1/2" 같은 레이블은 중간에 잘리지 않고 통째로 다음 줄로 이동.
  * @param {string} pillText  pillsToPlainText() 결과
  * @param {number} colWidth
  */
@@ -209,7 +209,7 @@ export async function exportSpellingResults({
   // ── 요약 행 (row 2) ───────────────────────────────────────────
   ws.mergeCells('A2:E2');
   const summaryCell = ws.getCell('A2');
-  summaryCell.value = `편집자 검토 필요 기준 ${cautionCount}개 · 맞춤법 기준 ${builtinCount}개 · 전체 발견 ${totalFindings}건`;
+  summaryCell.value = `편집자 검토 필요 ${cautionCount}개 · 맞춤법 규칙 ${builtinCount}개 · 전체 발견 ${totalFindings}건`;
   summaryCell.font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FF000000' } };
   summaryCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFFFF' } };
   summaryCell.alignment = { horizontal: 'left', vertical: 'center', indent: 1, wrapText: false };

@@ -317,6 +317,91 @@ export function shiftAfterFirstPageSingleChange(
 }
 
 /**
+ * 스프레드에서 왼쪽(앞) 파일 페이지 번호
+ * @param {number} systemPage
+ * @param {boolean} [firstPageSingle]
+ */
+export function leftSystemPageInSpread(systemPage, firstPageSingle = true) {
+  if (systemPage <= 1) return 1;
+  if (firstPageSingle) {
+    if (systemPage === 1) return 1;
+    return systemPage % 2 === 0 ? systemPage : systemPage - 1;
+  }
+  return systemPage % 2 === 1 ? systemPage : systemPage - 1;
+}
+
+/**
+ * 맞추기 없이 책의 단면(280·281) 번호
+ * @param {number} systemPage
+ * @param {boolean} [firstPageSingle]
+ */
+export function naturalBookPrintedPage(systemPage, firstPageSingle = true) {
+  if (systemPage <= 1) return 1;
+  if (firstPageSingle) {
+    if (systemPage === 1) return 1;
+    return 2 + (systemPage - 2);
+  }
+  return 1 + (systemPage - 1);
+}
+
+/**
+ * 결과 pill·엑셀용 단면 번호 (맞춘 뒤 앵커 기준으로 보정)
+ * @param {number} systemPage
+ * @param {number | null} shift
+ * @param {boolean} enabled
+ * @param {number} [anchorPage]
+ * @param {boolean} [firstPageSingle]
+ */
+export function bookPrintedPageNumber(
+  systemPage,
+  shift,
+  enabled,
+  anchorPage = 1,
+  firstPageSingle = true,
+) {
+  if (!enabled) return systemPage;
+  const natural = naturalBookPrintedPage(systemPage, firstPageSingle);
+  if (shift == null) return natural;
+
+  const calRef = leftSystemPageInSpread(anchorPage, firstPageSingle);
+  if (systemPage < calRef) return natural;
+
+  const calSpreadLeft =
+    naturalPrintedLeft(anchorPage, firstPageSingle) + shift;
+  const naturalRef = naturalBookPrintedPage(calRef, firstPageSingle);
+  return calSpreadLeft + (natural - naturalRef);
+}
+
+/**
+ * @param {number} systemPage
+ * @param {number | null} shift
+ * @param {boolean} enabled
+ * @param {number} [_numPages]
+ * @param {number} [anchorPage]
+ * @param {boolean} [firstPageSingle]
+ */
+export function formatBookPageLabel(
+  systemPage,
+  shift,
+  enabled,
+  _numPages = Number.MAX_SAFE_INTEGER,
+  anchorPage = 1,
+  firstPageSingle = true,
+) {
+  return appendPageLabelSuffix(
+    String(
+      bookPrintedPageNumber(
+        systemPage,
+        shift,
+        enabled,
+        anchorPage,
+        firstPageSingle,
+      ),
+    ),
+  );
+}
+
+/**
  * @param {number} systemPage
  * @param {number | null} shift
  * @param {boolean} enabled

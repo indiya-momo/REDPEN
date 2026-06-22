@@ -47,6 +47,7 @@ export function buildTabEntries(workTab, spellingResults, consistencyResults) {
   const source = workTab === 'spelling' ? 'spelling' : 'consistency';
   for (const group of results) {
     if (group.patternKind === 'toc-body') continue;
+    if (workTab === 'consistency' && group.instances.length === 0) continue;
     entries.push({ group, source });
   }
   return entries;
@@ -73,13 +74,13 @@ export function isTabCheckDone(workTab, spellingCheckDone, consistencyWorkDone) 
 }
 
 /**
- * PDF 중앙 스테이지 실행 버튼 라벨(검사 중 / 검수 실행).
+ * PDF 중앙 스테이지 실행 버튼 라벨(검수 중 / 검수 실행).
  * @param {boolean} isProcessing
  * @param {{ phase?: string } | null | undefined} progress
  * @returns {string}
  */
 export function getCenterRunLabel(isProcessing, progress) {
-  return isProcessing && progress?.phase === 'check' ? '검사 중…' : '검수 실행';
+  return isProcessing && progress?.phase === 'check' ? '검수 중…' : '검수 실행';
 }
 
 /**
