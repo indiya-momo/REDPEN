@@ -159,12 +159,12 @@ export default function CautionChecklist({
             type="checkbox"
             checked={allChecked}
             onChange={() => onCautionSetAll(!allChecked)}
-            aria-label="편집자 검토 필요 기준 전체 선택"
+            aria-label="편집자 검토 필요 전체 선택"
           />
         </label>
         <span className="caution-checklist-summary-title">
-          편집자 검토 필요 기준(선택 {activeCount}/{total})
-          <span className="criteria-summary-note">*계속 추가됩니다</span>
+          편집자 검토 필요(선택 {activeCount}/{total})
+          <span className="criteria-summary-note">※ 계속 추가 중</span>
         </span>
       </summary>
       <ul className="caution-checklist">

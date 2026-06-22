@@ -59,6 +59,23 @@ export const BETA_DAILY_QUOTA_ALERT_EXPORT =
   '오픈베타 기간에는 회원에게 매일 1회 내보내기를 제공합니다(한국 시간 기준). ' +
   '내일 0시 이후 다시 시도해 주세요.';
 
+/**
+ * @param {'spelling' | 'consistency'} [exportTab]
+ */
+export function buildProofreadExportConfirmMessage(exportTab = 'spelling') {
+  const tabLabel = exportTab === 'consistency' ? '일관성' : '맞춤법';
+  return (
+    `오늘 ${tabLabel} 검수 결과 다운로드는 1회 가능합니다.\n` +
+    '다운로드를 진행할까요?\n\n' +
+    '※ 엑셀(.xlsx)형식으로 진행되며, PDF보내기가 준비 중입니다'
+  );
+}
+
+/** @param {'spelling' | 'consistency'} [exportTab] */
+export function confirmProofreadExportOrCancel(exportTab = 'spelling') {
+  return window.confirm(buildProofreadExportConfirmMessage(exportTab));
+}
+
 /** 피드백 제출 후 작업 탭 새로고침 — 8번 말풍선 (돌아오기만으로는 안 뜸) */
 export const FEEDBACK_SUBMIT_THANK_BUBBLE_LINES = [
   '피드백을 보내준거냥?',
@@ -780,7 +797,8 @@ export async function assertBetaDailyCheckOrAlert(uid, options = {}) {
  */
 export async function consumeBetaDailyExport(uid, email = '', exportTab = 'spelling') {
   const dayId = getKstDayId();
-  const countField = exportTab === 'consistency' ? 'consistencyExportCount' : 'spellingExportCount';
+  const countField =
+    exportTab === 'consistency' ? 'consistencyExportCount' : 'spellingExportCount';
 
   if (!isBetaDailyQuotaEnforcedForUser(uid, email)) {
     if (isLocalDevQuotaRelaxed() && uid.trim()) {
@@ -815,23 +833,25 @@ export async function consumeBetaDailyExport(uid, email = '', exportTab = 'spell
     if (error instanceof Error && error.message === 'beta-export-quota-exceeded') {
       return { ok: false, dayId, alreadyUsed: true };
     }
-    // Firestore 실패 시 허용
     return { ok: true, dayId };
   }
 }
 
 /**
- * 내보내기 전 한도 확인·차감·알림
+ *보내기 전 시도 확인·차감·알림
  * @param {string} uid
  * @param {{ authEmail?: string, exportTab?: ExportTab, onConsumed?: () => void }} [options]
  * @returns {Promise<boolean>} 진행 가능하면 true
  */
 export async function assertBetaDailyExportOrAlert(uid, options = {}) {
+  const exportTab = options.exportTab ?? 'spelling';
+  if (!confirmProofreadExportOrCancel(exportTab)) {
+    return false;
+  }
   if (!assertLoggedInForCheckOrAlert(uid)) {
     return false;
   }
   const email = options.authEmail ?? '';
-  const exportTab = options.exportTab ?? 'spelling';
   if (!isBetaDailyQuotaEnforcedForUser(uid, email)) {
     return true;
   }

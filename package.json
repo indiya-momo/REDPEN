@@ -1,7 +1,7 @@
 {
   "name": "pdf-publish-proofread",
   "private": true,
-  "version": "0.75",
+  "version": "0.89",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -13,6 +13,7 @@
     "test": "vitest run && npm run validate-data",
     "test:watch": "vitest",
     "validate-data": "node scripts/validate-data-json.mjs",
+    "version:bump": "node scripts/bump-version.mjs",
     "preview": "vite preview --host --open",
     "sync-spelling": "node scripts/sync-spelling.mjs",
     "sync-caution": "node scripts/sync-caution.mjs",

@@ -14,7 +14,7 @@ export default function PanelSectionRunButton({
   disabled = false,
   isProcessing = false,
   label = '시작',
-  processingLabel = '검사 중…',
+  processingLabel = '검수 중…',
   className = '',
   title,
 }) {

@@ -13,6 +13,9 @@ import {
 } from './phraseSlotRegister.js';
 import { assertLoggedInForCheckOrAlert } from './checkAuthGate.js';
 import {
+  formatConsistencyResultsSummaryLine,
+} from './checkResultSummaryFormat.js';
+import {
   betaQuotaAlertForTab,
   canRunTabCheck,
   getBetaDailyQuotaStatus,
@@ -61,7 +64,7 @@ export function formatConsistencyCheckConfirmMessage({
   auxiliaryTotal,
 }) {
   return (
-    `오늘 일관성 확인은 ${remaining}회(한도 ${tabLimit}회) 가능합니다\n` +
+    `오늘 일관성 검수는 ${remaining}회(한도 ${tabLimit}회) 가능합니다\n` +
     `일관성 찾기(${literalActive}/${literalTotal}), 공통 문자열 찾기(${commonStringActive}/${commonStringTotal}), 본용언 + 보조용언 표기 (${auxiliaryActive}/${auxiliaryTotal})\n` +
     '검수를 진행할까요?'
   );
@@ -185,8 +188,12 @@ export function formatConsistencyCheckCompleteMessage({
 }) {
   return (
     `검수를 진행했습니다\n` +
-    `일관성 찾기{${literalWithFindings}} 공통 문자열 찾기{${commonStringWithFindings}} 본용언 + 보조용언 표기 {${auxiliaryWithFindings}}\n` +
-    `전체 발견은 [${totalFindings}]입니다`
+    formatConsistencyResultsSummaryLine({
+      literalWithFindings,
+      commonStringWithFindings,
+      auxiliaryWithFindings,
+      totalFindings,
+    })
   );
 }
 

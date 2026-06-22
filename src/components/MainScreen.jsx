@@ -29,8 +29,7 @@ import { useTocBodyCheck } from '../toc-body/hooks/useTocBodyCheck.js';
 import { useTocBodyHighlights } from '../toc-body/hooks/useTocBodyHighlights.js';
 import { buildTocBodyTabEntries } from '../toc-body/utils/toc-body-result-entries.js';
 import { exportSpellingResults, exportConsistencyResults } from '../lib/exportResults.js';
-import { assertBetaDailyExportOrAlert } from '../lib/betaDailyQuota.js';
-import { isTocBodyCheckEnabled } from '../lib/featureFlags.js';
+import { isSpellingExportEnabled, isTocBodyCheckEnabled } from '../lib/featureFlags.js';
 import { usePdfDocument } from '../hooks/usePdfDocument.js';
 import { usePdfZoom } from '../hooks/usePdfZoom.js';
 import { useRuleCheck } from '../hooks/useRuleCheck.js';
@@ -58,7 +57,7 @@ import { useBetaDailyQuota } from '../hooks/useBetaDailyQuota.js';
 import { useRewardNotice } from '../hooks/useRewardNotice.js';
 import { daysSinceJoin, syncProfileBadges } from '../lib/badgeGrants.js';
 import { isLoginRequiredForChecks } from '../lib/checkAuthGate.js';
-import { resolveQuotaAuthEmail } from '../lib/betaDailyQuota.js';
+import { resolveQuotaAuthEmail, assertBetaDailyExportOrAlert } from '../lib/betaDailyQuota.js';
 import { countConsistencyGroupsWithFindings } from '../lib/consistencyCheckConfirm.js';
 import { countSpellingGroupsWithFindings } from '../lib/spellingCheckConfirm.js';
 import { formatRuleSetSavedDate } from '../lib/ruleSetsStorage.js';
@@ -73,6 +72,19 @@ import {
   readThumbStripOpenPreference,
   shouldShowPdfViewer,
 } from '../utils/main-screen-helpers.js';
+
+function buildProofreadExportFilename(pdfFileName, label) {
+  const today = new Date();
+  const yy = String(today.getFullYear()).slice(2);
+  const mm = String(today.getMonth() + 1).padStart(2, '0');
+  const dd = String(today.getDate()).padStart(2, '0');
+  const datePart = `${yy}${mm}${dd}`;
+  const rawProject = pdfFileName
+    ? pdfFileName.replace(/\.[^.]+$/, '')
+    : '프로젝트명';
+  const projectPart = rawProject.replace(/[\\/:*?"<>|]/g, '_');
+  return `${datePart}_${projectPart}_인디야_${label}.xlsx`;
+}
 
 /** 1번 — 기준 검수 버튼 바로 아래 (좌측 패널 안에 보이도록) */
 const WORK_GUIDE_1_ALIGN = {
@@ -481,6 +493,7 @@ export default function MainScreen({
     onBetaQuotaConsumed: () => void betaQuota.refresh(),
   });
   const tocBodyCheckEnabled = isTocBodyCheckEnabled();
+  const spellingExportEnabled = isSpellingExportEnabled();
   const tocCheck = useTocBodyCheck({
     tocBodyText,
     tocBodyStartPage,
@@ -812,18 +825,16 @@ export default function MainScreen({
   );
 
   const handleSpellingExport = useCallback(() => {
-    const today = new Date();
-    const yy = String(today.getFullYear()).slice(2);
-    const mm = String(today.getMonth() + 1).padStart(2, '0');
-    const dd = String(today.getDate()).padStart(2, '0');
-    const datePart = `${yy}${mm}${dd}`;
-    const rawProject = pdf.pdfFileName
-      ? pdf.pdfFileName.replace(/\.[^.]+$/, '')
-      : '프로젝트명';
-    const projectPart = rawProject.replace(/[\\/:*?"<>|]/g, '_');
-    const filename = `${datePart}_${projectPart}_인디야_맞춤법_검수.xlsx`;
+    if (!spellingExportEnabled) return;
+    const filename = buildProofreadExportFilename(
+      pdf.pdfFileName,
+      '맞춤법_검수',
+    );
 
-    assertBetaDailyExportOrAlert(authUid, { authEmail, exportTab: 'spelling' })
+    assertBetaDailyExportOrAlert(authUid, {
+      authEmail,
+      exportTab: 'spelling',
+    })
       .then((allowed) => {
         if (!allowed) return;
         return exportSpellingResults({
@@ -838,8 +849,9 @@ export default function MainScreen({
           filename,
         });
       })
-      .catch((err) => console.error('엑셀 내보내기 오류:', err));
+      .catch((err) => console.error('엑셀보내기 오류:', err));
   }, [
+    spellingExportEnabled,
     authUid,
     authEmail,
     pdf.pdfFileName,
@@ -853,18 +865,16 @@ export default function MainScreen({
   ]);
 
   const handleConsistencyExport = useCallback(() => {
-    const today = new Date();
-    const yy = String(today.getFullYear()).slice(2);
-    const mm = String(today.getMonth() + 1).padStart(2, '0');
-    const dd = String(today.getDate()).padStart(2, '0');
-    const datePart = `${yy}${mm}${dd}`;
-    const rawProject = pdf.pdfFileName
-      ? pdf.pdfFileName.replace(/\.[^.]+$/, '')
-      : '프로젝트명';
-    const projectPart = rawProject.replace(/[\\/:*?"<>|]/g, '_');
-    const filename = `${datePart}_${projectPart}_인디야_일관성_검수.xlsx`;
+    if (!spellingExportEnabled) return;
+    const filename = buildProofreadExportFilename(
+      pdf.pdfFileName,
+      '일관성_검수',
+    );
 
-    assertBetaDailyExportOrAlert(authUid, { authEmail, exportTab: 'consistency' })
+    assertBetaDailyExportOrAlert(authUid, {
+      authEmail,
+      exportTab: 'consistency',
+    })
       .then((allowed) => {
         if (!allowed) return;
         return exportConsistencyResults({
@@ -879,8 +889,9 @@ export default function MainScreen({
           filename,
         });
       })
-      .catch((err) => console.error('일관성 엑셀 내보내기 오류:', err));
+      .catch((err) => console.error('일관성 엑셀보내기 오류:', err));
   }, [
+    spellingExportEnabled,
     authUid,
     authEmail,
     pdf.pdfFileName,
@@ -942,8 +953,8 @@ export default function MainScreen({
           님{' '}
           <span className="pdf-work-pane__greeting-criteria">
             [{activeSavedRuleSetNameDisplay}]
-          </span>{' '}
-          기준을 적용하고 있습니다
+          </span>
+          프로젝트를 진행하고 있습니다
         </>
       ) : greetingName ? (
         <>
@@ -1007,7 +1018,7 @@ export default function MainScreen({
       message={
         <>
           <span className="tooltip-guide__work-tab-chip tooltip-guide__work-tab-chip--consistency">
-            일관성 확인
+            일관성 검수
           </span>
           에서는
           <br />
@@ -1170,14 +1181,14 @@ export default function MainScreen({
               className={`work-tab work-tab--spelling ${workTab === 'spelling' ? 'active' : ''}`}
               onClick={() => switchTab('spelling')}
             >
-              맞춤법 확인
+              맞춤법 검수
             </button>
             <button
               type="button"
               className={`work-tab work-tab--consistency ${workTab === 'consistency' ? 'active' : ''}`}
               onClick={() => switchTab('consistency')}
             >
-              일관성 확인
+              일관성 검수
             </button>
           </nav>
         </header>
@@ -1204,6 +1215,7 @@ export default function MainScreen({
                     isProcessing={pdf.isProcessing}
                   />
                 </div>
+                {spellingExportEnabled ? (
                 <div className="spelling-tab-layout__run-row-actions--export">
                   <button
                     type="button"
@@ -1211,9 +1223,10 @@ export default function MainScreen({
                     onClick={handleSpellingExport}
                     disabled={!ruleCheck.spellingCheckDone}
                   >
-                    검수 결과 내보내기(엑셀)
+                    검수 결과 다운로드
                   </button>
                 </div>
+                ) : null}
                 <div className="spelling-tab-layout__run-row-actions spelling-tab-layout__run-row-actions--end">
                   <span
                     className="spelling-tab-layout__criteria-run-wrap"
@@ -1286,7 +1299,7 @@ export default function MainScreen({
                             검수는 아직 부족한 점도 있다냥
                             <br />
                             <span className="tooltip-guide__feedback-btn-look">
-                              피드백 남기기
+                              피드백
                             </span>
                             는 언제나 환영이다냥
                             <br />
@@ -1431,6 +1444,7 @@ export default function MainScreen({
                     isProcessing={pdf.isProcessing}
                   />
                 </div>
+                {spellingExportEnabled ? (
                 <div className="spelling-tab-layout__run-row-actions--export">
                   <button
                     type="button"
@@ -1438,21 +1452,47 @@ export default function MainScreen({
                     onClick={handleConsistencyExport}
                     disabled={!ruleCheck.consistencyCheckDone}
                   >
-                    검수 결과 내보내기(엑셀)
+                    검수 결과 다운로드
                   </button>
                 </div>
+                ) : null}
                 <div className="spelling-tab-layout__run-row-actions spelling-tab-layout__run-row-actions--end">
-                  <PanelSectionRunButton
-                    label="일관성+용언 검수"
-                    onClick={handleRunConsistencyRulesCheck}
-                    disabled={
-                      pdf.pageTexts.length === 0 ||
-                      pdf.isProcessing ||
-                      checkSessionBlocked
-                    }
-                    isProcessing={pdf.isProcessing}
-                  />
+                  <span className="spelling-tab-layout__criteria-run-wrap">
+                    <PanelSectionRunButton
+                      label="일관성+용언 검수"
+                      onClick={handleRunConsistencyRulesCheck}
+                      disabled={
+                        pdf.pageTexts.length === 0 ||
+                        pdf.isProcessing ||
+                        checkSessionBlocked
+                      }
+                      isProcessing={pdf.isProcessing}
+                    />
+                  </span>
                 </div>
+              </div>
+            ) : null}
+            {pdf.pdf && consistencyWorkDone ? (
+              <div className="spelling-tab-layout__calibration">
+                <PrintedPageSetup
+                  currentSystemPage={pdf.currentPage}
+                  active={pageDisplay.active}
+                  currentPrintedLabel={pageDisplay.formatLabel(pdf.currentPage)}
+                  previewPrintedLabel={
+                    pageDisplay.active
+                      ? pageDisplay.formatPageText(pdf.currentPage)
+                      : pageDisplay.formatNaturalPreview(pdf.currentPage)
+                  }
+                  spreadInput={pageDisplay.spreadInput}
+                  onSpreadInputChange={pageDisplay.setSpreadInput}
+                  firstPageSingle={pageDisplay.firstPageSingle}
+                  onFirstPageSingleChange={pageDisplay.setFirstPageSingle}
+                  onCalibrateFromInput={pageDisplay.calibrateFromInput}
+                  onCalibratePress={() =>
+                    workGuide.dismiss(WORK_GUIDE_KEYS.PDF_OPENED)
+                  }
+                  onClear={pageDisplay.clearCalibration}
+                />
               </div>
             ) : null}
             {tocBodyCheckEnabled &&
@@ -1524,6 +1564,9 @@ export default function MainScreen({
                 ruleCount={consistencyTabEntries.length}
                 literalWithFindingsCount={
                   consistencyGroupsWithFindings.literalWithFindings
+                }
+                commonStringWithFindingsCount={
+                  consistencyGroupsWithFindings.commonStringWithFindings
                 }
                 auxiliaryWithFindingsCount={
                   consistencyGroupsWithFindings.auxiliaryWithFindings
@@ -1762,7 +1805,7 @@ export default function MainScreen({
                       }}
                     >
                       <MessageSquare size={18} aria-hidden />
-                      피드백 남기기
+                      피드백
                     </button>
                   </TooltipGuide>
                 ) : (
@@ -1775,7 +1818,7 @@ export default function MainScreen({
                     }}
                   >
                     <MessageSquare size={18} aria-hidden />
-                    피드백 남기기
+                    피드백
                   </button>
                 )}
               </div>

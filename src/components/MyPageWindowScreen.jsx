@@ -25,13 +25,17 @@ import { resolveQuotaAuthEmail } from '../lib/betaDailyQuota.js';
 import { clearRewardNotice } from '../lib/rewardNotice.js';
 import { getEarnedBadgeIds } from '../lib/userBadges.js';
 import { useBetaDailyQuota } from '../hooks/useBetaDailyQuota.js';
+import {
+  summarizeProjectRuleSet,
+  useMyPageProjects,
+} from '../hooks/useMyPageProjects.js';
+import { criteriaNameForInput } from '../lib/criteriaName.js';
 import BadgeCollectionGrid from './BadgeCollectionGrid.jsx';
 import './my-page.css';
 
 const SIDEBAR_NAV = [
-  { id: 'profile', label: '회원정보관리' },
-  { id: 'usage', label: '최근 이용 내역' },
-  { id: 'inquiry', label: '최근 문의 내역', disabled: true },
+  { id: 'profile', label: '회원 정보' },
+  { id: 'overview', label: '나의 프로젝트' },
   { id: 'badges', label: '배지 모음집' },
 ];
 
@@ -57,7 +61,7 @@ const MEMBER_BENEFIT_TIERS = [
   },
 ];
 
-const RECENT_USAGE_LIMIT = 1;
+const USAGE_PAGE_LIMIT = 20;
 
 const FAQ_ITEMS = [
   {
@@ -82,7 +86,7 @@ const FAQ_ITEMS = [
     id: 'tabs',
     question: '맞춤법과 일관성 검수는 무엇이 다른가요?',
     answer:
-      '맞춤법 탭은 내장·주의 규칙으로 오탈자·띄어쓰기 후보를 찾습니다. 일관성 탭은 표기 통일 규칙·본보조·목차·본문 일치 등을 검수합니다.',
+      '맞춤법 검수 탭은 내장·주의 규칙으로 오탈자·띄어쓰기 후보를 찾습니다. 일관성 검수 탭은 표기 통일 규칙·본보조·목차·본문 일치 등을 검수합니다.',
   },
   {
     id: 'beta',
@@ -100,8 +104,9 @@ const FAQ_ITEMS = [
 
 /**
  * @param {number | null | undefined} loginAtMs
+ * @param {number} [limit]
  */
-function getRecentUsageEntries(loginAtMs) {
+function getRecentUsageEntries(loginAtMs, limit = USAGE_PAGE_LIMIT) {
   /** @type {Array<{ atMs: number, label: string }>} */
   const entries = [];
   if (loginAtMs && Number.isFinite(loginAtMs)) {
@@ -109,7 +114,13 @@ function getRecentUsageEntries(loginAtMs) {
   }
   return entries
     .sort((a, b) => b.atMs - a.atMs)
-    .slice(0, RECENT_USAGE_LIMIT);
+    .slice(0, limit);
+}
+
+/** @param {import('../lib/ruleSetsStorage.js').RuleSet} set */
+function projectDisplayName(set) {
+  const name = criteriaNameForInput(set.name);
+  return name || '이름 없는 프로젝트';
 }
 
 function RecentUsageTable({ entries }) {
@@ -138,25 +149,6 @@ function RecentUsageTable({ entries }) {
         ))}
       </tbody>
     </table>
-  );
-}
-
-function UsageHistorySection({ loginAtMs }) {
-  const recentUsage = useMemo(
-    () => getRecentUsageEntries(loginAtMs),
-    [loginAtMs],
-  );
-
-  return (
-    <div className="mypage__main-inner mypage__main-inner--section">
-      <h1 className="mypage__page-title">최근 이용 내역</h1>
-      <section className="mypage__card" aria-labelledby="mypage-usage-page-title">
-        <h2 id="mypage-usage-page-title" className="mypage__card-subtitle">
-          이용 기록
-        </h2>
-        <RecentUsageTable entries={recentUsage} />
-      </section>
-    </div>
   );
 }
 
@@ -224,7 +216,7 @@ function MyBenefitsSection({ quota }) {
       aria-labelledby="mypage-benefits-title"
     >
       <h2 id="mypage-benefits-title" className="mypage__card-title">
-        회원정보관리
+        회원 정보
       </h2>
       {quota.loading ? null : !quota.enforced ? (
         <p className="mypage__benefits-note">
@@ -271,77 +263,35 @@ function BadgeCollectionTitleRow({ titleId, titleClassName, earnedCount, totalLa
 
 function BadgeCollectionSection({ badges, earnedCount, totalLabel }) {
   return (
-    <section
-      className="mypage__card mypage__badge-card"
-      aria-labelledby="mypage-badge-title"
-    >
-      <div className="mypage__badge-head">
-        <BadgeCollectionTitleRow
-          titleId="mypage-badge-title"
-          titleClassName="mypage__page-title mypage__page-title--in-card"
-          earnedCount={earnedCount}
-          totalLabel={totalLabel}
-        />
-        <p className="mypage__badge-lead">
-          이벤트·활동으로 모은 배지를 확인할 수 있습니다.
-        </p>
-      </div>
-      <BadgeCollectionGrid badges={badges} />
-    </section>
+    <div className="mypage__main-inner mypage__main-inner--section">
+      <section
+        className="mypage__card mypage__badge-card"
+        aria-labelledby="mypage-badge-title"
+      >
+        <div className="mypage__badge-head">
+          <BadgeCollectionTitleRow
+            titleId="mypage-badge-title"
+            titleClassName="mypage__page-title mypage__page-title--in-card"
+            earnedCount={earnedCount}
+            totalLabel={totalLabel}
+          />
+          <p className="mypage__badge-lead">
+            이벤트·활동으로 모은 배지를 확인할 수 있습니다.
+          </p>
+        </div>
+        <BadgeCollectionGrid badges={badges} />
+      </section>
+    </div>
   );
 }
 
-function OverviewDashboard({
-  badges,
-  earnedCount,
-  totalLabel,
-  loginAtMs,
-}) {
-  const recentUsage = useMemo(
-    () => getRecentUsageEntries(loginAtMs),
-    [loginAtMs],
-  );
-
+function OverviewBadgePanel({ badges, earnedCount, totalLabel }) {
   return (
-    <div className="mypage__main-inner mypage__overview-primary">
-      <section className="mypage__card" aria-labelledby="mypage-usage-title">
-        <div className="mypage__card-head">
-          <h2 id="mypage-usage-title" className="mypage__card-title">
-            최근 이용 내역
-          </h2>
-        </div>
-        <RecentUsageTable entries={recentUsage} />
-      </section>
-
+    <div className="mypage__badge-column">
       <section
-        className="mypage__card mypage__card--disabled"
-        aria-labelledby="mypage-inquiry-title"
-        aria-disabled="true"
+        className="mypage__card mypage__badge-card mypage__card--badge-preview"
+        aria-labelledby="mypage-badge-overview-title"
       >
-        <div className="mypage__card-head">
-          <h2 id="mypage-inquiry-title" className="mypage__card-title">
-            최근 문의 내역
-          </h2>
-          <span className="mypage__card-soon">준비 중</span>
-        </div>
-        <table className="mypage__table">
-          <thead>
-            <tr>
-              <th scope="col">날짜</th>
-              <th scope="col">제목</th>
-              <th scope="col">상태</th>
-            </tr>
-          </thead>
-        </table>
-        <div className="mypage__empty mypage__empty--disabled">
-          <p className="mypage__empty-title">문의 내역 기능을 준비 중입니다.</p>
-          <p className="mypage__empty-desc">
-            궁금한 점은 자주 묻는 질문을 먼저 확인해 주세요.
-          </p>
-        </div>
-      </section>
-
-      <section className="mypage__card mypage__card--badge-preview" aria-labelledby="mypage-badge-overview-title">
         <div className="mypage__badge-head">
           <BadgeCollectionTitleRow
             titleId="mypage-badge-overview-title"
@@ -349,10 +299,159 @@ function OverviewDashboard({
             earnedCount={earnedCount}
             totalLabel={totalLabel}
           />
+          <p className="mypage__badge-lead">
+            이벤트·활동으로 모은 배지를 확인할 수 있습니다.
+          </p>
         </div>
         <BadgeCollectionGrid badges={badges} />
       </section>
     </div>
+  );
+}
+
+/**
+ * @param {{
+ *   uid: string,
+ *   email: string,
+ * }} props
+ */
+function ProjectHubSection({ uid, email }) {
+  const {
+    projects,
+    activeSetId,
+    loading,
+    selectProject,
+    savedCount,
+    maxSlots,
+    exempt,
+    emptySlotCount,
+    atSlotLimit,
+  } = useMyPageProjects(uid, email);
+
+  const slotLabel = exempt
+    ? `${savedCount}개`
+    : `${savedCount}/${maxSlots}`;
+
+  return (
+    <section
+      className="mypage__card mypage__project-hub"
+      aria-labelledby="mypage-project-hub-title"
+    >
+      <div className="mypage__project-hub-head">
+        <div>
+          <div className="mypage__project-hub-title-row">
+            <h1 id="mypage-project-hub-title" className="mypage__page-title">
+              나의 프로젝트
+            </h1>
+            <span className="mypage__project-preparing">
+              *준비중인 기능입니다
+            </span>
+          </div>
+          <p className="mypage__project-hub-lead">
+            저장한 검수 기준을 불러와 작업을 이어갈 수 있습니다.
+          </p>
+        </div>
+        <p className="mypage__project-slot-gauge" aria-live="polite">
+          슬롯 <strong>{slotLabel}</strong>
+        </p>
+      </div>
+
+      {loading ? (
+        <p className="mypage__project-loading" role="status">
+          프로젝트를 불러오는 중…
+        </p>
+      ) : (
+        <div className="mypage__project-slots">
+          {projects.map((set) => {
+            const isActive = set.id === activeSetId;
+            return (
+              <article
+                key={set.id}
+                className={`mypage__project-card${isActive ? ' mypage__project-card--active' : ''}`}
+              >
+                <div className="mypage__project-card-head">
+                  <h2 className="mypage__project-name">
+                    {projectDisplayName(set)}
+                  </h2>
+                  {isActive ? (
+                    <span className="mypage__project-active-badge">
+                      현재 선택
+                    </span>
+                  ) : null}
+                </div>
+                <p className="mypage__project-summary">
+                  {summarizeProjectRuleSet(set)}
+                </p>
+                <button
+                  type="button"
+                  className="mypage__project-load"
+                  onClick={() => selectProject(set.id)}
+                >
+                  검수에 불러오기
+                </button>
+              </article>
+            );
+          })}
+
+          {Array.from({ length: emptySlotCount }, (_, index) => (
+            <div
+              key={`empty-slot-${index}`}
+              className="mypage__project-slot mypage__project-slot--empty"
+            >
+              <p className="mypage__project-slot-label">빈 슬롯</p>
+              <p className="mypage__project-slot-desc">
+                검수 화면에서 기준을 저장하면 여기에 표시됩니다.
+              </p>
+            </div>
+          ))}
+
+          {!loading && projects.length === 0 && emptySlotCount === 0 ? (
+            <div className="mypage__project-empty">
+              <p className="mypage__empty-title">저장된 프로젝트가 없습니다.</p>
+              <p className="mypage__empty-desc">
+                검수 화면에서 맞춤법·일관성 기준을 저장해 주세요.
+              </p>
+              <button
+                type="button"
+                className="mypage__project-load"
+                onClick={returnToWorkspace}
+              >
+                검수 화면으로 이동
+              </button>
+            </div>
+          ) : null}
+        </div>
+      )}
+
+      {atSlotLimit ? (
+        <p className="mypage__project-upgrade">
+          추가 프로젝트 슬롯은 유료 플랜에서 제공될 예정입니다.
+        </p>
+      ) : null}
+    </section>
+  );
+}
+
+function InquiryPlaceholderCard() {
+  return (
+    <section
+      className="mypage__card mypage__card--disabled"
+      aria-labelledby="mypage-inquiry-title"
+      aria-disabled="true"
+    >
+      <div className="mypage__card-head">
+        <h2 id="mypage-inquiry-title" className="mypage__card-title">
+          문의
+        </h2>
+        <span className="mypage__card-soon">준비 중</span>
+      </div>
+      <div className="mypage__empty mypage__empty--disabled">
+        <p className="mypage__empty-title">문의 내역 기능을 준비 중입니다.</p>
+        <p className="mypage__empty-desc">
+          궁금한 점은 자주 묻는 질문을 먼저 확인해 주세요.
+        </p>
+      </div>
+    </section>
   );
 }
 
@@ -376,10 +475,15 @@ function MyPageFaq() {
   );
 }
 
-function ProfileSection({ displayName, email, daysWithMomo, authUid }) {
+function ProfileSection({ displayName, email, daysWithMomo, loginAtMs }) {
+  const recentUsage = useMemo(
+    () => getRecentUsageEntries(loginAtMs),
+    [loginAtMs],
+  );
+
   return (
     <div className="mypage__main-inner mypage__main-inner--section">
-      <h1 className="mypage__page-title">회원정보관리</h1>
+      <h1 className="mypage__page-title">회원 정보</h1>
       <section
         className="mypage__card mypage__profile-card"
         aria-labelledby="mypage-profile-title"
@@ -416,6 +520,17 @@ function ProfileSection({ displayName, email, daysWithMomo, authUid }) {
           이메일은 Google 로그인 계정이며, 인디야에서 변경할 수 없습니다.
         </p>
       </section>
+
+      <section className="mypage__card" aria-labelledby="mypage-usage-title">
+        <div className="mypage__card-head">
+          <h2 id="mypage-usage-title" className="mypage__card-title">
+            이용 내역
+          </h2>
+        </div>
+        <RecentUsageTable entries={recentUsage} />
+      </section>
+
+      <InquiryPlaceholderCard />
     </div>
   );
 }
@@ -619,12 +734,12 @@ export default function MyPageWindowScreen({ authSession, authReady }) {
               <MemberBenefitTierBanner quota={quota} authUid={authSession.uid} />
               <MyBenefitsSection quota={quota} />
             </div>
-            <div className="mypage__overview-layout">
-              <OverviewDashboard
+            <ProjectHubSection uid={authSession.uid} email={quotaEmail} />
+            <div className="mypage__overview-secondary">
+              <OverviewBadgePanel
                 badges={badges}
                 earnedCount={badgeStats.earnedCount}
                 totalLabel={badgeStats.totalLabel}
-                loginAtMs={loginAtMs}
               />
               <MyPageFaq />
             </div>
@@ -634,18 +749,14 @@ export default function MyPageWindowScreen({ authSession, authReady }) {
             displayName={displayName}
             email={email}
             daysWithMomo={daysWithMomo}
-            authUid={authSession.uid}
+            loginAtMs={loginAtMs}
           />
-        ) : activeNav === 'usage' ? (
-          <UsageHistorySection loginAtMs={loginAtMs} />
         ) : activeNav === 'badges' ? (
-          <div className="mypage__main-inner mypage__main-inner--section">
-            <BadgeCollectionSection
-              badges={badges}
-              earnedCount={badgeStats.earnedCount}
-              totalLabel={badgeStats.totalLabel}
-            />
-          </div>
+          <BadgeCollectionSection
+            badges={badges}
+            earnedCount={badgeStats.earnedCount}
+            totalLabel={badgeStats.totalLabel}
+          />
         ) : null}
       </main>
     </div>

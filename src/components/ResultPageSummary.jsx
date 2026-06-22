@@ -6,13 +6,6 @@ const RESULT_PILL_COLLAPSE_THRESHOLD = 15;
 
 /**
  * @typedef {{
- *   pageNum: number,
- *   instances: import('../lib/ruleEngine.js').MatchInstance[],
- * }} PageGroupEntry
- */
-
-/**
- * @typedef {{
  *   inst: import('../lib/ruleEngine.js').MatchInstance,
  *   indexOnPage: number,
  *   totalOnPage: number,
@@ -21,9 +14,9 @@ const RESULT_PILL_COLLAPSE_THRESHOLD = 15;
 
 /**
  * @param {import('../lib/ruleEngine.js').MatchInstance[]} instances
- * @returns {PageGroupEntry[]}
+ * @returns {InstancePillEntry[]}
  */
-function buildPageGroups(instances) {
+export function buildInstancePills(instances) {
   const byPage = new Map();
   for (const inst of instances) {
     const list = byPage.get(inst.pageNum) ?? [];
@@ -31,26 +24,14 @@ function buildPageGroups(instances) {
     byPage.set(inst.pageNum, list);
   }
 
-  /** @type {PageGroupEntry[]} */
-  const groups = [];
+  /** @type {InstancePillEntry[]} */
+  const pills = [];
   for (const pageNum of [...byPage.keys()].sort((a, b) => a - b)) {
     const pageInstances = (byPage.get(pageNum) ?? []).sort(
       (a, b) => a.index - b.index,
     );
-    groups.push({ pageNum, instances: pageInstances });
-  }
-  return groups;
-}
-
-/**
- * @param {import('../lib/ruleEngine.js').MatchInstance[]} instances
- * @returns {InstancePillEntry[]}
- */
-export function buildInstancePills(instances) {
-  const pills = [];
-  for (const group of buildPageGroups(instances)) {
-    const totalOnPage = group.instances.length;
-    group.instances.forEach((inst, index) => {
+    const totalOnPage = pageInstances.length;
+    pageInstances.forEach((inst, index) => {
       pills.push({
         inst,
         indexOnPage: index + 1,

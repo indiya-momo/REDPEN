@@ -36,6 +36,7 @@ import {
   isRuleSetsCloudEnabled,
   loadRuleSetsCloud,
   resolveCloudActiveSetId,
+  resolveHydratedActiveSetId,
   saveRuleSetsCloud,
 } from '../lib/ruleSetsCloud.js';
 import {
@@ -43,6 +44,7 @@ import {
   CRITERIA_PRESET_LIMIT_MESSAGE,
   enforceMaxCriteriaPresets,
 } from '../lib/criteriaPresetLimit.js';
+import { mergeRuleSetsOnLogin } from '../lib/ruleSetsMerge.js';
 
 const RULE_SET_AUTOSAVE_MS = 400;
 const RULE_SET_CLOUD_SYNC_MS = 800;
@@ -156,17 +158,17 @@ export function useRuleSets(authUid = '', authEmail = '') {
 
   useEffect(() => {
     const sets = normalizeLoadedRuleSets(loadRuleSets());
+    const storedActive = loadActiveSetId();
+    const activeId =
+      storedActive && sets.some((s) => s.id === storedActive)
+        ? storedActive
+        : sets[0].id;
+    ruleSetsRef.current = sets;
+    activeSetIdRef.current = activeId;
     saveRuleSets(sets);
-    if (!loadActiveSetId() || !sets.some((s) => s.id === loadActiveSetId())) {
-      saveActiveSetId(sets[0].id);
-    }
-    const savedActive = loadActiveSetId();
+    saveActiveSetId(activeId);
     setRuleSets(sets);
-    setActiveSetId(
-      savedActive && sets.some((s) => s.id === savedActive)
-        ? savedActive
-        : sets[0].id,
-    );
+    setActiveSetId(activeId);
     setRulesReady(true);
   }, []);
 
@@ -261,17 +263,29 @@ export function useRuleSets(authUid = '', authEmail = '') {
         if (cancelled) return;
 
         if (cloud?.ruleSets?.length) {
-          const sets = normalizeLoadedRuleSets(cloud.ruleSets);
-          const activeId = resolveCloudActiveSetId(cloud.activeSetId, sets);
+          const localSets = normalizeLoadedRuleSets(loadRuleSets());
+          const merged = mergeRuleSetsOnLogin(localSets, cloud.ruleSets);
+          let sets = normalizeLoadedRuleSets(merged);
+          sets = enforceMaxCriteriaPresets(
+            sets,
+            authUidRef.current,
+            authEmailRef.current,
+          );
+          const activeId = resolveHydratedActiveSetId(
+            sets,
+            loadActiveSetId(),
+            cloud.activeSetId,
+          );
           if (!activeId) return;
           applyRuleSets(sets, activeId);
         } else {
-          flushPendingRuleSetsSave();
-          await saveRuleSetsCloud(
-            uid,
-            ruleSetsRef.current,
-            activeSetIdRef.current,
-          );
+          const localSets = normalizeLoadedRuleSets(loadRuleSets());
+          const activeId =
+            resolveHydratedActiveSetId(localSets, loadActiveSetId(), null) ??
+            localSets[0]?.id ??
+            null;
+          if (!activeId) return;
+          applyRuleSets(localSets, activeId);
         }
         cloudHydratedUidRef.current = uid;
       } catch (e) {
@@ -428,22 +442,35 @@ export function useRuleSets(authUid = '', authEmail = '') {
             : s,
         );
       } else {
-        targetId = newId();
-        const created = normalizeRuleSet({
-          id: targetId,
-          name,
-          ...config,
-          savedAt,
-        });
-        next = [...ruleSetsRef.current, created];
+        const soleDraft =
+          ruleSetsRef.current.length === 1 &&
+          !ruleSetsRef.current[0]?.savedAt;
+        if (soleDraft) {
+          targetId = ruleSetsRef.current[0].id;
+          next = ruleSetsRef.current.map((s) =>
+            s.id === targetId
+              ? normalizeRuleSet({
+                  id: targetId,
+                  name,
+                  ...config,
+                  savedAt,
+                })
+              : s,
+          );
+        } else {
+          targetId = newId();
+          const created = normalizeRuleSet({
+            id: targetId,
+            name,
+            ...config,
+            savedAt,
+          });
+          next = [...ruleSetsRef.current, created];
+        }
       }
 
       ruleSetsRef.current = next;
-      setRuleSets(next);
-      flushRuleSets(next, targetId);
-      setActiveSetId(targetId);
-      activeSetIdRef.current = targetId;
-      void flushCloudRuleSetsImmediate();
+      applyRuleSets(next, targetId);
 
       const saved = next.find((s) => s.id === targetId);
       if (saved) {
@@ -460,7 +487,7 @@ export function useRuleSets(authUid = '', authEmail = '') {
       alert(`「${name}」 프로젝트가 저장되었습니다.`);
       return true;
     },
-    [flushRuleSets, flushCloudRuleSetsImmediate],
+    [applyRuleSets],
   );
 
   /** 저장한 기준 프리셋 삭제(목록·localStorage) */

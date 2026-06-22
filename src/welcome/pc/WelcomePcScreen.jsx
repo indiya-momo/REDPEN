@@ -164,7 +164,7 @@ export default function WelcomePcScreen({
               <span className="welcome-pc__desc-icon welcome-pc__desc-icon--ok" aria-hidden>
                 ✓
               </span>
-              선택한 맞춤법 · 일관성 규칙에 따라 PDF 원고를 검수합니다
+              선택한 맞춤법 · 일관성 기준에 따라 PDF 원고를 검수합니다
             </p>
             <p className="welcome-pc__desc-line">
               <span className="welcome-pc__desc-icon welcome-pc__desc-icon--no" aria-hidden>
@@ -245,15 +245,15 @@ export default function WelcomePcScreen({
           <span className="welcome-pc__perf-l1-num" aria-hidden>
             ❶
           </span>
-          맞춤법 규칙{' '}
+          맞춤법{' '}
           <span className="welcome-pc__perf-l1-num" aria-hidden>
             ❷
           </span>
-          {' '}일관성 확인{' '}
+          {' '}일관성{' '}
           <span className="welcome-pc__perf-l1-num" aria-hidden>
             ❸
           </span>
-          보조용언 + 본용언 표기 확인
+          보조용언 + 본용언 표기
         </p>
 
         <p className="welcome-pc__perf-l2">

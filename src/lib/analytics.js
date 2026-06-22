@@ -9,6 +9,7 @@ import { resolvePostHogHost, resolvePostHogKey } from './posthogEnv.js';
 
 const OPT_OUT_KEY = 'pdf-proofread-analytics-opt-out';
 const SESSION_SENT_KEY = 'pdf-proofread-analytics-session';
+const PDF_UPLOAD_COUNT_KEY = 'pdf-proofread-analytics-upload-count';
 
 /** @type {import('posthog-js').PostHog | null} */
 let posthogClient = null;
@@ -39,6 +40,11 @@ function applyIdentify(id, properties) {
     is_internal: properties.is_internal,
     is_logged_in: true,
   });
+  if (typeof posthogClient.setPersonProperties === 'function') {
+    posthogClient.setPersonProperties({
+      pdf_upload_count: readPdfUploadCount(),
+    });
+  }
   // Live events에서 $identify 대신 확인하기 쉬운 커스텀 이벤트 (uid·이메일 없음)
   posthogClient.capture('user_identified', {
     is_internal: properties.is_internal,
@@ -140,6 +146,11 @@ export function setAnalyticsOptOut(optOut) {
   if (optOut) {
     pendingCaptures.length = 0;
     pendingIdentify = null;
+    try {
+      localStorage.removeItem(PDF_UPLOAD_COUNT_KEY);
+    } catch {
+      /* private mode */
+    }
     if (posthogClient) posthogClient.opt_out_capturing();
     return;
   }
@@ -183,6 +194,38 @@ export function bucketFindingCount(n) {
   if (n <= 100) return '21-100';
   if (n <= 500) return '101-500';
   return '501+';
+}
+
+/** @returns {number} */
+export function readPdfUploadCount() {
+  try {
+    const n = Number.parseInt(localStorage.getItem(PDF_UPLOAD_COUNT_KEY) ?? '0', 10);
+    return Number.isFinite(n) && n >= 0 ? n : 0;
+  } catch {
+    return 0;
+  }
+}
+
+/**
+ * PDF 업로드 누적 횟수 +1 후 이번 업로드 순번(1부터).
+ * @returns {number}
+ */
+export function nextPdfUploadIndex() {
+  const next = readPdfUploadCount() + 1;
+  try {
+    localStorage.setItem(PDF_UPLOAD_COUNT_KEY, String(next));
+  } catch {
+    /* private mode */
+  }
+  return next;
+}
+
+/** @param {number} n */
+export function bucketUploadIndex(n) {
+  if (n <= 1) return '1';
+  if (n === 2) return '2';
+  if (n === 3) return '3';
+  return '4+';
 }
 
 /**
@@ -251,11 +294,20 @@ export async function initAnalytics() {
  * @param {{ pageCount: number, sizeBytes: number, textExtracted: boolean }} input
  */
 export function trackPdfOpened(input) {
+  const uploadIndex = nextPdfUploadIndex();
   captureAnalytics('pdf_opened', {
     page_count_bucket: bucketPageCount(input.pageCount),
     size_mb_bucket: bucketFileSizeMb(input.sizeBytes),
     text_extracted: input.textExtracted,
+    upload_index_bucket: bucketUploadIndex(uploadIndex),
+    is_return_upload: uploadIndex > 1,
   });
+  if (
+    posthogClient &&
+    typeof posthogClient.setPersonProperties === 'function'
+  ) {
+    posthogClient.setPersonProperties({ pdf_upload_count: uploadIndex });
+  }
 }
 
 /**
