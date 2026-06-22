@@ -1452,7 +1452,7 @@ export default function MainScreen({
                     onClick={handleConsistencyExport}
                     disabled={!ruleCheck.consistencyCheckDone}
                   >
-                    검수 결과보내기
+                    검수 결과 내보내기
                   </button>
                 </div>
                 ) : null}
