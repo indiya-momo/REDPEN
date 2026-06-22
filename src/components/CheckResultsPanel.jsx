@@ -47,9 +47,12 @@ function ResultHeaderSummary({
             {`{${builtinWithFindingsCount}}`}
           </span>
         </span>
-        {' '}전체 발견 기준{' '}
-        <span className="results-category-summary__count-underline">
-          {`[${totalFindings}]`}
+        <span className="results-header__total-findings">
+          {' '}
+          전체 발견 기준{' '}
+          <span className="results-category-summary__count-underline">
+            {`[${totalFindings}]`}
+          </span>
         </span>
       </div>
     );
@@ -68,9 +71,11 @@ function ResultHeaderSummary({
             {`{${auxiliaryWithFindingsCount}}`}
           </span>
         </span>
-        , 전체 발견 기준{' '}
-        <span className="results-category-summary__count-underline">
-          {`[${totalFindings}]`}
+        <span className="results-header__total-findings">
+          , 전체 발견 기준{' '}
+          <span className="results-category-summary__count-underline">
+            {`[${totalFindings}]`}
+          </span>
         </span>
       </div>
     );
@@ -81,9 +86,11 @@ function ResultHeaderSummary({
       <span className="results-header__applied">
         기준 <span className="results-header__rule-chip">{ruleCount}</span> 적용
       </span>{' '}
-      전체 발견 기준{' '}
-      <span className="results-category-summary__count-underline">
-        {totalFindings}
+      <span className="results-header__total-findings">
+        전체 발견 기준{' '}
+        <span className="results-category-summary__count-underline">
+          {totalFindings}
+        </span>
       </span>
     </div>
   );
