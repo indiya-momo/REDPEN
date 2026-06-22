@@ -1,6 +1,5 @@
 import ResultPageSummary from '../../components/ResultPageSummary.jsx';
 import GroupVisibilityCheckbox from '../../components/GroupVisibilityCheckbox.jsx';
-import PrintedPageSetup from '../../components/PrintedPageSetup.jsx';
 import { TOC_STATUS_LABELS } from '../lib/tocBodyCheck.js';
 import { countTocBodyTabFindings } from '../utils/toc-body-result-entries.js';
 
@@ -70,20 +69,6 @@ export default function TocBodyResultsPanel({
 
   return (
     <section className="results-panel results-panel--toc-body" aria-label="목차 · 본문 일치 확인 결과">
-      {pdf && onCalibrateFromInput ? (
-        <PrintedPageSetup
-          currentSystemPage={currentPage}
-          active={Boolean(printedPagesActive)}
-          currentPrintedLabel={currentPrintedLabel ?? ''}
-          previewPrintedLabel={previewPrintedLabel ?? ''}
-          spreadInput={spreadInput ?? false}
-          onSpreadInputChange={onSpreadInputChange ?? (() => {})}
-          firstPageSingle={firstPageSingle ?? false}
-          onFirstPageSingleChange={onFirstPageSingleChange ?? (() => {})}
-          onCalibrateFromInput={onCalibrateFromInput}
-          onClear={onClearPrintedPageOffset ?? (() => {})}
-        />
-      ) : null}
       {entries.length > 0 ? (
         <>
           <div className="results-header">

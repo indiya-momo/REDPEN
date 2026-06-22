@@ -209,8 +209,8 @@ export default function BuiltinSpellingPanel({
           />
         </label>
         <span className="builtin-spelling-summary-title">
-          맞춤법 기준(선택 {enabled}/{total})
-          <span className="criteria-summary-note">*계속 추가됩니다</span>
+          맞춤법 규칙(선택 {enabled}/{total})
+          <span className="criteria-summary-note">※ 계속 추가 중</span>
         </span>
       </summary>
       {guideRules.length > 0 ? (

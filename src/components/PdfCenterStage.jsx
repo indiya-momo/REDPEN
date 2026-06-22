@@ -291,7 +291,7 @@ export default function PdfCenterStage({
                 disabled={runDisabled}
               >
                 <Play size={16} />
-                {checkBusy ? '검사 중…' : runLabel}
+                {checkBusy ? '검수 중…' : runLabel}
               </button>
             ) : null}
 

@@ -58,7 +58,7 @@ npx -y @posthog/wizard@latest --region eu
 | 이벤트 | 시점 | 속성 (예) |
 |--------|------|-----------|
 | `session_start` | 세션당 1회 (탭) | `app_version`, `build_id`, `deploy_mode` |
-| `pdf_opened` | PDF 로드·추출 완료 | `page_count_bucket`, `size_mb_bucket`, `text_extracted` |
+| `pdf_opened` | PDF 로드·추출 완료 | `page_count_bucket`, `size_mb_bucket`, `text_extracted`, `upload_index_bucket` (1/2/3/4+), `is_return_upload` |
 | `check_run` | 맞춤법/일관성 검사 끝 | `scope`, `finding_count_bucket`, `active_rule_count_bucket` |
 | `result_viewed` | 검사 완료 직후 (결과 패널로 전환) | `scope`, `finding_count_bucket` |
 | `ruleset_saved` | 규칙 세트 「저장」 클릭 | `builtin_bucket`, `spacing_bucket`, `consistency_bucket` |
@@ -70,7 +70,7 @@ npx -y @posthog/wizard@latest --region eu
 
 ## PostHog 대시보드 (자동 생성)
 
-한 번만 실행하면 **코호트(내부 제외) + 인사이트 4개 + 대시보드**가 만들어집니다.
+한 번만 실행하면 **코호트(내부 제외·재업로드 2회+) + 인사이트 + 대시보드**가 만들어집니다.
 
 1. [PostHog](https://us.posthog.com) → **Settings → Personal API keys** → `phx_…` 발급 (`cohort:write`, `insight:write`)
 2. 브라우저 주소 `https://us.posthog.com/project/12345/…` 의 **숫자** = project id
@@ -85,8 +85,8 @@ npm run posthog:setup-beta
 
 `project:read` 권한이 없으면 **2번 PROJECT_ID는 필수**입니다.
 
-생성물: 대시보드 **「인디야 오픈베타」** — 방문 / 로그인 전환 / 로그인 후 검수 / `check_run` identify 연결.  
-필터: Person **`is_internal` is not true** (내부 테스트 계정 제외).
+생성물: 대시보드 **「인디야 오픈베타」** — 방문 / 로그인 전환 / 로그인 후 검수 / `check_run` identify 연결 / **PDF 업로드·재업로드** / 재방문 후 업로드 퍼널.  
+필터: Person **`is_internal` is not true** (내부 테스트 계정 제외). 재업로드 지표는 `pdf_opened`의 `is_return_upload`·`upload_index_bucket` 및 person `pdf_upload_count` 사용.
 
 **6/9 이후** 로그인·검수 지표만 제품 판단에 쓰세요. 그 이전은 identify 미연결로 참고만.
 

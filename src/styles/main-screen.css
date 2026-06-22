@@ -71,6 +71,7 @@
 .panel-left .results-category-summary,
 .panel-left .results-header,
 .panel-left .results-header__applied,
+.panel-left .results-header__total-findings,
 .panel-left .results-header__total,
 .panel-left .results-header__breakdown,
 .panel-left .results-panel--spelling.results-panel--tone-builtin .results-header,
@@ -78,6 +79,8 @@
 .panel-left .results-panel--consistency .results-header,
 .panel-left .results-panel--combined.results-panel--tone-consistency .results-header,
 .panel-left .result-rule,
+.panel-left .consistency-result-chip,
+.panel-left .result-card-findings-count,
 .panel-left .caution-result-chip,
 .panel-left .result-card--consistency .result-aux-stem,
 .panel-left .toc-result-title,
@@ -190,7 +193,7 @@
 }
 
 .panel-left .current-page-status strong,
-.panel-left .current-page-status .results-category-summary__count-underline {
+.panel-left .current-page-status .result-card-findings-count {
   font-weight: var(--w-step);
 }
 
@@ -314,7 +317,8 @@
 }
 
 .panel-left .results-panel--spelling .caution-badge-inline,
-.panel-left .results-panel--consistency .caution-badge-inline {
+.panel-left .results-panel--consistency .caution-badge-inline,
+.panel-left .results-panel--consistency .consistency-badge-inline {
   border: none;
   background: var(--panel-result-pill-muted);
   color: var(--c-ink);
@@ -560,14 +564,22 @@
 /* ── 좌측 패널 간격: 제목↔설명 · 요약↔목록 · 그룹↔항목 ── */
 
 /* 결과 카드 — 제목 줄 ↔ 설명 */
-.panel-left .result-card-head-main {
-  flex-direction: column;
-  align-items: flex-start;
+.panel-left .result-card {
   gap: var(--panel-gap-title-body);
 }
 
+.panel-left .result-card-head-main {
+  flex-direction: row;
+  align-items: baseline;
+  gap: var(--space-xs-tight) var(--space-md-tight);
+}
+
 .panel-left .result-card-head {
-  margin-bottom: var(--panel-gap-block);
+  margin-bottom: 0;
+}
+
+.panel-left .result-card-detail {
+  gap: var(--panel-gap-title-body);
 }
 
 .panel-left .result-card-tip-inline,
@@ -578,7 +590,7 @@
 
 .panel-left .result-pages {
   margin-top: 0;
-  margin-bottom: var(--panel-gap-block);
+  margin-bottom: 0;
 }
 
 .panel-left .result-detail {
@@ -639,7 +651,7 @@
 .panel-left .consistency-toc-section__start-page-input,
 .panel-left .consistency-toc-section__exclude-pages-input,
 .panel-left .consistency-toc-section__textarea {
-  border-color: var(--panel-border-soft);
+  border: none;
 }
 
 .panel-left .spelling-tab-layout__calibration .printed-page-setup {
@@ -1040,7 +1052,7 @@
   color: var(--color-text);
 }
 
-/* 4번 말풍선 — 좌측 「일관성 확인」탭 칩 */
+/* 4번 말풍선 — 좌측 「일관성 검수」탭 칩 */
 .tooltip-guide__work-tab-chip {
   display: inline-block;
   margin: 0 2px;
@@ -1199,16 +1211,15 @@
   display: flex;
   align-items: stretch;
   min-width: 0;
-  border: 1px solid var(--color-border-strong);
+  border: none;
   border-radius: var(--radius-ui);
-  background: var(--color-surface);
+  background: var(--btn-secondary-bg);
   overflow: hidden;
 }
 
 .panel-left__criteria-picker-field:focus-within {
   outline: 2px solid var(--focus-ring);
   outline-offset: 1px;
-  border-color: var(--focus-border);
 }
 
 .panel-left__criteria-name {
@@ -1242,8 +1253,7 @@
   width: 2.1rem;
   padding: 0;
   border: none;
-  border-left: 1px solid var(--color-border-strong);
-  background: var(--color-surface-inset);
+  background: transparent;
   color: var(--color-text-muted);
   cursor: pointer;
 }
@@ -1363,39 +1373,29 @@
   height: 2.1rem;
   padding: 0;
   box-sizing: border-box;
-  border-radius: var(--radius-ui);
   font-size: 0.78rem;
-  font-weight: 700;
   white-space: nowrap;
+}
+
+.panel-left__save-rules,
+.panel-left__delete-rules,
+.pdf-work-pane__aux-btn {
+  border: none;
+  border-radius: var(--radius-ui);
+  background: var(--btn-secondary-bg);
+  color: var(--btn-secondary-text);
+  font-weight: 700;
   cursor: pointer;
   transition:
     background 0.15s ease,
-    border-color 0.15s ease,
     color 0.15s ease;
 }
 
-.panel-left__save-rules {
-  border: 1px solid var(--accent-terracotta);
-  background: var(--color-surface);
-  color: var(--accent-terracotta);
-}
-
-.panel-left__save-rules:hover {
-  background: var(--panel-accordion-bg);
-  border-color: var(--accent-terracotta-deep);
-  color: var(--accent-terracotta-deep);
-}
-
-.panel-left__delete-rules {
-  border: 1px solid var(--color-border-strong);
-  background: var(--color-surface);
-  color: var(--color-text-muted);
-}
-
-.panel-left__delete-rules:hover:not(:disabled) {
-  border-color: var(--accent-terracotta);
-  background: var(--panel-accordion-bg);
-  color: var(--accent-terracotta-deep);
+.panel-left__save-rules:hover,
+.panel-left__delete-rules:hover:not(:disabled),
+.pdf-work-pane__aux-btn:hover {
+  background: var(--btn-secondary-hover-bg);
+  color: var(--btn-secondary-text);
 }
 
 .panel-left__delete-rules:disabled {
@@ -1574,6 +1574,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-shrink: 0;
   min-width: 0;
 }
 
@@ -1583,9 +1584,17 @@
 }
 
 .spelling-tab-layout__run-row-actions--export {
-  flex: 1;
+  flex: 1 1 auto;
+  min-width: 0;
   display: flex;
   justify-content: center;
+}
+
+.spelling-tab-layout__run-row-actions--export .btn-export-results {
+  max-width: 100%;
+  white-space: normal;
+  text-align: center;
+  line-height: 1.25;
 }
 
 .panel-left-work-scroll > .consistency-tab-layout__run-row {
@@ -1593,8 +1602,10 @@
   position: relative;
   z-index: 10020;
   isolation: isolate;
-  /* 아래 consistency-rules-scroll 스크롤바 폭만큼 내용이 좁아지므로 버튼 끝선 맞춤 */
-  padding-right: calc(var(--spelling-block-inset-x) + var(--custom-scrollbar-size, 6px));
+}
+
+.panel-left-work-scroll > .spelling-tab-layout__calibration {
+  flex-shrink: 0;
 }
 
 .consistency-section-head,
@@ -1639,13 +1650,13 @@
 
 .btn-add.panel-section-run-btn.btn-export-results {
   background: #D7CCC8;
-  border-color: #BCAAA4;
+  border: none;
   color: #3E2723;
 }
 
 .btn-add.panel-section-run-btn.btn-export-results:hover:not(:disabled) {
   background: #BCAAA4;
-  border-color: #A1887F;
+  border: none;
   color: #3E2723;
 }
 
@@ -2012,8 +2023,11 @@
   gap: var(--panel-gap-section);
 }
 
+.panel-left-work-scroll > .consistency-tab-layout__run-row + .spelling-tab-layout__calibration,
 .panel-left-work-scroll > .consistency-tab-layout__run-row + .consistency-results-switch,
+.panel-left-work-scroll > .spelling-tab-layout__calibration + .consistency-results-switch,
 .panel-left-work-scroll > .consistency-tab-layout__run-row + .results-panel,
+.panel-left-work-scroll > .spelling-tab-layout__calibration + .results-panel,
 .panel-left-work-scroll > .consistency-tab-layout__run-row + .consistency-rules-scroll {
   margin-top: 0;
 }
@@ -2541,7 +2555,7 @@
   column-gap: 12px;
   margin-top: 10px;
   padding-top: 10px;
-  border-top: 1px solid var(--color-border);
+  border-top: none;
 }
 
 /* 설명은 각 열에서 입력창 바로 위에 붙이고, 등록 입력창 행만 좌·우 정렬 */
@@ -2579,6 +2593,15 @@
   font-size: 1.1rem;
   font-weight: 700;
   line-height: 1;
+  border: none;
+  background: var(--btn-secondary-bg);
+  color: var(--btn-secondary-text);
+  transition: background 0.15s ease;
+}
+
+.consistency-unified-box .consistency-register-add-btn:hover:not(:disabled) {
+  background: var(--btn-secondary-hover-bg);
+  border: none;
 }
 
 .panel-left .consistency-unified-box .hint {
@@ -2671,7 +2694,7 @@
   min-width: 0;
   margin: 0;
   padding-right: 0.5rem;
-  font-size: 0.92rem;
+  font-size: calc(0.92rem * 0.6 * 1.2);
   font-weight: 600;
   line-height: 1.35;
   color: var(--color-text);
@@ -2693,7 +2716,6 @@
   font-weight: 800;
   color: var(--accent-terracotta-deep);
   letter-spacing: -0.01em;
-  box-shadow: inset 0 0 0 1px rgba(140, 98, 70, 0.28);
 }
 
 .pdf-work-pane__zoom-axis {
@@ -2777,24 +2799,8 @@
   align-items: center;
   gap: 6px;
   padding: 7px 10px;
-  border: 1px solid var(--color-border-strong);
-  border-radius: var(--radius-ui);
-  background: var(--color-surface);
-  color: var(--color-text-muted);
   font-size: 0.78rem;
-  font-weight: 700;
   white-space: nowrap;
-  cursor: pointer;
-  transition:
-    border-color 0.15s ease,
-    color 0.15s ease,
-    background 0.15s ease;
-}
-
-.pdf-work-pane__aux-btn:hover {
-  border-color: var(--accent-terracotta);
-  color: var(--accent-terracotta-deep);
-  background: var(--color-surface-overlay);
 }
 
 .ruleset-panel__feedback {
@@ -2862,7 +2868,11 @@
   overscroll-behavior: contain;
 }
 
-/* 100% 이하: 중앙 / 초과: flex-start로 전체 스크롤 (PdfViewer overflow 감지) */
+/* 원고 뷰어 레이아웃 (줌·스크롤)
+ * - stage: 유일한 스크롤 컨테이너 (overflow: auto)
+ * - align: 항상 flex center — 100% 이하일 때 시각적 가운데 정렬
+ * - 확대로 원고가 커지면 scroll 위치만 pdfStageScroll.js에서 가운데로 맞춤
+ *   (CSS 모드 전환·overflow 클래스 없음 — 재발 방지) */
 .pdf-viewer--fit .pdf-canvas-stage__align {
   box-sizing: border-box;
   display: flex;
@@ -2872,11 +2882,6 @@
   min-height: 100%;
   width: max-content;
   max-width: none;
-}
-
-.pdf-viewer--fit .pdf-canvas-stage__align--overflow {
-  align-items: flex-start;
-  justify-content: flex-start;
 }
 
 .pdf-viewer--fit .pdf-canvas-wrap {

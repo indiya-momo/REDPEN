@@ -86,6 +86,35 @@ describe('buildTabEntries', () => {
     expect(entries).toHaveLength(1);
     expect(entries[0].group.label).toBe('규칙');
   });
+
+  it('일관성 탭에서 발견 0건 그룹은 제외한다', () => {
+    const entries = buildTabEntries('consistency', [], [
+      {
+        find: 'auxiliary-item:(아/어) + 놓다',
+        replace: '$0',
+        patternKind: 'auxiliary-verb',
+        label: '(아/어) + 놓다',
+        groupDisplayLabel: '(아/어) + 놓다',
+        instances: [],
+      },
+      {
+        find: 'auxiliary-item:(아/어) + 가다',
+        replace: '$0',
+        patternKind: 'auxiliary-verb',
+        label: '(아/어) + 가다',
+        groupDisplayLabel: '(아/어) + 가다',
+        instances: [{ pageNum: 1 }],
+      },
+      {
+        find: 'lit',
+        replace: 'lit',
+        label: '세계경제',
+        instances: [],
+      },
+    ]);
+    expect(entries).toHaveLength(1);
+    expect(entries[0].group.label).toBe('(아/어) + 가다');
+  });
 });
 
 describe('countTabTotalFindings', () => {
@@ -106,8 +135,8 @@ describe('isTabCheckDone', () => {
 });
 
 describe('getCenterRunLabel', () => {
-  it('검사 중이면 검사 중…', () => {
-    expect(getCenterRunLabel(true, { phase: 'check' })).toBe('검사 중…');
+  it('검수 중이면 검수 중…', () => {
+    expect(getCenterRunLabel(true, { phase: 'check' })).toBe('검수 중…');
     expect(getCenterRunLabel(true, { phase: 'load' })).toBe('검수 실행');
   });
 });

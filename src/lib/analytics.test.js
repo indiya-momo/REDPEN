@@ -80,4 +80,27 @@ describe('analytics buckets', () => {
     expect(bucketFindingCount(0)).toBe('0');
     expect(bucketFindingCount(250)).toBe('101-500');
   });
+
+  it('bucketUploadIndex', async () => {
+    const { bucketUploadIndex } = await import('./analytics.js');
+    expect(bucketUploadIndex(1)).toBe('1');
+    expect(bucketUploadIndex(2)).toBe('2');
+    expect(bucketUploadIndex(4)).toBe('4+');
+  });
+
+  it('nextPdfUploadIndex는 localStorage에 누적', async () => {
+    const store = new Map();
+    vi.stubGlobal('localStorage', {
+      getItem: (k) => store.get(k) ?? null,
+      setItem: (k, v) => store.set(k, String(v)),
+      removeItem: (k) => store.delete(k),
+    });
+    store.set('pdf-proofread-analytics-upload-count', '1');
+    vi.resetModules();
+    const { nextPdfUploadIndex, readPdfUploadCount } = await import('./analytics.js');
+    expect(nextPdfUploadIndex()).toBe(2);
+    expect(readPdfUploadCount()).toBe(2);
+    vi.unstubAllGlobals();
+    vi.resetModules();
+  });
 });

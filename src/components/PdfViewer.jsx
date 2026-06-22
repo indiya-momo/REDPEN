@@ -7,6 +7,7 @@ import {
   scaleToFitContainer,
   stepPdfZoomFactor,
 } from '../lib/pdfService.js';
+import { syncPdfStageScrollAfterLayout } from '../lib/pdfStageScroll.js';
 import pdfEmptyIcon from '../assets/momo/pdf-empty.png';
 import PdfHighlightTipBubble from './PdfHighlightTipBubble.jsx';
 
@@ -45,7 +46,6 @@ export default function PdfViewer({
   /** @type {React.MutableRefObject<import('pdfjs-dist').RenderTask | null>} */
   const renderTaskRef = useRef(null);
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
-  const [stageOverflows, setStageOverflows] = useState(false);
   const [rects, setRects] = useState([]);
   const [error, setError] = useState(null);
   /** @type {{ id: string, tip: string, matchedText: string, left: number, top: number } | null} */
@@ -92,26 +92,15 @@ export default function PdfViewer({
     const wrap = wrapRef.current;
     if (!stage || !wrap) return undefined;
 
-    let frameId = 0;
-
-    const updateOverflow = () => {
-      cancelAnimationFrame(frameId);
-      frameId = requestAnimationFrame(() => {
-        setStageOverflows(
-          wrap.offsetWidth > stage.clientWidth + 1 ||
-            wrap.offsetHeight > stage.clientHeight + 1,
-        );
-      });
+    const onLayoutChange = () => {
+      syncPdfStageScrollAfterLayout(stage, wrap);
     };
 
-    updateOverflow();
-    const observer = new ResizeObserver(updateOverflow);
+    onLayoutChange();
+    const observer = new ResizeObserver(onLayoutChange);
     observer.observe(stage);
     observer.observe(wrap);
-    return () => {
-      observer.disconnect();
-      cancelAnimationFrame(frameId);
-    };
+    return () => observer.disconnect();
   }, [pdf, pageNum, zoomFactor, stageSize.width, stageSize.height]);
 
   useEffect(() => {
@@ -199,6 +188,10 @@ export default function PdfViewer({
           setRects(allBoxes);
         } else {
           setRects([]);
+        }
+
+        if (!cancelled) {
+          syncPdfStageScrollAfterLayout(stageRef.current, wrapRef.current);
         }
       } catch (e) {
         if (
@@ -320,11 +313,7 @@ export default function PdfViewer({
         </div>
       )}
       <div className="pdf-canvas-stage" ref={stageRef}>
-        <div
-          className={`pdf-canvas-stage__align${
-            stageOverflows ? ' pdf-canvas-stage__align--overflow' : ''
-          }`}
-        >
+        <div className="pdf-canvas-stage__align">
           <div className="pdf-canvas-wrap" ref={wrapRef}>
           <canvas ref={canvasRef} className="pdf-canvas" />
           <div className="pdf-highlight-layer">

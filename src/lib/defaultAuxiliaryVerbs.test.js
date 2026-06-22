@@ -6,6 +6,7 @@ import { ensureDefaultAuxiliaryVerbs } from './defaultAuxiliaryVerbs.js';
 import {
   isAuxiliaryVerbEntryEnabled,
   listAuxiliaryVerbEntries,
+  toggleAuxiliaryVerbEntry,
 } from './auxiliaryVerbRegister.js';
 
 import { ruleDisplayLabel } from './regexFromFind.js';
@@ -36,6 +37,25 @@ describe('ensureDefaultAuxiliaryVerbs', () => {
         expect(on).toBe(false);
       }
     }
+  });
+
+  it('필수 본조(하다·지다)도 사용자가 끌 수 있다', () => {
+    let rules = ensureDefaultAuxiliaryVerbs([]);
+    const hadaEntry = listAuxiliaryVerbEntries(rules).find(
+      (e) => e.bonBojoItemId === 'verb-hada',
+    );
+    const jidaEntry = listAuxiliaryVerbEntries(rules).find(
+      (e) => e.bonBojoItemId === 'verb-jida',
+    );
+    expect(hadaEntry).toBeTruthy();
+    expect(jidaEntry).toBeTruthy();
+
+    rules = toggleAuxiliaryVerbEntry(rules, hadaEntry, false);
+    rules = toggleAuxiliaryVerbEntry(rules, jidaEntry, false);
+    rules = ensureDefaultAuxiliaryVerbs(rules);
+
+    expect(isAuxiliaryVerbEntryEnabled(rules, hadaEntry)).toBe(false);
+    expect(isAuxiliaryVerbEntryEnabled(rules, jidaEntry)).toBe(false);
   });
 
   it('빈 규칙에 bon-bojo 시드 — 목록은 item당 1칸, stems는 검색용만', () => {

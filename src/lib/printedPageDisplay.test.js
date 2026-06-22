@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
+  bookPrintedPageNumber,
   formatPageLabel,
   formatPrintedPageText,
+  naturalBookPrintedPage,
   naturalPrintedLeft,
   shiftAfterFirstPageSingleChange,
   shiftFromPrintedInput,
@@ -87,5 +89,20 @@ describe('printedPageDisplay', () => {
     expect(systemPageFromDisplayInput('6-7', nextShift, true, 200, anchor, false)).toBe(
       anchor,
     );
+  });
+
+  it('maps file pages to single book sides for result pills', () => {
+    expect(naturalBookPrintedPage(1, true)).toBe(1);
+    expect(naturalBookPrintedPage(2, true)).toBe(2);
+    expect(naturalBookPrintedPage(3, true)).toBe(3);
+    expect(naturalBookPrintedPage(4, true)).toBe(4);
+  });
+
+  it('calibrates book sides from anchor spread left', () => {
+    const anchor = 141;
+    const shift = 0;
+    expect(bookPrintedPageNumber(140, shift, true, anchor, true)).toBe(280);
+    expect(bookPrintedPageNumber(141, shift, true, anchor, true)).toBe(281);
+    expect(bookPrintedPageNumber(139, shift, true, anchor, true)).toBe(139);
   });
 });
