@@ -307,7 +307,7 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
-  margin-bottom: 1.1rem;
+  margin-bottom: 0.55rem;
 }
 
 .mypage__project-hub-title-row {
@@ -358,7 +358,7 @@
 
 .mypage__project-slots {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.85rem;
 }
 
@@ -374,9 +374,13 @@
   background: var(--color-surface);
 }
 
+.mypage__project-card {
+  border-color: transparent;
+}
+
 .mypage__project-card--active {
-  border-color: var(--accent-terracotta);
-  box-shadow: 0 0 0 1px rgba(168, 107, 69, 0.18);
+  border-color: transparent;
+  box-shadow: none;
 }
 
 .mypage__project-card-head {
@@ -412,6 +416,47 @@
   font-size: 0.74rem;
   line-height: 1.55;
   color: var(--color-text-muted);
+}
+
+.mypage__project-date-badge {
+  flex-shrink: 0;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  background: var(--color-surface-overlay);
+  color: var(--color-text-muted);
+  font-size: 0.65rem;
+  font-weight: 700;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.mypage__project-spec {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.32rem;
+  margin: 0;
+}
+
+.mypage__project-spec-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.mypage__project-spec-label {
+  font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.mypage__project-spec-value {
+  margin: 0;
+  font-size: 0.74rem;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+  word-break: keep-all;
 }
 
 .mypage__project-load {
