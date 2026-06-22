@@ -1399,6 +1399,10 @@ details[open] > summary .details-chevron {
   font-weight: 700;
 }
 
+.results-header__total-findings {
+  font-weight: 800;
+}
+
 .results-header__applied {
   color: var(--color-text);
   font-weight: 800;
@@ -2010,14 +2014,15 @@ details[open] > summary .details-chevron {
 .printed-page-setup__input {
   width: calc(3.75rem * var(--pps-scale));
   padding: calc(var(--space-2xs-tight) * var(--pps-scale)) calc(var(--space-md-tight) * var(--pps-scale));
-  border: 1px solid var(--color-border-strong);
+  border: none;
   border-radius: calc(var(--radius-ui-sm) * var(--pps-scale));
   font-size: calc(0.75rem * var(--pps-scale));
+  background: var(--color-surface-raised);
 }
 
 .printed-page-setup__input:focus {
   outline: calc(2px * var(--pps-scale)) solid var(--focus-ring);
-  border-color: var(--focus-border);
+  outline-offset: 0;
 }
 
 .printed-page-setup__inline-opt {
@@ -2055,17 +2060,18 @@ details[open] > summary .details-chevron {
 
 .printed-page-setup__reset {
   padding: calc(var(--space-2xs-tight) * var(--pps-scale)) calc(var(--space-md-tight) * var(--pps-scale));
-  border: 1px solid var(--color-border-strong);
+  border: none;
   border-radius: calc(var(--radius-ui-sm) * var(--pps-scale));
-  background: var(--color-surface-raised);
+  background: var(--btn-secondary-bg);
   color: var(--color-text-faint);
   font-size: calc(0.72rem * var(--pps-scale));
   cursor: pointer;
   white-space: nowrap;
+  transition: background 0.15s ease;
 }
 
 .printed-page-setup__reset:hover:not(:disabled) {
-  background: var(--color-surface);
+  background: var(--btn-secondary-hover-bg);
 }
 
 .printed-page-setup__reset:disabled {
