@@ -128,8 +128,33 @@ describe('formatConsistencyCheckConfirmMessage', () => {
         auxiliaryTotal: 10,
       }),
     ).toBe(
-      '오늘 일관성 검수는 1회(한도 1회) 가능합니다\n' +
-        '일관성 찾기(3/8), 공통 문자열 찾기(1/4), 본용언 + 보조용언 표기 (2/10)\n' +
+      '[일관성 검수 안내]\n' +
+        '\n' +
+        '오늘 일관성 검수는 1회(한도 1회) 가능합니다\n' +
+        '일관성 찾기(3건), 공통 문자열 찾기(1건), 본용언 + 보조용언 표기(2/10건)\n' +
+        '\n' +
+        '검수를 진행할까요?',
+    );
+  });
+
+  it('켜진 기준이 없으면 (없음)으로 표기한다', () => {
+    expect(
+      formatConsistencyCheckConfirmMessage({
+        remaining: 1,
+        tabLimit: 1,
+        literalActive: 0,
+        literalTotal: 0,
+        commonStringActive: 0,
+        commonStringTotal: 0,
+        auxiliaryActive: 10,
+        auxiliaryTotal: 10,
+      }),
+    ).toBe(
+      '[일관성 검수 안내]\n' +
+        '\n' +
+        '오늘 일관성 검수는 1회(한도 1회) 가능합니다\n' +
+        '일관성 찾기(없음), 공통 문자열 찾기(없음), 본용언 + 보조용언 표기(10/10건)\n' +
+        '\n' +
         '검수를 진행할까요?',
     );
   });

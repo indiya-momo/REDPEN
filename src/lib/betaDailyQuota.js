@@ -67,7 +67,7 @@ function buildProofreadExportConfirmMessage(exportTab = 'spelling') {
   return (
     `오늘 ${tabLabel} 검수 결과 다운로드는 1회 가능합니다.\n` +
     '다운로드를 진행할까요?\n\n' +
-    '※ 엑셀(.xlsx)형식으로 진행되며, PDF보내기가 준비 중입니다'
+    '※ 엑셀(.xlsx)파일로 진행되며, PDF 다운로드는 준비중입니다'
   );
 }
 
