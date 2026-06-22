@@ -76,7 +76,11 @@ export default function PdfPreviewBar({
   }
 
   return (
-    <div className="pdf-preview-bar">
+    <div
+      className={`pdf-preview-bar${
+        !thumbStripOpen ? ' pdf-preview-bar--chrome-only' : ''
+      }`}
+    >
       <div className="pdf-preview-bar__toolbar">
         <div className="pdf-preview-bar__status-col">
           {pageStatus ? (
