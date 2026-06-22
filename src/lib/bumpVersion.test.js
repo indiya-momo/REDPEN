@@ -2,10 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { nextVersion, shouldSkipVersionBump } from './bumpVersion.js';
 
 describe('nextVersion', () => {
-  it('0.01씩 올린다', () => {
-    expect(nextVersion('0.75')).toBe('0.76');
-    expect(nextVersion('0.76')).toBe('0.77');
-    expect(nextVersion('0.99')).toBe('1.00');
+  it('0.001씩 올린다', () => {
+    expect(nextVersion('0.75')).toBe('0.751');
+    expect(nextVersion('0.90')).toBe('0.901');
+    expect(nextVersion('0.901')).toBe('0.902');
+    expect(nextVersion('0.999')).toBe('1.000');
   });
 });
 

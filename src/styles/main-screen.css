@@ -68,12 +68,9 @@
 /* ── 좌측 패널 타이포: 역할→토큰 (weight 400/700 · 색 3단 · UI face만) ── */
 
 /* header / step — 700 + ink */
-.panel-left .results-category-summary,
 .panel-left .results-header,
 .panel-left .results-header__applied,
 .panel-left .results-header__total-findings,
-.panel-left .results-header__total,
-.panel-left .results-header__breakdown,
 .panel-left .results-panel--spelling.results-panel--tone-builtin .results-header,
 .panel-left .results-panel--spelling.results-panel--tone-caution .results-header,
 .panel-left .results-panel--consistency .results-header,
@@ -101,8 +98,6 @@
 
 /* item — 400 + ink */
 .panel-left .results-header__rule-chip,
-.panel-left .results-category-summary__builtin,
-.panel-left .results-category-summary__caution,
 .panel-left .results-category-summary__count-underline,
 .panel-left .caution-chip-label,
 .panel-left .builtin-spelling-rules-scroll .rule-text .find,
@@ -212,17 +207,11 @@
 }
 
 .panel-left .spelling-tab-scroll .results-panel--spelling .results-header,
-.panel-left .spelling-tab-scroll .results-panel--spelling .results-category-summary,
 .panel-left .panel-left-work-scroll .results-panel--consistency .results-header {
   border-bottom: none;
   background: transparent;
 }
 
-.panel-left .spelling-tab-scroll .results-panel--spelling .results-panel-footer,
-.panel-left .panel-left-work-scroll .results-panel--consistency .results-panel-footer {
-  border-top: none;
-  background: transparent;
-}
 
 .panel-left .spelling-tab-scroll .results-list,
 .panel-left .panel-left-work-scroll .results-list {
@@ -604,7 +593,6 @@
 
 /* 요약 줄 ↔ 결과 목록 */
 .panel-left .results-header,
-.panel-left .results-category-summary,
 .panel-left .current-page-status {
   padding-bottom: calc(var(--space-sm) + 2px);
 }
@@ -1715,25 +1703,13 @@
   background: var(--results-stage-bg);
 }
 
-.spelling-tab-layout .results-panel--spelling .results-category-summary,
 .spelling-tab-layout .results-panel--spelling .results-header,
 .spelling-tab-layout .results-panel--spelling .result-card,
-.spelling-tab-layout .results-panel--spelling .results-panel-footer,
 .spelling-tab-layout .results-panel--spelling .results-empty-hint,
-.spelling-tab-layout .results-panel--spelling .current-page-status,
-.spelling-tab-layout .results-panel--spelling .printed-page-setup,
 .panel-left-work-scroll .results-panel--consistency .results-header,
 .panel-left-work-scroll .results-panel--consistency .result-card,
-.panel-left-work-scroll .results-panel--consistency .results-panel-footer,
-.panel-left-work-scroll .results-panel--consistency .results-empty-hint,
-.panel-left-work-scroll .results-panel--consistency .current-page-status,
-.panel-left-work-scroll .results-panel--consistency .printed-page-setup {
+.panel-left-work-scroll .results-panel--consistency .results-empty-hint {
   padding-inline: var(--results-panel-inset-x);
-}
-
-.spelling-tab-layout .results-panel--spelling .printed-page-setup,
-.panel-left-work-scroll .results-panel--consistency .printed-page-setup {
-  margin-inline: 0;
 }
 
 
@@ -3071,10 +3047,6 @@
 
 .panel-left .results-header {
   font-size: calc(0.98rem * var(--panel-ui-scale));
-}
-
-.panel-left .results-category-summary {
-  font-size: calc(0.85rem * var(--panel-ui-scale));
 }
 
 .panel-left .consistency-section-box:not([data-work-guide-step='auxiliary-box']) {
