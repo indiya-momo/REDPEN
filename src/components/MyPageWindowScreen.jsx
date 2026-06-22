@@ -25,10 +25,8 @@ import { resolveQuotaAuthEmail } from '../lib/betaDailyQuota.js';
 import { clearRewardNotice } from '../lib/rewardNotice.js';
 import { getEarnedBadgeIds } from '../lib/userBadges.js';
 import { useBetaDailyQuota } from '../hooks/useBetaDailyQuota.js';
-import {
-  summarizeProjectRuleSet,
-  useMyPageProjects,
-} from '../hooks/useMyPageProjects.js';
+import { useMyPageProjects } from '../hooks/useMyPageProjects.js';
+import { buildProjectCardSummary } from '../lib/projectCardSummary.js';
 import { criteriaNameForInput } from '../lib/criteriaName.js';
 import BadgeCollectionGrid from './BadgeCollectionGrid.jsx';
 import './my-page.css';
@@ -44,19 +42,19 @@ const MEMBER_BENEFIT_TIERS = [
   {
     name: '오픈베타 테스터',
     description:
-      '오픈베타 기간 동안 매일 맞춤법 검수 1회, 일관성 검수 1회 제공',
+      '오픈베타 기간 프로젝트 슬롯 [1개] 매일 맞춤법 검수 [1회] + 일관성 검수 [1회] 제공',
     tabLimit: 1,
   },
   {
     name: '비밀 연구원',
     description:
-      '오픈베타 기간 동안 매일 맞춤법 검수 2회, 일관성 검수 2회 제공',
+      '오픈베타 기간 프로젝트 슬롯 [1개] 매일 맞춤법 검수 [2회] + 일관성 검수 [2회] 제공',
     tabLimit: 2,
   },
   {
     name: '수석 검증관',
     description:
-      '오픈베타 기간 동안 매일 맞춤법 검수 3회, 일관성 검수 3회 제공',
+      '오픈베타 기간 프로젝트 슬롯 [1개] 매일 맞춤법 검수 [3회] + 일관성 검수 [3회] 제공',
     tabLimit: 3,
   },
 ];
@@ -320,12 +318,10 @@ function ProjectHubSection({ uid, email }) {
     projects,
     activeSetId,
     loading,
-    selectProject,
     savedCount,
     maxSlots,
     exempt,
     emptySlotCount,
-    atSlotLimit,
   } = useMyPageProjects(uid, email);
 
   const slotLabel = exempt
@@ -344,12 +340,9 @@ function ProjectHubSection({ uid, email }) {
               나의 프로젝트
             </h1>
             <span className="mypage__project-preparing">
-              *준비중인 기능입니다
+              - 프로젝트를 관리하고 회원과 공유합니다(준비중)
             </span>
           </div>
-          <p className="mypage__project-hub-lead">
-            저장한 검수 기준을 불러와 작업을 이어갈 수 있습니다.
-          </p>
         </div>
         <p className="mypage__project-slot-gauge" aria-live="polite">
           슬롯 <strong>{slotLabel}</strong>
@@ -364,6 +357,7 @@ function ProjectHubSection({ uid, email }) {
         <div className="mypage__project-slots">
           {projects.map((set) => {
             const isActive = set.id === activeSetId;
+            const summary = buildProjectCardSummary(set);
             return (
               <article
                 key={set.id}
@@ -373,22 +367,34 @@ function ProjectHubSection({ uid, email }) {
                   <h2 className="mypage__project-name">
                     {projectDisplayName(set)}
                   </h2>
-                  {isActive ? (
-                    <span className="mypage__project-active-badge">
-                      현재 선택
+                  {summary.savedDate ? (
+                    <span className="mypage__project-date-badge">
+                      {summary.savedDate}
                     </span>
                   ) : null}
                 </div>
-                <p className="mypage__project-summary">
-                  {summarizeProjectRuleSet(set)}
-                </p>
-                <button
-                  type="button"
-                  className="mypage__project-load"
-                  onClick={() => selectProject(set.id)}
-                >
-                  검수에 불러오기
-                </button>
+                <dl className="mypage__project-spec">
+                  <div className="mypage__project-spec-row">
+                    <dt className="mypage__project-spec-label">맞춤법 검수</dt>
+                    <dd className="mypage__project-spec-value">
+                      편집자 검토 필요({summary.spelling.editorReview}건), 맞춤법({summary.spelling.spelling}건)
+                    </dd>
+                  </div>
+                  <div className="mypage__project-spec-row">
+                    <dt className="mypage__project-spec-label">일관성 검수</dt>
+                    <dd className="mypage__project-spec-value">
+                      일관성 찾기({summary.consistency.find}), 공통 문자열 찾기 ({summary.consistency.commonString}), 검수 제외 단어 '{summary.consistency.excludeWords}'
+                    </dd>
+                  </div>
+                  <div className="mypage__project-spec-row">
+                    <dt className="mypage__project-spec-label">
+                      본용언 + 보조용언 표기
+                    </dt>
+                    <dd className="mypage__project-spec-value">
+                      {summary.auxiliary}
+                    </dd>
+                  </div>
+                </dl>
               </article>
             );
           })}
@@ -423,11 +429,6 @@ function ProjectHubSection({ uid, email }) {
         </div>
       )}
 
-      {atSlotLimit ? (
-        <p className="mypage__project-upgrade">
-          추가 프로젝트 슬롯은 유료 플랜에서 제공될 예정입니다.
-        </p>
-      ) : null}
     </section>
   );
 }

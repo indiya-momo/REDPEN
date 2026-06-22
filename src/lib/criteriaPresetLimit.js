@@ -1,4 +1,7 @@
-import { isBetaQuotaAdminExempt } from './betaDailyQuota.js';
+import {
+  isBetaQuotaAdminExempt,
+  isLocalDevQuotaRelaxed,
+} from './betaDailyQuota.js';
 
 /** 일반 계정 — 저장한 기준(이름 붙인 프리셋) 상한 */
 export const MAX_CRITERIA_PRESETS = 1;
@@ -18,7 +21,7 @@ export function countSavedCriteriaPresets(ruleSets) {
  * @param {string} [email]
  */
 export function isCriteriaPresetLimitExempt(uid, email = '') {
-  return isBetaQuotaAdminExempt(uid, email);
+  return isLocalDevQuotaRelaxed() || isBetaQuotaAdminExempt(uid, email);
 }
 
 /**
