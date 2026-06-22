@@ -17,6 +17,8 @@
 }
 
 .panel-left {
+  container-type: inline-size;
+  container-name: panel-left;
   /* 좌측 패널 UI 통일 스케일 (타이포·간격·체크리스트) */
   --panel-ui-scale: 0.9;
   --pps-scale: calc(1.2 * var(--panel-ui-scale));
@@ -1199,16 +1201,15 @@
   display: flex;
   align-items: stretch;
   min-width: 0;
-  border: 1px solid var(--color-border-strong);
+  border: none;
   border-radius: var(--radius-ui);
-  background: var(--color-surface);
+  background: var(--btn-secondary-bg);
   overflow: hidden;
 }
 
 .panel-left__criteria-picker-field:focus-within {
   outline: 2px solid var(--focus-ring);
   outline-offset: 1px;
-  border-color: var(--focus-border);
 }
 
 .panel-left__criteria-name {
@@ -1242,8 +1243,7 @@
   width: 2.1rem;
   padding: 0;
   border: none;
-  border-left: 1px solid var(--color-border-strong);
-  background: var(--color-surface-inset);
+  background: transparent;
   color: var(--color-text-muted);
   cursor: pointer;
 }
@@ -1363,39 +1363,29 @@
   height: 2.1rem;
   padding: 0;
   box-sizing: border-box;
-  border-radius: var(--radius-ui);
   font-size: 0.78rem;
-  font-weight: 700;
   white-space: nowrap;
+}
+
+.panel-left__save-rules,
+.panel-left__delete-rules,
+.pdf-work-pane__aux-btn {
+  border: none;
+  border-radius: var(--radius-ui);
+  background: var(--btn-secondary-bg);
+  color: var(--btn-secondary-text);
+  font-weight: 700;
   cursor: pointer;
   transition:
     background 0.15s ease,
-    border-color 0.15s ease,
     color 0.15s ease;
 }
 
-.panel-left__save-rules {
-  border: 1px solid var(--accent-terracotta);
-  background: var(--color-surface);
-  color: var(--accent-terracotta);
-}
-
-.panel-left__save-rules:hover {
-  background: var(--panel-accordion-bg);
-  border-color: var(--accent-terracotta-deep);
-  color: var(--accent-terracotta-deep);
-}
-
-.panel-left__delete-rules {
-  border: 1px solid var(--color-border-strong);
-  background: var(--color-surface);
-  color: var(--color-text-muted);
-}
-
-.panel-left__delete-rules:hover:not(:disabled) {
-  border-color: var(--accent-terracotta);
-  background: var(--panel-accordion-bg);
-  color: var(--accent-terracotta-deep);
+.panel-left__save-rules:hover,
+.panel-left__delete-rules:hover:not(:disabled),
+.pdf-work-pane__aux-btn:hover {
+  background: var(--btn-secondary-hover-bg);
+  color: var(--btn-secondary-text);
 }
 
 .panel-left__delete-rules:disabled {
@@ -1563,9 +1553,9 @@
   z-index: 10020;
   isolation: isolate;
   flex-shrink: 0;
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, auto) minmax(0, 1fr) minmax(0, auto);
   align-items: center;
-  justify-content: space-between;
   gap: 8px;
   padding: 4px var(--spelling-block-inset-x) 0;
 }
@@ -1578,14 +1568,60 @@
 }
 
 .spelling-tab-layout__run-row-actions--end {
-  margin-left: auto;
+  grid-column: 3;
+  justify-self: end;
+  margin-left: 0;
   flex-shrink: 0;
 }
 
 .spelling-tab-layout__run-row-actions--export {
-  flex: 1;
+  grid-column: 2;
+  justify-self: center;
+  min-width: 0;
   display: flex;
   justify-content: center;
+}
+
+.spelling-tab-layout__run-row:not(:has(.spelling-tab-layout__run-row-actions--export)) {
+  grid-template-columns: minmax(0, auto) minmax(0, 1fr) minmax(0, auto);
+}
+
+.spelling-tab-layout__run-row-actions--export .btn-export-results {
+  max-width: 100%;
+  white-space: normal;
+  text-align: center;
+  line-height: 1.25;
+}
+
+@container panel-left (max-width: 400px) {
+  .spelling-tab-layout__run-row:has(.spelling-tab-layout__run-row-actions--export) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: auto auto;
+  }
+
+  .spelling-tab-layout__run-row:has(.spelling-tab-layout__run-row-actions--export)
+    > .spelling-tab-layout__run-row-actions:first-child {
+    grid-column: 1;
+    grid-row: 1;
+    justify-self: start;
+  }
+
+  .spelling-tab-layout__run-row:has(.spelling-tab-layout__run-row-actions--export)
+    .spelling-tab-layout__run-row-actions--end {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+  }
+
+  .spelling-tab-layout__run-row-actions--export {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-self: stretch;
+  }
+
+  .spelling-tab-layout__run-row-actions--export .btn-export-results {
+    width: 100%;
+  }
 }
 
 .panel-left-work-scroll > .consistency-tab-layout__run-row {
@@ -2541,7 +2577,7 @@
   column-gap: 12px;
   margin-top: 10px;
   padding-top: 10px;
-  border-top: 1px solid var(--color-border);
+  border-top: none;
 }
 
 /* 설명은 각 열에서 입력창 바로 위에 붙이고, 등록 입력창 행만 좌·우 정렬 */
@@ -2579,6 +2615,15 @@
   font-size: 1.1rem;
   font-weight: 700;
   line-height: 1;
+  border: none;
+  background: var(--btn-secondary-bg);
+  color: var(--btn-secondary-text);
+  transition: background 0.15s ease;
+}
+
+.consistency-unified-box .consistency-register-add-btn:hover:not(:disabled) {
+  background: var(--btn-secondary-hover-bg);
+  border: none;
 }
 
 .panel-left .consistency-unified-box .hint {
@@ -2777,24 +2822,8 @@
   align-items: center;
   gap: 6px;
   padding: 7px 10px;
-  border: 1px solid var(--color-border-strong);
-  border-radius: var(--radius-ui);
-  background: var(--color-surface);
-  color: var(--color-text-muted);
   font-size: 0.78rem;
-  font-weight: 700;
   white-space: nowrap;
-  cursor: pointer;
-  transition:
-    border-color 0.15s ease,
-    color 0.15s ease,
-    background 0.15s ease;
-}
-
-.pdf-work-pane__aux-btn:hover {
-  border-color: var(--accent-terracotta);
-  color: var(--accent-terracotta-deep);
-  background: var(--color-surface-overlay);
 }
 
 .ruleset-panel__feedback {
