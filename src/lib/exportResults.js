@@ -191,11 +191,326 @@ export async function exportSpellingResults({
     { width: 58 }, // E: 페이지
   ];
 
-  // ── 요약 행 (row 1) ───────────────────────────────────────────
+  // ── 안내 행 (row 1) ───────────────────────────────────────────
   ws.mergeCells('A1:E1');
-  const summaryCell = ws.getCell('A1');
+  const guideCell = ws.getCell('A1');
+  guideCell.value = {
+    richText: [
+      { text: '※ 내용이 잘려 보이면 ', font: { name: 'Arial', size: 9, bold: false, color: { argb: 'FF555555' } } },
+      { text: 'Ctrl+A→홈 탭→ 서식 → 행 높이 자동 맞춤', font: { name: 'Arial', size: 9, bold: true, color: { argb: 'FF555555' } } },
+      { text: ' 을 이용하세요', font: { name: 'Arial', size: 9, bold: false, color: { argb: 'FF555555' } } },
+    ],
+  };
+  guideCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFF9C4' } };
+  guideCell.alignment = { horizontal: 'center', vertical: 'center', wrapText: false };
+  guideCell.border = CELL_BORDER;
+  ws.getRow(1).height = 30;
+
+  // ── 요약 행 (row 2) ───────────────────────────────────────────
+  ws.mergeCells('A2:E2');
+  const summaryCell = ws.getCell('A2');
   summaryCell.value = `편집자 검토 필요 기준 ${cautionCount}개 · 맞춤법 기준 ${builtinCount}개 · 전체 발견 ${totalFindings}건`;
   summaryCell.font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FF000000' } };
   summaryCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFFFF' } };
   summaryCell.alignment = { horizontal: 'left', vertical: 'center', indent: 1, wrapText: false };
-  summaryCell.bor
+  summaryCell.border = CELL_BORDER;
+  ws.getRow(2).height = 30;
+
+  // ── 헤더 (row 3) ──────────────────────────────────────────────
+  ['구분', '기준', '설명', '발견 수', '페이지'].forEach((h, i) => {
+    const cell = ws.getRow(3).getCell(i + 1);
+    cell.value = h;
+    applyStyle(cell, { bg: HEADER_BG, fg: HEADER_FG, bold: true, hAlign: 'center' });
+  });
+  ws.getRow(3).height = 30;
+
+  // ── 데이터 행 (row 4~) ────────────────────────────────────────
+  const categoryRanges = [];
+  let currentRange = null;
+
+  for (let i = 0; i < entries.length; i++) {
+    const excelRowNum = i + 4;
+    const { group, source } = entries[i];
+    const isCaution = group.category === 'caution';
+    const category = isCaution ? '편집자 검토' : '맞춤법';
+    const bg = isCaution ? CAUTION_BG : BUILTIN_BG;
+
+    // 구분 병합 범위 추적
+    if (!currentRange || currentRange.category !== category) {
+      if (currentRange) categoryRanges.push(currentRange);
+      currentRange = { start: excelRowNum, end: excelRowNum, category, bg };
+    } else {
+      currentRange.end = excelRowNum;
+    }
+
+    const tipText =
+      (group.tip || '').trim() ||
+      (source === 'spelling' && !isCaution
+        ? getBuiltInTip(group.find, group.replace) || ''
+        : '');
+
+    const visMode = groupVisibilityMode ? groupVisibilityMode(source, group) : 'visible';
+    const totalCount = group.instances.length;
+    const shownCount = visibleInstanceCount ? visibleInstanceCount(source, group) : totalCount;
+
+    const countText =
+      visMode === 'hidden'
+        ? `0/${totalCount}`
+        : visMode === 'partial'
+          ? `${shownCount}/${totalCount}`
+          : `${totalCount}`;
+
+    // pills는 한 번만 생성해서 높이 추정·셀 값에 공유
+    const pills = visMode === 'hidden' ? [] : buildInstancePills(group.instances);
+    const pagePlainText = visMode === 'hidden' ? '' : pillsToPlainText(pills, formatPageLabel);
+    const labelText = getEntryLabel(group, source);
+
+    // ── 행 높이: 열 B·C·E 중 가장 많은 줄 수 기준 ──────────────
+    const linesB = estimateLines(labelText, 30);
+    const linesC = estimateLines(tipText, 40);
+    const linesE = estimatePillLines(pagePlainText, 58);
+    const row = ws.getRow(excelRowNum);
+    const h = rowHeightPt(linesB, linesC, linesE);
+    row.height = h;
+    console.log(`[맞춤법 row${excelRowNum}] pills=${pills.length} linesB=${linesB} linesC=${linesC} linesE=${linesE} height=${h}pt`);
+
+    // A: 구분
+    const catCell = row.getCell(1);
+    catCell.value = category;
+    applyStyle(catCell, { bg, hAlign: 'center', vAlign: 'center' });
+
+    // B: 기준
+    const labelCell = row.getCell(2);
+    labelCell.value = labelText;
+    applyStyle(labelCell, { bg, hAlign: 'left', vAlign: 'top', wrap: true });
+
+    // C: 설명
+    const tipCell = row.getCell(3);
+    tipCell.value = tipText;
+    applyStyle(tipCell, { bg, hAlign: 'left', vAlign: 'top', wrap: true });
+
+    // D: 발견 수
+    const countCell = row.getCell(4);
+    countCell.value = countText;
+    applyStyle(countCell, { bg, hAlign: 'center', vAlign: 'top' });
+
+    // E: 페이지
+    const pagesCell = row.getCell(5);
+    if (visMode === 'hidden') {
+      pagesCell.value = '-';
+    } else {
+      pagesCell.value = { richText: buildPagesRichText(pills, source, group, formatPageLabel, isInstanceVisible) };
+    }
+    applyStyle(pagesCell, { bg, hAlign: 'left', vAlign: 'top', wrap: true });
+  }
+
+  if (currentRange) categoryRanges.push(currentRange);
+
+  // 구분 열 병합
+  for (const range of categoryRanges) {
+    if (range.start < range.end) {
+      ws.mergeCells(range.start, 1, range.end, 1);
+    }
+    const cell = ws.getCell(range.start, 1);
+    cell.value = range.category;
+    applyStyle(cell, { bg: range.bg, hAlign: 'center', vAlign: 'middle' });
+  }
+
+  // 다운로드
+  const buffer = await wb.xlsx.writeBuffer();
+  const blob = new Blob([buffer], {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ── 일관성 탭 export ──────────────────────────────────────────────
+
+/**
+ * 일관성 탭 구분 결정
+ * @param {import('./ruleEngine.js').GroupedResult} group
+ */
+function consistencyCategoryOf(group) {
+  return group.patternKind === 'auxiliary-verb' ? '본용언+보조용언' : '일관성 찾기';
+}
+
+/**
+ * 일관성 탭 기준 레이블
+ * @param {import('./ruleEngine.js').GroupedResult} group
+ */
+function consistencyEntryLabel(group) {
+  if (group.patternKind === 'auxiliary-verb') {
+    return group.tailWord
+      ? formatAuxiliaryVerbResultLabel(group.tailWord, group.groupDisplayLabel)
+      : (group.groupDisplayLabel?.trim() || group.label || '');
+  }
+  return group.label || group.find || '';
+}
+
+/**
+ * @param {{
+ *   entries: {group: import('./ruleEngine.js').GroupedResult, source: string}[],
+ *   formatPageLabel: (systemPage: number) => string,
+ *   isInstanceVisible: (source: string, group: object, inst: object) => boolean,
+ *   groupVisibilityMode: (source: string, group: object) => 'visible' | 'partial' | 'hidden',
+ *   visibleInstanceCount: (source: string, group: object) => number,
+ *   literalCount: number,
+ *   auxiliaryCount: number,
+ *   totalFindings: number,
+ *   filename?: string,
+ * }} options
+ */
+export async function exportConsistencyResults({
+  entries,
+  formatPageLabel,
+  isInstanceVisible,
+  groupVisibilityMode,
+  visibleInstanceCount,
+  literalCount,
+  auxiliaryCount,
+  totalFindings,
+  filename = '일관성_검사결과.xlsx',
+}) {
+  const ExcelJS = (await import('exceljs')).default;
+  const wb = new ExcelJS.Workbook();
+  wb.creator = '인디야';
+  const ws = wb.addWorksheet('일관성 확인');
+
+  ws.columns = [
+    { width: 18 }, // A: 구분
+    { width: 30 }, // B: 기준
+    { width: 40 }, // C: 설명
+    { width: 14 }, // D: 발견 수
+    { width: 58 }, // E: 페이지
+  ];
+
+  // ── 안내 행 (row 1)
+  ws.mergeCells('A1:E1');
+  const guideCell = ws.getCell('A1');
+  guideCell.value = {
+    richText: [
+      { text: '※ 내용이 잘려 보이면 ', font: { name: 'Arial', size: 9, bold: false, color: { argb: 'FF555555' } } },
+      { text: 'Ctrl+A→홈 탭→ 서식 → 행 높이 자동 맞춤', font: { name: 'Arial', size: 9, bold: true, color: { argb: 'FF555555' } } },
+      { text: ' 을 이용하세요', font: { name: 'Arial', size: 9, bold: false, color: { argb: 'FF555555' } } },
+    ],
+  };
+  guideCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFF9C4' } };
+  guideCell.alignment = { horizontal: 'center', vertical: 'center', wrapText: false };
+  guideCell.border = CELL_BORDER;
+  ws.getRow(1).height = 30;
+
+  // ── 요약 행 (row 2)
+  ws.mergeCells('A2:E2');
+  const summaryCell = ws.getCell('A2');
+  summaryCell.value = `일관성 찾기 ${literalCount}개 · 본용언+보조용언 ${auxiliaryCount}개 · 전체 발견 ${totalFindings}건`;
+  summaryCell.font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FF000000' } };
+  summaryCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFFFF' } };
+  summaryCell.alignment = { horizontal: 'left', vertical: 'center', indent: 1, wrapText: false };
+  summaryCell.border = CELL_BORDER;
+  ws.getRow(2).height = 30;
+
+  // ── 헤더 (row 3)
+  ['구분', '기준', '설명', '발견 수', '페이지'].forEach((h, i) => {
+    const cell = ws.getRow(3).getCell(i + 1);
+    cell.value = h;
+    applyStyle(cell, { bg: HEADER_BG, fg: HEADER_FG, bold: true, hAlign: 'center' });
+  });
+  ws.getRow(3).height = 30;
+
+  // ── 데이터 행 (row 4~)
+  const categoryRanges = [];
+  let currentRange = null;
+
+  for (let i = 0; i < entries.length; i++) {
+    const excelRowNum = i + 4;
+    const { group, source } = entries[i];
+    const category = consistencyCategoryOf(group);
+    const bg = category === '본용언+보조용언' ? CAUTION_BG : BUILTIN_BG;
+
+    if (!currentRange || currentRange.category !== category) {
+      if (currentRange) categoryRanges.push(currentRange);
+      currentRange = { start: excelRowNum, end: excelRowNum, category, bg };
+    } else {
+      currentRange.end = excelRowNum;
+    }
+
+    const tipText = (group.tip || '').trim();
+    const visMode = groupVisibilityMode ? groupVisibilityMode(source, group) : 'visible';
+    const totalCount = group.instances.length;
+    const shownCount = visibleInstanceCount ? visibleInstanceCount(source, group) : totalCount;
+
+    const countText =
+      visMode === 'hidden'
+        ? `0/${totalCount}`
+        : visMode === 'partial'
+          ? `${shownCount}/${totalCount}`
+          : `${totalCount}`;
+
+    const pills = visMode === 'hidden' ? [] : buildInstancePills(group.instances);
+    const pagePlainText = visMode === 'hidden' ? '' : pillsToPlainText(pills, formatPageLabel);
+    const labelText = consistencyEntryLabel(group);
+
+    const linesB = estimateLines(labelText, 30);
+    const linesC = estimateLines(tipText, 40);
+    const linesE = estimatePillLines(pagePlainText, 58);
+    const row = ws.getRow(excelRowNum);
+    const h = rowHeightPt(linesB, linesC, linesE);
+    row.height = h;
+    console.log(`[일관성 row${excelRowNum}] pills=${pills.length} linesB=${linesB} linesC=${linesC} linesE=${linesE} height=${h}pt`);
+
+    const catCell = row.getCell(1);
+    catCell.value = category;
+    applyStyle(catCell, { bg, hAlign: 'center', vAlign: 'center' });
+
+    const labelCell = row.getCell(2);
+    labelCell.value = labelText;
+    applyStyle(labelCell, { bg, hAlign: 'left', vAlign: 'top', wrap: true });
+
+    const tipCell = row.getCell(3);
+    tipCell.value = tipText;
+    applyStyle(tipCell, { bg, hAlign: 'left', vAlign: 'top', wrap: true });
+
+    const countCell = row.getCell(4);
+    countCell.value = countText;
+    applyStyle(countCell, { bg, hAlign: 'center', vAlign: 'top' });
+
+    const pagesCell = row.getCell(5);
+    if (visMode === 'hidden') {
+      pagesCell.value = '-';
+    } else {
+      pagesCell.value = { richText: buildPagesRichText(pills, source, group, formatPageLabel, isInstanceVisible) };
+    }
+    applyStyle(pagesCell, { bg, hAlign: 'left', vAlign: 'top', wrap: true });
+  }
+
+  if (currentRange) categoryRanges.push(currentRange);
+
+  for (const range of categoryRanges) {
+    if (range.start < range.end) {
+      ws.mergeCells(range.start, 1, range.end, 1);
+    }
+    const cell = ws.getCell(range.start, 1);
+    cell.value = range.category;
+    applyStyle(cell, { bg: range.bg, hAlign: 'center', vAlign: 'middle' });
+  }
+
+  const buffer = await wb.xlsx.writeBuffer();
+  const blob = new Blob([buffer], {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
