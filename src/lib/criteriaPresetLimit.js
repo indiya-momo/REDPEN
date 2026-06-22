@@ -48,9 +48,14 @@ export function enforceMaxCriteriaPresets(ruleSets, uid, email = '') {
   const saved = ruleSets.filter((s) => Boolean(s.savedAt));
   if (saved.length <= MAX_CRITERIA_PRESETS) return ruleSets;
 
-  const newest = [...saved].sort(
-    (a, b) => Date.parse(b.savedAt ?? '') - Date.parse(a.savedAt ?? ''),
-  )[0];
+  const newest = [...saved].sort((a, b) => {
+    const timeDiff =
+      Date.parse(b.savedAt ?? '') - Date.parse(a.savedAt ?? '');
+    if (timeDiff !== 0) return timeDiff;
+    const aNamed = (a.name || '').trim() ? 1 : 0;
+    const bNamed = (b.name || '').trim() ? 1 : 0;
+    return bNamed - aNamed;
+  })[0];
   if (!newest) return ruleSets;
 
   return ruleSets.filter((s) => !s.savedAt || s.id === newest.id);

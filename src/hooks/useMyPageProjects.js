@@ -22,7 +22,7 @@ import {
 import {
   isRuleSetsCloudEnabled,
   loadRuleSetsCloud,
-  resolveCloudActiveSetId,
+  resolveHydratedActiveSetId,
 } from '../lib/ruleSetsCloud.js';
 import { mergeRuleSetsOnLogin } from '../lib/ruleSetsMerge.js';
 import { enforceMaxCriteriaPresets } from '../lib/criteriaPresetLimit.js';
@@ -94,9 +94,11 @@ export function useMyPageProjects(uid = '', email = '') {
               trimmedUid,
               email,
             );
-            activeId =
-              resolveCloudActiveSetId(cloud.activeSetId, sets) ??
-              resolveCloudActiveSetId(activeId, sets);
+            activeId = resolveHydratedActiveSetId(
+              sets,
+              activeId,
+              cloud.activeSetId,
+            );
           }
         } catch {
           // 로컬 기준 유지
