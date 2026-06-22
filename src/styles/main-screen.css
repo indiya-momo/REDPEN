@@ -1040,7 +1040,7 @@
   color: var(--color-text);
 }
 
-/* 4번 말풍선 — 좌측 「일관성 확인」탭 칩 */
+/* 4번 말풍선 — 좌측 「일관성 검수」탭 칩 */
 .tooltip-guide__work-tab-chip {
   display: inline-block;
   margin: 0 2px;

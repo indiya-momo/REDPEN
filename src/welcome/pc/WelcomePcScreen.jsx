@@ -249,7 +249,7 @@ export default function WelcomePcScreen({
           <span className="welcome-pc__perf-l1-num" aria-hidden>
             ❷
           </span>
-          {' '}일관성 확인{' '}
+          {' '}일관성 검수{' '}
           <span className="welcome-pc__perf-l1-num" aria-hidden>
             ❸
           </span>

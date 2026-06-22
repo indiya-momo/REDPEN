@@ -69,7 +69,7 @@ describe('formatSpellingCheckConfirmMessage', () => {
         cautionTotal: 18,
       }),
     ).toBe(
-      '오늘 맞춤법 확인은 1회(한도 1회) 가능합니다\n' +
+      '오늘 맞춤법 검수는 1회(한도 1회) 가능합니다\n' +
         '편집자 검토 필요 기준(16/18), 맞춤법 기준(60/30)\n' +
         '검수를 진행할까요?',
     );

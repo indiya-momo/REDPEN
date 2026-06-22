@@ -34,8 +34,8 @@ import BadgeCollectionGrid from './BadgeCollectionGrid.jsx';
 import './my-page.css';
 
 const SIDEBAR_NAV = [
-  { id: 'overview', label: '나의 프로젝트' },
   { id: 'profile', label: '회원 정보' },
+  { id: 'overview', label: '나의 프로젝트' },
   { id: 'badges', label: '배지 모음집' },
 ];
 
@@ -86,7 +86,7 @@ const FAQ_ITEMS = [
     id: 'tabs',
     question: '맞춤법과 일관성 검수는 무엇이 다른가요?',
     answer:
-      '맞춤법 탭은 내장·주의 규칙으로 오탈자·띄어쓰기 후보를 찾습니다. 일관성 탭은 표기 통일 규칙·본보조·목차·본문 일치 등을 검수합니다.',
+      '맞춤법 검수 탭은 내장·주의 규칙으로 오탈자·띄어쓰기 후보를 찾습니다. 일관성 검수 탭은 표기 통일 규칙·본보조·목차·본문 일치 등을 검수합니다.',
   },
   {
     id: 'beta',
@@ -216,7 +216,7 @@ function MyBenefitsSection({ quota }) {
       aria-labelledby="mypage-benefits-title"
     >
       <h2 id="mypage-benefits-title" className="mypage__card-title">
-        회원정보관리
+        회원 정보
       </h2>
       {quota.loading ? null : !quota.enforced ? (
         <p className="mypage__benefits-note">
@@ -339,9 +339,14 @@ function ProjectHubSection({ uid, email }) {
     >
       <div className="mypage__project-hub-head">
         <div>
-          <h1 id="mypage-project-hub-title" className="mypage__page-title">
-            나의 프로젝트 관리
-          </h1>
+          <div className="mypage__project-hub-title-row">
+            <h1 id="mypage-project-hub-title" className="mypage__page-title">
+              나의 프로젝트
+            </h1>
+            <span className="mypage__project-preparing">
+              *준비중인 기능입니다
+            </span>
+          </div>
           <p className="mypage__project-hub-lead">
             저장한 검수 기준을 불러와 작업을 이어갈 수 있습니다.
           </p>

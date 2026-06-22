@@ -310,6 +310,22 @@
   margin-bottom: 1.1rem;
 }
 
+.mypage__project-hub-title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.45rem 0.65rem;
+}
+
+.mypage__project-preparing {
+  font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: -0.02em;
+  color: var(--color-text-muted);
+}
+
 .mypage__project-hub-lead {
   margin: 0.35rem 0 0;
   font-size: 0.82rem;
@@ -805,7 +821,7 @@
   margin: 0 auto;
 }
 
-/* 회원 등급 · 회원정보관리 */
+/* 회원 등급 · 회원 정보 */
 .mypage__member-head {
   display: grid;
   gap: 0.65rem;
