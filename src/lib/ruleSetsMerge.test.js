@@ -33,35 +33,32 @@ describe('mergeRuleSetsOnLogin', () => {
     expect(merged.some((s) => s.id === 'draft')).toBe(true);
   });
 
-  it('같은 id면 더 최신 savedAt을 유지한다', () => {
+  it('같은 id면 로컬 저장 프로젝트가 클라우드보다 우선한다', () => {
     const local = [
       set('a', {
-        name: '프로젝트',
-        savedAt: '2025-06-02T00:00:00.000Z',
+        name: '내 프로젝트',
+        savedAt: '2025-06-01T00:00:00.000Z',
         customRules: [{ id: 'local' }],
       }),
     ];
     const cloud = [
       set('a', {
-        name: '프로젝트',
-        savedAt: '2025-06-01T00:00:00.000Z',
+        name: '',
+        savedAt: '2025-06-02T00:00:00.000Z',
         customRules: [{ id: 'cloud' }],
       }),
     ];
     const merged = mergeRuleSetsOnLogin(local, cloud);
     expect(merged).toHaveLength(1);
+    expect(merged[0].name).toBe('내 프로젝트');
     expect(merged[0].customRules[0].id).toBe('local');
+    expect(merged[0].savedAt).toBe('2025-06-01T00:00:00.000Z');
   });
 
-  it('클라우드에 저장 프로젝트가 없고 로컬만 있으면 로컬 저장분을 넣는다', () => {
-    const local = [
-      set('local-only', {
-        name: '게스트 저장',
-        savedAt: '2025-05-01T00:00:00.000Z',
-      }),
-    ];
-    const cloud = [set('cloud-draft')];
+  it('로컬 초안은 클라우드 규칙으로 갱신된다', () => {
+    const local = [set('a', { builtInEnabled: { foo: false } })];
+    const cloud = [set('a', { builtInEnabled: { foo: true } })];
     const merged = mergeRuleSetsOnLogin(local, cloud);
-    expect(merged.find((s) => s.id === 'local-only')?.name).toBe('게스트 저장');
+    expect(merged[0].builtInEnabled).toEqual({ foo: true });
   });
 });
