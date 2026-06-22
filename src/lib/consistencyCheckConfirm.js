@@ -13,6 +13,7 @@ import {
 } from './phraseSlotRegister.js';
 import { assertLoggedInForCheckOrAlert } from './checkAuthGate.js';
 import {
+  formatCategoryFindingCount,
   formatConsistencyResultsSummaryLine,
 } from './checkResultSummaryFormat.js';
 import {
@@ -41,6 +42,36 @@ export function countConsistencyCheckActiveRules(customRules = []) {
   return { literalActive, commonStringActive, auxiliaryActive };
 }
 
+function formatConfirmActiveCount(active) {
+  return active > 0 ? formatCategoryFindingCount(active) : '(없음)';
+}
+
+/** @param {number} active @param {number} total */
+function formatConfirmAuxiliaryCount(active, total) {
+  return total > 0 ? `(${active}/${total}건)` : '(없음)';
+}
+
+/**
+ * @param {{
+ *   literalActive: number,
+ *   commonStringActive: number,
+ *   auxiliaryActive: number,
+ *   auxiliaryTotal: number,
+ * }} input
+ */
+function formatConsistencyCheckCriteriaLine({
+  literalActive,
+  commonStringActive,
+  auxiliaryActive,
+  auxiliaryTotal,
+}) {
+  return (
+    `일관성 찾기${formatConfirmActiveCount(literalActive)}, ` +
+    `공통 문자열 찾기${formatConfirmActiveCount(commonStringActive)}, ` +
+    `본용언 + 보조용언 표기${formatConfirmAuxiliaryCount(auxiliaryActive, auxiliaryTotal)}`
+  );
+}
+
 /**
  * @param {{
  *   remaining: number,
@@ -64,8 +95,16 @@ export function formatConsistencyCheckConfirmMessage({
   auxiliaryTotal,
 }) {
   return (
+    `[일관성 검수 안내]\n` +
+    `\n` +
     `오늘 일관성 검수는 ${remaining}회(한도 ${tabLimit}회) 가능합니다\n` +
-    `일관성 찾기(${literalActive}/${literalTotal}), 공통 문자열 찾기(${commonStringActive}/${commonStringTotal}), 본용언 + 보조용언 표기 (${auxiliaryActive}/${auxiliaryTotal})\n` +
+    `${formatConsistencyCheckCriteriaLine({
+      literalActive,
+      commonStringActive,
+      auxiliaryActive,
+      auxiliaryTotal,
+    })}\n` +
+    `\n` +
     '검수를 진행할까요?'
   );
 }
@@ -82,7 +121,15 @@ export function formatConsistencyCheckConfirmMessage({
  */
 export function formatConsistencyCheckConfirmMessageWithoutQuota(counts) {
   return (
-    `일관성 찾기(${counts.literalActive}/${counts.literalTotal}), 공통 문자열 찾기(${counts.commonStringActive}/${counts.commonStringTotal}), 본용언 + 보조용언 표기 (${counts.auxiliaryActive}/${counts.auxiliaryTotal})\n` +
+    `[일관성 검수 안내]\n` +
+    `\n` +
+    `${formatConsistencyCheckCriteriaLine({
+      literalActive: counts.literalActive,
+      commonStringActive: counts.commonStringActive,
+      auxiliaryActive: counts.auxiliaryActive,
+      auxiliaryTotal: counts.auxiliaryTotal,
+    })}\n` +
+    `\n` +
     '검수를 진행할까요?'
   );
 }
