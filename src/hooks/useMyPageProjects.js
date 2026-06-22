@@ -24,6 +24,8 @@ import {
   loadRuleSetsCloud,
   resolveCloudActiveSetId,
 } from '../lib/ruleSetsCloud.js';
+import { mergeRuleSetsOnLogin } from '../lib/ruleSetsMerge.js';
+import { enforceMaxCriteriaPresets } from '../lib/criteriaPresetLimit.js';
 
 /** @param {import('../lib/ruleSetsStorage.js').RuleSet} set */
 export function summarizeProjectRuleSet(set) {
@@ -77,7 +79,8 @@ export function useMyPageProjects(uid = '', email = '') {
 
     async function load() {
       setLoading(true);
-      let sets = normalizeLoadedSets(loadRuleSets());
+      const localSets = normalizeLoadedSets(loadRuleSets());
+      let sets = localSets;
       let activeId = loadActiveSetId();
 
       const trimmedUid = uid.trim();
@@ -85,8 +88,15 @@ export function useMyPageProjects(uid = '', email = '') {
         try {
           const cloud = await loadRuleSetsCloud(trimmedUid);
           if (cloud?.ruleSets?.length) {
-            sets = normalizeLoadedSets(cloud.ruleSets);
-            activeId = resolveCloudActiveSetId(cloud.activeSetId, sets);
+            const merged = mergeRuleSetsOnLogin(localSets, cloud.ruleSets);
+            sets = enforceMaxCriteriaPresets(
+              normalizeLoadedSets(merged),
+              trimmedUid,
+              email,
+            );
+            activeId =
+              resolveCloudActiveSetId(cloud.activeSetId, sets) ??
+              resolveCloudActiveSetId(activeId, sets);
           }
         } catch {
           // 로컬 기준 유지
@@ -106,7 +116,7 @@ export function useMyPageProjects(uid = '', email = '') {
     return () => {
       cancelled = true;
     };
-  }, [uid]);
+  }, [uid, email]);
 
   const exempt = isCriteriaPresetLimitExempt(uid, email);
   const maxSlots = exempt ? null : MAX_CRITERIA_PRESETS;
