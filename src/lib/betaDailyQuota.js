@@ -54,6 +54,11 @@ export const BETA_DAILY_QUOTA_ALERT_CONSISTENCY =
   BETA_QUOTA_POLICY_SUMMARY +
   '내일 0시 이후 다시 시도해 주세요.';
 
+export const BETA_DAILY_QUOTA_ALERT_EXPORT =
+  '오늘 검수 결과 내보내기 한도를 모두 사용했습니다.\n\n' +
+  '오픈베타 기간에는 회원에게 매일 1회 내보내기를 제공합니다(한국 시간 기준). ' +
+  '내일 0시 이후 다시 시도해 주세요.';
+
 /** 피드백 제출 후 작업 탭 새로고침 — 8번 말풍선 (돌아오기만으로는 안 뜸) */
 export const FEEDBACK_SUBMIT_THANK_BUBBLE_LINES = [
   '피드백을 보내준거냥?',
@@ -760,6 +765,88 @@ export async function assertBetaDailyCheckOrAlert(uid, options = {}) {
     typeof result.tabLimit === 'number'
   ) {
     alert(formatBetaQuotaConsumedAlert(tab, result.tabCount, result.tabLimit));
+  }
+  options.onConsumed?.();
+  return true;
+}
+
+/** @typedef {'spelling' | 'consistency'} ExportTab */
+
+/**
+ * export 횟수 차감 — 탭별(spellingExportCount / consistencyExportCount) 독립 관리
+ * @param {string} uid
+ * @param {string} email
+ * @param {ExportTab} exportTab
+ */
+export async function consumeBetaDailyExport(uid, email = '', exportTab = 'spelling') {
+  const dayId = getKstDayId();
+  const countField =
+    exportTab === 'consistency' ? 'consistencyExportCount' : 'spellingExportCount';
+
+  if (!isBetaDailyQuotaEnforcedForUser(uid, email)) {
+    if (isLocalDevQuotaRelaxed() && uid.trim()) {
+      return { ok: true, dayId, exportCount: 1, exportLimit: 1 };
+    }
+    return { ok: true, dayId };
+  }
+
+  const flags = await readQuotaFlags(uid, dayId);
+  const tabLimit = flags.tabLimit;
+
+  try {
+    let exportCount = 0;
+    await runTransaction(getFirestore(firebaseApp), async (tx) => {
+      const dayRef = dayDocRef(uid, dayId);
+      const daySnap = await tx.get(dayRef);
+      const data = daySnap.exists() ? daySnap.data() : {};
+      const current = Math.max(0, Number(data?.[countField]) || 0);
+      if (current >= tabLimit) {
+        throw new Error('beta-export-quota-exceeded');
+      }
+      exportCount = current + 1;
+      const update = { [countField]: exportCount, usedAt: serverTimestamp() };
+      if (!daySnap.exists()) {
+        tx.set(dayRef, { ...data, ...update });
+      } else {
+        tx.update(dayRef, update);
+      }
+    });
+    return { ok: true, dayId, exportCount, exportLimit: tabLimit };
+  } catch (error) {
+    if (error instanceof Error && error.message === 'beta-export-quota-exceeded') {
+      return { ok: false, dayId, alreadyUsed: true };
+    }
+    return { ok: true, dayId };
+  }
+}
+
+/**
+ *보내기 전 시도 확인·차감·알림
+ * @param {string} uid
+ * @param {{ authEmail?: string, exportTab?: ExportTab, onConsumed?: () => void }} [options]
+ * @returns {Promise<boolean>} 진행 가능하면 true
+ */
+export async function assertBetaDailyExportOrAlert(uid, options = {}) {
+  if (!assertLoggedInForCheckOrAlert(uid)) {
+    return false;
+  }
+  const email = options.authEmail ?? '';
+  const exportTab = options.exportTab ?? 'spelling';
+  if (!isBetaDailyQuotaEnforcedForUser(uid, email)) {
+    return true;
+  }
+  const result = await consumeBetaDailyExport(uid, email, exportTab);
+  if (!result.ok) {
+    alert(BETA_DAILY_QUOTA_ALERT_EXPORT);
+    return false;
+  }
+  if (typeof result.exportCount === 'number' && typeof result.exportLimit === 'number') {
+    const remaining = Math.max(0, result.exportLimit - result.exportCount);
+    alert(
+      `오늘 내보내기 횟수가 1회 차감되었습니다.\n\n` +
+      `사용: ${result.exportCount}/${result.exportLimit}회\n` +
+      `남음: ${remaining}회`,
+    );
   }
   options.onConsumed?.();
   return true;
