@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
+  formatBookPageLabel,
   formatPageLabel,
   formatPrintedPageText,
   formatSystemPageLabel,
@@ -165,6 +166,22 @@ export function usePrintedPageDisplay({ pdfFileName, numPages, currentPage }) {
     [enabled, active, displayOpts],
   );
 
+  /** 결과 pill·엑셀 — 스프레드가 아닌 단면(280P·281P) */
+  const formatInstanceLabel = useCallback(
+    (systemPage) => {
+      if (!enabled || !active) return formatSystemPageLabel(systemPage);
+      return formatBookPageLabel(
+        systemPage,
+        displayOpts.shift,
+        true,
+        displayOpts.numPages,
+        displayOpts.anchorPage,
+        displayOpts.firstPageSingle,
+      );
+    },
+    [enabled, active, displayOpts],
+  );
+
   const toSystemPage = useCallback(
     (displayPage) =>
       systemPageFromDisplay(
@@ -205,6 +222,7 @@ export function usePrintedPageDisplay({ pdfFileName, numPages, currentPage }) {
     formatNaturalPreview,
     formatPage,
     formatLabel,
+    formatInstanceLabel,
     toSystemPage,
     toSystemPageFromInput,
     /** @deprecated */ offset: shift,

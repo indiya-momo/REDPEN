@@ -4,8 +4,11 @@ import PrintedPageSetup from './PrintedPageSetup.jsx';
 import { getBuiltInTip } from '../lib/builtInRules.js';
 import { formatSystemPageLabel } from '../lib/printedPageDisplay.js';
 import { cautionResultChipLabel } from '../lib/cautionRules.js';
-import { getConsistencyHighlightTip } from '../lib/consistencyHighlightTip.js';
-import { auxiliaryVerbResultParts } from '../lib/patternDisplayLabels.js';
+import { getConsistencyHighlightTip, getConsistencyResultCardParts } from '../lib/consistencyHighlightTip.js';
+import {
+  formatCategoryFindingCount,
+  formatTotalFindingsToken,
+} from '../lib/checkResultSummaryFormat.js';
 
 /**
 
@@ -21,6 +24,7 @@ import { auxiliaryVerbResultParts } from '../lib/patternDisplayLabels.js';
  *   cautionWithFindingsCount?: number,
  *   builtinWithFindingsCount?: number,
  *   literalWithFindingsCount?: number,
+ *   commonStringWithFindingsCount?: number,
  *   auxiliaryWithFindingsCount?: number,
  * }} props
  */
@@ -32,26 +36,20 @@ function ResultHeaderSummary({
   cautionWithFindingsCount = 0,
   builtinWithFindingsCount = 0,
   literalWithFindingsCount = 0,
+  commonStringWithFindingsCount = 0,
   auxiliaryWithFindingsCount = 0,
 }) {
   if (viewSource === 'spelling' && spellingCheckDone) {
     return (
       <div className="results-header">
         <span className="results-header__applied">
-          편집자 검토 필요 기준{' '}
-          <span className="results-header__rule-chip results-category-summary__caution">
-            {`{${cautionWithFindingsCount}}`}
-          </span>{' '}
-          맞춤법 기준{' '}
-          <span className="results-header__rule-chip results-category-summary__builtin">
-            {`{${builtinWithFindingsCount}}`}
-          </span>
+          편집자 검토 필요{formatCategoryFindingCount(cautionWithFindingsCount)},{' '}
+          맞춤법 규칙{formatCategoryFindingCount(builtinWithFindingsCount)}{' '}
         </span>
         <span className="results-header__total-findings">
-          {' '}
-          전체 발견 기준{' '}
-          <span className="results-category-summary__count-underline">
-            {`[${totalFindings}]`}
+          전체 발견{' '}
+          <span className="result-card-findings-count">
+            {formatTotalFindingsToken(totalFindings)}
           </span>
         </span>
       </div>
@@ -62,19 +60,15 @@ function ResultHeaderSummary({
     return (
       <div className="results-header">
         <span className="results-header__applied">
-          일관성 찾기{' '}
-          <span className="results-header__rule-chip results-category-summary__builtin">
-            {`{${literalWithFindingsCount}}`}
-          </span>{' '}
-          본용언 + 보조용언 표기{' '}
-          <span className="results-header__rule-chip results-category-summary__caution">
-            {`{${auxiliaryWithFindingsCount}}`}
-          </span>
+          일관성 찾기{formatCategoryFindingCount(literalWithFindingsCount)},{' '}
+          공통 문자열 찾기{formatCategoryFindingCount(commonStringWithFindingsCount)},{' '}
+          본용언 + 보조용언 표기
+          {formatCategoryFindingCount(auxiliaryWithFindingsCount)}{' '}
         </span>
         <span className="results-header__total-findings">
-          , 전체 발견 기준{' '}
-          <span className="results-category-summary__count-underline">
-            {`[${totalFindings}]`}
+          전체 발견{' '}
+          <span className="result-card-findings-count">
+            {formatTotalFindingsToken(totalFindings)}
           </span>
         </span>
       </div>
@@ -88,7 +82,7 @@ function ResultHeaderSummary({
       </span>{' '}
       <span className="results-header__total-findings">
         전체 발견 기준{' '}
-        <span className="results-category-summary__count-underline">
+        <span className="result-card-findings-count">
           {totalFindings}
         </span>
       </span>
@@ -111,6 +105,7 @@ function ResultHeaderSummary({
  *   cautionWithFindingsCount?: number,
  *   builtinWithFindingsCount?: number,
  *   literalWithFindingsCount?: number,
+ *   commonStringWithFindingsCount?: number,
  *   auxiliaryWithFindingsCount?: number,
  *   spellingCheckDone: boolean,
  *   isGroupVisible: (source: 'spelling' | 'consistency', group: import('../lib/ruleEngine.js').GroupedResult) => boolean,
@@ -152,6 +147,7 @@ export default function CheckResultsPanel({
   cautionWithFindingsCount = 0,
   builtinWithFindingsCount = 0,
   literalWithFindingsCount = 0,
+  commonStringWithFindingsCount = 0,
   auxiliaryWithFindingsCount = 0,
   spellingCheckDone,
   isGroupVisible,
@@ -216,6 +212,7 @@ export default function CheckResultsPanel({
             cautionWithFindingsCount={cautionWithFindingsCount}
             builtinWithFindingsCount={builtinWithFindingsCount}
             literalWithFindingsCount={literalWithFindingsCount}
+            commonStringWithFindingsCount={commonStringWithFindingsCount}
             auxiliaryWithFindingsCount={auxiliaryWithFindingsCount}
           />
           <ul className="results-list">
@@ -244,22 +241,6 @@ export default function CheckResultsPanel({
                     ? getConsistencyHighlightTip(group)
                     : '');
               const selected = isSameGroupAsSelected(group, source);
-              const auxParts =
-                isConsistency && group.patternKind === 'auxiliary-verb'
-                  ? group.tailWord
-                    ? auxiliaryVerbResultParts(
-                        group.tailWord,
-                        group.groupDisplayLabel,
-                        group.label,
-                      )
-                    : {
-                        stem: '',
-                        groupTag:
-                          group.groupDisplayLabel?.trim() ||
-                          group.label?.trim() ||
-                          null,
-                      }
-                  : null;
 
               return (
                 <li key={`${source}-${group.label}-${group.find}`}>
@@ -286,26 +267,39 @@ export default function CheckResultsPanel({
                     }}
                   >
                     <div className="result-card-head">
+                      <label
+                        className="result-visibility-toggle"
+                        title="PDF에 표시"
+                        onClick={(e) => e.stopPropagation()}
+                        onKeyDown={(e) => e.stopPropagation()}
+                      >
+                        <GroupVisibilityCheckbox
+                          mode={visMode}
+                          label={group.label}
+                          onToggle={() => onToggleVisibility(source, group)}
+                        />
+                      </label>
                       <div className="result-card-head-main">
                         <span className="result-rule">
-                          {isConsistency ? (
-                            auxParts ? (
-                              <span className="result-aux-title">
-                                {auxParts.stem ? (
-                                  <span className="result-aux-stem">
-                                    {auxParts.stem}
-                                  </span>
+                          {isConsistency ? (() => {
+                            const { badge, label } =
+                              getConsistencyResultCardParts(group);
+                            return (
+                              <>
+                                <span className="consistency-badge-inline">
+                                  {badge}
+                                </span>
+                                {label ? (
+                                  <>
+                                    {' '}
+                                    <span className="consistency-result-chip">
+                                      {label}
+                                    </span>
+                                  </>
                                 ) : null}
-                                {auxParts.groupTag ? (
-                                  <span className="result-aux-group-tag">
-                                    {auxParts.groupTag}
-                                  </span>
-                                ) : null}
-                              </span>
-                            ) : (
-                              group.label
-                            )
-                          ) : isCaution ? (
+                              </>
+                            );
+                          })() : isCaution ? (
                             <>
                               <span className="caution-badge-inline">검토</span>{' '}
                               <span className="caution-result-chip">
@@ -318,65 +312,49 @@ export default function CheckResultsPanel({
                             group.label
                           )}
                         </span>
-                        {tipText ? (
+                      </div>
+                      {isConsistency || count > 1 ? (
+                        <span className="result-card-findings-count">
+                          {count === 0
+                            ? '[0]'
+                            : shownCount < count
+                              ? `[표시 ${shownCount}/${count}]`
+                              : `[${count}]`}
+                        </span>
+                      ) : null}
+                    </div>
+                    {(tipText && !isConsistency) || group.instances.length > 0 ? (
+                      <div className="result-card-detail">
+                        {tipText && !isConsistency ? (
                           <span className="result-card-tip-inline">{tipText}</span>
                         ) : null}
+                        <ResultPageSummary
+                          instances={group.instances}
+                          currentPage={currentPage}
+                          selectedInstance={selectedInstance}
+                          formatPageLabel={pageLabel}
+                          onSelectPage={(pageNum) =>
+                            onSelectPageInGroup(pageNum, group.instances, source)
+                          }
+                          onSelectInstance={
+                            onSelectInstance
+                              ? (inst) => onSelectInstance(inst, source)
+                              : undefined
+                          }
+                          isInstanceVisible={
+                            isInstanceVisible
+                              ? (inst) => isInstanceVisible(source, group, inst)
+                              : undefined
+                          }
+                          onToggleInstanceVisibility={
+                            onToggleInstanceVisibility
+                              ? (inst) =>
+                                  onToggleInstanceVisibility(source, group, inst)
+                              : undefined
+                          }
+                        />
                       </div>
-                      <div className="result-card-head-actions">
-                        <label
-                          className="result-visibility-toggle"
-                          title="PDF에 표시"
-                          onClick={(e) => e.stopPropagation()}
-                          onKeyDown={(e) => e.stopPropagation()}
-                        >
-                          <GroupVisibilityCheckbox
-                            mode={visMode}
-                            label={group.label}
-                            onToggle={() => onToggleVisibility(source, group)}
-                          />
-                          <span className="result-visibility-label">표시</span>
-                        </label>
-                        {isConsistency || count > 1 ? (
-                          <span
-                            className={`result-count${count === 0 ? ' result-count--zero' : ''}${
-                              shownCount < count ? ' result-count--partial' : ''
-                            }`}
-                          >
-                            {count === 0
-                              ? '0개'
-                              : shownCount < count
-                                ? `표시 ${shownCount} / ${count}`
-                                : `${count}개`}
-                          </span>
-                        ) : null}
-                      </div>
-                    </div>
-
-                    <ResultPageSummary
-                      instances={group.instances}
-                      currentPage={currentPage}
-                      selectedInstance={selectedInstance}
-                      formatPageLabel={pageLabel}
-                      onSelectPage={(pageNum) =>
-                        onSelectPageInGroup(pageNum, group.instances, source)
-                      }
-                      onSelectInstance={
-                        onSelectInstance
-                          ? (inst) => onSelectInstance(inst, source)
-                          : undefined
-                      }
-                      isInstanceVisible={
-                        isInstanceVisible
-                          ? (inst) => isInstanceVisible(source, group, inst)
-                          : undefined
-                      }
-                      onToggleInstanceVisibility={
-                        onToggleInstanceVisibility
-                          ? (inst) =>
-                              onToggleInstanceVisibility(source, group, inst)
-                          : undefined
-                      }
-                    />
+                    ) : null}
                   </div>
                 </li>
               );
