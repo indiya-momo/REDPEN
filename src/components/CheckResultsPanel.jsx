@@ -93,14 +93,10 @@ function ResultHeaderSummary({
  * @param {{
  *   entries: ResultEntry[],
  *   currentPage: number,
- *   pdf: object | null,
  *   activeGroup: import('../lib/ruleEngine.js').GroupedResult | null,
- *   activeSource: 'spelling' | 'consistency',
- *   visibleOnCurrentPage: number,
  *   totalFindings: number,
  *   ruleCount: number,
  *   viewSource: 'spelling' | 'consistency',
- *   spellingFindings?: number,
  *   cautionWithFindingsCount?: number,
  *   builtinWithFindingsCount?: number,
  *   literalWithFindingsCount?: number,
@@ -118,28 +114,13 @@ function ResultHeaderSummary({
  *   onSelectGroup: (group: import('../lib/ruleEngine.js').GroupedResult, source: 'spelling' | 'consistency') => void,
  *   onSelectPageInGroup: (pageNum: number, instances: import('../lib/ruleEngine.js').MatchInstance[], source: 'spelling' | 'consistency') => void,
  *   selectedInstance?: import('../lib/ruleEngine.js').MatchInstance | null,
- *   onAdditionalCheck?: () => void,
- *   onExport?: () => void,
- *   printedPageOffset?: number | null,
- *   printedPagesActive?: boolean,
- *   onCalibrateFromInput?: (raw: string, isSpread: boolean) => void,
- *   onClearPrintedPageOffset?: () => void,
- *   currentPrintedLabel?: string,
- *   previewPrintedLabel?: string,
- *   spreadInput?: boolean,
- *   onSpreadInputChange?: (v: boolean) => void,
- *   firstPageSingle?: boolean,
- *   onFirstPageSingleChange?: (v: boolean) => void,
  *   formatPageLabel?: (systemPage: number) => string,
  * }} props
  */
 export default function CheckResultsPanel({
   entries,
   currentPage,
-  pdf,
   activeGroup,
-  activeSource,
-  visibleOnCurrentPage,
   totalFindings,
   ruleCount,
   viewSource,
@@ -160,18 +141,6 @@ export default function CheckResultsPanel({
   onSelectGroup,
   onSelectPageInGroup,
   selectedInstance = null,
-  onAdditionalCheck,
-  onExport,
-  printedPageOffset = null,
-  printedPagesActive = false,
-  onCalibrateFromInput,
-  onClearPrintedPageOffset,
-  currentPrintedLabel = '',
-  previewPrintedLabel = '',
-  spreadInput = false,
-  onSpreadInputChange,
-  firstPageSingle = true,
-  onFirstPageSingleChange,
   formatPageLabel: formatPageLabelProp,
 }) {
   const pageLabel = formatPageLabelProp ?? formatSystemPageLabel;
@@ -348,20 +317,6 @@ export default function CheckResultsPanel({
         </>
       ) : (
         <p className="hint results-empty-hint">발견된 항목이 없습니다.</p>
-      )}
-      {(onAdditionalCheck || onExport) && (
-        <div className="results-panel-footer">
-          {onAdditionalCheck && (
-            <button type="button" className="btn-additional-check" onClick={onAdditionalCheck}>
-              다시 검사
-            </button>
-          )}
-          {onExport && (
-            <button type="button" className="btn-export-results" onClick={onExport}>
-              엑셀 내보내기
-            </button>
-          )}
-        </div>
       )}
     </section>
   );

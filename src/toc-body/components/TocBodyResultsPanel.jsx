@@ -7,8 +7,6 @@ import { countTocBodyTabFindings } from '../utils/toc-body-result-entries.js';
  * @param {{
  *   entries: import('../utils/toc-body-result-entries.js').TocBodyTabEntry[],
  *   currentPage: number,
- *   pdf: object | null,
- *   visibleOnCurrentPage: number,
  *   isGroupVisible: (group: import('../lib/tocBodyCheck.js').TocBodyGroup) => boolean,
  *   groupVisibilityMode?: (group: import('../lib/tocBodyCheck.js').TocBodyGroup) => 'visible' | 'partial' | 'hidden',
  *   visibleInstanceCount?: (group: import('../lib/tocBodyCheck.js').TocBodyGroup) => number,
@@ -21,23 +19,12 @@ import { countTocBodyTabFindings } from '../utils/toc-body-result-entries.js';
  *   onSelectPageInGroup: (pageNum: number, instances: import('../lib/ruleEngine.js').MatchInstance[]) => void,
  *   selectedInstance?: import('../lib/ruleEngine.js').MatchInstance | null,
  *   onBackToSetup?: () => void,
- *   printedPagesActive?: boolean,
- *   onCalibrateFromInput?: (raw: string, isSpread: boolean) => void,
- *   onClearPrintedPageOffset?: () => void,
- *   currentPrintedLabel?: string,
- *   previewPrintedLabel?: string,
- *   spreadInput?: boolean,
- *   onSpreadInputChange?: (v: boolean) => void,
- *   firstPageSingle?: boolean,
- *   onFirstPageSingleChange?: (v: boolean) => void,
  *   formatPageLabel?: (systemPage: number) => string,
  * }} props
  */
 export default function TocBodyResultsPanel({
   entries,
   currentPage,
-  pdf,
-  visibleOnCurrentPage,
   isGroupVisible,
   groupVisibilityMode,
   visibleInstanceCount,
@@ -50,15 +37,6 @@ export default function TocBodyResultsPanel({
   onSelectPageInGroup,
   selectedInstance = null,
   onBackToSetup,
-  printedPagesActive,
-  onCalibrateFromInput,
-  onClearPrintedPageOffset,
-  currentPrintedLabel,
-  previewPrintedLabel,
-  spreadInput,
-  onSpreadInputChange,
-  firstPageSingle,
-  onFirstPageSingleChange,
   formatPageLabel,
 }) {
   const pageLabel = formatPageLabel ?? ((p) => `${p}`);

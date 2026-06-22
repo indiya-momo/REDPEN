@@ -62,7 +62,7 @@ export const BETA_DAILY_QUOTA_ALERT_EXPORT =
 /**
  * @param {'spelling' | 'consistency'} [exportTab]
  */
-export function buildProofreadExportConfirmMessage(exportTab = 'spelling') {
+function buildProofreadExportConfirmMessage(exportTab = 'spelling') {
   const tabLabel = exportTab === 'consistency' ? '일관성' : '맞춤법';
   return (
     `오늘 ${tabLabel} 검수 결과 다운로드는 1회 가능합니다.\n` +
@@ -72,7 +72,7 @@ export function buildProofreadExportConfirmMessage(exportTab = 'spelling') {
 }
 
 /** @param {'spelling' | 'consistency'} [exportTab] */
-export function confirmProofreadExportOrCancel(exportTab = 'spelling') {
+function confirmProofreadExportOrCancel(exportTab = 'spelling') {
   return window.confirm(buildProofreadExportConfirmMessage(exportTab));
 }
 

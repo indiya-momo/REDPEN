@@ -1,4 +1,4 @@
-export const VERSION_BUMP_STEP = 0.01;
+export const VERSION_BUMP_STEP = 0.001;
 
 /**
  * @param {string} version
@@ -10,8 +10,8 @@ export function nextVersion(version, step = VERSION_BUMP_STEP) {
   if (!Number.isFinite(current)) {
     throw new Error(`Invalid version: ${version}`);
   }
-  const bumped = Math.round((current + step) * 100) / 100;
-  return bumped.toFixed(2);
+  const bumped = Math.round((current + step) * 1000) / 1000;
+  return bumped.toFixed(3);
 }
 
 /**

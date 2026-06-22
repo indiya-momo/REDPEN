@@ -710,22 +710,6 @@ export default function MainScreen({
     await ruleCheck.runConsistencyCheck();
   }, [ruleCheck.runConsistencyCheck]);
 
-  const printedPagePanelProps = {
-    printedPageOffset: pageDisplay.offset,
-    printedPagesActive: pageDisplay.active,
-    onCalibrateFromInput: pageDisplay.calibrateFromInput,
-    onClearPrintedPageOffset: pageDisplay.clearCalibration,
-    currentPrintedLabel: pageDisplay.formatLabel(pdf.currentPage),
-    previewPrintedLabel: pageDisplay.active
-      ? pageDisplay.formatPageText(pdf.currentPage)
-      : pageDisplay.formatNaturalPreview(pdf.currentPage),
-    spreadInput: pageDisplay.spreadInput,
-    onSpreadInputChange: pageDisplay.setSpreadInput,
-    firstPageSingle: pageDisplay.firstPageSingle,
-    onFirstPageSingleChange: pageDisplay.setFirstPageSingle,
-    formatPageLabel: pageDisplay.formatLabel,
-  };
-
   function switchTab(tab) {
     setWorkTab(tab);
     ruleCheck.syncSelectionForTab(tab);
@@ -910,10 +894,7 @@ export default function MainScreen({
         entries={spellingTabEntries}
         viewSource="spelling"
         currentPage={pdf.currentPage}
-        pdf={pdf.pdf}
         activeGroup={ruleCheck.activeGroup}
-        activeSource={ruleCheck.activeSource}
-        visibleOnCurrentPage={visibleOnCurrentPage}
         totalFindings={spellingTabTotalFindings}
         ruleCount={spellingTabEntries.length}
         cautionWithFindingsCount={spellingGroupsWithFindings.cautionWithFindings}
@@ -926,7 +907,7 @@ export default function MainScreen({
         selectedInstance={ruleCheck.spellingSelected}
         onSelectGroup={ruleCheck.selectGroup}
         onSelectPageInGroup={ruleCheck.selectPageInGroup}
-        {...printedPagePanelProps}
+        formatPageLabel={pageDisplay.formatLabel}
       />
     ) : null;
 
@@ -1522,8 +1503,6 @@ export default function MainScreen({
               <TocBodyResultsPanel
                 entries={tocBodyTabEntries}
                 currentPage={pdf.currentPage}
-                pdf={pdf.pdf}
-                visibleOnCurrentPage={visibleOnCurrentPage}
                 isGroupVisible={tocCheck.isGroupVisible}
                 onToggleVisibility={tocCheck.toggleGroupVisibility}
                 {...tocInstanceVisibilityProps}
@@ -1540,7 +1519,7 @@ export default function MainScreen({
                   tocCheck.selectPageInGroup(pageNum, instances);
                 }}
                 onBackToSetup={clearConsistencyTabWork}
-                {...printedPagePanelProps}
+                formatPageLabel={pageDisplay.formatLabel}
               />
             ) : null}
             {showConsistencyResultsPanel ? (
@@ -1548,10 +1527,7 @@ export default function MainScreen({
                 entries={consistencyTabEntries}
                 viewSource="consistency"
                 currentPage={pdf.currentPage}
-                pdf={pdf.pdf}
                 activeGroup={ruleCheck.activeGroup}
-                activeSource={ruleCheck.activeSource}
-                visibleOnCurrentPage={visibleOnCurrentPage}
                 totalFindings={consistencyTabTotalFindings}
                 ruleCount={consistencyTabEntries.length}
                 literalWithFindingsCount={
@@ -1563,7 +1539,6 @@ export default function MainScreen({
                 auxiliaryWithFindingsCount={
                   consistencyGroupsWithFindings.auxiliaryWithFindings
                 }
-                spellingFindings={ruleCheck.consistencyFindings}
                 spellingCheckDone={ruleCheck.consistencyCheckDone}
                 isGroupVisible={ruleCheck.isGroupVisible}
                 onToggleVisibility={ruleCheck.toggleResultVisibility}
@@ -1580,7 +1555,7 @@ export default function MainScreen({
                   setLastConsistencyPane('rules');
                   ruleCheck.selectPageInGroup(pageNum, instances, 'consistency');
                 }}
-                {...printedPagePanelProps}
+                formatPageLabel={pageDisplay.formatLabel}
               />
             ) : null}
             {!consistencyWorkDone ? (
