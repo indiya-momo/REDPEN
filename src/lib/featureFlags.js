@@ -12,10 +12,11 @@ export function isTocBodyCheckEnabled() {
 /**
  * 맞춤법·일관성 검수 결과 엑셀 다운로드.
  * - `npm run dev`: 항상 켜짐
- * - GitHub Pages 빌드: deploy-pages.yml 에서 `VITE_FEATURE_SPELLING_EXPORT=true`
- * - 로컬 preview에서만 켜려면 `.env`에 `VITE_FEATURE_SPELLING_EXPORT=true`
+ * - 프로덕션: 기본 켜짐 (`VITE_FEATURE_SPELLING_EXPORT=false` 로만 끔)
+ * - GitHub Pages 빌드: deploy-pages.yml 에서도 `true` 명시
  */
 export function isSpellingExportEnabled() {
   if (import.meta.env.DEV) return true;
-  return import.meta.env.VITE_FEATURE_SPELLING_EXPORT === 'true';
+  if (import.meta.env.VITE_FEATURE_SPELLING_EXPORT === 'false') return false;
+  return true;
 }
