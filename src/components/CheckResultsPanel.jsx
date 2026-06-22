@@ -1,6 +1,5 @@
 import ResultPageSummary from './ResultPageSummary.jsx';
 import GroupVisibilityCheckbox from './GroupVisibilityCheckbox.jsx';
-import PrintedPageSetup from './PrintedPageSetup.jsx';
 import { getBuiltInTip } from '../lib/builtInRules.js';
 import { formatSystemPageLabel } from '../lib/printedPageDisplay.js';
 import { cautionResultChipLabel } from '../lib/cautionRules.js';
@@ -188,20 +187,6 @@ export default function CheckResultsPanel({
     <section
       className={`results-panel results-panel--combined results-panel--${viewSource} results-panel--tone-${spellingTone}`}
     >
-      {pdf && onCalibrateFromInput && viewSource !== 'spelling' && (
-        <PrintedPageSetup
-          currentSystemPage={currentPage}
-          active={printedPagesActive}
-          currentPrintedLabel={currentPrintedLabel || pageLabel(currentPage)}
-          previewPrintedLabel={previewPrintedLabel}
-          spreadInput={spreadInput}
-          onSpreadInputChange={onSpreadInputChange ?? (() => {})}
-          firstPageSingle={firstPageSingle}
-          onFirstPageSingleChange={onFirstPageSingleChange ?? (() => {})}
-          onCalibrateFromInput={onCalibrateFromInput}
-          onClear={onClearPrintedPageOffset ?? (() => {})}
-        />
-      )}
       {entries.length > 0 ? (
         <>
           <ResultHeaderSummary

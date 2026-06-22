@@ -1602,8 +1602,10 @@
   position: relative;
   z-index: 10020;
   isolation: isolate;
-  /* 아래 consistency-rules-scroll 스크롤바 폭만큼 내용이 좁아지므로 버튼 끝선 맞춤 */
-  padding-right: calc(var(--spelling-block-inset-x) + var(--custom-scrollbar-size, 6px));
+}
+
+.panel-left-work-scroll > .spelling-tab-layout__calibration {
+  flex-shrink: 0;
 }
 
 .consistency-section-head,
@@ -2021,8 +2023,11 @@
   gap: var(--panel-gap-section);
 }
 
+.panel-left-work-scroll > .consistency-tab-layout__run-row + .spelling-tab-layout__calibration,
 .panel-left-work-scroll > .consistency-tab-layout__run-row + .consistency-results-switch,
+.panel-left-work-scroll > .spelling-tab-layout__calibration + .consistency-results-switch,
 .panel-left-work-scroll > .consistency-tab-layout__run-row + .results-panel,
+.panel-left-work-scroll > .spelling-tab-layout__calibration + .results-panel,
 .panel-left-work-scroll > .consistency-tab-layout__run-row + .consistency-rules-scroll {
   margin-top: 0;
 }

@@ -1223,7 +1223,7 @@ export default function MainScreen({
                     onClick={handleSpellingExport}
                     disabled={!ruleCheck.spellingCheckDone}
                   >
-                    검수 결과 내보내기
+                    검수 결과 다운로드
                   </button>
                 </div>
                 ) : null}
@@ -1452,22 +1452,47 @@ export default function MainScreen({
                     onClick={handleConsistencyExport}
                     disabled={!ruleCheck.consistencyCheckDone}
                   >
-                    검수 결과 내보내기
+                    검수 결과 다운로드
                   </button>
                 </div>
                 ) : null}
                 <div className="spelling-tab-layout__run-row-actions spelling-tab-layout__run-row-actions--end">
-                  <PanelSectionRunButton
-                    label="일관성+용언 검수"
-                    onClick={handleRunConsistencyRulesCheck}
-                    disabled={
-                      pdf.pageTexts.length === 0 ||
-                      pdf.isProcessing ||
-                      checkSessionBlocked
-                    }
-                    isProcessing={pdf.isProcessing}
-                  />
+                  <span className="spelling-tab-layout__criteria-run-wrap">
+                    <PanelSectionRunButton
+                      label="일관성+용언 검수"
+                      onClick={handleRunConsistencyRulesCheck}
+                      disabled={
+                        pdf.pageTexts.length === 0 ||
+                        pdf.isProcessing ||
+                        checkSessionBlocked
+                      }
+                      isProcessing={pdf.isProcessing}
+                    />
+                  </span>
                 </div>
+              </div>
+            ) : null}
+            {pdf.pdf && consistencyWorkDone ? (
+              <div className="spelling-tab-layout__calibration">
+                <PrintedPageSetup
+                  currentSystemPage={pdf.currentPage}
+                  active={pageDisplay.active}
+                  currentPrintedLabel={pageDisplay.formatLabel(pdf.currentPage)}
+                  previewPrintedLabel={
+                    pageDisplay.active
+                      ? pageDisplay.formatPageText(pdf.currentPage)
+                      : pageDisplay.formatNaturalPreview(pdf.currentPage)
+                  }
+                  spreadInput={pageDisplay.spreadInput}
+                  onSpreadInputChange={pageDisplay.setSpreadInput}
+                  firstPageSingle={pageDisplay.firstPageSingle}
+                  onFirstPageSingleChange={pageDisplay.setFirstPageSingle}
+                  onCalibrateFromInput={pageDisplay.calibrateFromInput}
+                  onCalibratePress={() =>
+                    workGuide.dismiss(WORK_GUIDE_KEYS.PDF_OPENED)
+                  }
+                  onClear={pageDisplay.clearCalibration}
+                />
               </div>
             ) : null}
             {tocBodyCheckEnabled &&

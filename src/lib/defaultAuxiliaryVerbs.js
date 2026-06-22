@@ -76,31 +76,8 @@ export function ensureDefaultAuxiliaryVerbs(customRules) {
   let next = rebuildAuxiliaryVerbRulesFromSheet(nonAux, enabledByItem);
 
   return applyBonBojoDisplayLabels(
-    syncBonBojoSheetEnabledFlags(forceLogicOnlyAuxiliaryEnabled(next)),
+    forceLogicOnlyAuxiliaryEnabled(next),
   );
-}
-
-/**
- * 시트 item.enabled=true인데 저장 규칙이 전부 꺼져 있으면 — 첫 실행 시 본조가 안 도는 경우 방지
- * @param {import('./ruleTypes.js').Rule[]} rules
- */
-function syncBonBojoSheetEnabledFlags(rules) {
-  let next = rules;
-  for (const group of getBonBojoGroups()) {
-    for (const item of group.items) {
-      const id = item.id;
-      if (!isBonBojoRequiredItem(id)) continue;
-      const groupRules = next.filter(
-        (r) =>
-          r.patternKind === 'auxiliary-verb' && r.bonBojoItemId?.trim() === id,
-      );
-      if (!groupRules.length || groupRules.some((r) => r.enabled)) continue;
-      next = next.map((r) =>
-        groupRules.includes(r) ? { ...r, enabled: true } : r,
-      );
-    }
-  }
-  return next;
 }
 
 /**
