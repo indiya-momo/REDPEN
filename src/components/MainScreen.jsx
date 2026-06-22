@@ -884,8 +884,8 @@ export default function MainScreen({
           님{' '}
           <span className="pdf-work-pane__greeting-criteria">
             [{activeSavedRuleSetNameDisplay}]
-          </span>{' '}
-          기준을 적용하고 있습니다
+          </span>
+          프로젝트를 진행하고 있습니다
         </>
       ) : greetingName ? (
         <>

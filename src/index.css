@@ -2512,7 +2512,7 @@ details[open] > summary .details-chevron {
   padding: 7px 10px;
   border-radius: var(--radius-ui-sm);
   background: #fef2f2;
-  border: 1px solid #fecaca;
+  border: none;
 }
 
 .pdf-dropzone__scan-note .pdf-support-msg__scan {
