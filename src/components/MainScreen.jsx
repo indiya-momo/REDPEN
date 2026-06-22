@@ -945,6 +945,197 @@ export default function MainScreen({
     [tabCheckDone],
   );
 
+  const spellingCalibrationEl = pdf.pdf ? (
+    <div
+      className="spelling-tab-layout__calibration"
+      data-work-guide-step="3"
+    >
+      {workGuide.showPdfOpenedGuide ? (
+        <TooltipGuide
+          storageKey={workGuide.storageKey(WORK_GUIDE_KEYS.PDF_OPENED)}
+          placement="right"
+          bubbleType="left"
+          useFixedLayer
+          bubbleGuideStep="3"
+          offsetX={0}
+          offsetY={0}
+          pinned={workGuide.pinAll}
+          message={
+            <>
+              원고 페이지 번호와 PDF가 다르면
+              <br />
+              원고 페이지 번호(예: 50-51)을 넣고
+              <br />
+              체크박스를 확인 후{' '}
+              <span className="tooltip-guide__calibrate-btn-look">보정</span>
+              을 눌러보라냥
+            </>
+          }
+          onDismiss={() => workGuide.dismiss(WORK_GUIDE_KEYS.PDF_OPENED)}
+        >
+          <span className="work-guide-anchor work-guide-anchor--calibration">
+            <PrintedPageSetup
+              currentSystemPage={pdf.currentPage}
+              active={pageDisplay.active}
+              currentPrintedLabel={pageDisplay.formatLabel(pdf.currentPage)}
+              previewPrintedLabel={
+                pageDisplay.active
+                  ? pageDisplay.formatPageText(pdf.currentPage)
+                  : pageDisplay.formatNaturalPreview(pdf.currentPage)
+              }
+              spreadInput={pageDisplay.spreadInput}
+              onSpreadInputChange={pageDisplay.setSpreadInput}
+              firstPageSingle={pageDisplay.firstPageSingle}
+              onFirstPageSingleChange={pageDisplay.setFirstPageSingle}
+              onCalibrateFromInput={pageDisplay.calibrateFromInput}
+              onCalibratePress={() =>
+                workGuide.dismiss(WORK_GUIDE_KEYS.PDF_OPENED)
+              }
+              onClear={pageDisplay.clearCalibration}
+            />
+          </span>
+        </TooltipGuide>
+      ) : (
+        <PrintedPageSetup
+          currentSystemPage={pdf.currentPage}
+          active={pageDisplay.active}
+          currentPrintedLabel={pageDisplay.formatLabel(pdf.currentPage)}
+          previewPrintedLabel={
+            pageDisplay.active
+              ? pageDisplay.formatPageText(pdf.currentPage)
+              : pageDisplay.formatNaturalPreview(pdf.currentPage)
+          }
+          spreadInput={pageDisplay.spreadInput}
+          onSpreadInputChange={pageDisplay.setSpreadInput}
+          firstPageSingle={pageDisplay.firstPageSingle}
+          onFirstPageSingleChange={pageDisplay.setFirstPageSingle}
+          onCalibrateFromInput={pageDisplay.calibrateFromInput}
+          onCalibratePress={() =>
+            workGuide.dismiss(WORK_GUIDE_KEYS.PDF_OPENED)
+          }
+          onClear={pageDisplay.clearCalibration}
+        />
+      )}
+    </div>
+  ) : null;
+
+  const spellingRunRowEl = showSpellingRunRow ? (
+    <div
+      className="spelling-tab-layout__run-row"
+      data-work-guide-step="2"
+    >
+      <div className="spelling-tab-layout__run-row-actions">
+        <PanelSectionRunButton
+          label="다시 검수"
+          onClick={handleSpellingRecheckFromScratch}
+          disabled={
+            pdf.pageTexts.length === 0 ||
+            !ruleCheck.spellingCheckDone ||
+            pdf.isProcessing ||
+            checkSessionBlocked
+          }
+          isProcessing={pdf.isProcessing}
+        />
+      </div>
+      {spellingExportEnabled ? (
+        <div className="spelling-tab-layout__run-row-actions--export">
+          <button
+            type="button"
+            className="btn-add panel-section-run-btn btn-export-results"
+            onClick={handleSpellingExport}
+            disabled={!ruleCheck.spellingCheckDone}
+          >
+            검수 결과 다운로드
+          </button>
+        </div>
+      ) : null}
+      <div className="spelling-tab-layout__run-row-actions spelling-tab-layout__run-row-actions--end">
+        <span
+          className="spelling-tab-layout__criteria-run-wrap"
+          data-work-guide-criteria-run
+          title={criteriaRunDisabledReason || undefined}
+        >
+          {workGuide.showLeftCriteriaGuide ? (
+            <TooltipGuide
+              storageKey={workGuide.storageKey(WORK_GUIDE_KEYS.LEFT_CRITERIA)}
+              placement="bottom"
+              bubbleType="left"
+              useFixedLayer
+              offsetX={0}
+              offsetY={0}
+              alignToBubble={WORK_GUIDE_1_ALIGN}
+              bubbleGuideStep="1"
+              pinned={workGuide.pinAll}
+              message={
+                <>
+                  검수할 기준을 선택하자냥!
+                  <br />
+                  〉 를 누르면 기준 항목을 볼 수 있다냥
+                  <br />
+                  선택했으면{' '}
+                  <span className="tooltip-guide__run-btn-look">기준 검수</span>
+                  를 누르라냥
+                </>
+              }
+              onDismiss={() =>
+                workGuide.dismiss(WORK_GUIDE_KEYS.LEFT_CRITERIA)
+              }
+            >
+              <PanelSectionRunButton
+                label="기준 검수"
+                onClick={handleCriteriaSpellingCheck}
+                disabled={criteriaRunBlocked}
+                isProcessing={criteriaRunChecking}
+              />
+            </TooltipGuide>
+          ) : (
+            <PanelSectionRunButton
+              label="기준 검수"
+              onClick={handleCriteriaSpellingCheck}
+              disabled={criteriaRunBlocked}
+              isProcessing={criteriaRunChecking}
+            />
+          )}
+        </span>
+        {workGuide.showFirstResultGuide ? (
+          <div className="work-guide-step-2">
+            <TooltipGuide
+              storageKey={workGuide.storageKey(WORK_GUIDE_KEYS.FIRST_RESULT)}
+              placement="left"
+              bubbleType="left"
+              useFixedLayer
+              alignToBubbleChain={WORK_GUIDE_2_ALIGN_CHAIN}
+              bubbleGuideStep="2"
+              offsetX={0}
+              offsetY={0}
+              pinned={workGuide.pinAll}
+              message={
+                <>
+                  검수는 아직 부족한 점도 있다냥
+                  <br />
+                  <span className="tooltip-guide__feedback-btn-look">
+                    피드백
+                  </span>
+                  는 언제나 환영이다냥
+                  <br />
+                  원고의 표시를 클릭하면 설명을 볼 수 있다냥
+                </>
+              }
+              onDismiss={() =>
+                workGuide.dismiss(WORK_GUIDE_KEYS.FIRST_RESULT)
+              }
+            >
+              <span
+                className="work-guide-anchor work-guide-anchor--guide-result"
+                aria-hidden
+              />
+            </TooltipGuide>
+          </div>
+        ) : null}
+      </div>
+    </div>
+  ) : null;
+
   const greetingInner = (
     <>
       {greetingName && activeSavedRuleSetNameDisplay ? (
@@ -1197,230 +1388,31 @@ export default function MainScreen({
           <div
             className={spellingTabLayoutClassName}
           >
-            {showSpellingRunRow ? (
-              <div
-                className="spelling-tab-layout__run-row"
-                data-work-guide-step="2"
-              >
-                <div className="spelling-tab-layout__run-row-actions">
-                  <PanelSectionRunButton
-                    label="다시 검수"
-                    onClick={handleSpellingRecheckFromScratch}
-                    disabled={
-                      pdf.pageTexts.length === 0 ||
-                      !ruleCheck.spellingCheckDone ||
-                      pdf.isProcessing ||
-                      checkSessionBlocked
-                    }
-                    isProcessing={pdf.isProcessing}
-                  />
-                </div>
-                {spellingExportEnabled ? (
-                <div className="spelling-tab-layout__run-row-actions--export">
-                  <button
-                    type="button"
-                    className="btn-add panel-section-run-btn btn-export-results"
-                    onClick={handleSpellingExport}
-                    disabled={!ruleCheck.spellingCheckDone}
-                  >
-                    검수 결과 다운로드
-                  </button>
-                </div>
-                ) : null}
-                <div className="spelling-tab-layout__run-row-actions spelling-tab-layout__run-row-actions--end">
-                  <span
-                    className="spelling-tab-layout__criteria-run-wrap"
-                    data-work-guide-criteria-run
-                    title={criteriaRunDisabledReason || undefined}
-                  >
-                    {workGuide.showLeftCriteriaGuide ? (
-                      <TooltipGuide
-                        storageKey={workGuide.storageKey(
-                          WORK_GUIDE_KEYS.LEFT_CRITERIA,
-                        )}
-                        placement="bottom"
-                        bubbleType="left"
-                        useFixedLayer
-                        offsetX={0}
-                        offsetY={0}
-                        alignToBubble={WORK_GUIDE_1_ALIGN}
-                        bubbleGuideStep="1"
-                        pinned={workGuide.pinAll}
-                        message={
-                          <>
-                            검수할 기준을 선택하자냥!
-                            <br />
-                            〉 를 누르면 기준 항목을 볼 수 있다냥
-                            <br />
-                            선택했으면{' '}
-                            <span className="tooltip-guide__run-btn-look">
-                              기준 검수
-                            </span>
-                            를 누르라냥
-                          </>
-                        }
-                        onDismiss={() =>
-                          workGuide.dismiss(WORK_GUIDE_KEYS.LEFT_CRITERIA)
-                        }
-                      >
-                        <PanelSectionRunButton
-                          label="기준 검수"
-                          onClick={handleCriteriaSpellingCheck}
-                          disabled={criteriaRunBlocked}
-                          isProcessing={criteriaRunChecking}
-                        />
-                      </TooltipGuide>
-                    ) : (
-                      <PanelSectionRunButton
-                        label="기준 검수"
-                        onClick={handleCriteriaSpellingCheck}
-                        disabled={criteriaRunBlocked}
-                        isProcessing={criteriaRunChecking}
-                      />
-                    )}
-                  </span>
-                  {/* 2번 말풍선 — 검수 결과 안내 */}
-                  {workGuide.showFirstResultGuide ? (
-                    <div className="work-guide-step-2">
-                      <TooltipGuide
-                        storageKey={workGuide.storageKey(
-                          WORK_GUIDE_KEYS.FIRST_RESULT,
-                        )}
-                        placement="left"
-                        bubbleType="left"
-                        useFixedLayer
-                        alignToBubbleChain={WORK_GUIDE_2_ALIGN_CHAIN}
-                        bubbleGuideStep="2"
-                        offsetX={0}
-                        offsetY={0}
-                        pinned={workGuide.pinAll}
-                        message={
-                          <>
-                            검수는 아직 부족한 점도 있다냥
-                            <br />
-                            <span className="tooltip-guide__feedback-btn-look">
-                              피드백
-                            </span>
-                            는 언제나 환영이다냥
-                            <br />
-                            원고의 표시를 클릭하면 설명을 볼 수 있다냥
-                          </>
-                        }
-                        onDismiss={() =>
-                          workGuide.dismiss(WORK_GUIDE_KEYS.FIRST_RESULT)
-                        }
-                      >
-                        <span
-                          className="work-guide-anchor work-guide-anchor--guide-result"
-                          aria-hidden
-                        />
-                      </TooltipGuide>
-                    </div>
-                  ) : null}
-                </div>
-              </div>
-            ) : null}
-            {pdf.pdf ? (
-              <div
-                className="spelling-tab-layout__calibration"
-                data-work-guide-step="3"
-              >
-                {/* 3번 말풍선 — 파일 - 원고 페이지 맞추기 */}
-                {workGuide.showPdfOpenedGuide ? (
-                  <TooltipGuide
-                    storageKey={workGuide.storageKey(
-                      WORK_GUIDE_KEYS.PDF_OPENED,
-                    )}
-                    placement="right"
-                    bubbleType="left"
-                    useFixedLayer
-                    bubbleGuideStep="3"
-                    offsetX={0}
-                    offsetY={0}
-                    pinned={workGuide.pinAll}
-                    message={
-                      <>
-                        원고 페이지 번호와 PDF가 다르면
-                        <br />
-                        원고 페이지 번호(예: 50-51)을 넣고
-                        <br />
-                        체크박스를 확인 후{' '}
-                        <span className="tooltip-guide__calibrate-btn-look">
-                          보정
-                        </span>
-                        을 눌러보라냥
-                      </>
-                    }
-                    onDismiss={() =>
-                      workGuide.dismiss(WORK_GUIDE_KEYS.PDF_OPENED)
-                    }
-                  >
-                    <span className="work-guide-anchor work-guide-anchor--calibration">
-                      <PrintedPageSetup
-                        currentSystemPage={pdf.currentPage}
-                        active={pageDisplay.active}
-                        currentPrintedLabel={pageDisplay.formatLabel(
-                          pdf.currentPage,
-                        )}
-                        previewPrintedLabel={
-                          pageDisplay.active
-                            ? pageDisplay.formatPageText(pdf.currentPage)
-                            : pageDisplay.formatNaturalPreview(pdf.currentPage)
-                        }
-                        spreadInput={pageDisplay.spreadInput}
-                        onSpreadInputChange={pageDisplay.setSpreadInput}
-                        firstPageSingle={pageDisplay.firstPageSingle}
-                        onFirstPageSingleChange={pageDisplay.setFirstPageSingle}
-                        onCalibrateFromInput={pageDisplay.calibrateFromInput}
-                        onCalibratePress={() =>
-                          workGuide.dismiss(WORK_GUIDE_KEYS.PDF_OPENED)
-                        }
-                        onClear={pageDisplay.clearCalibration}
-                      />
-                    </span>
-                  </TooltipGuide>
-                ) : (
-                  <PrintedPageSetup
-                    currentSystemPage={pdf.currentPage}
-                    active={pageDisplay.active}
-                    currentPrintedLabel={pageDisplay.formatLabel(pdf.currentPage)}
-                    previewPrintedLabel={
-                      pageDisplay.active
-                        ? pageDisplay.formatPageText(pdf.currentPage)
-                        : pageDisplay.formatNaturalPreview(pdf.currentPage)
-                    }
-                    spreadInput={pageDisplay.spreadInput}
-                    onSpreadInputChange={pageDisplay.setSpreadInput}
-                    firstPageSingle={pageDisplay.firstPageSingle}
-                    onFirstPageSingleChange={pageDisplay.setFirstPageSingle}
-                    onCalibrateFromInput={pageDisplay.calibrateFromInput}
-                    onCalibratePress={() =>
-                      workGuide.dismiss(WORK_GUIDE_KEYS.PDF_OPENED)
-                    }
-                    onClear={pageDisplay.clearCalibration}
-                  />
-                )}
-              </div>
-            ) : null}
             {showSpellingResultsSlot ? (
-              <div className="spelling-tab-scroll custom-scrollbar">
+              <div className="panel-left-work-scroll spelling-tab-scroll custom-scrollbar">
+                {spellingRunRowEl}
+                {spellingCalibrationEl}
                 <div className="spelling-tab-scroll__results">
                   {spellingResultsPanel}
                 </div>
               </div>
-            ) : null}
-
-            {!tabCheckDone ? (
-              <ResizableBuiltinSpelling
-                builtInEnabled={builtInEnabled}
-                onBuiltInToggle={onBuiltInToggle}
-                onBuiltInSetAll={onBuiltInSetAll}
-                cautionEnabled={cautionEnabled}
-                onCautionToggle={onCautionToggle}
-                onCautionSetAll={onCautionSetAll}
-                fillPanel
-              />
-            ) : null}
+            ) : (
+              <>
+                {spellingRunRowEl}
+                {spellingCalibrationEl}
+                {!tabCheckDone ? (
+                  <ResizableBuiltinSpelling
+                    builtInEnabled={builtInEnabled}
+                    onBuiltInToggle={onBuiltInToggle}
+                    onBuiltInSetAll={onBuiltInSetAll}
+                    cautionEnabled={cautionEnabled}
+                    onCautionToggle={onCautionToggle}
+                    onCautionSetAll={onCautionSetAll}
+                    fillPanel
+                  />
+                ) : null}
+              </>
+            )}
           </div>
         )}
 
