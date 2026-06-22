@@ -949,7 +949,7 @@ export default function MainScreen({
       message={
         <>
           <span className="tooltip-guide__work-tab-chip tooltip-guide__work-tab-chip--consistency">
-            일관성 확인
+            일관성 검수
           </span>
           에서는
           <br />
@@ -1112,14 +1112,14 @@ export default function MainScreen({
               className={`work-tab work-tab--spelling ${workTab === 'spelling' ? 'active' : ''}`}
               onClick={() => switchTab('spelling')}
             >
-              맞춤법 확인
+              맞춤법 검수
             </button>
             <button
               type="button"
               className={`work-tab work-tab--consistency ${workTab === 'consistency' ? 'active' : ''}`}
               onClick={() => switchTab('consistency')}
             >
-              일관성 확인
+              일관성 검수
             </button>
           </nav>
         </header>

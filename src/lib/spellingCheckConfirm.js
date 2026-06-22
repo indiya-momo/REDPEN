@@ -33,7 +33,7 @@ export function formatSpellingCheckConfirmMessage({
   cautionTotal,
 }) {
   return (
-    `오늘 맞춤법 확인은 ${remaining}회(한도 ${tabLimit}회) 가능합니다\n` +
+    `오늘 맞춤법 검수는 ${remaining}회(한도 ${tabLimit}회) 가능합니다\n` +
     `편집자 검토 필요 기준(${cautionActive}/${cautionTotal}), 맞춤법 기준(${builtinTotal}/${builtinActive})\n` +
     '검수를 진행할까요?'
   );

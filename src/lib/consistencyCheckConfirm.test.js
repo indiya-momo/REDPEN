@@ -128,7 +128,7 @@ describe('formatConsistencyCheckConfirmMessage', () => {
         auxiliaryTotal: 10,
       }),
     ).toBe(
-      '오늘 일관성 확인은 1회(한도 1회) 가능합니다\n' +
+      '오늘 일관성 검수는 1회(한도 1회) 가능합니다\n' +
         '일관성 찾기(3/8), 공통 문자열 찾기(1/4), 본용언 + 보조용언 표기 (2/10)\n' +
         '검수를 진행할까요?',
     );
