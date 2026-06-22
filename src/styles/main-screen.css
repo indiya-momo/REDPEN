@@ -1700,6 +1700,10 @@
   padding-right: 0;
 }
 
+.spelling-tab-scroll .spelling-tab-layout__calibration {
+  flex-shrink: 0;
+}
+
 .spelling-tab-scroll .panel-section {
   padding-left: 12px;
   padding-right: 12px;
