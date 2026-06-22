@@ -21,6 +21,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -62,12 +65,14 @@ jobs:
           touch docs/.nojekyll
 
       - name: Commit and push docs/
+        env:
+          HUSKY: 0
+          SKIP_VERSION_BUMP: 1
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add -A docs/
           git diff --staged --quiet && echo "No docs changes" && exit 0
           git commit -m "chore(pages): deploy built app to docs/"
-          # 다른 워크플로가 동시에 main에 반영되면 push가 non-fast-forward로 거절될 수 있음.
-          # 그 경우 최신 main을 rebase로 가져온 뒤 한 번 더 push 시도.
-          git push || (git pull --rebase origin main && git push)
+          # detached HEAD·동시 push 대비: main 브랜치로 명시 push
+          git push origin HEAD:main || (git pull --rebase origin main && git push origin HEAD:main)
