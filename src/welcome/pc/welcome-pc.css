@@ -48,9 +48,13 @@
   --welcome-ba-pane-scale: calc(0.93 * 0.95);
   --welcome-ba-split-gap: calc(28px * var(--welcome-scale));
   --welcome-ba-bridge-mid-pad-x: calc(14px * var(--welcome-scale));
-  --welcome-ba-gap-pen-width: calc(27px * var(--welcome-scale));
+  --welcome-ba-gap-pen-scale: 1.5;
+  --welcome-ba-gap-pen-width: calc(27px * var(--welcome-scale) * var(--welcome-ba-gap-pen-scale));
   --welcome-ba-bridge-scale: 0.9;
-  --welcome-ba-bridge-size: calc(5.625rem * var(--welcome-scale) * var(--welcome-ba-bridge-scale));
+  --welcome-ba-bridge-momo-scale: 1.2;
+  --welcome-ba-bridge-size: calc(
+    5.625rem * var(--welcome-scale) * var(--welcome-ba-bridge-scale) * var(--welcome-ba-bridge-momo-scale)
+  );
   --welcome-ba-bridge-disc: calc(var(--welcome-ba-bridge-size) * 1.155);
   --welcome-ba-bridge-col-width: calc(7.5rem * var(--welcome-scale));
   --welcome-ba-bridge-disc-inset-x: calc(
@@ -343,8 +347,49 @@
   --welcome-ba-pane-margin-before: calc(
     var(--welcome-ba-col-width-before) * (1 - var(--welcome-ba-pane-scale))
   );
+  /* 검수 전 이미지 왼쪽 = showcase 좌측 (이미지 bottom-left 정렬, 좌측 pane 여백 없음) */
+  --welcome-ba-before-img-left: var(--welcome-ba-showcase-inset-left);
+  /* page 콘텐츠 시작선 → 검수 전 이미지 좌측 (landing cqw 기준) */
+  --welcome-hero-left-nudge: calc(
+    var(--welcome-ba-before-img-left) -
+      max(0px, (100cqw - min(100cqw, var(--welcome-page-max-width))) / 2) -
+      var(--welcome-page-padding-inline)
+  );
   --welcome-ba-pane-margin-after: calc(
     var(--welcome-ba-col-width-after) * (1 - var(--welcome-ba-pane-scale))
+  );
+  /* ba-split 좌상단 기준 — 펜은 이미지 끝↔원 가장자리 중점 (오버레이 레이어) */
+  --welcome-ba-bridge-stack-h: calc(
+    var(--welcome-ba-bridge-disc) + calc(6px * var(--welcome-scale)) +
+      calc(
+        0.68rem * var(--welcome-scale) * var(--welcome-showcase-caption-scale) *
+          var(--welcome-ba-img-scale) * var(--welcome-ba-bridge-caption-scale, 1) * 1.35
+      )
+  );
+  --welcome-ba-gap-top-split: calc(
+    (var(--welcome-ba-shot-height) - var(--welcome-ba-bridge-stack-h)) / 2 +
+      var(--welcome-ba-bridge-disc) * 0.5
+  );
+  --welcome-ba-gap-edge-before-img-split: calc(
+    var(--welcome-ba-col-width-before) * var(--welcome-ba-pane-scale)
+  );
+  --welcome-ba-gap-edge-disc-left-split: calc(
+    var(--welcome-ba-col-width-before) + var(--welcome-ba-split-gap) +
+      var(--welcome-ba-bridge-disc-inset-x)
+  );
+  --welcome-ba-gap-mid-before-split: calc(
+    (var(--welcome-ba-gap-edge-before-img-split) + var(--welcome-ba-gap-edge-disc-left-split)) / 2
+  );
+  --welcome-ba-gap-edge-disc-right-split: calc(
+    var(--welcome-ba-gap-edge-disc-left-split) + var(--welcome-ba-bridge-disc)
+  );
+  --welcome-ba-gap-edge-after-img-split: calc(
+    var(--welcome-ba-col-width-before) + var(--welcome-ba-split-gap) +
+      var(--welcome-ba-bridge-col-width) + var(--welcome-ba-split-gap) +
+      var(--welcome-ba-pane-margin-after)
+  );
+  --welcome-ba-gap-mid-after-split: calc(
+    (var(--welcome-ba-gap-edge-disc-right-split) + var(--welcome-ba-gap-edge-after-img-split)) / 2
   );
   --welcome-proto-cta-max: var(--welcome-ba-before-img-width);
 }
@@ -407,6 +452,24 @@
   overflow: visible;
 }
 
+.welcome-pc__landing .welcome-pc__page .welcome-pc__hero-left {
+  box-sizing: border-box;
+  width: var(--welcome-ba-before-img-width);
+  max-width: 100%;
+  margin-inline-start: var(--welcome-hero-left-nudge);
+}
+
+.welcome-pc__landing .welcome-pc__page .welcome-pc__header,
+.welcome-pc__landing .welcome-pc__page .welcome-pc__cta-group--in-top,
+.welcome-pc__landing .welcome-pc__page .welcome-pc__guest-cta-match {
+  width: 100%;
+  max-width: 100%;
+}
+
+.welcome-pc__landing .welcome-pc__page .welcome-pc__perf-l2 .welcome-pc__perf-anc--left {
+  margin-inline-start: calc(1.625rem * var(--welcome-scale) * var(--welcome-perf-l2-decor, 1));
+}
+
 .welcome-pc__page .welcome-pc__header {
   display: flex;
   flex-direction: column;
@@ -451,6 +514,7 @@
   font-weight: normal;
   line-height: 1;
   letter-spacing: 0.08em;
+  margin-inline-start: calc(-3px * var(--welcome-scale));
   color: #f0e6d4;
 }
 
@@ -551,9 +615,7 @@
 }
 
 .welcome-pc__page .welcome-pc__desc-emphasis {
-  text-decoration: underline;
-  text-underline-offset: calc(0.12em * var(--welcome-scale));
-  text-decoration-thickness: 1px;
+  font-weight: 600;
 }
 
 .welcome-pc__page .welcome-pc__guest-cta-match {
@@ -766,6 +828,7 @@
 }
 
 .welcome-pc__ba-split {
+  position: relative;
   display: grid;
   grid-template-columns:
     minmax(0, var(--welcome-ba-col-width-before)) auto
@@ -775,35 +838,31 @@
   width: 100%;
 }
 
+.welcome-pc__ba-gaps {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
 .welcome-pc__ba-gap {
   position: absolute;
-  top: calc(var(--welcome-ba-bridge-disc) * 0.5);
+  top: var(--welcome-ba-gap-top-split);
   width: auto;
   background: none;
   border: none;
   line-height: 0;
   pointer-events: none;
-  z-index: 2;
 }
 
+/* ba-split 기준 — 이미지 끝과 원 가장자리 사이 중점 */
 .welcome-pc__ba-gap--before {
-  left: calc(
-    (
-        -1 * var(--welcome-ba-split-gap) - var(--welcome-ba-pane-margin-before) +
-          var(--welcome-ba-bridge-disc-inset-x)
-      ) / 2
-  );
+  left: var(--welcome-ba-gap-mid-before-split);
   transform: translate(-50%, -50%);
 }
 
 .welcome-pc__ba-gap--after {
-  left: calc(
-    (
-        var(--welcome-ba-bridge-disc-inset-x) + var(--welcome-ba-bridge-disc) +
-          var(--welcome-ba-bridge-col-width) + var(--welcome-ba-split-gap) +
-          var(--welcome-ba-pane-margin-after)
-      ) / 2
-  );
+  left: var(--welcome-ba-gap-mid-after-split);
   transform: translate(-50%, -50%);
 }
 

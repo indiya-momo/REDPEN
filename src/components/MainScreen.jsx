@@ -28,6 +28,8 @@ import TocBodyResultsPanel from '../toc-body/components/TocBodyResultsPanel.jsx'
 import { useTocBodyCheck } from '../toc-body/hooks/useTocBodyCheck.js';
 import { useTocBodyHighlights } from '../toc-body/hooks/useTocBodyHighlights.js';
 import { buildTocBodyTabEntries } from '../toc-body/utils/toc-body-result-entries.js';
+import { exportSpellingResults, exportConsistencyResults } from '../lib/exportResults.js';
+import { assertBetaDailyExportOrAlert } from '../lib/betaDailyQuota.js';
 import { isTocBodyCheckEnabled } from '../lib/featureFlags.js';
 import { usePdfDocument } from '../hooks/usePdfDocument.js';
 import { usePdfZoom } from '../hooks/usePdfZoom.js';
@@ -809,6 +811,88 @@ export default function MainScreen({
     ],
   );
 
+  const handleSpellingExport = useCallback(() => {
+    const today = new Date();
+    const yy = String(today.getFullYear()).slice(2);
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    const datePart = `${yy}${mm}${dd}`;
+    const rawProject = pdf.pdfFileName
+      ? pdf.pdfFileName.replace(/\.[^.]+$/, '')
+      : '프로젝트명';
+    const projectPart = rawProject.replace(/[\\/:*?"<>|]/g, '_');
+    const filename = `${datePart}_${projectPart}_인디야_맞춤법_검수.xlsx`;
+
+    assertBetaDailyExportOrAlert(authUid, { authEmail, exportTab: 'spelling' })
+      .then((allowed) => {
+        if (!allowed) return;
+        return exportSpellingResults({
+          entries: spellingTabEntries,
+          formatPageLabel: pageDisplay.formatLabel,
+          isInstanceVisible: ruleCheck.isInstanceVisible,
+          groupVisibilityMode: ruleCheck.groupVisibilityMode,
+          visibleInstanceCount: ruleCheck.visibleInstanceCount,
+          cautionCount: spellingGroupsWithFindings.cautionWithFindings,
+          builtinCount: spellingGroupsWithFindings.builtinWithFindings,
+          totalFindings: spellingTabTotalFindings,
+          filename,
+        });
+      })
+      .catch((err) => console.error('엑셀 내보내기 오류:', err));
+  }, [
+    authUid,
+    authEmail,
+    pdf.pdfFileName,
+    spellingTabEntries,
+    pageDisplay.formatLabel,
+    ruleCheck.isInstanceVisible,
+    ruleCheck.groupVisibilityMode,
+    ruleCheck.visibleInstanceCount,
+    spellingGroupsWithFindings,
+    spellingTabTotalFindings,
+  ]);
+
+  const handleConsistencyExport = useCallback(() => {
+    const today = new Date();
+    const yy = String(today.getFullYear()).slice(2);
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    const datePart = `${yy}${mm}${dd}`;
+    const rawProject = pdf.pdfFileName
+      ? pdf.pdfFileName.replace(/\.[^.]+$/, '')
+      : '프로젝트명';
+    const projectPart = rawProject.replace(/[\\/:*?"<>|]/g, '_');
+    const filename = `${datePart}_${projectPart}_인디야_일관성_검수.xlsx`;
+
+    assertBetaDailyExportOrAlert(authUid, { authEmail, exportTab: 'consistency' })
+      .then((allowed) => {
+        if (!allowed) return;
+        return exportConsistencyResults({
+          entries: consistencyTabEntries,
+          formatPageLabel: pageDisplay.formatLabel,
+          isInstanceVisible: ruleCheck.isInstanceVisible,
+          groupVisibilityMode: ruleCheck.groupVisibilityMode,
+          visibleInstanceCount: ruleCheck.visibleInstanceCount,
+          literalCount: consistencyGroupsWithFindings.literalWithFindings,
+          auxiliaryCount: consistencyGroupsWithFindings.auxiliaryWithFindings,
+          totalFindings: consistencyTabTotalFindings,
+          filename,
+        });
+      })
+      .catch((err) => console.error('일관성 엑셀 내보내기 오류:', err));
+  }, [
+    authUid,
+    authEmail,
+    pdf.pdfFileName,
+    consistencyTabEntries,
+    pageDisplay.formatLabel,
+    ruleCheck.isInstanceVisible,
+    ruleCheck.groupVisibilityMode,
+    ruleCheck.visibleInstanceCount,
+    consistencyGroupsWithFindings,
+    consistencyTabTotalFindings,
+  ]);
+
   const spellingResultsPanel =
     workTab === 'spelling' && ruleCheck.spellingCheckDone ? (
       <CheckResultsPanel
@@ -1120,6 +1204,16 @@ export default function MainScreen({
                     isProcessing={pdf.isProcessing}
                   />
                 </div>
+                <div className="spelling-tab-layout__run-row-actions--export">
+                  <button
+                    type="button"
+                    className="btn-add panel-section-run-btn btn-export-results"
+                    onClick={handleSpellingExport}
+                    disabled={!ruleCheck.spellingCheckDone}
+                  >
+                    검수 결과 내보내기(엑셀)
+                  </button>
+                </div>
                 <div className="spelling-tab-layout__run-row-actions spelling-tab-layout__run-row-actions--end">
                   <span
                     className="spelling-tab-layout__criteria-run-wrap"
@@ -1336,6 +1430,16 @@ export default function MainScreen({
                     }
                     isProcessing={pdf.isProcessing}
                   />
+                </div>
+                <div className="spelling-tab-layout__run-row-actions--export">
+                  <button
+                    type="button"
+                    className="btn-add panel-section-run-btn btn-export-results"
+                    onClick={handleConsistencyExport}
+                    disabled={!ruleCheck.consistencyCheckDone}
+                  >
+                    검수 결과 내보내기(엑셀)
+                  </button>
                 </div>
                 <div className="spelling-tab-layout__run-row-actions spelling-tab-layout__run-row-actions--end">
                   <PanelSectionRunButton

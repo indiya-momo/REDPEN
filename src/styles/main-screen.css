@@ -190,7 +190,7 @@
 }
 
 .panel-left .current-page-status strong,
-.panel-left .current-page-status__criterion-hit-num {
+.panel-left .current-page-status .results-category-summary__count-underline {
   font-weight: var(--w-step);
 }
 
@@ -1582,6 +1582,12 @@
   flex-shrink: 0;
 }
 
+.spelling-tab-layout__run-row-actions--export {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
 .panel-left-work-scroll > .consistency-tab-layout__run-row {
   flex-shrink: 0;
   position: relative;
@@ -1629,6 +1635,18 @@
   background: var(--btn-primary-bg);
   border: 1px solid var(--btn-primary-bg);
   color: var(--btn-primary-text);
+}
+
+.btn-add.panel-section-run-btn.btn-export-results {
+  background: #D7CCC8;
+  border-color: #BCAAA4;
+  color: #3E2723;
+}
+
+.btn-add.panel-section-run-btn.btn-export-results:hover:not(:disabled) {
+  background: #BCAAA4;
+  border-color: #A1887F;
+  color: #3E2723;
 }
 
 .btn-add.panel-section-run-btn:hover:not(:disabled) {
@@ -2612,6 +2630,10 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
+  /* 상·하단 크롬 바(헤더·미리보기 바) 공통 */
+  --pdf-work-pane-chrome-pad-block: 10px;
+  --pdf-work-pane-chrome-pad-inline: 14px;
+  --pdf-work-pane-chrome-row-min: 32px;
   /* 1번 말풍선이 헤더 아래로 내려와도 잘리지 않게 — 스크롤은 __content에만 */
   overflow: visible;
 }
@@ -2639,7 +2661,7 @@
   grid-template-columns: minmax(0, 1fr) auto auto;
   align-items: center;
   gap: 8px 12px;
-  padding: 10px 14px;
+  padding: var(--pdf-work-pane-chrome-pad-block) var(--pdf-work-pane-chrome-pad-inline);
   background: var(--color-surface-raised);
 }
 

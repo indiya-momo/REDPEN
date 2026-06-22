@@ -4,17 +4,11 @@ import { formatSystemPageLabel } from '../lib/printedPageDisplay.js';
  * @param {{ visibleOnCurrentPage: number }} props
  */
 export function CurrentPageFindingText({ visibleOnCurrentPage }) {
-  if (visibleOnCurrentPage <= 0) {
-    return <>에서 발견한 기준 [0]</>;
-  }
   return (
     <>
-      {' '}에서 발견한{' '}
-      <span className="current-page-status__criterion-hit">
-        기준{' '}
-        <span className="current-page-status__criterion-hit-num">
-          [{visibleOnCurrentPage}]
-        </span>
+      {' '}의 발견 기준{' '}
+      <span className="results-category-summary__count-underline">
+        [{visibleOnCurrentPage}]
       </span>
     </>
   );
