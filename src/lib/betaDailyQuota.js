@@ -59,6 +59,23 @@ export const BETA_DAILY_QUOTA_ALERT_EXPORT =
   '오픈베타 기간에는 회원에게 매일 1회 내보내기를 제공합니다(한국 시간 기준). ' +
   '내일 0시 이후 다시 시도해 주세요.';
 
+/**
+ * @param {'spelling' | 'consistency'} [exportTab]
+ */
+export function buildProofreadExportConfirmMessage(exportTab = 'spelling') {
+  const tabLabel = exportTab === 'consistency' ? '일관성' : '맞춤법';
+  return (
+    `오늘 ${tabLabel} 검수 결과보내기는 1회(한도 1회)가능합니다\n` +
+    '보내기를 진행할까요?\n\n' +
+    '※ 현재 엑셀 xlsx보내기가 가능하며, PDF형식은 준비중입니다'
+  );
+}
+
+/** @param {'spelling' | 'consistency'} [exportTab] */
+export function confirmProofreadExportOrCancel(exportTab = 'spelling') {
+  return window.confirm(buildProofreadExportConfirmMessage(exportTab));
+}
+
 /** 피드백 제출 후 작업 탭 새로고침 — 8번 말풍선 (돌아오기만으로는 안 뜸) */
 export const FEEDBACK_SUBMIT_THANK_BUBBLE_LINES = [
   '피드백을 보내준거냥?',
@@ -827,11 +844,14 @@ export async function consumeBetaDailyExport(uid, email = '', exportTab = 'spell
  * @returns {Promise<boolean>} 진행 가능하면 true
  */
 export async function assertBetaDailyExportOrAlert(uid, options = {}) {
+  const exportTab = options.exportTab ?? 'spelling';
+  if (!confirmProofreadExportOrCancel(exportTab)) {
+    return false;
+  }
   if (!assertLoggedInForCheckOrAlert(uid)) {
     return false;
   }
   const email = options.authEmail ?? '';
-  const exportTab = options.exportTab ?? 'spelling';
   if (!isBetaDailyQuotaEnforcedForUser(uid, email)) {
     return true;
   }
