@@ -37,33 +37,57 @@ function isWideChar(ch) {
  * @param {number} colWidth  ws.columns 에 설정한 width 값
  * @returns {number}
  */
+/**
+ * 일반 텍스트(한글 포함) 줄 수 추정 — 글자 단위 줄바꿈
+ * @param {string} text
+ * @param {number} colWidth
+ */
 function estimateLines(text, colWidth) {
   if (!text || text.length === 0) return 1;
-  // Excel 실제 렌더링은 font metrics·DPI에 따라 달라지므로
-  // colWidth의 80%를 유효 너비로 사용해 보수적으로 추정
-  const usable = Math.max(4, Math.floor(colWidth * 0.8));
+  const usable = Math.max(4, Math.floor(colWidth * 0.78));
   let lines = 1;
   let pos = 0;
   for (const ch of String(text)) {
-    if (ch === '\n') {
-      lines++;
-      pos = 0;
-      continue;
-    }
+    if (ch === '\n') { lines++; pos = 0; continue; }
     const w = isWideChar(ch) ? 2 : 1;
     pos += w;
-    if (pos > usable) {
+    if (pos > usable) { lines++; pos = w; }
+  }
+  return lines;
+}
+
+/**
+ * 페이지 레이블 텍스트 줄 수 추정 — Excel과 동일하게 공백(space) 기준 단어 단위 줄바꿈.
+ * "280-281P 9/9" 같은 레이블은 중간에 잘리지 않고 통째로 다음 줄로 이동.
+ * @param {string} pillText  pillsToPlainText() 결과
+ * @param {number} colWidth
+ */
+function estimatePillLines(pillText, colWidth) {
+  if (!pillText) return 1;
+  // 실측 기준으로 colWidth의 72%를 유효 너비로 사용
+  const usable = Math.max(4, Math.floor(colWidth * 0.72));
+  // 연속 공백 포함 split → 빈 문자열 제거
+  const words = pillText.split(' ').filter((w) => w.length > 0);
+  let lines = 1;
+  let lineW = 0;
+  for (const word of words) {
+    const w = word.length; // 페이지 레이블은 전부 ASCII
+    if (lineW === 0) {
+      lineW = w;
+    } else if (lineW + 1 + w > usable) {
       lines++;
-      pos = w;
+      lineW = w;
+    } else {
+      lineW += 1 + w;
     }
   }
   return lines;
 }
 
-const LINE_H_PT = 14;   // Arial 10pt 한 줄 높이 (pt)
+const LINE_H_PT = 15;   // Arial 10pt 한 줄 높이 (pt) — 실측 여유분 포함
 const ROW_PAD_PT = 8;   // 상하 패딩 합산
 const MIN_ROW_H = 24;
-const MAX_ROW_H = 500;
+const MAX_ROW_H = 800;  // 발견 수 많은 항목 대응
 
 /** 줄 수 배열 중 최대값으로 행 높이(pt) 결정 */
 function rowHeightPt(...linesArr) {
@@ -174,285 +198,4 @@ export async function exportSpellingResults({
   summaryCell.font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FF000000' } };
   summaryCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFFFF' } };
   summaryCell.alignment = { horizontal: 'left', vertical: 'center', indent: 1, wrapText: false };
-  summaryCell.border = CELL_BORDER;
-  ws.getRow(1).height = 30;
-
-  // ── 헤더 (row 2) ──────────────────────────────────────────────
-  ['구분', '기준', '설명', '발견 수', '페이지'].forEach((h, i) => {
-    const cell = ws.getRow(2).getCell(i + 1);
-    cell.value = h;
-    applyStyle(cell, { bg: HEADER_BG, fg: HEADER_FG, bold: true, hAlign: 'center' });
-  });
-  ws.getRow(2).height = 24;
-
-  // ── 데이터 행 (row 3~) ────────────────────────────────────────
-  const categoryRanges = [];
-  let currentRange = null;
-
-  for (let i = 0; i < entries.length; i++) {
-    const excelRowNum = i + 3;
-    const { group, source } = entries[i];
-    const isCaution = group.category === 'caution';
-    const category = isCaution ? '편집자 검토' : '맞춤법';
-    const bg = isCaution ? CAUTION_BG : BUILTIN_BG;
-
-    // 구분 병합 범위 추적
-    if (!currentRange || currentRange.category !== category) {
-      if (currentRange) categoryRanges.push(currentRange);
-      currentRange = { start: excelRowNum, end: excelRowNum, category, bg };
-    } else {
-      currentRange.end = excelRowNum;
-    }
-
-    const tipText =
-      (group.tip || '').trim() ||
-      (source === 'spelling' && !isCaution
-        ? getBuiltInTip(group.find, group.replace) || ''
-        : '');
-
-    const visMode = groupVisibilityMode ? groupVisibilityMode(source, group) : 'visible';
-    const totalCount = group.instances.length;
-    const shownCount = visibleInstanceCount ? visibleInstanceCount(source, group) : totalCount;
-
-    const countText =
-      visMode === 'hidden'
-        ? `0/${totalCount}`
-        : visMode === 'partial'
-          ? `${shownCount}/${totalCount}`
-          : `${totalCount}`;
-
-    // pills는 한 번만 생성해서 높이 추정·셀 값에 공유
-    const pills = visMode === 'hidden' ? [] : buildInstancePills(group.instances);
-    const pagePlainText = visMode === 'hidden' ? '' : pillsToPlainText(pills, formatPageLabel);
-    const labelText = getEntryLabel(group, source);
-
-    // ── 행 높이: 열 B·C·E 중 가장 많은 줄 수 기준 ──────────────
-    const linesB = estimateLines(labelText, 30);
-    const linesC = estimateLines(tipText, 40);
-    const linesE = estimateLines(pagePlainText, 55);
-    const row = ws.getRow(excelRowNum);
-    row.height = rowHeightPt(linesB, linesC, linesE);
-
-    // A: 구분
-    const catCell = row.getCell(1);
-    catCell.value = category;
-    applyStyle(catCell, { bg, hAlign: 'center', vAlign: 'center' });
-
-    // B: 기준
-    const labelCell = row.getCell(2);
-    labelCell.value = labelText;
-    applyStyle(labelCell, { bg, hAlign: 'left', vAlign: 'top', wrap: true });
-
-    // C: 설명
-    const tipCell = row.getCell(3);
-    tipCell.value = tipText;
-    applyStyle(tipCell, { bg, hAlign: 'left', vAlign: 'top', wrap: true });
-
-    // D: 발견 수
-    const countCell = row.getCell(4);
-    countCell.value = countText;
-    applyStyle(countCell, { bg, hAlign: 'center', vAlign: 'top' });
-
-    // E: 페이지
-    const pagesCell = row.getCell(5);
-    if (visMode === 'hidden') {
-      pagesCell.value = '-';
-    } else {
-      pagesCell.value = { richText: buildPagesRichText(pills, source, group, formatPageLabel, isInstanceVisible) };
-    }
-    applyStyle(pagesCell, { bg, hAlign: 'left', vAlign: 'top', wrap: true });
-  }
-
-  if (currentRange) categoryRanges.push(currentRange);
-
-  // 구분 열 병합
-  for (const range of categoryRanges) {
-    if (range.start < range.end) {
-      ws.mergeCells(range.start, 1, range.end, 1);
-    }
-    const cell = ws.getCell(range.start, 1);
-    cell.value = range.category;
-    applyStyle(cell, { bg: range.bg, hAlign: 'center', vAlign: 'middle' });
-  }
-
-  // 다운로드
-  const buffer = await wb.xlsx.writeBuffer();
-  const blob = new Blob([buffer], {
-    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-  });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
-
-// ── 일관성 탭 export ──────────────────────────────────────────────
-
-/**
- * 일관성 탭 구분 결정
- * @param {import('./ruleEngine.js').GroupedResult} group
- */
-function consistencyCategoryOf(group) {
-  return group.patternKind === 'auxiliary-verb' ? '본용언+보조용언' : '일관성 찾기';
-}
-
-/**
- * 일관성 탭 기준 레이블
- * @param {import('./ruleEngine.js').GroupedResult} group
- */
-function consistencyEntryLabel(group) {
-  if (group.patternKind === 'auxiliary-verb') {
-    return group.tailWord
-      ? formatAuxiliaryVerbResultLabel(group.tailWord, group.groupDisplayLabel)
-      : (group.groupDisplayLabel?.trim() || group.label || '');
-  }
-  return group.label || group.find || '';
-}
-
-/**
- * @param {{
- *   entries: {group: import('./ruleEngine.js').GroupedResult, source: string}[],
- *   formatPageLabel: (systemPage: number) => string,
- *   isInstanceVisible: (source: string, group: object, inst: object) => boolean,
- *   groupVisibilityMode: (source: string, group: object) => 'visible' | 'partial' | 'hidden',
- *   visibleInstanceCount: (source: string, group: object) => number,
- *   literalCount: number,
- *   auxiliaryCount: number,
- *   totalFindings: number,
- *   filename?: string,
- * }} options
- */
-export async function exportConsistencyResults({
-  entries,
-  formatPageLabel,
-  isInstanceVisible,
-  groupVisibilityMode,
-  visibleInstanceCount,
-  literalCount,
-  auxiliaryCount,
-  totalFindings,
-  filename = '일관성_검사결과.xlsx',
-}) {
-  const ExcelJS = (await import('exceljs')).default;
-  const wb = new ExcelJS.Workbook();
-  wb.creator = '인디야';
-  const ws = wb.addWorksheet('일관성 확인');
-
-  ws.columns = [
-    { width: 18 }, // A: 구분
-    { width: 30 }, // B: 기준
-    { width: 40 }, // C: 설명
-    { width: 14 }, // D: 발견 수
-    { width: 58 }, // E: 페이지
-  ];
-
-  // ── 요약 행 (row 1)
-  ws.mergeCells('A1:E1');
-  const summaryCell = ws.getCell('A1');
-  summaryCell.value = `일관성 찾기 ${literalCount}개 · 본용언+보조용언 ${auxiliaryCount}개 · 전체 발견 ${totalFindings}건`;
-  summaryCell.font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FF000000' } };
-  summaryCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFFFF' } };
-  summaryCell.alignment = { horizontal: 'left', vertical: 'center', indent: 1, wrapText: false };
-  summaryCell.border = CELL_BORDER;
-  ws.getRow(1).height = 30;
-
-  // ── 헤더 (row 2)
-  ['구분', '기준', '설명', '발견 수', '페이지'].forEach((h, i) => {
-    const cell = ws.getRow(2).getCell(i + 1);
-    cell.value = h;
-    applyStyle(cell, { bg: HEADER_BG, fg: HEADER_FG, bold: true, hAlign: 'center' });
-  });
-  ws.getRow(2).height = 24;
-
-  // ── 데이터 행 (row 3~)
-  const categoryRanges = [];
-  let currentRange = null;
-
-  for (let i = 0; i < entries.length; i++) {
-    const excelRowNum = i + 3;
-    const { group, source } = entries[i];
-    const category = consistencyCategoryOf(group);
-    const bg = category === '본용언+보조용언' ? CAUTION_BG : BUILTIN_BG;
-
-    if (!currentRange || currentRange.category !== category) {
-      if (currentRange) categoryRanges.push(currentRange);
-      currentRange = { start: excelRowNum, end: excelRowNum, category, bg };
-    } else {
-      currentRange.end = excelRowNum;
-    }
-
-    const tipText = (group.tip || '').trim();
-    const visMode = groupVisibilityMode ? groupVisibilityMode(source, group) : 'visible';
-    const totalCount = group.instances.length;
-    const shownCount = visibleInstanceCount ? visibleInstanceCount(source, group) : totalCount;
-
-    const countText =
-      visMode === 'hidden'
-        ? `0/${totalCount}`
-        : visMode === 'partial'
-          ? `${shownCount}/${totalCount}`
-          : `${totalCount}`;
-
-    const pills = visMode === 'hidden' ? [] : buildInstancePills(group.instances);
-    const pagePlainText = visMode === 'hidden' ? '' : pillsToPlainText(pills, formatPageLabel);
-    const labelText = consistencyEntryLabel(group);
-
-    const linesB = estimateLines(labelText, 30);
-    const linesC = estimateLines(tipText, 40);
-    const linesE = estimateLines(pagePlainText, 55);
-    const row = ws.getRow(excelRowNum);
-    row.height = rowHeightPt(linesB, linesC, linesE);
-
-    const catCell = row.getCell(1);
-    catCell.value = category;
-    applyStyle(catCell, { bg, hAlign: 'center', vAlign: 'center' });
-
-    const labelCell = row.getCell(2);
-    labelCell.value = labelText;
-    applyStyle(labelCell, { bg, hAlign: 'left', vAlign: 'top', wrap: true });
-
-    const tipCell = row.getCell(3);
-    tipCell.value = tipText;
-    applyStyle(tipCell, { bg, hAlign: 'left', vAlign: 'top', wrap: true });
-
-    const countCell = row.getCell(4);
-    countCell.value = countText;
-    applyStyle(countCell, { bg, hAlign: 'center', vAlign: 'top' });
-
-    const pagesCell = row.getCell(5);
-    if (visMode === 'hidden') {
-      pagesCell.value = '-';
-    } else {
-      pagesCell.value = { richText: buildPagesRichText(pills, source, group, formatPageLabel, isInstanceVisible) };
-    }
-    applyStyle(pagesCell, { bg, hAlign: 'left', vAlign: 'top', wrap: true });
-  }
-
-  if (currentRange) categoryRanges.push(currentRange);
-
-  for (const range of categoryRanges) {
-    if (range.start < range.end) {
-      ws.mergeCells(range.start, 1, range.end, 1);
-    }
-    const cell = ws.getCell(range.start, 1);
-    cell.value = range.category;
-    applyStyle(cell, { bg: range.bg, hAlign: 'center', vAlign: 'middle' });
-  }
-
-  const buffer = await wb.xlsx.writeBuffer();
-  const blob = new Blob([buffer], {
-    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-  });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
+  summaryCell.bor
