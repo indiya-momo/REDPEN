@@ -280,61 +280,30 @@
 .sheet-card__sections {
   display: flex;
   flex-direction: column;
-  border: 1px solid var(--sheet-border);
-  border-radius: 2px;
-  overflow: hidden;
+  gap: 0.45rem;
 }
 
 .sheet-card__section {
-  border-bottom: 1px solid var(--sheet-border);
+  padding: 0.45rem 0.55rem 0.5rem;
+  border: 1px solid var(--sheet-border);
+  border-radius: 2px;
   background: #fff;
 }
 
-.sheet-card__section:last-child {
-  border-bottom: none;
-}
-
-.sheet-card__section-toggle {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: 0.45rem;
-  width: 100%;
-  padding: 0.5rem 0.55rem;
-  border: none;
-  background: transparent;
-  text-align: left;
-  font: inherit;
-  cursor: pointer;
-}
-
-.sheet-card__section-toggle:hover {
-  background: rgba(168, 107, 69, 0.04);
-}
-
-.sheet-card__section-chevron {
-  width: 0.45rem;
-  height: 0.45rem;
-  border-right: 2px solid var(--color-text-muted);
-  border-bottom: 2px solid var(--color-text-muted);
-  transform: rotate(-45deg);
-  transition: transform 0.15s ease;
-}
-
-.sheet-card__section.is-open .sheet-card__section-chevron {
-  transform: rotate(45deg);
-}
-
-.sheet-card__section--spelling .sheet-card__section-toggle {
+.sheet-card__section--spelling {
   border-left: 3px solid var(--pillar-spelling);
 }
 
-.sheet-card__section--consistency .sheet-card__section-toggle {
+.sheet-card__section--consistency {
   border-left: 3px solid var(--pillar-consistency);
 }
 
-.sheet-card__section--auxiliary .sheet-card__section-toggle {
+.sheet-card__section--auxiliary {
   border-left: 3px solid var(--pillar-auxiliary);
+}
+
+.sheet-card__section-head {
+  margin-bottom: 0.28rem;
 }
 
 .sheet-card__section-label {
@@ -343,39 +312,81 @@
   color: var(--color-text);
 }
 
+.sheet-card__section-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.45rem;
+}
+
 .sheet-card__section-count {
+  flex-shrink: 0;
+  margin: 0;
   font-size: 0.88rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   color: var(--color-text);
+  line-height: 1.2;
+  text-align: right;
 }
 
-.sheet-card__section-body {
-  padding: 0 0.55rem 0.55rem 1.45rem;
+.sheet-card__chips {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem;
+  min-width: 0;
 }
 
-.sheet-card__section-detail {
-  margin: 0 0 0.35rem;
-  font-size: 0.72rem;
-  line-height: 1.5;
-  color: var(--color-text-muted);
+.sheet-card__chips--empty {
+  min-height: 0;
 }
 
-.sheet-card__section-edit {
+.sheet-card__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  max-width: 100%;
+  padding: 0.18rem 0.42rem;
+  border: 1px solid var(--sheet-border);
+  border-radius: 999px;
+  background: rgba(168, 107, 69, 0.08);
+  color: var(--accent-terracotta-deep);
+  font-size: 0.62rem;
+  font-weight: 600;
+  line-height: 1.35;
+  white-space: nowrap;
+}
+
+.sheet-card__section--consistency .sheet-card__chip {
+  background: rgba(92, 107, 122, 0.1);
+  color: var(--pillar-consistency);
+}
+
+.sheet-card__section--auxiliary .sheet-card__chip {
+  background: rgba(107, 124, 94, 0.1);
+  color: var(--pillar-auxiliary);
+}
+
+.sheet-card__chip--off {
+  background: rgba(28, 25, 23, 0.04);
+  border-color: rgba(28, 25, 23, 0.08);
+  color: var(--color-text-subtle);
+  font-weight: 500;
+}
+
+.sheet-card__chip-more {
+  display: inline;
+  margin-left: -0.12rem;
   padding: 0;
   border: none;
   background: none;
-  color: var(--accent-terracotta-deep);
-  font: inherit;
-  font-size: 0.68rem;
-  font-weight: 600;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-  cursor: pointer;
-}
-
-.sheet-card__section-edit:hover {
-  color: #7a4d32;
+  color: var(--color-text-muted);
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: 0.08em;
 }
 
 .sheet-card__meta {

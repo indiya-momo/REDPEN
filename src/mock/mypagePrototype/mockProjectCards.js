@@ -6,7 +6,30 @@ export const MOCK_PROJECT_CARDS = [
     tags: ['문학', '시리즈 2/5'],
     memo: '띄어쓰기·외래어 표기 강화. 1권과 「그러나」 통일.',
     headline:
-      '띄어쓰기·외래어 표기 강화 · "그러나" 통일 · 본보조 8쌍',
+      '띄어쓰기 \'한 번/한번\' · \'그러나\' 통일 · 본보조 8쌍',
+    chipPreview: {
+      spelling: [
+        { label: '한 번 / 한번', active: true },
+        { label: '되 / 돼', active: true },
+        { label: '갯수 → 개수', active: true },
+        { label: '전세계 → 전 세계', active: false },
+      ],
+      consistency: [
+        { label: '붉은표시 · 빨간표시 → 붉은 표시', active: true },
+        { label: '「그러나」 통일', active: true },
+        { label: '공통 문자열', active: true },
+      ],
+      auxiliary: [
+        { label: '본용언(아/어) ⁀ 하다', active: true },
+        { label: '본용언(아/어) ⁀ 지다', active: true },
+        { label: '본용언(아/어) ⁀ 놓다', active: true },
+        { label: '본용언(아/어) ⁀ 버리다', active: true },
+        { label: '본용언(아/어) ⁀ 두다', active: true },
+        { label: '본용언(아/어) ⁀ 오다', active: true },
+        { label: '본용언(아/어) ⁀ 가다', active: true },
+        { label: '본용언(아/어) ⁀ 있다', active: true },
+      ],
+    },
     highlights: [
       {
         category: '맞춤법 검수',
@@ -46,6 +69,16 @@ export const MOCK_PROJECT_CARDS = [
     tags: ['실용서', '출판사 매뉴얼'],
     memo: '신규 입사자용 템플릿. 숫자·단위 표기 통일.',
     headline: '숫자·단위 표기 · 따옴표 통일 · 검수 제외어 3개',
+    chipPreview: {
+      spelling: [
+        { label: '숫자·단위', active: true },
+        { label: '％ → %', active: true },
+      ],
+      consistency: [
+        { label: '따옴표 통일', active: true },
+      ],
+      auxiliary: [],
+    },
     highlights: [
       {
         category: '맞춤법 검수',
@@ -83,6 +116,20 @@ export const MOCK_PROJECT_CARDS = [
     title: '에세이 시리즈 1권',
     tags: ['문학'],
     headline: '맞춤법 기본 · 일관성 찾기 2건 · 본보조 3쌍',
+    chipPreview: {
+      spelling: [
+        { label: '맞춤법 기본', active: true },
+      ],
+      consistency: [
+        { label: '"그러나"', active: true },
+        { label: '공통 문자열', active: true },
+      ],
+      auxiliary: [
+        { label: '"서다+있다"', active: true },
+        { label: '"앉다+있다"', active: true },
+        { label: '"눕다+있다"', active: true },
+      ],
+    },
     highlights: [
       {
         category: '맞춤법 검수',

@@ -1,46 +1,9 @@
 import { useCallback, useId, useMemo, useState } from 'react';
-import { formatProjectCardMetaLine, formatProjectCardScheduleLines } from '../../presentation/projectCardViewModel.js';
-
-/** @type {readonly { key: string, label: string, match: (category: string) => boolean }[]} */
-const PILLARS = [
-  {
-    key: 'spelling',
-    label: '맞춤법',
-    match: (c) => c.includes('맞춤법'),
-  },
-  {
-    key: 'consistency',
-    label: '일관성',
-    match: (c) => c.includes('일관성'),
-  },
-  {
-    key: 'auxiliary',
-    label: '본·보조',
-    match: (c) => c.includes('본용언') || c.includes('보조'),
-  },
-];
-
-/**
- * @param {import('../../presentation/projectCardViewModel.js').ProjectCardViewModel} card
- * @param {string} key
- */
-function pillarCount(card, key) {
-  if (key === 'spelling') {
-    return card.counts.editorReview + card.counts.spelling;
-  }
-  if (key === 'consistency') {
-    return card.counts.find + card.counts.commonString;
-  }
-  return card.counts.auxiliary;
-}
-
-/**
- * @param {import('../../presentation/projectCardViewModel.js').ProjectCardViewModel} card
- * @param {(category: string) => boolean} match
- */
-function pillarHighlight(card, match) {
-  return card.highlights.find((row) => match(row.category));
-}
+import {
+  buildProjectCardPillarPreviews,
+  formatProjectCardMetaLine,
+  formatProjectCardScheduleLines,
+} from '../../presentation/projectCardViewModel.js';
 
 /**
  * @param {{
@@ -64,9 +27,6 @@ export default function ProjectLibraryCard({
 }) {
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState(card.title);
-  const [openSections, setOpenSections] = useState(
-    () => new Set(readOnly ? PILLARS.map((p) => p.key) : []),
-  );
   const nameInputId = useId();
 
   const commitName = useCallback(() => {
@@ -79,24 +39,8 @@ export default function ProjectLibraryCard({
     setEditingName(false);
   }, [card.title, nameDraft, onRename]);
 
-  const toggleSection = useCallback((key) => {
-    setOpenSections((prev) => {
-      const next = new Set(prev);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
-      return next;
-    });
-  }, []);
-
-  const anyOpen = openSections.size > 0;
-
-  const sectionRows = useMemo(
-    () =>
-      PILLARS.map((pillar) => ({
-        ...pillar,
-        count: pillarCount(card, pillar.key),
-        highlight: pillarHighlight(card, pillar.match),
-      })),
+  const pillarRows = useMemo(
+    () => buildProjectCardPillarPreviews(card),
     [card],
   );
 
@@ -104,7 +48,7 @@ export default function ProjectLibraryCard({
 
   return (
     <article
-      className={`sheet-card${card.isActive ? ' sheet-card--active' : ''}${readOnly ? ' sheet-card--readonly' : ''}${card.dirty ? ' sheet-card--dirty' : ''}${anyOpen ? ' sheet-card--open' : ''}`}
+      className={`sheet-card${card.isActive ? ' sheet-card--active' : ''}${readOnly ? ' sheet-card--readonly' : ''}${card.dirty ? ' sheet-card--dirty' : ''}`}
     >
       {card.tags.length > 0 ? (
         <div className="sheet-card__tabs" aria-label="분류">
@@ -167,50 +111,49 @@ export default function ProjectLibraryCard({
           ) : null}
         </div>
 
-        <div className="sheet-card__sections" aria-label="표기 기준 구역">
-          {sectionRows.map((section) => {
-            const isOpen = openSections.has(section.key);
-            const detail = section.highlight;
-            return (
-              <section
-                key={section.key}
-                className={`sheet-card__section sheet-card__section--${section.key}${isOpen ? ' is-open' : ''}`}
-              >
-                <button
-                  type="button"
-                  className="sheet-card__section-toggle"
-                  aria-expanded={isOpen}
-                  onClick={() => toggleSection(section.key)}
-                >
-                  <span className="sheet-card__section-chevron" aria-hidden />
-                  <span className="sheet-card__section-label">{section.label}</span>
-                  <span className="sheet-card__section-count">{section.count}</span>
-                </button>
-                {isOpen ? (
-                  <div className="sheet-card__section-body">
-                    <p className="sheet-card__section-detail">
-                      {detail?.label ?? '등록된 기준이 없습니다.'}
-                      {detail && detail.count > 0 ? ` · ${detail.count}건` : ''}
-                    </p>
-                    {!readOnly ? (
-                      <button
-                        type="button"
-                        className="sheet-card__section-edit"
-                        onClick={onStartWork}
-                      >
-                        작업대에서 편집
-                      </button>
-                    ) : null}
-                  </div>
-                ) : null}
-              </section>
-            );
-          })}
-        </div>
-
         <p className="sheet-card__meta">{formatProjectCardMetaLine(card)}</p>
 
         <p className="sheet-card__headline">{card.headline}</p>
+
+        <div className="sheet-card__sections" aria-label="표기 기준 구역">
+          {pillarRows.map((section) => (
+            <section
+              key={section.key}
+              className={`sheet-card__section sheet-card__section--${section.key}`}
+            >
+              <div className="sheet-card__section-head">
+                <span className="sheet-card__section-label">{section.label}</span>
+              </div>
+              <div className="sheet-card__section-row">
+                {section.chips.length > 0 ? (
+                  <div className="sheet-card__chips" aria-label={`${section.label} 미리보기`}>
+                    {section.chips.map((chip) => (
+                      <span
+                        key={chip.label}
+                        className={`sheet-card__chip${chip.active === false ? ' sheet-card__chip--off' : ''}`}
+                      >
+                        {chip.label}
+                      </span>
+                    ))}
+                    {section.hasMore ? (
+                      <span className="sheet-card__chip-more" aria-hidden>
+                        …
+                      </span>
+                    ) : null}
+                  </div>
+                ) : (
+                  <div className="sheet-card__chips sheet-card__chips--empty" aria-hidden />
+                )}
+                <span
+                  className="sheet-card__section-count"
+                  aria-label={`${section.label} ${section.count}건`}
+                >
+                  {section.count}
+                </span>
+              </div>
+            </section>
+          ))}
+        </div>
 
         {!readOnly ? (
           <footer className="sheet-card__footer">

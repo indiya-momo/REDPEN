@@ -32,6 +32,17 @@
 
 /**
  * @typedef {{
+ *   label: string,
+ *   active?: boolean,
+ * }} ProjectCardChip
+ */
+
+/**
+ * @typedef {'spelling' | 'consistency' | 'auxiliary'} ProjectCardPillarKey
+ */
+
+/**
+ * @typedef {{
  *   id: string,
  *   title: string,
  *   tags: string[],
@@ -39,6 +50,7 @@
  *   headline: string,
  *   highlights: ProjectCardHighlight[],
  *   counts: ProjectCardCounts,
+ *   chipPreview?: Partial<Record<ProjectCardPillarKey, ProjectCardChip[]>>,
  *   lastWork?: ProjectCardLastWork,
  *   createdDate?: string,
  *   proofRevision?: string,
@@ -82,6 +94,47 @@ export function formatProjectCardMetaLine(card) {
     parts.push(card.formatLabel);
   }
   return parts.join(' · ');
+}
+
+const PILLAR_META = [
+  { key: 'spelling', label: '맞춤법' },
+  { key: 'consistency', label: '일관성' },
+  { key: 'auxiliary', label: '본용언 + 보조용언' },
+];
+
+/** @param {ProjectCardViewModel} card @param {ProjectCardPillarKey} key */
+function pillarCount(card, key) {
+  if (key === 'spelling') {
+    return card.counts.editorReview + card.counts.spelling;
+  }
+  if (key === 'consistency') {
+    return card.counts.find + card.counts.commonString;
+  }
+  return card.counts.auxiliary;
+}
+
+const PILLAR_CHIP_PREVIEW_LIMIT = {
+  spelling: 2,
+  consistency: 1,
+  auxiliary: 2,
+};
+
+/**
+ * @param {ProjectCardViewModel} card
+ * @returns {{ key: ProjectCardPillarKey, label: string, count: number, chips: ProjectCardChip[], hasMore: boolean }[]}
+ */
+export function buildProjectCardPillarPreviews(card) {
+  return PILLAR_META.map(({ key, label }) => {
+    const all = card.chipPreview?.[key] ?? [];
+    const maxChips = PILLAR_CHIP_PREVIEW_LIMIT[key] ?? 2;
+    return {
+      key,
+      label,
+      count: pillarCount(card, key),
+      chips: all.slice(0, maxChips),
+      hasMore: all.length > maxChips,
+    };
+  });
 }
 
 /**
