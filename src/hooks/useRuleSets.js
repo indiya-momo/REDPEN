@@ -383,7 +383,7 @@ export function useRuleSets(authUid = '', authEmail = '') {
 
   /** 현재 기준을 이름 붙여 목록에 저장(동일 이름이면 덮어쓰기) */
   const handleSaveCriteriaPreset = useCallback(
-    (rawName) => {
+    async (rawName) => {
       const sourceId = activeSetIdRef.current;
       const source = ruleSetsRef.current.find((s) => s.id === sourceId);
       if (!source) return false;
@@ -406,21 +406,21 @@ export function useRuleSets(authUid = '', authEmail = '') {
         return false;
       }
 
-      if (autosaveTimerRef.current) {
-        clearTimeout(autosaveTimerRef.current);
-        autosaveTimerRef.current = null;
-      }
+      flushPendingRuleSetsSave();
 
       const savedAt = new Date().toISOString();
+      const sourceAfterFlush = ruleSetsRef.current.find((s) => s.id === sourceId);
+      if (!sourceAfterFlush) return false;
+
       const config = {
-        builtInEnabled: structuredClone(source.builtInEnabled ?? {}),
-        cautionEnabled: structuredClone(source.cautionEnabled ?? {}),
-        customRules: structuredClone(source.customRules ?? []),
-        globalExcludePhrases: [...(source.globalExcludePhrases ?? [])],
+        builtInEnabled: structuredClone(sourceAfterFlush.builtInEnabled ?? {}),
+        cautionEnabled: structuredClone(sourceAfterFlush.cautionEnabled ?? {}),
+        customRules: structuredClone(sourceAfterFlush.customRules ?? []),
+        globalExcludePhrases: [...(sourceAfterFlush.globalExcludePhrases ?? [])],
         spellingRulesFingerprint: SPELLING_RULES_FP,
-        cautionRulesFingerprint: source.cautionRulesFingerprint,
-        cautionEnabledPolicyVersion: source.cautionEnabledPolicyVersion,
-        compoundMigrateVersion: source.compoundMigrateVersion,
+        cautionRulesFingerprint: sourceAfterFlush.cautionRulesFingerprint,
+        cautionEnabledPolicyVersion: sourceAfterFlush.cautionEnabledPolicyVersion,
+        compoundMigrateVersion: sourceAfterFlush.compoundMigrateVersion,
       };
 
       const existing = ruleSetsRef.current.find(
@@ -471,6 +471,7 @@ export function useRuleSets(authUid = '', authEmail = '') {
 
       ruleSetsRef.current = next;
       applyRuleSets(next, targetId);
+      await flushCloudRuleSetsImmediate();
 
       const saved = next.find((s) => s.id === targetId);
       if (saved) {
@@ -487,7 +488,7 @@ export function useRuleSets(authUid = '', authEmail = '') {
       alert(`「${name}」 프로젝트가 저장되었습니다.`);
       return true;
     },
-    [applyRuleSets],
+    [applyRuleSets, flushPendingRuleSetsSave, flushCloudRuleSetsImmediate],
   );
 
   /** 저장한 기준 프리셋 삭제(목록·localStorage) */
@@ -660,5 +661,6 @@ export function useRuleSets(authUid = '', authEmail = '') {
     handleBuiltInSetAll,
     handleCautionToggle,
     handleCautionSetAll,
+    flushPendingRuleSetsSave,
   };
 }

@@ -243,7 +243,7 @@ export default function ConsistencyPanel({
         <p className="printed-page-setup__title consistency-panel-section-title panel-criteria-heading">
           일관성 찾기
           <span className="panel-criteria-heading-meta">
-            (1회 최대 5항목 찾아서 표시. 항목은 한글과 영문 대소문자 가능)
+            (1회 5항목까지, 한글 및 영문 대소문자 가능)
           </span>
         </p>
         <div className="consistency-subsection consistency-subsection--first">
@@ -331,7 +331,7 @@ export default function ConsistencyPanel({
               입력한 항목은 찾지 않습니다
               <br />
               <ConsistencyHintExample>
-                &apos;소녀시대&apos; 입력 → &apos;소녀시대&apos; 제외
+                &apos;소녀시대&apos;
               </ConsistencyHintExample>
             </p>
             <ConsistencyRegisterField

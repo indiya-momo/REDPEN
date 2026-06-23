@@ -30,7 +30,7 @@ describe('panelLeftWidthSession', () => {
   });
 
   it('로그아웃 시 해당 uid 폭을 지운다', () => {
-    persistSessionPanelLeftWidth('user-a', 540);
+    persistSessionPanelLeftWidth('user-a', 500);
     clearSessionPanelLeftWidth('user-a');
     expect(readSessionPanelLeftWidth('user-a')).toBeNull();
   });

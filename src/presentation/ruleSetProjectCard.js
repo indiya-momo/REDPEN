@@ -1,0 +1,148 @@
+import { buildCautionCheckRules, defaultCautionEnabled } from '../lib/cautionRules.js';
+import {
+  BUILT_IN_QUOTA_RULES,
+  builtInEnabledFromSheet,
+  isBuiltInRuleEnabled,
+} from '../lib/builtInRules.js';
+import {
+  isConsistencyEntryEnabled,
+  listConsistencyLiteralEntries,
+} from '../lib/compoundPairRegister.js';
+import {
+  isPhraseSlotEntryEnabled,
+  listPhraseSlotEntries,
+} from '../lib/phraseSlotRegister.js';
+import {
+  isAuxiliaryVerbEntryEnabled,
+  listAuxiliaryVerbEntries,
+} from '../lib/auxiliaryVerbRegister.js';
+import { buildProjectCardSummary } from '../lib/projectCardSummary.js';
+import { criteriaNameForInput } from '../lib/criteriaName.js';
+
+/** @param {import('../lib/ruleSetsStorage.js').RuleSet} set */
+function projectTitle(set) {
+  const name = criteriaNameForInput(set?.name);
+  return name || '이름 없는 프로젝트';
+}
+
+/** @param {import('../lib/ruleSetsStorage.js').RuleSet} set */
+function buildSpellingChips(set) {
+  /** @type {import('./projectCardViewModel.js').ProjectCardChip[]} */
+  const chips = [];
+  const builtInEnabled = set.builtInEnabled ?? builtInEnabledFromSheet();
+  for (const rule of BUILT_IN_QUOTA_RULES) {
+    if (!isBuiltInRuleEnabled(builtInEnabled, rule.find)) continue;
+    const replace = String(rule.overlayReplace ?? rule.replace ?? '').trim();
+    const label = replace ? `${rule.find} → ${replace}` : rule.find;
+    chips.push({ label, active: true });
+  }
+  const cautionEnabled = set.cautionEnabled ?? defaultCautionEnabled();
+  for (const rule of buildCautionCheckRules(cautionEnabled)) {
+    chips.push({
+      label: rule.displayLabel || rule.label,
+      active: true,
+    });
+  }
+  return chips;
+}
+
+/** @param {import('../lib/ruleTypes.js').Rule[]} customRules */
+function buildConsistencyChips(customRules) {
+  /** @type {import('./projectCardViewModel.js').ProjectCardChip[]} */
+  const chips = [];
+  for (const entry of listConsistencyLiteralEntries(customRules)) {
+    chips.push({
+      label: entry.tailWord,
+      active: isConsistencyEntryEnabled(customRules, entry.tailWord),
+    });
+  }
+  for (const entry of listPhraseSlotEntries(customRules)) {
+    chips.push({
+      label: entry.tailWord,
+      active: isPhraseSlotEntryEnabled(customRules, entry.tailWord),
+    });
+  }
+  return chips;
+}
+
+/** @param {import('../lib/ruleTypes.js').Rule[]} customRules */
+function buildAuxiliaryChips(customRules) {
+  return listAuxiliaryVerbEntries(customRules).map((entry) => ({
+    label: entry.displayLabel || entry.tailWord,
+    active: isAuxiliaryVerbEntryEnabled(customRules, entry),
+  }));
+}
+
+/**
+ * @param {{
+ *   editorReview: number,
+ *   spelling: number,
+ *   find: number,
+ *   commonString: number,
+ *   auxiliary: number,
+ * }} counts
+ * @param {string[]} excludePhrases
+ */
+function buildHeadline(counts, excludePhrases) {
+  /** @type {string[]} */
+  const parts = [];
+  const spellTotal = counts.editorReview + counts.spelling;
+  if (spellTotal > 0) parts.push(`맞춤법 ${spellTotal}건`);
+  const consistencyTotal = counts.find + counts.commonString;
+  if (consistencyTotal > 0) parts.push(`일관성 ${consistencyTotal}건`);
+  if (counts.auxiliary > 0) parts.push(`본보조 ${counts.auxiliary}쌍`);
+  const excludeCount = (excludePhrases ?? []).filter((p) => String(p).trim()).length;
+  if (excludeCount > 0) parts.push(`검수 제외 ${excludeCount}개`);
+  return parts.length
+    ? parts.join(' · ')
+    : '맞춤법·일관성 기준을 설정하세요';
+}
+
+/**
+ * 저장된 RuleSet → Library 카드 ViewModel (로컬·클라oud hydrate 데이터용).
+ *
+ * @param {import('../lib/ruleSetsStorage.js').RuleSet} set
+ * @param {{ isActive?: boolean }} [options]
+ * @returns {import('./projectCardViewModel.js').ProjectCardViewModel}
+ */
+export function buildProjectCardViewModelFromRuleSet(set, options = {}) {
+  const customRules = set?.customRules ?? [];
+  const summary = buildProjectCardSummary(set);
+
+  const consistencyWords = listConsistencyLiteralEntries(customRules)
+    .filter((entry) => isConsistencyEntryEnabled(customRules, entry.tailWord))
+    .map((entry) => entry.tailWord);
+  const commonStringWords = listPhraseSlotEntries(customRules)
+    .filter((entry) => isPhraseSlotEntryEnabled(customRules, entry.tailWord))
+    .map((entry) => entry.tailWord);
+  const auxiliaryWords = listAuxiliaryVerbEntries(customRules)
+    .filter((entry) => isAuxiliaryVerbEntryEnabled(customRules, entry))
+    .map((entry) => entry.displayLabel || entry.tailWord);
+
+  const counts = {
+    editorReview: summary.spelling.editorReview,
+    spelling: summary.spelling.spelling,
+    find: consistencyWords.length,
+    commonString: commonStringWords.length,
+    auxiliary: auxiliaryWords.length,
+  };
+
+  const chipPreview = {
+    spelling: buildSpellingChips(set),
+    consistency: buildConsistencyChips(customRules),
+    auxiliary: buildAuxiliaryChips(customRules),
+  };
+
+  return {
+    id: set.id,
+    title: projectTitle(set),
+    tags: [],
+    headline: buildHeadline(counts, set.globalExcludePhrases),
+    highlights: [],
+    counts,
+    chipPreview,
+    savedDate: summary.savedDate,
+    isActive: options.isActive === true,
+    dirty: false,
+  };
+}

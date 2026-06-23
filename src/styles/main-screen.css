@@ -1472,6 +1472,21 @@
   cursor: not-allowed;
 }
 
+.panel-left__save-rules:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.panel-left__save-rules-spinner {
+  animation: panel-left-save-rules-spin 0.8s linear infinite;
+}
+
+@keyframes panel-left-save-rules-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .panel-header-home {
   flex-shrink: 0;
   display: inline-flex;
@@ -2596,9 +2611,9 @@
   --consistency-register-text: var(--color-text-muted);
   --consistency-register-add-bg: var(--accent-terracotta);
   --consistency-register-add-bg-hover: var(--accent-terracotta-deep);
-  /* 공통 문자열 ↔ 검수 제외 — 열 gap(12px×60%) + 검색창 사이 여백(왼쪽열 10%→6%) */
-  --consistency-subsection-row-gap: calc(12px * 0.6);
-  --consistency-subsection-phrase-form-scale: 0.94;
+  /* 공통 문자열 ↔ 검수 제외 — 검색창 사이 여백(0.846 dead ×70%×80%) + 열 gap 동일 */
+  --consistency-subsection-row-gap: calc(12px * 0.6 * 0.7 * 0.8);
+  --consistency-subsection-phrase-form-scale: calc(1 - (1 - 0.846) * 0.7 * 0.8);
   --consistency-subsection-col1: calc(
     (100cqi - var(--consistency-subsection-row-gap)) * 3 / 5
   );
@@ -2646,13 +2661,9 @@
   margin-inline-end: 0.45em;
 }
 
-/* 일관성 찾기·검색창 — 다시 검수 행·아래 섹션 박스와 동일 좌우 폭 */
+/* 일관성 찾기·통일형 검색창 — 다시 검수 행·아래 섹션 박스와 동일 좌우 폭 */
 .consistency-unified-box .consistency-subsection--first > .tail-form,
-.consistency-unified-box .consistency-unify-section .tail-form,
-.consistency-unified-box
-  .consistency-subsection-row
-  > .consistency-subsection--half
-  > .tail-form {
+.consistency-unified-box .consistency-unify-section .tail-form {
   width: 100%;
   box-sizing: border-box;
 }
@@ -2662,9 +2673,9 @@
   > .consistency-subsection--half:not(.consistency-subsection--exclude)
   > .tail-form {
   width: calc(
-    var(--consistency-subsection-col1) * var(--consistency-subsection-phrase-form-scale, 0.94)
+    var(--consistency-subsection-col1) * var(--consistency-subsection-phrase-form-scale, calc(1 - (1 - 0.846) * 0.7 * 0.8))
   );
-  max-width: 100%;
+  max-width: none;
   justify-self: start;
 }
 
@@ -2694,14 +2705,14 @@
   display: grid;
   grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
   grid-template-rows: auto auto auto auto;
-  column-gap: calc(12px * 0.6);
+  container-type: inline-size;
   margin-top: var(--panel-gap-group);
   padding-top: var(--panel-gap-group);
   border-top: 1px solid var(--color-border);
 }
 
 .panel-left .consistency-unified-box .consistency-subsection-row {
-  column-gap: var(--consistency-subsection-row-gap, calc(12px * 0.6));
+  column-gap: var(--consistency-subsection-row-gap, calc(12px * 0.6 * 0.7 * 0.8));
 }
 
 /* 설명 길이가 달라도 입력·+ 버튼 행(subgrid 3행) 정렬 */

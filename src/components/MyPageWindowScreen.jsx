@@ -26,10 +26,13 @@ import { clearRewardNotice } from '../lib/rewardNotice.js';
 import { getEarnedBadgeIds } from '../lib/userBadges.js';
 import { useBetaDailyQuota } from '../hooks/useBetaDailyQuota.js';
 import { useMyPageProjects } from '../hooks/useMyPageProjects.js';
-import { buildProjectCardSummary } from '../lib/projectCardSummary.js';
+import { buildProjectCardViewModelFromRuleSet } from '../presentation/ruleSetProjectCard.js';
+import { planMyPageProjectGrid } from '../lib/mypageProjectDisplay.js';
+import ProjectLibraryCard from '../mock/mypagePrototype/ProjectLibraryCard.jsx';
 import { criteriaNameForInput } from '../lib/criteriaName.js';
 import BadgeCollectionGrid from './BadgeCollectionGrid.jsx';
 import './my-page.css';
+import '../mock/mypagePrototype/mypage-prototype.css';
 
 const SIDEBAR_NAV = [
   { id: 'profile', label: '회원 정보' },
@@ -321,8 +324,13 @@ function ProjectHubSection({ uid, email }) {
     savedCount,
     maxSlots,
     exempt,
-    emptySlotCount,
+    selectProject,
   } = useMyPageProjects(uid, email);
+
+  const { visibleProjects, visibleEmptySlotCount } = useMemo(
+    () => planMyPageProjectGrid(projects),
+    [projects],
+  );
 
   const slotLabel = exempt
     ? `${savedCount}개`
@@ -339,9 +347,6 @@ function ProjectHubSection({ uid, email }) {
             <h1 id="mypage-project-hub-title" className="mypage__page-title">
               나의 프로젝트
             </h1>
-            <span className="mypage__project-preparing">
-              - 프로젝트를 관리하고 회원과 공유합니다(준비중)
-            </span>
           </div>
         </div>
         <p className="mypage__project-slot-gauge" aria-live="polite">
@@ -354,55 +359,34 @@ function ProjectHubSection({ uid, email }) {
           프로젝트를 불러오는 중…
         </p>
       ) : (
-        <div className="mypage__project-slots">
-          {projects.map((set) => {
-            const isActive = set.id === activeSetId;
-            const summary = buildProjectCardSummary(set);
+        <div className="mypage-proto__grid">
+          {visibleProjects.map((set) => {
+            const card = buildProjectCardViewModelFromRuleSet(set, {
+              isActive: set.id === activeSetId,
+            });
             return (
-              <article
+              <ProjectLibraryCard
                 key={set.id}
-                className={`mypage__project-card${isActive ? ' mypage__project-card--active' : ''}`}
-              >
-                <div className="mypage__project-card-head">
-                  <h2 className="mypage__project-name">
-                    {projectDisplayName(set)}
-                  </h2>
-                  {summary.savedDate ? (
-                    <span className="mypage__project-date-badge">
-                      {summary.savedDate}
-                    </span>
-                  ) : null}
-                </div>
-                <dl className="mypage__project-spec">
-                  <div className="mypage__project-spec-row">
-                    <dt className="mypage__project-spec-label">맞춤법 검수</dt>
-                    <dd className="mypage__project-spec-value">
-                      편집자 검토 필요({summary.spelling.editorReview}건), 맞춤법({summary.spelling.spelling}건)
-                    </dd>
-                  </div>
-                  <div className="mypage__project-spec-row">
-                    <dt className="mypage__project-spec-label">일관성 검수</dt>
-                    <dd className="mypage__project-spec-value">
-                      일관성 찾기({summary.consistency.find}), 공통 문자열 찾기 ({summary.consistency.commonString}), 검수 제외 단어 '{summary.consistency.excludeWords}'
-                    </dd>
-                  </div>
-                  <div className="mypage__project-spec-row">
-                    <dt className="mypage__project-spec-label">
-                      본용언 + 보조용언 표기
-                    </dt>
-                    <dd className="mypage__project-spec-value">
-                      {summary.auxiliary}
-                    </dd>
-                  </div>
-                </dl>
-              </article>
+                card={card}
+                onRename={() => {
+                  window.alert('프로젝트 이름 변경은 준비 중입니다.');
+                }}
+                onUpdateMeta={() => undefined}
+                onStartWork={() => selectProject(set.id)}
+                onDuplicate={() => {
+                  window.alert('프로젝트 복제는 준비 중입니다.');
+                }}
+                onSharePreview={() => {
+                  window.alert('공유 미리보기는 준비 중입니다.');
+                }}
+              />
             );
           })}
 
-          {Array.from({ length: emptySlotCount }, (_, index) => (
+          {Array.from({ length: visibleEmptySlotCount }, (_, index) => (
             <div
               key={`empty-slot-${index}`}
-              className="mypage__project-slot mypage__project-slot--empty"
+              className="mypage__project-slot mypage__project-slot--empty mypage-proto__empty-slot"
             >
               <p className="mypage__project-slot-label">빈 슬롯</p>
               <p className="mypage__project-slot-desc">
@@ -410,22 +394,6 @@ function ProjectHubSection({ uid, email }) {
               </p>
             </div>
           ))}
-
-          {!loading && projects.length === 0 && emptySlotCount === 0 ? (
-            <div className="mypage__project-empty">
-              <p className="mypage__empty-title">저장된 프로젝트가 없습니다.</p>
-              <p className="mypage__empty-desc">
-                검수 화면에서 맞춤법·일관성 기준을 저장해 주세요.
-              </p>
-              <button
-                type="button"
-                className="mypage__project-load"
-                onClick={returnToWorkspace}
-              >
-                검수 화면으로 이동
-              </button>
-            </div>
-          ) : null}
         </div>
       )}
 

@@ -1,6 +1,7 @@
 /* DEV: ?window=mypage-mock — 스타일 시트(바인더) 카드 목업 */
 
-.mypage-proto {
+.mypage-proto,
+.mypage__project-hub {
   --sheet-bg: #fdfcfa;
   --sheet-border: #e8e4dc;
   --sheet-tab: #f3efe6;
