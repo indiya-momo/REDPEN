@@ -2,8 +2,8 @@
 export const MOCK_PROJECT_CARDS = [
   {
     id: 'proj-1',
-    title: '해는 지지 않았다',
-    tags: ['문학총서', '2권째'],
+    title: '검수냥 모모 이야기2',
+    tags: ['문학', '시리즈 2/5'],
     memo: '띄어쓰기·외래어 표기 강화. 1권과 「그러나」 통일.',
     headline:
       '띄어쓰기·외래어 표기 강화 · "그러나" 통일 · 본보조 8쌍',
@@ -31,8 +31,11 @@ export const MOCK_PROJECT_CARDS = [
       commonString: 2,
       auxiliary: 8,
     },
-    lastWork: { date: '6/18', manuscriptPages: 312 },
+    lastWork: { date: '26.06.20', manuscriptPages: 312 },
+    createdDate: '26.06.18',
+    proofRevision: '3교',
     savedDate: '6/15',
+    formatLabel: '신국판',
     isActive: true,
     dirty: true,
     shareScope: 'project',
@@ -40,7 +43,7 @@ export const MOCK_PROJECT_CARDS = [
   {
     id: 'proj-2',
     title: '실용서 편집 공통',
-    tags: ['실용서', '출판사 공통'],
+    tags: ['실용서', '출판사 매뉴얼'],
     memo: '신규 입사자용 템플릿. 숫자·단위 표기 통일.',
     headline: '숫자·단위 표기 · 따옴표 통일 · 검수 제외어 3개',
     highlights: [
@@ -67,7 +70,9 @@ export const MOCK_PROJECT_CARDS = [
       commonString: 1,
       auxiliary: 0,
     },
-    lastWork: { date: '6/10', manuscriptPages: 0 },
+    lastWork: { date: '26.06.10', manuscriptPages: 0 },
+    createdDate: '26.05.28',
+    proofRevision: '1교',
     savedDate: '5/28',
     isActive: false,
     dirty: false,
@@ -76,7 +81,7 @@ export const MOCK_PROJECT_CARDS = [
   {
     id: 'proj-3',
     title: '에세이 시리즈 1권',
-    tags: ['에세이'],
+    tags: ['문학'],
     headline: '맞춤법 기본 · 일관성 찾기 2건 · 본보조 3쌍',
     highlights: [
       {
@@ -102,7 +107,9 @@ export const MOCK_PROJECT_CARDS = [
       commonString: 0,
       auxiliary: 3,
     },
-    lastWork: { date: '6/1', manuscriptPages: 198 },
+    lastWork: { date: '26.06.01', manuscriptPages: 198 },
+    createdDate: '26.05.20',
+    proofRevision: '2교',
     savedDate: '5/20',
     isActive: false,
     dirty: false,

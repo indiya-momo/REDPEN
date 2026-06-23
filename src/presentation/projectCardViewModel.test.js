@@ -3,6 +3,7 @@ import {
   collectProjectTags,
   filterProjectsByTag,
   formatProjectCardMetaLine,
+  formatProjectCardScheduleLines,
   formatProjectCardTitleLine,
 } from './projectCardViewModel.js';
 
@@ -22,7 +23,9 @@ describe('projectCardViewModel helpers', () => {
     },
     savedDate: '6/1',
     isActive: false,
-    lastWork: { date: '6/18', manuscriptPages: 100 },
+    lastWork: { date: '26.06.18', manuscriptPages: 100 },
+    createdDate: '26.06.01',
+    proofRevision: '2교',
   };
 
   it('formatProjectCardTitleLine', () => {
@@ -31,9 +34,18 @@ describe('projectCardViewModel helpers', () => {
     );
   });
 
+  it('formatProjectCardScheduleLines', () => {
+    expect(formatProjectCardScheduleLines(sample)).toEqual([
+      '26.06.01 생성',
+      '26.06.18 작업',
+    ]);
+  });
+
   it('formatProjectCardMetaLine', () => {
-    expect(formatProjectCardMetaLine(sample)).toContain('100p');
-    expect(formatProjectCardMetaLine(sample)).toContain('6/18');
+    expect(formatProjectCardMetaLine(sample)).toBe('원고 100p · 2교');
+    expect(
+      formatProjectCardMetaLine({ ...sample, formatLabel: '신국판' }),
+    ).toBe('원고 100p · 2교 · 신국판');
   });
 
   it('collectProjectTags and filterProjectsByTag', () => {

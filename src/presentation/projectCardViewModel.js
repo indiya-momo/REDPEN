@@ -40,7 +40,10 @@
  *   highlights: ProjectCardHighlight[],
  *   counts: ProjectCardCounts,
  *   lastWork?: ProjectCardLastWork,
+ *   createdDate?: string,
+ *   proofRevision?: string,
  *   savedDate: string,
+ *   formatLabel?: string,
  *   isActive: boolean,
  *   dirty?: boolean,
  *   shareScope?: ProjectShareScope,
@@ -54,17 +57,29 @@ export function formatProjectCardTitleLine(card) {
   return `${tagPart}《${card.title}》 기준`;
 }
 
+/** @param {ProjectCardViewModel} card @returns {string[]} */
+export function formatProjectCardScheduleLines(card) {
+  const lines = [];
+  if (card.createdDate) {
+    lines.push(`${card.createdDate} 생성`);
+  }
+  if (card.lastWork?.date) {
+    lines.push(`${card.lastWork.date} 작업`);
+  }
+  return lines;
+}
+
 /** @param {ProjectCardViewModel} card @returns {string} */
 export function formatProjectCardMetaLine(card) {
   const parts = [];
-  if (card.lastWork?.date) {
-    parts.push(`마지막 작업 ${card.lastWork.date}`);
-  }
   if (card.lastWork?.manuscriptPages != null) {
     parts.push(`원고 ${card.lastWork.manuscriptPages}p`);
   }
-  if (card.savedDate) {
-    parts.push(`저장 ${card.savedDate}`);
+  if (card.proofRevision) {
+    parts.push(card.proofRevision);
+  }
+  if (card.formatLabel) {
+    parts.push(card.formatLabel);
   }
   return parts.join(' · ');
 }

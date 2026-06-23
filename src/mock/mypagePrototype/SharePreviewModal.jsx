@@ -41,15 +41,13 @@ export default function SharePreviewModal({ card, onClose }) {
         </header>
 
         <p className="mypage-proto__share-note">
-          PDF·검수 결과는 포함되지 않습니다. 표기 기준(규칙 요약)만
-          공유됩니다.
+          외주·팀에게 전달되는 읽기 전용 문서입니다. PDF·검수 결과는
+          포함되지 않습니다.
         </p>
 
         <ProjectLibraryCard
           card={card}
-          expanded
           readOnly
-          onToggleExpand={() => {}}
           onRename={() => {}}
           onUpdateMeta={() => {}}
           onStartWork={() => {}}
@@ -60,7 +58,7 @@ export default function SharePreviewModal({ card, onClose }) {
         <footer className="mypage-proto__modal-foot">
           <button
             type="button"
-            className="mypage-proto__btn mypage-proto__btn--primary"
+            className="sheet-card__btn sheet-card__btn--primary"
             disabled
             title="B-0: 읽기 링크 (미구현)"
           >
