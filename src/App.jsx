@@ -9,6 +9,7 @@ import WelcomeScreen from './components/WelcomeScreen.jsx';
 import MomoRoomScreen from './components/MomoRoomScreen.jsx';
 import GuideWindowScreen from './components/GuideWindowScreen.jsx';
 import MyPageWindowScreen from './components/MyPageWindowScreen.jsx';
+import MyPagePrototypeScreen from './mock/mypagePrototype/MyPagePrototypeScreen.jsx';
 import {
   defaultCautionEnabled,
 } from './lib/cautionRules.js';
@@ -263,6 +264,10 @@ export default function App() {
     updateActiveSet,
     activeSet,
   ]);
+
+  if (import.meta.env.DEV && auxWindow === 'mypage-mock') {
+    return <MyPagePrototypeScreen />;
+  }
 
   if (auxWindow === 'mypage') {
     return (
