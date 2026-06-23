@@ -213,7 +213,7 @@ export default function BuiltinSpellingPanel({
           <span className="panel-criteria-heading-meta">
             {`(선택 ${enabled}/${total})`}
           </span>
-          <span className="criteria-summary-note">※ 계속 추가 중</span>
+          <span className="criteria-summary-note">※ 추가중</span>
         </span>
       </summary>
       {guideRules.length > 0 ? (

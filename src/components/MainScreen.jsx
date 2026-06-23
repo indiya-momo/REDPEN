@@ -525,6 +525,19 @@ export default function MainScreen({
     ruleCheck.clearSpellingCheckState();
   }, [ruleCheck]);
 
+  const prevActiveSetIdRef = useRef(null);
+  useEffect(() => {
+    if (!activeSetId) return;
+    if (prevActiveSetIdRef.current === null) {
+      prevActiveSetIdRef.current = activeSetId;
+      return;
+    }
+    if (prevActiveSetIdRef.current === activeSetId) return;
+    prevActiveSetIdRef.current = activeSetId;
+    clearConsistencyTabWork();
+    clearSpellingTabWork();
+  }, [activeSetId, clearConsistencyTabWork, clearSpellingTabWork]);
+
   const ruleHighlights = useHighlights({
     currentPage: pdf.currentPage,
     currentPageData: pdf.currentPageData,
