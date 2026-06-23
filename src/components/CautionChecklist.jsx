@@ -163,7 +163,10 @@ export default function CautionChecklist({
           />
         </label>
         <span className="caution-checklist-summary-title">
-          편집자 검토 필요(선택 {activeCount}/{total})
+          편집자 검토 필요
+          <span className="panel-criteria-heading-meta">
+            {`(선택 ${activeCount}/${total})`}
+          </span>
           <span className="criteria-summary-note">※ 계속 추가 중</span>
         </span>
       </summary>

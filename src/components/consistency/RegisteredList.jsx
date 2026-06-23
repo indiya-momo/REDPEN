@@ -139,8 +139,6 @@ export default function RegisteredList({
           <RegisteredChip
             key={consistencyEntryKey(row)}
             label={label}
-            checked={isEnabled(customRules, row)}
-            onToggle={(on) => onToggle(row, on)}
             onRemove={onRemove ? () => onRemove(row.tailWord) : undefined}
           />
         );

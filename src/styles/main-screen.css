@@ -143,7 +143,6 @@
 .panel-left .panel-guide-text,
 .panel-left .consistency-unified-box .hint,
 .panel-left .consistency-hint-block,
-.panel-left .consistency-hint-example,
 .panel-left .auxiliary-checklist-intro,
 .panel-left .consistency-toc-section .hint,
 .panel-left .consistency-toc-section__calibration-done,
@@ -193,7 +192,8 @@
 }
 
 .panel-left .bon-bojo-required-badge,
-.panel-left .caution-badge-inline {
+.panel-left .caution-badge-inline,
+.panel-left .consistency-hint-badge {
   font-weight: var(--w-body);
 }
 
@@ -526,19 +526,89 @@
   outline: none;
 }
 
-.panel-left .registered-chip {
-  padding: 3px 4px 3px 0;
-  border: none;
-  background: transparent;
+.panel-left .consistency-embed .tail-list:not(.tail-list--grid) {
+  border-top: none;
+  margin-top: var(--consistency-item-gap, 6px);
+  padding-top: 0;
+}
+
+.panel-left .consistency-embed .registered-chip {
+  gap: 1px;
+  padding: 3px 2px 3px 4px;
+  font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+  font-size: var(--consistency-example-font-size);
+  font-weight: 400;
+  line-height: var(--consistency-example-line-height);
+  letter-spacing: 0;
+  color: var(--c-ink);
+  border: 1px solid var(--chip-border);
+  border-radius: var(--radius-ui-sm);
+  background: var(--rule-hover-bg);
   box-shadow: none;
 }
 
-.panel-left .registered-chip:hover {
-  background: var(--rule-hover-bg);
+.panel-left .consistency-embed .registered-chip .find,
+.panel-left .consistency-embed .registered-chip__text {
+  font: inherit;
+  line-height: inherit;
+  letter-spacing: inherit;
+  font-weight: inherit;
+  color: inherit;
 }
 
-.panel-left .registered-chip:has(input:checked) {
+.panel-left .consistency-embed .registered-chip .btn-icon--dismiss {
+  margin-inline-start: 0;
+  padding: 2px;
+  font-size: 1em;
+  line-height: 1;
+  width: auto;
+  height: auto;
+  background: transparent;
+  color: var(--color-text-muted);
+  border-radius: var(--radius-ui-sm);
+  transition:
+    color 0.15s ease,
+    background 0.15s ease;
+}
+
+.panel-left .consistency-embed .registered-chip .btn-icon--dismiss:hover {
+  color: var(--accent-terracotta-deep);
   background: var(--panel-accordion-bg);
+}
+
+.panel-left .consistency-embed .registered-chip .btn-icon--dismiss svg {
+  width: 1em;
+  height: 1em;
+}
+
+.panel-left .consistency-embed .registered-chip--unify {
+  gap: 1px;
+}
+
+.panel-left .consistency-embed .consistency-unify-pin-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.28;
+  filter: grayscale(1);
+}
+
+.panel-left .consistency-embed .consistency-unify-pin-btn--active {
+  opacity: 1;
+  filter: none;
+}
+
+.panel-left .consistency-embed .consistency-unify-pin-btn:focus-visible {
+  outline: 2px solid var(--panel-accent);
+  outline-offset: 1px;
 }
 
 /* 기능 섹션(보정·일관성 찾기) — 접이식이 아닌 설정 블록 1겹 */
@@ -648,17 +718,29 @@
 }
 
 .panel-left .consistency-unified-box {
-  padding: 12px 14px;
+  padding: 12px 16px;
+}
+
+.panel-left .consistency-unified-box .consistency-hint-block {
+  line-height: 1.55;
 }
 
 .panel-left .consistency-embed .tail-form {
-  gap: 10px;
-  margin-top: 10px;
+  margin-top: var(--consistency-item-gap, 6px);
 }
 
-.panel-left .consistency-embed .field-input {
+.panel-left .consistency-embed .consistency-register-field .consistency-register-field__input,
+.panel-left .consistency-embed .consistency-register-field .field-input {
   margin-top: 0;
-  padding-block: 9px;
+  padding: var(--consistency-input-padding-block, calc(10px * var(--panel-ui-scale, 1) * 0.6))
+    calc(12px * var(--panel-ui-scale, 1));
+  color: var(--consistency-register-text, var(--color-text-muted));
+}
+
+.panel-left .consistency-embed .consistency-register-field .consistency-register-field__input::placeholder,
+.panel-left .consistency-embed .consistency-register-field .field-input::placeholder {
+  color: var(--color-text-subtle);
+  opacity: 1;
 }
 
 .panel-left .consistency-toc-section__step-label {
@@ -719,7 +801,6 @@
 
 .panel-left .bon-bojo-required-badge {
   background: var(--color-surface-inset);
-  border: 1px solid var(--panel-sheet-border);
   color: var(--c-soft);
 }
 
@@ -2500,14 +2581,33 @@
 }
 
 .consistency-unified-box {
-  padding: 12px 14px;
+  padding: 12px 16px;
   border: none;
   border-radius: var(--radius-ui);
   background: var(--color-surface-raised);
+  container-type: inline-size;
+  --consistency-example-font-size: calc(var(--panel-guide-font-size, 0.828rem) * 0.9);
+  --consistency-example-line-height: 1.25;
+  /* 칩(문자열) 간 gap과 동일 — 예↔검색창·검색창↔목록 간격 기준 */
+  --consistency-item-gap: 6px;
+  --consistency-input-padding-block: calc(10px * var(--panel-ui-scale, 1) * 0.6);
+  --consistency-register-text: var(--color-text-muted);
+  --consistency-register-add-bg: var(--accent-terracotta);
+  --consistency-register-add-bg-hover: var(--accent-terracotta-deep);
+  /* 공통 문자열 ↔ 검수 제외 — 열 gap(12px×60%) + 검색창 사이 여백(왼쪽열 10%→6%) */
+  --consistency-subsection-row-gap: calc(12px * 0.6);
+  --consistency-subsection-phrase-form-scale: 0.94;
+  --consistency-subsection-col1: calc(
+    (100cqi - var(--consistency-subsection-row-gap)) * 3 / 5
+  );
+  --consistency-subsection-col2: calc(
+    (100cqi - var(--consistency-subsection-row-gap)) * 2 / 5
+  );
 }
 
 /* 일관성 찾기·검색창 — 다시 검수 행·아래 섹션 박스와 동일 좌우 폭 */
 .consistency-unified-box .consistency-subsection--first > .tail-form,
+.consistency-unified-box .consistency-unify-section .tail-form,
 .consistency-unified-box
   .consistency-subsection-row
   > .consistency-subsection--half
@@ -2516,9 +2616,30 @@
   box-sizing: border-box;
 }
 
+.consistency-unified-box
+  .consistency-subsection-row
+  > .consistency-subsection--half:not(.consistency-subsection--exclude)
+  > .tail-form {
+  width: calc(
+    var(--consistency-subsection-col1) * var(--consistency-subsection-phrase-form-scale, 0.94)
+  );
+  max-width: 100%;
+  justify-self: start;
+}
+
+.consistency-unified-box
+  .consistency-subsection-row
+  > .consistency-subsection--exclude
+  > .tail-form {
+  width: var(--consistency-subsection-col2);
+  max-width: 100%;
+  justify-self: end;
+  margin-inline-start: auto;
+}
+
 .consistency-subsection {
-  margin-top: 10px;
-  padding-top: 10px;
+  margin-top: var(--panel-gap-group);
+  padding-top: var(--panel-gap-group);
   border-top: 1px solid var(--color-border);
 }
 
@@ -2530,29 +2651,31 @@
 
 .consistency-subsection-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
   grid-template-rows: auto auto auto auto;
-  column-gap: 12px;
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: none;
+  column-gap: calc(12px * 0.6);
+  margin-top: var(--panel-gap-group);
+  padding-top: var(--panel-gap-group);
+  border-top: 1px solid var(--color-border);
 }
 
-/* 설명은 각 열에서 입력창 바로 위에 붙이고, 등록 입력창 행만 좌·우 정렬 */
+.panel-left .consistency-unified-box .consistency-subsection-row {
+  column-gap: var(--consistency-subsection-row-gap, calc(12px * 0.6));
+}
+
+/* 설명 길이가 달라도 입력·+ 버튼 행(subgrid 3행) 정렬 */
+.consistency-subsection-row > .consistency-subsection--half > .tail-form {
+  align-self: start;
+}
+
+/* 설명은 각 열에서 입력창 바로 위 — 일관성 찾기·통일형과 동일 간격 */
 .consistency-subsection-row > .consistency-subsection--half {
   display: grid;
   grid-template-rows: subgrid;
   grid-row: span 4;
   min-width: 0;
-}
-
-.consistency-subsection__hints-area {
+  padding-inline: 0;
   box-sizing: border-box;
-  margin-top: 2px;
-}
-
-.consistency-subsection-row .consistency-subsection__hints-area {
-  align-self: end;
 }
 
 .consistency-subsection--half {
@@ -2564,24 +2687,79 @@
 }
 
 .consistency-subsection--exclude .tail-list--exclude {
-  margin-top: 10px;
+  margin-top: var(--consistency-item-gap, 6px);
+}
+
+.consistency-register-field {
+  display: flex;
+  align-items: stretch;
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+  border: none;
+  border-radius: var(--radius-ui);
+  background: var(--color-surface-overlay);
+  overflow: hidden;
+}
+
+.panel-left .consistency-unified-box .consistency-register-field {
+  background: var(--color-surface-overlay);
+}
+
+.consistency-register-field__input {
+  flex: 1;
+  min-width: 0;
+  width: auto;
+  margin-top: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+}
+
+.consistency-register-field__input:focus,
+.consistency-register-field__input:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+.consistency-unified-box .consistency-register-field__input {
+  color: var(--consistency-register-text);
+}
+
+.consistency-unified-box .consistency-register-field__input::placeholder {
+  color: var(--color-text-subtle);
+  opacity: 1;
 }
 
 .consistency-unified-box .consistency-register-add-btn {
   min-width: 2.25rem;
-  padding-inline: 10px;
+  padding: var(--consistency-input-padding-block, calc(10px * 0.6)) 8px;
   font-size: 1.1rem;
   font-weight: 700;
   line-height: 1;
   border: none;
-  background: var(--btn-secondary-bg);
-  color: var(--btn-secondary-text);
+  border-radius: 0 var(--radius-ui) var(--radius-ui) 0;
+  background: var(--consistency-register-add-bg);
+  color: #fff;
   transition: background 0.15s ease;
 }
 
 .consistency-unified-box .consistency-register-add-btn:hover:not(:disabled) {
-  background: var(--btn-secondary-hover-bg);
-  border: none;
+  background: var(--consistency-register-add-bg-hover);
+}
+
+.consistency-unified-box .consistency-register-add-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.panel-left .consistency-unified-box .hint .consistency-hint-example {
+  color: var(--c-ink);
+}
+
+.panel-left .consistency-unified-box .hint .consistency-hint-badge {
+  color: #fff;
 }
 
 .panel-left .consistency-unified-box .hint {
@@ -2599,8 +2777,58 @@
 }
 
 .consistency-hint-example {
-  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
-  letter-spacing: 0.02em;
+  --consistency-hint-cap: 1.25em;
+  display: inline;
+  white-space: normal;
+  margin-top: 0;
+  margin-inline-start: 0;
+  font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+  font-size: var(--consistency-example-font-size);
+  font-weight: 400;
+  line-height: var(--consistency-example-line-height);
+  letter-spacing: 0;
+  color: var(--c-ink);
+  vertical-align: baseline;
+}
+
+.consistency-hint-example-body {
+  display: inline;
+  white-space: normal;
+  font: inherit;
+  line-height: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+}
+
+.consistency-hint-term {
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: 700;
+  line-height: inherit;
+  letter-spacing: inherit;
+  vertical-align: baseline;
+}
+
+.consistency-hint-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: var(--consistency-hint-cap);
+  height: var(--consistency-hint-cap);
+  min-width: var(--consistency-hint-cap);
+  margin-inline-end: 0.2em;
+  padding: 0;
+  border-radius: 50%;
+  vertical-align: -0.12em;
+  font-family: inherit;
+  font-size: 0.8em;
+  font-weight: 700;
+  line-height: 1;
+  --consistency-hint-badge-tone: var(--color-text-muted);
+  background: var(--consistency-hint-badge-tone);
+  border: 1px solid var(--consistency-hint-badge-tone);
+  color: #fff;
 }
 
 .consistency-section-box[data-work-guide-step='auxiliary-box'] .auxiliary-chip {
@@ -2944,6 +3172,12 @@
   font-size: calc(1.05rem * var(--panel-ui-scale));
 }
 
+.panel-left .panel-criteria-heading-meta {
+  margin-inline-start: 0.15em;
+  font-size: 0.75em;
+  line-height: inherit;
+}
+
 .panel-left .caution-checklist-summary.panel-criteria-heading,
 .panel-left .builtin-spelling-summary.panel-criteria-heading {
   font-size: calc(1.05rem * var(--panel-ui-scale));
@@ -3116,7 +3350,8 @@
 
 .panel-left .consistency-unified-box .consistency-register-add-btn {
   font-size: calc(1.1rem * var(--panel-ui-scale));
-  padding-inline: calc(10px * var(--panel-ui-scale));
+  padding: var(--consistency-input-padding-block, calc(10px * var(--panel-ui-scale, 1) * 0.6))
+    calc(8px * var(--panel-ui-scale));
 }
 
 .panel-left .field-label {
@@ -3131,6 +3366,12 @@
 .panel-left .consistency-toc-section__textarea {
   font-size: calc(0.875rem * var(--panel-ui-scale));
   padding: calc(10px * var(--panel-ui-scale)) calc(12px * var(--panel-ui-scale));
+}
+
+.panel-left .consistency-embed .consistency-register-field .consistency-register-field__input,
+.panel-left .consistency-embed .consistency-register-field .field-input {
+  padding: var(--consistency-input-padding-block, calc(10px * var(--panel-ui-scale, 1) * 0.6))
+    calc(12px * var(--panel-ui-scale, 1));
 }
 
 .panel-left .hint {

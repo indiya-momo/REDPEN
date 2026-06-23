@@ -534,6 +534,7 @@ export default function MainScreen({
     highlightTab: workTab === 'spelling' ? 'spelling' : 'consistency',
     activeSource: ruleCheck.activeSource,
     selectedInstance: ruleCheck.selectedInstance,
+    customRules,
   });
 
   const tocHighlights = useTocBodyHighlights({
