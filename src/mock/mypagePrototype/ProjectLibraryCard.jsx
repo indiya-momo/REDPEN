@@ -46,22 +46,26 @@ export default function ProjectLibraryCard({
 
   const scheduleLines = formatProjectCardScheduleLines(card);
 
+  const tabLabels = useMemo(() => {
+    if (card.tags.length > 0) return card.tags;
+    if (card.savedDate) return [card.savedDate];
+    return ['프로젝트'];
+  }, [card.tags, card.savedDate]);
+
   return (
     <article
       className={`sheet-card${card.isActive ? ' sheet-card--active' : ''}${readOnly ? ' sheet-card--readonly' : ''}${card.dirty ? ' sheet-card--dirty' : ''}`}
     >
-      {card.tags.length > 0 ? (
-        <div className="sheet-card__tabs" aria-label="분류">
-          {card.tags.map((tag, index) => (
-            <span
-              key={tag}
-              className={`sheet-card__tab${index === 0 ? ' sheet-card__tab--lead' : ''}`}
-            >
-              {tag}
-            </span>
-          ))}
-        </div>
-      ) : null}
+      <div className="sheet-card__tabs" aria-label="분류">
+        {tabLabels.map((tag, index) => (
+          <span
+            key={`${tag}-${index}`}
+            className={`sheet-card__tab${index === 0 ? ' sheet-card__tab--lead' : ''}`}
+          >
+            {tag}
+          </span>
+        ))}
+      </div>
 
       <div className="sheet-card__body">
         <div className="sheet-card__head">

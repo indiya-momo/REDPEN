@@ -58,7 +58,7 @@ export default function ConsistencyUnifySection({ customRules, onApplyRules }) {
       <p className="printed-page-setup__title consistency-subsection-title panel-criteria-heading">
         통일형 만들기
         <span className="panel-criteria-heading-meta">
-          (1회 최대 {MAX_CONSISTENCY_UNIFY_SLOTS}항목 찾고 통일형 지정 가능)
+          (1회 {MAX_CONSISTENCY_UNIFY_SLOTS}항목까지, 통일형 지정 가능)
         </span>
       </p>
       <p className="hint consistency-hint-block">

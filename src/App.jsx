@@ -208,6 +208,7 @@ export default function App() {
     handleBuiltInSetAll,
     handleCautionToggle,
     handleCautionSetAll,
+    flushPendingRuleSetsSave,
   } = useRuleSets(
     authSession?.uid ?? '',
     resolveQuotaAuthEmail(authSession),
@@ -376,12 +377,14 @@ export default function App() {
       onDeleteCriteriaPreset={handleDeleteCriteriaPreset}
       onOpenWelcome={() => {
         welcomeManualReturnRef.current = true;
+        flushPendingRuleSetsSave();
         void clearWorkSession();
         setMainWorkTab('spelling');
         setScreen('welcome');
       }}
       onLogout={async () => {
         welcomeManualReturnRef.current = false;
+        flushPendingRuleSetsSave();
         await clearWorkSession();
         await signOutUser();
         setMainWorkTab('spelling');

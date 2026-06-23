@@ -8,6 +8,7 @@ import {
   ChevronDown,
   FilePlus,
   House,
+  Loader2,
   LogOut,
   MessageSquare,
   Save,
@@ -213,7 +214,7 @@ const WORK_GUIDE_2_ALIGN_CHAIN = [
  *   onCustomRulesChange: (rules: import('../lib/ruleTypes.js').Rule[]) => void,
  *   onGlobalExcludePhrasesChange: (phrases: string[]) => void,
  *   onSaveRules: () => void,
- *   onSaveCriteriaPreset: (name: string) => boolean,
+ *   onSaveCriteriaPreset: (name: string) => boolean | Promise<boolean>,
  *   onDeleteCriteriaPreset: (setId: string) => boolean,
  *   onOpenWelcome: () => void,
  *   onLogout: () => void | Promise<void>,
@@ -273,6 +274,7 @@ export default function MainScreen({
   const [authSession, setAuthSession] = useState(() => getCurrentUserSession());
   const [criteriaNameInput, setCriteriaNameInput] = useState('');
   const [criteriaPickerOpen, setCriteriaPickerOpen] = useState(false);
+  const [criteriaSavePending, setCriteriaSavePending] = useState(false);
   const criteriaPickerRef = useRef(null);
   const afterCheckRef = useRef(async () => false);
   const { panelStyle, handleRef, startDrag } = useResizablePanelWidth(
@@ -311,9 +313,15 @@ export default function MainScreen({
     return () => document.removeEventListener('pointerdown', handlePointerDown);
   }, [criteriaPickerOpen]);
 
-  function handleSaveCriteria() {
-    onSaveCriteriaPreset(criteriaNameInput);
-    setCriteriaPickerOpen(false);
+  async function handleSaveCriteria() {
+    if (criteriaSavePending) return;
+    setCriteriaSavePending(true);
+    try {
+      const saved = await onSaveCriteriaPreset(criteriaNameInput);
+      if (saved) setCriteriaPickerOpen(false);
+    } finally {
+      setCriteriaSavePending(false);
+    }
   }
 
   function handleDeleteCriteria(setId) {
@@ -1270,6 +1278,7 @@ export default function MainScreen({
                     placeholder="프로젝트 이름"
                     maxLength={60}
                     autoComplete="off"
+                    disabled={criteriaSavePending}
                     role="combobox"
                     aria-expanded={criteriaPickerOpen}
                     aria-controls="panel-left-criteria-picker-list"
@@ -1342,11 +1351,21 @@ export default function MainScreen({
                 <button
                   type="button"
                   className="panel-left__save-rules"
-                  onClick={handleSaveCriteria}
-                  aria-label="기준 저장"
-                  title="기준 저장"
+                  onClick={() => void handleSaveCriteria()}
+                  disabled={criteriaSavePending}
+                  aria-busy={criteriaSavePending}
+                  aria-label={criteriaSavePending ? '프로젝트 저장 중' : '기준 저장'}
+                  title={criteriaSavePending ? '저장 중…' : '기준 저장'}
                 >
-                  <Save size={16} aria-hidden />
+                  {criteriaSavePending ? (
+                    <Loader2
+                      size={16}
+                      aria-hidden
+                      className="panel-left__save-rules-spinner"
+                    />
+                  ) : (
+                    <Save size={16} aria-hidden />
+                  )}
                 </button>
                 <button
                   type="button"
