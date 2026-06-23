@@ -25,6 +25,9 @@
  * @property {boolean} [visible] — false면 규칙 목록 UI에만 숨김(검사는 enabled로 제어)
  * @property {string} [dividerGroup] — 맞춤법 목록 구분선 묶음 키(같은 값끼리는 구분선 없음)
  * @property {string} [overlayReplace] — 시트 overlay_replace: PDF 하이라이트 위 표시 문구
+ * @property {boolean} [consistencyUnifyEntry] — 통일형 만들기에서 등록한 일관성 항목
+ * @property {boolean} [consistencyUnifyPinned] — 통일형 만들기에서 📌로 지정한 통일형
+ * @property {boolean} [consistencyLiteralEntry] — 일관성 찾기에서 등록한 항목
  * @property {boolean} [requireLeadingBoundary] — true면 앞에 글자/숫자가 붙은 매칭은 제외
  * @property {string} [bonBojoItemId] — bon-bojo 시트 item_id; 목록·체크는 항목 단위
  */

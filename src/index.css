@@ -3568,7 +3568,7 @@ details[open] > summary .details-chevron {
   display: flex;
   flex-direction: row;
   align-items: stretch;
-  gap: 8px;
+  gap: 4px;
   margin-top: 8px;
 }
 
@@ -3599,8 +3599,8 @@ details[open] > summary .details-chevron {
 }
 
 .consistency-embed .tail-list {
-  margin-top: 10px;
-  padding-top: 8px;
+  margin-top: 7px;
+  padding-top: 0;
 }
 
 .tail-list {
@@ -3759,7 +3759,6 @@ details[open] > summary .details-chevron {
   border-radius: var(--radius-ui-sm);
   background: #fef08a;
   color: #854d0e;
-  border: 1px solid #eab308;
 }
 
 .bon-bojo-checklist-header {

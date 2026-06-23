@@ -23,6 +23,7 @@ import {
  *   highlightTab: 'spelling' | 'consistency',
  *   activeSource: 'spelling' | 'consistency',
  *   selectedInstance: import('../lib/ruleEngine.js').MatchInstance | null,
+ *   customRules?: import('../lib/ruleTypes.js').Rule[],
  * }} options
  */
 export function useHighlights({
@@ -34,6 +35,7 @@ export function useHighlights({
   highlightTab,
   activeSource,
   selectedInstance,
+  customRules = [],
 }) {
   const activeResults =
     activeSource === 'spelling' ? spellingResults : consistencyResults;
@@ -83,7 +85,10 @@ export function useHighlights({
             selectedInstance != null &&
             instancesMatch(inst, selectedInstance),
         );
-        const overlayReplace = getHighlightOverlayReplace(inst);
+        const overlayReplace = getHighlightOverlayReplace(inst, {
+          customRules,
+          group: source === 'consistency' ? group : null,
+        });
         return {
           ...range,
           primary,
@@ -103,6 +108,7 @@ export function useHighlights({
     currentPageData,
     selectedInstance,
     activeGroupKey,
+    customRules,
   ]);
 
   const sortedFindings = useMemo(() => {

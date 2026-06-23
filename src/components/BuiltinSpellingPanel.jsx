@@ -209,7 +209,10 @@ export default function BuiltinSpellingPanel({
           />
         </label>
         <span className="builtin-spelling-summary-title">
-          맞춤법 규칙(선택 {enabled}/{total})
+          맞춤법 규칙
+          <span className="panel-criteria-heading-meta">
+            {`(선택 ${enabled}/${total})`}
+          </span>
           <span className="criteria-summary-note">※ 계속 추가 중</span>
         </span>
       </summary>
