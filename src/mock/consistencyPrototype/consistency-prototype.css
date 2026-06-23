@@ -1,0 +1,334 @@
+/* DEV: ?window=consistency-mock — 일관성·통일형 UI 목업 (다크 톤) */
+
+.consistency-proto {
+  --proto-bg: #1e1e1e;
+  --proto-panel: #2b2b2b;
+  --proto-border: #454545;
+  --proto-text: #ececec;
+  --proto-muted: #a8a8a8;
+  --proto-accent: #d4a574;
+  --proto-input: #363636;
+  min-height: 100dvh;
+  background: var(--proto-bg);
+  color: var(--proto-text);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.consistency-proto__dev-banner {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  padding: 0.35rem 0.75rem;
+  background: #1e293b;
+  color: #e2e8f0;
+  font-size: 0.72rem;
+  text-align: center;
+}
+
+.consistency-proto__dev-banner code {
+  color: #93c5fd;
+}
+
+.consistency-proto__dev-banner a {
+  color: #fcd34d;
+}
+
+.consistency-proto__stage {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 1.25rem 1rem 2rem;
+}
+
+.consistency-proto__panel {
+  width: min(22rem, 100%);
+  flex-shrink: 0;
+}
+
+.consistency-proto__box {
+  margin: 0;
+}
+
+.consistency-proto__box--half {
+  min-width: 0;
+}
+
+.consistency-proto__title {
+  margin: 0 0 0.45rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.consistency-proto__subtitle {
+  margin: 0 0 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.consistency-proto__hint {
+  margin: 0 0 0.55rem;
+  color: var(--proto-muted);
+  font-size: 0.7rem;
+  line-height: 1.55;
+}
+
+.consistency-proto__hint--compact {
+  margin-bottom: 0.45rem;
+  font-size: 0.68rem;
+}
+
+.consistency-proto__hint em {
+  font-style: normal;
+  color: #d6c4a8;
+}
+
+.consistency-proto__hint strong {
+  font-weight: 700;
+  color: var(--proto-text);
+}
+
+.consistency-proto__divider {
+  margin: 0.85rem 0;
+  border: none;
+  border-top: 1px dashed var(--proto-border);
+}
+
+.consistency-proto__field-row {
+  display: flex;
+  gap: 0.35rem;
+  align-items: stretch;
+}
+
+.consistency-proto__input {
+  flex: 1;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 0.42rem 0.55rem;
+  border: 1px solid var(--proto-border);
+  border-radius: 4px;
+  background: var(--proto-input);
+  color: var(--proto-text);
+  font: inherit;
+  font-size: 0.74rem;
+}
+
+.consistency-proto__input::placeholder {
+  color: #777;
+}
+
+.consistency-proto__input--mono {
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 0.72rem;
+}
+
+.consistency-proto__btn {
+  flex-shrink: 0;
+  border: 1px solid var(--proto-border);
+  border-radius: 4px;
+  background: #3a3a3a;
+  color: var(--proto-text);
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.consistency-proto__btn:hover {
+  border-color: var(--proto-accent);
+  color: var(--proto-accent);
+}
+
+.consistency-proto__btn--register {
+  padding: 0.42rem 0.7rem;
+}
+
+.consistency-proto__btn--add {
+  align-self: end;
+  padding: 0.42rem 0.75rem;
+}
+
+.consistency-proto__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin: 0.55rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.consistency-proto__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.18rem 0.35rem 0.18rem 0.28rem;
+  border: 1px solid var(--proto-border);
+  border-radius: 999px;
+  background: #333;
+  font-size: 0.68rem;
+}
+
+.consistency-proto__tag--pinned {
+  border-color: rgba(212, 165, 116, 0.55);
+  background: rgba(212, 165, 116, 0.12);
+}
+
+.consistency-proto__tag-pin,
+.consistency-proto__tag-remove,
+.consistency-proto__mapping-remove {
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.85;
+}
+
+.consistency-proto__tag-pin:hover,
+.consistency-proto__tag-remove:hover,
+.consistency-proto__mapping-remove:hover {
+  opacity: 1;
+}
+
+.consistency-proto__tag-label {
+  max-width: 8rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.consistency-proto__unify-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 0.35rem 0.4rem;
+  align-items: end;
+}
+
+.consistency-proto__label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.18rem;
+  min-width: 0;
+}
+
+.consistency-proto__label-text {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--proto-muted);
+}
+
+.consistency-proto__note {
+  margin: 0.45rem 0 0;
+  color: #888;
+  font-size: 0.64rem;
+  line-height: 1.45;
+}
+
+.consistency-proto__mapping-list {
+  margin: 0.55rem 0 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--proto-border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.consistency-proto__mapping {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr auto;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.45rem;
+  border-bottom: 1px solid var(--proto-border);
+  font-size: 0.7rem;
+}
+
+.consistency-proto__mapping:last-child {
+  border-bottom: none;
+}
+
+.consistency-proto__mapping-correction {
+  color: #c9b896;
+}
+
+.consistency-proto__mapping-arrow {
+  color: var(--proto-muted);
+  font-weight: 700;
+}
+
+.consistency-proto__mapping-unified {
+  font-weight: 700;
+}
+
+.consistency-proto__bottom-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.65rem;
+}
+
+.consistency-proto__simple-list {
+  margin: 0.45rem 0 0;
+  padding: 0;
+  list-style: none;
+  color: var(--proto-muted);
+  font-size: 0.68rem;
+}
+
+.consistency-proto__simple-list li {
+  padding: 0.15rem 0;
+}
+
+.consistency-proto__preview-note {
+  max-width: 14rem;
+  padding: 0.75rem 0.85rem;
+  border: 1px dashed var(--proto-border);
+  border-radius: 4px;
+  color: var(--proto-muted);
+  font-size: 0.68rem;
+  line-height: 1.55;
+}
+
+.consistency-proto__preview-note p {
+  margin: 0 0 0.5rem;
+}
+
+.consistency-proto__preview-chip span {
+  display: inline-block;
+  margin-top: 0.25rem;
+  padding: 0.2rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(92, 107, 122, 0.25);
+  color: #d0d8e0;
+  font-size: 0.65rem;
+}
+
+@media (max-width: 720px) {
+  .consistency-proto__stage {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .consistency-proto__panel {
+    width: 100%;
+  }
+
+  .consistency-proto__unify-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .consistency-proto__btn--add {
+    width: 100%;
+  }
+
+  .consistency-proto__bottom-row {
+    grid-template-columns: 1fr;
+  }
+
+  .consistency-proto__preview-note {
+    max-width: none;
+  }
+}

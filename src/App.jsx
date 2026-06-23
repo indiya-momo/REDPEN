@@ -10,6 +10,7 @@ import MomoRoomScreen from './components/MomoRoomScreen.jsx';
 import GuideWindowScreen from './components/GuideWindowScreen.jsx';
 import MyPageWindowScreen from './components/MyPageWindowScreen.jsx';
 import MyPagePrototypeScreen from './mock/mypagePrototype/MyPagePrototypeScreen.jsx';
+import ConsistencyPrototypeScreen from './mock/consistencyPrototype/ConsistencyPrototypeScreen.jsx';
 import {
   defaultCautionEnabled,
 } from './lib/cautionRules.js';
@@ -267,6 +268,10 @@ export default function App() {
 
   if (import.meta.env.DEV && auxWindow === 'mypage-mock') {
     return <MyPagePrototypeScreen />;
+  }
+
+  if (import.meta.env.DEV && auxWindow === 'consistency-mock') {
+    return <ConsistencyPrototypeScreen />;
   }
 
   if (auxWindow === 'mypage') {
