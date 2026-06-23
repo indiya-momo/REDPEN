@@ -1,0 +1,110 @@
+/** @type {import('../../presentation/projectCardViewModel.js').ProjectCardViewModel[]} */
+export const MOCK_PROJECT_CARDS = [
+  {
+    id: 'proj-1',
+    title: '해는 지지 않았다',
+    tags: ['문학총서', '2권째'],
+    memo: '띄어쓰기·외래어 표기 강화. 1권과 「그러나」 통일.',
+    headline:
+      '띄어쓰기·외래어 표기 강화 · "그러나" 통일 · 본보조 8쌍',
+    highlights: [
+      {
+        category: '맞춤법 검수',
+        label: '편집자 검토 필요, 맞춤법(외래어·띄어쓰기)',
+        count: 15,
+      },
+      {
+        category: '일관성 검수',
+        label: '"그러나" 포함 4건, 공통 문자열 2건',
+        count: 6,
+      },
+      {
+        category: '본용언 + 보조용언',
+        label: '"앉다+있다" 포함 8쌍',
+        count: 8,
+      },
+    ],
+    counts: {
+      editorReview: 3,
+      spelling: 12,
+      find: 4,
+      commonString: 2,
+      auxiliary: 8,
+    },
+    lastWork: { date: '6/18', manuscriptPages: 312 },
+    savedDate: '6/15',
+    isActive: true,
+    dirty: true,
+    shareScope: 'project',
+  },
+  {
+    id: 'proj-2',
+    title: '실용서 편집 공통',
+    tags: ['실용서', '출판사 공통'],
+    memo: '신규 입사자용 템플릿. 숫자·단위 표기 통일.',
+    headline: '숫자·단위 표기 · 따옴표 통일 · 검수 제외어 3개',
+    highlights: [
+      {
+        category: '맞춤법 검수',
+        label: '맞춤법(숫자·단위)',
+        count: 9,
+      },
+      {
+        category: '일관성 검수',
+        label: '공통 문자열 1건, 제외어 3개',
+        count: 4,
+      },
+      {
+        category: '본용언 + 보조용언',
+        label: '없음',
+        count: 0,
+      },
+    ],
+    counts: {
+      editorReview: 2,
+      spelling: 7,
+      find: 0,
+      commonString: 1,
+      auxiliary: 0,
+    },
+    lastWork: { date: '6/10', manuscriptPages: 0 },
+    savedDate: '5/28',
+    isActive: false,
+    dirty: false,
+    shareScope: 'folder',
+  },
+  {
+    id: 'proj-3',
+    title: '에세이 시리즈 1권',
+    tags: ['에세이'],
+    headline: '맞춤법 기본 · 일관성 찾기 2건 · 본보조 3쌍',
+    highlights: [
+      {
+        category: '맞춤법 검수',
+        label: '맞춤법 기본 세트',
+        count: 6,
+      },
+      {
+        category: '일관성 검수',
+        label: '"그러나" 2건',
+        count: 2,
+      },
+      {
+        category: '본용언 + 보조용언',
+        label: '"서다+있다" 3쌍',
+        count: 3,
+      },
+    ],
+    counts: {
+      editorReview: 1,
+      spelling: 5,
+      find: 2,
+      commonString: 0,
+      auxiliary: 3,
+    },
+    lastWork: { date: '6/1', manuscriptPages: 198 },
+    savedDate: '5/20',
+    isActive: false,
+    dirty: false,
+  },
+];
