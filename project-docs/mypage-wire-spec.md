@@ -1,6 +1,6 @@
 # 마이페이지 · 프로젝트 라이브러리 와이어 스펙
 
-**상태:** 목업 1차 (2026-06-23)  
+**상태:** 목업 1차 (2026-06-23) · 실마이페이지 연동 진행 — [`mypage-project-backlog-2026-06-24.md`](./mypage-project-backlog-2026-06-24.md)  
 **목적:** `projectCardViewModel` 계약·세 화면(Port) UX를 눈으로 고정  
 **범위:** 클릭 목업 (`?window=mypage-mock`, DEV 전용). 저장·Firebase 없음.
 
