@@ -13,15 +13,15 @@ export default function WorkbenchBarMock({ card, onBackToLibrary }) {
           <p className="mypage-proto__workbench-title">
             《{card.title}》
             {card.dirty ? (
-              <span className="mypage-proto__dirty-badge">변경됨 · 저장 필요</span>
+              <span className="sheet-card__flag sheet-card__flag--dirty">저장 전</span>
             ) : (
-              <span className="mypage-proto__saved-badge">저장됨</span>
+              <span className="sheet-card__flag sheet-card__flag--active">저장됨</span>
             )}
           </p>
         </div>
         <button
           type="button"
-          className="mypage-proto__btn"
+          className="sheet-card__btn"
           onClick={onBackToLibrary}
         >
           ← 라이브러리

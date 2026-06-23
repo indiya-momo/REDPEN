@@ -2,7 +2,6 @@ import { useCallback, useMemo, useState } from 'react';
 import '../../components/my-page.css';
 import './mypage-prototype.css';
 import {
-  collectProjectTags,
   filterProjectsByTag,
 } from '../../presentation/projectCardViewModel.js';
 import { MOCK_PROJECT_CARDS } from './mockProjectCards.js';
@@ -11,6 +10,25 @@ import SharePreviewModal from './SharePreviewModal.jsx';
 import WorkbenchBarMock from './WorkbenchBarMock.jsx';
 
 /** @typedef {'library' | 'workbench'} ProtoView */
+
+/** @type {readonly { id: string | null, label: string }[]} */
+const PROTO_TAG_FILTERS = [
+  { id: null, label: '전체' },
+  { id: '시리즈', label: '시리즈' },
+  { id: '문학', label: '문학' },
+  { id: '실용서', label: '실용서' },
+  { id: '경제경영', label: '경제경영' },
+  { id: '출판사 매뉴얼', label: '출판사 매뉴얼' },
+];
+
+/** @param {import('../../presentation/projectCardViewModel.js').ProjectCardViewModel[]} cards @param {string | null} tagFilter */
+function filterProtoCards(cards, tagFilter) {
+  if (!tagFilter) return cards;
+  if (tagFilter === '시리즈') {
+    return cards.filter((c) => c.tags.some((tag) => tag.startsWith('시리즈')));
+  }
+  return filterProjectsByTag(cards, tagFilter);
+}
 
 function duplicateCard(source, index) {
   return {
@@ -27,17 +45,13 @@ export default function MyPagePrototypeScreen() {
   const [view, setView] = useState(/** @type {ProtoView} */ ('library'));
   const [cards, setCards] = useState(MOCK_PROJECT_CARDS);
   const [activeId, setActiveId] = useState('proj-1');
-  const [expandedIds, setExpandedIds] = useState(
-    () => new Set(['proj-1']),
-  );
   const [tagFilter, setTagFilter] = useState(/** @type {string | null} */ (null));
   const [sharePreviewId, setSharePreviewId] = useState(
     /** @type {string | null} */ (null),
   );
 
-  const allTags = useMemo(() => collectProjectTags(cards), [cards]);
   const visibleCards = useMemo(
-    () => filterProjectsByTag(cards, tagFilter),
+    () => filterProtoCards(cards, tagFilter),
     [cards, tagFilter],
   );
 
@@ -56,15 +70,6 @@ export default function MyPagePrototypeScreen() {
       prev.map((c) => ({ ...c, isActive: c.id === id })),
     );
     setView('workbench');
-  }, []);
-
-  const toggleExpand = useCallback((id) => {
-    setExpandedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
   }, []);
 
   if (view === 'workbench' && activeCard) {
@@ -109,9 +114,6 @@ export default function MyPagePrototypeScreen() {
               <h1 id="proto-project-hub-title" className="mypage__page-title">
                 나의 프로젝트
               </h1>
-              <p className="mypage-proto__hub-lead">
-                명함+목차 카드 · 메타는 라이브러리 · 규칙은 작업대
-              </p>
             </div>
             <p className="mypage__project-slot-gauge">
               슬롯 <strong>{cards.length}/3</strong>
@@ -123,21 +125,14 @@ export default function MyPagePrototypeScreen() {
             role="group"
             aria-label="태그 필터"
           >
-            <button
-              type="button"
-              className={`mypage-proto__filter${tagFilter === null ? ' mypage-proto__filter--on' : ''}`}
-              onClick={() => setTagFilter(null)}
-            >
-              전체
-            </button>
-            {allTags.map((tag) => (
+            {PROTO_TAG_FILTERS.map(({ id, label }) => (
               <button
-                key={tag}
+                key={label}
                 type="button"
-                className={`mypage-proto__filter${tagFilter === tag ? ' mypage-proto__filter--on' : ''}`}
-                onClick={() => setTagFilter(tag)}
+                className={`mypage-proto__filter${tagFilter === id ? ' mypage-proto__filter--on' : ''}`}
+                onClick={() => setTagFilter(id)}
               >
-                {tag}
+                {label}
               </button>
             ))}
           </div>
@@ -147,8 +142,6 @@ export default function MyPagePrototypeScreen() {
               <ProjectLibraryCard
                 key={card.id}
                 card={card}
-                expanded={expandedIds.has(card.id)}
-                onToggleExpand={() => toggleExpand(card.id)}
                 onRename={(title) => updateCard(card.id, { title })}
                 onUpdateMeta={(patch) => updateCard(card.id, patch)}
                 onStartWork={() => handleStartWork(card.id)}
