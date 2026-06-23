@@ -27,7 +27,7 @@ export function countConsistencyUnifyRegisteredEntries(customRules) {
   let count = 0;
 
   for (const rule of customRules) {
-    if (!rule.consistencyUnifyEntry) continue;
+    if (!rule.consistencyUnifyEntry && !rule.consistencyUnifyPinned) continue;
     const tailWord = rule.tailWord?.trim();
     if (
       !tailWord ||
@@ -52,7 +52,7 @@ export function listConsistencyUnifyEntries(customRules) {
   const entries = [];
 
   for (const rule of customRules) {
-    if (!rule.consistencyUnifyEntry) continue;
+    if (!rule.consistencyUnifyEntry && !rule.consistencyUnifyPinned) continue;
     const tailWord = rule.tailWord?.trim();
     if (
       !tailWord ||

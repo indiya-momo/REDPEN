@@ -389,7 +389,7 @@ export default function ConsistencyPanel({
                   {`(선택 ${auxiliaryActiveCount}/${auxiliaryTotal})`}
                 </span>
               ) : null}{' '}
-              <span className="criteria-summary-note">※개발 중</span>
+              <span className="criteria-summary-note">※개발중</span>
             </span>
           </summary>
           <p className="auxiliary-checklist-intro">

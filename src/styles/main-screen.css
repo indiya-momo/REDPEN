@@ -718,11 +718,11 @@
 }
 
 .panel-left .consistency-unified-box {
-  padding: 12px 16px;
+  padding: calc(16px * var(--panel-ui-scale, 1));
 }
 
 .panel-left .consistency-unified-box .consistency-hint-block {
-  line-height: 1.55;
+  line-height: 1.6;
 }
 
 .panel-left .consistency-embed .tail-form {
@@ -2581,15 +2581,17 @@
 }
 
 .consistency-unified-box {
-  padding: 12px 16px;
+  padding: 16px;
   border: none;
   border-radius: var(--radius-ui);
   background: var(--color-surface-raised);
   container-type: inline-size;
   --consistency-example-font-size: calc(var(--panel-guide-font-size, 0.828rem) * 0.9);
-  --consistency-example-line-height: 1.25;
-  /* 칩(문자열) 간 gap과 동일 — 예↔검색창·검색창↔목록 간격 기준 */
-  --consistency-item-gap: 6px;
+  --consistency-example-line-height: 1.45;
+  /* 블록 내부 micro / 섹션 구분 macro */
+  --consistency-stack-gap: calc(8px * var(--panel-ui-scale, 1));
+  --consistency-section-gap: calc(14px * var(--panel-ui-scale, 1));
+  --consistency-item-gap: var(--consistency-stack-gap);
   --consistency-input-padding-block: calc(10px * var(--panel-ui-scale, 1) * 0.6);
   --consistency-register-text: var(--color-text-muted);
   --consistency-register-add-bg: var(--accent-terracotta);
@@ -2603,6 +2605,45 @@
   --consistency-subsection-col2: calc(
     (100cqi - var(--consistency-subsection-row-gap)) * 2 / 5
   );
+}
+
+/* 일관성 embed — stack(8px) / section(14px) 2단 여백 */
+.consistency-unified-box > .consistency-panel-section-title {
+  margin-bottom: var(--consistency-stack-gap);
+}
+
+.consistency-unified-box > .consistency-subsection:not(.consistency-subsection--first):not(.consistency-subsection--half),
+.consistency-unified-box > .consistency-subsection-row {
+  margin-top: var(--consistency-section-gap);
+  padding-top: var(--consistency-section-gap);
+}
+
+.consistency-unified-box .printed-page-setup__title.consistency-subsection-title {
+  margin: 0 0 var(--consistency-stack-gap);
+}
+
+.panel-left .consistency-unified-box .hint {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.panel-left .consistency-unified-box .consistency-hint-block .consistency-hint-example {
+  display: inline-block;
+  margin-top: calc(var(--consistency-stack-gap) * 0.75);
+}
+
+.panel-left .consistency-unified-box .tail-form {
+  margin-top: var(--consistency-stack-gap);
+}
+
+.panel-left .consistency-unified-box .tail-list:not(.tail-list--grid) {
+  margin-top: var(--consistency-stack-gap);
+  padding-top: 0;
+  border-top: none;
+}
+
+.consistency-unified-box .consistency-hint-badge {
+  margin-inline-end: 0.45em;
 }
 
 /* 일관성 찾기·검색창 — 다시 검수 행·아래 섹션 박스와 동일 좌우 폭 */
@@ -2764,12 +2805,6 @@
 
 .panel-left .consistency-unified-box .hint {
   font-weight: 400;
-  margin-top: 2px;
-  margin-bottom: 0;
-}
-
-.consistency-unified-box .printed-page-setup__title.consistency-subsection-title {
-  margin: 0 0 2px;
 }
 
 .consistency-hint-block {

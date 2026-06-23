@@ -90,7 +90,7 @@ export function getConsistencyUnifyOverlayForGroup(customRules, group) {
  */
 export function getConsistencyUnifyPinnedTailWord(rules) {
   for (const rule of rules) {
-    if (!rule.consistencyUnifyEntry || !rule.consistencyUnifyPinned) continue;
+    if (!rule.consistencyUnifyPinned) continue;
     const tailWord = rule.tailWord?.trim();
     if (tailWord) return tailWord;
   }

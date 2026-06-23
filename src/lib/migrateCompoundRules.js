@@ -12,7 +12,7 @@ const COMPOUND_KINDS = new Set([
 ]);
 
 /** 저장된 규칙 세트가 이 버전 미만이면 1회 재정리 */
-export const COMPOUND_MIGRATE_VERSION = 10;
+export const COMPOUND_MIGRATE_VERSION = 11;
 
 /** @param {string} tail */
 function isBadTail(tail) {
@@ -63,7 +63,14 @@ export function rebuildCompoundRules(customRules) {
 
   /** @type {Set<string>} */
   const tailWords = new Set();
-  /** @type {Map<string, { enabled: boolean, excludePrefixes: string[] }>} */
+  /** @type {Map<string, {
+   *   enabled: boolean,
+   *   excludePrefixes: string[],
+   *   consistencyLiteralEntry: boolean,
+   *   consistencyUnifyEntry: boolean,
+   *   consistencyUnifyPinned: boolean,
+   *   overlayReplace?: string,
+   * }>} */
   const meta = new Map();
 
   for (const r of withoutAuxiliary) {
@@ -73,23 +80,38 @@ export function rebuildCompoundRules(customRules) {
     }
     tailWords.add(raw);
     if (!meta.has(raw)) {
-      meta.set(raw, { enabled: true, excludePrefixes: [] });
+      meta.set(raw, {
+        enabled: true,
+        excludePrefixes: [],
+        consistencyLiteralEntry: false,
+        consistencyUnifyEntry: false,
+        consistencyUnifyPinned: false,
+      });
     }
     const row = meta.get(raw);
     if (r.enabled === false) row.enabled = false;
     if (r.excludePrefixes?.length) {
       row.excludePrefixes = r.excludePrefixes;
     }
+    if (r.consistencyLiteralEntry) row.consistencyLiteralEntry = true;
+    if (r.consistencyUnifyEntry) row.consistencyUnifyEntry = true;
+    if (r.consistencyUnifyPinned) row.consistencyUnifyPinned = true;
+    const overlayReplace = String(r.overlayReplace ?? '').trim();
+    if (overlayReplace) row.overlayReplace = overlayReplace;
   }
 
   /** @type {import('./ruleTypes.js').Rule[]} */
   const rebuilt = [];
 
   for (const tail of [...tailWords].sort((a, b) => a.localeCompare(b, 'ko'))) {
-    const { enabled, excludePrefixes } = meta.get(tail) ?? {
+    const row = meta.get(tail) ?? {
       enabled: true,
       excludePrefixes: [],
+      consistencyLiteralEntry: false,
+      consistencyUnifyEntry: false,
+      consistencyUnifyPinned: false,
     };
+    const { enabled, excludePrefixes } = row;
     const kind = classifyTail(tail);
     /** @type {import('./ruleTypes.js').Rule[]} */
     let batch = [];
@@ -105,6 +127,14 @@ export function rebuildCompoundRules(customRules) {
         ...rule,
         enabled,
         excludePrefixes,
+        ...(row.consistencyLiteralEntry
+          ? { consistencyLiteralEntry: true }
+          : {}),
+        ...(row.consistencyUnifyEntry ? { consistencyUnifyEntry: true } : {}),
+        ...(row.consistencyUnifyPinned
+          ? { consistencyUnifyPinned: true }
+          : {}),
+        ...(row.overlayReplace ? { overlayReplace: row.overlayReplace } : {}),
       })),
     );
   }
