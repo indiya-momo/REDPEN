@@ -26,6 +26,16 @@ import { clearRewardNotice } from '../lib/rewardNotice.js';
 import { getEarnedBadgeIds } from '../lib/userBadges.js';
 import { useBetaDailyQuota } from '../hooks/useBetaDailyQuota.js';
 import { useMyPageProjects } from '../hooks/useMyPageProjects.js';
+import {
+  isRuleSetsCloudEnabled,
+  saveRuleSetsCloud,
+} from '../lib/ruleSetsCloud.js';
+import {
+  loadActiveSetId,
+  loadRuleSets,
+  saveActiveSetId,
+  saveRuleSets,
+} from '../lib/ruleSetsStorage.js';
 import { buildProjectCardViewModelFromRuleSet } from '../presentation/ruleSetProjectCard.js';
 import { planMyPageProjectGrid } from '../lib/mypageProjectDisplay.js';
 import ProjectLibraryCard from '../mock/mypagePrototype/ProjectLibraryCard.jsx';
@@ -368,17 +378,13 @@ function ProjectHubSection({ uid, email }) {
               <ProjectLibraryCard
                 key={set.id}
                 card={card}
-                onRename={() => {
-                  window.alert('프로젝트 이름 변경은 준비 중입니다.');
-                }}
+                readOnly
+                showStartWork
+                onRename={() => undefined}
                 onUpdateMeta={() => undefined}
                 onStartWork={() => selectProject(set.id)}
-                onDuplicate={() => {
-                  window.alert('프로젝트 복제는 준비 중입니다.');
-                }}
-                onSharePreview={() => {
-                  window.alert('공유 미리보기는 준비 중입니다.');
-                }}
+                onDuplicate={() => undefined}
+                onSharePreview={() => undefined}
               />
             );
           })}
@@ -591,6 +597,20 @@ export default function MyPageWindowScreen({ authSession, authReady }) {
   ]);
 
   async function handleLogout() {
+    const uid = authSession?.uid?.trim() ?? '';
+    if (uid) {
+      const sets = loadRuleSets(uid);
+      const activeId = loadActiveSetId(uid);
+      saveRuleSets(sets, uid);
+      if (activeId) saveActiveSetId(activeId, uid);
+      if (isRuleSetsCloudEnabled()) {
+        try {
+          await saveRuleSetsCloud(uid, sets, activeId);
+        } catch (e) {
+          console.warn('기준 클라우드 저장 실패 (로그아웃)', e);
+        }
+      }
+    }
     await signOutUser();
     const url = new URL(import.meta.env.BASE_URL || '/', window.location.origin);
     window.location.replace(url.toString());

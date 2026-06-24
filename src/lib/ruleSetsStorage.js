@@ -1,5 +1,26 @@
-const STORAGE_KEY = 'pdf-proofread-rule-sets';
-const ACTIVE_KEY = 'pdf-proofread-active-set-id';
+export const RULE_SETS_STORAGE_KEY = 'pdf-proofread-rule-sets';
+export const RULE_SETS_ACTIVE_KEY = 'pdf-proofread-active-set-id';
+
+const LEGACY_RULE_SETS_KEY = RULE_SETS_STORAGE_KEY;
+const LEGACY_ACTIVE_KEY = RULE_SETS_ACTIVE_KEY;
+
+/**
+ * @param {string | undefined} uid
+ */
+export function ruleSetsStorageKey(uid) {
+  const id = String(uid ?? '').trim();
+  if (!id) return LEGACY_RULE_SETS_KEY;
+  return `${RULE_SETS_STORAGE_KEY}:${id}`;
+}
+
+/**
+ * @param {string | undefined} uid
+ */
+export function ruleSetsActiveStorageKey(uid) {
+  const id = String(uid ?? '').trim();
+  if (!id) return LEGACY_ACTIVE_KEY;
+  return `${RULE_SETS_ACTIVE_KEY}:${id}`;
+}
 
 /**
  * @typedef {{
@@ -49,10 +70,10 @@ export function formatRuleSetSummary({
   return date ? `${date} ${counts}` : counts;
 }
 
-/** @returns {RuleSet[]} */
-export function loadRuleSets() {
+/** @param {string} key */
+function readRuleSetsFromKey(key) {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(key);
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
@@ -62,19 +83,65 @@ export function loadRuleSets() {
   }
 }
 
-/** @param {RuleSet[]} sets */
-export function saveRuleSets(sets) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(sets));
+/**
+ * 로그인 전 공용(legacy) 키 → uid별 키로 1회 이전
+ * @param {string} uid
+ */
+export function migrateLegacyRuleSetsToUid(uid) {
+  const id = String(uid ?? '').trim();
+  if (!id) return [];
+
+  const scopedKey = ruleSetsStorageKey(id);
+  const existing = readRuleSetsFromKey(scopedKey);
+  if (existing.length) return existing;
+
+  const legacy = readRuleSetsFromKey(LEGACY_RULE_SETS_KEY);
+  if (!legacy.length) return [];
+
+  saveRuleSets(legacy, id);
+  const legacyActive = localStorage.getItem(LEGACY_ACTIVE_KEY);
+  if (legacyActive) {
+    saveActiveSetId(legacyActive, id);
+  }
+  return legacy.map((set) => ({ ...set }));
 }
 
-/** @returns {string | null} */
-export function loadActiveSetId() {
-  return localStorage.getItem(ACTIVE_KEY);
+/**
+ * @param {string | undefined} [uid]
+ * @returns {RuleSet[]}
+ */
+export function loadRuleSets(uid) {
+  const id = String(uid ?? '').trim();
+  if (id) {
+    const scoped = readRuleSetsFromKey(ruleSetsStorageKey(id));
+    if (scoped.length) return scoped;
+    return migrateLegacyRuleSetsToUid(id);
+  }
+  return readRuleSetsFromKey(LEGACY_RULE_SETS_KEY);
 }
 
-/** @param {string} id */
-export function saveActiveSetId(id) {
-  localStorage.setItem(ACTIVE_KEY, id);
+/**
+ * @param {RuleSet[]} sets
+ * @param {string | undefined} [uid]
+ */
+export function saveRuleSets(sets, uid) {
+  localStorage.setItem(ruleSetsStorageKey(uid), JSON.stringify(sets));
+}
+
+/**
+ * @param {string | undefined} [uid]
+ * @returns {string | null}
+ */
+export function loadActiveSetId(uid) {
+  return localStorage.getItem(ruleSetsActiveStorageKey(uid));
+}
+
+/**
+ * @param {string} id
+ * @param {string | undefined} [uid]
+ */
+export function saveActiveSetId(id, uid) {
+  localStorage.setItem(ruleSetsActiveStorageKey(uid), id);
 }
 
 /** @returns {string} */

@@ -44,7 +44,7 @@ import {
   CRITERIA_PRESET_LIMIT_MESSAGE,
   enforceMaxCriteriaPresets,
 } from '../lib/criteriaPresetLimit.js';
-import { mergeRuleSetsOnLogin } from '../lib/ruleSetsMerge.js';
+import { mergeRuleSetsOnLogin, dedupeSavedRuleSetsByName, mergeLocalRuleSetSources } from '../lib/ruleSetsMerge.js';
 
 const RULE_SET_AUTOSAVE_MS = 400;
 const RULE_SET_CLOUD_SYNC_MS = 800;
@@ -92,6 +92,7 @@ export function useRuleSets(authUid = '', authEmail = '') {
   const autosaveTimerRef = useRef(null);
   const cloudSyncTimerRef = useRef(null);
   const cloudHydratedUidRef = useRef('');
+  const loadedAuthUidRef = useRef('');
 
   activeSetIdRef.current = activeSetId;
   ruleSetsRef.current = ruleSets;
@@ -125,9 +126,9 @@ export function useRuleSets(authUid = '', authEmail = '') {
   }, [flushCloudRuleSetsImmediate]);
 
   const flushRuleSets = useCallback(
-    (sets, setId = activeSetIdRef.current) => {
-      saveRuleSets(sets);
-      if (setId) saveActiveSetId(setId);
+    (sets, setId = activeSetIdRef.current, uid = authUidRef.current) => {
+      saveRuleSets(sets, uid);
+      if (setId) saveActiveSetId(setId, uid);
       scheduleCloudRuleSetsSync();
     },
     [scheduleCloudRuleSetsSync],
@@ -156,21 +157,114 @@ export function useRuleSets(authUid = '', authEmail = '') {
     void flushCloudRuleSetsImmediate();
   }, [flushRuleSets, flushCloudRuleSetsImmediate]);
 
+  const flushPendingRuleSetsSaveAsync = useCallback(async () => {
+    if (autosaveTimerRef.current) {
+      clearTimeout(autosaveTimerRef.current);
+      autosaveTimerRef.current = null;
+    }
+    flushRuleSets(ruleSetsRef.current, activeSetIdRef.current);
+    await flushCloudRuleSetsImmediate();
+  }, [flushRuleSets, flushCloudRuleSetsImmediate]);
+
+  const applyProjectSwitch = useCallback(
+    (setId, { reloadFromDisk = false } = {}) => {
+      const id = String(setId ?? '').trim();
+      if (!id) return;
+
+      let sets = ruleSetsRef.current;
+      if (reloadFromDisk || !sets.some((set) => set.id === id)) {
+        sets = normalizeLoadedRuleSets(loadRuleSets(authUidRef.current));
+      }
+      if (!sets.some((set) => set.id === id)) return;
+
+      const activeChanged = id !== activeSetIdRef.current;
+      const setsChanged = sets !== ruleSetsRef.current;
+      if (!activeChanged && !setsChanged) return;
+
+      if (activeChanged) {
+        flushPendingRuleSetsSave();
+      }
+      ruleSetsRef.current = sets;
+      setRuleSets(sets);
+      setActiveSetId(id);
+      activeSetIdRef.current = id;
+      saveActiveSetId(id, authUidRef.current);
+      scheduleCloudRuleSetsSync();
+    },
+    [flushPendingRuleSetsSave, scheduleCloudRuleSetsSync],
+  );
+
   useEffect(() => {
-    const sets = normalizeLoadedRuleSets(loadRuleSets());
-    const storedActive = loadActiveSetId();
+    const uid = String(authUidRef.current ?? '').trim();
+    const sets = normalizeLoadedRuleSets(loadRuleSets(uid));
+    const storedActive = loadActiveSetId(uid);
     const activeId =
       storedActive && sets.some((s) => s.id === storedActive)
         ? storedActive
         : sets[0].id;
     ruleSetsRef.current = sets;
     activeSetIdRef.current = activeId;
-    saveRuleSets(sets);
-    saveActiveSetId(activeId);
+    loadedAuthUidRef.current = uid;
+    saveRuleSets(sets, uid);
+    saveActiveSetId(activeId, uid);
     setRuleSets(sets);
     setActiveSetId(activeId);
     setRulesReady(true);
   }, []);
+
+  // 로그인·로그아웃·계정 전환 — 이전 uid 데이터 저장 후 새 uid 네임스페이스 로드
+  useEffect(() => {
+    if (!rulesReady) return undefined;
+
+    const uid = String(authUid ?? '').trim();
+    const prev = loadedAuthUidRef.current;
+    if (prev === uid) return undefined;
+
+    let cancelled = false;
+
+    (async () => {
+      if (prev && ruleSetsRef.current.length) {
+        saveRuleSets(ruleSetsRef.current, prev);
+        if (activeSetIdRef.current) {
+          saveActiveSetId(activeSetIdRef.current, prev);
+        }
+        if (isRuleSetsCloudEnabled()) {
+          try {
+            await saveRuleSetsCloud(
+              prev,
+              ruleSetsRef.current,
+              activeSetIdRef.current,
+            );
+          } catch (e) {
+            console.warn('기준 클라우드 저장 실패 (계정 전환)', e);
+          }
+        }
+      }
+
+      if (cancelled) return;
+
+      loadedAuthUidRef.current = uid;
+      cloudHydratedUidRef.current = '';
+
+      const sets = normalizeLoadedRuleSets(loadRuleSets(uid));
+      const storedActive = loadActiveSetId(uid);
+      const activeId =
+        storedActive && sets.some((s) => s.id === storedActive)
+          ? storedActive
+          : sets[0].id;
+
+      ruleSetsRef.current = sets;
+      activeSetIdRef.current = activeId;
+      setRuleSets(sets);
+      setActiveSetId(activeId);
+      saveRuleSets(sets, uid);
+      saveActiveSetId(activeId, uid);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authUid, rulesReady]);
 
   useEffect(() => {
     return () => {
@@ -263,9 +357,13 @@ export function useRuleSets(authUid = '', authEmail = '') {
         if (cancelled) return;
 
         if (cloud?.ruleSets?.length) {
-          const localSets = normalizeLoadedRuleSets(loadRuleSets());
+          flushPendingRuleSetsSave();
+          const diskSets = normalizeLoadedRuleSets(loadRuleSets(uid));
+          const memorySets = normalizeLoadedRuleSets(ruleSetsRef.current);
+          const localSets = mergeLocalRuleSetSources(diskSets, memorySets);
           const merged = mergeRuleSetsOnLogin(localSets, cloud.ruleSets);
           let sets = normalizeLoadedRuleSets(merged);
+          sets = dedupeSavedRuleSetsByName(sets);
           sets = enforceMaxCriteriaPresets(
             sets,
             authUidRef.current,
@@ -273,15 +371,15 @@ export function useRuleSets(authUid = '', authEmail = '') {
           );
           const activeId = resolveHydratedActiveSetId(
             sets,
-            loadActiveSetId(),
+            loadActiveSetId(uid),
             cloud.activeSetId,
           );
           if (!activeId) return;
           applyRuleSets(sets, activeId);
         } else {
-          const localSets = normalizeLoadedRuleSets(loadRuleSets());
+          const localSets = normalizeLoadedRuleSets(loadRuleSets(uid));
           const activeId =
-            resolveHydratedActiveSetId(localSets, loadActiveSetId(), null) ??
+            resolveHydratedActiveSetId(localSets, loadActiveSetId(uid), null) ??
             localSets[0]?.id ??
             null;
           if (!activeId) return;
@@ -303,13 +401,9 @@ export function useRuleSets(authUid = '', authEmail = '') {
     (id) => {
       if (!id || id === activeSetIdRef.current) return;
       if (!ruleSetsRef.current.some((s) => s.id === id)) return;
-      flushPendingRuleSetsSave();
-      setActiveSetId(id);
-      activeSetIdRef.current = id;
-      saveActiveSetId(id);
-      scheduleCloudRuleSetsSync();
+      applyProjectSwitch(id);
     },
-    [flushPendingRuleSetsSave, scheduleCloudRuleSetsSync],
+    [applyProjectSwitch],
   );
 
   const handleCreateRuleSet = useCallback(() => {
@@ -485,8 +579,7 @@ export function useRuleSets(authUid = '', authEmail = '') {
           consistencyCount: countConsistencyActiveRules(saved.customRules),
         });
       }
-      alert(`「${name}」 프로젝트가 저장되었습니다.`);
-      return true;
+      return name;
     },
     [applyRuleSets, flushPendingRuleSetsSave, flushCloudRuleSetsImmediate],
   );
@@ -662,5 +755,6 @@ export function useRuleSets(authUid = '', authEmail = '') {
     handleCautionToggle,
     handleCautionSetAll,
     flushPendingRuleSetsSave,
+    flushPendingRuleSetsSaveAsync,
   };
 }
