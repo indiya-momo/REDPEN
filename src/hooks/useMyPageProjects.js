@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { LEGACY_DEFAULT_CRITERIA_HINT } from '../lib/criteriaName.js';
 import {
   countSavedCriteriaPresets,
@@ -12,19 +12,20 @@ import {
   countSpacingReviewActiveRules,
 } from '../lib/activeRuleCount.js';
 import { normalizeRuleSet } from '../lib/ruleSetNormalize.js';
-import { returnToWorkspace } from '../lib/returnToWorkspace.js';
 import {
   formatRuleSetSummary,
   loadActiveSetId,
   loadRuleSets,
   saveActiveSetId,
+  saveRuleSets,
 } from '../lib/ruleSetsStorage.js';
 import {
   isRuleSetsCloudEnabled,
   loadRuleSetsCloud,
   resolveHydratedActiveSetId,
+  saveRuleSetsCloud,
 } from '../lib/ruleSetsCloud.js';
-import { mergeRuleSetsOnLogin } from '../lib/ruleSetsMerge.js';
+import { mergeRuleSetsOnLogin, dedupeSavedRuleSetsByName } from '../lib/ruleSetsMerge.js';
 import { enforceMaxCriteriaPresets } from '../lib/criteriaPresetLimit.js';
 
 /** @param {import('../lib/ruleSetsStorage.js').RuleSet} set */
@@ -73,26 +74,34 @@ export function useMyPageProjects(uid = '', email = '') {
   );
   const [savedCount, setSavedCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const loadedSetsRef = useRef(
+    /** @type {import('../lib/ruleSetsStorage.js').RuleSet[]} */ ([]),
+  );
+  const activeSetIdRef = useRef(/** @type {string | null} */ (null));
+
+  activeSetIdRef.current = activeSetId;
 
   useEffect(() => {
     let cancelled = false;
 
     async function load() {
       setLoading(true);
-      const localSets = normalizeLoadedSets(loadRuleSets());
-      let sets = localSets;
-      let activeId = loadActiveSetId();
-
       const trimmedUid = uid.trim();
+      const localSets = normalizeLoadedSets(loadRuleSets(trimmedUid));
+      let sets = localSets;
+      let activeId = loadActiveSetId(trimmedUid);
+
       if (trimmedUid && isRuleSetsCloudEnabled()) {
         try {
           const cloud = await loadRuleSetsCloud(trimmedUid);
           if (cloud?.ruleSets?.length) {
             const merged = mergeRuleSetsOnLogin(localSets, cloud.ruleSets);
-            sets = enforceMaxCriteriaPresets(
-              normalizeLoadedSets(merged),
-              trimmedUid,
-              email,
+            sets = dedupeSavedRuleSetsByName(
+              enforceMaxCriteriaPresets(
+                normalizeLoadedSets(merged),
+                trimmedUid,
+                email,
+              ),
             );
             activeId = resolveHydratedActiveSetId(
               sets,
@@ -105,6 +114,8 @@ export function useMyPageProjects(uid = '', email = '') {
         }
       }
 
+      loadedSetsRef.current = sets;
+      activeSetIdRef.current = activeId;
       const saved = sets.filter((s) => Boolean(s.savedAt));
       if (!cancelled) {
         setProjects(saved);
@@ -120,22 +131,60 @@ export function useMyPageProjects(uid = '', email = '') {
     };
   }, [uid, email]);
 
+  const flushProjectsSaveAsync = useCallback(async () => {
+    const trimmedUid = uid.trim();
+    const sets = loadedSetsRef.current;
+    const setId = activeSetIdRef.current;
+    saveRuleSets(sets, trimmedUid);
+    if (setId) saveActiveSetId(setId, trimmedUid);
+    if (trimmedUid && isRuleSetsCloudEnabled()) {
+      try {
+        await saveRuleSetsCloud(trimmedUid, sets, setId);
+      } catch (e) {
+        console.warn('기준 클라우드 저장 실패 (마이페이지)', e);
+      }
+    }
+  }, [uid]);
+
+  /** 마이페이지 「작업하기」 — activeSetId·ruleSets만 local+cloud 저장 (메인 창 전환 없음) */
+  const selectProject = useCallback(
+    async (setId) => {
+      const trimmedUid = uid.trim();
+      const id = String(setId ?? '').trim();
+      if (!id || !loadedSetsRef.current.some((set) => set.id === id)) {
+        return false;
+      }
+
+      saveRuleSets(loadedSetsRef.current, trimmedUid);
+      saveActiveSetId(id, trimmedUid);
+      activeSetIdRef.current = id;
+      setActiveSetId(id);
+
+      if (trimmedUid && isRuleSetsCloudEnabled()) {
+        try {
+          await saveRuleSetsCloud(trimmedUid, loadedSetsRef.current, id);
+        } catch (e) {
+          console.warn('기준 클라우드 저장 실패 (작업하기)', e);
+          return false;
+        }
+      }
+      return true;
+    },
+    [uid],
+  );
+
   const exempt = isCriteriaPresetLimitExempt(uid, email);
   const maxSlots = exempt ? null : MAX_CRITERIA_PRESETS;
   const emptySlotCount = exempt
     ? 0
     : Math.max(0, MAX_CRITERIA_PRESETS - savedCount);
 
-  const selectProject = useCallback((setId) => {
-    saveActiveSetId(setId);
-    returnToWorkspace();
-  }, []);
-
   return {
     projects,
     activeSetId,
     loading,
     selectProject,
+    flushProjectsSaveAsync,
     savedCount,
     maxSlots,
     exempt,

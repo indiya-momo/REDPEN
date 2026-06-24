@@ -9,6 +9,7 @@ import {
  * @param {{
  *   card: import('../../presentation/projectCardViewModel.js').ProjectCardViewModel,
  *   readOnly?: boolean,
+ *   showStartWork?: boolean,
  *   onRename: (title: string) => void,
  *   onUpdateMeta: (patch: { memo?: string, tags?: string[] }) => void,
  *   onStartWork: () => void,
@@ -19,6 +20,7 @@ import {
 export default function ProjectLibraryCard({
   card,
   readOnly = false,
+  showStartWork = false,
   onRename,
   onUpdateMeta: _onUpdateMeta,
   onStartWork,
@@ -51,6 +53,8 @@ export default function ProjectLibraryCard({
     if (card.savedDate) return [card.savedDate];
     return ['프로젝트'];
   }, [card.tags, card.savedDate]);
+
+  const showWorkButton = showStartWork || !readOnly;
 
   return (
     <article
@@ -159,7 +163,7 @@ export default function ProjectLibraryCard({
           ))}
         </div>
 
-        {!readOnly ? (
+        {showWorkButton ? (
           <footer className="sheet-card__footer">
             <button
               type="button"
@@ -168,20 +172,24 @@ export default function ProjectLibraryCard({
             >
               이 프로젝트 작업하기
             </button>
-            <button
-              type="button"
-              className="sheet-card__btn sheet-card__btn--secondary"
-              onClick={onDuplicate}
-            >
-              복제
-            </button>
-            <button
-              type="button"
-              className="sheet-card__btn sheet-card__btn--secondary"
-              onClick={onSharePreview}
-            >
-              공유
-            </button>
+            {!readOnly ? (
+              <>
+                <button
+                  type="button"
+                  className="sheet-card__btn sheet-card__btn--secondary"
+                  onClick={onDuplicate}
+                >
+                  복제
+                </button>
+                <button
+                  type="button"
+                  className="sheet-card__btn sheet-card__btn--secondary"
+                  onClick={onSharePreview}
+                >
+                  공유
+                </button>
+              </>
+            ) : null}
           </footer>
         ) : null}
       </div>

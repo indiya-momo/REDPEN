@@ -35,19 +35,24 @@ export function resolveCloudActiveSetId(activeSetId, sets) {
 export function resolveHydratedActiveSetId(sets, localActiveId, cloudActiveId) {
   if (!sets.length) return null;
 
-  const savedNamed = [...sets]
-    .filter((set) => Boolean(set.savedAt) && (set.name || '').trim())
-    .sort(
-      (a, b) => Date.parse(b.savedAt ?? '') - Date.parse(a.savedAt ?? ''),
-    );
-
   const localId = resolveCloudActiveSetId(localActiveId, sets);
   if (localId) {
     const localSet = sets.find((set) => set.id === localId);
-    if (localSet?.savedAt && (localSet.name || '').trim()) return localId;
+    const isSavedNamed = Boolean(
+      localSet?.savedAt && (localSet.name || '').trim(),
+    );
+    // 사용자가 고른 저장 프로젝트는 savedAt 순서로 덮어쓰지 않는다.
+    if (isSavedNamed) return localId;
   }
 
-  if (savedNamed.length) return savedNamed[0].id;
+  const savedNamed = [...sets]
+    .filter((set) => Boolean(set.savedAt) && (set.name || '').trim())
+    .sort(
+      (a, b) =>
+        Date.parse(b.savedAt ?? '') - Date.parse(a.savedAt ?? ''),
+    );
+
+  if (savedNamed[0]) return savedNamed[0].id;
 
   return (
     resolveCloudActiveSetId(localActiveId, sets) ??

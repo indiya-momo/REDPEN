@@ -46,8 +46,8 @@ import {
   resolveFeedbackThankYouOnLoad,
 } from './lib/feedbackFormSubmitReturn.js';
 import { WORK_GUIDE_KEYS, workGuideStorageKey } from './lib/workGuideKeys.js';
-import { consumeReturnToMainWorkspace, markReturnToMainWorkspace } from './lib/returnToWorkspace.js';
-import { clearWorkSession } from './lib/sessionStore.js';
+import { consumeReturnToMainWorkspace, markReturnToMainWorkspace, shouldReopenMainWorkspace } from './lib/returnToWorkspace.js';
+import { clearTabSessionMarker, clearWorkSession } from './lib/sessionStore.js';
 import { clearTooltipGuideDismissed } from './lib/tooltipGuideStorage.js';
 import EventRewardLayer from './components/EventRewardLayer.jsx';
 
@@ -64,6 +64,9 @@ export default function App() {
       import.meta.env.DEV &&
       new URLSearchParams(window.location.search).get('devPdf')
     ) {
+      return 'main';
+    }
+    if (shouldReopenMainWorkspace()) {
       return 'main';
     }
     return 'welcome';
@@ -209,9 +212,24 @@ export default function App() {
     handleCautionToggle,
     handleCautionSetAll,
     flushPendingRuleSetsSave,
+    flushPendingRuleSetsSaveAsync,
   } = useRuleSets(
     authSession?.uid ?? '',
     resolveQuotaAuthEmail(authSession),
+  );
+
+  const handleSwitchSavedProject = useCallback(
+    async (setId) => {
+      if (!setId || setId === activeSetId) return;
+      await flushPendingRuleSetsSaveAsync();
+      handleSelectRuleSet(setId);
+      await flushPendingRuleSetsSaveAsync();
+      markReturnToMainWorkspace();
+      clearTabSessionMarker();
+      await clearWorkSession();
+      window.location.reload();
+    },
+    [activeSetId, flushPendingRuleSetsSaveAsync, handleSelectRuleSet],
   );
 
   const applyBonBojoSheetRefresh = useCallback(
@@ -311,6 +329,7 @@ export default function App() {
         }}
         onLogout={async () => {
           welcomeManualReturnRef.current = false;
+          await flushPendingRuleSetsSaveAsync();
           await signOutUser();
         }}
         onStart={() => {
@@ -341,7 +360,7 @@ export default function App() {
         savedAt: s.savedAt,
       }))}
       activeSetId={activeSetId}
-      onSelectRuleSet={handleSelectRuleSet}
+      onSelectRuleSet={handleSwitchSavedProject}
       onCreateRuleSet={handleCreateRuleSet}
       onDuplicateRuleSet={handleDuplicateRuleSet}
       onDeleteRuleSet={handleDeleteRuleSet}
@@ -384,7 +403,7 @@ export default function App() {
       }}
       onLogout={async () => {
         welcomeManualReturnRef.current = false;
-        flushPendingRuleSetsSave();
+        await flushPendingRuleSetsSaveAsync();
         await clearWorkSession();
         await signOutUser();
         setMainWorkTab('spelling');
@@ -394,7 +413,8 @@ export default function App() {
         markReturnToMainWorkspace();
         const url = new URL(import.meta.env.BASE_URL || '/', window.location.origin);
         url.searchParams.set('window', 'mypage');
-        window.open(url.toString(), '_blank', 'noopener');
+        // noopener 제거 — 마이페이지 뒤로가기 시 opener.focus() 사용
+        window.open(url.toString(), 'indiya-mypage');
       }}
       onOpenGuideWindow={() => {
         const url = new URL(import.meta.env.BASE_URL || '/', window.location.origin);

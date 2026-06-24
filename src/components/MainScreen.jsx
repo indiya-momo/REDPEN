@@ -25,6 +25,7 @@ import CheckResultsPanel from './CheckResultsPanel.jsx';
 import TooltipGuide from './TooltipGuide.jsx';
 import PrintedPageSetup from './PrintedPageSetup.jsx';
 import PdfCenterStage from './PdfCenterStage.jsx';
+import CriteriaSaveModal from './CriteriaSaveModal.jsx';
 import TocBodyResultsPanel from '../toc-body/components/TocBodyResultsPanel.jsx';
 import { useTocBodyCheck } from '../toc-body/hooks/useTocBodyCheck.js';
 import { useTocBodyHighlights } from '../toc-body/hooks/useTocBodyHighlights.js';
@@ -214,7 +215,7 @@ const WORK_GUIDE_2_ALIGN_CHAIN = [
  *   onCustomRulesChange: (rules: import('../lib/ruleTypes.js').Rule[]) => void,
  *   onGlobalExcludePhrasesChange: (phrases: string[]) => void,
  *   onSaveRules: () => void,
- *   onSaveCriteriaPreset: (name: string) => boolean | Promise<boolean>,
+ *   onSaveCriteriaPreset: (name: string) => false | Promise<false | string>,
  *   onDeleteCriteriaPreset: (setId: string) => boolean,
  *   onOpenWelcome: () => void,
  *   onLogout: () => void | Promise<void>,
@@ -275,6 +276,8 @@ export default function MainScreen({
   const [criteriaNameInput, setCriteriaNameInput] = useState('');
   const [criteriaPickerOpen, setCriteriaPickerOpen] = useState(false);
   const [criteriaSavePending, setCriteriaSavePending] = useState(false);
+  const [criteriaSaveModalOpen, setCriteriaSaveModalOpen] = useState(false);
+  const [criteriaSaveModalName, setCriteriaSaveModalName] = useState('');
   const criteriaPickerRef = useRef(null);
   const afterCheckRef = useRef(async () => false);
   const { panelStyle, handleRef, startDrag } = useResizablePanelWidth(
@@ -317,8 +320,13 @@ export default function MainScreen({
     if (criteriaSavePending) return;
     setCriteriaSavePending(true);
     try {
-      const saved = await onSaveCriteriaPreset(criteriaNameInput);
-      if (saved) setCriteriaPickerOpen(false);
+      const result = await onSaveCriteriaPreset(criteriaNameInput);
+      if (typeof result === 'string' && result) {
+        setCriteriaNameInput(criteriaNameForInput(result));
+        setCriteriaSaveModalName(result);
+        setCriteriaSaveModalOpen(true);
+        setCriteriaPickerOpen(false);
+      }
     } finally {
       setCriteriaSavePending(false);
     }
@@ -333,9 +341,21 @@ export default function MainScreen({
   }
 
   function selectSavedCriteria(set) {
-    onSelectRuleSet(set.id);
-    setCriteriaNameInput(criteriaNameForInput(set.name));
+    if (set.id === activeSetId) {
+      setCriteriaNameInput(criteriaNameForInput(set.name));
+      setCriteriaPickerOpen(false);
+      return;
+    }
+    const label = (set.name || '이름 없는 기준').trim();
+    if (
+      !window.confirm(
+        `「${label}」 프로젝트로 전환할까요?\n\n원고와 검사 결과는 초기화됩니다.`,
+      )
+    ) {
+      return;
+    }
     setCriteriaPickerOpen(false);
+    void Promise.resolve(onSelectRuleSet(set.id));
   }
 
   const authUid = authSession?.uid ?? '';
@@ -1900,6 +1920,11 @@ export default function MainScreen({
       </main>
       </div>
 
+      <CriteriaSaveModal
+        open={criteriaSaveModalOpen}
+        projectName={criteriaSaveModalName}
+        onClose={() => setCriteriaSaveModalOpen(false)}
+      />
     </div>
   );
 }
