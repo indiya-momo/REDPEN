@@ -10,6 +10,7 @@ import {
  *   card: import('../../presentation/projectCardViewModel.js').ProjectCardViewModel,
  *   readOnly?: boolean,
  *   showStartWork?: boolean,
+ *   onEditMeta?: () => void,
  *   onRename: (title: string) => void,
  *   onUpdateMeta: (patch: { memo?: string, tags?: string[] }) => void,
  *   onStartWork: () => void,
@@ -21,6 +22,7 @@ export default function ProjectLibraryCard({
   card,
   readOnly = false,
   showStartWork = false,
+  onEditMeta,
   onRename,
   onUpdateMeta: _onUpdateMeta,
   onStartWork,
@@ -189,6 +191,14 @@ export default function ProjectLibraryCard({
                   공유
                 </button>
               </>
+            ) : onEditMeta ? (
+              <button
+                type="button"
+                className="sheet-card__btn sheet-card__btn--secondary"
+                onClick={onEditMeta}
+              >
+                태그·메모
+              </button>
             ) : null}
           </footer>
         ) : null}

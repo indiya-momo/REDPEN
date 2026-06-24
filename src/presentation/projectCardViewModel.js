@@ -152,9 +152,56 @@ export function collectProjectTags(cards) {
   return [...set].sort((a, b) => a.localeCompare(b, 'ko'));
 }
 
+/** @type {readonly { id: string, label: string }[]} */
+export const STANDARD_PROJECT_LIBRARY_TAG_FILTERS = [
+  { id: '__series__', label: '시리즈' },
+  { id: '문학', label: '문학' },
+  { id: '실용서', label: '실용서' },
+  { id: '경제경영', label: '경제경영' },
+  { id: '출판사 매뉴얼', label: '출판사 매뉴얼' },
+];
+
 /**
  * @param {ProjectCardViewModel[]} cards
- * @param {string | null} tagFilter null = 전체
+ * @param {string | null} tagFilter null = 전체, '__series__' = 시리즈 접두
+ */
+export function filterProjectsForLibrary(cards, tagFilter) {
+  if (!tagFilter) return cards;
+  if (tagFilter === '__series__' || tagFilter === '시리즈') {
+    return cards.filter((c) =>
+      c.tags.some((tag) => tag.startsWith('시리즈')),
+    );
+  }
+  return filterProjectsByTag(cards, tagFilter);
+}
+
+/**
+ * @param {ProjectCardViewModel[]} cards
+ * @returns {readonly { id: string | null, label: string }[]}
+ */
+export function buildProjectTagFilterOptions(cards) {
+  /** @type {{ id: string | null, label: string }[]} */
+  const options = [{ id: null, label: '전체' }];
+  const seen = new Set(['__series__', '시리즈']);
+
+  for (const { id, label } of STANDARD_PROJECT_LIBRARY_TAG_FILTERS) {
+    options.push({ id, label });
+    seen.add(id);
+    seen.add(label);
+  }
+
+  for (const tag of collectProjectTags(cards)) {
+    if (seen.has(tag)) continue;
+    options.push({ id: tag, label: tag });
+    seen.add(tag);
+  }
+
+  return options;
+}
+
+/**
+ * @param {ProjectCardViewModel[]} cards
+ * @param {string | null} tagFilter
  */
 export function filterProjectsByTag(cards, tagFilter) {
   if (!tagFilter) return cards;

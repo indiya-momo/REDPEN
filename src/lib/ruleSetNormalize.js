@@ -10,6 +10,11 @@ import {
 import { applyCompoundRuleMigrations } from './migrateCompoundRules.js';
 import { ensureDefaultAuxiliaryVerbs } from './defaultAuxiliaryVerbs.js';
 import { BON_BOJO_RULES_FP } from './bonBojoRules.js';
+import {
+  normalizeProjectContext,
+  normalizeProjectMemo,
+  normalizeProjectTags,
+} from './projectMeta.js';
 
 /**
  * @param {Record<string, unknown>} set
@@ -50,5 +55,8 @@ export function normalizeRuleSet(set) {
         : null,
     tocBodyExcludePages:
       typeof set.tocBodyExcludePages === 'string' ? set.tocBodyExcludePages : '',
+    tags: normalizeProjectTags(set.tags),
+    memo: normalizeProjectMemo(set.memo),
+    projectContext: normalizeProjectContext(set.projectContext),
   };
 }

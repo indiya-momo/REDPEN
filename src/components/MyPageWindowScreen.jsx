@@ -3,7 +3,7 @@
  * App이 authSession·authReady만 전달.
  * 메인 작업창과 분리된 읽기·설정 UI (검수 플로우 끝단).
  */
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { returnToWorkspace } from '../lib/returnToWorkspace.js';
 import {
@@ -39,6 +39,11 @@ import {
 import { buildProjectCardViewModelFromRuleSet } from '../presentation/ruleSetProjectCard.js';
 import { planMyPageProjectGrid } from '../lib/mypageProjectDisplay.js';
 import ProjectLibraryCard from '../mock/mypagePrototype/ProjectLibraryCard.jsx';
+import ProjectMetaEditModal from './ProjectMetaEditModal.jsx';
+import {
+  buildProjectTagFilterOptions,
+  filterProjectsForLibrary,
+} from '../presentation/projectCardViewModel.js';
 import { criteriaNameForInput } from '../lib/criteriaName.js';
 import BadgeCollectionGrid from './BadgeCollectionGrid.jsx';
 import './my-page.css';
@@ -335,11 +340,66 @@ function ProjectHubSection({ uid, email }) {
     maxSlots,
     exempt,
     selectProject,
+    updateProjectMeta,
   } = useMyPageProjects(uid, email);
 
   const { visibleProjects, visibleEmptySlotCount } = useMemo(
     () => planMyPageProjectGrid(projects),
     [projects],
+  );
+
+  const [tagFilter, setTagFilter] = useState(/** @type {string | null} */ (null));
+  const [metaEditTarget, setMetaEditTarget] = useState(
+    /** @type {import('../presentation/projectCardViewModel.js').ProjectCardViewModel | null} */ (null),
+  );
+  const [metaSavePending, setMetaSavePending] = useState(false);
+
+  const cards = useMemo(() => {
+    try {
+      return visibleProjects.map((set) =>
+        buildProjectCardViewModelFromRuleSet(set, {
+          isActive: set.id === activeSetId,
+        }),
+      );
+    } catch (e) {
+      console.warn('프로젝트 카드 변환 실패', e);
+      return [];
+    }
+  }, [visibleProjects, activeSetId]);
+
+  const tagFilterOptions = useMemo(
+    () => buildProjectTagFilterOptions(cards),
+    [cards],
+  );
+
+  const filteredCards = useMemo(
+    () => filterProjectsForLibrary(cards, tagFilter),
+    [cards, tagFilter],
+  );
+
+  useEffect(() => {
+    if (!tagFilter) return;
+    const stillValid = tagFilterOptions.some((option) => option.id === tagFilter);
+    if (!stillValid) setTagFilter(null);
+  }, [tagFilter, tagFilterOptions]);
+
+  const closeMetaEdit = useCallback(() => {
+    if (metaSavePending) return;
+    setMetaEditTarget(null);
+  }, [metaSavePending]);
+
+  const handleSaveMeta = useCallback(
+    async (payload) => {
+      if (!metaEditTarget) return;
+      setMetaSavePending(true);
+      try {
+        const ok = await updateProjectMeta(metaEditTarget.id, payload);
+        if (ok) setMetaEditTarget(null);
+      } finally {
+        setMetaSavePending(false);
+      }
+    },
+    [metaEditTarget, updateProjectMeta],
   );
 
   const slotLabel = exempt
@@ -369,40 +429,76 @@ function ProjectHubSection({ uid, email }) {
           프로젝트를 불러오는 중…
         </p>
       ) : (
-        <div className="mypage-proto__grid">
-          {visibleProjects.map((set) => {
-            const card = buildProjectCardViewModelFromRuleSet(set, {
-              isActive: set.id === activeSetId,
-            });
-            return (
+        <>
+          <div
+            className="mypage-proto__filters"
+            role="group"
+            aria-label="태그 필터"
+          >
+            {tagFilterOptions.map(({ id, label }) => (
+              <button
+                key={label}
+                type="button"
+                className={`mypage-proto__filter${tagFilter === id ? ' mypage-proto__filter--on' : ''}`}
+                onClick={() => setTagFilter(id)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          <div className="mypage-proto__grid">
+            {filteredCards.map((card) => (
               <ProjectLibraryCard
-                key={set.id}
+                key={card.id}
                 card={card}
                 readOnly
                 showStartWork
+                onEditMeta={() => setMetaEditTarget(card)}
                 onRename={() => undefined}
                 onUpdateMeta={() => undefined}
-                onStartWork={() => selectProject(set.id)}
+                onStartWork={() => void selectProject(card.id)}
                 onDuplicate={() => undefined}
                 onSharePreview={() => undefined}
               />
-            );
-          })}
+            ))}
 
-          {Array.from({ length: visibleEmptySlotCount }, (_, index) => (
-            <div
-              key={`empty-slot-${index}`}
-              className="mypage__project-slot mypage__project-slot--empty mypage-proto__empty-slot"
-            >
-              <p className="mypage__project-slot-label">빈 슬롯</p>
-              <p className="mypage__project-slot-desc">
-                검수 화면에서 기준을 저장하면 여기에 표시됩니다.
+            {tagFilter && filteredCards.length === 0 ? (
+              <p className="mypage__project-filter-empty" role="status">
+                선택한 태그에 해당하는 프로젝트가 없습니다.
               </p>
-            </div>
-          ))}
-        </div>
+            ) : null}
+
+            {!tagFilter
+              ? Array.from({ length: visibleEmptySlotCount }, (_, index) => (
+                  <div
+                    key={`empty-slot-${index}`}
+                    className="mypage__project-slot mypage__project-slot--empty mypage-proto__empty-slot"
+                  >
+                    <p className="mypage__project-slot-label">빈 슬롯</p>
+                    <p className="mypage__project-slot-desc">
+                      검수 화면에서 기준을 저장하면 여기에 표시됩니다.
+                    </p>
+                  </div>
+                ))
+              : null}
+          </div>
+        </>
       )}
 
+      {metaEditTarget ? (
+        <ProjectMetaEditModal
+          open
+          projectTitle={metaEditTarget.title}
+          initialTags={metaEditTarget.tags}
+          initialMemo={metaEditTarget.memo ?? ''}
+          initialProofRevision={metaEditTarget.proofRevision ?? ''}
+          initialFormatLabel={metaEditTarget.formatLabel ?? ''}
+          saving={metaSavePending}
+          onClose={closeMetaEdit}
+          onSave={handleSaveMeta}
+        />
+      ) : null}
     </section>
   );
 }

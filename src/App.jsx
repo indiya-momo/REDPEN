@@ -207,6 +207,7 @@ export default function App() {
     handleSaveRules,
     handleSaveCriteriaPreset,
     handleDeleteCriteriaPreset,
+    touchActiveProjectContext,
     handleBuiltInToggle,
     handleBuiltInSetAll,
     handleCautionToggle,
@@ -394,6 +395,7 @@ export default function App() {
       onSaveRules={handleSaveRules}
       onSaveCriteriaPreset={handleSaveCriteriaPreset}
       onDeleteCriteriaPreset={handleDeleteCriteriaPreset}
+      onTouchActiveProjectContext={touchActiveProjectContext}
       onOpenWelcome={() => {
         welcomeManualReturnRef.current = true;
         flushPendingRuleSetsSave();

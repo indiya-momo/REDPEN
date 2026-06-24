@@ -35,6 +35,9 @@ export function ruleSetsActiveStorageKey(uid) {
  *   cautionEnabledPolicyVersion?: number,
  *   compoundMigrateVersion?: number,
  *   savedAt?: string,
+ *   tags?: string[],
+ *   memo?: string,
+ *   projectContext?: import('./projectMeta.js').ProjectContext,
  * }} RuleSet
  */
 
@@ -167,5 +170,10 @@ export function duplicateRuleSet(source) {
     compoundMigrateVersion: source.compoundMigrateVersion,
     spellingRulesFingerprint: source.spellingRulesFingerprint,
     savedAt: source.savedAt,
+    tags: structuredClone(source.tags ?? []),
+    memo: source.memo,
+    projectContext: source.projectContext
+      ? structuredClone(source.projectContext)
+      : undefined,
   };
 }

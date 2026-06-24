@@ -56,4 +56,29 @@ describe('buildProjectCardViewModelFromRuleSet', () => {
     expect(card.headline).toBe('맞춤법·일관성 기준을 설정하세요');
     expect(card.counts.find).toBe(0);
   });
+
+  it('tags·projectContext를 ViewModel에 매핑한다', () => {
+    const card = buildProjectCardViewModelFromRuleSet(
+      makeSet({
+        tags: [' 문학 ', '문학', '시리즈 1/3'],
+        memo: '테스트 메모',
+        projectContext: {
+          pdfPageCount: 88,
+          lastWorkedAt: '2026-06-23T09:00:00.000Z',
+          proofRevision: '3교',
+          formatLabel: '신국판',
+        },
+      }),
+    );
+
+    expect(card.tags).toEqual(['문학', '시리즈 1/3']);
+    expect(card.memo).toBe('테스트 메모');
+    expect(card.lastWork).toEqual({
+      date: '26년 6월 23일',
+      manuscriptPages: 88,
+    });
+    expect(card.createdDate).toBe('26년 6월 22일');
+    expect(card.proofRevision).toBe('3교');
+    expect(card.formatLabel).toBe('신국판');
+  });
 });

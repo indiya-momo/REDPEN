@@ -1,0 +1,99 @@
+.project-meta-edit-modal {
+  padding: 0;
+  border: none;
+  background: transparent;
+  max-width: min(24rem, calc(100vw - 2rem));
+}
+
+.project-meta-edit-modal:not([open]) {
+  display: none;
+}
+
+.project-meta-edit-modal::backdrop {
+  background: rgb(28 22 18 / 0.45);
+}
+
+.project-meta-edit-modal__panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  margin: 0;
+  padding: 1.25rem 1.35rem 1.35rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-ui-lg, 12px);
+  background: var(--color-surface-raised);
+  box-shadow: var(--shadow-panel, 0 12px 40px rgb(28 22 18 / 0.12));
+}
+
+.project-meta-edit-modal__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.project-meta-edit-modal__title {
+  margin: 0;
+  font-family: var(--font-family-title);
+  font-size: 1.15rem;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--color-text);
+}
+
+.project-meta-edit-modal__lead {
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+
+.project-meta-edit-modal__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.project-meta-edit-modal__label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.project-meta-edit-modal__input,
+.project-meta-edit-modal__textarea {
+  width: 100%;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-ui-md, 8px);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+}
+
+.project-meta-edit-modal__textarea {
+  resize: vertical;
+  min-height: 4.5rem;
+}
+
+.project-meta-edit-modal__hint {
+  font-size: 0.72rem;
+  color: var(--color-text-subtle);
+}
+
+.project-meta-edit-modal__row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.project-meta-edit-modal__field--half {
+  min-width: 0;
+}
+
+.project-meta-edit-modal__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding-top: 0.25rem;
+}
