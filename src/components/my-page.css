@@ -356,6 +356,15 @@
   color: var(--color-text-muted);
 }
 
+.mypage__project-filter-empty {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 1rem 0;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
 .mypage__project-slots {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

@@ -33,6 +33,9 @@ import {
 import { planCriteriaPresetDelete } from '../lib/criteriaPresetDelete.js';
 import { normalizeRuleSet } from '../lib/ruleSetNormalize.js';
 import {
+  mergeProjectContext,
+} from '../lib/projectMeta.js';
+import {
   isRuleSetsCloudEnabled,
   loadRuleSetsCloud,
   resolveCloudActiveSetId,
@@ -196,20 +199,34 @@ export function useRuleSets(authUid = '', authEmail = '') {
 
   useEffect(() => {
     const uid = String(authUidRef.current ?? '').trim();
-    const sets = normalizeLoadedRuleSets(loadRuleSets(uid));
-    const storedActive = loadActiveSetId(uid);
-    const activeId =
-      storedActive && sets.some((s) => s.id === storedActive)
-        ? storedActive
-        : sets[0].id;
-    ruleSetsRef.current = sets;
-    activeSetIdRef.current = activeId;
-    loadedAuthUidRef.current = uid;
-    saveRuleSets(sets, uid);
-    saveActiveSetId(activeId, uid);
-    setRuleSets(sets);
-    setActiveSetId(activeId);
-    setRulesReady(true);
+    try {
+      const sets = normalizeLoadedRuleSets(loadRuleSets(uid));
+      const storedActive = loadActiveSetId(uid);
+      const activeId =
+        storedActive && sets.some((s) => s.id === storedActive)
+          ? storedActive
+          : sets[0]?.id;
+      if (!activeId || !sets.length) {
+        setRulesReady(true);
+        return;
+      }
+      ruleSetsRef.current = sets;
+      activeSetIdRef.current = activeId;
+      loadedAuthUidRef.current = uid;
+      saveRuleSets(sets, uid);
+      saveActiveSetId(activeId, uid);
+      setRuleSets(sets);
+      setActiveSetId(activeId);
+    } catch (e) {
+      console.warn('규칙 세트 초기 로드 실패', e);
+      const fallback = normalizeLoadedRuleSets([createDefaultSet()]);
+      ruleSetsRef.current = fallback;
+      activeSetIdRef.current = fallback[0].id;
+      setRuleSets(fallback);
+      setActiveSetId(fallback[0].id);
+    } finally {
+      setRulesReady(true);
+    }
   }, []);
 
   // 로그인·로그아웃·계정 전환 — 이전 uid 데이터 저장 후 새 uid 네임스페이스 로드
@@ -477,7 +494,7 @@ export function useRuleSets(authUid = '', authEmail = '') {
 
   /** 현재 기준을 이름 붙여 목록에 저장(동일 이름이면 덮어쓰기) */
   const handleSaveCriteriaPreset = useCallback(
-    async (rawName) => {
+    async (rawName, saveOptions = {}) => {
       const sourceId = activeSetIdRef.current;
       const source = ruleSetsRef.current.find((s) => s.id === sourceId);
       if (!source) return false;
@@ -521,6 +538,13 @@ export function useRuleSets(authUid = '', authEmail = '') {
         (s) => (s.name || '').trim() === name,
       );
 
+      const snapshot = saveOptions.projectContextSnapshot;
+      const contextBase =
+        existing?.projectContext ?? sourceAfterFlush.projectContext;
+      const projectContext = snapshot
+        ? mergeProjectContext(contextBase, snapshot)
+        : contextBase;
+
       let next;
       let targetId;
       if (existing) {
@@ -532,6 +556,7 @@ export function useRuleSets(authUid = '', authEmail = '') {
                 ...config,
                 name,
                 savedAt,
+                projectContext,
               })
             : s,
         );
@@ -548,6 +573,7 @@ export function useRuleSets(authUid = '', authEmail = '') {
                   name,
                   ...config,
                   savedAt,
+                  projectContext,
                 })
               : s,
           );
@@ -558,6 +584,7 @@ export function useRuleSets(authUid = '', authEmail = '') {
             name,
             ...config,
             savedAt,
+            projectContext,
           });
           next = [...ruleSetsRef.current, created];
         }
@@ -582,6 +609,31 @@ export function useRuleSets(authUid = '', authEmail = '') {
       return name;
     },
     [applyRuleSets, flushPendingRuleSetsSave, flushCloudRuleSetsImmediate],
+  );
+
+  /** active 저장 프로젝트의 PDF·작업 메타만 갱신 (검수 완료 debounce용) */
+  const touchActiveProjectContext = useCallback(
+    (patch) => {
+      if (!patch || typeof patch !== 'object') return;
+      const sourceId = activeSetIdRef.current;
+      const sets = ruleSetsRef.current;
+      const index = sets.findIndex((s) => s.id === sourceId);
+      if (index < 0) return;
+      const source = sets[index];
+      if (!source.savedAt) return;
+
+      const projectContext = mergeProjectContext(source.projectContext, {
+        ...patch,
+        lastWorkedAt: patch.lastWorkedAt ?? new Date().toISOString(),
+      });
+      const next = sets.map((s, i) =>
+        i === index ? normalizeRuleSet({ ...s, projectContext }) : s,
+      );
+      ruleSetsRef.current = next;
+      setRuleSets(next);
+      scheduleRuleSetsSave(next);
+    },
+    [scheduleRuleSetsSave],
   );
 
   /** 저장한 기준 프리셋 삭제(목록·localStorage) */
@@ -750,6 +802,7 @@ export function useRuleSets(authUid = '', authEmail = '') {
     handleSaveRules,
     handleSaveCriteriaPreset,
     handleDeleteCriteriaPreset,
+    touchActiveProjectContext,
     handleBuiltInToggle,
     handleBuiltInSetAll,
     handleCautionToggle,

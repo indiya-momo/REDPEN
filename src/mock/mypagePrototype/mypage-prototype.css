@@ -105,6 +105,12 @@
   }
 }
 
+/* 나의 프로젝트 그리드 — 카드·빈 슬롯 15% 축소 (실·목업 공통) */
+.mypage__project-hub .mypage-proto__grid > .sheet-card,
+.mypage__project-hub .mypage-proto__grid > .mypage__project-slot {
+  zoom: 0.85;
+}
+
 /* ── Style sheet card ── */
 
 .sheet-card {
@@ -455,6 +461,16 @@
   margin-top: 0.15rem;
   padding-top: 0.55rem;
   border-top: 1px solid var(--sheet-border);
+}
+
+.sheet-card--readonly .sheet-card__footer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: stretch;
+}
+
+.sheet-card--readonly .sheet-card__btn--work {
+  grid-column: 1 / -1;
 }
 
 .sheet-card__btn {

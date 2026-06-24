@@ -51,6 +51,7 @@ import {
   subscribeAuthSession,
 } from '../lib/firebaseAuth.js';
 import { criteriaNameForInput } from '../lib/criteriaName.js';
+import { buildProjectContextSnapshot } from '../lib/projectMeta.js';
 import { getUserProfile } from '../lib/userProfileStorage.js';
 import { useUserProfileSync } from '../hooks/useUserProfileSync.js';
 import { WORK_GUIDE_KEYS } from '../lib/workGuideKeys.js';
@@ -215,8 +216,14 @@ const WORK_GUIDE_2_ALIGN_CHAIN = [
  *   onCustomRulesChange: (rules: import('../lib/ruleTypes.js').Rule[]) => void,
  *   onGlobalExcludePhrasesChange: (phrases: string[]) => void,
  *   onSaveRules: () => void,
- *   onSaveCriteriaPreset: (name: string) => false | Promise<false | string>,
+ *   onSaveCriteriaPreset: (
+ *     name: string,
+ *     options?: { projectContextSnapshot?: import('../lib/projectMeta.js').ProjectContext },
+ *   ) => false | Promise<false | string>,
  *   onDeleteCriteriaPreset: (setId: string) => boolean,
+ *   onTouchActiveProjectContext?: (
+ *     patch: Partial<import('../lib/projectMeta.js').ProjectContext>,
+ *   ) => void,
  *   onOpenWelcome: () => void,
  *   onLogout: () => void | Promise<void>,
  *   onOpenMyPageWindow: () => void,
@@ -254,6 +261,7 @@ export default function MainScreen({
   onSaveRules,
   onSaveCriteriaPreset,
   onDeleteCriteriaPreset,
+  onTouchActiveProjectContext,
   onOpenWelcome,
   onLogout,
   onOpenMyPageWindow,
@@ -315,22 +323,6 @@ export default function MainScreen({
     document.addEventListener('pointerdown', handlePointerDown);
     return () => document.removeEventListener('pointerdown', handlePointerDown);
   }, [criteriaPickerOpen]);
-
-  async function handleSaveCriteria() {
-    if (criteriaSavePending) return;
-    setCriteriaSavePending(true);
-    try {
-      const result = await onSaveCriteriaPreset(criteriaNameInput);
-      if (typeof result === 'string' && result) {
-        setCriteriaNameInput(criteriaNameForInput(result));
-        setCriteriaSaveModalName(result);
-        setCriteriaSaveModalOpen(true);
-        setCriteriaPickerOpen(false);
-      }
-    } finally {
-      setCriteriaSavePending(false);
-    }
-  }
 
   function handleDeleteCriteria(setId) {
     const deleted = onDeleteCriteriaPreset(setId);
@@ -643,9 +635,93 @@ export default function MainScreen({
     [tocCheck.results],
   );
 
+  const handleSaveCriteria = useCallback(async () => {
+    if (criteriaSavePending) return;
+    setCriteriaSavePending(true);
+    try {
+      const snapshot = buildProjectContextSnapshot({
+        pdfFileName: pdf.pdfFileName,
+        pdfPageCount: pdf.pdf?.numPages,
+        pdfSizeBytes: pdf.pdfByteLength,
+        lastSpellingFindingCount: ruleCheck.spellingCheckDone
+          ? spellingTabTotalFindings
+          : undefined,
+        lastConsistencyFindingCount: ruleCheck.consistencyCheckDone
+          ? consistencyTabTotalFindings
+          : undefined,
+      });
+      const result = await onSaveCriteriaPreset(criteriaNameInput, {
+        projectContextSnapshot: snapshot,
+      });
+      if (typeof result === 'string' && result) {
+        setCriteriaNameInput(criteriaNameForInput(result));
+        setCriteriaSaveModalName(result);
+        setCriteriaSaveModalOpen(true);
+        setCriteriaPickerOpen(false);
+      }
+    } finally {
+      setCriteriaSavePending(false);
+    }
+  }, [
+    criteriaSavePending,
+    criteriaNameInput,
+    onSaveCriteriaPreset,
+    pdf.pdf,
+    pdf.pdfFileName,
+    pdf.pdfByteLength,
+    ruleCheck.spellingCheckDone,
+    ruleCheck.consistencyCheckDone,
+    spellingTabTotalFindings,
+    consistencyTabTotalFindings,
+  ]);
+
   const consistencyWorkDone =
     (tocBodyCheckEnabled && tocCheck.checkDone) ||
     ruleCheck.consistencyCheckDone;
+
+  useEffect(() => {
+    if (!onTouchActiveProjectContext || !activeRuleSet?.savedAt) return undefined;
+    if (!ruleCheck.spellingCheckDone && !consistencyWorkDone) return undefined;
+
+    const timer = window.setTimeout(() => {
+      const snapshot = buildProjectContextSnapshot({
+        pdfFileName: pdf.pdfFileName,
+        pdfPageCount: pdf.pdf?.numPages,
+        pdfSizeBytes: pdf.pdfByteLength,
+        lastSpellingFindingCount: ruleCheck.spellingCheckDone
+          ? spellingTabTotalFindings
+          : undefined,
+        lastConsistencyFindingCount: ruleCheck.consistencyCheckDone
+          ? consistencyTabTotalFindings
+          : undefined,
+      });
+      if (!snapshot) {
+        onTouchActiveProjectContext({
+          lastSpellingFindingCount: ruleCheck.spellingCheckDone
+            ? spellingTabTotalFindings
+            : undefined,
+          lastConsistencyFindingCount: ruleCheck.consistencyCheckDone
+            ? consistencyTabTotalFindings
+            : undefined,
+        });
+        return;
+      }
+      onTouchActiveProjectContext(snapshot);
+    }, 800);
+
+    return () => window.clearTimeout(timer);
+  }, [
+    activeRuleSet?.savedAt,
+    consistencyWorkDone,
+    onTouchActiveProjectContext,
+    pdf.pdf,
+    pdf.pdfFileName,
+    pdf.pdfByteLength,
+    ruleCheck.consistencyCheckDone,
+    ruleCheck.spellingCheckDone,
+    consistencyTabTotalFindings,
+    spellingTabTotalFindings,
+  ]);
 
   const showTocResultsPanel =
     tocBodyCheckEnabled &&

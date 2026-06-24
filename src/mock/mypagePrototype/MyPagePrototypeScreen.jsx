@@ -2,7 +2,8 @@ import { useCallback, useMemo, useState } from 'react';
 import '../../components/my-page.css';
 import './mypage-prototype.css';
 import {
-  filterProjectsByTag,
+  buildProjectTagFilterOptions,
+  filterProjectsForLibrary,
 } from '../../presentation/projectCardViewModel.js';
 import { MOCK_PROJECT_CARDS } from './mockProjectCards.js';
 import ProjectLibraryCard from './ProjectLibraryCard.jsx';
@@ -10,25 +11,6 @@ import SharePreviewModal from './SharePreviewModal.jsx';
 import WorkbenchBarMock from './WorkbenchBarMock.jsx';
 
 /** @typedef {'library' | 'workbench'} ProtoView */
-
-/** @type {readonly { id: string | null, label: string }[]} */
-const PROTO_TAG_FILTERS = [
-  { id: null, label: '전체' },
-  { id: '시리즈', label: '시리즈' },
-  { id: '문학', label: '문학' },
-  { id: '실용서', label: '실용서' },
-  { id: '경제경영', label: '경제경영' },
-  { id: '출판사 매뉴얼', label: '출판사 매뉴얼' },
-];
-
-/** @param {import('../../presentation/projectCardViewModel.js').ProjectCardViewModel[]} cards @param {string | null} tagFilter */
-function filterProtoCards(cards, tagFilter) {
-  if (!tagFilter) return cards;
-  if (tagFilter === '시리즈') {
-    return cards.filter((c) => c.tags.some((tag) => tag.startsWith('시리즈')));
-  }
-  return filterProjectsByTag(cards, tagFilter);
-}
 
 function duplicateCard(source, index) {
   return {
@@ -50,8 +32,13 @@ export default function MyPagePrototypeScreen() {
     /** @type {string | null} */ (null),
   );
 
+  const tagFilterOptions = useMemo(
+    () => buildProjectTagFilterOptions(cards),
+    [cards],
+  );
+
   const visibleCards = useMemo(
-    () => filterProtoCards(cards, tagFilter),
+    () => filterProjectsForLibrary(cards, tagFilter),
     [cards, tagFilter],
   );
 
@@ -125,7 +112,7 @@ export default function MyPagePrototypeScreen() {
             role="group"
             aria-label="태그 필터"
           >
-            {PROTO_TAG_FILTERS.map(({ id, label }) => (
+            {tagFilterOptions.map(({ id, label }) => (
               <button
                 key={label}
                 type="button"

@@ -18,6 +18,8 @@ import {
 } from '../lib/auxiliaryVerbRegister.js';
 import { buildProjectCardSummary } from '../lib/projectCardSummary.js';
 import { criteriaNameForInput } from '../lib/criteriaName.js';
+import { formatRuleSetSavedDate } from '../lib/ruleSetsStorage.js';
+import { normalizeProjectTags } from '../lib/projectMeta.js';
 
 /** @param {import('../lib/ruleSetsStorage.js').RuleSet} set */
 function projectTitle(set) {
@@ -98,6 +100,25 @@ function buildHeadline(counts, excludePhrases) {
     : '맞춤법·일관성 기준을 설정하세요';
 }
 
+/** @param {import('../lib/ruleSetsStorage.js').RuleSet} set */
+function buildLastWork(set) {
+  const ctx = set.projectContext;
+  if (!ctx?.lastWorkedAt) return undefined;
+  const date = formatRuleSetSavedDate(ctx.lastWorkedAt);
+  if (!date) return undefined;
+  return {
+    date,
+    manuscriptPages:
+      typeof ctx.pdfPageCount === 'number' ? ctx.pdfPageCount : undefined,
+  };
+}
+
+/** @param {import('../lib/ruleSetsStorage.js').RuleSet} set */
+function buildCreatedDate(set) {
+  if (!set.savedAt) return undefined;
+  return formatRuleSetSavedDate(set.savedAt) || undefined;
+}
+
 /**
  * 저장된 RuleSet → Library 카드 ViewModel (로컬·클라oud hydrate 데이터용).
  *
@@ -136,11 +157,16 @@ export function buildProjectCardViewModelFromRuleSet(set, options = {}) {
   return {
     id: set.id,
     title: projectTitle(set),
-    tags: [],
+    tags: normalizeProjectTags(set.tags),
+    memo: set.memo,
     headline: buildHeadline(counts, set.globalExcludePhrases),
     highlights: [],
     counts,
     chipPreview,
+    lastWork: buildLastWork(set),
+    createdDate: buildCreatedDate(set),
+    proofRevision: set.projectContext?.proofRevision,
+    formatLabel: set.projectContext?.formatLabel,
     savedDate: summary.savedDate,
     isActive: options.isActive === true,
     dirty: false,

@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildProjectCardPillarPreviews,
+  buildProjectTagFilterOptions,
   collectProjectTags,
   filterProjectsByTag,
+  filterProjectsForLibrary,
   formatProjectCardMetaLine,
   formatProjectCardScheduleLines,
   formatProjectCardTitleLine,
@@ -71,5 +73,21 @@ describe('projectCardViewModel helpers', () => {
     expect(collectProjectTags(cards)).toEqual(['1권', '문학', '실용서']);
     expect(filterProjectsByTag(cards, '실용서')).toHaveLength(1);
     expect(filterProjectsByTag(cards, null)).toHaveLength(2);
+  });
+
+  it('buildProjectTagFilterOptions always includes standard filters', () => {
+    const options = buildProjectTagFilterOptions([]);
+    expect(options[0]).toEqual({ id: null, label: '전체' });
+    expect(options.map((o) => o.label)).toContain('문학');
+    expect(options.map((o) => o.label)).toContain('시리즈');
+  });
+
+  it('filterProjectsForLibrary handles series prefix', () => {
+    const cards = [
+      sample,
+      { ...sample, id: 'b', tags: ['시리즈 2/5'] },
+    ];
+    expect(filterProjectsForLibrary(cards, '__series__')).toHaveLength(1);
+    expect(filterProjectsForLibrary(cards, '시리즈')).toHaveLength(1);
   });
 });
