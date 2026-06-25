@@ -1,3 +1,5 @@
+import { AUXILIARY_VERB_FEATURE_LABEL } from './bonBojoRules.js';
+
 /** @param {number} count */
 export function formatCategoryFindingCount(count) {
   return `(${count}건)`;
@@ -30,6 +32,7 @@ export function formatSpellingResultsSummaryLine({
 /**
  * @param {{
  *   literalWithFindings: number,
+ *   unifyWithFindings?: number,
  *   commonStringWithFindings: number,
  *   auxiliaryWithFindings: number,
  *   totalFindings: number,
@@ -37,14 +40,16 @@ export function formatSpellingResultsSummaryLine({
  */
 export function formatConsistencyResultsSummaryLine({
   literalWithFindings,
+  unifyWithFindings = 0,
   commonStringWithFindings,
   auxiliaryWithFindings,
   totalFindings,
 }) {
   return (
     `일관성 찾기${formatCategoryFindingCount(literalWithFindings)}, ` +
+    `통일형 찾기${formatCategoryFindingCount(unifyWithFindings)}, ` +
     `공통 문자열 찾기${formatCategoryFindingCount(commonStringWithFindings)}, ` +
-    `본용언 + 보조용언 표기${formatCategoryFindingCount(auxiliaryWithFindings)} ` +
+    `${AUXILIARY_VERB_FEATURE_LABEL}${formatCategoryFindingCount(auxiliaryWithFindings)} ` +
     `전체 발견 ${formatTotalFindingsToken(totalFindings)}`
   );
 }

@@ -5,6 +5,10 @@ import {
   countsTowardSpellingQuota,
   isBuiltInRuleEnabled,
 } from '../lib/builtInRules.js';
+import {
+  buildSpellingRuleBundles,
+  groupRulesByDivider,
+} from '../lib/spellingRuleBundles.js';
 import DetailsChevron from './DetailsChevron.jsx';
 
 /**
@@ -38,36 +42,12 @@ export default function BuiltinSpellingPanel({
     }
   }, [someChecked]);
 
-  /**
-   * dividerGroup이 있으면 같은 키끼리 묶고, 없으면 단독 묶음으로 처리
-   * @param {import('../lib/ruleTypes.js').Rule[]} rules
-   */
-  function groupRulesByDivider(rules) {
-    /** @type {{ key: string, rules: import('../lib/ruleTypes.js').Rule[] }[]} */
-    const groups = [];
-    for (let i = 0; i < rules.length; i += 1) {
-      const rule = rules[i];
-      const key = String(rule.dividerGroup ?? '').trim();
-      if (!key) {
-        groups.push({ key: `__single_${rule.find}_${i}`, rules: [rule] });
-        continue;
-      }
-      const prev = groups[groups.length - 1];
-      if (prev && prev.key === key) {
-        prev.rules.push(rule);
-      } else {
-        groups.push({ key, rules: [rule] });
-      }
-    }
-    return groups;
-  }
-
   const groupedGuideRules = useMemo(
     () => groupRulesByDivider(guideRules),
     [guideRules],
   );
-  const groupedQuotaRules = useMemo(
-    () => groupRulesByDivider(quotaRules),
+  const quotaBundles = useMemo(
+    () => buildSpellingRuleBundles(quotaRules),
     [quotaRules],
   );
 
@@ -89,7 +69,6 @@ export default function BuiltinSpellingPanel({
     );
     return (
       <div
-        key={rule.find}
         className={`builtin-rule-row-wrap builtin-rule-item${noQuota ? ' builtin-rule-row-wrap--no-quota' : ''}`}
       >
         <div className="rule-row builtin-rule-row">
@@ -126,66 +105,105 @@ export default function BuiltinSpellingPanel({
   }
 
   /**
+   * @param {import('../lib/ruleTypes.js').Rule[]} rules
+   * @param {string} groupStateKey
+   */
+  function renderRuleGrid(rules, groupStateKey) {
+    const cols = 3;
+    const activeFind = activeTipByGroup[groupStateKey] ?? null;
+    const activeRule =
+      activeFind && rules.some((r) => r.find === activeFind)
+        ? rules.find((r) => r.find === activeFind) ?? null
+        : null;
+    const activeTip = String(activeRule?.tip ?? '').trim();
+    const activeIndex = activeFind
+      ? rules.findIndex((r) => r.find === activeFind)
+      : -1;
+    const rowEndIndex =
+      activeIndex >= 0
+        ? Math.min(
+            rules.length - 1,
+            Math.floor(activeIndex / cols) * cols + (cols - 1),
+          )
+        : -1;
+    const afterFind = rowEndIndex >= 0 ? rules[rowEndIndex]?.find : null;
+
+    return (
+      <div className={`builtin-rule-group builtin-rule-group--cols-${cols}`}>
+        {rules.map((rule) => {
+          const tipOpen = activeFind === rule.find;
+          return (
+            <Fragment key={rule.find}>
+              <div className="builtin-rule-entry-wrap">
+                <div className="builtin-rule-entry">
+                  {renderRuleRow(
+                    rule,
+                    tipOpen,
+                    () =>
+                      setActiveTipByGroup((prev) => ({
+                        ...prev,
+                        [groupStateKey]:
+                          prev[groupStateKey] === rule.find ? null : rule.find,
+                      })),
+                  )}
+                </div>
+              </div>
+              {activeTip && afterFind === rule.find ? (
+                <div className="builtin-rule-tip-inline">{activeTip}</div>
+              ) : null}
+            </Fragment>
+          );
+        })}
+      </div>
+    );
+  }
+
+  /**
+   * guideRules — 예전 flat 3열 그리드
    * @param {{ key: string, rules: import('../lib/ruleTypes.js').Rule[] }[]} groups
    * @param {'guide' | 'quota'} scope
    */
-  function renderRuleGroups(groups, scope) {
+  function renderFlatRuleGroups(groups, scope) {
     return groups.map((group, index) => {
       const groupStateKey = `${scope}:${group.key}`;
-      const activeFind = activeTipByGroup[groupStateKey] ?? null;
       const next = groups[index + 1];
       const currentKey = String(group.rules[0]?.dividerGroup ?? '').trim();
       const nextKey = String(next?.rules?.[0]?.dividerGroup ?? '').trim();
       const showDividerAfter =
         currentKey !== '' && nextKey !== '' && currentKey !== nextKey;
-      const activeRule =
-        activeFind && group.rules.some((r) => r.find === activeFind)
-          ? group.rules.find((r) => r.find === activeFind) ?? null
-          : null;
-      const activeTip = String(activeRule?.tip ?? '').trim();
-      const cols = 3;
-      const activeIndex = activeFind
-        ? group.rules.findIndex((r) => r.find === activeFind)
-        : -1;
-      const rowEndIndex =
-        activeIndex >= 0
-          ? Math.min(
-              group.rules.length - 1,
-              Math.floor(activeIndex / cols) * cols + (cols - 1),
-            )
-          : -1;
-      const afterFind = rowEndIndex >= 0 ? group.rules[rowEndIndex]?.find : null;
       return (
         <li
           key={group.key}
-          className={`builtin-rule-group builtin-rule-group--cols-${cols}${showDividerAfter ? ' builtin-rule-group--divider-after' : ''}`}
+          className={showDividerAfter ? 'builtin-rule-group--divider-after' : undefined}
         >
-          {group.rules.map((rule) => {
-            const tipOpen = activeFind === rule.find;
-            return (
-              <Fragment key={rule.find}>
-                <div className="builtin-rule-entry-wrap">
-                  <div className="builtin-rule-entry">
-                    {renderRuleRow(
-                      rule,
-                      tipOpen,
-                      () =>
-                        setActiveTipByGroup((prev) => ({
-                          ...prev,
-                          [groupStateKey]:
-                            prev[groupStateKey] === rule.find ? null : rule.find,
-                        })),
-                    )}
-                  </div>
-                </div>
-                {activeTip && afterFind === rule.find ? (
-                  <div className="builtin-rule-tip-inline">
-                    {activeTip}
-                  </div>
-                ) : null}
-              </Fragment>
-            );
-          })}
+          {renderRuleGrid(group.rules, groupStateKey)}
+        </li>
+      );
+    });
+  }
+
+  /**
+   * quotaRules — 묶음 아코디언 (기본 접힘, 3열)
+   */
+  function renderQuotaBundles() {
+    return quotaBundles.map((bundle) => {
+      const groupStateKey = `quota:${bundle.id}`;
+
+      return (
+        <li key={bundle.id} className="builtin-rule-bundle-item">
+          <details className="builtin-rule-bundle">
+            <summary className="builtin-rule-bundle-summary">
+              <DetailsChevron />
+              <span className="builtin-rule-bundle-icon" aria-hidden="true">
+                📁
+              </span>
+              <span className="builtin-rule-bundle-title">{bundle.label}</span>
+              <span className="builtin-rule-bundle-meta">{bundle.ruleCount}</span>
+            </summary>
+            <div className="builtin-rule-bundle-body">
+              {renderRuleGrid(bundle.rules, groupStateKey)}
+            </div>
+          </details>
         </li>
       );
     });
@@ -213,18 +231,15 @@ export default function BuiltinSpellingPanel({
           <span className="panel-criteria-heading-meta">
             {`(선택 ${enabled}/${total})`}
           </span>
-          <span className="criteria-summary-note">※ 추가중</span>
         </span>
       </summary>
       {guideRules.length > 0 ? (
-        <>
-          <ul className="rule-list builtin-rule-list builtin-rule-list--guide">
-            {renderRuleGroups(groupedGuideRules, 'guide')}
-          </ul>
-        </>
+        <ul className="rule-list builtin-rule-list builtin-rule-list--guide">
+          {renderFlatRuleGroups(groupedGuideRules, 'guide')}
+        </ul>
       ) : null}
-      <ul className="rule-list builtin-rule-list">
-        {renderRuleGroups(groupedQuotaRules, 'quota')}
+      <ul className="rule-list builtin-rule-list builtin-rule-list--bundles">
+        {renderQuotaBundles()}
       </ul>
     </details>
   );

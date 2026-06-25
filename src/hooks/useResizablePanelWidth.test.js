@@ -47,7 +47,7 @@ describe('clampPanelLeftWidth', () => {
     expect(clampPanelLeftWidth(900, 2000)).toBe(PANEL_LEFT_MAX_WIDTH);
   });
 
-  it('작업 화면 기본 폭은 540px이다', () => {
-    expect(PANEL_LEFT_DEFAULT_WIDTH).toBe(540);
+  it('작업 화면 기본 폭은 500px이다', () => {
+    expect(PANEL_LEFT_DEFAULT_WIDTH).toBe(500);
   });
 });

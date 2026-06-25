@@ -4,10 +4,47 @@ import { getBuiltInTip } from '../lib/builtInRules.js';
 import { formatSystemPageLabel } from '../lib/printedPageDisplay.js';
 import { cautionResultChipLabel } from '../lib/cautionRules.js';
 import { getConsistencyHighlightTip, getConsistencyResultCardParts } from '../lib/consistencyHighlightTip.js';
-import {
-  formatCategoryFindingCount,
-  formatTotalFindingsToken,
-} from '../lib/checkResultSummaryFormat.js';
+import { AUXILIARY_VERB_BADGE_LABEL } from '../lib/bonBojoRules.js';
+
+/**
+ * @param {{ count: number, shownCount?: number, className?: string }} props
+ */
+function ResultFindingsCountCircle({
+  count,
+  shownCount = count,
+  className = '',
+}) {
+  if (shownCount < count) {
+    return (
+      <span
+        className={`result-card-findings-count result-card-findings-count--partial ${className}`.trim()}
+      >
+        [표시 {shownCount}/{count}]
+      </span>
+    );
+  }
+
+  return (
+    <span
+      className={`result-findings-count-circle ${className}`.trim()}
+      aria-label={`${count}건`}
+    >
+      {count}
+    </span>
+  );
+}
+
+/**
+ * @param {{ badge: string, count: number }} props
+ */
+function ResultHeaderStat({ badge, count }) {
+  return (
+    <span className="results-header__stat">
+      <span className="results-header-badge">{badge}</span>
+      <span className="results-header__stat-count">{count}건</span>
+    </span>
+  );
+}
 
 /**
 
@@ -22,9 +59,16 @@ import {
  *   totalFindings: number,
  *   cautionWithFindingsCount?: number,
  *   builtinWithFindingsCount?: number,
+ *   cautionCriteriaSelected?: boolean,
+ *   builtinCriteriaSelected?: boolean,
  *   literalWithFindingsCount?: number,
+ *   unifyWithFindingsCount?: number,
  *   commonStringWithFindingsCount?: number,
  *   auxiliaryWithFindingsCount?: number,
+ *   literalCriteriaSelected?: boolean,
+ *   unifyCriteriaSelected?: boolean,
+ *   commonStringCriteriaSelected?: boolean,
+ *   auxiliaryCriteriaSelected?: boolean,
  * }} props
  */
 function ResultHeaderSummary({
@@ -34,56 +78,103 @@ function ResultHeaderSummary({
   totalFindings,
   cautionWithFindingsCount = 0,
   builtinWithFindingsCount = 0,
+  cautionCriteriaSelected = false,
+  builtinCriteriaSelected = false,
   literalWithFindingsCount = 0,
+  unifyWithFindingsCount = 0,
   commonStringWithFindingsCount = 0,
   auxiliaryWithFindingsCount = 0,
+  literalCriteriaSelected = false,
+  unifyCriteriaSelected = false,
+  commonStringCriteriaSelected = false,
+  auxiliaryCriteriaSelected = false,
 }) {
-  if (viewSource === 'spelling' && spellingCheckDone) {
-    return (
-      <div className="results-header">
-        <span className="results-header__applied">
-          편집자 검토 필요{formatCategoryFindingCount(cautionWithFindingsCount)},{' '}
-          맞춤법 규칙{formatCategoryFindingCount(builtinWithFindingsCount)}{' '}
-        </span>
-        <span className="results-header__total-findings">
-          전체 발견{' '}
-          <span className="result-card-findings-count">
-            {formatTotalFindingsToken(totalFindings)}
-          </span>
-        </span>
+  const totalFindingsNode = (
+    <span className="results-header__total-findings">
+      전체 발견{' '}
+      <ResultFindingsCountCircle
+        count={totalFindings}
+        className="results-header__total-count"
+      />
+    </span>
+  );
+
+  const renderCategoryHeader = (categoryStats) => (
+    <div className="results-header">
+      <div className="results-header__stats">
+        {categoryStats}
       </div>
-    );
+      {totalFindingsNode}
+    </div>
+  );
+
+  if (viewSource === 'spelling' && spellingCheckDone) {
+    const categoryStats = [
+        cautionCriteriaSelected ? (
+          <ResultHeaderStat
+            key="caution"
+            badge="편집자 검토"
+            count={cautionWithFindingsCount}
+          />
+        ) : null,
+        builtinCriteriaSelected ? (
+          <ResultHeaderStat
+            key="builtin"
+            badge="맞춤법"
+            count={builtinWithFindingsCount}
+          />
+        ) : null,
+    ].filter(Boolean);
+
+    return renderCategoryHeader(categoryStats);
   }
 
   if (viewSource === 'consistency' && spellingCheckDone) {
-    return (
-      <div className="results-header">
-        <span className="results-header__applied">
-          일관성 찾기{formatCategoryFindingCount(literalWithFindingsCount)},{' '}
-          공통 문자열 찾기{formatCategoryFindingCount(commonStringWithFindingsCount)},{' '}
-          본용언 + 보조용언 표기
-          {formatCategoryFindingCount(auxiliaryWithFindingsCount)}{' '}
-        </span>
-        <span className="results-header__total-findings">
-          전체 발견{' '}
-          <span className="result-card-findings-count">
-            {formatTotalFindingsToken(totalFindings)}
-          </span>
-        </span>
-      </div>
-    );
+    const categoryStats = [
+        literalCriteriaSelected ? (
+          <ResultHeaderStat
+            key="literal"
+            badge="일관성 찾기"
+            count={literalWithFindingsCount}
+          />
+        ) : null,
+        unifyCriteriaSelected ? (
+          <ResultHeaderStat
+            key="unify"
+            badge="통일형 찾기"
+            count={unifyWithFindingsCount}
+          />
+        ) : null,
+        commonStringCriteriaSelected ? (
+          <ResultHeaderStat
+            key="common"
+            badge="공통 문자열 찾기"
+            count={commonStringWithFindingsCount}
+          />
+        ) : null,
+        auxiliaryCriteriaSelected ? (
+          <ResultHeaderStat
+            key="auxiliary"
+            badge={AUXILIARY_VERB_BADGE_LABEL}
+            count={auxiliaryWithFindingsCount}
+          />
+        ) : null,
+    ].filter(Boolean);
+
+    return renderCategoryHeader(categoryStats);
   }
 
   return (
     <div className="results-header">
-      <span className="results-header__applied">
+      <div className="results-header__stats">
         기준 <span className="results-header__rule-chip">{ruleCount}</span> 적용
-      </span>{' '}
+      </div>
       <span className="results-header__total-findings">
         전체 발견 기준{' '}
-        <span className="result-card-findings-count">
-          {totalFindings}
-        </span>
+        <ResultFindingsCountCircle
+          count={totalFindings}
+          className="results-header__total-count"
+        />
       </span>
     </div>
   );
@@ -99,9 +190,16 @@ function ResultHeaderSummary({
  *   viewSource: 'spelling' | 'consistency',
  *   cautionWithFindingsCount?: number,
  *   builtinWithFindingsCount?: number,
+ *   cautionCriteriaSelected?: boolean,
+ *   builtinCriteriaSelected?: boolean,
  *   literalWithFindingsCount?: number,
+ *   unifyWithFindingsCount?: number,
  *   commonStringWithFindingsCount?: number,
  *   auxiliaryWithFindingsCount?: number,
+ *   literalCriteriaSelected?: boolean,
+ *   unifyCriteriaSelected?: boolean,
+ *   commonStringCriteriaSelected?: boolean,
+ *   auxiliaryCriteriaSelected?: boolean,
  *   spellingCheckDone: boolean,
  *   isGroupVisible: (source: 'spelling' | 'consistency', group: import('../lib/ruleEngine.js').GroupedResult) => boolean,
  *   groupVisibilityMode?: (source: 'spelling' | 'consistency', group: import('../lib/ruleEngine.js').GroupedResult) => 'visible' | 'partial' | 'hidden',
@@ -115,6 +213,7 @@ function ResultHeaderSummary({
  *   onSelectPageInGroup: (pageNum: number, instances: import('../lib/ruleEngine.js').MatchInstance[], source: 'spelling' | 'consistency') => void,
  *   selectedInstance?: import('../lib/ruleEngine.js').MatchInstance | null,
  *   formatPageLabel?: (systemPage: number) => string,
+ *   customRules?: import('../lib/ruleTypes.js').Rule[],
  * }} props
  */
 export default function CheckResultsPanel({
@@ -126,9 +225,16 @@ export default function CheckResultsPanel({
   viewSource,
   cautionWithFindingsCount = 0,
   builtinWithFindingsCount = 0,
+  cautionCriteriaSelected = false,
+  builtinCriteriaSelected = false,
   literalWithFindingsCount = 0,
+  unifyWithFindingsCount = 0,
   commonStringWithFindingsCount = 0,
   auxiliaryWithFindingsCount = 0,
+  literalCriteriaSelected = false,
+  unifyCriteriaSelected = false,
+  commonStringCriteriaSelected = false,
+  auxiliaryCriteriaSelected = false,
   spellingCheckDone,
   isGroupVisible,
   groupVisibilityMode,
@@ -142,6 +248,7 @@ export default function CheckResultsPanel({
   onSelectPageInGroup,
   selectedInstance = null,
   formatPageLabel: formatPageLabelProp,
+  customRules = [],
 }) {
   const pageLabel = formatPageLabelProp ?? formatSystemPageLabel;
 
@@ -165,9 +272,16 @@ export default function CheckResultsPanel({
             totalFindings={totalFindings}
             cautionWithFindingsCount={cautionWithFindingsCount}
             builtinWithFindingsCount={builtinWithFindingsCount}
+            cautionCriteriaSelected={cautionCriteriaSelected}
+            builtinCriteriaSelected={builtinCriteriaSelected}
             literalWithFindingsCount={literalWithFindingsCount}
+            unifyWithFindingsCount={unifyWithFindingsCount}
             commonStringWithFindingsCount={commonStringWithFindingsCount}
             auxiliaryWithFindingsCount={auxiliaryWithFindingsCount}
+            literalCriteriaSelected={literalCriteriaSelected}
+            unifyCriteriaSelected={unifyCriteriaSelected}
+            commonStringCriteriaSelected={commonStringCriteriaSelected}
+            auxiliaryCriteriaSelected={auxiliaryCriteriaSelected}
           />
           <ul className="results-list">
             {entries.map(({ group, source }) => {
@@ -192,7 +306,7 @@ export default function CheckResultsPanel({
                 (source === 'spelling' && !isCaution
                   ? getBuiltInTip(group.find, group.replace)
                   : isConsistency
-                    ? getConsistencyHighlightTip(group)
+                    ? getConsistencyHighlightTip(group, customRules)
                     : '');
               const selected = isSameGroupAsSelected(group, source);
 
@@ -237,7 +351,7 @@ export default function CheckResultsPanel({
                         <span className="result-rule">
                           {isConsistency ? (() => {
                             const { badge, label } =
-                              getConsistencyResultCardParts(group);
+                              getConsistencyResultCardParts(group, customRules);
                             return (
                               <>
                                 <span className="consistency-badge-inline">
@@ -255,27 +369,30 @@ export default function CheckResultsPanel({
                             );
                           })() : isCaution ? (
                             <>
-                              <span className="caution-badge-inline">검토</span>{' '}
+                              <span className="caution-badge-inline">
+                                편집자 검토
+                              </span>{' '}
                               <span className="caution-result-chip">
                                 {cautionResultChipLabel(group)}
                               </span>
                             </>
                           ) : first ? (
-                            `${first.matchedText} → ${first.suggestedText}`
+                            <>
+                              <span className="spelling-badge-inline">맞춤법</span>{' '}
+                              <span className="spelling-result-chip">
+                                {`${first.matchedText} → ${first.suggestedText}`}
+                              </span>
+                            </>
                           ) : (
                             group.label
                           )}
                         </span>
                       </div>
-                      {isConsistency || count > 1 ? (
-                        <span className="result-card-findings-count">
-                          {count === 0
-                            ? '[0]'
-                            : shownCount < count
-                              ? `[표시 ${shownCount}/${count}]`
-                              : `[${count}]`}
-                        </span>
-                      ) : null}
+                      <ResultFindingsCountCircle
+                        count={count}
+                        shownCount={shownCount}
+                        className="result-card-head__findings-count"
+                      />
                     </div>
                     {(tipText && !isConsistency) || group.instances.length > 0 ? (
                       <div className="result-card-detail">

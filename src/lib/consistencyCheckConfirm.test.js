@@ -58,7 +58,41 @@ describe('countConsistencyCheckActiveRules', () => {
           tailWord: '가다',
         },
       ]),
-    ).toEqual({ literalActive: 1, commonStringActive: 1, auxiliaryActive: 2 });
+    ).toEqual({
+      literalActive: 1,
+      unifyActive: 0,
+      commonStringActive: 1,
+      auxiliaryActive: 2,
+      excludeActive: 0,
+    });
+  });
+
+  it('통일형·검수 제외 항목을 분리해 센다', () => {
+    expect(
+      countConsistencyCheckActiveRules(
+        [
+          {
+            enabled: true,
+            patternKind: 'compound-find',
+            tailWord: '미국 정부',
+            consistencyUnifyEntry: true,
+          },
+          {
+            enabled: true,
+            patternKind: 'compound-find',
+            tailWord: '세계경제',
+            consistencyLiteralEntry: true,
+          },
+        ],
+        ['제외어'],
+      ),
+    ).toEqual({
+      literalActive: 1,
+      unifyActive: 1,
+      commonStringActive: 0,
+      auxiliaryActive: 0,
+      excludeActive: 1,
+    });
   });
 });
 
@@ -89,8 +123,11 @@ describe('confirmConsistencyCheckBeforeRun', () => {
         tabLimit: 2,
         literalActive: 0,
         literalTotal: 0,
+        unifyActive: 0,
+        unifyTotal: 0,
         commonStringActive: 1,
         commonStringTotal: 1,
+        excludeActive: 0,
         auxiliaryActive: 1,
         auxiliaryTotal: 1,
       }),
@@ -108,8 +145,39 @@ describe('countConsistencyGroupsWithFindings', () => {
       ]),
     ).toEqual({
       literalWithFindings: 1,
+      unifyWithFindings: 0,
       commonStringWithFindings: 0,
       auxiliaryWithFindings: 1,
+    });
+  });
+
+  it('통일형·일관성 찾기를 분리해 센다', () => {
+    const customRules = [
+      {
+        patternKind: 'compound-find',
+        tailWord: '미국 정부',
+        consistencyUnifyEntry: true,
+      },
+      {
+        patternKind: 'compound-find',
+        tailWord: '세계경제',
+        consistencyLiteralEntry: true,
+      },
+    ];
+    expect(
+      countConsistencyGroupsWithFindings(
+        [
+          { patternKind: 'compound-find', tailWord: '미국 정부', instances: [{}] },
+          { patternKind: 'compound-find', tailWord: '세계경제', instances: [{}] },
+          { patternKind: 'compound-find', tailWord: '세계경제', instances: [] },
+        ],
+        customRules,
+      ),
+    ).toEqual({
+      literalWithFindings: 1,
+      unifyWithFindings: 1,
+      commonStringWithFindings: 0,
+      auxiliaryWithFindings: 0,
     });
   });
 });
@@ -122,8 +190,11 @@ describe('formatConsistencyCheckConfirmMessage', () => {
         tabLimit: 1,
         literalActive: 3,
         literalTotal: 8,
+        unifyActive: 1,
+        unifyTotal: 2,
         commonStringActive: 1,
         commonStringTotal: 4,
+        excludeActive: 1,
         auxiliaryActive: 2,
         auxiliaryTotal: 10,
       }),
@@ -131,7 +202,7 @@ describe('formatConsistencyCheckConfirmMessage', () => {
       '[일관성 검수 안내]\n' +
         '\n' +
         '오늘 일관성 검수는 1회(한도 1회) 가능합니다\n' +
-        '일관성 찾기(3건), 공통 문자열 찾기(1건), 본용언 + 보조용언 표기(2/10건)\n' +
+        '일관성 찾기(3건), 통일형 만들기(1건), 공통 문자열 찾기(1건), 검수 제외 항목(1건), 본용언(-아/어) + 보조용언 표기(2/10건)\n' +
         '\n' +
         '검수를 진행할까요?',
     );
@@ -144,8 +215,11 @@ describe('formatConsistencyCheckConfirmMessage', () => {
         tabLimit: 1,
         literalActive: 0,
         literalTotal: 0,
+        unifyActive: 0,
+        unifyTotal: 0,
         commonStringActive: 0,
         commonStringTotal: 0,
+        excludeActive: 0,
         auxiliaryActive: 10,
         auxiliaryTotal: 10,
       }),
@@ -153,7 +227,7 @@ describe('formatConsistencyCheckConfirmMessage', () => {
       '[일관성 검수 안내]\n' +
         '\n' +
         '오늘 일관성 검수는 1회(한도 1회) 가능합니다\n' +
-        '일관성 찾기(없음), 공통 문자열 찾기(없음), 본용언 + 보조용언 표기(10/10건)\n' +
+        '일관성 찾기(없음), 통일형 만들기(없음), 공통 문자열 찾기(없음), 검수 제외 항목(없음), 본용언(-아/어) + 보조용언 표기(10/10건)\n' +
         '\n' +
         '검수를 진행할까요?',
     );
@@ -165,13 +239,14 @@ describe('formatConsistencyCheckCompleteMessage', () => {
     expect(
       formatConsistencyCheckCompleteMessage({
         literalWithFindings: 2,
+        unifyWithFindings: 0,
         commonStringWithFindings: 1,
         auxiliaryWithFindings: 1,
         totalFindings: 40,
       }),
     ).toBe(
       '검수를 진행했습니다\n' +
-        '일관성 찾기(2건), 공통 문자열 찾기(1건), 본용언 + 보조용언 표기(1건) 전체 발견 [40]',
+        '일관성 찾기(2건), 통일형 찾기(0건), 공통 문자열 찾기(1건), 본용언(-아/어) + 보조용언 표기(1건) 전체 발견 [40]',
     );
   });
 });
@@ -192,6 +267,7 @@ describe('alertConsistencyCheckAfterRun', () => {
     expect(alertMock).toHaveBeenCalledWith(
       formatConsistencyCheckCompleteMessage({
         literalWithFindings: 0,
+        unifyWithFindings: 0,
         commonStringWithFindings: 1,
         auxiliaryWithFindings: 1,
         totalFindings: 3,

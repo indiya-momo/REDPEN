@@ -62,7 +62,7 @@ describe('pdfPublishGate', () => {
     const pages = [
       {
         pageNum: 1,
-        text: 'x'.repeat(900) + ' 우리 나라 맞춤법 ',
+        text: 'x'.repeat(900) + ' 가을 밤 맞춤법 ',
         items: [],
       },
     ];

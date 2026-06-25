@@ -164,7 +164,7 @@ describe('ruleEngine', () => {
   it('auxiliary-verb — PDF 줄 검사에서 붙임(만들어내) 오탐 없음', () => {
     const rules = buildAuxiliaryVerbFindRules('어 내').map((r) => ({
       ...r,
-      label: '(아/어) + 내다',
+      label: '본(-아/어) + 내다',
       bonBojoItemId: 'verb-naeda',
     }));
     const page = {

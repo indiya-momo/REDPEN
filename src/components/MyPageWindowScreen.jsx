@@ -3,7 +3,7 @@
  * App이 authSession·authReady만 전달.
  * 메인 작업창과 분리된 읽기·설정 UI (검수 플로우 끝단).
  */
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { returnToWorkspace } from '../lib/returnToWorkspace.js';
 import {
@@ -26,10 +26,28 @@ import { clearRewardNotice } from '../lib/rewardNotice.js';
 import { getEarnedBadgeIds } from '../lib/userBadges.js';
 import { useBetaDailyQuota } from '../hooks/useBetaDailyQuota.js';
 import { useMyPageProjects } from '../hooks/useMyPageProjects.js';
-import { buildProjectCardSummary } from '../lib/projectCardSummary.js';
-import { criteriaNameForInput } from '../lib/criteriaName.js';
+import {
+  isRuleSetsCloudEnabled,
+  saveRuleSetsCloud,
+} from '../lib/ruleSetsCloud.js';
+import {
+  loadActiveSetId,
+  loadRuleSets,
+  saveActiveSetId,
+  saveRuleSets,
+} from '../lib/ruleSetsStorage.js';
+import { buildProjectCardViewModelFromRuleSet } from '../presentation/ruleSetProjectCard.js';
+import { planMyPageProjectGrid } from '../lib/mypageProjectDisplay.js';
+import ProjectLibraryCard from '../mock/mypagePrototype/ProjectLibraryCard.jsx';
+import ProjectMetaEditModal from './ProjectMetaEditModal.jsx';
+import {
+  buildProjectTagFilterOptions,
+  filterProjectsForLibrary,
+} from '../presentation/projectCardViewModel.js';
 import BadgeCollectionGrid from './BadgeCollectionGrid.jsx';
+import { isMyPageProjectHubEnabled } from '../lib/featureFlags.js';
 import './my-page.css';
+import '../mock/mypagePrototype/mypage-prototype.css';
 
 const SIDEBAR_NAV = [
   { id: 'profile', label: '회원 정보' },
@@ -113,12 +131,6 @@ function getRecentUsageEntries(loginAtMs, limit = USAGE_PAGE_LIMIT) {
   return entries
     .sort((a, b) => b.atMs - a.atMs)
     .slice(0, limit);
-}
-
-/** @param {import('../lib/ruleSetsStorage.js').RuleSet} set */
-function projectDisplayName(set) {
-  const name = criteriaNameForInput(set.name);
-  return name || '이름 없는 프로젝트';
 }
 
 function RecentUsageTable({ entries }) {
@@ -321,8 +333,108 @@ function ProjectHubSection({ uid, email }) {
     savedCount,
     maxSlots,
     exempt,
-    emptySlotCount,
+    selectProject,
+    renameProject,
+    duplicateProject,
+    updateProjectMeta,
+    atSlotLimit,
   } = useMyPageProjects(uid, email);
+
+  const { visibleProjects, visibleEmptySlotCount } = useMemo(
+    () => planMyPageProjectGrid(projects),
+    [projects],
+  );
+
+  const [tagFilter, setTagFilter] = useState(/** @type {string | null} */ (null));
+  const [metaEditTarget, setMetaEditTarget] = useState(
+    /** @type {import('../presentation/projectCardViewModel.js').ProjectCardViewModel | null} */ (null),
+  );
+  const [metaSavePending, setMetaSavePending] = useState(false);
+
+  const cards = useMemo(
+    () =>
+      visibleProjects.map((set) =>
+        buildProjectCardViewModelFromRuleSet(set, {
+          isActive: set.id === activeSetId,
+        }),
+      ),
+    [visibleProjects, activeSetId],
+  );
+
+  const tagFilterOptions = useMemo(
+    () => buildProjectTagFilterOptions(cards),
+    [cards],
+  );
+
+  const filteredCards = useMemo(
+    () => filterProjectsForLibrary(cards, tagFilter),
+    [cards, tagFilter],
+  );
+
+  useEffect(() => {
+    if (!tagFilter) return;
+    const stillValid = tagFilterOptions.some((option) => option.id === tagFilter);
+    if (!stillValid) setTagFilter(null);
+  }, [tagFilter, tagFilterOptions]);
+
+  const closeMetaEdit = useCallback(() => {
+    if (metaSavePending) return;
+    setMetaEditTarget(null);
+  }, [metaSavePending]);
+
+  const handleSaveMeta = useCallback(
+    async (payload) => {
+      if (!metaEditTarget) return;
+      setMetaSavePending(true);
+      try {
+        const ok = await updateProjectMeta(metaEditTarget.id, payload);
+        if (ok) setMetaEditTarget(null);
+      } finally {
+        setMetaSavePending(false);
+      }
+    },
+    [metaEditTarget, updateProjectMeta],
+  );
+
+  const handleRename = useCallback(
+    async (cardId, title) => {
+      const result = await renameProject(cardId, title);
+      if (!result.ok && result.message) {
+        window.alert(result.message);
+      }
+    },
+    [renameProject],
+  );
+
+  const handleDuplicate = useCallback(
+    async (cardId) => {
+      if (atSlotLimit) {
+        window.alert(
+          '프로젝트는 계정당 1개만 저장할 수 있습니다. 빈 슬롯이 있을 때 복제할 수 있습니다.',
+        );
+        return;
+      }
+      const result = await duplicateProject(cardId);
+      if (!result.ok && result.message) {
+        window.alert(result.message);
+      }
+    },
+    [atSlotLimit, duplicateProject],
+  );
+
+  const handleStartWork = useCallback(
+    async (cardId) => {
+      const result = await selectProject(cardId);
+      if (!result.ok) {
+        window.alert('프로젝트 선택을 저장하지 못했습니다. 다시 시도해 주세요.');
+      }
+    },
+    [selectProject],
+  );
+
+  const handleSharePreview = useCallback(() => {
+    window.alert('공유 미리보기는 준비 중입니다.');
+  }, []);
 
   const slotLabel = exempt
     ? `${savedCount}개`
@@ -339,9 +451,6 @@ function ProjectHubSection({ uid, email }) {
             <h1 id="mypage-project-hub-title" className="mypage__page-title">
               나의 프로젝트
             </h1>
-            <span className="mypage__project-preparing">
-              - 프로젝트를 관리하고 회원과 공유합니다(준비중)
-            </span>
           </div>
         </div>
         <p className="mypage__project-slot-gauge" aria-live="polite">
@@ -354,81 +463,100 @@ function ProjectHubSection({ uid, email }) {
           프로젝트를 불러오는 중…
         </p>
       ) : (
-        <div className="mypage__project-slots">
-          {projects.map((set) => {
-            const isActive = set.id === activeSetId;
-            const summary = buildProjectCardSummary(set);
-            return (
-              <article
-                key={set.id}
-                className={`mypage__project-card${isActive ? ' mypage__project-card--active' : ''}`}
-              >
-                <div className="mypage__project-card-head">
-                  <h2 className="mypage__project-name">
-                    {projectDisplayName(set)}
-                  </h2>
-                  {summary.savedDate ? (
-                    <span className="mypage__project-date-badge">
-                      {summary.savedDate}
-                    </span>
-                  ) : null}
-                </div>
-                <dl className="mypage__project-spec">
-                  <div className="mypage__project-spec-row">
-                    <dt className="mypage__project-spec-label">맞춤법 검수</dt>
-                    <dd className="mypage__project-spec-value">
-                      편집자 검토 필요({summary.spelling.editorReview}건), 맞춤법({summary.spelling.spelling}건)
-                    </dd>
-                  </div>
-                  <div className="mypage__project-spec-row">
-                    <dt className="mypage__project-spec-label">일관성 검수</dt>
-                    <dd className="mypage__project-spec-value">
-                      일관성 찾기({summary.consistency.find}), 공통 문자열 찾기 ({summary.consistency.commonString}), 검수 제외 단어 '{summary.consistency.excludeWords}'
-                    </dd>
-                  </div>
-                  <div className="mypage__project-spec-row">
-                    <dt className="mypage__project-spec-label">
-                      본용언 + 보조용언 표기
-                    </dt>
-                    <dd className="mypage__project-spec-value">
-                      {summary.auxiliary}
-                    </dd>
-                  </div>
-                </dl>
-              </article>
-            );
-          })}
-
-          {Array.from({ length: emptySlotCount }, (_, index) => (
-            <div
-              key={`empty-slot-${index}`}
-              className="mypage__project-slot mypage__project-slot--empty"
-            >
-              <p className="mypage__project-slot-label">빈 슬롯</p>
-              <p className="mypage__project-slot-desc">
-                검수 화면에서 기준을 저장하면 여기에 표시됩니다.
-              </p>
-            </div>
-          ))}
-
-          {!loading && projects.length === 0 && emptySlotCount === 0 ? (
-            <div className="mypage__project-empty">
-              <p className="mypage__empty-title">저장된 프로젝트가 없습니다.</p>
-              <p className="mypage__empty-desc">
-                검수 화면에서 맞춤법·일관성 기준을 저장해 주세요.
-              </p>
+        <>
+          <div
+            className="mypage-proto__filters"
+            role="group"
+            aria-label="태그 필터"
+          >
+            {tagFilterOptions.map(({ id, label }) => (
               <button
+                key={label}
                 type="button"
-                className="mypage__project-load"
-                onClick={returnToWorkspace}
+                className={`mypage-proto__filter${tagFilter === id ? ' mypage-proto__filter--on' : ''}`}
+                onClick={() => setTagFilter(id)}
               >
-                검수 화면으로 이동
+                {label}
               </button>
-            </div>
-          ) : null}
-        </div>
+            ))}
+          </div>
+
+          <div className="mypage-proto__grid">
+            {filteredCards.map((card) => (
+              <ProjectLibraryCard
+                key={card.id}
+                card={card}
+                showStartWork
+                onRename={(title) => void handleRename(card.id, title)}
+                onDuplicate={() => void handleDuplicate(card.id)}
+                onSharePreview={handleSharePreview}
+                onEditMeta={() => setMetaEditTarget(card)}
+                onStartWork={() => void handleStartWork(card.id)}
+              />
+            ))}
+
+            {tagFilter && filteredCards.length === 0 ? (
+              <p className="mypage__project-filter-empty" role="status">
+                선택한 태그에 해당하는 프로젝트가 없습니다.
+              </p>
+            ) : null}
+
+            {!tagFilter
+              ? Array.from({ length: visibleEmptySlotCount }, (_, index) => (
+                  <div
+                    key={`empty-slot-${index}`}
+                    className="mypage__project-slot mypage__project-slot--empty mypage-proto__empty-slot"
+                  >
+                    <p className="mypage__project-slot-label">빈 슬롯</p>
+                    <p className="mypage__project-slot-desc">
+                      검수 화면에서 기준을 저장하면 여기에 표시됩니다.
+                    </p>
+                  </div>
+                ))
+              : null}
+          </div>
+        </>
       )}
 
+      {metaEditTarget ? (
+        <ProjectMetaEditModal
+          open
+          projectTitle={metaEditTarget.title}
+          initialTags={metaEditTarget.tags}
+          initialMemo={metaEditTarget.memo ?? ''}
+          initialProofRevision={metaEditTarget.proofRevision ?? ''}
+          initialFormatLabel={metaEditTarget.formatLabel ?? ''}
+          saving={metaSavePending}
+          onClose={closeMetaEdit}
+          onSave={handleSaveMeta}
+        />
+      ) : null}
+    </section>
+  );
+}
+
+function ProjectHubPlaceholderSection() {
+  return (
+    <section
+      className="mypage__card mypage__project-hub mypage__card--disabled"
+      aria-labelledby="mypage-project-hub-title"
+      aria-disabled="true"
+    >
+      <div className="mypage__project-hub-head">
+        <div className="mypage__project-hub-title-row">
+          <h1 id="mypage-project-hub-title" className="mypage__page-title">
+            나의 프로젝트
+          </h1>
+        </div>
+      </div>
+      <div className="mypage__empty mypage__empty--disabled">
+        <p className="mypage__empty-title">
+          프로젝트 관리 화면을 준비하고 있습니다.
+        </p>
+        <p className="mypage__empty-desc">
+          지금은 검수 화면에서 프로젝트를 저장·전환할 수 있습니다.
+        </p>
+      </div>
     </section>
   );
 }
@@ -623,6 +751,20 @@ export default function MyPageWindowScreen({ authSession, authReady }) {
   ]);
 
   async function handleLogout() {
+    const uid = authSession?.uid?.trim() ?? '';
+    if (uid) {
+      const sets = loadRuleSets(uid);
+      const activeId = loadActiveSetId(uid);
+      saveRuleSets(sets, uid);
+      if (activeId) saveActiveSetId(activeId, uid);
+      if (isRuleSetsCloudEnabled()) {
+        try {
+          await saveRuleSetsCloud(uid, sets, activeId);
+        } catch (e) {
+          console.warn('기준 클라우드 저장 실패 (로그아웃)', e);
+        }
+      }
+    }
     await signOutUser();
     const url = new URL(import.meta.env.BASE_URL || '/', window.location.origin);
     window.location.replace(url.toString());
@@ -735,7 +877,11 @@ export default function MyPageWindowScreen({ authSession, authReady }) {
               <MemberBenefitTierBanner quota={quota} authUid={authSession.uid} />
               <MyBenefitsSection quota={quota} />
             </div>
-            <ProjectHubSection uid={authSession.uid} email={quotaEmail} />
+            {isMyPageProjectHubEnabled() ? (
+              <ProjectHubSection uid={authSession.uid} email={quotaEmail} />
+            ) : (
+              <ProjectHubPlaceholderSection />
+            )}
             <div className="mypage__overview-secondary">
               <OverviewBadgePanel
                 badges={badges}

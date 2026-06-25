@@ -8,6 +8,7 @@ import {
   ChevronDown,
   FilePlus,
   House,
+  Loader2,
   LogOut,
   MessageSquare,
   Save,
@@ -24,6 +25,7 @@ import CheckResultsPanel from './CheckResultsPanel.jsx';
 import TooltipGuide from './TooltipGuide.jsx';
 import PrintedPageSetup from './PrintedPageSetup.jsx';
 import PdfCenterStage from './PdfCenterStage.jsx';
+import CriteriaSaveModal from './CriteriaSaveModal.jsx';
 import TocBodyResultsPanel from '../toc-body/components/TocBodyResultsPanel.jsx';
 import { useTocBodyCheck } from '../toc-body/hooks/useTocBodyCheck.js';
 import { useTocBodyHighlights } from '../toc-body/hooks/useTocBodyHighlights.js';
@@ -49,6 +51,7 @@ import {
   subscribeAuthSession,
 } from '../lib/firebaseAuth.js';
 import { criteriaNameForInput } from '../lib/criteriaName.js';
+import { buildProjectContextWorkPatch } from '../lib/projectMeta.js';
 import { getUserProfile } from '../lib/userProfileStorage.js';
 import { useUserProfileSync } from '../hooks/useUserProfileSync.js';
 import { WORK_GUIDE_KEYS } from '../lib/workGuideKeys.js';
@@ -58,7 +61,11 @@ import { useRewardNotice } from '../hooks/useRewardNotice.js';
 import { daysSinceJoin, syncProfileBadges } from '../lib/badgeGrants.js';
 import { isLoginRequiredForChecks } from '../lib/checkAuthGate.js';
 import { resolveQuotaAuthEmail, assertBetaDailyExportOrAlert } from '../lib/betaDailyQuota.js';
-import { countConsistencyGroupsWithFindings } from '../lib/consistencyCheckConfirm.js';
+import {
+  countBuiltInActiveRules,
+  countSpacingReviewActiveRules,
+} from '../lib/activeRuleCount.js';
+import { countConsistencyCheckActiveRules, countConsistencyGroupsWithFindings } from '../lib/consistencyCheckConfirm.js';
 import { countSpellingGroupsWithFindings } from '../lib/spellingCheckConfirm.js';
 import { formatRuleSetSavedDate } from '../lib/ruleSetsStorage.js';
 import {
@@ -213,8 +220,14 @@ const WORK_GUIDE_2_ALIGN_CHAIN = [
  *   onCustomRulesChange: (rules: import('../lib/ruleTypes.js').Rule[]) => void,
  *   onGlobalExcludePhrasesChange: (phrases: string[]) => void,
  *   onSaveRules: () => void,
- *   onSaveCriteriaPreset: (name: string) => boolean,
+ *   onSaveCriteriaPreset: (
+ *     name: string,
+ *     options?: { projectContextSnapshot?: import('../lib/projectMeta.js').ProjectContext },
+ *   ) => false | Promise<false | string>,
  *   onDeleteCriteriaPreset: (setId: string) => boolean,
+ *   onTouchActiveProjectContext?: (
+ *     patch: Partial<import('../lib/projectMeta.js').ProjectContext>,
+ *   ) => void,
  *   onOpenWelcome: () => void,
  *   onLogout: () => void | Promise<void>,
  *   onOpenMyPageWindow: () => void,
@@ -252,6 +265,7 @@ export default function MainScreen({
   onSaveRules,
   onSaveCriteriaPreset,
   onDeleteCriteriaPreset,
+  onTouchActiveProjectContext,
   onOpenWelcome,
   onLogout,
   onOpenMyPageWindow,
@@ -273,6 +287,9 @@ export default function MainScreen({
   const [authSession, setAuthSession] = useState(() => getCurrentUserSession());
   const [criteriaNameInput, setCriteriaNameInput] = useState('');
   const [criteriaPickerOpen, setCriteriaPickerOpen] = useState(false);
+  const [criteriaSavePending, setCriteriaSavePending] = useState(false);
+  const [criteriaSaveModalOpen, setCriteriaSaveModalOpen] = useState(false);
+  const [criteriaSaveModalName, setCriteriaSaveModalName] = useState('');
   const criteriaPickerRef = useRef(null);
   const afterCheckRef = useRef(async () => false);
   const { panelStyle, handleRef, startDrag } = useResizablePanelWidth(
@@ -311,11 +328,6 @@ export default function MainScreen({
     return () => document.removeEventListener('pointerdown', handlePointerDown);
   }, [criteriaPickerOpen]);
 
-  function handleSaveCriteria() {
-    onSaveCriteriaPreset(criteriaNameInput);
-    setCriteriaPickerOpen(false);
-  }
-
   function handleDeleteCriteria(setId) {
     const deleted = onDeleteCriteriaPreset(setId);
     if (!deleted) return;
@@ -325,9 +337,21 @@ export default function MainScreen({
   }
 
   function selectSavedCriteria(set) {
-    onSelectRuleSet(set.id);
-    setCriteriaNameInput(criteriaNameForInput(set.name));
+    if (set.id === activeSetId) {
+      setCriteriaNameInput(criteriaNameForInput(set.name));
+      setCriteriaPickerOpen(false);
+      return;
+    }
+    const label = (set.name || '이름 없는 기준').trim();
+    if (
+      !window.confirm(
+        `「${label}」 프로젝트로 전환할까요?\n\n원고와 검사 결과는 초기화됩니다.`,
+      )
+    ) {
+      return;
+    }
     setCriteriaPickerOpen(false);
+    void Promise.resolve(onSelectRuleSet(set.id));
   }
 
   const authUid = authSession?.uid ?? '';
@@ -525,6 +549,19 @@ export default function MainScreen({
     ruleCheck.clearSpellingCheckState();
   }, [ruleCheck]);
 
+  const prevActiveSetIdRef = useRef(null);
+  useEffect(() => {
+    if (!activeSetId) return;
+    if (prevActiveSetIdRef.current === null) {
+      prevActiveSetIdRef.current = activeSetId;
+      return;
+    }
+    if (prevActiveSetIdRef.current === activeSetId) return;
+    prevActiveSetIdRef.current = activeSetId;
+    clearConsistencyTabWork();
+    clearSpellingTabWork();
+  }, [activeSetId, clearConsistencyTabWork, clearSpellingTabWork]);
+
   const ruleHighlights = useHighlights({
     currentPage: pdf.currentPage,
     currentPageData: pdf.currentPageData,
@@ -534,6 +571,7 @@ export default function MainScreen({
     highlightTab: workTab === 'spelling' ? 'spelling' : 'consistency',
     activeSource: ruleCheck.activeSource,
     selectedInstance: ruleCheck.selectedInstance,
+    customRules,
   });
 
   const tocHighlights = useTocBodyHighlights({
@@ -586,9 +624,35 @@ export default function MainScreen({
     [ruleCheck.spellingResults],
   );
 
+  const spellingCriteriaSelection = useMemo(
+    () => ({
+      cautionSelected:
+        countSpacingReviewActiveRules({ cautionEnabled }) > 0,
+      builtinSelected: countBuiltInActiveRules({ builtInEnabled }) > 0,
+    }),
+    [cautionEnabled, builtInEnabled],
+  );
+
+  const consistencyCriteriaSelection = useMemo(() => {
+    const active = countConsistencyCheckActiveRules(
+      customRules,
+      globalExcludePhrases,
+    );
+    return {
+      literalSelected: active.literalActive > 0,
+      unifySelected: active.unifyActive > 0,
+      commonStringSelected: active.commonStringActive > 0,
+      auxiliarySelected: active.auxiliaryActive > 0,
+    };
+  }, [customRules, globalExcludePhrases]);
+
   const consistencyGroupsWithFindings = useMemo(
-    () => countConsistencyGroupsWithFindings(ruleCheck.consistencyResults),
-    [ruleCheck.consistencyResults],
+    () =>
+      countConsistencyGroupsWithFindings(
+        ruleCheck.consistencyResults,
+        customRules,
+      ),
+    [ruleCheck.consistencyResults, customRules],
   );
 
   const consistencyTabTotalFindings = useMemo(
@@ -601,9 +665,78 @@ export default function MainScreen({
     [tocCheck.results],
   );
 
+  const handleSaveCriteria = useCallback(async () => {
+    if (criteriaSavePending) return;
+    setCriteriaSavePending(true);
+    try {
+      const patch = buildProjectContextWorkPatch({
+        pdfFileName: pdf.pdfFileName,
+        pdfPageCount: pdf.pdf?.numPages,
+        pdfSizeBytes: pdf.pdfByteLength,
+        spellingCheckDone: ruleCheck.spellingCheckDone,
+        consistencyCheckDone: ruleCheck.consistencyCheckDone,
+        spellingFindingCount: spellingTabTotalFindings,
+        consistencyFindingCount: consistencyTabTotalFindings,
+      });
+      const result = await onSaveCriteriaPreset(criteriaNameInput, {
+        projectContextSnapshot: patch,
+      });
+      if (typeof result === 'string' && result) {
+        setCriteriaNameInput(criteriaNameForInput(result));
+        setCriteriaSaveModalName(result);
+        setCriteriaSaveModalOpen(true);
+        setCriteriaPickerOpen(false);
+      }
+    } finally {
+      setCriteriaSavePending(false);
+    }
+  }, [
+    criteriaSavePending,
+    criteriaNameInput,
+    onSaveCriteriaPreset,
+    pdf.pdf,
+    pdf.pdfFileName,
+    pdf.pdfByteLength,
+    ruleCheck.spellingCheckDone,
+    ruleCheck.consistencyCheckDone,
+    spellingTabTotalFindings,
+    consistencyTabTotalFindings,
+  ]);
+
   const consistencyWorkDone =
     (tocBodyCheckEnabled && tocCheck.checkDone) ||
     ruleCheck.consistencyCheckDone;
+
+  useEffect(() => {
+    if (!onTouchActiveProjectContext || !activeRuleSet?.savedAt) return undefined;
+    if (!ruleCheck.spellingCheckDone && !consistencyWorkDone) return undefined;
+
+    const timer = window.setTimeout(() => {
+      const patch = buildProjectContextWorkPatch({
+        pdfFileName: pdf.pdfFileName,
+        pdfPageCount: pdf.pdf?.numPages,
+        pdfSizeBytes: pdf.pdfByteLength,
+        spellingCheckDone: ruleCheck.spellingCheckDone,
+        consistencyCheckDone: consistencyWorkDone,
+        spellingFindingCount: spellingTabTotalFindings,
+        consistencyFindingCount: consistencyTabTotalFindings,
+      });
+      if (patch) onTouchActiveProjectContext(patch);
+    }, 800);
+
+    return () => window.clearTimeout(timer);
+  }, [
+    activeRuleSet?.savedAt,
+    consistencyWorkDone,
+    onTouchActiveProjectContext,
+    pdf.pdf,
+    pdf.pdfFileName,
+    pdf.pdfByteLength,
+    ruleCheck.consistencyCheckDone,
+    ruleCheck.spellingCheckDone,
+    consistencyTabTotalFindings,
+    spellingTabTotalFindings,
+  ]);
 
   const showTocResultsPanel =
     tocBodyCheckEnabled &&
@@ -899,6 +1032,8 @@ export default function MainScreen({
         ruleCount={spellingTabEntries.length}
         cautionWithFindingsCount={spellingGroupsWithFindings.cautionWithFindings}
         builtinWithFindingsCount={spellingGroupsWithFindings.builtinWithFindings}
+        cautionCriteriaSelected={spellingCriteriaSelection.cautionSelected}
+        builtinCriteriaSelected={spellingCriteriaSelection.builtinSelected}
         spellingCheckDone={ruleCheck.spellingCheckDone}
         isGroupVisible={ruleCheck.isGroupVisible}
         onToggleVisibility={ruleCheck.toggleResultVisibility}
@@ -1064,6 +1199,7 @@ export default function MainScreen({
             >
               <PanelSectionRunButton
                 label="기준 검수"
+                className="panel-section-run-btn--primary"
                 onClick={handleCriteriaSpellingCheck}
                 disabled={criteriaRunBlocked}
                 isProcessing={criteriaRunChecking}
@@ -1072,6 +1208,7 @@ export default function MainScreen({
           ) : (
             <PanelSectionRunButton
               label="기준 검수"
+              className="panel-section-run-btn--primary"
               onClick={handleCriteriaSpellingCheck}
               disabled={criteriaRunBlocked}
               isProcessing={criteriaRunChecking}
@@ -1256,6 +1393,7 @@ export default function MainScreen({
                     placeholder="프로젝트 이름"
                     maxLength={60}
                     autoComplete="off"
+                    disabled={criteriaSavePending}
                     role="combobox"
                     aria-expanded={criteriaPickerOpen}
                     aria-controls="panel-left-criteria-picker-list"
@@ -1328,11 +1466,21 @@ export default function MainScreen({
                 <button
                   type="button"
                   className="panel-left__save-rules"
-                  onClick={handleSaveCriteria}
-                  aria-label="기준 저장"
-                  title="기준 저장"
+                  onClick={() => void handleSaveCriteria()}
+                  disabled={criteriaSavePending}
+                  aria-busy={criteriaSavePending}
+                  aria-label={criteriaSavePending ? '프로젝트 저장 중' : '기준 저장'}
+                  title={criteriaSavePending ? '저장 중…' : '기준 저장'}
                 >
-                  <Save size={16} aria-hidden />
+                  {criteriaSavePending ? (
+                    <Loader2
+                      size={16}
+                      aria-hidden
+                      className="panel-left__save-rules-spinner"
+                    />
+                  ) : (
+                    <Save size={16} aria-hidden />
+                  )}
                 </button>
                 <button
                   type="button"
@@ -1433,6 +1581,7 @@ export default function MainScreen({
                   <span className="spelling-tab-layout__criteria-run-wrap">
                     <PanelSectionRunButton
                       label="일관성+용언 검수"
+                      className="panel-section-run-btn--primary"
                       onClick={handleRunConsistencyRulesCheck}
                       disabled={
                         pdf.pageTexts.length === 0 ||
@@ -1533,11 +1682,26 @@ export default function MainScreen({
                 literalWithFindingsCount={
                   consistencyGroupsWithFindings.literalWithFindings
                 }
+                unifyWithFindingsCount={
+                  consistencyGroupsWithFindings.unifyWithFindings
+                }
                 commonStringWithFindingsCount={
                   consistencyGroupsWithFindings.commonStringWithFindings
                 }
                 auxiliaryWithFindingsCount={
                   consistencyGroupsWithFindings.auxiliaryWithFindings
+                }
+                literalCriteriaSelected={
+                  consistencyCriteriaSelection.literalSelected
+                }
+                unifyCriteriaSelected={
+                  consistencyCriteriaSelection.unifySelected
+                }
+                commonStringCriteriaSelected={
+                  consistencyCriteriaSelection.commonStringSelected
+                }
+                auxiliaryCriteriaSelected={
+                  consistencyCriteriaSelection.auxiliarySelected
                 }
                 spellingCheckDone={ruleCheck.consistencyCheckDone}
                 isGroupVisible={ruleCheck.isGroupVisible}
@@ -1556,6 +1720,7 @@ export default function MainScreen({
                   ruleCheck.selectPageInGroup(pageNum, instances, 'consistency');
                 }}
                 formatPageLabel={pageDisplay.formatLabel}
+                customRules={customRules}
               />
             ) : null}
             {!consistencyWorkDone ? (
@@ -1867,6 +2032,11 @@ export default function MainScreen({
       </main>
       </div>
 
+      <CriteriaSaveModal
+        open={criteriaSaveModalOpen}
+        projectName={criteriaSaveModalName}
+        onClose={() => setCriteriaSaveModalOpen(false)}
+      />
     </div>
   );
 }

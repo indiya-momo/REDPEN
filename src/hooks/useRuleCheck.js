@@ -38,6 +38,7 @@ import {
   filterCustomRulesByConsistencyScope,
 } from '../lib/consistencyCheckScopes.js';
 import { ensureDefaultAuxiliaryVerbs } from '../lib/defaultAuxiliaryVerbs.js';
+import { AUXILIARY_VERB_FEATURE_LABEL } from '../lib/bonBojoRules.js';
 import { assertBetaDailyCheckOrAlert } from '../lib/betaDailyQuota.js';
 import {
   alertConsistencyCheckAfterRun,
@@ -231,7 +232,7 @@ export function useRuleCheck({
       }
       if (runConsistency && consistencyActiveRules.length === 0) {
         alert(
-          '일관성 찾기·본용언+보조용언 표기에서 검사할 항목을 등록·선택하세요.',
+          `일관성 찾기·${AUXILIARY_VERB_FEATURE_LABEL}에서 검사할 항목을 등록·선택하세요.`,
         );
         return;
       }
@@ -263,6 +264,7 @@ export function useRuleCheck({
             authUid,
             authEmail,
             resolvedCustomRules,
+            globalExcludePhrases,
           ))
         ) {
           return;
@@ -376,7 +378,7 @@ export function useRuleCheck({
         alertSpellingCheckAfterRun(scopeResults, findingCount);
       }
       if (runConsistency) {
-        alertConsistencyCheckAfterRun(scopeResults, findingCount);
+        alertConsistencyCheckAfterRun(scopeResults, findingCount, customRules);
       }
       await afterCheckRef.current?.();
     },
@@ -420,7 +422,7 @@ export function useRuleCheck({
       if (!rules.length) {
         alert(
           subset === 'auxiliary'
-            ? '본용언+보조용언 표기에서 검사할 항목을 선택하세요.'
+            ? `${AUXILIARY_VERB_FEATURE_LABEL}에서 검사할 항목을 선택하세요.`
             : '일관성 찾기에서 검사할 항목을 등록·선택하세요.',
         );
         return;

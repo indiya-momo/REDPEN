@@ -23,6 +23,7 @@ import {
  *   highlightTab: 'spelling' | 'consistency',
  *   activeSource: 'spelling' | 'consistency',
  *   selectedInstance: import('../lib/ruleEngine.js').MatchInstance | null,
+ *   customRules?: import('../lib/ruleTypes.js').Rule[],
  * }} options
  */
 export function useHighlights({
@@ -34,6 +35,7 @@ export function useHighlights({
   highlightTab,
   activeSource,
   selectedInstance,
+  customRules = [],
 }) {
   const activeResults =
     activeSource === 'spelling' ? spellingResults : consistencyResults;
@@ -55,7 +57,7 @@ export function useHighlights({
           (source === 'spelling' && group.category !== 'caution'
             ? getBuiltInTip(group.find, group.replace)
             : source === 'consistency'
-              ? getConsistencyHighlightTip(group)
+              ? getConsistencyHighlightTip(group, customRules)
               : '');
         const isActiveGroup =
           activeGroupKey != null && groupKey(group) === activeGroupKey;
@@ -67,13 +69,15 @@ export function useHighlights({
             tip: tipText,
             isActiveGroup,
             isCaution: group.category === 'caution',
+            source,
+            group,
           });
         }
       }
     }
     onPage.sort((a, b) => a.inst.index - b.inst.index);
     return onPage
-      .map(({ inst, tip, isActiveGroup, isCaution }) => {
+      .map(({ inst, tip, isActiveGroup, isCaution, source, group }) => {
         const range = isCaution
           ? highlightRangeForCaution(currentPageData, inst)
           : highlightRangeForSpelling(currentPageData, inst);
@@ -83,7 +87,10 @@ export function useHighlights({
             selectedInstance != null &&
             instancesMatch(inst, selectedInstance),
         );
-        const overlayReplace = getHighlightOverlayReplace(inst);
+        const overlayReplace = getHighlightOverlayReplace(inst, {
+          customRules,
+          group: source === 'consistency' ? group : null,
+        });
         return {
           ...range,
           primary,
@@ -103,6 +110,7 @@ export function useHighlights({
     currentPageData,
     selectedInstance,
     activeGroupKey,
+    customRules,
   ]);
 
   const sortedFindings = useMemo(() => {
