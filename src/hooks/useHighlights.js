@@ -69,13 +69,15 @@ export function useHighlights({
             tip: tipText,
             isActiveGroup,
             isCaution: group.category === 'caution',
+            source,
+            group,
           });
         }
       }
     }
     onPage.sort((a, b) => a.inst.index - b.inst.index);
     return onPage
-      .map(({ inst, tip, isActiveGroup, isCaution }) => {
+      .map(({ inst, tip, isActiveGroup, isCaution, source, group }) => {
         const range = isCaution
           ? highlightRangeForCaution(currentPageData, inst)
           : highlightRangeForSpelling(currentPageData, inst);

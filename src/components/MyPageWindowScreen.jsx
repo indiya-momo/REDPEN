@@ -547,7 +547,6 @@ function ProjectHubPlaceholderSection() {
           <h1 id="mypage-project-hub-title" className="mypage__page-title">
             나의 프로젝트
           </h1>
-          <span className="mypage__card-soon">작업 중</span>
         </div>
       </div>
       <div className="mypage__empty mypage__empty--disabled">
@@ -555,8 +554,7 @@ function ProjectHubPlaceholderSection() {
           프로젝트 관리 화면을 준비하고 있습니다.
         </p>
         <p className="mypage__empty-desc">
-          지금은 검수 화면에서 프로젝트를 저장·전환할 수 있습니다. 열심히
-          준비하고 있어요 · ฅ•ω•ฅ
+          지금은 검수 화면에서 프로젝트를 저장·전환할 수 있습니다.
         </p>
       </div>
     </section>

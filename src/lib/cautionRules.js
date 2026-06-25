@@ -2,7 +2,7 @@ import cautionRulesJson from '../data/caution-rules.json';
 
 /**
  * @typedef {'any-before' | 'spaced-before' | 'attached-before' | 'spaced-stem' | 'fixed-phrase'} CautionMatchMode
- * @typedef {{ id: string, label: string, stems?: string[], tip?: string, enabled?: boolean, matchMode?: CautionMatchMode, displayLabel?: string, inventoryOnly?: boolean, except?: string[] }} CautionItem
+ * @typedef {{ id: string, label: string, stems?: string[], tip?: string, enabled?: boolean, matchMode?: CautionMatchMode, displayLabel?: string, groupLabel?: string, inventoryOnly?: boolean, except?: string[] }} CautionItem
  * @typedef {{ id: string, title?: string, tip?: string, hideGroupTitle?: boolean, tipInline?: boolean, items: CautionItem[] }} CautionGroup
  * @typedef {{ id: string, label: string, stems: string[], tip: string, groupId: string, enabled: boolean, matchMode: CautionMatchMode, displayLabel: string, inventoryOnly: boolean, except?: string[] }} CautionRule
  */
@@ -184,8 +184,24 @@ export function cautionDisplayLabel(item) {
   return item.label;
 }
 
+/** @param {CautionGroup} group */
+export function cautionGroupDisplayLabel(group) {
+  if (group.hideGroupTitle !== true) {
+    const title = String(group.title ?? '').trim();
+    if (title) return title;
+    const tip = String(group.tip ?? '').trim();
+    if (tip && tip.length <= 20 && !tip.includes('\n')) return tip;
+  }
+  return String(group.id ?? '').trim();
+}
+
 /** @type {CautionGroup[]} */
 export const CAUTION_GROUPS = normalizeGroups(cautionRulesJson);
+
+/** @type {Map<string, CautionGroup>} */
+const CAUTION_GROUP_BY_ID = new Map(
+  CAUTION_GROUPS.map((group) => [group.id, group]),
+);
 
 /** @param {typeof cautionRulesJson} raw */
 export function cautionRulesFingerprint(raw = cautionRulesJson) {
@@ -212,6 +228,7 @@ export const CAUTION_RULES = CAUTION_GROUPS.flatMap((group) =>
     matchMode: item.matchMode ?? 'any-before',
     displayLabel: item.displayLabel ?? cautionDisplayLabel(item),
     inventoryOnly: item.inventoryOnly === true,
+    ...(item.groupLabel?.trim() ? { groupLabel: item.groupLabel.trim() } : {}),
     ...(item.except?.length ? { except: item.except } : {}),
   })),
 );
@@ -376,6 +393,10 @@ export function buildCautionCheckRules(cautionEnabled) {
         : stems
             .map((stem) => `(?:${cautionFindPattern(stem, item.matchMode)})`)
             .join('|');
+    const group = CAUTION_GROUP_BY_ID.get(item.groupId);
+    const bundleLabel =
+      String(item.groupLabel ?? group?.title ?? '').trim() ||
+      (group ? cautionGroupDisplayLabel(group) : '');
     rules.push({
       find: findPattern,
       replace: '(검토)',
@@ -386,6 +407,8 @@ export function buildCautionCheckRules(cautionEnabled) {
       label: item.displayLabel,
       tip: item.tip,
       cautionStems: stems,
+      ...(group ? { dividerGroup: group.id } : {}),
+      ...(bundleLabel ? { dividerLabel: bundleLabel } : {}),
       ...(item.except?.length ? { excludePhrases: item.except } : {}),
     });
   }

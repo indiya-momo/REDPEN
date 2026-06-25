@@ -58,11 +58,11 @@ export default function ConsistencyUnifySection({ customRules, onApplyRules }) {
       <p className="printed-page-setup__title consistency-subsection-title panel-criteria-heading">
         통일형 만들기
         <span className="panel-criteria-heading-meta">
-          (1회 {MAX_CONSISTENCY_UNIFY_SLOTS}항목까지, 통일형 지정 가능)
+          (1회 {MAX_CONSISTENCY_UNIFY_SLOTS}항목까지 가능, 통일형 1항목 지원)
         </span>
       </p>
       <p className="hint consistency-hint-block">
-        여러 항목을 입력하고 하나를 📌을 눌러 통일형으로 지정할 수 있습니다
+        여러 모습을 입력하고 📌으로 통일형을 지정한 후 찾아 바꿀 수 있습니다
         <br />
         <ConsistencyHintExample>
           &apos;신라시대 , 신라˅시대 , 통일신라시대&apos; 입력 → &apos;신라시대&apos; 통일형 📌지정하고 찾기
