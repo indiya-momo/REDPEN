@@ -119,6 +119,12 @@ export function validateSpellingRules(data, label = 'spelling-rules.json') {
     ) {
       pushIssue(issues, `${base}.dividerGroup`, 'must be a string');
     }
+    if (
+      row.dividerLabel !== undefined &&
+      typeof row.dividerLabel !== 'string'
+    ) {
+      pushIssue(issues, `${base}.dividerLabel`, 'must be a string');
+    }
     if (row.overlayReplace !== undefined && typeof row.overlayReplace !== 'string') {
       pushIssue(issues, `${base}.overlayReplace`, 'must be a string');
     }
