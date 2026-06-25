@@ -73,10 +73,10 @@
     var(--panel-accent) 70%,
     #2c1810 30%
   );
-  --panel-page-chip-current-border: color-mix(
+  --panel-result-card-active-accent: color-mix(
     in srgb,
-    var(--panel-accent) 38%,
-    var(--c-ink) 62%
+    var(--panel-accent) 72%,
+    var(--c-ink) 28%
   );
   flex-shrink: 0;
   height: 100%;
@@ -264,16 +264,8 @@
 .panel-left .results-panel--spelling .result-card--caution.result-card--active,
 .panel-left .results-panel--consistency .result-card--active,
 .panel-left .results-panel--consistency .result-card--consistency.result-card--active {
-  box-shadow: none;
-  background: color-mix(in srgb, var(--panel-result-surface) 90%, var(--panel-accent) 10%);
-}
-
-.panel-left .results-panel--spelling .result-card--builtin.result-card--on-page:not(.result-card--active),
-.panel-left .results-panel--spelling .result-card--caution.result-card--on-page:not(.result-card--active),
-.panel-left .results-panel--consistency .result-card--on-page:not(.result-card--active),
-.panel-left .results-panel--consistency .result-card--consistency.result-card--on-page:not(.result-card--active) {
-  box-shadow: none;
-  background: color-mix(in srgb, var(--panel-result-surface) 94%, var(--panel-accent) 6%);
+  box-shadow: inset 3px 0 0 var(--panel-result-card-active-accent);
+  background: var(--panel-result-surface);
 }
 
 /* pill·배지 — 배경보다 한 톤 진한 은은한 테두리 */
@@ -307,21 +299,21 @@
 
 .panel-left .results-panel--spelling .page-chip--current,
 .panel-left .results-panel--consistency .page-chip--current {
-  background: var(--panel-result-pill);
+  background: color-mix(in srgb, var(--panel-result-pill) 66%, var(--panel-accent) 34%);
   color: var(--c-ink);
-  border: 1px solid var(--panel-page-chip-current-border);
+  border: none;
   box-shadow: none;
 }
 
 .panel-left .results-panel--spelling .page-chip--current:hover,
 .panel-left .results-panel--consistency .page-chip--current:hover {
-  background: color-mix(in srgb, var(--panel-result-pill) 86%, var(--panel-accent) 14%);
-  border-color: color-mix(in srgb, var(--panel-accent) 48%, var(--c-ink) 52%);
+  background: color-mix(in srgb, var(--panel-result-pill) 58%, var(--panel-accent) 42%);
+  border: none;
 }
 
 .panel-left .results-panel--spelling .page-chip--current .page-chip__bundle,
 .panel-left .results-panel--consistency .page-chip--current .page-chip__bundle {
-  background: var(--panel-result-pill-muted);
+  background: color-mix(in srgb, var(--panel-result-pill-muted) 70%, var(--c-ink) 30%);
   color: var(--c-ink);
 }
 .panel-left .results-panel--spelling .page-chip--on-page:not(.page-chip--current),
@@ -417,13 +409,11 @@
 .panel-left .results-panel--toc-body .result-card--active {
   box-shadow:
     var(--panel-sheet-shadow),
-    inset 0 0 0 1px var(--color-border-strong);
+    inset 3px 0 0 var(--panel-result-card-active-accent);
 }
 
 .panel-left .results-panel--toc-body .result-card--on-page:not(.result-card--active) {
-  box-shadow:
-    var(--panel-sheet-shadow),
-    inset 3px 0 0 var(--panel-accent);
+  box-shadow: var(--panel-sheet-shadow);
 }
 
 .panel-left .builtin-spelling-resize-body {
@@ -1787,7 +1777,7 @@
   padding: calc(6px * var(--panel-run-btn-scale)) calc(16px * var(--panel-run-btn-scale));
   white-space: nowrap;
   background: var(--btn-secondary-bg);
-  border: 1px solid var(--btn-secondary-border);
+  border: 1px solid var(--work-chrome-border);
   color: var(--btn-secondary-text);
   transition:
     background 0.15s ease,
@@ -1795,9 +1785,15 @@
     border-color 0.15s ease;
 }
 
+.btn-add.panel-section-run-btn--primary,
+.btn-add.panel-section-run-btn.btn-export-results {
+  padding-block: calc(8px * var(--panel-run-btn-scale));
+  padding-inline: calc(16px * var(--panel-run-btn-scale));
+}
+
 .btn-add.panel-section-run-btn:hover:not(:disabled) {
   background: var(--btn-secondary-hover-bg);
-  border-color: var(--btn-secondary-hover-border);
+  border-color: var(--work-chrome-border-hover);
   color: var(--btn-secondary-text);
 }
 
@@ -2716,7 +2712,7 @@
 }
 
 .consistency-section-box[data-work-guide-step='auxiliary-box'] .auxiliary-checklist-intro {
-  margin: 4px 0 8px;
+  margin: 4px 0 4px;
   padding-inline: var(--criteria-check-col-start, calc(14px + 23px))
     var(--criteria-pad-inline, 14px);
   font-size: 0.8125rem;
@@ -2752,7 +2748,7 @@
   .caution-checklist-details[open]
   .auxiliary-checklist {
   margin-top: 0;
-  padding-block: var(--panel-gap-section-list, 10px) 10px;
+  padding-block: calc(var(--panel-gap-section-list, 10px) * 0.5) 10px;
   padding-inline: var(--criteria-check-col-start, calc(14px + 23px))
     var(--criteria-pad-inline, 14px);
   box-sizing: border-box;
@@ -2773,6 +2769,14 @@
   font-weight: 700;
   line-height: 1.2;
   color: var(--color-text-secondary);
+  min-width: 0;
+}
+
+.consistency-section-box[data-work-guide-step='auxiliary-box'] .bon-bojo-required-badge {
+  font-size: calc(0.54rem * var(--panel-ui-scale, 1));
+  line-height: 1.1;
+  white-space: nowrap;
+  padding: 1px 3px;
 }
 
 .consistency-section-box[data-work-guide-step='auxiliary-box']
@@ -3672,7 +3676,7 @@
 
 .panel-left .consistency-section-box[data-work-guide-step='auxiliary-box'] .auxiliary-checklist-intro {
   font-size: calc(0.8125rem * var(--panel-ui-scale));
-  margin: calc(4px * var(--panel-ui-scale)) 0 calc(8px * var(--panel-ui-scale));
+  margin: calc(4px * var(--panel-ui-scale)) 0 calc(4px * var(--panel-ui-scale));
   padding-inline: var(--criteria-check-col-start) var(--criteria-pad-inline, 14px);
 }
 
