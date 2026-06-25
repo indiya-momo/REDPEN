@@ -3,6 +3,7 @@ import {
   CAUTION_RULES,
   buildCautionCheckRules,
   cautionFindPattern,
+  cautionStemListPattern,
   cautionGroupDisplayLabel,
   cautionHighlightSpan,
   cautionItemTip,
@@ -66,6 +67,16 @@ describe('cautionFindPattern', () => {
     const find = cautionFindPattern('정도', 'any-before');
     expect(matches(find, '오른정도')).toBe(true);
     expect(matches(find, '오른 정도')).toBe(true);
+    expect(matches(find, '그정도')).toBe(true);
+  });
+
+  it('any-before: 앞말 없음·한 글자·띄움·붙임 모두 잡음', () => {
+    const find = cautionFindPattern('만큼', 'any-before');
+    expect(matches(find, '그만큼')).toBe(true);
+    expect(matches(find, '이만큼')).toBe(true);
+    expect(matches(find, '키 만큼')).toBe(true);
+    expect(matches(find, '회상할만큼')).toBe(true);
+    expect(matches(find, '만큼 큰')).toBe(true);
   });
 
   it('any-before: 만큼은 단어 중간(회상할→상할)에서 중복 매칭하지 않음', () => {
@@ -79,6 +90,29 @@ describe('cautionFindPattern', () => {
       hits.push(m[0]);
     }
     expect(hits).toEqual(['회상할 만큼']);
+  });
+
+  it('stem-list: stems 나열 형태를 그대로 잡음', () => {
+    const find = cautionStemListPattern('놓아 주');
+    expect(matches(find, '그는 놓아 주었다')).toBe(true);
+    expect(matches(find, '놓아주었다')).toBe(true);
+
+    const jun = cautionStemListPattern('놓아 준');
+    expect(matches(jun, '놓아 준다')).toBe(true);
+    expect(matches(jun, '놓아준다')).toBe(true);
+
+    const gluedJun = cautionStemListPattern('놓아준');
+    expect(matches(gluedJun, '놓아준다')).toBe(true);
+
+    const gluedJu = cautionStemListPattern('놓아주');
+    expect(matches(gluedJu, '놓아주었다')).toBe(true);
+    expect(matches(gluedJu, '놓아 주었다')).toBe(false);
+  });
+
+  it('stem-list: 1음절 앞말도 stems에 넣으면 잡힘', () => {
+    const find = cautionStemListPattern('도와 준');
+    expect(matches(find, '도와 준 사람')).toBe(true);
+    expect(matches(find, '도와준 사람')).toBe(true);
   });
 });
 
@@ -100,15 +134,16 @@ describe('cautionHighlightSpan', () => {
 });
 
 describe('normalizeMatchMode (시트 별칭)', () => {
-  it('ap-any / ap-space / ap-attach / spaced-stem', () => {
+  it('ap-any / ap-space / ap-attach / stem-list', () => {
     expect(normalizeMatchMode('ap-any')).toBe('any-before');
     expect(normalizeMatchMode('ap-space')).toBe('spaced-before');
     expect(normalizeMatchMode('ap-attach')).toBe('attached-before');
-    expect(normalizeMatchMode('spaced-stem')).toBe('spaced-stem');
+    expect(normalizeMatchMode('stem-list')).toBe('stem-list');
+    expect(normalizeMatchMode('spaced-stem')).toBe('stem-list');
   });
 
-  it('space-stem은 spaced-stem, space 단독은 ap-space', () => {
-    expect(normalizeMatchMode('space-stem')).toBe('spaced-stem');
+  it('space-stem은 stem-list, space 단독은 ap-space', () => {
+    expect(normalizeMatchMode('space-stem')).toBe('stem-list');
     expect(normalizeMatchMode('space')).toBe('spaced-before');
   });
 });
@@ -202,7 +237,7 @@ describe('caution except → excludePhrases', () => {
     const { results, errors } = runRuleCheck(pages, rules);
     expect(errors).toEqual([]);
     const texts = results.flatMap((g) => g.instances.map((i) => i.matchedText));
-    expect(texts).toContain('그가 바라');
+    expect(texts).toContain('바라');
     expect(texts).not.toContain('하늘을 바라');
     expect(texts).not.toContain('그를 바라');
   });
