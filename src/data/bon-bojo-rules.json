@@ -20,7 +20,7 @@
             "러 간",
             "어 간"
           ],
-          "displayLabel": "(아/어) + 가다"
+          "displayLabel": "본(-아/어) + 가다"
         },
         {
           "id": "verb-naeda",
@@ -33,7 +33,7 @@
             "어 낸",
             "어 내"
           ],
-          "displayLabel": "(아/어) + 내다"
+          "displayLabel": "본(-아/어) + 내다"
         },
         {
           "id": "verb-notda",
@@ -45,7 +45,7 @@
             "해 놔",
             "다 놓"
           ],
-          "displayLabel": "(아/어) + 놓다"
+          "displayLabel": "본(-아/어) + 놓다"
         },
         {
           "id": "verb-duda",
@@ -61,7 +61,7 @@
             "겨 두",
             "려 두"
           ],
-          "displayLabel": "(아/어) + 두다"
+          "displayLabel": "본(-아/어) + 두다"
         },
         {
           "id": "verb-boda1",
@@ -87,7 +87,7 @@
             "려 본",
             "려 봤"
           ],
-          "displayLabel": "(아/어) + 보다"
+          "displayLabel": "본(-아/어) + 보다"
         },
         {
           "id": "verb-juda1",
@@ -110,7 +110,7 @@
             "펴 주",
             "펴 줍"
           ],
-          "displayLabel": "(아/어) + 주다"
+          "displayLabel": "본(-아/어) + 주다"
         },
         {
           "id": "verb-oda",
@@ -125,7 +125,7 @@
             "쳐 왔",
             "려 왔"
           ],
-          "displayLabel": "(아/어) + 오다"
+          "displayLabel": "본(-아/어) + 오다"
         },
         {
           "id": "verb-itta",
@@ -136,7 +136,7 @@
             "어 있",
             "아 있"
           ],
-          "displayLabel": "(아/어) + 있다"
+          "displayLabel": "본(-아/어) + 있다"
         },
         {
           "id": "verb-hada",
@@ -154,7 +154,7 @@
             "아 했",
             "어 했"
           ],
-          "displayLabel": "(아/어) + 하다"
+          "displayLabel": "본(-아/어) + 하다"
         },
         {
           "id": "verb-jida",
@@ -168,7 +168,7 @@
             "어 지",
             "러 지"
           ],
-          "displayLabel": "(아/어) + 지다"
+          "displayLabel": "본(-아/어) + 지다"
         }
       ],
       "bonVerbAllow": [

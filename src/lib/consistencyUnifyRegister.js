@@ -8,6 +8,21 @@ const COMPOUND_KINDS = new Set([
 ]);
 
 /**
+ * @param {import('./ruleTypes.js').Rule[]} customRules
+ * @param {string} [tailWord]
+ */
+export function isConsistencyUnifyTailWord(customRules, tailWord) {
+  const tail = String(tailWord ?? '').trim();
+  if (!tail) return false;
+  return customRules.some(
+    (rule) =>
+      COMPOUND_KINDS.has(rule.patternKind ?? '') &&
+      rule.tailWord?.trim() === tail &&
+      rule.consistencyUnifyEntry === true,
+  );
+}
+
+/**
  * @typedef {{ correction: string, unified: string }} ConsistencyUnifyMapping
  */
 
@@ -74,6 +89,7 @@ export function clearConsistencyUnifyOverlay(rules, correctionRaw) {
 export function getConsistencyUnifyOverlayForGroup(customRules, group) {
   const tail = String(group.tailWord ?? '').trim();
   if (!tail) return null;
+  if (getConsistencyUnifyPinnedTailWord(customRules) === tail) return null;
 
   for (const rule of customRules) {
     if (!COMPOUND_KINDS.has(rule.patternKind ?? '')) continue;

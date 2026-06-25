@@ -61,7 +61,11 @@ import { useRewardNotice } from '../hooks/useRewardNotice.js';
 import { daysSinceJoin, syncProfileBadges } from '../lib/badgeGrants.js';
 import { isLoginRequiredForChecks } from '../lib/checkAuthGate.js';
 import { resolveQuotaAuthEmail, assertBetaDailyExportOrAlert } from '../lib/betaDailyQuota.js';
-import { countConsistencyGroupsWithFindings } from '../lib/consistencyCheckConfirm.js';
+import {
+  countBuiltInActiveRules,
+  countSpacingReviewActiveRules,
+} from '../lib/activeRuleCount.js';
+import { countConsistencyCheckActiveRules, countConsistencyGroupsWithFindings } from '../lib/consistencyCheckConfirm.js';
 import { countSpellingGroupsWithFindings } from '../lib/spellingCheckConfirm.js';
 import { formatRuleSetSavedDate } from '../lib/ruleSetsStorage.js';
 import {
@@ -620,9 +624,35 @@ export default function MainScreen({
     [ruleCheck.spellingResults],
   );
 
+  const spellingCriteriaSelection = useMemo(
+    () => ({
+      cautionSelected:
+        countSpacingReviewActiveRules({ cautionEnabled }) > 0,
+      builtinSelected: countBuiltInActiveRules({ builtInEnabled }) > 0,
+    }),
+    [cautionEnabled, builtInEnabled],
+  );
+
+  const consistencyCriteriaSelection = useMemo(() => {
+    const active = countConsistencyCheckActiveRules(
+      customRules,
+      globalExcludePhrases,
+    );
+    return {
+      literalSelected: active.literalActive > 0,
+      unifySelected: active.unifyActive > 0,
+      commonStringSelected: active.commonStringActive > 0,
+      auxiliarySelected: active.auxiliaryActive > 0,
+    };
+  }, [customRules, globalExcludePhrases]);
+
   const consistencyGroupsWithFindings = useMemo(
-    () => countConsistencyGroupsWithFindings(ruleCheck.consistencyResults),
-    [ruleCheck.consistencyResults],
+    () =>
+      countConsistencyGroupsWithFindings(
+        ruleCheck.consistencyResults,
+        customRules,
+      ),
+    [ruleCheck.consistencyResults, customRules],
   );
 
   const consistencyTabTotalFindings = useMemo(
@@ -1002,6 +1032,8 @@ export default function MainScreen({
         ruleCount={spellingTabEntries.length}
         cautionWithFindingsCount={spellingGroupsWithFindings.cautionWithFindings}
         builtinWithFindingsCount={spellingGroupsWithFindings.builtinWithFindings}
+        cautionCriteriaSelected={spellingCriteriaSelection.cautionSelected}
+        builtinCriteriaSelected={spellingCriteriaSelection.builtinSelected}
         spellingCheckDone={ruleCheck.spellingCheckDone}
         isGroupVisible={ruleCheck.isGroupVisible}
         onToggleVisibility={ruleCheck.toggleResultVisibility}
@@ -1167,6 +1199,7 @@ export default function MainScreen({
             >
               <PanelSectionRunButton
                 label="기준 검수"
+                className="panel-section-run-btn--primary"
                 onClick={handleCriteriaSpellingCheck}
                 disabled={criteriaRunBlocked}
                 isProcessing={criteriaRunChecking}
@@ -1175,6 +1208,7 @@ export default function MainScreen({
           ) : (
             <PanelSectionRunButton
               label="기준 검수"
+              className="panel-section-run-btn--primary"
               onClick={handleCriteriaSpellingCheck}
               disabled={criteriaRunBlocked}
               isProcessing={criteriaRunChecking}
@@ -1547,6 +1581,7 @@ export default function MainScreen({
                   <span className="spelling-tab-layout__criteria-run-wrap">
                     <PanelSectionRunButton
                       label="일관성+용언 검수"
+                      className="panel-section-run-btn--primary"
                       onClick={handleRunConsistencyRulesCheck}
                       disabled={
                         pdf.pageTexts.length === 0 ||
@@ -1647,11 +1682,26 @@ export default function MainScreen({
                 literalWithFindingsCount={
                   consistencyGroupsWithFindings.literalWithFindings
                 }
+                unifyWithFindingsCount={
+                  consistencyGroupsWithFindings.unifyWithFindings
+                }
                 commonStringWithFindingsCount={
                   consistencyGroupsWithFindings.commonStringWithFindings
                 }
                 auxiliaryWithFindingsCount={
                   consistencyGroupsWithFindings.auxiliaryWithFindings
+                }
+                literalCriteriaSelected={
+                  consistencyCriteriaSelection.literalSelected
+                }
+                unifyCriteriaSelected={
+                  consistencyCriteriaSelection.unifySelected
+                }
+                commonStringCriteriaSelected={
+                  consistencyCriteriaSelection.commonStringSelected
+                }
+                auxiliaryCriteriaSelected={
+                  consistencyCriteriaSelection.auxiliarySelected
                 }
                 spellingCheckDone={ruleCheck.consistencyCheckDone}
                 isGroupVisible={ruleCheck.isGroupVisible}
@@ -1670,6 +1720,7 @@ export default function MainScreen({
                   ruleCheck.selectPageInGroup(pageNum, instances, 'consistency');
                 }}
                 formatPageLabel={pageDisplay.formatLabel}
+                customRules={customRules}
               />
             ) : null}
             {!consistencyWorkDone ? (

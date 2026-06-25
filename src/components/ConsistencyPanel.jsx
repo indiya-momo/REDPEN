@@ -29,7 +29,7 @@ import {
   togglePhraseSlotEntry,
 } from '../lib/phraseSlotRegister.js';
 import { parseCommaList } from '../lib/matchFilters.js';
-import { isBonBojoRequiredItem } from '../lib/bonBojoRules.js';
+import { isBonBojoRequiredItem, AUXILIARY_VERB_FEATURE_LABEL } from '../lib/bonBojoRules.js';
 import {
   countPhraseSlotRegisteredEntries,
   MAX_PHRASE_SLOT_REGISTERED_ENTRIES,
@@ -379,11 +379,11 @@ export default function ConsistencyPanel({
                     ),
                   )
                 }
-                aria-label="본용언+보조용언 표기 전체 선택"
+                aria-label={`${AUXILIARY_VERB_FEATURE_LABEL} 전체 선택`}
               />
             </label>
             <span className="caution-checklist-summary-title">
-              본용언 + 보조용언 표기
+              {AUXILIARY_VERB_FEATURE_LABEL}
               {auxiliaryTotal > 0 ? (
                 <span className="panel-criteria-heading-meta">
                   {`(선택 ${auxiliaryActiveCount}/${auxiliaryTotal})`}
@@ -392,7 +392,7 @@ export default function ConsistencyPanel({
             </span>
           </summary>
           <p className="auxiliary-checklist-intro hint">
-            ｢한글맞춤법｣ 기준 붙여 쓸 수 있는 ‘본용언(아/어) + 보조용언’ 을 찾습니다
+            ｢한글맞춤법｣ 기준 붙여 쓸 수 있는 ‘본용언(-아/어) + 보조용언’ 을 찾습니다
             <br />
             (본용언이 3음절 이상 복합어인 경우는 제외 예:
             <ConsistencyHintExample>생각하다</ConsistencyHintExample>)
@@ -422,7 +422,7 @@ export default function ConsistencyPanel({
             message={
               <>
                 <span className="tooltip-guide__gothic-label">
-                  본용언+보조용언 표기
+                  {AUXILIARY_VERB_FEATURE_LABEL}
                 </span>
                 를 검색한다냥
                 <br />

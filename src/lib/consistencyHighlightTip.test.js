@@ -19,18 +19,18 @@ describe('getConsistencyHighlightTip', () => {
     ).toBe('시트 안내');
   });
 
-  it('formats auxiliary-verb as 본용언 + 보조용언 : (tag)', () => {
+  it('formats auxiliary-verb as 본+보 : (tag)', () => {
     expect(
       getConsistencyHighlightTip({
         find: 'F',
         replace: '$0',
-        label: '고˅있 (아/어) + 있다',
+        label: '고˅있 본(-아/어) + 있다',
         patternKind: 'auxiliary-verb',
         tailWord: '고 있',
-        groupDisplayLabel: '(아/어) + 있다',
+        groupDisplayLabel: '본(-아/어) + 있다',
         instances: [],
       }),
-    ).toBe('본용언 + 보조용언 : (아/어) + 있다');
+    ).toBe('본+보 : 본(-아/어) + 있다');
   });
 
   it('formats literal consistency without replace line', () => {
@@ -57,6 +57,47 @@ describe('getConsistencyHighlightTip', () => {
       }),
     ).toBe('일관성 찾기 : 세계경제');
   });
+
+  it('통일형·공통 문자열 — 결과 카드와 동일 배지', () => {
+    const unifyRules = [
+      {
+        patternKind: 'compound-find',
+        tailWord: '미국정부',
+        consistencyUnifyEntry: true,
+        consistencyUnifyPinned: true,
+      },
+      {
+        patternKind: 'compound-find',
+        tailWord: '미국 정부',
+        consistencyUnifyEntry: true,
+      },
+    ];
+    expect(
+      getConsistencyHighlightTip(
+        {
+          find: '미국 정부',
+          replace: '$0',
+          label: '미국 정부',
+          patternKind: 'compound-find',
+          tailWord: '미국 정부',
+          instances: [],
+        },
+        unifyRules,
+      ),
+    ).toBe('통일형 찾기 : 미국˅정부');
+    expect(
+      getConsistencyHighlightTip(
+        {
+          find: '@정부',
+          replace: '$0',
+          label: '@정부',
+          patternKind: 'phrase-slot-find',
+          tailWord: '@정부',
+          instances: [],
+        },
+      ),
+    ).toBe('공통 문자열 찾기 : @정부');
+  });
 });
 
 describe('getConsistencyResultCardParts', () => {
@@ -70,7 +111,7 @@ describe('getConsistencyResultCardParts', () => {
         tailWord: '세계경제',
         instances: [{}, {}, {}],
       }),
-    ).toEqual({ badge: '일관성', label: '세계경제' });
+    ).toEqual({ badge: '일관성 찾기', label: '세계경제' });
     expect(
       getConsistencyResultCardParts({
         find: '세계 경제',
@@ -80,10 +121,52 @@ describe('getConsistencyResultCardParts', () => {
         tailWord: '세계 경제',
         instances: [{}],
       }),
-    ).toEqual({ badge: '일관성', label: '세계˅경제' });
+    ).toEqual({ badge: '일관성 찾기', label: '세계˅경제' });
   });
 
-  it('phrase-slot — 공통 문자열 배지 + 등록 문자열', () => {
+  it('통일형 — 배지·📌 표시', () => {
+    const unifyRules = [
+      {
+        patternKind: 'compound-find',
+        tailWord: '세계경제',
+        consistencyUnifyEntry: true,
+        consistencyUnifyPinned: true,
+      },
+      {
+        patternKind: 'compound-find',
+        tailWord: '세계 경제',
+        consistencyUnifyEntry: true,
+      },
+    ];
+    expect(
+      getConsistencyResultCardParts(
+        {
+          find: '세계경제',
+          replace: '$0',
+          label: '세계경제',
+          patternKind: 'compound-find',
+          tailWord: '세계경제',
+          instances: [{}],
+        },
+        unifyRules,
+      ),
+    ).toEqual({ badge: '통일형 찾기', label: '세계경제 📌' });
+    expect(
+      getConsistencyResultCardParts(
+        {
+          find: '세계 경제',
+          replace: '$0',
+          label: '세계 경제',
+          patternKind: 'compound-find',
+          tailWord: '세계 경제',
+          instances: [{}],
+        },
+        unifyRules,
+      ),
+    ).toEqual({ badge: '통일형 찾기', label: '세계˅경제' });
+  });
+
+  it('phrase-slot — 공통 문자열 찾기 배지 + 등록 문자열', () => {
     expect(
       getConsistencyResultCardParts({
         find: '@정부',
@@ -93,21 +176,21 @@ describe('getConsistencyResultCardParts', () => {
         tailWord: '@정부',
         instances: [{}],
       }),
-    ).toEqual({ badge: '공통 문자열', label: '@정부' });
+    ).toEqual({ badge: '공통 문자열 찾기', label: '@정부' });
   });
 
-  it('auxiliary-verb — 본용언 + 보조용언 배지 + 항목 라벨', () => {
+  it('auxiliary-verb — 본+보 배지 + 항목 라벨', () => {
     expect(
       getConsistencyResultCardParts({
         find: 'F',
         replace: '$0',
-        label: '고˅있 (아/어) + 가다',
+        label: '고˅있 본(-아/어) + 가다',
         patternKind: 'auxiliary-verb',
         tailWord: '고 있',
-        groupDisplayLabel: '(아/어) + 가다',
+        groupDisplayLabel: '본(-아/어) + 가다',
         instances: [{}],
       }),
-    ).toEqual({ badge: '본용언 + 보조용언', label: '(아/어) + 가다' });
+    ).toEqual({ badge: '본+보', label: '본(-아/어) + 가다' });
   });
 });
 
@@ -122,7 +205,7 @@ describe('getConsistencyResultCardTitle', () => {
         tailWord: '세계경제',
         instances: [{}],
       }),
-    ).toBe('일관성 세계경제');
+    ).toBe('일관성 찾기 세계경제');
   });
 });
 

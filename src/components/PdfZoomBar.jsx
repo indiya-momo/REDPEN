@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { ZoomIn, ZoomOut } from 'lucide-react';
 import {
   PDF_ZOOM_PERCENT_MAX,
   PDF_ZOOM_PERCENT_MIN,
@@ -57,7 +56,9 @@ export default function PdfZoomBar({
         disabled={!canZoomOut}
         aria-label="축소"
       >
-        <ZoomOut size={16} aria-hidden />
+        <span className="pdf-zoom-bar__sign" aria-hidden="true">
+          −
+        </span>
       </button>
       <label className="pdf-zoom-bar__percent-wrap">
         <span className="sr-only">확대 배율(퍼센트)</span>
@@ -91,7 +92,9 @@ export default function PdfZoomBar({
         disabled={!canZoomIn}
         aria-label="확대"
       >
-        <ZoomIn size={16} aria-hidden />
+        <span className="pdf-zoom-bar__sign" aria-hidden="true">
+          +
+        </span>
       </button>
     </div>
   );

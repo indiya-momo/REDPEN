@@ -44,6 +44,11 @@
   --panel-result-surface: var(--panel-surface-group);
   --panel-result-pill: var(--result-pill);
   --panel-result-pill-muted: rgb(42 33 24 / 6%);
+  --panel-result-badge-border: color-mix(
+    in srgb,
+    var(--panel-result-pill-muted) 92%,
+    var(--c-ink) 8%
+  );
   --panel-gap-section: calc(14px * var(--panel-ui-scale));
   /* 4순위 간격 — 위계용 여백 (블록 내부 micro) */
   --panel-gap-title-body: calc(6px * var(--panel-ui-scale));
@@ -53,6 +58,26 @@
   /* 5순위 accent — 패널 내 단일 강조(선택·CTA) */
   --panel-accent: var(--accent-terracotta);
   --panel-accent-deep: var(--accent-terracotta-deep);
+  --panel-run-btn-primary-bg: color-mix(
+    in srgb,
+    var(--panel-accent) 80%,
+    #2c1810 20%
+  );
+  --panel-run-btn-primary-border: color-mix(
+    in srgb,
+    var(--panel-accent) 68%,
+    #2c1810 32%
+  );
+  --panel-run-btn-primary-hover-bg: color-mix(
+    in srgb,
+    var(--panel-accent) 70%,
+    #2c1810 30%
+  );
+  --panel-page-chip-current-border: color-mix(
+    in srgb,
+    var(--panel-accent) 38%,
+    var(--c-ink) 62%
+  );
   flex-shrink: 0;
   height: 100%;
   min-width: 400px;
@@ -79,6 +104,7 @@
 .panel-left .consistency-result-chip,
 .panel-left .result-card-findings-count,
 .panel-left .caution-result-chip,
+.panel-left .spelling-result-chip,
 .panel-left .result-card--consistency .result-aux-stem,
 .panel-left .toc-result-title,
 .panel-left .panel-criteria-heading,
@@ -186,7 +212,7 @@
 }
 
 .panel-left .current-page-status strong,
-.panel-left .current-page-status .result-card-findings-count {
+.panel-left .current-page-status .result-findings-count-circle {
   font-weight: var(--w-step);
 }
 
@@ -208,7 +234,9 @@
 .panel-left .spelling-tab-scroll .results-panel--spelling .results-header,
 .panel-left .panel-left-work-scroll .results-panel--consistency .results-header {
   border-bottom: none;
-  background: transparent;
+  background: color-mix(in srgb, var(--panel-surface-group) 90%, var(--c-ink) 10%);
+  border-left: 3px solid color-mix(in srgb, var(--panel-accent) 72%, var(--c-ink) 28%);
+  box-shadow: inset 0 -1px 0 rgb(42 33 24 / 7%);
 }
 
 
@@ -248,7 +276,21 @@
   background: color-mix(in srgb, var(--panel-result-surface) 94%, var(--panel-accent) 6%);
 }
 
-/* pill·배지·묶음 — 테두리 없음, 명도로만 */
+/* pill·배지 — 배경보다 한 톤 진한 은은한 테두리 */
+.panel-left .results-panel--spelling :is(
+    .caution-badge-inline,
+    .spelling-badge-inline,
+    .results-header-badge
+  ),
+.panel-left .results-panel--consistency :is(
+    .caution-badge-inline,
+    .consistency-badge-inline,
+    .results-header-badge,
+    .result-card--consistency .result-aux-group-tag
+  ) {
+  border: 1px solid var(--panel-result-badge-border);
+}
+
 .panel-left .results-panel--spelling .page-chip,
 .panel-left .results-panel--consistency .page-chip {
   border: none;
@@ -265,18 +307,23 @@
 
 .panel-left .results-panel--spelling .page-chip--current,
 .panel-left .results-panel--consistency .page-chip--current {
-  background: var(--panel-accent);
-  color: var(--accent-on-terracotta);
-  border: none;
+  background: var(--panel-result-pill);
+  color: var(--c-ink);
+  border: 1px solid var(--panel-page-chip-current-border);
   box-shadow: none;
 }
 
 .panel-left .results-panel--spelling .page-chip--current:hover,
 .panel-left .results-panel--consistency .page-chip--current:hover {
-  background: var(--panel-accent-deep);
-  border: none;
+  background: color-mix(in srgb, var(--panel-result-pill) 86%, var(--panel-accent) 14%);
+  border-color: color-mix(in srgb, var(--panel-accent) 48%, var(--c-ink) 52%);
 }
 
+.panel-left .results-panel--spelling .page-chip--current .page-chip__bundle,
+.panel-left .results-panel--consistency .page-chip--current .page-chip__bundle {
+  background: var(--panel-result-pill-muted);
+  color: var(--c-ink);
+}
 .panel-left .results-panel--spelling .page-chip--on-page:not(.page-chip--current),
 .panel-left .results-panel--consistency .page-chip--on-page:not(.page-chip--current) {
   border: none;
@@ -291,12 +338,6 @@
   color: var(--c-soft);
 }
 
-.panel-left .results-panel--spelling .page-chip--current .page-chip__bundle,
-.panel-left .results-panel--consistency .page-chip--current .page-chip__bundle {
-  background: rgb(255 255 255 / 18%);
-  color: inherit;
-}
-
 .panel-left .results-panel--spelling .result-count,
 .panel-left .results-panel--consistency .result-count {
   border: none;
@@ -305,15 +346,31 @@
 }
 
 .panel-left .results-panel--spelling .caution-badge-inline,
+.panel-left .results-panel--spelling .spelling-badge-inline,
 .panel-left .results-panel--consistency .caution-badge-inline,
 .panel-left .results-panel--consistency .consistency-badge-inline {
-  border: none;
   background: var(--panel-result-pill-muted);
   color: var(--c-ink);
+  line-height: 1.15;
+}
+
+.panel-left .results-panel--spelling .result-rule,
+.panel-left .results-panel--consistency .result-rule {
+  font-size: calc(0.85rem * var(--panel-ui-scale) * 0.9);
+  line-height: 1.2;
+}
+
+.panel-left .results-panel--spelling .results-header-badge,
+.panel-left .results-panel--consistency .results-header-badge {
+  background: var(--panel-result-pill-muted);
+  color: var(--c-ink);
+  font-size: calc(0.62rem * var(--panel-ui-scale) * 1.32);
+  padding: calc(0.0625rem * var(--panel-ui-scale) * 1.32)
+    calc(var(--space-sm-tight) * var(--panel-ui-scale) * 1.32);
+  line-height: 1.15;
 }
 
 .panel-left .results-panel--consistency .result-card--consistency .result-aux-group-tag {
-  border: none;
   background: var(--panel-result-pill-muted);
   color: var(--c-ink);
   box-shadow: none;
@@ -628,7 +685,7 @@
 
 .panel-left .result-card-head-main {
   flex-direction: row;
-  align-items: baseline;
+  align-items: center;
   gap: var(--space-xs-tight) var(--space-md-tight);
 }
 
@@ -661,7 +718,10 @@
 }
 
 /* 요약 줄 ↔ 결과 목록 */
-.panel-left .results-header,
+.panel-left .results-header {
+  padding-bottom: calc((var(--space-sm) + 2px) * 0.7);
+}
+
 .panel-left .current-page-status {
   padding-bottom: calc(var(--space-sm) + 2px);
 }
@@ -1726,27 +1786,31 @@
   font-weight: 700;
   padding: calc(6px * var(--panel-run-btn-scale)) calc(16px * var(--panel-run-btn-scale));
   white-space: nowrap;
-  background: var(--btn-primary-bg);
-  border: 1px solid var(--btn-primary-bg);
-  color: var(--btn-primary-text);
-}
-
-.btn-add.panel-section-run-btn.btn-export-results {
-  background: #D7CCC8;
-  border: none;
-  color: #3E2723;
-}
-
-.btn-add.panel-section-run-btn.btn-export-results:hover:not(:disabled) {
-  background: #BCAAA4;
-  border: none;
-  color: #3E2723;
+  background: var(--btn-secondary-bg);
+  border: 1px solid var(--btn-secondary-border);
+  color: var(--btn-secondary-text);
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
 }
 
 .btn-add.panel-section-run-btn:hover:not(:disabled) {
-  background: var(--btn-primary-hover-bg);
-  border-color: var(--btn-primary-hover-bg);
-  color: var(--btn-primary-hover-text);
+  background: var(--btn-secondary-hover-bg);
+  border-color: var(--btn-secondary-hover-border);
+  color: var(--btn-secondary-text);
+}
+
+.btn-add.panel-section-run-btn--primary {
+  background: var(--panel-run-btn-primary-bg);
+  border-color: var(--panel-run-btn-primary-border);
+  color: var(--accent-on-terracotta);
+}
+
+.btn-add.panel-section-run-btn--primary:hover:not(:disabled) {
+  background: var(--panel-run-btn-primary-hover-bg);
+  border-color: var(--panel-run-btn-primary-hover-bg);
+  color: var(--accent-on-terracotta);
 }
 
 .btn-add.panel-section-run-btn:disabled {
@@ -3579,12 +3643,27 @@
 }
 
 .panel-left .current-page-status {
-  font-size: calc(0.98rem * var(--panel-ui-scale));
+  font-size: calc(0.98rem * var(--panel-ui-scale) * 0.9);
   padding: calc(var(--space-md) * 0.5 * var(--panel-ui-scale)) calc(var(--space-xl) * var(--panel-ui-scale));
 }
 
+.panel-left .current-page-status .result-findings-count-circle,
+.panel-left .current-page-status__findings-count {
+  font-size: calc(0.85rem * var(--panel-ui-scale) * 0.9);
+}
+
 .panel-left .results-header {
-  font-size: calc(0.98rem * var(--panel-ui-scale));
+  font-size: calc(0.98rem * var(--panel-ui-scale) * 0.9 * 1.1);
+}
+
+.panel-left .results-header .result-findings-count-circle,
+.panel-left .results-header__total-count {
+  font-size: calc(0.85rem * var(--panel-ui-scale) * 0.9 * 1.1);
+}
+
+.panel-left .result-card-head .result-findings-count-circle,
+.panel-left .result-card-head__findings-count.result-findings-count-circle {
+  font-size: calc(0.85rem * var(--panel-ui-scale) * 0.9);
 }
 
 .panel-left .consistency-section-box:not([data-work-guide-step='auxiliary-box']) {

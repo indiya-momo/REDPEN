@@ -99,7 +99,7 @@ export function formatProjectCardMetaLine(card) {
 const PILLAR_META = [
   { key: 'spelling', label: '맞춤법' },
   { key: 'consistency', label: '일관성' },
-  { key: 'auxiliary', label: '본용언 + 보조용언' },
+  { key: 'auxiliary', label: '본용언(-아/어) + 보조용언' },
 ];
 
 /** @param {ProjectCardViewModel} card @param {ProjectCardPillarKey} key */

@@ -237,13 +237,19 @@ describe('buildPageText — 역할을 해 왔다 추출·검사 (가설 검증)'
     expect(matchCountsOnPage(page)).toEqual({ literal: 1, auxiliary: 0 });
   });
 
-  it('항목이 한 덩어리(역할을해왔다)면 text도 붙음 — 문자열찾기(loose)만 가능', () => {
+  it('항목이 한 덩어리(역할을해왔다)면 띄어쓴 등록과는 별도 — 붙임 규칙으로 등록', () => {
     const items = mockLineItems([{ str: '역할을해왔다.', x: 0, w: 90 }]);
     const { text, textLayout } = buildPageText(items);
     expect(text).toBe('역할을해왔다.\n');
     expect(textLayout).toBe('역할을해왔다.\n');
     const page = { pageNum: 99, text, items, itemRefs: [] };
-    expect(matchCountsOnPage(page)).toEqual({ literal: 1, auxiliary: 0 });
+    expect(matchCountsOnPage(page)).toEqual({ literal: 0, auxiliary: 0 });
+    const glued = buildCompoundFindRules('역할을해왔다').map((r) => ({
+      ...r,
+      enabled: true,
+    }));
+    const lit = runRuleCheck([page], glued);
+    expect(lit.results.reduce((n, g) => n + g.instances.length, 0)).toBe(1);
   });
 
   it('해·왔 항목 gap이 음절 경계(좁지만 10% 이상)면 text에 해↔왔 공백', () => {
@@ -300,7 +306,7 @@ describe('buildPageText — 역할을 해 왔다 추출·검사 (가설 검증)'
     const { text } = buildPageText(items);
     expect(text).toMatch(/역할을\s+해왔다/);
     const page = { pageNum: 99, text, items, itemRefs: [] };
-    expect(matchCountsOnPage(page)).toEqual({ literal: 1, auxiliary: 0 });
+    expect(matchCountsOnPage(page)).toEqual({ literal: 0, auxiliary: 0 });
   });
 
   it('Hancom PDF — 공백 항목 bbox가 넓어도 같은 줄 어절로 묶음', () => {
