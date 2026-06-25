@@ -88,7 +88,7 @@ function formatConfirmAuxiliaryCount(active, total) {
  *   auxiliaryTotal: number,
  * }} input
  */
-function formatConsistencyCheckCriteriaLine({
+function formatConsistencyCheckCriteriaBlock({
   literalActive,
   unifyActive,
   commonStringActive,
@@ -96,13 +96,14 @@ function formatConsistencyCheckCriteriaLine({
   auxiliaryActive,
   auxiliaryTotal,
 }) {
-  return (
+  const line1 =
     `일관성 찾기${formatConfirmActiveCount(literalActive)}, ` +
     `통일형 만들기${formatConfirmActiveCount(unifyActive)}, ` +
-    `공통 문자열 찾기${formatConfirmActiveCount(commonStringActive)}, ` +
+    `공통 문자열 찾기${formatConfirmActiveCount(commonStringActive)}`;
+  const line2 =
     `검수 제외 항목${formatConfirmActiveCount(excludeActive)}, ` +
-    `${AUXILIARY_VERB_FEATURE_LABEL}${formatConfirmAuxiliaryCount(auxiliaryActive, auxiliaryTotal)}`
-  );
+    `${AUXILIARY_VERB_FEATURE_LABEL}${formatConfirmAuxiliaryCount(auxiliaryActive, auxiliaryTotal)}`;
+  return `${line1}\n${line2}`;
 }
 
 /**
@@ -131,10 +132,10 @@ export function formatConsistencyCheckConfirmMessage({
   auxiliaryTotal,
 }) {
   return (
-    `[일관성 검수 안내]\n` +
+    `[일관성 검수 진행]\n` +
     `\n` +
     `오늘 일관성 검수는 ${remaining}회(한도 ${tabLimit}회) 가능합니다\n` +
-    `${formatConsistencyCheckCriteriaLine({
+    `${formatConsistencyCheckCriteriaBlock({
       literalActive,
       unifyActive,
       commonStringActive,
@@ -162,9 +163,9 @@ export function formatConsistencyCheckConfirmMessage({
  */
 export function formatConsistencyCheckConfirmMessageWithoutQuota(counts) {
   return (
-    `[일관성 검수 안내]\n` +
+    `[일관성 검수 진행]\n` +
     `\n` +
-    `${formatConsistencyCheckCriteriaLine({
+    `${formatConsistencyCheckCriteriaBlock({
       literalActive: counts.literalActive,
       unifyActive: counts.unifyActive,
       commonStringActive: counts.commonStringActive,

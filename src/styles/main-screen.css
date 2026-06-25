@@ -761,6 +761,10 @@
   border: none;
 }
 
+.panel-left .printed-page-setup__input {
+  border: 1px solid var(--work-chrome-border);
+}
+
 .panel-left .spelling-tab-layout__calibration .printed-page-setup {
   margin: 0;
   padding: 9px 10px;
@@ -3773,12 +3777,25 @@
 }
 
 .panel-left .field-input,
-.panel-left .printed-page-setup__input,
 .panel-left .consistency-toc-section__start-page-input,
 .panel-left .consistency-toc-section__exclude-pages-input,
 .panel-left .consistency-toc-section__textarea {
   font-size: calc(0.875rem * var(--panel-ui-scale));
   padding: calc(10px * var(--panel-ui-scale)) calc(12px * var(--panel-ui-scale));
+}
+
+.panel-left .printed-page-setup__input {
+  box-sizing: border-box;
+  height: var(--work-chrome-control-h);
+  padding: 0 calc(10px * var(--panel-ui-scale));
+  font-size: calc(0.78rem * var(--panel-ui-scale));
+  line-height: 1;
+  border: 1px solid var(--work-chrome-border);
+  background: var(--work-chrome-field-bg);
+}
+
+.panel-left .printed-page-setup__input:hover {
+  border-color: var(--work-chrome-border-hover);
 }
 
 .panel-left .consistency-embed .consistency-register-field .consistency-register-field__input,

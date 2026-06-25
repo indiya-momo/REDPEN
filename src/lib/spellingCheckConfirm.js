@@ -41,7 +41,7 @@ export function formatSpellingCheckConfirmMessage({
   cautionTotal,
 }) {
   return (
-    `[맞춤법 검수 안내]\n` +
+    `[맞춤법 검수 진행]\n` +
     `오늘 맞춤법 검수는 ${remaining}회(한도 ${tabLimit}회) 가능합니다\n` +
     `편집자 검토 필요(${cautionActive}/${cautionTotal}), 맞춤법 규칙(${builtinTotal}/${builtinActive})\n` +
     `\n` +
@@ -59,7 +59,7 @@ export function formatSpellingCheckConfirmMessage({
  */
 export function formatSpellingCheckConfirmMessageWithoutQuota(counts) {
   return (
-    `[맞춤법 검수 안내]\n` +
+    `[맞춤법 검수 진행]\n` +
     `편집자 검토 필요(${counts.cautionActive}/${counts.cautionTotal}), 맞춤법 규칙(${counts.builtinTotal}/${counts.builtinActive})\n` +
     `\n` +
     '검수를 진행할까요?'
