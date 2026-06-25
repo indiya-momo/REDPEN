@@ -49,7 +49,7 @@ describe('getHighlightOverlayReplace', () => {
     ).toBeNull();
   });
 
-  it('통일형 오버레이 — 찾은 문자열 공백을 ˅로 표시', () => {
+  it('통일형 오버레이 — 통일형 문자열만 표시', () => {
     const inst = {
       find: '세계 경제',
       replace: '$0',
@@ -74,18 +74,24 @@ describe('getHighlightOverlayReplace', () => {
     };
     expect(
       getHighlightOverlayReplace(inst, { customRules, group }),
-    ).toBe('세계˅경제→세계경제');
+    ).toBe('세계경제');
     expect(
       formatConsistencyUnifyHighlightOverlay(
         { matchedText: '붉은표시' },
         '붉은 표시',
       ),
-    ).toBe('붉은표시→붉은˅표시');
+    ).toBe('붉은 표시');
     expect(
       formatConsistencyUnifyHighlightOverlay(
         { matchedText: '세계경제' },
         '세계경제',
       ),
-    ).toBe(null);
+    ).toBe('세계경제');
+    expect(
+      formatConsistencyUnifyHighlightOverlay(
+        { matchedText: '붉은표시' },
+        '붉은표시→붉은 표시',
+      ),
+    ).toBe('붉은 표시');
   });
 });

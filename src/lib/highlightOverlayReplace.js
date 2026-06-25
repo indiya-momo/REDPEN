@@ -1,18 +1,18 @@
 import { getBuiltInOverlayReplace } from './builtInRules.js';
 import { getConsistencyUnifyOverlayForGroup } from './consistencyUnifyRegister.js';
-import { formatConsistencyListLabel } from './patternDisplayLabels.js';
 
 /**
- * 통일형 PDF 오버레이 — 찾은 문자열은 ˅로 공백 위치 표시(일관성 찾기와 동일)
- * @param {import('./ruleEngine.js').MatchInstance} inst
+ * 통일형 PDF 오버레이 — 통일형 문자열만 그대로 표시(기호 없음)
+ * @param {import('./ruleEngine.js').MatchInstance} _inst
  * @param {string} unifiedRaw
  */
-export function formatConsistencyUnifyHighlightOverlay(inst, unifiedRaw) {
-  const unified = formatConsistencyListLabel(unifiedRaw);
+export function formatConsistencyUnifyHighlightOverlay(_inst, unifiedRaw) {
+  let unified = String(unifiedRaw ?? '').trim();
   if (!unified) return null;
-  const found = formatConsistencyListLabel(inst.matchedText ?? '');
-  if (!found || found === unified) return null;
-  return `${found}→${unified}`;
+  if (unified.startsWith('→')) unified = unified.slice(1).trim();
+  const arrow = unified.indexOf('→');
+  if (arrow >= 0) unified = unified.slice(arrow + 1).trim();
+  return unified || null;
 }
 
 /**

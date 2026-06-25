@@ -2032,8 +2032,8 @@
 
 .builtin-spelling-resize-body .caution-checklist-summary-title,
 .builtin-spelling-resize-body .builtin-spelling-summary-title {
-  display: flex;
-  align-items: center;
+  display: inline-flex;
+  align-items: baseline;
   align-self: center;
   line-height: 1.2;
 }
@@ -3531,8 +3531,23 @@
   font-size: calc(1.05rem * var(--panel-ui-scale));
 }
 
+.panel-left p.panel-criteria-heading,
+.panel-left .printed-page-setup__title.panel-criteria-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 0.15em;
+}
+
+.panel-left .caution-checklist-summary-title,
+.panel-left .builtin-spelling-summary-title {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 0.15em;
+}
+
 .panel-left .panel-criteria-heading-meta {
-  margin-inline-start: 0.15em;
   font-size: 0.75em;
   line-height: inherit;
 }
