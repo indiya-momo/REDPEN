@@ -147,7 +147,7 @@ export default function CautionChecklist({
   }
 
   return (
-    <details className="caution-checklist-details">
+    <details className="caution-checklist-details" open>
       <summary className="caution-checklist-summary panel-criteria-heading">
         <DetailsChevron />
         <label
