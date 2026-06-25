@@ -15,6 +15,11 @@ import {
   isBetaDailyQuotaEnabled,
   isBetaDailyQuotaEnforcedForUser,
 } from './betaDailyQuota.js';
+import {
+  parseBracketTitleMessage,
+  showAppAlert,
+  showAppConfirm,
+} from './appDialog.js';
 
 /**
  * 맞춤법 검수 시작 전 confirm 본문
@@ -116,7 +121,8 @@ export async function confirmSpellingCheckBeforeRun(
     });
   }
 
-  return confirm(message);
+  const { title, message: body } = parseBracketTitleMessage(message);
+  return showAppConfirm({ title, message: body });
 }
 
 /**
@@ -165,11 +171,16 @@ export function formatSpellingCheckCompleteMessage({
  * @param {import('./ruleEngine.js').RuleResultGroup[]} groups
  * @param {number} totalFindings
  */
-export function alertSpellingCheckAfterRun(groups = [], totalFindings = 0) {
-  alert(
-    formatSpellingCheckCompleteMessage({
-      ...countSpellingGroupsWithFindings(groups),
-      totalFindings,
-    }),
-  );
+export async function alertSpellingCheckAfterRun(
+  groups = [],
+  totalFindings = 0,
+) {
+  const raw = formatSpellingCheckCompleteMessage({
+    ...countSpellingGroupsWithFindings(groups),
+    totalFindings,
+  });
+  const newline = raw.indexOf('\n');
+  const title = newline >= 0 ? raw.slice(0, newline) : '검수 완료';
+  const message = newline >= 0 ? raw.slice(newline + 1).trimStart() : raw;
+  await showAppAlert({ title, message });
 }

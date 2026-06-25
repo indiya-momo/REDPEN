@@ -26,6 +26,7 @@ import TooltipGuide from './TooltipGuide.jsx';
 import PrintedPageSetup from './PrintedPageSetup.jsx';
 import PdfCenterStage from './PdfCenterStage.jsx';
 import CriteriaSaveModal from './CriteriaSaveModal.jsx';
+import { showAppConfirm } from '../lib/appDialog.js';
 import TocBodyResultsPanel from '../toc-body/components/TocBodyResultsPanel.jsx';
 import { useTocBodyCheck } from '../toc-body/hooks/useTocBodyCheck.js';
 import { useTocBodyHighlights } from '../toc-body/hooks/useTocBodyHighlights.js';
@@ -224,7 +225,7 @@ const WORK_GUIDE_2_ALIGN_CHAIN = [
  *     name: string,
  *     options?: { projectContextSnapshot?: import('../lib/projectMeta.js').ProjectContext },
  *   ) => false | Promise<false | string>,
- *   onDeleteCriteriaPreset: (setId: string) => boolean,
+ *   onDeleteCriteriaPreset: (setId: string) => boolean | Promise<boolean>,
  *   onTouchActiveProjectContext?: (
  *     patch: Partial<import('../lib/projectMeta.js').ProjectContext>,
  *   ) => void,
@@ -328,15 +329,15 @@ export default function MainScreen({
     return () => document.removeEventListener('pointerdown', handlePointerDown);
   }, [criteriaPickerOpen]);
 
-  function handleDeleteCriteria(setId) {
-    const deleted = onDeleteCriteriaPreset(setId);
+  async function handleDeleteCriteria(setId) {
+    const deleted = await onDeleteCriteriaPreset(setId);
     if (!deleted) return;
     if (savedRuleSets.length <= 1) {
       setCriteriaPickerOpen(false);
     }
   }
 
-  function selectSavedCriteria(set) {
+  async function selectSavedCriteria(set) {
     if (set.id === activeSetId) {
       setCriteriaNameInput(criteriaNameForInput(set.name));
       setCriteriaPickerOpen(false);
@@ -344,9 +345,11 @@ export default function MainScreen({
     }
     const label = (set.name || '이름 없는 기준').trim();
     if (
-      !window.confirm(
-        `「${label}」 프로젝트로 전환할까요?\n\n원고와 검사 결과는 초기화됩니다.`,
-      )
+      !(await showAppConfirm({
+        title: '프로젝트 전환',
+        message:
+          `「${label}」 프로젝트로 전환할까요?\n\n원고와 검사 결과는 초기화됩니다.`,
+      }))
     ) {
       return;
     }

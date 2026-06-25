@@ -8,6 +8,7 @@ import {
 } from './spellingCheckConfirm.js';
 import { BUILT_IN_QUOTA_RULES } from './builtInRules.js';
 import { CAUTION_SEARCH_RULES } from './cautionRules.js';
+import { parseBracketTitleMessage } from './appDialog.js';
 
 vi.mock('./checkAuthGate.js', () => ({
   assertLoggedInForCheckOrAlert: () => true,
@@ -44,16 +45,16 @@ describe('confirmSpellingCheckBeforeRun', () => {
 
     await confirmSpellingCheckBeforeRun('uid-1', 'a@b.c', {});
 
-    expect(confirmMock).toHaveBeenCalledWith(
-      formatSpellingCheckConfirmMessage({
+    const msg = formatSpellingCheckConfirmMessage({
         remaining: 1,
         tabLimit: 2,
         builtinActive: 12,
         builtinTotal: BUILT_IN_QUOTA_RULES.length,
         cautionActive: 5,
         cautionTotal: CAUTION_SEARCH_RULES.length,
-      }),
-    );
+      });
+    const { title, message } = parseBracketTitleMessage(msg);
+    expect(confirmMock).toHaveBeenCalledWith(`${title}\n\n${message}`);
   });
 });
 
@@ -110,11 +111,11 @@ describe('formatSpellingCheckCompleteMessage', () => {
 });
 
 describe('alertSpellingCheckAfterRun', () => {
-  it('검수 완료 alert를 띄운다', () => {
+  it('검수 완료 alert를 띄운다', async () => {
     const alertMock = vi.fn();
     vi.stubGlobal('alert', alertMock);
 
-    alertSpellingCheckAfterRun(
+    await alertSpellingCheckAfterRun(
       [
         { category: 'caution', instances: [{}] },
         { category: 'spelling', instances: [{}] },
@@ -122,12 +123,14 @@ describe('alertSpellingCheckAfterRun', () => {
       3,
     );
 
-    expect(alertMock).toHaveBeenCalledWith(
-      formatSpellingCheckCompleteMessage({
+    const complete = formatSpellingCheckCompleteMessage({
         builtinWithFindings: 1,
         cautionWithFindings: 1,
         totalFindings: 3,
-      }),
+      });
+    const newline = complete.indexOf('\n');
+    expect(alertMock).toHaveBeenCalledWith(
+      `${complete.slice(0, newline)}\n\n${complete.slice(newline + 1).trimStart()}`,
     );
   });
 });
