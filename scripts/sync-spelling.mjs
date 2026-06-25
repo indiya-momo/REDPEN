@@ -2,7 +2,8 @@
  * Google 시트 → 맞춤법 규칙 JSON
  *
  * 시트 탭 이름: spelling_rules
- * 컬럼: find | replace | enabled | tip | memo | counts_in_quota | visible | divider_group | overlay_replace
+ * 컬럼: find | replace | enabled | tip | memo | counts_in_quota | visible | divider_group | divider_label | overlay_replace
+ *   - divider_label: 묶음 이름(예: 사이시옷 법칙). 빈 칸 또는 "-"는 이름 없음으로 처리.
  *
  * 사용:
  *   SPREADSHEET_ID=xxx npm run sync-spelling
@@ -114,6 +115,10 @@ function stripCellPrefix(value, prefix) {
 /** 시트 헤더 별칭 (한글·영문) */
 const SPELLING_HEADER_ALIASES = {
   메모: 'memo',
+  묶음: 'divider_label',
+  묶음이름: 'divider_label',
+  묶음명: 'divider_label',
+  'divider label': 'divider_label',
 };
 
 function rowsToObjects(rows) {
@@ -174,6 +179,13 @@ function normalizeDividerGroup(value) {
   return v || undefined;
 }
 
+/** 묶음 이름: 빈 칸·"-"(이름 미정 자리표시)는 이름 없음으로 처리 */
+function normalizeDividerLabel(value) {
+  const v = String(value ?? '').trim();
+  if (!v || v === '-') return undefined;
+  return v;
+}
+
 function expandBulkRow(
   find,
   replace,
@@ -183,6 +195,7 @@ function expandBulkRow(
   countsInQuota,
   visible,
   dividerGroup,
+  dividerLabel,
   overlayReplace,
 ) {
   const findParts = find.split(/\s+/).filter(Boolean);
@@ -199,6 +212,7 @@ function expandBulkRow(
     ...(countsInQuota === false ? { countsInQuota: false } : {}),
     ...(visible === false ? { visible: false } : {}),
     ...(dividerGroup ? { dividerGroup } : {}),
+    ...(dividerLabel ? { dividerLabel } : {}),
     ...(overlayReplace ? { overlayReplace } : {}),
   }));
 }
@@ -215,6 +229,7 @@ function normalizeRow(row) {
   const countsInQuota = parseCountsInQuota(row.counts_in_quota);
   const visible = parseVisible(row.visible);
   const dividerGroup = normalizeDividerGroup(row.divider_group);
+  const dividerLabel = normalizeDividerLabel(row.divider_label);
   const overlayReplace = normalizeOverlayReplace(row.overlay_replace);
 
   const bulk = expandBulkRow(
@@ -226,6 +241,7 @@ function normalizeRow(row) {
     countsInQuota,
     visible,
     dividerGroup,
+    dividerLabel,
     overlayReplace,
   );
   if (bulk) return bulk;
@@ -243,6 +259,7 @@ function normalizeRow(row) {
     ...(countsInQuota === false ? { countsInQuota: false } : {}),
     ...(visible === false ? { visible: false } : {}),
     ...(dividerGroup ? { dividerGroup } : {}),
+    ...(dividerLabel ? { dividerLabel } : {}),
     ...(overlayReplace ? { overlayReplace } : {}),
   };
 }
@@ -352,7 +369,7 @@ async function main() {
       (r) =>
         `${r.find}\0${r.replace}\0${r.tip ?? ''}\0${r.enabled === true ? 1 : 0}\0${
           r.countsInQuota === false ? 0 : 1
-        }\0${r.visible === false ? 0 : 1}\0${r.dividerGroup ?? ''}\0${r.overlayReplace ?? ''}`,
+        }\0${r.visible === false ? 0 : 1}\0${r.dividerGroup ?? ''}\0${r.dividerLabel ?? ''}\0${r.overlayReplace ?? ''}`,
     )
     .join('\n');
   for (let i = 0; i < payload.length; i += 1) {

@@ -40,6 +40,8 @@ import { cautionHighlightSpan } from './cautionRules.js';
  * @property {import('./ruleTypes.js').RuleKind} [patternKind]
  * @property {string} [tailWord]
  * @property {string} [groupDisplayLabel]
+ * @property {string} [dividerGroup] — 맞춤법 묶음 키(엑셀 묶음 열 정렬·병합용)
+ * @property {string} [dividerLabel] — 묶음 표시 이름(엑셀 묶음 열 표시용)
  * @property {MatchInstance[]} instances
  */
 
@@ -103,6 +105,8 @@ function pushCompoundFindInstance(rule, page, byKey, globalIndex, matchedText) {
       ...(rule.patternKind === 'auxiliary-verb' && rule.label?.trim()
         ? { groupDisplayLabel: rule.label.trim() }
         : {}),
+      ...(rule.dividerGroup ? { dividerGroup: rule.dividerGroup } : {}),
+      ...(rule.dividerLabel ? { dividerLabel: rule.dividerLabel } : {}),
       instances: [],
     });
   }
@@ -288,6 +292,8 @@ function applyRuleToPages(rule, pages, byKey, globalExcludePhrases, errors) {
                   : {}),
               }
             : {}),
+          ...(rule.dividerGroup ? { dividerGroup: rule.dividerGroup } : {}),
+          ...(rule.dividerLabel ? { dividerLabel: rule.dividerLabel } : {}),
           instances: [],
         });
       }

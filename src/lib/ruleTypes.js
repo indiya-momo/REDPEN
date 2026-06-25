@@ -24,6 +24,7 @@
  * @property {boolean} [countsInQuota] — false면 1000개 한도·맞춤법 확인 (N/M) 집계에서 제외
  * @property {boolean} [visible] — false면 규칙 목록 UI에만 숨김(검사는 enabled로 제어)
  * @property {string} [dividerGroup] — 맞춤법 목록 구분선 묶음 키(같은 값끼리는 구분선 없음)
+ * @property {string} [dividerLabel] — 묶음 표시 이름(예: 사이시옷 법칙). 빈 칸·"-"는 이름 없음. 엑셀 내보내기 "묶음" 열에 표시
  * @property {string} [overlayReplace] — 시트 overlay_replace: PDF 하이라이트 위 표시 문구
  * @property {boolean} [consistencyUnifyEntry] — 통일형 만들기에서 등록한 일관성 항목
  * @property {boolean} [consistencyUnifyPinned] — 통일형 만들기에서 📌로 지정한 통일형
