@@ -1,5 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
-import { getHighlightOverlayReplace } from './highlightOverlayReplace.js';
+import {
+  formatConsistencyUnifyHighlightOverlay,
+  getHighlightOverlayReplace,
+} from './highlightOverlayReplace.js';
 
 vi.mock('./builtInRules.js', () => ({
   getBuiltInOverlayReplace: (find, replace) => {
@@ -44,5 +47,45 @@ describe('getHighlightOverlayReplace', () => {
         index: 0,
       }),
     ).toBeNull();
+  });
+
+  it('통일형 오버레이 — 찾은 문자열 공백을 ˅로 표시', () => {
+    const inst = {
+      find: '세계 경제',
+      replace: '$0',
+      matchedText: '세계 경제',
+      pageNum: 1,
+      index: 0,
+    };
+    const customRules = [
+      {
+        patternKind: 'compound-find',
+        tailWord: '세계 경제',
+        consistencyUnifyEntry: true,
+        overlayReplace: '세계경제',
+      },
+    ];
+    const group = {
+      find: '세계 경제',
+      replace: '$0',
+      label: '세계˅경제',
+      tailWord: '세계 경제',
+      instances: [],
+    };
+    expect(
+      getHighlightOverlayReplace(inst, { customRules, group }),
+    ).toBe('세계˅경제→세계경제');
+    expect(
+      formatConsistencyUnifyHighlightOverlay(
+        { matchedText: '붉은표시' },
+        '붉은 표시',
+      ),
+    ).toBe('붉은표시→붉은˅표시');
+    expect(
+      formatConsistencyUnifyHighlightOverlay(
+        { matchedText: '세계경제' },
+        '세계경제',
+      ),
+    ).toBe(null);
   });
 });

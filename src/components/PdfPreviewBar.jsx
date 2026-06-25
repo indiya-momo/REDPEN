@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
 import CurrentPageStatus from './CurrentPageStatus.jsx';
 import PdfThumbnailStrip from './PdfThumbnailStrip.jsx';
 
@@ -154,13 +155,19 @@ export default function PdfPreviewBar({
           {onToggleThumbStrip ? (
             <button
               type="button"
-              className={`pdf-preview-bar__toggle${
+              className={`pdf-work-pane__aux-btn pdf-preview-bar__toggle${
                 thumbStripOpen ? ' pdf-preview-bar__toggle--open' : ''
               }`}
               onClick={onToggleThumbStrip}
               aria-expanded={thumbStripOpen}
               aria-controls="pdf-thumb-strip"
+              aria-label={thumbStripOpen ? '미리보기 숨기기' : '미리보기 보기'}
             >
+              {thumbStripOpen ? (
+                <EyeOff size={16} aria-hidden />
+              ) : (
+                <Eye size={16} aria-hidden />
+              )}
               {thumbStripOpen ? '숨기기' : '미리보기'}
             </button>
           ) : null}

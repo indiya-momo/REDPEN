@@ -47,7 +47,6 @@ export function buildTabEntries(workTab, spellingResults, consistencyResults) {
   const source = workTab === 'spelling' ? 'spelling' : 'consistency';
   for (const group of results) {
     if (group.patternKind === 'toc-body') continue;
-    if (workTab === 'consistency' && group.instances.length === 0) continue;
     entries.push({ group, source });
   }
   return entries;

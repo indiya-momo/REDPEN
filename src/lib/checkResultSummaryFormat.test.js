@@ -28,12 +28,13 @@ describe('checkResultSummaryFormat', () => {
     expect(
       formatConsistencyResultsSummaryLine({
         literalWithFindings: 2,
-        commonStringWithFindings: 1,
+        unifyWithFindings: 1,
+        commonStringWithFindings: 0,
         auxiliaryWithFindings: 9,
-        totalFindings: 120,
+        totalFindings: 67,
       }),
     ).toBe(
-      '일관성 찾기(2건), 공통 문자열 찾기(1건), 본용언 + 보조용언 표기(9건) 전체 발견 [120]',
+      '일관성 찾기(2건), 통일형 찾기(1건), 공통 문자열 찾기(0건), 본용언(-아/어) + 보조용언 표기(9건) 전체 발견 [67]',
     );
   });
 

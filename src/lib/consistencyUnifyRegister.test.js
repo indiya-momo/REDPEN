@@ -88,6 +88,28 @@ describe('consistencyUnifyRegister', () => {
     ).toBe(null);
   });
 
+  it('📌 통일형은 검사·결과에 포함, PDF → 오버레이만 없음', () => {
+    const rules = applyConsistencyUnifyPin(baseRules, '빨간표시');
+    expect(
+      getConsistencyUnifyOverlayForGroup(rules, {
+        find: '빨간표시',
+        replace: '$0',
+        label: '빨간표시',
+        tailWord: '빨간표시',
+        instances: [],
+      }),
+    ).toBe(null);
+    expect(
+      getConsistencyUnifyOverlayForGroup(rules, {
+        find: '붉은표시',
+        replace: '$0',
+        label: '붉은표시',
+        tailWord: '붉은표시',
+        instances: [],
+      }),
+    ).toBe('빨간표시');
+  });
+
   it('같은 📌 재클릭 시 해제한다', () => {
     const pinned = applyConsistencyUnifyPin(baseRules, '빨간표시');
     const cleared = applyConsistencyUnifyPin(pinned, '빨간표시');

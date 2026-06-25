@@ -57,7 +57,7 @@ export function useHighlights({
           (source === 'spelling' && group.category !== 'caution'
             ? getBuiltInTip(group.find, group.replace)
             : source === 'consistency'
-              ? getConsistencyHighlightTip(group)
+              ? getConsistencyHighlightTip(group, customRules)
               : '');
         const isActiveGroup =
           activeGroupKey != null && groupKey(group) === activeGroupKey;
