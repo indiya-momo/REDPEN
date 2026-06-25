@@ -4,7 +4,6 @@ import {
   ruleDisplayLabel,
 } from './regexFromFind.js';
 import { isGloballyExcluded, shouldSkipMatch } from './matchFilters.js';
-import { tailRegexFragmentForFind } from './compoundPatternCommon.js';
 import { getLineContextAtTextIndex } from '../toc-body/lib/pdfHeadingExtract.js';
 import { isMatchSpatiallyCoherent } from './matchSpatial.js';
 import { cautionHighlightSpan } from './cautionRules.js';
@@ -138,15 +137,7 @@ function pageViewForCompoundFind(_rule, page) {
 }
 
 function applyCompoundFindByLines(rule, page, byKey, globalExcludePhrases) {
-  const tail = String(rule.tailWord ?? '').trim();
-  // 본조 stem은 rule.find(선택적 공백). loose는 문자열 찾기(전 구간 0칸 허용) 전용
-  const loose =
-    rule.patternKind !== 'auxiliary-verb' &&
-    /\s/.test(tail) &&
-    tailRegexFragmentForFind(tail);
-  const regex = loose
-    ? new RegExp(loose, 'gu')
-    : compileRuleRegex(rule);
+  const regex = compileRuleRegex(rule);
   if (!regex) return;
 
   const { text: searchText, itemRefs: searchRefs } = pageViewForCompoundFind(

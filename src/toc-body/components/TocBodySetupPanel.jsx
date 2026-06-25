@@ -95,6 +95,7 @@ export default function TocBodySetupPanel({
         </p>
         <PanelSectionRunButton
           label="검수"
+          className="panel-section-run-btn--primary"
           processingLabel="검수 중…"
           onClick={onRunCheck}
           disabled={!canRunCheck}

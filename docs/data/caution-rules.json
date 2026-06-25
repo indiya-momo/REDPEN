@@ -1,60 +1,9 @@
 {
   "groups": [
     {
-      "id": "josa-uinoun",
-      "tip": "'만, 만큼, 지'는 체언(명사, 대명사, 수사) 뒤는 조사로 붙이고, 용언(동사, 형용사) 뒤는 의존명사로 띄어 쓴다",
-      "items": [
-        {
-          "id": "josa-uinoun-mankum",
-          "label": "만큼",
-          "enabled": true,
-          "matchMode": "any-before",
-          "inventoryOnly": false,
-          "displayLabel": "만큼(체언 또는 의존명사)",
-          "tip": "'만, 만큼, 지'는 체언(명사, 대명사, 수사) 뒤는 조사로 붙이고, 용언(동사, 형용사) 뒤는 의존명사로 띄어 쓴다"
-        }
-      ]
-    },
-    {
-      "id": "josa-busa",
-      "tip": "'같이'가 명사·대명사 뒤 비교(~처럼)나 동시(때)일 떄는 조사로 붙이고, 동반(함께)을 뜻할 때는 부사로 띄어 쓴다",
-      "items": [
-        {
-          "id": "josa-busa-gachi",
-          "label": "같이",
-          "enabled": true,
-          "matchMode": "any-before",
-          "inventoryOnly": false,
-          "displayLabel": "같이(조사 또는 부사)",
-          "tip": "'같이'가 명사·대명사 뒤 비교(~처럼)나 동시(때)일 떄는 조사로 붙이고, 동반(함께)을 뜻할 때는 부사로 띄어 쓴다"
-        }
-      ]
-    },
-    {
-      "id": "uinoun-space",
-      "tip": "'정도'는 '그만큼의 분량이나 수준'을 뜻하는 의존명사로 앞말과 띄어 쓴다",
-      "items": [
-        {
-          "id": "uinoun-jungdo",
-          "label": "정도",
-          "enabled": true,
-          "matchMode": "attached-before",
-          "inventoryOnly": false,
-          "displayLabel": "정도(의존명사)",
-          "except": [
-            "결정도",
-            "감정도",
-            "공정도",
-            "사정도",
-            "온정도"
-          ],
-          "tip": "'정도'는 '그만큼의 분량이나 수준'을 뜻하는 의존명사로 앞말과 띄어 쓴다"
-        }
-      ]
-    },
-    {
       "id": "jubsa-attach",
       "tip": "'가량, 쯤'은  '정도'의 뜻을 더하는 접사로 수량을 나타내는 명사 뒤에 붙여 쓴다",
+      "title": "띄어쓰기로 뜻이 달라지는 경우",
       "items": [
         {
           "id": "jubsa-garyang",
@@ -67,13 +16,15 @@
             "쯤"
           ],
           "displayLabel": "가량, 쯤(접사)",
-          "tip": "'가량, 쯤'은  '정도'의 뜻을 더하는 접사로 수량을 나타내는 명사 뒤에 붙여 쓴다"
+          "tip": "'가량, 쯤'은  '정도'의 뜻을 더하는 접사로 수량을 나타내는 명사 뒤에 붙여 쓴다",
+          "groupLabel": "띄어쓰기로 뜻이 달라지는 경우"
         }
       ]
     },
     {
       "id": "dannoun-space",
       "tip": "수관형사+단위 명사 '가지'는 띄어 쓰는 것을 원칙으로 한다",
+      "title": "띄어쓰기로 뜻이 달라지는 경우",
       "items": [
         {
           "id": "dannoun-space-gaji",
@@ -100,108 +51,99 @@
             "여러 가지",
             "물가지수"
           ],
-          "tip": "수관형사+단위 명사 '가지'는 띄어 쓰는 것을 원칙으로 한다"
+          "tip": "수관형사+단위 명사 '가지'는 띄어 쓰는 것을 원칙으로 한다",
+          "groupLabel": "띄어쓰기로 뜻이 달라지는 경우"
         }
       ]
     },
     {
-      "id": "noun-space",
-      "tip": "'그중'는 합성어이나 '이중'은 합성어가 아니다",
+      "id": "josa-busa",
+      "tip": "'같이'가 명사·대명사 뒤 비교(~처럼)나 동시(때)일 떄는 조사로 붙이고, 동반(함께)을 뜻할 때는 부사로 띄어 쓴다",
+      "title": "띄어쓰기로 뜻이 달라지는 경우",
       "items": [
         {
-          "id": "noun-space-jung",
-          "label": "이중→이 중",
+          "id": "josa-busa-gachi",
+          "label": "같이",
           "enabled": true,
-          "matchMode": "spaced-before",
+          "matchMode": "any-before",
           "inventoryOnly": false,
-          "stems": [
-            "이중"
-          ],
-          "displayLabel": "이중(명사)",
-          "except": [
-            "이중적",
-            "이중인격",
-            "이중가격",
-            "이중간첩",
-            "이중감염",
-            "이중고",
-            "이중결합",
-            "이중과세",
-            "이중국적",
-            "이중근",
-            "이중근",
-            "이중나선",
-            "이중부정",
-            "이중사고",
-            "이중생",
-            "이중장부",
-            "이중임"
-          ],
-          "tip": "'그중'는 합성어이나 '이중'은 합성어가 아니다"
+          "displayLabel": "같이(조사 또는 부사)",
+          "tip": "'같이'가 명사·대명사 뒤 비교(~처럼)나 동시(때)일 떄는 조사로 붙이고, 동반(함께)을 뜻할 때는 부사로 띄어 쓴다",
+          "groupLabel": "띄어쓰기로 뜻이 달라지는 경우"
         }
       ]
     },
     {
-      "id": "noun-noun",
-      "tip": "'한 번'은 1회를, '한번'은 지난 때, 시험 삼아 시도할 때, 기회나 강조의 의미",
+      "id": "bon-bojo",
+      "tip": "'놓아 주다' : 잡고 있던 것을 놓다 (본용언+보조용언) , '놓아주다':억압받던 상태를 자유롭게 하다",
+      "title": "띄어쓰기로 뜻이 달라지는 경우",
       "items": [
         {
-          "id": "noun-noun-han",
-          "label": "한 번, 한번",
+          "id": "bon-bojo-notaboda",
+          "label": "놓아 주다, 놓아주다",
           "enabled": true,
           "matchMode": "spaced-before",
           "inventoryOnly": false,
           "stems": [
-            "한 번",
-            "한번"
+            "놓아 주",
+            "놓아주",
+            "놓아 준",
+            "놓아준",
+            "놓아 줄",
+            "놓아줄",
+            "놓아 줬",
+            "놓아줬"
           ],
-          "displayLabel": "한 번, 한번",
-          "tip": "'한 번'은 1회를, '한번'은 지난 때, 시험 삼아 시도할 때, 기회나 강조의 의미"
+          "displayLabel": "놓아 주다, 놓아주다",
+          "tip": "'놓아 주다' : 잡고 있던 것을 놓다 (본용언+보조용언) , '놓아주다':억압받던 상태를 자유롭게 하다",
+          "groupLabel": "띄어쓰기로 뜻이 달라지는 경우"
         },
         {
-          "id": "noun-noun-angae",
-          "label": "안개 속, 안갯속",
+          "id": "bon-bojo-eojuda",
+          "label": "들어 주다, 들어주다",
           "enabled": true,
           "matchMode": "spaced-before",
           "inventoryOnly": false,
           "stems": [
-            "안개 속",
-            "안갯속"
+            "들어 주",
+            "들어주",
+            "들어준",
+            "둘어 준",
+            "들어 줄",
+            "들어줄",
+            "들어줬",
+            "들어 줬"
           ],
-          "displayLabel": "안개 속, 안갯속",
-          "tip": "'안개 속은 물리적인 안개의 속, '안갯속'은 무슨 일이 이루어질지 모르는 상태"
+          "displayLabel": "들어 주다, 들어주다",
+          "tip": "'들어 주다': 물건, 말 (본용언_보조용언) '들어주다':부탁, 요구",
+          "groupLabel": "띄어쓰기로 뜻이 달라지는 경우"
         },
         {
-          "id": "noun-noun-gubun",
-          "label": "구별, 구분",
+          "id": "bon-bojo-chataboda",
+          "label": "찾아 보다, 찾아보다",
           "enabled": true,
           "matchMode": "spaced-before",
           "inventoryOnly": false,
           "stems": [
-            "구별",
-            "구분"
+            "찾아 보",
+            "찾아보",
+            "찾아 본",
+            "찾아본",
+            "찾아 볼",
+            "찾아볼",
+            "찾아 봤",
+            "찾아봤"
           ],
-          "displayLabel": "구별, 구분",
-          "tip": "구별(區別): 실존 대상을  차이에 따라 가를 때 예)남녀(男女) 구별, 구분(區分): 추상적인 것을 기준에 따라 나눌 때 예)시대(時代) 구분"
-        },
-        {
-          "id": "noun-noun-gyul",
-          "label": "결제, 결재",
-          "enabled": true,
-          "matchMode": "spaced-before",
-          "inventoryOnly": false,
-          "stems": [
-            "결제",
-            "결재"
-          ],
-          "displayLabel": "결제, 결재",
-          "tip": "결제(決濟):거래 관계를 끝맺는 일. 결재(決裁):상관이 승인함"
+          "displayLabel": "찾아 보다, 찾아보다",
+          "tip": "'찾아 보다': 현재 위치에서 뒤지거나 살피다 (본용언+보조용언), '찾아보다':조사하다",
+          "groupLabel": "띄어쓰기로 뜻이 달라지는 경우"
         }
       ]
     },
     {
       "id": "eogan-eomi",
       "tip": "'못하다''어떤 일을 일정한 수준에 못 미치게 하거나, 그 일을 할 능력이 없다(능력). \"못 하다\" (부정 부사 + 동사)상황이나 여건이 되지 않아 행동 자체를 하지 못할 때(상황)",
+      "title": "띄어쓰기로 뜻이 달라지는 경우",
       "items": [
         {
           "id": "eogan-eomi-mot",
@@ -220,7 +162,8 @@
             "못할"
           ],
           "displayLabel": "못하다, 못 하다",
-          "tip": "'못하다''어떤 일을 일정한 수준에 못 미치게 하거나, 그 일을 할 능력이 없다(능력). \"못 하다\" (부정 부사 + 동사)상황이나 여건이 되지 않아 행동 자체를 하지 못할 때(상황)"
+          "tip": "'못하다''어떤 일을 일정한 수준에 못 미치게 하거나, 그 일을 할 능력이 없다(능력). \"못 하다\" (부정 부사 + 동사)상황이나 여건이 되지 않아 행동 자체를 하지 못할 때(상황)",
+          "groupLabel": "띄어쓰기로 뜻이 달라지는 경우"
         },
         {
           "id": "eogan-eomi-doei",
@@ -236,19 +179,8 @@
           "except": [
             "돼지"
           ],
-          "tip": "한국어 어간(되-)은 홀로 문장 끝에 올 수 없으며, 어미(-어)와 결합해야 하므로 문장의 끝은 '돼'로 끝난다"
-        },
-        {
-          "id": "eogan-eomi-yeyo",
-          "label": "이예요, 이에요(예요)",
-          "enabled": true,
-          "matchMode": "spaced-before",
-          "inventoryOnly": false,
-          "stems": [
-            "이예요"
-          ],
-          "displayLabel": "이예요, 이에요",
-          "tip": "'(것)이예요' 가 아닌 '(것)이에요/예요'로 적는다"
+          "tip": "한국어 어간(되-)은 홀로 문장 끝에 올 수 없으며, 어미(-어)와 결합해야 하므로 문장의 끝은 '돼'로 끝난다",
+          "groupLabel": "틀리기 쉬운 경우"
         },
         {
           "id": "eogan-eomi-aniyo",
@@ -261,14 +193,155 @@
             "아니요"
           ],
           "displayLabel": "아니오, 아니요",
-          "tip": "'아니요'는 네/예의 반대말로 질문에 답할 때 ,  '아니오'는 아니다'의 어간 뒤에 하오체 어미 '-오'가 붙은 종결형"
+          "tip": "'아니요'는 네/예의 반대말로 질문에 답할 때 ,  '아니오'는 아니다'의 어간 뒤에 하오체 어미 '-오'가 붙은 종결형",
+          "groupLabel": "틀리기 쉬운 경우"
+        }
+      ]
+    },
+    {
+      "id": "noun-noun",
+      "tip": "'안개 속은 물리적인 안개의 속, '안갯속'은 무슨 일이 이루어질지 모르는 상태",
+      "title": "띄어쓰기로 뜻이 달라지는 경우",
+      "items": [
+        {
+          "id": "noun-noun-angae",
+          "label": "안개 속, 안갯속",
+          "enabled": true,
+          "matchMode": "spaced-before",
+          "inventoryOnly": false,
+          "stems": [
+            "안개 속",
+            "안갯속"
+          ],
+          "displayLabel": "안개 속, 안갯속",
+          "tip": "'안개 속은 물리적인 안개의 속, '안갯속'은 무슨 일이 이루어질지 모르는 상태",
+          "groupLabel": "띄어쓰기로 뜻이 달라지는 경우"
+        },
+        {
+          "id": "noun-noun-han",
+          "label": "한 번, 한번",
+          "enabled": true,
+          "matchMode": "spaced-before",
+          "inventoryOnly": false,
+          "stems": [
+            "한 번",
+            "한번"
+          ],
+          "displayLabel": "한 번, 한번",
+          "tip": "'한 번'은 1회를, '한번'은 지난 때, 시험 삼아 시도할 때, 기회나 강조의 의미",
+          "groupLabel": "띄어쓰기로 뜻이 달라지는 경우"
+        },
+        {
+          "id": "noun-noun-gyul",
+          "label": "결제, 결재",
+          "enabled": true,
+          "matchMode": "spaced-before",
+          "inventoryOnly": false,
+          "stems": [
+            "결제",
+            "결재"
+          ],
+          "displayLabel": "결제, 결재",
+          "tip": "결제(決濟):거래 관계를 끝맺는 일. 결재(決裁):상관이 승인함",
+          "groupLabel": "틀리기 쉬운 경우"
+        },
+        {
+          "id": "noun-noun-gubun",
+          "label": "구별, 구분",
+          "enabled": true,
+          "matchMode": "spaced-before",
+          "inventoryOnly": false,
+          "stems": [
+            "구별",
+            "구분"
+          ],
+          "displayLabel": "구별, 구분",
+          "tip": "구별(區別): 실존 대상을  차이에 따라 가를 때 예)남녀(男女) 구별, 구분(區分): 추상적인 것을 기준에 따라 나눌 때 예)시대(時代) 구분",
+          "groupLabel": "틀리기 쉬운 경우"
+        }
+      ]
+    },
+    {
+      "id": "uinoun-space",
+      "tip": "'정도'는 '그만큼의 분량이나 수준'을 뜻하는 의존명사로 앞말과 띄어 쓴다",
+      "title": "띄어쓰기로 뜻이 달라지는 경우",
+      "items": [
+        {
+          "id": "uinoun-jungdo",
+          "label": "정도",
+          "enabled": true,
+          "matchMode": "attached-before",
+          "inventoryOnly": false,
+          "displayLabel": "정도(의존명사)",
+          "except": [
+            "결정도",
+            "감정도",
+            "공정도",
+            "사정도",
+            "온정도"
+          ],
+          "tip": "'정도'는 '그만큼의 분량이나 수준'을 뜻하는 의존명사로 앞말과 띄어 쓴다",
+          "groupLabel": "띄어쓰기로 뜻이 달라지는 경우"
+        }
+      ]
+    },
+    {
+      "id": "josa-uinoun",
+      "tip": "'만, 만큼, 지'는 체언(명사, 대명사, 수사) 뒤는 조사로 붙이고, 용언(동사, 형용사) 뒤는 의존명사로 띄어 쓴다",
+      "title": "앞말에 따라 띄어쓰기가 달라지는 경우",
+      "items": [
+        {
+          "id": "josa-uinoun-mankum",
+          "label": "만큼",
+          "enabled": true,
+          "matchMode": "any-before",
+          "inventoryOnly": false,
+          "displayLabel": "만큼(조사 또는 의존명사)",
+          "tip": "'만, 만큼, 지'는 체언(명사, 대명사, 수사) 뒤는 조사로 붙이고, 용언(동사, 형용사) 뒤는 의존명사로 띄어 쓴다",
+          "groupLabel": "앞말에 따라 띄어쓰기가 달라지는 경우"
         }
       ]
     },
     {
       "id": "verb-verb",
-      "tip": "'바라다'는 어떤 일이 이루어지기를 원할 때, '바래다'는 색이 변하거나, 사람을 배웅할 때 사용",
+      "tip": "'늘이다'는 길이, '늘리다'는 너비, 부피 등에 사용한다",
+      "title": "틀리기 쉬운 경우",
       "items": [
+        {
+          "id": "verb-verb-neal",
+          "label": "늘이, 늘리",
+          "enabled": true,
+          "matchMode": "spaced-before",
+          "inventoryOnly": false,
+          "stems": [
+            "늘이",
+            "늘리",
+            "늘인",
+            "늘린",
+            "늘었",
+            "늘였",
+            "늘렸"
+          ],
+          "displayLabel": "늘이다, 늘리다",
+          "tip": "'늘이다'는 길이, '늘리다'는 너비, 부피 등에 사용한다",
+          "groupLabel": "틀리기 쉬운 경우"
+        },
+        {
+          "id": "verb-verbi-mat",
+          "label": "맞추, 맞히",
+          "enabled": true,
+          "matchMode": "spaced-before",
+          "inventoryOnly": false,
+          "stems": [
+            "맞추",
+            "맞히",
+            "맞춘",
+            "맞힌"
+          ],
+          "displayLabel": "맞추다, 맞히다",
+          "tip": "'맞추다'는 바르게 하다 또는 비교하다는 의미로,  '맞히다'는 적중하다의 의미로 사용",
+          "groupLabel": "틀리기 쉬운 경우"
+        },
         {
           "id": "verb-verb-bara",
           "label": "바라, 바래",
@@ -293,22 +366,8 @@
             "바라므로",
             "바라건"
           ],
-          "tip": "'바라다'는 어떤 일이 이루어지기를 원할 때, '바래다'는 색이 변하거나, 사람을 배웅할 때 사용"
-        },
-        {
-          "id": "verb-verbi-mat",
-          "label": "맞추, 맞히",
-          "enabled": true,
-          "matchMode": "spaced-before",
-          "inventoryOnly": false,
-          "stems": [
-            "맞추",
-            "맞히",
-            "맞춘",
-            "맞힌"
-          ],
-          "displayLabel": "맞추다, 맞히다",
-          "tip": "'맞추다'는 바르게 하다 또는 비교하다는 의미로,  '맞히다'는 적중하다의 의미로 사용"
+          "tip": "'바라다'는 어떤 일이 이루어지기를 원할 때, '바래다'는 색이 변하거나, 사람을 배웅할 때 사용",
+          "groupLabel": "틀리기 쉬운 경우"
         },
         {
           "id": "verb-verbi-but",
@@ -325,65 +384,8 @@
             "붙였"
           ],
           "displayLabel": "붙이다, 부치다",
-          "tip": "'붙이다'는 '붙다'의 사동사로 맞닿아 떨어지지 않게 하다 '부치다'는 미달하다, 보내다, 음식을 만들다, 바람을 만들어내다 등을 의미"
-        },
-        {
-          "id": "verb-verb-neal",
-          "label": "늘이, 늘리",
-          "enabled": true,
-          "matchMode": "spaced-before",
-          "inventoryOnly": false,
-          "stems": [
-            "늘이",
-            "늘리",
-            "늘인",
-            "늘린",
-            "늘었",
-            "늘였",
-            "늘렸"
-          ],
-          "displayLabel": "늘이다, 늘리다",
-          "tip": "'늘이다'는 길이, '늘리다'는 너비, 부피 등에 사용한다"
-        }
-      ]
-    },
-    {
-      "id": "bon-bojo",
-      "tip": "'들어 주다': 물건, 말 (본용언_보조용언) '들어주다':부탁, 요구",
-      "items": [
-        {
-          "id": "bon-bojo-eojuda",
-          "label": "들어 주다, 들어주다",
-          "enabled": true,
-          "matchMode": "spaced-before",
-          "inventoryOnly": false,
-          "stems": [
-            "들어 주",
-            "들어주",
-            "들어준",
-            "둘어 준",
-            "들어줬",
-            "들어 줬"
-          ],
-          "displayLabel": "들어 주다, 들어주다",
-          "tip": "'들어 주다': 물건, 말 (본용언_보조용언) '들어주다':부탁, 요구"
-        },
-        {
-          "id": "bon-bojo-aboda",
-          "label": "찾아 보다, 찾아보다",
-          "enabled": true,
-          "matchMode": "spaced-before",
-          "inventoryOnly": false,
-          "stems": [
-            "찾아 보",
-            "찾아보",
-            "찾아 본",
-            "찾아본",
-            "찾아 봤",
-            "찾아봤"
-          ],
-          "displayLabel": "찾아 보다, 찾아보다",
-          "tip": "'찾아 보다': 현재 위치에서 뒤지거나 살피다 (본용언+보조용언), '찾아보다':조사하다"
+          "tip": "'붙이다'는 '붙다'의 사동사로 맞닿아 떨어지지 않게 하다 '부치다'는 미달하다, 보내다, 음식을 만들다, 바람을 만들어내다 등을 의미",
+          "groupLabel": "틀리기 쉬운 경우"
         }
       ]
     }

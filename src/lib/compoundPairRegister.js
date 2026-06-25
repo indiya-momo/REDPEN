@@ -85,6 +85,49 @@ export function listConsistencyEntries(customRules) {
 }
 
 /**
+ * 일관성 찾기 UI 전용 — 통일형 만들기 전용 항목(consistencyUnifyEntry만)은 제외
+ *
+ * @param {import('./ruleTypes.js').Rule[]} customRules
+ * @returns {ConsistencyEntryRow[]}
+ */
+export function listConsistencyLiteralEntries(customRules) {
+  const kinds = new Set([
+    'compound-find',
+    'compound-tail',
+    'compound-spacing',
+  ]);
+  /** @type {Map<string, { literal: boolean, unify: boolean, legacy: boolean }>} */
+  const byTail = new Map();
+
+  for (const rule of customRules) {
+    const tailWord = rule.tailWord?.trim();
+    if (!tailWord || !kinds.has(rule.patternKind ?? '')) continue;
+
+    const meta = byTail.get(tailWord) ?? {
+      literal: false,
+      unify: false,
+      legacy: false,
+    };
+    if (rule.consistencyLiteralEntry) meta.literal = true;
+    if (rule.consistencyUnifyEntry) meta.unify = true;
+    if (!rule.consistencyLiteralEntry && !rule.consistencyUnifyEntry) {
+      meta.legacy = true;
+    }
+    byTail.set(tailWord, meta);
+  }
+
+  /** @type {ConsistencyEntryRow[]} */
+  const entries = [];
+  for (const [tailWord, meta] of byTail) {
+    if (meta.literal || meta.legacy || !meta.unify) {
+      entries.push({ tailWord });
+    }
+  }
+
+  return entries;
+}
+
+/**
  * @param {import('./ruleTypes.js').Rule[]} rules
  * @param {string} tailWord
  */

@@ -1,21 +1,12 @@
-import { Fragment, useEffect, useRef, useState } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
+import { buildCautionRuleBundles } from '../lib/cautionRuleBundles.js';
 import {
   CAUTION_GROUPS,
   CAUTION_SEARCH_RULES,
   cautionDisplayLabel,
   cautionItemTip,
-  isCautionSearchItem,
 } from '../lib/cautionRules.js';
 import DetailsChevron from './DetailsChevron.jsx';
-
-/** @param {{ title?: string, tip?: string }} group */
-function groupHeading(group) {
-  const title = String(group.title ?? '').trim();
-  if (title) return title;
-  const tip = String(group.tip ?? '').trim();
-  if (tip && tip.length <= 20 && !tip.includes('\n')) return tip;
-  return '';
-}
 
 /**
  * @param {import('../lib/cautionRules.js').CautionItem} item
@@ -38,7 +29,7 @@ export default function CautionChecklist({
   onCautionSetAll,
 }) {
   const selectAllRef = useRef(/** @type {HTMLInputElement | null} */ (null));
-  const [activeTipByGroup, setActiveTipByGroup] = useState(
+  const [activeTipByBundle, setActiveTipByBundle] = useState(
     /** @type {Record<string, string | null>} */ ({}),
   );
   const total = CAUTION_SEARCH_RULES.length;
@@ -47,6 +38,11 @@ export default function CautionChecklist({
   ).length;
   const allChecked = total > 0 && activeCount === total;
   const someChecked = activeCount > 0 && activeCount < total;
+
+  const bundles = useMemo(
+    () => buildCautionRuleBundles(CAUTION_GROUPS),
+    [],
+  );
 
   useEffect(() => {
     if (selectAllRef.current) {
@@ -57,21 +53,16 @@ export default function CautionChecklist({
   /**
    * @param {import('../lib/cautionRules.js').CautionItem} item
    * @param {import('../lib/cautionRules.js').CautionGroup} group
-   * @param {string | null} activeId
+   * @param {boolean} tipOpen
+   * @param {() => void} onToggleTip
    */
-  function renderCautionChip(item, group, activeId) {
+  function renderCautionChip(item, group, tipOpen, onToggleTip) {
     const label = cautionDisplayLabel(item);
     const explanation = itemExplanation(item, group);
-    const tipOpen = activeId === item.id;
     const canShowTip = Boolean(explanation);
-    const toggleTip = () =>
-      setActiveTipByGroup((prev) => ({
-        ...prev,
-        [group.id]: prev[group.id] === item.id ? null : item.id,
-      }));
 
     return (
-      <div key={item.id} className="caution-chip-entry-wrap">
+      <div className="caution-chip-entry-wrap">
         <div className="caution-chip-entry">
           <div className="caution-chip">
             <input
@@ -85,11 +76,11 @@ export default function CautionChecklist({
                 data-hover-tip="설명"
                 role="button"
                 tabIndex={0}
-                onClick={toggleTip}
+                onClick={onToggleTip}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
-                    toggleTip();
+                    onToggleTip();
                   }
                 }}
                 aria-expanded={tipOpen}
@@ -106,36 +97,46 @@ export default function CautionChecklist({
   }
 
   /**
-   * @param {import('../lib/cautionRules.js').CautionItem[]} items
-   * @param {import('../lib/cautionRules.js').CautionGroup} group
+   * @param {{ item: import('../lib/cautionRules.js').CautionItem, group: import('../lib/cautionRules.js').CautionGroup }[]} entries
+   * @param {string} bundleStateKey
    */
-  function renderCautionItems(items, group) {
-    const activeId = activeTipByGroup[group.id] ?? null;
+  function renderBundleItems(entries, bundleStateKey) {
     const cols = 3;
-    const activeItem =
-      activeId && items.some((item) => item.id === activeId)
-        ? items.find((item) => item.id === activeId) ?? null
+    const activeId = activeTipByBundle[bundleStateKey] ?? null;
+    const activeEntry =
+      activeId && entries.some(({ item }) => item.id === activeId)
+        ? entries.find(({ item }) => item.id === activeId) ?? null
         : null;
-    const activeTip = activeItem ? itemExplanation(activeItem, group) : '';
-
-    /** @type {import('../lib/cautionRules.js').CautionItem[][]} */
-    const rows = [];
-    for (let i = 0; i < items.length; i += cols) {
-      rows.push(items.slice(i, i + cols));
-    }
+    const activeTip = activeEntry
+      ? itemExplanation(activeEntry.item, activeEntry.group)
+      : '';
+    const activeIndex = activeId
+      ? entries.findIndex(({ item }) => item.id === activeId)
+      : -1;
+    const rowEndIndex =
+      activeIndex >= 0
+        ? Math.min(
+            entries.length - 1,
+            Math.floor(activeIndex / cols) * cols + (cols - 1),
+          )
+        : -1;
+    const afterId =
+      rowEndIndex >= 0 ? entries[rowEndIndex]?.item.id : null;
 
     return (
-      <div
-        className={`caution-group-items caution-group-items--cols-${cols}`}
-      >
-        {rows.map((rowItems, rowIndex) => {
-          const rowShowsTip =
-            Boolean(activeTip) &&
-            rowItems.some((item) => item.id === activeId);
+      <div className={`caution-group-items caution-group-items--cols-${cols}`}>
+        {entries.map(({ item, group }) => {
+          const tipOpen = activeId === item.id;
           return (
-            <Fragment key={`${group.id}-row-${rowIndex}`}>
-              {rowItems.map((item) => renderCautionChip(item, group, activeId))}
-              {rowShowsTip ? (
+            <Fragment key={item.id}>
+              {renderCautionChip(item, group, tipOpen, () =>
+                setActiveTipByBundle((prev) => ({
+                  ...prev,
+                  [bundleStateKey]:
+                    prev[bundleStateKey] === item.id ? null : item.id,
+                })),
+              )}
+              {activeTip && afterId === item.id ? (
                 <div className="caution-tip-inline">{activeTip}</div>
               ) : null}
             </Fragment>
@@ -146,7 +147,7 @@ export default function CautionChecklist({
   }
 
   return (
-    <details className="caution-checklist-details">
+    <details className="caution-checklist-details" open>
       <summary className="caution-checklist-summary panel-criteria-heading">
         <DetailsChevron />
         <label
@@ -163,24 +164,33 @@ export default function CautionChecklist({
           />
         </label>
         <span className="caution-checklist-summary-title">
-          편집자 검토 필요(선택 {activeCount}/{total})
-          <span className="criteria-summary-note">※ 계속 추가 중</span>
+          편집자 검토 필요
+          <span className="panel-criteria-heading-meta">
+            {`(선택 ${activeCount}/${total})`}
+          </span>
         </span>
       </summary>
-      <ul className="caution-checklist">
-        {CAUTION_GROUPS.map((group) => {
-          const heading = groupHeading(group);
-          const items = group.items.filter(isCautionSearchItem);
-          if (!items.length) return null;
-          const showTitle = Boolean(heading) && group.hideGroupTitle !== true;
+      <ul className="caution-checklist caution-checklist--bundles">
+        {bundles.map((bundle) => {
+          const bundleStateKey = `caution:${bundle.id}`;
+
           return (
-            <li key={group.id} className="caution-group">
-              <div className="caution-group-top">
-                {showTitle ? (
-                  <span className="caution-group-title">{heading}</span>
-                ) : null}
-                {renderCautionItems(items, group)}
-              </div>
+            <li key={bundle.id} className="caution-rule-bundle-item">
+              <details className="caution-rule-bundle">
+                <summary className="caution-rule-bundle-summary">
+                  <DetailsChevron />
+                  <span className="caution-rule-bundle-icon" aria-hidden="true">
+                    📁
+                  </span>
+                  <span className="caution-rule-bundle-title">{bundle.label}</span>
+                  <span className="caution-rule-bundle-meta">
+                    {bundle.ruleCount}
+                  </span>
+                </summary>
+                <div className="caution-rule-bundle-body">
+                  {renderBundleItems(bundle.entries, bundleStateKey)}
+                </div>
+              </details>
             </li>
           );
         })}

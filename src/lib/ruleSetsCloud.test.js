@@ -38,4 +38,13 @@ describe('resolveHydratedActiveSetId', () => {
   it('클라우드만 초안을 가리키면 최근 저장 프로젝트로 복귀', () => {
     expect(resolveHydratedActiveSetId(sets, 'draft', 'draft')).toBe('saved');
   });
+
+  it('활성 id가 저장 프로젝트면 savedAt과 관계없이 그대로', () => {
+    const many = [
+      { id: 'old', name: '1111', savedAt: '2026-06-22T00:00:00.000Z' },
+      { id: 'new', name: '2222', savedAt: '2026-06-24T00:00:00.000Z' },
+    ];
+    expect(resolveHydratedActiveSetId(many, 'old', null)).toBe('old');
+    expect(resolveHydratedActiveSetId(many, 'new', null)).toBe('new');
+  });
 });

@@ -6,9 +6,15 @@ import { formatSystemPageLabel } from '../lib/printedPageDisplay.js';
 export function CurrentPageFindingText({ visibleOnCurrentPage }) {
   return (
     <>
-      {' '}의 발견{' '}
-      <span className="result-card-findings-count">
-        [{visibleOnCurrentPage}]
+      {' '}
+      <span className="current-page-status__findings">
+        의 발견{' '}
+        <span
+          className="result-findings-count-circle current-page-status__findings-count"
+          aria-label={`${visibleOnCurrentPage}건`}
+        >
+          {visibleOnCurrentPage}
+        </span>
       </span>
     </>
   );

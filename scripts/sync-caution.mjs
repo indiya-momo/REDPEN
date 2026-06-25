@@ -4,11 +4,11 @@
  * 시트 탭: caution_rules (또는 .env CAUTION_SHEET / CAUTION_GID)
  *
  * 표기 A — 그룹당 여러 행 (tip은 첫 행만 써도 됨, 아래 행은 비워도 forward-fill)
- *   group_id | item_id (또는 id) | label | stems | tip | enabled | match_mode | display_label | inventory | except
+ *   group_id | item_id (또는 id) | label | stems | tip | enabled | match_mode | display_label | group_label | inventory | except
  *   except: 쉼표 구분 — 매칭된 문구 전체가 목록과 같으면 검사 제외 (예: 여름가지,산가지)
  *   stems: 쉼표 구분 어간 (예: 주,준 → ^주다 한 칸에 주다·준다)
  *   inventory: TRUE = 시트 추적용 변이형(체크 없음). 비우면 stems 묶음에 포함된 어간 행은 자동 추적 처리
- *   match_mode: spaced-before = 붙여야 하는데 띄어 씀. attached-before = 띄어야 하는데 붙여 씀 (별칭 before-attached, ap-attached). spaced-stem = 앞말+공백+label+어미. fixed-phrase = 문구 그대로. 비우면 any-before
+ *   match_mode: spaced-before = 앞말+공백+label. attached-before = 앞말+label 붙임. stem-list = stems 나열 형태 그대로. fixed-phrase = 문구+어미. 비우면 any-before
  *
  * 표기 B — 한 행에 여러 label
  *   group_id | labels | tip | enabled
@@ -178,12 +178,15 @@ function parseEnabled(value) {
 function parseMatchMode(value) {
   const v = String(value ?? '').trim().toLowerCase();
   if (
+    v === 'stem-list' ||
+    v === 'stems' ||
+    v === 'ap-stems' ||
     v === 'spaced-stem' ||
     v === 'space-stem' ||
     v === 'stem' ||
     v === 'spaced-compound'
   ) {
-    return 'spaced-stem';
+    return 'stem-list';
   }
   if (v === 'ap-space' || v === 'spaced-before' || v === 'spaced') {
     return 'spaced-before';
@@ -287,7 +290,13 @@ function markInventoryItems(items) {
   });
 }
 
-function itemFromRow(row, label, itemId, tip = '') {
+function parseGroupLabel(row) {
+  const raw = String(row.group_label ?? row.grouplabel ?? '').trim();
+  if (!raw || raw === '-') return '';
+  return raw;
+}
+
+function itemFromRow(row, label, itemId, tip = '', groupLabel = '') {
   const rawMode = String(row.match_mode ?? row.matchmode ?? '').trim();
   const inventoryOnly = parseInventoryOnly(row, rawMode);
   const matchMode = inventoryOnly ? 'any-before' : parseMatchMode(rawMode);
@@ -295,6 +304,7 @@ function itemFromRow(row, label, itemId, tip = '') {
   const stems = parseStems(row, label);
   const except = parseExcept(row);
   const tipText = String(tip ?? '').trim();
+  const bundleLabel = String(groupLabel ?? '').trim();
   return {
     id: itemId,
     label,
@@ -305,6 +315,7 @@ function itemFromRow(row, label, itemId, tip = '') {
     ...(displayLabel ? { displayLabel } : {}),
     ...(except ? { except } : {}),
     ...(tipText ? { tip: tipText } : {}),
+    ...(bundleLabel ? { groupLabel: bundleLabel } : {}),
   };
 }
 
@@ -326,11 +337,13 @@ function rowsToCautionGroups(rows) {
         if (isSkippedCautionGroupId(groupId)) return null;
 
         const enabledDefault = parseEnabled(row.enabled);
+        const groupLabel = parseGroupLabel(row);
         return {
           id: groupId,
           tip,
+          ...(groupLabel ? { title: groupLabel } : {}),
           items: labels.map((label) =>
-            itemFromRow(row, label, `${groupId}-${label}`, tip),
+            itemFromRow(row, label, `${groupId}-${label}`, tip, groupLabel),
           ),
         };
       })
@@ -340,16 +353,20 @@ function rowsToCautionGroups(rows) {
   const groups = new Map();
   let curGroupId = '';
   let curTip = '';
+  let curGroupLabel = '';
 
   for (const row of rows) {
     const nextGroupId = normalizeGroupId(row.group_id || row.groupid);
     if (nextGroupId && nextGroupId !== curGroupId) {
       curGroupId = nextGroupId;
       curTip = String(row.tip || '').trim();
+      curGroupLabel = parseGroupLabel(row);
     } else if (nextGroupId) {
       curGroupId = nextGroupId;
     }
     if (row.tip?.trim()) curTip = row.tip.trim();
+    const rowGroupLabel = parseGroupLabel(row);
+    if (rowGroupLabel) curGroupLabel = rowGroupLabel;
 
     const label = String(row.label || '').trim();
     if (!label || !curGroupId) continue;
@@ -360,11 +377,19 @@ function rowsToCautionGroups(rows) {
       `${curGroupId}-${label}`;
 
     if (!groups.has(curGroupId)) {
-      groups.set(curGroupId, { id: curGroupId, tip: curTip, items: [] });
+      groups.set(curGroupId, {
+        id: curGroupId,
+        tip: curTip,
+        ...(curGroupLabel ? { title: curGroupLabel } : {}),
+        items: [],
+      });
     }
     const group = groups.get(curGroupId);
+    if (curGroupLabel && !group.title) group.title = curGroupLabel;
 
-    group.items.push(itemFromRow(row, label, itemId, curTip));
+    group.items.push(
+      itemFromRow(row, label, itemId, curTip, rowGroupLabel || curGroupLabel),
+    );
   }
 
   return [...groups.values()]
@@ -380,7 +405,7 @@ function rowsToCautionGroups(rows) {
     .filter((g) => g.items.length);
 }
 
-/** @returns {Promise<Map<string, { title?: string, hideGroupTitle?: boolean, tipInline?: boolean }>>} */
+/** @returns {Promise<Map<string, { hideGroupTitle?: boolean, tipInline?: boolean }>>} */
 async function loadExistingGroupUiMeta() {
   const map = new Map();
   try {
@@ -388,11 +413,8 @@ async function loadExistingGroupUiMeta() {
     const parsed = JSON.parse(raw);
     for (const g of parsed.groups ?? []) {
       if (!g?.id) continue;
-      /** @type {{ title?: string, hideGroupTitle?: boolean, tipInline?: boolean }} */
+      /** @type {{ hideGroupTitle?: boolean, tipInline?: boolean }} */
       const meta = {};
-      if (typeof g.title === 'string' && g.title.trim()) {
-        meta.title = g.title.trim();
-      }
       if (g.hideGroupTitle === true) meta.hideGroupTitle = true;
       if (g.tipInline === true) meta.tipInline = true;
       if (Object.keys(meta).length) map.set(g.id, meta);
@@ -405,7 +427,7 @@ async function loadExistingGroupUiMeta() {
 
 /**
  * @param {ReturnType<typeof rowsToCautionGroups>} groups
- * @param {Map<string, { title?: string, hideGroupTitle?: boolean, tipInline?: boolean }>} metaMap
+ * @param {Map<string, { hideGroupTitle?: boolean, tipInline?: boolean }>} metaMap
  */
 function mergeGroupUiMeta(groups, metaMap) {
   return groups.map((g) => {

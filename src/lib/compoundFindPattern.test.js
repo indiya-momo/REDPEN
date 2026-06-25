@@ -55,7 +55,32 @@ describe('compoundFindPattern', () => {
     expect(hits).toContain('아 두');
   });
 
-  it('문자열 찾기(loose) — ZWSP(보이는 줄바꿈 없음)도 매칭', () => {
+  it('띄어쓴·붙임은 runRuleCheck에서도 분리 — 미국 정부 ≠ 미국정부', () => {
+    const spaced = buildCompoundFindRules('미국 정부').map((r) => ({
+      ...r,
+      enabled: true,
+    }));
+    const glued = buildCompoundFindRules('미국정부').map((r) => ({
+      ...r,
+      enabled: true,
+    }));
+    const page = {
+      pageNum: 1,
+      text: '세계경제와 미국 정부, 미국정부 정책.\n',
+      items: [],
+      itemRefs: [],
+    };
+    const spacedHits = runRuleCheck([page], spaced).results.flatMap((g) =>
+      g.instances.map((i) => i.matchedText),
+    );
+    const gluedHits = runRuleCheck([page], glued).results.flatMap((g) =>
+      g.instances.map((i) => i.matchedText),
+    );
+    expect(spacedHits).toEqual(['미국 정부']);
+    expect(gluedHits).toEqual(['미국정부']);
+  });
+
+  it('문자열 찾기 — ZWSP(보이는 줄바꿈 없음)도 매칭', () => {
     const rules = buildCompoundFindRules('담아 두어요').map((r) => ({
       ...r,
       enabled: true,
@@ -96,8 +121,8 @@ describe('compoundFindPattern', () => {
     expectCount('붉은표시', 0);
     expectCount('모모', 4);
     expectCount('새벽안개', 1);
-    expectCount('새벽 안개', 2);
-    expectCount('늦은 밤', 2);
+    expectCount('새벽 안개', 1);
+    expectCount('늦은 밤', 1);
     expectCount('늦은밤', 1);
   });
 

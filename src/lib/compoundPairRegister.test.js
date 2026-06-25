@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
   buildRulesForEntry,
   isLiteralConsistencyEntry,
+  listConsistencyEntries,
+  listConsistencyLiteralEntries,
 } from './compoundPairRegister.js';
 import { runRuleCheck } from './ruleEngine.js';
 import { SPACE_VISIBLE_CHAR } from './spaceVisibleText.js';
@@ -31,5 +33,42 @@ describe('compoundPairRegister', () => {
       g.instances.map((i) => i.matchedText),
     );
     expect(hits).toContain('담아 두어요');
+  });
+
+  it('listConsistencyLiteralEntries는 통일형 전용 항목을 제외한다', () => {
+    const rules = [
+      {
+        find: 'a',
+        replace: 'a',
+        enabled: true,
+        patternKind: 'compound-find',
+        tailWord: '일관성만',
+        consistencyLiteralEntry: true,
+      },
+      {
+        find: 'b',
+        replace: 'b',
+        enabled: true,
+        patternKind: 'compound-find',
+        tailWord: '통일형만',
+        consistencyUnifyEntry: true,
+      },
+      {
+        find: 'c',
+        replace: 'c',
+        enabled: true,
+        patternKind: 'compound-find',
+        tailWord: '레거시',
+      },
+    ];
+    expect(listConsistencyLiteralEntries(rules).map((e) => e.tailWord)).toEqual([
+      '일관성만',
+      '레거시',
+    ]);
+    expect(listConsistencyEntries(rules).map((e) => e.tailWord)).toEqual([
+      '레거시',
+      '일관성만',
+      '통일형만',
+    ]);
   });
 });

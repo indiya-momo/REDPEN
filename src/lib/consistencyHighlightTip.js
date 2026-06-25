@@ -1,10 +1,10 @@
+import { formatConsistencyListLabel } from './patternDisplayLabels.js';
 import {
-  auxiliaryVerbResultParts,
-  formatConsistencyListLabel,
-} from './patternDisplayLabels.js';
+  getConsistencyUnifyPinnedTailWord,
+  isConsistencyUnifyTailWord,
+} from './consistencyUnifyRegister.js';
+import { AUXILIARY_VERB_BADGE_LABEL } from './bonBojoRules.js';
 
-const LITERAL_PREFIX = '일관성 찾기 : ';
-const AUXILIARY_PREFIX = '본용언 + 보조용언 : ';
 /** @param {import('./ruleEngine.js').GroupedResult} group */
 function auxiliaryItemTitle(group) {
   return group.groupDisplayLabel?.trim() || (group.label || '').trim();
@@ -27,60 +27,49 @@ function consistencyFindDisplayLabel(group) {
 }
 
 /**
- * PDF 하이라이트·결과 카드 안내 — 일관성 찾기 / 본용언 + 보조용언 형식 통일
+ * PDF 하이라이트·결과 카드 안내 — 일관성·통일형·공통 문자열·본용언+보조용언 구분
  * @param {import('./ruleEngine.js').GroupedResult} group
+ * @param {import('./ruleTypes.js').Rule[]} [customRules]
  */
-export function getConsistencyHighlightTip(group) {
+export function getConsistencyHighlightTip(group, customRules = []) {
   const explicit = (group.tip || '').trim();
   if (explicit) return explicit;
 
-  if (group.patternKind === 'auxiliary-verb') {
-    const itemLabel = auxiliaryItemTitle(group);
-    if (itemLabel) return `${AUXILIARY_PREFIX}${itemLabel}`;
-    const value = (group.label || '').trim();
-    if (!value) return '';
-    if (group.tailWord?.trim()) {
-      const { stem, groupTag } = auxiliaryVerbResultParts(
-        group.tailWord,
-        group.groupDisplayLabel,
-        group.label,
-      );
-      const tag = groupTag?.trim() || value;
-      return stem
-        ? `${AUXILIARY_PREFIX}${stem} ${tag}`
-        : `${AUXILIARY_PREFIX}${tag}`;
-    }
-    return `${AUXILIARY_PREFIX}${value}`;
-  }
-
-  const registered = consistencyFindDisplayLabel(group);
-  if (!registered) return '';
-  return `${LITERAL_PREFIX}${registered}`;
+  const { badge, label } = getConsistencyResultCardParts(group, customRules);
+  if (!label) return badge || '';
+  return `${badge} : ${label}`;
 }
 
 /**
- * 결과 카드 한 줄 — 배지(일관성·공통 문자열·본용언 + 보조용언) + 등록 문자열
+ * 결과 카드 한 줄 — 배지(일관성·통일형·공통 문자열 찾기·본용언 + 보조용언) + 등록 문자열
  * @param {import('./ruleEngine.js').GroupedResult} group
+ * @param {import('./ruleTypes.js').Rule[]} [customRules]
  * @returns {{ badge: string, label: string }}
  */
-export function getConsistencyResultCardParts(group) {
+export function getConsistencyResultCardParts(group, customRules = []) {
   if (group.patternKind === 'phrase-slot-find') {
     return {
-      badge: '공통 문자열',
+      badge: '공통 문자열 찾기',
       label: consistencyFindDisplayLabel(group),
     };
   }
 
   if (group.patternKind === 'auxiliary-verb') {
     return {
-      badge: '본용언 + 보조용언',
+      badge: AUXILIARY_VERB_BADGE_LABEL,
       label: auxiliaryItemTitle(group),
     };
   }
 
+  const label = consistencyFindDisplayLabel(group);
+  const tail = group.tailWord?.trim();
+  const isUnify = isConsistencyUnifyTailWord(customRules, tail);
+  const pinnedTail = getConsistencyUnifyPinnedTailWord(customRules);
+  const showPin = isUnify && tail && pinnedTail === tail;
+
   return {
-    badge: '일관성',
-    label: consistencyFindDisplayLabel(group),
+    badge: isUnify ? '통일형 찾기' : '일관성 찾기',
+    label: showPin ? `${label} 📌` : label,
   };
 }
 

@@ -7,13 +7,12 @@ import {
 import {
   buildRulesForEntry,
   isConsistencyEntryEnabled,
-  isLiteralConsistencyEntry,
-  listConsistencyEntries,
+  listConsistencyLiteralEntries,
   planConsistencyEntries,
-  parseConsistencyInput,
   removeConsistencyEntry,
   toggleConsistencyEntry,
 } from '../lib/compoundPairRegister.js';
+import { registerConsistencyLiteralBatch } from '../lib/consistencyLiteralRegister.js';
 import {
   isAuxiliaryVerbEntryEnabled,
   listAuxiliaryVerbEntries,
@@ -30,21 +29,25 @@ import {
   togglePhraseSlotEntry,
 } from '../lib/phraseSlotRegister.js';
 import { parseCommaList } from '../lib/matchFilters.js';
-import { isBonBojoRequiredItem } from '../lib/bonBojoRules.js';
+import { isBonBojoRequiredItem, AUXILIARY_VERB_FEATURE_LABEL } from '../lib/bonBojoRules.js';
 import {
-  canAddConsistencyLiteralRegisteredEntries,
-  canAddPhraseSlotRegisteredEntries,
-  consistencyLiteralRegistrationBlockedMessage,
-  countConsistencyLiteralRegisteredEntries,
   countPhraseSlotRegisteredEntries,
-  MAX_CONSISTENCY_CRITERIA_SLOTS,
   MAX_PHRASE_SLOT_REGISTERED_ENTRIES,
+  MAX_GLOBAL_EXCLUDE_REGISTERED_ENTRIES,
+  canAddGlobalExcludeRegisteredEntries,
+  globalExcludeRegistrationBlockedMessage,
   phraseSlotRegistrationBlockedMessage,
 } from '../lib/consistencyRuleLimit.js';
 import ConsistencyRegisterField from './consistency/ConsistencyRegisterField.jsx';
+import ConsistencyHintExample from './consistency/ConsistencyHintExample.jsx';
+import ConsistencyUnifySection from './consistency/ConsistencyUnifySection.jsx';
 import ExcludePhraseList from './consistency/ExcludePhraseList.jsx';
 import RegisteredList from './consistency/RegisteredList.jsx';
-import { SPACE_INPUT_PLACEHOLDER } from './consistency/constants.js';
+import {
+  CONSISTENCY_EXCLUDE_INPUT_PLACEHOLDER,
+  CONSISTENCY_LITERAL_INPUT_PLACEHOLDER,
+  CONSISTENCY_PHRASE_SLOT_INPUT_PLACEHOLDER,
+} from './consistency/constants.js';
 import TocBodySetupPanel from '../toc-body/components/TocBodySetupPanel.jsx';
 import { isTocBodyCheckEnabled } from '../lib/featureFlags.js';
 import DetailsChevron from './DetailsChevron.jsx';
@@ -119,11 +122,13 @@ export default function ConsistencyPanel({
     setGlobalExcludeInput('');
   }, [globalExcludePhrases]);
 
-  const literalEntries = listConsistencyEntries(customRules);
+  const literalEntries = listConsistencyLiteralEntries(customRules);
   const slotEntries = listPhraseSlotEntries(customRules);
   const phraseSlotRegisteredCount = countPhraseSlotRegisteredEntries(customRules);
   const phraseSlotRegisterFull =
     phraseSlotRegisteredCount >= MAX_PHRASE_SLOT_REGISTERED_ENTRIES;
+  const excludeRegisterFull =
+    globalExcludePhrases.length >= MAX_GLOBAL_EXCLUDE_REGISTERED_ENTRIES;
   const auxiliaryEntries = listAuxiliaryVerbEntries(customRules);
   const auxiliarySelectAllRef = useRef(
     /** @type {HTMLInputElement | null} */ (null),
@@ -162,100 +167,67 @@ export default function ConsistencyPanel({
   }
 
   function registerLiteral() {
-    const currentCount = countConsistencyLiteralRegisteredEntries(customRules);
-    const variants = parseConsistencyInput(literalInput);
-    if (!variants.length) {
-      if (currentCount >= MAX_CONSISTENCY_CRITERIA_SLOTS) {
-        alert(consistencyLiteralRegistrationBlockedMessage(currentCount, 0));
-        return;
-      }
-      alert('문자열을 입력하세요.');
-      return;
+    const input = literalInput.trim() || CONSISTENCY_LITERAL_INPUT_PLACEHOLDER;
+    if (registerConsistencyLiteralBatch(input, customRules, applyCustomRules)) {
+      setLiteralInput('');
     }
-    let merged = customRules;
-    /** @type {import('../lib/ruleTypes.js').Rule[]} */
-    const toAdd = [];
-    let newEntryCount = 0;
-    for (const raw of planConsistencyEntries(variants)) {
-      if (!isLiteralConsistencyEntry(raw)) {
-        if (isPhraseSlotPattern(raw)) {
-          alert(`「${raw}」은 공통 문자열 찾기(1개)에 등록하세요. (@)`);
-        } else {
-          alert(`등록할 수 없는 형식입니다: ${raw}`);
-        }
-        continue;
-      }
-      const batch = buildRulesForEntry(merged, raw);
-      if (!batch.length) continue;
-      newEntryCount += 1;
-      toAdd.push(...batch);
-      merged = [...merged, ...batch];
-    }
-    if (!toAdd.length) {
-      alert('입력한 항목은 모두 이미 등록되어 있거나 다른 칸에 넣어야 합니다.');
-      return;
-    }
-    if (!canAddConsistencyLiteralRegisteredEntries(customRules, newEntryCount)) {
-      alert(
-        consistencyLiteralRegistrationBlockedMessage(
-          currentCount,
-          newEntryCount,
-        ),
-      );
-      return;
-    }
-    if (!assertSlots(toAdd)) return;
-    setLiteralInput('');
   }
 
   function registerSlot() {
-    const variants = parsePhraseSlotInput(slotInput);
+    const input = slotInput.trim() || CONSISTENCY_PHRASE_SLOT_INPUT_PLACEHOLDER;
+    const variants = parsePhraseSlotInput(input);
     if (!variants.length) {
       alert('패턴을 입력하세요. (예: @시대)');
       return;
     }
-    let merged = customRules;
-    const toAdd = [];
-    let newEntryCount = 0;
-    for (const raw of planConsistencyEntries(variants)) {
-      if (!isPhraseSlotPattern(raw)) {
-        alert(`「${raw}」에는 @가 필요합니다. (예: @시대)`);
-        continue;
-      }
-      const batch = buildRulesForPhraseSlot(merged, raw);
-      if (!batch.length) continue;
-      newEntryCount += 1;
-      toAdd.push(...batch);
-      merged = [...merged, ...batch];
-    }
-    if (!toAdd.length) {
-      alert('입력한 패턴은 모두 이미 등록되어 있습니다.');
+    if (variants.length > 1) {
+      alert('공통 문자열 찾기는 1항목만 등록할 수 있습니다.');
       return;
     }
-    if (!canAddPhraseSlotRegisteredEntries(customRules, newEntryCount)) {
+    if (phraseSlotRegisterFull) {
       alert(
-        phraseSlotRegistrationBlockedMessage(
-          phraseSlotRegisteredCount,
-          newEntryCount,
-        ),
+        phraseSlotRegistrationBlockedMessage(phraseSlotRegisteredCount, 1),
       );
       return;
     }
-    if (!assertSlots(toAdd)) return;
+    const raw = planConsistencyEntries(variants)[0];
+    if (!raw || !isPhraseSlotPattern(raw)) {
+      alert(`「${variants[0]}」에는 @가 필요합니다. (예: @시대)`);
+      return;
+    }
+    const batch = buildRulesForPhraseSlot(customRules, raw);
+    if (!batch.length) {
+      alert('입력한 패턴은 이미 등록되어 있습니다.');
+      return;
+    }
+    if (!assertSlots(batch)) return;
     setSlotInput('');
   }
 
   function addGlobalExcludePhrases() {
-    const parsed = parseCommaList(globalExcludeInput);
+    const input =
+      globalExcludeInput.trim() || CONSISTENCY_EXCLUDE_INPUT_PLACEHOLDER;
+    const parsed = parseCommaList(input);
     if (!parsed.length) {
-      alert('제외할 구문을 입력하세요.');
+      alert('제외할 항목을 입력하세요.');
       return;
     }
-    const merged = [...globalExcludePhrases];
-    for (const phrase of parsed) {
-      if (!merged.some((p) => p === phrase)) merged.push(phrase);
+    if (parsed.length > 1) {
+      alert('검수 제외 항목은 1항목만 등록할 수 있습니다.');
+      return;
     }
-    onGlobalExcludePhrasesChange(merged);
+    if (excludeRegisterFull) {
+      alert(
+        globalExcludeRegistrationBlockedMessage(globalExcludePhrases.length, 1),
+      );
+      return;
+    }
+    const phrase = parsed[0];
+    if (globalExcludePhrases.some((p) => p === phrase)) {
+      alert('입력한 항목은 이미 등록되어 있습니다.');
+      return;
+    }
+    onGlobalExcludePhrasesChange([...globalExcludePhrases, phrase]);
     setGlobalExcludeInput('');
   }
 
@@ -269,23 +241,24 @@ export default function ConsistencyPanel({
     <div className="consistency-embed">
       <section className="consistency-unified-box" aria-label="표기 일관성 찾기">
         <p className="printed-page-setup__title consistency-panel-section-title panel-criteria-heading">
-          일관성 찾기(1회 검수 8개 이내 추천)⭐
+          일관성 찾기
+          <span className="panel-criteria-heading-meta">
+            (1회 5항목까지 가능, 영문 대소문자 지원)
+          </span>
         </p>
         <div className="consistency-subsection consistency-subsection--first">
           <p className="hint consistency-hint-block">
-            한글 · 영문 대소문자 등을 찾습니다. 여러 항목은 사이에 , 를 넣어 한 번에 입력하세요
+            여러 항목은 사이에 &apos;,&apos;를 넣어 한 번에 입력하고 찾아 볼 수 있습니다
             <br />
-            예: 원고 내 '조선시대' 일관성 확인 →{' '}
-            <span className="consistency-hint-example">
-              '조선˅시대,조선시대'
-            </span>{' '}
-            입력 후 검수하세요
+            <ConsistencyHintExample>
+              &apos;마한, 진한, 변한&apos; 입력 → 3항목 한 번에 찾기
+            </ConsistencyHintExample>
           </p>
           <ConsistencyRegisterField
             value={literalInput}
             onChange={setLiteralInput}
             onRegister={registerLiteral}
-            placeholder={SPACE_INPUT_PLACEHOLDER}
+            placeholder={CONSISTENCY_LITERAL_INPUT_PLACEHOLDER}
             ariaLabel="일관성 찾기"
           />
           <RegisteredList
@@ -305,28 +278,30 @@ export default function ConsistencyPanel({
           />
         </div>
 
+        <ConsistencyUnifySection
+          customRules={customRules}
+          onApplyRules={applyCustomRules}
+        />
+
         <div className="consistency-subsection-row">
           <div className="consistency-subsection consistency-subsection--half">
             <p className="printed-page-setup__title consistency-subsection-title panel-criteria-heading">
-              공통 문자열 찾기(1개)
+              공통 문자열 찾기
+              <span className="panel-criteria-heading-meta">(1항목)</span>
             </p>
-            <div className="consistency-subsection__hints-area">
-              <p className="hint consistency-hint-block">
-                @을 포함한 항목을 모두 찾습니다
-                <br />
-                예: <span className="consistency-hint-example">'@시대'</span> 검색→{' '}
-                <span className="consistency-hint-example">
-                  '조선시대, 고려시대, 신라시대'
-                </span>{' '}
-                표시
-              </p>
-            </div>
+            <p className="hint consistency-hint-block">
+              @을 포함한 항목을 모두 찾습니다
+              <br />
+              <ConsistencyHintExample>
+                &apos;@시대&apos; 입력 → &apos;조선시대, 고려시대, 신라시대⋯&apos;
+              </ConsistencyHintExample>
+            </p>
             <ConsistencyRegisterField
               value={slotInput}
               onChange={setSlotInput}
               onRegister={registerSlot}
-              placeholder={SPACE_INPUT_PLACEHOLDER}
-              ariaLabel="공통 문자열 찾기(1개)"
+              placeholder={CONSISTENCY_PHRASE_SLOT_INPUT_PLACEHOLDER}
+              ariaLabel="공통 문자열 찾기(1항목)"
               inputClassName="field-input mono"
               registerDisabled={phraseSlotRegisterFull}
             />
@@ -348,22 +323,24 @@ export default function ConsistencyPanel({
           </div>
 
           <div className="consistency-subsection consistency-subsection--half consistency-subsection--exclude">
-            <p className="printed-page-setup__title consistency-subsection-title">
-              검수 제외 단어
+            <p className="printed-page-setup__title consistency-subsection-title panel-criteria-heading">
+              검수 제외 항목
+              <span className="panel-criteria-heading-meta">(1항목)</span>
             </p>
-            <div className="consistency-subsection__hints-area">
-              <p className="hint">
-                등록한 단어는 찾지 않습니다
-                <br />
-                예: <span className="consistency-hint-example">'소녀시대'</span>
-              </p>
-            </div>
+            <p className="hint consistency-hint-block">
+              입력한 항목은 찾지 않습니다
+              <br />
+              <ConsistencyHintExample>
+                &apos;소녀시대&apos;
+              </ConsistencyHintExample>
+            </p>
             <ConsistencyRegisterField
               value={globalExcludeInput}
               onChange={setGlobalExcludeInput}
               onRegister={addGlobalExcludePhrases}
-              placeholder={SPACE_INPUT_PLACEHOLDER}
-              ariaLabel="검수 제외 단어"
+              placeholder={CONSISTENCY_EXCLUDE_INPUT_PLACEHOLDER}
+              ariaLabel="검수 제외 항목(1항목)"
+              registerDisabled={excludeRegisterFull}
             />
             <ExcludePhraseList
               phrases={globalExcludePhrases}
@@ -402,21 +379,23 @@ export default function ConsistencyPanel({
                     ),
                   )
                 }
-                aria-label="본용언+보조용언 표기 전체 선택"
+                aria-label={`${AUXILIARY_VERB_FEATURE_LABEL} 전체 선택`}
               />
             </label>
             <span className="caution-checklist-summary-title">
-              본용언 + 보조용언 표기
-              {auxiliaryTotal > 0
-                ? `(선택 ${auxiliaryActiveCount}/${auxiliaryTotal})`
-                : ''}{' '}
-              <span className="criteria-summary-note">※개발 중</span>
+              {AUXILIARY_VERB_FEATURE_LABEL}
+              {auxiliaryTotal > 0 ? (
+                <span className="panel-criteria-heading-meta">
+                  {`(선택 ${auxiliaryActiveCount}/${auxiliaryTotal})`}
+                </span>
+              ) : null}
             </span>
           </summary>
-          <p className="auxiliary-checklist-intro">
-            ｢한글맞춤법｣을 바탕으로 붙여쓸 수 있는 ‘본용언 (아/어)+보조용언’ 형태를 찾습니다
+          <p className="auxiliary-checklist-intro hint">
+            ｢한글맞춤법｣ 기준 붙여 쓸 수 있는 ‘본용언(-아/어) + 보조용언’ 을 찾습니다
             <br />
-            본용언이 3음절 이상 복합어이면(예:생각하다) 검색에서 제외됩니다
+            (본용언이 3음절 이상 복합어인 경우는 제외 예:
+            <ConsistencyHintExample>생각하다</ConsistencyHintExample>)
           </p>
           <RegisteredList
             entries={auxiliaryEntries}
@@ -443,7 +422,7 @@ export default function ConsistencyPanel({
             message={
               <>
                 <span className="tooltip-guide__gothic-label">
-                  본용언+보조용언 표기
+                  {AUXILIARY_VERB_FEATURE_LABEL}
                 </span>
                 를 검색한다냥
                 <br />

@@ -2,7 +2,7 @@ const SESSION_KEY = 'pdf-proofread-panel-left-width-session-v1';
 const MIN_WIDTH = 400;
 const MAX_WIDTH = 720;
 
-/** @deprecated localStorage — 로그아웃 시 540px 정책 */
+/** @deprecated localStorage — 로그아웃 시 500px 정책 */
 const LEGACY_LOCAL_KEYS = [
   'pdf-proofread-panel-left-width-v1',
   'pdf-proofread-panel-left-width-by-user-v1',
@@ -49,7 +49,7 @@ export function clearLegacyPanelLeftWidthLocalStorage() {
 }
 
 /**
- * 로그인 세션 동안만 유지 (F5·대문 왕복). 없으면 null → 540px.
+ * 로그인 세션 동안만 유지 (F5·대문 왕복). 없으면 null → 500px.
  * @param {string} [uid]
  */
 export function readSessionPanelLeftWidth(uid = '') {
@@ -73,7 +73,7 @@ export function persistSessionPanelLeftWidth(uid, width) {
 }
 
 /**
- * 로그아웃 시 호출 — 다음 로그인은 540px.
+ * 로그아웃 시 호출 — 다음 로그인은 500px.
  * @param {string} [uid]
  */
 export function clearSessionPanelLeftWidth(uid = '') {

@@ -43,4 +43,48 @@ describe('migrateCompoundRules', () => {
     expect(version).toBe(COMPOUND_MIGRATE_VERSION);
     expect(rules.some((r) => r.patternKind === 'phrase-slot-find')).toBe(true);
   });
+
+  it('마이그레이션 시 일관성·통일형 메타를 보존한다', () => {
+    const { rules } = applyCompoundRuleMigrations(
+      [
+        {
+          find: 'a',
+          replace: 'a',
+          enabled: true,
+          patternKind: 'compound-find',
+          tailWord: '조선시대',
+          consistencyLiteralEntry: true,
+        },
+        {
+          find: 'b',
+          replace: 'b',
+          enabled: true,
+          patternKind: 'compound-find',
+          tailWord: '신라시대',
+          consistencyUnifyEntry: true,
+          consistencyUnifyPinned: true,
+        },
+        {
+          find: 'c',
+          replace: 'c',
+          enabled: true,
+          patternKind: 'compound-find',
+          tailWord: '고려시대',
+          consistencyUnifyEntry: true,
+          overlayReplace: '신라시대',
+        },
+      ],
+      10,
+    );
+
+    const literal = rules.find((r) => r.tailWord === '조선시대');
+    const pinned = rules.find((r) => r.tailWord === '신라시대');
+    const sibling = rules.find((r) => r.tailWord === '고려시대');
+
+    expect(literal?.consistencyLiteralEntry).toBe(true);
+    expect(pinned?.consistencyUnifyEntry).toBe(true);
+    expect(pinned?.consistencyUnifyPinned).toBe(true);
+    expect(sibling?.consistencyUnifyEntry).toBe(true);
+    expect(sibling?.overlayReplace).toBe('신라시대');
+  });
 });

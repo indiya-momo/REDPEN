@@ -51,7 +51,7 @@ describe('mergeConsistencyZeroFindGroups', () => {
       pattern: 'regex',
       patternKind: 'auxiliary-verb',
       tailWord: '켜 본',
-      label: '(아/어) + 보다',
+      label: '본(-아/어) + 보다',
     };
     const literalRule = {
       enabled: true,
@@ -83,7 +83,7 @@ describe('mergeConsistencyZeroFindGroups', () => {
       pattern: 'regex',
       patternKind: 'auxiliary-verb',
       tailWord: '켜 본',
-      label: '(아/어) + 보다',
+      label: '본(-아/어) + 보다',
     };
     const existing = [
       {
@@ -133,25 +133,25 @@ describe('mergeConsistencyZeroFindGroups', () => {
       {
         find: 'a1',
         replace: '$0',
-        label: '고˅있 (아/어) + 있다',
+        label: '고˅있 본(-아/어) + 있다',
         patternKind: 'auxiliary-verb',
         tailWord: '고 있',
-        groupDisplayLabel: '(아/어) + 있다',
+        groupDisplayLabel: '본(-아/어) + 있다',
         instances: [{ pageNum: 1, index: 1, matchedText: 'x', suggestedText: 'x', find: 'a1', replace: '$0' }],
       },
       {
         find: 'a2',
         replace: '$0',
-        label: '아˅있 (아/어) + 있다',
+        label: '아˅있 본(-아/어) + 있다',
         patternKind: 'auxiliary-verb',
         tailWord: '아 있',
-        groupDisplayLabel: '(아/어) + 있다',
+        groupDisplayLabel: '본(-아/어) + 있다',
         instances: [{ pageNum: 2, index: 2, matchedText: 'y', suggestedText: 'y', find: 'a2', replace: '$0' }],
       },
     ];
     const merged = mergeAuxiliaryResultsByBonBojoItem(groups);
     expect(merged).toHaveLength(1);
-    expect(merged[0].groupDisplayLabel).toBe('(아/어) + 있다');
+    expect(merged[0].groupDisplayLabel).toBe('본(-아/어) + 있다');
     expect(merged[0].instances).toHaveLength(2);
     expect(merged[0].tailWord).toBeUndefined();
   });
@@ -164,7 +164,7 @@ describe('mergeConsistencyZeroFindGroups', () => {
       pattern: 'regex',
       patternKind: 'auxiliary-verb',
       tailWord: '해 왔',
-      label: '(아/어) + 오다',
+      label: '본(-아/어) + 오다',
       bonBojoItemId: 'verb-oda',
     };
     const naeda = {
@@ -174,16 +174,16 @@ describe('mergeConsistencyZeroFindGroups', () => {
       pattern: 'regex',
       patternKind: 'auxiliary-verb',
       tailWord: '어 내',
-      label: '(아/어) + 내다',
+      label: '본(-아/어) + 내다',
       bonBojoItemId: 'verb-naeda',
     };
     const withHits = mergeAuxiliaryResultsByBonBojoItem([
       {
         find: 'F-nae',
         replace: '$0',
-        label: '(아/어) + 내다',
+        label: '본(-아/어) + 내다',
         patternKind: 'auxiliary-verb',
-        groupDisplayLabel: '(아/어) + 내다',
+        groupDisplayLabel: '본(-아/어) + 내다',
         instances: [
           {
             find: 'F-nae',
@@ -198,10 +198,10 @@ describe('mergeConsistencyZeroFindGroups', () => {
     ]);
     const merged = mergeAuxiliaryZeroFindByItem(withHits, [oda, naeda]);
     expect(merged.map((g) => g.groupDisplayLabel || g.label)).toEqual([
-      '(아/어) + 내다',
-      '(아/어) + 오다',
+      '본(-아/어) + 내다',
+      '본(-아/어) + 오다',
     ]);
-    expect(merged.find((g) => g.label === '(아/어) + 오다')?.instances).toEqual(
+    expect(merged.find((g) => g.label === '본(-아/어) + 오다')?.instances).toEqual(
       [],
     );
   });
@@ -214,7 +214,7 @@ describe('mergeConsistencyZeroFindGroups', () => {
       pattern: 'regex',
       patternKind: 'auxiliary-verb',
       tailWord: '켜 본',
-      label: '(아/어) + 보다',
+      label: '본(-아/어) + 보다',
     };
     const existing = [
       {

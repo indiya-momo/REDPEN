@@ -44,6 +44,11 @@
   --panel-result-surface: var(--panel-surface-group);
   --panel-result-pill: var(--result-pill);
   --panel-result-pill-muted: rgb(42 33 24 / 6%);
+  --panel-result-badge-border: color-mix(
+    in srgb,
+    var(--panel-result-pill-muted) 92%,
+    var(--c-ink) 8%
+  );
   --panel-gap-section: calc(14px * var(--panel-ui-scale));
   /* 4순위 간격 — 위계용 여백 (블록 내부 micro) */
   --panel-gap-title-body: calc(6px * var(--panel-ui-scale));
@@ -53,6 +58,26 @@
   /* 5순위 accent — 패널 내 단일 강조(선택·CTA) */
   --panel-accent: var(--accent-terracotta);
   --panel-accent-deep: var(--accent-terracotta-deep);
+  --panel-run-btn-primary-bg: color-mix(
+    in srgb,
+    var(--panel-accent) 80%,
+    #2c1810 20%
+  );
+  --panel-run-btn-primary-border: color-mix(
+    in srgb,
+    var(--panel-accent) 68%,
+    #2c1810 32%
+  );
+  --panel-run-btn-primary-hover-bg: color-mix(
+    in srgb,
+    var(--panel-accent) 70%,
+    #2c1810 30%
+  );
+  --panel-result-card-active-accent: color-mix(
+    in srgb,
+    var(--panel-accent) 72%,
+    var(--c-ink) 28%
+  );
   flex-shrink: 0;
   height: 100%;
   min-width: 400px;
@@ -79,6 +104,7 @@
 .panel-left .consistency-result-chip,
 .panel-left .result-card-findings-count,
 .panel-left .caution-result-chip,
+.panel-left .spelling-result-chip,
 .panel-left .result-card--consistency .result-aux-stem,
 .panel-left .toc-result-title,
 .panel-left .panel-criteria-heading,
@@ -122,7 +148,6 @@
 .panel-left .result-card-tip-inline,
 .panel-left .result-card--caution .result-card-tip-inline,
 .panel-left .result-card--builtin .result-card-tip-inline,
-.panel-left .criteria-summary-note,
 .panel-left .caution-tip-inline,
 .panel-left .caution-group-tip,
 .panel-left .builtin-rule-tip-inline,
@@ -143,7 +168,6 @@
 .panel-left .panel-guide-text,
 .panel-left .consistency-unified-box .hint,
 .panel-left .consistency-hint-block,
-.panel-left .consistency-hint-example,
 .panel-left .auxiliary-checklist-intro,
 .panel-left .consistency-toc-section .hint,
 .panel-left .consistency-toc-section__calibration-done,
@@ -188,12 +212,13 @@
 }
 
 .panel-left .current-page-status strong,
-.panel-left .current-page-status .result-card-findings-count {
+.panel-left .current-page-status .result-findings-count-circle {
   font-weight: var(--w-step);
 }
 
 .panel-left .bon-bojo-required-badge,
-.panel-left .caution-badge-inline {
+.panel-left .caution-badge-inline,
+.panel-left .consistency-hint-badge {
   font-weight: var(--w-body);
 }
 
@@ -209,7 +234,9 @@
 .panel-left .spelling-tab-scroll .results-panel--spelling .results-header,
 .panel-left .panel-left-work-scroll .results-panel--consistency .results-header {
   border-bottom: none;
-  background: transparent;
+  background: color-mix(in srgb, var(--panel-surface-group) 90%, var(--c-ink) 10%);
+  border-left: 3px solid color-mix(in srgb, var(--panel-accent) 72%, var(--c-ink) 28%);
+  box-shadow: inset 0 -1px 0 rgb(42 33 24 / 7%);
 }
 
 
@@ -237,19 +264,25 @@
 .panel-left .results-panel--spelling .result-card--caution.result-card--active,
 .panel-left .results-panel--consistency .result-card--active,
 .panel-left .results-panel--consistency .result-card--consistency.result-card--active {
-  box-shadow: none;
-  background: color-mix(in srgb, var(--panel-result-surface) 90%, var(--panel-accent) 10%);
+  box-shadow: inset 3px 0 0 var(--panel-result-card-active-accent);
+  background: var(--panel-result-surface);
 }
 
-.panel-left .results-panel--spelling .result-card--builtin.result-card--on-page:not(.result-card--active),
-.panel-left .results-panel--spelling .result-card--caution.result-card--on-page:not(.result-card--active),
-.panel-left .results-panel--consistency .result-card--on-page:not(.result-card--active),
-.panel-left .results-panel--consistency .result-card--consistency.result-card--on-page:not(.result-card--active) {
-  box-shadow: none;
-  background: color-mix(in srgb, var(--panel-result-surface) 94%, var(--panel-accent) 6%);
+/* pill·배지 — 배경보다 한 톤 진한 은은한 테두리 */
+.panel-left .results-panel--spelling :is(
+    .caution-badge-inline,
+    .spelling-badge-inline,
+    .results-header-badge
+  ),
+.panel-left .results-panel--consistency :is(
+    .caution-badge-inline,
+    .consistency-badge-inline,
+    .results-header-badge,
+    .result-card--consistency .result-aux-group-tag
+  ) {
+  border: 1px solid var(--panel-result-badge-border);
 }
 
-/* pill·배지·묶음 — 테두리 없음, 명도로만 */
 .panel-left .results-panel--spelling .page-chip,
 .panel-left .results-panel--consistency .page-chip {
   border: none;
@@ -266,18 +299,23 @@
 
 .panel-left .results-panel--spelling .page-chip--current,
 .panel-left .results-panel--consistency .page-chip--current {
-  background: var(--panel-accent);
-  color: var(--accent-on-terracotta);
+  background: color-mix(in srgb, var(--panel-result-pill) 66%, var(--panel-accent) 34%);
+  color: var(--c-ink);
   border: none;
   box-shadow: none;
 }
 
 .panel-left .results-panel--spelling .page-chip--current:hover,
 .panel-left .results-panel--consistency .page-chip--current:hover {
-  background: var(--panel-accent-deep);
+  background: color-mix(in srgb, var(--panel-result-pill) 58%, var(--panel-accent) 42%);
   border: none;
 }
 
+.panel-left .results-panel--spelling .page-chip--current .page-chip__bundle,
+.panel-left .results-panel--consistency .page-chip--current .page-chip__bundle {
+  background: color-mix(in srgb, var(--panel-result-pill-muted) 70%, var(--c-ink) 30%);
+  color: var(--c-ink);
+}
 .panel-left .results-panel--spelling .page-chip--on-page:not(.page-chip--current),
 .panel-left .results-panel--consistency .page-chip--on-page:not(.page-chip--current) {
   border: none;
@@ -292,12 +330,6 @@
   color: var(--c-soft);
 }
 
-.panel-left .results-panel--spelling .page-chip--current .page-chip__bundle,
-.panel-left .results-panel--consistency .page-chip--current .page-chip__bundle {
-  background: rgb(255 255 255 / 18%);
-  color: inherit;
-}
-
 .panel-left .results-panel--spelling .result-count,
 .panel-left .results-panel--consistency .result-count {
   border: none;
@@ -306,15 +338,31 @@
 }
 
 .panel-left .results-panel--spelling .caution-badge-inline,
+.panel-left .results-panel--spelling .spelling-badge-inline,
 .panel-left .results-panel--consistency .caution-badge-inline,
 .panel-left .results-panel--consistency .consistency-badge-inline {
-  border: none;
   background: var(--panel-result-pill-muted);
   color: var(--c-ink);
+  line-height: 1.15;
+}
+
+.panel-left .results-panel--spelling .result-rule,
+.panel-left .results-panel--consistency .result-rule {
+  font-size: calc(0.85rem * var(--panel-ui-scale) * 0.9);
+  line-height: 1.2;
+}
+
+.panel-left .results-panel--spelling .results-header-badge,
+.panel-left .results-panel--consistency .results-header-badge {
+  background: var(--panel-result-pill-muted);
+  color: var(--c-ink);
+  font-size: calc(0.62rem * var(--panel-ui-scale) * 1.32);
+  padding: calc(0.0625rem * var(--panel-ui-scale) * 1.32)
+    calc(var(--space-sm-tight) * var(--panel-ui-scale) * 1.32);
+  line-height: 1.15;
 }
 
 .panel-left .results-panel--consistency .result-card--consistency .result-aux-group-tag {
-  border: none;
   background: var(--panel-result-pill-muted);
   color: var(--c-ink);
   box-shadow: none;
@@ -361,13 +409,11 @@
 .panel-left .results-panel--toc-body .result-card--active {
   box-shadow:
     var(--panel-sheet-shadow),
-    inset 0 0 0 1px var(--color-border-strong);
+    inset 3px 0 0 var(--panel-result-card-active-accent);
 }
 
 .panel-left .results-panel--toc-body .result-card--on-page:not(.result-card--active) {
-  box-shadow:
-    var(--panel-sheet-shadow),
-    inset 3px 0 0 var(--panel-accent);
+  box-shadow: var(--panel-sheet-shadow);
 }
 
 .panel-left .builtin-spelling-resize-body {
@@ -526,19 +572,89 @@
   outline: none;
 }
 
-.panel-left .registered-chip {
-  padding: 3px 4px 3px 0;
-  border: none;
-  background: transparent;
+.panel-left .consistency-embed .tail-list:not(.tail-list--grid) {
+  border-top: none;
+  margin-top: var(--consistency-item-gap, 6px);
+  padding-top: 0;
+}
+
+.panel-left .consistency-embed .registered-chip {
+  gap: 1px;
+  padding: 3px 2px 3px 4px;
+  font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+  font-size: var(--consistency-example-font-size);
+  font-weight: 400;
+  line-height: var(--consistency-example-line-height);
+  letter-spacing: 0;
+  color: var(--c-ink);
+  border: 1px solid var(--chip-border);
+  border-radius: var(--radius-ui-sm);
+  background: var(--rule-hover-bg);
   box-shadow: none;
 }
 
-.panel-left .registered-chip:hover {
-  background: var(--rule-hover-bg);
+.panel-left .consistency-embed .registered-chip .find,
+.panel-left .consistency-embed .registered-chip__text {
+  font: inherit;
+  line-height: inherit;
+  letter-spacing: inherit;
+  font-weight: inherit;
+  color: inherit;
 }
 
-.panel-left .registered-chip:has(input:checked) {
+.panel-left .consistency-embed .registered-chip .btn-icon--dismiss {
+  margin-inline-start: 0;
+  padding: 2px;
+  font-size: 1em;
+  line-height: 1;
+  width: auto;
+  height: auto;
+  background: transparent;
+  color: var(--color-text-muted);
+  border-radius: var(--radius-ui-sm);
+  transition:
+    color 0.15s ease,
+    background 0.15s ease;
+}
+
+.panel-left .consistency-embed .registered-chip .btn-icon--dismiss:hover {
+  color: var(--accent-terracotta-deep);
   background: var(--panel-accordion-bg);
+}
+
+.panel-left .consistency-embed .registered-chip .btn-icon--dismiss svg {
+  width: 1em;
+  height: 1em;
+}
+
+.panel-left .consistency-embed .registered-chip--unify {
+  gap: 1px;
+}
+
+.panel-left .consistency-embed .consistency-unify-pin-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.28;
+  filter: grayscale(1);
+}
+
+.panel-left .consistency-embed .consistency-unify-pin-btn--active {
+  opacity: 1;
+  filter: none;
+}
+
+.panel-left .consistency-embed .consistency-unify-pin-btn:focus-visible {
+  outline: 2px solid var(--panel-accent);
+  outline-offset: 1px;
 }
 
 /* 기능 섹션(보정·일관성 찾기) — 접이식이 아닌 설정 블록 1겹 */
@@ -559,7 +675,7 @@
 
 .panel-left .result-card-head-main {
   flex-direction: row;
-  align-items: baseline;
+  align-items: center;
   gap: var(--space-xs-tight) var(--space-md-tight);
 }
 
@@ -592,7 +708,10 @@
 }
 
 /* 요약 줄 ↔ 결과 목록 */
-.panel-left .results-header,
+.panel-left .results-header {
+  padding-bottom: calc((var(--space-sm) + 2px) * 0.7);
+}
+
 .panel-left .current-page-status {
   padding-bottom: calc(var(--space-sm) + 2px);
 }
@@ -648,17 +767,29 @@
 }
 
 .panel-left .consistency-unified-box {
-  padding: 12px 14px;
+  padding: calc(16px * var(--panel-ui-scale, 1));
+}
+
+.panel-left .consistency-unified-box .consistency-hint-block {
+  line-height: 1.6;
 }
 
 .panel-left .consistency-embed .tail-form {
-  gap: 10px;
-  margin-top: 10px;
+  margin-top: var(--consistency-item-gap, 6px);
 }
 
-.panel-left .consistency-embed .field-input {
+.panel-left .consistency-embed .consistency-register-field .consistency-register-field__input,
+.panel-left .consistency-embed .consistency-register-field .field-input {
   margin-top: 0;
-  padding-block: 9px;
+  padding: var(--consistency-input-padding-block, calc(10px * var(--panel-ui-scale, 1) * 0.6))
+    calc(12px * var(--panel-ui-scale, 1));
+  color: var(--consistency-register-text, var(--color-text-muted));
+}
+
+.panel-left .consistency-embed .consistency-register-field .consistency-register-field__input::placeholder,
+.panel-left .consistency-embed .consistency-register-field .field-input::placeholder {
+  color: var(--color-text-subtle);
+  opacity: 1;
 }
 
 .panel-left .consistency-toc-section__step-label {
@@ -719,7 +850,6 @@
 
 .panel-left .bon-bojo-required-badge {
   background: var(--color-surface-inset);
-  border: 1px solid var(--panel-sheet-border);
   color: var(--c-soft);
 }
 
@@ -1391,6 +1521,21 @@
   cursor: not-allowed;
 }
 
+.panel-left__save-rules:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.panel-left__save-rules-spinner {
+  animation: panel-left-save-rules-spin 0.8s linear infinite;
+}
+
+@keyframes panel-left-save-rules-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .panel-header-home {
   flex-shrink: 0;
   display: inline-flex;
@@ -1631,27 +1776,37 @@
   font-weight: 700;
   padding: calc(6px * var(--panel-run-btn-scale)) calc(16px * var(--panel-run-btn-scale));
   white-space: nowrap;
-  background: var(--btn-primary-bg);
-  border: 1px solid var(--btn-primary-bg);
-  color: var(--btn-primary-text);
+  background: var(--btn-secondary-bg);
+  border: 1px solid var(--work-chrome-border);
+  color: var(--btn-secondary-text);
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
 }
 
+.btn-add.panel-section-run-btn--primary,
 .btn-add.panel-section-run-btn.btn-export-results {
-  background: #D7CCC8;
-  border: none;
-  color: #3E2723;
-}
-
-.btn-add.panel-section-run-btn.btn-export-results:hover:not(:disabled) {
-  background: #BCAAA4;
-  border: none;
-  color: #3E2723;
+  padding-block: calc(8px * var(--panel-run-btn-scale));
+  padding-inline: calc(16px * var(--panel-run-btn-scale));
 }
 
 .btn-add.panel-section-run-btn:hover:not(:disabled) {
-  background: var(--btn-primary-hover-bg);
-  border-color: var(--btn-primary-hover-bg);
-  color: var(--btn-primary-hover-text);
+  background: var(--btn-secondary-hover-bg);
+  border-color: var(--work-chrome-border-hover);
+  color: var(--btn-secondary-text);
+}
+
+.btn-add.panel-section-run-btn--primary {
+  background: var(--panel-run-btn-primary-bg);
+  border-color: var(--panel-run-btn-primary-border);
+  color: var(--accent-on-terracotta);
+}
+
+.btn-add.panel-section-run-btn--primary:hover:not(:disabled) {
+  background: var(--panel-run-btn-primary-hover-bg);
+  border-color: var(--panel-run-btn-primary-hover-bg);
+  color: var(--accent-on-terracotta);
 }
 
 .btn-add.panel-section-run-btn:disabled {
@@ -1842,18 +1997,8 @@
   border-radius: 0;
   min-height: 2.35rem;
   padding-block: 10px;
+  gap: var(--criteria-summary-gap, calc(8px * var(--panel-ui-scale, 1)));
   align-items: center;
-}
-
-.builtin-spelling-resize-body .caution-checklist-summary .details-chevron,
-.builtin-spelling-resize-body .builtin-spelling-summary .details-chevron {
-  align-self: center;
-  flex-shrink: 0;
-  transform: translateY(0.08em) rotate(-45deg);
-}
-
-.builtin-spelling-resize-body details[open] > summary .details-chevron {
-  transform: translateY(-0.04em) rotate(45deg);
 }
 
 .builtin-spelling-resize-body .caution-checklist-select-all,
@@ -1862,19 +2007,33 @@
   align-items: center;
   justify-content: center;
   align-self: center;
-  min-height: 15px;
+  flex-shrink: 0;
+  width: var(--criteria-checkbox-size, 15px);
+  height: var(--criteria-checkbox-size, 15px);
+  line-height: 0;
 }
 
 .builtin-spelling-resize-body .caution-checklist-select-all input,
-.builtin-spelling-resize-body .builtin-spelling-select-all input {
+.builtin-spelling-resize-body .builtin-spelling-select-all input,
+.builtin-spelling-resize-body .builtin-rule-list--guide .builtin-rule-row > input[type='checkbox'] {
   display: block;
   margin: 0;
+  width: var(--criteria-checkbox-size, 15px);
+  height: var(--criteria-checkbox-size, 15px);
+}
+
+.builtin-spelling-resize-body .caution-rule-bundle-body .caution-chip > input[type='checkbox'],
+.builtin-spelling-resize-body .builtin-rule-bundle-body .builtin-rule-row > input[type='checkbox'] {
+  display: block;
+  margin: 0;
+  width: var(--criteria-item-checkbox-size, calc(var(--criteria-checkbox-size, 15px) * 0.85));
+  height: var(--criteria-item-checkbox-size, calc(var(--criteria-checkbox-size, 15px) * 0.85));
 }
 
 .builtin-spelling-resize-body .caution-checklist-summary-title,
 .builtin-spelling-resize-body .builtin-spelling-summary-title {
-  display: flex;
-  align-items: center;
+  display: inline-flex;
+  align-items: baseline;
   align-self: center;
   line-height: 1.2;
 }
@@ -1899,6 +2058,201 @@
 .builtin-spelling-resize-body .builtin-spelling-details[open] .builtin-rule-list {
   margin: 0;
   padding-bottom: 10px;
+}
+
+/* 맞춤법 quota — 묶음 아코디언 (dividerLabel) */
+.builtin-spelling-resize-body .builtin-rule-list--bundles {
+  list-style: none;
+  margin: 0;
+  padding: var(--panel-gap-section-list) var(--criteria-pad-inline, 10px) 10px;
+  display: flex;
+  flex-direction: column;
+  gap: calc(6px * var(--panel-ui-scale));
+}
+
+.builtin-spelling-resize-body .builtin-rule-bundle-item {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.builtin-spelling-resize-body .builtin-rule-bundle {
+  margin: 0;
+  border: none;
+  border-radius: var(--radius-ui);
+}
+
+.builtin-spelling-resize-body .builtin-rule-bundle-summary {
+  display: flex;
+  align-items: center;
+  gap: var(--criteria-summary-gap, calc(8px * var(--panel-ui-scale, 1)));
+  min-height: 2.35rem;
+  padding-block: calc(8px * var(--panel-ui-scale, 1));
+  padding-inline-start: var(--criteria-summary-rail, var(--criteria-chevron-inset));
+  padding-inline-end: calc(10px * var(--panel-ui-scale));
+  box-sizing: border-box;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+  border-radius: var(--radius-ui);
+  background: transparent;
+  transition: background 0.15s ease;
+  font-size: 85%;
+}
+
+.builtin-spelling-resize-body .builtin-rule-bundle-summary::-webkit-details-marker {
+  display: none;
+}
+
+.builtin-spelling-resize-body .builtin-rule-bundle-summary:hover {
+  background: var(--panel-accordion-bg);
+}
+
+.builtin-spelling-resize-body .builtin-rule-bundle[open] > .builtin-rule-bundle-summary {
+  background: var(--panel-accordion-bg-open);
+}
+
+.builtin-spelling-resize-body .builtin-rule-bundle[open] > .builtin-rule-bundle-summary:hover {
+  background: color-mix(in srgb, var(--panel-accordion-bg-open) 72%, #fff);
+}
+
+.builtin-spelling-resize-body .builtin-rule-bundle-icon {
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.builtin-spelling-resize-body .builtin-rule-bundle-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-weight: 600;
+  color: var(--c-ink);
+  line-height: 1.25;
+}
+
+.builtin-spelling-resize-body .builtin-rule-bundle-meta {
+  flex-shrink: 0;
+  margin-left: auto;
+  color: var(--c-soft);
+  white-space: nowrap;
+  font-size: 80%;
+  font-variant-numeric: tabular-nums;
+}
+
+.builtin-spelling-resize-body .builtin-rule-bundle-body {
+  padding: calc(4px * var(--panel-ui-scale)) calc(10px * var(--panel-ui-scale)) 10px
+    calc(2 * var(--criteria-summary-rail, var(--criteria-chevron-inset)));
+  border-top: none;
+  background: transparent;
+}
+
+.panel-left .builtin-spelling-rules-scroll .builtin-rule-bundle-body .builtin-rule-group {
+  padding-left: 0;
+}
+
+.panel-left .builtin-spelling-rules-scroll .builtin-rule-list--bundles .builtin-rule-entry-wrap {
+  width: 100%;
+}
+
+/* 편집자 검토 — 그룹 묶음 아코디언 (맞춤법 quota와 동일 패턴) */
+.builtin-spelling-resize-body .caution-checklist--bundles {
+  list-style: none;
+  margin: 0;
+  padding: var(--panel-gap-section-list) var(--criteria-pad-inline, 10px) 10px;
+  display: flex;
+  flex-direction: column;
+  gap: calc(6px * var(--panel-ui-scale));
+}
+
+.builtin-spelling-resize-body .caution-rule-bundle-item {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.builtin-spelling-resize-body .caution-rule-bundle {
+  margin: 0;
+  border: none;
+  border-radius: var(--radius-ui);
+}
+
+.builtin-spelling-resize-body .caution-rule-bundle-summary {
+  display: flex;
+  align-items: center;
+  gap: var(--criteria-summary-gap, calc(8px * var(--panel-ui-scale, 1)));
+  min-height: 2.35rem;
+  padding-block: calc(8px * var(--panel-ui-scale, 1));
+  padding-inline-start: var(--criteria-summary-rail, var(--criteria-chevron-inset));
+  padding-inline-end: calc(10px * var(--panel-ui-scale));
+  box-sizing: border-box;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+  border-radius: var(--radius-ui);
+  background: transparent;
+  transition: background 0.15s ease;
+  font-size: 85%;
+}
+
+.builtin-spelling-resize-body .caution-rule-bundle-summary::-webkit-details-marker {
+  display: none;
+}
+
+.builtin-spelling-resize-body .caution-rule-bundle-summary:hover {
+  background: var(--panel-accordion-bg);
+}
+
+.builtin-spelling-resize-body .caution-rule-bundle[open] > .caution-rule-bundle-summary {
+  background: var(--panel-accordion-bg-open);
+}
+
+.builtin-spelling-resize-body .caution-rule-bundle[open] > .caution-rule-bundle-summary:hover {
+  background: color-mix(in srgb, var(--panel-accordion-bg-open) 72%, #fff);
+}
+
+.builtin-spelling-resize-body .caution-rule-bundle-icon {
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.builtin-spelling-resize-body .caution-rule-bundle-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-weight: 600;
+  color: var(--c-ink);
+  line-height: 1.25;
+}
+
+.builtin-spelling-resize-body .caution-rule-bundle-meta {
+  flex-shrink: 0;
+  margin-left: auto;
+  color: var(--c-soft);
+  white-space: nowrap;
+  font-size: 80%;
+  font-variant-numeric: tabular-nums;
+}
+
+.builtin-spelling-resize-body .caution-rule-bundle-body {
+  padding: calc(4px * var(--panel-ui-scale)) calc(10px * var(--panel-ui-scale)) 10px
+    calc(2 * var(--criteria-summary-rail, var(--criteria-chevron-inset)));
+  border-top: none;
+  background: transparent;
+}
+
+.panel-left .caution-rule-bundle-body .caution-group-items {
+  padding-left: 0;
+  display: grid;
+  width: 100%;
+  min-width: 0;
+}
+
+.panel-left .caution-rule-bundle-body .caution-chip-entry-wrap {
+  width: 100%;
+  min-width: 0;
+  justify-self: stretch;
+}
+
+.builtin-spelling-resize-body .builtin-spelling-details[open] .builtin-rule-list--guide {
+  padding-bottom: 0;
 }
 
 .custom-scrollbar {
@@ -2316,6 +2670,17 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  --criteria-pad-inline: 14px;
+  --criteria-checkbox-size: 15px;
+  --criteria-summary-gap: 8px;
+  --criteria-summary-rail: calc(
+    var(--criteria-checkbox-size) + var(--criteria-summary-gap)
+  );
+  --criteria-item-checkbox-size: calc(var(--criteria-checkbox-size) * 0.85);
+  /* 1단 체크박스 왼쪽 = pad + chevron + gap */
+  --criteria-check-col-start: calc(
+    var(--criteria-pad-inline) + var(--criteria-summary-rail)
+  );
   border-radius: var(--radius-ui-sm);
   overflow: hidden;
   border: 1px solid var(--panel-border-soft, var(--panel-caution-border));
@@ -2330,6 +2695,8 @@
   box-sizing: border-box;
   margin: 0;
   border-radius: 0;
+  gap: var(--criteria-summary-gap, 8px);
+  padding: 8px var(--criteria-pad-inline, 14px);
 }
 
 .consistency-section-box[data-work-guide-step='auxiliary-box']
@@ -2345,23 +2712,56 @@
 }
 
 .consistency-section-box[data-work-guide-step='auxiliary-box'] .auxiliary-checklist-intro {
-  margin: 4px 0 8px;
-  padding: 0 14px;
+  margin: 4px 0 4px;
+  padding-inline: var(--criteria-check-col-start, calc(14px + 23px))
+    var(--criteria-pad-inline, 14px);
   font-size: 0.8125rem;
   line-height: 1.5;
   color: var(--color-text-muted);
+  white-space: normal;
+  --consistency-example-font-size: calc(var(--panel-guide-font-size, 0.828rem) * 0.9);
+  --consistency-example-line-height: 1.45;
+}
+
+.consistency-section-box[data-work-guide-step='auxiliary-box']
+  .auxiliary-checklist-intro
+  .consistency-hint-example {
+  vertical-align: baseline;
+}
+
+.consistency-section-box[data-work-guide-step='auxiliary-box']
+  .auxiliary-checklist-intro
+  .consistency-hint-example,
+.consistency-section-box[data-work-guide-step='auxiliary-box']
+  .auxiliary-checklist-intro
+  .consistency-hint-example-body {
+  color: var(--c-ink);
+}
+
+.consistency-section-box[data-work-guide-step='auxiliary-box']
+  .auxiliary-checklist-intro
+  .consistency-hint-badge {
+  margin-inline-end: 0.45em;
 }
 
 .consistency-section-box[data-work-guide-step='auxiliary-box']
   .caution-checklist-details[open]
   .auxiliary-checklist {
   margin-top: 0;
-  padding: var(--panel-gap-section-list, 10px) 14px 10px;
+  padding-block: calc(var(--panel-gap-section-list, 10px) * 0.5) 10px;
+  padding-inline: var(--criteria-check-col-start, calc(14px + 23px))
+    var(--criteria-pad-inline, 14px);
   box-sizing: border-box;
 }
 
 .consistency-section-box[data-work-guide-step='auxiliary-box'] .auxiliary-chip {
+  width: 100%;
+  max-width: 100%;
   font-size: 0.8rem;
+  --auxiliary-chip-checkbox: var(
+    --criteria-item-checkbox-size,
+    calc(var(--criteria-checkbox-size, 15px) * 0.85)
+  );
 }
 
 .consistency-section-box[data-work-guide-step='auxiliary-box'] .auxiliary-chip .find {
@@ -2369,6 +2769,14 @@
   font-weight: 700;
   line-height: 1.2;
   color: var(--color-text-secondary);
+  min-width: 0;
+}
+
+.consistency-section-box[data-work-guide-step='auxiliary-box'] .bon-bojo-required-badge {
+  font-size: calc(0.54rem * var(--panel-ui-scale, 1));
+  line-height: 1.1;
+  white-space: nowrap;
+  padding: 1px 3px;
 }
 
 .consistency-section-box[data-work-guide-step='auxiliary-box']
@@ -2500,25 +2908,102 @@
 }
 
 .consistency-unified-box {
-  padding: 12px 14px;
+  padding: 16px;
   border: none;
   border-radius: var(--radius-ui);
   background: var(--color-surface-raised);
+  container-type: inline-size;
+  --consistency-example-font-size: calc(var(--panel-guide-font-size, 0.828rem) * 0.9);
+  --consistency-example-line-height: 1.45;
+  /* 블록 내부 micro / 섹션 구분 macro */
+  --consistency-stack-gap: calc(8px * var(--panel-ui-scale, 1));
+  --consistency-section-gap: calc(14px * var(--panel-ui-scale, 1));
+  --consistency-item-gap: var(--consistency-stack-gap);
+  --consistency-input-padding-block: calc(10px * var(--panel-ui-scale, 1) * 0.6);
+  --consistency-register-text: var(--color-text-muted);
+  --consistency-register-add-bg: var(--accent-terracotta);
+  --consistency-register-add-bg-hover: var(--accent-terracotta-deep);
+  /* 공통 문자열 ↔ 검수 제외 — 검색창 사이 여백(0.846 dead ×70%×80%) + 열 gap 동일 */
+  --consistency-subsection-row-gap: calc(12px * 0.6 * 0.7 * 0.8);
+  --consistency-subsection-phrase-form-scale: calc(1 - (1 - 0.846) * 0.7 * 0.8);
+  --consistency-subsection-col1: calc(
+    (100cqi - var(--consistency-subsection-row-gap)) * 3 / 5
+  );
+  --consistency-subsection-col2: calc(
+    (100cqi - var(--consistency-subsection-row-gap)) * 2 / 5
+  );
 }
 
-/* 일관성 찾기·검색창 — 다시 검수 행·아래 섹션 박스와 동일 좌우 폭 */
+/* 일관성 embed — stack(8px) / section(14px) 2단 여백 */
+.consistency-unified-box > .consistency-panel-section-title {
+  margin-bottom: var(--consistency-stack-gap);
+}
+
+.consistency-unified-box > .consistency-subsection:not(.consistency-subsection--first):not(.consistency-subsection--half),
+.consistency-unified-box > .consistency-subsection-row {
+  margin-top: var(--consistency-section-gap);
+  padding-top: var(--consistency-section-gap);
+}
+
+.consistency-unified-box .printed-page-setup__title.consistency-subsection-title {
+  margin: 0 0 var(--consistency-stack-gap);
+}
+
+.panel-left .consistency-unified-box .hint {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.panel-left .consistency-unified-box .consistency-hint-block .consistency-hint-example {
+  display: inline-block;
+  margin-top: calc(var(--consistency-stack-gap) * 0.75);
+}
+
+.panel-left .consistency-unified-box .tail-form {
+  margin-top: var(--consistency-stack-gap);
+}
+
+.panel-left .consistency-unified-box .tail-list:not(.tail-list--grid) {
+  margin-top: var(--consistency-stack-gap);
+  padding-top: 0;
+  border-top: none;
+}
+
+.consistency-unified-box .consistency-hint-badge {
+  margin-inline-end: 0.45em;
+}
+
+/* 일관성 찾기·통일형 검색창 — 다시 검수 행·아래 섹션 박스와 동일 좌우 폭 */
 .consistency-unified-box .consistency-subsection--first > .tail-form,
-.consistency-unified-box
-  .consistency-subsection-row
-  > .consistency-subsection--half
-  > .tail-form {
+.consistency-unified-box .consistency-unify-section .tail-form {
   width: 100%;
   box-sizing: border-box;
 }
 
+.consistency-unified-box
+  .consistency-subsection-row
+  > .consistency-subsection--half:not(.consistency-subsection--exclude)
+  > .tail-form {
+  width: calc(
+    var(--consistency-subsection-col1) * var(--consistency-subsection-phrase-form-scale, calc(1 - (1 - 0.846) * 0.7 * 0.8))
+  );
+  max-width: none;
+  justify-self: start;
+}
+
+.consistency-unified-box
+  .consistency-subsection-row
+  > .consistency-subsection--exclude
+  > .tail-form {
+  width: var(--consistency-subsection-col2);
+  max-width: 100%;
+  justify-self: end;
+  margin-inline-start: auto;
+}
+
 .consistency-subsection {
-  margin-top: 10px;
-  padding-top: 10px;
+  margin-top: var(--panel-gap-group);
+  padding-top: var(--panel-gap-group);
   border-top: 1px solid var(--color-border);
 }
 
@@ -2530,29 +3015,31 @@
 
 .consistency-subsection-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
   grid-template-rows: auto auto auto auto;
-  column-gap: 12px;
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: none;
+  container-type: inline-size;
+  margin-top: var(--panel-gap-group);
+  padding-top: var(--panel-gap-group);
+  border-top: 1px solid var(--color-border);
 }
 
-/* 설명은 각 열에서 입력창 바로 위에 붙이고, 등록 입력창 행만 좌·우 정렬 */
+.panel-left .consistency-unified-box .consistency-subsection-row {
+  column-gap: var(--consistency-subsection-row-gap, calc(12px * 0.6 * 0.7 * 0.8));
+}
+
+/* 설명 길이가 달라도 입력·+ 버튼 행(subgrid 3행) 정렬 */
+.consistency-subsection-row > .consistency-subsection--half > .tail-form {
+  align-self: start;
+}
+
+/* 설명은 각 열에서 입력창 바로 위 — 일관성 찾기·통일형과 동일 간격 */
 .consistency-subsection-row > .consistency-subsection--half {
   display: grid;
   grid-template-rows: subgrid;
   grid-row: span 4;
   min-width: 0;
-}
-
-.consistency-subsection__hints-area {
+  padding-inline: 0;
   box-sizing: border-box;
-  margin-top: 2px;
-}
-
-.consistency-subsection-row .consistency-subsection__hints-area {
-  align-self: end;
 }
 
 .consistency-subsection--half {
@@ -2564,34 +3051,83 @@
 }
 
 .consistency-subsection--exclude .tail-list--exclude {
-  margin-top: 10px;
+  margin-top: var(--consistency-item-gap, 6px);
+}
+
+.consistency-register-field {
+  display: flex;
+  align-items: stretch;
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+  border: none;
+  border-radius: var(--radius-ui);
+  background: var(--color-surface-overlay);
+  overflow: hidden;
+}
+
+.panel-left .consistency-unified-box .consistency-register-field {
+  background: var(--color-surface-overlay);
+}
+
+.consistency-register-field__input {
+  flex: 1;
+  min-width: 0;
+  width: auto;
+  margin-top: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+}
+
+.consistency-register-field__input:focus,
+.consistency-register-field__input:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+.consistency-unified-box .consistency-register-field__input {
+  color: var(--consistency-register-text);
+}
+
+.consistency-unified-box .consistency-register-field__input::placeholder {
+  color: var(--color-text-subtle);
+  opacity: 1;
 }
 
 .consistency-unified-box .consistency-register-add-btn {
   min-width: 2.25rem;
-  padding-inline: 10px;
+  padding: var(--consistency-input-padding-block, calc(10px * 0.6)) 8px;
   font-size: 1.1rem;
   font-weight: 700;
   line-height: 1;
   border: none;
-  background: var(--btn-secondary-bg);
-  color: var(--btn-secondary-text);
+  border-radius: 0 var(--radius-ui) var(--radius-ui) 0;
+  background: var(--consistency-register-add-bg);
+  color: #fff;
   transition: background 0.15s ease;
 }
 
 .consistency-unified-box .consistency-register-add-btn:hover:not(:disabled) {
-  background: var(--btn-secondary-hover-bg);
-  border: none;
+  background: var(--consistency-register-add-bg-hover);
+}
+
+.consistency-unified-box .consistency-register-add-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.panel-left .consistency-unified-box .hint .consistency-hint-example {
+  color: var(--c-ink);
+}
+
+.panel-left .consistency-unified-box .hint .consistency-hint-badge {
+  color: #fff;
 }
 
 .panel-left .consistency-unified-box .hint {
   font-weight: 400;
-  margin-top: 2px;
-  margin-bottom: 0;
-}
-
-.consistency-unified-box .printed-page-setup__title.consistency-subsection-title {
-  margin: 0 0 2px;
 }
 
 .consistency-hint-block {
@@ -2599,13 +3135,58 @@
 }
 
 .consistency-hint-example {
-  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
-  letter-spacing: 0.02em;
+  --consistency-hint-cap: 1.25em;
+  display: inline;
+  white-space: normal;
+  margin-top: 0;
+  margin-inline-start: 0;
+  font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+  font-size: var(--consistency-example-font-size);
+  font-weight: 400;
+  line-height: var(--consistency-example-line-height);
+  letter-spacing: 0;
+  color: var(--c-ink);
+  vertical-align: baseline;
 }
 
-.consistency-section-box[data-work-guide-step='auxiliary-box'] .auxiliary-chip {
-  width: 100%;
-  max-width: 100%;
+.consistency-hint-example-body {
+  display: inline;
+  white-space: normal;
+  font: inherit;
+  line-height: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+}
+
+.consistency-hint-term {
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: 700;
+  line-height: inherit;
+  letter-spacing: inherit;
+  vertical-align: baseline;
+}
+
+.consistency-hint-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: var(--consistency-hint-cap);
+  height: var(--consistency-hint-cap);
+  min-width: var(--consistency-hint-cap);
+  margin-inline-end: 0.2em;
+  padding: 0;
+  border-radius: 50%;
+  vertical-align: -0.12em;
+  font-family: inherit;
+  font-size: 0.8em;
+  font-weight: 700;
+  line-height: 1;
+  --consistency-hint-badge-tone: var(--color-text-muted);
+  background: var(--consistency-hint-badge-tone);
+  border: 1px solid var(--consistency-hint-badge-tone);
+  color: #fff;
 }
 
 .consistency-section-box .rule-form--boxed {
@@ -2923,6 +3504,12 @@
 .panel-left .builtin-spelling-details {
   --criteria-pad-inline: calc(10px * var(--panel-ui-scale));
   --criteria-checkbox-size: calc(15px * var(--panel-ui-scale));
+  --criteria-summary-gap: calc(8px * var(--panel-ui-scale));
+  --criteria-summary-rail: calc(
+    var(--criteria-checkbox-size) + var(--criteria-summary-gap)
+  );
+  --criteria-item-checkbox-size: calc(var(--criteria-checkbox-size) * 0.85);
+  --criteria-chevron-inset: var(--criteria-summary-rail);
   font-size: calc(1.05rem * var(--panel-ui-scale));
   margin: 0 0 calc(10px * var(--panel-ui-scale));
   padding: 0 0 calc(10px * var(--panel-ui-scale));
@@ -2944,6 +3531,27 @@
   font-size: calc(1.05rem * var(--panel-ui-scale));
 }
 
+.panel-left p.panel-criteria-heading,
+.panel-left .printed-page-setup__title.panel-criteria-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 0.15em;
+}
+
+.panel-left .caution-checklist-summary-title,
+.panel-left .builtin-spelling-summary-title {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 0.15em;
+}
+
+.panel-left .panel-criteria-heading-meta {
+  font-size: 0.75em;
+  line-height: inherit;
+}
+
 .panel-left .caution-checklist-summary.panel-criteria-heading,
 .panel-left .builtin-spelling-summary.panel-criteria-heading {
   font-size: calc(1.05rem * var(--panel-ui-scale));
@@ -2961,7 +3569,7 @@
 
 .panel-left .caution-checklist-summary,
 .panel-left .builtin-spelling-summary {
-  gap: calc(8px * var(--panel-ui-scale));
+  gap: var(--criteria-summary-gap, calc(8px * var(--panel-ui-scale, 1)));
   padding: calc(8px * var(--panel-ui-scale)) var(--criteria-pad-inline, 10px);
   align-items: center;
   line-height: 1.2;
@@ -2973,6 +3581,9 @@
   align-items: center;
   justify-content: center;
   align-self: center;
+  flex-shrink: 0;
+  width: var(--criteria-checkbox-size, 15px);
+  height: var(--criteria-checkbox-size, 15px);
   line-height: 0;
 }
 
@@ -2981,6 +3592,16 @@
 .panel-left .builtin-rule-row > input[type='checkbox'] {
   width: var(--criteria-checkbox-size, 15px);
   height: var(--criteria-checkbox-size, 15px);
+}
+
+.panel-left .caution-rule-bundle-body .caution-chip > input[type='checkbox'],
+.panel-left .builtin-rule-bundle-body .builtin-rule-row > input[type='checkbox'],
+.panel-left
+  .consistency-section-box[data-work-guide-step='auxiliary-box']
+  .auxiliary-chip
+  > input[type='checkbox'] {
+  width: var(--criteria-item-checkbox-size, calc(var(--criteria-checkbox-size, 15px) * 0.85));
+  height: var(--criteria-item-checkbox-size, calc(var(--criteria-checkbox-size, 15px) * 0.85));
 }
 
 .panel-left .caution-chip {
@@ -3041,12 +3662,27 @@
 }
 
 .panel-left .current-page-status {
-  font-size: calc(0.98rem * var(--panel-ui-scale));
+  font-size: calc(0.98rem * var(--panel-ui-scale) * 0.9);
   padding: calc(var(--space-md) * 0.5 * var(--panel-ui-scale)) calc(var(--space-xl) * var(--panel-ui-scale));
 }
 
+.panel-left .current-page-status .result-findings-count-circle,
+.panel-left .current-page-status__findings-count {
+  font-size: calc(0.85rem * var(--panel-ui-scale) * 0.9);
+}
+
 .panel-left .results-header {
-  font-size: calc(0.98rem * var(--panel-ui-scale));
+  font-size: calc(0.98rem * var(--panel-ui-scale) * 0.9 * 1.1);
+}
+
+.panel-left .results-header .result-findings-count-circle,
+.panel-left .results-header__total-count {
+  font-size: calc(0.85rem * var(--panel-ui-scale) * 0.9 * 1.1);
+}
+
+.panel-left .result-card-head .result-findings-count-circle,
+.panel-left .result-card-head__findings-count.result-findings-count-circle {
+  font-size: calc(0.85rem * var(--panel-ui-scale) * 0.9);
 }
 
 .panel-left .consistency-section-box:not([data-work-guide-step='auxiliary-box']) {
@@ -3055,8 +3691,8 @@
 
 .panel-left .consistency-section-box[data-work-guide-step='auxiliary-box'] .auxiliary-checklist-intro {
   font-size: calc(0.8125rem * var(--panel-ui-scale));
-  margin: calc(4px * var(--panel-ui-scale)) 0 calc(8px * var(--panel-ui-scale));
-  padding: 0 14px;
+  margin: calc(4px * var(--panel-ui-scale)) 0 calc(4px * var(--panel-ui-scale));
+  padding-inline: var(--criteria-check-col-start) var(--criteria-pad-inline, 14px);
 }
 
 .panel-left .consistency-section-box[data-work-guide-step='auxiliary-box'] .auxiliary-chip {
@@ -3084,20 +3720,31 @@
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
-  --criteria-pad-inline: 14px;
+  --criteria-pad-inline: calc(14px * var(--panel-ui-scale));
+  --criteria-checkbox-size: calc(15px * var(--panel-ui-scale));
+  --criteria-summary-gap: calc(8px * var(--panel-ui-scale));
+  --criteria-summary-rail: calc(
+    var(--criteria-checkbox-size) + var(--criteria-summary-gap)
+  );
+  --criteria-item-checkbox-size: calc(var(--criteria-checkbox-size) * 0.85);
+  --criteria-check-col-start: calc(
+    var(--criteria-pad-inline) + var(--criteria-summary-rail)
+  );
 }
 
 .panel-left
   .consistency-section-box[data-work-guide-step='auxiliary-box']
   .caution-checklist-summary {
-  padding: calc(8px * var(--panel-ui-scale)) 14px;
+  gap: var(--criteria-summary-gap, calc(8px * var(--panel-ui-scale, 1)));
+  padding: calc(8px * var(--panel-ui-scale)) var(--criteria-pad-inline, 14px);
 }
 
 .panel-left
   .consistency-section-box[data-work-guide-step='auxiliary-box']
   .caution-checklist-details[open]
   .auxiliary-checklist {
-  padding: var(--panel-gap-section-list) 14px calc(10px * var(--panel-ui-scale));
+  padding-block: var(--panel-gap-section-list) calc(10px * var(--panel-ui-scale));
+  padding-inline: var(--criteria-check-col-start) var(--criteria-pad-inline, 14px);
   margin: 0;
   box-sizing: border-box;
 }
@@ -3116,7 +3763,8 @@
 
 .panel-left .consistency-unified-box .consistency-register-add-btn {
   font-size: calc(1.1rem * var(--panel-ui-scale));
-  padding-inline: calc(10px * var(--panel-ui-scale));
+  padding: var(--consistency-input-padding-block, calc(10px * var(--panel-ui-scale, 1) * 0.6))
+    calc(8px * var(--panel-ui-scale));
 }
 
 .panel-left .field-label {
@@ -3131,6 +3779,12 @@
 .panel-left .consistency-toc-section__textarea {
   font-size: calc(0.875rem * var(--panel-ui-scale));
   padding: calc(10px * var(--panel-ui-scale)) calc(12px * var(--panel-ui-scale));
+}
+
+.panel-left .consistency-embed .consistency-register-field .consistency-register-field__input,
+.panel-left .consistency-embed .consistency-register-field .field-input {
+  padding: var(--consistency-input-padding-block, calc(10px * var(--panel-ui-scale, 1) * 0.6))
+    calc(12px * var(--panel-ui-scale, 1));
 }
 
 .panel-left .hint {

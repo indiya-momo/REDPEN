@@ -1,4 +1,4 @@
-group_id,item_id,label,stems,tip,enabled,match_mode,display_label,except
+group_id,item_id,label,stems,tip,enabled,match_mode,display_label,group_label,except
 particle-josa,particle-man,만,,"체언(명사·대명사·수사) 뒤 — 조사로 붙여 씁니다. 용언(동사·형용사) 뒤 — 의존명사로 띄어 씁니다.",FALSE,,
 particle-josa,particle-mankun,만큼,,,FALSE,,
 particle-josa,particle-ji,지,,,FALSE,,

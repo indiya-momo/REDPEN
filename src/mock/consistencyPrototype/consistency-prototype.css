@@ -1,0 +1,168 @@
+/* DEV: ?window=consistency-mock — 배너·통일형 만들기·핀 목록만 (나머지는 main-screen.css) */
+
+.consistency-proto-page {
+  min-height: 100dvh;
+  background: var(--color-bg, #f5f0e8);
+}
+
+.consistency-proto__dev-banner {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  padding: 0.35rem 0.75rem;
+  background: #1e293b;
+  color: #e2e8f0;
+  font-size: 0.72rem;
+  text-align: center;
+}
+
+.consistency-proto__dev-banner code {
+  color: #93c5fd;
+}
+
+.consistency-proto__dev-banner a {
+  color: #fcd34d;
+}
+
+.consistency-proto__frame {
+  box-sizing: border-box;
+  width: min(400px, 100%);
+  margin: 1rem auto 2rem;
+  padding: 0.75rem;
+}
+
+/* panel-left는 작업대 flex 안에서만 height:100% — 목업은 auto */
+.consistency-proto__frame.panel-left {
+  height: auto;
+  max-height: none;
+  min-width: 0;
+  overflow: visible;
+  background: transparent;
+  border: none;
+}
+
+/* 통일형 만들기 — 2열 + 수정형 옆 추가 */
+.consistency-proto-unify-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.4rem;
+  align-items: end;
+}
+
+.consistency-proto-unify-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.18rem;
+  min-width: 0;
+}
+
+.consistency-proto-unify-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--c-muted, #6b6560);
+}
+
+.consistency-proto-unify-add-row .consistency-proto-unify-add-btn {
+  flex-shrink: 0;
+  padding: 0.42rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-ui, 4px);
+  background: var(--btn-secondary-bg);
+  color: var(--btn-secondary-text);
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.consistency-proto-unify-add-row .consistency-proto-unify-add-btn:hover {
+  background: var(--btn-secondary-hover-bg);
+}
+
+.consistency-proto-unify-note {
+  margin-top: 0.45rem;
+  margin-bottom: 0;
+  font-size: 0.64rem;
+  color: var(--c-muted, #6b6560);
+}
+
+.consistency-proto__mapping-list {
+  margin: 0.55rem 0 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-ui, 4px);
+  overflow: hidden;
+}
+
+.consistency-proto__mapping {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr auto;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.45rem;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 0.7rem;
+}
+
+.consistency-proto__mapping:last-child {
+  border-bottom: none;
+}
+
+.consistency-proto__mapping-correction {
+  color: var(--c-muted, #6b6560);
+}
+
+.consistency-proto__mapping-unified {
+  font-weight: 700;
+}
+
+.consistency-proto__mapping-remove {
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  opacity: 0.85;
+}
+
+.consistency-proto__mapping-remove:hover {
+  opacity: 1;
+}
+
+/* 목업: 검수 결과 📌 (추후 overlay 연동) */
+.consistency-proto__pin-list {
+  margin-top: 0.55rem;
+}
+
+.consistency-proto__pin-item {
+  display: inline;
+}
+
+.consistency-proto__pin-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  margin: 0.15rem 0.25rem 0.15rem 0;
+  padding: 0.15rem 0.35rem 0.15rem 0.28rem;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-surface-raised);
+  font-size: 0.68rem;
+}
+
+.consistency-proto__pin-chip--on {
+  border-color: rgba(212, 165, 116, 0.55);
+  background: rgba(212, 165, 116, 0.12);
+}
+
+.consistency-proto__pin-btn,
+.consistency-proto__pin-remove {
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  line-height: 1;
+  cursor: pointer;
+}

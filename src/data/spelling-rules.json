@@ -4,152 +4,71 @@
     "replace": "과반수",
     "enabled": true,
     "tip": "과반수는 '반이 넘는 수'",
-    "dividerGroup": "A1",
+    "dividerGroup": "A0",
     "dividerLabel": "틀리기 쉬운 표현",
     "overlayReplace": "→과반수"
-  },
-  {
-    "find": "안절부절하",
-    "replace": "안절부절못",
-    "enabled": true,
-    "tip": "안절부절'에 '못하다'를 붙여 '어쩔 줄 몰라 하다' 라는 뜻이 성립한다",
-    "dividerGroup": "A1",
-    "dividerLabel": "틀리기 쉬운 표현",
-    "overlayReplace": "→안절부절못"
-  },
-  {
-    "find": "희노애락",
-    "replace": "희로애락",
-    "enabled": true,
-    "tip": "怒(노)를 속음(로)으로 바뀌어 적음",
-    "dividerGroup": "A1",
-    "dividerLabel": "틀리기 쉬운 표현",
-    "overlayReplace": "→희로애락"
-  },
-  {
-    "find": "들어나",
-    "replace": "드러나",
-    "enabled": true,
-    "tip": "알려지지 않던 것이 알려지게 되는 것은 '드러나다', “물건을 밖으로 내놓는 것은 '들어내다'",
-    "dividerGroup": "A1",
-    "dividerLabel": "틀리기 쉬운 표현",
-    "overlayReplace": "→드러나"
-  },
-  {
-    "find": "어떻해",
-    "replace": "어떡해 또는 어떻게",
-    "enabled": true,
-    "tip": "'어떡해'는 감정을 표현하는 '어떻게 해'의 줄임말, '어떻게'는 '어떠하게' 부사어",
-    "dividerGroup": "A1",
-    "dividerLabel": "틀리기 쉬운 표현",
-    "overlayReplace": "→어떡해 또는 어떻게"
   },
   {
     "find": "그을은",
     "replace": "그은 또는 그을린",
     "enabled": true,
     "tip": "'그을다'의 피동사, 사동사는 '그을리다', '그을다'의 탈락형은 '그은'",
-    "dividerGroup": "A1",
+    "dividerGroup": "A0",
     "dividerLabel": "틀리기 쉬운 표현",
     "overlayReplace": "→그은 또는 그을린"
   },
   {
-    "find": "우리 나라",
-    "replace": "우리나라",
+    "find": "들어나",
+    "replace": "드러나",
     "enabled": true,
-    "tip": "'우리나라', '우리말' ,'우리글' 표준국어대사전 등재",
-    "dividerGroup": "A",
-    "dividerLabel": "표준국어대사전 등재",
-    "overlayReplace": "→우리⁀나라"
+    "tip": "알려지지 않던 것이 알려지게 되는 것은 '드러나다', “물건을 밖으로 내놓는 것은 '들어내다'",
+    "dividerGroup": "A0",
+    "dividerLabel": "틀리기 쉬운 표현",
+    "overlayReplace": "→드러나"
   },
   {
-    "find": "집안 사람",
-    "replace": "집안사람",
+    "find": "안절부절하",
+    "replace": "안절부절못",
     "enabled": true,
-    "tip": "표준국어대사전  '집안사람' 등재",
-    "dividerGroup": "A",
-    "dividerLabel": "표준국어대사전 등재",
-    "overlayReplace": "→집안⁀사람"
+    "tip": "안절부절'에 '못하다'를 붙여 '어쩔 줄 몰라 하다' 라는 뜻이 성립한다",
+    "dividerGroup": "A0",
+    "dividerLabel": "틀리기 쉬운 표현",
+    "overlayReplace": "→안절부절못"
   },
   {
-    "find": "시간 제한",
-    "replace": "시간제한",
+    "find": "어떻해",
+    "replace": "어떡해 또는 어떻게",
     "enabled": true,
-    "tip": "표준국어대사전  '시간제한' 등재",
-    "dividerGroup": "A",
-    "dividerLabel": "표준국어대사전 등재",
-    "overlayReplace": "→시간⁀제한"
+    "tip": "'어떡해'는 감정을 표현하는 '어떻게 해'의 줄임말, '어떻게'는 '어떠하게' 부사어",
+    "dividerGroup": "A0",
+    "dividerLabel": "틀리기 쉬운 표현",
+    "overlayReplace": "→어떡해 또는 어떻게"
   },
   {
-    "find": "살아 생전",
-    "replace": "살아생전",
+    "find": "이예요",
+    "replace": "이에요 또는 예요",
     "enabled": true,
-    "tip": "표준국어대사전  '살아생전' 등재",
-    "dividerGroup": "A",
-    "dividerLabel": "표준국어대사전 등재",
-    "overlayReplace": "→살아⁀생전"
+    "tip": "'(것)이예요' 가 아닌 '(것)이에요', 또는 줄임말인 '예요'로 적는다",
+    "dividerGroup": "A0",
+    "dividerLabel": "틀리기 쉬운 표현",
+    "overlayReplace": "→이에요 또는 예요"
   },
   {
-    "find": "무염 식사",
-    "replace": "무염식사",
+    "find": "희노애락",
+    "replace": "희로애락",
     "enabled": true,
-    "tip": "표준국어대사전  '무염식사' 등재",
-    "dividerGroup": "A",
-    "dividerLabel": "표준국어대사전 등재",
-    "overlayReplace": "→무염⁀식사"
-  },
-  {
-    "find": "어제 저녁",
-    "replace": "어제저녁",
-    "enabled": true,
-    "tip": "표준국어대사전  '어제저녁' 등재",
-    "dividerGroup": "A",
-    "dividerLabel": "표준국어대사전 등재",
-    "overlayReplace": "→어제⁀저녁"
-  },
-  {
-    "find": "밝은 색",
-    "replace": "밝은색",
-    "enabled": true,
-    "tip": "표준국어대사전  '밝은색' 등재",
-    "dividerGroup": "A",
-    "dividerLabel": "표준국어대사전 등재",
-    "overlayReplace": "→밝은⁀색"
-  },
-  {
-    "find": "어두운 색",
-    "replace": "어두운색",
-    "enabled": true,
-    "tip": "표준국어대사전  '어두운색' 등재",
-    "dividerGroup": "A",
-    "dividerLabel": "표준국어대사전 등재",
-    "overlayReplace": "→어두운⁀색"
-  },
-  {
-    "find": "봄 밤",
-    "replace": "봄밤",
-    "enabled": true,
-    "tip": "표준국어대사전  '봄밤' 등재",
-    "dividerGroup": "A",
-    "dividerLabel": "표준국어대사전 등재",
-    "overlayReplace": "→봄⁀밤"
-  },
-  {
-    "find": "여름 밤",
-    "replace": "여름밤",
-    "enabled": true,
-    "tip": "표준국어대사전  '여름밤' 등재",
-    "dividerGroup": "A",
-    "dividerLabel": "표준국어대사전 등재",
-    "overlayReplace": "→여름⁀밤"
+    "tip": "怒(노)를 속음(로)으로 바뀌어 적음",
+    "dividerGroup": "A0",
+    "dividerLabel": "틀리기 쉬운 표현",
+    "overlayReplace": "→희로애락"
   },
   {
     "find": "가을 밤",
     "replace": "가을밤",
     "enabled": true,
     "tip": "표준국어대사전  '가을밤' 등재",
-    "dividerGroup": "A",
-    "dividerLabel": "표준국어대사전 등재",
+    "dividerGroup": "A1",
+    "dividerLabel": "표준국어대사전 등재(명사)",
     "overlayReplace": "→가을⁀밤"
   },
   {
@@ -157,9 +76,153 @@
     "replace": "겨울밤",
     "enabled": true,
     "tip": "표준국어대사전  '겨울밤' 등재",
-    "dividerGroup": "A",
-    "dividerLabel": "표준국어대사전 등재",
+    "dividerGroup": "A1",
+    "dividerLabel": "표준국어대사전 등재(명사)",
     "overlayReplace": "→겨울⁀밤"
+  },
+  {
+    "find": "경제 관념",
+    "replace": "경제관념",
+    "enabled": true,
+    "tip": "표준국어대사전  '경제관념' 등재",
+    "dividerGroup": "A1",
+    "dividerLabel": "표준국어대사전 등재(명사)",
+    "overlayReplace": "→경제⁀관념"
+  },
+  {
+    "find": "경제 생활",
+    "replace": "경제생활",
+    "enabled": true,
+    "tip": "표준국어대사전  '경제생활' 등재",
+    "dividerGroup": "A1",
+    "dividerLabel": "표준국어대사전 등재(명사)",
+    "overlayReplace": "→경제⁀생활"
+  },
+  {
+    "find": "그 중",
+    "replace": "그중",
+    "enabled": true,
+    "tip": "표준국어대사전  '그중' 등재_주의: '이중' 미등재",
+    "dividerGroup": "A1",
+    "dividerLabel": "표준국어대사전 등재(명사)",
+    "overlayReplace": "→그⁀중"
+  },
+  {
+    "find": "긴 긴 밤",
+    "replace": "긴긴밤",
+    "enabled": true,
+    "tip": "표준국어대사전  '긴긴밤' 등재_주의: '긴밤' 미등재",
+    "dividerGroup": "A1",
+    "dividerLabel": "표준국어대사전 등재(명사)",
+    "overlayReplace": "→긴⁀긴⁀밤"
+  },
+  {
+    "find": "무염 식사",
+    "replace": "무염식사",
+    "enabled": true,
+    "tip": "표준국어대사전  '무염식사' 등재",
+    "dividerGroup": "A1",
+    "dividerLabel": "표준국어대사전 등재(명사)",
+    "overlayReplace": "→무염⁀식사"
+  },
+  {
+    "find": "밝은 색",
+    "replace": "밝은색",
+    "enabled": true,
+    "tip": "표준국어대사전  '밝은색' 등재",
+    "dividerGroup": "A1",
+    "dividerLabel": "표준국어대사전 등재(명사)",
+    "overlayReplace": "→밝은⁀색"
+  },
+  {
+    "find": "봄 밤",
+    "replace": "봄밤",
+    "enabled": true,
+    "tip": "표준국어대사전  '봄밤' 등재",
+    "dividerGroup": "A1",
+    "dividerLabel": "표준국어대사전 등재(명사)",
+    "overlayReplace": "→봄⁀밤"
+  },
+  {
+    "find": "북 소리",
+    "replace": "북소리",
+    "enabled": true,
+    "tip": "표준국어대사전  '북소리' 등재",
+    "dividerGroup": "A1",
+    "dividerLabel": "표준국어대사전 등재(명사)",
+    "overlayReplace": "→북⁀소리"
+  },
+  {
+    "find": "살아 생전",
+    "replace": "살아생전",
+    "enabled": true,
+    "tip": "표준국어대사전  '살아생전' 등재",
+    "dividerGroup": "A1",
+    "dividerLabel": "표준국어대사전 등재(명사)",
+    "overlayReplace": "→살아⁀생전"
+  },
+  {
+    "find": "생과일 주스",
+    "replace": "생과일주스",
+    "enabled": true,
+    "tip": "표준국어대사전  '생과일', '생과일주스' 등재",
+    "dividerGroup": "A1",
+    "dividerLabel": "표준국어대사전 등재(명사)",
+    "overlayReplace": "→생과일⁀주스"
+  },
+  {
+    "find": "시간 제한",
+    "replace": "시간제한",
+    "enabled": true,
+    "tip": "표준국어대사전  '시간제한' 등재",
+    "dividerGroup": "A1",
+    "dividerLabel": "표준국어대사전 등재(명사)",
+    "overlayReplace": "→시간⁀제한"
+  },
+  {
+    "find": "어두운 색",
+    "replace": "어두운색",
+    "enabled": true,
+    "tip": "표준국어대사전  '어두운색' 등재",
+    "dividerGroup": "A1",
+    "dividerLabel": "표준국어대사전 등재(명사)",
+    "overlayReplace": "→어두운⁀색"
+  },
+  {
+    "find": "어제 저녁",
+    "replace": "어제저녁",
+    "enabled": true,
+    "tip": "표준국어대사전  '어제저녁' 등재_주의: '오늘저녁' 미등재",
+    "dividerGroup": "A1",
+    "dividerLabel": "표준국어대사전 등재(명사)",
+    "overlayReplace": "→어제⁀저녁"
+  },
+  {
+    "find": "여름 밤",
+    "replace": "여름밤",
+    "enabled": true,
+    "tip": "표준국어대사전 '여름밤' 등재",
+    "dividerGroup": "A1",
+    "dividerLabel": "표준국어대사전 등재(명사)",
+    "overlayReplace": "→여름⁀밤"
+  },
+  {
+    "find": "우리 나라",
+    "replace": "우리나라",
+    "enabled": true,
+    "tip": "표준국어대사전 '우리나라', '우리말' ,'우리글'  등재_주의: '우리집' 미등재",
+    "dividerGroup": "A1",
+    "dividerLabel": "표준국어대사전 등재(명사)",
+    "overlayReplace": "→우리⁀나라"
+  },
+  {
+    "find": "집안 사람",
+    "replace": "집안사람",
+    "enabled": true,
+    "tip": "표준국어대사전  '집안사람' 등재",
+    "dividerGroup": "A1",
+    "dividerLabel": "표준국어대사전 등재(명사)",
+    "overlayReplace": "→집안⁀사람"
   },
   {
     "find": "먹고 사",
@@ -167,7 +230,7 @@
     "enabled": true,
     "tip": "표준국어대사전 '먹고살다' 등재",
     "dividerGroup": "A",
-    "dividerLabel": "표준국어대사전 등재",
+    "dividerLabel": "표준국어대사전 등재(용언)",
     "overlayReplace": "→먹고⁀사"
   },
   {
@@ -176,7 +239,7 @@
     "enabled": true,
     "tip": "표준국어대사전 '그럴듯하다' 등재",
     "dividerGroup": "A",
-    "dividerLabel": "표준국어대사전 등재",
+    "dividerLabel": "표준국어대사전 등재(용언)",
     "overlayReplace": "→그럴⁀듯"
   },
   {
@@ -185,7 +248,7 @@
     "enabled": true,
     "tip": "표준국어대사전 '그럴싸하다' 등재",
     "dividerGroup": "A",
-    "dividerLabel": "표준국어대사전 등재",
+    "dividerLabel": "표준국어대사전 등재(용언)",
     "overlayReplace": "→그럴⁀싸"
   },
   {
@@ -194,7 +257,7 @@
     "enabled": true,
     "tip": "표준국어대사전 '뭐하다' 등재",
     "dividerGroup": "A",
-    "dividerLabel": "표준국어대사전 등재",
+    "dividerLabel": "표준국어대사전 등재(용언)",
     "overlayReplace": "→뭐⁀하"
   },
   {
@@ -203,7 +266,7 @@
     "enabled": true,
     "tip": "표준국어대사전 '머지않다' 등재",
     "dividerGroup": "A",
-    "dividerLabel": "표준국어대사전 등재",
+    "dividerLabel": "표준국어대사전 등재(용언)",
     "overlayReplace": "→머지⁀않"
   },
   {
@@ -212,7 +275,7 @@
     "enabled": true,
     "tip": "표준국어대사전 '놓아주다' 등재",
     "dividerGroup": "A",
-    "dividerLabel": "표준국어대사전 등재",
+    "dividerLabel": "표준국어대사전 등재(용언)",
     "overlayReplace": "→놓아⁀주"
   },
   {
@@ -221,7 +284,7 @@
     "enabled": true,
     "tip": "표준국어대사전 '귀신같다' 등재",
     "dividerGroup": "A",
-    "dividerLabel": "표준국어대사전 등재",
+    "dividerLabel": "표준국어대사전 등재(용언)",
     "overlayReplace": "→귀신⁀같"
   },
   {
@@ -230,7 +293,7 @@
     "enabled": true,
     "tip": "표준국어대사전 '세상모르다' 등재",
     "dividerGroup": "A",
-    "dividerLabel": "표준국어대사전 등재",
+    "dividerLabel": "표준국어대사전 등재(용언)",
     "overlayReplace": "→세상⁀모르"
   },
   {
@@ -239,7 +302,7 @@
     "enabled": true,
     "tip": "표준국어대사전  '되풀이되다' 등재",
     "dividerGroup": "A",
-    "dividerLabel": "표준국어대사전 등재",
+    "dividerLabel": "표준국어대사전 등재(용언)",
     "overlayReplace": "→되풀이⁀되"
   },
   {
@@ -248,7 +311,7 @@
     "enabled": true,
     "tip": "표준국어대사전  '가닿다' 등재",
     "dividerGroup": "A",
-    "dividerLabel": "표준국어대사전 등재",
+    "dividerLabel": "표준국어대사전 등재(용언)",
     "overlayReplace": "→가⁀닿"
   },
   {
@@ -257,7 +320,7 @@
     "enabled": true,
     "tip": "표준국어대사전  '때맞추다' 등재",
     "dividerGroup": "A",
-    "dividerLabel": "표준국어대사전 등재",
+    "dividerLabel": "표준국어대사전 등재(용언)",
     "overlayReplace": "→때⁀맞"
   },
   {
@@ -266,7 +329,7 @@
     "enabled": true,
     "tip": "표준국어대사전  '지각없이' 등재",
     "dividerGroup": "A",
-    "dividerLabel": "표준국어대사전 등재",
+    "dividerLabel": "표준국어대사전 등재(용언)",
     "overlayReplace": "→지각⁀없"
   },
   {
@@ -274,8 +337,8 @@
     "replace": "주야장천",
     "enabled": true,
     "tip": "표준국어대사전 미등재",
-    "dividerGroup": "A2",
-    "dividerLabel": "표준국어대사전 미등재",
+    "dividerGroup": "AB",
+    "dividerLabel": "표준국어대사전 미등재(명사)",
     "overlayReplace": "→주야장천"
   },
   {
@@ -283,124 +346,16 @@
     "replace": "전 세계",
     "enabled": true,
     "tip": "표준국어대사전 미등재",
-    "dividerGroup": "A3",
-    "dividerLabel": "표준국어대사전 미등재",
+    "dividerGroup": "AB",
+    "dividerLabel": "표준국어대사전 미등재(명사)",
     "overlayReplace": "→전∨세계"
-  },
-  {
-    "find": "놀래키",
-    "replace": "놀래",
-    "enabled": true,
-    "tip": "'놀래다' 또는 '놀라다'의 잘못된 표현('놀래키다'는 표준국어대사전 미등재)",
-    "dividerGroup": "B",
-    "dividerLabel": "잘못된 표현",
-    "overlayReplace": "→놀래"
-  },
-  {
-    "find": "빼곡이",
-    "replace": "빼곡히",
-    "enabled": true,
-    "tip": "'빼곡히' 의 잘못된 표현",
-    "dividerGroup": "B",
-    "dividerLabel": "잘못된 표현",
-    "overlayReplace": "→빼곡히"
-  },
-  {
-    "find": "빽빽히",
-    "replace": "빽빽이",
-    "enabled": true,
-    "tip": "'빽빽이' 의 잘못된 표현",
-    "dividerGroup": "B",
-    "dividerLabel": "잘못된 표현",
-    "overlayReplace": "→빽뺵이"
-  },
-  {
-    "find": "덮히",
-    "replace": "덮이",
-    "enabled": true,
-    "tip": "'덮이다'의 잘못된 표현, 과거형은 '덮였다'",
-    "dividerGroup": "B",
-    "dividerLabel": "잘못된 표현",
-    "overlayReplace": "→덮이"
-  },
-  {
-    "find": "높히",
-    "replace": "높이",
-    "enabled": true,
-    "tip": "'높이다'의 잘못된 표현, 과거형은 '높였다'",
-    "dividerGroup": "B",
-    "dividerLabel": "잘못된 표현",
-    "overlayReplace": "→높이"
-  },
-  {
-    "find": "담궈",
-    "replace": "담가",
-    "enabled": true,
-    "tip": "'담그다'의 잘못된 표현, 과거형은 '담갔다'",
-    "dividerGroup": "B",
-    "dividerLabel": "잘못된 표현",
-    "overlayReplace": "→담가"
-  },
-  {
-    "find": "치뤄",
-    "replace": "치러",
-    "enabled": true,
-    "tip": "'치르다'의 잘못된 표현, 과거형은 '치렀다'",
-    "dividerGroup": "B",
-    "dividerLabel": "잘못된 표현",
-    "overlayReplace": "→치러"
-  },
-  {
-    "find": "잠궈",
-    "replace": "잠가",
-    "enabled": true,
-    "tip": "'잠그다'의 잘못된 표현, 과거형은 '잠갔다'",
-    "dividerGroup": "B",
-    "dividerLabel": "잘못된 표현",
-    "overlayReplace": "→잠가"
-  },
-  {
-    "find": "부비",
-    "replace": "비비",
-    "enabled": true,
-    "tip": "'비비다\"의 잘못된 표현",
-    "dividerGroup": "B",
-    "dividerLabel": "잘못된 표현",
-    "overlayReplace": "→비비"
-  },
-  {
-    "find": "닥달",
-    "replace": "닦달",
-    "enabled": true,
-    "tip": "'닦달'의 잘못된 표현",
-    "dividerGroup": "B",
-    "dividerLabel": "잘못된 표현",
-    "overlayReplace": "→닦달"
-  },
-  {
-    "find": "우겨넣",
-    "replace": "욱여넣",
-    "enabled": true,
-    "tip": "'욱여넣다'의 잘못된 표현",
-    "dividerGroup": "B",
-    "dividerLabel": "잘못된 표현",
-    "overlayReplace": "→욱여넣"
-  },
-  {
-    "find": "끼여들",
-    "replace": "끼어들",
-    "enabled": true,
-    "tip": "'끼어들다'의 잘못된 표현('끼어 있다'는 가능)",
-    "dividerGroup": "B",
-    "dividerLabel": "잘못된 표현",
-    "overlayReplace": "→끼어들"
   },
   {
     "find": "깔대기",
     "replace": "깔때기",
     "enabled": true,
     "tip": "'깔때기'의 잘못된 표현",
-    "dividerGroup": "B2",
+    "dividerGroup": "B0",
     "dividerLabel": "잘못된 표현(명사)",
     "overlayReplace": "→깔때기"
   },
@@ -409,16 +364,25 @@
     "replace": "깜빡이",
     "enabled": true,
     "tip": "'깜빡이'의 잘못된 표현",
-    "dividerGroup": "B2",
+    "dividerGroup": "B0",
     "dividerLabel": "잘못된 표현(명사)",
     "overlayReplace": "→깜빡이"
+  },
+  {
+    "find": "닥달",
+    "replace": "닦달",
+    "enabled": true,
+    "tip": "'닦달'의 잘못된 표현",
+    "dividerGroup": "B0",
+    "dividerLabel": "잘못된 표현(명사)",
+    "overlayReplace": "→닦달"
   },
   {
     "find": "빨강색",
     "replace": "빨간색",
     "enabled": true,
-    "tip": "'빨간색'의 잘못된 표현, 참고: 빨강,빨간빛,빨간불(○),",
-    "dividerGroup": "B2",
+    "tip": "'빨간색'의 잘못된 표현_참고: 빨강,빨간빛,빨간불(○),",
+    "dividerGroup": "B0",
     "dividerLabel": "잘못된 표현(명사)",
     "overlayReplace": "→빨간색"
   },
@@ -426,8 +390,8 @@
     "find": "파랑색",
     "replace": "파란색",
     "enabled": true,
-    "tip": "'파란색'의 잘못된 표현, 참고: 파랑, 파란빛,푸른빛,파란불(○)",
-    "dividerGroup": "B2",
+    "tip": "'파란색'의 잘못된 표현_참고: 파랑, 파란빛,푸른빛,파란불(○)",
+    "dividerGroup": "B0",
     "dividerLabel": "잘못된 표현(명사)",
     "overlayReplace": "→파란색"
   },
@@ -435,10 +399,109 @@
     "find": "노랑색",
     "replace": "노란색",
     "enabled": true,
-    "tip": "'노란색'의 잘못된 표현, 참고: 노랑, 노란빛,노란불(○)",
-    "dividerGroup": "B2",
+    "tip": "'노란색'의 잘못된 표현_참고: 노랑, 노란빛,노란불(○)",
+    "dividerGroup": "B0",
     "dividerLabel": "잘못된 표현(명사)",
     "overlayReplace": "→노란색"
+  },
+  {
+    "find": "놀래키",
+    "replace": "놀래",
+    "enabled": true,
+    "tip": "'놀래다' 또는 '놀라다'의 잘못된 표현_주의: '놀래키다'는 표준국어대사전 미등재",
+    "dividerGroup": "B1",
+    "dividerLabel": "잘못된 표현(용언)",
+    "overlayReplace": "→놀래"
+  },
+  {
+    "find": "빼곡이",
+    "replace": "빼곡히",
+    "enabled": true,
+    "tip": "'빼곡히' 의 잘못된 표현",
+    "dividerGroup": "B1",
+    "dividerLabel": "잘못된 표현(용언)",
+    "overlayReplace": "→빼곡히"
+  },
+  {
+    "find": "빽빽히",
+    "replace": "빽빽이",
+    "enabled": true,
+    "tip": "'빽빽이' 의 잘못된 표현",
+    "dividerGroup": "B1",
+    "dividerLabel": "잘못된 표현(용언)",
+    "overlayReplace": "→빽뺵이"
+  },
+  {
+    "find": "덮히",
+    "replace": "덮이",
+    "enabled": true,
+    "tip": "'덮이다'의 잘못된 표현, 과거형은 '덮였다'",
+    "dividerGroup": "B1",
+    "dividerLabel": "잘못된 표현(용언)",
+    "overlayReplace": "→덮이"
+  },
+  {
+    "find": "높히",
+    "replace": "높이",
+    "enabled": true,
+    "tip": "'높이다'의 잘못된 표현, 과거형은 '높였다'",
+    "dividerGroup": "B1",
+    "dividerLabel": "잘못된 표현(용언)",
+    "overlayReplace": "→높이"
+  },
+  {
+    "find": "담궈",
+    "replace": "담가",
+    "enabled": true,
+    "tip": "'담그다'의 잘못된 표현, 과거형은 '담갔다'",
+    "dividerGroup": "B1",
+    "dividerLabel": "잘못된 표현(용언)",
+    "overlayReplace": "→담가"
+  },
+  {
+    "find": "치뤄",
+    "replace": "치러",
+    "enabled": true,
+    "tip": "'치르다'의 잘못된 표현, 과거형은 '치렀다'",
+    "dividerGroup": "B1",
+    "dividerLabel": "잘못된 표현(용언)",
+    "overlayReplace": "→치러"
+  },
+  {
+    "find": "잠궈",
+    "replace": "잠가",
+    "enabled": true,
+    "tip": "'잠그다'의 잘못된 표현, 과거형은 '잠갔다'",
+    "dividerGroup": "B1",
+    "dividerLabel": "잘못된 표현(용언)",
+    "overlayReplace": "→잠가"
+  },
+  {
+    "find": "부비",
+    "replace": "비비",
+    "enabled": true,
+    "tip": "'비비다\"의 잘못된 표현",
+    "dividerGroup": "B1",
+    "dividerLabel": "잘못된 표현(용언)",
+    "overlayReplace": "→비비"
+  },
+  {
+    "find": "우겨넣",
+    "replace": "욱여넣",
+    "enabled": true,
+    "tip": "'욱여넣다'의 잘못된 표현",
+    "dividerGroup": "B1",
+    "dividerLabel": "잘못된 표현(용언)",
+    "overlayReplace": "→욱여넣"
+  },
+  {
+    "find": "끼여들",
+    "replace": "끼어들",
+    "enabled": true,
+    "tip": "'끼어들다'의 잘못된 표현('끼어 있다'는 가능)",
+    "dividerGroup": "B1",
+    "dividerLabel": "잘못된 표현(용언)",
+    "overlayReplace": "→끼어들"
   },
   {
     "find": "설레이",
@@ -468,12 +531,39 @@
     "overlayReplace": "→헤메"
   },
   {
+    "find": "성장율",
+    "replace": "성장률",
+    "enabled": true,
+    "tip": "접미사 '-율率'은 모음이나 'ㄴ' 받침 뒤에서는 '-율' 그 외는 '률'로 표기",
+    "dividerGroup": "D2",
+    "dividerLabel": "접미사 '-율/률率'",
+    "overlayReplace": "→성장률"
+  },
+  {
+    "find": "합격율",
+    "replace": "합격률",
+    "enabled": true,
+    "tip": "접미사 '-율率'은 모음이나 'ㄴ' 받침 뒤에서는 '-율' 그 외는 '률'로 표기",
+    "dividerGroup": "D2",
+    "dividerLabel": "접미사 '-율/률率'",
+    "overlayReplace": "→합격률"
+  },
+  {
+    "find": "취업율",
+    "replace": "취업률",
+    "enabled": true,
+    "tip": "접미사 '-율率'은 모음이나 'ㄴ' 받침 뒤에서는 '-율' 그 외는 '률'로 표기",
+    "dividerGroup": "D2",
+    "dividerLabel": "접미사 '-율/률率'",
+    "overlayReplace": "→취업률"
+  },
+  {
     "find": "갯수",
     "replace": "개수",
     "enabled": true,
     "tip": "두 음절 한자어 6개(곳간庫間, 셋방貰房, 숫자數字, 찻간車間, 툇간退間,횟수回數)만 사이시옷을 넣는다",
     "dividerGroup": "E",
-    "dividerLabel": "사이시옷 법칙",
+    "dividerLabel": "사이시옷 법칙-한자어",
     "overlayReplace": "→개수"
   },
   {
@@ -482,7 +572,7 @@
     "enabled": true,
     "tip": "두 음절 한자어 6개(곳간庫間, 셋방貰房, 숫자數字, 찻간車間, 툇간退間,횟수回數)만 사이시옷을 넣는다",
     "dividerGroup": "E",
-    "dividerLabel": "사이시옷 법칙",
+    "dividerLabel": "사이시옷 법칙-한자어",
     "overlayReplace": "→시가"
   },
   {
@@ -491,7 +581,7 @@
     "enabled": true,
     "tip": "두 음절 한자어 6개(곳간庫間, 셋방貰房, 숫자數字, 찻간車間, 툇간退間,횟수回數)만 사이시옷을 넣는다",
     "dividerGroup": "E",
-    "dividerLabel": "사이시옷 법칙",
+    "dividerLabel": "사이시옷 법칙-한자어",
     "overlayReplace": "→대가"
   },
   {
@@ -500,7 +590,7 @@
     "enabled": true,
     "tip": "두 음절 한자어 6개(곳간庫間, 셋방貰房, 숫자數字, 찻간車間, 툇간退間,횟수回數)만 사이시옷을 넣는다",
     "dividerGroup": "E",
-    "dividerLabel": "사이시옷 법칙",
+    "dividerLabel": "사이시옷 법칙-한자어",
     "overlayReplace": "→초점"
   },
   {
@@ -509,7 +599,7 @@
     "enabled": true,
     "tip": "거센소리 ㅊ,ㅋ,ㅌ,ㅍ 앞에는 사이시옷이 붙지 않는다",
     "dividerGroup": "E2",
-    "dividerLabel": "사이시옷 법칙2",
+    "dividerLabel": "사이시옷 법칙-거센소리",
     "overlayReplace": "→뒤처리"
   },
   {
@@ -517,8 +607,8 @@
     "replace": "뒤풀이",
     "enabled": true,
     "tip": "거센소리 ㅊ,ㅋ,ㅌ,ㅍ 앞에는 사이시옷이 붙지 않는다",
-    "dividerGroup": "E3",
-    "dividerLabel": "사이시옷 법칙3",
+    "dividerGroup": "E2",
+    "dividerLabel": "사이시옷 법칙-거센소리",
     "overlayReplace": "→뒤풀이"
   },
   {
@@ -547,33 +637,6 @@
     "dividerGroup": "G",
     "dividerLabel": "형용사 표기",
     "overlayReplace": "→스러운"
-  },
-  {
-    "find": "성장율",
-    "replace": "성장률",
-    "enabled": true,
-    "tip": "접미사 '-율率'은 모음이나 'ㄴ' 받침 뒤에서는 '-율' 그 외는 '률'로 표기",
-    "dividerGroup": "I",
-    "dividerLabel": "접미사 '-율/률率'",
-    "overlayReplace": "→성장률"
-  },
-  {
-    "find": "합격율",
-    "replace": "합격률",
-    "enabled": true,
-    "tip": "접미사 '-율率'은 모음이나 'ㄴ' 받침 뒤에서는 '-율' 그 외는 '률'로 표기",
-    "dividerGroup": "I",
-    "dividerLabel": "접미사 '-율/률率'",
-    "overlayReplace": "→합격률"
-  },
-  {
-    "find": "취업율",
-    "replace": "취업률",
-    "enabled": true,
-    "tip": "접미사 '-율率'은 모음이나 'ㄴ' 받침 뒤에서는 '-율' 그 외는 '률'로 표기",
-    "dividerGroup": "I",
-    "dividerLabel": "접미사 '-율/률率'",
-    "overlayReplace": "→취업률"
   },
   {
     "find": "녹록치",

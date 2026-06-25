@@ -1,8 +1,9 @@
 import cautionRulesJson from '../data/caution-rules.json';
+import { tailRegexFragmentForFind } from './compoundPatternCommon.js';
 
 /**
- * @typedef {'any-before' | 'spaced-before' | 'attached-before' | 'spaced-stem' | 'fixed-phrase'} CautionMatchMode
- * @typedef {{ id: string, label: string, stems?: string[], tip?: string, enabled?: boolean, matchMode?: CautionMatchMode, displayLabel?: string, inventoryOnly?: boolean, except?: string[] }} CautionItem
+ * @typedef {'any-before' | 'spaced-before' | 'attached-before' | 'stem-list' | 'fixed-phrase'} CautionMatchMode
+ * @typedef {{ id: string, label: string, stems?: string[], tip?: string, enabled?: boolean, matchMode?: CautionMatchMode, displayLabel?: string, groupLabel?: string, inventoryOnly?: boolean, except?: string[] }} CautionItem
  * @typedef {{ id: string, title?: string, tip?: string, hideGroupTitle?: boolean, tipInline?: boolean, items: CautionItem[] }} CautionGroup
  * @typedef {{ id: string, label: string, stems: string[], tip: string, groupId: string, enabled: boolean, matchMode: CautionMatchMode, displayLabel: string, inventoryOnly: boolean, except?: string[] }} CautionRule
  */
@@ -88,12 +89,15 @@ export function normalizeMatchMode(mode) {
   const v = String(mode ?? '').trim().toLowerCase();
   // 긴 이름 먼저 (space-stem ⊃ space)
   if (
+    v === 'stem-list' ||
+    v === 'stems' ||
+    v === 'ap-stems' ||
     v === 'spaced-stem' ||
     v === 'space-stem' ||
     v === 'stem' ||
     v === 'spaced-compound'
   ) {
-    return 'spaced-stem';
+    return 'stem-list';
   }
   if (v === 'ap-space' || v === 'spaced-before' || v === 'spaced') {
     return 'spaced-before';
@@ -172,10 +176,10 @@ export function cautionItemTip(item, group) {
 /** @param {{ label: string, matchMode?: CautionMatchMode, displayLabel?: string }} item */
 export function cautionDisplayLabel(item) {
   if (item.displayLabel?.trim()) return item.displayLabel.trim();
-  if (item.matchMode === 'fixed-phrase') {
+  if (item.matchMode === 'fixed-phrase' || item.matchMode === 'stem-list') {
     return item.label;
   }
-  if (item.matchMode === 'spaced-before' || item.matchMode === 'spaced-stem') {
+  if (item.matchMode === 'spaced-before') {
     return `^${item.label}`;
   }
   if (item.matchMode === 'attached-before') {
@@ -184,8 +188,24 @@ export function cautionDisplayLabel(item) {
   return item.label;
 }
 
+/** @param {CautionGroup} group */
+export function cautionGroupDisplayLabel(group) {
+  if (group.hideGroupTitle !== true) {
+    const title = String(group.title ?? '').trim();
+    if (title) return title;
+    const tip = String(group.tip ?? '').trim();
+    if (tip && tip.length <= 20 && !tip.includes('\n')) return tip;
+  }
+  return String(group.id ?? '').trim();
+}
+
 /** @type {CautionGroup[]} */
 export const CAUTION_GROUPS = normalizeGroups(cautionRulesJson);
+
+/** @type {Map<string, CautionGroup>} */
+const CAUTION_GROUP_BY_ID = new Map(
+  CAUTION_GROUPS.map((group) => [group.id, group]),
+);
 
 /** @param {typeof cautionRulesJson} raw */
 export function cautionRulesFingerprint(raw = cautionRulesJson) {
@@ -212,6 +232,7 @@ export const CAUTION_RULES = CAUTION_GROUPS.flatMap((group) =>
     matchMode: item.matchMode ?? 'any-before',
     displayLabel: item.displayLabel ?? cautionDisplayLabel(item),
     inventoryOnly: item.inventoryOnly === true,
+    ...(item.groupLabel?.trim() ? { groupLabel: item.groupLabel.trim() } : {}),
     ...(item.except?.length ? { except: item.except } : {}),
   })),
 );
@@ -309,8 +330,17 @@ export function migrateCautionEnabled(
  * @param {Record<string, boolean>} cautionEnabled
  * @returns {import('./ruleTypes.js').Rule[]}
  */
+/** stems 시트 나열 형태 — PDF 공백/NBSP/ZWSP 허용 */
+export function cautionStemListPattern(stem) {
+  const core = tailRegexFragmentForFind(String(stem ?? '').trim());
+  return core || '(?!.)';
+}
+
 /** @internal 테스트·문서용 */
 export function cautionFindPattern(label, matchMode) {
+  if (matchMode === 'stem-list') {
+    return cautionStemListPattern(label);
+  }
   const esc = escapeRegex(label);
   if (matchMode === 'spaced-before') {
     // 붙여 써야 하는데 앞말+공백+label — 뒤에 조사·어미가 와도 잡음
@@ -321,9 +351,6 @@ export function cautionFindPattern(label, matchMode) {
     // 앞말+label이 한 토큰이고 토큰 끝이 label(예: 여름가지 O, 물가지수 X)
     return String.raw`([^\s]{1,}${esc})(?!\S)`;
   }
-  if (matchMode === 'spaced-stem') {
-    return String.raw`([^\s]{2,})[ \u00A0]+${esc}[\uAC00-\uD7A3]+(?!\S)`;
-  }
   if (matchMode === 'fixed-phrase') {
     const parts = label.trim().split(/\s+/).filter(Boolean);
     if (parts.length >= 2) {
@@ -332,7 +359,7 @@ export function cautionFindPattern(label, matchMode) {
     }
     return esc + String.raw`[\uAC00-\uD7A3]+(?!\S)`;
   }
-  return String.raw`(?<![^\s])([^\s]{2,})\s*${esc}`;
+  return String.raw`(?<![^\s])([^\s]*)\s*${esc}`;
 }
 
 /** 검사 결과 카드에 쓸 체크 항목 이름 (^주다, 만 …) */
@@ -370,12 +397,13 @@ export function buildCautionCheckRules(cautionEnabled) {
     if (cautionEnabled[item.id] !== true) continue;
     const stems = item.stems.filter(Boolean);
     if (!stems.length) continue;
-    const findPattern =
-      stems.length === 1
-        ? cautionFindPattern(stems[0], item.matchMode)
-        : stems
-            .map((stem) => `(?:${cautionFindPattern(stem, item.matchMode)})`)
-            .join('|');
+    const findPattern = stems
+      .map((stem) => `(?:${cautionFindPattern(stem, item.matchMode)})`)
+      .join('|');
+    const group = CAUTION_GROUP_BY_ID.get(item.groupId);
+    const bundleLabel =
+      String(item.groupLabel ?? group?.title ?? '').trim() ||
+      (group ? cautionGroupDisplayLabel(group) : '');
     rules.push({
       find: findPattern,
       replace: '(검토)',
@@ -386,6 +414,8 @@ export function buildCautionCheckRules(cautionEnabled) {
       label: item.displayLabel,
       tip: item.tip,
       cautionStems: stems,
+      ...(group ? { dividerGroup: group.id } : {}),
+      ...(bundleLabel ? { dividerLabel: bundleLabel } : {}),
       ...(item.except?.length ? { excludePhrases: item.except } : {}),
     });
   }

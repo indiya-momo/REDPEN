@@ -87,22 +87,22 @@ describe('buildTabEntries', () => {
     expect(entries[0].group.label).toBe('규칙');
   });
 
-  it('일관성 탭에서 발견 0건 그룹은 제외한다', () => {
+  it('일관성 탭에서도 발견 0건 그룹을 맞춤법과 같이 표시한다', () => {
     const entries = buildTabEntries('consistency', [], [
       {
-        find: 'auxiliary-item:(아/어) + 놓다',
+        find: 'auxiliary-item:본(-아/어) + 놓다',
         replace: '$0',
         patternKind: 'auxiliary-verb',
-        label: '(아/어) + 놓다',
-        groupDisplayLabel: '(아/어) + 놓다',
+        label: '본(-아/어) + 놓다',
+        groupDisplayLabel: '본(-아/어) + 놓다',
         instances: [],
       },
       {
-        find: 'auxiliary-item:(아/어) + 가다',
+        find: 'auxiliary-item:본(-아/어) + 가다',
         replace: '$0',
         patternKind: 'auxiliary-verb',
-        label: '(아/어) + 가다',
-        groupDisplayLabel: '(아/어) + 가다',
+        label: '본(-아/어) + 가다',
+        groupDisplayLabel: '본(-아/어) + 가다',
         instances: [{ pageNum: 1 }],
       },
       {
@@ -112,8 +112,12 @@ describe('buildTabEntries', () => {
         instances: [],
       },
     ]);
-    expect(entries).toHaveLength(1);
-    expect(entries[0].group.label).toBe('(아/어) + 가다');
+    expect(entries).toHaveLength(3);
+    expect(entries.map((e) => e.group.label)).toEqual([
+      '본(-아/어) + 놓다',
+      '본(-아/어) + 가다',
+      '세계경제',
+    ]);
   });
 });
 
