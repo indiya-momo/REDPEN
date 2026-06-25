@@ -28,6 +28,11 @@ import {
   isBetaDailyQuotaEnabled,
   isBetaDailyQuotaEnforcedForUser,
 } from './betaDailyQuota.js';
+import {
+  parseBracketTitleMessage,
+  showAppAlert,
+  showAppConfirm,
+} from './appDialog.js';
 
 /**
  * @param {import('./ruleTypes.js').Rule[]} [customRules]
@@ -244,7 +249,8 @@ export async function confirmConsistencyCheckBeforeRun(
     });
   }
 
-  return confirm(message);
+  const { title, message: body } = parseBracketTitleMessage(message);
+  return showAppConfirm({ title, message: body });
 }
 
 /**
@@ -315,15 +321,17 @@ export function formatConsistencyCheckCompleteMessage({
  * @param {import('./ruleEngine.js').RuleResultGroup[]} groups
  * @param {number} totalFindings
  */
-export function alertConsistencyCheckAfterRun(
+export async function alertConsistencyCheckAfterRun(
   groups = [],
   totalFindings = 0,
   customRules = [],
 ) {
-  alert(
-    formatConsistencyCheckCompleteMessage({
-      ...countConsistencyGroupsWithFindings(groups, customRules),
-      totalFindings,
-    }),
-  );
+  const raw = formatConsistencyCheckCompleteMessage({
+    ...countConsistencyGroupsWithFindings(groups, customRules),
+    totalFindings,
+  });
+  const newline = raw.indexOf('\n');
+  const title = newline >= 0 ? raw.slice(0, newline) : '검수 완료';
+  const message = newline >= 0 ? raw.slice(newline + 1).trimStart() : raw;
+  await showAppAlert({ title, message });
 }

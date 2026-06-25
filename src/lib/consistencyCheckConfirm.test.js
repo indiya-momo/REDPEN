@@ -7,6 +7,7 @@ import {
   formatConsistencyCheckCompleteMessage,
   formatConsistencyCheckConfirmMessage,
 } from './consistencyCheckConfirm.js';
+import { parseBracketTitleMessage } from './appDialog.js';
 
 vi.mock('./checkAuthGate.js', () => ({
   assertLoggedInForCheckOrAlert: () => true,
@@ -117,8 +118,7 @@ describe('confirmConsistencyCheckBeforeRun', () => {
       },
     ]);
 
-    expect(confirmMock).toHaveBeenCalledWith(
-      formatConsistencyCheckConfirmMessage({
+    const msg = formatConsistencyCheckConfirmMessage({
         remaining: 1,
         tabLimit: 2,
         literalActive: 0,
@@ -130,8 +130,9 @@ describe('confirmConsistencyCheckBeforeRun', () => {
         excludeActive: 0,
         auxiliaryActive: 1,
         auxiliaryTotal: 1,
-      }),
-    );
+      });
+    const { title, message } = parseBracketTitleMessage(msg);
+    expect(confirmMock).toHaveBeenCalledWith(`${title}\n\n${message}`);
   });
 });
 
@@ -252,11 +253,11 @@ describe('formatConsistencyCheckCompleteMessage', () => {
 });
 
 describe('alertConsistencyCheckAfterRun', () => {
-  it('검수 완료 alert를 띄운다', () => {
+  it('검수 완료 alert를 띄운다', async () => {
     const alertMock = vi.fn();
     vi.stubGlobal('alert', alertMock);
 
-    alertConsistencyCheckAfterRun(
+    await alertConsistencyCheckAfterRun(
       [
         { patternKind: 'phrase-slot-find', instances: [{}] },
         { patternKind: 'auxiliary-verb', instances: [{}, {}] },
@@ -264,14 +265,16 @@ describe('alertConsistencyCheckAfterRun', () => {
       3,
     );
 
+    const complete = formatConsistencyCheckCompleteMessage({
+      literalWithFindings: 0,
+      unifyWithFindings: 0,
+      commonStringWithFindings: 1,
+      auxiliaryWithFindings: 1,
+      totalFindings: 3,
+    });
+    const newline = complete.indexOf('\n');
     expect(alertMock).toHaveBeenCalledWith(
-      formatConsistencyCheckCompleteMessage({
-        literalWithFindings: 0,
-        unifyWithFindings: 0,
-        commonStringWithFindings: 1,
-        auxiliaryWithFindings: 1,
-        totalFindings: 3,
-      }),
+      `${complete.slice(0, newline)}\n\n${complete.slice(newline + 1).trimStart()}`,
     );
   });
 });

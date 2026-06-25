@@ -375,10 +375,14 @@ export function useRuleCheck({
       setIsProcessing(false);
       setProgress(null);
       if (runSpelling) {
-        alertSpellingCheckAfterRun(scopeResults, findingCount);
+        await alertSpellingCheckAfterRun(scopeResults, findingCount);
       }
       if (runConsistency) {
-        alertConsistencyCheckAfterRun(scopeResults, findingCount, customRules);
+        await alertConsistencyCheckAfterRun(
+          scopeResults,
+          findingCount,
+          customRules,
+        );
       }
       await afterCheckRef.current?.();
     },
