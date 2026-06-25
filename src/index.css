@@ -2288,11 +2288,15 @@ details[open] > summary .details-chevron::before {
 }
 
 .pdf-zoom-bar {
+  --pdf-zoom-h: 1.8rem;
+  --pdf-zoom-sign: 1.035rem;
+  --pdf-zoom-inset-y: 1px;
+  --pdf-zoom-inset-x: 3px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 2px;
-  padding: 2px 0;
+  padding: 0;
   font-size: 0.78rem;
 }
 
@@ -2300,13 +2304,15 @@ details[open] > summary .details-chevron::before {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: var(--pdf-zoom-h);
+  height: var(--pdf-zoom-h);
+  min-width: var(--pdf-zoom-h);
   padding: 0;
   border: none;
   background: transparent;
   color: var(--color-text-secondary);
   cursor: pointer;
+  flex-shrink: 0;
 }
 
 .pdf-zoom-bar__btn:hover:not(:disabled) {
@@ -2320,7 +2326,7 @@ details[open] > summary .details-chevron::before {
 
 .pdf-zoom-bar__sign {
   display: block;
-  font-size: 1.15rem;
+  font-size: var(--pdf-zoom-sign);
   font-weight: 700;
   line-height: 1;
   font-family: var(--font-ui, system-ui, sans-serif);
@@ -2329,16 +2335,24 @@ details[open] > summary .details-chevron::before {
 .pdf-zoom-bar__percent-wrap {
   display: inline-flex;
   align-items: center;
-  gap: 2px;
+  justify-content: center;
+  gap: 1px;
+  height: var(--pdf-zoom-h);
+  padding: var(--pdf-zoom-inset-y) var(--pdf-zoom-inset-x);
+  border: 1px solid var(--work-chrome-border);
+  border-radius: var(--radius-ui-sm);
+  background: var(--work-chrome-field-bg);
+  box-sizing: border-box;
 }
 
-.pdf-zoom-bar__percent-input {
-  width: 2.5rem;
+.pdf-zoom-bar__percent-wrap:hover {
+  border-color: var(--work-chrome-border-hover);
 }
 
 .pdf-zoom-bar__percent-suffix {
   font-size: 0.78rem;
   font-weight: 700;
+  line-height: 1;
   color: var(--color-text);
 }
 
@@ -3241,10 +3255,21 @@ details[open] > summary .details-chevron::before {
 }
 
 .pdf-zoom-bar__percent-input {
-  border: 1px solid var(--work-chrome-border);
+  box-sizing: border-box;
+  margin: 0;
+  width: 2.35rem;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  text-align: center;
+  color: var(--color-text);
+  background: transparent;
 }
 
-.pdf-zoom-bar__percent-input,
 .pdf-preview-bar__input {
   box-sizing: border-box;
   margin: 0;
@@ -3259,7 +3284,12 @@ details[open] > summary .details-chevron::before {
   background: var(--work-chrome-field-bg);
 }
 
-.pdf-zoom-bar__percent-input:focus,
+.pdf-zoom-bar__percent-wrap:focus-within {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 0;
+  border-color: var(--work-chrome-border-hover);
+}
+
 .pdf-preview-bar__jump-row .pdf-preview-bar__input:focus {
   outline: 2px solid var(--focus-ring);
   outline-offset: 0;
