@@ -44,7 +44,6 @@ import {
   buildProjectTagFilterOptions,
   filterProjectsForLibrary,
 } from '../presentation/projectCardViewModel.js';
-import { criteriaNameForInput } from '../lib/criteriaName.js';
 import BadgeCollectionGrid from './BadgeCollectionGrid.jsx';
 import './my-page.css';
 import '../mock/mypagePrototype/mypage-prototype.css';
@@ -131,12 +130,6 @@ function getRecentUsageEntries(loginAtMs, limit = USAGE_PAGE_LIMIT) {
   return entries
     .sort((a, b) => b.atMs - a.atMs)
     .slice(0, limit);
-}
-
-/** @param {import('../lib/ruleSetsStorage.js').RuleSet} set */
-function projectDisplayName(set) {
-  const name = criteriaNameForInput(set.name);
-  return name || '이름 없는 프로젝트';
 }
 
 function RecentUsageTable({ entries }) {
@@ -340,7 +333,10 @@ function ProjectHubSection({ uid, email }) {
     maxSlots,
     exempt,
     selectProject,
+    renameProject,
+    duplicateProject,
     updateProjectMeta,
+    atSlotLimit,
   } = useMyPageProjects(uid, email);
 
   const { visibleProjects, visibleEmptySlotCount } = useMemo(
@@ -354,18 +350,15 @@ function ProjectHubSection({ uid, email }) {
   );
   const [metaSavePending, setMetaSavePending] = useState(false);
 
-  const cards = useMemo(() => {
-    try {
-      return visibleProjects.map((set) =>
+  const cards = useMemo(
+    () =>
+      visibleProjects.map((set) =>
         buildProjectCardViewModelFromRuleSet(set, {
           isActive: set.id === activeSetId,
         }),
-      );
-    } catch (e) {
-      console.warn('프로젝트 카드 변환 실패', e);
-      return [];
-    }
-  }, [visibleProjects, activeSetId]);
+      ),
+    [visibleProjects, activeSetId],
+  );
 
   const tagFilterOptions = useMemo(
     () => buildProjectTagFilterOptions(cards),
@@ -401,6 +394,46 @@ function ProjectHubSection({ uid, email }) {
     },
     [metaEditTarget, updateProjectMeta],
   );
+
+  const handleRename = useCallback(
+    async (cardId, title) => {
+      const result = await renameProject(cardId, title);
+      if (!result.ok && result.message) {
+        window.alert(result.message);
+      }
+    },
+    [renameProject],
+  );
+
+  const handleDuplicate = useCallback(
+    async (cardId) => {
+      if (atSlotLimit) {
+        window.alert(
+          '프로젝트는 계정당 1개만 저장할 수 있습니다. 빈 슬롯이 있을 때 복제할 수 있습니다.',
+        );
+        return;
+      }
+      const result = await duplicateProject(cardId);
+      if (!result.ok && result.message) {
+        window.alert(result.message);
+      }
+    },
+    [atSlotLimit, duplicateProject],
+  );
+
+  const handleStartWork = useCallback(
+    async (cardId) => {
+      const result = await selectProject(cardId);
+      if (!result.ok) {
+        window.alert('프로젝트 선택을 저장하지 못했습니다. 다시 시도해 주세요.');
+      }
+    },
+    [selectProject],
+  );
+
+  const handleSharePreview = useCallback(() => {
+    window.alert('공유 미리보기는 준비 중입니다.');
+  }, []);
 
   const slotLabel = exempt
     ? `${savedCount}개`
@@ -452,14 +485,12 @@ function ProjectHubSection({ uid, email }) {
               <ProjectLibraryCard
                 key={card.id}
                 card={card}
-                readOnly
                 showStartWork
+                onRename={(title) => void handleRename(card.id, title)}
+                onDuplicate={() => void handleDuplicate(card.id)}
+                onSharePreview={handleSharePreview}
                 onEditMeta={() => setMetaEditTarget(card)}
-                onRename={() => undefined}
-                onUpdateMeta={() => undefined}
-                onStartWork={() => void selectProject(card.id)}
-                onDuplicate={() => undefined}
-                onSharePreview={() => undefined}
+                onStartWork={() => void handleStartWork(card.id)}
               />
             ))}
 

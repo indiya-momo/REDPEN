@@ -11,11 +11,11 @@ import {
  *   readOnly?: boolean,
  *   showStartWork?: boolean,
  *   onEditMeta?: () => void,
- *   onRename: (title: string) => void,
- *   onUpdateMeta: (patch: { memo?: string, tags?: string[] }) => void,
- *   onStartWork: () => void,
- *   onDuplicate: () => void,
- *   onSharePreview: () => void,
+ *   onRename?: (title: string) => void,
+ *   onUpdateMeta?: (patch: { memo?: string, tags?: string[] }) => void,
+ *   onStartWork?: () => void,
+ *   onDuplicate?: () => void,
+ *   onSharePreview?: () => void,
  * }} props
  */
 export default function ProjectLibraryCard({
@@ -23,11 +23,11 @@ export default function ProjectLibraryCard({
   readOnly = false,
   showStartWork = false,
   onEditMeta,
-  onRename,
-  onUpdateMeta: _onUpdateMeta,
-  onStartWork,
-  onDuplicate,
-  onSharePreview,
+  onRename = () => {},
+  onUpdateMeta: _onUpdateMeta = () => {},
+  onStartWork = () => {},
+  onDuplicate = () => {},
+  onSharePreview = () => {},
 }) {
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState(card.title);
@@ -191,7 +191,8 @@ export default function ProjectLibraryCard({
                   공유
                 </button>
               </>
-            ) : onEditMeta ? (
+            ) : null}
+            {onEditMeta ? (
               <button
                 type="button"
                 className="sheet-card__btn sheet-card__btn--secondary"

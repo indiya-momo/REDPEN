@@ -2,18 +2,13 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { LEGACY_DEFAULT_CRITERIA_HINT } from '../lib/criteriaName.js';
 import {
   countSavedCriteriaPresets,
+  CRITERIA_PRESET_LIMIT_MESSAGE,
+  enforceMaxCriteriaPresets,
   isCriteriaPresetLimitExempt,
   MAX_CRITERIA_PRESETS,
 } from '../lib/criteriaPresetLimit.js';
-import {
-  countBuiltInActiveRules,
-  countBuiltInGuideActiveRules,
-  countConsistencyActiveRules,
-  countSpacingReviewActiveRules,
-} from '../lib/activeRuleCount.js';
 import { normalizeRuleSet } from '../lib/ruleSetNormalize.js';
 import {
-  formatRuleSetSummary,
   loadActiveSetId,
   loadRuleSets,
   saveActiveSetId,
@@ -26,25 +21,37 @@ import {
   saveRuleSetsCloud,
 } from '../lib/ruleSetsCloud.js';
 import { mergeRuleSetsOnLogin, dedupeSavedRuleSetsByName } from '../lib/ruleSetsMerge.js';
-import { enforceMaxCriteriaPresets } from '../lib/criteriaPresetLimit.js';
 import { mergeProjectContext } from '../lib/projectMeta.js';
+import {
+  planDeleteProject,
+  planDuplicateProject,
+  planRenameProject,
+} from '../lib/mypageProjectMutations.js';
 
-/** @param {import('../lib/ruleSetsStorage.js').RuleSet} set */
-export function summarizeProjectRuleSet(set) {
-  return formatRuleSetSummary({
-    savedAt: set.savedAt,
-    builtInRuleCount: countBuiltInActiveRules({
-      builtInEnabled: set.builtInEnabled,
-    }),
-    builtInGuideRuleCount: countBuiltInGuideActiveRules({
-      builtInEnabled: set.builtInEnabled,
-    }),
-    spacingRuleCount: countSpacingReviewActiveRules({
-      cautionEnabled: set.cautionEnabled,
-    }),
-    consistencyRuleCount: countConsistencyActiveRules(set.customRules),
-  });
+/** @param {import('../lib/ruleSetsStorage.js').RuleSet[]} sets */
+function syncSavedProjectsState(sets, setProjects, setSavedCount) {
+  const saved = sets.filter((set) => Boolean(set.savedAt));
+  setProjects(saved);
+  setSavedCount(countSavedCriteriaPresets(sets));
 }
+
+const RENAME_FAILURE_MESSAGE = {
+  empty_name: '프로젝트 이름을 입력해 주세요.',
+  duplicate_name: '같은 이름의 프로젝트가 이미 있습니다.',
+  not_found: '프로젝트를 찾을 수 없습니다.',
+  not_saved: '저장된 프로젝트만 수정할 수 있습니다.',
+};
+
+const DUPLICATE_FAILURE_MESSAGE = {
+  not_found: '프로젝트를 찾을 수 없습니다.',
+  not_saved: '저장된 프로젝트만 복제할 수 있습니다.',
+  slot_limit: CRITERIA_PRESET_LIMIT_MESSAGE,
+};
+
+const DELETE_FAILURE_MESSAGE = {
+  not_found: '프로젝트를 찾을 수 없습니다.',
+  not_saved: '저장된 프로젝트만 삭제할 수 있습니다.',
+};
 
 /** @param {import('../lib/ruleSetsStorage.js').RuleSet[]} rawSets */
 function normalizeLoadedSets(rawSets) {
@@ -81,6 +88,33 @@ export function useMyPageProjects(uid = '', email = '') {
   const activeSetIdRef = useRef(/** @type {string | null} */ (null));
 
   activeSetIdRef.current = activeSetId;
+
+  const persistProjectSets = useCallback(
+    async (nextSets, nextActiveId = activeSetIdRef.current) => {
+      const trimmedUid = uid.trim();
+      loadedSetsRef.current = nextSets;
+      saveRuleSets(nextSets, trimmedUid);
+
+      if (nextActiveId) {
+        saveActiveSetId(nextActiveId, trimmedUid);
+        activeSetIdRef.current = nextActiveId;
+        setActiveSetId(nextActiveId);
+      }
+
+      syncSavedProjectsState(nextSets, setProjects, setSavedCount);
+
+      if (trimmedUid && isRuleSetsCloudEnabled()) {
+        try {
+          await saveRuleSetsCloud(trimmedUid, nextSets, nextActiveId);
+        } catch (e) {
+          console.warn('기준 클라우드 저장 실패 (마이페이지)', e);
+          return false;
+        }
+      }
+      return true;
+    },
+    [uid],
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -144,51 +178,91 @@ export function useMyPageProjects(uid = '', email = '') {
     };
   }, [uid, email]);
 
-  const flushProjectsSaveAsync = useCallback(async () => {
-    const trimmedUid = uid.trim();
-    const sets = loadedSetsRef.current;
-    const setId = activeSetIdRef.current;
-    saveRuleSets(sets, trimmedUid);
-    if (setId) saveActiveSetId(setId, trimmedUid);
-    if (trimmedUid && isRuleSetsCloudEnabled()) {
-      try {
-        await saveRuleSetsCloud(trimmedUid, sets, setId);
-      } catch (e) {
-        console.warn('기준 클라우드 저장 실패 (마이페이지)', e);
-      }
-    }
-  }, [uid]);
-
-  /** 마이페이지 「작업하기」 — activeSetId·ruleSets만 local+cloud 저장 (메인 창 전환 없음) */
   const selectProject = useCallback(
     async (setId) => {
-      const trimmedUid = uid.trim();
       const id = String(setId ?? '').trim();
       if (!id || !loadedSetsRef.current.some((set) => set.id === id)) {
-        return false;
+        return { ok: false, reason: 'not_found' };
       }
-
-      saveRuleSets(loadedSetsRef.current, trimmedUid);
-      saveActiveSetId(id, trimmedUid);
-      activeSetIdRef.current = id;
-      setActiveSetId(id);
-
-      if (trimmedUid && isRuleSetsCloudEnabled()) {
-        try {
-          await saveRuleSetsCloud(trimmedUid, loadedSetsRef.current, id);
-        } catch (e) {
-          console.warn('기준 클라우드 저장 실패 (작업하기)', e);
-          return false;
-        }
-      }
-      return true;
+      const ok = await persistProjectSets(loadedSetsRef.current, id);
+      return ok ? { ok: true } : { ok: false, reason: 'cloud_save_failed' };
     },
-    [uid],
+    [persistProjectSets],
+  );
+
+  const renameProject = useCallback(
+    async (setId, rawName) => {
+      const id = String(setId ?? '').trim();
+      const plan = planRenameProject(loadedSetsRef.current, id, rawName);
+      if (!plan.ok) {
+        return {
+          ok: false,
+          reason: plan.reason,
+          message: RENAME_FAILURE_MESSAGE[plan.reason],
+        };
+      }
+      if (plan.unchanged) return { ok: true };
+
+      const ok = await persistProjectSets(plan.next);
+      return ok
+        ? { ok: true, label: plan.label }
+        : { ok: false, reason: 'cloud_save_failed' };
+    },
+    [persistProjectSets],
+  );
+
+  const duplicateProject = useCallback(
+    async (setId) => {
+      const id = String(setId ?? '').trim();
+      const plan = planDuplicateProject(
+        loadedSetsRef.current,
+        id,
+        uid.trim(),
+        email,
+      );
+      if (!plan.ok) {
+        return {
+          ok: false,
+          reason: plan.reason,
+          message:
+            plan.message ?? DUPLICATE_FAILURE_MESSAGE[plan.reason],
+        };
+      }
+
+      const ok = await persistProjectSets(plan.next, plan.newSetId);
+      return ok
+        ? { ok: true, newSetId: plan.newSetId, label: plan.label }
+        : { ok: false, reason: 'cloud_save_failed' };
+    },
+    [persistProjectSets, uid, email],
+  );
+
+  const deleteProject = useCallback(
+    async (setId) => {
+      const id = String(setId ?? '').trim();
+      const plan = planDeleteProject(
+        loadedSetsRef.current,
+        activeSetIdRef.current,
+        id,
+      );
+      if (!plan.ok) {
+        return {
+          ok: false,
+          reason: plan.reason,
+          message: DELETE_FAILURE_MESSAGE[plan.reason],
+        };
+      }
+
+      const ok = await persistProjectSets(plan.next, plan.nextActiveId);
+      return ok
+        ? { ok: true, label: plan.label }
+        : { ok: false, reason: 'cloud_save_failed' };
+    },
+    [persistProjectSets],
   );
 
   const updateProjectMeta = useCallback(
     async (setId, patch) => {
-      const trimmedUid = uid.trim();
       const id = String(setId ?? '').trim();
       if (!id) return false;
 
@@ -198,11 +272,8 @@ export function useMyPageProjects(uid = '', email = '') {
 
       const current = sets[index];
       const nextProjectContext =
-        patch.projectContext !== undefined ||
-        patch.proofRevision !== undefined ||
-        patch.formatLabel !== undefined
+        patch.proofRevision !== undefined || patch.formatLabel !== undefined
           ? mergeProjectContext(current.projectContext, {
-              ...(patch.projectContext ?? {}),
               ...(patch.proofRevision !== undefined
                 ? { proofRevision: patch.proofRevision }
                 : {}),
@@ -220,28 +291,10 @@ export function useMyPageProjects(uid = '', email = '') {
           : {}),
       });
       const nextSets = sets.map((set, i) => (i === index ? nextSet : set));
-      loadedSetsRef.current = nextSets;
-      saveRuleSets(nextSets, trimmedUid);
-
-      const saved = nextSets.filter((s) => Boolean(s.savedAt));
-      setProjects(saved);
-      setSavedCount(countSavedCriteriaPresets(nextSets));
-
-      if (trimmedUid && isRuleSetsCloudEnabled()) {
-        try {
-          await saveRuleSetsCloud(
-            trimmedUid,
-            nextSets,
-            activeSetIdRef.current,
-          );
-        } catch (e) {
-          console.warn('기준 클라우드 저장 실패 (태그·메모)', e);
-          return false;
-        }
-      }
-      return true;
+      const ok = await persistProjectSets(nextSets);
+      return ok;
     },
-    [uid],
+    [persistProjectSets],
   );
 
   const exempt = isCriteriaPresetLimitExempt(uid, email);
@@ -255,8 +308,10 @@ export function useMyPageProjects(uid = '', email = '') {
     activeSetId,
     loading,
     selectProject,
+    renameProject,
+    duplicateProject,
+    deleteProject,
     updateProjectMeta,
-    flushProjectsSaveAsync,
     savedCount,
     maxSlots,
     exempt,

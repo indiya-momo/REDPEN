@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   MAX_PROJECT_TAGS,
   buildProjectContextSnapshot,
+  buildProjectContextWorkPatch,
   mergeProjectContext,
   normalizeProjectContext,
   normalizeProjectMemo,
@@ -89,6 +90,15 @@ describe('normalizeProjectContext', () => {
       pdfLinked: true,
     });
     expect(buildProjectContextSnapshot({ pdfFileName: '', pdfPageCount: 0 })).toBeUndefined();
+  });
+
+  it('buildProjectContextWorkPatch는 PDF 없을 때 검수 건수만 반환한다', () => {
+    expect(
+      buildProjectContextWorkPatch({
+        spellingCheckDone: true,
+        spellingFindingCount: 4,
+      }),
+    ).toEqual({ lastSpellingFindingCount: 4 });
   });
 
   it('mergeProjectContext는 기존 교차·판형을 유지한다', () => {
