@@ -74,7 +74,6 @@ import TooltipGuide from './TooltipGuide.jsx';
  *   firstPageSingle?: boolean,
  *   onFirstPageSingleChange?: (v: boolean) => void,
  *   onCalibrateFromInput?: (raw: string, isSpread: boolean) => void,
- *   onClearPrintedPageOffset?: () => void,
  *   onRunTocCheck?: () => void | Promise<void>,
  *   hasPdf?: boolean,
  *   isProcessing?: boolean,
@@ -107,7 +106,6 @@ export default function ConsistencyPanel({
   firstPageSingle = true,
   onFirstPageSingleChange = () => {},
   onCalibrateFromInput = () => {},
-  onClearPrintedPageOffset = () => {},
   onRunTocCheck = () => {},
   hasPdf = false,
   isProcessing = false,
@@ -457,7 +455,6 @@ export default function ConsistencyPanel({
           firstPageSingle={firstPageSingle}
           onFirstPageSingleChange={onFirstPageSingleChange}
           onCalibrateFromInput={onCalibrateFromInput}
-          onClearPrintedPageOffset={onClearPrintedPageOffset}
           onRunCheck={onRunTocCheck}
           hasPdf={hasPdf}
           isProcessing={isProcessing}

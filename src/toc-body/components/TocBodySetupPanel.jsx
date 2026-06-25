@@ -20,7 +20,6 @@ import { hasTocBodyEntries, parseTocBodyEntries } from '../lib/tocBodyCheck.js';
  *   firstPageSingle?: boolean,
  *   onFirstPageSingleChange?: (v: boolean) => void,
  *   onCalibrateFromInput?: (raw: string, isSpread: boolean) => void,
- *   onClearPrintedPageOffset?: () => void,
  *   onRunCheck: () => void | Promise<void>,
  *   hasPdf?: boolean,
  *   isProcessing?: boolean,
@@ -42,7 +41,6 @@ export default function TocBodySetupPanel({
   firstPageSingle = true,
   onFirstPageSingleChange = () => {},
   onCalibrateFromInput = () => {},
-  onClearPrintedPageOffset = () => {},
   onRunCheck,
   hasPdf = false,
   isProcessing = false,
@@ -138,7 +136,6 @@ export default function TocBodySetupPanel({
             firstPageSingle={firstPageSingle}
             onFirstPageSingleChange={onFirstPageSingleChange}
             onCalibrateFromInput={onCalibrateFromInput}
-            onClear={onClearPrintedPageOffset}
           />
           {hasPdf && !printedPagesActive ? (
             <p className="hint consistency-toc-section__tip">

@@ -86,7 +86,7 @@ export default function AppDialog({
             <>
               <button
                 type="button"
-                className="btn-run app-dialog__cancel"
+                className="app-dialog__cancel"
                 onClick={() => onCancel?.()}
               >
                 {cancelLabel}

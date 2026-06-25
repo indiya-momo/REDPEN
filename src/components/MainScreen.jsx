@@ -1086,7 +1086,7 @@ export default function MainScreen({
               원고 페이지 번호(예: 50-51)을 넣고
               <br />
               체크박스를 확인 후{' '}
-              <span className="tooltip-guide__calibrate-btn-look">보정</span>
+              <span className="tooltip-guide__calibrate-btn-look">확인</span>
               을 눌러보라냥
             </>
           }
@@ -1110,7 +1110,6 @@ export default function MainScreen({
               onCalibratePress={() =>
                 workGuide.dismiss(WORK_GUIDE_KEYS.PDF_OPENED)
               }
-              onClear={pageDisplay.clearCalibration}
             />
           </span>
         </TooltipGuide>
@@ -1132,7 +1131,6 @@ export default function MainScreen({
           onCalibratePress={() =>
             workGuide.dismiss(WORK_GUIDE_KEYS.PDF_OPENED)
           }
-          onClear={pageDisplay.clearCalibration}
         />
       )}
     </div>
@@ -1616,7 +1614,6 @@ export default function MainScreen({
                   onCalibratePress={() =>
                     workGuide.dismiss(WORK_GUIDE_KEYS.PDF_OPENED)
                   }
-                  onClear={pageDisplay.clearCalibration}
                 />
               </div>
             ) : null}
@@ -1767,7 +1764,6 @@ export default function MainScreen({
                   firstPageSingle={pageDisplay.firstPageSingle}
                   onFirstPageSingleChange={pageDisplay.setFirstPageSingle}
                   onCalibrateFromInput={pageDisplay.calibrateFromInput}
-                  onClearPrintedPageOffset={pageDisplay.clearCalibration}
                   onRunTocCheck={
                     tocBodyCheckEnabled
                       ? async () => {

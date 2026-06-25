@@ -45,11 +45,12 @@ export function formatConsistencyResultsSummaryLine({
   auxiliaryWithFindings,
   totalFindings,
 }) {
-  return (
+  const line1 =
     `일관성 찾기${formatCategoryFindingCount(literalWithFindings)}, ` +
     `통일형 찾기${formatCategoryFindingCount(unifyWithFindings)}, ` +
-    `공통 문자열 찾기${formatCategoryFindingCount(commonStringWithFindings)}, ` +
+    `공통 문자열 찾기${formatCategoryFindingCount(commonStringWithFindings)}`;
+  const line2 =
     `${AUXILIARY_VERB_FEATURE_LABEL}${formatCategoryFindingCount(auxiliaryWithFindings)} ` +
-    `전체 발견 ${formatTotalFindingsToken(totalFindings)}`
-  );
+    `전체 발견 ${formatTotalFindingsToken(totalFindings)}`;
+  return `${line1}\n${line2}`;
 }
