@@ -220,6 +220,9 @@ function validateGroupItem(item, itemPath, issues, options = {}) {
   if (item.displayLabel !== undefined && typeof item.displayLabel !== 'string') {
     pushIssue(issues, `${itemPath}.displayLabel`, 'must be a string');
   }
+  if (item.groupLabel !== undefined && typeof item.groupLabel !== 'string') {
+    pushIssue(issues, `${itemPath}.groupLabel`, 'must be a string');
+  }
   if (item.tip !== undefined && typeof item.tip !== 'string') {
     pushIssue(issues, `${itemPath}.tip`, 'must be a string');
   }
@@ -279,6 +282,21 @@ export function validateGroupedRulesDoc(data, label, options = {}) {
 
     if (group.tip !== undefined && typeof group.tip !== 'string') {
       pushIssue(issues, `${groupPath}.tip`, 'must be a string');
+    }
+
+    if (group.title !== undefined && typeof group.title !== 'string') {
+      pushIssue(issues, `${groupPath}.title`, 'must be a string');
+    }
+
+    if (
+      group.hideGroupTitle !== undefined &&
+      typeof group.hideGroupTitle !== 'boolean'
+    ) {
+      pushIssue(issues, `${groupPath}.hideGroupTitle`, 'must be a boolean');
+    }
+
+    if (group.tipInline !== undefined && typeof group.tipInline !== 'boolean') {
+      pushIssue(issues, `${groupPath}.tipInline`, 'must be a boolean');
     }
 
     if (group.bonVerbAllow !== undefined) {

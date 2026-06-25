@@ -122,7 +122,6 @@
 .panel-left .result-card-tip-inline,
 .panel-left .result-card--caution .result-card-tip-inline,
 .panel-left .result-card--builtin .result-card-tip-inline,
-.panel-left .criteria-summary-note,
 .panel-left .caution-tip-inline,
 .panel-left .caution-group-tip,
 .panel-left .builtin-rule-tip-inline,
@@ -1938,18 +1937,8 @@
   border-radius: 0;
   min-height: 2.35rem;
   padding-block: 10px;
+  gap: var(--criteria-summary-gap, calc(8px * var(--panel-ui-scale, 1)));
   align-items: center;
-}
-
-.builtin-spelling-resize-body .caution-checklist-summary .details-chevron,
-.builtin-spelling-resize-body .builtin-spelling-summary .details-chevron {
-  align-self: center;
-  flex-shrink: 0;
-  transform: translateY(0.08em) rotate(-45deg);
-}
-
-.builtin-spelling-resize-body details[open] > summary .details-chevron {
-  transform: translateY(-0.04em) rotate(45deg);
 }
 
 .builtin-spelling-resize-body .caution-checklist-select-all,
@@ -1958,13 +1947,27 @@
   align-items: center;
   justify-content: center;
   align-self: center;
-  min-height: 15px;
+  flex-shrink: 0;
+  width: var(--criteria-checkbox-size, 15px);
+  height: var(--criteria-checkbox-size, 15px);
+  line-height: 0;
 }
 
 .builtin-spelling-resize-body .caution-checklist-select-all input,
-.builtin-spelling-resize-body .builtin-spelling-select-all input {
+.builtin-spelling-resize-body .builtin-spelling-select-all input,
+.builtin-spelling-resize-body .builtin-rule-list--guide .builtin-rule-row > input[type='checkbox'] {
   display: block;
   margin: 0;
+  width: var(--criteria-checkbox-size, 15px);
+  height: var(--criteria-checkbox-size, 15px);
+}
+
+.builtin-spelling-resize-body .caution-rule-bundle-body .caution-chip > input[type='checkbox'],
+.builtin-spelling-resize-body .builtin-rule-bundle-body .builtin-rule-row > input[type='checkbox'] {
+  display: block;
+  margin: 0;
+  width: var(--criteria-item-checkbox-size, calc(var(--criteria-checkbox-size, 15px) * 0.85));
+  height: var(--criteria-item-checkbox-size, calc(var(--criteria-checkbox-size, 15px) * 0.85));
 }
 
 .builtin-spelling-resize-body .caution-checklist-summary-title,
@@ -1995,6 +1998,199 @@
 .builtin-spelling-resize-body .builtin-spelling-details[open] .builtin-rule-list {
   margin: 0;
   padding-bottom: 10px;
+}
+
+/* 맞춤법 quota — 묶음 아코디언 (dividerLabel) */
+.builtin-spelling-resize-body .builtin-rule-list--bundles {
+  list-style: none;
+  margin: 0;
+  padding: var(--panel-gap-section-list) var(--criteria-pad-inline, 10px) 10px;
+  display: flex;
+  flex-direction: column;
+  gap: calc(6px * var(--panel-ui-scale));
+}
+
+.builtin-spelling-resize-body .builtin-rule-bundle-item {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.builtin-spelling-resize-body .builtin-rule-bundle {
+  margin: 0;
+  border: none;
+  border-radius: var(--radius-ui);
+}
+
+.builtin-spelling-resize-body .builtin-rule-bundle-summary {
+  display: flex;
+  align-items: center;
+  gap: var(--criteria-summary-gap, calc(8px * var(--panel-ui-scale, 1)));
+  min-height: 2.35rem;
+  padding-block: calc(8px * var(--panel-ui-scale, 1));
+  padding-inline-start: var(--criteria-summary-rail, var(--criteria-chevron-inset));
+  padding-inline-end: calc(10px * var(--panel-ui-scale));
+  box-sizing: border-box;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+  border-radius: var(--radius-ui);
+  background: transparent;
+  transition: background 0.15s ease;
+  font-size: 85%;
+}
+
+.builtin-spelling-resize-body .builtin-rule-bundle-summary::-webkit-details-marker {
+  display: none;
+}
+
+.builtin-spelling-resize-body .builtin-rule-bundle-summary:hover {
+  background: var(--panel-accordion-bg);
+}
+
+.builtin-spelling-resize-body .builtin-rule-bundle[open] > .builtin-rule-bundle-summary {
+  background: var(--panel-accordion-bg-open);
+}
+
+.builtin-spelling-resize-body .builtin-rule-bundle[open] > .builtin-rule-bundle-summary:hover {
+  background: color-mix(in srgb, var(--panel-accordion-bg-open) 72%, #fff);
+}
+
+.builtin-spelling-resize-body .builtin-rule-bundle-icon {
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.builtin-spelling-resize-body .builtin-rule-bundle-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-weight: 600;
+  color: var(--c-ink);
+  line-height: 1.25;
+}
+
+.builtin-spelling-resize-body .builtin-rule-bundle-meta {
+  flex-shrink: 0;
+  margin-left: auto;
+  color: var(--c-soft);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.builtin-spelling-resize-body .builtin-rule-bundle-body {
+  padding: calc(4px * var(--panel-ui-scale)) calc(10px * var(--panel-ui-scale)) 10px
+    calc(2 * var(--criteria-summary-rail, var(--criteria-chevron-inset)));
+  border-top: none;
+  background: transparent;
+}
+
+.panel-left .builtin-spelling-rules-scroll .builtin-rule-bundle-body .builtin-rule-group {
+  padding-left: 0;
+}
+
+.panel-left .builtin-spelling-rules-scroll .builtin-rule-list--bundles .builtin-rule-entry-wrap {
+  width: 100%;
+}
+
+/* 편집자 검토 — 그룹 묶음 아코디언 (맞춤법 quota와 동일 패턴) */
+.builtin-spelling-resize-body .caution-checklist--bundles {
+  list-style: none;
+  margin: 0;
+  padding: var(--panel-gap-section-list) var(--criteria-pad-inline, 10px) 10px;
+  display: flex;
+  flex-direction: column;
+  gap: calc(6px * var(--panel-ui-scale));
+}
+
+.builtin-spelling-resize-body .caution-rule-bundle-item {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.builtin-spelling-resize-body .caution-rule-bundle {
+  margin: 0;
+  border: none;
+  border-radius: var(--radius-ui);
+}
+
+.builtin-spelling-resize-body .caution-rule-bundle-summary {
+  display: flex;
+  align-items: center;
+  gap: var(--criteria-summary-gap, calc(8px * var(--panel-ui-scale, 1)));
+  min-height: 2.35rem;
+  padding-block: calc(8px * var(--panel-ui-scale, 1));
+  padding-inline-start: var(--criteria-summary-rail, var(--criteria-chevron-inset));
+  padding-inline-end: calc(10px * var(--panel-ui-scale));
+  box-sizing: border-box;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+  border-radius: var(--radius-ui);
+  background: transparent;
+  transition: background 0.15s ease;
+  font-size: 85%;
+}
+
+.builtin-spelling-resize-body .caution-rule-bundle-summary::-webkit-details-marker {
+  display: none;
+}
+
+.builtin-spelling-resize-body .caution-rule-bundle-summary:hover {
+  background: var(--panel-accordion-bg);
+}
+
+.builtin-spelling-resize-body .caution-rule-bundle[open] > .caution-rule-bundle-summary {
+  background: var(--panel-accordion-bg-open);
+}
+
+.builtin-spelling-resize-body .caution-rule-bundle[open] > .caution-rule-bundle-summary:hover {
+  background: color-mix(in srgb, var(--panel-accordion-bg-open) 72%, #fff);
+}
+
+.builtin-spelling-resize-body .caution-rule-bundle-icon {
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.builtin-spelling-resize-body .caution-rule-bundle-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-weight: 600;
+  color: var(--c-ink);
+  line-height: 1.25;
+}
+
+.builtin-spelling-resize-body .caution-rule-bundle-meta {
+  flex-shrink: 0;
+  margin-left: auto;
+  color: var(--c-soft);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.builtin-spelling-resize-body .caution-rule-bundle-body {
+  padding: calc(4px * var(--panel-ui-scale)) calc(10px * var(--panel-ui-scale)) 10px
+    calc(2 * var(--criteria-summary-rail, var(--criteria-chevron-inset)));
+  border-top: none;
+  background: transparent;
+}
+
+.panel-left .caution-rule-bundle-body .caution-group-items {
+  padding-left: 0;
+  display: grid;
+  width: 100%;
+  min-width: 0;
+}
+
+.panel-left .caution-rule-bundle-body .caution-chip-entry-wrap {
+  width: 100%;
+  min-width: 0;
+  justify-self: stretch;
+}
+
+.builtin-spelling-resize-body .builtin-spelling-details[open] .builtin-rule-list--guide {
+  padding-bottom: 0;
 }
 
 .custom-scrollbar {
@@ -2412,6 +2608,17 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  --criteria-pad-inline: 14px;
+  --criteria-checkbox-size: 15px;
+  --criteria-summary-gap: 8px;
+  --criteria-summary-rail: calc(
+    var(--criteria-checkbox-size) + var(--criteria-summary-gap)
+  );
+  --criteria-item-checkbox-size: calc(var(--criteria-checkbox-size) * 0.85);
+  /* 1단 체크박스 왼쪽 = pad + chevron + gap */
+  --criteria-check-col-start: calc(
+    var(--criteria-pad-inline) + var(--criteria-summary-rail)
+  );
   border-radius: var(--radius-ui-sm);
   overflow: hidden;
   border: 1px solid var(--panel-border-soft, var(--panel-caution-border));
@@ -2426,6 +2633,8 @@
   box-sizing: border-box;
   margin: 0;
   border-radius: 0;
+  gap: var(--criteria-summary-gap, 8px);
+  padding: 8px var(--criteria-pad-inline, 14px);
 }
 
 .consistency-section-box[data-work-guide-step='auxiliary-box']
@@ -2442,22 +2651,55 @@
 
 .consistency-section-box[data-work-guide-step='auxiliary-box'] .auxiliary-checklist-intro {
   margin: 4px 0 8px;
-  padding: 0 14px;
+  padding-inline: var(--criteria-check-col-start, calc(14px + 23px))
+    var(--criteria-pad-inline, 14px);
   font-size: 0.8125rem;
   line-height: 1.5;
   color: var(--color-text-muted);
+  white-space: normal;
+  --consistency-example-font-size: calc(var(--panel-guide-font-size, 0.828rem) * 0.9);
+  --consistency-example-line-height: 1.45;
+}
+
+.consistency-section-box[data-work-guide-step='auxiliary-box']
+  .auxiliary-checklist-intro
+  .consistency-hint-example {
+  vertical-align: baseline;
+}
+
+.consistency-section-box[data-work-guide-step='auxiliary-box']
+  .auxiliary-checklist-intro
+  .consistency-hint-example,
+.consistency-section-box[data-work-guide-step='auxiliary-box']
+  .auxiliary-checklist-intro
+  .consistency-hint-example-body {
+  color: var(--c-ink);
+}
+
+.consistency-section-box[data-work-guide-step='auxiliary-box']
+  .auxiliary-checklist-intro
+  .consistency-hint-badge {
+  margin-inline-end: 0.45em;
 }
 
 .consistency-section-box[data-work-guide-step='auxiliary-box']
   .caution-checklist-details[open]
   .auxiliary-checklist {
   margin-top: 0;
-  padding: var(--panel-gap-section-list, 10px) 14px 10px;
+  padding-block: var(--panel-gap-section-list, 10px) 10px;
+  padding-inline: var(--criteria-check-col-start, calc(14px + 23px))
+    var(--criteria-pad-inline, 14px);
   box-sizing: border-box;
 }
 
 .consistency-section-box[data-work-guide-step='auxiliary-box'] .auxiliary-chip {
+  width: 100%;
+  max-width: 100%;
   font-size: 0.8rem;
+  --auxiliary-chip-checkbox: var(
+    --criteria-item-checkbox-size,
+    calc(var(--criteria-checkbox-size, 15px) * 0.85)
+  );
 }
 
 .consistency-section-box[data-work-guide-step='auxiliary-box'] .auxiliary-chip .find {
@@ -2877,11 +3119,6 @@
   color: #fff;
 }
 
-.consistency-section-box[data-work-guide-step='auxiliary-box'] .auxiliary-chip {
-  width: 100%;
-  max-width: 100%;
-}
-
 .consistency-section-box .rule-form--boxed {
   padding: 0;
   margin: 0;
@@ -3197,6 +3434,12 @@
 .panel-left .builtin-spelling-details {
   --criteria-pad-inline: calc(10px * var(--panel-ui-scale));
   --criteria-checkbox-size: calc(15px * var(--panel-ui-scale));
+  --criteria-summary-gap: calc(8px * var(--panel-ui-scale));
+  --criteria-summary-rail: calc(
+    var(--criteria-checkbox-size) + var(--criteria-summary-gap)
+  );
+  --criteria-item-checkbox-size: calc(var(--criteria-checkbox-size) * 0.85);
+  --criteria-chevron-inset: var(--criteria-summary-rail);
   font-size: calc(1.05rem * var(--panel-ui-scale));
   margin: 0 0 calc(10px * var(--panel-ui-scale));
   padding: 0 0 calc(10px * var(--panel-ui-scale));
@@ -3241,7 +3484,7 @@
 
 .panel-left .caution-checklist-summary,
 .panel-left .builtin-spelling-summary {
-  gap: calc(8px * var(--panel-ui-scale));
+  gap: var(--criteria-summary-gap, calc(8px * var(--panel-ui-scale, 1)));
   padding: calc(8px * var(--panel-ui-scale)) var(--criteria-pad-inline, 10px);
   align-items: center;
   line-height: 1.2;
@@ -3253,6 +3496,9 @@
   align-items: center;
   justify-content: center;
   align-self: center;
+  flex-shrink: 0;
+  width: var(--criteria-checkbox-size, 15px);
+  height: var(--criteria-checkbox-size, 15px);
   line-height: 0;
 }
 
@@ -3261,6 +3507,16 @@
 .panel-left .builtin-rule-row > input[type='checkbox'] {
   width: var(--criteria-checkbox-size, 15px);
   height: var(--criteria-checkbox-size, 15px);
+}
+
+.panel-left .caution-rule-bundle-body .caution-chip > input[type='checkbox'],
+.panel-left .builtin-rule-bundle-body .builtin-rule-row > input[type='checkbox'],
+.panel-left
+  .consistency-section-box[data-work-guide-step='auxiliary-box']
+  .auxiliary-chip
+  > input[type='checkbox'] {
+  width: var(--criteria-item-checkbox-size, calc(var(--criteria-checkbox-size, 15px) * 0.85));
+  height: var(--criteria-item-checkbox-size, calc(var(--criteria-checkbox-size, 15px) * 0.85));
 }
 
 .panel-left .caution-chip {
@@ -3336,7 +3592,7 @@
 .panel-left .consistency-section-box[data-work-guide-step='auxiliary-box'] .auxiliary-checklist-intro {
   font-size: calc(0.8125rem * var(--panel-ui-scale));
   margin: calc(4px * var(--panel-ui-scale)) 0 calc(8px * var(--panel-ui-scale));
-  padding: 0 14px;
+  padding-inline: var(--criteria-check-col-start) var(--criteria-pad-inline, 14px);
 }
 
 .panel-left .consistency-section-box[data-work-guide-step='auxiliary-box'] .auxiliary-chip {
@@ -3364,20 +3620,31 @@
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
-  --criteria-pad-inline: 14px;
+  --criteria-pad-inline: calc(14px * var(--panel-ui-scale));
+  --criteria-checkbox-size: calc(15px * var(--panel-ui-scale));
+  --criteria-summary-gap: calc(8px * var(--panel-ui-scale));
+  --criteria-summary-rail: calc(
+    var(--criteria-checkbox-size) + var(--criteria-summary-gap)
+  );
+  --criteria-item-checkbox-size: calc(var(--criteria-checkbox-size) * 0.85);
+  --criteria-check-col-start: calc(
+    var(--criteria-pad-inline) + var(--criteria-summary-rail)
+  );
 }
 
 .panel-left
   .consistency-section-box[data-work-guide-step='auxiliary-box']
   .caution-checklist-summary {
-  padding: calc(8px * var(--panel-ui-scale)) 14px;
+  gap: var(--criteria-summary-gap, calc(8px * var(--panel-ui-scale, 1)));
+  padding: calc(8px * var(--panel-ui-scale)) var(--criteria-pad-inline, 14px);
 }
 
 .panel-left
   .consistency-section-box[data-work-guide-step='auxiliary-box']
   .caution-checklist-details[open]
   .auxiliary-checklist {
-  padding: var(--panel-gap-section-list) 14px calc(10px * var(--panel-ui-scale));
+  padding-block: var(--panel-gap-section-list) calc(10px * var(--panel-ui-scale));
+  padding-inline: var(--criteria-check-col-start) var(--criteria-pad-inline, 14px);
   margin: 0;
   box-sizing: border-box;
 }

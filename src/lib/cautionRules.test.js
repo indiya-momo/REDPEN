@@ -3,6 +3,7 @@ import {
   CAUTION_RULES,
   buildCautionCheckRules,
   cautionFindPattern,
+  cautionGroupDisplayLabel,
   cautionHighlightSpan,
   cautionItemTip,
   normalizeMatchMode,
@@ -223,5 +224,47 @@ describe('caution except → excludePhrases', () => {
     const texts = results.flatMap((g) => g.instances.map((i) => i.matchedText));
     expect(texts).toContain('오른정도');
     expect(texts).not.toContain('여름정도');
+  });
+});
+
+describe('cautionGroupDisplayLabel', () => {
+  it('title을 우선 표시한다', () => {
+    expect(
+      cautionGroupDisplayLabel({
+        id: 'josa-uinoun',
+        title: '조사·의존명사',
+        tip: '긴 설명',
+      }),
+    ).toBe('조사·의존명사');
+  });
+
+  it('title이 없으면 짧은 tip을 쓴다', () => {
+    expect(
+      cautionGroupDisplayLabel({
+        id: 'josa-busa',
+        tip: '같이(조사·부사)',
+      }),
+    ).toBe('같이(조사·부사)');
+  });
+
+  it('긴 tip은 group id로 대체한다', () => {
+    expect(
+      cautionGroupDisplayLabel({
+        id: 'uinoun-space',
+        tip: '정도는 그만큼의 분량이나 수준을 뜻하는 의존명사',
+      }),
+    ).toBe('uinoun-space');
+  });
+});
+
+describe('buildCautionCheckRules dividerLabel', () => {
+  it('활성 caution 규칙에 dividerGroup·dividerLabel을 넣는다', () => {
+    const sample = CAUTION_RULES.find((rule) => rule.id === 'josa-uinoun-mankum');
+    expect(sample).toBeTruthy();
+    const enabled = { [sample.id]: true };
+    const rules = buildCautionCheckRules(enabled);
+    expect(rules).toHaveLength(1);
+    expect(rules[0].dividerGroup).toBe('josa-uinoun');
+    expect(rules[0].dividerLabel).toBeTruthy();
   });
 });
