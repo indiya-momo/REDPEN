@@ -4,7 +4,7 @@ export const CAUTION_MATCH_MODES = new Set([
   'any-before',
   'spaced-before',
   'attached-before',
-  'spaced-stem',
+  'stem-list',
   'fixed-phrase',
 ]);
 
