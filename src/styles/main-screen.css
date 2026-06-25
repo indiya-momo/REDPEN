@@ -2074,6 +2074,7 @@
   margin-left: auto;
   color: var(--c-soft);
   white-space: nowrap;
+  font-size: 80%;
   font-variant-numeric: tabular-nums;
 }
 
@@ -2166,6 +2167,7 @@
   margin-left: auto;
   color: var(--c-soft);
   white-space: nowrap;
+  font-size: 80%;
   font-variant-numeric: tabular-nums;
 }
 
