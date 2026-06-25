@@ -20,3 +20,14 @@ export function isSpellingExportEnabled() {
   if (import.meta.env.VITE_FEATURE_SPELLING_EXPORT === 'false') return false;
   return true;
 }
+
+/**
+ * 마이페이지 「나의 프로젝트」 라이브러리(카드·태그·복제 등).
+ * - `npm run dev`: 항상 켜짐
+ * - 프로덕션·Pages 빌드: 기본 꺼짐 (준비 중 UI만 표시)
+ * - 로컬 preview에서 켜려면 `.env`에 `VITE_FEATURE_MYPAGE_PROJECT_HUB=true`
+ */
+export function isMyPageProjectHubEnabled() {
+  if (import.meta.env.DEV) return true;
+  return import.meta.env.VITE_FEATURE_MYPAGE_PROJECT_HUB === 'true';
+}

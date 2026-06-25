@@ -45,6 +45,7 @@ import {
   filterProjectsForLibrary,
 } from '../presentation/projectCardViewModel.js';
 import BadgeCollectionGrid from './BadgeCollectionGrid.jsx';
+import { isMyPageProjectHubEnabled } from '../lib/featureFlags.js';
 import './my-page.css';
 import '../mock/mypagePrototype/mypage-prototype.css';
 
@@ -534,6 +535,34 @@ function ProjectHubSection({ uid, email }) {
   );
 }
 
+function ProjectHubPlaceholderSection() {
+  return (
+    <section
+      className="mypage__card mypage__project-hub mypage__card--disabled"
+      aria-labelledby="mypage-project-hub-title"
+      aria-disabled="true"
+    >
+      <div className="mypage__project-hub-head">
+        <div className="mypage__project-hub-title-row">
+          <h1 id="mypage-project-hub-title" className="mypage__page-title">
+            나의 프로젝트
+          </h1>
+          <span className="mypage__card-soon">작업 중</span>
+        </div>
+      </div>
+      <div className="mypage__empty mypage__empty--disabled">
+        <p className="mypage__empty-title">
+          프로젝트 관리 화면을 준비하고 있습니다.
+        </p>
+        <p className="mypage__empty-desc">
+          지금은 검수 화면에서 프로젝트를 저장·전환할 수 있습니다. 열심히
+          준비하고 있어요 · ฅ•ω•ฅ
+        </p>
+      </div>
+    </section>
+  );
+}
+
 function InquiryPlaceholderCard() {
   return (
     <section
@@ -850,7 +879,11 @@ export default function MyPageWindowScreen({ authSession, authReady }) {
               <MemberBenefitTierBanner quota={quota} authUid={authSession.uid} />
               <MyBenefitsSection quota={quota} />
             </div>
-            <ProjectHubSection uid={authSession.uid} email={quotaEmail} />
+            {isMyPageProjectHubEnabled() ? (
+              <ProjectHubSection uid={authSession.uid} email={quotaEmail} />
+            ) : (
+              <ProjectHubPlaceholderSection />
+            )}
             <div className="mypage__overview-secondary">
               <OverviewBadgePanel
                 badges={badges}
