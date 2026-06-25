@@ -88,6 +88,5 @@ describe('projectCardViewModel helpers', () => {
       { ...sample, id: 'b', tags: ['시리즈 2/5'] },
     ];
     expect(filterProjectsForLibrary(cards, '__series__')).toHaveLength(1);
-    expect(filterProjectsForLibrary(cards, '시리즈')).toHaveLength(1);
   });
 });

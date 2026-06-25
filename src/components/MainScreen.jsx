@@ -51,7 +51,7 @@ import {
   subscribeAuthSession,
 } from '../lib/firebaseAuth.js';
 import { criteriaNameForInput } from '../lib/criteriaName.js';
-import { buildProjectContextSnapshot } from '../lib/projectMeta.js';
+import { buildProjectContextWorkPatch } from '../lib/projectMeta.js';
 import { getUserProfile } from '../lib/userProfileStorage.js';
 import { useUserProfileSync } from '../hooks/useUserProfileSync.js';
 import { WORK_GUIDE_KEYS } from '../lib/workGuideKeys.js';
@@ -639,19 +639,17 @@ export default function MainScreen({
     if (criteriaSavePending) return;
     setCriteriaSavePending(true);
     try {
-      const snapshot = buildProjectContextSnapshot({
+      const patch = buildProjectContextWorkPatch({
         pdfFileName: pdf.pdfFileName,
         pdfPageCount: pdf.pdf?.numPages,
         pdfSizeBytes: pdf.pdfByteLength,
-        lastSpellingFindingCount: ruleCheck.spellingCheckDone
-          ? spellingTabTotalFindings
-          : undefined,
-        lastConsistencyFindingCount: ruleCheck.consistencyCheckDone
-          ? consistencyTabTotalFindings
-          : undefined,
+        spellingCheckDone: ruleCheck.spellingCheckDone,
+        consistencyCheckDone: ruleCheck.consistencyCheckDone,
+        spellingFindingCount: spellingTabTotalFindings,
+        consistencyFindingCount: consistencyTabTotalFindings,
       });
       const result = await onSaveCriteriaPreset(criteriaNameInput, {
-        projectContextSnapshot: snapshot,
+        projectContextSnapshot: patch,
       });
       if (typeof result === 'string' && result) {
         setCriteriaNameInput(criteriaNameForInput(result));
@@ -684,29 +682,16 @@ export default function MainScreen({
     if (!ruleCheck.spellingCheckDone && !consistencyWorkDone) return undefined;
 
     const timer = window.setTimeout(() => {
-      const snapshot = buildProjectContextSnapshot({
+      const patch = buildProjectContextWorkPatch({
         pdfFileName: pdf.pdfFileName,
         pdfPageCount: pdf.pdf?.numPages,
         pdfSizeBytes: pdf.pdfByteLength,
-        lastSpellingFindingCount: ruleCheck.spellingCheckDone
-          ? spellingTabTotalFindings
-          : undefined,
-        lastConsistencyFindingCount: ruleCheck.consistencyCheckDone
-          ? consistencyTabTotalFindings
-          : undefined,
+        spellingCheckDone: ruleCheck.spellingCheckDone,
+        consistencyCheckDone: consistencyWorkDone,
+        spellingFindingCount: spellingTabTotalFindings,
+        consistencyFindingCount: consistencyTabTotalFindings,
       });
-      if (!snapshot) {
-        onTouchActiveProjectContext({
-          lastSpellingFindingCount: ruleCheck.spellingCheckDone
-            ? spellingTabTotalFindings
-            : undefined,
-          lastConsistencyFindingCount: ruleCheck.consistencyCheckDone
-            ? consistencyTabTotalFindings
-            : undefined,
-        });
-        return;
-      }
-      onTouchActiveProjectContext(snapshot);
+      if (patch) onTouchActiveProjectContext(patch);
     }, 800);
 
     return () => window.clearTimeout(timer);

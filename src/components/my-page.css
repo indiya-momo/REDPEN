@@ -317,22 +317,6 @@
   gap: 0.45rem 0.65rem;
 }
 
-.mypage__project-preparing {
-  font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
-  font-size: 0.78rem;
-  font-weight: 600;
-  line-height: 1.35;
-  letter-spacing: -0.02em;
-  color: var(--color-text-muted);
-}
-
-.mypage__project-hub-lead {
-  margin: 0.35rem 0 0;
-  font-size: 0.82rem;
-  line-height: 1.55;
-  color: var(--color-text-muted);
-}
-
 .mypage__project-slot-gauge {
   flex-shrink: 0;
   margin: 0;
@@ -365,133 +349,6 @@
   text-align: center;
 }
 
-.mypage__project-slots {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.85rem;
-}
-
-.mypage__project-card,
-.mypage__project-slot {
-  display: flex;
-  flex-direction: column;
-  gap: 0.55rem;
-  min-height: 9.5rem;
-  padding: 1rem 1.05rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-ui);
-  background: var(--color-surface);
-}
-
-.mypage__project-card {
-  border-color: transparent;
-}
-
-.mypage__project-card--active {
-  border-color: transparent;
-  box-shadow: none;
-}
-
-.mypage__project-card-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.5rem;
-}
-
-.mypage__project-name {
-  margin: 0;
-  font-family: var(--mypage-heading-font);
-  font-size: 0.95rem;
-  font-weight: 700;
-  line-height: 1.35;
-  color: var(--color-text);
-}
-
-.mypage__project-active-badge {
-  flex-shrink: 0;
-  padding: 0.15rem 0.45rem;
-  border-radius: 999px;
-  background: rgba(168, 107, 69, 0.12);
-  color: var(--accent-terracotta-deep);
-  font-size: 0.65rem;
-  font-weight: 700;
-  line-height: 1.4;
-}
-
-.mypage__project-summary {
-  flex: 1 1 auto;
-  margin: 0;
-  font-size: 0.74rem;
-  line-height: 1.55;
-  color: var(--color-text-muted);
-}
-
-.mypage__project-date-badge {
-  flex-shrink: 0;
-  padding: 0.15rem 0.45rem;
-  border-radius: 999px;
-  background: var(--color-surface-overlay);
-  color: var(--color-text-muted);
-  font-size: 0.65rem;
-  font-weight: 700;
-  line-height: 1.4;
-  white-space: nowrap;
-}
-
-.mypage__project-spec {
-  flex: 1 1 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 0.32rem;
-  margin: 0;
-}
-
-.mypage__project-spec-row {
-  display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
-}
-
-.mypage__project-spec-label {
-  font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: var(--color-text);
-}
-
-.mypage__project-spec-value {
-  margin: 0;
-  font-size: 0.74rem;
-  line-height: 1.5;
-  color: var(--color-text-muted);
-  word-break: keep-all;
-}
-
-.mypage__project-load {
-  align-self: flex-start;
-  margin-top: auto;
-  padding: 0.42rem 0.8rem;
-  border: 1px solid var(--color-border-strong);
-  border-radius: var(--radius-ui);
-  background: var(--color-surface-overlay);
-  color: var(--color-text);
-  font: inherit;
-  font-size: 0.76rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition:
-    border-color 0.15s ease,
-    color 0.15s ease,
-    background 0.15s ease;
-}
-
-.mypage__project-load:hover {
-  border-color: var(--accent-terracotta);
-  color: var(--accent-terracotta-deep);
-  background: var(--color-surface);
-}
-
 .mypage__project-slot--empty {
   border-style: dashed;
   background: var(--color-surface-overlay);
@@ -509,22 +366,6 @@
   font-size: 0.76rem;
   line-height: 1.55;
   color: var(--color-text-muted);
-}
-
-.mypage__project-empty {
-  grid-column: 1 / -1;
-  padding: 1.5rem 0.5rem 0.75rem;
-  text-align: center;
-}
-
-.mypage__project-upgrade {
-  margin: 1rem 0 0;
-  padding: 0.75rem 0.9rem;
-  border-radius: var(--radius-ui);
-  background: rgba(168, 107, 69, 0.08);
-  font-size: 0.78rem;
-  line-height: 1.55;
-  color: var(--accent-terracotta-deep);
 }
 
 .mypage__overview-layout .mypage__main-inner,

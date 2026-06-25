@@ -171,3 +171,42 @@ export function buildProjectContextSnapshot(input) {
     pdfLinked: true,
   });
 }
+
+/**
+ * 검수 화면 — PDF 스냅샷 또는 검수 건수만 갱신할 패치.
+ *
+ * @param {{
+ *   pdfFileName?: string | null,
+ *   pdfPageCount?: number,
+ *   pdfSizeBytes?: number | null,
+ *   spellingCheckDone?: boolean,
+ *   consistencyCheckDone?: boolean,
+ *   spellingFindingCount?: number,
+ *   consistencyFindingCount?: number,
+ * }} input
+ * @returns {ProjectContext | undefined}
+ */
+export function buildProjectContextWorkPatch(input) {
+  const snapshot = buildProjectContextSnapshot({
+    pdfFileName: input.pdfFileName,
+    pdfPageCount: input.pdfPageCount,
+    pdfSizeBytes: input.pdfSizeBytes,
+    lastSpellingFindingCount: input.spellingCheckDone
+      ? input.spellingFindingCount
+      : undefined,
+    lastConsistencyFindingCount: input.consistencyCheckDone
+      ? input.consistencyFindingCount
+      : undefined,
+  });
+  if (snapshot) return snapshot;
+
+  /** @type {ProjectContext} */
+  const patch = {};
+  if (input.spellingCheckDone) {
+    patch.lastSpellingFindingCount = input.spellingFindingCount;
+  }
+  if (input.consistencyCheckDone) {
+    patch.lastConsistencyFindingCount = input.consistencyFindingCount;
+  }
+  return Object.keys(patch).length ? normalizeProjectContext(patch) : undefined;
+}

@@ -167,7 +167,7 @@ export const STANDARD_PROJECT_LIBRARY_TAG_FILTERS = [
  */
 export function filterProjectsForLibrary(cards, tagFilter) {
   if (!tagFilter) return cards;
-  if (tagFilter === '__series__' || tagFilter === '시리즈') {
+  if (tagFilter === '__series__') {
     return cards.filter((c) =>
       c.tags.some((tag) => tag.startsWith('시리즈')),
     );
