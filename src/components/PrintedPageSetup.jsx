@@ -17,7 +17,6 @@ import {
  *   onFirstPageSingleChange: (v: boolean) => void,
  *   onCalibrateFromInput: (raw: string, isSpread: boolean) => void,
  *   onCalibratePress?: () => void,
- *   onClear: () => void,
  * }} props
  */
 export default function PrintedPageSetup({
@@ -31,7 +30,6 @@ export default function PrintedPageSetup({
   onFirstPageSingleChange,
   onCalibrateFromInput,
   onCalibratePress,
-  onClear,
 }) {
   const [draft, setDraft] = useState('');
 
@@ -81,7 +79,7 @@ export default function PrintedPageSetup({
             <>
               현재 파일은 <strong>{filePageLabel}</strong>입니다 화면에서 원고의
               실제 페이지 (예: <strong>50-51</strong>)를 입력한 뒤{' '}
-              <strong>보정</strong>을 누르세요.
+              <strong>확인</strong>을 누르세요.
             </>
           )}
         </p>
@@ -126,15 +124,7 @@ export default function PrintedPageSetup({
               className="printed-page-setup__save"
               onClick={submitCalibration}
             >
-              보정
-            </button>
-            <button
-              type="button"
-              className="printed-page-setup__reset"
-              onClick={onClear}
-              disabled={!active}
-            >
-              취소
+              확인
             </button>
           </div>
         </div>

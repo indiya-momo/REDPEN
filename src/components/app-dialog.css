@@ -1,0 +1,201 @@
+.app-dialog {
+  padding: 0;
+  border: none;
+  background: transparent;
+  margin: 0;
+  width: max-content;
+  max-width: calc(100vw - 2rem);
+  max-height: calc(100vh - 2rem);
+  overflow: auto;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.app-dialog:not([open]) {
+  display: none;
+}
+
+.app-dialog::backdrop {
+  background: rgb(28 22 18 / 0.45);
+}
+
+.app-dialog__panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: max-content;
+  max-width: calc(100vw - 2rem);
+  padding: 1.25rem 1.35rem 1.35rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-ui-lg, 12px);
+  background: var(--color-surface-raised);
+  box-shadow: var(--shadow-panel, 0 12px 40px rgb(28 22 18 / 0.12));
+}
+
+.app-dialog__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.app-dialog__title {
+  margin: 0;
+  font-family: var(--font-family-title);
+  font-size: 1.15rem;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--color-text);
+  flex: 1;
+  min-width: 0;
+}
+
+.app-dialog__message {
+  margin: 0;
+  align-self: center;
+  width: max-content;
+  max-width: 100%;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--color-text-secondary);
+  text-align: justify;
+  white-space: pre-wrap;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.app-dialog__message--rich {
+  text-align: center;
+  white-space: normal;
+}
+
+/* 검수 완료 요약 — 좌측 결과 패널 헤더(.panel-left .results-header)와 동일 톤 */
+.app-dialog__results-summary {
+  --dialog-result-ui-scale: 0.9;
+  --dialog-result-pill-muted: rgb(42 33 24 / 6%);
+  --dialog-result-badge-border: color-mix(
+    in srgb,
+    var(--dialog-result-pill-muted) 92%,
+    var(--c-ink) 8%
+  );
+}
+
+.app-dialog__results-summary.results-header {
+  width: max-content;
+  max-width: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  justify-content: center;
+  gap: var(--space-sm) var(--space-md);
+  font-size: calc(0.98rem * var(--dialog-result-ui-scale) * 0.9 * 1.1);
+  font-weight: 800;
+  line-height: 1.35;
+  color: var(--color-text);
+}
+
+.app-dialog__results-summary .results-header__stats {
+  justify-content: center;
+  gap: 0.35em 1.15em;
+  color: var(--color-text);
+  font-weight: 800;
+  line-height: 1;
+}
+
+.app-dialog__results-summary .results-header__stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2em;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.app-dialog__results-summary .results-header-badge {
+  background: var(--dialog-result-pill-muted);
+  color: var(--c-ink);
+  border: 1px solid var(--dialog-result-badge-border);
+  font-size: calc(0.62rem * var(--dialog-result-ui-scale) * 1.32);
+  padding: calc(0.0625rem * var(--dialog-result-ui-scale) * 1.32)
+    calc(var(--space-sm-tight) * var(--dialog-result-ui-scale) * 1.32);
+  line-height: 1.15;
+  box-shadow: none;
+}
+
+.app-dialog__results-summary .results-header__stat-count {
+  font-weight: 800;
+  line-height: 1;
+}
+
+.app-dialog__results-summary .results-header__total-findings {
+  margin-left: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  flex-shrink: 0;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.app-dialog__results-summary .result-findings-count-circle,
+.app-dialog__results-summary .results-header__total-count {
+  min-width: 1.85em;
+  min-height: 1.85em;
+  font-size: calc(0.85rem * var(--dialog-result-ui-scale) * 0.9 * 1.1);
+}
+
+
+.app-dialog__project-name {
+  font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--color-text);
+}
+
+.app-dialog__footer {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  padding-top: 0.15rem;
+  width: 100%;
+}
+
+.app-dialog__footer--confirm {
+  justify-content: stretch;
+}
+
+.app-dialog__footer--confirm .app-dialog__cancel,
+.app-dialog__footer--confirm .app-dialog__confirm {
+  flex: 1;
+  min-width: 0;
+}
+
+.app-dialog__confirm {
+  min-width: 5.5rem;
+}
+
+.app-dialog__cancel {
+  min-width: 5.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 16px;
+  border-radius: var(--radius-ui);
+  font-weight: 600;
+  font-size: 0.875rem;
+  background: #fff;
+  border: 1px solid var(--btn-secondary-border);
+  color: var(--btn-secondary-text);
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.app-dialog__cancel:hover:not(:disabled) {
+  background: #fff;
+  border-color: var(--btn-secondary-hover-border);
+}

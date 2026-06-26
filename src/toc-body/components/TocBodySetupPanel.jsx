@@ -20,7 +20,6 @@ import { hasTocBodyEntries, parseTocBodyEntries } from '../lib/tocBodyCheck.js';
  *   firstPageSingle?: boolean,
  *   onFirstPageSingleChange?: (v: boolean) => void,
  *   onCalibrateFromInput?: (raw: string, isSpread: boolean) => void,
- *   onClearPrintedPageOffset?: () => void,
  *   onRunCheck: () => void | Promise<void>,
  *   hasPdf?: boolean,
  *   isProcessing?: boolean,
@@ -42,7 +41,6 @@ export default function TocBodySetupPanel({
   firstPageSingle = true,
   onFirstPageSingleChange = () => {},
   onCalibrateFromInput = () => {},
-  onClearPrintedPageOffset = () => {},
   onRunCheck,
   hasPdf = false,
   isProcessing = false,
@@ -138,11 +136,10 @@ export default function TocBodySetupPanel({
             firstPageSingle={firstPageSingle}
             onFirstPageSingleChange={onFirstPageSingleChange}
             onCalibrateFromInput={onCalibrateFromInput}
-            onClear={onClearPrintedPageOffset}
           />
           {hasPdf && !printedPagesActive ? (
             <p className="hint consistency-toc-section__tip">
-              맞춤법 검수 검사 결과에서 보정했거나, 위에서 보정하면 목차 검사에도 적용됩니다.
+              맞춤법 검사 결과에서 보정했거나, 위에서 보정하면 목차 검사에도 적용됩니다.
               {firstTocPage ? (
                 <>
                   {' '}
@@ -235,7 +232,7 @@ export default function TocBodySetupPanel({
       </div>
       {hasPdf && hasTocBodyEntries(tocBodyText) && !printedPagesActive ? (
         <p className="hint consistency-toc-section__run-hint">
-          맞춤법 검수에서 파일 - 원고 페이지 맞추기를 하거나, 위에서 맞춘 뒤 검수하세요.
+          맞춤법 탭에서 파일 - 원고 페이지 맞추기를 하거나, 위에서 맞춘 뒤 검수하세요.
         </p>
       ) : null}
     </section>

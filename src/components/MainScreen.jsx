@@ -26,6 +26,8 @@ import TooltipGuide from './TooltipGuide.jsx';
 import PrintedPageSetup from './PrintedPageSetup.jsx';
 import PdfCenterStage from './PdfCenterStage.jsx';
 import CriteriaSaveModal from './CriteriaSaveModal.jsx';
+import { showAppConfirm } from '../lib/appDialog.js';
+import { formatProjectDialogLabel } from '../lib/projectDialogLabel.js';
 import TocBodyResultsPanel from '../toc-body/components/TocBodyResultsPanel.jsx';
 import { useTocBodyCheck } from '../toc-body/hooks/useTocBodyCheck.js';
 import { useTocBodyHighlights } from '../toc-body/hooks/useTocBodyHighlights.js';
@@ -67,6 +69,7 @@ import {
 } from '../lib/activeRuleCount.js';
 import { countConsistencyCheckActiveRules, countConsistencyGroupsWithFindings } from '../lib/consistencyCheckConfirm.js';
 import { countSpellingGroupsWithFindings } from '../lib/spellingCheckConfirm.js';
+import { LITERAL_FIND_FEATURE_LABEL } from '../lib/consistencyRuleLimit.js';
 import { formatRuleSetSavedDate } from '../lib/ruleSetsStorage.js';
 import {
   buildTabEntries,
@@ -224,7 +227,7 @@ const WORK_GUIDE_2_ALIGN_CHAIN = [
  *     name: string,
  *     options?: { projectContextSnapshot?: import('../lib/projectMeta.js').ProjectContext },
  *   ) => false | Promise<false | string>,
- *   onDeleteCriteriaPreset: (setId: string) => boolean,
+ *   onDeleteCriteriaPreset: (setId: string) => boolean | Promise<boolean>,
  *   onTouchActiveProjectContext?: (
  *     patch: Partial<import('../lib/projectMeta.js').ProjectContext>,
  *   ) => void,
@@ -328,25 +331,27 @@ export default function MainScreen({
     return () => document.removeEventListener('pointerdown', handlePointerDown);
   }, [criteriaPickerOpen]);
 
-  function handleDeleteCriteria(setId) {
-    const deleted = onDeleteCriteriaPreset(setId);
+  async function handleDeleteCriteria(setId) {
+    const deleted = await onDeleteCriteriaPreset(setId);
     if (!deleted) return;
     if (savedRuleSets.length <= 1) {
       setCriteriaPickerOpen(false);
     }
   }
 
-  function selectSavedCriteria(set) {
+  async function selectSavedCriteria(set) {
     if (set.id === activeSetId) {
       setCriteriaNameInput(criteriaNameForInput(set.name));
       setCriteriaPickerOpen(false);
       return;
     }
-    const label = (set.name || '이름 없는 기준').trim();
+    const label = formatProjectDialogLabel(set.name);
     if (
-      !window.confirm(
-        `「${label}」 프로젝트로 전환할까요?\n\n원고와 검사 결과는 초기화됩니다.`,
-      )
+      !(await showAppConfirm({
+        title: '프로젝트 전환',
+        message:
+          `${label} 프로젝트로 전환할까요?\n\n원고와 검사 결과는 초기화됩니다.`,
+      }))
     ) {
       return;
     }
@@ -488,7 +493,7 @@ export default function MainScreen({
     if (checkQuotaBlocked) {
       return workTab === 'spelling'
         ? '오늘 맞춤법 검수 한도를 모두 사용했습니다.'
-        : '오늘 일관성 검수 한도를 모두 사용했습니다.';
+        : '오늘 표기 통일 검수 한도를 모두 사용했습니다.';
     }
     return '';
   }, [
@@ -985,7 +990,7 @@ export default function MainScreen({
     if (!spellingExportEnabled) return;
     const filename = buildProofreadExportFilename(
       pdf.pdfFileName,
-      '일관성_검수',
+      '표기통일_검수',
     );
 
     assertBetaDailyExportOrAlert(authUid, {
@@ -1082,8 +1087,12 @@ export default function MainScreen({
               <br />
               원고 페이지 번호(예: 50-51)을 넣고
               <br />
-              체크박스를 확인 후{' '}
-              <span className="tooltip-guide__calibrate-btn-look">보정</span>
+              <span
+                className="tooltip-guide__checkbox-look"
+                aria-hidden
+              />
+              에 체크하고{' '}
+              <span className="tooltip-guide__calibrate-btn-look">확인</span>
               을 눌러보라냥
             </>
           }
@@ -1107,7 +1116,6 @@ export default function MainScreen({
               onCalibratePress={() =>
                 workGuide.dismiss(WORK_GUIDE_KEYS.PDF_OPENED)
               }
-              onClear={pageDisplay.clearCalibration}
             />
           </span>
         </TooltipGuide>
@@ -1129,7 +1137,6 @@ export default function MainScreen({
           onCalibratePress={() =>
             workGuide.dismiss(WORK_GUIDE_KEYS.PDF_OPENED)
           }
-          onClear={pageDisplay.clearCalibration}
         />
       )}
     </div>
@@ -1261,9 +1268,9 @@ export default function MainScreen({
           <span className="pdf-work-pane__greeting-name">{greetingName}</span>
           님{' '}
           <span className="pdf-work-pane__greeting-criteria">
-            [{activeSavedRuleSetNameDisplay}]
-          </span>
-          프로젝트를 진행하고 있습니다
+            {formatProjectDialogLabel(activeSavedRuleSetNameDisplay)}
+          </span>{' '}
+          프로젝트를 진행중입니다
         </>
       ) : greetingName ? (
         <>
@@ -1276,9 +1283,15 @@ export default function MainScreen({
     </>
   );
 
+  const greetingClassName = `pdf-work-pane__greeting${
+    greetingName && activeSavedRuleSetNameDisplay
+      ? ' pdf-work-pane__greeting--active-project'
+      : ''
+  }`;
+
   const greetingAnchor = (
     <span className="work-guide-anchor work-guide-anchor--greeting">
-      <p className="pdf-work-pane__greeting">{greetingInner}</p>
+      <p className={greetingClassName}>{greetingInner}</p>
     </span>
   );
 
@@ -1326,12 +1339,12 @@ export default function MainScreen({
       pinned={workGuide.pinAll}
       message={
         <>
-          <span className="tooltip-guide__work-tab-chip tooltip-guide__work-tab-chip--consistency">
-            일관성 검수
+          <span className="tooltip-guide__feature-badge">
+            {LITERAL_FIND_FEATURE_LABEL}
           </span>
           에서는
           <br />
-          한 번에 여러 요소를 검색할 수 있는데
+          한 번에 여러 항목을 검색할 수 있는데
           <br />
           하나씩 찾기 힘들어서 만들었다냥!!
         </>
@@ -1343,7 +1356,7 @@ export default function MainScreen({
       {greetingAnchor}
     </TooltipGuide>
   ) : (
-    <p className="pdf-work-pane__greeting">{greetingInner}</p>
+    <p className={greetingClassName}>{greetingInner}</p>
   );
 
   return (
@@ -1501,14 +1514,14 @@ export default function MainScreen({
               className={`work-tab work-tab--spelling ${workTab === 'spelling' ? 'active' : ''}`}
               onClick={() => switchTab('spelling')}
             >
-              맞춤법 검수
+              맞춤법
             </button>
             <button
               type="button"
               className={`work-tab work-tab--consistency ${workTab === 'consistency' ? 'active' : ''}`}
               onClick={() => switchTab('consistency')}
             >
-              일관성 검수
+              표기 통일
             </button>
           </nav>
         </header>
@@ -1580,7 +1593,7 @@ export default function MainScreen({
                 <div className="spelling-tab-layout__run-row-actions spelling-tab-layout__run-row-actions--end">
                   <span className="spelling-tab-layout__criteria-run-wrap">
                     <PanelSectionRunButton
-                      label="일관성+용언 검수"
+                      label="기준 검수"
                       className="panel-section-run-btn--primary"
                       onClick={handleRunConsistencyRulesCheck}
                       disabled={
@@ -1613,7 +1626,6 @@ export default function MainScreen({
                   onCalibratePress={() =>
                     workGuide.dismiss(WORK_GUIDE_KEYS.PDF_OPENED)
                   }
-                  onClear={pageDisplay.clearCalibration}
                 />
               </div>
             ) : null}
@@ -1644,7 +1656,7 @@ export default function MainScreen({
                     ruleCheck.syncSelectionForTab('consistency');
                   }}
                 >
-                  표기 일관성 결과
+                  표기 통일 결과
                 </button>
               </nav>
             ) : null}
@@ -1764,7 +1776,6 @@ export default function MainScreen({
                   firstPageSingle={pageDisplay.firstPageSingle}
                   onFirstPageSingleChange={pageDisplay.setFirstPageSingle}
                   onCalibrateFromInput={pageDisplay.calibrateFromInput}
-                  onClearPrintedPageOffset={pageDisplay.clearCalibration}
                   onRunTocCheck={
                     tocBodyCheckEnabled
                       ? async () => {

@@ -29,6 +29,8 @@ import {
 } from '../lib/analytics.js';
 import {
   countActiveRules,
+  countBuiltInActiveRules,
+  countSpacingReviewActiveRules,
   isOverMaxRules,
   maxRulesExceededMessage,
 } from '../lib/activeRuleCount.js';
@@ -39,10 +41,12 @@ import {
 } from '../lib/consistencyCheckScopes.js';
 import { ensureDefaultAuxiliaryVerbs } from '../lib/defaultAuxiliaryVerbs.js';
 import { AUXILIARY_VERB_FEATURE_LABEL } from '../lib/bonBojoRules.js';
+import { LITERAL_FIND_FEATURE_LABEL } from '../lib/consistencyRuleLimit.js';
 import { assertBetaDailyCheckOrAlert } from '../lib/betaDailyQuota.js';
 import {
   alertConsistencyCheckAfterRun,
   confirmConsistencyCheckBeforeRun,
+  countConsistencyCheckActiveRules,
 } from '../lib/consistencyCheckConfirm.js';
 import {
   alertSpellingCheckAfterRun,
@@ -232,7 +236,7 @@ export function useRuleCheck({
       }
       if (runConsistency && consistencyActiveRules.length === 0) {
         alert(
-          `일관성 찾기·${AUXILIARY_VERB_FEATURE_LABEL}에서 검사할 항목을 등록·선택하세요.`,
+          `${LITERAL_FIND_FEATURE_LABEL}·${AUXILIARY_VERB_FEATURE_LABEL}에서 검사할 항목을 등록·선택하세요.`,
         );
         return;
       }
@@ -375,10 +379,28 @@ export function useRuleCheck({
       setIsProcessing(false);
       setProgress(null);
       if (runSpelling) {
-        alertSpellingCheckAfterRun(scopeResults, findingCount);
+        await alertSpellingCheckAfterRun(scopeResults, findingCount, {
+          cautionSelected:
+            countSpacingReviewActiveRules({ cautionEnabled }) > 0,
+          builtinSelected: countBuiltInActiveRules({ builtInEnabled }) > 0,
+        });
       }
       if (runConsistency) {
-        alertConsistencyCheckAfterRun(scopeResults, findingCount, customRules);
+        const consistencyCriteria = countConsistencyCheckActiveRules(
+          customRules,
+          globalExcludePhrases,
+        );
+        await alertConsistencyCheckAfterRun(
+          scopeResults,
+          findingCount,
+          customRules,
+          {
+            literalSelected: consistencyCriteria.literalActive > 0,
+            unifySelected: consistencyCriteria.unifyActive > 0,
+            commonStringSelected: consistencyCriteria.commonStringActive > 0,
+            auxiliarySelected: consistencyCriteria.auxiliaryActive > 0,
+          },
+        );
       }
       await afterCheckRef.current?.();
     },
@@ -423,7 +445,7 @@ export function useRuleCheck({
         alert(
           subset === 'auxiliary'
             ? `${AUXILIARY_VERB_FEATURE_LABEL}에서 검사할 항목을 선택하세요.`
-            : '일관성 찾기에서 검사할 항목을 등록·선택하세요.',
+            : `${LITERAL_FIND_FEATURE_LABEL}에서 검사할 항목을 등록·선택하세요.`,
         );
         return;
       }

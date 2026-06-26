@@ -1254,10 +1254,14 @@
   font-size: 0.8em;
   line-height: 1;
   vertical-align: middle;
-  margin-inline-end: 0.25em;
+  margin-inline-end: 0;
   -webkit-text-stroke: 0;
   paint-order: normal;
   text-shadow: none;
+}
+
+.welcome-pc__perf-l1-num:not(:first-child) {
+  margin-inline-start: 0.6em;
 }
 
 .welcome-pc__perf-anc {

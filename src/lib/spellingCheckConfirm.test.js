@@ -8,6 +8,7 @@ import {
 } from './spellingCheckConfirm.js';
 import { BUILT_IN_QUOTA_RULES } from './builtInRules.js';
 import { CAUTION_SEARCH_RULES } from './cautionRules.js';
+import { parseBracketTitleMessage } from './appDialog.js';
 
 vi.mock('./checkAuthGate.js', () => ({
   assertLoggedInForCheckOrAlert: () => true,
@@ -44,16 +45,16 @@ describe('confirmSpellingCheckBeforeRun', () => {
 
     await confirmSpellingCheckBeforeRun('uid-1', 'a@b.c', {});
 
-    expect(confirmMock).toHaveBeenCalledWith(
-      formatSpellingCheckConfirmMessage({
+    const msg = formatSpellingCheckConfirmMessage({
         remaining: 1,
         tabLimit: 2,
         builtinActive: 12,
         builtinTotal: BUILT_IN_QUOTA_RULES.length,
         cautionActive: 5,
         cautionTotal: CAUTION_SEARCH_RULES.length,
-      }),
-    );
+      });
+    const { title, message } = parseBracketTitleMessage(msg);
+    expect(confirmMock).toHaveBeenCalledWith(`${title}\n\n${message}`);
   });
 });
 
@@ -69,7 +70,7 @@ describe('formatSpellingCheckConfirmMessage', () => {
         cautionTotal: 18,
       }),
     ).toBe(
-      '[맞춤법 검수 안내]\n' +
+      '[맞춤법 검수 진행]\n' +
         '오늘 맞춤법 검수는 1회(한도 1회) 가능합니다\n' +
         '편집자 검토 필요(16/18), 맞춤법 규칙(60/30)\n' +
         '\n' +
@@ -102,32 +103,26 @@ describe('formatSpellingCheckCompleteMessage', () => {
         cautionWithFindings: 1,
         totalFindings: 128,
       }),
-    ).toBe(
-      '검수를 진행했습니다\n' +
-        '편집자 검토 필요(1건), 맞춤법 규칙(2건) 전체 발견 [128]',
-    );
+    ).toBe('편집자 검토 1건, 맞춤법 2건 전체 발견 128');
   });
 });
 
 describe('alertSpellingCheckAfterRun', () => {
-  it('검수 완료 alert를 띄운다', () => {
+  it('검수 완료 alert를 띄운다', async () => {
     const alertMock = vi.fn();
     vi.stubGlobal('alert', alertMock);
 
-    alertSpellingCheckAfterRun(
+    await alertSpellingCheckAfterRun(
       [
         { category: 'caution', instances: [{}] },
         { category: 'spelling', instances: [{}] },
       ],
       3,
+      { cautionSelected: true, builtinSelected: true },
     );
 
     expect(alertMock).toHaveBeenCalledWith(
-      formatSpellingCheckCompleteMessage({
-        builtinWithFindings: 1,
-        cautionWithFindings: 1,
-        totalFindings: 3,
-      }),
+      '검수를 진행했습니다\n\n편집자 검토 1건, 맞춤법 1건 전체 발견 3',
     );
   });
 });

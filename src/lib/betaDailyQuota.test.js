@@ -66,7 +66,7 @@ describe('formatBetaQuotaConsumedAlert', () => {
 
   it('일관성 한도 소진 시 남음 0회', () => {
     expect(formatBetaQuotaConsumedAlert('consistency', 3, 3)).toBe(
-      '오늘 일관성 검수 횟수가 1회 차감되었습니다.\n\n사용: 3/3회\n남음: 0회',
+      '오늘 표기 통일 검수 횟수가 1회 차감되었습니다.\n\n사용: 3/3회\n남음: 0회',
     );
   });
 });

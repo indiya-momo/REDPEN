@@ -53,7 +53,7 @@ describe('buildProjectCardViewModelFromRuleSet', () => {
 
   it('활성 항목이 없으면 기본 headline을 쓴다', () => {
     const card = buildProjectCardViewModelFromRuleSet(makeSet());
-    expect(card.headline).toBe('맞춤법·일관성 기준을 설정하세요');
+    expect(card.headline).toBe('맞춤법·표기 통일 기준을 설정하세요');
     expect(card.counts.find).toBe(0);
   });
 
