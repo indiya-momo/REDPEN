@@ -58,7 +58,7 @@ export default function FeedbackModal({ open, onClose, onOpenForm }) {
 
         <p className="feedback-modal-lead">
           불편한 점·좋았던 점·버그·원하시는 기능을 편하게 적어 주시면 오늘
-          맞춤법·일관성 각 2회까지 검수할 수 있습니다
+          맞춤법·표기 통일 각 2회까지 검수할 수 있습니다
         </p>
 
         <ul className="feedback-modal-list">

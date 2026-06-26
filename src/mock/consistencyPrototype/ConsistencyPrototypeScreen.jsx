@@ -110,9 +110,9 @@ export default function ConsistencyPrototypeScreen() {
 
       <div className="consistency-proto__frame panel-left">
         <div className="consistency-embed">
-          <section className="consistency-unified-box" aria-label="표기 일관성 찾기">
+          <section className="consistency-unified-box" aria-label="여러 개 찾기">
             <p className="printed-page-setup__title consistency-panel-section-title panel-criteria-heading">
-              일관성 찾기(1회 검수 8개 이내 추천)⭐
+              여러 개 찾기(1회 검수 8개 이내 추천)⭐
             </p>
             <div className="consistency-subsection consistency-subsection--first">
               <p className="hint consistency-hint-block">
@@ -132,7 +132,7 @@ export default function ConsistencyPrototypeScreen() {
                 onChange={setLiteralInput}
                 onRegister={registerLiteral}
                 placeholder={SPACE_INPUT_PLACEHOLDER}
-                ariaLabel="일관성 찾기"
+                ariaLabel="여러 개 찾기"
               />
               {findTerms.length > 0 ? (
                 <ul className="tail-list consistency-proto__pin-list" aria-label="등록된 찾기 항목">

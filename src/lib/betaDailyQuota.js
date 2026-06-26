@@ -41,7 +41,7 @@ export const BETA_TAB_LIMIT_FEEDBACK = 2;
 export const BETA_TAB_LIMIT_BOOSTED = 3;
 
 const BETA_QUOTA_POLICY_SUMMARY =
-  '오픈베타 기간에는 회원에게 매일 맞춤법·일관성 각 1회 검수를 제공합니다(한국 시간 기준). ' +
+  '오픈베타 기간에는 회원에게 매일 맞춤법·표기 통일 각 1회 검수를 제공합니다(한국 시간 기준). ' +
   '피드백을 남기면 각 2회, 우수 피드백으로 선정되면 각 3회까지 이용할 수 있습니다. ';
 
 export const BETA_DAILY_QUOTA_ALERT_SPELLING =
@@ -50,7 +50,7 @@ export const BETA_DAILY_QUOTA_ALERT_SPELLING =
   '내일 0시 이후 다시 시도해 주세요.';
 
 export const BETA_DAILY_QUOTA_ALERT_CONSISTENCY =
-  '오늘 일관성 검수 한도를 모두 사용했습니다.\n\n' +
+  '오늘 표기 통일 검수 한도를 모두 사용했습니다.\n\n' +
   BETA_QUOTA_POLICY_SUMMARY +
   '내일 0시 이후 다시 시도해 주세요.';
 
@@ -200,7 +200,7 @@ export function betaQuotaAlertForTab(tab) {
  * @param {BetaQuotaTab} tab
  */
 export function betaQuotaTabLabel(tab) {
-  return tab === 'spelling' ? '맞춤법 검수' : '일관성 검수';
+  return tab === 'spelling' ? '맞춤법 검수' : '표기 통일 검수';
 }
 
 /**
