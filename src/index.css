@@ -99,6 +99,7 @@ body:has(.welcome-pc) {
     var(--color-surface-raised) 67%
   );
   --work-chrome-field-bg: #fff;
+  --work-chrome-control-h: 1.5rem;
   --color-surface-inverse: #1f2937;
   --color-scrollbar-thumb: #d4c8b4;
   --color-scrollbar-thumb-hover: #b8a890;
@@ -2156,12 +2157,19 @@ details[open] > summary .details-chevron::before {
 }
 
 .printed-page-setup__input {
+  box-sizing: border-box;
   width: calc(3.75rem * var(--pps-scale));
-  padding: calc(var(--space-2xs-tight) * var(--pps-scale)) calc(var(--space-md-tight) * var(--pps-scale));
-  border: none;
+  height: var(--work-chrome-control-h);
+  padding: 0 calc(var(--space-md-tight) * var(--pps-scale));
+  border: 1px solid var(--work-chrome-border);
   border-radius: calc(var(--radius-ui-sm) * var(--pps-scale));
   font-size: calc(0.75rem * var(--pps-scale));
-  background: var(--color-surface-raised);
+  line-height: 1;
+  background: var(--work-chrome-field-bg);
+}
+
+.printed-page-setup__input:hover {
+  border-color: var(--work-chrome-border-hover);
 }
 
 .printed-page-setup__input:focus {
@@ -2193,10 +2201,12 @@ details[open] > summary .details-chevron::before {
 }
 
 .printed-page-setup__save {
-  padding: calc(var(--space-2xs-tight) * var(--pps-scale)) calc(var(--space-xs) * var(--pps-scale));
+  --pps-btn-scale: 0.8;
+  padding: calc(var(--space-2xs-tight) * var(--pps-scale) * var(--pps-btn-scale))
+    calc(var(--space-xs) * var(--pps-scale) * var(--pps-btn-scale));
   border: none;
-  border-radius: calc(var(--radius-ui-sm) * var(--pps-scale));
-  font-size: calc(0.72rem * var(--pps-scale));
+  border-radius: calc(var(--radius-ui-sm) * var(--pps-scale) * var(--pps-btn-scale));
+  font-size: calc(0.72rem * var(--pps-scale) * var(--pps-btn-scale));
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
@@ -2288,7 +2298,7 @@ details[open] > summary .details-chevron::before {
 }
 
 .pdf-zoom-bar {
-  --pdf-zoom-h: 1.8rem;
+  --pdf-zoom-h: var(--work-chrome-control-h);
   --pdf-zoom-sign: 1.035rem;
   --pdf-zoom-inset-y: 1px;
   --pdf-zoom-inset-x: 3px;
@@ -3239,9 +3249,13 @@ details[open] > summary .details-chevron::before {
 }
 
 .pdf-preview-bar__jump-row .pdf-preview-bar__input {
+  box-sizing: border-box;
+  height: var(--work-chrome-control-h);
   width: calc(2.45rem * var(--pdf-jump-scale) * 0.9);
+  padding: 0 4px;
   font-size: 1em;
   font-weight: 700;
+  line-height: 1;
   border: 1px solid var(--work-chrome-border);
   background: var(--work-chrome-field-bg);
 }
@@ -3273,12 +3287,12 @@ details[open] > summary .details-chevron::before {
 .pdf-preview-bar__input {
   box-sizing: border-box;
   margin: 0;
-  padding: 2px 4px;
+  padding: 0 4px;
   border-radius: var(--radius-ui-sm);
   font-size: 0.78rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  line-height: 1.35;
+  line-height: 1;
   text-align: center;
   color: var(--color-text);
   background: var(--work-chrome-field-bg);

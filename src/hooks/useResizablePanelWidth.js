@@ -7,7 +7,7 @@ import {
 
 const RESIZE_HANDLE_WIDTH = 8;
 
-export const PANEL_LEFT_DEFAULT_WIDTH = 500;
+export const PANEL_LEFT_DEFAULT_WIDTH = 520;
 /** 기준 이름·저장·탭이 한 줄에 들어갈 최소 폭 */
 export const PANEL_LEFT_MIN_WIDTH = 400;
 export const PANEL_LEFT_MAX_WIDTH = 720;

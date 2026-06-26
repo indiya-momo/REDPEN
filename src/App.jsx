@@ -50,6 +50,7 @@ import { consumeReturnToMainWorkspace, markReturnToMainWorkspace, shouldReopenMa
 import { clearTabSessionMarker, clearWorkSession } from './lib/sessionStore.js';
 import { clearTooltipGuideDismissed } from './lib/tooltipGuideStorage.js';
 import EventRewardLayer from './components/EventRewardLayer.jsx';
+import AppDialogHost from './components/AppDialogHost.jsx';
 
 export default function App() {
   const auxWindow =
@@ -287,11 +288,21 @@ export default function App() {
   ]);
 
   if (import.meta.env.DEV && auxWindow === 'mypage-mock') {
-    return <MyPagePrototypeScreen />;
+    return (
+      <>
+        <MyPagePrototypeScreen />
+        <AppDialogHost />
+      </>
+    );
   }
 
   if (import.meta.env.DEV && auxWindow === 'consistency-mock') {
-    return <ConsistencyPrototypeScreen />;
+    return (
+      <>
+        <ConsistencyPrototypeScreen />
+        <AppDialogHost />
+      </>
+    );
   }
 
   if (auxWindow === 'mypage') {
@@ -302,24 +313,34 @@ export default function App() {
           authUid={authSession?.uid}
           checkTick={eventRewardTick}
         />
+        <AppDialogHost />
       </>
     );
   }
   if (auxWindow === 'guide') {
-    return <GuideWindowScreen />;
+    return (
+      <>
+        <GuideWindowScreen />
+        <AppDialogHost />
+      </>
+    );
   }
 
   if (screen === 'room') {
     return (
-      <MomoRoomScreen
-        onClose={() => setScreen('welcome')}
-        authUid={authSession?.uid ?? ''}
-      />
+      <>
+        <MomoRoomScreen
+          onClose={() => setScreen('welcome')}
+          authUid={authSession?.uid ?? ''}
+        />
+        <AppDialogHost />
+      </>
     );
   }
 
   if (screen === 'welcome') {
     return (
+      <>
       <WelcomeScreen
         authSession={authSession}
         authReady={authReady}
@@ -339,14 +360,19 @@ export default function App() {
         }}
         onOpenRoom={() => setScreen('room')}
       />
+      <AppDialogHost />
+      </>
     );
   }
 
   if (!rulesReady || !activeSet) {
     return (
+      <>
       <div className="app-loading" role="status" aria-live="polite">
         <p>규칙 불러오는 중…</p>
       </div>
+      <AppDialogHost />
+      </>
     );
   }
 
@@ -432,6 +458,7 @@ export default function App() {
       authUid={authSession?.uid}
       checkTick={eventRewardTick}
     />
+    <AppDialogHost />
     </>
   );
 }

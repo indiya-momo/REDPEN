@@ -37,6 +37,7 @@ import {
   canAddGlobalExcludeRegisteredEntries,
   globalExcludeRegistrationBlockedMessage,
   phraseSlotRegistrationBlockedMessage,
+  LITERAL_FIND_FEATURE_LABEL,
 } from '../lib/consistencyRuleLimit.js';
 import ConsistencyRegisterField from './consistency/ConsistencyRegisterField.jsx';
 import ConsistencyHintExample from './consistency/ConsistencyHintExample.jsx';
@@ -74,7 +75,6 @@ import TooltipGuide from './TooltipGuide.jsx';
  *   firstPageSingle?: boolean,
  *   onFirstPageSingleChange?: (v: boolean) => void,
  *   onCalibrateFromInput?: (raw: string, isSpread: boolean) => void,
- *   onClearPrintedPageOffset?: () => void,
  *   onRunTocCheck?: () => void | Promise<void>,
  *   hasPdf?: boolean,
  *   isProcessing?: boolean,
@@ -107,7 +107,6 @@ export default function ConsistencyPanel({
   firstPageSingle = true,
   onFirstPageSingleChange = () => {},
   onCalibrateFromInput = () => {},
-  onClearPrintedPageOffset = () => {},
   onRunTocCheck = () => {},
   hasPdf = false,
   isProcessing = false,
@@ -239,9 +238,9 @@ export default function ConsistencyPanel({
 
   return (
     <div className="consistency-embed">
-      <section className="consistency-unified-box" aria-label="표기 일관성 찾기">
+      <section className="consistency-unified-box" aria-label={LITERAL_FIND_FEATURE_LABEL}>
         <p className="printed-page-setup__title consistency-panel-section-title panel-criteria-heading">
-          일관성 찾기
+          {LITERAL_FIND_FEATURE_LABEL}
           <span className="panel-criteria-heading-meta">
             (1회 5항목까지 가능, 영문 대소문자 지원)
           </span>
@@ -259,7 +258,7 @@ export default function ConsistencyPanel({
             onChange={setLiteralInput}
             onRegister={registerLiteral}
             placeholder={CONSISTENCY_LITERAL_INPUT_PLACEHOLDER}
-            ariaLabel="일관성 찾기"
+            ariaLabel={LITERAL_FIND_FEATURE_LABEL}
           />
           <RegisteredList
             entries={literalEntries}
@@ -394,7 +393,7 @@ export default function ConsistencyPanel({
           <p className="auxiliary-checklist-intro hint">
             ｢한글맞춤법｣ 기준 붙여 쓸 수 있는 ‘본용언(-아/어) + 보조용언’ 을 찾습니다
             <br />
-            (본용언이 3음절 이상 복합어인 경우는 제외 예:
+            (본용언이 3음절 이상 복합어인 경우는 제외{' '}
             <ConsistencyHintExample>생각하다</ConsistencyHintExample>)
           </p>
           <RegisteredList
@@ -457,7 +456,6 @@ export default function ConsistencyPanel({
           firstPageSingle={firstPageSingle}
           onFirstPageSingleChange={onFirstPageSingleChange}
           onCalibrateFromInput={onCalibrateFromInput}
-          onClearPrintedPageOffset={onClearPrintedPageOffset}
           onRunCheck={onRunTocCheck}
           hasPdf={hasPdf}
           isProcessing={isProcessing}

@@ -7,6 +7,7 @@ import {
   formatConsistencyCheckCompleteMessage,
   formatConsistencyCheckConfirmMessage,
 } from './consistencyCheckConfirm.js';
+import { parseBracketTitleMessage } from './appDialog.js';
 
 vi.mock('./checkAuthGate.js', () => ({
   assertLoggedInForCheckOrAlert: () => true,
@@ -117,8 +118,7 @@ describe('confirmConsistencyCheckBeforeRun', () => {
       },
     ]);
 
-    expect(confirmMock).toHaveBeenCalledWith(
-      formatConsistencyCheckConfirmMessage({
+    const msg = formatConsistencyCheckConfirmMessage({
         remaining: 1,
         tabLimit: 2,
         literalActive: 0,
@@ -130,8 +130,9 @@ describe('confirmConsistencyCheckBeforeRun', () => {
         excludeActive: 0,
         auxiliaryActive: 1,
         auxiliaryTotal: 1,
-      }),
-    );
+      });
+    const { title, message } = parseBracketTitleMessage(msg);
+    expect(confirmMock).toHaveBeenCalledWith(`${title}\n\n${message}`);
   });
 });
 
@@ -199,10 +200,11 @@ describe('formatConsistencyCheckConfirmMessage', () => {
         auxiliaryTotal: 10,
       }),
     ).toBe(
-      '[일관성 검수 안내]\n' +
+      '[표기 통일 검수 진행]\n' +
         '\n' +
-        '오늘 일관성 검수는 1회(한도 1회) 가능합니다\n' +
-        '일관성 찾기(3건), 통일형 만들기(1건), 공통 문자열 찾기(1건), 검수 제외 항목(1건), 본용언(-아/어) + 보조용언 표기(2/10건)\n' +
+        '오늘 표기 통일 검수는 1회(한도 1회) 가능합니다\n' +
+        '여러 개 찾기(3건), 통일형 만들기(1건), 공통 문자열 찾기(1건)\n' +
+        '검수 제외 항목(1건), 본용언(-아/어) + 보조용언 표기(2/10건)\n' +
         '\n' +
         '검수를 진행할까요?',
     );
@@ -224,10 +226,11 @@ describe('formatConsistencyCheckConfirmMessage', () => {
         auxiliaryTotal: 10,
       }),
     ).toBe(
-      '[일관성 검수 안내]\n' +
+      '[표기 통일 검수 진행]\n' +
         '\n' +
-        '오늘 일관성 검수는 1회(한도 1회) 가능합니다\n' +
-        '일관성 찾기(없음), 통일형 만들기(없음), 공통 문자열 찾기(없음), 검수 제외 항목(없음), 본용언(-아/어) + 보조용언 표기(10/10건)\n' +
+        '오늘 표기 통일 검수는 1회(한도 1회) 가능합니다\n' +
+        '여러 개 찾기(없음), 통일형 만들기(없음), 공통 문자열 찾기(없음)\n' +
+        '검수 제외 항목(없음), 본용언(-아/어) + 보조용언 표기(10/10건)\n' +
         '\n' +
         '검수를 진행할까요?',
     );
@@ -245,33 +248,34 @@ describe('formatConsistencyCheckCompleteMessage', () => {
         totalFindings: 40,
       }),
     ).toBe(
-      '검수를 진행했습니다\n' +
-        '일관성 찾기(2건), 통일형 찾기(0건), 공통 문자열 찾기(1건), 본용언(-아/어) + 보조용언 표기(1건) 전체 발견 [40]',
+      '여러 개 찾기 2건, 통일형 찾기 0건, 공통 문자열 찾기 1건, 본+보 1건 전체 발견 40',
     );
   });
 });
 
 describe('alertConsistencyCheckAfterRun', () => {
-  it('검수 완료 alert를 띄운다', () => {
+  it('검수 완료 alert를 띄운다', async () => {
     const alertMock = vi.fn();
     vi.stubGlobal('alert', alertMock);
 
-    alertConsistencyCheckAfterRun(
+    await alertConsistencyCheckAfterRun(
       [
         { patternKind: 'phrase-slot-find', instances: [{}] },
         { patternKind: 'auxiliary-verb', instances: [{}, {}] },
       ],
       3,
+      [],
+      {
+        literalSelected: true,
+        unifySelected: true,
+        commonStringSelected: true,
+        auxiliarySelected: true,
+      },
     );
 
     expect(alertMock).toHaveBeenCalledWith(
-      formatConsistencyCheckCompleteMessage({
-        literalWithFindings: 0,
-        unifyWithFindings: 0,
-        commonStringWithFindings: 1,
-        auxiliaryWithFindings: 1,
-        totalFindings: 3,
-      }),
+      '검수를 진행했습니다\n\n' +
+        '여러 개 찾기 0건, 통일형 찾기 0건, 공통 문자열 찾기 1건, 본+보 1건 전체 발견 3',
     );
   });
 });

@@ -3,7 +3,7 @@
     {
       "id": "jubsa-attach",
       "tip": "'가량, 쯤'은  '정도'의 뜻을 더하는 접사로 수량을 나타내는 명사 뒤에 붙여 쓴다",
-      "title": "띄어쓰기로 뜻이 달라지는 경우",
+      "title": "붙여서 쓰는 경우",
       "items": [
         {
           "id": "jubsa-garyang",
@@ -17,14 +17,14 @@
           ],
           "displayLabel": "가량, 쯤(접사)",
           "tip": "'가량, 쯤'은  '정도'의 뜻을 더하는 접사로 수량을 나타내는 명사 뒤에 붙여 쓴다",
-          "groupLabel": "띄어쓰기로 뜻이 달라지는 경우"
+          "groupLabel": "붙여서 쓰는 경우"
         }
       ]
     },
     {
       "id": "dannoun-space",
       "tip": "수관형사+단위 명사 '가지'는 띄어 쓰는 것을 원칙으로 한다",
-      "title": "띄어쓰기로 뜻이 달라지는 경우",
+      "title": "띄어 쓰는 경우",
       "items": [
         {
           "id": "dannoun-space-gaji",
@@ -52,7 +52,57 @@
             "물가지수"
           ],
           "tip": "수관형사+단위 명사 '가지'는 띄어 쓰는 것을 원칙으로 한다",
-          "groupLabel": "띄어쓰기로 뜻이 달라지는 경우"
+          "groupLabel": "띄어 쓰는 경우"
+        }
+      ]
+    },
+    {
+      "id": "uinoun-space",
+      "tip": "'정도'는 '그만큼의 분량이나 수준'을 뜻하는 의존명사로 앞말과 띄어 쓴다",
+      "title": "띄어 쓰는 경우",
+      "items": [
+        {
+          "id": "uinoun-jungdo",
+          "label": "정도",
+          "enabled": true,
+          "matchMode": "attached-before",
+          "inventoryOnly": false,
+          "displayLabel": "정도(의존명사)",
+          "except": [
+            "결정도",
+            "감정도",
+            "공정도",
+            "사정도",
+            "온정도"
+          ],
+          "tip": "'정도'는 '그만큼의 분량이나 수준'을 뜻하는 의존명사로 앞말과 띄어 쓴다",
+          "groupLabel": "띄어 쓰는 경우"
+        }
+      ]
+    },
+    {
+      "id": "josa-uinoun",
+      "tip": "'만, 만큼, 지'는 체언(명사, 대명사, 수사) 뒤는 조사로 붙이고, 용언(동사, 형용사) 뒤는 의존명사로 띄어 쓴다",
+      "title": "앞말에 따라 띄어쓰기가 달라지는 경우",
+      "items": [
+        {
+          "id": "josa-uinoun-mankum",
+          "label": "만큼",
+          "enabled": true,
+          "matchMode": "any-before",
+          "inventoryOnly": false,
+          "displayLabel": "만큼(조사 또는 의존명사)",
+          "except": [
+            "고만큼",
+            "그만큼",
+            "요만큼",
+            "웬만큼",
+            "이만큼",
+            "저만큼",
+            "조만큼"
+          ],
+          "tip": "'만, 만큼, 지'는 체언(명사, 대명사, 수사) 뒤는 조사로 붙이고, 용언(동사, 형용사) 뒤는 의존명사로 띄어 쓴다",
+          "groupLabel": "앞말에 따라 띄어쓰기가 달라지는 경우"
         }
       ]
     },
@@ -68,6 +118,22 @@
           "matchMode": "any-before",
           "inventoryOnly": false,
           "displayLabel": "같이(조사 또는 부사)",
+          "except": [
+            "감쪽같이",
+            "불같이",
+            "쏜살같이",
+            "이같이",
+            "저같이",
+            "찰떡같이",
+            "칼같이",
+            "하나같이",
+            "한결같이",
+            "그같이",
+            "꿈같이",
+            "똑같이",
+            "벼락같이",
+            "득달같이"
+          ],
           "tip": "'같이'가 명사·대명사 뒤 비교(~처럼)나 동시(때)일 떄는 조사로 붙이고, 동반(함께)을 뜻할 때는 부사로 띄어 쓴다",
           "groupLabel": "띄어쓰기로 뜻이 달라지는 경우"
         }
@@ -82,7 +148,7 @@
           "id": "bon-bojo-notaboda",
           "label": "놓아 주다, 놓아주다",
           "enabled": true,
-          "matchMode": "spaced-before",
+          "matchMode": "stem-list",
           "inventoryOnly": false,
           "stems": [
             "놓아 주",
@@ -102,7 +168,7 @@
           "id": "bon-bojo-eojuda",
           "label": "들어 주다, 들어주다",
           "enabled": true,
-          "matchMode": "spaced-before",
+          "matchMode": "stem-list",
           "inventoryOnly": false,
           "stems": [
             "들어 주",
@@ -122,7 +188,7 @@
           "id": "bon-bojo-chataboda",
           "label": "찾아 보다, 찾아보다",
           "enabled": true,
-          "matchMode": "spaced-before",
+          "matchMode": "stem-list",
           "inventoryOnly": false,
           "stems": [
             "찾아 보",
@@ -149,7 +215,7 @@
           "id": "eogan-eomi-mot",
           "label": "못하다, 못 하다",
           "enabled": true,
-          "matchMode": "spaced-before",
+          "matchMode": "stem-list",
           "inventoryOnly": false,
           "stems": [
             "못 하",
@@ -169,7 +235,7 @@
           "id": "eogan-eomi-doei",
           "label": "되, 돼",
           "enabled": false,
-          "matchMode": "any-before",
+          "matchMode": "stem-list",
           "inventoryOnly": false,
           "stems": [
             "되",
@@ -186,7 +252,7 @@
           "id": "eogan-eomi-aniyo",
           "label": "아니오, 아니요",
           "enabled": true,
-          "matchMode": "any-before",
+          "matchMode": "stem-list",
           "inventoryOnly": false,
           "stems": [
             "아니오",
@@ -207,7 +273,7 @@
           "id": "noun-noun-angae",
           "label": "안개 속, 안갯속",
           "enabled": true,
-          "matchMode": "spaced-before",
+          "matchMode": "stem-list",
           "inventoryOnly": false,
           "stems": [
             "안개 속",
@@ -221,7 +287,7 @@
           "id": "noun-noun-han",
           "label": "한 번, 한번",
           "enabled": true,
-          "matchMode": "spaced-before",
+          "matchMode": "stem-list",
           "inventoryOnly": false,
           "stems": [
             "한 번",
@@ -235,7 +301,7 @@
           "id": "noun-noun-gyul",
           "label": "결제, 결재",
           "enabled": true,
-          "matchMode": "spaced-before",
+          "matchMode": "stem-list",
           "inventoryOnly": false,
           "stems": [
             "결제",
@@ -249,7 +315,7 @@
           "id": "noun-noun-gubun",
           "label": "구별, 구분",
           "enabled": true,
-          "matchMode": "spaced-before",
+          "matchMode": "stem-list",
           "inventoryOnly": false,
           "stems": [
             "구별",
@@ -262,47 +328,6 @@
       ]
     },
     {
-      "id": "uinoun-space",
-      "tip": "'정도'는 '그만큼의 분량이나 수준'을 뜻하는 의존명사로 앞말과 띄어 쓴다",
-      "title": "띄어쓰기로 뜻이 달라지는 경우",
-      "items": [
-        {
-          "id": "uinoun-jungdo",
-          "label": "정도",
-          "enabled": true,
-          "matchMode": "attached-before",
-          "inventoryOnly": false,
-          "displayLabel": "정도(의존명사)",
-          "except": [
-            "결정도",
-            "감정도",
-            "공정도",
-            "사정도",
-            "온정도"
-          ],
-          "tip": "'정도'는 '그만큼의 분량이나 수준'을 뜻하는 의존명사로 앞말과 띄어 쓴다",
-          "groupLabel": "띄어쓰기로 뜻이 달라지는 경우"
-        }
-      ]
-    },
-    {
-      "id": "josa-uinoun",
-      "tip": "'만, 만큼, 지'는 체언(명사, 대명사, 수사) 뒤는 조사로 붙이고, 용언(동사, 형용사) 뒤는 의존명사로 띄어 쓴다",
-      "title": "앞말에 따라 띄어쓰기가 달라지는 경우",
-      "items": [
-        {
-          "id": "josa-uinoun-mankum",
-          "label": "만큼",
-          "enabled": true,
-          "matchMode": "any-before",
-          "inventoryOnly": false,
-          "displayLabel": "만큼(조사 또는 의존명사)",
-          "tip": "'만, 만큼, 지'는 체언(명사, 대명사, 수사) 뒤는 조사로 붙이고, 용언(동사, 형용사) 뒤는 의존명사로 띄어 쓴다",
-          "groupLabel": "앞말에 따라 띄어쓰기가 달라지는 경우"
-        }
-      ]
-    },
-    {
       "id": "verb-verb",
       "tip": "'늘이다'는 길이, '늘리다'는 너비, 부피 등에 사용한다",
       "title": "틀리기 쉬운 경우",
@@ -311,7 +336,7 @@
           "id": "verb-verb-neal",
           "label": "늘이, 늘리",
           "enabled": true,
-          "matchMode": "spaced-before",
+          "matchMode": "stem-list",
           "inventoryOnly": false,
           "stems": [
             "늘이",
@@ -330,7 +355,7 @@
           "id": "verb-verbi-mat",
           "label": "맞추, 맞히",
           "enabled": true,
-          "matchMode": "spaced-before",
+          "matchMode": "stem-list",
           "inventoryOnly": false,
           "stems": [
             "맞추",
@@ -346,7 +371,7 @@
           "id": "verb-verb-bara",
           "label": "바라, 바래",
           "enabled": true,
-          "matchMode": "any-before",
+          "matchMode": "stem-list",
           "inventoryOnly": false,
           "stems": [
             "바라",
@@ -373,7 +398,7 @@
           "id": "verb-verbi-but",
           "label": "붙이,부치",
           "enabled": true,
-          "matchMode": "spaced-before",
+          "matchMode": "stem-list",
           "inventoryOnly": false,
           "stems": [
             "부치",

@@ -31,6 +31,8 @@ import {
   LEGACY_DEFAULT_CRITERIA_HINT,
 } from '../lib/criteriaName.js';
 import { planCriteriaPresetDelete } from '../lib/criteriaPresetDelete.js';
+import { showAppConfirm } from '../lib/appDialog.js';
+import { formatProjectDialogLabel } from '../lib/projectDialogLabel.js';
 import { normalizeRuleSet } from '../lib/ruleSetNormalize.js';
 import {
   mergeProjectContext,
@@ -444,7 +446,7 @@ export function useRuleSets(authUid = '', authEmail = '') {
     applyRuleSets([...ruleSetsRef.current, copy], copy.id);
   }, [applyRuleSets]);
 
-  const handleDeleteRuleSet = useCallback(() => {
+  const handleDeleteRuleSet = useCallback(async () => {
     const sets = ruleSetsRef.current;
     if (sets.length <= 1) {
       alert('마지막 규칙 세트는 삭제할 수 없습니다.');
@@ -453,7 +455,14 @@ export function useRuleSets(authUid = '', authEmail = '') {
     const id = activeSetIdRef.current;
     const current = sets.find((s) => s.id === id);
     const label = (current?.name || '규칙 세트').trim() || '규칙 세트';
-    if (!window.confirm(`「${label}」 규칙 세트를 삭제할까요?`)) return;
+    if (
+      !(await showAppConfirm({
+        title: '삭제',
+        message: `「${label}」 규칙 세트를 삭제할까요?`,
+      }))
+    ) {
+      return;
+    }
 
     const next = sets.filter((s) => s.id !== id);
     const nextActive = next[0]?.id;
@@ -638,7 +647,7 @@ export function useRuleSets(authUid = '', authEmail = '') {
 
   /** 저장한 기준 프리셋 삭제(목록·localStorage) */
   const handleDeleteCriteriaPreset = useCallback(
-    (targetId) => {
+    async (targetId) => {
       const sets = ruleSetsRef.current;
       const plan = planCriteriaPresetDelete(
         sets,
@@ -652,7 +661,12 @@ export function useRuleSets(authUid = '', authEmail = '') {
         return false;
       }
 
-      if (!window.confirm(`「${plan.label}」 프로젝트를 삭제할까요?`)) {
+      if (
+        !(await showAppConfirm({
+          title: '삭제',
+          message: `${formatProjectDialogLabel(plan.label)} 프로젝트를 삭제할까요?`,
+        }))
+      ) {
         return false;
       }
 

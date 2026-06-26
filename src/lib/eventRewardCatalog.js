@@ -18,7 +18,7 @@ export const EVENT_REWARD_CATALOG = {
     badgeId: 'slot-2',
     title: '피드백 선물',
     message:
-      '오늘 맞춤법·일관성 각 2회까지 검수할 수 있어요. 마이페이지 배지 모음집에서 비밀 연구원 배지를 확인해 보세요.',
+      '오늘 맞춤법·표기 통일 각 2회까지 검수할 수 있어요. 마이페이지 배지 모음집에서 비밀 연구원 배지를 확인해 보세요.',
   },
   'momo-room': {
     id: 'momo-room',
@@ -32,7 +32,7 @@ export const EVENT_REWARD_CATALOG = {
     badgeId: 'slot-3',
     title: '우수 피드백 선정',
     message:
-      '오늘 맞춤법·일관성 각 3회까지 이용할 수 있어요. 수석 검증관 배지가 추가됐어요.',
+      '오늘 맞춤법·표기 통일 각 3회까지 이용할 수 있어요. 수석 검증관 배지가 추가됐어요.',
   },
 };
 

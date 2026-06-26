@@ -17,7 +17,11 @@ import {
 } from './phraseSlotRegister.js';
 import { assertLoggedInForCheckOrAlert } from './checkAuthGate.js';
 import { AUXILIARY_VERB_FEATURE_LABEL } from './bonBojoRules.js';
+import { LITERAL_FIND_FEATURE_LABEL } from './consistencyRuleLimit.js';
+import { createElement } from 'react';
+import CheckResultSummaryContent from '../components/CheckResultSummaryContent.jsx';
 import {
+  buildConsistencyResultSummaryStats,
   formatCategoryFindingCount,
   formatConsistencyResultsSummaryLine,
 } from './checkResultSummaryFormat.js';
@@ -28,6 +32,11 @@ import {
   isBetaDailyQuotaEnabled,
   isBetaDailyQuotaEnforcedForUser,
 } from './betaDailyQuota.js';
+import {
+  parseBracketTitleMessage,
+  showAppAlert,
+  showAppConfirm,
+} from './appDialog.js';
 
 /**
  * @param {import('./ruleTypes.js').Rule[]} [customRules]
@@ -83,7 +92,7 @@ function formatConfirmAuxiliaryCount(active, total) {
  *   auxiliaryTotal: number,
  * }} input
  */
-function formatConsistencyCheckCriteriaLine({
+function formatConsistencyCheckCriteriaBlock({
   literalActive,
   unifyActive,
   commonStringActive,
@@ -91,13 +100,14 @@ function formatConsistencyCheckCriteriaLine({
   auxiliaryActive,
   auxiliaryTotal,
 }) {
-  return (
-    `일관성 찾기${formatConfirmActiveCount(literalActive)}, ` +
+  const line1 =
+    `${LITERAL_FIND_FEATURE_LABEL}${formatConfirmActiveCount(literalActive)}, ` +
     `통일형 만들기${formatConfirmActiveCount(unifyActive)}, ` +
-    `공통 문자열 찾기${formatConfirmActiveCount(commonStringActive)}, ` +
+    `공통 문자열 찾기${formatConfirmActiveCount(commonStringActive)}`;
+  const line2 =
     `검수 제외 항목${formatConfirmActiveCount(excludeActive)}, ` +
-    `${AUXILIARY_VERB_FEATURE_LABEL}${formatConfirmAuxiliaryCount(auxiliaryActive, auxiliaryTotal)}`
-  );
+    `${AUXILIARY_VERB_FEATURE_LABEL}${formatConfirmAuxiliaryCount(auxiliaryActive, auxiliaryTotal)}`;
+  return `${line1}\n${line2}`;
 }
 
 /**
@@ -126,10 +136,10 @@ export function formatConsistencyCheckConfirmMessage({
   auxiliaryTotal,
 }) {
   return (
-    `[일관성 검수 안내]\n` +
+    `[표기 통일 검수 진행]\n` +
     `\n` +
-    `오늘 일관성 검수는 ${remaining}회(한도 ${tabLimit}회) 가능합니다\n` +
-    `${formatConsistencyCheckCriteriaLine({
+    `오늘 표기 통일 검수는 ${remaining}회(한도 ${tabLimit}회) 가능합니다\n` +
+    `${formatConsistencyCheckCriteriaBlock({
       literalActive,
       unifyActive,
       commonStringActive,
@@ -157,9 +167,9 @@ export function formatConsistencyCheckConfirmMessage({
  */
 export function formatConsistencyCheckConfirmMessageWithoutQuota(counts) {
   return (
-    `[일관성 검수 안내]\n` +
+    `[표기 통일 검수 진행]\n` +
     `\n` +
-    `${formatConsistencyCheckCriteriaLine({
+    `${formatConsistencyCheckCriteriaBlock({
       literalActive: counts.literalActive,
       unifyActive: counts.unifyActive,
       commonStringActive: counts.commonStringActive,
@@ -244,7 +254,8 @@ export async function confirmConsistencyCheckBeforeRun(
     });
   }
 
-  return confirm(message);
+  const { title, message: body } = parseBracketTitleMessage(message);
+  return showAppConfirm({ title, message: body });
 }
 
 /**
@@ -289,6 +300,10 @@ export function countConsistencyGroupsWithFindings(groups, customRules = []) {
  *   commonStringWithFindings: number,
  *   auxiliaryWithFindings: number,
  *   totalFindings: number,
+ *   literalSelected?: boolean,
+ *   unifySelected?: boolean,
+ *   commonStringSelected?: boolean,
+ *   auxiliarySelected?: boolean,
  * }} input
  */
 export function formatConsistencyCheckCompleteMessage({
@@ -297,33 +312,66 @@ export function formatConsistencyCheckCompleteMessage({
   commonStringWithFindings,
   auxiliaryWithFindings,
   totalFindings,
+  literalSelected = true,
+  unifySelected = true,
+  commonStringSelected = true,
+  auxiliarySelected = true,
 }) {
-  return (
-    `검수를 진행했습니다\n` +
-    formatConsistencyResultsSummaryLine({
-      literalWithFindings,
-      unifyWithFindings,
-      commonStringWithFindings,
-      auxiliaryWithFindings,
-      totalFindings,
-    })
-  );
+  return formatConsistencyResultsSummaryLine({
+    literalWithFindings,
+    unifyWithFindings,
+    commonStringWithFindings,
+    auxiliaryWithFindings,
+    totalFindings,
+    literalSelected,
+    unifySelected,
+    commonStringSelected,
+    auxiliarySelected,
+  });
 }
 
 /**
  * 일관성 탭 검수 직후 — 발견된 기준·총 건수 alert
  * @param {import('./ruleEngine.js').RuleResultGroup[]} groups
  * @param {number} totalFindings
+ * @param {import('./ruleTypes.js').Rule[]} [customRules]
+ * @param {{
+ *   literalSelected?: boolean,
+ *   unifySelected?: boolean,
+ *   commonStringSelected?: boolean,
+ *   auxiliarySelected?: boolean,
+ * }} [criteriaSelection]
  */
-export function alertConsistencyCheckAfterRun(
+export async function alertConsistencyCheckAfterRun(
   groups = [],
   totalFindings = 0,
   customRules = [],
+  criteriaSelection = {},
 ) {
-  alert(
-    formatConsistencyCheckCompleteMessage({
-      ...countConsistencyGroupsWithFindings(groups, customRules),
+  const {
+    literalSelected = true,
+    unifySelected = true,
+    commonStringSelected = true,
+    auxiliarySelected = true,
+  } = criteriaSelection;
+  const counts = countConsistencyGroupsWithFindings(groups, customRules);
+  const summaryInput = {
+    ...counts,
+    totalFindings,
+    literalSelected,
+    unifySelected,
+    commonStringSelected,
+    auxiliarySelected,
+  };
+  const message = formatConsistencyCheckCompleteMessage(summaryInput);
+  const stats = buildConsistencyResultSummaryStats(summaryInput);
+
+  await showAppAlert({
+    title: '검수를 진행했습니다',
+    message,
+    messageNode: createElement(CheckResultSummaryContent, {
+      stats,
       totalFindings,
     }),
-  );
+  });
 }

@@ -4,6 +4,7 @@ import {
   isConsistencyUnifyTailWord,
 } from './consistencyUnifyRegister.js';
 import { AUXILIARY_VERB_BADGE_LABEL } from './bonBojoRules.js';
+import { LITERAL_FIND_FEATURE_LABEL } from './consistencyRuleLimit.js';
 
 /** @param {import('./ruleEngine.js').GroupedResult} group */
 function auxiliaryItemTitle(group) {
@@ -68,7 +69,7 @@ export function getConsistencyResultCardParts(group, customRules = []) {
   const showPin = isUnify && tail && pinnedTail === tail;
 
   return {
-    badge: isUnify ? '통일형 찾기' : '일관성 찾기',
+    badge: isUnify ? '통일형 찾기' : LITERAL_FIND_FEATURE_LABEL,
     label: showPin ? `${label} 📌` : label,
   };
 }

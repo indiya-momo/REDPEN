@@ -42,7 +42,7 @@ describe('getConsistencyHighlightTip', () => {
         category: 'consistency',
         instances: [],
       }),
-    ).toBe('일관성 찾기 : 세계경제');
+    ).toBe('여러 개 찾기 : 세계경제');
   });
 
   it('uses tailWord for compound rules', () => {
@@ -55,7 +55,7 @@ describe('getConsistencyHighlightTip', () => {
         tailWord: '세계경제',
         instances: [],
       }),
-    ).toBe('일관성 찾기 : 세계경제');
+    ).toBe('여러 개 찾기 : 세계경제');
   });
 
   it('통일형·공통 문자열 — 결과 카드와 동일 배지', () => {
@@ -111,7 +111,7 @@ describe('getConsistencyResultCardParts', () => {
         tailWord: '세계경제',
         instances: [{}, {}, {}],
       }),
-    ).toEqual({ badge: '일관성 찾기', label: '세계경제' });
+    ).toEqual({ badge: '여러 개 찾기', label: '세계경제' });
     expect(
       getConsistencyResultCardParts({
         find: '세계 경제',
@@ -121,7 +121,7 @@ describe('getConsistencyResultCardParts', () => {
         tailWord: '세계 경제',
         instances: [{}],
       }),
-    ).toEqual({ badge: '일관성 찾기', label: '세계˅경제' });
+    ).toEqual({ badge: '여러 개 찾기', label: '세계˅경제' });
   });
 
   it('통일형 — 배지·📌 표시', () => {
@@ -205,7 +205,7 @@ describe('getConsistencyResultCardTitle', () => {
         tailWord: '세계경제',
         instances: [{}],
       }),
-    ).toBe('일관성 찾기 세계경제');
+    ).toBe('여러 개 찾기 세계경제');
   });
 });
 

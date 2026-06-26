@@ -5,6 +5,7 @@ import { formatSystemPageLabel } from '../lib/printedPageDisplay.js';
 import { cautionResultChipLabel } from '../lib/cautionRules.js';
 import { getConsistencyHighlightTip, getConsistencyResultCardParts } from '../lib/consistencyHighlightTip.js';
 import { AUXILIARY_VERB_BADGE_LABEL } from '../lib/bonBojoRules.js';
+import { LITERAL_FIND_FEATURE_LABEL } from '../lib/consistencyRuleLimit.js';
 
 /**
  * @param {{ count: number, shownCount?: number, className?: string }} props
@@ -134,7 +135,7 @@ function ResultHeaderSummary({
         literalCriteriaSelected ? (
           <ResultHeaderStat
             key="literal"
-            badge="일관성 찾기"
+            badge={LITERAL_FIND_FEATURE_LABEL}
             count={literalWithFindingsCount}
           />
         ) : null,
