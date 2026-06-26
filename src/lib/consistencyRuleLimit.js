@@ -1,7 +1,10 @@
 import { listConsistencyLiteralEntries } from './compoundPairRegister.js';
 import { listPhraseSlotEntries } from './phraseSlotRegister.js';
 
-/** 일관성 찾기 — 등록 상한 (쉼표 항목마다 1건) */
+/** UI 표기 — 쉼표로 여러 표기를 등록해 찾기 */
+export const LITERAL_FIND_FEATURE_LABEL = '여러 개 찾기';
+
+/** 여러 개 찾기 — 등록 상한 (쉼표 항목마다 1건) */
 export const MAX_CONSISTENCY_CRITERIA_SLOTS = 5;
 
 /** 통일형 만들기 — 등록 상한 (쉼표 항목마다 1건) */
@@ -90,7 +93,7 @@ export function consistencyLiteralRegistrationBlockedMessage(current, adding = 0
   const max = MAX_CONSISTENCY_CRITERIA_SLOTS;
   const total = current + adding;
   const over = Math.max(0, total - max);
-  return `일관성 찾기는 ${max}개까지 등록할 수 있습니다(현재 ${total}개, ${over}개 초과)`;
+  return `${LITERAL_FIND_FEATURE_LABEL}는 ${max}개까지 등록할 수 있습니다(현재 ${total}개, ${over}개 초과)`;
 }
 
 /**

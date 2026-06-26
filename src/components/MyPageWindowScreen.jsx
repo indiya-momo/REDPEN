@@ -60,19 +60,19 @@ const MEMBER_BENEFIT_TIERS = [
   {
     name: '오픈베타 테스터',
     description:
-      '오픈베타 기간 프로젝트 슬롯 [1개] 매일 맞춤법 검수 [1회] + 일관성 검수 [1회] 제공',
+      '오픈베타 기간 프로젝트 슬롯 [1개] 매일 맞춤법 [1회] + 표기 통일 [1회] 제공',
     tabLimit: 1,
   },
   {
     name: '비밀 연구원',
     description:
-      '오픈베타 기간 프로젝트 슬롯 [1개] 매일 맞춤법 검수 [2회] + 일관성 검수 [2회] 제공',
+      '오픈베타 기간 프로젝트 슬롯 [1개] 매일 맞춤법 [2회] + 표기 통일 [2회] 제공',
     tabLimit: 2,
   },
   {
     name: '수석 검증관',
     description:
-      '오픈베타 기간 프로젝트 슬롯 [1개] 매일 맞춤법 검수 [3회] + 일관성 검수 [3회] 제공',
+      '오픈베타 기간 프로젝트 슬롯 [1개] 매일 맞춤법 [3회] + 표기 통일 [3회] 제공',
     tabLimit: 3,
   },
 ];
@@ -84,7 +84,7 @@ const FAQ_ITEMS = [
     id: 'what',
     question: '인디야는 어떤 서비스인가요?',
     answer:
-      '인디자인 등에서 만든 조판 PDF에서 맞춤법·표기 일관성을 규칙으로 찾아 PDF 위에 표시하는 브라우저 도구입니다. AI가 문장을 고쳐 주지 않으며, 자동 탐지와 하이라이트만 제공합니다.',
+      '인디자인 등에서 만든 조판 PDF에서 맞춤법·표기 통일을 규칙으로 찾아 PDF 위에 표시하는 브라우저 도구입니다. AI가 문장을 고쳐 주지 않으며, 자동 탐지와 하이라이트만 제공합니다.',
   },
   {
     id: 'privacy',
@@ -100,15 +100,15 @@ const FAQ_ITEMS = [
   },
   {
     id: 'tabs',
-    question: '맞춤법과 일관성 검수는 무엇이 다른가요?',
+    question: '맞춤법과 표기 통일은 무엇이 다른가요?',
     answer:
-      '맞춤법 검수 탭은 내장·주의 규칙으로 오탈자·띄어쓰기 후보를 찾습니다. 일관성 검수 탭은 표기 통일 규칙·본보조·목차·본문 일치 등을 검수합니다.',
+      '맞춤법 탭은 내장·주의 규칙으로 오탈자·띄어쓰기 후보를 찾습니다. 표기 통일 탭은 표기 통일·본보조·목차·본문 일치 등을 검수합니다.',
   },
   {
     id: 'beta',
     question: '오픈베타 기간 이용료가 있나요?',
     answer:
-      '오픈베타 기간에는 회원에게 매일 맞춤법·일관성 각 1회 검수를 제공합니다(한국 시간 기준). 피드백을 남기면 각 2회, 우수 피드백으로 선정되면 각 3회까지 이용할 수 있습니다.',
+      '오픈베타 기간에는 회원에게 매일 맞춤법·표기 통일 각 1회 검수를 제공합니다(한국 시간 기준). 피드백을 남기면 각 2회, 우수 피드백으로 선정되면 각 3회까지 이용할 수 있습니다.',
   },
   {
     id: 'device',
@@ -235,7 +235,7 @@ function MyBenefitsSection({ quota }) {
       ) : (
         <dl className="mypage__benefits-grid">
           <div className="mypage__benefits-row">
-            <dt>맞춤법 검수</dt>
+            <dt>맞춤법</dt>
             <dd>
               <strong>{quota.spellingRemaining}회</strong> 남음
               <span className="mypage__benefits-used">
@@ -244,7 +244,7 @@ function MyBenefitsSection({ quota }) {
             </dd>
           </div>
           <div className="mypage__benefits-row">
-            <dt>일관성 검수</dt>
+            <dt>표기 통일</dt>
             <dd>
               <strong>{quota.consistencyRemaining}회</strong> 남음
               <span className="mypage__benefits-used">

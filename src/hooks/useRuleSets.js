@@ -32,6 +32,7 @@ import {
 } from '../lib/criteriaName.js';
 import { planCriteriaPresetDelete } from '../lib/criteriaPresetDelete.js';
 import { showAppConfirm } from '../lib/appDialog.js';
+import { formatProjectDialogLabel } from '../lib/projectDialogLabel.js';
 import { normalizeRuleSet } from '../lib/ruleSetNormalize.js';
 import {
   mergeProjectContext,
@@ -663,7 +664,7 @@ export function useRuleSets(authUid = '', authEmail = '') {
       if (
         !(await showAppConfirm({
           title: '삭제',
-          message: `「${plan.label}」 프로젝트를 삭제할까요?`,
+          message: `${formatProjectDialogLabel(plan.label)} 프로젝트를 삭제할까요?`,
         }))
       ) {
         return false;

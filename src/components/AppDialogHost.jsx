@@ -6,10 +6,14 @@ import {
 } from '../lib/appDialog.js';
 
 /**
+ * @typedef {import('react').ReactNode} ReactNode */
+
+/**
  * @typedef {{
  *   mode: 'alert' | 'confirm',
  *   title?: string,
- *   message: string,
+ *   message?: string,
+ *   messageNode?: ReactNode,
  *   confirmLabel?: string,
  *   cancelLabel?: string,
  * }} DialogState
@@ -28,7 +32,8 @@ export default function AppDialogHost() {
         setStateRef.current({
           mode: 'alert',
           title: opts.title || '안내',
-          message: opts.message,
+          message: opts.message ?? '',
+          messageNode: opts.messageNode,
           confirmLabel: opts.confirmLabel || '확인',
         });
       }),
@@ -65,6 +70,7 @@ export default function AppDialogHost() {
       mode={state.mode}
       title={state.title || '안내'}
       message={state.message}
+      messageNode={state.messageNode}
       confirmLabel={state.confirmLabel}
       cancelLabel={state.cancelLabel}
       onConfirm={() => finish(state.mode === 'confirm')}

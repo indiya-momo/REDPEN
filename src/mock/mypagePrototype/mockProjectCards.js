@@ -32,12 +32,12 @@ export const MOCK_PROJECT_CARDS = [
     },
     highlights: [
       {
-        category: '맞춤법 검수',
+        category: '맞춤법',
         label: '편집자 검토 필요, 맞춤법(외래어·띄어쓰기)',
         count: 15,
       },
       {
-        category: '일관성 검수',
+        category: '표기 통일',
         label: '"그러나" 포함 4건, 공통 문자열 2건',
         count: 6,
       },
@@ -81,12 +81,12 @@ export const MOCK_PROJECT_CARDS = [
     },
     highlights: [
       {
-        category: '맞춤법 검수',
+        category: '맞춤법',
         label: '맞춤법(숫자·단위)',
         count: 9,
       },
       {
-        category: '일관성 검수',
+        category: '표기 통일',
         label: '공통 문자열 1건, 제외어 3개',
         count: 4,
       },
@@ -115,7 +115,7 @@ export const MOCK_PROJECT_CARDS = [
     id: 'proj-3',
     title: '에세이 시리즈 1권',
     tags: ['문학'],
-    headline: '맞춤법 기본 · 일관성 찾기 2건 · 본보조 3쌍',
+    headline: '맞춤법 기본 · 여러 개 찾기 2건 · 본보조 3쌍',
     chipPreview: {
       spelling: [
         { label: '맞춤법 기본', active: true },
@@ -132,12 +132,12 @@ export const MOCK_PROJECT_CARDS = [
     },
     highlights: [
       {
-        category: '맞춤법 검수',
+        category: '맞춤법',
         label: '맞춤법 기본 세트',
         count: 6,
       },
       {
-        category: '일관성 검수',
+        category: '표기 통일',
         label: '"그러나" 2건',
         count: 2,
       },

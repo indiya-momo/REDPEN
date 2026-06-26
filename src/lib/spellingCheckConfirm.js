@@ -5,7 +5,10 @@ import {
 import { BUILT_IN_QUOTA_RULES } from './builtInRules.js';
 import { CAUTION_SEARCH_RULES } from './cautionRules.js';
 import { assertLoggedInForCheckOrAlert } from './checkAuthGate.js';
+import { createElement } from 'react';
+import CheckResultSummaryContent from '../components/CheckResultSummaryContent.jsx';
 import {
+  buildSpellingResultSummaryStats,
   formatSpellingResultsSummaryLine,
 } from './checkResultSummaryFormat.js';
 import {
@@ -144,43 +147,65 @@ export function countSpellingGroupsWithFindings(groups) {
 }
 
 /**
- * 맞춤법 검수 완료 후 alert 본문
+ * 맞춤법 검수 완료 후 alert 본문 (window.alert 폴백용)
  * @param {{
  *   builtinWithFindings: number,
  *   cautionWithFindings: number,
  *   totalFindings: number,
+ *   cautionSelected?: boolean,
+ *   builtinSelected?: boolean,
  * }} input
  */
 export function formatSpellingCheckCompleteMessage({
   builtinWithFindings,
   cautionWithFindings,
   totalFindings,
+  cautionSelected = true,
+  builtinSelected = true,
 }) {
-  return (
-    `검수를 진행했습니다\n` +
-    formatSpellingResultsSummaryLine({
-      cautionWithFindings,
-      builtinWithFindings,
-      totalFindings,
-    })
-  );
+  return formatSpellingResultsSummaryLine({
+    cautionWithFindings,
+    builtinWithFindings,
+    totalFindings,
+    cautionSelected,
+    builtinSelected,
+  });
 }
 
 /**
  * 맞춤법 탭 검수 직후 — 발견된 기준·총 건수 alert
  * @param {import('./ruleEngine.js').RuleResultGroup[]} groups
  * @param {number} totalFindings
+ * @param {{
+ *   cautionSelected?: boolean,
+ *   builtinSelected?: boolean,
+ * }} [criteriaSelection]
  */
 export async function alertSpellingCheckAfterRun(
   groups = [],
   totalFindings = 0,
+  criteriaSelection = {},
 ) {
-  const raw = formatSpellingCheckCompleteMessage({
-    ...countSpellingGroupsWithFindings(groups),
+  const {
+    cautionSelected = true,
+    builtinSelected = true,
+  } = criteriaSelection;
+  const counts = countSpellingGroupsWithFindings(groups);
+  const summaryInput = {
+    ...counts,
     totalFindings,
+    cautionSelected,
+    builtinSelected,
+  };
+  const message = formatSpellingCheckCompleteMessage(summaryInput);
+  const stats = buildSpellingResultSummaryStats(summaryInput);
+
+  await showAppAlert({
+    title: '검수를 진행했습니다',
+    message,
+    messageNode: createElement(CheckResultSummaryContent, {
+      stats,
+      totalFindings,
+    }),
   });
-  const newline = raw.indexOf('\n');
-  const title = newline >= 0 ? raw.slice(0, newline) : '검수 완료';
-  const message = newline >= 0 ? raw.slice(newline + 1).trimStart() : raw;
-  await showAppAlert({ title, message });
 }

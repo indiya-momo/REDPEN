@@ -164,7 +164,7 @@ export default function WelcomePcScreen({
               <span className="welcome-pc__desc-icon welcome-pc__desc-icon--ok" aria-hidden>
                 ✓
               </span>
-              선택한 맞춤법 · 일관성 기준에 따라 PDF 원고를 검수합니다
+              선택한 맞춤법 · 표기 통일 기준에 따라 PDF 원고를 검수합니다
             </p>
             <p className="welcome-pc__desc-line">
               <span className="welcome-pc__desc-icon welcome-pc__desc-icon--no" aria-hidden>
@@ -221,7 +221,7 @@ export default function WelcomePcScreen({
     <div className="welcome-pc__perf-beta welcome-pc__perf-beta--guest">
       <span className="welcome-pc__perf-badge-beta">오픈베타 중</span>
       <span className="welcome-pc__perf-quota">
-        회원은 매일 맞춤법 · 일관성 규칙 검수 가능
+        회원은 매일 맞춤법 · 표기 통일 검수 가능
       </span>
     </div>
   );
@@ -245,15 +245,15 @@ export default function WelcomePcScreen({
           <span className="welcome-pc__perf-l1-num" aria-hidden>
             ❶
           </span>
-          맞춤법{' '}
+          맞춤법
           <span className="welcome-pc__perf-l1-num" aria-hidden>
             ❷
           </span>
-          {' '}일관성{' '}
+          표기 통일
           <span className="welcome-pc__perf-l1-num" aria-hidden>
             ❸
           </span>
-          보조용언 + 본용언 표기
+          보조용언+본용언 표기
         </p>
 
         <p className="welcome-pc__perf-l2">
@@ -306,7 +306,7 @@ export default function WelcomePcScreen({
   const heroCtaButton = showSignedInLanding ? signedInStartButton : guestAuthButton;
 
   const foldCapText =
-    '사용자의 이해를 돕고자 검수 과정을 재구성한 장면입니다 · 맞춤법과 일관성 검수는 각각 진행합니다 · 크롬 브라우저를 통한 인디자인 PDF 사용을 권장합니다';
+    '사용자의 이해를 돕고자 검수 과정을 재구성한 장면입니다 · 맞춤법과 표기 통일 검수는 각각 진행합니다 · 크롬 브라우저를 통한 인디자인 PDF 사용을 권장합니다';
 
   const landingPageBlock = (
     <div className="welcome-pc__landing">
@@ -395,7 +395,7 @@ export default function WelcomePcScreen({
               src={WELCOME_PC_AFTER}
               width={1028}
               height={713}
-              alt="검수 후 예시 — 맞춤법·일관성·본용언+보조용언 표기 하이라이트"
+              alt="검수 후 예시 — 맞춤법·표기 통일·본용언+보조용언 표기 하이라이트"
               loading="lazy"
               decoding="async"
             />

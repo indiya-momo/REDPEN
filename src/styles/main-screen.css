@@ -1130,7 +1130,19 @@
   --tooltip-text-max: calc(360px * var(--tooltip-scale));
 }
 
-/* 3번 말풍선 — 「보정」을 실제 보정 버튼과 같은 느낌 */
+/* 3번 말풍선 — 보정 행 체크박스·확인 버튼과 같은 느낌 */
+.tooltip-guide__checkbox-look {
+  display: inline-block;
+  width: calc(0.9rem * var(--tooltip-scale, 1));
+  height: calc(0.9rem * var(--tooltip-scale, 1));
+  margin: 0 2px;
+  border: 1px solid color-mix(in srgb, var(--color-text-faint) 55%, var(--color-border));
+  border-radius: calc(2px * var(--tooltip-scale, 1));
+  vertical-align: middle;
+  background: var(--color-surface);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.35);
+}
+
 .tooltip-guide__calibrate-btn-look {
   display: inline-block;
   margin: 0 1px;
@@ -1174,7 +1186,7 @@
   color: var(--color-text);
 }
 
-/* 4번 말풍선 — 좌측 「일관성 검수」탭 칩 */
+/* 4번 말풍선 — 좌측 「표기 통일」탭 칩 */
 .tooltip-guide__work-tab-chip {
   display: inline-block;
   margin: 0 2px;
@@ -1197,6 +1209,26 @@
   color: var(--accent-terracotta-deep);
   box-shadow: inset 0 calc(-2px * var(--tooltip-scale, 1)) 0
     var(--accent-terracotta);
+}
+
+/* 4번 말풍선 — 「여러 개 찾기」 결과 뱃지와 같은 톤 */
+.tooltip-guide__feature-badge {
+  display: inline-flex;
+  align-items: center;
+  margin: 0 2px;
+  padding: calc(3px * var(--tooltip-scale, 1))
+    calc(7px * var(--tooltip-scale, 1));
+  border: 1px solid
+    color-mix(in srgb, var(--accent-terracotta) 94%, var(--accent-terracotta-deep) 6%);
+  border-radius: calc(var(--radius-ui-sm) * var(--tooltip-scale, 1));
+  font-family: inherit;
+  font-size: calc(0.72rem * var(--tooltip-scale, 1));
+  font-weight: 800;
+  line-height: 1.15;
+  vertical-align: middle;
+  white-space: nowrap;
+  background: var(--accent-terracotta);
+  color: var(--accent-on-terracotta);
 }
 
 /* 6번 말풍선 — 저장(디스크) 아이콘 = 좌측 패널 저장 버튼과 동일 톤 */
@@ -2716,7 +2748,7 @@
 }
 
 .consistency-section-box[data-work-guide-step='auxiliary-box'] .auxiliary-checklist-intro {
-  margin: 4px 0 4px;
+  margin: 8px 0 4px;
   padding-inline: var(--criteria-check-col-start, calc(14px + 23px))
     var(--criteria-pad-inline, 14px);
   font-size: 0.8125rem;
@@ -3274,13 +3306,23 @@
 }
 
 .pdf-work-pane__greeting-criteria {
-  display: inline-block;
-  padding: 0.1rem 0.35rem;
-  border-radius: var(--radius-ui-sm);
-  background: var(--panel-accordion-bg);
+  font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
   font-weight: 800;
   color: var(--accent-terracotta-deep);
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
+}
+
+.pdf-work-pane__greeting--active-project {
+  display: inline-block;
+  width: fit-content;
+  max-width: 100%;
+  padding: 0.28rem 0.62rem;
+  border-radius: var(--radius-ui-sm);
+  background: rgb(255 255 255 / 0.94);
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 0.85),
+    0 2px 10px rgb(255 255 255 / 0.55),
+    0 1px 3px rgb(42 33 24 / 0.06);
 }
 
 .pdf-work-pane__zoom-axis {
@@ -3695,7 +3737,7 @@
 
 .panel-left .consistency-section-box[data-work-guide-step='auxiliary-box'] .auxiliary-checklist-intro {
   font-size: calc(0.8125rem * var(--panel-ui-scale));
-  margin: calc(4px * var(--panel-ui-scale)) 0 calc(4px * var(--panel-ui-scale));
+  margin: calc(8px * var(--panel-ui-scale)) 0 calc(4px * var(--panel-ui-scale));
   padding-inline: var(--criteria-check-col-start) var(--criteria-pad-inline, 14px);
 }
 

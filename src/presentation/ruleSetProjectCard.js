@@ -97,7 +97,7 @@ function buildHeadline(counts, excludePhrases) {
   if (excludeCount > 0) parts.push(`검수 제외 ${excludeCount}개`);
   return parts.length
     ? parts.join(' · ')
-    : '맞춤법·일관성 기준을 설정하세요';
+    : '맞춤법·표기 통일 기준을 설정하세요';
 }
 
 /** @param {import('../lib/ruleSetsStorage.js').RuleSet} set */

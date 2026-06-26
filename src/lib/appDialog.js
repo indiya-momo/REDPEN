@@ -3,9 +3,12 @@
  * AppDialogHost가 마운트되지 않은 환경(테스트 등)에서는 window.alert/confirm으로 폴백.
  */
 
+/** @typedef {import('react').ReactNode} ReactNode */
+
 /** @typedef {{
  *   title?: string,
- *   message: string,
+ *   message?: string,
+ *   messageNode?: ReactNode,
  *   confirmLabel?: string,
  *   cancelLabel?: string,
  * }} AppDialogOptions */
