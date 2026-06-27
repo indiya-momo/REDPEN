@@ -39,7 +39,7 @@ import {
 import { buildProjectCardViewModelFromRuleSet } from '../presentation/ruleSetProjectCard.js';
 import { planMyPageProjectGrid } from '../lib/mypageProjectDisplay.js';
 import ProjectLibraryCard from '../mock/mypagePrototype/ProjectLibraryCard.jsx';
-import ProjectMetaEditModal from './ProjectMetaEditModal.jsx';
+import ProjectHubSettingsPanel from './ProjectHubSettingsPanel.jsx';
 import {
   buildProjectTagFilterOptions,
   filterProjectsForLibrary,
@@ -54,6 +54,13 @@ const SIDEBAR_NAV = [
   { id: 'overview', label: '나의 프로젝트' },
   { id: 'badges', label: '배지 모음집' },
 ];
+
+/** @param {string} nav */
+function resolveMypageNav(nav) {
+  if (nav === 'projects' || nav === 'home') return 'overview';
+  if (nav === 'profile' || nav === 'badges' || nav === 'overview') return nav;
+  return 'overview';
+}
 
 /** @type {ReadonlyArray<{ name: string, description: string, tabLimit: number }>} */
 const MEMBER_BENEFIT_TIERS = [
@@ -295,12 +302,25 @@ function BadgeCollectionSection({ badges, earnedCount, totalLabel }) {
   );
 }
 
-function OverviewBadgePanel({ badges, earnedCount, totalLabel }) {
+function OverviewBadgePanel({ badges, earnedCount, totalLabel, onOpen }) {
   return (
     <div className="mypage__badge-column">
       <section
-        className="mypage__card mypage__badge-card mypage__card--badge-preview"
+        className="mypage__card mypage__badge-card mypage__card--badge-preview mypage__card--nav-link"
         aria-labelledby="mypage-badge-overview-title"
+        role={onOpen ? 'button' : undefined}
+        tabIndex={onOpen ? 0 : undefined}
+        onClick={onOpen}
+        onKeyDown={
+          onOpen
+            ? (event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  onOpen();
+                }
+              }
+            : undefined
+        }
       >
         <div className="mypage__badge-head">
           <BadgeCollectionTitleRow
@@ -346,8 +366,8 @@ function ProjectHubSection({ uid, email }) {
   );
 
   const [tagFilter, setTagFilter] = useState(/** @type {string | null} */ (null));
-  const [metaEditTarget, setMetaEditTarget] = useState(
-    /** @type {import('../presentation/projectCardViewModel.js').ProjectCardViewModel | null} */ (null),
+  const [selectedCardId, setSelectedCardId] = useState(
+    /** @type {string | null} */ (null),
   );
   const [metaSavePending, setMetaSavePending] = useState(false);
 
@@ -377,23 +397,38 @@ function ProjectHubSection({ uid, email }) {
     if (!stillValid) setTagFilter(null);
   }, [tagFilter, tagFilterOptions]);
 
-  const closeMetaEdit = useCallback(() => {
-    if (metaSavePending) return;
-    setMetaEditTarget(null);
-  }, [metaSavePending]);
+  useEffect(() => {
+    if (!selectedCardId) return;
+    if (!cards.some((card) => card.id === selectedCardId)) {
+      setSelectedCardId(null);
+    }
+  }, [cards, selectedCardId]);
+
+  const openProjectSettings = useCallback((cardId) => {
+    setSelectedCardId(cardId);
+  }, []);
+
+  const selectedCard = useMemo(
+    () => cards.find((card) => card.id === selectedCardId) ?? null,
+    [cards, selectedCardId],
+  );
+
+  const selectedRuleSet = useMemo(
+    () => visibleProjects.find((set) => set.id === selectedCardId) ?? null,
+    [visibleProjects, selectedCardId],
+  );
 
   const handleSaveMeta = useCallback(
     async (payload) => {
-      if (!metaEditTarget) return;
+      if (!selectedCard) return;
       setMetaSavePending(true);
       try {
-        const ok = await updateProjectMeta(metaEditTarget.id, payload);
-        if (ok) setMetaEditTarget(null);
+        await updateProjectMeta(selectedCard.id, payload);
       } finally {
         setMetaSavePending(false);
       }
     },
-    [metaEditTarget, updateProjectMeta],
+    [selectedCard, updateProjectMeta],
   );
 
   const handleRename = useCallback(
@@ -487,10 +522,12 @@ function ProjectHubSection({ uid, email }) {
                 key={card.id}
                 card={card}
                 showStartWork
+                selected={card.id === selectedCardId}
+                onSelect={() => openProjectSettings(card.id)}
                 onRename={(title) => void handleRename(card.id, title)}
                 onDuplicate={() => void handleDuplicate(card.id)}
                 onSharePreview={handleSharePreview}
-                onEditMeta={() => setMetaEditTarget(card)}
+                onEditMeta={() => openProjectSettings(card.id)}
                 onStartWork={() => void handleStartWork(card.id)}
               />
             ))}
@@ -515,23 +552,58 @@ function ProjectHubSection({ uid, email }) {
                 ))
               : null}
           </div>
+
+          {selectedCard ? (
+            <ProjectHubSettingsPanel
+              card={selectedCard}
+              pdfFileName={selectedRuleSet?.projectContext?.pdfFileName}
+              pdfPageCount={selectedRuleSet?.projectContext?.pdfPageCount}
+              lastWorkedAt={selectedRuleSet?.projectContext?.lastWorkedAt}
+              saving={metaSavePending}
+              onSave={handleSaveMeta}
+              onStartWork={() => void handleStartWork(selectedCard.id)}
+              onDuplicate={() => void handleDuplicate(selectedCard.id)}
+              onSharePreview={handleSharePreview}
+            />
+          ) : null}
         </>
       )}
 
-      {metaEditTarget ? (
-        <ProjectMetaEditModal
-          open
-          projectTitle={metaEditTarget.title}
-          initialTags={metaEditTarget.tags}
-          initialMemo={metaEditTarget.memo ?? ''}
-          initialProofRevision={metaEditTarget.proofRevision ?? ''}
-          initialFormatLabel={metaEditTarget.formatLabel ?? ''}
-          saving={metaSavePending}
-          onClose={closeMetaEdit}
-          onSave={handleSaveMeta}
-        />
-      ) : null}
     </section>
+  );
+}
+
+function MyPageOverviewSection({
+  quota,
+  authUid,
+  badges,
+  earnedCount,
+  totalLabel,
+  onOpenBadges,
+  projectUid,
+  projectEmail,
+}) {
+  return (
+    <div className="mypage__overview">
+      <div className="mypage__member-head">
+        <MemberBenefitTierBanner quota={quota} authUid={authUid} />
+        <MyBenefitsSection quota={quota} />
+      </div>
+      {isMyPageProjectHubEnabled() ? (
+        <ProjectHubSection uid={projectUid} email={projectEmail} />
+      ) : (
+        <ProjectHubPlaceholderSection />
+      )}
+      <div className="mypage__overview-secondary">
+        <OverviewBadgePanel
+          badges={badges}
+          earnedCount={earnedCount}
+          totalLabel={totalLabel}
+          onOpen={onOpenBadges}
+        />
+        <MyPageFaq />
+      </div>
+    </div>
   );
 }
 
@@ -672,6 +744,13 @@ function ProfileSection({ displayName, email, daysWithMomo, loginAtMs }) {
  */
 export default function MyPageWindowScreen({ authSession, authReady }) {
   const [activeNav, setActiveNav] = useState('overview');
+  const resolvedNav = resolveMypageNav(activeNav);
+
+  useEffect(() => {
+    if (activeNav !== resolvedNav) {
+      setActiveNav(resolvedNav);
+    }
+  }, [activeNav, resolvedNav]);
   const [badgeRev, setBadgeRev] = useState(0);
 
   const profile = authSession?.uid ? getUserProfile(authSession.uid) : null;
@@ -851,7 +930,7 @@ export default function MyPageWindowScreen({ authSession, authReady }) {
               <li key={item.id}>
                 <button
                   type="button"
-                  className={`mypage__nav-btn${activeNav === item.id ? ' mypage__nav-btn--active' : ''}${item.disabled ? ' mypage__nav-btn--disabled' : ''}`}
+                  className={`mypage__nav-btn${resolvedNav === resolveMypageNav(item.id) ? ' mypage__nav-btn--active' : ''}${item.disabled ? ' mypage__nav-btn--disabled' : ''}`}
                   onClick={() => {
                     if (item.disabled) return;
                     setActiveNav(item.id);
@@ -871,34 +950,25 @@ export default function MyPageWindowScreen({ authSession, authReady }) {
       </aside>
 
       <main className="mypage__main">
-        {activeNav === 'overview' ? (
-          <div className="mypage__overview">
-            <div className="mypage__member-head">
-              <MemberBenefitTierBanner quota={quota} authUid={authSession.uid} />
-              <MyBenefitsSection quota={quota} />
-            </div>
-            {isMyPageProjectHubEnabled() ? (
-              <ProjectHubSection uid={authSession.uid} email={quotaEmail} />
-            ) : (
-              <ProjectHubPlaceholderSection />
-            )}
-            <div className="mypage__overview-secondary">
-              <OverviewBadgePanel
-                badges={badges}
-                earnedCount={badgeStats.earnedCount}
-                totalLabel={badgeStats.totalLabel}
-              />
-              <MyPageFaq />
-            </div>
-          </div>
-        ) : activeNav === 'profile' ? (
+        {resolvedNav === 'overview' ? (
+          <MyPageOverviewSection
+            quota={quota}
+            authUid={authSession.uid}
+            badges={badges}
+            earnedCount={badgeStats.earnedCount}
+            totalLabel={badgeStats.totalLabel}
+            onOpenBadges={() => setActiveNav('badges')}
+            projectUid={authSession.uid}
+            projectEmail={quotaEmail}
+          />
+        ) : resolvedNav === 'profile' ? (
           <ProfileSection
             displayName={displayName}
             email={email}
             daysWithMomo={daysWithMomo}
             loginAtMs={loginAtMs}
           />
-        ) : activeNav === 'badges' ? (
+        ) : resolvedNav === 'badges' ? (
           <BadgeCollectionSection
             badges={badges}
             earnedCount={badgeStats.earnedCount}

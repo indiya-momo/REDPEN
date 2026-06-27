@@ -25,10 +25,11 @@ describe('planMyPageProjectGrid', () => {
       project('old', '2026-01-01'),
       project('mid', '2026-06-01'),
       project('new', '2026-06-20'),
+      project('extra', '2026-06-21'),
     ];
     const { visibleProjects, visibleEmptySlotCount } =
       planMyPageProjectGrid(many);
-    expect(visibleProjects.map((p) => p.id)).toEqual(['new', 'mid']);
+    expect(visibleProjects.map((p) => p.id)).toEqual(['extra', 'new']);
     expect(visibleEmptySlotCount).toBe(0);
   });
 });
