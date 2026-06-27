@@ -5,6 +5,11 @@
   box-sizing: border-box;
 }
 
+.mypage__projects-layout .project-hub-settings {
+  width: 100%;
+  box-sizing: border-box;
+}
+
 .project-hub-settings {
   margin-top: 1.35rem;
   padding-top: 1.25rem;
