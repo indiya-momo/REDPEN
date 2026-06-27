@@ -252,7 +252,7 @@ export default function ProjectHubSettingsPanel({
           {activeSection === 'manuscript' ? (
             <div className="project-hub-settings__group">
               <div className="project-hub-settings__group-head">
-                <h3 className="project-hub-settings__group-title">원고</h3>
+                <h3 className="project-hub-settings__group-title">원고 정보</h3>
                 <p className="project-hub-settings__group-lead">
                   마지막으로 연결한 PDF 정보입니다. 원고는 서버에 저장되지
                   않습니다.

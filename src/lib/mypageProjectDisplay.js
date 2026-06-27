@@ -1,5 +1,5 @@
 /** 마이페이지 「나의 프로젝트」 그리드 표시 상한 (저장 쿼터와 무관) */
-export const MYPAGE_PROJECT_CARD_DISPLAY_MAX = 2;
+export const MYPAGE_PROJECT_CARD_DISPLAY_MAX = 4;
 
 /**
  * @param {import('./ruleSetsStorage.js').RuleSet[]} projects
