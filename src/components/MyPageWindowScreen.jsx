@@ -50,7 +50,6 @@ import './my-page.css';
 import '../mock/mypagePrototype/mypage-prototype.css';
 
 const SIDEBAR_NAV = [
-  { id: 'home', label: '홈' },
   { id: 'profile', label: '회원 정보' },
   { id: 'projects', label: '나의 프로젝트' },
   { id: 'badges', label: '배지 모음집' },
@@ -58,11 +57,16 @@ const SIDEBAR_NAV = [
 
 /** @param {string} nav */
 function resolveMypageNav(nav) {
-  if (nav === 'overview') return 'projects';
-  if (nav === 'home' || nav === 'projects' || nav === 'profile' || nav === 'badges') {
+  if (nav === 'home') return 'overview';
+  if (
+    nav === 'overview' ||
+    nav === 'projects' ||
+    nav === 'profile' ||
+    nav === 'badges'
+  ) {
     return nav;
   }
-  return 'home';
+  return 'overview';
 }
 
 /** @type {ReadonlyArray<{ name: string, description: string, tabLimit: number }>} */
@@ -346,9 +350,20 @@ function OverviewBadgePanel({ badges, earnedCount, totalLabel, onOpen }) {
  * @param {{
  *   uid: string,
  *   email: string,
+ *   showSettingsPanel?: boolean,
+ *   onFolderActivate?: (cardId: string) => void,
+ *   entryCardId?: string | null,
+ *   onEntryApplied?: () => void,
  * }} props
  */
-function ProjectHubSection({ uid, email }) {
+function ProjectHubSection({
+  uid,
+  email,
+  showSettingsPanel = true,
+  onFolderActivate,
+  entryCardId = null,
+  onEntryApplied,
+}) {
   const {
     projects,
     activeSetId,
@@ -401,24 +416,53 @@ function ProjectHubSection({ uid, email }) {
   }, [tagFilter, tagFilterOptions]);
 
   useEffect(() => {
-    if (loading) return;
+    if (!showSettingsPanel || loading) return;
+
     if (filteredCards.length === 0) {
       setSelectedCardId(null);
       return;
     }
-    if (selectedCardId && filteredCards.some((card) => card.id === selectedCardId)) {
+
+    if (entryCardId) {
+      if (filteredCards.some((card) => card.id === entryCardId)) {
+        setSelectedCardId(entryCardId);
+      }
+      onEntryApplied?.();
       return;
     }
+
+    if (
+      selectedCardId &&
+      filteredCards.some((card) => card.id === selectedCardId)
+    ) {
+      return;
+    }
+
     const preferredId =
       activeSetId && filteredCards.some((card) => card.id === activeSetId)
         ? activeSetId
         : filteredCards[0].id;
     setSelectedCardId(preferredId);
-  }, [loading, filteredCards, activeSetId, selectedCardId]);
+  }, [
+    showSettingsPanel,
+    loading,
+    filteredCards,
+    activeSetId,
+    selectedCardId,
+    entryCardId,
+    onEntryApplied,
+  ]);
 
-  const openProjectSettings = useCallback((cardId) => {
-    setSelectedCardId(cardId);
-  }, []);
+  const handleFolderSelect = useCallback(
+    (cardId) => {
+      if (onFolderActivate) {
+        onFolderActivate(cardId);
+        return;
+      }
+      setSelectedCardId(cardId);
+    },
+    [onFolderActivate],
+  );
 
   const selectedCard = useMemo(
     () => cards.find((card) => card.id === selectedCardId) ?? null,
@@ -536,7 +580,7 @@ function ProjectHubSection({ uid, email }) {
                   card={card}
                   compact
                   selected={card.id === selectedCardId}
-                  onSelect={() => openProjectSettings(card.id)}
+                  onSelect={() => handleFolderSelect(card.id)}
                 />
               ))}
 
@@ -564,7 +608,7 @@ function ProjectHubSection({ uid, email }) {
         )}
       </section>
 
-      {!loading && selectedCard ? (
+      {showSettingsPanel && !loading && selectedCard ? (
         <ProjectHubSettingsPanel
           card={selectedCard}
           pdfFileName={selectedRuleSet?.projectContext?.pdfFileName}
@@ -581,13 +625,16 @@ function ProjectHubSection({ uid, email }) {
   );
 }
 
-function MyPageHomeSection({
+function MyPageOverviewSection({
   quota,
   authUid,
   badges,
   earnedCount,
   totalLabel,
+  projectUid,
+  projectEmail,
   onOpenBadges,
+  onOpenProjects,
 }) {
   return (
     <div className="mypage__overview">
@@ -595,6 +642,16 @@ function MyPageHomeSection({
         <MemberBenefitTierBanner quota={quota} authUid={authUid} />
         <MyBenefitsSection quota={quota} />
       </div>
+      {isMyPageProjectHubEnabled() ? (
+        <ProjectHubSection
+          uid={projectUid}
+          email={projectEmail}
+          showSettingsPanel={false}
+          onFolderActivate={(cardId) => onOpenProjects(cardId)}
+        />
+      ) : (
+        <ProjectHubPlaceholderSection />
+      )}
       <div className="mypage__overview-secondary">
         <OverviewBadgePanel
           badges={badges}
@@ -608,11 +665,16 @@ function MyPageHomeSection({
   );
 }
 
-function ProjectHubPageSection({ uid, email }) {
+function ProjectHubPageSection({ uid, email, entryCardId, onEntryApplied }) {
   return (
     <div className="mypage__main-inner mypage__main-inner--section mypage__overview--projects">
       {isMyPageProjectHubEnabled() ? (
-        <ProjectHubSection uid={uid} email={email} />
+        <ProjectHubSection
+          uid={uid}
+          email={email}
+          entryCardId={entryCardId}
+          onEntryApplied={onEntryApplied}
+        />
       ) : (
         <ProjectHubPlaceholderSection />
       )}
@@ -756,7 +818,10 @@ function ProfileSection({ displayName, email, daysWithMomo, loginAtMs }) {
  * }} props
  */
 export default function MyPageWindowScreen({ authSession, authReady }) {
-  const [activeNav, setActiveNav] = useState('home');
+  const [activeNav, setActiveNav] = useState('overview');
+  const [projectsEntryCardId, setProjectsEntryCardId] = useState(
+    /** @type {string | null} */ (null),
+  );
   const resolvedNav = resolveMypageNav(activeNav);
 
   useEffect(() => {
@@ -904,7 +969,7 @@ export default function MyPageWindowScreen({ authSession, authReady }) {
             <button
               type="button"
               className="mypage__title-btn"
-              onClick={() => setActiveNav('home')}
+              onClick={() => setActiveNav('overview')}
             >
               마이페이지
             </button>
@@ -946,6 +1011,9 @@ export default function MyPageWindowScreen({ authSession, authReady }) {
                   className={`mypage__nav-btn${resolvedNav === resolveMypageNav(item.id) ? ' mypage__nav-btn--active' : ''}${item.disabled ? ' mypage__nav-btn--disabled' : ''}`}
                   onClick={() => {
                     if (item.disabled) return;
+                    if (item.id === 'projects') {
+                      setProjectsEntryCardId(null);
+                    }
                     setActiveNav(item.id);
                   }}
                   disabled={item.disabled}
@@ -963,17 +1031,28 @@ export default function MyPageWindowScreen({ authSession, authReady }) {
       </aside>
 
       <main className="mypage__main">
-        {resolvedNav === 'home' ? (
-          <MyPageHomeSection
+        {resolvedNav === 'overview' ? (
+          <MyPageOverviewSection
             quota={quota}
             authUid={authSession.uid}
             badges={badges}
             earnedCount={badgeStats.earnedCount}
             totalLabel={badgeStats.totalLabel}
+            projectUid={authSession.uid}
+            projectEmail={quotaEmail}
             onOpenBadges={() => setActiveNav('badges')}
+            onOpenProjects={(cardId) => {
+              setProjectsEntryCardId(cardId);
+              setActiveNav('projects');
+            }}
           />
         ) : resolvedNav === 'projects' ? (
-          <ProjectHubPageSection uid={authSession.uid} email={quotaEmail} />
+          <ProjectHubPageSection
+            uid={authSession.uid}
+            email={quotaEmail}
+            entryCardId={projectsEntryCardId}
+            onEntryApplied={() => setProjectsEntryCardId(null)}
+          />
         ) : resolvedNav === 'profile' ? (
           <ProfileSection
             displayName={displayName}
