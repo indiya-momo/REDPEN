@@ -6,6 +6,10 @@ import {
 import { isGloballyExcluded, shouldSkipMatch } from './matchFilters.js';
 import { getLineContextAtTextIndex } from '../toc-body/lib/pdfHeadingExtract.js';
 import { isMatchSpatiallyCoherent } from './matchSpatial.js';
+import {
+  buildPageByNum,
+  sortInstancesReadingOrder,
+} from './matchReadingOrder.js';
 import { cautionHighlightSpan } from './cautionRules.js';
 
 /**
@@ -60,8 +64,13 @@ function yieldToMain() {
 
 /**
  * @param {Map<string, GroupedResult>} byKey
+ * @param {(PageText | import('./pdfService.js').PageData)[]} [pages]
  */
-function finalizeResults(byKey) {
+function finalizeResults(byKey, pages = []) {
+  const pageByNum = buildPageByNum(pages);
+  for (const group of byKey.values()) {
+    group.instances = sortInstancesReadingOrder(group.instances, pageByNum);
+  }
   return [...byKey.values()].sort((a, b) => {
     const pa = a.instances[0]?.pageNum ?? 0;
     const pb = b.instances[0]?.pageNum ?? 0;
@@ -328,7 +337,7 @@ export function runRuleCheck(pages, rules, options = {}) {
     applyRuleToPages(rule, pages, byKey, globalExcludePhrases, errors);
   }
 
-  return { results: finalizeResults(byKey), errors };
+  return { results: finalizeResults(byKey, pages), errors };
 }
 
 /**
@@ -370,7 +379,7 @@ export async function runRuleCheckAsync(pages, rules, options = {}) {
     }
   }
 
-  return { results: finalizeResults(byKey), errors };
+  return { results: finalizeResults(byKey, pages), errors };
 }
 
 /**

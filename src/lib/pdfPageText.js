@@ -2,12 +2,17 @@
  * PDF 텍스트 항목 → page.text 조립 (pdfjs·Vite worker 없음 — Node 스크립트·테스트용)
  */
 
+import { splitSpreadColumns } from './spreadColumnSplit.js';
+
 /**
  * @typedef {Object} TextItemRef
  * @property {number} start
  * @property {number} end
  * @property {number} itemIndex
  */
+
+/** @typedef {{ item: import('pdfjs-dist').TextItem, itemIndex: number }} TextEntry */
+/** @typedef {{ y: number, entries: TextEntry[] }} BuiltLine */
 
 /** @param {string} s */
 function endsWithHangulSyllable(s) {
@@ -257,16 +262,13 @@ function appendBuiltLine(entries, text, itemRefs, shouldGapSpace) {
 }
 
 /**
- * @param {import('pdfjs-dist').TextItem[]} items
+ * @param {TextEntry[]} orderedEntries — sourceItems 순서의 부분집합
+ * @returns {BuiltLine[]}
  */
-export function buildPageText(items) {
-  const sourceItems = dedupeOverlayTextItems(items);
-  /** @type {{
-   *   y: number,
-   *   entries: { item: import('pdfjs-dist').TextItem, itemIndex: number }[],
-   * }[]} */
+function buildBuiltLinesFromEntries(orderedEntries) {
+  /** @type {BuiltLine[]} */
   const builtLines = [];
-  /** @type {{ item: import('pdfjs-dist').TextItem, itemIndex: number }[]} */
+  /** @type {TextEntry[]} */
   let bucket = [];
 
   const flush = () => {
@@ -276,19 +278,48 @@ export function buildPageText(items) {
     bucket = [];
   };
 
-  sourceItems.forEach((item, itemIndex) => {
-    if (!('str' in item) || !item.str) return;
-    const row = { item, itemIndex };
-    if (bucket.length && shouldStartNewTextLine(bucket[bucket.length - 1], item)) {
+  for (const row of orderedEntries) {
+    if (bucket.length && shouldStartNewTextLine(bucket[bucket.length - 1], row.item)) {
       flush();
     }
     bucket.push(row);
-    if (item.hasEOL) flush();
-  });
+    if (row.item.hasEOL) flush();
+  }
   flush();
 
   builtLines.sort((a, b) => b.y - a.y);
-  const uniqueLines = dedupeOverlayBuiltLines(builtLines);
+  return dedupeOverlayBuiltLines(builtLines);
+}
+
+/**
+ * @param {import('pdfjs-dist').TextItem[]} sourceItems
+ * @returns {BuiltLine[]}
+ */
+function buildUniqueLines(sourceItems) {
+  /** @type {TextEntry[]} */
+  const allEntries = [];
+  sourceItems.forEach((item, itemIndex) => {
+    if (!('str' in item) || !item.str) return;
+    allEntries.push({ item, itemIndex });
+  });
+
+  const spread = splitSpreadColumns(sourceItems);
+  if (!spread) {
+    return buildBuiltLinesFromEntries(allEntries);
+  }
+
+  return [
+    ...buildBuiltLinesFromEntries(spread.left),
+    ...buildBuiltLinesFromEntries(spread.right),
+  ];
+}
+
+/**
+ * @param {import('pdfjs-dist').TextItem[]} items
+ */
+export function buildPageText(items) {
+  const sourceItems = dedupeOverlayTextItems(items);
+  const uniqueLines = buildUniqueLines(sourceItems);
 
   let text = '';
   let textLayout = '';

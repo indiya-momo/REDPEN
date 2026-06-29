@@ -221,6 +221,112 @@ describe('buildPageText', () => {
   });
 });
 
+function mockSpreadPageItems() {
+  const leftX = 48;
+  const rightX = 420;
+  const font = 11;
+  const row = (parts, y) => mockLineItems(parts, y, font);
+  return [
+    ...row(
+      [
+        { str: '바로잡아', x: leftX, w: 55 },
+        { str: '바', x: leftX + 58, w: 11 },
+      ],
+      200,
+    ),
+    ...row([{ str: '하는', x: rightX, w: 22 }], 200),
+    ...row([{ str: '왼쪽윗', x: leftX }], 520),
+    ...row([{ str: '왼쪽중', x: leftX }], 460),
+    ...row([{ str: '왼쪽아래', x: leftX }], 400),
+    ...row([{ str: '오른윗', x: rightX }], 520),
+    ...row([{ str: '오른중', x: rightX }], 460),
+    ...row([{ str: '오른아래', x: rightX }], 400),
+  ];
+}
+
+describe('buildPageText — 펼침면 단 분할', () => {
+  it('책등을 넘는 바·하는 한 줄로 엮이지 않는다', () => {
+    const items = mockSpreadPageItems();
+    const { text } = buildPageText(items);
+    expect(text).not.toMatch(/바하/);
+    expect(text.indexOf('바')).toBeLessThan(text.indexOf('하는'));
+    expect(text).toMatch(/바\n/);
+    expect(text).toMatch(/하는\n/);
+  });
+
+  it('textLayout도 동일하게 단 분할된다', () => {
+    const items = mockSpreadPageItems();
+    const { textLayout } = buildPageText(items);
+    expect(textLayout).not.toMatch(/바하/);
+  });
+
+  it('펼침면 바하 오탐 — 맞춤법 검사 0건', () => {
+    const items = mockSpreadPageItems();
+    const { text, itemRefs } = buildPageText(items);
+    const page = { pageNum: 7, text, items, itemRefs };
+    const { results } = runRuleCheck(
+      [page],
+      [
+        {
+          find: '바하',
+          replace: '바흐',
+          pattern: 'literal',
+          category: 'spelling',
+          builtIn: true,
+          enabled: true,
+        },
+      ],
+    );
+    expect(results[0]?.instances ?? []).toHaveLength(0);
+  });
+
+  it('itemRefs itemIndex가 원본 items를 가리킨다', () => {
+    const items = mockSpreadPageItems();
+    const { text, itemRefs, textLayout, itemRefsLayout } = buildPageText(items);
+    const barRef = itemRefs.find(
+      (r) => items[r.itemIndex]?.str?.includes('바') && !items[r.itemIndex]?.str?.includes('바로'),
+    );
+    expect(barRef).toBeTruthy();
+    expect(text.slice(barRef.start, barRef.end)).toBe('바');
+    const layoutRef = itemRefsLayout.find((r) => r.itemIndex === barRef.itemIndex);
+    expect(layoutRef).toBeTruthy();
+    expect(textLayout.slice(layoutRef.start, layoutRef.end)).toBe('바');
+  });
+
+  it('단면 페이지는 기존과 같이 조립한다', () => {
+    const items = [
+      { str: '통해', transform: [10, 0, 0, 10, 0, 100], width: 22 },
+      { str: '보장', transform: [10, 0, 0, 10, 22.6, 100], width: 22 },
+    ];
+    const { text, textLayout, itemRefs } = buildPageText(items);
+    expect(text).toMatch(/통해\s+보장/);
+    expect(textLayout).toBe('통해보장\n');
+    expect(itemRefs).toHaveLength(2);
+  });
+
+  it('가운데 쪽번호만 있는 단면은 펼침으로 쪼개지 않는다', () => {
+    const font = 11;
+    const items = [
+      ...mockLineItems([{ str: '본문', x: 48 }], 420, font),
+      ...mockLineItems([{ str: '이어', x: 48 }], 380, font),
+      ...mockLineItems([{ str: '쓴다', x: 48 }], 340, font),
+      ...mockLineItems([{ str: '또', x: 48 }], 300, font),
+      ...mockLineItems([{ str: '내용', x: 48 }], 260, font),
+      ...mockLineItems([{ str: '계속', x: 48 }], 220, font),
+      ...mockLineItems([{ str: '단락', x: 48 }], 180, font),
+      ...mockLineItems([{ str: '끝', x: 48 }], 140, font),
+      {
+        str: '50',
+        transform: [font, 0, 0, font, 120, 400],
+        width: 16,
+      },
+    ];
+    const { text } = buildPageText(items);
+    expect(text.split('\n').filter(Boolean).length).toBeGreaterThanOrEqual(8);
+    expect(text).toContain('50');
+  });
+});
+
 describe('buildPageText — 역할을 해 왔다 추출·검사 (가설 검증)', () => {
   it('PDF 항목에 공백 문자가 있으면 text에도 띄움 유지', () => {
     const items = mockLineItems([

@@ -245,37 +245,6 @@ function postProcessSpellingRules(rules) {
   return sorted;
 }
 
-function expandBulkRow(
-  find,
-  replace,
-  enabled,
-  tip,
-  memo,
-  countsInQuota,
-  visible,
-  dividerGroup,
-  dividerLabel,
-  overlayReplace,
-) {
-  const findParts = find.split(/\s+/).filter(Boolean);
-  const replaceParts = replace.split(/\s+/).filter(Boolean);
-  if (findParts.length < 2 || findParts.length !== replaceParts.length) {
-    return null;
-  }
-  return findParts.map((f, i) => ({
-    find: f,
-    replace: replaceParts[i],
-    enabled,
-    ...(tip ? { tip } : {}),
-    ...(memo ? { memo } : {}),
-    ...(countsInQuota === false ? { countsInQuota: false } : {}),
-    ...(visible === false ? { visible: false } : {}),
-    ...(dividerGroup ? { dividerGroup } : {}),
-    ...(dividerLabel ? { dividerLabel } : {}),
-    ...(overlayReplace ? { overlayReplace } : {}),
-  }));
-}
-
 function normalizeRow(row) {
   const find = String(row.find || '').trim();
   const replace = String(row.replace || '').trim();
@@ -315,20 +284,6 @@ function normalizeRow(row) {
       ...shared,
     };
   }
-
-  const bulk = expandBulkRow(
-    find,
-    replace,
-    enabled,
-    tip,
-    memo,
-    countsInQuota,
-    visible,
-    dividerGroup,
-    dividerLabel,
-    overlayReplace,
-  );
-  if (bulk) return bulk;
 
   if (find.split(/\s+/).length > 8) {
     return null;

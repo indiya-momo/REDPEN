@@ -35,8 +35,8 @@ describe('buildInstancePills', () => {
     );
   });
 
-  it('orders pills by page then index within page', () => {
-    const pills = buildInstancePills([inst(6, 2), inst(4, 1), inst(6, 1)]);
+  it('orders pills by page then reading order within page', () => {
+    const pills = buildInstancePills([inst(4, 1), inst(6, 1), inst(6, 2)]);
     expect(pills.map((p) => [p.inst.pageNum, p.inst.index])).toEqual([
       [4, 1],
       [6, 1],

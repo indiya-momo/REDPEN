@@ -27,9 +27,7 @@ export function buildInstancePills(instances) {
   /** @type {InstancePillEntry[]} */
   const pills = [];
   for (const pageNum of [...byPage.keys()].sort((a, b) => a - b)) {
-    const pageInstances = (byPage.get(pageNum) ?? []).sort(
-      (a, b) => a.index - b.index,
-    );
+    const pageInstances = byPage.get(pageNum) ?? [];
     const totalOnPage = pageInstances.length;
     pageInstances.forEach((inst, index) => {
       pills.push({

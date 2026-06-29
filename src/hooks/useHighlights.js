@@ -9,6 +9,10 @@ import {
 } from '../lib/checkResultUtils.js';
 import { getHighlightOverlayReplace } from '../lib/highlightOverlayReplace.js';
 import {
+  buildPageByNum,
+  compareInstancesReadingOrder,
+} from '../lib/matchReadingOrder.js';
+import {
   highlightRangeForCaution,
   highlightRangeForSpelling,
 } from '../lib/pdfService.js';
@@ -24,6 +28,7 @@ import {
  *   activeSource: 'spelling' | 'consistency',
  *   selectedInstance: import('../lib/ruleEngine.js').MatchInstance | null,
  *   customRules?: import('../lib/ruleTypes.js').Rule[],
+ *   pageTexts?: import('../lib/pdfService.js').PageData[],
  * }} options
  */
 export function useHighlights({
@@ -36,7 +41,13 @@ export function useHighlights({
   activeSource,
   selectedInstance,
   customRules = [],
+  pageTexts = [],
 }) {
+  const pageByNum = useMemo(() => buildPageByNum(pageTexts), [pageTexts]);
+  const compareOnPage = useMemo(
+    () => (a, b) => compareInstancesReadingOrder(a, b, pageByNum),
+    [pageByNum],
+  );
   const activeResults =
     activeSource === 'spelling' ? spellingResults : consistencyResults;
   const activeGroup = findActiveGroup(activeResults, selectedInstance);
@@ -75,7 +86,7 @@ export function useHighlights({
         }
       }
     }
-    onPage.sort((a, b) => a.inst.index - b.inst.index);
+    onPage.sort((a, b) => compareOnPage(a.inst, b.inst));
     return onPage
       .map(({ inst, tip, isActiveGroup, isCaution, source, group }) => {
         const range = isCaution
@@ -111,6 +122,7 @@ export function useHighlights({
     selectedInstance,
     activeGroupKey,
     customRules,
+    compareOnPage,
   ]);
 
   const sortedFindings = useMemo(() => {
@@ -130,9 +142,15 @@ export function useHighlights({
     }
     return all.sort((a, b) => {
       if (a.pageNum !== b.pageNum) return a.pageNum - b.pageNum;
-      return a.index - b.index;
+      return compareOnPage(a, b);
     });
-  }, [highlightTab, spellingResults, consistencyResults, resultVisibility]);
+  }, [
+    highlightTab,
+    spellingResults,
+    consistencyResults,
+    resultVisibility,
+    compareOnPage,
+  ]);
 
   const currentFindingIndex = useMemo(() => {
     if (!selectedInstance || !sortedFindings.length) return -1;
