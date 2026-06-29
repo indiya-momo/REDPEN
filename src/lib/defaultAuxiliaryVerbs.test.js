@@ -66,9 +66,9 @@ describe('ensureDefaultAuxiliaryVerbs', () => {
 
     const labels = list.map((e) => e.displayLabel || e.tailWord);
 
-    expect(labels).toContain('본(-아/어) + 보다');
+    expect(labels).toContain('(아/어) + 보다');
 
-    expect(labels).toContain('본(-아/어) + 주다');
+    expect(labels).toContain('(아/어) + 주다');
 
     expect(list.some((e) => e.tailWord === '해 보' && !e.bonBojoItemId)).toBe(
 
@@ -78,12 +78,12 @@ describe('ensureDefaultAuxiliaryVerbs', () => {
 
     expect(list.length).toBe(10);
 
-    expect(labels).toContain('본(-아/어) + 하다');
+    expect(labels).toContain('(아/어) + 하다');
     expect(labels).not.toContain('아는체하다');
 
-    expect(labels).toContain('본(-아/어) + 지다');
+    expect(labels).toContain('(아/어) + 지다');
 
-    expect(labels).toContain('본(-아/어) + 있다');
+    expect(labels).toContain('(아/어) + 있다');
 
     const withBon = rules.filter((r) => r.bonBojoItemId === 'verb-boda1');
 
@@ -93,7 +93,7 @@ describe('ensureDefaultAuxiliaryVerbs', () => {
 
     expect(kyeoBon).toBeTruthy();
 
-    expect(ruleDisplayLabel(kyeoBon)).toBe('켜˅본 본(-아/어) + 보다');
+    expect(ruleDisplayLabel(kyeoBon)).toBe('켜˅본 (아/어) + 보다');
 
     expect(matches(kyeoBon, '책장에서 지켜 본')).toBe(true);
 
@@ -101,7 +101,7 @@ describe('ensureDefaultAuxiliaryVerbs', () => {
       (r) => r.bonBojoItemId === 'verb-jida' && r.tailWord === '해 지',
     );
 
-    expect(ruleDisplayLabel(haeJi)).toBe('해˅지 본(-아/어) + 지다');
+    expect(ruleDisplayLabel(haeJi)).toBe('해˅지 (아/어) + 지다');
 
     const bareBo = withBon.find((r) => r.tailWord === '보');
 

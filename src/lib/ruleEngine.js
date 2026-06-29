@@ -35,6 +35,7 @@ import { cautionHighlightSpan } from './cautionRules.js';
  * @property {string} label
  * @property {RuleCategory} [category]
  * @property {string} [cautionId]
+ * @property {string} [spellingRuleId]
  * @property {string} [tip]
  * @property {import('./ruleTypes.js').RuleKind} [patternKind]
  * @property {string} [tailWord]
@@ -264,7 +265,9 @@ function applyRuleToPages(rule, pages, byKey, globalExcludePhrases, errors) {
       const key =
         rule.category === 'caution' && rule.cautionId
           ? `caution:${rule.cautionId}`
-          : `${rule.find}\0${rule.replace}\0${rule.pattern ?? 'literal'}`;
+          : rule.spellingRuleId
+            ? `spelling:${rule.spellingRuleId}`
+            : `${rule.find}\0${rule.replace}\0${rule.pattern ?? 'literal'}`;
       if (!byKey.has(key)) {
         const tip = String(rule.tip ?? '').trim();
         byKey.set(key, {
@@ -273,6 +276,7 @@ function applyRuleToPages(rule, pages, byKey, globalExcludePhrases, errors) {
           label: ruleDisplayLabel(rule),
           category: rule.category ?? (rule.builtIn ? 'spelling' : 'custom'),
           ...(rule.cautionId ? { cautionId: rule.cautionId } : {}),
+          ...(rule.spellingRuleId ? { spellingRuleId: rule.spellingRuleId } : {}),
           ...(tip ? { tip } : {}),
           ...(rule.patternKind ? { patternKind: rule.patternKind } : {}),
           ...(rule.patternKind === 'auxiliary-verb' && rule.tailWord

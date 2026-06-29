@@ -11,7 +11,7 @@ import { MAX_RULES } from './ruleTypes.js';
 export function countBuiltInActiveRules(input = {}) {
   const builtInEnabled = input.builtInEnabled ?? builtInEnabledFromSheet();
   return BUILT_IN_QUOTA_RULES.filter((r) =>
-    isBuiltInRuleEnabled(builtInEnabled, r.find),
+    isBuiltInRuleEnabled(builtInEnabled, r),
   ).length;
 }
 
@@ -19,7 +19,7 @@ export function countBuiltInActiveRules(input = {}) {
 export function countBuiltInGuideActiveRules(input = {}) {
   const builtInEnabled = input.builtInEnabled ?? builtInEnabledFromSheet();
   return BUILT_IN_GUIDE_RULES.filter((r) =>
-    isBuiltInRuleEnabled(builtInEnabled, r.find),
+    isBuiltInRuleEnabled(builtInEnabled, r),
   ).length;
 }
 

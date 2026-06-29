@@ -385,7 +385,7 @@ export default function ConsistencyPanel({
               {AUXILIARY_VERB_FEATURE_LABEL}
               {auxiliaryTotal > 0 ? (
                 <span className="panel-criteria-heading-meta">
-                  {`(선택 ${auxiliaryActiveCount}/${auxiliaryTotal})`}
+                  {`(${auxiliaryActiveCount}/${auxiliaryTotal})`}
                 </span>
               ) : null}
             </span>

@@ -3,7 +3,7 @@
     {
       "id": "jubsa-attach",
       "tip": "'가량, 쯤'은  '정도'의 뜻을 더하는 접사로 수량을 나타내는 명사 뒤에 붙여 쓴다",
-      "title": "붙여서 쓰는 경우",
+      "title": "붙여 쓰는 경우",
       "items": [
         {
           "id": "jubsa-garyang",
@@ -17,7 +17,44 @@
           ],
           "displayLabel": "가량, 쯤(접사)",
           "tip": "'가량, 쯤'은  '정도'의 뜻을 더하는 접사로 수량을 나타내는 명사 뒤에 붙여 쓴다",
-          "groupLabel": "붙여서 쓰는 경우"
+          "groupLabel": "붙여 쓰는 경우"
+        },
+        {
+          "id": "jubsa-attach-tuseongi",
+          "label": "투성이",
+          "enabled": true,
+          "matchMode": "spaced-before",
+          "inventoryOnly": false,
+          "displayLabel": "투성이(접미사)",
+          "tip": "접미사 '투성이'는 앞말에 붙여 쓴다(재투성이)",
+          "groupLabel": "붙여 쓰는 경우"
+        }
+      ]
+    },
+    {
+      "id": "josa-attach",
+      "tip": "보조사 '커녕'은 앞말에 붙여 쓴다(밥은커녕)",
+      "title": "붙여 쓰는 경우",
+      "items": [
+        {
+          "id": "josa-attach-keonyeong",
+          "label": "커녕",
+          "enabled": true,
+          "matchMode": "spaced-before",
+          "inventoryOnly": false,
+          "displayLabel": "커녕(조사)",
+          "tip": "보조사 '커녕'은 앞말에 붙여 쓴다(밥은커녕)",
+          "groupLabel": "붙여 쓰는 경우"
+        },
+        {
+          "id": "josa-attach-bakke",
+          "label": "밖에",
+          "enabled": true,
+          "matchMode": "spaced-before",
+          "inventoryOnly": false,
+          "displayLabel": "밖에(조사)",
+          "tip": "보조사 '밖에'는 붙여 쓴다(할 수밖에)",
+          "groupLabel": "붙여 쓰는 경우"
         }
       ]
     },
@@ -103,6 +140,16 @@
           ],
           "tip": "'만, 만큼, 지'는 체언(명사, 대명사, 수사) 뒤는 조사로 붙이고, 용언(동사, 형용사) 뒤는 의존명사로 띄어 쓴다",
           "groupLabel": "앞말에 따라 띄어쓰기가 달라지는 경우"
+        },
+        {
+          "id": "josa-uinoun-ppun",
+          "label": "뿐",
+          "enabled": true,
+          "matchMode": "any-before",
+          "inventoryOnly": false,
+          "displayLabel": "뿐(조사 또는 의존명사)",
+          "tip": "체언 뒤는 조사로 붙이고(이것뿐), 용언 뒤는 의존명사라 띄어 쓴다(갈 뿐)",
+          "groupLabel": "앞말에 따라 띄어쓰기가 달라지는 경우"
         }
       ]
     },
@@ -148,7 +195,7 @@
           "id": "bon-bojo-notaboda",
           "label": "놓아 주다, 놓아주다",
           "enabled": true,
-          "matchMode": "stem-list",
+          "matchMode": "spaced-before",
           "inventoryOnly": false,
           "stems": [
             "놓아 주",
@@ -168,7 +215,7 @@
           "id": "bon-bojo-eojuda",
           "label": "들어 주다, 들어주다",
           "enabled": true,
-          "matchMode": "stem-list",
+          "matchMode": "spaced-before",
           "inventoryOnly": false,
           "stems": [
             "들어 주",
@@ -188,7 +235,7 @@
           "id": "bon-bojo-chataboda",
           "label": "찾아 보다, 찾아보다",
           "enabled": true,
-          "matchMode": "stem-list",
+          "matchMode": "spaced-before",
           "inventoryOnly": false,
           "stems": [
             "찾아 보",
@@ -215,7 +262,7 @@
           "id": "eogan-eomi-mot",
           "label": "못하다, 못 하다",
           "enabled": true,
-          "matchMode": "stem-list",
+          "matchMode": "spaced-before",
           "inventoryOnly": false,
           "stems": [
             "못 하",
@@ -235,7 +282,7 @@
           "id": "eogan-eomi-doei",
           "label": "되, 돼",
           "enabled": false,
-          "matchMode": "stem-list",
+          "matchMode": "spaced-before",
           "inventoryOnly": false,
           "stems": [
             "되",
@@ -243,16 +290,34 @@
           ],
           "displayLabel": "되, 돼",
           "except": [
-            "돼지"
+            "돼지",
+            "개돼지",
+            "꿀돼지",
+            "멧돼지",
+            "돼지갈비",
+            "돼지감자",
+            "돼지고기",
+            "돼지국밥",
+            "돼지기름",
+            "돼지꿈",
+            "돼지족발",
+            "돼지띠",
+            "돼지머리",
+            "돼지우리",
+            "돼지털",
+            "멧돼지",
+            "씨돼지",
+            "통돼지",
+            "애돼지"
           ],
           "tip": "한국어 어간(되-)은 홀로 문장 끝에 올 수 없으며, 어미(-어)와 결합해야 하므로 문장의 끝은 '돼'로 끝난다",
-          "groupLabel": "틀리기 쉬운 경우"
+          "groupLabel": "헷갈리기 쉬운 경우"
         },
         {
           "id": "eogan-eomi-aniyo",
           "label": "아니오, 아니요",
           "enabled": true,
-          "matchMode": "stem-list",
+          "matchMode": "spaced-before",
           "inventoryOnly": false,
           "stems": [
             "아니오",
@@ -260,7 +325,30 @@
           ],
           "displayLabel": "아니오, 아니요",
           "tip": "'아니요'는 네/예의 반대말로 질문에 답할 때 ,  '아니오'는 아니다'의 어간 뒤에 하오체 어미 '-오'가 붙은 종결형",
-          "groupLabel": "틀리기 쉬운 경우"
+          "groupLabel": "헷갈리기 쉬운 경우"
+        },
+        {
+          "id": "eogan-eomi-eumeuro",
+          "label": "로서, 로써",
+          "enabled": true,
+          "matchMode": "spaced-before",
+          "inventoryOnly": false,
+          "stems": [
+            "므로",
+            "으로",
+            "므로서",
+            "으로서",
+            "으로써",
+            "므로써",
+            "로서",
+            "로써"
+          ],
+          "displayLabel": "-으로, -로서, -로써",
+          "except": [
+            "홀로서기"
+          ],
+          "tip": "(-으)므로'는 이유(때문에), '(-으)로서'는 자격, '(-으)로써'는 재료, 방",
+          "groupLabel": "헷갈리기 쉬운 경우"
         }
       ]
     },
@@ -273,7 +361,7 @@
           "id": "noun-noun-angae",
           "label": "안개 속, 안갯속",
           "enabled": true,
-          "matchMode": "stem-list",
+          "matchMode": "spaced-before",
           "inventoryOnly": false,
           "stems": [
             "안개 속",
@@ -287,7 +375,7 @@
           "id": "noun-noun-han",
           "label": "한 번, 한번",
           "enabled": true,
-          "matchMode": "stem-list",
+          "matchMode": "spaced-before",
           "inventoryOnly": false,
           "stems": [
             "한 번",
@@ -301,7 +389,7 @@
           "id": "noun-noun-gyul",
           "label": "결제, 결재",
           "enabled": true,
-          "matchMode": "stem-list",
+          "matchMode": "spaced-before",
           "inventoryOnly": false,
           "stems": [
             "결제",
@@ -309,13 +397,13 @@
           ],
           "displayLabel": "결제, 결재",
           "tip": "결제(決濟):거래 관계를 끝맺는 일. 결재(決裁):상관이 승인함",
-          "groupLabel": "틀리기 쉬운 경우"
+          "groupLabel": "헷갈리기 쉬운 경우"
         },
         {
           "id": "noun-noun-gubun",
           "label": "구별, 구분",
           "enabled": true,
-          "matchMode": "stem-list",
+          "matchMode": "spaced-before",
           "inventoryOnly": false,
           "stems": [
             "구별",
@@ -323,20 +411,60 @@
           ],
           "displayLabel": "구별, 구분",
           "tip": "구별(區別): 실존 대상을  차이에 따라 가를 때 예)남녀(男女) 구별, 구분(區分): 추상적인 것을 기준에 따라 나눌 때 예)시대(時代) 구분",
-          "groupLabel": "틀리기 쉬운 경우"
+          "groupLabel": "헷갈리기 쉬운 경우"
+        },
+        {
+          "id": "noun-noun-jugi",
+          "label": "주기, 주년",
+          "enabled": true,
+          "matchMode": "any-before",
+          "inventoryOnly": false,
+          "displayLabel": "주기, 주년",
+          "except": [
+            "거름주기",
+            "고유주기",
+            "공전주기",
+            "관주기"
+          ],
+          "tip": "'주기周忌'는 죽은 사람의 기일이 돌아온 횟수, '주년周年'은 매년 특정한 날이 돌아오는 횟수",
+          "groupLabel": "헷갈리기 쉬운 경우"
         }
       ]
     },
     {
       "id": "verb-verb",
-      "tip": "'늘이다'는 길이, '늘리다'는 너비, 부피 등에 사용한다",
-      "title": "틀리기 쉬운 경우",
+      "tip": "'그러다'는 동사(그리하다), '그렇다'는 형용사(그러하다)",
+      "title": "헷갈리기 쉬운 경우",
       "items": [
+        {
+          "id": "verb-verb-geureoda",
+          "label": "그러다, 그렇다",
+          "enabled": true,
+          "matchMode": "spaced-before",
+          "inventoryOnly": false,
+          "stems": [
+            "그러다",
+            "그러고",
+            "그러지",
+            "그러니",
+            "그러던",
+            "그랬",
+            "그렇다",
+            "그렇고",
+            "그렇지",
+            "그렇게",
+            "그렇든",
+            "그러네"
+          ],
+          "displayLabel": "그러다, 그렇다",
+          "tip": "'그러다'는 동사(그리하다), '그렇다'는 형용사(그러하다)",
+          "groupLabel": "헷갈리기 쉬운 경우"
+        },
         {
           "id": "verb-verb-neal",
           "label": "늘이, 늘리",
           "enabled": true,
-          "matchMode": "stem-list",
+          "matchMode": "spaced-before",
           "inventoryOnly": false,
           "stems": [
             "늘이",
@@ -349,13 +477,13 @@
           ],
           "displayLabel": "늘이다, 늘리다",
           "tip": "'늘이다'는 길이, '늘리다'는 너비, 부피 등에 사용한다",
-          "groupLabel": "틀리기 쉬운 경우"
+          "groupLabel": "헷갈리기 쉬운 경우"
         },
         {
           "id": "verb-verbi-mat",
           "label": "맞추, 맞히",
           "enabled": true,
-          "matchMode": "stem-list",
+          "matchMode": "spaced-before",
           "inventoryOnly": false,
           "stems": [
             "맞추",
@@ -365,13 +493,13 @@
           ],
           "displayLabel": "맞추다, 맞히다",
           "tip": "'맞추다'는 바르게 하다 또는 비교하다는 의미로,  '맞히다'는 적중하다의 의미로 사용",
-          "groupLabel": "틀리기 쉬운 경우"
+          "groupLabel": "헷갈리기 쉬운 경우"
         },
         {
           "id": "verb-verb-bara",
           "label": "바라, 바래",
           "enabled": true,
-          "matchMode": "stem-list",
+          "matchMode": "spaced-before",
           "inventoryOnly": false,
           "stems": [
             "바라",
@@ -392,13 +520,35 @@
             "바라건"
           ],
           "tip": "'바라다'는 어떤 일이 이루어지기를 원할 때, '바래다'는 색이 변하거나, 사람을 배웅할 때 사용",
-          "groupLabel": "틀리기 쉬운 경우"
+          "groupLabel": "헷갈리기 쉬운 경우"
+        },
+        {
+          "id": "verb-verb-bbaetda",
+          "label": "뺏다, 뺐다",
+          "enabled": true,
+          "matchMode": "spaced-before",
+          "inventoryOnly": false,
+          "stems": [
+            "뺏다",
+            "뺏어",
+            "뺏고",
+            "뺏은",
+            "뺏기",
+            "뺏을",
+            "뺐다",
+            "뺐어",
+            "뺐고",
+            "뺐을"
+          ],
+          "displayLabel": "뺏다, 뺐다",
+          "tip": "'뺏다'는 물건 등을 '빼앗다'의 준말, '뺐다'는 더하고 빼는 '빼었다'의 준말",
+          "groupLabel": "헷갈리기 쉬운 경우"
         },
         {
           "id": "verb-verbi-but",
           "label": "붙이,부치",
           "enabled": true,
-          "matchMode": "stem-list",
+          "matchMode": "spaced-before",
           "inventoryOnly": false,
           "stems": [
             "부치",
@@ -410,7 +560,35 @@
           ],
           "displayLabel": "붙이다, 부치다",
           "tip": "'붙이다'는 '붙다'의 사동사로 맞닿아 떨어지지 않게 하다 '부치다'는 미달하다, 보내다, 음식을 만들다, 바람을 만들어내다 등을 의미",
-          "groupLabel": "틀리기 쉬운 경우"
+          "groupLabel": "헷갈리기 쉬운 경우"
+        },
+        {
+          "id": "verb-verb-yalda",
+          "label": "얇다, 가늘다",
+          "enabled": true,
+          "matchMode": "spaced-before",
+          "inventoryOnly": false,
+          "stems": [
+            "얇다",
+            "얇아",
+            "얇은",
+            "얇고",
+            "얇았",
+            "얇을",
+            "가늘다",
+            "가늘어",
+            "가늘고",
+            "가늘었",
+            "가는",
+            "가느다란",
+            "가느다랗"
+          ],
+          "displayLabel": "얇다, 가늘다",
+          "except": [
+            "얇실"
+          ],
+          "tip": "얇다'는 두께(종이), '가늘다'는 굵기(기둥)",
+          "groupLabel": "헷갈리기 쉬운 경우"
         }
       ]
     }

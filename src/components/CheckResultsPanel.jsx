@@ -305,7 +305,7 @@ export default function CheckResultsPanel({
               const tipText =
                 (group.tip || '').trim() ||
                 (source === 'spelling' && !isCaution
-                  ? getBuiltInTip(group.find, group.replace)
+                  ? getBuiltInTip(group.find, group.replace, group.spellingRuleId)
                   : isConsistency
                     ? getConsistencyHighlightTip(group, customRules)
                     : '');

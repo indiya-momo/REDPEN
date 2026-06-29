@@ -166,13 +166,16 @@ export default function CautionChecklist({
         <span className="caution-checklist-summary-title">
           편집자 검토 필요
           <span className="panel-criteria-heading-meta">
-            {`(선택 ${activeCount}/${total})`}
+            {`(${activeCount}/${total})`}
           </span>
         </span>
       </summary>
       <ul className="caution-checklist caution-checklist--bundles">
         {bundles.map((bundle) => {
           const bundleStateKey = `caution:${bundle.id}`;
+          const bundleActive = bundle.entries.filter(
+            ({ item }) => cautionEnabled[item.id] === true,
+          ).length;
 
           return (
             <li key={bundle.id} className="caution-rule-bundle-item">
@@ -184,7 +187,7 @@ export default function CautionChecklist({
                   </span>
                   <span className="caution-rule-bundle-title">{bundle.label}</span>
                   <span className="caution-rule-bundle-meta">
-                    {bundle.ruleCount}
+                    {`${bundleActive}/${bundle.ruleCount}`}
                   </span>
                 </summary>
                 <div className="caution-rule-bundle-body">

@@ -55,7 +55,7 @@ export function useHighlights({
         const tipText =
           (group.tip || '').trim() ||
           (source === 'spelling' && group.category !== 'caution'
-            ? getBuiltInTip(group.find, group.replace)
+            ? getBuiltInTip(group.find, group.replace, group.spellingRuleId)
             : source === 'consistency'
               ? getConsistencyHighlightTip(group, customRules)
               : '');

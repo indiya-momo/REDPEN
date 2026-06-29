@@ -6,6 +6,7 @@ import {
 import {
   SPELLING_RULES_FP,
   BUILT_IN_RULES,
+  builtInEnabledKey,
   countsTowardSpellingQuota,
   builtInEnabledFromSheet,
 } from '../lib/builtInRules.js';
@@ -690,14 +691,14 @@ export function useRuleSets(authUid = '', authEmail = '') {
   );
 
   const handleBuiltInToggle = useCallback(
-    (find) => {
+    (enabledKey) => {
       const activeSet = ruleSetsRef.current.find(
         (s) => s.id === activeSetIdRef.current,
       );
       if (!activeSet) return;
       const prev = activeSet.builtInEnabled ?? builtInEnabledFromSheet();
-      const on = prev[find] === true;
-      const nextBuiltIn = { ...prev, [find]: !on };
+      const on = prev[enabledKey] === true;
+      const nextBuiltIn = { ...prev, [enabledKey]: !on };
       if (
         !on &&
         isOverMaxRules(
@@ -726,7 +727,7 @@ export function useRuleSets(authUid = '', authEmail = '') {
       const nextBuiltIn = { ...prev };
       for (const r of BUILT_IN_RULES) {
         if (countsTowardSpellingQuota(r)) {
-          nextBuiltIn[r.find] = enabled;
+          nextBuiltIn[builtInEnabledKey(r)] = enabled;
         }
       }
       if (

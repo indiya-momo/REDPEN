@@ -10,7 +10,7 @@ function escapeRegexLiteral(s) {
 /**
  * @param {string} trimmed
  */
-function compileLiteralFindBody(trimmed) {
+export function compileLiteralFindBody(trimmed) {
   const wordParts = trimmed.split(/\s+/).filter(Boolean);
   if (!wordParts.length) return null;
 
@@ -28,6 +28,19 @@ function compileLiteralFindBody(trimmed) {
       return esc.split('').join(GAP);
     })
     .join(GAP_REQ);
+}
+
+/**
+ * 맞춤법 finds[] → 단일 alternation 패턴 (각 변형은 literal find 규칙과 동일)
+ * @param {string[]} finds
+ */
+export function compileSpellingFindsAlternation(finds) {
+  const bodies = finds
+    .map((f) => compileLiteralFindBody(String(f ?? '').trim()))
+    .filter(Boolean);
+  if (!bodies.length) return '';
+  if (bodies.length === 1) return bodies[0];
+  return `(?:${bodies.join('|')})`;
 }
 
 /**

@@ -4,6 +4,8 @@
  * 시트 탭 이름: spelling_rules
  * 컬럼: find | replace | enabled | tip | memo | counts_in_quota | visible | divider_group | divider_label | overlay_replace
  *   - divider_label: 묶음 이름(예: 사이시옷 법칙). 빈 칸 또는 "-"는 이름 없음으로 처리.
+ *   - rule_id · finds · display_label: 이형태 묶음(한 행·한 체크). finds는 쉼표 구분.
+ *   - 동기화 시 같은 divider_group 묶음 안 find 는 가나다순으로 정렬한다(시트 행 순서와 무관).
  *
  * 사용:
  *   SPREADSHEET_ID=xxx npm run sync-spelling
@@ -13,6 +15,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { assertValidSpellingRules } from '../src/lib/validateDataJson.js';
+import { parseSpellingFindsColumn } from '../src/lib/spellingRuleEntry.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
@@ -119,6 +122,11 @@ const SPELLING_HEADER_ALIASES = {
   묶음이름: 'divider_label',
   묶음명: 'divider_label',
   'divider label': 'divider_label',
+  규칙id: 'rule_id',
+  'rule id': 'rule_id',
+  이형태: 'finds',
+  표시이름: 'display_label',
+  'display label': 'display_label',
 };
 
 function rowsToObjects(rows) {
@@ -186,6 +194,57 @@ function normalizeDividerLabel(value) {
   return v;
 }
 
+/** spelling_rules 묶음 C — 외래어 명사 (시트·구 라벨 모두 이 이름으로 통일) */
+const FOREIGN_NOUN_DIVIDER_GROUP = 'C';
+const FOREIGN_NOUN_DIVIDER_LABEL = '잘못된 외래어 표기(명사)';
+const LEGACY_FOREIGN_NOUN_LABELS = new Set([
+  '잘못된 외래어표기',
+  FOREIGN_NOUN_DIVIDER_LABEL,
+]);
+
+function isForeignNounRule(rule) {
+  const group = String(rule.dividerGroup ?? '').trim();
+  if (group === FOREIGN_NOUN_DIVIDER_GROUP) return true;
+  const label = normalizeDividerLabel(rule.dividerLabel);
+  return label != null && LEGACY_FOREIGN_NOUN_LABELS.has(label);
+}
+
+/**
+ * 묶음별 find 가나다순 + 외래어 명사 묶음 라벨 통일
+ * @param {ReturnType<typeof normalizeRow> extends (infer R)[] ? NonNullable<R> : never} rules
+ */
+function postProcessSpellingRules(rules) {
+  for (const rule of rules) {
+    if (!isForeignNounRule(rule)) continue;
+    rule.dividerGroup = FOREIGN_NOUN_DIVIDER_GROUP;
+    rule.dividerLabel = FOREIGN_NOUN_DIVIDER_LABEL;
+  }
+
+  /** @type {typeof rules} */
+  const sorted = [];
+  let i = 0;
+  while (i < rules.length) {
+    const groupKey = String(rules[i].dividerGroup ?? '').trim();
+    if (!groupKey) {
+      sorted.push(rules[i]);
+      i += 1;
+      continue;
+    }
+    const start = i;
+    while (
+      i < rules.length &&
+      String(rules[i].dividerGroup ?? '').trim() === groupKey
+    ) {
+      i += 1;
+    }
+    const block = rules
+      .slice(start, i)
+      .sort((a, b) => a.find.localeCompare(b.find, 'ko'));
+    sorted.push(...block);
+  }
+  return sorted;
+}
+
 function expandBulkRow(
   find,
   replace,
@@ -231,6 +290,31 @@ function normalizeRow(row) {
   const dividerGroup = normalizeDividerGroup(row.divider_group);
   const dividerLabel = normalizeDividerLabel(row.divider_label);
   const overlayReplace = normalizeOverlayReplace(row.overlay_replace);
+  const ruleId = String(row.rule_id || '').trim() || undefined;
+  const displayLabel = String(row.display_label || '').trim() || undefined;
+  const finds = parseSpellingFindsColumn(row.finds, find);
+
+  const shared = {
+    enabled,
+    ...(tip ? { tip } : {}),
+    ...(memo ? { memo } : {}),
+    ...(countsInQuota === false ? { countsInQuota: false } : {}),
+    ...(visible === false ? { visible: false } : {}),
+    ...(dividerGroup ? { dividerGroup } : {}),
+    ...(dividerLabel ? { dividerLabel } : {}),
+    ...(overlayReplace ? { overlayReplace } : {}),
+    ...(ruleId ? { ruleId } : {}),
+    ...(displayLabel ? { displayLabel } : {}),
+  };
+
+  if (finds) {
+    return {
+      find,
+      replace,
+      finds,
+      ...shared,
+    };
+  }
 
   const bulk = expandBulkRow(
     find,
@@ -253,14 +337,7 @@ function normalizeRow(row) {
   return {
     find,
     replace,
-    enabled,
-    ...(tip ? { tip } : {}),
-    ...(memo ? { memo } : {}),
-    ...(countsInQuota === false ? { countsInQuota: false } : {}),
-    ...(visible === false ? { visible: false } : {}),
-    ...(dividerGroup ? { dividerGroup } : {}),
-    ...(dividerLabel ? { dividerLabel } : {}),
-    ...(overlayReplace ? { overlayReplace } : {}),
+    ...shared,
   };
 }
 
@@ -336,11 +413,13 @@ async function main() {
         return fetchSheet(SHEET_NAME);
       })();
   const skippedBulk = rows.length;
-  const rules = rows.flatMap((row) => {
-    const normalized = normalizeRow(row);
-    if (!normalized) return [];
-    return Array.isArray(normalized) ? normalized : [normalized];
-  });
+  const rules = postProcessSpellingRules(
+    rows.flatMap((row) => {
+      const normalized = normalizeRow(row);
+      if (!normalized) return [];
+      return Array.isArray(normalized) ? normalized : [normalized];
+    }),
+  );
 
   if (!rules.length) {
     throw new Error(
@@ -354,7 +433,11 @@ async function main() {
 
   console.log(`CSV ${skippedBulk}행 → 규칙 ${rules.length}개 (find=replace·빈 행 제외)`);
   rules.forEach((r, i) => {
-    console.log(`  ${i + 1}. ${r.find} → ${r.replace}`);
+    const label =
+      r.finds?.length >= 2
+        ? `${r.finds.join('·')} → ${r.replace}`
+        : `${r.find} → ${r.replace}`;
+    console.log(`  ${i + 1}. ${label}`);
   });
 
   for (const out of OUTPUTS) {
@@ -369,7 +452,9 @@ async function main() {
       (r) =>
         `${r.find}\0${r.replace}\0${r.tip ?? ''}\0${r.enabled === true ? 1 : 0}\0${
           r.countsInQuota === false ? 0 : 1
-        }\0${r.visible === false ? 0 : 1}\0${r.dividerGroup ?? ''}\0${r.dividerLabel ?? ''}\0${r.overlayReplace ?? ''}`,
+        }\0${r.visible === false ? 0 : 1}\0${r.dividerGroup ?? ''}\0${r.dividerLabel ?? ''}\0${r.overlayReplace ?? ''}\0${r.ruleId ?? ''}\0${
+          r.finds?.length >= 2 ? r.finds.join('\u0001') : ''
+        }\0${r.displayLabel ?? ''}`,
     )
     .join('\n');
   for (let i = 0; i < payload.length; i += 1) {

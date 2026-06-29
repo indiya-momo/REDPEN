@@ -188,10 +188,12 @@ describe('pdfHighlightRange', () => {
     const page = { pageNum: 216, text, items, itemRefs };
     const rules = buildCautionCheckRules({ 'verb-verb-bara': true });
     const { results } = runRuleCheck([page], rules);
-    const inst = results[0]?.instances.find((i) => i.matchedText === '바라');
+    const inst = results[0]?.instances.find((i) => i.matchedText === '그는 바라');
     expect(inst).toBeTruthy();
     expect(inst?.highlightText).toBe('바라');
-    expect(inst?.highlightIndex).toBe(inst.index);
+    expect(inst?.highlightIndex).toBe(
+      inst.index + inst.matchedText.length - inst.highlightText.length,
+    );
 
     const range = highlightRangeForCaution(page, inst);
     expect(range).not.toBeNull();

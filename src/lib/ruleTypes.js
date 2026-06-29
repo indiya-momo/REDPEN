@@ -26,6 +26,11 @@
  * @property {string} [dividerGroup] — 맞춤법 목록 구분선 묶음 키(같은 값끼리는 구분선 없음)
  * @property {string} [dividerLabel] — 묶음 표시 이름(예: 사이시옷 법칙). 빈 칸·"-"는 이름 없음. 엑셀 내보내기 "묶음" 열에 표시
  * @property {string} [overlayReplace] — 시트 overlay_replace: PDF 하이라이트 위 표시 문구
+ * @property {string} [ruleId] — 논리 규칙 고정 키(체크·마이그레이션). finds와 함께 쓰면 권장
+ * @property {string[]} [finds] — 같은 replace로 묶는 잘못된 표기 이형태(2개 이상)
+ * @property {string} [displayLabel] — 체크·결과 표시 이름(비우면 finds·find로 생성)
+ * @property {string} [spellingRuleId] — 검사용 그룹 키(런타임, ruleId에서 유도)
+ * @property {string[]} [spellingFinds] — 검사용 변형 목록(런타임)
  * @property {boolean} [consistencyUnifyEntry] — 통일형 만들기에서 등록한 일관성 항목
  * @property {boolean} [consistencyUnifyPinned] — 통일형 만들기에서 📌로 지정한 통일형
  * @property {boolean} [consistencyLiteralEntry] — 일관성 찾기에서 등록한 항목
