@@ -167,7 +167,7 @@
     "enabled": true,
     "tip": "표준국어대사전  '가닿다' 등재",
     "dividerGroup": "A",
-    "dividerLabel": "표준국어대사전 등재(용언)",
+    "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
     "overlayReplace": "→가⁀닿"
   },
   {
@@ -176,7 +176,7 @@
     "enabled": true,
     "tip": "표준국어대사전 '귀신같다' 등재",
     "dividerGroup": "A",
-    "dividerLabel": "표준국어대사전 등재(용언)",
+    "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
     "overlayReplace": "→귀신⁀같"
   },
   {
@@ -185,7 +185,7 @@
     "enabled": true,
     "tip": "표준국어대사전 '그럴듯하다' 등재",
     "dividerGroup": "A",
-    "dividerLabel": "표준국어대사전 등재(용언)",
+    "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
     "overlayReplace": "→그럴⁀듯"
   },
   {
@@ -194,7 +194,7 @@
     "enabled": true,
     "tip": "표준국어대사전 '그럴싸하다' 등재",
     "dividerGroup": "A",
-    "dividerLabel": "표준국어대사전 등재(용언)",
+    "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
     "overlayReplace": "→그럴⁀싸"
   },
   {
@@ -203,7 +203,7 @@
     "enabled": true,
     "tip": "표준국어대사전 '놓아주다' 등재",
     "dividerGroup": "A",
-    "dividerLabel": "표준국어대사전 등재(용언)",
+    "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
     "overlayReplace": "→놓아⁀주"
   },
   {
@@ -212,7 +212,7 @@
     "enabled": true,
     "tip": "표준국어대사전  '되풀이되다' 등재",
     "dividerGroup": "A",
-    "dividerLabel": "표준국어대사전 등재(용언)",
+    "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
     "overlayReplace": "→되풀이⁀되"
   },
   {
@@ -221,7 +221,7 @@
     "enabled": true,
     "tip": "표준국어대사전  '때맞추다' 등재",
     "dividerGroup": "A",
-    "dividerLabel": "표준국어대사전 등재(용언)",
+    "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
     "overlayReplace": "→때⁀맞"
   },
   {
@@ -230,7 +230,7 @@
     "enabled": true,
     "tip": "표준국어대사전 '머지않다' 등재",
     "dividerGroup": "A",
-    "dividerLabel": "표준국어대사전 등재(용언)",
+    "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
     "overlayReplace": "→머지⁀않"
   },
   {
@@ -239,7 +239,7 @@
     "enabled": true,
     "tip": "표준국어대사전 '먹고살다' 등재",
     "dividerGroup": "A",
-    "dividerLabel": "표준국어대사전 등재(용언)",
+    "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
     "overlayReplace": "→먹고⁀사"
   },
   {
@@ -248,7 +248,7 @@
     "enabled": true,
     "tip": "표준국어대사전 '뭐하다' 등재",
     "dividerGroup": "A",
-    "dividerLabel": "표준국어대사전 등재(용언)",
+    "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
     "overlayReplace": "→뭐⁀하"
   },
   {
@@ -257,7 +257,7 @@
     "enabled": true,
     "tip": "표준국어대사전 '세상모르다' 등재",
     "dividerGroup": "A",
-    "dividerLabel": "표준국어대사전 등재(용언)",
+    "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
     "overlayReplace": "→세상⁀모르"
   },
   {
@@ -266,7 +266,7 @@
     "enabled": true,
     "tip": "표준국어대사전  '지각없이' 등재",
     "dividerGroup": "A",
-    "dividerLabel": "표준국어대사전 등재(용언)",
+    "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
     "overlayReplace": "→지각⁀없"
   },
   {
@@ -342,6 +342,15 @@
     "overlayReplace": "→빨간색 또는 빨강"
   },
   {
+    "find": "성장율",
+    "replace": "성장률",
+    "enabled": true,
+    "tip": "접미사 '-율率'은 모음이나 'ㄴ' 받침 뒤에서는 '-율' 그 외는 '률'로 표기",
+    "dividerGroup": "B0",
+    "dividerLabel": "잘못된 표현(명사)",
+    "overlayReplace": "→성장률"
+  },
+  {
     "find": "역대급",
     "replace": "역대 또는 초유의",
     "enabled": true,
@@ -349,6 +358,15 @@
     "dividerGroup": "B0",
     "dividerLabel": "잘못된 표현(명사)",
     "overlayReplace": "→역대 또는 초유의"
+  },
+  {
+    "find": "취업율",
+    "replace": "취업률",
+    "enabled": true,
+    "tip": "접미사 '-율率'은 모음이나 'ㄴ' 받침 뒤에서는 '-율' 그 외는 '률'로 표기",
+    "dividerGroup": "B0",
+    "dividerLabel": "잘못된 표현(명사)",
+    "overlayReplace": "→취업률"
   },
   {
     "find": "파랑색",
@@ -360,12 +378,21 @@
     "overlayReplace": "→파란색 또는 파랑"
   },
   {
+    "find": "합격율",
+    "replace": "합격률",
+    "enabled": true,
+    "tip": "접미사 '-율率'은 모음이나 'ㄴ' 받침 뒤에서는 '-율' 그 외는 '률'로 표기",
+    "dividerGroup": "B0",
+    "dividerLabel": "잘못된 표현(명사)",
+    "overlayReplace": "→합격률"
+  },
+  {
     "find": "가득이",
     "replace": "가득히",
     "enabled": true,
     "tip": "-이'와 '히'의 구 별 중 /히/로 발음되는 것",
     "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(용언)",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
     "overlayReplace": "→가득히"
   },
   {
@@ -374,7 +401,7 @@
     "enabled": true,
     "tip": "어간 끝 음절 '하'가 줄어든 대로 적는다",
     "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(용언)",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
     "overlayReplace": "→거북지"
   },
   {
@@ -383,7 +410,7 @@
     "enabled": true,
     "tip": "형용사에는 'ㄴ'을 붙일 수 없다",
     "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(용언)",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
     "overlayReplace": "→걸맞은"
   },
   {
@@ -392,7 +419,7 @@
     "enabled": true,
     "tip": "'-이'와 '히'의 구 별 중 /이/로 발음되는 것",
     "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(용언)",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
     "overlayReplace": "→곰곰이"
   },
   {
@@ -401,7 +428,7 @@
     "enabled": true,
     "tip": "'그을다'의 피동사, 사동사는 '그을리다', '그을다'의 탈락형은 '그은'",
     "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(용언)",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
     "overlayReplace": "→그은 또는 그을린"
   },
   {
@@ -410,7 +437,7 @@
     "enabled": true,
     "tip": "-이'와 '히'의 구 별 중 /히/로 발음되는 것",
     "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(용언)",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
     "overlayReplace": "→까마득히"
   },
   {
@@ -419,7 +446,7 @@
     "enabled": true,
     "tip": "어간 끝 음절 '하'가 줄어든 대로 적는다",
     "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(용언)",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
     "overlayReplace": "→깨끗지"
   },
   {
@@ -428,7 +455,7 @@
     "enabled": true,
     "tip": "'-이'와 '히'의 구 별 중 /이/로 발음되는 것",
     "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(용언)",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
     "overlayReplace": "→깨끗이"
   },
   {
@@ -437,7 +464,7 @@
     "enabled": true,
     "tip": "-ㄹ게/-ㄹ걸/-ㄹ거야'는 된소리로 적지 않는다(껄→걸, 께→게) 주의: 높임 조사 '께'와 구별",
     "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(용언)",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
     "overlayReplace": "→거야"
   },
   {
@@ -446,7 +473,7 @@
     "enabled": true,
     "tip": "'끼어들다'의 잘못된 표현('끼어 있다'는 가능)",
     "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(용언)",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
     "overlayReplace": "→끼어들"
   },
   {
@@ -455,7 +482,7 @@
     "enabled": true,
     "tip": "이중 피동(잘못된 사용)",
     "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(용언)",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
     "overlayReplace": "→나뉘"
   },
   {
@@ -464,7 +491,7 @@
     "enabled": true,
     "tip": "어간 끝 음절 '하'가 줄어든 대로 적는다",
     "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(용언)",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
     "overlayReplace": "→넉넉지"
   },
   {
@@ -473,7 +500,7 @@
     "enabled": true,
     "tip": "어간 끝 음절 '하'가 줄어든 대로 적는다",
     "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(용언)",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
     "overlayReplace": "→녹록지"
   },
   {
@@ -482,7 +509,7 @@
     "enabled": true,
     "tip": "'놀래다' 또는 '놀라다'의 잘못된 표현 주의: '놀래키다'는 표준국어대사전 미등재",
     "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(용언)",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
     "overlayReplace": "→놀래"
   },
   {
@@ -491,7 +518,7 @@
     "enabled": true,
     "tip": "'높이다'의 잘못된 표현, 과거형은 '높였다'",
     "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(용언)",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
     "overlayReplace": "→높이"
   },
   {
@@ -500,7 +527,7 @@
     "enabled": true,
     "tip": "'담그다'의 잘못된 표현, 과거형은 '담갔다'",
     "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(용언)",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
     "overlayReplace": "→담가"
   },
   {
@@ -509,7 +536,7 @@
     "enabled": true,
     "tip": "'덮이다'의 잘못된 표현, 과거형은 '덮였다'",
     "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(용언)",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
     "overlayReplace": "→덮이"
   },
   {
@@ -518,7 +545,7 @@
     "enabled": true,
     "tip": "자동사에 불필요한 사동 접미사 '-이'삽입",
     "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(용언)",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
     "overlayReplace": "→되뇌"
   },
   {
@@ -527,7 +554,7 @@
     "enabled": true,
     "tip": "알려지지 않던 것이 알려지게 되는 것은 '드러나다', “물건을 밖으로 내놓는 것은 '들어내다'",
     "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(용언)",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
     "overlayReplace": "→드러나"
   },
   {
@@ -536,7 +563,7 @@
     "enabled": true,
     "tip": "'-이'와 '히'의 구 별 중 /이/로 발음되는 것",
     "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(용언)",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
     "overlayReplace": "→따뜻이"
   },
   {
@@ -545,7 +572,7 @@
     "enabled": true,
     "tip": "'있을런지/올런지'가 아니라 '-ㄹ는지'로 적는다",
     "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(용언)",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
     "overlayReplace": "→는지"
   },
   {
@@ -554,7 +581,7 @@
     "enabled": true,
     "tip": "이중 피동(잘못된 사용)",
     "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(용언)",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
     "overlayReplace": "→믿"
   },
   {
@@ -563,7 +590,7 @@
     "enabled": true,
     "tip": "이중 피동(잘못된 사용)",
     "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(용언)",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
     "overlayReplace": "→보이"
   },
   {
@@ -572,7 +599,7 @@
     "enabled": true,
     "tip": "'비비다\"의 잘못된 표현",
     "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(용언)",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
     "overlayReplace": "→비비"
   },
   {
@@ -581,7 +608,7 @@
     "enabled": true,
     "tip": "이중 피동(잘못된 사용)",
     "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(용언)",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
     "overlayReplace": "→불리"
   },
   {
@@ -590,7 +617,7 @@
     "enabled": true,
     "tip": "'빼곡히' 의 잘못된 표현",
     "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(용언)",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
     "overlayReplace": "→빼곡히"
   },
   {
@@ -599,7 +626,7 @@
     "enabled": true,
     "tip": "'빽빽이' 의 잘못된 표현",
     "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(용언)",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
     "overlayReplace": "→빽뺵이"
   },
   {
@@ -608,7 +635,7 @@
     "enabled": true,
     "tip": "이중 피동(잘못된 사용)",
     "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(용언)",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
     "overlayReplace": "→생각되"
   },
   {
@@ -617,7 +644,7 @@
     "enabled": true,
     "tip": "자동사에 불필요한 사동 접미사 '-이'삽입",
     "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(용언)",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
     "overlayReplace": "→설레"
   },
   {
@@ -626,7 +653,7 @@
     "enabled": true,
     "tip": "'-스러운' 형태로 적는다",
     "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(용언)",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
     "overlayReplace": "→스러운"
   },
   {
@@ -635,7 +662,7 @@
     "enabled": true,
     "tip": "이중 피동(잘못된 사용)",
     "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(용언)",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
     "overlayReplace": "→쓰여"
   },
   {
@@ -644,7 +671,7 @@
     "enabled": true,
     "tip": "안절부절'에 '못하다'를 붙여 '어쩔 줄 몰라 하다' 라는 뜻이 성립한다",
     "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(용언)",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
     "overlayReplace": "→안절부절못"
   },
   {
@@ -653,7 +680,7 @@
     "enabled": true,
     "tip": "형용사에는 'ㄴ'을 붙일 수 없다",
     "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(용언)",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
     "overlayReplace": "→알맞은"
   },
   {
@@ -662,7 +689,7 @@
     "enabled": true,
     "tip": "'어떡해'는 감정을 표현하는 '어떻게 해'의 줄임말, '어떻게'는 '어떠하게' 부사어",
     "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(용언)",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
     "overlayReplace": "→어떡해 또는 어떻게"
   },
   {
@@ -671,7 +698,7 @@
     "enabled": true,
     "tip": "-이'와 '히'의 구 별 중 /히/로 발음되는 것",
     "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(용언)",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
     "overlayReplace": "→열심히"
   },
   {
@@ -680,7 +707,7 @@
     "enabled": true,
     "tip": "'욱여넣다'의 잘못된 표현",
     "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(용언)",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
     "overlayReplace": "→욱여넣"
   },
   {
@@ -689,7 +716,7 @@
     "enabled": true,
     "tip": "'(것)이예요' 가 아닌 '(것)이에요', 또는 줄임말인 '예요'로 적는다",
     "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(용언)",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
     "overlayReplace": "→이에요 또는 예요"
   },
   {
@@ -698,7 +725,7 @@
     "enabled": true,
     "tip": "어간 끝 음절 '하'가 줄어든 대로 적는다",
     "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(용언)",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
     "overlayReplace": "→익숙하게"
   },
   {
@@ -707,7 +734,7 @@
     "enabled": true,
     "tip": "'-이'와 '히'의 구 별 중 /이/로 발음되는 것",
     "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(용언)",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
     "overlayReplace": "→일일이"
   },
   {
@@ -716,7 +743,7 @@
     "enabled": true,
     "tip": "이중 피동(잘못된 사용)",
     "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(용언)",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
     "overlayReplace": "→잊힌"
   },
   {
@@ -725,7 +752,7 @@
     "enabled": true,
     "tip": "'잠그다'의 잘못된 표현, 과거형은 '잠갔다'",
     "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(용언)",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
     "overlayReplace": "→잠가"
   },
   {
@@ -734,7 +761,7 @@
     "enabled": true,
     "tip": "이중 피동(잘못된 사용)",
     "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(용언)",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
     "overlayReplace": "→짜여"
   },
   {
@@ -743,7 +770,7 @@
     "enabled": true,
     "tip": "'치르다'의 잘못된 표현, 과거형은 '치렀다'",
     "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(용언)",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
     "overlayReplace": "→치러"
   },
   {
@@ -752,7 +779,7 @@
     "enabled": true,
     "tip": "-이'와 '히'의 구 별 중 /히/로 발음되는 것",
     "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(용언)",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
     "overlayReplace": "→특별히"
   },
   {
@@ -761,7 +788,7 @@
     "enabled": true,
     "tip": "'-이'와 '히'의 구 별 중 /이/로 발음되는 것",
     "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(용언)",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
     "overlayReplace": "→틈틈이"
   },
   {
@@ -770,7 +797,7 @@
     "enabled": true,
     "tip": "자동사에 불필요한 사동 접미사 '-이'삽입",
     "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(용언)",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
     "overlayReplace": "→헤메"
   },
   {
@@ -828,19 +855,82 @@
     "overlayReplace": "→희로애락"
   },
   {
+    "find": "갯수",
+    "replace": "개수",
+    "enabled": true,
+    "tip": "두 음절 한자어 6개(곳간庫間, 셋방貰房, 숫자數字, 찻간車間, 툇간退間,횟수回數)만 사이시옷을 넣는다",
+    "dividerGroup": "E",
+    "dividerLabel": "사이시옷 법칙",
+    "overlayReplace": "→개수"
+  },
+  {
+    "find": "댓가",
+    "replace": "대가",
+    "enabled": true,
+    "tip": "두 음절 한자어 6개(곳간庫間, 셋방貰房, 숫자數字, 찻간車間, 툇간退間,횟수回數)만 사이시옷을 넣는다",
+    "dividerGroup": "E",
+    "dividerLabel": "사이시옷 법칙",
+    "overlayReplace": "→대가"
+  },
+  {
+    "find": "뒷처리",
+    "replace": "뒤처리",
+    "enabled": true,
+    "tip": "거센소리 ㅊ,ㅋ,ㅌ,ㅍ 앞에는 사이시옷이 붙지 않는다",
+    "dividerGroup": "E",
+    "dividerLabel": "사이시옷 법칙",
+    "overlayReplace": "→뒤처리"
+  },
+  {
+    "find": "뒷풀이",
+    "replace": "뒤풀이",
+    "enabled": true,
+    "tip": "거센소리 ㅊ,ㅋ,ㅌ,ㅍ 앞에는 사이시옷이 붙지 않는다",
+    "dividerGroup": "E",
+    "dividerLabel": "사이시옷 법칙",
+    "overlayReplace": "→뒤풀이"
+  },
+  {
+    "find": "싯가",
+    "replace": "시가",
+    "enabled": true,
+    "tip": "두 음절 한자어 6개(곳간庫間, 셋방貰房, 숫자數字, 찻간車間, 툇간退間,횟수回數)만 사이시옷을 넣는다",
+    "dividerGroup": "E",
+    "dividerLabel": "사이시옷 법칙",
+    "overlayReplace": "→시가"
+  },
+  {
+    "find": "촛점",
+    "replace": "초점",
+    "enabled": true,
+    "tip": "두 음절 한자어 6개(곳간庫間, 셋방貰房, 숫자數字, 찻간車間, 툇간退間,횟수回數)만 사이시옷을 넣는다",
+    "dividerGroup": "E",
+    "dividerLabel": "사이시옷 법칙",
+    "overlayReplace": "→초점"
+  },
+  {
     "find": "가디건",
     "replace": "카디건",
     "enabled": false,
-    "tip": "외래어 표기법에 따른 올바른 한글 표기",
+    "tip": "영어 cardigan. 'car-'는 [카]라 '카디건'; '가디건'은 일본식 오표기",
     "dividerGroup": "C",
     "dividerLabel": "잘못된 외래어 표기(명사)",
     "overlayReplace": "→카디건"
   },
   {
+    "find": "까메오",
+    "replace": "카메오",
+    "enabled": false,
+    "tip": "영어 cameo. 된소리 'ㄲ' 대신 '카메오'",
+    "dividerGroup": "C",
+    "dividerLabel": "잘못된 외래어 표기(명사)",
+    "overlayReplace": "→카메오"
+  },
+  {
     "find": "나레이션",
     "replace": "내레이션",
     "enabled": false,
-    "tip": "외래어 표기법에 따른 올바른 한글 표기",
+    "tip": "영어 narration. 'na-'는 [내]라 '내레이션'",
     "dividerGroup": "C",
     "dividerLabel": "잘못된 외래어 표기(명사)",
     "overlayReplace": "→내레이션"
@@ -849,7 +939,7 @@
     "find": "나르시즘",
     "replace": "나르시시즘",
     "enabled": false,
-    "tip": "외래어 표기법에 따른 올바른 한글 표기",
+    "tip": "영어 narcissism. 'ssi'를 살려 '나르시시즘'(한 음절 빠뜨림 주의)",
     "dividerGroup": "C",
     "dividerLabel": "잘못된 외래어 표기(명사)",
     "overlayReplace": "→나르시시즘"
@@ -858,16 +948,43 @@
     "find": "노말",
     "replace": "노멀",
     "enabled": false,
-    "tip": "외래어 표기법에 따른 올바른 한글 표기",
+    "tip": "영어 normal. 'mal'은 [멀]이라 '노멀'",
     "dividerGroup": "C",
     "dividerLabel": "잘못된 외래어 표기(명사)",
     "overlayReplace": "→노멀"
   },
   {
+    "find": "다니엘",
+    "replace": "대니얼",
+    "enabled": false,
+    "tip": "영어 Daniel. 'Da-'는 [대]라 '대니얼'. ※독일·프랑스·스페인·성경은 '다니엘'",
+    "dividerGroup": "C",
+    "dividerLabel": "잘못된 외래어 표기(명사)",
+    "overlayReplace": "→대니얼"
+  },
+  {
+    "find": "데이빗",
+    "replace": "데이비드",
+    "enabled": false,
+    "tip": "영어 David. '-vid'는 [비드]라 '데이비드'. ※ 프랑스 다비드, 독일 다비트, 성경 다윗",
+    "dividerGroup": "C",
+    "dividerLabel": "잘못된 외래어 표기(명사)",
+    "overlayReplace": "→데이비드"
+  },
+  {
+    "find": "도날드",
+    "replace": "도널드",
+    "enabled": false,
+    "tip": "영어 Donald. '-nald'는 [널드]라 '도널드'",
+    "dividerGroup": "C",
+    "dividerLabel": "잘못된 외래어 표기(명사)",
+    "overlayReplace": "→도널드"
+  },
+  {
     "find": "드래곤",
     "replace": "드래건",
     "enabled": false,
-    "tip": "외래어 표기법에 따른 올바른 한글 표기",
+    "tip": "영어 dragon. '-gon'은 [건]이라 '드래건'",
     "dividerGroup": "C",
     "dividerLabel": "잘못된 외래어 표기(명사)",
     "overlayReplace": "→드래건"
@@ -876,34 +993,88 @@
     "find": "라이센스",
     "replace": "라이선스",
     "enabled": false,
-    "tip": "외래어 표기법에 따른 올바른 한글 표기",
+    "tip": "영어 licence. '-cence'는 [선스]라 '라이선스'",
     "dividerGroup": "C",
     "dividerLabel": "잘못된 외래어 표기(명사)",
     "overlayReplace": "→라이선스"
   },
   {
+    "find": "레이첼",
+    "replace": "레이철",
+    "enabled": false,
+    "tip": "영어 Rachel. '-chel'은 [철]이라 '레이철'. ※프랑스 라셸, 히브리 라헬",
+    "dividerGroup": "C",
+    "dividerLabel": "잘못된 외래어 표기(명사)",
+    "overlayReplace": "→레이철"
+  },
+  {
+    "find": "리차드",
+    "replace": "리처드",
+    "enabled": false,
+    "tip": "영어 Richard. '-cha-'는 [처]라 '리처드'. ※프랑스 리샤르, 독일 리하르트",
+    "dividerGroup": "C",
+    "dividerLabel": "잘못된 외래어 표기(명사)",
+    "overlayReplace": "→리처드"
+  },
+  {
     "find": "링겔",
     "replace": "링거",
     "enabled": false,
-    "tip": "외래어 표기법에 따른 올바른 한글 표기",
+    "tip": "영어 ringer. '-ger'는 [거]라 '링거', '링겔'은 독일식 발음,",
     "dividerGroup": "C",
     "dividerLabel": "잘못된 외래어 표기(명사)",
     "overlayReplace": "→링거"
   },
   {
+    "find": "마가렛",
+    "replace": "마거릿",
+    "enabled": false,
+    "tip": "영어 Margaret. '-ret'은 [릿]이라 '마거릿'",
+    "dividerGroup": "C",
+    "dividerLabel": "잘못된 외래어 표기(명사)",
+    "overlayReplace": "→마거릿"
+  },
+  {
     "find": "맘모스",
     "replace": "매머드",
     "enabled": false,
-    "tip": "외래어 표기법에 따른 올바른 한글 표기",
+    "tip": "영어 mammoth. 'th'를 [드]로 살려 '매머드'; '맘모스'는 일본식",
     "dividerGroup": "C",
     "dividerLabel": "잘못된 외래어 표기(명사)",
     "overlayReplace": "→매머드"
   },
   {
+    "find": "매니아",
+    "replace": "마니아",
+    "enabled": false,
+    "tip": "영어 mania. '매-'가 아니라 '마니아'",
+    "dividerGroup": "C",
+    "dividerLabel": "잘못된 외래어 표기(명사)",
+    "overlayReplace": "→마니아"
+  },
+  {
+    "find": "매튜",
+    "replace": "매슈",
+    "enabled": false,
+    "tip": "영어 Matthew. '-thew'는 [슈]라 '매슈'",
+    "dividerGroup": "C",
+    "dividerLabel": "잘못된 외래어 표기(명사)",
+    "overlayReplace": "→매슈"
+  },
+  {
+    "find": "맥도날드",
+    "replace": "맥도널드",
+    "enabled": false,
+    "tip": "영어 McDonald. '-nald'는 [널드]라 '맥도널드'(브랜드는 '맥도날드'가 공식)",
+    "dividerGroup": "C",
+    "dividerLabel": "잘못된 외래어 표기(명사)",
+    "overlayReplace": "→맥도널드"
+  },
+  {
     "find": "메론",
     "replace": "멜론",
     "enabled": false,
-    "tip": "외래어 표기법에 따른 올바른 한글 표기",
+    "tip": "영어 melon. 'l'을 받침으로 살려 '멜론'",
     "dividerGroup": "C",
     "dividerLabel": "잘못된 외래어 표기(명사)",
     "overlayReplace": "→멜론"
@@ -912,7 +1083,7 @@
     "find": "메세지",
     "replace": "메시지",
     "enabled": false,
-    "tip": "외래어 표기법에 따른 올바른 한글 표기",
+    "tip": "영어 message. 'sage'는 [시지]라 '메시지'",
     "dividerGroup": "C",
     "dividerLabel": "잘못된 외래어 표기(명사)",
     "overlayReplace": "→메시지"
@@ -921,25 +1092,16 @@
     "find": "미스테리",
     "replace": "미스터리",
     "enabled": false,
-    "tip": "외래어 표기법에 따른 올바른 한글 표기",
+    "tip": "영어 mystery. 'te'는 [터]라 '미스터리'",
     "dividerGroup": "C",
     "dividerLabel": "잘못된 외래어 표기(명사)",
     "overlayReplace": "→미스터리"
   },
   {
-    "find": "바게뜨",
-    "replace": "바게트",
-    "enabled": false,
-    "tip": "외래어 표기법에 따른 올바른 한글 표기",
-    "dividerGroup": "C",
-    "dividerLabel": "잘못된 외래어 표기(명사)",
-    "overlayReplace": "→바게트"
-  },
-  {
     "find": "바디",
     "replace": "보디",
     "enabled": false,
-    "tip": "외래어 표기법에 따른 올바른 한글 표기",
+    "tip": "영어 body. 'o'는 [오]라 '보디'",
     "dividerGroup": "C",
     "dividerLabel": "잘못된 외래어 표기(명사)",
     "overlayReplace": "→보디"
@@ -948,16 +1110,25 @@
     "find": "뱃지",
     "replace": "배지",
     "enabled": false,
-    "tip": "외래어 표기법에 따른 올바른 한글 표기",
+    "tip": "영어 badge. 사이시옷 없이 '배지'",
     "dividerGroup": "C",
     "dividerLabel": "잘못된 외래어 표기(명사)",
     "overlayReplace": "→배지"
   },
   {
+    "find": "벤자민",
+    "replace": "벤저민",
+    "enabled": false,
+    "tip": "영어 Benjamin. '-ja-'는 [저]라 '벤저민'. ※프랑스 뱅자맹, 독일 벤야민",
+    "dividerGroup": "C",
+    "dividerLabel": "잘못된 외래어 표기(명사)",
+    "overlayReplace": "→벤저민"
+  },
+  {
     "find": "브라더",
     "replace": "브러더",
     "enabled": false,
-    "tip": "외래어 표기법에 따른 올바른 한글 표기",
+    "tip": "영어 brother. 'o'는 [어]라 '브러더'",
     "dividerGroup": "C",
     "dividerLabel": "잘못된 외래어 표기(명사)",
     "overlayReplace": "→브러더"
@@ -966,7 +1137,7 @@
     "find": "비스켓",
     "replace": "비스킷",
     "enabled": false,
-    "tip": "외래어 표기법에 따른 올바른 한글 표기",
+    "tip": "영어 biscuit. 'cuit'은 [킷]이라 '비스킷'",
     "dividerGroup": "C",
     "dividerLabel": "잘못된 외래어 표기(명사)",
     "overlayReplace": "→비스킷"
@@ -975,7 +1146,7 @@
     "find": "샷다",
     "replace": "셔터",
     "enabled": false,
-    "tip": "외래어 표기법에 따른 올바른 한글 표기",
+    "tip": "영어 shutter. '셔터'; '샷다'는 일본식 발음(シャッター)",
     "dividerGroup": "C",
     "dividerLabel": "잘못된 외래어 표기(명사)",
     "overlayReplace": "→셔터"
@@ -984,7 +1155,7 @@
     "find": "샷시",
     "replace": "새시",
     "enabled": false,
-    "tip": "외래어 표기법에 따른 올바른 한글 표기",
+    "tip": "영어 sash. '새시'; '샷시'는 일본식 발음",
     "dividerGroup": "C",
     "dividerLabel": "잘못된 외래어 표기(명사)",
     "overlayReplace": "→새시"
@@ -997,7 +1168,7 @@
       "쉐도우"
     ],
     "enabled": false,
-    "tip": "외래어 표기법에 따른 올바른 한글 표기",
+    "tip": "영어 shadow. 어말 'ow'는 [오]라 '섀도'",
     "dividerGroup": "C",
     "dividerLabel": "잘못된 외래어 표기(명사)",
     "overlayReplace": "→섀도",
@@ -1007,7 +1178,7 @@
     "find": "쇼파",
     "replace": "소파",
     "enabled": false,
-    "tip": "외래어 표기법에 따른 올바른 한글 표기",
+    "tip": "영어 sofa. 'so'는 [소]라 '소파'",
     "dividerGroup": "C",
     "dividerLabel": "잘못된 외래어 표기(명사)",
     "overlayReplace": "→소파"
@@ -1016,7 +1187,7 @@
     "find": "숏컷",
     "replace": "쇼트커트",
     "enabled": false,
-    "tip": "외래어 표기법에 따른 올바른 한글 표기",
+    "tip": "영어 short cut. 'short'를 살려 '쇼트커트'",
     "dividerGroup": "C",
     "dividerLabel": "잘못된 외래어 표기(명사)",
     "overlayReplace": "→쇼트커트"
@@ -1025,7 +1196,7 @@
     "find": "쉐이크",
     "replace": "셰이크",
     "enabled": false,
-    "tip": "외래어 표기법에 따른 올바른 한글 표기",
+    "tip": "영어 shake. 'sha'는 [셰]라 '셰이크'",
     "dividerGroup": "C",
     "dividerLabel": "잘못된 외래어 표기(명사)",
     "overlayReplace": "→셰이크"
@@ -1034,7 +1205,7 @@
     "find": "아울렛",
     "replace": "아웃렛",
     "enabled": false,
-    "tip": "외래어 표기법에 따른 올바른 한글 표기",
+    "tip": "영어 outlet. 'out'의 't'를 받침으로 살려 '아웃렛'",
     "dividerGroup": "C",
     "dividerLabel": "잘못된 외래어 표기(명사)",
     "overlayReplace": "→아웃렛"
@@ -1043,16 +1214,30 @@
     "find": "악세사리",
     "replace": "액세서리",
     "enabled": false,
-    "tip": "외래어 표기법에 따른 올바른 한글 표기",
+    "tip": "영어 accessory. 'cc'·'sso'를 살려 '액세서리'",
     "dividerGroup": "C",
     "dividerLabel": "잘못된 외래어 표기(명사)",
     "overlayReplace": "→액세서리"
   },
   {
+    "find": "안토니",
+    "replace": "앤서니",
+    "finds": [
+      "안토니",
+      "안소니"
+    ],
+    "enabled": false,
+    "tip": "영어 Anthony. 'th'를 살려 '앤서니'",
+    "dividerGroup": "C",
+    "dividerLabel": "잘못된 외래어 표기(명사)",
+    "overlayReplace": "→앤서니",
+    "ruleId": "foreign-name-anthony"
+  },
+  {
     "find": "엔돌핀",
     "replace": "엔도르핀",
     "enabled": false,
-    "tip": "외래어 표기법에 따른 올바른 한글 표기",
+    "tip": "영어 endorphin. 'dor'의 'r'을 살려 '엔도르핀'",
     "dividerGroup": "C",
     "dividerLabel": "잘못된 외래어 표기(명사)",
     "overlayReplace": "→엔도르핀"
@@ -1061,10 +1246,42 @@
     "find": "윈도우",
     "replace": "윈도",
     "enabled": false,
-    "tip": "외래어 표기법에 따른 올바른 한글 표기",
+    "tip": "영어 window. 어말 'ow'는 [오]라 '윈도'",
     "dividerGroup": "C",
     "dividerLabel": "잘못된 외래어 표기(명사)",
     "overlayReplace": "→윈도"
+  },
+  {
+    "find": "윌리암",
+    "replace": "윌리엄",
+    "enabled": false,
+    "tip": "영어 William. '-liam'은 [리엄]이라 '윌리엄'",
+    "dividerGroup": "C",
+    "dividerLabel": "잘못된 외래어 표기(명사)",
+    "overlayReplace": "→윌리엄"
+  },
+  {
+    "find": "제레미",
+    "replace": "제러미",
+    "enabled": false,
+    "tip": "영어 Jeremy. '-re-'는 [러]라 '제러미'. ※프랑스 Jérémie는 제레미",
+    "dividerGroup": "C",
+    "dividerLabel": "잘못된 외래어 표기(명사)",
+    "overlayReplace": "→제러미"
+  },
+  {
+    "find": "조나단",
+    "replace": "조너선",
+    "finds": [
+      "조나단",
+      "죠나단"
+    ],
+    "enabled": false,
+    "tip": "영어 Jonathan. 'th'를 살려 '조너선'. ※성경 요나단, 프랑스 조나탕",
+    "dividerGroup": "C",
+    "dividerLabel": "잘못된 외래어 표기(명사)",
+    "overlayReplace": "→조너선",
+    "ruleId": "foreign-name-jonathan"
   },
   {
     "find": "초콜렛",
@@ -1074,7 +1291,7 @@
       "초코렛"
     ],
     "enabled": false,
-    "tip": "외래어 표기법에 따른 올바른 한글 표기",
+    "tip": "영어 chocolate. 어말은 [릿]이라 '초콜릿'",
     "dividerGroup": "C",
     "dividerLabel": "잘못된 외래어 표기(명사)",
     "overlayReplace": "→초콜릿",
@@ -1084,16 +1301,25 @@
     "find": "카라멜",
     "replace": "캐러멜",
     "enabled": false,
-    "tip": "외래어 표기법에 따른 올바른 한글 표기",
+    "tip": "영어 caramel. 'ca-'는 [캐], 'ra'는 [러]라 '캐러멜'",
     "dividerGroup": "C",
     "dividerLabel": "잘못된 외래어 표기(명사)",
     "overlayReplace": "→캐러멜"
   },
   {
+    "find": "캐롤라인",
+    "replace": "캐럴라인",
+    "enabled": false,
+    "tip": "영어 Caroline. '-ro-'는 [럴]이라 '캐럴라인'. ※프랑스 카롤린, 독일 카롤리네",
+    "dividerGroup": "C",
+    "dividerLabel": "잘못된 외래어 표기(명사)",
+    "overlayReplace": "→캐럴라인"
+  },
+  {
     "find": "커텐",
     "replace": "커튼",
     "enabled": false,
-    "tip": "외래어 표기법에 따른 올바른 한글 표기",
+    "tip": "영어 curtain. '-tain'은 [튼]이라 '커튼'",
     "dividerGroup": "C",
     "dividerLabel": "잘못된 외래어 표기(명사)",
     "overlayReplace": "→커튼"
@@ -1102,7 +1328,7 @@
     "find": "컨텐츠",
     "replace": "콘텐츠",
     "enabled": true,
-    "tip": "외래어 표기법에 따른 올바른 한글 표기",
+    "tip": "영어 contents. 'con-'은 [콘]이라 '콘텐츠'",
     "dividerGroup": "C",
     "dividerLabel": "잘못된 외래어 표기(명사)",
     "overlayReplace": "→콘텐츠"
@@ -1111,7 +1337,7 @@
     "find": "컴플렉스",
     "replace": "콤플렉스",
     "enabled": false,
-    "tip": "외래어 표기법에 따른 올바른 한글 표기",
+    "tip": "영어 complex. 'com-'은 [콤]이라 '콤플렉스'",
     "dividerGroup": "C",
     "dividerLabel": "잘못된 외래어 표기(명사)",
     "overlayReplace": "→콤플렉스"
@@ -1120,7 +1346,7 @@
     "find": "케잌",
     "replace": "케이크",
     "enabled": false,
-    "tip": "외래어 표기법에 따른 올바른 한글 표기",
+    "tip": "영어 cake. 받침 'ㅋ' 대신 '케이크'",
     "dividerGroup": "C",
     "dividerLabel": "잘못된 외래어 표기(명사)",
     "overlayReplace": "→케이크"
@@ -1129,16 +1355,25 @@
     "find": "코메디",
     "replace": "코미디",
     "enabled": false,
-    "tip": "외래어 표기법에 따른 올바른 한글 표기",
+    "tip": "영어 comedy. 'me'는 [미]라 '코미디'",
     "dividerGroup": "C",
     "dividerLabel": "잘못된 외래어 표기(명사)",
     "overlayReplace": "→코미디"
   },
   {
+    "find": "토마스",
+    "replace": "토머스",
+    "enabled": false,
+    "tip": "영어 Thomas. '-mas'는 [머스]라 '토머스'. ※독일·북유럽은 '토마스', 프랑스는 '토마'",
+    "dividerGroup": "C",
+    "dividerLabel": "잘못된 외래어 표기(명사)",
+    "overlayReplace": "→토머스"
+  },
+  {
     "find": "패러랠",
     "replace": "패럴렐",
     "enabled": false,
-    "tip": "외래어 표기법에 따른 올바른 한글 표기",
+    "tip": "영어 parallel. '-llel'은 [럴렐]이라 '패럴렐'",
     "dividerGroup": "C",
     "dividerLabel": "잘못된 외래어 표기(명사)",
     "overlayReplace": "→패럴렐"
@@ -1147,7 +1382,7 @@
     "find": "팬더",
     "replace": "판다",
     "enabled": false,
-    "tip": "외래어 표기법에 따른 올바른 한글 표기",
+    "tip": "영어 panda. 'da'는 [다]라 '판다'; '팬더'는 영어 발음 오인",
     "dividerGroup": "C",
     "dividerLabel": "잘못된 외래어 표기(명사)",
     "overlayReplace": "→판다"
@@ -1156,7 +1391,7 @@
     "find": "프로포즈",
     "replace": "프러포즈",
     "enabled": false,
-    "tip": "외래어 표기법에 따른 올바른 한글 표기",
+    "tip": "영어 propose. 'pro-'는 [프러]라 '프러포즈'",
     "dividerGroup": "C",
     "dividerLabel": "잘못된 외래어 표기(명사)",
     "overlayReplace": "→프러포즈"
@@ -1165,7 +1400,7 @@
     "find": "피규어",
     "replace": "피겨",
     "enabled": false,
-    "tip": "외래어 표기법에 따른 올바른 한글 표기",
+    "tip": "영어 figure. '-gure'는 [겨]라 '피겨'",
     "dividerGroup": "C",
     "dividerLabel": "잘못된 외래어 표기(명사)",
     "overlayReplace": "→피겨"
@@ -1174,90 +1409,883 @@
     "find": "호일",
     "replace": "포일",
     "enabled": false,
-    "tip": "외래어 표기법에 따른 올바른 한글 표기",
+    "tip": "영어 foil. 'f'는 [ㅍ]라 '포일'; '호일'은 일본식 발음",
     "dividerGroup": "C",
     "dividerLabel": "잘못된 외래어 표기(명사)",
     "overlayReplace": "→포일"
   },
   {
-    "find": "성장율",
-    "replace": "성장률",
+    "find": "고로케",
+    "replace": "크로켓",
     "enabled": true,
-    "tip": "접미사 '-율率'은 모음이나 'ㄴ' 받침 뒤에서는 '-율' 그 외는 '률'로 표기",
-    "dividerGroup": "D2",
-    "dividerLabel": "접미사 '-율/률率'",
-    "overlayReplace": "→성장률"
+    "tip": "프랑스어 croquette. '고로케'는 일본어 コロッケ를 거친 표기",
+    "dividerGroup": "C1",
+    "dividerLabel": "잘못된 외래어 표기(프랑스어 · 독일어)",
+    "overlayReplace": "→크로켓"
   },
   {
-    "find": "취업율",
-    "replace": "취업률",
+    "find": "그라탕",
+    "replace": "그라탱",
     "enabled": true,
-    "tip": "접미사 '-율率'은 모음이나 'ㄴ' 받침 뒤에서는 '-율' 그 외는 '률'로 표기",
-    "dividerGroup": "D2",
-    "dividerLabel": "접미사 '-율/률率'",
-    "overlayReplace": "→취업률"
+    "tip": "프랑스어 gratin. 비모음 'in'은 [앵]이라 '그라탱'",
+    "dividerGroup": "C1",
+    "dividerLabel": "잘못된 외래어 표기(프랑스어 · 독일어)",
+    "overlayReplace": "→그라탱"
   },
   {
-    "find": "합격율",
-    "replace": "합격률",
+    "find": "기브스",
+    "replace": "깁스",
     "enabled": true,
-    "tip": "접미사 '-율率'은 모음이나 'ㄴ' 받침 뒤에서는 '-율' 그 외는 '률'로 표기",
-    "dividerGroup": "D2",
-    "dividerLabel": "접미사 '-율/률率'",
-    "overlayReplace": "→합격률"
+    "tip": "독일어 Gips. '깁스'; '기브스'는 영어식 오표기",
+    "dividerGroup": "C1",
+    "dividerLabel": "잘못된 외래어 표기(프랑스어 · 독일어)",
+    "overlayReplace": "→깁스"
   },
   {
-    "find": "갯수",
-    "replace": "개수",
+    "find": "길로틴",
+    "replace": "기요틴",
     "enabled": true,
-    "tip": "두 음절 한자어 6개(곳간庫間, 셋방貰房, 숫자數字, 찻간車間, 툇간退間,횟수回數)만 사이시옷을 넣는다",
-    "dividerGroup": "E",
-    "dividerLabel": "사이시옷 법칙-한자어",
-    "overlayReplace": "→개수"
+    "tip": "프랑스어 guillotine. 'ill'은 [이]라 '기요틴'",
+    "dividerGroup": "C1",
+    "dividerLabel": "잘못된 외래어 표기(프랑스어 · 독일어)",
+    "overlayReplace": "→기요틴"
   },
   {
-    "find": "댓가",
-    "replace": "대가",
+    "find": "까망베르",
+    "replace": "카망베르",
     "enabled": true,
-    "tip": "두 음절 한자어 6개(곳간庫間, 셋방貰房, 숫자數字, 찻간車間, 툇간退間,횟수回數)만 사이시옷을 넣는다",
-    "dividerGroup": "E",
-    "dividerLabel": "사이시옷 법칙-한자어",
-    "overlayReplace": "→대가"
+    "tip": "프랑스어 camembert. 된소리 'ㄲ' 대신 '카망베르'",
+    "dividerGroup": "C1",
+    "dividerLabel": "잘못된 외래어 표기(프랑스어 · 독일어)",
+    "overlayReplace": "→카망베르"
   },
   {
-    "find": "싯가",
-    "replace": "시가",
+    "find": "까페",
+    "replace": "카페",
     "enabled": true,
-    "tip": "두 음절 한자어 6개(곳간庫間, 셋방貰房, 숫자數字, 찻간車間, 툇간退間,횟수回數)만 사이시옷을 넣는다",
-    "dividerGroup": "E",
-    "dividerLabel": "사이시옷 법칙-한자어",
-    "overlayReplace": "→시가"
+    "tip": "프랑스어 café. 외래어는 된소리(ㄲ)를 쓰지 않아 '카페'",
+    "dividerGroup": "C1",
+    "dividerLabel": "잘못된 외래어 표기(프랑스어 · 독일어)",
+    "overlayReplace": "→카페"
   },
   {
-    "find": "촛점",
-    "replace": "초점",
+    "find": "꼬냑",
+    "replace": "코냑",
     "enabled": true,
-    "tip": "두 음절 한자어 6개(곳간庫間, 셋방貰房, 숫자數字, 찻간車間, 툇간退間,횟수回數)만 사이시옷을 넣는다",
-    "dividerGroup": "E",
-    "dividerLabel": "사이시옷 법칙-한자어",
-    "overlayReplace": "→초점"
+    "tip": "프랑스어 cognac. 된소리 'ㄲ' 대신 '코냑'",
+    "dividerGroup": "C1",
+    "dividerLabel": "잘못된 외래어 표기(프랑스어 · 독일어)",
+    "overlayReplace": "→코냑"
   },
   {
-    "find": "뒷처리",
-    "replace": "뒤처리",
+    "find": "꼴라쥬",
+    "replace": "콜라주",
     "enabled": true,
-    "tip": "거센소리 ㅊ,ㅋ,ㅌ,ㅍ 앞에는 사이시옷이 붙지 않는다",
-    "dividerGroup": "E2",
-    "dividerLabel": "사이시옷 법칙-거센소리",
-    "overlayReplace": "→뒤처리"
+    "tip": "프랑스어 collage. 된소리와 '쥬' 대신 '콜라주'",
+    "dividerGroup": "C1",
+    "dividerLabel": "잘못된 외래어 표기(프랑스어 · 독일어)",
+    "overlayReplace": "→콜라주"
   },
   {
-    "find": "뒷풀이",
-    "replace": "뒤풀이",
+    "find": "꽁트",
+    "replace": "콩트",
     "enabled": true,
-    "tip": "거센소리 ㅊ,ㅋ,ㅌ,ㅍ 앞에는 사이시옷이 붙지 않는다",
-    "dividerGroup": "E2",
-    "dividerLabel": "사이시옷 법칙-거센소리",
-    "overlayReplace": "→뒤풀이"
+    "tip": "프랑스어 conte. 된소리 'ㄲ' 대신 '콩트'",
+    "dividerGroup": "C1",
+    "dividerLabel": "잘못된 외래어 표기(프랑스어 · 독일어)",
+    "overlayReplace": "→콩트"
+  },
+  {
+    "find": "나찌",
+    "replace": "나치",
+    "enabled": true,
+    "tip": "독일어 Nazi. 된소리 'ㅉ' 대신 '나치'",
+    "dividerGroup": "C1",
+    "dividerLabel": "잘못된 외래어 표기(프랑스어 · 독일어)",
+    "overlayReplace": "→나치"
+  },
+  {
+    "find": "느와르",
+    "replace": "누아르",
+    "enabled": true,
+    "tip": "프랑스어 noir. 'oi'는 [우아]라 '누아르'",
+    "dividerGroup": "C1",
+    "dividerLabel": "잘못된 외래어 표기(프랑스어 · 독일어)",
+    "overlayReplace": "→누아르"
+  },
+  {
+    "find": "늬앙스",
+    "replace": "뉘앙스",
+    "enabled": true,
+    "tip": "프랑스어 nuance. 'nu'는 [뉘]라 '뉘앙스'",
+    "dividerGroup": "C1",
+    "dividerLabel": "잘못된 외래어 표기(프랑스어 · 독일어)",
+    "overlayReplace": "→뉘앙스"
+  },
+  {
+    "find": "데자부",
+    "replace": "데자뷔",
+    "finds": [
+      "데자부",
+      "데자뷰"
+    ],
+    "enabled": true,
+    "tip": "프랑스어 déjà vu. 'vu'는 [뷔]라 '데자뷔'",
+    "dividerGroup": "C1",
+    "dividerLabel": "잘못된 외래어 표기(프랑스어 · 독일어)",
+    "overlayReplace": "→데자뷔",
+    "ruleId": "foreign-fr-dejavu"
+  },
+  {
+    "find": "뎃생",
+    "replace": "데생",
+    "enabled": true,
+    "tip": "프랑스어 dessin. 사이시옷 없이 '데생'",
+    "dividerGroup": "C1",
+    "dividerLabel": "잘못된 외래어 표기(프랑스어 · 독일어)",
+    "overlayReplace": "→데생"
+  },
+  {
+    "find": "도플갱어",
+    "replace": "도펠겡거",
+    "enabled": true,
+    "tip": "독일어 Doppelgänger. 'pp'·'ä'를 살려 '도펠겡거'",
+    "dividerGroup": "C1",
+    "dividerLabel": "잘못된 외래어 표기(프랑스어 · 독일어)",
+    "overlayReplace": "→도펠겡거"
+  },
+  {
+    "find": "똘레랑스",
+    "replace": "톨레랑스",
+    "enabled": true,
+    "tip": "프랑스어 tolérance. 된소리 'ㄸ' 대신 '톨레랑스'",
+    "dividerGroup": "C1",
+    "dividerLabel": "잘못된 외래어 표기(프랑스어 · 독일어)",
+    "overlayReplace": "→톨레랑스"
+  },
+  {
+    "find": "라푼젤",
+    "replace": "라푼첼",
+    "enabled": true,
+    "tip": "독일어 Rapunzel. 'z'는 [츠]라 '라푼첼'",
+    "dividerGroup": "C1",
+    "dividerLabel": "잘못된 외래어 표기(프랑스어 · 독일어)",
+    "overlayReplace": "→라푼첼"
+  },
+  {
+    "find": "롬멜",
+    "replace": "로멜",
+    "enabled": true,
+    "tip": "독일어 Rommel. 'mm'은 겹치지 않아 '로멜'",
+    "dividerGroup": "C1",
+    "dividerLabel": "잘못된 외래어 표기(프랑스어 · 독일어)",
+    "overlayReplace": "→로멜"
+  },
+  {
+    "find": "루즈",
+    "replace": "루주",
+    "finds": [
+      "루즈",
+      "루지",
+      "루쥬"
+    ],
+    "enabled": true,
+    "tip": "프랑스어 rouge. 'ge'는 [주]라 '루주'",
+    "dividerGroup": "C1",
+    "dividerLabel": "잘못된 외래어 표기(프랑스어 · 독일어)",
+    "overlayReplace": "→루주",
+    "ruleId": "foreign-fr-rouge"
+  },
+  {
+    "find": "맑스",
+    "replace": "마르크스",
+    "finds": [
+      "맑스",
+      "막스"
+    ],
+    "enabled": true,
+    "tip": "독일어 Marx. 'r'을 살려 '마르크스'",
+    "dividerGroup": "C1",
+    "dividerLabel": "잘못된 외래어 표기(프랑스어 · 독일어)",
+    "overlayReplace": "→마르크스",
+    "ruleId": "foreign-de-marx"
+  },
+  {
+    "find": "망또",
+    "replace": "망토",
+    "enabled": true,
+    "tip": "프랑스어 manteau. 된소리 'ㄸ' 대신 '망토'",
+    "dividerGroup": "C1",
+    "dividerLabel": "잘못된 외래어 표기(프랑스어 · 독일어)",
+    "overlayReplace": "→망토"
+  },
+  {
+    "find": "모짜르트",
+    "replace": "모차르트",
+    "enabled": true,
+    "tip": "독일어 Mozart. 된소리 'ㅉ' 대신 '모차르트'",
+    "dividerGroup": "C1",
+    "dividerLabel": "잘못된 외래어 표기(프랑스어 · 독일어)",
+    "overlayReplace": "→모차르트"
+  },
+  {
+    "find": "뮬러",
+    "replace": "뮐러",
+    "enabled": true,
+    "tip": "독일어 Müller. 'ü'는 [위]라 '뮐러'",
+    "dividerGroup": "C1",
+    "dividerLabel": "잘못된 외래어 표기(프랑스어 · 독일어)",
+    "overlayReplace": "→뮐러"
+  },
+  {
+    "find": "미쉐린",
+    "replace": "미슐랭",
+    "enabled": true,
+    "tip": "프랑스어 Michelin. 'ch'는 [슈], 'in'은 [앵]이라 '미슐랭'",
+    "dividerGroup": "C1",
+    "dividerLabel": "잘못된 외래어 표기(프랑스어 · 독일어)",
+    "overlayReplace": "→미슐랭"
+  },
+  {
+    "find": "바게뜨",
+    "replace": "바게트",
+    "enabled": true,
+    "tip": "프랑스어 baguette. 된소리 'ㄸ' 대신 '바게트'",
+    "dividerGroup": "C1",
+    "dividerLabel": "잘못된 외래어 표기(프랑스어 · 독일어)",
+    "overlayReplace": "→바게트"
+  },
+  {
+    "find": "바리깡",
+    "replace": "바리캉",
+    "enabled": true,
+    "tip": "프랑스어 bariquant. 된소리 'ㄲ' 대신 '바리캉'(일본어 バリカン 경유)",
+    "dividerGroup": "C1",
+    "dividerLabel": "잘못된 외래어 표기(프랑스어 · 독일어)",
+    "overlayReplace": "→바리캉"
+  },
+  {
+    "find": "바하",
+    "replace": "바흐",
+    "enabled": true,
+    "tip": "독일어 Bach. 어말 'ch'는 [흐]라 '바흐'; '바하'는 영어식",
+    "dividerGroup": "C1",
+    "dividerLabel": "잘못된 외래어 표기(프랑스어 · 독일어)",
+    "overlayReplace": "→바흐"
+  },
+  {
+    "find": "벤쯔",
+    "replace": "벤츠",
+    "enabled": true,
+    "tip": "독일어 Benz. 된소리 'ㅉ' 대신 '벤츠'",
+    "dividerGroup": "C1",
+    "dividerLabel": "잘못된 외래어 표기(프랑스어 · 독일어)",
+    "overlayReplace": "→벤츠"
+  },
+  {
+    "find": "부르조아",
+    "replace": "부르주아",
+    "enabled": true,
+    "tip": "프랑스어 bourgeois. 'oi'는 [와]라 '주아'; '부르조아'는 영어식 오표기",
+    "dividerGroup": "C1",
+    "dividerLabel": "잘못된 외래어 표기(프랑스어 · 독일어)",
+    "overlayReplace": "→부르주아"
+  },
+  {
+    "find": "부페",
+    "replace": "뷔페",
+    "finds": [
+      "부페",
+      "부패"
+    ],
+    "enabled": true,
+    "tip": "프랑스어 buffet. 'u'는 [위]라 '뷔페'; '부페·부패'는 영어·일본식 오표기",
+    "dividerGroup": "C1",
+    "dividerLabel": "잘못된 외래어 표기(프랑스어 · 독일어)",
+    "overlayReplace": "→뷔페",
+    "ruleId": "foreign-fr-buffet"
+  },
+  {
+    "find": "브라암스",
+    "replace": "브람스",
+    "enabled": true,
+    "tip": "독일어 Brahms. 'ah'는 장음 [아]라 '브람스'",
+    "dividerGroup": "C1",
+    "dividerLabel": "잘못된 외래어 표기(프랑스어 · 독일어)",
+    "overlayReplace": "→브람스"
+  },
+  {
+    "find": "쁘띠",
+    "replace": "프티",
+    "enabled": true,
+    "tip": "프랑스어 petit. 된소리(ㅃㄸ) 대신 '프티'",
+    "dividerGroup": "C1",
+    "dividerLabel": "잘못된 외래어 표기(프랑스어 · 독일어)",
+    "overlayReplace": "→프티"
+  },
+  {
+    "find": "삐에로",
+    "replace": "피에로",
+    "enabled": true,
+    "tip": "프랑스어 pierrot. 된소리 'ㅃ' 대신 '피에로'",
+    "dividerGroup": "C1",
+    "dividerLabel": "잘못된 외래어 표기(프랑스어 · 독일어)",
+    "overlayReplace": "→피에로"
+  },
+  {
+    "find": "사브레",
+    "replace": "사블레",
+    "finds": [
+      "사브레",
+      "샤브레"
+    ],
+    "enabled": true,
+    "tip": "프랑스어 sablé. 'bl'을 살려 '사블레'",
+    "dividerGroup": "C1",
+    "dividerLabel": "잘못된 외래어 표기(프랑스어 · 독일어)",
+    "overlayReplace": "→사블레",
+    "ruleId": "foreign-fr-sable"
+  },
+  {
+    "find": "쉐프",
+    "replace": "셰프",
+    "enabled": true,
+    "tip": "프랑스어 chef. '쉐'가 아니라 '셰'로 '셰프'",
+    "dividerGroup": "C1",
+    "dividerLabel": "잘못된 외래어 표기(프랑스어 · 독일어)",
+    "overlayReplace": "→셰프"
+  },
+  {
+    "find": "슈닛첼",
+    "replace": "슈니첼",
+    "enabled": true,
+    "tip": "독일어 Schnitzel. 사이시옷 없이 '슈니첼'",
+    "dividerGroup": "C1",
+    "dividerLabel": "잘못된 외래어 표기(프랑스어 · 독일어)",
+    "overlayReplace": "→슈니첼"
+  },
+  {
+    "find": "알러지",
+    "replace": "알레르기",
+    "finds": [
+      "알러지",
+      "알르레기"
+    ],
+    "enabled": true,
+    "tip": "독일어 Allergie. 독일어 발음 '알레르기'; '알러지'는 영어식",
+    "dividerGroup": "C1",
+    "dividerLabel": "잘못된 외래어 표기(프랑스어 · 독일어)",
+    "overlayReplace": "→알레르기",
+    "ruleId": "foreign-de-allergie"
+  },
+  {
+    "find": "앙케이트",
+    "replace": "앙케트",
+    "enabled": true,
+    "tip": "프랑스어 enquête. '앙케트'; '-케이트'는 영어식",
+    "dividerGroup": "C1",
+    "dividerLabel": "잘못된 외래어 표기(프랑스어 · 독일어)",
+    "overlayReplace": "→앙케트"
+  },
+  {
+    "find": "앙콜",
+    "replace": "앙코르",
+    "finds": [
+      "앙콜",
+      "앵콜"
+    ],
+    "enabled": true,
+    "tip": "프랑스어 encore. 어말 'r'를 살려 '앙코르'",
+    "dividerGroup": "C1",
+    "dividerLabel": "잘못된 외래어 표기(프랑스어 · 독일어)",
+    "overlayReplace": "→앙코르",
+    "ruleId": "foreign-fr-encore"
+  },
+  {
+    "find": "에뛰드",
+    "replace": "에튀드",
+    "enabled": true,
+    "tip": "프랑스어 étude. 된소리 'ㄸ' 대신 '에튀드'",
+    "dividerGroup": "C1",
+    "dividerLabel": "잘못된 외래어 표기(프랑스어 · 독일어)",
+    "overlayReplace": "→에튀드"
+  },
+  {
+    "find": "오마쥬",
+    "replace": "오마주",
+    "enabled": true,
+    "tip": "프랑스어 hommage. '쥬' 대신 '주'로 '오마주'",
+    "dividerGroup": "C1",
+    "dividerLabel": "잘못된 외래어 표기(프랑스어 · 독일어)",
+    "overlayReplace": "→오마주"
+  },
+  {
+    "find": "옴므",
+    "replace": "옴",
+    "enabled": true,
+    "tip": "프랑스어 homme. 'mm'은 겹치지 않아 '옴'",
+    "dividerGroup": "C1",
+    "dividerLabel": "잘못된 외래어 표기(프랑스어 · 독일어)",
+    "overlayReplace": "→옴"
+  },
+  {
+    "find": "자이스",
+    "replace": "차이스",
+    "finds": [
+      "자이스",
+      "짜이스"
+    ],
+    "enabled": true,
+    "tip": "독일어 Zeiss. 'Z'는 [츠]라 '차이스'",
+    "dividerGroup": "C1",
+    "dividerLabel": "잘못된 외래어 표기(프랑스어 · 독일어)",
+    "overlayReplace": "→차이스",
+    "ruleId": "foreign-de-zeiss"
+  },
+  {
+    "find": "콩쿨",
+    "replace": "콩쿠르",
+    "enabled": true,
+    "tip": "프랑스어 concours. 어말 '-rs'를 살려 '콩쿠르'",
+    "dividerGroup": "C1",
+    "dividerLabel": "잘못된 외래어 표기(프랑스어 · 독일어)",
+    "overlayReplace": "→콩쿠르"
+  },
+  {
+    "find": "쿠테타",
+    "replace": "쿠데타",
+    "finds": [
+      "쿠테타",
+      "구테타"
+    ],
+    "enabled": true,
+    "tip": "프랑스어 coup d'État. 'd'는 [ㄷ]라 '쿠데타'",
+    "dividerGroup": "C1",
+    "dividerLabel": "잘못된 외래어 표기(프랑스어 · 독일어)",
+    "overlayReplace": "→쿠데타",
+    "ruleId": "foreign-fr-coup"
+  },
+  {
+    "find": "파티쉐",
+    "replace": "파티시에",
+    "finds": [
+      "파티쉐",
+      "파티셰"
+    ],
+    "enabled": true,
+    "tip": "프랑스어 pâtissier. 어말 '-ier'는 [이에]라 '파티시에'",
+    "dividerGroup": "C1",
+    "dividerLabel": "잘못된 외래어 표기(프랑스어 · 독일어)",
+    "overlayReplace": "→파티시에",
+    "ruleId": "foreign-fr-patissier"
+  },
+  {
+    "find": "팜므파탈",
+    "replace": "팜 파탈",
+    "enabled": true,
+    "tip": "프랑스어 femme fatale. 'mm'은 겹쳐 적지 않아 '팜 파탈'",
+    "dividerGroup": "C1",
+    "dividerLabel": "잘못된 외래어 표기(프랑스어 · 독일어)",
+    "overlayReplace": "→팜 파탈"
+  },
+  {
+    "find": "포르쉐",
+    "replace": "포르셰",
+    "enabled": true,
+    "tip": "독일어 Porsche. 'sche'는 [셰]라 '포르셰'",
+    "dividerGroup": "C1",
+    "dividerLabel": "잘못된 외래어 표기(프랑스어 · 독일어)",
+    "overlayReplace": "→포르셰"
+  },
+  {
+    "find": "퐁듀",
+    "replace": "퐁뒤",
+    "enabled": true,
+    "tip": "프랑스어 fondue. 'u'는 [위]라 '퐁뒤'",
+    "dividerGroup": "C1",
+    "dividerLabel": "잘못된 외래어 표기(프랑스어 · 독일어)",
+    "overlayReplace": "→퐁뒤"
+  },
+  {
+    "find": "퓨러",
+    "replace": "퓌러",
+    "enabled": true,
+    "tip": "독일어 Führer. 'ü'는 [위]라 '퓌러'; '퓨러'는 영어식",
+    "dividerGroup": "C1",
+    "dividerLabel": "잘못된 외래어 표기(프랑스어 · 독일어)",
+    "overlayReplace": "→퓌러"
+  },
+  {
+    "find": "프레젤",
+    "replace": "프레첼",
+    "finds": [
+      "프레젤",
+      "프레즐"
+    ],
+    "enabled": true,
+    "tip": "독일어 Pretzel. 'tz'는 [츠]라 '프레첼'",
+    "dividerGroup": "C1",
+    "dividerLabel": "잘못된 외래어 표기(프랑스어 · 독일어)",
+    "overlayReplace": "→프레첼",
+    "ruleId": "foreign-de-pretzel"
+  },
+  {
+    "find": "까르보나라",
+    "replace": "카르보나라",
+    "enabled": true,
+    "tip": "이탈리아어 carbonara. 된소리 'ㄲ' 대신 '카르보나라'",
+    "dividerGroup": "C2",
+    "dividerLabel": "잘못된 외래어 표기(그 외)",
+    "overlayReplace": "→카르보나라"
+  },
+  {
+    "find": "까페라떼",
+    "replace": "카페라테",
+    "enabled": true,
+    "tip": "이탈리아어 caffè latte. 된소리 대신 '카페라테'",
+    "dividerGroup": "C2",
+    "dividerLabel": "잘못된 외래어 표기(그 외)",
+    "overlayReplace": "→카페라테"
+  },
+  {
+    "find": "깔라만시",
+    "replace": "칼라만시",
+    "enabled": true,
+    "tip": "필리핀어 calamansi. 된소리 'ㄲ' 대신 '칼라만시'",
+    "dividerGroup": "C2",
+    "dividerLabel": "잘못된 외래어 표기(그 외)",
+    "overlayReplace": "→칼라만시"
+  },
+  {
+    "find": "나쵸",
+    "replace": "나초",
+    "enabled": true,
+    "tip": "스페인어 nacho. '쵸' 대신 '초'로 '나초'",
+    "dividerGroup": "C2",
+    "dividerLabel": "잘못된 외래어 표기(그 외)",
+    "overlayReplace": "→나초"
+  },
+  {
+    "find": "나트랑",
+    "replace": "냐짱",
+    "enabled": true,
+    "tip": "베트남어 Nha Trang. 현지 발음에 가깝게 '냐짱'",
+    "dividerGroup": "C2",
+    "dividerLabel": "잘못된 외래어 표기(그 외)",
+    "overlayReplace": "→냐짱"
+  },
+  {
+    "find": "데낄라",
+    "replace": "테킬라",
+    "finds": [
+      "데낄라",
+      "데킬라"
+    ],
+    "enabled": true,
+    "tip": "스페인어 tequila. 't'는 [ㅌ]라 '테킬라'",
+    "dividerGroup": "C2",
+    "dividerLabel": "잘못된 외래어 표기(그 외)",
+    "overlayReplace": "→테킬라",
+    "ruleId": "foreign-es-tequila"
+  },
+  {
+    "find": "도스토예프스키",
+    "replace": "도스토옙스키",
+    "finds": [
+      "도스토예프스키",
+      "도스또예프스키",
+      "도스또옙스키"
+    ],
+    "enabled": true,
+    "tip": "러시아어 Достоевский. 표준 표기 '도스토옙스키'",
+    "dividerGroup": "C2",
+    "dividerLabel": "잘못된 외래어 표기(그 외)",
+    "overlayReplace": "→도스토옙스키",
+    "ruleId": "foreign-ru-dostoevsky"
+  },
+  {
+    "find": "드보르작",
+    "replace": "드보르자크",
+    "enabled": true,
+    "tip": "체코어 Dvořák. 어말 'k'는 [크]라 '드보르자크'",
+    "dividerGroup": "C2",
+    "dividerLabel": "잘못된 외래어 표기(그 외)",
+    "overlayReplace": "→드보르자크"
+  },
+  {
+    "find": "리조또",
+    "replace": "리소토",
+    "enabled": true,
+    "tip": "이탈리아어 risotto. 된소리 없이 '리소토'",
+    "dividerGroup": "C2",
+    "dividerLabel": "잘못된 외래어 표기(그 외)",
+    "overlayReplace": "→리소토"
+  },
+  {
+    "find": "마끼아또",
+    "replace": "마키아토",
+    "finds": [
+      "마끼아또",
+      "마끼야또"
+    ],
+    "enabled": true,
+    "tip": "이탈리아어 macchiato. 된소리 대신 '마키아토'",
+    "dividerGroup": "C2",
+    "dividerLabel": "잘못된 외래어 표기(그 외)",
+    "overlayReplace": "→마키아토",
+    "ruleId": "foreign-it-macchiato"
+  },
+  {
+    "find": "마오쩌뚱",
+    "replace": "마오쩌둥",
+    "finds": [
+      "마오쩌뚱",
+      "마오저뚱"
+    ],
+    "enabled": true,
+    "tip": "중국어 毛澤東(Máo Zédōng). 원지음 '마오쩌둥', '-뚱'은 불필요한 된소리",
+    "dividerGroup": "C2",
+    "dividerLabel": "잘못된 외래어 표기(그 외)",
+    "overlayReplace": "→마오쩌둥",
+    "ruleId": "foreign-zh-mao"
+  },
+  {
+    "find": "모짜렐라",
+    "replace": "모차렐라",
+    "enabled": true,
+    "tip": "이탈리아어 mozzarella. 'zz'는 [차]라 '모차렐라'",
+    "dividerGroup": "C2",
+    "dividerLabel": "잘못된 외래어 표기(그 외)",
+    "overlayReplace": "→모차렐라"
+  },
+  {
+    "find": "블라디보스톡",
+    "replace": "블라디보스토크",
+    "enabled": true,
+    "tip": "러시아어 Владивосток. 어말 'k'는 [크]라 '블라디보스토크'",
+    "dividerGroup": "C2",
+    "dividerLabel": "잘못된 외래어 표기(그 외)",
+    "overlayReplace": "→블라디보스토크"
+  },
+  {
+    "find": "빠에야",
+    "replace": "파에야",
+    "enabled": true,
+    "tip": "스페인어 paella. 된소리 'ㅃ' 대신, 'll'은 [야]라 '파에야'",
+    "dividerGroup": "C2",
+    "dividerLabel": "잘못된 외래어 표기(그 외)",
+    "overlayReplace": "→파에야"
+  },
+  {
+    "find": "응웬",
+    "replace": "응우옌",
+    "finds": [
+      "응웬",
+      "느구옌"
+    ],
+    "enabled": true,
+    "tip": "베트남어 Nguyễn. 현지 발음을 따라 '응우옌'",
+    "dividerGroup": "C2",
+    "dividerLabel": "잘못된 외래어 표기(그 외)",
+    "overlayReplace": "→응우옌",
+    "ruleId": "foreign-vi-nguyen"
+  },
+  {
+    "find": "젤라또",
+    "replace": "젤라토",
+    "enabled": true,
+    "tip": "이탈리아어 gelato. 된소리 'ㄸ' 대신 '젤라토'",
+    "dividerGroup": "C2",
+    "dividerLabel": "잘못된 외래어 표기(그 외)",
+    "overlayReplace": "→젤라토"
+  },
+  {
+    "find": "짜르",
+    "replace": "차르",
+    "enabled": true,
+    "tip": "러시아어 царь(Tsar). 된소리 'ㅉ' 대신 '차르'",
+    "dividerGroup": "C2",
+    "dividerLabel": "잘못된 외래어 표기(그 외)",
+    "overlayReplace": "→차르"
+  },
+  {
+    "find": "츄러스",
+    "replace": "추로스",
+    "finds": [
+      "츄러스",
+      "추러스"
+    ],
+    "enabled": true,
+    "tip": "스페인어 churros. 'rro'는 [로]라 '추로스'",
+    "dividerGroup": "C2",
+    "dividerLabel": "잘못된 외래어 표기(그 외)",
+    "overlayReplace": "→추로스",
+    "ruleId": "foreign-es-churros"
+  },
+  {
+    "find": "카스테라",
+    "replace": "카스텔라",
+    "enabled": true,
+    "tip": "포르투갈어 castela. '카스테라'는 일본어 カステラ를 거친 표기",
+    "dividerGroup": "C2",
+    "dividerLabel": "잘못된 외래어 표기(그 외)",
+    "overlayReplace": "→카스텔라"
+  },
+  {
+    "find": "카츄샤",
+    "replace": "카튜샤",
+    "finds": [
+      "카츄샤",
+      "카추샤"
+    ],
+    "enabled": true,
+    "tip": "러시아어 Катюша(Katyusha). 'tyu'는 [튜]라 '카튜샤'",
+    "dividerGroup": "C2",
+    "dividerLabel": "잘못된 외래어 표기(그 외)",
+    "overlayReplace": "→카튜샤",
+    "ruleId": "foreign-ru-katyusha"
+  },
+  {
+    "find": "카톨릭",
+    "replace": "가톨릭",
+    "enabled": true,
+    "tip": "라틴어 발음에 가깝게 '가톨릭'",
+    "dividerGroup": "C2",
+    "dividerLabel": "잘못된 외래어 표기(그 외)",
+    "overlayReplace": "→가톨릭"
+  },
+  {
+    "find": "크레센도",
+    "replace": "크레셴도",
+    "enabled": true,
+    "tip": "이탈리아어 crescendo. 'sce'는 [셴]이라 '크레셴도'",
+    "dividerGroup": "C2",
+    "dividerLabel": "잘못된 외래어 표기(그 외)",
+    "overlayReplace": "→크레셴도"
+  },
+  {
+    "find": "키에르케고르",
+    "replace": "키르케고르",
+    "enabled": true,
+    "tip": "덴마크어 Kierkegaard. 원지음에 가깝게 '키르케고르'",
+    "dividerGroup": "C2",
+    "dividerLabel": "잘못된 외래어 표기(그 외)",
+    "overlayReplace": "→키르케고르"
+  },
+  {
+    "find": "키예프",
+    "replace": "키이우",
+    "enabled": true,
+    "tip": "우크라이나어 Київ(Kyiv). 우크라이나어 발음 '키이우'(러시아어식이 '키예프')",
+    "dividerGroup": "C2",
+    "dividerLabel": "잘못된 외래어 표기(그 외)",
+    "overlayReplace": "→키이우"
+  },
+  {
+    "find": "타이페이",
+    "replace": "타이베이",
+    "enabled": true,
+    "tip": "중국어 臺北(Táiběi). 'b'는 [ㅂ]라 '타이베이'",
+    "dividerGroup": "C2",
+    "dividerLabel": "잘못된 외래어 표기(그 외)",
+    "overlayReplace": "→타이베이"
+  },
+  {
+    "find": "토티아",
+    "replace": "토르티야",
+    "finds": [
+      "토티아",
+      "토티야",
+      "또띠아",
+      "또티야"
+    ],
+    "enabled": true,
+    "tip": "스페인어 tortilla. 'r'을 살리고 'll'은 [야]라 '토르티야'",
+    "dividerGroup": "C2",
+    "dividerLabel": "잘못된 외래어 표기(그 외)",
+    "overlayReplace": "→토르티야",
+    "ruleId": "foreign-es-tortilla"
+  },
+  {
+    "find": "투르크",
+    "replace": "튀르크",
+    "enabled": true,
+    "tip": "튀르키예어 Türk. 'ü'는 [위]라 '튀르크'",
+    "dividerGroup": "C2",
+    "dividerLabel": "잘못된 외래어 표기(그 외)",
+    "overlayReplace": "→튀르크"
+  },
+  {
+    "find": "티라미스",
+    "replace": "티라미수",
+    "finds": [
+      "티라미스",
+      "티라미슈"
+    ],
+    "enabled": true,
+    "tip": "이탈리아어 tiramisù. 어말 'sù'는 [수]라 '티라미수'",
+    "dividerGroup": "C2",
+    "dividerLabel": "잘못된 외래어 표기(그 외)",
+    "overlayReplace": "→티라미수",
+    "ruleId": "foreign-it-tiramisu"
+  },
+  {
+    "find": "포르투칼",
+    "replace": "포르투갈",
+    "enabled": true,
+    "tip": "포르투갈어 Portugal. 어말은 [갈]이라 '포르투갈'",
+    "dividerGroup": "C2",
+    "dividerLabel": "잘못된 외래어 표기(그 외)",
+    "overlayReplace": "→포르투갈"
+  },
+  {
+    "find": "푸슈킨",
+    "replace": "푸시킨",
+    "enabled": true,
+    "tip": "러시아어 Пушкин(Pushkin). 'sh'는 [시]라 '푸시킨'",
+    "dividerGroup": "C2",
+    "dividerLabel": "잘못된 외래어 표기(그 외)",
+    "overlayReplace": "→푸시킨"
+  },
+  {
+    "find": "푸켓",
+    "replace": "푸껫",
+    "finds": [
+      "푸켓",
+      "푸케트"
+    ],
+    "enabled": true,
+    "tip": "태국어 ภูเก็ต(Phuket). 현지 발음에 가깝게 '푸껫'",
+    "dividerGroup": "C2",
+    "dividerLabel": "잘못된 외래어 표기(그 외)",
+    "overlayReplace": "→푸껫",
+    "ruleId": "foreign-etc-phuket"
+  },
+  {
+    "find": "피요르드",
+    "replace": "피오르",
+    "enabled": true,
+    "tip": "노르웨이어 fjord. 어말 'd'는 묵음이라 '피오르'",
+    "dividerGroup": "C2",
+    "dividerLabel": "잘못된 외래어 표기(그 외)",
+    "overlayReplace": "→피오르"
+  },
+  {
+    "find": "호치민",
+    "replace": "호찌민",
+    "enabled": true,
+    "tip": "베트남어 Hồ Chí Minh. 현지 발음을 따라 '호찌민'",
+    "dividerGroup": "C2",
+    "dividerLabel": "잘못된 외래어 표기(그 외)",
+    "overlayReplace": "→호찌민"
+  },
+  {
+    "find": "훗카이도",
+    "replace": "홋카이도",
+    "enabled": true,
+    "tip": "일본어 北海道(ほっかいどう). 촉음은 'ㅅ' 받침이라 '홋카이도'",
+    "dividerGroup": "C2",
+    "dividerLabel": "잘못된 외래어 표기(그 외)",
+    "overlayReplace": "→홋카이도"
   }
 ]
