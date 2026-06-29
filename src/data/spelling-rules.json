@@ -333,6 +333,15 @@
     "overlayReplace": "→닦달"
   },
   {
+    "find": "보냉병",
+    "replace": "보랭병",
+    "enabled": true,
+    "tip": "냉(冷)'을 두음법칙 외 환경에서 '랭'으로 적어 '보랭병'",
+    "dividerGroup": "B0",
+    "dividerLabel": "잘못된 표현(명사)",
+    "overlayReplace": "→보랭병"
+  },
+  {
     "find": "빨강색",
     "replace": "빨간색 또는 빨강",
     "enabled": true,
@@ -1584,17 +1593,11 @@
   {
     "find": "루즈",
     "replace": "루주",
-    "finds": [
-      "루즈",
-      "루지",
-      "루쥬"
-    ],
     "enabled": true,
     "tip": "프랑스어 rouge. 'ge'는 [주]라 '루주'",
     "dividerGroup": "C1",
     "dividerLabel": "잘못된 외래어 표기(프랑스어 · 독일어)",
-    "overlayReplace": "→루주",
-    "ruleId": "foreign-fr-rouge"
+    "overlayReplace": "→루주"
   },
   {
     "find": "맑스",
@@ -2287,5 +2290,442 @@
     "dividerGroup": "C2",
     "dividerLabel": "잘못된 외래어 표기(그 외)",
     "overlayReplace": "→홋카이도"
+  },
+  {
+    "find": "간뇌",
+    "replace": "사이뇌",
+    "enabled": false,
+    "tip": "개정 교육과정 새 용어. 간뇌(diencephalon)는 '사이뇌'",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→사이뇌"
+  },
+  {
+    "find": "게르마늄",
+    "replace": "저마늄",
+    "enabled": false,
+    "tip": "개정 화학 용어. germanium → '저마늄'(옛 '게르마늄')",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→저마늄"
+  },
+  {
+    "find": "글리코겐",
+    "replace": "글라이코겐",
+    "enabled": false,
+    "tip": "개정 교육과정 새 용어. 'glycogen' 원음에 가깝게 '글라이코겐'",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→글라이코겐"
+  },
+  {
+    "find": "기관",
+    "replace": "숨관",
+    "enabled": false,
+    "tip": "개정 교육과정 새 용어. 호흡 통로(trachea)는 '숨관'",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→숨관"
+  },
+  {
+    "find": "기관지",
+    "replace": "숨관가지",
+    "enabled": false,
+    "tip": "개정 교육과정 새 용어. 기관지(bronchus)는 '숨관가지'",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→숨관가지"
+  },
+  {
+    "find": "나트륨",
+    "replace": "소듐",
+    "enabled": false,
+    "tip": "개정 교육과정. 'sodium'에 따라 '소듐', '나트륨'과 혼용",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→소듐 또는 나트륨"
+  },
+  {
+    "find": "뇌간",
+    "replace": "뇌줄기",
+    "enabled": false,
+    "tip": "개정 교육과정 새 용어. 뇌간(brainstem)은 '뇌줄기'",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→뇌줄기"
+  },
+  {
+    "find": "니오브",
+    "replace": "나이오븀",
+    "enabled": false,
+    "tip": "개정 화학 용어. niobium → '나이오븀'(옛 '니오브')",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→나이오븀"
+  },
+  {
+    "find": "두정엽",
+    "replace": "마루엽",
+    "enabled": false,
+    "tip": "개정 교육과정 새 용어. 두정엽(parietal lobe)은 '마루엽'",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→마루엽"
+  },
+  {
+    "find": "란탄",
+    "replace": "란타넘",
+    "enabled": false,
+    "tip": "개정 화학 용어. lanthanum → '란타넘'(옛 '란탄')",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→란타넘"
+  },
+  {
+    "find": "리보솜",
+    "replace": "라이보솜",
+    "enabled": false,
+    "tip": "개정 교육과정 새 용어. 'ribosome' 원음에 가깝게 '라이보솜'",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→라이보솜"
+  },
+  {
+    "find": "리보스",
+    "replace": "라이보스",
+    "enabled": false,
+    "tip": "개정 교육과정 새 용어. 'ribose' 원음에 가깝게 '라이보스'",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→라이보스"
+  },
+  {
+    "find": "리소솜",
+    "replace": "라이소솜",
+    "enabled": false,
+    "tip": "개정 교육과정 새 용어. 'lysosome' 원음에 가깝게 '라이소솜'",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→라이소솜"
+  },
+  {
+    "find": "리소자임",
+    "replace": "라이소자임",
+    "enabled": false,
+    "tip": "개정 교육과정 새 용어. 'lysozyme' 원음에 가깝게 '라이소자임'",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→라이소자임"
+  },
+  {
+    "find": "리파아제",
+    "replace": "라이페이스",
+    "enabled": true,
+    "tip": "개정 화학 용어. lipase → '라이페이스'(효소 -ase는 '-에이스')",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→라이페이스"
+  },
+  {
+    "find": "망간",
+    "replace": "망가니즈",
+    "enabled": false,
+    "tip": "개정 화학 용어. manganese → '망가니즈'(옛 '망간')",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→망가니즈"
+  },
+  {
+    "find": "메탄",
+    "replace": "메테인",
+    "enabled": false,
+    "tip": "개정 화학 용어. methane → '메테인'(-안→-에인)",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→메테인"
+  },
+  {
+    "find": "몰리브덴",
+    "replace": "몰리브데넘",
+    "enabled": false,
+    "tip": "개정 화학 용어. molybdenum → '몰리브데넘'(옛 '몰리브덴')",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→몰리브데넘"
+  },
+  {
+    "find": "미토콘드리아",
+    "replace": "마이토콘드리아",
+    "enabled": false,
+    "tip": "개정 교육과정 새 용어(세포소기관). 'mitochondria' 원음에 가깝게 '마이토콘드리아'",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→마이토콘드리아"
+  },
+  {
+    "find": "부탄",
+    "replace": "뷰테인",
+    "enabled": false,
+    "tip": "개정 화학 용어. butane → '뷰테인'(-안→-에인)",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→뷰테인"
+  },
+  {
+    "find": "브롬",
+    "replace": "브로민",
+    "enabled": false,
+    "tip": "개정 화학 용어. bromine → '브로민'(옛 '브롬')",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→브로민"
+  },
+  {
+    "find": "사구체",
+    "replace": "토리",
+    "enabled": false,
+    "tip": "개정 교육과정 새 용어. 사구체(glomerulus)는 '토리'",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→토리"
+  },
+  {
+    "find": "셀렌",
+    "replace": "셀레늄",
+    "enabled": false,
+    "tip": "개정 화학 용어. selenium → '셀레늄'(옛 '셀렌')",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→셀레늄"
+  },
+  {
+    "find": "시클로",
+    "replace": "사이클로",
+    "enabled": false,
+    "tip": "개정 화학 용어. cyclo- → '사이클로'",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→사이클로"
+  },
+  {
+    "find": "십이지장",
+    "replace": "샘창자",
+    "enabled": false,
+    "tip": "개정 교육과정 새 용어. 십이지장(duodenum)은 '샘창자'",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→샘창자"
+  },
+  {
+    "find": "아밀라아제",
+    "replace": "아밀레이스",
+    "enabled": true,
+    "tip": "개정 화학 용어. amylase → '아밀레이스'(효소 -ase는 '-에이스')",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→아밀레이스"
+  },
+  {
+    "find": "아인시타이늄",
+    "replace": "아인슈타이늄",
+    "enabled": false,
+    "tip": "개정 화학 용어. einsteinium → '아인슈타이늄'(옛 '아인시타이늄')",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→아인슈타이늄"
+  },
+  {
+    "find": "안티몬",
+    "replace": "안티모니",
+    "enabled": false,
+    "tip": "개정 화학 용어. antimony → '안티모니'(옛 '안티몬')",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→안티모니"
+  },
+  {
+    "find": "알칸",
+    "replace": "알케인",
+    "enabled": false,
+    "tip": "개정 화학 용어. alkane(-ane)류는 '-안→-에인'이라 '알케인'",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→알케인"
+  },
+  {
+    "find": "알킨",
+    "replace": "알카인",
+    "enabled": false,
+    "tip": "개정 화학 용어. alkyne(-yne)류는 '-인→-아인'이라 '알카인'",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→알카인"
+  },
+  {
+    "find": "에르븀",
+    "replace": "어븀",
+    "enabled": false,
+    "tip": "개정 화학 용어. erbium → '어븀'(옛 '에르븀')",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→어븀"
+  },
+  {
+    "find": "에탄",
+    "replace": "에테인",
+    "enabled": false,
+    "tip": "개정 화학 용어. ethane → '에테인'(-안→-에인)",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→에테인"
+  },
+  {
+    "find": "에틴",
+    "replace": "에타인",
+    "enabled": false,
+    "tip": "개정 화학 용어. ethyne → '에타인'(-인→-아인)",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→에타인"
+  },
+  {
+    "find": "요오드",
+    "replace": "아이오딘",
+    "enabled": true,
+    "tip": "개정 화학 용어. iodine → '아이오딘'(옛 '요오드')",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→아이오딘"
+  },
+  {
+    "find": "이테르븀",
+    "replace": "이터븀",
+    "enabled": false,
+    "tip": "개정 화학 용어. ytterbium → '이터븀'(옛 '이테르븀')",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→이터븀"
+  },
+  {
+    "find": "전두엽",
+    "replace": "이마엽",
+    "enabled": false,
+    "tip": "개정 교육과정 새 용어. 전두엽(frontal lobe)은 '이마엽'",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→이마엽"
+  },
+  {
+    "find": "측두엽",
+    "replace": "관자엽",
+    "enabled": false,
+    "tip": "개정 교육과정 새 용어. 측두엽(temporal lobe)은 '관자엽'",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→관자엽"
+  },
+  {
+    "find": "칼륨",
+    "replace": "포타슘",
+    "enabled": false,
+    "tip": "개정 교육과정. 'potassium'에 따라 '포타슘', '칼륨'과 혼용",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→포타슘 또는 칼륨"
+  },
+  {
+    "find": "칼리포르늄",
+    "replace": "캘리포늄",
+    "enabled": false,
+    "tip": "개정 화학 용어. californium → '캘리포늄'(옛 '칼리포르늄')",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→캘리포늄"
+  },
+  {
+    "find": "크롬",
+    "replace": "크로뮴",
+    "enabled": false,
+    "tip": "개정 화학 용어. chromium → '크로뮴'(옛 '크롬')",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→크로뮴"
+  },
+  {
+    "find": "크세논",
+    "replace": "제논",
+    "enabled": false,
+    "tip": "개정 화학 용어. xenon → '제논'(옛 '크세논')",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→제논"
+  },
+  {
+    "find": "탄탈",
+    "replace": "탄탈럼",
+    "enabled": false,
+    "tip": "개정 화학 용어. tantalum → '탄탈럼'(옛 '탄탈')",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→탄탈럼"
+  },
+  {
+    "find": "테르븀",
+    "replace": "터븀",
+    "enabled": false,
+    "tip": "개정 화학 용어. terbium → '터븀'(옛 '테르븀')",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→터븀"
+  },
+  {
+    "find": "텔루르",
+    "replace": "텔루륨",
+    "enabled": false,
+    "tip": "개정 화학 용어. tellurium → '텔루륨'(옛 '텔루르')",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→텔루륨"
+  },
+  {
+    "find": "티타늄",
+    "replace": "타이타늄",
+    "enabled": false,
+    "tip": "개정 화학 용어. titanium → '타이타늄'(옛 '티타늄')",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→타이타늄"
+  },
+  {
+    "find": "폐포",
+    "replace": "허파꽈리",
+    "enabled": false,
+    "tip": "개정 교육과정 새 용어. 폐포(alveolus)는 '허파꽈리'",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→허파꽈리"
+  },
+  {
+    "find": "플루오르",
+    "replace": "플루오린",
+    "finds": [
+      "플루오르",
+      "불소"
+    ],
+    "enabled": false,
+    "tip": "개정 화학 용어. fluorine → '플루오린'(옛 '플루오르', '불소')",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→플루오린",
+    "ruleId": "chem-fluorine"
+  },
+  {
+    "find": "후두엽",
+    "replace": "뒤통수엽",
+    "enabled": false,
+    "tip": "개정 교육과정 새 용어. 후두엽(occipital lobe)은 '뒤통수엽'",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→뒤통수엽"
   }
 ]
