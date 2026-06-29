@@ -194,30 +194,29 @@ function normalizeDividerLabel(value) {
   return v;
 }
 
-/** spelling_rules 묶음 C — 외래어 명사 (시트·구 라벨 모두 이 이름으로 통일) */
+/** 묶음 C — 구 시트에 group 없이 옛 라벨만 있는 행 보정용 */
 const FOREIGN_NOUN_DIVIDER_GROUP = 'C';
-const FOREIGN_NOUN_DIVIDER_LABEL = '잘못된 외래어 표기(명사)';
 const LEGACY_FOREIGN_NOUN_LABELS = new Set([
   '잘못된 외래어표기',
-  FOREIGN_NOUN_DIVIDER_LABEL,
+  '잘못된 외래어 표기(명사)',
+  '잘못된 외래어 표기(영어)',
 ]);
 
-function isForeignNounRule(rule) {
-  const group = String(rule.dividerGroup ?? '').trim();
-  if (group === FOREIGN_NOUN_DIVIDER_GROUP) return true;
+function needsLegacyForeignNounGroup(rule) {
+  if (String(rule.dividerGroup ?? '').trim()) return false;
   const label = normalizeDividerLabel(rule.dividerLabel);
   return label != null && LEGACY_FOREIGN_NOUN_LABELS.has(label);
 }
 
 /**
- * 묶음별 find 가나다순 + 외래어 명사 묶음 라벨 통일
+ * 묶음별 find 가나다순 (divider_label은 시트 값 그대로)
  * @param {ReturnType<typeof normalizeRow> extends (infer R)[] ? NonNullable<R> : never} rules
  */
 function postProcessSpellingRules(rules) {
   for (const rule of rules) {
-    if (!isForeignNounRule(rule)) continue;
-    rule.dividerGroup = FOREIGN_NOUN_DIVIDER_GROUP;
-    rule.dividerLabel = FOREIGN_NOUN_DIVIDER_LABEL;
+    if (needsLegacyForeignNounGroup(rule)) {
+      rule.dividerGroup = FOREIGN_NOUN_DIVIDER_GROUP;
+    }
   }
 
   /** @type {typeof rules} */
