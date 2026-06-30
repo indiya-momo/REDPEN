@@ -225,24 +225,6 @@
     "overlayReplace": "→세상⁀모르"
   },
   {
-    "find": "전세계",
-    "replace": "전 세계",
-    "enabled": true,
-    "tip": "표준국어대사전 미등재",
-    "dividerGroup": "AB",
-    "dividerLabel": "표준국어대사전 미등재",
-    "overlayReplace": "→전∨세계"
-  },
-  {
-    "find": "주구장창",
-    "replace": "주야장천",
-    "enabled": true,
-    "tip": "표준국어대사전 미등재",
-    "dividerGroup": "AB",
-    "dividerLabel": "표준국어대사전 미등재",
-    "overlayReplace": "→주야장천"
-  },
-  {
     "find": "갯수",
     "replace": "개수",
     "enabled": true,
@@ -259,6 +241,15 @@
     "dividerGroup": "B0",
     "dividerLabel": "잘못된 표현(명사)",
     "overlayReplace": "→검은색 또는 검정"
+  },
+  {
+    "find": "과반수 이상",
+    "replace": "과반수",
+    "enabled": true,
+    "tip": "과반수는 '반이 넘는 수'",
+    "dividerGroup": "B0",
+    "dividerLabel": "잘못된 표현(명사)",
+    "overlayReplace": "→과반수"
   },
   {
     "find": "깔대기",
@@ -414,6 +405,24 @@
     "overlayReplace": "→유월"
   },
   {
+    "find": "전세계",
+    "replace": "전 세계",
+    "enabled": true,
+    "tip": "표준국어대사전 미등재",
+    "dividerGroup": "B0",
+    "dividerLabel": "잘못된 표현(명사)",
+    "overlayReplace": "→전∨세계"
+  },
+  {
+    "find": "주구장창",
+    "replace": "주야장천",
+    "enabled": true,
+    "tip": "표준국어대사전 미등재",
+    "dividerGroup": "B0",
+    "dividerLabel": "잘못된 표현(명사)",
+    "overlayReplace": "→주야장천"
+  },
+  {
     "find": "초팔일",
     "replace": "초파일",
     "enabled": true,
@@ -459,31 +468,13 @@
     "overlayReplace": "→합격률"
   },
   {
-    "find": "가득이",
-    "replace": "가득히",
+    "find": "희노애락(喜怒哀樂)",
+    "replace": "희로애락",
     "enabled": true,
-    "tip": "'-이'와 '-히' 중 /히/로 발음",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사 · 형용사)",
-    "overlayReplace": "→가득히"
-  },
-  {
-    "find": "간편이",
-    "replace": "간편히",
-    "enabled": true,
-    "tip": "'-이'와 '-히' 중 /히/로 발음('-하다'가 붙는 어근 뒤)",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사·형용사)",
-    "overlayReplace": "→간편히"
-  },
-  {
-    "find": "같히",
-    "replace": "같이",
-    "enabled": true,
-    "tip": "'-이'와 '-히' 중 /이/로 발음('-하다'가 붙지 않는 용언 어간 뒤)",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사·형용사)",
-    "overlayReplace": "→같이"
+    "tip": "'怒(노)'를 속음(로)으로 바뀌어 적음 -한글맞춤법 제 52항",
+    "dividerGroup": "B0",
+    "dividerLabel": "잘못된 표현(명사)",
+    "overlayReplace": "→희로애락"
   },
   {
     "find": "거북치",
@@ -504,24 +495,6 @@
     "overlayReplace": "→걸맞은"
   },
   {
-    "find": "겹겹히",
-    "replace": "겹겹이",
-    "enabled": true,
-    "tip": "'-이'와 '-히' 중 /이/로 발음(겹쳐 쓰인 명사 뒤)",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사·형용사)",
-    "overlayReplace": "→겹겹이"
-  },
-  {
-    "find": "곰곰히",
-    "replace": "곰곰이",
-    "enabled": true,
-    "tip": "'-이'와 '-히' 중 /이/로 발음(겹쳐 쓰인 명사 뒤)",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사 · 형용사)",
-    "overlayReplace": "→곰곰이"
-  },
-  {
     "find": "그을은",
     "replace": "그은 또는 그을린",
     "enabled": true,
@@ -529,42 +502,6 @@
     "dividerGroup": "B1",
     "dividerLabel": "잘못된 표현(동사 · 형용사)",
     "overlayReplace": "→그은 또는 그을린"
-  },
-  {
-    "find": "급급이",
-    "replace": "급급히",
-    "enabled": true,
-    "tip": "'-이'와 '-히' 중 /히/로 발음('-하다'가 붙는 어근 뒤)",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사·형용사)",
-    "overlayReplace": "→급급히"
-  },
-  {
-    "find": "기꺼히",
-    "replace": "기꺼이",
-    "enabled": true,
-    "tip": "'-이'와 '-히' 중 /이/로 발음(ㅂ 불규칙 용언의 어간 뒤)",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사·형용사)",
-    "overlayReplace": "→기꺼이"
-  },
-  {
-    "find": "깊히",
-    "replace": "깊이",
-    "enabled": true,
-    "tip": "'-이'와 '-히' 중 /이/로 발음('-하다'가 붙지 않는 용언 어간 뒤)",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사·형용사)",
-    "overlayReplace": "→깊이"
-  },
-  {
-    "find": "까마득이",
-    "replace": "까마득히",
-    "enabled": true,
-    "tip": "'-이'와 '-히' 중 /히/로 발음",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사 · 형용사)",
-    "overlayReplace": "→까마득히"
   },
   {
     "find": "깨끗치",
@@ -576,15 +513,6 @@
     "overlayReplace": "→깨끗지"
   },
   {
-    "find": "깨끗히",
-    "replace": "깨끗이",
-    "enabled": true,
-    "tip": "'-이'와 '-히' 중 /이/로 발음(ㅅ 받침 뒤)",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사 · 형용사)",
-    "overlayReplace": "→깨끗이"
-  },
-  {
     "find": "꺼야",
     "replace": "거야",
     "enabled": true,
@@ -592,15 +520,6 @@
     "dividerGroup": "B1",
     "dividerLabel": "잘못된 표현(동사 · 형용사)",
     "overlayReplace": "→거야"
-  },
-  {
-    "find": "꼼꼼이",
-    "replace": "꼼꼼히",
-    "enabled": true,
-    "tip": "'-이'와 '-히' 중 /히/로 발음('-하다'가 붙는 어근 뒤)",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사·형용사)",
-    "overlayReplace": "→꼼꼼히"
   },
   {
     "find": "끼여들",
@@ -619,42 +538,6 @@
     "dividerGroup": "B1",
     "dividerLabel": "잘못된 표현(동사 · 형용사)",
     "overlayReplace": "→나뉘"
-  },
-  {
-    "find": "나른이",
-    "replace": "나른히",
-    "enabled": true,
-    "tip": "'-이'와 '-히' 중 /히/로 발음('-하다'가 붙는 어근 뒤)",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사·형용사)",
-    "overlayReplace": "→나른히"
-  },
-  {
-    "find": "날카로히",
-    "replace": "날카로이",
-    "enabled": true,
-    "tip": "'-이'와 '-히' 중 /이/로 발음(ㅂ 불규칙 용언의 어간 뒤)",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사·형용사)",
-    "overlayReplace": "→날카로이"
-  },
-  {
-    "find": "남짓히",
-    "replace": "남짓이",
-    "enabled": true,
-    "tip": "'-이'와 '-히' 중 /이/로 발음(ㅅ 받침 뒤)",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사·형용사)",
-    "overlayReplace": "→남짓이"
-  },
-  {
-    "find": "낱낱히",
-    "replace": "낱낱이",
-    "enabled": true,
-    "tip": "'-이'와 '-히' 중 /이/로 발음(겹쳐 쓰인 명사 뒤)",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사·형용사)",
-    "overlayReplace": "→낱낱이"
   },
   {
     "find": "넉넉치",
@@ -693,24 +576,6 @@
     "overlayReplace": "→높이"
   },
   {
-    "find": "느긋히",
-    "replace": "느긋이",
-    "enabled": true,
-    "tip": "'-이'와 '-히' 중 /이/로 발음(ㅅ 받침 뒤)",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사·형용사)",
-    "overlayReplace": "→느긋이"
-  },
-  {
-    "find": "다달히",
-    "replace": "다달이",
-    "enabled": true,
-    "tip": "'-이'와 '-히' 중 /이/로 발음(겹쳐 쓰인 명사 뒤)",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사·형용사)",
-    "overlayReplace": "→다달이"
-  },
-  {
     "find": "담궈",
     "replace": "담가",
     "enabled": true,
@@ -718,15 +583,6 @@
     "dividerGroup": "B1",
     "dividerLabel": "잘못된 표현(동사 · 형용사)",
     "overlayReplace": "→담가"
-  },
-  {
-    "find": "대수로히",
-    "replace": "대수로이",
-    "enabled": true,
-    "tip": "'-이'와 '-히' 중 /이/로 발음(ㅂ 불규칙 용언의 어간 뒤)",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사·형용사)",
-    "overlayReplace": "→대수로이"
   },
   {
     "find": "덮히",
@@ -756,24 +612,6 @@
     "overlayReplace": "→드러나"
   },
   {
-    "find": "따뜻히",
-    "replace": "따뜻이",
-    "enabled": true,
-    "tip": "'-이'와 '-히' 중 /이/로 발음(ㅅ 받침 뒤)",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사 · 형용사)",
-    "overlayReplace": "→따뜻이"
-  },
-  {
-    "find": "뜨뜻히",
-    "replace": "뜨뜻이",
-    "enabled": true,
-    "tip": "'-이'와 '-히' 중 /이/로 발음(ㅅ 받침 뒤)",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사·형용사)",
-    "overlayReplace": "→뜨뜻이"
-  },
-  {
     "find": "런지",
     "replace": "는지",
     "enabled": true,
@@ -783,15 +621,6 @@
     "overlayReplace": "→는지"
   },
   {
-    "find": "몫몫히",
-    "replace": "몫몫이",
-    "enabled": true,
-    "tip": "'-이'와 '-히' 중 /이/로 발음(겹쳐 쓰인 명사 뒤)",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사·형용사)",
-    "overlayReplace": "→몫몫이"
-  },
-  {
     "find": "믿겨지",
     "replace": "믿기",
     "enabled": true,
@@ -799,42 +628,6 @@
     "dividerGroup": "B1",
     "dividerLabel": "잘못된 표현(동사 · 형용사)",
     "overlayReplace": "→믿"
-  },
-  {
-    "find": "반듯히",
-    "replace": "반듯이",
-    "enabled": true,
-    "tip": "'-이'와 '-히' 중 /이/로 발음(ㅅ 받침 뒤)",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사·형용사)",
-    "overlayReplace": "→반듯이"
-  },
-  {
-    "find": "버젓히",
-    "replace": "버젓이",
-    "enabled": true,
-    "tip": "'-이'와 '-히' 중 /이/로 발음(ㅅ 받침 뒤)",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사·형용사)",
-    "overlayReplace": "→버젓이"
-  },
-  {
-    "find": "번듯히",
-    "replace": "번듯이",
-    "enabled": true,
-    "tip": "'-이'와 '-히' 중 /이/로 발음(ㅅ 받침 뒤)",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사·형용사)",
-    "overlayReplace": "→번듯이"
-  },
-  {
-    "find": "번번히",
-    "replace": "번번이",
-    "enabled": true,
-    "tip": "'-이'와 '-히' 중 /이/로 발음(겹쳐 쓰인 명사 뒤)",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사·형용사)",
-    "overlayReplace": "→번번이"
   },
   {
     "find": "보여지",
@@ -864,51 +657,6 @@
     "overlayReplace": "→불리"
   },
   {
-    "find": "빠듯히",
-    "replace": "빠듯이",
-    "enabled": true,
-    "tip": "'-이'와 '-히' 중 /이/로 발음(ㅅ 받침 뒤)",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사·형용사)",
-    "overlayReplace": "→빠듯이"
-  },
-  {
-    "find": "빼곡이",
-    "replace": "빼곡히",
-    "enabled": true,
-    "tip": "'빼곡히' 의 잘못된 표현",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사 · 형용사)",
-    "overlayReplace": "→빼곡히"
-  },
-  {
-    "find": "빽빽히",
-    "replace": "빽빽이",
-    "enabled": true,
-    "tip": "'빽빽이' 의 잘못된 표현",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사 · 형용사)",
-    "overlayReplace": "→빽뺵이"
-  },
-  {
-    "find": "샅샅히",
-    "replace": "샅샅이",
-    "enabled": true,
-    "tip": "'-이'와 '-히' 중 /이/로 발음(겹쳐 쓰인 명사 뒤)",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사·형용사)",
-    "overlayReplace": "→샅샅이"
-  },
-  {
-    "find": "새로히",
-    "replace": "새로이",
-    "enabled": true,
-    "tip": "'-이'와 '-히' 중 /이/로 발음(ㅂ 불규칙 용언의 어간 뒤)",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사·형용사)",
-    "overlayReplace": "→새로이"
-  },
-  {
     "find": "생각되어",
     "replace": "생각되",
     "enabled": true,
@@ -925,15 +673,6 @@
     "dividerGroup": "B1",
     "dividerLabel": "잘못된 표현(동사 · 형용사)",
     "overlayReplace": "→설레"
-  },
-  {
-    "find": "쉬히",
-    "replace": "쉬이",
-    "enabled": true,
-    "tip": "'-이'와 '-히' 중 /이/로 발음(ㅂ 불규칙 용언의 어간 뒤)",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사·형용사)",
-    "overlayReplace": "→쉬이"
   },
   {
     "find": "스런",
@@ -972,15 +711,6 @@
     "overlayReplace": "→알맞은"
   },
   {
-    "find": "알알히",
-    "replace": "알알이",
-    "enabled": true,
-    "tip": "'-이'와 '-히' 중 /이/로 발음(겹쳐 쓰인 명사 뒤)",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사·형용사)",
-    "overlayReplace": "→알알이"
-  },
-  {
     "find": "어떻해",
     "replace": "어떡해 또는 어떻게",
     "enabled": true,
@@ -990,24 +720,6 @@
     "overlayReplace": "→어떡해 또는 어떻게"
   },
   {
-    "find": "엄격이",
-    "replace": "엄격히",
-    "enabled": true,
-    "tip": "'-이'와 '-히' 중 /히/로 발음('-하다'가 붙는 어근 뒤)",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사·형용사)",
-    "overlayReplace": "→엄격히"
-  },
-  {
-    "find": "열심이",
-    "replace": "열심히",
-    "enabled": true,
-    "tip": "'-이'와 '-히' 중 /히/로 발음",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사 · 형용사)",
-    "overlayReplace": "→열심히"
-  },
-  {
     "find": "우겨넣",
     "replace": "욱여넣",
     "enabled": true,
@@ -1015,15 +727,6 @@
     "dividerGroup": "B1",
     "dividerLabel": "잘못된 표현(동사 · 형용사)",
     "overlayReplace": "→욱여넣"
-  },
-  {
-    "find": "의젓히",
-    "replace": "의젓이",
-    "enabled": true,
-    "tip": "'-이'와 '-히' 중 /이/로 발음(ㅅ 받침 뒤)",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사·형용사)",
-    "overlayReplace": "→의젓이"
   },
   {
     "find": "이예요",
@@ -1044,24 +747,6 @@
     "overlayReplace": "→익숙하게"
   },
   {
-    "find": "일일히",
-    "replace": "일일이",
-    "enabled": true,
-    "tip": "'-이'와 '-히' 중 /이/로 발음(겹쳐 쓰인 명사 뒤)",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사 · 형용사)",
-    "overlayReplace": "→일일이"
-  },
-  {
-    "find": "일찍히",
-    "replace": "일찍이",
-    "enabled": true,
-    "tip": "'-이'와 '-히' 중 /이/로 발음(부사 뒤)",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사·형용사)",
-    "overlayReplace": "→일찍이"
-  },
-  {
     "find": "잊혀",
     "replace": "잊힌",
     "enabled": true,
@@ -1080,33 +765,6 @@
     "overlayReplace": "→잠가"
   },
   {
-    "find": "정확이",
-    "replace": "정확히",
-    "enabled": true,
-    "tip": "'-이'와 '-히' 중 /히/로 발음('-하다'가 붙는 어근 뒤)",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사·형용사)",
-    "overlayReplace": "→정확히"
-  },
-  {
-    "find": "줄줄히",
-    "replace": "줄줄이",
-    "enabled": true,
-    "tip": "'-이'와 '-히' 중 /이/로 발음(겹쳐 쓰인 명사 뒤)",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사·형용사)",
-    "overlayReplace": "→줄줄이"
-  },
-  {
-    "find": "지긋히",
-    "replace": "지긋이",
-    "enabled": true,
-    "tip": "'-이'와 '-히' 중 /이/로 발음(ㅅ 받침 뒤)",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사·형용사)",
-    "overlayReplace": "→지긋이"
-  },
-  {
     "find": "짜여진",
     "replace": "짜여",
     "enabled": true,
@@ -1114,15 +772,6 @@
     "dividerGroup": "B1",
     "dividerLabel": "잘못된 표현(동사 · 형용사)",
     "overlayReplace": "→짜여"
-  },
-  {
-    "find": "짬짬히",
-    "replace": "짬짬이",
-    "enabled": true,
-    "tip": "'-이'와 '-히' 중 /이/로 발음(겹쳐 쓰인 명사 뒤)",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사·형용사)",
-    "overlayReplace": "→짬짬이"
   },
   {
     "find": "치뤄",
@@ -1134,24 +783,6 @@
     "overlayReplace": "→치러"
   },
   {
-    "find": "특별이",
-    "replace": "특별히",
-    "enabled": true,
-    "tip": "'-이'와 '-히' 중 /히/로 발음",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사 · 형용사)",
-    "overlayReplace": "→특별히"
-  },
-  {
-    "find": "틈틈히",
-    "replace": "틈틈이",
-    "enabled": true,
-    "tip": "'-이'와 '-히' 중 /이/로 발음(겹쳐 쓰인 명사 뒤)",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사 · 형용사)",
-    "overlayReplace": "→틈틈이"
-  },
-  {
     "find": "헤메이",
     "replace": "헤메",
     "enabled": true,
@@ -1159,6 +790,33 @@
     "dividerGroup": "B1",
     "dividerLabel": "잘못된 표현(동사 · 형용사)",
     "overlayReplace": "→헤메"
+  },
+  {
+    "find": "가득이",
+    "replace": "가득히",
+    "enabled": true,
+    "tip": "'-이'와 '-히' 중 /히/로 발음",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→가득히"
+  },
+  {
+    "find": "간편이",
+    "replace": "간편히",
+    "enabled": true,
+    "tip": "'-이'와 '-히' 중 /히/로 발음('-하다'가 붙는 어근 뒤)",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→간편히"
+  },
+  {
+    "find": "같히",
+    "replace": "같이",
+    "enabled": true,
+    "tip": "'-이'와 '-히' 중 /이/로 발음('-하다'가 붙지 않는 용언 어간 뒤)",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→같이"
   },
   {
     "find": "것 뿐",
@@ -1170,13 +828,22 @@
     "overlayReplace": "→것뿐"
   },
   {
-    "find": "과반수 이상",
-    "replace": "과반수",
+    "find": "겹겹히",
+    "replace": "겹겹이",
     "enabled": true,
-    "tip": "과반수는 '반이 넘는 수'",
+    "tip": "'-이'와 '-히' 중 /이/로 발음(겹쳐 쓰인 명사 뒤)",
     "dividerGroup": "B2",
     "dividerLabel": "잘못된 표현(그 외)",
-    "overlayReplace": "→과반수"
+    "overlayReplace": "→겹겹이"
+  },
+  {
+    "find": "곰곰히",
+    "replace": "곰곰이",
+    "enabled": true,
+    "tip": "'-이'와 '-히' 중 /이/로 발음(겹쳐 쓰인 명사 뒤)",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→곰곰이"
   },
   {
     "find": "구지",
@@ -1188,6 +855,240 @@
     "overlayReplace": "→굳이"
   },
   {
+    "find": "급급이",
+    "replace": "급급히",
+    "enabled": true,
+    "tip": "'-이'와  '-히' 중 /히/로 발음('-하다'가 붙는 어근 뒤)",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→급급히"
+  },
+  {
+    "find": "기꺼히",
+    "replace": "기꺼이",
+    "enabled": true,
+    "tip": "'-이'와 '-히' 중 /이/로 발음(ㅂ 불규칙 용언의 어간 뒤)",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→기꺼이"
+  },
+  {
+    "find": "깊히",
+    "replace": "깊이",
+    "enabled": true,
+    "tip": "'-이'와 '-히' 중 /이/로 발음('-하다'가 붙지 않는 용언 어간 뒤)",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→깊이"
+  },
+  {
+    "find": "까마득이",
+    "replace": "까마득히",
+    "enabled": true,
+    "tip": "'-이'와 '-히' 중 /히/로 발음",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→까마득히"
+  },
+  {
+    "find": "깨끗히",
+    "replace": "깨끗이",
+    "enabled": true,
+    "tip": "'-이'와 '-히' 중 /이/로 발음(ㅅ 받침 뒤)",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→깨끗이"
+  },
+  {
+    "find": "꼼꼼이",
+    "replace": "꼼꼼히",
+    "enabled": true,
+    "tip": "'-이'와  '-히' 중 /히/로 발음('-하다'가 붙는 어근 뒤)",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→꼼꼼히"
+  },
+  {
+    "find": "나른이",
+    "replace": "나른히",
+    "enabled": true,
+    "tip": "'-이'와  '-히' 중 /히/로 발음('-하다'가 붙는 어근 뒤)",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→나른히"
+  },
+  {
+    "find": "날카로히",
+    "replace": "날카로이",
+    "enabled": true,
+    "tip": "'-이'와 '-히' 중 /이/로 발음(ㅂ 불규칙 용언의 어간 뒤)",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→날카로이"
+  },
+  {
+    "find": "남짓히",
+    "replace": "남짓이",
+    "enabled": true,
+    "tip": "'-이'와 '-히' 중 /이/로 발음(ㅅ 받침 뒤)",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→남짓이"
+  },
+  {
+    "find": "낱낱히",
+    "replace": "낱낱이",
+    "enabled": true,
+    "tip": "'-이'와 '-히' 중 /이/로 발음(겹쳐 쓰인 명사 뒤)",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→낱낱이"
+  },
+  {
+    "find": "느긋히",
+    "replace": "느긋이",
+    "enabled": true,
+    "tip": "'-이'와 '-히' 중 /이/로 발음(ㅅ 받침 뒤)",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→느긋이"
+  },
+  {
+    "find": "다달히",
+    "replace": "다달이",
+    "enabled": true,
+    "tip": "'-이'와 '-히' 중 /이/로 발음(겹쳐 쓰인 명사 뒤)",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→다달이"
+  },
+  {
+    "find": "대수로히",
+    "replace": "대수로이",
+    "enabled": true,
+    "tip": "'-이'와 '-히' 중 /이/로 발음(ㅂ 불규칙 용언의 어간 뒤)",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→대수로이"
+  },
+  {
+    "find": "따뜻히",
+    "replace": "따뜻이",
+    "enabled": true,
+    "tip": "'-이'와 '-히' 중 /이/로 발음(ㅅ 받침 뒤)",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→따뜻이"
+  },
+  {
+    "find": "뜨뜻히",
+    "replace": "뜨뜻이",
+    "enabled": true,
+    "tip": "'-이'와 '-히' 중 /이/로 발음(ㅅ 받침 뒤)",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→뜨뜻이"
+  },
+  {
+    "find": "반듯히",
+    "replace": "반듯이",
+    "enabled": true,
+    "tip": "'-이'와 '-히' 중 /이/로 발음(ㅅ 받침 뒤)",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→반듯이"
+  },
+  {
+    "find": "버젓히",
+    "replace": "버젓이",
+    "enabled": true,
+    "tip": "'-이'와 '-히' 중 /이/로 발음(ㅅ 받침 뒤)",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→버젓이"
+  },
+  {
+    "find": "번듯히",
+    "replace": "번듯이",
+    "enabled": true,
+    "tip": "'-이'와 '-히' 중 /이/로 발음(ㅅ 받침 뒤)",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→번듯이"
+  },
+  {
+    "find": "번번히",
+    "replace": "번번이",
+    "enabled": true,
+    "tip": "'-이'와 '-히' 중 /이/로 발음(겹쳐 쓰인 명사 뒤)",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→번번이"
+  },
+  {
+    "find": "빠듯히",
+    "replace": "빠듯이",
+    "enabled": true,
+    "tip": "'-이'와 '-히' 중 /이/로 발음(ㅅ 받침 뒤)",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→빠듯이"
+  },
+  {
+    "find": "빼곡이",
+    "replace": "빼곡히",
+    "enabled": true,
+    "tip": "'-이'와 '-히' 중 /히/로 발음",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→빼곡히"
+  },
+  {
+    "find": "빽빽히",
+    "replace": "빽빽이",
+    "enabled": true,
+    "tip": "'-이'와 '-히' 중 /이/로 발음",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→빽뺵이"
+  },
+  {
+    "find": "샅샅히",
+    "replace": "샅샅이",
+    "enabled": true,
+    "tip": "'-이'와 '-히' 중 /이/로 발음(겹쳐 쓰인 명사 뒤)",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→샅샅이"
+  },
+  {
+    "find": "새로히",
+    "replace": "새로이",
+    "enabled": true,
+    "tip": "'-이'와 '-히' 중 /이/로 발음(ㅂ 불규칙 용언의 어간 뒤)",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→새로이"
+  },
+  {
+    "find": "쉬히",
+    "replace": "쉬이",
+    "enabled": true,
+    "tip": "'-이'와 '-히' 중 /이/로 발음(ㅂ 불규칙 용언의 어간 뒤)",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→쉬이"
+  },
+  {
+    "find": "알알히",
+    "replace": "알알이",
+    "enabled": true,
+    "tip": "'-이'와 '-히' 중 /이/로 발음(겹쳐 쓰인 명사 뒤)",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→알알이"
+  },
+  {
     "find": "어짜피",
     "replace": "어차피",
     "enabled": true,
@@ -1195,6 +1096,15 @@
     "dividerGroup": "B2",
     "dividerLabel": "잘못된 표현(그 외)",
     "overlayReplace": "→어차피"
+  },
+  {
+    "find": "엄격이",
+    "replace": "엄격히",
+    "enabled": true,
+    "tip": "'-이'와  '-히' 중 /히/로 발음('-하다'가 붙는 어근 뒤)",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→엄격히"
   },
   {
     "find": "에걔",
@@ -1206,13 +1116,94 @@
     "overlayReplace": "→에계 또는 에계"
   },
   {
-    "find": "희노애락(喜怒哀樂)",
-    "replace": "희로애락",
+    "find": "열심이",
+    "replace": "열심히",
     "enabled": true,
-    "tip": "'怒(노)'를 속음(로)으로 바뀌어 적음 -한글맞춤법 제 52항",
+    "tip": "'-이'와 '-히' 중 /히/로 발음",
     "dividerGroup": "B2",
     "dividerLabel": "잘못된 표현(그 외)",
-    "overlayReplace": "→희로애락"
+    "overlayReplace": "→열심히"
+  },
+  {
+    "find": "의젓히",
+    "replace": "의젓이",
+    "enabled": true,
+    "tip": "'-이'와 '-히' 중 /이/로 발음(ㅅ 받침 뒤)",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→의젓이"
+  },
+  {
+    "find": "일일히",
+    "replace": "일일이",
+    "enabled": true,
+    "tip": "'-이'와 '-히' 중 /이/로 발음(겹쳐 쓰인 명사 뒤)",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→일일이"
+  },
+  {
+    "find": "일찍히",
+    "replace": "일찍이",
+    "enabled": true,
+    "tip": "'-이'와 '-히' 중 /이/로 발음(부사 뒤)",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→일찍이"
+  },
+  {
+    "find": "정확이",
+    "replace": "정확히",
+    "enabled": true,
+    "tip": "'-이'와  '-히' 중 /히/로 발음('-하다'가 붙는 어근 뒤)",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→정확히"
+  },
+  {
+    "find": "줄줄히",
+    "replace": "줄줄이",
+    "enabled": true,
+    "tip": "'-이'와 '-히' 중 /이/로 발음(겹쳐 쓰인 명사 뒤)",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→줄줄이"
+  },
+  {
+    "find": "지긋히",
+    "replace": "지긋이",
+    "enabled": true,
+    "tip": "'-이'와 '-히' 중 /이/로 발음(ㅅ 받침 뒤)",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→지긋이"
+  },
+  {
+    "find": "짬짬히",
+    "replace": "짬짬이",
+    "enabled": true,
+    "tip": "'-이'와 '-히' 중 /이/로 발음(겹쳐 쓰인 명사 뒤)",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→짬짬이"
+  },
+  {
+    "find": "특별이",
+    "replace": "특별히",
+    "enabled": true,
+    "tip": "'-이'와 '-히' 중 /히/로 발음",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→특별히"
+  },
+  {
+    "find": "틈틈히",
+    "replace": "틈틈이",
+    "enabled": true,
+    "tip": "'-이'와 '-히' 중 /이/로 발음(겹쳐 쓰인 명사 뒤)",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→틈틈이"
   },
   {
     "find": "가디건",
