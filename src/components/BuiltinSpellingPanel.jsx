@@ -216,7 +216,12 @@ export default function BuiltinSpellingPanel({
               <span className="builtin-rule-bundle-icon" aria-hidden="true">
                 📁
               </span>
-              <span className="builtin-rule-bundle-title">{bundle.label}</span>
+              <span className="builtin-rule-bundle-title-wrap">
+                <span className="builtin-rule-bundle-title">{bundle.label}</span>
+                {bundle.uiNote ? (
+                  <span className="builtin-rule-bundle-note">{bundle.uiNote}</span>
+                ) : null}
+              </span>
               <span className="builtin-rule-bundle-meta">
                 {`${bundleEnabled}/${bundle.ruleCount}`}
               </span>

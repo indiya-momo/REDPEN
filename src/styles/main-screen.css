@@ -2157,11 +2157,25 @@
   line-height: 1;
 }
 
-.builtin-spelling-resize-body .builtin-rule-bundle-title {
+.builtin-spelling-resize-body .builtin-rule-bundle-title-wrap {
   flex: 1 1 auto;
   min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35em 0.5em;
+}
+
+.builtin-spelling-resize-body .builtin-rule-bundle-title {
   font-weight: 600;
   color: var(--c-ink);
+  line-height: 1.25;
+}
+
+.builtin-spelling-resize-body .builtin-rule-bundle-note {
+  font-weight: 400;
+  font-size: 78%;
+  color: var(--c-soft);
   line-height: 1.25;
 }
 
