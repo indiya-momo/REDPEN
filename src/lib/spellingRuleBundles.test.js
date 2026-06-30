@@ -49,12 +49,29 @@ describe('buildSpellingRuleBundles', () => {
     expect(bundles[0]).toMatchObject({
       id: 'E',
       label: '사이시옷 법칙',
+      uiNote: '',
       ruleCount: 2,
     });
     expect(bundles[1]).toMatchObject({
       id: 'E2',
       label: '사이시옷 법칙2',
       ruleCount: 1,
+    });
+  });
+
+  it('교육부 개정 용어(F) 묶음에만 보조 문구를 붙인다', () => {
+    const bundles = buildSpellingRuleBundles([
+      rule({
+        find: '간뇌',
+        replace: '사이뇌',
+        dividerGroup: 'F',
+        dividerLabel: '교육부 개정 용어',
+      }),
+    ]);
+    expect(bundles[0]).toMatchObject({
+      id: 'F',
+      label: '교육부 개정 용어',
+      uiNote: '※기존 용어도 표준어로 사용 가능',
     });
   });
 
