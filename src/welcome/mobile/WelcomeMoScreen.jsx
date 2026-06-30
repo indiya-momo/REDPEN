@@ -74,7 +74,7 @@ export default function WelcomeMoScreen({ onOpenRoom }) {
           </h1>
           <p className="welcome-mo__lead">
             <span className="welcome-mo__lead-line">
-              PDF에서 맞춤법 · 일관성을 검수합니다
+              PDF에서 맞춤법 · 표기 통일을 검수합니다
             </span>
           </p>
           <div className="welcome-mo__trust" role="note" aria-label="개인정보·원고 보관 안내">
@@ -132,7 +132,7 @@ export default function WelcomeMoScreen({ onOpenRoom }) {
                       alt="검수 전 — 원고 본문"
                     />
                     <figcaption>
-                      적용할 맞춤법 · 일관성 기준을 선택합니다
+                      적용할 맞춤법 · 표기 통일 기준을 선택합니다
                     </figcaption>
                   </figure>
                 </div>
