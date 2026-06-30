@@ -297,6 +297,15 @@
     "overlayReplace": "→닦달"
   },
   {
+    "find": "대노",
+    "replace": "대로",
+    "enabled": true,
+    "tip": "'怒(노)'를 속음(로)으로 바뀌어 적음 -한글맞춤법 제 52항",
+    "dividerGroup": "B0",
+    "dividerLabel": "잘못된 표현(명사)",
+    "overlayReplace": "→대로"
+  },
+  {
     "find": "댓가",
     "replace": "대가",
     "enabled": true,
@@ -351,6 +360,24 @@
     "overlayReplace": "→성장률"
   },
   {
+    "find": "십왕",
+    "replace": "시왕",
+    "enabled": true,
+    "tip": "'十'의 본음은 '십'이나 '十王'에서는 속음 '시'로 나므로 '시왕'으로 적음-한글맞춤법 제 52항",
+    "dividerGroup": "B0",
+    "dividerLabel": "잘못된 표현(명사)",
+    "overlayReplace": "→시왕"
+  },
+  {
+    "find": "십월",
+    "replace": "시월",
+    "enabled": true,
+    "tip": "'十'의 본음은 '십'이나 '十月'에서는 속음 '시'로 나므로 '시월'로 적음-한글맞춤법 제 52항",
+    "dividerGroup": "B0",
+    "dividerLabel": "잘못된 표현(명사)",
+    "overlayReplace": "→시월"
+  },
+  {
     "find": "싯가",
     "replace": "시가",
     "enabled": true,
@@ -367,6 +394,33 @@
     "dividerGroup": "B0",
     "dividerLabel": "잘못된 표현(명사)",
     "overlayReplace": "→역대 또는 초유의"
+  },
+  {
+    "find": "오륙월",
+    "replace": "오뉴월",
+    "enabled": true,
+    "tip": "'六'의 본음은 '육'이나 '五六月'에서는 속음 '뉴'로 나므로 '오뉴월'로 적음 -한글맞춤법 제 52항",
+    "dividerGroup": "B0",
+    "dividerLabel": "잘못된 표현(명사)",
+    "overlayReplace": "→오뉴월"
+  },
+  {
+    "find": "육월(六月)",
+    "replace": "유월",
+    "enabled": true,
+    "tip": "'六'의 본음은 '육'이나 '六月'에서는 속음 '유'로 나므로 '유월'로 적음-한글맞춤법 제 52항",
+    "dividerGroup": "B0",
+    "dividerLabel": "잘못된 표현(명사)",
+    "overlayReplace": "→유월"
+  },
+  {
+    "find": "초팔일",
+    "replace": "초파일",
+    "enabled": true,
+    "tip": "'八'의 본음은 '팔'이나 '初八日'에서는 속음 '파'로 나므로 '초파일'로 적음-한글맞춤법 제 52항",
+    "dividerGroup": "B0",
+    "dividerLabel": "잘못된 표현(명사)",
+    "overlayReplace": "→초파일"
   },
   {
     "find": "촛점",
@@ -1161,60 +1215,6 @@
     "overlayReplace": "→희로애락"
   },
   {
-    "find": "대노",
-    "replace": "대로",
-    "enabled": true,
-    "tip": "'怒(노)'를 속음(로)으로 바뀌어 적음 -한글맞춤법 제 52항",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(한자어)",
-    "overlayReplace": "→대로"
-  },
-  {
-    "find": "십왕",
-    "replace": "시왕",
-    "enabled": true,
-    "tip": "제52항 한자어 속음. '十'의 본음은 '십'이나 '十王'에서는 속음 '시'로 나므로 '시왕'으로 적음-한글맞춤법 제 52항",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(한자어)",
-    "overlayReplace": "→시왕"
-  },
-  {
-    "find": "십월",
-    "replace": "시월",
-    "enabled": true,
-    "tip": "제52항 한자어 속음. '十'의 본음은 '십'이나 '十月'에서는 속음 '시'로 나므로 '시월'로 적음-한글맞춤법 제 52항",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(한자어)",
-    "overlayReplace": "→시월"
-  },
-  {
-    "find": "오륙월",
-    "replace": "오뉴월",
-    "enabled": true,
-    "tip": "제52항 한자어 속음. '六'의 본음은 '육'이나 '五六月'에서는 속음 '뉴'로 나므로 '오뉴월'로 적음 -한글맞춤법 제 52항",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(한자어)",
-    "overlayReplace": "→오뉴월"
-  },
-  {
-    "find": "육월(六月)",
-    "replace": "유월",
-    "enabled": true,
-    "tip": "제52항 한자어 속음. '六'의 본음은 '육'이나 '六月'에서는 속음 '유'로 나므로 '유월'로 적음-한글맞춤법 제 52항",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(한자어)",
-    "overlayReplace": "→유월"
-  },
-  {
-    "find": "초팔일",
-    "replace": "초파일",
-    "enabled": true,
-    "tip": "제52항 한자어 속음. '八'의 본음은 '팔'이나 '初八日'에서는 속음 '파'로 나므로 '초파일'로 적음-한글맞춤법 제 52항",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(한자어)",
-    "overlayReplace": "→초파일"
-  },
-  {
     "find": "가디건",
     "replace": "카디건",
     "enabled": true,
@@ -1994,16 +1994,11 @@
   {
     "find": "부페",
     "replace": "뷔페",
-    "finds": [
-      "부페",
-      "부패"
-    ],
     "enabled": true,
     "tip": "프랑스어 buffet. 'u'는 [위]라 '뷔페'; '부페·부패'는 영어·일본식 오표기",
     "dividerGroup": "C1",
     "dividerLabel": "외래어 표기법(프랑스어 · 독일어)",
-    "overlayReplace": "→뷔페",
-    "ruleId": "foreign-fr-buffet"
+    "overlayReplace": "→뷔페"
   },
   {
     "find": "브라암스",
