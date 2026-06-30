@@ -14,6 +14,11 @@ import {
 import { syncFirstCheckBadge } from './badgeGrants.js';
 import { assertLoggedInForCheckOrAlert } from './checkAuthGate.js';
 import {
+  parseBracketTitleMessage,
+  showAppAlert,
+  showAppConfirm,
+} from './appDialog.js';
+import {
   firebaseApp,
   isFirebaseAuthConfigured,
   resolveSessionEmail,
@@ -62,18 +67,29 @@ export const BETA_DAILY_QUOTA_ALERT_EXPORT =
 /**
  * @param {'spelling' | 'consistency'} [exportTab]
  */
-function buildProofreadExportConfirmMessage(exportTab = 'spelling') {
-  const tabLabel = exportTab === 'consistency' ? '일관성' : '맞춤법';
+export function proofreadExportTabShortLabel(exportTab = 'spelling') {
+  return exportTab === 'consistency' ? '표기 통일' : '맞춤법';
+}
+
+/**
+ * @param {'spelling' | 'consistency'} [exportTab]
+ */
+export function buildProofreadExportConfirmMessage(exportTab = 'spelling') {
+  const tabLabel = proofreadExportTabShortLabel(exportTab);
   return (
-    `오늘 ${tabLabel} 검수 결과 다운로드는 1회 가능합니다.\n` +
+    `[${tabLabel} 검수 결과 다운로드]\n` +
+    `오늘 ${tabLabel} 검수 결과 다운로드는 1회 가능합니다.\n\n` +
     '다운로드를 진행할까요?\n\n' +
     '※ 엑셀(.xlsx)파일로 진행되며, PDF 다운로드는 준비중입니다'
   );
 }
 
 /** @param {'spelling' | 'consistency'} [exportTab] */
-function confirmProofreadExportOrCancel(exportTab = 'spelling') {
-  return window.confirm(buildProofreadExportConfirmMessage(exportTab));
+async function confirmProofreadExportOrCancel(exportTab = 'spelling') {
+  const { title, message } = parseBracketTitleMessage(
+    buildProofreadExportConfirmMessage(exportTab),
+  );
+  return showAppConfirm({ title, message });
 }
 
 /** 피드백 제출 후 작업 탭 새로고침 — 8번 말풍선 (돌아오기만으로는 안 뜸) */
@@ -203,8 +219,17 @@ export function betaQuotaTabLabel(tab) {
   return tab === 'spelling' ? '맞춤법 검수' : '표기 통일 검수';
 }
 
+export function formatBetaExportConsumedAlert(exportCount, exportLimit) {
+  const remaining = Math.max(0, exportLimit - exportCount);
+  return (
+    `오늘보내기 횟수가 1회 차감되었습니다.\n\n` +
+    `사용: ${exportCount}/${exportLimit}회\n` +
+    `남음: ${remaining}회`
+  );
+}
+
 /**
- * 검수 차감 직후 안내 (alert)
+ * 검수 차감 직후 안내
  * @param {BetaQuotaTab} tab
  * @param {number} tabCount 차감 후 해당 탭 사용 횟수
  * @param {number} tabLimit 해당 탭 일일 한도
@@ -845,7 +870,7 @@ export async function consumeBetaDailyExport(uid, email = '', exportTab = 'spell
  */
 export async function assertBetaDailyExportOrAlert(uid, options = {}) {
   const exportTab = options.exportTab ?? 'spelling';
-  if (!confirmProofreadExportOrCancel(exportTab)) {
+  if (!(await confirmProofreadExportOrCancel(exportTab))) {
     return false;
   }
   if (!assertLoggedInForCheckOrAlert(uid)) {
@@ -857,16 +882,14 @@ export async function assertBetaDailyExportOrAlert(uid, options = {}) {
   }
   const result = await consumeBetaDailyExport(uid, email, exportTab);
   if (!result.ok) {
-    alert(BETA_DAILY_QUOTA_ALERT_EXPORT);
+    await showAppAlert({ title: '안내', message: BETA_DAILY_QUOTA_ALERT_EXPORT });
     return false;
   }
   if (typeof result.exportCount === 'number' && typeof result.exportLimit === 'number') {
-    const remaining = Math.max(0, result.exportLimit - result.exportCount);
-    alert(
-      `오늘 내보내기 횟수가 1회 차감되었습니다.\n\n` +
-      `사용: ${result.exportCount}/${result.exportLimit}회\n` +
-      `남음: ${remaining}회`,
-    );
+    await showAppAlert({
+      title: '안내',
+      message: formatBetaExportConsumedAlert(result.exportCount, result.exportLimit),
+    });
   }
   options.onConsumed?.();
   return true;

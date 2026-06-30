@@ -6,7 +6,12 @@
 import { useCallback, useMemo, useState } from 'react';
 import { buildCautionCheckRules } from '../lib/cautionRules.js';
 import { sortSpellingResultsForDisplay } from '../utils/main-screen-helpers.js';
-import { BUILT_IN_RULES, isBuiltInRuleEnabled } from '../lib/builtInRules.js';
+import {
+  BUILT_IN_RULES,
+  buildSpellingCheckRuleFromBuiltIn,
+  builtInEnabledKey,
+  isBuiltInRuleEnabled,
+} from '../lib/builtInRules.js';
 import {
   clearVisibilityForGroup,
   clearVisibilityForSource,
@@ -105,12 +110,14 @@ export function useRuleCheck({
 
   const spellingActiveRules = useMemo(() => {
     const builtIn = BUILT_IN_RULES.filter((r) =>
-      isBuiltInRuleEnabled(builtInEnabled, r.find),
-    ).map((r) => ({
-      ...r,
-      enabled: true,
-      category: 'spelling',
-    }));
+      isBuiltInRuleEnabled(builtInEnabled, r),
+    ).map((r) =>
+      buildSpellingCheckRuleFromBuiltIn({
+        ...r,
+        enabled: true,
+        category: 'spelling',
+      }),
+    );
     const caution = buildCautionCheckRules(cautionEnabled).map((r) => ({
       ...r,
       enabled: true,
@@ -679,7 +686,7 @@ export function useRuleCheck({
     spellingResults.length + consistencyResults.length;
 
   const hasBuiltInActive =
-    BUILT_IN_RULES.some((r) => isBuiltInRuleEnabled(builtInEnabled, r.find)) ||
+    BUILT_IN_RULES.some((r) => isBuiltInRuleEnabled(builtInEnabled, r)) ||
     buildCautionCheckRules(cautionEnabled).length > 0;
   const hasConsistencyRulesActive = consistencyActiveRules.length > 0;
 

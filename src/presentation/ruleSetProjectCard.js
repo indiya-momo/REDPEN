@@ -4,6 +4,7 @@ import {
   builtInEnabledFromSheet,
   isBuiltInRuleEnabled,
 } from '../lib/builtInRules.js';
+import { spellingRuleDisplayLabel } from '../lib/spellingRuleEntry.js';
 import {
   isConsistencyEntryEnabled,
   listConsistencyLiteralEntries,
@@ -33,10 +34,8 @@ function buildSpellingChips(set) {
   const chips = [];
   const builtInEnabled = set.builtInEnabled ?? builtInEnabledFromSheet();
   for (const rule of BUILT_IN_QUOTA_RULES) {
-    if (!isBuiltInRuleEnabled(builtInEnabled, rule.find)) continue;
-    const replace = String(rule.overlayReplace ?? rule.replace ?? '').trim();
-    const label = replace ? `${rule.find} → ${replace}` : rule.find;
-    chips.push({ label, active: true });
+    if (!isBuiltInRuleEnabled(builtInEnabled, rule)) continue;
+    chips.push({ label: spellingRuleDisplayLabel(rule), active: true });
   }
   const cautionEnabled = set.cautionEnabled ?? defaultCautionEnabled();
   for (const rule of buildCautionCheckRules(cautionEnabled)) {

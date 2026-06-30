@@ -577,6 +577,7 @@ export default function MainScreen({
     activeSource: ruleCheck.activeSource,
     selectedInstance: ruleCheck.selectedInstance,
     customRules,
+    pageTexts: pdf.pageTexts,
   });
 
   const tocHighlights = useTocBodyHighlights({

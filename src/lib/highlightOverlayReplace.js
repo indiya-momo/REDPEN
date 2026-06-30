@@ -37,6 +37,9 @@ export function getHighlightOverlayReplace(inst, options = {}) {
     }
   }
 
-  const text = String(getBuiltInOverlayReplace(inst.find, inst.replace) ?? '').trim();
+  const text = String(
+    getBuiltInOverlayReplace(inst.find, inst.replace, group?.spellingRuleId) ??
+      '',
+  ).trim();
   return text || null;
 }
