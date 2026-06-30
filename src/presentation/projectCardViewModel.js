@@ -82,6 +82,11 @@ export function formatProjectCardScheduleLines(card) {
 }
 
 /** @param {ProjectCardViewModel} card @returns {string} */
+export function formatProjectCardCompactDateLine(card) {
+  return card.lastWork?.date || card.savedDate || card.createdDate || '';
+}
+
+/** @param {ProjectCardViewModel} card @returns {string} */
 export function formatProjectCardMetaLine(card) {
   const parts = [];
   if (card.lastWork?.manuscriptPages != null) {

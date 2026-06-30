@@ -1,6 +1,7 @@
 import { useCallback, useId, useMemo, useState } from 'react';
 import {
   buildProjectCardPillarPreviews,
+  formatProjectCardCompactDateLine,
   formatProjectCardMetaLine,
   formatProjectCardScheduleLines,
 } from '../../presentation/projectCardViewModel.js';
@@ -10,6 +11,9 @@ import {
  *   card: import('../../presentation/projectCardViewModel.js').ProjectCardViewModel,
  *   readOnly?: boolean,
  *   showStartWork?: boolean,
+ *   compact?: boolean,
+ *   selected?: boolean,
+ *   onSelect?: () => void,
  *   onEditMeta?: () => void,
  *   onRename?: (title: string) => void,
  *   onUpdateMeta?: (patch: { memo?: string, tags?: string[] }) => void,
@@ -22,6 +26,9 @@ export default function ProjectLibraryCard({
   card,
   readOnly = false,
   showStartWork = false,
+  compact = false,
+  selected = false,
+  onSelect,
   onEditMeta,
   onRename = () => {},
   onUpdateMeta: _onUpdateMeta = () => {},
@@ -56,11 +63,56 @@ export default function ProjectLibraryCard({
     return ['프로젝트'];
   }, [card.tags, card.savedDate]);
 
-  const showWorkButton = showStartWork || !readOnly;
+  const showWorkButton = !compact && (showStartWork || !readOnly);
+  const compactDateLine = formatProjectCardCompactDateLine(card);
+
+  if (compact) {
+    return (
+      <article
+        className={`sheet-card sheet-card--compact sheet-card--folder${card.isActive ? ' sheet-card--active' : ''}${selected ? ' sheet-card--selected' : ''}${readOnly ? ' sheet-card--readonly' : ''}`}
+        onClick={onSelect}
+        onKeyDown={
+          onSelect
+            ? (event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  onSelect();
+                }
+              }
+            : undefined
+        }
+        role={onSelect ? 'button' : undefined}
+        tabIndex={onSelect ? 0 : undefined}
+        aria-pressed={onSelect ? selected : undefined}
+        aria-label={`${card.title}${compactDateLine ? `, ${compactDateLine}` : ''}`}
+      >
+        <div className="sheet-card__body sheet-card__body--folder">
+          <p className="sheet-card__folder-title">《{card.title}》</p>
+          {compactDateLine ? (
+            <p className="sheet-card__folder-date">{compactDateLine}</p>
+          ) : null}
+        </div>
+      </article>
+    );
+  }
 
   return (
     <article
-      className={`sheet-card${card.isActive ? ' sheet-card--active' : ''}${readOnly ? ' sheet-card--readonly' : ''}${card.dirty ? ' sheet-card--dirty' : ''}`}
+      className={`sheet-card${card.isActive ? ' sheet-card--active' : ''}${selected ? ' sheet-card--selected' : ''}${readOnly ? ' sheet-card--readonly' : ''}${card.dirty ? ' sheet-card--dirty' : ''}`}
+      onClick={onSelect}
+      onKeyDown={
+        onSelect
+          ? (event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                onSelect();
+              }
+            }
+          : undefined
+      }
+      role={onSelect ? 'button' : undefined}
+      tabIndex={onSelect ? 0 : undefined}
+      aria-pressed={onSelect ? selected : undefined}
     >
       <div className="sheet-card__tabs" aria-label="분류">
         {tabLabels.map((tag, index) => (
@@ -91,6 +143,7 @@ export default function ProjectLibraryCard({
                     setEditingName(false);
                   }
                 }}
+                onClick={(event) => event.stopPropagation()}
                 autoFocus
               />
             </label>
@@ -100,7 +153,8 @@ export default function ProjectLibraryCard({
             <button
               type="button"
               className="sheet-card__title-field"
-              onClick={() => {
+              onClick={(event) => {
+                event.stopPropagation();
                 setNameDraft(card.title);
                 setEditingName(true);
               }}
@@ -170,7 +224,10 @@ export default function ProjectLibraryCard({
             <button
               type="button"
               className="sheet-card__btn sheet-card__btn--primary sheet-card__btn--work"
-              onClick={onStartWork}
+              onClick={(event) => {
+                event.stopPropagation();
+                onStartWork();
+              }}
             >
               이 프로젝트 작업하기
             </button>
@@ -179,14 +236,20 @@ export default function ProjectLibraryCard({
                 <button
                   type="button"
                   className="sheet-card__btn sheet-card__btn--secondary"
-                  onClick={onDuplicate}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onDuplicate();
+                  }}
                 >
                   복제
                 </button>
                 <button
                   type="button"
                   className="sheet-card__btn sheet-card__btn--secondary"
-                  onClick={onSharePreview}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onSharePreview();
+                  }}
                 >
                   공유
                 </button>
@@ -196,7 +259,10 @@ export default function ProjectLibraryCard({
               <button
                 type="button"
                 className="sheet-card__btn sheet-card__btn--secondary"
-                onClick={onEditMeta}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onEditMeta();
+                }}
               >
                 태그·메모
               </button>

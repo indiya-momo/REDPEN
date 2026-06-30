@@ -164,7 +164,7 @@ describe('mergeConsistencyZeroFindGroups', () => {
       pattern: 'regex',
       patternKind: 'auxiliary-verb',
       tailWord: '해 왔',
-      label: '본(-아/어) + 오다',
+      label: '(아/어) + 오다',
       bonBojoItemId: 'verb-oda',
     };
     const naeda = {
@@ -174,16 +174,16 @@ describe('mergeConsistencyZeroFindGroups', () => {
       pattern: 'regex',
       patternKind: 'auxiliary-verb',
       tailWord: '어 내',
-      label: '본(-아/어) + 내다',
+      label: '(아/어) + 내다',
       bonBojoItemId: 'verb-naeda',
     };
     const withHits = mergeAuxiliaryResultsByBonBojoItem([
       {
         find: 'F-nae',
         replace: '$0',
-        label: '본(-아/어) + 내다',
+        label: '(아/어) + 내다',
         patternKind: 'auxiliary-verb',
-        groupDisplayLabel: '본(-아/어) + 내다',
+        groupDisplayLabel: '(아/어) + 내다',
         instances: [
           {
             find: 'F-nae',
@@ -198,10 +198,10 @@ describe('mergeConsistencyZeroFindGroups', () => {
     ]);
     const merged = mergeAuxiliaryZeroFindByItem(withHits, [oda, naeda]);
     expect(merged.map((g) => g.groupDisplayLabel || g.label)).toEqual([
-      '본(-아/어) + 내다',
-      '본(-아/어) + 오다',
+      '(아/어) + 내다',
+      '(아/어) + 오다',
     ]);
-    expect(merged.find((g) => g.label === '본(-아/어) + 오다')?.instances).toEqual(
+    expect(merged.find((g) => g.label === '(아/어) + 오다')?.instances).toEqual(
       [],
     );
   });

@@ -1,17 +1,27 @@
 import spellingRulesJson from '../data/spelling-rules.json';
 import { MAX_RULES } from './ruleTypes.js';
+import {
+  buildSpellingCheckRuleFromBuiltIn,
+  builtInEnabledKey,
+  hasSpellingFindVariants,
+} from './spellingRuleEntry.js';
+
+function spellingRowFingerprintPart(row) {
+  const finds =
+    row.finds?.length >= 2 ? row.finds.join('\u0001') : '';
+  return `${row.find}\0${row.replace}\0${row.tip ?? ''}\0${
+    row.enabled === true ? 1 : 0
+  }\0${row.countsInQuota === false ? 0 : 1}\0${
+    row.visible === false ? 0 : 1
+  }\0${row.dividerGroup ?? ''}\0${row.dividerLabel ?? ''}\0${
+    row.overlayReplace ?? ''
+  }\0${row.ruleId ?? ''}\0${finds}\0${row.displayLabel ?? ''}`;
+}
 
 /** @param {typeof spellingRulesJson} rows */
 export function spellingRulesFingerprint(rows = spellingRulesJson) {
   let hash = 0;
-  const payload = rows
-    .map(
-      (r) =>
-        `${r.find}\0${r.replace}\0${r.tip ?? ''}\0${r.enabled === true ? 1 : 0}\0${
-          r.countsInQuota === false ? 0 : 1
-        }\0${r.visible === false ? 0 : 1}\0${r.dividerGroup ?? ''}\0${r.dividerLabel ?? ''}\0${r.overlayReplace ?? ''}`,
-    )
-    .join('\n');
+  const payload = rows.map(spellingRowFingerprintPart).join('\n');
   for (let i = 0; i < payload.length; i += 1) {
     hash = (Math.imul(31, hash) + payload.charCodeAt(i)) | 0;
   }
@@ -26,6 +36,13 @@ export function countsTowardSpellingQuota(rule) {
 /** @param {typeof spellingRulesJson[number]} row */
 function builtInRuleFromRow(row) {
   const fromSheet = row.countsInQuota !== false;
+  const finds =
+    row.finds?.filter((f) => String(f ?? '').trim()).length >= 2
+      ? row.finds.map((f) => String(f).trim())
+      : undefined;
+  const ruleId = String(row.ruleId ?? '').trim() || undefined;
+  const displayLabel = String(row.displayLabel ?? '').trim() || undefined;
+
   return {
     find: row.find,
     replace: row.replace,
@@ -42,7 +59,9 @@ function builtInRuleFromRow(row) {
     ...(row.overlayReplace
       ? { overlayReplace: String(row.overlayReplace).trim() }
       : {}),
-    // "펼쳐지다" 같은 합성어 오탐 방지: 단어 시작에서만 매칭
+    ...(ruleId ? { ruleId } : {}),
+    ...(finds ? { finds } : {}),
+    ...(displayLabel ? { displayLabel } : {}),
     ...(row.find === '쳐지' ? { requireLeadingBoundary: true } : {}),
   };
 }
@@ -57,12 +76,10 @@ export const BUILT_IN_RULES = spellingRulesJson.map(builtInRuleFromRow);
 
 export const BUILT_IN_QUOTA_RULES = BUILT_IN_RULES.filter(countsTowardSpellingQuota);
 
-/** 한도 제외(서비스·시트 참고) 맞춤법 규칙 */
 export const BUILT_IN_GUIDE_RULES = BUILT_IN_RULES.filter(
   (r) => !countsTowardSpellingQuota(r),
 );
 
-/** UI 목록용 — visible=FALSE 행 제외 */
 export const BUILT_IN_QUOTA_RULES_UI = BUILT_IN_QUOTA_RULES.filter(
   isBuiltInRuleVisible,
 );
@@ -73,19 +90,15 @@ export const BUILT_IN_GUIDE_RULES_UI = BUILT_IN_GUIDE_RULES.filter(
 
 export const SPELLING_RULES_FP = spellingRulesFingerprint();
 
-/**
- * 맞춤법 체크 초기값 — 시트·JSON `enabled`(TRUE/FALSE) 반영.
- * 규칙 제외(서비스)는 시트에서 TRUE면 기본 체크.
- */
+export { builtInEnabledKey, buildSpellingCheckRuleFromBuiltIn, hasSpellingFindVariants };
+
 export function builtInEnabledFromSheet() {
   return Object.fromEntries(
-    BUILT_IN_RULES.map((r) => [r.find, r.enabled === true]),
+    BUILT_IN_RULES.map((r) => [builtInEnabledKey(r), r.enabled === true]),
   );
 }
 
 /**
- * 규칙 JSON(시트 동기화) 변경 시 enabled 열 기준으로 초기화.
- * 동일 fingerprint면 사용자가 바꾼 체크 상태는 유지.
  * @param {Record<string, boolean>} [saved]
  * @param {string | null | undefined} [savedFingerprint]
  */
@@ -96,6 +109,16 @@ export function migrateBuiltInEnabled(saved = {}, savedFingerprint = null) {
   }
   const merged = { ...defaults };
   for (const r of BUILT_IN_RULES) {
+    const key = builtInEnabledKey(r);
+    if (Object.prototype.hasOwnProperty.call(saved, key)) {
+      merged[key] = saved[key] === true;
+      continue;
+    }
+    if (hasSpellingFindVariants(r)) {
+      const legacyOn = (r.finds ?? []).some((f) => saved[f] === true);
+      if (legacyOn) merged[key] = true;
+      continue;
+    }
     if (Object.prototype.hasOwnProperty.call(saved, r.find)) {
       merged[r.find] = saved[r.find] === true;
     }
@@ -103,9 +126,16 @@ export function migrateBuiltInEnabled(saved = {}, savedFingerprint = null) {
   return merged;
 }
 
-/** @param {Record<string, boolean>} builtInEnabled */
-export function isBuiltInRuleEnabled(builtInEnabled, find) {
-  return builtInEnabled[find] === true;
+/**
+ * @param {Record<string, boolean>} builtInEnabled
+ * @param {import('./ruleTypes.js').Rule | string} ruleOrKey
+ */
+export function isBuiltInRuleEnabled(builtInEnabled, ruleOrKey) {
+  const key =
+    typeof ruleOrKey === 'string'
+      ? ruleOrKey
+      : builtInEnabledKey(/** @type {import('./ruleTypes.js').Rule} */ (ruleOrKey));
+  return builtInEnabled[key] === true;
 }
 
 const tipLookup = new Map(
@@ -115,8 +145,19 @@ const tipLookup = new Map(
   ]),
 );
 
-/** @param {string} find @param {string} replace */
-export function getBuiltInTip(find, replace) {
+const tipByRuleId = new Map(
+  spellingRulesJson.flatMap((row) => {
+    const id = String(row.ruleId ?? '').trim();
+    const tip = String(row.tip ?? '').trim();
+    if (!id || !tip) return [];
+    return [[id, tip]];
+  }),
+);
+
+/** @param {string} find @param {string} replace @param {string} [spellingRuleId] */
+export function getBuiltInTip(find, replace, spellingRuleId) {
+  const id = String(spellingRuleId ?? '').trim();
+  if (id && tipByRuleId.has(id)) return tipByRuleId.get(id) ?? '';
   return tipLookup.get(`${find}\0${replace}`) ?? '';
 }
 
@@ -128,8 +169,19 @@ const overlayReplaceLookup = new Map(
   }),
 );
 
-/** @param {string} find @param {string} replace */
-export function getBuiltInOverlayReplace(find, replace) {
+const overlayByRuleId = new Map(
+  spellingRulesJson.flatMap((row) => {
+    const id = String(row.ruleId ?? '').trim();
+    const text = String(row.overlayReplace ?? '').trim();
+    if (!id || !text) return [];
+    return [[id, text]];
+  }),
+);
+
+/** @param {string} find @param {string} replace @param {string} [spellingRuleId] */
+export function getBuiltInOverlayReplace(find, replace, spellingRuleId) {
+  const id = String(spellingRuleId ?? '').trim();
+  if (id && overlayByRuleId.has(id)) return overlayByRuleId.get(id) ?? null;
   return overlayReplaceLookup.get(`${find}\0${replace}`) ?? null;
 }
 

@@ -5,6 +5,7 @@ import {
   BUILT_IN_RULES,
   builtInEnabledFromSheet,
 } from './builtInRules.js';
+import { builtInEnabledKey } from './spellingRuleEntry.js';
 import {
   countActiveRules,
   countBuiltInGuideActiveRules,
@@ -25,14 +26,14 @@ describe('activeRuleCount', () => {
   it('내장 기본 체크는 시트 enabled 열과 같다', () => {
     const defaults = builtInEnabledFromSheet();
     for (const r of BUILT_IN_RULES) {
-      expect(defaults[r.find]).toBe(r.enabled === true);
+      expect(defaults[builtInEnabledKey(r)]).toBe(r.enabled === true);
     }
   });
 
   it('규칙 제외(참고)는 한도 집계에서 빠지고 제외 수에만 잡힌다', () => {
     const guideOnlyOn = Object.fromEntries(
       BUILT_IN_RULES.filter((r) => r.countsInQuota === false).map((r) => [
-        r.find,
+        builtInEnabledKey(r),
         true,
       ]),
     );
@@ -49,7 +50,7 @@ describe('activeRuleCount', () => {
 
   it('내장 전부 ON + 일관성 없음 = 한도 포함 내장 개수', () => {
     const builtInOn = Object.fromEntries(
-      BUILT_IN_RULES.map((r) => [r.find, true]),
+      BUILT_IN_RULES.map((r) => [builtInEnabledKey(r), true]),
     );
     expect(
       countSpellingActiveRules({
@@ -61,7 +62,7 @@ describe('activeRuleCount', () => {
 
   it('띄어쓰기만 켜면 활성 규칙 수에 caution regex 수가 더해짐', () => {
     const builtInOff = Object.fromEntries(
-      BUILT_IN_RULES.map((r) => [r.find, false]),
+      BUILT_IN_RULES.map((r) => [builtInEnabledKey(r), false]),
     );
     const cautionEnabled = { 'josa-uinoun-mankum': true };
     const cautionRules = buildCautionCheckRules(cautionEnabled);

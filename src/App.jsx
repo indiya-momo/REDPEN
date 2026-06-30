@@ -441,7 +441,12 @@ export default function App() {
         markReturnToMainWorkspace();
         const url = new URL(import.meta.env.BASE_URL || '/', window.location.origin);
         url.searchParams.set('window', 'mypage');
-        // noopener 제거 — 마이페이지 뒤로가기 시 opener.focus() 사용
+        const existing = window.open('', 'indiya-mypage');
+        if (existing && !existing.closed) {
+          existing.location.replace(url.toString());
+          existing.focus();
+          return;
+        }
         window.open(url.toString(), 'indiya-mypage');
       }}
       onOpenGuideWindow={() => {

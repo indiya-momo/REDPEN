@@ -2,9 +2,13 @@ import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import {
   BUILT_IN_GUIDE_RULES_UI,
   BUILT_IN_QUOTA_RULES_UI,
+  builtInEnabledKey,
   countsTowardSpellingQuota,
   isBuiltInRuleEnabled,
 } from '../lib/builtInRules.js';
+import {
+  hasSpellingFindVariants,
+} from '../lib/spellingRuleEntry.js';
 import {
   buildSpellingRuleBundles,
   groupRulesByDivider,
@@ -31,7 +35,7 @@ export default function BuiltinSpellingPanel({
   const guideRules = BUILT_IN_GUIDE_RULES_UI;
   const total = quotaRules.length;
   const enabled = quotaRules.filter((r) =>
-    isBuiltInRuleEnabled(builtInEnabled, r.find),
+    isBuiltInRuleEnabled(builtInEnabled, r),
   ).length;
   const allChecked = total > 0 && enabled === total;
   const someChecked = enabled > 0 && enabled < total;
@@ -60,7 +64,17 @@ export default function BuiltinSpellingPanel({
     const tip = (rule.tip || '').trim();
     const noQuota = !countsTowardSpellingQuota(rule);
     const useInlineTipToggle = Boolean(tip);
-    const ruleLine = (
+    const enabledKey = builtInEnabledKey(rule);
+    const variantFinds = hasSpellingFindVariants(rule)
+      ? [...rule.finds].sort((a, b) => a.localeCompare(b, 'ko'))
+      : null;
+    const ruleLine = variantFinds ? (
+      <>
+        <span className="find">{variantFinds.join('·')}</span>
+        <span className="arrow">→</span>
+        <span className="replace">{rule.replace}</span>
+      </>
+    ) : (
       <>
         <span className="find">{rule.find}</span>
         <span className="arrow">→</span>
@@ -74,8 +88,8 @@ export default function BuiltinSpellingPanel({
         <div className="rule-row builtin-rule-row">
           <input
             type="checkbox"
-            checked={isBuiltInRuleEnabled(builtInEnabled, rule.find)}
-            onChange={() => onBuiltInToggle(rule.find)}
+            checked={isBuiltInRuleEnabled(builtInEnabled, rule)}
+            onChange={() => onBuiltInToggle(enabledKey)}
           />
           <div className="rule-text builtin-rule-text">
             {useInlineTipToggle ? (
@@ -110,14 +124,14 @@ export default function BuiltinSpellingPanel({
    */
   function renderRuleGrid(rules, groupStateKey) {
     const cols = 3;
-    const activeFind = activeTipByGroup[groupStateKey] ?? null;
+    const activeKey = activeTipByGroup[groupStateKey] ?? null;
     const activeRule =
-      activeFind && rules.some((r) => r.find === activeFind)
-        ? rules.find((r) => r.find === activeFind) ?? null
+      activeKey && rules.some((r) => builtInEnabledKey(r) === activeKey)
+        ? rules.find((r) => builtInEnabledKey(r) === activeKey) ?? null
         : null;
     const activeTip = String(activeRule?.tip ?? '').trim();
-    const activeIndex = activeFind
-      ? rules.findIndex((r) => r.find === activeFind)
+    const activeIndex = activeKey
+      ? rules.findIndex((r) => builtInEnabledKey(r) === activeKey)
       : -1;
     const rowEndIndex =
       activeIndex >= 0
@@ -126,14 +140,16 @@ export default function BuiltinSpellingPanel({
             Math.floor(activeIndex / cols) * cols + (cols - 1),
           )
         : -1;
-    const afterFind = rowEndIndex >= 0 ? rules[rowEndIndex]?.find : null;
+    const afterKey =
+      rowEndIndex >= 0 ? builtInEnabledKey(rules[rowEndIndex]) : null;
 
     return (
       <div className={`builtin-rule-group builtin-rule-group--cols-${cols}`}>
         {rules.map((rule) => {
-          const tipOpen = activeFind === rule.find;
+          const rowKey = builtInEnabledKey(rule);
+          const tipOpen = activeKey === rowKey;
           return (
-            <Fragment key={rule.find}>
+            <Fragment key={rowKey}>
               <div className="builtin-rule-entry-wrap">
                 <div className="builtin-rule-entry">
                   {renderRuleRow(
@@ -143,12 +159,12 @@ export default function BuiltinSpellingPanel({
                       setActiveTipByGroup((prev) => ({
                         ...prev,
                         [groupStateKey]:
-                          prev[groupStateKey] === rule.find ? null : rule.find,
+                          prev[groupStateKey] === rowKey ? null : rowKey,
                       })),
                   )}
                 </div>
               </div>
-              {activeTip && afterFind === rule.find ? (
+              {activeTip && afterKey === rowKey ? (
                 <div className="builtin-rule-tip-inline">{activeTip}</div>
               ) : null}
             </Fragment>
@@ -188,6 +204,9 @@ export default function BuiltinSpellingPanel({
   function renderQuotaBundles() {
     return quotaBundles.map((bundle) => {
       const groupStateKey = `quota:${bundle.id}`;
+      const bundleEnabled = bundle.rules.filter((r) =>
+        isBuiltInRuleEnabled(builtInEnabled, r),
+      ).length;
 
       return (
         <li key={bundle.id} className="builtin-rule-bundle-item">
@@ -198,7 +217,9 @@ export default function BuiltinSpellingPanel({
                 📁
               </span>
               <span className="builtin-rule-bundle-title">{bundle.label}</span>
-              <span className="builtin-rule-bundle-meta">{bundle.ruleCount}</span>
+              <span className="builtin-rule-bundle-meta">
+                {`${bundleEnabled}/${bundle.ruleCount}`}
+              </span>
             </summary>
             <div className="builtin-rule-bundle-body">
               {renderRuleGrid(bundle.rules, groupStateKey)}
@@ -229,7 +250,7 @@ export default function BuiltinSpellingPanel({
         <span className="builtin-spelling-summary-title">
           맞춤법 규칙
           <span className="panel-criteria-heading-meta">
-            {`(선택 ${enabled}/${total})`}
+            {`(${enabled}/${total})`}
           </span>
         </span>
       </summary>

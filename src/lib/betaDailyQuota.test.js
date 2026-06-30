@@ -3,6 +3,7 @@ import {
   BETA_TAB_LIMIT_BOOSTED,
   BETA_TAB_LIMIT_DEFAULT,
   BETA_TAB_LIMIT_FEEDBACK,
+  buildProofreadExportConfirmMessage,
   canRunTabCheck,
   getKstDayId,
   getTabCheckLimit,
@@ -54,6 +55,23 @@ describe('getTabCheckLimit', () => {
 
   it('보너스가 다른 날이면 1회', () => {
     expect(getTabCheckLimit('2026-06-04', null, '2026-06-05')).toBe(1);
+  });
+});
+
+describe('buildProofreadExportConfirmMessage', () => {
+  it('맞춤법·표기 통일 탭별 제목과 본문을 만든다', () => {
+    expect(buildProofreadExportConfirmMessage('spelling')).toBe(
+      '[맞춤법 검수 결과 다운로드]\n' +
+        '오늘 맞춤법 검수 결과 다운로드는 1회 가능합니다.\n\n' +
+        '다운로드를 진행할까요?\n\n' +
+        '※ 엑셀(.xlsx)파일로 진행되며, PDF 다운로드는 준비중입니다',
+    );
+    expect(buildProofreadExportConfirmMessage('consistency')).toBe(
+      '[표기 통일 검수 결과 다운로드]\n' +
+        '오늘 표기 통일 검수 결과 다운로드는 1회 가능합니다.\n\n' +
+        '다운로드를 진행할까요?\n\n' +
+        '※ 엑셀(.xlsx)파일로 진행되며, PDF 다운로드는 준비중입니다',
+    );
   });
 });
 

@@ -237,7 +237,7 @@ describe('caution except → excludePhrases', () => {
     const { results, errors } = runRuleCheck(pages, rules);
     expect(errors).toEqual([]);
     const texts = results.flatMap((g) => g.instances.map((i) => i.matchedText));
-    expect(texts).toContain('바라');
+    expect(texts).toContain('그가 바라');
     expect(texts).not.toContain('하늘을 바라');
     expect(texts).not.toContain('그를 바라');
   });

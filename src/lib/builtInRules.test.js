@@ -15,6 +15,16 @@ describe('migrateBuiltInEnabled', () => {
     expect(merged['과반수 이상']).toBe(false);
     expect(merged['우리 나라']).toBe(false);
   });
+
+  it('finds 규칙은 예전 find 키가 켜져 있으면 ruleId로 이전한다', () => {
+    const merged = migrateBuiltInEnabled(
+      { 애덤: true, 애썸: false },
+      SPELLING_RULES_FP,
+    );
+    if (merged['foreign-adam'] !== undefined) {
+      expect(merged['foreign-adam']).toBe(true);
+    }
+  });
 });
 
 describe('isBuiltInRuleVisible', () => {

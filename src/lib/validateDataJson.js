@@ -72,6 +72,9 @@ export function validateSpellingRules(data, label = 'spelling-rules.json') {
   }
 
   const seenFindReplace = new Set();
+  const seenRuleIds = new Set();
+  /** @type {Map<string, number>} */
+  const seenFindForms = new Map();
 
   data.forEach((row, index) => {
     const base = `${label}[${index}]`;
@@ -128,8 +131,61 @@ export function validateSpellingRules(data, label = 'spelling-rules.json') {
     if (row.overlayReplace !== undefined && typeof row.overlayReplace !== 'string') {
       pushIssue(issues, `${base}.overlayReplace`, 'must be a string');
     }
+    if (row.ruleId !== undefined) {
+      if (!isNonEmptyString(row.ruleId)) {
+        pushIssue(issues, `${base}.ruleId`, 'must be a non-empty string');
+      } else if (seenRuleIds.has(row.ruleId.trim())) {
+        pushIssue(issues, `${base}.ruleId`, `duplicate ruleId (${row.ruleId})`);
+      } else {
+        seenRuleIds.add(row.ruleId.trim());
+      }
+    }
+    if (row.displayLabel !== undefined && typeof row.displayLabel !== 'string') {
+      pushIssue(issues, `${base}.displayLabel`, 'must be a string');
+    }
+    if (row.finds !== undefined) {
+      if (!Array.isArray(row.finds)) {
+        pushIssue(issues, `${base}.finds`, 'must be an array');
+      } else if (row.finds.length < 2) {
+        pushIssue(issues, `${base}.finds`, 'must contain at least two variants');
+      } else {
+        row.finds.forEach((variant, vi) => {
+          if (!isNonEmptyString(variant)) {
+            pushIssue(
+              issues,
+              `${base}.finds[${vi}]`,
+              'must be a non-empty string',
+            );
+          }
+        });
+      }
+    }
 
-    if (isNonEmptyString(row.find) && isNonEmptyString(row.replace)) {
+    const forms =
+      Array.isArray(row.finds) && row.finds.length >= 2
+        ? row.finds.map((f) => String(f).trim())
+        : isNonEmptyString(row.find)
+          ? [row.find.trim()]
+          : [];
+    for (const form of forms) {
+      if (!form) continue;
+      const prev = seenFindForms.get(form);
+      if (prev !== undefined) {
+        pushIssue(
+          issues,
+          base,
+          `duplicate find form "${form}" (also in row ${prev})`,
+        );
+      } else {
+        seenFindForms.set(form, index);
+      }
+    }
+
+    if (
+      isNonEmptyString(row.find) &&
+      isNonEmptyString(row.replace) &&
+      !(Array.isArray(row.finds) && row.finds.length >= 2)
+    ) {
       const key = `${row.find.trim()}\0${row.replace.trim()}`;
       if (seenFindReplace.has(key)) {
         pushIssue(
