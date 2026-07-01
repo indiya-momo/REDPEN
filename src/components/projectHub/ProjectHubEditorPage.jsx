@@ -151,6 +151,9 @@ export default function ProjectHubEditorPage({
             onCriteriaChange={handleCriteriaChange}
             onStartWork={() => void actions.handleStartWork(selectedCard.id)}
             onDuplicate={() => void actions.handleDuplicate(selectedCard.id)}
+            onDelete={() =>
+              void actions.handleDelete(selectedCard.id, selectedCard.title)
+            }
             onSharePreview={() => setSharePreviewCardId(selectedCard.id)}
           />
         ) : null}

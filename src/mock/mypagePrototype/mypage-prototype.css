@@ -18,25 +18,6 @@
   font-family: var(--sheet-font);
 }
 
-.mypage-proto__dev-banner {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  padding: 0.35rem 0.75rem;
-  background: #1e293b;
-  color: #e2e8f0;
-  font-size: 0.72rem;
-  text-align: center;
-}
-
-.mypage-proto__dev-banner code {
-  font-size: 0.68rem;
-  color: #93c5fd;
-}
-
-.mypage-proto__dev-banner a {
-  color: #fcd34d;
-}
 
 .mypage-proto__sidebar {
   padding-top: 1rem;
@@ -56,8 +37,15 @@
   color: var(--color-text-muted);
 }
 
-.mypage-proto__main {
-  padding-top: 0.5rem;
+.mypage-proto__main--editor {
+  padding-top: 0;
+  width: 100%;
+  max-width: none;
+}
+
+.mypage-proto__main--editor .mypage__main-inner {
+  max-width: none;
+  padding-top: 0.75rem;
 }
 
 .mypage-proto__hub-lead {
@@ -231,6 +219,10 @@
   z-index: 2;
 }
 
+.sheet-card__tab--tag {
+  background: var(--sheet-tab);
+}
+
 .sheet-card__body {
   display: flex;
   flex-direction: column;
@@ -330,6 +322,30 @@
   gap: 0.5rem;
 }
 
+.sheet-card__title-block {
+  --sheet-card-head-line: calc(1.22rem * 1.3);
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+}
+
+.sheet-card__title-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.sheet-card__meta-stack {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0;
+  max-width: 46%;
+  min-width: 0;
+}
+
 .sheet-card__title,
 .sheet-card__title-field {
   margin: 0;
@@ -339,6 +355,54 @@
   line-height: 1.3;
   color: var(--color-text);
   letter-spacing: -0.02em;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.sheet-card__date-chip {
+  min-height: var(--sheet-card-head-line);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0.1rem 0.42rem;
+  border-radius: 2px;
+  background: rgba(34, 197, 94, 0.18);
+  color: #166534;
+  font-size: 0.6rem;
+  font-weight: 700;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.sheet-card__edition-line {
+  margin: 0;
+  min-width: 0;
+  min-height: var(--sheet-card-head-line);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: #1d4ed8;
+}
+
+.sheet-card__memo-preview {
+  margin: 0;
+  min-height: calc(0.68rem * 1.35);
+  font-size: 0.68rem;
+  line-height: 1.35;
+  color: var(--color-text-subtle);
+  letter-spacing: 0.01em;
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .sheet-card__title-field {

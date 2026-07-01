@@ -13,7 +13,7 @@
 export const MAX_PROJECT_PROOF_REVISION_LENGTH = 12;
 export const MAX_PROJECT_FORMAT_LABEL_LENGTH = 16;
 
-export const MAX_PROJECT_TAGS = 8;
+export const MAX_PROJECT_TAGS = 3;
 export const MAX_PROJECT_TAG_LENGTH = 24;
 export const MAX_PROJECT_MEMO_LENGTH = 200;
 

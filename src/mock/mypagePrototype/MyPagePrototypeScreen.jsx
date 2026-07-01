@@ -1,12 +1,21 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import '../../components/my-page.css';
+import '../../components/project-hub-settings.css';
 import './mypage-prototype.css';
-import {
-  buildProjectTagFilterOptions,
-  filterProjectsForLibrary,
-} from '../../presentation/projectCardViewModel.js';
-import { MOCK_PROJECT_CARDS } from './mockProjectCards.js';
+import ProjectHubSettingsPanel from '../../components/ProjectHubSettingsPanel.jsx';
+import ProjectHubTagFilters from '../../components/projectHub/ProjectHubTagFilters.jsx';
+import { showAppConfirm } from '../../lib/appDialog.js';
+import { formatProjectDialogLabel } from '../../lib/projectDialogLabel.js';
+import { useProjectTagFilter } from '../../hooks/useProjectTagFilter.js';
 import { MOCK_LIBRARY_SLOT_MAX, buildMockLibrarySlots } from '../../lib/mypageProjectDisplay.js';
+import {
+  MOCK_PROJECT_RULE_SETS,
+  MOCK_PROJECT_SEED_VERSION,
+  applyMockProjectCriteria,
+  applyMockProjectMeta,
+  buildMockProjectCards,
+  duplicateMockProject,
+} from './mockProjectRuleSets.js';
 import ProjectLibraryCard from './ProjectLibraryCard.jsx';
 import ProjectLibraryEmptySlot from './ProjectLibraryEmptySlot.jsx';
 import SharePreviewModal from './SharePreviewModal.jsx';
@@ -14,67 +23,170 @@ import WorkbenchBarMock from './WorkbenchBarMock.jsx';
 
 /** @typedef {'library' | 'workbench'} ProtoView */
 
-function duplicateCard(source, index) {
-  return {
-    ...source,
-    id: `proj-dup-${Date.now()}-${index}`,
-    title: `${source.title} (복제)`,
-    isActive: false,
-    dirty: false,
-    savedDate: '오늘',
-  };
+const MOCK_PROJECTS_STORAGE_KEY = `mypage-mock:projects:${MOCK_PROJECT_SEED_VERSION}`;
+
+/** @returns {import('../../lib/ruleSetsStorage.js').RuleSet[] | null} */
+function readMockProjectsFromSession() {
+  if (typeof sessionStorage === 'undefined') return null;
+  try {
+    const raw = sessionStorage.getItem(MOCK_PROJECTS_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
 }
 
 export default function MyPagePrototypeScreen() {
   const [view, setView] = useState(/** @type {ProtoView} */ ('library'));
-  const [cards, setCards] = useState(MOCK_PROJECT_CARDS);
+  const [projects, setProjects] = useState(
+    () => readMockProjectsFromSession() ?? MOCK_PROJECT_RULE_SETS,
+  );
   const [activeId, setActiveId] = useState('proj-1');
-  const [tagFilter, setTagFilter] = useState(/** @type {string | null} */ (null));
+  const [dirtyIds, setDirtyIds] = useState(
+    () => new Set(/** @type {string[]} */ (['proj-1'])),
+  );
+  const [selectedCardId, setSelectedCardId] = useState('proj-1');
   const [sharePreviewId, setSharePreviewId] = useState(
     /** @type {string | null} */ (null),
   );
 
-  const tagFilterOptions = useMemo(
-    () => buildProjectTagFilterOptions(cards),
-    [cards],
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(MOCK_PROJECTS_STORAGE_KEY, JSON.stringify(projects));
+    } catch {
+      // private browsing 등
+    }
+  }, [projects]);
+
+  const cards = useMemo(
+    () =>
+      buildMockProjectCards(projects, {
+        activeId,
+        dirtyIds,
+      }),
+    [projects, activeId, dirtyIds],
   );
 
-  const visibleCards = useMemo(
-    () => filterProjectsForLibrary(cards, tagFilter),
-    [cards, tagFilter],
-  );
+  const {
+    tagFilter,
+    setTagFilter,
+    tagFilterOptions,
+    filteredCards: visibleCards,
+  } = useProjectTagFilter(cards);
 
-  const activeCard = cards.find((c) => c.id === activeId) ?? cards[0];
+  const workbenchCard =
+    cards.find((c) => c.id === activeId) ?? cards[0] ?? null;
   const shareCard = cards.find((c) => c.id === sharePreviewId) ?? null;
-
-  const updateCard = useCallback((id, patch) => {
-    setCards((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, ...patch } : c)),
-    );
-  }, []);
 
   const librarySlots = useMemo(
     () => buildMockLibrarySlots(cards),
     [cards],
   );
 
+  const selectedCard = useMemo(
+    () => cards.find((card) => card.id === selectedCardId) ?? null,
+    [cards, selectedCardId],
+  );
+
+  const selectedRuleSet = useMemo(
+    () => projects.find((set) => set.id === selectedCardId) ?? null,
+    [projects, selectedCardId],
+  );
+
+  useEffect(() => {
+    if (visibleCards.length === 0) {
+      setSelectedCardId(null);
+      return;
+    }
+    if (
+      selectedCardId &&
+      visibleCards.some((card) => card.id === selectedCardId)
+    ) {
+      return;
+    }
+    setSelectedCardId(visibleCards[0].id);
+  }, [visibleCards, selectedCardId]);
+
+  const handleDeleteCard = useCallback(
+    async (id, title) => {
+      if (
+        !(await showAppConfirm({
+          title: '삭제',
+          message: `${formatProjectDialogLabel(title)} 프로젝트를 삭제할까요?`,
+        }))
+      ) {
+        return;
+      }
+      setProjects((prev) => prev.filter((set) => set.id !== id));
+      setDirtyIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+      if (activeId === id) {
+        setActiveId(null);
+      }
+    },
+    [activeId],
+  );
+
   const handleStartWork = useCallback((id) => {
     setActiveId(id);
-    setCards((prev) =>
-      prev.map((c) => ({ ...c, isActive: c.id === id })),
-    );
+    setSelectedCardId(id);
     setView('workbench');
   }, []);
 
-  if (view === 'workbench' && activeCard) {
+  const handleSaveMeta = useCallback(
+    async (payload) => {
+      if (!selectedCard) return;
+      setProjects((prev) =>
+        applyMockProjectMeta(prev, selectedCard.id, {
+          name: payload.name,
+          tags: payload.tags,
+          memo: payload.memo,
+          proofRevision: payload.proofRevision,
+          formatLabel: payload.formatLabel,
+        }),
+      );
+      setDirtyIds((prev) => new Set(prev).add(selectedCard.id));
+    },
+    [selectedCard],
+  );
+
+  const handleCriteriaChange = useCallback(
+    async (patch) => {
+      if (!selectedCard) return;
+      setProjects((prev) =>
+        applyMockProjectCriteria(prev, selectedCard.id, patch),
+      );
+      setDirtyIds((prev) => new Set(prev).add(selectedCard.id));
+    },
+    [selectedCard],
+  );
+
+  const handleDuplicate = useCallback(
+    (sourceId) => {
+      setProjects((prev) => {
+        const next = duplicateMockProject(prev, sourceId);
+        const copy = next.find(
+          (set) => !prev.some((row) => row.id === set.id),
+        );
+        if (copy) {
+          setSelectedCardId(copy.id);
+        }
+        return next;
+      });
+    },
+    [],
+  );
+
+  if (view === 'workbench' && workbenchCard) {
     return (
       <div className="mypage-proto">
-        <div className="mypage-proto__dev-banner" role="status">
-          DEV 목업 ·{' '}
-          <code>?window=mypage-mock</code> · 저장 없음
-        </div>
         <WorkbenchBarMock
-          card={activeCard}
+          card={workbenchCard}
           onBackToLibrary={() => setView('library')}
         />
       </div>
@@ -83,92 +195,101 @@ export default function MyPagePrototypeScreen() {
 
   return (
     <div className="mypage mypage-proto">
-      <div className="mypage-proto__dev-banner" role="status">
-        DEV 목업 · <code>?window=mypage-mock</code> ·{' '}
-        <a href="/?window=mypage">실제 마이페이지</a>
-      </div>
+      <main className="mypage__main mypage-proto__main mypage-proto__main--editor">
+        <div className="mypage__main-inner mypage__main-inner--section mypage__overview--projects">
+          <div className="mypage__projects-layout">
+            <section
+              className="mypage__card mypage__project-hub"
+              aria-labelledby="proto-project-hub-title"
+            >
+              <div className="mypage__project-hub-head">
+                <div>
+                  <h1 id="proto-project-hub-title" className="mypage__page-title">
+                    나의 프로젝트
+                  </h1>
+                </div>
+                <p className="mypage__project-slot-gauge" aria-live="polite">
+                  슬롯{' '}
+                  <strong>
+                    {cards.length}/{MOCK_LIBRARY_SLOT_MAX}
+                  </strong>
+                </p>
+              </div>
 
-      <aside className="mypage__sidebar mypage-proto__sidebar">
-        <div className="mypage__sidebar-head">
-          <p className="mypage__eyebrow">PROTOTYPE</p>
-          <h1 className="mypage-proto__sidebar-title">프로젝트 라이브러리</h1>
-        </div>
-        <p className="mypage-proto__sidebar-desc">
-          카드 · 작업대 · 공유 미리보기 UX 검증용. 클릭으로 흐름을 확인하세요.
-        </p>
-      </aside>
-
-      <main className="mypage__main mypage-proto__main">
-        <section
-          className="mypage__card mypage__project-hub"
-          aria-labelledby="proto-project-hub-title"
-        >
-          <div className="mypage__project-hub-head">
-            <div>
-              <h1 id="proto-project-hub-title" className="mypage__page-title">
-                나의 프로젝트
-              </h1>
-            </div>
-            <p className="mypage__project-slot-gauge">
-              슬롯 <strong>{cards.length}/{MOCK_LIBRARY_SLOT_MAX}</strong>
-            </p>
-          </div>
-
-          <div
-            className="mypage-proto__filters"
-            role="group"
-            aria-label="태그 필터"
-          >
-            {tagFilterOptions.map(({ id, label }) => (
-              <button
-                key={label}
-                type="button"
-                className={`mypage-proto__filter${tagFilter === id ? ' mypage-proto__filter--on' : ''}`}
-                onClick={() => setTagFilter(id)}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-
-          <div
-            className={`mypage-proto__grid${tagFilter ? '' : ' mypage-proto__grid--triple'}`}
-          >
-            {tagFilter ? (
-              visibleCards.map((card) => (
-                <ProjectLibraryCard
-                  key={card.id}
-                  card={card}
-                  onRename={(title) => updateCard(card.id, { title })}
-                  onUpdateMeta={(patch) => updateCard(card.id, patch)}
-                  onStartWork={() => handleStartWork(card.id)}
-                  onDuplicate={() => {
-                    setCards((prev) => [...prev, duplicateCard(card, prev.length)]);
-                  }}
-                  onSharePreview={() => setSharePreviewId(card.id)}
+              <div className="mypage__project-hub-body">
+                <ProjectHubTagFilters
+                  options={tagFilterOptions}
+                  value={tagFilter}
+                  onChange={setTagFilter}
                 />
-              ))
-            ) : (
-              librarySlots.map((card, index) =>
-                card ? (
-                  <ProjectLibraryCard
-                    key={card.id}
-                    card={card}
-                    onRename={(title) => updateCard(card.id, { title })}
-                    onUpdateMeta={(patch) => updateCard(card.id, patch)}
-                    onStartWork={() => handleStartWork(card.id)}
-                    onDuplicate={() => {
-                      setCards((prev) => [...prev, duplicateCard(card, prev.length)]);
-                    }}
-                    onSharePreview={() => setSharePreviewId(card.id)}
-                  />
-                ) : (
-                  <ProjectLibraryEmptySlot key={`library-empty-slot-${index}`} />
-                ),
-              )
-            )}
+
+                <div
+                  className={`mypage-proto__grid${tagFilter ? '' : ' mypage-proto__grid--triple'}`}
+                >
+                  {tagFilter ? (
+                    <>
+                      {visibleCards.map((card) => (
+                        <ProjectLibraryCard
+                          key={card.id}
+                          card={card}
+                          nameEditable={false}
+                          selected={card.id === selectedCardId}
+                          onSelect={() => setSelectedCardId(card.id)}
+                          onStartWork={() => handleStartWork(card.id)}
+                          onDuplicate={() => handleDuplicate(card.id)}
+                          onDelete={() =>
+                            void handleDeleteCard(card.id, card.title)
+                          }
+                          onSharePreview={() => setSharePreviewId(card.id)}
+                        />
+                      ))}
+                      {visibleCards.length === 0 ? (
+                        <p className="mypage__project-filter-empty" role="status">
+                          선택한 태그에 해당하는 프로젝트가 없습니다.
+                        </p>
+                      ) : null}
+                    </>
+                  ) : (
+                    librarySlots.map((card, index) =>
+                      card ? (
+                        <ProjectLibraryCard
+                          key={card.id}
+                          card={card}
+                          nameEditable={false}
+                          selected={card.id === selectedCardId}
+                          onSelect={() => setSelectedCardId(card.id)}
+                          onStartWork={() => handleStartWork(card.id)}
+                          onDuplicate={() => handleDuplicate(card.id)}
+                          onDelete={() =>
+                            void handleDeleteCard(card.id, card.title)
+                          }
+                          onSharePreview={() => setSharePreviewId(card.id)}
+                        />
+                      ) : (
+                        <ProjectLibraryEmptySlot key={`library-empty-slot-${index}`} />
+                      ),
+                    )
+                  )}
+                </div>
+              </div>
+            </section>
+
+            {selectedCard ? (
+              <ProjectHubSettingsPanel
+                card={selectedCard}
+                ruleSet={selectedRuleSet}
+                onSave={handleSaveMeta}
+                onCriteriaChange={handleCriteriaChange}
+                onStartWork={() => handleStartWork(selectedCard.id)}
+                onDuplicate={() => handleDuplicate(selectedCard.id)}
+                onDelete={() =>
+                  void handleDeleteCard(selectedCard.id, selectedCard.title)
+                }
+                onSharePreview={() => setSharePreviewId(selectedCard.id)}
+              />
+            ) : null}
           </div>
-        </section>
+        </div>
       </main>
 
       {shareCard ? (

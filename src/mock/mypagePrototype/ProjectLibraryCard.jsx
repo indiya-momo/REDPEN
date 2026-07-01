@@ -1,9 +1,11 @@
 import { useCallback, useId, useMemo, useState } from 'react';
 import {
+  buildProjectCardDisplayTags,
   buildProjectCardPillarPreviews,
-  buildProjectCardTabLabels,
   formatProjectCardCompactDateLine,
-  formatProjectCardMetaLine,
+  formatProjectCardEditionValues,
+  formatProjectCardLastModifiedLabel,
+  formatProjectCardMemoPreview,
 } from '../../presentation/projectCardViewModel.js';
 
 /**
@@ -20,6 +22,7 @@ import {
  *   onUpdateMeta?: (patch: { memo?: string, tags?: string[] }) => void,
  *   onStartWork?: () => void,
  *   onDuplicate?: () => void,
+ *   onDelete?: () => void,
  *   onSharePreview?: () => void,
  * }} props
  */
@@ -36,6 +39,7 @@ export default function ProjectLibraryCard({
   onUpdateMeta: _onUpdateMeta = () => {},
   onStartWork = () => {},
   onDuplicate = () => {},
+  onDelete,
   onSharePreview = () => {},
 }) {
   const [editingName, setEditingName] = useState(false);
@@ -61,13 +65,54 @@ export default function ProjectLibraryCard({
     [card],
   );
 
-  const tabLabels = useMemo(
-    () => buildProjectCardTabLabels(card),
+  const displayTags = useMemo(
+    () => buildProjectCardDisplayTags(card),
     [card],
   );
 
+  const lastModifiedLabel = formatProjectCardLastModifiedLabel(card);
+  const editionValues = formatProjectCardEditionValues(card);
+  const memoPreview = formatProjectCardMemoPreview(card);
+
   const showWorkButton = !compact && (showStartWork || !readOnly);
   const compactDateLine = formatProjectCardCompactDateLine(card);
+
+  const titleBlock = editingName && allowNameEdit ? (
+    <label className="sheet-card__name-edit" htmlFor={nameInputId}>
+      <span className="visually-hidden">프로젝트 이름</span>
+      <input
+        id={nameInputId}
+        className="sheet-card__name-input sheet-card__name-input--active"
+        value={nameDraft}
+        onChange={(e) => setNameDraft(e.target.value)}
+        onBlur={commitName}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') commitName();
+          if (e.key === 'Escape') {
+            setNameDraft(card.title);
+            setEditingName(false);
+          }
+        }}
+        onClick={(event) => event.stopPropagation()}
+        autoFocus
+      />
+    </label>
+  ) : allowNameEdit ? (
+    <button
+      type="button"
+      className="sheet-card__title-field"
+      onClick={(event) => {
+        event.stopPropagation();
+        setNameDraft(card.title);
+        setEditingName(true);
+      }}
+      aria-label={`프로젝트 이름 수정: ${card.title}`}
+    >
+      《{card.title}》
+    </button>
+  ) : (
+    <h2 className="sheet-card__title">《{card.title}》</h2>
+  );
 
   if (compact) {
     return (
@@ -117,59 +162,39 @@ export default function ProjectLibraryCard({
       tabIndex={onSelect ? 0 : undefined}
       aria-pressed={onSelect ? selected : undefined}
     >
-      <div className="sheet-card__tabs" aria-label="분류">
-        {tabLabels.map((tag, index) => (
-          <span
-            key={`${tag}-${index}`}
-            className={`sheet-card__tab${index === 0 ? ' sheet-card__tab--lead' : ''}`}
-          >
-            {tag}
-          </span>
-        ))}
-      </div>
+      {displayTags.length > 0 ? (
+        <div className="sheet-card__tabs" aria-label="분류">
+          {displayTags.map((tag, index) => (
+            <span
+              key={tag}
+              className={`sheet-card__tab sheet-card__tab--tag${index === 0 ? ' sheet-card__tab--lead' : ''}`}
+            >
+              {tag}
+            </span>
+          ))}
+        </div>
+      ) : null}
 
       <div className="sheet-card__body">
         <div className="sheet-card__head">
-          {editingName && allowNameEdit ? (
-            <label className="sheet-card__name-edit" htmlFor={nameInputId}>
-              <span className="visually-hidden">프로젝트 이름</span>
-              <input
-                id={nameInputId}
-                className="sheet-card__name-input sheet-card__name-input--active"
-                value={nameDraft}
-                onChange={(e) => setNameDraft(e.target.value)}
-                onBlur={commitName}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') commitName();
-                  if (e.key === 'Escape') {
-                    setNameDraft(card.title);
-                    setEditingName(false);
-                  }
-                }}
-                onClick={(event) => event.stopPropagation()}
-                autoFocus
-              />
-            </label>
-          ) : allowNameEdit ? (
-            <button
-              type="button"
-              className="sheet-card__title-field"
-              onClick={(event) => {
-                event.stopPropagation();
-                setNameDraft(card.title);
-                setEditingName(true);
-              }}
-              aria-label={`프로젝트 이름 수정: ${card.title}`}
-            >
-              《{card.title}》
-            </button>
-          ) : (
-            <h2 className="sheet-card__title">《{card.title}》</h2>
-          )}
-
+          <div className="sheet-card__title-block">
+            <div className="sheet-card__title-main">{titleBlock}</div>
+            <div className="sheet-card__meta-stack">
+              <span className="sheet-card__date-chip">{lastModifiedLabel}</span>
+              {editionValues ? (
+                <p className="sheet-card__edition-line">{editionValues}</p>
+              ) : null}
+            </div>
+          </div>
         </div>
 
-        <p className="sheet-card__meta">{formatProjectCardMetaLine(card)}</p>
+        <p
+          className="sheet-card__memo-preview"
+          title={memoPreview || undefined}
+          aria-hidden={memoPreview ? undefined : true}
+        >
+          {memoPreview}
+        </p>
 
         <div className="sheet-card__sections" aria-label="표기 기준 구역">
           {pillarRows.map((section) => (
@@ -214,6 +239,18 @@ export default function ProjectLibraryCard({
                 >
                   복제
                 </button>
+                {onDelete ? (
+                  <button
+                    type="button"
+                    className="sheet-card__btn sheet-card__btn--secondary"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onDelete();
+                    }}
+                  >
+                    삭제
+                  </button>
+                ) : null}
                 <button
                   type="button"
                   className="sheet-card__btn sheet-card__btn--secondary"

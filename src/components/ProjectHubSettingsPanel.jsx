@@ -45,6 +45,7 @@ const CRITERIA_SECTIONS = new Set(['spelling', 'consistency', 'auxiliary']);
  *   ) => void | Promise<void>,
  *   onStartWork?: () => void,
  *   onDuplicate?: () => void,
+ *   onDelete?: () => void,
  *   onSharePreview?: () => void,
  * }} props
  */
@@ -60,6 +61,7 @@ export default function ProjectHubSettingsPanel({
   onCriteriaChange,
   onStartWork,
   onDuplicate,
+  onDelete,
   onSharePreview,
 }) {
   const tagsInputId = useId();
@@ -157,10 +159,10 @@ export default function ProjectHubSettingsPanel({
                         className="project-hub-settings__row-label"
                         htmlFor={nameInputId}
                       >
-                        이름
+                        제목
                       </label>
                       <p className="project-hub-settings__row-desc">
-                        프로젝트 표시 이름
+                        프로젝트 제목
                       </p>
                     </div>
                     <input
@@ -168,7 +170,7 @@ export default function ProjectHubSettingsPanel({
                       className="project-hub-settings__input project-hub-settings__input--wide"
                       value={nameInput}
                       onChange={(e) => setNameInput(e.target.value)}
-                      placeholder="프로젝트 이름"
+                      placeholder="프로젝트 제목"
                       maxLength={60}
                       disabled={saving}
                       autoComplete="off"
@@ -184,7 +186,7 @@ export default function ProjectHubSettingsPanel({
                         태그
                       </label>
                       <p className="project-hub-settings__row-desc">
-                        쉼표로 구분 · 최대 8개
+                        쉼표로 구분 · 최대 3개
                       </p>
                     </div>
                     <input
@@ -204,10 +206,10 @@ export default function ProjectHubSettingsPanel({
                         className="project-hub-settings__row-label"
                         htmlFor={proofRevisionInputId}
                       >
-                        교차
+                        교
                       </label>
                       <p className="project-hub-settings__row-desc">
-                        교열·교차 차수 표기
+                        예: 3교
                       </p>
                     </div>
                     <input
@@ -227,10 +229,10 @@ export default function ProjectHubSettingsPanel({
                         className="project-hub-settings__row-label"
                         htmlFor={formatLabelInputId}
                       >
-                        판형, 페이지
+                        판형
                       </label>
                       <p className="project-hub-settings__row-desc">
-                        신국판 · 페이지 수 등
+                        예: 신국판
                       </p>
                     </div>
                     <input
@@ -312,6 +314,15 @@ export default function ProjectHubSettingsPanel({
                 >
                   복제
                 </button>
+                {onDelete ? (
+                  <button
+                    type="button"
+                    className="sheet-card__btn sheet-card__btn--secondary"
+                    onClick={onDelete}
+                  >
+                    삭제
+                  </button>
+                ) : null}
                 <button
                   type="button"
                   className="sheet-card__btn sheet-card__btn--secondary"
