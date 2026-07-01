@@ -127,13 +127,13 @@ export default function ProjectHubLibraryPanel({
                     <ProjectLibraryCard
                       key={card.id}
                       card={card}
+                      nameEditable={false}
                       selected={card.id === selectedCardId}
                       onSelect={
                         onSelectCard
                           ? () => onSelectCard(card.id)
                           : undefined
                       }
-                      onRename={(title) => void actions.handleRename(card.id, title)}
                       onUpdateMeta={(patch) =>
                         void actions.handleUpdateMeta(card.id, patch)
                       }
@@ -154,13 +154,13 @@ export default function ProjectHubLibraryPanel({
                     <ProjectLibraryCard
                       key={card.id}
                       card={card}
+                      nameEditable={false}
                       selected={card.id === selectedCardId}
                       onSelect={
                         onSelectCard
                           ? () => onSelectCard(card.id)
                           : undefined
                       }
-                      onRename={(title) => void actions.handleRename(card.id, title)}
                       onUpdateMeta={(patch) =>
                         void actions.handleUpdateMeta(card.id, patch)
                       }

@@ -27,6 +27,7 @@ const NAV_ITEMS = [
  *   saving?: boolean,
  *   criteriaSaving?: boolean,
  *   onSave: (payload: {
+ *     name?: string,
  *     tags: string[],
  *     memo?: string,
  *     proofRevision?: string,
@@ -55,6 +56,7 @@ export default function ProjectHubSettingsPanel({
   onSharePreview,
 }) {
   const tagsInputId = useId();
+  const nameInputId = useId();
   const proofRevisionInputId = useId();
   const formatLabelInputId = useId();
   const memoInputId = useId();
@@ -62,16 +64,18 @@ export default function ProjectHubSettingsPanel({
   const [activeSection, setActiveSection] =
     useState(/** @type {ProjectHubSettingsSection} */ ('meta'));
   const [tagsInput, setTagsInput] = useState('');
+  const [nameInput, setNameInput] = useState('');
   const [memoInput, setMemoInput] = useState('');
   const [proofRevisionInput, setProofRevisionInput] = useState('');
   const [formatLabelInput, setFormatLabelInput] = useState('');
 
   useEffect(() => {
+    setNameInput(card.title);
     setTagsInput(card.tags.join(', '));
     setMemoInput(card.memo ?? '');
     setProofRevisionInput(card.proofRevision ?? '');
     setFormatLabelInput(card.formatLabel ?? '');
-  }, [card.id, card.tags, card.memo, card.proofRevision, card.formatLabel]);
+  }, [card.id, card.title, card.tags, card.memo, card.proofRevision, card.formatLabel]);
 
   async function handleSave(event) {
     event.preventDefault();
@@ -89,6 +93,7 @@ export default function ProjectHubSettingsPanel({
       .trim()
       .slice(0, MAX_PROJECT_FORMAT_LABEL_LENGTH);
     await onSave({
+      name: nameInput.trim(),
       tags,
       memo,
       proofRevision: proofRevision || undefined,
@@ -132,6 +137,30 @@ export default function ProjectHubSettingsPanel({
             <form className="project-hub-settings__form" onSubmit={(e) => void handleSave(e)}>
               <div className="project-hub-settings__group">
                 <div className="project-hub-settings__card">
+                  <div className="project-hub-settings__row">
+                    <div className="project-hub-settings__row-text">
+                      <label
+                        className="project-hub-settings__row-label"
+                        htmlFor={nameInputId}
+                      >
+                        이름
+                      </label>
+                      <p className="project-hub-settings__row-desc">
+                        프로젝트 표시 이름
+                      </p>
+                    </div>
+                    <input
+                      id={nameInputId}
+                      className="project-hub-settings__input project-hub-settings__input--wide"
+                      value={nameInput}
+                      onChange={(e) => setNameInput(e.target.value)}
+                      placeholder="프로젝트 이름"
+                      maxLength={60}
+                      disabled={saving}
+                      autoComplete="off"
+                    />
+                  </div>
+
                   <div className="project-hub-settings__row">
                     <div className="project-hub-settings__row-text">
                       <label

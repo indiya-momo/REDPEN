@@ -298,11 +298,24 @@ export function useMyPageProjects(uid = '', email = '') {
   const updateProjectMeta = useCallback(
     async (setId, patch) => {
       const id = String(setId ?? '').trim();
-      if (!id) return false;
+      if (!id) return { ok: false, reason: 'not_found' };
 
-      const sets = loadedSetsRef.current;
+      let sets = loadedSetsRef.current;
+
+      if (patch.name !== undefined) {
+        const renamePlan = planRenameProject(sets, id, patch.name);
+        if (!renamePlan.ok) {
+          return {
+            ok: false,
+            reason: renamePlan.reason,
+            message: RENAME_FAILURE_MESSAGE[renamePlan.reason],
+          };
+        }
+        sets = renamePlan.next;
+      }
+
       const index = sets.findIndex((set) => set.id === id);
-      if (index < 0) return false;
+      if (index < 0) return { ok: false, reason: 'not_found' };
 
       const current = sets[index];
       const nextProjectContext =
@@ -326,7 +339,7 @@ export function useMyPageProjects(uid = '', email = '') {
       });
       const nextSets = sets.map((set, i) => (i === index ? nextSet : set));
       const ok = await persistProjectSets(nextSets);
-      return ok;
+      return ok ? { ok: true } : { ok: false, reason: 'cloud_save_failed' };
     },
     [persistProjectSets],
   );

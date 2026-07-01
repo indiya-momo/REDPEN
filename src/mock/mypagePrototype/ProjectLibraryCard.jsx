@@ -15,6 +15,7 @@ import {
  *   selected?: boolean,
  *   onSelect?: () => void,
  *   onEditMeta?: () => void,
+ *   nameEditable?: boolean,
  *   onRename?: (title: string) => void,
  *   onUpdateMeta?: (patch: { memo?: string, tags?: string[] }) => void,
  *   onStartWork?: () => void,
@@ -30,7 +31,8 @@ export default function ProjectLibraryCard({
   selected = false,
   onSelect,
   onEditMeta,
-  onRename = () => {},
+  nameEditable,
+  onRename,
   onUpdateMeta: _onUpdateMeta = () => {},
   onStartWork = () => {},
   onDuplicate = () => {},
@@ -40,7 +42,11 @@ export default function ProjectLibraryCard({
   const [nameDraft, setNameDraft] = useState(card.title);
   const nameInputId = useId();
 
+  const allowNameEdit =
+    !readOnly && (nameEditable ?? Boolean(onRename)) && Boolean(onRename);
+
   const commitName = useCallback(() => {
+    if (!onRename) return;
     const trimmed = nameDraft.trim();
     if (trimmed && trimmed !== card.title) {
       onRename(trimmed);
@@ -124,7 +130,7 @@ export default function ProjectLibraryCard({
 
       <div className="sheet-card__body">
         <div className="sheet-card__head">
-          {editingName && !readOnly ? (
+          {editingName && allowNameEdit ? (
             <label className="sheet-card__name-edit" htmlFor={nameInputId}>
               <span className="visually-hidden">프로젝트 이름</span>
               <input
@@ -144,9 +150,7 @@ export default function ProjectLibraryCard({
                 autoFocus
               />
             </label>
-          ) : readOnly ? (
-            <h2 className="sheet-card__title">《{card.title}》</h2>
-          ) : (
+          ) : allowNameEdit ? (
             <button
               type="button"
               className="sheet-card__title-field"
@@ -159,6 +163,8 @@ export default function ProjectLibraryCard({
             >
               《{card.title}》
             </button>
+          ) : (
+            <h2 className="sheet-card__title">《{card.title}》</h2>
           )}
 
         </div>
