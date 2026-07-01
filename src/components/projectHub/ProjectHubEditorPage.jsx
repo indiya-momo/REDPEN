@@ -114,7 +114,10 @@ export default function ProjectHubEditorPage({
       if (!selectedCard) return;
       setMetaSavePending(true);
       try {
-        await updateProjectMeta(selectedCard.id, payload);
+        const result = await updateProjectMeta(selectedCard.id, payload);
+        if (!result.ok && result.message) {
+          window.alert(result.message);
+        }
       } finally {
         setMetaSavePending(false);
       }
