@@ -1,13 +1,9 @@
 /**
  * @param {{
- *   count?: number,
  *   onStartWork?: () => void,
  * }} props
  */
-export default function ProjectHubCriteriaSpellingSection({
-  count = 0,
-  onStartWork,
-}) {
+export default function ProjectHubCriteriaSpellingSection({ onStartWork }) {
   return (
     <div className="project-hub-settings__criteria project-hub-settings__criteria--single">
       <section
@@ -16,7 +12,6 @@ export default function ProjectHubCriteriaSpellingSection({
       >
         <div className="project-hub-settings__criteria-head">
           <h3 className="project-hub-settings__criteria-title">맞춤법</h3>
-          <span className="project-hub-settings__criteria-count">{count}</span>
         </div>
         <p className="project-hub-settings__criteria-lead">
           맞춤법·띄어쓰기 검수 항목은 검수 화면에서 편집합니다.

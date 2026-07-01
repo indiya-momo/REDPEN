@@ -31,5 +31,21 @@ export function useProjectHubCriteriaMutations({
     [hubRuleSet, onCriteriaChange],
   );
 
-  return { hubRuleSet, customRules, applyCriteriaPatch };
+  /** @param {import('../lib/ruleTypes.js').Rule[]} nextCustomRules */
+  const applyCustomRules = useCallback(
+    (nextCustomRules) => {
+      const plan = planProjectCriteriaUpdate(hubRuleSet, {
+        customRules: nextCustomRules,
+      });
+      if (!plan.ok) {
+        alert(plan.message);
+        return false;
+      }
+      void onCriteriaChange(plan.patch);
+      return true;
+    },
+    [hubRuleSet, onCriteriaChange],
+  );
+
+  return { hubRuleSet, customRules, applyCriteriaPatch, applyCustomRules };
 }
