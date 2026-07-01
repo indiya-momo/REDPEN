@@ -20,8 +20,8 @@ describe('MOCK_PROJECT_RULE_SETS', () => {
     expect(card.counts.auxiliary).toBe(8);
     expect(card.counts.editorReview + card.counts.spelling).toBe(15);
     expect(card.counts.find).toBe(4);
-    expect(card.counts.commonString).toBe(2);
-    expect(listPhraseSlotEntries(set.customRules)).toHaveLength(2);
+    expect(card.counts.commonString).toBe(1);
+    expect(listPhraseSlotEntries(set.customRules)).toHaveLength(1);
 
     const enabledAux = listAuxiliaryVerbEntries(set.customRules).filter(
       (entry) => isAuxiliaryVerbEntryEnabled(set.customRules, entry),

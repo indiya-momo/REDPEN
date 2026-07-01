@@ -64,7 +64,6 @@ export default function ProjectHubCriteriaPanel({
   return (
     <ProjectHubCriteriaToggleSection
       pillarKey={toggleConfig.key}
-      title={toggleConfig.title}
       ariaLabel={toggleConfig.ariaLabel}
       entries={auxiliaryEntries}
       customRules={customRules}

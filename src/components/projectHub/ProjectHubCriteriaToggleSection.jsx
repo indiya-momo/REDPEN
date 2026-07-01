@@ -5,7 +5,6 @@ import RegisteredList from '../consistency/RegisteredList.jsx';
  *
  * @param {{
  *   pillarKey: 'consistency' | 'auxiliary',
- *   title: string,
  *   ariaLabel: string,
  *   entries: { tailWord: string, displayLabel?: string, bonBojoItemId?: string }[],
  *   customRules: import('../../lib/ruleTypes.js').Rule[],
@@ -23,7 +22,6 @@ import RegisteredList from '../consistency/RegisteredList.jsx';
  */
 export default function ProjectHubCriteriaToggleSection({
   pillarKey,
-  title,
   ariaLabel,
   entries,
   customRules,
@@ -38,9 +36,6 @@ export default function ProjectHubCriteriaToggleSection({
         className={`project-hub-settings__criteria-section project-hub-settings__criteria-section--${pillarKey}`}
         aria-label={ariaLabel}
       >
-        <div className="project-hub-settings__criteria-head">
-          <h3 className="project-hub-settings__criteria-title">{title}</h3>
-        </div>
         <RegisteredList
           entries={entries}
           customRules={customRules}
