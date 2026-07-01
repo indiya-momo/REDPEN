@@ -134,3 +134,53 @@ export function applyCriteriaPresetQuota(ruleSets, uid = '', email = '') {
     enforceMaxCriteriaPresets(ruleSets ?? [], uid, email),
   );
 }
+
+/**
+ * localStorage 저장 직전 병합 — 다른 창(마이페이지)에서 반영한 태그·삭제를 메인 autosave가 덮지 않게 한다.
+ *
+ * @param {import('./ruleSetsStorage.js').RuleSet[]} diskSets
+ * @param {import('./ruleSetsStorage.js').RuleSet[]} memorySets
+ * @returns {import('./ruleSetsStorage.js').RuleSet[]}
+ */
+export function mergeRuleSetsOnPersist(diskSets, memorySets) {
+  const disk = diskSets ?? [];
+  const memory = memorySets ?? [];
+  if (!disk.length) return [...memory];
+  if (!memory.length) return [...disk];
+
+  const diskById = new Map(disk.map((set) => [set.id, set]));
+  const diskSavedIds = new Set(
+    disk.filter((set) => set.savedAt).map((set) => set.id),
+  );
+  const memorySavedIds = new Set(
+    memory.filter((set) => set.savedAt).map((set) => set.id),
+  );
+  const diskSavedCount = diskSavedIds.size;
+  const memorySavedCount = memorySavedIds.size;
+  const externalDeletion =
+    diskSavedCount > 0 &&
+    diskSavedCount < memorySavedCount &&
+    [...diskSavedIds].every((id) => memorySavedIds.has(id));
+
+  let merged = memory.map((set) => {
+    const diskSet = diskById.get(set.id);
+    if (!diskSet) return { ...set };
+    return pickNewerRuleSet(diskSet, set);
+  });
+
+  if (externalDeletion) {
+    merged = merged.filter(
+      (set) => !set.savedAt || diskSavedIds.has(set.id),
+    );
+  }
+
+  const mergedIds = new Set(merged.map((set) => set.id));
+  for (const diskSet of disk) {
+    if (!mergedIds.has(diskSet.id)) {
+      merged.push({ ...diskSet });
+      mergedIds.add(diskSet.id);
+    }
+  }
+
+  return merged;
+}
