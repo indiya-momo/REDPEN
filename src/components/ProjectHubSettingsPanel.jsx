@@ -9,13 +9,17 @@ import { buildProjectCardPillarPreviews } from '../presentation/projectCardViewM
 import ProjectHubCriteriaPanel from './projectHub/ProjectHubCriteriaPanel.jsx';
 import './project-hub-settings.css';
 
-/** @typedef {'meta' | 'manuscript' | 'actions'} ProjectHubSettingsSection */
+/** @typedef {'meta' | 'spelling' | 'consistency' | 'auxiliary' | 'actions'} ProjectHubSettingsSection */
 
 const NAV_ITEMS = [
   { id: 'meta', label: '프로젝트 정보' },
-  { id: 'manuscript', label: '프로젝트 편집' },
+  { id: 'spelling', label: '맞춤법', pillarKey: 'spelling' },
+  { id: 'consistency', label: '표기 통일', pillarKey: 'consistency' },
+  { id: 'auxiliary', label: '본용언 + 보조용언', pillarKey: 'auxiliary' },
   { id: 'actions', label: '작업 이력' },
 ];
+
+const CRITERIA_SECTIONS = new Set(['spelling', 'consistency', 'auxiliary']);
 
 /**
  * @param {{
@@ -33,8 +37,12 @@ const NAV_ITEMS = [
  *     proofRevision?: string,
  *     formatLabel?: string,
  *   }) => void | Promise<void>,
- *   onCustomRulesChange?: (
- *     rules: import('../lib/ruleTypes.js').Rule[],
+ *   onCriteriaChange?: (
+ *     patch: {
+ *       customRules?: import('../lib/ruleTypes.js').Rule[],
+ *       builtInEnabled?: Record<string, boolean>,
+ *       cautionEnabled?: Record<string, boolean>,
+ *     },
  *   ) => void | Promise<void>,
  *   onStartWork?: () => void,
  *   onDuplicate?: () => void,
@@ -50,7 +58,7 @@ export default function ProjectHubSettingsPanel({
   saving = false,
   criteriaSaving = false,
   onSave,
-  onCustomRulesChange,
+  onCriteriaChange,
   onStartWork,
   onDuplicate,
   onSharePreview,
@@ -106,6 +114,18 @@ export default function ProjectHubSettingsPanel({
     [card],
   );
 
+  const pillarCountByKey = useMemo(() => {
+    /** @type {Record<string, number>} */
+    const counts = {};
+    for (const row of pillarRows) {
+      counts[row.key] = row.count;
+    }
+    return counts;
+  }, [pillarRows]);
+
+  const showCriteriaPanel =
+    CRITERIA_SECTIONS.has(activeSection) && ruleSet && onCriteriaChange;
+
   return (
     <section
       className="project-hub-settings"
@@ -125,7 +145,14 @@ export default function ProjectHubSettingsPanel({
                   }`}
                   onClick={() => setActiveSection(item.id)}
                 >
-                  {item.label}
+                  <span className="project-hub-settings__nav-btn-label">
+                    {item.label}
+                  </span>
+                  {'pillarKey' in item && item.pillarKey ? (
+                    <span className="project-hub-settings__nav-btn-count">
+                      {pillarCountByKey[item.pillarKey] ?? 0}
+                    </span>
+                  ) : null}
                 </button>
               </li>
             ))}
@@ -267,14 +294,15 @@ export default function ProjectHubSettingsPanel({
             </form>
           ) : null}
 
-          {activeSection === 'manuscript' && ruleSet && onCustomRulesChange ? (
+          {showCriteriaPanel ? (
             <div className="project-hub-settings__group">
               <div className="project-hub-settings__card project-hub-settings__card--criteria">
                 <ProjectHubCriteriaPanel
-                  pillarRows={pillarRows}
+                  section={activeSection}
+                  count={pillarCountByKey[activeSection] ?? 0}
                   ruleSet={ruleSet}
                   criteriaSaving={criteriaSaving}
-                  onCustomRulesChange={onCustomRulesChange}
+                  onCriteriaChange={onCriteriaChange}
                   onStartWork={onStartWork}
                 />
               </div>

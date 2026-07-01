@@ -23,6 +23,7 @@ function AuxiliaryGridChip({
   isEnabled,
   onToggle,
   isRequired,
+  disabled = false,
 }) {
   const label = consistencyEntryLabel(row);
   return (
@@ -30,6 +31,7 @@ function AuxiliaryGridChip({
       <input
         type="checkbox"
         checked={isEnabled(customRules, row)}
+        disabled={disabled}
         onChange={(e) => onToggle(row, e.target.checked)}
       />
       <span className="find">{label}</span>
@@ -79,6 +81,7 @@ function AuxiliaryGridItem(props) {
  *   onRemove?: (tw: string) => void,
  *   variant?: 'chips' | 'auxiliary-grid',
  *   isRequired?: (row: { bonBojoItemId?: string }) => boolean,
+ *   disabled?: boolean,
  * }} props
  */
 export default function RegisteredList({
@@ -89,6 +92,7 @@ export default function RegisteredList({
   onRemove,
   variant = 'chips',
   isRequired,
+  disabled = false,
 }) {
   if (!entries.length) return null;
 
@@ -106,7 +110,7 @@ export default function RegisteredList({
         );
         return ia - ib;
       });
-    const itemProps = { customRules, isEnabled, onToggle, isRequired };
+    const itemProps = { customRules, isEnabled, onToggle, isRequired, disabled };
 
     return (
       <div className="auxiliary-checklist">

@@ -31,7 +31,7 @@ export default function ProjectHubEditorPage({
     loading,
     activeSetId,
     updateProjectMeta,
-    updateProjectCustomRules,
+    updateProjectCriteria,
   } = library;
   const { filteredCards } = tagFilter;
 
@@ -96,17 +96,17 @@ export default function ProjectHubEditorPage({
     [previewCards, sharePreviewCardId],
   );
 
-  const handleCustomRulesChange = useCallback(
-    async (nextCustomRules) => {
+  const handleCriteriaChange = useCallback(
+    async (patch) => {
       if (!selectedCard) return;
       setCriteriaSavePending(true);
       try {
-        await updateProjectCustomRules(selectedCard.id, nextCustomRules);
+        await updateProjectCriteria(selectedCard.id, patch);
       } finally {
         setCriteriaSavePending(false);
       }
     },
-    [selectedCard, updateProjectCustomRules],
+    [selectedCard, updateProjectCriteria],
   );
 
   const handleSaveMeta = useCallback(
@@ -148,7 +148,7 @@ export default function ProjectHubEditorPage({
             saving={metaSavePending}
             criteriaSaving={criteriaSavePending}
             onSave={handleSaveMeta}
-            onCustomRulesChange={handleCustomRulesChange}
+            onCriteriaChange={handleCriteriaChange}
             onStartWork={() => void actions.handleStartWork(selectedCard.id)}
             onDuplicate={() => void actions.handleDuplicate(selectedCard.id)}
             onSharePreview={() => setSharePreviewCardId(selectedCard.id)}
