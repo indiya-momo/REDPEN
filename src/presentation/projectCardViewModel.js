@@ -71,11 +71,41 @@ export function formatProjectCardTitleLine(card) {
   return `${tagPart}《${card.title}》 기준`;
 }
 
+/** ISO·표시 문자열 → `YY.MM.DD` @param {string} [value] @returns {string} */
+export function formatProjectCardDotDateFromIso(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  const y = String(d.getFullYear() % 100).padStart(2, '0');
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}.${m}.${day}`;
+}
+
+/** `26년 6월 30일`·`26.6.30` 등 → `26.06.30` @param {string} [value] @returns {string} */
+export function normalizeProjectCardDotDate(value) {
+  const raw = String(value ?? '').trim();
+  if (!raw) return '';
+
+  const dotted = raw.match(/^(\d{2})\.(\d{1,2})\.(\d{1,2})$/);
+  if (dotted) {
+    return `${dotted[1]}.${dotted[2].padStart(2, '0')}.${dotted[3].padStart(2, '0')}`;
+  }
+
+  const korean = raw.match(/^(\d{2})년\s*(\d{1,2})월\s*(\d{1,2})일$/);
+  if (korean) {
+    return `${korean[1]}.${korean[2].padStart(2, '0')}.${korean[3].padStart(2, '0')}`;
+  }
+
+  return raw;
+}
+
 /** @param {ProjectCardViewModel} card @returns {string} */
 export function formatProjectCardLastModifiedLabel(card) {
-  const date = card.lastWork?.date || card.savedDate || card.createdDate || '';
+  const raw = card.lastWork?.date || card.savedDate || card.createdDate || '';
+  const date = normalizeProjectCardDotDate(raw);
   if (!date) return '프로젝트';
-  return `${date} 최종수정`;
+  return `${date} 작업`;
 }
 
 /** @param {ProjectCardViewModel} card @returns {string[]} */
@@ -112,15 +142,18 @@ export function formatProjectCardMemoPreview(card) {
 /** @param {ProjectCardViewModel} card @returns {string[]} */
 export function formatProjectCardScheduleLines(card) {
   const lines = [];
-  if (card.lastWork?.date) {
-    lines.push(`${card.lastWork.date} 작업`);
+  const workDate = normalizeProjectCardDotDate(card.lastWork?.date);
+  if (workDate) {
+    lines.push(`${workDate} 작업`);
   }
   return lines;
 }
 
 /** @param {ProjectCardViewModel} card @returns {string} */
 export function formatProjectCardCompactDateLine(card) {
-  return card.lastWork?.date || card.savedDate || card.createdDate || '';
+  return normalizeProjectCardDotDate(
+    card.lastWork?.date || card.savedDate || card.createdDate || '',
+  );
 }
 
 /** @param {ProjectCardViewModel} card @returns {string} */

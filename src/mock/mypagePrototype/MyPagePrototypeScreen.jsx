@@ -3,6 +3,7 @@ import '../../components/my-page.css';
 import '../../components/project-hub-settings.css';
 import './mypage-prototype.css';
 import ProjectHubEditorPage from '../../components/projectHub/ProjectHubEditorPage.jsx';
+import ProjectHubEditorShell from '../../components/projectHub/ProjectHubEditorShell.jsx';
 import { useMockProjectHubLibrary } from './useMockProjectHubLibrary.js';
 import WorkbenchBarMock from './WorkbenchBarMock.jsx';
 
@@ -43,14 +44,14 @@ export default function MyPagePrototypeScreen() {
   return (
     <div className="mypage mypage-proto">
       <main className="mypage__main mypage-proto__main mypage-proto__main--editor">
-        <div className="mypage__main-inner mypage__main-inner--section mypage__overview--projects">
+        <ProjectHubEditorShell>
           <ProjectHubEditorPage
             uid=""
             email=""
             library={library}
             onStartWork={handleStartWork}
           />
-        </div>
+        </ProjectHubEditorShell>
       </main>
     </div>
   );

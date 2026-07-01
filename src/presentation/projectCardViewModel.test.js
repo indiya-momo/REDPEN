@@ -11,6 +11,7 @@ import {
   formatProjectCardLastModifiedLabel,
   formatProjectCardMemoPreview,
   formatProjectCardMetaLine,
+  normalizeProjectCardDotDate,
   formatProjectCardScheduleLines,
   formatProjectCardTitleLine,
 } from './projectCardViewModel.js';
@@ -48,14 +49,20 @@ describe('projectCardViewModel helpers', () => {
   });
 
   it('formatProjectCardLastModifiedLabel', () => {
-    expect(formatProjectCardLastModifiedLabel(sample)).toBe('26.06.18 최종수정');
+    expect(formatProjectCardLastModifiedLabel(sample)).toBe('26.06.18 작업');
     expect(
       formatProjectCardLastModifiedLabel({
         ...sample,
         lastWork: undefined,
         savedDate: '26년 6월 22일',
       }),
-    ).toBe('26년 6월 22일 최종수정');
+    ).toBe('26.06.22 작업');
+  });
+
+  it('normalizeProjectCardDotDate', () => {
+    expect(normalizeProjectCardDotDate('26.6.30')).toBe('26.06.30');
+    expect(normalizeProjectCardDotDate('26년 6월 30일')).toBe('26.06.30');
+    expect(normalizeProjectCardDotDate('26.06.18')).toBe('26.06.18');
   });
 
   it('buildProjectCardTabLabels / buildProjectCardDisplayTags', () => {
@@ -67,6 +74,12 @@ describe('projectCardViewModel helpers', () => {
         tags: ['a', 'b', 'c'],
       }),
     ).toEqual(['a', 'b', 'c']);
+    expect(
+      buildProjectCardTabLabels({
+        ...sample,
+        tags: [],
+      }),
+    ).toEqual([]);
   });
 
   it('formatProjectCardEditionValues', () => {

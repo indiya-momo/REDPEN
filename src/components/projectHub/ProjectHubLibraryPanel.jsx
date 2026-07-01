@@ -5,7 +5,7 @@
 import { useMemo, useState } from 'react';
 import {
   buildMockLibrarySlots,
-  MOCK_LIBRARY_SLOT_MAX,
+  formatLibrarySlotGauge,
 } from '../../lib/mypageProjectDisplay.js';
 import { useProjectHubActions } from '../../hooks/useProjectHubActions.js';
 import { useProjectHubLibrary } from '../../hooks/useProjectHubLibrary.js';
@@ -25,6 +25,8 @@ import ProjectHubTagFilters from './ProjectHubTagFilters.jsx';
  *   tagFilter?: ReturnType<typeof useProjectTagFilter>,
  *   actions?: ReturnType<typeof useProjectHubActions>,
  *   onOpenSection?: () => void,
+ *   sharePreviewCardId?: string | null,
+ *   onSharePreviewCardIdChange?: (cardId: string | null) => void,
  * }} props
  */
 export default function ProjectHubLibraryPanel({
@@ -36,6 +38,8 @@ export default function ProjectHubLibraryPanel({
   tagFilter: tagFilterProp,
   actions: actionsProp,
   onOpenSection,
+  sharePreviewCardId: sharePreviewCardIdProp,
+  onSharePreviewCardIdChange,
 }) {
   const libraryInternal = useProjectHubLibrary(uid, email);
   const library = libraryProp ?? libraryInternal;
@@ -49,9 +53,27 @@ export default function ProjectHubLibraryPanel({
   const actionsInternal = useProjectHubActions(library);
   const actions = actionsProp ?? actionsInternal;
 
-  const [sharePreviewCardId, setSharePreviewCardId] = useState(
+  const [internalSharePreviewCardId, setInternalSharePreviewCardId] = useState(
     /** @type {string | null} */ (null),
   );
+  const isSharePreviewControlled = onSharePreviewCardIdChange !== undefined;
+  const sharePreviewCardId = isSharePreviewControlled
+    ? (sharePreviewCardIdProp ?? null)
+    : internalSharePreviewCardId;
+  const openSharePreview = (cardId) => {
+    if (isSharePreviewControlled) {
+      onSharePreviewCardIdChange(cardId);
+      return;
+    }
+    setInternalSharePreviewCardId(cardId);
+  };
+  const closeSharePreview = () => {
+    if (isSharePreviewControlled) {
+      onSharePreviewCardIdChange(null);
+      return;
+    }
+    setInternalSharePreviewCardId(null);
+  };
 
   const librarySlots = useMemo(
     () => buildMockLibrarySlots(previewCards),
@@ -95,10 +117,7 @@ export default function ProjectHubLibraryPanel({
             </div>
           </div>
           <p className="mypage__project-slot-gauge" aria-live="polite">
-            슬롯{' '}
-            <strong>
-              {previewCards.length}/{MOCK_LIBRARY_SLOT_MAX}
-            </strong>
+            슬롯 <strong>{formatLibrarySlotGauge(previewCards.length)}</strong>
           </p>
         </div>
 
@@ -142,7 +161,7 @@ export default function ProjectHubLibraryPanel({
                       onDelete={() =>
                         void actions.handleDelete(card.id, card.title)
                       }
-                      onSharePreview={() => setSharePreviewCardId(card.id)}
+                      onSharePreview={() => openSharePreview(card.id)}
                     />
                   ))}
                   {filteredCards.length === 0 ? (
@@ -172,7 +191,7 @@ export default function ProjectHubLibraryPanel({
                       onDelete={() =>
                         void actions.handleDelete(card.id, card.title)
                       }
-                      onSharePreview={() => setSharePreviewCardId(card.id)}
+                      onSharePreview={() => openSharePreview(card.id)}
                     />
                   ) : (
                     <ProjectLibraryEmptySlot key={`library-empty-slot-${index}`} />
@@ -184,10 +203,10 @@ export default function ProjectHubLibraryPanel({
         )}
       </section>
 
-      {sharePreviewCard ? (
+      {!isSharePreviewControlled && sharePreviewCard ? (
         <SharePreviewModal
           card={sharePreviewCard}
-          onClose={() => setSharePreviewCardId(null)}
+          onClose={closeSharePreview}
         />
       ) : null}
     </>

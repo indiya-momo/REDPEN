@@ -6,6 +6,10 @@
  * }} props
  */
 export default function ProjectHubTagFilters({ options, value, onChange }) {
+  if (options.length <= 1) {
+    return null;
+  }
+
   return (
     <div
       className="mypage-proto__filters"

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildMockLibrarySlots,
+  formatLibrarySlotGauge,
   MOCK_LIBRARY_SLOT_MAX,
   MYPAGE_PROJECT_CARD_DISPLAY_MAX,
   planMyPageProjectGrid,
@@ -41,6 +42,15 @@ describe('planMyPageProjectGrid', () => {
       'mid',
     ]);
     expect(visibleEmptySlotCount).toBe(0);
+  });
+});
+
+describe('formatLibrarySlotGauge', () => {
+  it('라이브러리 슬롯 게이지', () => {
+    expect(formatLibrarySlotGauge(0)).toBe('0/3');
+    expect(formatLibrarySlotGauge(2)).toBe('2/3');
+    expect(formatLibrarySlotGauge(3)).toBe('3/3');
+    expect(formatLibrarySlotGauge(5)).toBe('3/3');
   });
 });
 
