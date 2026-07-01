@@ -10,6 +10,7 @@ import { normalizeRuleSet } from '../lib/ruleSetNormalize.js';
 import {
   loadActiveSetId,
   loadRuleSets,
+  ruleSetsStorageKey,
   saveActiveSetId,
   saveRuleSets,
 } from '../lib/ruleSetsStorage.js';
@@ -186,6 +187,46 @@ export function useMyPageProjects(uid = '', email = '') {
     return () => {
       cancelled = true;
     };
+  }, [uid, email]);
+
+  useEffect(() => {
+    const trimmedUid = uid.trim();
+    const storageKey = ruleSetsStorageKey(trimmedUid);
+
+    const reloadFromStorage = () => {
+      try {
+        let sets = normalizeLoadedSets(loadRuleSets(trimmedUid));
+        const beforeIds = sets.map((set) => set.id).join(',');
+        sets = applyCriteriaPresetQuota(sets, trimmedUid, email);
+        const activeId = resolveHydratedActiveSetId(
+          sets,
+          loadActiveSetId(trimmedUid),
+          activeSetIdRef.current,
+        );
+
+        loadedSetsRef.current = sets;
+        activeSetIdRef.current = activeId;
+        const saved = sets.filter((s) => Boolean(s.savedAt));
+        setProjects(saved);
+        setActiveSetId(activeId);
+        setSavedCount(countSavedCriteriaPresets(sets));
+
+        if (beforeIds !== sets.map((set) => set.id).join(',')) {
+          saveRuleSets(sets, trimmedUid);
+          if (activeId) saveActiveSetId(activeId, trimmedUid);
+        }
+      } catch (e) {
+        console.warn('마이페이지 프로젝트 storage 동기화 실패', e);
+      }
+    };
+
+    const onStorage = (event) => {
+      if (event.key !== storageKey || event.newValue == null) return;
+      reloadFromStorage();
+    };
+
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
   }, [uid, email]);
 
   const selectProject = useCallback(

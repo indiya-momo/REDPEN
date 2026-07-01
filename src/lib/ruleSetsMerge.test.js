@@ -4,6 +4,7 @@ import {
   dedupeSavedRuleSetsByName,
   mergeLocalRuleSetSources,
   mergeRuleSetsOnLogin,
+  mergeRuleSetsOnPersist,
   pickNewerRuleSet,
 } from './ruleSetsMerge.js';
 
@@ -140,6 +141,41 @@ describe('dedupeSavedRuleSetsByName', () => {
     ];
     const next = dedupeSavedRuleSetsByName(sets);
     expect(next.map((s) => s.id)).toEqual(['new', 'draft']);
+  });
+});
+
+describe('mergeRuleSetsOnPersist', () => {
+  it('디스크에만 있는 태그를 같은 savedAt 메모리에 보존한다', () => {
+    const savedAt = '2026-06-20T00:00:00.000Z';
+    const disk = [
+      set('a', { name: 'A', savedAt, tags: ['문학'] }),
+      set('b', { name: 'B', savedAt }),
+    ];
+    const memory = [
+      set('a', { name: 'A', savedAt }),
+      set('b', { name: 'B', savedAt }),
+    ];
+    const merged = mergeRuleSetsOnPersist(disk, memory);
+    expect(merged.find((row) => row.id === 'a')?.tags).toEqual(['문학']);
+  });
+
+  it('다른 창에서 삭제한 저장 프로젝트를 메모리 autosave가 되살리지 않는다', () => {
+    const savedAt = '2026-06-20T00:00:00.000Z';
+    const disk = [set('a', { name: 'A', savedAt, tags: ['문학'] })];
+    const memory = [
+      set('a', { name: 'A', savedAt }),
+      set('b', { name: 'B', savedAt }),
+    ];
+    const merged = mergeRuleSetsOnPersist(disk, memory);
+    expect(merged.map((row) => row.id)).toEqual(['a']);
+    expect(merged[0].tags).toEqual(['문학']);
+  });
+
+  it('메모리에만 있는 초안은 유지한다', () => {
+    const disk = [set('a', { name: 'A', savedAt: '2026-06-20T00:00:00.000Z' })];
+    const memory = [set('a', { name: 'A' }), set('draft', { name: '' })];
+    const merged = mergeRuleSetsOnPersist(disk, memory);
+    expect(merged.map((row) => row.id).sort()).toEqual(['a', 'draft']);
   });
 });
 

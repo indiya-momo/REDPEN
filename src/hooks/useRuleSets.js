@@ -24,6 +24,7 @@ import {
   loadActiveSetId,
   loadRuleSets,
   newId,
+  ruleSetsStorageKey,
   saveActiveSetId,
   saveRuleSets,
 } from '../lib/ruleSetsStorage.js';
@@ -53,6 +54,7 @@ import {
   mergeRuleSetsOnLogin,
   applyCriteriaPresetQuota,
   mergeLocalRuleSetSources,
+  mergeRuleSetsOnPersist,
 } from '../lib/ruleSetsMerge.js';
 
 const RULE_SET_AUTOSAVE_MS = 400;
@@ -136,7 +138,13 @@ export function useRuleSets(authUid = '', authEmail = '') {
 
   const flushRuleSets = useCallback(
     (sets, setId = activeSetIdRef.current, uid = authUidRef.current) => {
-      saveRuleSets(sets, uid);
+      const disk = loadRuleSets(uid);
+      const merged = mergeRuleSetsOnPersist(disk, sets);
+      ruleSetsRef.current = merged;
+      if (JSON.stringify(merged) !== JSON.stringify(sets)) {
+        setRuleSets(merged);
+      }
+      saveRuleSets(merged, uid);
       if (setId) saveActiveSetId(setId, uid);
       scheduleCloudRuleSetsSync();
     },
@@ -310,6 +318,47 @@ export function useRuleSets(authUid = '', authEmail = '') {
       window.removeEventListener('beforeunload', onPageLeave);
     };
   }, [flushPendingRuleSetsSave]);
+
+  useEffect(() => {
+    if (!rulesReady) return undefined;
+
+    const uid = String(authUid ?? '').trim();
+    const storageKey = ruleSetsStorageKey(uid);
+
+    const reloadFromStorage = () => {
+      if (autosaveTimerRef.current) {
+        clearTimeout(autosaveTimerRef.current);
+        autosaveTimerRef.current = null;
+      }
+      if (cloudSyncTimerRef.current) {
+        clearTimeout(cloudSyncTimerRef.current);
+        cloudSyncTimerRef.current = null;
+      }
+
+      let sets = normalizeLoadedRuleSets(loadRuleSets(uid));
+      if (uid) {
+        sets = applyCriteriaPresetQuota(sets, uid, authEmailRef.current);
+      }
+      const storedActive = loadActiveSetId(uid);
+      const activeId =
+        resolveHydratedActiveSetId(sets, storedActive, activeSetIdRef.current) ??
+        sets[0]?.id ??
+        null;
+
+      ruleSetsRef.current = sets;
+      activeSetIdRef.current = activeId;
+      setRuleSets(sets);
+      setActiveSetId(activeId);
+    };
+
+    const onStorage = (event) => {
+      if (event.key !== storageKey || event.newValue == null) return;
+      reloadFromStorage();
+    };
+
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, [authUid, rulesReady]);
 
   const activeSet = rulesReady
     ? (ruleSets.find((s) => s.id === activeSetId) ?? ruleSets[0] ?? null)
