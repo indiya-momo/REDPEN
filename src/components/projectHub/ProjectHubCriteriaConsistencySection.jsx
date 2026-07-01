@@ -1,171 +1,200 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import {
   isConsistencyEntryEnabled,
   listConsistencyLiteralEntries,
+  planConsistencyEntries,
+  removeConsistencyEntry,
+  toggleConsistencyEntry,
 } from '../../lib/compoundPairRegister.js';
+import { registerConsistencyLiteralBatch } from '../../lib/consistencyLiteralRegister.js';
 import {
   LITERAL_FIND_FEATURE_LABEL,
-  listConsistencyUnifyEntries,
-  MAX_CONSISTENCY_CRITERIA_SLOTS,
-  MAX_CONSISTENCY_UNIFY_SLOTS,
   MAX_PHRASE_SLOT_REGISTERED_ENTRIES,
+  countPhraseSlotRegisteredEntries,
+  phraseSlotRegistrationBlockedMessage,
 } from '../../lib/consistencyRuleLimit.js';
 import {
+  buildRulesForPhraseSlot,
   isPhraseSlotEntryEnabled,
+  isPhraseSlotPattern,
   listPhraseSlotEntries,
+  parsePhraseSlotInput,
+  removePhraseSlotEntry,
+  togglePhraseSlotEntry,
 } from '../../lib/phraseSlotRegister.js';
+import ConsistencyRegisterField from '../consistency/ConsistencyRegisterField.jsx';
+import ConsistencyHintExample from '../consistency/ConsistencyHintExample.jsx';
+import ConsistencyUnifySection from '../consistency/ConsistencyUnifySection.jsx';
 import RegisteredList from '../consistency/RegisteredList.jsx';
+import {
+  CONSISTENCY_LITERAL_INPUT_PLACEHOLDER,
+  CONSISTENCY_PHRASE_SLOT_INPUT_PLACEHOLDER,
+} from '../consistency/constants.js';
 
 /**
- * @param {{
- *   title: string,
- *   meta?: string,
- *   entries: { tailWord: string, displayLabel?: string }[],
- *   customRules: import('../../lib/ruleTypes.js').Rule[],
- *   isEnabled: (
- *     rules: import('../../lib/ruleTypes.js').Rule[],
- *     row: { tailWord: string, displayLabel?: string },
- *   ) => boolean,
- *   onToggle: (
- *     row: { tailWord: string, displayLabel?: string },
- *     enabled: boolean,
- *   ) => void,
- *   criteriaSaving?: boolean,
- * }} props
- */
-function ConsistencyCriteriaGroup({
-  title,
-  meta,
-  entries,
-  customRules,
-  isEnabled,
-  onToggle,
-  criteriaSaving = false,
-}) {
-  return (
-    <div className="project-hub-settings__consistency-group">
-      <h4 className="project-hub-settings__consistency-group-title">
-        {title}
-        {meta ? (
-          <span className="project-hub-settings__consistency-group-meta">
-            {meta}
-          </span>
-        ) : null}
-      </h4>
-      {entries.length > 0 ? (
-        <RegisteredList
-          entries={entries}
-          customRules={customRules}
-          isEnabled={isEnabled}
-          onToggle={onToggle}
-          variant="auxiliary-grid"
-          disabled={criteriaSaving}
-        />
-      ) : (
-        <p className="project-hub-settings__criteria-empty project-hub-settings__criteria-empty--inline">
-          등록된 항목 없음
-        </p>
-      )}
-    </div>
-  );
-}
-
-/**
- * 표기 통일 — 검수 화면과 동일한 3구역(여러 개 찾기·통일형·공통 문자열) 토글.
+ * 마이페이지 표기 통일 — 검수 화면과 동일한 등록·토글 UI (여러 개 찾기·통일형·공통 문자열).
  *
  * @param {{
- *   count?: number,
  *   customRules: import('../../lib/ruleTypes.js').Rule[],
  *   criteriaSaving?: boolean,
- *   onToggle: (
- *     row: { tailWord: string, displayLabel?: string },
- *     enabled: boolean,
- *   ) => void,
- *   onStartWork?: () => void,
+ *   applyCustomRules: (rules: import('../../lib/ruleTypes.js').Rule[]) => boolean,
  * }} props
  */
 export default function ProjectHubCriteriaConsistencySection({
-  count = 0,
   customRules,
   criteriaSaving = false,
-  onToggle,
-  onStartWork,
+  applyCustomRules,
 }) {
+  const [literalInput, setLiteralInput] = useState('');
+  const [slotInput, setSlotInput] = useState('');
+
   const literalEntries = useMemo(
     () => listConsistencyLiteralEntries(customRules),
     [customRules],
   );
-  const unifyEntries = useMemo(
-    () => listConsistencyUnifyEntries(customRules),
-    [customRules],
-  );
-  const phraseSlotEntries = useMemo(
+  const slotEntries = useMemo(
     () => listPhraseSlotEntries(customRules),
     [customRules],
   );
+  const phraseSlotRegisteredCount = useMemo(
+    () => countPhraseSlotRegisteredEntries(customRules),
+    [customRules],
+  );
+  const phraseSlotRegisterFull =
+    phraseSlotRegisteredCount >= MAX_PHRASE_SLOT_REGISTERED_ENTRIES;
 
-  const hasAnyEntry =
-    literalEntries.length > 0 ||
-    unifyEntries.length > 0 ||
-    phraseSlotEntries.length > 0;
+  function assertSlots(toAdd) {
+    return applyCustomRules([...customRules, ...toAdd]);
+  }
+
+  function registerLiteral() {
+    const input = literalInput.trim() || CONSISTENCY_LITERAL_INPUT_PLACEHOLDER;
+    if (registerConsistencyLiteralBatch(input, customRules, applyCustomRules)) {
+      setLiteralInput('');
+    }
+  }
+
+  function registerSlot() {
+    const input = slotInput.trim() || CONSISTENCY_PHRASE_SLOT_INPUT_PLACEHOLDER;
+    const variants = parsePhraseSlotInput(input);
+    if (!variants.length) {
+      alert('패턴을 입력하세요. (예: @시대)');
+      return;
+    }
+    if (variants.length > 1) {
+      alert('공통 문자열 찾기는 1항목만 등록할 수 있습니다.');
+      return;
+    }
+    if (phraseSlotRegisterFull) {
+      alert(
+        phraseSlotRegistrationBlockedMessage(phraseSlotRegisteredCount, 1),
+      );
+      return;
+    }
+    const raw = planConsistencyEntries(variants)[0];
+    if (!raw || !isPhraseSlotPattern(raw)) {
+      alert(`「${variants[0]}」에는 @가 필요합니다. (예: @시대)`);
+      return;
+    }
+    const batch = buildRulesForPhraseSlot(customRules, raw);
+    if (!batch.length) {
+      alert('입력한 패턴은 이미 등록되어 있습니다.');
+      return;
+    }
+    if (!assertSlots(batch)) return;
+    setSlotInput('');
+  }
 
   return (
     <div className="project-hub-settings__criteria project-hub-settings__criteria--single">
-      <section
-        className="project-hub-settings__criteria-section project-hub-settings__criteria-section--consistency"
-        aria-label="표기 통일"
-      >
-        <div className="project-hub-settings__criteria-head">
-          <h3 className="project-hub-settings__criteria-title">표기 통일</h3>
-          <span className="project-hub-settings__criteria-count">{count}</span>
-        </div>
+      <div className="consistency-embed project-hub-settings__consistency-editor">
+        <section className="consistency-unified-box" aria-label="표기 통일">
+          <div className="consistency-subsection consistency-subsection--first">
+            <p className="printed-page-setup__title consistency-panel-section-title panel-criteria-heading">
+              {LITERAL_FIND_FEATURE_LABEL}
+              <span className="panel-criteria-heading-meta">
+                (1회 5항목까지 가능, 영문 대소문자 지원)
+              </span>
+            </p>
+            <p className="hint consistency-hint-block">
+              여러 항목은 사이에 &apos;,&apos;를 넣어 한 번에 입력하고 찾아 볼 수
+              있습니다
+              <br />
+              <ConsistencyHintExample>
+                &apos;마한, 진한, 변한&apos; 입력 → 3항목 한 번에 찾기
+              </ConsistencyHintExample>
+            </p>
+            <ConsistencyRegisterField
+              value={literalInput}
+              onChange={setLiteralInput}
+              onRegister={registerLiteral}
+              placeholder={CONSISTENCY_LITERAL_INPUT_PLACEHOLDER}
+              ariaLabel={LITERAL_FIND_FEATURE_LABEL}
+              registerDisabled={criteriaSaving}
+            />
+            <RegisteredList
+              entries={literalEntries}
+              customRules={customRules}
+              isEnabled={(rules, row) =>
+                isConsistencyEntryEnabled(rules, row.tailWord)
+              }
+              onToggle={(row, on) =>
+                applyCustomRules(
+                  toggleConsistencyEntry(customRules, row.tailWord, on),
+                )
+              }
+              onRemove={(tw) =>
+                applyCustomRules(removeConsistencyEntry(customRules, tw))
+              }
+              disabled={criteriaSaving}
+            />
+          </div>
 
-        <div className="project-hub-settings__consistency-groups">
-          <ConsistencyCriteriaGroup
-            title={LITERAL_FIND_FEATURE_LABEL}
-            meta={`(최대 ${MAX_CONSISTENCY_CRITERIA_SLOTS}항목)`}
-            entries={literalEntries}
+          <ConsistencyUnifySection
             customRules={customRules}
-            isEnabled={(rules, row) =>
-              isConsistencyEntryEnabled(rules, row.tailWord)
-            }
-            onToggle={onToggle}
-            criteriaSaving={criteriaSaving}
+            onApplyRules={applyCustomRules}
           />
-          <ConsistencyCriteriaGroup
-            title="통일형 만들기"
-            meta={`(최대 ${MAX_CONSISTENCY_UNIFY_SLOTS}항목)`}
-            entries={unifyEntries}
-            customRules={customRules}
-            isEnabled={(rules, row) =>
-              isConsistencyEntryEnabled(rules, row.tailWord)
-            }
-            onToggle={onToggle}
-            criteriaSaving={criteriaSaving}
-          />
-          <ConsistencyCriteriaGroup
-            title="공통 문자열 찾기"
-            meta={`(최대 ${MAX_PHRASE_SLOT_REGISTERED_ENTRIES}항목)`}
-            entries={phraseSlotEntries}
-            customRules={customRules}
-            isEnabled={(rules, row) =>
-              isPhraseSlotEntryEnabled(rules, row.tailWord)
-            }
-            onToggle={onToggle}
-            criteriaSaving={criteriaSaving}
-          />
-        </div>
 
-        {!hasAnyEntry ? (
-          <button
-            type="button"
-            className="sheet-card__btn sheet-card__btn--secondary project-hub-settings__criteria-link"
-            onClick={onStartWork}
-          >
-            검수 화면에서 추가
-          </button>
-        ) : null}
-      </section>
+          <div className="consistency-subsection">
+            <p className="printed-page-setup__title consistency-subsection-title panel-criteria-heading">
+              공통 문자열 찾기
+              <span className="panel-criteria-heading-meta">(1항목)</span>
+            </p>
+            <p className="hint consistency-hint-block">
+              @을 포함한 항목을 모두 찾습니다
+              <br />
+              <ConsistencyHintExample>
+                &apos;@시대&apos; 입력 → &apos;조선시대, 고려시대, 신라시대⋯&apos;
+              </ConsistencyHintExample>
+            </p>
+            <ConsistencyRegisterField
+              value={slotInput}
+              onChange={setSlotInput}
+              onRegister={registerSlot}
+              placeholder={CONSISTENCY_PHRASE_SLOT_INPUT_PLACEHOLDER}
+              ariaLabel="공통 문자열 찾기(1항목)"
+              inputClassName="mono"
+              registerDisabled={phraseSlotRegisterFull || criteriaSaving}
+            />
+            <RegisteredList
+              entries={slotEntries}
+              customRules={customRules}
+              isEnabled={(rules, row) =>
+                isPhraseSlotEntryEnabled(rules, row.tailWord)
+              }
+              onToggle={(row, on) =>
+                applyCustomRules(
+                  togglePhraseSlotEntry(customRules, row.tailWord, on),
+                )
+              }
+              onRemove={(tw) =>
+                applyCustomRules(removePhraseSlotEntry(customRules, tw))
+              }
+              disabled={criteriaSaving}
+            />
+          </div>
+        </section>
+      </div>
     </div>
   );
 }

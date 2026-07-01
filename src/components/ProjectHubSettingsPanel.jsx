@@ -1,11 +1,10 @@
-import { useEffect, useId, useMemo, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import {
   MAX_PROJECT_FORMAT_LABEL_LENGTH,
   MAX_PROJECT_PROOF_REVISION_LENGTH,
   normalizeProjectMemo,
   normalizeProjectTags,
 } from '../lib/projectMeta.js';
-import { buildProjectCardPillarPreviews } from '../presentation/projectCardViewModel.js';
 import ProjectHubCriteriaPanel from './projectHub/ProjectHubCriteriaPanel.jsx';
 import './project-hub-settings.css';
 
@@ -109,20 +108,6 @@ export default function ProjectHubSettingsPanel({
     });
   }
 
-  const pillarRows = useMemo(
-    () => buildProjectCardPillarPreviews(card),
-    [card],
-  );
-
-  const pillarCountByKey = useMemo(() => {
-    /** @type {Record<string, number>} */
-    const counts = {};
-    for (const row of pillarRows) {
-      counts[row.key] = row.count;
-    }
-    return counts;
-  }, [pillarRows]);
-
   const showCriteriaPanel =
     CRITERIA_SECTIONS.has(activeSection) && ruleSet && onCriteriaChange;
 
@@ -134,28 +119,30 @@ export default function ProjectHubSettingsPanel({
       <div className="project-hub-settings__layout">
         <nav className="project-hub-settings__nav" aria-label="설정 구역">
           <ul className="project-hub-settings__nav-list">
-            {NAV_ITEMS.map((item) => (
-              <li key={item.id}>
-                <button
-                  type="button"
-                  className={`project-hub-settings__nav-btn${
-                    activeSection === item.id
-                      ? ' project-hub-settings__nav-btn--active'
-                      : ''
-                  }`}
-                  onClick={() => setActiveSection(item.id)}
-                >
-                  <span className="project-hub-settings__nav-btn-label">
+            {NAV_ITEMS.map((item) => {
+              const isActive = activeSection === item.id;
+              const pillarKey =
+                'pillarKey' in item ? item.pillarKey : undefined;
+              return (
+                <li key={item.id}>
+                  <button
+                    type="button"
+                    className={[
+                      'project-hub-settings__nav-btn',
+                      isActive ? 'project-hub-settings__nav-btn--active' : '',
+                      pillarKey
+                        ? `project-hub-settings__nav-btn--${pillarKey}`
+                        : '',
+                    ]
+                      .filter(Boolean)
+                      .join(' ')}
+                    onClick={() => setActiveSection(item.id)}
+                  >
                     {item.label}
-                  </span>
-                  {'pillarKey' in item && item.pillarKey ? (
-                    <span className="project-hub-settings__nav-btn-count">
-                      {pillarCountByKey[item.pillarKey] ?? 0}
-                    </span>
-                  ) : null}
-                </button>
-              </li>
-            ))}
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         </nav>
 
@@ -299,7 +286,6 @@ export default function ProjectHubSettingsPanel({
               <div className="project-hub-settings__card project-hub-settings__card--criteria">
                 <ProjectHubCriteriaPanel
                   section={activeSection}
-                  count={pillarCountByKey[activeSection] ?? 0}
                   ruleSet={ruleSet}
                   criteriaSaving={criteriaSaving}
                   onCriteriaChange={onCriteriaChange}
