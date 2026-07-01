@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  applyCriteriaPresetQuota,
   dedupeSavedRuleSetsByName,
   mergeLocalRuleSetSources,
   mergeRuleSetsOnLogin,
@@ -138,6 +139,24 @@ describe('dedupeSavedRuleSetsByName', () => {
       set('draft', { name: '' }),
     ];
     const next = dedupeSavedRuleSetsByName(sets);
+    expect(next.map((s) => s.id)).toEqual(['new', 'draft']);
+  });
+});
+
+describe('applyCriteriaPresetQuota', () => {
+  it('비관리자 — 저장 프리셋은 최신 1개만 남긴다', () => {
+    const sets = [
+      set('old', {
+        name: 'A',
+        savedAt: '2026-06-22T00:00:00.000Z',
+      }),
+      set('new', {
+        name: 'B',
+        savedAt: '2026-06-23T00:00:00.000Z',
+      }),
+      set('draft', { name: '' }),
+    ];
+    const next = applyCriteriaPresetQuota(sets, 'user', '');
     expect(next.map((s) => s.id)).toEqual(['new', 'draft']);
   });
 });

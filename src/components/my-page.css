@@ -354,6 +354,19 @@
   background: var(--color-surface-overlay);
 }
 
+.mypage__project-slot--locked {
+  border-style: solid;
+  border-color: var(--sheet-border, var(--color-border-subtle));
+  background: transparent;
+  opacity: 0.82;
+  cursor: default;
+  user-select: none;
+}
+
+.mypage__project-slot--locked .mypage__project-slot-label {
+  color: var(--color-text-muted);
+}
+
 .mypage__project-slot-label {
   margin: 0;
   font-size: 0.88rem;

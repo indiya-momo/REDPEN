@@ -3,7 +3,6 @@ import { LEGACY_DEFAULT_CRITERIA_HINT } from '../lib/criteriaName.js';
 import {
   countSavedCriteriaPresets,
   CRITERIA_PRESET_LIMIT_MESSAGE,
-  enforceMaxCriteriaPresets,
   isCriteriaPresetLimitExempt,
   MAX_CRITERIA_PRESETS,
 } from '../lib/criteriaPresetLimit.js';
@@ -20,7 +19,7 @@ import {
   resolveHydratedActiveSetId,
   saveRuleSetsCloud,
 } from '../lib/ruleSetsCloud.js';
-import { mergeRuleSetsOnLogin, dedupeSavedRuleSetsByName } from '../lib/ruleSetsMerge.js';
+import { mergeRuleSetsOnLogin, applyCriteriaPresetQuota } from '../lib/ruleSetsMerge.js';
 import { mergeProjectContext } from '../lib/projectMeta.js';
 import {
   planDeleteProject,
@@ -126,27 +125,36 @@ export function useMyPageProjects(uid = '', email = '') {
         const localSets = normalizeLoadedSets(loadRuleSets(trimmedUid));
         let sets = localSets;
         let activeId = loadActiveSetId(trimmedUid);
+        let cloudActiveId = null;
 
         if (trimmedUid && isRuleSetsCloudEnabled()) {
           try {
             const cloud = await loadRuleSetsCloud(trimmedUid);
             if (cloud?.ruleSets?.length) {
-              const merged = mergeRuleSetsOnLogin(localSets, cloud.ruleSets);
-              sets = dedupeSavedRuleSetsByName(
-                enforceMaxCriteriaPresets(
-                  normalizeLoadedSets(merged),
-                  trimmedUid,
-                  email,
-                ),
+              sets = normalizeLoadedSets(
+                mergeRuleSetsOnLogin(localSets, cloud.ruleSets),
               );
-              activeId = resolveHydratedActiveSetId(
-                sets,
-                activeId,
-                cloud.activeSetId,
-              );
+              cloudActiveId = cloud.activeSetId;
             }
           } catch {
             // 로컬 기준 유지
+          }
+        }
+
+        const beforeIds = sets.map((set) => set.id).join(',');
+        sets = applyCriteriaPresetQuota(sets, trimmedUid, email);
+        activeId = resolveHydratedActiveSetId(sets, activeId, cloudActiveId);
+        const quotaTrimmed = beforeIds !== sets.map((set) => set.id).join(',');
+
+        if (quotaTrimmed) {
+          saveRuleSets(sets, trimmedUid);
+          if (activeId) saveActiveSetId(activeId, trimmedUid);
+          if (trimmedUid && isRuleSetsCloudEnabled()) {
+            try {
+              await saveRuleSetsCloud(trimmedUid, sets, activeId);
+            } catch (e) {
+              console.warn('프로젝트 슬롯 상한 적용 후 클라우드 저장 실패', e);
+            }
           }
         }
 
