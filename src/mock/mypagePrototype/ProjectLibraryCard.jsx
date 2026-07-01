@@ -1,9 +1,9 @@
 import { useCallback, useId, useMemo, useState } from 'react';
 import {
   buildProjectCardPillarPreviews,
+  buildProjectCardTabLabels,
   formatProjectCardCompactDateLine,
   formatProjectCardMetaLine,
-  formatProjectCardScheduleLines,
 } from '../../presentation/projectCardViewModel.js';
 
 /**
@@ -55,13 +55,10 @@ export default function ProjectLibraryCard({
     [card],
   );
 
-  const scheduleLines = formatProjectCardScheduleLines(card);
-
-  const tabLabels = useMemo(() => {
-    if (card.tags.length > 0) return card.tags;
-    if (card.savedDate) return [card.savedDate];
-    return ['프로젝트'];
-  }, [card.tags, card.savedDate]);
+  const tabLabels = useMemo(
+    () => buildProjectCardTabLabels(card),
+    [card],
+  );
 
   const showWorkButton = !compact && (showStartWork || !readOnly);
   const compactDateLine = formatProjectCardCompactDateLine(card);
@@ -164,57 +161,25 @@ export default function ProjectLibraryCard({
             </button>
           )}
 
-          {scheduleLines.length > 0 ? (
-            <div className="sheet-card__schedule">
-              {scheduleLines.map((line) => (
-                <span key={line} className="sheet-card__schedule-line">
-                  {line}
-                </span>
-              ))}
-            </div>
-          ) : null}
         </div>
 
         <p className="sheet-card__meta">{formatProjectCardMetaLine(card)}</p>
-
-        <p className="sheet-card__headline">{card.headline}</p>
 
         <div className="sheet-card__sections" aria-label="표기 기준 구역">
           {pillarRows.map((section) => (
             <section
               key={section.key}
-              className={`sheet-card__section sheet-card__section--${section.key}`}
+              className={`sheet-card__section sheet-card__section--${section.key} sheet-card__section--summary`}
             >
-              <div className="sheet-card__section-head">
-                <span className="sheet-card__section-label">{section.label}</span>
-              </div>
-              <div className="sheet-card__section-row">
-                {section.chips.length > 0 ? (
-                  <div className="sheet-card__chips" aria-label={`${section.label} 미리보기`}>
-                    {section.chips.map((chip) => (
-                      <span
-                        key={chip.label}
-                        className={`sheet-card__chip${chip.active === false ? ' sheet-card__chip--off' : ''}`}
-                      >
-                        {chip.label}
-                      </span>
-                    ))}
-                    {section.hasMore ? (
-                      <span className="sheet-card__chip-more" aria-hidden>
-                        …
-                      </span>
-                    ) : null}
-                  </div>
-                ) : (
-                  <div className="sheet-card__chips sheet-card__chips--empty" aria-hidden />
-                )}
+              <p className="sheet-card__pillar-summary">
+                <span className="sheet-card__section-label">{section.label}</span>{' '}
                 <span
                   className="sheet-card__section-count"
                   aria-label={`${section.label} ${section.count}건`}
                 >
                   {section.count}
                 </span>
-              </div>
+              </p>
             </section>
           ))}
         </div>

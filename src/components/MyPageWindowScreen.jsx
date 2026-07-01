@@ -37,9 +37,13 @@ import {
   saveRuleSets,
 } from '../lib/ruleSetsStorage.js';
 import { buildProjectCardViewModelFromRuleSet } from '../presentation/ruleSetProjectCard.js';
-import { planMyPageProjectSlots } from '../lib/mypageProjectDisplay.js';
+import {
+  buildMockLibrarySlots,
+  MOCK_LIBRARY_SLOT_MAX,
+} from '../lib/mypageProjectDisplay.js';
 import ProjectLibraryCard from '../mock/mypagePrototype/ProjectLibraryCard.jsx';
-import ProjectHubSettingsPanel from './ProjectHubSettingsPanel.jsx';
+import ProjectLibraryEmptySlot from '../mock/mypagePrototype/ProjectLibraryEmptySlot.jsx';
+import SharePreviewModal from '../mock/mypagePrototype/SharePreviewModal.jsx';
 import {
   buildProjectTagFilterOptions,
   filterProjectsForLibrary,
@@ -74,19 +78,19 @@ const MEMBER_BENEFIT_TIERS = [
   {
     name: '오픈베타 테스터',
     description:
-      '오픈베타 기간 프로젝트 슬롯 [1개] 매일 맞춤법 [1회] + 표기 통일 [1회] 제공',
+      '오픈베타 기간 프로젝트 슬롯 [3개] 매일 맞춤법 [1회] + 표기 통일 [1회] 제공',
     tabLimit: 1,
   },
   {
     name: '비밀 연구원',
     description:
-      '오픈베타 기간 프로젝트 슬롯 [1개] 매일 맞춤법 [2회] + 표기 통일 [2회] 제공',
+      '오픈베타 기간 프로젝트 슬롯 [3개] 매일 맞춤법 [2회] + 표기 통일 [2회] 제공',
     tabLimit: 2,
   },
   {
     name: '수석 검증관',
     description:
-      '오픈베타 기간 프로젝트 슬롯 [1개] 매일 맞춤법 [3회] + 표기 통일 [3회] 제공',
+      '오픈베타 기간 프로젝트 슬롯 [3개] 매일 맞춤법 [3회] + 표기 통일 [3회] 제공',
     tabLimit: 3,
   },
 ];
@@ -205,69 +209,95 @@ function resolveMemberBenefitTier(quota, uid = '') {
 }
 
 /**
- * @param {{ quota: ReturnType<typeof useBetaDailyQuota>, authUid?: string }} props
+ * @param {number} remaining
+ * @param {number} tabLimit
  */
-function MemberBenefitTierBanner({ quota, authUid = '' }) {
-  if (quota.loading) {
-    return (
-      <p className="mypage__member-tier mypage__member-tier--loading">
-        오늘 남은 검수 횟수를 불러오는 중…
-      </p>
-    );
-  }
-
-  const tier = resolveMemberBenefitTier(quota, authUid);
-
-  return (
-    <p className="mypage__member-tier" aria-label={`${tier.name}. ${tier.description}`}>
-      <strong className="mypage__member-tier-name">{tier.name}</strong>
-      <span className="mypage__member-tier-sep" aria-hidden>
-        {' '}
-        :{' '}
-      </span>
-      <span className="mypage__member-tier-desc">{tier.description}</span>
-    </p>
-  );
+function formatQuotaUsageLabel(remaining, tabLimit) {
+  const left =
+    remaining <= 0 ? '오늘 한도 소진' : `${remaining}회 남음`;
+  return `${left} / 일 ${tabLimit}회`;
 }
 
 /**
- * @param {{ quota: ReturnType<typeof useBetaDailyQuota> }} props
+ * @param {{ quota: ReturnType<typeof useBetaDailyQuota>, authUid?: string, loginAtMs?: number | null }} props
  */
-function MyBenefitsSection({ quota }) {
+function MemberOverviewCard({ quota, authUid = '', loginAtMs = null }) {
+  const tier = useMemo(
+    () => (quota.loading ? null : resolveMemberBenefitTier(quota, authUid)),
+    [quota, authUid],
+  );
+
+  const recentLine = useMemo(() => {
+    const [latest] = getRecentUsageEntries(loginAtMs, 1);
+    if (!latest) return '최근 이용 내역이 없습니다.';
+    return `${formatMypageUsageDate(latest.atMs)} ${latest.label}`;
+  }, [loginAtMs]);
+
   return (
     <section
-      className="mypage__card mypage__benefits-card"
+      className="mypage__card mypage__member-overview"
       aria-labelledby="mypage-benefits-title"
     >
-      <h2 id="mypage-benefits-title" className="mypage__card-title">
-        회원 정보
-      </h2>
-      {quota.loading ? null : !quota.enforced ? (
+      <div className="mypage__card-head mypage__member-overview-head">
+        <h2 id="mypage-benefits-title" className="mypage__card-title">
+          회원 정보
+        </h2>
+        {quota.loading ? (
+          <span className="mypage__tier-badge mypage__tier-badge--loading">
+            불러오는 중…
+          </span>
+        ) : tier ? (
+          <span
+            className="mypage__tier-badge"
+            title={tier.description}
+            aria-label={`회원 등급: ${tier.name}. ${tier.description}`}
+          >
+            <span className="mypage__tier-badge__icon" aria-hidden>
+              ★
+            </span>
+            {tier.name}
+          </span>
+        ) : null}
+      </div>
+
+      {quota.loading ? (
+        <p className="mypage__benefits-note">회원 등급과 검수 한도를 불러오는 중…</p>
+      ) : !quota.enforced ? (
         <p className="mypage__benefits-note">
           개발 환경 — 검수 한도가 적용되지 않습니다.
         </p>
       ) : (
-        <dl className="mypage__benefits-grid">
-          <div className="mypage__benefits-row">
+        <dl className="mypage__quota-stats" aria-label="오늘 검수 한도">
+          <div
+            className={`mypage__quota-stat${quota.spellingRemaining <= 0 ? ' mypage__quota-stat--depleted' : ''}`}
+          >
             <dt>맞춤법</dt>
-            <dd>
-              <strong>{quota.spellingRemaining}회</strong> 남음
-              <span className="mypage__benefits-used">
-                (사용 {quota.spellingCount}/{quota.tabLimit})
-              </span>
+            <dd className="mypage__quota-usage">
+              {formatQuotaUsageLabel(
+                quota.spellingRemaining,
+                quota.tabLimit,
+              )}
             </dd>
           </div>
-          <div className="mypage__benefits-row">
+          <div
+            className={`mypage__quota-stat${quota.consistencyRemaining <= 0 ? ' mypage__quota-stat--depleted' : ''}`}
+          >
             <dt>표기 통일</dt>
-            <dd>
-              <strong>{quota.consistencyRemaining}회</strong> 남음
-              <span className="mypage__benefits-used">
-                (사용 {quota.consistencyCount}/{quota.tabLimit})
-              </span>
+            <dd className="mypage__quota-usage">
+              {formatQuotaUsageLabel(
+                quota.consistencyRemaining,
+                quota.tabLimit,
+              )}
             </dd>
           </div>
         </dl>
       )}
+
+      {!quota.loading ? (
+        <p className="mypage__benefits-recent mypage__benefits-recent--sub">
+          {recentLine}
+        </p>
+      ) : null}
     </section>
   );
 }
@@ -350,8 +380,6 @@ function OverviewBadgePanel({ badges, earnedCount, totalLabel, onOpen }) {
  * @param {{
  *   uid: string,
  *   email: string,
- *   showSettingsPanel?: boolean,
- *   onFolderActivate?: (cardId: string) => void,
  *   entryCardId?: string | null,
  *   onEntryApplied?: () => void,
  * }} props
@@ -359,8 +387,6 @@ function OverviewBadgePanel({ badges, earnedCount, totalLabel, onOpen }) {
 function ProjectHubSection({
   uid,
   email,
-  showSettingsPanel = true,
-  onFolderActivate,
   entryCardId = null,
   onEntryApplied,
 }) {
@@ -368,41 +394,30 @@ function ProjectHubSection({
     projects,
     activeSetId,
     loading,
-    savedCount,
-    maxSlots,
-    exempt,
     selectProject,
     renameProject,
     duplicateProject,
     updateProjectMeta,
-    atSlotLimit,
   } = useMyPageProjects(uid, email);
 
-  const { visibleProjects, actionableEmptySlotCount, lockedSlotCount } =
-    useMemo(
-      () =>
-        planMyPageProjectSlots(projects, {
-          exempt,
-          savedCount,
-          maxSlots: maxSlots ?? undefined,
-        }),
-      [projects, exempt, savedCount, maxSlots],
-    );
-
   const [tagFilter, setTagFilter] = useState(/** @type {string | null} */ (null));
-  const [selectedCardId, setSelectedCardId] = useState(
+  const [sharePreviewCardId, setSharePreviewCardId] = useState(
     /** @type {string | null} */ (null),
   );
-  const [metaSavePending, setMetaSavePending] = useState(false);
 
   const cards = useMemo(
     () =>
-      visibleProjects.map((set) =>
-        buildProjectCardViewModelFromRuleSet(set, {
-          isActive: set.id === activeSetId,
-        }),
-      ),
-    [visibleProjects, activeSetId],
+      [...projects]
+        .sort(
+          (a, b) =>
+            Date.parse(b.savedAt ?? '') - Date.parse(a.savedAt ?? ''),
+        )
+        .map((set) =>
+          buildProjectCardViewModelFromRuleSet(set, {
+            isActive: set.id === activeSetId,
+          }),
+        ),
+    [projects, activeSetId],
   );
 
   const tagFilterOptions = useMemo(
@@ -415,6 +430,16 @@ function ProjectHubSection({
     [cards, tagFilter],
   );
 
+  const sharePreviewCard = useMemo(
+    () => cards.find((card) => card.id === sharePreviewCardId) ?? null,
+    [cards, sharePreviewCardId],
+  );
+
+  const librarySlots = useMemo(
+    () => buildMockLibrarySlots(cards),
+    [cards],
+  );
+
   useEffect(() => {
     if (!tagFilter) return;
     const stillValid = tagFilterOptions.some((option) => option.id === tagFilter);
@@ -422,76 +447,9 @@ function ProjectHubSection({
   }, [tagFilter, tagFilterOptions]);
 
   useEffect(() => {
-    if (!showSettingsPanel || loading) return;
-
-    if (filteredCards.length === 0) {
-      setSelectedCardId(null);
-      return;
-    }
-
-    if (entryCardId) {
-      if (filteredCards.some((card) => card.id === entryCardId)) {
-        setSelectedCardId(entryCardId);
-      }
-      onEntryApplied?.();
-      return;
-    }
-
-    if (
-      selectedCardId &&
-      filteredCards.some((card) => card.id === selectedCardId)
-    ) {
-      return;
-    }
-
-    const preferredId =
-      activeSetId && filteredCards.some((card) => card.id === activeSetId)
-        ? activeSetId
-        : filteredCards[0].id;
-    setSelectedCardId(preferredId);
-  }, [
-    showSettingsPanel,
-    loading,
-    filteredCards,
-    activeSetId,
-    selectedCardId,
-    entryCardId,
-    onEntryApplied,
-  ]);
-
-  const handleFolderSelect = useCallback(
-    (cardId) => {
-      if (onFolderActivate) {
-        onFolderActivate(cardId);
-        return;
-      }
-      setSelectedCardId(cardId);
-    },
-    [onFolderActivate],
-  );
-
-  const selectedCard = useMemo(
-    () => cards.find((card) => card.id === selectedCardId) ?? null,
-    [cards, selectedCardId],
-  );
-
-  const selectedRuleSet = useMemo(
-    () => visibleProjects.find((set) => set.id === selectedCardId) ?? null,
-    [visibleProjects, selectedCardId],
-  );
-
-  const handleSaveMeta = useCallback(
-    async (payload) => {
-      if (!selectedCard) return;
-      setMetaSavePending(true);
-      try {
-        await updateProjectMeta(selectedCard.id, payload);
-      } finally {
-        setMetaSavePending(false);
-      }
-    },
-    [selectedCard, updateProjectMeta],
-  );
+    if (!entryCardId) return;
+    onEntryApplied?.();
+  }, [entryCardId, onEntryApplied]);
 
   const handleRename = useCallback(
     async (cardId, title) => {
@@ -505,18 +463,19 @@ function ProjectHubSection({
 
   const handleDuplicate = useCallback(
     async (cardId) => {
-      if (atSlotLimit) {
-        window.alert(
-          '프로젝트 슬롯이 가득 찼습니다. 추가 슬롯은 회원 혜택으로 제공됩니다. (준비 중)',
-        );
-        return;
-      }
       const result = await duplicateProject(cardId);
       if (!result.ok && result.message) {
         window.alert(result.message);
       }
     },
-    [atSlotLimit, duplicateProject],
+    [duplicateProject],
+  );
+
+  const handleUpdateMeta = useCallback(
+    async (cardId, patch) => {
+      await updateProjectMeta(cardId, patch);
+    },
+    [updateProjectMeta],
   );
 
   const handleStartWork = useCallback(
@@ -524,23 +483,17 @@ function ProjectHubSection({
       const result = await selectProject(cardId);
       if (!result.ok) {
         window.alert('프로젝트 선택을 저장하지 못했습니다. 다시 시도해 주세요.');
+        return;
       }
+      returnToWorkspace();
     },
     [selectProject],
   );
 
-  const handleSharePreview = useCallback(() => {
-    window.alert('공유 미리보기는 준비 중입니다.');
-  }, []);
-
-  const slotLabel = exempt
-    ? `${savedCount}개`
-    : `${savedCount}/${maxSlots}`;
-
   return (
-    <div className="mypage__projects-layout">
+    <>
       <section
-        className="mypage__card mypage__project-hub mypage__project-hub--folders"
+        className="mypage__card mypage__project-hub"
         aria-labelledby="mypage-project-hub-title"
       >
         <div className="mypage__project-hub-head">
@@ -551,8 +504,8 @@ function ProjectHubSection({
               </h1>
             </div>
           </div>
-          <p className="mypage__project-slot-gauge" aria-live="polite">
-            슬롯 <strong>{slotLabel}</strong>
+          <p className="mypage__project-slot-gauge">
+            슬롯 <strong>{cards.length}/{MOCK_LIBRARY_SLOT_MAX}</strong>
           </p>
         </div>
 
@@ -579,96 +532,86 @@ function ProjectHubSection({
               ))}
             </div>
 
-            <div className="mypage-proto__grid mypage-proto__grid--quad">
-              {filteredCards.map((card) => (
-                <ProjectLibraryCard
-                  key={card.id}
-                  card={card}
-                  compact
-                  selected={card.id === selectedCardId}
-                  onSelect={() => handleFolderSelect(card.id)}
-                />
-              ))}
-
-              {tagFilter && filteredCards.length === 0 ? (
-                <p className="mypage__project-filter-empty" role="status">
-                  선택한 태그에 해당하는 프로젝트가 없습니다.
-                </p>
-              ) : null}
-
-              {!tagFilter ? (
+            <div
+              className={`mypage-proto__grid${tagFilter ? '' : ' mypage-proto__grid--triple'}`}
+            >
+              {tagFilter ? (
                 <>
-                  {Array.from({ length: actionableEmptySlotCount }, (_, index) => (
-                    <div
-                      key={`empty-slot-${index}`}
-                      className="mypage__project-slot mypage__project-slot--empty mypage-proto__empty-slot"
-                    >
-                      <p className="mypage__project-slot-label">빈 슬롯</p>
-                      <p className="mypage__project-slot-desc">
-                        검수 화면에서 기준을 저장하면 여기에 표시됩니다.
-                      </p>
-                    </div>
+                  {filteredCards.map((card) => (
+                    <ProjectLibraryCard
+                      key={card.id}
+                      card={card}
+                      onRename={(title) => void handleRename(card.id, title)}
+                      onUpdateMeta={(patch) =>
+                        void handleUpdateMeta(card.id, patch)
+                      }
+                      onStartWork={() => void handleStartWork(card.id)}
+                      onDuplicate={() => void handleDuplicate(card.id)}
+                      onSharePreview={() => setSharePreviewCardId(card.id)}
+                    />
                   ))}
-                  {Array.from({ length: lockedSlotCount }, (_, index) => (
-                    <div
-                      key={`locked-slot-${index}`}
-                      className="mypage__project-slot mypage__project-slot--locked mypage-proto__slot-limit"
-                      aria-disabled="true"
-                    >
-                      <p className="mypage__project-slot-label">추가 슬롯</p>
-                      <p className="mypage__project-slot-desc">
-                        회원 혜택으로 프로젝트 슬롯을 늘릴 수 있습니다.
-                        (준비 중)
-                      </p>
-                    </div>
-                  ))}
+                  {filteredCards.length === 0 ? (
+                    <p className="mypage__project-filter-empty" role="status">
+                      선택한 태그에 해당하는 프로젝트가 없습니다.
+                    </p>
+                  ) : null}
                 </>
-              ) : null}
+              ) : (
+                librarySlots.map((card, index) =>
+                  card ? (
+                    <ProjectLibraryCard
+                      key={card.id}
+                      card={card}
+                      onRename={(title) => void handleRename(card.id, title)}
+                      onUpdateMeta={(patch) =>
+                        void handleUpdateMeta(card.id, patch)
+                      }
+                      onStartWork={() => void handleStartWork(card.id)}
+                      onDuplicate={() => void handleDuplicate(card.id)}
+                      onSharePreview={() => setSharePreviewCardId(card.id)}
+                    />
+                  ) : (
+                    <ProjectLibraryEmptySlot key={`library-empty-slot-${index}`} />
+                  ),
+                )
+              )}
             </div>
           </>
         )}
       </section>
 
-      {showSettingsPanel && !loading && selectedCard ? (
-        <ProjectHubSettingsPanel
-          card={selectedCard}
-          pdfFileName={selectedRuleSet?.projectContext?.pdfFileName}
-          pdfPageCount={selectedRuleSet?.projectContext?.pdfPageCount}
-          lastWorkedAt={selectedRuleSet?.projectContext?.lastWorkedAt}
-          saving={metaSavePending}
-          onSave={handleSaveMeta}
-          onStartWork={() => void handleStartWork(selectedCard.id)}
-          onDuplicate={() => void handleDuplicate(selectedCard.id)}
-          onSharePreview={handleSharePreview}
+      {sharePreviewCard ? (
+        <SharePreviewModal
+          card={sharePreviewCard}
+          onClose={() => setSharePreviewCardId(null)}
         />
       ) : null}
-    </div>
+    </>
   );
 }
 
 function MyPageOverviewSection({
   quota,
   authUid,
+  loginAtMs,
   badges,
   earnedCount,
   totalLabel,
   projectUid,
   projectEmail,
   onOpenBadges,
-  onOpenProjects,
 }) {
   return (
     <div className="mypage__overview">
-      <div className="mypage__member-head">
-        <MemberBenefitTierBanner quota={quota} authUid={authUid} />
-        <MyBenefitsSection quota={quota} />
-      </div>
+      <MemberOverviewCard
+        quota={quota}
+        authUid={authUid}
+        loginAtMs={loginAtMs}
+      />
       {isMyPageProjectHubEnabled() ? (
         <ProjectHubSection
           uid={projectUid}
           email={projectEmail}
-          showSettingsPanel={false}
-          onFolderActivate={(cardId) => onOpenProjects(cardId)}
         />
       ) : (
         <ProjectHubPlaceholderSection />
@@ -906,6 +849,14 @@ export default function MyPageWindowScreen({ authSession, authReady }) {
   );
   const quota = useBetaDailyQuota(authSession?.uid ?? '', quotaEmail);
 
+  const memberTier = useMemo(
+    () =>
+      quota.loading
+        ? null
+        : resolveMemberBenefitTier(quota, authSession?.uid ?? ''),
+    [quota, authSession?.uid],
+  );
+
   useEffect(() => {
     const uid = authSession?.uid?.trim();
     if (uid) clearRewardNotice(uid);
@@ -1007,7 +958,20 @@ export default function MyPageWindowScreen({ authSession, authReady }) {
         </header>
         <div className="mypage__user">
           <p className="mypage__user-name">
-            <span>{displayName} 님</span>
+            <span className="mypage__user-name-row">
+              <span>{displayName} 님</span>
+              {memberTier && !quota.loading ? (
+                <span
+                  className="mypage__tier-badge"
+                  title={memberTier.description}
+                >
+                  <span className="mypage__tier-badge__icon" aria-hidden>
+                    ★
+                  </span>
+                  {memberTier.name}
+                </span>
+              ) : null}
+            </span>
             {daysWithMomo != null ? (
               <span className="mypage__user-tenure">
                 모모와 함께한 {daysWithMomo}일
@@ -1056,16 +1020,13 @@ export default function MyPageWindowScreen({ authSession, authReady }) {
           <MyPageOverviewSection
             quota={quota}
             authUid={authSession.uid}
+            loginAtMs={loginAtMs}
             badges={badges}
             earnedCount={badgeStats.earnedCount}
             totalLabel={badgeStats.totalLabel}
             projectUid={authSession.uid}
             projectEmail={quotaEmail}
             onOpenBadges={() => setActiveNav('badges')}
-            onOpenProjects={(cardId) => {
-              setProjectsEntryCardId(cardId);
-              setActiveNav('projects');
-            }}
           />
         ) : resolvedNav === 'projects' ? (
           <ProjectHubPageSection

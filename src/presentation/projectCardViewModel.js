@@ -69,12 +69,21 @@ export function formatProjectCardTitleLine(card) {
   return `${tagPart}《${card.title}》 기준`;
 }
 
+/** @param {ProjectCardViewModel} card @returns {string} */
+export function formatProjectCardLastModifiedLabel(card) {
+  const date = card.lastWork?.date || card.savedDate || card.createdDate || '';
+  if (!date) return '프로젝트';
+  return `${date} 최종수정`;
+}
+
+/** @param {ProjectCardViewModel} card @returns {string[]} */
+export function buildProjectCardTabLabels(card) {
+  return [formatProjectCardLastModifiedLabel(card)];
+}
+
 /** @param {ProjectCardViewModel} card @returns {string[]} */
 export function formatProjectCardScheduleLines(card) {
   const lines = [];
-  if (card.createdDate) {
-    lines.push(`${card.createdDate} 생성`);
-  }
   if (card.lastWork?.date) {
     lines.push(`${card.lastWork.date} 작업`);
   }
@@ -103,7 +112,7 @@ export function formatProjectCardMetaLine(card) {
 
 const PILLAR_META = [
   { key: 'spelling', label: '맞춤법' },
-  { key: 'consistency', label: '일관성' },
+  { key: 'consistency', label: '표기 통일' },
   { key: 'auxiliary', label: '본용언(-아/어) + 보조용언' },
 ];
 

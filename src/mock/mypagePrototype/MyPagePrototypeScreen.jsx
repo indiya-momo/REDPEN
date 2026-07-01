@@ -6,7 +6,9 @@ import {
   filterProjectsForLibrary,
 } from '../../presentation/projectCardViewModel.js';
 import { MOCK_PROJECT_CARDS } from './mockProjectCards.js';
+import { MOCK_LIBRARY_SLOT_MAX, buildMockLibrarySlots } from '../../lib/mypageProjectDisplay.js';
 import ProjectLibraryCard from './ProjectLibraryCard.jsx';
+import ProjectLibraryEmptySlot from './ProjectLibraryEmptySlot.jsx';
 import SharePreviewModal from './SharePreviewModal.jsx';
 import WorkbenchBarMock from './WorkbenchBarMock.jsx';
 
@@ -50,6 +52,11 @@ export default function MyPagePrototypeScreen() {
       prev.map((c) => (c.id === id ? { ...c, ...patch } : c)),
     );
   }, []);
+
+  const librarySlots = useMemo(
+    () => buildMockLibrarySlots(cards),
+    [cards],
+  );
 
   const handleStartWork = useCallback((id) => {
     setActiveId(id);
@@ -103,7 +110,7 @@ export default function MyPagePrototypeScreen() {
               </h1>
             </div>
             <p className="mypage__project-slot-gauge">
-              슬롯 <strong>{cards.length}/3</strong>
+              슬롯 <strong>{cards.length}/{MOCK_LIBRARY_SLOT_MAX}</strong>
             </p>
           </div>
 
@@ -124,35 +131,41 @@ export default function MyPagePrototypeScreen() {
             ))}
           </div>
 
-          <div className="mypage-proto__grid">
-            {visibleCards.map((card) => (
-              <ProjectLibraryCard
-                key={card.id}
-                card={card}
-                onRename={(title) => updateCard(card.id, { title })}
-                onUpdateMeta={(patch) => updateCard(card.id, patch)}
-                onStartWork={() => handleStartWork(card.id)}
-                onDuplicate={() => {
-                  setCards((prev) => [...prev, duplicateCard(card, prev.length)]);
-                }}
-                onSharePreview={() => setSharePreviewId(card.id)}
-              />
-            ))}
-
-            {cards.length < 3 ? (
-              <div className="mypage__project-slot mypage-proto__empty-slot">
-                <p className="mypage__project-slot-label">빈 슬롯</p>
-                <p className="mypage__project-slot-desc">
-                  복제하거나 검수 화면에서 새 기준을 저장하면 채워집니다.
-                </p>
-              </div>
+          <div
+            className={`mypage-proto__grid${tagFilter ? '' : ' mypage-proto__grid--triple'}`}
+          >
+            {tagFilter ? (
+              visibleCards.map((card) => (
+                <ProjectLibraryCard
+                  key={card.id}
+                  card={card}
+                  onRename={(title) => updateCard(card.id, { title })}
+                  onUpdateMeta={(patch) => updateCard(card.id, patch)}
+                  onStartWork={() => handleStartWork(card.id)}
+                  onDuplicate={() => {
+                    setCards((prev) => [...prev, duplicateCard(card, prev.length)]);
+                  }}
+                  onSharePreview={() => setSharePreviewId(card.id)}
+                />
+              ))
             ) : (
-              <div className="mypage__project-slot mypage-proto__slot-limit">
-                <p className="mypage__project-slot-label">슬롯 가득 참</p>
-                <p className="mypage__project-slot-desc">
-                  Pro에서 슬롯을 늘릴 수 있습니다. (placeholder)
-                </p>
-              </div>
+              librarySlots.map((card, index) =>
+                card ? (
+                  <ProjectLibraryCard
+                    key={card.id}
+                    card={card}
+                    onRename={(title) => updateCard(card.id, { title })}
+                    onUpdateMeta={(patch) => updateCard(card.id, patch)}
+                    onStartWork={() => handleStartWork(card.id)}
+                    onDuplicate={() => {
+                      setCards((prev) => [...prev, duplicateCard(card, prev.length)]);
+                    }}
+                    onSharePreview={() => setSharePreviewId(card.id)}
+                  />
+                ) : (
+                  <ProjectLibraryEmptySlot key={`library-empty-slot-${index}`} />
+                ),
+              )
             )}
           </div>
         </section>
