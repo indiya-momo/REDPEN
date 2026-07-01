@@ -4,6 +4,7 @@ import {
   isPhraseSlotPattern,
   removePhraseSlotFind,
 } from './phraseSlotPattern.js';
+import { canAddPhraseSlotRegisteredEntries } from './consistencyRuleLimit.js';
 import { normalizeConsistencyVariant } from './compoundPairRegister.js';
 import { decodeSpacesVisible } from './spaceVisibleText.js';
 import { parseCommaList } from './matchFilters.js';
@@ -17,6 +18,7 @@ export { isPhraseSlotPattern };
 export function buildRulesForPhraseSlot(rules, pattern) {
   const t = normalizeConsistencyVariant(pattern);
   if (!isPhraseSlotPattern(t) || hasPhraseSlotFind(rules, t)) return [];
+  if (!canAddPhraseSlotRegisteredEntries(rules, 1)) return [];
   return buildPhraseSlotFindRules(t);
 }
 

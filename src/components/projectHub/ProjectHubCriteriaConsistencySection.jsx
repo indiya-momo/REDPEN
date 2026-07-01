@@ -12,6 +12,7 @@ import {
   MAX_PHRASE_SLOT_REGISTERED_ENTRIES,
   countPhraseSlotRegisteredEntries,
   phraseSlotRegistrationBlockedMessage,
+  canAddPhraseSlotRegisteredEntries,
 } from '../../lib/consistencyRuleLimit.js';
 import {
   buildRulesForPhraseSlot,
@@ -26,6 +27,7 @@ import ConsistencyRegisterField from '../consistency/ConsistencyRegisterField.js
 import ConsistencyHintExample from '../consistency/ConsistencyHintExample.jsx';
 import ConsistencyUnifySection from '../consistency/ConsistencyUnifySection.jsx';
 import RegisteredList from '../consistency/RegisteredList.jsx';
+import ProjectHubConsistencyRegisterRow from './ProjectHubConsistencyRegisterRow.jsx';
 import {
   CONSISTENCY_LITERAL_INPUT_PLACEHOLDER,
   CONSISTENCY_PHRASE_SLOT_INPUT_PLACEHOLDER,
@@ -98,6 +100,15 @@ export default function ProjectHubCriteriaConsistencySection({
     }
     const batch = buildRulesForPhraseSlot(customRules, raw);
     if (!batch.length) {
+      if (
+        phraseSlotRegisterFull ||
+        !canAddPhraseSlotRegisteredEntries(customRules, 1)
+      ) {
+        alert(
+          phraseSlotRegistrationBlockedMessage(phraseSlotRegisteredCount, 1),
+        );
+        return;
+      }
       alert('입력한 패턴은 이미 등록되어 있습니다.');
       return;
     }
@@ -124,35 +135,38 @@ export default function ProjectHubCriteriaConsistencySection({
                 &apos;마한, 진한, 변한&apos; 입력 → 3항목 한 번에 찾기
               </ConsistencyHintExample>
             </p>
-            <ConsistencyRegisterField
-              value={literalInput}
-              onChange={setLiteralInput}
-              onRegister={registerLiteral}
-              placeholder={CONSISTENCY_LITERAL_INPUT_PLACEHOLDER}
-              ariaLabel={LITERAL_FIND_FEATURE_LABEL}
-              registerDisabled={criteriaSaving}
-            />
-            <RegisteredList
-              entries={literalEntries}
-              customRules={customRules}
-              isEnabled={(rules, row) =>
-                isConsistencyEntryEnabled(rules, row.tailWord)
-              }
-              onToggle={(row, on) =>
-                applyCustomRules(
-                  toggleConsistencyEntry(customRules, row.tailWord, on),
-                )
-              }
-              onRemove={(tw) =>
-                applyCustomRules(removeConsistencyEntry(customRules, tw))
-              }
-              disabled={criteriaSaving}
-            />
+            <ProjectHubConsistencyRegisterRow>
+              <ConsistencyRegisterField
+                value={literalInput}
+                onChange={setLiteralInput}
+                onRegister={registerLiteral}
+                placeholder={CONSISTENCY_LITERAL_INPUT_PLACEHOLDER}
+                ariaLabel={LITERAL_FIND_FEATURE_LABEL}
+                registerDisabled={criteriaSaving}
+              />
+              <RegisteredList
+                entries={literalEntries}
+                customRules={customRules}
+                isEnabled={(rules, row) =>
+                  isConsistencyEntryEnabled(rules, row.tailWord)
+                }
+                onToggle={(row, on) =>
+                  applyCustomRules(
+                    toggleConsistencyEntry(customRules, row.tailWord, on),
+                  )
+                }
+                onRemove={(tw) =>
+                  applyCustomRules(removeConsistencyEntry(customRules, tw))
+                }
+                disabled={criteriaSaving}
+              />
+            </ProjectHubConsistencyRegisterRow>
           </div>
 
           <ConsistencyUnifySection
             customRules={customRules}
             onApplyRules={applyCustomRules}
+            inlineRegisterRow
           />
 
           <div className="consistency-subsection">
@@ -167,31 +181,33 @@ export default function ProjectHubCriteriaConsistencySection({
                 &apos;@시대&apos; 입력 → &apos;조선시대, 고려시대, 신라시대⋯&apos;
               </ConsistencyHintExample>
             </p>
-            <ConsistencyRegisterField
-              value={slotInput}
-              onChange={setSlotInput}
-              onRegister={registerSlot}
-              placeholder={CONSISTENCY_PHRASE_SLOT_INPUT_PLACEHOLDER}
-              ariaLabel="공통 문자열 찾기(1항목)"
-              inputClassName="mono"
-              registerDisabled={phraseSlotRegisterFull || criteriaSaving}
-            />
-            <RegisteredList
-              entries={slotEntries}
-              customRules={customRules}
-              isEnabled={(rules, row) =>
-                isPhraseSlotEntryEnabled(rules, row.tailWord)
-              }
-              onToggle={(row, on) =>
-                applyCustomRules(
-                  togglePhraseSlotEntry(customRules, row.tailWord, on),
-                )
-              }
-              onRemove={(tw) =>
-                applyCustomRules(removePhraseSlotEntry(customRules, tw))
-              }
-              disabled={criteriaSaving}
-            />
+            <ProjectHubConsistencyRegisterRow>
+              <ConsistencyRegisterField
+                value={slotInput}
+                onChange={setSlotInput}
+                onRegister={registerSlot}
+                placeholder={CONSISTENCY_PHRASE_SLOT_INPUT_PLACEHOLDER}
+                ariaLabel="공통 문자열 찾기(1항목)"
+                inputClassName="mono"
+                registerDisabled={phraseSlotRegisterFull || criteriaSaving}
+              />
+              <RegisteredList
+                entries={slotEntries}
+                customRules={customRules}
+                isEnabled={(rules, row) =>
+                  isPhraseSlotEntryEnabled(rules, row.tailWord)
+                }
+                onToggle={(row, on) =>
+                  applyCustomRules(
+                    togglePhraseSlotEntry(customRules, row.tailWord, on),
+                  )
+                }
+                onRemove={(tw) =>
+                  applyCustomRules(removePhraseSlotEntry(customRules, tw))
+                }
+                disabled={criteriaSaving}
+              />
+            </ProjectHubConsistencyRegisterRow>
           </div>
         </section>
       </div>

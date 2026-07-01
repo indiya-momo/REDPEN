@@ -17,6 +17,10 @@
   --pillar-spelling: #a86b45;
   --pillar-consistency: #5c6b7a;
   --pillar-auxiliary: #6b7c5e;
+  --project-hub-criteria-title-font-size: 0.84rem;
+  /* 표기 통일 입력창 — 고정 너비(칩 유무 무관) */
+  --project-hub-consistency-input-width: 25rem;
+  --project-hub-consistency-input-min-width: 25rem;
 }
 
 .project-hub-settings__layout {
@@ -163,7 +167,7 @@
 
 .project-hub-settings__criteria-title {
   margin: 0;
-  font-size: 0.84rem;
+  font-size: var(--project-hub-criteria-title-font-size);
   font-weight: 700;
   color: var(--color-text);
 }
@@ -191,13 +195,88 @@
   background: transparent;
   --panel-ui-scale: 1;
   --panel-guide-font-size: 0.72rem;
+  --consistency-example-font-size: 0.72rem;
+}
+
+/* 표기 통일 각 블록 제목 — 좌측 네비·맞춤법 제목과 동일 크기 */
+.project-hub-settings__consistency-editor
+  .printed-page-setup__title.panel-criteria-heading,
+.project-hub-settings__consistency-editor .panel-criteria-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 0.15em;
+  margin: 0 0 0.45rem;
+  font-size: var(--project-hub-criteria-title-font-size);
+  font-weight: 700;
+  line-height: 1.45;
+  color: var(--color-text);
+}
+
+.project-hub-settings__consistency-editor .panel-criteria-heading-meta {
+  font-size: 0.75em;
+  font-weight: 400;
+  line-height: inherit;
 }
 
 .project-hub-settings__consistency-editor .consistency-unified-box .hint {
   margin: 0 0 0.45rem;
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   line-height: 1.45;
   color: var(--color-text-subtle);
+}
+
+/* 본보조 auxiliary-chip(0.8rem)과 동일 — 인라인 행 안에서는 더 작게 */
+.project-hub-settings__consistency-editor .registered-chip {
+  font-size: 0.8rem;
+}
+
+.project-hub-consistency-register-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.35rem 0.5rem;
+  margin-top: 0.35rem;
+}
+
+.project-hub-consistency-register-row > .tail-form {
+  flex: 0 0 var(--project-hub-consistency-input-width);
+  width: var(--project-hub-consistency-input-width);
+  min-width: var(--project-hub-consistency-input-min-width);
+  max-width: var(--project-hub-consistency-input-width);
+  flex-shrink: 0;
+  margin-top: 0;
+}
+
+/* 입력창 바로 옆 — 남는 영역으로 늘리지 않음 */
+.project-hub-consistency-register-row > .tail-list:not(.tail-list--grid) {
+  flex: 0 1 auto;
+  width: auto;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border-top: none;
+  gap: 0.25rem 0.35rem;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.project-hub-consistency-register-row .registered-chip,
+.project-hub-consistency-register-row .registered-chip--unify {
+  font-size: 0.7rem;
+  line-height: 1.2;
+  padding: 2px 3px 2px 5px;
+}
+
+.project-hub-consistency-register-row .registered-chip .btn-icon--dismiss,
+.project-hub-consistency-register-row .consistency-unify-pin-btn {
+  font-size: 0.85em;
+}
+
+.project-hub-settings__consistency-editor .consistency-register-field__input,
+.project-hub-settings__consistency-editor .consistency-register-field .field-input {
+  font-size: 0.82rem;
 }
 
 .project-hub-settings__consistency-editor .consistency-unified-box .tail-form {

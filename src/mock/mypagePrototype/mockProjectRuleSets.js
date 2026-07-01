@@ -19,7 +19,6 @@ import {
   buildRulesForEntry,
   toggleConsistencyEntry,
 } from '../../lib/compoundPairRegister.js';
-import { buildPhraseSlotFindRules } from '../../lib/phraseSlotPattern.js';
 import {
   buildRulesForPhraseSlot,
   togglePhraseSlotEntry,
@@ -77,12 +76,9 @@ function buildNonAuxCustomRules(spec) {
   }
 
   for (const pattern of spec.phraseSlots ?? []) {
-    const built = buildPhraseSlotFindRules(pattern);
-    if (built.length) {
-      rules = [...rules, ...built];
-      continue;
-    }
-    rules = [...rules, ...buildRulesForPhraseSlot(rules, pattern)];
+    const batch = buildRulesForPhraseSlot(rules, pattern);
+    if (!batch.length) continue;
+    rules = [...rules, ...batch];
     rules = togglePhraseSlotEntry(rules, pattern, true);
   }
 
@@ -167,7 +163,7 @@ export const MOCK_PROJECT_RULE_SETS = [
         'verb-itta',
       ],
       consistencyFind: ['그러나', '한번', '붉은표시', '빨간표시'],
-      phraseSlots: ['@시대', '@문자'],
+      phraseSlots: ['@시대'],
     },
   ),
   buildMockRuleSet(
@@ -193,7 +189,7 @@ export const MOCK_PROJECT_RULE_SETS = [
 ];
 
 /** 목업 시드 버전 — 바뀌면 sessionStorage 초기화 키도 맞춘다 */
-export const MOCK_PROJECT_SEED_VERSION = 'no-proj-2';
+export const MOCK_PROJECT_SEED_VERSION = 'phrase-slot-1';
 
 /**
  * @param {import('../../lib/ruleSetsStorage.js').RuleSet[]} projects
