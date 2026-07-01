@@ -4,6 +4,7 @@ import {
   MOCK_LIBRARY_SLOT_MAX,
   MYPAGE_PROJECT_CARD_DISPLAY_MAX,
   planMyPageProjectGrid,
+  planMyPageProjectSlots,
   planMyPageProjectTrailingSlot,
 } from './mypageProjectDisplay.js';
 
@@ -73,6 +74,39 @@ describe('planMyPageProjectTrailingSlot', () => {
     expect(planMyPageProjectTrailingSlot(3)).toEqual({
       showEmptySlot: false,
       showLockedSlot: true,
+    });
+  });
+});
+
+describe('planMyPageProjectSlots', () => {
+  it('저장 0개 → 저장 안내 1칸 + 잠금 3칸', () => {
+    expect(planMyPageProjectSlots([])).toEqual({
+      visibleProjects: [],
+      actionableEmptySlotCount: 1,
+      lockedSlotCount: 3,
+    });
+  });
+
+  it('저장 1개(쿼터 찼음) → 잠금 3칸만', () => {
+    expect(
+      planMyPageProjectSlots([project('a', '2026-06-01')], { savedCount: 1 }),
+    ).toEqual({
+      visibleProjects: [project('a', '2026-06-01')],
+      actionableEmptySlotCount: 0,
+      lockedSlotCount: 3,
+    });
+  });
+
+  it('관리자 면제 시 빈 칸 모두 저장 안내, 잠금 없음', () => {
+    expect(
+      planMyPageProjectSlots([project('a', '2026-06-01')], {
+        exempt: true,
+        savedCount: 1,
+      }),
+    ).toEqual({
+      visibleProjects: [project('a', '2026-06-01')],
+      actionableEmptySlotCount: 3,
+      lockedSlotCount: 0,
     });
   });
 });

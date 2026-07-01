@@ -25,7 +25,6 @@ import { resolveQuotaAuthEmail } from '../lib/betaDailyQuota.js';
 import { clearRewardNotice } from '../lib/rewardNotice.js';
 import { getEarnedBadgeIds } from '../lib/userBadges.js';
 import { useBetaDailyQuota } from '../hooks/useBetaDailyQuota.js';
-import { useMyPageProjects } from '../hooks/useMyPageProjects.js';
 import {
   isRuleSetsCloudEnabled,
   saveRuleSetsCloud,
@@ -36,19 +35,9 @@ import {
   saveActiveSetId,
   saveRuleSets,
 } from '../lib/ruleSetsStorage.js';
-import { buildProjectCardViewModelFromRuleSet } from '../presentation/ruleSetProjectCard.js';
-import {
-  buildMockLibrarySlots,
-  MOCK_LIBRARY_SLOT_MAX,
-} from '../lib/mypageProjectDisplay.js';
-import ProjectLibraryCard from '../mock/mypagePrototype/ProjectLibraryCard.jsx';
-import ProjectLibraryEmptySlot from '../mock/mypagePrototype/ProjectLibraryEmptySlot.jsx';
-import SharePreviewModal from '../mock/mypagePrototype/SharePreviewModal.jsx';
-import {
-  buildProjectTagFilterOptions,
-  filterProjectsForLibrary,
-} from '../presentation/projectCardViewModel.js';
 import BadgeCollectionGrid from './BadgeCollectionGrid.jsx';
+import ProjectHubEditorPage from './projectHub/ProjectHubEditorPage.jsx';
+import ProjectHubLibraryPanel from './projectHub/ProjectHubLibraryPanel.jsx';
 import { isMyPageProjectHubEnabled } from '../lib/featureFlags.js';
 import './my-page.css';
 import '../mock/mypagePrototype/mypage-prototype.css';
@@ -71,6 +60,16 @@ function resolveMypageNav(nav) {
     return nav;
   }
   return 'overview';
+}
+
+/** @param {() => void} onOpen */
+function handleOverviewNavKeyDown(onOpen) {
+  return (event) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      onOpen();
+    }
+  };
 }
 
 /** @type {ReadonlyArray<{ name: string, description: string, tabLimit: number }>} */
@@ -219,9 +218,14 @@ function formatQuotaUsageLabel(remaining, tabLimit) {
 }
 
 /**
- * @param {{ quota: ReturnType<typeof useBetaDailyQuota>, authUid?: string, loginAtMs?: number | null }} props
+ * @param {{
+ *   quota: ReturnType<typeof useBetaDailyQuota>,
+ *   authUid?: string,
+ *   loginAtMs?: number | null,
+ *   onOpen?: () => void,
+ * }} props
  */
-function MemberOverviewCard({ quota, authUid = '', loginAtMs = null }) {
+function MemberOverviewCard({ quota, authUid = '', loginAtMs = null, onOpen }) {
   const tier = useMemo(
     () => (quota.loading ? null : resolveMemberBenefitTier(quota, authUid)),
     [quota, authUid],
@@ -235,8 +239,12 @@ function MemberOverviewCard({ quota, authUid = '', loginAtMs = null }) {
 
   return (
     <section
-      className="mypage__card mypage__member-overview"
+      className={`mypage__card mypage__member-overview${onOpen ? ' mypage__card--nav-link' : ''}`}
       aria-labelledby="mypage-benefits-title"
+      role={onOpen ? 'button' : undefined}
+      tabIndex={onOpen ? 0 : undefined}
+      onClick={onOpen}
+      onKeyDown={onOpen ? handleOverviewNavKeyDown(onOpen) : undefined}
     >
       <div className="mypage__card-head mypage__member-overview-head">
         <h2 id="mypage-benefits-title" className="mypage__card-title">
@@ -348,16 +356,7 @@ function OverviewBadgePanel({ badges, earnedCount, totalLabel, onOpen }) {
         role={onOpen ? 'button' : undefined}
         tabIndex={onOpen ? 0 : undefined}
         onClick={onOpen}
-        onKeyDown={
-          onOpen
-            ? (event) => {
-                if (event.key === 'Enter' || event.key === ' ') {
-                  event.preventDefault();
-                  onOpen();
-                }
-              }
-            : undefined
-        }
+        onKeyDown={onOpen ? handleOverviewNavKeyDown(onOpen) : undefined}
       >
         <div className="mypage__badge-head">
           <BadgeCollectionTitleRow
@@ -376,220 +375,6 @@ function OverviewBadgePanel({ badges, earnedCount, totalLabel, onOpen }) {
   );
 }
 
-/**
- * @param {{
- *   uid: string,
- *   email: string,
- *   entryCardId?: string | null,
- *   onEntryApplied?: () => void,
- * }} props
- */
-function ProjectHubSection({
-  uid,
-  email,
-  entryCardId = null,
-  onEntryApplied,
-}) {
-  const {
-    projects,
-    activeSetId,
-    loading,
-    selectProject,
-    renameProject,
-    duplicateProject,
-    updateProjectMeta,
-  } = useMyPageProjects(uid, email);
-
-  const [tagFilter, setTagFilter] = useState(/** @type {string | null} */ (null));
-  const [sharePreviewCardId, setSharePreviewCardId] = useState(
-    /** @type {string | null} */ (null),
-  );
-
-  const cards = useMemo(
-    () =>
-      [...projects]
-        .sort(
-          (a, b) =>
-            Date.parse(b.savedAt ?? '') - Date.parse(a.savedAt ?? ''),
-        )
-        .map((set) =>
-          buildProjectCardViewModelFromRuleSet(set, {
-            isActive: set.id === activeSetId,
-          }),
-        ),
-    [projects, activeSetId],
-  );
-
-  const tagFilterOptions = useMemo(
-    () => buildProjectTagFilterOptions(cards),
-    [cards],
-  );
-
-  const filteredCards = useMemo(
-    () => filterProjectsForLibrary(cards, tagFilter),
-    [cards, tagFilter],
-  );
-
-  const sharePreviewCard = useMemo(
-    () => cards.find((card) => card.id === sharePreviewCardId) ?? null,
-    [cards, sharePreviewCardId],
-  );
-
-  const librarySlots = useMemo(
-    () => buildMockLibrarySlots(cards),
-    [cards],
-  );
-
-  useEffect(() => {
-    if (!tagFilter) return;
-    const stillValid = tagFilterOptions.some((option) => option.id === tagFilter);
-    if (!stillValid) setTagFilter(null);
-  }, [tagFilter, tagFilterOptions]);
-
-  useEffect(() => {
-    if (!entryCardId) return;
-    onEntryApplied?.();
-  }, [entryCardId, onEntryApplied]);
-
-  const handleRename = useCallback(
-    async (cardId, title) => {
-      const result = await renameProject(cardId, title);
-      if (!result.ok && result.message) {
-        window.alert(result.message);
-      }
-    },
-    [renameProject],
-  );
-
-  const handleDuplicate = useCallback(
-    async (cardId) => {
-      const result = await duplicateProject(cardId);
-      if (!result.ok && result.message) {
-        window.alert(result.message);
-      }
-    },
-    [duplicateProject],
-  );
-
-  const handleUpdateMeta = useCallback(
-    async (cardId, patch) => {
-      await updateProjectMeta(cardId, patch);
-    },
-    [updateProjectMeta],
-  );
-
-  const handleStartWork = useCallback(
-    async (cardId) => {
-      const result = await selectProject(cardId);
-      if (!result.ok) {
-        window.alert('프로젝트 선택을 저장하지 못했습니다. 다시 시도해 주세요.');
-        return;
-      }
-      returnToWorkspace();
-    },
-    [selectProject],
-  );
-
-  return (
-    <>
-      <section
-        className="mypage__card mypage__project-hub"
-        aria-labelledby="mypage-project-hub-title"
-      >
-        <div className="mypage__project-hub-head">
-          <div>
-            <div className="mypage__project-hub-title-row">
-              <h1 id="mypage-project-hub-title" className="mypage__page-title">
-                나의 프로젝트
-              </h1>
-            </div>
-          </div>
-          <p className="mypage__project-slot-gauge">
-            슬롯 <strong>{cards.length}/{MOCK_LIBRARY_SLOT_MAX}</strong>
-          </p>
-        </div>
-
-        {loading ? (
-          <p className="mypage__project-loading" role="status">
-            프로젝트를 불러오는 중…
-          </p>
-        ) : (
-          <>
-            <div
-              className="mypage-proto__filters"
-              role="group"
-              aria-label="태그 필터"
-            >
-              {tagFilterOptions.map(({ id, label }) => (
-                <button
-                  key={label}
-                  type="button"
-                  className={`mypage-proto__filter${tagFilter === id ? ' mypage-proto__filter--on' : ''}`}
-                  onClick={() => setTagFilter(id)}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-
-            <div
-              className={`mypage-proto__grid${tagFilter ? '' : ' mypage-proto__grid--triple'}`}
-            >
-              {tagFilter ? (
-                <>
-                  {filteredCards.map((card) => (
-                    <ProjectLibraryCard
-                      key={card.id}
-                      card={card}
-                      onRename={(title) => void handleRename(card.id, title)}
-                      onUpdateMeta={(patch) =>
-                        void handleUpdateMeta(card.id, patch)
-                      }
-                      onStartWork={() => void handleStartWork(card.id)}
-                      onDuplicate={() => void handleDuplicate(card.id)}
-                      onSharePreview={() => setSharePreviewCardId(card.id)}
-                    />
-                  ))}
-                  {filteredCards.length === 0 ? (
-                    <p className="mypage__project-filter-empty" role="status">
-                      선택한 태그에 해당하는 프로젝트가 없습니다.
-                    </p>
-                  ) : null}
-                </>
-              ) : (
-                librarySlots.map((card, index) =>
-                  card ? (
-                    <ProjectLibraryCard
-                      key={card.id}
-                      card={card}
-                      onRename={(title) => void handleRename(card.id, title)}
-                      onUpdateMeta={(patch) =>
-                        void handleUpdateMeta(card.id, patch)
-                      }
-                      onStartWork={() => void handleStartWork(card.id)}
-                      onDuplicate={() => void handleDuplicate(card.id)}
-                      onSharePreview={() => setSharePreviewCardId(card.id)}
-                    />
-                  ) : (
-                    <ProjectLibraryEmptySlot key={`library-empty-slot-${index}`} />
-                  ),
-                )
-              )}
-            </div>
-          </>
-        )}
-      </section>
-
-      {sharePreviewCard ? (
-        <SharePreviewModal
-          card={sharePreviewCard}
-          onClose={() => setSharePreviewCardId(null)}
-        />
-      ) : null}
-    </>
-  );
-}
-
 function MyPageOverviewSection({
   quota,
   authUid,
@@ -599,7 +384,9 @@ function MyPageOverviewSection({
   totalLabel,
   projectUid,
   projectEmail,
+  onOpenProfile,
   onOpenBadges,
+  onOpenProjects,
 }) {
   return (
     <div className="mypage__overview">
@@ -607,11 +394,14 @@ function MyPageOverviewSection({
         quota={quota}
         authUid={authUid}
         loginAtMs={loginAtMs}
+        onOpen={onOpenProfile}
       />
       {isMyPageProjectHubEnabled() ? (
-        <ProjectHubSection
+        <ProjectHubLibraryPanel
           uid={projectUid}
           email={projectEmail}
+          onSelectCard={onOpenProjects}
+          onOpenSection={() => onOpenProjects()}
         />
       ) : (
         <ProjectHubPlaceholderSection />
@@ -633,7 +423,7 @@ function ProjectHubPageSection({ uid, email, entryCardId, onEntryApplied }) {
   return (
     <div className="mypage__main-inner mypage__main-inner--section mypage__overview--projects">
       {isMyPageProjectHubEnabled() ? (
-        <ProjectHubSection
+        <ProjectHubEditorPage
           uid={uid}
           email={email}
           entryCardId={entryCardId}
@@ -1026,7 +816,12 @@ export default function MyPageWindowScreen({ authSession, authReady }) {
             totalLabel={badgeStats.totalLabel}
             projectUid={authSession.uid}
             projectEmail={quotaEmail}
+            onOpenProfile={() => setActiveNav('profile')}
             onOpenBadges={() => setActiveNav('badges')}
+            onOpenProjects={(cardId) => {
+              setProjectsEntryCardId(cardId ?? null);
+              setActiveNav('projects');
+            }}
           />
         ) : resolvedNav === 'projects' ? (
           <ProjectHubPageSection

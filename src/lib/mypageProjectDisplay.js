@@ -1,3 +1,5 @@
+import { MAX_CRITERIA_PRESETS } from './criteriaPresetLimit.js';
+
 /** 목업(`mypage-mock`) Library — 슬롯 게이지·끝 칸 기준 */
 export const MOCK_LIBRARY_SLOT_MAX = 3;
 
@@ -39,5 +41,42 @@ export function planMyPageProjectTrailingSlot(cardCount = 0) {
   return {
     showEmptySlot: cardCount < MOCK_LIBRARY_SLOT_MAX,
     showLockedSlot: cardCount >= MOCK_LIBRARY_SLOT_MAX,
+  };
+}
+
+/**
+ * 그리드 칸을 저장 가능 빈 슬롯 vs 잠금 슬롯으로 나눈다.
+ *
+ * @param {import('./ruleSetsStorage.js').RuleSet[]} projects
+ * @param {{ exempt?: boolean, savedCount?: number, maxSlots?: number }} [options]
+ */
+export function planMyPageProjectSlots(projects, options = {}) {
+  const {
+    exempt = false,
+    savedCount,
+    maxSlots = MAX_CRITERIA_PRESETS,
+  } = options;
+  const { visibleProjects, visibleEmptySlotCount } =
+    planMyPageProjectGrid(projects);
+  const count = savedCount ?? projects?.length ?? 0;
+
+  if (exempt) {
+    return {
+      visibleProjects,
+      actionableEmptySlotCount: visibleEmptySlotCount,
+      lockedSlotCount: 0,
+    };
+  }
+
+  const canSaveMore = count < maxSlots;
+  const actionableEmptySlotCount = canSaveMore
+    ? Math.min(1, visibleEmptySlotCount)
+    : 0;
+  const lockedSlotCount = visibleEmptySlotCount - actionableEmptySlotCount;
+
+  return {
+    visibleProjects,
+    actionableEmptySlotCount,
+    lockedSlotCount,
   };
 }

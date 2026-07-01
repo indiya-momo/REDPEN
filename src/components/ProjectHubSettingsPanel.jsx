@@ -1,33 +1,40 @@
-import { useEffect, useId, useState } from 'react';
+import { useEffect, useId, useMemo, useState } from 'react';
 import {
   MAX_PROJECT_FORMAT_LABEL_LENGTH,
   MAX_PROJECT_PROOF_REVISION_LENGTH,
   normalizeProjectMemo,
   normalizeProjectTags,
 } from '../lib/projectMeta.js';
+import { buildProjectCardPillarPreviews } from '../presentation/projectCardViewModel.js';
+import ProjectHubCriteriaPanel from './projectHub/ProjectHubCriteriaPanel.jsx';
 import './project-hub-settings.css';
 
 /** @typedef {'meta' | 'manuscript' | 'actions'} ProjectHubSettingsSection */
 
 const NAV_ITEMS = [
-  { id: 'meta', label: '프로젝트 편집' },
-  { id: 'manuscript', label: '원고 정보' },
+  { id: 'meta', label: '프로젝트 정보' },
+  { id: 'manuscript', label: '프로젝트 편집' },
   { id: 'actions', label: '작업 이력' },
 ];
 
 /**
  * @param {{
  *   card: import('../presentation/projectCardViewModel.js').ProjectCardViewModel,
+ *   ruleSet?: import('../lib/ruleSetsStorage.js').RuleSet | null,
  *   pdfFileName?: string,
  *   pdfPageCount?: number,
  *   lastWorkedAt?: string,
  *   saving?: boolean,
+ *   criteriaSaving?: boolean,
  *   onSave: (payload: {
  *     tags: string[],
  *     memo?: string,
  *     proofRevision?: string,
  *     formatLabel?: string,
  *   }) => void | Promise<void>,
+ *   onCustomRulesChange?: (
+ *     rules: import('../lib/ruleTypes.js').Rule[],
+ *   ) => void | Promise<void>,
  *   onStartWork?: () => void,
  *   onDuplicate?: () => void,
  *   onSharePreview?: () => void,
@@ -35,11 +42,14 @@ const NAV_ITEMS = [
  */
 export default function ProjectHubSettingsPanel({
   card,
-  pdfFileName,
-  pdfPageCount,
-  lastWorkedAt,
+  ruleSet = null,
+  pdfFileName: _pdfFileName,
+  pdfPageCount: _pdfPageCount,
+  lastWorkedAt: _lastWorkedAt,
   saving = false,
+  criteriaSaving = false,
   onSave,
+  onCustomRulesChange,
   onStartWork,
   onDuplicate,
   onSharePreview,
@@ -86,15 +96,10 @@ export default function ProjectHubSettingsPanel({
     });
   }
 
-  const manuscriptDate =
-    lastWorkedAt && !Number.isNaN(Date.parse(lastWorkedAt))
-      ? new Date(lastWorkedAt).toLocaleDateString('ko-KR', {
-          timeZone: 'Asia/Seoul',
-          year: '2-digit',
-          month: 'numeric',
-          day: 'numeric',
-        })
-      : null;
+  const pillarRows = useMemo(
+    () => buildProjectCardPillarPreviews(card),
+    [card],
+  );
 
   return (
     <section
@@ -123,25 +128,9 @@ export default function ProjectHubSettingsPanel({
         </nav>
 
         <div className="project-hub-settings__main">
-          <header className="project-hub-settings__header">
-            <div>
-              <h2 className="project-hub-settings__title">프로젝트 설정</h2>
-              <p className="project-hub-settings__subtitle">
-                《{card.title}》
-                {card.isActive ? ' · 작업 중' : ''}
-              </p>
-            </div>
-          </header>
-
           {activeSection === 'meta' ? (
             <form className="project-hub-settings__form" onSubmit={(e) => void handleSave(e)}>
               <div className="project-hub-settings__group">
-                <div className="project-hub-settings__group-head">
-                  <h3 className="project-hub-settings__group-title">프로젝트 편집</h3>
-                  <p className="project-hub-settings__group-lead">
-                    태그·교차·판형·메모를 저장합니다.
-                  </p>
-                </div>
                 <div className="project-hub-settings__card">
                   <div className="project-hub-settings__row">
                     <div className="project-hub-settings__row-text">
@@ -195,10 +184,10 @@ export default function ProjectHubSettingsPanel({
                         className="project-hub-settings__row-label"
                         htmlFor={formatLabelInputId}
                       >
-                        판형
+                        판형, 페이지
                       </label>
                       <p className="project-hub-settings__row-desc">
-                        신국판 등 판형 이름
+                        신국판 · 페이지 수 등
                       </p>
                     </div>
                     <input
@@ -249,63 +238,22 @@ export default function ProjectHubSettingsPanel({
             </form>
           ) : null}
 
-          {activeSection === 'manuscript' ? (
+          {activeSection === 'manuscript' && ruleSet && onCustomRulesChange ? (
             <div className="project-hub-settings__group">
-              <div className="project-hub-settings__group-head">
-                <h3 className="project-hub-settings__group-title">원고 정보</h3>
-                <p className="project-hub-settings__group-lead">
-                  마지막으로 연결한 PDF 정보입니다. 원고는 서버에 저장되지
-                  않습니다.
-                </p>
-              </div>
-              <div className="project-hub-settings__card">
-                <div className="project-hub-settings__row project-hub-settings__row--readonly">
-                  <div className="project-hub-settings__row-text">
-                    <span className="project-hub-settings__row-label">파일</span>
-                    <p className="project-hub-settings__row-desc">
-                      검수 화면에서 연 PDF
-                    </p>
-                  </div>
-                  <span className="project-hub-settings__value">
-                    {pdfFileName || '—'}
-                  </span>
-                </div>
-                <div className="project-hub-settings__row project-hub-settings__row--readonly">
-                  <div className="project-hub-settings__row-text">
-                    <span className="project-hub-settings__row-label">페이지</span>
-                    <p className="project-hub-settings__row-desc">
-                      시스템 페이지 수
-                    </p>
-                  </div>
-                  <span className="project-hub-settings__value">
-                    {typeof pdfPageCount === 'number' ? `${pdfPageCount}p` : '—'}
-                  </span>
-                </div>
-                <div className="project-hub-settings__row project-hub-settings__row--readonly">
-                  <div className="project-hub-settings__row-text">
-                    <span className="project-hub-settings__row-label">
-                      마지막 작업
-                    </span>
-                    <p className="project-hub-settings__row-desc">
-                      검수·저장 시각
-                    </p>
-                  </div>
-                  <span className="project-hub-settings__value">
-                    {manuscriptDate || '—'}
-                  </span>
-                </div>
+              <div className="project-hub-settings__card project-hub-settings__card--criteria">
+                <ProjectHubCriteriaPanel
+                  pillarRows={pillarRows}
+                  ruleSet={ruleSet}
+                  criteriaSaving={criteriaSaving}
+                  onCustomRulesChange={onCustomRulesChange}
+                  onStartWork={onStartWork}
+                />
               </div>
             </div>
           ) : null}
 
           {activeSection === 'actions' ? (
             <div className="project-hub-settings__group">
-              <div className="project-hub-settings__group-head">
-                <h3 className="project-hub-settings__group-title">작업 이력</h3>
-                <p className="project-hub-settings__group-lead">
-                  검수 화면으로 전환하거나 프로젝트를 복제·공유합니다.
-                </p>
-              </div>
               <div className="project-hub-settings__card project-hub-settings__card--actions">
                 <button
                   type="button"
