@@ -3,6 +3,8 @@
  * Library / Share Preview가 공유하는 ViewModel.
  */
 
+import { MAX_PROJECT_TAGS } from '../lib/projectMeta.js';
+
 /** @typedef {'project' | 'folder'} ProjectShareScope */
 
 /**
@@ -78,7 +80,33 @@ export function formatProjectCardLastModifiedLabel(card) {
 
 /** @param {ProjectCardViewModel} card @returns {string[]} */
 export function buildProjectCardTabLabels(card) {
-  return [formatProjectCardLastModifiedLabel(card)];
+  return buildProjectCardDisplayTags(card);
+}
+
+/** 카드 상단 탭 — 태그 최대 {@link MAX_PROJECT_TAGS}개 @param {ProjectCardViewModel} card @returns {string[]} */
+export function buildProjectCardDisplayTags(card) {
+  return (card.tags ?? [])
+    .map((tag) => tag.trim())
+    .filter(Boolean)
+    .slice(0, MAX_PROJECT_TAGS);
+}
+
+/** 교차·판형 값 (「교 판형」 라벨 옆 표시) @param {ProjectCardViewModel} card @returns {string} */
+export function formatProjectCardEditionValues(card) {
+  const parts = [];
+  if (card.proofRevision?.trim()) {
+    parts.push(card.proofRevision.trim());
+  }
+  if (card.formatLabel?.trim()) {
+    parts.push(card.formatLabel.trim());
+  }
+  return parts.join(' ');
+}
+
+/** 메모 첫 줄 — CSS 말줄임표용 @param {ProjectCardViewModel} card @returns {string} */
+export function formatProjectCardMemoPreview(card) {
+  const firstLine = (card.memo ?? '').split(/\r?\n/, 1)[0]?.trim() ?? '';
+  return firstLine;
 }
 
 /** @param {ProjectCardViewModel} card @returns {string[]} */
@@ -166,15 +194,6 @@ export function collectProjectTags(cards) {
   return [...set].sort((a, b) => a.localeCompare(b, 'ko'));
 }
 
-/** @type {readonly { id: string, label: string }[]} */
-export const STANDARD_PROJECT_LIBRARY_TAG_FILTERS = [
-  { id: '__series__', label: '시리즈' },
-  { id: '문학', label: '문학' },
-  { id: '실용서', label: '실용서' },
-  { id: '경제경영', label: '경제경영' },
-  { id: '출판사 매뉴얼', label: '출판사 매뉴얼' },
-];
-
 /**
  * @param {ProjectCardViewModel[]} cards
  * @param {string | null} tagFilter null = 전체, '__series__' = 시리즈 접두
@@ -196,18 +215,20 @@ export function filterProjectsForLibrary(cards, tagFilter) {
 export function buildProjectTagFilterOptions(cards) {
   /** @type {{ id: string | null, label: string }[]} */
   const options = [{ id: null, label: '전체' }];
-  const seen = new Set(['__series__', '시리즈']);
+  const seenLabels = new Set(['전체']);
+  const tags = collectProjectTags(cards);
 
-  for (const { id, label } of STANDARD_PROJECT_LIBRARY_TAG_FILTERS) {
-    options.push({ id, label });
-    seen.add(id);
-    seen.add(label);
+  const hasSeriesTags = tags.some((tag) => tag.startsWith('시리즈'));
+  if (hasSeriesTags) {
+    options.push({ id: '__series__', label: '시리즈' });
+    seenLabels.add('시리즈');
   }
 
-  for (const tag of collectProjectTags(cards)) {
-    if (seen.has(tag)) continue;
+  for (const tag of tags) {
+    if (hasSeriesTags && tag.startsWith('시리즈')) continue;
+    if (seenLabels.has(tag)) continue;
     options.push({ id: tag, label: tag });
-    seen.add(tag);
+    seenLabels.add(tag);
   }
 
   return options;

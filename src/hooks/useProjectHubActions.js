@@ -1,5 +1,7 @@
 import { useCallback } from 'react';
 import { returnToWorkspace } from '../lib/returnToWorkspace.js';
+import { showAppConfirm } from '../lib/appDialog.js';
+import { formatProjectDialogLabel } from '../lib/projectDialogLabel.js';
 
 const SLOT_LIMIT_MESSAGE =
   '프로젝트 슬롯이 가득 찼습니다. 추가 슬롯은 회원 등급으로 제공됩니다. (준비 중)';
@@ -12,6 +14,7 @@ const SELECT_FAILURE_MESSAGE =
  *   selectProject: (id: string) => Promise<{ ok: boolean }>,
  *   renameProject: (id: string, title: string) => Promise<{ ok: boolean, message?: string }>,
  *   duplicateProject: (id: string) => Promise<{ ok: boolean, message?: string }>,
+ *   deleteProject: (id: string) => Promise<{ ok: boolean, message?: string }>,
  *   updateProjectMeta: (id: string, patch: object) => Promise<unknown>,
  *   atSlotLimit: boolean,
  * }} deps
@@ -20,6 +23,7 @@ export function useProjectHubActions({
   selectProject,
   renameProject,
   duplicateProject,
+  deleteProject,
   updateProjectMeta,
   atSlotLimit,
 }) {
@@ -47,6 +51,24 @@ export function useProjectHubActions({
     [atSlotLimit, duplicateProject],
   );
 
+  const handleDelete = useCallback(
+    async (cardId, title) => {
+      if (
+        !(await showAppConfirm({
+          title: '삭제',
+          message: `${formatProjectDialogLabel(title)} 프로젝트를 삭제할까요?`,
+        }))
+      ) {
+        return;
+      }
+      const result = await deleteProject(cardId);
+      if (!result.ok && result.message) {
+        window.alert(result.message);
+      }
+    },
+    [deleteProject],
+  );
+
   const handleUpdateMeta = useCallback(
     async (cardId, patch) => {
       await updateProjectMeta(cardId, patch);
@@ -69,6 +91,7 @@ export function useProjectHubActions({
   return {
     handleRename,
     handleDuplicate,
+    handleDelete,
     handleUpdateMeta,
     handleStartWork,
   };

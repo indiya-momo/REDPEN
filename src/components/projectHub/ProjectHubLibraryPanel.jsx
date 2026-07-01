@@ -139,6 +139,9 @@ export default function ProjectHubLibraryPanel({
                       }
                       onStartWork={() => void actions.handleStartWork(card.id)}
                       onDuplicate={() => void actions.handleDuplicate(card.id)}
+                      onDelete={() =>
+                        void actions.handleDelete(card.id, card.title)
+                      }
                       onSharePreview={() => setSharePreviewCardId(card.id)}
                     />
                   ))}
@@ -166,6 +169,9 @@ export default function ProjectHubLibraryPanel({
                       }
                       onStartWork={() => void actions.handleStartWork(card.id)}
                       onDuplicate={() => void actions.handleDuplicate(card.id)}
+                      onDelete={() =>
+                        void actions.handleDelete(card.id, card.title)
+                      }
                       onSharePreview={() => setSharePreviewCardId(card.id)}
                     />
                   ) : (

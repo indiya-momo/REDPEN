@@ -1,12 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import {
+  buildProjectCardDisplayTags,
   buildProjectCardPillarPreviews,
   buildProjectCardTabLabels,
   buildProjectTagFilterOptions,
   collectProjectTags,
   filterProjectsByTag,
   filterProjectsForLibrary,
+  formatProjectCardEditionValues,
   formatProjectCardLastModifiedLabel,
+  formatProjectCardMemoPreview,
   formatProjectCardMetaLine,
   formatProjectCardScheduleLines,
   formatProjectCardTitleLine,
@@ -55,8 +58,31 @@ describe('projectCardViewModel helpers', () => {
     ).toBe('26년 6월 22일 최종수정');
   });
 
-  it('buildProjectCardTabLabels', () => {
-    expect(buildProjectCardTabLabels(sample)).toEqual(['26.06.18 최종수정']);
+  it('buildProjectCardTabLabels / buildProjectCardDisplayTags', () => {
+    expect(buildProjectCardTabLabels(sample)).toEqual(['문학', '1권']);
+    expect(buildProjectCardDisplayTags(sample)).toEqual(['문학', '1권']);
+    expect(
+      buildProjectCardDisplayTags({
+        ...sample,
+        tags: ['a', 'b', 'c'],
+      }),
+    ).toEqual(['a', 'b', 'c']);
+  });
+
+  it('formatProjectCardEditionValues', () => {
+    expect(formatProjectCardEditionValues(sample)).toBe('2교');
+    expect(
+      formatProjectCardEditionValues({ ...sample, formatLabel: '신국판' }),
+    ).toBe('2교 신국판');
+  });
+
+  it('formatProjectCardMemoPreview', () => {
+    expect(formatProjectCardMemoPreview({ ...sample, memo: '첫 줄\n둘째 줄' })).toBe(
+      '첫 줄',
+    );
+    expect(formatProjectCardMemoPreview({ ...sample, memo: '  \n비어 있음' })).toBe(
+      '',
+    );
   });
 
   it('formatProjectCardScheduleLines', () => {
@@ -92,11 +118,35 @@ describe('projectCardViewModel helpers', () => {
     expect(filterProjectsByTag(cards, null)).toHaveLength(2);
   });
 
-  it('buildProjectTagFilterOptions always includes standard filters', () => {
-    const options = buildProjectTagFilterOptions([]);
-    expect(options[0]).toEqual({ id: null, label: '전체' });
-    expect(options.map((o) => o.label)).toContain('문학');
-    expect(options.map((o) => o.label)).toContain('시리즈');
+  it('buildProjectTagFilterOptions lists 전체 and tags from cards', () => {
+    expect(buildProjectTagFilterOptions([])).toEqual([
+      { id: null, label: '전체' },
+    ]);
+    const options = buildProjectTagFilterOptions([
+      sample,
+      { ...sample, id: 'b', tags: ['시리즈 2/5', '경제경영'] },
+    ]);
+    expect(options.map((o) => o.label)).toEqual([
+      '전체',
+      '시리즈',
+      '1권',
+      '경제경영',
+      '문학',
+    ]);
+  });
+
+  it('buildProjectTagFilterOptions dedupes identical labels', () => {
+    const base = { ...sample, tags: [] };
+    const cards = [
+      { ...base, id: 'a', tags: ['문학'] },
+      { ...base, id: 'b', tags: ['문학', '시리즈 2/5'] },
+      { ...base, id: 'c', tags: ['시리즈', '시리즈 3/5'] },
+    ];
+    expect(buildProjectTagFilterOptions(cards).map((o) => o.label)).toEqual([
+      '전체',
+      '시리즈',
+      '문학',
+    ]);
   });
 
   it('filterProjectsForLibrary handles series prefix', () => {
