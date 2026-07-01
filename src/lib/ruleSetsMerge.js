@@ -2,6 +2,7 @@
  * 로그인·클라우드 hydrate 시 로컬과 클라우드 기준 병합.
  * 같은 id는 savedAt이 더 최신인 쪽을 우선한다.
  */
+import { enforceMaxCriteriaPresets } from './criteriaPresetLimit.js';
 
 /** @param {string | undefined} iso */
 function savedAtMs(iso) {
@@ -119,4 +120,17 @@ export function mergeRuleSetsOnLogin(localSets, cloudSets) {
   }
 
   return [...byId.values()];
+}
+
+/**
+ * 로드·동기화 직후 — 동일 이름 dedupe + 저장 슬롯 상한 적용
+ *
+ * @param {import('./ruleSetsStorage.js').RuleSet[]} ruleSets
+ * @param {string} [uid]
+ * @param {string} [email]
+ */
+export function applyCriteriaPresetQuota(ruleSets, uid = '', email = '') {
+  return dedupeSavedRuleSetsByName(
+    enforceMaxCriteriaPresets(ruleSets ?? [], uid, email),
+  );
 }

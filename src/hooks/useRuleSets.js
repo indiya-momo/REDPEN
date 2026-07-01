@@ -48,9 +48,12 @@ import {
 import {
   canAddCriteriaPreset,
   CRITERIA_PRESET_LIMIT_MESSAGE,
-  enforceMaxCriteriaPresets,
 } from '../lib/criteriaPresetLimit.js';
-import { mergeRuleSetsOnLogin, dedupeSavedRuleSetsByName, mergeLocalRuleSetSources } from '../lib/ruleSetsMerge.js';
+import {
+  mergeRuleSetsOnLogin,
+  applyCriteriaPresetQuota,
+  mergeLocalRuleSetSources,
+} from '../lib/ruleSetsMerge.js';
 
 const RULE_SET_AUTOSAVE_MS = 400;
 const RULE_SET_CLOUD_SYNC_MS = 800;
@@ -266,12 +269,16 @@ export function useRuleSets(authUid = '', authEmail = '') {
       loadedAuthUidRef.current = uid;
       cloudHydratedUidRef.current = '';
 
-      const sets = normalizeLoadedRuleSets(loadRuleSets(uid));
+      let sets = normalizeLoadedRuleSets(loadRuleSets(uid));
+      if (uid) {
+        sets = applyCriteriaPresetQuota(sets, uid, authEmailRef.current);
+      }
       const storedActive = loadActiveSetId(uid);
       const activeId =
-        storedActive && sets.some((s) => s.id === storedActive)
-          ? storedActive
-          : sets[0].id;
+        resolveHydratedActiveSetId(sets, storedActive, null) ??
+        sets[0]?.id ??
+        null;
+      if (!activeId) return;
 
       ruleSetsRef.current = sets;
       activeSetIdRef.current = activeId;
@@ -383,8 +390,7 @@ export function useRuleSets(authUid = '', authEmail = '') {
           const localSets = mergeLocalRuleSetSources(diskSets, memorySets);
           const merged = mergeRuleSetsOnLogin(localSets, cloud.ruleSets);
           let sets = normalizeLoadedRuleSets(merged);
-          sets = dedupeSavedRuleSetsByName(sets);
-          sets = enforceMaxCriteriaPresets(
+          sets = applyCriteriaPresetQuota(
             sets,
             authUidRef.current,
             authEmailRef.current,
@@ -397,7 +403,12 @@ export function useRuleSets(authUid = '', authEmail = '') {
           if (!activeId) return;
           applyRuleSets(sets, activeId);
         } else {
-          const localSets = normalizeLoadedRuleSets(loadRuleSets(uid));
+          let localSets = normalizeLoadedRuleSets(loadRuleSets(uid));
+          localSets = applyCriteriaPresetQuota(
+            localSets,
+            authUidRef.current,
+            authEmailRef.current,
+          );
           const activeId =
             resolveHydratedActiveSetId(localSets, loadActiveSetId(uid), null) ??
             localSets[0]?.id ??
@@ -444,6 +455,17 @@ export function useRuleSets(authUid = '', authEmail = '') {
     );
     if (!source) return;
     const copy = normalizeRuleSet(duplicateRuleSet(source));
+    if (
+      !canAddCriteriaPreset(
+        ruleSetsRef.current,
+        copy.name,
+        authUidRef.current,
+        authEmailRef.current,
+      )
+    ) {
+      alert(CRITERIA_PRESET_LIMIT_MESSAGE);
+      return;
+    }
     applyRuleSets([...ruleSetsRef.current, copy], copy.id);
   }, [applyRuleSets]);
 

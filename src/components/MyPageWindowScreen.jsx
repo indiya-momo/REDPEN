@@ -37,7 +37,7 @@ import {
   saveRuleSets,
 } from '../lib/ruleSetsStorage.js';
 import { buildProjectCardViewModelFromRuleSet } from '../presentation/ruleSetProjectCard.js';
-import { planMyPageProjectGrid } from '../lib/mypageProjectDisplay.js';
+import { planMyPageProjectSlots } from '../lib/mypageProjectDisplay.js';
 import ProjectLibraryCard from '../mock/mypagePrototype/ProjectLibraryCard.jsx';
 import ProjectHubSettingsPanel from './ProjectHubSettingsPanel.jsx';
 import {
@@ -378,10 +378,16 @@ function ProjectHubSection({
     atSlotLimit,
   } = useMyPageProjects(uid, email);
 
-  const { visibleProjects, visibleEmptySlotCount } = useMemo(
-    () => planMyPageProjectGrid(projects),
-    [projects],
-  );
+  const { visibleProjects, actionableEmptySlotCount, lockedSlotCount } =
+    useMemo(
+      () =>
+        planMyPageProjectSlots(projects, {
+          exempt,
+          savedCount,
+          maxSlots: maxSlots ?? undefined,
+        }),
+      [projects, exempt, savedCount, maxSlots],
+    );
 
   const [tagFilter, setTagFilter] = useState(/** @type {string | null} */ (null));
   const [selectedCardId, setSelectedCardId] = useState(
@@ -501,7 +507,7 @@ function ProjectHubSection({
     async (cardId) => {
       if (atSlotLimit) {
         window.alert(
-          '프로젝트는 계정당 1개만 저장할 수 있습니다. 빈 슬롯이 있을 때 복제할 수 있습니다.',
+          '프로젝트 슬롯이 가득 찼습니다. 추가 슬롯은 회원 혜택으로 제공됩니다. (준비 중)',
         );
         return;
       }
@@ -590,8 +596,9 @@ function ProjectHubSection({
                 </p>
               ) : null}
 
-              {!tagFilter
-                ? Array.from({ length: visibleEmptySlotCount }, (_, index) => (
+              {!tagFilter ? (
+                <>
+                  {Array.from({ length: actionableEmptySlotCount }, (_, index) => (
                     <div
                       key={`empty-slot-${index}`}
                       className="mypage__project-slot mypage__project-slot--empty mypage-proto__empty-slot"
@@ -601,8 +608,22 @@ function ProjectHubSection({
                         검수 화면에서 기준을 저장하면 여기에 표시됩니다.
                       </p>
                     </div>
-                  ))
-                : null}
+                  ))}
+                  {Array.from({ length: lockedSlotCount }, (_, index) => (
+                    <div
+                      key={`locked-slot-${index}`}
+                      className="mypage__project-slot mypage__project-slot--locked mypage-proto__slot-limit"
+                      aria-disabled="true"
+                    >
+                      <p className="mypage__project-slot-label">추가 슬롯</p>
+                      <p className="mypage__project-slot-desc">
+                        회원 혜택으로 프로젝트 슬롯을 늘릴 수 있습니다.
+                        (준비 중)
+                      </p>
+                    </div>
+                  ))}
+                </>
+              ) : null}
             </div>
           </>
         )}
