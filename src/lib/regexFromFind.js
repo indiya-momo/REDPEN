@@ -16,16 +16,19 @@ export function compileLiteralFindBody(trimmed) {
 
   if (wordParts.length === 1) {
     const word = wordParts[0];
-    const esc = escapeRegexLiteral(word);
-    if (word.length <= 1) return esc;
-    return esc.split('').join(LINE_BREAK_GAP);
+    if (word.length <= 1) return escapeRegexLiteral(word);
+    // 글자 단위 이스케이프 후 줄바꿈 허용 — whole-string escape 후 split('')은 \( 등이 깨짐
+    return [...word]
+      .map((ch) => escapeRegexLiteral(ch))
+      .join(LINE_BREAK_GAP);
   }
 
   return wordParts
     .map((word) => {
-      const esc = escapeRegexLiteral(word);
-      if (word.length <= 1) return esc;
-      return esc.split('').join(GAP);
+      if (word.length <= 1) return escapeRegexLiteral(word);
+      return [...word]
+        .map((ch) => escapeRegexLiteral(ch))
+        .join(GAP);
     })
     .join(GAP_REQ);
 }

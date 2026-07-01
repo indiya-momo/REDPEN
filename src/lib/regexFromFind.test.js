@@ -30,4 +30,16 @@ describe('compileRuleRegex', () => {
     expect(re?.test('조선시대')).toBe(false);
     expect(re?.test('조선 시대')).toBe(true);
   });
+
+  it('find에 괄호·한자 — 이스케이프가 글자 단위로 유지된다', () => {
+    for (const find of ['육월(六月)', '희노애락(喜怒哀樂)']) {
+      expect(compileRuleRegex({ find, replace: 'x', enabled: true })).not.toBeNull();
+    }
+    expect(matches({ find: '육월(六月)', replace: '유월', enabled: true }, '육월(六月)')).toBe(
+      true,
+    );
+    expect(
+      matches({ find: '희노애락(喜怒哀樂)', replace: '희로애락', enabled: true }, '희노애락(喜怒哀樂)'),
+    ).toBe(true);
+  });
 });
