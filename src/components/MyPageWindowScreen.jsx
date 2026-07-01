@@ -37,9 +37,11 @@ import {
 } from '../lib/ruleSetsStorage.js';
 import BadgeCollectionGrid from './BadgeCollectionGrid.jsx';
 import ProjectHubEditorPage from './projectHub/ProjectHubEditorPage.jsx';
+import ProjectHubEditorShell from './projectHub/ProjectHubEditorShell.jsx';
 import ProjectHubLibraryPanel from './projectHub/ProjectHubLibraryPanel.jsx';
 import { isMyPageProjectHubEnabled } from '../lib/featureFlags.js';
 import './my-page.css';
+import './project-hub-settings.css';
 import '../mock/mypagePrototype/mypage-prototype.css';
 
 const SIDEBAR_NAV = [
@@ -421,7 +423,7 @@ function MyPageOverviewSection({
 
 function ProjectHubPageSection({ uid, email, entryCardId, onEntryApplied }) {
   return (
-    <div className="mypage__main-inner mypage__main-inner--section mypage__overview--projects">
+    <ProjectHubEditorShell>
       {isMyPageProjectHubEnabled() ? (
         <ProjectHubEditorPage
           uid={uid}
@@ -432,7 +434,7 @@ function ProjectHubPageSection({ uid, email, entryCardId, onEntryApplied }) {
       ) : (
         <ProjectHubPlaceholderSection />
       )}
-    </div>
+    </ProjectHubEditorShell>
   );
 }
 
@@ -639,14 +641,6 @@ export default function MyPageWindowScreen({ authSession, authReady }) {
   );
   const quota = useBetaDailyQuota(authSession?.uid ?? '', quotaEmail);
 
-  const memberTier = useMemo(
-    () =>
-      quota.loading
-        ? null
-        : resolveMemberBenefitTier(quota, authSession?.uid ?? ''),
-    [quota, authSession?.uid],
-  );
-
   useEffect(() => {
     const uid = authSession?.uid?.trim();
     if (uid) clearRewardNotice(uid);
@@ -722,8 +716,10 @@ export default function MyPageWindowScreen({ authSession, authReady }) {
     );
   }
 
+  const isProjectHubEditor = resolvedNav === 'projects';
+
   return (
-    <div className="mypage">
+    <div className={`mypage${isProjectHubEditor ? ' mypage-proto' : ''}`}>
       <aside className="mypage__sidebar" aria-label="마이페이지 메뉴">
         <header className="mypage__sidebar-head">
           <p className="mypage__eyebrow">MY ACCOUNT</p>
@@ -748,34 +744,13 @@ export default function MyPageWindowScreen({ authSession, authReady }) {
         </header>
         <div className="mypage__user">
           <p className="mypage__user-name">
-            <span className="mypage__user-name-row">
-              <span>{displayName} 님</span>
-              {memberTier && !quota.loading ? (
-                <span
-                  className="mypage__tier-badge"
-                  title={memberTier.description}
-                >
-                  <span className="mypage__tier-badge__icon" aria-hidden>
-                    ★
-                  </span>
-                  {memberTier.name}
-                </span>
-              ) : null}
-            </span>
+            <span>{displayName} 님</span>
             {daysWithMomo != null ? (
               <span className="mypage__user-tenure">
                 모모와 함께한 {daysWithMomo}일
               </span>
             ) : null}
           </p>
-          {email ? (
-            <p className="mypage__user-email">{email}</p>
-          ) : (
-            <p className="mypage__user-email mypage__user-email--missing">
-              로그인 이메일을 불러오지 못했습니다. 로그아웃 후 다시 로그인해
-              주세요.
-            </p>
-          )}
         </div>
         <nav aria-label="계정 메뉴">
           <ul className="mypage__nav">
@@ -805,7 +780,9 @@ export default function MyPageWindowScreen({ authSession, authReady }) {
         </button>
       </aside>
 
-      <main className="mypage__main">
+      <main
+        className={`mypage__main${isProjectHubEditor ? ' mypage-proto__main mypage-proto__main--editor' : ''}`}
+      >
         {resolvedNav === 'overview' ? (
           <MyPageOverviewSection
             quota={quota}

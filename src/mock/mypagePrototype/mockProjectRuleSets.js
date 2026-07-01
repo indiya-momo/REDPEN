@@ -31,7 +31,7 @@ import {
   duplicateRuleSet,
   newId,
 } from '../../lib/ruleSetsStorage.js';
-import { buildProjectCardViewModelFromRuleSet } from '../../presentation/ruleSetProjectCard.js';
+import { buildSortedProjectCards } from '../../lib/projectHubCards.js';
 
 /**
  * @param {number} activeCount
@@ -197,15 +197,9 @@ export const MOCK_PROJECT_SEED_VERSION = 'phrase-slot-1';
  */
 export function buildMockProjectCards(projects, options = {}) {
   const { activeId = null, dirtyIds = new Set() } = options;
-  return projects.map((set) => {
-    const card = buildProjectCardViewModelFromRuleSet(set, {
-      isActive: set.id === activeId,
-    });
-    if (dirtyIds.has(set.id)) {
-      return { ...card, dirty: true };
-    }
-    return card;
-  });
+  return buildSortedProjectCards(projects, activeId).map((card) =>
+    dirtyIds.has(card.id) ? { ...card, dirty: true } : card,
+  );
 }
 
 /**

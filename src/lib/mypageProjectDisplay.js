@@ -3,6 +3,15 @@ import { MAX_CRITERIA_PRESETS } from './criteriaPresetLimit.js';
 /** 목업(`mypage-mock`) Library — 슬롯 게이지·끝 칸 기준 */
 export const MOCK_LIBRARY_SLOT_MAX = 3;
 
+/**
+ * 라이브러리 그리드 슬롯 게이지 — `3/3` 형식.
+ * @param {number} cardCount
+ */
+export function formatLibrarySlotGauge(cardCount = 0) {
+  const filled = Math.min(Math.max(0, cardCount), MOCK_LIBRARY_SLOT_MAX);
+  return `${filled}/${MOCK_LIBRARY_SLOT_MAX}`;
+}
+
 /** 마이페이지 「나의 프로젝트」 그리드 표시 상한 (저장 쿼터와 무관) */
 export const MYPAGE_PROJECT_CARD_DISPLAY_MAX = 4;
 

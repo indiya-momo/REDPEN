@@ -21,7 +21,7 @@ import {
 } from '../lib/auxiliaryVerbRegister.js';
 import { buildProjectCardSummary } from '../lib/projectCardSummary.js';
 import { criteriaNameForInput } from '../lib/criteriaName.js';
-import { formatRuleSetSavedDate } from '../lib/ruleSetsStorage.js';
+import { formatProjectCardDotDateFromIso } from './projectCardViewModel.js';
 import { normalizeProjectTags } from '../lib/projectMeta.js';
 
 /** @param {import('../lib/ruleSetsStorage.js').RuleSet} set */
@@ -111,7 +111,7 @@ function buildHeadline(counts, excludePhrases) {
 function buildLastWork(set) {
   const ctx = set.projectContext;
   if (!ctx?.lastWorkedAt) return undefined;
-  const date = formatRuleSetSavedDate(ctx.lastWorkedAt);
+  const date = formatProjectCardDotDateFromIso(ctx.lastWorkedAt);
   if (!date) return undefined;
   return {
     date,
@@ -123,7 +123,7 @@ function buildLastWork(set) {
 /** @param {import('../lib/ruleSetsStorage.js').RuleSet} set */
 function buildCreatedDate(set) {
   if (!set.savedAt) return undefined;
-  return formatRuleSetSavedDate(set.savedAt) || undefined;
+  return formatProjectCardDotDateFromIso(set.savedAt) || undefined;
 }
 
 /**

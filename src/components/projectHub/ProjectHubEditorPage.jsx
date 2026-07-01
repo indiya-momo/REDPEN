@@ -149,6 +149,8 @@ export default function ProjectHubEditorPage({
           actions={actions}
           selectedCardId={selectedCardId}
           onSelectCard={setSelectedCardId}
+          sharePreviewCardId={sharePreviewCardId}
+          onSharePreviewCardIdChange={setSharePreviewCardId}
         />
 
         {!loading && selectedCard ? (

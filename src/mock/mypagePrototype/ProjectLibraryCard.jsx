@@ -1,12 +1,30 @@
 import { useCallback, useId, useMemo, useState } from 'react';
 import {
-  buildProjectCardDisplayTags,
   buildProjectCardPillarPreviews,
+  buildProjectCardTabLabels,
   formatProjectCardCompactDateLine,
   formatProjectCardEditionValues,
   formatProjectCardLastModifiedLabel,
   formatProjectCardMemoPreview,
 } from '../../presentation/projectCardViewModel.js';
+
+/**
+ * @param {{ title: string, className?: string, titleAttr?: string }} props
+ */
+function SheetCardBookTitle({ title }) {
+  const trimmed = title.trim();
+  return (
+    <span className="sheet-card__title-line">
+      <span className="sheet-card__title-glyph" aria-hidden>
+        《
+      </span>
+      <span className="sheet-card__title-text">{trimmed}</span>
+      <span className="sheet-card__title-glyph" aria-hidden>
+        》
+      </span>
+    </span>
+  );
+}
 
 /**
  * @param {{
@@ -65,10 +83,7 @@ export default function ProjectLibraryCard({
     [card],
   );
 
-  const displayTags = useMemo(
-    () => buildProjectCardDisplayTags(card),
-    [card],
-  );
+  const tabLabels = useMemo(() => buildProjectCardTabLabels(card), [card]);
 
   const lastModifiedLabel = formatProjectCardLastModifiedLabel(card);
   const editionValues = formatProjectCardEditionValues(card);
@@ -107,11 +122,14 @@ export default function ProjectLibraryCard({
         setEditingName(true);
       }}
       aria-label={`프로젝트 이름 수정: ${card.title}`}
+      title={`《${card.title}》`}
     >
-      《{card.title}》
+      <SheetCardBookTitle title={card.title} />
     </button>
   ) : (
-    <h2 className="sheet-card__title">《{card.title}》</h2>
+    <h2 className="sheet-card__title" title={`《${card.title}》`}>
+      <SheetCardBookTitle title={card.title} />
+    </h2>
   );
 
   if (compact) {
@@ -135,7 +153,9 @@ export default function ProjectLibraryCard({
         aria-label={`${card.title}${compactDateLine ? `, ${compactDateLine}` : ''}`}
       >
         <div className="sheet-card__body sheet-card__body--folder">
-          <p className="sheet-card__folder-title">《{card.title}》</p>
+          <p className="sheet-card__folder-title" title={`《${card.title}》`}>
+            <SheetCardBookTitle title={card.title} />
+          </p>
           {compactDateLine ? (
             <p className="sheet-card__folder-date">{compactDateLine}</p>
           ) : null}
@@ -162,18 +182,24 @@ export default function ProjectLibraryCard({
       tabIndex={onSelect ? 0 : undefined}
       aria-pressed={onSelect ? selected : undefined}
     >
-      {displayTags.length > 0 ? (
-        <div className="sheet-card__tabs" aria-label="분류">
-          {displayTags.map((tag, index) => (
+      <div
+        className="sheet-card__tabs"
+        aria-label="분류"
+        aria-hidden={tabLabels.length === 0 ? true : undefined}
+      >
+        {tabLabels.length > 0 ? (
+          tabLabels.map((tag, index) => (
             <span
-              key={tag}
+              key={`${tag}-${index}`}
               className={`sheet-card__tab sheet-card__tab--tag${index === 0 ? ' sheet-card__tab--lead' : ''}`}
             >
               {tag}
             </span>
-          ))}
-        </div>
-      ) : null}
+          ))
+        ) : (
+          <span className="sheet-card__tab sheet-card__tab--tag sheet-card__tab--lead sheet-card__tab--ghost" />
+        )}
+      </div>
 
       <div className="sheet-card__body">
         <div className="sheet-card__head">
