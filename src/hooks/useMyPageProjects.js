@@ -21,6 +21,7 @@ import {
 } from '../lib/ruleSetsCloud.js';
 import { mergeRuleSetsOnLogin, applyCriteriaPresetQuota } from '../lib/ruleSetsMerge.js';
 import { mergeProjectContext } from '../lib/projectMeta.js';
+import { planProjectCustomRulesUpdate } from '../lib/projectCustomRulesUpdate.js';
 import {
   planDeleteProject,
   planDuplicateProject,
@@ -269,6 +270,31 @@ export function useMyPageProjects(uid = '', email = '') {
     [persistProjectSets],
   );
 
+  const updateProjectCustomRules = useCallback(
+    async (setId, nextCustomRules) => {
+      const id = String(setId ?? '').trim();
+      if (!id) return false;
+
+      const sets = loadedSetsRef.current;
+      const index = sets.findIndex((set) => set.id === id);
+      if (index < 0) return false;
+
+      const current = sets[index];
+      const plan = planProjectCustomRulesUpdate(current, nextCustomRules);
+      if (!plan.ok) {
+        return false;
+      }
+
+      const nextSet = normalizeRuleSet({
+        ...current,
+        customRules: plan.nextCustomRules,
+      });
+      const nextSets = sets.map((set, i) => (i === index ? nextSet : set));
+      return persistProjectSets(nextSets);
+    },
+    [persistProjectSets],
+  );
+
   const updateProjectMeta = useCallback(
     async (setId, patch) => {
       const id = String(setId ?? '').trim();
@@ -320,6 +346,7 @@ export function useMyPageProjects(uid = '', email = '') {
     duplicateProject,
     deleteProject,
     updateProjectMeta,
+    updateProjectCustomRules,
     savedCount,
     maxSlots,
     exempt,

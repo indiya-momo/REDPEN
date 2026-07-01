@@ -1,0 +1,164 @@
+/**
+ * 마이페이지 「나의 프로젝트」 메뉴 — 공통 그리드 + 하단 편집 패널.
+ */
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useProjectHubActions } from '../../hooks/useProjectHubActions.js';
+import { useProjectHubLibrary } from '../../hooks/useProjectHubLibrary.js';
+import { useProjectTagFilter } from '../../hooks/useProjectTagFilter.js';
+import SharePreviewModal from '../../mock/mypagePrototype/SharePreviewModal.jsx';
+import ProjectHubSettingsPanel from '../ProjectHubSettingsPanel.jsx';
+import ProjectHubLibraryPanel from './ProjectHubLibraryPanel.jsx';
+
+/**
+ * @param {{
+ *   uid: string,
+ *   email: string,
+ *   entryCardId?: string | null,
+ *   onEntryApplied?: () => void,
+ * }} props
+ */
+export default function ProjectHubEditorPage({
+  uid,
+  email,
+  entryCardId = null,
+  onEntryApplied,
+}) {
+  const library = useProjectHubLibrary(uid, email);
+  const tagFilter = useProjectTagFilter(library.previewCards);
+  const actions = useProjectHubActions(library);
+  const {
+    previewCards,
+    loading,
+    activeSetId,
+    updateProjectMeta,
+    updateProjectCustomRules,
+  } = library;
+  const { filteredCards } = tagFilter;
+
+  const [selectedCardId, setSelectedCardId] = useState(
+    /** @type {string | null} */ (null),
+  );
+  const [metaSavePending, setMetaSavePending] = useState(false);
+  const [criteriaSavePending, setCriteriaSavePending] = useState(false);
+  const [sharePreviewCardId, setSharePreviewCardId] = useState(
+    /** @type {string | null} */ (null),
+  );
+
+  useEffect(() => {
+    if (loading) return;
+
+    if (filteredCards.length === 0) {
+      setSelectedCardId(null);
+      return;
+    }
+
+    if (entryCardId) {
+      if (filteredCards.some((card) => card.id === entryCardId)) {
+        setSelectedCardId(entryCardId);
+      }
+      onEntryApplied?.();
+      return;
+    }
+
+    if (
+      selectedCardId &&
+      filteredCards.some((card) => card.id === selectedCardId)
+    ) {
+      return;
+    }
+
+    const preferredId =
+      activeSetId && filteredCards.some((card) => card.id === activeSetId)
+        ? activeSetId
+        : filteredCards[0].id;
+    setSelectedCardId(preferredId);
+  }, [
+    loading,
+    filteredCards,
+    activeSetId,
+    selectedCardId,
+    entryCardId,
+    onEntryApplied,
+  ]);
+
+  const selectedCard = useMemo(
+    () => previewCards.find((card) => card.id === selectedCardId) ?? null,
+    [previewCards, selectedCardId],
+  );
+
+  const selectedRuleSet = useMemo(
+    () => library.projects.find((set) => set.id === selectedCardId) ?? null,
+    [library.projects, selectedCardId],
+  );
+
+  const sharePreviewCard = useMemo(
+    () => previewCards.find((card) => card.id === sharePreviewCardId) ?? null,
+    [previewCards, sharePreviewCardId],
+  );
+
+  const handleCustomRulesChange = useCallback(
+    async (nextCustomRules) => {
+      if (!selectedCard) return;
+      setCriteriaSavePending(true);
+      try {
+        await updateProjectCustomRules(selectedCard.id, nextCustomRules);
+      } finally {
+        setCriteriaSavePending(false);
+      }
+    },
+    [selectedCard, updateProjectCustomRules],
+  );
+
+  const handleSaveMeta = useCallback(
+    async (payload) => {
+      if (!selectedCard) return;
+      setMetaSavePending(true);
+      try {
+        await updateProjectMeta(selectedCard.id, payload);
+      } finally {
+        setMetaSavePending(false);
+      }
+    },
+    [selectedCard, updateProjectMeta],
+  );
+
+  return (
+    <>
+      <div className="mypage__projects-layout">
+        <ProjectHubLibraryPanel
+          uid={uid}
+          email={email}
+          library={library}
+          tagFilter={tagFilter}
+          actions={actions}
+          selectedCardId={selectedCardId}
+          onSelectCard={setSelectedCardId}
+        />
+
+        {!loading && selectedCard ? (
+          <ProjectHubSettingsPanel
+            card={selectedCard}
+            ruleSet={selectedRuleSet}
+            pdfFileName={selectedRuleSet?.projectContext?.pdfFileName}
+            pdfPageCount={selectedRuleSet?.projectContext?.pdfPageCount}
+            lastWorkedAt={selectedRuleSet?.projectContext?.lastWorkedAt}
+            saving={metaSavePending}
+            criteriaSaving={criteriaSavePending}
+            onSave={handleSaveMeta}
+            onCustomRulesChange={handleCustomRulesChange}
+            onStartWork={() => void actions.handleStartWork(selectedCard.id)}
+            onDuplicate={() => void actions.handleDuplicate(selectedCard.id)}
+            onSharePreview={() => setSharePreviewCardId(selectedCard.id)}
+          />
+        ) : null}
+      </div>
+
+      {sharePreviewCard ? (
+        <SharePreviewModal
+          card={sharePreviewCard}
+          onClose={() => setSharePreviewCardId(null)}
+        />
+      ) : null}
+    </>
+  );
+}
