@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildProjectCardPillarPreviews,
+  buildProjectCardTabLabels,
   buildProjectTagFilterOptions,
   collectProjectTags,
   filterProjectsByTag,
   filterProjectsForLibrary,
+  formatProjectCardLastModifiedLabel,
   formatProjectCardMetaLine,
   formatProjectCardScheduleLines,
   formatProjectCardTitleLine,
@@ -42,11 +44,26 @@ describe('projectCardViewModel helpers', () => {
     );
   });
 
+  it('formatProjectCardLastModifiedLabel', () => {
+    expect(formatProjectCardLastModifiedLabel(sample)).toBe('26.06.18 최종수정');
+    expect(
+      formatProjectCardLastModifiedLabel({
+        ...sample,
+        lastWork: undefined,
+        savedDate: '26년 6월 22일',
+      }),
+    ).toBe('26년 6월 22일 최종수정');
+  });
+
+  it('buildProjectCardTabLabels', () => {
+    expect(buildProjectCardTabLabels(sample)).toEqual(['26.06.18 최종수정']);
+  });
+
   it('formatProjectCardScheduleLines', () => {
-    expect(formatProjectCardScheduleLines(sample)).toEqual([
-      '26.06.01 생성',
-      '26.06.18 작업',
-    ]);
+    expect(formatProjectCardScheduleLines(sample)).toEqual(['26.06.18 작업']);
+    expect(
+      formatProjectCardScheduleLines({ ...sample, lastWork: undefined }),
+    ).toEqual([]);
   });
 
   it('formatProjectCardMetaLine', () => {
