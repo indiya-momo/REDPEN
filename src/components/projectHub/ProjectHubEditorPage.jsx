@@ -8,6 +8,7 @@ import { useProjectTagFilter } from '../../hooks/useProjectTagFilter.js';
 import SharePreviewModal from '../../mock/mypagePrototype/SharePreviewModal.jsx';
 import ProjectHubSettingsPanel from '../ProjectHubSettingsPanel.jsx';
 import ProjectHubLibraryPanel from './ProjectHubLibraryPanel.jsx';
+import '../project-hub-settings.css';
 
 /**
  * @param {{
@@ -15,6 +16,8 @@ import ProjectHubLibraryPanel from './ProjectHubLibraryPanel.jsx';
  *   email: string,
  *   entryCardId?: string | null,
  *   onEntryApplied?: () => void,
+ *   library?: ReturnType<typeof useProjectHubLibrary>,
+ *   onStartWork?: (cardId: string) => void | Promise<void>,
  * }} props
  */
 export default function ProjectHubEditorPage({
@@ -22,10 +25,20 @@ export default function ProjectHubEditorPage({
   email,
   entryCardId = null,
   onEntryApplied,
+  library: libraryProp,
+  onStartWork: onStartWorkOverride,
 }) {
-  const library = useProjectHubLibrary(uid, email);
+  const libraryInternal = useProjectHubLibrary(uid, email);
+  const library = libraryProp ?? libraryInternal;
   const tagFilter = useProjectTagFilter(library.previewCards);
-  const actions = useProjectHubActions(library);
+  const actionsInternal = useProjectHubActions(library);
+  const actions = useMemo(
+    () =>
+      onStartWorkOverride
+        ? { ...actionsInternal, handleStartWork: onStartWorkOverride }
+        : actionsInternal,
+    [actionsInternal, onStartWorkOverride],
+  );
   const {
     previewCards,
     loading,
