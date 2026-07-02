@@ -11,6 +11,7 @@ import {
   loadActiveSetId,
   loadRuleSets,
   ruleSetsStorageKey,
+  RULE_SETS_LOCAL_SYNC_EVENT,
   saveActiveSetId,
   saveRuleSets,
 } from '../lib/ruleSetsStorage.js';
@@ -20,7 +21,12 @@ import {
   resolveHydratedActiveSetId,
   saveRuleSetsCloud,
 } from '../lib/ruleSetsCloud.js';
-import { mergeRuleSetsOnLogin, applyCriteriaPresetQuota } from '../lib/ruleSetsMerge.js';
+import {
+  mergeRuleSetsOnLogin,
+  applyCriteriaPresetQuota,
+  mergeRuleSetsOnPersist,
+  mergeLocalRuleSetSources,
+} from '../lib/ruleSetsMerge.js';
 import { mergeProjectContext } from '../lib/projectMeta.js';
 import { planProjectCriteriaUpdate } from '../lib/projectCriteriaUpdate.js';
 import { planProjectCustomRulesUpdate } from '../lib/projectCustomRulesUpdate.js';
@@ -94,8 +100,10 @@ export function useMyPageProjects(uid = '', email = '') {
   const persistProjectSets = useCallback(
     async (nextSets, nextActiveId = activeSetIdRef.current) => {
       const trimmedUid = uid.trim();
-      loadedSetsRef.current = nextSets;
-      saveRuleSets(nextSets, trimmedUid);
+      const disk = loadRuleSets(trimmedUid);
+      const merged = mergeRuleSetsOnPersist(disk, nextSets);
+      loadedSetsRef.current = merged;
+      saveRuleSets(merged, trimmedUid);
 
       if (nextActiveId) {
         saveActiveSetId(nextActiveId, trimmedUid);
@@ -103,11 +111,11 @@ export function useMyPageProjects(uid = '', email = '') {
         setActiveSetId(nextActiveId);
       }
 
-      syncSavedProjectsState(nextSets, setProjects, setSavedCount);
+      syncSavedProjectsState(merged, setProjects, setSavedCount);
 
       if (trimmedUid && isRuleSetsCloudEnabled()) {
         try {
-          await saveRuleSetsCloud(trimmedUid, nextSets, nextActiveId);
+          await saveRuleSetsCloud(trimmedUid, merged, nextActiveId);
         } catch (e) {
           console.warn('기준 클라우드 저장 실패 (마이페이지)', e);
           return false;
@@ -195,7 +203,11 @@ export function useMyPageProjects(uid = '', email = '') {
 
     const reloadFromStorage = () => {
       try {
-        let sets = normalizeLoadedSets(loadRuleSets(trimmedUid));
+        const diskSets = normalizeLoadedSets(loadRuleSets(trimmedUid));
+        let sets = mergeLocalRuleSetSources(
+          diskSets,
+          loadedSetsRef.current,
+        );
         const beforeIds = sets.map((set) => set.id).join(',');
         sets = applyCriteriaPresetQuota(sets, trimmedUid, email);
         const activeId = resolveHydratedActiveSetId(
@@ -225,8 +237,20 @@ export function useMyPageProjects(uid = '', email = '') {
       reloadFromStorage();
     };
 
+    const onLocalSync = (event) => {
+      const detailUid = String(
+        /** @type {CustomEvent<{ uid?: string }>} */ (event).detail?.uid ?? '',
+      ).trim();
+      if (detailUid !== trimmedUid) return;
+      reloadFromStorage();
+    };
+
     window.addEventListener('storage', onStorage);
-    return () => window.removeEventListener('storage', onStorage);
+    window.addEventListener(RULE_SETS_LOCAL_SYNC_EVENT, onLocalSync);
+    return () => {
+      window.removeEventListener('storage', onStorage);
+      window.removeEventListener(RULE_SETS_LOCAL_SYNC_EVENT, onLocalSync);
+    };
   }, [uid, email]);
 
   const selectProject = useCallback(
@@ -330,6 +354,7 @@ export function useMyPageProjects(uid = '', email = '') {
       const nextSet = normalizeRuleSet({
         ...current,
         customRules: plan.nextCustomRules,
+        ...(current.savedAt ? { savedAt: new Date().toISOString() } : {}),
       });
       const nextSets = sets.map((set, i) => (i === index ? nextSet : set));
       return persistProjectSets(nextSets);
@@ -355,6 +380,7 @@ export function useMyPageProjects(uid = '', email = '') {
       const nextSet = normalizeRuleSet({
         ...current,
         ...plan.patch,
+        ...(current.savedAt ? { savedAt: new Date().toISOString() } : {}),
       });
       const nextSets = sets.map((set, i) => (i === index ? nextSet : set));
       return persistProjectSets(nextSets);
@@ -396,12 +422,20 @@ export function useMyPageProjects(uid = '', email = '') {
                 : {}),
             })
           : current.projectContext;
+      const touchesMeta =
+        patch.tags !== undefined ||
+        patch.memo !== undefined ||
+        patch.proofRevision !== undefined ||
+        patch.formatLabel !== undefined;
       const nextSet = normalizeRuleSet({
         ...current,
         ...(patch.tags !== undefined ? { tags: patch.tags } : {}),
         ...(patch.memo !== undefined ? { memo: patch.memo } : {}),
         ...(nextProjectContext !== undefined
           ? { projectContext: nextProjectContext }
+          : {}),
+        ...(touchesMeta
+          ? { metaUpdatedAt: new Date().toISOString() }
           : {}),
       });
       const nextSets = sets.map((set, i) => (i === index ? nextSet : set));

@@ -1,4 +1,4 @@
-import { useEffect, useId, useState } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import {
   MAX_PROJECT_FORMAT_LABEL_LENGTH,
   MAX_PROJECT_PROOF_REVISION_LENGTH,
@@ -19,6 +19,18 @@ const NAV_ITEMS = [
 ];
 
 const CRITERIA_SECTIONS = new Set(['spelling', 'consistency', 'auxiliary']);
+const META_AUTOSAVE_MS = 400;
+
+/** @param {import('../presentation/projectCardViewModel.js').ProjectCardViewModel} card */
+function buildCardMetaSyncKey(card) {
+  return [
+    card.title,
+    card.tags.join('\u0001'),
+    card.memo ?? '',
+    card.proofRevision ?? '',
+    card.formatLabel ?? '',
+  ].join('\u0002');
+}
 
 /**
  * @param {{
@@ -35,7 +47,7 @@ const CRITERIA_SECTIONS = new Set(['spelling', 'consistency', 'auxiliary']);
  *     memo?: string,
  *     proofRevision?: string,
  *     formatLabel?: string,
- *   }) => void | Promise<void>,
+ *   }, cardId?: string) => void | Promise<{ ok?: boolean } | void>,
  *   onCriteriaChange?: (
  *     patch: {
  *       customRules?: import('../lib/ruleTypes.js').Rule[],
@@ -78,37 +90,145 @@ export default function ProjectHubSettingsPanel({
   const [proofRevisionInput, setProofRevisionInput] = useState('');
   const [formatLabelInput, setFormatLabelInput] = useState('');
 
-  useEffect(() => {
-    setNameInput(card.title);
-    setTagsInput(card.tags.join(', '));
-    setMemoInput(card.memo ?? '');
-    setProofRevisionInput(card.proofRevision ?? '');
-    setFormatLabelInput(card.formatLabel ?? '');
-  }, [card.id, card.title, card.tags, card.memo, card.proofRevision, card.formatLabel]);
+  const onSaveRef = useRef(onSave);
+  onSaveRef.current = onSave;
+  const activeSectionRef = useRef(activeSection);
+  activeSectionRef.current = activeSection;
+  const skipMetaAutosaveRef = useRef(true);
+  const metaDirtyRef = useRef(false);
+  const metaInputRef = useRef({
+    nameInput,
+    tagsInput,
+    memoInput,
+    proofRevisionInput,
+    formatLabelInput,
+  });
+  metaInputRef.current = {
+    nameInput,
+    tagsInput,
+    memoInput,
+    proofRevisionInput,
+    formatLabelInput,
+  };
 
-  async function handleSave(event) {
-    event.preventDefault();
+  const markMetaDirty = useCallback(() => {
+    metaDirtyRef.current = true;
+  }, []);
+
+  const buildMetaPayloadFromRef = useCallback(() => {
+    const {
+      nameInput: name,
+      tagsInput: tagsRaw,
+      memoInput: memoRaw,
+      proofRevisionInput: proofRevisionRaw,
+      formatLabelInput: formatLabelRaw,
+    } = metaInputRef.current;
     const tags = normalizeProjectTags(
-      tagsInput
+      tagsRaw
         .split(/[,，]/)
         .map((part) => part.trim())
         .filter(Boolean),
     );
-    const memo = normalizeProjectMemo(memoInput);
-    const proofRevision = proofRevisionInput
+    const memo = normalizeProjectMemo(memoRaw);
+    const proofRevision = proofRevisionRaw
       .trim()
       .slice(0, MAX_PROJECT_PROOF_REVISION_LENGTH);
-    const formatLabel = formatLabelInput
+    const formatLabel = formatLabelRaw
       .trim()
       .slice(0, MAX_PROJECT_FORMAT_LABEL_LENGTH);
-    await onSave({
-      name: nameInput.trim(),
+    return {
+      name: name.trim(),
       tags,
       memo,
       proofRevision: proofRevision || undefined,
       formatLabel: formatLabel || undefined,
-    });
-  }
+    };
+  }, []);
+
+  const syncFormFromCard = useCallback((sourceCard) => {
+    setNameInput(sourceCard.title);
+    setTagsInput(sourceCard.tags.join(', '));
+    setMemoInput(sourceCard.memo ?? '');
+    setProofRevisionInput(sourceCard.proofRevision ?? '');
+    setFormatLabelInput(sourceCard.formatLabel ?? '');
+  }, []);
+
+  const flushMetaSave = useCallback(async (forCardId) => {
+    if (!metaDirtyRef.current) return true;
+    try {
+      const result = await onSaveRef.current(
+        buildMetaPayloadFromRef(),
+        forCardId,
+      );
+      if (result && typeof result === 'object' && result.ok === false) {
+        metaDirtyRef.current = true;
+        return false;
+      }
+      metaDirtyRef.current = false;
+      return true;
+    } catch {
+      metaDirtyRef.current = true;
+      return false;
+    }
+  }, [buildMetaPayloadFromRef]);
+
+  const flushMetaSaveRef = useRef(flushMetaSave);
+  flushMetaSaveRef.current = flushMetaSave;
+
+  const prevCardIdRef = useRef(card.id);
+  const cardMetaSyncKey = buildCardMetaSyncKey(card);
+
+  useEffect(() => {
+    const cardSwitched = prevCardIdRef.current !== card.id;
+    prevCardIdRef.current = card.id;
+    if (cardSwitched) {
+      metaDirtyRef.current = false;
+    }
+    if (cardSwitched || !metaDirtyRef.current) {
+      syncFormFromCard(card);
+      skipMetaAutosaveRef.current = true;
+    }
+  }, [card, card.id, cardMetaSyncKey, syncFormFromCard]);
+
+  useEffect(() => {
+    const saveForCardId = card.id;
+    return () => {
+      void flushMetaSaveRef.current(saveForCardId);
+    };
+  }, [card.id]);
+
+  useEffect(() => {
+    if (activeSection !== 'meta') return undefined;
+
+    if (skipMetaAutosaveRef.current) {
+      skipMetaAutosaveRef.current = false;
+      return () => {
+        if (activeSectionRef.current !== 'meta') {
+          void flushMetaSaveRef.current(card.id);
+        }
+      };
+    }
+
+    const saveForCardId = card.id;
+    const timer = setTimeout(() => {
+      void flushMetaSaveRef.current(saveForCardId);
+    }, META_AUTOSAVE_MS);
+
+    return () => {
+      clearTimeout(timer);
+      if (activeSectionRef.current !== 'meta') {
+        void flushMetaSaveRef.current(saveForCardId);
+      }
+    };
+  }, [
+    activeSection,
+    card.id,
+    nameInput,
+    tagsInput,
+    memoInput,
+    proofRevisionInput,
+    formatLabelInput,
+  ]);
 
   const showCriteriaPanel =
     CRITERIA_SECTIONS.has(activeSection) && ruleSet && onCriteriaChange;
@@ -150,7 +270,7 @@ export default function ProjectHubSettingsPanel({
 
         <div className="project-hub-settings__main">
           {activeSection === 'meta' ? (
-            <form className="project-hub-settings__form" onSubmit={(e) => void handleSave(e)}>
+            <div className="project-hub-settings__form">
               <div className="project-hub-settings__group">
                 <div className="project-hub-settings__card">
                   <div className="project-hub-settings__row">
@@ -169,10 +289,13 @@ export default function ProjectHubSettingsPanel({
                       id={nameInputId}
                       className="project-hub-settings__input project-hub-settings__input--wide"
                       value={nameInput}
-                      onChange={(e) => setNameInput(e.target.value)}
+                      onChange={(e) => {
+                        markMetaDirty();
+                        setNameInput(e.target.value);
+                      }}
                       placeholder="프로젝트 제목"
                       maxLength={60}
-                      disabled={saving}
+                      aria-busy={saving}
                       autoComplete="off"
                     />
                   </div>
@@ -193,9 +316,12 @@ export default function ProjectHubSettingsPanel({
                       id={tagsInputId}
                       className="project-hub-settings__input project-hub-settings__input--wide"
                       value={tagsInput}
-                      onChange={(e) => setTagsInput(e.target.value)}
+                      onChange={(e) => {
+                        markMetaDirty();
+                        setTagsInput(e.target.value);
+                      }}
                       placeholder="문학, 시리즈 2/5"
-                      disabled={saving}
+                      aria-busy={saving}
                       autoComplete="off"
                     />
                   </div>
@@ -206,7 +332,7 @@ export default function ProjectHubSettingsPanel({
                         className="project-hub-settings__row-label"
                         htmlFor={proofRevisionInputId}
                       >
-                        교
+                        교정교열
                       </label>
                       <p className="project-hub-settings__row-desc">
                         예: 3교
@@ -216,9 +342,12 @@ export default function ProjectHubSettingsPanel({
                       id={proofRevisionInputId}
                       className="project-hub-settings__input"
                       value={proofRevisionInput}
-                      onChange={(e) => setProofRevisionInput(e.target.value)}
+                      onChange={(e) => {
+                        markMetaDirty();
+                        setProofRevisionInput(e.target.value);
+                      }}
                       placeholder="3교"
-                      disabled={saving}
+                      aria-busy={saving}
                       autoComplete="off"
                     />
                   </div>
@@ -239,9 +368,12 @@ export default function ProjectHubSettingsPanel({
                       id={formatLabelInputId}
                       className="project-hub-settings__input"
                       value={formatLabelInput}
-                      onChange={(e) => setFormatLabelInput(e.target.value)}
+                      onChange={(e) => {
+                        markMetaDirty();
+                        setFormatLabelInput(e.target.value);
+                      }}
                       placeholder="신국판"
-                      disabled={saving}
+                      aria-busy={saving}
                       autoComplete="off"
                     />
                   </div>
@@ -262,25 +394,17 @@ export default function ProjectHubSettingsPanel({
                       id={memoInputId}
                       className="project-hub-settings__textarea"
                       value={memoInput}
-                      onChange={(e) => setMemoInput(e.target.value)}
+                      onChange={(e) => {
+                        markMetaDirty();
+                        setMemoInput(e.target.value);
+                      }}
                       rows={3}
-                      disabled={saving}
+                      aria-busy={saving}
                     />
                   </div>
                 </div>
               </div>
-
-              <footer className="project-hub-settings__footer">
-                <button
-                  type="submit"
-                  className="btn-run project-hub-settings__save"
-                  disabled={saving}
-                  aria-busy={saving}
-                >
-                  {saving ? '저장 중…' : '저장'}
-                </button>
-              </footer>
-            </form>
+            </div>
           ) : null}
 
           {showCriteriaPanel ? (

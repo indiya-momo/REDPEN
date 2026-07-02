@@ -136,6 +136,73 @@ export function mergeProjectContext(existing, patch) {
   });
 }
 
+/** @param {string | undefined} iso */
+export function metaUpdatedAtMs(iso) {
+  const ms = Date.parse(String(iso ?? ''));
+  return Number.isFinite(ms) ? ms : 0;
+}
+
+/**
+ * 규칙(savedAt) 병합 후 프로젝트 메타(tags·memo·교차·판형)를 잃지 않게 합친다.
+ *
+ * @param {import('./ruleSetsStorage.js').RuleSet} primary
+ * @param {import('./ruleSetsStorage.js').RuleSet | undefined} secondary
+ * @returns {import('./ruleSetsStorage.js').RuleSet}
+ */
+export function mergeRuleSetProjectMeta(primary, secondary) {
+  if (!secondary || primary.id !== secondary.id) {
+    return {
+      ...primary,
+      tags: normalizeProjectTags(primary.tags),
+      memo: normalizeProjectMemo(primary.memo),
+      projectContext: normalizeProjectContext(primary.projectContext),
+    };
+  }
+
+  const primaryMetaMs = metaUpdatedAtMs(primary.metaUpdatedAt);
+  const secondaryMetaMs = metaUpdatedAtMs(secondary.metaUpdatedAt);
+
+  /** @type {string[]} */
+  let tags;
+  /** @type {string | undefined} */
+  let memo;
+  /** @type {ProjectContext | undefined} */
+  let projectContext;
+  /** @type {string | undefined} */
+  let metaUpdatedAt;
+
+  if (primaryMetaMs > secondaryMetaMs) {
+    tags = normalizeProjectTags(primary.tags);
+    memo = normalizeProjectMemo(primary.memo);
+    projectContext = normalizeProjectContext(primary.projectContext);
+    metaUpdatedAt = primary.metaUpdatedAt;
+  } else if (secondaryMetaMs > primaryMetaMs) {
+    tags = normalizeProjectTags(secondary.tags);
+    memo = normalizeProjectMemo(secondary.memo);
+    projectContext = normalizeProjectContext(secondary.projectContext);
+    metaUpdatedAt = secondary.metaUpdatedAt;
+  } else {
+    const primaryTags = normalizeProjectTags(primary.tags);
+    const secondaryTags = normalizeProjectTags(secondary.tags);
+    tags = primaryTags.length ? primaryTags : secondaryTags;
+    memo =
+      normalizeProjectMemo(primary.memo) ??
+      normalizeProjectMemo(secondary.memo);
+    projectContext = normalizeProjectContext(
+      mergeProjectContext(secondary.projectContext, primary.projectContext),
+    );
+    metaUpdatedAt = primary.metaUpdatedAt ?? secondary.metaUpdatedAt;
+  }
+
+  return {
+    ...primary,
+    tags,
+    ...(memo !== undefined ? { memo } : {}),
+    ...(projectContext !== undefined ? { projectContext } : {}),
+    ...(metaUpdatedAt ? { metaUpdatedAt } : {}),
+  };
+}
+
 /**
  * PDF가 열려 있을 때 RuleSet 저장·작업 갱신용 스냅샷.
  *

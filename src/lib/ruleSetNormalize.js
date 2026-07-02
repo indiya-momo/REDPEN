@@ -58,5 +58,10 @@ export function normalizeRuleSet(set) {
     tags: normalizeProjectTags(set.tags),
     memo: normalizeProjectMemo(set.memo),
     projectContext: normalizeProjectContext(set.projectContext),
+    metaUpdatedAt:
+      typeof set.metaUpdatedAt === 'string' &&
+      !Number.isNaN(Date.parse(set.metaUpdatedAt))
+        ? set.metaUpdatedAt
+        : undefined,
   };
 }

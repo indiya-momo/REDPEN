@@ -96,7 +96,7 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1.1rem 0.9rem;
-  align-items: start;
+  align-items: stretch;
 }
 
 .mypage-proto__grid--quad {
@@ -183,6 +183,7 @@
   position: relative;
   display: flex;
   flex-direction: column;
+  height: 100%;
   min-width: 0;
   border-radius: 4px;
   box-shadow: var(--sheet-shadow);
@@ -225,6 +226,7 @@
 
 .sheet-card__body {
   display: flex;
+  flex: 1;
   flex-direction: column;
   gap: 0.55rem;
   padding: 0.9rem 1rem 0.8rem;
@@ -332,6 +334,8 @@
   gap: 0;
   max-width: 46%;
   min-width: 0;
+  min-height: calc(2 * var(--sheet-card-head-line));
+  justify-content: flex-start;
 }
 
 .sheet-card__title,
@@ -413,14 +417,19 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 0.82rem;
-  font-weight: 600;
+  font-size: 0.6rem;
+  font-weight: 700;
   line-height: 1.3;
-  color: #1d4ed8;
+  color: #1e3a5f;
+}
+
+.sheet-card__edition-line--ghost {
+  visibility: hidden;
 }
 
 .sheet-card__memo-preview {
   margin: 0;
+  height: calc(0.68rem * 1.35);
   min-height: calc(0.68rem * 1.35);
   font-size: 0.68rem;
   line-height: 1.35;
@@ -430,6 +439,10 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.sheet-card__memo-preview:empty::before {
+  content: '\00a0';
 }
 
 .sheet-card__title-field {
@@ -520,6 +533,7 @@
 }
 
 .sheet-card__sections {
+  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 0.45rem;
