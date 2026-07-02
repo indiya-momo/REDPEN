@@ -1,5 +1,19 @@
 export const RULE_SETS_STORAGE_KEY = 'pdf-proofread-rule-sets';
 export const RULE_SETS_ACTIVE_KEY = 'pdf-proofread-active-set-id';
+/** 같은 탭 내 메인·마이페이지 동기화용 (storage 이벤트는 다른 탭만 발생) */
+export const RULE_SETS_LOCAL_SYNC_EVENT = 'pdf-proofread-rule-sets-local-updated';
+
+/**
+ * @param {string | undefined} uid
+ */
+export function notifyRuleSetsLocalUpdated(uid) {
+  if (typeof window === 'undefined') return;
+  window.dispatchEvent(
+    new CustomEvent(RULE_SETS_LOCAL_SYNC_EVENT, {
+      detail: { uid: String(uid ?? '').trim() },
+    }),
+  );
+}
 
 const LEGACY_RULE_SETS_KEY = RULE_SETS_STORAGE_KEY;
 const LEGACY_ACTIVE_KEY = RULE_SETS_ACTIVE_KEY;
@@ -37,6 +51,7 @@ export function ruleSetsActiveStorageKey(uid) {
  *   savedAt?: string,
  *   tags?: string[],
  *   memo?: string,
+ *   metaUpdatedAt?: string,
  *   projectContext?: import('./projectMeta.js').ProjectContext,
  * }} RuleSet
  */
@@ -129,6 +144,7 @@ export function loadRuleSets(uid) {
  */
 export function saveRuleSets(sets, uid) {
   localStorage.setItem(ruleSetsStorageKey(uid), JSON.stringify(sets));
+  notifyRuleSetsLocalUpdated(uid);
 }
 
 /**

@@ -8,6 +8,7 @@ import {
   migrateLegacyRuleSetsToUid,
   ruleSetsStorageKey,
   RULE_SETS_ACTIVE_KEY,
+  RULE_SETS_LOCAL_SYNC_EVENT,
   RULE_SETS_STORAGE_KEY,
   saveActiveSetId,
   saveRuleSets,
@@ -211,5 +212,58 @@ describe('uid-scoped rule set storage', () => {
 
     expect(migrated[0].name).toBe('uid 전용');
     expect(migrated[0].id).toBe('set_scoped');
+  });
+});
+
+describe('notifyRuleSetsLocalUpdated', () => {
+  it('saveRuleSets 후 같은 탭 동기화 이벤트를 발행한다', () => {
+    const store = new Map();
+    const listeners = new Map();
+    vi.stubGlobal('localStorage', {
+      getItem: (key) => store.get(key) ?? null,
+      setItem: (key, value) => {
+        store.set(key, value);
+      },
+      removeItem: (key) => {
+        store.delete(key);
+      },
+    });
+    vi.stubGlobal('window', {
+      addEventListener: (type, fn) => {
+        if (!listeners.has(type)) listeners.set(type, new Set());
+        listeners.get(type).add(fn);
+      },
+      removeEventListener: (type, fn) => {
+        listeners.get(type)?.delete(fn);
+      },
+      dispatchEvent: (event) => {
+        for (const fn of listeners.get(event.type) ?? []) {
+          fn(event);
+        }
+        return true;
+      },
+    });
+
+    const handler = vi.fn();
+    window.addEventListener(RULE_SETS_LOCAL_SYNC_EVENT, handler);
+    try {
+      saveRuleSets(
+        [
+          {
+            id: 'set_1',
+            name: '테스트',
+            builtInEnabled: {},
+            cautionEnabled: {},
+            customRules: [],
+          },
+        ],
+        'user_sync',
+      );
+      expect(handler).toHaveBeenCalledTimes(1);
+      expect(handler.mock.calls[0][0].detail).toEqual({ uid: 'user_sync' });
+    } finally {
+      window.removeEventListener(RULE_SETS_LOCAL_SYNC_EVENT, handler);
+      vi.unstubAllGlobals();
+    }
   });
 });

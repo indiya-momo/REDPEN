@@ -154,7 +154,7 @@ export default function ProjectMetaEditModal({
             className="project-meta-edit-modal__field project-meta-edit-modal__field--half"
             htmlFor={proofRevisionInputId}
           >
-            <span className="project-meta-edit-modal__label">교</span>
+            <span className="project-meta-edit-modal__label">교정교열</span>
             <input
               id={proofRevisionInputId}
               className="project-meta-edit-modal__input"

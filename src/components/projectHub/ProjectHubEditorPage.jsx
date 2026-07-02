@@ -123,14 +123,16 @@ export default function ProjectHubEditorPage({
   );
 
   const handleSaveMeta = useCallback(
-    async (payload) => {
-      if (!selectedCard) return;
+    async (payload, cardId) => {
+      const id = cardId ?? selectedCard?.id;
+      if (!id) return { ok: false, reason: 'not_found' };
       setMetaSavePending(true);
       try {
-        const result = await updateProjectMeta(selectedCard.id, payload);
+        const result = await updateProjectMeta(id, payload);
         if (!result.ok && result.message) {
           window.alert(result.message);
         }
+        return result;
       } finally {
         setMetaSavePending(false);
       }

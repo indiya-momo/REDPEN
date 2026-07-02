@@ -207,9 +207,12 @@ export default function ProjectLibraryCard({
             <div className="sheet-card__title-main">{titleBlock}</div>
             <div className="sheet-card__meta-stack">
               <span className="sheet-card__date-chip">{lastModifiedLabel}</span>
-              {editionValues ? (
-                <p className="sheet-card__edition-line">{editionValues}</p>
-              ) : null}
+              <p
+                className={`sheet-card__edition-line${editionValues ? '' : ' sheet-card__edition-line--ghost'}`}
+                aria-hidden={editionValues ? undefined : true}
+              >
+                {editionValues || '\u00a0'}
+              </p>
             </div>
           </div>
         </div>
@@ -219,7 +222,7 @@ export default function ProjectLibraryCard({
           title={memoPreview || undefined}
           aria-hidden={memoPreview ? undefined : true}
         >
-          {memoPreview}
+          {memoPreview || '\u00a0'}
         </p>
 
         <div className="sheet-card__sections" aria-label="표기 기준 구역">

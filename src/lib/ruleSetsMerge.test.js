@@ -33,6 +33,33 @@ describe('pickNewerRuleSet', () => {
     expect(pickNewerRuleSet(older, newer).customRules[0].id).toBe('new');
     expect(pickNewerRuleSet(newer, older).customRules[0].id).toBe('new');
   });
+
+  it('savedAt이 더 최신이어도 비어 있는 태그는 다른 쪽에서 보존한다', () => {
+    const older = set('a', {
+      savedAt: '2026-06-20T00:00:00.000Z',
+      tags: ['문학'],
+    });
+    const newer = set('a', {
+      savedAt: '2026-06-24T00:00:00.000Z',
+      customRules: [{ id: 'new' }],
+    });
+    expect(pickNewerRuleSet(older, newer).tags).toEqual(['문학']);
+    expect(pickNewerRuleSet(older, newer).customRules[0].id).toBe('new');
+  });
+
+  it('metaUpdatedAt이 더 최신이면 빈 태그도 그대로 적용한다', () => {
+    const withTags = set('a', {
+      savedAt: '2026-06-20T00:00:00.000Z',
+      tags: ['문학'],
+      metaUpdatedAt: '2026-06-21T00:00:00.000Z',
+    });
+    const cleared = set('a', {
+      savedAt: '2026-06-24T00:00:00.000Z',
+      tags: [],
+      metaUpdatedAt: '2026-06-25T00:00:00.000Z',
+    });
+    expect(pickNewerRuleSet(withTags, cleared).tags).toEqual([]);
+  });
 });
 
 describe('mergeLocalRuleSetSources', () => {
@@ -55,6 +82,28 @@ describe('mergeLocalRuleSetSources', () => {
     expect(merged).toHaveLength(1);
     expect(merged[0].savedAt).toBe('2026-06-24T00:00:00.000Z');
     expect(merged[0].customRules[0].id).toBe('memory');
+  });
+
+  it('savedAt 동률이면 메모리 편집을 살린다', () => {
+    const disk = [
+      set('a', {
+        name: '1111',
+        savedAt: '2026-06-22T00:00:00.000Z',
+        customRules: [{ id: 'disk' }],
+        builtInEnabled: { foo: true },
+      }),
+    ];
+    const memory = [
+      set('a', {
+        name: '1111',
+        savedAt: '2026-06-22T00:00:00.000Z',
+        customRules: [{ id: 'memory' }],
+        builtInEnabled: { foo: false },
+      }),
+    ];
+    const merged = mergeLocalRuleSetSources(disk, memory);
+    expect(merged[0].customRules[0].id).toBe('memory');
+    expect(merged[0].builtInEnabled).toEqual({ foo: false });
   });
 });
 
@@ -169,6 +218,26 @@ describe('mergeRuleSetsOnPersist', () => {
     const merged = mergeRuleSetsOnPersist(disk, memory);
     expect(merged.map((row) => row.id)).toEqual(['a']);
     expect(merged[0].tags).toEqual(['문학']);
+  });
+
+  it('savedAt 동률이면 메모리 customRules를 유지한다', () => {
+    const savedAt = '2026-06-20T00:00:00.000Z';
+    const disk = [
+      set('a', {
+        name: 'A',
+        savedAt,
+        customRules: [{ id: 'disk' }],
+      }),
+    ];
+    const memory = [
+      set('a', {
+        name: 'A',
+        savedAt,
+        customRules: [{ id: 'memory' }],
+      }),
+    ];
+    const merged = mergeRuleSetsOnPersist(disk, memory);
+    expect(merged[0].customRules[0].id).toBe('memory');
   });
 
   it('메모리에만 있는 초안은 유지한다', () => {
