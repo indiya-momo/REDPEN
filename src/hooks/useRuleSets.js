@@ -24,6 +24,8 @@ import {
   loadActiveSetId,
   loadRuleSets,
   newId,
+  RULE_SETS_LOCAL_SYNC_EVENT,
+  ruleSetsStorageKey,
   saveActiveSetId,
   saveRuleSets,
 } from '../lib/ruleSetsStorage.js';
@@ -48,9 +50,13 @@ import {
 import {
   canAddCriteriaPreset,
   CRITERIA_PRESET_LIMIT_MESSAGE,
-  enforceMaxCriteriaPresets,
 } from '../lib/criteriaPresetLimit.js';
-import { mergeRuleSetsOnLogin, dedupeSavedRuleSetsByName, mergeLocalRuleSetSources } from '../lib/ruleSetsMerge.js';
+import {
+  mergeRuleSetsOnLogin,
+  applyCriteriaPresetQuota,
+  mergeLocalRuleSetSources,
+  mergeRuleSetsOnPersist,
+} from '../lib/ruleSetsMerge.js';
 
 const RULE_SET_AUTOSAVE_MS = 400;
 const RULE_SET_CLOUD_SYNC_MS = 800;
@@ -113,7 +119,10 @@ export function useRuleSets(authUid = '', authEmail = '') {
     const uid = String(authUidRef.current ?? '').trim();
     if (!uid || !isRuleSetsCloudEnabled()) return;
     try {
-      await saveRuleSetsCloud(uid, ruleSetsRef.current, activeSetIdRef.current);
+      const disk = loadRuleSets(uid);
+      const merged = mergeRuleSetsOnPersist(disk, ruleSetsRef.current);
+      ruleSetsRef.current = merged;
+      await saveRuleSetsCloud(uid, merged, activeSetIdRef.current);
     } catch (e) {
       console.warn('기준 클라우드 저장 실패', e);
     }
@@ -133,7 +142,13 @@ export function useRuleSets(authUid = '', authEmail = '') {
 
   const flushRuleSets = useCallback(
     (sets, setId = activeSetIdRef.current, uid = authUidRef.current) => {
-      saveRuleSets(sets, uid);
+      const disk = loadRuleSets(uid);
+      const merged = mergeRuleSetsOnPersist(disk, sets);
+      ruleSetsRef.current = merged;
+      if (JSON.stringify(merged) !== JSON.stringify(sets)) {
+        setRuleSets(merged);
+      }
+      saveRuleSets(merged, uid);
       if (setId) saveActiveSetId(setId, uid);
       scheduleCloudRuleSetsSync();
     },
@@ -266,12 +281,16 @@ export function useRuleSets(authUid = '', authEmail = '') {
       loadedAuthUidRef.current = uid;
       cloudHydratedUidRef.current = '';
 
-      const sets = normalizeLoadedRuleSets(loadRuleSets(uid));
+      let sets = normalizeLoadedRuleSets(loadRuleSets(uid));
+      if (uid) {
+        sets = applyCriteriaPresetQuota(sets, uid, authEmailRef.current);
+      }
       const storedActive = loadActiveSetId(uid);
       const activeId =
-        storedActive && sets.some((s) => s.id === storedActive)
-          ? storedActive
-          : sets[0].id;
+        resolveHydratedActiveSetId(sets, storedActive, null) ??
+        sets[0]?.id ??
+        null;
+      if (!activeId) return;
 
       ruleSetsRef.current = sets;
       activeSetIdRef.current = activeId;
@@ -304,6 +323,52 @@ export function useRuleSets(authUid = '', authEmail = '') {
     };
   }, [flushPendingRuleSetsSave]);
 
+  useEffect(() => {
+    if (!rulesReady) return undefined;
+
+    const uid = String(authUid ?? '').trim();
+    const storageKey = ruleSetsStorageKey(uid);
+
+    const reloadFromStorage = () => {
+      const diskSets = normalizeLoadedRuleSets(loadRuleSets(uid));
+      const memorySets = normalizeLoadedRuleSets(ruleSetsRef.current);
+      let sets = mergeLocalRuleSetSources(diskSets, memorySets);
+      if (uid) {
+        sets = applyCriteriaPresetQuota(sets, uid, authEmailRef.current);
+      }
+      const storedActive = loadActiveSetId(uid);
+      const activeId =
+        resolveHydratedActiveSetId(sets, storedActive, activeSetIdRef.current) ??
+        sets[0]?.id ??
+        null;
+
+      ruleSetsRef.current = sets;
+      activeSetIdRef.current = activeId;
+      setRuleSets(sets);
+      setActiveSetId(activeId);
+    };
+
+    const onStorage = (event) => {
+      if (event.key !== storageKey || event.newValue == null) return;
+      reloadFromStorage();
+    };
+
+    const onLocalSync = (event) => {
+      const detailUid = String(
+        /** @type {CustomEvent<{ uid?: string }>} */ (event).detail?.uid ?? '',
+      ).trim();
+      if (detailUid !== uid) return;
+      reloadFromStorage();
+    };
+
+    window.addEventListener('storage', onStorage);
+    window.addEventListener(RULE_SETS_LOCAL_SYNC_EVENT, onLocalSync);
+    return () => {
+      window.removeEventListener('storage', onStorage);
+      window.removeEventListener(RULE_SETS_LOCAL_SYNC_EVENT, onLocalSync);
+    };
+  }, [authUid, rulesReady]);
+
   const activeSet = rulesReady
     ? (ruleSets.find((s) => s.id === activeSetId) ?? ruleSets[0] ?? null)
     : null;
@@ -313,7 +378,18 @@ export function useRuleSets(authUid = '', authEmail = '') {
       const setId = activeSetIdRef.current;
       if (!setId) return;
       setRuleSets((prev) => {
-        const next = prev.map((s) => (s.id === setId ? { ...s, ...patch } : s));
+        const next = prev.map((s) => {
+          if (s.id !== setId) return s;
+          const touchesCriteria =
+            patch.builtInEnabled !== undefined ||
+            patch.cautionEnabled !== undefined ||
+            patch.customRules !== undefined;
+          const savedAtBump =
+            s.savedAt && touchesCriteria
+              ? { savedAt: new Date().toISOString() }
+              : {};
+          return { ...s, ...patch, ...savedAtBump };
+        });
         scheduleRuleSetsSave(next);
         return next;
       });
@@ -377,14 +453,16 @@ export function useRuleSets(authUid = '', authEmail = '') {
         if (cancelled) return;
 
         if (cloud?.ruleSets?.length) {
-          flushPendingRuleSetsSave();
+          if (autosaveTimerRef.current) {
+            clearTimeout(autosaveTimerRef.current);
+            autosaveTimerRef.current = null;
+          }
           const diskSets = normalizeLoadedRuleSets(loadRuleSets(uid));
           const memorySets = normalizeLoadedRuleSets(ruleSetsRef.current);
           const localSets = mergeLocalRuleSetSources(diskSets, memorySets);
           const merged = mergeRuleSetsOnLogin(localSets, cloud.ruleSets);
           let sets = normalizeLoadedRuleSets(merged);
-          sets = dedupeSavedRuleSetsByName(sets);
-          sets = enforceMaxCriteriaPresets(
+          sets = applyCriteriaPresetQuota(
             sets,
             authUidRef.current,
             authEmailRef.current,
@@ -397,7 +475,12 @@ export function useRuleSets(authUid = '', authEmail = '') {
           if (!activeId) return;
           applyRuleSets(sets, activeId);
         } else {
-          const localSets = normalizeLoadedRuleSets(loadRuleSets(uid));
+          let localSets = normalizeLoadedRuleSets(loadRuleSets(uid));
+          localSets = applyCriteriaPresetQuota(
+            localSets,
+            authUidRef.current,
+            authEmailRef.current,
+          );
           const activeId =
             resolveHydratedActiveSetId(localSets, loadActiveSetId(uid), null) ??
             localSets[0]?.id ??
@@ -444,6 +527,17 @@ export function useRuleSets(authUid = '', authEmail = '') {
     );
     if (!source) return;
     const copy = normalizeRuleSet(duplicateRuleSet(source));
+    if (
+      !canAddCriteriaPreset(
+        ruleSetsRef.current,
+        copy.name,
+        authUidRef.current,
+        authEmailRef.current,
+      )
+    ) {
+      alert(CRITERIA_PRESET_LIMIT_MESSAGE);
+      return;
+    }
     applyRuleSets([...ruleSetsRef.current, copy], copy.id);
   }, [applyRuleSets]);
 

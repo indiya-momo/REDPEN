@@ -1,16 +1,24 @@
 /* 마이페이지 전용 — ?window=mypage (메인 화면과 분리) */
 
 .mypage {
+  --mypage-font: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
   --mypage-sidebar-width: 15.5rem;
-  --mypage-heading-font: var(--font-family-body-brand);
+  --mypage-section-gap: 1.5rem;
+  --mypage-card-radius: var(--radius-ui-lg);
+  --mypage-card-border: 1px solid var(--color-border);
+  --mypage-card-shadow: 0 2px 10px rgba(58, 42, 18, 0.05);
+  --mypage-card-padding: 1.1rem 1.25rem 1.15rem;
+  --mypage-heading-font: var(--mypage-font);
+  --font-family-title: var(--mypage-font);
   --mypage-heading-size: 0.88rem;
   --mypage-heading-weight: 700;
   --mypage-heading-line: 1.35;
+  --mypage-main-canvas: #d8d2c6;
   display: flex;
   min-height: 100dvh;
   background: var(--color-surface);
   color: var(--color-text);
-  font-family: var(--font-family-body-brand);
+  font-family: var(--mypage-font);
 }
 
 .mypage__sidebar {
@@ -49,7 +57,7 @@
   padding: 0;
   border: none;
   background: transparent;
-  font-family: var(--font-family-title);
+  font-family: var(--mypage-heading-font);
   font-size: 1.55rem;
   font-weight: 700;
   line-height: 1.2;
@@ -111,6 +119,42 @@
   font-size: 0.95rem;
   font-weight: 700;
   color: var(--color-text);
+}
+
+.mypage__user-name-row {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.mypage__tier-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  flex-shrink: 0;
+  padding: 0.18rem 0.5rem;
+  border: 1px solid color-mix(in srgb, var(--accent-spelling) 28%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent-spelling) 9%, var(--color-surface));
+  font-size: 0.66rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--accent-spelling);
+  white-space: nowrap;
+}
+
+.mypage__tier-badge__icon {
+  font-size: 0.58rem;
+  line-height: 1;
+  opacity: 0.88;
+}
+
+.mypage__tier-badge--loading {
+  border-color: var(--color-border);
+  background: var(--color-surface-overlay);
+  font-weight: 600;
+  color: var(--color-text-muted);
 }
 
 .mypage__user-tenure {
@@ -258,12 +302,13 @@
   padding: 1.75rem 2rem 2rem;
   box-sizing: border-box;
   overflow: auto;
+  background: var(--mypage-main-canvas);
 }
 
 .mypage__overview {
   display: flex;
   flex-direction: column;
-  gap: 1.15rem;
+  gap: var(--mypage-section-gap);
   width: 100%;
   max-width: 98rem;
 }
@@ -271,7 +316,7 @@
 .mypage__overview-layout {
   display: grid;
   grid-template-columns: minmax(0, 52rem) minmax(31rem, 44rem);
-  gap: clamp(1.25rem, 2.5vw, 2.25rem);
+  gap: var(--mypage-section-gap);
   align-items: start;
   width: 100%;
 }
@@ -279,7 +324,7 @@
 .mypage__overview-secondary {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: clamp(1.25rem, 2.5vw, 2.25rem);
+  gap: var(--mypage-section-gap);
   align-items: start;
   width: 100%;
 }
@@ -298,8 +343,8 @@
   min-width: 0;
 }
 
-.mypage__project-hub {
-  padding: 1.35rem 1.45rem 1.4rem;
+.mypage__overview > .mypage__project-hub {
+  margin-top: 0;
 }
 
 .mypage__project-hub-head {
@@ -307,7 +352,7 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
-  margin-bottom: 0.55rem;
+  margin-bottom: 0.85rem;
 }
 
 .mypage__project-hub-title-row {
@@ -352,6 +397,19 @@
 .mypage__project-slot--empty {
   border-style: dashed;
   background: var(--color-surface-overlay);
+}
+
+.mypage__project-slot--locked {
+  border-style: solid;
+  border-color: var(--sheet-border, var(--color-border-subtle));
+  background: transparent;
+  opacity: 0.82;
+  cursor: default;
+  user-select: none;
+}
+
+.mypage__project-slot--locked .mypage__project-slot-label {
+  color: var(--color-text-muted);
 }
 
 .mypage__project-slot-label {
@@ -536,7 +594,7 @@
 
 .mypage__balance-beta {
   margin: 0;
-  font-family: var(--font-family-title);
+  font-family: var(--mypage-heading-font);
   font-size: 1.35rem;
   font-weight: 700;
   line-height: 1.35;
@@ -544,11 +602,11 @@
 }
 
 .mypage__card {
-  padding: 1.1rem 1.25rem 1.15rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-ui-lg);
+  padding: var(--mypage-card-padding);
+  border: var(--mypage-card-border);
+  border-radius: var(--mypage-card-radius);
   background: var(--color-surface-overlay);
-  box-shadow: 0 2px 10px rgba(58, 42, 18, 0.05);
+  box-shadow: var(--mypage-card-shadow);
 }
 
 .mypage__card-head {
@@ -716,55 +774,59 @@
   margin: 0 auto;
 }
 
-/* 회원 등급 · 회원 정보 */
-.mypage__member-head {
+/* 회원 정보 — 등급 배지 + 검수 한도 + 최근 이용 */
+.mypage__member-overview-head {
+  margin-bottom: 0.55rem;
+}
+
+.mypage__quota-stats {
   display: grid;
-  gap: 0.65rem;
-  margin-bottom: 0.15rem;
-}
-
-.mypage__member-tier {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.35rem 1.5rem;
   margin: 0;
-  padding: 0.95rem 1.05rem;
-  border-radius: var(--radius-ui-md, 10px);
-  border: 1px solid color-mix(in srgb, var(--accent-spelling) 28%, transparent);
-  border-left: 4px solid var(--accent-spelling);
-  background: color-mix(in srgb, var(--accent-spelling) 9%, var(--color-surface));
-  box-shadow: 0 2px 10px color-mix(in srgb, var(--accent-spelling) 12%, transparent);
-  font-size: 1.08rem;
-  font-weight: 700;
-  line-height: 1.45;
-  color: var(--color-text);
-  white-space: nowrap;
+  padding: 0;
 }
 
-.mypage__member-tier--loading {
-  font-size: 0.88rem;
+.mypage__quota-stat {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.65rem;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+}
+
+.mypage__quota-stat dt {
+  margin: 0;
+  flex-shrink: 0;
+  font-size: 0.76rem;
   font-weight: 600;
   color: var(--color-text-muted);
-  background: var(--color-surface-overlay);
-  border-color: var(--color-border);
-  border-left-color: var(--color-border-strong);
-  box-shadow: none;
 }
 
-.mypage__member-tier-name {
-  font-weight: 800;
+.mypage__quota-stat dd {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1.35;
+  text-align: right;
+  color: var(--color-text);
+}
+
+.mypage__quota-usage {
+  color: var(--color-text);
+}
+
+.mypage__quota-stat:not(.mypage__quota-stat--depleted) .mypage__quota-usage {
   color: var(--accent-spelling);
 }
 
-.mypage__member-tier-sep {
-  font-weight: 700;
-  color: var(--color-text-muted);
-}
-
-.mypage__member-tier-desc {
-  font-weight: 700;
-  color: var(--color-text);
-}
-
-.mypage__benefits-card {
-  margin-bottom: 0;
+.mypage__quota-stat--depleted .mypage__quota-usage {
+  color: var(--color-text-subtle);
+  font-weight: 600;
 }
 
 .mypage__usage-empty {
@@ -775,6 +837,21 @@
   margin: 0;
   font-size: 0.82rem;
   line-height: 1.55;
+  color: var(--color-text-muted);
+}
+
+.mypage__benefits-recent {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.55;
+  color: var(--color-text);
+}
+
+.mypage__benefits-recent--sub {
+  margin-top: 0.55rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--color-border);
+  font-size: 0.76rem;
   color: var(--color-text-muted);
 }
 
@@ -868,13 +945,14 @@
 
 .mypage__projects-layout .project-hub-settings {
   margin-top: 0;
-  padding: 1.25rem 1.45rem 1.35rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-ui-lg);
+  padding: var(--mypage-card-padding);
+  border: var(--mypage-card-border);
+  border-radius: var(--mypage-card-radius);
   background: var(--color-surface-overlay);
-  box-shadow: 0 2px 10px rgba(58, 42, 18, 0.05);
+  box-shadow: var(--mypage-card-shadow);
 }
 
+.mypage__card.mypage__project-hub,
 .mypage__overview--projects .mypage__project-hub {
   width: 100%;
 }
@@ -1020,10 +1098,9 @@
   color: var(--color-text-subtle);
 }
 
-@media (max-width: 1180px) {
-  .mypage__member-tier {
-    white-space: normal;
-    font-size: 1rem;
+@media (max-width: 520px) {
+  .mypage__quota-stats {
+    grid-template-columns: 1fr;
   }
 }
 

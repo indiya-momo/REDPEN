@@ -74,10 +74,10 @@ describe('buildProjectCardViewModelFromRuleSet', () => {
     expect(card.tags).toEqual(['문학', '시리즈 1/3']);
     expect(card.memo).toBe('테스트 메모');
     expect(card.lastWork).toEqual({
-      date: '26년 6월 23일',
+      date: '26.06.23',
       manuscriptPages: 88,
     });
-    expect(card.createdDate).toBe('26년 6월 22일');
+    expect(card.createdDate).toBe('26.06.22');
     expect(card.proofRevision).toBe('3교');
     expect(card.formatLabel).toBe('신국판');
   });

@@ -4,6 +4,7 @@ import {
   buildProjectContextSnapshot,
   buildProjectContextWorkPatch,
   mergeProjectContext,
+  mergeRuleSetProjectMeta,
   normalizeProjectContext,
   normalizeProjectMemo,
   normalizeProjectTags,
@@ -119,5 +120,43 @@ describe('normalizeProjectContext', () => {
   it('빈 객체는 undefined다', () => {
     expect(normalizeProjectContext({})).toBeUndefined();
     expect(normalizeProjectContext(null)).toBeUndefined();
+  });
+});
+
+describe('mergeRuleSetProjectMeta', () => {
+  /** @param {Partial<import('./ruleSetsStorage.js').RuleSet>} patch */
+  function ruleSet(patch) {
+    return {
+      id: 'a',
+      name: 'A',
+      builtInEnabled: {},
+      cautionEnabled: {},
+      customRules: [],
+      ...patch,
+    };
+  }
+
+  it('savedAt만 최신인 쪽에 태그가 없으면 다른 쪽 태그를 채운다', () => {
+    const older = ruleSet({
+      savedAt: '2026-06-20T00:00:00.000Z',
+      tags: ['문학'],
+    });
+    const newer = ruleSet({
+      savedAt: '2026-06-24T00:00:00.000Z',
+    });
+    expect(mergeRuleSetProjectMeta(newer, older).tags).toEqual(['문학']);
+  });
+
+  it('metaUpdatedAt이 더 최신이면 해당 쪽 메타를 따른다', () => {
+    const stale = ruleSet({
+      tags: ['문학'],
+      metaUpdatedAt: '2026-06-20T00:00:00.000Z',
+    });
+    const fresh = ruleSet({
+      tags: ['경제'],
+      metaUpdatedAt: '2026-06-25T00:00:00.000Z',
+    });
+    expect(mergeRuleSetProjectMeta(stale, fresh).tags).toEqual(['경제']);
+    expect(mergeRuleSetProjectMeta(fresh, stale).tags).toEqual(['경제']);
   });
 });

@@ -1,50 +1,83 @@
-import { useEffect, useId, useState } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import {
   MAX_PROJECT_FORMAT_LABEL_LENGTH,
   MAX_PROJECT_PROOF_REVISION_LENGTH,
   normalizeProjectMemo,
   normalizeProjectTags,
 } from '../lib/projectMeta.js';
+import ProjectHubCriteriaPanel from './projectHub/ProjectHubCriteriaPanel.jsx';
 import './project-hub-settings.css';
 
-/** @typedef {'meta' | 'manuscript' | 'actions'} ProjectHubSettingsSection */
+/** @typedef {'meta' | 'spelling' | 'consistency' | 'auxiliary' | 'actions'} ProjectHubSettingsSection */
 
 const NAV_ITEMS = [
-  { id: 'meta', label: '프로젝트 편집' },
-  { id: 'manuscript', label: '원고 정보' },
+  { id: 'meta', label: '프로젝트 정보' },
+  { id: 'spelling', label: '맞춤법', pillarKey: 'spelling' },
+  { id: 'consistency', label: '표기 통일', pillarKey: 'consistency' },
+  { id: 'auxiliary', label: '본용언 + 보조용언', pillarKey: 'auxiliary' },
   { id: 'actions', label: '작업 이력' },
 ];
+
+const CRITERIA_SECTIONS = new Set(['spelling', 'consistency', 'auxiliary']);
+const META_AUTOSAVE_MS = 400;
+
+/** @param {import('../presentation/projectCardViewModel.js').ProjectCardViewModel} card */
+function buildCardMetaSyncKey(card) {
+  return [
+    card.title,
+    card.tags.join('\u0001'),
+    card.memo ?? '',
+    card.proofRevision ?? '',
+    card.formatLabel ?? '',
+  ].join('\u0002');
+}
 
 /**
  * @param {{
  *   card: import('../presentation/projectCardViewModel.js').ProjectCardViewModel,
+ *   ruleSet?: import('../lib/ruleSetsStorage.js').RuleSet | null,
  *   pdfFileName?: string,
  *   pdfPageCount?: number,
  *   lastWorkedAt?: string,
  *   saving?: boolean,
+ *   criteriaSaving?: boolean,
  *   onSave: (payload: {
+ *     name?: string,
  *     tags: string[],
  *     memo?: string,
  *     proofRevision?: string,
  *     formatLabel?: string,
- *   }) => void | Promise<void>,
+ *   }, cardId?: string) => void | Promise<{ ok?: boolean } | void>,
+ *   onCriteriaChange?: (
+ *     patch: {
+ *       customRules?: import('../lib/ruleTypes.js').Rule[],
+ *       builtInEnabled?: Record<string, boolean>,
+ *       cautionEnabled?: Record<string, boolean>,
+ *     },
+ *   ) => void | Promise<void>,
  *   onStartWork?: () => void,
  *   onDuplicate?: () => void,
+ *   onDelete?: () => void,
  *   onSharePreview?: () => void,
  * }} props
  */
 export default function ProjectHubSettingsPanel({
   card,
-  pdfFileName,
-  pdfPageCount,
-  lastWorkedAt,
+  ruleSet = null,
+  pdfFileName: _pdfFileName,
+  pdfPageCount: _pdfPageCount,
+  lastWorkedAt: _lastWorkedAt,
   saving = false,
+  criteriaSaving = false,
   onSave,
+  onCriteriaChange,
   onStartWork,
   onDuplicate,
+  onDelete,
   onSharePreview,
 }) {
   const tagsInputId = useId();
+  const nameInputId = useId();
   const proofRevisionInputId = useId();
   const formatLabelInputId = useId();
   const memoInputId = useId();
@@ -52,49 +85,153 @@ export default function ProjectHubSettingsPanel({
   const [activeSection, setActiveSection] =
     useState(/** @type {ProjectHubSettingsSection} */ ('meta'));
   const [tagsInput, setTagsInput] = useState('');
+  const [nameInput, setNameInput] = useState('');
   const [memoInput, setMemoInput] = useState('');
   const [proofRevisionInput, setProofRevisionInput] = useState('');
   const [formatLabelInput, setFormatLabelInput] = useState('');
 
-  useEffect(() => {
-    setTagsInput(card.tags.join(', '));
-    setMemoInput(card.memo ?? '');
-    setProofRevisionInput(card.proofRevision ?? '');
-    setFormatLabelInput(card.formatLabel ?? '');
-  }, [card.id, card.tags, card.memo, card.proofRevision, card.formatLabel]);
+  const onSaveRef = useRef(onSave);
+  onSaveRef.current = onSave;
+  const activeSectionRef = useRef(activeSection);
+  activeSectionRef.current = activeSection;
+  const skipMetaAutosaveRef = useRef(true);
+  const metaDirtyRef = useRef(false);
+  const metaInputRef = useRef({
+    nameInput,
+    tagsInput,
+    memoInput,
+    proofRevisionInput,
+    formatLabelInput,
+  });
+  metaInputRef.current = {
+    nameInput,
+    tagsInput,
+    memoInput,
+    proofRevisionInput,
+    formatLabelInput,
+  };
 
-  async function handleSave(event) {
-    event.preventDefault();
+  const markMetaDirty = useCallback(() => {
+    metaDirtyRef.current = true;
+  }, []);
+
+  const buildMetaPayloadFromRef = useCallback(() => {
+    const {
+      nameInput: name,
+      tagsInput: tagsRaw,
+      memoInput: memoRaw,
+      proofRevisionInput: proofRevisionRaw,
+      formatLabelInput: formatLabelRaw,
+    } = metaInputRef.current;
     const tags = normalizeProjectTags(
-      tagsInput
+      tagsRaw
         .split(/[,，]/)
         .map((part) => part.trim())
         .filter(Boolean),
     );
-    const memo = normalizeProjectMemo(memoInput);
-    const proofRevision = proofRevisionInput
+    const memo = normalizeProjectMemo(memoRaw);
+    const proofRevision = proofRevisionRaw
       .trim()
       .slice(0, MAX_PROJECT_PROOF_REVISION_LENGTH);
-    const formatLabel = formatLabelInput
+    const formatLabel = formatLabelRaw
       .trim()
       .slice(0, MAX_PROJECT_FORMAT_LABEL_LENGTH);
-    await onSave({
+    return {
+      name: name.trim(),
       tags,
       memo,
       proofRevision: proofRevision || undefined,
       formatLabel: formatLabel || undefined,
-    });
-  }
+    };
+  }, []);
 
-  const manuscriptDate =
-    lastWorkedAt && !Number.isNaN(Date.parse(lastWorkedAt))
-      ? new Date(lastWorkedAt).toLocaleDateString('ko-KR', {
-          timeZone: 'Asia/Seoul',
-          year: '2-digit',
-          month: 'numeric',
-          day: 'numeric',
-        })
-      : null;
+  const syncFormFromCard = useCallback((sourceCard) => {
+    setNameInput(sourceCard.title);
+    setTagsInput(sourceCard.tags.join(', '));
+    setMemoInput(sourceCard.memo ?? '');
+    setProofRevisionInput(sourceCard.proofRevision ?? '');
+    setFormatLabelInput(sourceCard.formatLabel ?? '');
+  }, []);
+
+  const flushMetaSave = useCallback(async (forCardId) => {
+    if (!metaDirtyRef.current) return true;
+    try {
+      const result = await onSaveRef.current(
+        buildMetaPayloadFromRef(),
+        forCardId,
+      );
+      if (result && typeof result === 'object' && result.ok === false) {
+        metaDirtyRef.current = true;
+        return false;
+      }
+      metaDirtyRef.current = false;
+      return true;
+    } catch {
+      metaDirtyRef.current = true;
+      return false;
+    }
+  }, [buildMetaPayloadFromRef]);
+
+  const flushMetaSaveRef = useRef(flushMetaSave);
+  flushMetaSaveRef.current = flushMetaSave;
+
+  const prevCardIdRef = useRef(card.id);
+  const cardMetaSyncKey = buildCardMetaSyncKey(card);
+
+  useEffect(() => {
+    const cardSwitched = prevCardIdRef.current !== card.id;
+    prevCardIdRef.current = card.id;
+    if (cardSwitched) {
+      metaDirtyRef.current = false;
+    }
+    if (cardSwitched || !metaDirtyRef.current) {
+      syncFormFromCard(card);
+      skipMetaAutosaveRef.current = true;
+    }
+  }, [card, card.id, cardMetaSyncKey, syncFormFromCard]);
+
+  useEffect(() => {
+    const saveForCardId = card.id;
+    return () => {
+      void flushMetaSaveRef.current(saveForCardId);
+    };
+  }, [card.id]);
+
+  useEffect(() => {
+    if (activeSection !== 'meta') return undefined;
+
+    if (skipMetaAutosaveRef.current) {
+      skipMetaAutosaveRef.current = false;
+      return () => {
+        if (activeSectionRef.current !== 'meta') {
+          void flushMetaSaveRef.current(card.id);
+        }
+      };
+    }
+
+    const saveForCardId = card.id;
+    const timer = setTimeout(() => {
+      void flushMetaSaveRef.current(saveForCardId);
+    }, META_AUTOSAVE_MS);
+
+    return () => {
+      clearTimeout(timer);
+      if (activeSectionRef.current !== 'meta') {
+        void flushMetaSaveRef.current(saveForCardId);
+      }
+    };
+  }, [
+    activeSection,
+    card.id,
+    nameInput,
+    tagsInput,
+    memoInput,
+    proofRevisionInput,
+    formatLabelInput,
+  ]);
+
+  const showCriteriaPanel =
+    CRITERIA_SECTIONS.has(activeSection) && ruleSet && onCriteriaChange;
 
   return (
     <section
@@ -104,45 +241,65 @@ export default function ProjectHubSettingsPanel({
       <div className="project-hub-settings__layout">
         <nav className="project-hub-settings__nav" aria-label="설정 구역">
           <ul className="project-hub-settings__nav-list">
-            {NAV_ITEMS.map((item) => (
-              <li key={item.id}>
-                <button
-                  type="button"
-                  className={`project-hub-settings__nav-btn${
-                    activeSection === item.id
-                      ? ' project-hub-settings__nav-btn--active'
-                      : ''
-                  }`}
-                  onClick={() => setActiveSection(item.id)}
-                >
-                  {item.label}
-                </button>
-              </li>
-            ))}
+            {NAV_ITEMS.map((item) => {
+              const isActive = activeSection === item.id;
+              const pillarKey =
+                'pillarKey' in item ? item.pillarKey : undefined;
+              return (
+                <li key={item.id}>
+                  <button
+                    type="button"
+                    className={[
+                      'project-hub-settings__nav-btn',
+                      isActive ? 'project-hub-settings__nav-btn--active' : '',
+                      pillarKey
+                        ? `project-hub-settings__nav-btn--${pillarKey}`
+                        : '',
+                    ]
+                      .filter(Boolean)
+                      .join(' ')}
+                    onClick={() => setActiveSection(item.id)}
+                  >
+                    {item.label}
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         </nav>
 
         <div className="project-hub-settings__main">
-          <header className="project-hub-settings__header">
-            <div>
-              <h2 className="project-hub-settings__title">프로젝트 설정</h2>
-              <p className="project-hub-settings__subtitle">
-                《{card.title}》
-                {card.isActive ? ' · 작업 중' : ''}
-              </p>
-            </div>
-          </header>
-
           {activeSection === 'meta' ? (
-            <form className="project-hub-settings__form" onSubmit={(e) => void handleSave(e)}>
+            <div className="project-hub-settings__form">
               <div className="project-hub-settings__group">
-                <div className="project-hub-settings__group-head">
-                  <h3 className="project-hub-settings__group-title">프로젝트 편집</h3>
-                  <p className="project-hub-settings__group-lead">
-                    태그·교차·판형·메모를 저장합니다.
-                  </p>
-                </div>
                 <div className="project-hub-settings__card">
+                  <div className="project-hub-settings__row">
+                    <div className="project-hub-settings__row-text">
+                      <label
+                        className="project-hub-settings__row-label"
+                        htmlFor={nameInputId}
+                      >
+                        제목
+                      </label>
+                      <p className="project-hub-settings__row-desc">
+                        프로젝트 제목
+                      </p>
+                    </div>
+                    <input
+                      id={nameInputId}
+                      className="project-hub-settings__input project-hub-settings__input--wide"
+                      value={nameInput}
+                      onChange={(e) => {
+                        markMetaDirty();
+                        setNameInput(e.target.value);
+                      }}
+                      placeholder="프로젝트 제목"
+                      maxLength={60}
+                      aria-busy={saving}
+                      autoComplete="off"
+                    />
+                  </div>
+
                   <div className="project-hub-settings__row">
                     <div className="project-hub-settings__row-text">
                       <label
@@ -152,16 +309,19 @@ export default function ProjectHubSettingsPanel({
                         태그
                       </label>
                       <p className="project-hub-settings__row-desc">
-                        쉼표로 구분 · 최대 8개
+                        쉼표로 구분 · 최대 3개
                       </p>
                     </div>
                     <input
                       id={tagsInputId}
                       className="project-hub-settings__input project-hub-settings__input--wide"
                       value={tagsInput}
-                      onChange={(e) => setTagsInput(e.target.value)}
+                      onChange={(e) => {
+                        markMetaDirty();
+                        setTagsInput(e.target.value);
+                      }}
                       placeholder="문학, 시리즈 2/5"
-                      disabled={saving}
+                      aria-busy={saving}
                       autoComplete="off"
                     />
                   </div>
@@ -172,19 +332,22 @@ export default function ProjectHubSettingsPanel({
                         className="project-hub-settings__row-label"
                         htmlFor={proofRevisionInputId}
                       >
-                        교차
+                        교정교열
                       </label>
                       <p className="project-hub-settings__row-desc">
-                        교열·교차 차수 표기
+                        예: 3교
                       </p>
                     </div>
                     <input
                       id={proofRevisionInputId}
                       className="project-hub-settings__input"
                       value={proofRevisionInput}
-                      onChange={(e) => setProofRevisionInput(e.target.value)}
+                      onChange={(e) => {
+                        markMetaDirty();
+                        setProofRevisionInput(e.target.value);
+                      }}
                       placeholder="3교"
-                      disabled={saving}
+                      aria-busy={saving}
                       autoComplete="off"
                     />
                   </div>
@@ -198,16 +361,19 @@ export default function ProjectHubSettingsPanel({
                         판형
                       </label>
                       <p className="project-hub-settings__row-desc">
-                        신국판 등 판형 이름
+                        예: 신국판
                       </p>
                     </div>
                     <input
                       id={formatLabelInputId}
                       className="project-hub-settings__input"
                       value={formatLabelInput}
-                      onChange={(e) => setFormatLabelInput(e.target.value)}
+                      onChange={(e) => {
+                        markMetaDirty();
+                        setFormatLabelInput(e.target.value);
+                      }}
                       placeholder="신국판"
-                      disabled={saving}
+                      aria-busy={saving}
                       autoComplete="off"
                     />
                   </div>
@@ -228,84 +394,35 @@ export default function ProjectHubSettingsPanel({
                       id={memoInputId}
                       className="project-hub-settings__textarea"
                       value={memoInput}
-                      onChange={(e) => setMemoInput(e.target.value)}
+                      onChange={(e) => {
+                        markMetaDirty();
+                        setMemoInput(e.target.value);
+                      }}
                       rows={3}
-                      disabled={saving}
+                      aria-busy={saving}
                     />
                   </div>
                 </div>
               </div>
-
-              <footer className="project-hub-settings__footer">
-                <button
-                  type="submit"
-                  className="btn-run project-hub-settings__save"
-                  disabled={saving}
-                  aria-busy={saving}
-                >
-                  {saving ? '저장 중…' : '저장'}
-                </button>
-              </footer>
-            </form>
+            </div>
           ) : null}
 
-          {activeSection === 'manuscript' ? (
+          {showCriteriaPanel ? (
             <div className="project-hub-settings__group">
-              <div className="project-hub-settings__group-head">
-                <h3 className="project-hub-settings__group-title">원고 정보</h3>
-                <p className="project-hub-settings__group-lead">
-                  마지막으로 연결한 PDF 정보입니다. 원고는 서버에 저장되지
-                  않습니다.
-                </p>
-              </div>
-              <div className="project-hub-settings__card">
-                <div className="project-hub-settings__row project-hub-settings__row--readonly">
-                  <div className="project-hub-settings__row-text">
-                    <span className="project-hub-settings__row-label">파일</span>
-                    <p className="project-hub-settings__row-desc">
-                      검수 화면에서 연 PDF
-                    </p>
-                  </div>
-                  <span className="project-hub-settings__value">
-                    {pdfFileName || '—'}
-                  </span>
-                </div>
-                <div className="project-hub-settings__row project-hub-settings__row--readonly">
-                  <div className="project-hub-settings__row-text">
-                    <span className="project-hub-settings__row-label">페이지</span>
-                    <p className="project-hub-settings__row-desc">
-                      시스템 페이지 수
-                    </p>
-                  </div>
-                  <span className="project-hub-settings__value">
-                    {typeof pdfPageCount === 'number' ? `${pdfPageCount}p` : '—'}
-                  </span>
-                </div>
-                <div className="project-hub-settings__row project-hub-settings__row--readonly">
-                  <div className="project-hub-settings__row-text">
-                    <span className="project-hub-settings__row-label">
-                      마지막 작업
-                    </span>
-                    <p className="project-hub-settings__row-desc">
-                      검수·저장 시각
-                    </p>
-                  </div>
-                  <span className="project-hub-settings__value">
-                    {manuscriptDate || '—'}
-                  </span>
-                </div>
+              <div className="project-hub-settings__card project-hub-settings__card--criteria">
+                <ProjectHubCriteriaPanel
+                  section={activeSection}
+                  ruleSet={ruleSet}
+                  criteriaSaving={criteriaSaving}
+                  onCriteriaChange={onCriteriaChange}
+                  onStartWork={onStartWork}
+                />
               </div>
             </div>
           ) : null}
 
           {activeSection === 'actions' ? (
             <div className="project-hub-settings__group">
-              <div className="project-hub-settings__group-head">
-                <h3 className="project-hub-settings__group-title">작업 이력</h3>
-                <p className="project-hub-settings__group-lead">
-                  검수 화면으로 전환하거나 프로젝트를 복제·공유합니다.
-                </p>
-              </div>
               <div className="project-hub-settings__card project-hub-settings__card--actions">
                 <button
                   type="button"
@@ -321,6 +438,15 @@ export default function ProjectHubSettingsPanel({
                 >
                   복제
                 </button>
+                {onDelete ? (
+                  <button
+                    type="button"
+                    className="sheet-card__btn sheet-card__btn--secondary"
+                    onClick={onDelete}
+                  >
+                    삭제
+                  </button>
+                ) : null}
                 <button
                   type="button"
                   className="sheet-card__btn sheet-card__btn--secondary"
