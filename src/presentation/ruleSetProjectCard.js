@@ -9,6 +9,8 @@ import {
   isConsistencyEntryEnabled,
   listConsistencyLiteralEntries,
 } from '../lib/compoundPairRegister.js';
+import { countActiveConsistencyCriteria } from '../lib/consistencyCriteriaEntries.js';
+import { listConsistencyUnifyEntries } from '../lib/consistencyRuleLimit.js';
 import {
   isPhraseSlotEntryEnabled,
   listPhraseSlotEntries,
@@ -19,7 +21,7 @@ import {
 } from '../lib/auxiliaryVerbRegister.js';
 import { buildProjectCardSummary } from '../lib/projectCardSummary.js';
 import { criteriaNameForInput } from '../lib/criteriaName.js';
-import { formatRuleSetSavedDate } from '../lib/ruleSetsStorage.js';
+import { formatProjectCardDotDateFromIso } from './projectCardViewModel.js';
 import { normalizeProjectTags } from '../lib/projectMeta.js';
 
 /** @param {import('../lib/ruleSetsStorage.js').RuleSet} set */
@@ -52,6 +54,12 @@ function buildConsistencyChips(customRules) {
   /** @type {import('./projectCardViewModel.js').ProjectCardChip[]} */
   const chips = [];
   for (const entry of listConsistencyLiteralEntries(customRules)) {
+    chips.push({
+      label: entry.tailWord,
+      active: isConsistencyEntryEnabled(customRules, entry.tailWord),
+    });
+  }
+  for (const entry of listConsistencyUnifyEntries(customRules)) {
     chips.push({
       label: entry.tailWord,
       active: isConsistencyEntryEnabled(customRules, entry.tailWord),
@@ -103,7 +111,7 @@ function buildHeadline(counts, excludePhrases) {
 function buildLastWork(set) {
   const ctx = set.projectContext;
   if (!ctx?.lastWorkedAt) return undefined;
-  const date = formatRuleSetSavedDate(ctx.lastWorkedAt);
+  const date = formatProjectCardDotDateFromIso(ctx.lastWorkedAt);
   if (!date) return undefined;
   return {
     date,
@@ -115,7 +123,7 @@ function buildLastWork(set) {
 /** @param {import('../lib/ruleSetsStorage.js').RuleSet} set */
 function buildCreatedDate(set) {
   if (!set.savedAt) return undefined;
-  return formatRuleSetSavedDate(set.savedAt) || undefined;
+  return formatProjectCardDotDateFromIso(set.savedAt) || undefined;
 }
 
 /**
@@ -129,12 +137,7 @@ export function buildProjectCardViewModelFromRuleSet(set, options = {}) {
   const customRules = set?.customRules ?? [];
   const summary = buildProjectCardSummary(set);
 
-  const consistencyWords = listConsistencyLiteralEntries(customRules)
-    .filter((entry) => isConsistencyEntryEnabled(customRules, entry.tailWord))
-    .map((entry) => entry.tailWord);
-  const commonStringWords = listPhraseSlotEntries(customRules)
-    .filter((entry) => isPhraseSlotEntryEnabled(customRules, entry.tailWord))
-    .map((entry) => entry.tailWord);
+  const consistencyCounts = countActiveConsistencyCriteria(customRules);
   const auxiliaryWords = listAuxiliaryVerbEntries(customRules)
     .filter((entry) => isAuxiliaryVerbEntryEnabled(customRules, entry))
     .map((entry) => entry.displayLabel || entry.tailWord);
@@ -142,8 +145,8 @@ export function buildProjectCardViewModelFromRuleSet(set, options = {}) {
   const counts = {
     editorReview: summary.spelling.editorReview,
     spelling: summary.spelling.spelling,
-    find: consistencyWords.length,
-    commonString: commonStringWords.length,
+    find: consistencyCounts.find,
+    commonString: consistencyCounts.commonString,
     auxiliary: auxiliaryWords.length,
   };
 

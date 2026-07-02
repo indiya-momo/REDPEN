@@ -337,7 +337,7 @@ export function runRuleCheck(pages, rules, options = {}) {
     applyRuleToPages(rule, pages, byKey, globalExcludePhrases, errors);
   }
 
-  return { results: finalizeResults(byKey, pages), errors };
+  return { results: finalizeResults(byKey, pages), errors: [...new Set(errors)] };
 }
 
 /**
@@ -379,7 +379,7 @@ export async function runRuleCheckAsync(pages, rules, options = {}) {
     }
   }
 
-  return { results: finalizeResults(byKey, pages), errors };
+  return { results: finalizeResults(byKey, pages), errors: [...new Set(errors)] };
 }
 
 /**

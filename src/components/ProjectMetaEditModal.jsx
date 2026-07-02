@@ -146,7 +146,7 @@ export default function ProjectMetaEditModal({
             disabled={saving}
             autoComplete="off"
           />
-          <span className="project-meta-edit-modal__hint">쉼표로 구분 · 최대 8개</span>
+          <span className="project-meta-edit-modal__hint">쉼표로 구분 · 최대 3개</span>
         </label>
 
         <div className="project-meta-edit-modal__row">
@@ -154,7 +154,7 @@ export default function ProjectMetaEditModal({
             className="project-meta-edit-modal__field project-meta-edit-modal__field--half"
             htmlFor={proofRevisionInputId}
           >
-            <span className="project-meta-edit-modal__label">교차</span>
+            <span className="project-meta-edit-modal__label">교정교열</span>
             <input
               id={proofRevisionInputId}
               className="project-meta-edit-modal__input"

@@ -1,10 +1,30 @@
 import { useCallback, useId, useMemo, useState } from 'react';
 import {
   buildProjectCardPillarPreviews,
+  buildProjectCardTabLabels,
   formatProjectCardCompactDateLine,
-  formatProjectCardMetaLine,
-  formatProjectCardScheduleLines,
+  formatProjectCardEditionValues,
+  formatProjectCardLastModifiedLabel,
+  formatProjectCardMemoPreview,
 } from '../../presentation/projectCardViewModel.js';
+
+/**
+ * @param {{ title: string, className?: string, titleAttr?: string }} props
+ */
+function SheetCardBookTitle({ title }) {
+  const trimmed = title.trim();
+  return (
+    <span className="sheet-card__title-line">
+      <span className="sheet-card__title-glyph" aria-hidden>
+        《
+      </span>
+      <span className="sheet-card__title-text">{trimmed}</span>
+      <span className="sheet-card__title-glyph" aria-hidden>
+        》
+      </span>
+    </span>
+  );
+}
 
 /**
  * @param {{
@@ -15,10 +35,12 @@ import {
  *   selected?: boolean,
  *   onSelect?: () => void,
  *   onEditMeta?: () => void,
+ *   nameEditable?: boolean,
  *   onRename?: (title: string) => void,
  *   onUpdateMeta?: (patch: { memo?: string, tags?: string[] }) => void,
  *   onStartWork?: () => void,
  *   onDuplicate?: () => void,
+ *   onDelete?: () => void,
  *   onSharePreview?: () => void,
  * }} props
  */
@@ -30,17 +52,23 @@ export default function ProjectLibraryCard({
   selected = false,
   onSelect,
   onEditMeta,
-  onRename = () => {},
+  nameEditable,
+  onRename,
   onUpdateMeta: _onUpdateMeta = () => {},
   onStartWork = () => {},
   onDuplicate = () => {},
+  onDelete,
   onSharePreview = () => {},
 }) {
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState(card.title);
   const nameInputId = useId();
 
+  const allowNameEdit =
+    !readOnly && (nameEditable ?? Boolean(onRename)) && Boolean(onRename);
+
   const commitName = useCallback(() => {
+    if (!onRename) return;
     const trimmed = nameDraft.trim();
     if (trimmed && trimmed !== card.title) {
       onRename(trimmed);
@@ -55,16 +83,54 @@ export default function ProjectLibraryCard({
     [card],
   );
 
-  const scheduleLines = formatProjectCardScheduleLines(card);
+  const tabLabels = useMemo(() => buildProjectCardTabLabels(card), [card]);
 
-  const tabLabels = useMemo(() => {
-    if (card.tags.length > 0) return card.tags;
-    if (card.savedDate) return [card.savedDate];
-    return ['프로젝트'];
-  }, [card.tags, card.savedDate]);
+  const lastModifiedLabel = formatProjectCardLastModifiedLabel(card);
+  const editionValues = formatProjectCardEditionValues(card);
+  const memoPreview = formatProjectCardMemoPreview(card);
 
   const showWorkButton = !compact && (showStartWork || !readOnly);
   const compactDateLine = formatProjectCardCompactDateLine(card);
+
+  const titleBlock = editingName && allowNameEdit ? (
+    <label className="sheet-card__name-edit" htmlFor={nameInputId}>
+      <span className="visually-hidden">프로젝트 이름</span>
+      <input
+        id={nameInputId}
+        className="sheet-card__name-input sheet-card__name-input--active"
+        value={nameDraft}
+        onChange={(e) => setNameDraft(e.target.value)}
+        onBlur={commitName}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') commitName();
+          if (e.key === 'Escape') {
+            setNameDraft(card.title);
+            setEditingName(false);
+          }
+        }}
+        onClick={(event) => event.stopPropagation()}
+        autoFocus
+      />
+    </label>
+  ) : allowNameEdit ? (
+    <button
+      type="button"
+      className="sheet-card__title-field"
+      onClick={(event) => {
+        event.stopPropagation();
+        setNameDraft(card.title);
+        setEditingName(true);
+      }}
+      aria-label={`프로젝트 이름 수정: ${card.title}`}
+      title={`《${card.title}》`}
+    >
+      <SheetCardBookTitle title={card.title} />
+    </button>
+  ) : (
+    <h2 className="sheet-card__title" title={`《${card.title}》`}>
+      <SheetCardBookTitle title={card.title} />
+    </h2>
+  );
 
   if (compact) {
     return (
@@ -87,7 +153,9 @@ export default function ProjectLibraryCard({
         aria-label={`${card.title}${compactDateLine ? `, ${compactDateLine}` : ''}`}
       >
         <div className="sheet-card__body sheet-card__body--folder">
-          <p className="sheet-card__folder-title">《{card.title}》</p>
+          <p className="sheet-card__folder-title" title={`《${card.title}》`}>
+            <SheetCardBookTitle title={card.title} />
+          </p>
           {compactDateLine ? (
             <p className="sheet-card__folder-date">{compactDateLine}</p>
           ) : null}
@@ -114,107 +182,64 @@ export default function ProjectLibraryCard({
       tabIndex={onSelect ? 0 : undefined}
       aria-pressed={onSelect ? selected : undefined}
     >
-      <div className="sheet-card__tabs" aria-label="분류">
-        {tabLabels.map((tag, index) => (
-          <span
-            key={`${tag}-${index}`}
-            className={`sheet-card__tab${index === 0 ? ' sheet-card__tab--lead' : ''}`}
-          >
-            {tag}
-          </span>
-        ))}
+      <div
+        className="sheet-card__tabs"
+        aria-label="분류"
+        aria-hidden={tabLabels.length === 0 ? true : undefined}
+      >
+        {tabLabels.length > 0 ? (
+          tabLabels.map((tag, index) => (
+            <span
+              key={`${tag}-${index}`}
+              className={`sheet-card__tab sheet-card__tab--tag${index === 0 ? ' sheet-card__tab--lead' : ''}`}
+            >
+              {tag}
+            </span>
+          ))
+        ) : (
+          <span className="sheet-card__tab sheet-card__tab--tag sheet-card__tab--lead sheet-card__tab--ghost" />
+        )}
       </div>
 
       <div className="sheet-card__body">
         <div className="sheet-card__head">
-          {editingName && !readOnly ? (
-            <label className="sheet-card__name-edit" htmlFor={nameInputId}>
-              <span className="visually-hidden">프로젝트 이름</span>
-              <input
-                id={nameInputId}
-                className="sheet-card__name-input sheet-card__name-input--active"
-                value={nameDraft}
-                onChange={(e) => setNameDraft(e.target.value)}
-                onBlur={commitName}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') commitName();
-                  if (e.key === 'Escape') {
-                    setNameDraft(card.title);
-                    setEditingName(false);
-                  }
-                }}
-                onClick={(event) => event.stopPropagation()}
-                autoFocus
-              />
-            </label>
-          ) : readOnly ? (
-            <h2 className="sheet-card__title">《{card.title}》</h2>
-          ) : (
-            <button
-              type="button"
-              className="sheet-card__title-field"
-              onClick={(event) => {
-                event.stopPropagation();
-                setNameDraft(card.title);
-                setEditingName(true);
-              }}
-              aria-label={`프로젝트 이름 수정: ${card.title}`}
-            >
-              《{card.title}》
-            </button>
-          )}
-
-          {scheduleLines.length > 0 ? (
-            <div className="sheet-card__schedule">
-              {scheduleLines.map((line) => (
-                <span key={line} className="sheet-card__schedule-line">
-                  {line}
-                </span>
-              ))}
+          <div className="sheet-card__title-block">
+            <div className="sheet-card__title-main">{titleBlock}</div>
+            <div className="sheet-card__meta-stack">
+              <span className="sheet-card__date-chip">{lastModifiedLabel}</span>
+              <p
+                className={`sheet-card__edition-line${editionValues ? '' : ' sheet-card__edition-line--ghost'}`}
+                aria-hidden={editionValues ? undefined : true}
+              >
+                {editionValues || '\u00a0'}
+              </p>
             </div>
-          ) : null}
+          </div>
         </div>
 
-        <p className="sheet-card__meta">{formatProjectCardMetaLine(card)}</p>
-
-        <p className="sheet-card__headline">{card.headline}</p>
+        <p
+          className="sheet-card__memo-preview"
+          title={memoPreview || undefined}
+          aria-hidden={memoPreview ? undefined : true}
+        >
+          {memoPreview || '\u00a0'}
+        </p>
 
         <div className="sheet-card__sections" aria-label="표기 기준 구역">
           {pillarRows.map((section) => (
             <section
               key={section.key}
-              className={`sheet-card__section sheet-card__section--${section.key}`}
+              className={`sheet-card__section sheet-card__section--${section.key} sheet-card__section--summary`}
             >
-              <div className="sheet-card__section-head">
-                <span className="sheet-card__section-label">{section.label}</span>
-              </div>
-              <div className="sheet-card__section-row">
-                {section.chips.length > 0 ? (
-                  <div className="sheet-card__chips" aria-label={`${section.label} 미리보기`}>
-                    {section.chips.map((chip) => (
-                      <span
-                        key={chip.label}
-                        className={`sheet-card__chip${chip.active === false ? ' sheet-card__chip--off' : ''}`}
-                      >
-                        {chip.label}
-                      </span>
-                    ))}
-                    {section.hasMore ? (
-                      <span className="sheet-card__chip-more" aria-hidden>
-                        …
-                      </span>
-                    ) : null}
-                  </div>
-                ) : (
-                  <div className="sheet-card__chips sheet-card__chips--empty" aria-hidden />
-                )}
+              <p className="sheet-card__pillar-summary">
+                <span className="sheet-card__section-label">{section.label}</span>{' '}
                 <span
                   className="sheet-card__section-count"
                   aria-label={`${section.label} ${section.count}건`}
                 >
                   {section.count}
                 </span>
-              </div>
+              </p>
             </section>
           ))}
         </div>
@@ -243,6 +268,18 @@ export default function ProjectLibraryCard({
                 >
                   복제
                 </button>
+                {onDelete ? (
+                  <button
+                    type="button"
+                    className="sheet-card__btn sheet-card__btn--secondary"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onDelete();
+                    }}
+                  >
+                    삭제
+                  </button>
+                ) : null}
                 <button
                   type="button"
                   className="sheet-card__btn sheet-card__btn--secondary"

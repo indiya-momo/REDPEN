@@ -34,7 +34,7 @@
 
 .project-meta-edit-modal__title {
   margin: 0;
-  font-family: var(--font-family-title);
+  font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
   font-size: 1.15rem;
   font-weight: 700;
   line-height: 1.35;

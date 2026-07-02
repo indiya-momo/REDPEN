@@ -3,7 +3,6 @@ import { LEGACY_DEFAULT_CRITERIA_HINT } from '../lib/criteriaName.js';
 import {
   countSavedCriteriaPresets,
   CRITERIA_PRESET_LIMIT_MESSAGE,
-  enforceMaxCriteriaPresets,
   isCriteriaPresetLimitExempt,
   MAX_CRITERIA_PRESETS,
 } from '../lib/criteriaPresetLimit.js';
@@ -11,6 +10,8 @@ import { normalizeRuleSet } from '../lib/ruleSetNormalize.js';
 import {
   loadActiveSetId,
   loadRuleSets,
+  ruleSetsStorageKey,
+  RULE_SETS_LOCAL_SYNC_EVENT,
   saveActiveSetId,
   saveRuleSets,
 } from '../lib/ruleSetsStorage.js';
@@ -20,8 +21,15 @@ import {
   resolveHydratedActiveSetId,
   saveRuleSetsCloud,
 } from '../lib/ruleSetsCloud.js';
-import { mergeRuleSetsOnLogin, dedupeSavedRuleSetsByName } from '../lib/ruleSetsMerge.js';
+import {
+  mergeRuleSetsOnLogin,
+  applyCriteriaPresetQuota,
+  mergeRuleSetsOnPersist,
+  mergeLocalRuleSetSources,
+} from '../lib/ruleSetsMerge.js';
 import { mergeProjectContext } from '../lib/projectMeta.js';
+import { planProjectCriteriaUpdate } from '../lib/projectCriteriaUpdate.js';
+import { planProjectCustomRulesUpdate } from '../lib/projectCustomRulesUpdate.js';
 import {
   planDeleteProject,
   planDuplicateProject,
@@ -92,8 +100,10 @@ export function useMyPageProjects(uid = '', email = '') {
   const persistProjectSets = useCallback(
     async (nextSets, nextActiveId = activeSetIdRef.current) => {
       const trimmedUid = uid.trim();
-      loadedSetsRef.current = nextSets;
-      saveRuleSets(nextSets, trimmedUid);
+      const disk = loadRuleSets(trimmedUid);
+      const merged = mergeRuleSetsOnPersist(disk, nextSets);
+      loadedSetsRef.current = merged;
+      saveRuleSets(merged, trimmedUid);
 
       if (nextActiveId) {
         saveActiveSetId(nextActiveId, trimmedUid);
@@ -101,11 +111,11 @@ export function useMyPageProjects(uid = '', email = '') {
         setActiveSetId(nextActiveId);
       }
 
-      syncSavedProjectsState(nextSets, setProjects, setSavedCount);
+      syncSavedProjectsState(merged, setProjects, setSavedCount);
 
       if (trimmedUid && isRuleSetsCloudEnabled()) {
         try {
-          await saveRuleSetsCloud(trimmedUid, nextSets, nextActiveId);
+          await saveRuleSetsCloud(trimmedUid, merged, nextActiveId);
         } catch (e) {
           console.warn('기준 클라우드 저장 실패 (마이페이지)', e);
           return false;
@@ -126,27 +136,36 @@ export function useMyPageProjects(uid = '', email = '') {
         const localSets = normalizeLoadedSets(loadRuleSets(trimmedUid));
         let sets = localSets;
         let activeId = loadActiveSetId(trimmedUid);
+        let cloudActiveId = null;
 
         if (trimmedUid && isRuleSetsCloudEnabled()) {
           try {
             const cloud = await loadRuleSetsCloud(trimmedUid);
             if (cloud?.ruleSets?.length) {
-              const merged = mergeRuleSetsOnLogin(localSets, cloud.ruleSets);
-              sets = dedupeSavedRuleSetsByName(
-                enforceMaxCriteriaPresets(
-                  normalizeLoadedSets(merged),
-                  trimmedUid,
-                  email,
-                ),
+              sets = normalizeLoadedSets(
+                mergeRuleSetsOnLogin(localSets, cloud.ruleSets),
               );
-              activeId = resolveHydratedActiveSetId(
-                sets,
-                activeId,
-                cloud.activeSetId,
-              );
+              cloudActiveId = cloud.activeSetId;
             }
           } catch {
             // 로컬 기준 유지
+          }
+        }
+
+        const beforeIds = sets.map((set) => set.id).join(',');
+        sets = applyCriteriaPresetQuota(sets, trimmedUid, email);
+        activeId = resolveHydratedActiveSetId(sets, activeId, cloudActiveId);
+        const quotaTrimmed = beforeIds !== sets.map((set) => set.id).join(',');
+
+        if (quotaTrimmed) {
+          saveRuleSets(sets, trimmedUid);
+          if (activeId) saveActiveSetId(activeId, trimmedUid);
+          if (trimmedUid && isRuleSetsCloudEnabled()) {
+            try {
+              await saveRuleSetsCloud(trimmedUid, sets, activeId);
+            } catch (e) {
+              console.warn('프로젝트 슬롯 상한 적용 후 클라우드 저장 실패', e);
+            }
           }
         }
 
@@ -175,6 +194,62 @@ export function useMyPageProjects(uid = '', email = '') {
     void load();
     return () => {
       cancelled = true;
+    };
+  }, [uid, email]);
+
+  useEffect(() => {
+    const trimmedUid = uid.trim();
+    const storageKey = ruleSetsStorageKey(trimmedUid);
+
+    const reloadFromStorage = () => {
+      try {
+        const diskSets = normalizeLoadedSets(loadRuleSets(trimmedUid));
+        let sets = mergeLocalRuleSetSources(
+          diskSets,
+          loadedSetsRef.current,
+        );
+        const beforeIds = sets.map((set) => set.id).join(',');
+        sets = applyCriteriaPresetQuota(sets, trimmedUid, email);
+        const activeId = resolveHydratedActiveSetId(
+          sets,
+          loadActiveSetId(trimmedUid),
+          activeSetIdRef.current,
+        );
+
+        loadedSetsRef.current = sets;
+        activeSetIdRef.current = activeId;
+        const saved = sets.filter((s) => Boolean(s.savedAt));
+        setProjects(saved);
+        setActiveSetId(activeId);
+        setSavedCount(countSavedCriteriaPresets(sets));
+
+        if (beforeIds !== sets.map((set) => set.id).join(',')) {
+          saveRuleSets(sets, trimmedUid);
+          if (activeId) saveActiveSetId(activeId, trimmedUid);
+        }
+      } catch (e) {
+        console.warn('마이페이지 프로젝트 storage 동기화 실패', e);
+      }
+    };
+
+    const onStorage = (event) => {
+      if (event.key !== storageKey || event.newValue == null) return;
+      reloadFromStorage();
+    };
+
+    const onLocalSync = (event) => {
+      const detailUid = String(
+        /** @type {CustomEvent<{ uid?: string }>} */ (event).detail?.uid ?? '',
+      ).trim();
+      if (detailUid !== trimmedUid) return;
+      reloadFromStorage();
+    };
+
+    window.addEventListener('storage', onStorage);
+    window.addEventListener(RULE_SETS_LOCAL_SYNC_EVENT, onLocalSync);
+    return () => {
+      window.removeEventListener('storage', onStorage);
+      window.removeEventListener(RULE_SETS_LOCAL_SYNC_EVENT, onLocalSync);
     };
   }, [uid, email]);
 
@@ -261,7 +336,33 @@ export function useMyPageProjects(uid = '', email = '') {
     [persistProjectSets],
   );
 
-  const updateProjectMeta = useCallback(
+  const updateProjectCustomRules = useCallback(
+    async (setId, nextCustomRules) => {
+      const id = String(setId ?? '').trim();
+      if (!id) return false;
+
+      const sets = loadedSetsRef.current;
+      const index = sets.findIndex((set) => set.id === id);
+      if (index < 0) return false;
+
+      const current = sets[index];
+      const plan = planProjectCustomRulesUpdate(current, nextCustomRules);
+      if (!plan.ok) {
+        return false;
+      }
+
+      const nextSet = normalizeRuleSet({
+        ...current,
+        customRules: plan.nextCustomRules,
+        ...(current.savedAt ? { savedAt: new Date().toISOString() } : {}),
+      });
+      const nextSets = sets.map((set, i) => (i === index ? nextSet : set));
+      return persistProjectSets(nextSets);
+    },
+    [persistProjectSets],
+  );
+
+  const updateProjectCriteria = useCallback(
     async (setId, patch) => {
       const id = String(setId ?? '').trim();
       if (!id) return false;
@@ -269,6 +370,45 @@ export function useMyPageProjects(uid = '', email = '') {
       const sets = loadedSetsRef.current;
       const index = sets.findIndex((set) => set.id === id);
       if (index < 0) return false;
+
+      const current = sets[index];
+      const plan = planProjectCriteriaUpdate(current, patch);
+      if (!plan.ok) {
+        return false;
+      }
+
+      const nextSet = normalizeRuleSet({
+        ...current,
+        ...plan.patch,
+        ...(current.savedAt ? { savedAt: new Date().toISOString() } : {}),
+      });
+      const nextSets = sets.map((set, i) => (i === index ? nextSet : set));
+      return persistProjectSets(nextSets);
+    },
+    [persistProjectSets],
+  );
+
+  const updateProjectMeta = useCallback(
+    async (setId, patch) => {
+      const id = String(setId ?? '').trim();
+      if (!id) return { ok: false, reason: 'not_found' };
+
+      let sets = loadedSetsRef.current;
+
+      if (patch.name !== undefined) {
+        const renamePlan = planRenameProject(sets, id, patch.name);
+        if (!renamePlan.ok) {
+          return {
+            ok: false,
+            reason: renamePlan.reason,
+            message: RENAME_FAILURE_MESSAGE[renamePlan.reason],
+          };
+        }
+        sets = renamePlan.next;
+      }
+
+      const index = sets.findIndex((set) => set.id === id);
+      if (index < 0) return { ok: false, reason: 'not_found' };
 
       const current = sets[index];
       const nextProjectContext =
@@ -282,6 +422,11 @@ export function useMyPageProjects(uid = '', email = '') {
                 : {}),
             })
           : current.projectContext;
+      const touchesMeta =
+        patch.tags !== undefined ||
+        patch.memo !== undefined ||
+        patch.proofRevision !== undefined ||
+        patch.formatLabel !== undefined;
       const nextSet = normalizeRuleSet({
         ...current,
         ...(patch.tags !== undefined ? { tags: patch.tags } : {}),
@@ -289,10 +434,13 @@ export function useMyPageProjects(uid = '', email = '') {
         ...(nextProjectContext !== undefined
           ? { projectContext: nextProjectContext }
           : {}),
+        ...(touchesMeta
+          ? { metaUpdatedAt: new Date().toISOString() }
+          : {}),
       });
       const nextSets = sets.map((set, i) => (i === index ? nextSet : set));
       const ok = await persistProjectSets(nextSets);
-      return ok;
+      return ok ? { ok: true } : { ok: false, reason: 'cloud_save_failed' };
     },
     [persistProjectSets],
   );
@@ -312,6 +460,8 @@ export function useMyPageProjects(uid = '', email = '') {
     duplicateProject,
     deleteProject,
     updateProjectMeta,
+    updateProjectCustomRules,
+    updateProjectCriteria,
     savedCount,
     maxSlots,
     exempt,

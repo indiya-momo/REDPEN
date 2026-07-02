@@ -18,9 +18,14 @@ import { CONSISTENCY_UNIFY_INPUT_PLACEHOLDER } from './constants.js';
  * @param {{
  *   customRules: import('../../lib/ruleTypes.js').Rule[],
  *   onApplyRules: (next: import('../../lib/ruleTypes.js').Rule[]) => boolean,
+ *   inlineRegisterRow?: boolean,
  * }} props
  */
-export default function ConsistencyUnifySection({ customRules, onApplyRules }) {
+export default function ConsistencyUnifySection({
+  customRules,
+  onApplyRules,
+  inlineRegisterRow = false,
+}) {
   const [unifiedDraft, setUnifiedDraft] = useState('');
   const unifyEntries = useMemo(
     () => listConsistencyUnifyEntries(customRules),
@@ -68,20 +73,42 @@ export default function ConsistencyUnifySection({ customRules, onApplyRules }) {
           &apos;신라시대 , 신라˅시대 , 통일신라시대&apos; 입력 → &apos;신라시대&apos; 통일형 📌지정하고 찾기
         </ConsistencyHintExample>
       </p>
-      <ConsistencyRegisterField
-        value={unifiedDraft}
-        onChange={setUnifiedDraft}
-        onRegister={registerUnified}
-        placeholder={CONSISTENCY_UNIFY_INPUT_PLACEHOLDER}
-        ariaLabel="통일형 만들기"
-        registerDisabled={unifyRegisterFull}
-      />
-      <UnifyRegisteredList
-        entries={unifyEntries}
-        pinnedTailWord={pinnedTailWord}
-        onPin={pinEntry}
-        onRemove={removeEntry}
-      />
+      {inlineRegisterRow ? (
+        <div className="project-hub-consistency-register-row">
+          <ConsistencyRegisterField
+            value={unifiedDraft}
+            onChange={setUnifiedDraft}
+            onRegister={registerUnified}
+            placeholder={CONSISTENCY_UNIFY_INPUT_PLACEHOLDER}
+            ariaLabel="통일형 만들기"
+            registerDisabled={unifyRegisterFull}
+          />
+          <UnifyRegisteredList
+            entries={unifyEntries}
+            pinnedTailWord={pinnedTailWord}
+            onPin={pinEntry}
+            onRemove={removeEntry}
+            hidePinUntilPinned
+          />
+        </div>
+      ) : (
+        <>
+          <ConsistencyRegisterField
+            value={unifiedDraft}
+            onChange={setUnifiedDraft}
+            onRegister={registerUnified}
+            placeholder={CONSISTENCY_UNIFY_INPUT_PLACEHOLDER}
+            ariaLabel="통일형 만들기"
+            registerDisabled={unifyRegisterFull}
+          />
+          <UnifyRegisteredList
+            entries={unifyEntries}
+            pinnedTailWord={pinnedTailWord}
+            onPin={pinEntry}
+            onRemove={removeEntry}
+          />
+        </>
+      )}
     </div>
   );
 }

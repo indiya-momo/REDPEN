@@ -29,6 +29,17 @@ describe('ruleEngine', () => {
     expect(asyncFindings).toBe(syncFindings);
   });
 
+  it('runRuleCheckAsync — 컴파일 실패 오류는 규칙당 한 번만', async () => {
+    const pages = Array.from({ length: 5 }, (_, i) => ({
+      pageNum: i + 1,
+      text: '본문',
+    }));
+    const rules = [{ find: '(?', replace: 'x', enabled: true, pattern: 'regex' }];
+    const { errors } = await runRuleCheckAsync(pages, rules, { pagesPerChunk: 1 });
+    expect(errors).toHaveLength(1);
+    expect(errors[0]).toMatch(/규칙 문법 오류/);
+  });
+
   it('auxiliary-verb — 주택·지급은 어 주·어 지 오탐 없음', () => {
     const rules = [
       ...buildAuxiliaryVerbFindRules('어 주'),

@@ -14,11 +14,18 @@
   margin-top: 1.35rem;
   padding-top: 1.25rem;
   border-top: 1px solid var(--color-border);
+  --pillar-spelling: #a86b45;
+  --pillar-consistency: #5c6b7a;
+  --pillar-auxiliary: #6b7c5e;
+  --project-hub-criteria-title-font-size: 0.84rem;
+  /* 표기 통일 입력창 — 고정 너비(칩 유무 무관) */
+  --project-hub-consistency-input-width: 25rem;
+  --project-hub-consistency-input-min-width: 25rem;
 }
 
 .project-hub-settings__layout {
   display: grid;
-  grid-template-columns: minmax(9.5rem, 11.5rem) minmax(0, 1fr);
+  grid-template-columns: minmax(10.5rem, 12.5rem) minmax(0, 1fr);
   gap: 1.25rem;
   align-items: start;
   width: 100%;
@@ -35,9 +42,9 @@
 
 .project-hub-settings__nav-btn {
   width: 100%;
-  padding: 0.55rem 0.7rem;
-  border: none;
-  border-radius: var(--radius-ui);
+  padding: 0.45rem 0.55rem;
+  border: 1px solid transparent;
+  border-radius: 2px;
   background: transparent;
   color: var(--color-text-muted);
   font: inherit;
@@ -47,15 +54,40 @@
   cursor: pointer;
 }
 
+.project-hub-settings__nav-btn--spelling {
+  border-left: 3px solid var(--pillar-spelling);
+}
+
+.project-hub-settings__nav-btn--consistency {
+  border-left: 3px solid var(--pillar-consistency);
+}
+
+.project-hub-settings__nav-btn--auxiliary {
+  border-left: 3px solid var(--pillar-auxiliary);
+}
+
 .project-hub-settings__nav-btn:hover {
-  background: var(--color-surface-muted, #f5f2ec);
   color: var(--color-text);
+  border-color: var(--color-border);
 }
 
 .project-hub-settings__nav-btn--active {
-  background: var(--color-surface);
+  background: transparent;
   color: var(--color-text);
-  box-shadow: inset 0 0 0 1px var(--color-border-strong);
+  border-color: var(--color-border-strong, var(--color-border));
+  box-shadow: none;
+}
+
+.project-hub-settings__nav-btn--active.project-hub-settings__nav-btn--spelling {
+  border-left-color: var(--pillar-spelling);
+}
+
+.project-hub-settings__nav-btn--active.project-hub-settings__nav-btn--consistency {
+  border-left-color: var(--pillar-consistency);
+}
+
+.project-hub-settings__nav-btn--active.project-hub-settings__nav-btn--auxiliary {
+  border-left-color: var(--pillar-auxiliary);
 }
 
 .project-hub-settings__main {
@@ -63,45 +95,8 @@
   width: 100%;
 }
 
-.project-hub-settings__header {
-  margin-bottom: 1rem;
-}
-
-.project-hub-settings__title {
-  margin: 0;
-  font-family: var(--mypage-heading-font);
-  font-size: 1.15rem;
-  font-weight: 700;
-  line-height: 1.3;
-  color: var(--color-text);
-}
-
-.project-hub-settings__subtitle {
-  margin: 0.3rem 0 0;
-  font-size: 0.82rem;
-  color: var(--color-text-muted);
-}
-
 .project-hub-settings__group + .project-hub-settings__group {
   margin-top: 1rem;
-}
-
-.project-hub-settings__group-head {
-  margin-bottom: 0.55rem;
-}
-
-.project-hub-settings__group-title {
-  margin: 0;
-  font-size: 0.92rem;
-  font-weight: 700;
-  color: var(--color-text);
-}
-
-.project-hub-settings__group-lead {
-  margin: 0.2rem 0 0;
-  font-size: 0.76rem;
-  line-height: 1.5;
-  color: var(--color-text-muted);
 }
 
 .project-hub-settings__card {
@@ -116,6 +111,240 @@
   flex-wrap: wrap;
   gap: 0.5rem;
   padding: 0.85rem 1rem;
+}
+
+.project-hub-settings__card--criteria {
+  padding: 0.85rem 1rem 1rem;
+}
+
+.project-hub-settings__criteria {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.project-hub-settings__criteria--single {
+  gap: 0;
+}
+
+.project-hub-settings__criteria--single .project-hub-settings__criteria-section {
+  padding-top: 0;
+  border-left-width: 3px;
+  padding-left: 0.65rem;
+}
+
+.project-hub-settings__criteria-section {
+  padding-top: 0.15rem;
+}
+
+.project-hub-settings__criteria-section + .project-hub-settings__criteria-section {
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.project-hub-settings__criteria-section--spelling {
+  border-left: 3px solid var(--pillar-spelling, #a86b45);
+  padding-left: 0.65rem;
+}
+
+.project-hub-settings__criteria-section--consistency {
+  border-left: 3px solid var(--pillar-consistency, #5c6b7a);
+  padding-left: 0.65rem;
+}
+
+.project-hub-settings__criteria-section--auxiliary {
+  border-left: none;
+  padding-left: 0;
+}
+
+.project-hub-settings__criteria--single .project-hub-settings__criteria-section--auxiliary {
+  border-left-width: 0;
+  padding-left: 0;
+}
+
+.project-hub-settings__criteria-section--consistency .auxiliary-checklist,
+.project-hub-settings__criteria-section--auxiliary .auxiliary-checklist {
+  margin-top: 0.15rem;
+}
+
+.project-hub-settings__criteria-section--auxiliary .auxiliary-checklist .tail-list {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+
+.project-hub-settings__criteria-section--auxiliary .tail-list--grid-required {
+  padding-top: 0;
+  border-top: none;
+}
+
+.project-hub-settings__criteria-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.45rem;
+}
+
+.project-hub-settings__criteria-title {
+  margin: 0;
+  font-size: var(--project-hub-criteria-title-font-size);
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.project-hub-settings__criteria-lead,
+.project-hub-settings__criteria-empty {
+  margin: 0 0 0.55rem;
+  font-size: 0.72rem;
+  line-height: 1.45;
+  color: var(--color-text-subtle);
+}
+
+.project-hub-settings__criteria-link {
+  font-size: 0.78rem;
+}
+
+.project-hub-settings__consistency-editor .consistency-unified-box {
+  padding: 0;
+  border: none;
+  background: transparent;
+  --panel-ui-scale: 1;
+  --panel-guide-font-size: 0.72rem;
+  --consistency-example-font-size: 0.72rem;
+}
+
+/* 표기 통일 각 블록 제목 — 좌측 네비·맞춤법 제목과 동일 크기 */
+.project-hub-settings__consistency-editor
+  .printed-page-setup__title.panel-criteria-heading,
+.project-hub-settings__consistency-editor .panel-criteria-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 0.15em;
+  margin: 0 0 0.45rem;
+  font-size: var(--project-hub-criteria-title-font-size);
+  font-weight: 700;
+  line-height: 1.45;
+  color: var(--color-text);
+}
+
+.project-hub-settings__consistency-editor .panel-criteria-heading-meta {
+  font-size: 0.75em;
+  font-weight: 400;
+  line-height: inherit;
+}
+
+.project-hub-settings__consistency-editor .consistency-unified-box .hint {
+  margin: 0 0 0.45rem;
+  font-size: 0.72rem;
+  line-height: 1.45;
+  color: var(--color-text-subtle);
+}
+
+/* 본보조 auxiliary-chip(0.8rem)과 동일 — 인라인 행 안에서는 더 작게 */
+.project-hub-settings__consistency-editor .registered-chip {
+  font-size: 0.8rem;
+}
+
+.project-hub-consistency-register-row {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: flex-end;
+  justify-content: flex-start;
+  gap: 0.35rem 0.5rem;
+  margin-top: 0.35rem;
+}
+
+.project-hub-consistency-register-row > .tail-form {
+  flex: 0 0 var(--project-hub-consistency-input-width);
+  width: var(--project-hub-consistency-input-width);
+  min-width: var(--project-hub-consistency-input-min-width);
+  max-width: var(--project-hub-consistency-input-width);
+  flex-shrink: 0;
+  margin-top: 0;
+}
+
+/* 입력창 옆 — 넘치면 위쪽 줄로 쌓임 */
+.project-hub-consistency-register-row > .tail-list:not(.tail-list--grid) {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: calc(100% - var(--project-hub-consistency-input-width) - 0.5rem);
+  margin: 0;
+  padding: 0;
+  border-top: none;
+  gap: 0.25rem 0.35rem;
+  flex-wrap: wrap-reverse;
+  align-content: flex-end;
+  align-items: flex-end;
+  justify-content: flex-start;
+}
+
+.project-hub-consistency-register-row .registered-chip,
+.project-hub-consistency-register-row .registered-chip--unify {
+  font-size: 0.7rem;
+  line-height: 1.2;
+  padding: 2px 3px 2px 5px;
+}
+
+.project-hub-consistency-register-row .registered-chip .btn-icon--dismiss,
+.project-hub-consistency-register-row .consistency-unify-pin-btn {
+  font-size: 0.85em;
+}
+
+.project-hub-consistency-register-row .consistency-unify-pin-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.project-hub-consistency-register-row .consistency-unify-chip-label-btn {
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  line-height: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.project-hub-consistency-register-row .consistency-unify-chip-label-btn:hover .find {
+  color: var(--accent-terracotta-deep);
+}
+
+.project-hub-settings__consistency-editor .consistency-register-field__input,
+.project-hub-settings__consistency-editor .consistency-register-field .field-input {
+  font-size: 0.82rem;
+}
+
+.project-hub-settings__consistency-editor .consistency-unified-box .tail-form {
+  margin-top: 0.35rem;
+}
+
+.project-hub-settings__consistency-editor
+  .consistency-unified-box
+  .tail-list:not(.tail-list--grid) {
+  margin-top: 0.45rem;
+  padding-top: 0;
+  border-top: none;
+}
+
+.project-hub-settings__consistency-editor .consistency-register-field {
+  display: flex;
+  align-items: stretch;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-ui);
+  background: var(--color-surface-overlay);
+  overflow: hidden;
 }
 
 .project-hub-settings__row {
