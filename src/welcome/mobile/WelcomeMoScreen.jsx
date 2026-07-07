@@ -1,13 +1,13 @@
 import { useCallback, useState } from 'react';
 import { BookOpen, Copy, Lock } from 'lucide-react';
 import AppVersionBadge from '../../components/AppVersionBadge.jsx';
-import MomoHero from '../../components/MomoHero.jsx';
+import WelcomeMoMomoHero from './WelcomeMoMomoHero.jsx';
 import {
   isAnalyticsOptedOut,
   setAnalyticsOptOut,
 } from '../../lib/analytics.js';
 import { publicAssetUrl } from '../../lib/publicAssetUrl.js';
-import welcomeMomoFrame from '../../assets/welcome/welcome_momo_frame3.png';
+import welcomeMomoFrame from '../../assets/welcome/welcome_momo_frame_pc.png';
 import { WelcomeMoIllustrationFigure } from './WelcomeMoIllustrationCompare.jsx';
 import './welcome-mo.css';
 
@@ -102,7 +102,7 @@ export default function WelcomeMoScreen({ onOpenRoom }) {
 
         <div className="welcome-mo__portrait">
           <div className="welcome-mo__portrait-media">
-            <MomoHero variant="gate" />
+            <WelcomeMoMomoHero />
           </div>
           <img
             className="welcome-mo__portrait-frame"
@@ -179,18 +179,23 @@ export default function WelcomeMoScreen({ onOpenRoom }) {
               </div>
             </li>
             <li className="welcome-mo__showcase-item welcome-mo__showcase-item--message">
-              <p className="welcome-mo__showcase-message">
-                <span className="welcome-mo__showcase-message-lines">
-                  <span className="welcome-mo__showcase-message-line">
-                    기계적인 부담은 줄이고
+              <div className="welcome-mo__showcase-message-box">
+                <p className="welcome-mo__showcase-message">
+                  <span className="welcome-mo__showcase-message-lines">
+                    <span className="welcome-mo__showcase-message-line">
+                      기계적인 부담은 줄이고
+                    </span>
+                    <span className="welcome-mo__showcase-message-line">
+                      중요한 일에 집중하도록
+                    </span>
                   </span>
-                  <span className="welcome-mo__showcase-message-line">
-                    중요한 일에 집중하도록
+                  <span className="welcome-mo__showcase-message-credit">
+                    (현직 편집자가 만들었어요!)
                   </span>
-                </span>
-                <span className="welcome-mo__showcase-message-credit">
-                  (현직 편집자가 만들었어요!)
-                </span>
+                </p>
+              </div>
+              <p className="welcome-mo__eyebrow welcome-mo__showcase-beta-tag">
+                오픈베타 무료 서비스 중
               </p>
             </li>
           </ol>
