@@ -49,7 +49,7 @@ import { WORK_GUIDE_KEYS, workGuideStorageKey } from './lib/workGuideKeys.js';
 import { consumeReturnToMainWorkspace, markReturnToMainWorkspace, shouldReopenMainWorkspace } from './lib/returnToWorkspace.js';
 import { clearTabSessionMarker, clearWorkSession } from './lib/sessionStore.js';
 import { clearTooltipGuideDismissed } from './lib/tooltipGuideStorage.js';
-import EventRewardLayer from './components/EventRewardLayer.jsx';
+import { shouldAutoEnterMainFromWelcome } from './lib/welcomeViewport.js';
 import AppDialogHost from './components/AppDialogHost.jsx';
 
 export default function App() {
@@ -67,7 +67,7 @@ export default function App() {
     ) {
       return 'main';
     }
-    if (shouldReopenMainWorkspace()) {
+    if (shouldReopenMainWorkspace() && shouldAutoEnterMainFromWelcome()) {
       return 'main';
     }
     return 'welcome';
@@ -87,7 +87,7 @@ export default function App() {
     );
     setFeedbackThankYouOpen(true);
     setRewardNoticeTick((tick) => tick + 1);
-    if (isLoginRequiredForChecks()) {
+    if (isLoginRequiredForChecks() && shouldAutoEnterMainFromWelcome()) {
       setScreen('main');
     }
   }, []);
@@ -107,7 +107,7 @@ export default function App() {
       if (result.showEventReward) {
         setEventRewardTick((tick) => tick + 1);
       }
-      if (isLoginRequiredForChecks()) {
+      if (isLoginRequiredForChecks() && shouldAutoEnterMainFromWelcome()) {
         setScreen('main');
       }
     });
@@ -116,6 +116,7 @@ export default function App() {
   useEffect(() => {
     if (!authReady || auxWindow) return;
     if (!consumeReturnToMainWorkspace()) return;
+    if (!shouldAutoEnterMainFromWelcome()) return;
     if (!isLoginRequiredForChecks() || authSession?.uid) {
       setScreen('main');
     }
@@ -189,6 +190,7 @@ export default function App() {
   useEffect(() => {
     if (!authReady || auxWindow || screen !== 'welcome') return;
     if (welcomeManualReturnRef.current) return;
+    if (!shouldAutoEnterMainFromWelcome()) return;
     const uid = authSession?.uid?.trim();
     if (!uid || !isOnboardingComplete(uid)) return;
     setMainWorkTab('spelling');
