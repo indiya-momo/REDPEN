@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 import WelcomePcScreen from './pc/WelcomePcScreen.jsx';
 import WelcomeMoScreen from './mobile/WelcomeMoScreen.jsx';
 
-const MOBILE_MQ = '(max-width: 960px)';
+import { WELCOME_MOBILE_MQ } from '../lib/welcomeViewport.js';
 /** PC worktree dev: 좁은 Cursor 브라우저 패널에서도 welcome-pc 유지 (모바일은 별도 worktree) */
 const DEV_FORCE_PC = import.meta.env.DEV;
 
@@ -16,12 +16,12 @@ export default function WelcomeScreen(props) {
     () =>
       !DEV_FORCE_PC &&
       typeof window !== 'undefined' &&
-      window.matchMedia(MOBILE_MQ).matches,
+      window.matchMedia(WELCOME_MOBILE_MQ).matches,
   );
 
   useEffect(() => {
     if (DEV_FORCE_PC) return undefined;
-    const mq = window.matchMedia(MOBILE_MQ);
+    const mq = window.matchMedia(WELCOME_MOBILE_MQ);
     const sync = () => setIsMobile(mq.matches);
     mq.addEventListener('change', sync);
     return () => mq.removeEventListener('change', sync);

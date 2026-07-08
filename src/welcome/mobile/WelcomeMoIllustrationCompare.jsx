@@ -3,7 +3,7 @@ import revealManifest from './welcome-mo-reveal-regions.json';
 
 const BASE = import.meta.env.BASE_URL;
 const STAGGER_MS = revealManifest.staggerMs ?? 600;
-const FINAL_PAUSE_MS = 400;
+const FINAL_PAUSE_MS = 100;
 
 const highlightLayer = revealManifest.layers.find((layer) => layer.id === 'highlight');
 const HIGHLIGHT_OVERLAY = highlightLayer
