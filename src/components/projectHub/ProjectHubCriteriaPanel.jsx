@@ -73,6 +73,18 @@ export default function ProjectHubCriteriaPanel({
           customRules: toggleConfig.toggle(customRules, row, enabled),
         })
       }
+      onSetAll={
+        toggleConfig.setAll
+          ? (enabled) =>
+              applyCriteriaPatch({
+                customRules: toggleConfig.setAll(
+                  customRules,
+                  auxiliaryEntries,
+                  enabled,
+                ),
+              })
+          : undefined
+      }
       isRequired={toggleConfig.isRequired}
       criteriaSaving={criteriaSaving}
     />

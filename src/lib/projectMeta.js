@@ -1,3 +1,5 @@
+import { mergeWorkHistories } from './projectWorkHistory.js';
+
 /** @typedef {{
  *   pdfFileName?: string,
  *   pdfPageCount?: number,
@@ -156,6 +158,7 @@ export function mergeRuleSetProjectMeta(primary, secondary) {
       tags: normalizeProjectTags(primary.tags),
       memo: normalizeProjectMemo(primary.memo),
       projectContext: normalizeProjectContext(primary.projectContext),
+      workHistory: mergeWorkHistories(primary.workHistory, undefined),
     };
   }
 
@@ -200,6 +203,7 @@ export function mergeRuleSetProjectMeta(primary, secondary) {
     ...(memo !== undefined ? { memo } : {}),
     ...(projectContext !== undefined ? { projectContext } : {}),
     ...(metaUpdatedAt ? { metaUpdatedAt } : {}),
+    workHistory: mergeWorkHistories(primary.workHistory, secondary.workHistory),
   };
 }
 

@@ -85,10 +85,6 @@ export default function ProjectHubLibraryPanel({
     [previewCards, sharePreviewCardId],
   );
 
-  const stopSectionNav = (event) => {
-    event.stopPropagation();
-  };
-
   return (
     <>
       <section
@@ -128,8 +124,7 @@ export default function ProjectHubLibraryPanel({
         ) : (
           <div
             className="mypage__project-hub-body"
-            onClick={onOpenSection ? stopSectionNav : undefined}
-            onKeyDown={onOpenSection ? stopSectionNav : undefined}
+            inert={onOpenSection ? true : undefined}
           >
             <ProjectHubTagFilters
               options={tagFilterOptions}

@@ -15,6 +15,7 @@ import {
   normalizeProjectMemo,
   normalizeProjectTags,
 } from './projectMeta.js';
+import { normalizeWorkHistory } from './projectWorkHistory.js';
 
 /**
  * @param {Record<string, unknown>} set
@@ -58,6 +59,7 @@ export function normalizeRuleSet(set) {
     tags: normalizeProjectTags(set.tags),
     memo: normalizeProjectMemo(set.memo),
     projectContext: normalizeProjectContext(set.projectContext),
+    workHistory: normalizeWorkHistory(set.workHistory),
     metaUpdatedAt:
       typeof set.metaUpdatedAt === 'string' &&
       !Number.isNaN(Date.parse(set.metaUpdatedAt))

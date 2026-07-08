@@ -29,6 +29,14 @@
   gap: 1.25rem;
   align-items: start;
   width: 100%;
+  /* 판형 고정 — 짧은 탭(작업 이력 등)도 최소 이 높이를 유지 */
+  min-height: 24rem;
+}
+
+.project-hub-settings__nav {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
 }
 
 .project-hub-settings__nav-list {
@@ -38,6 +46,14 @@
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
+}
+
+.project-hub-settings__autosave-note {
+  margin: auto 0 0;
+  padding: 0.45rem 0.55rem 0;
+  font-size: 0.74rem;
+  line-height: 1.45;
+  color: var(--color-text-subtle);
 }
 
 .project-hub-settings__nav-btn {
@@ -280,6 +296,23 @@
   justify-content: flex-start;
 }
 
+/* 토글 그리드 맨 윗줄 — 모두 선택/취소 */
+.project-hub-settings__select-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0 0 0.65rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.project-hub-settings__select-all input {
+  margin: 0;
+  cursor: pointer;
+}
+
 .project-hub-consistency-register-row .registered-chip,
 .project-hub-consistency-register-row .registered-chip--unify {
   font-size: 0.7rem;
@@ -304,6 +337,14 @@
   font: inherit;
   line-height: 1;
   cursor: pointer;
+  /* 검수 화면과 동일 — 지정 안 된 핀은 흐리게 */
+  opacity: 0.28;
+  filter: grayscale(1);
+}
+
+.project-hub-consistency-register-row .consistency-unify-pin-btn--active {
+  opacity: 1;
+  filter: none;
 }
 
 .project-hub-consistency-register-row .consistency-unify-chip-label-btn {
@@ -411,6 +452,65 @@
   color: var(--color-text);
   text-align: right;
   word-break: break-all;
+}
+
+/* 작업 이력 — 검수 진행 이력 꺾은선 그래프 */
+.work-history-chart {
+  margin-top: 1rem;
+  padding: 0.9rem 1rem 0.75rem;
+}
+
+.work-history-chart svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.work-history-chart__grid {
+  stroke: var(--color-border);
+  stroke-width: 1;
+}
+
+.work-history-chart__tick {
+  font-size: 10px;
+  fill: var(--color-text-subtle);
+}
+
+.work-history-chart__line {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.work-history-chart__point {
+  fill: currentColor;
+}
+
+.work-history-chart__legend {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.5rem;
+  font-size: 0.74rem;
+  color: var(--color-text-subtle);
+}
+
+.work-history-chart__legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.work-history-chart__legend-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+.work-history-chart__empty {
+  margin: 0;
+  padding: 0.75rem 1rem;
 }
 
 .project-hub-settings__footer {

@@ -1,6 +1,7 @@
 import {
   isAuxiliaryVerbEntryEnabled,
   listAuxiliaryVerbEntries,
+  setAllAuxiliaryVerbEntries,
   toggleAuxiliaryVerbEntry,
 } from './auxiliaryVerbRegister.js';
 import { isBonBojoRequiredItem } from './bonBojoRules.js';
@@ -20,6 +21,7 @@ import {
  *   listEntries: (rules: import('./ruleTypes.js').Rule[]) => { tailWord: string, displayLabel?: string, bonBojoItemId?: string }[],
  *   isEnabled: (rules: import('./ruleTypes.js').Rule[], row: { tailWord: string, bonBojoItemId?: string }) => boolean,
  *   toggle: (rules: import('./ruleTypes.js').Rule[], row: { tailWord: string, bonBojoItemId?: string }, enabled: boolean) => import('./ruleTypes.js').Rule[],
+ *   setAll?: (rules: import('./ruleTypes.js').Rule[], entries: { tailWord: string, bonBojoItemId?: string }[], enabled: boolean) => import('./ruleTypes.js').Rule[],
  *   isRequired?: (row: { bonBojoItemId?: string }) => boolean,
  * }} ProjectHubToggleCriteriaSection
  */
@@ -41,6 +43,7 @@ export const PROJECT_HUB_TOGGLE_CRITERIA = {
     listEntries: listAuxiliaryVerbEntries,
     isEnabled: isAuxiliaryVerbEntryEnabled,
     toggle: toggleAuxiliaryVerbEntry,
+    setAll: setAllAuxiliaryVerbEntries,
     isRequired: (row) => isBonBojoRequiredItem(row.bonBojoItemId),
   },
 };

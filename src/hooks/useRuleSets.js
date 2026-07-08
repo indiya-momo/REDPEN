@@ -40,6 +40,7 @@ import { normalizeRuleSet } from '../lib/ruleSetNormalize.js';
 import {
   mergeProjectContext,
 } from '../lib/projectMeta.js';
+import { appendWorkHistoryEntry } from '../lib/projectWorkHistory.js';
 import {
   isRuleSetsCloudEnabled,
   loadRuleSetsCloud,
@@ -726,12 +727,24 @@ export function useRuleSets(authUid = '', authEmail = '') {
       const source = sets[index];
       if (!source.savedAt) return;
 
+      const lastWorkedAt = patch.lastWorkedAt ?? new Date().toISOString();
       const projectContext = mergeProjectContext(source.projectContext, {
         ...patch,
-        lastWorkedAt: patch.lastWorkedAt ?? new Date().toISOString(),
+        lastWorkedAt,
       });
+      // 검수 진행 이력 — 지적 건수가 있으면 날짜별 장부에 한 줄 기입
+      const workHistory = appendWorkHistoryEntry(
+        source.workHistory,
+        {
+          spelling: patch.lastSpellingFindingCount,
+          consistency: patch.lastConsistencyFindingCount,
+        },
+        lastWorkedAt,
+      );
       const next = sets.map((s, i) =>
-        i === index ? normalizeRuleSet({ ...s, projectContext }) : s,
+        i === index
+          ? normalizeRuleSet({ ...s, projectContext, workHistory })
+          : s,
       );
       ruleSetsRef.current = next;
       setRuleSets(next);
