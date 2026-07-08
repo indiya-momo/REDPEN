@@ -51,6 +51,7 @@ import { clearTabSessionMarker, clearWorkSession } from './lib/sessionStore.js';
 import { clearTooltipGuideDismissed } from './lib/tooltipGuideStorage.js';
 import { shouldAutoEnterMainFromWelcome } from './lib/welcomeViewport.js';
 import AppDialogHost from './components/AppDialogHost.jsx';
+import EventRewardLayer from './components/EventRewardLayer.jsx';
 
 export default function App() {
   const auxWindow =
