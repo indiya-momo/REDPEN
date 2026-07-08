@@ -38,7 +38,6 @@ export function formatPdfSizeLabel(bytes) {
  * @typedef {{
  *   lastWorked: string,
  *   pdf: string,
- *   findings: string,
  * }} ProjectWorkSummary
  */
 
@@ -50,13 +49,7 @@ export function formatPdfSizeLabel(bytes) {
 export function buildProjectWorkSummary(ctx, nowMs = Date.now()) {
   if (!ctx || typeof ctx !== 'object') return null;
 
-  const hasSpelling = typeof ctx.lastSpellingFindingCount === 'number';
-  const hasConsistency = typeof ctx.lastConsistencyFindingCount === 'number';
-  const hasAny =
-    Boolean(ctx.lastWorkedAt) ||
-    Boolean(ctx.pdfFileName) ||
-    hasSpelling ||
-    hasConsistency;
+  const hasAny = Boolean(ctx.lastWorkedAt) || Boolean(ctx.pdfFileName);
   if (!hasAny) return null;
 
   let lastWorked = WORK_SUMMARY_NONE_LABEL;
@@ -78,15 +71,5 @@ export function buildProjectWorkSummary(ctx, nowMs = Date.now()) {
   if (sizeLabel) pdfParts.push(sizeLabel);
   const pdf = pdfParts.length ? pdfParts.join(' · ') : WORK_SUMMARY_NONE_LABEL;
 
-  /** @type {string[]} */
-  const findingParts = [];
-  if (hasSpelling) findingParts.push(`맞춤법 ${ctx.lastSpellingFindingCount}건`);
-  if (hasConsistency) {
-    findingParts.push(`표기 통일 ${ctx.lastConsistencyFindingCount}건`);
-  }
-  const findings = findingParts.length
-    ? findingParts.join(' · ')
-    : WORK_SUMMARY_NONE_LABEL;
-
-  return { lastWorked, pdf, findings };
+  return { lastWorked, pdf };
 }

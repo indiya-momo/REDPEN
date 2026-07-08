@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   alertSpellingCheckAfterRun,
   confirmSpellingCheckBeforeRun,
+  countSpellingFindingsByCategory,
   countSpellingGroupsWithFindings,
   formatSpellingCheckCompleteMessage,
   formatSpellingCheckConfirmMessage,
@@ -76,6 +77,17 @@ describe('formatSpellingCheckConfirmMessage', () => {
         '\n' +
         '검수를 진행할까요?',
     );
+  });
+});
+
+describe('countSpellingFindingsByCategory', () => {
+  it('지적 건수(instances)를 편집자 검토·맞춤법으로 나눈다', () => {
+    expect(
+      countSpellingFindingsByCategory([
+        { category: 'caution', instances: [{}, {}] },
+        { category: 'spelling', instances: [{}] },
+      ]),
+    ).toEqual({ editorReview: 2, spelling: 1 });
   });
 });
 

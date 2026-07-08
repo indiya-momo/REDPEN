@@ -44,8 +44,7 @@ function ProjectWorkSummaryCard({ summary }) {
 
   const rows = [
     { label: '마지막 작업', value: summary.lastWorked },
-    { label: '검수한 PDF', value: summary.pdf },
-    { label: '검수 진행 이력', value: summary.findings },
+    { label: 'PDF 정보', value: summary.pdf },
   ];
 
   return (
@@ -478,6 +477,8 @@ export default function ProjectHubSettingsPanel({
                   ruleSet?.workHistory,
                   ruleSet?.projectContext,
                 )}
+                customRules={ruleSet?.customRules ?? []}
+                globalExcludePhrases={ruleSet?.globalExcludePhrases ?? []}
               />
             </div>
           ) : null}

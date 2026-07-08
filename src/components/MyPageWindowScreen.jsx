@@ -683,6 +683,15 @@ export default function MyPageWindowScreen({ authSession, authReady }) {
     window.location.replace(url.toString());
   }
 
+  const handleSidebarBack = useCallback(() => {
+    if (resolvedNav !== 'overview') {
+      setProjectsEntryCardId(null);
+      setActiveNav('overview');
+      return;
+    }
+    returnToWorkspace();
+  }, [resolvedNav]);
+
   if (!authReady) {
     return (
       <div className="mypage mypage--boot">
@@ -734,9 +743,17 @@ export default function MyPageWindowScreen({ authSession, authReady }) {
             <button
               type="button"
               className="mypage__back mypage__back--icon"
-              onClick={returnToWorkspace}
-              aria-label="검수 화면으로 돌아가기"
-              title="검수 화면으로 돌아가기"
+              onClick={handleSidebarBack}
+              aria-label={
+                resolvedNav === 'overview'
+                  ? '검수 화면으로 돌아가기'
+                  : '마이페이지 홈으로'
+              }
+              title={
+                resolvedNav === 'overview'
+                  ? '검수 화면으로 돌아가기'
+                  : '마이페이지 홈으로'
+              }
             >
               <ArrowLeft size={18} aria-hidden />
             </button>

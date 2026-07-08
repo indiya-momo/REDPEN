@@ -736,8 +736,14 @@ export function useRuleSets(authUid = '', authEmail = '') {
       const workHistory = appendWorkHistoryEntry(
         source.workHistory,
         {
-          spelling: patch.lastSpellingFindingCount,
+          editorReview: patch.lastEditorReviewFindingCount,
+          spelling:
+            patch.lastBuiltinSpellingFindingCount ?? patch.lastSpellingFindingCount,
+          consistencyFind: patch.lastConsistencyFindCount,
+          consistencyUnify: patch.lastConsistencyUnifyCount,
+          consistencyCommonString: patch.lastConsistencyCommonStringCount,
           consistency: patch.lastConsistencyFindingCount,
+          bonBojo: patch.lastBonBojoFindingCount,
         },
         lastWorkedAt,
       );
