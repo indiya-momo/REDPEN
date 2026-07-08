@@ -46,7 +46,12 @@ import {
   resolveFeedbackThankYouOnLoad,
 } from './lib/feedbackFormSubmitReturn.js';
 import { WORK_GUIDE_KEYS, workGuideStorageKey } from './lib/workGuideKeys.js';
-import { consumeReturnToMainWorkspace, markReturnToMainWorkspace, shouldReopenMainWorkspace } from './lib/returnToWorkspace.js';
+import {
+  consumeReturnToMainWorkspace,
+  markReturnToMainWorkspace,
+  RETURN_TO_MAIN_STORAGE_KEY,
+  shouldReopenMainWorkspace,
+} from './lib/returnToWorkspace.js';
 import { clearTabSessionMarker, clearWorkSession } from './lib/sessionStore.js';
 import { clearTooltipGuideDismissed } from './lib/tooltipGuideStorage.js';
 import { shouldAutoEnterMainFromWelcome } from './lib/welcomeViewport.js';
@@ -114,14 +119,28 @@ export default function App() {
     });
   }, [authReady, auxWindow, authSession, applyFeedbackThankYouUi]);
 
-  useEffect(() => {
-    if (!authReady || auxWindow) return;
+  const applyReturnToMainWorkspace = useCallback(() => {
     if (!consumeReturnToMainWorkspace()) return;
     if (!shouldAutoEnterMainFromWelcome()) return;
     if (!isLoginRequiredForChecks() || authSession?.uid) {
       setScreen('main');
     }
-  }, [authReady, auxWindow, authSession]);
+  }, [authSession]);
+
+  useEffect(() => {
+    if (!authReady || auxWindow) return;
+    applyReturnToMainWorkspace();
+  }, [authReady, auxWindow, applyReturnToMainWorkspace]);
+
+  useEffect(() => {
+    if (auxWindow) return;
+    const onStorage = (event) => {
+      if (event.key !== RETURN_TO_MAIN_STORAGE_KEY || event.newValue == null) return;
+      applyReturnToMainWorkspace();
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, [auxWindow, applyReturnToMainWorkspace]);
 
   useEffect(() => {
     if (!authReady || auxWindow) return;
@@ -441,7 +460,6 @@ export default function App() {
         setScreen('welcome');
       }}
       onOpenMyPageWindow={() => {
-        markReturnToMainWorkspace();
         const url = new URL(import.meta.env.BASE_URL || '/', window.location.origin);
         url.searchParams.set('window', 'mypage');
         const existing = window.open('', 'indiya-mypage');
