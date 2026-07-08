@@ -88,7 +88,6 @@ export default function ConsistencyUnifySection({
             pinnedTailWord={pinnedTailWord}
             onPin={pinEntry}
             onRemove={removeEntry}
-            hidePinUntilPinned
           />
         </div>
       ) : (

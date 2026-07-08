@@ -5,7 +5,10 @@ import {
   normalizeProjectMemo,
   normalizeProjectTags,
 } from '../lib/projectMeta.js';
+import { buildDisplayWorkHistory } from '../lib/projectWorkHistory.js';
+import { buildProjectWorkSummary } from '../presentation/projectWorkSummary.js';
 import ProjectHubCriteriaPanel from './projectHub/ProjectHubCriteriaPanel.jsx';
+import ProjectWorkHistoryChart from './projectHub/ProjectWorkHistoryChart.jsx';
 import './project-hub-settings.css';
 
 /** @typedef {'meta' | 'spelling' | 'consistency' | 'auxiliary' | 'actions'} ProjectHubSettingsSection */
@@ -20,6 +23,47 @@ const NAV_ITEMS = [
 
 const CRITERIA_SECTIONS = new Set(['spelling', 'consistency', 'auxiliary']);
 const META_AUTOSAVE_MS = 400;
+
+/**
+ * 작업 이력 — 마지막 작업 요약 카드 (읽기 전용).
+ * @param {{ summary: import('../presentation/projectWorkSummary.js').ProjectWorkSummary | null }} props
+ */
+function ProjectWorkSummaryCard({ summary }) {
+  if (!summary) {
+    return (
+      <div className="project-hub-settings__card project-hub-settings__card--work-summary">
+        <div className="project-hub-settings__row project-hub-settings__row--readonly">
+          <p className="project-hub-settings__row-desc">
+            아직 작업 기록이 없습니다. 검수 작업을 진행하면 여기에 요약이
+            남습니다.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const rows = [
+    { label: '마지막 작업', value: summary.lastWorked },
+    { label: '검수한 PDF', value: summary.pdf },
+    { label: '검수 진행 이력', value: summary.findings },
+  ];
+
+  return (
+    <div className="project-hub-settings__card project-hub-settings__card--work-summary">
+      {rows.map((row) => (
+        <div
+          key={row.label}
+          className="project-hub-settings__row project-hub-settings__row--readonly"
+        >
+          <div className="project-hub-settings__row-text">
+            <span className="project-hub-settings__row-label">{row.label}</span>
+          </div>
+          <span className="project-hub-settings__value">{row.value}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 /** @param {import('../presentation/projectCardViewModel.js').ProjectCardViewModel} card */
 function buildCardMetaSyncKey(card) {
@@ -72,9 +116,9 @@ export default function ProjectHubSettingsPanel({
   onSave,
   onCriteriaChange,
   onStartWork,
-  onDuplicate,
-  onDelete,
-  onSharePreview,
+  onDuplicate: _onDuplicate,
+  onDelete: _onDelete,
+  onSharePreview: _onSharePreview,
 }) {
   const tagsInputId = useId();
   const nameInputId = useId();
@@ -266,6 +310,9 @@ export default function ProjectHubSettingsPanel({
               );
             })}
           </ul>
+          <p className="project-hub-settings__autosave-note">
+            ※변경 사항은 자동 저장됩니다
+          </p>
         </nav>
 
         <div className="project-hub-settings__main">
@@ -378,7 +425,7 @@ export default function ProjectHubSettingsPanel({
                     />
                   </div>
 
-                  <div className="project-hub-settings__row project-hub-settings__row--stack">
+                  <div className="project-hub-settings__row">
                     <div className="project-hub-settings__row-text">
                       <label
                         className="project-hub-settings__row-label"
@@ -423,38 +470,15 @@ export default function ProjectHubSettingsPanel({
 
           {activeSection === 'actions' ? (
             <div className="project-hub-settings__group">
-              <div className="project-hub-settings__card project-hub-settings__card--actions">
-                <button
-                  type="button"
-                  className="sheet-card__btn sheet-card__btn--primary sheet-card__btn--work"
-                  onClick={onStartWork}
-                >
-                  이 프로젝트 작업하기
-                </button>
-                <button
-                  type="button"
-                  className="sheet-card__btn sheet-card__btn--secondary"
-                  onClick={onDuplicate}
-                >
-                  복제
-                </button>
-                {onDelete ? (
-                  <button
-                    type="button"
-                    className="sheet-card__btn sheet-card__btn--secondary"
-                    onClick={onDelete}
-                  >
-                    삭제
-                  </button>
-                ) : null}
-                <button
-                  type="button"
-                  className="sheet-card__btn sheet-card__btn--secondary"
-                  onClick={onSharePreview}
-                >
-                  공유
-                </button>
-              </div>
+              <ProjectWorkSummaryCard
+                summary={buildProjectWorkSummary(ruleSet?.projectContext)}
+              />
+              <ProjectWorkHistoryChart
+                history={buildDisplayWorkHistory(
+                  ruleSet?.workHistory,
+                  ruleSet?.projectContext,
+                )}
+              />
             </div>
           ) : null}
         </div>

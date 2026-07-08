@@ -53,6 +53,7 @@ export function ruleSetsActiveStorageKey(uid) {
  *   memo?: string,
  *   metaUpdatedAt?: string,
  *   projectContext?: import('./projectMeta.js').ProjectContext,
+ *   workHistory?: import('./projectWorkHistory.js').WorkHistoryEntry[],
  * }} RuleSet
  */
 
