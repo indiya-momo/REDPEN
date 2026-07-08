@@ -1,103 +1,267 @@
 /**
- * 작업 이력 — 검수 진행 이력 꺾은선 그래프.
- * 선 색은 설정 메뉴 기둥 색(--pillar-*)을 그대로 쓴다.
+ * 작업 이력 — 맞춤법 2행 · 표기 통일(4분류+최근1회) · 본·보조 sparkline.
  */
-import { buildWorkHistoryChartModel } from '../../presentation/workHistoryChart.js';
+import { WORK_CHART_MIN_SESSIONS_FOR_LINE } from '../../lib/projectWorkHistory.js';
+import {
+  buildWorkHistoryConsistencyCriteria,
+  WORK_HISTORY_CONSISTENCY_GROUPS,
+} from '../../presentation/workHistoryConsistencyCriteria.js';
+import {
+  buildSparklinePath,
+  hasSpellingSplitHistory,
+  sparklinePoints,
+  WORK_HISTORY_SPARKLINE_HEIGHT,
+  WORK_HISTORY_SPARKLINE_WIDTH,
+} from '../../presentation/workHistorySparkline.js';
 
-const SERIES_META = {
-  spelling: { label: '맞춤법', color: 'var(--pillar-spelling)' },
-  consistency: { label: '표기 통일', color: 'var(--pillar-consistency)' },
-};
+const SPARK_W = WORK_HISTORY_SPARKLINE_WIDTH;
+const SPARK_H = WORK_HISTORY_SPARKLINE_HEIGHT;
+
+/**
+ * @param {{
+ *   label: string,
+ *   subLabel?: boolean,
+ *   values: number[],
+ *   sessionCount: number,
+ *   colorClass: string,
+ *   muted?: boolean,
+ *   hideLabel?: boolean,
+ * }} props
+ */
+function SparklineRow({
+  label,
+  subLabel = false,
+  values,
+  sessionCount,
+  colorClass,
+  muted = false,
+  hideLabel = false,
+}) {
+  const latest = values[values.length - 1] ?? 0;
+  const path = buildSparklinePath(values, SPARK_W, SPARK_H);
+  const points = sparklinePoints(values, SPARK_W, SPARK_H);
+
+  return (
+    <div
+      className={`work-history-panel__spark-row ${colorClass}${
+        subLabel ? ' work-history-panel__spark-row--sub' : ''
+      }${muted ? ' work-history-panel__spark-row--muted' : ''}${
+        hideLabel ? ' work-history-panel__spark-row--no-label' : ''
+      }`}
+    >
+      {hideLabel ? null : (
+        <span className="work-history-panel__spark-label">{label}</span>
+      )}
+      <svg
+        className="work-history-panel__spark"
+        viewBox={`0 0 ${SPARK_W} ${SPARK_H}`}
+        role="img"
+        aria-label={`${label} 최근 ${sessionCount}회 추이`}
+      >
+        <line
+          x1={0}
+          x2={SPARK_W}
+          y1={SPARK_H / 2}
+          y2={SPARK_H / 2}
+          className="work-history-panel__spark-grid"
+        />
+        {sessionCount >= WORK_CHART_MIN_SESSIONS_FOR_LINE ? (
+          <path d={path} className="work-history-panel__spark-line" />
+        ) : null}
+        {points.map((point, index) => (
+          <circle
+            key={`${label}-${index}`}
+            cx={point.x}
+            cy={point.y}
+            r={3.5}
+            className="work-history-panel__spark-dot"
+          >
+            <title>{`${label} ${index + 1}회차 ${point.value}건`}</title>
+          </circle>
+        ))}
+      </svg>
+      <span className="work-history-panel__latest">
+        {latest}
+        <span className="work-history-panel__unit">건</span>
+      </span>
+    </div>
+  );
+}
+
+/**
+ * @param {import('../../lib/projectWorkHistory.js').WorkHistoryEntry[]} sessions
+ * @param {(entry: import('../../lib/projectWorkHistory.js').WorkHistoryEntry) => number | undefined} pick
+ */
+function sparklineSeries(sessions, pick) {
+  return sessions.map((entry) => {
+    const value = pick(entry);
+    return typeof value === 'number' ? value : 0;
+  });
+}
 
 /**
  * @param {{
  *   history: import('../../lib/projectWorkHistory.js').WorkHistoryEntry[] | undefined,
+ *   customRules?: import('../../lib/ruleTypes.js').Rule[],
+ *   globalExcludePhrases?: string[],
  * }} props
  */
-export default function ProjectWorkHistoryChart({ history }) {
-  const model = buildWorkHistoryChartModel(history);
+export default function ProjectWorkHistoryChart({
+  history,
+  customRules = [],
+  globalExcludePhrases = [],
+}) {
+  const sessions = Array.isArray(history) ? history : [];
+  const sessionCount = sessions.length;
+  const criteria = buildWorkHistoryConsistencyCriteria(
+    customRules,
+    globalExcludePhrases,
+  );
+  const spellingSplit = hasSpellingSplitHistory(sessions);
 
-  if (!model) {
+  if (!sessionCount) {
     return (
-      <div className="project-hub-settings__card work-history-chart">
-        <p className="project-hub-settings__row-desc work-history-chart__empty">
-          검수를 진행하면 날짜별 지적 건수가 꺾은선 그래프로 쌓입니다.
+      <div className="project-hub-settings__card work-history-panel">
+        <h3 className="work-history-panel__title">검수 진행 이력</h3>
+        <p className="project-hub-settings__row-desc work-history-panel__empty">
+          검수를 진행하면 항목별 추이가 여기에 표시됩니다.
         </p>
       </div>
     );
   }
 
+  const editorReviewValues = sparklineSeries(
+    sessions,
+    (entry) => entry.editorReview,
+  );
+  const builtinSpellingValues = sparklineSeries(
+    sessions,
+    (entry) => entry.spelling,
+  );
+  const legacySpellingValues = sparklineSeries(
+    sessions,
+    (entry) => entry.spelling,
+  );
+  const bonBojoValues = sparklineSeries(sessions, (entry) => entry.bonBojo);
+
   return (
-    <div className="project-hub-settings__card work-history-chart">
-      <svg
-        viewBox={`0 0 ${model.width} ${model.height}`}
-        role="img"
-        aria-label="날짜별 검수 지적 건수 꺾은선 그래프"
-      >
-        {model.yTicks.map((tick) => (
-          <g key={tick.y}>
-            <line
-              x1={model.plot.left}
-              x2={model.plot.right}
-              y1={tick.y}
-              y2={tick.y}
-              className="work-history-chart__grid"
+    <div className="project-hub-settings__card work-history-panel">
+      <h3 className="work-history-panel__title">검수 진행 이력</h3>
+
+      <div className="work-history-panel__top-row">
+        <section className="work-history-panel__block work-history-panel__block--spelling work-history-panel__block--half">
+          {spellingSplit ? null : (
+            <h4 className="work-history-panel__block-title">편집자 검토</h4>
+          )}
+          <div className="work-history-panel__block-body">
+            {spellingSplit ? (
+              <>
+                <SparklineRow
+                  label="편집자 검토"
+                  subLabel
+                  values={editorReviewValues}
+                  sessionCount={sessionCount}
+                  colorClass="work-history-panel__spark-row--spelling"
+                  muted
+                />
+                <SparklineRow
+                  label="맞춤법"
+                  subLabel
+                  values={builtinSpellingValues}
+                  sessionCount={sessionCount}
+                  colorClass="work-history-panel__spark-row--spelling"
+                />
+              </>
+            ) : (
+              <SparklineRow
+                label="편집자 검토"
+                values={legacySpellingValues}
+                sessionCount={sessionCount}
+                colorClass="work-history-panel__spark-row--spelling"
+                hideLabel
+              />
+            )}
+          </div>
+        </section>
+
+        <section className="work-history-panel__block work-history-panel__block--auxiliary work-history-panel__block--half">
+          <h4 className="work-history-panel__block-title">본용언+보조용언</h4>
+          <div className="work-history-panel__block-body">
+            <SparklineRow
+              label="본용언+보조용언"
+              values={bonBojoValues}
+              sessionCount={sessionCount}
+              colorClass="work-history-panel__spark-row--auxiliary"
+              hideLabel
             />
-            <text
-              x={model.plot.left - 8}
-              y={tick.y}
-              className="work-history-chart__tick"
-              textAnchor="end"
-              dominantBaseline="middle"
-            >
-              {tick.label}
-            </text>
-          </g>
-        ))}
-        {model.xLabels.map((label) => (
-          <text
-            key={`${label.x}-${label.label}`}
-            x={label.x}
-            y={model.plot.bottom + 18}
-            className="work-history-chart__tick"
-            textAnchor="middle"
-          >
-            {label.label}
-          </text>
-        ))}
-        {model.series.map((series) => (
-          <g key={series.key} style={{ color: SERIES_META[series.key].color }}>
-            {series.points.length > 1 ? (
-              <path d={series.path} className="work-history-chart__line" />
-            ) : null}
-            {series.points.map((point) => (
-              <circle
-                key={`${series.key}-${point.date}`}
-                cx={point.x}
-                cy={point.y}
-                r={3.5}
-                className="work-history-chart__point"
-              >
-                <title>
-                  {`${point.date} ${SERIES_META[series.key].label} ${point.value}건`}
-                </title>
-              </circle>
-            ))}
-          </g>
-        ))}
-      </svg>
-      <div className="work-history-chart__legend">
-        {model.series.map((series) => (
-          <span key={series.key} className="work-history-chart__legend-item">
-            <span
-              className="work-history-chart__legend-dot"
-              style={{ background: SERIES_META[series.key].color }}
-              aria-hidden
-            />
-            {SERIES_META[series.key].label}
-          </span>
-        ))}
+          </div>
+        </section>
       </div>
+
+      <section className="work-history-panel__block work-history-panel__block--consistency">
+        <h4 className="work-history-panel__block-title">표기 통일(최근)</h4>
+        <dl className="work-history-panel__criteria-groups">
+          {WORK_HISTORY_CONSISTENCY_GROUPS.map((group) => {
+            const items = criteria[group.id] ?? [];
+
+            if (group.id === 'unify') {
+              return (
+                <div key={group.id} className="work-history-panel__criteria-group">
+                  <dt className="work-history-panel__criteria-label">
+                    {group.label}
+                  </dt>
+                  <dd className="work-history-panel__criteria-body">
+                    {items.length ? (
+                      <ul className="work-history-panel__chips work-history-panel__chips--unify">
+                        {items.map((entry) => (
+                          <li
+                            key={entry.label}
+                            className={`work-history-panel__chip${
+                              entry.pinned
+                                ? ' work-history-panel__chip--pinned'
+                                : ''
+                            }`}
+                          >
+                            {entry.label}
+                            {entry.pinned ? (
+                              <span className="work-history-panel__pin" aria-hidden>
+                                📌
+                              </span>
+                            ) : null}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="work-history-panel__criteria-empty">등록 없음</p>
+                    )}
+                  </dd>
+                </div>
+              );
+            }
+
+            return (
+              <div key={group.id} className="work-history-panel__criteria-group">
+                <dt className="work-history-panel__criteria-label">
+                  {group.label}
+                </dt>
+                <dd className="work-history-panel__criteria-body">
+                  {items.length ? (
+                    <ul className="work-history-panel__chips">
+                      {items.map((item) => (
+                        <li key={item} className="work-history-panel__chip">
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="work-history-panel__criteria-empty">등록 없음</p>
+                  )}
+                </dd>
+              </div>
+            );
+          })}
+        </dl>
+      </section>
     </div>
   );
 }

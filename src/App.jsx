@@ -10,6 +10,7 @@ import MomoRoomScreen from './components/MomoRoomScreen.jsx';
 import GuideWindowScreen from './components/GuideWindowScreen.jsx';
 import MyPageWindowScreen from './components/MyPageWindowScreen.jsx';
 import MyPagePrototypeScreen from './mock/mypagePrototype/MyPagePrototypeScreen.jsx';
+import WorkHistoryPrototypeScreen from './mock/workHistoryPrototype/WorkHistoryPrototypeScreen.jsx';
 import ConsistencyPrototypeScreen from './mock/consistencyPrototype/ConsistencyPrototypeScreen.jsx';
 import {
   defaultCautionEnabled,
@@ -138,8 +139,16 @@ export default function App() {
       if (event.key !== RETURN_TO_MAIN_STORAGE_KEY || event.newValue == null) return;
       applyReturnToMainWorkspace();
     };
+    const onFocus = () => {
+      if (!shouldReopenMainWorkspace()) return;
+      applyReturnToMainWorkspace();
+    };
     window.addEventListener('storage', onStorage);
-    return () => window.removeEventListener('storage', onStorage);
+    window.addEventListener('focus', onFocus);
+    return () => {
+      window.removeEventListener('storage', onStorage);
+      window.removeEventListener('focus', onFocus);
+    };
   }, [auxWindow, applyReturnToMainWorkspace]);
 
   useEffect(() => {
@@ -325,6 +334,10 @@ export default function App() {
         <AppDialogHost />
       </>
     );
+  }
+
+  if (import.meta.env.DEV && auxWindow === 'work-history-mock') {
+    return <WorkHistoryPrototypeScreen />;
   }
 
   if (auxWindow === 'mypage') {

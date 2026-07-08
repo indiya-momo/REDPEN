@@ -147,6 +147,25 @@ export function countSpellingGroupsWithFindings(groups) {
 }
 
 /**
+ * 맞춤법 탭 — 지적 건수(instances)를 편집자 검토·맞춤법으로 나눈다.
+ * @param {import('./ruleEngine.js').RuleResultGroup[]} groups
+ */
+export function countSpellingFindingsByCategory(groups) {
+  let editorReview = 0;
+  let spelling = 0;
+  for (const group of groups) {
+    const count = group.instances.length;
+    if (count <= 0) continue;
+    if (group.category === 'caution') {
+      editorReview += count;
+    } else {
+      spelling += count;
+    }
+  }
+  return { editorReview, spelling };
+}
+
+/**
  * 맞춤법 검수 완료 후 alert 본문 (window.alert 폴백용)
  * @param {{
  *   builtinWithFindings: number,

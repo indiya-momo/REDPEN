@@ -7,7 +7,13 @@ import { mergeWorkHistories } from './projectWorkHistory.js';
  *   pdfLinked?: boolean,
  *   lastWorkedAt?: string,
  *   lastSpellingFindingCount?: number,
+ *   lastEditorReviewFindingCount?: number,
+ *   lastBuiltinSpellingFindingCount?: number,
  *   lastConsistencyFindingCount?: number,
+ *   lastConsistencyFindCount?: number,
+ *   lastConsistencyUnifyCount?: number,
+ *   lastConsistencyCommonStringCount?: number,
+ *   lastBonBojoFindingCount?: number,
  *   proofRevision?: string,
  *   formatLabel?: string,
  * }} ProjectContext */
@@ -91,6 +97,24 @@ export function normalizeProjectContext(raw) {
     ctx.lastSpellingFindingCount = Math.floor(spellCount);
   }
 
+  const editorReviewCount = source.lastEditorReviewFindingCount;
+  if (
+    typeof editorReviewCount === 'number' &&
+    Number.isFinite(editorReviewCount) &&
+    editorReviewCount >= 0
+  ) {
+    ctx.lastEditorReviewFindingCount = Math.floor(editorReviewCount);
+  }
+
+  const builtinSpellingCount = source.lastBuiltinSpellingFindingCount;
+  if (
+    typeof builtinSpellingCount === 'number' &&
+    Number.isFinite(builtinSpellingCount) &&
+    builtinSpellingCount >= 0
+  ) {
+    ctx.lastBuiltinSpellingFindingCount = Math.floor(builtinSpellingCount);
+  }
+
   const consistencyCount = source.lastConsistencyFindingCount;
   if (
     typeof consistencyCount === 'number' &&
@@ -98,6 +122,42 @@ export function normalizeProjectContext(raw) {
     consistencyCount >= 0
   ) {
     ctx.lastConsistencyFindingCount = Math.floor(consistencyCount);
+  }
+
+  const consistencyFindCount = source.lastConsistencyFindCount;
+  if (
+    typeof consistencyFindCount === 'number' &&
+    Number.isFinite(consistencyFindCount) &&
+    consistencyFindCount >= 0
+  ) {
+    ctx.lastConsistencyFindCount = Math.floor(consistencyFindCount);
+  }
+
+  const consistencyUnifyCount = source.lastConsistencyUnifyCount;
+  if (
+    typeof consistencyUnifyCount === 'number' &&
+    Number.isFinite(consistencyUnifyCount) &&
+    consistencyUnifyCount >= 0
+  ) {
+    ctx.lastConsistencyUnifyCount = Math.floor(consistencyUnifyCount);
+  }
+
+  const consistencyCommonStringCount = source.lastConsistencyCommonStringCount;
+  if (
+    typeof consistencyCommonStringCount === 'number' &&
+    Number.isFinite(consistencyCommonStringCount) &&
+    consistencyCommonStringCount >= 0
+  ) {
+    ctx.lastConsistencyCommonStringCount = Math.floor(consistencyCommonStringCount);
+  }
+
+  const bonBojoCount = source.lastBonBojoFindingCount;
+  if (
+    typeof bonBojoCount === 'number' &&
+    Number.isFinite(bonBojoCount) &&
+    bonBojoCount >= 0
+  ) {
+    ctx.lastBonBojoFindingCount = Math.floor(bonBojoCount);
   }
 
   if (typeof source.proofRevision === 'string') {
@@ -215,7 +275,13 @@ export function mergeRuleSetProjectMeta(primary, secondary) {
  *   pdfPageCount?: number,
  *   pdfSizeBytes?: number | null,
  *   lastSpellingFindingCount?: number,
+ *   lastEditorReviewFindingCount?: number,
+ *   lastBuiltinSpellingFindingCount?: number,
  *   lastConsistencyFindingCount?: number,
+ *   lastConsistencyFindCount?: number,
+ *   lastConsistencyUnifyCount?: number,
+ *   lastConsistencyCommonStringCount?: number,
+ *   lastBonBojoFindingCount?: number,
  * }} input
  * @returns {ProjectContext | undefined}
  */
@@ -238,7 +304,13 @@ export function buildProjectContextSnapshot(input) {
         : undefined,
     lastWorkedAt: new Date().toISOString(),
     lastSpellingFindingCount: input.lastSpellingFindingCount,
+    lastEditorReviewFindingCount: input.lastEditorReviewFindingCount,
+    lastBuiltinSpellingFindingCount: input.lastBuiltinSpellingFindingCount,
     lastConsistencyFindingCount: input.lastConsistencyFindingCount,
+    lastConsistencyFindCount: input.lastConsistencyFindCount,
+    lastConsistencyUnifyCount: input.lastConsistencyUnifyCount,
+    lastConsistencyCommonStringCount: input.lastConsistencyCommonStringCount,
+    lastBonBojoFindingCount: input.lastBonBojoFindingCount,
     pdfLinked: true,
   });
 }
@@ -253,7 +325,13 @@ export function buildProjectContextSnapshot(input) {
  *   spellingCheckDone?: boolean,
  *   consistencyCheckDone?: boolean,
  *   spellingFindingCount?: number,
+ *   editorReviewFindingCount?: number,
+ *   builtinSpellingFindingCount?: number,
  *   consistencyFindingCount?: number,
+ *   consistencyFindCount?: number,
+ *   consistencyUnifyCount?: number,
+ *   consistencyCommonStringCount?: number,
+ *   bonBojoFindingCount?: number,
  * }} input
  * @returns {ProjectContext | undefined}
  */
@@ -265,8 +343,26 @@ export function buildProjectContextWorkPatch(input) {
     lastSpellingFindingCount: input.spellingCheckDone
       ? input.spellingFindingCount
       : undefined,
+    lastEditorReviewFindingCount: input.spellingCheckDone
+      ? input.editorReviewFindingCount
+      : undefined,
+    lastBuiltinSpellingFindingCount: input.spellingCheckDone
+      ? input.builtinSpellingFindingCount
+      : undefined,
     lastConsistencyFindingCount: input.consistencyCheckDone
       ? input.consistencyFindingCount
+      : undefined,
+    lastConsistencyFindCount: input.consistencyCheckDone
+      ? input.consistencyFindCount
+      : undefined,
+    lastConsistencyUnifyCount: input.consistencyCheckDone
+      ? input.consistencyUnifyCount
+      : undefined,
+    lastConsistencyCommonStringCount: input.consistencyCheckDone
+      ? input.consistencyCommonStringCount
+      : undefined,
+    lastBonBojoFindingCount: input.consistencyCheckDone
+      ? input.bonBojoFindingCount
       : undefined,
   });
   if (snapshot) return snapshot;
@@ -275,9 +371,15 @@ export function buildProjectContextWorkPatch(input) {
   const patch = {};
   if (input.spellingCheckDone) {
     patch.lastSpellingFindingCount = input.spellingFindingCount;
+    patch.lastEditorReviewFindingCount = input.editorReviewFindingCount;
+    patch.lastBuiltinSpellingFindingCount = input.builtinSpellingFindingCount;
   }
   if (input.consistencyCheckDone) {
     patch.lastConsistencyFindingCount = input.consistencyFindingCount;
+    patch.lastConsistencyFindCount = input.consistencyFindCount;
+    patch.lastConsistencyUnifyCount = input.consistencyUnifyCount;
+    patch.lastConsistencyCommonStringCount = input.consistencyCommonStringCount;
+    patch.lastBonBojoFindingCount = input.bonBojoFindingCount;
   }
   return Object.keys(patch).length ? normalizeProjectContext(patch) : undefined;
 }

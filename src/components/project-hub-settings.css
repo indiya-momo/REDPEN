@@ -454,63 +454,222 @@
   word-break: break-all;
 }
 
-/* 작업 이력 — 검수 진행 이력 꺾은선 그래프 */
-.work-history-chart {
+/* 작업 이력 — 검수 진행 이력 패널 */
+.work-history-panel {
   margin-top: 1rem;
-  padding: 0.9rem 1rem 0.75rem;
+  padding: 0.9rem 1rem 0.85rem;
 }
 
-.work-history-chart svg {
+.work-history-panel__title {
+  margin: 0 0 0.65rem;
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.work-history-panel__empty {
+  margin: 0;
+  padding: 0.35rem 0 0.15rem;
+}
+
+.work-history-panel__top-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.55rem;
+  margin-bottom: 0.65rem;
+}
+
+.work-history-panel__block {
+  margin-bottom: 0.65rem;
+  padding: 0.55rem 0.6rem 0.6rem;
+  border-radius: calc(var(--radius-ui) - 2px);
+  background: #faf8f5;
+}
+
+.work-history-panel__block--spelling {
+  border-left: 3px solid var(--pillar-spelling);
+}
+
+.work-history-panel__block--consistency {
+  margin-bottom: 0;
+  border-left: 3px solid var(--pillar-consistency);
+}
+
+.work-history-panel__top-row .work-history-panel__spark {
+  max-width: none;
+}
+
+.work-history-panel__spark-row--no-label {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.work-history-panel__top-row .work-history-panel__spark-row:not(.work-history-panel__spark-row--no-label) {
+  grid-template-columns: 3.4rem minmax(0, 1fr) auto;
+  gap: 0.35rem;
+}
+
+.work-history-panel__top-row .work-history-panel__spark-row--sub .work-history-panel__spark-label {
+  padding-left: 0;
+  font-size: 0.68rem;
+}
+
+.work-history-panel__top-row .work-history-panel__latest {
+  min-width: 2.4rem;
+  font-size: 0.82rem;
+}
+
+.work-history-panel__block-title {
+  margin: 0 0 0.45rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.work-history-panel__block-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.work-history-panel__spark-row {
+  display: grid;
+  grid-template-columns: 5.2rem minmax(0, 1fr) auto;
+  gap: 0.55rem;
+  align-items: center;
+  color: inherit;
+}
+
+.work-history-panel__spark-row--sub .work-history-panel__spark-label {
+  padding-left: 0.55rem;
+  font-size: 0.74rem;
+  font-weight: 600;
+}
+
+.work-history-panel__spark-row--spelling {
+  color: var(--pillar-spelling);
+}
+
+.work-history-panel__spark-row--spelling.work-history-panel__spark-row--muted {
+  color: #b8896a;
+}
+
+.work-history-panel__spark-row--auxiliary {
+  color: var(--pillar-auxiliary);
+}
+
+.work-history-panel__spark-label {
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.work-history-panel__spark {
   display: block;
   width: 100%;
-  height: auto;
+  max-width: 168px;
+  height: 32px;
 }
 
-.work-history-chart__grid {
+.work-history-panel__spark-grid {
   stroke: var(--color-border);
   stroke-width: 1;
 }
 
-.work-history-chart__tick {
-  font-size: 10px;
-  fill: var(--color-text-subtle);
-}
-
-.work-history-chart__line {
+.work-history-panel__spark-line {
   fill: none;
   stroke: currentColor;
   stroke-width: 2;
-  stroke-linejoin: round;
   stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
-.work-history-chart__point {
+.work-history-panel__spark-dot {
   fill: currentColor;
 }
 
-.work-history-chart__legend {
-  display: flex;
-  gap: 1rem;
-  margin-top: 0.5rem;
-  font-size: 0.74rem;
+.work-history-panel__latest {
+  min-width: 3rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--color-text);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.work-history-panel__unit {
+  margin-left: 0.1rem;
+  font-size: 0.72rem;
+  font-weight: 600;
   color: var(--color-text-subtle);
 }
 
-.work-history-chart__legend-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-
-.work-history-chart__legend-dot {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-}
-
-.work-history-chart__empty {
+.work-history-panel__criteria-groups {
   margin: 0;
-  padding: 0.75rem 1rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.55rem;
+}
+
+.work-history-panel__criteria-group {
+  margin: 0;
+  min-width: 0;
+  padding: 0.5rem 0.55rem;
+  border-radius: calc(var(--radius-ui) - 2px);
+  background: #fff;
+  border: 1px solid #e8e4de;
+}
+
+.work-history-panel__criteria-label {
+  margin: 0;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--pillar-consistency);
+}
+
+.work-history-panel__criteria-body {
+  margin: 0.25rem 0 0;
+}
+
+.work-history-panel__criteria-empty {
+  margin: 0;
+  font-size: 0.72rem;
+  color: var(--color-text-subtle);
+}
+
+.work-history-panel__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.work-history-panel__chip {
+  padding: 0.28rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid #c5d0db;
+  background: #fff;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--pillar-consistency);
+}
+
+.work-history-panel__chip--pinned {
+  border-color: var(--pillar-consistency);
+  background: #f4f8fb;
+  font-weight: 700;
+}
+
+.work-history-panel__chip--more {
+  border-style: dashed;
+  color: var(--color-text-subtle);
+  background: transparent;
+}
+
+.work-history-panel__pin {
+  margin-left: 0.2rem;
+  font-size: 0.72rem;
+  line-height: 1;
 }
 
 .project-hub-settings__footer {
@@ -539,5 +698,13 @@
 
   .project-hub-settings__row--readonly .project-hub-settings__value {
     text-align: left;
+  }
+
+  .work-history-panel__top-row {
+    grid-template-columns: 1fr;
+  }
+
+  .work-history-panel__criteria-groups {
+    grid-template-columns: 1fr;
   }
 }

@@ -67,8 +67,8 @@ import {
   countBuiltInActiveRules,
   countSpacingReviewActiveRules,
 } from '../lib/activeRuleCount.js';
-import { countConsistencyCheckActiveRules, countConsistencyGroupsWithFindings } from '../lib/consistencyCheckConfirm.js';
-import { countSpellingGroupsWithFindings } from '../lib/spellingCheckConfirm.js';
+import { countConsistencyCheckActiveRules, countConsistencyFindingsByType, countConsistencyGroupsWithFindings } from '../lib/consistencyCheckConfirm.js';
+import { countSpellingGroupsWithFindings, countSpellingFindingsByCategory } from '../lib/spellingCheckConfirm.js';
 import { LITERAL_FIND_FEATURE_LABEL } from '../lib/consistencyRuleLimit.js';
 import { formatRuleSetSavedDate } from '../lib/ruleSetsStorage.js';
 import {
@@ -652,6 +652,28 @@ export default function MainScreen({
     };
   }, [customRules, globalExcludePhrases]);
 
+  const spellingFindingsByCategory = useMemo(
+    () => countSpellingFindingsByCategory(ruleCheck.spellingResults),
+    [ruleCheck.spellingResults],
+  );
+
+  const consistencyFindingsByType = useMemo(
+    () =>
+      countConsistencyFindingsByType(
+        ruleCheck.consistencyResults,
+        customRules,
+      ),
+    [ruleCheck.consistencyResults, customRules],
+  );
+
+  const consistencyTabFindingsTotal = useMemo(
+    () =>
+      consistencyFindingsByType.find +
+      consistencyFindingsByType.unify +
+      consistencyFindingsByType.commonString,
+    [consistencyFindingsByType],
+  );
+
   const consistencyGroupsWithFindings = useMemo(
     () =>
       countConsistencyGroupsWithFindings(
@@ -682,7 +704,13 @@ export default function MainScreen({
         spellingCheckDone: ruleCheck.spellingCheckDone,
         consistencyCheckDone: ruleCheck.consistencyCheckDone,
         spellingFindingCount: spellingTabTotalFindings,
-        consistencyFindingCount: consistencyTabTotalFindings,
+        editorReviewFindingCount: spellingFindingsByCategory.editorReview,
+        builtinSpellingFindingCount: spellingFindingsByCategory.spelling,
+        consistencyFindingCount: consistencyTabFindingsTotal,
+        consistencyFindCount: consistencyFindingsByType.find,
+        consistencyUnifyCount: consistencyFindingsByType.unify,
+        consistencyCommonStringCount: consistencyFindingsByType.commonString,
+        bonBojoFindingCount: consistencyFindingsByType.bonBojo,
       });
       const result = await onSaveCriteriaPreset(criteriaNameInput, {
         projectContextSnapshot: patch,
@@ -706,7 +734,13 @@ export default function MainScreen({
     ruleCheck.spellingCheckDone,
     ruleCheck.consistencyCheckDone,
     spellingTabTotalFindings,
-    consistencyTabTotalFindings,
+    spellingFindingsByCategory.editorReview,
+    spellingFindingsByCategory.spelling,
+    consistencyTabFindingsTotal,
+    consistencyFindingsByType.find,
+    consistencyFindingsByType.unify,
+    consistencyFindingsByType.commonString,
+    consistencyFindingsByType.bonBojo,
   ]);
 
   const consistencyWorkDone =
@@ -725,7 +759,13 @@ export default function MainScreen({
         spellingCheckDone: ruleCheck.spellingCheckDone,
         consistencyCheckDone: consistencyWorkDone,
         spellingFindingCount: spellingTabTotalFindings,
-        consistencyFindingCount: consistencyTabTotalFindings,
+        editorReviewFindingCount: spellingFindingsByCategory.editorReview,
+        builtinSpellingFindingCount: spellingFindingsByCategory.spelling,
+        consistencyFindingCount: consistencyTabFindingsTotal,
+        consistencyFindCount: consistencyFindingsByType.find,
+        consistencyUnifyCount: consistencyFindingsByType.unify,
+        consistencyCommonStringCount: consistencyFindingsByType.commonString,
+        bonBojoFindingCount: consistencyFindingsByType.bonBojo,
       });
       if (patch) onTouchActiveProjectContext(patch);
     }, 800);
@@ -740,8 +780,14 @@ export default function MainScreen({
     pdf.pdfByteLength,
     ruleCheck.consistencyCheckDone,
     ruleCheck.spellingCheckDone,
-    consistencyTabTotalFindings,
     spellingTabTotalFindings,
+    spellingFindingsByCategory.editorReview,
+    spellingFindingsByCategory.spelling,
+    consistencyTabFindingsTotal,
+    consistencyFindingsByType.find,
+    consistencyFindingsByType.unify,
+    consistencyFindingsByType.commonString,
+    consistencyFindingsByType.bonBojo,
   ]);
 
   const showTocResultsPanel =

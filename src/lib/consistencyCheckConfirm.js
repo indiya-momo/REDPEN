@@ -294,6 +294,37 @@ export function countConsistencyGroupsWithFindings(groups, customRules = []) {
 }
 
 /**
+ * 표기 통일 탭 — 지적 건수(instances)를 종류별로 나눈다. 본·보조는 별도 필드.
+ * @param {import('./ruleEngine.js').RuleResultGroup[]} groups
+ * @param {import('./ruleTypes.js').Rule[]} [customRules]
+ */
+export function countConsistencyFindingsByType(groups, customRules = []) {
+  let find = 0;
+  let unify = 0;
+  let commonString = 0;
+  let bonBojo = 0;
+  for (const group of groups) {
+    const count = group.instances.length;
+    if (count <= 0) continue;
+    if (group.patternKind === 'phrase-slot-find') {
+      commonString += count;
+      continue;
+    }
+    const scope = consistencyGroupScope(group);
+    if (scope === 'literal-slot') {
+      if (isConsistencyUnifyTailWord(customRules, group.tailWord)) {
+        unify += count;
+      } else {
+        find += count;
+      }
+    } else if (scope === 'auxiliary') {
+      bonBojo += count;
+    }
+  }
+  return { find, unify, commonString, bonBojo };
+}
+
+/**
  * @param {{
  *   literalWithFindings: number,
  *   unifyWithFindings?: number,
