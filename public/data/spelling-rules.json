@@ -612,15 +612,6 @@
     "overlayReplace": "→드러나"
   },
   {
-    "find": "런지",
-    "replace": "는지",
-    "enabled": true,
-    "tip": "'있을런지/올런지'가 아니라 '-ㄹ는지'로 적는다",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사 · 형용사)",
-    "overlayReplace": "→는지"
-  },
-  {
     "find": "믿겨지",
     "replace": "믿기",
     "enabled": true,
