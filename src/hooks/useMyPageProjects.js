@@ -260,7 +260,13 @@ export function useMyPageProjects(uid = '', email = '') {
         return { ok: false, reason: 'not_found' };
       }
       const ok = await persistProjectSets(loadedSetsRef.current, id);
-      return ok ? { ok: true } : { ok: false, reason: 'cloud_save_failed' };
+      if (ok) return { ok: true };
+      // persistProjectSets는 로컬 activeSetId·ruleSets를 먼저 저장한다.
+      // 클라우드만 실패해도 검수 화면 전환은 막지 않는다(useRuleSets와 동일).
+      if (activeSetIdRef.current === id) {
+        return { ok: true, reason: 'cloud_save_failed' };
+      }
+      return { ok: false, reason: 'cloud_save_failed' };
     },
     [persistProjectSets],
   );

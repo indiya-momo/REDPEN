@@ -162,6 +162,7 @@ export function loadActiveSetId(uid) {
  */
 export function saveActiveSetId(id, uid) {
   localStorage.setItem(ruleSetsActiveStorageKey(uid), id);
+  notifyRuleSetsLocalUpdated(uid);
 }
 
 /** @returns {string} */
