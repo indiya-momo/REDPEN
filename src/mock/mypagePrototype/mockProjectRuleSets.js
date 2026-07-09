@@ -147,8 +147,7 @@ export const MOCK_PROJECT_RULE_SETS = [
       projectContext: {
         lastWorkedAt: '2026-06-20T12:00:00.000Z',
         pdfPageCount: 312,
-        proofRevision: '3교',
-        formatLabel: '신국판',
+        formatLabel: '신국판 · 3교',
       },
     },
     {
@@ -177,7 +176,7 @@ export const MOCK_PROJECT_RULE_SETS = [
       projectContext: {
         lastWorkedAt: '2026-06-01T12:00:00.000Z',
         pdfPageCount: 198,
-        proofRevision: '2교',
+        formatLabel: '2교',
       },
     },
     {
@@ -224,7 +223,6 @@ export function duplicateMockProject(projects, sourceId) {
  *   name?: string,
  *   tags?: string[],
  *   memo?: string,
- *   proofRevision?: string,
  *   formatLabel?: string,
  * }} patch
  */
@@ -239,14 +237,9 @@ export function applyMockProjectMeta(projects, id, patch) {
   return next.map((set) => {
     if (set.id !== id) return set;
     const projectContext =
-      patch.proofRevision !== undefined || patch.formatLabel !== undefined
+      patch.formatLabel !== undefined
         ? mergeProjectContext(set.projectContext, {
-            ...(patch.proofRevision !== undefined
-              ? { proofRevision: patch.proofRevision }
-              : {}),
-            ...(patch.formatLabel !== undefined
-              ? { formatLabel: patch.formatLabel }
-              : {}),
+            formatLabel: patch.formatLabel,
           })
         : set.projectContext;
 

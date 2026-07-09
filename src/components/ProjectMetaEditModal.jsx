@@ -2,7 +2,6 @@ import { useEffect, useId, useRef, useState } from 'react';
 import { X } from 'lucide-react';
 import {
   MAX_PROJECT_FORMAT_LABEL_LENGTH,
-  MAX_PROJECT_PROOF_REVISION_LENGTH,
   mergeProjectContext,
   normalizeProjectMemo,
   normalizeProjectTags,
@@ -15,13 +14,11 @@ import './project-meta-edit-modal.css';
  *   projectTitle: string,
  *   initialTags?: string[],
  *   initialMemo?: string,
- *   initialProofRevision?: string,
  *   initialFormatLabel?: string,
  *   onClose: () => void,
  *   onSave: (payload: {
  *     tags: string[],
  *     memo?: string,
- *     proofRevision?: string,
  *     formatLabel?: string,
  *   }) => void | Promise<void>,
  *   saving?: boolean,
@@ -32,7 +29,6 @@ export default function ProjectMetaEditModal({
   projectTitle,
   initialTags = [],
   initialMemo = '',
-  initialProofRevision = '',
   initialFormatLabel = '',
   onClose,
   onSave,
@@ -41,12 +37,10 @@ export default function ProjectMetaEditModal({
   const titleId = useId();
   const tagsInputId = useId();
   const memoInputId = useId();
-  const proofRevisionInputId = useId();
   const formatLabelInputId = useId();
   const dialogRef = useRef(/** @type {HTMLDialogElement | null} */ (null));
   const [tagsInput, setTagsInput] = useState('');
   const [memoInput, setMemoInput] = useState('');
-  const [proofRevisionInput, setProofRevisionInput] = useState('');
   const [formatLabelInput, setFormatLabelInput] = useState('');
 
   useEffect(() => {
@@ -71,9 +65,8 @@ export default function ProjectMetaEditModal({
     if (!open) return;
     setTagsInput(initialTags.join(', '));
     setMemoInput(initialMemo ?? '');
-    setProofRevisionInput(initialProofRevision ?? '');
     setFormatLabelInput(initialFormatLabel ?? '');
-  }, [open, initialTags, initialMemo, initialProofRevision, initialFormatLabel]);
+  }, [open, initialTags, initialMemo, initialFormatLabel]);
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -84,10 +77,6 @@ export default function ProjectMetaEditModal({
         .filter(Boolean),
     );
     const memo = normalizeProjectMemo(memoInput);
-    const proofRevision = proofRevisionInput.trim().slice(
-      0,
-      MAX_PROJECT_PROOF_REVISION_LENGTH,
-    );
     const formatLabel = formatLabelInput.trim().slice(
       0,
       MAX_PROJECT_FORMAT_LABEL_LENGTH,
@@ -95,7 +84,6 @@ export default function ProjectMetaEditModal({
     await onSave({
       tags,
       memo,
-      proofRevision: proofRevision || undefined,
       formatLabel: formatLabel || undefined,
     });
   }
@@ -149,39 +137,21 @@ export default function ProjectMetaEditModal({
           <span className="project-meta-edit-modal__hint">쉼표로 구분 · 최대 3개</span>
         </label>
 
-        <div className="project-meta-edit-modal__row">
-          <label
-            className="project-meta-edit-modal__field project-meta-edit-modal__field--half"
-            htmlFor={proofRevisionInputId}
-          >
-            <span className="project-meta-edit-modal__label">교정교열</span>
-            <input
-              id={proofRevisionInputId}
-              className="project-meta-edit-modal__input"
-              value={proofRevisionInput}
-              onChange={(e) => setProofRevisionInput(e.target.value)}
-              placeholder="3교"
-              disabled={saving}
-              autoComplete="off"
-            />
-          </label>
-
-          <label
-            className="project-meta-edit-modal__field project-meta-edit-modal__field--half"
-            htmlFor={formatLabelInputId}
-          >
-            <span className="project-meta-edit-modal__label">판형</span>
-            <input
-              id={formatLabelInputId}
-              className="project-meta-edit-modal__input"
-              value={formatLabelInput}
-              onChange={(e) => setFormatLabelInput(e.target.value)}
-              placeholder="신국판"
-              disabled={saving}
-              autoComplete="off"
-            />
-          </label>
-        </div>
+        <label
+          className="project-meta-edit-modal__field"
+          htmlFor={formatLabelInputId}
+        >
+          <span className="project-meta-edit-modal__label">그 외 정보</span>
+          <input
+            id={formatLabelInputId}
+            className="project-meta-edit-modal__input"
+            value={formatLabelInput}
+            onChange={(e) => setFormatLabelInput(e.target.value)}
+            placeholder="신국판, 3교"
+            disabled={saving}
+            autoComplete="off"
+          />
+        </label>
 
         <label className="project-meta-edit-modal__field" htmlFor={memoInputId}>
           <span className="project-meta-edit-modal__label">메모</span>

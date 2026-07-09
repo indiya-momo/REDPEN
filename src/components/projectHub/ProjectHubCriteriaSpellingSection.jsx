@@ -1,9 +1,15 @@
 /**
  * @param {{
  *   onStartWork?: () => void,
+ *   editorReviewCount?: number,
+ *   spellingRuleCount?: number,
  * }} props
  */
-export default function ProjectHubCriteriaSpellingSection({ onStartWork }) {
+export default function ProjectHubCriteriaSpellingSection({
+  onStartWork,
+  editorReviewCount = 0,
+  spellingRuleCount = 0,
+}) {
   return (
     <div className="project-hub-settings__criteria project-hub-settings__criteria--single">
       <section
@@ -11,7 +17,9 @@ export default function ProjectHubCriteriaSpellingSection({ onStartWork }) {
         aria-label="맞춤법"
       >
         <div className="project-hub-settings__criteria-head">
-          <h3 className="project-hub-settings__criteria-title">맞춤법</h3>
+          <h3 className="project-hub-settings__criteria-title">
+            편집자 검토 필요 {editorReviewCount}, 맞춤법 규칙 {spellingRuleCount}
+          </h3>
         </div>
         <p className="project-hub-settings__criteria-lead">
           맞춤법·띄어쓰기 검수 항목은 검수 화면에서 편집합니다.

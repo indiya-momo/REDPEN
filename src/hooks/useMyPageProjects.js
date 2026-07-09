@@ -418,25 +418,23 @@ export function useMyPageProjects(uid = '', email = '') {
 
       const current = sets[index];
       const nextProjectContext =
-        patch.proofRevision !== undefined || patch.formatLabel !== undefined
+        patch.formatLabel !== undefined
           ? mergeProjectContext(current.projectContext, {
-              ...(patch.proofRevision !== undefined
-                ? { proofRevision: patch.proofRevision }
-                : {}),
-              ...(patch.formatLabel !== undefined
-                ? { formatLabel: patch.formatLabel }
-                : {}),
+              formatLabel: patch.formatLabel,
             })
           : current.projectContext;
       const touchesMeta =
         patch.tags !== undefined ||
         patch.memo !== undefined ||
-        patch.proofRevision !== undefined ||
+        patch.pillarMemos !== undefined ||
         patch.formatLabel !== undefined;
       const nextSet = normalizeRuleSet({
         ...current,
         ...(patch.tags !== undefined ? { tags: patch.tags } : {}),
         ...(patch.memo !== undefined ? { memo: patch.memo } : {}),
+        ...(patch.pillarMemos !== undefined
+          ? { pillarMemos: patch.pillarMemos }
+          : {}),
         ...(nextProjectContext !== undefined
           ? { projectContext: nextProjectContext }
           : {}),

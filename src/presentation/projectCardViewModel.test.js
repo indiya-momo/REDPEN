@@ -34,7 +34,7 @@ describe('projectCardViewModel helpers', () => {
     isActive: false,
     lastWork: { date: '26.06.18', manuscriptPages: 100 },
     createdDate: '26.06.01',
-    proofRevision: '2교',
+    formatLabel: '2교',
     chipPreview: {
       spelling: [{ label: '테스트', active: true }],
       consistency: [{ label: 'A', active: true }, { label: 'B', active: false }],
@@ -86,7 +86,7 @@ describe('projectCardViewModel helpers', () => {
     expect(formatProjectCardEditionValues(sample)).toBe('2교');
     expect(
       formatProjectCardEditionValues({ ...sample, formatLabel: '신국판' }),
-    ).toBe('2교 신국판');
+    ).toBe('신국판');
   });
 
   it('formatProjectCardMemoPreview', () => {
@@ -109,7 +109,7 @@ describe('projectCardViewModel helpers', () => {
     expect(formatProjectCardMetaLine(sample)).toBe('원고 100p · 2교');
     expect(
       formatProjectCardMetaLine({ ...sample, formatLabel: '신국판' }),
-    ).toBe('원고 100p · 2교 · 신국판');
+    ).toBe('원고 100p · 신국판');
   });
 
   it('buildProjectCardPillarPreviews', () => {

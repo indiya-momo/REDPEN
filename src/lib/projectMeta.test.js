@@ -63,14 +63,12 @@ describe('normalizeProjectContext', () => {
     });
   });
 
-  it('교차·판형을 정규화한다', () => {
+  it('그 외 정보를 정규화한다', () => {
     expect(
       normalizeProjectContext({
-        proofRevision: ' 3교 ',
         formatLabel: ' 신국판 ',
       }),
     ).toEqual({
-      proofRevision: '3교',
       formatLabel: '신국판',
     });
   });
@@ -102,14 +100,13 @@ describe('normalizeProjectContext', () => {
     ).toEqual({ lastSpellingFindingCount: 4 });
   });
 
-  it('mergeProjectContext는 기존 교차·판형을 유지한다', () => {
+  it('mergeProjectContext는 기존 그 외 정보를 유지한다', () => {
     expect(
       mergeProjectContext(
-        { proofRevision: '2교', formatLabel: '신국판' },
+        { formatLabel: '신국판' },
         { pdfPageCount: 10, pdfFileName: 'a.pdf' },
       ),
     ).toEqual({
-      proofRevision: '2교',
       formatLabel: '신국판',
       pdfPageCount: 10,
       pdfFileName: 'a.pdf',

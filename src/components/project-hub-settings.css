@@ -159,8 +159,8 @@
 }
 
 .project-hub-settings__criteria-section--spelling {
-  border-left: 3px solid var(--pillar-spelling, #a86b45);
-  padding-left: 0.65rem;
+  border-left: none;
+  padding-left: 0;
 }
 
 .project-hub-settings__criteria-section--consistency {
@@ -219,6 +219,50 @@
 
 .project-hub-settings__criteria-link {
   font-size: 0.78rem;
+}
+
+.project-hub-settings__criteria-groups {
+  list-style: none;
+  margin: 0 0 0.7rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.project-hub-settings__criteria-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.5rem;
+}
+
+.project-hub-settings__criteria-group-label {
+  flex: 0 0 auto;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.project-hub-settings__criteria-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.project-hub-settings__criteria-chip {
+  display: inline-block;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  background: var(--color-surface-sunken, #efeae1);
+  border: 1px solid var(--color-border, #d8cfbf);
+  font-size: 0.74rem;
+  color: var(--color-text);
+}
+
+.project-hub-settings__criteria-chip--off {
+  opacity: 0.45;
+  text-decoration: line-through;
 }
 
 .project-hub-settings__consistency-editor .consistency-unified-box {
@@ -452,7 +496,7 @@
 }
 
 .project-hub-settings__row--memo .project-hub-settings__textarea {
-  min-height: 16rem;
+  min-height: 8rem;
 }
 
 .project-hub-settings__value {

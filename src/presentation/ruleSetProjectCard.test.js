@@ -65,8 +65,7 @@ describe('buildProjectCardViewModelFromRuleSet', () => {
         projectContext: {
           pdfPageCount: 88,
           lastWorkedAt: '2026-06-23T09:00:00.000Z',
-          proofRevision: '3교',
-          formatLabel: '신국판',
+          formatLabel: '신국판 · 3교',
         },
       }),
     );
@@ -78,7 +77,6 @@ describe('buildProjectCardViewModelFromRuleSet', () => {
       manuscriptPages: 88,
     });
     expect(card.createdDate).toBe('26.06.22');
-    expect(card.proofRevision).toBe('3교');
-    expect(card.formatLabel).toBe('신국판');
+    expect(card.formatLabel).toBe('신국판 · 3교');
   });
 });

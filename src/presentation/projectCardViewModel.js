@@ -49,13 +49,13 @@ import { MAX_PROJECT_TAGS } from '../lib/projectMeta.js';
  *   title: string,
  *   tags: string[],
  *   memo?: string,
+ *   pillarMemos?: import('../lib/projectMeta.js').ProjectPillarMemos,
  *   headline: string,
  *   highlights: ProjectCardHighlight[],
  *   counts: ProjectCardCounts,
  *   chipPreview?: Partial<Record<ProjectCardPillarKey, ProjectCardChip[]>>,
  *   lastWork?: ProjectCardLastWork,
  *   createdDate?: string,
- *   proofRevision?: string,
  *   savedDate: string,
  *   formatLabel?: string,
  *   isActive: boolean,
@@ -121,16 +121,9 @@ export function buildProjectCardDisplayTags(card) {
     .slice(0, MAX_PROJECT_TAGS);
 }
 
-/** 교차·판형 값 (「교 판형」 라벨 옆 표시) @param {ProjectCardViewModel} card @returns {string} */
+/** 그 외 정보 (판형·교차 등) @param {ProjectCardViewModel} card @returns {string} */
 export function formatProjectCardEditionValues(card) {
-  const parts = [];
-  if (card.proofRevision?.trim()) {
-    parts.push(card.proofRevision.trim());
-  }
-  if (card.formatLabel?.trim()) {
-    parts.push(card.formatLabel.trim());
-  }
-  return parts.join(' ');
+  return card.formatLabel?.trim() ?? '';
 }
 
 /** 메모 첫 줄 — CSS 말줄임표용 @param {ProjectCardViewModel} card @returns {string} */
@@ -161,9 +154,6 @@ export function formatProjectCardMetaLine(card) {
   const parts = [];
   if (card.lastWork?.manuscriptPages != null) {
     parts.push(`원고 ${card.lastWork.manuscriptPages}p`);
-  }
-  if (card.proofRevision) {
-    parts.push(card.proofRevision);
   }
   if (card.formatLabel) {
     parts.push(card.formatLabel);
