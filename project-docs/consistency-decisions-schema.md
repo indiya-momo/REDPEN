@@ -137,13 +137,18 @@ type ConsistencyDecision =
 ### 3.3 조회 (MVP)
 
 - 저장·비교: `normalizeConsistencyVariant()`
-- 최신 우선: variant를 `variants[]`에 포함하는 레코드 중 **`at` 최대**의 `pinned` ( `supersededAt`은 2단계)
+- 매칭 집합: 레코드마다 **`variants[]` ∪ `{ pinned }`** — `variants[]`만 보면 확정형 자체(예: `제미나이`)는 매칭되지 않으므로, 조회 시 **pinned도 포함**한다.
+- **확정형 자체 입력:** 정규화한 `rawVariant`가 어떤 레코드의 `pinned`와 같으면 → `resolvePinnedForVariant`는 그 `pinned`를 반환하거나, UI는 **「이미 확정된 표기입니다」**로 분기(둘 다 동일 의미).
+- 최신 우선: 위 집합에 `rawVariant`가 들어가는 `kind: 'unify'` 레코드 중 **`at` 최대**의 `pinned`를 반환 (`supersededAt`은 2단계).
+- **1홉만:** 입력 variant → **한 레코드**의 `pinned`까지만. 이전 variant가 다른 레코드의 `pinned`였더라도 **체인 추적은 하지 않음** (전이 확정은 §비범위).
 
 ```ts
 resolvePinnedForVariant(
   decisions: ConsistencyDecision[],
   rawVariant: string,
 ): string | null
+// 매칭: normalize(rawVariant) ∈ normalize(variants[i]) ∪ { normalize(pinned) }
+// 반환: at 최대 레코드의 pinned (1홉)
 ```
 
 ---
@@ -202,6 +207,8 @@ UI(`ConsistencyUnifySection`)는 `onApplyRules` 콜백만 호출하고, **append
 | **1단계 MVP** | append, 대장 열람, 동일 variant **읽기 전용 경고** | ruleEngine·regex **미변경** |
 | **2단계** | 검수 자동 차단, 공유·엑셀 | 별도 합의 |
 
+**경고 문구 (1단계):** 대장은 기억용이고 검수 엔진은 **활성 규칙(최대 3)**만 잡는다. 상한에서 밀려난 통일형이라도 대장에 있으면 경고가 뜰 수 있으나, 문구는 **「지금 자동으로 잡힌다」가 아니라 「과거에 이렇게 확정함」** 뉘앙스로 — 오해 방지.
+
 ---
 
 ## 6. 용량·상한 (방향)
@@ -219,10 +226,11 @@ UI(`ConsistencyUnifySection`)는 `onApplyRules` 콜백만 호출하고, **append
 3. pin 성공 경로 — domain append → 기존 persist
 4. **`presentation/workHistoryDecisionLedger.js`** — decisions → 탭용 DTO (읽기)
 5. `ProjectWorkHistoryChart` — 확정 대장 섹션 추가 (일지·칩과 분리)
-6. (1단계) variant 재📌 시 경고
+6. (1단계) variant 재📌 시 경고 — §5 경고 문구 톤 준수
 
 ## 비범위
 
 - `workHistory`에 매핑·결정 레코드 합치기
 - 1단계 검수 엔진 연동
 - ruleEngine / regex / spelling 매칭 변경
+- **확정 체인(transitive) 해석** — 예: `제미니→제미나이` 확정 후 `제미나이→Gemini`를 또 확정하면, `제미나이`는 레코드1의 `pinned`이면서 레코드2의 `variant`가 된다. MVP 조회는 **입력 1홉만** 해석하며, `제미니` 조회 시 최신 레코드의 `pinned`만 반환한다(중간 표기까지 연쇄 갱신하지 않음).
