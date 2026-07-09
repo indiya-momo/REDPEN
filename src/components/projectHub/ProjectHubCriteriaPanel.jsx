@@ -26,12 +26,13 @@ export default function ProjectHubCriteriaPanel({
   criteriaSaving = false,
   onCriteriaChange,
   onStartWork,
+  editorReviewCount = 0,
+  spellingRuleCount = 0,
 }) {
-  const { customRules, applyCriteriaPatch, applyCustomRules } =
-    useProjectHubCriteriaMutations({
-      ruleSet,
-      onCriteriaChange,
-    });
+  const { customRules, applyCriteriaPatch } = useProjectHubCriteriaMutations({
+    ruleSet,
+    onCriteriaChange,
+  });
 
   const toggleConfig = useMemo(() => {
     if (section === 'auxiliary') {
@@ -46,15 +47,21 @@ export default function ProjectHubCriteriaPanel({
   }, [toggleConfig, customRules]);
 
   if (section === 'spelling') {
-    return <ProjectHubCriteriaSpellingSection onStartWork={onStartWork} />;
+    return (
+      <ProjectHubCriteriaSpellingSection
+        onStartWork={onStartWork}
+        editorReviewCount={editorReviewCount}
+        spellingRuleCount={spellingRuleCount}
+      />
+    );
   }
 
   if (section === 'consistency') {
     return (
       <ProjectHubCriteriaConsistencySection
         customRules={customRules}
-        criteriaSaving={criteriaSaving}
-        applyCustomRules={applyCustomRules}
+        globalExcludePhrases={ruleSet?.globalExcludePhrases ?? []}
+        onStartWork={onStartWork}
       />
     );
   }

@@ -13,6 +13,7 @@ import { BON_BOJO_RULES_FP } from './bonBojoRules.js';
 import {
   normalizeProjectContext,
   normalizeProjectMemo,
+  normalizeProjectPillarMemos,
   normalizeProjectTags,
 } from './projectMeta.js';
 import { normalizeWorkHistory } from './projectWorkHistory.js';
@@ -58,6 +59,7 @@ export function normalizeRuleSet(set) {
       typeof set.tocBodyExcludePages === 'string' ? set.tocBodyExcludePages : '',
     tags: normalizeProjectTags(set.tags),
     memo: normalizeProjectMemo(set.memo),
+    pillarMemos: normalizeProjectPillarMemos(set.pillarMemos),
     projectContext: normalizeProjectContext(set.projectContext),
     workHistory: normalizeWorkHistory(set.workHistory),
     metaUpdatedAt:

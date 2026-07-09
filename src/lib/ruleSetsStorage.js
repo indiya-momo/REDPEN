@@ -51,6 +51,7 @@ export function ruleSetsActiveStorageKey(uid) {
  *   savedAt?: string,
  *   tags?: string[],
  *   memo?: string,
+ *   pillarMemos?: import('./projectMeta.js').ProjectPillarMemos,
  *   metaUpdatedAt?: string,
  *   projectContext?: import('./projectMeta.js').ProjectContext,
  *   workHistory?: import('./projectWorkHistory.js').WorkHistoryEntry[],
@@ -190,6 +191,9 @@ export function duplicateRuleSet(source) {
     savedAt: source.savedAt,
     tags: structuredClone(source.tags ?? []),
     memo: source.memo,
+    pillarMemos: source.pillarMemos
+      ? structuredClone(source.pillarMemos)
+      : undefined,
     projectContext: source.projectContext
       ? structuredClone(source.projectContext)
       : undefined,

@@ -11,7 +11,7 @@ describe('buildProjectWorkSummary', () => {
   it('기록이 전혀 없으면 null을 돌려준다', () => {
     expect(buildProjectWorkSummary(undefined, NOW)).toBeNull();
     expect(buildProjectWorkSummary({}, NOW)).toBeNull();
-    expect(buildProjectWorkSummary({ proofRevision: '3교' }, NOW)).toBeNull();
+    expect(buildProjectWorkSummary({ formatLabel: '3교' }, NOW)).toBeNull();
   });
 
   it('마지막 작업·PDF 정보를 표시 문구로 바꾼다', () => {

@@ -14,16 +14,18 @@ import { mergeWorkHistories } from './projectWorkHistory.js';
  *   lastConsistencyUnifyCount?: number,
  *   lastConsistencyCommonStringCount?: number,
  *   lastBonBojoFindingCount?: number,
- *   proofRevision?: string,
  *   formatLabel?: string,
  * }} ProjectContext */
 
-export const MAX_PROJECT_PROOF_REVISION_LENGTH = 12;
 export const MAX_PROJECT_FORMAT_LABEL_LENGTH = 16;
 
 export const MAX_PROJECT_TAGS = 3;
 export const MAX_PROJECT_TAG_LENGTH = 24;
 export const MAX_PROJECT_MEMO_LENGTH = 200;
+/** 기둥(맞춤법·본용언)별 메모 길이 상한 — 프로젝트 메모와 동일 */
+export const MAX_PROJECT_PILLAR_MEMO_LENGTH = 200;
+
+/** @typedef {{ spelling?: string, auxiliary?: string }} ProjectPillarMemos */
 
 /**
  * @param {unknown} raw
@@ -54,6 +56,26 @@ export function normalizeProjectMemo(raw) {
   const trimmed = raw.trim();
   if (!trimmed) return undefined;
   return trimmed.slice(0, MAX_PROJECT_MEMO_LENGTH);
+}
+
+/**
+ * 기둥별 메모 정규화 — 각 칸을 다듬고, 내용이 하나도 없으면 undefined.
+ * @param {unknown} raw
+ * @returns {ProjectPillarMemos | undefined}
+ */
+export function normalizeProjectPillarMemos(raw) {
+  if (!raw || typeof raw !== 'object') return undefined;
+  const source = /** @type {Record<string, unknown>} */ (raw);
+  /** @type {ProjectPillarMemos} */
+  const out = {};
+  for (const key of /** @type {const} */ (['spelling', 'auxiliary'])) {
+    const value = source[key];
+    if (typeof value !== 'string') continue;
+    const trimmed = value.trim();
+    if (!trimmed) continue;
+    out[key] = trimmed.slice(0, MAX_PROJECT_PILLAR_MEMO_LENGTH);
+  }
+  return Object.keys(out).length ? out : undefined;
 }
 
 /**
@@ -160,13 +182,6 @@ export function normalizeProjectContext(raw) {
     ctx.lastBonBojoFindingCount = Math.floor(bonBojoCount);
   }
 
-  if (typeof source.proofRevision === 'string') {
-    const revision = source.proofRevision.trim();
-    if (revision) {
-      ctx.proofRevision = revision.slice(0, MAX_PROJECT_PROOF_REVISION_LENGTH);
-    }
-  }
-
   if (typeof source.formatLabel === 'string') {
     const format = source.formatLabel.trim();
     if (format) {
@@ -217,6 +232,7 @@ export function mergeRuleSetProjectMeta(primary, secondary) {
       ...primary,
       tags: normalizeProjectTags(primary.tags),
       memo: normalizeProjectMemo(primary.memo),
+      pillarMemos: normalizeProjectPillarMemos(primary.pillarMemos),
       projectContext: normalizeProjectContext(primary.projectContext),
       workHistory: mergeWorkHistories(primary.workHistory, undefined),
     };
@@ -229,6 +245,8 @@ export function mergeRuleSetProjectMeta(primary, secondary) {
   let tags;
   /** @type {string | undefined} */
   let memo;
+  /** @type {ProjectPillarMemos | undefined} */
+  let pillarMemos;
   /** @type {ProjectContext | undefined} */
   let projectContext;
   /** @type {string | undefined} */
@@ -237,11 +255,13 @@ export function mergeRuleSetProjectMeta(primary, secondary) {
   if (primaryMetaMs > secondaryMetaMs) {
     tags = normalizeProjectTags(primary.tags);
     memo = normalizeProjectMemo(primary.memo);
+    pillarMemos = normalizeProjectPillarMemos(primary.pillarMemos);
     projectContext = normalizeProjectContext(primary.projectContext);
     metaUpdatedAt = primary.metaUpdatedAt;
   } else if (secondaryMetaMs > primaryMetaMs) {
     tags = normalizeProjectTags(secondary.tags);
     memo = normalizeProjectMemo(secondary.memo);
+    pillarMemos = normalizeProjectPillarMemos(secondary.pillarMemos);
     projectContext = normalizeProjectContext(secondary.projectContext);
     metaUpdatedAt = secondary.metaUpdatedAt;
   } else {
@@ -251,6 +271,9 @@ export function mergeRuleSetProjectMeta(primary, secondary) {
     memo =
       normalizeProjectMemo(primary.memo) ??
       normalizeProjectMemo(secondary.memo);
+    pillarMemos =
+      normalizeProjectPillarMemos(primary.pillarMemos) ??
+      normalizeProjectPillarMemos(secondary.pillarMemos);
     projectContext = normalizeProjectContext(
       mergeProjectContext(secondary.projectContext, primary.projectContext),
     );
@@ -261,6 +284,7 @@ export function mergeRuleSetProjectMeta(primary, secondary) {
     ...primary,
     tags,
     ...(memo !== undefined ? { memo } : {}),
+    ...(pillarMemos !== undefined ? { pillarMemos } : {}),
     ...(projectContext !== undefined ? { projectContext } : {}),
     ...(metaUpdatedAt ? { metaUpdatedAt } : {}),
     workHistory: mergeWorkHistories(primary.workHistory, secondary.workHistory),
