@@ -25,7 +25,7 @@ export const MAX_PROJECT_MEMO_LENGTH = 200;
 /** 기둥(맞춤법·본용언)별 메모 길이 상한 — 프로젝트 메모와 동일 */
 export const MAX_PROJECT_PILLAR_MEMO_LENGTH = 200;
 
-/** @typedef {{ spelling?: string, auxiliary?: string }} ProjectPillarMemos */
+/** @typedef {{ spelling?: string, consistency?: string, auxiliary?: string }} ProjectPillarMemos */
 
 /**
  * @param {unknown} raw
@@ -68,7 +68,7 @@ export function normalizeProjectPillarMemos(raw) {
   const source = /** @type {Record<string, unknown>} */ (raw);
   /** @type {ProjectPillarMemos} */
   const out = {};
-  for (const key of /** @type {const} */ (['spelling', 'auxiliary'])) {
+  for (const key of /** @type {const} */ (['spelling', 'consistency', 'auxiliary'])) {
     const value = source[key];
     if (typeof value !== 'string') continue;
     const trimmed = value.trim();

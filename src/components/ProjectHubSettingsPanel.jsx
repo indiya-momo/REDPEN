@@ -24,9 +24,18 @@ const NAV_ITEMS = [
 
 const CRITERIA_SECTIONS = new Set(['spelling', 'consistency', 'auxiliary']);
 /** 메타 자동 저장이 도는 섹션 — 기둥별 메모가 있는 맞춤법·본용언 포함 */
-const META_AUTOSAVE_SECTIONS = new Set(['meta', 'spelling', 'auxiliary']);
+const META_AUTOSAVE_SECTIONS = new Set([
+  'meta',
+  'spelling',
+  'consistency',
+  'auxiliary',
+]);
 /** 기둥별 메모를 편집하는 섹션 → pillarMemos 키 매핑 */
-const PILLAR_MEMO_SECTIONS = { spelling: 'spelling', auxiliary: 'auxiliary' };
+const PILLAR_MEMO_SECTIONS = {
+  spelling: 'spelling',
+  consistency: 'consistency',
+  auxiliary: 'auxiliary',
+};
 const META_AUTOSAVE_MS = 400;
 
 /**
@@ -127,6 +136,7 @@ export default function ProjectHubSettingsPanel({
   const formatLabelInputId = useId();
   const memoInputId = useId();
   const spellingMemoInputId = useId();
+  const consistencyMemoInputId = useId();
   const auxiliaryMemoInputId = useId();
 
   const [activeSection, setActiveSection] =
@@ -136,6 +146,7 @@ export default function ProjectHubSettingsPanel({
   const [memoInput, setMemoInput] = useState('');
   const [formatLabelInput, setFormatLabelInput] = useState('');
   const [spellingMemoInput, setSpellingMemoInput] = useState('');
+  const [consistencyMemoInput, setConsistencyMemoInput] = useState('');
   const [auxiliaryMemoInput, setAuxiliaryMemoInput] = useState('');
 
   const onSaveRef = useRef(onSave);
@@ -150,6 +161,7 @@ export default function ProjectHubSettingsPanel({
     memoInput,
     formatLabelInput,
     spellingMemoInput,
+    consistencyMemoInput,
     auxiliaryMemoInput,
   });
   metaInputRef.current = {
@@ -158,6 +170,7 @@ export default function ProjectHubSettingsPanel({
     memoInput,
     formatLabelInput,
     spellingMemoInput,
+    consistencyMemoInput,
     auxiliaryMemoInput,
   };
 
@@ -172,6 +185,7 @@ export default function ProjectHubSettingsPanel({
       memoInput: memoRaw,
       formatLabelInput: formatLabelRaw,
       spellingMemoInput: spellingMemoRaw,
+      consistencyMemoInput: consistencyMemoRaw,
       auxiliaryMemoInput: auxiliaryMemoRaw,
     } = metaInputRef.current;
     const tags = normalizeProjectTags(
@@ -184,6 +198,7 @@ export default function ProjectHubSettingsPanel({
     const pillarMemos =
       normalizeProjectPillarMemos({
         spelling: spellingMemoRaw,
+        consistency: consistencyMemoRaw,
         auxiliary: auxiliaryMemoRaw,
       }) ?? null;
     const formatLabel = formatLabelRaw
@@ -204,6 +219,7 @@ export default function ProjectHubSettingsPanel({
     setMemoInput(sourceCard.memo ?? '');
     setFormatLabelInput(sourceCard.formatLabel ?? '');
     setSpellingMemoInput(sourceCard.pillarMemos?.spelling ?? '');
+    setConsistencyMemoInput(sourceCard.pillarMemos?.consistency ?? '');
     setAuxiliaryMemoInput(sourceCard.pillarMemos?.auxiliary ?? '');
   }, []);
 
@@ -282,6 +298,7 @@ export default function ProjectHubSettingsPanel({
     memoInput,
     formatLabelInput,
     spellingMemoInput,
+    consistencyMemoInput,
     auxiliaryMemoInput,
   ]);
 
@@ -297,6 +314,13 @@ export default function ProjectHubSettingsPanel({
           desc: '이 프로젝트의 맞춤법 원칙·예외를 메모하세요',
           value: spellingMemoInput,
           setValue: setSpellingMemoInput,
+        },
+        consistency: {
+          id: consistencyMemoInputId,
+          label: '메모',
+          desc: '이 프로젝트의 표기 통일 원칙·예외를 메모하세요',
+          value: consistencyMemoInput,
+          setValue: setConsistencyMemoInput,
         },
         auxiliary: {
           id: auxiliaryMemoInputId,
