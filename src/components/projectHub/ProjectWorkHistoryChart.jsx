@@ -212,22 +212,33 @@ export default function ProjectWorkHistoryChart({
                   </dt>
                   <dd className="work-history-panel__criteria-body">
                     {items.length ? (
-                      <ul className="work-history-panel__chips work-history-panel__chips--unify">
+                      <ul className="work-history-panel__unify-list">
                         {items.map((entry) => (
                           <li
-                            key={entry.label}
-                            className={`work-history-panel__chip${
-                              entry.pinned
-                                ? ' work-history-panel__chip--pinned'
-                                : ''
-                            }`}
+                            key={`${entry.variants.join('\u0001')}\u0002${entry.pinned ?? ''}`}
+                            className="work-history-panel__unify-entry"
                           >
-                            {entry.label}
-                            {entry.pinned ? (
-                              <span className="work-history-panel__pin" aria-hidden>
-                                📌
-                              </span>
-                            ) : null}
+                            <ul className="work-history-panel__chips work-history-panel__chips--unify">
+                              {entry.variants.map((variant) => (
+                                <li
+                                  key={variant}
+                                  className="work-history-panel__chip"
+                                >
+                                  {variant}
+                                </li>
+                              ))}
+                              {entry.pinned ? (
+                                <li className="work-history-panel__chip work-history-panel__chip--pinned">
+                                  {entry.pinned}
+                                  <span
+                                    className="work-history-panel__pin"
+                                    aria-hidden
+                                  >
+                                    📌
+                                  </span>
+                                </li>
+                              ) : null}
+                            </ul>
                           </li>
                         ))}
                       </ul>

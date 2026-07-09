@@ -4,7 +4,31 @@ import { listConsistencyUnifyEntries } from '../lib/consistencyRuleLimit.js';
 import { listPhraseSlotEntries } from '../lib/phraseSlotRegister.js';
 import { formatConsistencyListLabel } from '../lib/patternDisplayLabels.js';
 
-/** @typedef {{ label: string, pinned: boolean }} WorkHistoryUnifyCriterion */
+/** @typedef {{ variants: string[], pinned: string | null }} WorkHistoryUnifyCriterion */
+
+/**
+ * @param {import('../lib/ruleTypes.js').Rule[]} customRules
+ * @returns {WorkHistoryUnifyCriterion[]}
+ */
+export function buildWorkHistoryUnifyCriteria(customRules) {
+  const entries = listConsistencyUnifyEntries(customRules ?? []);
+  if (!entries.length) return [];
+
+  const pinnedTailWord = getConsistencyUnifyPinnedTailWord(customRules ?? []);
+  if (!pinnedTailWord) {
+    return entries.map((entry) => ({
+      variants: [formatConsistencyListLabel(entry.tailWord)],
+      pinned: null,
+    }));
+  }
+
+  const pinned = formatConsistencyListLabel(pinnedTailWord);
+  const variants = entries
+    .filter((entry) => entry.tailWord !== pinnedTailWord)
+    .map((entry) => formatConsistencyListLabel(entry.tailWord));
+
+  return [{ variants, pinned }];
+}
 
 /**
  * @param {import('../lib/ruleTypes.js').Rule[]} customRules
@@ -18,12 +42,7 @@ export function buildWorkHistoryConsistencyCriteria(
     (entry) => formatConsistencyListLabel(entry.tailWord),
   );
 
-  const pinnedTailWord = getConsistencyUnifyPinnedTailWord(customRules ?? []);
-  /** @type {WorkHistoryUnifyCriterion[]} */
-  const unify = listConsistencyUnifyEntries(customRules ?? []).map((entry) => ({
-    label: formatConsistencyListLabel(entry.tailWord),
-    pinned: pinnedTailWord === entry.tailWord,
-  }));
+  const unify = buildWorkHistoryUnifyCriteria(customRules);
 
   const commonString = listPhraseSlotEntries(customRules ?? []).map((entry) =>
     formatConsistencyListLabel(entry.tailWord),

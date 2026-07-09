@@ -390,7 +390,7 @@
 
 .project-hub-settings__row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(8rem, 12rem);
+  grid-template-columns: minmax(6.25rem, 7.75rem) minmax(0, 1fr);
   gap: 0.75rem 1rem;
   align-items: center;
   padding: 0.75rem 1rem;
@@ -402,6 +402,11 @@
 }
 
 .project-hub-settings__row--stack {
+  grid-template-columns: 1fr;
+  align-items: start;
+}
+
+.project-hub-settings__row--memo {
   grid-template-columns: 1fr;
   align-items: start;
 }
@@ -444,6 +449,10 @@
 .project-hub-settings__textarea {
   resize: vertical;
   min-height: 4.5rem;
+}
+
+.project-hub-settings__row--memo .project-hub-settings__textarea {
+  min-height: 16rem;
 }
 
 .project-hub-settings__value {
@@ -641,6 +650,23 @@
   gap: 0.35rem;
   margin: 0;
   padding: 0;
+  list-style: none;
+}
+
+.work-history-panel__chips--unify {
+  align-items: center;
+}
+
+.work-history-panel__unify-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.work-history-panel__unify-entry {
   list-style: none;
 }
 
