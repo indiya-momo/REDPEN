@@ -424,7 +424,7 @@ export default function ProjectHubSettingsPanel({
                     />
                   </div>
 
-                  <div className="project-hub-settings__row">
+                  <div className="project-hub-settings__row project-hub-settings__row--memo">
                     <div className="project-hub-settings__row-text">
                       <label
                         className="project-hub-settings__row-label"
@@ -444,7 +444,7 @@ export default function ProjectHubSettingsPanel({
                         markMetaDirty();
                         setMemoInput(e.target.value);
                       }}
-                      rows={3}
+                      rows={12}
                       aria-busy={saving}
                     />
                   </div>
