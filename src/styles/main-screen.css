@@ -960,6 +960,7 @@
 
 .spelling-tab-layout__criteria-run-wrap {
   display: inline-flex;
+  overflow: visible;
 }
 
 .spelling-tab-layout__run-row .tooltip-guide {
@@ -1185,6 +1186,51 @@
   white-space: nowrap;
   background: var(--btn-primary-bg);
   color: var(--btn-primary-text);
+}
+
+.spelling-tab-layout__criteria-run-wrap {
+  overflow: visible;
+}
+
+/* 둘러보기 1번 — 기준 검수 클릭 안내 손 */
+.guide-auto-click-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  overflow: visible;
+}
+
+.guide-click-hand {
+  pointer-events: none;
+  transform-origin: 40% 15%;
+  animation: guide-click-hand-tap 1.6s ease-in-out infinite;
+}
+
+.guide-click-hand--fixed {
+  position: fixed;
+}
+
+.guide-click-hand__emoji {
+  display: block;
+  font-size: 2.35rem;
+  line-height: 1;
+  filter: drop-shadow(0 3px 4px rgb(0 0 0 / 0.35));
+}
+
+@keyframes guide-click-hand-tap {
+  0%,
+  100% {
+    opacity: 1;
+    transform: translate(10px, 12px) rotate(-14deg) scale(1);
+  }
+  45% {
+    opacity: 1;
+    transform: translate(5px, 2px) rotate(-10deg) scale(1.05);
+  }
+  55% {
+    transform: translate(4px, 12px) rotate(-6deg) scale(0.92);
+  }
 }
 
 /* 5번·패널 제목 — 고딕 강조 */

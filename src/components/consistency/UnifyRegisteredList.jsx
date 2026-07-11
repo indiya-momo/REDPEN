@@ -8,6 +8,7 @@ import DismissButton from './DismissButton.jsx';
  *   onPin: (tailWord: string) => void,
  *   onRemove: (tailWord: string) => void,
  *   hidePinUntilPinned?: boolean,
+ *   guidePinTailWord?: string | null,
  * }} props
  */
 export default function UnifyRegisteredList({
@@ -16,6 +17,7 @@ export default function UnifyRegisteredList({
   onPin,
   onRemove,
   hidePinUntilPinned = false,
+  guidePinTailWord = null,
 }) {
   if (!entries.length) return null;
 
@@ -24,12 +26,15 @@ export default function UnifyRegisteredList({
       {entries.map((row) => {
         const label = consistencyEntryLabel(row);
         const isPinned = pinnedTailWord === row.tailWord;
+        const isGuidePin =
+          guidePinTailWord != null && row.tailWord === guidePinTailWord;
         return (
           <li key={consistencyEntryKey(row)} className="registered-chip registered-chip--unify">
             {(!hidePinUntilPinned || isPinned) ? (
               <button
                 type="button"
                 className={`consistency-unify-pin-btn${isPinned ? ' consistency-unify-pin-btn--active' : ''}`}
+                data-work-guide={isGuidePin ? 'unify-pin-silla' : undefined}
                 aria-label={
                   isPinned
                     ? `${label} 통일형 고정 해제`

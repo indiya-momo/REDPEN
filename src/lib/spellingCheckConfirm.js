@@ -5,6 +5,10 @@ import {
 import { BUILT_IN_QUOTA_RULES } from './builtInRules.js';
 import { CAUTION_SEARCH_RULES } from './cautionRules.js';
 import { assertLoggedInForCheckOrAlert } from './checkAuthGate.js';
+import {
+  finishGuestBrowseResultThenUnlockNextGuide,
+  guestBrowseSkipsCheckConfirm,
+} from './guestBrowsePolicy.js';
 import { createElement } from 'react';
 import CheckResultSummaryContent from '../components/CheckResultSummaryContent.jsx';
 import {
@@ -85,6 +89,9 @@ export async function confirmSpellingCheckBeforeRun(
 ) {
   if (!assertLoggedInForCheckOrAlert(uid)) {
     return false;
+  }
+  if (guestBrowseSkipsCheckConfirm()) {
+    return true;
   }
 
   const builtinActive = countBuiltInActiveRules(ruleState);
@@ -219,12 +226,15 @@ export async function alertSpellingCheckAfterRun(
   const message = formatSpellingCheckCompleteMessage(summaryInput);
   const stats = buildSpellingResultSummaryStats(summaryInput);
 
-  await showAppAlert({
-    title: '검수를 진행했습니다',
-    message,
-    messageNode: createElement(CheckResultSummaryContent, {
-      stats,
-      totalFindings,
-    }),
+  await finishGuestBrowseResultThenUnlockNextGuide(async (extra = {}) => {
+    await showAppAlert({
+      title: '검수를 진행했습니다',
+      message,
+      messageNode: createElement(CheckResultSummaryContent, {
+        stats,
+        totalFindings,
+      }),
+      ...extra,
+    });
   });
 }

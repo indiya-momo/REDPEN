@@ -8,8 +8,9 @@ import { clearTooltipGuideDismissed } from './tooltipGuideStorage.js';
  * - **2번**: 검수 결과 안내 (`FIRST_RESULT`)
  * - **3번**: 파일 - 원고 페이지 맞추기 (`PDF_OPENED`)
  * - **4번**: 일관성 탭 안내 (`CONSISTENCY_INTRO`) — 우측 상단 인사 영역
+ * - **4.5 / 핀**: 통일형 📌 지정 (`CONSISTENCY_UNIFY_PIN`) — 신라시대 핀
  * - **5번**: 본용언+보조용언 표기 (`AUXILIARY_VERB_INTRO`) — 4번 가로·박스 상단 높이
- * - **6번**: 기준 저장 안내 (`RULE_SET_SAVE`) — 우측 인사말 영역
+ * - **6번**: 검수 결과 다운로드·프로젝트 저장 안내 (`RULE_SET_SAVE`)
  * - **7번**: 작업 종료·로그아웃 안내 (`WORK_EXIT`) — 로그아웃 버튼 아래·오른쪽 정렬
  *
  * 업로드 전 「처음 할 일은 이거다냥」(`PRE_UPLOAD`)은 1~7 체인에 포함하지 않음.
@@ -27,6 +28,8 @@ export const WORK_GUIDE_KEYS = {
   /** 2번 — 순서 교체(2026-06)로 v2 */
   FIRST_RESULT: 'work-first-result-v2',
   CONSISTENCY_INTRO: 'work-consistency-intro-v1',
+  /** 통일형 📌 지정 (4번 다음) */
+  CONSISTENCY_UNIFY_PIN: 'work-consistency-unify-pin-v1',
   AUXILIARY_VERB_INTRO: 'work-auxiliary-verb-intro-v1',
   RULE_SET_SAVE: 'work-rule-set-save-v1',
   WORK_EXIT: 'work-exit-v1',
@@ -68,7 +71,7 @@ function isLocalDevBrowser() {
 }
 
 /**
- * 로컬 dev — 마지막으로 본 1~7번(0=업로드 전) 고정. `?workGuide=7` 이 우선.
+ * 로컬 dev — 마지막으로 본 가이드 단계(0=업로드 전) 고정. `?workGuide=7` 이 우선.
  * @returns {number | null}
  */
 export function getDevWorkGuideForceStep() {
@@ -76,13 +79,13 @@ export function getDevWorkGuideForceStep() {
   const q = new URLSearchParams(window.location.search).get('workGuide');
   if (q != null && q !== '') {
     const n = Number(q);
-    if (Number.isInteger(n) && n >= 0 && n <= 7) return n;
+    if (Number.isInteger(n) && n >= 0 && n <= 8) return n;
   }
   try {
     const stored = sessionStorage.getItem(DEV_WORK_GUIDE_FORCE_KEY);
     if (stored != null && stored !== '') {
       const n = Number(stored);
-      if (Number.isInteger(n) && n >= 0 && n <= 7) return n;
+      if (Number.isInteger(n) && n >= 0 && n <= 8) return n;
     }
   } catch {
     /* ignore */

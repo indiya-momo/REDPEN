@@ -16,6 +16,9 @@ export function activeWorkGuideKeyFromChain(chain) {
   if (chain.showFirstResultGuide) return WORK_GUIDE_KEYS.FIRST_RESULT;
   if (chain.showPdfOpenedGuide) return WORK_GUIDE_KEYS.PDF_OPENED;
   if (chain.showConsistencyGuide) return WORK_GUIDE_KEYS.CONSISTENCY_INTRO;
+  if (chain.showConsistencyUnifyPinGuide) {
+    return WORK_GUIDE_KEYS.CONSISTENCY_UNIFY_PIN;
+  }
   if (chain.showAuxiliaryVerbGuide) return WORK_GUIDE_KEYS.AUXILIARY_VERB_INTRO;
   if (chain.showRuleSetSaveGuide) return WORK_GUIDE_KEYS.RULE_SET_SAVE;
   if (chain.showWorkExitGuide) return WORK_GUIDE_KEYS.WORK_EXIT;
@@ -32,9 +35,10 @@ export function devWorkGuideStepFromChain(chain) {
   if (chain.showFirstResultGuide) return 2;
   if (chain.showPdfOpenedGuide) return 3;
   if (chain.showConsistencyGuide) return 4;
-  if (chain.showAuxiliaryVerbGuide) return 5;
-  if (chain.showRuleSetSaveGuide) return 6;
-  if (chain.showWorkExitGuide) return 7;
+  if (chain.showConsistencyUnifyPinGuide) return 5;
+  if (chain.showAuxiliaryVerbGuide) return 6;
+  if (chain.showRuleSetSaveGuide) return 7;
+  if (chain.showWorkExitGuide) return 8;
   return null;
 }
 
@@ -76,12 +80,15 @@ function getDevForcedWorkGuideChain(step, empty, ctx, pinAll, keyFor, dismissedM
       if (d(WORK_GUIDE_KEYS.CONSISTENCY_INTRO)) return null;
       return { ...base, showConsistencyGuide: true };
     case 5:
+      if (d(WORK_GUIDE_KEYS.CONSISTENCY_UNIFY_PIN)) return null;
+      return { ...base, showConsistencyUnifyPinGuide: true };
+    case 6:
       if (d(WORK_GUIDE_KEYS.AUXILIARY_VERB_INTRO)) return null;
       return { ...base, showAuxiliaryVerbGuide: true };
-    case 6:
+    case 7:
       if (d(WORK_GUIDE_KEYS.RULE_SET_SAVE)) return null;
       return { ...base, showRuleSetSaveGuide: true };
-    case 7:
+    case 8:
       if (d(WORK_GUIDE_KEYS.WORK_EXIT)) return null;
       return { ...base, showWorkExitGuide: true };
     default:
@@ -106,6 +113,8 @@ function dismissed(storageKey, dismissedMap) {
  *   pageTextsReady: boolean,
  *   workTab: 'spelling' | 'consistency',
  *   spellingCheckDone: boolean,
+ *   consistencyCheckDone?: boolean,
+ *   consistencyExportGuideReady?: boolean,
  * }} ctx
  * @param {(key: string) => string} keyFor
  * @param {Record<string, boolean> | null} dismissedMap
@@ -117,6 +126,8 @@ function computeWorkGuideChainState(ctx, keyFor, dismissedMap, options) {
     pageTextsReady,
     workTab,
     spellingCheckDone,
+    consistencyCheckDone = false,
+    consistencyExportGuideReady = true,
   } = ctx;
   const spellingActive = workTab === 'spelling';
   const consistencyActive = workTab === 'consistency';
@@ -131,10 +142,12 @@ function computeWorkGuideChainState(ctx, keyFor, dismissedMap, options) {
     showLeftCriteriaGuide: false,
     showFirstResultGuide: false,
     showConsistencyGuide: false,
+    showConsistencyUnifyPinGuide: false,
     showAuxiliaryVerbGuide: false,
     showRuleSetSaveGuide: false,
     showWorkExitGuide: false,
     workGuideOpen: false,
+    requestConsistencyTab: false,
   };
 
   if (!hasPdf) {
@@ -162,21 +175,18 @@ function computeWorkGuideChainState(ctx, keyFor, dismissedMap, options) {
         workGuideOpen: true,
       };
     }
-    if (d(WORK_GUIDE_KEYS.FIRST_RESULT) && !d(WORK_GUIDE_KEYS.PDF_OPENED)) {
-      return {
-        ...empty,
-        showPdfOpenedGuide: true,
-        workGuideOpen: true,
-      };
-    }
   }
 
   const spellingStepsDone =
-    d(WORK_GUIDE_KEYS.PDF_OPENED) &&
-    d(WORK_GUIDE_KEYS.LEFT_CRITERIA) &&
-    d(WORK_GUIDE_KEYS.FIRST_RESULT);
+    d(WORK_GUIDE_KEYS.LEFT_CRITERIA) && d(WORK_GUIDE_KEYS.FIRST_RESULT);
 
   if (spellingCheckDone && spellingStepsDone && !d(WORK_GUIDE_KEYS.CONSISTENCY_INTRO)) {
+    if (!consistencyActive) {
+      return {
+        ...empty,
+        requestConsistencyTab: true,
+      };
+    }
     return {
       ...empty,
       showConsistencyGuide: true,
@@ -189,6 +199,21 @@ function computeWorkGuideChainState(ctx, keyFor, dismissedMap, options) {
     spellingCheckDone &&
     spellingStepsDone &&
     d(WORK_GUIDE_KEYS.CONSISTENCY_INTRO) &&
+    !d(WORK_GUIDE_KEYS.CONSISTENCY_UNIFY_PIN)
+  ) {
+    return {
+      ...empty,
+      showConsistencyUnifyPinGuide: true,
+      workGuideOpen: true,
+    };
+  }
+
+  if (
+    consistencyActive &&
+    spellingCheckDone &&
+    spellingStepsDone &&
+    d(WORK_GUIDE_KEYS.CONSISTENCY_INTRO) &&
+    d(WORK_GUIDE_KEYS.CONSISTENCY_UNIFY_PIN) &&
     !d(WORK_GUIDE_KEYS.AUXILIARY_VERB_INTRO)
   ) {
     return {
@@ -199,13 +224,15 @@ function computeWorkGuideChainState(ctx, keyFor, dismissedMap, options) {
   }
 
   if (
-    hasPdf &&
+    consistencyActive &&
     spellingCheckDone &&
     spellingStepsDone &&
     d(WORK_GUIDE_KEYS.CONSISTENCY_INTRO) &&
+    d(WORK_GUIDE_KEYS.CONSISTENCY_UNIFY_PIN) &&
     d(WORK_GUIDE_KEYS.AUXILIARY_VERB_INTRO) &&
     !d(WORK_GUIDE_KEYS.RULE_SET_SAVE)
   ) {
+    if (!consistencyCheckDone || !consistencyExportGuideReady) return empty;
     return {
       ...empty,
       showRuleSetSaveGuide: true,
@@ -218,6 +245,7 @@ function computeWorkGuideChainState(ctx, keyFor, dismissedMap, options) {
     spellingCheckDone &&
     spellingStepsDone &&
     d(WORK_GUIDE_KEYS.CONSISTENCY_INTRO) &&
+    d(WORK_GUIDE_KEYS.CONSISTENCY_UNIFY_PIN) &&
     d(WORK_GUIDE_KEYS.AUXILIARY_VERB_INTRO) &&
     d(WORK_GUIDE_KEYS.RULE_SET_SAVE) &&
     !d(WORK_GUIDE_KEYS.WORK_EXIT)
@@ -267,6 +295,8 @@ function applyOnboardingExposureGate(empty, chain, uid, keyFor, dismissedMap) {
  *   pageTextsReady: boolean,
  *   workTab: 'spelling' | 'consistency',
  *   spellingCheckDone: boolean,
+ *   consistencyCheckDone?: boolean,
+ *   consistencyExportGuideReady?: boolean,
  * }} ctx
  * @param {(key: string) => string} keyFor
  * @param {Record<string, boolean> | null} [dismissedMap]
@@ -287,10 +317,12 @@ export function getWorkGuideChainState(
     showLeftCriteriaGuide: false,
     showFirstResultGuide: false,
     showConsistencyGuide: false,
+    showConsistencyUnifyPinGuide: false,
     showAuxiliaryVerbGuide: false,
     showRuleSetSaveGuide: false,
     showWorkExitGuide: false,
     workGuideOpen: false,
+    requestConsistencyTab: false,
   };
 
   const devForceStep = getDevWorkGuideForceStep();
