@@ -1,5 +1,7 @@
 export const RULE_SETS_STORAGE_KEY = 'pdf-proofread-rule-sets';
 export const RULE_SETS_ACTIVE_KEY = 'pdf-proofread-active-set-id';
+/** 삭제한 프로젝트 id 기록(툼스톤) — 로그인 병합 때 되살아나지 않게 한다 */
+export const RULE_SETS_DELETED_KEY = 'pdf-proofread-deleted-set-ids';
 /** 같은 탭 내 메인·마이페이지 동기화용 (storage 이벤트는 다른 탭만 발생) */
 export const RULE_SETS_LOCAL_SYNC_EVENT = 'pdf-proofread-rule-sets-local-updated';
 
@@ -34,6 +36,15 @@ export function ruleSetsActiveStorageKey(uid) {
   const id = String(uid ?? '').trim();
   if (!id) return LEGACY_ACTIVE_KEY;
   return `${RULE_SETS_ACTIVE_KEY}:${id}`;
+}
+
+/**
+ * @param {string | undefined} uid
+ */
+export function ruleSetsDeletedStorageKey(uid) {
+  const id = String(uid ?? '').trim();
+  if (!id) return RULE_SETS_DELETED_KEY;
+  return `${RULE_SETS_DELETED_KEY}:${id}`;
 }
 
 /**
@@ -163,6 +174,42 @@ export function loadActiveSetId(uid) {
  */
 export function saveActiveSetId(id, uid) {
   localStorage.setItem(ruleSetsActiveStorageKey(uid), id);
+  notifyRuleSetsLocalUpdated(uid);
+}
+
+/**
+ * 삭제 기록(툼스톤) 읽기.
+ * @param {string | undefined} [uid]
+ * @returns {{ id: string, deletedAt: string }[]}
+ */
+export function loadDeletedRuleSetIds(uid) {
+  try {
+    const raw = localStorage.getItem(ruleSetsDeletedStorageKey(uid));
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter((row) => row && typeof row.id === 'string' && row.id.trim())
+      .map((row) => ({
+        id: row.id.trim(),
+        deletedAt:
+          typeof row.deletedAt === 'string' ? row.deletedAt : '',
+      }));
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * 삭제 기록(툼스톤) 저장.
+ * @param {{ id: string, deletedAt: string }[]} tombstones
+ * @param {string | undefined} [uid]
+ */
+export function saveDeletedRuleSetIds(tombstones, uid) {
+  localStorage.setItem(
+    ruleSetsDeletedStorageKey(uid),
+    JSON.stringify(tombstones ?? []),
+  );
   notifyRuleSetsLocalUpdated(uid);
 }
 
