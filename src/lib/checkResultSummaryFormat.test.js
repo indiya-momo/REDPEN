@@ -73,7 +73,7 @@ describe('checkResultSummaryFormat', () => {
         cautionSelected: true,
         builtinSelected: false,
       }),
-    ).toEqual([{ badge: '편집자 검토', count: 0 }]);
+    ).toEqual([{ badge: '편집자 검토', count: 0, tone: 'spelling-caution' }]);
   });
 
   it('buildConsistencyResultSummaryStats', () => {
@@ -89,8 +89,8 @@ describe('checkResultSummaryFormat', () => {
         auxiliarySelected: true,
       }),
     ).toEqual([
-      { badge: '여러 개 찾기', count: 1 },
-      { badge: '본+보', count: 2 },
+      { badge: '여러 개 찾기', count: 1, tone: 'consistency-literal' },
+      { badge: '본+보', count: 2, tone: 'auxiliary' },
     ]);
   });
 });

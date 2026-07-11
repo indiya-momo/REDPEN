@@ -606,8 +606,9 @@ export default function MainScreen({
         'spelling',
         ruleCheck.spellingResults,
         ruleCheck.consistencyResults,
+        pdf.pageTexts,
       ),
-    [ruleCheck.spellingResults, ruleCheck.consistencyResults],
+    [ruleCheck.spellingResults, ruleCheck.consistencyResults, pdf.pageTexts],
   );
 
   const consistencyTabEntries = useMemo(
@@ -1356,16 +1357,17 @@ export default function MainScreen({
       message={
         <>
           <span className="tooltip-guide__message-line">
-            선택한 기준 리스트를
-          </span>
-          <span className="tooltip-guide__message-line">
+            선택한 기준 리스트를{' '}
             <span
               className="tooltip-guide__save-rules-btn-look"
               aria-hidden
             >
               <Save size={14} strokeWidth={2} />
             </span>
-            해서 프로젝트로 관리해보라냥
+            해서
+          </span>
+          <span className="tooltip-guide__message-line">
+            프로젝트로 관리할 수 있다냥
           </span>
         </>
       }
@@ -1391,9 +1393,11 @@ export default function MainScreen({
           </span>
           에서는
           <br />
-          한 번에 여러 항목을 검색할 수 있는데
+          여러 항목을 한 번에 검색하고
           <br />
-          하나씩 찾기 힘들어서 만들었다냥!!
+          통일형 만들기에서는
+          <br />
+          여러 항목을 통일할 수 있다냥
         </>
       }
       onDismiss={() =>

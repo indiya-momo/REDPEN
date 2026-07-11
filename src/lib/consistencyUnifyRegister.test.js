@@ -65,7 +65,7 @@ describe('consistencyUnifyRegister', () => {
     ).toBe('붉은 표시');
   });
 
-  it('📌 1개만 — 다른 항목에 overlayReplace를 설정한다', () => {
+  it('📌 확정형은 원고 오버레이 없음, 변형만 「→ 통일형 📌」', () => {
     const rules = applyConsistencyUnifyPin(baseRules, '빨간표시');
     expect(getConsistencyUnifyPinnedTailWord(rules)).toBe('빨간표시');
     expect(
@@ -76,7 +76,7 @@ describe('consistencyUnifyRegister', () => {
         tailWord: '붉은표시',
         instances: [],
       }),
-    ).toBe('빨간표시');
+    ).toBe('→ 빨간표시 📌');
     expect(
       getConsistencyUnifyOverlayForGroup(rules, {
         find: '빨간표시',
@@ -86,28 +86,6 @@ describe('consistencyUnifyRegister', () => {
         instances: [],
       }),
     ).toBe(null);
-  });
-
-  it('📌 통일형은 검사·결과에 포함, PDF → 오버레이만 없음', () => {
-    const rules = applyConsistencyUnifyPin(baseRules, '빨간표시');
-    expect(
-      getConsistencyUnifyOverlayForGroup(rules, {
-        find: '빨간표시',
-        replace: '$0',
-        label: '빨간표시',
-        tailWord: '빨간표시',
-        instances: [],
-      }),
-    ).toBe(null);
-    expect(
-      getConsistencyUnifyOverlayForGroup(rules, {
-        find: '붉은표시',
-        replace: '$0',
-        label: '붉은표시',
-        tailWord: '붉은표시',
-        instances: [],
-      }),
-    ).toBe('빨간표시');
   });
 
   it('같은 📌 재클릭 시 해제한다', () => {

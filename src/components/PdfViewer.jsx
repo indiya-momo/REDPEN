@@ -182,6 +182,7 @@ export default function PdfViewer({
                 tip: h.tip ?? '',
                 matchedText: h.matchedText ?? '',
                 overlayReplace: h.overlayReplace ?? '',
+                pillarClass: h.pillarClass ?? '',
               });
             }
           }
@@ -324,6 +325,7 @@ export default function PdfViewer({
                   key={`${r.highlightId}-${i}`}
                   className={[
                     'pdf-highlight',
+                    r.pillarClass || '',
                     r.primary ? 'pdf-highlight--primary' : '',
                     openTip?.id === r.highlightId ? 'pdf-highlight--tip-open' : '',
                     (r.tip || '').trim() ? 'pdf-highlight--has-tip' : '',

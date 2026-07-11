@@ -4,7 +4,7 @@ import { encodeSpacesVisible } from './spaceVisibleText.js';
 /**
  * 문자열 찾기 — 등록 문자열 그대로 (경제˅전망, 경제전망, 김말이 …)
  * @param {string} tailWord
- * @param {{ excludePrefixes?: string[] }} [options]
+ * @param {{ excludePrefixes?: string[], requireLeadingBoundary?: boolean }} [options]
  */
 export function buildCompoundFindRules(tailWord, options = {}) {
   const tail = tailWord.trim();
@@ -12,7 +12,7 @@ export function buildCompoundFindRules(tailWord, options = {}) {
 
   const tailFrag = tailRegexFragment(tail);
   const esc = escapeRegex(tail.replace(/\s+/g, ''));
-  const { excludePrefixes = [] } = options;
+  const { excludePrefixes = [], requireLeadingBoundary = false } = options;
 
   const base = {
     enabled: true,
@@ -30,7 +30,7 @@ export function buildCompoundFindRules(tailWord, options = {}) {
       {
         ...base,
         find: tailFrag,
-        requireLeadingBoundary: false,
+        requireLeadingBoundary,
       },
     ];
   }
@@ -39,7 +39,7 @@ export function buildCompoundFindRules(tailWord, options = {}) {
     {
       ...base,
       find: esc,
-      requireLeadingBoundary: false,
+      requireLeadingBoundary,
     },
   ];
 }

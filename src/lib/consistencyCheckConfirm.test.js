@@ -1,7 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   alertConsistencyCheckAfterRun,
+  assertConsistencyUnifyPinnedForCheck,
   confirmConsistencyCheckBeforeRun,
+  CONSISTENCY_UNIFY_PIN_REQUIRED_MESSAGE,
   countConsistencyCheckActiveRules,
   countConsistencyGroupsWithFindings,
   formatConsistencyCheckCompleteMessage,
@@ -133,6 +135,60 @@ describe('confirmConsistencyCheckBeforeRun', () => {
       });
     const { title, message } = parseBracketTitleMessage(msg);
     expect(confirmMock).toHaveBeenCalledWith(`${title}\n\n${message}`);
+  });
+
+  it('통일형 항목이 켜져 있는데 📌 미지정이면 검수를 막는다', async () => {
+    const alertMock = vi.fn();
+    const confirmMock = vi.fn(() => true);
+    vi.stubGlobal('alert', alertMock);
+    vi.stubGlobal('confirm', confirmMock);
+
+    const ok = await confirmConsistencyCheckBeforeRun('uid-1', 'a@b.c', [
+      {
+        enabled: true,
+        patternKind: 'compound-find',
+        tailWord: '신라시대',
+        consistencyUnifyEntry: true,
+      },
+      {
+        enabled: true,
+        patternKind: 'compound-find',
+        tailWord: '통일신라시대',
+        consistencyUnifyEntry: true,
+      },
+    ]);
+
+    expect(ok).toBe(false);
+    expect(alertMock).toHaveBeenCalledWith(
+      `안내\n\n${CONSISTENCY_UNIFY_PIN_REQUIRED_MESSAGE}`,
+    );
+    expect(confirmMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('assertConsistencyUnifyPinnedForCheck', () => {
+  it('📌 지정이 있으면 통과한다', async () => {
+    const alertMock = vi.fn();
+    vi.stubGlobal('alert', alertMock);
+    expect(
+      await assertConsistencyUnifyPinnedForCheck([
+        {
+          enabled: true,
+          patternKind: 'compound-find',
+          tailWord: '신라시대',
+          consistencyUnifyEntry: true,
+          consistencyUnifyPinned: true,
+        },
+        {
+          enabled: true,
+          patternKind: 'compound-find',
+          tailWord: '통일신라시대',
+          consistencyUnifyEntry: true,
+          overlayReplace: '신라시대',
+        },
+      ]),
+    ).toBe(true);
+    expect(alertMock).not.toHaveBeenCalled();
   });
 });
 

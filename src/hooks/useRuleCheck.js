@@ -50,6 +50,7 @@ import { LITERAL_FIND_FEATURE_LABEL } from '../lib/consistencyRuleLimit.js';
 import { assertBetaDailyCheckOrAlert } from '../lib/betaDailyQuota.js';
 import {
   alertConsistencyCheckAfterRun,
+  assertConsistencyUnifyPinnedForCheck,
   confirmConsistencyCheckBeforeRun,
   countConsistencyCheckActiveRules,
 } from '../lib/consistencyCheckConfirm.js';
@@ -316,10 +317,10 @@ export function useRuleCheck({
           },
         );
         allErrors.push(...errors);
-        scopeResults = sortSpellingResultsForDisplay(grouped);
+        scopeResults = sortSpellingResultsForDisplay(grouped, pageTexts);
         setSpellingResults(scopeResults);
         setSpellingCheckDone(true);
-        const inst = grouped[0]?.instances[0] ?? null;
+        const inst = scopeResults[0]?.instances[0] ?? null;
         if (inst) {
           first = inst;
           setSpellingSelected(inst);
@@ -454,6 +455,13 @@ export function useRuleCheck({
             ? `${AUXILIARY_VERB_FEATURE_LABEL}에서 검사할 항목을 선택하세요.`
             : `${LITERAL_FIND_FEATURE_LABEL}에서 검사할 항목을 등록·선택하세요.`,
         );
+        return;
+      }
+
+      if (
+        subset !== 'auxiliary' &&
+        !(await assertConsistencyUnifyPinnedForCheck(resolvedCustomRules))
+      ) {
         return;
       }
 

@@ -94,4 +94,69 @@ describe('getHighlightOverlayReplace', () => {
       ),
     ).toBe('붉은 표시');
   });
+
+  it('통일형 📌 — 확정형은 원고 오버레이 없음, 변형만 표시', () => {
+    const customRules = [
+      {
+        patternKind: 'compound-find',
+        tailWord: '신라시대',
+        consistencyUnifyEntry: true,
+        consistencyUnifyPinned: true,
+      },
+      {
+        patternKind: 'compound-find',
+        tailWord: '통일신라시대',
+        consistencyUnifyEntry: true,
+        overlayReplace: '신라시대',
+      },
+      {
+        patternKind: 'compound-find',
+        tailWord: '신라 시대',
+        consistencyUnifyEntry: true,
+        overlayReplace: '신라시대',
+      },
+    ];
+    expect(
+      getHighlightOverlayReplace(
+        {
+          find: '신라시대',
+          replace: '$0',
+          matchedText: '신라시대',
+          pageNum: 1,
+          index: 0,
+        },
+        {
+          customRules,
+          group: {
+            find: '신라시대',
+            replace: '$0',
+            label: '신라시대',
+            tailWord: '신라시대',
+            instances: [],
+          },
+        },
+      ),
+    ).toBeNull();
+    expect(
+      getHighlightOverlayReplace(
+        {
+          find: '통일신라시대',
+          replace: '$0',
+          matchedText: '통일신라시대',
+          pageNum: 1,
+          index: 0,
+        },
+        {
+          customRules,
+          group: {
+            find: '통일신라시대',
+            replace: '$0',
+            label: '통일신라시대',
+            tailWord: '통일신라시대',
+            instances: [],
+          },
+        },
+      ),
+    ).toBe('→ 신라시대 📌');
+  });
 });

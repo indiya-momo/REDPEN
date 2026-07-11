@@ -2,6 +2,8 @@
  * 검수 완료 팝업·결과 헤더와 동일한 뱃지·건수·원형 총건 UI
  */
 
+import { resultPillarToneClass } from '../lib/resultPillarTone.js';
+
 /**
  * @param {{ count: number, className?: string }} props
  */
@@ -17,12 +19,17 @@ export function ResultFindingsCountCircle({ count, className = '' }) {
 }
 
 /**
- * @param {{ badge: string, count: number }} props
+ * @param {{
+ *   badge: string,
+ *   count: number,
+ *   tone?: import('../lib/resultPillarTone.js').ResultBadgeTone,
+ * }} props
  */
-function ResultHeaderStat({ badge, count }) {
+function ResultHeaderStat({ badge, count, tone }) {
+  const toneClass = tone ? resultPillarToneClass(tone) : '';
   return (
     <span className="results-header__stat">
-      <span className="results-header-badge">{badge}</span>
+      <span className={`results-header-badge ${toneClass}`.trim()}>{badge}</span>
       <span className="results-header__stat-count">{count}건</span>
     </span>
   );
@@ -30,7 +37,11 @@ function ResultHeaderStat({ badge, count }) {
 
 /**
  * @param {{
- *   stats: Array<{ badge: string, count: number }>,
+ *   stats: Array<{
+ *     badge: string,
+ *     count: number,
+ *     tone?: import('../lib/resultPillarTone.js').ResultBadgeTone,
+ *   }>,
  *   totalFindings: number,
  * }} props
  */
@@ -52,8 +63,8 @@ export default function CheckResultSummaryContent({ stats, totalFindings }) {
   return (
     <div className="results-header app-dialog__results-summary">
       <div className="results-header__stats">
-        {stats.map(({ badge, count }) => (
-          <ResultHeaderStat key={badge} badge={badge} count={count} />
+        {stats.map(({ badge, count, tone }) => (
+          <ResultHeaderStat key={badge} badge={badge} count={count} tone={tone} />
         ))}
       </div>
       <span className="results-header__total-findings">

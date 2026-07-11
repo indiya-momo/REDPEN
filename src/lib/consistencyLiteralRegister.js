@@ -65,7 +65,11 @@ function promoteConsistencyUnifyEntry(rules, tailWord) {
       COMPOUND_LITERAL_KINDS.has(rule.patternKind ?? '') &&
       rule.tailWord?.trim() === tail
     ) {
-      return { ...rule, consistencyUnifyEntry: true };
+      return {
+        ...rule,
+        consistencyUnifyEntry: true,
+        ...(tail && !/\s/.test(tail) ? { requireLeadingBoundary: true } : {}),
+      };
     }
     return rule;
   });
@@ -135,7 +139,11 @@ function registerConsistencyLiteralBatchWithOptions(
 
     const batch = buildRulesForEntry(nextRules, tail).map((rule) => {
       if (options.markUnifyEntry) {
-        return { ...rule, consistencyUnifyEntry: true };
+        return {
+          ...rule,
+          consistencyUnifyEntry: true,
+          ...(tail && !/\s/.test(tail) ? { requireLeadingBoundary: true } : {}),
+        };
       }
       return { ...rule, consistencyLiteralEntry: true };
     });

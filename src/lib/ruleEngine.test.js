@@ -219,4 +219,26 @@ describe('ruleEngine', () => {
     expect(hits).toContain('쳐지');
     expect(hits.length).toBe(1);
   });
+
+  it('통일형 붙임 표기는 앞글자 붙은 부분일치를 제외', () => {
+    const rules = buildCompoundFindRules('신라시대').map((r) => ({
+      ...r,
+      enabled: true,
+      consistencyUnifyEntry: true,
+    }));
+    const { results, errors } = runRuleCheck(
+      [
+        {
+          pageNum: 1,
+          text: '신라시대, 통일신라시대, 신라 시대 이야기',
+          items: [],
+          itemRefs: [],
+        },
+      ],
+      rules,
+    );
+    expect(errors).toEqual([]);
+    const hits = results.flatMap((g) => g.instances.map((i) => i.matchedText));
+    expect(hits).toEqual(['신라시대']);
+  });
 });

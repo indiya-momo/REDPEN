@@ -66,11 +66,24 @@ export function getConsistencyResultCardParts(group, customRules = []) {
   const tail = group.tailWord?.trim();
   const isUnify = isConsistencyUnifyTailWord(customRules, tail);
   const pinnedTail = getConsistencyUnifyPinnedTailWord(customRules);
-  const showPin = isUnify && tail && pinnedTail === tail;
+
+  if (isUnify && pinnedTail) {
+    const pinnedLabel = formatConsistencyListLabel(pinnedTail);
+    if (tail === pinnedTail) {
+      return {
+        badge: '통일형 찾기',
+        label: `${label} 📌`,
+      };
+    }
+    return {
+      badge: '통일형 찾기',
+      label: `${label} → ${pinnedLabel} 📌`,
+    };
+  }
 
   return {
     badge: isUnify ? '통일형 찾기' : LITERAL_FIND_FEATURE_LABEL,
-    label: showPin ? `${label} 📌` : label,
+    label,
   };
 }
 

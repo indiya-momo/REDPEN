@@ -84,7 +84,7 @@ describe('getConsistencyHighlightTip', () => {
         },
         unifyRules,
       ),
-    ).toBe('통일형 찾기 : 미국˅정부');
+    ).toBe('통일형 찾기 : 미국˅정부 → 미국정부 📌');
     expect(
       getConsistencyHighlightTip(
         {
@@ -163,7 +163,10 @@ describe('getConsistencyResultCardParts', () => {
         },
         unifyRules,
       ),
-    ).toEqual({ badge: '통일형 찾기', label: '세계˅경제' });
+    ).toEqual({
+      badge: '통일형 찾기',
+      label: '세계˅경제 → 세계경제 📌',
+    });
   });
 
   it('phrase-slot — 공통 문자열 찾기 배지 + 등록 문자열', () => {

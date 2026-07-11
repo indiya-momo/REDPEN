@@ -14,9 +14,6 @@
   margin-top: 1.35rem;
   padding-top: 1.25rem;
   border-top: 1px solid var(--color-border);
-  --pillar-spelling: #a86b45;
-  --pillar-consistency: #5c6b7a;
-  --pillar-auxiliary: #6b7c5e;
   --project-hub-criteria-title-font-size: 0.84rem;
   /* 표기 통일 입력창 — 고정 너비(칩 유무 무관) */
   --project-hub-consistency-input-width: 25rem;

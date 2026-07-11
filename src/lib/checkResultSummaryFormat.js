@@ -98,7 +98,7 @@ export function formatConsistencyResultsSummaryLine({
  *   cautionSelected?: boolean,
  *   builtinSelected?: boolean,
  * }} input
- * @returns {Array<{ badge: string, count: number }>}
+ * @returns {Array<{ badge: string, count: number, tone: import('./resultPillarTone.js').ResultBadgeTone }>}
  */
 export function buildSpellingResultSummaryStats({
   cautionWithFindings,
@@ -108,10 +108,18 @@ export function buildSpellingResultSummaryStats({
 }) {
   const stats = [];
   if (cautionSelected) {
-    stats.push({ badge: '편집자 검토', count: cautionWithFindings });
+    stats.push({
+      badge: '편집자 검토',
+      count: cautionWithFindings,
+      tone: 'spelling-caution',
+    });
   }
   if (builtinSelected) {
-    stats.push({ badge: '맞춤법', count: builtinWithFindings });
+    stats.push({
+      badge: '맞춤법',
+      count: builtinWithFindings,
+      tone: 'spelling-builtin',
+    });
   }
   return stats;
 }
@@ -127,7 +135,7 @@ export function buildSpellingResultSummaryStats({
  *   commonStringSelected?: boolean,
  *   auxiliarySelected?: boolean,
  * }} input
- * @returns {Array<{ badge: string, count: number }>}
+ * @returns {Array<{ badge: string, count: number, tone: import('./resultPillarTone.js').ResultBadgeTone }>}
  */
 export function buildConsistencyResultSummaryStats({
   literalWithFindings,
@@ -144,21 +152,28 @@ export function buildConsistencyResultSummaryStats({
     stats.push({
       badge: LITERAL_FIND_FEATURE_LABEL,
       count: literalWithFindings,
+      tone: 'consistency-literal',
     });
   }
   if (unifySelected) {
-    stats.push({ badge: '통일형 찾기', count: unifyWithFindings });
+    stats.push({
+      badge: '통일형 찾기',
+      count: unifyWithFindings,
+      tone: 'consistency-unify',
+    });
   }
   if (commonStringSelected) {
     stats.push({
       badge: '공통 문자열 찾기',
       count: commonStringWithFindings,
+      tone: 'consistency-common',
     });
   }
   if (auxiliarySelected) {
     stats.push({
       badge: AUXILIARY_VERB_BADGE_LABEL,
       count: auxiliaryWithFindings,
+      tone: 'auxiliary',
     });
   }
   return stats;

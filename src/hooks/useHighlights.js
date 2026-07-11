@@ -8,6 +8,13 @@ import {
   isInstanceVisible,
 } from '../lib/checkResultUtils.js';
 import { getHighlightOverlayReplace } from '../lib/highlightOverlayReplace.js';
+import { isConsistencyUnifyTailWord } from '../lib/consistencyUnifyRegister.js';
+import {
+  pdfHighlightHasOutline,
+  pdfHighlightPillarClass,
+  resultBadgeTone,
+  resultPillarTone,
+} from '../lib/resultPillarTone.js';
 import {
   buildPageByNum,
   compareInstancesReadingOrder,
@@ -102,12 +109,27 @@ export function useHighlights({
           customRules,
           group: source === 'consistency' ? group : null,
         });
+        const pillarTone = resultPillarTone(source, group);
+        const badgeTone = resultBadgeTone(source, {
+          category: group.category,
+          patternKind: group.patternKind,
+          isUnify:
+            source === 'consistency' &&
+            isConsistencyUnifyTailWord(customRules, group.tailWord),
+        });
         return {
           ...range,
           primary,
           id: `${inst.pageNum}-${inst.index}-${inst.find}`,
           tip,
           matchedText: inst.matchedText,
+          pillarTone,
+          pillarClass: [
+            pdfHighlightPillarClass(pillarTone),
+            pdfHighlightHasOutline(badgeTone) ? 'pdf-highlight--outline' : '',
+          ]
+            .filter(Boolean)
+            .join(' '),
           ...(overlayReplace ? { overlayReplace } : {}),
         };
       })
