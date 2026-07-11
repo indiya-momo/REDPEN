@@ -237,11 +237,12 @@
 .welcome-pc__layout--guest .welcome-pc__footer-line {
   justify-content: space-between;
   flex-wrap: nowrap;
-  width: var(--welcome-ba-footer-track-width);
-  max-width: var(--welcome-ba-footer-track-width);
-  margin-left: var(--welcome-ba-footer-inset-left);
-  margin-right: auto;
-  gap: 0;
+  width: 100%;
+  max-width: 100%;
+  margin-left: 0;
+  margin-right: 0;
+  gap: calc(0.75rem * var(--welcome-scale));
+  text-align: left;
 }
 
 .welcome-pc__layout--guest .welcome-pc__footer-sep {
@@ -254,8 +255,9 @@
 }
 
 .welcome-pc__layout--guest .welcome-pc__footer-part {
-  flex: 0 1 auto;
+  flex: 1 1 auto;
   min-width: 0;
+  text-align: left;
 }
 
 .welcome-pc__layout--guest .welcome-pc__footer-meta {
@@ -1879,6 +1881,14 @@
   max-width: none;
 }
 
+/* 구글은 넓게, 둘러보기만 내용 너비로 축소 */
+.welcome-pc__page .welcome-pc__hero-cta .welcome-pc__cta-bar-action--pair .btn-welcome-primary.welcome-pc__auth-browse--single {
+  flex: 0 1 auto;
+  width: max-content;
+  max-width: 42%;
+  padding-inline: calc(1rem * var(--welcome-scale) * var(--welcome-ba-img-scale));
+}
+
 .welcome-pc__page .welcome-pc__hero-cta .btn-welcome-primary.welcome-pc__auth-logout--single {
   color: #ececec;
   background: linear-gradient(180deg, #6e6e6e 0%, #4f4f4f 100%);
@@ -1889,22 +1899,22 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.16);
 }
 
-/* 구글 옆 — 파란색 「먼저 둘러보기」 */
+/* 구글 옆 — 파란색 「먼저 둘러보기」(명도↓) */
 .welcome-pc__page .welcome-pc__hero-cta .btn-welcome-primary.welcome-pc__auth-browse--single {
-  color: #f2f7ff;
+  color: #e8eef8;
   letter-spacing: 0.06em;
-  font-size: calc(1.28rem * var(--welcome-scale) * var(--welcome-ba-img-scale));
-  background: linear-gradient(180deg, #4d8fd6 0%, #2b5fad 100%);
-  border: 1px solid #6aa3e0;
+  font-size: calc(1.2rem * var(--welcome-scale) * var(--welcome-ba-img-scale));
+  background: linear-gradient(180deg, #3a6fad 0%, #1f4578 100%);
+  border: 1px solid #4a7ab8;
   box-shadow:
-    0 8px 26px rgba(43, 95, 173, 0.48),
-    0 0 20px rgba(77, 143, 214, 0.28),
-    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+    0 8px 22px rgba(31, 69, 120, 0.42),
+    0 0 14px rgba(58, 111, 173, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
 }
 
 .welcome-pc__page .welcome-pc__hero-cta .btn-welcome-primary.welcome-pc__auth-browse--single:hover:not(:disabled) {
-  background: linear-gradient(180deg, #5a9ae0 0%, #346bbd 100%);
-  color: #ffffff;
+  background: linear-gradient(180deg, #4479b8 0%, #27548a 100%);
+  color: #f4f8fc;
   transform: translateY(-2px);
 }
 
