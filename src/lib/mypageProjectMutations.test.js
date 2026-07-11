@@ -63,7 +63,7 @@ describe('planDuplicateProject', () => {
     if (!result.ok) return;
     expect(result.next).toHaveLength(2);
     expect(result.next[1].id).not.toBe('a');
-    expect(result.next[1].name).toBe('경제서 (복사)');
+    expect(result.next[1].name).toBe('경제서(1)');
     expect(result.next[1].tags).toEqual(['웹소설']);
     expect(result.next[1].savedAt).toBeTruthy();
   });
