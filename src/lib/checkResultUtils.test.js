@@ -156,7 +156,7 @@ describe('mergeConsistencyZeroFindGroups', () => {
     expect(merged[0].tailWord).toBeUndefined();
   });
 
-  it('mergeAuxiliaryZeroFindByItem — 켠 본조 항목은 0건이어도 목록에 표시', () => {
+  it('mergeAuxiliaryZeroFindByItem — 본+보 0건 줄은 목록에서 제외', () => {
     const oda = {
       enabled: true,
       find: 'F-oda',
@@ -195,15 +195,19 @@ describe('mergeConsistencyZeroFindGroups', () => {
           },
         ],
       },
+      {
+        find: 'F-oda',
+        replace: '$0',
+        label: '(아/어) + 오다',
+        patternKind: 'auxiliary-verb',
+        groupDisplayLabel: '(아/어) + 오다',
+        instances: [],
+      },
     ]);
     const merged = mergeAuxiliaryZeroFindByItem(withHits, [oda, naeda]);
     expect(merged.map((g) => g.groupDisplayLabel || g.label)).toEqual([
       '(아/어) + 내다',
-      '(아/어) + 오다',
     ]);
-    expect(merged.find((g) => g.label === '(아/어) + 오다')?.instances).toEqual(
-      [],
-    );
   });
 
   it('본용언+보조용언은 발견이 있을 때만 결과에 포함', () => {

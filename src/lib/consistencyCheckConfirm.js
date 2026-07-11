@@ -7,7 +7,10 @@ import {
   listConsistencyLiteralEntries,
 } from './compoundPairRegister.js';
 import { consistencyGroupScope } from './consistencyCheckScopes.js';
-import { isConsistencyUnifyTailWord } from './consistencyUnifyRegister.js';
+import {
+  getConsistencyUnifyPinnedTailWord,
+  isConsistencyUnifyTailWord,
+} from './consistencyUnifyRegister.js';
 import {
   listConsistencyUnifyEntries,
 } from './consistencyRuleLimit.js';
@@ -71,6 +74,26 @@ export function countConsistencyCheckActiveRules(
     auxiliaryActive,
     excludeActive,
   };
+}
+
+/** 통일형 항목이 켜져 있는데 📌 미지정일 때 검수 차단 문구 */
+export const CONSISTENCY_UNIFY_PIN_REQUIRED_MESSAGE =
+  '통일형 만들기에서 통일형📌을 지정한 뒤 검수해 주세요.';
+
+/**
+ * 켠 통일형 항목이 있으면 📌 지정 필수.
+ * @param {import('./ruleTypes.js').Rule[]} [customRules]
+ * @returns {Promise<boolean>} 검수 진행 가능하면 true
+ */
+export async function assertConsistencyUnifyPinnedForCheck(customRules = []) {
+  const { unifyActive } = countConsistencyCheckActiveRules(customRules);
+  if (unifyActive <= 0) return true;
+  if (getConsistencyUnifyPinnedTailWord(customRules)) return true;
+  await showAppAlert({
+    title: '안내',
+    message: CONSISTENCY_UNIFY_PIN_REQUIRED_MESSAGE,
+  });
+  return false;
 }
 
 function formatConfirmActiveCount(active) {
@@ -196,6 +219,10 @@ export async function confirmConsistencyCheckBeforeRun(
   globalExcludePhrases = [],
 ) {
   if (!assertLoggedInForCheckOrAlert(uid)) {
+    return false;
+  }
+
+  if (!(await assertConsistencyUnifyPinnedForCheck(customRules))) {
     return false;
   }
 

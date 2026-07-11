@@ -56,6 +56,25 @@ function isLetterOrDigit(ch) {
   return /\p{L}|\p{N}/u.test(ch);
 }
 
+/**
+ * 통일형 붙임 표기는 「통일신라시대」 안의 「신라시대」처럼 앞글자 붙은 부분일치를 제외한다.
+ * @param {import('./ruleTypes.js').Rule} rule
+ */
+function ruleRequiresLeadingBoundary(rule) {
+  if (rule.requireLeadingBoundary) return true;
+  if (!rule.consistencyUnifyEntry) return false;
+  const kind = rule.patternKind ?? '';
+  if (
+    kind !== 'compound-find' &&
+    kind !== 'compound-tail' &&
+    kind !== 'compound-spacing'
+  ) {
+    return false;
+  }
+  const tail = String(rule.tailWord ?? '').trim();
+  return Boolean(tail) && !/\s/.test(tail);
+}
+
 function yieldToMain() {
   return new Promise((resolve) => {
     setTimeout(resolve, 0);
@@ -177,7 +196,7 @@ function applyCompoundFindByLines(rule, page, byKey, globalExcludePhrases) {
         continue;
       }
       const globalIndex = lineStart + match.index;
-      if (rule.requireLeadingBoundary && match.index > 0) {
+      if (ruleRequiresLeadingBoundary(rule) && match.index > 0) {
         let atLineStart = false;
         if (searchRefs?.length) {
           const ctx = getLineContextAtTextIndex(searchPage, globalIndex);
@@ -229,7 +248,7 @@ function applyRuleToPages(rule, pages, byKey, globalExcludePhrases, errors) {
         continue;
       }
       const matchEnd = match.index + match[0].length;
-      if (rule.requireLeadingBoundary && match.index > 0) {
+      if (ruleRequiresLeadingBoundary(rule) && match.index > 0) {
         let atLineStart = false;
         if (page.itemRefs?.length) {
           const ctx = getLineContextAtTextIndex(page, match.index);

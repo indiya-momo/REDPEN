@@ -89,7 +89,12 @@ export function clearConsistencyUnifyOverlay(rules, correctionRaw) {
 export function getConsistencyUnifyOverlayForGroup(customRules, group) {
   const tail = String(group.tailWord ?? '').trim();
   if (!tail) return null;
-  if (getConsistencyUnifyPinnedTailWord(customRules) === tail) return null;
+  if (!isConsistencyUnifyTailWord(customRules, tail)) return null;
+
+  const pinned = getConsistencyUnifyPinnedTailWord(customRules);
+  // 확정형(📌) 본문은 원고에 오버레이를 띄우지 않는다
+  if (pinned && pinned === tail) return null;
+  if (pinned) return `→ ${pinned} 📌`;
 
   for (const rule of customRules) {
     if (!COMPOUND_KINDS.has(rule.patternKind ?? '')) continue;

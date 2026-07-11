@@ -134,6 +134,10 @@ body:has(.welcome-pc) {
   --result-pill: #e2d7c2;
   /* pill 톤 + 형광펜 — 색 자체는 선명, PDF 위는 낮은 불투명도로 얹음 */
   --result-pill-marker: color-mix(in srgb, var(--result-pill) 20%, #ffea4d 80%);
+  /* 프로젝트 카드 기둥 색 — 결과 뱃지·PDF 하이라이트와 공유 */
+  --pillar-spelling: #a86b45;
+  --pillar-consistency: #5c6b7a;
+  --pillar-auxiliary: #6b7c5e;
   /* PDF 교정 하이라이트 — 형광펜 틴트 + 빨간펜(선택 1건) */
   --editor-red: #b91c1c;
   --editor-red-ink: #c62828;
@@ -150,6 +154,16 @@ body:has(.welcome-pc) {
     0 1px 4px rgb(198 40 40 / 20%);
   --pdf-highlight-red-underline: 2px;
   --pdf-highlight-red-underline-gap: clamp(2px, 11%, 4px);
+  /* 기둥별 PDF 틴트 (연한 칠) */
+  --pdf-highlight-fill-spelling: color-mix(in srgb, var(--pillar-spelling) 28%, transparent);
+  --pdf-highlight-fill-spelling-hover: color-mix(in srgb, var(--pillar-spelling) 40%, transparent);
+  --pdf-highlight-border-spelling: color-mix(in srgb, var(--pillar-spelling) 55%, transparent);
+  --pdf-highlight-fill-consistency: color-mix(in srgb, var(--pillar-consistency) 26%, transparent);
+  --pdf-highlight-fill-consistency-hover: color-mix(in srgb, var(--pillar-consistency) 38%, transparent);
+  --pdf-highlight-border-consistency: color-mix(in srgb, var(--pillar-consistency) 50%, transparent);
+  --pdf-highlight-fill-auxiliary: color-mix(in srgb, var(--pillar-auxiliary) 28%, transparent);
+  --pdf-highlight-fill-auxiliary-hover: color-mix(in srgb, var(--pillar-auxiliary) 40%, transparent);
+  --pdf-highlight-border-auxiliary: color-mix(in srgb, var(--pillar-auxiliary) 52%, transparent);
   /* 오버레이 교정문 ↔ 원문 세로 패딩 (기준 0.05 × 1.8) */
   --pdf-overlay-pad-y-ratio: 0.09;
 
@@ -1752,6 +1766,72 @@ details[open] > summary .details-chevron::before {
   line-height: 1.15;
 }
 
+/* 기둥 톤 — 프로젝트 카드 칩과 동일 팔레트(뱃지 세부 톤) */
+.result-pillar--spelling,
+.result-pillar--spelling-builtin,
+.results-header-badge.result-pillar--spelling,
+.results-header-badge.result-pillar--spelling-builtin,
+.spelling-badge-inline.result-pillar--spelling,
+.spelling-badge-inline.result-pillar--spelling-builtin {
+  background: color-mix(in srgb, var(--pillar-spelling) 22%, #fffdfb);
+  border-color: color-mix(in srgb, var(--pillar-spelling) 48%, transparent);
+  color: color-mix(in srgb, var(--pillar-spelling) 88%, #3a2418 12%);
+}
+
+/* 편집자 검토 — 같은 브라운 휴, 더 밝고 따뜻한 앰버 */
+.result-pillar--spelling-caution,
+.results-header-badge.result-pillar--spelling-caution,
+.caution-badge-inline.result-pillar--spelling-caution,
+.caution-badge-inline.result-pillar--spelling {
+  background: color-mix(in srgb, var(--pillar-spelling) 10%, #fff8f0 90%);
+  border-color: color-mix(in srgb, var(--pillar-spelling) 32%, #c4a574 28%);
+  color: color-mix(in srgb, var(--pillar-spelling) 55%, #9a6b3a 45%);
+}
+
+/* 통일형 찾기 — 진한 블루그레이(정책·확정) */
+.result-pillar--consistency-unify,
+.results-header-badge.result-pillar--consistency-unify {
+  background: color-mix(in srgb, var(--pillar-consistency) 22%, #fffdfb);
+  border-color: color-mix(in srgb, var(--pillar-consistency) 48%, transparent);
+  color: color-mix(in srgb, var(--pillar-consistency) 92%, #1e2936 8%);
+}
+
+/* 여러 개 찾기 — 옅은 블루그레이(수집·탐색) */
+.result-pillar--consistency,
+.result-pillar--consistency-literal,
+.results-header-badge.result-pillar--consistency,
+.results-header-badge.result-pillar--consistency-literal,
+.consistency-badge-inline.result-pillar--consistency,
+.consistency-badge-inline.result-pillar--consistency-literal {
+  background: color-mix(in srgb, var(--pillar-consistency) 11%, #fffdfb);
+  border-color: color-mix(in srgb, var(--pillar-consistency) 28%, transparent);
+  color: color-mix(in srgb, var(--pillar-consistency) 78%, #5c6b7a 22%);
+}
+
+/* 공통 문자열 — 여러 개와 비슷, 테두리만 또렷하게 */
+.result-pillar--consistency-common,
+.results-header-badge.result-pillar--consistency-common,
+.consistency-badge-inline.result-pillar--consistency-common {
+  background: color-mix(in srgb, var(--pillar-consistency) 12%, #fffdfb);
+  border-color: color-mix(in srgb, var(--pillar-consistency) 52%, transparent);
+  color: color-mix(in srgb, var(--pillar-consistency) 82%, #334155 18%);
+}
+
+.result-pillar--auxiliary,
+.results-header-badge.result-pillar--auxiliary,
+.consistency-badge-inline.result-pillar--auxiliary {
+  background: color-mix(in srgb, var(--pillar-auxiliary) 18%, #fffdfb);
+  border-color: color-mix(in srgb, var(--pillar-auxiliary) 42%, transparent);
+  color: var(--pillar-auxiliary);
+}
+
+/* 카드 인라인 — 통일형도 consistency-badge-inline */
+.consistency-badge-inline.result-pillar--consistency-unify {
+  background: color-mix(in srgb, var(--pillar-consistency) 22%, #fffdfb);
+  border-color: color-mix(in srgb, var(--pillar-consistency) 48%, transparent);
+  color: color-mix(in srgb, var(--pillar-consistency) 92%, #1e2936 8%);
+}
+
 .consistency-result-chip,
 .caution-result-chip,
 .spelling-result-chip {
@@ -2901,6 +2981,53 @@ details[open] > summary .details-chevron::before {
   cursor: default;
 }
 
+.pdf-highlight--pillar-spelling {
+  background: var(--pdf-highlight-fill-spelling);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--pillar-spelling) 22%, transparent),
+    0 1px 3px color-mix(in srgb, var(--pillar-spelling) 14%, transparent);
+}
+
+.pdf-highlight--pillar-consistency {
+  background: var(--pdf-highlight-fill-consistency);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--pillar-consistency) 20%, transparent),
+    0 1px 3px color-mix(in srgb, var(--pillar-consistency) 12%, transparent);
+}
+
+.pdf-highlight--pillar-auxiliary {
+  background: var(--pdf-highlight-fill-auxiliary);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--pillar-auxiliary) 22%, transparent),
+    0 1px 3px color-mix(in srgb, var(--pillar-auxiliary) 14%, transparent);
+}
+
+/* 맞춤법·통일형만 — 농도 유지, 테두리로 구분 */
+.pdf-highlight--outline {
+  outline: 1.5px solid transparent;
+  outline-offset: -1px;
+}
+
+.pdf-highlight--pillar-spelling.pdf-highlight--outline {
+  outline-color: color-mix(in srgb, var(--pillar-spelling) 72%, transparent);
+}
+
+.pdf-highlight--pillar-consistency.pdf-highlight--outline {
+  outline-color: color-mix(in srgb, var(--pillar-consistency) 72%, transparent);
+}
+
+.pdf-highlight--pillar-spelling.pdf-highlight--outline.pdf-highlight--has-tip:hover,
+.pdf-highlight--pillar-spelling.pdf-highlight--outline.pdf-highlight--tip-open {
+  outline: 1.5px solid color-mix(in srgb, var(--pillar-spelling) 82%, transparent);
+  outline-offset: -1px;
+}
+
+.pdf-highlight--pillar-consistency.pdf-highlight--outline.pdf-highlight--has-tip:hover,
+.pdf-highlight--pillar-consistency.pdf-highlight--outline.pdf-highlight--tip-open {
+  outline: 1.5px solid color-mix(in srgb, var(--pillar-consistency) 82%, transparent);
+  outline-offset: -1px;
+}
+
 .pdf-highlight--has-tip {
   cursor: pointer;
 }
@@ -2910,6 +3037,24 @@ details[open] > summary .details-chevron::before {
   background: var(--pdf-highlight-fill-hover);
   outline: 1px solid var(--pdf-highlight-border);
   box-shadow: var(--pdf-highlight-shadow);
+}
+
+.pdf-highlight--pillar-spelling.pdf-highlight--has-tip:hover,
+.pdf-highlight--pillar-spelling.pdf-highlight--tip-open {
+  background: var(--pdf-highlight-fill-spelling-hover);
+  outline: 1px solid var(--pdf-highlight-border-spelling);
+}
+
+.pdf-highlight--pillar-consistency.pdf-highlight--has-tip:hover,
+.pdf-highlight--pillar-consistency.pdf-highlight--tip-open {
+  background: var(--pdf-highlight-fill-consistency-hover);
+  outline: 1px solid var(--pdf-highlight-border-consistency);
+}
+
+.pdf-highlight--pillar-auxiliary.pdf-highlight--has-tip:hover,
+.pdf-highlight--pillar-auxiliary.pdf-highlight--tip-open {
+  background: var(--pdf-highlight-fill-auxiliary-hover);
+  outline: 1px solid var(--pdf-highlight-border-auxiliary);
 }
 
 /* PDF 교정문 오버레이 — 하이라이트 톤 유지, 글씨는 .builtin-rule-tip-inline */
@@ -2945,6 +3090,18 @@ details[open] > summary .details-chevron::before {
   z-index: 1;
 }
 
+.pdf-highlight--pillar-spelling.pdf-highlight--primary {
+  background: var(--pdf-highlight-fill-spelling-hover);
+}
+
+.pdf-highlight--pillar-consistency.pdf-highlight--primary {
+  background: var(--pdf-highlight-fill-consistency-hover);
+}
+
+.pdf-highlight--pillar-auxiliary.pdf-highlight--primary {
+  background: var(--pdf-highlight-fill-auxiliary-hover);
+}
+
 .pdf-highlight--primary::after {
   content: '';
   position: absolute;
@@ -2963,6 +3120,21 @@ details[open] > summary .details-chevron::before {
   outline: 1px solid var(--editor-red-ink);
   border-bottom: none;
   z-index: 2;
+}
+
+.pdf-highlight--pillar-spelling.pdf-highlight--primary.pdf-highlight--has-tip:hover,
+.pdf-highlight--pillar-spelling.pdf-highlight--primary.pdf-highlight--tip-open {
+  background: var(--pdf-highlight-fill-spelling-hover);
+}
+
+.pdf-highlight--pillar-consistency.pdf-highlight--primary.pdf-highlight--has-tip:hover,
+.pdf-highlight--pillar-consistency.pdf-highlight--primary.pdf-highlight--tip-open {
+  background: var(--pdf-highlight-fill-consistency-hover);
+}
+
+.pdf-highlight--pillar-auxiliary.pdf-highlight--primary.pdf-highlight--has-tip:hover,
+.pdf-highlight--pillar-auxiliary.pdf-highlight--primary.pdf-highlight--tip-open {
+  background: var(--pdf-highlight-fill-auxiliary-hover);
 }
 
 .pdf-highlight-tip {

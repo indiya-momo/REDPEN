@@ -4,8 +4,13 @@ import { getBuiltInTip } from '../lib/builtInRules.js';
 import { formatSystemPageLabel } from '../lib/printedPageDisplay.js';
 import { cautionResultChipLabel } from '../lib/cautionRules.js';
 import { getConsistencyHighlightTip, getConsistencyResultCardParts } from '../lib/consistencyHighlightTip.js';
+import { isConsistencyUnifyTailWord } from '../lib/consistencyUnifyRegister.js';
 import { AUXILIARY_VERB_BADGE_LABEL } from '../lib/bonBojoRules.js';
 import { LITERAL_FIND_FEATURE_LABEL } from '../lib/consistencyRuleLimit.js';
+import {
+  resultBadgeTone,
+  resultPillarToneClass,
+} from '../lib/resultPillarTone.js';
 
 /**
  * @param {{ count: number, shownCount?: number, className?: string }} props
@@ -36,12 +41,17 @@ function ResultFindingsCountCircle({
 }
 
 /**
- * @param {{ badge: string, count: number }} props
+ * @param {{
+ *   badge: string,
+ *   count: number,
+ *   tone?: import('../lib/resultPillarTone.js').ResultBadgeTone,
+ * }} props
  */
-function ResultHeaderStat({ badge, count }) {
+function ResultHeaderStat({ badge, count, tone }) {
+  const toneClass = tone ? resultPillarToneClass(tone) : '';
   return (
     <span className="results-header__stat">
-      <span className="results-header-badge">{badge}</span>
+      <span className={`results-header-badge ${toneClass}`.trim()}>{badge}</span>
       <span className="results-header__stat-count">{count}건</span>
     </span>
   );
@@ -116,6 +126,7 @@ function ResultHeaderSummary({
             key="caution"
             badge="편집자 검토"
             count={cautionWithFindingsCount}
+            tone="spelling-caution"
           />
         ) : null,
         builtinCriteriaSelected ? (
@@ -123,6 +134,7 @@ function ResultHeaderSummary({
             key="builtin"
             badge="맞춤법"
             count={builtinWithFindingsCount}
+            tone="spelling-builtin"
           />
         ) : null,
     ].filter(Boolean);
@@ -137,6 +149,7 @@ function ResultHeaderSummary({
             key="literal"
             badge={LITERAL_FIND_FEATURE_LABEL}
             count={literalWithFindingsCount}
+            tone="consistency-literal"
           />
         ) : null,
         unifyCriteriaSelected ? (
@@ -144,6 +157,7 @@ function ResultHeaderSummary({
             key="unify"
             badge="통일형 찾기"
             count={unifyWithFindingsCount}
+            tone="consistency-unify"
           />
         ) : null,
         commonStringCriteriaSelected ? (
@@ -151,6 +165,7 @@ function ResultHeaderSummary({
             key="common"
             badge="공통 문자열 찾기"
             count={commonStringWithFindingsCount}
+            tone="consistency-common"
           />
         ) : null,
         auxiliaryCriteriaSelected ? (
@@ -158,6 +173,7 @@ function ResultHeaderSummary({
             key="auxiliary"
             badge={AUXILIARY_VERB_BADGE_LABEL}
             count={auxiliaryWithFindingsCount}
+            tone="auxiliary"
           />
         ) : null,
     ].filter(Boolean);
@@ -353,9 +369,20 @@ export default function CheckResultsPanel({
                           {isConsistency ? (() => {
                             const { badge, label } =
                               getConsistencyResultCardParts(group, customRules);
+                            const toneClass = resultPillarToneClass(
+                              resultBadgeTone('consistency', {
+                                patternKind: group.patternKind,
+                                isUnify: isConsistencyUnifyTailWord(
+                                  customRules,
+                                  group.tailWord,
+                                ),
+                              }),
+                            );
                             return (
                               <>
-                                <span className="consistency-badge-inline">
+                                <span
+                                  className={`consistency-badge-inline ${toneClass}`.trim()}
+                                >
                                   {badge}
                                 </span>
                                 {label ? (
@@ -370,7 +397,9 @@ export default function CheckResultsPanel({
                             );
                           })() : isCaution ? (
                             <>
-                              <span className="caution-badge-inline">
+                              <span
+                                className={`caution-badge-inline ${resultPillarToneClass('spelling-caution')}`.trim()}
+                              >
                                 편집자 검토
                               </span>{' '}
                               <span className="caution-result-chip">
@@ -379,7 +408,11 @@ export default function CheckResultsPanel({
                             </>
                           ) : first ? (
                             <>
-                              <span className="spelling-badge-inline">맞춤법</span>{' '}
+                              <span
+                                className={`spelling-badge-inline ${resultPillarToneClass('spelling-builtin')}`.trim()}
+                              >
+                                맞춤법
+                              </span>{' '}
                               <span className="spelling-result-chip">
                                 {`${first.matchedText} → ${first.suggestedText}`}
                               </span>

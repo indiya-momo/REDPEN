@@ -2,13 +2,17 @@ import { getBuiltInOverlayReplace } from './builtInRules.js';
 import { getConsistencyUnifyOverlayForGroup } from './consistencyUnifyRegister.js';
 
 /**
- * 통일형 PDF 오버레이 — 통일형 문자열만 그대로 표시(기호 없음)
+ * 통일형 PDF 오버레이 — 통일형(+📌) 표시. 「→ 통일형 📌」는 화살표 유지
  * @param {import('./ruleEngine.js').MatchInstance} _inst
  * @param {string} unifiedRaw
  */
 export function formatConsistencyUnifyHighlightOverlay(_inst, unifiedRaw) {
   let unified = String(unifiedRaw ?? '').trim();
   if (!unified) return null;
+  // 변형 원고: 「→ 신라시대 📌」
+  if (unified.startsWith('→') && unified.includes('📌')) {
+    return unified;
+  }
   if (unified.startsWith('→')) unified = unified.slice(1).trim();
   const arrow = unified.indexOf('→');
   if (arrow >= 0) unified = unified.slice(arrow + 1).trim();

@@ -2,16 +2,41 @@
  * MainScreen 전용 순수 UI 연산 — React state·훅에 의존하지 않음.
  */
 
+import {
+  buildPageByNum,
+  compareInstancesReadingOrder,
+} from '../lib/matchReadingOrder.js';
+
 /** @typedef {'spelling' | 'consistency'} WorkTab */
 /** @typedef {import('../lib/ruleEngine.js').GroupedResult} GroupedResult */
 /** @typedef {{ group: GroupedResult, source: 'spelling' | 'consistency' }} TabEntry */
 
 /**
- * 맞춤법 탭 결과 목록 — 편집자 검토 필요 기준 먼저, 맞춤법 기준 다음 (각각 쪽·라벨 순)
+ * @param {GroupedResult} a
+ * @param {GroupedResult} b
+ * @param {Map<number, import('../lib/pdfService.js').PageData>} pageByNum
+ */
+function compareGroupsByReadingOrder(a, b, pageByNum) {
+  const ia = a.instances[0];
+  const ib = b.instances[0];
+  if (!ia && !ib) {
+    return String(a.label ?? '').localeCompare(String(b.label ?? ''), 'ko');
+  }
+  if (!ia) return 1;
+  if (!ib) return -1;
+  const byRead = compareInstancesReadingOrder(ia, ib, pageByNum);
+  if (byRead !== 0) return byRead;
+  return String(a.label ?? '').localeCompare(String(b.label ?? ''), 'ko');
+}
+
+/**
+ * 맞춤법 탭 결과 목록 — 편집자 검토 필요 기준 먼저, 맞춤법 기준 다음
+ * (각 묶음 안은 본문 읽는 순: 쪽 → 위치 → 라벨)
  * @param {GroupedResult[]} groups
+ * @param {import('../lib/pdfService.js').PageData[] | Map<number, import('../lib/pdfService.js').PageData>} [pagesOrByNum]
  * @returns {GroupedResult[]}
  */
-export function sortSpellingResultsForDisplay(groups) {
+export function sortSpellingResultsForDisplay(groups, pagesOrByNum) {
   /** @type {GroupedResult[]} */
   const builtin = [];
   /** @type {GroupedResult[]} */
@@ -20,11 +45,11 @@ export function sortSpellingResultsForDisplay(groups) {
     if (g.category === 'caution') caution.push(g);
     else builtin.push(g);
   }
-  const cmp = (a, b) => {
-    const pa = a.instances[0]?.pageNum ?? 0;
-    const pb = b.instances[0]?.pageNum ?? 0;
-    return pa - pb || String(a.label ?? '').localeCompare(String(b.label ?? ''), 'ko');
-  };
+  const pageByNum =
+    pagesOrByNum instanceof Map
+      ? pagesOrByNum
+      : buildPageByNum(pagesOrByNum ?? []);
+  const cmp = (a, b) => compareGroupsByReadingOrder(a, b, pageByNum);
   builtin.sort(cmp);
   caution.sort(cmp);
   return [...caution, ...builtin];
@@ -35,18 +60,31 @@ export function sortSpellingResultsForDisplay(groups) {
  * @param {WorkTab} workTab
  * @param {GroupedResult[]} spellingResults
  * @param {GroupedResult[]} consistencyResults
+ * @param {import('../lib/pdfService.js').PageData[]} [pageTexts]
  * @returns {TabEntry[]}
  */
-export function buildTabEntries(workTab, spellingResults, consistencyResults) {
+export function buildTabEntries(
+  workTab,
+  spellingResults,
+  consistencyResults,
+  pageTexts,
+) {
   /** @type {TabEntry[]} */
   const entries = [];
   const results =
     workTab === 'spelling'
-      ? sortSpellingResultsForDisplay(spellingResults)
+      ? sortSpellingResultsForDisplay(spellingResults, pageTexts)
       : consistencyResults;
   const source = workTab === 'spelling' ? 'spelling' : 'consistency';
   for (const group of results) {
     if (group.patternKind === 'toc-body') continue;
+    // 본+보: 발견 있는 항목만 (문자열 찾기 0건 줄과 구분)
+    if (
+      group.patternKind === 'auxiliary-verb' &&
+      group.instances.length === 0
+    ) {
+      continue;
+    }
     entries.push({ group, source });
   }
   return entries;
