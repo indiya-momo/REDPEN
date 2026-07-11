@@ -9,10 +9,12 @@ import {
 import { normalizeRuleSet } from '../lib/ruleSetNormalize.js';
 import {
   loadActiveSetId,
+  loadDeletedRuleSetIds,
   loadRuleSets,
   ruleSetsStorageKey,
   RULE_SETS_LOCAL_SYNC_EVENT,
   saveActiveSetId,
+  saveDeletedRuleSetIds,
   saveRuleSets,
 } from '../lib/ruleSetsStorage.js';
 import {
@@ -24,7 +26,9 @@ import {
 import {
   mergeRuleSetsOnLogin,
   applyCriteriaPresetQuota,
+  applyTombstones,
   mergeRuleSetsOnPersist,
+  mergeTombstones,
   mergeLocalRuleSetSources,
 } from '../lib/ruleSetsMerge.js';
 import { mergeProjectContext } from '../lib/projectMeta.js';
@@ -98,12 +102,21 @@ export function useMyPageProjects(uid = '', email = '') {
   activeSetIdRef.current = activeSetId;
 
   const persistProjectSets = useCallback(
-    async (nextSets, nextActiveId = activeSetIdRef.current) => {
+    async (
+      nextSets,
+      nextActiveId = activeSetIdRef.current,
+      intent = {},
+      tombstones = null,
+    ) => {
       const trimmedUid = uid.trim();
       const disk = loadRuleSets(trimmedUid);
-      const merged = mergeRuleSetsOnPersist(disk, nextSets);
+      const merged = mergeRuleSetsOnPersist(disk, nextSets, intent);
       loadedSetsRef.current = merged;
       saveRuleSets(merged, trimmedUid);
+
+      if (Array.isArray(tombstones)) {
+        saveDeletedRuleSetIds(tombstones, trimmedUid);
+      }
 
       if (nextActiveId) {
         saveActiveSetId(nextActiveId, trimmedUid);
@@ -115,7 +128,12 @@ export function useMyPageProjects(uid = '', email = '') {
 
       if (trimmedUid && isRuleSetsCloudEnabled()) {
         try {
-          await saveRuleSetsCloud(trimmedUid, merged, nextActiveId);
+          await saveRuleSetsCloud(
+            trimmedUid,
+            merged,
+            nextActiveId,
+            Array.isArray(tombstones) ? tombstones : undefined,
+          );
         } catch (e) {
           console.warn('기준 클라우드 저장 실패 (마이페이지)', e);
           return false;
@@ -137,6 +155,7 @@ export function useMyPageProjects(uid = '', email = '') {
         let sets = localSets;
         let activeId = loadActiveSetId(trimmedUid);
         let cloudActiveId = null;
+        let tombstones = loadDeletedRuleSetIds(trimmedUid);
 
         if (trimmedUid && isRuleSetsCloudEnabled()) {
           try {
@@ -146,11 +165,15 @@ export function useMyPageProjects(uid = '', email = '') {
                 mergeRuleSetsOnLogin(localSets, cloud.ruleSets),
               );
               cloudActiveId = cloud.activeSetId;
+              tombstones = mergeTombstones(tombstones, cloud.deletedIds);
             }
           } catch {
             // 로컬 기준 유지
           }
         }
+
+        // 삭제 기록(툼스톤) 적용 — 삭제된 프로젝트가 클라우드에서 되살아나지 않게 한다.
+        sets = applyTombstones(sets, tombstones).sets;
 
         const beforeIds = sets.map((set) => set.id).join(',');
         sets = applyCriteriaPresetQuota(sets, trimmedUid, email);
@@ -310,7 +333,9 @@ export function useMyPageProjects(uid = '', email = '') {
         };
       }
 
-      const ok = await persistProjectSets(plan.next, plan.newSetId);
+      const ok = await persistProjectSets(plan.next, plan.newSetId, {
+        added: [plan.newSetId],
+      });
       return ok
         ? { ok: true, newSetId: plan.newSetId, label: plan.label }
         : { ok: false, reason: 'cloud_save_failed' };
@@ -334,12 +359,21 @@ export function useMyPageProjects(uid = '', email = '') {
         };
       }
 
-      const ok = await persistProjectSets(plan.next, plan.nextActiveId);
+      // 삭제 기록(툼스톤) — 나갔다 들어와도 클라우드에서 되살아나지 않게 한다.
+      const tombstones = mergeTombstones(loadDeletedRuleSetIds(uid.trim()), [
+        { id, deletedAt: new Date().toISOString() },
+      ]);
+      const ok = await persistProjectSets(
+        plan.next,
+        plan.nextActiveId,
+        { removed: [id] },
+        tombstones,
+      );
       return ok
         ? { ok: true, label: plan.label }
         : { ok: false, reason: 'cloud_save_failed' };
     },
-    [persistProjectSets],
+    [persistProjectSets, uid],
   );
 
   const updateProjectCustomRules = useCallback(

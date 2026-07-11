@@ -149,6 +149,60 @@ export function mergeRuleSetsOnLogin(localSets, cloudSets) {
 }
 
 /**
+ * 두 삭제 기록(툼스톤) 목록을 id 기준으로 합친다 — 같은 id는 삭제시각이 더 늦은 쪽을 남긴다.
+ *
+ * @param {{ id: string, deletedAt: string }[]} [a]
+ * @param {{ id: string, deletedAt: string }[]} [b]
+ * @returns {{ id: string, deletedAt: string }[]}
+ */
+export function mergeTombstones(a, b) {
+  /** @type {Map<string, { id: string, deletedAt: string }>} */
+  const byId = new Map();
+  for (const row of [...(a ?? []), ...(b ?? [])]) {
+    if (!row || typeof row.id !== 'string' || !row.id.trim()) continue;
+    const id = row.id.trim();
+    const deletedAt = typeof row.deletedAt === 'string' ? row.deletedAt : '';
+    const prev = byId.get(id);
+    if (!prev || savedAtMs(deletedAt) >= savedAtMs(prev.deletedAt)) {
+      byId.set(id, { id, deletedAt });
+    }
+  }
+  return [...byId.values()];
+}
+
+/**
+ * 툼스톤을 적용해 삭제된 프로젝트를 목록에서 제거한다.
+ * 예외 — 삭제시각 이후에 다시 저장(savedAt이 더 최신)한 항목은 "재생성"으로 보고 유지하며,
+ * 그 id의 툼스톤은 더 이상 필요 없으므로 정리한다.
+ *
+ * @param {import('./ruleSetsStorage.js').RuleSet[]} sets
+ * @param {{ id: string, deletedAt: string }[]} tombstones
+ * @returns {{ sets: import('./ruleSetsStorage.js').RuleSet[], tombstones: { id: string, deletedAt: string }[] }}
+ */
+export function applyTombstones(sets, tombstones) {
+  const list = sets ?? [];
+  /** @type {Map<string, { id: string, deletedAt: string }>} */
+  const tombById = new Map((tombstones ?? []).map((t) => [t.id, t]));
+  if (!tombById.size) return { sets: [...list], tombstones: [] };
+
+  const recreatedIds = new Set();
+  const kept = list.filter((set) => {
+    const tomb = tombById.get(set.id);
+    if (!tomb) return true;
+    if (set.savedAt && savedAtMs(set.savedAt) > savedAtMs(tomb.deletedAt)) {
+      recreatedIds.add(set.id);
+      return true;
+    }
+    return false;
+  });
+
+  const survivingTombstones = [...tombById.values()].filter(
+    (t) => !recreatedIds.has(t.id),
+  );
+  return { sets: kept, tombstones: survivingTombstones };
+}
+
+/**
  * 로드·동기화 직후 — 동일 이름 dedupe + 저장 슬롯 상한 적용
  *
  * @param {import('./ruleSetsStorage.js').RuleSet[]} ruleSets
@@ -164,15 +218,23 @@ export function applyCriteriaPresetQuota(ruleSets, uid = '', email = '') {
 /**
  * localStorage 저장 직전 병합 — 다른 창(마이페이지)에서 반영한 태그·삭제를 메인 autosave가 덮지 않게 한다.
  *
+ * `intent`로 "이번 저장에서 이 창이 일부러 추가/삭제한 id"를 알려주면,
+ * 그 항목은 외부 변경 감지(externalDeletion·재삽입)에서 제외해 되돌리지 않는다.
+ * intent가 비어 있으면 기존 동작과 동일하다.
+ *
  * @param {import('./ruleSetsStorage.js').RuleSet[]} diskSets
  * @param {import('./ruleSetsStorage.js').RuleSet[]} memorySets
+ * @param {{ added?: string[], removed?: string[] }} [intent]
  * @returns {import('./ruleSetsStorage.js').RuleSet[]}
  */
-export function mergeRuleSetsOnPersist(diskSets, memorySets) {
+export function mergeRuleSetsOnPersist(diskSets, memorySets, intent = {}) {
   const disk = diskSets ?? [];
   const memory = memorySets ?? [];
   if (!disk.length) return [...memory];
   if (!memory.length) return [...disk];
+
+  const addedIds = new Set(intent.added ?? []);
+  const removedIds = new Set(intent.removed ?? []);
 
   const diskById = new Map(disk.map((set) => [set.id, set]));
   const diskSavedIds = new Set(
@@ -182,10 +244,13 @@ export function mergeRuleSetsOnPersist(diskSets, memorySets) {
     memory.filter((set) => set.savedAt).map((set) => set.id),
   );
   const diskSavedCount = diskSavedIds.size;
-  const memorySavedCount = memorySavedIds.size;
+  // 이 창에서 방금 새로 넣은 항목(복제본)은 "외부 삭제" 판정 비교에서 제외한다.
+  const memorySavedCountForCompare = [...memorySavedIds].filter(
+    (id) => !addedIds.has(id),
+  ).length;
   const externalDeletion =
     diskSavedCount > 0 &&
-    diskSavedCount < memorySavedCount &&
+    diskSavedCount < memorySavedCountForCompare &&
     [...diskSavedIds].every((id) => memorySavedIds.has(id));
 
   let merged = memory.map((set) => {
@@ -196,12 +261,15 @@ export function mergeRuleSetsOnPersist(diskSets, memorySets) {
 
   if (externalDeletion) {
     merged = merged.filter(
-      (set) => !set.savedAt || diskSavedIds.has(set.id),
+      (set) =>
+        !set.savedAt || diskSavedIds.has(set.id) || addedIds.has(set.id),
     );
   }
 
   const mergedIds = new Set(merged.map((set) => set.id));
   for (const diskSet of disk) {
+    // 이 창에서 방금 삭제한 항목은 디스크에 남아 있어도 되살리지 않는다.
+    if (removedIds.has(diskSet.id)) continue;
     if (!mergedIds.has(diskSet.id)) {
       merged.push({ ...diskSet });
       mergedIds.add(diskSet.id);
