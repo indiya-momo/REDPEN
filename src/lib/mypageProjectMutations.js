@@ -58,6 +58,45 @@ export function planRenameProject(sets, setId, rawName) {
 }
 
 /**
+ * 원본 이름 뒤의 `(숫자)`를 떼어 기준 이름을 얻는다. 예: `원고(2)` → `원고`
+ * @param {string} name
+ */
+function stripDuplicateSuffix(name) {
+  return String(name ?? '')
+    .trim()
+    .replace(/\s*\(\d+\)\s*$/, '')
+    .trim();
+}
+
+/**
+ * 복사본 이름을 `원본(1)`, 이미 있으면 `원본(2)`… 로 정한다.
+ * @param {import('./ruleSetsStorage.js').RuleSet[]} sets
+ * @param {string} sourceName
+ */
+export function nextDuplicateName(sets, sourceName) {
+  const base = stripDuplicateSuffix(sourceName) || '규칙 세트';
+  const used = new Set(
+    (sets ?? []).map((set) => String(set.name ?? '').trim()),
+  );
+  let index = 1;
+  while (used.has(`${base}(${index})`)) index += 1;
+  return `${base}(${index})`;
+}
+
+/**
+ * 복사본을 목록 맨 끝(가장 오래된 위치)에 두기 위한 정렬용 savedAt.
+ * 카드의 "작업일" 배지는 projectContext.lastWorkedAt를 쓰므로 영향 없음.
+ * @param {import('./ruleSetsStorage.js').RuleSet[]} sets
+ */
+function savedAtForListEnd(sets) {
+  const times = (sets ?? [])
+    .map((set) => Date.parse(set.savedAt ?? ''))
+    .filter((ms) => !Number.isNaN(ms));
+  if (!times.length) return new Date().toISOString();
+  return new Date(Math.min(...times) - 1000).toISOString();
+}
+
+/**
  * @param {import('./ruleSetsStorage.js').RuleSet[]} sets
  * @param {string} setId
  * @param {string} [uid]
@@ -68,9 +107,18 @@ export function planDuplicateProject(sets, setId, uid = '', email = '') {
   if (!source) return { ok: false, reason: 'not_found' };
   if (!source.savedAt) return { ok: false, reason: 'not_saved' };
 
+  const duped = duplicateRuleSet(source);
+  const duplicatedAt = new Date().toISOString();
   const copy = normalizeRuleSet({
-    ...duplicateRuleSet(source),
-    savedAt: new Date().toISOString(),
+    ...duped,
+    name: nextDuplicateName(sets, source.name),
+    // 정렬(목록 맨 끝)용 — 화면 "작업일" 배지와는 별개
+    savedAt: savedAtForListEnd(sets),
+    // 복제도 하나의 작업 → "작업일" 배지는 복제한 시각으로 표시
+    projectContext: {
+      ...(duped.projectContext ?? {}),
+      lastWorkedAt: duplicatedAt,
+    },
   });
 
   if (!canAddCriteriaPreset(sets, copy.name, uid, email)) {

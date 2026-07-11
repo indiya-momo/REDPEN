@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
   applyCriteriaPresetQuota,
+  applyTombstones,
   dedupeSavedRuleSetsByName,
   mergeLocalRuleSetSources,
   mergeRuleSetsOnLogin,
   mergeRuleSetsOnPersist,
+  mergeTombstones,
   pickNewerRuleSet,
 } from './ruleSetsMerge.js';
 
@@ -245,6 +247,69 @@ describe('mergeRuleSetsOnPersist', () => {
     const memory = [set('a', { name: 'A' }), set('draft', { name: '' })];
     const merged = mergeRuleSetsOnPersist(disk, memory);
     expect(merged.map((row) => row.id).sort()).toEqual(['a', 'draft']);
+  });
+
+  it('이 창에서 방금 복제한 저장 프로젝트를 외부삭제로 오판해 지우지 않는다', () => {
+    const savedAt = '2026-06-20T00:00:00.000Z';
+    const disk = [
+      set('a', { name: 'A', savedAt }),
+      set('b', { name: 'B', savedAt }),
+    ];
+    const memory = [
+      set('a', { name: 'A', savedAt }),
+      set('b', { name: 'B', savedAt }),
+      set('a-copy', { name: 'A(1)', savedAt }),
+    ];
+    const merged = mergeRuleSetsOnPersist(disk, memory, { added: ['a-copy'] });
+    expect(merged.map((row) => row.id).sort()).toEqual(['a', 'a-copy', 'b']);
+  });
+
+  it('이 창에서 방금 삭제한 저장 프로젝트를 디스크에서 되살리지 않는다', () => {
+    const savedAt = '2026-06-20T00:00:00.000Z';
+    const disk = [
+      set('a', { name: 'A', savedAt }),
+      set('b', { name: 'B', savedAt }),
+    ];
+    const memory = [set('a', { name: 'A', savedAt })];
+    const merged = mergeRuleSetsOnPersist(disk, memory, { removed: ['b'] });
+    expect(merged.map((row) => row.id)).toEqual(['a']);
+  });
+});
+
+describe('mergeTombstones', () => {
+  it('id 기준으로 합치고 같은 id는 삭제시각이 늦은 쪽을 남긴다', () => {
+    const a = [{ id: 'x', deletedAt: '2026-06-20T00:00:00.000Z' }];
+    const b = [
+      { id: 'x', deletedAt: '2026-06-24T00:00:00.000Z' },
+      { id: 'y', deletedAt: '2026-06-21T00:00:00.000Z' },
+    ];
+    const merged = mergeTombstones(a, b);
+    expect(merged.find((t) => t.id === 'x')?.deletedAt).toBe(
+      '2026-06-24T00:00:00.000Z',
+    );
+    expect(merged.map((t) => t.id).sort()).toEqual(['x', 'y']);
+  });
+});
+
+describe('applyTombstones', () => {
+  it('툼스톤에 있는 프로젝트는 클라우드에 남아 있어도 목록에서 제거한다', () => {
+    const sets = [
+      set('a', { name: 'A', savedAt: '2026-06-20T00:00:00.000Z' }),
+      set('b', { name: 'B', savedAt: '2026-06-20T00:00:00.000Z' }),
+    ];
+    const tombstones = [{ id: 'b', deletedAt: '2026-06-22T00:00:00.000Z' }];
+    const result = applyTombstones(sets, tombstones);
+    expect(result.sets.map((s) => s.id)).toEqual(['a']);
+  });
+
+  it('삭제시각 이후 다시 저장(재생성)한 프로젝트는 유지하고 그 툼스톤은 정리한다', () => {
+    const sets = [
+      set('a', { name: 'A', savedAt: '2026-06-25T00:00:00.000Z' }),
+    ];
+    const tombstones = [{ id: 'a', deletedAt: '2026-06-22T00:00:00.000Z' }];
+    const result = applyTombstones(sets, tombstones);
+    expect(result.sets.map((s) => s.id)).toEqual(['a']);
+    expect(result.tombstones).toEqual([]);
   });
 });
 
