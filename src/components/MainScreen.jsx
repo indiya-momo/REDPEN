@@ -38,6 +38,8 @@ import { usePdfDocument } from '../hooks/usePdfDocument.js';
 import { usePdfZoom } from '../hooks/usePdfZoom.js';
 import { useRuleCheck } from '../hooks/useRuleCheck.js';
 import { useWorkSession } from '../hooks/useWorkSession.js';
+import { useGuestBrowseDemoPdf } from '../hooks/useGuestBrowseDemoPdf.js';
+import { isOnboardingSamplePdfName } from '../lib/onboardingSamplePdf.js';
 import { useHighlights } from '../hooks/useHighlights.js';
 import {
   PANEL_LEFT_MAX_WIDTH,
@@ -61,7 +63,7 @@ import { useWorkGuideChain } from '../hooks/useWorkGuideChain.js';
 import { useBetaDailyQuota } from '../hooks/useBetaDailyQuota.js';
 import { useRewardNotice } from '../hooks/useRewardNotice.js';
 import { daysSinceJoin, syncProfileBadges } from '../lib/badgeGrants.js';
-import { isLoginRequiredForChecks } from '../lib/checkAuthGate.js';
+import { isCheckAuthBlocked } from '../lib/checkAuthGate.js';
 import { resolveQuotaAuthEmail, assertBetaDailyExportOrAlert } from '../lib/betaDailyQuota.js';
 import {
   countBuiltInActiveRules,
@@ -441,8 +443,7 @@ export default function MainScreen({
     daysWithMomo,
     rewardNotice,
   ]);
-  const loginRequiredForChecks = isLoginRequiredForChecks();
-  const checkAuthBlocked = loginRequiredForChecks && !authUid;
+  const checkAuthBlocked = isCheckAuthBlocked(authUid);
   const checkQuotaBlocked =
     betaQuota.enforced &&
     !betaQuota.loading &&
@@ -863,6 +864,23 @@ export default function MainScreen({
     pageTextsReady: pdf.pageTexts.length > 0,
     workTab,
     spellingCheckDone: ruleCheck.spellingCheckDone,
+  });
+
+  const dismissPreUploadGuide = useCallback(() => {
+    workGuide.dismiss(WORK_GUIDE_KEYS.PRE_UPLOAD);
+  }, [workGuide.dismiss]);
+
+  const openThumbStripAfterDemo = useCallback(() => {
+    setThumbStripOpen(true);
+  }, []);
+
+  useGuestBrowseDemoPdf({
+    isRestoring: session.isRestoring,
+    hasPdf: Boolean(pdf.pdf),
+    loadPdfFile: session.loadPdfFile,
+    showPreUploadGuide: workGuide.showPreUploadGuide,
+    dismissPreUpload: dismissPreUploadGuide,
+    onLoaded: openThumbStripAfterDemo,
   });
 
   const showSpellingRunRow = Boolean(pdf.pdf);
@@ -2044,6 +2062,7 @@ export default function MainScreen({
               progress={pdf.progress}
               pdf={pdf.pdf}
               pdfFileName={pdf.pdfFileName}
+              isDemoSample={isOnboardingSamplePdfName(pdf.pdfFileName)}
               pdfByteLength={pdf.pdfByteLength ?? undefined}
               pageTextsLength={pdf.pageTexts.length}
               fileHandleActive={pdf.fileHandleActive}

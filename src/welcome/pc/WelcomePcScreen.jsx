@@ -48,6 +48,7 @@ function WelcomePcSparkle({ className }) {
 
 /** @param {{
  *   onStart: () => void,
+ *   onBrowse?: () => void,
  *   onOpenRoom: () => void,
  *   authSession: { uid: string, email?: string, displayName?: string } | null,
  *   authReady: boolean,
@@ -58,6 +59,7 @@ function WelcomePcSparkle({ className }) {
  */
 export default function WelcomePcScreen({
   onStart,
+  onBrowse,
   onOpenRoom,
   authSession,
   authReady,
@@ -195,7 +197,7 @@ export default function WelcomePcScreen({
   );
 
   const guestAuthButton = (
-    <div className="welcome-pc__cta-bar-action">
+    <div className="welcome-pc__cta-bar-action welcome-pc__cta-bar-action--pair">
       {!authReady ? (
         <button
           type="button"
@@ -205,14 +207,24 @@ export default function WelcomePcScreen({
           로그인 확인 중…
         </button>
       ) : (
-        <button
-          type="button"
-          className="btn-welcome-primary welcome-pc__start welcome-pc__auth-submit welcome-pc__auth-submit--single"
-          onClick={handleGoogleAuth}
-          disabled={authPending}
-        >
-          {authPending ? '구글 로그인 연결 중…' : '구글로 시작하기'}
-        </button>
+        <>
+          <button
+            type="button"
+            className="btn-welcome-primary welcome-pc__start welcome-pc__auth-submit welcome-pc__auth-submit--single"
+            onClick={handleGoogleAuth}
+            disabled={authPending}
+          >
+            {authPending ? '구글 로그인 연결 중…' : '구글로 시작하기'}
+          </button>
+          <button
+            type="button"
+            className="btn-welcome-primary welcome-pc__start welcome-pc__auth-submit welcome-pc__auth-submit--single welcome-pc__auth-browse--single"
+            onClick={() => onBrowse?.()}
+            disabled={!onBrowse || authPending}
+          >
+            먼저 둘러보기
+          </button>
+        </>
       )}
     </div>
   );
@@ -221,7 +233,7 @@ export default function WelcomePcScreen({
     <div className="welcome-pc__perf-beta welcome-pc__perf-beta--guest">
       <span className="welcome-pc__perf-badge-beta">오픈베타 중</span>
       <span className="welcome-pc__perf-quota">
-        회원은 매일 검수 기능 무료(크롬 브라우저 권장)
+        둘러보기로 먼저 화면을 익히고, 회원은 매일 검수 무료(크롬 권장)
       </span>
     </div>
   );

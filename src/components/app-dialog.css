@@ -72,15 +72,9 @@
   white-space: normal;
 }
 
-/* 검수 완료 요약 — 좌측 결과 패널 헤더(.panel-left .results-header)와 동일 톤 */
+/* 검수 완료 요약 — 좌측 결과 패널 헤더와 동일 톤(색은 result-pillar--*) */
 .app-dialog__results-summary {
   --dialog-result-ui-scale: 0.9;
-  --dialog-result-pill-muted: rgb(42 33 24 / 6%);
-  --dialog-result-badge-border: color-mix(
-    in srgb,
-    var(--dialog-result-pill-muted) 92%,
-    var(--c-ink) 8%
-  );
 }
 
 .app-dialog__results-summary.results-header {
@@ -115,9 +109,7 @@
 }
 
 .app-dialog__results-summary .results-header-badge {
-  background: var(--dialog-result-pill-muted);
-  color: var(--c-ink);
-  border: 1px solid var(--dialog-result-badge-border);
+  /* 크기만 다이얼로그 스케일 — 배경·테두리·글자색은 결과 패널 기둥 톤 유지 */
   font-size: calc(0.62rem * var(--dialog-result-ui-scale) * 1.32);
   padding: calc(0.0625rem * var(--dialog-result-ui-scale) * 1.32)
     calc(var(--space-sm-tight) * var(--dialog-result-ui-scale) * 1.32);

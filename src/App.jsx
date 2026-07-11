@@ -35,6 +35,11 @@ import {
   waitForAuthInitialization,
 } from './lib/firebaseAuth.js';
 import { isLoginRequiredForChecks } from './lib/checkAuthGate.js';
+import {
+  beginGuestBrowse,
+  endGuestBrowse,
+  guestBrowseAllowsWorkspaceStay,
+} from './lib/guestBrowsePolicy.js';
 import { isOnboardingComplete } from './lib/userProfileStorage.js';
 import {
   identifyAnalyticsUser,
@@ -155,10 +160,13 @@ export default function App() {
     if (!authReady || auxWindow) return;
     if (screen !== 'main') return;
     if (!isLoginRequiredForChecks()) return;
-    if (!authSession?.uid) {
-      void clearWorkSession();
-      setScreen('welcome');
+    if (authSession?.uid) {
+      endGuestBrowse();
+      return;
     }
+    if (guestBrowseAllowsWorkspaceStay()) return;
+    void clearWorkSession();
+    setScreen('welcome');
   }, [authReady, auxWindow, screen, authSession]);
 
   const syncPostHogIdentity = useCallback((session) => {
@@ -390,6 +398,12 @@ export default function App() {
           await signOutUser();
         }}
         onStart={() => {
+          endGuestBrowse();
+          setMainWorkTab('spelling');
+          setScreen('main');
+        }}
+        onBrowse={() => {
+          beginGuestBrowse();
           setMainWorkTab('spelling');
           setScreen('main');
         }}
@@ -459,6 +473,7 @@ export default function App() {
       onTouchActiveProjectContext={touchActiveProjectContext}
       onOpenWelcome={() => {
         welcomeManualReturnRef.current = true;
+        endGuestBrowse();
         flushPendingRuleSetsSave();
         void clearWorkSession();
         setMainWorkTab('spelling');
@@ -466,6 +481,7 @@ export default function App() {
       }}
       onLogout={async () => {
         welcomeManualReturnRef.current = false;
+        endGuestBrowse();
         await flushPendingRuleSetsSaveAsync();
         await clearWorkSession();
         await signOutUser();
