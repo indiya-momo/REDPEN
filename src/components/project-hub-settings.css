@@ -499,6 +499,10 @@
   min-height: 8rem;
 }
 
+.project-hub-settings__pillar-memo {
+  margin-top: 0.7rem;
+}
+
 .project-hub-settings__value {
   font-size: 0.82rem;
   font-weight: 600;

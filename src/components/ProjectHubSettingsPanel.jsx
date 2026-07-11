@@ -492,38 +492,33 @@ export default function ProjectHubSettingsPanel({
                   editorReviewCount={card.counts?.editorReview ?? 0}
                   spellingRuleCount={card.counts?.spelling ?? 0}
                 />
-              </div>
-            </div>
-          ) : null}
-
-          {pillarMemoConfig ? (
-            <div className="project-hub-settings__group">
-              <div className="project-hub-settings__card">
-                <div className="project-hub-settings__row project-hub-settings__row--memo">
-                  <div className="project-hub-settings__row-text">
-                    <label
-                      className="project-hub-settings__row-label"
-                      htmlFor={pillarMemoConfig.id}
-                    >
-                      {pillarMemoConfig.label}
-                    </label>
-                    <p className="project-hub-settings__row-desc">
-                      {pillarMemoConfig.desc}
-                    </p>
+                {pillarMemoConfig ? (
+                  <div className="project-hub-settings__row project-hub-settings__row--memo project-hub-settings__pillar-memo">
+                    <div className="project-hub-settings__row-text">
+                      <label
+                        className="project-hub-settings__row-label"
+                        htmlFor={pillarMemoConfig.id}
+                      >
+                        {pillarMemoConfig.label}
+                      </label>
+                      <p className="project-hub-settings__row-desc">
+                        {pillarMemoConfig.desc}
+                      </p>
+                    </div>
+                    <textarea
+                      id={pillarMemoConfig.id}
+                      className="project-hub-settings__textarea"
+                      value={pillarMemoConfig.value}
+                      onChange={(e) => {
+                        markMetaDirty();
+                        pillarMemoConfig.setValue(e.target.value);
+                      }}
+                      rows={3}
+                      maxLength={MAX_PROJECT_PILLAR_MEMO_LENGTH}
+                      aria-busy={saving}
+                    />
                   </div>
-                  <textarea
-                    id={pillarMemoConfig.id}
-                    className="project-hub-settings__textarea"
-                    value={pillarMemoConfig.value}
-                    onChange={(e) => {
-                      markMetaDirty();
-                      pillarMemoConfig.setValue(e.target.value);
-                    }}
-                    rows={3}
-                    maxLength={MAX_PROJECT_PILLAR_MEMO_LENGTH}
-                    aria-busy={saving}
-                  />
-                </div>
+                ) : null}
               </div>
             </div>
           ) : null}
