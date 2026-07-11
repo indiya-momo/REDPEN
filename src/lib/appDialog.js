@@ -11,6 +11,7 @@
  *   messageNode?: ReactNode,
  *   confirmLabel?: string,
  *   cancelLabel?: string,
+ *   autoCloseMs?: number,
  * }} AppDialogOptions */
 
 const HOST_REGISTRY_KEY = Symbol.for('pdf-publish-proofread.appDialogHost');

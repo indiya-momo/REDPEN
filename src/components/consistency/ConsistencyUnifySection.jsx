@@ -19,12 +19,20 @@ import { CONSISTENCY_UNIFY_INPUT_PLACEHOLDER } from './constants.js';
  *   customRules: import('../../lib/ruleTypes.js').Rule[],
  *   onApplyRules: (next: import('../../lib/ruleTypes.js').Rule[]) => boolean,
  *   inlineRegisterRow?: boolean,
+ *   addButtonGuideAttr?: string,
+ *   onAddButtonClick?: () => void,
+ *   guidePinTailWord?: string | null,
+ *   onGuidePinClick?: (tailWord: string) => void,
  * }} props
  */
 export default function ConsistencyUnifySection({
   customRules,
   onApplyRules,
   inlineRegisterRow = false,
+  addButtonGuideAttr,
+  onAddButtonClick,
+  guidePinTailWord = null,
+  onGuidePinClick,
 }) {
   const [unifiedDraft, setUnifiedDraft] = useState('');
   const unifyEntries = useMemo(
@@ -47,8 +55,9 @@ export default function ConsistencyUnifySection({
   const pinEntry = useCallback(
     (tailWord) => {
       onApplyRules(applyConsistencyUnifyPin(customRules, tailWord));
+      onGuidePinClick?.(tailWord);
     },
-    [customRules, onApplyRules],
+    [customRules, onApplyRules, onGuidePinClick],
   );
 
   const removeEntry = useCallback(
@@ -82,12 +91,15 @@ export default function ConsistencyUnifySection({
             placeholder={CONSISTENCY_UNIFY_INPUT_PLACEHOLDER}
             ariaLabel="통일형 만들기"
             registerDisabled={unifyRegisterFull}
+            addButtonGuideAttr={addButtonGuideAttr}
+            onAddButtonClick={onAddButtonClick}
           />
           <UnifyRegisteredList
             entries={unifyEntries}
             pinnedTailWord={pinnedTailWord}
             onPin={pinEntry}
             onRemove={removeEntry}
+            guidePinTailWord={guidePinTailWord}
           />
         </div>
       ) : (
@@ -99,12 +111,15 @@ export default function ConsistencyUnifySection({
             placeholder={CONSISTENCY_UNIFY_INPUT_PLACEHOLDER}
             ariaLabel="통일형 만들기"
             registerDisabled={unifyRegisterFull}
+            addButtonGuideAttr={addButtonGuideAttr}
+            onAddButtonClick={onAddButtonClick}
           />
           <UnifyRegisteredList
             entries={unifyEntries}
             pinnedTailWord={pinnedTailWord}
             onPin={pinEntry}
             onRemove={removeEntry}
+            guidePinTailWord={guidePinTailWord}
           />
         </>
       )}

@@ -27,6 +27,11 @@ const PDF_OVERLAY_PAD_Y_RATIO = 0.09;
  *   showPageMeta?: boolean,
  *   zoomFactor?: number,
  *   onZoomFactorChange?: (update: (prev: number) => number) => void,
+ *   guideHighlightActive?: boolean,
+ *   onHighlightTipOpen?: () => void,
+ *   onHighlightTipConfirm?: () => void,
+ *   onHighlightTipDismiss?: () => void,
+ *   tipConfirmGuideAttr?: string,
  * }} props
  */
 export default function PdfViewer({
@@ -39,6 +44,11 @@ export default function PdfViewer({
   showPageMeta = true,
   zoomFactor = 1,
   onZoomFactorChange,
+  guideHighlightActive = false,
+  onHighlightTipOpen,
+  onHighlightTipConfirm,
+  onHighlightTipDismiss,
+  tipConfirmGuideAttr,
 }) {
   const canvasRef = useRef(null);
   const stageRef = useRef(null);
@@ -55,6 +65,11 @@ export default function PdfViewer({
   useEffect(() => {
     setOpenTip(null);
   }, [pageNum, highlightsKey]);
+
+  useEffect(() => {
+    if (!openTip) return;
+    onHighlightTipOpen?.();
+  }, [openTip, onHighlightTipOpen]);
 
   useEffect(() => {
     const stage = stageRef.current;
@@ -223,8 +238,13 @@ export default function PdfViewer({
   useEffect(() => {
     if (!openTip) return undefined;
 
+    function dismissTip() {
+      setOpenTip(null);
+      onHighlightTipDismiss?.();
+    }
+
     function onKeyDown(e) {
-      if (e.key === 'Escape') setOpenTip(null);
+      if (e.key === 'Escape') dismissTip();
     }
 
     function onPointerDown(e) {
@@ -236,7 +256,7 @@ export default function PdfViewer({
       ) {
         return;
       }
-      setOpenTip(null);
+      dismissTip();
     }
 
     document.addEventListener('keydown', onKeyDown);
@@ -245,7 +265,7 @@ export default function PdfViewer({
       document.removeEventListener('keydown', onKeyDown);
       document.removeEventListener('pointerdown', onPointerDown, true);
     };
-  }, [openTip]);
+  }, [openTip, onHighlightTipDismiss]);
 
   function handleHighlightClick(rect, event) {
     event.stopPropagation();
@@ -320,6 +340,13 @@ export default function PdfViewer({
           <div className="pdf-highlight-layer">
             {rects.map((r, i) => {
               const overlayReplace = (r.overlayReplace || '').trim();
+              const isGuidePdfAnchor =
+                guideHighlightActive &&
+                r.primary &&
+                rects.findIndex(
+                  (other) =>
+                    other.primary && other.highlightId === r.highlightId,
+                ) === i;
               return (
                 <div
                   key={`${r.highlightId}-${i}`}
@@ -342,6 +369,9 @@ export default function PdfViewer({
                   role={(r.tip || '').trim() ? 'button' : undefined}
                   tabIndex={(r.tip || '').trim() ? 0 : undefined}
                   title={(r.tip || '').trim() ? '설명' : undefined}
+                  {...(isGuidePdfAnchor
+                    ? { 'data-work-guide-pdf-highlight': '' }
+                    : {})}
                   onClick={(e) => handleHighlightClick(r, e)}
                   onKeyDown={(e) => {
                     if (e.key !== 'Enter' && e.key !== ' ') return;
@@ -371,7 +401,11 @@ export default function PdfViewer({
               matchedText={openTip.matchedText}
               left={openTip.left}
               top={openTip.top}
-              onClose={() => setOpenTip(null)}
+              confirmGuideAttr={tipConfirmGuideAttr}
+              onClose={() => {
+                setOpenTip(null);
+                onHighlightTipConfirm?.();
+              }}
             />
           ) : null}
           </div>

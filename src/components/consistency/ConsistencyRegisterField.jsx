@@ -9,6 +9,8 @@ import SpaceVisibleInput from '../SpaceVisibleInput.jsx';
  *   ariaLabel: string,
  *   inputClassName?: string,
  *   registerDisabled?: boolean,
+ *   addButtonGuideAttr?: string,
+ *   onAddButtonClick?: () => void,
  * }} props
  */
 export default function ConsistencyRegisterField({
@@ -19,6 +21,8 @@ export default function ConsistencyRegisterField({
   ariaLabel,
   inputClassName,
   registerDisabled = false,
+  addButtonGuideAttr,
+  onAddButtonClick,
 }) {
   const inputClasses = [
     'consistency-register-field__input',
@@ -47,7 +51,11 @@ export default function ConsistencyRegisterField({
         <button
           type="button"
           className="btn-add consistency-register-add-btn consistency-register-field__add"
-          onClick={onRegister}
+          data-work-guide={addButtonGuideAttr || undefined}
+          onClick={() => {
+            onAddButtonClick?.();
+            onRegister();
+          }}
           disabled={registerDisabled}
           aria-label="등록"
           title={registerDisabled ? '등록 한도에 도달했습니다' : undefined}

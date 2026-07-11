@@ -21,10 +21,19 @@ import { dismissTooltipGuide } from '../lib/tooltipGuideStorage.js';
  *   pageTextsReady: boolean,
  *   workTab: 'spelling' | 'consistency',
  *   spellingCheckDone: boolean,
+ *   consistencyCheckDone?: boolean,
+ *   consistencyExportGuideReady?: boolean,
  * }} ctx
  */
 export function useWorkGuideChain(uid, ctx) {
-  const { hasPdf, pageTextsReady, workTab, spellingCheckDone } = ctx;
+  const {
+    hasPdf,
+    pageTextsReady,
+    workTab,
+    spellingCheckDone,
+    consistencyCheckDone = false,
+    consistencyExportGuideReady = true,
+  } = ctx;
   const [rev, setRev] = useState(0);
   const bump = useCallback(() => setRev((n) => n + 1), []);
 
@@ -51,7 +60,14 @@ export function useWorkGuideChain(uid, ctx) {
     () =>
       getWorkGuideChainState(
         uid,
-        { hasPdf, pageTextsReady, workTab, spellingCheckDone },
+        {
+          hasPdf,
+          pageTextsReady,
+          workTab,
+          spellingCheckDone,
+          consistencyCheckDone,
+          consistencyExportGuideReady,
+        },
         storageKey,
       ),
     [
@@ -60,6 +76,8 @@ export function useWorkGuideChain(uid, ctx) {
       pageTextsReady,
       workTab,
       spellingCheckDone,
+      consistencyCheckDone,
+      consistencyExportGuideReady,
       storageKey,
       rev,
     ],

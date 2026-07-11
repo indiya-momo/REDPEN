@@ -102,7 +102,7 @@ describe('getWorkGuideChainState', () => {
     expect(chain.showPdfOpenedGuide).toBe(false);
   });
 
-  it('4단 확인·일관성 탭에서 5단이 보인다', () => {
+  it('4단 확인·일관성 탭에서 핀 가이드가 보인다', () => {
     const dismissedMap = {
       [keyFor(WORK_GUIDE_KEYS.PDF_OPENED)]: true,
       [keyFor(WORK_GUIDE_KEYS.LEFT_CRITERIA)]: true,
@@ -116,11 +116,31 @@ describe('getWorkGuideChainState', () => {
       dismissedMap,
       { pinAll: false },
     );
-    expect(chain.showAuxiliaryVerbGuide).toBe(true);
+    expect(chain.showConsistencyUnifyPinGuide).toBe(true);
+    expect(chain.showAuxiliaryVerbGuide).toBe(false);
     expect(chain.showConsistencyGuide).toBe(false);
   });
 
-  it('3단 확인·검수 완료 후 4단이 보인다', () => {
+  it('핀 가이드 확인 후 본·보 가이드가 보인다', () => {
+    const dismissedMap = {
+      [keyFor(WORK_GUIDE_KEYS.PDF_OPENED)]: true,
+      [keyFor(WORK_GUIDE_KEYS.LEFT_CRITERIA)]: true,
+      [keyFor(WORK_GUIDE_KEYS.FIRST_RESULT)]: true,
+      [keyFor(WORK_GUIDE_KEYS.CONSISTENCY_INTRO)]: true,
+      [keyFor(WORK_GUIDE_KEYS.CONSISTENCY_UNIFY_PIN)]: true,
+    };
+    const chain = getWorkGuideChainState(
+      'u1',
+      { ...baseCtx, spellingCheckDone: true, workTab: 'consistency' },
+      keyFor,
+      dismissedMap,
+      { pinAll: false },
+    );
+    expect(chain.showAuxiliaryVerbGuide).toBe(true);
+    expect(chain.showConsistencyUnifyPinGuide).toBe(false);
+  });
+
+  it('3단 확인·검수 완료 후 맞춤법 탭이면 표기 통일 탭 전환을 요청한다', () => {
     const dismissedMap = {
       [keyFor(WORK_GUIDE_KEYS.PDF_OPENED)]: true,
       [keyFor(WORK_GUIDE_KEYS.LEFT_CRITERIA)]: true,
@@ -133,11 +153,29 @@ describe('getWorkGuideChainState', () => {
       dismissedMap,
       { pinAll: false },
     );
+    expect(chain.requestConsistencyTab).toBe(true);
+    expect(chain.showConsistencyGuide).toBe(false);
+  });
+
+  it('3단 확인·검수 완료 후 표기 통일 탭에서 4단이 보인다', () => {
+    const dismissedMap = {
+      [keyFor(WORK_GUIDE_KEYS.PDF_OPENED)]: true,
+      [keyFor(WORK_GUIDE_KEYS.LEFT_CRITERIA)]: true,
+      [keyFor(WORK_GUIDE_KEYS.FIRST_RESULT)]: true,
+    };
+    const chain = getWorkGuideChainState(
+      'u1',
+      { ...baseCtx, spellingCheckDone: true, workTab: 'consistency' },
+      keyFor,
+      dismissedMap,
+      { pinAll: false },
+    );
     expect(chain.showConsistencyGuide).toBe(true);
+    expect(chain.requestConsistencyTab).toBe(false);
     expect(chain.showFirstResultGuide).toBe(false);
   });
 
-  it('2단 확인 후 3단(보정)이 보인다', () => {
+  it('2단 확인 후 보정 가이드 없이 표기 통일 탭 전환을 요청한다', () => {
     const dismissedMap = {
       [keyFor(WORK_GUIDE_KEYS.FIRST_RESULT)]: true,
       [keyFor(WORK_GUIDE_KEYS.LEFT_CRITERIA)]: true,
@@ -149,7 +187,9 @@ describe('getWorkGuideChainState', () => {
       dismissedMap,
       { pinAll: false },
     );
-    expect(chain.showPdfOpenedGuide).toBe(true);
+    expect(chain.showPdfOpenedGuide).toBe(false);
+    expect(chain.requestConsistencyTab).toBe(true);
+    expect(chain.showConsistencyGuide).toBe(false);
     expect(chain.showFirstResultGuide).toBe(false);
     expect(chain.showLeftCriteriaGuide).toBe(false);
   });
@@ -161,6 +201,7 @@ describe('getWorkGuideChainState', () => {
       [keyFor(WORK_GUIDE_KEYS.LEFT_CRITERIA)]: true,
       [keyFor(WORK_GUIDE_KEYS.FIRST_RESULT)]: true,
       [keyFor(WORK_GUIDE_KEYS.CONSISTENCY_INTRO)]: true,
+      [keyFor(WORK_GUIDE_KEYS.CONSISTENCY_UNIFY_PIN)]: true,
       [keyFor(WORK_GUIDE_KEYS.AUXILIARY_VERB_INTRO)]: true,
       [keyFor(WORK_GUIDE_KEYS.RULE_SET_SAVE)]: true,
       [keyFor(WORK_GUIDE_KEYS.WORK_EXIT)]: true,
@@ -175,37 +216,72 @@ describe('getWorkGuideChainState', () => {
     expect(chain.workGuideOpen).toBe(false);
   });
 
-  it('5단 확인 후 6단이 보인다', () => {
+  it('본·보·표기 통일 검수 완료 후 다운로드 가이드가 보인다', () => {
     const dismissedMap = {
       [keyFor(WORK_GUIDE_KEYS.PDF_OPENED)]: true,
       [keyFor(WORK_GUIDE_KEYS.LEFT_CRITERIA)]: true,
       [keyFor(WORK_GUIDE_KEYS.FIRST_RESULT)]: true,
       [keyFor(WORK_GUIDE_KEYS.CONSISTENCY_INTRO)]: true,
+      [keyFor(WORK_GUIDE_KEYS.CONSISTENCY_UNIFY_PIN)]: true,
       [keyFor(WORK_GUIDE_KEYS.AUXILIARY_VERB_INTRO)]: true,
     };
     const chain = getWorkGuideChainState(
       'u1',
-      { ...baseCtx, spellingCheckDone: true, workTab: 'consistency' },
+      {
+        ...baseCtx,
+        spellingCheckDone: true,
+        consistencyCheckDone: true,
+        consistencyExportGuideReady: true,
+        workTab: 'consistency',
+      },
       keyFor,
       dismissedMap,
       { pinAll: false },
     );
     expect(chain.showRuleSetSaveGuide).toBe(true);
+    expect(chain.showWorkExitGuide).toBe(false);
     expect(chain.showAuxiliaryVerbGuide).toBe(false);
   });
 
-  it('6단 확인 후 7단이 보인다', () => {
+  it('검수 완료여도 다운로드 가이드 준비가 안 되면 숨긴다', () => {
     const dismissedMap = {
       [keyFor(WORK_GUIDE_KEYS.PDF_OPENED)]: true,
       [keyFor(WORK_GUIDE_KEYS.LEFT_CRITERIA)]: true,
       [keyFor(WORK_GUIDE_KEYS.FIRST_RESULT)]: true,
       [keyFor(WORK_GUIDE_KEYS.CONSISTENCY_INTRO)]: true,
+      [keyFor(WORK_GUIDE_KEYS.CONSISTENCY_UNIFY_PIN)]: true,
+      [keyFor(WORK_GUIDE_KEYS.AUXILIARY_VERB_INTRO)]: true,
+    };
+    const chain = getWorkGuideChainState(
+      'u1',
+      {
+        ...baseCtx,
+        spellingCheckDone: true,
+        consistencyCheckDone: true,
+        consistencyExportGuideReady: false,
+        workTab: 'consistency',
+      },
+      keyFor,
+      dismissedMap,
+      { pinAll: false },
+    );
+    expect(chain.showRuleSetSaveGuide).toBe(false);
+    expect(chain.workGuideOpen).toBe(false);
+  });
+
+  it('다운로드 가이드 확인 후 종료 가이드가 보인다', () => {
+    const dismissedMap = {
+      [keyFor(WORK_GUIDE_KEYS.PDF_OPENED)]: true,
+      [keyFor(WORK_GUIDE_KEYS.LEFT_CRITERIA)]: true,
+      [keyFor(WORK_GUIDE_KEYS.FIRST_RESULT)]: true,
+      [keyFor(WORK_GUIDE_KEYS.CONSISTENCY_INTRO)]: true,
+      [keyFor(WORK_GUIDE_KEYS.CONSISTENCY_UNIFY_PIN)]: true,
       [keyFor(WORK_GUIDE_KEYS.AUXILIARY_VERB_INTRO)]: true,
       [keyFor(WORK_GUIDE_KEYS.RULE_SET_SAVE)]: true,
     };
     const chain = getWorkGuideChainState(
       'u1',
-      { ...baseCtx, spellingCheckDone: true },
+      { ...baseCtx, spellingCheckDone: true, consistencyCheckDone: true },
       keyFor,
       dismissedMap,
       { pinAll: false },

@@ -85,6 +85,16 @@ import TooltipGuide from './TooltipGuide.jsx';
  *     pinned: boolean,
  *     onDismiss: () => void,
  *   } | null,
+ *   onLiteralAddButtonClick?: () => void,
+ *   onUnifyAddButtonClick?: () => void,
+ *   guidePinTailWord?: string | null,
+ *   onGuidePinClick?: (tailWord: string) => void,
+ *   consistencyUnifyPinGuide?: {
+ *     storageKey: string,
+ *     alignToBubble: object,
+ *     pinned: boolean,
+ *     onDismiss: () => void,
+ *   } | null,
  * }} props
  */
 export default function ConsistencyPanel({
@@ -112,6 +122,11 @@ export default function ConsistencyPanel({
   isProcessing = false,
   checkQuotaBlocked = false,
   auxiliaryVerbGuide = null,
+  onLiteralAddButtonClick,
+  onUnifyAddButtonClick,
+  guidePinTailWord = null,
+  onGuidePinClick,
+  consistencyUnifyPinGuide = null,
 }) {
   const [literalInput, setLiteralInput] = useState('');
   const [slotInput, setSlotInput] = useState('');
@@ -259,6 +274,8 @@ export default function ConsistencyPanel({
             onRegister={registerLiteral}
             placeholder={CONSISTENCY_LITERAL_INPUT_PLACEHOLDER}
             ariaLabel={LITERAL_FIND_FEATURE_LABEL}
+            addButtonGuideAttr="literal-add"
+            onAddButtonClick={onLiteralAddButtonClick}
           />
           <RegisteredList
             entries={literalEntries}
@@ -280,7 +297,38 @@ export default function ConsistencyPanel({
         <ConsistencyUnifySection
           customRules={customRules}
           onApplyRules={applyCustomRules}
+          addButtonGuideAttr="unify-add"
+          onAddButtonClick={onUnifyAddButtonClick}
+          guidePinTailWord={guidePinTailWord}
+          onGuidePinClick={onGuidePinClick}
         />
+        {consistencyUnifyPinGuide ? (
+          <TooltipGuide
+            storageKey={consistencyUnifyPinGuide.storageKey}
+            placement="right"
+            bubbleType="left"
+            useFixedLayer
+            alignToBubble={consistencyUnifyPinGuide.alignToBubble}
+            bubbleGuideStep="4b"
+            offsetX={8}
+            offsetY={0}
+            pinned={consistencyUnifyPinGuide.pinned}
+            showConfirm={false}
+            message={
+              <>
+                통일형으로 지정하고 싶은 항목에
+                <br />
+                📌를 붙이면 된다냥
+              </>
+            }
+            onDismiss={consistencyUnifyPinGuide.onDismiss}
+          >
+            <span
+              className="work-guide-anchor work-guide-anchor--unify-pin"
+              aria-hidden
+            />
+          </TooltipGuide>
+        ) : null}
 
         <div className="consistency-subsection-row">
           <div className="consistency-subsection consistency-subsection--half">
@@ -424,7 +472,7 @@ export default function ConsistencyPanel({
                   {AUXILIARY_VERB_FEATURE_LABEL}
                 </span>
                 <br />
-                이거 하다보면 공부 많이 되고
+                맞춤법 공부 많이 되고
                 <br />
                 자기 전에 생각난다냥...
               </>

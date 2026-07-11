@@ -173,6 +173,8 @@ function fixedTooltipPosition(rect, placement, offsetX, offsetY) {
  *   bubbleGuideStep?: string | number | null,
  *   pinned?: boolean,
  *   showConfirm?: boolean,
+ *   confirmGuideAttr?: string,
+ *   autoDismissMs?: number — ms 후 확인 없이 닫기(0이면 없음)
  *   children: import('react').ReactElement,
  * }} props
  */
@@ -192,7 +194,9 @@ export default function TooltipGuide({
   alignToBubbleChain = null,
   bubbleGuideStep = null,
   pinned = false,
-  showConfirm = true,
+  showConfirm = false,
+  confirmGuideAttr,
+  autoDismissMs = 0,
   children,
 }) {
   const anchorRef = useRef(/** @type {HTMLSpanElement | null} */ (null));
@@ -276,8 +280,8 @@ export default function TooltipGuide({
 
   const handleConfirm = useCallback(
     (event) => {
-      event.preventDefault();
-      event.stopPropagation();
+      event?.preventDefault?.();
+      event?.stopPropagation?.();
       if (dismissed) return;
       if (pinned) return;
       dismissTooltipGuide(storageKey);
@@ -287,6 +291,16 @@ export default function TooltipGuide({
     [dismissed, storageKey, onDismiss, pinned],
   );
 
+  useEffect(() => {
+    if (pinned || dismissed) return undefined;
+    const ms = Number(autoDismissMs);
+    if (!Number.isFinite(ms) || ms <= 0) return undefined;
+    const timer = window.setTimeout(() => {
+      handleConfirm(null);
+    }, ms);
+    return () => window.clearTimeout(timer);
+  }, [autoDismissMs, pinned, dismissed, handleConfirm]);
+
   const showMomo = imageSrc != null && imageSrc !== '';
 
   const bubbleClassName = [
@@ -295,6 +309,7 @@ export default function TooltipGuide({
     usePortalFixed ? 'tooltip-guide--fixed-layer' : '',
     bubbleType !== 'auto' ? `tooltip-guide--bubble-${bubbleType}` : '',
     !showMomo ? 'tooltip-guide--no-momo' : '',
+    !showConfirm ? 'tooltip-guide--no-confirm' : '',
   ]
     .filter(Boolean)
     .join(' ');
@@ -341,6 +356,7 @@ export default function TooltipGuide({
           <button
             type="button"
             className="tooltip-guide__confirm"
+            data-work-guide={confirmGuideAttr || undefined}
             onClick={handleConfirm}
           >
             확인

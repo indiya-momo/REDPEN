@@ -36,6 +36,10 @@ import {
   isBetaDailyQuotaEnforcedForUser,
 } from './betaDailyQuota.js';
 import {
+  finishGuestBrowseConsistencyResultThenUnlockExportGuide,
+  guestBrowseSkipsCheckConfirm,
+} from './guestBrowsePolicy.js';
+import {
   parseBracketTitleMessage,
   showAppAlert,
   showAppConfirm,
@@ -224,6 +228,10 @@ export async function confirmConsistencyCheckBeforeRun(
 
   if (!(await assertConsistencyUnifyPinnedForCheck(customRules))) {
     return false;
+  }
+
+  if (guestBrowseSkipsCheckConfirm()) {
+    return true;
   }
 
   const {
@@ -424,12 +432,17 @@ export async function alertConsistencyCheckAfterRun(
   const message = formatConsistencyCheckCompleteMessage(summaryInput);
   const stats = buildConsistencyResultSummaryStats(summaryInput);
 
-  await showAppAlert({
-    title: '검수를 진행했습니다',
-    message,
-    messageNode: createElement(CheckResultSummaryContent, {
-      stats,
-      totalFindings,
-    }),
-  });
+  await finishGuestBrowseConsistencyResultThenUnlockExportGuide(
+    async (extra = {}) => {
+      await showAppAlert({
+        title: '검수를 진행했습니다',
+        message,
+        messageNode: createElement(CheckResultSummaryContent, {
+          stats,
+          totalFindings,
+        }),
+        ...extra,
+      });
+    },
+  );
 }

@@ -5,6 +5,7 @@
  *   left: number,
  *   top: number,
  *   onClose: () => void,
+ *   confirmGuideAttr?: string,
  * }} props
  */
 export default function PdfHighlightTipBubble({
@@ -13,6 +14,7 @@ export default function PdfHighlightTipBubble({
   left,
   top,
   onClose,
+  confirmGuideAttr,
 }) {
   return (
     <div
@@ -31,8 +33,9 @@ export default function PdfHighlightTipBubble({
       <button
         type="button"
         className="pdf-highlight-tip__close"
+        data-work-guide={confirmGuideAttr || undefined}
         onClick={onClose}
-        aria-label="닫기"
+        aria-label="확인"
       >
         확인
       </button>

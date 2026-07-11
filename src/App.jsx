@@ -405,7 +405,11 @@ export default function App() {
         onBrowse={() => {
           beginGuestBrowse();
           setMainWorkTab('spelling');
-          setScreen('main');
+          void clearWorkSession()
+            .catch(() => {})
+            .finally(() => {
+              setScreen('main');
+            });
         }}
         onOpenRoom={() => setScreen('room')}
       />
