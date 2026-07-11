@@ -221,7 +221,7 @@ export default function WelcomePcScreen({
     <div className="welcome-pc__perf-beta welcome-pc__perf-beta--guest">
       <span className="welcome-pc__perf-badge-beta">오픈베타 중</span>
       <span className="welcome-pc__perf-quota">
-        회원은 매일 맞춤법 · 표기 통일 검수 가능
+        회원은 매일 검수 기능 무료(크롬 브라우저 권장)
       </span>
     </div>
   );
@@ -306,7 +306,7 @@ export default function WelcomePcScreen({
   const heroCtaButton = showSignedInLanding ? signedInStartButton : guestAuthButton;
 
   const foldCapText =
-    '사용자의 이해를 돕고자 검수 과정을 재구성한 장면입니다 · 맞춤법과 표기 통일 검수는 각각 진행합니다 · 크롬 브라우저를 통한 인디자인 PDF 사용을 권장합니다';
+    '사용자의 이해를 돕고자 재구성한 장면으로 맞춤법과 표기 통일 검수는 각각 진행합니다';
 
   const landingPageBlock = (
     <div className="welcome-pc__landing">
@@ -469,13 +469,7 @@ export default function WelcomePcScreen({
         <div className="welcome-pc__bottom-notes">
           <p className="welcome-pc__footer-line">
             <span className="welcome-pc__footer-part">
-              오픈베타 기간 동안 사용자의 이용 데이터를 익명으로 수집합니다
-            </span>
-            <span className="welcome-pc__footer-sep" aria-hidden="true">
-              |
-            </span>
-            <span className="welcome-pc__footer-part">
-              원고는 서버에 저장되지 않으며 수집한 이용 데이터는 기능 향상을 위해 사용됩니다
+              오픈베타 기간 동안 기능 향상을 위해 사용자의 이용 데이터를 익명으로 수집합니다
             </span>
             <span className="welcome-pc__footer-sep" aria-hidden="true">
               |
