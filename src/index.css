@@ -2804,6 +2804,22 @@ details[open] > summary .details-chevron::before {
   word-break: break-all;
 }
 
+.pdf-ready-file__demo-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0.4em;
+  padding: 0.1em 0.45em;
+  border: 1px solid color-mix(in srgb, var(--pillar-consistency) 28%, transparent);
+  border-radius: var(--radius-ui-sm);
+  font-size: 0.68em;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  vertical-align: 0.05em;
+  white-space: nowrap;
+  background: color-mix(in srgb, var(--pillar-consistency) 11%, #fffdfb);
+  color: color-mix(in srgb, var(--pillar-consistency) 78%, #5c6b7a 22%);
+}
+
 .pdf-ready-file__detail {
   margin: 5px 0 0;
   font-size: 0.78rem;

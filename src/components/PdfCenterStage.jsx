@@ -26,6 +26,7 @@ import TooltipGuide from './TooltipGuide.jsx';
  *   progress: { current: number; total: number; phase?: string } | null,
  *   pdf: import('pdfjs-dist').PDFDocumentProxy | null,
  *   pdfFileName: string | null,
+ *   isDemoSample?: boolean,
  *   pdfByteLength: number | undefined,
  *   pageTextsLength: number,
  *   fileHandleActive: boolean,
@@ -54,6 +55,7 @@ export default function PdfCenterStage({
   progress,
   pdf,
   pdfFileName,
+  isDemoSample = false,
   pdfByteLength,
   pageTextsLength,
   fileHandleActive,
@@ -250,7 +252,12 @@ export default function PdfCenterStage({
                 <FileText size={24} strokeWidth={1.5} />
               </span>
               <div className="pdf-ready-file__meta">
-                <p className="pdf-ready-file__name">{pdfFileName}</p>
+                <p className="pdf-ready-file__name">
+                  {pdfFileName}
+                  {isDemoSample ? (
+                    <span className="pdf-ready-file__demo-badge">데모</span>
+                  ) : null}
+                </p>
                 <p className="pdf-ready-file__detail">
                   {isSizeBlocked ? (
                     <>

@@ -1228,7 +1228,7 @@
   padding: calc(3px * var(--tooltip-scale, 1))
     calc(7px * var(--tooltip-scale, 1));
   border: 1px solid
-    color-mix(in srgb, var(--accent-terracotta) 94%, var(--accent-terracotta-deep) 6%);
+    color-mix(in srgb, var(--pillar-consistency) 28%, transparent);
   border-radius: calc(var(--radius-ui-sm) * var(--tooltip-scale, 1));
   font-family: inherit;
   font-size: calc(0.72rem * var(--tooltip-scale, 1));
@@ -1236,8 +1236,8 @@
   line-height: 1.15;
   vertical-align: middle;
   white-space: nowrap;
-  background: var(--accent-terracotta);
-  color: var(--accent-on-terracotta);
+  background: color-mix(in srgb, var(--pillar-consistency) 11%, #fffdfb);
+  color: color-mix(in srgb, var(--pillar-consistency) 78%, #5c6b7a 22%);
 }
 
 /* 6번 말풍선 — 저장(디스크) 아이콘 = 좌측 패널 저장 버튼과 동일 톤 */
