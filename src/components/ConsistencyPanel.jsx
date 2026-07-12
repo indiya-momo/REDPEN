@@ -14,6 +14,10 @@ import {
 } from '../lib/compoundPairRegister.js';
 import { registerConsistencyLiteralBatch } from '../lib/consistencyLiteralRegister.js';
 import {
+  appendCommonStringDecision,
+  appendFindDecisions,
+} from '../lib/consistencyDecisions.js';
+import {
   isAuxiliaryVerbEntryEnabled,
   listAuxiliaryVerbEntries,
   setAllAuxiliaryVerbEntries,
@@ -188,13 +192,29 @@ export default function ConsistencyPanel({
     return true;
   }
 
-  function assertSlots(toAdd) {
-    return applyCustomRules([...customRules, ...toAdd]);
+  function assertSlots(toAdd, extra) {
+    return applyCustomRules([...customRules, ...toAdd], extra);
   }
 
   function registerLiteral() {
     const input = literalInput.trim() || literalPlaceholder;
-    if (registerConsistencyLiteralBatch(input, customRules, applyCustomRules)) {
+    const before = new Set(
+      listConsistencyLiteralEntries(customRules).map((entry) => entry.tailWord),
+    );
+    if (
+      registerConsistencyLiteralBatch(input, customRules, (nextRules) => {
+        const added = listConsistencyLiteralEntries(nextRules)
+          .map((entry) => entry.tailWord)
+          .filter((tail) => !before.has(tail));
+        return applyCustomRules(nextRules, {
+          consistencyDecisions: appendFindDecisions(
+            consistencyDecisions,
+            added,
+            { byUid: decisionByUid },
+          ),
+        });
+      })
+    ) {
       setLiteralInput('');
     }
   }
@@ -226,7 +246,17 @@ export default function ConsistencyPanel({
       alert('입력한 패턴은 이미 등록되어 있습니다.');
       return;
     }
-    if (!assertSlots(batch)) return;
+    if (
+      !assertSlots(batch, {
+        consistencyDecisions: appendCommonStringDecision(
+          consistencyDecisions,
+          raw,
+          { byUid: decisionByUid },
+        ),
+      })
+    ) {
+      return;
+    }
     setSlotInput('');
   }
 
@@ -480,6 +510,7 @@ export default function ConsistencyPanel({
             offsetX={0}
             offsetY={0}
             pinned={auxiliaryVerbGuide.pinned}
+            showConfirm={false}
             message={
               <>
                 <span className="tooltip-guide__gothic-label">

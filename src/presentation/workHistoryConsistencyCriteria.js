@@ -1,6 +1,10 @@
 import { listConsistencyLiteralEntries } from '../lib/compoundPairRegister.js';
 import { getConsistencyUnifyPinnedTailWord } from '../lib/consistencyUnifyRegister.js';
-import { listConsistencyUnifyEntries } from '../lib/consistencyRuleLimit.js';
+import {
+  LITERAL_FIND_FEATURE_LABEL,
+  listConsistencyUnifyEntries,
+  UNIFY_FEATURE_LABEL,
+} from '../lib/consistencyRuleLimit.js';
 import { listPhraseSlotEntries } from '../lib/phraseSlotRegister.js';
 import { formatConsistencyListLabel } from '../lib/patternDisplayLabels.js';
 
@@ -57,8 +61,8 @@ export function buildWorkHistoryConsistencyCriteria(
 
 /** @type {{ id: 'find' | 'unify' | 'commonString' | 'exclude', label: string }[]} */
 export const WORK_HISTORY_CONSISTENCY_GROUPS = [
-  { id: 'find', label: '찾기 항목' },
-  { id: 'unify', label: '통일형' },
-  { id: 'commonString', label: '공통 문자열' },
-  { id: 'exclude', label: '제외 항목' },
+  { id: 'find', label: LITERAL_FIND_FEATURE_LABEL },
+  { id: 'unify', label: UNIFY_FEATURE_LABEL },
+  { id: 'commonString', label: '공통 문자열 찾기' },
+  { id: 'exclude', label: '검수 제외 항목' },
 ];

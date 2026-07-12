@@ -4,21 +4,31 @@ import { getBuiltInTip } from '../lib/builtInRules.js';
 import { formatSystemPageLabel } from '../lib/printedPageDisplay.js';
 import { cautionResultChipLabel } from '../lib/cautionRules.js';
 import { getConsistencyHighlightTip, getConsistencyResultCardParts } from '../lib/consistencyHighlightTip.js';
-import { isConsistencyUnifyTailWord } from '../lib/consistencyUnifyRegister.js';
+import { isConsistencyUnifyResultGroup } from '../lib/consistencyUnifyRegister.js';
 import { AUXILIARY_VERB_BADGE_LABEL } from '../lib/bonBojoRules.js';
-import { LITERAL_FIND_FEATURE_LABEL } from '../lib/consistencyRuleLimit.js';
+import {
+  LITERAL_FIND_FEATURE_LABEL,
+  UNIFY_FEATURE_LABEL,
+} from '../lib/consistencyRuleLimit.js';
 import {
   resultBadgeTone,
   resultPillarToneClass,
 } from '../lib/resultPillarTone.js';
+import { formatResultsStatCount, EDITOR_REVIEW_BADGE_LABEL, SPELLING_RULE_BADGE_LABEL } from '../lib/checkResultSummaryFormat.js';
 
 /**
- * @param {{ count: number, shownCount?: number, className?: string }} props
+ * @param {{
+ *   count: number,
+ *   shownCount?: number,
+ *   className?: string,
+ *   ariaLabel?: string,
+ * }} props
  */
 function ResultFindingsCountCircle({
   count,
   shownCount = count,
   className = '',
+  ariaLabel,
 }) {
   if (shownCount < count) {
     return (
@@ -33,7 +43,7 @@ function ResultFindingsCountCircle({
   return (
     <span
       className={`result-findings-count-circle ${className}`.trim()}
-      aria-label={`${count}건`}
+      aria-label={ariaLabel ?? `${count}건`}
     >
       {count}
     </span>
@@ -44,15 +54,24 @@ function ResultFindingsCountCircle({
  * @param {{
  *   badge: string,
  *   count: number,
+ *   findingsCount: number,
  *   tone?: import('../lib/resultPillarTone.js').ResultBadgeTone,
  * }} props
  */
-function ResultHeaderStat({ badge, count, tone }) {
+function ResultHeaderStat({ badge, count, findingsCount, tone }) {
   const toneClass = tone ? resultPillarToneClass(tone) : '';
   return (
     <span className="results-header__stat">
       <span className={`results-header-badge ${toneClass}`.trim()}>{badge}</span>
-      <span className="results-header__stat-count">{count}건</span>
+      <span className="results-header__stat-count" aria-label={formatResultsStatCount(count)}>
+        <span className="results-header__stat-num">{count}</span>
+        <span className="results-header__stat-unit">기준</span>
+      </span>
+      <ResultFindingsCountCircle
+        count={findingsCount}
+        className="results-header__stat-circle"
+        ariaLabel={`${findingsCount}건`}
+      />
     </span>
   );
 }
@@ -70,12 +89,18 @@ function ResultHeaderStat({ badge, count, tone }) {
  *   totalFindings: number,
  *   cautionWithFindingsCount?: number,
  *   builtinWithFindingsCount?: number,
+ *   cautionFindingsCount?: number,
+ *   builtinFindingsCount?: number,
  *   cautionCriteriaSelected?: boolean,
  *   builtinCriteriaSelected?: boolean,
  *   literalWithFindingsCount?: number,
  *   unifyWithFindingsCount?: number,
  *   commonStringWithFindingsCount?: number,
  *   auxiliaryWithFindingsCount?: number,
+ *   literalFindingsCount?: number,
+ *   unifyFindingsCount?: number,
+ *   commonStringFindingsCount?: number,
+ *   auxiliaryFindingsCount?: number,
  *   literalCriteriaSelected?: boolean,
  *   unifyCriteriaSelected?: boolean,
  *   commonStringCriteriaSelected?: boolean,
@@ -89,12 +114,18 @@ function ResultHeaderSummary({
   totalFindings,
   cautionWithFindingsCount = 0,
   builtinWithFindingsCount = 0,
+  cautionFindingsCount = 0,
+  builtinFindingsCount = 0,
   cautionCriteriaSelected = false,
   builtinCriteriaSelected = false,
   literalWithFindingsCount = 0,
   unifyWithFindingsCount = 0,
   commonStringWithFindingsCount = 0,
   auxiliaryWithFindingsCount = 0,
+  literalFindingsCount = 0,
+  unifyFindingsCount = 0,
+  commonStringFindingsCount = 0,
+  auxiliaryFindingsCount = 0,
   literalCriteriaSelected = false,
   unifyCriteriaSelected = false,
   commonStringCriteriaSelected = false,
@@ -124,16 +155,18 @@ function ResultHeaderSummary({
         cautionCriteriaSelected ? (
           <ResultHeaderStat
             key="caution"
-            badge="편집자 검토"
+            badge={EDITOR_REVIEW_BADGE_LABEL}
             count={cautionWithFindingsCount}
+            findingsCount={cautionFindingsCount}
             tone="spelling-caution"
           />
         ) : null,
         builtinCriteriaSelected ? (
           <ResultHeaderStat
             key="builtin"
-            badge="맞춤법"
+            badge={SPELLING_RULE_BADGE_LABEL}
             count={builtinWithFindingsCount}
+            findingsCount={builtinFindingsCount}
             tone="spelling-builtin"
           />
         ) : null,
@@ -149,14 +182,16 @@ function ResultHeaderSummary({
             key="literal"
             badge={LITERAL_FIND_FEATURE_LABEL}
             count={literalWithFindingsCount}
+            findingsCount={literalFindingsCount}
             tone="consistency-literal"
           />
         ) : null,
         unifyCriteriaSelected ? (
           <ResultHeaderStat
             key="unify"
-            badge="통일형 찾기"
+            badge={UNIFY_FEATURE_LABEL}
             count={unifyWithFindingsCount}
+            findingsCount={unifyFindingsCount}
             tone="consistency-unify"
           />
         ) : null,
@@ -165,6 +200,7 @@ function ResultHeaderSummary({
             key="common"
             badge="공통 문자열 찾기"
             count={commonStringWithFindingsCount}
+            findingsCount={commonStringFindingsCount}
             tone="consistency-common"
           />
         ) : null,
@@ -173,6 +209,7 @@ function ResultHeaderSummary({
             key="auxiliary"
             badge={AUXILIARY_VERB_BADGE_LABEL}
             count={auxiliaryWithFindingsCount}
+            findingsCount={auxiliaryFindingsCount}
             tone="auxiliary"
           />
         ) : null,
@@ -207,12 +244,18 @@ function ResultHeaderSummary({
  *   viewSource: 'spelling' | 'consistency',
  *   cautionWithFindingsCount?: number,
  *   builtinWithFindingsCount?: number,
+ *   cautionFindingsCount?: number,
+ *   builtinFindingsCount?: number,
  *   cautionCriteriaSelected?: boolean,
  *   builtinCriteriaSelected?: boolean,
  *   literalWithFindingsCount?: number,
  *   unifyWithFindingsCount?: number,
  *   commonStringWithFindingsCount?: number,
  *   auxiliaryWithFindingsCount?: number,
+ *   literalFindingsCount?: number,
+ *   unifyFindingsCount?: number,
+ *   commonStringFindingsCount?: number,
+ *   auxiliaryFindingsCount?: number,
  *   literalCriteriaSelected?: boolean,
  *   unifyCriteriaSelected?: boolean,
  *   commonStringCriteriaSelected?: boolean,
@@ -242,12 +285,18 @@ export default function CheckResultsPanel({
   viewSource,
   cautionWithFindingsCount = 0,
   builtinWithFindingsCount = 0,
+  cautionFindingsCount = 0,
+  builtinFindingsCount = 0,
   cautionCriteriaSelected = false,
   builtinCriteriaSelected = false,
   literalWithFindingsCount = 0,
   unifyWithFindingsCount = 0,
   commonStringWithFindingsCount = 0,
   auxiliaryWithFindingsCount = 0,
+  literalFindingsCount = 0,
+  unifyFindingsCount = 0,
+  commonStringFindingsCount = 0,
+  auxiliaryFindingsCount = 0,
   literalCriteriaSelected = false,
   unifyCriteriaSelected = false,
   commonStringCriteriaSelected = false,
@@ -289,12 +338,18 @@ export default function CheckResultsPanel({
             totalFindings={totalFindings}
             cautionWithFindingsCount={cautionWithFindingsCount}
             builtinWithFindingsCount={builtinWithFindingsCount}
+            cautionFindingsCount={cautionFindingsCount}
+            builtinFindingsCount={builtinFindingsCount}
             cautionCriteriaSelected={cautionCriteriaSelected}
             builtinCriteriaSelected={builtinCriteriaSelected}
             literalWithFindingsCount={literalWithFindingsCount}
             unifyWithFindingsCount={unifyWithFindingsCount}
             commonStringWithFindingsCount={commonStringWithFindingsCount}
             auxiliaryWithFindingsCount={auxiliaryWithFindingsCount}
+            literalFindingsCount={literalFindingsCount}
+            unifyFindingsCount={unifyFindingsCount}
+            commonStringFindingsCount={commonStringFindingsCount}
+            auxiliaryFindingsCount={auxiliaryFindingsCount}
             literalCriteriaSelected={literalCriteriaSelected}
             unifyCriteriaSelected={unifyCriteriaSelected}
             commonStringCriteriaSelected={commonStringCriteriaSelected}
@@ -372,9 +427,9 @@ export default function CheckResultsPanel({
                             const toneClass = resultPillarToneClass(
                               resultBadgeTone('consistency', {
                                 patternKind: group.patternKind,
-                                isUnify: isConsistencyUnifyTailWord(
+                                isUnify: isConsistencyUnifyResultGroup(
                                   customRules,
-                                  group.tailWord,
+                                  group,
                                 ),
                               }),
                             );
@@ -400,7 +455,7 @@ export default function CheckResultsPanel({
                               <span
                                 className={`caution-badge-inline ${resultPillarToneClass('spelling-caution')}`.trim()}
                               >
-                                편집자 검토
+                                {EDITOR_REVIEW_BADGE_LABEL}
                               </span>{' '}
                               <span className="caution-result-chip">
                                 {cautionResultChipLabel(group)}
@@ -411,7 +466,7 @@ export default function CheckResultsPanel({
                               <span
                                 className={`spelling-badge-inline ${resultPillarToneClass('spelling-builtin')}`.trim()}
                               >
-                                맞춤법
+                                {SPELLING_RULE_BADGE_LABEL}
                               </span>{' '}
                               <span className="spelling-result-chip">
                                 {`${first.matchedText} → ${first.suggestedText}`}

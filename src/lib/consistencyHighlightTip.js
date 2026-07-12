@@ -1,10 +1,14 @@
 import { formatConsistencyListLabel } from './patternDisplayLabels.js';
 import {
   getConsistencyUnifyPinnedTailWord,
-  isConsistencyUnifyTailWord,
+  isConsistencyUnifyResultGroup,
+  resolveConsistencyGroupTailWord,
 } from './consistencyUnifyRegister.js';
 import { AUXILIARY_VERB_BADGE_LABEL } from './bonBojoRules.js';
-import { LITERAL_FIND_FEATURE_LABEL } from './consistencyRuleLimit.js';
+import {
+  LITERAL_FIND_FEATURE_LABEL,
+  UNIFY_FEATURE_LABEL,
+} from './consistencyRuleLimit.js';
 
 /** @param {import('./ruleEngine.js').GroupedResult} group */
 function auxiliaryItemTitle(group) {
@@ -15,8 +19,9 @@ function auxiliaryItemTitle(group) {
  * @param {import('./ruleEngine.js').GroupedResult} group
  */
 function consistencyFindDisplayLabel(group) {
-  if (group.tailWord?.trim()) {
-    return formatConsistencyListLabel(group.tailWord);
+  const tail = resolveConsistencyGroupTailWord(group);
+  if (tail) {
+    return formatConsistencyListLabel(tail);
   }
   const label = (group.label || '').trim();
   if (label) {
@@ -63,26 +68,26 @@ export function getConsistencyResultCardParts(group, customRules = []) {
   }
 
   const label = consistencyFindDisplayLabel(group);
-  const tail = group.tailWord?.trim();
-  const isUnify = isConsistencyUnifyTailWord(customRules, tail);
+  const tail = resolveConsistencyGroupTailWord(group);
+  const isUnify = isConsistencyUnifyResultGroup(customRules, group);
   const pinnedTail = getConsistencyUnifyPinnedTailWord(customRules);
 
   if (isUnify && pinnedTail) {
     const pinnedLabel = formatConsistencyListLabel(pinnedTail);
     if (tail === pinnedTail) {
       return {
-        badge: '통일형 찾기',
+        badge: UNIFY_FEATURE_LABEL,
         label: `${label} 📌`,
       };
     }
     return {
-      badge: '통일형 찾기',
+      badge: UNIFY_FEATURE_LABEL,
       label: `${label} → ${pinnedLabel} 📌`,
     };
   }
 
   return {
-    badge: isUnify ? '통일형 찾기' : LITERAL_FIND_FEATURE_LABEL,
+    badge: isUnify ? UNIFY_FEATURE_LABEL : LITERAL_FIND_FEATURE_LABEL,
     label,
   };
 }

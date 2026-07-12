@@ -1,15 +1,15 @@
 /**
- * 프로젝트 검수 진행 이력 — 검수 1회(세션)마다 지적 건수를 한 줄씩 쌓는 장부.
- * 같은 세션 안(90초 이내) 재기록은 마지막 줄을 갱신한다.
+ * 프로젝트 검수 진행 이력 — 검수 1회(버튼 1번)마다 지적 건수를 한 줄씩 쌓는 장부.
+ * 같은 검수 직후 중복 기입만 짧게 합친다(실수로 두 번 호출 방지).
  */
 
 export const MAX_WORK_HISTORY_ENTRIES = 60;
-/** 그래프에 표시할 최근 검수 세션 수 */
-export const WORK_CHART_SESSION_COUNT = 3;
+/** 그래프에 표시할 최근 검수 세션 수 (하루 여러 회차 포함) */
+export const WORK_CHART_SESSION_COUNT = 7;
 /** 꺾은선을 그릴 최소 세션 수 */
 export const WORK_CHART_MIN_SESSIONS_FOR_LINE = 2;
-/** 같은 세션으로 묶는 최대 간격(ms) — 검수 중 건수 갱신만 덮어쓴다 */
-export const SESSION_COALESCE_MS = 90 * 1000;
+/** 같은 검수 완료 직후 중복 append만 합침 (시간 단위 세션 구분 아님) */
+export const SESSION_COALESCE_MS = 10 * 1000;
 
 /** @typedef {{
  *   at: string,
@@ -288,27 +288,13 @@ export function selectRecentWorkSessions(history, count = WORK_CHART_SESSION_COU
 }
 
 /**
- * 그래프 표시용 이력 — 이력이 비어 있으면 마지막 스냅샷 1점으로 대신한다.
+ * 그래프 표시용 이력 — 실제 검수 세션(`workHistory`)만 쓴다.
+ * projectContext 스냅샷으로 가짜 점을 만들지 않는다.
  *
  * @param {unknown} history
- * @param {import('./projectMeta.js').ProjectContext | undefined} ctx
+ * @param {import('./projectMeta.js').ProjectContext | undefined} [_ctx]
  * @returns {WorkHistoryEntry[] | undefined}
  */
-export function buildDisplayWorkHistory(history, ctx) {
-  const recent = selectRecentWorkSessions(history);
-  if (recent?.length) return recent;
-  if (!ctx?.lastWorkedAt) return undefined;
-  return appendWorkHistoryEntry(
-    undefined,
-    {
-      editorReview: ctx.lastEditorReviewFindingCount,
-      spelling: ctx.lastBuiltinSpellingFindingCount ?? ctx.lastSpellingFindingCount,
-      consistencyFind: ctx.lastConsistencyFindCount,
-      consistencyUnify: ctx.lastConsistencyUnifyCount,
-      consistencyCommonString: ctx.lastConsistencyCommonStringCount,
-      consistency: ctx.lastConsistencyFindingCount,
-      bonBojo: ctx.lastBonBojoFindingCount,
-    },
-    ctx.lastWorkedAt,
-  );
+export function buildDisplayWorkHistory(history, _ctx) {
+  return selectRecentWorkSessions(history);
 }

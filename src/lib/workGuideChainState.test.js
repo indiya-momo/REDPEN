@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beginGuestBrowse, endGuestBrowse } from './guestBrowsePolicy.js';
 import { getWorkGuideChainState } from './workGuideChainState.js';
 import { WORK_GUIDE_KEYS, workGuideStorageKey } from './workGuideKeys.js';
 
@@ -16,9 +17,20 @@ beforeEach(() => {
       delete store[key];
     },
   });
+  vi.stubGlobal('sessionStorage', {
+    getItem: (key) => store[`session:${key}`] ?? null,
+    setItem: (key, value) => {
+      store[`session:${key}`] = String(value);
+    },
+    removeItem: (key) => {
+      delete store[`session:${key}`];
+    },
+  });
+  beginGuestBrowse();
 });
 
 afterEach(() => {
+  endGuestBrowse();
   vi.unstubAllGlobals();
 });
 
@@ -312,6 +324,29 @@ describe('getWorkGuideChainState', () => {
     );
     expect(chain.showFirstResultGuide).toBe(true);
     expect(chain.showPdfOpenedGuide).toBe(false);
+  });
+
+  it('일반 작업(둘러보기 아님)에서는 말풍선 체인이 꺼진다', () => {
+    endGuestBrowse();
+    const chain = getWorkGuideChainState('u1', baseCtx, keyFor, null, {
+      pinAll: false,
+      guestBrowseActive: false,
+    });
+    expect(chain.workGuideOpen).toBe(false);
+    expect(chain.showLeftCriteriaGuide).toBe(false);
+    expect(chain.showConsistencyUnifyPinGuide).toBe(false);
+    expect(chain.requestConsistencyTab).toBe(false);
+  });
+
+  it('일반 작업에서는 pinAll만으로도 말풍선이 켜지지 않는다', () => {
+    endGuestBrowse();
+    const chain = getWorkGuideChainState('u1', baseCtx, keyFor, null, {
+      pinAll: true,
+      guestBrowseActive: false,
+    });
+    expect(chain.workGuideOpen).toBe(false);
+    expect(chain.showLeftCriteriaGuide).toBe(false);
+    expect(chain.showConsistencyUnifyPinGuide).toBe(false);
   });
 
   it('온보딩 5회 소진 후 말풍선이 뜨지 않는다', () => {

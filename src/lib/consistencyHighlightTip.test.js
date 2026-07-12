@@ -19,7 +19,7 @@ describe('getConsistencyHighlightTip', () => {
     ).toBe('시트 안내');
   });
 
-  it('formats auxiliary-verb as 본+보 : (tag)', () => {
+  it('formats auxiliary-verb as 본용언+보조용언 : (tag)', () => {
     expect(
       getConsistencyHighlightTip({
         find: 'F',
@@ -30,7 +30,7 @@ describe('getConsistencyHighlightTip', () => {
         groupDisplayLabel: '본(-아/어) + 있다',
         instances: [],
       }),
-    ).toBe('본+보 : 본(-아/어) + 있다');
+    ).toBe('본용언+보조용언 : 본(-아/어) + 있다');
   });
 
   it('formats literal consistency without replace line', () => {
@@ -84,7 +84,7 @@ describe('getConsistencyHighlightTip', () => {
         },
         unifyRules,
       ),
-    ).toBe('통일형 찾기 : 미국˅정부 → 미국정부 📌');
+    ).toBe('통일형 만들기 : 미국˅정부 → 미국정부 📌');
     expect(
       getConsistencyHighlightTip(
         {
@@ -150,7 +150,7 @@ describe('getConsistencyResultCardParts', () => {
         },
         unifyRules,
       ),
-    ).toEqual({ badge: '통일형 찾기', label: '세계경제 📌' });
+    ).toEqual({ badge: '통일형 만들기', label: '세계경제 📌' });
     expect(
       getConsistencyResultCardParts(
         {
@@ -164,8 +164,51 @@ describe('getConsistencyResultCardParts', () => {
         unifyRules,
       ),
     ).toEqual({
-      badge: '통일형 찾기',
+      badge: '통일형 만들기',
       label: '세계˅경제 → 세계경제 📌',
+    });
+  });
+
+  it('tailWord 없이도 라벨로 통일형 만들기 배지를 판별한다', () => {
+    const unifyRules = [
+      {
+        patternKind: 'compound-find',
+        tailWord: '캐나다정부',
+        consistencyUnifyEntry: true,
+        consistencyUnifyPinned: true,
+      },
+      {
+        patternKind: 'compound-find',
+        tailWord: '캐나다 정부',
+        consistencyUnifyEntry: true,
+      },
+    ];
+    expect(
+      getConsistencyResultCardParts(
+        {
+          find: '캐나다정부',
+          replace: '$0',
+          label: '캐나다정부',
+          patternKind: 'compound-find',
+          instances: [{}],
+        },
+        unifyRules,
+      ),
+    ).toEqual({ badge: '통일형 만들기', label: '캐나다정부 📌' });
+    expect(
+      getConsistencyResultCardParts(
+        {
+          find: '캐나다\\s+정부',
+          replace: '$0',
+          label: '캐나다˅정부',
+          patternKind: 'compound-spacing',
+          instances: [{}],
+        },
+        unifyRules,
+      ),
+    ).toEqual({
+      badge: '통일형 만들기',
+      label: '캐나다˅정부 → 캐나다정부 📌',
     });
   });
 
@@ -182,7 +225,7 @@ describe('getConsistencyResultCardParts', () => {
     ).toEqual({ badge: '공통 문자열 찾기', label: '@정부' });
   });
 
-  it('auxiliary-verb — 본+보 배지 + 항목 라벨', () => {
+  it('auxiliary-verb — 본용언+보조용언 배지 + 항목 라벨', () => {
     expect(
       getConsistencyResultCardParts({
         find: 'F',
@@ -193,7 +236,7 @@ describe('getConsistencyResultCardParts', () => {
         groupDisplayLabel: '본(-아/어) + 가다',
         instances: [{}],
       }),
-    ).toEqual({ badge: '본+보', label: '본(-아/어) + 가다' });
+    ).toEqual({ badge: '본용언+보조용언', label: '본(-아/어) + 가다' });
   });
 });
 
