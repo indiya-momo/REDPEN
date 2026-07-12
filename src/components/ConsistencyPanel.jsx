@@ -48,9 +48,11 @@ import {
   CONSISTENCY_EXCLUDE_INPUT_PLACEHOLDER,
   CONSISTENCY_LITERAL_INPUT_PLACEHOLDER,
   CONSISTENCY_PHRASE_SLOT_INPUT_PLACEHOLDER,
+  GUEST_BROWSE_LITERAL_INPUT_PLACEHOLDER,
 } from './consistency/constants.js';
 import TocBodySetupPanel from '../toc-body/components/TocBodySetupPanel.jsx';
 import { isTocBodyCheckEnabled } from '../lib/featureFlags.js';
+import { isGuestBrowseActive } from '../lib/guestBrowsePolicy.js';
 import DetailsChevron from './DetailsChevron.jsx';
 import TooltipGuide from './TooltipGuide.jsx';
 
@@ -138,6 +140,9 @@ export default function ConsistencyPanel({
   const [literalInput, setLiteralInput] = useState('');
   const [slotInput, setSlotInput] = useState('');
   const [globalExcludeInput, setGlobalExcludeInput] = useState('');
+  const literalPlaceholder = isGuestBrowseActive()
+    ? GUEST_BROWSE_LITERAL_INPUT_PLACEHOLDER
+    : CONSISTENCY_LITERAL_INPUT_PLACEHOLDER;
 
   useEffect(() => {
     setGlobalExcludeInput('');
@@ -188,7 +193,7 @@ export default function ConsistencyPanel({
   }
 
   function registerLiteral() {
-    const input = literalInput.trim() || CONSISTENCY_LITERAL_INPUT_PLACEHOLDER;
+    const input = literalInput.trim() || literalPlaceholder;
     if (registerConsistencyLiteralBatch(input, customRules, applyCustomRules)) {
       setLiteralInput('');
     }
@@ -279,7 +284,7 @@ export default function ConsistencyPanel({
             value={literalInput}
             onChange={setLiteralInput}
             onRegister={registerLiteral}
-            placeholder={CONSISTENCY_LITERAL_INPUT_PLACEHOLDER}
+            placeholder={literalPlaceholder}
             ariaLabel={LITERAL_FIND_FEATURE_LABEL}
             addButtonGuideAttr="literal-add"
             onAddButtonClick={onLiteralAddButtonClick}
@@ -481,9 +486,11 @@ export default function ConsistencyPanel({
                   {AUXILIARY_VERB_FEATURE_LABEL}
                 </span>
                 <br />
-                맞춤법 공부 많이 되고
+                집사가 이거 넣다가
                 <br />
-                자기 전에 생각난다냥...
+                맞춤법 공부 많이 했다냥
+                <br />
+                자기전에 생각난다냥...
               </>
             }
             onDismiss={auxiliaryVerbGuide.onDismiss}

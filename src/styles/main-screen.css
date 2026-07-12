@@ -1259,6 +1259,15 @@
   color: var(--color-text-muted);
 }
 
+.tooltip-guide__work-tab-chip--spelling {
+  border-radius: calc(2px * var(--tooltip-scale, 1));
+  background: color-mix(in srgb, var(--pillar-spelling) 16%, #fffdfb);
+  color: var(--accent-terracotta-deep);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--pillar-spelling) 42%, transparent),
+    inset 0 calc(-2px * var(--tooltip-scale, 1)) 0 var(--accent-terracotta);
+}
+
 .tooltip-guide__work-tab-chip--consistency {
   background: var(--color-surface-raised);
   color: var(--accent-terracotta-deep);
@@ -3580,6 +3589,17 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
+}
+
+.pdf-work-pane .pdf-center-stage--guest-prep {
+  overflow: hidden;
+}
+
+.pdf-center-stage__guest-prep-label {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
 }
 
 /* ── 좌측 패널 UI 90% 통일 스케일 (--panel-ui-scale) ── */

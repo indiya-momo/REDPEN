@@ -32,6 +32,7 @@ const COMPOUND_LITERAL_KINDS = new Set([
  *   blockedMessage: (current: number, adding?: number) => string,
  *   emptyInputMessage: string,
  *   markUnifyEntry?: boolean,
+ *   silentLimit?: boolean,
  * }} ConsistencyLiteralRegisterOptions
  */
 
@@ -106,7 +107,9 @@ function registerConsistencyLiteralBatchWithOptions(
   const variants = parseConsistencyInput(input);
   if (!variants.length) {
     if (currentCount >= options.maxSlots) {
-      alert(options.blockedMessage(currentCount, 0));
+      if (!options.silentLimit) {
+        alert(options.blockedMessage(currentCount, 0));
+      }
       return false;
     }
     alert(options.emptyInputMessage);
@@ -159,7 +162,9 @@ function registerConsistencyLiteralBatchWithOptions(
   }
 
   if (!options.canAddEntries(customRules, newEntryCount)) {
-    alert(options.blockedMessage(currentCount, newEntryCount));
+    if (!options.silentLimit) {
+      alert(options.blockedMessage(currentCount, newEntryCount));
+    }
     return false;
   }
 
@@ -189,13 +194,22 @@ export function registerConsistencyLiteralBatch(input, customRules, onApplyRules
  * @param {string} input
  * @param {import('./ruleTypes.js').Rule[]} customRules
  * @param {(next: import('./ruleTypes.js').Rule[]) => boolean} onApplyRules
+ * @param {{ silentLimit?: boolean }} [opts]
  * @returns {boolean}
  */
-export function registerConsistencyUnifyBatch(input, customRules, onApplyRules) {
+export function registerConsistencyUnifyBatch(
+  input,
+  customRules,
+  onApplyRules,
+  opts = {},
+) {
   return registerConsistencyLiteralBatchWithOptions(
     input,
     customRules,
     onApplyRules,
-    UNIFY_REGISTER_OPTIONS,
+    {
+      ...UNIFY_REGISTER_OPTIONS,
+      silentLimit: Boolean(opts.silentLimit),
+    },
   );
 }

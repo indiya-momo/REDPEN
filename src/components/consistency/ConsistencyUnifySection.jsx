@@ -9,10 +9,11 @@ import {
   listConsistencyUnifyEntries,
   MAX_CONSISTENCY_UNIFY_SLOTS,
 } from '../../lib/consistencyRuleLimit.js';
+import { isGuestBrowseActive } from '../../lib/guestBrowsePolicy.js';
 import ConsistencyRegisterField from './ConsistencyRegisterField.jsx';
 import ConsistencyHintExample from './ConsistencyHintExample.jsx';
 import UnifyRegisteredList from './UnifyRegisteredList.jsx';
-import { CONSISTENCY_UNIFY_INPUT_PLACEHOLDER } from './constants.js';
+import { CONSISTENCY_UNIFY_INPUT_PLACEHOLDER, GUEST_BROWSE_UNIFY_INPUT_PLACEHOLDER } from './constants.js';
 
 /**
  * @param {{
@@ -51,13 +52,30 @@ export default function ConsistencyUnifySection({
     [customRules],
   );
   const unifyRegisterFull = unifyEntries.length >= MAX_CONSISTENCY_UNIFY_SLOTS;
+  const guestBrowse = isGuestBrowseActive();
+  const unifyPlaceholder = guestBrowse
+    ? GUEST_BROWSE_UNIFY_INPUT_PLACEHOLDER
+    : CONSISTENCY_UNIFY_INPUT_PLACEHOLDER;
+  /** 둘러보기 — 한도 안내 숨김·가이드 + 클릭 유지 (한도 자체는 유지) */
+  const suppressLimitMessage = guestBrowse;
+  const registerBlocked = unifyRegisterFull && !guestBrowse;
 
   const registerUnified = useCallback(() => {
-    const input = unifiedDraft.trim() || CONSISTENCY_UNIFY_INPUT_PLACEHOLDER;
-    if (registerConsistencyUnifyBatch(input, customRules, onApplyRules)) {
+    const input = unifiedDraft.trim() || unifyPlaceholder;
+    if (
+      registerConsistencyUnifyBatch(input, customRules, onApplyRules, {
+        silentLimit: suppressLimitMessage,
+      })
+    ) {
       setUnifiedDraft('');
     }
-  }, [customRules, onApplyRules, unifiedDraft]);
+  }, [
+    customRules,
+    onApplyRules,
+    suppressLimitMessage,
+    unifiedDraft,
+    unifyPlaceholder,
+  ]);
 
   const pinEntry = useCallback(
     (tailWord) => {
@@ -112,9 +130,10 @@ export default function ConsistencyUnifySection({
             value={unifiedDraft}
             onChange={setUnifiedDraft}
             onRegister={registerUnified}
-            placeholder={CONSISTENCY_UNIFY_INPUT_PLACEHOLDER}
+            placeholder={unifyPlaceholder}
             ariaLabel="통일형 만들기"
-            registerDisabled={unifyRegisterFull}
+            registerDisabled={registerBlocked}
+            hideLimitTitle={suppressLimitMessage}
             addButtonGuideAttr={addButtonGuideAttr}
             onAddButtonClick={onAddButtonClick}
           />
@@ -132,9 +151,10 @@ export default function ConsistencyUnifySection({
             value={unifiedDraft}
             onChange={setUnifiedDraft}
             onRegister={registerUnified}
-            placeholder={CONSISTENCY_UNIFY_INPUT_PLACEHOLDER}
+            placeholder={unifyPlaceholder}
             ariaLabel="통일형 만들기"
-            registerDisabled={unifyRegisterFull}
+            registerDisabled={registerBlocked}
+            hideLimitTitle={suppressLimitMessage}
             addButtonGuideAttr={addButtonGuideAttr}
             onAddButtonClick={onAddButtonClick}
           />

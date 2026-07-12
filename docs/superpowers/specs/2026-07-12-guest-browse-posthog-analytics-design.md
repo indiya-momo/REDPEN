@@ -1,7 +1,7 @@
 # 둘러보기 PostHog Product Analytics
 
 **날짜:** 2026-07-12  
-**상태:** 초안 (구현 전 검토)
+**상태:** 구현됨 (2026-07-12)
 
 ## 목표
 
@@ -24,14 +24,16 @@ PostHog에서 **일별**로 아래 두 지표를 본다.
 - `source`: `'welcome'` (시작) / `'work_exit_guide'` (완료) — 나중에 확장용
 - 기존 공통 규칙 준수: 이메일·원고 내용 등 PII 미전송
 
-## PostHog에서 보는 법
+## PostHog에서 보는 법 (Product analytics)
 
-- Insights → Trends
-- Event: `guest_browse_started` / `guest_browse_completed`
-- Aggregation: **Unique users**
-- Interval: **Daily**
+코드 이벤트 → **Product analytics** Insights. Web analytics 탭이 아님.
 
-(선택) Funnel: started → completed, Unique users, Daily — 완료율 한눈에 보기.
+1. 사이드바 **Product analytics** → **New insight** (Trends)
+2. 이벤트: `guest_browse_started`, `guest_browse_completed`
+3. Aggregation: **Unique users** · Interval: **Daily**
+4. Save 후 대시보드에 추가
+
+또는 Personal API 키로 `npm run posthog:setup-beta` → 대시보드 「인디야 오픈베타」에 둘러보기 Trends·Funnel 자동 추가 (`project-docs/analytics-beta.md`).
 
 ## 구현 요지
 

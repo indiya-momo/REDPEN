@@ -37,13 +37,17 @@ import {
 import { isLoginRequiredForChecks } from './lib/checkAuthGate.js';
 import {
   beginGuestBrowse,
+  clearGuestBrowseConsistencyChips,
   endGuestBrowse,
   guestBrowseAllowsWorkspaceStay,
+  isGuestBrowseActive,
+  prepareGuestBrowseConsistencyRules,
 } from './lib/guestBrowsePolicy.js';
 import { isOnboardingComplete } from './lib/userProfileStorage.js';
 import {
   identifyAnalyticsUser,
   resetAnalyticsUser,
+  trackGuestBrowseStarted,
   waitForAnalyticsReady,
 } from './lib/analytics.js';
 import { resolveQuotaAuthEmail } from './lib/betaDailyQuota.js';
@@ -404,7 +408,14 @@ export default function App() {
         }}
         onBrowse={() => {
           beginGuestBrowse();
+          trackGuestBrowseStarted();
           setMainWorkTab('spelling');
+          updateActiveSet({
+            customRules: prepareGuestBrowseConsistencyRules(
+              activeSet?.customRules ?? [],
+            ),
+            globalExcludePhrases: [],
+          });
           void clearWorkSession()
             .catch(() => {})
             .finally(() => {
@@ -484,7 +495,16 @@ export default function App() {
       onTouchActiveProjectContext={touchActiveProjectContext}
       onOpenWelcome={() => {
         welcomeManualReturnRef.current = true;
+        const wasGuest = isGuestBrowseActive();
         endGuestBrowse();
+        if (wasGuest) {
+          updateActiveSet({
+            customRules: clearGuestBrowseConsistencyChips(
+              activeSet?.customRules ?? [],
+            ),
+            globalExcludePhrases: [],
+          });
+        }
         flushPendingRuleSetsSave();
         void clearWorkSession();
         setMainWorkTab('spelling');
