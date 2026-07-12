@@ -34,8 +34,9 @@ export function isMyPageProjectHubEnabled() {
 
 /**
  * 맞춤법 탭 「외래어 표기(영어 → 한글 지원)」.
- * - 기본 켜짐 (로그인·게스트 제한 없음)
+ * - 둘러보기·로그인 작업 모두 기본 표시
  * - 끌 때만 `VITE_FEATURE_LOANWORD_CONVERTER=false`
+ * - Pages 배포는 deploy-pages.yml에서 `true` 명시
  */
 export function isLoanwordConverterEnabled() {
   if (import.meta.env.VITE_FEATURE_LOANWORD_CONVERTER === 'false') return false;

@@ -233,7 +233,7 @@ export default function WelcomePcScreen({
     <div className="welcome-pc__perf-beta welcome-pc__perf-beta--guest">
       <span className="welcome-pc__perf-badge-beta">오픈베타 중</span>
       <span className="welcome-pc__perf-quota">
-        회원은 매일 검수 기능 무료(크롬 브라우저 권장)
+        회원은 매일 전 기능 무료 사용(크롬 브라우저 권장)
       </span>
     </div>
   );
