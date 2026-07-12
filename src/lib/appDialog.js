@@ -12,6 +12,7 @@
  *   confirmLabel?: string,
  *   cancelLabel?: string,
  *   autoCloseMs?: number,
+ *   showGuideHand?: boolean,
  * }} AppDialogOptions */
 
 const HOST_REGISTRY_KEY = Symbol.for('pdf-publish-proofread.appDialogHost');
