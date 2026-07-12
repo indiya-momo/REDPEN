@@ -49,6 +49,7 @@ describe('getWorkGuideChainState', () => {
       pinAll: false,
     });
     expect(chain.showLeftCriteriaGuide).toBe(true);
+    expect(chain.showSpellingStartCheckGuide).toBe(false);
     expect(chain.showPdfOpenedGuide).toBe(false);
     expect(chain.showFirstResultGuide).toBe(false);
   });
@@ -62,11 +63,12 @@ describe('getWorkGuideChainState', () => {
       { pinAll: false },
     );
     expect(chain.showLeftCriteriaGuide).toBe(true);
+    expect(chain.showSpellingStartCheckGuide).toBe(false);
     expect(chain.showFirstResultGuide).toBe(false);
     expect(chain.showPdfOpenedGuide).toBe(false);
   });
 
-  it('1단 확인 후 검수 전에는 2·3단이 없다', () => {
+  it('1단 확인 후 검수 전에는 1b(검수 시작)만 보인다', () => {
     const dismissedMap = {
       [keyFor(WORK_GUIDE_KEYS.LEFT_CRITERIA)]: true,
     };
@@ -74,14 +76,16 @@ describe('getWorkGuideChainState', () => {
       pinAll: false,
     });
     expect(chain.showLeftCriteriaGuide).toBe(false);
+    expect(chain.showSpellingStartCheckGuide).toBe(true);
     expect(chain.showFirstResultGuide).toBe(false);
     expect(chain.showPdfOpenedGuide).toBe(false);
-    expect(chain.workGuideOpen).toBe(false);
+    expect(chain.workGuideOpen).toBe(true);
   });
 
-  it('1단 확인·검수 완료 후 2단(결과)이 보인다', () => {
+  it('1단·1b 확인·검수 완료 후 2단(결과)이 보인다', () => {
     const dismissedMap = {
       [keyFor(WORK_GUIDE_KEYS.LEFT_CRITERIA)]: true,
+      [keyFor(WORK_GUIDE_KEYS.SPELLING_START_CHECK)]: true,
     };
     const chain = getWorkGuideChainState(
       'u1',
@@ -91,10 +95,11 @@ describe('getWorkGuideChainState', () => {
       { pinAll: false },
     );
     expect(chain.showFirstResultGuide).toBe(true);
+    expect(chain.showSpellingStartCheckGuide).toBe(false);
     expect(chain.showPdfOpenedGuide).toBe(false);
   });
 
-  it('dev force 1이어도 1단 dismiss면 2·3단이 안 보인다', () => {
+  it('dev force 1이어도 1단 dismiss면 1단은 안 보이고 1b로 넘어간다', () => {
     vi.stubGlobal('sessionStorage', {
       getItem: () => '1',
       setItem: () => {},
@@ -110,6 +115,7 @@ describe('getWorkGuideChainState', () => {
       pinAll: false,
     });
     expect(chain.showLeftCriteriaGuide).toBe(false);
+    expect(chain.showSpellingStartCheckGuide).toBe(true);
     expect(chain.showFirstResultGuide).toBe(false);
     expect(chain.showPdfOpenedGuide).toBe(false);
   });
@@ -118,6 +124,7 @@ describe('getWorkGuideChainState', () => {
     const dismissedMap = {
       [keyFor(WORK_GUIDE_KEYS.PDF_OPENED)]: true,
       [keyFor(WORK_GUIDE_KEYS.LEFT_CRITERIA)]: true,
+      [keyFor(WORK_GUIDE_KEYS.SPELLING_START_CHECK)]: true,
       [keyFor(WORK_GUIDE_KEYS.FIRST_RESULT)]: true,
       [keyFor(WORK_GUIDE_KEYS.CONSISTENCY_INTRO)]: true,
     };
@@ -137,6 +144,7 @@ describe('getWorkGuideChainState', () => {
     const dismissedMap = {
       [keyFor(WORK_GUIDE_KEYS.PDF_OPENED)]: true,
       [keyFor(WORK_GUIDE_KEYS.LEFT_CRITERIA)]: true,
+      [keyFor(WORK_GUIDE_KEYS.SPELLING_START_CHECK)]: true,
       [keyFor(WORK_GUIDE_KEYS.FIRST_RESULT)]: true,
       [keyFor(WORK_GUIDE_KEYS.CONSISTENCY_INTRO)]: true,
       [keyFor(WORK_GUIDE_KEYS.CONSISTENCY_UNIFY_PIN)]: true,
@@ -156,6 +164,7 @@ describe('getWorkGuideChainState', () => {
     const dismissedMap = {
       [keyFor(WORK_GUIDE_KEYS.PDF_OPENED)]: true,
       [keyFor(WORK_GUIDE_KEYS.LEFT_CRITERIA)]: true,
+      [keyFor(WORK_GUIDE_KEYS.SPELLING_START_CHECK)]: true,
       [keyFor(WORK_GUIDE_KEYS.FIRST_RESULT)]: true,
     };
     const chain = getWorkGuideChainState(
@@ -173,6 +182,7 @@ describe('getWorkGuideChainState', () => {
     const dismissedMap = {
       [keyFor(WORK_GUIDE_KEYS.PDF_OPENED)]: true,
       [keyFor(WORK_GUIDE_KEYS.LEFT_CRITERIA)]: true,
+      [keyFor(WORK_GUIDE_KEYS.SPELLING_START_CHECK)]: true,
       [keyFor(WORK_GUIDE_KEYS.FIRST_RESULT)]: true,
     };
     const chain = getWorkGuideChainState(
@@ -191,6 +201,7 @@ describe('getWorkGuideChainState', () => {
     const dismissedMap = {
       [keyFor(WORK_GUIDE_KEYS.FIRST_RESULT)]: true,
       [keyFor(WORK_GUIDE_KEYS.LEFT_CRITERIA)]: true,
+      [keyFor(WORK_GUIDE_KEYS.SPELLING_START_CHECK)]: true,
     };
     const chain = getWorkGuideChainState(
       'u1',
@@ -211,6 +222,7 @@ describe('getWorkGuideChainState', () => {
       [keyFor(WORK_GUIDE_KEYS.PRE_UPLOAD)]: true,
       [keyFor(WORK_GUIDE_KEYS.PDF_OPENED)]: true,
       [keyFor(WORK_GUIDE_KEYS.LEFT_CRITERIA)]: true,
+      [keyFor(WORK_GUIDE_KEYS.SPELLING_START_CHECK)]: true,
       [keyFor(WORK_GUIDE_KEYS.FIRST_RESULT)]: true,
       [keyFor(WORK_GUIDE_KEYS.CONSISTENCY_INTRO)]: true,
       [keyFor(WORK_GUIDE_KEYS.CONSISTENCY_UNIFY_PIN)]: true,
@@ -232,6 +244,7 @@ describe('getWorkGuideChainState', () => {
     const dismissedMap = {
       [keyFor(WORK_GUIDE_KEYS.PDF_OPENED)]: true,
       [keyFor(WORK_GUIDE_KEYS.LEFT_CRITERIA)]: true,
+      [keyFor(WORK_GUIDE_KEYS.SPELLING_START_CHECK)]: true,
       [keyFor(WORK_GUIDE_KEYS.FIRST_RESULT)]: true,
       [keyFor(WORK_GUIDE_KEYS.CONSISTENCY_INTRO)]: true,
       [keyFor(WORK_GUIDE_KEYS.CONSISTENCY_UNIFY_PIN)]: true,
@@ -259,6 +272,7 @@ describe('getWorkGuideChainState', () => {
     const dismissedMap = {
       [keyFor(WORK_GUIDE_KEYS.PDF_OPENED)]: true,
       [keyFor(WORK_GUIDE_KEYS.LEFT_CRITERIA)]: true,
+      [keyFor(WORK_GUIDE_KEYS.SPELLING_START_CHECK)]: true,
       [keyFor(WORK_GUIDE_KEYS.FIRST_RESULT)]: true,
       [keyFor(WORK_GUIDE_KEYS.CONSISTENCY_INTRO)]: true,
       [keyFor(WORK_GUIDE_KEYS.CONSISTENCY_UNIFY_PIN)]: true,
@@ -285,6 +299,7 @@ describe('getWorkGuideChainState', () => {
     const dismissedMap = {
       [keyFor(WORK_GUIDE_KEYS.PDF_OPENED)]: true,
       [keyFor(WORK_GUIDE_KEYS.LEFT_CRITERIA)]: true,
+      [keyFor(WORK_GUIDE_KEYS.SPELLING_START_CHECK)]: true,
       [keyFor(WORK_GUIDE_KEYS.FIRST_RESULT)]: true,
       [keyFor(WORK_GUIDE_KEYS.CONSISTENCY_INTRO)]: true,
       [keyFor(WORK_GUIDE_KEYS.CONSISTENCY_UNIFY_PIN)]: true,
@@ -314,6 +329,7 @@ describe('getWorkGuideChainState', () => {
   it('검수 완료여도 2단(결과) 미확인이면 3단 대신 2단', () => {
     const dismissedMap = {
       [keyFor(WORK_GUIDE_KEYS.LEFT_CRITERIA)]: true,
+      [keyFor(WORK_GUIDE_KEYS.SPELLING_START_CHECK)]: true,
     };
     const chain = getWorkGuideChainState(
       'u1',

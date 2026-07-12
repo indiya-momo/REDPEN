@@ -30,27 +30,7 @@ const styles = {
     userSelect: 'none',
     listStyle: 'none',
   },
-  form: { display: 'flex', gap: 6, margin: '10px 0 6px' },
-  input: {
-    flex: 1,
-    minWidth: 0,
-    padding: '6px 10px',
-    border: '1px solid rgba(0, 0, 0, 0.2)',
-    borderRadius: 6,
-    fontSize: 13,
-    fontWeight: 400,
-    color: 'var(--color-text-muted, #6b6258)',
-  },
-  button: {
-    padding: '6px 14px',
-    border: 'none',
-    borderRadius: 6,
-    background: '#4a5568',
-    color: '#fff',
-    cursor: 'pointer',
-    fontSize: 13,
-    whiteSpace: 'nowrap',
-  },
+  form: { margin: '10px 0 6px' },
   sectionLabel: { fontSize: 11, fontWeight: 700, color: '#666', margin: '10px 0 2px' },
   result: {
     border: '1px solid rgba(0, 0, 0, 0.08)',
@@ -59,14 +39,12 @@ const styles = {
     marginTop: 6,
     background: '#fff',
   },
-  officialResult: {
-    border: '1px solid rgba(37, 99, 235, 0.35)',
-    borderRadius: 6,
-    padding: '8px 10px',
+  /** 변환 결과 한글 — 검색창 입력 글씨 시작(좌 패딩 10px)과 맞춤 */
+  hangulResult: {
     marginTop: 6,
-    background: '#f5f9ff',
+    padding: '2px 0 2px 10px',
   },
-  hangul: { fontSize: 18, fontWeight: 700 },
+  hangul: { fontSize: 'calc(18px * 0.9)', fontWeight: 700 },
   badge: {
     display: 'inline-block',
     padding: '0 5px',
@@ -181,7 +159,7 @@ function ApplicationTrace({ result, estimated }) {
 
 function EngineResult({ result, label, estimated }) {
   return (
-    <div style={styles.result}>
+    <div style={styles.hangulResult}>
       <span style={styles.hangul}>{result.hangul}</span>
       <span style={{ ...styles.estBadge, marginLeft: 6 }}>발음 추정</span>
       <span style={styles.meta}>
@@ -192,7 +170,10 @@ function EngineResult({ result, label, estimated }) {
   );
 }
 
-export default function LoanwordConverter() {
+/**
+ * @param {{ onConvertClick?: () => void }} [props]
+ */
+export default function LoanwordConverter({ onConvertClick } = {}) {
   const [input, setInput] = useState('Jo March');
   const [loading, setLoading] = useState(false);
   const [outcome, setOutcome] = useState(null); // { word, official, engine, phrase }
@@ -271,9 +252,10 @@ export default function LoanwordConverter() {
         </span>
       </summary>
 
-      <div style={styles.form}>
+      <div className="loanword-converter__field" style={styles.form}>
         <input
           type="text"
+          className="loanword-converter__input"
           value={input}
           onChange={(e) => setInput(e.target.value.replace(/[^a-zA-Z ]/g, ''))}
           onKeyDown={onKeyDown}
@@ -283,9 +265,17 @@ export default function LoanwordConverter() {
           autoCapitalize="off"
           autoCorrect="off"
           spellCheck={false}
-          style={styles.input}
         />
-        <button type="button" onClick={handleConvert} disabled={loading} style={styles.button}>
+        <button
+          type="button"
+          className="loanword-converter__submit"
+          onClick={() => {
+            onConvertClick?.();
+            void handleConvert();
+          }}
+          disabled={loading}
+          data-work-guide="loanword-convert"
+        >
           {loading ? '변환 중…' : '변환'}
         </button>
       </div>
@@ -296,7 +286,7 @@ export default function LoanwordConverter() {
         <>
           <p style={styles.sectionLabel}>국립국어원 용례집 등재 표기 (공식 심의 결과)</p>
           {groupedOfficial.map((entry) => (
-            <div key={entry.h} style={styles.officialResult}>
+            <div key={entry.h} style={styles.hangulResult}>
               <span style={styles.hangul}>{entry.h}</span>
               <span style={{ ...styles.badge, marginLeft: 6 }}>용례집</span>
               {entry.cats.length ? <span style={styles.meta}>{entry.cats.join(' · ')}</span> : null}
@@ -332,7 +322,7 @@ export default function LoanwordConverter() {
 
       {hasEngine && outcome.phrase && !hasOfficial ? (
         <>
-          <div style={styles.officialResult}>
+          <div style={styles.hangulResult}>
             <span style={styles.hangul}>{outcome.engine.hangul}</span>
             {outcome.engine.words.some((w) => w.source !== 'yongrye') ? (
               outcome.engine.words.every((w) => w.source !== 'yongrye') ? (

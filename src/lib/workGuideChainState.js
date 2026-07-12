@@ -13,6 +13,7 @@ function emptyWorkGuideChainState(pinAll) {
     showPreUploadGuide: false,
     showPdfOpenedGuide: false,
     showLeftCriteriaGuide: false,
+    showSpellingStartCheckGuide: false,
     showFirstResultGuide: false,
     showConsistencyGuide: false,
     showConsistencyUnifyPinGuide: false,
@@ -30,6 +31,9 @@ function emptyWorkGuideChainState(pinAll) {
 export function activeWorkGuideKeyFromChain(chain) {
   if (chain.showPreUploadGuide) return WORK_GUIDE_KEYS.PRE_UPLOAD;
   if (chain.showLeftCriteriaGuide) return WORK_GUIDE_KEYS.LEFT_CRITERIA;
+  if (chain.showSpellingStartCheckGuide) {
+    return WORK_GUIDE_KEYS.SPELLING_START_CHECK;
+  }
   if (chain.showFirstResultGuide) return WORK_GUIDE_KEYS.FIRST_RESULT;
   if (chain.showPdfOpenedGuide) return WORK_GUIDE_KEYS.PDF_OPENED;
   if (chain.showConsistencyGuide) return WORK_GUIDE_KEYS.CONSISTENCY_INTRO;
@@ -49,13 +53,14 @@ export function activeWorkGuideKeyFromChain(chain) {
 export function devWorkGuideStepFromChain(chain) {
   if (chain.showPreUploadGuide) return 0;
   if (chain.showLeftCriteriaGuide) return 1;
-  if (chain.showFirstResultGuide) return 2;
-  if (chain.showPdfOpenedGuide) return 3;
-  if (chain.showConsistencyGuide) return 4;
-  if (chain.showConsistencyUnifyPinGuide) return 5;
-  if (chain.showAuxiliaryVerbGuide) return 6;
-  if (chain.showRuleSetSaveGuide) return 7;
-  if (chain.showWorkExitGuide) return 8;
+  if (chain.showSpellingStartCheckGuide) return 2;
+  if (chain.showFirstResultGuide) return 3;
+  if (chain.showPdfOpenedGuide) return 4;
+  if (chain.showConsistencyGuide) return 5;
+  if (chain.showConsistencyUnifyPinGuide) return 6;
+  if (chain.showAuxiliaryVerbGuide) return 7;
+  if (chain.showRuleSetSaveGuide) return 8;
+  if (chain.showWorkExitGuide) return 9;
   return null;
 }
 
@@ -88,24 +93,29 @@ function getDevForcedWorkGuideChain(step, empty, ctx, pinAll, keyFor, dismissedM
       return { ...base, showLeftCriteriaGuide: true };
     case 2:
       if (!d(WORK_GUIDE_KEYS.LEFT_CRITERIA)) return null;
+      if (d(WORK_GUIDE_KEYS.SPELLING_START_CHECK)) return null;
+      return { ...base, showSpellingStartCheckGuide: true };
+    case 3:
+      if (!d(WORK_GUIDE_KEYS.LEFT_CRITERIA)) return null;
+      if (!d(WORK_GUIDE_KEYS.SPELLING_START_CHECK)) return null;
       if (d(WORK_GUIDE_KEYS.FIRST_RESULT)) return null;
       return pageTextsReady ? { ...base, showFirstResultGuide: true } : null;
-    case 3:
+    case 4:
       if (d(WORK_GUIDE_KEYS.PDF_OPENED)) return null;
       return pageTextsReady ? { ...base, showPdfOpenedGuide: true } : null;
-    case 4:
+    case 5:
       if (d(WORK_GUIDE_KEYS.CONSISTENCY_INTRO)) return null;
       return { ...base, showConsistencyGuide: true };
-    case 5:
+    case 6:
       if (d(WORK_GUIDE_KEYS.CONSISTENCY_UNIFY_PIN)) return null;
       return { ...base, showConsistencyUnifyPinGuide: true };
-    case 6:
+    case 7:
       if (d(WORK_GUIDE_KEYS.AUXILIARY_VERB_INTRO)) return null;
       return { ...base, showAuxiliaryVerbGuide: true };
-    case 7:
+    case 8:
       if (d(WORK_GUIDE_KEYS.RULE_SET_SAVE)) return null;
       return { ...base, showRuleSetSaveGuide: true };
-    case 8:
+    case 9:
       if (d(WORK_GUIDE_KEYS.WORK_EXIT)) return null;
       return { ...base, showWorkExitGuide: true };
     default:
@@ -171,8 +181,27 @@ function computeWorkGuideChainState(ctx, keyFor, dismissedMap, options) {
     };
   }
 
+  if (
+    spellingActive &&
+    hasPdf &&
+    d(WORK_GUIDE_KEYS.LEFT_CRITERIA) &&
+    !d(WORK_GUIDE_KEYS.SPELLING_START_CHECK) &&
+    !spellingCheckDone
+  ) {
+    return {
+      ...empty,
+      showSpellingStartCheckGuide: true,
+      workGuideOpen: true,
+    };
+  }
+
   if (spellingActive && pageTextsReady) {
-    if (spellingCheckDone && !d(WORK_GUIDE_KEYS.FIRST_RESULT)) {
+    if (
+      spellingCheckDone &&
+      d(WORK_GUIDE_KEYS.LEFT_CRITERIA) &&
+      d(WORK_GUIDE_KEYS.SPELLING_START_CHECK) &&
+      !d(WORK_GUIDE_KEYS.FIRST_RESULT)
+    ) {
       return {
         ...empty,
         showFirstResultGuide: true,
@@ -182,7 +211,9 @@ function computeWorkGuideChainState(ctx, keyFor, dismissedMap, options) {
   }
 
   const spellingStepsDone =
-    d(WORK_GUIDE_KEYS.LEFT_CRITERIA) && d(WORK_GUIDE_KEYS.FIRST_RESULT);
+    d(WORK_GUIDE_KEYS.LEFT_CRITERIA) &&
+    d(WORK_GUIDE_KEYS.SPELLING_START_CHECK) &&
+    d(WORK_GUIDE_KEYS.FIRST_RESULT);
 
   if (spellingCheckDone && spellingStepsDone && !d(WORK_GUIDE_KEYS.CONSISTENCY_INTRO)) {
     if (!consistencyActive) {

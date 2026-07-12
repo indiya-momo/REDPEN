@@ -9,6 +9,7 @@ export const EMPTY_GUEST_BROWSE_WORK_GUIDE = Object.freeze({
   showPreUploadGuide: false,
   showPdfOpenedGuide: false,
   showLeftCriteriaGuide: false,
+  showSpellingStartCheckGuide: false,
   showFirstResultGuide: false,
   showConsistencyGuide: false,
   showConsistencyUnifyPinGuide: false,

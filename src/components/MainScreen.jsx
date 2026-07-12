@@ -1068,24 +1068,30 @@ export default function MainScreen({
     if (guestBrowseAutoRunsCriteriaCheck()) {
       markGuestBrowseCriteriaClick();
     }
-    if (guestWorkGuide.showLeftCriteriaGuide) {
+    if (
+      guestWorkGuide.showLeftCriteriaGuide ||
+      guestWorkGuide.showSpellingStartCheckGuide
+    ) {
       guestWorkGuide.dismiss(WORK_GUIDE_KEYS.LEFT_CRITERIA);
+      guestWorkGuide.dismiss(WORK_GUIDE_KEYS.SPELLING_START_CHECK);
     }
     void ruleCheck.runSpellingCheck();
   }, [
     guestWorkGuide.dismiss,
     guestWorkGuide.showLeftCriteriaGuide,
+    guestWorkGuide.showSpellingStartCheckGuide,
     ruleCheck.runSpellingCheck,
   ]);
 
-  /** 둘러보기 — 말풍선 후 손 표시, 사용자가 직접 기준 검수 클릭 */
+  /** 둘러보기 1번·1b — 말풍선 후 「변환」또는 「기준 검수」에 손 표시 */
   useEffect(() => {
-    if (!guestWorkGuide.showLeftCriteriaGuide) {
+    if (
+      !guestWorkGuide.showLeftCriteriaGuide &&
+      !guestWorkGuide.showSpellingStartCheckGuide
+    ) {
       setGuestGuideHandActive(false);
       return undefined;
     }
-    if (!guestBrowseAutoRunsCriteriaCheck()) return undefined;
-    if (criteriaRunBlocked) return undefined;
 
     const handTimer = window.setTimeout(() => {
       setGuestGuideHandActive(true);
@@ -1095,7 +1101,10 @@ export default function MainScreen({
       window.clearTimeout(handTimer);
       setGuestGuideHandActive(false);
     };
-  }, [guestWorkGuide.showLeftCriteriaGuide, criteriaRunBlocked]);
+  }, [
+    guestWorkGuide.showLeftCriteriaGuide,
+    guestWorkGuide.showSpellingStartCheckGuide,
+  ]);
 
   /** 다시 검수 — 결과 비우고 맞춤법 탭 검수 항목·기준 설정으로 복귀 */
   const handleSpellingRecheckFromScratch = useCallback(() => {
@@ -1473,7 +1482,15 @@ export default function MainScreen({
             onCalibrateFromInput={pageDisplay.calibrateFromInput}
           />
         ) : null}
-        {loanwordConverterEnabled ? <LoanwordConverter /> : null}
+        {loanwordConverterEnabled ? (
+          <LoanwordConverter
+            onConvertClick={() => {
+              if (guestWorkGuide.showLeftCriteriaGuide) {
+                guestWorkGuide.dismiss(WORK_GUIDE_KEYS.LEFT_CRITERIA);
+              }
+            }}
+          />
+        ) : null}
       </div>
     ) : null;
 
@@ -1527,18 +1544,18 @@ export default function MainScreen({
               showConfirm={false}
               message={
                 <>
-                  교정냥 &apos;모모&apos;다냥, 반갑다냥!
+                  교정냥 &apos;모모&apos;다냥, 만나서 반갑다냥!
                   <br />
                   먼저{' '}
                   <span className="tooltip-guide__work-tab-chip tooltip-guide__work-tab-chip--spelling">
                     맞춤법
                   </span>{' '}
-                  기능부터 알려주겠다냥
+                  탭부터 보자냥
                   <br />
-                  <span className="tooltip-guide__gothic-label">편집자 검토 필요</span>와{' '}
-                  <span className="tooltip-guide__gothic-label">맞춤법 규칙</span>이 있다냥
-                  <br />
-                  일단 검수를 시작해 보자냥
+                  <span className="tooltip-guide__gothic-label">
+                    외래어 표기
+                  </span>
+                  는 매일 무제한 사용 가능하다냥
                 </>
               }
               onDismiss={() =>
@@ -1546,7 +1563,49 @@ export default function MainScreen({
               }
             >
               <span className="guide-auto-click-wrap">
-                <GuideClickHand active={guestGuideHandActive} align="label-gap" />
+                <PanelSectionRunButton
+                  label="기준 검수"
+                  className="panel-section-run-btn--primary"
+                  onClick={handleCriteriaSpellingCheck}
+                  disabled={criteriaRunBlocked}
+                  isProcessing={criteriaRunChecking}
+                />
+              </span>
+            </TooltipGuide>
+          ) : guestWorkGuide.showSpellingStartCheckGuide ? (
+            <TooltipGuide
+              storageKey={guestWorkGuide.storageKey(
+                WORK_GUIDE_KEYS.SPELLING_START_CHECK,
+              )}
+              placement="bottom"
+              bubbleType="left"
+              useFixedLayer
+              offsetX={0}
+              offsetY={0}
+              alignToBubble={WORK_GUIDE_1_ALIGN}
+              bubbleGuideStep="1b"
+              pinned={guestWorkGuide.pinAll}
+              showConfirm={false}
+              message={
+                <>
+                  <span className="tooltip-guide__gothic-label">
+                    편집자 검토 필요
+                  </span>
+                  는 확인을 꼭 해야 한다냥
+                  <br />
+                  <span className="tooltip-guide__gothic-label">
+                    맞춤법 규칙
+                  </span>
+                  은 바로 적용해도 괜찮다냥
+                  <br />
+                  일단 검수를 시작해 보자냥
+                </>
+              }
+              onDismiss={() =>
+                guestWorkGuide.dismiss(WORK_GUIDE_KEYS.SPELLING_START_CHECK)
+              }
+            >
+              <span className="guide-auto-click-wrap">
                 <PanelSectionRunButton
                   label="기준 검수"
                   className="panel-section-run-btn--primary"
@@ -1566,6 +1625,16 @@ export default function MainScreen({
             />
           )}
         </span>
+        {guestWorkGuide.showLeftCriteriaGuide ? (
+          <GuideClickHand
+            active={guestGuideHandActive}
+            anchorSelector='[data-work-guide="loanword-convert"]'
+            align="center"
+          />
+        ) : null}
+        {guestWorkGuide.showSpellingStartCheckGuide ? (
+          <GuideClickHand active={guestGuideHandActive} align="label-gap" />
+        ) : null}
         {guestWorkGuide.showFirstResultGuide &&
         (!guestBrowseAutoRunsCriteriaCheck() ||
           (guestNextGuideReady && !guestPdfTipOpened)) ? (
