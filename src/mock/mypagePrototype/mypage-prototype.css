@@ -177,6 +177,14 @@
   color: var(--color-text-subtle);
 }
 
+.sheet-card--locked-slot {
+  opacity: 0.5;
+}
+
+.sheet-card--locked-slot .mypage__project-slot-label {
+  color: var(--color-text-muted);
+}
+
 /* ── Style sheet card ── */
 
 .sheet-card {
