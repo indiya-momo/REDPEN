@@ -34,7 +34,11 @@ import { useTocBodyCheck } from '../toc-body/hooks/useTocBodyCheck.js';
 import { useTocBodyHighlights } from '../toc-body/hooks/useTocBodyHighlights.js';
 import { buildTocBodyTabEntries } from '../toc-body/utils/toc-body-result-entries.js';
 import { exportSpellingResults, exportConsistencyResults } from '../lib/exportResults.js';
-import { isSpellingExportEnabled, isTocBodyCheckEnabled } from '../lib/featureFlags.js';
+import {
+  isLoanwordConverterEnabled,
+  isSpellingExportEnabled,
+  isTocBodyCheckEnabled,
+} from '../lib/featureFlags.js';
 import { usePdfDocument } from '../hooks/usePdfDocument.js';
 import { usePdfZoom } from '../hooks/usePdfZoom.js';
 import { useRuleCheck } from '../hooks/useRuleCheck.js';
@@ -572,6 +576,7 @@ export default function MainScreen({
   });
   const tocBodyCheckEnabled = isTocBodyCheckEnabled();
   const spellingExportEnabled = isSpellingExportEnabled();
+  const loanwordConverterEnabled = isLoanwordConverterEnabled();
   const tocCheck = useTocBodyCheck({
     tocBodyText,
     tocBodyStartPage,
@@ -1352,28 +1357,32 @@ export default function MainScreen({
     [tabCheckDone],
   );
 
-  const spellingCalibrationEl = pdf.pdf ? (
-    <div
-      className="spelling-tab-layout__calibration"
-      data-work-guide-step="3"
-    >
-      <PrintedPageSetup
-        currentSystemPage={pdf.currentPage}
-        active={pageDisplay.active}
-        currentPrintedLabel={pageDisplay.formatLabel(pdf.currentPage)}
-        previewPrintedLabel={
-          pageDisplay.active
-            ? pageDisplay.formatPageText(pdf.currentPage)
-            : pageDisplay.formatNaturalPreview(pdf.currentPage)
-        }
-        spreadInput={pageDisplay.spreadInput}
-        onSpreadInputChange={pageDisplay.setSpreadInput}
-        firstPageSingle={pageDisplay.firstPageSingle}
-        onFirstPageSingleChange={pageDisplay.setFirstPageSingle}
-        onCalibrateFromInput={pageDisplay.calibrateFromInput}
-      />
-    </div>
-  ) : null;
+  const spellingCalibrationEl =
+    pdf.pdf || loanwordConverterEnabled ? (
+      <div
+        className="spelling-tab-layout__calibration"
+        data-work-guide-step="3"
+      >
+        {pdf.pdf ? (
+          <PrintedPageSetup
+            currentSystemPage={pdf.currentPage}
+            active={pageDisplay.active}
+            currentPrintedLabel={pageDisplay.formatLabel(pdf.currentPage)}
+            previewPrintedLabel={
+              pageDisplay.active
+                ? pageDisplay.formatPageText(pdf.currentPage)
+                : pageDisplay.formatNaturalPreview(pdf.currentPage)
+            }
+            spreadInput={pageDisplay.spreadInput}
+            onSpreadInputChange={pageDisplay.setSpreadInput}
+            firstPageSingle={pageDisplay.firstPageSingle}
+            onFirstPageSingleChange={pageDisplay.setFirstPageSingle}
+            onCalibrateFromInput={pageDisplay.calibrateFromInput}
+          />
+        ) : null}
+        {loanwordConverterEnabled ? <LoanwordConverter /> : null}
+      </div>
+    ) : null;
 
   const spellingRunRowEl = showSpellingRunRow ? (
     <div
@@ -1811,7 +1820,6 @@ export default function MainScreen({
               <div className="panel-left-work-scroll spelling-tab-scroll custom-scrollbar">
                 {spellingRunRowEl}
                 {spellingCalibrationEl}
-                <LoanwordConverter />
                 <div className="spelling-tab-scroll__results">
                   {spellingResultsPanel}
                 </div>
@@ -1820,7 +1828,6 @@ export default function MainScreen({
               <>
                 {spellingRunRowEl}
                 {spellingCalibrationEl}
-                <LoanwordConverter />
                 {!tabCheckDone ? (
                   <ResizableBuiltinSpelling
                     builtInEnabled={builtInEnabled}

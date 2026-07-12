@@ -12,6 +12,8 @@ import SpaceVisibleInput from '../SpaceVisibleInput.jsx';
  *   hideLimitTitle?: boolean,
  *   addButtonGuideAttr?: string,
  *   onAddButtonClick?: () => void,
+ *   addAriaLabel?: string,
+ *   useSpaceVisible?: boolean,
  * }} props
  */
 export default function ConsistencyRegisterField({
@@ -25,6 +27,8 @@ export default function ConsistencyRegisterField({
   hideLimitTitle = false,
   addButtonGuideAttr,
   onAddButtonClick,
+  addAriaLabel = '등록',
+  useSpaceVisible = true,
 }) {
   const inputClasses = [
     'consistency-register-field__input',
@@ -34,22 +38,38 @@ export default function ConsistencyRegisterField({
     .filter(Boolean)
     .join(' ');
 
+  const onKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (!registerDisabled) onRegister();
+    }
+  };
+
   return (
     <div className="tail-form">
       <div className="consistency-register-field">
-        <SpaceVisibleInput
-          className={inputClasses}
-          value={value}
-          onChange={onChange}
-          placeholder={placeholder}
-          aria-label={ariaLabel}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              e.preventDefault();
-              if (!registerDisabled) onRegister();
-            }
-          }}
-        />
+        {useSpaceVisible ? (
+          <SpaceVisibleInput
+            className={inputClasses}
+            value={value}
+            onChange={onChange}
+            placeholder={placeholder}
+            aria-label={ariaLabel}
+            onKeyDown={onKeyDown}
+          />
+        ) : (
+          <input
+            type="text"
+            className={inputClasses}
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            placeholder={placeholder}
+            aria-label={ariaLabel}
+            onKeyDown={onKeyDown}
+            autoComplete="off"
+            spellCheck={false}
+          />
+        )}
         <button
           type="button"
           className="btn-add consistency-register-add-btn consistency-register-field__add"
@@ -59,7 +79,7 @@ export default function ConsistencyRegisterField({
             if (!registerDisabled) onRegister();
           }}
           disabled={registerDisabled}
-          aria-label="등록"
+          aria-label={addAriaLabel}
           title={
             registerDisabled && !hideLimitTitle
               ? '등록 한도에 도달했습니다'

@@ -116,6 +116,10 @@ body:has(.welcome-pc) {
   --radius-ui: 12px;
   --radius-ui-lg: 14px;
   --radius-ui-sm: 8px;
+  /* 찾기·변환 검색창 (외래어 변환 입력과 동일) */
+  --radius-search: 6px;
+  --search-action-bg: #404a5a;
+  --search-action-bg-hover: #343c48;
 
   /* 버튼 — 붉은 잉크 + 오렌지 톤, hover 금 (인트로·작업 UI 공통) */
   --btn-primary-bg: #924a2e;
