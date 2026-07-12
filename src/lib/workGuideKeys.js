@@ -5,7 +5,8 @@ import { clearTooltipGuideDismissed } from './tooltipGuideStorage.js';
  *
  * 통칭 **1~7번 말풍선** = **둘러보기(게스트) 전용** PDF 업로드·추출 이후 체인.
  * UI는 `useGuestBrowseWorkGuide`만 쓴다. 일반 로그인 작업에서는 EMPTY만 반환된다.
- * - **1번**: 검수 기준 선택·목록 (`LEFT_CRITERIA`)
+ * - **1번**: 외래어 표기·무제한 안내 (`LEFT_CRITERIA`) — 변환 버튼 손
+ * - **1b**: 편집자 검토·맞춤법 규칙·검수 시작 (`SPELLING_START_CHECK`) — 기준 검수 손
  * - **2번**: 검수 결과 안내 (`FIRST_RESULT`)
  * - **3번**: 파일 - 원고 페이지 맞추기 (`PDF_OPENED`)
  * - **4번**: 일관성 탭 안내 (`CONSISTENCY_INTRO`) — 우측 상단 인사 영역
@@ -18,7 +19,7 @@ import { clearTooltipGuideDismissed } from './tooltipGuideStorage.js';
  *
  * 말풍선 위치: UI 앵커 기준 (`TooltipGuide` placement + offset px). 뷰포트 x,y 숫자는
  * 브라우저 창 기준이라 인디야 작업면만의 2880×1454 좌표와 1:1로 안 맞음.
- * - **1번** 앵커: 기준 이름 옆 `>` · **3번** 앵커: 파일 - 원고 페이지 맞추기
+ * - **1번** 앵커: 기준 검수 행 · **3번** 앵커: 파일 - 원고 페이지 맞추기
  */
 
 export const WORK_GUIDE_KEYS = {
@@ -26,6 +27,8 @@ export const WORK_GUIDE_KEYS = {
   /** 3번 — 순서 교체(2026-06)로 v2 (v1 dismiss는 체인에 반영 안 됨) */
   PDF_OPENED: 'work-pdf-opened-v2',
   LEFT_CRITERIA: 'work-left-criteria-v2',
+  /** 1b — 편집자 검토·맞춤법 규칙 안내 후 기준 검수 */
+  SPELLING_START_CHECK: 'work-spelling-start-check-v1',
   /** 2번 — 순서 교체(2026-06)로 v2 */
   FIRST_RESULT: 'work-first-result-v2',
   CONSISTENCY_INTRO: 'work-consistency-intro-v1',
@@ -72,7 +75,7 @@ function isLocalDevBrowser() {
 }
 
 /**
- * 로컬 dev — 마지막으로 본 가이드 단계(0=업로드 전) 고정. `?workGuide=7` 이 우선.
+ * 로컬 dev — 마지막으로 본 가이드 단계(0=업로드 전) 고정. `?workGuide=9` 이 우선.
  * @returns {number | null}
  */
 export function getDevWorkGuideForceStep() {
@@ -80,13 +83,13 @@ export function getDevWorkGuideForceStep() {
   const q = new URLSearchParams(window.location.search).get('workGuide');
   if (q != null && q !== '') {
     const n = Number(q);
-    if (Number.isInteger(n) && n >= 0 && n <= 8) return n;
+    if (Number.isInteger(n) && n >= 0 && n <= 9) return n;
   }
   try {
     const stored = sessionStorage.getItem(DEV_WORK_GUIDE_FORCE_KEY);
     if (stored != null && stored !== '') {
       const n = Number(stored);
-      if (Number.isInteger(n) && n >= 0 && n <= 8) return n;
+      if (Number.isInteger(n) && n >= 0 && n <= 9) return n;
     }
   } catch {
     /* ignore */

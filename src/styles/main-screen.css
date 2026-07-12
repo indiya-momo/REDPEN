@@ -1256,46 +1256,48 @@
   }
 }
 
-/* 5번·패널 제목 — 고딕 강조 */
+/* 가이드 말풍선 — 「편집자 검토 필요」·「맞춤법 규칙」등 강조 라벨 (패널 90% 스케일과 맞춤) */
 .tooltip-guide__gothic-label {
   font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+  font-size: 0.9em;
   font-weight: 800;
   letter-spacing: -0.02em;
   color: var(--color-text);
 }
 
-/* 4번 말풍선 — 좌측 「표기 통일」탭 칩 */
+/* 2번 말풍선 — 결과 헤더 뱃지 크기 = 좌측 패널(--panel-ui-scale 0.9)과 동일 */
+.tooltip-guide .results-header-badge {
+  font-size: calc(0.62rem * 0.9 * 1.32);
+  padding: calc(0.0625rem * 0.9 * 1.32)
+    calc(var(--space-sm-tight) * 0.9 * 1.32);
+}
+
+/* 4번·1번 말풍선 — 좌측 work-tab과 같은 톤 (글씨 = 탭의 90%) */
 .tooltip-guide__work-tab-chip {
   display: inline-block;
   margin: 0 2px;
-  padding: calc(5px * var(--tooltip-scale, 1)) calc(8px * var(--tooltip-scale, 1));
+  padding: calc(14px * 0.9 * 0.35) calc(8px * 0.9);
   border: none;
-  border-radius: calc(2px * var(--tooltip-scale, 1))
-    calc(2px * var(--tooltip-scale, 1)) 0 0;
+  border-radius: 0;
   font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
-  font-size: calc(1.275rem * var(--tooltip-scale, 1));
   font-weight: 700;
-  line-height: 1.15;
+  line-height: 1.2;
   vertical-align: middle;
   white-space: nowrap;
-  background: var(--color-surface-inset);
+  background: var(--color-surface-raised);
   color: var(--color-text-muted);
 }
 
 .tooltip-guide__work-tab-chip--spelling {
-  border-radius: calc(2px * var(--tooltip-scale, 1));
-  background: color-mix(in srgb, var(--pillar-spelling) 16%, #fffdfb);
   color: var(--accent-terracotta-deep);
-  box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, var(--pillar-spelling) 42%, transparent),
-    inset 0 calc(-2px * var(--tooltip-scale, 1)) 0 var(--accent-terracotta);
+  background: var(--color-surface-raised);
+  box-shadow: inset 0 -2px 0 var(--accent-terracotta);
 }
 
 .tooltip-guide__work-tab-chip--consistency {
-  background: var(--color-surface-raised);
   color: var(--accent-terracotta-deep);
-  box-shadow: inset 0 calc(-2px * var(--tooltip-scale, 1)) 0
-    var(--accent-terracotta);
+  background: var(--color-surface-raised);
+  box-shadow: inset 0 -2px 0 var(--accent-terracotta);
 }
 
 /* 4번 말풍선 — 「여러 개 찾기」 결과 뱃지와 같은 톤 */
@@ -3080,8 +3082,8 @@
   --consistency-item-gap: var(--consistency-stack-gap);
   --consistency-input-padding-block: calc(10px * var(--panel-ui-scale, 1) * 0.6);
   --consistency-register-text: var(--color-text-muted);
-  --consistency-register-add-bg: var(--accent-terracotta);
-  --consistency-register-add-bg-hover: var(--accent-terracotta-deep);
+  --consistency-register-add-bg: var(--search-action-bg);
+  --consistency-register-add-bg-hover: var(--search-action-bg-hover);
   /* 공통 문자열 ↔ 검수 제외 — 검색창 사이 여백(0.846 dead ×70%×80%) + 열 gap 동일 */
   --consistency-subsection-row-gap: calc(12px * 0.6 * 0.7 * 0.8);
   --consistency-subsection-phrase-form-scale: calc(1 - (1 - 0.846) * 0.7 * 0.8);
@@ -3221,7 +3223,7 @@
   width: 100%;
   box-sizing: border-box;
   border: none;
-  border-radius: var(--radius-ui);
+  border-radius: var(--radius-search);
   background: var(--color-surface-overlay);
   overflow: hidden;
 }
@@ -3262,7 +3264,7 @@
   font-weight: 700;
   line-height: 1;
   border: none;
-  border-radius: 0 var(--radius-ui) var(--radius-ui) 0;
+  border-radius: 0 var(--radius-search) var(--radius-search) 0;
   background: var(--consistency-register-add-bg);
   color: #fff;
   transition: background 0.15s ease;
@@ -3757,6 +3759,67 @@
   font-weight: inherit;
   line-height: inherit;
   color: inherit;
+}
+
+/* 외래어 입력+변환 — 표기 통일 검색창과 같이 한 덩어리 */
+.loanword-converter__field {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #c5c9d0;
+  border-radius: var(--radius-search);
+  background: var(--color-surface-overlay);
+  overflow: hidden;
+}
+
+.loanword-converter__input {
+  flex: 1;
+  min-width: 0;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 6px 10px;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  font-size: calc(0.85rem * var(--panel-ui-scale, 1));
+  font-weight: 400;
+  color: var(--c-ink, var(--color-text));
+  outline: none;
+}
+
+.loanword-converter__input:focus,
+.loanword-converter__input:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+.loanword-converter__input::placeholder {
+  color: var(--color-text-subtle, #9a948c);
+  opacity: 1;
+}
+
+.loanword-converter__submit {
+  flex-shrink: 0;
+  margin: 0;
+  padding: 6px 14px;
+  border: none;
+  border-radius: 0;
+  background: var(--search-action-bg);
+  color: #fff;
+  font-size: calc(0.85rem * var(--panel-ui-scale, 1));
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.loanword-converter__submit:hover:not(:disabled) {
+  background: var(--search-action-bg-hover);
+}
+
+.loanword-converter__submit:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 .panel-left .caution-checklist-summary.panel-criteria-heading,
