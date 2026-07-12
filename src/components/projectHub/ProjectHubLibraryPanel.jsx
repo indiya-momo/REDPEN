@@ -45,7 +45,7 @@ export default function ProjectHubLibraryPanel({
 }) {
   const libraryInternal = useProjectHubLibrary(uid, email);
   const library = libraryProp ?? libraryInternal;
-  const { previewCards, loading, slotLabel } = library;
+  const { previewCards, loading, slotLabel, slotPlan } = library;
 
   const tagFilterInternal = useProjectTagFilter(previewCards);
   const tagFilter = tagFilterProp ?? tagFilterInternal;
@@ -156,7 +156,7 @@ export default function ProjectHubLibraryPanel({
             </div>
           </div>
           <p className="mypage__project-slot-gauge" aria-live="polite">
-            슬롯 <strong>{gaugeLabel}</strong>
+            저장 <strong>{gaugeLabel}</strong>
           </p>
         </div>
 
@@ -192,13 +192,21 @@ export default function ProjectHubLibraryPanel({
               ) : shelf.expanded ? (
                 shelf.visibleCards.map((card) => renderLibraryCard(card))
               ) : (
-                librarySlots.map((card, index) =>
-                  card ? (
-                    renderLibraryCard(card)
-                  ) : (
-                    <ProjectLibraryEmptySlot key={`library-empty-slot-${index}`} />
-                  ),
-                )
+                (() => {
+                  let emptyOrdinal = 0;
+                  return librarySlots.map((card, index) => {
+                    if (card) return renderLibraryCard(card);
+                    emptyOrdinal += 1;
+                    const locked =
+                      emptyOrdinal > (slotPlan?.actionableEmptySlotCount ?? 0);
+                    return (
+                      <ProjectLibraryEmptySlot
+                        key={`library-empty-slot-${index}`}
+                        locked={locked}
+                      />
+                    );
+                  });
+                })()
               )}
             </div>
 

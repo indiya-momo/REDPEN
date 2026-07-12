@@ -4,7 +4,7 @@ import { showAppConfirm } from '../lib/appDialog.js';
 import { formatProjectDialogLabel } from '../lib/projectDialogLabel.js';
 
 const SLOT_LIMIT_MESSAGE =
-  '프로젝트 슬롯이 가득 찼습니다. 추가 슬롯은 회원 등급으로 제공됩니다. (준비 중)';
+  '프로젝트 저장 한도에 도달했습니다. 오픈베타에서는 1개만 저장할 수 있습니다. 기존 프로젝트를 삭제하거나 같은 이름으로 덮어쓰세요.';
 
 const SELECT_FAILURE_MESSAGE =
   '프로젝트 선택을 저장하지 못했습니다. 다시 시도해 주세요.';
