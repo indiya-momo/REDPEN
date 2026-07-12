@@ -30,6 +30,31 @@ export function planMyPageProjectGrid(projects) {
 }
 
 /**
+ * Library 선반 — 접힘(기본 3칸) / 펼침(전체).
+ *
+ * @param {readonly unknown[]} cards
+ * @param {{ expanded?: boolean, shelfMax?: number }} [options]
+ * @returns {{
+ *   visibleCards: unknown[],
+ *   hiddenCount: number,
+ *   canExpand: boolean,
+ *   expanded: boolean,
+ * }}
+ */
+export function planLibraryShelfCards(cards, options = {}) {
+  const shelfMax = options.shelfMax ?? MOCK_LIBRARY_SLOT_MAX;
+  const list = [...(cards ?? [])];
+  const hiddenCount = Math.max(0, list.length - shelfMax);
+  const expanded = Boolean(options.expanded) && hiddenCount > 0;
+  return {
+    visibleCards: expanded ? list : list.slice(0, shelfMax),
+    hiddenCount,
+    canExpand: hiddenCount > 0,
+    expanded,
+  };
+}
+
+/**
  * Library 3슬롯 선반 — index 순서대로 카드 또는 null(빈 칸).
  *
  * @param {readonly unknown[]} cards

@@ -4,6 +4,7 @@ import {
   formatLibrarySlotGauge,
   MOCK_LIBRARY_SLOT_MAX,
   MYPAGE_PROJECT_CARD_DISPLAY_MAX,
+  planLibraryShelfCards,
   planMyPageProjectGrid,
   planMyPageProjectSlots,
   planMyPageProjectTrailingSlot,
@@ -51,6 +52,37 @@ describe('formatLibrarySlotGauge', () => {
     expect(formatLibrarySlotGauge(2)).toBe('2/3');
     expect(formatLibrarySlotGauge(3)).toBe('3/3');
     expect(formatLibrarySlotGauge(5)).toBe('3/3');
+  });
+});
+
+describe('planLibraryShelfCards', () => {
+  it('접힘 — 선반 상한만 보이고 나머지는 hiddenCount', () => {
+    const cards = [{ id: 'a' }, { id: 'b' }, { id: 'c' }, { id: 'd' }];
+    expect(planLibraryShelfCards(cards)).toEqual({
+      visibleCards: [{ id: 'a' }, { id: 'b' }, { id: 'c' }],
+      hiddenCount: 1,
+      canExpand: true,
+      expanded: false,
+    });
+  });
+
+  it('펼침 — 전체 표시', () => {
+    const cards = [{ id: 'a' }, { id: 'b' }, { id: 'c' }, { id: 'd' }];
+    expect(planLibraryShelfCards(cards, { expanded: true })).toEqual({
+      visibleCards: cards,
+      hiddenCount: 1,
+      canExpand: true,
+      expanded: true,
+    });
+  });
+
+  it('상한 이하면 더 보기 없음', () => {
+    expect(planLibraryShelfCards([{ id: 'a' }, { id: 'b' }])).toEqual({
+      visibleCards: [{ id: 'a' }, { id: 'b' }],
+      hiddenCount: 0,
+      canExpand: false,
+      expanded: false,
+    });
   });
 });
 
