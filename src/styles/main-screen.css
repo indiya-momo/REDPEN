@@ -1,4 +1,4 @@
-/* MainScreen layout shell — extracted from index.css (structure only, selectors unchanged) */
+/* MainScreen layout shell ? extracted from index.css (structure only, selectors unchanged) */
 
 .layout-main {
   display: flex;
@@ -17,30 +17,30 @@
 }
 
 .panel-left {
-  /* 좌측 패널 UI 통일 스케일 (타이포·간격·체크리스트) */
+  /* ?? ?? UI ?? ??? (????????????) */
   --panel-ui-scale: 0.9;
   --pps-scale: calc(1.2 * var(--panel-ui-scale));
-  /* 맞춤법 기준 — 화살표 뒤(교정 후): 은은함·선명함 중간 */
+  /* ??? ?? ? ??? ?(?? ?): ??????? ?? */
   --panel-rule-replace-color: color-mix(
     in srgb,
     color-mix(in srgb, var(--c-ink) 86%, var(--accent-spelling) 14%) 50%,
     color-mix(in srgb, var(--editor-red) 62%, #f05252 38%) 50%
   );
-  /* 편집자 검토 · 맞춤법 기준 — 항목 글씨 통일 */
+  /* ??? ?? ? ??? ?? ? ?? ?? ?? */
   --panel-criteria-item-font-size: calc(0.8rem * var(--panel-ui-scale));
   --panel-criteria-item-label-font-size: calc(0.85rem * var(--panel-ui-scale));
-  /* 패널 안내 문구 (panel-guide-text): 설명·예시·보정·목차 안내 — 0.72rem 대비 +15% */
+  /* ?? ?? ?? (panel-guide-text): ??????????? ?? ? 0.72rem ?? +15% */
   --panel-guide-font-size: calc(0.72rem * 1.15 * var(--panel-ui-scale));
   --panel-guide-line-height: 1.35;
-  /* 3순위 figure-ground — 트레이(어둡게) vs 종이(밝게) */
+  /* 3?? figure-ground ? ???(???) vs ??(??) */
   --panel-surface-stage: #e5ddd0;
   --panel-surface-sheet: #ffffff;
   --panel-sheet-border: #d9cfc1;
   --panel-sheet-shadow: 0 1px 3px rgb(42 33 24 / 6%);
-  /* 3순위 분리·간격 — 섹션 macro / 컨테이너 surface / 디바이더 */
+  /* 3?? ????? ? ?? macro / ???? surface / ???? */
   --panel-surface-group: #f6f1e7;
   --panel-border-soft: #dcd2bf;
-  /* 3순위 연장 — 검수 결과 카드·pill (맞춤법·일관성) */
+  /* 3?? ?? ? ?? ?? ???pill (???????) */
   --panel-result-surface: var(--panel-surface-group);
   --panel-result-pill: var(--result-pill);
   --panel-result-pill-muted: rgb(42 33 24 / 6%);
@@ -50,12 +50,12 @@
     var(--c-ink) 8%
   );
   --panel-gap-section: calc(14px * var(--panel-ui-scale));
-  /* 4순위 간격 — 위계용 여백 (블록 내부 micro) */
+  /* 4?? ?? ? ??? ?? (?? ?? micro) */
   --panel-gap-title-body: calc(6px * var(--panel-ui-scale));
   --panel-gap-block: calc(8px * var(--panel-ui-scale));
   --panel-gap-section-list: calc(10px * var(--panel-ui-scale));
   --panel-gap-group: calc(10px * var(--panel-ui-scale));
-  /* 5순위 accent — 패널 내 단일 강조(선택·CTA) */
+  /* 5?? accent ? ?? ? ?? ??(???CTA) */
   --panel-accent: var(--accent-terracotta);
   --panel-accent-deep: var(--accent-terracotta-deep);
   --panel-run-btn-primary-bg: color-mix(
@@ -90,9 +90,9 @@
   overflow: hidden;
 }
 
-/* ── 좌측 패널 타이포: 역할→토큰 (weight 400/700 · 색 3단 · UI face만) ── */
+/* ?? ?? ?? ???: ????? (weight 400/700 ? ? 3? ? UI face?) ?? */
 
-/* header / step — 700 + ink */
+/* header / step ? 700 + ink */
 .panel-left .results-header,
 .panel-left .results-header__applied,
 .panel-left .results-header__total-findings,
@@ -122,7 +122,7 @@
   color: var(--c-ink);
 }
 
-/* item — 400 + ink */
+/* item ? 400 + ink */
 .panel-left .results-header__rule-chip,
 .panel-left .results-category-summary__count-underline,
 .panel-left .caution-chip-label,
@@ -143,7 +143,7 @@
   color: var(--c-ink);
 }
 
-/* body — 400 + soft */
+/* body ? 400 + soft */
 .panel-left .result-detail,
 .panel-left .result-card-tip-inline,
 .panel-left .result-card--caution .result-card-tip-inline,
@@ -184,7 +184,7 @@
   color: var(--c-soft);
 }
 
-/* 인라인 칩 버튼 — 본문 두께 유지 */
+/* ??? ? ?? ? ?? ?? ?? */
 .panel-left .consistency-toc-section__start-chip,
 .panel-left .consistency-toc-section__recalibrate-btn,
 .panel-left .consistency-toc-section__file-btn,
@@ -193,7 +193,7 @@
   font-weight: var(--w-body);
 }
 
-/* placeholder — 400 + faint */
+/* placeholder ? 400 + faint */
 .panel-left .panel-left__criteria-name::placeholder,
 .panel-left .field-input::placeholder,
 .panel-left .printed-page-setup__input::placeholder,
@@ -205,7 +205,7 @@
   opacity: 1;
 }
 
-/* 활성 탭 — 볼드 유지, 색만 기존 규칙 */
+/* ?? ? ? ?? ??, ?? ?? ?? */
 .panel-left .work-tab,
 .panel-left .work-tab.active {
   font-weight: var(--w-header);
@@ -222,7 +222,7 @@
   font-weight: var(--w-body);
 }
 
-/* ── 좌측 패널 figure-ground: 검수 결과 (3a — 카드 1겹·pill 명도) ── */
+/* ?? ?? ?? figure-ground: ?? ?? (3a ? ?? 1??pill ??) ?? */
 
 .panel-left .spelling-tab-layout .results-panel--spelling,
 .panel-left .panel-left-work-scroll .results-panel--consistency {
@@ -248,7 +248,7 @@
   padding: 8px 0 12px;
 }
 
-/* 맞춤법·일관성 — 카드: 유일한 테두리 1겹, #FFF 미사용 */
+/* ??????? ? ??: ??? ??? 1?, #FFF ??? */
 .panel-left .spelling-tab-layout .results-panel--spelling .result-card,
 .panel-left .panel-left-work-scroll .results-panel--consistency .result-card {
   --results-card-bg: var(--panel-result-surface);
@@ -268,7 +268,7 @@
   background: var(--panel-result-surface);
 }
 
-/* pill·배지 — 배경보다 한 톤 진한 은은한 테두리 */
+/* pill??? ? ???? ? ? ?? ??? ??? */
 .panel-left .results-panel--spelling :is(
     .caution-badge-inline,
     .spelling-badge-inline,
@@ -392,7 +392,7 @@
   color: var(--c-ink);
 }
 
-/* 목차 결과 — 3a 범위 밖, 기존 sheet 유지 */
+/* ?? ?? ? 3a ?? ?, ?? sheet ?? */
 .panel-left .results-panel--toc-body {
   --results-stage-bg: var(--panel-surface-stage);
   background: var(--panel-surface-stage);
@@ -429,7 +429,7 @@
   background: var(--panel-surface-stage);
 }
 
-/* 접이식 그룹 컨테이너만 박스(면+테두리) — 항목은 plain */
+/* ??? ?? ????? ??(?+???) ? ??? plain */
 .panel-left .builtin-spelling-resize-body .caution-checklist-details,
 .panel-left .builtin-spelling-resize-body .builtin-spelling-details,
 .panel-left
@@ -441,7 +441,7 @@
   box-shadow: none;
 }
 
-/* 체크리스트 항목 — 박스·짧은 구분선 금지, 여백·hover만 (편집자·맞춤법 동일) */
+/* ????? ?? ? ????? ??? ??, ???hover? (??????? ??) */
 .panel-left .builtin-spelling-caution-scroll,
 .panel-left .builtin-spelling-rules-scroll {
   --criteria-item-pad-y: calc(5px * var(--panel-ui-scale));
@@ -666,7 +666,7 @@
   outline-offset: 1px;
 }
 
-/* 기능 섹션(보정·일관성 찾기) — 접이식이 아닌 설정 블록 1겹 */
+/* ?? ??(?????? ??) ? ???? ?? ?? ?? 1? */
 .panel-left .spelling-tab-layout__calibration .printed-page-setup,
 .panel-left .consistency-unified-box {
   border: 1px solid var(--panel-border-soft);
@@ -675,9 +675,9 @@
   box-shadow: none;
 }
 
-/* ── 좌측 패널 간격: 제목↔설명 · 요약↔목록 · 그룹↔항목 ── */
+/* ?? ?? ?? ??: ????? ? ????? ? ????? ?? */
 
-/* 결과 카드 — 제목 줄 ↔ 설명 */
+/* ?? ?? ? ?? ? ? ?? */
 .panel-left .result-card {
   gap: var(--panel-gap-title-body);
 }
@@ -716,7 +716,7 @@
   margin-top: var(--panel-gap-title-body);
 }
 
-/* 요약 줄 ↔ 결과 목록 */
+/* ?? ? ? ?? ?? */
 .panel-left .results-header {
   padding-bottom: calc((var(--space-sm) + 2px) * 0.7);
 }
@@ -731,7 +731,7 @@
   padding-top: var(--panel-gap-section-list);
 }
 
-/* 체크리스트 — 그룹 긴 구분선만 (항목별 짧은 선 없음) */
+/* ????? ? ?? ? ???? (??? ?? ? ??) */
 .panel-left .caution-group-items .caution-tip-inline {
   margin-top: 4px;
   margin-bottom: var(--panel-gap-group);
@@ -748,7 +748,7 @@
   margin-bottom: var(--panel-gap-group);
 }
 
-/* 일관성 — 설명 ↔ 입력·칩 */
+/* ??? ? ?? ? ???? */
 .panel-left .consistency-hint-block,
 .panel-left .printed-page-setup__hint {
   margin-bottom: var(--panel-gap-block);
@@ -819,7 +819,7 @@
   padding-top: var(--panel-gap-group);
 }
 
-/* ── 좌측 패널 accent 정리: 테라코타 = 선택·CTA만, 나머지는 ink/soft ── */
+/* ?? ?? ?? accent ??: ???? = ???CTA?, ???? ink/soft ?? */
 
 .panel-left .caution-group-title,
 .panel-left .caution-badge {
@@ -926,7 +926,7 @@
   color: var(--panel-accent-deep);
 }
 
-/* 작업 가이드 — 말풍선은 하위 영역 overflow만 열고 패널 폭은 유지 */
+/* ?? ??? ? ???? ?? ?? overflow? ?? ?? ?? ?? */
 .panel-left.panel-left--work-guide {
   overflow: hidden;
   z-index: 4;
@@ -946,7 +946,7 @@
   z-index: 10001;
 }
 
-/* 1번: 왼쪽 30px (--wg-shift-x 양수) */
+/* 1?: ?? 30px (--wg-shift-x ??) */
 .spelling-tab-layout__calibration .tooltip-guide--right {
   --wg-shift-x: 30px;
   --wg-shift-y: 0%;
@@ -1135,12 +1135,12 @@
   width: 100%;
 }
 
-/* 3번(보정) — 텍스트 열 폭 */
+/* 3?(??) ? ??? ? ? */
 .spelling-tab-layout__calibration .tooltip-guide {
   --tooltip-text-max: calc(360px * var(--tooltip-scale));
 }
 
-/* 3번 말풍선 — 보정 행 체크박스·확인 버튼과 같은 느낌 */
+/* 3? ??? ? ?? ? ??????? ??? ?? ?? */
 .tooltip-guide__checkbox-look {
   display: inline-block;
   width: calc(0.9rem * var(--tooltip-scale, 1));
@@ -1170,7 +1170,7 @@
   color: var(--btn-primary-text);
 }
 
-/* 2번 말풍선 — 「기준 검수」를 실행 행 버튼과 같은 느낌 */
+/* 2? ??? ? ??? ???? ?? ? ??? ?? ?? */
 .tooltip-guide__run-btn-look {
   display: inline-block;
   margin: 0 1px;
@@ -1192,7 +1192,7 @@
   overflow: visible;
 }
 
-/* 둘러보기 1번 — 기준 검수 클릭 안내 손 */
+/* ???? 1? ? ?? ?? ?? ?? ? */
 .guide-auto-click-wrap {
   position: relative;
   display: inline-flex;
@@ -1233,7 +1233,7 @@
   }
 }
 
-/* 1번 — 「기준 검수」글자 사이(공백)를 아래에서 가리킴, 글자는 가리지 않음 */
+/* 1? ? ??? ????? ??(??)? ???? ???, ??? ??? ?? */
 .guide-click-hand--label-gap {
   transform-origin: 50% 10%;
   animation-name: guide-click-hand-tap-label-gap;
@@ -1254,7 +1254,7 @@
   }
 }
 
-/* 5번·패널 제목 — 고딕 강조 */
+/* 5???? ?? ? ?? ?? */
 .tooltip-guide__gothic-label {
   font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
   font-weight: 800;
@@ -1262,7 +1262,7 @@
   color: var(--color-text);
 }
 
-/* 4번 말풍선 — 좌측 「표기 통일」탭 칩 */
+/* 4? ??? ? ?? ??? ???? ? */
 .tooltip-guide__work-tab-chip {
   display: inline-block;
   margin: 0 2px;
@@ -1296,7 +1296,7 @@
     var(--accent-terracotta);
 }
 
-/* 4번 말풍선 — 「여러 개 찾기」 결과 뱃지와 같은 톤 */
+/* 4? ??? ? ??? ? ??? ?? ??? ?? ? */
 .tooltip-guide__feature-badge {
   display: inline-flex;
   align-items: center;
@@ -1316,7 +1316,7 @@
   color: color-mix(in srgb, var(--pillar-consistency) 78%, #5c6b7a 22%);
 }
 
-/* 6번 말풍선 — 저장(디스크) 아이콘 = 좌측 패널 저장 버튼과 동일 톤 */
+/* 6? ??? ? ??(???) ??? = ?? ?? ?? ??? ?? ? */
 .tooltip-guide__save-rules-btn-look {
   display: inline-flex;
   align-items: center;
@@ -1332,7 +1332,7 @@
   color: var(--accent-terracotta);
 }
 
-/* 3·7번 말풍선 — 「피드백」= 우측 상단 피드백 버튼과 동일 톤 */
+/* 3?7? ??? ? ?????= ?? ?? ??? ??? ?? ? */
 .tooltip-guide__feedback-btn-look {
   display: inline-flex;
   align-items: center;
@@ -1706,7 +1706,7 @@
   border: none;
   background: var(--color-surface-inset);
   font-weight: 700;
-  font-size: 1.275rem; /* 0.85rem × 1.5 */
+  font-size: 1.275rem; /* 0.85rem ? 1.5 */
   line-height: 1.2;
   white-space: nowrap;
   overflow: hidden;
@@ -1940,7 +1940,7 @@
   cursor: not-allowed;
 }
 
-/* 보정(위) + 결과·규칙 — 세로 flex */
+/* ??(?) + ????? ? ?? flex */
 .spelling-tab-layout--rules-only,
 .spelling-tab-layout--with-results {
   display: flex;
@@ -1994,7 +1994,7 @@
 }
 
 
-/* 검사 결과는 위 영역 스크롤에 합류 (중첩 스크롤 제거) */
+/* ?? ??? ? ?? ???? ?? (?? ??? ??) */
 .spelling-tab-scroll .results-panel {
   flex: 0 0 auto;
   min-height: auto;
@@ -2016,7 +2016,7 @@
   border-top: none;
 }
 
-/* 검사 결과(위) ↔ 편집자 검토·맞춤법 확인(아래) 사이 — 드래그만 (회색 띠) */
+/* ?? ??(?) ? ??? ?????? ??(??) ?? ? ???? (?? ?) */
 .builtin-spelling-resize-handle {
   display: flex;
   align-items: center;
@@ -2059,7 +2059,7 @@
   background: var(--color-surface-raised);
 }
 
-/* 인쇄 쪽 보정 박스와 동일 가로 폭(스크롤 gutter로 좁아지지 않게) */
+/* ?? ? ?? ??? ?? ?? ?(??? gutter? ???? ??) */
 .spelling-tab-layout .builtin-spelling-resize-body {
   scrollbar-gutter: auto;
   padding: 8px var(--spelling-block-inset-x) 8px;
@@ -2090,7 +2090,7 @@
   box-shadow: none;
 }
 
-/* 아코디언 — 테두리·면은 details 한 겹 (바깥 padding 이중 링 제거) */
+/* ???? ? ?????? details ? ? (?? padding ?? ? ??) */
 .builtin-spelling-resize-body .caution-checklist-details,
 .builtin-spelling-resize-body .builtin-spelling-details {
   width: 100%;
@@ -2186,7 +2186,7 @@
   padding-bottom: 10px;
 }
 
-/* 맞춤법 quota — 묶음 아코디언 (dividerLabel) */
+/* ??? quota ? ?? ???? (dividerLabel) */
 .builtin-spelling-resize-body .builtin-rule-list--bundles {
   list-style: none;
   margin: 0;
@@ -2293,7 +2293,7 @@
   width: 100%;
 }
 
-/* 편집자 검토 — 그룹 묶음 아코디언 (맞춤법 quota와 동일 패턴) */
+/* ??? ?? ? ?? ?? ???? (??? quota? ?? ??) */
 .builtin-spelling-resize-body .caution-checklist--bundles {
   list-style: none;
   margin: 0;
@@ -2418,7 +2418,7 @@
   background: var(--color-scrollbar-thumb-hover);
 }
 
-/* 편집자 검토 필요 / 맞춤법 — 래퍼는 간격만 (면·테두리는 details) */
+/* ??? ?? ?? / ??? ? ??? ??? (?????? details) */
 .builtin-spelling-caution-scroll,
 .builtin-spelling-rules-scroll {
   flex: 0 0 auto;
@@ -2803,7 +2803,7 @@
   margin-top: 2px;
 }
 
-/* 본용언+보조용언 — 맞춤법 탭 편집자 검토 필요 기준과 동일 박스·헤더 */
+/* ???+???? ? ??? ? ??? ?? ?? ??? ?? ????? */
 .consistency-section-box[data-work-guide-step='auxiliary-box'] .caution-checklist-details {
   width: 100%;
   max-width: 100%;
@@ -2817,7 +2817,7 @@
     var(--criteria-checkbox-size) + var(--criteria-summary-gap)
   );
   --criteria-item-checkbox-size: calc(var(--criteria-checkbox-size) * 0.85);
-  /* 1단 체크박스 왼쪽 = pad + chevron + gap */
+  /* 1? ???? ?? = pad + chevron + gap */
   --criteria-check-col-start: calc(
     var(--criteria-pad-inline) + var(--criteria-summary-rail)
   );
@@ -3055,15 +3055,15 @@
   container-type: inline-size;
   --consistency-example-font-size: calc(var(--panel-guide-font-size, 0.828rem) * 0.9);
   --consistency-example-line-height: 1.45;
-  /* 블록 내부 micro / 섹션 구분 macro */
+  /* ?? ?? micro / ?? ?? macro */
   --consistency-stack-gap: calc(8px * var(--panel-ui-scale, 1));
   --consistency-section-gap: calc(14px * var(--panel-ui-scale, 1));
   --consistency-item-gap: var(--consistency-stack-gap);
   --consistency-input-padding-block: calc(10px * var(--panel-ui-scale, 1) * 0.6);
   --consistency-register-text: var(--color-text-muted);
-  --consistency-register-add-bg: var(--accent-terracotta);
-  --consistency-register-add-bg-hover: var(--accent-terracotta-deep);
-  /* 공통 문자열 ↔ 검수 제외 — 검색창 사이 여백(0.846 dead ×70%×80%) + 열 gap 동일 */
+  --consistency-register-add-bg: var(--search-action-bg);
+  --consistency-register-add-bg-hover: var(--search-action-bg-hover);
+  /* ?? ??? ? ?? ?? ? ??? ?? ??(0.846 dead ?70%?80%) + ? gap ?? */
   --consistency-subsection-row-gap: calc(12px * 0.6 * 0.7 * 0.8);
   --consistency-subsection-phrase-form-scale: calc(1 - (1 - 0.846) * 0.7 * 0.8);
   --consistency-subsection-col1: calc(
@@ -3074,7 +3074,7 @@
   );
 }
 
-/* 일관성 embed — stack(8px) / section(14px) 2단 여백 */
+/* ??? embed ? stack(8px) / section(14px) 2? ?? */
 .consistency-unified-box > .consistency-panel-section-title {
   margin-bottom: var(--consistency-stack-gap);
 }
@@ -3113,7 +3113,7 @@
   margin-inline-end: 0.45em;
 }
 
-/* 일관성 찾기·통일형 검색창 — 다시 검수 행·아래 섹션 박스와 동일 좌우 폭 */
+/* ??? ?????? ??? ? ?? ?? ???? ?? ??? ?? ?? ? */
 .consistency-unified-box .consistency-subsection--first > .tail-form,
 .consistency-unified-box .consistency-unify-section .tail-form {
   width: 100%;
@@ -3167,12 +3167,12 @@
   column-gap: var(--consistency-subsection-row-gap, calc(12px * 0.6 * 0.7 * 0.8));
 }
 
-/* 설명 길이가 달라도 입력·+ 버튼 행(subgrid 3행) 정렬 */
+/* ?? ??? ??? ???+ ?? ?(subgrid 3?) ?? */
 .consistency-subsection-row > .consistency-subsection--half > .tail-form {
   align-self: start;
 }
 
-/* 설명은 각 열에서 입력창 바로 위 — 일관성 찾기·통일형과 동일 간격 */
+/* ??? ? ??? ??? ?? ? ? ??? ??????? ?? ?? */
 .consistency-subsection-row > .consistency-subsection--half {
   display: grid;
   grid-template-rows: subgrid;
@@ -3202,7 +3202,7 @@
   width: 100%;
   box-sizing: border-box;
   border: none;
-  border-radius: var(--radius-ui);
+  border-radius: var(--radius-search);
   background: var(--color-surface-overlay);
   overflow: hidden;
 }
@@ -3243,7 +3243,7 @@
   font-weight: 700;
   line-height: 1;
   border: none;
-  border-radius: 0 var(--radius-ui) var(--radius-ui) 0;
+  border-radius: 0 var(--radius-search) var(--radius-search) 0;
   background: var(--consistency-register-add-bg);
   color: #fff;
   transition: background 0.15s ease;
@@ -3354,11 +3354,11 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
-  /* 상·하단 크롬 바(헤더·미리보기 바) 공통 */
+  /* ???? ?? ?(??????? ?) ?? */
   --pdf-work-pane-chrome-pad-block: 10px;
   --pdf-work-pane-chrome-pad-inline: 14px;
   --pdf-work-pane-chrome-row-min: 32px;
-  /* 1번 말풍선이 헤더 아래로 내려와도 잘리지 않게 — 스크롤은 __content에만 */
+  /* 1? ???? ?? ??? ???? ??? ?? ? ???? __content?? */
   overflow: visible;
 }
 
@@ -3579,11 +3579,11 @@
   overscroll-behavior: contain;
 }
 
-/* 원고 뷰어 레이아웃 (줌·스크롤)
- * - stage: 유일한 스크롤 컨테이너 (overflow: auto)
- * - align: 항상 flex center — 100% 이하일 때 시각적 가운데 정렬
- * - 확대로 원고가 커지면 scroll 위치만 pdfStageScroll.js에서 가운데로 맞춤
- *   (CSS 모드 전환·overflow 클래스 없음 — 재발 방지) */
+/* ?? ?? ???? (?????)
+ * - stage: ??? ??? ???? (overflow: auto)
+ * - align: ?? flex center ? 100% ??? ? ??? ??? ??
+ * - ??? ??? ??? scroll ??? pdfStageScroll.js?? ???? ??
+ *   (CSS ?? ???overflow ??? ?? ? ?? ??) */
 .pdf-viewer--fit .pdf-canvas-stage__align {
   box-sizing: border-box;
   display: flex;
@@ -3628,7 +3628,7 @@
   color: var(--color-text-muted);
 }
 
-/* ── 좌측 패널 UI 90% 통일 스케일 (--panel-ui-scale) ── */
+/* ?? ?? ?? UI 90% ?? ??? (--panel-ui-scale) ?? */
 
 .panel-left .work-tab {
   font-size: calc(1.275rem * var(--panel-ui-scale));
@@ -3869,7 +3869,7 @@
   font-size: calc(0.85rem * var(--panel-ui-scale));
 }
 
-/* 본용언+보조용언 — 위 일관성 찾기 박스와 동일 너비·좌우 여백 */
+/* ???+???? ? ? ??? ?? ??? ?? ????? ?? */
 .panel-left .consistency-section-box[data-work-guide-step='auxiliary-box'] {
   padding: 0;
   border: none;
@@ -3963,4 +3963,151 @@
 
 .panel-left .hint {
   font-size: calc(0.72rem * var(--panel-ui-scale));
+}
+
+
+/* loanword converter ? input+?? ? ???/?? ?? ?? */
+.spelling-tab-layout__calibration .loanword-converter.printed-page-setup {
+  margin: 8px 0 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.loanword-converter__form {
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.loanword-converter__input {
+  flex: 1;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 6px 10px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: var(--radius-search);
+  background: #fff;
+  font-size: calc(0.85rem * var(--panel-ui-scale, 1));
+  color: var(--c-ink, var(--color-text));
+  outline: none;
+}
+
+.loanword-converter__input:focus,
+.loanword-converter__input:focus-visible {
+  border-color: rgba(0, 0, 0, 0.35);
+}
+
+.loanword-converter__input::placeholder {
+  color: var(--color-text-subtle);
+  opacity: 1;
+}
+
+.loanword-converter__submit {
+  flex-shrink: 0;
+  padding: 6px 14px;
+  border: none;
+  border-radius: var(--radius-search);
+  background: var(--search-action-bg);
+  color: #fff;
+  font-size: calc(0.85rem * var(--panel-ui-scale, 1));
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.loanword-converter__submit:hover:not(:disabled) {
+  background: var(--search-action-bg-hover);
+}
+
+.loanword-converter__submit:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.loanword-converter__block {
+  margin-top: 10px;
+}
+
+.loanword-converter__label {
+  margin: 0 0 4px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #666;
+}
+
+.loanword-converter__card {
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 6px;
+  padding: 8px 10px;
+  margin-top: 6px;
+  background: #fff;
+}
+
+.loanword-converter__card--official {
+  border-color: rgba(37, 99, 235, 0.35);
+  background: #f5f9ff;
+}
+
+.loanword-converter__card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 8px;
+}
+
+.loanword-converter__hangul {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--c-ink, var(--color-text));
+}
+
+.loanword-converter__badge {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: #2563eb;
+  color: #fff;
+  font-size: 10px;
+  line-height: 1.4;
+  vertical-align: middle;
+}
+
+.loanword-converter__meta {
+  font-size: 0.75rem;
+  color: #666;
+}
+
+.loanword-converter__meaning {
+  margin: 4px 0 0;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: #555;
+}
+
+.loanword-converter__parts {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.loanword-converter__part {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 10px;
+  padding: 8px 10px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 6px;
+  background: #fff;
+  font-size: 0.82rem;
+  color: var(--c-ink, var(--color-text));
+}
+
+.loanword-converter__error {
+  margin: 8px 0 0;
+  font-size: 0.78rem;
+  color: #b91c1c;
 }
