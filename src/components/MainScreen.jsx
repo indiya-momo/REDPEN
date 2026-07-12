@@ -82,7 +82,7 @@ import { buildProjectContextWorkPatch } from '../lib/projectMeta.js';
 import { getUserProfile } from '../lib/userProfileStorage.js';
 import { useUserProfileSync } from '../hooks/useUserProfileSync.js';
 import { WORK_GUIDE_KEYS } from '../lib/workGuideKeys.js';
-import { useWorkGuideChain } from '../hooks/useWorkGuideChain.js';
+import { useGuestBrowseWorkGuide } from '../hooks/useGuestBrowseWorkGuide.js';
 import { useBetaDailyQuota } from '../hooks/useBetaDailyQuota.js';
 import { useRewardNotice } from '../hooks/useRewardNotice.js';
 import { daysSinceJoin, syncProfileBadges } from '../lib/badgeGrants.js';
@@ -93,7 +93,7 @@ import {
   countSpacingReviewActiveRules,
 } from '../lib/activeRuleCount.js';
 import { countConsistencyCheckActiveRules, countConsistencyFindingsByType, countConsistencyGroupsWithFindings } from '../lib/consistencyCheckConfirm.js';
-import { countSpellingGroupsWithFindings, countSpellingFindingsByCategory } from '../lib/spellingCheckConfirm.js';
+import { countSpellingFindingsByCategory, countSpellingGroupsWithFindings } from '../lib/spellingCheckConfirm.js';
 import { LITERAL_FIND_FEATURE_LABEL } from '../lib/consistencyRuleLimit.js';
 import { formatRuleSetSavedDate } from '../lib/ruleSetsStorage.js';
 import {
@@ -680,11 +680,6 @@ export default function MainScreen({
     [spellingTabEntries],
   );
 
-  const spellingGroupsWithFindings = useMemo(
-    () => countSpellingGroupsWithFindings(ruleCheck.spellingResults),
-    [ruleCheck.spellingResults],
-  );
-
   const spellingCriteriaSelection = useMemo(
     () => ({
       cautionSelected:
@@ -694,21 +689,29 @@ export default function MainScreen({
     [cautionEnabled, builtInEnabled],
   );
 
-  const consistencyCriteriaSelection = useMemo(() => {
-    const active = countConsistencyCheckActiveRules(
-      customRules,
-      globalExcludePhrases,
-    );
-    return {
-      literalSelected: active.literalActive > 0,
-      unifySelected: active.unifyActive > 0,
-      commonStringSelected: active.commonStringActive > 0,
-      auxiliarySelected: active.auxiliaryActive > 0,
-    };
-  }, [customRules, globalExcludePhrases]);
+  const consistencyActiveCriteria = useMemo(
+    () =>
+      countConsistencyCheckActiveRules(customRules, globalExcludePhrases),
+    [customRules, globalExcludePhrases],
+  );
+
+  const consistencyCriteriaSelection = useMemo(
+    () => ({
+      literalSelected: consistencyActiveCriteria.literalActive > 0,
+      unifySelected: consistencyActiveCriteria.unifyActive > 0,
+      commonStringSelected: consistencyActiveCriteria.commonStringActive > 0,
+      auxiliarySelected: consistencyActiveCriteria.auxiliaryActive > 0,
+    }),
+    [consistencyActiveCriteria],
+  );
 
   const spellingFindingsByCategory = useMemo(
     () => countSpellingFindingsByCategory(ruleCheck.spellingResults),
+    [ruleCheck.spellingResults],
+  );
+
+  const spellingGroupsWithFindings = useMemo(
+    () => countSpellingGroupsWithFindings(ruleCheck.spellingResults),
     [ruleCheck.spellingResults],
   );
 
@@ -822,6 +825,7 @@ export default function MainScreen({
         consistencyCommonStringCount: consistencyFindingsByType.commonString,
         bonBojoFindingCount: consistencyFindingsByType.bonBojo,
       });
+      // 메타 갱신만 — 이력 장부는 검수 완료 gen으로만 기입
       if (patch) onTouchActiveProjectContext(patch);
     }, 800);
 
@@ -843,6 +847,54 @@ export default function MainScreen({
     consistencyFindingsByType.unify,
     consistencyFindingsByType.commonString,
     consistencyFindingsByType.bonBojo,
+  ]);
+
+  // 검수 버튼 1회 완료 → 작업 이력 1점
+  const lastWorkHistoryCommitGenRef = useRef(0);
+  useEffect(() => {
+    if (!onTouchActiveProjectContext || !activeRuleSet?.savedAt) return;
+    const gen = ruleCheck.workHistoryCommitGen;
+    if (!gen || gen === lastWorkHistoryCommitGenRef.current) return;
+    lastWorkHistoryCommitGenRef.current = gen;
+
+    const patch = buildProjectContextWorkPatch({
+      pdfFileName: pdf.pdfFileName,
+      pdfPageCount: pdf.pdf?.numPages,
+      pdfSizeBytes: pdf.pdfByteLength,
+      spellingCheckDone: ruleCheck.spellingCheckDone,
+      consistencyCheckDone: consistencyWorkDone,
+      spellingFindingCount: spellingTabTotalFindings,
+      editorReviewFindingCount: spellingFindingsByCategory.editorReview,
+      builtinSpellingFindingCount: spellingFindingsByCategory.spelling,
+      consistencyFindingCount: consistencyTabFindingsTotal,
+      consistencyFindCount: consistencyFindingsByType.find,
+      consistencyUnifyCount: consistencyFindingsByType.unify,
+      consistencyCommonStringCount: consistencyFindingsByType.commonString,
+      bonBojoFindingCount: consistencyFindingsByType.bonBojo,
+    });
+    if (!patch) return;
+    onTouchActiveProjectContext({
+      ...patch,
+      commitWorkHistory: true,
+    });
+  }, [
+    activeRuleSet?.savedAt,
+    consistencyWorkDone,
+    onTouchActiveProjectContext,
+    pdf.pdf,
+    pdf.pdfByteLength,
+    pdf.pdfFileName,
+    ruleCheck.consistencyCheckDone,
+    ruleCheck.spellingCheckDone,
+    ruleCheck.workHistoryCommitGen,
+    spellingFindingsByCategory.editorReview,
+    spellingFindingsByCategory.spelling,
+    spellingTabTotalFindings,
+    consistencyFindingsByType.find,
+    consistencyFindingsByType.unify,
+    consistencyFindingsByType.commonString,
+    consistencyFindingsByType.bonBojo,
+    consistencyTabFindingsTotal,
   ]);
 
   const showTocResultsPanel =
@@ -927,7 +979,7 @@ export default function MainScreen({
     useState(false);
   const guestConsistencyPreparedRef = useRef(false);
 
-  const workGuide = useWorkGuideChain(authUid, {
+  const guestWorkGuide = useGuestBrowseWorkGuide(authUid, {
     hasPdf: Boolean(pdf.pdf),
     pageTextsReady: pdf.pageTexts.length > 0,
     workTab,
@@ -957,7 +1009,7 @@ export default function MainScreen({
 
   const guestResultGuideActive =
     guestBrowseAutoRunsCriteriaCheck() &&
-    workGuide.showFirstResultGuide &&
+    guestWorkGuide.showFirstResultGuide &&
     guestNextGuideReady &&
     !guestPdfTipOpened;
 
@@ -981,9 +1033,9 @@ export default function MainScreen({
 
   const handleGuestHighlightTipConfirm = useCallback(() => {
     if (!guestBrowseAutoRunsCriteriaCheck()) return;
-    if (!workGuide.showFirstResultGuide) return;
-    workGuide.dismiss(WORK_GUIDE_KEYS.FIRST_RESULT);
-  }, [workGuide.showFirstResultGuide, workGuide.dismiss]);
+    if (!guestWorkGuide.showFirstResultGuide) return;
+    guestWorkGuide.dismiss(WORK_GUIDE_KEYS.FIRST_RESULT);
+  }, [guestWorkGuide.showFirstResultGuide, guestWorkGuide.dismiss]);
 
   const handleGuestHighlightTipDismiss = useCallback(() => {
     if (!guestBrowseAutoRunsCriteriaCheck()) return;
@@ -991,8 +1043,8 @@ export default function MainScreen({
   }, []);
 
   const dismissPreUploadGuide = useCallback(() => {
-    workGuide.dismiss(WORK_GUIDE_KEYS.PRE_UPLOAD);
-  }, [workGuide.dismiss]);
+    guestWorkGuide.dismiss(WORK_GUIDE_KEYS.PRE_UPLOAD);
+  }, [guestWorkGuide.dismiss]);
 
   const openThumbStripAfterDemo = useCallback(() => {
     if (guestBrowseHidesThumbStrip()) return;
@@ -1015,19 +1067,19 @@ export default function MainScreen({
     if (guestBrowseAutoRunsCriteriaCheck()) {
       markGuestBrowseCriteriaClick();
     }
-    if (workGuide.showLeftCriteriaGuide) {
-      workGuide.dismiss(WORK_GUIDE_KEYS.LEFT_CRITERIA);
+    if (guestWorkGuide.showLeftCriteriaGuide) {
+      guestWorkGuide.dismiss(WORK_GUIDE_KEYS.LEFT_CRITERIA);
     }
     void ruleCheck.runSpellingCheck();
   }, [
-    workGuide.dismiss,
-    workGuide.showLeftCriteriaGuide,
+    guestWorkGuide.dismiss,
+    guestWorkGuide.showLeftCriteriaGuide,
     ruleCheck.runSpellingCheck,
   ]);
 
   /** 둘러보기 — 말풍선 후 손 표시, 사용자가 직접 기준 검수 클릭 */
   useEffect(() => {
-    if (!workGuide.showLeftCriteriaGuide) {
+    if (!guestWorkGuide.showLeftCriteriaGuide) {
       setGuestGuideHandActive(false);
       return undefined;
     }
@@ -1042,7 +1094,7 @@ export default function MainScreen({
       window.clearTimeout(handTimer);
       setGuestGuideHandActive(false);
     };
-  }, [workGuide.showLeftCriteriaGuide, criteriaRunBlocked]);
+  }, [guestWorkGuide.showLeftCriteriaGuide, criteriaRunBlocked]);
 
   /** 다시 검수 — 결과 비우고 맞춤법 탭 검수 항목·기준 설정으로 복귀 */
   const handleSpellingRecheckFromScratch = useCallback(() => {
@@ -1055,15 +1107,15 @@ export default function MainScreen({
   }, [clearConsistencyTabWork]);
 
   const handleRunConsistencyRulesCheck = useCallback(async () => {
-    if (workGuide.showAuxiliaryVerbGuide) {
-      workGuide.dismiss(WORK_GUIDE_KEYS.AUXILIARY_VERB_INTRO);
+    if (guestWorkGuide.showAuxiliaryVerbGuide) {
+      guestWorkGuide.dismiss(WORK_GUIDE_KEYS.AUXILIARY_VERB_INTRO);
     }
     setConsistencyFocus('rules');
     setLastConsistencyPane('rules');
     await ruleCheck.runConsistencyCheck();
   }, [
-    workGuide.showAuxiliaryVerbGuide,
-    workGuide.dismiss,
+    guestWorkGuide.showAuxiliaryVerbGuide,
+    guestWorkGuide.dismiss,
     ruleCheck.runConsistencyCheck,
   ]);
 
@@ -1074,7 +1126,7 @@ export default function MainScreen({
 
   /** 4번 말풍선 전에 표기 통일 탭으로 전환 (+둘러보기면 칩 초기화·본·보 전체 선택) */
   useEffect(() => {
-    if (!workGuide.requestConsistencyTab) return;
+    if (!guestWorkGuide.requestConsistencyTab) return;
     if (guestBrowseAutoRunsCriteriaCheck() && !guestConsistencyPreparedRef.current) {
       guestConsistencyPreparedRef.current = true;
       onCustomRulesChange(prepareGuestBrowseConsistencyRules(customRules));
@@ -1084,7 +1136,7 @@ export default function MainScreen({
     setWorkTab('consistency');
     ruleCheck.syncSelectionForTab('consistency');
   }, [
-    workGuide.requestConsistencyTab,
+    guestWorkGuide.requestConsistencyTab,
     workTab,
     ruleCheck.syncSelectionForTab,
     customRules,
@@ -1093,46 +1145,46 @@ export default function MainScreen({
   ]);
 
   useEffect(() => {
-    if (!workGuide.showConsistencyGuide) {
+    if (!guestWorkGuide.showConsistencyGuide) {
       setConsistencyGuideLiteralAddClicked(false);
       setConsistencyGuideUnifyAddClicked(false);
     }
-  }, [workGuide.showConsistencyGuide]);
+  }, [guestWorkGuide.showConsistencyGuide]);
 
   const handleConsistencyLiteralAddGuideClick = useCallback(() => {
-    if (!workGuide.showConsistencyGuide) return;
+    if (!guestWorkGuide.showConsistencyGuide) return;
     setConsistencyGuideLiteralAddClicked(true);
-  }, [workGuide.showConsistencyGuide]);
+  }, [guestWorkGuide.showConsistencyGuide]);
 
   const handleConsistencyUnifyAddGuideClick = useCallback(() => {
-    if (!workGuide.showConsistencyGuide) return;
+    if (!guestWorkGuide.showConsistencyGuide) return;
     if (!consistencyGuideLiteralAddClicked) return;
     setConsistencyGuideUnifyAddClicked(true);
   }, [
-    workGuide.showConsistencyGuide,
+    guestWorkGuide.showConsistencyGuide,
     consistencyGuideLiteralAddClicked,
   ]);
 
   useEffect(() => {
-    if (!workGuide.showConsistencyGuide) return;
+    if (!guestWorkGuide.showConsistencyGuide) return;
     if (!consistencyGuideLiteralAddClicked || !consistencyGuideUnifyAddClicked) {
       return;
     }
-    workGuide.dismiss(WORK_GUIDE_KEYS.CONSISTENCY_INTRO);
+    guestWorkGuide.dismiss(WORK_GUIDE_KEYS.CONSISTENCY_INTRO);
   }, [
-    workGuide.showConsistencyGuide,
+    guestWorkGuide.showConsistencyGuide,
     consistencyGuideLiteralAddClicked,
     consistencyGuideUnifyAddClicked,
-    workGuide.dismiss,
+    guestWorkGuide.dismiss,
   ]);
 
   const handleConsistencyUnifyPinGuideClick = useCallback(
     (tailWord) => {
-      if (!workGuide.showConsistencyUnifyPinGuide) return;
+      if (!guestWorkGuide.showConsistencyUnifyPinGuide) return;
       if (tailWord !== GUEST_BROWSE_UNIFY_PIN_TAIL) return;
-      workGuide.dismiss(WORK_GUIDE_KEYS.CONSISTENCY_UNIFY_PIN);
+      guestWorkGuide.dismiss(WORK_GUIDE_KEYS.CONSISTENCY_UNIFY_PIN);
     },
-    [workGuide.showConsistencyUnifyPinGuide, workGuide.dismiss],
+    [guestWorkGuide.showConsistencyUnifyPinGuide, guestWorkGuide.dismiss],
   );
 
   const goToPdfPage = (pageNum) => {
@@ -1247,9 +1299,13 @@ export default function MainScreen({
           isInstanceVisible: ruleCheck.isInstanceVisible,
           groupVisibilityMode: ruleCheck.groupVisibilityMode,
           visibleInstanceCount: ruleCheck.visibleInstanceCount,
-          cautionCount: spellingGroupsWithFindings.cautionWithFindings,
-          builtinCount: spellingGroupsWithFindings.builtinWithFindings,
+          cautionCriteriaCount: spellingGroupsWithFindings.cautionWithFindings,
+          cautionFindingsCount: spellingFindingsByCategory.editorReview,
+          builtinCriteriaCount: spellingGroupsWithFindings.builtinWithFindings,
+          builtinFindingsCount: spellingFindingsByCategory.spelling,
           totalFindings: spellingTabTotalFindings,
+          cautionSelected: spellingCriteriaSelection.cautionSelected,
+          builtinSelected: spellingCriteriaSelection.builtinSelected,
           filename,
         });
       })
@@ -1264,13 +1320,18 @@ export default function MainScreen({
     ruleCheck.isInstanceVisible,
     ruleCheck.groupVisibilityMode,
     ruleCheck.visibleInstanceCount,
-    spellingGroupsWithFindings,
+    spellingGroupsWithFindings.cautionWithFindings,
+    spellingGroupsWithFindings.builtinWithFindings,
+    spellingFindingsByCategory.editorReview,
+    spellingFindingsByCategory.spelling,
     spellingTabTotalFindings,
+    spellingCriteriaSelection.cautionSelected,
+    spellingCriteriaSelection.builtinSelected,
   ]);
 
   const handleConsistencyExport = useCallback(() => {
-    if (workGuide.showRuleSetSaveGuide) {
-      workGuide.dismiss(WORK_GUIDE_KEYS.RULE_SET_SAVE);
+    if (guestWorkGuide.showRuleSetSaveGuide) {
+      guestWorkGuide.dismiss(WORK_GUIDE_KEYS.RULE_SET_SAVE);
     }
     if (guestBrowseBlocksResultExport()) return;
     if (!spellingExportEnabled) return;
@@ -1291,16 +1352,30 @@ export default function MainScreen({
           isInstanceVisible: ruleCheck.isInstanceVisible,
           groupVisibilityMode: ruleCheck.groupVisibilityMode,
           visibleInstanceCount: ruleCheck.visibleInstanceCount,
-          literalCount: consistencyGroupsWithFindings.literalWithFindings,
-          auxiliaryCount: consistencyGroupsWithFindings.auxiliaryWithFindings,
+          literalCriteriaCount:
+            consistencyGroupsWithFindings.literalWithFindings,
+          literalFindingsCount: consistencyFindingsByType.find,
+          unifyCriteriaCount: consistencyGroupsWithFindings.unifyWithFindings,
+          unifyFindingsCount: consistencyFindingsByType.unify,
+          commonStringCriteriaCount:
+            consistencyGroupsWithFindings.commonStringWithFindings,
+          commonStringFindingsCount: consistencyFindingsByType.commonString,
+          auxiliaryCriteriaCount:
+            consistencyGroupsWithFindings.auxiliaryWithFindings,
+          auxiliaryFindingsCount: consistencyFindingsByType.bonBojo,
           totalFindings: consistencyTabTotalFindings,
+          literalSelected: consistencyCriteriaSelection.literalSelected,
+          unifySelected: consistencyCriteriaSelection.unifySelected,
+          commonStringSelected:
+            consistencyCriteriaSelection.commonStringSelected,
+          auxiliarySelected: consistencyCriteriaSelection.auxiliarySelected,
           filename,
         });
       })
       .catch((err) => console.error('일관성 엑셀보내기 오류:', err));
   }, [
-    workGuide.showRuleSetSaveGuide,
-    workGuide.dismiss,
+    guestWorkGuide.showRuleSetSaveGuide,
+    guestWorkGuide.dismiss,
     spellingExportEnabled,
     authUid,
     authEmail,
@@ -1310,8 +1385,19 @@ export default function MainScreen({
     ruleCheck.isInstanceVisible,
     ruleCheck.groupVisibilityMode,
     ruleCheck.visibleInstanceCount,
-    consistencyGroupsWithFindings,
+    consistencyGroupsWithFindings.literalWithFindings,
+    consistencyGroupsWithFindings.unifyWithFindings,
+    consistencyGroupsWithFindings.commonStringWithFindings,
+    consistencyGroupsWithFindings.auxiliaryWithFindings,
+    consistencyFindingsByType.find,
+    consistencyFindingsByType.unify,
+    consistencyFindingsByType.commonString,
+    consistencyFindingsByType.bonBojo,
     consistencyTabTotalFindings,
+    consistencyCriteriaSelection.literalSelected,
+    consistencyCriteriaSelection.unifySelected,
+    consistencyCriteriaSelection.commonStringSelected,
+    consistencyCriteriaSelection.auxiliarySelected,
   ]);
 
   const spellingResultsPanel =
@@ -1323,8 +1409,14 @@ export default function MainScreen({
         activeGroup={ruleCheck.activeGroup}
         totalFindings={spellingTabTotalFindings}
         ruleCount={spellingTabEntries.length}
-        cautionWithFindingsCount={spellingGroupsWithFindings.cautionWithFindings}
-        builtinWithFindingsCount={spellingGroupsWithFindings.builtinWithFindings}
+        cautionWithFindingsCount={
+          spellingGroupsWithFindings.cautionWithFindings
+        }
+        builtinWithFindingsCount={
+          spellingGroupsWithFindings.builtinWithFindings
+        }
+        cautionFindingsCount={spellingFindingsByCategory.editorReview}
+        builtinFindingsCount={spellingFindingsByCategory.spelling}
         cautionCriteriaSelected={spellingCriteriaSelection.cautionSelected}
         builtinCriteriaSelected={spellingCriteriaSelection.builtinSelected}
         spellingCheckDone={ruleCheck.spellingCheckDone}
@@ -1420,9 +1512,9 @@ export default function MainScreen({
           data-work-guide-criteria-run
           title={criteriaRunDisabledReason || undefined}
         >
-          {workGuide.showLeftCriteriaGuide ? (
+          {guestWorkGuide.showLeftCriteriaGuide ? (
             <TooltipGuide
-              storageKey={workGuide.storageKey(WORK_GUIDE_KEYS.LEFT_CRITERIA)}
+              storageKey={guestWorkGuide.storageKey(WORK_GUIDE_KEYS.LEFT_CRITERIA)}
               placement="bottom"
               bubbleType="left"
               useFixedLayer
@@ -1430,7 +1522,7 @@ export default function MainScreen({
               offsetY={0}
               alignToBubble={WORK_GUIDE_1_ALIGN}
               bubbleGuideStep="1"
-              pinned={workGuide.pinAll}
+              pinned={guestWorkGuide.pinAll}
               showConfirm={false}
               message={
                 <>
@@ -1449,7 +1541,7 @@ export default function MainScreen({
                 </>
               }
               onDismiss={() =>
-                workGuide.dismiss(WORK_GUIDE_KEYS.LEFT_CRITERIA)
+                guestWorkGuide.dismiss(WORK_GUIDE_KEYS.LEFT_CRITERIA)
               }
             >
               <span className="guide-auto-click-wrap">
@@ -1473,12 +1565,12 @@ export default function MainScreen({
             />
           )}
         </span>
-        {workGuide.showFirstResultGuide &&
+        {guestWorkGuide.showFirstResultGuide &&
         (!guestBrowseAutoRunsCriteriaCheck() ||
           (guestNextGuideReady && !guestPdfTipOpened)) ? (
           <div className="work-guide-step-2">
             <TooltipGuide
-              storageKey={workGuide.storageKey(WORK_GUIDE_KEYS.FIRST_RESULT)}
+              storageKey={guestWorkGuide.storageKey(WORK_GUIDE_KEYS.FIRST_RESULT)}
               placement="left"
               bubbleType="left"
               useFixedLayer
@@ -1486,7 +1578,7 @@ export default function MainScreen({
               bubbleGuideStep="2"
               offsetX={0}
               offsetY={0}
-              pinned={workGuide.pinAll}
+              pinned={guestWorkGuide.pinAll}
               showConfirm={false}
               message={
                 <>
@@ -1494,10 +1586,10 @@ export default function MainScreen({
                   <br />
                   왼쪽에는{' '}
                   <span className="results-header-badge result-pillar--spelling-caution">
-                    편집자 검토
+                    편집자 검토 필요
                   </span>{' '}
                   <span className="results-header-badge result-pillar--spelling">
-                    맞춤법
+                    맞춤법 규칙
                   </span>
                   <br />
                   검사 결과가 나온다냥
@@ -1508,7 +1600,7 @@ export default function MainScreen({
                 </>
               }
               onDismiss={() =>
-                workGuide.dismiss(WORK_GUIDE_KEYS.FIRST_RESULT)
+                guestWorkGuide.dismiss(WORK_GUIDE_KEYS.FIRST_RESULT)
               }
             >
               <span
@@ -1526,7 +1618,7 @@ export default function MainScreen({
         <GuideClickHand
           active={
             guestBrowseAutoRunsCriteriaCheck() &&
-            workGuide.showFirstResultGuide &&
+            guestWorkGuide.showFirstResultGuide &&
             guestPdfTipOpened
           }
           anchorSelector='[data-work-guide="pdf-tip-confirm"]'
@@ -1569,9 +1661,9 @@ export default function MainScreen({
     </span>
   );
 
-  const greetingParagraph = workGuide.showRuleSetSaveGuide ? (
+  const greetingParagraph = guestWorkGuide.showRuleSetSaveGuide ? (
     <TooltipGuide
-      storageKey={workGuide.storageKey(WORK_GUIDE_KEYS.RULE_SET_SAVE)}
+      storageKey={guestWorkGuide.storageKey(WORK_GUIDE_KEYS.RULE_SET_SAVE)}
       placement="bottom"
       bubbleType="left"
       useFixedLayer
@@ -1579,7 +1671,7 @@ export default function MainScreen({
       bubbleGuideStep="6"
       offsetX={0}
       offsetY={0}
-      pinned={workGuide.pinAll}
+      pinned={guestWorkGuide.pinAll}
       showConfirm={false}
       message={
         <>
@@ -1588,13 +1680,13 @@ export default function MainScreen({
           검수 항목을 프로젝트로 저장할 수 있다냥
         </>
       }
-      onDismiss={() => workGuide.dismiss(WORK_GUIDE_KEYS.RULE_SET_SAVE)}
+      onDismiss={() => guestWorkGuide.dismiss(WORK_GUIDE_KEYS.RULE_SET_SAVE)}
     >
       {greetingAnchor}
     </TooltipGuide>
-  ) : workGuide.showConsistencyGuide ? (
+  ) : guestWorkGuide.showConsistencyGuide ? (
     <TooltipGuide
-      storageKey={workGuide.storageKey(WORK_GUIDE_KEYS.CONSISTENCY_INTRO)}
+      storageKey={guestWorkGuide.storageKey(WORK_GUIDE_KEYS.CONSISTENCY_INTRO)}
       placement="bottom"
       bubbleType="left"
       useFixedLayer
@@ -1602,7 +1694,7 @@ export default function MainScreen({
       bubbleGuideStep="4"
       offsetX={0}
       offsetY={8}
-      pinned={workGuide.pinAll}
+      pinned={guestWorkGuide.pinAll}
       message={
         consistencyGuideLiteralAddClicked ? (
           <>
@@ -1632,7 +1724,7 @@ export default function MainScreen({
         )
       }
       onDismiss={() =>
-        workGuide.dismiss(WORK_GUIDE_KEYS.CONSISTENCY_INTRO)
+        guestWorkGuide.dismiss(WORK_GUIDE_KEYS.CONSISTENCY_INTRO)
       }
     >
       {greetingAnchor}
@@ -1648,7 +1740,7 @@ export default function MainScreen({
         className={[
           'panel-left',
           `panel-left--${workTab}`,
-          workGuide.workGuideOpen ? 'panel-left--work-guide' : '',
+          guestWorkGuide.workGuideOpen ? 'panel-left--work-guide' : '',
         ]
           .filter(Boolean)
           .join(' ')}
@@ -2026,37 +2118,37 @@ export default function MainScreen({
               <div className="consistency-rules-scroll custom-scrollbar">
                 <ConsistencyPanel
                   auxiliaryVerbGuide={
-                    workGuide.showAuxiliaryVerbGuide
+                    guestWorkGuide.showAuxiliaryVerbGuide
                       ? {
-                          storageKey: workGuide.storageKey(
+                          storageKey: guestWorkGuide.storageKey(
                             WORK_GUIDE_KEYS.AUXILIARY_VERB_INTRO,
                           ),
                           alignToBubbleChain: WORK_GUIDE_5_ALIGN_CHAIN,
-                          pinned: workGuide.pinAll,
+                          pinned: guestWorkGuide.pinAll,
                           onDismiss: () =>
-                            workGuide.dismiss(
+                            guestWorkGuide.dismiss(
                               WORK_GUIDE_KEYS.AUXILIARY_VERB_INTRO,
                             ),
                         }
                       : null
                   }
                   consistencyUnifyPinGuide={
-                    workGuide.showConsistencyUnifyPinGuide
+                    guestWorkGuide.showConsistencyUnifyPinGuide
                       ? {
-                          storageKey: workGuide.storageKey(
+                          storageKey: guestWorkGuide.storageKey(
                             WORK_GUIDE_KEYS.CONSISTENCY_UNIFY_PIN,
                           ),
                           alignToBubble: WORK_GUIDE_UNIFY_PIN_ALIGN,
-                          pinned: workGuide.pinAll,
+                          pinned: guestWorkGuide.pinAll,
                           onDismiss: () =>
-                            workGuide.dismiss(
+                            guestWorkGuide.dismiss(
                               WORK_GUIDE_KEYS.CONSISTENCY_UNIFY_PIN,
                             ),
                         }
                       : null
                   }
                   guidePinTailWord={
-                    workGuide.showConsistencyUnifyPinGuide
+                    guestWorkGuide.showConsistencyUnifyPinGuide
                       ? GUEST_BROWSE_UNIFY_PIN_TAIL
                       : null
                   }
@@ -2134,30 +2226,30 @@ export default function MainScreen({
               {greetingParagraph}
               <GuideClickHand
                 active={
-                  workGuide.showConsistencyGuide &&
+                  guestWorkGuide.showConsistencyGuide &&
                   !consistencyGuideLiteralAddClicked
                 }
                 anchorSelector='[data-work-guide="literal-add"]'
               />
               <GuideClickHand
                 active={
-                  workGuide.showConsistencyGuide &&
+                  guestWorkGuide.showConsistencyGuide &&
                   consistencyGuideLiteralAddClicked &&
                   !consistencyGuideUnifyAddClicked
                 }
                 anchorSelector='[data-work-guide="unify-add"]'
               />
               <GuideClickHand
-                active={workGuide.showConsistencyUnifyPinGuide}
+                active={guestWorkGuide.showConsistencyUnifyPinGuide}
                 anchorSelector='[data-work-guide="unify-pin-silla"]'
                 align="center"
               />
               <GuideClickHand
-                active={workGuide.showAuxiliaryVerbGuide}
+                active={guestWorkGuide.showAuxiliaryVerbGuide}
                 anchorSelector='[data-work-guide="consistency-criteria-run"]'
               />
               <GuideClickHand
-                active={workGuide.showRuleSetSaveGuide}
+                active={guestWorkGuide.showRuleSetSaveGuide}
                 anchorSelector='[data-work-guide="consistency-export"]'
               />
               {showPdfViewer ? (
@@ -2200,9 +2292,9 @@ export default function MainScreen({
                   <FilePlus size={16} aria-hidden />
                   새 업로드
                 </button>
-                {workGuide.showWorkExitGuide ? (
+                {guestWorkGuide.showWorkExitGuide ? (
                   <TooltipGuide
-                    storageKey={workGuide.storageKey(WORK_GUIDE_KEYS.WORK_EXIT)}
+                    storageKey={guestWorkGuide.storageKey(WORK_GUIDE_KEYS.WORK_EXIT)}
                     placement="bottom"
                     bubbleType="left"
                     useFixedLayer
@@ -2210,7 +2302,7 @@ export default function MainScreen({
                     bubbleGuideStep="7"
                     offsetX={0}
                     offsetY={8}
-                    pinned={workGuide.pinAll}
+                    pinned={guestWorkGuide.pinAll}
                     message={
                       <>
                         <span className="tooltip-guide__message-line">
@@ -2233,7 +2325,7 @@ export default function MainScreen({
                       </>
                     }
                     onDismiss={() => {
-                      workGuide.dismiss(WORK_GUIDE_KEYS.WORK_EXIT);
+                      guestWorkGuide.dismiss(WORK_GUIDE_KEYS.WORK_EXIT);
                       trackGuestBrowseCompleted();
                     }}
                   >
@@ -2264,7 +2356,7 @@ export default function MainScreen({
                 )}
                 {feedbackThankYouOpen ? (
                   <TooltipGuide
-                    storageKey={workGuide.storageKey(
+                    storageKey={guestWorkGuide.storageKey(
                       WORK_GUIDE_KEYS.FEEDBACK_QUOTA_THANK,
                     )}
                     placement="bottom"
@@ -2362,13 +2454,13 @@ export default function MainScreen({
               runLabel={centerRunLabel}
               showReady={Boolean(pdf.pdf)}
               checkQuotaBlocked={checkSessionBlocked}
-              showUploadGuide={workGuide.showPreUploadGuide}
-              uploadGuideStorageKey={workGuide.storageKey(
+              showUploadGuide={guestWorkGuide.showPreUploadGuide}
+              uploadGuideStorageKey={guestWorkGuide.storageKey(
                 WORK_GUIDE_KEYS.PRE_UPLOAD,
               )}
-              uploadGuidePinned={workGuide.pinAll}
+              uploadGuidePinned={guestWorkGuide.pinAll}
               onUploadGuideDismiss={() =>
-                workGuide.dismiss(WORK_GUIDE_KEYS.PRE_UPLOAD)
+                guestWorkGuide.dismiss(WORK_GUIDE_KEYS.PRE_UPLOAD)
               }
             />
               )
@@ -2389,7 +2481,7 @@ export default function MainScreen({
                 onHighlightTipDismiss={handleGuestHighlightTipDismiss}
                 tipConfirmGuideAttr={
                   guestBrowseAutoRunsCriteriaCheck() &&
-                  workGuide.showFirstResultGuide
+                  guestWorkGuide.showFirstResultGuide
                     ? 'pdf-tip-confirm'
                     : undefined
                 }

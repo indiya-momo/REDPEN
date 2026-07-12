@@ -307,13 +307,9 @@ function applyRuleToPages(rule, pages, byKey, globalExcludePhrases, errors) {
           ...(rule.spellingRuleId ? { spellingRuleId: rule.spellingRuleId } : {}),
           ...(tip ? { tip } : {}),
           ...(rule.patternKind ? { patternKind: rule.patternKind } : {}),
-          ...(rule.patternKind === 'auxiliary-verb' && rule.tailWord
-            ? {
-                tailWord: rule.tailWord,
-                ...(rule.label?.trim()
-                  ? { groupDisplayLabel: rule.label.trim() }
-                  : {}),
-              }
+          ...(rule.tailWord ? { tailWord: rule.tailWord } : {}),
+          ...(rule.patternKind === 'auxiliary-verb' && rule.label?.trim()
+            ? { groupDisplayLabel: rule.label.trim() }
             : {}),
           ...(rule.dividerGroup ? { dividerGroup: rule.dividerGroup } : {}),
           ...(rule.dividerLabel ? { dividerLabel: rule.dividerLabel } : {}),

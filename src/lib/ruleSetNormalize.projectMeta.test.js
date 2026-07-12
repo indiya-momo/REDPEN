@@ -55,6 +55,7 @@ describe('normalizeRuleSet project meta', () => {
         pinned: '신라시대',
         variants: ['통일신라시대'],
       },
+      { kind: 'find', id: 'x', at: '2026-07-10T00:00:00.000Z', query: 'a' },
     ]);
   });
 });

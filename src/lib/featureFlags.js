@@ -33,7 +33,7 @@ export function isMyPageProjectHubEnabled() {
 }
 
 /**
- * 맞춤법 탭 「외래어 표기 변환」.
+ * 맞춤법 탭 「외래어 표기(영어 → 한글 지원)」.
  * - `npm run dev`: 항상 켜짐 (로컬에서만 확인)
  * - 프로덕션·Pages 빌드: 기본 꺼짐 (UI 숨김, 코드는 유지)
  * - 로컬 preview에서 켜려면 `.env`에 `VITE_FEATURE_LOANWORD_CONVERTER=true`

@@ -129,11 +129,11 @@ export default function LoanwordConverter() {
   return (
     <section
       className="printed-page-setup loanword-converter"
-      aria-label="외래어 표기 변환"
+      aria-label="외래어 표기(영어 → 한글 지원)"
     >
       <p className="printed-page-setup__title panel-criteria-heading">
-        외래어 표기 변환
-        <span className="panel-criteria-heading-meta">(영어 → 한글 참고)</span>
+        외래어 표기
+        <span className="panel-criteria-heading-meta">(영어 → 한글 지원)</span>
       </p>
       <p className="hint consistency-hint-block">
         국립국어원 용례집을 먼저 찾고, 없으면 규정 적용 결과를 보여 줍니다

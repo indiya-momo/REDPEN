@@ -4,6 +4,9 @@ import { listPhraseSlotEntries } from './phraseSlotRegister.js';
 /** UI 표기 — 쉼표로 여러 표기를 등록해 찾기 */
 export const LITERAL_FIND_FEATURE_LABEL = '여러 개 찾기';
 
+/** UI 표기 — 통일형 만들기(결과 뱃지·헤더·팝업 공통) */
+export const UNIFY_FEATURE_LABEL = '통일형 만들기';
+
 /** 여러 개 찾기 — 등록 상한 (쉼표 항목마다 1건) */
 export const MAX_CONSISTENCY_CRITERIA_SLOTS = 5;
 
@@ -104,7 +107,7 @@ export function consistencyUnifyRegistrationBlockedMessage(current, adding = 0) 
   const max = MAX_CONSISTENCY_UNIFY_SLOTS;
   const total = current + adding;
   const over = Math.max(0, total - max);
-  return `통일형 만들기는 ${max}개까지 등록할 수 있습니다(현재 ${total}개, ${over}개 초과)`;
+  return `${UNIFY_FEATURE_LABEL}는 ${max}개까지 등록할 수 있습니다(현재 ${total}개, ${over}개 초과)`;
 }
 
 /**

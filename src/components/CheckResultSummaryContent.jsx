@@ -1,17 +1,22 @@
 /**
- * 검수 완료 팝업·결과 헤더와 동일한 뱃지·건수·원형 총건 UI
+ * 검수 완료 팝업·결과 헤더와 동일한 뱃지·기준수·원형 발견수 UI
  */
 
 import { resultPillarToneClass } from '../lib/resultPillarTone.js';
+import { formatResultsStatCount } from '../lib/checkResultSummaryFormat.js';
 
 /**
- * @param {{ count: number, className?: string }} props
+ * @param {{ count: number, className?: string, ariaLabel?: string }} props
  */
-export function ResultFindingsCountCircle({ count, className = '' }) {
+export function ResultFindingsCountCircle({
+  count,
+  className = '',
+  ariaLabel,
+}) {
   return (
     <span
       className={`result-findings-count-circle ${className}`.trim()}
-      aria-label={`${count}건`}
+      aria-label={ariaLabel ?? `${count}건`}
     >
       {count}
     </span>
@@ -22,15 +27,24 @@ export function ResultFindingsCountCircle({ count, className = '' }) {
  * @param {{
  *   badge: string,
  *   count: number,
+ *   findingsCount: number,
  *   tone?: import('../lib/resultPillarTone.js').ResultBadgeTone,
  * }} props
  */
-function ResultHeaderStat({ badge, count, tone }) {
+function ResultHeaderStat({ badge, count, findingsCount, tone }) {
   const toneClass = tone ? resultPillarToneClass(tone) : '';
   return (
     <span className="results-header__stat">
       <span className={`results-header-badge ${toneClass}`.trim()}>{badge}</span>
-      <span className="results-header__stat-count">{count}건</span>
+      <span className="results-header__stat-count" aria-label={formatResultsStatCount(count)}>
+        <span className="results-header__stat-num">{count}</span>
+        <span className="results-header__stat-unit">기준</span>
+      </span>
+      <ResultFindingsCountCircle
+        count={findingsCount}
+        className="results-header__stat-circle"
+        ariaLabel={`${findingsCount}건`}
+      />
     </span>
   );
 }
@@ -40,6 +54,7 @@ function ResultHeaderStat({ badge, count, tone }) {
  *   stats: Array<{
  *     badge: string,
  *     count: number,
+ *     findingsCount: number,
  *     tone?: import('../lib/resultPillarTone.js').ResultBadgeTone,
  *   }>,
  *   totalFindings: number,
@@ -63,8 +78,14 @@ export default function CheckResultSummaryContent({ stats, totalFindings }) {
   return (
     <div className="results-header app-dialog__results-summary">
       <div className="results-header__stats">
-        {stats.map(({ badge, count, tone }) => (
-          <ResultHeaderStat key={badge} badge={badge} count={count} tone={tone} />
+        {stats.map(({ badge, count, findingsCount, tone }) => (
+          <ResultHeaderStat
+            key={badge}
+            badge={badge}
+            count={count}
+            findingsCount={findingsCount}
+            tone={tone}
+          />
         ))}
       </div>
       <span className="results-header__total-findings">

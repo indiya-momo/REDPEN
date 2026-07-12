@@ -9,9 +9,11 @@ import {
 import { consistencyGroupScope } from './consistencyCheckScopes.js';
 import {
   getConsistencyUnifyPinnedTailWord,
-  isConsistencyUnifyTailWord,
+  isConsistencyUnifyResultGroup,
 } from './consistencyUnifyRegister.js';
 import {
+  LITERAL_FIND_FEATURE_LABEL,
+  UNIFY_FEATURE_LABEL,
   listConsistencyUnifyEntries,
 } from './consistencyRuleLimit.js';
 import {
@@ -20,7 +22,6 @@ import {
 } from './phraseSlotRegister.js';
 import { assertLoggedInForCheckOrAlert } from './checkAuthGate.js';
 import { AUXILIARY_VERB_FEATURE_LABEL } from './bonBojoRules.js';
-import { LITERAL_FIND_FEATURE_LABEL } from './consistencyRuleLimit.js';
 import { createElement } from 'react';
 import CheckResultSummaryContent from '../components/CheckResultSummaryContent.jsx';
 import {
@@ -106,7 +107,7 @@ function formatConfirmActiveCount(active) {
 
 /** @param {number} active @param {number} total */
 function formatConfirmAuxiliaryCount(active, total) {
-  return total > 0 ? `(${active}/${total}건)` : '(없음)';
+  return total > 0 ? `(${active}/${total}기준)` : '(없음)';
 }
 
 /**
@@ -129,7 +130,7 @@ function formatConsistencyCheckCriteriaBlock({
 }) {
   const line1 =
     `${LITERAL_FIND_FEATURE_LABEL}${formatConfirmActiveCount(literalActive)}, ` +
-    `통일형 만들기${formatConfirmActiveCount(unifyActive)}, ` +
+    `${UNIFY_FEATURE_LABEL}${formatConfirmActiveCount(unifyActive)}, ` +
     `공통 문자열 찾기${formatConfirmActiveCount(commonStringActive)}`;
   const line2 =
     `검수 제외 항목${formatConfirmActiveCount(excludeActive)}, ` +
@@ -311,7 +312,7 @@ export function countConsistencyGroupsWithFindings(groups, customRules = []) {
     }
     const scope = consistencyGroupScope(group);
     if (scope === 'literal-slot') {
-      if (isConsistencyUnifyTailWord(customRules, group.tailWord)) {
+      if (isConsistencyUnifyResultGroup(customRules, group)) {
         unifyWithFindings += 1;
       } else {
         literalWithFindings += 1;
@@ -347,7 +348,7 @@ export function countConsistencyFindingsByType(groups, customRules = []) {
     }
     const scope = consistencyGroupScope(group);
     if (scope === 'literal-slot') {
-      if (isConsistencyUnifyTailWord(customRules, group.tailWord)) {
+      if (isConsistencyUnifyResultGroup(customRules, group)) {
         unify += count;
       } else {
         find += count;
@@ -420,9 +421,16 @@ export async function alertConsistencyCheckAfterRun(
     commonStringSelected = true,
     auxiliarySelected = true,
   } = criteriaSelection;
-  const counts = countConsistencyGroupsWithFindings(groups, customRules);
+  const withFindings = countConsistencyGroupsWithFindings(
+    groups,
+    customRules,
+  );
+  const findingsByType = countConsistencyFindingsByType(groups, customRules);
   const summaryInput = {
-    ...counts,
+    literalWithFindings: withFindings.literalWithFindings,
+    unifyWithFindings: withFindings.unifyWithFindings,
+    commonStringWithFindings: withFindings.commonStringWithFindings,
+    auxiliaryWithFindings: withFindings.auxiliaryWithFindings,
     totalFindings,
     literalSelected,
     unifySelected,
@@ -430,7 +438,13 @@ export async function alertConsistencyCheckAfterRun(
     auxiliarySelected,
   };
   const message = formatConsistencyCheckCompleteMessage(summaryInput);
-  const stats = buildConsistencyResultSummaryStats(summaryInput);
+  const stats = buildConsistencyResultSummaryStats({
+    ...summaryInput,
+    literalFindings: findingsByType.find,
+    unifyFindings: findingsByType.unify,
+    commonStringFindings: findingsByType.commonString,
+    auxiliaryFindings: findingsByType.bonBojo,
+  });
 
   await finishGuestBrowseConsistencyResultThenUnlockExportGuide(
     async (extra = {}) => {

@@ -259,8 +259,8 @@ describe('formatConsistencyCheckConfirmMessage', () => {
       '[표기 통일 검수 진행]\n' +
         '\n' +
         '오늘 표기 통일 검수는 1회(한도 1회) 가능합니다\n' +
-        '여러 개 찾기(3건), 통일형 만들기(1건), 공통 문자열 찾기(1건)\n' +
-        '검수 제외 항목(1건), 본용언(-아/어) + 보조용언 표기(2/10건)\n' +
+        '여러 개 찾기(3기준), 통일형 만들기(1기준), 공통 문자열 찾기(1기준)\n' +
+        '검수 제외 항목(1기준), 본용언(-아/어) + 보조용언 표기(2/10기준)\n' +
         '\n' +
         '검수를 진행할까요?',
     );
@@ -286,7 +286,7 @@ describe('formatConsistencyCheckConfirmMessage', () => {
         '\n' +
         '오늘 표기 통일 검수는 1회(한도 1회) 가능합니다\n' +
         '여러 개 찾기(없음), 통일형 만들기(없음), 공통 문자열 찾기(없음)\n' +
-        '검수 제외 항목(없음), 본용언(-아/어) + 보조용언 표기(10/10건)\n' +
+        '검수 제외 항목(없음), 본용언(-아/어) + 보조용언 표기(10/10기준)\n' +
         '\n' +
         '검수를 진행할까요?',
     );
@@ -304,13 +304,13 @@ describe('formatConsistencyCheckCompleteMessage', () => {
         totalFindings: 40,
       }),
     ).toBe(
-      '여러 개 찾기 2건, 통일형 찾기 0건, 공통 문자열 찾기 1건, 본+보 1건 전체 발견 40',
+      '여러 개 찾기 2기준, 통일형 만들기 0기준, 공통 문자열 찾기 1기준, 본+보 1기준 전체 발견 40',
     );
   });
 });
 
 describe('alertConsistencyCheckAfterRun', () => {
-  it('검수 완료 alert를 띄운다', async () => {
+  it('검수 완료 alert를 띄운다 — N기준은 발견 있는 그룹 수', async () => {
     const alertMock = vi.fn();
     vi.stubGlobal('alert', alertMock);
 
@@ -331,7 +331,7 @@ describe('alertConsistencyCheckAfterRun', () => {
 
     expect(alertMock).toHaveBeenCalledWith(
       '검수를 진행했습니다\n\n' +
-        '여러 개 찾기 0건, 통일형 찾기 0건, 공통 문자열 찾기 1건, 본+보 1건 전체 발견 3',
+        '여러 개 찾기 0기준, 통일형 만들기 0기준, 공통 문자열 찾기 1기준, 본+보 1기준 전체 발견 3',
     );
   });
 });
