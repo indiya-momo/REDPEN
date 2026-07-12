@@ -1,7 +1,10 @@
 import { useMemo } from 'react';
 import { useMyPageProjects } from './useMyPageProjects.js';
 import { buildSortedProjectCards } from '../lib/projectHubCards.js';
-import { planMyPageProjectSlots } from '../lib/mypageProjectDisplay.js';
+import {
+  formatLibrarySlotGauge,
+  planMyPageProjectSlots,
+} from '../lib/mypageProjectDisplay.js';
 
 /**
  * 마이페이지 프로젝트 허브 공통 데이터.
@@ -40,9 +43,7 @@ export function useProjectHubLibrary(uid, email) {
     [slotPlan.visibleProjects, activeSetId],
   );
 
-  const slotLabel = exempt
-    ? `${savedCount}개`
-    : `${savedCount}/${maxSlots}`;
+  const slotLabel = formatLibrarySlotGauge(savedCount);
 
   return {
     ...projectState,

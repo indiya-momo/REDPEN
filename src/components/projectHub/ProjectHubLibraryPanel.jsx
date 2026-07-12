@@ -15,7 +15,6 @@ import ProjectLibraryCard from './ProjectLibraryCard.jsx';
 import ProjectLibraryEmptySlot from './ProjectLibraryEmptySlot.jsx';
 import SharePreviewModal from './SharePreviewModal.jsx';
 import './project-library.css';
-import ProjectMetaEditModal from '../ProjectMetaEditModal.jsx';
 import ProjectHubTagFilters from './ProjectHubTagFilters.jsx';
 
 /**
@@ -59,10 +58,6 @@ export default function ProjectHubLibraryPanel({
   const [internalSharePreviewCardId, setInternalSharePreviewCardId] = useState(
     /** @type {string | null} */ (null),
   );
-  const [metaEditCardId, setMetaEditCardId] = useState(
-    /** @type {string | null} */ (null),
-  );
-  const [metaSaving, setMetaSaving] = useState(false);
   const [shelfExpanded, setShelfExpanded] = useState(false);
 
   const isSharePreviewControlled = onSharePreviewCardIdChange !== undefined;
@@ -99,11 +94,6 @@ export default function ProjectHubLibraryPanel({
     [previewCards, sharePreviewCardId],
   );
 
-  const metaEditCard = useMemo(
-    () => previewCards.find((card) => card.id === metaEditCardId) ?? null,
-    [previewCards, metaEditCardId],
-  );
-
   /**
    * @param {import('../../presentation/projectCardViewModel.js').ProjectCardViewModel} card
    */
@@ -115,7 +105,6 @@ export default function ProjectHubLibraryPanel({
         nameEditable={false}
         selected={card.id === selectedCardId}
         onSelect={onSelectCard ? () => onSelectCard(card.id) : undefined}
-        onEditMeta={() => setMetaEditCardId(card.id)}
         onStartWork={() => void actions.handleStartWork(card.id)}
         onDuplicate={() => void actions.handleDuplicate(card.id)}
         onDelete={() => void actions.handleDelete(card.id, card.title)}
@@ -237,26 +226,6 @@ export default function ProjectHubLibraryPanel({
           onClose={closeSharePreview}
         />
       ) : null}
-
-      <ProjectMetaEditModal
-        open={Boolean(metaEditCard)}
-        projectTitle={metaEditCard?.title ?? ''}
-        initialTags={metaEditCard?.tags ?? []}
-        initialMemo={metaEditCard?.memo ?? ''}
-        initialFormatLabel={metaEditCard?.formatLabel ?? ''}
-        saving={metaSaving}
-        onClose={() => setMetaEditCardId(null)}
-        onSave={async (payload) => {
-          if (!metaEditCard) return;
-          setMetaSaving(true);
-          try {
-            await actions.handleUpdateMeta(metaEditCard.id, payload);
-            setMetaEditCardId(null);
-          } finally {
-            setMetaSaving(false);
-          }
-        }}
-      />
     </>
   );
 }

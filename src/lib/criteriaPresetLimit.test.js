@@ -27,6 +27,7 @@ describe('countSavedCriteriaPresets', () => {
         set('c', 'C', '2026-01-02'),
       ]),
     ).toBe(2);
+    expect(MAX_CRITERIA_PRESETS).toBe(3);
   });
 });
 
@@ -37,10 +38,22 @@ describe('canAddCriteriaPreset', () => {
     import.meta.env.VITE_BETA_QUOTA_ADMIN_UIDS = prevUids;
   });
 
-  it('일반 계정 — 저장 1개면 새 이름 추가 불가', () => {
-    const sets = [set('a', '기존', '2026-01-01')];
+  it('일반 계정 — 저장 3개면 새 이름 추가 불가', () => {
+    const sets = [
+      set('a', 'A', '2026-01-01'),
+      set('b', 'B', '2026-01-02'),
+      set('c', 'C', '2026-01-03'),
+    ];
     expect(canAddCriteriaPreset(sets, '새 기준', 'u1', '')).toBe(false);
-    expect(canAddCriteriaPreset(sets, '기존', 'u1', '')).toBe(true);
+    expect(canAddCriteriaPreset(sets, 'A', 'u1', '')).toBe(true);
+  });
+
+  it('일반 계정 — 저장 2개면 새 이름 추가 가능', () => {
+    const sets = [
+      set('a', 'A', '2026-01-01'),
+      set('b', 'B', '2026-01-02'),
+    ];
+    expect(canAddCriteriaPreset(sets, 'C', 'u1', '')).toBe(true);
   });
 
   it('관리자 uid — 여러 개 추가 가능', () => {
@@ -48,8 +61,9 @@ describe('canAddCriteriaPreset', () => {
     const sets = [
       set('a', 'A', '2026-01-01'),
       set('b', 'B', '2026-01-02'),
+      set('c', 'C', '2026-01-03'),
     ];
-    expect(canAddCriteriaPreset(sets, 'C', 'admin-uid', '')).toBe(true);
+    expect(canAddCriteriaPreset(sets, 'D', 'admin-uid', '')).toBe(true);
   });
 });
 
@@ -58,9 +72,16 @@ describe('enforceMaxCriteriaPresets', () => {
     const sets = [
       set('draft', ''),
       set('old', '옛', '2026-01-01'),
-      set('new', '최신', '2026-06-01'),
+      set('mid', '중간', '2026-03-01'),
+      set('newer', '더최근', '2026-05-01'),
+      set('newest', '최신', '2026-06-01'),
     ];
     const next = enforceMaxCriteriaPresets(sets, 'user', '');
-    expect(next.map((s) => s.id)).toEqual(['draft', 'new']);
+    expect(next.map((s) => s.id)).toEqual([
+      'draft',
+      'mid',
+      'newer',
+      'newest',
+    ]);
   });
 });

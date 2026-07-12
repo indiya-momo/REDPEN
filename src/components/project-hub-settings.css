@@ -161,8 +161,13 @@
 }
 
 .project-hub-settings__criteria-section--consistency {
-  border-left: 3px solid var(--pillar-consistency, #5c6b7a);
-  padding-left: 0.65rem;
+  border-left: none;
+  padding-left: 0;
+}
+
+.project-hub-settings__criteria--single .project-hub-settings__criteria-section--consistency {
+  border-left-width: 0;
+  padding-left: 0;
 }
 
 .project-hub-settings__criteria-section--auxiliary {
@@ -199,6 +204,12 @@
   margin-bottom: 0.45rem;
 }
 
+.project-hub-settings__criteria-stats {
+  flex: 1 1 auto;
+  margin: 0;
+  font-size: 0.84rem;
+}
+
 .project-hub-settings__criteria-title {
   margin: 0;
   font-size: var(--project-hub-criteria-title-font-size);
@@ -220,7 +231,7 @@
 
 .project-hub-settings__criteria-groups {
   list-style: none;
-  margin: 0 0 0.7rem;
+  margin: 0 0 0.55rem;
   padding: 0;
   display: flex;
   flex-direction: column;
@@ -230,7 +241,7 @@
 .project-hub-settings__criteria-group {
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
+  align-items: center;
   gap: 0.35rem 0.5rem;
 }
 
@@ -239,6 +250,35 @@
   font-size: 0.76rem;
   font-weight: 700;
   color: var(--color-text);
+}
+
+.project-hub-settings__criteria-group-badge {
+  flex: 0 0 auto;
+  gap: 0.2rem;
+}
+
+.project-hub-settings__criteria-chip-pin {
+  margin-left: 0.15rem;
+  font-size: 0.72rem;
+  line-height: 1;
+}
+
+.project-hub-settings__criteria-chip--pinned {
+  border-color: color-mix(in srgb, var(--pillar-consistency) 55%, #c5d0db);
+  background: #f4f8fb;
+  font-weight: 700;
+}
+
+.project-hub-settings__criteria .visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .project-hub-settings__criteria-chips {
@@ -526,13 +566,6 @@
   padding: 0.35rem 0 0.15rem;
 }
 
-.work-history-panel__top-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.55rem;
-  margin-bottom: 0.65rem;
-}
-
 .work-history-panel__block {
   margin-bottom: 0.65rem;
   padding: 0.55rem 0.6rem 0.6rem;
@@ -544,16 +577,19 @@
   border-left: 3px solid var(--pillar-spelling);
 }
 
-.work-history-panel__block--consistency {
+.work-history-panel__block--auxiliary {
   margin-bottom: 0;
+  border-left: 3px solid var(--pillar-auxiliary);
+}
+
+.work-history-panel__block--consistency {
   border-left: 3px solid var(--pillar-consistency);
 }
 
-.work-history-panel__block--ledger {
-  margin-top: 0.35rem;
-  padding-top: 0.65rem;
+.work-history-panel__ledger {
+  margin-top: 0.55rem;
+  padding-top: 0.55rem;
   border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent);
-  border-left: 3px solid var(--pillar-consistency);
 }
 
 .work-history-panel__ledger-list {
@@ -576,25 +612,15 @@
   opacity: 0.72;
 }
 
-.work-history-panel__top-row .work-history-panel__spark {
-  max-width: none;
-}
-
 .work-history-panel__spark-row--no-label {
   grid-template-columns: minmax(0, 1fr) auto;
 }
 
-.work-history-panel__top-row .work-history-panel__spark-row:not(.work-history-panel__spark-row--no-label) {
-  grid-template-columns: 3.4rem minmax(0, 1fr) auto;
-  gap: 0.35rem;
+.work-history-panel__block .work-history-panel__spark {
+  max-width: none;
 }
 
-.work-history-panel__top-row .work-history-panel__spark-row--sub .work-history-panel__spark-label {
-  padding-left: 0;
-  font-size: 0.68rem;
-}
-
-.work-history-panel__top-row .work-history-panel__latest {
+.work-history-panel__block .work-history-panel__latest {
   min-width: 2.4rem;
   font-size: 0.82rem;
 }
@@ -699,6 +725,10 @@
   border: 1px solid #e8e4de;
 }
 
+.work-history-panel__criteria-group--tall {
+  min-height: 11rem;
+}
+
 .work-history-panel__criteria-label {
   margin: 0;
   font-size: 0.76rem;
@@ -764,12 +794,6 @@
   background: transparent;
 }
 
-.work-history-panel__pin {
-  margin-left: 0.2rem;
-  font-size: 0.72rem;
-  line-height: 1;
-}
-
 .project-hub-settings__footer {
   display: flex;
   justify-content: flex-end;
@@ -798,11 +822,11 @@
     text-align: left;
   }
 
-  .work-history-panel__top-row {
+  .work-history-panel__criteria-groups {
     grid-template-columns: 1fr;
   }
 
-  .work-history-panel__criteria-groups {
-    grid-template-columns: 1fr;
+  .work-history-panel__criteria-group--tall {
+    min-height: 9rem;
   }
 }
