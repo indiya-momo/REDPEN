@@ -52,6 +52,7 @@ function renderDialogMessage(message) {
  *   onConfirm: () => void,
  *   onCancel?: () => void,
  *   onClose?: () => void,
+ *   showGuideHand?: boolean,
  * }} props
  */
 export default function AppDialog({
@@ -65,6 +66,7 @@ export default function AppDialog({
   onConfirm,
   onCancel,
   onClose,
+  showGuideHand = false,
 }) {
   const titleId = useId();
   const dialogRef = useRef(/** @type {HTMLDialogElement | null} */ (null));
@@ -137,22 +139,44 @@ export default function AppDialog({
               >
                 {cancelLabel}
               </button>
+              <span className="app-dialog__confirm-hand-wrap">
+                <button
+                  type="button"
+                  className="btn-run app-dialog__confirm"
+                  data-work-guide="app-dialog-confirm"
+                  onClick={onConfirm}
+                >
+                  {confirmLabel}
+                </button>
+                {showGuideHand ? (
+                  <span
+                    className="guide-click-hand guide-click-hand--label-gap app-dialog__guide-hand"
+                    aria-hidden
+                  >
+                    <span className="guide-click-hand__emoji">👆</span>
+                  </span>
+                ) : null}
+              </span>
+            </>
+          ) : (
+            <span className="app-dialog__confirm-hand-wrap">
               <button
                 type="button"
                 className="btn-run app-dialog__confirm"
+                data-work-guide="app-dialog-confirm"
                 onClick={onConfirm}
               >
                 {confirmLabel}
               </button>
-            </>
-          ) : (
-            <button
-              type="button"
-              className="btn-run app-dialog__confirm"
-              onClick={onConfirm}
-            >
-              {confirmLabel}
-            </button>
+              {showGuideHand ? (
+                <span
+                  className="guide-click-hand guide-click-hand--label-gap app-dialog__guide-hand"
+                  aria-hidden
+                >
+                  <span className="guide-click-hand__emoji">👆</span>
+                </span>
+              ) : null}
+            </span>
           )}
         </footer>
       </div>

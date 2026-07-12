@@ -17,6 +17,7 @@ import {
  *   confirmLabel?: string,
  *   cancelLabel?: string,
  *   autoCloseMs?: number,
+ *   showGuideHand?: boolean,
  * }} DialogState
  */
 
@@ -46,6 +47,7 @@ export default function AppDialogHost() {
           messageNode: opts.messageNode,
           confirmLabel: opts.confirmLabel || '확인',
           autoCloseMs: opts.autoCloseMs,
+          showGuideHand: Boolean(opts.showGuideHand ?? opts.autoCloseMs),
         });
       }),
     confirm: (opts) =>
@@ -104,6 +106,7 @@ export default function AppDialogHost() {
       messageNode={state.messageNode}
       confirmLabel={state.confirmLabel}
       cancelLabel={state.cancelLabel}
+      showGuideHand={Boolean(state.showGuideHand)}
       onConfirm={() => finish(state.mode === 'confirm')}
       onCancel={() => finish(false)}
     />
