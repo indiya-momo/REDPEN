@@ -12,7 +12,15 @@
 
 import { describe, it, expect } from 'vitest';
 import { dictionary } from 'cmu-pronouncing-dictionary';
-import { convertWord, convertPhrase, convertPronunciation } from './convertLoanword.js';
+import {
+  convertWord,
+  convertWordAsync,
+  convertPhrase,
+  convertPronunciation,
+} from './convertLoanword.js';
+import { ipaToTokens } from './ipaToTokens.js';
+import { transcribe } from './transcriptionRules.js';
+import { assemble } from './hangulAssembler.js';
 import { loadYongryeDictionary } from './yongryeDictionary.js';
 
 const yongrye = await loadYongryeDictionary();
@@ -158,6 +166,44 @@ describe('발음 추정(G2P) 폴백 — 사전에 없어도 결과가 반드시 
     const r = convertWord('towson', dictionary);
     expect(r.found).toBe(true);
     expect(r.estimated).toBe(false);
+  });
+});
+
+describe('IPA 어댑터 — eSpeak-NG 발음 추정 경로', () => {
+  const viaIpa = (ipa, word) => {
+    const { tokens } = ipaToTokens(ipa, word);
+    const { pieces } = transcribe(tokens);
+    return assemble(pieces);
+  };
+
+  it.each([
+    ['tˈəʊsən', 'towson', '토슨'],
+    ['pˈɑːt', 'part', '파트'],
+    ['ʃˈɒpɪŋ', 'shopping', '쇼핑'],
+    ['wˈɪliəmz', 'williams', '윌리엄즈'],
+    ['kˈaʃɡə', 'kashgar', '캐슈거'],
+  ])('%s (%s) → %s', (ipa, word, expected) => {
+    expect(viaIpa(ipa, word)).toBe(expected);
+  });
+
+  it('convertWordAsync는 사전 미등재 단어에 IPA 추정기를 사용한다', async () => {
+    const r = await convertWordAsync('zzyzqx', {}, async () => 'pˈɑːt');
+    expect(r.estimated).toBe(true);
+    expect(r.results[0].hangul).toBe('파트');
+    expect(r.results[0].notes[0]).toContain('eSpeak');
+  });
+
+  it('추정기가 실패하면 자체 철자 추정으로 폴백한다', async () => {
+    const r = await convertWordAsync('brixworth', dictionary, async () => null);
+    expect(r.found).toBe(true);
+    expect(r.results[0].hangul).toBe('브릭스워스');
+  });
+
+  it('사전에 있는 단어는 추정기를 쓰지 않는다', async () => {
+    const r = await convertWordAsync('gap', dictionary, async () => {
+      throw new Error('호출되면 안 됨');
+    });
+    expect(r.results[0].hangul).toBe('갭');
   });
 });
 
