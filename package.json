@@ -28,6 +28,7 @@
     "prepare": "husky"
   },
   "dependencies": {
+    "cmu-pronouncing-dictionary": "^3.0.0",
     "exceljs": "^4.4.0",
     "firebase": "^12.14.0",
     "lucide-react": "^0.511.0",
