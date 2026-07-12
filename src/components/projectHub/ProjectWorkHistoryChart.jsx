@@ -1,11 +1,12 @@
 /**
- * 작업 이력 — 맞춤법 2행 · 표기 통일(4분류+최근1회) · 본·보조 sparkline.
+ * 작업 이력 — 맞춤법 각 1행 · 표기 통일(현재 기준+확정) · 본·보조.
  */
 import { WORK_CHART_MIN_SESSIONS_FOR_LINE } from '../../lib/projectWorkHistory.js';
 import {
   buildWorkHistoryConsistencyCriteria,
   WORK_HISTORY_CONSISTENCY_GROUPS,
 } from '../../presentation/workHistoryConsistencyCriteria.js';
+import { buildWorkHistoryDecisionLedger } from '../../presentation/workHistoryDecisionLedger.js';
 import {
   buildSparklinePath,
   hasSpellingSplitHistory,
@@ -16,6 +17,9 @@ import {
 
 const SPARK_W = WORK_HISTORY_SPARKLINE_WIDTH;
 const SPARK_H = WORK_HISTORY_SPARKLINE_HEIGHT;
+
+/** @type {ReadonlySet<'find' | 'unify'>} */
+const TALL_CRITERIA_GROUP_IDS = new Set(['find', 'unify']);
 
 /**
  * @param {{
@@ -101,15 +105,139 @@ function sparklineSeries(sessions, pick) {
 
 /**
  * @param {{
+ *   variants: string[],
+ *   pinned?: string | null,
+ * }} props
+ */
+function UnifyChipRow({ variants, pinned = null }) {
+  return (
+    <ul className="work-history-panel__chips work-history-panel__chips--unify">
+      {variants.map((variant) => (
+        <li key={variant} className="work-history-panel__chip">
+          {variant}
+        </li>
+      ))}
+      {pinned ? (
+        <li className="work-history-panel__chip work-history-panel__chip--pinned">
+          {pinned}
+        </li>
+      ) : null}
+    </ul>
+  );
+}
+
+/**
+ * @param {{
+ *   criteria: ReturnType<typeof buildWorkHistoryConsistencyCriteria>,
+ *   ledger: ReturnType<typeof buildWorkHistoryDecisionLedger>,
+ * }} props
+ */
+function ConsistencyCriteriaBlock({ criteria, ledger }) {
+  return (
+    <section className="work-history-panel__block work-history-panel__block--consistency">
+      <h4 className="work-history-panel__block-title">표기 통일(현재 기준)</h4>
+      <dl className="work-history-panel__criteria-groups">
+        {WORK_HISTORY_CONSISTENCY_GROUPS.map((group) => {
+          const items = criteria[group.id] ?? [];
+          const tall = TALL_CRITERIA_GROUP_IDS.has(group.id);
+
+          if (group.id === 'unify') {
+            return (
+              <div
+                key={group.id}
+                className={`work-history-panel__criteria-group${
+                  tall ? ' work-history-panel__criteria-group--tall' : ''
+                }`}
+              >
+                <dt className="work-history-panel__criteria-label">
+                  {group.label}
+                </dt>
+                <dd className="work-history-panel__criteria-body">
+                  {items.length ? (
+                    <ul className="work-history-panel__unify-list">
+                      {items.map((entry) => (
+                        <li
+                          key={`${entry.variants.join('\u0001')}\u0002${entry.pinned ?? ''}`}
+                          className="work-history-panel__unify-entry"
+                        >
+                          <UnifyChipRow
+                            variants={entry.variants}
+                            pinned={entry.pinned}
+                          />
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="work-history-panel__criteria-empty">등록 없음</p>
+                  )}
+                </dd>
+              </div>
+            );
+          }
+
+          return (
+            <div
+              key={group.id}
+              className={`work-history-panel__criteria-group${
+                tall ? ' work-history-panel__criteria-group--tall' : ''
+              }`}
+            >
+              <dt className="work-history-panel__criteria-label">
+                {group.label}
+              </dt>
+              <dd className="work-history-panel__criteria-body">
+                {items.length ? (
+                  <ul className="work-history-panel__chips">
+                    {items.map((item) => (
+                      <li key={item} className="work-history-panel__chip">
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="work-history-panel__criteria-empty">등록 없음</p>
+                )}
+              </dd>
+            </div>
+          );
+        })}
+      </dl>
+
+      <div className="work-history-panel__ledger">
+        {ledger.length ? (
+          <ul className="work-history-panel__ledger-list">
+            {ledger.map((item) => (
+              <li key={item.id} className="work-history-panel__ledger-item">
+                <div className="work-history-panel__ledger-meta">
+                  {item.atLabel || '날짜 없음'}
+                </div>
+                <UnifyChipRow variants={item.variants} pinned={item.pinned} />
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="work-history-panel__criteria-empty">
+            통일형을 지정하면 확정 기록이 여기에 쌓입니다.
+          </p>
+        )}
+      </div>
+    </section>
+  );
+}
+
+/**
+ * @param {{
  *   history: import('../../lib/projectWorkHistory.js').WorkHistoryEntry[] | undefined,
  *   customRules?: import('../../lib/ruleTypes.js').Rule[],
  *   globalExcludePhrases?: string[],
+ *   consistencyDecisions?: import('../../lib/consistencyDecisions.js').ConsistencyDecision[],
  * }} props
  */
 export default function ProjectWorkHistoryChart({
   history,
   customRules = [],
   globalExcludePhrases = [],
+  consistencyDecisions = [],
 }) {
   const sessions = Array.isArray(history) ? history : [];
   const sessionCount = sessions.length;
@@ -117,18 +245,8 @@ export default function ProjectWorkHistoryChart({
     customRules,
     globalExcludePhrases,
   );
+  const ledger = buildWorkHistoryDecisionLedger(consistencyDecisions);
   const spellingSplit = hasSpellingSplitHistory(sessions);
-
-  if (!sessionCount) {
-    return (
-      <div className="project-hub-settings__card work-history-panel">
-        <h3 className="work-history-panel__title">검수 진행 이력</h3>
-        <p className="project-hub-settings__row-desc work-history-panel__empty">
-          검수를 진행하면 항목별 추이가 여기에 표시됩니다.
-        </p>
-      </div>
-    );
-  }
 
   const editorReviewValues = sparklineSeries(
     sessions,
@@ -144,134 +262,78 @@ export default function ProjectWorkHistoryChart({
   );
   const bonBojoValues = sparklineSeries(sessions, (entry) => entry.bonBojo);
 
+  if (!sessionCount) {
+    return (
+      <div className="project-hub-settings__card work-history-panel">
+        <h3 className="work-history-panel__title">검수 진행 이력</h3>
+        <p className="project-hub-settings__row-desc work-history-panel__empty">
+          검수를 진행하면 항목별 추이가 여기에 표시됩니다.
+        </p>
+        <ConsistencyCriteriaBlock criteria={criteria} ledger={ledger} />
+      </div>
+    );
+  }
+
   return (
     <div className="project-hub-settings__card work-history-panel">
       <h3 className="work-history-panel__title">검수 진행 이력</h3>
 
-      <div className="work-history-panel__top-row">
-        <section className="work-history-panel__block work-history-panel__block--spelling work-history-panel__block--half">
-          {spellingSplit ? null : (
+      {spellingSplit ? (
+        <>
+          <section className="work-history-panel__block work-history-panel__block--spelling">
             <h4 className="work-history-panel__block-title">편집자 검토</h4>
-          )}
-          <div className="work-history-panel__block-body">
-            {spellingSplit ? (
-              <>
-                <SparklineRow
-                  label="편집자 검토"
-                  subLabel
-                  values={editorReviewValues}
-                  sessionCount={sessionCount}
-                  colorClass="work-history-panel__spark-row--spelling"
-                  muted
-                />
-                <SparklineRow
-                  label="맞춤법"
-                  subLabel
-                  values={builtinSpellingValues}
-                  sessionCount={sessionCount}
-                  colorClass="work-history-panel__spark-row--spelling"
-                />
-              </>
-            ) : (
+            <div className="work-history-panel__block-body">
               <SparklineRow
                 label="편집자 검토"
-                values={legacySpellingValues}
+                values={editorReviewValues}
+                sessionCount={sessionCount}
+                colorClass="work-history-panel__spark-row--spelling"
+                muted
+                hideLabel
+              />
+            </div>
+          </section>
+          <section className="work-history-panel__block work-history-panel__block--spelling">
+            <h4 className="work-history-panel__block-title">맞춤법</h4>
+            <div className="work-history-panel__block-body">
+              <SparklineRow
+                label="맞춤법"
+                values={builtinSpellingValues}
                 sessionCount={sessionCount}
                 colorClass="work-history-panel__spark-row--spelling"
                 hideLabel
               />
-            )}
-          </div>
-        </section>
-
-        <section className="work-history-panel__block work-history-panel__block--auxiliary work-history-panel__block--half">
-          <h4 className="work-history-panel__block-title">본용언+보조용언</h4>
+            </div>
+          </section>
+        </>
+      ) : (
+        <section className="work-history-panel__block work-history-panel__block--spelling">
+          <h4 className="work-history-panel__block-title">편집자 검토</h4>
           <div className="work-history-panel__block-body">
             <SparklineRow
-              label="본용언+보조용언"
-              values={bonBojoValues}
+              label="편집자 검토"
+              values={legacySpellingValues}
               sessionCount={sessionCount}
-              colorClass="work-history-panel__spark-row--auxiliary"
+              colorClass="work-history-panel__spark-row--spelling"
               hideLabel
             />
           </div>
         </section>
-      </div>
+      )}
 
-      <section className="work-history-panel__block work-history-panel__block--consistency">
-        <h4 className="work-history-panel__block-title">표기 통일(최근)</h4>
-        <dl className="work-history-panel__criteria-groups">
-          {WORK_HISTORY_CONSISTENCY_GROUPS.map((group) => {
-            const items = criteria[group.id] ?? [];
+      <ConsistencyCriteriaBlock criteria={criteria} ledger={ledger} />
 
-            if (group.id === 'unify') {
-              return (
-                <div key={group.id} className="work-history-panel__criteria-group">
-                  <dt className="work-history-panel__criteria-label">
-                    {group.label}
-                  </dt>
-                  <dd className="work-history-panel__criteria-body">
-                    {items.length ? (
-                      <ul className="work-history-panel__unify-list">
-                        {items.map((entry) => (
-                          <li
-                            key={`${entry.variants.join('\u0001')}\u0002${entry.pinned ?? ''}`}
-                            className="work-history-panel__unify-entry"
-                          >
-                            <ul className="work-history-panel__chips work-history-panel__chips--unify">
-                              {entry.variants.map((variant) => (
-                                <li
-                                  key={variant}
-                                  className="work-history-panel__chip"
-                                >
-                                  {variant}
-                                </li>
-                              ))}
-                              {entry.pinned ? (
-                                <li className="work-history-panel__chip work-history-panel__chip--pinned">
-                                  {entry.pinned}
-                                  <span
-                                    className="work-history-panel__pin"
-                                    aria-hidden
-                                  >
-                                    📌
-                                  </span>
-                                </li>
-                              ) : null}
-                            </ul>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p className="work-history-panel__criteria-empty">등록 없음</p>
-                    )}
-                  </dd>
-                </div>
-              );
-            }
-
-            return (
-              <div key={group.id} className="work-history-panel__criteria-group">
-                <dt className="work-history-panel__criteria-label">
-                  {group.label}
-                </dt>
-                <dd className="work-history-panel__criteria-body">
-                  {items.length ? (
-                    <ul className="work-history-panel__chips">
-                      {items.map((item) => (
-                        <li key={item} className="work-history-panel__chip">
-                          {item}
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="work-history-panel__criteria-empty">등록 없음</p>
-                  )}
-                </dd>
-              </div>
-            );
-          })}
-        </dl>
+      <section className="work-history-panel__block work-history-panel__block--auxiliary">
+        <h4 className="work-history-panel__block-title">본용언+보조용언</h4>
+        <div className="work-history-panel__block-body">
+          <SparklineRow
+            label="본용언+보조용언"
+            values={bonBojoValues}
+            sessionCount={sessionCount}
+            colorClass="work-history-panel__spark-row--auxiliary"
+            hideLabel
+          />
+        </div>
       </section>
     </div>
   );

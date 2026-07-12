@@ -5,11 +5,22 @@
  */
 import { APP_VERSION, UI_BUILD_ID, deployModeLabel } from './appVersion.js';
 import { isBetaQuotaAdminExempt } from './betaDailyQuota.js';
+import { isGuestBrowseActive } from './guestBrowseSession.js';
 import { resolvePostHogHost, resolvePostHogKey } from './posthogEnv.js';
 
 const OPT_OUT_KEY = 'pdf-proofread-analytics-opt-out';
 const SESSION_SENT_KEY = 'pdf-proofread-analytics-session';
 const PDF_UPLOAD_COUNT_KEY = 'pdf-proofread-analytics-upload-count';
+
+/**
+ * localhost / 127.0.0.1 — PostHog로 보내지 않음 (로컬 키가 있어도)
+ * @returns {boolean}
+ */
+export function isLocalAnalyticsHost() {
+  if (typeof window === 'undefined') return false;
+  const host = window.location.hostname;
+  return host === 'localhost' || host === '127.0.0.1' || host === '[::1]';
+}
 
 /** @type {import('posthog-js').PostHog | null} */
 let posthogClient = null;
@@ -95,6 +106,7 @@ export function buildAnalyticsPersonProperties(uid, email = '') {
  * @param {string} [email] env 면제 목록 비교용 — PostHog로 전송하지 않음
  */
 export function identifyAnalyticsUser(uid, email = '') {
+  if (isLocalAnalyticsHost()) return;
   if (isAnalyticsOptedOut()) return;
   const id = uid.trim();
   if (!id) {
@@ -233,6 +245,7 @@ export function bucketUploadIndex(n) {
  * @param {Record<string, string | number | boolean>} [properties]
  */
 export function captureAnalytics(event, properties = {}) {
+  if (isLocalAnalyticsHost()) return;
   if (isAnalyticsOptedOut()) return;
   if (!posthogClient) {
     pendingCaptures.push({ event, properties });
@@ -242,6 +255,11 @@ export function captureAnalytics(event, properties = {}) {
 }
 
 export async function initAnalytics() {
+  if (isLocalAnalyticsHost()) {
+    pendingCaptures.length = 0;
+    pendingIdentify = null;
+    return;
+  }
   if (isAnalyticsOptedOut()) {
     pendingCaptures.length = 0;
     return;
@@ -357,4 +375,17 @@ export function trackRulesetSaved(input) {
 
 export function trackFeedbackOpened() {
   captureAnalytics('feedback_opened');
+}
+
+/** 대문 「먼저 둘러보기」 */
+export function trackGuestBrowseStarted() {
+  captureAnalytics('guest_browse_started', { source: 'welcome' });
+}
+
+/**
+ * 둘러보기 7번(`WORK_EXIT`) 완료 — 게스트 세션일 때만 전송
+ */
+export function trackGuestBrowseCompleted() {
+  if (!isGuestBrowseActive()) return;
+  captureAnalytics('guest_browse_completed', { source: 'work_exit_guide' });
 }

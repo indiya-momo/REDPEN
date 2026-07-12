@@ -22,11 +22,13 @@ import { trackRulesetSaved } from '../lib/analytics.js';
 import {
   duplicateRuleSet,
   loadActiveSetId,
+  loadDeletedRuleSetIds,
   loadRuleSets,
   newId,
   RULE_SETS_LOCAL_SYNC_EVENT,
   ruleSetsStorageKey,
   saveActiveSetId,
+  saveDeletedRuleSetIds,
   saveRuleSets,
 } from '../lib/ruleSetsStorage.js';
 import {
@@ -34,9 +36,10 @@ import {
   LEGACY_DEFAULT_CRITERIA_HINT,
 } from '../lib/criteriaName.js';
 import { planCriteriaPresetDelete } from '../lib/criteriaPresetDelete.js';
-import { showAppConfirm } from '../lib/appDialog.js';
+import { showAppAlert, showAppConfirm } from '../lib/appDialog.js';
 import { formatProjectDialogLabel } from '../lib/projectDialogLabel.js';
 import { normalizeRuleSet } from '../lib/ruleSetNormalize.js';
+import { buildCriteriaCheckpoint } from '../lib/criteriaCheckpoint.js';
 import {
   mergeProjectContext,
 } from '../lib/projectMeta.js';
@@ -55,8 +58,10 @@ import {
 import {
   mergeRuleSetsOnLogin,
   applyCriteriaPresetQuota,
+  applyTombstones,
   mergeLocalRuleSetSources,
   mergeRuleSetsOnPersist,
+  mergeTombstones,
 } from '../lib/ruleSetsMerge.js';
 
 const RULE_SET_AUTOSAVE_MS = 400;
@@ -123,7 +128,13 @@ export function useRuleSets(authUid = '', authEmail = '') {
       const disk = loadRuleSets(uid);
       const merged = mergeRuleSetsOnPersist(disk, ruleSetsRef.current);
       ruleSetsRef.current = merged;
-      await saveRuleSetsCloud(uid, merged, activeSetIdRef.current);
+      const deletedIds = loadDeletedRuleSetIds(uid);
+      await saveRuleSetsCloud(
+        uid,
+        merged,
+        activeSetIdRef.current,
+        deletedIds,
+      );
     } catch (e) {
       console.warn('기준 클라우드 저장 실패', e);
     }
@@ -142,9 +153,14 @@ export function useRuleSets(authUid = '', authEmail = '') {
   }, [flushCloudRuleSetsImmediate]);
 
   const flushRuleSets = useCallback(
-    (sets, setId = activeSetIdRef.current, uid = authUidRef.current) => {
+    (
+      sets,
+      setId = activeSetIdRef.current,
+      uid = authUidRef.current,
+      intent = {},
+    ) => {
       const disk = loadRuleSets(uid);
-      const merged = mergeRuleSetsOnPersist(disk, sets);
+      const merged = mergeRuleSetsOnPersist(disk, sets, intent);
       ruleSetsRef.current = merged;
       if (JSON.stringify(merged) !== JSON.stringify(sets)) {
         setRuleSets(merged);
@@ -270,6 +286,7 @@ export function useRuleSets(authUid = '', authEmail = '') {
               prev,
               ruleSetsRef.current,
               activeSetIdRef.current,
+              loadDeletedRuleSetIds(prev),
             );
           } catch (e) {
             console.warn('기준 클라우드 저장 실패 (계정 전환)', e);
@@ -284,6 +301,9 @@ export function useRuleSets(authUid = '', authEmail = '') {
 
       let sets = normalizeLoadedRuleSets(loadRuleSets(uid));
       if (uid) {
+        const tombstoned = applyTombstones(sets, loadDeletedRuleSetIds(uid));
+        sets = normalizeLoadedRuleSets(tombstoned.sets);
+        saveDeletedRuleSetIds(tombstoned.tombstones, uid);
         sets = applyCriteriaPresetQuota(sets, uid, authEmailRef.current);
       }
       const storedActive = loadActiveSetId(uid);
@@ -384,7 +404,8 @@ export function useRuleSets(authUid = '', authEmail = '') {
           const touchesCriteria =
             patch.builtInEnabled !== undefined ||
             patch.cautionEnabled !== undefined ||
-            patch.customRules !== undefined;
+            patch.customRules !== undefined ||
+            patch.consistencyDecisions !== undefined;
           const savedAtBump =
             s.savedAt && touchesCriteria
               ? { savedAt: new Date().toISOString() }
@@ -399,7 +420,7 @@ export function useRuleSets(authUid = '', authEmail = '') {
   );
 
   const applyRuleSets = useCallback(
-    (next, nextActiveId = activeSetIdRef.current) => {
+    (next, nextActiveId = activeSetIdRef.current, intent = {}) => {
       if (autosaveTimerRef.current) {
         clearTimeout(autosaveTimerRef.current);
         autosaveTimerRef.current = null;
@@ -408,7 +429,7 @@ export function useRuleSets(authUid = '', authEmail = '') {
       setRuleSets(next);
       setActiveSetId(nextActiveId);
       activeSetIdRef.current = nextActiveId;
-      flushRuleSets(next, nextActiveId);
+      flushRuleSets(next, nextActiveId, authUidRef.current, intent);
       void flushCloudRuleSetsImmediate();
     },
     [flushRuleSets, flushCloudRuleSetsImmediate],
@@ -462,7 +483,14 @@ export function useRuleSets(authUid = '', authEmail = '') {
           const memorySets = normalizeLoadedRuleSets(ruleSetsRef.current);
           const localSets = mergeLocalRuleSetSources(diskSets, memorySets);
           const merged = mergeRuleSetsOnLogin(localSets, cloud.ruleSets);
-          let sets = normalizeLoadedRuleSets(merged);
+          let tombstones = mergeTombstones(
+            loadDeletedRuleSetIds(uid),
+            cloud.deletedIds,
+          );
+          const tombstoned = applyTombstones(merged, tombstones);
+          let sets = normalizeLoadedRuleSets(tombstoned.sets);
+          tombstones = tombstoned.tombstones;
+          saveDeletedRuleSetIds(tombstones, uid);
           sets = applyCriteriaPresetQuota(
             sets,
             authUidRef.current,
@@ -476,7 +504,11 @@ export function useRuleSets(authUid = '', authEmail = '') {
           if (!activeId) return;
           applyRuleSets(sets, activeId);
         } else {
+          let tombstones = loadDeletedRuleSetIds(uid);
           let localSets = normalizeLoadedRuleSets(loadRuleSets(uid));
+          const tombstoned = applyTombstones(localSets, tombstones);
+          localSets = normalizeLoadedRuleSets(tombstoned.sets);
+          saveDeletedRuleSetIds(tombstoned.tombstones, uid);
           localSets = applyCriteriaPresetQuota(
             localSets,
             authUidRef.current,
@@ -528,18 +560,23 @@ export function useRuleSets(authUid = '', authEmail = '') {
     );
     if (!source) return;
     const copy = normalizeRuleSet(duplicateRuleSet(source));
-    if (
-      !canAddCriteriaPreset(
-        ruleSetsRef.current,
-        copy.name,
-        authUidRef.current,
-        authEmailRef.current,
-      )
-    ) {
-      alert(CRITERIA_PRESET_LIMIT_MESSAGE);
-      return;
-    }
-    applyRuleSets([...ruleSetsRef.current, copy], copy.id);
+      if (
+        !canAddCriteriaPreset(
+          ruleSetsRef.current,
+          copy.name,
+          authUidRef.current,
+          authEmailRef.current,
+        )
+      ) {
+        void showAppAlert({
+          title: '저장 한도',
+          message: CRITERIA_PRESET_LIMIT_MESSAGE,
+        });
+        return;
+      }
+    applyRuleSets([...ruleSetsRef.current, copy], copy.id, {
+      added: [copy.id],
+    });
   }, [applyRuleSets]);
 
   const handleDeleteRuleSet = useCallback(async () => {
@@ -563,7 +600,15 @@ export function useRuleSets(authUid = '', authEmail = '') {
     const next = sets.filter((s) => s.id !== id);
     const nextActive = next[0]?.id;
     if (!nextActive) return;
-    applyRuleSets(next, nextActive);
+
+    const uid = String(authUidRef.current ?? '').trim();
+    if (current?.savedAt) {
+      const tombstones = mergeTombstones(loadDeletedRuleSetIds(uid), [
+        { id, deletedAt: new Date().toISOString() },
+      ]);
+      saveDeletedRuleSetIds(tombstones, uid);
+    }
+    applyRuleSets(next, nextActive, { removed: [id] });
   }, [applyRuleSets]);
 
   const handleSaveRules = useCallback(() => {
@@ -618,7 +663,10 @@ export function useRuleSets(authUid = '', authEmail = '') {
           authEmailRef.current,
         )
       ) {
-        alert(CRITERIA_PRESET_LIMIT_MESSAGE);
+        await showAppAlert({
+          title: '저장 한도',
+          message: CRITERIA_PRESET_LIMIT_MESSAGE,
+        });
         return false;
       }
 
@@ -633,11 +681,15 @@ export function useRuleSets(authUid = '', authEmail = '') {
         cautionEnabled: structuredClone(sourceAfterFlush.cautionEnabled ?? {}),
         customRules: structuredClone(sourceAfterFlush.customRules ?? []),
         globalExcludePhrases: [...(sourceAfterFlush.globalExcludePhrases ?? [])],
+        consistencyDecisions: structuredClone(
+          sourceAfterFlush.consistencyDecisions ?? [],
+        ),
         spellingRulesFingerprint: SPELLING_RULES_FP,
         cautionRulesFingerprint: sourceAfterFlush.cautionRulesFingerprint,
         cautionEnabledPolicyVersion: sourceAfterFlush.cautionEnabledPolicyVersion,
         compoundMigrateVersion: sourceAfterFlush.compoundMigrateVersion,
       };
+      const criteriaCheckpoint = buildCriteriaCheckpoint(config);
 
       const existing = ruleSetsRef.current.find(
         (s) => (s.name || '').trim() === name,
@@ -652,6 +704,8 @@ export function useRuleSets(authUid = '', authEmail = '') {
 
       let next;
       let targetId;
+      /** @type {{ added?: string[] }} */
+      let persistIntent = {};
       if (existing) {
         targetId = existing.id;
         next = ruleSetsRef.current.map((s) =>
@@ -662,6 +716,7 @@ export function useRuleSets(authUid = '', authEmail = '') {
                 name,
                 savedAt,
                 projectContext,
+                criteriaCheckpoint,
               })
             : s,
         );
@@ -679,6 +734,7 @@ export function useRuleSets(authUid = '', authEmail = '') {
                   ...config,
                   savedAt,
                   projectContext,
+                  criteriaCheckpoint,
                 })
               : s,
           );
@@ -690,27 +746,41 @@ export function useRuleSets(authUid = '', authEmail = '') {
             ...config,
             savedAt,
             projectContext,
+            criteriaCheckpoint,
           });
           next = [...ruleSetsRef.current, created];
+          // 디스크에 아직 없는 새 저장분을 autosave 병합이 「외부 삭제」로 지우지 않게 한다.
+          persistIntent = { added: [targetId] };
         }
       }
 
       ruleSetsRef.current = next;
-      applyRuleSets(next, targetId);
+      applyRuleSets(next, targetId, persistIntent);
       await flushCloudRuleSetsImmediate();
 
-      const saved = next.find((s) => s.id === targetId);
-      if (saved) {
-        trackRulesetSaved({
-          builtinCount: countBuiltInActiveRules({
-            builtInEnabled: saved.builtInEnabled,
-          }),
-          spacingCount: countSpacingReviewActiveRules({
-            cautionEnabled: saved.cautionEnabled,
-          }),
-          consistencyCount: countConsistencyActiveRules(saved.customRules),
+      const persisted = ruleSetsRef.current.find((s) => s.id === targetId);
+      const persistedName = criteriaNameForSave(persisted?.name);
+      if (!persisted?.savedAt || persistedName !== name) {
+        console.warn('[rulesets] save vanished after merge', {
+          targetId,
+          name,
+          persistedName: persisted?.name,
         });
+        alert(
+          '프로젝트 저장에 실패했습니다. 잠시 후 다시 저장해 주세요.',
+        );
+        return false;
       }
+
+      trackRulesetSaved({
+        builtinCount: countBuiltInActiveRules({
+          builtInEnabled: persisted.builtInEnabled,
+        }),
+        spacingCount: countSpacingReviewActiveRules({
+          cautionEnabled: persisted.cautionEnabled,
+        }),
+        consistencyCount: countConsistencyActiveRules(persisted.customRules),
+      });
       return name;
     },
     [applyRuleSets, flushPendingRuleSetsSave, flushCloudRuleSetsImmediate],
@@ -797,7 +867,12 @@ export function useRuleSets(authUid = '', authEmail = '') {
         nextActiveId = fresh.id;
       }
 
-      applyRuleSets(next, nextActiveId);
+      const uid = String(authUidRef.current ?? '').trim();
+      const tombstones = mergeTombstones(loadDeletedRuleSetIds(uid), [
+        { id: targetId, deletedAt: new Date().toISOString() },
+      ]);
+      saveDeletedRuleSetIds(tombstones, uid);
+      applyRuleSets(next, nextActiveId, { removed: [targetId] });
       return true;
     },
     [applyRuleSets],

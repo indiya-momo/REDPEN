@@ -1,8 +1,9 @@
-import { useEffect, useRef } from 'react';
 import RegisteredList from '../consistency/RegisteredList.jsx';
+import { AUXILIARY_VERB_BADGE_LABEL } from '../../lib/bonBojoRules.js';
+import { resultPillarToneClass } from '../../lib/resultPillarTone.js';
 
 /**
- * 표기 통일·본용언+보조용언 — 공통 토글 그리드 섹션.
+ * 본용언+보조용언 — 뱃지 + 토글 그리드 섹션.
  *
  * @param {{
  *   pillarKey: 'consistency' | 'auxiliary',
@@ -17,7 +18,6 @@ import RegisteredList from '../consistency/RegisteredList.jsx';
  *     row: { tailWord: string, displayLabel?: string, bonBojoItemId?: string },
  *     enabled: boolean,
  *   ) => void,
- *   onSetAll?: (enabled: boolean) => void,
  *   isRequired?: (row: { bonBojoItemId?: string }) => boolean,
  *   criteriaSaving?: boolean,
  * }} props
@@ -29,43 +29,34 @@ export default function ProjectHubCriteriaToggleSection({
   customRules,
   isEnabled,
   onToggle,
-  onSetAll,
   isRequired,
   criteriaSaving = false,
 }) {
-  const selectAllRef = useRef(/** @type {HTMLInputElement | null} */ (null));
-  const total = entries.length;
-  const activeCount = entries.filter((row) =>
-    isEnabled(customRules, row),
-  ).length;
-  const allChecked = total > 0 && activeCount === total;
-  const someChecked = activeCount > 0 && activeCount < total;
-
-  useEffect(() => {
-    if (selectAllRef.current) {
-      selectAllRef.current.indeterminate = someChecked;
-    }
-  }, [someChecked]);
-
   return (
     <div className="project-hub-settings__criteria project-hub-settings__criteria--single">
       <section
         className={`project-hub-settings__criteria-section project-hub-settings__criteria-section--${pillarKey}`}
         aria-label={ariaLabel}
       >
-        {onSetAll ? (
-          <label className="project-hub-settings__select-all">
-            <input
-              ref={selectAllRef}
-              type="checkbox"
-              checked={allChecked}
-              disabled={criteriaSaving || total === 0}
-              onChange={() => onSetAll(!allChecked)}
-              aria-label={`${ariaLabel} 전체 선택`}
-            />
-            <span>모두 선택 또는 취소</span>
-          </label>
-        ) : null}
+        <div className="project-hub-settings__criteria-head">
+          <h3 className="project-hub-settings__criteria-title visually-hidden">
+            {ariaLabel}
+          </h3>
+          <div
+            className="project-hub-settings__criteria-stats results-header__stats"
+            aria-label={ariaLabel}
+          >
+            <span className="results-header__stat">
+              <span
+                className={`results-header-badge ${resultPillarToneClass('auxiliary')}`}
+              >
+                {pillarKey === 'auxiliary'
+                  ? AUXILIARY_VERB_BADGE_LABEL
+                  : ariaLabel}
+              </span>
+            </span>
+          </div>
+        </div>
         <RegisteredList
           entries={entries}
           customRules={customRules}

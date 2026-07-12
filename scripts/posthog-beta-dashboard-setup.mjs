@@ -90,6 +90,12 @@ const PROJECT_ID_HINT =
 
 async function resolveProjectId() {
   if (PROJECT_ID) {
+    if (!/^\d+$/.test(PROJECT_ID)) {
+      fail(
+        `POSTHOG_PROJECT_ID는 숫자만 가능합니다. 지금 값: "${PROJECT_ID}"\n` +
+          'PostHog 주소창 예: https://eu.posthog.com/project/12345/… → 12345',
+      );
+    }
     console.log(`[posthog-setup] project_id=${PROJECT_ID} (env)`);
     return PROJECT_ID;
   }
@@ -211,12 +217,14 @@ function eventPropertyFilter(key, value) {
   };
 }
 
-function insightQuery(source, cohortId) {
+function insightQuery(source, cohortId = null) {
   return {
     kind: 'InsightVizNode',
     source: {
       filterTestAccounts: false,
-      properties: cohortInsightProperties(cohortId),
+      ...(cohortId
+        ? { properties: cohortInsightProperties(cohortId) }
+        : { properties: [] }),
       ...source,
     },
   };
@@ -224,6 +232,58 @@ function insightQuery(source, cohortId) {
 
 function buildInsightSpecs(cohortId, returnUploaderCohortId) {
   return [
+  {
+    name: '[베타] 둘러보기 시작·완료 (일별 Unique)',
+    description:
+      'Product analytics — guest_browse_started / completed 일별 Unique users. 둘러보기는 익명이라 내부 코호트 필터 없음.',
+    query: insightQuery({
+      kind: 'TrendsQuery',
+      interval: 'day',
+      dateRange: DATE_7D,
+      series: [
+        {
+          kind: 'EventsNode',
+          event: 'guest_browse_started',
+          name: '둘러보기 시작',
+          math: 'dau',
+        },
+        {
+          kind: 'EventsNode',
+          event: 'guest_browse_completed',
+          name: '7번까지 완료',
+          math: 'dau',
+        },
+      ],
+      trendsFilter: {},
+      version: 2,
+    }, null),
+  },
+  {
+    name: '[베타] 둘러보기 완료 퍼널',
+    description:
+      'guest_browse_started → guest_browse_completed (7일 창). Product analytics Funnel.',
+    query: insightQuery({
+      kind: 'FunnelsQuery',
+      dateRange: DATE_7D,
+      series: [
+        {
+          kind: 'EventsNode',
+          event: 'guest_browse_started',
+          name: '둘러보기 시작',
+        },
+        {
+          kind: 'EventsNode',
+          event: 'guest_browse_completed',
+          name: '7번 완료',
+        },
+      ],
+      funnelsFilter: {
+        funnelWindowInterval: 7,
+        funnelWindowIntervalUnit: 'day',
+      },
+      version: 2,
+    }, null),
+  },
   {
     name: '[베타] 방문 — session_start',
     description: '주간 유입 (내부 제외). 6/9 이전 데이터는 identify 미연결로 참고만.',

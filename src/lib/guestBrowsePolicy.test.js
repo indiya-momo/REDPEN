@@ -4,6 +4,7 @@ import {
   GUEST_BROWSE_PROJECT_NAME,
   GUEST_BROWSE_TIMING,
   beginGuestBrowse,
+  clearGuestBrowseConsistencyChips,
   endGuestBrowse,
   finishGuestBrowseConsistencyResultThenUnlockExportGuide,
   finishGuestBrowseResultThenUnlockNextGuide,
@@ -19,6 +20,7 @@ import {
   isGuestBrowseExportGuideReady,
   isGuestBrowseNextGuideReady,
   markGuestBrowseCriteriaClick,
+  findGuestBrowseDemoSpellingGroup,
   prepareGuestBrowseConsistencyRules,
 } from './guestBrowsePolicy.js';
 
@@ -173,5 +175,40 @@ describe('guestBrowsePolicy', () => {
     expect(next.every((r) => r.patternKind === 'auxiliary-verb')).toBe(true);
     expect(next.every((r) => r.enabled === true)).toBe(true);
     expect(next).toHaveLength(2);
+  });
+
+  it('clearGuestBrowseConsistencyChips removes find chips but keeps aux enablement', () => {
+    const rules = [
+      {
+        id: 'lit-1',
+        patternKind: 'compound-find',
+        find: '마한',
+        replace: '마한',
+        enabled: true,
+        tailWord: '마한',
+        consistencyLiteralEntry: true,
+      },
+      {
+        id: 'aux-1',
+        patternKind: 'auxiliary-verb',
+        find: '하다',
+        replace: '하다',
+        enabled: false,
+        tailWord: '하다',
+        bonBojoItemId: 'verb-hada',
+      },
+    ];
+    const next = clearGuestBrowseConsistencyChips(rules);
+    expect(next).toHaveLength(1);
+    expect(next[0].patternKind).toBe('auxiliary-verb');
+    expect(next[0].enabled).toBe(false);
+  });
+
+  it('findGuestBrowseDemoSpellingGroup matches 빼곡이 builtin group', () => {
+    const group = findGuestBrowseDemoSpellingGroup([
+      { category: 'caution', label: '가량, 쯤' },
+      { category: 'spelling', label: '빼곡이' },
+    ]);
+    expect(group?.label).toBe('빼곡이');
   });
 });

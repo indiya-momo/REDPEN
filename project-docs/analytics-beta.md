@@ -49,11 +49,13 @@ npx -y @posthog/wizard@latest --region eu
 
 키가 없으면 SDK는 **로드하지 않습니다** (로컬·Pages 빌드 그대로 동작).
 
+**localhost / 127.0.0.1:** `.env.local`에 키가 있어도 PostHog를 **초기화·전송하지 않습니다**. 집계는 배포(Vercel 등)만.
+
 **Vercel 배포:** Marketplace에서 PostHog를 연결하면 `NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN` · `NEXT_PUBLIC_POSTHOG_HOST` 가 들어가며, 앱이 자동으로 읽습니다. 절차는 `project-docs/vercel-posthog.md`.
 
 ---
 
-## 이벤트 6개 (수동 capture만, autocapture OFF)
+## 이벤트 (수동 capture만, autocapture OFF)
 
 | 이벤트 | 시점 | 속성 (예) |
 |--------|------|-----------|
@@ -63,8 +65,28 @@ npx -y @posthog/wizard@latest --region eu
 | `result_viewed` | 검사 완료 직후 (결과 패널로 전환) | `scope`, `finding_count_bucket` |
 | `ruleset_saved` | 규칙 세트 「저장」 클릭 | `builtin_bucket`, `spacing_bucket`, `consistency_bucket` |
 | `feedback_opened` | 피드백 모달 열기 | — |
+| `guest_browse_started` | 대문 「먼저 둘러보기」 | `source: welcome` |
+| `guest_browse_completed` | 둘러보기 중 7번(`WORK_EXIT`) 확인 | `source: work_exit_guide` |
 
 **버킷 예:** 페이지 `1-50` / `51-150` / `151-300` / `301+`, 규칙 수·발견 건수도 구간만.
+
+### Product analytics에서 둘러보기 보기
+
+코드가 보내는 위 이벤트가 **Product analytics** 데이터입니다. (Web analytics ≠ 커스텀 이벤트)
+
+**수동 (배포·이벤트 유입 후)**
+
+1. PostHog 왼쪽 **Product analytics** → **New insight**
+2. Trends → 시리즈에 `guest_browse_started`, `guest_browse_completed`
+3. 집계를 **Unique users**, 간격을 **Day**
+4. Save → 대시보드에 추가
+
+**스크립트로 인사이트·대시보드에 붙이기**
+
+아래 `posthog:setup-beta` 실행 시  
+`[베타] 둘러보기 시작·완료 (일별 Unique)` · `[베타] 둘러보기 완료 퍼널` 이  
+「인디야 오픈베타」대시보드에 생성/갱신됩니다.  
+(둘러보기는 익명이라 내부 코호트 필터를 걸지 않음)
 
 ---
 
@@ -85,8 +107,8 @@ npm run posthog:setup-beta
 
 `project:read` 권한이 없으면 **2번 PROJECT_ID는 필수**입니다.
 
-생성물: 대시보드 **「인디야 오픈베타」** — 방문 / 로그인 전환 / 로그인 후 검수 / `check_run` identify 연결 / **PDF 업로드·재업로드** / 재방문 후 업로드 퍼널.  
-필터: Person **`is_internal` is not true** (내부 테스트 계정 제외). 재업로드 지표는 `pdf_opened`의 `is_return_upload`·`upload_index_bucket` 및 person `pdf_upload_count` 사용.
+생성물: 대시보드 **「인디야 오픈베타」** — **둘러보기 시작·완료** / 방문 / 로그인 전환 / 로그인 후 검수 / `check_run` identify 연결 / **PDF 업로드·재업로드** / 재방문 후 업로드 퍼널.  
+필터: Person **`is_internal` is not true** (내부 테스트 계정 제외). 둘러보기 인사이트는 익명이라 코호트 필터 없음. 재업로드 지표는 `pdf_opened`의 `is_return_upload`·`upload_index_bucket` 및 person `pdf_upload_count` 사용.
 
 **6/9 이후** 로그인·검수 지표만 제품 판단에 쓰세요. 그 이전은 identify 미연결로 참고만.
 

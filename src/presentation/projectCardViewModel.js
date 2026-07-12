@@ -61,6 +61,7 @@ import { MAX_PROJECT_TAGS } from '../lib/projectMeta.js';
  *   isActive: boolean,
  *   dirty?: boolean,
  *   shareScope?: ProjectShareScope,
+ *   decisionLedger?: import('./workHistoryDecisionLedger.js').WorkHistoryDecisionLedgerItem[],
  * }} ProjectCardViewModel
  */
 
