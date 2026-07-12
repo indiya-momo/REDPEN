@@ -42,6 +42,7 @@ import { useGuestBrowseDemoPdf } from '../hooks/useGuestBrowseDemoPdf.js';
 import { isOnboardingSamplePdfName } from '../lib/onboardingSamplePdf.js';
 import {
   findGuestBrowseDemoSpellingGroup,
+  guestBrowseAllowsDemoPdfAutoLoad,
   guestBrowseAutoRunsCriteriaCheck,
   guestBrowseBlocksResultExport,
   guestBrowseHidesGreetingText,
@@ -64,7 +65,7 @@ import {
   useResizablePanelWidth,
 } from '../hooks/useResizablePanelWidth.js';
 import { usePrintedPageDisplay } from '../hooks/usePrintedPageDisplay.js';
-import { trackFeedbackOpened } from '../lib/analytics.js';
+import { trackFeedbackOpened, trackGuestBrowseCompleted } from '../lib/analytics.js';
 import { openFeedbackFormForUser } from '../lib/feedbackConfig.js';
 import { FEEDBACK_SUBMIT_THANK_BUBBLE_LINES } from '../lib/betaDailyQuota.js';
 import {
@@ -172,15 +173,15 @@ const WORK_GUIDE_5_ALIGN_CHAIN = [
   },
 ];
 
-/** 통일형 📌 — 신라시대 핀 오른쪽 */
+/** 통일형 📌 — 둘러보기 통일형(붉은 표시) 핀 오른쪽 */
 const WORK_GUIDE_UNIFY_PIN_ALIGN = {
   selector: '[data-work-guide="unify-pin-silla"]',
   leftFromTargetLeft: 36,
   topFromTargetTop: -4,
 };
 
-/** 둘러보기 핀 가이드 대상 */
-const GUEST_BROWSE_UNIFY_PIN_TAIL = '신라시대';
+/** 둘러보기 핀 가이드 대상 — 통일형 */
+const GUEST_BROWSE_UNIFY_PIN_TAIL = '붉은 표시';
 
 /** 2번 — 가로: 인사말 왼쪽, 세로: 3번(보정) 아래 또는 실행 행 */
 const WORK_GUIDE_2_ALIGN_CHAIN = [
@@ -996,7 +997,6 @@ export default function MainScreen({
     isRestoring: session.isRestoring,
     hasPdf: Boolean(pdf.pdf),
     loadPdfFile: session.loadPdfFile,
-    showPreUploadGuide: workGuide.showPreUploadGuide,
     dismissPreUpload: dismissPreUploadGuide,
     onLoaded: openThumbStripAfterDemo,
   });
@@ -1338,6 +1338,9 @@ export default function MainScreen({
     [pdf.pdf],
   );
 
+  const guestBrowsePreparingDemo =
+    guestBrowseAllowsDemoPdfAutoLoad() && !showPdfViewer && !pdf.loadError;
+
   const centerRunLabel = useMemo(
     () => getCenterRunLabel(pdf.isProcessing, pdf.progress),
     [pdf.isProcessing, pdf.progress],
@@ -1421,12 +1424,18 @@ export default function MainScreen({
               showConfirm={false}
               message={
                 <>
-                  검수할 맞춤법 기준을 선택한다냥
+                  교정냥 &apos;모모&apos;다냥, 반갑다냥!
+                  <br />
+                  먼저{' '}
+                  <span className="tooltip-guide__work-tab-chip tooltip-guide__work-tab-chip--spelling">
+                    맞춤법
+                  </span>{' '}
+                  기능부터 알려주겠다냥
                   <br />
                   <span className="tooltip-guide__gothic-label">편집자 검토 필요</span>와{' '}
                   <span className="tooltip-guide__gothic-label">맞춤법 규칙</span>이 있다냥
                   <br />
-                  검수를 시작해 보겠다냥
+                  일단 검수를 시작해 보자냥
                 </>
               }
               onDismiss={() =>
@@ -1473,9 +1482,19 @@ export default function MainScreen({
                 <>
                   맞춤법 검수가 완료되었다냥
                   <br />
-                  왼쪽에는 검수 결과가 나온다냥
+                  왼쪽에는{' '}
+                  <span className="results-header-badge result-pillar--spelling-caution">
+                    편집자 검토
+                  </span>{' '}
+                  <span className="results-header-badge result-pillar--spelling">
+                    맞춤법
+                  </span>
                   <br />
-                  오른쪽의 항목을 클릭하면 설명을 볼 수 있다냥
+                  검사 결과가 나온다냥
+                  <br />
+                  오른쪽 원고에서 하이라이트를 클릭하면
+                  <br />
+                  해당하는 설명이 나온다냥
                 </>
               }
               onDismiss={() =>
@@ -1575,21 +1594,32 @@ export default function MainScreen({
       offsetY={8}
       pinned={workGuide.pinAll}
       message={
-        <>
-          <span className="tooltip-guide__gothic-label">
-            {LITERAL_FIND_FEATURE_LABEL}
-          </span>
-          에서는
-          <br />
-          여러 항목을 한 번에 검색하고
-          <br />
-          <span className="tooltip-guide__gothic-label">통일형 만들기</span>
-          에서는
-          <br />
-          여러 항목을 통일할 수 있다냥
-          <br />
-          항목을 추가해 보자냥!
-        </>
+        consistencyGuideLiteralAddClicked ? (
+          <>
+            <span className="tooltip-guide__gothic-label">통일형 만들기</span>
+            에서는
+            <br />
+            여러 항목을 통일할 수 있다냥
+            <br />
+            +를 눌러 예시 항목을 추가해 보자냥!
+          </>
+        ) : (
+          <>
+            <span className="tooltip-guide__work-tab-chip tooltip-guide__work-tab-chip--consistency">
+              표기 통일
+            </span>{' '}
+            기능이다냥
+            <br />
+            <span className="tooltip-guide__gothic-label">
+              {LITERAL_FIND_FEATURE_LABEL}
+            </span>
+            에서는 최대 5개를
+            <br />
+            한 번에 검색할 수 있어 편리하다냥
+            <br />
+            +를 눌러 예시 항목을 추가해 보자냥!
+          </>
+        )
       }
       onDismiss={() =>
         workGuide.dismiss(WORK_GUIDE_KEYS.CONSISTENCY_INTRO)
@@ -2184,9 +2214,10 @@ export default function MainScreen({
                         </span>
                       </>
                     }
-                    onDismiss={() =>
-                      workGuide.dismiss(WORK_GUIDE_KEYS.WORK_EXIT)
-                    }
+                    onDismiss={() => {
+                      workGuide.dismiss(WORK_GUIDE_KEYS.WORK_EXIT);
+                      trackGuestBrowseCompleted();
+                    }}
                   >
                     <span className="work-guide-anchor work-guide-anchor--logout">
                       <button
@@ -2197,7 +2228,7 @@ export default function MainScreen({
                         }}
                       >
                         <LogOut size={16} aria-hidden />
-                        로그아웃
+                        메인 화면으로
                       </button>
                     </span>
                   </TooltipGuide>
@@ -2210,7 +2241,7 @@ export default function MainScreen({
                     }}
                   >
                     <LogOut size={16} aria-hidden />
-                    로그아웃
+                    메인 화면으로
                   </button>
                 )}
                 {feedbackThankYouOpen ? (
@@ -2269,6 +2300,17 @@ export default function MainScreen({
           </header>
           <div className="pdf-work-pane__content">
             {!showPdfViewer ? (
+              guestBrowsePreparingDemo ? (
+                <div
+                  className="pdf-center-stage pdf-center-stage--guest-prep"
+                  role="status"
+                  aria-live="polite"
+                >
+                  <p className="pdf-center-stage__guest-prep-label">
+                    샘플 원고 준비 중…
+                  </p>
+                </div>
+              ) : (
             <PdfCenterStage
               fileRef={pdf.fileRef}
               onOpenPicker={session.openPdfWithPicker}
@@ -2311,7 +2353,8 @@ export default function MainScreen({
                 workGuide.dismiss(WORK_GUIDE_KEYS.PRE_UPLOAD)
               }
             />
-          ) : (
+              )
+            ) : (
             <>
               <PdfViewer
                 key={`pdf-${pdf.pdf.numPages}`}

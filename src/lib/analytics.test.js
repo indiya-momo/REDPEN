@@ -7,6 +7,13 @@ import {
   bucketRuleCount,
 } from './analytics.js';
 
+/** 테스트에서 localhost 스킵을 피하려면 배포 호스트로 스텁 */
+function stubAnalyticsHost(hostname) {
+  vi.stubGlobal('window', {
+    location: { hostname },
+  });
+}
+
 describe('buildAnalyticsPersonProperties', () => {
   const prevEmails = import.meta.env.VITE_BETA_QUOTA_ADMIN_EMAILS;
 
@@ -35,6 +42,13 @@ describe('buildAnalyticsPersonProperties', () => {
 });
 
 describe('identifyAnalyticsUser', () => {
+  afterEach(() => {
+    vi.doUnmock('posthog-js');
+    vi.unstubAllGlobals();
+    vi.resetModules();
+    delete import.meta.env.VITE_PUBLIC_POSTHOG_KEY;
+  });
+
   it('opt-out 복구 시 PostHog opt_in_capturing 호출', async () => {
     const optIn = vi.fn();
     const optOut = vi.fn();
@@ -48,6 +62,7 @@ describe('identifyAnalyticsUser', () => {
         reset: vi.fn(),
       },
     }));
+    stubAnalyticsHost('indiya.vercel.app');
     vi.resetModules();
     import.meta.env.VITE_PUBLIC_POSTHOG_KEY = 'phc_test';
     const mod = await import('./analytics.js');
@@ -56,9 +71,6 @@ describe('identifyAnalyticsUser', () => {
     mod.setAnalyticsOptOut(false);
     expect(optOut).toHaveBeenCalled();
     expect(optIn).toHaveBeenCalled();
-    vi.doUnmock('posthog-js');
-    vi.resetModules();
-    delete import.meta.env.VITE_PUBLIC_POSTHOG_KEY;
   });
 });
 
@@ -102,5 +114,93 @@ describe('analytics buckets', () => {
     expect(readPdfUploadCount()).toBe(2);
     vi.unstubAllGlobals();
     vi.resetModules();
+  });
+});
+
+describe('trackGuestBrowse', () => {
+  afterEach(() => {
+    vi.doUnmock('posthog-js');
+    vi.unstubAllGlobals();
+    vi.resetModules();
+    delete import.meta.env.VITE_PUBLIC_POSTHOG_KEY;
+  });
+
+  it('started는 guest_browse_started를 보낸다', async () => {
+    const capture = vi.fn();
+    vi.doMock('posthog-js', () => ({
+      default: {
+        init: vi.fn(),
+        identify: vi.fn(),
+        capture,
+        opt_in_capturing: vi.fn(),
+        opt_out_capturing: vi.fn(),
+        reset: vi.fn(),
+      },
+    }));
+    stubAnalyticsHost('indiya.vercel.app');
+    import.meta.env.VITE_PUBLIC_POSTHOG_KEY = 'phc_test';
+    vi.resetModules();
+    const mod = await import('./analytics.js');
+    await mod.initAnalytics();
+    mod.trackGuestBrowseStarted();
+    expect(capture).toHaveBeenCalledWith('guest_browse_started', {
+      source: 'welcome',
+    });
+  });
+
+  it('completed는 둘러보기 중일 때만 보낸다', async () => {
+    const capture = vi.fn();
+    vi.doMock('posthog-js', () => ({
+      default: {
+        init: vi.fn(),
+        identify: vi.fn(),
+        capture,
+        opt_in_capturing: vi.fn(),
+        opt_out_capturing: vi.fn(),
+        reset: vi.fn(),
+      },
+    }));
+    stubAnalyticsHost('indiya.vercel.app');
+    import.meta.env.VITE_PUBLIC_POSTHOG_KEY = 'phc_test';
+    vi.resetModules();
+    const session = await import('./guestBrowseSession.js');
+    session.endGuestBrowse();
+    const mod = await import('./analytics.js');
+    await mod.initAnalytics();
+    mod.trackGuestBrowseCompleted();
+    expect(capture).not.toHaveBeenCalledWith(
+      'guest_browse_completed',
+      expect.anything(),
+    );
+    session.beginGuestBrowse();
+    mod.trackGuestBrowseCompleted();
+    expect(capture).toHaveBeenCalledWith('guest_browse_completed', {
+      source: 'work_exit_guide',
+    });
+    session.endGuestBrowse();
+  });
+
+  it('localhost에서는 PostHog를 초기화하지 않는다', async () => {
+    const capture = vi.fn();
+    const init = vi.fn();
+    vi.doMock('posthog-js', () => ({
+      default: {
+        init,
+        identify: vi.fn(),
+        capture,
+        opt_in_capturing: vi.fn(),
+        opt_out_capturing: vi.fn(),
+        reset: vi.fn(),
+      },
+    }));
+    stubAnalyticsHost('127.0.0.1');
+    import.meta.env.VITE_PUBLIC_POSTHOG_KEY = 'phc_test';
+    vi.resetModules();
+    const mod = await import('./analytics.js');
+    expect(mod.isLocalAnalyticsHost()).toBe(true);
+    await mod.initAnalytics();
+    mod.trackGuestBrowseStarted();
+    expect(init).not.toHaveBeenCalled();
+    expect(capture).not.toHaveBeenCalled();
   });
 });
