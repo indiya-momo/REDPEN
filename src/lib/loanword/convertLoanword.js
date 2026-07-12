@@ -11,6 +11,7 @@ import { arpabetToTokens, tokensToIpaString } from './arpabet.js';
 import { transcribe } from './transcriptionRules.js';
 import { assemble } from './hangulAssembler.js';
 import { graphemeToArpabet } from './graphemeToArpabet.js';
+import { ipaToTokens } from './ipaToTokens.js';
 import { lookupYongrye } from './yongryeDictionary.js';
 
 /**
@@ -68,6 +69,55 @@ export function convertWord(word, dictionary) {
 }
 
 /**
+ * 비동기 변환: 사전 미등재 단어는 외부 발음 추정기(eSpeak-NG 등)를 먼저
+ * 시도하고, 없거나 실패하면 자체 철자 추정(convertWord의 폴백)을 쓴다.
+ * @param {string} word
+ * @param {Record<string,string>} dictionary CMU 발음 사전
+ * @param {(w:string)=>Promise<string|null>} [ipaProvider] IPA 발음 추정기
+ */
+export async function convertWordAsync(word, dictionary, ipaProvider = null) {
+  const sync = convertWord(word, dictionary);
+  if (!sync.estimated || !ipaProvider) return sync; // 사전에 있으면 그대로
+  const ipa = await Promise.resolve(ipaProvider(sync.word)).catch(() => null);
+  if (!ipa) return sync;
+  const { tokens, notes } = ipaToTokens(ipa, sync.word);
+  if (tokens.length === 0) return sync;
+  const { pieces, trace } = transcribe(tokens);
+  return {
+    word: sync.word,
+    found: true,
+    estimated: true,
+    results: [{
+      arpabet: ipa,
+      ipa: tokensToIpaString(tokens),
+      hangul: assemble(pieces),
+      trace,
+      notes: ['발음 추정: eSpeak-NG 음성 엔진 (영국식)', ...notes],
+    }],
+  };
+}
+
+/** 캐스케이드에서 단어 하나의 대표 표기를 고른다 (용례집 → 엔진) */
+function pickWordRepresentation(part, engine, yongrye) {
+  const official = yongrye ? lookupYongrye(part, yongrye) : [];
+  let hangul = '?';
+  let source = 'none'; // 'yongrye' | 'dict' | 'g2p' | 'none'
+  let officialForms = [];
+
+  if (official.length > 0) {
+    const counts = new Map();
+    for (const e of official) counts.set(e.h, (counts.get(e.h) ?? 0) + 1);
+    officialForms = [...counts.keys()];
+    hangul = [...counts.entries()].sort((a, b) => b[1] - a[1])[0][0];
+    source = 'yongrye';
+  } else if (engine.found) {
+    hangul = engine.results[0].hangul;
+    source = engine.estimated ? 'g2p' : 'dict';
+  }
+  return { word: part, hangul, source, officialForms, engine };
+}
+
+/**
  * 여러 단어(공백·하이픈 구분) → 단어별 변환 후 이어 붙임.
  * 제10항 2: 원어에서 띄어 쓴 말은 띄어 쓴 대로 적는다.
  *
@@ -82,30 +132,26 @@ export function convertWord(word, dictionary) {
  */
 export function convertPhrase(phrase, dictionary, yongrye = null) {
   const parts = String(phrase).trim().split(/[\s-]+/).filter(Boolean);
+  const words = parts.map((part) =>
+    pickWordRepresentation(part, convertWord(part, dictionary), yongrye),
+  );
+  return {
+    phrase: parts.join(' '),
+    found: words.some((w) => w.source !== 'none'),
+    estimated: words.some((w) => w.source === 'g2p'),
+    hangul: words.map((w) => w.hangul).join(' '),
+    words,
+  };
+}
 
-  const words = parts.map((part) => {
-    const engine = convertWord(part, dictionary);
-    const official = yongrye ? lookupYongrye(part, yongrye) : [];
-
-    let hangul = '?';
-    let source = 'none'; // 'yongrye' | 'dict' | 'g2p' | 'none'
-    let officialForms = [];
-
-    if (official.length > 0) {
-      // 같은 단어에 여러 표기가 있으면 최빈 표기를 대표로
-      const counts = new Map();
-      for (const e of official) counts.set(e.h, (counts.get(e.h) ?? 0) + 1);
-      officialForms = [...counts.keys()];
-      hangul = [...counts.entries()].sort((a, b) => b[1] - a[1])[0][0];
-      source = 'yongrye';
-    } else if (engine.found) {
-      hangul = engine.results[0].hangul;
-      source = engine.estimated ? 'g2p' : 'dict';
-    }
-
-    return { word: part, hangul, source, officialForms, engine };
-  });
-
+/** convertPhrase의 비동기판 — 미등재 단어에 외부 발음 추정기를 사용 */
+export async function convertPhraseAsync(phrase, dictionary, yongrye = null, ipaProvider = null) {
+  const parts = String(phrase).trim().split(/[\s-]+/).filter(Boolean);
+  const words = await Promise.all(
+    parts.map(async (part) =>
+      pickWordRepresentation(part, await convertWordAsync(part, dictionary, ipaProvider), yongrye),
+    ),
+  );
   return {
     phrase: parts.join(' '),
     found: words.some((w) => w.source !== 'none'),

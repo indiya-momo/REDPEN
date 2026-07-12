@@ -9,10 +9,11 @@
  *
  * 여러 단어(공백·하이픈)는 단어별로 변환해 이어 붙인다(제10항 2).
  */
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { loadCmuDictionary } from '../lib/loanword/cmuDictionary.js';
 import { loadYongryeDictionary, lookupYongrye } from '../lib/loanword/yongryeDictionary.js';
-import { convertWord, convertPhrase } from '../lib/loanword/convertLoanword.js';
+import { convertWordAsync, convertPhraseAsync } from '../lib/loanword/convertLoanword.js';
+import { preloadEspeak, espeakToIpa } from '../lib/loanword/espeakG2p.js';
 
 const styles = {
   wrap: {
@@ -157,6 +158,11 @@ export default function LoanwordConverter() {
   const [error, setError] = useState('');
   const busyRef = useRef(false);
 
+  // 발음 추정 엔진(eSpeak-NG)을 앱이 뜬 뒤 유휴 시간에 미리 받아 둔다
+  useEffect(() => {
+    preloadEspeak();
+  }, []);
+
   const handleConvert = useCallback(async () => {
     const word = input.trim();
     if (!word || busyRef.current) return;
@@ -176,11 +182,11 @@ export default function LoanwordConverter() {
       const official = lookupYongrye(word, yongrye);
       const isPhrase = /[\s-]/.test(word);
       if (isPhrase) {
-        // 단어별 캐스케이드: 용례집 → 발음 사전+규정 → 철자 추정
-        const engine = convertPhrase(word, cmu, yongrye);
+        // 단어별 캐스케이드: 용례집 → 발음 사전+규정 → 발음 추정(eSpeak → 철자)
+        const engine = await convertPhraseAsync(word, cmu, yongrye, espeakToIpa);
         setOutcome({ word, official, engine, phrase: true });
       } else {
-        const engine = convertWord(word, cmu);
+        const engine = await convertWordAsync(word, cmu, espeakToIpa);
         setOutcome({ word, official, engine, phrase: false });
       }
     } catch {
