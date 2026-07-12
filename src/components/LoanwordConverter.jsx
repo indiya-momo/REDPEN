@@ -20,11 +20,16 @@ const styles = {
     border: '1px solid rgba(0, 0, 0, 0.12)',
     borderRadius: 8,
     padding: '8px 12px',
-    margin: '6px 0',
+    margin: '6px 0 0',
     background: 'rgba(255, 255, 255, 0.6)',
     fontSize: 13,
   },
-  summary: { cursor: 'pointer', fontWeight: 600, userSelect: 'none' },
+  summary: {
+    /* 제목 타이포는 .loanword-converter__summary (main-screen.css) */
+    cursor: 'pointer',
+    userSelect: 'none',
+    listStyle: 'none',
+  },
   form: { display: 'flex', gap: 6, margin: '10px 0 6px' },
   input: {
     flex: 1,
@@ -33,6 +38,8 @@ const styles = {
     border: '1px solid rgba(0, 0, 0, 0.2)',
     borderRadius: 6,
     fontSize: 13,
+    fontWeight: 400,
+    color: 'var(--color-text-muted, #6b6258)',
   },
   button: {
     padding: '6px 14px',
@@ -62,36 +69,54 @@ const styles = {
   hangul: { fontSize: 18, fontWeight: 700 },
   badge: {
     display: 'inline-block',
-    marginLeft: 8,
-    padding: '1px 6px',
-    borderRadius: 4,
+    padding: '0 5px',
+    borderRadius: 3,
     background: '#2563eb',
     color: '#fff',
-    fontSize: 10,
-    verticalAlign: 'middle',
+    fontSize: 11,
+    fontWeight: 600,
+    lineHeight: 1.5,
+    verticalAlign: 'baseline',
   },
   estBadge: {
     display: 'inline-block',
-    marginLeft: 8,
-    padding: '1px 6px',
-    borderRadius: 4,
+    padding: '0 5px',
+    borderRadius: 3,
     background: '#d97706',
     color: '#fff',
-    fontSize: 10,
-    verticalAlign: 'middle',
+    fontSize: 11,
+    fontWeight: 600,
+    lineHeight: 1.5,
+    verticalAlign: 'baseline',
   },
-  ruleBadge: {
+  partialEstBadge: {
     display: 'inline-block',
-    marginLeft: 8,
-    padding: '1px 6px',
-    borderRadius: 4,
+    padding: '0 5px',
+    borderRadius: 3,
     background: '#6b7280',
     color: '#fff',
-    fontSize: 10,
-    verticalAlign: 'middle',
+    fontSize: 11,
+    fontWeight: 600,
+    lineHeight: 1.5,
+    verticalAlign: 'baseline',
   },
   meta: { color: '#666', marginLeft: 8, fontSize: 12 },
   meaning: { color: '#555', fontSize: 12, margin: '4px 0 0', lineHeight: 1.5 },
+  traceBlock: { marginTop: 6 },
+  traceToggle: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 6,
+    margin: 0,
+    padding: 0,
+    border: 'none',
+    background: 'transparent',
+    color: '#555',
+    cursor: 'pointer',
+    fontSize: 12,
+    fontWeight: 400,
+    lineHeight: 1.4,
+  },
   traceList: { margin: '6px 0 0', paddingLeft: 18, color: '#444', fontSize: 12 },
   note: { color: '#888', fontSize: 11, marginTop: 8, lineHeight: 1.5 },
   error: { color: '#b91c1c', marginTop: 6, fontSize: 12 },
@@ -118,21 +143,24 @@ function groupOfficial(entries) {
   return grouped;
 }
 
-function EngineResult({ result, label, estimated }) {
+function ApplicationTrace({ result, estimated }) {
+  const [traceOpen, setTraceOpen] = useState(false);
+  if (!result) return null;
   return (
-    <div style={styles.result}>
-      <span style={styles.hangul}>{result.hangul}</span>
-      {estimated ? <span style={styles.estBadge}>발음 추정</span> : null}
-      <span style={styles.meta}>
-        {label ? `${label} · ` : ''}[{result.ipa}]
-      </span>
-      <details>
-        <summary style={{ ...styles.summary, fontWeight: 400, fontSize: 12, color: '#555' }}>
-          적용 근거 (외래어 표기법)
-        </summary>
+    <div style={styles.traceBlock}>
+      <button
+        type="button"
+        style={styles.traceToggle}
+        aria-expanded={traceOpen}
+        onClick={() => setTraceOpen((v) => !v)}
+      >
+        적용 근거 (외래어 표기법)
+      </button>
+      {traceOpen ? (
         <ul style={styles.traceList}>
+          <li>용례집에 없어 외래어 표기법 규정으로 변환했습니다.</li>
           {estimated ? (
-            <li>발음 사전에 없는 단어라 철자에서 발음을 추정했습니다 (근사치).</li>
+            <li>발음 사전에 없는 단어라 철자·음성 엔진에서 발음을 추정했습니다 (근사치).</li>
           ) : null}
           {result.trace
             .filter((e) => e.rule)
@@ -146,16 +174,30 @@ function EngineResult({ result, label, estimated }) {
             <li key={n}>{n}</li>
           ))}
         </ul>
-      </details>
+      ) : null}
+    </div>
+  );
+}
+
+function EngineResult({ result, label, estimated }) {
+  return (
+    <div style={styles.result}>
+      <span style={styles.hangul}>{result.hangul}</span>
+      <span style={{ ...styles.estBadge, marginLeft: 6 }}>발음 추정</span>
+      <span style={styles.meta}>
+        {label ? `${label} · ` : ''}[{result.ipa}]
+      </span>
+      <ApplicationTrace result={result} estimated={estimated} />
     </div>
   );
 }
 
 export default function LoanwordConverter() {
-  const [input, setInput] = useState('');
+  const [input, setInput] = useState('Jo March');
   const [loading, setLoading] = useState(false);
   const [outcome, setOutcome] = useState(null); // { word, official, engine, phrase }
   const [error, setError] = useState('');
+  const [panelOpen, setPanelOpen] = useState(true);
   const busyRef = useRef(false);
 
   // 발음 추정 엔진(eSpeak-NG)을 앱이 뜬 뒤 유휴 시간에 미리 받아 둔다
@@ -166,8 +208,8 @@ export default function LoanwordConverter() {
   const handleConvert = useCallback(async () => {
     const word = input.trim();
     if (!word || busyRef.current) return;
-    if (!/^[a-zA-Z''\- ]+$/.test(word)) {
-      setError('영어 철자만 입력해 주세요. (알파벳, 하이픈, 어깻점, 공백)');
+    if (!/^[a-zA-Z ]+$/.test(word)) {
+      setError('영어 철자, 공백만 입력 가능합니다');
       setOutcome(null);
       return;
     }
@@ -180,7 +222,7 @@ export default function LoanwordConverter() {
         loadCmuDictionary(),
       ]);
       const official = lookupYongrye(word, yongrye);
-      const isPhrase = /[\s-]/.test(word);
+      const isPhrase = /\s/.test(word);
       if (isPhrase) {
         // 단어별 캐스케이드: 용례집 → 발음 사전+규정 → 발음 추정(eSpeak → 철자)
         const engine = await convertPhraseAsync(word, cmu, yongrye, espeakToIpa);
@@ -213,17 +255,34 @@ export default function LoanwordConverter() {
   const groupedOfficial = hasOfficial ? groupOfficial(outcome.official) : [];
 
   return (
-    <details style={styles.wrap}>
-      <summary style={styles.summary}>외래어 표기 변환 (영어)</summary>
+    <details
+      className="loanword-converter"
+      style={styles.wrap}
+      open={panelOpen}
+      onToggle={(e) => setPanelOpen(e.currentTarget.open)}
+    >
+      <summary
+        className="loanword-converter__summary panel-criteria-heading"
+        style={styles.summary}
+      >
+        <span className="loanword-converter__summary-title">
+          외래어 표기
+          <span className="panel-criteria-heading-meta">(영어 → 한국어 지원)</span>
+        </span>
+      </summary>
 
       <div style={styles.form}>
         <input
           type="text"
           value={input}
-          onChange={(e) => setInput(e.target.value)}
+          onChange={(e) => setInput(e.target.value.replace(/[^a-zA-Z ]/g, ''))}
           onKeyDown={onKeyDown}
-          placeholder="영어 단어·이름 입력 (예: williams, stephen king)"
+          placeholder="영어 단어·이름 입력 (예: Jo March)"
           aria-label="외래어 표기로 변환할 영어 단어"
+          inputMode="text"
+          autoCapitalize="off"
+          autoCorrect="off"
+          spellCheck={false}
           style={styles.input}
         />
         <button type="button" onClick={handleConvert} disabled={loading} style={styles.button}>
@@ -239,7 +298,7 @@ export default function LoanwordConverter() {
           {groupedOfficial.map((entry) => (
             <div key={entry.h} style={styles.officialResult}>
               <span style={styles.hangul}>{entry.h}</span>
-              <span style={styles.badge}>용례집</span>
+              <span style={{ ...styles.badge, marginLeft: 6 }}>용례집</span>
               {entry.cats.length ? <span style={styles.meta}>{entry.cats.join(' · ')}</span> : null}
               {entry.alts.length ? (
                 <span style={styles.meta}>이표기: {entry.alts.join(', ')}</span>
@@ -273,22 +332,36 @@ export default function LoanwordConverter() {
 
       {hasEngine && outcome.phrase && !hasOfficial ? (
         <>
-          <p style={styles.sectionLabel}>
-            권장 표기 — 단어별 우선순위: 용례집 → 규정 → 철자 추정 (제10항 2: 띄어 쓴 대로)
-          </p>
           <div style={styles.officialResult}>
             <span style={styles.hangul}>{outcome.engine.hangul}</span>
-            {outcome.engine.estimated ? <span style={styles.estBadge}>일부 발음 추정</span> : null}
+            {outcome.engine.words.some((w) => w.source !== 'yongrye') ? (
+              outcome.engine.words.every((w) => w.source !== 'yongrye') ? (
+                <span style={{ ...styles.estBadge, marginLeft: 6 }}>발음 추정</span>
+              ) : (
+                <span style={{ ...styles.partialEstBadge, marginLeft: 6 }}>
+                  일부 발음 추정
+                </span>
+              )
+            ) : null}
           </div>
           {outcome.engine.words.map((w) => (
             <div key={w.word} style={{ ...styles.result, marginLeft: 12 }}>
               <span style={{ fontWeight: 600 }}>{w.word}</span>
               <span style={styles.meta}>→ {w.hangul}</span>
-              {w.source === 'yongrye' ? <span style={styles.badge}>용례집</span> : null}
-              {w.source === 'dict' ? <span style={styles.ruleBadge}>규정</span> : null}
-              {w.source === 'g2p' ? <span style={styles.estBadge}>발음 추정</span> : null}
+              {w.source === 'yongrye' ? (
+                <span style={{ ...styles.badge, marginLeft: 6 }}>용례집</span>
+              ) : null}
+              {w.source === 'dict' || w.source === 'g2p' ? (
+                <span style={{ ...styles.estBadge, marginLeft: 6 }}>발음 추정</span>
+              ) : null}
               {w.officialForms.length > 1 ? (
                 <span style={styles.meta}>다른 표기: {w.officialForms.slice(1).join(', ')}</span>
+              ) : null}
+              {w.source === 'dict' || w.source === 'g2p' ? (
+                <ApplicationTrace
+                  result={w.engine?.results?.[0]}
+                  estimated={Boolean(w.engine?.estimated) || w.source === 'g2p'}
+                />
               ) : null}
             </div>
           ))}
@@ -300,10 +373,11 @@ export default function LoanwordConverter() {
       ) : null}
 
       <p style={styles.note}>
-        국립국어원 용례집(외래어 표기법 용례 목록)에 등재된 단어는 공식 심의 표기만
-        보여줍니다. 등재되지 않은 단어만 외래어 표기법(제3장 제1절 영어) 규정을 적용해
-        변환하며, 발음 사전에도 없으면 철자에서 발음을 추정하고 <b>발음 추정</b> 표시가
-        붙습니다. 최종 선택은 편집자의 판단에 맡깁니다.
+        {'외국어 원문을 입력하면 한국어로 표기합니다. 국립국어원 외래어 표기법'}
+        <span style={{ ...styles.badge, marginLeft: '0.25em' }}>용례집</span>
+        {'을 우선으로 하며, 등재되지 않은 경우 외래어 표기법 규정을 적용해'}
+        <span style={{ ...styles.estBadge, marginLeft: '0.25em' }}>발음 추정</span>
+        {'합니다'}
       </p>
     </details>
   );
