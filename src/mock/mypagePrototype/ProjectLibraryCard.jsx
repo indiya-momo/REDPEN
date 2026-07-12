@@ -60,6 +60,7 @@ export default function ProjectLibraryCard({
   onDelete,
   onSharePreview = () => {},
 }) {
+  void _onUpdateMeta;
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState(card.title);
   const nameInputId = useId();
@@ -215,6 +216,20 @@ export default function ProjectLibraryCard({
               </p>
             </div>
           </div>
+          {card.isActive || card.dirty ? (
+            <div className="sheet-card__flags">
+              {card.isActive ? (
+                <span className="sheet-card__flag sheet-card__flag--active">
+                  작업 중
+                </span>
+              ) : null}
+              {card.dirty ? (
+                <span className="sheet-card__flag sheet-card__flag--dirty">
+                  변경됨
+                </span>
+              ) : null}
+            </div>
+          ) : null}
         </div>
 
         <p

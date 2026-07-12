@@ -861,6 +861,11 @@
   color: var(--color-text-muted);
 }
 
+.mypage-proto__share-ledger {
+  margin-top: 0.85rem;
+  padding: 0.65rem 0.15rem 0;
+}
+
 .mypage-proto__modal .sheet-card {
   box-shadow: none;
 }

@@ -37,6 +37,7 @@ import { planCriteriaPresetDelete } from '../lib/criteriaPresetDelete.js';
 import { showAppConfirm } from '../lib/appDialog.js';
 import { formatProjectDialogLabel } from '../lib/projectDialogLabel.js';
 import { normalizeRuleSet } from '../lib/ruleSetNormalize.js';
+import { buildCriteriaCheckpoint } from '../lib/criteriaCheckpoint.js';
 import {
   mergeProjectContext,
 } from '../lib/projectMeta.js';
@@ -634,11 +635,15 @@ export function useRuleSets(authUid = '', authEmail = '') {
         cautionEnabled: structuredClone(sourceAfterFlush.cautionEnabled ?? {}),
         customRules: structuredClone(sourceAfterFlush.customRules ?? []),
         globalExcludePhrases: [...(sourceAfterFlush.globalExcludePhrases ?? [])],
+        consistencyDecisions: structuredClone(
+          sourceAfterFlush.consistencyDecisions ?? [],
+        ),
         spellingRulesFingerprint: SPELLING_RULES_FP,
         cautionRulesFingerprint: sourceAfterFlush.cautionRulesFingerprint,
         cautionEnabledPolicyVersion: sourceAfterFlush.cautionEnabledPolicyVersion,
         compoundMigrateVersion: sourceAfterFlush.compoundMigrateVersion,
       };
+      const criteriaCheckpoint = buildCriteriaCheckpoint(config);
 
       const existing = ruleSetsRef.current.find(
         (s) => (s.name || '').trim() === name,
@@ -663,6 +668,7 @@ export function useRuleSets(authUid = '', authEmail = '') {
                 name,
                 savedAt,
                 projectContext,
+                criteriaCheckpoint,
               })
             : s,
         );
@@ -680,6 +686,7 @@ export function useRuleSets(authUid = '', authEmail = '') {
                   ...config,
                   savedAt,
                   projectContext,
+                  criteriaCheckpoint,
                 })
               : s,
           );
@@ -691,6 +698,7 @@ export function useRuleSets(authUid = '', authEmail = '') {
             ...config,
             savedAt,
             projectContext,
+            criteriaCheckpoint,
           });
           next = [...ruleSetsRef.current, created];
         }
