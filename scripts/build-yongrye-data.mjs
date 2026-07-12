@@ -56,13 +56,16 @@ const add = (key, entry) => {
 
 sheet.eachRow((row, rowNumber) => {
   if (rowNumber === 1) return; // 머리글
-  if (text(row.getCell(6).value) !== '영어') return;
+  // 언어명이 '영어'이거나 공란인 레코드 포함
+  // (뉴욕 등 유명 지명·다국적 인명 다수가 언어명 공란으로 등재되어 있음)
+  const lang = text(row.getCell(6).value);
+  if (lang !== '영어' && lang !== '') return;
 
-  const rawWord = text(row.getCell(4).value)
+  const rawOriginal = text(row.getCell(4).value)
     .replace(/❲[^❳]*❳/g, ' ') // 병기 표기 제거
     .replace(/\s+/g, ' ')
-    .trim()
-    .toLowerCase();
+    .trim();
+  const rawWord = rawOriginal.toLowerCase();
   const hangul = text(row.getCell(3).value);
   const category = text(row.getCell(2).value);
   const meaning = text(row.getCell(15).value);
@@ -79,26 +82,34 @@ sheet.eachRow((row, rowNumber) => {
     return;
   }
 
-  // 인명 형식: 한글 "성, 이름 …" → 원어의 성(마지막 단어)으로 색인
+  // 인명 형식: 한글 "성, 이름 …" → 원어의 성으로 색인
+  // (영어 행: 마지막 단어가 성 / 언어명 공란 행: 전부 대문자인 단어가 성)
   if (hangul.includes(',')) {
-    let clean = rawWord.replace(/[（(][^)）]*[)）]/g, ' ');
-    clean = clean.split(/[^a-z' .-]/)[0] ?? '';
-    const tokens = clean
-      .split(/\s+/)
-      .filter((t) => NAME_TOKEN.test(t) && !SKIP_TOKENS.has(t));
-    if (tokens.length) {
-      const surnameEn = tokens[tokens.length - 1];
-      const surnameKo = hangul.split(',')[0].trim();
-      if (surnameKo && NAME_TOKEN.test(surnameEn)) {
-        const full = hangul.replace(/\s+/g, ' ');
-        add(surnameEn, {
-          h: surnameKo,
-          c: category || '인명',
-          m: `${meaning ? `${meaning} ` : ''}[전체 표기: ${full}]`,
-        });
-        surname += 1;
-        return;
-      }
+    let surnameEn = null;
+    if (lang === '영어') {
+      let clean = rawWord.replace(/[（(][^)）]*[)）]/g, ' ');
+      clean = clean.split(/[^a-z' .-]/)[0] ?? '';
+      const tokens = clean
+        .split(/\s+/)
+        .filter((t) => NAME_TOKEN.test(t) && !SKIP_TOKENS.has(t));
+      if (tokens.length) surnameEn = tokens[tokens.length - 1];
+    } else {
+      const caps = rawOriginal
+        .replace(/[（(][^)）]*[)）]/g, ' ')
+        .split(/\s+/)
+        .filter((t) => /^[A-Z][A-Z'-]+$/.test(t));
+      if (caps.length === 1) surnameEn = caps[0].toLowerCase();
+    }
+    const surnameKo = hangul.split(',')[0].trim();
+    if (surnameEn && surnameKo && NAME_TOKEN.test(surnameEn)) {
+      const full = hangul.replace(/\s+/g, ' ');
+      add(surnameEn, {
+        h: surnameKo,
+        c: category || '인명',
+        m: `${meaning ? `${meaning} ` : ''}[전체 표기: ${full}]`,
+      });
+      surname += 1;
+      return;
     }
   }
   dropped += 1;

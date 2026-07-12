@@ -12,7 +12,11 @@
 
 import { describe, it, expect } from 'vitest';
 import { dictionary } from 'cmu-pronouncing-dictionary';
-import { convertWord, convertPronunciation } from './convertLoanword.js';
+import { convertWord, convertPhrase, convertPronunciation } from './convertLoanword.js';
+import { loadYongryeDictionary } from './yongryeDictionary.js';
+
+const yongrye = await loadYongryeDictionary();
+const hasYongrye = Object.keys(yongrye).length > 0;
 
 const hangulOf = (word) => {
   const r = convertWord(word, dictionary);
@@ -93,7 +97,7 @@ describe('인명 — 규정 그대로 적용 (관용 표기와 다를 수 있음
   it('복수 발음이 있으면 모두 반환한다 (aaronson)', () => {
     const r = convertWord('aaronson', dictionary);
     expect(r.results.length).toBe(2);
-    expect(r.results.map((x) => x.hangul)).toEqual(['애런선', '아런선']);
+    expect(r.results.map((x) => x.hangul)).toEqual(['애런슨', '아런슨']);
   });
 
   it.each([
@@ -103,10 +107,91 @@ describe('인명 — 규정 그대로 적용 (관용 표기와 다를 수 있음
   ])('%s → %s', (word, expected) => {
     expect(hangulOf(word)).toBe(expected);
   });
+});
 
-  it('사전에 없는 단어는 found=false', () => {
-    const r = convertWord('zzzznotaword', dictionary);
-    expect(r.found).toBe(false);
+describe('관용 조정 — 어말 철자 a → 아, 어말 -son → 슨 (용례집 대조로 승인된 범위)', () => {
+  it.each([
+    ['sofa', '소파'],
+    ['dora', '도라'],
+    ['saga', '사가'],
+    ['obama', '오바마'],
+    ['drama', '드라마'],
+    ['jefferson', '제퍼슨'],
+    ['johnson', '존슨'],
+    ['wilson', '윌슨'],
+    ['towson', '토슨'],
+  ])('%s → %s', (word, expected) => {
+    expect(hangulOf(word)).toBe(expected);
+  });
+
+});
+
+describe('정규화 회귀 — [w] 앞의 r 처리와 [hw] 한 음절 합치기', () => {
+  it.each([
+    ['barwick', '바윅'], // r이 [w] 앞에서도 자음 앞처럼 탈락
+    ['farwell', '파웰'],
+    ['fairway', '페어웨이'],
+  ])('%s → %s', (word, expected) => {
+    expect(hangulOf(word)).toBe(expected);
+  });
+
+  it('white의 [hw] 발음은 화이트로 합쳐 적는다 (제9항 2, whistle 휘슬형)', () => {
+    const r = convertWord('white', dictionary);
+    expect(r.results.map((x) => x.hangul)).toContain('화이트');
+  });
+
+  it('whitfield → 휫필드 포함', () => {
+    const r = convertWord('whitfield', dictionary);
+    expect(r.results.map((x) => x.hangul)).toContain('휫필드');
+  });
+});
+
+describe('발음 추정(G2P) 폴백 — 사전에 없어도 결과가 반드시 나온다', () => {
+  it('사전 미등재 단어도 철자 추정으로 변환된다 (brixworth)', () => {
+    const r = convertWord('brixworth', dictionary);
+    expect(r.found).toBe(true);
+    expect(r.estimated).toBe(true);
+    expect(r.results[0].hangul).toBe('브릭스워스');
+  });
+
+  it('사전에 있는 단어는 추정 표시가 없다', () => {
+    const r = convertWord('towson', dictionary);
+    expect(r.found).toBe(true);
+    expect(r.estimated).toBe(false);
+  });
+});
+
+describe('여러 단어 변환 (제10항 2: 띄어 쓴 대로)', () => {
+  it('stephen king → 단어별 변환 후 이어 붙임', () => {
+    const r = convertPhrase('stephen king', dictionary);
+    expect(r.found).toBe(true);
+    expect(r.hangul).toBe('스티번 킹');
+    expect(r.words.length).toBe(2);
+  });
+
+  it('하이픈도 단어 경계로 처리한다', () => {
+    const r = convertPhrase('west-york', dictionary);
+    expect(r.words.length).toBe(2);
+  });
+});
+
+describe.skipIf(!hasYongrye)('여러 단어 캐스케이드 — 단어별 용례집 우선 (kings club 사례)', () => {
+  it('kings club → 킹스 클럽 (두 단어 모두 용례집 표기 사용)', () => {
+    const r = convertPhrase('kings club', dictionary, yongrye);
+    expect(r.hangul).toBe('킹스 클럽');
+    expect(r.words.map((w) => w.source)).toEqual(['yongrye', 'yongrye']);
+  });
+
+  it('stephen king → 스티븐 킹', () => {
+    const r = convertPhrase('stephen king', dictionary, yongrye);
+    expect(r.hangul).toBe('스티븐 킹');
+  });
+
+  it('용례집에 없는 단어만 규정 엔진·추정으로 채운다', () => {
+    const r = convertPhrase('brixworth club', dictionary, yongrye);
+    expect(r.words[0].source).toBe('g2p');
+    expect(r.words[1].source).toBe('yongrye');
+    expect(r.hangul).toBe('브릭스워스 클럽');
   });
 });
 
