@@ -169,6 +169,21 @@
   min-width: 5.5rem;
 }
 
+.app-dialog__confirm-hand-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  overflow: visible;
+}
+
+.app-dialog__guide-hand {
+  position: absolute;
+  left: calc(50% - 14px);
+  top: 52%;
+  z-index: 2;
+  pointer-events: none;
+}
+
 .app-dialog__cancel {
   min-width: 5.5rem;
   display: flex;
