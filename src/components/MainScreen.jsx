@@ -1444,7 +1444,7 @@ export default function MainScreen({
               }
             >
               <span className="guide-auto-click-wrap">
-                <GuideClickHand active={guestGuideHandActive} />
+                <GuideClickHand active={guestGuideHandActive} align="label-gap" />
                 <PanelSectionRunButton
                   label="기준 검수"
                   className="panel-section-run-btn--primary"
@@ -2210,10 +2210,18 @@ export default function MainScreen({
                           모모는 늘 여기에 있다냥
                         </span>
                         <span className="tooltip-guide__message-line">
-                          회원 가입 후 사용하다 불편하면
+                          회원 가입 후 사용하다 질문이 생기면
                         </span>
                         <span className="tooltip-guide__message-line">
-                          피드백으로 물어보라냥!
+                          <span className="tooltip-guide__feedback-btn-look">
+                            <MessageSquare
+                              size={14}
+                              aria-hidden
+                              className="tooltip-guide__feedback-btn-look__icon"
+                            />
+                            피드백
+                          </span>
+                          으로 물어보라냥!
                         </span>
                       </>
                     }
