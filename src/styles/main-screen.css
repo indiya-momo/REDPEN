@@ -583,6 +583,15 @@
   outline: none;
 }
 
+/* 설명 뱃지 — 기준 항목(라벨) 안쪽 오른쪽에 표시 */
+.panel-left .builtin-spelling-caution-scroll .caution-inline-tip-trigger:hover::after,
+.panel-left .builtin-spelling-rules-scroll .caution-inline-tip-trigger:hover::after {
+  left: auto;
+  right: 2px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
 .panel-left .consistency-embed .tail-list:not(.tail-list--grid) {
   border-top: none;
   margin-top: var(--consistency-item-gap, 6px);
@@ -974,7 +983,8 @@
   z-index: 10003;
 }
 
-.tooltip-guide--fixed-layer[data-work-guide-bubble='1'] {
+.tooltip-guide--fixed-layer[data-work-guide-bubble='1'],
+.tooltip-guide--fixed-layer[data-work-guide-bubble='1b'] {
   z-index: 10010;
   max-width: min(calc(400px * var(--tooltip-scale, 1)), calc(100vw - 28px));
 }
@@ -1137,12 +1147,42 @@
   width: 100%;
 }
 
+/* 블록 UI를 TooltipGuide로 감쌀 때 inline-flex 앵커가 폭을 줄이지 않게 */
+.tooltip-guide-anchor:has(> .loanword-converter),
+.tooltip-guide-anchor:has(> .work-guide-criteria-anchor) {
+  display: block;
+  width: 100%;
+  align-items: stretch;
+  flex-shrink: 1;
+  min-width: 0;
+}
+
+.work-guide-criteria-anchor {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.loanword-converter {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+}
+
 /* 3번(보정) — 텍스트 열 폭 */
 .spelling-tab-layout__calibration .tooltip-guide {
   --tooltip-text-max: calc(360px * var(--tooltip-scale));
 }
 
 /* 3번 말풍선 — 보정 행 체크박스·확인 버튼과 같은 느낌 */
+.tooltip-guide__folder-icon {
+  display: inline-block;
+  margin: 0 1px;
+  font-size: calc(0.95rem * var(--tooltip-scale, 1));
+  line-height: 1;
+  vertical-align: middle;
+}
+
 .tooltip-guide__checkbox-look {
   display: inline-block;
   width: calc(0.9rem * var(--tooltip-scale, 1));
@@ -1192,6 +1232,26 @@
 
 .spelling-tab-layout__criteria-run-wrap {
   overflow: visible;
+}
+
+/* 로그인 온보딩 0·1·1b — 대상 영역 테두리 강조 */
+.work-guide-spotlight {
+  outline: 2px solid rgba(196, 112, 58, 0.85);
+  outline-offset: 3px;
+  border-radius: 8px;
+  animation: work-guide-spotlight-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes work-guide-spotlight-pulse {
+  0%,
+  100% {
+    outline-color: rgba(196, 112, 58, 0.55);
+    box-shadow: 0 0 0 0 rgba(196, 112, 58, 0.2);
+  }
+  50% {
+    outline-color: rgba(196, 112, 58, 0.95);
+    box-shadow: 0 0 0 4px rgba(196, 112, 58, 0.18);
+  }
 }
 
 /* 둘러보기 1번 — 기준 검수 클릭 안내 손 */

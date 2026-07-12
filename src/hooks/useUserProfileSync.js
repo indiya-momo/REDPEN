@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
+  consumeResetOnboardingQuery,
   isOnboardingComplete,
   mergeUserProfileFromCloud,
+  shouldSkipProfileCloudMerge,
 } from '../lib/userProfileStorage.js';
 import { loadUserProfileCloud } from '../lib/userProfileCloud.js';
 
@@ -16,8 +18,14 @@ export function useUserProfileSync(authUid) {
   }, []);
 
   useEffect(() => {
+    if (!consumeResetOnboardingQuery()) return;
+    setProfileRev((n) => n + 1);
+  }, []);
+
+  useEffect(() => {
     const uid = String(authUid ?? '').trim();
     if (!uid) return undefined;
+    if (shouldSkipProfileCloudMerge()) return undefined;
 
     let cancelled = false;
 

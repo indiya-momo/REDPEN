@@ -36,6 +36,7 @@ function computeDefaultHeight(layoutEl) {
  *   onCautionToggle: (id: string) => void,
  *   onCautionSetAll: (enabled: boolean) => void,
  *   fillPanel?: boolean,
+ *   guideSpotlight?: boolean,
  * }} props
  */
 export default function ResizableBuiltinSpelling({
@@ -46,6 +47,7 @@ export default function ResizableBuiltinSpelling({
   onCautionToggle,
   onCautionSetAll,
   fillPanel = false,
+  guideSpotlight = false,
 }) {
   const [height, setHeight] = useState(
     () => readStoredHeight() ?? FALLBACK_HEIGHT,
@@ -162,7 +164,9 @@ export default function ResizableBuiltinSpelling({
         </div>
       )}
       <section
-        className={`panel-section panel-section--builtin-spelling ${fillPanel ? 'panel-section--builtin-spelling--fill' : ''}`}
+        className={`panel-section panel-section--builtin-spelling${
+          fillPanel ? ' panel-section--builtin-spelling--fill' : ''
+        }${guideSpotlight ? ' work-guide-spotlight' : ''}`}
         style={fillPanel ? undefined : { height }}
       >
         <div className="builtin-spelling-resize-body custom-scrollbar">
@@ -171,6 +175,7 @@ export default function ResizableBuiltinSpelling({
               cautionEnabled={cautionEnabled}
               onCautionToggle={onCautionToggle}
               onCautionSetAll={onCautionSetAll}
+              guideSpotlight={guideSpotlight}
             />
           </div>
           <div className="builtin-spelling-rules-scroll">
@@ -178,6 +183,7 @@ export default function ResizableBuiltinSpelling({
               builtInEnabled={builtInEnabled}
               onBuiltInToggle={onBuiltInToggle}
               onBuiltInSetAll={onBuiltInSetAll}
+              guideSpotlight={guideSpotlight}
             />
           </div>
         </div>

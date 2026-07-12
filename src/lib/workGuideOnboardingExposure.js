@@ -60,6 +60,28 @@ function writeWorkGuideOnboardingExposure(uid, state) {
 }
 
 /**
+ * 둘러보기 말풍선 노출 횟수 초기화. uid 없으면 접두사 키 전부 삭제.
+ * @param {string} [uid]
+ */
+export function clearWorkGuideOnboardingExposure(uid) {
+  const id = typeof uid === 'string' ? uid.trim() : '';
+  try {
+    if (id) {
+      localStorage.removeItem(storageKey(id));
+      return;
+    }
+    const toRemove = [];
+    for (let i = 0; i < localStorage.length; i += 1) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith(STORAGE_PREFIX)) toRemove.push(key);
+    }
+    for (const key of toRemove) localStorage.removeItem(key);
+  } catch {
+    /* private mode */
+  }
+}
+
+/**
  * 오늘 첫 노출 시 슬롯 1회 소비 (렌더마다 호출해도 하루 1회만 증가)
  * @param {string} uid
  * @param {string} [dayId]

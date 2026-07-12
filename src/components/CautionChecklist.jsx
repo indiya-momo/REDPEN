@@ -21,12 +21,14 @@ function itemExplanation(item, group) {
  *   cautionEnabled: Record<string, boolean>,
  *   onCautionToggle: (id: string) => void,
  *   onCautionSetAll: (enabled: boolean) => void,
+ *   guideSpotlight?: boolean,
  * }} props
  */
 export default function CautionChecklist({
   cautionEnabled,
   onCautionToggle,
   onCautionSetAll,
+  guideSpotlight = false,
 }) {
   const selectAllRef = useRef(/** @type {HTMLInputElement | null} */ (null));
   const [activeTipByBundle, setActiveTipByBundle] = useState(
@@ -44,6 +46,9 @@ export default function CautionChecklist({
     [],
   );
 
+  let guideTipMarked = false;
+  let guideCheckMarked = false;
+
   useEffect(() => {
     if (selectAllRef.current) {
       selectAllRef.current.indeterminate = someChecked;
@@ -60,6 +65,10 @@ export default function CautionChecklist({
     const label = cautionDisplayLabel(item);
     const explanation = itemExplanation(item, group);
     const canShowTip = Boolean(explanation);
+    const markGuideTip = guideSpotlight && canShowTip && !guideTipMarked;
+    if (markGuideTip) guideTipMarked = true;
+    const markGuideCheck = guideSpotlight && !guideCheckMarked;
+    if (markGuideCheck) guideCheckMarked = true;
 
     return (
       <div className="caution-chip-entry-wrap">
@@ -69,11 +78,13 @@ export default function CautionChecklist({
               type="checkbox"
               checked={cautionEnabled[item.id] === true}
               onChange={() => onCautionToggle(item.id)}
+              data-work-guide={markGuideCheck ? 'criteria-checkbox' : undefined}
             />
             {canShowTip ? (
               <span
                 className={`caution-chip-label caution-inline-tip-trigger${tipOpen ? ' caution-inline-tip-trigger--open' : ''}`}
                 data-hover-tip="설명"
+                data-work-guide={markGuideTip ? 'criteria-tip' : undefined}
                 role="button"
                 tabIndex={0}
                 onClick={onToggleTip}
@@ -148,7 +159,10 @@ export default function CautionChecklist({
 
   return (
     <details className="caution-checklist-details" open>
-      <summary className="caution-checklist-summary panel-criteria-heading">
+      <summary
+        className="caution-checklist-summary panel-criteria-heading"
+        data-work-guide="criteria-caution-heading"
+      >
         <DetailsChevron />
         <label
           className="caution-checklist-select-all"

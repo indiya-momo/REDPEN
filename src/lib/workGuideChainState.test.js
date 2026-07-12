@@ -342,39 +342,75 @@ describe('getWorkGuideChainState', () => {
     expect(chain.showPdfOpenedGuide).toBe(false);
   });
 
-  it('일반 작업(둘러보기 아님)에서는 말풍선 체인이 꺼진다', () => {
+  it('비로그인·비둘러보기에서는 체인이 꺼진다', () => {
     endGuestBrowse();
-    const chain = getWorkGuideChainState('u1', baseCtx, keyFor, null, {
-      pinAll: false,
-      guestBrowseActive: false,
-    });
-    expect(chain.workGuideOpen).toBe(false);
-    expect(chain.showLeftCriteriaGuide).toBe(false);
-    expect(chain.showConsistencyUnifyPinGuide).toBe(false);
-    expect(chain.requestConsistencyTab).toBe(false);
-  });
-
-  it('일반 작업에서는 pinAll만으로도 말풍선이 켜지지 않는다', () => {
-    endGuestBrowse();
-    const chain = getWorkGuideChainState('u1', baseCtx, keyFor, null, {
+    const chain = getWorkGuideChainState('', baseCtx, (k) => k, null, {
       pinAll: true,
       guestBrowseActive: false,
     });
     expect(chain.workGuideOpen).toBe(false);
     expect(chain.showLeftCriteriaGuide).toBe(false);
-    expect(chain.showConsistencyUnifyPinGuide).toBe(false);
+  });
+
+  it('로그인 회원은 둘러보기 없이도 온보딩 말풍선이 켜진다', () => {
+    endGuestBrowse();
+    const chain = getWorkGuideChainState('u1', baseCtx, keyFor, null, {
+      pinAll: false,
+      guestBrowseActive: false,
+    });
+    expect(chain.workGuideOpen).toBe(true);
+    expect(chain.showLoanwordIntroGuide).toBe(true);
   });
 
   it('온보딩 5회 소진 후 말풍선이 뜨지 않는다', () => {
+    endGuestBrowse();
     localStorage.setItem(
       'indiya-work-guide-onboarding-exposure--u1',
       JSON.stringify({ count: 5, lastDayId: '2026-06-01' }),
     );
     const chain = getWorkGuideChainState('u1', baseCtx, keyFor, null, {
       pinAll: false,
+      guestBrowseActive: false,
     });
     expect(chain.workGuideOpen).toBe(false);
     expect(chain.showLeftCriteriaGuide).toBe(false);
+  });
+
+  it('회원 온보딩은 0 외래어 → 1 기준 → 1b 업로드 순이다', () => {
+    endGuestBrowse();
+    const chain0 = getWorkGuideChainState(
+      'u1',
+      { ...baseCtx, hasPdf: false },
+      keyFor,
+      null,
+      { pinAll: false, guestBrowseActive: false },
+    );
+    expect(chain0.showLoanwordIntroGuide).toBe(true);
+    expect(chain0.showLeftCriteriaGuide).toBe(false);
+    expect(chain0.showPreUploadGuide).toBe(false);
+
+    const chain1 = getWorkGuideChainState(
+      'u1',
+      { ...baseCtx, hasPdf: false },
+      keyFor,
+      { [keyFor(WORK_GUIDE_KEYS.LOANWORD_INTRO)]: true },
+      { pinAll: false, guestBrowseActive: false },
+    );
+    expect(chain1.showLeftCriteriaGuide).toBe(true);
+    expect(chain1.showPreUploadGuide).toBe(false);
+
+    const chain1b = getWorkGuideChainState(
+      'u1',
+      { ...baseCtx, hasPdf: false },
+      keyFor,
+      {
+        [keyFor(WORK_GUIDE_KEYS.LOANWORD_INTRO)]: true,
+        [keyFor(WORK_GUIDE_KEYS.LEFT_CRITERIA)]: true,
+      },
+      { pinAll: false, guestBrowseActive: false },
+    );
+    expect(chain1b.showPreUploadGuide).toBe(true);
+    expect(chain1b.showSpellingStartCheckGuide).toBe(false);
   });
 
   it('업로드 전에는 pre-upload만 대상이다', () => {

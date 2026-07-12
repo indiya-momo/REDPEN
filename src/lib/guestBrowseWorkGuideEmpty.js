@@ -7,6 +7,7 @@ export const EMPTY_GUEST_BROWSE_WORK_GUIDE = Object.freeze({
   dismiss: () => {},
   pinAll: false,
   showPreUploadGuide: false,
+  showLoanwordIntroGuide: false,
   showPdfOpenedGuide: false,
   showLeftCriteriaGuide: false,
   showSpellingStartCheckGuide: false,

@@ -112,16 +112,17 @@ export function endGuestBrowse() {
 export { isGuestBrowseActive };
 
 /**
- * 작업 화면 말풍선 체인(1~7·📌) — 둘러보기 전용.
- * 일반 로그인 작업 화면에서는 false.
+ * 작업 화면 말풍선 체인(1~7·📌) — **둘러보기 세션**에서만 true.
+ * 로그인 회원 온보딩 말풍선은 uid + 노출 게이트로 따로 켠다.
  */
 export function guestBrowseShowsWorkGuideChain() {
   return isGuestBrowseActive();
 }
 
-/** 둘러보기 시작 — 가이드·세션 강제 단계 초기화 */
+/** 둘러보기 시작 — 가이드 dismiss·세션 강제 단계 초기화 */
 export function beginGuestBrowse() {
   beginGuestBrowseSession();
+  // 게스트('') + 로그인 uid별 dismiss가 섞여 있을 수 있어 함께 비움
   clearAllWorkGuideDismissals('');
   setDevWorkGuideForceStep(null);
   criteriaClickAtMs = 0;

@@ -26,7 +26,7 @@ const styles = {
   },
   summary: {
     /* 제목 타이포는 .loanword-converter__summary (main-screen.css) */
-    cursor: 'pointer',
+    cursor: 'default',
     userSelect: 'none',
     listStyle: 'none',
   },
@@ -49,8 +49,8 @@ const styles = {
     display: 'inline-block',
     padding: '0 5px',
     borderRadius: 3,
-    background: '#0ea5e9',
-    color: '#fff',
+    background: '#E8E6E1',
+    color: '#555555',
     fontSize: 11,
     fontWeight: 600,
     lineHeight: 1.5,
@@ -60,8 +60,9 @@ const styles = {
     display: 'inline-block',
     padding: '0 5px',
     borderRadius: 3,
-    background: '#e09a3e',
-    color: '#fff',
+    border: '1px solid #555555',
+    background: '#F3F1EC',
+    color: '#555555',
     fontSize: 11,
     fontWeight: 600,
     lineHeight: 1.5,
@@ -71,8 +72,9 @@ const styles = {
     display: 'inline-block',
     padding: '0 5px',
     borderRadius: 3,
-    background: '#6b7280',
-    color: '#fff',
+    border: '1px solid #555555',
+    background: '#F3F1EC',
+    color: '#555555',
     fontSize: 11,
     fontWeight: 600,
     lineHeight: 1.5,
@@ -171,14 +173,16 @@ function EngineResult({ result, label, estimated }) {
 }
 
 /**
- * @param {{ onConvertClick?: () => void }} [props]
+ * @param {{ onConvertClick?: () => void, guideSpotlight?: boolean }} [props]
  */
-export default function LoanwordConverter({ onConvertClick } = {}) {
+export default function LoanwordConverter({
+  onConvertClick,
+  guideSpotlight = false,
+} = {}) {
   const [input, setInput] = useState('Jo March');
   const [loading, setLoading] = useState(false);
   const [outcome, setOutcome] = useState(null); // { word, official, engine, phrase }
   const [error, setError] = useState('');
-  const [panelOpen, setPanelOpen] = useState(true);
   const busyRef = useRef(false);
 
   // 발음 추정 엔진(eSpeak-NG)을 앱이 뜬 뒤 유휴 시간에 미리 받아 둔다
@@ -237,14 +241,18 @@ export default function LoanwordConverter({ onConvertClick } = {}) {
 
   return (
     <details
-      className="loanword-converter"
+      className={`loanword-converter${guideSpotlight ? ' work-guide-spotlight' : ''}`}
       style={styles.wrap}
-      open={panelOpen}
-      onToggle={(e) => setPanelOpen(e.currentTarget.open)}
+      open
+      onToggle={(e) => {
+        e.currentTarget.open = true;
+      }}
+      data-work-guide="loanword-section"
     >
       <summary
         className="loanword-converter__summary panel-criteria-heading"
         style={styles.summary}
+        onClick={(e) => e.preventDefault()}
       >
         <span className="loanword-converter__summary-title">
           외래어 표기
@@ -366,9 +374,9 @@ export default function LoanwordConverter({ onConvertClick } = {}) {
       ) : null}
 
       <p style={styles.note}>
-        {'외국어 원문을 입력하면 한국어로 표기합니다. 국립국어원 외래어 표기법'}
+        {'외국어 원문을 입력하면 한국어로 변환합니다. 외래어 표기법'}
         <span style={{ ...styles.badge, marginLeft: '0.25em' }}>용례집</span>
-        {'을 우선으로 하며, 등재되지 않은 경우 외래어 표기법 규정을 적용해'}
+        {'을 우선하며, 등재되지 않은 경우 규정을 적용해'}
         <span style={{ ...styles.estBadge, marginLeft: '0.25em' }}>발음 추정</span>
         {'합니다'}
       </p>

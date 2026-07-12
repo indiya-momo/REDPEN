@@ -1,33 +1,35 @@
 import { clearTooltipGuideDismissed } from './tooltipGuideStorage.js';
 
+const TOOLTIP_GUIDE_PREFIX = 'pdf-proofread-tooltip-guide-';
+
 /**
  * 작업 화면 말풍선 storageKey (tooltipGuideStorage 접두사와 결합)
  *
- * 통칭 **1~7번 말풍선** = **둘러보기(게스트) 전용** PDF 업로드·추출 이후 체인.
- * UI는 `useGuestBrowseWorkGuide`만 쓴다. 일반 로그인 작업에서는 EMPTY만 반환된다.
- * - **1번**: 외래어 표기·무제한 안내 (`LEFT_CRITERIA`) — 변환 버튼 손
- * - **1b**: 편집자 검토·맞춤법 규칙·검수 시작 (`SPELLING_START_CHECK`) — 기준 검수 손
- * - **2번**: 검수 결과 안내 (`FIRST_RESULT`)
- * - **3번**: 파일 - 원고 페이지 맞추기 (`PDF_OPENED`)
- * - **4번**: 일관성 탭 안내 (`CONSISTENCY_INTRO`) — 우측 상단 인사 영역
- * - **4.5 / 핀**: 통일형 📌 지정 (`CONSISTENCY_UNIFY_PIN`) — 신라시대 핀
- * - **5번**: 본용언+보조용언 표기 (`AUXILIARY_VERB_INTRO`) — 4번 가로·박스 상단 높이
- * - **6번**: 검수 결과 다운로드·프로젝트 저장 안내 (`RULE_SET_SAVE`)
- * - **7번**: 작업 종료·로그아웃 안내 (`WORK_EXIT`) — 로그아웃 버튼 아래·오른쪽 정렬
+ * **두 경로**
+ * - **둘러보기(게스트)**: `beginGuestBrowse` 세션 — 데모 원고·자동 검수 등과 함께
+ * - **로그인 회원 온보딩**: uid별 dismiss + `workGuideOnboardingExposure`(하루 1·최대 5회)
  *
- * 업로드 전 「처음 할 일은 이거다냥」(`PRE_UPLOAD`)은 1~7 체인에 포함하지 않음.
+ * UI는 `useGuestBrowseWorkGuide` (이름 레거시). 비로그인·비둘러보기에서는 EMPTY.
  *
- * 말풍선 위치: UI 앵커 기준 (`TooltipGuide` placement + offset px). 뷰포트 x,y 숫자는
- * 브라우저 창 기준이라 인디야 작업면만의 2880×1454 좌표와 1:1로 안 맞음.
- * - **1번** 앵커: 기준 검수 행 · **3번** 앵커: 파일 - 원고 페이지 맞추기
+ * **로그인 온보딩**
+ * - **0**: 맞춤법 탭·외래어 (`LOANWORD_INTRO`)
+ * - **1**: 검수 기준 (`LEFT_CRITERIA`)
+ * - **1b**: PDF 업로드 (`PRE_UPLOAD`) — 옛 0
+ * - **2~7**: FIRST_RESULT … WORK_EXIT (1b SPELLING_START 는 회원에서 건너뜀)
+ *
+ * **둘러보기** — 별도 문구·순서 (`workGuideMessagesGuest`). 여기 키 주석의 로그인 번호와 다름.
+ *
+ * 말풍선 위치: UI 앵커 기준 (`TooltipGuide` placement + offset px).
  */
 
 export const WORK_GUIDE_KEYS = {
   PRE_UPLOAD: 'pdf-upload-first-step',
+  /** 로그인 0 — 외래어·맞춤법 탭 소개 */
+  LOANWORD_INTRO: 'work-loanword-intro-v1',
   /** 3번 — 순서 교체(2026-06)로 v2 (v1 dismiss는 체인에 반영 안 됨) */
   PDF_OPENED: 'work-pdf-opened-v2',
   LEFT_CRITERIA: 'work-left-criteria-v2',
-  /** 1b — 편집자 검토·맞춤법 규칙 안내 후 기준 검수 */
+  /** 둘러보기 1b — 편집자 검토·맞춤법 규칙 안내 후 기준 검수 */
   SPELLING_START_CHECK: 'work-spelling-start-check-v1',
   /** 2번 — 순서 교체(2026-06)로 v2 */
   FIRST_RESULT: 'work-first-result-v2',
@@ -116,5 +118,23 @@ export function clearAllWorkGuideDismissals(uid) {
   const id = typeof uid === 'string' ? uid.trim() : '';
   for (const key of Object.values(WORK_GUIDE_KEYS)) {
     clearTooltipGuideDismissed(workGuideStorageKey(id, key));
+  }
+  // uid 인자 없이/게스트로 시작할 때 — `--uid` 접미사 dismiss도 함께 제거
+  if (!id) {
+    try {
+      const toRemove = [];
+      for (let i = 0; i < localStorage.length; i += 1) {
+        const full = localStorage.key(i);
+        if (!full || !full.startsWith(TOOLTIP_GUIDE_PREFIX)) continue;
+        const rest = full.slice(TOOLTIP_GUIDE_PREFIX.length);
+        const matched = Object.values(WORK_GUIDE_KEYS).some(
+          (key) => rest === key || rest.startsWith(`${key}--`),
+        );
+        if (matched) toRemove.push(full);
+      }
+      for (const full of toRemove) localStorage.removeItem(full);
+    } catch {
+      /* private mode */
+    }
   }
 }

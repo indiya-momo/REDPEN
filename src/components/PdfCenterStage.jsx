@@ -37,6 +37,8 @@ import TooltipGuide from './TooltipGuide.jsx';
  *   showUploadGuide?: boolean,
  *   uploadGuideStorageKey?: string,
  *   uploadGuidePinned?: boolean,
+ *   uploadGuideMessage?: import('react').ReactNode,
+ *   uploadGuideSpotlight?: boolean,
  *   onUploadGuideDismiss?: () => void,
  *   checkQuotaBlocked?: boolean,
  * }} props
@@ -66,6 +68,8 @@ export default function PdfCenterStage({
   showUploadGuide = true,
   uploadGuideStorageKey = 'pdf-upload-first-step',
   uploadGuidePinned = false,
+  uploadGuideMessage = '처음 할 일은 이거다냥',
+  uploadGuideSpotlight = false,
   onUploadGuideDismiss,
   checkQuotaBlocked = false,
 }) {
@@ -185,8 +189,7 @@ export default function PdfCenterStage({
                     offsetY={-50}
                     imageSrc={null}
                     pinned={uploadGuidePinned}
-                    showConfirm={false}
-                    message="처음 할 일은 이거다냥"
+                    message={uploadGuideMessage}
                     onDismiss={onUploadGuideDismiss}
                   >
                     <span className="pdf-center-stage__hero-tooltip-dot" />
@@ -197,7 +200,10 @@ export default function PdfCenterStage({
               </span>
             </div>
             <div
-              className={`pdf-dropzone ${dragOver ? 'pdf-dropzone--dragover' : ''}`}
+              className={`pdf-dropzone ${dragOver ? 'pdf-dropzone--dragover' : ''}${
+                uploadGuideSpotlight ? ' work-guide-spotlight' : ''
+              }`}
+              data-work-guide="pdf-dropzone"
             >
             <div className="pdf-dropzone__icon" aria-hidden>
               <FileText size={32} strokeWidth={1.35} />
@@ -206,6 +212,7 @@ export default function PdfCenterStage({
             <button
               type="button"
               className="btn-upload pdf-dropzone__open"
+              data-work-guide="pdf-open"
               onClick={openPicker}
               disabled={isProcessing}
             >
