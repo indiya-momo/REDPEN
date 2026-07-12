@@ -11,9 +11,10 @@ import {
 import { useProjectHubActions } from '../../hooks/useProjectHubActions.js';
 import { useProjectHubLibrary } from '../../hooks/useProjectHubLibrary.js';
 import { useProjectTagFilter } from '../../hooks/useProjectTagFilter.js';
-import ProjectLibraryCard from '../../mock/mypagePrototype/ProjectLibraryCard.jsx';
-import ProjectLibraryEmptySlot from '../../mock/mypagePrototype/ProjectLibraryEmptySlot.jsx';
-import SharePreviewModal from '../../mock/mypagePrototype/SharePreviewModal.jsx';
+import ProjectLibraryCard from './ProjectLibraryCard.jsx';
+import ProjectLibraryEmptySlot from './ProjectLibraryEmptySlot.jsx';
+import SharePreviewModal from './SharePreviewModal.jsx';
+import './project-library.css';
 import ProjectMetaEditModal from '../ProjectMetaEditModal.jsx';
 import ProjectHubTagFilters from './ProjectHubTagFilters.jsx';
 
