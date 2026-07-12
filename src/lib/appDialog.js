@@ -11,7 +11,6 @@
  *   messageNode?: ReactNode,
  *   confirmLabel?: string,
  *   cancelLabel?: string,
- *   autoCloseMs?: number,
  *   showGuideHand?: boolean,
  * }} AppDialogOptions */
 
@@ -51,7 +50,14 @@ export function registerAppDialogHost(api) {
   getHostRegistry().api = api;
 }
 
-export function unregisterAppDialogHost() {
+/**
+ * @param {{
+ *   alert: (opts: AppDialogOptions) => Promise<void>,
+ *   confirm: (opts: AppDialogOptions) => Promise<boolean>,
+ * } | undefined} [api]
+ */
+export function unregisterAppDialogHost(api) {
+  if (api && resolveHost() !== api) return;
   moduleHost = null;
   getHostRegistry().api = null;
 }

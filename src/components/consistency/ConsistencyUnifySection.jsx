@@ -85,7 +85,8 @@ export default function ConsistencyUnifySection({
         tailWord,
         { byUid: decisionByUid },
       );
-      if (result.warning) {
+      // 둘러보기 — 과거 확정 대장 경고는 방해만 되므로 숨김
+      if (result.warning && !guestBrowse) {
         window.alert(result.warning);
       }
       onApplyRules(result.nextRules, {
@@ -97,6 +98,7 @@ export default function ConsistencyUnifySection({
       consistencyDecisions,
       customRules,
       decisionByUid,
+      guestBrowse,
       onApplyRules,
       onGuidePinClick,
     ],

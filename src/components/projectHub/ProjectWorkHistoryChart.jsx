@@ -13,9 +13,7 @@ import {
 } from '../../presentation/workHistoryConsistencyCriteria.js';
 import {
   buildWorkHistoryDecisionLedger,
-  formatDecisionAtLabel,
 } from '../../presentation/workHistoryDecisionLedger.js';
-import { hydrateConsistencyDecisionsFromRules } from '../../lib/consistencyDecisions.js';
 import {
   buildSparklinePath,
   hasSpellingSplitHistory,
@@ -288,13 +286,11 @@ function DatedChipGroup({ labels, atLabel = '' }) {
  * @param {{
  *   criteria: ReturnType<typeof buildWorkHistoryConsistencyCriteria>,
  *   ledger: ReturnType<typeof buildWorkHistoryDecisionLedger>,
- *   fallbackAtLabel?: string,
  * }} props
  */
 function ConsistencyCriteriaBlock({
   criteria,
   ledger,
-  fallbackAtLabel = '',
 }) {
   const unifyLedger = ledger.filter((item) => item.kind === 'unify');
   const findLedger = ledger.filter((item) => item.kind === 'find');
@@ -315,7 +311,6 @@ function ConsistencyCriteriaBlock({
         atLabel: '',
       }));
 
-  const findByLabel = new Map(findLedger.map((item) => [item.query, item]));
   /** @type {{ key: string, label: string, atLabel: string }[]} */
   const findRows = findLedger.length
     ? findLedger.map((item) => ({
@@ -323,15 +318,12 @@ function ConsistencyCriteriaBlock({
         label: item.query,
         atLabel: item.atLabel || '',
       }))
-    : (criteria.find ?? []).map((label, index) => {
-        const match = findByLabel.get(label);
-        return {
-          key: match?.id ?? `find-${index}-${label}`,
-          label,
-          atLabel: match?.atLabel || fallbackAtLabel,
-        };
-      });
-  // 대장에 없는 현재 등록 찾기도 이어서 표시
+    : (criteria.find ?? []).map((label, index) => ({
+        key: `find-${index}-${label}`,
+        label,
+        atLabel: '',
+      }));
+  // 대장에 없는 현재 등록 찾기도 날짜 없이 이어서 표시
   if (findLedger.length && criteria.find?.length) {
     const seen = new Set(findLedger.map((item) => item.query));
     criteria.find.forEach((label, index) => {
@@ -340,7 +332,7 @@ function ConsistencyCriteriaBlock({
       findRows.push({
         key: `find-current-${index}-${label}`,
         label,
-        atLabel: fallbackAtLabel,
+        atLabel: '',
       });
     });
   }
@@ -355,7 +347,7 @@ function ConsistencyCriteriaBlock({
     : (criteria.commonString ?? []).map((label, index) => ({
         key: `common-${index}-${label}`,
         label,
-        atLabel: fallbackAtLabel,
+        atLabel: '',
       }));
   const commonGroups = groupDatedChipsByAt(commonLedgerRows);
 
@@ -506,7 +498,6 @@ export default function ProjectWorkHistoryChart({
   customRules = [],
   globalExcludePhrases = [],
   consistencyDecisions = [],
-  decisionFallbackAt,
 }) {
   const chartSessions = buildDisplayWorkHistory(history, projectContext) ?? [];
   const listSessions = normalizeWorkHistory(history) ?? [];
@@ -515,18 +506,8 @@ export default function ProjectWorkHistoryChart({
     customRules,
     globalExcludePhrases,
   );
-  const fallbackAt =
-    decisionFallbackAt ||
-    projectContext?.lastWorkedAt ||
-    chartSessions[chartSessions.length - 1]?.at ||
-    listSessions[listSessions.length - 1]?.at;
-  const hydratedDecisions = hydrateConsistencyDecisionsFromRules(
-    consistencyDecisions,
-    customRules,
-    fallbackAt,
-  );
-  const ledger = buildWorkHistoryDecisionLedger(hydratedDecisions);
-  const fallbackAtLabel = fallbackAt ? formatDecisionAtLabel(fallbackAt) : '';
+  // 실제 확정 대장만 — 등록 항목·projectContext로 가짜 이력을 만들지 않음
+  const ledger = buildWorkHistoryDecisionLedger(consistencyDecisions);
   const spellingSplit = hasSpellingSplitHistory(
     listSessions.length ? listSessions : chartSessions,
   );
@@ -545,6 +526,14 @@ export default function ProjectWorkHistoryChart({
   );
   const bonBojoValues = sparklineSeries(chartSessions, (entry) => entry.bonBojo);
   const sessionAts = chartSessions.map((entry) => entry.at);
+  const hasBonBojoHistory = chartSessions.some(
+    (entry) => typeof entry.bonBojo === 'number',
+  );
+  const hasSpellingHistory = chartSessions.some(
+    (entry) =>
+      typeof entry.spelling === 'number' ||
+      typeof entry.editorReview === 'number',
+  );
 
   if (!sessionCount) {
     return (
@@ -556,7 +545,6 @@ export default function ProjectWorkHistoryChart({
         <ConsistencyCriteriaBlock
           criteria={criteria}
           ledger={ledger}
-          fallbackAtLabel={fallbackAtLabel}
         />
       </div>
     );
@@ -566,7 +554,7 @@ export default function ProjectWorkHistoryChart({
     <div className="project-hub-settings__card work-history-panel">
       <h3 className="work-history-panel__title">검수 진행 이력</h3>
 
-      {spellingSplit ? (
+      {hasSpellingHistory && spellingSplit ? (
         <section className="work-history-panel__block work-history-panel__block--spelling">
           <h4 className="work-history-panel__block-title">맞춤법</h4>
           <div className="work-history-panel__block-body">
@@ -592,7 +580,8 @@ export default function ProjectWorkHistoryChart({
             <SessionDateAxis sessions={chartSessions} />
           </div>
         </section>
-      ) : (
+      ) : null}
+      {hasSpellingHistory && !spellingSplit ? (
         <section className="work-history-panel__block work-history-panel__block--spelling">
           <h4 className="work-history-panel__block-title">맞춤법</h4>
           <div className="work-history-panel__block-body">
@@ -608,29 +597,30 @@ export default function ProjectWorkHistoryChart({
             <SessionDateAxis sessions={chartSessions} />
           </div>
         </section>
-      )}
+      ) : null}
 
       <ConsistencyCriteriaBlock
         criteria={criteria}
         ledger={ledger}
-        fallbackAtLabel={fallbackAtLabel}
       />
 
-      <section className="work-history-panel__block work-history-panel__block--auxiliary">
-        <h4 className="work-history-panel__block-title">본용언+보조용언</h4>
-        <div className="work-history-panel__block-body">
-          <SparklineRow
-            label="본용언+보조용언"
-            values={bonBojoValues}
-            sessionAts={sessionAts}
-            sessions={chartSessions}
-            sessionCount={sessionCount}
-            colorClass="work-history-panel__spark-row--auxiliary"
-            hideLabel
-          />
-          <SessionDateAxis sessions={chartSessions} />
-        </div>
-      </section>
+      {hasBonBojoHistory ? (
+        <section className="work-history-panel__block work-history-panel__block--auxiliary">
+          <h4 className="work-history-panel__block-title">본용언+보조용언</h4>
+          <div className="work-history-panel__block-body">
+            <SparklineRow
+              label="본용언+보조용언"
+              values={bonBojoValues}
+              sessionAts={sessionAts}
+              sessions={chartSessions}
+              sessionCount={sessionCount}
+              colorClass="work-history-panel__spark-row--auxiliary"
+              hideLabel
+            />
+            <SessionDateAxis sessions={chartSessions} />
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }

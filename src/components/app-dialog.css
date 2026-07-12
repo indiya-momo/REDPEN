@@ -6,7 +6,7 @@
   width: max-content;
   max-width: calc(100vw - 2rem);
   max-height: calc(100vh - 2rem);
-  overflow: auto;
+  overflow: hidden;
   position: fixed;
   top: 50%;
   left: 50%;
@@ -78,6 +78,9 @@
 }
 
 .app-dialog__results-summary.results-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   width: max-content;
   max-width: 100%;
   padding: 0;
@@ -85,14 +88,17 @@
   background: transparent;
   box-shadow: none;
   justify-content: center;
-  gap: var(--space-sm) var(--space-md);
+  gap: 0.65rem;
   font-size: calc(0.98rem * var(--dialog-result-ui-scale) * 0.9 * 1.1);
   font-weight: 800;
   line-height: 1.35;
   color: var(--color-text);
 }
 
-.app-dialog__results-summary .results-header__stats {
+.app-dialog__results-summary-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   justify-content: center;
   gap: 0.35em 1.15em;
   color: var(--color-text);
@@ -117,6 +123,14 @@
   box-shadow: none;
 }
 
+.app-dialog__results-summary .results-header-badge--total {
+  background: color-mix(in srgb, var(--color-text) 8%, #fffdfb);
+  border-color: color-mix(in srgb, var(--color-text) 18%, transparent);
+  color: var(--color-text);
+  border-radius: var(--radius-ui-sm);
+  font-weight: 800;
+}
+
 .app-dialog__results-summary .results-header__stat-count {
   display: inline-flex;
   align-items: baseline;
@@ -130,16 +144,6 @@
   font-weight: 700;
   line-height: 1;
   color: var(--color-text-muted);
-}
-
-.app-dialog__results-summary .results-header__total-findings {
-  margin-left: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35em;
-  flex-shrink: 0;
-  font-weight: 800;
-  line-height: 1;
 }
 
 .app-dialog__results-summary .result-findings-count-circle,
@@ -160,19 +164,19 @@
 .app-dialog__footer {
   display: flex;
   justify-content: center;
+  align-items: center;
   gap: 0.5rem;
   padding-top: 0.15rem;
   width: 100%;
 }
 
-.app-dialog__footer--confirm {
-  justify-content: stretch;
-}
-
 .app-dialog__footer--confirm .app-dialog__cancel,
 .app-dialog__footer--confirm .app-dialog__confirm {
-  flex: 1;
-  min-width: 0;
+  flex: 0 0 auto;
+  box-sizing: border-box;
+  min-width: 5.5rem;
+  height: 2.75rem;
+  padding: 0 1rem;
 }
 
 .app-dialog__confirm {
@@ -196,10 +200,10 @@
 
 .app-dialog__cancel {
   min-width: 5.5rem;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 12px 16px;
+  padding: 0 1rem;
   border-radius: var(--radius-ui);
   font-weight: 600;
   font-size: 0.875rem;

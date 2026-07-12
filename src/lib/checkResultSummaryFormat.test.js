@@ -63,7 +63,7 @@ describe('checkResultSummaryFormat', () => {
         totalFindings: 67,
       }),
     ).toBe(
-      '여러 개 찾기 2기준, 통일형 만들기 1기준, 공통 문자열 찾기 0기준, 본+보 9기준 전체 발견 67',
+      '여러 개 찾기 2기준, 통일형 만들기 1기준, 공통 문자열 찾기 0기준, 본용언+보조용언 9기준 전체 발견 67',
     );
   });
 
@@ -110,7 +110,7 @@ describe('checkResultSummaryFormat', () => {
         findingsCount: 4,
         tone: 'consistency-literal',
       },
-      { badge: '본+보', count: 2, findingsCount: 9, tone: 'auxiliary' },
+      { badge: '본용언+보조용언', count: 2, findingsCount: 9, tone: 'auxiliary' },
     ]);
   });
 
@@ -142,7 +142,7 @@ describe('checkResultSummaryFormat', () => {
         totalFindings: 19,
       }),
     ).toBe(
-      '여러 개 찾기 1기준 4발견 · 통일형 만들기 2기준 0발견 · 공통 문자열 찾기 1기준 3발견 · 본+보 9기준 12발견 · 전체 발견 19',
+      '여러 개 찾기 1기준 4발견 · 통일형 만들기 2기준 0발견 · 공통 문자열 찾기 1기준 3발견 · 본용언+보조용언 9기준 12발견 · 전체 발견 19',
     );
   });
 });

@@ -69,10 +69,6 @@ export function findGuestBrowseDemoSpellingGroup(spellingResults) {
 export const GUEST_BROWSE_TIMING = {
   /** 손/기준 검수 클릭 → 결과 팝업 */
   resultAfterClickMs: 1000,
-  /** 결과 팝업 → 2번 가이드 말풍선 */
-  nextGuideAfterResultMs: 3500,
-  /** 표기 통일 「검수를 진행했습니다」 → 다운로드 가이드 */
-  exportGuideAfterResultMs: 5000,
 };
 
 /** @type {number} */
@@ -218,9 +214,8 @@ export async function waitGuestBrowseResultScreenDelay() {
 }
 
 /**
- * 결과 팝업을 띄운 뒤 5초가 지나면 2번 가이드를 연다.
- * (팝업이 더 일찍 닫혀도 5초를 채운 뒤에 연다)
- * @param {(extra?: { autoCloseMs?: number }) => Promise<void>} showResultAlert
+ * 결과 팝업을 띄우고, 확인(닫기) 뒤에 2번 가이드를 연다.
+ * @param {(extra?: { showGuideHand?: boolean }) => Promise<void>} showResultAlert
  */
 export async function finishGuestBrowseResultThenUnlockNextGuide(
   showResultAlert,
@@ -233,20 +228,14 @@ export async function finishGuestBrowseResultThenUnlockNextGuide(
   }
 
   await waitGuestBrowseResultScreenDelay();
-  const shownAt = Date.now();
-  await showResultAlert({
-    autoCloseMs: GUEST_BROWSE_TIMING.nextGuideAfterResultMs,
-  });
-  const remain =
-    shownAt + GUEST_BROWSE_TIMING.nextGuideAfterResultMs - Date.now();
-  if (remain > 0) await sleep(remain);
+  await showResultAlert({ showGuideHand: true });
   nextGuideReady = true;
   notifyNextGuideListeners();
 }
 
 /**
- * 표기 통일 결과 팝업을 띄운 뒤 5초가 지나면 다운로드 가이드를 연다.
- * @param {(extra?: { autoCloseMs?: number }) => Promise<void>} showResultAlert
+ * 표기 통일 결과 팝업을 띄우고, 확인(닫기) 뒤에 다운로드 가이드를 연다.
+ * @param {(extra?: { showGuideHand?: boolean }) => Promise<void>} showResultAlert
  */
 export async function finishGuestBrowseConsistencyResultThenUnlockExportGuide(
   showResultAlert,
@@ -260,13 +249,7 @@ export async function finishGuestBrowseConsistencyResultThenUnlockExportGuide(
 
   exportGuideReady = false;
   notifyExportGuideListeners();
-  const shownAt = Date.now();
-  await showResultAlert({
-    autoCloseMs: GUEST_BROWSE_TIMING.exportGuideAfterResultMs,
-  });
-  const remain =
-    shownAt + GUEST_BROWSE_TIMING.exportGuideAfterResultMs - Date.now();
-  if (remain > 0) await sleep(remain);
+  await showResultAlert({ showGuideHand: true });
   exportGuideReady = true;
   notifyExportGuideListeners();
 }

@@ -27,7 +27,7 @@ import TooltipGuide from './TooltipGuide.jsx';
 import PrintedPageSetup from './PrintedPageSetup.jsx';
 import PdfCenterStage from './PdfCenterStage.jsx';
 import CriteriaSaveModal from './CriteriaSaveModal.jsx';
-import { showAppConfirm } from '../lib/appDialog.js';
+import { showAppAlert, showAppConfirm } from '../lib/appDialog.js';
 import { formatProjectDialogLabel } from '../lib/projectDialogLabel.js';
 import TocBodyResultsPanel from '../toc-body/components/TocBodyResultsPanel.jsx';
 import { useTocBodyCheck } from '../toc-body/hooks/useTocBodyCheck.js';
@@ -55,6 +55,7 @@ import {
   guestBrowseHidesProjectSaveUi,
   guestBrowseHidesThumbStrip,
   guestBrowseProjectDisplayName,
+  isGuestBrowseActive,
   isGuestBrowseExportGuideReady,
   isGuestBrowseNextGuideReady,
   markGuestBrowseCriteriaClick,
@@ -2082,6 +2083,12 @@ export default function MainScreen({
                 auxiliaryWithFindingsCount={
                   consistencyGroupsWithFindings.auxiliaryWithFindings
                 }
+                literalFindingsCount={consistencyFindingsByType.find}
+                unifyFindingsCount={consistencyFindingsByType.unify}
+                commonStringFindingsCount={
+                  consistencyFindingsByType.commonString
+                }
+                auxiliaryFindingsCount={consistencyFindingsByType.bonBojo}
                 literalCriteriaSelected={
                   consistencyCriteriaSelection.literalSelected
                 }
@@ -2287,7 +2294,16 @@ export default function MainScreen({
                 <button
                   type="button"
                   className="pdf-work-pane__aux-btn"
-                  onClick={() => void session.handleEndWork()}
+                  onClick={() => {
+                    // 둘러보기: 로그인 안내만 / 로그인: 작업 종료 확인 후 대기 화면
+                    if (isGuestBrowseActive()) {
+                      void showAppAlert({
+                        message: '로그인 후 새 업로드를 이용할 수 있습니다',
+                      });
+                      return;
+                    }
+                    void session.handleEndWork();
+                  }}
                 >
                   <FilePlus size={16} aria-hidden />
                   새 업로드
@@ -2351,7 +2367,7 @@ export default function MainScreen({
                     }}
                   >
                     <LogOut size={16} aria-hidden />
-                    메인 화면으로
+                    {authUid ? '로그아웃' : '메인 화면으로'}
                   </button>
                 )}
                 {feedbackThankYouOpen ? (

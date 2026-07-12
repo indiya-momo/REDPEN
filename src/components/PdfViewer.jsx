@@ -238,16 +238,24 @@ export default function PdfViewer({
   useEffect(() => {
     if (!openTip) return undefined;
 
+    const requireConfirmClick = Boolean(tipConfirmGuideAttr);
+
     function dismissTip() {
       setOpenTip(null);
       onHighlightTipDismiss?.();
     }
 
     function onKeyDown(e) {
-      if (e.key === 'Escape') dismissTip();
+      if (e.key !== 'Escape') return;
+      if (requireConfirmClick) {
+        e.preventDefault();
+        return;
+      }
+      dismissTip();
     }
 
     function onPointerDown(e) {
+      if (requireConfirmClick) return;
       const target = e.target;
       if (!(target instanceof Element)) return;
       if (
@@ -265,7 +273,7 @@ export default function PdfViewer({
       document.removeEventListener('keydown', onKeyDown);
       document.removeEventListener('pointerdown', onPointerDown, true);
     };
-  }, [openTip, onHighlightTipDismiss]);
+  }, [openTip, onHighlightTipDismiss, tipConfirmGuideAttr]);
 
   function handleHighlightClick(rect, event) {
     event.stopPropagation();
