@@ -264,6 +264,27 @@ describe('mergeRuleSetsOnPersist', () => {
     expect(merged.map((row) => row.id).sort()).toEqual(['a', 'a-copy', 'b']);
   });
 
+  it('intent.added 없이 새 저장 프로젝트를 넣으면 외부삭제로 오판해 지운다', () => {
+    const savedAt = '2026-06-20T00:00:00.000Z';
+    const disk = [
+      set('a', { name: '세계경제', savedAt }),
+      set('b', { name: '편', savedAt }),
+    ];
+    const memory = [
+      set('a', { name: '세계경제', savedAt }),
+      set('b', { name: '편', savedAt }),
+      set('street', { name: '스트리트 이코노미', savedAt: '2026-07-12T00:00:00.000Z' }),
+    ];
+    const wiped = mergeRuleSetsOnPersist(disk, memory);
+    expect(wiped.map((row) => row.id).sort()).toEqual(['a', 'b']);
+
+    const kept = mergeRuleSetsOnPersist(disk, memory, { added: ['street'] });
+    expect(kept.map((row) => row.id).sort()).toEqual(['a', 'b', 'street']);
+    expect(kept.find((row) => row.id === 'street')?.name).toBe(
+      '스트리트 이코노미',
+    );
+  });
+
   it('이 창에서 방금 삭제한 저장 프로젝트를 디스크에서 되살리지 않는다', () => {
     const savedAt = '2026-06-20T00:00:00.000Z';
     const disk = [
@@ -314,19 +335,27 @@ describe('applyTombstones', () => {
 });
 
 describe('applyCriteriaPresetQuota', () => {
-  it('비관리자 — 저장 프리셋은 최신 1개만 남긴다', () => {
+  it('비관리자 — 저장 프리셋은 최신 3개만 남긴다', () => {
     const sets = [
       set('old', {
         name: 'A',
+        savedAt: '2026-06-20T00:00:00.000Z',
+      }),
+      set('mid', {
+        name: 'B',
+        savedAt: '2026-06-21T00:00:00.000Z',
+      }),
+      set('newer', {
+        name: 'C',
         savedAt: '2026-06-22T00:00:00.000Z',
       }),
-      set('new', {
-        name: 'B',
+      set('newest', {
+        name: 'D',
         savedAt: '2026-06-23T00:00:00.000Z',
       }),
       set('draft', { name: '' }),
     ];
     const next = applyCriteriaPresetQuota(sets, 'user', '');
-    expect(next.map((s) => s.id)).toEqual(['new', 'draft']);
+    expect(next.map((s) => s.id)).toEqual(['mid', 'newer', 'newest', 'draft']);
   });
 });

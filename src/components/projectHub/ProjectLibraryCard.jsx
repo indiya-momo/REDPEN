@@ -1,11 +1,9 @@
 import { useCallback, useId, useMemo, useState } from 'react';
 import {
   buildProjectCardPillarPreviews,
-  buildProjectCardTabLabels,
   formatProjectCardCompactDateLine,
   formatProjectCardEditionValues,
   formatProjectCardLastModifiedLabel,
-  formatProjectCardMemoPreview,
 } from '../../presentation/projectCardViewModel.js';
 
 /**
@@ -34,10 +32,8 @@ function SheetCardBookTitle({ title }) {
  *   compact?: boolean,
  *   selected?: boolean,
  *   onSelect?: () => void,
- *   onEditMeta?: () => void,
  *   nameEditable?: boolean,
  *   onRename?: (title: string) => void,
- *   onUpdateMeta?: (patch: { memo?: string, tags?: string[] }) => void,
  *   onStartWork?: () => void,
  *   onDuplicate?: () => void,
  *   onDelete?: () => void,
@@ -51,16 +47,13 @@ export default function ProjectLibraryCard({
   compact = false,
   selected = false,
   onSelect,
-  onEditMeta,
   nameEditable,
   onRename,
-  onUpdateMeta: _onUpdateMeta = () => {},
   onStartWork = () => {},
   onDuplicate = () => {},
   onDelete,
   onSharePreview = () => {},
 }) {
-  void _onUpdateMeta;
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState(card.title);
   const nameInputId = useId();
@@ -84,11 +77,8 @@ export default function ProjectLibraryCard({
     [card],
   );
 
-  const tabLabels = useMemo(() => buildProjectCardTabLabels(card), [card]);
-
   const lastModifiedLabel = formatProjectCardLastModifiedLabel(card);
   const editionValues = formatProjectCardEditionValues(card);
-  const memoPreview = formatProjectCardMemoPreview(card);
 
   const showWorkButton = !compact && (showStartWork || !readOnly);
   const compactDateLine = formatProjectCardCompactDateLine(card);
@@ -167,7 +157,7 @@ export default function ProjectLibraryCard({
 
   return (
     <article
-      className={`sheet-card${card.isActive ? ' sheet-card--active' : ''}${selected ? ' sheet-card--selected' : ''}${readOnly ? ' sheet-card--readonly' : ''}${card.dirty ? ' sheet-card--dirty' : ''}`}
+      className={`sheet-card${card.isActive ? ' sheet-card--active' : ''}${selected ? ' sheet-card--selected' : ''}${readOnly ? ' sheet-card--readonly' : ''}`}
       onClick={onSelect}
       onKeyDown={
         onSelect
@@ -183,23 +173,8 @@ export default function ProjectLibraryCard({
       tabIndex={onSelect ? 0 : undefined}
       aria-pressed={onSelect ? selected : undefined}
     >
-      <div
-        className="sheet-card__tabs"
-        aria-label="분류"
-        aria-hidden={tabLabels.length === 0 ? true : undefined}
-      >
-        {tabLabels.length > 0 ? (
-          tabLabels.map((tag, index) => (
-            <span
-              key={`${tag}-${index}`}
-              className={`sheet-card__tab sheet-card__tab--tag${index === 0 ? ' sheet-card__tab--lead' : ''}`}
-            >
-              {tag}
-            </span>
-          ))
-        ) : (
-          <span className="sheet-card__tab sheet-card__tab--tag sheet-card__tab--lead sheet-card__tab--ghost" />
-        )}
+      <div className="sheet-card__tabs" aria-hidden="true">
+        <span className="sheet-card__tab sheet-card__tab--tag sheet-card__tab--lead sheet-card__tab--ghost" />
       </div>
 
       <div className="sheet-card__body">
@@ -216,29 +191,7 @@ export default function ProjectLibraryCard({
               </p>
             </div>
           </div>
-          {card.isActive || card.dirty ? (
-            <div className="sheet-card__flags">
-              {card.isActive ? (
-                <span className="sheet-card__flag sheet-card__flag--active">
-                  작업 중
-                </span>
-              ) : null}
-              {card.dirty ? (
-                <span className="sheet-card__flag sheet-card__flag--dirty">
-                  변경됨
-                </span>
-              ) : null}
-            </div>
-          ) : null}
         </div>
-
-        <p
-          className="sheet-card__memo-preview"
-          title={memoPreview || undefined}
-          aria-hidden={memoPreview ? undefined : true}
-        >
-          {memoPreview || '\u00a0'}
-        </p>
 
         <div className="sheet-card__sections" aria-label="표기 기준 구역">
           {pillarRows.map((section) => (
@@ -306,18 +259,6 @@ export default function ProjectLibraryCard({
                   공유
                 </button>
               </>
-            ) : null}
-            {onEditMeta ? (
-              <button
-                type="button"
-                className="sheet-card__btn sheet-card__btn--secondary"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  onEditMeta();
-                }}
-              >
-                태그·메모
-              </button>
             ) : null}
           </footer>
         ) : null}

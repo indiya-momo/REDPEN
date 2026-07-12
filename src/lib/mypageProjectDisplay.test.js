@@ -129,13 +129,34 @@ describe('planMyPageProjectSlots', () => {
     });
   });
 
-  it('저장 1개(쿼터 찼음) → 잠금 3칸만', () => {
+  it('저장 3개(쿼터 찼음) → 잠금 1칸만', () => {
+    expect(
+      planMyPageProjectSlots(
+        [
+          project('a', '2026-06-01'),
+          project('b', '2026-06-02'),
+          project('c', '2026-06-03'),
+        ],
+        { savedCount: 3 },
+      ),
+    ).toEqual({
+      visibleProjects: [
+        project('c', '2026-06-03'),
+        project('b', '2026-06-02'),
+        project('a', '2026-06-01'),
+      ],
+      actionableEmptySlotCount: 0,
+      lockedSlotCount: 1,
+    });
+  });
+
+  it('저장 1개(쿼터 여유) → 저장 안내 1칸 + 잠금 2칸', () => {
     expect(
       planMyPageProjectSlots([project('a', '2026-06-01')], { savedCount: 1 }),
     ).toEqual({
       visibleProjects: [project('a', '2026-06-01')],
-      actionableEmptySlotCount: 0,
-      lockedSlotCount: 3,
+      actionableEmptySlotCount: 1,
+      lockedSlotCount: 2,
     });
   });
 

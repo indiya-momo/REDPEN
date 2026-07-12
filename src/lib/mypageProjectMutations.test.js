@@ -69,7 +69,11 @@ describe('planDuplicateProject', () => {
   });
 
   it('슬롯이 꽉 차면 거부한다', () => {
-    const sets = [set({ id: 'a', name: 'A', savedAt: '2026-01-01' })];
+    const sets = [
+      set({ id: 'a', name: 'A', savedAt: '2026-01-01' }),
+      set({ id: 'b', name: 'B', savedAt: '2026-01-02' }),
+      set({ id: 'c', name: 'C', savedAt: '2026-01-03' }),
+    ];
     const result = planDuplicateProject(sets, 'a');
     expect(result.ok).toBe(false);
     if (result.ok) return;
