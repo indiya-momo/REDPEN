@@ -42,7 +42,7 @@ import ProjectHubLibraryPanel from './projectHub/ProjectHubLibraryPanel.jsx';
 import { isMyPageProjectHubEnabled } from '../lib/featureFlags.js';
 import './my-page.css';
 import './project-hub-settings.css';
-import '../mock/mypagePrototype/mypage-prototype.css';
+import './projectHub/project-library.css';
 
 const SIDEBAR_NAV = [
   { id: 'profile', label: '회원 정보' },
