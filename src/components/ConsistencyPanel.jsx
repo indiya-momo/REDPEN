@@ -510,6 +510,7 @@ export default function ConsistencyPanel({
             offsetX={0}
             offsetY={0}
             pinned={auxiliaryVerbGuide.pinned}
+            showConfirm={false}
             message={
               <>
                 <span className="tooltip-guide__gothic-label">

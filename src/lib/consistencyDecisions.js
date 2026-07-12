@@ -1,5 +1,4 @@
 import {
-  listConsistencyLiteralEntries,
   normalizeConsistencyVariant,
 } from './compoundPairRegister.js';
 import {
@@ -7,7 +6,6 @@ import {
   getConsistencyUnifyPinnedTailWord,
 } from './consistencyUnifyRegister.js';
 import { listConsistencyUnifyEntries } from './consistencyRuleLimit.js';
-import { listPhraseSlotEntries } from './phraseSlotRegister.js';
 import { newId } from './ruleSetsStorage.js';
 
 /** @typedef {{
@@ -209,48 +207,19 @@ export function appendCommonStringDecision(decisions, patternRaw, meta = {}) {
 }
 
 /**
- * 이미 등록된 찾기·공통 문자열에 확정 시각이 없으면 fallbackAt으로 채운다.
- * (이전 버전에서 대장 없이 등록된 항목용)
+ * 확정 대장만 정규화한다. 등록 규칙으로 가짜 확정 이력을 만들지 않는다.
  *
  * @param {unknown} decisions
- * @param {import('./ruleTypes.js').Rule[] | undefined} customRules
- * @param {string | undefined} fallbackAt
+ * @param {import('./ruleTypes.js').Rule[] | undefined} [_customRules]
+ * @param {string | undefined} [_fallbackAt]
  * @returns {ConsistencyDecision[]}
  */
 export function hydrateConsistencyDecisionsFromRules(
   decisions,
-  customRules,
-  fallbackAt,
+  _customRules,
+  _fallbackAt,
 ) {
-  const at = normalizeAt(fallbackAt);
-  let list = normalizeConsistencyDecisions(decisions);
-  if (!at) return list;
-
-  const haveFind = new Set(
-    list
-      .filter((decision) => decision.kind === 'find')
-      .map((decision) => normalizeConsistencyVariant(decision.query)),
-  );
-  const missingFind = listConsistencyLiteralEntries(customRules ?? [])
-    .map((entry) => normalizeConsistencyVariant(entry.tailWord))
-    .filter((query) => query && !haveFind.has(query));
-  if (missingFind.length) {
-    list = appendFindDecisions(list, missingFind, { at });
-  }
-
-  const haveCommon = new Set(
-    list
-      .filter((decision) => decision.kind === 'commonString')
-      .map((decision) => normalizeConsistencyVariant(decision.pattern)),
-  );
-  const missingCommon = listPhraseSlotEntries(customRules ?? [])
-    .map((entry) => normalizeConsistencyVariant(entry.tailWord))
-    .filter((pattern) => pattern && !haveCommon.has(pattern));
-  for (const pattern of missingCommon) {
-    list = appendCommonStringDecision(list, pattern, { at });
-  }
-
-  return list;
+  return normalizeConsistencyDecisions(decisions);
 }
 
 /**

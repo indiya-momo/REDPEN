@@ -17,9 +17,7 @@ import {
   normalizeProjectTags,
 } from './projectMeta.js';
 import { normalizeWorkHistory } from './projectWorkHistory.js';
-import {
-  hydrateConsistencyDecisionsFromRules,
-} from './consistencyDecisions.js';
+import { normalizeConsistencyDecisions } from './consistencyDecisions.js';
 import { buildCriteriaCheckpoint } from './criteriaCheckpoint.js';
 
 /**
@@ -45,16 +43,8 @@ export function normalizeRuleSet(set) {
   const projectContext = normalizeProjectContext(set.projectContext);
   const savedAt =
     typeof set.savedAt === 'string' && set.savedAt ? set.savedAt : undefined;
-  const createdAt =
-    typeof set.createdAt === 'string' && set.createdAt
-      ? set.createdAt
-      : undefined;
-  const decisionFallbackAt =
-    projectContext?.lastWorkedAt || savedAt || createdAt;
-  const consistencyDecisions = hydrateConsistencyDecisionsFromRules(
+  const consistencyDecisions = normalizeConsistencyDecisions(
     set.consistencyDecisions,
-    normalizedCustomRules,
-    decisionFallbackAt,
   );
   const criteriaCheckpoint =
     typeof set.criteriaCheckpoint === 'string' && set.criteriaCheckpoint

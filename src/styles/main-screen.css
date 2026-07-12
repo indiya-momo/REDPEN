@@ -1262,16 +1262,18 @@
   color: var(--color-text);
 }
 
-/* 4? ??? ? ?? ??? ???? ? */
+/* ??? ? ? ? ? ?? .work-tab ??? 90% (tooltip-scale ???) */
 .tooltip-guide__work-tab-chip {
+  --guide-tab-chip-scale: calc(var(--panel-ui-scale, 0.9) * 0.9);
   display: inline-block;
   margin: 0 2px;
-  padding: calc(5px * var(--tooltip-scale, 1)) calc(8px * var(--tooltip-scale, 1));
+  padding: calc(5px * var(--guide-tab-chip-scale))
+    calc(8px * var(--guide-tab-chip-scale));
   border: none;
-  border-radius: calc(2px * var(--tooltip-scale, 1))
-    calc(2px * var(--tooltip-scale, 1)) 0 0;
+  border-radius: calc(2px * var(--guide-tab-chip-scale))
+    calc(2px * var(--guide-tab-chip-scale)) 0 0;
   font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
-  font-size: calc(1.275rem * var(--tooltip-scale, 1));
+  font-size: calc(1.275rem * var(--guide-tab-chip-scale));
   font-weight: 700;
   line-height: 1.15;
   vertical-align: middle;
@@ -1281,18 +1283,18 @@
 }
 
 .tooltip-guide__work-tab-chip--spelling {
-  border-radius: calc(2px * var(--tooltip-scale, 1));
+  border-radius: calc(2px * var(--guide-tab-chip-scale));
   background: color-mix(in srgb, var(--pillar-spelling) 16%, #fffdfb);
   color: var(--accent-terracotta-deep);
   box-shadow:
     inset 0 0 0 1px color-mix(in srgb, var(--pillar-spelling) 42%, transparent),
-    inset 0 calc(-2px * var(--tooltip-scale, 1)) 0 var(--accent-terracotta);
+    inset 0 calc(-2px * var(--guide-tab-chip-scale)) 0 var(--accent-terracotta);
 }
 
 .tooltip-guide__work-tab-chip--consistency {
   background: var(--color-surface-raised);
   color: var(--accent-terracotta-deep);
-  box-shadow: inset 0 calc(-2px * var(--tooltip-scale, 1)) 0
+  box-shadow: inset 0 calc(-2px * var(--guide-tab-chip-scale)) 0
     var(--accent-terracotta);
 }
 

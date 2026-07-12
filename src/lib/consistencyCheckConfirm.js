@@ -105,9 +105,14 @@ function formatConfirmActiveCount(active) {
   return active > 0 ? formatCategoryFindingCount(active) : '(없음)';
 }
 
+/** 여러 개 찾기·통일형 만들기 — 등록 항목 수 */
+function formatConfirmItemCount(active) {
+  return active > 0 ? `(${active}항목)` : '(없음)';
+}
+
 /** @param {number} active @param {number} total */
 function formatConfirmAuxiliaryCount(active, total) {
-  return total > 0 ? `(${active}/${total}기준)` : '(없음)';
+  return total > 0 ? `(${active}/${total})` : '(없음)';
 }
 
 /**
@@ -129,8 +134,8 @@ function formatConsistencyCheckCriteriaBlock({
   auxiliaryTotal,
 }) {
   const line1 =
-    `${LITERAL_FIND_FEATURE_LABEL}${formatConfirmActiveCount(literalActive)}, ` +
-    `${UNIFY_FEATURE_LABEL}${formatConfirmActiveCount(unifyActive)}, ` +
+    `${LITERAL_FIND_FEATURE_LABEL}${formatConfirmItemCount(literalActive)}, ` +
+    `${UNIFY_FEATURE_LABEL}${formatConfirmItemCount(unifyActive)}, ` +
     `공통 문자열 찾기${formatConfirmActiveCount(commonStringActive)}`;
   const line2 =
     `검수 제외 항목${formatConfirmActiveCount(excludeActive)}, ` +

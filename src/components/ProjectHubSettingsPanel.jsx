@@ -533,11 +533,6 @@ export default function ProjectHubSettingsPanel({
                 customRules={ruleSet?.customRules ?? []}
                 globalExcludePhrases={ruleSet?.globalExcludePhrases ?? []}
                 consistencyDecisions={ruleSet?.consistencyDecisions ?? []}
-                decisionFallbackAt={
-                  ruleSet?.projectContext?.lastWorkedAt ||
-                  ruleSet?.savedAt ||
-                  ruleSet?.createdAt
-                }
               />
             </div>
           ) : null}

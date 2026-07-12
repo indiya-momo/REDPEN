@@ -80,6 +80,8 @@ export default function AppDialog({
   }, [open]);
 
   const handleClose = onClose ?? onConfirm;
+  /** 손 안내가 있으면 확인 버튼만으로 진행 (X·Esc로 건너뛰기 금지) */
+  const requireConfirmClick = showGuideHand;
 
   return (
     <dialog
@@ -88,6 +90,7 @@ export default function AppDialog({
       aria-labelledby={titleId}
       onCancel={(e) => {
         e.preventDefault();
+        if (requireConfirmClick) return;
         if (isConfirm) {
           onCancel?.();
         } else {
@@ -95,6 +98,7 @@ export default function AppDialog({
         }
       }}
       onClose={() => {
+        if (requireConfirmClick) return;
         if (!isConfirm) handleClose();
       }}
     >
@@ -103,20 +107,22 @@ export default function AppDialog({
           <h2 id={titleId} className="app-dialog__title">
             {title}
           </h2>
-          <button
-            type="button"
-            className="btn-icon app-dialog__close"
-            onClick={() => {
-              if (isConfirm) {
-                onCancel?.();
-              } else {
-                handleClose();
-              }
-            }}
-            aria-label="닫기"
-          >
-            <X size={18} />
-          </button>
+          {requireConfirmClick ? null : (
+            <button
+              type="button"
+              className="btn-icon app-dialog__close"
+              onClick={() => {
+                if (isConfirm) {
+                  onCancel?.();
+                } else {
+                  handleClose();
+                }
+              }}
+              aria-label="닫기"
+            >
+              <X size={18} />
+            </button>
+          )}
         </header>
 
         {messageNode ? (

@@ -5,7 +5,7 @@ import {
 } from './consistencyDecisions.js';
 
 describe('hydrateConsistencyDecisionsFromRules', () => {
-  it('등록된 찾기에 확정 시각이 없으면 fallbackAt으로 채운다', () => {
+  it('등록 규칙만으로 가짜 확정 이력을 만들지 않는다', () => {
     /** @type {import('./ruleTypes.js').Rule[]} */
     const rules = [
       {
@@ -23,15 +23,10 @@ describe('hydrateConsistencyDecisionsFromRules', () => {
       rules,
       '2026-07-12T10:15:00.000Z',
     );
-    expect(out).toHaveLength(1);
-    expect(out[0]).toMatchObject({
-      kind: 'find',
-      query: '고구려',
-      at: '2026-07-12T10:15:00.000Z',
-    });
+    expect(out).toEqual([]);
   });
 
-  it('이미 대장에 있으면 중복 추가하지 않는다', () => {
+  it('실제 대장만 정규화해 남긴다', () => {
     /** @type {import('./ruleTypes.js').Rule[]} */
     const rules = [
       {

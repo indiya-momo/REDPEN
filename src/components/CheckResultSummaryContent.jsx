@@ -50,6 +50,57 @@ function ResultHeaderStat({ badge, count, findingsCount, tone }) {
 }
 
 /**
+ * @param {Array<{
+ *   badge: string,
+ *   count: number,
+ *   findingsCount: number,
+ *   tone?: import('../lib/resultPillarTone.js').ResultBadgeTone,
+ * }>} stats
+ * @param {number} totalFindings
+ */
+function buildSummaryCells(stats, totalFindings) {
+  /** @type {import('react').ReactNode[]} */
+  const cells = stats.map(({ badge, count, findingsCount, tone }) => (
+    <ResultHeaderStat
+      key={badge}
+      badge={badge}
+      count={count}
+      findingsCount={findingsCount}
+      tone={tone}
+    />
+  ));
+  cells.push(
+    <span
+      key="__total__"
+      className="results-header__stat results-header__stat--total"
+    >
+      <span className="results-header-badge results-header-badge--total">
+        전체 발견
+      </span>
+      <ResultFindingsCountCircle
+        count={totalFindings}
+        className="results-header__total-count"
+        ariaLabel={`전체 ${totalFindings}건`}
+      />
+    </span>,
+  );
+  return cells;
+}
+
+/**
+ * @param {import('react').ReactNode[]} cells
+ * @param {number} [perRow]
+ */
+function chunkRows(cells, perRow = 2) {
+  /** @type {import('react').ReactNode[][]} */
+  const rows = [];
+  for (let i = 0; i < cells.length; i += perRow) {
+    rows.push(cells.slice(i, i + perRow));
+  }
+  return rows;
+}
+
+/**
  * @param {{
  *   stats: Array<{
  *     badge: string,
@@ -61,40 +112,18 @@ function ResultHeaderStat({ badge, count, findingsCount, tone }) {
  * }} props
  */
 export default function CheckResultSummaryContent({ stats, totalFindings }) {
-  if (stats.length === 0) {
-    return (
-      <div className="results-header app-dialog__results-summary">
-        <span className="results-header__total-findings">
-          전체 발견{' '}
-          <ResultFindingsCountCircle
-            count={totalFindings}
-            className="results-header__total-count"
-          />
-        </span>
-      </div>
-    );
-  }
+  const rows = chunkRows(buildSummaryCells(stats, totalFindings), 2);
 
   return (
     <div className="results-header app-dialog__results-summary">
-      <div className="results-header__stats">
-        {stats.map(({ badge, count, findingsCount, tone }) => (
-          <ResultHeaderStat
-            key={badge}
-            badge={badge}
-            count={count}
-            findingsCount={findingsCount}
-            tone={tone}
-          />
-        ))}
-      </div>
-      <span className="results-header__total-findings">
-        전체 발견{' '}
-        <ResultFindingsCountCircle
-          count={totalFindings}
-          className="results-header__total-count"
-        />
-      </span>
+      {rows.map((row, rowIndex) => (
+        <div
+          key={`summary-row-${rowIndex}`}
+          className="app-dialog__results-summary-row"
+        >
+          {row}
+        </div>
+      ))}
     </div>
   );
 }

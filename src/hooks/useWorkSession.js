@@ -13,6 +13,7 @@ import {
   isPdfSizeOverMax,
   PDF_SIZE_MAX_MESSAGE,
 } from '../lib/pdfSizeLimits.js';
+import { showAppConfirm } from '../lib/appDialog.js';
 import {
   clearWorkSession,
   getStorageHint,
@@ -493,14 +494,14 @@ export function useWorkSession(pdf, ruleCheck, tocCheck) {
     await discardWorkSessionOnLeave();
   }, [discardWorkSessionOnLeave]);
 
+  /** 로그인 사용자 「새 업로드」— AppDialog 확인 후 세션 종료 */
   const handleEndWork = useCallback(async () => {
-    if (
-      !confirm(
+    const ok = await showAppConfirm({
+      title: '안내',
+      message:
         '현재 작업을 종료하고 업로드 대기 화면으로 돌아가시겠습니까?\nPDF는 삭제되며 작업 내용은 저장되지 않습니다',
-      )
-    ) {
-      return;
-    }
+    });
+    if (!ok) return;
     await discardWorkSessionOnLeave();
   }, [discardWorkSessionOnLeave]);
 

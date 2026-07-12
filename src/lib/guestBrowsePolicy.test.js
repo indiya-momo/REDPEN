@@ -66,7 +66,7 @@ describe('guestBrowsePolicy', () => {
     );
   });
 
-  it('손 클릭 후 결과 2초·다음 가이드 5초 게이트', async () => {
+  it('손 클릭 후 결과 팝업 → 확인 뒤에만 다음 가이드', async () => {
     vi.useFakeTimers();
     beginGuestBrowse();
     expect(isGuestBrowseNextGuideReady()).toBe(false);
@@ -75,12 +75,14 @@ describe('guestBrowsePolicy', () => {
     expect(isGuestBrowseNextGuideReady()).toBe(false);
 
     let alertOpenedAt = 0;
+    let resolveAlert;
     const alertPromise = finishGuestBrowseResultThenUnlockNextGuide(
       async (extra = {}) => {
         alertOpenedAt = Date.now();
-        expect(extra.autoCloseMs).toBe(
-          GUEST_BROWSE_TIMING.nextGuideAfterResultMs,
-        );
+        expect(extra.showGuideHand).toBe(true);
+        await new Promise((resolve) => {
+          resolveAlert = resolve;
+        });
       },
     );
 
@@ -93,36 +95,33 @@ describe('guestBrowsePolicy', () => {
     expect(alertOpenedAt).toBeGreaterThan(0);
     expect(isGuestBrowseNextGuideReady()).toBe(false);
 
-    await vi.advanceTimersByTimeAsync(
-      GUEST_BROWSE_TIMING.nextGuideAfterResultMs,
-    );
+    resolveAlert();
     await alertPromise;
     expect(isGuestBrowseNextGuideReady()).toBe(true);
   });
 
-  it('표기 통일 결과 팝업 후 5초 뒤 다운로드 가이드 게이트', async () => {
-    vi.useFakeTimers();
+  it('표기 통일 결과 팝업 → 확인 뒤에만 다운로드 가이드', async () => {
     beginGuestBrowse();
     expect(isGuestBrowseExportGuideReady()).toBe(false);
 
-    let alertOpenedAt = 0;
+    let alertOpened = false;
+    let resolveAlert;
     const alertPromise =
       finishGuestBrowseConsistencyResultThenUnlockExportGuide(
         async (extra = {}) => {
-          alertOpenedAt = Date.now();
-          expect(extra.autoCloseMs).toBe(
-            GUEST_BROWSE_TIMING.exportGuideAfterResultMs,
-          );
+          alertOpened = true;
+          expect(extra.showGuideHand).toBe(true);
+          await new Promise((resolve) => {
+            resolveAlert = resolve;
+          });
         },
       );
 
-    await vi.advanceTimersByTimeAsync(0);
-    expect(alertOpenedAt).toBeGreaterThan(0);
+    await Promise.resolve();
+    expect(alertOpened).toBe(true);
     expect(isGuestBrowseExportGuideReady()).toBe(false);
 
-    await vi.advanceTimersByTimeAsync(
-      GUEST_BROWSE_TIMING.exportGuideAfterResultMs,
-    );
+    resolveAlert();
     await alertPromise;
     expect(isGuestBrowseExportGuideReady()).toBe(true);
   });
