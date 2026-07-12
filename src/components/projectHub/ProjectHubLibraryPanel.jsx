@@ -6,6 +6,7 @@ import { useMemo, useState } from 'react';
 import {
   buildMockLibrarySlots,
   formatLibrarySlotGauge,
+  planLibraryShelfCards,
 } from '../../lib/mypageProjectDisplay.js';
 import { useProjectHubActions } from '../../hooks/useProjectHubActions.js';
 import { useProjectHubLibrary } from '../../hooks/useProjectHubLibrary.js';
@@ -44,7 +45,7 @@ export default function ProjectHubLibraryPanel({
 }) {
   const libraryInternal = useProjectHubLibrary(uid, email);
   const library = libraryProp ?? libraryInternal;
-  const { previewCards, loading } = library;
+  const { previewCards, loading, slotLabel } = library;
 
   const tagFilterInternal = useProjectTagFilter(previewCards);
   const tagFilter = tagFilterProp ?? tagFilterInternal;
@@ -61,6 +62,7 @@ export default function ProjectHubLibraryPanel({
     /** @type {string | null} */ (null),
   );
   const [metaSaving, setMetaSaving] = useState(false);
+  const [shelfExpanded, setShelfExpanded] = useState(false);
 
   const isSharePreviewControlled = onSharePreviewCardIdChange !== undefined;
   const sharePreviewCardId = isSharePreviewControlled
@@ -81,9 +83,14 @@ export default function ProjectHubLibraryPanel({
     setInternalSharePreviewCardId(null);
   };
 
+  const shelf = useMemo(
+    () => planLibraryShelfCards(previewCards, { expanded: shelfExpanded }),
+    [previewCards, shelfExpanded],
+  );
+
   const librarySlots = useMemo(
-    () => buildMockLibrarySlots(previewCards),
-    [previewCards],
+    () => buildMockLibrarySlots(shelf.visibleCards),
+    [shelf.visibleCards],
   );
 
   const sharePreviewCard = useMemo(
@@ -116,6 +123,11 @@ export default function ProjectHubLibraryPanel({
     );
   }
 
+  const gaugeLabel =
+    typeof slotLabel === 'string' && slotLabel
+      ? slotLabel
+      : formatLibrarySlotGauge(previewCards.length);
+
   return (
     <>
       <section
@@ -144,7 +156,7 @@ export default function ProjectHubLibraryPanel({
             </div>
           </div>
           <p className="mypage__project-slot-gauge" aria-live="polite">
-            슬롯 <strong>{formatLibrarySlotGauge(previewCards.length)}</strong>
+            슬롯 <strong>{gaugeLabel}</strong>
           </p>
         </div>
 
@@ -164,7 +176,9 @@ export default function ProjectHubLibraryPanel({
             />
 
             <div
-              className={`mypage-proto__grid${activeTag ? '' : ' mypage-proto__grid--triple'}`}
+              className={`mypage-proto__grid${
+                activeTag || shelf.expanded ? '' : ' mypage-proto__grid--triple'
+              }`}
             >
               {activeTag ? (
                 <>
@@ -175,6 +189,8 @@ export default function ProjectHubLibraryPanel({
                     </p>
                   ) : null}
                 </>
+              ) : shelf.expanded ? (
+                shelf.visibleCards.map((card) => renderLibraryCard(card))
               ) : (
                 librarySlots.map((card, index) =>
                   card ? (
@@ -185,6 +201,23 @@ export default function ProjectHubLibraryPanel({
                 )
               )}
             </div>
+
+            {!activeTag && shelf.canExpand ? (
+              <div className="mypage__project-shelf-more">
+                <button
+                  type="button"
+                  className="mypage__project-shelf-more-btn"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setShelfExpanded((prev) => !prev);
+                  }}
+                >
+                  {shelf.expanded
+                    ? '접기'
+                    : `더 보기 (${shelf.hiddenCount})`}
+                </button>
+              </div>
+            ) : null}
           </div>
         )}
       </section>
