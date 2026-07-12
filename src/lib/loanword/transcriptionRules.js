@@ -90,7 +90,7 @@ function beforeVowelish(tokens, i) {
   if (!next) return false;
   if (next.kind === 'V') return true;
   if (next.kind === 'G' && next.ph === 'j') return true;
-  if (next.kind === 'G' && next.ph === 'w' && ['g', 'k'].includes(c.ph)) return true;
+  if (next.kind === 'G' && next.ph === 'w' && ['g', 'k', 'h'].includes(c.ph)) return true;
   return false;
 }
 
@@ -157,8 +157,8 @@ export function transcribe(tokens) {
       consumed.add(i + 1);
       let onsetJamo = 'ㅇ';
       let rule = RULES.R9_1;
-      if (isCons(prev, ['g', 'k'])) {
-        onsetJamo = CONSONANTS[prev.ph].onset; // [gw],[kw] 한 음절 (자음 배출은 여기서)
+      if (isCons(prev, ['g', 'k', 'h'])) {
+        onsetJamo = CONSONANTS[prev.ph].onset; // [gw],[hw],[kw] 한 음절 (자음 배출은 여기서)
         rule = RULES.R9_2;
       } else if (prev && prev.kind === 'C') {
         rule = RULES.R9_2; // 갈라 적기 (자음은 이미 '으' 음절로 배출됨)
@@ -205,8 +205,8 @@ export function transcribe(tokens) {
     const table = CONSONANTS[t.ph];
     const beforeV = beforeVowelish(tokens, i);
 
-    // [g],[k]가 [w] 앞이면 배출을 [w] 단계로 미룸 (한 음절 붙여 적기)
-    if (isCons(t, ['g', 'k']) && next && next.kind === 'G' && next.ph === 'w') {
+    // [g],[k],[h]가 [w] 앞이면 배출을 [w] 단계로 미룸 (제9항 2: gw·hw·kw 한 음절)
+    if (isCons(t, ['g', 'k', 'h']) && next && next.kind === 'G' && next.ph === 'w') {
       continue;
     }
 

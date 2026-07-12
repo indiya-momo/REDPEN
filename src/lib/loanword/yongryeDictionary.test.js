@@ -39,4 +39,15 @@ describe.skipIf(!hasData)('용례집 조회 (공식 심의 표기)', () => {
   it('미등재 단어는 빈 배열', () => {
     expect(lookupYongrye('zzzznotaword', dictionary)).toEqual([]);
   });
+
+  it('언어명 공란 레코드도 포함된다 (New York → 뉴욕)', () => {
+    const entries = lookupYongrye('New York', dictionary);
+    expect(entries.length).toBeGreaterThan(0);
+    expect(entries[0].h).toBe('뉴욕');
+  });
+
+  it('이름 단어도 조회된다 (stephen → 스티븐, king → 킹)', () => {
+    expect(lookupYongrye('stephen', dictionary)[0].h).toBe('스티븐');
+    expect(lookupYongrye('king', dictionary)[0].h).toBe('킹');
+  });
 });

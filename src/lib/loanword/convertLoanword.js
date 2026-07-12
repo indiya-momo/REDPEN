@@ -10,6 +10,8 @@
 import { arpabetToTokens, tokensToIpaString } from './arpabet.js';
 import { transcribe } from './transcriptionRules.js';
 import { assemble } from './hangulAssembler.js';
+import { graphemeToArpabet } from './graphemeToArpabet.js';
+import { lookupYongrye } from './yongryeDictionary.js';
 
 /**
  * 발음 기호 하나 → 한글 표기 + 근거.
@@ -30,12 +32,14 @@ export function convertPronunciation(arpabet, word) {
 
 /**
  * 영어 단어 → 한글 표기 후보(복수 발음이면 모두).
+ * 발음 사전에 없으면 철자 기반 발음 추정(G2P)으로 폴백한다.
  * @param {string} word
  * @param {Record<string,string>} dictionary CMU 발음 사전 (word → ARPABET)
+ * @returns {{word:string, found:boolean, estimated:boolean, results:Array}}
  */
 export function convertWord(word, dictionary) {
   const key = String(word).trim().toLowerCase();
-  if (!key) return { word: key, found: false, results: [] };
+  if (!key) return { word: key, found: false, estimated: false, results: [] };
 
   const pronunciations = [];
   if (dictionary[key]) pronunciations.push(dictionary[key]);
@@ -43,9 +47,70 @@ export function convertWord(word, dictionary) {
     pronunciations.push(dictionary[`${key}(${n})`]);
   }
 
+  if (pronunciations.length > 0) {
+    return {
+      word: key,
+      found: true,
+      estimated: false,
+      results: pronunciations.map((p) => convertPronunciation(p, key)),
+    };
+  }
+
+  // 사전 미등재 → 철자 기반 발음 추정 (결과는 반드시 "추정" 표시)
+  const guessed = graphemeToArpabet(key);
+  if (!guessed) return { word: key, found: false, estimated: false, results: [] };
   return {
     word: key,
-    found: pronunciations.length > 0,
-    results: pronunciations.map((p) => convertPronunciation(p, key)),
+    found: true,
+    estimated: true,
+    results: [convertPronunciation(guessed, key)],
+  };
+}
+
+/**
+ * 여러 단어(공백·하이픈 구분) → 단어별 변환 후 이어 붙임.
+ * 제10항 2: 원어에서 띄어 쓴 말은 띄어 쓴 대로 적는다.
+ *
+ * 단어마다 3단 캐스케이드로 대표 표기를 정한다:
+ *   ① 용례집 등재 표기(공식 심의)  ② 발음 사전+규정 엔진  ③ 철자 추정+규정 엔진
+ * (kings club → 용례집의 킹스 + 클럽 = "킹스 클럽". 용례집에 없는 단어만
+ *  규정 엔진 결과로 채운다.)
+ *
+ * @param {string} phrase
+ * @param {Record<string,string>} dictionary CMU 발음 사전
+ * @param {Record<string,Array>|null} [yongrye] 용례집 (없으면 규정 엔진만 사용)
+ */
+export function convertPhrase(phrase, dictionary, yongrye = null) {
+  const parts = String(phrase).trim().split(/[\s-]+/).filter(Boolean);
+
+  const words = parts.map((part) => {
+    const engine = convertWord(part, dictionary);
+    const official = yongrye ? lookupYongrye(part, yongrye) : [];
+
+    let hangul = '?';
+    let source = 'none'; // 'yongrye' | 'dict' | 'g2p' | 'none'
+    let officialForms = [];
+
+    if (official.length > 0) {
+      // 같은 단어에 여러 표기가 있으면 최빈 표기를 대표로
+      const counts = new Map();
+      for (const e of official) counts.set(e.h, (counts.get(e.h) ?? 0) + 1);
+      officialForms = [...counts.keys()];
+      hangul = [...counts.entries()].sort((a, b) => b[1] - a[1])[0][0];
+      source = 'yongrye';
+    } else if (engine.found) {
+      hangul = engine.results[0].hangul;
+      source = engine.estimated ? 'g2p' : 'dict';
+    }
+
+    return { word: part, hangul, source, officialForms, engine };
+  });
+
+  return {
+    phrase: parts.join(' '),
+    found: words.some((w) => w.source !== 'none'),
+    estimated: words.some((w) => w.source === 'g2p'),
+    hangul: words.map((w) => w.hangul).join(' '),
+    words,
   };
 }

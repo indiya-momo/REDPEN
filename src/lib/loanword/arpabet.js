@@ -162,7 +162,9 @@ export function arpabetToTokens(arpabet, word) {
     const prev = tokens[i - 1];
     const next = tokens[i + 1];
     if (!prev || prev.kind !== 'V') continue; // 어두·자음 뒤 r은 그대로
-    if (isVowelish(next)) continue; // 모음 사이 r은 그대로 (ㄹ)
+    // 모음·[j] 앞 r은 그대로(ㄹ). 단 [w] 앞의 r은 자음 앞처럼 처리한다
+    // (barwick 바윅, farwell 파웰, fairway 페어웨이)
+    if (next && (next.kind === 'V' || (next.kind === 'G' && next.ph === 'j'))) continue;
 
     if (prev.diph || ['i', 'u', 'e'].includes(prev.ph)) {
       tokens.splice(i, 1, { kind: 'V', ph: 'ə' });
@@ -214,6 +216,33 @@ export function arpabetToTokens(arpabet, word) {
 
   // 6) 철자 참고 조정 (철자를 아는 경우에만)
   applySpellingHints(tokens, word, notes);
+
+  // 7) 관용 표기 조정 — 국립국어원 용례집 대조로 확인된 관행 (로사 님 승인 범위만)
+  if (word) {
+    const spelling = String(word).trim().toLowerCase();
+
+    // 7-1) 어말 철자 a + 어말 [ə] → ‘아’ (sofa 소파, catalonia 카탈로니아)
+    const lastTok = tokens[tokens.length - 1];
+    if (
+      /a$/.test(spelling) &&
+      lastTok && lastTok.kind === 'V' && !lastTok.diph && lastTok.ph === 'ə'
+    ) {
+      lastTok.ph = 'ɑ';
+      notes.push('관용 조정: 어말 철자 a는 ‘아’로 (용례집 관행, 소파·카탈로니아형)');
+    }
+
+    // 7-2) 철자 -son + [s][ə][n] → ‘슨’ (jefferson 제퍼슨, johnson 존슨)
+    const m = tokens.length;
+    if (
+      /son$/.test(spelling) && m >= 3 &&
+      tokens[m - 1].kind === 'C' && tokens[m - 1].ph === 'n' &&
+      tokens[m - 2].kind === 'V' && !tokens[m - 2].diph && tokens[m - 2].ph === 'ə' &&
+      tokens[m - 3].kind === 'C' && tokens[m - 3].ph === 's'
+    ) {
+      tokens.splice(m - 2, 1);
+      notes.push('관용 조정: 어말 -son은 ‘슨’으로 (용례집 관행, 제퍼슨형)');
+    }
+  }
 
   return { tokens, notes };
 }
