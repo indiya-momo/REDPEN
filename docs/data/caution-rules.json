@@ -148,6 +148,11 @@
           "matchMode": "any-before",
           "inventoryOnly": false,
           "displayLabel": "뿐(조사 또는 의존명사)",
+          "except": [
+            "사뿐",
+            "가뿐",
+            "거뿐"
+          ],
           "tip": "체언 뒤는 조사로 붙이고(이것뿐), 용언 뒤는 의존명사라 띄어 쓴다(갈 뿐)",
           "groupLabel": "앞말에 따라 띄어쓰기가 달라지는 경우"
         }
@@ -164,6 +169,10 @@
           "enabled": true,
           "matchMode": "any-before",
           "inventoryOnly": false,
+          "stems": [
+            "같이",
+            "같"
+          ],
           "displayLabel": "같이(조사 또는 부사)",
           "except": [
             "감쪽같이",
