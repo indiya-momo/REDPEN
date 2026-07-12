@@ -66,7 +66,7 @@ export default function PdfCenterStage({
   runLabel,
   showReady,
   showUploadGuide = true,
-  uploadGuideStorageKey = 'pdf-upload-first-step',
+  uploadGuideStorageKey = 'work-pre-upload-v1',
   uploadGuidePinned = false,
   uploadGuideMessage = '처음 할 일은 이거다냥',
   uploadGuideSpotlight = false,
@@ -180,25 +180,68 @@ export default function PdfCenterStage({
                 decoding="async"
               />
               <span className="pdf-center-stage__hero-tooltip-anchor" aria-hidden>
-                {showUploadGuide ? (
-                  <TooltipGuide
-                    storageKey={uploadGuideStorageKey}
-                    placement="left"
-                    bubbleType="left"
-                    offsetX={60}
-                    offsetY={-50}
-                    imageSrc={null}
-                    pinned={uploadGuidePinned}
-                    message={uploadGuideMessage}
-                    onDismiss={onUploadGuideDismiss}
-                  >
-                    <span className="pdf-center-stage__hero-tooltip-dot" />
-                  </TooltipGuide>
-                ) : (
-                  <span className="pdf-center-stage__hero-tooltip-dot" />
-                )}
+                <span className="pdf-center-stage__hero-tooltip-dot" />
               </span>
             </div>
+            {showUploadGuide ? (
+              <TooltipGuide
+                storageKey={uploadGuideStorageKey}
+                placement="left"
+                bubbleType="left"
+                useFixedLayer
+                offsetX={12}
+                offsetY={0}
+                bubbleGuideStep="1b"
+                pinned={uploadGuidePinned}
+                message={uploadGuideMessage}
+                onDismiss={onUploadGuideDismiss}
+              >
+                <div
+                  className={`pdf-dropzone${
+                    dragOver ? ' pdf-dropzone--dragover' : ''
+                  }${uploadGuideSpotlight ? ' work-guide-spotlight' : ''}`}
+                  data-work-guide="pdf-dropzone"
+                >
+                  <div className="pdf-dropzone__icon" aria-hidden>
+                    <FileText size={32} strokeWidth={1.35} />
+                  </div>
+                  <p className="pdf-dropzone__drag">PDF 파일을 드래그하거나</p>
+                  <button
+                    type="button"
+                    className="btn-upload pdf-dropzone__open"
+                    data-work-guide="pdf-open"
+                    onClick={openPicker}
+                    disabled={isProcessing}
+                  >
+                    <Upload size={16} />
+                    {supportsFilePicker() ? 'PDF 열기' : 'PDF 업로드'}
+                  </button>
+                  {fileHandleActive && !pdf && (
+                    <button
+                      type="button"
+                      className="btn-upload-secondary pdf-dropzone__reconnect"
+                      onClick={onReconnect}
+                      disabled={isProcessing}
+                    >
+                      PDF 다시 연결
+                    </button>
+                  )}
+                  <footer className="pdf-dropzone__footer">
+                    <p className="pdf-dropzone__limit">
+                      <strong>100MB 이하</strong>
+                      <span className="pdf-dropzone__limit-detail">
+                        (50MB 이하 권장 · 신국판 300페이지 내외)
+                      </span>
+                    </p>
+                    <p className="pdf-dropzone__scan-note">
+                      <span className="pdf-support-msg__scan">
+                        스캔 PDF는 읽을 수 없어요ㅠ
+                      </span>
+                    </p>
+                  </footer>
+                </div>
+              </TooltipGuide>
+            ) : (
             <div
               className={`pdf-dropzone ${dragOver ? 'pdf-dropzone--dragover' : ''}${
                 uploadGuideSpotlight ? ' work-guide-spotlight' : ''
@@ -241,6 +284,7 @@ export default function PdfCenterStage({
               </p>
             </footer>
             </div>
+            )}
           </div>
         ) : (
           <>

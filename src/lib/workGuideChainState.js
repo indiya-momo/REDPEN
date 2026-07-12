@@ -56,7 +56,8 @@ export function devWorkGuideStepFromChain(chain) {
   if (chain.showLoanwordIntroGuide) return 0;
   if (chain.showLeftCriteriaGuide) return 1;
   if (chain.showSpellingStartCheckGuide) return 2;
-  if (chain.showPreUploadGuide) return 0;
+  /** 회원 1b·둘러보기 업로드 — LOANWORD(0)과 겹치지 않게 10 */
+  if (chain.showPreUploadGuide) return 10;
   if (chain.showFirstResultGuide) return 3;
   if (chain.showPdfOpenedGuide) return 4;
   if (chain.showConsistencyGuide) return 5;
@@ -79,16 +80,38 @@ export function devWorkGuideStepFromChain(chain) {
  * @param {boolean} pinAll
  * @param {(key: string) => string} keyFor
  * @param {Record<string, boolean> | null} dismissedMap
+ * @param {{ guestBrowseActive?: boolean }} [forceOptions]
  */
-function getDevForcedWorkGuideChain(step, empty, ctx, pinAll, keyFor, dismissedMap) {
+function getDevForcedWorkGuideChain(
+  step,
+  empty,
+  ctx,
+  pinAll,
+  keyFor,
+  dismissedMap,
+  forceOptions = {},
+) {
   const { hasPdf, pageTextsReady } = ctx;
   const d = (key) => dismissed(keyFor(key), dismissedMap);
   const base = { ...empty, pinAll, workGuideOpen: true };
+  const guestBrowse = Boolean(forceOptions.guestBrowseActive);
+
   if (step === 0) {
+    if (guestBrowse) {
+      if (d(WORK_GUIDE_KEYS.PRE_UPLOAD)) return null;
+      if (!hasPdf) return { ...base, showPreUploadGuide: true };
+      return null;
+    }
+    if (d(WORK_GUIDE_KEYS.LOANWORD_INTRO)) return null;
+    return { ...base, showLoanwordIntroGuide: true };
+  }
+
+  if (step === 10) {
     if (d(WORK_GUIDE_KEYS.PRE_UPLOAD)) return null;
     if (!hasPdf) return { ...base, showPreUploadGuide: true };
     return null;
   }
+
   if (!hasPdf) return null;
   switch (step) {
     case 1:
@@ -100,7 +123,8 @@ function getDevForcedWorkGuideChain(step, empty, ctx, pinAll, keyFor, dismissedM
       return { ...base, showSpellingStartCheckGuide: true };
     case 3:
       if (!d(WORK_GUIDE_KEYS.LEFT_CRITERIA)) return null;
-      if (!d(WORK_GUIDE_KEYS.SPELLING_START_CHECK)) return null;
+      if (!guestBrowse && !d(WORK_GUIDE_KEYS.LOANWORD_INTRO)) return null;
+      if (guestBrowse && !d(WORK_GUIDE_KEYS.SPELLING_START_CHECK)) return null;
       if (d(WORK_GUIDE_KEYS.FIRST_RESULT)) return null;
       return pageTextsReady ? { ...base, showFirstResultGuide: true } : null;
     case 4:
@@ -532,6 +556,7 @@ export function getWorkGuideChainState(
       pinAll,
       keyFor,
       dismissedMap,
+      { guestBrowseActive: guestBrowse },
     );
     if (forced) return forced;
   }

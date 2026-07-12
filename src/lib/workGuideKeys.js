@@ -23,7 +23,8 @@ const TOOLTIP_GUIDE_PREFIX = 'pdf-proofread-tooltip-guide-';
  */
 
 export const WORK_GUIDE_KEYS = {
-  PRE_UPLOAD: 'pdf-upload-first-step',
+  /** 1b(회원)·둘러보기 업로드 — 옛 `pdf-upload-first-step` dismiss와 분리(v1) */
+  PRE_UPLOAD: 'work-pre-upload-v1',
   /** 로그인 0 — 외래어·맞춤법 탭 소개 */
   LOANWORD_INTRO: 'work-loanword-intro-v1',
   /** 3번 — 순서 교체(2026-06)로 v2 (v1 dismiss는 체인에 반영 안 됨) */
@@ -77,7 +78,8 @@ function isLocalDevBrowser() {
 }
 
 /**
- * 로컬 dev — 마지막으로 본 가이드 단계(0=업로드 전) 고정. `?workGuide=9` 이 우선.
+ * 로컬 dev — 마지막으로 본 가이드 단계 고정. `?workGuide=10` 이 우선.
+ * 0=로그인 외래어(또는 둘러보기 업로드), 1=기준, 10=업로드(1b), 2~9=이후.
  * @returns {number | null}
  */
 export function getDevWorkGuideForceStep() {
@@ -85,13 +87,13 @@ export function getDevWorkGuideForceStep() {
   const q = new URLSearchParams(window.location.search).get('workGuide');
   if (q != null && q !== '') {
     const n = Number(q);
-    if (Number.isInteger(n) && n >= 0 && n <= 9) return n;
+    if (Number.isInteger(n) && n >= 0 && n <= 10) return n;
   }
   try {
     const stored = sessionStorage.getItem(DEV_WORK_GUIDE_FORCE_KEY);
     if (stored != null && stored !== '') {
       const n = Number(stored);
-      if (Number.isInteger(n) && n >= 0 && n <= 9) return n;
+      if (Number.isInteger(n) && n >= 0 && n <= 10) return n;
     }
   } catch {
     /* ignore */
@@ -107,6 +109,7 @@ export function setDevWorkGuideForceStep(step) {
       sessionStorage.removeItem(DEV_WORK_GUIDE_FORCE_KEY);
       return;
     }
+    if (!Number.isInteger(step) || step < 0 || step > 10) return;
     sessionStorage.setItem(DEV_WORK_GUIDE_FORCE_KEY, String(step));
   } catch {
     /* ignore */

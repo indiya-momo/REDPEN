@@ -2528,6 +2528,11 @@ details[open] > summary .details-chevron::before {
   align-items: center;
 }
 
+.pdf-center-stage__preupload > .tooltip-guide-anchor {
+  display: block;
+  width: 100%;
+}
+
 .profile-onboarding-mount--pane {
   position: absolute;
   inset: 0;
