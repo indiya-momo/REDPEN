@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import PdfViewer from './PdfViewer.jsx';
 import ResizableBuiltinSpelling from './ResizableBuiltinSpelling.jsx';
+import LoanwordConverter from './LoanwordConverter.jsx';
 import ConsistencyPanel from './ConsistencyPanel.jsx';
 import PanelSectionRunButton from './PanelSectionRunButton.jsx';
 import PdfPreviewBar from './PdfPreviewBar.jsx';
@@ -1773,6 +1774,7 @@ export default function MainScreen({
               <div className="panel-left-work-scroll spelling-tab-scroll custom-scrollbar">
                 {spellingRunRowEl}
                 {spellingCalibrationEl}
+                <LoanwordConverter />
                 <div className="spelling-tab-scroll__results">
                   {spellingResultsPanel}
                 </div>
@@ -1781,6 +1783,7 @@ export default function MainScreen({
               <>
                 {spellingRunRowEl}
                 {spellingCalibrationEl}
+                <LoanwordConverter />
                 {!tabCheckDone ? (
                   <ResizableBuiltinSpelling
                     builtInEnabled={builtInEnabled}
