@@ -277,7 +277,7 @@ export default function ConsistencyPanel({
             여러 항목은 사이에 &apos;,&apos;를 넣어 한 번에 입력하고 찾아 볼 수 있습니다
             <br />
             <ConsistencyHintExample>
-              &apos;마한, 진한, 변한&apos; 입력 → 3항목 한 번에 찾기
+              &apos;고구려,백제,신라,Silla&apos; 입력 → 4항목 한 번에 찾기
             </ConsistencyHintExample>
           </p>
           <ConsistencyRegisterField
