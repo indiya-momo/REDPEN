@@ -5,7 +5,24 @@ import {
 } from './workGuideKeys.js';
 import { isTooltipGuideDismissed } from './tooltipGuideStorage.js';
 import { isWorkGuideOnboardingExposureAllowed } from './workGuideOnboardingExposure.js';
+import { guestBrowseShowsWorkGuideChain } from './guestBrowsePolicy.js';
 
+function emptyWorkGuideChainState(pinAll) {
+  return {
+    pinAll,
+    showPreUploadGuide: false,
+    showPdfOpenedGuide: false,
+    showLeftCriteriaGuide: false,
+    showFirstResultGuide: false,
+    showConsistencyGuide: false,
+    showConsistencyUnifyPinGuide: false,
+    showAuxiliaryVerbGuide: false,
+    showRuleSetSaveGuide: false,
+    showWorkExitGuide: false,
+    workGuideOpen: false,
+    requestConsistencyTab: false,
+  };
+}
 /**
  * @param {ReturnType<typeof getWorkGuideChainState>} chain
  * @returns {string | null}
@@ -135,20 +152,7 @@ function computeWorkGuideChainState(ctx, keyFor, dismissedMap, options) {
 
   const d = (key) => dismissed(keyFor(key), dismissedMap);
 
-  const empty = {
-    pinAll,
-    showPreUploadGuide: false,
-    showPdfOpenedGuide: false,
-    showLeftCriteriaGuide: false,
-    showFirstResultGuide: false,
-    showConsistencyGuide: false,
-    showConsistencyUnifyPinGuide: false,
-    showAuxiliaryVerbGuide: false,
-    showRuleSetSaveGuide: false,
-    showWorkExitGuide: false,
-    workGuideOpen: false,
-    requestConsistencyTab: false,
-  };
+  const empty = emptyWorkGuideChainState(pinAll);
 
   if (!hasPdf) {
     const showPreUploadGuide = !d(WORK_GUIDE_KEYS.PRE_UPLOAD);
@@ -300,7 +304,7 @@ function applyOnboardingExposureGate(empty, chain, uid, keyFor, dismissedMap) {
  * }} ctx
  * @param {(key: string) => string} keyFor
  * @param {Record<string, boolean> | null} [dismissedMap]
- * @param {{ pinAll?: boolean }} [options]
+ * @param {{ pinAll?: boolean, guestBrowseActive?: boolean }} [options]
  */
 export function getWorkGuideChainState(
   uid,
@@ -310,20 +314,14 @@ export function getWorkGuideChainState(
   options = {},
 ) {
   const pinAll = options.pinAll ?? isWorkGuidePinned();
-  const empty = {
-    pinAll,
-    showPreUploadGuide: false,
-    showPdfOpenedGuide: false,
-    showLeftCriteriaGuide: false,
-    showFirstResultGuide: false,
-    showConsistencyGuide: false,
-    showConsistencyUnifyPinGuide: false,
-    showAuxiliaryVerbGuide: false,
-    showRuleSetSaveGuide: false,
-    showWorkExitGuide: false,
-    workGuideOpen: false,
-    requestConsistencyTab: false,
-  };
+  const empty = emptyWorkGuideChainState(pinAll);
+
+  // 둘러보기 전용. 일반 작업·pinAll만으로는 체인을 켜지 않는다.
+  const guestBrowse =
+    options.guestBrowseActive ?? guestBrowseShowsWorkGuideChain();
+  if (!guestBrowse) {
+    return empty;
+  }
 
   const devForceStep = getDevWorkGuideForceStep();
   if (devForceStep != null) {

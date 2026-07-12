@@ -118,8 +118,18 @@
 }
 
 .app-dialog__results-summary .results-header__stat-count {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.05em;
   font-weight: 800;
   line-height: 1;
+}
+
+.app-dialog__results-summary .results-header__stat-unit {
+  font-size: 0.9em;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--color-text-muted);
 }
 
 .app-dialog__results-summary .results-header__total-findings {

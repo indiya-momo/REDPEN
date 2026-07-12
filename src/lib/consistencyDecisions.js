@@ -1,9 +1,13 @@
-import { normalizeConsistencyVariant } from './compoundPairRegister.js';
+import {
+  listConsistencyLiteralEntries,
+  normalizeConsistencyVariant,
+} from './compoundPairRegister.js';
 import {
   applyConsistencyUnifyPin,
   getConsistencyUnifyPinnedTailWord,
 } from './consistencyUnifyRegister.js';
 import { listConsistencyUnifyEntries } from './consistencyRuleLimit.js';
+import { listPhraseSlotEntries } from './phraseSlotRegister.js';
 import { newId } from './ruleSetsStorage.js';
 
 /** @typedef {{
@@ -81,6 +85,44 @@ function normalizeUnifyDecision(raw) {
 }
 
 /**
+ * @param {unknown} raw
+ * @returns {FindConsistencyDecision | null}
+ */
+function normalizeFindDecision(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+  const id = typeof raw.id === 'string' ? raw.id.trim() : '';
+  const at = normalizeAt(raw.at);
+  const query = normalizeConsistencyVariant(
+    typeof raw.query === 'string' ? raw.query : '',
+  );
+  if (!id || !at || !query) return null;
+  /** @type {FindConsistencyDecision} */
+  const decision = { id, kind: 'find', at, query };
+  const byUid = typeof raw.byUid === 'string' ? raw.byUid.trim() : '';
+  if (byUid) decision.byUid = byUid;
+  return decision;
+}
+
+/**
+ * @param {unknown} raw
+ * @returns {CommonStringConsistencyDecision | null}
+ */
+function normalizeCommonStringDecision(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+  const id = typeof raw.id === 'string' ? raw.id.trim() : '';
+  const at = normalizeAt(raw.at);
+  const pattern = normalizeConsistencyVariant(
+    typeof raw.pattern === 'string' ? raw.pattern : '',
+  );
+  if (!id || !at || !pattern) return null;
+  /** @type {CommonStringConsistencyDecision} */
+  const decision = { id, kind: 'commonString', at, pattern };
+  const byUid = typeof raw.byUid === 'string' ? raw.byUid.trim() : '';
+  if (byUid) decision.byUid = byUid;
+  return decision;
+}
+
+/**
  * @param {unknown} decisions
  * @returns {ConsistencyDecision[]}
  */
@@ -95,9 +137,120 @@ export function normalizeConsistencyDecisions(decisions) {
       if (normalized) out.push(normalized);
       continue;
     }
-    // MVP: find/commonString는 저장만 허용, 조회·append는 2단계
+    if (raw.kind === 'find') {
+      const normalized = normalizeFindDecision(raw);
+      if (normalized) out.push(normalized);
+      continue;
+    }
+    if (raw.kind === 'commonString') {
+      const normalized = normalizeCommonStringDecision(raw);
+      if (normalized) out.push(normalized);
+    }
   }
   return out;
+}
+
+/**
+ * @param {{ at?: string, byUid?: string }} [meta]
+ */
+function decisionMeta(meta = {}) {
+  const at = meta.at ?? new Date().toISOString();
+  const byUid = String(meta.byUid ?? '').trim();
+  return { at, byUid };
+}
+
+/**
+ * @param {ConsistencyDecision[] | undefined} decisions
+ * @param {string[]} queries
+ * @param {{ at?: string, byUid?: string }} [meta]
+ */
+export function appendFindDecisions(decisions, queries, meta = {}) {
+  const list = normalizeConsistencyDecisions(decisions);
+  const { at, byUid } = decisionMeta(meta);
+  /** @type {FindConsistencyDecision[]} */
+  const added = [];
+  const seen = new Set();
+  for (const raw of queries ?? []) {
+    const query = normalizeConsistencyVariant(raw);
+    if (!query || seen.has(query)) continue;
+    seen.add(query);
+    /** @type {FindConsistencyDecision} */
+    const decision = {
+      id: newId().replace(/^set_/, 'dec_'),
+      kind: 'find',
+      at,
+      query,
+    };
+    if (byUid) decision.byUid = byUid;
+    added.push(decision);
+  }
+  return added.length ? [...list, ...added] : list;
+}
+
+/**
+ * @param {ConsistencyDecision[] | undefined} decisions
+ * @param {string} patternRaw
+ * @param {{ at?: string, byUid?: string }} [meta]
+ */
+export function appendCommonStringDecision(decisions, patternRaw, meta = {}) {
+  const pattern = normalizeConsistencyVariant(patternRaw);
+  if (!pattern) return normalizeConsistencyDecisions(decisions);
+  const list = normalizeConsistencyDecisions(decisions);
+  const { at, byUid } = decisionMeta(meta);
+  /** @type {CommonStringConsistencyDecision} */
+  const decision = {
+    id: newId().replace(/^set_/, 'dec_'),
+    kind: 'commonString',
+    at,
+    pattern,
+  };
+  if (byUid) decision.byUid = byUid;
+  return [...list, decision];
+}
+
+/**
+ * 이미 등록된 찾기·공통 문자열에 확정 시각이 없으면 fallbackAt으로 채운다.
+ * (이전 버전에서 대장 없이 등록된 항목용)
+ *
+ * @param {unknown} decisions
+ * @param {import('./ruleTypes.js').Rule[] | undefined} customRules
+ * @param {string | undefined} fallbackAt
+ * @returns {ConsistencyDecision[]}
+ */
+export function hydrateConsistencyDecisionsFromRules(
+  decisions,
+  customRules,
+  fallbackAt,
+) {
+  const at = normalizeAt(fallbackAt);
+  let list = normalizeConsistencyDecisions(decisions);
+  if (!at) return list;
+
+  const haveFind = new Set(
+    list
+      .filter((decision) => decision.kind === 'find')
+      .map((decision) => normalizeConsistencyVariant(decision.query)),
+  );
+  const missingFind = listConsistencyLiteralEntries(customRules ?? [])
+    .map((entry) => normalizeConsistencyVariant(entry.tailWord))
+    .filter((query) => query && !haveFind.has(query));
+  if (missingFind.length) {
+    list = appendFindDecisions(list, missingFind, { at });
+  }
+
+  const haveCommon = new Set(
+    list
+      .filter((decision) => decision.kind === 'commonString')
+      .map((decision) => normalizeConsistencyVariant(decision.pattern)),
+  );
+  const missingCommon = listPhraseSlotEntries(customRules ?? [])
+    .map((entry) => normalizeConsistencyVariant(entry.tailWord))
+    .filter((pattern) => pattern && !haveCommon.has(pattern));
+  for (const pattern of missingCommon) {
+    list = appendCommonStringDecision(list, pattern, { at });
+  }
+
+  return list;
 }
 
 /**

@@ -6,7 +6,6 @@ import {
   normalizeProjectPillarMemos,
   normalizeProjectTags,
 } from '../lib/projectMeta.js';
-import { buildDisplayWorkHistory } from '../lib/projectWorkHistory.js';
 import { buildProjectWorkSummary } from '../presentation/projectWorkSummary.js';
 import ProjectHubCriteriaPanel from './projectHub/ProjectHubCriteriaPanel.jsx';
 import ProjectWorkHistoryChart from './projectHub/ProjectWorkHistoryChart.jsx';
@@ -529,13 +528,16 @@ export default function ProjectHubSettingsPanel({
                 summary={buildProjectWorkSummary(ruleSet?.projectContext)}
               />
               <ProjectWorkHistoryChart
-                history={buildDisplayWorkHistory(
-                  ruleSet?.workHistory,
-                  ruleSet?.projectContext,
-                )}
+                history={ruleSet?.workHistory}
+                projectContext={ruleSet?.projectContext}
                 customRules={ruleSet?.customRules ?? []}
                 globalExcludePhrases={ruleSet?.globalExcludePhrases ?? []}
                 consistencyDecisions={ruleSet?.consistencyDecisions ?? []}
+                decisionFallbackAt={
+                  ruleSet?.projectContext?.lastWorkedAt ||
+                  ruleSet?.savedAt ||
+                  ruleSet?.createdAt
+                }
               />
             </div>
           ) : null}

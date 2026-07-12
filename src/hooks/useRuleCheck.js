@@ -102,6 +102,8 @@ export function useRuleCheck({
   );
   const [spellingCheckDone, setSpellingCheckDone] = useState(false);
   const [consistencyCheckDone, setConsistencyCheckDone] = useState(false);
+  /** 검수 버튼 1회 완료마다 +1 — 작업 이력 장부 커밋 신호 */
+  const [workHistoryCommitGen, setWorkHistoryCommitGen] = useState(0);
 
   const selectedInstance =
     activeSource === 'spelling' ? spellingSelected : consistencySelected;
@@ -387,10 +389,15 @@ export function useRuleCheck({
       setIsProcessing(false);
       setProgress(null);
       if (runSpelling) {
+        const cautionCriteriaCount = countSpacingReviewActiveRules({
+          cautionEnabled,
+        });
+        const builtinCriteriaCount = countBuiltInActiveRules({
+          builtInEnabled,
+        });
         await alertSpellingCheckAfterRun(scopeResults, findingCount, {
-          cautionSelected:
-            countSpacingReviewActiveRules({ cautionEnabled }) > 0,
-          builtinSelected: countBuiltInActiveRules({ builtInEnabled }) > 0,
+          cautionSelected: cautionCriteriaCount > 0,
+          builtinSelected: builtinCriteriaCount > 0,
         });
       }
       if (runConsistency) {
@@ -410,6 +417,7 @@ export function useRuleCheck({
           },
         );
       }
+      setWorkHistoryCommitGen((n) => n + 1);
       await afterCheckRef.current?.();
     },
     [
@@ -776,6 +784,7 @@ export function useRuleCheck({
     resultVisibility,
     spellingCheckDone,
     consistencyCheckDone,
+    workHistoryCommitGen,
     selectedInstance,
     checkDone,
     spellingActiveRules,

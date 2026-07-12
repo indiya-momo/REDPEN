@@ -17,6 +17,7 @@ import {
   guestBrowseHidesProjectSaveUi,
   guestBrowseHidesThumbStrip,
   guestBrowseProjectDisplayName,
+  guestBrowseShowsWorkGuideChain,
   isGuestBrowseExportGuideReady,
   isGuestBrowseNextGuideReady,
   markGuestBrowseCriteriaClick,
@@ -33,9 +34,11 @@ describe('guestBrowsePolicy', () => {
   it('둘러보기 — 프로젝트 목록 숨김·표시 이름', () => {
     expect(guestBrowseHidesProjectList()).toBe(false);
     expect(guestBrowseProjectDisplayName()).toBe(null);
+    expect(guestBrowseShowsWorkGuideChain()).toBe(false);
     beginGuestBrowse();
     expect(guestBrowseHidesProjectList()).toBe(true);
     expect(guestBrowseProjectDisplayName()).toBe(GUEST_BROWSE_PROJECT_NAME);
+    expect(guestBrowseShowsWorkGuideChain()).toBe(true);
   });
 
   it('활성 시 정책 플래그에 따라 허용·숨김', () => {
