@@ -136,6 +136,53 @@ function fixedTooltipPosition(rect, placement, offsetX, offsetY) {
   }
 }
 
+const VIEWPORT_EDGE = 14;
+
+/**
+ * fixed 말풍선이 뷰포트 밖으로 잘리지 않게 left/top 보정
+ * @param {import('react').CSSProperties} style
+ * @param {HTMLElement} bubbleEl
+ */
+function clampFixedBubbleToViewport(style, bubbleEl) {
+  const width = bubbleEl.offsetWidth;
+  const height = bubbleEl.offsetHeight;
+  if (!width || !height) return style;
+
+  const transform = String(style.transform ?? 'none');
+  let left =
+    typeof style.left === 'number' ? style.left : bubbleEl.getBoundingClientRect().left;
+  let top =
+    typeof style.top === 'number' ? style.top : bubbleEl.getBoundingClientRect().top;
+
+  // translate(-100%) / translateY(-100%) 등은 실제 박스 위치가 left/top과 다름 → 측정값 기준
+  if (transform !== 'none' && transform !== '') {
+    const rect = bubbleEl.getBoundingClientRect();
+    let dx = 0;
+    let dy = 0;
+    if (rect.left < VIEWPORT_EDGE) dx = VIEWPORT_EDGE - rect.left;
+    if (rect.right > window.innerWidth - VIEWPORT_EDGE) {
+      dx = window.innerWidth - VIEWPORT_EDGE - rect.right;
+    }
+    if (rect.top < VIEWPORT_EDGE) dy = VIEWPORT_EDGE - rect.top;
+    if (rect.bottom > window.innerHeight - VIEWPORT_EDGE) {
+      dy = window.innerHeight - VIEWPORT_EDGE - rect.bottom;
+    }
+    if (dx === 0 && dy === 0) return style;
+    return {
+      ...style,
+      left: left + dx,
+      top: top + dy,
+    };
+  }
+
+  const maxLeft = window.innerWidth - width - VIEWPORT_EDGE;
+  const maxTop = window.innerHeight - height - VIEWPORT_EDGE;
+  const nextLeft = Math.min(Math.max(VIEWPORT_EDGE, left), Math.max(VIEWPORT_EDGE, maxLeft));
+  const nextTop = Math.min(Math.max(VIEWPORT_EDGE, top), Math.max(VIEWPORT_EDGE, maxTop));
+  if (nextLeft === left && nextTop === top) return style;
+  return { ...style, left: nextLeft, top: nextTop, transform: 'none' };
+}
+
 /**
  * @param {{
  *   storageKey: string,
@@ -172,7 +219,7 @@ function fixedTooltipPosition(rect, placement, offsetX, offsetY) {
  *   })[] | null,
  *   bubbleGuideStep?: string | number | null,
  *   pinned?: boolean,
- *   showConfirm?: boolean,
+ *   showConfirm?: boolean, // 기본 true — 작업 가이드 말풍선 확인
  *   confirmGuideAttr?: string,
  *   children: import('react').ReactElement,
  * }} props
@@ -193,11 +240,12 @@ export default function TooltipGuide({
   alignToBubbleChain = null,
   bubbleGuideStep = null,
   pinned = false,
-  showConfirm = false,
+  showConfirm = true,
   confirmGuideAttr,
   children,
 }) {
   const anchorRef = useRef(/** @type {HTMLSpanElement | null} */ (null));
+  const bubbleRef = useRef(/** @type {HTMLDivElement | null} */ (null));
   const [dismissed, setDismissed] = useState(() =>
     isTooltipGuideDismissed(storageKey),
   );
@@ -217,9 +265,10 @@ export default function TooltipGuide({
 
   const syncFixedPosition = useCallback(() => {
     if (!usePortalFixed || dismissed) return;
+    let next = null;
     const aligned = resolveAlignToStyle(alignToBubble, alignToBubbleChain);
     if (aligned) {
-      setFixedStyle(aligned.style);
+      next = aligned.style;
       if (isWorkGuideDebug()) {
         logWorkGuideDebug('fixed-align-bubble', {
           storageKey,
@@ -227,28 +276,49 @@ export default function TooltipGuide({
           fixedStyle: aligned.style,
         });
       }
-      return;
+    } else {
+      const anchor = anchorRef.current;
+      if (!anchor) return;
+      const rect = anchor.getBoundingClientRect();
+      next = fixedTooltipPosition(rect, placement, offsetX, offsetY);
+      if (isWorkGuideDebug()) {
+        logWorkGuideDebug('fixed-anchor', {
+          storageKey,
+          placement,
+          rect: {
+            left: rect.left,
+            top: rect.top,
+            right: rect.right,
+            bottom: rect.bottom,
+            width: rect.width,
+            height: rect.height,
+          },
+          fixedStyle: next,
+        });
+      }
     }
-    const anchor = anchorRef.current;
-    if (!anchor) return;
-    const rect = anchor.getBoundingClientRect();
-    const next = fixedTooltipPosition(rect, placement, offsetX, offsetY);
+    if (!next) return;
     setFixedStyle(next);
-    if (isWorkGuideDebug()) {
-      logWorkGuideDebug('fixed-anchor', {
-        storageKey,
-        placement,
-        rect: {
-          left: rect.left,
-          top: rect.top,
-          right: rect.right,
-          bottom: rect.bottom,
-          width: rect.width,
-          height: rect.height,
-        },
-        fixedStyle: next,
-      });
-    }
+    // 렌더 후 실측으로 뷰포트 안으로 당김 (오른쪽 잘림 → 문구 실종 방지)
+    requestAnimationFrame(() => {
+      const el = bubbleRef.current;
+      if (!el) return;
+      const clamped = clampFixedBubbleToViewport(next, el);
+      if (
+        clamped.left !== next.left ||
+        clamped.top !== next.top ||
+        clamped.transform !== next.transform
+      ) {
+        setFixedStyle(clamped);
+        if (isWorkGuideDebug()) {
+          logWorkGuideDebug('fixed-clamp-viewport', {
+            storageKey,
+            before: next,
+            after: clamped,
+          });
+        }
+      }
+    });
   }, [
     usePortalFixed,
     dismissed,
@@ -316,6 +386,7 @@ export default function TooltipGuide({
 
   const bubble = !dismissed ? (
     <div
+      ref={bubbleRef}
       style={bubbleStyle}
       className={bubbleClassName}
       role="status"

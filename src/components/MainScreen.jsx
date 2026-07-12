@@ -63,6 +63,7 @@ import {
   subscribeGuestBrowseExportGuide,
   subscribeGuestBrowseNextGuide,
 } from '../lib/guestBrowsePolicy.js';
+import { getWorkGuideMessages } from '../lib/workGuideMessages.js';
 import GuideClickHand from './GuideClickHand.jsx';
 import { useHighlights } from '../hooks/useHighlights.js';
 import {
@@ -95,7 +96,6 @@ import {
 } from '../lib/activeRuleCount.js';
 import { countConsistencyCheckActiveRules, countConsistencyFindingsByType, countConsistencyGroupsWithFindings } from '../lib/consistencyCheckConfirm.js';
 import { countSpellingFindingsByCategory, countSpellingGroupsWithFindings } from '../lib/spellingCheckConfirm.js';
-import { LITERAL_FIND_FEATURE_LABEL } from '../lib/consistencyRuleLimit.js';
 import { formatRuleSetSavedDate } from '../lib/ruleSetsStorage.js';
 import {
   buildTabEntries,
@@ -988,6 +988,7 @@ export default function MainScreen({
     consistencyCheckDone: ruleCheck.consistencyCheckDone,
     consistencyExportGuideReady: guestExportGuideReady,
   });
+  const guideMessages = getWorkGuideMessages();
 
   useEffect(() => {
     setGuestNextGuideReady(isGuestBrowseNextGuideReady());
@@ -1483,13 +1484,34 @@ export default function MainScreen({
           />
         ) : null}
         {loanwordConverterEnabled ? (
-          <LoanwordConverter
-            onConvertClick={() => {
-              if (guestWorkGuide.showLeftCriteriaGuide) {
-                guestWorkGuide.dismiss(WORK_GUIDE_KEYS.LEFT_CRITERIA);
+          !isGuestBrowseActive() && guestWorkGuide.showLoanwordIntroGuide ? (
+            <TooltipGuide
+              storageKey={guestWorkGuide.storageKey(
+                WORK_GUIDE_KEYS.LOANWORD_INTRO,
+              )}
+              placement="right"
+              bubbleType="left"
+              useFixedLayer
+              offsetX={8}
+              offsetY={0}
+              bubbleGuideStep="0"
+              pinned={guestWorkGuide.pinAll}
+              message={<guideMessages.SpellingTabIntroMessage />}
+              onDismiss={() =>
+                guestWorkGuide.dismiss(WORK_GUIDE_KEYS.LOANWORD_INTRO)
               }
-            }}
-          />
+            >
+              <LoanwordConverter guideSpotlight />
+            </TooltipGuide>
+          ) : (
+            <LoanwordConverter
+              onConvertClick={() => {
+                if (guestWorkGuide.showLeftCriteriaGuide) {
+                  guestWorkGuide.dismiss(WORK_GUIDE_KEYS.LEFT_CRITERIA);
+                }
+              }}
+            />
+          )
         ) : null}
       </div>
     ) : null;
@@ -1530,7 +1552,7 @@ export default function MainScreen({
           data-work-guide-criteria-run
           title={criteriaRunDisabledReason || undefined}
         >
-          {guestWorkGuide.showLeftCriteriaGuide ? (
+          {guestWorkGuide.showLeftCriteriaGuide && isGuestBrowseActive() ? (
             <TooltipGuide
               storageKey={guestWorkGuide.storageKey(WORK_GUIDE_KEYS.LEFT_CRITERIA)}
               placement="bottom"
@@ -1541,23 +1563,7 @@ export default function MainScreen({
               alignToBubble={WORK_GUIDE_1_ALIGN}
               bubbleGuideStep="1"
               pinned={guestWorkGuide.pinAll}
-              showConfirm={false}
-              message={
-                <>
-                  교정냥 &apos;모모&apos;다냥, 만나서 반갑다냥!
-                  <br />
-                  먼저{' '}
-                  <span className="tooltip-guide__work-tab-chip tooltip-guide__work-tab-chip--spelling">
-                    맞춤법
-                  </span>{' '}
-                  탭부터 보자냥
-                  <br />
-                  <span className="tooltip-guide__gothic-label">
-                    외래어 표기
-                  </span>
-                  는 매일 무제한 사용 가능하다냥
-                </>
-              }
+              message={<guideMessages.LeftCriteriaMessage />}
               onDismiss={() =>
                 guestWorkGuide.dismiss(WORK_GUIDE_KEYS.LEFT_CRITERIA)
               }
@@ -1585,22 +1591,7 @@ export default function MainScreen({
               alignToBubble={WORK_GUIDE_1_ALIGN}
               bubbleGuideStep="1b"
               pinned={guestWorkGuide.pinAll}
-              showConfirm={false}
-              message={
-                <>
-                  <span className="tooltip-guide__gothic-label">
-                    편집자 검토 필요
-                  </span>
-                  는 확인을 꼭 해야 한다냥
-                  <br />
-                  <span className="tooltip-guide__gothic-label">
-                    맞춤법 규칙
-                  </span>
-                  은 바로 적용해도 괜찮다냥
-                  <br />
-                  일단 검수를 시작해 보자냥
-                </>
-              }
+              message={<guideMessages.SpellingStartCheckMessage />}
               onDismiss={() =>
                 guestWorkGuide.dismiss(WORK_GUIDE_KEYS.SPELLING_START_CHECK)
               }
@@ -1625,7 +1616,7 @@ export default function MainScreen({
             />
           )}
         </span>
-        {guestWorkGuide.showLeftCriteriaGuide ? (
+        {guestWorkGuide.showLeftCriteriaGuide && isGuestBrowseActive() ? (
           <GuideClickHand
             active={guestGuideHandActive}
             anchorSelector='[data-work-guide="loanword-convert"]'
@@ -1634,6 +1625,13 @@ export default function MainScreen({
         ) : null}
         {guestWorkGuide.showSpellingStartCheckGuide ? (
           <GuideClickHand active={guestGuideHandActive} align="label-gap" />
+        ) : null}
+        {!isGuestBrowseActive() && guestWorkGuide.showLeftCriteriaGuide ? (
+          <GuideClickHand
+            active
+            anchorSelector='[data-work-guide="criteria-tip"]'
+            align="center"
+          />
         ) : null}
         {guestWorkGuide.showFirstResultGuide &&
         (!guestBrowseAutoRunsCriteriaCheck() ||
@@ -1649,26 +1647,7 @@ export default function MainScreen({
               offsetX={0}
               offsetY={0}
               pinned={guestWorkGuide.pinAll}
-              showConfirm={false}
-              message={
-                <>
-                  맞춤법 검수가 완료되었다냥
-                  <br />
-                  왼쪽에는{' '}
-                  <span className="results-header-badge result-pillar--spelling-caution">
-                    편집자 검토 필요
-                  </span>{' '}
-                  <span className="results-header-badge result-pillar--spelling">
-                    맞춤법 규칙
-                  </span>
-                  <br />
-                  검사 결과가 나온다냥
-                  <br />
-                  오른쪽 원고에서 하이라이트를 클릭하면
-                  <br />
-                  해당하는 설명이 나온다냥
-                </>
-              }
+              message={<guideMessages.FirstResultMessage />}
               onDismiss={() =>
                 guestWorkGuide.dismiss(WORK_GUIDE_KEYS.FIRST_RESULT)
               }
@@ -1742,14 +1721,7 @@ export default function MainScreen({
       offsetX={0}
       offsetY={0}
       pinned={guestWorkGuide.pinAll}
-      showConfirm={false}
-      message={
-        <>
-          회원은 검수 결과를 다운받을 수 있고
-          <br />
-          검수 항목을 프로젝트로 저장할 수 있다냥
-        </>
-      }
+      message={<guideMessages.RuleSetSaveMessage />}
       onDismiss={() => guestWorkGuide.dismiss(WORK_GUIDE_KEYS.RULE_SET_SAVE)}
     >
       {greetingAnchor}
@@ -1766,32 +1738,9 @@ export default function MainScreen({
       offsetY={8}
       pinned={guestWorkGuide.pinAll}
       message={
-        consistencyGuideLiteralAddClicked ? (
-          <>
-            <span className="tooltip-guide__gothic-label">통일형 만들기</span>
-            에서는
-            <br />
-            여러 항목을 통일할 수 있다냥
-            <br />
-            +를 눌러 예시 항목을 추가해 보자냥!
-          </>
-        ) : (
-          <>
-            <span className="tooltip-guide__work-tab-chip tooltip-guide__work-tab-chip--consistency">
-              표기 통일
-            </span>{' '}
-            기능이다냥
-            <br />
-            <span className="tooltip-guide__gothic-label">
-              {LITERAL_FIND_FEATURE_LABEL}
-            </span>
-            에서는 최대 5개를
-            <br />
-            한 번에 검색할 수 있어 편리하다냥
-            <br />
-            +를 눌러 예시 항목을 추가해 보자냥!
-          </>
-        )
+        <guideMessages.ConsistencyIntroMessage
+          literalAddClicked={consistencyGuideLiteralAddClicked}
+        />
       }
       onDismiss={() =>
         guestWorkGuide.dismiss(WORK_GUIDE_KEYS.CONSISTENCY_INTRO)
@@ -1986,15 +1935,48 @@ export default function MainScreen({
                   {spellingResultsPanel}
                 </div>
               ) : !tabCheckDone ? (
-                <ResizableBuiltinSpelling
-                  builtInEnabled={builtInEnabled}
-                  onBuiltInToggle={onBuiltInToggle}
-                  onBuiltInSetAll={onBuiltInSetAll}
-                  cautionEnabled={cautionEnabled}
-                  onCautionToggle={onCautionToggle}
-                  onCautionSetAll={onCautionSetAll}
-                  fillPanel
-                />
+                !isGuestBrowseActive() &&
+                guestWorkGuide.showLeftCriteriaGuide ? (
+                  <TooltipGuide
+                    storageKey={guestWorkGuide.storageKey(
+                      WORK_GUIDE_KEYS.LEFT_CRITERIA,
+                    )}
+                    placement="right"
+                    bubbleType="left"
+                    useFixedLayer
+                    offsetX={8}
+                    offsetY={0}
+                    bubbleGuideStep="1"
+                    pinned={guestWorkGuide.pinAll}
+                    message={<guideMessages.LeftCriteriaMessage />}
+                    onDismiss={() =>
+                      guestWorkGuide.dismiss(WORK_GUIDE_KEYS.LEFT_CRITERIA)
+                    }
+                  >
+                    <div className="work-guide-criteria-anchor">
+                      <ResizableBuiltinSpelling
+                        builtInEnabled={builtInEnabled}
+                        onBuiltInToggle={onBuiltInToggle}
+                        onBuiltInSetAll={onBuiltInSetAll}
+                        cautionEnabled={cautionEnabled}
+                        onCautionToggle={onCautionToggle}
+                        onCautionSetAll={onCautionSetAll}
+                        fillPanel
+                        guideSpotlight
+                      />
+                    </div>
+                  </TooltipGuide>
+                ) : (
+                  <ResizableBuiltinSpelling
+                    builtInEnabled={builtInEnabled}
+                    onBuiltInToggle={onBuiltInToggle}
+                    onBuiltInSetAll={onBuiltInSetAll}
+                    cautionEnabled={cautionEnabled}
+                    onCautionToggle={onCautionToggle}
+                    onCautionSetAll={onCautionSetAll}
+                    fillPanel
+                  />
+                )
               ) : null}
             </div>
           </div>
@@ -2195,6 +2177,7 @@ export default function MainScreen({
                           ),
                           alignToBubbleChain: WORK_GUIDE_5_ALIGN_CHAIN,
                           pinned: guestWorkGuide.pinAll,
+                          message: <guideMessages.AuxiliaryVerbMessage />,
                           onDismiss: () =>
                             guestWorkGuide.dismiss(
                               WORK_GUIDE_KEYS.AUXILIARY_VERB_INTRO,
@@ -2210,6 +2193,7 @@ export default function MainScreen({
                           ),
                           alignToBubble: WORK_GUIDE_UNIFY_PIN_ALIGN,
                           pinned: guestWorkGuide.pinAll,
+                          message: <guideMessages.ConsistencyUnifyPinMessage />,
                           onDismiss: () =>
                             guestWorkGuide.dismiss(
                               WORK_GUIDE_KEYS.CONSISTENCY_UNIFY_PIN,
@@ -2382,27 +2366,7 @@ export default function MainScreen({
                     offsetX={0}
                     offsetY={8}
                     pinned={guestWorkGuide.pinAll}
-                    message={
-                      <>
-                        <span className="tooltip-guide__message-line">
-                          모모는 늘 여기에 있다냥
-                        </span>
-                        <span className="tooltip-guide__message-line">
-                          회원 가입 후 사용하다 질문이 생기면
-                        </span>
-                        <span className="tooltip-guide__message-line">
-                          <span className="tooltip-guide__feedback-btn-look">
-                            <MessageSquare
-                              size={14}
-                              aria-hidden
-                              className="tooltip-guide__feedback-btn-look__icon"
-                            />
-                            피드백
-                          </span>
-                          으로 물어보라냥!
-                        </span>
-                      </>
-                    }
+                    message={<guideMessages.WorkExitMessage />}
                     onDismiss={() => {
                       guestWorkGuide.dismiss(WORK_GUIDE_KEYS.WORK_EXIT);
                       trackGuestBrowseCompleted();
@@ -2500,6 +2464,7 @@ export default function MainScreen({
                   </p>
                 </div>
               ) : (
+              <>
             <PdfCenterStage
               fileRef={pdf.fileRef}
               onOpenPicker={session.openPdfWithPicker}
@@ -2538,10 +2503,28 @@ export default function MainScreen({
                 WORK_GUIDE_KEYS.PRE_UPLOAD,
               )}
               uploadGuidePinned={guestWorkGuide.pinAll}
+              uploadGuideMessage={
+                isGuestBrowseActive() ? (
+                  '처음 할 일은 이거다냥'
+                ) : (
+                  <guideMessages.PreUploadMessage />
+                )
+              }
+              uploadGuideSpotlight={
+                !isGuestBrowseActive() && guestWorkGuide.showPreUploadGuide
+              }
               onUploadGuideDismiss={() =>
                 guestWorkGuide.dismiss(WORK_GUIDE_KEYS.PRE_UPLOAD)
               }
             />
+                {!isGuestBrowseActive() && guestWorkGuide.showPreUploadGuide ? (
+                  <GuideClickHand
+                    active
+                    anchorSelector='[data-work-guide="pdf-open"]'
+                    align="center"
+                  />
+                ) : null}
+              </>
               )
             ) : (
             <>

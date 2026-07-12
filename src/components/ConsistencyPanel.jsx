@@ -94,6 +94,7 @@ import TooltipGuide from './TooltipGuide.jsx';
  *     storageKey: string,
  *     alignToBubbleChain: readonly object[],
  *     pinned: boolean,
+ *     message: import('react').ReactNode,
  *     onDismiss: () => void,
  *   } | null,
  *   onLiteralAddButtonClick?: () => void,
@@ -104,6 +105,7 @@ import TooltipGuide from './TooltipGuide.jsx';
  *     storageKey: string,
  *     alignToBubble: object,
  *     pinned: boolean,
+ *     message: import('react').ReactNode,
  *     onDismiss: () => void,
  *   } | null,
  * }} props
@@ -357,14 +359,7 @@ export default function ConsistencyPanel({
             offsetX={8}
             offsetY={0}
             pinned={consistencyUnifyPinGuide.pinned}
-            showConfirm={false}
-            message={
-              <>
-                통일형으로 지정하고 싶은 항목에
-                <br />
-                📌를 붙이면 된다냥
-              </>
-            }
+            message={consistencyUnifyPinGuide.message}
             onDismiss={consistencyUnifyPinGuide.onDismiss}
           >
             <span
@@ -510,20 +505,7 @@ export default function ConsistencyPanel({
             offsetX={0}
             offsetY={0}
             pinned={auxiliaryVerbGuide.pinned}
-            showConfirm={false}
-            message={
-              <>
-                <span className="tooltip-guide__gothic-label">
-                  {AUXILIARY_VERB_FEATURE_LABEL}
-                </span>
-                <br />
-                집사가 이거 넣다가
-                <br />
-                맞춤법 공부 많이 했다냥
-                <br />
-                자기전에 생각난다냥...
-              </>
-            }
+            message={auxiliaryVerbGuide.message}
             onDismiss={auxiliaryVerbGuide.onDismiss}
           >
             <span

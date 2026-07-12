@@ -16,8 +16,9 @@ import { commitWorkGuideOnboardingExposureSlot } from '../lib/workGuideOnboardin
 import { dismissTooltipGuide } from '../lib/tooltipGuideStorage.js';
 
 /**
- * 둘러보기 전용 작업 말풍선 훅.
- * 일반 로그인 작업에서는 EMPTY만 반환하며 체인·노출·DEV 강제 단계를 돌리지 않는다.
+ * 작업 말풍선 훅.
+ * - 둘러보기(게스트): 세션 동안 체인
+ * - 로그인 회원: uid별 dismiss + 온보딩 노출(하루 1·최대 5회)
  *
  * @param {string} uid
  * @param {{
@@ -41,11 +42,13 @@ export function useGuestBrowseWorkGuide(uid, ctx) {
   const [rev, setRev] = useState(0);
   const bump = useCallback(() => setRev((n) => n + 1), []);
   const guestBrowseActive = guestBrowseShowsWorkGuideChain();
+  const memberUid = String(uid ?? '').trim();
+  const guidesActive = guestBrowseActive || Boolean(memberUid);
 
   useEffect(() => {
-    if (!guestBrowseActive) return;
+    if (!guidesActive) return;
     syncWorkGuideOnAuthChange(uid);
-  }, [uid, guestBrowseActive]);
+  }, [uid, guidesActive]);
 
   const storageKey = useCallback(
     (key) => workGuideStorageKey(uid, key),
@@ -54,17 +57,17 @@ export function useGuestBrowseWorkGuide(uid, ctx) {
 
   const dismiss = useCallback(
     (key) => {
-      if (!guestBrowseActive) return;
+      if (!guidesActive) return;
       if (isWorkGuidePinned()) return;
       dismissTooltipGuide(storageKey(key));
       setDevWorkGuideForceStep(null);
       bump();
     },
-    [guestBrowseActive, storageKey, bump],
+    [guidesActive, storageKey, bump],
   );
 
   const chain = useMemo(() => {
-    if (!guestBrowseActive) return EMPTY_GUEST_BROWSE_WORK_GUIDE;
+    if (!guidesActive) return EMPTY_GUEST_BROWSE_WORK_GUIDE;
     return getWorkGuideChainState(
       uid,
       {
@@ -77,9 +80,10 @@ export function useGuestBrowseWorkGuide(uid, ctx) {
       },
       storageKey,
       null,
-      { guestBrowseActive: true },
+      { guestBrowseActive },
     );
   }, [
+    guidesActive,
     guestBrowseActive,
     uid,
     hasPdf,
@@ -92,34 +96,33 @@ export function useGuestBrowseWorkGuide(uid, ctx) {
     rev,
   ]);
 
-  const openGuideStep = guestBrowseActive
+  const openGuideStep = guidesActive
     ? devWorkGuideStepFromChain(chain)
     : null;
 
   useEffect(() => {
-    if (!guestBrowseActive) return;
+    if (!guidesActive || !memberUid) return;
     if (
-      !uid ||
       openGuideStep == null ||
       isWorkGuidePinned() ||
       getDevWorkGuideForceStep() != null
     ) {
       return;
     }
-    const result = commitWorkGuideOnboardingExposureSlot(uid);
+    const result = commitWorkGuideOnboardingExposureSlot(memberUid);
     if (result.committed) bump();
-  }, [guestBrowseActive, uid, openGuideStep, bump]);
+  }, [guidesActive, memberUid, openGuideStep, bump]);
 
   useEffect(() => {
     if (!import.meta.env.DEV) return;
-    if (!guestBrowseActive) {
+    if (!guidesActive) {
       setDevWorkGuideForceStep(null);
       return;
     }
     setDevWorkGuideForceStep(devWorkGuideStepFromChain(chain));
-  }, [guestBrowseActive, chain]);
+  }, [guidesActive, chain]);
 
-  if (!guestBrowseActive) {
+  if (!guidesActive) {
     return EMPTY_GUEST_BROWSE_WORK_GUIDE;
   }
 

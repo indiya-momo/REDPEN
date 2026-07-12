@@ -20,12 +20,14 @@ import DetailsChevron from './DetailsChevron.jsx';
  *   builtInEnabled: Record<string, boolean>,
  *   onBuiltInToggle: (find: string) => void,
  *   onBuiltInSetAll: (enabled: boolean) => void,
+ *   guideSpotlight?: boolean,
  * }} props
  */
 export default function BuiltinSpellingPanel({
   builtInEnabled,
   onBuiltInToggle,
   onBuiltInSetAll,
+  guideSpotlight = false,
 }) {
   const selectAllRef = useRef(/** @type {HTMLInputElement | null} */ (null));
   const [activeTipByGroup, setActiveTipByGroup] = useState(
@@ -237,7 +239,10 @@ export default function BuiltinSpellingPanel({
 
   return (
     <details className="builtin-spelling-details">
-      <summary className="builtin-spelling-summary panel-criteria-heading">
+      <summary
+        className="builtin-spelling-summary panel-criteria-heading"
+        data-work-guide="criteria-spelling-heading"
+      >
         <DetailsChevron />
         <label
           className="builtin-spelling-select-all"
