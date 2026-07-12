@@ -13,6 +13,7 @@ import { useProjectTagFilter } from '../../hooks/useProjectTagFilter.js';
 import ProjectLibraryCard from '../../mock/mypagePrototype/ProjectLibraryCard.jsx';
 import ProjectLibraryEmptySlot from '../../mock/mypagePrototype/ProjectLibraryEmptySlot.jsx';
 import SharePreviewModal from '../../mock/mypagePrototype/SharePreviewModal.jsx';
+import ProjectMetaEditModal from '../ProjectMetaEditModal.jsx';
 import ProjectHubTagFilters from './ProjectHubTagFilters.jsx';
 
 /**
@@ -56,6 +57,11 @@ export default function ProjectHubLibraryPanel({
   const [internalSharePreviewCardId, setInternalSharePreviewCardId] = useState(
     /** @type {string | null} */ (null),
   );
+  const [metaEditCardId, setMetaEditCardId] = useState(
+    /** @type {string | null} */ (null),
+  );
+  const [metaSaving, setMetaSaving] = useState(false);
+
   const isSharePreviewControlled = onSharePreviewCardIdChange !== undefined;
   const sharePreviewCardId = isSharePreviewControlled
     ? (sharePreviewCardIdProp ?? null)
@@ -84,6 +90,31 @@ export default function ProjectHubLibraryPanel({
     () => previewCards.find((card) => card.id === sharePreviewCardId) ?? null,
     [previewCards, sharePreviewCardId],
   );
+
+  const metaEditCard = useMemo(
+    () => previewCards.find((card) => card.id === metaEditCardId) ?? null,
+    [previewCards, metaEditCardId],
+  );
+
+  /**
+   * @param {import('../../presentation/projectCardViewModel.js').ProjectCardViewModel} card
+   */
+  function renderLibraryCard(card) {
+    return (
+      <ProjectLibraryCard
+        key={card.id}
+        card={card}
+        nameEditable={false}
+        selected={card.id === selectedCardId}
+        onSelect={onSelectCard ? () => onSelectCard(card.id) : undefined}
+        onEditMeta={() => setMetaEditCardId(card.id)}
+        onStartWork={() => void actions.handleStartWork(card.id)}
+        onDuplicate={() => void actions.handleDuplicate(card.id)}
+        onDelete={() => void actions.handleDelete(card.id, card.title)}
+        onSharePreview={() => openSharePreview(card.id)}
+      />
+    );
+  }
 
   return (
     <>
@@ -137,28 +168,7 @@ export default function ProjectHubLibraryPanel({
             >
               {activeTag ? (
                 <>
-                  {filteredCards.map((card) => (
-                    <ProjectLibraryCard
-                      key={card.id}
-                      card={card}
-                      nameEditable={false}
-                      selected={card.id === selectedCardId}
-                      onSelect={
-                        onSelectCard
-                          ? () => onSelectCard(card.id)
-                          : undefined
-                      }
-                      onUpdateMeta={(patch) =>
-                        void actions.handleUpdateMeta(card.id, patch)
-                      }
-                      onStartWork={() => void actions.handleStartWork(card.id)}
-                      onDuplicate={() => void actions.handleDuplicate(card.id)}
-                      onDelete={() =>
-                        void actions.handleDelete(card.id, card.title)
-                      }
-                      onSharePreview={() => openSharePreview(card.id)}
-                    />
-                  ))}
+                  {filteredCards.map((card) => renderLibraryCard(card))}
                   {filteredCards.length === 0 ? (
                     <p className="mypage__project-filter-empty" role="status">
                       선택한 태그에 해당하는 프로젝트가 없습니다.
@@ -168,26 +178,7 @@ export default function ProjectHubLibraryPanel({
               ) : (
                 librarySlots.map((card, index) =>
                   card ? (
-                    <ProjectLibraryCard
-                      key={card.id}
-                      card={card}
-                      nameEditable={false}
-                      selected={card.id === selectedCardId}
-                      onSelect={
-                        onSelectCard
-                          ? () => onSelectCard(card.id)
-                          : undefined
-                      }
-                      onUpdateMeta={(patch) =>
-                        void actions.handleUpdateMeta(card.id, patch)
-                      }
-                      onStartWork={() => void actions.handleStartWork(card.id)}
-                      onDuplicate={() => void actions.handleDuplicate(card.id)}
-                      onDelete={() =>
-                        void actions.handleDelete(card.id, card.title)
-                      }
-                      onSharePreview={() => openSharePreview(card.id)}
-                    />
+                    renderLibraryCard(card)
                   ) : (
                     <ProjectLibraryEmptySlot key={`library-empty-slot-${index}`} />
                   ),
@@ -204,6 +195,26 @@ export default function ProjectHubLibraryPanel({
           onClose={closeSharePreview}
         />
       ) : null}
+
+      <ProjectMetaEditModal
+        open={Boolean(metaEditCard)}
+        projectTitle={metaEditCard?.title ?? ''}
+        initialTags={metaEditCard?.tags ?? []}
+        initialMemo={metaEditCard?.memo ?? ''}
+        initialFormatLabel={metaEditCard?.formatLabel ?? ''}
+        saving={metaSaving}
+        onClose={() => setMetaEditCardId(null)}
+        onSave={async (payload) => {
+          if (!metaEditCard) return;
+          setMetaSaving(true);
+          try {
+            await actions.handleUpdateMeta(metaEditCard.id, payload);
+            setMetaEditCardId(null);
+          } finally {
+            setMetaSaving(false);
+          }
+        }}
+      />
     </>
   );
 }

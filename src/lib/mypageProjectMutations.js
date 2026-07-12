@@ -9,6 +9,7 @@ import {
 } from './cautionRules.js';
 import { builtInEnabledFromSheet } from './builtInRules.js';
 import { normalizeRuleSet } from './ruleSetNormalize.js';
+import { buildCriteriaCheckpoint } from './criteriaCheckpoint.js';
 import {
   duplicateRuleSet,
   newId,
@@ -120,8 +121,12 @@ export function planDuplicateProject(sets, setId, uid = '', email = '') {
       lastWorkedAt: duplicatedAt,
     },
   });
+  const copyWithCheckpoint = normalizeRuleSet({
+    ...copy,
+    criteriaCheckpoint: buildCriteriaCheckpoint(copy),
+  });
 
-  if (!canAddCriteriaPreset(sets, copy.name, uid, email)) {
+  if (!canAddCriteriaPreset(sets, copyWithCheckpoint.name, uid, email)) {
     return {
       ok: false,
       reason: 'slot_limit',
@@ -131,9 +136,9 @@ export function planDuplicateProject(sets, setId, uid = '', email = '') {
 
   return {
     ok: true,
-    next: [...sets, copy],
-    newSetId: copy.id,
-    label: copy.name,
+    next: [...sets, copyWithCheckpoint],
+    newSetId: copyWithCheckpoint.id,
+    label: copyWithCheckpoint.name,
   };
 }
 
