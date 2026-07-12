@@ -6,13 +6,15 @@ import { useMemo, useState } from 'react';
 import {
   buildMockLibrarySlots,
   formatLibrarySlotGauge,
+  planLibraryShelfCards,
 } from '../../lib/mypageProjectDisplay.js';
 import { useProjectHubActions } from '../../hooks/useProjectHubActions.js';
 import { useProjectHubLibrary } from '../../hooks/useProjectHubLibrary.js';
 import { useProjectTagFilter } from '../../hooks/useProjectTagFilter.js';
-import ProjectLibraryCard from '../../mock/mypagePrototype/ProjectLibraryCard.jsx';
-import ProjectLibraryEmptySlot from '../../mock/mypagePrototype/ProjectLibraryEmptySlot.jsx';
-import SharePreviewModal from '../../mock/mypagePrototype/SharePreviewModal.jsx';
+import ProjectLibraryCard from './ProjectLibraryCard.jsx';
+import ProjectLibraryEmptySlot from './ProjectLibraryEmptySlot.jsx';
+import SharePreviewModal from './SharePreviewModal.jsx';
+import './project-library.css';
 import ProjectHubTagFilters from './ProjectHubTagFilters.jsx';
 
 /**
@@ -43,7 +45,7 @@ export default function ProjectHubLibraryPanel({
 }) {
   const libraryInternal = useProjectHubLibrary(uid, email);
   const library = libraryProp ?? libraryInternal;
-  const { previewCards, loading } = library;
+  const { previewCards, loading, slotLabel, slotPlan } = library;
 
   const tagFilterInternal = useProjectTagFilter(previewCards);
   const tagFilter = tagFilterProp ?? tagFilterInternal;
@@ -56,6 +58,8 @@ export default function ProjectHubLibraryPanel({
   const [internalSharePreviewCardId, setInternalSharePreviewCardId] = useState(
     /** @type {string | null} */ (null),
   );
+  const [shelfExpanded, setShelfExpanded] = useState(false);
+
   const isSharePreviewControlled = onSharePreviewCardIdChange !== undefined;
   const sharePreviewCardId = isSharePreviewControlled
     ? (sharePreviewCardIdProp ?? null)
@@ -75,15 +79,44 @@ export default function ProjectHubLibraryPanel({
     setInternalSharePreviewCardId(null);
   };
 
+  const shelf = useMemo(
+    () => planLibraryShelfCards(previewCards, { expanded: shelfExpanded }),
+    [previewCards, shelfExpanded],
+  );
+
   const librarySlots = useMemo(
-    () => buildMockLibrarySlots(previewCards),
-    [previewCards],
+    () => buildMockLibrarySlots(shelf.visibleCards),
+    [shelf.visibleCards],
   );
 
   const sharePreviewCard = useMemo(
     () => previewCards.find((card) => card.id === sharePreviewCardId) ?? null,
     [previewCards, sharePreviewCardId],
   );
+
+  /**
+   * @param {import('../../presentation/projectCardViewModel.js').ProjectCardViewModel} card
+   */
+  function renderLibraryCard(card) {
+    return (
+      <ProjectLibraryCard
+        key={card.id}
+        card={card}
+        nameEditable={false}
+        selected={card.id === selectedCardId}
+        onSelect={onSelectCard ? () => onSelectCard(card.id) : undefined}
+        onStartWork={() => void actions.handleStartWork(card.id)}
+        onDuplicate={() => void actions.handleDuplicate(card.id)}
+        onDelete={() => void actions.handleDelete(card.id, card.title)}
+        onSharePreview={() => openSharePreview(card.id)}
+      />
+    );
+  }
+
+  const gaugeLabel =
+    typeof slotLabel === 'string' && slotLabel
+      ? slotLabel
+      : formatLibrarySlotGauge(previewCards.length);
 
   return (
     <>
@@ -113,7 +146,7 @@ export default function ProjectHubLibraryPanel({
             </div>
           </div>
           <p className="mypage__project-slot-gauge" aria-live="polite">
-            슬롯 <strong>{formatLibrarySlotGauge(previewCards.length)}</strong>
+            저장 <strong>{gaugeLabel}</strong>
           </p>
         </div>
 
@@ -133,67 +166,56 @@ export default function ProjectHubLibraryPanel({
             />
 
             <div
-              className={`mypage-proto__grid${activeTag ? '' : ' mypage-proto__grid--triple'}`}
+              className={`mypage-proto__grid${
+                activeTag || shelf.expanded ? '' : ' mypage-proto__grid--triple'
+              }`}
             >
               {activeTag ? (
                 <>
-                  {filteredCards.map((card) => (
-                    <ProjectLibraryCard
-                      key={card.id}
-                      card={card}
-                      nameEditable={false}
-                      selected={card.id === selectedCardId}
-                      onSelect={
-                        onSelectCard
-                          ? () => onSelectCard(card.id)
-                          : undefined
-                      }
-                      onUpdateMeta={(patch) =>
-                        void actions.handleUpdateMeta(card.id, patch)
-                      }
-                      onStartWork={() => void actions.handleStartWork(card.id)}
-                      onDuplicate={() => void actions.handleDuplicate(card.id)}
-                      onDelete={() =>
-                        void actions.handleDelete(card.id, card.title)
-                      }
-                      onSharePreview={() => openSharePreview(card.id)}
-                    />
-                  ))}
+                  {filteredCards.map((card) => renderLibraryCard(card))}
                   {filteredCards.length === 0 ? (
                     <p className="mypage__project-filter-empty" role="status">
                       선택한 태그에 해당하는 프로젝트가 없습니다.
                     </p>
                   ) : null}
                 </>
+              ) : shelf.expanded ? (
+                shelf.visibleCards.map((card) => renderLibraryCard(card))
               ) : (
-                librarySlots.map((card, index) =>
-                  card ? (
-                    <ProjectLibraryCard
-                      key={card.id}
-                      card={card}
-                      nameEditable={false}
-                      selected={card.id === selectedCardId}
-                      onSelect={
-                        onSelectCard
-                          ? () => onSelectCard(card.id)
-                          : undefined
-                      }
-                      onUpdateMeta={(patch) =>
-                        void actions.handleUpdateMeta(card.id, patch)
-                      }
-                      onStartWork={() => void actions.handleStartWork(card.id)}
-                      onDuplicate={() => void actions.handleDuplicate(card.id)}
-                      onDelete={() =>
-                        void actions.handleDelete(card.id, card.title)
-                      }
-                      onSharePreview={() => openSharePreview(card.id)}
-                    />
-                  ) : (
-                    <ProjectLibraryEmptySlot key={`library-empty-slot-${index}`} />
-                  ),
-                )
+                (() => {
+                  let emptyOrdinal = 0;
+                  return librarySlots.map((card, index) => {
+                    if (card) return renderLibraryCard(card);
+                    emptyOrdinal += 1;
+                    const locked =
+                      emptyOrdinal > (slotPlan?.actionableEmptySlotCount ?? 0);
+                    return (
+                      <ProjectLibraryEmptySlot
+                        key={`library-empty-slot-${index}`}
+                        locked={locked}
+                      />
+                    );
+                  });
+                })()
               )}
             </div>
+
+            {!activeTag && shelf.canExpand ? (
+              <div className="mypage__project-shelf-more">
+                <button
+                  type="button"
+                  className="mypage__project-shelf-more-btn"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setShelfExpanded((prev) => !prev);
+                  }}
+                >
+                  {shelf.expanded
+                    ? '접기'
+                    : `더 보기 (${shelf.hiddenCount})`}
+                </button>
+              </div>
+            ) : null}
           </div>
         )}
       </section>

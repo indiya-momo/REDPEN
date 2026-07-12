@@ -37,13 +37,17 @@ import {
 import { isLoginRequiredForChecks } from './lib/checkAuthGate.js';
 import {
   beginGuestBrowse,
+  clearGuestBrowseConsistencyChips,
   endGuestBrowse,
   guestBrowseAllowsWorkspaceStay,
+  isGuestBrowseActive,
+  prepareGuestBrowseConsistencyRules,
 } from './lib/guestBrowsePolicy.js';
 import { isOnboardingComplete } from './lib/userProfileStorage.js';
 import {
   identifyAnalyticsUser,
   resetAnalyticsUser,
+  trackGuestBrowseStarted,
   waitForAnalyticsReady,
 } from './lib/analytics.js';
 import { resolveQuotaAuthEmail } from './lib/betaDailyQuota.js';
@@ -404,7 +408,14 @@ export default function App() {
         }}
         onBrowse={() => {
           beginGuestBrowse();
+          trackGuestBrowseStarted();
           setMainWorkTab('spelling');
+          updateActiveSet({
+            customRules: prepareGuestBrowseConsistencyRules(
+              activeSet?.customRules ?? [],
+            ),
+            globalExcludePhrases: [],
+          });
           void clearWorkSession()
             .catch(() => {})
             .finally(() => {
@@ -449,6 +460,8 @@ export default function App() {
         activeSet.builtInEnabled ?? builtInEnabledFromSheet()
       }
       customRules={resolvedCustomRules}
+      consistencyDecisions={activeSet.consistencyDecisions ?? []}
+      decisionByUid={authSession?.uid ?? ''}
       globalExcludePhrases={activeSet.globalExcludePhrases ?? []}
       tocBodyText={activeSet.tocBodyText ?? ''}
       tocBodyStartPage={activeSet.tocBodyStartPage ?? null}
@@ -461,8 +474,13 @@ export default function App() {
       onBuiltInSetAll={handleBuiltInSetAll}
       onCautionToggle={handleCautionToggle}
       onCautionSetAll={handleCautionSetAll}
-      onCustomRulesChange={(customRules) =>
-        updateActiveSet({ customRules: ensureDefaultAuxiliaryVerbs(customRules) })
+      onCustomRulesChange={(customRules, extra) =>
+        updateActiveSet({
+          customRules: ensureDefaultAuxiliaryVerbs(customRules),
+          ...(extra?.consistencyDecisions
+            ? { consistencyDecisions: extra.consistencyDecisions }
+            : {}),
+        })
       }
       onGlobalExcludePhrasesChange={(globalExcludePhrases) =>
         updateActiveSet({ globalExcludePhrases })
@@ -477,7 +495,16 @@ export default function App() {
       onTouchActiveProjectContext={touchActiveProjectContext}
       onOpenWelcome={() => {
         welcomeManualReturnRef.current = true;
+        const wasGuest = isGuestBrowseActive();
         endGuestBrowse();
+        if (wasGuest) {
+          updateActiveSet({
+            customRules: clearGuestBrowseConsistencyChips(
+              activeSet?.customRules ?? [],
+            ),
+            globalExcludePhrases: [],
+          });
+        }
         flushPendingRuleSetsSave();
         void clearWorkSession();
         setMainWorkTab('spelling');

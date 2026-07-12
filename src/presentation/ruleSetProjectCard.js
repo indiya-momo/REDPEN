@@ -23,6 +23,8 @@ import { buildProjectCardSummary } from '../lib/projectCardSummary.js';
 import { criteriaNameForInput } from '../lib/criteriaName.js';
 import { formatProjectCardDotDateFromIso } from './projectCardViewModel.js';
 import { normalizeProjectTags } from '../lib/projectMeta.js';
+import { buildWorkHistoryDecisionLedger } from './workHistoryDecisionLedger.js';
+import { isRuleSetCriteriaDirty } from '../lib/criteriaCheckpoint.js';
 
 /** @param {import('../lib/ruleSetsStorage.js').RuleSet} set */
 function projectTitle(set) {
@@ -171,6 +173,7 @@ export function buildProjectCardViewModelFromRuleSet(set, options = {}) {
     formatLabel: set.projectContext?.formatLabel,
     savedDate: summary.savedDate,
     isActive: options.isActive === true,
-    dirty: false,
+    dirty: isRuleSetCriteriaDirty(set),
+    decisionLedger: buildWorkHistoryDecisionLedger(set.consistencyDecisions),
   };
 }

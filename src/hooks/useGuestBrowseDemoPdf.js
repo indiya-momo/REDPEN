@@ -10,7 +10,6 @@ import { fetchOnboardingSamplePdfFile } from '../lib/onboardingSamplePdf.js';
  *   isRestoring: boolean,
  *   hasPdf: boolean,
  *   loadPdfFile: (file: File) => Promise<unknown>,
- *   showPreUploadGuide: boolean,
  *   dismissPreUpload: () => void,
  *   onLoaded?: () => void,
  * }} options
@@ -19,7 +18,6 @@ export function useGuestBrowseDemoPdf({
   isRestoring,
   hasPdf,
   loadPdfFile,
-  showPreUploadGuide,
   dismissPreUpload,
   onLoaded,
 }) {
@@ -35,7 +33,6 @@ export function useGuestBrowseDemoPdf({
     if (!guestBrowseAllowsDemoPdfAutoLoad()) return undefined;
     if (isRestoring) return undefined;
     if (hasPdf || loadRef.current !== 'idle') return undefined;
-    if (!showPreUploadGuide) return undefined;
     if (import.meta.env.DEV) {
       const devPdf = new URLSearchParams(window.location.search).get('devPdf');
       if (devPdf) return undefined;
@@ -66,12 +63,5 @@ export function useGuestBrowseDemoPdf({
     return () => {
       cancelled = true;
     };
-  }, [
-    isRestoring,
-    hasPdf,
-    loadPdfFile,
-    showPreUploadGuide,
-    dismissPreUpload,
-    onLoaded,
-  ]);
+  }, [isRestoring, hasPdf, loadPdfFile, dismissPreUpload, onLoaded]);
 }

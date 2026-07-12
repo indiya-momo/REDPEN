@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { registerConsistencyUnifyBatch } from '../../lib/consistencyLiteralRegister.js';
+import { applyUnifyPinWithLedger } from '../../lib/consistencyDecisions.js';
 import {
-  applyConsistencyUnifyPin,
   getConsistencyUnifyPinnedTailWord,
   removeConsistencyUnifyEntry,
 } from '../../lib/consistencyUnifyRegister.js';
@@ -9,15 +9,21 @@ import {
   listConsistencyUnifyEntries,
   MAX_CONSISTENCY_UNIFY_SLOTS,
 } from '../../lib/consistencyRuleLimit.js';
+import { isGuestBrowseActive } from '../../lib/guestBrowsePolicy.js';
 import ConsistencyRegisterField from './ConsistencyRegisterField.jsx';
 import ConsistencyHintExample from './ConsistencyHintExample.jsx';
 import UnifyRegisteredList from './UnifyRegisteredList.jsx';
-import { CONSISTENCY_UNIFY_INPUT_PLACEHOLDER } from './constants.js';
+import { CONSISTENCY_UNIFY_INPUT_PLACEHOLDER, GUEST_BROWSE_UNIFY_INPUT_PLACEHOLDER } from './constants.js';
 
 /**
  * @param {{
  *   customRules: import('../../lib/ruleTypes.js').Rule[],
- *   onApplyRules: (next: import('../../lib/ruleTypes.js').Rule[]) => boolean,
+ *   onApplyRules: (
+ *     next: import('../../lib/ruleTypes.js').Rule[],
+ *     extra?: { consistencyDecisions?: import('../../lib/consistencyDecisions.js').ConsistencyDecision[] },
+ *   ) => boolean,
+ *   consistencyDecisions?: import('../../lib/consistencyDecisions.js').ConsistencyDecision[],
+ *   decisionByUid?: string,
  *   inlineRegisterRow?: boolean,
  *   addButtonGuideAttr?: string,
  *   onAddButtonClick?: () => void,
@@ -28,6 +34,8 @@ import { CONSISTENCY_UNIFY_INPUT_PLACEHOLDER } from './constants.js';
 export default function ConsistencyUnifySection({
   customRules,
   onApplyRules,
+  consistencyDecisions = [],
+  decisionByUid = '',
   inlineRegisterRow = false,
   addButtonGuideAttr,
   onAddButtonClick,
@@ -44,20 +52,54 @@ export default function ConsistencyUnifySection({
     [customRules],
   );
   const unifyRegisterFull = unifyEntries.length >= MAX_CONSISTENCY_UNIFY_SLOTS;
+  const guestBrowse = isGuestBrowseActive();
+  const unifyPlaceholder = guestBrowse
+    ? GUEST_BROWSE_UNIFY_INPUT_PLACEHOLDER
+    : CONSISTENCY_UNIFY_INPUT_PLACEHOLDER;
+  /** 둘러보기 — 한도 안내 숨김·가이드 + 클릭 유지 (한도 자체는 유지) */
+  const suppressLimitMessage = guestBrowse;
+  const registerBlocked = unifyRegisterFull && !guestBrowse;
 
   const registerUnified = useCallback(() => {
-    const input = unifiedDraft.trim() || CONSISTENCY_UNIFY_INPUT_PLACEHOLDER;
-    if (registerConsistencyUnifyBatch(input, customRules, onApplyRules)) {
+    const input = unifiedDraft.trim() || unifyPlaceholder;
+    if (
+      registerConsistencyUnifyBatch(input, customRules, onApplyRules, {
+        silentLimit: suppressLimitMessage,
+      })
+    ) {
       setUnifiedDraft('');
     }
-  }, [customRules, onApplyRules, unifiedDraft]);
+  }, [
+    customRules,
+    onApplyRules,
+    suppressLimitMessage,
+    unifiedDraft,
+    unifyPlaceholder,
+  ]);
 
   const pinEntry = useCallback(
     (tailWord) => {
-      onApplyRules(applyConsistencyUnifyPin(customRules, tailWord));
+      const result = applyUnifyPinWithLedger(
+        customRules,
+        consistencyDecisions,
+        tailWord,
+        { byUid: decisionByUid },
+      );
+      if (result.warning) {
+        window.alert(result.warning);
+      }
+      onApplyRules(result.nextRules, {
+        consistencyDecisions: result.nextDecisions,
+      });
       onGuidePinClick?.(tailWord);
     },
-    [customRules, onApplyRules, onGuidePinClick],
+    [
+      consistencyDecisions,
+      customRules,
+      decisionByUid,
+      onApplyRules,
+      onGuidePinClick,
+    ],
   );
 
   const removeEntry = useCallback(
@@ -79,7 +121,7 @@ export default function ConsistencyUnifySection({
         여러 항목 중 하나를 통일형📌으로 지정하고, 나머지를 찾아 바꿀 수 있습니다
         <br />
         <ConsistencyHintExample>
-          &apos;신라시대 , 신라˅시대 , 통일신라시대&apos; 입력 → &apos;신라시대&apos; 통일형 📌지정하고 찾기
+          &apos;조선시대,조선˅시대&apos; 입력 → &apos;조선시대&apos; 통일형 📌지정하고 찾기
         </ConsistencyHintExample>
       </p>
       {inlineRegisterRow ? (
@@ -88,9 +130,10 @@ export default function ConsistencyUnifySection({
             value={unifiedDraft}
             onChange={setUnifiedDraft}
             onRegister={registerUnified}
-            placeholder={CONSISTENCY_UNIFY_INPUT_PLACEHOLDER}
+            placeholder={unifyPlaceholder}
             ariaLabel="통일형 만들기"
-            registerDisabled={unifyRegisterFull}
+            registerDisabled={registerBlocked}
+            hideLimitTitle={suppressLimitMessage}
             addButtonGuideAttr={addButtonGuideAttr}
             onAddButtonClick={onAddButtonClick}
           />
@@ -108,9 +151,10 @@ export default function ConsistencyUnifySection({
             value={unifiedDraft}
             onChange={setUnifiedDraft}
             onRegister={registerUnified}
-            placeholder={CONSISTENCY_UNIFY_INPUT_PLACEHOLDER}
+            placeholder={unifyPlaceholder}
             ariaLabel="통일형 만들기"
-            registerDisabled={unifyRegisterFull}
+            registerDisabled={registerBlocked}
+            hideLimitTitle={suppressLimitMessage}
             addButtonGuideAttr={addButtonGuideAttr}
             onAddButtonClick={onAddButtonClick}
           />

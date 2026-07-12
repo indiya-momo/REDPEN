@@ -48,16 +48,23 @@ import {
   CONSISTENCY_EXCLUDE_INPUT_PLACEHOLDER,
   CONSISTENCY_LITERAL_INPUT_PLACEHOLDER,
   CONSISTENCY_PHRASE_SLOT_INPUT_PLACEHOLDER,
+  GUEST_BROWSE_LITERAL_INPUT_PLACEHOLDER,
 } from './consistency/constants.js';
 import TocBodySetupPanel from '../toc-body/components/TocBodySetupPanel.jsx';
 import { isTocBodyCheckEnabled } from '../lib/featureFlags.js';
+import { isGuestBrowseActive } from '../lib/guestBrowsePolicy.js';
 import DetailsChevron from './DetailsChevron.jsx';
 import TooltipGuide from './TooltipGuide.jsx';
 
 /**
  * @param {{
  *   customRules: import('../lib/ruleTypes.js').Rule[],
- *   onCustomRulesChange: (rules: import('../lib/ruleTypes.js').Rule[]) => void,
+ *   onCustomRulesChange: (
+ *     rules: import('../lib/ruleTypes.js').Rule[],
+ *     extra?: { consistencyDecisions?: import('../lib/consistencyDecisions.js').ConsistencyDecision[] },
+ *   ) => void,
+ *   consistencyDecisions?: import('../lib/consistencyDecisions.js').ConsistencyDecision[],
+ *   decisionByUid?: string,
  *   globalExcludePhrases: string[],
  *   onGlobalExcludePhrasesChange: (phrases: string[]) => void,
  *   builtInEnabled: Record<string, boolean>,
@@ -100,6 +107,8 @@ import TooltipGuide from './TooltipGuide.jsx';
 export default function ConsistencyPanel({
   customRules,
   onCustomRulesChange,
+  consistencyDecisions = [],
+  decisionByUid = '',
   globalExcludePhrases,
   onGlobalExcludePhrasesChange,
   builtInEnabled,
@@ -131,6 +140,9 @@ export default function ConsistencyPanel({
   const [literalInput, setLiteralInput] = useState('');
   const [slotInput, setSlotInput] = useState('');
   const [globalExcludeInput, setGlobalExcludeInput] = useState('');
+  const literalPlaceholder = isGuestBrowseActive()
+    ? GUEST_BROWSE_LITERAL_INPUT_PLACEHOLDER
+    : CONSISTENCY_LITERAL_INPUT_PLACEHOLDER;
 
   useEffect(() => {
     setGlobalExcludeInput('');
@@ -162,7 +174,7 @@ export default function ConsistencyPanel({
     }
   }, [auxiliarySomeChecked]);
 
-  function applyCustomRules(nextRules) {
+  function applyCustomRules(nextRules, extra) {
     const count = countActiveRules({
       builtInEnabled,
       cautionEnabled,
@@ -172,7 +184,7 @@ export default function ConsistencyPanel({
       alert(maxRulesExceededMessage(count));
       return false;
     }
-    onCustomRulesChange(nextRules);
+    onCustomRulesChange(nextRules, extra);
     return true;
   }
 
@@ -181,7 +193,7 @@ export default function ConsistencyPanel({
   }
 
   function registerLiteral() {
-    const input = literalInput.trim() || CONSISTENCY_LITERAL_INPUT_PLACEHOLDER;
+    const input = literalInput.trim() || literalPlaceholder;
     if (registerConsistencyLiteralBatch(input, customRules, applyCustomRules)) {
       setLiteralInput('');
     }
@@ -265,14 +277,14 @@ export default function ConsistencyPanel({
             여러 항목은 사이에 &apos;,&apos;를 넣어 한 번에 입력하고 찾아 볼 수 있습니다
             <br />
             <ConsistencyHintExample>
-              &apos;마한, 진한, 변한&apos; 입력 → 3항목 한 번에 찾기
+              &apos;고구려,백제,신라,Silla&apos; 입력 → 4항목 한 번에 찾기
             </ConsistencyHintExample>
           </p>
           <ConsistencyRegisterField
             value={literalInput}
             onChange={setLiteralInput}
             onRegister={registerLiteral}
-            placeholder={CONSISTENCY_LITERAL_INPUT_PLACEHOLDER}
+            placeholder={literalPlaceholder}
             ariaLabel={LITERAL_FIND_FEATURE_LABEL}
             addButtonGuideAttr="literal-add"
             onAddButtonClick={onLiteralAddButtonClick}
@@ -297,6 +309,8 @@ export default function ConsistencyPanel({
         <ConsistencyUnifySection
           customRules={customRules}
           onApplyRules={applyCustomRules}
+          consistencyDecisions={consistencyDecisions}
+          decisionByUid={decisionByUid}
           addButtonGuideAttr="unify-add"
           onAddButtonClick={onUnifyAddButtonClick}
           guidePinTailWord={guidePinTailWord}
@@ -472,9 +486,11 @@ export default function ConsistencyPanel({
                   {AUXILIARY_VERB_FEATURE_LABEL}
                 </span>
                 <br />
-                맞춤법 공부 많이 되고
+                집사가 이거 넣다가
                 <br />
-                자기 전에 생각난다냥...
+                맞춤법 공부 많이 했다냥
+                <br />
+                자기전에 생각난다냥...
               </>
             }
             onDismiss={auxiliaryVerbGuide.onDismiss}

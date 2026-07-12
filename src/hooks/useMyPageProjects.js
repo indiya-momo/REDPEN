@@ -7,6 +7,7 @@ import {
   MAX_CRITERIA_PRESETS,
 } from '../lib/criteriaPresetLimit.js';
 import { normalizeRuleSet } from '../lib/ruleSetNormalize.js';
+import { buildCriteriaCheckpoint } from '../lib/criteriaCheckpoint.js';
 import {
   loadActiveSetId,
   loadDeletedRuleSetIds,
@@ -422,7 +423,13 @@ export function useMyPageProjects(uid = '', email = '') {
         ...plan.patch,
         ...(current.savedAt ? { savedAt: new Date().toISOString() } : {}),
       });
-      const nextSets = sets.map((set, i) => (i === index ? nextSet : set));
+      const withCheckpoint = normalizeRuleSet({
+        ...nextSet,
+        criteriaCheckpoint: buildCriteriaCheckpoint(nextSet),
+      });
+      const nextSets = sets.map((set, i) =>
+        i === index ? withCheckpoint : set,
+      );
       return persistProjectSets(nextSets);
     },
     [persistProjectSets],

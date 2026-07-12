@@ -1,10 +1,8 @@
 import { useCallback } from 'react';
 import { returnToWorkspace } from '../lib/returnToWorkspace.js';
-import { showAppConfirm } from '../lib/appDialog.js';
+import { showAppAlert, showAppConfirm } from '../lib/appDialog.js';
 import { formatProjectDialogLabel } from '../lib/projectDialogLabel.js';
-
-const SLOT_LIMIT_MESSAGE =
-  '프로젝트 슬롯이 가득 찼습니다. 추가 슬롯은 회원 등급으로 제공됩니다. (준비 중)';
+import { CRITERIA_PRESET_LIMIT_MESSAGE } from '../lib/criteriaPresetLimit.js';
 
 const SELECT_FAILURE_MESSAGE =
   '프로젝트 선택을 저장하지 못했습니다. 다시 시도해 주세요.';
@@ -40,7 +38,10 @@ export function useProjectHubActions({
   const handleDuplicate = useCallback(
     async (cardId) => {
       if (atSlotLimit) {
-        window.alert(SLOT_LIMIT_MESSAGE);
+        void showAppAlert({
+          title: '저장 한도',
+          message: CRITERIA_PRESET_LIMIT_MESSAGE,
+        });
         return;
       }
       const result = await duplicateProject(cardId);

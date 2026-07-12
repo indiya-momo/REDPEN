@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { buildCriteriaCheckpoint } from '../lib/criteriaCheckpoint.js';
 import { buildProjectCardViewModelFromRuleSet } from './ruleSetProjectCard.js';
 
 function makeSet(overrides = {}) {
@@ -78,5 +79,50 @@ describe('buildProjectCardViewModelFromRuleSet', () => {
     });
     expect(card.createdDate).toBe('26.06.22');
     expect(card.formatLabel).toBe('신국판 · 3교');
+  });
+
+  it('consistencyDecisions를 decisionLedger로 매핑한다', () => {
+    const card = buildProjectCardViewModelFromRuleSet(
+      makeSet({
+        consistencyDecisions: [
+          {
+            id: 'dec_1',
+            kind: 'unify',
+            at: '2026-07-10T00:00:00.000Z',
+            pinned: '신라시대',
+            variants: ['통일신라시대'],
+          },
+        ],
+      }),
+    );
+
+    expect(card.decisionLedger).toHaveLength(1);
+    expect(card.decisionLedger[0].pinned).toBe('신라시대');
+    expect(card.decisionLedger[0].variants).toEqual(['통일신라시대']);
+  });
+
+  it('criteriaCheckpoint와 다르면 dirty', () => {
+    const base = makeSet({
+      customRules: [
+        {
+          patternKind: 'compound-find',
+          tailWord: '가',
+          enabled: true,
+          consistencyLiteralEntry: true,
+        },
+      ],
+    });
+    const clean = buildProjectCardViewModelFromRuleSet({
+      ...base,
+      criteriaCheckpoint: buildCriteriaCheckpoint(base),
+    });
+    expect(clean.dirty).toBe(false);
+
+    const dirty = buildProjectCardViewModelFromRuleSet({
+      ...base,
+      criteriaCheckpoint: buildCriteriaCheckpoint(base),
+      customRules: [],
+    });
+    expect(dirty.dirty).toBe(true);
   });
 });

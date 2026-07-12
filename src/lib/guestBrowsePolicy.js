@@ -46,11 +46,11 @@ export const GUEST_BROWSE_CAPABILITIES = {
   autoRunCriteriaCheck: true,
 };
 
-/** 둘러보기 2번 — 데모 결과(가량·쯤) 라벨 매칭 */
-export const GUEST_BROWSE_DEMO_RESULT_NEEDLE = '가량, 쯤';
+/** 둘러보기 2번 — 데모 결과(빼곡이→빼곡히) 라벨 매칭 */
+export const GUEST_BROWSE_DEMO_RESULT_NEEDLE = '빼곡이';
 
 /**
- * 데모 원고의 「가량, 쯤」 caution 그룹
+ * 데모 원고의 「빼곡이」 맞춤법 그룹
  * @param {import('./ruleEngine.js').RuleResultGroup[] | null | undefined} spellingResults
  */
 export function findGuestBrowseDemoSpellingGroup(spellingResults) {
@@ -58,10 +58,9 @@ export function findGuestBrowseDemoSpellingGroup(spellingResults) {
   return (
     spellingResults.find(
       (group) =>
-        group?.category === 'caution' &&
+        group?.category !== 'caution' &&
         typeof group.label === 'string' &&
-        group.label.includes('가량') &&
-        group.label.includes('쯤'),
+        group.label.includes(GUEST_BROWSE_DEMO_RESULT_NEEDLE),
     ) ?? null
   );
 }
@@ -293,14 +292,22 @@ export function subscribeGuestBrowseExportGuide(listener) {
 }
 
 /**
+ * 둘러보기 — 표기 통일 등록 칩만 제거 (본·보 선택은 유지)
+ * @param {import('./ruleTypes.js').Rule[] | null | undefined} customRules
+ */
+export function clearGuestBrowseConsistencyChips(customRules) {
+  const base = Array.isArray(customRules) ? customRules : [];
+  return base.filter(
+    (rule) => !GUEST_BROWSE_CONSISTENCY_CHIP_KINDS.has(rule.patternKind ?? ''),
+  );
+}
+
+/**
  * 둘러보기 — 표기 통일 탭 진입 시 등록 칩 비우고 본·보 전체 선택
  * @param {import('./ruleTypes.js').Rule[] | null | undefined} customRules
  */
 export function prepareGuestBrowseConsistencyRules(customRules) {
-  const base = Array.isArray(customRules) ? customRules : [];
-  const withoutChips = base.filter(
-    (rule) => !GUEST_BROWSE_CONSISTENCY_CHIP_KINDS.has(rule.patternKind ?? ''),
-  );
+  const withoutChips = clearGuestBrowseConsistencyChips(customRules);
   return setAllAuxiliaryVerbEntries(
     withoutChips,
     listAuxiliaryVerbEntries(withoutChips),

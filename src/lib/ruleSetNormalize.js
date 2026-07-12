@@ -17,6 +17,8 @@ import {
   normalizeProjectTags,
 } from './projectMeta.js';
 import { normalizeWorkHistory } from './projectWorkHistory.js';
+import { normalizeConsistencyDecisions } from './consistencyDecisions.js';
+import { buildCriteriaCheckpoint } from './criteriaCheckpoint.js';
 
 /**
  * @param {Record<string, unknown>} set
@@ -27,21 +29,43 @@ export function normalizeRuleSet(set) {
       set.customRules ?? [],
       set.compoundMigrateVersion,
     );
+  const builtInEnabled = migrateBuiltInEnabled(
+    set.builtInEnabled,
+    set.spellingRulesFingerprint,
+  );
+  const cautionEnabled = migrateCautionEnabled(
+    set.cautionEnabled,
+    set.cautionRulesFingerprint,
+    set.cautionEnabledPolicyVersion,
+  );
+  const normalizedCustomRules = ensureDefaultAuxiliaryVerbs(customRules);
+  const globalExcludePhrases = set.globalExcludePhrases ?? [];
+  const consistencyDecisions = normalizeConsistencyDecisions(
+    set.consistencyDecisions,
+  );
+  const savedAt =
+    typeof set.savedAt === 'string' && set.savedAt ? set.savedAt : undefined;
+  const criteriaCheckpoint =
+    typeof set.criteriaCheckpoint === 'string' && set.criteriaCheckpoint
+      ? set.criteriaCheckpoint
+      : savedAt
+        ? buildCriteriaCheckpoint({
+            builtInEnabled,
+            cautionEnabled,
+            customRules: normalizedCustomRules,
+            globalExcludePhrases,
+            consistencyDecisions,
+          })
+        : undefined;
+
   return {
     ...set,
-    builtInEnabled: migrateBuiltInEnabled(
-      set.builtInEnabled,
-      set.spellingRulesFingerprint,
-    ),
+    builtInEnabled,
     spellingRulesFingerprint: SPELLING_RULES_FP,
-    customRules: ensureDefaultAuxiliaryVerbs(customRules),
+    customRules: normalizedCustomRules,
     compoundMigrateVersion,
-    globalExcludePhrases: set.globalExcludePhrases ?? [],
-    cautionEnabled: migrateCautionEnabled(
-      set.cautionEnabled,
-      set.cautionRulesFingerprint,
-      set.cautionEnabledPolicyVersion,
-    ),
+    globalExcludePhrases,
+    cautionEnabled,
     cautionRulesFingerprint: CAUTION_RULES_FP,
     cautionEnabledPolicyVersion: CAUTION_ENABLED_POLICY_VERSION,
     bonBojoRulesFingerprint:
@@ -62,6 +86,9 @@ export function normalizeRuleSet(set) {
     pillarMemos: normalizeProjectPillarMemos(set.pillarMemos),
     projectContext: normalizeProjectContext(set.projectContext),
     workHistory: normalizeWorkHistory(set.workHistory),
+    consistencyDecisions,
+    criteriaCheckpoint,
+    savedAt,
     metaUpdatedAt:
       typeof set.metaUpdatedAt === 'string' &&
       !Number.isNaN(Date.parse(set.metaUpdatedAt))
