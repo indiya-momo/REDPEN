@@ -265,7 +265,11 @@ export default function WelcomePcScreen({
           <span className="welcome-pc__perf-l1-num" aria-hidden>
             ❸
           </span>
-          보조용언+본용언 표기
+          보조용언+본용언
+          <span className="welcome-pc__perf-l1-num" aria-hidden>
+            ❹
+          </span>
+          외래어 표기
         </p>
 
         <p className="welcome-pc__perf-l2">

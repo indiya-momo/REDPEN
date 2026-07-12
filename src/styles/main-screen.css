@@ -112,6 +112,8 @@
 .panel-left .caution-checklist-summary-title,
 .panel-left .builtin-spelling-summary,
 .panel-left .builtin-spelling-summary-title,
+.panel-left .loanword-converter__summary,
+.panel-left .loanword-converter__summary-title,
 .panel-left .printed-page-setup__title,
 .panel-left .consistency-panel-section-title,
 .panel-left .consistency-subsection-title,
@@ -1947,16 +1949,31 @@
   flex-direction: column;
 }
 
-.spelling-tab-layout--with-results .spelling-tab-scroll {
+/* 표기 통일과 동일: 패널 전체 높이 단일 스크롤 */
+.spelling-tab-layout--rules-only > .spelling-tab-scroll,
+.spelling-tab-layout--with-results > .spelling-tab-scroll {
   flex: 1 1 0;
   min-height: 0;
 }
 
-.spelling-tab-layout--rules-only .panel-section--builtin-spelling--fill,
-.spelling-tab-layout--with-results .panel-section--builtin-spelling--fill {
-  flex: 1 1 0;
-  min-height: 0;
+/* 안쪽 편집자 검토·맞춤법 패널은 높이 고정/중첩 스크롤 없이 바깥 스크롤에 합류 */
+.spelling-tab-layout .spelling-tab-scroll .panel-section--builtin-spelling--fill {
+  flex: 0 0 auto;
+  min-height: auto;
   height: auto !important;
+  overflow: visible;
+  background: transparent;
+  padding: 0;
+  border: none;
+  border-bottom: none;
+}
+
+.spelling-tab-layout .spelling-tab-scroll .builtin-spelling-resize-body {
+  flex: none;
+  min-height: auto;
+  overflow: visible;
+  scrollbar-gutter: auto;
+  background: transparent;
 }
 
 .spelling-tab-scroll {
@@ -1973,7 +1990,7 @@
   flex-shrink: 0;
 }
 
-.spelling-tab-scroll .panel-section {
+.spelling-tab-scroll .panel-section:not(.panel-section--builtin-spelling) {
   padding-left: 12px;
   padding-right: 12px;
 }
@@ -2059,10 +2076,12 @@
   background: var(--color-surface-raised);
 }
 
-/* 인쇄 쪽 보정 박스와 동일 가로 폭(스크롤 gutter로 좁아지지 않게) */
+/* 인쇄 쪽 보정 박스와 동일 가로 폭(스크롤 gutter로 좁아지지 않게)
+   위쪽 간격은 .spelling-tab-layout__calibration margin-bottom(--panel-gap-section)만 —
+   표기 통일 본용언 박스와 위 테두리 사이 gap과 동일 */
 .spelling-tab-layout .builtin-spelling-resize-body {
   scrollbar-gutter: auto;
-  padding: 8px var(--spelling-block-inset-x) 8px;
+  padding: 0 var(--spelling-block-inset-x) 8px;
   gap: calc(var(--panel-gap-section) * 0.5);
 }
 
@@ -3711,6 +3730,33 @@
 .panel-left .panel-criteria-heading-meta {
   font-size: 0.75em;
   line-height: inherit;
+}
+
+/* 외래어 표기 — 맞춤법 탭 제목을 다른 criteria heading과 동일 스케일로 */
+.panel-left .loanword-converter__summary.panel-criteria-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--criteria-summary-gap, calc(8px * var(--panel-ui-scale, 1)));
+  font-size: calc(1.05rem * var(--panel-ui-scale));
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--c-ink);
+}
+
+.panel-left .loanword-converter__summary::-webkit-details-marker {
+  display: none;
+}
+
+.panel-left .loanword-converter__summary-title {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 0.15em;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+  color: inherit;
 }
 
 .panel-left .caution-checklist-summary.panel-criteria-heading,

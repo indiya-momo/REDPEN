@@ -29,7 +29,7 @@ describe('featureFlags', () => {
     expect(isLoanwordConverterEnabled()).toBe(true);
   });
 
-  it('프로덕션에서는 목차·프로젝트 허브·외래어 변환만 env 없으면 꺼지고 export는 기본 켜진다', () => {
+  it('프로덕션에서는 목차·프로젝트 허브만 env 없으면 꺼지고 export·외래어 변환은 기본 켜진다', () => {
     import.meta.env.DEV = false;
     import.meta.env.VITE_FEATURE_TOC_BODY_CHECK = undefined;
     import.meta.env.VITE_FEATURE_SPELLING_EXPORT = undefined;
@@ -37,7 +37,7 @@ describe('featureFlags', () => {
     import.meta.env.VITE_FEATURE_LOANWORD_CONVERTER = undefined;
     expect(isTocBodyCheckEnabled()).toBe(false);
     expect(isMyPageProjectHubEnabled()).toBe(false);
-    expect(isLoanwordConverterEnabled()).toBe(false);
+    expect(isLoanwordConverterEnabled()).toBe(true);
     expect(isSpellingExportEnabled()).toBe(true);
   });
 
@@ -45,6 +45,12 @@ describe('featureFlags', () => {
     import.meta.env.DEV = false;
     import.meta.env.VITE_FEATURE_SPELLING_EXPORT = 'false';
     expect(isSpellingExportEnabled()).toBe(false);
+  });
+
+  it('프로덕션에서 VITE_FEATURE_LOANWORD_CONVERTER=false면 외래어 변환을 끈다', () => {
+    import.meta.env.DEV = false;
+    import.meta.env.VITE_FEATURE_LOANWORD_CONVERTER = 'false';
+    expect(isLoanwordConverterEnabled()).toBe(false);
   });
 
   it('프로덕션 preview는 env true로 명시해도 켜진다', () => {

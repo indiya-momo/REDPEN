@@ -1909,33 +1909,25 @@ export default function MainScreen({
           <div
             className={spellingTabLayoutClassName}
           >
-            {showSpellingResultsSlot ? (
-              <div className="panel-left-work-scroll spelling-tab-scroll custom-scrollbar">
-                {spellingRunRowEl}
-                {spellingCalibrationEl}
-                <LoanwordConverter />
+            <div className="panel-left-work-scroll spelling-tab-scroll custom-scrollbar">
+              {spellingRunRowEl}
+              {spellingCalibrationEl}
+              {showSpellingResultsSlot ? (
                 <div className="spelling-tab-scroll__results">
                   {spellingResultsPanel}
                 </div>
-              </div>
-            ) : (
-              <>
-                {spellingRunRowEl}
-                {spellingCalibrationEl}
-                <LoanwordConverter />
-                {!tabCheckDone ? (
-                  <ResizableBuiltinSpelling
-                    builtInEnabled={builtInEnabled}
-                    onBuiltInToggle={onBuiltInToggle}
-                    onBuiltInSetAll={onBuiltInSetAll}
-                    cautionEnabled={cautionEnabled}
-                    onCautionToggle={onCautionToggle}
-                    onCautionSetAll={onCautionSetAll}
-                    fillPanel
-                  />
-                ) : null}
-              </>
-            )}
+              ) : !tabCheckDone ? (
+                <ResizableBuiltinSpelling
+                  builtInEnabled={builtInEnabled}
+                  onBuiltInToggle={onBuiltInToggle}
+                  onBuiltInSetAll={onBuiltInSetAll}
+                  cautionEnabled={cautionEnabled}
+                  onCautionToggle={onCautionToggle}
+                  onCautionSetAll={onCautionSetAll}
+                  fillPanel
+                />
+              ) : null}
+            </div>
           </div>
         )}
 
