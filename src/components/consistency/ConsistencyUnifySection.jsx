@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { registerConsistencyUnifyBatch } from '../../lib/consistencyLiteralRegister.js';
+import { applyUnifyPinWithLedger } from '../../lib/consistencyDecisions.js';
 import {
-  applyConsistencyUnifyPin,
   getConsistencyUnifyPinnedTailWord,
   removeConsistencyUnifyEntry,
 } from '../../lib/consistencyUnifyRegister.js';
@@ -17,7 +17,12 @@ import { CONSISTENCY_UNIFY_INPUT_PLACEHOLDER } from './constants.js';
 /**
  * @param {{
  *   customRules: import('../../lib/ruleTypes.js').Rule[],
- *   onApplyRules: (next: import('../../lib/ruleTypes.js').Rule[]) => boolean,
+ *   onApplyRules: (
+ *     next: import('../../lib/ruleTypes.js').Rule[],
+ *     extra?: { consistencyDecisions?: import('../../lib/consistencyDecisions.js').ConsistencyDecision[] },
+ *   ) => boolean,
+ *   consistencyDecisions?: import('../../lib/consistencyDecisions.js').ConsistencyDecision[],
+ *   decisionByUid?: string,
  *   inlineRegisterRow?: boolean,
  *   addButtonGuideAttr?: string,
  *   onAddButtonClick?: () => void,
@@ -28,6 +33,8 @@ import { CONSISTENCY_UNIFY_INPUT_PLACEHOLDER } from './constants.js';
 export default function ConsistencyUnifySection({
   customRules,
   onApplyRules,
+  consistencyDecisions = [],
+  decisionByUid = '',
   inlineRegisterRow = false,
   addButtonGuideAttr,
   onAddButtonClick,
@@ -54,10 +61,27 @@ export default function ConsistencyUnifySection({
 
   const pinEntry = useCallback(
     (tailWord) => {
-      onApplyRules(applyConsistencyUnifyPin(customRules, tailWord));
+      const result = applyUnifyPinWithLedger(
+        customRules,
+        consistencyDecisions,
+        tailWord,
+        { byUid: decisionByUid },
+      );
+      if (result.warning) {
+        window.alert(result.warning);
+      }
+      onApplyRules(result.nextRules, {
+        consistencyDecisions: result.nextDecisions,
+      });
       onGuidePinClick?.(tailWord);
     },
-    [customRules, onApplyRules, onGuidePinClick],
+    [
+      consistencyDecisions,
+      customRules,
+      decisionByUid,
+      onApplyRules,
+      onGuidePinClick,
+    ],
   );
 
   const removeEntry = useCallback(

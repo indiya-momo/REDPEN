@@ -57,7 +57,12 @@ import TooltipGuide from './TooltipGuide.jsx';
 /**
  * @param {{
  *   customRules: import('../lib/ruleTypes.js').Rule[],
- *   onCustomRulesChange: (rules: import('../lib/ruleTypes.js').Rule[]) => void,
+ *   onCustomRulesChange: (
+ *     rules: import('../lib/ruleTypes.js').Rule[],
+ *     extra?: { consistencyDecisions?: import('../lib/consistencyDecisions.js').ConsistencyDecision[] },
+ *   ) => void,
+ *   consistencyDecisions?: import('../lib/consistencyDecisions.js').ConsistencyDecision[],
+ *   decisionByUid?: string,
  *   globalExcludePhrases: string[],
  *   onGlobalExcludePhrasesChange: (phrases: string[]) => void,
  *   builtInEnabled: Record<string, boolean>,
@@ -100,6 +105,8 @@ import TooltipGuide from './TooltipGuide.jsx';
 export default function ConsistencyPanel({
   customRules,
   onCustomRulesChange,
+  consistencyDecisions = [],
+  decisionByUid = '',
   globalExcludePhrases,
   onGlobalExcludePhrasesChange,
   builtInEnabled,
@@ -162,7 +169,7 @@ export default function ConsistencyPanel({
     }
   }, [auxiliarySomeChecked]);
 
-  function applyCustomRules(nextRules) {
+  function applyCustomRules(nextRules, extra) {
     const count = countActiveRules({
       builtInEnabled,
       cautionEnabled,
@@ -172,7 +179,7 @@ export default function ConsistencyPanel({
       alert(maxRulesExceededMessage(count));
       return false;
     }
-    onCustomRulesChange(nextRules);
+    onCustomRulesChange(nextRules, extra);
     return true;
   }
 
@@ -297,6 +304,8 @@ export default function ConsistencyPanel({
         <ConsistencyUnifySection
           customRules={customRules}
           onApplyRules={applyCustomRules}
+          consistencyDecisions={consistencyDecisions}
+          decisionByUid={decisionByUid}
           addButtonGuideAttr="unify-add"
           onAddButtonClick={onUnifyAddButtonClick}
           guidePinTailWord={guidePinTailWord}

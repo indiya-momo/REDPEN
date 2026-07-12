@@ -384,7 +384,8 @@ export function useRuleSets(authUid = '', authEmail = '') {
           const touchesCriteria =
             patch.builtInEnabled !== undefined ||
             patch.cautionEnabled !== undefined ||
-            patch.customRules !== undefined;
+            patch.customRules !== undefined ||
+            patch.consistencyDecisions !== undefined;
           const savedAtBump =
             s.savedAt && touchesCriteria
               ? { savedAt: new Date().toISOString() }

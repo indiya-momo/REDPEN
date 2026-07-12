@@ -17,6 +17,7 @@ import {
   normalizeProjectTags,
 } from './projectMeta.js';
 import { normalizeWorkHistory } from './projectWorkHistory.js';
+import { normalizeConsistencyDecisions } from './consistencyDecisions.js';
 
 /**
  * @param {Record<string, unknown>} set
@@ -62,6 +63,9 @@ export function normalizeRuleSet(set) {
     pillarMemos: normalizeProjectPillarMemos(set.pillarMemos),
     projectContext: normalizeProjectContext(set.projectContext),
     workHistory: normalizeWorkHistory(set.workHistory),
+    consistencyDecisions: normalizeConsistencyDecisions(
+      set.consistencyDecisions,
+    ),
     metaUpdatedAt:
       typeof set.metaUpdatedAt === 'string' &&
       !Number.isNaN(Date.parse(set.metaUpdatedAt))

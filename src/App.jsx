@@ -449,6 +449,8 @@ export default function App() {
         activeSet.builtInEnabled ?? builtInEnabledFromSheet()
       }
       customRules={resolvedCustomRules}
+      consistencyDecisions={activeSet.consistencyDecisions ?? []}
+      decisionByUid={authSession?.uid ?? ''}
       globalExcludePhrases={activeSet.globalExcludePhrases ?? []}
       tocBodyText={activeSet.tocBodyText ?? ''}
       tocBodyStartPage={activeSet.tocBodyStartPage ?? null}
@@ -461,8 +463,13 @@ export default function App() {
       onBuiltInSetAll={handleBuiltInSetAll}
       onCautionToggle={handleCautionToggle}
       onCautionSetAll={handleCautionSetAll}
-      onCustomRulesChange={(customRules) =>
-        updateActiveSet({ customRules: ensureDefaultAuxiliaryVerbs(customRules) })
+      onCustomRulesChange={(customRules, extra) =>
+        updateActiveSet({
+          customRules: ensureDefaultAuxiliaryVerbs(customRules),
+          ...(extra?.consistencyDecisions
+            ? { consistencyDecisions: extra.consistencyDecisions }
+            : {}),
+        })
       }
       onGlobalExcludePhrasesChange={(globalExcludePhrases) =>
         updateActiveSet({ globalExcludePhrases })

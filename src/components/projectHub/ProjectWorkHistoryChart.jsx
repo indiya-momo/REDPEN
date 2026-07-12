@@ -1,11 +1,12 @@
 /**
- * 작업 이력 — 맞춤법 2행 · 표기 통일(4분류+최근1회) · 본·보조 sparkline.
+ * 작업 이력 — 맞춤법 2행 · 표기 통일(현재 기준) · 확정 대장 · 본·보조 sparkline.
  */
 import { WORK_CHART_MIN_SESSIONS_FOR_LINE } from '../../lib/projectWorkHistory.js';
 import {
   buildWorkHistoryConsistencyCriteria,
   WORK_HISTORY_CONSISTENCY_GROUPS,
 } from '../../presentation/workHistoryConsistencyCriteria.js';
+import { buildWorkHistoryDecisionLedger } from '../../presentation/workHistoryDecisionLedger.js';
 import {
   buildSparklinePath,
   hasSpellingSplitHistory,
@@ -101,15 +102,143 @@ function sparklineSeries(sessions, pick) {
 
 /**
  * @param {{
+ *   criteria: ReturnType<typeof buildWorkHistoryConsistencyCriteria>,
+ * }} props
+ */
+function ConsistencyCriteriaBlock({ criteria }) {
+  return (
+    <section className="work-history-panel__block work-history-panel__block--consistency">
+      <h4 className="work-history-panel__block-title">표기 통일(현재 기준)</h4>
+      <dl className="work-history-panel__criteria-groups">
+        {WORK_HISTORY_CONSISTENCY_GROUPS.map((group) => {
+          const items = criteria[group.id] ?? [];
+
+          if (group.id === 'unify') {
+            return (
+              <div key={group.id} className="work-history-panel__criteria-group">
+                <dt className="work-history-panel__criteria-label">
+                  {group.label}
+                </dt>
+                <dd className="work-history-panel__criteria-body">
+                  {items.length ? (
+                    <ul className="work-history-panel__unify-list">
+                      {items.map((entry) => (
+                        <li
+                          key={`${entry.variants.join('\u0001')}\u0002${entry.pinned ?? ''}`}
+                          className="work-history-panel__unify-entry"
+                        >
+                          <ul className="work-history-panel__chips work-history-panel__chips--unify">
+                            {entry.variants.map((variant) => (
+                              <li
+                                key={variant}
+                                className="work-history-panel__chip"
+                              >
+                                {variant}
+                              </li>
+                            ))}
+                            {entry.pinned ? (
+                              <li className="work-history-panel__chip work-history-panel__chip--pinned">
+                                {entry.pinned}
+                                <span
+                                  className="work-history-panel__pin"
+                                  aria-hidden
+                                >
+                                  📌
+                                </span>
+                              </li>
+                            ) : null}
+                          </ul>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="work-history-panel__criteria-empty">등록 없음</p>
+                  )}
+                </dd>
+              </div>
+            );
+          }
+
+          return (
+            <div key={group.id} className="work-history-panel__criteria-group">
+              <dt className="work-history-panel__criteria-label">
+                {group.label}
+              </dt>
+              <dd className="work-history-panel__criteria-body">
+                {items.length ? (
+                  <ul className="work-history-panel__chips">
+                    {items.map((item) => (
+                      <li key={item} className="work-history-panel__chip">
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="work-history-panel__criteria-empty">등록 없음</p>
+                )}
+              </dd>
+            </div>
+          );
+        })}
+      </dl>
+    </section>
+  );
+}
+
+/**
+ * @param {{
+ *   ledger: ReturnType<typeof buildWorkHistoryDecisionLedger>,
+ * }} props
+ */
+function DecisionLedgerBlock({ ledger }) {
+  return (
+    <section className="work-history-panel__block work-history-panel__block--ledger">
+      <h4 className="work-history-panel__block-title">확정 대장</h4>
+      {ledger.length ? (
+        <ul className="work-history-panel__ledger-list">
+          {ledger.map((item) => (
+            <li key={item.id} className="work-history-panel__ledger-item">
+              <div className="work-history-panel__ledger-meta">
+                {item.atLabel || '날짜 없음'}
+              </div>
+              <ul className="work-history-panel__chips work-history-panel__chips--unify">
+                {item.variants.map((variant) => (
+                  <li key={variant} className="work-history-panel__chip">
+                    {variant}
+                  </li>
+                ))}
+                <li className="work-history-panel__chip work-history-panel__chip--pinned">
+                  {item.pinned}
+                  <span className="work-history-panel__pin" aria-hidden>
+                    📌
+                  </span>
+                </li>
+              </ul>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="work-history-panel__criteria-empty">
+          통일형 📌을 지정하면 확정 기록이 여기에 쌓입니다.
+        </p>
+      )}
+    </section>
+  );
+}
+
+/**
+ * @param {{
  *   history: import('../../lib/projectWorkHistory.js').WorkHistoryEntry[] | undefined,
  *   customRules?: import('../../lib/ruleTypes.js').Rule[],
  *   globalExcludePhrases?: string[],
+ *   consistencyDecisions?: import('../../lib/consistencyDecisions.js').ConsistencyDecision[],
  * }} props
  */
 export default function ProjectWorkHistoryChart({
   history,
   customRules = [],
   globalExcludePhrases = [],
+  consistencyDecisions = [],
 }) {
   const sessions = Array.isArray(history) ? history : [];
   const sessionCount = sessions.length;
@@ -117,6 +246,7 @@ export default function ProjectWorkHistoryChart({
     customRules,
     globalExcludePhrases,
   );
+  const ledger = buildWorkHistoryDecisionLedger(consistencyDecisions);
   const spellingSplit = hasSpellingSplitHistory(sessions);
 
   if (!sessionCount) {
@@ -126,6 +256,8 @@ export default function ProjectWorkHistoryChart({
         <p className="project-hub-settings__row-desc work-history-panel__empty">
           검수를 진행하면 항목별 추이가 여기에 표시됩니다.
         </p>
+        <ConsistencyCriteriaBlock criteria={criteria} />
+        <DecisionLedgerBlock ledger={ledger} />
       </div>
     );
   }
@@ -198,81 +330,8 @@ export default function ProjectWorkHistoryChart({
         </section>
       </div>
 
-      <section className="work-history-panel__block work-history-panel__block--consistency">
-        <h4 className="work-history-panel__block-title">표기 통일(최근)</h4>
-        <dl className="work-history-panel__criteria-groups">
-          {WORK_HISTORY_CONSISTENCY_GROUPS.map((group) => {
-            const items = criteria[group.id] ?? [];
-
-            if (group.id === 'unify') {
-              return (
-                <div key={group.id} className="work-history-panel__criteria-group">
-                  <dt className="work-history-panel__criteria-label">
-                    {group.label}
-                  </dt>
-                  <dd className="work-history-panel__criteria-body">
-                    {items.length ? (
-                      <ul className="work-history-panel__unify-list">
-                        {items.map((entry) => (
-                          <li
-                            key={`${entry.variants.join('\u0001')}\u0002${entry.pinned ?? ''}`}
-                            className="work-history-panel__unify-entry"
-                          >
-                            <ul className="work-history-panel__chips work-history-panel__chips--unify">
-                              {entry.variants.map((variant) => (
-                                <li
-                                  key={variant}
-                                  className="work-history-panel__chip"
-                                >
-                                  {variant}
-                                </li>
-                              ))}
-                              {entry.pinned ? (
-                                <li className="work-history-panel__chip work-history-panel__chip--pinned">
-                                  {entry.pinned}
-                                  <span
-                                    className="work-history-panel__pin"
-                                    aria-hidden
-                                  >
-                                    📌
-                                  </span>
-                                </li>
-                              ) : null}
-                            </ul>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p className="work-history-panel__criteria-empty">등록 없음</p>
-                    )}
-                  </dd>
-                </div>
-              );
-            }
-
-            return (
-              <div key={group.id} className="work-history-panel__criteria-group">
-                <dt className="work-history-panel__criteria-label">
-                  {group.label}
-                </dt>
-                <dd className="work-history-panel__criteria-body">
-                  {items.length ? (
-                    <ul className="work-history-panel__chips">
-                      {items.map((item) => (
-                        <li key={item} className="work-history-panel__chip">
-                          {item}
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="work-history-panel__criteria-empty">등록 없음</p>
-                  )}
-                </dd>
-              </div>
-            );
-          })}
-        </dl>
-      </section>
+      <ConsistencyCriteriaBlock criteria={criteria} />
+      <DecisionLedgerBlock ledger={ledger} />
     </div>
   );
 }
