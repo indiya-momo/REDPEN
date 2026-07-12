@@ -257,19 +257,19 @@ export default function WelcomePcScreen({
           <span className="welcome-pc__perf-l1-num" aria-hidden>
             ❶
           </span>
-          맞춤법
+          (무제한)외래어 표기 변환
           <span className="welcome-pc__perf-l1-num" aria-hidden>
             ❷
           </span>
-          표기 통일
+          맞춤법 확인
           <span className="welcome-pc__perf-l1-num" aria-hidden>
             ❸
           </span>
-          보조용언+본용언
+          표기 통일
           <span className="welcome-pc__perf-l1-num" aria-hidden>
             ❹
           </span>
-          외래어 표기
+          보조용언+본용언
         </p>
 
         <p className="welcome-pc__perf-l2">

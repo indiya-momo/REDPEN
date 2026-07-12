@@ -3761,6 +3761,22 @@
   color: inherit;
 }
 
+.panel-left .loanword-converter__free-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0.35em;
+  padding: 0.12em 0.45em;
+  border-radius: 3px;
+  background: #e11d48;
+  color: #fff;
+  font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+  font-size: 0.62em;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+  vertical-align: middle;
+}
+
 /* 외래어 입력+변환 — 표기 통일 검색창과 같이 한 덩어리 */
 .loanword-converter__field {
   display: flex;

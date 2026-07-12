@@ -49,7 +49,7 @@ const styles = {
     display: 'inline-block',
     padding: '0 5px',
     borderRadius: 3,
-    background: '#2563eb',
+    background: '#0ea5e9',
     color: '#fff',
     fontSize: 11,
     fontWeight: 600,
@@ -60,7 +60,7 @@ const styles = {
     display: 'inline-block',
     padding: '0 5px',
     borderRadius: 3,
-    background: '#d97706',
+    background: '#e09a3e',
     color: '#fff',
     fontSize: 11,
     fontWeight: 600,
@@ -249,6 +249,9 @@ export default function LoanwordConverter({ onConvertClick } = {}) {
         <span className="loanword-converter__summary-title">
           외래어 표기
           <span className="panel-criteria-heading-meta">(영어 → 한국어 지원)</span>
+          <span className="loanword-converter__free-badge" aria-label="무제한">
+            FREE
+          </span>
         </span>
       </summary>
 
