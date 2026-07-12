@@ -535,6 +535,7 @@ export default function ProjectHubSettingsPanel({
                 )}
                 customRules={ruleSet?.customRules ?? []}
                 globalExcludePhrases={ruleSet?.globalExcludePhrases ?? []}
+                consistencyDecisions={ruleSet?.consistencyDecisions ?? []}
               />
             </div>
           ) : null}

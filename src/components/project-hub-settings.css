@@ -549,6 +549,33 @@
   border-left: 3px solid var(--pillar-consistency);
 }
 
+.work-history-panel__block--ledger {
+  margin-top: 0.35rem;
+  padding-top: 0.65rem;
+  border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+  border-left: 3px solid var(--pillar-consistency);
+}
+
+.work-history-panel__ledger-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.work-history-panel__ledger-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.28rem;
+}
+
+.work-history-panel__ledger-meta {
+  font-size: 0.72rem;
+  opacity: 0.72;
+}
+
 .work-history-panel__top-row .work-history-panel__spark {
   max-width: none;
 }

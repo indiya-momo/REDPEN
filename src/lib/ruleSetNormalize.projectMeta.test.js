@@ -27,4 +27,34 @@ describe('normalizeRuleSet project meta', () => {
       pdfLinked: true,
     });
   });
+
+  it('consistencyDecisions를 정규화한다', () => {
+    const normalized = normalizeRuleSet({
+      id: 'set_1',
+      name: '테스트',
+      builtInEnabled: {},
+      cautionEnabled: {},
+      customRules: [],
+      consistencyDecisions: [
+        {
+          id: 'dec_1',
+          kind: 'unify',
+          at: '2026-07-10T00:00:00.000Z',
+          pinned: '신라시대',
+          variants: ['통일신라시대', '신라시대'],
+        },
+        { kind: 'find', id: 'x', at: '2026-07-10T00:00:00.000Z', query: 'a' },
+      ],
+    });
+
+    expect(normalized.consistencyDecisions).toEqual([
+      {
+        id: 'dec_1',
+        kind: 'unify',
+        at: '2026-07-10T00:00:00.000Z',
+        pinned: '신라시대',
+        variants: ['통일신라시대'],
+      },
+    ]);
+  });
 });

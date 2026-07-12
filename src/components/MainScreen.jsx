@@ -249,7 +249,12 @@ const WORK_GUIDE_2_ALIGN_CHAIN = [
  *   cautionEnabled: Record<string, boolean>,
  *   onCautionToggle: (id: string) => void,
  *   onCautionSetAll: (enabled: boolean) => void,
- *   onCustomRulesChange: (rules: import('../lib/ruleTypes.js').Rule[]) => void,
+ *   onCustomRulesChange: (
+ *     rules: import('../lib/ruleTypes.js').Rule[],
+ *     extra?: { consistencyDecisions?: import('../lib/consistencyDecisions.js').ConsistencyDecision[] },
+ *   ) => void,
+ *   consistencyDecisions?: import('../lib/consistencyDecisions.js').ConsistencyDecision[],
+ *   decisionByUid?: string,
  *   onGlobalExcludePhrasesChange: (phrases: string[]) => void,
  *   onSaveRules: () => void,
  *   onSaveCriteriaPreset: (
@@ -280,6 +285,8 @@ export default function MainScreen({
   ruleSetSavedAt,
   builtInEnabled,
   customRules,
+  consistencyDecisions = [],
+  decisionByUid = '',
   globalExcludePhrases,
   tocBodyText = '',
   onTocBodyTextChange = () => {},
@@ -2017,6 +2024,8 @@ export default function MainScreen({
                   onLiteralAddButtonClick={handleConsistencyLiteralAddGuideClick}
                   onUnifyAddButtonClick={handleConsistencyUnifyAddGuideClick}
                   customRules={customRules}
+                  consistencyDecisions={consistencyDecisions}
+                  decisionByUid={decisionByUid}
                   onCustomRulesChange={onCustomRulesChange}
                   globalExcludePhrases={globalExcludePhrases}
                   onGlobalExcludePhrasesChange={onGlobalExcludePhrasesChange}
