@@ -115,7 +115,7 @@ describe('formatSpellingCheckCompleteMessage', () => {
         cautionWithFindings: 1,
         totalFindings: 128,
       }),
-    ).toBe('편집자 검토 1건, 맞춤법 2건 전체 발견 128');
+    ).toBe('편집자 검토 필요 1기준, 맞춤법 규칙 2기준 전체 발견 128');
   });
 });
 
@@ -130,11 +130,14 @@ describe('alertSpellingCheckAfterRun', () => {
         { category: 'spelling', instances: [{}] },
       ],
       3,
-      { cautionSelected: true, builtinSelected: true },
+      {
+        cautionSelected: true,
+        builtinSelected: true,
+      },
     );
 
     expect(alertMock).toHaveBeenCalledWith(
-      '검수를 진행했습니다\n\n편집자 검토 1건, 맞춤법 1건 전체 발견 3',
+      '검수를 진행했습니다\n\n편집자 검토 필요 1기준, 맞춤법 규칙 1기준 전체 발견 3',
     );
   });
 });

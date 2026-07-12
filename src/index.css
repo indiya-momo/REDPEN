@@ -116,6 +116,10 @@ body:has(.welcome-pc) {
   --radius-ui: 12px;
   --radius-ui-lg: 14px;
   --radius-ui-sm: 8px;
+  /* 찾기·변환 검색창 (외래어 변환 입력과 동일) */
+  --radius-search: 6px;
+  --search-action-bg: #404a5a;
+  --search-action-bg-hover: #343c48;
 
   /* 버튼 — 붉은 잉크 + 오렌지 톤, hover 금 (인트로·작업 UI 공통) */
   --btn-primary-bg: #924a2e;
@@ -1467,8 +1471,27 @@ details[open] > summary .details-chevron::before {
 }
 
 .results-header__stat-count {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.05em;
   font-weight: 800;
   line-height: 1;
+}
+
+.results-header__stat-num {
+  font-weight: 800;
+  line-height: 1;
+}
+
+.results-header__stat-unit {
+  font-size: 0.9em;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--color-text-muted);
+}
+
+.results-header__stat-circle {
+  flex-shrink: 0;
 }
 
 .results-header__sep {
@@ -1788,7 +1811,7 @@ details[open] > summary .details-chevron::before {
   color: color-mix(in srgb, var(--pillar-spelling) 55%, #9a6b3a 45%);
 }
 
-/* 통일형 찾기 — 진한 블루그레이(정책·확정) */
+/* 통일형 만들기 — 진한 블루그레이(정책·확정) */
 .result-pillar--consistency-unify,
 .results-header-badge.result-pillar--consistency-unify {
   background: color-mix(in srgb, var(--pillar-consistency) 22%, #fffdfb);

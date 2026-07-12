@@ -802,21 +802,24 @@ export function useRuleSets(authUid = '', authEmail = '') {
         ...patch,
         lastWorkedAt,
       });
-      // 검수 진행 이력 — 지적 건수가 있으면 날짜별 장부에 한 줄 기입
-      const workHistory = appendWorkHistoryEntry(
-        source.workHistory,
-        {
-          editorReview: patch.lastEditorReviewFindingCount,
-          spelling:
-            patch.lastBuiltinSpellingFindingCount ?? patch.lastSpellingFindingCount,
-          consistencyFind: patch.lastConsistencyFindCount,
-          consistencyUnify: patch.lastConsistencyUnifyCount,
-          consistencyCommonString: patch.lastConsistencyCommonStringCount,
-          consistency: patch.lastConsistencyFindingCount,
-          bonBojo: patch.lastBonBojoFindingCount,
-        },
-        lastWorkedAt,
-      );
+      // 검수 1회 커밋일 때만 이력 장부에 한 줄 기입 (debounce 갱신은 메타만)
+      const workHistory = patch.commitWorkHistory
+        ? appendWorkHistoryEntry(
+            source.workHistory,
+            {
+              editorReview: patch.lastEditorReviewFindingCount,
+              spelling:
+                patch.lastBuiltinSpellingFindingCount ??
+                patch.lastSpellingFindingCount,
+              consistencyFind: patch.lastConsistencyFindCount,
+              consistencyUnify: patch.lastConsistencyUnifyCount,
+              consistencyCommonString: patch.lastConsistencyCommonStringCount,
+              consistency: patch.lastConsistencyFindingCount,
+              bonBojo: patch.lastBonBojoFindingCount,
+            },
+            lastWorkedAt,
+          )
+        : source.workHistory;
       const next = sets.map((s, i) =>
         i === index
           ? normalizeRuleSet({ ...s, projectContext, workHistory })

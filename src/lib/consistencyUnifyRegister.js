@@ -1,5 +1,6 @@
 import { removeCompoundFind } from './compoundFindPattern.js';
 import { normalizeConsistencyVariant } from './compoundPairRegister.js';
+import { decodeSpacesVisible } from './spaceVisibleText.js';
 
 const COMPOUND_KINDS = new Set([
   'compound-find',
@@ -8,17 +9,55 @@ const COMPOUND_KINDS = new Set([
 ]);
 
 /**
+ * 결과 그룹에서 등록 문자열(tailWord)을 복원한다.
+ * @param {import('./ruleEngine.js').GroupedResult | { tailWord?: string, label?: string, find?: string }} group
+ */
+export function resolveConsistencyGroupTailWord(group) {
+  const direct = String(group?.tailWord ?? '').trim();
+  if (direct) return normalizeConsistencyVariant(direct);
+
+  const label = String(group?.label ?? '').trim();
+  if (label) {
+    const arrow = label.indexOf(' → ');
+    const raw = arrow >= 0 ? label.slice(0, arrow).trim() : label;
+    if (raw && !raw.startsWith('(?') && !raw.includes('$0')) {
+      return normalizeConsistencyVariant(decodeSpacesVisible(raw));
+    }
+  }
+
+  const find = String(group?.find ?? '').trim();
+  if (find && !find.startsWith('(?') && !find.includes('\\s') && !find.includes('$')) {
+    return normalizeConsistencyVariant(decodeSpacesVisible(find));
+  }
+
+  return '';
+}
+
+/**
  * @param {import('./ruleTypes.js').Rule[]} customRules
  * @param {string} [tailWord]
  */
 export function isConsistencyUnifyTailWord(customRules, tailWord) {
-  const tail = String(tailWord ?? '').trim();
+  const tail = normalizeConsistencyVariant(tailWord);
   if (!tail) return false;
-  return customRules.some(
-    (rule) =>
-      COMPOUND_KINDS.has(rule.patternKind ?? '') &&
-      rule.tailWord?.trim() === tail &&
-      rule.consistencyUnifyEntry === true,
+  return customRules.some((rule) => {
+    if (!COMPOUND_KINDS.has(rule.patternKind ?? '')) return false;
+    if (normalizeConsistencyVariant(rule.tailWord) !== tail) return false;
+    return (
+      rule.consistencyUnifyEntry === true ||
+      rule.consistencyUnifyPinned === true
+    );
+  });
+}
+
+/**
+ * @param {import('./ruleTypes.js').Rule[]} customRules
+ * @param {import('./ruleEngine.js').GroupedResult | { tailWord?: string, label?: string, find?: string }} group
+ */
+export function isConsistencyUnifyResultGroup(customRules, group) {
+  return isConsistencyUnifyTailWord(
+    customRules,
+    resolveConsistencyGroupTailWord(group),
   );
 }
 
@@ -59,7 +98,7 @@ export function setConsistencyUnifyOverlay(rules, correctionRaw, unifiedRaw) {
 
   return rules.map((rule) => {
     if (!COMPOUND_KINDS.has(rule.patternKind ?? '')) return rule;
-    if (rule.tailWord?.trim() !== correction) return rule;
+    if (normalizeConsistencyVariant(rule.tailWord) !== correction) return rule;
     return { ...rule, overlayReplace: unified };
   });
 }
@@ -74,7 +113,7 @@ export function clearConsistencyUnifyOverlay(rules, correctionRaw) {
 
   return rules.map((rule) => {
     if (!COMPOUND_KINDS.has(rule.patternKind ?? '')) return rule;
-    if (rule.tailWord?.trim() !== correction) return rule;
+    if (normalizeConsistencyVariant(rule.tailWord) !== correction) return rule;
     const next = { ...rule };
     delete next.overlayReplace;
     return next;
@@ -87,7 +126,7 @@ export function clearConsistencyUnifyOverlay(rules, correctionRaw) {
  * @returns {string | null}
  */
 export function getConsistencyUnifyOverlayForGroup(customRules, group) {
-  const tail = String(group.tailWord ?? '').trim();
+  const tail = resolveConsistencyGroupTailWord(group);
   if (!tail) return null;
   if (!isConsistencyUnifyTailWord(customRules, tail)) return null;
 
@@ -98,7 +137,7 @@ export function getConsistencyUnifyOverlayForGroup(customRules, group) {
 
   for (const rule of customRules) {
     if (!COMPOUND_KINDS.has(rule.patternKind ?? '')) continue;
-    if (rule.tailWord?.trim() !== tail) continue;
+    if (normalizeConsistencyVariant(rule.tailWord) !== tail) continue;
     const text = String(rule.overlayReplace ?? '').trim();
     if (text) return text;
   }
@@ -112,7 +151,7 @@ export function getConsistencyUnifyOverlayForGroup(customRules, group) {
 export function getConsistencyUnifyPinnedTailWord(rules) {
   for (const rule of rules) {
     if (!rule.consistencyUnifyPinned) continue;
-    const tailWord = rule.tailWord?.trim();
+    const tailWord = normalizeConsistencyVariant(rule.tailWord);
     if (tailWord) return tailWord;
   }
   return null;
@@ -148,7 +187,7 @@ export function applyConsistencyUnifyPin(rules, targetTailWordRaw) {
 
   return rules.map((rule) => {
     if (!rule.consistencyUnifyEntry) return rule;
-    const tailWord = rule.tailWord?.trim();
+    const tailWord = normalizeConsistencyVariant(rule.tailWord);
     if (!tailWord) return rule;
 
     if (tailWord === target) {

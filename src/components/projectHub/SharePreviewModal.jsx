@@ -7,7 +7,9 @@ import ProjectLibraryCard from './ProjectLibraryCard.jsx';
  * }} props
  */
 export default function SharePreviewModal({ card, onClose }) {
-  const ledger = Array.isArray(card.decisionLedger) ? card.decisionLedger : [];
+  const ledger = (Array.isArray(card.decisionLedger) ? card.decisionLedger : []).filter(
+    (item) => item.kind === 'unify',
+  );
 
   return (
     <div

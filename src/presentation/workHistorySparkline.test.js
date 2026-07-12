@@ -8,9 +8,21 @@ import {
 
 describe('workHistorySparkline', () => {
   it('2세션 sparkline path를 만든다', () => {
-    const path = buildSparklinePath([10, 20], 168, 32);
+    const path = buildSparklinePath([10, 20], 168, 56);
     expect(path).toContain('L');
-    expect(sparklinePoints([10, 20], 168, 32)).toHaveLength(2);
+    const points = sparklinePoints([10, 20], 168, 56);
+    expect(points).toHaveLength(2);
+    // 0 기준: 20이 10보다 위에 있다
+    expect(points[1].y).toBeLessThan(points[0].y);
+    // x는 양 끝
+    expect(points[0].x).toBe(0);
+    expect(points[1].x).toBe(168);
+  });
+
+  it('동일 값이어도 0 기준으로 아래에 붙지 않는다', () => {
+    const points = sparklinePoints([50, 50], 168, 56);
+    expect(points[0].y).toBe(points[1].y);
+    expect(points[0].y).toBeLessThan(56 / 2);
   });
 
   it('맞춤법 분리 이력 여부를 판별한다', () => {

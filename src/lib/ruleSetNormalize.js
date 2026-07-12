@@ -40,11 +40,12 @@ export function normalizeRuleSet(set) {
   );
   const normalizedCustomRules = ensureDefaultAuxiliaryVerbs(customRules);
   const globalExcludePhrases = set.globalExcludePhrases ?? [];
+  const projectContext = normalizeProjectContext(set.projectContext);
+  const savedAt =
+    typeof set.savedAt === 'string' && set.savedAt ? set.savedAt : undefined;
   const consistencyDecisions = normalizeConsistencyDecisions(
     set.consistencyDecisions,
   );
-  const savedAt =
-    typeof set.savedAt === 'string' && set.savedAt ? set.savedAt : undefined;
   const criteriaCheckpoint =
     typeof set.criteriaCheckpoint === 'string' && set.criteriaCheckpoint
       ? set.criteriaCheckpoint
@@ -84,7 +85,7 @@ export function normalizeRuleSet(set) {
     tags: normalizeProjectTags(set.tags),
     memo: normalizeProjectMemo(set.memo),
     pillarMemos: normalizeProjectPillarMemos(set.pillarMemos),
-    projectContext: normalizeProjectContext(set.projectContext),
+    projectContext,
     workHistory: normalizeWorkHistory(set.workHistory),
     consistencyDecisions,
     criteriaCheckpoint,

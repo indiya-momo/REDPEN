@@ -199,7 +199,7 @@ export function formatSpellingCheckCompleteMessage({
 }
 
 /**
- * 맞춤법 탭 검수 직후 — 발견된 기준·총 건수 alert
+ * 맞춤법 탭 검수 직후 — 발견 있는 기준·발견 건수 alert
  * @param {import('./ruleEngine.js').RuleResultGroup[]} groups
  * @param {number} totalFindings
  * @param {{
@@ -216,15 +216,21 @@ export async function alertSpellingCheckAfterRun(
     cautionSelected = true,
     builtinSelected = true,
   } = criteriaSelection;
-  const counts = countSpellingGroupsWithFindings(groups);
+  const withFindings = countSpellingGroupsWithFindings(groups);
+  const findingsByCategory = countSpellingFindingsByCategory(groups);
   const summaryInput = {
-    ...counts,
+    cautionWithFindings: withFindings.cautionWithFindings,
+    builtinWithFindings: withFindings.builtinWithFindings,
     totalFindings,
     cautionSelected,
     builtinSelected,
   };
   const message = formatSpellingCheckCompleteMessage(summaryInput);
-  const stats = buildSpellingResultSummaryStats(summaryInput);
+  const stats = buildSpellingResultSummaryStats({
+    ...summaryInput,
+    editorReviewFindings: findingsByCategory.editorReview,
+    spellingFindings: findingsByCategory.spelling,
+  });
 
   await finishGuestBrowseResultThenUnlockNextGuide(async (extra = {}) => {
     await showAppAlert({

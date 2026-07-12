@@ -20,7 +20,7 @@ function seedUnifyRules(...words) {
 }
 
 describe('consistencyDecisions', () => {
-  it('normalize — unify만 통과', () => {
+  it('normalize — find/unify/commonString 통과', () => {
     const normalized = normalizeConsistencyDecisions([
       {
         id: 'dec_1',
@@ -35,13 +35,24 @@ describe('consistencyDecisions', () => {
         at: '2026-07-10T00:00:00.000Z',
         query: '찾기',
       },
+      {
+        id: 'dec_3',
+        kind: 'commonString',
+        at: '2026-07-11T00:00:00.000Z',
+        pattern: '@시대',
+      },
       { id: 'bad' },
     ]);
-    expect(normalized).toHaveLength(1);
+    expect(normalized).toHaveLength(3);
     expect(normalized[0]).toMatchObject({
       kind: 'unify',
       pinned: '신라시대',
       variants: ['통일신라시대'],
+    });
+    expect(normalized[1]).toMatchObject({ kind: 'find', query: '찾기' });
+    expect(normalized[2]).toMatchObject({
+      kind: 'commonString',
+      pattern: '@시대',
     });
   });
 

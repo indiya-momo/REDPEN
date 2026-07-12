@@ -174,7 +174,6 @@ function fixedTooltipPosition(rect, placement, offsetX, offsetY) {
  *   pinned?: boolean,
  *   showConfirm?: boolean,
  *   confirmGuideAttr?: string,
- *   autoDismissMs?: number — ms 후 확인 없이 닫기(0이면 없음)
  *   children: import('react').ReactElement,
  * }} props
  */
@@ -196,7 +195,6 @@ export default function TooltipGuide({
   pinned = false,
   showConfirm = false,
   confirmGuideAttr,
-  autoDismissMs = 0,
   children,
 }) {
   const anchorRef = useRef(/** @type {HTMLSpanElement | null} */ (null));
@@ -290,16 +288,6 @@ export default function TooltipGuide({
     },
     [dismissed, storageKey, onDismiss, pinned],
   );
-
-  useEffect(() => {
-    if (pinned || dismissed) return undefined;
-    const ms = Number(autoDismissMs);
-    if (!Number.isFinite(ms) || ms <= 0) return undefined;
-    const timer = window.setTimeout(() => {
-      handleConfirm(null);
-    }, ms);
-    return () => window.clearTimeout(timer);
-  }, [autoDismissMs, pinned, dismissed, handleConfirm]);
 
   const showMomo = imageSrc != null && imageSrc !== '';
 

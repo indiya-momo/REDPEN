@@ -3,7 +3,8 @@ import { clearTooltipGuideDismissed } from './tooltipGuideStorage.js';
 /**
  * 작업 화면 말풍선 storageKey (tooltipGuideStorage 접두사와 결합)
  *
- * 통칭 **1~7번 말풍선** = PDF 업로드·추출 이후 체인 (맞춤법·일관성·종료).
+ * 통칭 **1~7번 말풍선** = **둘러보기(게스트) 전용** PDF 업로드·추출 이후 체인.
+ * UI는 `useGuestBrowseWorkGuide`만 쓴다. 일반 로그인 작업에서는 EMPTY만 반환된다.
  * - **1번**: 검수 기준 선택·목록 (`LEFT_CRITERIA`)
  * - **2번**: 검수 결과 안내 (`FIRST_RESULT`)
  * - **3번**: 파일 - 원고 페이지 맞추기 (`PDF_OPENED`)

@@ -2,12 +2,16 @@ import {
   isConsistencyEntryEnabled,
   listConsistencyLiteralEntries,
 } from '../../lib/compoundPairRegister.js';
-import { listConsistencyUnifyEntries } from '../../lib/consistencyRuleLimit.js';
+import {
+  LITERAL_FIND_FEATURE_LABEL,
+  UNIFY_FEATURE_LABEL,
+  listConsistencyUnifyEntries,
+} from '../../lib/consistencyRuleLimit.js';
 import { getConsistencyUnifyPinnedTailWord } from '../../lib/consistencyUnifyRegister.js';
 import { resultPillarToneClass } from '../../lib/resultPillarTone.js';
 
 /**
- * 마이페이지 표기 통일 — 여러 개 찾기·통일형 찾기만 칩으로 요약.
+ * 마이페이지 표기 통일 — 여러 개 찾기·통일형 만들기만 칩으로 요약.
  * 편집은 검수 화면에서 한다.
  *
  * @param {{
@@ -24,7 +28,7 @@ export default function ProjectHubCriteriaConsistencySection({
 
   const groups = [
     {
-      label: '여러 개 찾기',
+      label: LITERAL_FIND_FEATURE_LABEL,
       tone: /** @type {const} */ ('consistency-literal'),
       chips: listConsistencyLiteralEntries(customRules).map((entry) => ({
         label: entry.tailWord,
@@ -33,7 +37,7 @@ export default function ProjectHubCriteriaConsistencySection({
       })),
     },
     {
-      label: '통일형 찾기',
+      label: UNIFY_FEATURE_LABEL,
       tone: /** @type {const} */ ('consistency-unify'),
       chips: listConsistencyUnifyEntries(customRules).map((entry) => ({
         label: entry.tailWord,

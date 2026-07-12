@@ -3,50 +3,57 @@
  */
 
 export const WORK_HISTORY_SPARKLINE_WIDTH = 168;
-export const WORK_HISTORY_SPARKLINE_HEIGHT = 32;
+/** 노란 숫자 원형이 들어가도록 높이 확보 */
+export const WORK_HISTORY_SPARKLINE_HEIGHT = 56;
+/** 원형·선이 잘리지 않도록 상하 여백(px, viewBox 기준) */
+export const WORK_HISTORY_SPARKLINE_PAD = 14;
 
 /**
  * @param {number[]} values
  * @param {number} width
  * @param {number} height
+ * @param {number} [pad]
  */
-export function buildSparklinePath(values, width, height) {
-  if (!values.length) return '';
-  if (values.length === 1) {
-    const x = width / 2;
-    const y = height / 2;
-    return `M${x},${y}`;
-  }
-  const max = Math.max(...values, 1);
-  const min = Math.min(...values);
-  const range = max - min || max || 1;
-  return values
-    .map((value, index) => {
-      const x = (width * index) / (values.length - 1);
-      const normalized = (value - min) / range;
-      const y = height - normalized * (height - 8) - 4;
-      return `${index === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`;
+export function buildSparklinePath(
+  values,
+  width,
+  height,
+  pad = WORK_HISTORY_SPARKLINE_PAD,
+) {
+  const points = sparklinePoints(values, width, height, pad);
+  if (!points.length) return '';
+  return points
+    .map((point, index) => {
+      const x = point.x.toFixed(1);
+      const y = point.y.toFixed(1);
+      return `${index === 0 ? 'M' : 'L'}${x},${y}`;
     })
     .join(' ');
 }
 
 /**
+ * 0건 = 아래, max = 위. (세션 간 상대 min-max가 아니라 절대 건수 반영)
  * @param {number[]} values
  * @param {number} width
  * @param {number} height
+ * @param {number} [pad]
  */
-export function sparklinePoints(values, width, height) {
+export function sparklinePoints(
+  values,
+  width,
+  height,
+  pad = WORK_HISTORY_SPARKLINE_PAD,
+) {
   if (!values.length) return [];
-  if (values.length === 1) {
-    return [{ x: width / 2, y: height / 2, value: values[0] }];
-  }
   const max = Math.max(...values, 1);
-  const min = Math.min(...values);
-  const range = max - min || max || 1;
+  const usable = Math.max(height - pad * 2, 1);
+  if (values.length === 1) {
+    const y = height - pad - (values[0] / max) * usable;
+    return [{ x: width / 2, y, value: values[0] }];
+  }
   return values.map((value, index) => {
     const x = (width * index) / (values.length - 1);
-    const normalized = (value - min) / range;
-    const y = height - normalized * (height - 8) - 4;
+    const y = height - pad - (value / max) * usable;
     return { x, y, value };
   });
 }
