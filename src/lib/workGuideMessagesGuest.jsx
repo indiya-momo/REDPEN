@@ -26,11 +26,10 @@ export function LeftCriteriaMessage() {
 export function SpellingStartCheckMessage() {
   return (
     <>
-      <span className="tooltip-guide__gothic-label">편집자 검토 필요</span>는
-      확인을 꼭 해야 한다냥
+      <span className="tooltip-guide__gothic-label">편집자 검토 필요</span>와
       <br />
-      <span className="tooltip-guide__gothic-label">맞춤법 규칙</span>은 바로
-      적용해도 괜찮다냥
+      <span className="tooltip-guide__gothic-label">맞춤법 규칙</span>은 결과가
+      조금 다르다냥
       <br />
       일단 검수를 시작해 보자냥
     </>
