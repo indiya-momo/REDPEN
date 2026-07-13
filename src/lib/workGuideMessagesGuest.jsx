@@ -137,7 +137,7 @@ export function WorkExitMessage() {
       <span className="tooltip-guide__message-line">
         <span className="tooltip-guide__feedback-btn-look">
           <MessageSquare
-            size={14}
+            size={18}
             aria-hidden
             className="tooltip-guide__feedback-btn-look__icon"
           />

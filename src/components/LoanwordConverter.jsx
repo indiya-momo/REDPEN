@@ -15,6 +15,10 @@ import { loadYongryeDictionary, lookupYongrye } from '../lib/loanword/yongryeDic
 import { convertWordAsync, convertPhraseAsync } from '../lib/loanword/convertLoanword.js';
 import { preloadEspeak, espeakToIpa } from '../lib/loanword/espeakG2p.js';
 
+/** 용례집 미등재·규정 적용 결과 뱃지 — UI 통일 라벨 */
+const EST_BADGE_LABEL = '표기 추정';
+const PARTIAL_EST_BADGE_LABEL = '일부 표기 추정';
+
 const styles = {
   wrap: {
     border: '1px solid rgba(0, 0, 0, 0.12)',
@@ -163,7 +167,7 @@ function EngineResult({ result, label, estimated }) {
   return (
     <div style={styles.hangulResult}>
       <span style={styles.hangul}>{result.hangul}</span>
-      <span style={{ ...styles.estBadge, marginLeft: 6 }}>발음 추정</span>
+      <span style={{ ...styles.estBadge, marginLeft: 6 }}>{EST_BADGE_LABEL}</span>
       <span style={styles.meta}>
         {label ? `${label} · ` : ''}[{result.ipa}]
       </span>
@@ -337,10 +341,10 @@ export default function LoanwordConverter({
             <span style={styles.hangul}>{outcome.engine.hangul}</span>
             {outcome.engine.words.some((w) => w.source !== 'yongrye') ? (
               outcome.engine.words.every((w) => w.source !== 'yongrye') ? (
-                <span style={{ ...styles.estBadge, marginLeft: 6 }}>발음 추정</span>
+                <span style={{ ...styles.estBadge, marginLeft: 6 }}>{EST_BADGE_LABEL}</span>
               ) : (
                 <span style={{ ...styles.partialEstBadge, marginLeft: 6 }}>
-                  일부 발음 추정
+                  {PARTIAL_EST_BADGE_LABEL}
                 </span>
               )
             ) : null}
@@ -353,7 +357,7 @@ export default function LoanwordConverter({
                 <span style={{ ...styles.badge, marginLeft: 6 }}>용례집</span>
               ) : null}
               {w.source === 'dict' || w.source === 'g2p' ? (
-                <span style={{ ...styles.estBadge, marginLeft: 6 }}>발음 추정</span>
+                <span style={{ ...styles.estBadge, marginLeft: 6 }}>{EST_BADGE_LABEL}</span>
               ) : null}
               {w.officialForms.length > 1 ? (
                 <span style={styles.meta}>다른 표기: {w.officialForms.slice(1).join(', ')}</span>
@@ -377,7 +381,7 @@ export default function LoanwordConverter({
         {'외국어 원문을 입력하면 한국어로 변환합니다. 외래어 표기법'}
         <span style={{ ...styles.badge, marginLeft: '0.25em' }}>용례집</span>
         {'을 우선하며, 등재되지 않은 경우 규정을 적용해'}
-        <span style={{ ...styles.estBadge, marginLeft: '0.25em' }}>발음 추정</span>
+        <span style={{ ...styles.estBadge, marginLeft: '0.25em' }}>{EST_BADGE_LABEL}</span>
         {'합니다'}
       </p>
     </details>

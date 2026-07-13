@@ -92,7 +92,7 @@ export async function convertWordAsync(word, dictionary, ipaProvider = null) {
       ipa: tokensToIpaString(tokens),
       hangul: assemble(pieces),
       trace,
-      notes: ['발음 추정: eSpeak-NG 음성 엔진 (영국식)', ...notes],
+      notes: ['표기 추정: eSpeak-NG 음성 엔진 (영국식)', ...notes],
     }],
   };
 }
