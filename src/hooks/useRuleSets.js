@@ -36,6 +36,7 @@ import {
   LEGACY_DEFAULT_CRITERIA_HINT,
 } from '../lib/criteriaName.js';
 import { planCriteriaPresetDelete } from '../lib/criteriaPresetDelete.js';
+import { planSaveCriteriaPreset } from '../lib/saveCriteriaPresetPlan.js';
 import { showAppAlert, showAppConfirm } from '../lib/appDialog.js';
 import { formatProjectDialogLabel } from '../lib/projectDialogLabel.js';
 import { normalizeRuleSet } from '../lib/ruleSetNormalize.js';
@@ -691,68 +692,27 @@ export function useRuleSets(authUid = '', authEmail = '') {
       };
       const criteriaCheckpoint = buildCriteriaCheckpoint(config);
 
-      const existing = ruleSetsRef.current.find(
-        (s) => (s.name || '').trim() === name,
-      );
-
-      const snapshot = saveOptions.projectContextSnapshot;
-      const contextBase =
-        existing?.projectContext ?? sourceAfterFlush.projectContext;
-      const projectContext = snapshot
-        ? mergeProjectContext(contextBase, snapshot)
-        : contextBase;
-
-      let next;
-      let targetId;
-      /** @type {{ added?: string[] }} */
-      let persistIntent = {};
-      if (existing) {
-        targetId = existing.id;
-        next = ruleSetsRef.current.map((s) =>
-          s.id === existing.id
-            ? normalizeRuleSet({
-                ...s,
-                ...config,
-                name,
-                savedAt,
-                projectContext,
-                criteriaCheckpoint,
-              })
-            : s,
-        );
-      } else {
-        const soleDraft =
-          ruleSetsRef.current.length === 1 &&
-          !ruleSetsRef.current[0]?.savedAt;
-        if (soleDraft) {
-          targetId = ruleSetsRef.current[0].id;
-          next = ruleSetsRef.current.map((s) =>
-            s.id === targetId
-              ? normalizeRuleSet({
-                  id: targetId,
-                  name,
-                  ...config,
-                  savedAt,
-                  projectContext,
-                  criteriaCheckpoint,
-                })
-              : s,
-          );
-        } else {
-          targetId = newId();
-          const created = normalizeRuleSet({
-            id: targetId,
-            name,
-            ...config,
-            savedAt,
-            projectContext,
-            criteriaCheckpoint,
+      // 저장 대상은 "지금 작업 중인 프로젝트(sourceId)" 기준으로 정한다.
+      // 이름이 다른 프로젝트와 겹치면 덮어쓰지 않고 막아 원본을 보호한다.
+      const plan = planSaveCriteriaPreset(ruleSetsRef.current, {
+        sourceId,
+        name,
+        config,
+        savedAt,
+        criteriaCheckpoint,
+        projectContextSnapshot: saveOptions.projectContextSnapshot ?? null,
+      });
+      if (!plan.ok) {
+        if (plan.reason === 'duplicate_name') {
+          await showAppAlert({
+            title: '저장',
+            message: '같은 이름의 프로젝트가 이미 있습니다.',
           });
-          next = [...ruleSetsRef.current, created];
-          // 디스크에 아직 없는 새 저장분을 autosave 병합이 「외부 삭제」로 지우지 않게 한다.
-          persistIntent = { added: [targetId] };
         }
+        return false;
       }
+      const { next, targetId } = plan;
+      const persistIntent = plan.intent;
 
       ruleSetsRef.current = next;
       applyRuleSets(next, targetId, persistIntent);
