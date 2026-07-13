@@ -63,6 +63,6 @@ export function buildWorkHistoryConsistencyCriteria(
 export const WORK_HISTORY_CONSISTENCY_GROUPS = [
   { id: 'find', label: LITERAL_FIND_FEATURE_LABEL },
   { id: 'unify', label: UNIFY_FEATURE_LABEL },
-  { id: 'commonString', label: '공통 문자열 찾기' },
+  { id: 'commonString', label: '공통 항목 찾기' },
   { id: 'exclude', label: '검수 제외 항목' },
 ];

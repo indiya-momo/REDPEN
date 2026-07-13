@@ -136,7 +136,7 @@ function formatConsistencyCheckCriteriaBlock({
   const line1 =
     `${LITERAL_FIND_FEATURE_LABEL}${formatConfirmItemCount(literalActive)}, ` +
     `${UNIFY_FEATURE_LABEL}${formatConfirmItemCount(unifyActive)}, ` +
-    `공통 문자열 찾기${formatConfirmActiveCount(commonStringActive)}`;
+    `공통 항목 찾기${formatConfirmActiveCount(commonStringActive)}`;
   const line2 =
     `검수 제외 항목${formatConfirmActiveCount(excludeActive)}, ` +
     `${AUXILIARY_VERB_FEATURE_LABEL}${formatConfirmAuxiliaryCount(auxiliaryActive, auxiliaryTotal)}`;

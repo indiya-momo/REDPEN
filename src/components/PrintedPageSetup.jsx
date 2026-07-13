@@ -17,6 +17,7 @@ import {
  *   onFirstPageSingleChange: (v: boolean) => void,
  *   onCalibrateFromInput: (raw: string, isSpread: boolean) => void,
  *   onCalibratePress?: () => void,
+ *   guideSpotlight?: boolean,
  * }} props
  */
 export default function PrintedPageSetup({
@@ -30,6 +31,7 @@ export default function PrintedPageSetup({
   onFirstPageSingleChange,
   onCalibrateFromInput,
   onCalibratePress,
+  guideSpotlight = false,
 }) {
   const [draft, setDraft] = useState('');
 
@@ -62,7 +64,16 @@ export default function PrintedPageSetup({
     : '';
 
   return (
-    <section className="printed-page-setup" aria-label="파일 - 원고 페이지 맞추기">
+    <section
+      className={[
+        'printed-page-setup',
+        guideSpotlight ? 'work-guide-spotlight' : '',
+      ]
+        .filter(Boolean)
+        .join(' ')}
+      data-work-guide="page-calibration"
+      aria-label="파일 - 원고 페이지 맞추기"
+    >
       <p className="printed-page-setup__title panel-criteria-heading">
         파일 - 원고 페이지 맞추기
       </p>

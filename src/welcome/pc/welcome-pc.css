@@ -228,22 +228,21 @@
   width: 100%;
   max-width: none;
   margin-inline: 0;
-  padding-inline: var(--welcome-ba-footer-inset-left)
-    var(--welcome-page-padding-inline);
+  padding-inline: var(--welcome-page-padding-inline);
   padding-top: var(--welcome-ba-cream-outer-gap);
   padding-bottom: clamp(calc(0.35rem * var(--welcome-scale)), 0.8vw, calc(0.65rem * var(--welcome-scale)));
-  text-align: left;
+  text-align: center;
 }
 
 .welcome-pc__layout--guest .welcome-pc__footer-line {
-  justify-content: flex-start;
+  justify-content: center;
   flex-wrap: wrap;
   width: 100%;
   max-width: 100%;
   margin-left: 0;
   margin-right: 0;
   gap: calc(0.75rem * var(--welcome-scale));
-  text-align: left;
+  text-align: center;
 }
 
 .welcome-pc__layout--guest .welcome-pc__footer-sep {
@@ -258,7 +257,7 @@
 .welcome-pc__layout--guest .welcome-pc__footer-part {
   flex: 0 1 auto;
   min-width: 0;
-  text-align: left;
+  text-align: center;
 }
 
 .welcome-pc__layout--guest .welcome-pc__footer-meta {

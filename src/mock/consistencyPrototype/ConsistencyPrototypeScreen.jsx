@@ -247,7 +247,7 @@ export default function ConsistencyPrototypeScreen() {
             <div className="consistency-subsection-row">
               <div className="consistency-subsection consistency-subsection--half">
                 <p className="printed-page-setup__title consistency-subsection-title panel-criteria-heading">
-                  공통 문자열 찾기(1개)
+                  공통 항목 찾기(1개)
                 </p>
                 <div className="consistency-subsection__hints-area">
                   <p className="hint consistency-hint-block">
@@ -266,7 +266,7 @@ export default function ConsistencyPrototypeScreen() {
                   onChange={setSlotInput}
                   onRegister={registerSlot}
                   placeholder={SPACE_INPUT_PLACEHOLDER}
-                  ariaLabel="공통 문자열 찾기(1개)"
+                  ariaLabel="공통 항목 찾기(1개)"
                   inputClassName="field-input mono"
                 />
                 {phraseSlots.length > 0 ? (

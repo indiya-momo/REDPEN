@@ -15,7 +15,8 @@ const TOOLTIP_GUIDE_PREFIX = 'pdf-proofread-tooltip-guide-';
  * - **0**: 맞춤법 탭·외래어 (`LOANWORD_INTRO`)
  * - **1**: 검수 기준 (`LEFT_CRITERIA`)
  * - **1b**: PDF 업로드 (`PRE_UPLOAD`) — 옛 0
- * - **2~7**: FIRST_RESULT … WORK_EXIT (1b SPELLING_START 는 회원에서 건너뜀)
+ * - **업로드 직후**: 기준 검수 안내 (`SPELLING_START_CHECK`)
+ * - **2~**: FIRST_RESULT … AUXILIARY → (표기 통일 검수) → RULE_SET_SAVE …
  *
  * **둘러보기** — 별도 문구·순서 (`workGuideMessagesGuest`). 여기 키 주석의 로그인 번호와 다름.
  *
@@ -30,7 +31,7 @@ export const WORK_GUIDE_KEYS = {
   /** 3번 — 순서 교체(2026-06)로 v2 (v1 dismiss는 체인에 반영 안 됨) */
   PDF_OPENED: 'work-pdf-opened-v2',
   LEFT_CRITERIA: 'work-left-criteria-v2',
-  /** 둘러보기 1b — 편집자 검토·맞춤법 규칙 안내 후 기준 검수 */
+  /** 둘러보기 1b / 회원 업로드 직후 — 기준 검수 안내 */
   SPELLING_START_CHECK: 'work-spelling-start-check-v1',
   /** 2번 — 순서 교체(2026-06)로 v2 */
   FIRST_RESULT: 'work-first-result-v2',
@@ -38,6 +39,8 @@ export const WORK_GUIDE_KEYS = {
   /** 통일형 📌 지정 (4번 다음) */
   CONSISTENCY_UNIFY_PIN: 'work-consistency-unify-pin-v1',
   AUXILIARY_VERB_INTRO: 'work-auxiliary-verb-intro-v1',
+  /** 로그인 — 표기 통일 기준 검수·다운로드 안내 (저장 안내 직전) */
+  CONSISTENCY_START_CHECK: 'work-consistency-start-check-v1',
   RULE_SET_SAVE: 'work-rule-set-save-v1',
   WORK_EXIT: 'work-exit-v1',
   /** 피드백 제출 보너스 감사 말풍선 (온보딩 5회와 별도) */
@@ -79,7 +82,7 @@ function isLocalDevBrowser() {
 
 /**
  * 로컬 dev — 마지막으로 본 가이드 단계 고정. `?workGuide=10` 이 우선.
- * 0=로그인 외래어(또는 둘러보기 업로드), 1=기준, 10=업로드(1b), 2~9=이후.
+ * 0=로그인 외래어(또는 둘러보기 업로드), 1=기준, 10=업로드(1b), 2~9·11=이후.
  * @returns {number | null}
  */
 export function getDevWorkGuideForceStep() {
@@ -87,13 +90,13 @@ export function getDevWorkGuideForceStep() {
   const q = new URLSearchParams(window.location.search).get('workGuide');
   if (q != null && q !== '') {
     const n = Number(q);
-    if (Number.isInteger(n) && n >= 0 && n <= 10) return n;
+    if (Number.isInteger(n) && n >= 0 && n <= 11) return n;
   }
   try {
     const stored = sessionStorage.getItem(DEV_WORK_GUIDE_FORCE_KEY);
     if (stored != null && stored !== '') {
       const n = Number(stored);
-      if (Number.isInteger(n) && n >= 0 && n <= 10) return n;
+      if (Number.isInteger(n) && n >= 0 && n <= 11) return n;
     }
   } catch {
     /* ignore */
@@ -109,7 +112,7 @@ export function setDevWorkGuideForceStep(step) {
       sessionStorage.removeItem(DEV_WORK_GUIDE_FORCE_KEY);
       return;
     }
-    if (!Number.isInteger(step) || step < 0 || step > 10) return;
+    if (!Number.isInteger(step) || step < 0 || step > 11) return;
     sessionStorage.setItem(DEV_WORK_GUIDE_FORCE_KEY, String(step));
   } catch {
     /* ignore */

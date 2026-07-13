@@ -123,7 +123,7 @@ function registerConsistencyLiteralBatchWithOptions(
   for (const raw of planConsistencyEntries(variants)) {
     if (!isLiteralConsistencyEntry(raw)) {
       if (isPhraseSlotPattern(raw)) {
-        alert(`「${raw}」은 공통 문자열 찾기(1항목)에 등록하세요. (@)`);
+        alert(`「${raw}」은 공통 항목 찾기(1항목)에 등록하세요. (@)`);
       } else {
         alert(`등록할 수 없는 형식입니다: ${raw}`);
       }

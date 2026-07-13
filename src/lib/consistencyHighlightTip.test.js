@@ -96,7 +96,7 @@ describe('getConsistencyHighlightTip', () => {
           instances: [],
         },
       ),
-    ).toBe('공통 문자열 찾기 : @정부');
+    ).toBe('공통 항목 찾기 : @정부');
   });
 });
 
@@ -212,7 +212,7 @@ describe('getConsistencyResultCardParts', () => {
     });
   });
 
-  it('phrase-slot — 공통 문자열 찾기 배지 + 등록 문자열', () => {
+  it('phrase-slot — 공통 항목 찾기 배지 + 등록 문자열', () => {
     expect(
       getConsistencyResultCardParts({
         find: '@정부',
@@ -222,7 +222,7 @@ describe('getConsistencyResultCardParts', () => {
         tailWord: '@정부',
         instances: [{}],
       }),
-    ).toEqual({ badge: '공통 문자열 찾기', label: '@정부' });
+    ).toEqual({ badge: '공통 항목 찾기', label: '@정부' });
   });
 
   it('auxiliary-verb — 본용언+보조용언 배지 + 항목 라벨', () => {

@@ -186,6 +186,13 @@ const WORK_GUIDE_UNIFY_PIN_ALIGN = {
   topFromTargetTop: -4,
 };
 
+/** 회원 통일형 📌 — 오른쪽 원고(인사말) 아래 330px */
+const WORK_GUIDE_UNIFY_PIN_MEMBER_ALIGN = {
+  selector: '.pdf-work-pane__greeting',
+  leftFromTargetLeft: 0,
+  topFromTargetTop: 330,
+};
+
 /** 둘러보기 핀 가이드 대상 — 통일형 */
 const GUEST_BROWSE_UNIFY_PIN_TAIL = '붉은 표시';
 
@@ -1066,9 +1073,7 @@ export default function MainScreen({
   const showSpellingResultsSlot = tabCheckDone;
 
   const handleCriteriaSpellingCheck = useCallback(() => {
-    if (guestBrowseAutoRunsCriteriaCheck()) {
-      markGuestBrowseCriteriaClick();
-    }
+    markGuestBrowseCriteriaClick();
     if (
       guestWorkGuide.showLeftCriteriaGuide ||
       guestWorkGuide.showSpellingStartCheckGuide
@@ -1177,6 +1182,7 @@ export default function MainScreen({
   ]);
 
   useEffect(() => {
+    if (!isGuestBrowseActive()) return;
     if (!guestWorkGuide.showConsistencyGuide) return;
     if (!consistencyGuideLiteralAddClicked || !consistencyGuideUnifyAddClicked) {
       return;
@@ -1191,6 +1197,8 @@ export default function MainScreen({
 
   const handleConsistencyUnifyPinGuideClick = useCallback(
     (tailWord) => {
+      // 회원은 말풍선「확인」으로만 본보조로 진행. 둘러보기만 데모 핀으로 진행.
+      if (!isGuestBrowseActive()) return;
       if (!guestWorkGuide.showConsistencyUnifyPinGuide) return;
       if (tailWord !== GUEST_BROWSE_UNIFY_PIN_TAIL) return;
       guestWorkGuide.dismiss(WORK_GUIDE_KEYS.CONSISTENCY_UNIFY_PIN);
@@ -1481,6 +1489,11 @@ export default function MainScreen({
             firstPageSingle={pageDisplay.firstPageSingle}
             onFirstPageSingleChange={pageDisplay.setFirstPageSingle}
             onCalibrateFromInput={pageDisplay.calibrateFromInput}
+            guideSpotlight={
+              !isGuestBrowseActive() &&
+              guestWorkGuide.showFirstResultGuide &&
+              guestNextGuideReady
+            }
           />
         ) : null}
         {loanwordConverterEnabled ? (
@@ -1496,6 +1509,7 @@ export default function MainScreen({
               offsetY={0}
               bubbleGuideStep="0"
               pinned={guestWorkGuide.pinAll}
+              showConfirm
               message={<guideMessages.SpellingTabIntroMessage />}
               onDismiss={() =>
                 guestWorkGuide.dismiss(WORK_GUIDE_KEYS.LOANWORD_INTRO)
@@ -1589,8 +1603,9 @@ export default function MainScreen({
               offsetX={0}
               offsetY={0}
               alignToBubble={WORK_GUIDE_1_ALIGN}
-              bubbleGuideStep="1b"
+              bubbleGuideStep={isGuestBrowseActive() ? '1b' : '1c'}
               pinned={guestWorkGuide.pinAll}
+              showConfirm={!isGuestBrowseActive()}
               message={<guideMessages.SpellingStartCheckMessage />}
               onDismiss={() =>
                 guestWorkGuide.dismiss(WORK_GUIDE_KEYS.SPELLING_START_CHECK)
@@ -1634,8 +1649,8 @@ export default function MainScreen({
           />
         ) : null}
         {guestWorkGuide.showFirstResultGuide &&
-        (!guestBrowseAutoRunsCriteriaCheck() ||
-          (guestNextGuideReady && !guestPdfTipOpened)) ? (
+        guestNextGuideReady &&
+        (!guestBrowseAutoRunsCriteriaCheck() || !guestPdfTipOpened) ? (
           <div className="work-guide-step-2">
             <TooltipGuide
               storageKey={guestWorkGuide.storageKey(WORK_GUIDE_KEYS.FIRST_RESULT)}
@@ -1647,6 +1662,7 @@ export default function MainScreen({
               offsetX={0}
               offsetY={0}
               pinned={guestWorkGuide.pinAll}
+              showConfirm={!isGuestBrowseActive()}
               message={<guideMessages.FirstResultMessage />}
               onDismiss={() =>
                 guestWorkGuide.dismiss(WORK_GUIDE_KEYS.FIRST_RESULT)
@@ -1657,11 +1673,13 @@ export default function MainScreen({
                 aria-hidden
               />
             </TooltipGuide>
-            <GuideClickHand
-              active={guestResultGuideActive}
-              anchorSelector="[data-work-guide-pdf-highlight]"
-              align="center"
-            />
+            {guestResultGuideActive ? (
+              <GuideClickHand
+                active
+                anchorSelector="[data-work-guide-pdf-highlight]"
+                align="center"
+              />
+            ) : null}
           </div>
         ) : null}
         <GuideClickHand
@@ -1721,6 +1739,7 @@ export default function MainScreen({
       offsetX={0}
       offsetY={0}
       pinned={guestWorkGuide.pinAll}
+      showConfirm={!isGuestBrowseActive()}
       message={<guideMessages.RuleSetSaveMessage />}
       onDismiss={() => guestWorkGuide.dismiss(WORK_GUIDE_KEYS.RULE_SET_SAVE)}
     >
@@ -1737,6 +1756,7 @@ export default function MainScreen({
       offsetX={0}
       offsetY={8}
       pinned={guestWorkGuide.pinAll}
+      showConfirm={!isGuestBrowseActive()}
       message={
         <guideMessages.ConsistencyIntroMessage
           literalAddClicked={consistencyGuideLiteralAddClicked}
@@ -1749,7 +1769,7 @@ export default function MainScreen({
       {greetingAnchor}
     </TooltipGuide>
   ) : (
-    <p className={greetingClassName}>{greetingInner}</p>
+    greetingAnchor
   );
 
   return (
@@ -1875,6 +1895,7 @@ export default function MainScreen({
                 <button
                   type="button"
                   className="panel-left__save-rules"
+                  data-work-guide="save-rules"
                   onClick={() => void handleSaveCriteria()}
                   disabled={criteriaSavePending}
                   aria-busy={criteriaSavePending}
@@ -1948,6 +1969,7 @@ export default function MainScreen({
                     offsetY={0}
                     bubbleGuideStep="1"
                     pinned={guestWorkGuide.pinAll}
+                    showConfirm
                     message={<guideMessages.LeftCriteriaMessage />}
                     onDismiss={() =>
                       guestWorkGuide.dismiss(WORK_GUIDE_KEYS.LEFT_CRITERIA)
@@ -1975,6 +1997,10 @@ export default function MainScreen({
                     onCautionToggle={onCautionToggle}
                     onCautionSetAll={onCautionSetAll}
                     fillPanel
+                    guideSpotlight={
+                      !isGuestBrowseActive() &&
+                      guestWorkGuide.showSpellingStartCheckGuide
+                    }
                   />
                 )
               ) : null}
@@ -2169,6 +2195,10 @@ export default function MainScreen({
             {!consistencyWorkDone ? (
               <div className="consistency-rules-scroll custom-scrollbar">
                 <ConsistencyPanel
+                  guideSpotlight={
+                    !isGuestBrowseActive() &&
+                    guestWorkGuide.showConsistencyGuide
+                  }
                   auxiliaryVerbGuide={
                     guestWorkGuide.showAuxiliaryVerbGuide
                       ? {
@@ -2177,6 +2207,7 @@ export default function MainScreen({
                           ),
                           alignToBubbleChain: WORK_GUIDE_5_ALIGN_CHAIN,
                           pinned: guestWorkGuide.pinAll,
+                          showConfirm: !isGuestBrowseActive(),
                           message: <guideMessages.AuxiliaryVerbMessage />,
                           onDismiss: () =>
                             guestWorkGuide.dismiss(
@@ -2191,8 +2222,11 @@ export default function MainScreen({
                           storageKey: guestWorkGuide.storageKey(
                             WORK_GUIDE_KEYS.CONSISTENCY_UNIFY_PIN,
                           ),
-                          alignToBubble: WORK_GUIDE_UNIFY_PIN_ALIGN,
+                          alignToBubble: isGuestBrowseActive()
+                            ? WORK_GUIDE_UNIFY_PIN_ALIGN
+                            : WORK_GUIDE_UNIFY_PIN_MEMBER_ALIGN,
                           pinned: guestWorkGuide.pinAll,
+                          showConfirm: !isGuestBrowseActive(),
                           message: <guideMessages.ConsistencyUnifyPinMessage />,
                           onDismiss: () =>
                             guestWorkGuide.dismiss(
@@ -2280,6 +2314,7 @@ export default function MainScreen({
               {greetingParagraph}
               <GuideClickHand
                 active={
+                  isGuestBrowseActive() &&
                   guestWorkGuide.showConsistencyGuide &&
                   !consistencyGuideLiteralAddClicked
                 }
@@ -2287,6 +2322,7 @@ export default function MainScreen({
               />
               <GuideClickHand
                 active={
+                  isGuestBrowseActive() &&
                   guestWorkGuide.showConsistencyGuide &&
                   consistencyGuideLiteralAddClicked &&
                   !consistencyGuideUnifyAddClicked
@@ -2303,8 +2339,17 @@ export default function MainScreen({
                 anchorSelector='[data-work-guide="consistency-criteria-run"]'
               />
               <GuideClickHand
-                active={guestWorkGuide.showRuleSetSaveGuide}
+                active={
+                  isGuestBrowseActive() && guestWorkGuide.showRuleSetSaveGuide
+                }
                 anchorSelector='[data-work-guide="consistency-export"]'
+              />
+              <GuideClickHand
+                active={
+                  !isGuestBrowseActive() && guestWorkGuide.showRuleSetSaveGuide
+                }
+                anchorSelector='[data-work-guide="save-rules"]'
+                align="center"
               />
               {showPdfViewer ? (
                 <div className="pdf-work-pane__zoom-axis">
@@ -2366,6 +2411,7 @@ export default function MainScreen({
                     offsetX={0}
                     offsetY={8}
                     pinned={guestWorkGuide.pinAll}
+                    showConfirm={!isGuestBrowseActive()}
                     message={<guideMessages.WorkExitMessage />}
                     onDismiss={() => {
                       guestWorkGuide.dismiss(WORK_GUIDE_KEYS.WORK_EXIT);
@@ -2381,7 +2427,7 @@ export default function MainScreen({
                         }}
                       >
                         <LogOut size={16} aria-hidden />
-                        메인 화면으로
+                        {isGuestBrowseActive() ? '로그아웃' : '메인 화면으로'}
                       </button>
                     </span>
                   </TooltipGuide>
@@ -2394,7 +2440,9 @@ export default function MainScreen({
                     }}
                   >
                     <LogOut size={16} aria-hidden />
-                    {authUid ? '로그아웃' : '메인 화면으로'}
+                    {isGuestBrowseActive() || authUid
+                      ? '로그아웃'
+                      : '메인 화면으로'}
                   </button>
                 )}
                 {feedbackThankYouOpen ? (
@@ -2513,6 +2561,7 @@ export default function MainScreen({
               uploadGuideSpotlight={
                 !isGuestBrowseActive() && guestWorkGuide.showPreUploadGuide
               }
+              uploadGuideShowConfirm={!isGuestBrowseActive()}
               onUploadGuideDismiss={() =>
                 guestWorkGuide.dismiss(WORK_GUIDE_KEYS.PRE_UPLOAD)
               }

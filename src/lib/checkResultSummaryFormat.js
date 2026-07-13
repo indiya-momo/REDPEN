@@ -126,7 +126,7 @@ export function formatConsistencyExcelSummaryLine({
   if (commonStringSelected) {
     parts.push(
       formatExcelCategoryStat(
-        '공통 문자열 찾기',
+        '공통 항목 찾기',
         commonStringCriteriaCount,
         commonStringFindingsCount,
       ),
@@ -215,7 +215,7 @@ export function formatConsistencyResultsSummaryLine({
   }
   if (commonStringSelected) {
     parts.push(
-      `공통 문자열 찾기 ${formatResultsStatCount(commonStringWithFindings)}`,
+      `공통 항목 찾기 ${formatResultsStatCount(commonStringWithFindings)}`,
     );
   }
   if (auxiliarySelected) {
@@ -318,7 +318,7 @@ export function buildConsistencyResultSummaryStats({
   }
   if (commonStringSelected) {
     stats.push({
-      badge: '공통 문자열 찾기',
+      badge: '공통 항목 찾기',
       count: commonStringWithFindings,
       findingsCount: commonStringFindings,
       tone: 'consistency-common',
