@@ -182,7 +182,7 @@ const WORK_GUIDE_5_ALIGN_CHAIN = [
 /** 통일형 📌 — 둘러보기 통일형(붉은 표시) 핀 오른쪽 */
 const WORK_GUIDE_UNIFY_PIN_ALIGN = {
   selector: '[data-work-guide="unify-pin-silla"]',
-  leftFromTargetLeft: 36,
+  leftFromTargetLeft: 186,
   topFromTargetTop: -4,
 };
 
