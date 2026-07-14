@@ -315,7 +315,7 @@ export default function LoanwordConverter({
         <span className="loanword-converter__summary-title">
           외래어 표기
           <span className="panel-criteria-heading-meta">
-            (영어·한글·원어 표기 지원)
+            (다국어 → 한국어, 영어↔한국어 표기 변환 지원)
           </span>
           <span className="loanword-converter__free-badge" aria-label="무제한">
             FREE
@@ -326,7 +326,7 @@ export default function LoanwordConverter({
       <p className="hint consistency-hint-block" style={styles.noteAbove}>
         {'｢외래어 표기법｣ '}
         <span style={styles.badge}>용례집</span>
-        {' 검색, 영어 한정 '}
+        {' 검색, 미등재시 영어 한정 '}
         <span style={styles.estBadge}>{EST_BADGE_LABEL}</span>
         {'를 제공합니다'}
         <br />
