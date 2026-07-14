@@ -78,6 +78,15 @@ export default defineConfig(({ mode }) => {
     port: devPort,
     strictPort: true,
     open: '/',
+    // 국립국어원 어문 규범 Open API — 브라우저 CORS 회피
+    proxy: {
+      '/api/kornorms': {
+        target: 'https://korean.go.kr',
+        changeOrigin: true,
+        secure: true,
+        rewrite: (p) => p.replace(/^\/api\/kornorms/, '/kornorms'),
+      },
+    },
   },
   preview: {
     host: true,
