@@ -468,8 +468,14 @@
   max-width: 100%;
 }
 
-.welcome-pc__landing .welcome-pc__page .welcome-pc__perf-l2 .welcome-pc__perf-anc--left {
-  margin-inline-start: calc(1.625rem * var(--welcome-scale) * var(--welcome-perf-l2-decor, 1));
+.welcome-pc__page .welcome-pc__perf-l2 .welcome-pc__perf-anc--left {
+  /* 신국판 제거 후에도 앞쪽 별이 보이도록 앵커 박스 유지 */
+  margin-inline-start: 0;
+  margin-inline-end: 0;
+  min-width: calc(1.375rem * var(--welcome-scale) * var(--welcome-perf-l2-decor, 1));
+  min-height: 1em;
+  vertical-align: middle;
+  overflow: visible;
 }
 
 .welcome-pc__page .welcome-pc__header {
@@ -574,15 +580,33 @@
 }
 
 .welcome-pc__page .welcome-pc__desc-icon--ok {
-  background: #5fae6a;
+  background: none;
+  border-radius: 0;
+  font-size: calc(12px * var(--welcome-scale) * var(--welcome-desc-scale));
+  font-weight: 800;
+  line-height: 1;
+  color: #d1ad6e; /* 본문 금색 톤 */
+}
+
+.welcome-pc .symbol-gold {
+  color: #d1ad6e;
 }
 
 .welcome-pc__page .welcome-pc__desc-icon--no {
   border-radius: 0;
   background: none;
+  width: calc(12px * 1.3 * var(--welcome-scale) * var(--welcome-desc-scale));
+  height: calc(12px * 1.3 * var(--welcome-scale) * var(--welcome-desc-scale));
   font-size: calc(12px * var(--welcome-scale) * var(--welcome-desc-scale));
   font-weight: normal;
   line-height: 1;
+  color: #d1ad6e;
+}
+
+.welcome-pc__page .welcome-pc__desc-shield {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 .welcome-pc__page .welcome-pc__perf-l1-num {
@@ -1303,7 +1327,7 @@
 }
 
 .welcome-pc__perf-l2 .welcome-pc__perf-anc--left .welcome-pc__perf-spk--big {
-  left: calc(-1.625rem * var(--welcome-scale) * var(--welcome-perf-l2-decor));
+  left: 0;
   top: calc(-0.5rem * var(--welcome-scale) * var(--welcome-perf-l2-decor));
   width: calc(1.375rem * var(--welcome-scale) * var(--welcome-perf-l2-decor));
   color: #f6efe0;

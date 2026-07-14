@@ -37,11 +37,22 @@ const BA_BRIDGE_R_DISC = 50;
 const ENTER_MAIN_AFTER_GOOGLE_KEY = 'indiya-enter-main-after-google';
 
 const SPARKLE_PATH = 'M12 0l2.4 9.6L24 12l-9.6 2.4L12 24l-2.4-9.6L0 12l9.6-2.4z';
+/** 방패 실루엣 — currentColor로 금색 적용 */
+const SHIELD_PATH =
+  'M12 2.2l7.2 2.4v6.1c0 4.6-3.1 8.7-7.2 10.1-4.1-1.4-7.2-5.5-7.2-10.1V4.6L12 2.2z';
 
 function WelcomePcSparkle({ className }) {
   return (
     <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
       <path fill="currentColor" d={SPARKLE_PATH} />
+    </svg>
+  );
+}
+
+function WelcomePcShield({ className }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
+      <path fill="currentColor" d={SHIELD_PATH} />
     </svg>
   );
 }
@@ -163,14 +174,20 @@ export default function WelcomePcScreen({
         {!needsWelcomeMessage ? (
           <div className="welcome-pc__desc">
             <p className="welcome-pc__desc-line">
-              <span className="welcome-pc__desc-icon welcome-pc__desc-icon--ok" aria-hidden>
+              <span
+                className="welcome-pc__desc-icon welcome-pc__desc-icon--ok symbol-gold"
+                aria-hidden
+              >
                 ✓
               </span>
               선택한 맞춤법 · 표기 통일 기준에 따라 PDF 원고를 검수합니다
             </p>
             <p className="welcome-pc__desc-line">
-              <span className="welcome-pc__desc-icon welcome-pc__desc-icon--no" aria-hidden>
-                🚫
+              <span
+                className="welcome-pc__desc-icon welcome-pc__desc-icon--no symbol-gold"
+                aria-hidden
+              >
+                <WelcomePcShield className="welcome-pc__desc-shield" />
               </span>
               AI 자동 수정은 하지 않으며,{' '}
               <span className="welcome-pc__desc-emphasis">원고는 서버에 저장되지 않습니다</span>
@@ -275,9 +292,7 @@ export default function WelcomePcScreen({
         <p className="welcome-pc__perf-l2">
           <span className="welcome-pc__perf-anc welcome-pc__perf-anc--left">
             <WelcomePcSparkle className="welcome-pc__perf-spk welcome-pc__perf-spk--big" />
-            신국판
-          </span>
-          {' '}300페이지 PDF 검수에 단{' '}
+          </span>300페이지 PDF 검수에 단{' '}
           <span className="welcome-pc__perf-l2__gold">3초</span>
           <span className="welcome-pc__perf-anc welcome-pc__perf-anc--right">
             !
