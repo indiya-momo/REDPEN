@@ -315,7 +315,7 @@ export default function LoanwordConverter({
         <span className="loanword-converter__summary-title">
           외래어 표기
           <span className="panel-criteria-heading-meta">
-            (다국어 → 한국어, 영어↔한국어 표기 변환 지원)
+            (영어↔한국어 표기 변환 지원)
           </span>
           <span className="loanword-converter__free-badge" aria-label="무제한">
             FREE
@@ -331,8 +331,8 @@ export default function LoanwordConverter({
         {'를 제공합니다'}
         <br />
         <ConsistencyHintExample>
-          &apos;孫正義&apos; 또는 &apos;そん まさよし&apos;(등재) 입력 →
-          &apos;손 마사요시&apos; 표기
+          &apos;孫正義&apos; 또는 &apos;そん まさよし&apos; →
+          &apos;손 마사요시&apos; , 가디건 → 카디건
         </ConsistencyHintExample>
       </p>
 
