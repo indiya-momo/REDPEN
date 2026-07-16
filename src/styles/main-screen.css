@@ -1008,13 +1008,13 @@
 
 .tooltip-guide--fixed-layer[data-work-guide-bubble='6'] {
   z-index: 10014;
-  --tooltip-text-max: calc(400px * var(--tooltip-scale, 1));
-  max-width: min(calc(440px * var(--tooltip-scale, 1)), calc(100vw - 28px));
+  --tooltip-text-max: calc(520px * var(--tooltip-scale, 1));
+  max-width: min(calc(560px * var(--tooltip-scale, 1)), calc(100vw - 28px));
 }
 
 .tooltip-guide--fixed-layer[data-work-guide-bubble='6'] .tooltip-guide__message-line {
   display: block;
-  white-space: nowrap;
+  white-space: normal;
 }
 
 .tooltip-guide--fixed-layer[data-work-guide-bubble='7'] {
@@ -1062,6 +1062,18 @@
   height: 0;
   pointer-events: none;
   overflow: visible;
+}
+
+/* 통일형 📌 가이드 — 섹션 사이 패딩을 밀지 않도록 레이아웃 0 */
+.consistency-unified-box > .tooltip-guide-anchor:has(> .work-guide-anchor--unify-pin),
+.work-guide-anchor--unify-pin {
+  position: absolute;
+  width: 0;
+  height: 0;
+  margin: 0;
+  padding: 0;
+  overflow: visible;
+  pointer-events: none;
 }
 
 .work-guide-anchor--greeting {
@@ -1174,36 +1186,76 @@
   --tooltip-text-max: calc(360px * var(--tooltip-scale));
 }
 
+/* 말풍선 안 화면 UI 모사 — 탭·제목 기준(패널 0.9 × 0.9)으로 통일 */
+.tooltip-guide {
+  --tooltip-ui-scale: 0.81;
+}
+
 /* 3번 말풍선 — 보정 행 체크박스·확인 버튼과 같은 느낌 */
 .tooltip-guide__folder-icon {
   display: inline-block;
   margin: 0 1px;
-  font-size: calc(0.95rem * var(--tooltip-scale, 1));
+  font-size: calc(0.95rem * var(--tooltip-ui-scale));
   line-height: 1;
   vertical-align: middle;
 }
 
+/* 1번 말풍선 — 기준 항목 호버 「설명」뱃지와 동일 톤 */
+.tooltip-guide__explain-badge {
+  display: inline-block;
+  margin: 0 2px;
+  padding: calc(4px * var(--tooltip-ui-scale))
+    calc(6px * var(--tooltip-ui-scale));
+  border: 1px solid #d1d5db;
+  border-radius: calc(6px * var(--tooltip-ui-scale));
+  font-family: inherit;
+  font-size: calc(0.64rem * var(--tooltip-ui-scale));
+  font-weight: 600;
+  line-height: 1;
+  vertical-align: middle;
+  white-space: nowrap;
+  color: #1f2937;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+}
+
 .tooltip-guide__checkbox-look {
   display: inline-block;
-  width: calc(0.9rem * var(--tooltip-scale, 1));
-  height: calc(0.9rem * var(--tooltip-scale, 1));
+  width: calc(0.9rem * var(--tooltip-ui-scale));
+  height: calc(0.9rem * var(--tooltip-ui-scale));
   margin: 0 2px;
   border: 1px solid color-mix(in srgb, var(--color-text-faint) 55%, var(--color-border));
-  border-radius: calc(2px * var(--tooltip-scale, 1));
+  border-radius: calc(2px * var(--tooltip-ui-scale));
   vertical-align: middle;
   background: var(--color-surface);
   box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.35);
 }
 
+.tooltip-guide__checkbox-look--checked {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-color: var(--accent-terracotta);
+  background: color-mix(in srgb, var(--accent-terracotta) 18%, var(--color-surface));
+  color: var(--accent-terracotta-deep);
+  box-shadow: none;
+}
+
+.tooltip-guide__checkbox-look--checked svg {
+  display: block;
+  width: calc(0.62rem * var(--tooltip-ui-scale));
+  height: calc(0.62rem * var(--tooltip-ui-scale));
+}
+
 .tooltip-guide__calibrate-btn-look {
   display: inline-block;
   margin: 0 1px;
-  padding: calc(3px * var(--tooltip-scale, 1))
-    calc(9px * var(--tooltip-scale, 1));
+  padding: calc(3px * var(--tooltip-ui-scale))
+    calc(9px * var(--tooltip-ui-scale));
   border: none;
-  border-radius: calc(var(--radius-ui-sm) * var(--tooltip-scale, 1));
+  border-radius: calc(var(--radius-ui-sm) * var(--tooltip-ui-scale));
   font-family: inherit;
-  font-size: calc(0.72rem * var(--tooltip-scale, 1));
+  font-size: calc(0.72rem * var(--tooltip-ui-scale));
   font-weight: 600;
   line-height: 1.2;
   vertical-align: middle;
@@ -1212,16 +1264,17 @@
   color: var(--btn-primary-text);
 }
 
-/* 2번 말풍선 — 「기준 검수」를 실행 행 버튼과 같은 느낌 */
-.tooltip-guide__run-btn-look {
+/* 「기준 검수」·「검수 결과 다운로드」= 실행 행 primary 버튼 */
+.tooltip-guide__run-btn-look,
+.tooltip-guide__export-btn-look {
   display: inline-block;
   margin: 0 1px;
-  padding: calc(4.8px * var(--tooltip-scale, 1))
-    calc(12.8px * var(--tooltip-scale, 1));
+  padding: calc(4.8px * var(--tooltip-ui-scale))
+    calc(12.8px * var(--tooltip-ui-scale));
   border: 1px solid var(--btn-primary-bg);
-  border-radius: calc(var(--radius-ui-sm) * var(--tooltip-scale, 1));
+  border-radius: calc(var(--radius-ui-sm) * var(--tooltip-ui-scale));
   font-family: inherit;
-  font-size: calc(0.936rem * var(--tooltip-scale, 1));
+  font-size: calc(0.936rem * var(--tooltip-ui-scale));
   font-weight: 700;
   line-height: 1.2;
   vertical-align: middle;
@@ -1240,6 +1293,11 @@
   outline-offset: 3px;
   border-radius: 8px;
   animation: work-guide-spotlight-pulse 1.8s ease-in-out infinite;
+}
+
+/* 맞춤법 기준 패널 — 레이아웃은 그대로, 테두리만 본문에 더 붙게 */
+.panel-section--builtin-spelling.work-guide-spotlight {
+  outline-offset: -5px;
 }
 
 @keyframes work-guide-spotlight-pulse {
@@ -1316,30 +1374,44 @@
   }
 }
 
-/* 가이드 말풍선 — 「편집자 검토 필요」·「맞춤법 규칙」등 강조 라벨 (패널 90% 스케일과 맞춤) */
+/* 가이드 말풍선 — 「편집자 검토 필요」·「맞춤법 규칙」등 강조 라벨 */
 .tooltip-guide__gothic-label {
   font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
-  font-size: 0.9em;
+  font-size: calc(1.05rem * var(--tooltip-ui-scale));
   font-weight: 800;
   letter-spacing: -0.02em;
   color: var(--color-text);
 }
 
-/* 2번 말풍선 — 결과 헤더 뱃지 크기 = 좌측 패널(--panel-ui-scale 0.9)과 동일 */
-.tooltip-guide .results-header-badge {
-  font-size: calc(0.62rem * 0.9 * 1.32);
-  padding: calc(0.0625rem * 0.9 * 1.32)
-    calc(var(--space-sm-tight) * 0.9 * 1.32);
+/* 표기 통일 — 「여러 개 찾기」「통일형 만들기」섹션 제목 */
+.tooltip-guide__criteria-heading-look {
+  display: inline;
+  font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+  font-size: calc(1.05rem * var(--tooltip-ui-scale));
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: -0.02em;
+  vertical-align: baseline;
+  color: var(--color-text);
 }
 
-/* 4번·1번 말풍선 — 좌측 work-tab과 같은 톤 (글씨 = 탭의 90%) */
+/* 결과 헤더 뱃지 */
+.tooltip-guide .results-header-badge {
+  font-size: calc(0.62rem * 1.32 * var(--tooltip-ui-scale));
+  padding: calc(0.0625rem * 1.32 * var(--tooltip-ui-scale))
+    calc(var(--space-sm-tight) * var(--tooltip-ui-scale));
+}
+
+/* 맞춤법·표기 통일 탭 칩 */
 .tooltip-guide__work-tab-chip {
   display: inline-block;
   margin: 0 2px;
-  padding: calc(14px * 0.9 * 0.35) calc(8px * 0.9);
+  padding: calc(14px * var(--tooltip-ui-scale) * 0.35)
+    calc(8px * var(--tooltip-ui-scale));
   border: none;
   border-radius: 0;
   font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+  font-size: calc(1.275rem * var(--tooltip-ui-scale));
   font-weight: 700;
   line-height: 1.2;
   vertical-align: middle;
@@ -1360,18 +1432,17 @@
   box-shadow: inset 0 -2px 0 var(--accent-terracotta);
 }
 
-/* 4번 말풍선 — 「여러 개 찾기」 결과 뱃지와 같은 톤 */
 .tooltip-guide__feature-badge {
   display: inline-flex;
   align-items: center;
   margin: 0 2px;
-  padding: calc(3px * var(--tooltip-scale, 1))
-    calc(7px * var(--tooltip-scale, 1));
+  padding: calc(3px * var(--tooltip-ui-scale))
+    calc(7px * var(--tooltip-ui-scale));
   border: 1px solid
     color-mix(in srgb, var(--pillar-consistency) 28%, transparent);
-  border-radius: calc(var(--radius-ui-sm) * var(--tooltip-scale, 1));
+  border-radius: calc(var(--radius-ui-sm) * var(--tooltip-ui-scale));
   font-family: inherit;
-  font-size: calc(0.72rem * var(--tooltip-scale, 1));
+  font-size: calc(0.72rem * var(--tooltip-ui-scale));
   font-weight: 800;
   line-height: 1.15;
   vertical-align: middle;
@@ -1380,47 +1451,111 @@
   color: color-mix(in srgb, var(--pillar-consistency) 78%, #5c6b7a 22%);
 }
 
-/* 6번 말풍선 — 저장(디스크) 아이콘 = 좌측 패널 저장 버튼과 동일 톤 */
 .tooltip-guide__save-rules-btn-look {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  margin: 0 1px;
-  width: calc(1.65rem * var(--tooltip-scale, 1));
-  height: calc(1.65rem * var(--tooltip-scale, 1));
+  margin: 0 2px;
+  width: calc(2.1rem * var(--tooltip-ui-scale));
+  height: calc(2.1rem * var(--tooltip-ui-scale));
   padding: 0;
-  border: 1px solid var(--accent-terracotta);
-  border-radius: calc(var(--radius-ui) * var(--tooltip-scale, 1));
+  border: none !important;
+  outline: none;
+  box-shadow: none;
+  border-radius: calc(var(--radius-ui) * var(--tooltip-ui-scale));
   vertical-align: middle;
-  background: var(--color-surface);
-  color: var(--accent-terracotta);
+  background: var(--btn-secondary-bg);
+  color: var(--btn-secondary-text);
+  box-sizing: border-box;
 }
 
-/* 3·7번 말풍선 — 「피드백」= 우측 상단 피드백 버튼과 동일 톤 */
+/* 말풍선 안 — 실제 저장·마이페이지 버튼 클래스를 그대로 쓸 때 */
+.tooltip-guide .tooltip-guide__inline-real-btn {
+  display: inline-flex;
+  vertical-align: middle;
+  margin: 0 2px;
+  pointer-events: none;
+  cursor: default;
+  flex-shrink: 0;
+}
+
+.tooltip-guide__mypage-btn-look {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 2px;
+  padding: 7px 10px;
+  border: none !important;
+  border-radius: var(--radius-ui);
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.2;
+  vertical-align: middle;
+  white-space: nowrap;
+  background: var(--btn-secondary-bg);
+  color: var(--btn-secondary-text);
+  box-sizing: border-box;
+}
+
+.tooltip-guide__mypage-btn-look__icon {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+}
+
+/* 말풍선 안 — 「새 업로드」「로그아웃」aux 버튼 모양 */
+.tooltip-guide__aux-btn-look {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(6px * var(--tooltip-ui-scale));
+  margin: 0 2px;
+  padding: calc(7px * var(--tooltip-ui-scale))
+    calc(10px * var(--tooltip-ui-scale));
+  border: none;
+  border-radius: calc(var(--radius-ui) * var(--tooltip-ui-scale));
+  font-family: inherit;
+  font-size: calc(0.78rem * var(--tooltip-ui-scale));
+  font-weight: 700;
+  line-height: 1.2;
+  vertical-align: middle;
+  white-space: nowrap;
+  background: var(--btn-secondary-bg);
+  color: var(--btn-secondary-text);
+  box-sizing: border-box;
+}
+
+.tooltip-guide__aux-btn-look__icon {
+  flex-shrink: 0;
+  width: calc(16px * var(--tooltip-ui-scale));
+  height: calc(16px * var(--tooltip-ui-scale));
+}
+
 .tooltip-guide__feedback-btn-look {
   display: inline-flex;
   align-items: center;
-  gap: calc(6px * var(--tooltip-scale, 1));
+  gap: calc(8px * var(--tooltip-ui-scale));
   margin: 0 1px;
-  padding: calc(5px * var(--tooltip-scale, 1))
-    calc(10px * var(--tooltip-scale, 1));
+  padding: calc(9px * var(--tooltip-ui-scale))
+    calc(18px * var(--tooltip-ui-scale));
   border: none;
-  border-radius: calc(var(--radius-ui) * var(--tooltip-scale, 1));
-  font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
-  font-size: calc(0.78rem * var(--tooltip-scale, 1));
+  border-radius: calc(var(--radius-ui) * var(--tooltip-ui-scale));
+  font-family: inherit;
+  font-size: calc(0.92rem * var(--tooltip-ui-scale));
   font-weight: 700;
-  line-height: 1.2;
-  letter-spacing: -0.02em;
+  line-height: 1;
   vertical-align: middle;
   white-space: nowrap;
   background: var(--accent-terracotta-deep);
   color: var(--accent-on-terracotta);
-  box-shadow: 0 calc(2px * var(--tooltip-scale, 1))
-    calc(6px * var(--tooltip-scale, 1)) rgba(115, 75, 50, 0.22);
+  box-shadow: 0 calc(2px * var(--tooltip-ui-scale))
+    calc(8px * var(--tooltip-ui-scale)) rgba(115, 75, 50, 0.22);
 }
 
 .tooltip-guide__feedback-btn-look__icon {
   flex-shrink: 0;
+  width: calc(18px * var(--tooltip-ui-scale));
+  height: calc(18px * var(--tooltip-ui-scale));
 }
 
 .panel-left .panel-guide-text,

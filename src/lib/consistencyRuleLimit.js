@@ -13,7 +13,7 @@ export const MAX_CONSISTENCY_CRITERIA_SLOTS = 5;
 /** 통일형 만들기 — 등록 상한 (쉼표 항목마다 1건) */
 export const MAX_CONSISTENCY_UNIFY_SLOTS = 3;
 
-/** 공통 문자열 찾기(@ 패턴) 등록 상한 */
+/** 공통 항목 찾기(@ 패턴) 등록 상한 */
 export const MAX_PHRASE_SLOT_REGISTERED_ENTRIES = 1;
 
 /** 검수 제외 항목 등록 상한 */
@@ -117,9 +117,9 @@ export function consistencyUnifyRegistrationBlockedMessage(current, adding = 0) 
 export function phraseSlotRegistrationBlockedMessage(current, adding = 1) {
   const max = MAX_PHRASE_SLOT_REGISTERED_ENTRIES;
   if (adding > 1) {
-    return `공통 문자열 찾기는 최대 ${max}항목까지 등록할 수 있습니다. (현재 ${current}항목, ${adding}항목 추가 시도)`;
+    return `공통 항목 찾기는 최대 ${max}항목까지 등록할 수 있습니다. (현재 ${current}항목, ${adding}항목 추가 시도)`;
   }
-  return `공통 문자열 찾기는 최대 ${max}항목까지 등록할 수 있습니다. (현재 ${current}항목)`;
+  return `공통 항목 찾기는 최대 ${max}항목까지 등록할 수 있습니다. (현재 ${current}항목)`;
 }
 
 /**

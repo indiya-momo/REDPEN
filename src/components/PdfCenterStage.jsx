@@ -39,6 +39,7 @@ import TooltipGuide from './TooltipGuide.jsx';
  *   uploadGuidePinned?: boolean,
  *   uploadGuideMessage?: import('react').ReactNode,
  *   uploadGuideSpotlight?: boolean,
+ *   uploadGuideShowConfirm?: boolean,
  *   onUploadGuideDismiss?: () => void,
  *   checkQuotaBlocked?: boolean,
  * }} props
@@ -70,6 +71,7 @@ export default function PdfCenterStage({
   uploadGuidePinned = false,
   uploadGuideMessage = '처음 할 일은 이거다냥',
   uploadGuideSpotlight = false,
+  uploadGuideShowConfirm = false,
   onUploadGuideDismiss,
   checkQuotaBlocked = false,
 }) {
@@ -193,6 +195,7 @@ export default function PdfCenterStage({
                 offsetY={0}
                 bubbleGuideStep="1b"
                 pinned={uploadGuidePinned}
+                showConfirm={uploadGuideShowConfirm}
                 message={uploadGuideMessage}
                 onDismiss={onUploadGuideDismiss}
               >

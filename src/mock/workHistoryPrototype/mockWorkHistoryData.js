@@ -92,7 +92,7 @@ export const MOCK_CONSISTENCY_EXCLUDE = ['소녀시대'];
 export const MOCK_CONSISTENCY_GROUPS = [
   { id: 'find', label: '여러 개 찾기' },
   { id: 'unify', label: '통일형 만들기' },
-  { id: 'commonString', label: '공통 문자열 찾기' },
+  { id: 'commonString', label: '공통 항목 찾기' },
   { id: 'exclude', label: '검수 제외 항목' },
 ];
 

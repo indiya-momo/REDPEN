@@ -37,11 +37,22 @@ const BA_BRIDGE_R_DISC = 50;
 const ENTER_MAIN_AFTER_GOOGLE_KEY = 'indiya-enter-main-after-google';
 
 const SPARKLE_PATH = 'M12 0l2.4 9.6L24 12l-9.6 2.4L12 24l-2.4-9.6L0 12l9.6-2.4z';
+/** 방패 실루엣 — currentColor로 금색 적용 */
+const SHIELD_PATH =
+  'M12 2.2l7.2 2.4v6.1c0 4.6-3.1 8.7-7.2 10.1-4.1-1.4-7.2-5.5-7.2-10.1V4.6L12 2.2z';
 
 function WelcomePcSparkle({ className }) {
   return (
     <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
       <path fill="currentColor" d={SPARKLE_PATH} />
+    </svg>
+  );
+}
+
+function WelcomePcShield({ className }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
+      <path fill="currentColor" d={SHIELD_PATH} />
     </svg>
   );
 }
@@ -163,17 +174,24 @@ export default function WelcomePcScreen({
         {!needsWelcomeMessage ? (
           <div className="welcome-pc__desc">
             <p className="welcome-pc__desc-line">
-              <span className="welcome-pc__desc-icon welcome-pc__desc-icon--ok" aria-hidden>
+              <span
+                className="welcome-pc__desc-icon welcome-pc__desc-icon--ok symbol-gold"
+                aria-hidden
+              >
                 ✓
               </span>
               선택한 맞춤법 · 표기 통일 기준에 따라 PDF 원고를 검수합니다
             </p>
             <p className="welcome-pc__desc-line">
-              <span className="welcome-pc__desc-icon welcome-pc__desc-icon--no" aria-hidden>
-                🚫
+              <span
+                className="welcome-pc__desc-icon welcome-pc__desc-icon--no symbol-gold"
+                aria-hidden
+              >
+                <WelcomePcShield className="welcome-pc__desc-shield" />
               </span>
-              AI 자동 수정은 하지 않으며,{' '}
-              <span className="welcome-pc__desc-emphasis">원고는 서버에 저장되지 않습니다</span>
+              <span className="welcome-pc__desc-emphasis">
+                AI가 글을 고치지 않으며, 원고는 서버에 저장되지 않습니다
+              </span>
             </p>
           </div>
         ) : null}
@@ -233,7 +251,8 @@ export default function WelcomePcScreen({
     <div className="welcome-pc__perf-beta welcome-pc__perf-beta--guest">
       <span className="welcome-pc__perf-badge-beta">오픈베타 중</span>
       <span className="welcome-pc__perf-quota">
-        회원은 매일 전 기능 무료 사용(크롬 브라우저 권장)
+        매일 모든 기능 무료
+        <span className="welcome-pc__perf-quota-hint">(크롬 브라우저 권장)</span>
       </span>
     </div>
   );
@@ -254,34 +273,22 @@ export default function WelcomePcScreen({
     <div className="welcome-pc__cta-group welcome-pc__cta-group--in-top">
       <div className="welcome-pc__perf-ribbon">
         <p className="welcome-pc__perf-l1">
-          <span className="welcome-pc__perf-l1-num" aria-hidden>
-            ❶
-          </span>
-          (무제한)외래어 표기 변환
-          <span className="welcome-pc__perf-l1-num" aria-hidden>
-            ❷
-          </span>
-          맞춤법 확인
-          <span className="welcome-pc__perf-l1-num" aria-hidden>
-            ❸
-          </span>
-          표기 통일
-          <span className="welcome-pc__perf-l1-num" aria-hidden>
-            ❹
-          </span>
-          보조용언+본용언
+          외래어 표기 · 맞춤법 · 표기 통일 · 본+보조용언
         </p>
 
         <p className="welcome-pc__perf-l2">
           <span className="welcome-pc__perf-anc welcome-pc__perf-anc--left">
             <WelcomePcSparkle className="welcome-pc__perf-spk welcome-pc__perf-spk--big" />
-            신국판
           </span>
-          {' '}300페이지 PDF 검수에 단{' '}
-          <span className="welcome-pc__perf-l2__gold">3초</span>
-          <span className="welcome-pc__perf-anc welcome-pc__perf-anc--right">
-            !
-            <WelcomePcSparkle className="welcome-pc__perf-spk welcome-pc__perf-spk--big" />
+          이 모든 검수를{' '}
+          <span className="welcome-pc__perf-l2__gold">3초만에</span>
+          <span className="welcome-pc__perf-l2__end">
+            {' '}
+            완료!
+            <span className="welcome-pc__perf-anc welcome-pc__perf-anc--right">
+              <WelcomePcSparkle className="welcome-pc__perf-spk welcome-pc__perf-spk--big" />
+            </span>
+            <span className="welcome-pc__perf-l2-note">300페이지 PDF기준</span>
           </span>
         </p>
       </div>
@@ -354,7 +361,7 @@ export default function WelcomePcScreen({
           </div>
         </div>
         <aside className="welcome-pc__hero-right" aria-label="검수냥 모모">
-          <p className="welcome-pc__guest-hero-bubble">현직 편집자가 만들었다냥🐾</p>
+          <p className="welcome-pc__guest-hero-bubble">편집자가 직접 만들었습니다🐾</p>
           <div className="welcome-pc__guest-portrait-wrap">{portraitBlock}</div>
         </aside>
       </section>
@@ -378,31 +385,33 @@ export default function WelcomePcScreen({
           </figure>
           <div className="welcome-pc__ba-bridge" aria-label={BA_BRIDGE_LABEL}>
             <div className="welcome-pc__ba-bridge-mid">
-              <div className="welcome-pc__ba-bridge-momo-wrap">
-                <svg
-                  className="welcome-pc__ba-bridge-disc"
-                  viewBox={BA_BRIDGE_DISC_VIEWBOX}
-                  aria-hidden="true"
-                  focusable="false"
-                >
-                  <circle
-                    className="welcome-pc__ba-bridge-disc-fill"
-                    cx={BA_BRIDGE_CX}
-                    cy={BA_BRIDGE_CY}
-                    r={BA_BRIDGE_R_DISC}
+              <div className="welcome-pc__ba-bridge-stack">
+                <div className="welcome-pc__ba-bridge-momo-wrap">
+                  <svg
+                    className="welcome-pc__ba-bridge-disc"
+                    viewBox={BA_BRIDGE_DISC_VIEWBOX}
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <circle
+                      className="welcome-pc__ba-bridge-disc-fill"
+                      cx={BA_BRIDGE_CX}
+                      cy={BA_BRIDGE_CY}
+                      r={BA_BRIDGE_R_DISC}
+                    />
+                  </svg>
+                  <img
+                    className="welcome-pc__ba-bridge-img"
+                    src={WELCOME_PC_PDF_FULL}
+                    width={142}
+                    height={142}
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
                   />
-                </svg>
-                <img
-                  className="welcome-pc__ba-bridge-img"
-                  src={WELCOME_PC_PDF_FULL}
-                  width={142}
-                  height={142}
-                  alt=""
-                  loading="lazy"
-                  decoding="async"
-                />
+                </div>
+                <p className="welcome-pc__ba-bridge-caption">{BA_BRIDGE_LABEL}</p>
               </div>
-              <p className="welcome-pc__ba-bridge-caption">{BA_BRIDGE_LABEL}</p>
             </div>
           </div>
           <figure className="welcome-pc__ba-pane welcome-pc__ba-pane--after">

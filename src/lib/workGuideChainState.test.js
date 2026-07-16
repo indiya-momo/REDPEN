@@ -240,6 +240,34 @@ describe('getWorkGuideChainState', () => {
     expect(chain.workGuideOpen).toBe(false);
   });
 
+  it('본·보 안내 후 표기 통일 기준 검수 말풍선은 없다', () => {
+    endGuestBrowse();
+    const dismissedMap = {
+      [keyFor(WORK_GUIDE_KEYS.LOANWORD_INTRO)]: true,
+      [keyFor(WORK_GUIDE_KEYS.LEFT_CRITERIA)]: true,
+      [keyFor(WORK_GUIDE_KEYS.SPELLING_START_CHECK)]: true,
+      [keyFor(WORK_GUIDE_KEYS.FIRST_RESULT)]: true,
+      [keyFor(WORK_GUIDE_KEYS.CONSISTENCY_INTRO)]: true,
+      [keyFor(WORK_GUIDE_KEYS.CONSISTENCY_UNIFY_PIN)]: true,
+      [keyFor(WORK_GUIDE_KEYS.AUXILIARY_VERB_INTRO)]: true,
+    };
+    const chain = getWorkGuideChainState(
+      'u1',
+      {
+        ...baseCtx,
+        spellingCheckDone: true,
+        consistencyCheckDone: false,
+        workTab: 'consistency',
+      },
+      keyFor,
+      dismissedMap,
+      { pinAll: false, guestBrowseActive: false },
+    );
+    expect(chain.showConsistencyStartCheckGuide).toBe(false);
+    expect(chain.showRuleSetSaveGuide).toBe(false);
+    expect(chain.workGuideOpen).toBe(false);
+  });
+
   it('본·보·표기 통일 검수 완료 후 다운로드 가이드가 보인다', () => {
     const dismissedMap = {
       [keyFor(WORK_GUIDE_KEYS.PDF_OPENED)]: true,
@@ -376,7 +404,7 @@ describe('getWorkGuideChainState', () => {
     expect(chain.showLeftCriteriaGuide).toBe(false);
   });
 
-  it('회원 온보딩은 0 외래어 → 1 기준 → 1b 업로드 순이다', () => {
+  it('회원 온보딩은 0 외래어 → 1 기준 → 1b 업로드 → 업로드 후 기준 검수 순이다', () => {
     endGuestBrowse();
     const chain0 = getWorkGuideChainState(
       'u1',
@@ -411,6 +439,20 @@ describe('getWorkGuideChainState', () => {
     );
     expect(chain1b.showPreUploadGuide).toBe(true);
     expect(chain1b.showSpellingStartCheckGuide).toBe(false);
+
+    const chainAfterUpload = getWorkGuideChainState(
+      'u1',
+      { ...baseCtx, hasPdf: true, pageTextsReady: true, spellingCheckDone: false },
+      keyFor,
+      {
+        [keyFor(WORK_GUIDE_KEYS.LOANWORD_INTRO)]: true,
+        [keyFor(WORK_GUIDE_KEYS.LEFT_CRITERIA)]: true,
+      },
+      { pinAll: false, guestBrowseActive: false },
+    );
+    expect(chainAfterUpload.showPreUploadGuide).toBe(false);
+    expect(chainAfterUpload.showSpellingStartCheckGuide).toBe(true);
+    expect(chainAfterUpload.showFirstResultGuide).toBe(false);
   });
 
   it('업로드 전에는 pre-upload만 대상이다', () => {
@@ -423,5 +465,49 @@ describe('getWorkGuideChainState', () => {
     );
     expect(chain.showPreUploadGuide).toBe(true);
     expect(chain.showPdfOpenedGuide).toBe(false);
+  });
+
+  it('회원은 결과 팝업 확인 전에 저장 안내를 숨긴다', () => {
+    endGuestBrowse();
+    const dismissedMap = {
+      [keyFor(WORK_GUIDE_KEYS.LOANWORD_INTRO)]: true,
+      [keyFor(WORK_GUIDE_KEYS.LEFT_CRITERIA)]: true,
+      [keyFor(WORK_GUIDE_KEYS.SPELLING_START_CHECK)]: true,
+      [keyFor(WORK_GUIDE_KEYS.FIRST_RESULT)]: true,
+      [keyFor(WORK_GUIDE_KEYS.CONSISTENCY_INTRO)]: true,
+      [keyFor(WORK_GUIDE_KEYS.CONSISTENCY_UNIFY_PIN)]: true,
+      [keyFor(WORK_GUIDE_KEYS.AUXILIARY_VERB_INTRO)]: true,
+    };
+    const locked = getWorkGuideChainState(
+      'u1',
+      {
+        ...baseCtx,
+        spellingCheckDone: true,
+        consistencyCheckDone: true,
+        consistencyExportGuideReady: false,
+        workTab: 'consistency',
+      },
+      keyFor,
+      dismissedMap,
+      { pinAll: false, guestBrowseActive: false },
+    );
+    expect(locked.showRuleSetSaveGuide).toBe(false);
+    expect(locked.workGuideOpen).toBe(false);
+
+    const unlocked = getWorkGuideChainState(
+      'u1',
+      {
+        ...baseCtx,
+        spellingCheckDone: true,
+        consistencyCheckDone: true,
+        consistencyExportGuideReady: true,
+        workTab: 'consistency',
+      },
+      keyFor,
+      dismissedMap,
+      { pinAll: false, guestBrowseActive: false },
+    );
+    expect(unlocked.showRuleSetSaveGuide).toBe(true);
+    expect(unlocked.workGuideOpen).toBe(true);
   });
 });

@@ -58,6 +58,7 @@ import {
   alertSpellingCheckAfterRun,
   confirmSpellingCheckBeforeRun,
 } from '../lib/spellingCheckConfirm.js';
+import { markConsistencyCheckStartedForExportGuide } from '../lib/guestBrowsePolicy.js';
 
 /** @param {{
  *   builtInEnabled: Record<string, boolean>,
@@ -283,6 +284,7 @@ export function useRuleCheck({
         ) {
           return;
         }
+        markConsistencyCheckStartedForExportGuide();
       }
 
       if (
@@ -347,7 +349,7 @@ export function useRuleCheck({
         );
         scopeResults = withZeroRows;
         setConsistencyResults(withZeroRows);
-        setConsistencyCheckDone(withZeroRows.length > 0);
+        setConsistencyCheckDone(true);
         const inst =
           withZeroRows.find((g) => g.instances.length > 0)?.instances[0] ?? null;
         if (inst) {
