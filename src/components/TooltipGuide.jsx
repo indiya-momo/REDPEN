@@ -219,7 +219,7 @@ function clampFixedBubbleToViewport(style, bubbleEl) {
  *   })[] | null,
  *   bubbleGuideStep?: string | number | null,
  *   pinned?: boolean,
- *   showConfirm?: boolean, // 기본 true — 작업 가이드 말풍선 확인
+ *   showConfirm?: boolean, // 기본 false — 로그인 온보딩만 true
  *   confirmGuideAttr?: string,
  *   children: import('react').ReactElement,
  * }} props
@@ -240,7 +240,7 @@ export default function TooltipGuide({
   alignToBubbleChain = null,
   bubbleGuideStep = null,
   pinned = false,
-  showConfirm = true,
+  showConfirm = false,
   confirmGuideAttr,
   children,
 }) {

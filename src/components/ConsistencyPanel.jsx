@@ -95,17 +95,20 @@ import TooltipGuide from './TooltipGuide.jsx';
  *     alignToBubbleChain: readonly object[],
  *     pinned: boolean,
  *     message: import('react').ReactNode,
+ *     showConfirm?: boolean,
  *     onDismiss: () => void,
  *   } | null,
  *   onLiteralAddButtonClick?: () => void,
  *   onUnifyAddButtonClick?: () => void,
  *   guidePinTailWord?: string | null,
  *   onGuidePinClick?: (tailWord: string) => void,
+ *   guideSpotlight?: boolean,
  *   consistencyUnifyPinGuide?: {
  *     storageKey: string,
  *     alignToBubble: object,
  *     pinned: boolean,
  *     message: import('react').ReactNode,
+ *     showConfirm?: boolean,
  *     onDismiss: () => void,
  *   } | null,
  * }} props
@@ -141,6 +144,7 @@ export default function ConsistencyPanel({
   onUnifyAddButtonClick,
   guidePinTailWord = null,
   onGuidePinClick,
+  guideSpotlight = false,
   consistencyUnifyPinGuide = null,
 }) {
   const [literalInput, setLiteralInput] = useState('');
@@ -229,7 +233,7 @@ export default function ConsistencyPanel({
       return;
     }
     if (variants.length > 1) {
-      alert('공통 문자열 찾기는 1항목만 등록할 수 있습니다.');
+      alert('공통 항목 찾기는 1항목만 등록할 수 있습니다.');
       return;
     }
     if (phraseSlotRegisterFull) {
@@ -297,7 +301,15 @@ export default function ConsistencyPanel({
 
   return (
     <div className="consistency-embed">
-      <section className="consistency-unified-box" aria-label={LITERAL_FIND_FEATURE_LABEL}>
+      <section
+        className={[
+          'consistency-unified-box',
+          guideSpotlight ? 'work-guide-spotlight' : '',
+        ]
+          .filter(Boolean)
+          .join(' ')}
+        aria-label={LITERAL_FIND_FEATURE_LABEL}
+      >
         <p className="printed-page-setup__title consistency-panel-section-title panel-criteria-heading">
           {LITERAL_FIND_FEATURE_LABEL}
           <span className="panel-criteria-heading-meta">
@@ -306,7 +318,7 @@ export default function ConsistencyPanel({
         </p>
         <div className="consistency-subsection consistency-subsection--first">
           <p className="hint consistency-hint-block">
-            여러 항목은 사이에 &apos;,&apos;를 넣어 한 번에 입력하고 찾아 볼 수 있습니다
+            여러 항목 사이 &apos;,&apos;를 넣어 입력하면 한 번에 찾을 수 있습니다
             <br />
             <ConsistencyHintExample>
               &apos;고구려,백제,신라,Silla&apos; 입력 → 4항목 한 번에 찾기
@@ -348,31 +360,11 @@ export default function ConsistencyPanel({
           guidePinTailWord={guidePinTailWord}
           onGuidePinClick={onGuidePinClick}
         />
-        {consistencyUnifyPinGuide ? (
-          <TooltipGuide
-            storageKey={consistencyUnifyPinGuide.storageKey}
-            placement="right"
-            bubbleType="left"
-            useFixedLayer
-            alignToBubble={consistencyUnifyPinGuide.alignToBubble}
-            bubbleGuideStep="4b"
-            offsetX={8}
-            offsetY={0}
-            pinned={consistencyUnifyPinGuide.pinned}
-            message={consistencyUnifyPinGuide.message}
-            onDismiss={consistencyUnifyPinGuide.onDismiss}
-          >
-            <span
-              className="work-guide-anchor work-guide-anchor--unify-pin"
-              aria-hidden
-            />
-          </TooltipGuide>
-        ) : null}
 
         <div className="consistency-subsection-row">
           <div className="consistency-subsection consistency-subsection--half">
             <p className="printed-page-setup__title consistency-subsection-title panel-criteria-heading">
-              공통 문자열 찾기
+              공통 항목 찾기
               <span className="panel-criteria-heading-meta">(1항목)</span>
             </p>
             <p className="hint consistency-hint-block">
@@ -387,7 +379,7 @@ export default function ConsistencyPanel({
               onChange={setSlotInput}
               onRegister={registerSlot}
               placeholder={CONSISTENCY_PHRASE_SLOT_INPUT_PLACEHOLDER}
-              ariaLabel="공통 문자열 찾기(1항목)"
+              ariaLabel="공통 항목 찾기(1항목)"
               inputClassName="field-input mono"
               registerDisabled={phraseSlotRegisterFull}
             />
@@ -434,6 +426,27 @@ export default function ConsistencyPanel({
             />
           </div>
         </div>
+        {consistencyUnifyPinGuide ? (
+          <TooltipGuide
+            storageKey={consistencyUnifyPinGuide.storageKey}
+            placement="right"
+            bubbleType="left"
+            useFixedLayer
+            alignToBubble={consistencyUnifyPinGuide.alignToBubble}
+            bubbleGuideStep="4b"
+            offsetX={8}
+            offsetY={0}
+            pinned={consistencyUnifyPinGuide.pinned}
+            showConfirm={Boolean(consistencyUnifyPinGuide.showConfirm)}
+            message={consistencyUnifyPinGuide.message}
+            onDismiss={consistencyUnifyPinGuide.onDismiss}
+          >
+            <span
+              className="work-guide-anchor work-guide-anchor--unify-pin"
+              aria-hidden
+            />
+          </TooltipGuide>
+        ) : null}
       </section>
 
       <section
@@ -505,6 +518,7 @@ export default function ConsistencyPanel({
             offsetX={0}
             offsetY={0}
             pinned={auxiliaryVerbGuide.pinned}
+            showConfirm={Boolean(auxiliaryVerbGuide.showConfirm)}
             message={auxiliaryVerbGuide.message}
             onDismiss={auxiliaryVerbGuide.onDismiss}
           >

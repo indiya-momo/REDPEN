@@ -198,7 +198,7 @@ function ResultHeaderSummary({
         commonStringCriteriaSelected ? (
           <ResultHeaderStat
             key="common"
-            badge="공통 문자열 찾기"
+            badge="공통 항목 찾기"
             count={commonStringWithFindingsCount}
             findingsCount={commonStringFindingsCount}
             tone="consistency-common"

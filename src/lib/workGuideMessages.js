@@ -8,5 +8,6 @@ import * as member from './workGuideMessagesMember.jsx';
 
 /** @returns {typeof guest} */
 export function getWorkGuideMessages() {
+  // 로그인 온보딩 ↔ 둘러보기 문구 모듈 선택
   return isGuestBrowseActive() ? guest : member;
 }

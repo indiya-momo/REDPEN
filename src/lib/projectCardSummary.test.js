@@ -46,7 +46,7 @@ describe('buildProjectCardSummary', () => {
     expect(summary.consistency.excludeWords).toBe('서울, 부산');
   });
 
-  it('공통 문자열 찾기 1건은 "단어" N건 형태로 표시한다', () => {
+  it('공통 항목 찾기 1건은 "단어" N건 형태로 표시한다', () => {
     const summary = buildProjectCardSummary(
       makeSet({
         customRules: [

@@ -16,7 +16,7 @@ import {
   setAllAuxiliaryVerbEntries,
 } from './auxiliaryVerbRegister.js';
 
-/** 표기 통일 등록 칩(여러 개 찾기·통일형·공통 문자열) patternKind */
+/** 표기 통일 등록 칩(여러 개 찾기·통일형·공통 항목) patternKind */
 const GUEST_BROWSE_CONSISTENCY_CHIP_KINDS = new Set([
   'compound-find',
   'compound-tail',
@@ -197,12 +197,18 @@ export function guestBrowseBlocksResultExport() {
   return guestBrowseAutoRunsCriteriaCheck();
 }
 
-/** 손이 기준 검수를 누른 시각 기록 (결과 팝업 2초 지연용) */
+/** 기준 검수 시작 — 결과 팝업 확인 전까지 다음 말풍선 잠금 */
 export function markGuestBrowseCriteriaClick() {
-  if (!guestBrowseAutoRunsCriteriaCheck()) return;
-  criteriaClickAtMs = Date.now();
   nextGuideReady = false;
   notifyNextGuideListeners();
+  if (!guestBrowseAutoRunsCriteriaCheck()) return;
+  criteriaClickAtMs = Date.now();
+}
+
+/** 표기 통일 기준 검수 시작 — 결과 팝업 확인 전까지 저장·다운로드 안내 잠금 */
+export function markConsistencyCheckStartedForExportGuide() {
+  exportGuideReady = false;
+  notifyExportGuideListeners();
 }
 
 /** 손 클릭 후 결과 팝업까지 남은 시간 대기 */
@@ -221,6 +227,9 @@ export async function waitGuestBrowseResultScreenDelay() {
 export async function finishGuestBrowseResultThenUnlockNextGuide(
   showResultAlert,
 ) {
+  nextGuideReady = false;
+  notifyNextGuideListeners();
+
   if (!guestBrowseAutoRunsCriteriaCheck()) {
     await showResultAlert();
     nextGuideReady = true;
@@ -241,6 +250,9 @@ export async function finishGuestBrowseResultThenUnlockNextGuide(
 export async function finishGuestBrowseConsistencyResultThenUnlockExportGuide(
   showResultAlert,
 ) {
+  exportGuideReady = false;
+  notifyExportGuideListeners();
+
   if (!guestBrowseAutoRunsCriteriaCheck()) {
     await showResultAlert();
     exportGuideReady = true;
@@ -248,22 +260,18 @@ export async function finishGuestBrowseConsistencyResultThenUnlockExportGuide(
     return;
   }
 
-  exportGuideReady = false;
-  notifyExportGuideListeners();
   await showResultAlert({ showGuideHand: true });
   exportGuideReady = true;
   notifyExportGuideListeners();
 }
 
-/** 둘러보기에서 2번 가이드를 아직 열면 안 되는지 */
+/** 결과 팝업 확인 전 — 다음(2번) 가이드를 아직 열면 안 되는지 */
 export function isGuestBrowseNextGuideReady() {
-  if (!guestBrowseAutoRunsCriteriaCheck()) return true;
   return nextGuideReady;
 }
 
-/** 둘러보기에서 다운로드 가이드를 아직 열면 안 되는지 */
+/** 결과 팝업 확인 전 — 저장·다운로드 가이드를 아직 열면 안 되는지 */
 export function isGuestBrowseExportGuideReady() {
-  if (!guestBrowseAutoRunsCriteriaCheck()) return true;
   return exportGuideReady;
 }
 

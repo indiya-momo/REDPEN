@@ -267,7 +267,7 @@ export function WorkHistoryPanelMock({
               <span className="work-history-panel-mock__findings-sep" aria-hidden>
                 ·
               </span>
-              공통 문자열{' '}
+              공통 항목{' '}
               <strong>{latestFindings.commonString}</strong>
               <span className="work-history-panel-mock__unit">건</span>
             </p>

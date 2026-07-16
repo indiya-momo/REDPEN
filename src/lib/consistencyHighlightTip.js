@@ -33,7 +33,7 @@ function consistencyFindDisplayLabel(group) {
 }
 
 /**
- * PDF 하이라이트·결과 카드 안내 — 일관성·통일형·공통 문자열·본용언+보조용언 구분
+ * PDF 하이라이트·결과 카드 안내 — 일관성·통일형·공통 항목·본용언+보조용언 구분
  * @param {import('./ruleEngine.js').GroupedResult} group
  * @param {import('./ruleTypes.js').Rule[]} [customRules]
  */
@@ -47,7 +47,7 @@ export function getConsistencyHighlightTip(group, customRules = []) {
 }
 
 /**
- * 결과 카드 한 줄 — 배지(일관성·통일형·공통 문자열 찾기·본용언 + 보조용언) + 등록 문자열
+ * 결과 카드 한 줄 — 배지(일관성·통일형·공통 항목 찾기·본용언 + 보조용언) + 등록 문자열
  * @param {import('./ruleEngine.js').GroupedResult} group
  * @param {import('./ruleTypes.js').Rule[]} [customRules]
  * @returns {{ badge: string, label: string }}
@@ -55,7 +55,7 @@ export function getConsistencyHighlightTip(group, customRules = []) {
 export function getConsistencyResultCardParts(group, customRules = []) {
   if (group.patternKind === 'phrase-slot-find') {
     return {
-      badge: '공통 문자열 찾기',
+      badge: '공통 항목 찾기',
       label: consistencyFindDisplayLabel(group),
     };
   }
