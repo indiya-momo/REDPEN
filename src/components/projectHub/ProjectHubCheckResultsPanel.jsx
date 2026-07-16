@@ -7,8 +7,7 @@ import {
 } from '../../lib/checkResultSnapshot.js';
 import { listCheckResultsCloud } from '../../lib/checkResultsCloud.js';
 import { downloadCheckResultsAsZip } from '../../lib/downloadCheckResultsZip.js';
-import { isPaidPlan } from '../../lib/userPlan.js';
-import { loadUserProfileCloud } from '../../lib/userProfileCloud.js';
+import { ensureLocalPlanFromCloud } from '../../lib/userProfileCloud.js';
 import { showAppAlert } from '../../lib/appDialog.js';
 
 /**
@@ -43,17 +42,22 @@ export default function ProjectHubCheckResultsPanel({
     }
     setLoading(true);
     try {
-      const profile = await loadUserProfileCloud(id);
-      const isPaid = isPaidPlan(profile);
+      const plan = await ensureLocalPlanFromCloud(id);
+      const isPaid = plan === 'paid';
       setPaid(isPaid);
       if (!isPaid) {
         setItems([]);
         return;
       }
-      const list = await listCheckResultsCloud({ uid: id, projectId: pid });
-      setItems(list);
+      try {
+        const list = await listCheckResultsCloud({ uid: id, projectId: pid });
+        setItems(list);
+      } catch (listErr) {
+        console.error('검수 결과 목록 로드 실패:', listErr);
+        setItems([]);
+      }
     } catch (err) {
-      console.error('검수 결과 목록 로드 실패:', err);
+      console.error('유료 plan 확인 실패:', err);
       setPaid(false);
       setItems([]);
     } finally {
@@ -79,7 +83,11 @@ export default function ProjectHubCheckResultsPanel({
       await showAppAlert('저장된 결과를 확인하는 중입니다. 잠시 후 다시 눌러 주세요.');
       return;
     }
-    if (paid === false) {
+    const id = String(uid ?? '').trim();
+    const plan = id ? await ensureLocalPlanFromCloud(id) : 'free';
+    const isPaid = plan === 'paid';
+    setPaid(isPaid);
+    if (!isPaid) {
       await showAppAlert(
         '유료회원 전용입니다.\n검수 결과 자동 보관은 유료(plan: paid) 계정에서만 됩니다.',
       );

@@ -7,6 +7,10 @@ import {
 } from 'firebase/firestore';
 import { firebaseApp, isFirebaseAuthConfigured } from './firebaseAuth.js';
 import { normalizeUserPlan } from './userPlan.js';
+import {
+  getLocalUserPlan,
+  syncUserPlanFromCloud,
+} from './userProfileStorage.js';
 
 const COLLECTION = 'userCriteria';
 
@@ -80,6 +84,29 @@ export async function loadUserCriteriaCloud(uid) {
 export async function loadUserPlanCloud(uid) {
   const { plan } = await loadUserCriteriaCloud(uid);
   return plan;
+}
+
+/**
+ * Firestore plan 을 읽어 localStorage 에 맞춘 뒤 반환.
+ * 공유·한도·검수저장 등 유료 게이트의 공통 진입점.
+ * 클라우드 불가·실패 시에는 기존 local plan 을 유지한다.
+ * @param {string} uid
+ * @returns {Promise<'free' | 'paid'>}
+ */
+export async function ensureLocalPlanFromCloud(uid) {
+  const id = String(uid ?? '').trim();
+  if (!id) return 'free';
+  if (!isUserProfileCloudEnabled()) {
+    return getLocalUserPlan(id);
+  }
+  try {
+    const plan = await loadUserPlanCloud(id);
+    syncUserPlanFromCloud(id, plan);
+    return plan;
+  } catch (err) {
+    console.warn('ensureLocalPlanFromCloud 실패, local plan 유지', err);
+    return getLocalUserPlan(id);
+  }
 }
 
 /**

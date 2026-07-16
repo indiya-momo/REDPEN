@@ -7,6 +7,7 @@ import {
   MAX_CRITERIA_PRESETS_FREE,
 } from '../lib/criteriaPresetLimit.js';
 import { getLocalUserPlan } from '../lib/userProfileStorage.js';
+import { ensureLocalPlanFromCloud } from '../lib/userProfileCloud.js';
 import { normalizeRuleSet } from '../lib/ruleSetNormalize.js';
 import { buildCriteriaCheckpoint } from '../lib/criteriaCheckpoint.js';
 import {
@@ -184,12 +185,13 @@ export function useMyPageProjects(uid = '', email = '', options = {}) {
         // 삭제 기록(툼스톤) 적용 — 삭제된 프로젝트가 클라우드에서 되살아나지 않게 한다.
         sets = applyTombstones(sets, tombstones).sets;
 
+        const userPlan = await ensureLocalPlanFromCloud(trimmedUid);
         const beforeIds = sets.map((set) => set.id).join(',');
         sets = applyCriteriaPresetQuota(
           sets,
           trimmedUid,
           email,
-          getLocalUserPlan(trimmedUid),
+          userPlan,
         );
         activeId = resolveHydratedActiveSetId(sets, activeId, cloudActiveId);
         const quotaTrimmed = beforeIds !== sets.map((set) => set.id).join(',');
@@ -337,11 +339,16 @@ export function useMyPageProjects(uid = '', email = '', options = {}) {
   const duplicateProject = useCallback(
     async (setId) => {
       const id = String(setId ?? '').trim();
+      const trimmedUid = uid.trim();
+      const userPlan = trimmedUid
+        ? await ensureLocalPlanFromCloud(trimmedUid)
+        : 'free';
       const plan = planDuplicateProject(
         loadedSetsRef.current,
         id,
-        uid.trim(),
+        trimmedUid,
         email,
+        userPlan,
       );
       if (!plan.ok) {
         return {

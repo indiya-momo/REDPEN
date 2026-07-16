@@ -103,8 +103,9 @@ function savedAtForListEnd(sets) {
  * @param {string} setId
  * @param {string} [uid]
  * @param {string} [email]
+ * @param {unknown} [plan] 유료 슬롯 판정용 — 없으면 localStorage
  */
-export function planDuplicateProject(sets, setId, uid = '', email = '') {
+export function planDuplicateProject(sets, setId, uid = '', email = '', plan) {
   const source = sets.find((set) => set.id === setId);
   if (!source) return { ok: false, reason: 'not_found' };
   if (!source.savedAt) return { ok: false, reason: 'not_saved' };
@@ -127,8 +128,8 @@ export function planDuplicateProject(sets, setId, uid = '', email = '') {
     criteriaCheckpoint: buildCriteriaCheckpoint(copy),
   });
 
-  if (!canAddCriteriaPreset(sets, copyWithCheckpoint.name, uid, email)) {
-    const maxSlots = getMaxCriteriaPresets(uid, email);
+  if (!canAddCriteriaPreset(sets, copyWithCheckpoint.name, uid, email, plan)) {
+    const maxSlots = getMaxCriteriaPresets(uid, email, plan);
     return {
       ok: false,
       reason: 'slot_limit',
