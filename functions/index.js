@@ -3,20 +3,12 @@ const { isQuotaAdmin, parseAdminAllowlist } = require('./adminAllowlist.js');
 
 const USER_CRITERIA = 'userCriteria';
 
-/**
- * .env 배포가 깨져도 동작하도록 운영자 식별자를 코드에 고정.
- * (functions/.env 의 BETA_QUOTA_ADMIN_* 와 합쳐짐)
- *
- * 참고: Google 로그인인데 Auth top-level email 이 비어 있는 계정이 있음.
- * 그 경우 getUserByEmail(관리자메일) 이 실패하므로 UID 도 고정한다.
- */
-const BUILTIN_ADMIN_EMAILS = ['wakano1017@gmail.com'];
-const BUILTIN_ADMIN_UIDS = ['sRAczpH8p3YpFOKKmZhJNLxL5Vh1'];
+/** provider-only 이메일 계정 스캔 상한 (페이지당 1000명) */
+const LIST_USERS_MAX_PAGES = 5;
 
 /** @type {import('firebase-admin/app').App | null} */
 let adminApp = null;
 
-/** Admin SDK 앱을 한 번만 초기화하고, 같은 인스턴스를 Auth/Firestore에 전달 */
 function ensureAdminApp() {
   const { initializeApp, getApps } = require('firebase-admin/app');
   if (!adminApp) {
@@ -55,8 +47,6 @@ function normalizeEmail(raw) {
 }
 
 /**
- * top-level email + providerData email 수집.
- * getUserByEmail 은 top-level 만 보므로 provider 이메일도 따로 본다.
  * @param {import('firebase-admin/auth').UserRecord} user
  * @returns {Set<string>}
  */
@@ -71,9 +61,10 @@ function collectUserEmails(user) {
 }
 
 /**
- * provider 에만 이메일이 있는 계정은 getUserByEmail 이 실패한다.
- * Admin updateUser(email) 로 top-level 을 채우면 클라이언트 세션이
- * 끊길 수 있어, 조회만 하고 Auth 레코드는 수정하지 않는다.
+ * Auth 사용자를 이메일로 찾는다.
+ * getUserByEmail 은 top-level email 만 보므로, 실패 시 호출자·listUsers(상한)로 provider 이메일을 본다.
+ * Admin updateUser(email) 은 클라 세션을 끊을 수 있어 쓰지 않는다.
+ *
  * @param {import('firebase-admin/auth').Auth} auth
  * @param {string} email
  * @param {string} [callerUid]
@@ -96,18 +87,20 @@ async function resolveTargetUser(auth, email, callerUid = '') {
   }
 
   let pageToken;
-  do {
-    const page = await auth.listUsers(1000, pageToken);
-    for (const user of page.users) {
+  for (let page = 0; page < LIST_USERS_MAX_PAGES; page += 1) {
+    const result = await auth.listUsers(1000, pageToken);
+    for (const user of result.users) {
       if (collectUserEmails(user).has(email)) return user;
     }
-    pageToken = page.pageToken;
-  } while (pageToken);
+    pageToken = result.pageToken;
+    if (!pageToken) break;
+  }
 
   return null;
 }
 
 function resolveAdminEnv() {
+  // PowerShell Set-Content BOM 대비
   const fromEnvEmails =
     process.env.BETA_QUOTA_ADMIN_EMAILS ??
     process.env['\ufeffBETA_QUOTA_ADMIN_EMAILS'] ??
@@ -116,15 +109,10 @@ function resolveAdminEnv() {
     process.env.BETA_QUOTA_ADMIN_UIDS ??
     process.env['\ufeffBETA_QUOTA_ADMIN_UIDS'] ??
     '';
-  const mergedEmails = [
-    ...BUILTIN_ADMIN_EMAILS,
-    ...parseAdminAllowlist(fromEnvEmails, { lowercase: true }),
-  ].join(',');
-  const mergedUids = [
-    ...BUILTIN_ADMIN_UIDS,
-    ...parseAdminAllowlist(fromEnvUids),
-  ].join(',');
-  return { emails: mergedEmails, uids: mergedUids };
+  return {
+    emails: fromEnvEmails,
+    uids: fromEnvUids,
+  };
 }
 
 async function assertAdmin(request) {
@@ -134,12 +122,21 @@ async function assertAdmin(request) {
 
   const uid = String(request.auth.uid).trim();
   const adminEnv = resolveAdminEnv();
+  const emailAllow = parseAdminAllowlist(adminEnv.emails, { lowercase: true });
+  const uidAllow = parseAdminAllowlist(adminEnv.uids);
+
+  if (emailAllow.length === 0 && uidAllow.length === 0) {
+    console.error('assertAdmin: BETA_QUOTA_ADMIN_EMAILS/UIDS 가 비어 있음');
+    throw new HttpsError(
+      'failed-precondition',
+      '관리자 allowlist가 설정되지 않았습니다.',
+    );
+  }
+
   const { auth } = getAdmin();
 
-  // 1) uid allowlist (토큰/Auth email 이 비어 있어도 통과)
   if (isQuotaAdmin({ uid, token: { email: '' } }, adminEnv)) return;
 
-  // 2) 호출자 이메일을 여러 경로로 수집
   /** @type {Set<string>} */
   const callerEmails = new Set();
   const tokenEmail = normalizeEmail(request.auth.token?.email);
@@ -156,26 +153,22 @@ async function assertAdmin(request) {
     if (isQuotaAdmin({ uid, token: { email } }, adminEnv)) return;
   }
 
-  // 3) 관리자 이메일의 Auth uid 와 대조 (top-level email 이 있을 때만 유효)
-  const adminEmails = parseAdminAllowlist(adminEnv.emails, {
-    lowercase: true,
-  });
-  for (const adminEmail of adminEmails) {
+  for (const adminEmail of emailAllow) {
     try {
       const adminUser = await auth.getUserByEmail(adminEmail);
       if (adminUser.uid === uid) return;
     } catch (err) {
       if (err?.code !== 'auth/user-not-found') {
-        console.warn('assertAdmin getUserByEmail failed', adminEmail, err?.code);
+        console.warn('assertAdmin getUserByEmail failed', err?.code);
       }
     }
   }
 
   console.warn('assertAdmin deny', {
     uid,
-    callerEmails: [...callerEmails],
-    envEmails: adminEnv.emails,
-    envUids: adminEnv.uids,
+    callerEmailCount: callerEmails.size,
+    allowEmailCount: emailAllow.length,
+    allowUidCount: uidAllow.length,
   });
   throw new HttpsError('permission-denied', '관리자만 사용할 수 있습니다.');
 }
@@ -187,9 +180,6 @@ const CALL_OPTS = {
   invoker: 'public',
 };
 
-/**
- * 관리자가 이메일로 대상 계정의 profile.plan 을 paid|free 로 설정한다.
- */
 exports.setUserPlanByEmail = onCall(CALL_OPTS, async (request) => {
   try {
     await assertAdmin(request);
@@ -209,7 +199,7 @@ exports.setUserPlanByEmail = onCall(CALL_OPTS, async (request) => {
     try {
       user = await resolveTargetUser(auth, email, request.auth.uid);
     } catch (err) {
-      console.error('resolveTargetUser failed', email, err?.code ?? err);
+      console.error('resolveTargetUser failed', err?.code ?? err);
       throw new HttpsError('internal', '사용자 조회에 실패했습니다.');
     }
 
@@ -221,9 +211,9 @@ exports.setUserPlanByEmail = onCall(CALL_OPTS, async (request) => {
     }
 
     const resolvedEmail = normalizeEmail(user.email) || email;
-    const uid = user.uid;
+    const targetUid = user.uid;
     const now = Date.now();
-    const ref = db.collection(USER_CRITERIA).doc(uid);
+    const ref = db.collection(USER_CRITERIA).doc(targetUid);
     const snap = await ref.get();
 
     if (!snap.exists) {
@@ -252,19 +242,13 @@ exports.setUserPlanByEmail = onCall(CALL_OPTS, async (request) => {
       await ref.update(patch);
     }
 
-    const payload = {
+    return {
       ok: true,
-      uid,
+      uid: targetUid,
       email: resolvedEmail,
       plan,
       paidUpdatedAt: now,
     };
-    console.info('setUserPlanByEmail ok', {
-      uid: payload.uid,
-      email: payload.email,
-      plan: payload.plan,
-    });
-    return payload;
   } catch (err) {
     if (err instanceof HttpsError) throw err;
     console.error('setUserPlanByEmail unexpected', err);
@@ -272,9 +256,6 @@ exports.setUserPlanByEmail = onCall(CALL_OPTS, async (request) => {
   }
 });
 
-/**
- * 관리자 — 현재 plan=paid 인 계정 목록 (이메일·등록 시각).
- */
 exports.listPaidUsers = onCall(CALL_OPTS, async (request) => {
   try {
     await assertAdmin(request);
@@ -288,12 +269,12 @@ exports.listPaidUsers = onCall(CALL_OPTS, async (request) => {
     /** @type {{ uid: string, email: string, paidUpdatedAt: number }[]} */
     const paidUsers = [];
 
-    for (const doc of snap.docs) {
-      const profile = doc.data()?.profile ?? {};
+    for (const docSnap of snap.docs) {
+      const profile = docSnap.data()?.profile ?? {};
       let email = normalizeEmail(profile.paidEmail);
       if (!email) {
         try {
-          const user = await auth.getUser(doc.id);
+          const user = await auth.getUser(docSnap.id);
           email =
             normalizeEmail(user.email) ||
             [...collectUserEmails(user)][0] ||
@@ -303,7 +284,7 @@ exports.listPaidUsers = onCall(CALL_OPTS, async (request) => {
         }
       }
       paidUsers.push({
-        uid: doc.id,
+        uid: docSnap.id,
         email,
         paidUpdatedAt:
           typeof profile.paidUpdatedAt === 'number' ? profile.paidUpdatedAt : 0,
@@ -311,10 +292,8 @@ exports.listPaidUsers = onCall(CALL_OPTS, async (request) => {
     }
 
     paidUsers.sort((a, b) => b.paidUpdatedAt - a.paidUpdatedAt);
-    console.info('listPaidUsers ok', { count: paidUsers.length });
 
-    // 클라이언트는 paidUsers 를 우선 사용 (users 키 혼동 방지)
-    return { ok: true, paidUsers, users: paidUsers };
+    return { ok: true, paidUsers };
   } catch (err) {
     if (err instanceof HttpsError) throw err;
     console.error('listPaidUsers unexpected', err);

@@ -153,8 +153,19 @@ export function resolveQuotaAuthEmail(session) {
 export function isBetaQuotaAdminExempt(uid, email = '') {
   const id = uid.trim();
   const mail = email.trim().toLowerCase();
-  if (id && getBetaQuotaAdminUidSet().has(id)) return true;
-  if (mail && getBetaQuotaAdminEmailSet().has(mail)) return true;
+  const uids = getBetaQuotaAdminUidSet();
+  const emails = getBetaQuotaAdminEmailSet();
+  if (id && uids.has(id)) return true;
+  if (mail && emails.has(mail)) return true;
+  if (
+    import.meta.env.DEV &&
+    uids.size === 0 &&
+    emails.size === 0
+  ) {
+    console.warn(
+      '[admin] VITE_BETA_QUOTA_ADMIN_EMAILS / UIDS 가 비어 있습니다. .env 를 확인하고 Vite를 재시작하세요.',
+    );
+  }
   return false;
 }
 

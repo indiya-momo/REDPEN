@@ -37,6 +37,15 @@ describe('formatPaidPlanAdminError', () => {
       }),
     ).toContain('서버 응답');
   });
+
+  it('목록 unwrap 실패 메시지는 응답 읽기 실패로 안내', () => {
+    expect(
+      formatPaidPlanAdminError({
+        code: 'internal',
+        message: '서버 응답을 읽지 못했습니다. 페이지를 새로고침한 뒤 다시 시도해 주세요.',
+      }),
+    ).toContain('서버 응답');
+  });
 });
 
 describe('formatPaidUpdatedAt', () => {

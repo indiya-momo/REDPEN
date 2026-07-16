@@ -49,16 +49,46 @@ function normalizeCloudProfile(raw) {
 }
 
 /**
+ * 프로필 문서 한 번 읽고 plan + (가능하면) 닉네임 프로필을 반환.
+ * @param {string} uid
+ * @returns {Promise<{
+ *   plan: 'free' | 'paid',
+ *   profile: ReturnType<typeof normalizeCloudProfile>,
+ * }>}
+ */
+export async function loadUserCriteriaCloud(uid) {
+  const id = String(uid ?? '').trim();
+  if (!isUserProfileCloudEnabled() || !id) {
+    return { plan: 'free', profile: null };
+  }
+
+  const snap = await getDoc(criteriaDocRef(id));
+  if (!snap.exists()) {
+    return { plan: 'free', profile: null };
+  }
+  const raw = snap.data()?.profile;
+  return {
+    plan: normalizeUserPlan(raw?.plan),
+    profile: normalizeCloudProfile(raw),
+  };
+}
+
+/**
+ * @param {string} uid
+ * @returns {Promise<'free' | 'paid'>}
+ */
+export async function loadUserPlanCloud(uid) {
+  const { plan } = await loadUserCriteriaCloud(uid);
+  return plan;
+}
+
+/**
  * @param {string} uid
  * @returns {Promise<ReturnType<typeof normalizeCloudProfile>>}
  */
 export async function loadUserProfileCloud(uid) {
-  const id = String(uid ?? '').trim();
-  if (!isUserProfileCloudEnabled() || !id) return null;
-
-  const snap = await getDoc(criteriaDocRef(id));
-  if (!snap.exists()) return null;
-  return normalizeCloudProfile(snap.data()?.profile);
+  const { profile } = await loadUserCriteriaCloud(uid);
+  return profile;
 }
 
 /**

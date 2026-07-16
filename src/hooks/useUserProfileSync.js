@@ -6,10 +6,11 @@ import {
   shouldSkipProfileCloudMerge,
   syncUserPlanFromCloud,
 } from '../lib/userProfileStorage.js';
-import { loadUserProfileCloud } from '../lib/userProfileCloud.js';
+import { loadUserCriteriaCloud } from '../lib/userProfileCloud.js';
 
 /**
- * 로그인 계정의 닉네임 프로필을 Firestore에서 불러와 localStorage에 반영한다.
+ * 로그인 계정의 닉네임 프로필·plan 을 Firestore에서 불러와 localStorage에 반영한다.
+ * plan 은 닉네임/온보딩 여부와 무관하게 항상 동기화한다.
  * @param {string} authUid
  */
 export function useUserProfileSync(authUid) {
@@ -41,25 +42,36 @@ export function useUserProfileSync(authUid) {
     let cancelled = false;
     setProfileSyncDone(false);
 
-    (async () => {
+    async function syncFromCloud({ markDone }) {
+      let changed = false;
       try {
-        const cloudProfile = await loadUserProfileCloud(uid);
+        const { plan, profile } = await loadUserCriteriaCloud(uid);
         if (cancelled) return;
-        if (cloudProfile) {
-          let changed = false;
-          if (syncUserPlanFromCloud(uid, cloudProfile.plan)) changed = true;
-          if (mergeUserProfileFromCloud(uid, cloudProfile)) changed = true;
-          if (changed) setProfileRev((n) => n + 1);
-        }
+        // plan 은 nickname 없이도 문서에 있을 수 있음 (관리자 선등록)
+        if (syncUserPlanFromCloud(uid, plan)) changed = true;
+        if (profile && mergeUserProfileFromCloud(uid, profile)) changed = true;
       } catch {
         /* 네트워크·권한 오류 시 localStorage만 사용 */
       } finally {
-        if (!cancelled) setProfileSyncDone(true);
+        if (cancelled) return;
+        if (markDone) setProfileSyncDone(true);
+        if (changed) setProfileRev((n) => n + 1);
       }
-    })();
+    }
+
+    void syncFromCloud({ markDone: true });
+
+    const refreshPlan = () => {
+      if (document.visibilityState !== 'visible') return;
+      void syncFromCloud({ markDone: false });
+    };
+    window.addEventListener('focus', refreshPlan);
+    document.addEventListener('visibilitychange', refreshPlan);
 
     return () => {
       cancelled = true;
+      window.removeEventListener('focus', refreshPlan);
+      document.removeEventListener('visibilitychange', refreshPlan);
     };
   }, [authUid]);
 
