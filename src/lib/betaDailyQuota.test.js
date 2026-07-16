@@ -253,4 +253,20 @@ describe('isBetaDailyQuotaEnforcedForUser localhost dev', () => {
     const mod = await import('./betaDailyQuota.js');
     expect(mod.isBetaDailyQuotaEnforcedForUser('uid-1', 'a@b.c')).toBe(false);
   });
+
+  it('유료 plan이면 한도 미적용', async () => {
+    import.meta.env.DEV = true;
+    import.meta.env.VITE_BETA_QUOTA_RELAX_LOCAL = 'false';
+    vi.stubGlobal('window', { location: { hostname: 'localhost' } });
+    vi.resetModules();
+    const mod = await import('./betaDailyQuota.js');
+    expect(mod.isBetaDailyQuotaEnforcedForUser('uid-1', 'a@b.c', 'paid')).toBe(
+      false,
+    );
+    if (mod.isBetaDailyQuotaEnabled()) {
+      expect(
+        mod.isBetaDailyQuotaEnforcedForUser('uid-1', 'a@b.c', 'free'),
+      ).toBe(true);
+    }
+  });
 });

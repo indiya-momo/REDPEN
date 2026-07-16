@@ -19,6 +19,7 @@ import {
   builtInEnabledFromSheet,
 } from './lib/builtInRules.js';
 import { useRuleSets } from './hooks/useRuleSets.js';
+import { useUserProfileSync } from './hooks/useUserProfileSync.js';
 import { useBonBojoDevRefresh } from './hooks/useBonBojoDevRefresh.js';
 import { ensureDefaultAuxiliaryVerbs } from './lib/defaultAuxiliaryVerbs.js';
 import {
@@ -239,6 +240,8 @@ export default function App() {
     setScreen('main');
   }, [authReady, auxWindow, screen, authSession?.uid]);
 
+  const { profileSyncDone } = useUserProfileSync(authSession?.uid ?? '');
+
   const {
     rulesReady,
     activeSet,
@@ -262,6 +265,7 @@ export default function App() {
   } = useRuleSets(
     authSession?.uid ?? '',
     resolveQuotaAuthEmail(authSession),
+    { profileSyncDone },
   );
 
   const handleSwitchSavedProject = useCallback(

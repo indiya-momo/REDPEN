@@ -374,7 +374,7 @@ describe('applyTombstones', () => {
 });
 
 describe('applyCriteriaPresetQuota', () => {
-  it('비관리자 — 저장 프리셋은 최신 3개만 남긴다', () => {
+  it('유료 — 저장 프리셋은 최신 3개만 남긴다', () => {
     const sets = [
       set('old', {
         name: 'A',
@@ -394,7 +394,23 @@ describe('applyCriteriaPresetQuota', () => {
       }),
       set('draft', { name: '' }),
     ];
-    const next = applyCriteriaPresetQuota(sets, 'user', '');
+    const next = applyCriteriaPresetQuota(sets, 'user', '', 'paid');
     expect(next.map((s) => s.id)).toEqual(['mid', 'newer', 'newest', 'draft']);
+  });
+
+  it('무료 — 저장 프리셋은 최신 1개만 남긴다', () => {
+    const sets = [
+      set('old', {
+        name: 'A',
+        savedAt: '2026-06-20T00:00:00.000Z',
+      }),
+      set('newest', {
+        name: 'D',
+        savedAt: '2026-06-23T00:00:00.000Z',
+      }),
+      set('draft', { name: '' }),
+    ];
+    const next = applyCriteriaPresetQuota(sets, 'user', '', 'free');
+    expect(next.map((s) => s.id)).toEqual(['newest', 'draft']);
   });
 });

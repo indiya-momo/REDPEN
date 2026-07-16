@@ -212,10 +212,16 @@ export function applyTombstones(sets, tombstones) {
  * @param {import('./ruleSetsStorage.js').RuleSet[]} ruleSets
  * @param {string} [uid]
  * @param {string} [email]
+ * @param {unknown} [plan]
  */
-export function applyCriteriaPresetQuota(ruleSets, uid = '', email = '') {
+export function applyCriteriaPresetQuota(
+  ruleSets,
+  uid = '',
+  email = '',
+  plan,
+) {
   return dedupeSavedRuleSetsByName(
-    enforceMaxCriteriaPresets(ruleSets ?? [], uid, email),
+    enforceMaxCriteriaPresets(ruleSets ?? [], uid, email, plan),
   );
 }
 

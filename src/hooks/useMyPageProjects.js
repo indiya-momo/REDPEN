@@ -2,10 +2,11 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { LEGACY_DEFAULT_CRITERIA_HINT } from '../lib/criteriaName.js';
 import {
   countSavedCriteriaPresets,
-  CRITERIA_PRESET_LIMIT_MESSAGE,
-  isCriteriaPresetLimitExempt,
-  MAX_CRITERIA_PRESETS,
+  formatCriteriaPresetLimitMessage,
+  getMaxCriteriaPresets,
+  MAX_CRITERIA_PRESETS_FREE,
 } from '../lib/criteriaPresetLimit.js';
+import { getLocalUserPlan } from '../lib/userProfileStorage.js';
 import { normalizeRuleSet } from '../lib/ruleSetNormalize.js';
 import { buildCriteriaCheckpoint } from '../lib/criteriaCheckpoint.js';
 import {
@@ -58,7 +59,7 @@ const RENAME_FAILURE_MESSAGE = {
 const DUPLICATE_FAILURE_MESSAGE = {
   not_found: '프로젝트를 찾을 수 없습니다.',
   not_saved: '저장된 프로젝트만 복제할 수 있습니다.',
-  slot_limit: CRITERIA_PRESET_LIMIT_MESSAGE,
+  slot_limit: formatCriteriaPresetLimitMessage(MAX_CRITERIA_PRESETS_FREE),
 };
 
 const DELETE_FAILURE_MESSAGE = {
@@ -86,7 +87,13 @@ function normalizeLoadedSets(rawSets) {
  * @param {string} [uid]
  * @param {string} [email]
  */
-export function useMyPageProjects(uid = '', email = '') {
+/**
+ * @param {string} [uid]
+ * @param {string} [email]
+ * @param {{ profileSyncDone?: boolean }} [options]
+ */
+export function useMyPageProjects(uid = '', email = '', options = {}) {
+  const { profileSyncDone = true } = options;
   const [projects, setProjects] = useState(
     /** @type {import('../lib/ruleSetsStorage.js').RuleSet[]} */ ([]),
   );
@@ -146,6 +153,7 @@ export function useMyPageProjects(uid = '', email = '') {
   );
 
   useEffect(() => {
+    if (!profileSyncDone) return undefined;
     let cancelled = false;
 
     async function load() {
@@ -177,7 +185,12 @@ export function useMyPageProjects(uid = '', email = '') {
         sets = applyTombstones(sets, tombstones).sets;
 
         const beforeIds = sets.map((set) => set.id).join(',');
-        sets = applyCriteriaPresetQuota(sets, trimmedUid, email);
+        sets = applyCriteriaPresetQuota(
+          sets,
+          trimmedUid,
+          email,
+          getLocalUserPlan(trimmedUid),
+        );
         activeId = resolveHydratedActiveSetId(sets, activeId, cloudActiveId);
         const quotaTrimmed = beforeIds !== sets.map((set) => set.id).join(',');
 
@@ -219,7 +232,7 @@ export function useMyPageProjects(uid = '', email = '') {
     return () => {
       cancelled = true;
     };
-  }, [uid, email]);
+  }, [uid, email, profileSyncDone]);
 
   useEffect(() => {
     const trimmedUid = uid.trim();
@@ -233,7 +246,12 @@ export function useMyPageProjects(uid = '', email = '') {
           loadedSetsRef.current,
         );
         const beforeIds = sets.map((set) => set.id).join(',');
-        sets = applyCriteriaPresetQuota(sets, trimmedUid, email);
+        sets = applyCriteriaPresetQuota(
+          sets,
+          trimmedUid,
+          email,
+          getLocalUserPlan(trimmedUid),
+        );
         const activeId = resolveHydratedActiveSetId(
           sets,
           loadActiveSetId(trimmedUid),
@@ -490,11 +508,12 @@ export function useMyPageProjects(uid = '', email = '') {
     [persistProjectSets],
   );
 
-  const exempt = isCriteriaPresetLimitExempt(uid, email);
-  const maxSlots = exempt ? null : MAX_CRITERIA_PRESETS;
+  const userPlan = getLocalUserPlan(uid);
+  const maxSlots = getMaxCriteriaPresets(uid, email, userPlan);
+  const exempt = maxSlots == null;
   const emptySlotCount = exempt
     ? 0
-    : Math.max(0, MAX_CRITERIA_PRESETS - savedCount);
+    : Math.max(0, maxSlots - savedCount);
 
   return {
     projects,
@@ -511,6 +530,7 @@ export function useMyPageProjects(uid = '', email = '') {
     maxSlots,
     exempt,
     emptySlotCount,
-    atSlotLimit: !exempt && savedCount >= MAX_CRITERIA_PRESETS,
+    atSlotLimit: !exempt && savedCount >= maxSlots,
+    userPlan,
   };
 }

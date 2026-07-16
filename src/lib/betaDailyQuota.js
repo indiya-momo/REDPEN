@@ -23,6 +23,8 @@ import {
   isFirebaseAuthConfigured,
   resolveSessionEmail,
 } from './firebaseAuth.js';
+import { isPaidPlan } from './userPlan.js';
+import { getLocalUserPlan } from './userProfileStorage.js';
 
 const LOCAL_QUOTA_PREFIX = 'indiya-beta-quota-v3--';
 const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
@@ -159,9 +161,13 @@ export function isBetaQuotaAdminExempt(uid, email = '') {
 /**
  * @param {string} uid
  * @param {string} [email]
+ * @param {unknown} [plan]
  */
-export function isBetaDailyQuotaEnforcedForUser(uid, email = '') {
+export function isBetaDailyQuotaEnforcedForUser(uid, email = '', plan) {
   if (isLocalDevQuotaRelaxed()) return false;
+  const resolvedPlan =
+    plan === undefined ? getLocalUserPlan(uid) : plan;
+  if (isPaidPlan({ plan: resolvedPlan })) return false;
   return (
     isBetaDailyQuotaEnabled() &&
     Boolean(uid.trim()) &&

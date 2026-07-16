@@ -4,6 +4,7 @@ import {
   isOnboardingComplete,
   mergeUserProfileFromCloud,
   shouldSkipProfileCloudMerge,
+  syncUserPlanFromCloud,
 } from '../lib/userProfileStorage.js';
 import { loadUserProfileCloud } from '../lib/userProfileCloud.js';
 
@@ -13,6 +14,10 @@ import { loadUserProfileCloud } from '../lib/userProfileCloud.js';
  */
 export function useUserProfileSync(authUid) {
   const [profileRev, setProfileRev] = useState(0);
+  const [profileSyncDone, setProfileSyncDone] = useState(() => {
+    const uid = String(authUid ?? '').trim();
+    return !uid;
+  });
   const bumpProfileRev = useCallback(() => {
     setProfileRev((n) => n + 1);
   }, []);
@@ -24,20 +29,32 @@ export function useUserProfileSync(authUid) {
 
   useEffect(() => {
     const uid = String(authUid ?? '').trim();
-    if (!uid) return undefined;
-    if (shouldSkipProfileCloudMerge()) return undefined;
+    if (!uid) {
+      setProfileSyncDone(true);
+      return undefined;
+    }
+    if (shouldSkipProfileCloudMerge()) {
+      setProfileSyncDone(true);
+      return undefined;
+    }
 
     let cancelled = false;
+    setProfileSyncDone(false);
 
     (async () => {
       try {
         const cloudProfile = await loadUserProfileCloud(uid);
-        if (cancelled || !cloudProfile) return;
-        if (mergeUserProfileFromCloud(uid, cloudProfile)) {
-          setProfileRev((n) => n + 1);
+        if (cancelled) return;
+        if (cloudProfile) {
+          let changed = false;
+          if (syncUserPlanFromCloud(uid, cloudProfile.plan)) changed = true;
+          if (mergeUserProfileFromCloud(uid, cloudProfile)) changed = true;
+          if (changed) setProfileRev((n) => n + 1);
         }
       } catch {
         /* 네트워크·권한 오류 시 localStorage만 사용 */
+      } finally {
+        if (!cancelled) setProfileSyncDone(true);
       }
     })();
 
@@ -49,5 +66,5 @@ export function useUserProfileSync(authUid) {
   const uid = String(authUid ?? '').trim();
   const onboardingComplete = uid ? isOnboardingComplete(uid) : false;
 
-  return { profileRev, bumpProfileRev, onboardingComplete };
+  return { profileRev, bumpProfileRev, onboardingComplete, profileSyncDone };
 }

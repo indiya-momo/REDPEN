@@ -54,6 +54,12 @@ describe('formatLibrarySlotGauge', () => {
     expect(formatLibrarySlotGauge(3)).toBe('3/3');
     expect(formatLibrarySlotGauge(5)).toBe('3/3');
   });
+
+  it('maxSlots 인자를 반영한다', () => {
+    expect(formatLibrarySlotGauge(0, 1)).toBe('0/1');
+    expect(formatLibrarySlotGauge(1, 1)).toBe('1/1');
+    expect(formatLibrarySlotGauge(2, 1)).toBe('1/1');
+  });
 });
 
 describe('planLibraryShelfCards', () => {
