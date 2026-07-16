@@ -147,7 +147,10 @@ export async function listPaidUsersCloud() {
   const result = await fn({});
   const data = unwrapCallableData(result);
   if (!data) {
-    return { ok: true, users: [] };
+    throw Object.assign(
+      new Error('서버 응답을 읽지 못했습니다. 페이지를 새로고침한 뒤 다시 시도해 주세요.'),
+      { code: 'internal' },
+    );
   }
   const list = Array.isArray(data.paidUsers)
     ? data.paidUsers
