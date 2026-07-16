@@ -189,10 +189,13 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (auxWindow) return;
+    // 마이페이지 보조 창(?window=mypage)도 Auth 구독 필요.
+    // 구독 없으면 초기화 레이스에서 session=null 로 고정되어
+    // 「로그인 후 마이페이지…」만 보인다.
+    if (auxWindow && auxWindow !== 'mypage') return;
     return subscribeAuthSession((session) => {
       setAuthSession(session);
-      syncPostHogIdentity(session);
+      if (!auxWindow) syncPostHogIdentity(session);
     });
   }, [auxWindow, syncPostHogIdentity]);
 
