@@ -21,18 +21,23 @@ export function projectCreatedAtMs(set) {
 }
 
 /**
+ * 만든 순서 오름차순 = 오래된 것이 왼쪽. 편집해도 순서가 바뀌지 않는다.
+ * @param {import('./ruleSetsStorage.js').RuleSet} a
+ * @param {import('./ruleSetsStorage.js').RuleSet} b
+ */
+export function compareProjectsByCreatedAt(a, b) {
+  const diff = projectCreatedAtMs(a) - projectCreatedAtMs(b);
+  if (diff !== 0) return diff;
+  return String(a?.id ?? '').localeCompare(String(b?.id ?? ''));
+}
+
+/**
  * @param {import('./ruleSetsStorage.js').RuleSet[]} projects
  * @param {string | null} activeSetId
  */
 export function buildSortedProjectCards(projects, activeSetId) {
   return [...(projects ?? [])]
-    .sort((a, b) => {
-      // 만든 순서 오름차순 = 오래된 것이 왼쪽. 편집해도 순서가 바뀌지 않는다.
-      const diff = projectCreatedAtMs(a) - projectCreatedAtMs(b);
-      if (diff !== 0) return diff;
-      // 생성 시각이 같으면 id로 안정 정렬(순서가 흔들리지 않게).
-      return String(a?.id ?? '').localeCompare(String(b?.id ?? ''));
-    })
+    .sort(compareProjectsByCreatedAt)
     .map((set) =>
       buildProjectCardViewModelFromRuleSet(set, {
         isActive: set.id === activeSetId,

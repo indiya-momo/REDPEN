@@ -148,6 +148,13 @@
 - 피드백 **텍스트**는 Form 제출 시 Google 측으로 전송됩니다.
 - 운영자만 응답 스프레드시트에서 확인합니다.
 
+### 유료 검수 결과 스냅숏 (MVP)
+
+- **수집:** 유료(`profile.plan === 'paid'`)·저장 프로젝트에서 검수 완료 시 발견 목록·요약 JSON만 Firestore `userCriteria/{uid}/checkResults`
+- **수집 안 함:** 원고 PDF 바이트
+- **보관:** 약 30일(`expiresAt`). 허브 「작업 이력」에서 재다운로드
+- **설정:** 테스터 uid에 `plan: 'paid'` 수동 기입 · `firestore.rules` 배포. 상세는 `docs/superpowers/specs/2026-07-16-paid-check-result-snapshot-design.md` §9
+
 자세한 운영 설정: `project-docs/analytics-beta.md`
 
 ---

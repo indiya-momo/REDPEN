@@ -8,6 +8,7 @@ import {
 } from '../lib/projectMeta.js';
 import { buildProjectWorkSummary } from '../presentation/projectWorkSummary.js';
 import ProjectHubCriteriaPanel from './projectHub/ProjectHubCriteriaPanel.jsx';
+import ProjectHubCheckResultsPanel from './projectHub/ProjectHubCheckResultsPanel.jsx';
 import ProjectWorkHistoryChart from './projectHub/ProjectWorkHistoryChart.jsx';
 import './project-hub-settings.css';
 
@@ -113,6 +114,7 @@ function buildCardMetaSyncKey(card) {
  *   onDuplicate?: () => void,
  *   onDelete?: () => void,
  *   onSharePreview?: () => void,
+ *   uid?: string,
  * }} props
  */
 export default function ProjectHubSettingsPanel({
@@ -129,6 +131,7 @@ export default function ProjectHubSettingsPanel({
   onDuplicate: _onDuplicate,
   onDelete: _onDelete,
   onSharePreview: _onSharePreview,
+  uid = '',
 }) {
   const tagsInputId = useId();
   const nameInputId = useId();
@@ -527,6 +530,13 @@ export default function ProjectHubSettingsPanel({
               <ProjectWorkSummaryCard
                 summary={buildProjectWorkSummary(ruleSet?.projectContext)}
               />
+              {uid && card?.id ? (
+                <ProjectHubCheckResultsPanel
+                  uid={uid}
+                  projectId={card.id}
+                  projectName={card.title || ruleSet?.name || ''}
+                />
+              ) : null}
               <ProjectWorkHistoryChart
                 history={ruleSet?.workHistory}
                 projectContext={ruleSet?.projectContext}

@@ -1,4 +1,5 @@
 import { MAX_CRITERIA_PRESETS } from './criteriaPresetLimit.js';
+import { compareProjectsByCreatedAt } from './projectHubCards.js';
 
 /** 목업(`mypage-mock`) Library — 슬롯 게이지·끝 칸 기준 */
 export const MOCK_LIBRARY_SLOT_MAX = 3;
@@ -20,7 +21,7 @@ export const MYPAGE_PROJECT_CARD_DISPLAY_MAX = 4;
  */
 export function planMyPageProjectGrid(projects) {
   const visibleProjects = [...(projects ?? [])]
-    .sort((a, b) => Date.parse(b.savedAt ?? '') - Date.parse(a.savedAt ?? ''))
+    .sort(compareProjectsByCreatedAt)
     .slice(0, MYPAGE_PROJECT_CARD_DISPLAY_MAX);
   const visibleEmptySlotCount = Math.max(
     0,

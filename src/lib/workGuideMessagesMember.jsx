@@ -61,7 +61,7 @@ export function PreUploadMessage() {
     <>
       여기서 PDF를 올리면 되고
       <br />
-      서버에 저장되지 않으니 안심하라냥
+      원고 PDF는 서버에 저장되지 않으니 안심하라냥
       <br />
       <span className="tooltip-guide__run-btn-look">PDF 열기</span> 후
       설명을 계속한다냥
@@ -184,6 +184,9 @@ export function RuleSetSaveMessage() {
       <span className="tooltip-guide__message-line">
         <span className="tooltip-guide__export-btn-look">검수 결과 다운받기</span>
         가 가능하다냥
+      </span>
+      <span className="tooltip-guide__message-line">
+        유료 회원은 프로젝트에도 결과(목록·요약)가 잠시 보관된다냥
       </span>
       <span className="tooltip-guide__message-line">
         이때까지 선택한 기준에 이름을 붙이고

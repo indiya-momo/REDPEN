@@ -62,6 +62,45 @@ describe('pickNewerRuleSet', () => {
     });
     expect(pickNewerRuleSet(withTags, cleared).tags).toEqual([]);
   });
+
+  it('둘 다 미저장 초안이면 preferOnTie에 따라 고른다 (기본: 첫 인자)', () => {
+    const memory = set('draft', {
+      customRules: [{ id: 'new-chip' }, { id: 'old' }],
+    });
+    const disk = set('draft', {
+      customRules: [{ id: 'old' }],
+    });
+    expect(pickNewerRuleSet(memory, disk).customRules.map((r) => r.id)).toEqual([
+      'new-chip',
+      'old',
+    ]);
+    expect(
+      pickNewerRuleSet(memory, disk, 'second').customRules.map((r) => r.id),
+    ).toEqual(['old']);
+  });
+});
+
+describe('mergeRuleSetsOnPersist — 미저장 초안', () => {
+  it('미저장 초안의 메모리 customRules가 디스크보다 우선한다', () => {
+    const disk = [
+      set('draft', {
+        name: '',
+        customRules: [{ id: 'old' }],
+      }),
+    ];
+    const memory = [
+      set('draft', {
+        name: '',
+        customRules: [{ id: 'new-chip' }, { id: 'old' }],
+      }),
+    ];
+    const merged = mergeRuleSetsOnPersist(disk, memory);
+    expect(merged).toHaveLength(1);
+    expect(merged[0].customRules.map((r) => r.id)).toEqual([
+      'new-chip',
+      'old',
+    ]);
+  });
 });
 
 describe('mergeLocalRuleSetSources', () => {

@@ -1,47 +1,62 @@
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /betaDailyUsage/{userId} {
-      allow read: if request.auth != null && request.auth.uid == userId;
-      allow create: if request.auth != null
-        && request.auth.uid == userId
-        && request.resource.data.keys().hasOnly(['feedbackBonusDayId'])
-        && request.resource.data.feedbackBonusDayId is string
-        && request.resource.data.feedbackBonusDayId.matches('^\\d{4}-\\d{2}-\\d{2}$');
-      allow update: if request.auth != null
-        && request.auth.uid == userId
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['feedbackBonusDayId'])
-        && request.resource.data.feedbackBonusDayId is string
-        && request.resource.data.feedbackBonusDayId.matches('^\\d{4}-\\d{2}-\\d{2}$');
-      allow delete: if false;
-    }
-    match /betaDailyUsage/{userId}/days/{dayId} {
-      allow read: if request.auth != null && request.auth.uid == userId;
-      allow create: if request.auth != null
-        && request.auth.uid == userId
-        && request.resource.data.usedAt is timestamp
-        && (
-          (request.resource.data.get('spellingCount', 0) == 1
-            && request.resource.data.get('consistencyCount', 0) == 0)
-          || (request.resource.data.get('spellingCount', 0) == 0
-            && request.resource.data.get('consistencyCount', 0) == 1)
-        );
-      allow update: if request.auth != null
-        && request.auth.uid == userId
-        && request.resource.data.usedAt is timestamp
-        && (
-          (request.resource.data.spellingCount == resource.data.get('spellingCount', 0) + 1
-            && request.resource.data.spellingCount <= 3
-            && request.resource.data.consistencyCount == resource.data.get('consistencyCount', 0))
-          || (request.resource.data.consistencyCount == resource.data.get('consistencyCount', 0) + 1
-            && request.resource.data.consistencyCount <= 3
-            && request.resource.data.spellingCount == resource.data.get('spellingCount', 0))
-        );
-      allow delete: if false;
-    }
-    match /userCriteria/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
-  }
-}
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /betaDailyUsage/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null
+        && request.auth.uid == userId
+        && request.resource.data.keys().hasOnly(['feedbackBonusDayId'])
+        && request.resource.data.feedbackBonusDayId is string
+        && request.resource.data.feedbackBonusDayId.matches('^\\d{4}-\\d{2}-\\d{2}$');
+      allow update: if request.auth != null
+        && request.auth.uid == userId
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['feedbackBonusDayId'])
+        && request.resource.data.feedbackBonusDayId is string
+        && request.resource.data.feedbackBonusDayId.matches('^\\d{4}-\\d{2}-\\d{2}$');
+      allow delete: if false;
+    }
+    match /betaDailyUsage/{userId}/days/{dayId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null
+        && request.auth.uid == userId
+        && request.resource.data.usedAt is timestamp
+        && (
+          (request.resource.data.get('spellingCount', 0) == 1
+            && request.resource.data.get('consistencyCount', 0) == 0)
+          || (request.resource.data.get('spellingCount', 0) == 0
+            && request.resource.data.get('consistencyCount', 0) == 1)
+        );
+      allow update: if request.auth != null
+        && request.auth.uid == userId
+        && request.resource.data.usedAt is timestamp
+        && (
+          (request.resource.data.spellingCount == resource.data.get('spellingCount', 0) + 1
+            && request.resource.data.spellingCount <= 3
+            && request.resource.data.consistencyCount == resource.data.get('consistencyCount', 0))
+          || (request.resource.data.consistencyCount == resource.data.get('consistencyCount', 0) + 1
+            && request.resource.data.consistencyCount <= 3
+            && request.resource.data.spellingCount == resource.data.get('spellingCount', 0))
+        );
+      allow delete: if false;
+    }
+    match /userCriteria/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+
+      match /checkResults/{resultId} {
+        allow read: if request.auth != null && request.auth.uid == userId;
+        allow create: if request.auth != null
+          && request.auth.uid == userId
+          && request.resource.data.uid == userId
+          && request.resource.data.kind in ['spelling', 'consistency']
+          && request.resource.data.projectId is string
+          && request.resource.data.projectId.size() > 0
+          && request.resource.data.createdAt is number
+          && request.resource.data.expiresAt is number
+          && request.resource.data.schemaVersion is number;
+        allow update: if false;
+        allow delete: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+  }
+}
 
