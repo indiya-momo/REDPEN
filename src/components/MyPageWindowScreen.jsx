@@ -21,11 +21,12 @@ import {
   getUserBadgeCollection,
   syncBadgeShowcase,
 } from '../lib/userBadges.js';
-import { resolveQuotaAuthEmail } from '../lib/betaDailyQuota.js';
+import { resolveQuotaAuthEmail, isBetaQuotaAdminExempt } from '../lib/betaDailyQuota.js';
 import { clearRewardNotice } from '../lib/rewardNotice.js';
 import { getEarnedBadgeIds } from '../lib/userBadges.js';
 import { useBetaDailyQuota } from '../hooks/useBetaDailyQuota.js';
 import { useUserProfileSync } from '../hooks/useUserProfileSync.js';
+import PaidPlanAdminSection from './PaidPlanAdminSection.jsx';
 import {
   isRuleSetsCloudEnabled,
   saveRuleSetsCloud,
@@ -51,20 +52,24 @@ const SIDEBAR_NAV = [
   { id: 'badges', label: '배지 모음집' },
 ];
 
-/** @returns {'overview' | 'projects' | 'profile' | 'badges'} */
-function readInitialMypageNav() {
+/** @returns {'overview' | 'projects' | 'profile' | 'badges' | 'paid-admin'} */
+function readInitialMypageNav(isAdmin = false) {
   try {
     const section = new URLSearchParams(window.location.search).get('mypageSection');
-    if (section) return resolveMypageNav(section);
+    if (section) return resolveMypageNav(section, isAdmin);
   } catch {
     /* ignore */
   }
   return 'overview';
 }
 
-/** @param {string} nav */
-function resolveMypageNav(nav) {
+/**
+ * @param {string} nav
+ * @param {boolean} [isAdmin]
+ */
+function resolveMypageNav(nav, isAdmin = false) {
   if (nav === 'home') return 'overview';
+  if (nav === 'paid-admin') return isAdmin ? 'paid-admin' : 'overview';
   if (
     nav === 'overview' ||
     nav === 'projects' ||
@@ -595,21 +600,34 @@ function ProfileSection({ displayName, email, daysWithMomo, loginAtMs }) {
  * }} props
  */
 export default function MyPageWindowScreen({ authSession, authReady }) {
-  const [activeNav, setActiveNav] = useState(readInitialMypageNav);
+  const [activeNav, setActiveNav] = useState(() => readInitialMypageNav(false));
   const [projectsEntryCardId, setProjectsEntryCardId] = useState(
     /** @type {string | null} */ (null),
   );
-  const resolvedNav = resolveMypageNav(activeNav);
+  const [badgeRev, setBadgeRev] = useState(0);
+  const { profileRev, profileSyncDone, bumpProfileRev } = useUserProfileSync(
+    authSession?.uid ?? '',
+  );
+
+  const quotaEmail = useMemo(
+    () => resolveQuotaAuthEmail(authSession),
+    [authSession],
+  );
+  const isAdmin = isBetaQuotaAdminExempt(
+    authSession?.uid ?? '',
+    quotaEmail,
+  );
+  const resolvedNav = resolveMypageNav(activeNav, isAdmin);
+  const sidebarNav = useMemo(() => {
+    if (!isAdmin) return SIDEBAR_NAV;
+    return [...SIDEBAR_NAV, { id: 'paid-admin', label: '유료 회원 등록' }];
+  }, [isAdmin]);
 
   useEffect(() => {
     if (activeNav !== resolvedNav) {
       setActiveNav(resolvedNav);
     }
   }, [activeNav, resolvedNav]);
-  const [badgeRev, setBadgeRev] = useState(0);
-  const { profileRev, profileSyncDone } = useUserProfileSync(
-    authSession?.uid ?? '',
-  );
 
   const profile = authSession?.uid ? getUserProfile(authSession.uid) : null;
   const displayName = useMemo(() => {
@@ -660,10 +678,6 @@ export default function MyPageWindowScreen({ authSession, authReady }) {
     [authSession?.lastSignInMs, authSession?.createdAtMs, profile?.completedAt],
   );
 
-  const quotaEmail = useMemo(
-    () => resolveQuotaAuthEmail(authSession),
-    [authSession],
-  );
   const userPlan = useMemo(() => {
     void profileRev;
     return getLocalUserPlan(authSession?.uid ?? '');
@@ -791,11 +805,11 @@ export default function MyPageWindowScreen({ authSession, authReady }) {
         </div>
         <nav aria-label="계정 메뉴">
           <ul className="mypage__nav">
-            {SIDEBAR_NAV.map((item) => (
+            {sidebarNav.map((item) => (
               <li key={item.id}>
                 <button
                   type="button"
-                  className={`mypage__nav-btn${resolvedNav === resolveMypageNav(item.id) ? ' mypage__nav-btn--active' : ''}${item.disabled ? ' mypage__nav-btn--disabled' : ''}`}
+                  className={`mypage__nav-btn${resolvedNav === resolveMypageNav(item.id, isAdmin) ? ' mypage__nav-btn--active' : ''}${item.disabled ? ' mypage__nav-btn--disabled' : ''}`}
                   onClick={() => {
                     if (item.disabled) return;
                     if (item.id === 'projects') {
@@ -852,6 +866,11 @@ export default function MyPageWindowScreen({ authSession, authReady }) {
             email={email}
             daysWithMomo={daysWithMomo}
             loginAtMs={loginAtMs}
+          />
+        ) : resolvedNav === 'paid-admin' && isAdmin ? (
+          <PaidPlanAdminSection
+            authUid={authSession.uid}
+            onSelfPlanChanged={bumpProfileRev}
           />
         ) : resolvedNav === 'badges' ? (
           <BadgeCollectionSection

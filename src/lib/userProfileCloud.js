@@ -77,20 +77,36 @@ export async function saveUserProfileCloud(uid, profile) {
   if (!nickname) return false;
 
   const existing = await getDoc(criteriaDocRef(id));
+  const prevProfile = existing.exists()
+    ? (existing.data()?.profile ?? {})
+    : {};
   const existingPlan = existing.exists()
-    ? normalizeUserPlan(existing.data()?.profile?.plan)
+    ? normalizeUserPlan(prevProfile.plan)
     : 'free';
+
+  /** @type {Record<string, unknown>} */
+  const nextProfile = {
+    nickname,
+    onboardingComplete: Boolean(profile.onboardingComplete),
+    userConfirmed: Boolean(profile.userConfirmed),
+    completedAt: profile.completedAt ?? Date.now(),
+    // plan은 Callable만 변경 — 클라에서는 기존 값 유지(또는 생성 시 free)
+    plan: existingPlan,
+  };
+  if (typeof prevProfile.paidUpdatedAt === 'number') {
+    nextProfile.paidUpdatedAt = prevProfile.paidUpdatedAt;
+  }
+  if (
+    typeof prevProfile.paidUpdatedBy === 'string' &&
+    prevProfile.paidUpdatedBy.trim()
+  ) {
+    nextProfile.paidUpdatedBy = prevProfile.paidUpdatedBy.trim();
+  }
 
   await setDoc(
     criteriaDocRef(id),
     {
-      profile: {
-        nickname,
-        onboardingComplete: Boolean(profile.onboardingComplete),
-        userConfirmed: Boolean(profile.userConfirmed),
-        completedAt: profile.completedAt ?? Date.now(),
-        plan: existingPlan,
-      },
+      profile: nextProfile,
       updatedAt: serverTimestamp(),
     },
     { merge: true },
