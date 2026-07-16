@@ -64,9 +64,10 @@ describe('planSaveCriteriaPreset', () => {
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.targetId).toBe('copy');
-    expect(result.next.find((s) => s.id === 'copy').builtInEnabled).toEqual({
-      rule1: true,
-    });
+    const updated = result.next.find((s) => s.id === 'copy');
+    expect(updated?.name).toBe('A(1)');
+    expect(updated?.savedAt).toBe(baseParams.savedAt);
+    expect(result.next.find((s) => s.id === 'orig')?.savedAt).toBe('2026-07-11');
     expect(result.intent).toEqual({});
   });
 
