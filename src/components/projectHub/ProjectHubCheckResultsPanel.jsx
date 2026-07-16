@@ -27,7 +27,7 @@ export default function ProjectHubCheckResultsPanel({
   const [items, setItems] = useState(
     /** @type {Array<{ id: string } & Record<string, unknown>>} */ ([]),
   );
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [zipBusy, setZipBusy] = useState(false);
 
   const refresh = useCallback(async () => {
@@ -36,6 +36,7 @@ export default function ProjectHubCheckResultsPanel({
     if (!id || !pid) {
       setPaid(false);
       setItems([]);
+      setLoading(false);
       return;
     }
     setLoading(true);
@@ -51,6 +52,7 @@ export default function ProjectHubCheckResultsPanel({
       setItems(list);
     } catch (err) {
       console.error('검수 결과 목록 로드 실패:', err);
+      setPaid(false);
       setItems([]);
     } finally {
       setLoading(false);
@@ -61,15 +63,29 @@ export default function ProjectHubCheckResultsPanel({
     void refresh();
   }, [refresh]);
 
+  // 검수 직후 허브로 오면 최신 스냅숏을 다시 읽는다
+  useEffect(() => {
+    const onFocus = () => {
+      void refresh();
+    };
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, [refresh]);
+
   const handleZipDownload = async () => {
-    if (paid === false) {
-      await showAppAlert('유료회원 전용입니다');
+    if (loading || paid === null) {
+      await showAppAlert('저장된 결과를 확인하는 중입니다. 잠시 후 다시 눌러 주세요.');
       return;
     }
-    if (!paid) return;
+    if (paid === false) {
+      await showAppAlert(
+        '유료회원 전용입니다.\n검수 결과 자동 보관은 유료(plan: paid) 계정에서만 됩니다.',
+      );
+      return;
+    }
     if (items.length === 0) {
       await showAppAlert(
-        '저장된 검수 결과가 없습니다.\n작업대에서 검수를 완료하면 여기에 보관됩니다.',
+        '저장된 검수 결과가 없습니다.\n작업대에서 「기준 검수」를 완료하면 여기에 보관됩니다.\n(기준만 등록·수정한 이력과는 다릅니다.)',
       );
       return;
     }
@@ -113,6 +129,15 @@ export default function ProjectHubCheckResultsPanel({
     }
   };
 
+  const statusDesc =
+    loading || paid === null
+      ? '저장된 결과를 확인하는 중…'
+      : paid === false
+        ? '유료회원 전용입니다. 작업대에서 바로 받는 「검수 결과 다운받기」는 그대로 이용할 수 있습니다.'
+        : items.length === 0
+          ? '아직 저장된 검수 결과가 없습니다. 작업대에서 「기준 검수」를 완료해야 보관됩니다. (아래 작업 이력의 기준 등록과는 다릅니다.)'
+          : null;
+
   return (
     <div className="project-hub-settings__card project-hub-settings__card--check-results">
       <div className="project-hub-settings__row project-hub-settings__row--readonly project-hub-settings__row--check-results-head">
@@ -126,26 +151,16 @@ export default function ProjectHubCheckResultsPanel({
         <button
           type="button"
           className="project-hub-settings__secondary-btn project-hub-settings__secondary-btn--check-results"
-          disabled={zipBusy || paid === null || loading}
+          disabled={zipBusy}
+          aria-busy={zipBusy || loading}
           onClick={() => void handleZipDownload()}
         >
           {zipBusy ? '받는 중…' : '검수 결과 다운받기'}
         </button>
       </div>
 
-      {paid === false ? (
-        <p className="project-hub-settings__row-desc">유료회원 전용입니다</p>
-      ) : null}
-
-      {paid && loading ? (
-        <p className="project-hub-settings__row-desc">불러오는 중…</p>
-      ) : null}
-
-      {paid && !loading && items.length === 0 ? (
-        <p className="project-hub-settings__row-desc">
-          아직 저장된 검수 결과가 없습니다. 작업대에서 검수를 완료하면 여기에
-          나타납니다.
-        </p>
+      {statusDesc ? (
+        <p className="project-hub-settings__row-desc">{statusDesc}</p>
       ) : null}
 
       {paid && !loading && items.length > 0 ? (
