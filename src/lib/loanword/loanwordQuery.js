@@ -2,6 +2,7 @@
  * 외래어 표기 질의 — 영어 변환 + 한글/오표기 조회 + 원어(한자·가나·키릴 등) 조회.
  */
 import { convertPhraseAsync, convertWordAsync } from './convertLoanword.js';
+import { convertKanaPhrase, isKanaQuery } from './kanaTranscribe.js';
 import { isKornormsConfigured, searchKornormsExamples } from './kornormsApi.js';
 import { lookupYongrye } from './yongryeDictionary.js';
 
@@ -405,6 +406,8 @@ export async function resolveHangulLoanwordQuery(hangul, yongrye, signal) {
 
 /**
  * 원어(한자·가나·키릴·아랍 등) 질의 — 어문회 원어(srclang_mark) 검색.
+ * 가나로만 이루어진 질의는 등재가 없을 때 표 4 규정 엔진의 추정 표기를 붙인다.
+ * (한자는 읽기를 알 수 없어 엔진 대상이 아님)
  * @param {string} raw
  * @param {Record<string, Array>} _yongrye
  * @param {AbortSignal} [signal]
@@ -449,13 +452,16 @@ export async function resolveSourceLangLoanwordQuery(raw, _yongrye, signal) {
     }
   }
 
+  // 가나 질의 — 규정 엔진 추정 표기 (등재가 없을 때 UI에 표시됨)
+  const kanaEngine = isKanaQuery(q) ? convertKanaPhrase(q) : null;
+
   return {
     mode: 'source',
     word: q,
     official: items,
     matchKind: items.length ? 'exact' : 'other',
     source,
-    engine: null,
+    engine: kanaEngine?.found ? kanaEngine : null,
     phrase: false,
   };
 }

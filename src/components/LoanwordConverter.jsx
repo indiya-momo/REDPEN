@@ -27,7 +27,8 @@ import { loadYongryeDictionary } from '../lib/loanword/yongryeDictionary.js';
 import { preloadEspeak, espeakToIpa } from '../lib/loanword/espeakG2p.js';
 import ConsistencyHintExample from './consistency/ConsistencyHintExample.jsx';
 
-/** 용례집 미등재·규정 적용 결과 뱃지 — UI 통일 라벨 */
+/** 용례·추정 표기 뱃지 — UI 통일 라벨 */
+const YONGRYE_BADGE_LABEL = '용례';
 const EST_BADGE_LABEL = '추정 표기';
 const PARTIAL_EST_BADGE_LABEL = '일부 추정 표기';
 
@@ -60,11 +61,17 @@ const styles = {
     padding: '8px 10px',
     marginTop: 6,
     background: '#fff',
+    display: 'flex',
+    flexWrap: 'wrap',
+    alignItems: 'baseline',
   },
   /** 변환 결과 한글 — 검색창 입력 글씨 시작(좌 패딩 10px)과 맞춤 */
   hangulResult: {
     marginTop: 6,
     padding: '2px 0 2px 10px',
+    display: 'flex',
+    flexWrap: 'wrap',
+    alignItems: 'baseline',
   },
   hangul: { fontSize: 'calc(18px * 0.9)', fontWeight: 700 },
   badge: {
@@ -103,13 +110,19 @@ const styles = {
     verticalAlign: 'baseline',
   },
   meta: { color: '#666', marginLeft: 8, fontSize: 12 },
-  meaning: { color: '#555', fontSize: 12, margin: '4px 0 0', lineHeight: 1.5 },
-  traceBlock: { marginTop: 6 },
+  meaning: {
+    color: '#555',
+    fontSize: 12,
+    margin: '4px 0 0',
+    lineHeight: 1.5,
+    flexBasis: '100%',
+    width: '100%',
+  },
   traceToggle: {
     display: 'inline-flex',
     alignItems: 'center',
     gap: 6,
-    margin: 0,
+    margin: '0 0 0 8px',
     padding: 0,
     border: 'none',
     background: 'transparent',
@@ -119,7 +132,14 @@ const styles = {
     fontWeight: 400,
     lineHeight: 1.4,
   },
-  traceList: { margin: '6px 0 0', paddingLeft: 18, color: '#444', fontSize: 12 },
+  traceList: {
+    margin: '6px 0 0',
+    paddingLeft: 18,
+    color: '#444',
+    fontSize: 12,
+    flexBasis: '100%',
+    width: '100%',
+  },
   noteAbove: {
     color: '#333',
     fontSize: 12,
@@ -158,27 +178,30 @@ function ApplicationTrace({ result, estimated }) {
   const [traceOpen, setTraceOpen] = useState(false);
   if (!result) return null;
   return (
-    <div style={styles.traceBlock}>
+    <>
       <button
         type="button"
         style={styles.traceToggle}
         aria-expanded={traceOpen}
         onClick={() => setTraceOpen((v) => !v)}
       >
-        적용 근거 (외래어 표기법)
+        ｢외래어 표기법｣ 적용 근거
       </button>
       {traceOpen ? (
         <ul style={styles.traceList}>
-          <li>용례집에 없어 외래어 표기법 규정으로 변환했습니다.</li>
           {estimated ? (
-            <li>발음 사전에 없는 단어라 철자·음성 엔진에서 발음을 추정했습니다 (근사치).</li>
+            <li>
+              발음 사전에 없는 단어라 철자·음성 엔진에서 발음을 추정했습니다
+              (근사치).
+            </li>
           ) : null}
           {result.trace
             .filter((e) => e.rule)
             .map((e, i) => (
               // eslint-disable-next-line react/no-array-index-key
               <li key={i}>
-                {e.ph} → {e.out || '(음절 결합)'} — <strong>{e.rule.id}</strong> {e.rule.text}
+                {e.ph} → {e.out || '(음절 결합)'}{' '}
+                <strong>{e.rule.id}</strong> {e.rule.text}
               </li>
             ))}
           {result.notes.map((n) => (
@@ -186,7 +209,7 @@ function ApplicationTrace({ result, estimated }) {
           ))}
         </ul>
       ) : null}
-    </div>
+    </>
   );
 }
 
@@ -246,7 +269,11 @@ export default function LoanwordConverter({
       } else if (queryNeedsSourceLookup(word)) {
         const next = await resolveSourceLangLoanwordQuery(word, yongrye);
         setOutcome(next);
-        if (!next.official.length && !isKornormsConfigured()) {
+        if (
+          !next.official.length &&
+          !next.engine?.found &&
+          !isKornormsConfigured()
+        ) {
           setError(
             '원어 검색은 어문 규범 API 키가 필요합니다 (.env.local의 VITE_KORNORMS_SERVICE_KEY)',
           );
@@ -324,15 +351,15 @@ export default function LoanwordConverter({
       </summary>
 
       <p className="hint consistency-hint-block" style={styles.noteAbove}>
-        {'｢외래어 표기법｣ '}
-        <span style={styles.badge}>용례집</span>
-        {' 검색, 미등재시 영어 한정 '}
+        {'국립국어원 다국어 '}
+        <span style={styles.badge}>{YONGRYE_BADGE_LABEL}</span>
+        {' 검색, 미등재 영어·일본어(가나)는 '}
         <span style={styles.estBadge}>{EST_BADGE_LABEL}</span>
         {'를 제공합니다'}
         <br />
         <ConsistencyHintExample>
-          &apos;孫正義&apos; 또는 &apos;そん まさよし&apos; →
-          &apos;손 마사요시&apos; , 가디건 → 카디건
+          &apos;そん まさよし&apos; → &apos;손 마사요시&apos; , 가디건 →
+          카디건
         </ConsistencyHintExample>
       </p>
 
@@ -392,7 +419,9 @@ export default function LoanwordConverter({
           {groupedOfficial.map((entry) => (
             <div key={entry.h} style={styles.hangulResult}>
               <span style={styles.hangul}>{entry.h}</span>
-              <span style={{ ...styles.badge, marginLeft: 6 }}>용례집</span>
+              <span style={{ ...styles.badge, marginLeft: 6 }}>
+                {YONGRYE_BADGE_LABEL}
+              </span>
               {entry.cats.length ? (
                 <span style={styles.meta}>{entry.cats.join(' · ')}</span>
               ) : null}
@@ -424,7 +453,9 @@ export default function LoanwordConverter({
             <EngineResult
               key={r.arpabet}
               result={r}
-              estimated={outcome.engine.estimated}
+              estimated={
+                outcome.engine.estimated && outcome.mode !== 'source'
+              }
               label={outcome.engine.results.length > 1 ? `발음 ${idx + 1}` : ''}
             />
           ))}
@@ -452,7 +483,9 @@ export default function LoanwordConverter({
               <span style={{ fontWeight: 600 }}>{w.word}</span>
               <span style={styles.meta}>→ {w.hangul}</span>
               {w.source === 'yongrye' ? (
-                <span style={{ ...styles.badge, marginLeft: 6 }}>용례집</span>
+                <span style={{ ...styles.badge, marginLeft: 6 }}>
+                {YONGRYE_BADGE_LABEL}
+              </span>
               ) : null}
               {w.source === 'dict' || w.source === 'g2p' ? (
                 <span style={{ ...styles.estBadge, marginLeft: 6 }}>
