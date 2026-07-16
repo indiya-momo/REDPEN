@@ -5,6 +5,12 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useProjectHubActions } from '../../hooks/useProjectHubActions.js';
 import { useProjectHubLibrary } from '../../hooks/useProjectHubLibrary.js';
 import { useProjectTagFilter } from '../../hooks/useProjectTagFilter.js';
+import { showAppAlert } from '../../lib/appDialog.js';
+import {
+  isPaidPlan,
+  PAID_SHARE_ONLY_MESSAGE,
+} from '../../lib/userPlan.js';
+import { getLocalUserPlan } from '../../lib/userProfileStorage.js';
 import SharePreviewModal from './SharePreviewModal.jsx';
 import './project-library.css';
 import ProjectHubSettingsPanel from '../ProjectHubSettingsPanel.jsx';
@@ -61,6 +67,21 @@ export default function ProjectHubEditorPage({
   const [sharePreviewCardId, setSharePreviewCardId] = useState(
     /** @type {string | null} */ (null),
   );
+  const openSharePreview = useCallback(
+    (cardId) => {
+      if (cardId == null) {
+        setSharePreviewCardId(null);
+        return;
+      }
+      if (!isPaidPlan({ plan: getLocalUserPlan(uid) })) {
+        void showAppAlert(PAID_SHARE_ONLY_MESSAGE);
+        return;
+      }
+      setSharePreviewCardId(cardId);
+    },
+    [uid],
+  );
+
 
   useEffect(() => {
     if (loading) return;
@@ -157,7 +178,7 @@ export default function ProjectHubEditorPage({
           selectedCardId={selectedCardId}
           onSelectCard={setSelectedCardId}
           sharePreviewCardId={sharePreviewCardId}
-          onSharePreviewCardIdChange={setSharePreviewCardId}
+          onSharePreviewCardIdChange={openSharePreview}
         />
 
         {!loading && selectedCard ? (
@@ -177,7 +198,7 @@ export default function ProjectHubEditorPage({
             onDelete={() =>
               void actions.handleDelete(selectedCard.id, selectedCard.title)
             }
-            onSharePreview={() => setSharePreviewCardId(selectedCard.id)}
+            onSharePreview={() => openSharePreview(selectedCard.id)}
           />
         ) : null}
       </div>
