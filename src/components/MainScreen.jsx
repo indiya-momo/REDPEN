@@ -7,6 +7,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ChevronDown,
   FilePlus,
+  FolderOpen,
   House,
   Loader2,
   LogOut,
@@ -282,7 +283,7 @@ const WORK_GUIDE_2_ALIGN_CHAIN = [
  *   ) => void,
  *   onOpenWelcome: () => void,
  *   onLogout: () => void | Promise<void>,
- *   onOpenMyPageWindow: () => void,
+ *   onOpenMyPageWindow: (section?: string) => void,
  *   onOpenGuideWindow: () => void,
  *   initialWorkTab?: 'spelling' | 'consistency',
  *   feedbackThankYouOpen?: boolean,
@@ -2016,6 +2017,15 @@ export default function MainScreen({
                   disabled={!activeRuleSet?.savedAt}
                 >
                   <Trash2 size={16} aria-hidden />
+                </button>
+                <button
+                  type="button"
+                  className="panel-left__open-projects"
+                  onClick={() => onOpenMyPageWindow('projects')}
+                  aria-label="프로젝트 관리"
+                  title="프로젝트 관리"
+                >
+                  <FolderOpen size={16} aria-hidden />
                 </button>
               </div>
             </div>
