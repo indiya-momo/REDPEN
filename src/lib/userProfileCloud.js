@@ -6,6 +6,7 @@ import {
   setDoc,
 } from 'firebase/firestore';
 import { firebaseApp, isFirebaseAuthConfigured } from './firebaseAuth.js';
+import { normalizeUserPlan } from './userPlan.js';
 
 const COLLECTION = 'userCriteria';
 
@@ -28,6 +29,7 @@ function criteriaDocRef(uid) {
  *   onboardingComplete: boolean,
  *   userConfirmed: boolean,
  *   completedAt: number,
+ *   plan: 'free' | 'paid',
  * } | null}
  */
 function normalizeCloudProfile(raw) {
@@ -42,6 +44,7 @@ function normalizeCloudProfile(raw) {
       typeof raw.completedAt === 'number' && Number.isFinite(raw.completedAt)
         ? raw.completedAt
         : 0,
+    plan: normalizeUserPlan(/** @type {{ plan?: unknown }} */ (raw).plan),
   };
 }
 
@@ -73,6 +76,11 @@ export async function saveUserProfileCloud(uid, profile) {
   const nickname = String(profile.nickname ?? '').trim();
   if (!nickname) return false;
 
+  const existing = await getDoc(criteriaDocRef(id));
+  const existingPlan = existing.exists()
+    ? normalizeUserPlan(existing.data()?.profile?.plan)
+    : 'free';
+
   await setDoc(
     criteriaDocRef(id),
     {
@@ -81,6 +89,7 @@ export async function saveUserProfileCloud(uid, profile) {
         onboardingComplete: Boolean(profile.onboardingComplete),
         userConfirmed: Boolean(profile.userConfirmed),
         completedAt: profile.completedAt ?? Date.now(),
+        plan: existingPlan,
       },
       updatedAt: serverTimestamp(),
     },
