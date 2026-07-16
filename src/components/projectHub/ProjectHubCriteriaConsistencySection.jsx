@@ -55,6 +55,18 @@ export default function ProjectHubCriteriaConsistencySection({
       >
         <div className="project-hub-settings__criteria-head">
           <h3 className="project-hub-settings__criteria-title">표기 통일</h3>
+          <div className="project-hub-settings__criteria-actions">
+            <button
+              type="button"
+              className="sheet-card__btn sheet-card__btn--secondary project-hub-settings__criteria-link"
+              onClick={onStartWork}
+            >
+              검수 화면에서 편집
+            </button>
+            <p className="project-hub-settings__criteria-lead">
+              표기 통일 항목은 검수 화면에서 편집합니다
+            </p>
+          </div>
         </div>
         <ul className="project-hub-settings__criteria-groups">
           {groups.map((group) => (
@@ -100,16 +112,6 @@ export default function ProjectHubCriteriaConsistencySection({
             </li>
           ))}
         </ul>
-        <p className="project-hub-settings__criteria-lead">
-          표기 통일 검수 항목은 검수 화면에서 편집합니다.
-        </p>
-        <button
-          type="button"
-          className="sheet-card__btn sheet-card__btn--secondary project-hub-settings__criteria-link"
-          onClick={onStartWork}
-        >
-          검수 화면에서 편집
-        </button>
       </section>
     </div>
   );

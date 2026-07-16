@@ -55,17 +55,19 @@ export default function ProjectHubCriteriaSpellingSection({
               tone="spelling-builtin"
             />
           </div>
+          <div className="project-hub-settings__criteria-actions">
+            <button
+              type="button"
+              className="sheet-card__btn sheet-card__btn--secondary project-hub-settings__criteria-link"
+              onClick={onStartWork}
+            >
+              검수 화면에서 편집
+            </button>
+            <p className="project-hub-settings__criteria-lead">
+              맞춤법·띄어쓰기 항목은 검수 화면에서 편집합니다
+            </p>
+          </div>
         </div>
-        <p className="project-hub-settings__criteria-lead">
-          맞춤법·띄어쓰기 검수 항목은 검수 화면에서 편집합니다.
-        </p>
-        <button
-          type="button"
-          className="sheet-card__btn sheet-card__btn--secondary project-hub-settings__criteria-link"
-          onClick={onStartWork}
-        >
-          검수 화면에서 편집
-        </button>
       </section>
     </div>
   );

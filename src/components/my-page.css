@@ -4,7 +4,7 @@
   --mypage-font: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
   --mypage-sidebar-width: 15.5rem;
   --mypage-section-gap: 1.5rem;
-  --mypage-card-radius: var(--radius-ui-lg);
+  --mypage-card-radius: 0;
   --mypage-card-border: 1px solid var(--color-border);
   --mypage-card-shadow: 0 2px 10px rgba(58, 42, 18, 0.05);
   --mypage-card-padding: 1.1rem 1.25rem 1.15rem;
@@ -77,7 +77,7 @@
   gap: 0.3rem;
   padding: 0.35rem 0.55rem;
   border: 1px solid var(--color-border-strong);
-  border-radius: var(--radius-ui-sm);
+  border-radius: 0;
   background: var(--color-surface);
   color: var(--color-text-muted);
   font: inherit;
@@ -231,7 +231,7 @@
 
 .mypage__profile-note--uid {
   padding: 0.65rem 0.75rem;
-  border-radius: var(--radius-ui-sm);
+  border-radius: 0;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
 }
@@ -255,7 +255,7 @@
   width: 100%;
   padding: 0.55rem 0.35rem;
   border: none;
-  border-radius: var(--radius-ui-sm);
+  border-radius: 0;
   background: transparent;
   color: var(--color-text-secondary);
   font-family: var(--mypage-heading-font);
@@ -367,7 +367,7 @@
   margin: 0;
   padding: 0.35rem 0.65rem;
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-ui);
+  border-radius: 0;
   background: var(--color-surface);
   font-size: 0.78rem;
   color: var(--color-text-muted);
@@ -388,7 +388,7 @@
 .mypage__project-shelf-more-btn {
   appearance: none;
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-ui);
+  border-radius: 0;
   background: var(--color-surface);
   color: var(--color-text);
   font-size: 0.78rem;
@@ -472,7 +472,7 @@
 
 .mypage__faq-item {
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-ui);
+  border-radius: 0;
   background: var(--color-surface);
   overflow: hidden;
 }
@@ -556,7 +556,7 @@
   gap: 0.35rem;
   padding: 0.45rem 0.85rem;
   border: 1px solid var(--color-border-strong);
-  border-radius: var(--radius-ui);
+  border-radius: 0;
   background: var(--color-surface);
   color: var(--color-text);
   font: inherit;
@@ -603,7 +603,7 @@
 
 .mypage__balance {
   padding: 1.35rem 1.5rem;
-  border-radius: var(--radius-ui-lg);
+  border-radius: 0;
   background: linear-gradient(
     128deg,
     #a86b45 0%,
@@ -626,7 +626,7 @@
 .mypage__card {
   padding: var(--mypage-card-padding);
   border: var(--mypage-card-border);
-  border-radius: var(--mypage-card-radius);
+  border-radius: 0;
   background: var(--color-surface-overlay);
   box-shadow: var(--mypage-card-shadow);
 }
@@ -749,7 +749,7 @@
 .mypage__section-placeholder {
   padding: 2rem 1.25rem;
   border: 1px dashed var(--color-border-strong);
-  border-radius: var(--radius-ui-lg);
+  border-radius: 0;
   background: var(--color-surface-overlay);
   text-align: center;
 }
@@ -780,7 +780,7 @@
   max-width: 22rem;
   padding: 1.5rem;
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-ui-lg);
+  border-radius: 0;
   background: var(--color-surface-overlay);
   text-align: center;
 }
@@ -969,7 +969,7 @@
   margin-top: 0;
   padding: var(--mypage-card-padding);
   border: var(--mypage-card-border);
-  border-radius: var(--mypage-card-radius);
+  border-radius: 0;
   background: var(--color-surface-overlay);
   box-shadow: var(--mypage-card-shadow);
 }
@@ -1066,7 +1066,7 @@
 .mypage-badge-card__image,
 .mypage-badge-card__placeholder {
   display: block;
-  border-radius: var(--radius-ui-md, 10px);
+  border-radius: 0;
   box-sizing: border-box;
 }
 

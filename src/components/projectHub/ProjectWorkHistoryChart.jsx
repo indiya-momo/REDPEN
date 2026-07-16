@@ -3,7 +3,6 @@
  */
 import {
   buildDisplayWorkHistory,
-  workHistoryDateKeyFromIso,
   WORK_CHART_MIN_SESSIONS_FOR_LINE,
 } from '../../lib/projectWorkHistory.js';
 import {
@@ -20,34 +19,28 @@ import {
 import {
   buildSparklinePath,
   sparklinePoints,
+  sparklineZeroY,
   WORK_HISTORY_SPARKLINE_HEIGHT,
   WORK_HISTORY_SPARKLINE_WIDTH,
 } from '../../presentation/workHistorySparkline.js';
 
 const SPARK_W = WORK_HISTORY_SPARKLINE_WIDTH;
 const SPARK_H = WORK_HISTORY_SPARKLINE_HEIGHT;
+const SPARK_ZERO_Y = sparklineZeroY(SPARK_H);
 
 /** @type {ReadonlySet<'find' | 'unify'>} */
 const TALL_CRITERIA_GROUP_IDS = new Set(['find', 'unify']);
 
 /**
- * 스파크라인 눈금 — 날짜. 같은 날 여러 검수면 `M.D N회`.
+ * 스파크라인 눈금 — `M.D HH:MM` (로컬 24시).
  * @param {string} iso
- * @param {import('../../lib/projectWorkHistory.js').WorkHistoryEntry[]} [sessions]
- * @param {number} [index]
  */
-function formatSessionAxisTick(iso, sessions = [], index = 0) {
+function formatSessionAxisTick(iso) {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return '';
-  const datePart = `${d.getMonth() + 1}.${d.getDate()}`;
-  const dayKey = workHistoryDateKeyFromIso(iso);
-  if (!dayKey || sessions.length < 2) return datePart;
-  const sameDay = sessions
-    .map((entry, i) => ({ entry, i }))
-    .filter(({ entry }) => workHistoryDateKeyFromIso(entry.at) === dayKey);
-  if (sameDay.length <= 1) return datePart;
-  const order = sameDay.findIndex(({ i }) => i === index) + 1;
-  return `${datePart} ${order}회`;
+  const hh = String(d.getHours()).padStart(2, '0');
+  const mm = String(d.getMinutes()).padStart(2, '0');
+  return `${d.getMonth() + 1}.${d.getDate()} ${hh}:${mm}`;
 }
 
 /**
@@ -100,8 +93,8 @@ function SparklineRow({
           <line
             x1={0}
             x2={SPARK_W}
-            y1={SPARK_H / 2}
-            y2={SPARK_H / 2}
+            y1={SPARK_ZERO_Y}
+            y2={SPARK_ZERO_Y}
             className="work-history-panel__spark-grid"
           />
           {sessionCount >= WORK_CHART_MIN_SESSIONS_FOR_LINE ? (
@@ -111,7 +104,7 @@ function SparklineRow({
         <div className="work-history-panel__spark-dots" aria-hidden="true">
           {points.map((point, index) => {
             const atLabel = sessionAts[index]
-              ? formatSessionAxisTick(sessionAts[index], sessions, index)
+              ? formatSessionAxisTick(sessionAts[index])
               : `${index + 1}회차`;
             return (
               <span
@@ -167,9 +160,9 @@ function SessionDateAxis({ sessions }) {
               key={entry.at}
               className="work-history-panel__session-date-tick"
               style={{ left: `${leftPct}%` }}
-              title={`${index + 1}회차 ${formatSessionAxisTick(entry.at, sessions, index)}`}
+              title={`${index + 1}회차 ${formatSessionAxisTick(entry.at)}`}
             >
-              {formatSessionAxisTick(entry.at, sessions, index)}
+              {formatSessionAxisTick(entry.at)}
             </span>
           );
         })}
@@ -527,69 +520,57 @@ export default function ProjectWorkHistoryChart({
   const hasBonBojoHistory = chartSessions.some(
     (entry) => typeof entry.bonBojo === 'number',
   );
-  const hasSpellingHistory = chartSessions.some(
-    (entry) =>
-      typeof entry.spelling === 'number' ||
-      typeof entry.editorReview === 'number' ||
-      typeof entry.loanword === 'number',
-  );
 
-  if (!sessionCount) {
-    return (
-      <div className="project-hub-settings__card work-history-panel">
-        <h3 className="work-history-panel__title">검수 진행 이력</h3>
-        <p className="project-hub-settings__row-desc work-history-panel__empty">
-          검수를 진행하면 항목별 추이가 여기에 표시됩니다.
-        </p>
-        <ConsistencyCriteriaBlock
-          criteria={criteria}
-          ledger={ledger}
-        />
-      </div>
-    );
-  }
+  // 세션이 없어도 맞춤법 그래프 자리(라벨·플롯)는 항상 둔다
+  const spellingEditorValues = sessionCount ? editorReviewValues : [];
+  const spellingBuiltinValues = sessionCount ? builtinSpellingValues : [];
+  const spellingLoanwordValues = sessionCount ? loanwordValues : [];
 
   return (
     <div className="project-hub-settings__card work-history-panel">
       <h3 className="work-history-panel__title">검수 진행 이력</h3>
 
-      {hasSpellingHistory ? (
-        <section className="work-history-panel__block work-history-panel__block--spelling">
-          <h4 className="work-history-panel__block-title">맞춤법</h4>
-          <div className="work-history-panel__block-body">
-            <SparklineRow
-              label={EDITOR_REVIEW_BADGE_LABEL}
-              subLabel
-              values={editorReviewValues}
-              sessionAts={sessionAts}
-              sessions={chartSessions}
-              sessionCount={sessionCount}
-              colorClass="work-history-panel__spark-row--spelling"
-              muted
-            />
-            <SparklineRow
-              label="맞춤법"
-              subLabel
-              values={builtinSpellingValues}
-              sessionAts={sessionAts}
-              sessions={chartSessions}
-              sessionCount={sessionCount}
-              colorClass="work-history-panel__spark-row--spelling"
-            />
-            <SparklineRow
-              label={LOANWORD_FEATURE_LABEL}
-              subLabel
-              values={loanwordValues}
-              sessionAts={sessionAts}
-              sessions={chartSessions}
-              sessionCount={sessionCount}
-              colorClass="work-history-panel__spark-row--spelling"
-              muted
-            />
-            <SessionDateAxis sessions={chartSessions} />
-          </div>
-        </section>
+      {!sessionCount ? (
+        <p className="project-hub-settings__row-desc work-history-panel__empty">
+          검수를 진행하면 항목별 추이가 여기에 표시됩니다.
+        </p>
       ) : null}
+
+      <section className="work-history-panel__block work-history-panel__block--spelling">
+        <h4 className="work-history-panel__block-title">맞춤법</h4>
+        <div className="work-history-panel__block-body">
+          <SparklineRow
+            label={EDITOR_REVIEW_BADGE_LABEL}
+            subLabel
+            values={spellingEditorValues}
+            sessionAts={sessionAts}
+            sessions={chartSessions}
+            sessionCount={sessionCount}
+            colorClass="work-history-panel__spark-row--spelling"
+            muted
+          />
+          <SparklineRow
+            label="맞춤법"
+            subLabel
+            values={spellingBuiltinValues}
+            sessionAts={sessionAts}
+            sessions={chartSessions}
+            sessionCount={sessionCount}
+            colorClass="work-history-panel__spark-row--spelling"
+          />
+          <SparklineRow
+            label={LOANWORD_FEATURE_LABEL}
+            subLabel
+            values={spellingLoanwordValues}
+            sessionAts={sessionAts}
+            sessions={chartSessions}
+            sessionCount={sessionCount}
+            colorClass="work-history-panel__spark-row--spelling"
+            muted
+          />
+          {sessionCount ? <SessionDateAxis sessions={chartSessions} /> : null}
+        </div>
+      </section>
 
       <ConsistencyCriteriaBlock
         criteria={criteria}
