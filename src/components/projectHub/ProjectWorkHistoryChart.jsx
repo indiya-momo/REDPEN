@@ -1,12 +1,15 @@
 /**
- * 작업 이력 — 맞춤법(편집자 검토·맞춤법) · 표기 통일(현재 기준+확정) · 본·보조.
+ * 작업 이력 — 맞춤법(편집자 검토·맞춤법·외래어) · 표기 통일(현재 기준+확정) · 본·보조.
  */
 import {
   buildDisplayWorkHistory,
-  normalizeWorkHistory,
   workHistoryDateKeyFromIso,
   WORK_CHART_MIN_SESSIONS_FOR_LINE,
 } from '../../lib/projectWorkHistory.js';
+import {
+  EDITOR_REVIEW_BADGE_LABEL,
+} from '../../lib/checkResultSummaryFormat.js';
+import { LOANWORD_FEATURE_LABEL } from '../../lib/loanwordCheckRules.js';
 import {
   buildWorkHistoryConsistencyCriteria,
   WORK_HISTORY_CONSISTENCY_GROUPS,
@@ -16,7 +19,6 @@ import {
 } from '../../presentation/workHistoryDecisionLedger.js';
 import {
   buildSparklinePath,
-  hasSpellingSplitHistory,
   sparklinePoints,
   WORK_HISTORY_SPARKLINE_HEIGHT,
   WORK_HISTORY_SPARKLINE_WIDTH,
@@ -500,7 +502,6 @@ export default function ProjectWorkHistoryChart({
   consistencyDecisions = [],
 }) {
   const chartSessions = buildDisplayWorkHistory(history, projectContext) ?? [];
-  const listSessions = normalizeWorkHistory(history) ?? [];
   const sessionCount = chartSessions.length;
   const criteria = buildWorkHistoryConsistencyCriteria(
     customRules,
@@ -508,9 +509,6 @@ export default function ProjectWorkHistoryChart({
   );
   // 실제 확정 대장만 — 등록 항목·projectContext로 가짜 이력을 만들지 않음
   const ledger = buildWorkHistoryDecisionLedger(consistencyDecisions);
-  const spellingSplit = hasSpellingSplitHistory(
-    listSessions.length ? listSessions : chartSessions,
-  );
 
   const editorReviewValues = sparklineSeries(
     chartSessions,
@@ -520,9 +518,9 @@ export default function ProjectWorkHistoryChart({
     chartSessions,
     (entry) => entry.spelling,
   );
-  const legacySpellingValues = sparklineSeries(
+  const loanwordValues = sparklineSeries(
     chartSessions,
-    (entry) => entry.spelling,
+    (entry) => entry.loanword,
   );
   const bonBojoValues = sparklineSeries(chartSessions, (entry) => entry.bonBojo);
   const sessionAts = chartSessions.map((entry) => entry.at);
@@ -532,7 +530,8 @@ export default function ProjectWorkHistoryChart({
   const hasSpellingHistory = chartSessions.some(
     (entry) =>
       typeof entry.spelling === 'number' ||
-      typeof entry.editorReview === 'number',
+      typeof entry.editorReview === 'number' ||
+      typeof entry.loanword === 'number',
   );
 
   if (!sessionCount) {
@@ -554,12 +553,12 @@ export default function ProjectWorkHistoryChart({
     <div className="project-hub-settings__card work-history-panel">
       <h3 className="work-history-panel__title">검수 진행 이력</h3>
 
-      {hasSpellingHistory && spellingSplit ? (
+      {hasSpellingHistory ? (
         <section className="work-history-panel__block work-history-panel__block--spelling">
           <h4 className="work-history-panel__block-title">맞춤법</h4>
           <div className="work-history-panel__block-body">
             <SparklineRow
-              label="편집자 검토 필요"
+              label={EDITOR_REVIEW_BADGE_LABEL}
               subLabel
               values={editorReviewValues}
               sessionAts={sessionAts}
@@ -569,7 +568,7 @@ export default function ProjectWorkHistoryChart({
               muted
             />
             <SparklineRow
-              label="맞춤법 규칙"
+              label="맞춤법"
               subLabel
               values={builtinSpellingValues}
               sessionAts={sessionAts}
@@ -577,22 +576,15 @@ export default function ProjectWorkHistoryChart({
               sessionCount={sessionCount}
               colorClass="work-history-panel__spark-row--spelling"
             />
-            <SessionDateAxis sessions={chartSessions} />
-          </div>
-        </section>
-      ) : null}
-      {hasSpellingHistory && !spellingSplit ? (
-        <section className="work-history-panel__block work-history-panel__block--spelling">
-          <h4 className="work-history-panel__block-title">맞춤법</h4>
-          <div className="work-history-panel__block-body">
             <SparklineRow
-              label="맞춤법 규칙"
-              values={legacySpellingValues}
+              label={LOANWORD_FEATURE_LABEL}
+              subLabel
+              values={loanwordValues}
               sessionAts={sessionAts}
               sessions={chartSessions}
               sessionCount={sessionCount}
               colorClass="work-history-panel__spark-row--spelling"
-              hideLabel
+              muted
             />
             <SessionDateAxis sessions={chartSessions} />
           </div>

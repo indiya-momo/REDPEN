@@ -21,6 +21,20 @@ function relativeDaysLabel(iso, nowMs) {
 }
 
 /**
+ * 로컬 24시간 HH:MM
+ * @param {string} iso
+ * @returns {string | undefined}
+ */
+function formatWorkedClock(iso) {
+  const ms = Date.parse(iso);
+  if (!Number.isFinite(ms)) return undefined;
+  const d = new Date(ms);
+  const hh = String(d.getHours()).padStart(2, '0');
+  const mm = String(d.getMinutes()).padStart(2, '0');
+  return `${hh}:${mm}`;
+}
+
+/**
  * @param {number | undefined} bytes
  * @returns {string | undefined}
  */
@@ -56,8 +70,10 @@ export function buildProjectWorkSummary(ctx, nowMs = Date.now()) {
   if (ctx.lastWorkedAt) {
     const date = formatProjectCardDotDateFromIso(ctx.lastWorkedAt);
     const relative = relativeDaysLabel(ctx.lastWorkedAt, nowMs);
+    const clock = formatWorkedClock(ctx.lastWorkedAt);
     if (date) {
-      lastWorked = relative ? `${date} (${relative})` : date;
+      const dayPart = relative ? `${date} (${relative})` : date;
+      lastWorked = clock ? `${dayPart} ${clock}` : dayPart;
     }
   }
 

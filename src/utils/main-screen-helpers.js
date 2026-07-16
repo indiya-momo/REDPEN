@@ -41,8 +41,11 @@ export function sortSpellingResultsForDisplay(groups, pagesOrByNum) {
   const builtin = [];
   /** @type {GroupedResult[]} */
   const caution = [];
+  /** @type {GroupedResult[]} */
+  const loanword = [];
   for (const g of groups) {
     if (g.category === 'caution') caution.push(g);
+    else if (g.category === 'loanword') loanword.push(g);
     else builtin.push(g);
   }
   const pageByNum =
@@ -52,7 +55,8 @@ export function sortSpellingResultsForDisplay(groups, pagesOrByNum) {
   const cmp = (a, b) => compareGroupsByReadingOrder(a, b, pageByNum);
   builtin.sort(cmp);
   caution.sort(cmp);
-  return [...caution, ...builtin];
+  loanword.sort(cmp);
+  return [...caution, ...builtin, ...loanword];
 }
 
 /**

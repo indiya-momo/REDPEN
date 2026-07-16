@@ -2,15 +2,33 @@ import { buildCautionCheckRules, defaultCautionEnabled } from './cautionRules.js
 import {
   BUILT_IN_GUIDE_RULES,
   BUILT_IN_QUOTA_RULES,
+  LOANWORD_QUOTA_RULES,
+  SPELLING_QUOTA_RULES,
   builtInEnabledFromSheet,
   isBuiltInRuleEnabled,
 } from './builtInRules.js';
 import { MAX_RULES } from './ruleTypes.js';
 
-/** @param {{ builtInEnabled?: Record<string, boolean> }} [input] */
+/** 내장 규칙 전체(맞춤법+외래어) 활성 수 — 한도 계산용 @param {{ builtInEnabled?: Record<string, boolean> }} [input] */
 export function countBuiltInActiveRules(input = {}) {
   const builtInEnabled = input.builtInEnabled ?? builtInEnabledFromSheet();
   return BUILT_IN_QUOTA_RULES.filter((r) =>
+    isBuiltInRuleEnabled(builtInEnabled, r),
+  ).length;
+}
+
+/** 맞춤법 규칙 구분(외래어 제외) 활성 수 @param {{ builtInEnabled?: Record<string, boolean> }} [input] */
+export function countSpellingRuleActiveRules(input = {}) {
+  const builtInEnabled = input.builtInEnabled ?? builtInEnabledFromSheet();
+  return SPELLING_QUOTA_RULES.filter((r) =>
+    isBuiltInRuleEnabled(builtInEnabled, r),
+  ).length;
+}
+
+/** 외래어 표기법 구분 활성 수 @param {{ builtInEnabled?: Record<string, boolean> }} [input] */
+export function countLoanwordActiveRules(input = {}) {
+  const builtInEnabled = input.builtInEnabled ?? builtInEnabledFromSheet();
+  return LOANWORD_QUOTA_RULES.filter((r) =>
     isBuiltInRuleEnabled(builtInEnabled, r),
   ).length;
 }

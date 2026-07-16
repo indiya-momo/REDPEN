@@ -1,8 +1,13 @@
 import {
-  countBuiltInActiveRules,
+  countLoanwordActiveRules,
   countSpacingReviewActiveRules,
+  countSpellingRuleActiveRules,
 } from './activeRuleCount.js';
-import { BUILT_IN_QUOTA_RULES } from './builtInRules.js';
+import { LOANWORD_FEATURE_LABEL } from './loanwordCheckRules.js';
+import {
+  LOANWORD_QUOTA_RULES,
+  SPELLING_QUOTA_RULES,
+} from './builtInRules.js';
 import { CAUTION_SEARCH_RULES } from './cautionRules.js';
 import { assertLoggedInForCheckOrAlert } from './checkAuthGate.js';
 import {
@@ -46,11 +51,16 @@ export function formatSpellingCheckConfirmMessage({
   builtinTotal,
   cautionActive,
   cautionTotal,
+  loanwordActive = 0,
+  loanwordTotal = 0,
 }) {
+  const loanwordPart = loanwordTotal
+    ? `, ${LOANWORD_FEATURE_LABEL}(${loanwordActive}/${loanwordTotal})`
+    : '';
   return (
     `[맞춤법 검수 진행]\n` +
     `오늘 맞춤법 검수는 ${remaining}회(한도 ${tabLimit}회) 가능합니다\n` +
-    `편집자 검토 필요(${cautionActive}/${cautionTotal}), 맞춤법 규칙(${builtinTotal}/${builtinActive})\n` +
+    `편집자 검토 필요(${cautionActive}/${cautionTotal}), 맞춤법 규칙(${builtinTotal}/${builtinActive})${loanwordPart}\n` +
     `\n` +
     '검수를 진행할까요?'
   );
@@ -65,9 +75,12 @@ export function formatSpellingCheckConfirmMessage({
  * }} counts
  */
 export function formatSpellingCheckConfirmMessageWithoutQuota(counts) {
+  const loanwordPart = counts.loanwordTotal
+    ? `, ${LOANWORD_FEATURE_LABEL}(${counts.loanwordActive ?? 0}/${counts.loanwordTotal})`
+    : '';
   return (
     `[맞춤법 검수 진행]\n` +
-    `편집자 검토 필요(${counts.cautionActive}/${counts.cautionTotal}), 맞춤법 규칙(${counts.builtinTotal}/${counts.builtinActive})\n` +
+    `편집자 검토 필요(${counts.cautionActive}/${counts.cautionTotal}), 맞춤법 규칙(${counts.builtinTotal}/${counts.builtinActive})${loanwordPart}\n` +
     `\n` +
     '검수를 진행할까요?'
   );
@@ -94,10 +107,12 @@ export async function confirmSpellingCheckBeforeRun(
     return true;
   }
 
-  const builtinActive = countBuiltInActiveRules(ruleState);
+  const builtinActive = countSpellingRuleActiveRules(ruleState);
   const cautionActive = countSpacingReviewActiveRules(ruleState);
-  const builtinTotal = BUILT_IN_QUOTA_RULES.length;
+  const builtinTotal = SPELLING_QUOTA_RULES.length;
   const cautionTotal = CAUTION_SEARCH_RULES.length;
+  const loanwordActive = countLoanwordActiveRules(ruleState);
+  const loanwordTotal = LOANWORD_QUOTA_RULES.length;
 
   const quotaDisplayEnabled =
     isBetaDailyQuotaEnabled() && Boolean(uid.trim());
@@ -121,6 +136,8 @@ export async function confirmSpellingCheckBeforeRun(
       builtinTotal,
       cautionActive,
       cautionTotal,
+      loanwordActive,
+      loanwordTotal,
     });
   } else {
     message = formatSpellingCheckConfirmMessageWithoutQuota({
@@ -128,6 +145,8 @@ export async function confirmSpellingCheckBeforeRun(
       builtinTotal,
       cautionActive,
       cautionTotal,
+      loanwordActive,
+      loanwordTotal,
     });
   }
 
@@ -142,15 +161,18 @@ export async function confirmSpellingCheckBeforeRun(
 export function countSpellingGroupsWithFindings(groups) {
   let builtinWithFindings = 0;
   let cautionWithFindings = 0;
+  let loanwordWithFindings = 0;
   for (const group of groups) {
     if (group.instances.length <= 0) continue;
     if (group.category === 'caution') {
       cautionWithFindings += 1;
+    } else if (group.category === 'loanword') {
+      loanwordWithFindings += 1;
     } else {
       builtinWithFindings += 1;
     }
   }
-  return { builtinWithFindings, cautionWithFindings };
+  return { builtinWithFindings, cautionWithFindings, loanwordWithFindings };
 }
 
 /**
@@ -160,16 +182,19 @@ export function countSpellingGroupsWithFindings(groups) {
 export function countSpellingFindingsByCategory(groups) {
   let editorReview = 0;
   let spelling = 0;
+  let loanword = 0;
   for (const group of groups) {
     const count = group.instances.length;
     if (count <= 0) continue;
     if (group.category === 'caution') {
       editorReview += count;
+    } else if (group.category === 'loanword') {
+      loanword += count;
     } else {
       spelling += count;
     }
   }
-  return { editorReview, spelling };
+  return { editorReview, spelling, loanword };
 }
 
 /**
@@ -185,16 +210,20 @@ export function countSpellingFindingsByCategory(groups) {
 export function formatSpellingCheckCompleteMessage({
   builtinWithFindings,
   cautionWithFindings,
+  loanwordWithFindings = 0,
   totalFindings,
   cautionSelected = true,
   builtinSelected = true,
+  loanwordSelected = false,
 }) {
   return formatSpellingResultsSummaryLine({
     cautionWithFindings,
     builtinWithFindings,
+    loanwordWithFindings,
     totalFindings,
     cautionSelected,
     builtinSelected,
+    loanwordSelected,
   });
 }
 
@@ -215,21 +244,25 @@ export async function alertSpellingCheckAfterRun(
   const {
     cautionSelected = true,
     builtinSelected = true,
+    loanwordSelected = false,
   } = criteriaSelection;
   const withFindings = countSpellingGroupsWithFindings(groups);
   const findingsByCategory = countSpellingFindingsByCategory(groups);
   const summaryInput = {
     cautionWithFindings: withFindings.cautionWithFindings,
     builtinWithFindings: withFindings.builtinWithFindings,
+    loanwordWithFindings: withFindings.loanwordWithFindings,
     totalFindings,
     cautionSelected,
     builtinSelected,
+    loanwordSelected,
   };
   const message = formatSpellingCheckCompleteMessage(summaryInput);
   const stats = buildSpellingResultSummaryStats({
     ...summaryInput,
     editorReviewFindings: findingsByCategory.editorReview,
     spellingFindings: findingsByCategory.spelling,
+    loanwordFindings: findingsByCategory.loanword,
   });
 
   await finishGuestBrowseResultThenUnlockNextGuide(async (extra = {}) => {

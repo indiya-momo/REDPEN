@@ -58,6 +58,8 @@ import {
   alertSpellingCheckAfterRun,
   confirmSpellingCheckBeforeRun,
 } from '../lib/spellingCheckConfirm.js';
+import { isLoanwordSpellingRule } from '../lib/loanwordCheckRules.js';
+import { countLoanwordActiveRules } from '../lib/activeRuleCount.js';
 import { markConsistencyCheckStartedForExportGuide } from '../lib/guestBrowsePolicy.js';
 
 /** @param {{
@@ -123,7 +125,8 @@ export function useRuleCheck({
       buildSpellingCheckRuleFromBuiltIn({
         ...r,
         enabled: true,
-        category: 'spelling',
+        // 외래어 표기법 묶음은 결과·엑셀에서 별도 구분으로 집계
+        category: isLoanwordSpellingRule(r) ? 'loanword' : 'spelling',
       }),
     );
     const caution = buildCautionCheckRules(cautionEnabled).map((r) => ({
@@ -404,6 +407,8 @@ export function useRuleCheck({
         await alertSpellingCheckAfterRun(scopeResults, findingCount, {
           cautionSelected: cautionCriteriaCount > 0,
           builtinSelected: builtinCriteriaCount > 0,
+          loanwordSelected:
+            countLoanwordActiveRules({ builtInEnabled }) > 0,
         });
       }
       if (runConsistency) {
@@ -557,6 +562,8 @@ export function useRuleCheck({
       setCurrentPage(inst?.pageNum ?? 1);
       setIsProcessing(false);
       setProgress(null);
+      setLastCompletedCheckScope('consistency');
+      setWorkHistoryCommitGen((n) => n + 1);
       await afterCheckRef.current?.();
     },
     [
@@ -832,6 +839,9 @@ export function useRuleCheck({
       .reduce((n, g) => n + g.instances.length, 0),
     spacingFindings: spellingResults
       .filter((g) => g.category === 'caution')
+      .reduce((n, g) => n + g.instances.length, 0),
+    loanwordFindings: spellingResults
+      .filter((g) => g.category === 'loanword')
       .reduce((n, g) => n + g.instances.length, 0),
     spellingFindings: spellingResults.reduce(
       (n, g) => n + g.instances.length,

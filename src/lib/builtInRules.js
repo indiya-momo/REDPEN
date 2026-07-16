@@ -1,5 +1,6 @@
 import spellingRulesJson from '../data/spelling-rules.json';
 import { MAX_RULES } from './ruleTypes.js';
+import { isLoanwordSpellingRule } from './loanwordCheckRules.js';
 import {
   buildSpellingCheckRuleFromBuiltIn,
   builtInEnabledKey,
@@ -85,6 +86,24 @@ export const BUILT_IN_QUOTA_RULES_UI = BUILT_IN_QUOTA_RULES.filter(
 );
 
 export const BUILT_IN_GUIDE_RULES_UI = BUILT_IN_GUIDE_RULES.filter(
+  isBuiltInRuleVisible,
+);
+
+/** 외래어 표기법 구분 — 묶음 이름이 "외래어 표기법(…)"인 내장 규칙 */
+export const LOANWORD_QUOTA_RULES = BUILT_IN_QUOTA_RULES.filter(
+  isLoanwordSpellingRule,
+);
+
+/** 맞춤법 규칙 구분 — 외래어 표기법 묶음을 뺀 나머지 내장 규칙 */
+export const SPELLING_QUOTA_RULES = BUILT_IN_QUOTA_RULES.filter(
+  (r) => !isLoanwordSpellingRule(r),
+);
+
+export const LOANWORD_QUOTA_RULES_UI = LOANWORD_QUOTA_RULES.filter(
+  isBuiltInRuleVisible,
+);
+
+export const SPELLING_QUOTA_RULES_UI = SPELLING_QUOTA_RULES.filter(
   isBuiltInRuleVisible,
 );
 

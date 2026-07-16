@@ -15,6 +15,7 @@ export const SESSION_COALESCE_MS = 10 * 1000;
  *   at: string,
  *   editorReview?: number,
  *   spelling?: number,
+ *   loanword?: number,
  *   consistency?: number,
  *   consistencyFind?: number,
  *   consistencyUnify?: number,
@@ -66,6 +67,7 @@ function mergeEntryCounts(a, b) {
   const out = { at: b.at };
   const editorReview = b.editorReview ?? a.editorReview;
   const spelling = b.spelling ?? a.spelling;
+  const loanword = b.loanword ?? a.loanword;
   const consistency = b.consistency ?? a.consistency;
   const consistencyFind = b.consistencyFind ?? a.consistencyFind;
   const consistencyUnify = b.consistencyUnify ?? a.consistencyUnify;
@@ -74,6 +76,7 @@ function mergeEntryCounts(a, b) {
   const bonBojo = b.bonBojo ?? a.bonBojo;
   if (editorReview !== undefined) out.editorReview = editorReview;
   if (spelling !== undefined) out.spelling = spelling;
+  if (loanword !== undefined) out.loanword = loanword;
   if (consistency !== undefined) out.consistency = consistency;
   if (consistencyFind !== undefined) out.consistencyFind = consistencyFind;
   if (consistencyUnify !== undefined) out.consistencyUnify = consistencyUnify;
@@ -127,6 +130,7 @@ export function normalizeWorkHistory(raw) {
     const source = /** @type {Record<string, unknown>} */ (item);
     const spelling = normalizeCount(source.spelling);
     const editorReview = normalizeCount(source.editorReview);
+    const loanword = normalizeCount(source.loanword);
     const consistency = normalizeCount(source.consistency);
     const consistencyFind = normalizeCount(source.consistencyFind);
     const consistencyUnify = normalizeCount(source.consistencyUnify);
@@ -135,6 +139,7 @@ export function normalizeWorkHistory(raw) {
     if (
       editorReview === undefined &&
       spelling === undefined &&
+      loanword === undefined &&
       consistency === undefined &&
       consistencyFind === undefined &&
       consistencyUnify === undefined &&
@@ -150,6 +155,7 @@ export function normalizeWorkHistory(raw) {
       const entry = { at };
       if (editorReview !== undefined) entry.editorReview = editorReview;
       if (spelling !== undefined) entry.spelling = spelling;
+      if (loanword !== undefined) entry.loanword = loanword;
       if (consistency !== undefined) entry.consistency = consistency;
       if (consistencyFind !== undefined) entry.consistencyFind = consistencyFind;
       if (consistencyUnify !== undefined) entry.consistencyUnify = consistencyUnify;
@@ -168,6 +174,7 @@ export function normalizeWorkHistory(raw) {
     const entry = { at: legacyDateToAt(date) };
     const nextEditorReview = editorReview ?? prev?.editorReview;
     const nextSpelling = spelling ?? prev?.spelling;
+    const nextLoanword = loanword ?? prev?.loanword;
     const nextConsistency = consistency ?? prev?.consistency;
     const nextConsistencyFind = consistencyFind ?? prev?.consistencyFind;
     const nextConsistencyUnify = consistencyUnify ?? prev?.consistencyUnify;
@@ -176,6 +183,7 @@ export function normalizeWorkHistory(raw) {
     const nextBonBojo = bonBojo ?? prev?.bonBojo;
     if (nextEditorReview !== undefined) entry.editorReview = nextEditorReview;
     if (nextSpelling !== undefined) entry.spelling = nextSpelling;
+    if (nextLoanword !== undefined) entry.loanword = nextLoanword;
     if (nextConsistency !== undefined) entry.consistency = nextConsistency;
     if (nextConsistencyFind !== undefined) entry.consistencyFind = nextConsistencyFind;
     if (nextConsistencyUnify !== undefined) entry.consistencyUnify = nextConsistencyUnify;
@@ -199,6 +207,7 @@ export function normalizeWorkHistory(raw) {
  * @param {{ 
  *   editorReview?: number,
  *   spelling?: number,
+ *   loanword?: number,
  *   consistency?: number,
  *   consistencyFind?: number,
  *   consistencyUnify?: number,
@@ -212,6 +221,7 @@ export function appendWorkHistoryEntry(history, counts, atIso) {
   const at = normalizeAt(atIso) ?? new Date().toISOString();
   const editorReview = normalizeCount(counts?.editorReview);
   const spelling = normalizeCount(counts?.spelling);
+  const loanword = normalizeCount(counts?.loanword);
   const consistency = normalizeCount(counts?.consistency);
   const consistencyFind = normalizeCount(counts?.consistencyFind);
   const consistencyUnify = normalizeCount(counts?.consistencyUnify);
@@ -221,6 +231,7 @@ export function appendWorkHistoryEntry(history, counts, atIso) {
   if (
     editorReview === undefined &&
     spelling === undefined &&
+    loanword === undefined &&
     consistency === undefined &&
     consistencyFind === undefined &&
     consistencyUnify === undefined &&
@@ -234,6 +245,7 @@ export function appendWorkHistoryEntry(history, counts, atIso) {
   const entry = { at };
   if (editorReview !== undefined) entry.editorReview = editorReview;
   if (spelling !== undefined) entry.spelling = spelling;
+  if (loanword !== undefined) entry.loanword = loanword;
   if (consistency !== undefined) entry.consistency = consistency;
   if (consistencyFind !== undefined) entry.consistencyFind = consistencyFind;
   if (consistencyUnify !== undefined) entry.consistencyUnify = consistencyUnify;

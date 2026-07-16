@@ -87,9 +87,9 @@ const styles = {
   },
   estBadge: {
     display: 'inline-block',
-    padding: '0 5px',
+    padding: '0 2.5px',
     borderRadius: 3,
-    border: '1px solid #555555',
+    border: '1px solid #B8B5AE',
     background: '#F3F1EC',
     color: '#555555',
     fontSize: 11,
@@ -99,9 +99,9 @@ const styles = {
   },
   partialEstBadge: {
     display: 'inline-block',
-    padding: '0 5px',
+    padding: '0 2.5px',
     borderRadius: 3,
-    border: '1px solid #555555',
+    border: '1px solid #B8B5AE',
     background: '#F3F1EC',
     color: '#555555',
     fontSize: 11,
@@ -342,7 +342,7 @@ export default function LoanwordConverter({
         <span className="loanword-converter__summary-title">
           외래어 표기
           <span className="panel-criteria-heading-meta">
-            (영어↔한국어 표기 변환 지원)
+            (영어·일본어↔한국어)
           </span>
           <span className="loanword-converter__free-badge" aria-label="무제한">
             FREE

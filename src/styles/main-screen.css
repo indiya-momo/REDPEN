@@ -434,6 +434,7 @@
 /* 접이식 그룹 컨테이너만 박스(면+테두리) — 항목은 plain */
 .panel-left .builtin-spelling-resize-body .caution-checklist-details,
 .panel-left .builtin-spelling-resize-body .builtin-spelling-details,
+.panel-left .builtin-spelling-resize-body .loanword-check-details,
 .panel-left
   .consistency-section-box[data-work-guide-step='auxiliary-box']
   .caution-checklist-details {
@@ -450,7 +451,8 @@
 }
 
 .panel-left .caution-checklist-details[open] > .caution-checklist,
-.panel-left .builtin-spelling-resize-body .builtin-spelling-details[open] .builtin-rule-list {
+.panel-left .builtin-spelling-resize-body .builtin-spelling-details[open] .builtin-rule-list,
+.panel-left .builtin-spelling-resize-body .loanword-check-details[open] .builtin-rule-list {
   padding: var(--panel-gap-section-list) var(--criteria-pad-inline, 10px) 10px;
   margin: 0;
   box-sizing: border-box;
@@ -2286,19 +2288,22 @@
 }
 
 .spelling-tab-layout .builtin-spelling-caution-scroll,
-.spelling-tab-layout .builtin-spelling-rules-scroll {
+.spelling-tab-layout .builtin-spelling-rules-scroll,
+.spelling-tab-layout .builtin-spelling-loanword-scroll {
   width: 100%;
   max-width: 100%;
 }
 
 .spelling-tab-layout .builtin-spelling-resize-body .caution-checklist-details,
-.spelling-tab-layout .builtin-spelling-resize-body .builtin-spelling-details {
+.spelling-tab-layout .builtin-spelling-resize-body .builtin-spelling-details,
+.spelling-tab-layout .builtin-spelling-resize-body .loanword-check-details {
   width: 100%;
   max-width: 100%;
 }
 
 .builtin-spelling-caution-scroll,
-.builtin-spelling-rules-scroll {
+.builtin-spelling-rules-scroll,
+.builtin-spelling-loanword-scroll {
   width: 100%;
   min-width: 0;
   box-sizing: border-box;
@@ -2311,7 +2316,8 @@
 
 /* 아코디언 — 테두리·면은 details 한 겹 (바깥 padding 이중 링 제거) */
 .builtin-spelling-resize-body .caution-checklist-details,
-.builtin-spelling-resize-body .builtin-spelling-details {
+.builtin-spelling-resize-body .builtin-spelling-details,
+.builtin-spelling-resize-body .loanword-check-details {
   width: 100%;
   max-width: 100%;
   margin: 0;
@@ -2333,8 +2339,15 @@
   box-shadow: none;
 }
 
+.builtin-spelling-resize-body .loanword-check-details {
+  border: 1px solid var(--panel-border-soft, var(--panel-spelling-border));
+  background: var(--panel-surface-group, var(--panel-spelling-surface));
+  box-shadow: none;
+}
+
 .builtin-spelling-resize-body .caution-checklist-summary,
-.builtin-spelling-resize-body .builtin-spelling-summary {
+.builtin-spelling-resize-body .builtin-spelling-summary,
+.builtin-spelling-resize-body .loanword-check-summary {
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
@@ -2347,7 +2360,8 @@
 }
 
 .builtin-spelling-resize-body .caution-checklist-select-all,
-.builtin-spelling-resize-body .builtin-spelling-select-all {
+.builtin-spelling-resize-body .builtin-spelling-select-all,
+.builtin-spelling-resize-body .loanword-check-select-all {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -2360,6 +2374,7 @@
 
 .builtin-spelling-resize-body .caution-checklist-select-all input,
 .builtin-spelling-resize-body .builtin-spelling-select-all input,
+.builtin-spelling-resize-body .loanword-check-select-all input,
 .builtin-spelling-resize-body .builtin-rule-list--guide .builtin-rule-row > input[type='checkbox'] {
   display: block;
   margin: 0;
@@ -4037,10 +4052,15 @@
 }
 
 .panel-left .caution-checklist-summary.panel-criteria-heading,
-.panel-left .builtin-spelling-summary.panel-criteria-heading {
+.panel-left .builtin-spelling-summary.panel-criteria-heading,
+.panel-left .loanword-check-summary.panel-criteria-heading {
   font-size: calc(1.05rem * var(--panel-ui-scale));
   font-weight: 600;
   line-height: 1.2;
+}
+
+.panel-left .loanword-check-summary.panel-criteria-heading {
+  color: var(--accent-spelling);
 }
 
 .panel-left .caution-checklist-summary.panel-criteria-heading {
@@ -4052,7 +4072,8 @@
 }
 
 .panel-left .caution-checklist-summary,
-.panel-left .builtin-spelling-summary {
+.panel-left .builtin-spelling-summary,
+.panel-left .loanword-check-summary {
   gap: var(--criteria-summary-gap, calc(8px * var(--panel-ui-scale, 1)));
   padding: calc(8px * var(--panel-ui-scale)) var(--criteria-pad-inline, 10px);
   align-items: center;
@@ -4060,7 +4081,8 @@
 }
 
 .panel-left .caution-checklist-select-all,
-.panel-left .builtin-spelling-select-all {
+.panel-left .builtin-spelling-select-all,
+.panel-left .loanword-check-select-all {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -4073,6 +4095,7 @@
 
 .panel-left .caution-checklist-select-all input,
 .panel-left .builtin-spelling-select-all input,
+.panel-left .loanword-check-select-all input,
 .panel-left .builtin-rule-row > input[type='checkbox'] {
   width: var(--criteria-checkbox-size, 15px);
   height: var(--criteria-checkbox-size, 15px);

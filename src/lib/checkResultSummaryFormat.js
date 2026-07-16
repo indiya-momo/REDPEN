@@ -3,11 +3,14 @@ import {
   LITERAL_FIND_FEATURE_LABEL,
   UNIFY_FEATURE_LABEL,
 } from './consistencyRuleLimit.js';
+import { LOANWORD_FEATURE_LABEL } from './loanwordCheckRules.js';
 
 /** 결과 헤더·팝업·카드 뱃지 — 편집자 검토 */
 export const EDITOR_REVIEW_BADGE_LABEL = '편집자 검토 필요';
 /** 결과 헤더·팝업·카드 뱃지 — 맞춤법 규칙 */
 export const SPELLING_RULE_BADGE_LABEL = '맞춤법 규칙';
+/** 결과 헤더·팝업·카드 뱃지 — 외래어 표기법 */
+export const LOANWORD_BADGE_LABEL = LOANWORD_FEATURE_LABEL;
 
 /** confirm 등 — 활성 기준 개수 표기 */
 export function formatCategoryFindingCount(count) {
@@ -32,9 +35,12 @@ export function formatExcelCategoryStat(label, criteriaCount, findingsCount) {
  *   cautionFindingsCount: number,
  *   builtinCriteriaCount: number,
  *   builtinFindingsCount: number,
+ *   loanwordCriteriaCount?: number,
+ *   loanwordFindingsCount?: number,
  *   totalFindings: number,
  *   cautionSelected?: boolean,
  *   builtinSelected?: boolean,
+ *   loanwordSelected?: boolean,
  * }} input
  */
 export function formatSpellingExcelSummaryLine({
@@ -42,9 +48,12 @@ export function formatSpellingExcelSummaryLine({
   cautionFindingsCount,
   builtinCriteriaCount,
   builtinFindingsCount,
+  loanwordCriteriaCount = 0,
+  loanwordFindingsCount = 0,
   totalFindings,
   cautionSelected = true,
   builtinSelected = true,
+  loanwordSelected = false,
 }) {
   const parts = [];
   if (cautionSelected) {
@@ -62,6 +71,15 @@ export function formatSpellingExcelSummaryLine({
         SPELLING_RULE_BADGE_LABEL,
         builtinCriteriaCount,
         builtinFindingsCount,
+      ),
+    );
+  }
+  if (loanwordSelected) {
+    parts.push(
+      formatExcelCategoryStat(
+        LOANWORD_BADGE_LABEL,
+        loanwordCriteriaCount,
+        loanwordFindingsCount,
       ),
     );
   }
@@ -151,17 +169,21 @@ export function formatConsistencyExcelSummaryLine({
  * @param {{
  *   cautionWithFindings: number,
  *   builtinWithFindings: number,
+ *   loanwordWithFindings?: number,
  *   totalFindings: number,
  *   cautionSelected?: boolean,
  *   builtinSelected?: boolean,
+ *   loanwordSelected?: boolean,
  * }} input
  */
 export function formatSpellingResultsSummaryLine({
   cautionWithFindings,
   builtinWithFindings,
+  loanwordWithFindings = 0,
   totalFindings,
   cautionSelected = true,
   builtinSelected = true,
+  loanwordSelected = false,
 }) {
   const parts = [];
   if (cautionSelected) {
@@ -172,6 +194,11 @@ export function formatSpellingResultsSummaryLine({
   if (builtinSelected) {
     parts.push(
       `${SPELLING_RULE_BADGE_LABEL} ${formatResultsStatCount(builtinWithFindings)}`,
+    );
+  }
+  if (loanwordSelected) {
+    parts.push(
+      `${LOANWORD_BADGE_LABEL} ${formatResultsStatCount(loanwordWithFindings)}`,
     );
   }
   const stats = parts.join(', ');
@@ -233,20 +260,26 @@ export function formatConsistencyResultsSummaryLine({
  * @param {{
  *   cautionWithFindings: number,
  *   builtinWithFindings: number,
+ *   loanwordWithFindings?: number,
  *   editorReviewFindings?: number,
  *   spellingFindings?: number,
+ *   loanwordFindings?: number,
  *   cautionSelected?: boolean,
  *   builtinSelected?: boolean,
+ *   loanwordSelected?: boolean,
  * }} input
  * @returns {Array<{ badge: string, count: number, findingsCount: number, tone: import('./resultPillarTone.js').ResultBadgeTone }>}
  */
 export function buildSpellingResultSummaryStats({
   cautionWithFindings,
   builtinWithFindings,
+  loanwordWithFindings = 0,
   editorReviewFindings = 0,
   spellingFindings = 0,
+  loanwordFindings = 0,
   cautionSelected = true,
   builtinSelected = true,
+  loanwordSelected = false,
 }) {
   const stats = [];
   if (cautionSelected) {
@@ -263,6 +296,14 @@ export function buildSpellingResultSummaryStats({
       count: builtinWithFindings,
       findingsCount: spellingFindings,
       tone: 'spelling-builtin',
+    });
+  }
+  if (loanwordSelected) {
+    stats.push({
+      badge: LOANWORD_BADGE_LABEL,
+      count: loanwordWithFindings,
+      findingsCount: loanwordFindings,
+      tone: 'spelling-loanword',
     });
   }
   return stats;
