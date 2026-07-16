@@ -1,0 +1,116 @@
+import JSZip from 'jszip';
+import {
+  exportModelFromSnapshot,
+} from './checkResultSnapshot.js';
+import {
+  writeConsistencyWorkbook,
+  writeSpellingWorkbook,
+} from './exportResults.js';
+
+/**
+ * @param {BlobPart | Blob} data
+ * @param {string} filename
+ * @param {string} mime
+ */
+function downloadBlob(data, filename, mime) {
+  const blob = data instanceof Blob ? data : new Blob([data], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/**
+ * @param {unknown} ms
+ * @returns {string}
+ */
+function stampFromCreatedAt(ms) {
+  const n = Number(ms);
+  if (!Number.isFinite(n)) return 'unknown';
+  const d = new Date(n);
+  const pad = (x) => String(x).padStart(2, '0');
+  return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}`;
+}
+
+/**
+ * @param {{
+ *   kind?: unknown,
+ *   createdAt?: unknown,
+ *   id?: unknown,
+ *   filename?: unknown,
+ * } & Record<string, unknown>} item
+ * @param {Set<string>} used
+ */
+function uniqueXlsxName(item, used) {
+  const kind = item.kind === 'consistency' ? '표기통일' : '맞춤법';
+  const stamp = stampFromCreatedAt(item.createdAt);
+  const base =
+    typeof item.filename === 'string' && item.filename.trim()
+      ? item.filename.replace(/[\\/:*?"<>|]/g, '_').replace(/\.xlsx$/i, '')
+      : `${kind}_${stamp}`;
+  let name = `${base}.xlsx`;
+  let n = 2;
+  while (used.has(name)) {
+    name = `${base}_${n}.xlsx`;
+    n += 1;
+  }
+  used.add(name);
+  return name;
+}
+
+/**
+ * 저장된 스냅숏들을 엑셀로 만든 뒤 zip으로 다운로드.
+ * @param {{
+ *   items: Array<Record<string, unknown> & { id?: string }>,
+ *   zipFilename?: string,
+ * }} args
+ * @returns {Promise<{ ok: true, fileCount: number } | { ok: false, reason: string }>}
+ */
+export async function downloadCheckResultsAsZip({ items, zipFilename }) {
+  const list = Array.isArray(items) ? items : [];
+  if (list.length === 0) {
+    return { ok: false, reason: 'empty' };
+  }
+
+  const zip = new JSZip();
+  const used = new Set();
+  let fileCount = 0;
+
+  for (const item of list) {
+    const model = exportModelFromSnapshot({
+      kind: item.kind === 'consistency' ? 'consistency' : 'spelling',
+      sheetName: typeof item.sheetName === 'string' ? item.sheetName : undefined,
+      filename: typeof item.filename === 'string' ? item.filename : undefined,
+      summaryLine:
+        typeof item.summaryLine === 'string' ? item.summaryLine : '',
+      summary:
+        item.summary && typeof item.summary === 'object' ? item.summary : {},
+      rows: Array.isArray(item.rows) ? item.rows : [],
+    });
+    if (!model) continue;
+
+    const buffer =
+      model.kind === 'spelling'
+        ? await writeSpellingWorkbook(model)
+        : await writeConsistencyWorkbook(model);
+
+    zip.file(uniqueXlsxName(item, used), buffer);
+    fileCount += 1;
+  }
+
+  if (fileCount === 0) {
+    return { ok: false, reason: 'no-files' };
+  }
+
+  const blob = await zip.generateAsync({ type: 'blob' });
+  const name =
+    (typeof zipFilename === 'string' && zipFilename.trim()
+      ? zipFilename.trim().replace(/\.zip$/i, '')
+      : '검수결과') + '.zip';
+  downloadBlob(blob, name, 'application/zip');
+  return { ok: true, fileCount };
+}

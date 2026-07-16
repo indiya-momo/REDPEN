@@ -1806,7 +1806,8 @@
 }
 
 .panel-left__save-rules,
-.panel-left__delete-rules {
+.panel-left__delete-rules,
+.panel-left__open-projects {
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
@@ -1822,6 +1823,7 @@
 
 .panel-left__save-rules,
 .panel-left__delete-rules,
+.panel-left__open-projects,
 .pdf-work-pane__aux-btn {
   border: none;
   border-radius: var(--radius-ui);
@@ -1836,6 +1838,7 @@
 
 .panel-left__save-rules:hover,
 .panel-left__delete-rules:hover:not(:disabled),
+.panel-left__open-projects:hover,
 .pdf-work-pane__aux-btn:hover {
   background: var(--btn-secondary-hover-bg);
   color: var(--btn-secondary-text);

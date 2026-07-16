@@ -50,6 +50,17 @@ const SIDEBAR_NAV = [
   { id: 'badges', label: '배지 모음집' },
 ];
 
+/** @returns {'overview' | 'projects' | 'profile' | 'badges'} */
+function readInitialMypageNav() {
+  try {
+    const section = new URLSearchParams(window.location.search).get('mypageSection');
+    if (section) return resolveMypageNav(section);
+  } catch {
+    /* ignore */
+  }
+  return 'overview';
+}
+
 /** @param {string} nav */
 function resolveMypageNav(nav) {
   if (nav === 'home') return 'overview';
@@ -574,7 +585,7 @@ function ProfileSection({ displayName, email, daysWithMomo, loginAtMs }) {
  * }} props
  */
 export default function MyPageWindowScreen({ authSession, authReady }) {
-  const [activeNav, setActiveNav] = useState('overview');
+  const [activeNav, setActiveNav] = useState(readInitialMypageNav);
   const [projectsEntryCardId, setProjectsEntryCardId] = useState(
     /** @type {string | null} */ (null),
   );

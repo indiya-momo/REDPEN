@@ -531,7 +531,11 @@ export default function ProjectHubSettingsPanel({
                 summary={buildProjectWorkSummary(ruleSet?.projectContext)}
               />
               {uid && card?.id ? (
-                <ProjectHubCheckResultsPanel uid={uid} projectId={card.id} />
+                <ProjectHubCheckResultsPanel
+                  uid={uid}
+                  projectId={card.id}
+                  projectName={card.title || ruleSet?.name || ''}
+                />
               ) : null}
               <ProjectWorkHistoryChart
                 history={ruleSet?.workHistory}

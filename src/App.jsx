@@ -67,6 +67,7 @@ import { clearTooltipGuideDismissed } from './lib/tooltipGuideStorage.js';
 import { shouldAutoEnterMainFromWelcome } from './lib/welcomeViewport.js';
 import AppDialogHost from './components/AppDialogHost.jsx';
 import EventRewardLayer from './components/EventRewardLayer.jsx';
+import { openMyPageWindow } from './lib/openMyPageWindow.js';
 
 export default function App() {
   const auxWindow =
@@ -519,17 +520,7 @@ export default function App() {
         setMainWorkTab('spelling');
         setScreen('welcome');
       }}
-      onOpenMyPageWindow={() => {
-        const url = new URL(import.meta.env.BASE_URL || '/', window.location.origin);
-        url.searchParams.set('window', 'mypage');
-        const existing = window.open('', 'indiya-mypage');
-        if (existing && !existing.closed) {
-          existing.location.replace(url.toString());
-          existing.focus();
-          return;
-        }
-        window.open(url.toString(), 'indiya-mypage');
-      }}
+      onOpenMyPageWindow={(section) => openMyPageWindow(section)}
       onOpenGuideWindow={() => {
         const url = new URL(import.meta.env.BASE_URL || '/', window.location.origin);
         url.searchParams.set('window', 'guide');

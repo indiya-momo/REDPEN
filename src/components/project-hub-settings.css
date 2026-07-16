@@ -906,11 +906,21 @@
   background: #fff;
   color: #3e2723;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .project-hub-settings__secondary-btn:disabled {
   opacity: 0.55;
   cursor: not-allowed;
+}
+
+.project-hub-settings__row--check-results-head {
+  align-items: center;
+}
+
+.project-hub-settings__secondary-btn--check-results {
+  align-self: center;
+  flex-shrink: 0;
 }
 
 .project-hub-check-results {
