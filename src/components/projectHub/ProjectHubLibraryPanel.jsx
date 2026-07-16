@@ -13,7 +13,7 @@ import {
   isPaidPlan,
   PAID_SHARE_ONLY_MESSAGE,
 } from '../../lib/userPlan.js';
-import { getLocalUserPlan } from '../../lib/userProfileStorage.js';
+import { ensureLocalPlanFromCloud } from '../../lib/userProfileCloud.js';
 import { useProjectHubActions } from '../../hooks/useProjectHubActions.js';
 import { useProjectHubLibrary } from '../../hooks/useProjectHubLibrary.js';
 import { useProjectTagFilter } from '../../hooks/useProjectTagFilter.js';
@@ -75,15 +75,18 @@ export default function ProjectHubLibraryPanel({
     ? (sharePreviewCardIdProp ?? null)
     : internalSharePreviewCardId;
   const openSharePreview = (cardId) => {
-    if (!isPaidPlan({ plan: getLocalUserPlan(uid) })) {
-      void showAppAlert(PAID_SHARE_ONLY_MESSAGE);
-      return;
-    }
-    if (isSharePreviewControlled) {
-      onSharePreviewCardIdChange(cardId);
-      return;
-    }
-    setInternalSharePreviewCardId(cardId);
+    void (async () => {
+      const plan = await ensureLocalPlanFromCloud(uid);
+      if (!isPaidPlan({ plan })) {
+        await showAppAlert(PAID_SHARE_ONLY_MESSAGE);
+        return;
+      }
+      if (isSharePreviewControlled) {
+        onSharePreviewCardIdChange(cardId);
+        return;
+      }
+      setInternalSharePreviewCardId(cardId);
+    })();
   };
   const closeSharePreview = () => {
     if (isSharePreviewControlled) {

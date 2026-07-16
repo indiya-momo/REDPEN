@@ -24,6 +24,7 @@ import {
   resolveSessionEmail,
 } from './firebaseAuth.js';
 import { isPaidPlan } from './userPlan.js';
+import { ensureLocalPlanFromCloud } from './userProfileCloud.js';
 import { getLocalUserPlan } from './userProfileStorage.js';
 
 const LOCAL_QUOTA_PREFIX = 'indiya-beta-quota-v3--';
@@ -810,7 +811,8 @@ export async function assertBetaDailyCheckOrAlert(uid, options = {}) {
   }
   const email = options.authEmail ?? '';
   const tab = options.checkTab ?? 'spelling';
-  if (!isBetaDailyQuotaEnforcedForUser(uid, email)) {
+  const plan = await ensureLocalPlanFromCloud(uid);
+  if (!isBetaDailyQuotaEnforcedForUser(uid, email, plan)) {
     return true;
   }
   const result = await consumeBetaDailyQuota(uid, email, tab);
@@ -894,7 +896,8 @@ export async function assertBetaDailyExportOrAlert(uid, options = {}) {
     return false;
   }
   const email = options.authEmail ?? '';
-  if (!isBetaDailyQuotaEnforcedForUser(uid, email)) {
+  const plan = await ensureLocalPlanFromCloud(uid);
+  if (!isBetaDailyQuotaEnforcedForUser(uid, email, plan)) {
     return true;
   }
   const result = await consumeBetaDailyExport(uid, email, exportTab);

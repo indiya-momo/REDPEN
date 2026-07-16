@@ -5,7 +5,7 @@ import {
 import { buildCheckResultSnapshot } from './checkResultSnapshot.js';
 import { saveCheckResultCloud } from './checkResultsCloud.js';
 import { isPaidPlan } from './userPlan.js';
-import { loadUserProfileCloud } from './userProfileCloud.js';
+import { ensureLocalPlanFromCloud } from './userProfileCloud.js';
 
 /**
  * 유료·활성 프로젝트일 때만 검수 결과 스냅숏을 Firestore에 저장.
@@ -33,8 +33,8 @@ export async function maybeSavePaidCheckResult({
     if (!id) return { saved: false, reason: 'no-uid' };
     if (!pid) return { saved: false, reason: 'no-project' };
 
-    const profile = await loadUserProfileCloud(id);
-    if (!isPaidPlan(profile)) return { saved: false, reason: 'not-paid' };
+    const plan = await ensureLocalPlanFromCloud(id);
+    if (!isPaidPlan({ plan })) return { saved: false, reason: 'not-paid' };
 
     const exportModel =
       kind === 'spelling'
