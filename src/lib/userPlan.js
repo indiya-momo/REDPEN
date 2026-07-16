@@ -14,3 +14,7 @@ export function isPaidPlan(profile) {
 export function normalizeUserPlan(raw) {
   return raw === 'paid' ? 'paid' : 'free';
 }
+
+/** 무료 사용자가 유료 전용 공유를 눌렀을 때 */
+export const PAID_SHARE_ONLY_MESSAGE =
+  '유료회원 전용입니다.\n프로젝트 공유는 유료 계정에서만 사용할 수 있습니다.';
