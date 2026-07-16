@@ -19,6 +19,7 @@ import '../project-hub-settings.css';
  *   onEntryApplied?: () => void,
  *   library?: ReturnType<typeof useProjectHubLibrary>,
  *   onStartWork?: (cardId: string) => void | Promise<void>,
+ *   profileSyncDone?: boolean,
  * }} props
  */
 export default function ProjectHubEditorPage({
@@ -28,8 +29,11 @@ export default function ProjectHubEditorPage({
   onEntryApplied,
   library: libraryProp,
   onStartWork: onStartWorkOverride,
+  profileSyncDone = true,
 }) {
-  const libraryInternal = useProjectHubLibrary(uid, email);
+  const libraryInternal = useProjectHubLibrary(uid, email, {
+    profileSyncDone,
+  });
   const library = libraryProp ?? libraryInternal;
   const tagFilter = useProjectTagFilter(library.previewCards);
   const actionsInternal = useProjectHubActions(library);

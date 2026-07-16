@@ -1,6 +1,7 @@
 import {
   canAddCriteriaPreset,
-  CRITERIA_PRESET_LIMIT_MESSAGE,
+  formatCriteriaPresetLimitMessage,
+  getMaxCriteriaPresets,
 } from './criteriaPresetLimit.js';
 import { planCriteriaPresetDelete } from './criteriaPresetDelete.js';
 import { criteriaNameForSave } from './criteriaName.js';
@@ -127,10 +128,11 @@ export function planDuplicateProject(sets, setId, uid = '', email = '') {
   });
 
   if (!canAddCriteriaPreset(sets, copyWithCheckpoint.name, uid, email)) {
+    const maxSlots = getMaxCriteriaPresets(uid, email);
     return {
       ok: false,
       reason: 'slot_limit',
-      message: CRITERIA_PRESET_LIMIT_MESSAGE,
+      message: formatCriteriaPresetLimitMessage(maxSlots),
     };
   }
 

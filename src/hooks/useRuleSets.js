@@ -54,8 +54,10 @@ import {
 } from '../lib/ruleSetsCloud.js';
 import {
   canAddCriteriaPreset,
-  CRITERIA_PRESET_LIMIT_MESSAGE,
+  formatCriteriaPresetLimitMessage,
+  getMaxCriteriaPresets,
 } from '../lib/criteriaPresetLimit.js';
+import { getLocalUserPlan } from '../lib/userProfileStorage.js';
 import {
   mergeRuleSetsOnLogin,
   applyCriteriaPresetQuota,
@@ -98,8 +100,13 @@ function normalizeLoadedRuleSets(rawSets) {
   return sets;
 }
 
-/** @param {string} [authUid] @param {string} [authEmail] */
-export function useRuleSets(authUid = '', authEmail = '') {
+/**
+ * @param {string} [authUid]
+ * @param {string} [authEmail]
+ * @param {{ profileSyncDone?: boolean }} [options]
+ */
+export function useRuleSets(authUid = '', authEmail = '', options = {}) {
+  const { profileSyncDone = true } = options;
   const [ruleSets, setRuleSets] = useState([]);
   const [activeSetId, setActiveSetId] = useState(null);
   const [rulesReady, setRulesReady] = useState(false);
@@ -266,8 +273,9 @@ export function useRuleSets(authUid = '', authEmail = '') {
   }, []);
 
   // 로그인·로그아웃·계정 전환 — 이전 uid 데이터 저장 후 새 uid 네임스페이스 로드
+  // plan 동기화 전에는 free=1로 trim하지 않는다.
   useEffect(() => {
-    if (!rulesReady) return undefined;
+    if (!rulesReady || !profileSyncDone) return undefined;
 
     const uid = String(authUid ?? '').trim();
     const prev = loadedAuthUidRef.current;
@@ -305,7 +313,12 @@ export function useRuleSets(authUid = '', authEmail = '') {
         const tombstoned = applyTombstones(sets, loadDeletedRuleSetIds(uid));
         sets = normalizeLoadedRuleSets(tombstoned.sets);
         saveDeletedRuleSetIds(tombstoned.tombstones, uid);
-        sets = applyCriteriaPresetQuota(sets, uid, authEmailRef.current);
+        sets = applyCriteriaPresetQuota(
+          sets,
+          uid,
+          authEmailRef.current,
+          getLocalUserPlan(uid),
+        );
       }
       const storedActive = loadActiveSetId(uid);
       const activeId =
@@ -325,7 +338,7 @@ export function useRuleSets(authUid = '', authEmail = '') {
     return () => {
       cancelled = true;
     };
-  }, [authUid, rulesReady]);
+  }, [authUid, rulesReady, profileSyncDone]);
 
   useEffect(() => {
     return () => {
@@ -356,7 +369,12 @@ export function useRuleSets(authUid = '', authEmail = '') {
       const memorySets = normalizeLoadedRuleSets(ruleSetsRef.current);
       let sets = mergeLocalRuleSetSources(diskSets, memorySets);
       if (uid) {
-        sets = applyCriteriaPresetQuota(sets, uid, authEmailRef.current);
+        sets = applyCriteriaPresetQuota(
+          sets,
+          uid,
+          authEmailRef.current,
+          getLocalUserPlan(uid),
+        );
       }
       const storedActive = loadActiveSetId(uid);
       const activeId =
@@ -465,7 +483,9 @@ export function useRuleSets(authUid = '', authEmail = '') {
       cloudHydratedUidRef.current = '';
       return undefined;
     }
-    if (!isRuleSetsCloudEnabled() || !rulesReady) return undefined;
+    if (!isRuleSetsCloudEnabled() || !rulesReady || !profileSyncDone) {
+      return undefined;
+    }
     if (cloudHydratedUidRef.current === uid) return undefined;
 
     let cancelled = false;
@@ -496,6 +516,7 @@ export function useRuleSets(authUid = '', authEmail = '') {
             sets,
             authUidRef.current,
             authEmailRef.current,
+            getLocalUserPlan(authUidRef.current),
           );
           const activeId = resolveHydratedActiveSetId(
             sets,
@@ -514,6 +535,7 @@ export function useRuleSets(authUid = '', authEmail = '') {
             localSets,
             authUidRef.current,
             authEmailRef.current,
+            getLocalUserPlan(authUidRef.current),
           );
           const activeId =
             resolveHydratedActiveSetId(localSets, loadActiveSetId(uid), null) ??
@@ -532,7 +554,32 @@ export function useRuleSets(authUid = '', authEmail = '') {
     return () => {
       cancelled = true;
     };
-  }, [authUid, rulesReady, applyRuleSets, flushPendingRuleSetsSave]);
+  }, [authUid, rulesReady, profileSyncDone, applyRuleSets, flushPendingRuleSetsSave]);
+
+  // 초기 로드·계정 전환이 plan 동기화 전에 끝났을 때 슬롯 상한 재적용
+  useEffect(() => {
+    if (!rulesReady || !profileSyncDone) return;
+    const uid = String(authUid ?? '').trim();
+    if (!uid) return;
+    const plan = getLocalUserPlan(uid);
+    const next = applyCriteriaPresetQuota(
+      normalizeLoadedRuleSets(ruleSetsRef.current),
+      uid,
+      authEmailRef.current,
+      plan,
+    );
+    const beforeIds = ruleSetsRef.current.map((s) => s.id).join(',');
+    const afterIds = next.map((s) => s.id).join(',');
+    if (beforeIds === afterIds) return;
+    const activeId =
+      resolveHydratedActiveSetId(
+        next,
+        activeSetIdRef.current,
+        activeSetIdRef.current,
+      ) ?? next[0]?.id;
+    if (!activeId) return;
+    applyRuleSets(next, activeId);
+  }, [rulesReady, profileSyncDone, authUid, applyRuleSets]);
 
   const handleSelectRuleSet = useCallback(
     (id) => {
@@ -561,20 +608,18 @@ export function useRuleSets(authUid = '', authEmail = '') {
     );
     if (!source) return;
     const copy = normalizeRuleSet(duplicateRuleSet(source));
-      if (
-        !canAddCriteriaPreset(
-          ruleSetsRef.current,
-          copy.name,
-          authUidRef.current,
-          authEmailRef.current,
-        )
-      ) {
-        void showAppAlert({
-          title: '저장 한도',
-          message: CRITERIA_PRESET_LIMIT_MESSAGE,
-        });
-        return;
-      }
+    const uid = authUidRef.current;
+    const email = authEmailRef.current;
+    const plan = getLocalUserPlan(uid);
+    if (!canAddCriteriaPreset(ruleSetsRef.current, copy.name, uid, email, plan)) {
+      void showAppAlert({
+        title: '저장 한도',
+        message: formatCriteriaPresetLimitMessage(
+          getMaxCriteriaPresets(uid, email, plan),
+        ),
+      });
+      return;
+    }
     applyRuleSets([...ruleSetsRef.current, copy], copy.id, {
       added: [copy.id],
     });
@@ -662,11 +707,18 @@ export function useRuleSets(authUid = '', authEmail = '') {
           name,
           authUidRef.current,
           authEmailRef.current,
+          getLocalUserPlan(authUidRef.current),
         )
       ) {
         await showAppAlert({
           title: '저장 한도',
-          message: CRITERIA_PRESET_LIMIT_MESSAGE,
+          message: formatCriteriaPresetLimitMessage(
+            getMaxCriteriaPresets(
+              authUidRef.current,
+              authEmailRef.current,
+              getLocalUserPlan(authUidRef.current),
+            ),
+          ),
         });
         return false;
       }

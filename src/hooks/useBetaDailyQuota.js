@@ -11,8 +11,8 @@ import {
   isLocalDevQuotaRelaxed,
 } from '../lib/betaDailyQuota.js';
 
-/** @param {string} uid @param {string} [email] */
-export function useBetaDailyQuota(uid, email = '') {
+/** @param {string} uid @param {string} [email] @param {unknown} [plan] */
+export function useBetaDailyQuota(uid, email = '', plan) {
   const [loading, setLoading] = useState(true);
   const [spellingConsumed, setSpellingConsumed] = useState(false);
   const [consistencyConsumed, setConsistencyConsumed] = useState(false);
@@ -24,7 +24,7 @@ export function useBetaDailyQuota(uid, email = '') {
   const [dayId, setDayId] = useState('');
 
   const refresh = useCallback(async () => {
-    const enforced = isBetaDailyQuotaEnforcedForUser(uid, email);
+    const enforced = isBetaDailyQuotaEnforcedForUser(uid, email, plan);
     if (!enforced && !(isLocalDevQuotaRelaxed() && uid.trim())) {
       setLoading(false);
       setSpellingConsumed(false);
@@ -51,13 +51,13 @@ export function useBetaDailyQuota(uid, email = '') {
     if (status.hasBoostApprovedToday) {
       syncBoostApprovedBadge(uid);
     }
-  }, [uid, email]);
+  }, [uid, email, plan]);
 
   useEffect(() => {
     void refresh();
   }, [refresh]);
 
-  const enforced = isBetaDailyQuotaEnforcedForUser(uid, email);
+  const enforced = isBetaDailyQuotaEnforcedForUser(uid, email, plan);
   const canRunSpellingCheck = !enforced || (!loading && !spellingConsumed);
   const canRunConsistencyCheck =
     !enforced || (!loading && !consistencyConsumed);

@@ -1,10 +1,32 @@
 import { isBetaQuotaAdminExempt } from './betaDailyQuota.js';
+import { isPaidPlan, normalizeUserPlan } from './userPlan.js';
+import { getLocalUserPlan } from './userProfileStorage.js';
 
-/** 일반 계정 — 저장한 기준(이름 붙인 프리셋) 상한 */
-export const MAX_CRITERIA_PRESETS = 3;
+/** 무료 계정 — 저장한 기준(이름 붙인 프리셋) 상한 */
+export const MAX_CRITERIA_PRESETS_FREE = 1;
 
+/** 유료 계정 — 저장 상한 */
+export const MAX_CRITERIA_PRESETS_PAID = 3;
+
+/**
+ * 선반 UI·하위 호환용 — 유료 상한과 동일.
+ * 실제 한도는 `getMaxCriteriaPresets`를 쓴다.
+ */
+export const MAX_CRITERIA_PRESETS = MAX_CRITERIA_PRESETS_PAID;
+
+/**
+ * @param {number | null} maxSlots null = 무제한(관리자)
+ */
+export function formatCriteriaPresetLimitMessage(maxSlots) {
+  if (maxSlots == null) {
+    return '프로젝트 저장 한도가 없습니다.';
+  }
+  return `프로젝트는 계정당 ${maxSlots}개까지 저장할 수 있습니다.`;
+}
+
+/** @deprecated `formatCriteriaPresetLimitMessage(getMaxCriteriaPresets(...))` 권장 */
 export const CRITERIA_PRESET_LIMIT_MESSAGE =
-  '프로젝트는 계정당 3개까지 저장할 수 있습니다.';
+  formatCriteriaPresetLimitMessage(MAX_CRITERIA_PRESETS_FREE);
 
 /**
  * @param {import('./ruleSetsStorage.js').RuleSet[]} ruleSets
@@ -23,19 +45,36 @@ export function isCriteriaPresetLimitExempt(uid, email = '') {
 }
 
 /**
+ * @param {string} [uid]
+ * @param {string} [email]
+ * @param {unknown} [plan] 생략 시 로컬 프로필 plan
+ * @returns {number | null} null = 무제한
+ */
+export function getMaxCriteriaPresets(uid = '', email = '', plan) {
+  if (isCriteriaPresetLimitExempt(uid, email)) return null;
+  const resolved =
+    plan === undefined ? getLocalUserPlan(uid) : normalizeUserPlan(plan);
+  return isPaidPlan({ plan: resolved })
+    ? MAX_CRITERIA_PRESETS_PAID
+    : MAX_CRITERIA_PRESETS_FREE;
+}
+
+/**
  * 새 이름으로 기준 저장 가능 여부 (동일 이름 덮어쓰기는 항상 허용)
  * @param {import('./ruleSetsStorage.js').RuleSet[]} ruleSets
  * @param {string} name
  * @param {string} [uid]
  * @param {string} [email]
+ * @param {unknown} [plan]
  */
-export function canAddCriteriaPreset(ruleSets, name, uid, email = '') {
-  if (isCriteriaPresetLimitExempt(uid, email)) return true;
+export function canAddCriteriaPreset(ruleSets, name, uid, email = '', plan) {
+  const maxSlots = getMaxCriteriaPresets(uid, email, plan);
+  if (maxSlots == null) return true;
   const trimmed = String(name ?? '').trim();
   if (!trimmed) return false;
   const existing = ruleSets.find((s) => (s.name || '').trim() === trimmed);
   if (existing) return true;
-  return countSavedCriteriaPresets(ruleSets) < MAX_CRITERIA_PRESETS;
+  return countSavedCriteriaPresets(ruleSets) < maxSlots;
 }
 
 /**
@@ -43,12 +82,14 @@ export function canAddCriteriaPreset(ruleSets, name, uid, email = '') {
  * @param {import('./ruleSetsStorage.js').RuleSet[]} ruleSets
  * @param {string} [uid]
  * @param {string} [email]
+ * @param {unknown} [plan]
  */
-export function enforceMaxCriteriaPresets(ruleSets, uid, email = '') {
-  if (isCriteriaPresetLimitExempt(uid, email)) return ruleSets;
+export function enforceMaxCriteriaPresets(ruleSets, uid, email = '', plan) {
+  const maxSlots = getMaxCriteriaPresets(uid, email, plan);
+  if (maxSlots == null) return ruleSets;
   const list = ruleSets ?? [];
   const saved = list.filter((s) => Boolean(s.savedAt));
-  if (saved.length <= MAX_CRITERIA_PRESETS) return list;
+  if (saved.length <= maxSlots) return list;
 
   const keepIds = new Set(
     [...saved]
@@ -60,7 +101,7 @@ export function enforceMaxCriteriaPresets(ruleSets, uid, email = '') {
         const bNamed = (b.name || '').trim() ? 1 : 0;
         return bNamed - aNamed;
       })
-      .slice(0, MAX_CRITERIA_PRESETS)
+      .slice(0, maxSlots)
       .map((s) => s.id),
   );
 

@@ -29,6 +29,7 @@ import ProjectHubTagFilters from './ProjectHubTagFilters.jsx';
  *   onOpenSection?: () => void,
  *   sharePreviewCardId?: string | null,
  *   onSharePreviewCardIdChange?: (cardId: string | null) => void,
+ *   profileSyncDone?: boolean,
  * }} props
  */
 export default function ProjectHubLibraryPanel({
@@ -42,8 +43,11 @@ export default function ProjectHubLibraryPanel({
   onOpenSection,
   sharePreviewCardId: sharePreviewCardIdProp,
   onSharePreviewCardIdChange,
+  profileSyncDone = true,
 }) {
-  const libraryInternal = useProjectHubLibrary(uid, email);
+  const libraryInternal = useProjectHubLibrary(uid, email, {
+    profileSyncDone,
+  });
   const library = libraryProp ?? libraryInternal;
   const { previewCards, loading, slotLabel, slotPlan } = library;
 

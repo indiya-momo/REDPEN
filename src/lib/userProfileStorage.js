@@ -5,6 +5,7 @@
  */
 import { clearAllWorkGuideDismissals } from './workGuideKeys.js';
 import { clearWorkGuideOnboardingExposure } from './workGuideOnboardingExposure.js';
+import { normalizeUserPlan } from './userPlan.js';
 
 const STORAGE_KEY = 'indiya-user-profile-v1';
 /** ?resetOnboarding=1 로 로컬 리셋한 뒤, 같은 탭에서 클라우드 완료 프로필이 다시 안 덮이게 */
@@ -49,12 +50,55 @@ export function createRandomNickname() {
  *   onboardingComplete: boolean,
  *   userConfirmed: boolean,
  *   completedAt: number,
+ *   plan: 'free' | 'paid',
  * } | null}
  */
 export function getUserProfile(uid) {
   if (!uid) return null;
   const profile = readMap()[uid];
-  return profile && typeof profile === 'object' ? profile : null;
+  if (!profile || typeof profile !== 'object') return null;
+  return {
+    ...profile,
+    plan: normalizeUserPlan(profile.plan),
+  };
+}
+
+/**
+ * @param {string} uid
+ * @returns {'free' | 'paid'}
+ */
+export function getLocalUserPlan(uid) {
+  return normalizeUserPlan(getUserProfile(uid)?.plan);
+}
+
+/**
+ * 클라우드 plan만 로컬에 반영 (온보딩 병합과 무관).
+ * @param {string} uid
+ * @param {unknown} plan
+ * @returns {boolean}
+ */
+export function syncUserPlanFromCloud(uid, plan) {
+  const id = String(uid ?? '').trim();
+  if (!id) return false;
+  const nextPlan = normalizeUserPlan(plan);
+  const map = readMap();
+  const prev = map[id];
+  if (prev && typeof prev === 'object') {
+    if (normalizeUserPlan(prev.plan) === nextPlan) return false;
+    map[id] = { ...prev, plan: nextPlan };
+  } else {
+    map[id] = {
+      nickname: '',
+      termsAccepted: false,
+      privacyAccepted: false,
+      marketingOptIn: false,
+      onboardingComplete: false,
+      userConfirmed: false,
+      completedAt: 0,
+      plan: nextPlan,
+    };
+  }
+  return writeMap(map);
 }
 
 /** 모달에서 직접 완료한 경우만 true (예전 자동 저장은 false) */
@@ -77,6 +121,7 @@ export function isOnboardingComplete(uid) {
  *   onboardingComplete?: boolean,
  *   userConfirmed?: boolean,
  *   completedAt?: number,
+ *   plan?: string,
  * }} cloudProfile
  * @returns {boolean} localStorage를 갱신했으면 true
  */
@@ -87,7 +132,9 @@ export function mergeUserProfileFromCloud(uid, cloudProfile) {
   const local = getUserProfile(uid);
   const cloudAt = cloudProfile.completedAt ?? 0;
   const localAt = local?.completedAt ?? 0;
-  if (local?.userConfirmed && localAt >= cloudAt) return false;
+  // plan은 항상 클라우드 우선 동기화
+  const planSynced = syncUserPlanFromCloud(uid, cloudProfile.plan);
+  if (local?.userConfirmed && localAt >= cloudAt) return planSynced;
 
   return Boolean(
     saveUserProfile(uid, {
@@ -95,7 +142,8 @@ export function mergeUserProfileFromCloud(uid, cloudProfile) {
       termsAccepted: local?.termsAccepted ?? false,
       privacyAccepted: local?.privacyAccepted ?? false,
       marketingOptIn: local?.marketingOptIn ?? false,
-    }),
+      plan: cloudProfile.plan,
+    }) || planSynced,
   );
 }
 
@@ -106,12 +154,14 @@ export function mergeUserProfileFromCloud(uid, cloudProfile) {
  *   termsAccepted?: boolean,
  *   privacyAccepted?: boolean,
  *   marketingOptIn?: boolean,
+ *   plan?: unknown,
  * }} payload
  * @returns {ReturnType<typeof getUserProfile>}
  */
 export function saveUserProfile(uid, payload) {
   if (!uid) return null;
   const map = readMap();
+  const prev = map[uid];
   const profile = {
     nickname: String(payload.nickname ?? '').trim(),
     termsAccepted: Boolean(payload.termsAccepted),
@@ -120,6 +170,9 @@ export function saveUserProfile(uid, payload) {
     onboardingComplete: true,
     userConfirmed: true,
     completedAt: Date.now(),
+    plan: normalizeUserPlan(
+      payload.plan !== undefined ? payload.plan : prev?.plan,
+    ),
   };
   map[uid] = profile;
   if (!writeMap(map)) return null;

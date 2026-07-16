@@ -83,7 +83,7 @@ import {
 } from '../lib/firebaseAuth.js';
 import { criteriaNameForInput } from '../lib/criteriaName.js';
 import { buildProjectContextWorkPatch } from '../lib/projectMeta.js';
-import { getUserProfile } from '../lib/userProfileStorage.js';
+import { getLocalUserPlan, getUserProfile } from '../lib/userProfileStorage.js';
 import { useUserProfileSync } from '../hooks/useUserProfileSync.js';
 import { WORK_GUIDE_KEYS } from '../lib/workGuideKeys.js';
 import { useGuestBrowseWorkGuide } from '../hooks/useGuestBrowseWorkGuide.js';
@@ -427,6 +427,10 @@ export default function MainScreen({
   const authUid = authSession?.uid ?? '';
   const authEmail = resolveQuotaAuthEmail(authSession);
   const { profileRev } = useUserProfileSync(authUid);
+  const userPlan = useMemo(() => {
+    void profileRev;
+    return getLocalUserPlan(authUid);
+  }, [authUid, profileRev]);
   const greetingName = useMemo(() => {
     void profileRev;
     const profile = authUid ? getUserProfile(authUid) : null;
@@ -476,7 +480,7 @@ export default function MainScreen({
     },
     [pageDisplay.active, pageDisplay.formatPage],
   );
-  const betaQuota = useBetaDailyQuota(authUid, authEmail);
+  const betaQuota = useBetaDailyQuota(authUid, authEmail, userPlan);
   const rewardNotice = useRewardNotice(authUid, rewardNoticeTick);
 
   const daysWithMomo = useMemo(() => {

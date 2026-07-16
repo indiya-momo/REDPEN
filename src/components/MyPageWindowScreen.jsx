@@ -11,7 +11,7 @@ import {
   resolveSessionEmailAsync,
   signOutUser,
 } from '../lib/firebaseAuth.js';
-import { getUserProfile } from '../lib/userProfileStorage.js';
+import { getLocalUserPlan, getUserProfile } from '../lib/userProfileStorage.js';
 import {
   daysSinceJoin,
   syncProfileBadges,
@@ -25,6 +25,7 @@ import { resolveQuotaAuthEmail } from '../lib/betaDailyQuota.js';
 import { clearRewardNotice } from '../lib/rewardNotice.js';
 import { getEarnedBadgeIds } from '../lib/userBadges.js';
 import { useBetaDailyQuota } from '../hooks/useBetaDailyQuota.js';
+import { useUserProfileSync } from '../hooks/useUserProfileSync.js';
 import {
   isRuleSetsCloudEnabled,
   saveRuleSetsCloud,
@@ -90,19 +91,19 @@ const MEMBER_BENEFIT_TIERS = [
   {
     name: '오픈베타 테스터',
     description:
-      '오픈베타 기간 프로젝트 저장 [3개] · 매일 맞춤법 [1회] + 표기 통일 [1회] 제공',
+      '오픈베타 기간 프로젝트 저장 [1개] · 매일 맞춤법 [1회] + 표기 통일 [1회] 제공',
     tabLimit: 1,
   },
   {
     name: '비밀 연구원',
     description:
-      '오픈베타 기간 프로젝트 저장 [3개] · 매일 맞춤법 [2회] + 표기 통일 [2회] 제공',
+      '오픈베타 기간 프로젝트 저장 [1개] · 매일 맞춤법 [2회] + 표기 통일 [2회] 제공',
     tabLimit: 2,
   },
   {
     name: '수석 검증관',
     description:
-      '오픈베타 기간 프로젝트 저장 [3개] · 매일 맞춤법 [3회] + 표기 통일 [3회] 제공',
+      '오픈베타 기간 프로젝트 저장 [1개] · 매일 맞춤법 [3회] + 표기 통일 [3회] 제공',
     tabLimit: 3,
   },
 ];
@@ -397,6 +398,7 @@ function MyPageOverviewSection({
   totalLabel,
   projectUid,
   projectEmail,
+  profileSyncDone,
   onOpenProfile,
   onOpenBadges,
   onOpenProjects,
@@ -413,6 +415,7 @@ function MyPageOverviewSection({
         <ProjectHubLibraryPanel
           uid={projectUid}
           email={projectEmail}
+          profileSyncDone={profileSyncDone}
           onSelectCard={onOpenProjects}
           onOpenSection={() => onOpenProjects()}
         />
@@ -432,7 +435,13 @@ function MyPageOverviewSection({
   );
 }
 
-function ProjectHubPageSection({ uid, email, entryCardId, onEntryApplied }) {
+function ProjectHubPageSection({
+  uid,
+  email,
+  entryCardId,
+  onEntryApplied,
+  profileSyncDone,
+}) {
   return (
     <ProjectHubEditorShell>
       {isMyPageProjectHubEnabled() ? (
@@ -441,6 +450,7 @@ function ProjectHubPageSection({ uid, email, entryCardId, onEntryApplied }) {
           email={email}
           entryCardId={entryCardId}
           onEntryApplied={onEntryApplied}
+          profileSyncDone={profileSyncDone}
         />
       ) : (
         <ProjectHubPlaceholderSection />
@@ -597,15 +607,19 @@ export default function MyPageWindowScreen({ authSession, authReady }) {
     }
   }, [activeNav, resolvedNav]);
   const [badgeRev, setBadgeRev] = useState(0);
+  const { profileRev, profileSyncDone } = useUserProfileSync(
+    authSession?.uid ?? '',
+  );
 
   const profile = authSession?.uid ? getUserProfile(authSession.uid) : null;
   const displayName = useMemo(() => {
+    void profileRev;
     const nickname = profile?.nickname?.trim();
     if (nickname) return nickname;
     const name = authSession?.displayName?.trim();
     if (name) return name;
     return '게스트';
-  }, [authSession?.displayName, profile?.nickname]);
+  }, [authSession?.displayName, profile?.nickname, profileRev]);
 
   const [email, setEmail] = useState(() => resolveSessionEmail(authSession));
 
@@ -650,7 +664,15 @@ export default function MyPageWindowScreen({ authSession, authReady }) {
     () => resolveQuotaAuthEmail(authSession),
     [authSession],
   );
-  const quota = useBetaDailyQuota(authSession?.uid ?? '', quotaEmail);
+  const userPlan = useMemo(() => {
+    void profileRev;
+    return getLocalUserPlan(authSession?.uid ?? '');
+  }, [authSession?.uid, profileRev]);
+  const quota = useBetaDailyQuota(
+    authSession?.uid ?? '',
+    quotaEmail,
+    userPlan,
+  );
 
   useEffect(() => {
     const uid = authSession?.uid?.trim();
@@ -808,6 +830,7 @@ export default function MyPageWindowScreen({ authSession, authReady }) {
             totalLabel={badgeStats.totalLabel}
             projectUid={authSession.uid}
             projectEmail={quotaEmail}
+            profileSyncDone={profileSyncDone}
             onOpenProfile={() => setActiveNav('profile')}
             onOpenBadges={() => setActiveNav('badges')}
             onOpenProjects={(cardId) => {
@@ -821,6 +844,7 @@ export default function MyPageWindowScreen({ authSession, authReady }) {
             email={quotaEmail}
             entryCardId={projectsEntryCardId}
             onEntryApplied={() => setProjectsEntryCardId(null)}
+            profileSyncDone={profileSyncDone}
           />
         ) : resolvedNav === 'profile' ? (
           <ProfileSection

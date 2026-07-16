@@ -12,9 +12,10 @@ import {
  *
  * @param {string} uid
  * @param {string} email
+ * @param {{ profileSyncDone?: boolean }} [options]
  */
-export function useProjectHubLibrary(uid, email) {
-  const projectState = useMyPageProjects(uid, email);
+export function useProjectHubLibrary(uid, email, options = {}) {
+  const projectState = useMyPageProjects(uid, email, options);
   const {
     projects,
     activeSetId,
@@ -43,7 +44,10 @@ export function useProjectHubLibrary(uid, email) {
     [slotPlan.visibleProjects, activeSetId],
   );
 
-  const slotLabel = formatLibrarySlotGauge(savedCount);
+  const slotLabel =
+    maxSlots == null
+      ? String(savedCount)
+      : formatLibrarySlotGauge(savedCount, maxSlots);
 
   return {
     ...projectState,

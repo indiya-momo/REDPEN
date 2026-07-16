@@ -7,10 +7,15 @@ export const MOCK_LIBRARY_SLOT_MAX = 3;
 /**
  * 라이브러리 그리드 슬롯 게이지 — `3/3` 형식.
  * @param {number} cardCount
+ * @param {number} [maxSlots]
  */
-export function formatLibrarySlotGauge(cardCount = 0) {
-  const filled = Math.min(Math.max(0, cardCount), MOCK_LIBRARY_SLOT_MAX);
-  return `${filled}/${MOCK_LIBRARY_SLOT_MAX}`;
+export function formatLibrarySlotGauge(
+  cardCount = 0,
+  maxSlots = MOCK_LIBRARY_SLOT_MAX,
+) {
+  const limit = Math.max(0, maxSlots);
+  const filled = Math.min(Math.max(0, cardCount), limit);
+  return `${filled}/${limit}`;
 }
 
 /** 마이페이지 「나의 프로젝트」 그리드 표시 상한 (저장 쿼터와 무관) */
