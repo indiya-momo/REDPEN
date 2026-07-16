@@ -1,5 +1,6 @@
 import { useCallback, useId, useMemo, useState } from 'react';
 import {
+  buildProjectCardDisplayTags,
   buildProjectCardPillarPreviews,
   formatProjectCardCompactDateLine,
   formatProjectCardEditionValues,
@@ -74,6 +75,10 @@ export default function ProjectLibraryCard({
 
   const pillarRows = useMemo(
     () => buildProjectCardPillarPreviews(card),
+    [card],
+  );
+  const displayTags = useMemo(
+    () => buildProjectCardDisplayTags(card),
     [card],
   );
 
@@ -173,8 +178,19 @@ export default function ProjectLibraryCard({
       tabIndex={onSelect ? 0 : undefined}
       aria-pressed={onSelect ? selected : undefined}
     >
-      <div className="sheet-card__tabs" aria-hidden="true">
-        <span className="sheet-card__tab sheet-card__tab--tag sheet-card__tab--lead sheet-card__tab--ghost" />
+      <div className="sheet-card__tabs" aria-hidden={displayTags.length === 0}>
+        {displayTags.length > 0 ? (
+          displayTags.map((tag, index) => (
+            <span
+              key={`${tag}-${index}`}
+              className={`sheet-card__tab sheet-card__tab--tag${index === 0 ? ' sheet-card__tab--lead' : ''}`}
+            >
+              {tag}
+            </span>
+          ))
+        ) : (
+          <span className="sheet-card__tab sheet-card__tab--tag sheet-card__tab--lead sheet-card__tab--ghost" />
+        )}
       </div>
 
       <div className="sheet-card__body">

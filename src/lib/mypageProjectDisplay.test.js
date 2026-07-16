@@ -36,11 +36,12 @@ describe('planMyPageProjectGrid', () => {
     ];
     const { visibleProjects, visibleEmptySlotCount } =
       planMyPageProjectGrid(many);
+    // 만든/저장 시각 오름차순 — 오래된 것부터, 편집으로 순서가 바뀌지 않음
     expect(visibleProjects.map((p) => p.id)).toEqual([
-      'fifth',
-      'extra',
-      'new',
+      'old',
       'mid',
+      'new',
+      'extra',
     ]);
     expect(visibleEmptySlotCount).toBe(0);
   });
@@ -141,9 +142,9 @@ describe('planMyPageProjectSlots', () => {
       ),
     ).toEqual({
       visibleProjects: [
-        project('c', '2026-06-03'),
-        project('b', '2026-06-02'),
         project('a', '2026-06-01'),
+        project('b', '2026-06-02'),
+        project('c', '2026-06-03'),
       ],
       actionableEmptySlotCount: 0,
       lockedSlotCount: 1,
