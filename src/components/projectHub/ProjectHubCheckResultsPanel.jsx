@@ -16,12 +16,14 @@ import { showAppAlert } from '../../lib/appDialog.js';
  *   uid: string,
  *   projectId: string,
  *   projectName?: string,
+ *   embedded?: boolean,
  * }} props
  */
 export default function ProjectHubCheckResultsPanel({
   uid,
   projectId,
   projectName = '',
+  embedded = false,
 }) {
   const [paid, setPaid] = useState(/** @type {boolean | null} */ (null));
   const [items, setItems] = useState(
@@ -132,31 +134,35 @@ export default function ProjectHubCheckResultsPanel({
   const statusDesc =
     loading || paid === null
       ? '저장된 결과를 확인하는 중…'
-      : paid === false
-        ? '유료회원 전용입니다. 작업대에서 바로 받는 「검수 결과 다운받기」는 그대로 이용할 수 있습니다.'
-        : items.length === 0
-          ? '아직 저장된 검수 결과가 없습니다. 작업대에서 「기준 검수」를 완료해야 보관됩니다. (아래 작업 이력의 기준 등록과는 다릅니다.)'
-          : null;
+      : paid && items.length === 0
+        ? '아직 저장된 검수 결과가 없습니다. 작업대에서 「기준 검수」를 완료해야 보관됩니다. (아래 작업 이력의 기준 등록과는 다릅니다.)'
+        : null;
 
-  return (
-    <div className="project-hub-settings__card project-hub-settings__card--check-results">
+  const countLabel = loading || paid === null ? '…' : `${items.length}건`;
+
+  const body = (
+    <>
       <div className="project-hub-settings__row project-hub-settings__row--readonly project-hub-settings__row--check-results-head">
         <div className="project-hub-settings__row-text">
           <span className="project-hub-settings__row-label">저장된 검수 결과</span>
           <p className="project-hub-settings__row-desc">
-            유료 회원은 검수 완료 시 결과(발견 목록·요약)가 최대 30일 보관됩니다.
-            원고 PDF는 서버에 올리지 않습니다.
+            유료 회원은 검수 완료시 결과가 자동 저장되며 30일간 보관됩니다
           </p>
         </div>
-        <button
-          type="button"
-          className="project-hub-settings__secondary-btn project-hub-settings__secondary-btn--check-results"
-          disabled={zipBusy}
-          aria-busy={zipBusy || loading}
-          onClick={() => void handleZipDownload()}
-        >
-          {zipBusy ? '받는 중…' : '검수 결과 다운받기'}
-        </button>
+        <div className="project-hub-check-results__download-box">
+          <span className="project-hub-check-results__download-count">
+            {countLabel}
+          </span>
+          <button
+            type="button"
+            className="project-hub-settings__secondary-btn project-hub-settings__secondary-btn--check-results"
+            disabled={zipBusy}
+            aria-busy={zipBusy || loading}
+            onClick={() => void handleZipDownload()}
+          >
+            {zipBusy ? '받는 중…' : '검수 이력 다운받기'}
+          </button>
+        </div>
       </div>
 
       {statusDesc ? (
@@ -194,6 +200,18 @@ export default function ProjectHubCheckResultsPanel({
           })}
         </ul>
       ) : null}
+    </>
+  );
+
+  if (embedded) {
+    return (
+      <div className="project-hub-settings__check-results-embedded">{body}</div>
+    );
+  }
+
+  return (
+    <div className="project-hub-settings__card project-hub-settings__card--check-results">
+      {body}
     </div>
   );
 }

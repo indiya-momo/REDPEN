@@ -39,41 +39,53 @@ const PILLAR_MEMO_SECTIONS = {
 const META_AUTOSAVE_MS = 400;
 
 /**
- * 작업 이력 — 마지막 작업 요약 카드 (읽기 전용).
- * @param {{ summary: import('../presentation/projectWorkSummary.js').ProjectWorkSummary | null }} props
+ * 작업 이력 — 마지막 작업·PDF·저장된 검수 결과 (한 카드).
+ * @param {{
+ *   summary: import('../presentation/projectWorkSummary.js').ProjectWorkSummary | null,
+ *   uid?: string,
+ *   projectId?: string,
+ *   projectName?: string,
+ * }} props
  */
-function ProjectWorkSummaryCard({ summary }) {
-  if (!summary) {
-    return (
-      <div className="project-hub-settings__card project-hub-settings__card--work-summary">
+function ProjectWorkSummaryCard({
+  summary,
+  uid = '',
+  projectId = '',
+  projectName = '',
+}) {
+  return (
+    <div className="project-hub-settings__card project-hub-settings__card--work-summary">
+      {!summary ? (
         <div className="project-hub-settings__row project-hub-settings__row--readonly">
           <p className="project-hub-settings__row-desc">
             아직 작업 기록이 없습니다. 검수 작업을 진행하면 여기에 요약이
             남습니다.
           </p>
         </div>
-      </div>
-    );
-  }
-
-  const rows = [
-    { label: '마지막 작업', value: summary.lastWorked },
-    { label: 'PDF 정보', value: summary.pdf },
-  ];
-
-  return (
-    <div className="project-hub-settings__card project-hub-settings__card--work-summary">
-      {rows.map((row) => (
-        <div
-          key={row.label}
-          className="project-hub-settings__row project-hub-settings__row--readonly"
-        >
-          <div className="project-hub-settings__row-text">
-            <span className="project-hub-settings__row-label">{row.label}</span>
+      ) : (
+        [
+          { label: '마지막 작업', value: summary.lastWorked },
+          { label: 'PDF 정보', value: summary.pdf },
+        ].map((row) => (
+          <div
+            key={row.label}
+            className="project-hub-settings__row project-hub-settings__row--readonly"
+          >
+            <div className="project-hub-settings__row-text">
+              <span className="project-hub-settings__row-label">{row.label}</span>
+            </div>
+            <span className="project-hub-settings__value">{row.value}</span>
           </div>
-          <span className="project-hub-settings__value">{row.value}</span>
-        </div>
-      ))}
+        ))
+      )}
+      {uid && projectId ? (
+        <ProjectHubCheckResultsPanel
+          uid={uid}
+          projectId={projectId}
+          projectName={projectName}
+          embedded
+        />
+      ) : null}
     </div>
   );
 }
@@ -529,14 +541,10 @@ export default function ProjectHubSettingsPanel({
             <div className="project-hub-settings__group">
               <ProjectWorkSummaryCard
                 summary={buildProjectWorkSummary(ruleSet?.projectContext)}
+                uid={uid}
+                projectId={card?.id}
+                projectName={card.title || ruleSet?.name || ''}
               />
-              {uid && card?.id ? (
-                <ProjectHubCheckResultsPanel
-                  uid={uid}
-                  projectId={card.id}
-                  projectName={card.title || ruleSet?.name || ''}
-                />
-              ) : null}
               <ProjectWorkHistoryChart
                 history={ruleSet?.workHistory}
                 projectContext={ruleSet?.projectContext}

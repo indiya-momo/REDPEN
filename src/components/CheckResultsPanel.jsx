@@ -14,7 +14,7 @@ import {
   resultBadgeTone,
   resultPillarToneClass,
 } from '../lib/resultPillarTone.js';
-import { formatResultsStatCount, EDITOR_REVIEW_BADGE_LABEL, SPELLING_RULE_BADGE_LABEL } from '../lib/checkResultSummaryFormat.js';
+import { formatResultsStatCount, EDITOR_REVIEW_BADGE_LABEL, SPELLING_RULE_BADGE_LABEL, LOANWORD_BADGE_LABEL } from '../lib/checkResultSummaryFormat.js';
 
 /**
  * @param {{
@@ -114,10 +114,13 @@ function ResultHeaderSummary({
   totalFindings,
   cautionWithFindingsCount = 0,
   builtinWithFindingsCount = 0,
+  loanwordWithFindingsCount = 0,
   cautionFindingsCount = 0,
   builtinFindingsCount = 0,
+  loanwordFindingsCount = 0,
   cautionCriteriaSelected = false,
   builtinCriteriaSelected = false,
+  loanwordCriteriaSelected = false,
   literalWithFindingsCount = 0,
   unifyWithFindingsCount = 0,
   commonStringWithFindingsCount = 0,
@@ -168,6 +171,15 @@ function ResultHeaderSummary({
             count={builtinWithFindingsCount}
             findingsCount={builtinFindingsCount}
             tone="spelling-builtin"
+          />
+        ) : null,
+        loanwordCriteriaSelected ? (
+          <ResultHeaderStat
+            key="loanword"
+            badge={LOANWORD_BADGE_LABEL}
+            count={loanwordWithFindingsCount}
+            findingsCount={loanwordFindingsCount}
+            tone="spelling-loanword"
           />
         ) : null,
     ].filter(Boolean);
@@ -285,10 +297,13 @@ export default function CheckResultsPanel({
   viewSource,
   cautionWithFindingsCount = 0,
   builtinWithFindingsCount = 0,
+  loanwordWithFindingsCount = 0,
   cautionFindingsCount = 0,
   builtinFindingsCount = 0,
+  loanwordFindingsCount = 0,
   cautionCriteriaSelected = false,
   builtinCriteriaSelected = false,
+  loanwordCriteriaSelected = false,
   literalWithFindingsCount = 0,
   unifyWithFindingsCount = 0,
   commonStringWithFindingsCount = 0,
@@ -338,10 +353,13 @@ export default function CheckResultsPanel({
             totalFindings={totalFindings}
             cautionWithFindingsCount={cautionWithFindingsCount}
             builtinWithFindingsCount={builtinWithFindingsCount}
+            loanwordWithFindingsCount={loanwordWithFindingsCount}
             cautionFindingsCount={cautionFindingsCount}
             builtinFindingsCount={builtinFindingsCount}
+            loanwordFindingsCount={loanwordFindingsCount}
             cautionCriteriaSelected={cautionCriteriaSelected}
             builtinCriteriaSelected={builtinCriteriaSelected}
+            loanwordCriteriaSelected={loanwordCriteriaSelected}
             literalWithFindingsCount={literalWithFindingsCount}
             unifyWithFindingsCount={unifyWithFindingsCount}
             commonStringWithFindingsCount={commonStringWithFindingsCount}
@@ -363,6 +381,7 @@ export default function CheckResultsPanel({
                 (i) => i.pageNum === currentPage,
               );
               const isCaution = group.category === 'caution';
+              const isLoanword = group.category === 'loanword';
               const isConsistency = source === 'consistency';
               const visible = isGroupVisible(source, group);
               const visMode = groupVisibilityMode
@@ -394,7 +413,9 @@ export default function CheckResultsPanel({
                         ? 'result-card--consistency'
                         : isCaution
                           ? 'result-card--caution'
-                          : 'result-card--builtin'
+                          : isLoanword
+                            ? 'result-card--loanword'
+                            : 'result-card--builtin'
                     }`}
                     role="button"
                     tabIndex={0}
@@ -459,6 +480,17 @@ export default function CheckResultsPanel({
                               </span>{' '}
                               <span className="caution-result-chip">
                                 {cautionResultChipLabel(group)}
+                              </span>
+                            </>
+                          ) : isLoanword && first ? (
+                            <>
+                              <span
+                                className={`spelling-badge-inline ${resultPillarToneClass('spelling-loanword')}`.trim()}
+                              >
+                                {LOANWORD_BADGE_LABEL}
+                              </span>{' '}
+                              <span className="spelling-result-chip">
+                                {`${first.matchedText} → ${first.suggestedText}`}
                               </span>
                             </>
                           ) : first ? (

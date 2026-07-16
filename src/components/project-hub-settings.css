@@ -690,6 +690,14 @@
   color: var(--pillar-auxiliary);
 }
 
+.work-history-panel__spark-row--consistency {
+  color: var(--pillar-consistency, #5a6b4f);
+}
+
+.work-history-panel__spark-row--consistency.work-history-panel__spark-row--muted {
+  color: #7a8a6e;
+}
+
 .work-history-panel__spark-label {
   font-size: 0.76rem;
   font-weight: 700;
@@ -895,6 +903,41 @@
   display: flex;
   flex-direction: column;
   gap: 0.65rem;
+}
+
+/* 작업 요약 카드 안 — 위 행(마지막 작업·PDF)과 같은 패딩·구분선만 쓴다 */
+.project-hub-settings__check-results-embedded {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.project-hub-settings__check-results-embedded > .project-hub-settings__row-desc {
+  padding: 0 1rem 0.75rem;
+}
+
+.project-hub-settings__check-results-embedded > .project-hub-check-results {
+  padding: 0 1rem 0.75rem;
+}
+
+.project-hub-check-results__download-box {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+
+.project-hub-check-results__download-count {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #3e2723;
+  white-space: nowrap;
 }
 
 .project-hub-settings__secondary-btn {

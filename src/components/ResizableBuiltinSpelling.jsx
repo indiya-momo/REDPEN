@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import BuiltinSpellingPanel from './BuiltinSpellingPanel.jsx';
 import CautionChecklist from './CautionChecklist.jsx';
+import LoanwordCheckPanel from './LoanwordCheckPanel.jsx';
 
 const STORAGE_KEY = 'builtin-spelling-panel-height-v2';
 // 기본 진입 시 맞춤법 기준 항목이 충분히 보이도록 하단 패널 비중을 높인다.
@@ -184,6 +185,13 @@ export default function ResizableBuiltinSpelling({
               onBuiltInToggle={onBuiltInToggle}
               onBuiltInSetAll={onBuiltInSetAll}
               guideSpotlight={guideSpotlight}
+            />
+          </div>
+          <div className="builtin-spelling-loanword-scroll">
+            <LoanwordCheckPanel
+              builtInEnabled={builtInEnabled}
+              onBuiltInToggle={onBuiltInToggle}
+              onBuiltInSetAll={onBuiltInSetAll}
             />
           </div>
         </div>

@@ -763,6 +763,7 @@ export function useRuleSets(authUid = '', authEmail = '') {
         lastWorkedAt,
       });
       // 검수 1회 커밋일 때만 이력 장부에 한 줄 기입 (debounce 갱신은 메타만)
+      // spelling = 맞춤법 규칙만, loanword = 외래어 표기법 (합산하지 않음)
       const workHistory = patch.commitWorkHistory
         ? appendWorkHistoryEntry(
             source.workHistory,
@@ -771,6 +772,7 @@ export function useRuleSets(authUid = '', authEmail = '') {
               spelling:
                 patch.lastBuiltinSpellingFindingCount ??
                 patch.lastSpellingFindingCount,
+              loanword: patch.lastLoanwordFindingCount,
               consistencyFind: patch.lastConsistencyFindCount,
               consistencyUnify: patch.lastConsistencyUnifyCount,
               consistencyCommonString: patch.lastConsistencyCommonStringCount,
@@ -787,9 +789,14 @@ export function useRuleSets(authUid = '', authEmail = '') {
       );
       ruleSetsRef.current = next;
       setRuleSets(next);
-      scheduleRuleSetsSave(next);
+      // 검수 1회 커밋은 마이페이지 창이 storage 이벤트로 바로 읽도록 즉시 flush
+      if (patch.commitWorkHistory) {
+        flushPendingRuleSetsSave();
+      } else {
+        scheduleRuleSetsSave(next);
+      }
     },
-    [scheduleRuleSetsSave],
+    [flushPendingRuleSetsSave, scheduleRuleSetsSave],
   );
 
   /** 저장한 기준 프리셋 삭제(목록·localStorage) */
@@ -869,14 +876,19 @@ export function useRuleSets(authUid = '', authEmail = '') {
   );
 
   const handleBuiltInSetAll = useCallback(
-    (enabled) => {
+    /**
+     * @param {boolean} enabled
+     * @param {import('../lib/ruleTypes.js').Rule[]} [targetRules]
+     *   패널별 부분 선택(맞춤법 규칙 / 외래어 표기법). 없으면 전체.
+     */
+    (enabled, targetRules) => {
       const activeSet = ruleSetsRef.current.find(
         (s) => s.id === activeSetIdRef.current,
       );
       if (!activeSet) return;
       const prev = activeSet.builtInEnabled ?? builtInEnabledFromSheet();
       const nextBuiltIn = { ...prev };
-      for (const r of BUILT_IN_RULES) {
+      for (const r of targetRules ?? BUILT_IN_RULES) {
         if (countsTowardSpellingQuota(r)) {
           nextBuiltIn[builtInEnabledKey(r)] = enabled;
         }

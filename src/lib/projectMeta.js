@@ -9,6 +9,7 @@ import { mergeWorkHistories } from './projectWorkHistory.js';
  *   lastSpellingFindingCount?: number,
  *   lastEditorReviewFindingCount?: number,
  *   lastBuiltinSpellingFindingCount?: number,
+ *   lastLoanwordFindingCount?: number,
  *   lastConsistencyFindingCount?: number,
  *   lastConsistencyFindCount?: number,
  *   lastConsistencyUnifyCount?: number,
@@ -135,6 +136,15 @@ export function normalizeProjectContext(raw) {
     builtinSpellingCount >= 0
   ) {
     ctx.lastBuiltinSpellingFindingCount = Math.floor(builtinSpellingCount);
+  }
+
+  const loanwordCount = source.lastLoanwordFindingCount;
+  if (
+    typeof loanwordCount === 'number' &&
+    Number.isFinite(loanwordCount) &&
+    loanwordCount >= 0
+  ) {
+    ctx.lastLoanwordFindingCount = Math.floor(loanwordCount);
   }
 
   const consistencyCount = source.lastConsistencyFindingCount;
@@ -301,6 +311,7 @@ export function mergeRuleSetProjectMeta(primary, secondary) {
  *   lastSpellingFindingCount?: number,
  *   lastEditorReviewFindingCount?: number,
  *   lastBuiltinSpellingFindingCount?: number,
+ *   lastLoanwordFindingCount?: number,
  *   lastConsistencyFindingCount?: number,
  *   lastConsistencyFindCount?: number,
  *   lastConsistencyUnifyCount?: number,
@@ -330,6 +341,7 @@ export function buildProjectContextSnapshot(input) {
     lastSpellingFindingCount: input.lastSpellingFindingCount,
     lastEditorReviewFindingCount: input.lastEditorReviewFindingCount,
     lastBuiltinSpellingFindingCount: input.lastBuiltinSpellingFindingCount,
+    lastLoanwordFindingCount: input.lastLoanwordFindingCount,
     lastConsistencyFindingCount: input.lastConsistencyFindingCount,
     lastConsistencyFindCount: input.lastConsistencyFindCount,
     lastConsistencyUnifyCount: input.lastConsistencyUnifyCount,
@@ -351,6 +363,7 @@ export function buildProjectContextSnapshot(input) {
  *   spellingFindingCount?: number,
  *   editorReviewFindingCount?: number,
  *   builtinSpellingFindingCount?: number,
+ *   loanwordFindingCount?: number,
  *   consistencyFindingCount?: number,
  *   consistencyFindCount?: number,
  *   consistencyUnifyCount?: number,
@@ -372,6 +385,9 @@ export function buildProjectContextWorkPatch(input) {
       : undefined,
     lastBuiltinSpellingFindingCount: input.spellingCheckDone
       ? input.builtinSpellingFindingCount
+      : undefined,
+    lastLoanwordFindingCount: input.spellingCheckDone
+      ? input.loanwordFindingCount
       : undefined,
     lastConsistencyFindingCount: input.consistencyCheckDone
       ? input.consistencyFindingCount
@@ -397,6 +413,7 @@ export function buildProjectContextWorkPatch(input) {
     patch.lastSpellingFindingCount = input.spellingFindingCount;
     patch.lastEditorReviewFindingCount = input.editorReviewFindingCount;
     patch.lastBuiltinSpellingFindingCount = input.builtinSpellingFindingCount;
+    patch.lastLoanwordFindingCount = input.loanwordFindingCount;
   }
   if (input.consistencyCheckDone) {
     patch.lastConsistencyFindingCount = input.consistencyFindingCount;

@@ -25,21 +25,25 @@ describe('buildProjectWorkSummary', () => {
       NOW,
     );
     expect(summary).not.toBeNull();
-    expect(summary?.lastWorked).toBe('26.07.05 (3일 전)');
+    const clock = (() => {
+      const d = new Date('2026-07-05T09:00:00.000Z');
+      return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+    })();
+    expect(summary?.lastWorked).toBe(`26.07.05 (3일 전) ${clock}`);
     expect(summary?.pdf).toBe('원고.pdf · 240쪽 · 12.3MB');
   });
 
-  it('오늘·어제는 상대 표기로 쓴다', () => {
+  it('오늘·어제는 상대 표기와 24시간 시각을 쓴다', () => {
     const today = buildProjectWorkSummary(
       { lastWorkedAt: '2026-07-08T01:00:00.000Z' },
       NOW,
     );
-    expect(today?.lastWorked).toContain('(오늘)');
+    expect(today?.lastWorked).toMatch(/\(오늘\) \d{2}:\d{2}$/);
     const yesterday = buildProjectWorkSummary(
       { lastWorkedAt: '2026-07-07T01:00:00.000Z' },
       NOW,
     );
-    expect(yesterday?.lastWorked).toContain('(어제)');
+    expect(yesterday?.lastWorked).toMatch(/\(어제\) \d{2}:\d{2}$/);
   });
 
   it('PDF 정보가 없으면 기록 없음으로 표시한다', () => {

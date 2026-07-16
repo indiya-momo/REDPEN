@@ -7,7 +7,10 @@ import {
   formatSpellingCheckCompleteMessage,
   formatSpellingCheckConfirmMessage,
 } from './spellingCheckConfirm.js';
-import { BUILT_IN_QUOTA_RULES } from './builtInRules.js';
+import {
+  LOANWORD_QUOTA_RULES,
+  SPELLING_QUOTA_RULES,
+} from './builtInRules.js';
 import { CAUTION_SEARCH_RULES } from './cautionRules.js';
 import { parseBracketTitleMessage } from './appDialog.js';
 
@@ -29,8 +32,9 @@ vi.mock('./betaDailyQuota.js', async (importOriginal) => {
 });
 
 vi.mock('./activeRuleCount.js', () => ({
-  countBuiltInActiveRules: () => 12,
+  countSpellingRuleActiveRules: () => 12,
   countSpacingReviewActiveRules: () => 5,
+  countLoanwordActiveRules: () => 3,
 }));
 
 afterEach(() => {
@@ -50,9 +54,11 @@ describe('confirmSpellingCheckBeforeRun', () => {
         remaining: 1,
         tabLimit: 2,
         builtinActive: 12,
-        builtinTotal: BUILT_IN_QUOTA_RULES.length,
+        builtinTotal: SPELLING_QUOTA_RULES.length,
         cautionActive: 5,
         cautionTotal: CAUTION_SEARCH_RULES.length,
+        loanwordActive: 3,
+        loanwordTotal: LOANWORD_QUOTA_RULES.length,
       });
     const { title, message } = parseBracketTitleMessage(msg);
     expect(confirmMock).toHaveBeenCalledWith(`${title}\n\n${message}`);
@@ -87,7 +93,16 @@ describe('countSpellingFindingsByCategory', () => {
         { category: 'caution', instances: [{}, {}] },
         { category: 'spelling', instances: [{}] },
       ]),
-    ).toEqual({ editorReview: 2, spelling: 1 });
+    ).toEqual({ editorReview: 2, spelling: 1, loanword: 0 });
+  });
+
+  it('외래어 표기법 지적은 따로 센다', () => {
+    expect(
+      countSpellingFindingsByCategory([
+        { category: 'loanword', instances: [{}, {}, {}] },
+        { category: 'spelling', instances: [{}] },
+      ]),
+    ).toEqual({ editorReview: 0, spelling: 1, loanword: 3 });
   });
 });
 
@@ -99,10 +114,13 @@ describe('countSpellingGroupsWithFindings', () => {
         { category: 'caution', instances: [] },
         { category: 'spelling', instances: [{}] },
         { category: 'spelling', instances: [] },
+        { category: 'loanword', instances: [{}] },
+        { category: 'loanword', instances: [] },
       ]),
     ).toEqual({
       cautionWithFindings: 1,
       builtinWithFindings: 1,
+      loanwordWithFindings: 1,
     });
   });
 });

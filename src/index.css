@@ -553,7 +553,8 @@ button {
 }
 
 .caution-checklist-summary,
-.builtin-spelling-summary {
+.builtin-spelling-summary,
+.loanword-check-summary {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -564,7 +565,8 @@ button {
 }
 
 .caution-checklist-details[open] > .caution-checklist-summary,
-.builtin-spelling-details[open] > .builtin-spelling-summary {
+.builtin-spelling-details[open] > .builtin-spelling-summary,
+.loanword-check-details[open] > .loanword-check-summary {
   background: var(--panel-accordion-bg-open);
 }
 
@@ -583,7 +585,16 @@ button {
   user-select: none;
 }
 
-.caution-checklist-select-all {
+.loanword-check-summary {
+  gap: 8px;
+  color: var(--accent-spelling);
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+
+.caution-checklist-select-all,
+.loanword-check-select-all {
   display: inline-flex;
   align-items: center;
   flex-shrink: 0;
@@ -591,14 +602,16 @@ button {
   cursor: pointer;
 }
 
-.caution-checklist-select-all input {
+.caution-checklist-select-all input,
+.loanword-check-select-all input {
   width: var(--criteria-checkbox-size, 15px);
   height: var(--criteria-checkbox-size, 15px);
   margin: 0;
   cursor: pointer;
 }
 
-.caution-checklist-summary-title {
+.caution-checklist-summary-title,
+.loanword-check-summary-title {
   flex: 1;
   min-width: 0;
   display: flex;
@@ -607,7 +620,8 @@ button {
 }
 
 .caution-checklist-summary::-webkit-details-marker,
-.builtin-spelling-summary::-webkit-details-marker {
+.builtin-spelling-summary::-webkit-details-marker,
+.loanword-check-summary::-webkit-details-marker {
   display: none;
 }
 
@@ -650,6 +664,11 @@ details[open] > summary .details-chevron::before {
 }
 
 .caution-checklist-details[open] > .caution-checklist {
+  padding: 0 var(--criteria-pad-inline) 10px;
+  box-sizing: border-box;
+}
+
+.loanword-check-details[open] > .builtin-rule-list {
   padding: 0 var(--criteria-pad-inline) 10px;
   box-sizing: border-box;
 }
@@ -1593,6 +1612,7 @@ details[open] > summary .details-chevron::before {
 
 .results-panel--spelling .result-card--builtin,
 .results-panel--spelling .result-card--caution,
+.results-panel--spelling .result-card--loanword,
 .results-panel--consistency .result-card,
 .results-panel--consistency .result-card--consistency {
   background: var(--results-card-bg);
@@ -1601,6 +1621,7 @@ details[open] > summary .details-chevron::before {
 
 .results-panel--spelling .result-card--builtin:hover,
 .results-panel--spelling .result-card--caution:hover,
+.results-panel--spelling .result-card--loanword:hover,
 .results-panel--consistency .result-card:hover,
 .results-panel--consistency .result-card--consistency:hover {
   background: var(--results-card-bg);
@@ -1608,6 +1629,7 @@ details[open] > summary .details-chevron::before {
 
 .results-panel--spelling .result-card--builtin.result-card--active,
 .results-panel--spelling .result-card--caution.result-card--active,
+.results-panel--spelling .result-card--loanword.result-card--active,
 .results-panel--consistency .result-card--active,
 .results-panel--consistency .result-card--consistency.result-card--active {
   background: var(--results-card-bg);
@@ -1809,6 +1831,15 @@ details[open] > summary .details-chevron::before {
   background: color-mix(in srgb, var(--pillar-spelling) 10%, #fff8f0 90%);
   border-color: color-mix(in srgb, var(--pillar-spelling) 32%, #c4a574 28%);
   color: color-mix(in srgb, var(--pillar-spelling) 55%, #9a6b3a 45%);
+}
+
+/* 외래어 표기법 — 같은 브라운 휴, 붉은 기 도는 테라코타 톤 */
+.result-pillar--spelling-loanword,
+.results-header-badge.result-pillar--spelling-loanword,
+.spelling-badge-inline.result-pillar--spelling-loanword {
+  background: color-mix(in srgb, var(--accent-terracotta) 14%, #fffdfb);
+  border-color: color-mix(in srgb, var(--accent-terracotta) 42%, transparent);
+  color: color-mix(in srgb, var(--accent-terracotta) 78%, #3a2418 22%);
 }
 
 /* 통일형 만들기 — 진한 블루그레이(정책·확정) */

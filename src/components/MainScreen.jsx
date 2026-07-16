@@ -93,8 +93,9 @@ import { daysSinceJoin, syncProfileBadges } from '../lib/badgeGrants.js';
 import { isCheckAuthBlocked } from '../lib/checkAuthGate.js';
 import { resolveQuotaAuthEmail, assertBetaDailyExportOrAlert } from '../lib/betaDailyQuota.js';
 import {
-  countBuiltInActiveRules,
+  countLoanwordActiveRules,
   countSpacingReviewActiveRules,
+  countSpellingRuleActiveRules,
 } from '../lib/activeRuleCount.js';
 import { countConsistencyCheckActiveRules, countConsistencyFindingsByType, countConsistencyGroupsWithFindings } from '../lib/consistencyCheckConfirm.js';
 import { countSpellingFindingsByCategory, countSpellingGroupsWithFindings } from '../lib/spellingCheckConfirm.js';
@@ -694,7 +695,8 @@ export default function MainScreen({
     () => ({
       cautionSelected:
         countSpacingReviewActiveRules({ cautionEnabled }) > 0,
-      builtinSelected: countBuiltInActiveRules({ builtInEnabled }) > 0,
+      builtinSelected: countSpellingRuleActiveRules({ builtInEnabled }) > 0,
+      loanwordSelected: countLoanwordActiveRules({ builtInEnabled }) > 0,
     }),
     [cautionEnabled, builtInEnabled],
   );
@@ -774,6 +776,7 @@ export default function MainScreen({
         spellingFindingCount: spellingTabTotalFindings,
         editorReviewFindingCount: spellingFindingsByCategory.editorReview,
         builtinSpellingFindingCount: spellingFindingsByCategory.spelling,
+        loanwordFindingCount: spellingFindingsByCategory.loanword,
         consistencyFindingCount: consistencyTabFindingsTotal,
         consistencyFindCount: consistencyFindingsByType.find,
         consistencyUnifyCount: consistencyFindingsByType.unify,
@@ -804,6 +807,7 @@ export default function MainScreen({
     spellingTabTotalFindings,
     spellingFindingsByCategory.editorReview,
     spellingFindingsByCategory.spelling,
+    spellingFindingsByCategory.loanword,
     consistencyTabFindingsTotal,
     consistencyFindingsByType.find,
     consistencyFindingsByType.unify,
@@ -829,6 +833,7 @@ export default function MainScreen({
         spellingFindingCount: spellingTabTotalFindings,
         editorReviewFindingCount: spellingFindingsByCategory.editorReview,
         builtinSpellingFindingCount: spellingFindingsByCategory.spelling,
+        loanwordFindingCount: spellingFindingsByCategory.loanword,
         consistencyFindingCount: consistencyTabFindingsTotal,
         consistencyFindCount: consistencyFindingsByType.find,
         consistencyUnifyCount: consistencyFindingsByType.unify,
@@ -852,6 +857,7 @@ export default function MainScreen({
     spellingTabTotalFindings,
     spellingFindingsByCategory.editorReview,
     spellingFindingsByCategory.spelling,
+    spellingFindingsByCategory.loanword,
     consistencyTabFindingsTotal,
     consistencyFindingsByType.find,
     consistencyFindingsByType.unify,
@@ -859,7 +865,7 @@ export default function MainScreen({
     consistencyFindingsByType.bonBojo,
   ]);
 
-  // 검수 버튼 1회 완료 → 작업 이력 1점
+  // 검수 버튼 1회 완료 → 작업 이력 1점 (이번 검수 범위만 기록)
   const lastWorkHistoryCommitGenRef = useRef(0);
   useEffect(() => {
     if (!onTouchActiveProjectContext || !activeRuleSet?.savedAt) return;
@@ -867,15 +873,21 @@ export default function MainScreen({
     if (!gen || gen === lastWorkHistoryCommitGenRef.current) return;
     lastWorkHistoryCommitGenRef.current = gen;
 
+    const scope = ruleCheck.lastCompletedCheckScope;
+    const spellingDone = scope === 'spelling';
+    const consistencyDone = scope === 'consistency';
+    if (!spellingDone && !consistencyDone) return;
+
     const patch = buildProjectContextWorkPatch({
       pdfFileName: pdf.pdfFileName,
       pdfPageCount: pdf.pdf?.numPages,
       pdfSizeBytes: pdf.pdfByteLength,
-      spellingCheckDone: ruleCheck.spellingCheckDone,
-      consistencyCheckDone: consistencyWorkDone,
+      spellingCheckDone: spellingDone,
+      consistencyCheckDone: consistencyDone,
       spellingFindingCount: spellingTabTotalFindings,
       editorReviewFindingCount: spellingFindingsByCategory.editorReview,
       builtinSpellingFindingCount: spellingFindingsByCategory.spelling,
+      loanwordFindingCount: spellingFindingsByCategory.loanword,
       consistencyFindingCount: consistencyTabFindingsTotal,
       consistencyFindCount: consistencyFindingsByType.find,
       consistencyUnifyCount: consistencyFindingsByType.unify,
@@ -889,16 +901,15 @@ export default function MainScreen({
     });
   }, [
     activeRuleSet?.savedAt,
-    consistencyWorkDone,
     onTouchActiveProjectContext,
     pdf.pdf,
     pdf.pdfByteLength,
     pdf.pdfFileName,
-    ruleCheck.consistencyCheckDone,
-    ruleCheck.spellingCheckDone,
+    ruleCheck.lastCompletedCheckScope,
     ruleCheck.workHistoryCommitGen,
     spellingFindingsByCategory.editorReview,
     spellingFindingsByCategory.spelling,
+    spellingFindingsByCategory.loanword,
     spellingTabTotalFindings,
     consistencyFindingsByType.find,
     consistencyFindingsByType.unify,
@@ -1418,9 +1429,13 @@ export default function MainScreen({
           cautionFindingsCount: spellingFindingsByCategory.editorReview,
           builtinCriteriaCount: spellingGroupsWithFindings.builtinWithFindings,
           builtinFindingsCount: spellingFindingsByCategory.spelling,
+          loanwordCriteriaCount:
+            spellingGroupsWithFindings.loanwordWithFindings,
+          loanwordFindingsCount: spellingFindingsByCategory.loanword,
           totalFindings: spellingTabTotalFindings,
           cautionSelected: spellingCriteriaSelection.cautionSelected,
           builtinSelected: spellingCriteriaSelection.builtinSelected,
+          loanwordSelected: spellingCriteriaSelection.loanwordSelected,
           filename,
         });
       })
@@ -1437,11 +1452,14 @@ export default function MainScreen({
     ruleCheck.visibleInstanceCount,
     spellingGroupsWithFindings.cautionWithFindings,
     spellingGroupsWithFindings.builtinWithFindings,
+    spellingGroupsWithFindings.loanwordWithFindings,
     spellingFindingsByCategory.editorReview,
     spellingFindingsByCategory.spelling,
+    spellingFindingsByCategory.loanword,
     spellingTabTotalFindings,
     spellingCriteriaSelection.cautionSelected,
     spellingCriteriaSelection.builtinSelected,
+    spellingCriteriaSelection.loanwordSelected,
   ]);
 
   const handleConsistencyExport = useCallback(() => {
@@ -1530,10 +1548,15 @@ export default function MainScreen({
         builtinWithFindingsCount={
           spellingGroupsWithFindings.builtinWithFindings
         }
+        loanwordWithFindingsCount={
+          spellingGroupsWithFindings.loanwordWithFindings
+        }
         cautionFindingsCount={spellingFindingsByCategory.editorReview}
         builtinFindingsCount={spellingFindingsByCategory.spelling}
+        loanwordFindingsCount={spellingFindingsByCategory.loanword}
         cautionCriteriaSelected={spellingCriteriaSelection.cautionSelected}
         builtinCriteriaSelected={spellingCriteriaSelection.builtinSelected}
+        loanwordCriteriaSelected={spellingCriteriaSelection.loanwordSelected}
         spellingCheckDone={ruleCheck.spellingCheckDone}
         isGroupVisible={ruleCheck.isGroupVisible}
         onToggleVisibility={ruleCheck.toggleResultVisibility}

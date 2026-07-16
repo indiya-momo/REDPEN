@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import {
   BUILT_IN_GUIDE_RULES_UI,
-  BUILT_IN_QUOTA_RULES_UI,
+  SPELLING_QUOTA_RULES_UI,
   builtInEnabledKey,
   countsTowardSpellingQuota,
   isBuiltInRuleEnabled,
@@ -19,8 +19,14 @@ import DetailsChevron from './DetailsChevron.jsx';
  * @param {{
  *   builtInEnabled: Record<string, boolean>,
  *   onBuiltInToggle: (find: string) => void,
- *   onBuiltInSetAll: (enabled: boolean) => void,
+ *   onBuiltInSetAll: (enabled: boolean, rules?: import('../lib/ruleTypes.js').Rule[]) => void,
  *   guideSpotlight?: boolean,
+ *   quotaRules?: import('../lib/ruleTypes.js').Rule[],
+ *   guideRules?: import('../lib/ruleTypes.js').Rule[],
+ *   title?: string,
+ *   classPrefix?: string,
+ *   dataWorkGuide?: string,
+ *   selectAllAriaLabel?: string,
  * }} props
  */
 export default function BuiltinSpellingPanel({
@@ -28,13 +34,17 @@ export default function BuiltinSpellingPanel({
   onBuiltInToggle,
   onBuiltInSetAll,
   guideSpotlight = false,
+  quotaRules = SPELLING_QUOTA_RULES_UI,
+  guideRules = BUILT_IN_GUIDE_RULES_UI,
+  title = '맞춤법 규칙',
+  classPrefix = 'builtin-spelling',
+  dataWorkGuide = 'criteria-spelling-heading',
+  selectAllAriaLabel = '맞춤법 확인 규칙 전체 선택',
 }) {
   const selectAllRef = useRef(/** @type {HTMLInputElement | null} */ (null));
   const [activeTipByGroup, setActiveTipByGroup] = useState(
     /** @type {Record<string, string | null>} */ ({}),
   );
-  const quotaRules = BUILT_IN_QUOTA_RULES_UI;
-  const guideRules = BUILT_IN_GUIDE_RULES_UI;
   const total = quotaRules.length;
   const enabled = quotaRules.filter((r) =>
     isBuiltInRuleEnabled(builtInEnabled, r),
@@ -238,14 +248,14 @@ export default function BuiltinSpellingPanel({
   }
 
   return (
-    <details className="builtin-spelling-details">
+    <details className={`${classPrefix}-details`}>
       <summary
-        className="builtin-spelling-summary panel-criteria-heading"
-        data-work-guide="criteria-spelling-heading"
+        className={`${classPrefix}-summary panel-criteria-heading`}
+        data-work-guide={dataWorkGuide}
       >
         <DetailsChevron />
         <label
-          className="builtin-spelling-select-all"
+          className={`${classPrefix}-select-all`}
           onClick={(e) => e.stopPropagation()}
           onKeyDown={(e) => e.stopPropagation()}
         >
@@ -253,12 +263,12 @@ export default function BuiltinSpellingPanel({
             ref={selectAllRef}
             type="checkbox"
             checked={allChecked}
-            onChange={() => onBuiltInSetAll(!allChecked)}
-            aria-label="맞춤법 확인 규칙 전체 선택"
+            onChange={() => onBuiltInSetAll(!allChecked, quotaRules)}
+            aria-label={selectAllAriaLabel}
           />
         </label>
-        <span className="builtin-spelling-summary-title">
-          맞춤법 규칙
+        <span className={`${classPrefix}-summary-title`}>
+          {title}
           <span className="panel-criteria-heading-meta">
             {`(${enabled}/${total})`}
           </span>

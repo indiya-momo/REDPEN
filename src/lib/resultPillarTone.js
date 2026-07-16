@@ -8,6 +8,7 @@
  * @typedef {
  *   | 'spelling-builtin'
  *   | 'spelling-caution'
+ *   | 'spelling-loanword'
  *   | 'consistency-literal'
  *   | 'consistency-unify'
  *   | 'consistency-common'
@@ -37,9 +38,9 @@ export function resultPillarTone(source, group) {
  */
 export function resultBadgeTone(source, group) {
   if (source === 'spelling') {
-    return group?.category === 'caution'
-      ? 'spelling-caution'
-      : 'spelling-builtin';
+    if (group?.category === 'caution') return 'spelling-caution';
+    if (group?.category === 'loanword') return 'spelling-loanword';
+    return 'spelling-builtin';
   }
   if (group?.patternKind === 'auxiliary-verb') return 'auxiliary';
   if (group?.patternKind === 'phrase-slot-find') return 'consistency-common';
