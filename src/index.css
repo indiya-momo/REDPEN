@@ -4121,14 +4121,14 @@ details[open] > summary .details-chevron::before {
 }
 
 .auxiliary-chip:has(.bon-bojo-required-badge) {
-  grid-template-columns: var(--auxiliary-chip-checkbox) minmax(0, 1fr) max-content;
-  column-gap: 3px;
+  grid-template-columns: var(--auxiliary-chip-checkbox) max-content max-content;
+  column-gap: 4px;
 }
 
 .auxiliary-chip .bon-bojo-required-badge {
   grid-column: 3;
   grid-row: 1;
-  justify-self: end;
+  justify-self: start;
   align-self: center;
   margin-left: 0;
 }

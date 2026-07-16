@@ -9,6 +9,18 @@ export const WORK_HISTORY_SPARKLINE_HEIGHT = 56;
 export const WORK_HISTORY_SPARKLINE_PAD = 14;
 
 /**
+ * 0건 기준선 Y (viewBox). 점·선이 이 아래로 내려가지 않는다.
+ * @param {number} [height]
+ * @param {number} [pad]
+ */
+export function sparklineZeroY(
+  height = WORK_HISTORY_SPARKLINE_HEIGHT,
+  pad = WORK_HISTORY_SPARKLINE_PAD,
+) {
+  return height - pad;
+}
+
+/**
  * @param {number[]} values
  * @param {number} width
  * @param {number} height
@@ -32,7 +44,7 @@ export function buildSparklinePath(
 }
 
 /**
- * 0건 = 아래, max = 위. (세션 간 상대 min-max가 아니라 절대 건수 반영)
+ * 0건 = 기준선(아래), max = 위. 상대 min-max가 아니라 0~max 절대 스케일.
  * @param {number[]} values
  * @param {number} width
  * @param {number} height
@@ -46,14 +58,15 @@ export function sparklinePoints(
 ) {
   if (!values.length) return [];
   const max = Math.max(...values, 1);
+  const zeroY = sparklineZeroY(height, pad);
   const usable = Math.max(height - pad * 2, 1);
   if (values.length === 1) {
-    const y = height - pad - (values[0] / max) * usable;
+    const y = zeroY - (values[0] / max) * usable;
     return [{ x: width / 2, y, value: values[0] }];
   }
   return values.map((value, index) => {
     const x = (width * index) / (values.length - 1);
-    const y = height - pad - (value / max) * usable;
+    const y = zeroY - (value / max) * usable;
     return { x, y, value };
   });
 }

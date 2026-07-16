@@ -4,6 +4,7 @@ import {
   hasSpellingSplitHistory,
   latestConsistencyFindings,
   sparklinePoints,
+  sparklineZeroY,
 } from './workHistorySparkline.js';
 
 describe('workHistorySparkline', () => {
@@ -23,6 +24,13 @@ describe('workHistorySparkline', () => {
     const points = sparklinePoints([50, 50], 168, 56);
     expect(points[0].y).toBe(points[1].y);
     expect(points[0].y).toBeLessThan(56 / 2);
+  });
+
+  it('0건은 기준선(zeroY)에 붙고 아래로 내려가지 않는다', () => {
+    const zeroY = sparklineZeroY(56);
+    const points = sparklinePoints([564, 122, 0], 168, 56);
+    expect(points[2].y).toBe(zeroY);
+    expect(points.every((point) => point.y <= zeroY)).toBe(true);
   });
 
   it('맞춤법 분리 이력 여부를 판별한다', () => {
