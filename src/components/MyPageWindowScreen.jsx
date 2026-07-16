@@ -50,6 +50,17 @@ const SIDEBAR_NAV = [
   { id: 'badges', label: '배지 모음집' },
 ];
 
+/** @returns {'overview' | 'projects' | 'profile' | 'badges'} */
+function readInitialMypageNav() {
+  try {
+    const section = new URLSearchParams(window.location.search).get('mypageSection');
+    if (section) return resolveMypageNav(section);
+  } catch {
+    /* ignore */
+  }
+  return 'overview';
+}
+
 /** @param {string} nav */
 function resolveMypageNav(nav) {
   if (nav === 'home') return 'overview';
@@ -109,7 +120,7 @@ const FAQ_ITEMS = [
     id: 'privacy',
     question: 'PDF가 서버로 올라가나요?',
     answer:
-      '검수에 쓰는 PDF 본문은 브라우저 안에서만 처리됩니다. 원고를 서버에 업로드해 AI 교정을 받는 방식이 아닙니다.',
+      '검수에 쓰는 PDF 본문은 브라우저 안에서만 처리됩니다. 원고를 서버에 업로드해 AI 교정을 받는 방식이 아닙니다. 유료 회원은 검수 결과(발견 목록·요약)만 프로젝트에 일정 기간 보관될 수 있으며, 원고 PDF는 올리지 않습니다.',
   },
   {
     id: 'pdf-type',
@@ -574,7 +585,7 @@ function ProfileSection({ displayName, email, daysWithMomo, loginAtMs }) {
  * }} props
  */
 export default function MyPageWindowScreen({ authSession, authReady }) {
-  const [activeNav, setActiveNav] = useState('overview');
+  const [activeNav, setActiveNav] = useState(readInitialMypageNav);
   const [projectsEntryCardId, setProjectsEntryCardId] = useState(
     /** @type {string | null} */ (null),
   );

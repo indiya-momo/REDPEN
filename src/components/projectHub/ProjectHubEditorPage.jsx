@@ -160,6 +160,7 @@ export default function ProjectHubEditorPage({
           <ProjectHubSettingsPanel
             card={selectedCard}
             ruleSet={selectedRuleSet}
+            uid={uid}
             pdfFileName={selectedRuleSet?.projectContext?.pdfFileName}
             pdfPageCount={selectedRuleSet?.projectContext?.pdfPageCount}
             lastWorkedAt={selectedRuleSet?.projectContext?.lastWorkedAt}

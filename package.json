@@ -1,7 +1,7 @@
 {
   "name": "pdf-publish-proofread",
   "private": true,
-  "version": "0.997",
+  "version": "1.001",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -32,6 +32,7 @@
     "espeak-ng": "^1.0.2",
     "exceljs": "^4.4.0",
     "firebase": "^12.14.0",
+    "jszip": "^3.10.1",
     "lucide-react": "^0.511.0",
     "pdfjs-dist": "5.2.133",
     "posthog-js": "^1.376.2",

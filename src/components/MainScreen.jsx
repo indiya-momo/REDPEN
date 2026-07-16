@@ -7,6 +7,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ChevronDown,
   FilePlus,
+  FolderOpen,
   House,
   Loader2,
   LogOut,
@@ -34,6 +35,7 @@ import { useTocBodyCheck } from '../toc-body/hooks/useTocBodyCheck.js';
 import { useTocBodyHighlights } from '../toc-body/hooks/useTocBodyHighlights.js';
 import { buildTocBodyTabEntries } from '../toc-body/utils/toc-body-result-entries.js';
 import { exportSpellingResults, exportConsistencyResults } from '../lib/exportResults.js';
+import { maybeSavePaidCheckResult } from '../lib/maybeSavePaidCheckResult.js';
 import {
   isLoanwordConverterEnabled,
   isSpellingExportEnabled,
@@ -281,7 +283,7 @@ const WORK_GUIDE_2_ALIGN_CHAIN = [
  *   ) => void,
  *   onOpenWelcome: () => void,
  *   onLogout: () => void | Promise<void>,
- *   onOpenMyPageWindow: () => void,
+ *   onOpenMyPageWindow: (section?: string) => void,
  *   onOpenGuideWindow: () => void,
  *   initialWorkTab?: 'spelling' | 'consistency',
  *   feedbackThankYouOpen?: boolean,
@@ -903,6 +905,100 @@ export default function MainScreen({
     consistencyFindingsByType.commonString,
     consistencyFindingsByType.bonBojo,
     consistencyTabFindingsTotal,
+  ]);
+
+  // 유료: 검수 완료 시 결과 스냅숏 자동 저장 (실패해도 검수 UX 유지)
+  const lastPaidSnapshotGenRef = useRef(0);
+  useEffect(() => {
+    const gen = ruleCheck.workHistoryCommitGen;
+    if (!gen || gen === lastPaidSnapshotGenRef.current) return;
+    lastPaidSnapshotGenRef.current = gen;
+
+    const scope = ruleCheck.lastCompletedCheckScope;
+    if (scope !== 'spelling' && scope !== 'consistency') return;
+    if (!authUid || !activeRuleSet?.savedAt || !activeSetId) return;
+
+    const exportOptions =
+      scope === 'spelling'
+        ? {
+            entries: spellingTabEntries,
+            formatPageLabel: pageDisplay.formatLabel,
+            isInstanceVisible: ruleCheck.isInstanceVisible,
+            groupVisibilityMode: ruleCheck.groupVisibilityMode,
+            visibleInstanceCount: ruleCheck.visibleInstanceCount,
+            cautionCriteriaCount: spellingGroupsWithFindings.cautionWithFindings,
+            cautionFindingsCount: spellingFindingsByCategory.editorReview,
+            builtinCriteriaCount: spellingGroupsWithFindings.builtinWithFindings,
+            builtinFindingsCount: spellingFindingsByCategory.spelling,
+            totalFindings: spellingTabTotalFindings,
+            cautionSelected: spellingCriteriaSelection.cautionSelected,
+            builtinSelected: spellingCriteriaSelection.builtinSelected,
+          }
+        : {
+            entries: consistencyTabEntries,
+            formatPageLabel: pageDisplay.formatLabel,
+            isInstanceVisible: ruleCheck.isInstanceVisible,
+            groupVisibilityMode: ruleCheck.groupVisibilityMode,
+            visibleInstanceCount: ruleCheck.visibleInstanceCount,
+            literalCriteriaCount:
+              consistencyGroupsWithFindings.literalWithFindings,
+            literalFindingsCount: consistencyFindingsByType.find,
+            unifyCriteriaCount: consistencyGroupsWithFindings.unifyWithFindings,
+            unifyFindingsCount: consistencyFindingsByType.unify,
+            commonStringCriteriaCount:
+              consistencyGroupsWithFindings.commonStringWithFindings,
+            commonStringFindingsCount: consistencyFindingsByType.commonString,
+            auxiliaryCriteriaCount:
+              consistencyGroupsWithFindings.auxiliaryWithFindings,
+            auxiliaryFindingsCount: consistencyFindingsByType.bonBojo,
+            totalFindings: consistencyTabTotalFindings,
+            literalSelected: consistencyCriteriaSelection.literalSelected,
+            unifySelected: consistencyCriteriaSelection.unifySelected,
+            commonStringSelected:
+              consistencyCriteriaSelection.commonStringSelected,
+            auxiliarySelected: consistencyCriteriaSelection.auxiliarySelected,
+          };
+
+    void maybeSavePaidCheckResult({
+      kind: scope,
+      uid: authUid,
+      projectId: activeSetId,
+      pdfFileName: pdf.pdfFileName,
+      exportOptions,
+    });
+  }, [
+    activeRuleSet?.savedAt,
+    activeSetId,
+    authUid,
+    consistencyCriteriaSelection.auxiliarySelected,
+    consistencyCriteriaSelection.commonStringSelected,
+    consistencyCriteriaSelection.literalSelected,
+    consistencyCriteriaSelection.unifySelected,
+    consistencyFindingsByType.bonBojo,
+    consistencyFindingsByType.commonString,
+    consistencyFindingsByType.find,
+    consistencyFindingsByType.unify,
+    consistencyGroupsWithFindings.auxiliaryWithFindings,
+    consistencyGroupsWithFindings.commonStringWithFindings,
+    consistencyGroupsWithFindings.literalWithFindings,
+    consistencyGroupsWithFindings.unifyWithFindings,
+    consistencyTabEntries,
+    consistencyTabTotalFindings,
+    pageDisplay.formatLabel,
+    pdf.pdfFileName,
+    ruleCheck.groupVisibilityMode,
+    ruleCheck.isInstanceVisible,
+    ruleCheck.lastCompletedCheckScope,
+    ruleCheck.visibleInstanceCount,
+    ruleCheck.workHistoryCommitGen,
+    spellingCriteriaSelection.builtinSelected,
+    spellingCriteriaSelection.cautionSelected,
+    spellingFindingsByCategory.editorReview,
+    spellingFindingsByCategory.spelling,
+    spellingGroupsWithFindings.builtinWithFindings,
+    spellingGroupsWithFindings.cautionWithFindings,
+    spellingTabEntries,
+    spellingTabTotalFindings,
   ]);
 
   const showTocResultsPanel =
@@ -1921,6 +2017,15 @@ export default function MainScreen({
                   disabled={!activeRuleSet?.savedAt}
                 >
                   <Trash2 size={16} aria-hidden />
+                </button>
+                <button
+                  type="button"
+                  className="panel-left__open-projects"
+                  onClick={() => onOpenMyPageWindow('projects')}
+                  aria-label="프로젝트 관리"
+                  title="프로젝트 관리"
+                >
+                  <FolderOpen size={16} aria-hidden />
                 </button>
               </div>
             </div>

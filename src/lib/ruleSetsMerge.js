@@ -14,7 +14,7 @@ function savedAtMs(iso) {
 /**
  * @param {import('./ruleSetsStorage.js').RuleSet} a
  * @param {import('./ruleSetsStorage.js').RuleSet} b
- * @param {'first' | 'second'} [preferOnTie='first'] savedAt 동률일 때 우선할 쪽
+ * @param {'first' | 'second'} [preferOnTie='first'] savedAt 동률·둘 다 미저장일 때 우선할 쪽
  * @returns {import('./ruleSetsStorage.js').RuleSet}
  */
 export function pickNewerRuleSet(a, b, preferOnTie = 'first') {
@@ -48,9 +48,13 @@ export function pickNewerRuleSet(a, b, preferOnTie = 'first') {
       winner = { ...a };
       loser = b;
     }
-  } else {
+  } else if (preferOnTie === 'second') {
+    // 둘 다 미저장 초안 — persist 시 메모리(a)를 살리고, 명시적 second 우선만 b
     winner = { ...b };
     loser = a;
+  } else {
+    winner = { ...a };
+    loser = b;
   }
 
   return mergeRuleSetProjectMeta(winner, loser);
@@ -132,7 +136,7 @@ export function mergeRuleSetsOnLogin(localSets, cloudSets) {
       byId.set(cloudSet.id, { ...cloudSet });
       continue;
     }
-    byId.set(cloudSet.id, pickNewerRuleSet(localSet, cloudSet));
+    byId.set(cloudSet.id, pickNewerRuleSet(localSet, cloudSet, 'second'));
   }
 
   for (const localSet of local) {
