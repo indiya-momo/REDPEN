@@ -18,12 +18,14 @@ export function buildMyPageWindowUrl(section) {
  * @param {'overview' | 'projects' | 'profile' | 'badges' | string} [section]
  */
 export function openMyPageWindow(section) {
-  const url = buildMyPageWindowUrl(section);
-  const existing = window.open('', 'indiya-mypage');
-  if (existing && !existing.closed) {
-    existing.location.replace(url.toString());
-    existing.focus();
-    return;
+  const url = buildMyPageWindowUrl(section).toString();
+  // about:blank 로 먼저 열면 Auth 초기화 레이스가 나기 쉬워 URL 을 바로 연다.
+  const win = window.open(url, 'indiya-mypage');
+  if (win && !win.closed) {
+    try {
+      win.focus();
+    } catch {
+      /* ignore */
+    }
   }
-  window.open(url.toString(), 'indiya-mypage');
 }

@@ -9,7 +9,7 @@ service cloud.firestore {
     function profilePlanIsFreeOrAbsent() {
       let p = request.resource.data.get('profile', {});
       return p.get('plan', 'free') == 'free'
-        && !p.keys().hasAny(['paidUpdatedAt', 'paidUpdatedBy']);
+        && !p.keys().hasAny(['paidUpdatedAt', 'paidUpdatedBy', 'paidEmail']);
     }
 
     function profileProtectedFieldsUnchanged() {
@@ -17,7 +17,8 @@ service cloud.firestore {
       let after = request.resource.data.get('profile', {});
       return after.get('plan', 'free') == before.get('plan', 'free')
         && after.get('paidUpdatedAt', 0) == before.get('paidUpdatedAt', 0)
-        && after.get('paidUpdatedBy', '') == before.get('paidUpdatedBy', '');
+        && after.get('paidUpdatedBy', '') == before.get('paidUpdatedBy', '')
+        && after.get('paidEmail', '') == before.get('paidEmail', '');
     }
 
     match /betaDailyUsage/{userId} {

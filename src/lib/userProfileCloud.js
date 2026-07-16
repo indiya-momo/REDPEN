@@ -102,6 +102,12 @@ export async function saveUserProfileCloud(uid, profile) {
   ) {
     nextProfile.paidUpdatedBy = prevProfile.paidUpdatedBy.trim();
   }
+  if (
+    typeof prevProfile.paidEmail === 'string' &&
+    prevProfile.paidEmail.trim()
+  ) {
+    nextProfile.paidEmail = prevProfile.paidEmail.trim().toLowerCase();
+  }
 
   await setDoc(
     criteriaDocRef(id),
