@@ -105,6 +105,10 @@ export function useRuleCheck({
   const [consistencyCheckDone, setConsistencyCheckDone] = useState(false);
   /** 검수 버튼 1회 완료마다 +1 — 작업 이력 장부 커밋 신호 */
   const [workHistoryCommitGen, setWorkHistoryCommitGen] = useState(0);
+  /** 직전에 완료된 검수 탭 — 유료 스냅숏 저장용 */
+  const [lastCompletedCheckScope, setLastCompletedCheckScope] = useState(
+    /** @type {'spelling' | 'consistency' | null} */ (null),
+  );
 
   const selectedInstance =
     activeSource === 'spelling' ? spellingSelected : consistencySelected;
@@ -419,6 +423,7 @@ export function useRuleCheck({
           },
         );
       }
+      setLastCompletedCheckScope(scope);
       setWorkHistoryCommitGen((n) => n + 1);
       await afterCheckRef.current?.();
     },
@@ -787,6 +792,7 @@ export function useRuleCheck({
     spellingCheckDone,
     consistencyCheckDone,
     workHistoryCommitGen,
+    lastCompletedCheckScope,
     selectedInstance,
     checkDone,
     spellingActiveRules,
