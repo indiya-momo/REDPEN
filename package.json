@@ -1,7 +1,7 @@
 {
   "name": "pdf-publish-proofread",
   "private": true,
-  "version": "1.006",
+  "version": "1.007",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -23,6 +23,8 @@
     "trim:badges": "node scripts/trim-welcome-badges.mjs",
     "optimize:momo-gate-mobile": "node scripts/optimize-momo-gate-mobile.mjs",
     "firebase:firestore:deploy": "npx --yes firebase-tools@14.2.1 deploy --only firestore:rules --project indiya-757ba",
+    "firebase:functions:deploy": "npx --yes firebase-tools@14.2.1 deploy --only functions --project indiya-757ba",
+    "firebase:paid-admin:deploy": "npx --yes firebase-tools@14.2.1 deploy --only functions,firestore:rules --project indiya-757ba",
     "firebase:firestore:setup": "powershell -ExecutionPolicy Bypass -File scripts/Deploy-FirestoreBetaQuota.ps1",
     "posthog:setup-beta": "node scripts/posthog-beta-dashboard-setup.mjs",
     "prepare": "husky"

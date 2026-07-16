@@ -1,24 +1,40 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    /** profile.plan / paid* — Admin SDK(Callable)만 변경 가능 */
+    function profilePlanIsFreeOrAbsent() {
+      let p = request.resource.data.get('profile', {});
+      return p.get('plan', 'free') == 'free'
+        && !p.keys().hasAny(['paidUpdatedAt', 'paidUpdatedBy']);
+    }
+
+    function profileProtectedFieldsUnchanged() {
+      let before = resource.data.get('profile', {});
+      let after = request.resource.data.get('profile', {});
+      return after.get('plan', 'free') == before.get('plan', 'free')
+        && after.get('paidUpdatedAt', 0) == before.get('paidUpdatedAt', 0)
+        && after.get('paidUpdatedBy', '') == before.get('paidUpdatedBy', '');
+    }
+
     match /betaDailyUsage/{userId} {
-      allow read: if request.auth != null && request.auth.uid == userId;
-      allow create: if request.auth != null
-        && request.auth.uid == userId
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId)
         && request.resource.data.keys().hasOnly(['feedbackBonusDayId'])
         && request.resource.data.feedbackBonusDayId is string
         && request.resource.data.feedbackBonusDayId.matches('^\\d{4}-\\d{2}-\\d{2}$');
-      allow update: if request.auth != null
-        && request.auth.uid == userId
+      allow update: if isOwner(userId)
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['feedbackBonusDayId'])
         && request.resource.data.feedbackBonusDayId is string
         && request.resource.data.feedbackBonusDayId.matches('^\\d{4}-\\d{2}-\\d{2}$');
       allow delete: if false;
     }
     match /betaDailyUsage/{userId}/days/{dayId} {
-      allow read: if request.auth != null && request.auth.uid == userId;
-      allow create: if request.auth != null
-        && request.auth.uid == userId
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId)
         && request.resource.data.usedAt is timestamp
         && (
           (request.resource.data.get('spellingCount', 0) == 1
@@ -26,8 +42,7 @@ service cloud.firestore {
           || (request.resource.data.get('spellingCount', 0) == 0
             && request.resource.data.get('consistencyCount', 0) == 1)
         );
-      allow update: if request.auth != null
-        && request.auth.uid == userId
+      allow update: if isOwner(userId)
         && request.resource.data.usedAt is timestamp
         && (
           (request.resource.data.spellingCount == resource.data.get('spellingCount', 0) + 1
@@ -40,12 +55,14 @@ service cloud.firestore {
       allow delete: if false;
     }
     match /userCriteria/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && profilePlanIsFreeOrAbsent();
+      allow update: if isOwner(userId) && profileProtectedFieldsUnchanged();
+      allow delete: if false;
 
       match /checkResults/{resultId} {
-        allow read: if request.auth != null && request.auth.uid == userId;
-        allow create: if request.auth != null
-          && request.auth.uid == userId
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId)
           && request.resource.data.uid == userId
           && request.resource.data.kind in ['spelling', 'consistency']
           && request.resource.data.projectId is string
@@ -54,9 +71,8 @@ service cloud.firestore {
           && request.resource.data.expiresAt is number
           && request.resource.data.schemaVersion is number;
         allow update: if false;
-        allow delete: if request.auth != null && request.auth.uid == userId;
+        allow delete: if isOwner(userId);
       }
     }
   }
 }
-
