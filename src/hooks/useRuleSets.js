@@ -314,12 +314,12 @@ export function useRuleSets(authUid = '', authEmail = '', options = {}) {
         const tombstoned = applyTombstones(sets, loadDeletedRuleSetIds(uid));
         sets = normalizeLoadedRuleSets(tombstoned.sets);
         saveDeletedRuleSetIds(tombstoned.tombstones, uid);
-        const plan = await ensureLocalPlanFromCloud(uid);
+        const userPlan = await ensureLocalPlanFromCloud(uid);
         sets = applyCriteriaPresetQuota(
           sets,
           uid,
           authEmailRef.current,
-          plan,
+          userPlan,
         );
       }
       const storedActive = loadActiveSetId(uid);
@@ -514,12 +514,12 @@ export function useRuleSets(authUid = '', authEmail = '', options = {}) {
           let sets = normalizeLoadedRuleSets(tombstoned.sets);
           tombstones = tombstoned.tombstones;
           saveDeletedRuleSetIds(tombstones, uid);
-          const plan = await ensureLocalPlanFromCloud(uid);
+          const userPlan = await ensureLocalPlanFromCloud(uid);
           sets = applyCriteriaPresetQuota(
             sets,
             authUidRef.current,
             authEmailRef.current,
-            plan,
+            userPlan,
           );
           const activeId = resolveHydratedActiveSetId(
             sets,
@@ -534,12 +534,12 @@ export function useRuleSets(authUid = '', authEmail = '', options = {}) {
           const tombstoned = applyTombstones(localSets, tombstones);
           localSets = normalizeLoadedRuleSets(tombstoned.sets);
           saveDeletedRuleSetIds(tombstoned.tombstones, uid);
-          const plan = await ensureLocalPlanFromCloud(uid);
+          const userPlan = await ensureLocalPlanFromCloud(uid);
           localSets = applyCriteriaPresetQuota(
             localSets,
             authUidRef.current,
             authEmailRef.current,
-            plan,
+            userPlan,
           );
           const activeId =
             resolveHydratedActiveSetId(localSets, loadActiveSetId(uid), null) ??
@@ -567,13 +567,13 @@ export function useRuleSets(authUid = '', authEmail = '', options = {}) {
     if (!uid) return;
     let cancelled = false;
     void (async () => {
-      const plan = await ensureLocalPlanFromCloud(uid);
+      const userPlan = await ensureLocalPlanFromCloud(uid);
       if (cancelled) return;
       const next = applyCriteriaPresetQuota(
         normalizeLoadedRuleSets(ruleSetsRef.current),
         uid,
         authEmailRef.current,
-        plan,
+        userPlan,
       );
       const beforeIds = ruleSetsRef.current.map((s) => s.id).join(',');
       const afterIds = next.map((s) => s.id).join(',');
@@ -622,12 +622,12 @@ export function useRuleSets(authUid = '', authEmail = '', options = {}) {
       const copy = normalizeRuleSet(duplicateRuleSet(source));
       const uid = authUidRef.current;
       const email = authEmailRef.current;
-      const plan = uid ? await ensureLocalPlanFromCloud(uid) : 'free';
-      if (!canAddCriteriaPreset(ruleSetsRef.current, copy.name, uid, email, plan)) {
+      const userPlan = uid ? await ensureLocalPlanFromCloud(uid) : 'free';
+      if (!canAddCriteriaPreset(ruleSetsRef.current, copy.name, uid, email, userPlan)) {
         await showAppAlert({
           title: '저장 한도',
           message: formatCriteriaPresetLimitMessage(
-            getMaxCriteriaPresets(uid, email, plan),
+            getMaxCriteriaPresets(uid, email, userPlan),
           ),
         });
         return;
@@ -716,20 +716,20 @@ export function useRuleSets(authUid = '', authEmail = '', options = {}) {
 
       const uid = authUidRef.current;
       const email = authEmailRef.current;
-      const plan = uid ? await ensureLocalPlanFromCloud(uid) : 'free';
+      const userPlan = uid ? await ensureLocalPlanFromCloud(uid) : 'free';
       if (
         !canAddCriteriaPreset(
           ruleSetsRef.current,
           name,
           uid,
           email,
-          plan,
+          userPlan,
         )
       ) {
         await showAppAlert({
           title: '저장 한도',
           message: formatCriteriaPresetLimitMessage(
-            getMaxCriteriaPresets(uid, email, plan),
+            getMaxCriteriaPresets(uid, email, userPlan),
           ),
         });
         return false;
