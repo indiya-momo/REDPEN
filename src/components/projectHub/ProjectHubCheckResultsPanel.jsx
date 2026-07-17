@@ -7,7 +7,10 @@ import {
 } from '../../lib/checkResultSnapshot.js';
 import { listCheckResultsCloud } from '../../lib/checkResultsCloud.js';
 import { downloadCheckResultsAsZip } from '../../lib/downloadCheckResultsZip.js';
-import { ensureLocalPlanFromCloud } from '../../lib/userProfileCloud.js';
+import {
+  assertPaidCheckResultsOrAlert,
+  isPaidUser,
+} from '../../lib/paidPlanGate.js';
 import { showAppAlert } from '../../lib/appDialog.js';
 
 /**
@@ -42,8 +45,7 @@ export default function ProjectHubCheckResultsPanel({
     }
     setLoading(true);
     try {
-      const plan = await ensureLocalPlanFromCloud(id);
-      const isPaid = plan === 'paid';
+      const isPaid = await isPaidUser(id);
       setPaid(isPaid);
       if (!isPaid) {
         setItems([]);
@@ -56,10 +58,6 @@ export default function ProjectHubCheckResultsPanel({
         console.error('검수 결과 목록 로드 실패:', listErr);
         setItems([]);
       }
-    } catch (err) {
-      console.error('유료 plan 확인 실패:', err);
-      setPaid(false);
-      setItems([]);
     } finally {
       setLoading(false);
     }
@@ -84,15 +82,11 @@ export default function ProjectHubCheckResultsPanel({
       return;
     }
     const id = String(uid ?? '').trim();
-    const plan = id ? await ensureLocalPlanFromCloud(id) : 'free';
-    const isPaid = plan === 'paid';
-    setPaid(isPaid);
-    if (!isPaid) {
-      await showAppAlert(
-        '유료회원 전용입니다.\n검수 결과 자동 보관은 유료(plan: paid) 계정에서만 됩니다.',
-      );
+    if (!(await assertPaidCheckResultsOrAlert(id))) {
+      setPaid(false);
       return;
     }
+    setPaid(true);
     if (items.length === 0) {
       await showAppAlert(
         '저장된 검수 결과가 없습니다.\n작업대에서 「기준 검수」를 완료하면 여기에 보관됩니다.\n(기준만 등록·수정한 이력과는 다릅니다.)',

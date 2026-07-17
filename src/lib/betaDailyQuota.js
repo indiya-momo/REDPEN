@@ -811,8 +811,8 @@ export async function assertBetaDailyCheckOrAlert(uid, options = {}) {
   }
   const email = options.authEmail ?? '';
   const tab = options.checkTab ?? 'spelling';
-  const plan = await ensureLocalPlanFromCloud(uid);
-  if (!isBetaDailyQuotaEnforcedForUser(uid, email, plan)) {
+  const userPlan = await ensureLocalPlanFromCloud(uid);
+  if (!isBetaDailyQuotaEnforcedForUser(uid, email, userPlan)) {
     return true;
   }
   const result = await consumeBetaDailyQuota(uid, email, tab);
@@ -896,8 +896,8 @@ export async function assertBetaDailyExportOrAlert(uid, options = {}) {
     return false;
   }
   const email = options.authEmail ?? '';
-  const plan = await ensureLocalPlanFromCloud(uid);
-  if (!isBetaDailyQuotaEnforcedForUser(uid, email, plan)) {
+  const userPlan = await ensureLocalPlanFromCloud(uid);
+  if (!isBetaDailyQuotaEnforcedForUser(uid, email, userPlan)) {
     return true;
   }
   const result = await consumeBetaDailyExport(uid, email, exportTab);

@@ -5,12 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useProjectHubActions } from '../../hooks/useProjectHubActions.js';
 import { useProjectHubLibrary } from '../../hooks/useProjectHubLibrary.js';
 import { useProjectTagFilter } from '../../hooks/useProjectTagFilter.js';
-import { showAppAlert } from '../../lib/appDialog.js';
-import {
-  isPaidPlan,
-  PAID_SHARE_ONLY_MESSAGE,
-} from '../../lib/userPlan.js';
-import { ensureLocalPlanFromCloud } from '../../lib/userProfileCloud.js';
+import { assertPaidShareOrAlert } from '../../lib/paidPlanGate.js';
 import SharePreviewModal from './SharePreviewModal.jsx';
 import './project-library.css';
 import ProjectHubSettingsPanel from '../ProjectHubSettingsPanel.jsx';
@@ -74,11 +69,7 @@ export default function ProjectHubEditorPage({
         return;
       }
       void (async () => {
-        const plan = await ensureLocalPlanFromCloud(uid);
-        if (!isPaidPlan({ plan })) {
-          await showAppAlert(PAID_SHARE_ONLY_MESSAGE);
-          return;
-        }
+        if (!(await assertPaidShareOrAlert(uid))) return;
         setSharePreviewCardId(cardId);
       })();
     },
