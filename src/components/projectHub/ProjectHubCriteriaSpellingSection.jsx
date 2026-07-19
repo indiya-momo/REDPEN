@@ -64,7 +64,7 @@ export default function ProjectHubCriteriaSpellingSection({
               검수 화면에서 편집
             </button>
             <p className="project-hub-settings__criteria-lead">
-              맞춤법·띄어쓰기 항목은 검수 화면에서 편집합니다
+              맞춤법·띄어쓰기는 검수 화면에서 편집합니다
             </p>
           </div>
         </div>
