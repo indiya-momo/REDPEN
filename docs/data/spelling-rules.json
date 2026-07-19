@@ -1,21 +1,195 @@
 [
   {
-    "find": "가을 밤",
-    "replace": "가을밤",
+    "find": "봄 밤",
+    "replace": "봄밤",
+    "finds": [
+      "봄 밤",
+      "여름 밤",
+      "가을 밤",
+      "겨울 밤",
+      "지난 밤"
+    ],
     "enabled": true,
-    "tip": "표준국어대사전  '가을밤' 등재",
+    "tip": "표준국어대사전  '봄밤,여름밤,가을밤,겨울밤,지난밤' 등재",
     "dividerGroup": "A1",
     "dividerLabel": "표준국어대사전 등재(명사)",
-    "overlayReplace": "→가을⁀밤"
+    "displayLabel": "→봄밤, 여름밤, 가을밤, 겨울밤, 지난밤"
   },
   {
-    "find": "겨울 밤",
-    "replace": "겨울밤",
+    "find": "봄 비",
+    "replace": "봄비",
+    "finds": [
+      "봄 비",
+      "여름 비",
+      "가을 비",
+      "겨울 비"
+    ],
     "enabled": true,
-    "tip": "표준국어대사전  '겨울밤' 등재",
+    "tip": "표준국어대사전  '봄비,여름비,가을비,겨울비' 등재",
     "dividerGroup": "A1",
     "dividerLabel": "표준국어대사전 등재(명사)",
-    "overlayReplace": "→겨울⁀밤"
+    "displayLabel": "→봄비, 여름비, 가을비, 겨울비"
+  },
+  {
+    "find": "봄 날",
+    "replace": "봄날",
+    "finds": [
+      "봄 날",
+      "여름 날",
+      "가을 날",
+      "겨울 날"
+    ],
+    "enabled": true,
+    "tip": "표준국어대사전  '봄날,여름날,가을날,겨울날' 등재",
+    "dividerGroup": "A1",
+    "dividerLabel": "표준국어대사전 등재(명사)",
+    "displayLabel": "→봄날, 여름날, 가을날, 겨울날"
+  },
+  {
+    "find": "올 봄",
+    "replace": "올봄",
+    "finds": [
+      "올 봄",
+      "올 여름",
+      "올 가을",
+      "올 겨울"
+    ],
+    "enabled": true,
+    "tip": "표준국어대사전  '올봄,올여름,올가을,올겨울' 등재",
+    "dividerGroup": "A1",
+    "dividerLabel": "표준국어대사전 등재(명사)",
+    "displayLabel": "→올봄, 올여름, 올가을, 올겨울"
+  },
+  {
+    "find": "지난 봄",
+    "replace": "지난봄",
+    "finds": [
+      "지난 봄",
+      "지난 여름",
+      "지난 가을",
+      "지난 겨울"
+    ],
+    "enabled": true,
+    "tip": "표준국어대사전  '지난봄,지난여름,지난가을,지난겨울' 등재",
+    "dividerGroup": "A1",
+    "dividerLabel": "표준국어대사전 등재(명사)",
+    "displayLabel": "→지난봄, 지난여름, 지난가을, 지난겨울"
+  },
+  {
+    "find": "맞은 편",
+    "replace": "맞은편",
+    "finds": [
+      "이 편",
+      "저 편",
+      "그 편",
+      "건너 편",
+      "맞은 편"
+    ],
+    "enabled": true,
+    "tip": "표준국어대사전  '이편,저편,그편,건너편,맞은편' 등재",
+    "dividerGroup": "A1",
+    "dividerLabel": "표준국어대사전 등재(명사)",
+    "displayLabel": "→이편, 저편, 그편, 건너편, 맞은편"
+  },
+  {
+    "find": "밝은 색",
+    "replace": "밝은색",
+    "finds": [
+      "밝은 색",
+      "어두운 색"
+    ],
+    "enabled": true,
+    "tip": "표준국어대사전  '밝은색, 어두운색' 등재",
+    "dividerGroup": "A1",
+    "dividerLabel": "표준국어대사전 등재(명사)",
+    "displayLabel": "→밝은색, 어두운색"
+  },
+  {
+    "find": "아무 것",
+    "replace": "아무것",
+    "finds": [
+      "별 것",
+      "아무 것",
+      "옛 것",
+      "헛 것"
+    ],
+    "enabled": true,
+    "tip": "표준국어대사전 '별것,아무것,옛것,헛것' 등재 참고: '요즘것' 미등재",
+    "dividerGroup": "A1",
+    "dividerLabel": "표준국어대사전 등재(명사)",
+    "displayLabel": "→별것, 아무것, 옛것, 헛것"
+  },
+  {
+    "find": "젊은 것",
+    "replace": "젊은것",
+    "finds": [
+      "어린 것",
+      "젊은 것",
+      "늙은 것"
+    ],
+    "enabled": true,
+    "tip": "표준국어대사전  '어린것,젊은것,늙은것' 등재",
+    "dividerGroup": "A1",
+    "dividerLabel": "표준국어대사전 등재(명사)",
+    "displayLabel": "→어린것, 젊은것, 늙은것, 앞엣것, 뒤엣것"
+  },
+  {
+    "find": "점심 때",
+    "replace": "점심때",
+    "finds": [
+      "점심 때",
+      "저녁 때",
+      "이맘 때"
+    ],
+    "enabled": true,
+    "tip": "표준국어대사전 '점심때,저녁때,이맘때'등재",
+    "dividerGroup": "A1",
+    "dividerLabel": "표준국어대사전 등재(명사)",
+    "displayLabel": "→점심때, 저녁때, 이맘때"
+  },
+  {
+    "find": "우리 나라",
+    "replace": "우리나라",
+    "finds": [
+      "우리 나라",
+      "우리 말",
+      "우리 글"
+    ],
+    "enabled": true,
+    "tip": "표준국어대사전 '우리나라,우리말,우리글'  등재_주의: '우리집·우리가족' 미등재",
+    "dividerGroup": "A1",
+    "dividerLabel": "표준국어대사전 등재(명사)",
+    "displayLabel": "→우리나라, 우리말, 우리글"
+  },
+  {
+    "find": "부재 중",
+    "replace": "부재중",
+    "finds": [
+      "은연 중",
+      "부지불식 중",
+      "부재 중"
+    ],
+    "enabled": true,
+    "tip": "표준국어대사전 '은연중·부지불식중·부재중' 등재",
+    "dividerGroup": "A1",
+    "dividerLabel": "표준국어대사전 등재(명사)",
+    "displayLabel": "→은연중, 부지불식중,부재중"
+  },
+  {
+    "find": "북 소리",
+    "replace": "북소리",
+    "finds": [
+      "북 소리",
+      "개 소리",
+      "끽 소리",
+      "딴 소리",
+      "별 소리"
+    ],
+    "enabled": true,
+    "tip": "표준국어대사전  '북소리,개소리,끽소리,딴소리,별소리' 등재",
+    "dividerGroup": "A1",
+    "dividerLabel": "표준국어대사전 등재(명사)",
+    "displayLabel": "→북소리, 개소리, 끽소리, 딴소리, 별소리"
   },
   {
     "find": "경제 관념",
@@ -63,33 +237,6 @@
     "overlayReplace": "→무염⁀식사"
   },
   {
-    "find": "밝은 색",
-    "replace": "밝은색",
-    "enabled": true,
-    "tip": "표준국어대사전  '밝은색' 등재",
-    "dividerGroup": "A1",
-    "dividerLabel": "표준국어대사전 등재(명사)",
-    "overlayReplace": "→밝은⁀색"
-  },
-  {
-    "find": "봄 밤",
-    "replace": "봄밤",
-    "enabled": true,
-    "tip": "표준국어대사전  '봄밤' 등재",
-    "dividerGroup": "A1",
-    "dividerLabel": "표준국어대사전 등재(명사)",
-    "overlayReplace": "→봄⁀밤"
-  },
-  {
-    "find": "북 소리",
-    "replace": "북소리",
-    "enabled": true,
-    "tip": "표준국어대사전  '북소리' 등재",
-    "dividerGroup": "A1",
-    "dividerLabel": "표준국어대사전 등재(명사)",
-    "overlayReplace": "→북⁀소리"
-  },
-  {
     "find": "살아 생전",
     "replace": "살아생전",
     "enabled": true,
@@ -117,15 +264,6 @@
     "overlayReplace": "→시간⁀제한"
   },
   {
-    "find": "어두운 색",
-    "replace": "어두운색",
-    "enabled": true,
-    "tip": "표준국어대사전  '어두운색' 등재",
-    "dividerGroup": "A1",
-    "dividerLabel": "표준국어대사전 등재(명사)",
-    "overlayReplace": "→어두운⁀색"
-  },
-  {
     "find": "어제 저녁",
     "replace": "어제저녁",
     "enabled": true,
@@ -135,24 +273,6 @@
     "overlayReplace": "→어제⁀저녁"
   },
   {
-    "find": "여름 밤",
-    "replace": "여름밤",
-    "enabled": true,
-    "tip": "표준국어대사전 '여름밤' 등재",
-    "dividerGroup": "A1",
-    "dividerLabel": "표준국어대사전 등재(명사)",
-    "overlayReplace": "→여름⁀밤"
-  },
-  {
-    "find": "우리 나라",
-    "replace": "우리나라",
-    "enabled": true,
-    "tip": "표준국어대사전 '우리나라', '우리말' ,'우리글'  등재_주의: '우리집' 미등재",
-    "dividerGroup": "A1",
-    "dividerLabel": "표준국어대사전 등재(명사)",
-    "overlayReplace": "→우리⁀나라"
-  },
-  {
     "find": "집안 사람",
     "replace": "집안사람",
     "enabled": true,
@@ -160,15 +280,6 @@
     "dividerGroup": "A1",
     "dividerLabel": "표준국어대사전 등재(명사)",
     "overlayReplace": "→집안⁀사람"
-  },
-  {
-    "find": "가 닿",
-    "replace": "가닿",
-    "enabled": true,
-    "tip": "표준국어대사전  '가닿다' 등재",
-    "dividerGroup": "A",
-    "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
-    "overlayReplace": "→가⁀닿"
   },
   {
     "find": "그럴 듯",
@@ -189,22 +300,36 @@
     "overlayReplace": "→그럴⁀싸"
   },
   {
-    "find": "되풀이 되",
-    "replace": "되풀이되",
+    "find": "자신만만 하",
+    "replace": "자신만만하",
+    "finds": [
+      "자신만만 하",
+      "자신만만 한",
+      "자신만만 했"
+    ],
     "enabled": true,
-    "tip": "표준국어대사전  '되풀이되다' 등재",
+    "tip": "표준국어대사전 '자신만만하다' 등재",
     "dividerGroup": "A",
     "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
-    "overlayReplace": "→되풀이⁀되"
+    "overlayReplace": "→자신만만⁀"
   },
   {
-    "find": "때 맞",
-    "replace": "때맞",
+    "find": "보잘 것",
+    "replace": "보잘것없",
     "enabled": true,
-    "tip": "표준국어대사전  '때맞추다' 등재",
+    "tip": "표준국어대사전 '보잘것없다' 등재",
     "dividerGroup": "A",
     "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
-    "overlayReplace": "→때⁀맞"
+    "overlayReplace": "→보잘⁀것없"
+  },
+  {
+    "find": "하잘 것",
+    "replace": "하잘것없",
+    "enabled": true,
+    "tip": "표준국어대사전 '하잘것없다' 등재",
+    "dividerGroup": "A",
+    "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
+    "overlayReplace": "→하잘⁀것없"
   },
   {
     "find": "머지 않",
@@ -222,16 +347,85 @@
     "tip": "표준국어대사전 '세상모르다' 등재",
     "dividerGroup": "A",
     "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
-    "overlayReplace": "→세상⁀모르"
+    "overlayReplace": "→세상⁀모"
   },
   {
-    "find": "갯수",
-    "replace": "개수",
+    "find": "되풀이 되",
+    "replace": "되풀이되",
+    "finds": [
+      "되풀이 되",
+      "되풀이 된"
+    ],
     "enabled": true,
-    "tip": "두 음절 한자어 6개(곳간庫間, 셋방貰房, 숫자數字, 찻간車間, 툇간退間,횟수回數)만 사이시옷을 넣는다",
-    "dividerGroup": "B0",
-    "dividerLabel": "잘못된 표현(명사)",
-    "overlayReplace": "→개수"
+    "tip": "표준국어대사전  '되풀이되다' 등재",
+    "dividerGroup": "A",
+    "dividerLabel": "표준국어대사전 등재(동사 · 형용사)"
+  },
+  {
+    "find": "부끄러워 하",
+    "replace": "부끄러워하",
+    "finds": [
+      "부끄러워 하",
+      "부끄러워 했",
+      "부끄러워 한"
+    ],
+    "enabled": true,
+    "tip": "표준국어대사전  '부끄러워하다' 등재",
+    "dividerGroup": "A",
+    "dividerLabel": "표준국어대사전 등재(동사 · 형용사)"
+  },
+  {
+    "find": "기꺼워 하",
+    "replace": "기꺼워하",
+    "finds": [
+      "기꺼워 하",
+      "기꺼워 했",
+      "기꺼워 한"
+    ],
+    "enabled": true,
+    "tip": "표준국어대사전  '기꺼워하다' 등재",
+    "dividerGroup": "A",
+    "dividerLabel": "표준국어대사전 등재(동사 · 형용사)"
+  },
+  {
+    "find": "마다 하",
+    "replace": "마다하",
+    "finds": [
+      "마다 하",
+      "마다 했",
+      "마다 한"
+    ],
+    "enabled": true,
+    "tip": "표준국어대사전  '마다하다' 등재",
+    "dividerGroup": "A",
+    "dividerLabel": "표준국어대사전 등재(동사 · 형용사)"
+  },
+  {
+    "find": "가 닿",
+    "replace": "가닿",
+    "enabled": true,
+    "tip": "표준국어대사전  '가닿다' 등재",
+    "dividerGroup": "A",
+    "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
+    "overlayReplace": "→가⁀닿"
+  },
+  {
+    "find": "때 맞",
+    "replace": "때맞",
+    "enabled": true,
+    "tip": "표준국어대사전  '때맞추다' 등재",
+    "dividerGroup": "A",
+    "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
+    "overlayReplace": "→때⁀맞"
+  },
+  {
+    "find": "장난 삼",
+    "replace": "장난삼",
+    "enabled": true,
+    "tip": "표준국어대사전  '장난삼다' 등재 참고: '친구삼다' 미등재",
+    "dividerGroup": "A",
+    "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
+    "overlayReplace": "→장난⁀삼"
   },
   {
     "find": "검정색",
@@ -243,13 +437,31 @@
     "overlayReplace": "→검은색 또는 검정"
   },
   {
-    "find": "과반수 이상",
-    "replace": "과반수",
+    "find": "노랑색",
+    "replace": "노란색 또는 노랑",
     "enabled": true,
-    "tip": "과반수는 '반이 넘는 수'",
+    "tip": "'노랑'에 색이라는 의미 있음 참고: 노란빛,노란불(○)",
     "dividerGroup": "B0",
     "dividerLabel": "잘못된 표현(명사)",
-    "overlayReplace": "→과반수"
+    "overlayReplace": "→노란색 또는 노랑"
+  },
+  {
+    "find": "빨강색",
+    "replace": "빨간색 또는 빨강",
+    "enabled": true,
+    "tip": "'빨강'에 색이라는 의미 있음 참고: 빨간빛,빨간불(○),",
+    "dividerGroup": "B0",
+    "dividerLabel": "잘못된 표현(명사)",
+    "overlayReplace": "→빨간색 또는 빨강"
+  },
+  {
+    "find": "파랑색",
+    "replace": "파란색 또는 파랑",
+    "enabled": true,
+    "tip": "'파랑'에 색이라는 의미 있음 참고: 파란빛,푸른빛,파란불(○)",
+    "dividerGroup": "B0",
+    "dividerLabel": "잘못된 표현(명사)",
+    "overlayReplace": "→파란색 또는 파랑"
   },
   {
     "find": "깔대기",
@@ -270,15 +482,6 @@
     "overlayReplace": "→깜빡이"
   },
   {
-    "find": "노랑색",
-    "replace": "노란색 또는 노랑",
-    "enabled": true,
-    "tip": "'노랑'에 색이라는 의미 있음 참고: 노란빛,노란불(○)",
-    "dividerGroup": "B0",
-    "dividerLabel": "잘못된 표현(명사)",
-    "overlayReplace": "→노란색 또는 노랑"
-  },
-  {
     "find": "닥달",
     "replace": "닦달",
     "enabled": true,
@@ -288,13 +491,85 @@
     "overlayReplace": "→닦달"
   },
   {
-    "find": "대노",
-    "replace": "대로",
+    "find": "보냉병",
+    "replace": "보랭병",
     "enabled": true,
-    "tip": "'怒(노)'를 속음(로)으로 바뀌어 적음 -한글맞춤법 제 52항",
+    "tip": "냉(冷)'을 두음법칙 외 환경에서 '랭'으로 적어 '보랭병'",
     "dividerGroup": "B0",
     "dividerLabel": "잘못된 표현(명사)",
-    "overlayReplace": "→대로"
+    "overlayReplace": "→보랭병"
+  },
+  {
+    "find": "주구장창",
+    "replace": "주야장천",
+    "enabled": true,
+    "tip": "표준국어대사전 미등재",
+    "dividerGroup": "B0",
+    "dividerLabel": "잘못된 표현(명사)",
+    "overlayReplace": "→주야장천"
+  },
+  {
+    "find": "전세계",
+    "replace": "전 세계",
+    "enabled": true,
+    "tip": "표준국어대사전 미등재",
+    "dividerGroup": "B0",
+    "dividerLabel": "잘못된 표현(명사)",
+    "overlayReplace": "→전∨세계"
+  },
+  {
+    "find": "역대급",
+    "replace": "역대 또는 초유의",
+    "enabled": true,
+    "tip": "역대(歷代)'는 '그동안'이라는 뜻을 지닌 명사고, '-급(級)'은 '그에 준하는'이라는 뜻을 지닌 접미사로 역대급은 '평상시의' 라는 뜻이나 '초유의' 라는 뜻으로 오용",
+    "dividerGroup": "B0",
+    "dividerLabel": "잘못된 표현(명사)",
+    "overlayReplace": "→역대 또는 초유의"
+  },
+  {
+    "find": "성장율",
+    "replace": "성장률",
+    "enabled": true,
+    "tip": "접미사 '-율率'은 모음이나 'ㄴ' 받침 뒤에서는 '-율' 그 외는 '률'로 표기",
+    "dividerGroup": "B0",
+    "dividerLabel": "잘못된 표현(명사)",
+    "overlayReplace": "→성장률"
+  },
+  {
+    "find": "합격율",
+    "replace": "합격률",
+    "enabled": true,
+    "tip": "접미사 '-율率'은 모음이나 'ㄴ' 받침 뒤에서는 '-율' 그 외는 '률'로 표기",
+    "dividerGroup": "B0",
+    "dividerLabel": "잘못된 표현(명사)",
+    "overlayReplace": "→합격률"
+  },
+  {
+    "find": "취업율",
+    "replace": "취업률",
+    "enabled": true,
+    "tip": "접미사 '-율率'은 모음이나 'ㄴ' 받침 뒤에서는 '-율' 그 외는 '률'로 표기",
+    "dividerGroup": "B0",
+    "dividerLabel": "잘못된 표현(명사)",
+    "overlayReplace": "→취업률"
+  },
+  {
+    "find": "갯수",
+    "replace": "개수",
+    "enabled": true,
+    "tip": "두 음절 한자어 6개(곳간庫間, 셋방貰房, 숫자數字, 찻간車間, 툇간退間,횟수回數)만 사이시옷을 넣는다",
+    "dividerGroup": "B0",
+    "dividerLabel": "잘못된 표현(명사)",
+    "overlayReplace": "→개수"
+  },
+  {
+    "find": "싯가",
+    "replace": "시가",
+    "enabled": true,
+    "tip": "두 음절 한자어 6개(곳간庫間, 셋방貰房, 숫자數字, 찻간車間, 툇간退間,횟수回數)만 사이시옷을 넣는다",
+    "dividerGroup": "B0",
+    "dividerLabel": "잘못된 표현(명사)",
+    "overlayReplace": "→시가"
   },
   {
     "find": "댓가",
@@ -304,6 +579,15 @@
     "dividerGroup": "B0",
     "dividerLabel": "잘못된 표현(명사)",
     "overlayReplace": "→대가"
+  },
+  {
+    "find": "촛점",
+    "replace": "초점",
+    "enabled": true,
+    "tip": "두 음절 한자어 6개(곳간庫間, 셋방貰房, 숫자數字, 찻간車間, 툇간退間,횟수回數)만 사이시옷을 넣는다",
+    "dividerGroup": "B0",
+    "dividerLabel": "잘못된 표현(명사)",
+    "overlayReplace": "→초점"
   },
   {
     "find": "뒷처리",
@@ -324,67 +608,22 @@
     "overlayReplace": "→뒤풀이"
   },
   {
-    "find": "보냉병",
-    "replace": "보랭병",
+    "find": "희노애락(喜怒哀樂)",
+    "replace": "희로애락",
     "enabled": true,
-    "tip": "냉(冷)'을 두음법칙 외 환경에서 '랭'으로 적어 '보랭병'",
+    "tip": "'怒(노)'를 속음(로)으로 바뀌어 적음 -한글맞춤법 제 52항",
     "dividerGroup": "B0",
     "dividerLabel": "잘못된 표현(명사)",
-    "overlayReplace": "→보랭병"
+    "overlayReplace": "→희로애락"
   },
   {
-    "find": "빨강색",
-    "replace": "빨간색 또는 빨강",
+    "find": "대노",
+    "replace": "대로",
     "enabled": true,
-    "tip": "'빨강'에 색이라는 의미 있음 참고: 빨간빛,빨간불(○),",
+    "tip": "'怒(노)'를 속음(로)으로 바뀌어 적음 -한글맞춤법 제 52항",
     "dividerGroup": "B0",
     "dividerLabel": "잘못된 표현(명사)",
-    "overlayReplace": "→빨간색 또는 빨강"
-  },
-  {
-    "find": "성장율",
-    "replace": "성장률",
-    "enabled": true,
-    "tip": "접미사 '-율率'은 모음이나 'ㄴ' 받침 뒤에서는 '-율' 그 외는 '률'로 표기",
-    "dividerGroup": "B0",
-    "dividerLabel": "잘못된 표현(명사)",
-    "overlayReplace": "→성장률"
-  },
-  {
-    "find": "십왕",
-    "replace": "시왕",
-    "enabled": true,
-    "tip": "'十'의 본음은 '십'이나 '十王'에서는 속음 '시'로 나므로 '시왕'으로 적음-한글맞춤법 제 52항",
-    "dividerGroup": "B0",
-    "dividerLabel": "잘못된 표현(명사)",
-    "overlayReplace": "→시왕"
-  },
-  {
-    "find": "십월",
-    "replace": "시월",
-    "enabled": true,
-    "tip": "'十'의 본음은 '십'이나 '十月'에서는 속음 '시'로 나므로 '시월'로 적음-한글맞춤법 제 52항",
-    "dividerGroup": "B0",
-    "dividerLabel": "잘못된 표현(명사)",
-    "overlayReplace": "→시월"
-  },
-  {
-    "find": "싯가",
-    "replace": "시가",
-    "enabled": true,
-    "tip": "두 음절 한자어 6개(곳간庫間, 셋방貰房, 숫자數字, 찻간車間, 툇간退間,횟수回數)만 사이시옷을 넣는다",
-    "dividerGroup": "B0",
-    "dividerLabel": "잘못된 표현(명사)",
-    "overlayReplace": "→시가"
-  },
-  {
-    "find": "역대급",
-    "replace": "역대 또는 초유의",
-    "enabled": true,
-    "tip": "역대(歷代)'는 '그동안'이라는 뜻을 지닌 명사고, '-급(級)'은 '그에 준하는'이라는 뜻을 지닌 접미사로 ''평상시의' 라는 뜻이나, '초유의' 라는 뜻으로 오용",
-    "dividerGroup": "B0",
-    "dividerLabel": "잘못된 표현(명사)",
-    "overlayReplace": "→역대 또는 초유의"
+    "overlayReplace": "→대로"
   },
   {
     "find": "오륙월",
@@ -405,22 +644,22 @@
     "overlayReplace": "→유월"
   },
   {
-    "find": "전세계",
-    "replace": "전 세계",
+    "find": "십왕",
+    "replace": "시왕",
     "enabled": true,
-    "tip": "표준국어대사전 미등재",
+    "tip": "'十'의 본음은 '십'이나 '十王'에서는 속음 '시'로 나므로 '시왕'으로 적음-한글맞춤법 제 52항",
     "dividerGroup": "B0",
     "dividerLabel": "잘못된 표현(명사)",
-    "overlayReplace": "→전∨세계"
+    "overlayReplace": "→시왕"
   },
   {
-    "find": "주구장창",
-    "replace": "주야장천",
+    "find": "십월",
+    "replace": "시월",
     "enabled": true,
-    "tip": "표준국어대사전 미등재",
+    "tip": "'十'의 본음은 '십'이나 '十月'에서는 속음 '시'로 나므로 '시월'로 적음-한글맞춤법 제 52항",
     "dividerGroup": "B0",
     "dividerLabel": "잘못된 표현(명사)",
-    "overlayReplace": "→주야장천"
+    "overlayReplace": "→시월"
   },
   {
     "find": "초팔일",
@@ -432,67 +671,31 @@
     "overlayReplace": "→초파일"
   },
   {
-    "find": "촛점",
-    "replace": "초점",
+    "find": "과반수 이상",
+    "replace": "과반수",
     "enabled": true,
-    "tip": "두 음절 한자어 6개(곳간庫間, 셋방貰房, 숫자數字, 찻간車間, 툇간退間,횟수回數)만 사이시옷을 넣는다",
+    "tip": "과반수는 '반이 넘는 수'",
     "dividerGroup": "B0",
     "dividerLabel": "잘못된 표현(명사)",
-    "overlayReplace": "→초점"
+    "overlayReplace": "→과반수"
   },
   {
-    "find": "취업율",
-    "replace": "취업률",
+    "find": "그외",
+    "replace": "그 외",
     "enabled": true,
-    "tip": "접미사 '-율率'은 모음이나 'ㄴ' 받침 뒤에서는 '-율' 그 외는 '률'로 표기",
+    "tip": "표준국어대사전 미등재(참고 : 동일한 뜻의 '이외以外'는 등재)",
     "dividerGroup": "B0",
     "dividerLabel": "잘못된 표현(명사)",
-    "overlayReplace": "→취업률"
+    "overlayReplace": "→그 외"
   },
   {
-    "find": "파랑색",
-    "replace": "파란색 또는 파랑",
+    "find": "군중들",
+    "replace": "군중",
     "enabled": true,
-    "tip": "'파랑'에 색이라는 의미 있음 참고: 파란빛,푸른빛,파란불(○)",
+    "tip": "군중群中 '많은 사람 가운데'라는 뜻",
     "dividerGroup": "B0",
     "dividerLabel": "잘못된 표현(명사)",
-    "overlayReplace": "→파란색 또는 파랑"
-  },
-  {
-    "find": "합격율",
-    "replace": "합격률",
-    "enabled": true,
-    "tip": "접미사 '-율率'은 모음이나 'ㄴ' 받침 뒤에서는 '-율' 그 외는 '률'로 표기",
-    "dividerGroup": "B0",
-    "dividerLabel": "잘못된 표현(명사)",
-    "overlayReplace": "→합격률"
-  },
-  {
-    "find": "희노애락(喜怒哀樂)",
-    "replace": "희로애락",
-    "enabled": true,
-    "tip": "'怒(노)'를 속음(로)으로 바뀌어 적음 -한글맞춤법 제 52항",
-    "dividerGroup": "B0",
-    "dividerLabel": "잘못된 표현(명사)",
-    "overlayReplace": "→희로애락"
-  },
-  {
-    "find": "거북치",
-    "replace": "거북지",
-    "enabled": true,
-    "tip": "어간 끝 음절 '하'가 줄어든 대로 적는다",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사 · 형용사)",
-    "overlayReplace": "→거북지"
-  },
-  {
-    "find": "걸맞는",
-    "replace": "걸맞은",
-    "enabled": true,
-    "tip": "형용사에는 'ㄴ'을 붙일 수 없다",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사 · 형용사)",
-    "overlayReplace": "→걸맞은"
+    "overlayReplace": "→군중"
   },
   {
     "find": "그을은",
@@ -504,60 +707,6 @@
     "overlayReplace": "→그은 또는 그을린"
   },
   {
-    "find": "깨끗치",
-    "replace": "깨끗지",
-    "enabled": true,
-    "tip": "어간 끝 음절 '하'가 줄어든 대로 적는다",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사 · 형용사)",
-    "overlayReplace": "→깨끗지"
-  },
-  {
-    "find": "꺼야",
-    "replace": "거야",
-    "enabled": true,
-    "tip": "-ㄹ게/-ㄹ걸/-ㄹ거야'는 된소리로 적지 않는다(껄→걸, 께→게) 주의: 높임 조사 '께'와 구별",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사 · 형용사)",
-    "overlayReplace": "→거야"
-  },
-  {
-    "find": "끼여들",
-    "replace": "끼어들",
-    "enabled": true,
-    "tip": "'끼어들다'의 잘못된 표현('끼어 있다'는 가능)",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사 · 형용사)",
-    "overlayReplace": "→끼어들"
-  },
-  {
-    "find": "나뉘어",
-    "replace": "나뉘",
-    "enabled": true,
-    "tip": "이중 피동(잘못된 사용)",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사 · 형용사)",
-    "overlayReplace": "→나뉘"
-  },
-  {
-    "find": "넉넉치",
-    "replace": "넉넉지",
-    "enabled": true,
-    "tip": "어간 끝 음절 '하'가 줄어든 대로 적는다",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사 · 형용사)",
-    "overlayReplace": "→넉넉지"
-  },
-  {
-    "find": "녹록치",
-    "replace": "녹록지",
-    "enabled": true,
-    "tip": "어간 끝 음절 '하'가 줄어든 대로 적는다",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사 · 형용사)",
-    "overlayReplace": "→녹록지"
-  },
-  {
     "find": "놀래키",
     "replace": "놀래",
     "enabled": true,
@@ -565,42 +714,6 @@
     "dividerGroup": "B1",
     "dividerLabel": "잘못된 표현(동사 · 형용사)",
     "overlayReplace": "→놀래"
-  },
-  {
-    "find": "높히",
-    "replace": "높이",
-    "enabled": true,
-    "tip": "'높이다'의 잘못된 표현, 과거형은 '높였다'",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사 · 형용사)",
-    "overlayReplace": "→높이"
-  },
-  {
-    "find": "담궈",
-    "replace": "담가",
-    "enabled": true,
-    "tip": "'담그다'의 잘못된 표현, 과거형은 '담갔다'",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사 · 형용사)",
-    "overlayReplace": "→담가"
-  },
-  {
-    "find": "덮히",
-    "replace": "덮이",
-    "enabled": true,
-    "tip": "'덮이다'의 잘못된 표현, 과거형은 '덮였다'",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사 · 형용사)",
-    "overlayReplace": "→덮이"
-  },
-  {
-    "find": "되뇌이",
-    "replace": "되뇌",
-    "enabled": true,
-    "tip": "자동사에 불필요한 사동 접미사 '-이'삽입",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사 · 형용사)",
-    "overlayReplace": "→되뇌"
   },
   {
     "find": "들어나",
@@ -612,78 +725,6 @@
     "overlayReplace": "→드러나"
   },
   {
-    "find": "믿겨지",
-    "replace": "믿기",
-    "enabled": true,
-    "tip": "이중 피동(잘못된 사용)",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사 · 형용사)",
-    "overlayReplace": "→믿"
-  },
-  {
-    "find": "보여지",
-    "replace": "보이",
-    "enabled": true,
-    "tip": "이중 피동(잘못된 사용)",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사 · 형용사)",
-    "overlayReplace": "→보이"
-  },
-  {
-    "find": "부비",
-    "replace": "비비",
-    "enabled": true,
-    "tip": "'비비다\"의 잘못된 표현",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사 · 형용사)",
-    "overlayReplace": "→비비"
-  },
-  {
-    "find": "불려",
-    "replace": "불리",
-    "enabled": true,
-    "tip": "이중 피동(잘못된 사용)",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사 · 형용사)",
-    "overlayReplace": "→불리"
-  },
-  {
-    "find": "생각되어",
-    "replace": "생각되",
-    "enabled": true,
-    "tip": "이중 피동(잘못된 사용)",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사 · 형용사)",
-    "overlayReplace": "→생각되"
-  },
-  {
-    "find": "설레이",
-    "replace": "설레",
-    "enabled": true,
-    "tip": "자동사에 불필요한 사동 접미사 '-이'삽입",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사 · 형용사)",
-    "overlayReplace": "→설레"
-  },
-  {
-    "find": "스런",
-    "replace": "스러운",
-    "enabled": true,
-    "tip": "'-스러운' 형태로 적는다",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사 · 형용사)",
-    "overlayReplace": "→스러운"
-  },
-  {
-    "find": "쓰여지",
-    "replace": "쓰여",
-    "enabled": true,
-    "tip": "이중 피동(잘못된 사용)",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사 · 형용사)",
-    "overlayReplace": "→쓰여"
-  },
-  {
     "find": "안절부절하",
     "replace": "안절부절못",
     "enabled": true,
@@ -691,15 +732,6 @@
     "dividerGroup": "B1",
     "dividerLabel": "잘못된 표현(동사 · 형용사)",
     "overlayReplace": "→안절부절못"
-  },
-  {
-    "find": "알맞는",
-    "replace": "알맞은",
-    "enabled": true,
-    "tip": "형용사에는 'ㄴ'을 붙일 수 없다",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사 · 형용사)",
-    "overlayReplace": "→알맞은"
   },
   {
     "find": "어떻해",
@@ -711,6 +743,238 @@
     "overlayReplace": "→어떡해 또는 어떻게"
   },
   {
+    "find": "이예요",
+    "replace": "이에요 또는 예요",
+    "enabled": true,
+    "tip": "'(것)이예요' 가 아닌 '(것)이에요', 또는 줄임말인 '예요'로 적는다",
+    "dividerGroup": "B1",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
+    "overlayReplace": "→이에요 또는 예요"
+  },
+  {
+    "find": "덮히",
+    "replace": "덮이",
+    "finds": [
+      "덮히",
+      "덮혔",
+      "덮혀"
+    ],
+    "enabled": true,
+    "tip": "'덮이다'의 잘못된 표현, 과거형은 '덮였다'",
+    "dividerGroup": "B1",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)"
+  },
+  {
+    "find": "높히",
+    "replace": "높이",
+    "finds": [
+      "높히",
+      "높혔",
+      "높혀"
+    ],
+    "enabled": true,
+    "tip": "'높이다'의 잘못된 표현, 과거형은 '높였다'",
+    "dividerGroup": "B1",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)"
+  },
+  {
+    "find": "담궈",
+    "replace": "담가",
+    "finds": [
+      "담궈",
+      "담궜",
+      "담겼",
+      "담구었"
+    ],
+    "enabled": true,
+    "tip": "'담그다'의 잘못된 표현, 과거형은 '담갔다'",
+    "dividerGroup": "B1",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)"
+  },
+  {
+    "find": "치뤄",
+    "replace": "치러",
+    "finds": [
+      "치뤄",
+      "치뤘",
+      "치루었"
+    ],
+    "enabled": true,
+    "tip": "'치르다'의 잘못된 표현, 과거형은 '치렀다'",
+    "dividerGroup": "B1",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)"
+  },
+  {
+    "find": "잠궈",
+    "replace": "잠가",
+    "finds": [
+      "잠궈",
+      "잠궜",
+      "잠구었"
+    ],
+    "enabled": true,
+    "tip": "'잠그다'의 잘못된 표현, 과거형은 '잠갔다'",
+    "dividerGroup": "B1",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)"
+  },
+  {
+    "find": "불려",
+    "replace": "불리",
+    "finds": [
+      "불려",
+      "불리어"
+    ],
+    "enabled": true,
+    "tip": "'불리다'의 잘못된 표현, 과겨형은 '불렸다'",
+    "dividerGroup": "B1",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)"
+  },
+  {
+    "find": "꺼려지",
+    "replace": "꺼리",
+    "finds": [
+      "꺼려지",
+      "꺼려졌",
+      "꺼려진"
+    ],
+    "enabled": true,
+    "tip": "이중피동, 과겨형은 '꺼렸다'",
+    "dividerGroup": "B1",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)"
+  },
+  {
+    "find": "믿겨지",
+    "replace": "믿기",
+    "finds": [
+      "믿겨지",
+      "믿겨진",
+      "믿겨졌"
+    ],
+    "enabled": true,
+    "tip": "이중피동, 과겨형은 '믿겼다'",
+    "dividerGroup": "B1",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)"
+  },
+  {
+    "find": "되어지",
+    "replace": "되다",
+    "finds": [
+      "되어지",
+      "되어진",
+      "되어졌"
+    ],
+    "enabled": true,
+    "tip": "이중피동, 과거형은 '되었다(됐다)'",
+    "dividerGroup": "B1",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)"
+  },
+  {
+    "find": "보여지",
+    "replace": "보이",
+    "finds": [
+      "보여지",
+      "보여진",
+      "보여졌"
+    ],
+    "enabled": true,
+    "tip": "이중피동, 과겨형은 '보였다'",
+    "dividerGroup": "B1",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)"
+  },
+  {
+    "find": "불려지",
+    "replace": "불려",
+    "finds": [
+      "불려지",
+      "불려졌",
+      "불려진"
+    ],
+    "enabled": true,
+    "tip": "이중피동, 과거형은 '불렸다'",
+    "dividerGroup": "B1",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)"
+  },
+  {
+    "find": "쓰여지",
+    "replace": "쓰여",
+    "finds": [
+      "쓰여지",
+      "쓰여졌"
+    ],
+    "enabled": true,
+    "tip": "아중피동, 과겨형은 '쓰였다'",
+    "dividerGroup": "B1",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)"
+  },
+  {
+    "find": "읽혀지",
+    "replace": "읽히",
+    "finds": [
+      "읽혀지",
+      "읽혀진",
+      "읽혀졌"
+    ],
+    "enabled": true,
+    "tip": "이중피동, 과거형은 '읽혔다'",
+    "dividerGroup": "B1",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)"
+  },
+  {
+    "find": "잊혀",
+    "replace": "잊힌",
+    "finds": [
+      "잊혀",
+      "잊혀진"
+    ],
+    "enabled": true,
+    "tip": "이중피동, 과겨형은 '잊혔다'",
+    "dividerGroup": "B1",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)"
+  },
+  {
+    "find": "짜여진",
+    "replace": "짜여",
+    "finds": [
+      "짜여진",
+      "짜여졌"
+    ],
+    "enabled": true,
+    "tip": "이중피동, 과겨형은 '짜였다'",
+    "dividerGroup": "B1",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)"
+  },
+  {
+    "find": "부비",
+    "replace": "비비",
+    "enabled": true,
+    "tip": "'비비다'의 잘못된 표현",
+    "dividerGroup": "B1",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
+    "overlayReplace": "→비비"
+  },
+  {
+    "find": "본따",
+    "replace": "본떠",
+    "finds": [
+      "본따",
+      "본딴"
+    ],
+    "enabled": true,
+    "tip": "'본뜨다'의 잘못된 표현",
+    "dividerGroup": "B1",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
+    "overlayReplace": "→본떠"
+  },
+  {
+    "find": "삼가토록",
+    "replace": "삼가도록",
+    "enabled": true,
+    "tip": "'삼가다'의 잘못된 표현",
+    "dividerGroup": "B1",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
+    "overlayReplace": "→삼가도록"
+  },
+  {
     "find": "우겨넣",
     "replace": "욱여넣",
     "enabled": true,
@@ -720,13 +984,143 @@
     "overlayReplace": "→욱여넣"
   },
   {
-    "find": "이예요",
-    "replace": "이에요 또는 예요",
+    "find": "오랫만",
+    "replace": "오랜만",
     "enabled": true,
-    "tip": "'(것)이예요' 가 아닌 '(것)이에요', 또는 줄임말인 '예요'로 적는다",
+    "tip": "'오랜만'의 잘못된 표현",
     "dividerGroup": "B1",
     "dividerLabel": "잘못된 표현(동사 · 형용사)",
-    "overlayReplace": "→이에요 또는 예요"
+    "overlayReplace": "→오랜만"
+  },
+  {
+    "find": "끼여들",
+    "replace": "끼어들",
+    "enabled": true,
+    "tip": "'끼어들다'의 잘못된 표현('끼어 있다'는 가능)",
+    "dividerGroup": "B1",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
+    "overlayReplace": "→끼어들"
+  },
+  {
+    "find": "걸맞는",
+    "replace": "걸맞은",
+    "enabled": true,
+    "tip": "형용사에는 'ㄴ'을 붙일 수 없다",
+    "dividerGroup": "B1",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
+    "overlayReplace": "→걸맞은"
+  },
+  {
+    "find": "알맞는",
+    "replace": "알맞은",
+    "enabled": true,
+    "tip": "형용사에는 'ㄴ'을 붙일 수 없다",
+    "dividerGroup": "B1",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
+    "overlayReplace": "→알맞은"
+  },
+  {
+    "find": "스런",
+    "replace": "스러운",
+    "enabled": true,
+    "tip": "'-스러운' 형태로 적는다",
+    "dividerGroup": "B1",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
+    "overlayReplace": "→스러운"
+  },
+  {
+    "find": "꺼야",
+    "replace": "거야",
+    "enabled": true,
+    "tip": "-ㄹ게/-ㄹ걸/-ㄹ거야'는 된소리로 적지 않는다(껄→걸, 께→게) 주의: 높임 조사 '께'와 구별",
+    "dividerGroup": "B1",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
+    "overlayReplace": "→거야"
+  },
+  {
+    "find": "설레이",
+    "replace": "설레",
+    "finds": [
+      "설레이",
+      "설레였"
+    ],
+    "enabled": true,
+    "tip": "자동사에 불필요한 사동 접미사 '-이'삽입",
+    "dividerGroup": "B1",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)"
+  },
+  {
+    "find": "되뇌이",
+    "replace": "되뇌",
+    "finds": [
+      "되뇌이",
+      "되네이",
+      "되뇌였"
+    ],
+    "enabled": true,
+    "tip": "자동사에 불필요한 사동 접미사 '-이'삽입",
+    "dividerGroup": "B1",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)"
+  },
+  {
+    "find": "헤메이",
+    "replace": "헤메",
+    "finds": [
+      "헤메이",
+      "헤메였"
+    ],
+    "enabled": true,
+    "tip": "자동사에 불필요한 사동 접미사 '-이'삽입",
+    "dividerGroup": "B1",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)"
+  },
+  {
+    "find": "에이는",
+    "replace": "에는",
+    "finds": [
+      "에이는",
+      "에이던"
+    ],
+    "enabled": true,
+    "tip": "자동사에 불필요한 사동 접미사 '-이'삽입",
+    "dividerGroup": "B1",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)"
+  },
+  {
+    "find": "녹록치",
+    "replace": "녹록지",
+    "enabled": true,
+    "tip": "어간 끝 음절 '하'가 줄어든 대로 적는다",
+    "dividerGroup": "B1",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
+    "overlayReplace": "→녹록지"
+  },
+  {
+    "find": "거북치",
+    "replace": "거북지",
+    "enabled": true,
+    "tip": "어간 끝 음절 '하'가 줄어든 대로 적는다",
+    "dividerGroup": "B1",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
+    "overlayReplace": "→거북지"
+  },
+  {
+    "find": "깨끗치",
+    "replace": "깨끗지",
+    "enabled": true,
+    "tip": "어간 끝 음절 '하'가 줄어든 대로 적는다",
+    "dividerGroup": "B1",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
+    "overlayReplace": "→깨끗지"
+  },
+  {
+    "find": "넉넉치",
+    "replace": "넉넉지",
+    "enabled": true,
+    "tip": "어간 끝 음절 '하'가 줄어든 대로 적는다",
+    "dividerGroup": "B1",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
+    "overlayReplace": "→넉넉지"
   },
   {
     "find": "익숙케",
@@ -738,76 +1132,35 @@
     "overlayReplace": "→익숙하게"
   },
   {
-    "find": "잊혀",
-    "replace": "잊힌",
+    "find": "구지",
+    "replace": "굳이",
+    "finds": [
+      "구지",
+      "궂이"
+    ],
     "enabled": true,
-    "tip": "이중 피동(잘못된 사용)",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사 · 형용사)",
-    "overlayReplace": "→잊힌"
-  },
-  {
-    "find": "잠궈",
-    "replace": "잠가",
-    "enabled": true,
-    "tip": "'잠그다'의 잘못된 표현, 과거형은 '잠갔다'",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사 · 형용사)",
-    "overlayReplace": "→잠가"
-  },
-  {
-    "find": "짜여진",
-    "replace": "짜여",
-    "enabled": true,
-    "tip": "이중 피동(잘못된 사용)",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사 · 형용사)",
-    "overlayReplace": "→짜여"
-  },
-  {
-    "find": "치뤄",
-    "replace": "치러",
-    "enabled": true,
-    "tip": "'치르다'의 잘못된 표현, 과거형은 '치렀다'",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사 · 형용사)",
-    "overlayReplace": "→치러"
-  },
-  {
-    "find": "헤메이",
-    "replace": "헤메",
-    "enabled": true,
-    "tip": "자동사에 불필요한 사동 접미사 '-이'삽입",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사 · 형용사)",
-    "overlayReplace": "→헤메"
-  },
-  {
-    "find": "가득이",
-    "replace": "가득히",
-    "enabled": true,
-    "tip": "'-이'와 '-히' 중 /히/로 발음",
+    "tip": "'굳이'의 잘못된 표기",
     "dividerGroup": "B2",
     "dividerLabel": "잘못된 표현(그 외)",
-    "overlayReplace": "→가득히"
+    "overlayReplace": "→굳이"
   },
   {
-    "find": "간편이",
-    "replace": "간편히",
+    "find": "어짜피",
+    "replace": "어차피",
     "enabled": true,
-    "tip": "'-이'와 '-히' 중 /히/로 발음('-하다'가 붙는 어근 뒤)",
+    "tip": "부사 '어차피'의 잘못된 표기",
     "dividerGroup": "B2",
     "dividerLabel": "잘못된 표현(그 외)",
-    "overlayReplace": "→간편히"
+    "overlayReplace": "→어차피"
   },
   {
-    "find": "같히",
-    "replace": "같이",
+    "find": "에걔",
+    "replace": "애게 또는 에계",
     "enabled": true,
-    "tip": "'-이'와 '-히' 중 /이/로 발음('-하다'가 붙지 않는 용언 어간 뒤)",
+    "tip": "감탄사는 '애걔' 또는 '에계'로 적는다",
     "dividerGroup": "B2",
     "dividerLabel": "잘못된 표현(그 외)",
-    "overlayReplace": "→같이"
+    "overlayReplace": "→에계 또는 에계"
   },
   {
     "find": "것 뿐",
@@ -819,58 +1172,22 @@
     "overlayReplace": "→것뿐"
   },
   {
-    "find": "겹겹히",
-    "replace": "겹겹이",
+    "find": "빼곡이",
+    "replace": "빼곡히",
     "enabled": true,
-    "tip": "'-이'와 '-히' 중 /이/로 발음(겹쳐 쓰인 명사 뒤)",
+    "tip": "'-이'와 '-히' 중 /히/로 발음",
     "dividerGroup": "B2",
     "dividerLabel": "잘못된 표현(그 외)",
-    "overlayReplace": "→겹겹이"
+    "overlayReplace": "→빼곡히"
   },
   {
-    "find": "곰곰히",
-    "replace": "곰곰이",
+    "find": "가득이",
+    "replace": "가득히",
     "enabled": true,
-    "tip": "'-이'와 '-히' 중 /이/로 발음(겹쳐 쓰인 명사 뒤)",
+    "tip": "'-이'와 '-히' 중 /히/로 발음",
     "dividerGroup": "B2",
     "dividerLabel": "잘못된 표현(그 외)",
-    "overlayReplace": "→곰곰이"
-  },
-  {
-    "find": "구지",
-    "replace": "굳이",
-    "enabled": true,
-    "tip": "'굳이'의 잘못된 표기, '궂이'로도 자주 오용된다",
-    "dividerGroup": "B2",
-    "dividerLabel": "잘못된 표현(그 외)",
-    "overlayReplace": "→굳이"
-  },
-  {
-    "find": "급급이",
-    "replace": "급급히",
-    "enabled": true,
-    "tip": "'-이'와  '-히' 중 /히/로 발음('-하다'가 붙는 어근 뒤)",
-    "dividerGroup": "B2",
-    "dividerLabel": "잘못된 표현(그 외)",
-    "overlayReplace": "→급급히"
-  },
-  {
-    "find": "기꺼히",
-    "replace": "기꺼이",
-    "enabled": true,
-    "tip": "'-이'와 '-히' 중 /이/로 발음(ㅂ 불규칙 용언의 어간 뒤)",
-    "dividerGroup": "B2",
-    "dividerLabel": "잘못된 표현(그 외)",
-    "overlayReplace": "→기꺼이"
-  },
-  {
-    "find": "깊히",
-    "replace": "깊이",
-    "enabled": true,
-    "tip": "'-이'와 '-히' 중 /이/로 발음('-하다'가 붙지 않는 용언 어간 뒤)",
-    "dividerGroup": "B2",
-    "dividerLabel": "잘못된 표현(그 외)",
-    "overlayReplace": "→깊이"
+    "overlayReplace": "→가득히"
   },
   {
     "find": "까마득이",
@@ -882,13 +1199,40 @@
     "overlayReplace": "→까마득히"
   },
   {
-    "find": "깨끗히",
-    "replace": "깨끗이",
+    "find": "특별이",
+    "replace": "특별히",
     "enabled": true,
-    "tip": "'-이'와 '-히' 중 /이/로 발음(ㅅ 받침 뒤)",
+    "tip": "'-이'와 '-히' 중 /히/로 발음",
     "dividerGroup": "B2",
     "dividerLabel": "잘못된 표현(그 외)",
-    "overlayReplace": "→깨끗이"
+    "overlayReplace": "→특별히"
+  },
+  {
+    "find": "열심이",
+    "replace": "열심히",
+    "enabled": true,
+    "tip": "'-이'와 '-히' 중 /히/로 발음",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→열심히"
+  },
+  {
+    "find": "간편이",
+    "replace": "간편히",
+    "enabled": true,
+    "tip": "'-이'와 '-히' 중 /히/로 발음('-하다'가 붙는 어근 뒤)",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→간편히"
+  },
+  {
+    "find": "급급이",
+    "replace": "급급히",
+    "enabled": true,
+    "tip": "'-이'와  '-히' 중 /히/로 발음('-하다'가 붙는 어근 뒤)",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→급급히"
   },
   {
     "find": "꼼꼼이",
@@ -909,22 +1253,58 @@
     "overlayReplace": "→나른히"
   },
   {
-    "find": "날카로히",
-    "replace": "날카로이",
+    "find": "빽빽히",
+    "replace": "빽빽이",
     "enabled": true,
-    "tip": "'-이'와 '-히' 중 /이/로 발음(ㅂ 불규칙 용언의 어간 뒤)",
+    "tip": "'-이'와 '-히' 중 /이/로 발음",
     "dividerGroup": "B2",
     "dividerLabel": "잘못된 표현(그 외)",
-    "overlayReplace": "→날카로이"
+    "overlayReplace": "→빽뺵이"
   },
   {
-    "find": "남짓히",
-    "replace": "남짓이",
+    "find": "엄격이",
+    "replace": "엄격히",
     "enabled": true,
-    "tip": "'-이'와 '-히' 중 /이/로 발음(ㅅ 받침 뒤)",
+    "tip": "'-이'와  '-히' 중 /히/로 발음('-하다'가 붙는 어근 뒤)",
     "dividerGroup": "B2",
     "dividerLabel": "잘못된 표현(그 외)",
-    "overlayReplace": "→남짓이"
+    "overlayReplace": "→엄격히"
+  },
+  {
+    "find": "정확이",
+    "replace": "정확히",
+    "enabled": true,
+    "tip": "'-이'와  '-히' 중 /히/로 발음('-하다'가 붙는 어근 뒤)",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→정확히"
+  },
+  {
+    "find": "틈틈히",
+    "replace": "틈틈이",
+    "enabled": true,
+    "tip": "'-이'와 '-히' 중 /이/로 발음(겹쳐 쓰인 명사 뒤)",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→틈틈이"
+  },
+  {
+    "find": "곰곰히",
+    "replace": "곰곰이",
+    "enabled": true,
+    "tip": "'-이'와 '-히' 중 /이/로 발음(겹쳐 쓰인 명사 뒤)",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→곰곰이"
+  },
+  {
+    "find": "일일히",
+    "replace": "일일이",
+    "enabled": true,
+    "tip": "'-이'와 '-히' 중 /이/로 발음(겹쳐 쓰인 명사 뒤)",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→일일이"
   },
   {
     "find": "낱낱히",
@@ -936,15 +1316,6 @@
     "overlayReplace": "→낱낱이"
   },
   {
-    "find": "느긋히",
-    "replace": "느긋이",
-    "enabled": true,
-    "tip": "'-이'와 '-히' 중 /이/로 발음(ㅅ 받침 뒤)",
-    "dividerGroup": "B2",
-    "dividerLabel": "잘못된 표현(그 외)",
-    "overlayReplace": "→느긋이"
-  },
-  {
     "find": "다달히",
     "replace": "다달이",
     "enabled": true,
@@ -954,13 +1325,85 @@
     "overlayReplace": "→다달이"
   },
   {
-    "find": "대수로히",
-    "replace": "대수로이",
+    "find": "샅샅히",
+    "replace": "샅샅이",
     "enabled": true,
-    "tip": "'-이'와 '-히' 중 /이/로 발음(ㅂ 불규칙 용언의 어간 뒤)",
+    "tip": "'-이'와 '-히' 중 /이/로 발음(겹쳐 쓰인 명사 뒤)",
     "dividerGroup": "B2",
     "dividerLabel": "잘못된 표현(그 외)",
-    "overlayReplace": "→대수로이"
+    "overlayReplace": "→샅샅이"
+  },
+  {
+    "find": "알알히",
+    "replace": "알알이",
+    "enabled": true,
+    "tip": "'-이'와 '-히' 중 /이/로 발음(겹쳐 쓰인 명사 뒤)",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→알알이"
+  },
+  {
+    "find": "줄줄히",
+    "replace": "줄줄이",
+    "enabled": true,
+    "tip": "'-이'와 '-히' 중 /이/로 발음(겹쳐 쓰인 명사 뒤)",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→줄줄이"
+  },
+  {
+    "find": "짬짬히",
+    "replace": "짬짬이",
+    "enabled": true,
+    "tip": "'-이'와 '-히' 중 /이/로 발음(겹쳐 쓰인 명사 뒤)",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→짬짬이"
+  },
+  {
+    "find": "겹겹히",
+    "replace": "겹겹이",
+    "enabled": true,
+    "tip": "'-이'와 '-히' 중 /이/로 발음(겹쳐 쓰인 명사 뒤)",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→겹겹이"
+  },
+  {
+    "find": "번번히",
+    "replace": "번번이",
+    "enabled": true,
+    "tip": "'-이'와 '-히' 중 /이/로 발음(겹쳐 쓰인 명사 뒤)",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→번번이"
+  },
+  {
+    "find": "같히",
+    "replace": "같이",
+    "enabled": true,
+    "tip": "'-이'와 '-히' 중 /이/로 발음('-하다'가 붙지 않는 용언 어간 뒤)",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→같이"
+  },
+  {
+    "find": "깊히",
+    "replace": "깊이",
+    "enabled": true,
+    "tip": "'-이'와 '-히' 중 /이/로 발음('-하다'가 붙지 않는 용언 어간 뒤)",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→깊이"
+  },
+  {
+    "find": "깨끗히",
+    "replace": "깨끗이",
+    "enabled": true,
+    "tip": "'-이'와 '-히' 중 /이/로 발음(ㅅ 받침 뒤)",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→깨끗이"
   },
   {
     "find": "따뜻히",
@@ -972,6 +1415,15 @@
     "overlayReplace": "→따뜻이"
   },
   {
+    "find": "남짓히",
+    "replace": "남짓이",
+    "enabled": true,
+    "tip": "'-이'와 '-히' 중 /이/로 발음(ㅅ 받침 뒤)",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→남짓이"
+  },
+  {
     "find": "뜨뜻히",
     "replace": "뜨뜻이",
     "enabled": true,
@@ -979,15 +1431,6 @@
     "dividerGroup": "B2",
     "dividerLabel": "잘못된 표현(그 외)",
     "overlayReplace": "→뜨뜻이"
-  },
-  {
-    "find": "반듯히",
-    "replace": "반듯이",
-    "enabled": true,
-    "tip": "'-이'와 '-히' 중 /이/로 발음(ㅅ 받침 뒤)",
-    "dividerGroup": "B2",
-    "dividerLabel": "잘못된 표현(그 외)",
-    "overlayReplace": "→반듯이"
   },
   {
     "find": "버젓히",
@@ -1008,15 +1451,6 @@
     "overlayReplace": "→번듯이"
   },
   {
-    "find": "번번히",
-    "replace": "번번이",
-    "enabled": true,
-    "tip": "'-이'와 '-히' 중 /이/로 발음(겹쳐 쓰인 명사 뒤)",
-    "dividerGroup": "B2",
-    "dividerLabel": "잘못된 표현(그 외)",
-    "overlayReplace": "→번번이"
-  },
-  {
     "find": "빠듯히",
     "replace": "빠듯이",
     "enabled": true,
@@ -1026,31 +1460,49 @@
     "overlayReplace": "→빠듯이"
   },
   {
-    "find": "빼곡이",
-    "replace": "빼곡히",
+    "find": "지긋히",
+    "replace": "지긋이",
     "enabled": true,
-    "tip": "'-이'와 '-히' 중 /히/로 발음",
+    "tip": "'-이'와 '-히' 중 /이/로 발음(ㅅ 받침 뒤)",
     "dividerGroup": "B2",
     "dividerLabel": "잘못된 표현(그 외)",
-    "overlayReplace": "→빼곡히"
+    "overlayReplace": "→지긋이"
   },
   {
-    "find": "빽빽히",
-    "replace": "빽빽이",
+    "find": "느긋히",
+    "replace": "느긋이",
     "enabled": true,
-    "tip": "'-이'와 '-히' 중 /이/로 발음",
+    "tip": "'-이'와 '-히' 중 /이/로 발음(ㅅ 받침 뒤)",
     "dividerGroup": "B2",
     "dividerLabel": "잘못된 표현(그 외)",
-    "overlayReplace": "→빽뺵이"
+    "overlayReplace": "→느긋이"
   },
   {
-    "find": "샅샅히",
-    "replace": "샅샅이",
+    "find": "반듯히",
+    "replace": "반듯이",
     "enabled": true,
-    "tip": "'-이'와 '-히' 중 /이/로 발음(겹쳐 쓰인 명사 뒤)",
+    "tip": "'-이'와 '-히' 중 /이/로 발음(ㅅ 받침 뒤)",
     "dividerGroup": "B2",
     "dividerLabel": "잘못된 표현(그 외)",
-    "overlayReplace": "→샅샅이"
+    "overlayReplace": "→반듯이"
+  },
+  {
+    "find": "의젓히",
+    "replace": "의젓이",
+    "enabled": true,
+    "tip": "'-이'와 '-히' 중 /이/로 발음(ㅅ 받침 뒤)",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→의젓이"
+  },
+  {
+    "find": "기꺼히",
+    "replace": "기꺼이",
+    "enabled": true,
+    "tip": "'-이'와 '-히' 중 /이/로 발음(ㅂ 불규칙 용언의 어간 뒤)",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→기꺼이"
   },
   {
     "find": "새로히",
@@ -1071,67 +1523,22 @@
     "overlayReplace": "→쉬이"
   },
   {
-    "find": "알알히",
-    "replace": "알알이",
+    "find": "날카로히",
+    "replace": "날카로이",
     "enabled": true,
-    "tip": "'-이'와 '-히' 중 /이/로 발음(겹쳐 쓰인 명사 뒤)",
+    "tip": "'-이'와 '-히' 중 /이/로 발음(ㅂ 불규칙 용언의 어간 뒤)",
     "dividerGroup": "B2",
     "dividerLabel": "잘못된 표현(그 외)",
-    "overlayReplace": "→알알이"
+    "overlayReplace": "→날카로이"
   },
   {
-    "find": "어짜피",
-    "replace": "어차피",
+    "find": "대수로히",
+    "replace": "대수로이",
     "enabled": true,
-    "tip": "부사 '어차피'의 잘못된 표기",
+    "tip": "'-이'와 '-히' 중 /이/로 발음(ㅂ 불규칙 용언의 어간 뒤)",
     "dividerGroup": "B2",
     "dividerLabel": "잘못된 표현(그 외)",
-    "overlayReplace": "→어차피"
-  },
-  {
-    "find": "엄격이",
-    "replace": "엄격히",
-    "enabled": true,
-    "tip": "'-이'와  '-히' 중 /히/로 발음('-하다'가 붙는 어근 뒤)",
-    "dividerGroup": "B2",
-    "dividerLabel": "잘못된 표현(그 외)",
-    "overlayReplace": "→엄격히"
-  },
-  {
-    "find": "에걔",
-    "replace": "애게 또는 에계",
-    "enabled": true,
-    "tip": "감탄사는 '애걔' 또는 '에계'로 적는다",
-    "dividerGroup": "B2",
-    "dividerLabel": "잘못된 표현(그 외)",
-    "overlayReplace": "→에계 또는 에계"
-  },
-  {
-    "find": "열심이",
-    "replace": "열심히",
-    "enabled": true,
-    "tip": "'-이'와 '-히' 중 /히/로 발음",
-    "dividerGroup": "B2",
-    "dividerLabel": "잘못된 표현(그 외)",
-    "overlayReplace": "→열심히"
-  },
-  {
-    "find": "의젓히",
-    "replace": "의젓이",
-    "enabled": true,
-    "tip": "'-이'와 '-히' 중 /이/로 발음(ㅅ 받침 뒤)",
-    "dividerGroup": "B2",
-    "dividerLabel": "잘못된 표현(그 외)",
-    "overlayReplace": "→의젓이"
-  },
-  {
-    "find": "일일히",
-    "replace": "일일이",
-    "enabled": true,
-    "tip": "'-이'와 '-히' 중 /이/로 발음(겹쳐 쓰인 명사 뒤)",
-    "dividerGroup": "B2",
-    "dividerLabel": "잘못된 표현(그 외)",
-    "overlayReplace": "→일일이"
+    "overlayReplace": "→대수로이"
   },
   {
     "find": "일찍히",
@@ -1141,60 +1548,6 @@
     "dividerGroup": "B2",
     "dividerLabel": "잘못된 표현(그 외)",
     "overlayReplace": "→일찍이"
-  },
-  {
-    "find": "정확이",
-    "replace": "정확히",
-    "enabled": true,
-    "tip": "'-이'와  '-히' 중 /히/로 발음('-하다'가 붙는 어근 뒤)",
-    "dividerGroup": "B2",
-    "dividerLabel": "잘못된 표현(그 외)",
-    "overlayReplace": "→정확히"
-  },
-  {
-    "find": "줄줄히",
-    "replace": "줄줄이",
-    "enabled": true,
-    "tip": "'-이'와 '-히' 중 /이/로 발음(겹쳐 쓰인 명사 뒤)",
-    "dividerGroup": "B2",
-    "dividerLabel": "잘못된 표현(그 외)",
-    "overlayReplace": "→줄줄이"
-  },
-  {
-    "find": "지긋히",
-    "replace": "지긋이",
-    "enabled": true,
-    "tip": "'-이'와 '-히' 중 /이/로 발음(ㅅ 받침 뒤)",
-    "dividerGroup": "B2",
-    "dividerLabel": "잘못된 표현(그 외)",
-    "overlayReplace": "→지긋이"
-  },
-  {
-    "find": "짬짬히",
-    "replace": "짬짬이",
-    "enabled": true,
-    "tip": "'-이'와 '-히' 중 /이/로 발음(겹쳐 쓰인 명사 뒤)",
-    "dividerGroup": "B2",
-    "dividerLabel": "잘못된 표현(그 외)",
-    "overlayReplace": "→짬짬이"
-  },
-  {
-    "find": "특별이",
-    "replace": "특별히",
-    "enabled": true,
-    "tip": "'-이'와 '-히' 중 /히/로 발음",
-    "dividerGroup": "B2",
-    "dividerLabel": "잘못된 표현(그 외)",
-    "overlayReplace": "→특별히"
-  },
-  {
-    "find": "틈틈히",
-    "replace": "틈틈이",
-    "enabled": true,
-    "tip": "'-이'와 '-히' 중 /이/로 발음(겹쳐 쓰인 명사 뒤)",
-    "dividerGroup": "B2",
-    "dividerLabel": "잘못된 표현(그 외)",
-    "overlayReplace": "→틈틈이"
   },
   {
     "find": "가디건",
@@ -1217,7 +1570,7 @@
   {
     "find": "나레이션",
     "replace": "내레이션",
-    "enabled": false,
+    "enabled": true,
     "tip": "영어 narration. 'na-'는 [내]라 '내레이션'",
     "dividerGroup": "C",
     "dividerLabel": "외래어 표기법(영어)",
@@ -1244,11 +1597,20 @@
   {
     "find": "다니엘",
     "replace": "대니얼",
-    "enabled": false,
+    "enabled": true,
     "tip": "영어 Daniel. 'Da-'는 [대]라 '대니얼'. ※독일·프랑스·스페인·성경은 '다니엘'",
     "dividerGroup": "C",
     "dividerLabel": "외래어 표기법(영어)",
     "overlayReplace": "→대니얼"
+  },
+  {
+    "find": "달라스",
+    "replace": "댈러스",
+    "enabled": true,
+    "tip": "영어 Dallas [ˈdæləs]. 짧은 모음 æ는 '애'로 적음 → '댈러스'",
+    "dividerGroup": "C",
+    "dividerLabel": "외래어 표기법(영어)",
+    "overlayReplace": "→댈러스"
   },
   {
     "find": "데이빗",
@@ -1294,6 +1656,20 @@
     "dividerGroup": "C",
     "dividerLabel": "외래어 표기법(영어)",
     "overlayReplace": "→레이철"
+  },
+  {
+    "find": "록커",
+    "replace": "로커",
+    "finds": [
+      "락커",
+      "롹커",
+      "록커"
+    ],
+    "enabled": true,
+    "tip": "영어 rocker rɑːkə(r) 락, 롹이 아닌 록이 표준이며, k가 모음 사이에 오면 넘겨 적음 락앤롤→록앤롤 (참고: 무성 파열음 p, t, k\n어말에 올 때: 받침으로 적음 → rock[rɒk] = 록\n모음과 모음 사이에 올 때: 뒤 음절의 초성으로 넘겨 적음)",
+    "dividerGroup": "C",
+    "dividerLabel": "외래어 표기법(영어)",
+    "ruleId": "foreign-name-rocker"
   },
   {
     "find": "리차드",
@@ -1359,6 +1735,15 @@
     "overlayReplace": "→맥도널드"
   },
   {
+    "find": "맨해턴",
+    "replace": "맨해튼",
+    "enabled": true,
+    "tip": "영어 Manhattan [mænˈhætən]. 어말 -tan의 슈와[ə]는 '으'로 적음 → '맨해튼'",
+    "dividerGroup": "C",
+    "dividerLabel": "외래어 표기법(영어)",
+    "overlayReplace": "→맨해튼"
+  },
+  {
     "find": "메론",
     "replace": "멜론",
     "enabled": true,
@@ -1389,7 +1774,7 @@
     "find": "바디",
     "replace": "보디",
     "enabled": false,
-    "tip": "영어 body. 'o'는 [오]라 '보디'",
+    "tip": "영어 body. 'o'는 [오]라 '보디' (바디랭귀지→보디랭귀지)",
     "dividerGroup": "C",
     "dividerLabel": "외래어 표기법(영어)",
     "overlayReplace": "→보디"
@@ -1404,6 +1789,15 @@
     "overlayReplace": "→배지"
   },
   {
+    "find": "베이직",
+    "replace": "베이식",
+    "enabled": true,
+    "tip": "영어 basic. beɪsɪk  magic(매직), logic(로직)처럼 '-ic'로 끝나는 다른 단어들의 표기 패턴을 basic에도 그대로 적용해서 생긴 유추 오류",
+    "dividerGroup": "C",
+    "dividerLabel": "외래어 표기법(영어)",
+    "overlayReplace": "→베이식"
+  },
+  {
     "find": "벤자민",
     "replace": "벤저민",
     "enabled": true,
@@ -1411,6 +1805,15 @@
     "dividerGroup": "C",
     "dividerLabel": "외래어 표기법(영어)",
     "overlayReplace": "→벤저민"
+  },
+  {
+    "find": "본넷",
+    "replace": "보닛",
+    "enabled": false,
+    "tip": "영어 bonnet. 짧은 모음 뒤의 어말 파열음 t는 받침 'ㅅ'으로 적어 '닛'이 되며, 같은 자음(nn)이 겹쳐 나올 때는 한 번만 표기하므로 '보닛'.",
+    "dividerGroup": "C",
+    "dividerLabel": "외래어 표기법(영어)",
+    "overlayReplace": "→보닛"
   },
   {
     "find": "브라더",
@@ -1422,6 +1825,24 @@
     "overlayReplace": "→브러더"
   },
   {
+    "find": "브릿지",
+    "replace": "브리지",
+    "enabled": true,
+    "tip": "영어 bridge. g가 ㅈ 발음이 되면서 d 발음이 반복, 같은 자음이 두 번 나오는 경우 한 번만 표기하므로 '브리지",
+    "dividerGroup": "C",
+    "dividerLabel": "외래어 표기법(영어)",
+    "overlayReplace": "→브리지"
+  },
+  {
+    "find": "블럭",
+    "replace": "블록",
+    "enabled": true,
+    "tip": "영어 block.  'o'는 [어]라 '블록'",
+    "dividerGroup": "C",
+    "dividerLabel": "외래어 표기법(영어)",
+    "overlayReplace": "→블록"
+  },
+  {
     "find": "비스켓",
     "replace": "비스킷",
     "enabled": true,
@@ -1431,9 +1852,27 @@
     "overlayReplace": "→비스킷"
   },
   {
+    "find": "비틀즈",
+    "replace": "비틀스",
+    "enabled": true,
+    "tip": "영어 The Beatles. 어말 -s는 무성음 [s]로 발음되므로 '스' → '비틀스'",
+    "dividerGroup": "C",
+    "dividerLabel": "외래어 표기법(영어)",
+    "overlayReplace": "→비틀스"
+  },
+  {
+    "find": "샌달",
+    "replace": "샌들",
+    "enabled": true,
+    "tip": "영어 sandal [ˈsændl]. 어말 -al이 슈와화된 음절(l만 발음)이므로 '들'로 적음.",
+    "dividerGroup": "C",
+    "dividerLabel": "외래어 표기법(영어)",
+    "overlayReplace": "→샌들"
+  },
+  {
     "find": "샷다",
     "replace": "셔터",
-    "enabled": false,
+    "enabled": true,
     "tip": "영어 shutter. '셔터'; '샷다'는 일본식 발음(シャッター)",
     "dividerGroup": "C",
     "dividerLabel": "외래어 표기법(영어)",
@@ -1442,7 +1881,7 @@
   {
     "find": "샷시",
     "replace": "새시",
-    "enabled": false,
+    "enabled": true,
     "tip": "영어 sash. '새시'; '샷시'는 일본식 발음",
     "dividerGroup": "C",
     "dividerLabel": "외래어 표기법(영어)",
@@ -1474,7 +1913,7 @@
   {
     "find": "숏컷",
     "replace": "쇼트커트",
-    "enabled": false,
+    "enabled": true,
     "tip": "영어 short cut. 'short'를 살려 '쇼트커트'",
     "dividerGroup": "C",
     "dividerLabel": "외래어 표기법(영어)",
@@ -1490,13 +1929,49 @@
     "overlayReplace": "→셰이크"
   },
   {
+    "find": "심볼",
+    "replace": "심벌",
+    "enabled": true,
+    "tip": "영어 symbol [ˈsɪmbəl]. 어말 -ol이  [ə] 음가",
+    "dividerGroup": "C",
+    "dividerLabel": "외래어 표기법(영어)",
+    "overlayReplace": "→심벌"
+  },
+  {
+    "find": "싸이코",
+    "replace": "사이코",
+    "enabled": true,
+    "tip": "외래어 표기에는 경음(된소리)을 쓰지 않는다는 원칙에 따라 'ㅆ'이 아닌 'ㅅ'으로 적어 '사이코'.",
+    "dividerGroup": "C",
+    "dividerLabel": "외래어 표기법(영어)",
+    "overlayReplace": "→사이코"
+  },
+  {
+    "find": "싸인",
+    "replace": "사인",
+    "enabled": true,
+    "tip": "외래어 표기에는 경음(된소리)을 쓰지 않는다는 원칙에 따라 'ㅆ'이 아닌 'ㅅ'으로 적어 '사인'.",
+    "dividerGroup": "C",
+    "dividerLabel": "외래어 표기법(영어)",
+    "overlayReplace": "→사인"
+  },
+  {
     "find": "아울렛",
     "replace": "아웃렛",
-    "enabled": false,
+    "enabled": true,
     "tip": "영어 outlet. 'out'의 't'를 받침으로 살려 '아웃렛'",
     "dividerGroup": "C",
     "dividerLabel": "외래어 표기법(영어)",
     "overlayReplace": "→아웃렛"
+  },
+  {
+    "find": "아틀란틱",
+    "replace": "애틀랜틱",
+    "enabled": true,
+    "tip": "영어 Atlantic [ətˈlæntɪk]. 강세 음절 -lan-의 æ는 '래' → '애틀랜틱'",
+    "dividerGroup": "C",
+    "dividerLabel": "외래어 표기법(영어)",
+    "overlayReplace": "→애틀랜틱"
   },
   {
     "find": "악세사리",
@@ -1531,6 +2006,15 @@
     "overlayReplace": "→엔도르핀"
   },
   {
+    "find": "옐로우",
+    "replace": "옐로",
+    "enabled": true,
+    "tip": "영어 yellow. 이중모음 /oʊ/는 장음이므로 '오'로만 적음(옐로우카드→옐로카드)",
+    "dividerGroup": "C",
+    "dividerLabel": "외래어 표기법(영어)",
+    "overlayReplace": "→옐로"
+  },
+  {
     "find": "윈도우",
     "replace": "윈도",
     "enabled": false,
@@ -1538,6 +2022,15 @@
     "dividerGroup": "C",
     "dividerLabel": "외래어 표기법(영어)",
     "overlayReplace": "→윈도"
+  },
+  {
+    "find": "유니온",
+    "replace": "유니언",
+    "enabled": true,
+    "tip": "영어 union",
+    "dividerGroup": "C",
+    "dividerLabel": "외래어 표기법(영어)",
+    "overlayReplace": "→유니언"
   },
   {
     "find": "윌리암",
@@ -1549,6 +2042,15 @@
     "overlayReplace": "→윌리엄"
   },
   {
+    "find": "자켓",
+    "replace": "재킷",
+    "enabled": true,
+    "tip": "영어 jacket [ˈdʒækɪt]. 모음 æ는 '애'로 적는 규정에 따라 '재', 짧은 모음 뒤 파열음 t는 받침 'ㅅ'으로 적어 '킷'",
+    "dividerGroup": "C",
+    "dividerLabel": "외래어 표기법(영어)",
+    "overlayReplace": "→재킷"
+  },
+  {
     "find": "제레미",
     "replace": "제러미",
     "enabled": true,
@@ -1556,6 +2058,15 @@
     "dividerGroup": "C",
     "dividerLabel": "외래어 표기법(영어)",
     "overlayReplace": "→제러미"
+  },
+  {
+    "find": "제스쳐",
+    "replace": "제스처",
+    "enabled": true,
+    "tip": "영어 gesture. 외래어 표기에서 ㅈ, ㅉ, ㅊ 다음에는 야·여·요·유 같은 이중모음이 올 수 없다는 규정에 따라 '쳐'가 아닌 '처'로 적어 '제스처'.",
+    "dividerGroup": "C",
+    "dividerLabel": "외래어 표기법(영어)",
+    "overlayReplace": "→제스처"
   },
   {
     "find": "조나단",
@@ -1595,6 +2106,15 @@
     "overlayReplace": "→캐러멜"
   },
   {
+    "find": "카페트",
+    "replace": "카펫",
+    "enabled": true,
+    "tip": "영어 carpet 짧은 모음 뒤 어말 파열음 t는 받침 'ㅅ'으로 적으므로 '펫', '으'를 덧붙인 '카페트'는 불필요한 장음화.",
+    "dividerGroup": "C",
+    "dividerLabel": "외래어 표기법(영어)",
+    "overlayReplace": "→카펫"
+  },
+  {
     "find": "캐롤라인",
     "replace": "캐럴라인",
     "enabled": false,
@@ -1602,6 +2122,15 @@
     "dividerGroup": "C",
     "dividerLabel": "외래어 표기법(영어)",
     "overlayReplace": "→캐럴라인"
+  },
+  {
+    "find": "캐비넷",
+    "replace": "캐비닛",
+    "enabled": true,
+    "tip": "영어 cabinet. 캐비넷이 아닌 캐비닛이 표준이며, 첫 모음 æ는 '애'(캐), 어말 짧은 모음+t는 받침 'ㅅ'(닛)으로 적음",
+    "dividerGroup": "C",
+    "dividerLabel": "외래어 표기법(영어)",
+    "overlayReplace": "→캐비닛"
   },
   {
     "find": "커텐",
@@ -1649,6 +2178,38 @@
     "overlayReplace": "→코미디"
   },
   {
+    "find": "콘테이너",
+    "replace": "컨테이너",
+    "enabled": true,
+    "tip": "영어 container [kənˈteɪnər]. con- 부분이 강세 없는  음절이므로 '컨'으로 적음(concept의 con-은 강세 음절이라 '콘'인 것과 대조).",
+    "dividerGroup": "C",
+    "dividerLabel": "외래어 표기법(영어)",
+    "overlayReplace": "→컨테이너"
+  },
+  {
+    "find": "콤파스",
+    "replace": "컴퍼스",
+    "finds": [
+      "콤파스",
+      "콤퍼스"
+    ],
+    "enabled": true,
+    "tip": "영어 compass [ˈkʌmpəs]. 강세 있는 첫 모음 ʌ를 '어'로 적어 '컴', 어말 -pass를 '퍼스'로 적어 '컴퍼스'.",
+    "dividerGroup": "C",
+    "dividerLabel": "외래어 표기법(영어)",
+    "overlayReplace": "→컴퍼스",
+    "ruleId": "foreign-noun-compass"
+  },
+  {
+    "find": "크리스탈",
+    "replace": "크리스털",
+    "enabled": true,
+    "tip": "영어 crystal [ˈkrɪstəl]. 크리스탈이 아닌 크리스털이 표준이며, 어말 -tal의 슈와를 '털'로 적음",
+    "dividerGroup": "C",
+    "dividerLabel": "외래어 표기법(영어)",
+    "overlayReplace": "→크리스털"
+  },
+  {
     "find": "토마스",
     "replace": "토머스",
     "enabled": true,
@@ -1656,6 +2217,24 @@
     "dividerGroup": "C",
     "dividerLabel": "외래어 표기법(영어)",
     "overlayReplace": "→토머스"
+  },
+  {
+    "find": "트럼본",
+    "replace": "트롬본",
+    "enabled": true,
+    "tip": "영어 trombone [trɒmˈboʊn]. 첫 음절 모음 ɒ(영국식 발음 기준)를 '오'로 적어 '트롬본'.",
+    "dividerGroup": "C",
+    "dividerLabel": "외래어 표기법(영어)",
+    "overlayReplace": "→트럼본"
+  },
+  {
+    "find": "파라독스",
+    "replace": "패러독스",
+    "enabled": true,
+    "tip": "영어 paradox [ˈpærədɒks]. 첫 모음 æ를 '애'로 적어 '패러독스'.",
+    "dividerGroup": "C",
+    "dividerLabel": "외래어 표기법(영어)",
+    "overlayReplace": "→패러독스"
   },
   {
     "find": "패러랠",
@@ -1669,16 +2248,30 @@
   {
     "find": "팬더",
     "replace": "판다",
-    "enabled": false,
+    "enabled": true,
     "tip": "영어 panda. 'da'는 [다]라 '판다'; '팬더'는 영어 발음 오인",
     "dividerGroup": "C",
     "dividerLabel": "외래어 표기법(영어)",
     "overlayReplace": "→판다"
   },
   {
+    "find": "퍼머",
+    "replace": "파마",
+    "finds": [
+      "펌",
+      "퍼머"
+    ],
+    "enabled": true,
+    "tip": "영어 permanent (wave). 국립국어원이 규칙적 표기가 아닌 관용 표기 '파마'를 표준으로 인정한 경우.",
+    "dividerGroup": "C",
+    "dividerLabel": "외래어 표기법(영어)",
+    "overlayReplace": "→파마",
+    "ruleId": "foreign-noun-perm"
+  },
+  {
     "find": "프로포즈",
     "replace": "프러포즈",
-    "enabled": false,
+    "enabled": true,
     "tip": "영어 propose. 'pro-'는 [프러]라 '프러포즈'",
     "dividerGroup": "C",
     "dividerLabel": "외래어 표기법(영어)",
@@ -1694,6 +2287,19 @@
     "overlayReplace": "→피겨"
   },
   {
+    "find": "헐리우드",
+    "replace": "할리우드",
+    "finds": [
+      "헐리우드",
+      "헐리웃"
+    ],
+    "enabled": false,
+    "tip": "영어 Hollywood. Holly의 짧은 모음 ɒ를 '아'로 적어 '할리'",
+    "dividerGroup": "C",
+    "dividerLabel": "외래어 표기법(영어)",
+    "overlayReplace": "→할리우드"
+  },
+  {
     "find": "호일",
     "replace": "포일",
     "enabled": true,
@@ -1703,6 +2309,15 @@
     "overlayReplace": "→포일"
   },
   {
+    "find": "게오르그",
+    "replace": "게오르크",
+    "enabled": true,
+    "tip": "독일어 Georg. 어말 유성 파열음 g는 무성음화되어 '그'가 아닌 '크'로 적음 → '게오르크'",
+    "dividerGroup": "C1",
+    "dividerLabel": "외래어 표기법(프랑스어 · 독일어)",
+    "overlayReplace": "→게오르크"
+  },
+  {
     "find": "고로케",
     "replace": "크로켓",
     "enabled": true,
@@ -1710,6 +2325,15 @@
     "dividerGroup": "C1",
     "dividerLabel": "외래어 표기법(프랑스어 · 독일어)",
     "overlayReplace": "→크로켓"
+  },
+  {
+    "find": "괴팅엔",
+    "replace": "괴팅겐",
+    "enabled": true,
+    "tip": "독일 도시명 Göttingen. 독일어 g는 e/i 앞에서도 구개음화되지 않고 [g] 음가를 유지 → '겐'",
+    "dividerGroup": "C1",
+    "dividerLabel": "외래어 표기법(프랑스어 · 독일어)",
+    "overlayReplace": "→괴팅겐"
   },
   {
     "find": "그라탕",
@@ -1886,7 +2510,7 @@
       "막스"
     ],
     "enabled": true,
-    "tip": "독일어 Marx. 'r'을 살려 '마르크스'",
+    "tip": "독일어 Marx. 'r'을 살려 '마르크스' (참고 칼 맑스 → 카를 마르크스)",
     "dividerGroup": "C1",
     "dividerLabel": "외래어 표기법(프랑스어 · 독일어)",
     "overlayReplace": "→마르크스",
@@ -1909,6 +2533,15 @@
     "dividerGroup": "C1",
     "dividerLabel": "외래어 표기법(프랑스어 · 독일어)",
     "overlayReplace": "→모차르트"
+  },
+  {
+    "find": "모티브",
+    "replace": "모티프",
+    "enabled": true,
+    "tip": "프랑스어 motif [mɔtif]에서 온 말로, 어말 f 발음을 살려 '프'로 적음. 영어 motive의 v 발음을 반영한 '모티브'는 어원을 잘못 짚은 표기",
+    "dividerGroup": "C1",
+    "dividerLabel": "외래어 표기법(프랑스어 · 독일어)",
+    "overlayReplace": "→모티프"
   },
   {
     "find": "뮬러",
@@ -1956,6 +2589,15 @@
     "overlayReplace": "→바흐"
   },
   {
+    "find": "베르사이유",
+    "replace": "베르사유",
+    "enabled": true,
+    "tip": "프랑스어 Versailles [vɛʁsaj]. -ai-와 -ll-가 결합해 [aj] 한 음절로 발음 → '사유'",
+    "dividerGroup": "C1",
+    "dividerLabel": "외래어 표기법(프랑스어 · 독일어)",
+    "overlayReplace": "→베르사유"
+  },
+  {
     "find": "벤쯔",
     "replace": "벤츠",
     "enabled": true,
@@ -1990,6 +2632,15 @@
     "dividerGroup": "C1",
     "dividerLabel": "외래어 표기법(프랑스어 · 독일어)",
     "overlayReplace": "→브람스"
+  },
+  {
+    "find": "비엔나",
+    "replace": "빈",
+    "enabled": true,
+    "tip": "오스트리아 수도명은 독일어 발음 Wien[viːn]을 따라 '빈'. '비엔나'는 영어식 발음에서 온 관용 표기로 소시지 등 특정 복합어에서만 허용",
+    "dividerGroup": "C1",
+    "dividerLabel": "외래어 표기법(프랑스어 · 독일어)",
+    "overlayReplace": "→빈"
   },
   {
     "find": "쁘띠",
@@ -2040,6 +2691,15 @@
     "dividerGroup": "C1",
     "dividerLabel": "외래어 표기법(프랑스어 · 독일어)",
     "overlayReplace": "→슈니첼"
+  },
+  {
+    "find": "슈트트가르트",
+    "replace": "슈투트가르트",
+    "enabled": true,
+    "tip": "독일어 Stuttgart [ˈʃtʊtɡaʁt]. 자음이 겹쳐 발음 불가능한 자리(St-)에 모음 '우'를 끼워 넣음 → '슈투트가르트'",
+    "dividerGroup": "C1",
+    "dividerLabel": "외래어 표기법(프랑스어 · 독일어)",
+    "overlayReplace": "→슈투트가르트"
   },
   {
     "find": "알러지",
@@ -2128,6 +2788,15 @@
     "overlayReplace": "→쿠데타"
   },
   {
+    "find": "튀빙엔",
+    "replace": "튀빙겐",
+    "enabled": true,
+    "tip": "독일어 g는 항상 [g] 음가이므로(괴팅겐과 동일 원리) '겐'",
+    "dividerGroup": "C1",
+    "dividerLabel": "외래어 표기법(프랑스어 · 독일어)",
+    "overlayReplace": "→튀빙겐"
+  },
+  {
     "find": "파티쉐",
     "replace": "파티시에",
     "finds": [
@@ -2190,6 +2859,33 @@
     "dividerLabel": "외래어 표기법(프랑스어 · 독일어)",
     "overlayReplace": "→프레첼",
     "ruleId": "foreign-de-pretzel"
+  },
+  {
+    "find": "하이너 뮬러",
+    "replace": "하이너 뮐러",
+    "enabled": true,
+    "tip": "독일 극작가 Heiner Müller. 독일어 ü는 '위'에 가까운 모음으로 관용상 '뮐러'로 정착. '뮬러'는 ü를 단순 u로 오인",
+    "dividerGroup": "C1",
+    "dividerLabel": "외래어 표기법(프랑스어 · 독일어)",
+    "overlayReplace": "→하이너 뮐러"
+  },
+  {
+    "find": "하이델베르그",
+    "replace": "하이델베르크",
+    "enabled": true,
+    "tip": "독일어 Heidelberg. 어말 무성음화 규칙(-berg→베르크), 퓨어스텐베르그→퓨어스텐베르크",
+    "dividerGroup": "C1",
+    "dividerLabel": "외래어 표기법(프랑스어 · 독일어)",
+    "overlayReplace": "→하이델베르크"
+  },
+  {
+    "find": "함부르그",
+    "replace": "함부르크",
+    "enabled": true,
+    "tip": "독일어 Hamburg. 어말 무성음화 규칙(-burg→부르크)",
+    "dividerGroup": "C1",
+    "dividerLabel": "외래어 표기법(프랑스어 · 독일어)",
+    "overlayReplace": "→함부르크"
   },
   {
     "find": "까르보나라",
@@ -2339,6 +3035,15 @@
     "overlayReplace": "→파에야"
   },
   {
+    "find": "시실리아",
+    "replace": "시칠리아",
+    "enabled": true,
+    "tip": "이탈리아어 Sicilia. c가 i 앞에서 [tʃ](치) 음가를 가짐 → '시칠리아'",
+    "dividerGroup": "C2",
+    "dividerLabel": "외래어 표기법(그 외)",
+    "overlayReplace": "→시칠리아"
+  },
+  {
     "find": "응웬",
     "replace": "응우옌",
     "finds": [
@@ -2360,6 +3065,15 @@
     "dividerGroup": "C2",
     "dividerLabel": "외래어 표기법(그 외)",
     "overlayReplace": "→젤라토"
+  },
+  {
+    "find": "줄리어스 시저",
+    "replace": "율리우스 카이사르",
+    "enabled": true,
+    "tip": "인명은 활동한 시대·문화권 언어를 기준으로 표기하므로 로마 시대 인물은 라틴어식 → '율리우스 카이사르'",
+    "dividerGroup": "C2",
+    "dividerLabel": "외래어 표기법(그 외)",
+    "overlayReplace": "→율리우스 카이사르"
   },
   {
     "find": "짜르",
@@ -2453,6 +3167,15 @@
     "overlayReplace": "→타이베이"
   },
   {
+    "find": "터키",
+    "replace": "튀르키예",
+    "enabled": true,
+    "tip": "2022년 튀르키예 정부의 국명 변경 요청에 따라 국립국어원이 공식 표기를 '튀르키예'로 변경",
+    "dividerGroup": "C2",
+    "dividerLabel": "외래어 표기법(그 외)",
+    "overlayReplace": "→튀르키예"
+  },
+  {
     "find": "토티아",
     "replace": "토르티야",
     "finds": [
@@ -2476,6 +3199,15 @@
     "dividerGroup": "C2",
     "dividerLabel": "외래어 표기법(그 외)",
     "overlayReplace": "→튀르크"
+  },
+  {
+    "find": "트롯츠키",
+    "replace": "트로츠키",
+    "enabled": true,
+    "tip": "러시아어 Троцкий. 불필요한 받침을 끼워 넣은 '트롯츠키'는 비표준 → '트로츠키'",
+    "dividerGroup": "C2",
+    "dividerLabel": "외래어 표기법(그 외)",
+    "overlayReplace": "→트로츠키"
   },
   {
     "find": "티라미스",
@@ -2546,166 +3278,13 @@
     "overlayReplace": "→홋카이도"
   },
   {
-    "find": "간뇌",
-    "replace": "사이뇌",
-    "enabled": false,
-    "tip": "개정 교육과정 새 용어. 간뇌(diencephalon)는 '사이뇌'",
-    "dividerGroup": "F",
-    "dividerLabel": "교육부 개정 용어",
-    "overlayReplace": "→사이뇌"
-  },
-  {
-    "find": "게르마늄",
-    "replace": "저마늄",
+    "find": "흐루시쵸프",
+    "replace": "흐루시초프",
     "enabled": true,
-    "tip": "개정 화학 용어. germanium → '저마늄'(옛 '게르마늄')",
-    "dividerGroup": "F",
-    "dividerLabel": "교육부 개정 용어",
-    "overlayReplace": "→저마늄"
-  },
-  {
-    "find": "글리코겐",
-    "replace": "글라이코겐",
-    "enabled": true,
-    "tip": "개정 교육과정 새 용어. 'glycogen' 원음에 가깝게 '글라이코겐'",
-    "dividerGroup": "F",
-    "dividerLabel": "교육부 개정 용어",
-    "overlayReplace": "→글라이코겐"
-  },
-  {
-    "find": "기관",
-    "replace": "숨관",
-    "enabled": false,
-    "tip": "개정 교육과정 새 용어. 호흡 통로(trachea)는 '숨관'",
-    "dividerGroup": "F",
-    "dividerLabel": "교육부 개정 용어",
-    "overlayReplace": "→숨관"
-  },
-  {
-    "find": "기관지",
-    "replace": "숨관가지",
-    "enabled": false,
-    "tip": "개정 교육과정 새 용어. 기관지(bronchus)는 '숨관가지'",
-    "dividerGroup": "F",
-    "dividerLabel": "교육부 개정 용어",
-    "overlayReplace": "→숨관가지"
-  },
-  {
-    "find": "나트륨",
-    "replace": "소듐 또는 나트륨",
-    "enabled": true,
-    "tip": "개정 교육과정. 'sodium'에 따라 '소듐', '나트륨'과 혼용",
-    "dividerGroup": "F",
-    "dividerLabel": "교육부 개정 용어",
-    "overlayReplace": "→소듐 또는 나트륨"
-  },
-  {
-    "find": "뇌간",
-    "replace": "뇌줄기",
-    "enabled": false,
-    "tip": "개정 교육과정 새 용어. 뇌간(brainstem)은 '뇌줄기'",
-    "dividerGroup": "F",
-    "dividerLabel": "교육부 개정 용어",
-    "overlayReplace": "→뇌줄기"
-  },
-  {
-    "find": "니오브",
-    "replace": "나이오븀",
-    "enabled": false,
-    "tip": "개정 화학 용어. niobium → '나이오븀'(옛 '니오브')",
-    "dividerGroup": "F",
-    "dividerLabel": "교육부 개정 용어",
-    "overlayReplace": "→나이오븀"
-  },
-  {
-    "find": "두정엽",
-    "replace": "마루엽",
-    "enabled": false,
-    "tip": "개정 교육과정 새 용어. 두정엽(parietal lobe)은 '마루엽'",
-    "dividerGroup": "F",
-    "dividerLabel": "교육부 개정 용어",
-    "overlayReplace": "→마루엽"
-  },
-  {
-    "find": "란탄",
-    "replace": "란타넘",
-    "enabled": false,
-    "tip": "개정 화학 용어. lanthanum → '란타넘'(옛 '란탄')",
-    "dividerGroup": "F",
-    "dividerLabel": "교육부 개정 용어",
-    "overlayReplace": "→란타넘"
-  },
-  {
-    "find": "리보솜",
-    "replace": "라이보솜",
-    "enabled": true,
-    "tip": "개정 교육과정 새 용어. 'ribosome' 원음에 가깝게 '라이보솜'",
-    "dividerGroup": "F",
-    "dividerLabel": "교육부 개정 용어",
-    "overlayReplace": "→라이보솜"
-  },
-  {
-    "find": "리보스",
-    "replace": "라이보스",
-    "enabled": true,
-    "tip": "개정 교육과정 새 용어. 'ribose' 원음에 가깝게 '라이보스'",
-    "dividerGroup": "F",
-    "dividerLabel": "교육부 개정 용어",
-    "overlayReplace": "→라이보스"
-  },
-  {
-    "find": "리소솜",
-    "replace": "라이소솜",
-    "enabled": true,
-    "tip": "개정 교육과정 새 용어. 'lysosome' 원음에 가깝게 '라이소솜'",
-    "dividerGroup": "F",
-    "dividerLabel": "교육부 개정 용어",
-    "overlayReplace": "→라이소솜"
-  },
-  {
-    "find": "리소자임",
-    "replace": "라이소자임",
-    "enabled": true,
-    "tip": "개정 교육과정 새 용어. 'lysozyme' 원음에 가깝게 '라이소자임'",
-    "dividerGroup": "F",
-    "dividerLabel": "교육부 개정 용어",
-    "overlayReplace": "→라이소자임"
-  },
-  {
-    "find": "리파아제",
-    "replace": "라이페이스",
-    "enabled": true,
-    "tip": "개정 화학 용어. lipase → '라이페이스'(효소 -ase는 '-에이스')",
-    "dividerGroup": "F",
-    "dividerLabel": "교육부 개정 용어",
-    "overlayReplace": "→라이페이스"
-  },
-  {
-    "find": "망간",
-    "replace": "망가니즈",
-    "enabled": false,
-    "tip": "개정 화학 용어. manganese → '망가니즈'(옛 '망간')",
-    "dividerGroup": "F",
-    "dividerLabel": "교육부 개정 용어",
-    "overlayReplace": "→망가니즈"
-  },
-  {
-    "find": "메탄",
-    "replace": "메테인",
-    "enabled": false,
-    "tip": "개정 화학 용어. methane → '메테인'(-안→-에인)",
-    "dividerGroup": "F",
-    "dividerLabel": "교육부 개정 용어",
-    "overlayReplace": "→메테인"
-  },
-  {
-    "find": "몰리브덴",
-    "replace": "몰리브데넘",
-    "enabled": false,
-    "tip": "개정 화학 용어. molybdenum → '몰리브데넘'(옛 '몰리브덴')",
-    "dividerGroup": "F",
-    "dividerLabel": "교육부 개정 용어",
-    "overlayReplace": "→몰리브데넘"
+    "tip": "러시아어 Хрущёв. ㅊ 뒤에는 이중모음(야·여·요·유 계열)을 쓰지 않음 → '초'",
+    "dividerGroup": "C2",
+    "dividerLabel": "외래어 표기법(그 외)",
+    "overlayReplace": "→흐루시초프"
   },
   {
     "find": "미토콘드리아",
@@ -2717,49 +3296,31 @@
     "overlayReplace": "→마이토콘드리아"
   },
   {
-    "find": "부탄",
-    "replace": "뷰테인",
+    "find": "기관지",
+    "replace": "숨관가지",
     "enabled": false,
-    "tip": "개정 화학 용어. butane → '뷰테인'(-안→-에인)",
+    "tip": "개정 교육과정 새 용어. 기관지(bronchus)는 '숨관가지'",
     "dividerGroup": "F",
     "dividerLabel": "교육부 개정 용어",
-    "overlayReplace": "→뷰테인"
+    "overlayReplace": "→숨관가지"
   },
   {
-    "find": "브롬",
-    "replace": "브로민",
+    "find": "폐포",
+    "replace": "허파꽈리",
     "enabled": false,
-    "tip": "개정 화학 용어. bromine → '브로민'(옛 '브롬')",
+    "tip": "개정 교육과정 새 용어. 폐포(alveolus)는 '허파꽈리'",
     "dividerGroup": "F",
     "dividerLabel": "교육부 개정 용어",
-    "overlayReplace": "→브로민"
+    "overlayReplace": "→허파꽈리"
   },
   {
-    "find": "사구체",
-    "replace": "토리",
-    "enabled": false,
-    "tip": "개정 교육과정 새 용어. 사구체(glomerulus)는 '토리'",
-    "dividerGroup": "F",
-    "dividerLabel": "교육부 개정 용어",
-    "overlayReplace": "→토리"
-  },
-  {
-    "find": "셀렌",
-    "replace": "셀레늄",
+    "find": "리보솜",
+    "replace": "라이보솜",
     "enabled": true,
-    "tip": "개정 화학 용어. selenium → '셀레늄'(옛 '셀렌')",
+    "tip": "개정 교육과정 새 용어. 'ribosome' 원음에 가깝게 '라이보솜'",
     "dividerGroup": "F",
     "dividerLabel": "교육부 개정 용어",
-    "overlayReplace": "→셀레늄"
-  },
-  {
-    "find": "시클로",
-    "replace": "사이클로",
-    "enabled": false,
-    "tip": "개정 화학 용어. cyclo- → '사이클로'",
-    "dividerGroup": "F",
-    "dividerLabel": "교육부 개정 용어",
-    "overlayReplace": "→사이클로"
+    "overlayReplace": "→라이보솜"
   },
   {
     "find": "십이지장",
@@ -2771,94 +3332,49 @@
     "overlayReplace": "→샘창자"
   },
   {
-    "find": "아밀라아제",
-    "replace": "아밀레이스",
+    "find": "글리코겐",
+    "replace": "글라이코겐",
     "enabled": true,
-    "tip": "개정 화학 용어. amylase → '아밀레이스'(효소 -ase는 '-에이스')",
+    "tip": "개정 교육과정 새 용어. 'glycogen' 원음에 가깝게 '글라이코겐'",
     "dividerGroup": "F",
     "dividerLabel": "교육부 개정 용어",
-    "overlayReplace": "→아밀레이스"
+    "overlayReplace": "→글라이코겐"
   },
   {
-    "find": "아인시타이늄",
-    "replace": "아인슈타이늄",
-    "enabled": false,
-    "tip": "개정 화학 용어. einsteinium → '아인슈타이늄'(옛 '아인시타이늄')",
-    "dividerGroup": "F",
-    "dividerLabel": "교육부 개정 용어",
-    "overlayReplace": "→아인슈타이늄"
-  },
-  {
-    "find": "안티몬",
-    "replace": "안티모니",
-    "enabled": false,
-    "tip": "개정 화학 용어. antimony → '안티모니'(옛 '안티몬')",
-    "dividerGroup": "F",
-    "dividerLabel": "교육부 개정 용어",
-    "overlayReplace": "→안티모니"
-  },
-  {
-    "find": "알칸",
-    "replace": "알케인",
-    "enabled": false,
-    "tip": "개정 화학 용어. alkane(-ane)류는 '-안→-에인'이라 '알케인'",
-    "dividerGroup": "F",
-    "dividerLabel": "교육부 개정 용어",
-    "overlayReplace": "→알케인"
-  },
-  {
-    "find": "알킨",
-    "replace": "알카인",
-    "enabled": false,
-    "tip": "개정 화학 용어. alkyne(-yne)류는 '-인→-아인'이라 '알카인'",
-    "dividerGroup": "F",
-    "dividerLabel": "교육부 개정 용어",
-    "overlayReplace": "→알카인"
-  },
-  {
-    "find": "에르븀",
-    "replace": "어븀",
-    "enabled": false,
-    "tip": "개정 화학 용어. erbium → '어븀'(옛 '에르븀')",
-    "dividerGroup": "F",
-    "dividerLabel": "교육부 개정 용어",
-    "overlayReplace": "→어븀"
-  },
-  {
-    "find": "에탄",
-    "replace": "에테인",
-    "enabled": false,
-    "tip": "개정 화학 용어. ethane → '에테인'(-안→-에인)",
-    "dividerGroup": "F",
-    "dividerLabel": "교육부 개정 용어",
-    "overlayReplace": "→에테인"
-  },
-  {
-    "find": "에틴",
-    "replace": "에타인",
-    "enabled": false,
-    "tip": "개정 화학 용어. ethyne → '에타인'(-인→-아인)",
-    "dividerGroup": "F",
-    "dividerLabel": "교육부 개정 용어",
-    "overlayReplace": "→에타인"
-  },
-  {
-    "find": "요오드",
-    "replace": "아이오딘",
+    "find": "리소자임",
+    "replace": "라이소자임",
     "enabled": true,
-    "tip": "개정 화학 용어. iodine → '아이오딘'(옛 '요오드')",
+    "tip": "개정 교육과정 새 용어. 'lysozyme' 원음에 가깝게 '라이소자임'",
     "dividerGroup": "F",
     "dividerLabel": "교육부 개정 용어",
-    "overlayReplace": "→아이오딘"
+    "overlayReplace": "→라이소자임"
   },
   {
-    "find": "이테르븀",
-    "replace": "이터븀",
-    "enabled": false,
-    "tip": "개정 화학 용어. ytterbium → '이터븀'(옛 '이테르븀')",
+    "find": "리소솜",
+    "replace": "라이소솜",
+    "enabled": true,
+    "tip": "개정 교육과정 새 용어. 'lysosome' 원음에 가깝게 '라이소솜'",
     "dividerGroup": "F",
     "dividerLabel": "교육부 개정 용어",
-    "overlayReplace": "→이터븀"
+    "overlayReplace": "→라이소솜"
+  },
+  {
+    "find": "리보스",
+    "replace": "라이보스",
+    "enabled": true,
+    "tip": "개정 교육과정 새 용어. 'ribose' 원음에 가깝게 '라이보스'",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→라이보스"
+  },
+  {
+    "find": "사구체",
+    "replace": "토리",
+    "enabled": false,
+    "tip": "개정 교육과정 새 용어. 사구체(glomerulus)는 '토리'",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→토리"
   },
   {
     "find": "전두엽",
@@ -2870,6 +3386,24 @@
     "overlayReplace": "→이마엽"
   },
   {
+    "find": "두정엽",
+    "replace": "마루엽",
+    "enabled": false,
+    "tip": "개정 교육과정 새 용어. 두정엽(parietal lobe)은 '마루엽'",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→마루엽"
+  },
+  {
+    "find": "후두엽",
+    "replace": "뒤통수엽",
+    "enabled": false,
+    "tip": "개정 교육과정 새 용어. 후두엽(occipital lobe)은 '뒤통수엽'",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→뒤통수엽"
+  },
+  {
     "find": "측두엽",
     "replace": "관자엽",
     "enabled": false,
@@ -2879,6 +3413,33 @@
     "overlayReplace": "→관자엽"
   },
   {
+    "find": "간뇌",
+    "replace": "사이뇌",
+    "enabled": false,
+    "tip": "개정 교육과정 새 용어. 간뇌(diencephalon)는 '사이뇌'",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→사이뇌"
+  },
+  {
+    "find": "뇌간",
+    "replace": "뇌줄기",
+    "enabled": false,
+    "tip": "개정 교육과정 새 용어. 뇌간(brainstem)은 '뇌줄기'",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→뇌줄기"
+  },
+  {
+    "find": "나트륨",
+    "replace": "소듐 또는 나트륨",
+    "enabled": true,
+    "tip": "개정 교육과정. 'sodium'에 따라 '소듐', '나트륨'과 혼용",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→소듐 또는 나트륨"
+  },
+  {
     "find": "칼륨",
     "replace": "포타슘 또는 칼륨",
     "enabled": true,
@@ -2886,78 +3447,6 @@
     "dividerGroup": "F",
     "dividerLabel": "교육부 개정 용어",
     "overlayReplace": "→포타슘 또는 칼륨"
-  },
-  {
-    "find": "칼리포르늄",
-    "replace": "캘리포늄",
-    "enabled": false,
-    "tip": "개정 화학 용어. californium → '캘리포늄'(옛 '칼리포르늄')",
-    "dividerGroup": "F",
-    "dividerLabel": "교육부 개정 용어",
-    "overlayReplace": "→캘리포늄"
-  },
-  {
-    "find": "크롬",
-    "replace": "크로뮴",
-    "enabled": false,
-    "tip": "개정 화학 용어. chromium → '크로뮴'(옛 '크롬')",
-    "dividerGroup": "F",
-    "dividerLabel": "교육부 개정 용어",
-    "overlayReplace": "→크로뮴"
-  },
-  {
-    "find": "크세논",
-    "replace": "제논",
-    "enabled": false,
-    "tip": "개정 화학 용어. xenon → '제논'(옛 '크세논')",
-    "dividerGroup": "F",
-    "dividerLabel": "교육부 개정 용어",
-    "overlayReplace": "→제논"
-  },
-  {
-    "find": "탄탈",
-    "replace": "탄탈럼",
-    "enabled": false,
-    "tip": "개정 화학 용어. tantalum → '탄탈럼'(옛 '탄탈')",
-    "dividerGroup": "F",
-    "dividerLabel": "교육부 개정 용어",
-    "overlayReplace": "→탄탈럼"
-  },
-  {
-    "find": "테르븀",
-    "replace": "터븀",
-    "enabled": false,
-    "tip": "개정 화학 용어. terbium → '터븀'(옛 '테르븀')",
-    "dividerGroup": "F",
-    "dividerLabel": "교육부 개정 용어",
-    "overlayReplace": "→터븀"
-  },
-  {
-    "find": "텔루르",
-    "replace": "텔루륨",
-    "enabled": false,
-    "tip": "개정 화학 용어. tellurium → '텔루륨'(옛 '텔루르')",
-    "dividerGroup": "F",
-    "dividerLabel": "교육부 개정 용어",
-    "overlayReplace": "→텔루륨"
-  },
-  {
-    "find": "티타늄",
-    "replace": "타이타늄",
-    "enabled": false,
-    "tip": "개정 화학 용어. titanium → '타이타늄'(옛 '티타늄')",
-    "dividerGroup": "F",
-    "dividerLabel": "교육부 개정 용어",
-    "overlayReplace": "→타이타늄"
-  },
-  {
-    "find": "폐포",
-    "replace": "허파꽈리",
-    "enabled": false,
-    "tip": "개정 교육과정 새 용어. 폐포(alveolus)는 '허파꽈리'",
-    "dividerGroup": "F",
-    "dividerLabel": "교육부 개정 용어",
-    "overlayReplace": "→허파꽈리"
   },
   {
     "find": "플루오르",
@@ -2974,12 +3463,255 @@
     "ruleId": "chem-fluorine"
   },
   {
-    "find": "후두엽",
-    "replace": "뒤통수엽",
+    "find": "크롬",
+    "replace": "크로뮴",
     "enabled": false,
-    "tip": "개정 교육과정 새 용어. 후두엽(occipital lobe)은 '뒤통수엽'",
+    "tip": "개정 화학 용어. chromium → '크로뮴'(옛 '크롬')",
     "dividerGroup": "F",
     "dividerLabel": "교육부 개정 용어",
-    "overlayReplace": "→뒤통수엽"
+    "overlayReplace": "→크로뮴"
+  },
+  {
+    "find": "망간",
+    "replace": "망가니즈",
+    "enabled": false,
+    "tip": "개정 화학 용어. manganese → '망가니즈'(옛 '망간')",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→망가니즈"
+  },
+  {
+    "find": "게르마늄",
+    "replace": "저마늄",
+    "enabled": true,
+    "tip": "개정 화학 용어. germanium → '저마늄'(옛 '게르마늄')",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→저마늄"
+  },
+  {
+    "find": "셀렌",
+    "replace": "셀레늄",
+    "enabled": true,
+    "tip": "개정 화학 용어. selenium → '셀레늄'(옛 '셀렌')",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→셀레늄"
+  },
+  {
+    "find": "브롬",
+    "replace": "브로민",
+    "enabled": false,
+    "tip": "개정 화학 용어. bromine → '브로민'(옛 '브롬')",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→브로민"
+  },
+  {
+    "find": "니오브",
+    "replace": "나이오븀",
+    "enabled": false,
+    "tip": "개정 화학 용어. niobium → '나이오븀'(옛 '니오브')",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→나이오븀"
+  },
+  {
+    "find": "몰리브덴",
+    "replace": "몰리브데넘",
+    "enabled": false,
+    "tip": "개정 화학 용어. molybdenum → '몰리브데넘'(옛 '몰리브덴')",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→몰리브데넘"
+  },
+  {
+    "find": "안티몬",
+    "replace": "안티모니",
+    "enabled": false,
+    "tip": "개정 화학 용어. antimony → '안티모니'(옛 '안티몬')",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→안티모니"
+  },
+  {
+    "find": "텔루르",
+    "replace": "텔루륨",
+    "enabled": false,
+    "tip": "개정 화학 용어. tellurium → '텔루륨'(옛 '텔루르')",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→텔루륨"
+  },
+  {
+    "find": "요오드",
+    "replace": "아이오딘",
+    "enabled": true,
+    "tip": "개정 화학 용어. iodine → '아이오딘'(옛 '요오드')",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→아이오딘"
+  },
+  {
+    "find": "크세논",
+    "replace": "제논",
+    "enabled": false,
+    "tip": "개정 화학 용어. xenon → '제논'(옛 '크세논')",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→제논"
+  },
+  {
+    "find": "테르븀",
+    "replace": "터븀",
+    "enabled": false,
+    "tip": "개정 화학 용어. terbium → '터븀'(옛 '테르븀')",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→터븀"
+  },
+  {
+    "find": "에르븀",
+    "replace": "어븀",
+    "enabled": false,
+    "tip": "개정 화학 용어. erbium → '어븀'(옛 '에르븀')",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→어븀"
+  },
+  {
+    "find": "이테르븀",
+    "replace": "이터븀",
+    "enabled": false,
+    "tip": "개정 화학 용어. ytterbium → '이터븀'(옛 '이테르븀')",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→이터븀"
+  },
+  {
+    "find": "탄탈",
+    "replace": "탄탈럼",
+    "enabled": false,
+    "tip": "개정 화학 용어. tantalum → '탄탈럼'(옛 '탄탈')",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→탄탈럼"
+  },
+  {
+    "find": "티타늄",
+    "replace": "타이타늄",
+    "enabled": false,
+    "tip": "개정 화학 용어. titanium → '타이타늄'(옛 '티타늄')",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→타이타늄"
+  },
+  {
+    "find": "칼리포르늄",
+    "replace": "캘리포늄",
+    "enabled": false,
+    "tip": "개정 화학 용어. californium → '캘리포늄'(옛 '칼리포르늄')",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→캘리포늄"
+  },
+  {
+    "find": "아인시타이늄",
+    "replace": "아인슈타이늄",
+    "enabled": false,
+    "tip": "개정 화학 용어. einsteinium → '아인슈타이늄'(옛 '아인시타이늄')",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→아인슈타이늄"
+  },
+  {
+    "find": "란탄",
+    "replace": "란타넘",
+    "enabled": false,
+    "tip": "개정 화학 용어. lanthanum → '란타넘'(옛 '란탄')",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→란타넘"
+  },
+  {
+    "find": "알칸",
+    "replace": "알케인",
+    "enabled": false,
+    "tip": "개정 화학 용어. alkane(-ane)류는 '-안→-에인'이라 '알케인'",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→알케인"
+  },
+  {
+    "find": "메탄",
+    "replace": "메테인",
+    "enabled": false,
+    "tip": "개정 화학 용어. methane → '메테인'(-안→-에인)",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→메테인"
+  },
+  {
+    "find": "에탄",
+    "replace": "에테인",
+    "enabled": false,
+    "tip": "개정 화학 용어. ethane → '에테인'(-안→-에인)",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→에테인"
+  },
+  {
+    "find": "부탄",
+    "replace": "뷰테인",
+    "enabled": false,
+    "tip": "개정 화학 용어. butane → '뷰테인'(-안→-에인)",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→뷰테인"
+  },
+  {
+    "find": "알킨",
+    "replace": "알카인",
+    "enabled": false,
+    "tip": "개정 화학 용어. alkyne(-yne)류는 '-인→-아인'이라 '알카인'",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→알카인"
+  },
+  {
+    "find": "에틴",
+    "replace": "에타인",
+    "enabled": false,
+    "tip": "개정 화학 용어. ethyne → '에타인'(-인→-아인)",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→에타인"
+  },
+  {
+    "find": "시클로",
+    "replace": "사이클로",
+    "enabled": false,
+    "tip": "개정 화학 용어. cyclo- → '사이클로'",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→사이클로"
+  },
+  {
+    "find": "아밀라아제",
+    "replace": "아밀레이스",
+    "enabled": true,
+    "tip": "개정 화학 용어. amylase → '아밀레이스'(효소 -ase는 '-에이스')",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→아밀레이스"
+  },
+  {
+    "find": "리파아제",
+    "replace": "라이페이스",
+    "enabled": true,
+    "tip": "개정 화학 용어. lipase → '라이페이스'(효소 -ase는 '-에이스')",
+    "dividerGroup": "F",
+    "dividerLabel": "교육부 개정 용어",
+    "overlayReplace": "→라이페이스"
   }
 ]
