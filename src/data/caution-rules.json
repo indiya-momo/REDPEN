@@ -354,41 +354,6 @@
           "groupLabel": "띄어쓰기로 뜻이 달라지는 경우"
         },
         {
-          "id": "eogan-eomi-doei",
-          "label": "되, 돼",
-          "enabled": false,
-          "matchMode": "spaced-before",
-          "inventoryOnly": false,
-          "stems": [
-            "되",
-            "돼"
-          ],
-          "displayLabel": "되, 돼",
-          "except": [
-            "돼지",
-            "개돼지",
-            "꿀돼지",
-            "멧돼지",
-            "돼지갈비",
-            "돼지감자",
-            "돼지고기",
-            "돼지국밥",
-            "돼지기름",
-            "돼지꿈",
-            "돼지족발",
-            "돼지띠",
-            "돼지머리",
-            "돼지우리",
-            "돼지털",
-            "멧돼지",
-            "씨돼지",
-            "통돼지",
-            "애돼지"
-          ],
-          "tip": "한국어 어간(되-)은 홀로 문장 끝에 올 수 없으며, 어미(-어)와 결합해야 하므로 문장의 끝은 '돼'로 끝난다",
-          "groupLabel": "헷갈리기 쉬운 경우"
-        },
-        {
           "id": "eogan-eomi-aniyo",
           "label": "아니오, 아니요",
           "enabled": true,
@@ -454,6 +419,41 @@
           ],
           "tip": "지난 일을 나타내는 어미는 ‘-더라, -던(예: 춥더라)',  내용을 가리지 아니하는 뜻을 나타내는 조사와 어미는 ‘-든지(예: 먹든지 말든지)'",
           "groupLabel": "헷갈리기 쉬운 경우"
+        },
+        {
+          "id": "eogan-eomi-doei",
+          "label": "되, 돼",
+          "enabled": false,
+          "matchMode": "spaced-before",
+          "inventoryOnly": false,
+          "stems": [
+            "되",
+            "돼"
+          ],
+          "displayLabel": "되, 돼",
+          "except": [
+            "돼지",
+            "개돼지",
+            "꿀돼지",
+            "멧돼지",
+            "돼지갈비",
+            "돼지감자",
+            "돼지고기",
+            "돼지국밥",
+            "돼지기름",
+            "돼지꿈",
+            "돼지족발",
+            "돼지띠",
+            "돼지머리",
+            "돼지우리",
+            "돼지털",
+            "멧돼지",
+            "씨돼지",
+            "통돼지",
+            "애돼지"
+          ],
+          "tip": "한국어 어간(되-)은 홀로 문장 끝에 올 수 없으며, 어미(-어)와 결합해야 하므로 문장의 끝은 '돼'로 끝난다",
+          "groupLabel": "헷갈리기 쉬운 경우"
         }
       ]
     },
@@ -491,7 +491,21 @@
           "groupLabel": "띄어쓰기로 뜻이 달라지는 경우"
         },
         {
-          "id": "noun-noun-gyul",
+          "id": "noun-noun-daum",
+          "label": "다음 날, 다음날",
+          "enabled": true,
+          "matchMode": "spaced-before",
+          "inventoryOnly": false,
+          "stems": [
+            "다음 날",
+            "다음날"
+          ],
+          "displayLabel": "다음 날,다음날",
+          "tip": "'다음 날'은 그 이튿날, '다음날'은 막연한 날을 뜻한다",
+          "groupLabel": "띄어쓰기로 뜻이 달라지는 경우"
+        },
+        {
+          "id": "noun-noun-gyuljae",
           "label": "결제, 결재",
           "enabled": true,
           "matchMode": "spaced-before",
@@ -516,6 +530,20 @@
           ],
           "displayLabel": "구별, 구분",
           "tip": "구별(區別): 실존 대상을  차이에 따라 가를 때 예)남녀(男女) 구별, 구분(區分): 추상적인 것을 기준에 따라 나눌 때 예)시대(時代) 구분",
+          "groupLabel": "헷갈리기 쉬운 경우"
+        },
+        {
+          "id": "noun-noun-gyuldan",
+          "label": "결단, 결딴",
+          "enabled": true,
+          "matchMode": "spaced-before",
+          "inventoryOnly": false,
+          "stems": [
+            "결단",
+            "결딴"
+          ],
+          "displayLabel": "결딴, 결단",
+          "tip": "결단'은 결심, '결딴'은 어떤 일이나 물건 따위가 망가진 상태",
           "groupLabel": "헷갈리기 쉬운 경우"
         },
         {

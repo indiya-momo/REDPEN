@@ -484,6 +484,33 @@ async function fetchSheet() {
   return rowsToObjects(parseCsv(csv));
 }
 
+/**
+ * 항목 id 중복은 첫 번째만 남기고 동기화는 계속한다.
+ * @param {{ id: string, items: { id: string, label: string }[] }[]} groups
+ */
+function dedupeCautionGroupsKeepFirst(groups) {
+  const seenItemIds = new Set();
+  /** @type {string[]} */
+  const warnings = [];
+  const out = groups.map((group) => {
+    const items = [];
+    for (const item of group.items) {
+      const id = String(item.id ?? '').trim();
+      if (id && seenItemIds.has(id)) {
+        warnings.push(
+          `그룹 ${group.id}: 항목 id "${id}" 중복 — "${item.label}" 건너뜀`,
+        );
+        continue;
+      }
+      if (id) seenItemIds.add(id);
+      items.push(item);
+    }
+    return { ...group, items };
+  }).filter((g) => g.items.length > 0);
+
+  return { groups: out, warnings };
+}
+
 async function main() {
   const csvArg = process.argv.slice(2).find((a) => a.startsWith('--csv='));
   const rows = csvArg
@@ -497,13 +524,25 @@ async function main() {
       })();
 
   const uiMeta = await loadExistingGroupUiMeta();
-  const groups = mergeGroupUiMeta(rowsToCautionGroups(rows), uiMeta);
+  let groups = mergeGroupUiMeta(rowsToCautionGroups(rows), uiMeta);
 
   if (!groups.length) {
     throw new Error(
       `${SHEET_NAME} 탭에 유효한 행이 없습니다. group_id·label(또는 labels) 컬럼을 확인하세요.`,
     );
   }
+
+  const deduped = dedupeCautionGroupsKeepFirst(groups);
+  if (deduped.warnings.length) {
+    console.warn(
+      `\n⚠ 시트 중복 ${deduped.warnings.length}건 — 첫 번째만 유지하고 동기화 계속합니다.`,
+    );
+    for (const w of deduped.warnings) {
+      console.warn(`  - ${w}`);
+    }
+    console.warn('');
+  }
+  groups = deduped.groups;
 
   const payload = { groups };
   assertValidCautionRules(payload, 'sync-caution output');
