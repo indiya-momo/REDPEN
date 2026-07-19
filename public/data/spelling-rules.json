@@ -1661,12 +1661,11 @@
     "find": "록커",
     "replace": "로커",
     "finds": [
-      "락커",
       "롹커",
       "록커"
     ],
     "enabled": true,
-    "tip": "영어 rocker rɑːkə(r) 락, 롹이 아닌 록이 표준이며, k가 모음 사이에 오면 넘겨 적음 락앤롤→록앤롤 (참고: 무성 파열음 p, t, k\n어말에 올 때: 받침으로 적음 → rock[rɒk] = 록\n모음과 모음 사이에 올 때: 뒤 음절의 초성으로 넘겨 적음)",
+    "tip": "영어 rocker rɑːkə(r). 록rock[rɒk]이 표준이며 무성 파열음 p, t, k가 모음 사이에 오면 넘겨 적음",
     "dividerGroup": "C",
     "dividerLabel": "외래어 표기법(영어)",
     "ruleId": "foreign-name-rocker"
@@ -1809,7 +1808,7 @@
   {
     "find": "본넷",
     "replace": "보닛",
-    "enabled": false,
+    "enabled": true,
     "tip": "영어 bonnet. 짧은 모음 뒤의 어말 파열음 t는 받침 'ㅅ'으로 적어 '닛'이 되며, 같은 자음(nn)이 겹쳐 나올 때는 한 번만 표기하므로 '보닛'.",
     "dividerGroup": "C",
     "dividerLabel": "외래어 표기법(영어)",
@@ -1837,7 +1836,7 @@
     "find": "블럭",
     "replace": "블록",
     "enabled": true,
-    "tip": "영어 block.  'o'는 [어]라 '블록'",
+    "tip": "영어 block.  'o'는 [어]라 '블록' 참고:보도블럭 → 보도블록",
     "dividerGroup": "C",
     "dividerLabel": "외래어 표기법(영어)",
     "overlayReplace": "→블록"
