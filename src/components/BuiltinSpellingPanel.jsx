@@ -7,13 +7,11 @@ import {
   isBuiltInRuleEnabled,
 } from '../lib/builtInRules.js';
 import {
-  hasSpellingFindVariants,
-} from '../lib/spellingRuleEntry.js';
-import {
   buildSpellingRuleBundles,
   groupRulesByDivider,
 } from '../lib/spellingRuleBundles.js';
 import DetailsChevron from './DetailsChevron.jsx';
+import { spellingRuleChecklistParts } from '../lib/spellingRuleEntry.js';
 
 /**
  * @param {{
@@ -77,20 +75,13 @@ export default function BuiltinSpellingPanel({
     const noQuota = !countsTowardSpellingQuota(rule);
     const useInlineTipToggle = Boolean(tip);
     const enabledKey = builtInEnabledKey(rule);
-    const variantFinds = hasSpellingFindVariants(rule)
-      ? [...rule.finds].sort((a, b) => a.localeCompare(b, 'ko'))
-      : null;
-    const ruleLine = variantFinds ? (
+    const { find: displayFind, replace: displayReplace } =
+      spellingRuleChecklistParts(rule);
+    const ruleLine = (
       <>
-        <span className="find">{variantFinds.join('·')}</span>
+        <span className="find">{displayFind}</span>
         <span className="arrow">→</span>
-        <span className="replace">{rule.replace}</span>
-      </>
-    ) : (
-      <>
-        <span className="find">{rule.find}</span>
-        <span className="arrow">→</span>
-        <span className="replace">{rule.replace}</span>
+        <span className="replace">{displayReplace}</span>
       </>
     );
     return (

@@ -16,7 +16,7 @@ import {
   defaultCautionEnabled,
 } from './lib/cautionRules.js';
 import {
-  builtInEnabledFromSheet,
+  migrateBuiltInEnabled,
 } from './lib/builtInRules.js';
 import { useRuleSets } from './hooks/useRuleSets.js';
 import { useUserProfileSync } from './hooks/useUserProfileSync.js';
@@ -464,9 +464,10 @@ export default function App() {
       onDuplicateRuleSet={handleDuplicateRuleSet}
       onDeleteRuleSet={handleDeleteRuleSet}
       ruleSetSavedAt={activeSet.savedAt}
-      builtInEnabled={
-        activeSet.builtInEnabled ?? builtInEnabledFromSheet()
-      }
+      builtInEnabled={migrateBuiltInEnabled(
+        activeSet.builtInEnabled ?? {},
+        activeSet.spellingRulesFingerprint,
+      )}
       customRules={resolvedCustomRules}
       consistencyDecisions={activeSet.consistencyDecisions ?? []}
       decisionByUid={authSession?.uid ?? ''}

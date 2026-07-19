@@ -9,6 +9,7 @@ import {
   builtInEnabledKey,
   countsTowardSpellingQuota,
   builtInEnabledFromSheet,
+  migrateBuiltInEnabled,
 } from '../lib/builtInRules.js';
 import {
   countActiveRules,
@@ -456,8 +457,8 @@ export function useRuleSets(authUid = '', authEmail = '', options = {}) {
     [flushRuleSets, flushCloudRuleSetsImmediate],
   );
 
-  // 시트 sync 후 지문이 안 맞는 저장분만 1회 보정. ruleSets는 deps에 넣지 않음
-  // (applyRuleSets → setRuleSets 재실행이 effect를 다시 깨우는 패턴 방지).
+  // 시트 sync 후 지문이 안 맞는 저장분만 1회 보정.
+  // SPELLING_RULES_FP를 deps에 둬서 HMR·sync 직후에도 새 규칙 키가 채워지게 한다.
   useEffect(() => {
     if (!rulesReady) return;
 
@@ -477,7 +478,7 @@ export function useRuleSets(authUid = '', authEmail = '', options = {}) {
     if (!nextActive) return;
 
     applyRuleSets(next, nextActive);
-  }, [rulesReady, applyRuleSets]);
+  }, [rulesReady, applyRuleSets, SPELLING_RULES_FP]);
 
   useEffect(() => {
     const uid = String(authUid ?? '').trim();
@@ -680,7 +681,7 @@ export function useRuleSets(authUid = '', authEmail = '', options = {}) {
     const savedAt = new Date().toISOString();
     const next = ruleSetsRef.current.map((s) =>
       s.id === setId
-        ? { ...s, spellingRulesFingerprint: SPELLING_RULES_FP, savedAt }
+        ? normalizeRuleSet({ ...s, savedAt })
         : s,
     );
     ruleSetsRef.current = next;
@@ -918,7 +919,12 @@ export function useRuleSets(authUid = '', authEmail = '', options = {}) {
         (s) => s.id === activeSetIdRef.current,
       );
       if (!activeSet) return;
-      const prev = activeSet.builtInEnabled ?? builtInEnabledFromSheet();
+      // 시트 sync로 새 규칙이 들어와도 키가 비어 있으면 꺼진 것처럼 보이므로
+      // 토글 전에 지문 기준으로 맵을 채운다.
+      const prev = migrateBuiltInEnabled(
+        activeSet.builtInEnabled ?? {},
+        activeSet.spellingRulesFingerprint,
+      );
       const on = prev[enabledKey] === true;
       const nextBuiltIn = { ...prev, [enabledKey]: !on };
       if (
@@ -934,7 +940,10 @@ export function useRuleSets(authUid = '', authEmail = '', options = {}) {
         alert(maxRulesExceededMessage());
         return;
       }
-      updateActiveSet({ builtInEnabled: nextBuiltIn });
+      updateActiveSet({
+        builtInEnabled: nextBuiltIn,
+        spellingRulesFingerprint: SPELLING_RULES_FP,
+      });
     },
     [updateActiveSet],
   );
@@ -950,7 +959,10 @@ export function useRuleSets(authUid = '', authEmail = '', options = {}) {
         (s) => s.id === activeSetIdRef.current,
       );
       if (!activeSet) return;
-      const prev = activeSet.builtInEnabled ?? builtInEnabledFromSheet();
+      const prev = migrateBuiltInEnabled(
+        activeSet.builtInEnabled ?? {},
+        activeSet.spellingRulesFingerprint,
+      );
       const nextBuiltIn = { ...prev };
       for (const r of targetRules ?? BUILT_IN_RULES) {
         if (countsTowardSpellingQuota(r)) {
@@ -970,7 +982,10 @@ export function useRuleSets(authUid = '', authEmail = '', options = {}) {
         alert(maxRulesExceededMessage());
         return;
       }
-      updateActiveSet({ builtInEnabled: nextBuiltIn });
+      updateActiveSet({
+        builtInEnabled: nextBuiltIn,
+        spellingRulesFingerprint: SPELLING_RULES_FP,
+      });
     },
     [updateActiveSet],
   );

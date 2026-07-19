@@ -482,7 +482,7 @@ export default function CheckResultsPanel({
                                 {cautionResultChipLabel(group)}
                               </span>
                             </>
-                          ) : isLoanword && first ? (
+                          ) : isLoanword ? (
                             <>
                               <span
                                 className={`spelling-badge-inline ${resultPillarToneClass('spelling-loanword')}`.trim()}
@@ -490,10 +490,13 @@ export default function CheckResultsPanel({
                                 {LOANWORD_BADGE_LABEL}
                               </span>{' '}
                               <span className="spelling-result-chip">
-                                {`${first.matchedText} → ${first.suggestedText}`}
+                                {group.label ||
+                                  (first
+                                    ? `${first.matchedText} → ${first.suggestedText}`
+                                    : '')}
                               </span>
                             </>
-                          ) : first ? (
+                          ) : (
                             <>
                               <span
                                 className={`spelling-badge-inline ${resultPillarToneClass('spelling-builtin')}`.trim()}
@@ -501,11 +504,12 @@ export default function CheckResultsPanel({
                                 {SPELLING_RULE_BADGE_LABEL}
                               </span>{' '}
                               <span className="spelling-result-chip">
-                                {`${first.matchedText} → ${first.suggestedText}`}
+                                {group.label ||
+                                  (first
+                                    ? `${first.matchedText} → ${first.suggestedText}`
+                                    : '')}
                               </span>
                             </>
-                          ) : (
-                            group.label
                           )}
                         </span>
                       </div>

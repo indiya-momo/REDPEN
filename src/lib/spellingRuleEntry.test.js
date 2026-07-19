@@ -27,21 +27,61 @@ describe('builtInEnabledKey', () => {
 });
 
 describe('spellingRuleDisplayLabel', () => {
-  it('finds가 있으면 · 로 묶어 표시한다', () => {
+  it('이형태가 있어도 대표 find만 표시한다', () => {
     expect(
       spellingRuleDisplayLabel({
-        find: '애덤',
-        replace: '아담',
-        finds: ['애덤', '애썸'],
+        find: '봄 밤',
+        replace: '봄밤',
+        finds: ['가을 밤', '겨울 밤', '봄 밤', '여름 밤', '지난 밤'],
       }),
-    ).toBe('애덤·애썸 → 아담');
+    ).toBe('봄 밤 → 봄밤');
+  });
+
+  it('displayLabel이 있으면 표시에 쓴다', () => {
+    expect(
+      spellingRuleDisplayLabel({
+        find: '봄 밤',
+        replace: '봄밤',
+        finds: ['봄 밤', '여름 밤'],
+        displayLabel: '계절 밤',
+      }),
+    ).toBe('계절 밤 → 봄밤');
+  });
+
+  it('displayLabel이 →로 시작하면 finds를 앞에 붙인다', () => {
+    expect(
+      spellingRuleDisplayLabel({
+        find: '맞은 편',
+        replace: '맞은편',
+        finds: ['이 편', '저 편', '그 편', '건너 편', '맞은 편'],
+        displayLabel: '→이편·저편·그편·건너편·맞은편',
+      }),
+    ).toBe(
+      '이 편, 저 편, 그 편, 건너 편, 맞은 편 → 이편·저편·그편·건너편·맞은편',
+    );
+  });
+
+  it('봄 밤 묶음은 finds → display_label 오른쪽이다', () => {
+    expect(
+      spellingRuleDisplayLabel({
+        find: '봄 밤',
+        replace: '봄밤',
+        finds: ['봄 밤', '여름 밤', '가을 밤', '겨울 밤', '지난 밤'],
+        displayLabel: '→봄밤,여름밤,가을밤,겨울밤,지난밤',
+      }),
+    ).toBe(
+      '봄 밤, 여름 밤, 가을 밤, 겨울 밤, 지난 밤 → 봄밤,여름밤,가을밤,겨울밤,지난밤',
+    );
   });
 });
 
 describe('buildSpellingCheckRuleFromBuiltIn', () => {
-  it('finds가 없으면 규칙을 그대로 둔다', () => {
+  it('finds가 없어도 displayLabel·label을 붙인다', () => {
     const rule = { find: '컨텐츠', replace: '콘텐츠', enabled: true };
-    expect(buildSpellingCheckRuleFromBuiltIn(rule)).toEqual(rule);
+    expect(buildSpellingCheckRuleFromBuiltIn(rule)).toEqual({
+      ...rule,
+      label: '컨텐츠 → 콘텐츠',
+    });
   });
 
   it('finds가 있으면 regex alternation과 spellingRuleId를 넣는다', () => {

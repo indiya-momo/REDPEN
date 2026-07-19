@@ -33,17 +33,49 @@ export function parseSpellingFindsColumn(raw, primaryFind) {
 
 /**
  * @param {{ find: string, replace: string, finds?: string[], displayLabel?: string }} entry
+ * @returns {{ find: string, replace: string }}
+ */
+export function spellingRuleChecklistParts(entry) {
+  const custom = String(entry.displayLabel ?? '').trim();
+  const finds = (entry.finds ?? []).map((f) => String(f).trim()).filter(Boolean);
+  const leftFromFinds =
+    finds.length >= 2 ? finds.join(', ') : String(entry.find ?? '').trim();
+
+  if (custom.startsWith('→')) {
+    return {
+      find: leftFromFinds || String(entry.find ?? '').trim(),
+      replace: custom.replace(/^→\s*/, ''),
+    };
+  }
+  if (custom.includes('→')) {
+    const idx = custom.indexOf('→');
+    const left = custom.slice(0, idx).trim();
+    const right = custom.slice(idx + 1).trim();
+    return {
+      find: left || leftFromFinds || String(entry.find ?? '').trim(),
+      replace: right || String(entry.replace ?? '').trim(),
+    };
+  }
+  if (custom) {
+    return {
+      find: custom,
+      replace: String(entry.replace ?? '').trim(),
+    };
+  }
+  return {
+    find: String(entry.find ?? '').trim(),
+    replace: String(entry.replace ?? '').trim(),
+  };
+}
+
+/**
+ * @param {{ find: string, replace: string, finds?: string[], displayLabel?: string }} entry
  */
 export function spellingRuleDisplayLabel(entry) {
-  const custom = String(entry.displayLabel ?? '').trim();
-  if (custom) return custom;
-
-  const finds = entry.finds?.filter(Boolean) ?? [];
-  if (finds.length >= 2) {
-    const sorted = [...finds].sort((a, b) => a.localeCompare(b, 'ko'));
-    return `${sorted.join('·')} → ${entry.replace}`;
-  }
-  return `${entry.find} → ${entry.replace}`;
+  const { find, replace } = spellingRuleChecklistParts(entry);
+  if (!find) return replace;
+  if (!replace) return find;
+  return `${find} → ${replace}`;
 }
 
 /**
@@ -59,13 +91,14 @@ export function hasSpellingFindVariants(entry) {
  */
 export function buildSpellingCheckRuleFromBuiltIn(rule) {
   const finds = rule.finds?.filter(Boolean) ?? [];
+  const label = spellingRuleDisplayLabel(rule);
+
   if (finds.length < 2) {
-    return rule;
+    return { ...rule, label };
   }
 
   const alternation = compileSpellingFindsAlternation(finds);
   const spellingRuleId = String(rule.ruleId ?? '').trim() || rule.find;
-  const label = spellingRuleDisplayLabel(rule);
 
   return {
     ...rule,

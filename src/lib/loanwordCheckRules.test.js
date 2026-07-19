@@ -11,12 +11,16 @@ import {
 } from './builtInRules.js';
 
 describe('외래어 표기법 규칙 분류', () => {
-  it('묶음 이름이 외래어 표기법이면 loanword로 분류한다', () => {
+  it('묶음 이름이 자주 틀리는 외래어 표기법이면 loanword로 분류한다', () => {
     expect(
-      isLoanwordSpellingRule({ dividerLabel: '외래어 표기법(영어)' }),
+      isLoanwordSpellingRule({
+        dividerLabel: '자주 틀리는 외래어 표기법(영어)',
+      }),
     ).toBe(true);
     expect(
-      isLoanwordSpellingRule({ dividerLabel: '외래어 표기법(그 외)' }),
+      isLoanwordSpellingRule({
+        dividerLabel: '자주 틀리는 외래어 표기법(그 외)',
+      }),
     ).toBe(true);
     expect(
       isLoanwordSpellingRule({ dividerLabel: '표준국어대사전 등재(명사)' }),
@@ -24,8 +28,17 @@ describe('외래어 표기법 규칙 분류', () => {
     expect(isLoanwordSpellingRule({})).toBe(false);
   });
 
+  it('구 묶음 이름 외래어 표기법도 호환한다', () => {
+    expect(
+      isLoanwordSpellingRule({ dividerLabel: '외래어 표기법(영어)' }),
+    ).toBe(true);
+    expect(
+      isLoanwordSpellingRule({ dividerLabel: '외래어 표기법(그 외)' }),
+    ).toBe(true);
+  });
+
   it('구분 라벨·카테고리 상수', () => {
-    expect(LOANWORD_FEATURE_LABEL).toBe('외래어 표기법');
+    expect(LOANWORD_FEATURE_LABEL).toBe('자주 틀리는 외래어 표기법');
     expect(LOANWORD_CATEGORY).toBe('loanword');
   });
 });
