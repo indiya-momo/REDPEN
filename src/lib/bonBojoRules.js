@@ -7,6 +7,9 @@ export const AUXILIARY_VERB_FEATURE_LABEL =
   '본용언(-아/어) + 보조용언 표기';
 /** 결과 카드·PDF 말풍선·헤더 배지 */
 export const AUXILIARY_VERB_BADGE_LABEL = '본용언+보조용언';
+/** 국립국어원 한글 맞춤법 — 본용언·보조용언 관련 조항 */
+export const AUXILIARY_VERB_BASIS_URL =
+  'https://www.korean.go.kr/kornorms/regltn/regltnView.do#a198';
 
 /**
  * @typedef {{ id: string, label: string, stems?: string[], enabled?: boolean, displayLabel?: string, except?: string[] }} BonBojoItem

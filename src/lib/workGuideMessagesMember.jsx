@@ -164,7 +164,7 @@ export function AuxiliaryVerbMessage() {
       <br />
       집사가 많이 고민했던 부분인데
       <br />
-      ｢한글맞춤법｣ 기준으로 정리했다냥
+      ｢한글 맞춤법｣ 기준으로 정리했다냥
       <br />
       필요에 따라{' '}
       <span
