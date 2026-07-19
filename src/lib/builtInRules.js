@@ -89,7 +89,7 @@ export const BUILT_IN_GUIDE_RULES_UI = BUILT_IN_GUIDE_RULES.filter(
   isBuiltInRuleVisible,
 );
 
-/** 외래어 표기법 구분 — 묶음 이름이 "외래어 표기법(…)"인 내장 규칙 */
+/** 외래어 표기법 구분 — 묶음 이름이 "자주 틀리는 외래어 표기법(…)"(구: 외래어 표기법)인 내장 규칙 */
 export const LOANWORD_QUOTA_RULES = BUILT_IN_QUOTA_RULES.filter(
   isLoanwordSpellingRule,
 );
@@ -134,8 +134,15 @@ export function migrateBuiltInEnabled(saved = {}, savedFingerprint = null) {
       continue;
     }
     if (hasSpellingFindVariants(r)) {
-      const legacyOn = (r.finds ?? []).some((f) => saved[f] === true);
-      if (legacyOn) merged[key] = true;
+      const finds = r.finds ?? [];
+      const hasLegacyKey = finds.some((f) =>
+        Object.prototype.hasOwnProperty.call(saved, f),
+      );
+      if (hasLegacyKey) {
+        // 예전 이형태별 키만 있을 때: 하나라도 켜져 있으면 on
+        merged[key] = finds.some((f) => saved[f] === true);
+      }
+      // 새 규칙(키·레거시 모두 없음)은 defaults[key] 유지
       continue;
     }
     if (Object.prototype.hasOwnProperty.call(saved, r.find)) {

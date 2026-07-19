@@ -128,8 +128,9 @@ function applyStyle(cell, { bg, fg = 'FF000000', bold = false, size = 10, hAlign
 function getEntryLabel(group, source) {
   if (source === 'spelling') {
     if (group.category === 'caution') return cautionResultChipLabel(group);
+    if (group.label) return group.label;
     const first = group.instances[0];
-    return first ? `${first.matchedText} → ${first.suggestedText}` : group.label;
+    return first ? `${first.matchedText} → ${first.suggestedText}` : '';
   }
   return group.label;
 }

@@ -5,7 +5,7 @@
  * 컬럼: find | replace | enabled | tip | memo | counts_in_quota | visible | divider_group | divider_label | overlay_replace
  *   - divider_label: 묶음 이름(예: 사이시옷 법칙). 빈 칸 또는 "-"는 이름 없음으로 처리.
  *   - rule_id · finds · display_label: 이형태 묶음(한 행·한 체크). finds는 쉼표 구분.
- *   - 동기화 시 같은 divider_group 묶음 안 find 는 가나다순으로 정렬한다(시트 행 순서와 무관).
+ *   - 동기화 시 규칙 순서는 시트 행 순서를 그대로 유지한다.
  *
  * 사용:
  *   SPREADSHEET_ID=xxx npm run sync-spelling
@@ -209,7 +209,7 @@ function needsLegacyForeignNounGroup(rule) {
 }
 
 /**
- * 묶음별 find 가나다순 (divider_label은 시트 값 그대로)
+ * 시트 행 순서 유지. legacy 외래어 명사 묶음에 dividerGroup만 보정.
  * @param {ReturnType<typeof normalizeRow> extends (infer R)[] ? NonNullable<R> : never} rules
  */
 function postProcessSpellingRules(rules) {
@@ -218,30 +218,7 @@ function postProcessSpellingRules(rules) {
       rule.dividerGroup = FOREIGN_NOUN_DIVIDER_GROUP;
     }
   }
-
-  /** @type {typeof rules} */
-  const sorted = [];
-  let i = 0;
-  while (i < rules.length) {
-    const groupKey = String(rules[i].dividerGroup ?? '').trim();
-    if (!groupKey) {
-      sorted.push(rules[i]);
-      i += 1;
-      continue;
-    }
-    const start = i;
-    while (
-      i < rules.length &&
-      String(rules[i].dividerGroup ?? '').trim() === groupKey
-    ) {
-      i += 1;
-    }
-    const block = rules
-      .slice(start, i)
-      .sort((a, b) => a.find.localeCompare(b.find, 'ko'));
-    sorted.push(...block);
-  }
-  return sorted;
+  return rules;
 }
 
 function normalizeRow(row) {
@@ -357,6 +334,58 @@ async function syncFromCsvFile(csvPath) {
   return rowsToObjects(parseCsv(csv));
 }
 
+/**
+ * 시트 중복 find / find+replace는 첫 행만 남기고 나머지는 건너뛴다.
+ * 동기화는 중단하지 않고, 경고로 알려 준다.
+ * @param {import('../src/lib/ruleTypes.js').Rule[]} rules
+ * @returns {{ rules: import('../src/lib/ruleTypes.js').Rule[], warnings: string[] }}
+ */
+function dedupeSpellingRulesKeepFirst(rules) {
+  const seenFindForms = new Map();
+  const seenFindReplace = new Set();
+  /** @type {import('../src/lib/ruleTypes.js').Rule[]} */
+  const out = [];
+  /** @type {string[]} */
+  const warnings = [];
+
+  rules.forEach((row, index) => {
+    const forms =
+      Array.isArray(row.finds) && row.finds.length >= 2
+        ? row.finds.map((f) => String(f).trim()).filter(Boolean)
+        : row.find
+          ? [String(row.find).trim()]
+          : [];
+
+    const dupForm = forms.find((form) => seenFindForms.has(form));
+    if (dupForm) {
+      const prev = seenFindForms.get(dupForm);
+      warnings.push(
+        `규칙 ${index + 1} 건너뜀: find "${dupForm}" 중복 (이미 규칙 ${prev + 1}에 있음) — ${row.find} → ${row.replace}`,
+      );
+      return;
+    }
+
+    const isVariantBundle = Array.isArray(row.finds) && row.finds.length >= 2;
+    if (!isVariantBundle && row.find && row.replace) {
+      const key = `${String(row.find).trim()}\0${String(row.replace).trim()}`;
+      if (seenFindReplace.has(key)) {
+        warnings.push(
+          `규칙 ${index + 1} 건너뜀: find+replace 중복 — ${row.find} → ${row.replace}`,
+        );
+        return;
+      }
+      seenFindReplace.add(key);
+    }
+
+    forms.forEach((form) => {
+      if (!seenFindForms.has(form)) seenFindForms.set(form, index);
+    });
+    out.push(row);
+  });
+
+  return { rules: out, warnings };
+}
+
 async function main() {
   const csvArg = process.argv.slice(2).find((a) => a.startsWith('--csv='));
   const rows = csvArg
@@ -367,7 +396,7 @@ async function main() {
         return fetchSheet(SHEET_NAME);
       })();
   const skippedBulk = rows.length;
-  const rules = postProcessSpellingRules(
+  let rules = postProcessSpellingRules(
     rows.flatMap((row) => {
       const normalized = normalizeRow(row);
       if (!normalized) return [];
@@ -380,6 +409,18 @@ async function main() {
       `${SHEET_NAME} 탭에 유효한 행이 없습니다. find·replace 컬럼을 확인하세요.`,
     );
   }
+
+  const deduped = dedupeSpellingRulesKeepFirst(rules);
+  if (deduped.warnings.length) {
+    console.warn(
+      `\n⚠ 시트 중복 ${deduped.warnings.length}건 — 첫 번째만 유지하고 동기화 계속합니다.`,
+    );
+    for (const w of deduped.warnings) {
+      console.warn(`  - ${w}`);
+    }
+    console.warn('');
+  }
+  rules = deduped.rules;
 
   assertValidSpellingRules(rules, 'sync-spelling output');
 

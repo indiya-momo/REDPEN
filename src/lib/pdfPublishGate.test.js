@@ -62,7 +62,8 @@ describe('pdfPublishGate', () => {
     const pages = [
       {
         pageNum: 1,
-        text: 'x'.repeat(900) + ' 가을 밤 맞춤법 ',
+        // probeRules는 대표 find만 본다(이형태 finds는 미적용)
+        text: 'x'.repeat(900) + ' 봄 밤 맞춤법 ',
         items: [],
       },
     ];

@@ -25,6 +25,16 @@ describe('migrateBuiltInEnabled', () => {
       expect(merged['foreign-adam']).toBe(true);
     }
   });
+
+  it('저장 맵에 없는 새 finds 규칙은 시트 기본값을 유지한다', () => {
+    const defaults = migrateBuiltInEnabled({}, null);
+    const withoutNew = { ...defaults };
+    delete withoutNew['봄 비'];
+    delete withoutNew['봄 날'];
+    const merged = migrateBuiltInEnabled(withoutNew, SPELLING_RULES_FP);
+    expect(merged['봄 비']).toBe(true);
+    expect(merged['봄 날']).toBe(true);
+  });
 });
 
 describe('isBuiltInRuleVisible', () => {

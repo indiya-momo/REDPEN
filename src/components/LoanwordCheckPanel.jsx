@@ -1,9 +1,9 @@
 /**
- * 외래어 표기법 검수 기준 패널 — 맞춤법 탭 세 번째 구분.
+ * 자주 틀리는 외래어 표기법 검수 기준 패널 — 맞춤법 탭 세 번째 구분.
  *
- * 국립국어원 심의 근거로 선별한 내장 규칙 중 "외래어 표기법(…)" 묶음
- * (영어 / 프랑스어·독일어 / 그 외)만 따로 보여준다. 렌더링·켜고 끄기는
- * 맞춤법 규칙 패널(BuiltinSpellingPanel)과 동일한 방식을 그대로 쓴다.
+ * 국립국어원 심의 근거로 선별한 내장 규칙 중 "자주 틀리는 외래어 표기법(…)" 묶음
+ * (영어 / 프랑스어·독일어 / 그 외)만 따로 보여준다. 렌더링·켜고 끄기·항목 CSS는
+ * 맞춤법 규칙 패널(BuiltinSpellingPanel / rules-scroll)과 동일하다.
  */
 import BuiltinSpellingPanel from './BuiltinSpellingPanel.jsx';
 import { LOANWORD_QUOTA_RULES_UI } from '../lib/builtInRules.js';
