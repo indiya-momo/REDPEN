@@ -358,8 +358,8 @@ export default function LoanwordConverter({
         {'를 제공합니다'}
         <br />
         <ConsistencyHintExample>
-          &apos;そん まさよし&apos; → &apos;손 마사요시&apos; , 가디건 →
-          카디건
+          &apos;そん まさよし&apos; → &apos;손 마사요시&apos; &apos;momo&apos;
+          → &apos;모모&apos;
         </ConsistencyHintExample>
       </p>
 
