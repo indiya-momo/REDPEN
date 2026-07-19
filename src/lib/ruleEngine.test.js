@@ -241,4 +241,73 @@ describe('ruleEngine', () => {
     const hits = results.flatMap((g) => g.instances.map((i) => i.matchedText));
     expect(hits).toEqual(['신라시대']);
   });
+
+  it('부분·전체 표기가 겹치면 전체(긴 매칭)만 남긴다', () => {
+    const pages = [
+      {
+        pageNum: 135,
+        text: '맥도날드에 갔다가 맥도날드를 또 보고 맥도날드에서 나왔다.',
+        items: [],
+        itemRefs: [],
+      },
+    ];
+    const rules = [
+      {
+        find: '맥도날드',
+        replace: '맥도널드',
+        enabled: true,
+        builtIn: true,
+        category: 'spelling',
+      },
+      {
+        find: '도날드',
+        replace: '도널드',
+        enabled: true,
+        builtIn: true,
+        category: 'spelling',
+      },
+    ];
+    const { results, errors } = runRuleCheck(pages, rules);
+    expect(errors).toEqual([]);
+    const byFind = Object.fromEntries(
+      results.map((g) => [g.find, g.instances.length]),
+    );
+    expect(byFind['맥도날드']).toBe(3);
+    expect(byFind['도날드']).toBeUndefined();
+    const total = results.reduce((n, g) => n + g.instances.length, 0);
+    expect(total).toBe(3);
+  });
+
+  it('겹치지 않는 부분 표기는 그대로 남긴다', () => {
+    const pages = [
+      {
+        pageNum: 1,
+        text: '도날드가 맥도날드에 갔다.',
+        items: [],
+        itemRefs: [],
+      },
+    ];
+    const rules = [
+      {
+        find: '맥도날드',
+        replace: '맥도널드',
+        enabled: true,
+        builtIn: true,
+        category: 'spelling',
+      },
+      {
+        find: '도날드',
+        replace: '도널드',
+        enabled: true,
+        builtIn: true,
+        category: 'spelling',
+      },
+    ];
+    const { results } = runRuleCheck(pages, rules);
+    const byFind = Object.fromEntries(
+      results.map((g) => [g.find, g.instances.length]),
+    );
+    expect(byFind['도날드']).toBe(1);
+    expect(byFind['맥도날드']).toBe(1);
+  });
 });
