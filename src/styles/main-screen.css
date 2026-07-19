@@ -112,6 +112,8 @@
 .panel-left .caution-checklist-summary-title,
 .panel-left .builtin-spelling-summary,
 .panel-left .builtin-spelling-summary-title,
+.panel-left .loanword-check-summary,
+.panel-left .loanword-check-summary-title,
 .panel-left .loanword-converter__summary,
 .panel-left .loanword-converter__summary-title,
 .panel-left .printed-page-setup__title,
@@ -123,12 +125,12 @@
   font-weight: var(--w-header);
   color: var(--c-ink);
 }
-
 /* item — 400 + ink */
 .panel-left .results-header__rule-chip,
 .panel-left .results-category-summary__count-underline,
 .panel-left .caution-chip-label,
 .panel-left .builtin-spelling-rules-scroll .rule-text .find,
+.panel-left .builtin-spelling-loanword-scroll .rule-text .find,
 .panel-left .page-chip:not(.page-chip--current),
 .panel-left .registered-chip .find,
 .panel-left .registered-chip__text,
@@ -144,7 +146,6 @@
   font-weight: var(--w-item);
   color: var(--c-ink);
 }
-
 /* body — 400 + soft */
 .panel-left .result-detail,
 .panel-left .result-card-tip-inline,
@@ -162,6 +163,7 @@
 .panel-left .printed-page-setup__hint,
 .panel-left .printed-page-setup__inline-opt,
 .panel-left .builtin-spelling-rules-scroll .rule-text .arrow,
+.panel-left .builtin-spelling-loanword-scroll .rule-text .arrow,
 .panel-left .builtin-spelling-guide-heading,
 .panel-left .consistency-subtab,
 .panel-left .consistency-results-switch__btn,
@@ -443,10 +445,11 @@
   background: var(--panel-surface-group);
   box-shadow: none;
 }
-
-/* 체크리스트 항목 — 박스·짧은 구분선 금지, 여백·hover만 (편집자·맞춤법 동일) */
+/* 체크리스트 항목 — 박스·짧은 구분선 금지,
+여백·hover만 (편집자·맞춤법 동일) */
 .panel-left .builtin-spelling-caution-scroll,
-.panel-left .builtin-spelling-rules-scroll {
+.panel-left .builtin-spelling-rules-scroll,
+.panel-left .builtin-spelling-loanword-scroll {
   --criteria-item-pad-y: calc(5px * var(--panel-ui-scale));
 }
 
@@ -457,9 +460,9 @@
   margin: 0;
   box-sizing: border-box;
 }
-
 .panel-left .caution-group,
-.panel-left .builtin-spelling-rules-scroll .builtin-rule-group {
+.panel-left .builtin-spelling-rules-scroll .builtin-rule-group,
+.panel-left .builtin-spelling-loanword-scroll .builtin-rule-group {
   padding: var(--panel-gap-block) 0 calc(var(--panel-gap-group) + 2px) var(--criteria-chevron-inset);
   margin-bottom: 0;
 }
@@ -468,32 +471,32 @@
   margin-bottom: 0;
   gap: calc(6px * var(--panel-ui-scale)) 1px;
 }
-
 .panel-left .caution-group-items,
-.panel-left .builtin-spelling-rules-scroll .builtin-rule-group {
+.panel-left .builtin-spelling-rules-scroll .builtin-rule-group,
+.panel-left .builtin-spelling-loanword-scroll .builtin-rule-group {
   row-gap: var(--panel-gap-group);
   column-gap: calc(6px * var(--panel-ui-scale));
   justify-items: stretch;
 }
-
 .panel-left .caution-group-items--cols-3,
-.panel-left .builtin-spelling-rules-scroll .builtin-rule-group--cols-3 {
+.panel-left .builtin-spelling-rules-scroll .builtin-rule-group--cols-3,
+.panel-left .builtin-spelling-loanword-scroll .builtin-rule-group--cols-3 {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
-
-.panel-left .builtin-spelling-rules-scroll .builtin-rule-entry-wrap {
+.panel-left .builtin-spelling-rules-scroll .builtin-rule-entry-wrap,
+.panel-left .builtin-spelling-loanword-scroll .builtin-rule-entry-wrap {
   width: 100%;
   min-width: 0;
   justify-self: stretch;
 }
-
-.panel-left .builtin-spelling-rules-scroll .builtin-rule-entry {
+.panel-left .builtin-spelling-rules-scroll .builtin-rule-entry,
+.panel-left .builtin-spelling-loanword-scroll .builtin-rule-entry {
   width: 100%;
   max-width: 100%;
 }
-
 .panel-left .builtin-spelling-caution-scroll .caution-chip,
-.panel-left .builtin-spelling-rules-scroll .builtin-rule-row-wrap {
+.panel-left .builtin-spelling-rules-scroll .builtin-rule-row-wrap,
+.panel-left .builtin-spelling-loanword-scroll .builtin-rule-row-wrap {
   padding: var(--criteria-item-pad-y) 0;
   border: none;
   border-radius: 0;
@@ -502,22 +505,22 @@
   width: 100%;
   box-sizing: border-box;
 }
-
-.panel-left .builtin-spelling-rules-scroll .builtin-rule-item {
+.panel-left .builtin-spelling-rules-scroll .builtin-rule-item,
+.panel-left .builtin-spelling-loanword-scroll .builtin-rule-item {
   padding: 0;
   border-radius: 0;
   width: 100%;
 }
-
-.panel-left .builtin-spelling-rules-scroll .builtin-rule-row {
+.panel-left .builtin-spelling-rules-scroll .builtin-rule-row,
+.panel-left .builtin-spelling-loanword-scroll .builtin-rule-row {
   min-height: 0;
   align-items: center;
   padding: 0;
   gap: 5px;
   width: 100%;
 }
-
-.panel-left .builtin-spelling-rules-scroll .builtin-rule-text {
+.panel-left .builtin-spelling-rules-scroll .builtin-rule-text,
+.panel-left .builtin-spelling-loanword-scroll .builtin-rule-text {
   flex: 1;
   min-width: 0;
   display: flex;
@@ -527,16 +530,18 @@
   line-height: 1.2;
   font-size: var(--panel-criteria-item-font-size);
 }
-
 .panel-left .builtin-spelling-rules-scroll .rule-text .find,
+.panel-left .builtin-spelling-loanword-scroll .rule-text .find,
 .panel-left .builtin-spelling-rules-scroll .rule-text .replace,
-.panel-left .builtin-spelling-rules-scroll .rule-text .arrow {
+.panel-left .builtin-spelling-loanword-scroll .rule-text .replace,
+.panel-left .builtin-spelling-rules-scroll .rule-text .arrow,
+.panel-left .builtin-spelling-loanword-scroll .rule-text .arrow {
   font-size: var(--panel-criteria-item-label-font-size);
   line-height: 1.2;
   font-weight: var(--w-item);
 }
-
-.panel-left .builtin-spelling-rules-scroll .builtin-rule-label {
+.panel-left .builtin-spelling-rules-scroll .builtin-rule-label,
+.panel-left .builtin-spelling-loanword-scroll .builtin-rule-label {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
@@ -549,45 +554,48 @@
   background: transparent;
   cursor: pointer;
 }
-
-.panel-left .builtin-spelling-rules-scroll .builtin-rule-row > input[type='checkbox'] {
+.panel-left .builtin-spelling-rules-scroll .builtin-rule-row > input[type='checkbox'],
+.panel-left .builtin-spelling-loanword-scroll .builtin-rule-row > input[type='checkbox'] {
   margin-top: 0;
   flex: 0 0 auto;
 }
-
 .panel-left .builtin-spelling-rules-scroll .rule-list > .rule-row:hover,
-.panel-left .builtin-spelling-rules-scroll .builtin-rule-row:hover {
+.panel-left .builtin-spelling-loanword-scroll .rule-list > .rule-row:hover,
+.panel-left .builtin-spelling-rules-scroll .builtin-rule-row:hover,
+.panel-left .builtin-spelling-loanword-scroll .builtin-rule-row:hover {
   box-shadow: none;
 }
-
 .panel-left .builtin-spelling-caution-scroll .caution-chip:hover,
-.panel-left .builtin-spelling-rules-scroll .builtin-rule-row-wrap:hover {
+.panel-left .builtin-spelling-rules-scroll .builtin-rule-row-wrap:hover,
+.panel-left .builtin-spelling-loanword-scroll .builtin-rule-row-wrap:hover {
   background: var(--rule-hover-bg);
   box-shadow: none;
 }
-
 .panel-left .builtin-spelling-caution-scroll .caution-inline-tip-trigger,
-.panel-left .builtin-spelling-rules-scroll .caution-inline-tip-trigger {
+.panel-left .builtin-spelling-rules-scroll .caution-inline-tip-trigger,
+.panel-left .builtin-spelling-loanword-scroll .caution-inline-tip-trigger {
   padding: 0;
   border: none;
   border-radius: 0;
 }
-
 .panel-left .builtin-spelling-caution-scroll .caution-inline-tip-trigger:hover,
 .panel-left .builtin-spelling-caution-scroll .caution-inline-tip-trigger:focus,
 .panel-left .builtin-spelling-caution-scroll .caution-inline-tip-trigger:focus-visible,
 .panel-left .builtin-spelling-rules-scroll .caution-inline-tip-trigger:hover,
+.panel-left .builtin-spelling-loanword-scroll .caution-inline-tip-trigger:hover,
 .panel-left .builtin-spelling-rules-scroll .caution-inline-tip-trigger:focus,
-.panel-left .builtin-spelling-rules-scroll .caution-inline-tip-trigger:focus-visible {
+.panel-left .builtin-spelling-loanword-scroll .caution-inline-tip-trigger:focus,
+.panel-left .builtin-spelling-rules-scroll .caution-inline-tip-trigger:focus-visible,
+.panel-left .builtin-spelling-loanword-scroll .caution-inline-tip-trigger:focus-visible {
   border-color: transparent;
   background: transparent;
   box-shadow: none;
   outline: none;
 }
-
 /* 설명 뱃지 — 기준 항목(라벨) 안쪽 오른쪽에 표시 */
 .panel-left .builtin-spelling-caution-scroll .caution-inline-tip-trigger:hover::after,
-.panel-left .builtin-spelling-rules-scroll .caution-inline-tip-trigger:hover::after {
+.panel-left .builtin-spelling-rules-scroll .caution-inline-tip-trigger:hover::after,
+.panel-left .builtin-spelling-loanword-scroll .caution-inline-tip-trigger:hover::after {
   left: auto;
   right: 2px;
   top: 50%;
@@ -750,13 +758,13 @@
   margin-bottom: var(--panel-gap-group);
   padding-top: 2px;
 }
-
 .panel-left .builtin-spelling-details[open] .builtin-spelling-caution-scroll,
-.panel-left .builtin-spelling-details[open] .builtin-spelling-rules-scroll {
+.panel-left .builtin-spelling-details[open] .builtin-spelling-rules-scroll,
+.panel-left .loanword-check-details[open] .builtin-spelling-loanword-scroll {
   padding-top: 0;
 }
-
-.panel-left .builtin-spelling-rules-scroll .builtin-rule-entry-wrap + .builtin-rule-tip-inline {
+.panel-left .builtin-spelling-rules-scroll .builtin-rule-entry-wrap + .builtin-rule-tip-inline,
+.panel-left .builtin-spelling-loanword-scroll .builtin-rule-entry-wrap + .builtin-rule-tip-inline {
   margin-top: 4px;
   margin-bottom: var(--panel-gap-group);
 }
@@ -840,9 +848,9 @@
   border: 1px solid var(--panel-border-soft);
   color: var(--c-ink);
 }
-
 .panel-left .caution-group::after,
-.panel-left .builtin-spelling-rules-scroll .builtin-rule-group--divider-after::after {
+.panel-left .builtin-spelling-rules-scroll .builtin-rule-group--divider-after::after,
+.panel-left .builtin-spelling-loanword-scroll .builtin-rule-group--divider-after::after {
   border-bottom-color: var(--panel-border-soft);
 }
 
@@ -860,17 +868,18 @@
   border-left-color: var(--panel-border-soft);
   color: var(--c-soft);
 }
-
 .panel-left .builtin-spelling-rules-scroll .rule-text .find,
-.panel-left .builtin-spelling-rules-scroll .rule-text .arrow {
+.panel-left .builtin-spelling-loanword-scroll .rule-text .find,
+.panel-left .builtin-spelling-rules-scroll .rule-text .arrow,
+.panel-left .builtin-spelling-loanword-scroll .rule-text .arrow {
   color: var(--c-ink);
 }
-
-.panel-left .builtin-spelling-rules-scroll .rule-text .arrow {
+.panel-left .builtin-spelling-rules-scroll .rule-text .arrow,
+.panel-left .builtin-spelling-loanword-scroll .rule-text .arrow {
   color: var(--c-soft);
 }
-
-.panel-left .builtin-spelling-rules-scroll .rule-text .replace {
+.panel-left .builtin-spelling-rules-scroll .rule-text .replace,
+.panel-left .builtin-spelling-loanword-scroll .rule-text .replace {
   color: var(--panel-rule-replace-color);
 }
 
@@ -2391,7 +2400,8 @@
 }
 
 .builtin-spelling-resize-body .caution-checklist-summary-title,
-.builtin-spelling-resize-body .builtin-spelling-summary-title {
+.builtin-spelling-resize-body .builtin-spelling-summary-title,
+.builtin-spelling-resize-body .loanword-check-summary-title {
   display: inline-flex;
   align-items: baseline;
   align-self: center;
@@ -2402,12 +2412,14 @@
   background: var(--panel-surface-group, var(--panel-caution-surface));
 }
 
-.builtin-spelling-resize-body .builtin-spelling-details:not([open]) > .builtin-spelling-summary {
+.builtin-spelling-resize-body .builtin-spelling-details:not([open]) > .builtin-spelling-summary,
+.builtin-spelling-resize-body .loanword-check-details:not([open]) > .loanword-check-summary {
   background: var(--panel-surface-group, var(--panel-spelling-surface));
 }
 
 .builtin-spelling-resize-body .caution-checklist-details[open] > .caution-checklist-summary,
-.builtin-spelling-resize-body .builtin-spelling-details[open] > .builtin-spelling-summary {
+.builtin-spelling-resize-body .builtin-spelling-details[open] > .builtin-spelling-summary,
+.builtin-spelling-resize-body .loanword-check-details[open] > .loanword-check-summary {
   background: var(--panel-accordion-bg-open);
 }
 
@@ -2415,7 +2427,8 @@
   padding-bottom: 10px;
 }
 
-.builtin-spelling-resize-body .builtin-spelling-details[open] .builtin-rule-list {
+.builtin-spelling-resize-body .builtin-spelling-details[open] .builtin-rule-list,
+.builtin-spelling-resize-body .loanword-check-details[open] .builtin-rule-list {
   margin: 0;
   padding-bottom: 10px;
 }
@@ -2518,12 +2531,12 @@
   border-top: none;
   background: transparent;
 }
-
-.panel-left .builtin-spelling-rules-scroll .builtin-rule-bundle-body .builtin-rule-group {
+.panel-left .builtin-spelling-rules-scroll .builtin-rule-bundle-body .builtin-rule-group,
+.panel-left .builtin-spelling-loanword-scroll .builtin-rule-bundle-body .builtin-rule-group {
   padding-left: 0;
 }
-
-.panel-left .builtin-spelling-rules-scroll .builtin-rule-list--bundles .builtin-rule-entry-wrap {
+.panel-left .builtin-spelling-rules-scroll .builtin-rule-list--bundles .builtin-rule-entry-wrap,
+.panel-left .builtin-spelling-loanword-scroll .builtin-rule-list--bundles .builtin-rule-entry-wrap {
   width: 100%;
 }
 
@@ -2651,10 +2664,10 @@
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: var(--color-scrollbar-thumb-hover);
 }
-
 /* 편집자 검토 필요 / 맞춤법 — 래퍼는 간격만 (면·테두리는 details) */
 .builtin-spelling-caution-scroll,
-.builtin-spelling-rules-scroll {
+.builtin-spelling-rules-scroll,
+.builtin-spelling-loanword-scroll {
   flex: 0 0 auto;
   padding: 0;
   background: transparent;
@@ -2666,8 +2679,8 @@
   padding: 0;
   border-bottom: none;
 }
-
-.builtin-spelling-rules-scroll .builtin-spelling-details:not([open]) {
+.builtin-spelling-rules-scroll .builtin-spelling-details:not([open]),
+.builtin-spelling-loanword-scroll .loanword-check-details:not([open]) {
   min-height: 0;
 }
 
@@ -3896,7 +3909,8 @@
 }
 
 .panel-left .caution-checklist-details,
-.panel-left .builtin-spelling-details {
+.panel-left .builtin-spelling-details,
+.panel-left .loanword-check-details {
   --criteria-pad-inline: calc(10px * var(--panel-ui-scale));
   --criteria-checkbox-size: calc(15px * var(--panel-ui-scale));
   --criteria-summary-gap: calc(8px * var(--panel-ui-scale));
@@ -3911,13 +3925,15 @@
 }
 
 .panel-left .builtin-spelling-resize-body .caution-checklist-details,
-.panel-left .builtin-spelling-resize-body .builtin-spelling-details {
+.panel-left .builtin-spelling-resize-body .builtin-spelling-details,
+.panel-left .builtin-spelling-resize-body .loanword-check-details {
   margin: 0;
   padding: 0;
 }
 
 .panel-left .builtin-spelling-resize-body .caution-checklist-summary,
-.panel-left .builtin-spelling-resize-body .builtin-spelling-summary {
+.panel-left .builtin-spelling-resize-body .builtin-spelling-summary,
+.panel-left .builtin-spelling-resize-body .loanword-check-summary {
   min-height: calc(2.35rem * var(--panel-ui-scale));
   padding: calc(10px * var(--panel-ui-scale)) var(--criteria-pad-inline, 10px);
 }
@@ -3935,7 +3951,8 @@
 }
 
 .panel-left .caution-checklist-summary-title,
-.panel-left .builtin-spelling-summary-title {
+.panel-left .builtin-spelling-summary-title,
+.panel-left .loanword-check-summary-title {
   display: inline-flex;
   flex-wrap: wrap;
   align-items: baseline;
@@ -3945,6 +3962,21 @@
 .panel-left .panel-criteria-heading-meta {
   font-size: 0.75em;
   line-height: inherit;
+}
+
+.panel-left .panel-criteria-source-link {
+  margin-left: 0.4em;
+  font-size: 0.72em;
+  font-weight: 500;
+  line-height: inherit;
+  color: var(--c-soft);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  white-space: nowrap;
+}
+
+.panel-left .panel-criteria-source-link:hover {
+  color: var(--c-ink);
 }
 
 /* 외래어 표기 — 맞춤법 탭 제목을 다른 criteria heading과 동일 스케일로 */

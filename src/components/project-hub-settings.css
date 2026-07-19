@@ -215,12 +215,13 @@
   flex: 0 0 auto;
   gap: 0.3rem;
   margin-left: auto;
-  max-width: 15rem;
+  max-width: none;
 }
 
 .project-hub-settings__criteria-actions .project-hub-settings__criteria-lead {
   margin: 0;
   text-align: right;
+  white-space: nowrap;
 }
 
 .project-hub-settings__criteria-link {
