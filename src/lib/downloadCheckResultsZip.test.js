@@ -40,22 +40,24 @@ describe('downloadCheckResultsAsZip', () => {
           id: 'a',
           kind: 'spelling',
           createdAt: Date.UTC(2026, 6, 16, 6, 0),
+          pdfFileName: '고구려조선본없음.pdf',
           summaryLine: 's',
           summary: {},
           rows: [],
-          filename: '맞춤법.xlsx',
+          filename: '맞춤법_검사결과.xlsx',
         },
         {
           id: 'b',
           kind: 'consistency',
           createdAt: Date.UTC(2026, 6, 16, 7, 0),
+          pdfFileName: '고구려조선본없음.pdf',
           summaryLine: 'c',
           summary: {},
           rows: [],
-          filename: '표기통일.xlsx',
+          filename: '표기통일_검사결과.xlsx',
         },
       ],
-      zipFilename: '테스트_검수결과',
+      zipFilename: '260719_고구려조선본없음_검수결과',
     });
 
     expect(result.ok).toBe(true);

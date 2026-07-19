@@ -5,6 +5,10 @@ import {
 import { buildCheckResultSnapshot } from './checkResultSnapshot.js';
 import { saveCheckResultCloud } from './checkResultsCloud.js';
 import { isPaidUser } from './paidPlanGate.js';
+import {
+  buildProofreadExportFilename,
+  proofreadExportLabelForKind,
+} from './proofreadExportFilename.js';
 
 /**
  * 유료·활성 프로젝트일 때만 검수 결과 스냅숏을 Firestore에 저장.
@@ -38,12 +42,19 @@ export async function maybeSavePaidCheckResult({
       kind === 'spelling'
         ? buildSpellingExportModel(exportOptions)
         : buildConsistencyExportModel(exportOptions);
+    if (!exportModel) return { saved: false, reason: 'no-model' };
 
     const snapshot = buildCheckResultSnapshot({
       kind,
       projectId: pid,
       pdfFileName,
-      exportModel,
+      exportModel: {
+        ...exportModel,
+        filename: buildProofreadExportFilename(
+          pdfFileName,
+          proofreadExportLabelForKind(kind),
+        ),
+      },
     });
     if (!snapshot) return { saved: false, reason: 'no-snapshot' };
 

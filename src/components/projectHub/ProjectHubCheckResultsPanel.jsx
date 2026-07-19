@@ -11,6 +11,7 @@ import {
   assertPaidCheckResultsOrAlert,
   isPaidUser,
 } from '../../lib/paidPlanGate.js';
+import { buildCheckResultsZipBasename } from '../../lib/proofreadExportFilename.js';
 import { showAppAlert } from '../../lib/appDialog.js';
 
 /**
@@ -102,7 +103,7 @@ export default function ProjectHubCheckResultsPanel({
         .slice(0, 40);
       const result = await downloadCheckResultsAsZip({
         items,
-        zipFilename: `${safeName || '검수결과'}_검수결과`,
+        zipFilename: buildCheckResultsZipBasename(safeName || '검수결과'),
       });
       if (!result.ok) {
         await showAppAlert('다운로드할 결과를 만들 수 없습니다');
