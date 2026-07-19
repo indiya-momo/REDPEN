@@ -82,10 +82,70 @@ function yieldToMain() {
 }
 
 /**
+ * 인스턴스가 차지하는 문자 구간 [start, end).
+ * @param {MatchInstance} inst
+ */
+function instanceSpan(inst) {
+  const start =
+    typeof inst.highlightIndex === 'number' ? inst.highlightIndex : inst.index;
+  const text = inst.highlightText || inst.matchedText || '';
+  return { start, end: start + text.length };
+}
+
+/**
+ * 같은 페이지에서 구간이 겹치면 더 긴(전체) 표기만 남긴다.
+ * 예: 「맥도날드」와 그 안의 「도날드」→ 「맥도날드」만.
+ * @param {Map<string, GroupedResult>} byKey
+ */
+function suppressContainedOverlaps(byKey) {
+  /** @type {{ key: string, inst: MatchInstance, start: number, end: number, len: number }[]} */
+  const flat = [];
+  for (const [key, group] of byKey) {
+    for (const inst of group.instances) {
+      const { start, end } = instanceSpan(inst);
+      if (end <= start) continue;
+      flat.push({ key, inst, start, end, len: end - start });
+    }
+  }
+
+  /** @type {Map<number, typeof flat>} */
+  const byPage = new Map();
+  for (const row of flat) {
+    const page = row.inst.pageNum;
+    if (!byPage.has(page)) byPage.set(page, []);
+    byPage.get(page).push(row);
+  }
+
+  /** @type {WeakSet<MatchInstance>} */
+  const drop = new WeakSet();
+  for (const rows of byPage.values()) {
+    rows.sort((a, b) => b.len - a.len || a.start - b.start);
+    /** @type {{ start: number, end: number }[]} */
+    const claimed = [];
+    for (const row of rows) {
+      const overlaps = claimed.some(
+        (c) => row.start < c.end && c.start < row.end,
+      );
+      if (overlaps) {
+        drop.add(row.inst);
+        continue;
+      }
+      claimed.push({ start: row.start, end: row.end });
+    }
+  }
+
+  for (const [key, group] of byKey) {
+    group.instances = group.instances.filter((inst) => !drop.has(inst));
+    if (group.instances.length === 0) byKey.delete(key);
+  }
+}
+
+/**
  * @param {Map<string, GroupedResult>} byKey
  * @param {(PageText | import('./pdfService.js').PageData)[]} [pages]
  */
 function finalizeResults(byKey, pages = []) {
+  suppressContainedOverlaps(byKey);
   const pageByNum = buildPageByNum(pages);
   for (const group of byKey.values()) {
     group.instances = sortInstancesReadingOrder(group.instances, pageByNum);
