@@ -6,6 +6,10 @@ import {
   writeConsistencyWorkbook,
   writeSpellingWorkbook,
 } from './exportResults.js';
+import {
+  buildProofreadExportFilename,
+  proofreadExportLabelForKind,
+} from './proofreadExportFilename.js';
 
 /**
  * @param {BlobPart | Blob} data
@@ -25,33 +29,28 @@ function downloadBlob(data, filename, mime) {
 }
 
 /**
- * @param {unknown} ms
- * @returns {string}
- */
-function stampFromCreatedAt(ms) {
-  const n = Number(ms);
-  if (!Number.isFinite(n)) return 'unknown';
-  const d = new Date(n);
-  const pad = (x) => String(x).padStart(2, '0');
-  return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}`;
-}
-
-/**
+ * 작업대 다운로드와 같은 형식. 저장된 구형 filename 은 무시하고 재생성.
  * @param {{
  *   kind?: unknown,
  *   createdAt?: unknown,
- *   id?: unknown,
+ *   pdfFileName?: unknown,
  *   filename?: unknown,
  * } & Record<string, unknown>} item
  * @param {Set<string>} used
  */
 function uniqueXlsxName(item, used) {
-  const kind = item.kind === 'consistency' ? '표기통일' : '맞춤법';
-  const stamp = stampFromCreatedAt(item.createdAt);
-  const base =
-    typeof item.filename === 'string' && item.filename.trim()
-      ? item.filename.replace(/[\\/:*?"<>|]/g, '_').replace(/\.xlsx$/i, '')
-      : `${kind}_${stamp}`;
+  const kind = item.kind === 'consistency' ? 'consistency' : 'spelling';
+  const when = Number(item.createdAt);
+  const date = Number.isFinite(when) ? new Date(when) : new Date();
+  const pdfName =
+    typeof item.pdfFileName === 'string' && item.pdfFileName.trim()
+      ? item.pdfFileName
+      : '프로젝트명';
+  const base = buildProofreadExportFilename(
+    pdfName,
+    proofreadExportLabelForKind(kind),
+    date,
+  ).replace(/\.xlsx$/i, '');
   let name = `${base}.xlsx`;
   let n = 2;
   while (used.has(name)) {

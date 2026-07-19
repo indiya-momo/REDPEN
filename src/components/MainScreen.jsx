@@ -111,19 +111,10 @@ import {
   readThumbStripOpenPreference,
   shouldShowPdfViewer,
 } from '../utils/main-screen-helpers.js';
-
-function buildProofreadExportFilename(pdfFileName, label) {
-  const today = new Date();
-  const yy = String(today.getFullYear()).slice(2);
-  const mm = String(today.getMonth() + 1).padStart(2, '0');
-  const dd = String(today.getDate()).padStart(2, '0');
-  const datePart = `${yy}${mm}${dd}`;
-  const rawProject = pdfFileName
-    ? pdfFileName.replace(/\.[^.]+$/, '')
-    : '프로젝트명';
-  const projectPart = rawProject.replace(/[\\/:*?"<>|]/g, '_');
-  return `${datePart}_${projectPart}_인디야_${label}.xlsx`;
-}
+import {
+  buildProofreadExportFilename,
+  proofreadExportLabelForKind,
+} from '../lib/proofreadExportFilename.js';
 
 /** 1번 — 기준 검수 버튼 바로 아래 (좌측 패널 안에 보이도록) */
 const WORK_GUIDE_1_ALIGN = {
@@ -1414,7 +1405,7 @@ export default function MainScreen({
     if (!spellingExportEnabled) return;
     const filename = buildProofreadExportFilename(
       pdf.pdfFileName,
-      '맞춤법_검수',
+      proofreadExportLabelForKind('spelling'),
     );
 
     assertBetaDailyExportOrAlert(authUid, {
@@ -1474,7 +1465,7 @@ export default function MainScreen({
     if (!spellingExportEnabled) return;
     const filename = buildProofreadExportFilename(
       pdf.pdfFileName,
-      '표기통일_검수',
+      proofreadExportLabelForKind('consistency'),
     );
 
     assertBetaDailyExportOrAlert(authUid, {
