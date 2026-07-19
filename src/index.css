@@ -830,7 +830,7 @@ details[open] > summary .details-chevron::before {
   line-height: 1.45;
   color: #92400e;
   white-space: pre-line;
-  text-align: start;
+  text-align: center;
   overflow-wrap: break-word;
   word-break: keep-all;
 }
@@ -847,7 +847,8 @@ details[open] > summary .details-chevron::before {
   white-space: pre-line;
 }
 
-.builtin-spelling-details {
+.builtin-spelling-details,
+.loanword-check-details {
   --criteria-pad-inline: 10px;
   font-size: 1.05rem;
   --criteria-chevron-inset: calc(var(--criteria-checkbox-size, 15px) + 8px);
@@ -1008,7 +1009,7 @@ details[open] > summary .details-chevron::before {
   font-weight: 500;
   line-height: 1.45;
   color: #b91c1c;
-  text-align: start;
+  text-align: center;
 }
 
 .builtin-tip-toggle-btn {
