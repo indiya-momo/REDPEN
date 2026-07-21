@@ -1,14 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { listCheckResultsCloud } from '../../lib/checkResultsCloud.js';
 import ProjectLibraryCard from './ProjectLibraryCard.jsx';
-
-/** 공유 미리보기 — 수신자가 보게 될 설정 구역 안내 (비활성) */
-const SHARE_OUTLINE_NAV = [
-  { id: 'meta', label: '프로젝트 정보', boxed: true },
-  { id: 'spelling', label: '맞춤법', pillar: 'spelling' },
-  { id: 'consistency', label: '표기 통일', pillar: 'consistency' },
-  { id: 'auxiliary', label: '본용언 + 보조용언', pillar: 'auxiliary' },
-  { id: 'actions', label: '작업 이력', boxed: true },
-];
+import SharePackageReadPanel from '../SharePackageReadPanel.jsx';
 
 /** 나의 프로젝트 그리드에 있는 실제 폴더 카드 너비(px) */
 function measureLibraryFolderWidth() {
@@ -24,12 +17,16 @@ function measureLibraryFolderWidth() {
 /**
  * @param {{
  *   card: import('../../presentation/projectCardViewModel.js').ProjectCardViewModel,
+ *   ruleSet?: import('../../lib/ruleSetsStorage.js').RuleSet | null,
+ *   uid?: string,
  *   onClose: () => void,
  *   onCreateShareLink?: () => void | Promise<void>,
  * }} props
  */
 export default function SharePreviewModal({
   card,
+  ruleSet = null,
+  uid = '',
   onClose,
   onCreateShareLink,
 }) {
@@ -37,11 +34,44 @@ export default function SharePreviewModal({
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [dragging, setDragging] = useState(false);
   const [folderWidthPx, setFolderWidthPx] = useState(null);
+  const [checkResults, setCheckResults] = useState(
+    /** @type {Array<Record<string, unknown>>} */ ([]),
+  );
+  const [checkResultsLoading, setCheckResultsLoading] = useState(false);
   const dragRef = useRef(null);
 
   useLayoutEffect(() => {
     setFolderWidthPx(measureLibraryFolderWidth());
   }, []);
+
+  useEffect(() => {
+    const projectId = String(ruleSet?.id ?? card?.id ?? '').trim();
+    const ownerUid = String(uid ?? '').trim();
+    if (!projectId || !ownerUid) {
+      setCheckResults([]);
+      setCheckResultsLoading(false);
+      return undefined;
+    }
+    let cancelled = false;
+    setCheckResultsLoading(true);
+    void (async () => {
+      try {
+        const rows = await listCheckResultsCloud({
+          uid: ownerUid,
+          projectId,
+        });
+        if (!cancelled) setCheckResults(rows);
+      } catch (err) {
+        console.error('공유 미리보기 검수 이력 로드 실패:', err);
+        if (!cancelled) setCheckResults([]);
+      } finally {
+        if (!cancelled) setCheckResultsLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [uid, ruleSet?.id, card?.id]);
 
   const handleCreateLink = async () => {
     if (!onCreateShareLink || linkBusy) return;
@@ -101,7 +131,7 @@ export default function SharePreviewModal({
     };
   }, [dragging]);
 
-  const columnStyle = folderWidthPx
+  const folderStyle = folderWidthPx
     ? { width: folderWidthPx, maxWidth: '100%' }
     : undefined;
 
@@ -115,7 +145,7 @@ export default function SharePreviewModal({
       }}
     >
       <div
-        className={`mypage-proto__modal${dragging ? ' mypage-proto__modal--dragging' : ''}`}
+        className={`mypage-proto__modal mypage-proto__modal--share${dragging ? ' mypage-proto__modal--dragging' : ''}`}
         role="dialog"
         aria-labelledby="share-preview-title"
         aria-modal="true"
@@ -131,7 +161,7 @@ export default function SharePreviewModal({
           ×
         </button>
 
-        <div className="mypage-proto__share-column" style={columnStyle}>
+        <div className="mypage-proto__share-body">
           <header
             className="mypage-proto__modal-head mypage-proto__modal-head--drag"
             onPointerDown={onDragPointerDown}
@@ -144,42 +174,30 @@ export default function SharePreviewModal({
             </h2>
           </header>
 
-        <p className="mypage-proto__share-note">
-          공유 링크가 있는 사용자는 프로젝트 정보를 볼 수 있습니다. 인디야
-          유료회원은 프로젝트를 적용하여 작업할 수 있습니다. 원고 PDF는
-          포함되지 않습니다.
-        </p>
+          <p className="mypage-proto__share-note">
+            공유 링크가 있는 사용자는 프로젝트 정보를 볼 수 있습니다. 인디야
+            유료회원은 프로젝트를 적용하여 작업할 수 있습니다. 원고 PDF는
+            포함되지 않습니다.
+          </p>
 
-          <div className="mypage-proto__share-stack">
+          <div className="mypage-proto__share-folder" style={folderStyle}>
             <ProjectLibraryCard card={card} readOnly />
-
-            <nav
-              className="mypage-proto__share-outline"
-              aria-label="공유에 포함되는 구역"
-            >
-              <ul className="mypage-proto__share-outline-list">
-                {SHARE_OUTLINE_NAV.map((item) => (
-                  <li key={item.id}>
-                    <div
-                      className={[
-                        'mypage-proto__share-outline-item',
-                        item.boxed
-                          ? 'mypage-proto__share-outline-item--boxed'
-                          : '',
-                        item.pillar
-                          ? `mypage-proto__share-outline-item--${item.pillar}`
-                          : '',
-                      ]
-                        .filter(Boolean)
-                        .join(' ')}
-                    >
-                      {item.label}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </nav>
           </div>
+
+          {ruleSet ? (
+            <SharePackageReadPanel
+              card={card}
+              ruleSet={ruleSet}
+              checkResults={checkResults}
+              checkResultsLoading={checkResultsLoading}
+              actionsLead="링크에 포함될 검수 결과 목록입니다. 다운로드는 제공하지 않습니다."
+              navAriaLabel="공유에 포함되는 구역"
+            />
+          ) : (
+            <p className="mypage-proto__share-note" role="status">
+              프로젝트 기준을 불러올 수 없습니다.
+            </p>
+          )}
 
           <footer className="mypage-proto__modal-foot">
             <button

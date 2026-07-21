@@ -242,6 +242,10 @@ export default function ProjectHubLibraryPanel({
       {!isSharePreviewControlled && sharePreviewCard ? (
         <SharePreviewModal
           card={sharePreviewCard}
+          ruleSet={
+            (projects ?? []).find((p) => p.id === sharePreviewCard.id) ?? null
+          }
+          uid={uid}
           onClose={closeSharePreview}
           onCreateShareLink={() => openShareLink(sharePreviewCard.id)}
         />
