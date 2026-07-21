@@ -123,9 +123,6 @@ function buildCardMetaSyncKey(card) {
  *     },
  *   ) => void | Promise<void>,
  *   onStartWork?: () => void,
- *   onDuplicate?: () => void,
- *   onDelete?: () => void,
- *   onSharePreview?: () => void,
  *   uid?: string,
  * }} props
  */
@@ -140,9 +137,6 @@ export default function ProjectHubSettingsPanel({
   onSave,
   onCriteriaChange,
   onStartWork,
-  onDuplicate: _onDuplicate,
-  onDelete: _onDelete,
-  onSharePreview: _onSharePreview,
   uid = '',
 }) {
   const tagsInputId = useId();

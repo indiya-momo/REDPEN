@@ -203,11 +203,6 @@ export default function ProjectHubEditorPage({
             onSave={handleSaveMeta}
             onCriteriaChange={handleCriteriaChange}
             onStartWork={() => void actions.handleStartWork(selectedCard.id)}
-            onDuplicate={() => void actions.handleDuplicate(selectedCard.id)}
-            onDelete={() =>
-              void actions.handleDelete(selectedCard.id, selectedCard.title)
-            }
-            onSharePreview={() => openSharePreview(selectedCard.id)}
           />
         ) : null}
       </div>
@@ -215,6 +210,10 @@ export default function ProjectHubEditorPage({
       {sharePreviewCard ? (
         <SharePreviewModal
           card={sharePreviewCard}
+          ruleSet={
+            (projects ?? []).find((p) => p.id === sharePreviewCard.id) ?? null
+          }
+          uid={uid}
           onClose={() => setSharePreviewCardId(null)}
           onCreateShareLink={() => handleCreateShareLink(sharePreviewCard.id)}
         />
