@@ -232,6 +232,15 @@ export function filterProjectsForLibrary(cards, tagFilter) {
   return filterProjectsByTag(cards, tagFilter);
 }
 
+/** 라이브러리 필터에 항상 보이는 예시 태그 (시리즈는 접두 매칭) */
+export const PROJECT_TAG_FILTER_PRESETS = Object.freeze([
+  { id: '__series__', label: '시리즈' },
+  { id: '국내서', label: '국내서' },
+  { id: '영미서', label: '영미서' },
+  { id: '문학', label: '문학' },
+  { id: '비문학', label: '비문학' },
+]);
+
 /**
  * @param {ProjectCardViewModel[]} cards
  * @returns {readonly { id: string | null, label: string }[]}
@@ -240,16 +249,15 @@ export function buildProjectTagFilterOptions(cards) {
   /** @type {{ id: string | null, label: string }[]} */
   const options = [{ id: null, label: '전체' }];
   const seenLabels = new Set(['전체']);
-  const tags = collectProjectTags(cards);
 
-  const hasSeriesTags = tags.some((tag) => tag.startsWith('시리즈'));
-  if (hasSeriesTags) {
-    options.push({ id: '__series__', label: '시리즈' });
-    seenLabels.add('시리즈');
+  for (const preset of PROJECT_TAG_FILTER_PRESETS) {
+    options.push({ id: preset.id, label: preset.label });
+    seenLabels.add(preset.label);
   }
 
+  const tags = collectProjectTags(cards);
   for (const tag of tags) {
-    if (hasSeriesTags && tag.startsWith('시리즈')) continue;
+    if (tag.startsWith('시리즈')) continue;
     if (seenLabels.has(tag)) continue;
     options.push({ id: tag, label: tag });
     seenLabels.add(tag);

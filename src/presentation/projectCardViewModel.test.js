@@ -131,9 +131,14 @@ describe('projectCardViewModel helpers', () => {
     expect(filterProjectsByTag(cards, null)).toHaveLength(2);
   });
 
-  it('buildProjectTagFilterOptions lists 전체 and tags from cards', () => {
-    expect(buildProjectTagFilterOptions([])).toEqual([
-      { id: null, label: '전체' },
+  it('buildProjectTagFilterOptions always lists presets then extra card tags', () => {
+    expect(buildProjectTagFilterOptions([]).map((o) => o.label)).toEqual([
+      '전체',
+      '시리즈',
+      '국내서',
+      '영미서',
+      '문학',
+      '비문학',
     ]);
     const options = buildProjectTagFilterOptions([
       sample,
@@ -142,10 +147,14 @@ describe('projectCardViewModel helpers', () => {
     expect(options.map((o) => o.label)).toEqual([
       '전체',
       '시리즈',
+      '국내서',
+      '영미서',
+      '문학',
+      '비문학',
       '1권',
       '경제경영',
-      '문학',
     ]);
+    expect(options.find((o) => o.label === '시리즈')?.id).toBe('__series__');
   });
 
   it('buildProjectTagFilterOptions dedupes identical labels', () => {
@@ -158,7 +167,10 @@ describe('projectCardViewModel helpers', () => {
     expect(buildProjectTagFilterOptions(cards).map((o) => o.label)).toEqual([
       '전체',
       '시리즈',
+      '국내서',
+      '영미서',
       '문학',
+      '비문학',
     ]);
   });
 
