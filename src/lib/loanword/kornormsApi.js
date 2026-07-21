@@ -2,8 +2,9 @@
  * 국립국어원 어문 규범 Open API — 외래어·로마자 용례 검색.
  * @see https://korean.go.kr/kornorms/main/openAPI.do
  *
- * 브라우저 CORS 회피: dev는 Vite 프록시(`/api/kornorms`), 배포는 직접 URL.
- * 인증 키: VITE_KORNORMS_SERVICE_KEY (.env.local, 커밋 금지)
+ * 브라우저 CORS 회피: 항상 동일 출처 `/api/kornorms`
+ * - 로컬: Vite proxy → korean.go.kr (클라이언트에 VITE_KORNORMS_SERVICE_KEY)
+ * - Vercel: api/kornorms/[...path].js 가 서버 env 키를 붙여 전달
  *
  * 주의: resultType=json 은 StatsVO만 돌아오는 경우가 있어 **xml** 을 사용한다.
  */
@@ -15,16 +16,18 @@ export function getKornormsServiceKey() {
   return String(import.meta.env.VITE_KORNORMS_SERVICE_KEY ?? '').trim();
 }
 
+/** Vercel 배포 — 서버 프록시가 키를 붙이므로 클라이언트 키가 없어도 조회 가능 */
+export function isKornormsServerProxy() {
+  return import.meta.env.VITE_DEPLOY_TARGET === 'vercel';
+}
+
 export function isKornormsConfigured() {
-  return Boolean(getKornormsServiceKey());
+  return Boolean(getKornormsServiceKey()) || isKornormsServerProxy();
 }
 
 /** @returns {string} */
 export function getKornormsRequestUrl() {
-  if (import.meta.env.DEV) {
-    return '/api/kornorms/exampleReqList.do';
-  }
-  return 'https://korean.go.kr/kornorms/exampleReqList.do';
+  return '/api/kornorms/exampleReqList.do';
 }
 
 /**
@@ -129,7 +132,7 @@ export function parseKornormsXmlResponse(xml) {
  */
 export async function searchKornormsExamples(opts) {
   const serviceKey = getKornormsServiceKey();
-  if (!serviceKey) {
+  if (!serviceKey && !isKornormsServerProxy()) {
     throw new Error('KORNORMS_KEY_MISSING');
   }
   const {
@@ -145,7 +148,6 @@ export async function searchKornormsExamples(opts) {
 
   // json 모드는 StatsVO만 오는 경우가 있어 xml 고정
   const params = new URLSearchParams({
-    serviceKey,
     pageNo: String(pageNo),
     numOfRows: String(numOfRows),
     langType: KORNORMS_LANG_FOREIGN,
@@ -154,6 +156,8 @@ export async function searchKornormsExamples(opts) {
     searchEquals,
     searchKeyword: keyword,
   });
+  // Vercel 서버 프록시가 키를 붙임. 로컬(Vite proxy)은 클라이언트 키 필요.
+  if (serviceKey) params.set('serviceKey', serviceKey);
 
   const res = await fetch(`${getKornormsRequestUrl()}?${params}`, {
     method: 'GET',
