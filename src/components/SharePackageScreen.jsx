@@ -1,14 +1,15 @@
 /**
- * ?share= 수신 — 기준·검수결과 열람, 작업대 적용.
+ * ?share= 수신 — 기준·검수결과 열람(읽기 전용), 유료 적용.
+ * 발신자 설정 패널은 건드리지 않고, 수신 전용 UI만 사용한다.
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { showAppAlert } from '../lib/appDialog.js';
-import { remainingRetentionDays } from '../lib/checkResultSnapshot.js';
-import { downloadCheckResultsAsZip } from '../lib/downloadCheckResultsZip.js';
 import { signInWithGoogle } from '../lib/firebaseAuth.js';
-import { buildCheckResultsZipBasename } from '../lib/proofreadExportFilename.js';
 import { getSharePackageCloud } from '../lib/sharePackageCloud.js';
-import { planApplySharePackage } from '../lib/sharePackage.js';
+import {
+  buildRuleSetFromSharePackage,
+  planApplySharePackage,
+} from '../lib/sharePackage.js';
 import {
   loadRuleSets,
   saveActiveSetId,
@@ -20,8 +21,31 @@ import {
   saveRuleSetsCloud,
 } from '../lib/ruleSetsCloud.js';
 import { ensureLocalPlanFromCloud } from '../lib/userProfileCloud.js';
+import { isPaidPlan } from '../lib/userPlan.js';
 import { markReturnToMainWorkspace } from '../lib/returnToWorkspace.js';
+import { buildProjectCardViewModelFromRuleSet } from '../presentation/ruleSetProjectCard.js';
+import {
+  isConsistencyEntryEnabled,
+  listConsistencyLiteralEntries,
+} from '../lib/compoundPairRegister.js';
+import {
+  LITERAL_FIND_FEATURE_LABEL,
+  UNIFY_FEATURE_LABEL,
+  listConsistencyUnifyEntries,
+} from '../lib/consistencyRuleLimit.js';
+import { getConsistencyUnifyPinnedTailWord } from '../lib/consistencyUnifyRegister.js';
+import { PROJECT_HUB_TOGGLE_CRITERIA } from '../lib/projectHubCriteriaSections.js';
 import './share-package-screen.css';
+
+/** @typedef {'meta' | 'spelling' | 'consistency' | 'auxiliary' | 'actions'} ShareReceiveSection */
+
+const NAV_ITEMS = [
+  { id: 'meta', label: '프로젝트 정보' },
+  { id: 'spelling', label: '맞춤법', pillar: 'spelling' },
+  { id: 'consistency', label: '표기 통일', pillar: 'consistency' },
+  { id: 'auxiliary', label: '본용언 + 보조용언', pillar: 'auxiliary' },
+  { id: 'actions', label: '작업 이력' },
+];
 
 /**
  * @param {{
@@ -43,7 +67,8 @@ export default function SharePackageScreen({
   const [error, setError] = useState(/** @type {string | null} */ (null));
   const [pkg, setPkg] = useState(/** @type {Record<string, unknown> | null} */ (null));
   const [applyBusy, setApplyBusy] = useState(false);
-  const [zipBusy, setZipBusy] = useState(false);
+  const [userPlan, setUserPlan] = useState(/** @type {'free' | 'paid' | null} */ (null));
+  const [section, setSection] = useState(/** @type {ShareReceiveSection} */ ('meta'));
 
   useEffect(() => {
     let cancelled = false;
@@ -72,24 +97,70 @@ export default function SharePackageScreen({
     };
   }, [packageId]);
 
-  const checkResults = useMemo(() => {
-    const rows = Array.isArray(pkg?.checkResults) ? pkg.checkResults : [];
-    return rows.map((row, index) => ({
-      id: String(row.id ?? `share-result-${index}`),
-      ...row,
+  useEffect(() => {
+    if (!authUid) {
+      setUserPlan(null);
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      const plan = await ensureLocalPlanFromCloud(authUid);
+      if (!cancelled) setUserPlan(plan);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [authUid]);
+
+  const ruleSet = useMemo(
+    () => (pkg ? buildRuleSetFromSharePackage(pkg) : null),
+    [pkg],
+  );
+
+  const card = useMemo(
+    () => (ruleSet ? buildProjectCardViewModelFromRuleSet(ruleSet) : null),
+    [ruleSet],
+  );
+
+  const shareCheckResults = useMemo(() => {
+    return Array.isArray(pkg?.checkResults) ? pkg.checkResults : [];
+  }, [pkg]);
+
+  const consistencyGroups = useMemo(() => {
+    const customRules = ruleSet?.customRules ?? [];
+    const pinnedTailWord = getConsistencyUnifyPinnedTailWord(customRules);
+    return [
+      {
+        label: LITERAL_FIND_FEATURE_LABEL,
+        chips: listConsistencyLiteralEntries(customRules).map((entry) => ({
+          label: entry.tailWord,
+          active: isConsistencyEntryEnabled(customRules, entry.tailWord),
+          pinned: false,
+        })),
+      },
+      {
+        label: UNIFY_FEATURE_LABEL,
+        chips: listConsistencyUnifyEntries(customRules).map((entry) => ({
+          label: entry.tailWord,
+          active: isConsistencyEntryEnabled(customRules, entry.tailWord),
+          pinned: pinnedTailWord === entry.tailWord,
+        })),
+      },
+    ];
+  }, [ruleSet]);
+
+  const auxiliaryEntries = useMemo(() => {
+    const cfg = PROJECT_HUB_TOGGLE_CRITERIA.auxiliary;
+    const customRules = ruleSet?.customRules ?? [];
+    return cfg.listEntries(customRules).map((row) => ({
+      label: row.displayLabel || row.tailWord,
+      active: cfg.isEnabled(customRules, row),
     }));
-  }, [pkg]);
+  }, [ruleSet]);
 
-  const ledger = useMemo(() => {
-    const decisions = pkg?.criteria?.consistencyDecisions;
-    return Array.isArray(decisions)
-      ? decisions.filter((d) => d && d.kind === 'unify')
-      : [];
-  }, [pkg]);
+  const canApply = Boolean(authUid) && isPaidPlan({ plan: userPlan ?? 'free' });
 
-  const canAct = Boolean(authUid);
-
-  const requireLoginForAction = async (actionLabel) => {
+  const requireLoginForApply = async () => {
     if (!authReady) {
       await showAppAlert('로그인 상태를 확인하는 중입니다. 잠시 후 다시 눌러 주세요.');
       return false;
@@ -97,7 +168,8 @@ export default function SharePackageScreen({
     if (authUid) return true;
     await showAppAlert({
       title: '로그인이 필요합니다',
-      message: `링크만으로는 미리보기만 가능합니다.\n${actionLabel}하려면 Google 로그인이 필요합니다.`,
+      message:
+        '공유 링크가 있는 사용자는 프로젝트 정보를 볼 수 있습니다. 인디야 유료회원은 프로젝트를 적용하여 작업할 수 있습니다.',
     });
     try {
       await signInWithGoogle();
@@ -107,37 +179,20 @@ export default function SharePackageScreen({
     return false;
   };
 
-  const handleZip = async () => {
-    if (!(await requireLoginForAction('검수 결과 다운로드'))) return;
-    if (checkResults.length === 0) {
-      await showAppAlert('포함된 검수 결과가 없습니다.');
-      return;
-    }
-    setZipBusy(true);
-    try {
-      const title = String(pkg?.sourceName ?? pkg?.meta?.title ?? '공유').trim();
-      const result = await downloadCheckResultsAsZip({
-        items: checkResults,
-        zipFilename: buildCheckResultsZipBasename(title || '공유'),
-      });
-      if (!result.ok) {
-        await showAppAlert('다운로드할 결과를 만들 수 없습니다');
-      }
-    } catch (err) {
-      console.error('공유 검수 결과 zip 실패:', err);
-      await showAppAlert('다운로드에 실패했습니다');
-    } finally {
-      setZipBusy(false);
-    }
-  };
-
   const handleApply = useCallback(async () => {
     if (!pkg) return;
-    if (!(await requireLoginForAction('기준 적용'))) return;
+    if (!(await requireLoginForApply())) return;
 
     setApplyBusy(true);
     try {
       const plan = await ensureLocalPlanFromCloud(authUid);
+      if (!isPaidPlan({ plan })) {
+        await showAppAlert(
+          '인디야 유료회원만 프로젝트를 적용하여 작업할 수 있습니다.',
+        );
+        return;
+      }
+
       let sets = loadRuleSets(authUid);
       if (isRuleSetsCloudEnabled()) {
         try {
@@ -191,7 +246,6 @@ export default function SharePackageScreen({
   }, [pkg, authReady, authUid, authEmail, onApplied]);
 
   const title = String(pkg?.meta?.title ?? pkg?.sourceName ?? '').trim();
-  const tags = Array.isArray(pkg?.meta?.tags) ? pkg.meta.tags : [];
 
   return (
     <div className="share-package-screen">
@@ -201,8 +255,9 @@ export default function SharePackageScreen({
           {loading ? '불러오는 중…' : title ? `《${title}》` : '공유 기준'}
         </h1>
         <p className="share-package-screen__note">
-          원고 PDF는 포함되지 않습니다. 링크만으로는 미리보기만 가능하고,
-          검수 결과 다운로드·기준 적용은 로그인 후 사용할 수 있습니다.
+          공유 링크가 있는 사용자는 프로젝트 정보를 볼 수 있습니다. 인디야
+          유료회원은 프로젝트를 적용하여 작업할 수 있습니다. 원고 PDF는
+          포함되지 않습니다.
         </p>
       </header>
 
@@ -212,102 +267,203 @@ export default function SharePackageScreen({
         <p className="share-package-screen__error" role="alert">
           {error}
         </p>
-      ) : pkg ? (
+      ) : pkg && card && ruleSet ? (
         <>
-          {tags.length > 0 ? (
-            <p className="share-package-screen__tags">
-              {tags.map((tag) => (
-                <span key={tag} className="share-package-screen__tag">
-                  {tag}
-                </span>
-              ))}
-            </p>
-          ) : null}
-
-          {pkg.meta?.memo ? (
-            <p className="share-package-screen__memo">{String(pkg.meta.memo)}</p>
-          ) : null}
-
-          <section className="share-package-screen__block" aria-label="확정 대장">
-            <h2>확정 대장</h2>
-            {ledger.length === 0 ? (
-              <p className="share-package-screen__empty">아직 확정 기록이 없습니다.</p>
-            ) : (
-              <ul className="share-package-screen__ledger">
-                {ledger.map((item, index) => (
-                  <li key={String(item.id ?? index)}>
-                    <span className="share-package-screen__ledger-pin">
-                      {String(item.pinned ?? '')}
-                      {Array.isArray(item.variants) && item.variants.length
-                        ? ` ← ${item.variants.join(' · ')}`
-                        : ''}
-                    </span>
+          <div className="share-receive">
+            <nav className="share-receive__nav" aria-label="공유 구역">
+              <ul className="share-receive__nav-list">
+                {NAV_ITEMS.map((item) => (
+                  <li key={item.id}>
+                    <button
+                      type="button"
+                      className={[
+                        'share-receive__nav-btn',
+                        section === item.id ? 'share-receive__nav-btn--active' : '',
+                        item.pillar
+                          ? `share-receive__nav-btn--${item.pillar}`
+                          : '',
+                      ]
+                        .filter(Boolean)
+                        .join(' ')}
+                      onClick={() => setSection(/** @type {ShareReceiveSection} */ (item.id))}
+                    >
+                      {item.label}
+                    </button>
                   </li>
                 ))}
               </ul>
-            )}
-          </section>
+            </nav>
 
-          <section className="share-package-screen__block" aria-label="검수 결과">
-            <div className="share-package-screen__block-head">
-              <h2>검수 결과</h2>
-              <button
-                type="button"
-                className="share-package-screen__btn share-package-screen__btn--secondary"
-                disabled={zipBusy || checkResults.length === 0}
-                title={
-                  canAct
-                    ? undefined
-                    : '로그인 후 다운로드할 수 있습니다'
-                }
-                onClick={() => void handleZip()}
-              >
-                {zipBusy
-                  ? '받는 중…'
-                  : canAct
-                    ? '검수 이력 다운받기'
-                    : '로그인 후 다운받기'}
-              </button>
-            </div>
-            {!canAct ? (
-              <p className="share-package-screen__empty">
-                결과 목록은 미리보기로만 보입니다. 다운로드는 로그인 후 가능합니다.
-              </p>
-            ) : null}
-            {checkResults.length === 0 ? (
-              <p className="share-package-screen__empty">포함된 검수 결과가 없습니다.</p>
-            ) : (
-              <ul className="share-package-screen__results">
-                {checkResults.map((item) => {
-                  const kind =
-                    item.kind === 'consistency' ? '표기 통일' : '맞춤법';
-                  const days = remainingRetentionDays(Number(item.expiresAt));
-                  const when = Number(item.createdAt);
-                  let whenLabel = '-';
-                  if (Number.isFinite(when)) {
-                    try {
-                      whenLabel = new Date(when).toLocaleString('ko-KR', {
-                        month: 'numeric',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      });
-                    } catch {
-                      whenLabel = '-';
-                    }
-                  }
-                  return (
-                    <li key={item.id}>
-                      <strong>{kind}</strong>
-                      <span>
-                        {whenLabel} · {days}일 남음
+            <div className="share-receive__main">
+              {section === 'meta' ? (
+                <div className="share-receive__card">
+                  <ReadRow label="제목" desc="프로젝트 제목" value={card.title} />
+                  <ReadRow
+                    label="태그"
+                    desc="쉼표로 구분 · 최대 3개"
+                    value={(card.tags ?? []).join(', ') || '—'}
+                  />
+                  <ReadRow
+                    label="그 외 정보"
+                    desc="예: 신국판, 3교"
+                    value={card.formatLabel || '—'}
+                  />
+                  <ReadRow label="메모" value={card.memo || '—'} multiline />
+                </div>
+              ) : null}
+
+              {section === 'spelling' ? (
+                <div className="share-receive__card">
+                  <p className="share-receive__lead">
+                    공유 패키지에 포함된 맞춤법 기준 요약입니다
+                  </p>
+                  <div className="share-receive__stats">
+                    <span>
+                      편집자 검토 필요{' '}
+                      <strong>{card.counts?.editorReview ?? 0}건</strong>
+                    </span>
+                    <span>
+                      맞춤법 규칙 <strong>{card.counts?.spelling ?? 0}건</strong>
+                    </span>
+                  </div>
+                  {card.pillarMemos?.spelling ? (
+                    <ReadRow
+                      label="메모"
+                      value={card.pillarMemos.spelling}
+                      multiline
+                    />
+                  ) : null}
+                </div>
+              ) : null}
+
+              {section === 'consistency' ? (
+                <div className="share-receive__card">
+                  <p className="share-receive__lead">
+                    공유 패키지에 포함된 표기 통일 기준입니다
+                  </p>
+                  {consistencyGroups.map((group) => (
+                    <div key={group.label} className="share-receive__group">
+                      <span className="share-receive__group-label">
+                        {group.label}
                       </span>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </section>
+                      {group.chips.length ? (
+                        <div className="share-receive__chips">
+                          {group.chips.map((chip, index) => (
+                            <span
+                              key={`${chip.label}-${index}`}
+                              className={[
+                                'share-receive__chip',
+                                chip.active ? '' : 'share-receive__chip--off',
+                                chip.pinned ? 'share-receive__chip--pinned' : '',
+                              ]
+                                .filter(Boolean)
+                                .join(' ')}
+                            >
+                              {chip.label}
+                              {chip.pinned ? ' 📌' : ''}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="share-receive__empty">—</span>
+                      )}
+                    </div>
+                  ))}
+                  {card.pillarMemos?.consistency ? (
+                    <ReadRow
+                      label="메모"
+                      value={card.pillarMemos.consistency}
+                      multiline
+                    />
+                  ) : null}
+                </div>
+              ) : null}
+
+              {section === 'auxiliary' ? (
+                <div className="share-receive__card">
+                  <p className="share-receive__lead">
+                    공유 패키지에 포함된 본용언·보조용언 기준입니다
+                  </p>
+                  {auxiliaryEntries.length ? (
+                    <div className="share-receive__chips">
+                      {auxiliaryEntries.map((entry) => (
+                        <span
+                          key={entry.label}
+                          className={[
+                            'share-receive__chip',
+                            entry.active ? '' : 'share-receive__chip--off',
+                          ]
+                            .filter(Boolean)
+                            .join(' ')}
+                        >
+                          {entry.label}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="share-receive__empty">—</span>
+                  )}
+                  {card.pillarMemos?.auxiliary ? (
+                    <ReadRow
+                      label="메모"
+                      value={card.pillarMemos.auxiliary}
+                      multiline
+                    />
+                  ) : null}
+                </div>
+              ) : null}
+
+              {section === 'actions' ? (
+                <div className="share-receive__card">
+                  <p className="share-receive__lead">
+                    공유 패키지에 담긴 검수 결과 목록입니다. 다운로드는 제공하지
+                    않습니다.
+                  </p>
+                  {shareCheckResults.length ? (
+                    <ul className="share-receive__results">
+                      {shareCheckResults.map((item, index) => {
+                        const kind =
+                          item.kind === 'consistency' ? '표기 통일' : '맞춤법';
+                        const when = Number(item.createdAt);
+                        let whenLabel = '-';
+                        if (Number.isFinite(when) && when > 0) {
+                          try {
+                            whenLabel = new Date(when).toLocaleString('ko-KR', {
+                              month: 'numeric',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            });
+                          } catch {
+                            whenLabel = '-';
+                          }
+                        }
+                        const rowCount = Number(
+                          item.rowCount ??
+                            (Array.isArray(item.rows) ? item.rows.length : 0),
+                        );
+                        return (
+                          <li key={String(item.id ?? `r-${index}`)}>
+                            <strong>{kind}</strong>
+                            <span>
+                              {whenLabel}
+                              {Number.isFinite(rowCount) && rowCount > 0
+                                ? ` · ${rowCount}건`
+                                : ''}
+                            </span>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  ) : (
+                    <p className="share-receive__empty">
+                      포함된 검수 결과가 없습니다.
+                    </p>
+                  )}
+                </div>
+              ) : null}
+            </div>
+          </div>
 
           <footer className="share-package-screen__foot">
             <button
@@ -318,13 +474,34 @@ export default function SharePackageScreen({
             >
               {applyBusy
                 ? '적용 중…'
-                : canAct
+                : canApply
                   ? '이 기준으로 내 작업대에서 검수하기'
-                  : '로그인 후 기준 적용하기'}
+                  : authUid
+                    ? '유료회원만 적용할 수 있습니다'
+                    : '로그인 후 기준 적용하기'}
             </button>
           </footer>
         </>
       ) : null}
+    </div>
+  );
+}
+
+/**
+ * @param {{ label: string, desc?: string, value: string, multiline?: boolean }} props
+ */
+function ReadRow({ label, desc, value, multiline = false }) {
+  return (
+    <div className="share-receive__row">
+      <div className="share-receive__row-text">
+        <span className="share-receive__row-label">{label}</span>
+        {desc ? <p className="share-receive__row-desc">{desc}</p> : null}
+      </div>
+      {multiline ? (
+        <p className="share-receive__value share-receive__value--memo">{value}</p>
+      ) : (
+        <p className="share-receive__value">{value}</p>
+      )}
     </div>
   );
 }

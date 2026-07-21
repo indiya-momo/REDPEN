@@ -144,10 +144,11 @@ export default function SharePreviewModal({
             </h2>
           </header>
 
-          <p className="mypage-proto__share-note">
-            링크만으로는 미리보기만 가능합니다. 다운로드·기준 적용은 수신자
-            로그인이 필요합니다. 원고 PDF는 포함되지 않습니다.
-          </p>
+        <p className="mypage-proto__share-note">
+          공유 링크가 있는 사용자는 프로젝트 정보를 볼 수 있습니다. 인디야
+          유료회원은 프로젝트를 적용하여 작업할 수 있습니다. 원고 PDF는
+          포함되지 않습니다.
+        </p>
 
           <div className="mypage-proto__share-stack">
             <ProjectLibraryCard card={card} readOnly />

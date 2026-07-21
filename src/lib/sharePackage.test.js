@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  buildRuleSetFromSharePackage,
   buildSharePackagePayload,
   buildSharePackageUrl,
   extractShareCriteria,
@@ -127,6 +128,21 @@ describe('sharePackage', () => {
       now: Date.now() - 40 * 24 * 60 * 60 * 1000,
     });
     expect(planApplySharePackage(pkg, [], 'recv').ok).toBe(false);
+  });
+
+  it('buildRuleSetFromSharePackage builds preview ruleSet', () => {
+    const pkg = buildSharePackagePayload({
+      ruleSet: sampleRuleSet(),
+      createdByUid: 'owner',
+      now: Date.now(),
+    });
+    const set = buildRuleSetFromSharePackage(pkg);
+    expect(set).not.toBeNull();
+    expect(set.name).toBe('고구려조선본없음');
+    expect(set.tags).toEqual(['문학']);
+    expect(set.memo).toBe('메모');
+    expect(set.projectContext?.formatLabel).toBe('신국판');
+    expect(set.customRules.some((r) => r.find === '제미니')).toBe(true);
   });
 
   it('isSharePackageExpired', () => {
