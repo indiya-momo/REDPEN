@@ -136,7 +136,7 @@ describe('projectCardViewModel helpers', () => {
       '전체',
       '시리즈',
       '국내서',
-      '영미서',
+      '외서',
       '문학',
       '비문학',
     ]);
@@ -148,7 +148,7 @@ describe('projectCardViewModel helpers', () => {
       '전체',
       '시리즈',
       '국내서',
-      '영미서',
+      '외서',
       '문학',
       '비문학',
       '1권',
@@ -168,7 +168,7 @@ describe('projectCardViewModel helpers', () => {
       '전체',
       '시리즈',
       '국내서',
-      '영미서',
+      '외서',
       '문학',
       '비문학',
     ]);

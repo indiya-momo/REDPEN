@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Eye, EyeOff } from 'lucide-react';
+import { CircleHelp, Eye, EyeOff } from 'lucide-react';
 import CurrentPageStatus from './CurrentPageStatus.jsx';
+import FaqModal from './FaqModal.jsx';
 import PdfThumbnailStrip from './PdfThumbnailStrip.jsx';
 
 /**
@@ -43,6 +44,7 @@ export default function PdfPreviewBar({
   const displayCurrent = formatPageText(currentPage);
   const displayTotal = formatPageText(numPages);
   const [value, setValue] = useState(displayCurrent);
+  const [faqOpen, setFaqOpen] = useState(false);
 
   useEffect(() => {
     setValue(displayCurrent);
@@ -84,6 +86,16 @@ export default function PdfPreviewBar({
     >
       <div className="pdf-preview-bar__toolbar">
         <div className="pdf-preview-bar__status-col">
+          <button
+            type="button"
+            className="pdf-work-pane__aux-btn pdf-preview-bar__faq-btn"
+            onClick={() => setFaqOpen(true)}
+            aria-haspopup="dialog"
+            aria-expanded={faqOpen}
+          >
+            <CircleHelp size={16} aria-hidden />
+            FAQ
+          </button>
           {pageStatus ? (
             <CurrentPageStatus
               {...pageStatus}
@@ -189,6 +201,7 @@ export default function PdfPreviewBar({
           />
         </div>
       ) : null}
+      <FaqModal open={faqOpen} onClose={() => setFaqOpen(false)} />
     </div>
   );
 }

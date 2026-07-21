@@ -33,7 +33,7 @@ import {
   togglePhraseSlotEntry,
 } from '../lib/phraseSlotRegister.js';
 import { parseCommaList } from '../lib/matchFilters.js';
-import { isBonBojoRequiredItem, AUXILIARY_VERB_FEATURE_LABEL, AUXILIARY_VERB_BASIS_URL } from '../lib/bonBojoRules.js';
+import { isBonBojoRequiredItem, AUXILIARY_VERB_FEATURE_LABEL } from '../lib/bonBojoRules.js';
 import {
   countPhraseSlotRegisteredEntries,
   MAX_PHRASE_SLOT_REGISTERED_ENTRIES,
@@ -495,15 +495,7 @@ export default function ConsistencyPanel({
             찾습니다
             <br />
             (본용언이 3음절 이상 복합어인 경우는 제외{' '}
-            <ConsistencyHintExample>생각하다</ConsistencyHintExample>){' '}
-            <a
-              className="panel-criteria-source-link auxiliary-checklist-basis-link"
-              href={AUXILIARY_VERB_BASIS_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              한글 맞춤법
-            </a>
+            <ConsistencyHintExample>생각하다</ConsistencyHintExample>)
           </p>
           <RegisteredList
             entries={auxiliaryEntries}

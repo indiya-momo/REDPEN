@@ -157,7 +157,7 @@ export default function SharePackageReadPanel({
               />
               <MetaReadRow
                 label="태그"
-                desc="쉼표로 구분 · 최대 3개"
+                desc="쉼표로 구분 · 추가 가능"
                 value={(card.tags ?? []).join(', ') || '—'}
               />
               <MetaReadRow

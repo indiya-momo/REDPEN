@@ -236,7 +236,7 @@ export function filterProjectsForLibrary(cards, tagFilter) {
 export const PROJECT_TAG_FILTER_PRESETS = Object.freeze([
   { id: '__series__', label: '시리즈' },
   { id: '국내서', label: '국내서' },
-  { id: '영미서', label: '영미서' },
+  { id: '외서', label: '외서' },
   { id: '문학', label: '문학' },
   { id: '비문학', label: '비문학' },
 ]);

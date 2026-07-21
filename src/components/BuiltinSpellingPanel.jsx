@@ -22,6 +22,8 @@ import { spellingRuleChecklistParts } from '../lib/spellingRuleEntry.js';
  *   quotaRules?: import('../lib/ruleTypes.js').Rule[],
  *   guideRules?: import('../lib/ruleTypes.js').Rule[],
  *   title?: string,
+ *   sourceHref?: string,
+ *   sourceLabel?: string,
  *   classPrefix?: string,
  *   dataWorkGuide?: string,
  *   selectAllAriaLabel?: string,
@@ -35,6 +37,8 @@ export default function BuiltinSpellingPanel({
   quotaRules = SPELLING_QUOTA_RULES_UI,
   guideRules = BUILT_IN_GUIDE_RULES_UI,
   title = '맞춤법 규칙',
+  sourceHref = '',
+  sourceLabel = '',
   classPrefix = 'builtin-spelling',
   dataWorkGuide = 'criteria-spelling-heading',
   selectAllAriaLabel = '맞춤법 확인 규칙 전체 선택',
@@ -263,6 +267,17 @@ export default function BuiltinSpellingPanel({
           <span className="panel-criteria-heading-meta">
             {`(${enabled}/${total})`}
           </span>
+          {sourceHref && sourceLabel ? (
+            <a
+              className="panel-criteria-source-link"
+              href={sourceHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {sourceLabel}
+            </a>
+          ) : null}
         </span>
       </summary>
       {guideRules.length > 0 ? (

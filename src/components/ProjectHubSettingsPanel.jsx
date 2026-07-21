@@ -419,7 +419,7 @@ export default function ProjectHubSettingsPanel({
                         태그
                       </label>
                       <p className="project-hub-settings__row-desc">
-                        쉼표로 구분 · 최대 3개
+                        쉼표로 구분 · 추가 가능
                       </p>
                     </div>
                     <input
