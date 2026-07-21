@@ -43,7 +43,14 @@ export async function issueSharePackageLink({ uid, ruleSet }) {
     const message =
       result.reason === 'cloud_disabled'
         ? '공유 기능을 사용할 수 없습니다. 네트워크·로그인을 확인해 주세요.'
-        : '공유 링크를 만들지 못했습니다. 잠시 후 다시 시도해 주세요.';
+        : result.reason === 'permission_denied'
+          ? '공유 링크를 만들 권한이 없습니다. 로그인·유료 상태를 확인해 주세요.'
+          : result.reason === 'too_large'
+            ? '공유 데이터가 너무 큽니다. 검수 이력이 많으면 일부만 포함하거나 잠시 후 다시 시도해 주세요.'
+            : result.reason === 'invalid_payload' ||
+                result.reason === 'invalid_project'
+              ? '공유할 프로젝트 데이터를 준비하지 못했습니다. 저장 후 다시 시도해 주세요.'
+              : '공유 링크를 만들지 못했습니다. 잠시 후 다시 시도해 주세요.';
     await showAppAlert(message);
     return { ok: false };
   }

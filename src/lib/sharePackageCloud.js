@@ -61,6 +61,20 @@ export async function createSharePackageCloud({
     };
   } catch (err) {
     console.error('공유 패키지 생성 실패:', err);
+    const code = String(err?.code ?? '');
+    const message = String(err?.message ?? '');
+    if (code === 'permission-denied') {
+      return { ok: false, reason: 'permission_denied' };
+    }
+    if (
+      code === 'invalid-argument' ||
+      /unsupported field value|undefined/i.test(message)
+    ) {
+      return { ok: false, reason: 'invalid_payload' };
+    }
+    if (/exceeds|too large|size/i.test(message)) {
+      return { ok: false, reason: 'too_large' };
+    }
     return { ok: false, reason: 'create_failed' };
   }
 }

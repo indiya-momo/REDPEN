@@ -5,6 +5,7 @@ import {
   buildSharePackageUrl,
   extractShareCriteria,
   isSharePackageExpired,
+  omitUndefinedDeep,
   planApplySharePackage,
   sanitizeCheckResultForShare,
 } from './sharePackage.js';
@@ -81,6 +82,8 @@ describe('sharePackage', () => {
     expect(payload.criteria.consistencyDecisions).toHaveLength(1);
     expect(payload.checkResults).toHaveLength(1);
     expect(payload.checkResults[0].pdfFileName).toBe('a.pdf');
+    expect(payload.checkResults[0].rowCount).toBe(1);
+    expect(payload.checkResults[0].rows).toEqual([]);
     expect(JSON.stringify(payload)).not.toMatch(/"pdfBytes"|"fileBytes"/);
   });
 
@@ -143,6 +146,34 @@ describe('sharePackage', () => {
     expect(set.memo).toBe('메모');
     expect(set.projectContext?.formatLabel).toBe('신국판');
     expect(set.customRules.some((r) => r.find === '제미니')).toBe(true);
+  });
+
+  it('buildSharePackagePayload omits undefined fields for Firestore', () => {
+    const payload = buildSharePackagePayload({
+      ruleSet: sampleRuleSet({ pillarMemos: undefined }),
+      createdByUid: 'uid1',
+      now: Date.now(),
+    });
+    expect(payload).not.toBeNull();
+    expect(payload.meta).not.toHaveProperty('pillarMemos');
+    expect(JSON.stringify(payload)).not.toMatch(/undefined/);
+    // JSON.stringify는 undefined를 지우므로, 객체에 undefined가 남지 않았는지도 검사
+    expect(omitUndefinedDeep(payload)).toEqual(payload);
+  });
+
+  it('omitUndefinedDeep drops nested undefined', () => {
+    expect(
+      omitUndefinedDeep({
+        a: 1,
+        b: undefined,
+        c: { d: undefined, e: 2 },
+        f: [1, undefined, { g: undefined, h: 3 }],
+      }),
+    ).toEqual({
+      a: 1,
+      c: { e: 2 },
+      f: [1, { h: 3 }],
+    });
   });
 
   it('isSharePackageExpired', () => {
