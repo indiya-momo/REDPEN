@@ -1,10 +1,8 @@
 /**
- * 프로젝트 허브 — 저장된 검수 결과 목록·재다운로드.
+ * 프로젝트 허브 — 저장된 검수 결과 건수·재다운로드.
+ * 개별 이력 줄은 zip 안 「YYMMDD_검수이력.txt」에만 넣는다.
  */
 import { useCallback, useEffect, useState } from 'react';
-import {
-  remainingRetentionDays,
-} from '../../lib/checkResultSnapshot.js';
 import { listCheckResultsCloud } from '../../lib/checkResultsCloud.js';
 import { downloadCheckResultsAsZip } from '../../lib/downloadCheckResultsZip.js';
 import {
@@ -116,24 +114,6 @@ export default function ProjectHubCheckResultsPanel({
     }
   };
 
-  const kindLabel = (kind) =>
-    kind === 'consistency' ? '표기 통일' : '맞춤법';
-
-  const formatWhen = (ms) => {
-    const n = Number(ms);
-    if (!Number.isFinite(n)) return '-';
-    try {
-      return new Date(n).toLocaleString('ko-KR', {
-        month: 'numeric',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      });
-    } catch {
-      return '-';
-    }
-  };
-
   const statusDesc =
     loading || paid === null
       ? '저장된 결과를 확인하는 중…'
@@ -149,7 +129,8 @@ export default function ProjectHubCheckResultsPanel({
         <div className="project-hub-settings__row-text">
           <span className="project-hub-settings__row-label">저장된 검수 결과</span>
           <p className="project-hub-settings__row-desc">
-            유료 회원은 검수 완료시 결과가 자동 저장되며 30일간 보관됩니다
+            유료 회원은 검수 완료시 결과가 자동 저장되며 30일간 보관됩니다.
+            이력 요약은 텍스트 파일에서 확인할 수 있습니다.
           </p>
         </div>
         <div className="project-hub-check-results__download-box">
@@ -170,38 +151,6 @@ export default function ProjectHubCheckResultsPanel({
 
       {statusDesc ? (
         <p className="project-hub-settings__row-desc">{statusDesc}</p>
-      ) : null}
-
-      {paid && !loading && items.length > 0 ? (
-        <ul className="project-hub-check-results">
-          {items.map((item) => {
-            const days = remainingRetentionDays(Number(item.expiresAt));
-            const count = Number(item.rowCount ?? item.rows?.length ?? 0);
-            return (
-              <li key={item.id} className="project-hub-check-results__item">
-                <div className="project-hub-check-results__meta">
-                  <span className="project-hub-check-results__kind">
-                    {kindLabel(item.kind)}
-                  </span>
-                  <span className="project-hub-check-results__when">
-                    {formatWhen(item.createdAt)}
-                  </span>
-                  <span className="project-hub-check-results__count">
-                    {count}행
-                  </span>
-                  <span className="project-hub-check-results__days">
-                    {days}일 남음
-                  </span>
-                  {item.truncated ? (
-                    <span className="project-hub-check-results__badge">
-                      일부만 저장됨
-                    </span>
-                  ) : null}
-                </div>
-              </li>
-            );
-          })}
-        </ul>
       ) : null}
     </>
   );
