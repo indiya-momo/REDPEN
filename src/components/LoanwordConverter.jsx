@@ -24,6 +24,10 @@ import {
   resolveSourceLangLoanwordQuery,
 } from '../lib/loanword/loanwordQuery.js';
 import { loadYongryeDictionary } from '../lib/loanword/yongryeDictionary.js';
+import {
+  formatYongryeMeaningLine,
+  groupOfficialYongrye,
+} from '../lib/loanword/yongryeDisplay.js';
 import { preloadEspeak, espeakToIpa } from '../lib/loanword/espeakG2p.js';
 import ConsistencyHintExample from './consistency/ConsistencyHintExample.jsx';
 
@@ -150,29 +154,7 @@ const styles = {
 };
 
 /** 같은 표기를 한 카드로 묶는다 (동명이인 존스 6건 → 존스 1장 + 의미 목록) */
-function groupOfficial(entries) {
-  const grouped = [];
-  for (const entry of entries) {
-    const g = grouped.find((x) => x.h === entry.h);
-    if (g) {
-      if (entry.c && !g.cats.includes(entry.c)) g.cats.push(entry.c);
-      if (entry.m) g.meanings.push(entry.m);
-      for (const alt of entry.a ?? []) if (!g.alts.includes(alt)) g.alts.push(alt);
-      for (const typo of entry.o ?? []) if (!g.typos.includes(typo)) g.typos.push(typo);
-      if (entry.src && !g.srcs.includes(entry.src)) g.srcs.push(entry.src);
-    } else {
-      grouped.push({
-        h: entry.h,
-        cats: entry.c ? [entry.c] : [],
-        meanings: entry.m ? [entry.m] : [],
-        alts: [...(entry.a ?? [])],
-        typos: [...(entry.o ?? [])],
-        srcs: entry.src ? [entry.src] : [],
-      });
-    }
-  }
-  return grouped;
-}
+const groupOfficial = groupOfficialYongrye;
 
 function ApplicationTrace({ result, estimated }) {
   const [traceOpen, setTraceOpen] = useState(false);
@@ -425,22 +407,22 @@ export default function LoanwordConverter({
               {entry.cats.length ? (
                 <span style={styles.meta}>{entry.cats.join(' · ')}</span>
               ) : null}
-              {entry.srcs.length ? (
-                <span style={styles.meta}>원어: {entry.srcs.join(', ')}</span>
-              ) : null}
+              <span style={styles.meta}>{entry.count}건</span>
               {entry.alts.length ? (
                 <span style={styles.meta}>이표기: {entry.alts.join(', ')}</span>
               ) : null}
-              {entry.meanings.slice(0, 2).map((m) => (
-                <p key={m} style={styles.meaning}>
-                  {m}
-                </p>
-              ))}
-              {entry.meanings.length > 2 ? (
-                <p style={styles.meaning}>
-                  외 같은 표기 {entry.meanings.length - 2}건
-                </p>
-              ) : null}
+              {entry.lines.map((line, index) => {
+                const text = formatYongryeMeaningLine(line);
+                if (!text) return null;
+                return (
+                  <p
+                    key={`${entry.h}-${index}-${line.m}-${line.guk ?? ''}-${line.lang ?? ''}`}
+                    style={styles.meaning}
+                  >
+                    {text}
+                  </p>
+                );
+              })}
             </div>
           ))}
         </>

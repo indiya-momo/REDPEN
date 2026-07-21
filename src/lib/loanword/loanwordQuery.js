@@ -90,7 +90,8 @@ export function srcMatchesSourceQuery(src, query) {
     stripSrcReading(raw),
     ...extractSrcReadings(raw),
   ];
-  return candidates.some((part) => sourceKey(part).includes(qKey));
+  // 국어원 ‘일치’와 같이 부분 포함(いとう→사이토)은 제외
+  return candidates.some((part) => sourceKey(part) === qKey);
 }
 
 /**
@@ -421,31 +422,20 @@ export async function resolveSourceLangLoanwordQuery(raw, _yongrye, signal) {
 
   if (isKornormsConfigured() && qKey) {
     try {
-      const [byEqual, byLike] = await Promise.all([
-        searchKornormsExamples({
-          searchKeyword: q,
-          searchCondition: 'srclang_mark',
-          searchEquals: 'equal',
-          numOfRows: 30,
-          signal,
-        }),
-        searchKornormsExamples({
-          searchKeyword: q,
-          searchCondition: 'srclang_mark',
-          searchEquals: 'like',
-          numOfRows: 50,
-          signal,
-        }),
-      ]);
+      const byEqual = await searchKornormsExamples({
+        searchKeyword: q,
+        searchCondition: 'srclang_mark',
+        searchEquals: 'equal',
+        numOfRows: 50,
+        signal,
+      });
       const merged = new Map();
-      for (const item of [...byEqual.items, ...byLike.items]) {
+      for (const item of byEqual.items) {
+        if (!srcMatchesSourceQuery(item.src ?? '', q)) continue;
         const key = `${item.h}|${item.src ?? ''}|${item.c ?? ''}|${item.m ?? ''}`;
         if (!merged.has(key)) merged.set(key, item);
       }
-      // API like 결과를 국어원 ‘포함’과 같이 통과 (いとう → 이토·사이토 등)
-      items = [...merged.values()].filter((item) =>
-        srcMatchesSourceQuery(item.src ?? '', q),
-      );
+      items = [...merged.values()];
       if (items.length) source = 'kornorms';
     } catch {
       // 네트워크·키 오류
@@ -472,7 +462,8 @@ export async function resolveCjkLoanwordQuery(raw, yongrye, signal) {
 }
 
 /**
- * 원어 표기가 라틴 질의와 맞는지 — "Merkel" / "Merkel, Angela" / "Merkel 소체".
+ * 원어 표기가 라틴 질의와 일치하는지 — 국어원 ‘일치’와 동일(대소문자·공백만 무시).
+ * "david hill" 등 부분 포함·성만 일치("Merkel, Angela")는 제외.
  * @param {string} src
  * @param {string} query
  */
@@ -484,9 +475,7 @@ export function srcMatchesLatinQuery(src, query) {
     .toLowerCase()
     .replace(/\s+/g, ' ');
   if (!base) return false;
-  if (base === q) return true;
-  if (base.startsWith(`${q},`) || base.startsWith(`${q} `)) return true;
-  return false;
+  return base === q;
 }
 
 /**
@@ -512,24 +501,15 @@ export async function resolveLatinLoanwordQuery(
 
   if (isKornormsConfigured()) {
     try {
-      const [byEqual, byLike] = await Promise.all([
-        searchKornormsExamples({
-          searchKeyword: q,
-          searchCondition: 'srclang_mark',
-          searchEquals: 'equal',
-          numOfRows: 20,
-          signal,
-        }),
-        searchKornormsExamples({
-          searchKeyword: q,
-          searchCondition: 'srclang_mark',
-          searchEquals: 'like',
-          numOfRows: 30,
-          signal,
-        }),
-      ]);
+      const byEqual = await searchKornormsExamples({
+        searchKeyword: q,
+        searchCondition: 'srclang_mark',
+        searchEquals: 'equal',
+        numOfRows: 50,
+        signal,
+      });
       const merged = new Map();
-      for (const item of [...byEqual.items, ...byLike.items]) {
+      for (const item of byEqual.items) {
         if (!srcMatchesLatinQuery(item.src ?? '', q)) continue;
         const key = `${item.h}|${item.src ?? ''}|${item.c ?? ''}|${item.m ?? ''}`;
         if (!merged.has(key)) merged.set(key, item);
