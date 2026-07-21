@@ -488,22 +488,22 @@ export default function ConsistencyPanel({
                   {`(${auxiliaryActiveCount}/${auxiliaryTotal})`}
                 </span>
               ) : null}
-              <a
-                className="panel-criteria-source-link"
-                href={AUXILIARY_VERB_BASIS_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={(e) => e.stopPropagation()}
-              >
-                한글 맞춤법
-              </a>
             </span>
           </summary>
           <p className="auxiliary-checklist-intro hint">
-            ｢한글 맞춤법｣ 기준으로 붙여 쓸 수 있는 ‘본용언(-아/어) + 보조용언’ 을 찾습니다
+            ｢한글 맞춤법｣ 기준으로 붙여 쓸 수 있는 ‘본용언(-아/어) + 보조용언’ 을
+            찾습니다
             <br />
             (본용언이 3음절 이상 복합어인 경우는 제외{' '}
-            <ConsistencyHintExample>생각하다</ConsistencyHintExample>)
+            <ConsistencyHintExample>생각하다</ConsistencyHintExample>){' '}
+            <a
+              className="panel-criteria-source-link auxiliary-checklist-basis-link"
+              href={AUXILIARY_VERB_BASIS_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              한글 맞춤법
+            </a>
           </p>
           <RegisteredList
             entries={auxiliaryEntries}
