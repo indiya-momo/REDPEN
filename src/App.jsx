@@ -68,13 +68,16 @@ import { clearTooltipGuideDismissed } from './lib/tooltipGuideStorage.js';
 import { shouldAutoEnterMainFromWelcome } from './lib/welcomeViewport.js';
 import AppDialogHost from './components/AppDialogHost.jsx';
 import EventRewardLayer from './components/EventRewardLayer.jsx';
+import SharePackageScreen from './components/SharePackageScreen.jsx';
 import { openMyPageWindow } from './lib/openMyPageWindow.js';
 
 export default function App() {
-  const auxWindow =
+  const searchParams =
     typeof window !== 'undefined'
-      ? new URLSearchParams(window.location.search).get('window')
-      : '';
+      ? new URLSearchParams(window.location.search)
+      : new URLSearchParams();
+  const auxWindow = searchParams.get('window') ?? '';
+  const sharePackageId = (searchParams.get('share') ?? '').trim();
   const [authSession, setAuthSession] = useState(() => getCurrentUserSession());
   const [authReady, setAuthReady] = useState(false);
   const [authBootstrapError, setAuthBootstrapError] = useState('');
@@ -337,6 +340,20 @@ export default function App() {
     updateActiveSet,
     activeSet,
   ]);
+
+  if (sharePackageId) {
+    return (
+      <>
+        <SharePackageScreen
+          packageId={sharePackageId}
+          authUid={authSession?.uid ?? ''}
+          authEmail={authSession?.email ?? ''}
+          authReady={authReady}
+        />
+        <AppDialogHost />
+      </>
+    );
+  }
 
   if (import.meta.env.DEV && auxWindow === 'mypage-mock') {
     return (
