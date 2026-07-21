@@ -8,11 +8,42 @@ vi.mock('./exportResults.js', () => ({
   writeConsistencyWorkbook: vi.fn(async () => new Uint8Array([4, 5, 6]).buffer),
 }));
 
-import { downloadCheckResultsAsZip } from './downloadCheckResultsZip.js';
+import {
+  buildCheckResultsHistoryTxt,
+  buildCheckResultsHistoryTxtName,
+  downloadCheckResultsAsZip,
+} from './downloadCheckResultsZip.js';
 import {
   writeConsistencyWorkbook,
   writeSpellingWorkbook,
 } from './exportResults.js';
+
+describe('buildCheckResultsHistoryTxtName', () => {
+  it('YYMMDD_검수이력.txt 형식이다', () => {
+    expect(buildCheckResultsHistoryTxtName(new Date(2026, 6, 21))).toBe(
+      '260721_검수이력.txt',
+    );
+  });
+});
+
+describe('buildCheckResultsHistoryTxt', () => {
+  it('종류·일시·남은 일수만 줄로 적는다', () => {
+    const createdAt = Date.UTC(2026, 6, 20, 1, 42);
+    const expiresAt = createdAt + 29 * 24 * 60 * 60 * 1000;
+    const text = buildCheckResultsHistoryTxt([
+      { kind: 'spelling', createdAt, expiresAt },
+      {
+        kind: 'consistency',
+        createdAt: Date.UTC(2026, 6, 20, 1, 40),
+        expiresAt,
+      },
+    ]);
+    expect(text).toContain('맞춤법\n');
+    expect(text).toContain('표기 통일\n');
+    expect(text).toMatch(/\d+일 남음/);
+    expect(text).not.toContain('행');
+  });
+});
 
 describe('downloadCheckResultsAsZip', () => {
   beforeEach(() => {
@@ -40,6 +71,7 @@ describe('downloadCheckResultsAsZip', () => {
           id: 'a',
           kind: 'spelling',
           createdAt: Date.UTC(2026, 6, 16, 6, 0),
+          expiresAt: Date.UTC(2026, 7, 15, 6, 0),
           pdfFileName: '고구려조선본없음.pdf',
           summaryLine: 's',
           summary: {},
@@ -50,6 +82,7 @@ describe('downloadCheckResultsAsZip', () => {
           id: 'b',
           kind: 'consistency',
           createdAt: Date.UTC(2026, 6, 16, 7, 0),
+          expiresAt: Date.UTC(2026, 7, 15, 7, 0),
           pdfFileName: '고구려조선본없음.pdf',
           summaryLine: 'c',
           summary: {},

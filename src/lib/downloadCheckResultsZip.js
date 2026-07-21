@@ -1,6 +1,7 @@
 import JSZip from 'jszip';
 import {
   exportModelFromSnapshot,
+  remainingRetentionDays,
 } from './checkResultSnapshot.js';
 import {
   writeConsistencyWorkbook,
@@ -8,8 +9,61 @@ import {
 } from './exportResults.js';
 import {
   buildProofreadExportFilename,
+  formatProofreadYymmdd,
   proofreadExportLabelForKind,
 } from './proofreadExportFilename.js';
+
+/**
+ * @param {Date} [date]
+ * @returns {string}
+ */
+export function buildCheckResultsHistoryTxtName(date = new Date()) {
+  return `${formatProofreadYymmdd(date)}_검수이력.txt`;
+}
+
+/**
+ * @param {unknown} kind
+ * @returns {string}
+ */
+function kindLabel(kind) {
+  return kind === 'consistency' ? '표기 통일' : '맞춤법';
+}
+
+/**
+ * @param {unknown} ms
+ * @returns {string}
+ */
+function formatWhen(ms) {
+  const n = Number(ms);
+  if (!Number.isFinite(n)) return '-';
+  try {
+    return new Date(n).toLocaleString('ko-KR', {
+      month: 'numeric',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  } catch {
+    return '-';
+  }
+}
+
+/**
+ * 화면 목록과 같은 요약 — zip 안 txt 전용.
+ * @param {Array<Record<string, unknown>>} items
+ * @returns {string}
+ */
+export function buildCheckResultsHistoryTxt(items) {
+  const list = Array.isArray(items) ? items : [];
+  if (list.length === 0) return '';
+
+  const blocks = list.map((item) => {
+    const when = formatWhen(item.createdAt);
+    const days = remainingRetentionDays(Number(item.expiresAt));
+    return `${kindLabel(item.kind)}\n${when} ${days}일 남음`;
+  });
+  return `${blocks.join('\n\n')}\n`;
+}
 
 /**
  * @param {BlobPart | Blob} data
@@ -103,6 +157,11 @@ export async function downloadCheckResultsAsZip({ items, zipFilename }) {
 
   if (fileCount === 0) {
     return { ok: false, reason: 'no-files' };
+  }
+
+  const historyTxt = buildCheckResultsHistoryTxt(list);
+  if (historyTxt) {
+    zip.file(buildCheckResultsHistoryTxtName(), historyTxt);
   }
 
   const blob = await zip.generateAsync({ type: 'blob' });
