@@ -9,6 +9,8 @@ import {
   planLibraryShelfCards,
 } from '../../lib/mypageProjectDisplay.js';
 import { assertPaidShareOrAlert } from '../../lib/paidPlanGate.js';
+import { issueSharePackageLink } from '../../lib/issueSharePackageLink.js';
+import { showAppAlert } from '../../lib/appDialog.js';
 import { useProjectHubActions } from '../../hooks/useProjectHubActions.js';
 import { useProjectHubLibrary } from '../../hooks/useProjectHubLibrary.js';
 import { useProjectTagFilter } from '../../hooks/useProjectTagFilter.js';
@@ -50,7 +52,7 @@ export default function ProjectHubLibraryPanel({
     profileSyncDone,
   });
   const library = libraryProp ?? libraryInternal;
-  const { previewCards, loading, slotLabel, slotPlan } = library;
+  const { previewCards, loading, slotLabel, slotPlan, projects } = library;
 
   const tagFilterInternal = useProjectTagFilter(previewCards);
   const tagFilter = tagFilterProp ?? tagFilterInternal;
@@ -102,6 +104,17 @@ export default function ProjectHubLibraryPanel({
     [previewCards, sharePreviewCardId],
   );
 
+  const openShareLink = (cardId) => {
+    void (async () => {
+      const ruleSet = (projects ?? []).find((p) => p.id === cardId);
+      if (!ruleSet) {
+        await showAppAlert('프로젝트를 찾을 수 없습니다.');
+        return;
+      }
+      await issueSharePackageLink({ uid, ruleSet });
+    })();
+  };
+
   /**
    * @param {import('../../presentation/projectCardViewModel.js').ProjectCardViewModel} card
    */
@@ -117,6 +130,7 @@ export default function ProjectHubLibraryPanel({
         onDuplicate={() => void actions.handleDuplicate(card.id)}
         onDelete={() => void actions.handleDelete(card.id, card.title)}
         onSharePreview={() => openSharePreview(card.id)}
+        onCreateShareLink={() => openShareLink(card.id)}
       />
     );
   }

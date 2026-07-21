@@ -1,0 +1,132 @@
+.share-package-screen {
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 2rem 1.25rem 3rem;
+  font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+  color: #3e2723;
+}
+
+.share-package-screen__eyebrow {
+  margin: 0 0 0.35rem;
+  font-size: 0.8rem;
+  color: #8d6e63;
+}
+
+.share-package-screen__title {
+  margin: 0 0 0.75rem;
+  font-size: 1.45rem;
+  font-weight: 700;
+}
+
+.share-package-screen__note {
+  margin: 0 0 1.5rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: #5d4037;
+}
+
+.share-package-screen__error {
+  color: #b71c1c;
+}
+
+.share-package-screen__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0 0 1rem;
+}
+
+.share-package-screen__tag {
+  padding: 0.15rem 0.45rem;
+  border: 1px solid #d7ccc8;
+  font-size: 0.8rem;
+}
+
+.share-package-screen__memo {
+  margin: 0 0 1.25rem;
+  font-size: 0.9rem;
+  color: #4e342e;
+}
+
+.share-package-screen__block {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  border: 1px solid #e8e2dc;
+  background: #faf8f5;
+}
+
+.share-package-screen__block h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+}
+
+.share-package-screen__block-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.share-package-screen__block-head h2 {
+  margin: 0;
+}
+
+.share-package-screen__empty {
+  margin: 0;
+  font-size: 0.88rem;
+  color: #8d6e63;
+}
+
+.share-package-screen__ledger,
+.share-package-screen__results {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.share-package-screen__results li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.75rem;
+  font-size: 0.88rem;
+}
+
+.share-package-screen__ledger-pin {
+  font-size: 0.88rem;
+}
+
+.share-package-screen__foot {
+  margin-top: 1.5rem;
+}
+
+.share-package-screen__btn {
+  font: inherit;
+  cursor: pointer;
+  border-radius: 0;
+  padding: 0.55rem 1rem;
+}
+
+.share-package-screen__btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.share-package-screen__btn--primary {
+  width: 100%;
+  border: none;
+  background: #8b5a3c;
+  color: #fff;
+  font-weight: 600;
+}
+
+.share-package-screen__btn--secondary {
+  border: 1px solid #cfc4ae;
+  background: #fff;
+  color: #4e342e;
+  font-size: 0.85rem;
+}
