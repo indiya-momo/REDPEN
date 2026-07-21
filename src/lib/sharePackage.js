@@ -126,6 +126,10 @@ export function buildSharePackagePayload({
           : typeof set.formatLabel === 'string'
             ? set.formatLabel
             : '',
+      pillarMemos:
+        set.pillarMemos && typeof set.pillarMemos === 'object'
+          ? structuredClone(set.pillarMemos)
+          : undefined,
     },
     criteria: extractShareCriteria(set),
     checkResults: cleaned,
@@ -148,6 +152,53 @@ export function buildSharePackagePayload({
     checkResults: results,
     truncated,
   };
+}
+
+/**
+ * 공유 패키지 → 열람·적용용 임시 RuleSet (저장 전 미리보기).
+ * @param {Record<string, unknown>} pkg
+ * @returns {import('./ruleSetsStorage.js').RuleSet | null}
+ */
+export function buildRuleSetFromSharePackage(pkg) {
+  if (!pkg || typeof pkg !== 'object') return null;
+  const criteria = pkg.criteria;
+  if (!criteria || typeof criteria !== 'object') return null;
+
+  const sourceName =
+    String(pkg.sourceName ?? pkg.meta?.title ?? '').trim() || '공유 프로젝트';
+  const draft = normalizeRuleSet({
+    id: String(pkg.sourceProjectId ?? pkg.id ?? 'share-preview'),
+    name: sourceName.slice(0, 80),
+    builtInEnabled: criteria.builtInEnabled ?? {},
+    cautionEnabled: criteria.cautionEnabled ?? {},
+    customRules: criteria.customRules ?? [],
+    globalExcludePhrases: criteria.globalExcludePhrases ?? [],
+    consistencyDecisions: criteria.consistencyDecisions ?? [],
+    cautionRulesFingerprint: criteria.cautionRulesFingerprint,
+    cautionEnabledPolicyVersion: criteria.cautionEnabledPolicyVersion,
+    compoundMigrateVersion: criteria.compoundMigrateVersion,
+    spellingRulesFingerprint: criteria.spellingRulesFingerprint,
+    bonBojoRulesFingerprint: criteria.bonBojoRulesFingerprint,
+    savedAt:
+      typeof pkg.createdAt === 'number'
+        ? new Date(pkg.createdAt).toISOString()
+        : new Date().toISOString(),
+    tags: Array.isArray(pkg.meta?.tags) ? [...pkg.meta.tags] : [],
+    memo: typeof pkg.meta?.memo === 'string' ? pkg.meta.memo : '',
+    pillarMemos:
+      pkg.meta?.pillarMemos && typeof pkg.meta.pillarMemos === 'object'
+        ? structuredClone(pkg.meta.pillarMemos)
+        : undefined,
+    projectContext: {
+      formatLabel:
+        typeof pkg.meta?.formatLabel === 'string' ? pkg.meta.formatLabel : '',
+    },
+  });
+
+  return normalizeRuleSet({
+    ...draft,
+    criteriaCheckpoint: buildCriteriaCheckpoint(draft),
+  });
 }
 
 /**
@@ -213,6 +264,10 @@ export function planApplySharePackage(
     savedAt: nowIso,
     tags: Array.isArray(pkg.meta?.tags) ? [...pkg.meta.tags] : [],
     memo: typeof pkg.meta?.memo === 'string' ? pkg.meta.memo : '',
+    pillarMemos:
+      pkg.meta?.pillarMemos && typeof pkg.meta.pillarMemos === 'object'
+        ? structuredClone(pkg.meta.pillarMemos)
+        : undefined,
     projectContext: {
       formatLabel:
         typeof pkg.meta?.formatLabel === 'string' ? pkg.meta.formatLabel : '',
