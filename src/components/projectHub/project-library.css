@@ -24,11 +24,26 @@
   padding-top: 0;
 }
 
+.mypage-proto__filters-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.45rem 0.75rem;
+  margin-top: 0.65rem;
+}
+
+.mypage-proto__filters-label {
+  flex-shrink: 0;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--color-text-muted, #5c5346);
+}
+
 .mypage-proto__filters {
   display: flex;
   flex-wrap: wrap;
   gap: 0.25rem;
-  margin-top: 0.65rem;
+  margin-top: 0;
   margin-bottom: 0;
   padding-bottom: 0;
 }
