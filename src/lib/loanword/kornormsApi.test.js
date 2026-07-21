@@ -41,6 +41,8 @@ describe('mapKornormsItem', () => {
         srclang_mark: 'cardigan',
         foreign_gubun: '일반 용어',
         mean: '스웨터',
+        guk_nm: '영국',
+        lang_nm: '영어',
         relate_mark_e: '-',
         relate_mark_o: '가디건(X)',
       }),
@@ -49,6 +51,8 @@ describe('mapKornormsItem', () => {
       src: 'cardigan',
       c: '일반 용어',
       m: '스웨터',
+      guk: '영국',
+      lang: '영어',
       o: ['가디건'],
     });
   });
@@ -63,6 +67,8 @@ describe('parseKornormsXmlResponse', () => {
         <srclang_mark>cardigan</srclang_mark>
         <foreign_gubun>일반 용어</foreign_gubun>
         <mean>스웨터</mean>
+        <guk_nm>영국</guk_nm>
+        <lang_nm>영어</lang_nm>
         <relate_mark_e></relate_mark_e>
         <relate_mark_o>가디건(X),</relate_mark_o>
       </items>
@@ -76,6 +82,8 @@ describe('parseKornormsXmlResponse', () => {
       h: '카디건',
       src: 'cardigan',
       o: ['가디건'],
+      guk: '영국',
+      lang: '영어',
     });
   });
 });
@@ -107,21 +115,24 @@ describe('loanwordQuery helpers', () => {
       true,
     );
     expect(srcMatchesSourceQuery('伊東良孝(いとう よしたか)', 'いとう')).toBe(
-      true,
+      false,
     );
     expect(srcMatchesSourceQuery('齋藤實(さいとう まこと)', 'いとう')).toBe(
-      true,
+      false,
     );
-    expect(srcMatchesSourceQuery('大東(だいとう)섬', 'いとう')).toBe(true);
+    expect(srcMatchesSourceQuery('大東(だいとう)섬', 'いとう')).toBe(false);
     expect(srcMatchesSourceQuery('孫正義(そん まさよし)', 'いとう')).toBe(
       false,
     );
+    expect(srcMatchesSourceQuery('いとう', 'いとう')).toBe(true);
   });
 
   it('라틴 원어 질의 매칭 (Merkel / Merkel, Angela)', () => {
     expect(srcMatchesLatinQuery('Merkel', 'Merkel')).toBe(true);
-    expect(srcMatchesLatinQuery('Merkel, Angela', 'merkel')).toBe(true);
-    expect(srcMatchesLatinQuery('Merkel 소체', 'Merkel')).toBe(true);
+    expect(srcMatchesLatinQuery('DAVID', 'david')).toBe(true);
+    expect(srcMatchesLatinQuery('Merkel, Angela', 'merkel')).toBe(false);
+    expect(srcMatchesLatinQuery('david hill', 'david')).toBe(false);
+    expect(srcMatchesLatinQuery('Merkel 소체', 'Merkel')).toBe(false);
     expect(srcMatchesLatinQuery('Weidmann, Jens', 'Merkel')).toBe(false);
   });
 

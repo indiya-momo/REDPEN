@@ -55,6 +55,8 @@ export function parseRelateMarkList(raw) {
  *   m?: string,
  *   a?: string[],
  *   o?: string[],
+ *   guk?: string,
+ *   lang?: string,
  * }}
  */
 export function mapKornormsItem(item) {
@@ -62,13 +64,17 @@ export function mapKornormsItem(item) {
   const src = String(item?.srclang_mark ?? '').trim();
   const c = String(item?.foreign_gubun ?? '').trim();
   const m = String(item?.mean ?? '').trim();
+  const guk = String(item?.guk_nm ?? '').trim();
+  const lang = String(item?.lang_nm ?? '').trim();
   const a = parseRelateMarkList(item?.relate_mark_e);
   const o = parseRelateMarkList(item?.relate_mark_o);
-  /** @type {{ h: string, src?: string, c?: string, m?: string, a?: string[], o?: string[] }} */
+  /** @type {{ h: string, src?: string, c?: string, m?: string, a?: string[], o?: string[], guk?: string, lang?: string }} */
   const entry = { h };
   if (src) entry.src = src;
   if (c) entry.c = c;
   if (m) entry.m = m;
+  if (guk) entry.guk = guk;
+  if (lang) entry.lang = lang;
   if (a.length) entry.a = a;
   if (o.length) entry.o = o;
   return entry;
@@ -100,6 +106,8 @@ export function parseKornormsXmlResponse(xml) {
         srclang_mark: xmlTag(block, 'srclang_mark'),
         foreign_gubun: xmlTag(block, 'foreign_gubun'),
         mean: xmlTag(block, 'mean'),
+        guk_nm: xmlTag(block, 'guk_nm'),
+        lang_nm: xmlTag(block, 'lang_nm'),
         relate_mark_e: xmlTag(block, 'relate_mark_e'),
         relate_mark_o: xmlTag(block, 'relate_mark_o'),
       }),
