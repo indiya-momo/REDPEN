@@ -53,7 +53,7 @@ export async function issueSharePackageLink({ uid, ruleSet }) {
     await showAppAlert({
       title: '공유 링크가 복사되었습니다',
       message:
-        '링크를 상대에게 보내 주세요.\n상대는 기준·검수 결과를 보고, 자기 PDF로 같은 기준 검수를 할 수 있습니다.\n\n' +
+        '공유 링크가 있는 사용자는 프로젝트 정보를 볼 수 있습니다. 인디야 유료회원은 프로젝트를 적용하여 작업할 수 있습니다.\n\n' +
         result.url,
     });
   } catch {
