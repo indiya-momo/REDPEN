@@ -3112,6 +3112,17 @@
 
 .consistency-section-box[data-work-guide-step='auxiliary-box']
   .auxiliary-checklist-intro
+  .auxiliary-checklist-basis-link {
+  display: inline;
+  margin: 0 0 0 0.35em;
+  font-size: inherit;
+  line-height: inherit;
+  vertical-align: baseline;
+  white-space: nowrap;
+}
+
+.consistency-section-box[data-work-guide-step='auxiliary-box']
+  .auxiliary-checklist-intro
   .consistency-hint-example {
   vertical-align: baseline;
 }
@@ -3979,6 +3990,15 @@
   color: var(--c-ink);
 }
 
+.panel-left .loanword-converter__basis-link {
+  display: inline;
+  margin-left: 0.35em;
+  font-size: inherit;
+  line-height: inherit;
+  vertical-align: baseline;
+  white-space: nowrap;
+}
+
 /* 외래어 표기 — 맞춤법 탭 제목을 다른 criteria heading과 동일 스케일로 */
 .panel-left .loanword-converter__summary.panel-criteria-heading {
   display: flex;
@@ -4232,6 +4252,15 @@
   font-size: calc(0.8125rem * var(--panel-ui-scale));
   margin: calc(8px * var(--panel-ui-scale)) 0 calc(4px * var(--panel-ui-scale));
   padding-inline: var(--criteria-check-col-start) var(--criteria-pad-inline, 14px);
+}
+
+.panel-left
+  .consistency-section-box[data-work-guide-step='auxiliary-box']
+  .auxiliary-checklist-intro
+  .auxiliary-checklist-basis-link {
+  font-size: inherit;
+  margin-left: 0.35em;
+  margin-bottom: 0;
 }
 
 .panel-left .consistency-section-box[data-work-guide-step='auxiliary-box'] .auxiliary-chip {

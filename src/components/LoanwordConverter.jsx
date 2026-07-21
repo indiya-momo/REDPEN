@@ -35,6 +35,9 @@ import ConsistencyHintExample from './consistency/ConsistencyHintExample.jsx';
 const YONGRYE_BADGE_LABEL = '용례';
 const EST_BADGE_LABEL = '추정 표기';
 const PARTIAL_EST_BADGE_LABEL = '일부 추정 표기';
+/** 국립국어원 외래어 표기법 규정 */
+const LOANWORD_ORTHOGRAPHY_URL =
+  'https://korean.go.kr/kornorms/regltn/regltnView.do?regltn_code=0003#a';
 
 /**
  * 문자(모든 언어)·결합 기호·공백·하이픈·어깻점·이체자 선택자.
@@ -342,7 +345,15 @@ export default function LoanwordConverter({
         <ConsistencyHintExample>
           &apos;そん まさよし&apos; → &apos;손 마사요시&apos; &apos;momo&apos;
           → &apos;모모&apos;
-        </ConsistencyHintExample>
+        </ConsistencyHintExample>{' '}
+        <a
+          className="panel-criteria-source-link loanword-converter__basis-link"
+          href={LOANWORD_ORTHOGRAPHY_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          외래어 표기법
+        </a>
       </p>
 
       <div className="loanword-converter__field" style={styles.form}>
