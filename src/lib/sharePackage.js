@@ -15,6 +15,29 @@ export const SHARE_PACKAGE_SCHEMA_VERSION = 1;
 export const SHARE_PACKAGE_COLLECTION = 'sharePackages';
 
 /**
+ * Firestore addDoc는 undefined 필드를 거부한다. 재귀적으로 제거한다.
+ * @param {unknown} value
+ * @returns {unknown}
+ */
+export function omitUndefinedDeep(value) {
+  if (Array.isArray(value)) {
+    return value
+      .filter((item) => item !== undefined)
+      .map((item) => omitUndefinedDeep(item));
+  }
+  if (value && typeof value === 'object') {
+    /** @type {Record<string, unknown>} */
+    const out = {};
+    for (const [key, nested] of Object.entries(value)) {
+      if (nested === undefined) continue;
+      out[key] = omitUndefinedDeep(nested);
+    }
+    return out;
+  }
+  return value;
+}
+
+/**
  * @param {Date} [date]
  * @returns {string}
  */
@@ -59,6 +82,9 @@ export function sanitizeCheckResultForShare(raw) {
   if (!raw || typeof raw !== 'object') return null;
   const kind = raw.kind === 'consistency' ? 'consistency' : raw.kind === 'spelling' ? 'spelling' : null;
   if (!kind) return null;
+  const rowCount = Number(
+    raw.rowCount ?? (Array.isArray(raw.rows) ? raw.rows.length : 0),
+  );
   return {
     schemaVersion: Number(raw.schemaVersion) || 1,
     kind,
@@ -73,9 +99,10 @@ export function sanitizeCheckResultForShare(raw) {
       raw.summary && typeof raw.summary === 'object' && !Array.isArray(raw.summary)
         ? raw.summary
         : {},
-    rows: Array.isArray(raw.rows) ? raw.rows : [],
-    truncated: Boolean(raw.truncated),
-    rowCount: Number(raw.rowCount ?? (Array.isArray(raw.rows) ? raw.rows.length : 0)),
+    // 공유 화면은 건수·메타만 표시. 행 본문은 문서 한도·권한 리스크를 키우므로 넣지 않는다.
+    rows: [],
+    truncated: Boolean(raw.truncated) || (Array.isArray(raw.rows) && raw.rows.length > 0),
+    rowCount: Number.isFinite(rowCount) ? rowCount : 0,
   };
 }
 
@@ -147,11 +174,13 @@ export function buildSharePackagePayload({
     truncated = true;
   }
 
-  return {
-    ...base,
-    checkResults: results,
-    truncated,
-  };
+  return /** @type {typeof base & { checkResults: typeof results, truncated: boolean }} */ (
+    omitUndefinedDeep({
+      ...base,
+      checkResults: results,
+      truncated,
+    })
+  );
 }
 
 /**

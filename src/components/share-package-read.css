@@ -1,200 +1,28 @@
-/* 공유 패키지 읽기 패널 — 발신 미리보기·수신 화면 공통 */
+/* 공유 읽기 패널 — 시스템(project-hub-settings) 스타일 재사용 + 공유 컨텍스트만 보정 */
 
-.share-receive {
-  display: grid;
-  grid-template-columns: minmax(10.5rem, 12.5rem) minmax(0, 1fr);
-  gap: 1.25rem;
-  align-items: start;
+.project-hub-settings--share {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
   width: 100%;
+  box-sizing: border-box;
+  --project-hub-criteria-title-font-size: 0.84rem;
+}
+
+.project-hub-settings--share .project-hub-settings__layout {
   min-height: 16rem;
-  box-sizing: border-box;
-  color: #3e2723;
-  font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
 }
 
-.share-receive *,
-.share-receive *::before,
-.share-receive *::after {
-  box-sizing: border-box;
-}
-
-.share-receive__nav-list {
-  list-style: none;
+.share-package-read__readonly-field {
   margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-}
-
-.share-receive__nav-btn {
-  width: 100%;
-  padding: 0.45rem 0.55rem;
-  border: 1px solid transparent;
-  border-radius: 0;
-  background: transparent;
-  color: #6d4c41;
-  font: inherit;
-  font-size: 0.82rem;
-  font-weight: 600;
-  text-align: left;
-  cursor: pointer;
-}
-
-.share-receive__nav-btn--spelling {
-  border-left: 3px solid #8b5a3c;
-}
-
-.share-receive__nav-btn--consistency {
-  border-left: 3px solid #5a6b8a;
-}
-
-.share-receive__nav-btn--auxiliary {
-  border-left: 3px solid #5a6b4f;
-}
-
-.share-receive__nav-btn--active {
-  color: #3e2723;
-  border-color: #cfc4ae;
-}
-
-.share-receive__nav-btn--active.share-receive__nav-btn--spelling {
-  border-left-color: #8b5a3c;
-}
-
-.share-receive__nav-btn--active.share-receive__nav-btn--consistency {
-  border-left-color: #5a6b8a;
-}
-
-.share-receive__nav-btn--active.share-receive__nav-btn--auxiliary {
-  border-left-color: #5a6b4f;
-}
-
-.share-receive__card {
-  display: flex;
-  flex-direction: column;
-  gap: 0.85rem;
-  padding: 0.9rem 1rem;
-  border: 1px solid #e0d6c8;
-  background: #fff;
-}
-
-.share-receive__lead {
-  margin: 0;
-  font-size: 0.78rem;
-  line-height: 1.45;
-  color: #8d6e63;
-}
-
-.share-receive__row {
-  display: grid;
-  grid-template-columns: minmax(6rem, 8.5rem) minmax(0, 1fr);
-  gap: 0.75rem;
-  align-items: start;
-}
-
-.share-receive__row-label {
-  display: block;
-  font-size: 0.84rem;
-  font-weight: 700;
-}
-
-.share-receive__row-desc {
-  margin: 0.15rem 0 0;
-  font-size: 0.72rem;
-  line-height: 1.45;
-  color: #8d6e63;
-}
-
-.share-receive__value {
-  margin: 0;
-  padding: 0.45rem 0.6rem;
-  border: 1px solid #e0d6c8;
-  background: #f7f4ef;
-  font-size: 0.82rem;
-  line-height: 1.45;
-}
-
-.share-receive__value--memo {
-  min-height: 4rem;
   white-space: pre-wrap;
+  background: var(--color-surface-sunken, #f7f4ef);
+  color: var(--color-text);
+  cursor: default;
 }
 
-.share-receive__stats {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem 1.25rem;
-  font-size: 0.84rem;
-}
-
-.share-receive__group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
-
-.share-receive__group-label {
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: #5d4037;
-}
-
-.share-receive__chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-}
-
-.share-receive__chip {
-  padding: 0.2rem 0.5rem;
-  border: 1px solid #cfc4ae;
-  background: #fff;
-  font-size: 0.78rem;
-}
-
-.share-receive__chip--off {
-  opacity: 0.45;
-}
-
-.share-receive__chip--pinned {
-  border-color: #5a6b8a;
-  font-weight: 700;
-}
-
-.share-receive__empty {
-  font-size: 0.82rem;
-  color: #8d6e63;
-}
-
-.share-receive__results {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
-
-.share-receive__results li {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem 0.75rem;
-  padding: 0.4rem 0.55rem;
-  border: 1px solid #e0d6c8;
-  font-size: 0.82rem;
-}
-
-@media (max-width: 720px) {
-  .share-receive {
-    grid-template-columns: 1fr;
-  }
-
-  .share-receive__nav-list {
-    flex-direction: row;
-    flex-wrap: wrap;
-  }
-
-  .share-receive__row {
-    grid-template-columns: 1fr;
-  }
+.project-hub-settings--share
+  .project-hub-settings__check-results-embedded
+  > .project-hub-settings__row-desc {
+  padding: 0 1rem 0.75rem;
 }

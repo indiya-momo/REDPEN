@@ -190,7 +190,6 @@ export default function SharePreviewModal({
               ruleSet={ruleSet}
               checkResults={checkResults}
               checkResultsLoading={checkResultsLoading}
-              actionsLead="링크에 포함될 검수 결과 목록입니다. 다운로드는 제공하지 않습니다."
               navAriaLabel="공유에 포함되는 구역"
             />
           ) : (
