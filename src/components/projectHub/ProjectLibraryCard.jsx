@@ -39,7 +39,6 @@ function SheetCardBookTitle({ title }) {
  *   onDuplicate?: () => void,
  *   onDelete?: () => void,
  *   onSharePreview?: () => void,
- *   onCreateShareLink?: () => void,
  * }} props
  */
 export default function ProjectLibraryCard({
@@ -55,7 +54,6 @@ export default function ProjectLibraryCard({
   onDuplicate = () => {},
   onDelete,
   onSharePreview = () => {},
-  onCreateShareLink,
 }) {
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState(card.title);
@@ -274,20 +272,8 @@ export default function ProjectLibraryCard({
                     onSharePreview();
                   }}
                 >
-                  미리보기
+                  공유하기
                 </button>
-                {onCreateShareLink ? (
-                  <button
-                    type="button"
-                    className="sheet-card__btn sheet-card__btn--secondary"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      onCreateShareLink();
-                    }}
-                  >
-                    공유 링크
-                  </button>
-                ) : null}
               </>
             ) : null}
           </footer>
