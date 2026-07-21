@@ -1,15 +1,32 @@
+import { useState } from 'react';
 import ProjectLibraryCard from './ProjectLibraryCard.jsx';
 
 /**
  * @param {{
  *   card: import('../../presentation/projectCardViewModel.js').ProjectCardViewModel,
  *   onClose: () => void,
+ *   onCreateShareLink?: () => void | Promise<void>,
  * }} props
  */
-export default function SharePreviewModal({ card, onClose }) {
+export default function SharePreviewModal({
+  card,
+  onClose,
+  onCreateShareLink,
+}) {
+  const [linkBusy, setLinkBusy] = useState(false);
   const ledger = (Array.isArray(card.decisionLedger) ? card.decisionLedger : []).filter(
     (item) => item.kind === 'unify',
   );
+
+  const handleCreateLink = async () => {
+    if (!onCreateShareLink || linkBusy) return;
+    setLinkBusy(true);
+    try {
+      await onCreateShareLink();
+    } finally {
+      setLinkBusy(false);
+    }
+  };
 
   return (
     <div
@@ -45,8 +62,8 @@ export default function SharePreviewModal({ card, onClose }) {
         </header>
 
         <p className="mypage-proto__share-note">
-          외주·팀에게 전달되는 읽기 전용 문서입니다. PDF·검수 결과는
-          포함되지 않습니다. 확정 대장(통일형 📌 기록)은 포함됩니다.
+          링크만으로는 미리보기만 가능합니다. 다운로드·기준 적용은 수신자
+          로그인이 필요합니다. 원고 PDF는 포함되지 않습니다.
         </p>
 
         <ProjectLibraryCard
@@ -98,10 +115,11 @@ export default function SharePreviewModal({ card, onClose }) {
           <button
             type="button"
             className="sheet-card__btn sheet-card__btn--primary"
-            disabled
-            title="B-0: 읽기 링크 (미구현)"
+            disabled={!onCreateShareLink || linkBusy}
+            aria-busy={linkBusy}
+            onClick={() => void handleCreateLink()}
           >
-            공유 링크 만들기 (준비 중)
+            {linkBusy ? '만드는 중…' : '공유 링크 만들기'}
           </button>
         </footer>
       </div>

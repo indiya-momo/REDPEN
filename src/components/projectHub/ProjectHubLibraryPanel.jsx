@@ -104,15 +104,13 @@ export default function ProjectHubLibraryPanel({
     [previewCards, sharePreviewCardId],
   );
 
-  const openShareLink = (cardId) => {
-    void (async () => {
-      const ruleSet = (projects ?? []).find((p) => p.id === cardId);
-      if (!ruleSet) {
-        await showAppAlert('프로젝트를 찾을 수 없습니다.');
-        return;
-      }
-      await issueSharePackageLink({ uid, ruleSet });
-    })();
+  const openShareLink = async (cardId) => {
+    const ruleSet = (projects ?? []).find((p) => p.id === cardId);
+    if (!ruleSet) {
+      await showAppAlert('프로젝트를 찾을 수 없습니다.');
+      return;
+    }
+    await issueSharePackageLink({ uid, ruleSet });
   };
 
   /**
@@ -130,7 +128,6 @@ export default function ProjectHubLibraryPanel({
         onDuplicate={() => void actions.handleDuplicate(card.id)}
         onDelete={() => void actions.handleDelete(card.id, card.title)}
         onSharePreview={() => openSharePreview(card.id)}
-        onCreateShareLink={() => openShareLink(card.id)}
       />
     );
   }
@@ -246,6 +243,7 @@ export default function ProjectHubLibraryPanel({
         <SharePreviewModal
           card={sharePreviewCard}
           onClose={closeSharePreview}
+          onCreateShareLink={() => openShareLink(sharePreviewCard.id)}
         />
       ) : null}
     </>

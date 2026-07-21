@@ -87,7 +87,28 @@ export default function SharePackageScreen({
       : [];
   }, [pkg]);
 
+  const canAct = Boolean(authUid);
+
+  const requireLoginForAction = async (actionLabel) => {
+    if (!authReady) {
+      await showAppAlert('로그인 상태를 확인하는 중입니다. 잠시 후 다시 눌러 주세요.');
+      return false;
+    }
+    if (authUid) return true;
+    await showAppAlert({
+      title: '로그인이 필요합니다',
+      message: `링크만으로는 미리보기만 가능합니다.\n${actionLabel}하려면 Google 로그인이 필요합니다.`,
+    });
+    try {
+      await signInWithGoogle();
+    } catch (err) {
+      console.error('공유 화면 로그인 실패:', err);
+    }
+    return false;
+  };
+
   const handleZip = async () => {
+    if (!(await requireLoginForAction('검수 결과 다운로드'))) return;
     if (checkResults.length === 0) {
       await showAppAlert('포함된 검수 결과가 없습니다.');
       return;
@@ -112,22 +133,7 @@ export default function SharePackageScreen({
 
   const handleApply = useCallback(async () => {
     if (!pkg) return;
-    if (!authReady) {
-      await showAppAlert('로그인 상태를 확인하는 중입니다. 잠시 후 다시 눌러 주세요.');
-      return;
-    }
-    if (!authUid) {
-      await showAppAlert({
-        title: '로그인이 필요합니다',
-        message: '받은 기준으로 검수하려면 Google 로그인이 필요합니다.',
-      });
-      try {
-        await signInWithGoogle();
-      } catch (err) {
-        console.error('공유 적용 로그인 실패:', err);
-      }
-      return;
-    }
+    if (!(await requireLoginForAction('기준 적용'))) return;
 
     setApplyBusy(true);
     try {
@@ -195,8 +201,8 @@ export default function SharePackageScreen({
           {loading ? '불러오는 중…' : title ? `《${title}》` : '공유 기준'}
         </h1>
         <p className="share-package-screen__note">
-          원고 PDF는 포함되지 않습니다. 기준·확정 대장·검수 결과만 전달됩니다.
-          같은 기준으로 자기 PDF를 검수해 크로스 교정에 쓸 수 있습니다.
+          원고 PDF는 포함되지 않습니다. 링크만으로는 미리보기만 가능하고,
+          검수 결과 다운로드·기준 적용은 로그인 후 사용할 수 있습니다.
         </p>
       </header>
 
@@ -249,11 +255,25 @@ export default function SharePackageScreen({
                 type="button"
                 className="share-package-screen__btn share-package-screen__btn--secondary"
                 disabled={zipBusy || checkResults.length === 0}
+                title={
+                  canAct
+                    ? undefined
+                    : '로그인 후 다운로드할 수 있습니다'
+                }
                 onClick={() => void handleZip()}
               >
-                {zipBusy ? '받는 중…' : '검수 이력 다운받기'}
+                {zipBusy
+                  ? '받는 중…'
+                  : canAct
+                    ? '검수 이력 다운받기'
+                    : '로그인 후 다운받기'}
               </button>
             </div>
+            {!canAct ? (
+              <p className="share-package-screen__empty">
+                결과 목록은 미리보기로만 보입니다. 다운로드는 로그인 후 가능합니다.
+              </p>
+            ) : null}
             {checkResults.length === 0 ? (
               <p className="share-package-screen__empty">포함된 검수 결과가 없습니다.</p>
             ) : (
@@ -298,7 +318,9 @@ export default function SharePackageScreen({
             >
               {applyBusy
                 ? '적용 중…'
-                : '이 기준으로 내 작업대에서 검수하기'}
+                : canAct
+                  ? '이 기준으로 내 작업대에서 검수하기'
+                  : '로그인 후 기준 적용하기'}
             </button>
           </footer>
         </>

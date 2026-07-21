@@ -6,6 +6,8 @@ import { useProjectHubActions } from '../../hooks/useProjectHubActions.js';
 import { useProjectHubLibrary } from '../../hooks/useProjectHubLibrary.js';
 import { useProjectTagFilter } from '../../hooks/useProjectTagFilter.js';
 import { assertPaidShareOrAlert } from '../../lib/paidPlanGate.js';
+import { issueSharePackageLink } from '../../lib/issueSharePackageLink.js';
+import { showAppAlert } from '../../lib/appDialog.js';
 import SharePreviewModal from './SharePreviewModal.jsx';
 import './project-library.css';
 import ProjectHubSettingsPanel from '../ProjectHubSettingsPanel.jsx';
@@ -51,6 +53,7 @@ export default function ProjectHubEditorPage({
     activeSetId,
     updateProjectMeta,
     updateProjectCriteria,
+    projects,
   } = library;
   const { filteredCards } = tagFilter;
 
@@ -74,6 +77,18 @@ export default function ProjectHubEditorPage({
       })();
     },
     [uid],
+  );
+
+  const handleCreateShareLink = useCallback(
+    async (cardId) => {
+      const ruleSet = (projects ?? []).find((p) => p.id === cardId);
+      if (!ruleSet) {
+        await showAppAlert('프로젝트를 찾을 수 없습니다.');
+        return;
+      }
+      await issueSharePackageLink({ uid, ruleSet });
+    },
+    [projects, uid],
   );
 
 
@@ -201,6 +216,7 @@ export default function ProjectHubEditorPage({
         <SharePreviewModal
           card={sharePreviewCard}
           onClose={() => setSharePreviewCardId(null)}
+          onCreateShareLink={() => handleCreateShareLink(sharePreviewCard.id)}
         />
       ) : null}
     </>
