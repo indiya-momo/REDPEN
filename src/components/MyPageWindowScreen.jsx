@@ -42,6 +42,7 @@ import ProjectHubEditorPage from './projectHub/ProjectHubEditorPage.jsx';
 import ProjectHubEditorShell from './projectHub/ProjectHubEditorShell.jsx';
 import ProjectHubLibraryPanel from './projectHub/ProjectHubLibraryPanel.jsx';
 import { isMyPageProjectHubEnabled } from '../lib/featureFlags.js';
+import { FAQ_ITEMS } from '../lib/faqItems.js';
 import './my-page.css';
 import './project-hub-settings.css';
 import './projectHub/project-library.css';
@@ -114,45 +115,6 @@ const MEMBER_BENEFIT_TIERS = [
 ];
 
 const USAGE_PAGE_LIMIT = 20;
-
-const FAQ_ITEMS = [
-  {
-    id: 'what',
-    question: '인디야는 어떤 서비스인가요?',
-    answer:
-      '인디자인 등에서 만든 조판 PDF에서 맞춤법·표기 통일을 규칙으로 찾아 PDF 위에 표시하는 브라우저 도구입니다. AI가 문장을 고쳐 주지 않으며, 자동 탐지와 하이라이트만 제공합니다.',
-  },
-  {
-    id: 'privacy',
-    question: 'PDF가 서버로 올라가나요?',
-    answer:
-      '검수에 쓰는 PDF 본문은 브라우저 안에서만 처리됩니다. 원고를 서버에 업로드해 AI 교정을 받는 방식이 아닙니다. 유료 회원은 검수 결과(발견 목록·요약)만 프로젝트에 일정 기간 보관될 수 있으며, 원고 PDF는 올리지 않습니다.',
-  },
-  {
-    id: 'pdf-type',
-    question: '어떤 PDF를 지원하나요?',
-    answer:
-      '텍스트가 선택·추출되는 PDF를 권장합니다. 스캔(이미지) PDF는 지원하지 않으며, 100MB를 넘으면 검수할 수 없습니다(50MB 이하 권장).',
-  },
-  {
-    id: 'tabs',
-    question: '맞춤법과 표기 통일은 무엇이 다른가요?',
-    answer:
-      '맞춤법 탭은 내장·주의 규칙으로 오탈자·띄어쓰기 후보를 찾습니다. 표기 통일 탭은 표기 통일·본보조·목차·본문 일치 등을 검수합니다.',
-  },
-  {
-    id: 'beta',
-    question: '오픈베타 기간 이용료가 있나요?',
-    answer:
-      '오픈베타 기간에는 회원에게 매일 맞춤법·표기 통일 각 1회 검수를 제공합니다(한국 시간 기준). 피드백을 남기면 각 2회, 우수 피드백으로 선정되면 각 3회까지 이용할 수 있습니다.',
-  },
-  {
-    id: 'device',
-    question: '모바일에서도 검수할 수 있나요?',
-    answer:
-      '본격 검수는 PC·Chrome/Edge 환경을 권장합니다. 모바일은 대문·둘러보기 수준으로, 세밀한 교열 작업에는 PC가 적합합니다.',
-  },
-];
 
 /**
  * @param {number | null | undefined} loginAtMs
@@ -518,7 +480,7 @@ function MyPageFaq() {
     <aside className="mypage__faq" aria-labelledby="mypage-faq-title">
       <section className="mypage__card mypage__faq-card">
         <h2 id="mypage-faq-title" className="mypage__card-title">
-          자주 묻는 질문
+          FAQ
         </h2>
         <div className="mypage__faq-list">
           {FAQ_ITEMS.map((item) => (

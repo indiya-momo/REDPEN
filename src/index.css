@@ -1351,6 +1351,114 @@ details[open] > summary .details-chevron::before {
   padding: 10px 18px;
 }
 
+.faq-modal {
+  padding: 0;
+  border: none;
+  background: transparent;
+  max-width: calc(100vw - 24px);
+}
+
+.faq-modal::backdrop {
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.faq-modal__panel {
+  width: min(520px, calc(100vw - 32px));
+  max-height: min(80vh, 640px);
+  margin: 0;
+  padding: 18px 20px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-ui-lg);
+  background: var(--color-surface-raised);
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.18);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow: hidden;
+}
+
+.faq-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.faq-modal__header--drag {
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.faq-modal--dragging .faq-modal__header--drag {
+  cursor: grabbing;
+}
+
+.faq-modal__title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--c-ink);
+}
+
+.faq-modal__close {
+  flex-shrink: 0;
+}
+
+.faq-modal__lead {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: var(--c-soft);
+  flex-shrink: 0;
+}
+
+.faq-modal__list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-right: 2px;
+}
+
+.faq-modal__item {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-ui);
+  background: var(--color-surface, #fff);
+  padding: 0 12px;
+}
+
+.faq-modal__question {
+  cursor: pointer;
+  list-style: none;
+  padding: 10px 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--c-ink);
+}
+
+.faq-modal__question::-webkit-details-marker {
+  display: none;
+}
+
+.faq-modal__answer {
+  margin: 0 0 12px;
+  font-size: 0.85rem;
+  line-height: 1.55;
+  color: var(--c-soft);
+}
+
+.faq-modal__footer {
+  display: flex;
+  justify-content: flex-end;
+  flex-shrink: 0;
+  padding-top: 4px;
+}
+
 .link-btn {
   border: none;
   background: none;
@@ -3349,6 +3457,13 @@ details[open] > summary .details-chevron::before {
   min-width: 0;
   max-width: 100%;
   overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pdf-preview-bar__faq-btn {
+  flex-shrink: 0;
 }
 
 .pdf-preview-bar__status-col .current-page-status--in-preview-bar {

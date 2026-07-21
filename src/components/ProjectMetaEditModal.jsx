@@ -134,7 +134,7 @@ export default function ProjectMetaEditModal({
             disabled={saving}
             autoComplete="off"
           />
-          <span className="project-meta-edit-modal__hint">쉼표로 구분 · 최대 3개</span>
+          <span className="project-meta-edit-modal__hint">쉼표로 구분 · 추가 가능</span>
         </label>
 
         <label

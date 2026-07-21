@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { HANGUL_ORTHOGRAPHY_URL } from '../lib/koreanNormsLinks.js';
 import BuiltinSpellingPanel from './BuiltinSpellingPanel.jsx';
 import CautionChecklist from './CautionChecklist.jsx';
 import LoanwordCheckPanel from './LoanwordCheckPanel.jsx';
@@ -185,6 +186,8 @@ export default function ResizableBuiltinSpelling({
               onBuiltInToggle={onBuiltInToggle}
               onBuiltInSetAll={onBuiltInSetAll}
               guideSpotlight={guideSpotlight}
+              sourceHref={HANGUL_ORTHOGRAPHY_URL}
+              sourceLabel="한글 맞춤법"
             />
           </div>
           <div className="builtin-spelling-loanword-scroll">

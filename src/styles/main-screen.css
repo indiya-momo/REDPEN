@@ -2402,7 +2402,10 @@
 .builtin-spelling-resize-body .caution-checklist-summary-title,
 .builtin-spelling-resize-body .builtin-spelling-summary-title,
 .builtin-spelling-resize-body .loanword-check-summary-title {
-  display: inline-flex;
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-wrap: nowrap;
   align-items: baseline;
   align-self: center;
   line-height: 1.2;
@@ -3964,8 +3967,10 @@
 .panel-left .caution-checklist-summary-title,
 .panel-left .builtin-spelling-summary-title,
 .panel-left .loanword-check-summary-title {
-  display: inline-flex;
-  flex-wrap: wrap;
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-wrap: nowrap;
   align-items: baseline;
   column-gap: 0.15em;
 }
@@ -3976,18 +3981,19 @@
 }
 
 .panel-left .panel-criteria-source-link {
-  margin-left: 0.4em;
-  font-size: 0.72em;
+  flex-shrink: 0;
+  margin-left: auto;
+  font-size: 0.504em;
   font-weight: 500;
   line-height: inherit;
   color: var(--c-soft);
-  text-decoration: underline;
-  text-underline-offset: 2px;
+  text-decoration: none;
   white-space: nowrap;
 }
 
 .panel-left .panel-criteria-source-link:hover {
   color: var(--c-ink);
+  text-decoration: none;
 }
 
 .panel-left .loanword-converter__basis-link {
