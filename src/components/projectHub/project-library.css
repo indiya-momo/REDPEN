@@ -791,23 +791,52 @@
 }
 
 .mypage-proto__modal {
-  width: min(28rem, 100%);
+  position: relative;
+  width: fit-content;
+  max-width: min(28rem, 100%);
   max-height: 90dvh;
   overflow: auto;
   padding: 1.35rem 1.5rem 1.15rem;
   border-radius: 0;
   background: #fff;
   box-shadow: 0 16px 40px rgba(28, 25, 23, 0.14);
+  overflow-x: hidden;
 }
 
 .mypage-proto__modal-head {
   display: flex;
   align-items: flex-start;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 0.75rem;
   margin-bottom: 0.75rem;
   padding-bottom: 0.65rem;
   border-bottom: 1px solid var(--sheet-border);
+}
+
+.mypage-proto__modal-head--drag {
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.mypage-proto__modal--dragging .mypage-proto__modal-head--drag {
+  cursor: grabbing;
+}
+
+.mypage-proto__modal-close {
+  position: absolute;
+  top: 0.85rem;
+  right: 0.85rem;
+  z-index: 2;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
 }
 
 .mypage-proto__modal-eyebrow {
@@ -825,18 +854,6 @@
   font-weight: 700;
 }
 
-.mypage-proto__modal-close {
-  width: 1.75rem;
-  height: 1.75rem;
-  border: none;
-  border-radius: 0;
-  background: transparent;
-  color: var(--color-text-muted);
-  font-size: 1.2rem;
-  line-height: 1;
-  cursor: pointer;
-}
-
 .mypage-proto__modal-close:hover {
   background: var(--color-surface-overlay);
 }
@@ -848,24 +865,137 @@
   color: var(--color-text-muted);
 }
 
-.mypage-proto__share-ledger {
-  margin-top: 0.85rem;
-  padding: 0.65rem 0.15rem 0;
+/* 설명·폴더·버튼 — 나의 프로젝트 폴더와 같은 폭·시작줄 */
+.mypage-proto__share-column {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  margin-inline: auto;
 }
 
+/* 공유 미리보기 — 폴더·구역 안내 */
+.mypage-proto__share-stack {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.85rem;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.mypage-proto__share-stack > .sheet-card,
+.mypage-proto__share-stack > .mypage-proto__share-outline {
+  width: auto;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  margin: 0;
+}
+
+/* 나의 프로젝트 sheet-card와 동일 골격 — 모달에서 폭만 컬럼에 귀속 */
 .mypage-proto__modal .sheet-card {
+  height: auto;
   box-shadow: none;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 
-.mypage-proto__modal .sheet-card__body {
-  border: 1px solid var(--sheet-border);
+.mypage-proto__modal .sheet-card__tabs {
+  /* 라이브러리와 동일 탭이되, 모달 안에서는 본문·아래 안내와 좌우를 맞춤 */
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.mypage-proto__modal .sheet-card__tabs,
+.mypage-proto__modal .sheet-card__body,
+.mypage-proto__modal .sheet-card__head,
+.mypage-proto__modal .sheet-card__title-block,
+.mypage-proto__modal .sheet-card__title-main,
+.mypage-proto__modal .sheet-card__title-line,
+.mypage-proto__modal .sheet-card__sections,
+.mypage-proto__modal .sheet-card__section,
+.mypage-proto__modal .sheet-card__meta-stack {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.mypage-proto__modal .sheet-card__title-text,
+.mypage-proto__modal .sheet-card__section-label,
+.mypage-proto__modal .sheet-card__pillar-summary {
+  overflow-wrap: anywhere;
+  word-break: keep-all;
+}
+
+.mypage-proto__share-outline {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-width: 0;
+}
+
+.mypage-proto__share-outline-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.mypage-proto__share-outline-item {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  padding: 0.45rem 0.55rem;
+  border: 1px solid transparent;
   border-radius: 0;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.35;
+  cursor: default;
+  pointer-events: none;
+}
+
+.mypage-proto__share-outline-item--boxed {
+  color: var(--color-text);
+  border: var(--sheet-border-width) solid var(--sheet-border);
+}
+
+.mypage-proto__share-outline-item--spelling {
+  border-left: 3px solid var(--pillar-spelling);
+}
+
+.mypage-proto__share-outline-item--consistency {
+  border-left: 3px solid var(--pillar-consistency);
+}
+
+.mypage-proto__share-outline-item--auxiliary {
+  border-left: 3px solid var(--pillar-auxiliary);
 }
 
 .mypage-proto__modal-foot {
   margin-top: 1rem;
   padding-top: 0.75rem;
   border-top: 1px solid var(--sheet-border);
+}
+
+.mypage-proto__share-column .mypage-proto__modal-foot .sheet-card__btn {
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .visually-hidden {
