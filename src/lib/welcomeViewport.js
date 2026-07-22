@@ -1,5 +1,5 @@
 /** welcome-pc / welcome-mo 분기와 동일 (WelcomeScreen.jsx) */
-export const WELCOME_MOBILE_MQ = '(max-width: 960px)';
+export const WELCOME_MOBILE_MQ = '(max-width: 600px)';
 
 /** @returns {boolean} */
 export function isWelcomeMobileViewport() {

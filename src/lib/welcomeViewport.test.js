@@ -7,7 +7,7 @@ import {
 
 describe('welcomeViewport', () => {
   it('exports the same breakpoint as welcome screen split', () => {
-    expect(WELCOME_MOBILE_MQ).toBe('(max-width: 960px)');
+    expect(WELCOME_MOBILE_MQ).toBe('(max-width: 600px)');
   });
 
   it('treats narrow viewport as mobile welcome', () => {
