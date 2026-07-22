@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import {
   MAX_PROJECT_FORMAT_LABEL_LENGTH,
   MAX_PROJECT_PILLAR_MEMO_LENGTH,
@@ -6,7 +6,10 @@ import {
   normalizeProjectPillarMemos,
   normalizeProjectTags,
 } from '../lib/projectMeta.js';
-import { buildProjectWorkSummary } from '../presentation/projectWorkSummary.js';
+import {
+  buildProjectWorkSummary,
+  WORK_SUMMARY_NONE_LABEL,
+} from '../presentation/projectWorkSummary.js';
 import ProjectHubCriteriaPanel from './projectHub/ProjectHubCriteriaPanel.jsx';
 import ProjectHubCheckResultsPanel from './projectHub/ProjectHubCheckResultsPanel.jsx';
 import ProjectWorkHistoryChart from './projectHub/ProjectWorkHistoryChart.jsx';
@@ -39,7 +42,8 @@ const PILLAR_MEMO_SECTIONS = {
 const META_AUTOSAVE_MS = 400;
 
 /**
- * 작업 이력 — 마지막 작업·PDF·저장된 검수 결과 (한 카드).
+ * 작업 이력 — 마지막 작업·저장된 검수 결과 (한 카드).
+ * PDF 정보는 프로젝트 정보 탭 첫 줄에 둔다.
  * @param {{
  *   summary: import('../presentation/projectWorkSummary.js').ProjectWorkSummary | null,
  *   uid?: string,
@@ -63,20 +67,12 @@ function ProjectWorkSummaryCard({
           </p>
         </div>
       ) : (
-        [
-          { label: '마지막 작업', value: summary.lastWorked },
-          { label: 'PDF 정보', value: summary.pdf },
-        ].map((row) => (
-          <div
-            key={row.label}
-            className="project-hub-settings__row project-hub-settings__row--readonly"
-          >
-            <div className="project-hub-settings__row-text">
-              <span className="project-hub-settings__row-label">{row.label}</span>
-            </div>
-            <span className="project-hub-settings__value">{row.value}</span>
+        <div className="project-hub-settings__row project-hub-settings__row--readonly">
+          <div className="project-hub-settings__row-text">
+            <span className="project-hub-settings__row-label">마지막 작업</span>
           </div>
-        ))
+          <span className="project-hub-settings__value">{summary.lastWorked}</span>
+        </div>
       )}
       {uid && projectId ? (
         <ProjectHubCheckResultsPanel
@@ -185,6 +181,12 @@ export default function ProjectHubSettingsPanel({
   const markMetaDirty = useCallback(() => {
     metaDirtyRef.current = true;
   }, []);
+
+  const workSummary = useMemo(
+    () => buildProjectWorkSummary(ruleSet?.projectContext),
+    [ruleSet?.projectContext],
+  );
+  const pdfInfoLabel = workSummary?.pdf ?? WORK_SUMMARY_NONE_LABEL;
 
   const buildMetaPayloadFromRef = useCallback(() => {
     const {
@@ -383,6 +385,17 @@ export default function ProjectHubSettingsPanel({
             <div className="project-hub-settings__form">
               <div className="project-hub-settings__group">
                 <div className="project-hub-settings__card">
+                  <div className="project-hub-settings__row project-hub-settings__row--readonly">
+                    <div className="project-hub-settings__row-text">
+                      <span className="project-hub-settings__row-label">
+                        PDF 정보
+                      </span>
+                    </div>
+                    <span className="project-hub-settings__value">
+                      {pdfInfoLabel}
+                    </span>
+                  </div>
+
                   <div className="project-hub-settings__row">
                     <div className="project-hub-settings__row-text">
                       <label
@@ -499,6 +512,7 @@ export default function ProjectHubSettingsPanel({
                   onStartWork={onStartWork}
                   editorReviewCount={card.counts?.editorReview ?? 0}
                   spellingRuleCount={card.counts?.spelling ?? 0}
+                  loanwordCount={card.counts?.loanword ?? 0}
                 />
                 {pillarMemoConfig ? (
                   <div className="project-hub-settings__row project-hub-settings__row--memo project-hub-settings__pillar-memo">
@@ -534,7 +548,7 @@ export default function ProjectHubSettingsPanel({
           {activeSection === 'actions' ? (
             <div className="project-hub-settings__group">
               <ProjectWorkSummaryCard
-                summary={buildProjectWorkSummary(ruleSet?.projectContext)}
+                summary={workSummary}
                 uid={uid}
                 projectId={card?.id}
                 projectName={card.title || ruleSet?.name || ''}

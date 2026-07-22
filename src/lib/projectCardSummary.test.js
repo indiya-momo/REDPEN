@@ -26,6 +26,7 @@ describe('buildProjectCardSummary', () => {
     expect(summary.auxiliary).toBe(PROJECT_CARD_NONE_LABEL);
     expect(typeof summary.spelling.editorReview).toBe('number');
     expect(typeof summary.spelling.spelling).toBe('number');
+    expect(typeof summary.spelling.loanword).toBe('number');
   });
 
   it('선택하지 않은(비활성) 항목은 대표단어·개수에서 제외한다', () => {

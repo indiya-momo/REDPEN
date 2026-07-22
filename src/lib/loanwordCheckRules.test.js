@@ -38,7 +38,7 @@ describe('외래어 표기법 규칙 분류', () => {
   });
 
   it('구분 라벨·카테고리 상수', () => {
-    expect(LOANWORD_FEATURE_LABEL).toBe('자주 틀리는 외래어 표기법');
+    expect(LOANWORD_FEATURE_LABEL).toBe('외래어 표기법');
     expect(LOANWORD_CATEGORY).toBe('loanword');
   });
 });

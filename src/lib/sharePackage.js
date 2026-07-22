@@ -107,6 +107,24 @@ export function sanitizeCheckResultForShare(raw) {
 }
 
 /**
+ * 공유 수신 화면 eyebrow용 — `YY.MM.DD.HH:mm 공유`
+ * @param {unknown} createdAtMs
+ * @returns {string}
+ */
+export function formatShareIssuedLabel(createdAtMs) {
+  const n = Number(createdAtMs);
+  if (!Number.isFinite(n) || n <= 0) return '';
+  const d = new Date(n);
+  if (Number.isNaN(d.getTime())) return '';
+  const yy = String(d.getFullYear() % 100).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  const hh = String(d.getHours()).padStart(2, '0');
+  const mi = String(d.getMinutes()).padStart(2, '0');
+  return `${yy}.${mm}.${dd}.${hh}:${mi} 공유`;
+}
+
+/**
  * @param {{
  *   ruleSet: import('./ruleSetsStorage.js').RuleSet,
  *   checkResults?: Array<Record<string, unknown>>,

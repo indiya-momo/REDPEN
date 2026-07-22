@@ -18,6 +18,9 @@ import ProjectHubCriteriaToggleSection from './ProjectHubCriteriaToggleSection.j
  *     cautionEnabled?: Record<string, boolean>,
  *   }) => void | Promise<void>,
  *   onStartWork?: () => void,
+ *   editorReviewCount?: number,
+ *   spellingRuleCount?: number,
+ *   loanwordCount?: number,
  * }} props
  */
 export default function ProjectHubCriteriaPanel({
@@ -28,6 +31,7 @@ export default function ProjectHubCriteriaPanel({
   onStartWork,
   editorReviewCount = 0,
   spellingRuleCount = 0,
+  loanwordCount = 0,
 }) {
   const { customRules, applyCriteriaPatch } = useProjectHubCriteriaMutations({
     ruleSet,
@@ -52,6 +56,7 @@ export default function ProjectHubCriteriaPanel({
         onStartWork={onStartWork}
         editorReviewCount={editorReviewCount}
         spellingRuleCount={spellingRuleCount}
+        loanwordCount={loanwordCount}
       />
     );
   }

@@ -735,7 +735,7 @@ export default function MyPageWindowScreen({ authSession, authReady }) {
     <div className={`mypage${isProjectHubEditor ? ' mypage-proto' : ''}`}>
       <aside className="mypage__sidebar" aria-label="마이페이지 메뉴">
         <header className="mypage__sidebar-head">
-          <p className="mypage__eyebrow">MY ACCOUNT</p>
+          <p className="mypage__eyebrow">MY PAGE</p>
           <div className="mypage__title-row">
             <button
               type="button"

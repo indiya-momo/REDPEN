@@ -7,8 +7,10 @@ import {
 } from '../../lib/projectWorkHistory.js';
 import {
   EDITOR_REVIEW_BADGE_LABEL,
+  SPELLING_RULE_BADGE_LABEL,
 } from '../../lib/checkResultSummaryFormat.js';
 import { LOANWORD_FEATURE_LABEL } from '../../lib/loanwordCheckRules.js';
+import { resultPillarToneClass } from '../../lib/resultPillarTone.js';
 import {
   buildWorkHistoryConsistencyCriteria,
   WORK_HISTORY_CONSISTENCY_GROUPS,
@@ -46,6 +48,7 @@ function formatSessionAxisTick(iso) {
 /**
  * @param {{
  *   label: string,
+ *   badgeTone?: import('../../lib/resultPillarTone.js').ResultBadgeTone,
  *   subLabel?: boolean,
  *   values: number[],
  *   sessionAts?: string[],
@@ -58,6 +61,7 @@ function formatSessionAxisTick(iso) {
  */
 function SparklineRow({
   label,
+  badgeTone,
   subLabel = false,
   values,
   sessionAts = [],
@@ -74,13 +78,23 @@ function SparklineRow({
     <div
       className={`work-history-panel__spark-row ${colorClass}${
         subLabel ? ' work-history-panel__spark-row--sub' : ''
-      }${muted ? ' work-history-panel__spark-row--muted' : ''}`}
+      }${muted ? ' work-history-panel__spark-row--muted' : ''}${
+        badgeTone ? ' work-history-panel__spark-row--badge' : ''
+      }`}
     >
       <span
         className="work-history-panel__spark-label"
         aria-hidden={hideLabel ? true : undefined}
       >
-        {hideLabel ? null : label}
+        {hideLabel ? null : badgeTone ? (
+          <span
+            className={`results-header-badge ${resultPillarToneClass(badgeTone)}`}
+          >
+            {label}
+          </span>
+        ) : (
+          label
+        )}
       </span>
       <div className="work-history-panel__spark-plot">
         <svg
@@ -541,6 +555,7 @@ export default function ProjectWorkHistoryChart({
         <div className="work-history-panel__block-body">
           <SparklineRow
             label={EDITOR_REVIEW_BADGE_LABEL}
+            badgeTone="spelling-caution"
             subLabel
             values={spellingEditorValues}
             sessionAts={sessionAts}
@@ -550,7 +565,8 @@ export default function ProjectWorkHistoryChart({
             muted
           />
           <SparklineRow
-            label="맞춤법"
+            label={SPELLING_RULE_BADGE_LABEL}
+            badgeTone="spelling-builtin"
             subLabel
             values={spellingBuiltinValues}
             sessionAts={sessionAts}
@@ -560,6 +576,7 @@ export default function ProjectWorkHistoryChart({
           />
           <SparklineRow
             label={LOANWORD_FEATURE_LABEL}
+            badgeTone="spelling-loanword"
             subLabel
             values={spellingLoanwordValues}
             sessionAts={sessionAts}

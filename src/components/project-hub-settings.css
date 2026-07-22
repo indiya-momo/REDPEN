@@ -193,6 +193,38 @@
   font-size: 0.84rem;
 }
 
+.project-hub-settings__criteria-stats.project-hub-settings__criteria-stats--stack {
+  --criteria-stat-badge-col: 8.75rem;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 0.45em;
+  margin: 0;
+}
+
+.project-hub-settings__criteria-stats--stack .project-hub-settings__criteria-stat {
+  display: grid;
+  grid-template-columns: var(--criteria-stat-badge-col) auto;
+  column-gap: 0.4em;
+  align-items: center;
+  width: max-content;
+  max-width: 100%;
+}
+
+.project-hub-settings__criteria-stats--stack .project-hub-settings__criteria-stat .results-header-badge {
+  justify-self: start;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.project-hub-settings__criteria-stats--stack .results-header__stat-count {
+  justify-self: start;
+  white-space: nowrap;
+}
+
 .project-hub-settings__criteria-title {
   margin: 0;
   font-size: var(--project-hub-criteria-title-font-size);
@@ -671,9 +703,25 @@
   color: inherit;
 }
 
+.work-history-panel__spark-row--badge {
+  grid-template-columns: 10.5rem minmax(0, 1fr) 2.4rem;
+}
+
 .work-history-panel__spark-row--sub .work-history-panel__spark-label {
   font-size: 0.74rem;
   font-weight: 600;
+}
+
+.work-history-panel__spark-row--badge .work-history-panel__spark-label {
+  display: flex;
+  align-items: center;
+  line-height: 1.2;
+}
+
+.work-history-panel__spark-row--badge .results-header-badge {
+  max-width: 100%;
+  white-space: normal;
+  text-align: left;
 }
 
 .work-history-panel__spark-row--spelling {

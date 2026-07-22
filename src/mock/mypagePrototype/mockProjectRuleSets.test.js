@@ -18,7 +18,7 @@ describe('MOCK_PROJECT_RULE_SETS', () => {
 
     const card = buildProjectCardViewModelFromRuleSet(set, { isActive: true });
     expect(card.counts.auxiliary).toBe(8);
-    expect(card.counts.editorReview + card.counts.spelling).toBe(15);
+    expect(card.counts.editorReview + card.counts.spelling + card.counts.loanword).toBe(15);
     expect(card.counts.find).toBe(4);
     expect(card.counts.commonString).toBe(1);
     expect(listPhraseSlotEntries(set.customRules)).toHaveLength(1);

@@ -1,4 +1,5 @@
 import { resultPillarToneClass } from '../../lib/resultPillarTone.js';
+import { LOANWORD_FEATURE_LABEL } from '../../lib/loanwordCheckRules.js';
 
 /**
  * @param {{
@@ -9,7 +10,7 @@ import { resultPillarToneClass } from '../../lib/resultPillarTone.js';
  */
 function CriteriaStatBadge({ badge, count, tone }) {
   return (
-    <span className="results-header__stat">
+    <span className="results-header__stat project-hub-settings__criteria-stat">
       <span className={`results-header-badge ${resultPillarToneClass(tone)}`}>
         {badge}
       </span>
@@ -23,12 +24,14 @@ function CriteriaStatBadge({ badge, count, tone }) {
  *   onStartWork?: () => void,
  *   editorReviewCount?: number,
  *   spellingRuleCount?: number,
+ *   loanwordCount?: number,
  * }} props
  */
 export default function ProjectHubCriteriaSpellingSection({
   onStartWork,
   editorReviewCount = 0,
   spellingRuleCount = 0,
+  loanwordCount = 0,
 }) {
   return (
     <div className="project-hub-settings__criteria project-hub-settings__criteria--single">
@@ -41,7 +44,7 @@ export default function ProjectHubCriteriaSpellingSection({
             맞춤법
           </h3>
           <div
-            className="project-hub-settings__criteria-stats results-header__stats"
+            className="project-hub-settings__criteria-stats results-header__stats project-hub-settings__criteria-stats--stack"
             aria-label="맞춤법 항목 수"
           >
             <CriteriaStatBadge
@@ -53,6 +56,11 @@ export default function ProjectHubCriteriaSpellingSection({
               badge="맞춤법 규칙"
               count={spellingRuleCount}
               tone="spelling-builtin"
+            />
+            <CriteriaStatBadge
+              badge={LOANWORD_FEATURE_LABEL}
+              count={loanwordCount}
+              tone="spelling-loanword"
             />
           </div>
           <div className="project-hub-settings__criteria-actions">

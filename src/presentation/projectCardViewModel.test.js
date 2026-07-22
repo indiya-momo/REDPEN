@@ -26,6 +26,7 @@ describe('projectCardViewModel helpers', () => {
     counts: {
       editorReview: 0,
       spelling: 0,
+      loanword: 0,
       find: 0,
       commonString: 0,
       auxiliary: 0,

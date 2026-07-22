@@ -11,7 +11,7 @@
  */
 
 /** 구분(카테고리) 표시 이름 — 패널 제목·결과 뱃지·엑셀 구분 열 공용 */
-export const LOANWORD_FEATURE_LABEL = '자주 틀리는 외래어 표기법';
+export const LOANWORD_FEATURE_LABEL = '외래어 표기법';
 
 /** GroupedResult.category 값 */
 export const LOANWORD_CATEGORY = 'loanword';

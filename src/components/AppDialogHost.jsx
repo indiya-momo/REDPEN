@@ -14,6 +14,7 @@ import {
  *   title?: string,
  *   message?: string,
  *   messageNode?: ReactNode,
+ *   copyableUrl?: string,
  *   confirmLabel?: string,
  *   cancelLabel?: string,
  *   showGuideHand?: boolean,
@@ -35,6 +36,7 @@ export default function AppDialogHost() {
           title: opts.title || '안내',
           message: opts.message ?? '',
           messageNode: opts.messageNode,
+          copyableUrl: opts.copyableUrl,
           confirmLabel: opts.confirmLabel || '확인',
           showGuideHand: Boolean(opts.showGuideHand),
         });
@@ -76,6 +78,7 @@ export default function AppDialogHost() {
       title={state.title || '안내'}
       message={state.message}
       messageNode={state.messageNode}
+      copyableUrl={state.copyableUrl}
       confirmLabel={state.confirmLabel}
       cancelLabel={state.cancelLabel}
       showGuideHand={Boolean(state.showGuideHand)}
