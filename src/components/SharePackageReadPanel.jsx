@@ -15,7 +15,10 @@ import {
 import { PROJECT_HUB_TOGGLE_CRITERIA } from '../lib/projectHubCriteriaSections.js';
 import { resultPillarToneClass } from '../lib/resultPillarTone.js';
 import { LOANWORD_FEATURE_LABEL } from '../lib/loanwordCheckRules.js';
-import { buildProjectWorkSummary } from '../presentation/projectWorkSummary.js';
+import {
+  buildProjectWorkSummary,
+  WORK_SUMMARY_NONE_LABEL,
+} from '../presentation/projectWorkSummary.js';
 import './project-hub-settings.css';
 import './share-package-read.css';
 
@@ -320,13 +323,8 @@ export default function SharePackageReadPanel({
 
           {section === 'actions' ? (
             <div className="project-hub-settings__card project-hub-settings__card--work-summary">
-              {!workSummary ? (
-                <div className="project-hub-settings__row project-hub-settings__row--readonly">
-                  <p className="project-hub-settings__row-desc">
-                    아직 작업 기록이 없습니다.
-                  </p>
-                </div>
-              ) : (
+              {workSummary?.lastWorked &&
+              workSummary.lastWorked !== WORK_SUMMARY_NONE_LABEL ? (
                 <div className="project-hub-settings__row project-hub-settings__row--readonly">
                   <div className="project-hub-settings__row-text">
                     <span className="project-hub-settings__row-label">
@@ -337,7 +335,7 @@ export default function SharePackageReadPanel({
                     {workSummary.lastWorked}
                   </span>
                 </div>
-              )}
+              ) : null}
 
               <div className="project-hub-settings__check-results-embedded">
                 <div className="project-hub-settings__row project-hub-settings__row--readonly project-hub-settings__row--check-results-head">

@@ -5,7 +5,6 @@ import {
   formatRuleSetSummary,
   loadActiveSetId,
   loadRuleSets,
-  migrateLegacyRuleSetsToUid,
   ruleSetsStorageKey,
   RULE_SETS_ACTIVE_KEY,
   RULE_SETS_LOCAL_SYNC_EVENT,
@@ -162,7 +161,7 @@ describe('uid-scoped rule set storage', () => {
     expect(loadActiveSetId(uidB)).toBe('set_b');
   });
 
-  it('legacy 공용 키를 uid 키로 1회 이전한다', () => {
+  it('uid 키가 비어 있어도 legacy 공용 잔여를 붙이지 않는다', () => {
     stubStorage();
     const legacySets = [
       {
@@ -176,16 +175,13 @@ describe('uid-scoped rule set storage', () => {
     store.set(RULE_SETS_STORAGE_KEY, JSON.stringify(legacySets));
     store.set(RULE_SETS_ACTIVE_KEY, 'set_legacy');
 
-    const uid = 'user_migrate';
-    const migrated = migrateLegacyRuleSetsToUid(uid);
-
-    expect(migrated[0].name).toBe('이전 데이터');
-    expect(store.has(ruleSetsStorageKey(uid))).toBe(true);
-    expect(loadActiveSetId(uid)).toBe('set_legacy');
-    expect(loadRuleSets(uid)[0].id).toBe('set_legacy');
+    const uid = 'user_new_signup';
+    expect(loadRuleSets(uid)).toEqual([]);
+    expect(store.has(ruleSetsStorageKey(uid))).toBe(false);
+    expect(loadActiveSetId(uid)).toBe(null);
   });
 
-  it('uid 키가 이미 있으면 legacy를 다시 이전하지 않는다', () => {
+  it('uid 키가 있으면 그 데이터만 읽고 legacy는 무시한다', () => {
     stubStorage();
     const uid = 'user_existing';
     const scopedSets = [
@@ -197,21 +193,22 @@ describe('uid-scoped rule set storage', () => {
         customRules: [],
       },
     ];
-    store.set(RULE_SETS_STORAGE_KEY, JSON.stringify([
-      {
-        id: 'set_legacy',
-        name: 'legacy',
-        builtInEnabled: {},
-        cautionEnabled: {},
-        customRules: [],
-      },
-    ]));
+    store.set(
+      RULE_SETS_STORAGE_KEY,
+      JSON.stringify([
+        {
+          id: 'set_legacy',
+          name: 'legacy',
+          builtInEnabled: {},
+          cautionEnabled: {},
+          customRules: [],
+        },
+      ]),
+    );
     store.set(ruleSetsStorageKey(uid), JSON.stringify(scopedSets));
 
-    const migrated = migrateLegacyRuleSetsToUid(uid);
-
-    expect(migrated[0].name).toBe('uid 전용');
-    expect(migrated[0].id).toBe('set_scoped');
+    expect(loadRuleSets(uid)[0].name).toBe('uid 전용');
+    expect(loadRuleSets(uid)[0].id).toBe('set_scoped');
   });
 });
 
