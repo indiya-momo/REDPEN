@@ -1,5 +1,5 @@
-import { useCallback, useState } from 'react';
-import { BookOpen, Copy, Lock } from 'lucide-react';
+import { useState } from 'react';
+import { BookOpen, Lock } from 'lucide-react';
 import AppVersionBadge from '../../components/AppVersionBadge.jsx';
 import WelcomeMoMomoHero from './WelcomeMoMomoHero.jsx';
 import {
@@ -20,47 +20,10 @@ const PDF_BRIDGE_MOMO = publicAssetUrl('momo/pdf-full.png');
  * 모바일 대문 — welcome-mo 전용 (PC와 마크업·CSS 공유 없음) — git 6b26b31
  * @param {{ onStart?: () => void, onOpenRoom: () => void }} props
  */
-async function copyTextToClipboard(text) {
-  if (navigator.clipboard?.writeText) {
-    await navigator.clipboard.writeText(text);
-    return;
-  }
-  const textarea = document.createElement('textarea');
-  textarea.value = text;
-  textarea.setAttribute('readonly', '');
-  textarea.style.position = 'fixed';
-  textarea.style.left = '-9999px';
-  document.body.appendChild(textarea);
-  textarea.select();
-  const ok = document.execCommand('copy');
-  document.body.removeChild(textarea);
-  if (!ok) throw new Error('copy failed');
-}
-
 export default function WelcomeMoScreen({ onOpenRoom }) {
   const [analyticsOptedOut, setAnalyticsOptedOut] = useState(() =>
     isAnalyticsOptedOut(),
   );
-  const [pcLinkCopyState, setPcLinkCopyState] = useState('idle');
-
-  const handleCopyPcLink = useCallback(async () => {
-    const url = window.location.href;
-    try {
-      await copyTextToClipboard(url);
-      setPcLinkCopyState('ok');
-      window.setTimeout(() => setPcLinkCopyState('idle'), 2500);
-    } catch {
-      setPcLinkCopyState('error');
-      window.setTimeout(() => setPcLinkCopyState('idle'), 3000);
-    }
-  }, []);
-
-  const pcLinkCopyLabel =
-    pcLinkCopyState === 'ok'
-      ? '복사했습니다'
-      : pcLinkCopyState === 'error'
-        ? '복사에 실패했습니다'
-        : '링크 복사';
 
   return (
     <div className="welcome-mo">
@@ -87,17 +50,10 @@ export default function WelcomeMoScreen({ onOpenRoom }) {
 
         <aside className="welcome-mo__pc-banner" aria-label="PC 이용 안내">
           <p className="welcome-mo__pc-banner-text">
-            실제 검수는 PC 브라우저에서만 가능합니다
+            검수는 PC 브라우저에서만 가능합니다
+            <br />
+            PC에서는 브라우저 크기를 키워 주세요
           </p>
-          <button
-            type="button"
-            className="welcome-mo__pc-banner-copy"
-            onClick={handleCopyPcLink}
-            aria-live="polite"
-          >
-            <Copy size={16} strokeWidth={2} aria-hidden />
-            {pcLinkCopyLabel}
-          </button>
         </aside>
 
         <div className="welcome-mo__portrait">

@@ -1,5 +1,5 @@
 /**
- * PC 대문(960px+): 서비스 설명, Google 로그인 CTA, 검수 시작.
+ * PC 대문(600px+): 서비스 설명, Google 로그인 CTA, 검수 시작.
  * 로그인 후 온보딩 미완료면 WelcomeProfileOnboarding, 완료면 onStart로 main.
  * App이 내려준 onGoogleSignIn/onStart/authSession만 사용 (모바일 분기 없음).
  */

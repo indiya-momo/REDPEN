@@ -1,5 +1,5 @@
 /**
- * 뷰포트 960px 기준 PC·모바일 완전 분리 렌더 (이 worktree는 pc만 유지보수).
+ * 뷰포트 600px 기준 PC·모바일 완전 분리 렌더 (이 worktree는 pc만 유지보수).
  * props를 WelcomePcScreen 또는 WelcomeMoScreen에 그대로 전달.
  * App과 MainScreen 사이의 「대문」 단일 진입점.
  */
