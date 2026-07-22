@@ -7,6 +7,7 @@ import {
   isSharePackageExpired,
   omitUndefinedDeep,
   planApplySharePackage,
+  formatShareIssuedLabel,
   sanitizeCheckResultForShare,
 } from './sharePackage.js';
 
@@ -183,5 +184,12 @@ describe('sharePackage', () => {
 
   it('buildSharePackageUrl sets share query', () => {
     expect(buildSharePackageUrl('abc123')).toContain('share=abc123');
+  });
+
+  it('formatShareIssuedLabel', () => {
+    expect(formatShareIssuedLabel(0)).toBe('');
+    expect(formatShareIssuedLabel(null)).toBe('');
+    const label = formatShareIssuedLabel(new Date(2026, 6, 21, 11, 13).getTime());
+    expect(label).toBe('26.07.21.11:13 공유');
   });
 });

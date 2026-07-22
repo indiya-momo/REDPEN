@@ -3983,17 +3983,33 @@
 .panel-left .panel-criteria-source-link {
   flex-shrink: 0;
   margin-left: auto;
-  font-size: 0.504em;
+  padding: 0.12em 0.35em;
+  border-radius: 3px;
+  font-size: 0.554em;
   font-weight: 500;
   line-height: inherit;
   color: var(--c-soft);
   text-decoration: none;
   white-space: nowrap;
+  cursor: pointer;
+  transition:
+    color 0.12s ease,
+    background-color 0.12s ease,
+    text-decoration-color 0.12s ease;
 }
 
 .panel-left .panel-criteria-source-link:hover {
   color: var(--c-ink);
-  text-decoration: none;
+  background-color: rgba(15, 23, 42, 0.08);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.panel-left .panel-criteria-source-link:focus-visible {
+  color: var(--c-ink);
+  background-color: rgba(15, 23, 42, 0.1);
+  outline: 2px solid rgba(15, 23, 42, 0.35);
+  outline-offset: 1px;
 }
 
 .panel-left .loanword-converter__basis-link {

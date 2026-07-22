@@ -19,6 +19,7 @@ import { MAX_PROJECT_TAGS } from '../lib/projectMeta.js';
  * @typedef {{
  *   editorReview: number,
  *   spelling: number,
+ *   loanword: number,
  *   find: number,
  *   commonString: number,
  *   auxiliary: number,
@@ -171,7 +172,11 @@ const PILLAR_META = [
 /** @param {ProjectCardViewModel} card @param {ProjectCardPillarKey} key */
 function pillarCount(card, key) {
   if (key === 'spelling') {
-    return card.counts.editorReview + card.counts.spelling;
+    return (
+      card.counts.editorReview +
+      card.counts.spelling +
+      (card.counts.loanword ?? 0)
+    );
   }
   if (key === 'consistency') {
     return card.counts.find + card.counts.commonString;

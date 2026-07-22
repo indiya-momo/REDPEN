@@ -1,5 +1,5 @@
-import { Fragment, useEffect, useId, useRef } from 'react';
-import { X } from 'lucide-react';
+import { Fragment, useEffect, useId, useRef, useState } from 'react';
+import { Copy, X } from 'lucide-react';
 import './app-dialog.css';
 
 /** ≪프로젝트명≫ 구간을 고딕 강조로 렌더 */
@@ -46,6 +46,7 @@ function renderDialogMessage(message) {
  *   title: string,
  *   message?: string,
  *   messageNode?: import('react').ReactNode,
+ *   copyableUrl?: string,
  *   mode?: 'alert' | 'confirm',
  *   confirmLabel?: string,
  *   cancelLabel?: string,
@@ -60,6 +61,7 @@ export default function AppDialog({
   title,
   message = '',
   messageNode,
+  copyableUrl = '',
   mode = 'alert',
   confirmLabel = '확인',
   cancelLabel = '취소',
@@ -71,6 +73,10 @@ export default function AppDialog({
   const titleId = useId();
   const dialogRef = useRef(/** @type {HTMLDialogElement | null} */ (null));
   const isConfirm = mode === 'confirm';
+  const [copyState, setCopyState] = useState(
+    /** @type {'idle' | 'ok' | 'error'} */ ('idle'),
+  );
+  const url = String(copyableUrl ?? '').trim();
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -79,9 +85,32 @@ export default function AppDialog({
     if (!open && dialog.open) dialog.close();
   }, [open]);
 
+  useEffect(() => {
+    if (!open) setCopyState('idle');
+  }, [open]);
+
   const handleClose = onClose ?? onConfirm;
   /** 손 안내가 있으면 확인 버튼만으로 진행 (X·Esc로 건너뛰기 금지) */
   const requireConfirmClick = showGuideHand;
+
+  const handleCopyUrl = async () => {
+    if (!url) return;
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopyState('ok');
+      window.setTimeout(() => setCopyState('idle'), 2000);
+    } catch {
+      setCopyState('error');
+      window.setTimeout(() => setCopyState('idle'), 2500);
+    }
+  };
+
+  const copyLabel =
+    copyState === 'ok'
+      ? '복사됨'
+      : copyState === 'error'
+        ? '실패'
+        : '링크 복사';
 
   return (
     <dialog
@@ -132,6 +161,23 @@ export default function AppDialog({
         ) : (
           <p className="app-dialog__message">{renderDialogMessage(message)}</p>
         )}
+
+        {url ? (
+          <div className="app-dialog__link-row">
+            <code className="app-dialog__link-url" title={url}>
+              {url}
+            </code>
+            <button
+              type="button"
+              className="app-dialog__link-copy"
+              onClick={() => void handleCopyUrl()}
+              aria-label={copyLabel}
+              title={copyLabel}
+            >
+              <Copy size={16} strokeWidth={2} aria-hidden />
+            </button>
+          </div>
+        ) : null}
 
         <footer
           className={`app-dialog__footer${isConfirm ? ' app-dialog__footer--confirm' : ''}`}

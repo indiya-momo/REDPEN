@@ -9,6 +9,7 @@ import { getSharePackageCloud } from '../lib/sharePackageCloud.js';
 import {
   buildRuleSetFromSharePackage,
   planApplySharePackage,
+  formatShareIssuedLabel,
 } from '../lib/sharePackage.js';
 import {
   loadRuleSets,
@@ -61,8 +62,8 @@ export default function SharePackageScreen({
           result.reason === 'expired'
             ? '이 공유 링크는 만료되었습니다.'
             : result.reason === 'not_found'
-              ? '공유 패키지를 찾을 수 없습니다.'
-              : '공유 패키지를 불러오지 못했습니다.';
+              ? '공유 프로젝트를 찾을 수 없습니다.'
+              : '공유 프로젝트를 불러오지 못했습니다.';
         setError(msg);
         setPkg(null);
         setLoading(false);
@@ -116,7 +117,7 @@ export default function SharePackageScreen({
     await showAppAlert({
       title: '로그인이 필요합니다',
       message:
-        '공유 링크가 있는 사용자는 프로젝트 정보를 볼 수 있습니다. 인디야 유료회원은 프로젝트를 적용하여 작업할 수 있습니다.',
+        '공유 링크가 있는 사용자는 프로젝트 정보를 볼 수 있으며\n인디야 유료회원은 프로젝트를 적용하여 작업할 수 있습니다.',
     });
     try {
       await signInWithGoogle();
@@ -193,23 +194,29 @@ export default function SharePackageScreen({
   }, [pkg, authReady, authUid, authEmail, onApplied]);
 
   const title = String(pkg?.meta?.title ?? pkg?.sourceName ?? '').trim();
+  const issuedLabel = formatShareIssuedLabel(pkg?.createdAt);
 
   return (
     <div className="share-package-screen">
       <header className="share-package-screen__head">
-        <p className="share-package-screen__eyebrow">공유 패키지</p>
+        <p className="share-package-screen__eyebrow">
+          <span className="share-package-screen__eyebrow-label">공유 프로젝트</span>
+          {issuedLabel ? (
+            <span className="share-package-screen__eyebrow-when">{issuedLabel}</span>
+          ) : null}
+        </p>
         <h1 className="share-package-screen__title">
           {loading ? '불러오는 중…' : title ? `《${title}》` : '공유 기준'}
         </h1>
         <p className="share-package-screen__note">
-          공유 링크가 있는 사용자는 프로젝트 정보를 볼 수 있습니다. 인디야
-          유료회원은 프로젝트를 적용하여 작업할 수 있습니다. 원고 PDF는
-          포함되지 않습니다.
+          공유 링크가 있는 사용자는 프로젝트 정보를 볼 수 있으며
+          <br />
+          인디야 유료회원은 프로젝트를 적용하여 작업할 수 있습니다
         </p>
       </header>
 
       {loading ? (
-        <p role="status">공유 패키지를 확인하는 중…</p>
+        <p role="status">공유 프로젝트를 확인하는 중…</p>
       ) : error ? (
         <p className="share-package-screen__error" role="alert">
           {error}

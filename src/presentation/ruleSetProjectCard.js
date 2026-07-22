@@ -88,6 +88,7 @@ function buildAuxiliaryChips(customRules) {
  * @param {{
  *   editorReview: number,
  *   spelling: number,
+ *   loanword?: number,
  *   find: number,
  *   commonString: number,
  *   auxiliary: number,
@@ -97,7 +98,8 @@ function buildAuxiliaryChips(customRules) {
 function buildHeadline(counts, excludePhrases) {
   /** @type {string[]} */
   const parts = [];
-  const spellTotal = counts.editorReview + counts.spelling;
+  const spellTotal =
+    counts.editorReview + counts.spelling + (counts.loanword ?? 0);
   if (spellTotal > 0) parts.push(`맞춤법 ${spellTotal}건`);
   const consistencyTotal = counts.find + counts.commonString;
   if (consistencyTotal > 0) parts.push(`일관성 ${consistencyTotal}건`);
@@ -147,6 +149,7 @@ export function buildProjectCardViewModelFromRuleSet(set, options = {}) {
   const counts = {
     editorReview: summary.spelling.editorReview,
     spelling: summary.spelling.spelling,
+    loanword: summary.spelling.loanword,
     find: consistencyCounts.find,
     commonString: consistencyCounts.commonString,
     auxiliary: auxiliaryWords.length,

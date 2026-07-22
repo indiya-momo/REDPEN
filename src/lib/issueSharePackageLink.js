@@ -60,15 +60,14 @@ export async function issueSharePackageLink({ uid, ruleSet }) {
     await showAppAlert({
       title: '공유 링크가 복사되었습니다',
       message:
-        '공유 링크가 있는 사용자는 프로젝트 정보를 볼 수 있습니다. 인디야 유료회원은 프로젝트를 적용하여 작업할 수 있습니다.\n\n' +
-        result.url,
+        '공유 링크가 있는 사용자는 프로젝트 정보를 볼 수 있으며\n인디야 유료회원은 프로젝트를 적용하여 작업할 수 있습니다.',
+      copyableUrl: result.url,
     });
   } catch {
     await showAppAlert({
       title: '공유 링크',
-      message:
-        '클립보드 복사에 실패했습니다. 아래 주소를 직접 복사해 주세요.\n\n' +
-        result.url,
+      message: '클립보드 복사에 실패했습니다. 아래 주소를 복사해 주세요.',
+      copyableUrl: result.url,
     });
   }
   return { ok: true };

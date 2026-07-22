@@ -1,5 +1,6 @@
 import {
-  countBuiltInActiveRules,
+  countLoanwordActiveRules,
+  countSpellingRuleActiveRules,
   countSpacingReviewActiveRules,
 } from './activeRuleCount.js';
 import {
@@ -52,7 +53,7 @@ function formatEntrySummary(words) {
 /**
  * @typedef {{
  *   savedDate: string,
- *   spelling: { editorReview: number, spelling: number },
+ *   spelling: { editorReview: number, spelling: number, loanword: number },
  *   consistency: { find: string, commonString: string, excludeWords: string },
  *   auxiliary: string,
  * }} ProjectCardSummary
@@ -87,7 +88,10 @@ export function buildProjectCardSummary(set) {
       editorReview: countSpacingReviewActiveRules({
         cautionEnabled: set?.cautionEnabled,
       }),
-      spelling: countBuiltInActiveRules({
+      spelling: countSpellingRuleActiveRules({
+        builtInEnabled: set?.builtInEnabled,
+      }),
+      loanword: countLoanwordActiveRules({
         builtInEnabled: set?.builtInEnabled,
       }),
     },

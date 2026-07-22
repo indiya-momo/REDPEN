@@ -162,26 +162,40 @@ export default function SharePreviewModal({
         </button>
 
         <div className="mypage-proto__share-body">
-          <header
-            className="mypage-proto__modal-head mypage-proto__modal-head--drag"
-            onPointerDown={onDragPointerDown}
-            onPointerMove={onDragPointerMove}
-            onPointerUp={endDrag}
-            onPointerCancel={endDrag}
-          >
-            <h2 id="share-preview-title" className="mypage-proto__modal-title">
-              프로젝트 공유 미리보기
-            </h2>
-          </header>
+          <div className="mypage-proto__share-hero">
+            <header
+              className="mypage-proto__modal-head mypage-proto__modal-head--drag mypage-proto__modal-head--share"
+              onPointerDown={onDragPointerDown}
+              onPointerMove={onDragPointerMove}
+              onPointerUp={endDrag}
+              onPointerCancel={endDrag}
+            >
+              <h2 id="share-preview-title" className="mypage-proto__modal-title">
+                프로젝트 공유 미리보기
+              </h2>
+            </header>
 
-          <p className="mypage-proto__share-note">
-            공유 링크가 있는 사용자는 프로젝트 정보를 볼 수 있습니다. 인디야
-            유료회원은 프로젝트를 적용하여 작업할 수 있습니다. 원고 PDF는
-            포함되지 않습니다.
-          </p>
+            <p className="mypage-proto__share-note">
+              공유 링크가 있는 사용자는 프로젝트 정보를 볼 수 있으며
+              <br />
+              인디야 유료회원은 프로젝트를 적용하여 작업할 수 있습니다
+            </p>
 
-          <div className="mypage-proto__share-folder" style={folderStyle}>
-            <ProjectLibraryCard card={card} readOnly />
+            <div className="mypage-proto__share-stack" style={folderStyle}>
+              <div className="mypage-proto__share-folder">
+                <ProjectLibraryCard card={card} readOnly />
+              </div>
+
+              <button
+                type="button"
+                className="mypage-proto__share-create-btn"
+                disabled={!onCreateShareLink || linkBusy}
+                aria-busy={linkBusy}
+                onClick={() => void handleCreateLink()}
+              >
+                {linkBusy ? '만드는 중…' : '프로젝트 링크 공유하기'}
+              </button>
+            </div>
           </div>
 
           {ruleSet ? (
@@ -197,18 +211,6 @@ export default function SharePreviewModal({
               프로젝트 기준을 불러올 수 없습니다.
             </p>
           )}
-
-          <footer className="mypage-proto__modal-foot">
-            <button
-              type="button"
-              className="sheet-card__btn sheet-card__btn--primary"
-              disabled={!onCreateShareLink || linkBusy}
-              aria-busy={linkBusy}
-              onClick={() => void handleCreateLink()}
-            >
-              {linkBusy ? '만드는 중…' : '공유 링크 만들기'}
-            </button>
-          </footer>
         </div>
       </div>
     </div>

@@ -12,9 +12,22 @@
 }
 
 .share-package-screen__eyebrow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.65rem 1rem;
   margin: 0 0 0.35rem;
   font-size: 0.8rem;
   color: #8d6e63;
+}
+
+.share-package-screen__eyebrow-label {
+  font-weight: 600;
+}
+
+.share-package-screen__eyebrow-when {
+  font-variant-numeric: tabular-nums;
+  color: #a1887f;
 }
 
 .share-package-screen__title {

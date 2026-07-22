@@ -1,5 +1,6 @@
 /**
- * 작업 이력 탭 — 마지막 작업 스냅샷(projectContext)을 표시용 문구로 변환.
+ * 마지막 작업·PDF 스냅샷(projectContext)을 표시용 문구로 변환.
+ * PDF 문구는 프로젝트 정보 탭, 마지막 작업은 작업 이력 탭에서 쓴다.
  * 저장 구조는 건드리지 않고 읽기만 한다.
  */
 import { formatProjectCardDotDateFromIso } from './projectCardViewModel.js';

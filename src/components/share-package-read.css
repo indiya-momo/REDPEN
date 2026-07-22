@@ -21,6 +21,14 @@
   cursor: default;
 }
 
+.share-package-read__meta-leading {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 0.65rem 1rem 0.35rem;
+  border-bottom: 1px solid var(--sheet-border, #e5dfd6);
+}
+
 .project-hub-settings--share
   .project-hub-settings__check-results-embedded
   > .project-hub-settings__row-desc {

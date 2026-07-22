@@ -9,6 +9,7 @@
  *   title?: string,
  *   message?: string,
  *   messageNode?: ReactNode,
+ *   copyableUrl?: string,
  *   confirmLabel?: string,
  *   cancelLabel?: string,
  *   showGuideHand?: boolean,

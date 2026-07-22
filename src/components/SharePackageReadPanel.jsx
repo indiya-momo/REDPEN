@@ -12,9 +12,9 @@ import {
   UNIFY_FEATURE_LABEL,
   listConsistencyUnifyEntries,
 } from '../lib/consistencyRuleLimit.js';
-import { getConsistencyUnifyPinnedTailWord } from '../lib/consistencyUnifyRegister.js';
 import { PROJECT_HUB_TOGGLE_CRITERIA } from '../lib/projectHubCriteriaSections.js';
 import { resultPillarToneClass } from '../lib/resultPillarTone.js';
+import { LOANWORD_FEATURE_LABEL } from '../lib/loanwordCheckRules.js';
 import { buildProjectWorkSummary } from '../presentation/projectWorkSummary.js';
 import './project-hub-settings.css';
 import './share-package-read.css';
@@ -39,6 +39,7 @@ const ACTIONS_CHECK_RESULTS_DESC =
  *   checkResults?: Array<Record<string, unknown>>,
  *   checkResultsLoading?: boolean,
  *   navAriaLabel?: string,
+ *   metaLeading?: import('react').ReactNode,
  * }} props
  */
 export default function SharePackageReadPanel({
@@ -47,32 +48,28 @@ export default function SharePackageReadPanel({
   checkResults = [],
   checkResultsLoading = false,
   navAriaLabel = '공유 구역',
+  metaLeading = null,
 }) {
   const [section, setSection] = useState(
     /** @type {SharePackageSection} */ ('meta'),
   );
 
-  const consistencyGroups = useMemo(() => {
+  const consistencyStats = useMemo(() => {
     const customRules = ruleSet?.customRules ?? [];
-    const pinnedTailWord = getConsistencyUnifyPinnedTailWord(customRules);
     return [
       {
         label: LITERAL_FIND_FEATURE_LABEL,
         tone: /** @type {const} */ ('consistency-literal'),
-        chips: listConsistencyLiteralEntries(customRules).map((entry) => ({
-          label: entry.tailWord,
-          active: isConsistencyEntryEnabled(customRules, entry.tailWord),
-          pinned: false,
-        })),
+        count: listConsistencyLiteralEntries(customRules).filter((entry) =>
+          isConsistencyEntryEnabled(customRules, entry.tailWord),
+        ).length,
       },
       {
         label: UNIFY_FEATURE_LABEL,
         tone: /** @type {const} */ ('consistency-unify'),
-        chips: listConsistencyUnifyEntries(customRules).map((entry) => ({
-          label: entry.tailWord,
-          active: isConsistencyEntryEnabled(customRules, entry.tailWord),
-          pinned: pinnedTailWord === entry.tailWord,
-        })),
+        count: listConsistencyUnifyEntries(customRules).filter((entry) =>
+          isConsistencyEntryEnabled(customRules, entry.tailWord),
+        ).length,
       },
     ];
   }, [ruleSet]);
@@ -150,6 +147,15 @@ export default function SharePackageReadPanel({
         <div className="project-hub-settings__main">
           {section === 'meta' ? (
             <div className="project-hub-settings__card">
+              {metaLeading ? (
+                <div className="share-package-read__meta-leading">
+                  {metaLeading}
+                </div>
+              ) : null}
+              <MetaReadRow
+                label="PDF 정보"
+                value={workSummary?.pdf || '—'}
+              />
               <MetaReadRow
                 label="제목"
                 desc="프로젝트 제목"
@@ -179,35 +185,43 @@ export default function SharePackageReadPanel({
                 className="project-hub-settings__criteria-section project-hub-settings__criteria-section--spelling"
                 aria-label="맞춤법"
               >
-                <div className="project-hub-settings__criteria-head">
-                  <h3 className="project-hub-settings__criteria-title visually-hidden">
-                    맞춤법
-                  </h3>
-                  <div
-                    className="project-hub-settings__criteria-stats results-header__stats"
-                    aria-label="맞춤법 항목 수"
-                  >
-                    <span className="results-header__stat">
-                      <span
-                        className={`results-header-badge ${resultPillarToneClass('spelling-caution')}`}
-                      >
-                        편집자 검토 필요
-                      </span>
-                      <span className="results-header__stat-count">
-                        {card.counts?.editorReview ?? 0}건
-                      </span>
+                <h3 className="project-hub-settings__criteria-title visually-hidden">
+                  맞춤법
+                </h3>
+                <div
+                  className="project-hub-settings__criteria-stats results-header__stats project-hub-settings__criteria-stats--stack"
+                  aria-label="맞춤법 항목 수"
+                >
+                  <span className="results-header__stat project-hub-settings__criteria-stat">
+                    <span
+                      className={`results-header-badge ${resultPillarToneClass('spelling-caution')}`}
+                    >
+                      편집자 검토 필요
                     </span>
-                    <span className="results-header__stat">
-                      <span
-                        className={`results-header-badge ${resultPillarToneClass('spelling-builtin')}`}
-                      >
-                        맞춤법 규칙
-                      </span>
-                      <span className="results-header__stat-count">
-                        {card.counts?.spelling ?? 0}건
-                      </span>
+                    <span className="results-header__stat-count">
+                      {card.counts?.editorReview ?? 0}건
                     </span>
-                  </div>
+                  </span>
+                  <span className="results-header__stat project-hub-settings__criteria-stat">
+                    <span
+                      className={`results-header-badge ${resultPillarToneClass('spelling-builtin')}`}
+                    >
+                      맞춤법 규칙
+                    </span>
+                    <span className="results-header__stat-count">
+                      {card.counts?.spelling ?? 0}건
+                    </span>
+                  </span>
+                  <span className="results-header__stat project-hub-settings__criteria-stat">
+                    <span
+                      className={`results-header-badge ${resultPillarToneClass('spelling-loanword')}`}
+                    >
+                      {LOANWORD_FEATURE_LABEL}
+                    </span>
+                    <span className="results-header__stat-count">
+                      {card.counts?.loanword ?? 0}건
+                    </span>
+                  </span>
                 </div>
                 <p className="project-hub-settings__criteria-lead">
                   공유 패키지에 포함된 맞춤법 기준 요약입니다
@@ -229,57 +243,29 @@ export default function SharePackageReadPanel({
                 className="project-hub-settings__criteria-section project-hub-settings__criteria-section--consistency"
                 aria-label="표기 통일"
               >
+                <div
+                  className="project-hub-settings__criteria-stats results-header__stats project-hub-settings__criteria-stats--stack"
+                  aria-label="표기 통일 항목 수"
+                >
+                  {consistencyStats.map((stat) => (
+                    <span
+                      key={stat.label}
+                      className="results-header__stat project-hub-settings__criteria-stat"
+                    >
+                      <span
+                        className={`results-header-badge ${resultPillarToneClass(stat.tone)}`}
+                      >
+                        {stat.label}
+                      </span>
+                      <span className="results-header__stat-count">
+                        {stat.count}건
+                      </span>
+                    </span>
+                  ))}
+                </div>
                 <p className="project-hub-settings__criteria-lead">
                   공유 패키지에 포함된 표기 통일 기준입니다
                 </p>
-                <ul className="project-hub-settings__criteria-groups">
-                  {consistencyGroups.map((group) => (
-                    <li
-                      key={group.label}
-                      className="project-hub-settings__criteria-group"
-                    >
-                      <span
-                        className={`results-header-badge project-hub-settings__criteria-group-badge ${resultPillarToneClass(group.tone)}`}
-                      >
-                        {group.label}
-                      </span>
-                      {group.chips.length ? (
-                        <span className="project-hub-settings__criteria-chips">
-                          {group.chips.map((chip, index) => (
-                            <span
-                              key={`${chip.label}-${index}`}
-                              className={[
-                                'project-hub-settings__criteria-chip',
-                                chip.active
-                                  ? ''
-                                  : 'project-hub-settings__criteria-chip--off',
-                                chip.pinned
-                                  ? 'project-hub-settings__criteria-chip--pinned'
-                                  : '',
-                              ]
-                                .filter(Boolean)
-                                .join(' ')}
-                            >
-                              {chip.label}
-                              {chip.pinned ? (
-                                <span
-                                  className="project-hub-settings__criteria-chip-pin"
-                                  aria-label="통일형"
-                                >
-                                  📌
-                                </span>
-                              ) : null}
-                            </span>
-                          ))}
-                        </span>
-                      ) : (
-                        <span className="project-hub-settings__criteria-empty">
-                          —
-                        </span>
-                      )}
-                    </li>
-                  ))}
-                </ul>
                 {card.pillarMemos?.consistency ? (
                   <MetaReadRow
                     label="메모"
@@ -341,28 +327,16 @@ export default function SharePackageReadPanel({
                   </p>
                 </div>
               ) : (
-                <>
-                  <div className="project-hub-settings__row project-hub-settings__row--readonly">
-                    <div className="project-hub-settings__row-text">
-                      <span className="project-hub-settings__row-label">
-                        마지막 작업
-                      </span>
-                    </div>
-                    <span className="project-hub-settings__value">
-                      {workSummary.lastWorked}
+                <div className="project-hub-settings__row project-hub-settings__row--readonly">
+                  <div className="project-hub-settings__row-text">
+                    <span className="project-hub-settings__row-label">
+                      마지막 작업
                     </span>
                   </div>
-                  <div className="project-hub-settings__row project-hub-settings__row--readonly">
-                    <div className="project-hub-settings__row-text">
-                      <span className="project-hub-settings__row-label">
-                        PDF 정보
-                      </span>
-                    </div>
-                    <span className="project-hub-settings__value">
-                      {workSummary.pdf}
-                    </span>
-                  </div>
-                </>
+                  <span className="project-hub-settings__value">
+                    {workSummary.lastWorked}
+                  </span>
+                </div>
               )}
 
               <div className="project-hub-settings__check-results-embedded">
