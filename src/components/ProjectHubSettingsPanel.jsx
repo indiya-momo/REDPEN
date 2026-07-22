@@ -10,6 +10,7 @@ import {
   buildProjectWorkSummary,
   WORK_SUMMARY_NONE_LABEL,
 } from '../presentation/projectWorkSummary.js';
+import { isPaidUser } from '../lib/paidPlanGate.js';
 import ProjectHubCriteriaPanel from './projectHub/ProjectHubCriteriaPanel.jsx';
 import ProjectHubCheckResultsPanel from './projectHub/ProjectHubCheckResultsPanel.jsx';
 import ProjectWorkHistoryChart from './projectHub/ProjectWorkHistoryChart.jsx';
@@ -44,6 +45,7 @@ const META_AUTOSAVE_MS = 400;
 /**
  * 작업 이력 — 마지막 작업·저장된 검수 결과 (한 카드).
  * PDF 정보는 프로젝트 정보 탭 첫 줄에 둔다.
+ * 유료 회원에게만 렌더한다 (부모에서 게이트).
  * @param {{
  *   summary: import('../presentation/projectWorkSummary.js').ProjectWorkSummary | null,
  *   uid?: string,
@@ -57,23 +59,20 @@ function ProjectWorkSummaryCard({
   projectId = '',
   projectName = '',
 }) {
+  const lastWorkedLabel = summary?.lastWorked;
+  const hasLastWork =
+    Boolean(lastWorkedLabel) && lastWorkedLabel !== WORK_SUMMARY_NONE_LABEL;
+
   return (
     <div className="project-hub-settings__card project-hub-settings__card--work-summary">
-      {!summary ? (
-        <div className="project-hub-settings__row project-hub-settings__row--readonly">
-          <p className="project-hub-settings__row-desc">
-            아직 작업 기록이 없습니다. 검수 작업을 진행하면 여기에 요약이
-            남습니다.
-          </p>
-        </div>
-      ) : (
+      {hasLastWork ? (
         <div className="project-hub-settings__row project-hub-settings__row--readonly">
           <div className="project-hub-settings__row-text">
             <span className="project-hub-settings__row-label">마지막 작업</span>
           </div>
-          <span className="project-hub-settings__value">{summary.lastWorked}</span>
+          <span className="project-hub-settings__value">{lastWorkedLabel}</span>
         </div>
-      )}
+      ) : null}
       {uid && projectId ? (
         <ProjectHubCheckResultsPanel
           uid={uid}
@@ -152,6 +151,25 @@ export default function ProjectHubSettingsPanel({
   const [spellingMemoInput, setSpellingMemoInput] = useState('');
   const [consistencyMemoInput, setConsistencyMemoInput] = useState('');
   const [auxiliaryMemoInput, setAuxiliaryMemoInput] = useState('');
+  /** 작업 이력 탭 — 유료만 상세 표시 */
+  const [actionsPaid, setActionsPaid] = useState(
+    /** @type {boolean | null} */ (null),
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+    const id = String(uid ?? '').trim();
+    if (!id) {
+      setActionsPaid(false);
+      return undefined;
+    }
+    void isPaidUser(id).then((isPaid) => {
+      if (!cancelled) setActionsPaid(isPaid);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [uid]);
 
   const onSaveRef = useRef(onSave);
   onSaveRef.current = onSave;
@@ -547,20 +565,28 @@ export default function ProjectHubSettingsPanel({
 
           {activeSection === 'actions' ? (
             <div className="project-hub-settings__group">
-              <ProjectWorkSummaryCard
-                summary={workSummary}
-                uid={uid}
-                projectId={card?.id}
-                projectName={card.title || ruleSet?.name || ''}
-              />
-              <ProjectWorkHistoryChart
-                uid={uid}
-                history={ruleSet?.workHistory}
-                projectContext={ruleSet?.projectContext}
-                customRules={ruleSet?.customRules ?? []}
-                globalExcludePhrases={ruleSet?.globalExcludePhrases ?? []}
-                consistencyDecisions={ruleSet?.consistencyDecisions ?? []}
-              />
+              {actionsPaid === true ? (
+                <>
+                  <ProjectWorkSummaryCard
+                    summary={workSummary}
+                    uid={uid}
+                    projectId={card?.id}
+                    projectName={card.title || ruleSet?.name || ''}
+                  />
+                  <ProjectWorkHistoryChart
+                    uid={uid}
+                    history={ruleSet?.workHistory}
+                    projectContext={ruleSet?.projectContext}
+                    customRules={ruleSet?.customRules ?? []}
+                    globalExcludePhrases={ruleSet?.globalExcludePhrases ?? []}
+                    consistencyDecisions={ruleSet?.consistencyDecisions ?? []}
+                  />
+                </>
+              ) : (
+                <div className="project-hub-settings__card">
+                  <p className="project-hub-settings__row-desc">준비중</p>
+                </div>
+              )}
             </div>
           ) : null}
         </div>

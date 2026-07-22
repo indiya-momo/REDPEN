@@ -117,38 +117,15 @@ function readRuleSetsFromKey(key) {
 }
 
 /**
- * 로그인 전 공용(legacy) 키 → uid별 키로 1회 이전
- * @param {string} uid
- */
-export function migrateLegacyRuleSetsToUid(uid) {
-  const id = String(uid ?? '').trim();
-  if (!id) return [];
-
-  const scopedKey = ruleSetsStorageKey(id);
-  const existing = readRuleSetsFromKey(scopedKey);
-  if (existing.length) return existing;
-
-  const legacy = readRuleSetsFromKey(LEGACY_RULE_SETS_KEY);
-  if (!legacy.length) return [];
-
-  saveRuleSets(legacy, id);
-  const legacyActive = localStorage.getItem(LEGACY_ACTIVE_KEY);
-  if (legacyActive) {
-    saveActiveSetId(legacyActive, id);
-  }
-  return legacy.map((set) => ({ ...set }));
-}
-
-/**
  * @param {string | undefined} [uid]
  * @returns {RuleSet[]}
  */
 export function loadRuleSets(uid) {
   const id = String(uid ?? '').trim();
+  // 로그인 계정은 uid 키만 본다. 공용(legacy) 잔여 프로젝트를
+  // 새 가입·다른 계정에 붙이지 않는다.
   if (id) {
-    const scoped = readRuleSetsFromKey(ruleSetsStorageKey(id));
-    if (scoped.length) return scoped;
-    return migrateLegacyRuleSetsToUid(id);
+    return readRuleSetsFromKey(ruleSetsStorageKey(id));
   }
   return readRuleSetsFromKey(LEGACY_RULE_SETS_KEY);
 }
