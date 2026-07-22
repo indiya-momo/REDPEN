@@ -282,7 +282,7 @@ export function mapFirebaseAuthError(error) {
       }
       return (
         `이 주소에서는 로그인을 할 수 없습니다.\n\n` +
-        `공식 사이트 ${PUBLIC_APP_URL} 에서 「구글로 회원가입」을 다시 시도해 주세요.`
+        `공식 사이트 ${PUBLIC_APP_URL} 에서 「구글로 시작하기」를 다시 시도해 주세요.`
       );
     })(),
     'auth/operation-not-allowed':

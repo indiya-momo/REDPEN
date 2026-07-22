@@ -128,10 +128,6 @@ export default function ProjectHubCheckResultsPanel({
       <div className="project-hub-settings__row project-hub-settings__row--readonly project-hub-settings__row--check-results-head">
         <div className="project-hub-settings__row-text">
           <span className="project-hub-settings__row-label">저장된 검수 결과</span>
-          <p className="project-hub-settings__row-desc">
-            유료 회원은 검수 완료시 결과가 자동 저장되며 30일간 보관됩니다.
-            이력 요약은 텍스트 파일에서 확인할 수 있습니다.
-          </p>
         </div>
         <div className="project-hub-check-results__download-box">
           <span className="project-hub-check-results__download-count">
@@ -140,11 +136,18 @@ export default function ProjectHubCheckResultsPanel({
           <button
             type="button"
             className="project-hub-settings__secondary-btn project-hub-settings__secondary-btn--check-results"
-            disabled={zipBusy}
+            disabled={zipBusy || paid !== true}
             aria-busy={zipBusy || loading}
+            title={
+              paid === false ? '유료회원 전용 · 준비중' : undefined
+            }
             onClick={() => void handleZipDownload()}
           >
-            {zipBusy ? '받는 중…' : '검수 이력 다운받기'}
+            {zipBusy
+              ? '받는 중…'
+              : paid === false
+                ? '준비중'
+                : '검수 이력 다운받기'}
           </button>
         </div>
       </div>

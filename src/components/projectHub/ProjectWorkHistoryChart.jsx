@@ -1,6 +1,8 @@
 /**
  * 작업 이력 — 맞춤법(편집자 검토·맞춤법·외래어) · 표기 통일(현재 기준+확정) · 본·보조.
+ * 유료 회원만 표시. 검수 세션이 없으면 빈 안내만 두고 자리·현재 기준 목록을 채우지 않는다.
  */
+import { useEffect, useState } from 'react';
 import {
   buildDisplayWorkHistory,
   WORK_CHART_MIN_SESSIONS_FOR_LINE,
@@ -10,6 +12,7 @@ import {
   SPELLING_RULE_BADGE_LABEL,
 } from '../../lib/checkResultSummaryFormat.js';
 import { LOANWORD_FEATURE_LABEL } from '../../lib/loanwordCheckRules.js';
+import { isPaidUser } from '../../lib/paidPlanGate.js';
 import { resultPillarToneClass } from '../../lib/resultPillarTone.js';
 import {
   buildWorkHistoryConsistencyCriteria,
@@ -494,6 +497,7 @@ function ConsistencyCriteriaBlock({
 
 /**
  * @param {{
+ *   uid?: string,
  *   history: import('../../lib/projectWorkHistory.js').WorkHistoryEntry[] | undefined,
  *   projectContext?: import('../../lib/projectMeta.js').ProjectContext,
  *   customRules?: import('../../lib/ruleTypes.js').Rule[],
@@ -502,12 +506,41 @@ function ConsistencyCriteriaBlock({
  * }} props
  */
 export default function ProjectWorkHistoryChart({
+  uid = '',
   history,
   projectContext,
   customRules = [],
   globalExcludePhrases = [],
   consistencyDecisions = [],
 }) {
+  const [paid, setPaid] = useState(/** @type {boolean | null} */ (null));
+
+  useEffect(() => {
+    let cancelled = false;
+    const id = String(uid ?? '').trim();
+    if (!id) {
+      setPaid(false);
+      return undefined;
+    }
+    void isPaidUser(id).then((isPaid) => {
+      if (!cancelled) setPaid(isPaid);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [uid]);
+
+  if (paid !== true) {
+    return (
+      <div className="project-hub-settings__card work-history-panel">
+        <h3 className="work-history-panel__title">검수 진행 이력</h3>
+        <p className="project-hub-settings__row-desc work-history-panel__empty">
+          준비중
+        </p>
+      </div>
+    );
+  }
+
   const chartSessions = buildDisplayWorkHistory(history, projectContext) ?? [];
   const sessionCount = chartSessions.length;
   const criteria = buildWorkHistoryConsistencyCriteria(
@@ -535,20 +568,20 @@ export default function ProjectWorkHistoryChart({
     (entry) => typeof entry.bonBojo === 'number',
   );
 
-  // 세션이 없어도 맞춤법 그래프 자리(라벨·플롯)는 항상 둔다
-  const spellingEditorValues = sessionCount ? editorReviewValues : [];
-  const spellingBuiltinValues = sessionCount ? builtinSpellingValues : [];
-  const spellingLoanwordValues = sessionCount ? loanwordValues : [];
+  if (!sessionCount) {
+    return (
+      <div className="project-hub-settings__card work-history-panel">
+        <h3 className="work-history-panel__title">검수 진행 이력</h3>
+        <p className="project-hub-settings__row-desc work-history-panel__empty">
+          검수를 진행하면 항목별 추이가 여기에 표시됩니다.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="project-hub-settings__card work-history-panel">
       <h3 className="work-history-panel__title">검수 진행 이력</h3>
-
-      {!sessionCount ? (
-        <p className="project-hub-settings__row-desc work-history-panel__empty">
-          검수를 진행하면 항목별 추이가 여기에 표시됩니다.
-        </p>
-      ) : null}
 
       <section className="work-history-panel__block work-history-panel__block--spelling">
         <h4 className="work-history-panel__block-title">맞춤법</h4>
@@ -557,7 +590,7 @@ export default function ProjectWorkHistoryChart({
             label={EDITOR_REVIEW_BADGE_LABEL}
             badgeTone="spelling-caution"
             subLabel
-            values={spellingEditorValues}
+            values={editorReviewValues}
             sessionAts={sessionAts}
             sessions={chartSessions}
             sessionCount={sessionCount}
@@ -568,7 +601,7 @@ export default function ProjectWorkHistoryChart({
             label={SPELLING_RULE_BADGE_LABEL}
             badgeTone="spelling-builtin"
             subLabel
-            values={spellingBuiltinValues}
+            values={builtinSpellingValues}
             sessionAts={sessionAts}
             sessions={chartSessions}
             sessionCount={sessionCount}
@@ -578,14 +611,14 @@ export default function ProjectWorkHistoryChart({
             label={LOANWORD_FEATURE_LABEL}
             badgeTone="spelling-loanword"
             subLabel
-            values={spellingLoanwordValues}
+            values={loanwordValues}
             sessionAts={sessionAts}
             sessions={chartSessions}
             sessionCount={sessionCount}
             colorClass="work-history-panel__spark-row--spelling"
             muted
           />
-          {sessionCount ? <SessionDateAxis sessions={chartSessions} /> : null}
+          <SessionDateAxis sessions={chartSessions} />
         </div>
       </section>
 

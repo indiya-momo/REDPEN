@@ -740,6 +740,18 @@
   white-space: nowrap;
 }
 
+.sheet-card__btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  color: var(--color-text-subtle);
+  border-color: var(--sheet-border);
+}
+
+.sheet-card__btn:disabled:hover {
+  border-color: var(--sheet-border);
+  color: var(--color-text-subtle);
+}
+
 .sheet-card__btn:hover {
   border-color: var(--accent-terracotta);
   color: var(--accent-terracotta-deep);

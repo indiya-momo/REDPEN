@@ -359,7 +359,7 @@ export default function SharePackageReadPanel({
                       disabled
                       title={ACTIONS_CHECK_RESULTS_DESC}
                     >
-                      검수 이력 다운받기
+                      준비중
                     </button>
                   </div>
                 </div>
