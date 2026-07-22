@@ -39,6 +39,7 @@ function SheetCardBookTitle({ title }) {
  *   onDuplicate?: () => void,
  *   onDelete?: () => void,
  *   onSharePreview?: () => void,
+ *   shareAvailable?: boolean,
  * }} props
  */
 export default function ProjectLibraryCard({
@@ -54,6 +55,7 @@ export default function ProjectLibraryCard({
   onDuplicate = () => {},
   onDelete,
   onSharePreview = () => {},
+  shareAvailable = true,
 }) {
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState(card.title);
@@ -267,12 +269,15 @@ export default function ProjectLibraryCard({
                 <button
                   type="button"
                   className="sheet-card__btn sheet-card__btn--secondary"
+                  disabled={!shareAvailable}
+                  title={shareAvailable ? undefined : '유료회원 전용 · 준비중'}
                   onClick={(event) => {
                     event.stopPropagation();
+                    if (!shareAvailable) return;
                     onSharePreview();
                   }}
                 >
-                  공유하기
+                  {shareAvailable ? '공유하기' : '준비중'}
                 </button>
               </>
             ) : null}

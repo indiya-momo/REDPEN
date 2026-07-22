@@ -232,7 +232,7 @@ export default function WelcomePcScreen({
             onClick={handleGoogleAuth}
             disabled={authPending}
           >
-            {authPending ? '구글 로그인 연결 중…' : '구글로 회원가입'}
+            {authPending ? '구글 로그인 연결 중…' : '구글로 시작하기'}
           </button>
           <button
             type="button"

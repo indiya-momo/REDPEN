@@ -2,13 +2,13 @@
  * 마이페이지 「나의 프로젝트」 그리드 — 개요·편집 화면 공통 단일 UI.
  * 편집 패널은 ProjectHubEditorPage에서 이 컴포넌트 아래에만 붙인다.
  */
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   buildMockLibrarySlots,
   formatLibrarySlotGauge,
   planLibraryShelfCards,
 } from '../../lib/mypageProjectDisplay.js';
-import { assertPaidShareOrAlert } from '../../lib/paidPlanGate.js';
+import { assertPaidShareOrAlert, isPaidUser } from '../../lib/paidPlanGate.js';
 import { issueSharePackageLink } from '../../lib/issueSharePackageLink.js';
 import { showAppAlert } from '../../lib/appDialog.js';
 import { useProjectHubActions } from '../../hooks/useProjectHubActions.js';
@@ -66,6 +66,22 @@ export default function ProjectHubLibraryPanel({
     /** @type {string | null} */ (null),
   );
   const [shelfExpanded, setShelfExpanded] = useState(false);
+  const [shareAvailable, setShareAvailable] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    const id = String(uid ?? '').trim();
+    if (!id) {
+      setShareAvailable(false);
+      return undefined;
+    }
+    void isPaidUser(id).then((paid) => {
+      if (!cancelled) setShareAvailable(paid);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [uid, profileSyncDone]);
 
   const isSharePreviewControlled = onSharePreviewCardIdChange !== undefined;
   const sharePreviewCardId = isSharePreviewControlled
@@ -128,6 +144,7 @@ export default function ProjectHubLibraryPanel({
         onDuplicate={() => void actions.handleDuplicate(card.id)}
         onDelete={() => void actions.handleDelete(card.id, card.title)}
         onSharePreview={() => openSharePreview(card.id)}
+        shareAvailable={shareAvailable}
       />
     );
   }

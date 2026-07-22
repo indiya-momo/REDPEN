@@ -554,6 +554,7 @@ export default function ProjectHubSettingsPanel({
                 projectName={card.title || ruleSet?.name || ''}
               />
               <ProjectWorkHistoryChart
+                uid={uid}
                 history={ruleSet?.workHistory}
                 projectContext={ruleSet?.projectContext}
                 customRules={ruleSet?.customRules ?? []}
