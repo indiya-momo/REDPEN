@@ -41,6 +41,39 @@
   border: none;
 }
 
+/* 등록 + 통일형 검수 한 줄 (main-screen .panel-left 규칙 보강) */
+.consistency-proto__frame .consistency-unify-action-row {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+}
+
+.consistency-proto__frame .consistency-unify-action-row__field {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.consistency-proto__frame .consistency-unify-run-btn {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 6px 12px;
+  border: none;
+  border-radius: var(--radius-search, 6px);
+  background: var(--accent-terracotta, #a67c52);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.consistency-proto__frame .consistency-unify-run-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 /* 통일형 만들기 — 2열 + 수정형 옆 추가 */
 .consistency-proto-unify-cols {
   display: grid;

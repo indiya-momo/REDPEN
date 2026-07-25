@@ -2405,6 +2405,9 @@ export default function MainScreen({
                   hasPdf={pdf.pageTexts.length > 0}
                   isProcessing={pdf.isProcessing}
                   checkQuotaBlocked={checkSessionBlocked}
+                  onUnifyRunClick={() => {
+                    void ruleCheck.runConsistencyUnifyCheck();
+                  }}
                 />
               </div>
             ) : null}

@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+  BETA_CONSISTENCY_LIMIT_DEFAULT,
+  BETA_CONSISTENCY_LIMIT_FEEDBACK,
   BETA_TAB_LIMIT_BOOSTED,
   BETA_TAB_LIMIT_DEFAULT,
   BETA_TAB_LIMIT_FEEDBACK,
@@ -29,32 +31,49 @@ describe('getKstDayId', () => {
 });
 
 describe('getTabCheckLimit', () => {
-  it('베타 기본은 탭당 1회', () => {
-    expect(getTabCheckLimit(null, null, '2026-06-05')).toBe(
+  it('맞춤법 기본은 하루 1회', () => {
+    expect(getTabCheckLimit(null, null, '2026-06-05', 'spelling')).toBe(
       BETA_TAB_LIMIT_DEFAULT,
     );
   });
 
-  it('피드백 보너스 당일이면 탭당 2회', () => {
-    expect(getTabCheckLimit('2026-06-05', null, '2026-06-05')).toBe(
+  it('맞춤법 피드백 보너스 당일이면 2회', () => {
+    expect(getTabCheckLimit('2026-06-05', null, '2026-06-05', 'spelling')).toBe(
       BETA_TAB_LIMIT_FEEDBACK,
     );
   });
 
-  it('우수 피드백 선정 당일이면 탭당 3회', () => {
-    expect(getTabCheckLimit(null, '2026-06-05', '2026-06-05')).toBe(
+  it('맞춤법 우수 피드백 선정 당일이면 3회', () => {
+    expect(getTabCheckLimit(null, '2026-06-05', '2026-06-05', 'spelling')).toBe(
       BETA_TAB_LIMIT_BOOSTED,
     );
   });
 
-  it('피드백과 선정이 겹치면 3회', () => {
-    expect(getTabCheckLimit('2026-06-05', '2026-06-05', '2026-06-05')).toBe(
-      BETA_TAB_LIMIT_BOOSTED,
+  it('맞춤법 피드백과 선정이 겹치면 3회', () => {
+    expect(
+      getTabCheckLimit('2026-06-05', '2026-06-05', '2026-06-05', 'spelling'),
+    ).toBe(BETA_TAB_LIMIT_BOOSTED);
+  });
+
+  it('맞춤법 보너스가 다른 날이면 1회', () => {
+    expect(getTabCheckLimit('2026-06-04', null, '2026-06-05', 'spelling')).toBe(
+      1,
     );
   });
 
-  it('보너스가 다른 날이면 1회', () => {
-    expect(getTabCheckLimit('2026-06-04', null, '2026-06-05')).toBe(1);
+  it('표기 통일 기본은 하루 5회', () => {
+    expect(getTabCheckLimit(null, null, '2026-06-05', 'consistency')).toBe(
+      BETA_CONSISTENCY_LIMIT_DEFAULT,
+    );
+  });
+
+  it('표기 통일 피드백·선정이면 하루 10회', () => {
+    expect(
+      getTabCheckLimit('2026-06-05', null, '2026-06-05', 'consistency'),
+    ).toBe(BETA_CONSISTENCY_LIMIT_FEEDBACK);
+    expect(
+      getTabCheckLimit(null, '2026-06-05', '2026-06-05', 'consistency'),
+    ).toBe(BETA_CONSISTENCY_LIMIT_FEEDBACK);
   });
 });
 

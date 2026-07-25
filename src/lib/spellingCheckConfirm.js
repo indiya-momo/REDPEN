@@ -121,7 +121,7 @@ export async function confirmSpellingCheckBeforeRun(
   if (quotaDisplayEnabled) {
     const status = await getBetaDailyQuotaStatus(uid, email);
     const tabCount = status.spellingCount;
-    const tabLimit = status.tabLimit;
+    const tabLimit = status.spellingTabLimit ?? status.tabLimit;
     if (
       isBetaDailyQuotaEnforcedForUser(uid, email) &&
       !canRunTabCheck(tabCount, tabLimit)

@@ -201,11 +201,7 @@ export default function ProjectHubLibraryPanel({
               onChange={setTagFilter}
             />
 
-            <div
-              className={`mypage-proto__grid${
-                activeTag || shelf.expanded ? '' : ' mypage-proto__grid--triple'
-              }`}
-            >
+            <div className="mypage-proto__grid mypage-proto__grid--triple">
               {activeTag ? (
                 <>
                   {filteredCards.map((card) => renderLibraryCard(card))}

@@ -17,6 +17,23 @@ describe('consistencyCheckScopes', () => {
     expect(aux.map((r) => r.id)).toEqual(['b']);
   });
 
+  it('filters unify rules by consistencyUnifyEntry', () => {
+    const rules = [
+      {
+        id: 'u',
+        enabled: true,
+        patternKind: 'compound-find',
+        consistencyUnifyEntry: true,
+      },
+      { id: 'l', enabled: true, patternKind: 'compound-find' },
+      { id: 'a', enabled: true, patternKind: 'auxiliary-verb' },
+    ];
+    const unify = filterCustomRulesByConsistencyScope(rules, 'unify');
+    expect(unify.map((r) => r.id)).toEqual(['u']);
+    const literal = filterCustomRulesByConsistencyScope(rules, 'literal-slot');
+    expect(literal.map((r) => r.id)).toEqual(['l']);
+  });
+
   it('classifies result groups by scope', () => {
     expect(
       consistencyGroupScope({ patternKind: 'compound-spacing', instances: [] }),

@@ -46,12 +46,17 @@ import {
 } from '../lib/consistencyCheckScopes.js';
 import { ensureDefaultAuxiliaryVerbs } from '../lib/defaultAuxiliaryVerbs.js';
 import { AUXILIARY_VERB_FEATURE_LABEL } from '../lib/bonBojoRules.js';
-import { LITERAL_FIND_FEATURE_LABEL } from '../lib/consistencyRuleLimit.js';
+import {
+  LITERAL_FIND_FEATURE_LABEL,
+  UNIFY_FEATURE_LABEL,
+} from '../lib/consistencyRuleLimit.js';
+import { isConsistencyUnifyResultGroup } from '../lib/consistencyUnifyRegister.js';
 import { assertBetaDailyCheckOrAlert } from '../lib/betaDailyQuota.js';
 import {
   alertConsistencyCheckAfterRun,
   assertConsistencyUnifyPinnedForCheck,
   confirmConsistencyCheckBeforeRun,
+  confirmConsistencyUnifyCheckBeforeRun,
   countConsistencyCheckActiveRules,
 } from '../lib/consistencyCheckConfirm.js';
 import {
@@ -473,7 +478,9 @@ export function useRuleCheck({
         alert(
           subset === 'auxiliary'
             ? `${AUXILIARY_VERB_FEATURE_LABEL}에서 검사할 항목을 선택하세요.`
-            : `${LITERAL_FIND_FEATURE_LABEL}에서 검사할 항목을 등록·선택하세요.`,
+            : subset === 'unify'
+              ? `${UNIFY_FEATURE_LABEL}에서 검사할 항목을 등록·선택하세요.`
+              : `${LITERAL_FIND_FEATURE_LABEL}에서 검사할 항목을 등록·선택하세요.`,
         );
         return;
       }
@@ -483,6 +490,19 @@ export function useRuleCheck({
         !(await assertConsistencyUnifyPinnedForCheck(resolvedCustomRules))
       ) {
         return;
+      }
+
+      if (subset === 'unify') {
+        if (
+          !(await confirmConsistencyUnifyCheckBeforeRun(
+            authUid,
+            authEmail,
+            resolvedCustomRules,
+          ))
+        ) {
+          return;
+        }
+        markConsistencyCheckStartedForExportGuide();
       }
 
       const activeTotal = countActiveRules({
@@ -522,8 +542,17 @@ export function useRuleCheck({
       const withZeroRows = finalizeConsistencyCheckResults(grouped, rules);
 
       setConsistencyResults((prev) => {
-        const kept = prev.filter((g) => consistencyGroupScope(g) !== subset);
-        return finalizeConsistencyCheckResults([...kept, ...withZeroRows], rules);
+        const kept =
+          subset === 'unify'
+            ? prev.filter(
+                (g) =>
+                  !isConsistencyUnifyResultGroup(resolvedCustomRules, g),
+              )
+            : prev.filter((g) => consistencyGroupScope(g) !== subset);
+        return finalizeConsistencyCheckResults(
+          [...kept, ...withZeroRows],
+          rules,
+        );
       });
       setConsistencyCheckDone(true);
       setResultVisibility((prev) => {
@@ -551,7 +580,12 @@ export function useRuleCheck({
       );
       await trackCheckRun(
         {
-          scope: subset === 'auxiliary' ? 'consistency-aux' : 'consistency-literal',
+          scope:
+            subset === 'auxiliary'
+              ? 'consistency-aux'
+              : subset === 'unify'
+                ? 'consistency-unify'
+                : 'consistency-literal',
           findingCount,
           activeRuleCount: rules.length,
         },
@@ -570,8 +604,8 @@ export function useRuleCheck({
       pageTexts,
       builtInEnabled,
       cautionEnabled,
-        resolvedCustomRules,
-        consistencyActiveRules,
+      resolvedCustomRules,
+      consistencyActiveRules,
       globalExcludePhrases,
       setCurrentPage,
       setIsProcessing,
@@ -590,6 +624,11 @@ export function useRuleCheck({
 
   const runConsistencyAuxiliaryCheck = useCallback(
     () => runConsistencyScopeCheck('auxiliary'),
+    [runConsistencyScopeCheck],
+  );
+
+  const runConsistencyUnifyCheck = useCallback(
+    () => runConsistencyScopeCheck('unify'),
     [runConsistencyScopeCheck],
   );
 
@@ -812,6 +851,7 @@ export function useRuleCheck({
     runConsistencyCheck,
     runConsistencyLiteralCheck,
     runConsistencyAuxiliaryCheck,
+    runConsistencyUnifyCheck,
     selectInstance,
     goToPage,
     selectPageInGroup,

@@ -97,19 +97,19 @@ const MEMBER_BENEFIT_TIERS = [
   {
     name: '오픈베타 테스터',
     description:
-      '오픈베타 기간 프로젝트 저장 [1개] · 매일 맞춤법 [1회] + 표기 통일 [1회] 제공',
+      '오픈베타 기간 프로젝트 저장 [1개] · 매일 맞춤법 [1회] + 표기 통일 [5회] 제공',
     tabLimit: 1,
   },
   {
     name: '비밀 연구원',
     description:
-      '오픈베타 기간 프로젝트 저장 [1개] · 매일 맞춤법 [2회] + 표기 통일 [2회] 제공',
+      '오픈베타 기간 프로젝트 저장 [1개] · 매일 맞춤법 [2회] + 표기 통일 [10회] 제공',
     tabLimit: 2,
   },
   {
     name: '수석 검증관',
     description:
-      '오픈베타 기간 프로젝트 저장 [1개] · 매일 맞춤법 [3회] + 표기 통일 [3회] 제공',
+      '오픈베타 기간 프로젝트 저장 [1개] · 매일 맞춤법 [3회] + 표기 통일 [10회] 제공',
     tabLimit: 3,
   },
 ];
@@ -264,7 +264,7 @@ function MemberOverviewCard({ quota, authUid = '', loginAtMs = null, onOpen }) {
             <dd className="mypage__quota-usage">
               {formatQuotaUsageLabel(
                 quota.spellingRemaining,
-                quota.tabLimit,
+                quota.spellingTabLimit ?? quota.tabLimit,
               )}
             </dd>
           </div>
@@ -275,7 +275,7 @@ function MemberOverviewCard({ quota, authUid = '', loginAtMs = null, onOpen }) {
             <dd className="mypage__quota-usage">
               {formatQuotaUsageLabel(
                 quota.consistencyRemaining,
-                quota.tabLimit,
+                quota.consistencyTabLimit ?? quota.tabLimit,
               )}
             </dd>
           </div>

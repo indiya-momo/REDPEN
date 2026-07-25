@@ -186,6 +186,39 @@ export function formatConsistencyCheckConfirmMessage({
 }
 
 /**
+ * @param {{ remaining: number, tabLimit: number, unifyActive: number }} input
+ */
+export function formatConsistencyUnifyCheckConfirmMessage({
+  remaining,
+  tabLimit,
+  unifyActive,
+}) {
+  return (
+    `[통일형 검수 진행]\n` +
+    `\n` +
+    `오늘 표기 통일 검수는 ${remaining}회(한도 ${tabLimit}회) 가능합니다\n` +
+    `${UNIFY_FEATURE_LABEL}${formatConfirmItemCount(unifyActive)}\n` +
+    `\n` +
+    '검수를 진행할까요?'
+  );
+}
+
+/**
+ * @param {{ unifyActive: number }} input
+ */
+export function formatConsistencyUnifyCheckConfirmMessageWithoutQuota({
+  unifyActive,
+}) {
+  return (
+    `[통일형 검수 진행]\n` +
+    `\n` +
+    `${UNIFY_FEATURE_LABEL}${formatConfirmItemCount(unifyActive)}\n` +
+    `\n` +
+    '검수를 진행할까요?'
+  );
+}
+
+/**
  * @param {{
  *   literalActive: number,
  *   literalTotal: number,
@@ -259,7 +292,8 @@ export async function confirmConsistencyCheckBeforeRun(
   if (quotaDisplayEnabled) {
     const status = await getBetaDailyQuotaStatus(uid, email);
     const tabCount = status.consistencyCount;
-    const tabLimit = status.tabLimit;
+    const tabLimit =
+      status.consistencyTabLimit ?? status.tabLimit;
     if (
       isBetaDailyQuotaEnforcedForUser(uid, email) &&
       !canRunTabCheck(tabCount, tabLimit)
@@ -292,6 +326,69 @@ export async function confirmConsistencyCheckBeforeRun(
       excludeActive,
       auxiliaryActive,
       auxiliaryTotal,
+    });
+  }
+
+  const { title, message: body } = parseBracketTitleMessage(message);
+  return showAppConfirm({ title, message: body });
+}
+
+/**
+ * 통일형 만들기 전용 검수 confirm
+ * @param {string} uid
+ * @param {string} [email]
+ * @param {import('./ruleTypes.js').Rule[]} [customRules]
+ */
+export async function confirmConsistencyUnifyCheckBeforeRun(
+  uid,
+  email = '',
+  customRules = [],
+) {
+  if (!assertLoggedInForCheckOrAlert(uid)) {
+    return false;
+  }
+
+  if (!(await assertConsistencyUnifyPinnedForCheck(customRules))) {
+    return false;
+  }
+
+  if (guestBrowseSkipsCheckConfirm()) {
+    return true;
+  }
+
+  const { unifyActive } = countConsistencyCheckActiveRules(customRules, []);
+  if (unifyActive <= 0) {
+    await showAppAlert({
+      title: '안내',
+      message: `${UNIFY_FEATURE_LABEL}에서 검사할 항목을 등록·선택하세요.`,
+    });
+    return false;
+  }
+
+  const quotaDisplayEnabled =
+    isBetaDailyQuotaEnabled() && Boolean(uid.trim());
+
+  let message;
+  if (quotaDisplayEnabled) {
+    const status = await getBetaDailyQuotaStatus(uid, email);
+    const tabCount = status.consistencyCount;
+    const tabLimit = status.consistencyTabLimit ?? status.tabLimit;
+    if (
+      isBetaDailyQuotaEnforcedForUser(uid, email) &&
+      !canRunTabCheck(tabCount, tabLimit)
+    ) {
+      alert(betaQuotaAlertForTab('consistency'));
+      return false;
+    }
+    const remaining = Math.max(0, tabLimit - tabCount);
+    message = formatConsistencyUnifyCheckConfirmMessage({
+      remaining,
+      tabLimit,
+      unifyActive,
+    });
+  } else {
+    message = formatConsistencyUnifyCheckConfirmMessageWithoutQuota({
+      unifyActive,
     });
   }
 

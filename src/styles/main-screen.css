@@ -696,6 +696,14 @@
   box-shadow: none;
 }
 
+/* 통일형 히어로 — 외래어 변환과 동일 흰 배경 */
+.panel-left .consistency-unify-hero {
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.6);
+  box-shadow: none;
+}
+
 /* ── 좌측 패널 간격: 제목↔설명 · 요약↔목록 · 그룹↔항목 ── */
 
 /* 결과 카드 — 제목 줄 ↔ 설명 */
@@ -1077,6 +1085,7 @@
 
 /* 통일형 📌 가이드 — 섹션 사이 패딩을 밀지 않도록 레이아웃 0 */
 .consistency-unified-box > .tooltip-guide-anchor:has(> .work-guide-anchor--unify-pin),
+.consistency-unify-hero > .tooltip-guide-anchor:has(> .work-guide-anchor--unify-pin),
 .work-guide-anchor--unify-pin {
   position: absolute;
   width: 0;
@@ -2765,13 +2774,185 @@
 }
 
 .consistency-unified-box,
-.consistency-section-box:not(.consistency-toc-section) {
+.consistency-section-box:not(.consistency-toc-section),
+.consistency-unify-hero {
   flex-shrink: 0;
 }
 
 .consistency-section-box:not(.consistency-toc-section) {
   padding-block: var(--consistency-box-padding-y);
   padding-inline: 0;
+}
+
+/* 통일형 만들기 — 외래어 변환처럼 탭 맨 위 분리 카드
+   아래 여러 개 찾기와의 간격은 .consistency-embed gap(--panel-gap-section)만
+   (맞춤법: calibration margin-bottom과 동일, margin 중복 금지) */
+.consistency-unify-hero {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 10px 14px 12px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.6);
+  container-type: inline-size;
+  /* 아래 여러 개 찾기 칩과 동일 타이포 */
+  --consistency-example-font-size: calc(
+    var(--panel-guide-font-size, 0.828rem) * 0.9
+  );
+  --consistency-example-line-height: 1.45;
+  --consistency-stack-gap: calc(8px * var(--panel-ui-scale, 1));
+  --consistency-item-gap: var(--consistency-stack-gap);
+  --consistency-input-padding-block: calc(10px * var(--panel-ui-scale, 1) * 0.6);
+  --consistency-register-text: var(--color-text-muted);
+  --consistency-register-add-bg: var(--search-action-bg);
+  --consistency-register-add-bg-hover: var(--search-action-bg-hover);
+}
+
+.panel-left .consistency-unify-hero__summary.panel-criteria-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  margin: 0 0 6px;
+  cursor: default;
+  user-select: none;
+  list-style: none;
+}
+
+.panel-left .consistency-unify-hero__summary-title {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 0.15em;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+  color: inherit;
+}
+
+.panel-left .consistency-unify-hero__badge {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0.35em;
+  padding: 0.12em 0.45em;
+  border-radius: 3px;
+  background: #e11d48;
+  color: #fff;
+  font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+  font-size: 0.62em;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+  vertical-align: middle;
+}
+
+.panel-left .consistency-unify-hero__badge--feedback {
+  background: #b45309;
+  letter-spacing: 0.02em;
+}
+
+.panel-left .consistency-unify-hero__hint {
+  margin: 0 0 8px;
+}
+
+.panel-left .consistency-unify-hero .consistency-unify-section {
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+/* 등록(입력바) + 통일형 검수 — 한 줄 */
+.panel-left .consistency-unify-hero .consistency-unify-action-row {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+}
+
+.panel-left .consistency-unify-hero .consistency-unify-action-row__field {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.panel-left .consistency-unify-hero .consistency-unify-action-row__field .tail-form {
+  margin: 0;
+}
+
+.panel-left .consistency-unify-hero .consistency-unify-run-btn {
+  flex: 0 0 auto;
+  align-self: stretch;
+  margin: 0;
+  padding: 6px 12px;
+  border: none;
+  border-radius: var(--radius-search);
+  background: var(--accent-terracotta, #a67c52);
+  color: #fff;
+  font-size: calc(0.85rem * var(--panel-ui-scale, 1));
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.15s ease, opacity 0.15s ease;
+}
+
+.panel-left .consistency-unify-hero .consistency-unify-run-btn:hover:not(:disabled) {
+  background: var(--accent-terracotta-deep, #8b6340);
+}
+
+.panel-left .consistency-unify-hero .consistency-unify-run-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* 외래어 변환 입력창과 동일 테두리·버튼 */
+.panel-left .consistency-unify-hero .consistency-register-field {
+  margin-top: 0;
+  border: 1px solid #c5c9d0;
+  border-radius: var(--radius-search);
+  background: var(--color-surface-overlay);
+  overflow: hidden;
+}
+
+.panel-left .consistency-unify-hero .consistency-register-field__input {
+  padding: 6px 10px;
+  font-size: calc(0.85rem * var(--panel-ui-scale, 1));
+  font-weight: 400;
+  color: var(--c-ink, var(--color-text));
+}
+
+.panel-left .consistency-unify-hero .consistency-register-add-btn,
+.panel-left .consistency-unify-hero .consistency-register-add-btn--label {
+  min-width: auto;
+  margin: 0;
+  padding: 6px 14px;
+  border: none;
+  border-radius: 0;
+  background: var(--search-action-bg);
+  color: #fff;
+  font-size: calc(0.85rem * var(--panel-ui-scale, 1));
+  font-weight: 400;
+  line-height: 1.2;
+  white-space: nowrap;
+  transition: background 0.15s ease;
+}
+
+.panel-left
+  .consistency-unify-hero
+  .consistency-register-add-btn:hover:not(:disabled) {
+  background: var(--search-action-bg-hover);
+}
+
+.panel-left .consistency-unify-hero .consistency-register-add-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.panel-left .consistency-unify-hero .tail-list:not(.tail-list--grid) {
+  border-top: none;
+  margin-top: var(--consistency-item-gap, 6px);
+  padding-top: 0;
 }
 
 .consistency-toc-section {
@@ -3469,6 +3650,7 @@
 }
 
 .panel-left .consistency-unified-box .consistency-register-field {
+  border: 1px solid #c5c9d0;
   background: var(--color-surface-overlay);
 }
 
@@ -3488,25 +3670,30 @@
   box-shadow: none;
 }
 
-.consistency-unified-box .consistency-register-field__input {
+.consistency-unified-box .consistency-register-field__input,
+.consistency-unify-hero .consistency-register-field__input {
   color: var(--consistency-register-text);
 }
 
-.consistency-unified-box .consistency-register-field__input::placeholder {
+.consistency-unified-box .consistency-register-field__input::placeholder,
+.consistency-unify-hero .consistency-register-field__input::placeholder {
   color: var(--color-text-subtle);
   opacity: 1;
 }
 
-.consistency-unified-box .consistency-register-add-btn {
-  min-width: 2.25rem;
-  padding: var(--consistency-input-padding-block, calc(10px * 0.6)) 8px;
-  font-size: 1.1rem;
-  font-weight: 700;
-  line-height: 1;
+.consistency-unified-box .consistency-register-add-btn,
+.consistency-unified-box .consistency-register-add-btn--label {
+  min-width: auto;
+  margin: 0;
+  padding: 6px 14px;
+  font-size: calc(0.85rem * var(--panel-ui-scale, 1));
+  font-weight: 400;
+  line-height: 1.2;
   border: none;
-  border-radius: 0 var(--radius-search) var(--radius-search) 0;
+  border-radius: 0;
   background: var(--consistency-register-add-bg);
   color: #fff;
+  white-space: nowrap;
   transition: background 0.15s ease;
 }
 
@@ -3515,7 +3702,7 @@
 }
 
 .consistency-unified-box .consistency-register-add-btn:disabled {
-  opacity: 0.45;
+  opacity: 0.55;
   cursor: not-allowed;
 }
 
@@ -4351,10 +4538,11 @@
   font-size: calc(0.65rem * var(--panel-ui-scale));
 }
 
-.panel-left .consistency-unified-box .consistency-register-add-btn {
-  font-size: calc(1.1rem * var(--panel-ui-scale));
-  padding: var(--consistency-input-padding-block, calc(10px * var(--panel-ui-scale, 1) * 0.6))
-    calc(8px * var(--panel-ui-scale));
+.panel-left .consistency-unified-box .consistency-register-add-btn,
+.panel-left .consistency-unified-box .consistency-register-add-btn--label {
+  font-size: calc(0.85rem * var(--panel-ui-scale));
+  font-weight: 400;
+  padding: 6px 14px;
 }
 
 .panel-left .field-label {

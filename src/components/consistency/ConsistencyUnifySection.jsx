@@ -29,6 +29,10 @@ import { CONSISTENCY_UNIFY_INPUT_PLACEHOLDER, GUEST_BROWSE_UNIFY_INPUT_PLACEHOLD
  *   onAddButtonClick?: () => void,
  *   guidePinTailWord?: string | null,
  *   onGuidePinClick?: (tailWord: string) => void,
+ *   hideHeading?: boolean,
+ *   showRunButton?: boolean,
+ *   runDisabled?: boolean,
+ *   onRunClick?: () => void,
  * }} props
  */
 export default function ConsistencyUnifySection({
@@ -41,6 +45,10 @@ export default function ConsistencyUnifySection({
   onAddButtonClick,
   guidePinTailWord = null,
   onGuidePinClick,
+  hideHeading = false,
+  showRunButton = false,
+  runDisabled = false,
+  onRunClick,
 }) {
   const [unifiedDraft, setUnifiedDraft] = useState('');
   const unifyEntries = useMemo(
@@ -108,19 +116,24 @@ export default function ConsistencyUnifySection({
 
   return (
     <div className="consistency-subsection consistency-unify-section">
-      <p className="printed-page-setup__title consistency-subsection-title panel-criteria-heading">
-        통일형 만들기
-        <span className="panel-criteria-heading-meta">
-          (1회 {MAX_CONSISTENCY_UNIFY_SLOTS}항목까지 가능, 통일형 1항목 지원)
-        </span>
-      </p>
-      <p className="hint consistency-hint-block">
-        여러 항목 중 하나를 통일형📌으로 지정하고, 나머지를 찾아 바꿀 수 있습니다
-        <br />
-        <ConsistencyHintExample>
-          &apos;조선시대,조선˅시대&apos; 입력 → &apos;조선시대&apos; 통일형 📌지정하고 찾기
-        </ConsistencyHintExample>
-      </p>
+      {hideHeading ? null : (
+        <>
+          <p className="printed-page-setup__title consistency-subsection-title panel-criteria-heading">
+            통일형 만들기
+            <span className="panel-criteria-heading-meta">
+              (1회 {MAX_CONSISTENCY_UNIFY_SLOTS}항목까지 가능, 통일형 1항목 지원)
+            </span>
+          </p>
+          <p className="hint consistency-hint-block">
+            여러 항목 중 하나를 통일형📌으로 지정하고, 나머지를 찾아 바꿀 수 있습니다
+            <br />
+            <ConsistencyHintExample>
+              &apos;조선시대,조선˅시대&apos; 입력 → &apos;조선시대&apos; 통일형
+              📌지정하고 찾기
+            </ConsistencyHintExample>
+          </p>
+        </>
+      )}
       {inlineRegisterRow ? (
         <div className="project-hub-consistency-register-row">
           <ConsistencyRegisterField
@@ -133,6 +146,7 @@ export default function ConsistencyUnifySection({
             hideLimitTitle={suppressLimitMessage}
             addButtonGuideAttr={addButtonGuideAttr}
             onAddButtonClick={onAddButtonClick}
+            addLabel="등록"
           />
           <UnifyRegisteredList
             entries={unifyEntries}
@@ -144,17 +158,49 @@ export default function ConsistencyUnifySection({
         </div>
       ) : (
         <>
-          <ConsistencyRegisterField
-            value={unifiedDraft}
-            onChange={setUnifiedDraft}
-            onRegister={registerUnified}
-            placeholder={unifyPlaceholder}
-            ariaLabel="통일형 만들기"
-            registerDisabled={registerBlocked}
-            hideLimitTitle={suppressLimitMessage}
-            addButtonGuideAttr={addButtonGuideAttr}
-            onAddButtonClick={onAddButtonClick}
-          />
+          <div
+            className={
+              showRunButton
+                ? 'consistency-unify-action-row'
+                : undefined
+            }
+          >
+            <div
+              className={
+                showRunButton
+                  ? 'consistency-unify-action-row__field'
+                  : undefined
+              }
+            >
+              <ConsistencyRegisterField
+                value={unifiedDraft}
+                onChange={setUnifiedDraft}
+                onRegister={registerUnified}
+                placeholder={unifyPlaceholder}
+                ariaLabel="통일형 만들기"
+                registerDisabled={registerBlocked}
+                hideLimitTitle={suppressLimitMessage}
+                addButtonGuideAttr={addButtonGuideAttr}
+                onAddButtonClick={onAddButtonClick}
+                addLabel="등록"
+              />
+            </div>
+            {showRunButton ? (
+              <button
+                type="button"
+                className="consistency-unify-run-btn"
+                disabled={runDisabled || unifyEntries.length === 0}
+                onClick={() => onRunClick?.()}
+                title={
+                  unifyEntries.length === 0
+                    ? '통일형을 먼저 등록해 주세요'
+                    : '등록한 통일형만 검수합니다'
+                }
+              >
+                검수
+              </button>
+            ) : null}
+          </div>
           <UnifyRegisteredList
             entries={unifyEntries}
             pinnedTailWord={pinnedTailWord}

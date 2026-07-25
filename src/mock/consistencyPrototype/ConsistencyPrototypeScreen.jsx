@@ -19,7 +19,8 @@ function splitCommaInput(raw) {
 }
 
 /**
- * DEV: ?window=consistency-mock — 작업대 일관성 UI + 통일형 만들기만 추가
+ * DEV: ?window=consistency-mock
+ * 통일형 만들기를 외래어 변환처럼 탭 맨 위 분리 카드로 둔 목업
  */
 export default function ConsistencyPrototypeScreen() {
   const [literalInput, setLiteralInput] = useState('');
@@ -68,15 +69,23 @@ export default function ConsistencyPrototypeScreen() {
   }, []);
 
   const addMapping = useCallback(() => {
-    const unified = unifiedDraft.trim();
-    const correction = correctionDraft.trim();
-    if (!unified || !correction) return;
-    setMappings((prev) => [
-      ...prev,
-      { id: `m-${Date.now()}`, unified, correction },
-    ]);
+    const parts = splitCommaInput(correctionDraft);
+    if (!parts.length) return;
+    const unified = parts[0];
+    const corrections = parts.length > 1 ? parts.slice(1) : [];
+    if (corrections.length) {
+      setMappings((prev) => [
+        ...prev,
+        ...corrections.map((correction, i) => ({
+          id: `m-${Date.now()}-${i}-${correction}`,
+          unified,
+          correction,
+        })),
+      ]);
+    }
+    setUnifiedDraft(unified);
     setCorrectionDraft('');
-  }, [correctionDraft, unifiedDraft]);
+  }, [correctionDraft]);
 
   const removeMapping = useCallback((id) => {
     setMappings((prev) => prev.filter((m) => m.id !== id));
@@ -103,29 +112,114 @@ export default function ConsistencyPrototypeScreen() {
   return (
     <div className="consistency-proto-page">
       <div className="consistency-proto__dev-banner" role="status">
-        DEV 목업 · <code>?window=consistency-mock</code> · 규칙 저장·검수 없음
+        DEV 목업 · <code>?window=consistency-mock</code> · 통일형 맨 위 분리
         {' · '}
         <a href="/?devPdf=1">실제 작업대</a>
       </div>
 
       <div className="consistency-proto__frame panel-left">
         <div className="consistency-embed">
+          <section
+            className="consistency-unify-hero"
+            aria-label="통일형 만들기"
+          >
+            <div className="consistency-unify-hero__summary panel-criteria-heading">
+              <span className="consistency-unify-hero__summary-title">
+                통일형 만들기
+                <span className="panel-criteria-heading-meta">
+                  (1회 3항목까지 가능, 통일형 1항목 지원)
+                </span>
+                <span
+                  className="consistency-unify-hero__badge"
+                  aria-label="하루 5회"
+                >
+                  1일 5회
+                </span>
+                <span
+                  className="consistency-unify-hero__badge consistency-unify-hero__badge--feedback"
+                  aria-label="피드백 시 2배"
+                  title="피드백을 남기면 하루 10회"
+                >
+                  ×2 피드백
+                </span>
+              </span>
+            </div>
+            <p className="hint consistency-hint-block consistency-unify-hero__hint">
+              여러 항목 중 하나를 통일형📌으로 지정하고, 나머지를 찾아 바꿀 수
+              있습니다
+              <br />
+              예:{' '}
+              <span className="consistency-hint-example">
+                &apos;조선시대,조선˅시대&apos;
+              </span>{' '}
+              입력 → &apos;조선시대&apos; 통일형 📌지정하고 찾기
+            </p>
+            <div className="consistency-unify-action-row">
+              <div className="consistency-unify-action-row__field">
+                <ConsistencyRegisterField
+                  value={correctionDraft}
+                  onChange={setCorrectionDraft}
+                  onRegister={addMapping}
+                  placeholder="조선시대,조선˅시대"
+                  ariaLabel="통일형 만들기"
+                  addLabel="등록"
+                />
+              </div>
+              <button
+                type="button"
+                className="consistency-unify-run-btn"
+                disabled={mappings.length === 0}
+                title="목업 — 등록한 통일형만 검수"
+              >
+                검수
+              </button>
+            </div>
+            {mappings.length > 0 ? (
+              <ul
+                className="tail-list consistency-proto__pin-list"
+                aria-label="통일 매핑"
+              >
+                {mappings.map((row) => (
+                  <li key={row.id} className="consistency-proto__pin-item">
+                    <span className="consistency-proto__pin-chip consistency-proto__pin-chip--on">
+                      <span className="consistency-proto__pin-btn" aria-hidden>
+                        📌
+                      </span>
+                      <span>
+                        {row.correction} → {row.unified}
+                      </span>
+                      <button
+                        type="button"
+                        className="consistency-proto__pin-remove"
+                        aria-label={`${row.correction} → ${row.unified} 삭제`}
+                        onClick={() => removeMapping(row.id)}
+                      >
+                        ×
+                      </button>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </section>
+
           <section className="consistency-unified-box" aria-label="여러 개 찾기">
             <p className="printed-page-setup__title consistency-panel-section-title panel-criteria-heading">
-              여러 개 찾기(1회 검수 8개 이내 추천)⭐
+              여러 개 찾기
+              <span className="panel-criteria-heading-meta">
+                (1회 5항목까지 가능, 영문 대소문자 지원)
+              </span>
             </p>
             <div className="consistency-subsection consistency-subsection--first">
               <p className="hint consistency-hint-block">
-                한글 · 영문 대소문자 등을 찾습니다. 여러 항목은 사이에 , 를 넣어 한
-                번에 입력하세요
+                여러 항목 사이 &apos;,&apos;를 넣어 입력하면 한 번에 찾을 수
+                있습니다
                 <br />
-                예: 원고 내 &apos;조선시대&apos; 일관성 확인 →{' '}
+                예:{' '}
                 <span className="consistency-hint-example">
-                  &apos;조선˅시대,조선시대&apos;
+                  &apos;고구려,백제,신라,Silla&apos;
                 </span>{' '}
-                입력 후 검수하세요
-                <br />
-                결과에 핀 꽂으면 아래 통일형으로 연결됩니다.
+                입력 → 4항목 한 번에 찾기
               </p>
               <ConsistencyRegisterField
                 value={literalInput}
@@ -135,7 +229,10 @@ export default function ConsistencyPrototypeScreen() {
                 ariaLabel="여러 개 찾기"
               />
               {findTerms.length > 0 ? (
-                <ul className="tail-list consistency-proto__pin-list" aria-label="등록된 찾기 항목">
+                <ul
+                  className="tail-list consistency-proto__pin-list"
+                  aria-label="등록된 찾기 항목"
+                >
                   {findTerms.map((term) => (
                     <li key={term.id} className="consistency-proto__pin-item">
                       <span
@@ -170,90 +267,20 @@ export default function ConsistencyPrototypeScreen() {
               ) : null}
             </div>
 
-            <div className="consistency-subsection consistency-proto-unify">
-              <p className="printed-page-setup__title consistency-subsection-title panel-criteria-heading">
-                통일형 만들기
-              </p>
-              <p className="hint">
-                찾은 표기를 통일합니다. <strong>수정형</strong>은 원고에서 찾을
-                표기, <strong>통일형</strong>은 PDF 위에 보여 줄 안내 문구입니다
-                (자동 치환 아님).
-              </p>
-              <div className="consistency-proto-unify-cols">
-                <label className="consistency-proto-unify-field">
-                  <span className="consistency-proto-unify-label">통일형</span>
-                  <input
-                    type="text"
-                    className="field-input"
-                    value={unifiedDraft}
-                    onChange={(e) => setUnifiedDraft(e.target.value)}
-                    placeholder="결과에서 고정하거나 직접 입력"
-                  />
-                </label>
-                <div className="consistency-proto-unify-field">
-                  <span className="consistency-proto-unify-label">수정형</span>
-                  <div className="tail-form consistency-proto-unify-add-row">
-                    <input
-                      type="text"
-                      className="field-input"
-                      value={correctionDraft}
-                      onChange={(e) => setCorrectionDraft(e.target.value)}
-                      placeholder="입력 후 Enter"
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          addMapping();
-                        }
-                      }}
-                    />
-                    <button
-                      type="button"
-                      className="btn consistency-proto-unify-add-btn"
-                      onClick={addMapping}
-                    >
-                      추가
-                    </button>
-                  </div>
-                </div>
-              </div>
-              <p className="hint consistency-proto-unify-note">
-                통일형을 정하면, 수정형은 검수 시 원고 위에 통일형으로 안내됩니다.
-              </p>
-              {mappings.length > 0 ? (
-                <ul className="consistency-proto__mapping-list" aria-label="통일 매핑">
-                  {mappings.map((row) => (
-                    <li key={row.id} className="consistency-proto__mapping">
-                      <span className="consistency-proto__mapping-correction">
-                        {row.correction}
-                      </span>
-                      <span aria-hidden>→</span>
-                      <span className="consistency-proto__mapping-unified">
-                        {row.unified}
-                      </span>
-                      <button
-                        type="button"
-                        className="consistency-proto__mapping-remove"
-                        aria-label={`${row.correction} → ${row.unified} 삭제`}
-                        onClick={() => removeMapping(row.id)}
-                      >
-                        ×
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
-            </div>
-
             <div className="consistency-subsection-row">
               <div className="consistency-subsection consistency-subsection--half">
                 <p className="printed-page-setup__title consistency-subsection-title panel-criteria-heading">
-                  공통 항목 찾기(1개)
+                  공통 항목 찾기
+                  <span className="panel-criteria-heading-meta">(1항목)</span>
                 </p>
                 <div className="consistency-subsection__hints-area">
                   <p className="hint consistency-hint-block">
                     @을 포함한 항목을 모두 찾습니다
                     <br />
-                    예: <span className="consistency-hint-example">&apos;@시대&apos;</span>{' '}
+                    예:{' '}
+                    <span className="consistency-hint-example">
+                      &apos;@시대&apos;
+                    </span>{' '}
                     검색→{' '}
                     <span className="consistency-hint-example">
                       &apos;조선시대, 고려시대, 신라시대&apos;
@@ -276,7 +303,9 @@ export default function ConsistencyPrototypeScreen() {
                         key={slot}
                         label={slot}
                         onRemove={() =>
-                          setPhraseSlots((prev) => prev.filter((s) => s !== slot))
+                          setPhraseSlots((prev) =>
+                            prev.filter((s) => s !== slot),
+                          )
                         }
                       />
                     ))}
@@ -285,14 +314,18 @@ export default function ConsistencyPrototypeScreen() {
               </div>
 
               <div className="consistency-subsection consistency-subsection--half consistency-subsection--exclude">
-                <p className="printed-page-setup__title consistency-subsection-title">
-                  검수 제외 단어
+                <p className="printed-page-setup__title consistency-subsection-title panel-criteria-heading">
+                  검수 제외 항목
+                  <span className="panel-criteria-heading-meta">(1항목)</span>
                 </p>
                 <div className="consistency-subsection__hints-area">
-                  <p className="hint">
-                    등록한 단어는 찾지 않습니다
+                  <p className="hint consistency-hint-block">
+                    입력한 항목은 찾지 않습니다
                     <br />
-                    예: <span className="consistency-hint-example">&apos;소녀시대&apos;</span>
+                    예:{' '}
+                    <span className="consistency-hint-example">
+                      &apos;소녀시대&apos;
+                    </span>
                   </p>
                 </div>
                 <ConsistencyRegisterField
@@ -300,12 +333,14 @@ export default function ConsistencyPrototypeScreen() {
                   onChange={setExcludeInput}
                   onRegister={registerExclude}
                   placeholder={SPACE_INPUT_PLACEHOLDER}
-                  ariaLabel="검수 제외 단어"
+                  ariaLabel="검수 제외 항목"
                 />
                 <ExcludePhraseList
                   phrases={excludePhrases}
                   onRemove={(phrase) =>
-                    setExcludePhrases((prev) => prev.filter((p) => p !== phrase))
+                    setExcludePhrases((prev) =>
+                      prev.filter((p) => p !== phrase),
+                    )
                   }
                 />
               </div>
