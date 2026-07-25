@@ -92,6 +92,7 @@ import TooltipGuide from './TooltipGuide.jsx';
  *   hasPdf?: boolean,
  *   isProcessing?: boolean,
  *   checkQuotaBlocked?: boolean,
+ *   unifyQuotaBlocked?: boolean,
  *   auxiliaryVerbGuide?: {
  *     storageKey: string,
  *     alignToBubbleChain: readonly object[],
@@ -142,6 +143,7 @@ export default function ConsistencyPanel({
   hasPdf = false,
   isProcessing = false,
   checkQuotaBlocked = false,
+  unifyQuotaBlocked = false,
   auxiliaryVerbGuide = null,
   onLiteralAddButtonClick,
   onUnifyAddButtonClick,
@@ -325,7 +327,7 @@ export default function ConsistencyPanel({
             </span>
             <span
               className="consistency-unify-hero__badge consistency-unify-hero__badge--feedback"
-              aria-label="피드백 시 2배"
+              aria-label="피드백 시 10회"
               title="피드백을 남기면 하루 10회"
             >
               ×2 피드백
@@ -351,7 +353,7 @@ export default function ConsistencyPanel({
           onGuidePinClick={onGuidePinClick}
           hideHeading
           showRunButton
-          runDisabled={!hasPdf || isProcessing || checkQuotaBlocked}
+          runDisabled={!hasPdf || isProcessing || unifyQuotaBlocked}
           onRunClick={onUnifyRunClick}
         />
         {consistencyUnifyPinGuide ? (

@@ -98,6 +98,7 @@ import {
   countSpellingRuleActiveRules,
 } from '../lib/activeRuleCount.js';
 import { countConsistencyCheckActiveRules, countConsistencyFindingsByType, countConsistencyGroupsWithFindings } from '../lib/consistencyCheckConfirm.js';
+import { isConsistencyUnifyResultGroup } from '../lib/consistencyUnifyRegister.js';
 import { countSpellingFindingsByCategory, countSpellingGroupsWithFindings } from '../lib/spellingCheckConfirm.js';
 import { formatRuleSetSavedDate } from '../lib/ruleSetsStorage.js';
 import {
@@ -508,7 +509,12 @@ export default function MainScreen({
     (workTab === 'spelling'
       ? !betaQuota.canRunSpellingCheck
       : !betaQuota.canRunConsistencyCheck);
+  const unifyQuotaBlocked =
+    betaQuota.enforced &&
+    !betaQuota.loading &&
+    !betaQuota.canRunUnifyCheck;
   const checkSessionBlocked = checkAuthBlocked || checkQuotaBlocked;
+  const unifySessionBlocked = checkAuthBlocked || unifyQuotaBlocked;
 
   const criteriaRunBlocked = useMemo(() => {
     if (pdf.pageTexts.length === 0 || checkAuthBlocked || checkQuotaBlocked) {
@@ -705,11 +711,18 @@ export default function MainScreen({
   const consistencyCriteriaSelection = useMemo(
     () => ({
       literalSelected: consistencyActiveCriteria.literalActive > 0,
-      unifySelected: consistencyActiveCriteria.unifyActive > 0,
+      // 통일형은 카드 검수 전용 — 결과에 통일형 그룹이 있을 때만 요약·엑셀에 표시
+      unifySelected: ruleCheck.consistencyResults.some((g) =>
+        isConsistencyUnifyResultGroup(customRules, g),
+      ),
       commonStringSelected: consistencyActiveCriteria.commonStringActive > 0,
       auxiliarySelected: consistencyActiveCriteria.auxiliaryActive > 0,
     }),
-    [consistencyActiveCriteria],
+    [
+      consistencyActiveCriteria,
+      customRules,
+      ruleCheck.consistencyResults,
+    ],
   );
 
   const spellingFindingsByCategory = useMemo(
@@ -2409,6 +2422,7 @@ export default function MainScreen({
                   hasPdf={pdf.pageTexts.length > 0}
                   isProcessing={pdf.isProcessing}
                   checkQuotaBlocked={checkSessionBlocked}
+                  unifyQuotaBlocked={unifySessionBlocked}
                   onUnifyRunClick={() => {
                     void ruleCheck.runConsistencyUnifyCheck();
                   }}

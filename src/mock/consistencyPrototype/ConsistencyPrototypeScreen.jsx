@@ -137,7 +137,7 @@ export default function ConsistencyPrototypeScreen() {
                 </span>
                 <span
                   className="consistency-unify-hero__badge consistency-unify-hero__badge--feedback"
-                  aria-label="피드백 시 2배"
+                  aria-label="피드백 시 10회"
                   title="피드백을 남기면 하루 10회"
                 >
                   ×2 피드백

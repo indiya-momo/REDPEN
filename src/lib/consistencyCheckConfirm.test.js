@@ -26,6 +26,9 @@ vi.mock('./betaDailyQuota.js', async (importOriginal) => {
     isBetaDailyQuotaEnforcedForUser: vi.fn(() => false),
     getBetaDailyQuotaStatus: vi.fn(async () => ({
       consistencyCount: 1,
+      consistencyTabLimit: 2,
+      unifyCount: 1,
+      unifyTabLimit: 5,
       tabLimit: 2,
     })),
   };
@@ -128,8 +131,6 @@ describe('confirmConsistencyCheckBeforeRun', () => {
         tabLimit: 2,
         literalActive: 0,
         literalTotal: 0,
-        unifyActive: 0,
-        unifyTotal: 0,
         commonStringActive: 1,
         commonStringTotal: 1,
         excludeActive: 0,
@@ -140,7 +141,7 @@ describe('confirmConsistencyCheckBeforeRun', () => {
     expect(confirmMock).toHaveBeenCalledWith(`${title}\n\n${message}`);
   });
 
-  it('통일형 항목이 켜져 있는데 📌 미지정이면 검수를 막는다', async () => {
+  it('기준 검수는 통일형 📌 없이도 confirm을 진행한다', async () => {
     const alertMock = vi.fn();
     const confirmMock = vi.fn(() => true);
     vi.stubGlobal('alert', alertMock);
@@ -161,11 +162,9 @@ describe('confirmConsistencyCheckBeforeRun', () => {
       },
     ]);
 
-    expect(ok).toBe(false);
-    expect(alertMock).toHaveBeenCalledWith(
-      `안내\n\n${CONSISTENCY_UNIFY_PIN_REQUIRED_MESSAGE}`,
-    );
-    expect(confirmMock).not.toHaveBeenCalled();
+    expect(ok).toBe(true);
+    expect(alertMock).not.toHaveBeenCalled();
+    expect(confirmMock).toHaveBeenCalled();
   });
 });
 
@@ -250,8 +249,6 @@ describe('formatConsistencyCheckConfirmMessage', () => {
         tabLimit: 1,
         literalActive: 3,
         literalTotal: 8,
-        unifyActive: 1,
-        unifyTotal: 2,
         commonStringActive: 1,
         commonStringTotal: 4,
         excludeActive: 1,
@@ -259,11 +256,11 @@ describe('formatConsistencyCheckConfirmMessage', () => {
         auxiliaryTotal: 10,
       }),
     ).toBe(
-      '[표기 통일 검수 진행]\n' +
+      '[표기 통일 검수]\n' +
         '\n' +
         '오늘 표기 통일 검수는 1회(한도 1회) 가능합니다\n' +
-        '여러 개 찾기(3항목), 통일형 만들기(1항목), 공통 항목 찾기(1기준)\n' +
-        '검수 제외 항목(1기준), 본용언(-아/어) + 보조용언 표기(2/10)\n' +
+        '여러 개 찾기(3항목), 공통 항목 찾기(1기준), 검수 제외 항목(1기준)\n' +
+        '본용언(-아/어) + 보조용언 표기(2/10)\n' +
         '\n' +
         '검수를 진행할까요?',
     );
@@ -276,8 +273,6 @@ describe('formatConsistencyCheckConfirmMessage', () => {
         tabLimit: 1,
         literalActive: 0,
         literalTotal: 0,
-        unifyActive: 0,
-        unifyTotal: 0,
         commonStringActive: 0,
         commonStringTotal: 0,
         excludeActive: 0,
@@ -285,11 +280,11 @@ describe('formatConsistencyCheckConfirmMessage', () => {
         auxiliaryTotal: 10,
       }),
     ).toBe(
-      '[표기 통일 검수 진행]\n' +
+      '[표기 통일 검수]\n' +
         '\n' +
         '오늘 표기 통일 검수는 1회(한도 1회) 가능합니다\n' +
-        '여러 개 찾기(없음), 통일형 만들기(없음), 공통 항목 찾기(없음)\n' +
-        '검수 제외 항목(없음), 본용언(-아/어) + 보조용언 표기(10/10)\n' +
+        '여러 개 찾기(없음), 공통 항목 찾기(없음), 검수 제외 항목(없음)\n' +
+        '본용언(-아/어) + 보조용언 표기(10/10)\n' +
         '\n' +
         '검수를 진행할까요?',
     );
@@ -303,12 +298,13 @@ describe('formatConsistencyUnifyCheckConfirmMessage', () => {
         remaining: 4,
         tabLimit: 5,
         unifyActive: 2,
+        pinnedTailWord: '조선시대',
       }),
     ).toBe(
       '[통일형 검수 진행]\n' +
         '\n' +
-        '오늘 표기 통일 검수는 4회(한도 5회) 가능합니다\n' +
-        `${UNIFY_FEATURE_LABEL}(2항목)\n` +
+        '오늘 통일형 검수는 4회(한도 5회) 가능합니다\n' +
+        `${UNIFY_FEATURE_LABEL}(2항목, 통일형: 조선시대📌)\n` +
         '\n' +
         '검수를 진행할까요?',
     );
@@ -318,11 +314,12 @@ describe('formatConsistencyUnifyCheckConfirmMessage', () => {
     expect(
       formatConsistencyUnifyCheckConfirmMessageWithoutQuota({
         unifyActive: 1,
+        pinnedTailWord: '조선시대',
       }),
     ).toBe(
       '[통일형 검수 진행]\n' +
         '\n' +
-        `${UNIFY_FEATURE_LABEL}(1항목)\n` +
+        `${UNIFY_FEATURE_LABEL}(1항목, 통일형: 조선시대📌)\n` +
         '\n' +
         '검수를 진행할까요?',
     );

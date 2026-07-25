@@ -16,6 +16,7 @@ import {
   UNIFY_FEATURE_LABEL,
   listConsistencyUnifyEntries,
 } from './consistencyRuleLimit.js';
+import { formatConsistencyListLabel } from './patternDisplayLabels.js';
 import {
   isPhraseSlotEntryEnabled,
   listPhraseSlotEntries,
@@ -30,6 +31,7 @@ import {
   formatConsistencyResultsSummaryLine,
 } from './checkResultSummaryFormat.js';
 import {
+  BETA_UNIFY_LIMIT_DEFAULT,
   betaQuotaAlertForTab,
   canRunTabCheck,
   getBetaDailyQuotaStatus,
@@ -110,6 +112,26 @@ function formatConfirmItemCount(active) {
   return active > 0 ? `(${active}항목)` : '(없음)';
 }
 
+/**
+ * 통일형 confirm 한 줄 — 예: 통일형 만들기(2항목, 통일형: 조선시대📌)
+ * @param {number} unifyActive
+ * @param {string | null | undefined} pinnedTailWord
+ */
+export function formatConsistencyUnifyConfirmLine(
+  unifyActive,
+  pinnedTailWord,
+) {
+  if (unifyActive <= 0) {
+    return `${UNIFY_FEATURE_LABEL}(없음)`;
+  }
+  const pinned = typeof pinnedTailWord === 'string' ? pinnedTailWord.trim() : '';
+  if (!pinned) {
+    return `${UNIFY_FEATURE_LABEL}${formatConfirmItemCount(unifyActive)}`;
+  }
+  const label = formatConsistencyListLabel(pinned);
+  return `${UNIFY_FEATURE_LABEL}(${unifyActive}항목, 통일형: ${label}📌)`;
+}
+
 /** @param {number} active @param {number} total */
 function formatConfirmAuxiliaryCount(active, total) {
   return total > 0 ? `(${active}/${total})` : '(없음)';
@@ -118,7 +140,6 @@ function formatConfirmAuxiliaryCount(active, total) {
 /**
  * @param {{
  *   literalActive: number,
- *   unifyActive: number,
  *   commonStringActive: number,
  *   excludeActive: number,
  *   auxiliaryActive: number,
@@ -127,7 +148,6 @@ function formatConfirmAuxiliaryCount(active, total) {
  */
 function formatConsistencyCheckCriteriaBlock({
   literalActive,
-  unifyActive,
   commonStringActive,
   excludeActive,
   auxiliaryActive,
@@ -135,11 +155,9 @@ function formatConsistencyCheckCriteriaBlock({
 }) {
   const line1 =
     `${LITERAL_FIND_FEATURE_LABEL}${formatConfirmItemCount(literalActive)}, ` +
-    `${UNIFY_FEATURE_LABEL}${formatConfirmItemCount(unifyActive)}, ` +
-    `공통 항목 찾기${formatConfirmActiveCount(commonStringActive)}`;
-  const line2 =
-    `검수 제외 항목${formatConfirmActiveCount(excludeActive)}, ` +
-    `${AUXILIARY_VERB_FEATURE_LABEL}${formatConfirmAuxiliaryCount(auxiliaryActive, auxiliaryTotal)}`;
+    `공통 항목 찾기${formatConfirmActiveCount(commonStringActive)}, ` +
+    `검수 제외 항목${formatConfirmActiveCount(excludeActive)}`;
+  const line2 = `${AUXILIARY_VERB_FEATURE_LABEL}${formatConfirmAuxiliaryCount(auxiliaryActive, auxiliaryTotal)}`;
   return `${line1}\n${line2}`;
 }
 
@@ -149,8 +167,6 @@ function formatConsistencyCheckCriteriaBlock({
  *   tabLimit: number,
  *   literalActive: number,
  *   literalTotal: number,
- *   unifyActive: number,
- *   unifyTotal: number,
  *   commonStringActive: number,
  *   commonStringTotal: number,
  *   excludeActive: number,
@@ -162,19 +178,17 @@ export function formatConsistencyCheckConfirmMessage({
   remaining,
   tabLimit,
   literalActive,
-  unifyActive,
   commonStringActive,
   excludeActive,
   auxiliaryActive,
   auxiliaryTotal,
 }) {
   return (
-    `[표기 통일 검수 진행]\n` +
+    `[표기 통일 검수]\n` +
     `\n` +
     `오늘 표기 통일 검수는 ${remaining}회(한도 ${tabLimit}회) 가능합니다\n` +
     `${formatConsistencyCheckCriteriaBlock({
       literalActive,
-      unifyActive,
       commonStringActive,
       excludeActive,
       auxiliaryActive,
@@ -186,33 +200,40 @@ export function formatConsistencyCheckConfirmMessage({
 }
 
 /**
- * @param {{ remaining: number, tabLimit: number, unifyActive: number }} input
+ * @param {{
+ *   remaining: number,
+ *   tabLimit: number,
+ *   unifyActive: number,
+ *   pinnedTailWord?: string | null,
+ * }} input
  */
 export function formatConsistencyUnifyCheckConfirmMessage({
   remaining,
   tabLimit,
   unifyActive,
+  pinnedTailWord = null,
 }) {
   return (
     `[통일형 검수 진행]\n` +
     `\n` +
-    `오늘 표기 통일 검수는 ${remaining}회(한도 ${tabLimit}회) 가능합니다\n` +
-    `${UNIFY_FEATURE_LABEL}${formatConfirmItemCount(unifyActive)}\n` +
+    `오늘 통일형 검수는 ${remaining}회(한도 ${tabLimit}회) 가능합니다\n` +
+    `${formatConsistencyUnifyConfirmLine(unifyActive, pinnedTailWord)}\n` +
     `\n` +
     '검수를 진행할까요?'
   );
 }
 
 /**
- * @param {{ unifyActive: number }} input
+ * @param {{ unifyActive: number, pinnedTailWord?: string | null }} input
  */
 export function formatConsistencyUnifyCheckConfirmMessageWithoutQuota({
   unifyActive,
+  pinnedTailWord = null,
 }) {
   return (
     `[통일형 검수 진행]\n` +
     `\n` +
-    `${UNIFY_FEATURE_LABEL}${formatConfirmItemCount(unifyActive)}\n` +
+    `${formatConsistencyUnifyConfirmLine(unifyActive, pinnedTailWord)}\n` +
     `\n` +
     '검수를 진행할까요?'
   );
@@ -222,8 +243,6 @@ export function formatConsistencyUnifyCheckConfirmMessageWithoutQuota({
  * @param {{
  *   literalActive: number,
  *   literalTotal: number,
- *   unifyActive: number,
- *   unifyTotal: number,
  *   commonStringActive: number,
  *   commonStringTotal: number,
  *   excludeActive: number,
@@ -233,11 +252,10 @@ export function formatConsistencyUnifyCheckConfirmMessageWithoutQuota({
  */
 export function formatConsistencyCheckConfirmMessageWithoutQuota(counts) {
   return (
-    `[표기 통일 검수 진행]\n` +
+    `[표기 통일 검수]\n` +
     `\n` +
     `${formatConsistencyCheckCriteriaBlock({
       literalActive: counts.literalActive,
-      unifyActive: counts.unifyActive,
       commonStringActive: counts.commonStringActive,
       excludeActive: counts.excludeActive,
       auxiliaryActive: counts.auxiliaryActive,
@@ -265,23 +283,17 @@ export async function confirmConsistencyCheckBeforeRun(
     return false;
   }
 
-  if (!(await assertConsistencyUnifyPinnedForCheck(customRules))) {
-    return false;
-  }
-
   if (guestBrowseSkipsCheckConfirm()) {
     return true;
   }
 
   const {
     literalActive,
-    unifyActive,
     commonStringActive,
     auxiliaryActive,
     excludeActive,
   } = countConsistencyCheckActiveRules(customRules, globalExcludePhrases);
   const literalTotal = listConsistencyLiteralEntries(customRules).length;
-  const unifyTotal = listConsistencyUnifyEntries(customRules).length;
   const commonStringTotal = listPhraseSlotEntries(customRules).length;
   const auxiliaryTotal = listAuxiliaryVerbEntries(customRules).length;
 
@@ -307,8 +319,6 @@ export async function confirmConsistencyCheckBeforeRun(
       tabLimit,
       literalActive,
       literalTotal,
-      unifyActive,
-      unifyTotal,
       commonStringActive,
       commonStringTotal,
       excludeActive,
@@ -319,8 +329,6 @@ export async function confirmConsistencyCheckBeforeRun(
     message = formatConsistencyCheckConfirmMessageWithoutQuota({
       literalActive,
       literalTotal,
-      unifyActive,
-      unifyTotal,
       commonStringActive,
       commonStringTotal,
       excludeActive,
@@ -365,19 +373,21 @@ export async function confirmConsistencyUnifyCheckBeforeRun(
     return false;
   }
 
+  const pinnedTailWord = getConsistencyUnifyPinnedTailWord(customRules);
+
   const quotaDisplayEnabled =
     isBetaDailyQuotaEnabled() && Boolean(uid.trim());
 
   let message;
   if (quotaDisplayEnabled) {
     const status = await getBetaDailyQuotaStatus(uid, email);
-    const tabCount = status.consistencyCount;
-    const tabLimit = status.consistencyTabLimit ?? status.tabLimit;
+    const tabCount = status.unifyCount ?? 0;
+    const tabLimit = status.unifyTabLimit ?? BETA_UNIFY_LIMIT_DEFAULT;
     if (
       isBetaDailyQuotaEnforcedForUser(uid, email) &&
       !canRunTabCheck(tabCount, tabLimit)
     ) {
-      alert(betaQuotaAlertForTab('consistency'));
+      alert(betaQuotaAlertForTab('unify'));
       return false;
     }
     const remaining = Math.max(0, tabLimit - tabCount);
@@ -385,10 +395,12 @@ export async function confirmConsistencyUnifyCheckBeforeRun(
       remaining,
       tabLimit,
       unifyActive,
+      pinnedTailWord,
     });
   } else {
     message = formatConsistencyUnifyCheckConfirmMessageWithoutQuota({
       unifyActive,
+      pinnedTailWord,
     });
   }
 

@@ -1,7 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-  BETA_CONSISTENCY_LIMIT_DEFAULT,
-  BETA_CONSISTENCY_LIMIT_FEEDBACK,
+  BETA_UNIFY_LIMIT_BOOSTED,
+  BETA_UNIFY_LIMIT_DEFAULT,
+  BETA_UNIFY_LIMIT_FEEDBACK,
   BETA_TAB_LIMIT_BOOSTED,
   BETA_TAB_LIMIT_DEFAULT,
   BETA_TAB_LIMIT_FEEDBACK,
@@ -61,19 +62,43 @@ describe('getTabCheckLimit', () => {
     );
   });
 
-  it('표기 통일 기본은 하루 5회', () => {
+  it('표기 통일 기준 검수 기본은 하루 1회', () => {
     expect(getTabCheckLimit(null, null, '2026-06-05', 'consistency')).toBe(
-      BETA_CONSISTENCY_LIMIT_DEFAULT,
+      BETA_TAB_LIMIT_DEFAULT,
     );
   });
 
-  it('표기 통일 피드백·선정이면 하루 10회', () => {
+  it('표기 통일 기준 검수 피드백이면 2회·선정이면 3회', () => {
     expect(
       getTabCheckLimit('2026-06-05', null, '2026-06-05', 'consistency'),
-    ).toBe(BETA_CONSISTENCY_LIMIT_FEEDBACK);
+    ).toBe(BETA_TAB_LIMIT_FEEDBACK);
     expect(
       getTabCheckLimit(null, '2026-06-05', '2026-06-05', 'consistency'),
-    ).toBe(BETA_CONSISTENCY_LIMIT_FEEDBACK);
+    ).toBe(BETA_TAB_LIMIT_BOOSTED);
+  });
+
+  it('통일형 검수 기본은 하루 5회', () => {
+    expect(getTabCheckLimit(null, null, '2026-06-05', 'unify')).toBe(
+      BETA_UNIFY_LIMIT_DEFAULT,
+    );
+  });
+
+  it('통일형 검수 피드백이면 하루 10회', () => {
+    expect(getTabCheckLimit('2026-06-05', null, '2026-06-05', 'unify')).toBe(
+      BETA_UNIFY_LIMIT_FEEDBACK,
+    );
+  });
+
+  it('통일형 검수 우수 선정이면 하루 15회', () => {
+    expect(getTabCheckLimit(null, '2026-06-05', '2026-06-05', 'unify')).toBe(
+      BETA_UNIFY_LIMIT_BOOSTED,
+    );
+  });
+
+  it('통일형 피드백과 선정이 겹치면 15회', () => {
+    expect(
+      getTabCheckLimit('2026-06-05', '2026-06-05', '2026-06-05', 'unify'),
+    ).toBe(BETA_UNIFY_LIMIT_BOOSTED);
   });
 });
 
@@ -106,25 +131,31 @@ describe('formatBetaQuotaConsumedAlert', () => {
       '오늘 표기 통일 검수 횟수가 1회 차감되었습니다.\n\n사용: 3/3회\n남음: 0회',
     );
   });
+
+  it('통일형 차감 후 사용·남은 횟수를 표시한다', () => {
+    expect(formatBetaQuotaConsumedAlert('unify', 1, 5)).toBe(
+      '오늘 통일형 검수 횟수가 1회 차감되었습니다.\n\n사용: 1/5회\n남음: 4회',
+    );
+  });
 });
 
 describe('mergeTabQuotaCounts', () => {
   it('Firestore가 0이고 local이 있으면 local을 유지한다', () => {
     expect(
       mergeTabQuotaCounts(
-        { spellingCount: 0, consistencyCount: 0 },
-        { spellingCount: 1, consistencyCount: 0 },
+        { spellingCount: 0, consistencyCount: 0, unifyCount: 0 },
+        { spellingCount: 1, consistencyCount: 0, unifyCount: 2 },
       ),
-    ).toEqual({ spellingCount: 1, consistencyCount: 0 });
+    ).toEqual({ spellingCount: 1, consistencyCount: 0, unifyCount: 2 });
   });
 
   it('Firestore가 더 크면 Firestore를 따른다', () => {
     expect(
       mergeTabQuotaCounts(
-        { spellingCount: 2, consistencyCount: 1 },
-        { spellingCount: 1, consistencyCount: 0 },
+        { spellingCount: 2, consistencyCount: 1, unifyCount: 3 },
+        { spellingCount: 1, consistencyCount: 0, unifyCount: 1 },
       ),
-    ).toEqual({ spellingCount: 2, consistencyCount: 1 });
+    ).toEqual({ spellingCount: 2, consistencyCount: 1, unifyCount: 3 });
   });
 });
 

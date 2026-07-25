@@ -92,24 +92,33 @@ export function SpellingStartCheckMessage() {
 export function FirstResultMessage() {
   return (
     <>
-      추가하고 싶은 기준이 있으면
+      왼쪽에는 검수 결과를 정리했다냥
       <br />
-      <span className="tooltip-guide__feedback-btn-look">
-        <MessageSquare
-          size={18}
-          aria-hidden
-          className="tooltip-guide__feedback-btn-look__icon"
-        />
-        피드백
+      오른쪽에서는 원고를 볼 수 있다냥
+      <br />
+      위{' '}
+      <span
+        className="tooltip-guide__inline-real-btn pdf-zoom-bar"
+        aria-hidden
+      >
+        <span className="pdf-zoom-bar__btn">
+          <span className="pdf-zoom-bar__sign">−</span>
+        </span>
+        <span className="pdf-zoom-bar__btn">
+          <span className="pdf-zoom-bar__sign">+</span>
+        </span>
       </span>
-      으로 알려달라냥
+      로 크기를 조절할 수 있고
       <br />
-      왼쪽은 기준, 오른쪽은 검수 원고가 있고
-      <br />
-      <span className="tooltip-guide__gothic-label">
-        파일 - 원고 페이지 맞추기
+      아래{' '}
+      <span
+        className="tooltip-guide__inline-real-btn tooltip-guide__pdf-page-nav-look"
+        aria-hidden
+      >
+        <span className="pdf-preview-bar__nav">◀</span>
+        <span className="pdf-preview-bar__nav">▶</span>
       </span>
-      를 하면 편해진다냥
+      로 페이지를 이동할 수 있다냥
     </>
   );
 }
@@ -121,18 +130,13 @@ export function ConsistencyIntroMessage(_props = {}) {
       <ConsistencyTabChip />을 살펴보자냥
       <br />
       <span className="tooltip-guide__criteria-heading-look">
-        {LITERAL_FIND_FEATURE_LABEL}
-      </span>
-      에서는
-      <br />
-      여러 항목을 한 번에 검색하고
-      <br />
-      <span className="tooltip-guide__criteria-heading-look">
         {UNIFY_FEATURE_LABEL}
       </span>
-      에서는
+      는 유용한 기능이다냥
       <br />
-      여러 항목을 통일할 수 있다냥
+      여러 항목을 입력한 다음
+      <br />
+      통일하고 싶은 항목에📌를 붙이면 된다냥
     </>
   );
 }
@@ -140,17 +144,22 @@ export function ConsistencyIntroMessage(_props = {}) {
 export function ConsistencyUnifyPinMessage() {
   return (
     <>
-      여러 항목을 입력하고 통일형에📌를 붙이라냥
+      <span className="tooltip-guide__criteria-heading-look">
+        {LITERAL_FIND_FEATURE_LABEL}
+      </span>
+      에서는
+      <br />
+      여러 항목을 한 번에 찾을 수 있다냥
       <br />
       <span className="tooltip-guide__criteria-heading-look">
         공통 항목 찾기
       </span>
-      는 @를 잊지 말라냥
+      는 @을 포함한 항목을 모두 찾고
       <br />
       <span className="tooltip-guide__criteria-heading-look">
         검수 제외 항목
       </span>
-      은 찾지 않는다냥
+      에 등록한 항목은 찾지 않는다냥
     </>
   );
 }

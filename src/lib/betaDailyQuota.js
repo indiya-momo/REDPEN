@@ -1,6 +1,6 @@
 /**
  * 오픈베타 일일 검수 한도 정책·Firestore 트랜잭션·로컬 dev 완화.
- * 맞춤법 탭: 1/2/3회 · 표기 통일 탭: 5/10회
+ * 맞춤법·표기 통일 기준: 1/2/3회 · 통일형: 5/10/15회
  * 검수 직전 assertBetaDailyCheckOrAlert, 소비 후 배지·피드백 보너스 연동.
  * resolveQuotaAuthEmail로 관리자 면제·이메일 키 해석.
  */
@@ -31,7 +31,7 @@ import { getLocalUserPlan } from './userProfileStorage.js';
 const LOCAL_QUOTA_PREFIX = 'indiya-beta-quota-v3--';
 const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
 
-/** @typedef {'spelling' | 'consistency'} BetaQuotaTab */
+/** @typedef {'spelling' | 'consistency' | 'unify'} BetaQuotaTab */
 
 /** @returns {boolean} */
 export function isLocalDevQuotaRelaxed() {
@@ -42,21 +42,30 @@ export function isLocalDevQuotaRelaxed() {
   return host === 'localhost' || host === '127.0.0.1' || host === '[::1]';
 }
 
-/** 베타 기본 — 맞춤법 탭 하루 1회 */
+/** 베타 기본 — 맞춤법·표기 통일 기준 검수 하루 1회 */
 export const BETA_TAB_LIMIT_DEFAULT = 1;
-/** 피드백 보너스 — 맞춤법 탭 하루 2회 */
+/** 피드백 보너스 — 맞춤법·표기 통일 기준 검수 하루 2회 */
 export const BETA_TAB_LIMIT_FEEDBACK = 2;
-/** 우수 피드백 선정 — 맞춤법 탭 하루 3회 */
+/** 우수 피드백 선정 — 맞춤법·표기 통일 기준 검수 하루 3회 */
 export const BETA_TAB_LIMIT_BOOSTED = 3;
 
-/** 베타 기본 — 표기 통일(통일형) 탭 하루 5회 */
-export const BETA_CONSISTENCY_LIMIT_DEFAULT = 5;
-/** 피드백·우수 선정 — 표기 통일 탭 하루 10회 */
-export const BETA_CONSISTENCY_LIMIT_FEEDBACK = 10;
+/** 베타 기본 — 통일형 검수 하루 5회 */
+export const BETA_UNIFY_LIMIT_DEFAULT = 5;
+/** 피드백 보너스 — 통일형 검수 하루 10회 */
+export const BETA_UNIFY_LIMIT_FEEDBACK = 10;
+/** 우수 피드백 선정 — 통일형 검수 하루 15회 */
+export const BETA_UNIFY_LIMIT_BOOSTED = 15;
+
+/** @deprecated BETA_UNIFY_LIMIT_DEFAULT 사용 */
+export const BETA_CONSISTENCY_LIMIT_DEFAULT = BETA_UNIFY_LIMIT_DEFAULT;
+/** @deprecated BETA_UNIFY_LIMIT_FEEDBACK 사용 */
+export const BETA_CONSISTENCY_LIMIT_FEEDBACK = BETA_UNIFY_LIMIT_FEEDBACK;
+/** @deprecated BETA_UNIFY_LIMIT_BOOSTED 사용 */
+export const BETA_CONSISTENCY_LIMIT_BOOSTED = BETA_UNIFY_LIMIT_BOOSTED;
 
 const BETA_QUOTA_POLICY_SUMMARY =
-  '오픈베타 기간에는 회원에게 매일 맞춤법 1회·표기 통일 5회 검수를 제공합니다(한국 시간 기준). ' +
-  '피드백을 남기면 맞춤법 2회·표기 통일 10회, 우수 피드백으로 선정되면 맞춤법 3회·표기 통일 10회까지 이용할 수 있습니다. ';
+  '오픈베타 기간에는 회원에게 매일 맞춤법·표기 통일 각 1회·통일형 5회 검수를 제공합니다(한국 시간 기준). ' +
+  '피드백을 남기면 맞춤법·표기 통일 각 2회·통일형 10회, 우수 피드백으로 선정되면 맞춤법·표기 통일 각 3회·통일형 15회까지 이용할 수 있습니다. ';
 
 export const BETA_DAILY_QUOTA_ALERT_SPELLING =
   '오늘 맞춤법 검수 한도를 모두 사용했습니다.\n\n' +
@@ -65,6 +74,11 @@ export const BETA_DAILY_QUOTA_ALERT_SPELLING =
 
 export const BETA_DAILY_QUOTA_ALERT_CONSISTENCY =
   '오늘 표기 통일 검수 한도를 모두 사용했습니다.\n\n' +
+  BETA_QUOTA_POLICY_SUMMARY +
+  '내일 0시 이후 다시 시도해 주세요.';
+
+export const BETA_DAILY_QUOTA_ALERT_UNIFY =
+  '오늘 통일형 검수 한도를 모두 사용했습니다.\n\n' +
   BETA_QUOTA_POLICY_SUMMARY +
   '내일 0시 이후 다시 시도해 주세요.';
 
@@ -219,11 +233,13 @@ export function getTabCheckLimit(
   const hasBoost = boostApprovedDayId === dayId;
   const hasFeedback = feedbackBonusDayId === dayId;
 
-  if (tab === 'consistency') {
-    if (hasBoost || hasFeedback) return BETA_CONSISTENCY_LIMIT_FEEDBACK;
-    return BETA_CONSISTENCY_LIMIT_DEFAULT;
+  if (tab === 'unify') {
+    if (hasBoost) return BETA_UNIFY_LIMIT_BOOSTED;
+    if (hasFeedback) return BETA_UNIFY_LIMIT_FEEDBACK;
+    return BETA_UNIFY_LIMIT_DEFAULT;
   }
 
+  // spelling · consistency(기준 검수) — 1/2/3
   if (hasBoost) return BETA_TAB_LIMIT_BOOSTED;
   if (hasFeedback) return BETA_TAB_LIMIT_FEEDBACK;
   return BETA_TAB_LIMIT_DEFAULT;
@@ -241,16 +257,18 @@ export function canRunTabCheck(tabCount, tabLimit) {
  * @param {BetaQuotaTab} tab
  */
 export function betaQuotaAlertForTab(tab) {
-  return tab === 'spelling'
-    ? BETA_DAILY_QUOTA_ALERT_SPELLING
-    : BETA_DAILY_QUOTA_ALERT_CONSISTENCY;
+  if (tab === 'spelling') return BETA_DAILY_QUOTA_ALERT_SPELLING;
+  if (tab === 'unify') return BETA_DAILY_QUOTA_ALERT_UNIFY;
+  return BETA_DAILY_QUOTA_ALERT_CONSISTENCY;
 }
 
 /**
  * @param {BetaQuotaTab} tab
  */
 export function betaQuotaTabLabel(tab) {
-  return tab === 'spelling' ? '맞춤법 검수' : '표기 통일 검수';
+  if (tab === 'spelling') return '맞춤법 검수';
+  if (tab === 'unify') return '통일형 검수';
+  return '표기 통일 검수';
 }
 
 export function formatBetaExportConsumedAlert(exportCount, exportLimit) {
@@ -284,6 +302,7 @@ export function formatBetaQuotaConsumedAlert(tab, tabCount, tabLimit) {
  * @param {number} tabLimit
  * @param {number} nextSpelling
  * @param {number} nextConsistency
+ * @param {number} nextUnify
  */
 function buildConsumeSuccessResult(
   tab,
@@ -291,8 +310,14 @@ function buildConsumeSuccessResult(
   tabLimit,
   nextSpelling,
   nextConsistency,
+  nextUnify,
 ) {
-  const tabCount = tab === 'spelling' ? nextSpelling : nextConsistency;
+  const tabCount =
+    tab === 'spelling'
+      ? nextSpelling
+      : tab === 'unify'
+        ? nextUnify
+        : nextConsistency;
   return {
     ok: true,
     dayId,
@@ -303,6 +328,11 @@ function buildConsumeSuccessResult(
   };
 }
 
+/** @returns {{ spellingCount: number, consistencyCount: number, unifyCount: number }} */
+function emptyTabCounts() {
+  return { spellingCount: 0, consistencyCount: 0, unifyCount: 0 };
+}
+
 /**
  * @param {Record<string, unknown> | undefined} data
  */
@@ -310,6 +340,7 @@ function readDayTabCounts(data) {
   return {
     spellingCount: Math.max(0, Number(data?.spellingCount) || 0),
     consistencyCount: Math.max(0, Number(data?.consistencyCount) || 0),
+    unifyCount: Math.max(0, Number(data?.unifyCount) || 0),
   };
 }
 
@@ -325,7 +356,7 @@ function localQuotaKey(uid) {
  * @param {string} dayId
  * @param {string | null} feedbackBonusDayId
  * @param {string | null} boostApprovedDayId
- * @param {{ spellingCount: number, consistencyCount: number }} counts
+ * @param {{ spellingCount: number, consistencyCount: number, unifyCount: number }} counts
  */
 function buildTabQuotaView(
   uid,
@@ -346,6 +377,12 @@ function buildTabQuotaView(
     dayId,
     'consistency',
   );
+  const unifyTabLimit = getTabCheckLimit(
+    feedbackBonusDayId,
+    boostApprovedDayId,
+    dayId,
+    'unify',
+  );
   const enforced = Boolean(uid.trim());
   return {
     dayId,
@@ -356,10 +393,13 @@ function buildTabQuotaView(
     tabLimit: spellingTabLimit,
     spellingTabLimit,
     consistencyTabLimit,
+    unifyTabLimit,
     spellingCount: counts.spellingCount,
     consistencyCount: counts.consistencyCount,
+    unifyCount: counts.unifyCount,
     spellingConsumed: counts.spellingCount >= spellingTabLimit,
     consistencyConsumed: counts.consistencyCount >= consistencyTabLimit,
+    unifyConsumed: counts.unifyCount >= unifyTabLimit,
   };
 }
 
@@ -369,18 +409,12 @@ function buildTabQuotaView(
  */
 function readLocalQuota(uid, dayId) {
   if (!uid.trim()) {
-    return buildTabQuotaView(uid, dayId, null, null, {
-      spellingCount: 0,
-      consistencyCount: 0,
-    });
+    return buildTabQuotaView(uid, dayId, null, null, emptyTabCounts());
   }
   try {
     const raw = localStorage.getItem(localQuotaKey(uid));
     if (!raw) {
-      return buildTabQuotaView(uid, dayId, null, null, {
-        spellingCount: 0,
-        consistencyCount: 0,
-      });
+      return buildTabQuotaView(uid, dayId, null, null, emptyTabCounts());
     }
     const parsed = JSON.parse(raw);
     const feedbackBonusDayId =
@@ -398,8 +432,9 @@ function readLocalQuota(uid, dayId) {
         ? {
             spellingCount: Math.max(0, Number(parsed?.spellingCount) || 0),
             consistencyCount: Math.max(0, Number(parsed?.consistencyCount) || 0),
+            unifyCount: Math.max(0, Number(parsed?.unifyCount) || 0),
           }
-        : { spellingCount: 0, consistencyCount: 0 };
+        : emptyTabCounts();
     return buildTabQuotaView(
       uid,
       dayId,
@@ -408,10 +443,7 @@ function readLocalQuota(uid, dayId) {
       counts,
     );
   } catch {
-    return buildTabQuotaView(uid, dayId, null, null, {
-      spellingCount: 0,
-      consistencyCount: 0,
-    });
+    return buildTabQuotaView(uid, dayId, null, null, emptyTabCounts());
   }
 }
 
@@ -421,6 +453,7 @@ function readLocalQuota(uid, dayId) {
  *   dayId: string,
  *   spellingCount: number,
  *   consistencyCount: number,
+ *   unifyCount: number,
  *   feedbackBonusDayId?: string | null,
  *   boostApprovedDayId?: string | null,
  * }} state
@@ -434,6 +467,7 @@ function writeLocalQuota(uid, state) {
         dayId: state.dayId,
         spellingCount: state.spellingCount,
         consistencyCount: state.consistencyCount,
+        unifyCount: state.unifyCount,
         feedbackBonusDayId:
           state.feedbackBonusDayId !== undefined
             ? state.feedbackBonusDayId
@@ -482,8 +516,8 @@ function readUserBonusDayIds(userData) {
 
 /**
  * Firestore·localStorage 탭 사용 횟수 — 큰 값을 신뢰 (쓰기 실패 후 refresh 시 0으로 덮이지 않게)
- * @param {{ spellingCount: number, consistencyCount: number }} firestoreCounts
- * @param {{ spellingCount: number, consistencyCount: number }} localCounts
+ * @param {{ spellingCount: number, consistencyCount: number, unifyCount?: number }} firestoreCounts
+ * @param {{ spellingCount: number, consistencyCount: number, unifyCount?: number }} localCounts
  */
 export function mergeTabQuotaCounts(firestoreCounts, localCounts) {
   return {
@@ -494,6 +528,10 @@ export function mergeTabQuotaCounts(firestoreCounts, localCounts) {
     consistencyCount: Math.max(
       firestoreCounts.consistencyCount,
       localCounts.consistencyCount,
+    ),
+    unifyCount: Math.max(
+      firestoreCounts.unifyCount ?? 0,
+      localCounts.unifyCount ?? 0,
     ),
   };
 }
@@ -531,10 +569,11 @@ async function readQuotaFlags(uid, dayId) {
     );
     const firestoreCounts = daySnap.exists()
       ? readDayTabCounts(daySnap.data())
-      : { spellingCount: 0, consistencyCount: 0 };
+      : emptyTabCounts();
     const counts = mergeTabQuotaCounts(firestoreCounts, {
       spellingCount: local.spellingCount,
       consistencyCount: local.consistencyCount,
+      unifyCount: local.unifyCount,
     });
     const view = buildTabQuotaView(
       uid,
@@ -547,6 +586,7 @@ async function readQuotaFlags(uid, dayId) {
       dayId,
       spellingCount: counts.spellingCount,
       consistencyCount: counts.consistencyCount,
+      unifyCount: counts.unifyCount,
       feedbackBonusDayId,
       boostApprovedDayId,
     });
@@ -571,10 +611,13 @@ export async function getBetaDailyQuotaStatus(uid, email = '') {
         tabLimit: flags.tabLimit,
         spellingTabLimit: flags.spellingTabLimit,
         consistencyTabLimit: flags.consistencyTabLimit,
+        unifyTabLimit: flags.unifyTabLimit,
         spellingCount: flags.spellingCount,
         consistencyCount: flags.consistencyCount,
+        unifyCount: flags.unifyCount,
         spellingConsumed: flags.spellingConsumed,
         consistencyConsumed: flags.consistencyConsumed,
+        unifyConsumed: flags.unifyConsumed,
         hasFeedbackBonusToday: flags.feedbackBonusDayId === dayId,
         hasBoostApprovedToday: flags.boostApprovedDayId === dayId,
       };
@@ -584,11 +627,14 @@ export async function getBetaDailyQuotaStatus(uid, email = '') {
       enforced: false,
       tabLimit: BETA_TAB_LIMIT_DEFAULT,
       spellingTabLimit: BETA_TAB_LIMIT_DEFAULT,
-      consistencyTabLimit: BETA_CONSISTENCY_LIMIT_DEFAULT,
+      consistencyTabLimit: BETA_TAB_LIMIT_DEFAULT,
+      unifyTabLimit: BETA_UNIFY_LIMIT_DEFAULT,
       spellingCount: 0,
       consistencyCount: 0,
+      unifyCount: 0,
       spellingConsumed: false,
       consistencyConsumed: false,
+      unifyConsumed: false,
       hasFeedbackBonusToday: false,
       hasBoostApprovedToday: false,
     };
@@ -601,17 +647,20 @@ export async function getBetaDailyQuotaStatus(uid, email = '') {
     tabLimit: flags.tabLimit,
     spellingTabLimit: flags.spellingTabLimit,
     consistencyTabLimit: flags.consistencyTabLimit,
+    unifyTabLimit: flags.unifyTabLimit,
     spellingCount: flags.spellingCount,
     consistencyCount: flags.consistencyCount,
+    unifyCount: flags.unifyCount,
     spellingConsumed: flags.spellingConsumed,
     consistencyConsumed: flags.consistencyConsumed,
+    unifyConsumed: flags.unifyConsumed,
     hasFeedbackBonusToday: flags.feedbackBonusDayId === dayId,
     hasBoostApprovedToday: flags.boostApprovedDayId === dayId,
   };
 }
 
 /**
- * Google Form 피드백 — 맞춤법 2회·표기 통일 10회 (KST 당일)
+ * Google Form 피드백 — 맞춤법·표기 통일 2회·통일형 10회 (KST 당일)
  * @param {string} uid
  * @param {string} [email]
  */
@@ -633,6 +682,7 @@ export async function grantFeedbackDailyQuotaBonus(uid, email = '') {
       dayId,
       spellingCount: local.spellingCount,
       consistencyCount: local.consistencyCount,
+      unifyCount: local.unifyCount,
       feedbackBonusDayId: dayId,
       boostApprovedDayId: local.boostApprovedDayId,
     });
@@ -655,6 +705,7 @@ export async function grantFeedbackDailyQuotaBonus(uid, email = '') {
       dayId,
       spellingCount: flags.spellingCount,
       consistencyCount: flags.consistencyCount,
+      unifyCount: flags.unifyCount,
       feedbackBonusDayId: dayId,
       boostApprovedDayId: flags.boostApprovedDayId,
     });
@@ -664,6 +715,7 @@ export async function grantFeedbackDailyQuotaBonus(uid, email = '') {
       dayId,
       spellingCount: flags.spellingCount,
       consistencyCount: flags.consistencyCount,
+      unifyCount: flags.unifyCount,
       feedbackBonusDayId: dayId,
       boostApprovedDayId: flags.boostApprovedDayId,
     });
@@ -685,19 +737,29 @@ export function consumeLocalDevQuotaPreview(uid, tab, dayId = getKstDayId()) {
     tab === 'consistency'
       ? local.consistencyCount + 1
       : local.consistencyCount;
+  const nextUnify =
+    tab === 'unify' ? local.unifyCount + 1 : local.unifyCount;
   writeLocalQuota(uid, {
     dayId,
     spellingCount: nextSpelling,
     consistencyCount: nextConsistency,
+    unifyCount: nextUnify,
     feedbackBonusDayId: local.feedbackBonusDayId,
     boostApprovedDayId: local.boostApprovedDayId,
   });
+  const tabLimit =
+    tab === 'spelling'
+      ? local.spellingTabLimit
+      : tab === 'unify'
+        ? local.unifyTabLimit
+        : local.consistencyTabLimit;
   return buildConsumeSuccessResult(
     tab,
     dayId,
-    tab === 'consistency' ? local.consistencyTabLimit : local.spellingTabLimit,
+    tabLimit,
     nextSpelling,
     nextConsistency,
+    nextUnify,
   );
 }
 
@@ -717,16 +779,31 @@ export async function consumeBetaDailyQuota(uid, email = '', tab = 'spelling') {
 
   const flags = await readQuotaFlags(uid, dayId);
   const isFirstEverCheck =
-    flags.spellingCount === 0 && flags.consistencyCount === 0;
+    flags.spellingCount === 0 &&
+    flags.consistencyCount === 0 &&
+    flags.unifyCount === 0;
   const tabCount =
-    tab === 'spelling' ? flags.spellingCount : flags.consistencyCount;
+    tab === 'spelling'
+      ? flags.spellingCount
+      : tab === 'unify'
+        ? flags.unifyCount
+        : flags.consistencyCount;
   const tabLimit =
-    tab === 'consistency' ? flags.consistencyTabLimit : flags.spellingTabLimit;
+    tab === 'spelling'
+      ? flags.spellingTabLimit
+      : tab === 'unify'
+        ? flags.unifyTabLimit
+        : flags.consistencyTabLimit;
   if (!canRunTabCheck(tabCount, tabLimit)) {
     return { ok: false, dayId, alreadyUsed: true, tab };
   }
 
-  const countField = tab === 'spelling' ? 'spellingCount' : 'consistencyCount';
+  const countField =
+    tab === 'spelling'
+      ? 'spellingCount'
+      : tab === 'unify'
+        ? 'unifyCount'
+        : 'consistencyCount';
 
   try {
     await runTransaction(getFirestore(firebaseApp), async (tx) => {
@@ -746,9 +823,13 @@ export async function consumeBetaDailyQuota(uid, email = '', tab = 'spelling') {
       const daySnap = await tx.get(dayRef);
       const counts = daySnap.exists()
         ? readDayTabCounts(daySnap.data())
-        : { spellingCount: 0, consistencyCount: 0 };
+        : emptyTabCounts();
       const currentCount =
-        tab === 'spelling' ? counts.spellingCount : counts.consistencyCount;
+        tab === 'spelling'
+          ? counts.spellingCount
+          : tab === 'unify'
+            ? counts.unifyCount
+            : counts.consistencyCount;
       if (currentCount >= limit) {
         throw new Error('beta-quota-exceeded');
       }
@@ -771,10 +852,13 @@ export async function consumeBetaDailyQuota(uid, email = '', tab = 'spelling') {
       tab === 'consistency'
         ? flags.consistencyCount + 1
         : flags.consistencyCount;
+    const nextUnify =
+      tab === 'unify' ? flags.unifyCount + 1 : flags.unifyCount;
     writeLocalQuota(uid, {
       dayId,
       spellingCount: nextSpelling,
       consistencyCount: nextConsistency,
+      unifyCount: nextUnify,
       feedbackBonusDayId: flags.feedbackBonusDayId,
       boostApprovedDayId: flags.boostApprovedDayId,
     });
@@ -785,6 +869,7 @@ export async function consumeBetaDailyQuota(uid, email = '', tab = 'spelling') {
       tabLimit,
       nextSpelling,
       nextConsistency,
+      nextUnify,
     );
   } catch (error) {
     if (
@@ -795,6 +880,7 @@ export async function consumeBetaDailyQuota(uid, email = '', tab = 'spelling') {
         dayId,
         spellingCount: flags.spellingCount,
         consistencyCount: flags.consistencyCount,
+        unifyCount: flags.unifyCount,
         feedbackBonusDayId: flags.feedbackBonusDayId,
         boostApprovedDayId: flags.boostApprovedDayId,
       });
@@ -803,11 +889,17 @@ export async function consumeBetaDailyQuota(uid, email = '', tab = 'spelling') {
 
     const local = readLocalQuota(uid, dayId);
     const localTabCount =
-      tab === 'spelling' ? local.spellingCount : local.consistencyCount;
+      tab === 'spelling'
+        ? local.spellingCount
+        : tab === 'unify'
+          ? local.unifyCount
+          : local.consistencyCount;
     const localTabLimit =
-      tab === 'consistency'
-        ? local.consistencyTabLimit
-        : local.spellingTabLimit;
+      tab === 'spelling'
+        ? local.spellingTabLimit
+        : tab === 'unify'
+          ? local.unifyTabLimit
+          : local.consistencyTabLimit;
     if (!canRunTabCheck(localTabCount, localTabLimit)) {
       return { ok: false, dayId, alreadyUsed: true, tab };
     }
@@ -817,10 +909,13 @@ export async function consumeBetaDailyQuota(uid, email = '', tab = 'spelling') {
       tab === 'consistency'
         ? local.consistencyCount + 1
         : local.consistencyCount;
+    const nextUnify =
+      tab === 'unify' ? local.unifyCount + 1 : local.unifyCount;
     writeLocalQuota(uid, {
       dayId,
       spellingCount: nextSpelling,
       consistencyCount: nextConsistency,
+      unifyCount: nextUnify,
       feedbackBonusDayId: local.feedbackBonusDayId,
       boostApprovedDayId: local.boostApprovedDayId,
     });
@@ -831,6 +926,7 @@ export async function consumeBetaDailyQuota(uid, email = '', tab = 'spelling') {
       localTabLimit,
       nextSpelling,
       nextConsistency,
+      nextUnify,
     );
   }
 }

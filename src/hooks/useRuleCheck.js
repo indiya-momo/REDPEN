@@ -59,7 +59,6 @@ import { normalizeConsistencyVariant } from '../lib/compoundPairRegister.js';
 import { assertBetaDailyCheckOrAlert } from '../lib/betaDailyQuota.js';
 import {
   alertConsistencyCheckAfterRun,
-  assertConsistencyUnifyPinnedForCheck,
   confirmConsistencyCheckBeforeRun,
   confirmConsistencyUnifyCheckBeforeRun,
   countConsistencyCheckActiveRules,
@@ -169,6 +168,17 @@ export function useRuleCheck({
     [resolvedCustomRules],
   );
 
+  /** 기준 검수 — 통일형 만들기는 카드 「검수」전용 */
+  const consistencyCriteriaActiveRules = useMemo(
+    () =>
+      consistencyActiveRules.filter(
+        (r) =>
+          r.consistencyUnifyEntry !== true &&
+          r.consistencyUnifyPinned !== true,
+      ),
+    [consistencyActiveRules],
+  );
+
   const restoreFromSession = useCallback(
     /**
      * @param {{
@@ -262,7 +272,7 @@ export function useRuleCheck({
         alert('맞춤법 검수를 진행할 기준을 등록해주세요');
         return;
       }
-      if (runConsistency && consistencyActiveRules.length === 0) {
+      if (runConsistency && consistencyCriteriaActiveRules.length === 0) {
         alert(
           `${LITERAL_FIND_FEATURE_LABEL}·${AUXILIARY_VERB_FEATURE_LABEL}에서 검사할 항목을 등록·선택하세요.`,
         );
@@ -353,7 +363,7 @@ export function useRuleCheck({
       if (runConsistency) {
         const { results: grouped, errors } = await runRuleCheckAsync(
           pageTexts,
-          consistencyActiveRules,
+          consistencyCriteriaActiveRules,
           {
             globalExcludePhrases,
             onProgress: reportCheckProgress,
@@ -362,11 +372,19 @@ export function useRuleCheck({
         allErrors.push(...errors);
         const withZeroRows = finalizeConsistencyCheckResults(
           grouped,
-          consistencyActiveRules,
+          consistencyCriteriaActiveRules,
         );
-        scopeResults = withZeroRows;
-        setConsistencyResults(withZeroRows);
+        setConsistencyResults((prev) => {
+          const keptUnify = prev.filter((g) =>
+            isConsistencyUnifyResultGroup(resolvedCustomRules, g),
+          );
+          return finalizeConsistencyCheckResults(
+            [...keptUnify, ...withZeroRows],
+            consistencyCriteriaActiveRules,
+          );
+        });
         setConsistencyCheckDone(true);
+        scopeResults = withZeroRows;
         const inst =
           withZeroRows.find((g) => g.instances.length > 0)?.instances[0] ?? null;
         if (inst) {
@@ -432,7 +450,7 @@ export function useRuleCheck({
           customRules,
           {
             literalSelected: consistencyCriteria.literalActive > 0,
-            unifySelected: consistencyCriteria.unifyActive > 0,
+            unifySelected: false,
             commonStringSelected: consistencyCriteria.commonStringActive > 0,
             auxiliarySelected: consistencyCriteria.auxiliaryActive > 0,
           },
@@ -449,7 +467,9 @@ export function useRuleCheck({
       customRules,
       spellingActiveRules,
       consistencyActiveRules,
+      consistencyCriteriaActiveRules,
       globalExcludePhrases,
+      resolvedCustomRules,
       resultVisibility,
       setCurrentPage,
       setIsProcessing,
@@ -490,13 +510,6 @@ export function useRuleCheck({
         return;
       }
 
-      if (
-        subset === 'literal-slot' &&
-        !(await assertConsistencyUnifyPinnedForCheck(resolvedCustomRules))
-      ) {
-        return;
-      }
-
       if (subset === 'unify') {
         if (
           !(await confirmConsistencyUnifyCheckBeforeRun(
@@ -523,7 +536,7 @@ export function useRuleCheck({
       if (
         !(await assertBetaDailyCheckOrAlert(authUid, {
           authEmail,
-          checkTab: 'consistency',
+          checkTab: subset === 'unify' ? 'unify' : 'consistency',
           onConsumed: onBetaQuotaConsumed,
           skipConsumedAlert: true,
         }))
