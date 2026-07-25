@@ -13,6 +13,7 @@ import SpaceVisibleInput from '../SpaceVisibleInput.jsx';
  *   addButtonGuideAttr?: string,
  *   onAddButtonClick?: () => void,
  *   addAriaLabel?: string,
+ *   addLabel?: string,
  *   useSpaceVisible?: boolean,
  * }} props
  */
@@ -28,6 +29,7 @@ export default function ConsistencyRegisterField({
   addButtonGuideAttr,
   onAddButtonClick,
   addAriaLabel = '등록',
+  addLabel = '등록',
   useSpaceVisible = true,
 }) {
   const inputClasses = [
@@ -44,6 +46,8 @@ export default function ConsistencyRegisterField({
       if (!registerDisabled) onRegister();
     }
   };
+
+  const isTextAdd = addLabel !== '+';
 
   return (
     <div className="tail-form">
@@ -72,7 +76,14 @@ export default function ConsistencyRegisterField({
         )}
         <button
           type="button"
-          className="btn-add consistency-register-add-btn consistency-register-field__add"
+          className={[
+            'btn-add',
+            'consistency-register-add-btn',
+            'consistency-register-field__add',
+            isTextAdd ? 'consistency-register-add-btn--label' : '',
+          ]
+            .filter(Boolean)
+            .join(' ')}
           data-work-guide={addButtonGuideAttr || undefined}
           onClick={() => {
             onAddButtonClick?.();
@@ -86,7 +97,7 @@ export default function ConsistencyRegisterField({
               : undefined
           }
         >
-          +
+          {addLabel}
         </button>
       </div>
     </div>

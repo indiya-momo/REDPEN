@@ -6,6 +6,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { syncBoostApprovedBadge } from '../lib/badgeGrants.js';
 import {
+  BETA_CONSISTENCY_LIMIT_DEFAULT,
+  BETA_TAB_LIMIT_DEFAULT,
   getBetaDailyQuotaStatus,
   isBetaDailyQuotaEnforcedForUser,
   isLocalDevQuotaRelaxed,
@@ -18,7 +20,12 @@ export function useBetaDailyQuota(uid, email = '', plan) {
   const [consistencyConsumed, setConsistencyConsumed] = useState(false);
   const [spellingCount, setSpellingCount] = useState(0);
   const [consistencyCount, setConsistencyCount] = useState(0);
-  const [tabLimit, setTabLimit] = useState(1);
+  const [spellingTabLimit, setSpellingTabLimit] = useState(
+    BETA_TAB_LIMIT_DEFAULT,
+  );
+  const [consistencyTabLimit, setConsistencyTabLimit] = useState(
+    BETA_CONSISTENCY_LIMIT_DEFAULT,
+  );
   const [hasFeedbackBonusToday, setHasFeedbackBonusToday] = useState(false);
   const [hasBoostApprovedToday, setHasBoostApprovedToday] = useState(false);
   const [dayId, setDayId] = useState('');
@@ -31,7 +38,8 @@ export function useBetaDailyQuota(uid, email = '', plan) {
       setConsistencyConsumed(false);
       setSpellingCount(0);
       setConsistencyCount(0);
-      setTabLimit(1);
+      setSpellingTabLimit(BETA_TAB_LIMIT_DEFAULT);
+      setConsistencyTabLimit(BETA_CONSISTENCY_LIMIT_DEFAULT);
       setHasFeedbackBonusToday(false);
       setHasBoostApprovedToday(false);
       setDayId('');
@@ -43,7 +51,12 @@ export function useBetaDailyQuota(uid, email = '', plan) {
     setConsistencyConsumed(status.consistencyConsumed);
     setSpellingCount(status.spellingCount);
     setConsistencyCount(status.consistencyCount);
-    setTabLimit(status.tabLimit);
+    setSpellingTabLimit(
+      status.spellingTabLimit ?? status.tabLimit ?? BETA_TAB_LIMIT_DEFAULT,
+    );
+    setConsistencyTabLimit(
+      status.consistencyTabLimit ?? BETA_CONSISTENCY_LIMIT_DEFAULT,
+    );
     setHasFeedbackBonusToday(status.hasFeedbackBonusToday);
     setHasBoostApprovedToday(status.hasBoostApprovedToday);
     setDayId(status.dayId);
@@ -62,8 +75,11 @@ export function useBetaDailyQuota(uid, email = '', plan) {
   const canRunConsistencyCheck =
     !enforced || (!loading && !consistencyConsumed);
 
-  const spellingRemaining = Math.max(0, tabLimit - spellingCount);
-  const consistencyRemaining = Math.max(0, tabLimit - consistencyCount);
+  const spellingRemaining = Math.max(0, spellingTabLimit - spellingCount);
+  const consistencyRemaining = Math.max(
+    0,
+    consistencyTabLimit - consistencyCount,
+  );
 
   return {
     loading,
@@ -76,7 +92,10 @@ export function useBetaDailyQuota(uid, email = '', plan) {
     consistencyCount,
     spellingRemaining,
     consistencyRemaining,
-    tabLimit,
+    spellingTabLimit,
+    consistencyTabLimit,
+    /** @deprecated 맞춤법 한도와 동일 */
+    tabLimit: spellingTabLimit,
     hasFeedbackBonusToday,
     hasBoostApprovedToday,
     dayId,

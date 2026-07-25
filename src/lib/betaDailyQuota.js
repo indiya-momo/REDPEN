@@ -1,5 +1,6 @@
 /**
- * 오픈베타 일일 검수 한도(탭별 1/2/3회) 정책·Firestore 트랜잭션·로컬 dev 완화.
+ * 오픈베타 일일 검수 한도 정책·Firestore 트랜잭션·로컬 dev 완화.
+ * 맞춤법 탭: 1/2/3회 · 표기 통일 탭: 5/10회
  * 검수 직전 assertBetaDailyCheckOrAlert, 소비 후 배지·피드백 보너스 연동.
  * resolveQuotaAuthEmail로 관리자 면제·이메일 키 해석.
  */
@@ -41,16 +42,21 @@ export function isLocalDevQuotaRelaxed() {
   return host === 'localhost' || host === '127.0.0.1' || host === '[::1]';
 }
 
-/** 베타 기본 — 탭당 하루 1회 */
+/** 베타 기본 — 맞춤법 탭 하루 1회 */
 export const BETA_TAB_LIMIT_DEFAULT = 1;
-/** 피드백 보너스 — 탭당 하루 2회 */
+/** 피드백 보너스 — 맞춤법 탭 하루 2회 */
 export const BETA_TAB_LIMIT_FEEDBACK = 2;
-/** 우수 피드백 선정 — 탭당 하루 3회 */
+/** 우수 피드백 선정 — 맞춤법 탭 하루 3회 */
 export const BETA_TAB_LIMIT_BOOSTED = 3;
 
+/** 베타 기본 — 표기 통일(통일형) 탭 하루 5회 */
+export const BETA_CONSISTENCY_LIMIT_DEFAULT = 5;
+/** 피드백·우수 선정 — 표기 통일 탭 하루 10회 */
+export const BETA_CONSISTENCY_LIMIT_FEEDBACK = 10;
+
 const BETA_QUOTA_POLICY_SUMMARY =
-  '오픈베타 기간에는 회원에게 매일 맞춤법·표기 통일 각 1회 검수를 제공합니다(한국 시간 기준). ' +
-  '피드백을 남기면 각 2회, 우수 피드백으로 선정되면 각 3회까지 이용할 수 있습니다. ';
+  '오픈베타 기간에는 회원에게 매일 맞춤법 1회·표기 통일 5회 검수를 제공합니다(한국 시간 기준). ' +
+  '피드백을 남기면 맞춤법 2회·표기 통일 10회, 우수 피드백으로 선정되면 맞춤법 3회·표기 통일 10회까지 이용할 수 있습니다. ';
 
 export const BETA_DAILY_QUOTA_ALERT_SPELLING =
   '오늘 맞춤법 검수 한도를 모두 사용했습니다.\n\n' +
@@ -202,14 +208,24 @@ export function getKstDayId(date = new Date()) {
  * @param {string | null | undefined} feedbackBonusDayId
  * @param {string | null | undefined} boostApprovedDayId
  * @param {string} dayId
+ * @param {BetaQuotaTab} [tab='spelling']
  */
-export function getTabCheckLimit(feedbackBonusDayId, boostApprovedDayId, dayId) {
-  if (boostApprovedDayId === dayId) {
-    return BETA_TAB_LIMIT_BOOSTED;
+export function getTabCheckLimit(
+  feedbackBonusDayId,
+  boostApprovedDayId,
+  dayId,
+  tab = 'spelling',
+) {
+  const hasBoost = boostApprovedDayId === dayId;
+  const hasFeedback = feedbackBonusDayId === dayId;
+
+  if (tab === 'consistency') {
+    if (hasBoost || hasFeedback) return BETA_CONSISTENCY_LIMIT_FEEDBACK;
+    return BETA_CONSISTENCY_LIMIT_DEFAULT;
   }
-  if (feedbackBonusDayId === dayId) {
-    return BETA_TAB_LIMIT_FEEDBACK;
-  }
+
+  if (hasBoost) return BETA_TAB_LIMIT_BOOSTED;
+  if (hasFeedback) return BETA_TAB_LIMIT_FEEDBACK;
   return BETA_TAB_LIMIT_DEFAULT;
 }
 
@@ -318,10 +334,17 @@ function buildTabQuotaView(
   boostApprovedDayId,
   counts,
 ) {
-  const tabLimit = getTabCheckLimit(
+  const spellingTabLimit = getTabCheckLimit(
     feedbackBonusDayId,
     boostApprovedDayId,
     dayId,
+    'spelling',
+  );
+  const consistencyTabLimit = getTabCheckLimit(
+    feedbackBonusDayId,
+    boostApprovedDayId,
+    dayId,
+    'consistency',
   );
   const enforced = Boolean(uid.trim());
   return {
@@ -329,11 +352,14 @@ function buildTabQuotaView(
     enforced,
     feedbackBonusDayId,
     boostApprovedDayId,
-    tabLimit,
+    /** @deprecated 맞춤법 한도와 동일 — 하위 호환 */
+    tabLimit: spellingTabLimit,
+    spellingTabLimit,
+    consistencyTabLimit,
     spellingCount: counts.spellingCount,
     consistencyCount: counts.consistencyCount,
-    spellingConsumed: counts.spellingCount >= tabLimit,
-    consistencyConsumed: counts.consistencyCount >= tabLimit,
+    spellingConsumed: counts.spellingCount >= spellingTabLimit,
+    consistencyConsumed: counts.consistencyCount >= consistencyTabLimit,
   };
 }
 
@@ -543,6 +569,8 @@ export async function getBetaDailyQuotaStatus(uid, email = '') {
         dayId,
         enforced: false,
         tabLimit: flags.tabLimit,
+        spellingTabLimit: flags.spellingTabLimit,
+        consistencyTabLimit: flags.consistencyTabLimit,
         spellingCount: flags.spellingCount,
         consistencyCount: flags.consistencyCount,
         spellingConsumed: flags.spellingConsumed,
@@ -555,6 +583,8 @@ export async function getBetaDailyQuotaStatus(uid, email = '') {
       dayId,
       enforced: false,
       tabLimit: BETA_TAB_LIMIT_DEFAULT,
+      spellingTabLimit: BETA_TAB_LIMIT_DEFAULT,
+      consistencyTabLimit: BETA_CONSISTENCY_LIMIT_DEFAULT,
       spellingCount: 0,
       consistencyCount: 0,
       spellingConsumed: false,
@@ -569,6 +599,8 @@ export async function getBetaDailyQuotaStatus(uid, email = '') {
     dayId,
     enforced: true,
     tabLimit: flags.tabLimit,
+    spellingTabLimit: flags.spellingTabLimit,
+    consistencyTabLimit: flags.consistencyTabLimit,
     spellingCount: flags.spellingCount,
     consistencyCount: flags.consistencyCount,
     spellingConsumed: flags.spellingConsumed,
@@ -579,7 +611,7 @@ export async function getBetaDailyQuotaStatus(uid, email = '') {
 }
 
 /**
- * Google Form 피드백 — 당일 탭당 2회 (KST)
+ * Google Form 피드백 — 맞춤법 2회·표기 통일 10회 (KST 당일)
  * @param {string} uid
  * @param {string} [email]
  */
@@ -663,7 +695,7 @@ export function consumeLocalDevQuotaPreview(uid, tab, dayId = getKstDayId()) {
   return buildConsumeSuccessResult(
     tab,
     dayId,
-    local.tabLimit,
+    tab === 'consistency' ? local.consistencyTabLimit : local.spellingTabLimit,
     nextSpelling,
     nextConsistency,
   );
@@ -688,7 +720,9 @@ export async function consumeBetaDailyQuota(uid, email = '', tab = 'spelling') {
     flags.spellingCount === 0 && flags.consistencyCount === 0;
   const tabCount =
     tab === 'spelling' ? flags.spellingCount : flags.consistencyCount;
-  if (!canRunTabCheck(tabCount, flags.tabLimit)) {
+  const tabLimit =
+    tab === 'consistency' ? flags.consistencyTabLimit : flags.spellingTabLimit;
+  if (!canRunTabCheck(tabCount, tabLimit)) {
     return { ok: false, dayId, alreadyUsed: true, tab };
   }
 
@@ -701,10 +735,11 @@ export async function consumeBetaDailyQuota(uid, email = '', tab = 'spelling') {
       const { feedbackBonusDayId, boostApprovedDayId } = readUserBonusDayIds(
         userSnap.exists() ? userSnap.data() : undefined,
       );
-      const tabLimit = getTabCheckLimit(
+      const limit = getTabCheckLimit(
         feedbackBonusDayId,
         boostApprovedDayId,
         dayId,
+        tab,
       );
 
       const dayRef = dayDocRef(uid, dayId);
@@ -714,7 +749,7 @@ export async function consumeBetaDailyQuota(uid, email = '', tab = 'spelling') {
         : { spellingCount: 0, consistencyCount: 0 };
       const currentCount =
         tab === 'spelling' ? counts.spellingCount : counts.consistencyCount;
-      if (currentCount >= tabLimit) {
+      if (currentCount >= limit) {
         throw new Error('beta-quota-exceeded');
       }
       const nextCount = currentCount + 1;
@@ -747,7 +782,7 @@ export async function consumeBetaDailyQuota(uid, email = '', tab = 'spelling') {
     return buildConsumeSuccessResult(
       tab,
       dayId,
-      flags.tabLimit,
+      tabLimit,
       nextSpelling,
       nextConsistency,
     );
@@ -769,7 +804,11 @@ export async function consumeBetaDailyQuota(uid, email = '', tab = 'spelling') {
     const local = readLocalQuota(uid, dayId);
     const localTabCount =
       tab === 'spelling' ? local.spellingCount : local.consistencyCount;
-    if (!canRunTabCheck(localTabCount, local.tabLimit)) {
+    const localTabLimit =
+      tab === 'consistency'
+        ? local.consistencyTabLimit
+        : local.spellingTabLimit;
+    if (!canRunTabCheck(localTabCount, localTabLimit)) {
       return { ok: false, dayId, alreadyUsed: true, tab };
     }
     const nextSpelling =
@@ -789,7 +828,7 @@ export async function consumeBetaDailyQuota(uid, email = '', tab = 'spelling') {
     return buildConsumeSuccessResult(
       tab,
       dayId,
-      local.tabLimit,
+      localTabLimit,
       nextSpelling,
       nextConsistency,
     );

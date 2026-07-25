@@ -1,4 +1,4 @@
-/** @typedef {'literal-slot' | 'auxiliary'} ConsistencyCheckScope */
+/** @typedef {'literal-slot' | 'auxiliary' | 'unify'} ConsistencyCheckScope */
 
 export const LITERAL_SLOT_PATTERN_KINDS = [
   'compound-find',
@@ -13,9 +13,14 @@ export const LITERAL_SLOT_PATTERN_KINDS = [
  */
 export function filterCustomRulesByConsistencyScope(rules, scope) {
   const enabled = rules.filter((r) => r.enabled);
+  if (scope === 'unify') {
+    return enabled.filter((r) => r.consistencyUnifyEntry === true);
+  }
   if (scope === 'literal-slot') {
-    return enabled.filter((r) =>
-      LITERAL_SLOT_PATTERN_KINDS.includes(r.patternKind),
+    return enabled.filter(
+      (r) =>
+        LITERAL_SLOT_PATTERN_KINDS.includes(r.patternKind) &&
+        r.consistencyUnifyEntry !== true,
     );
   }
   if (scope === 'auxiliary') {

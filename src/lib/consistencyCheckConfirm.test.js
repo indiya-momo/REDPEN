@@ -8,8 +8,11 @@ import {
   countConsistencyGroupsWithFindings,
   formatConsistencyCheckCompleteMessage,
   formatConsistencyCheckConfirmMessage,
+  formatConsistencyUnifyCheckConfirmMessage,
+  formatConsistencyUnifyCheckConfirmMessageWithoutQuota,
 } from './consistencyCheckConfirm.js';
 import { parseBracketTitleMessage } from './appDialog.js';
+import { UNIFY_FEATURE_LABEL } from './consistencyRuleLimit.js';
 
 vi.mock('./checkAuthGate.js', () => ({
   assertLoggedInForCheckOrAlert: () => true,
@@ -287,6 +290,39 @@ describe('formatConsistencyCheckConfirmMessage', () => {
         '오늘 표기 통일 검수는 1회(한도 1회) 가능합니다\n' +
         '여러 개 찾기(없음), 통일형 만들기(없음), 공통 항목 찾기(없음)\n' +
         '검수 제외 항목(없음), 본용언(-아/어) + 보조용언 표기(10/10)\n' +
+        '\n' +
+        '검수를 진행할까요?',
+    );
+  });
+});
+
+describe('formatConsistencyUnifyCheckConfirmMessage', () => {
+  it('통일형 전용 confirm 문구를 만든다', () => {
+    expect(
+      formatConsistencyUnifyCheckConfirmMessage({
+        remaining: 4,
+        tabLimit: 5,
+        unifyActive: 2,
+      }),
+    ).toBe(
+      '[통일형 검수 진행]\n' +
+        '\n' +
+        '오늘 표기 통일 검수는 4회(한도 5회) 가능합니다\n' +
+        `${UNIFY_FEATURE_LABEL}(2항목)\n` +
+        '\n' +
+        '검수를 진행할까요?',
+    );
+  });
+
+  it('한도 없이 통일형 전용 confirm 문구를 만든다', () => {
+    expect(
+      formatConsistencyUnifyCheckConfirmMessageWithoutQuota({
+        unifyActive: 1,
+      }),
+    ).toBe(
+      '[통일형 검수 진행]\n' +
+        '\n' +
+        `${UNIFY_FEATURE_LABEL}(1항목)\n` +
         '\n' +
         '검수를 진행할까요?',
     );
