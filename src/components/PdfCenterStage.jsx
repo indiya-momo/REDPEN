@@ -208,7 +208,7 @@ export default function PdfCenterStage({
                   <div className="pdf-dropzone__icon" aria-hidden>
                     <FileText size={32} strokeWidth={1.35} />
                   </div>
-                  <p className="pdf-dropzone__drag">PDF 파일을 드래그하거나</p>
+                  <p className="pdf-dropzone__drag">인디자인 PDF 파일을 여기로 옮기거나</p>
                   <button
                     type="button"
                     className="btn-upload pdf-dropzone__open"
@@ -217,7 +217,7 @@ export default function PdfCenterStage({
                     disabled={isProcessing}
                   >
                     <Upload size={16} />
-                    {supportsFilePicker() ? 'PDF 열기' : 'PDF 업로드'}
+                    인디자인 PDF를 브라우저에 업로드
                   </button>
                   {fileHandleActive && !pdf && (
                     <button
@@ -254,7 +254,7 @@ export default function PdfCenterStage({
             <div className="pdf-dropzone__icon" aria-hidden>
               <FileText size={32} strokeWidth={1.35} />
             </div>
-            <p className="pdf-dropzone__drag">PDF 파일을 드래그하거나</p>
+            <p className="pdf-dropzone__drag">인디자인 PDF 파일을 여기로 옮기거나</p>
             <button
               type="button"
               className="btn-upload pdf-dropzone__open"
@@ -263,7 +263,7 @@ export default function PdfCenterStage({
               disabled={isProcessing}
             >
               <Upload size={16} />
-              {supportsFilePicker() ? 'PDF 열기' : 'PDF 업로드'}
+              인디자인 PDF를 브라우저에 업로드
             </button>
             {fileHandleActive && !pdf && (
               <button

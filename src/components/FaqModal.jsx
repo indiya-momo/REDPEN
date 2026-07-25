@@ -114,11 +114,6 @@ export default function FaqModal({ open, onClose }) {
             </details>
           ))}
         </div>
-        <footer className="faq-modal__footer">
-          <button type="button" className="btn-ghost" onClick={onClose}>
-            닫기
-          </button>
-        </footer>
       </div>
     </dialog>
   );
