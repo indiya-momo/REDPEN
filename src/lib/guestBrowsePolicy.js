@@ -16,7 +16,7 @@ import {
   setAllAuxiliaryVerbEntries,
 } from './auxiliaryVerbRegister.js';
 
-/** 표기 통일 등록 칩(여러 개 찾기·통일형·공통 항목) patternKind */
+/** 표기 통일 등록 칩(여러 항목 찾기·통일형·공통 항목) patternKind */
 const GUEST_BROWSE_CONSISTENCY_CHIP_KINDS = new Set([
   'compound-find',
   'compound-tail',

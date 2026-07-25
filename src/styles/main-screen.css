@@ -1403,7 +1403,7 @@
   color: var(--color-text);
 }
 
-/* 표기 통일 — 「여러 개 찾기」「통일형 만들기」섹션 제목 */
+/* 표기 통일 — 「여러 항목 찾기」「표기 통일하기」섹션 제목 */
 .tooltip-guide__criteria-heading-look {
   display: inline;
   font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
@@ -2794,8 +2794,8 @@
   padding-inline: 0;
 }
 
-/* 통일형 만들기 — 외래어 변환처럼 탭 맨 위 분리 카드
-   아래 여러 개 찾기와의 간격은 .consistency-embed gap(--panel-gap-section)만
+/* 표기 통일하기 — 외래어 변환처럼 탭 맨 위 분리 카드
+   아래 여러 항목 찾기와의 간격은 .consistency-embed gap(--panel-gap-section)만
    (맞춤법: calibration margin-bottom과 동일, margin 중복 금지) */
 .consistency-unify-hero {
   display: block;
@@ -2807,7 +2807,7 @@
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.6);
   container-type: inline-size;
-  /* 아래 여러 개 찾기 칩과 동일 타이포 */
+  /* 아래 여러 항목 찾기 칩과 동일 타이포 */
   --consistency-example-font-size: calc(
     var(--panel-guide-font-size, 0.828rem) * 0.9
   );

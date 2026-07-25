@@ -16,3 +16,21 @@ export function ConsistencyTabChip() {
     </span>
   );
 }
+
+/** 말풍선 안 — 외래어 표기 「변환」버튼 모양 */
+export function LoanwordConvertBtnLook() {
+  return (
+    <span className="tooltip-guide__loanword-convert-btn-look" aria-hidden>
+      변환
+    </span>
+  );
+}
+
+/** 말풍선 안 — 통일형 「등록」버튼 모양 */
+export function RegisterBtnLook() {
+  return (
+    <span className="tooltip-guide__register-btn-look" aria-hidden>
+      등록
+    </span>
+  );
+}

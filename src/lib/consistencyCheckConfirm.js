@@ -85,7 +85,7 @@ export function countConsistencyCheckActiveRules(
 
 /** 통일형 항목이 켜져 있는데 📌 미지정일 때 검수 차단 문구 */
 export const CONSISTENCY_UNIFY_PIN_REQUIRED_MESSAGE =
-  '통일형 만들기에서 통일형📌을 지정한 뒤 검수해 주세요.';
+  '표기 통일하기에서 통일형📌을 지정한 뒤 검수해 주세요.';
 
 /**
  * 켠 통일형 항목이 있으면 📌 지정 필수.
@@ -107,13 +107,13 @@ function formatConfirmActiveCount(active) {
   return active > 0 ? formatCategoryFindingCount(active) : '(없음)';
 }
 
-/** 여러 개 찾기·통일형 만들기 — 등록 항목 수 */
+/** 여러 항목 찾기·표기 통일하기 — 등록 항목 수 */
 function formatConfirmItemCount(active) {
   return active > 0 ? `(${active}항목)` : '(없음)';
 }
 
 /**
- * 통일형 confirm 한 줄 — 예: 통일형 만들기(2항목, 통일형: 조선시대📌)
+ * 통일형 confirm 한 줄 — 예: 표기 통일하기(2항목, 통일형: 조선시대📌)
  * @param {number} unifyActive
  * @param {string | null | undefined} pinnedTailWord
  */
@@ -342,7 +342,7 @@ export async function confirmConsistencyCheckBeforeRun(
 }
 
 /**
- * 통일형 만들기 전용 검수 confirm
+ * 표기 통일하기 전용 검수 confirm
  * @param {string} uid
  * @param {string} [email]
  * @param {import('./ruleTypes.js').Rule[]} [customRules]

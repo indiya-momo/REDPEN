@@ -124,6 +124,13 @@ const WORK_GUIDE_1_ALIGN = {
   topFromTargetBottom: 10,
 };
 
+/** 1b — 기준 검수 안내 (1번보다 200px 아래) */
+const WORK_GUIDE_1B_ALIGN = {
+  selector: '[data-work-guide-criteria-run]',
+  leftFromTargetLeft: 0,
+  topFromTargetBottom: 210,
+};
+
 /** 4번 — 우측 상단 인사말(○○님 안녕하세요) 아래 120px */
 const WORK_GUIDE_GREETING_ALIGN = {
   selector: '.work-guide-anchor--greeting',
@@ -1286,17 +1293,17 @@ export default function MainScreen({
 
   const handleConsistencyLiteralAddGuideClick = useCallback(() => {
     if (!guestWorkGuide.showConsistencyGuide) return;
+    if (!consistencyGuideUnifyAddClicked) return;
     setConsistencyGuideLiteralAddClicked(true);
-  }, [guestWorkGuide.showConsistencyGuide]);
+  }, [
+    guestWorkGuide.showConsistencyGuide,
+    consistencyGuideUnifyAddClicked,
+  ]);
 
   const handleConsistencyUnifyAddGuideClick = useCallback(() => {
     if (!guestWorkGuide.showConsistencyGuide) return;
-    if (!consistencyGuideLiteralAddClicked) return;
     setConsistencyGuideUnifyAddClicked(true);
-  }, [
-    guestWorkGuide.showConsistencyGuide,
-    consistencyGuideLiteralAddClicked,
-  ]);
+  }, [guestWorkGuide.showConsistencyGuide]);
 
   useEffect(() => {
     if (!isGuestBrowseActive()) return;
@@ -1739,7 +1746,9 @@ export default function MainScreen({
               useFixedLayer
               offsetX={0}
               offsetY={0}
-              alignToBubble={WORK_GUIDE_1_ALIGN}
+              alignToBubble={
+                isGuestBrowseActive() ? WORK_GUIDE_1B_ALIGN : WORK_GUIDE_1_ALIGN
+              }
               bubbleGuideStep={isGuestBrowseActive() ? '1b' : '1c'}
               pinned={guestWorkGuide.pinAll}
               showConfirm={!isGuestBrowseActive()}
@@ -1896,7 +1905,7 @@ export default function MainScreen({
       showConfirm={!isGuestBrowseActive()}
       message={
         <guideMessages.ConsistencyIntroMessage
-          literalAddClicked={consistencyGuideLiteralAddClicked}
+          unifyAddClicked={consistencyGuideUnifyAddClicked}
         />
       }
       onDismiss={() =>
@@ -2466,18 +2475,18 @@ export default function MainScreen({
                 active={
                   isGuestBrowseActive() &&
                   guestWorkGuide.showConsistencyGuide &&
-                  !consistencyGuideLiteralAddClicked
+                  !consistencyGuideUnifyAddClicked
                 }
-                anchorSelector='[data-work-guide="literal-add"]'
+                anchorSelector='[data-work-guide="unify-add"]'
               />
               <GuideClickHand
                 active={
                   isGuestBrowseActive() &&
                   guestWorkGuide.showConsistencyGuide &&
-                  consistencyGuideLiteralAddClicked &&
-                  !consistencyGuideUnifyAddClicked
+                  consistencyGuideUnifyAddClicked &&
+                  !consistencyGuideLiteralAddClicked
                 }
-                anchorSelector='[data-work-guide="unify-add"]'
+                anchorSelector='[data-work-guide="literal-add"]'
               />
               <GuideClickHand
                 active={guestWorkGuide.showConsistencyUnifyPinGuide}

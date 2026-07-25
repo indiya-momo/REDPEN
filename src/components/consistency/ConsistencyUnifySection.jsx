@@ -119,7 +119,7 @@ export default function ConsistencyUnifySection({
       {hideHeading ? null : (
         <>
           <p className="printed-page-setup__title consistency-subsection-title panel-criteria-heading">
-            통일형 만들기
+            표기 통일하기
             <span className="panel-criteria-heading-meta">
               (최대 {MAX_CONSISTENCY_UNIFY_SLOTS}항목, 통일형 1항목)
             </span>
@@ -141,7 +141,7 @@ export default function ConsistencyUnifySection({
             onChange={setUnifiedDraft}
             onRegister={registerUnified}
             placeholder={unifyPlaceholder}
-            ariaLabel="통일형 만들기"
+            ariaLabel="표기 통일하기"
             registerDisabled={registerBlocked}
             hideLimitTitle={suppressLimitMessage}
             addButtonGuideAttr={addButtonGuideAttr}
@@ -177,7 +177,7 @@ export default function ConsistencyUnifySection({
                 onChange={setUnifiedDraft}
                 onRegister={registerUnified}
                 placeholder={unifyPlaceholder}
-                ariaLabel="통일형 만들기"
+                ariaLabel="표기 통일하기"
                 registerDisabled={registerBlocked}
                 hideLimitTitle={suppressLimitMessage}
                 addButtonGuideAttr={addButtonGuideAttr}

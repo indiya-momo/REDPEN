@@ -85,7 +85,7 @@ export function listConsistencyEntries(customRules) {
 }
 
 /**
- * 일관성 찾기 UI 전용 — 통일형 만들기 전용 항목(consistencyUnifyEntry만)은 제외
+ * 일관성 찾기 UI 전용 — 표기 통일하기 전용 항목(consistencyUnifyEntry만)은 제외
  *
  * @param {import('./ruleTypes.js').Rule[]} customRules
  * @returns {ConsistencyEntryRow[]}

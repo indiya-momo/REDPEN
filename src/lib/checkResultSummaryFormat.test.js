@@ -63,7 +63,7 @@ describe('checkResultSummaryFormat', () => {
         totalFindings: 67,
       }),
     ).toBe(
-      '여러 개 찾기 2기준, 통일형 만들기 1기준, 공통 항목 찾기 0기준, 본용언+보조용언 9기준 전체 발견 67',
+      '여러 항목 찾기 2기준, 표기 통일하기 1기준, 공통 항목 찾기 0기준, 본용언+보조용언 9기준 전체 발견 67',
     );
   });
 
@@ -105,7 +105,7 @@ describe('checkResultSummaryFormat', () => {
       }),
     ).toEqual([
       {
-        badge: '여러 개 찾기',
+        badge: '여러 항목 찾기',
         count: 1,
         findingsCount: 4,
         tone: 'consistency-literal',
@@ -142,7 +142,7 @@ describe('checkResultSummaryFormat', () => {
         totalFindings: 19,
       }),
     ).toBe(
-      '여러 개 찾기 1기준 4발견 · 통일형 만들기 2기준 0발견 · 공통 항목 찾기 1기준 3발견 · 본용언+보조용언 9기준 12발견 · 전체 발견 19',
+      '여러 항목 찾기 1기준 4발견 · 표기 통일하기 2기준 0발견 · 공통 항목 찾기 1기준 3발견 · 본용언+보조용언 9기준 12발견 · 전체 발견 19',
     );
   });
 });

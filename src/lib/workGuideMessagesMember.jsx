@@ -8,20 +8,23 @@ import {
   LITERAL_FIND_FEATURE_LABEL,
   UNIFY_FEATURE_LABEL,
 } from './consistencyRuleLimit.js';
-import { ConsistencyTabChip, SpellingTabChip } from './workGuideMessageUi.jsx';
+import { ConsistencyTabChip, LoanwordConvertBtnLook, SpellingTabChip } from './workGuideMessageUi.jsx';
 
 /** 0 — 맞춤법 탭·외래어 소개 */
 export function SpellingTabIntroMessage() {
   return (
     <>
-      교정냥 &apos;모모&apos;다냥
+      나는 교정냥 &apos;모모&apos;, 만나서 반갑다냥
+      <br />
+      인디야는 출판 PDF를 브라우저에서 검수하는 프로그램이다냥(AI를 사용하지
+      않음)
       <br />
       먼저 <SpellingTabChip /> 탭을 소개한다냥
       <br />
       <span className="tooltip-guide__gothic-label">외래어 표기</span>는
-      무제한이다냥
+      무제한으로 사용할 수 있으니
       <br />
-      필요한 만큼 마음껏 사용하라냥
+      편안하게 <LoanwordConvertBtnLook /> 해 보라냥
     </>
   );
 }

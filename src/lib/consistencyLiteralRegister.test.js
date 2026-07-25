@@ -32,7 +32,7 @@ describe('registerConsistencyLiteralBatch', () => {
 });
 
 describe('registerConsistencyUnifyBatch', () => {
-  it('통일형 만들기 항목은 consistencyUnifyEntry로 표시한다', () => {
+  it('표기 통일하기 항목은 consistencyUnifyEntry로 표시한다', () => {
     const onApplyRules = vi.fn(() => true);
     registerConsistencyUnifyBatch('신라시대,고려시대', [], onApplyRules);
     const next = onApplyRules.mock.calls[0][0];
@@ -54,7 +54,7 @@ describe('registerConsistencyUnifyBatch', () => {
     ]);
   });
 
-  it('통일형 만들기는 3개까지만 등록한다', () => {
+  it('표기 통일하기는 3개까지만 등록한다', () => {
     const alertMock = vi.fn();
     vi.stubGlobal('alert', alertMock);
     const rules = Array.from({ length: 3 }, (_, i) => ({

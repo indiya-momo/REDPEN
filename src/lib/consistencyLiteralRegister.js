@@ -189,7 +189,7 @@ export function registerConsistencyLiteralBatch(input, customRules, onApplyRules
 }
 
 /**
- * 쉼표로 구분된 통일형 만들기 항목을 그대로 등록한다(최대 3건).
+ * 쉼표로 구분된 표기 통일하기 항목을 그대로 등록한다(최대 3건).
  *
  * @param {string} input
  * @param {import('./ruleTypes.js').Rule[]} customRules

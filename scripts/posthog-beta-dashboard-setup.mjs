@@ -22,7 +22,7 @@ const COHORT_NAME = '베타 실사용자 (내부 제외)';
 const RETURN_UPLOADER_COHORT_NAME = '재업로드 2회+ (로그인)';
 const DASHBOARD_NAME = '인디야 오픈베타';
 const LOANWORD_DASHBOARD_NAME = '인디야 — 외래어 표기 (일별)';
-const UNIFY_DASHBOARD_NAME = '인디야 — 통일형 만들기 검수 (일별)';
+const UNIFY_DASHBOARD_NAME = '인디야 — 표기 통일하기 검수 (일별)';
 const TAG = 'indiya-beta';
 
 /** 코호트 API용 (레거시 filters 형식) */
@@ -530,13 +530,13 @@ function buildLoanwordInsightSpecs(cohortId) {
   ];
 }
 
-/** 통일형 만들기 카드 「검수」— scope=consistency-unify */
+/** 표기 통일하기 카드 「검수」— scope=consistency-unify */
 function buildUnifyInsightSpecs(cohortId) {
   return [
     {
       name: '[통일형] 일별 검수 사용자·횟수',
       description:
-        '로그인 후 통일형 만들기 카드 검수(check_run scope=consistency-unify). Unique(dau)=사람 수, Total=횟수. 내부 제외.',
+        '로그인 후 표기 통일하기 카드 검수(check_run scope=consistency-unify). Unique(dau)=사람 수, Total=횟수. 내부 제외.',
       query: insightQuery(
         {
           kind: 'TrendsQuery',
@@ -707,7 +707,7 @@ async function main() {
   const unifyDashboardId = await ensureNamedDashboard(projectId, {
     name: UNIFY_DASHBOARD_NAME,
     description:
-      '로그인 회원 · 통일형 만들기 카드 검수(check_run scope=consistency-unify). 일별 Unique·Total. 내부 제외.',
+      '로그인 회원 · 표기 통일하기 카드 검수(check_run scope=consistency-unify). 일별 Unique·Total. 내부 제외.',
   });
 
   const insights = [
@@ -732,7 +732,7 @@ async function main() {
   for (const [label, id] of [
     ['오픈베타', betaDashboardId],
     ['외래어 표기', loanwordDashboardId],
-    ['통일형 만들기 검수', unifyDashboardId],
+    ['표기 통일하기 검수', unifyDashboardId],
   ]) {
     if (id) {
       console.log(`  ${label}: ${HOST}/project/${projectId}/dashboard/${id}`);
