@@ -128,4 +128,62 @@ describe('exportResults compose', () => {
     expect(model.rows[0].pageRuns.some((r) => r.text.includes('3P'))).toBe(true);
     expect(JSON.parse(JSON.stringify(model))).toEqual(model);
   });
+
+  it('buildConsistencyExportModel: 통일형 구분·설명을 채운다', () => {
+    const pinned = {
+      patternKind: 'compound-find',
+      label: '조선시대',
+      find: '조선시대',
+      tip: '',
+      instances: [{ pageNum: 1, matchedText: '조선시대', start: 0, end: 4 }],
+    };
+    const need = {
+      patternKind: 'compound-find',
+      label: '조선˅시대',
+      find: '조선 시대',
+      tip: '',
+      instances: [{ pageNum: 2, matchedText: '조선 시대', start: 0, end: 5 }],
+    };
+    const customRules = [
+      {
+        id: 'u1',
+        enabled: true,
+        patternKind: 'compound-find',
+        tailWord: '조선시대',
+        consistencyUnifyEntry: true,
+        consistencyUnifyPinned: true,
+      },
+      {
+        id: 'u2',
+        enabled: true,
+        patternKind: 'compound-find',
+        tailWord: '조선˅시대',
+        consistencyUnifyEntry: true,
+      },
+    ];
+    const model = buildConsistencyExportModel({
+      entries: [
+        { group: pinned, source: 'consistency' },
+        { group: need, source: 'consistency' },
+      ],
+      formatPageLabel,
+      isInstanceVisible: alwaysVisible,
+      groupVisibilityMode: allVisibleMode,
+      visibleInstanceCount: visibleCount,
+      literalCriteriaCount: 0,
+      literalFindingsCount: 0,
+      unifyCriteriaCount: 2,
+      unifyFindingsCount: 2,
+      commonStringCriteriaCount: 0,
+      commonStringFindingsCount: 0,
+      auxiliaryCriteriaCount: 0,
+      auxiliaryFindingsCount: 0,
+      totalFindings: 2,
+      customRules,
+    });
+    expect(model.rows[0].category).toBe('통일형 만들기');
+    expect(model.rows[0].tip).toBe('통일형 📌');
+    expect(model.rows[1].category).toBe('통일형 만들기');
+    expect(model.rows[1].tip).toBe('통일 필요 항목');
+  });
 });

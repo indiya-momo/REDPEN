@@ -39,6 +39,7 @@ import {
   MAX_PHRASE_SLOT_REGISTERED_ENTRIES,
   MAX_GLOBAL_EXCLUDE_REGISTERED_ENTRIES,
   MAX_CONSISTENCY_UNIFY_SLOTS,
+  MAX_CONSISTENCY_CRITERIA_SLOTS,
   canAddGlobalExcludeRegisteredEntries,
   globalExcludeRegistrationBlockedMessage,
   phraseSlotRegistrationBlockedMessage,
@@ -314,7 +315,7 @@ export default function ConsistencyPanel({
           <span className="consistency-unify-hero__summary-title">
             통일형 만들기
             <span className="panel-criteria-heading-meta">
-              (1회 {MAX_CONSISTENCY_UNIFY_SLOTS}항목까지 가능, 통일형 1항목 지원)
+              (최대 {MAX_CONSISTENCY_UNIFY_SLOTS}항목, 통일형 1항목)
             </span>
             <span
               className="consistency-unify-hero__badge"
@@ -388,7 +389,7 @@ export default function ConsistencyPanel({
         <p className="printed-page-setup__title consistency-panel-section-title panel-criteria-heading">
           {LITERAL_FIND_FEATURE_LABEL}
           <span className="panel-criteria-heading-meta">
-            (1회 5항목까지 가능, 영문 대소문자 지원)
+            (최대 {MAX_CONSISTENCY_CRITERIA_SLOTS}항목, 영문 대소문자 지원)
           </span>
         </p>
         <div className="consistency-subsection consistency-subsection--first">

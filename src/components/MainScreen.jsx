@@ -963,6 +963,7 @@ export default function MainScreen({
             commonStringSelected:
               consistencyCriteriaSelection.commonStringSelected,
             auxiliarySelected: consistencyCriteriaSelection.auxiliarySelected,
+            customRules,
           };
 
     void maybeSavePaidCheckResult({
@@ -990,6 +991,7 @@ export default function MainScreen({
     consistencyGroupsWithFindings.unifyWithFindings,
     consistencyTabEntries,
     consistencyTabTotalFindings,
+    customRules,
     pageDisplay.formatLabel,
     pdf.pdfFileName,
     ruleCheck.groupVisibilityMode,
@@ -1497,6 +1499,7 @@ export default function MainScreen({
           commonStringSelected:
             consistencyCriteriaSelection.commonStringSelected,
           auxiliarySelected: consistencyCriteriaSelection.auxiliarySelected,
+          customRules,
           filename,
         });
       })
@@ -1526,6 +1529,7 @@ export default function MainScreen({
     consistencyCriteriaSelection.unifySelected,
     consistencyCriteriaSelection.commonStringSelected,
     consistencyCriteriaSelection.auxiliarySelected,
+    customRules,
   ]);
 
   const spellingResultsPanel =
@@ -2155,7 +2159,7 @@ export default function MainScreen({
                 <div className="spelling-tab-layout__run-row-actions--export">
                   <button
                     type="button"
-                    className="btn-add panel-section-run-btn panel-section-run-btn--primary btn-export-results"
+                    className="btn-add panel-section-run-btn btn-export-results"
                     data-work-guide="consistency-export"
                     onClick={handleConsistencyExport}
                     disabled={!ruleCheck.consistencyCheckDone}

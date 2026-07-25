@@ -2834,22 +2834,24 @@
 .panel-left .consistency-unify-hero__badge {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
   margin-left: 0.35em;
-  padding: 0.12em 0.45em;
+  min-height: 1.55em;
+  padding: 0 0.5em;
   border-radius: 3px;
   background: #e11d48;
   color: #fff;
   font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
   font-size: 0.62em;
   font-weight: 800;
-  letter-spacing: 0.04em;
-  line-height: 1.2;
+  letter-spacing: 0.02em;
+  line-height: 1;
   vertical-align: middle;
 }
 
 .panel-left .consistency-unify-hero__badge--feedback {
   background: #b45309;
-  letter-spacing: 0.02em;
 }
 
 .panel-left .consistency-unify-hero__hint {

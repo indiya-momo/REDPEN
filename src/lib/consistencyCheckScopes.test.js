@@ -25,11 +25,17 @@ describe('consistencyCheckScopes', () => {
         patternKind: 'compound-find',
         consistencyUnifyEntry: true,
       },
+      {
+        id: 'p',
+        enabled: true,
+        patternKind: 'compound-find',
+        consistencyUnifyPinned: true,
+      },
       { id: 'l', enabled: true, patternKind: 'compound-find' },
       { id: 'a', enabled: true, patternKind: 'auxiliary-verb' },
     ];
     const unify = filterCustomRulesByConsistencyScope(rules, 'unify');
-    expect(unify.map((r) => r.id)).toEqual(['u']);
+    expect(unify.map((r) => r.id)).toEqual(['u', 'p']);
     const literal = filterCustomRulesByConsistencyScope(rules, 'literal-slot');
     expect(literal.map((r) => r.id)).toEqual(['l']);
   });
