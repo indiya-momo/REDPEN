@@ -57,7 +57,7 @@ VITE_PUBLIC_POSTHOG_HOST=https://eu.i.posthog.com
 ## 4. 수집 정책 (변경 없음)
 
 - autocapture · session replay **OFF**
-- 이벤트 6개만 수동 전송 (`project-docs/analytics-beta.md`)
+- 수동 capture만 (`project-docs/analytics-beta.md`)
 - 대문 「수집 안 함」 → `localStorage` opt-out
 
 ---

@@ -30,6 +30,7 @@ import {
 } from '../lib/loanword/yongryeDisplay.js';
 import { preloadEspeak, espeakToIpa } from '../lib/loanword/espeakG2p.js';
 import ConsistencyHintExample from './consistency/ConsistencyHintExample.jsx';
+import { trackLoanwordConvert } from '../lib/analytics.js';
 
 /** 용례·추정 표기 뱃지 — UI 통일 라벨 */
 const YONGRYE_BADGE_LABEL = '용례';
@@ -209,11 +210,18 @@ function EngineResult({ result, label, estimated }) {
 }
 
 /**
- * @param {{ onConvertClick?: () => void, guideSpotlight?: boolean }} [props]
+ * @param {{
+ *   onConvertClick?: () => void,
+ *   guideSpotlight?: boolean,
+ *   authUid?: string,
+ *   authEmail?: string,
+ * }} [props]
  */
 export default function LoanwordConverter({
   onConvertClick,
   guideSpotlight = false,
+  authUid = '',
+  authEmail = '',
 } = {}) {
   const [input, setInput] = useState('Jo March');
   const [loading, setLoading] = useState(false);
@@ -240,8 +248,10 @@ export default function LoanwordConverter({
     setError('');
     try {
       const yongrye = await loadYongryeDictionary();
+      /** @type {Awaited<ReturnType<typeof resolveLatinLoanwordQuery>> | null} */
+      let next = null;
       if (queryHasHangul(word)) {
-        const next = await resolveHangulLoanwordQuery(word, yongrye);
+        next = await resolveHangulLoanwordQuery(word, yongrye);
         setOutcome(next);
         if (!next.official.length && !next.engine?.found && !isKornormsConfigured()) {
           setError(
@@ -249,7 +259,7 @@ export default function LoanwordConverter({
           );
         }
       } else if (queryNeedsSourceLookup(word)) {
-        const next = await resolveSourceLangLoanwordQuery(word, yongrye);
+        next = await resolveSourceLangLoanwordQuery(word, yongrye);
         setOutcome(next);
         if (
           !next.official.length &&
@@ -262,7 +272,7 @@ export default function LoanwordConverter({
         }
       } else if (queryLooksLatin(word)) {
         const cmu = await loadCmuDictionary();
-        const next = await resolveLatinLoanwordQuery(
+        next = await resolveLatinLoanwordQuery(
           word,
           yongrye,
           cmu,
@@ -273,6 +283,16 @@ export default function LoanwordConverter({
         setError('영어·한글·원어 표기를 입력해 주세요');
         setOutcome(null);
       }
+      if (next) {
+        void trackLoanwordConvert(
+          {
+            mode: typeof next.mode === 'string' ? next.mode : '',
+            hasOfficial: Boolean(next.official?.length),
+            hasEngine: Boolean(next.engine?.found),
+          },
+          { uid: authUid, email: authEmail },
+        );
+      }
     } catch {
       setError('사전을 불러오지 못했습니다. 새로고침 후 다시 시도해 주세요.');
       setOutcome(null);
@@ -280,7 +300,7 @@ export default function LoanwordConverter({
       busyRef.current = false;
       setLoading(false);
     }
-  }, [input]);
+  }, [input, authUid, authEmail]);
 
   const onKeyDown = useCallback(
     (e) => {
