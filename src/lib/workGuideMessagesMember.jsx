@@ -8,7 +8,7 @@ import {
   LITERAL_FIND_FEATURE_LABEL,
   UNIFY_FEATURE_LABEL,
 } from './consistencyRuleLimit.js';
-import { ConsistencyTabChip, LoanwordConvertBtnLook, SpellingTabChip } from './workGuideMessageUi.jsx';
+import { ConsistencyTabChip, IndiyaBrandLook, LoanwordConvertBtnLook, SpellingTabChip } from './workGuideMessageUi.jsx';
 
 /** 0 — 맞춤법 탭·외래어 소개 */
 export function SpellingTabIntroMessage() {
@@ -16,8 +16,8 @@ export function SpellingTabIntroMessage() {
     <>
       나는 교정냥 &apos;모모&apos;, 만나서 반갑다냥
       <br />
-      인디야는 출판 PDF를 브라우저에서 검수하는 프로그램이다냥(AI를 사용하지
-      않음)
+      <IndiyaBrandLook />는 출판 PDF를 브라우저에서 검수하는 프로그램이다냥(AI를
+      사용하지 않음)
       <br />
       먼저 <SpellingTabChip /> 탭을 소개한다냥
       <br />
@@ -167,10 +167,15 @@ export function ConsistencyUnifyPinMessage() {
   );
 }
 
+/** 둘러보기 전용 — 로그인 온보딩 체인에서는 쓰지 않음 */
+export function ConsistencyLiteralFindMessage() {
+  return null;
+}
+
 export function AuxiliaryVerbMessage() {
   return (
     <>
-      <span className="tooltip-guide__gothic-label">
+      <span className="tooltip-guide__criteria-summary-label">
         {AUXILIARY_VERB_FEATURE_LABEL}
       </span>
       <br />

@@ -2,7 +2,7 @@
  * 둘러보기(게스트) 작업 가이드 말풍선 문구.
  * 로그인 온보딩 문구는 workGuideMessagesMember.jsx — 여기서 가져오지 않는다.
  */
-import { MessageSquare } from 'lucide-react';
+import { Check, MessageSquare, Save } from 'lucide-react';
 import { AUXILIARY_VERB_FEATURE_LABEL } from './bonBojoRules.js';
 import {
   LITERAL_FIND_FEATURE_LABEL,
@@ -10,7 +10,11 @@ import {
 } from './consistencyRuleLimit.js';
 import { LOANWORD_FEATURE_LABEL } from './loanwordCheckRules.js';
 import {
+  ConsistencyTabChip,
+  FaqBtnLook,
+  IndiyaBrandLook,
   LoanwordConvertBtnLook,
+  LogoutBtnLook,
   RegisterBtnLook,
   SpellingTabChip,
 } from './workGuideMessageUi.jsx';
@@ -20,8 +24,8 @@ export function LeftCriteriaMessage() {
     <>
       나는 교정냥 &apos;모모&apos;, 만나서 반갑다냥
       <br />
-      인디야는 출판 PDF를 브라우저에서 검수하는 프로그램이다냥(AI를 사용하지
-      않음)
+      <IndiyaBrandLook />는 출판 PDF를 브라우저에서 검수하는 프로그램이다냥(AI를
+      사용하지 않음)
       <br />
       먼저 <SpellingTabChip /> 탭을 소개한다냥
       <br />
@@ -66,40 +70,38 @@ export function SpellingStartCheckMessage() {
 export function FirstResultMessage() {
   return (
     <>
-      <SpellingTabChip /> 검수가 완료되었다냥
+      검수가 완료되었다냥!
       <br />
-      왼쪽에는 검사 결과가 나온다냥
+      왼쪽은{' '}
+      <span className="tooltip-guide__criteria-summary-label">전체 발견</span>{' '}
+      한 결과 화면,
       <br />
-      오른쪽 원고에서 하이라이트를 클릭하면
+      오른쪽은 원고 화면,{' '}
+      <span className="tooltip-guide__pdf-highlight-look">하이라이트</span>를
+      클릭하면
       <br />
       기준에 대한 <span className="tooltip-guide__explain-badge">설명</span>이
       나온다냥
+      <br />
+      스크롤하며 천천히 살펴보라냥
     </>
   );
 }
 
-/** @param {{ unifyAddClicked?: boolean }} props */
-export function ConsistencyIntroMessage({ unifyAddClicked = false } = {}) {
-  if (unifyAddClicked) {
-    return (
-      <>
-        <span className="tooltip-guide__gothic-label">
-          {LITERAL_FIND_FEATURE_LABEL}
-        </span>
-        에서는 최대 5 항목을
-        <br />
-        한 번에 검색할 수 있어 편리하다냥
-        <br />
-        <RegisterBtnLook />을 눌러 예시 항목을 추가해 보자냥!
-      </>
-    );
-  }
+export function ConsistencyIntroMessage() {
   return (
     <>
-      <span className="tooltip-guide__gothic-label">{UNIFY_FEATURE_LABEL}</span>
+      <ConsistencyTabChip /> 탭에도 여러 기능이 있다냥
+      <br />
+      먼저{' '}
+      <span className="tooltip-guide__criteria-summary-label">
+        {UNIFY_FEATURE_LABEL}
+      </span>
       에서는
       <br />
       여러 항목을 통일📌할 수 있다냥
+      <br />
+      좋은 기능이니 꼭 활용해 달라냥
       <br />
       <RegisterBtnLook />을 눌러 예시 항목을 추가해 보자냥
     </>
@@ -116,16 +118,40 @@ export function ConsistencyUnifyPinMessage() {
   );
 }
 
+export function ConsistencyLiteralFindMessage() {
+  return (
+    <>
+      <span className="tooltip-guide__criteria-summary-label">
+        {LITERAL_FIND_FEATURE_LABEL}
+      </span>
+      에서는 최대 5항목을
+      <br />
+      한 번에 검색할 수 있어 편리하다냥
+      <br />
+      <RegisterBtnLook />을 눌러 예시 항목을 추가해 보자냥!
+    </>
+  );
+}
+
 export function AuxiliaryVerbMessage() {
   return (
     <>
-      <span className="tooltip-guide__gothic-label">
+      <span className="tooltip-guide__criteria-summary-label">
         {AUXILIARY_VERB_FEATURE_LABEL}
       </span>
       <br />
+      기준은{' '}
+      <span
+        className="tooltip-guide__checkbox-look tooltip-guide__checkbox-look--checked"
+        aria-hidden
+      >
+        <Check size={10} strokeWidth={3.5} />
+      </span>
+      로 넣고 뺄 수 있다냥
+      <br />
       집사가 이거 넣다가
       <br />
-      맞춤법 공부 많이 했다냥
+      맞춤법 공부 많이 해서
       <br />
       자기전에 생각난다냥...
     </>
@@ -135,9 +161,15 @@ export function AuxiliaryVerbMessage() {
 export function RuleSetSaveMessage() {
   return (
     <>
-      회원은 검수 결과를 다운받을 수 있고
+      회원은{' '}
+      <span className="tooltip-guide__export-btn-look">검수 결과 다운로드</span>{' '}
+      가능하고
       <br />
-      검수 항목을 프로젝트로 저장할 수 있다냥
+      검수 기준을 프로젝트로{' '}
+      <span className="tooltip-guide__save-rules-btn-look" aria-hidden>
+        <Save size={16} strokeWidth={2} />
+      </span>{' '}
+      하고 관리할 수 있다냥
     </>
   );
 }
@@ -149,9 +181,7 @@ export function WorkExitMessage() {
         모모는 늘 여기에 있다냥
       </span>
       <span className="tooltip-guide__message-line">
-        회원 가입 후 사용하다 질문이 생기면
-      </span>
-      <span className="tooltip-guide__message-line">
+        궁금한 부분은 <FaqBtnLook />와{' '}
         <span className="tooltip-guide__feedback-btn-look">
           <MessageSquare
             size={18}
@@ -160,7 +190,10 @@ export function WorkExitMessage() {
           />
           피드백
         </span>
-        으로 물어보라냥!
+        을 이용하라냥
+      </span>
+      <span className="tooltip-guide__message-line">
+        <LogoutBtnLook /> 후 <IndiyaBrandLook />에서 만나자냥
       </span>
     </>
   );

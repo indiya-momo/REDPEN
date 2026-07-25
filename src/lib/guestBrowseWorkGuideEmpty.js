@@ -14,6 +14,7 @@ export const EMPTY_GUEST_BROWSE_WORK_GUIDE = Object.freeze({
   showFirstResultGuide: false,
   showConsistencyGuide: false,
   showConsistencyUnifyPinGuide: false,
+  showConsistencyLiteralGuide: false,
   showAuxiliaryVerbGuide: false,
   showConsistencyStartCheckGuide: false,
   showRuleSetSaveGuide: false,

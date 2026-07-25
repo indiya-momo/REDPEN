@@ -138,6 +138,13 @@ const WORK_GUIDE_GREETING_ALIGN = {
   topFromTargetTop: 120,
 };
 
+/** 여러 항목 찾기 — 인사말 아래 320px (4번보다 200px 아래) */
+const WORK_GUIDE_LITERAL_FIND_ALIGN = {
+  selector: '.work-guide-anchor--greeting',
+  leftFromTargetLeft: 0,
+  topFromTargetTop: 320,
+};
+
 /** 다운로드 가이드 — 검수 결과 다운로드 버튼 아래 */
 const WORK_GUIDE_EXPORT_ALIGN = {
   selector: '[data-work-guide="consistency-export"]',
@@ -1286,19 +1293,20 @@ export default function MainScreen({
 
   useEffect(() => {
     if (!guestWorkGuide.showConsistencyGuide) {
-      setConsistencyGuideLiteralAddClicked(false);
       setConsistencyGuideUnifyAddClicked(false);
     }
   }, [guestWorkGuide.showConsistencyGuide]);
 
+  useEffect(() => {
+    if (!guestWorkGuide.showConsistencyLiteralGuide) {
+      setConsistencyGuideLiteralAddClicked(false);
+    }
+  }, [guestWorkGuide.showConsistencyLiteralGuide]);
+
   const handleConsistencyLiteralAddGuideClick = useCallback(() => {
-    if (!guestWorkGuide.showConsistencyGuide) return;
-    if (!consistencyGuideUnifyAddClicked) return;
+    if (!guestWorkGuide.showConsistencyLiteralGuide) return;
     setConsistencyGuideLiteralAddClicked(true);
-  }, [
-    guestWorkGuide.showConsistencyGuide,
-    consistencyGuideUnifyAddClicked,
-  ]);
+  }, [guestWorkGuide.showConsistencyLiteralGuide]);
 
   const handleConsistencyUnifyAddGuideClick = useCallback(() => {
     if (!guestWorkGuide.showConsistencyGuide) return;
@@ -1308,14 +1316,22 @@ export default function MainScreen({
   useEffect(() => {
     if (!isGuestBrowseActive()) return;
     if (!guestWorkGuide.showConsistencyGuide) return;
-    if (!consistencyGuideLiteralAddClicked || !consistencyGuideUnifyAddClicked) {
-      return;
-    }
+    if (!consistencyGuideUnifyAddClicked) return;
     guestWorkGuide.dismiss(WORK_GUIDE_KEYS.CONSISTENCY_INTRO);
   }, [
     guestWorkGuide.showConsistencyGuide,
-    consistencyGuideLiteralAddClicked,
     consistencyGuideUnifyAddClicked,
+    guestWorkGuide.dismiss,
+  ]);
+
+  useEffect(() => {
+    if (!isGuestBrowseActive()) return;
+    if (!guestWorkGuide.showConsistencyLiteralGuide) return;
+    if (!consistencyGuideLiteralAddClicked) return;
+    guestWorkGuide.dismiss(WORK_GUIDE_KEYS.CONSISTENCY_LITERAL_FIND);
+  }, [
+    guestWorkGuide.showConsistencyLiteralGuide,
+    consistencyGuideLiteralAddClicked,
     guestWorkGuide.dismiss,
   ]);
 
@@ -1903,13 +1919,30 @@ export default function MainScreen({
       offsetY={8}
       pinned={guestWorkGuide.pinAll}
       showConfirm={!isGuestBrowseActive()}
-      message={
-        <guideMessages.ConsistencyIntroMessage
-          unifyAddClicked={consistencyGuideUnifyAddClicked}
-        />
-      }
+      message={<guideMessages.ConsistencyIntroMessage />}
       onDismiss={() =>
         guestWorkGuide.dismiss(WORK_GUIDE_KEYS.CONSISTENCY_INTRO)
+      }
+    >
+      {greetingAnchor}
+    </TooltipGuide>
+  ) : guestWorkGuide.showConsistencyLiteralGuide ? (
+    <TooltipGuide
+      storageKey={guestWorkGuide.storageKey(
+        WORK_GUIDE_KEYS.CONSISTENCY_LITERAL_FIND,
+      )}
+      placement="bottom"
+      bubbleType="left"
+      useFixedLayer
+      alignToBubble={WORK_GUIDE_LITERAL_FIND_ALIGN}
+      bubbleGuideStep="4"
+      offsetX={0}
+      offsetY={0}
+      pinned={guestWorkGuide.pinAll}
+      showConfirm={!isGuestBrowseActive()}
+      message={<guideMessages.ConsistencyLiteralFindMessage />}
+      onDismiss={() =>
+        guestWorkGuide.dismiss(WORK_GUIDE_KEYS.CONSISTENCY_LITERAL_FIND)
       }
     >
       {greetingAnchor}
@@ -2480,18 +2513,17 @@ export default function MainScreen({
                 anchorSelector='[data-work-guide="unify-add"]'
               />
               <GuideClickHand
-                active={
-                  isGuestBrowseActive() &&
-                  guestWorkGuide.showConsistencyGuide &&
-                  consistencyGuideUnifyAddClicked &&
-                  !consistencyGuideLiteralAddClicked
-                }
-                anchorSelector='[data-work-guide="literal-add"]'
-              />
-              <GuideClickHand
                 active={guestWorkGuide.showConsistencyUnifyPinGuide}
                 anchorSelector='[data-work-guide="unify-pin-silla"]'
                 align="center"
+              />
+              <GuideClickHand
+                active={
+                  isGuestBrowseActive() &&
+                  guestWorkGuide.showConsistencyLiteralGuide &&
+                  !consistencyGuideLiteralAddClicked
+                }
+                anchorSelector='[data-work-guide="literal-add"]'
               />
               <GuideClickHand
                 active={guestWorkGuide.showAuxiliaryVerbGuide}

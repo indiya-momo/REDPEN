@@ -74,9 +74,7 @@ function buildSummaryCells(stats, totalFindings) {
       key="__total__"
       className="results-header__stat results-header__stat--total"
     >
-      <span className="results-header-badge results-header-badge--total">
-        전체 발견
-      </span>
+      <span className="results-header__total-label">전체 발견</span>
       <ResultFindingsCountCircle
         count={totalFindings}
         className="results-header__total-count"

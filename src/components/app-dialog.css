@@ -174,12 +174,11 @@
   box-shadow: none;
 }
 
-.app-dialog__results-summary .results-header-badge--total {
-  background: color-mix(in srgb, var(--color-text) 8%, #fffdfb);
-  border-color: color-mix(in srgb, var(--color-text) 18%, transparent);
-  color: var(--color-text);
-  border-radius: var(--radius-ui-sm);
+.app-dialog__results-summary .results-header__total-label {
+  font-size: calc(0.78rem * var(--dialog-result-ui-scale));
   font-weight: 800;
+  line-height: 1;
+  color: var(--color-text);
 }
 
 .app-dialog__results-summary .results-header__stat-count {

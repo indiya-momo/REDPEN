@@ -38,6 +38,8 @@ export const WORK_GUIDE_KEYS = {
   CONSISTENCY_INTRO: 'work-consistency-intro-v1',
   /** 통일형 📌 지정 (4번 다음) */
   CONSISTENCY_UNIFY_PIN: 'work-consistency-unify-pin-v1',
+  /** 둘러보기 — 여러 항목 찾기 등록 (📌 다음) */
+  CONSISTENCY_LITERAL_FIND: 'work-consistency-literal-find-v1',
   AUXILIARY_VERB_INTRO: 'work-auxiliary-verb-intro-v1',
   /** 로그인 — 표기 통일 기준 검수·다운로드 안내 (저장 안내 직전) */
   CONSISTENCY_START_CHECK: 'work-consistency-start-check-v1',

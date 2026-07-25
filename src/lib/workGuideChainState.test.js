@@ -140,7 +140,7 @@ describe('getWorkGuideChainState', () => {
     expect(chain.showConsistencyGuide).toBe(false);
   });
 
-  it('핀 가이드 확인 후 본·보 가이드가 보인다', () => {
+  it('핀 가이드 확인 후 여러 항목 찾기 가이드가 보인다', () => {
     const dismissedMap = {
       [keyFor(WORK_GUIDE_KEYS.PDF_OPENED)]: true,
       [keyFor(WORK_GUIDE_KEYS.LEFT_CRITERIA)]: true,
@@ -156,8 +156,30 @@ describe('getWorkGuideChainState', () => {
       dismissedMap,
       { pinAll: false },
     );
-    expect(chain.showAuxiliaryVerbGuide).toBe(true);
+    expect(chain.showConsistencyLiteralGuide).toBe(true);
+    expect(chain.showAuxiliaryVerbGuide).toBe(false);
     expect(chain.showConsistencyUnifyPinGuide).toBe(false);
+  });
+
+  it('여러 항목 찾기 확인 후 본·보 가이드가 보인다', () => {
+    const dismissedMap = {
+      [keyFor(WORK_GUIDE_KEYS.PDF_OPENED)]: true,
+      [keyFor(WORK_GUIDE_KEYS.LEFT_CRITERIA)]: true,
+      [keyFor(WORK_GUIDE_KEYS.SPELLING_START_CHECK)]: true,
+      [keyFor(WORK_GUIDE_KEYS.FIRST_RESULT)]: true,
+      [keyFor(WORK_GUIDE_KEYS.CONSISTENCY_INTRO)]: true,
+      [keyFor(WORK_GUIDE_KEYS.CONSISTENCY_UNIFY_PIN)]: true,
+      [keyFor(WORK_GUIDE_KEYS.CONSISTENCY_LITERAL_FIND)]: true,
+    };
+    const chain = getWorkGuideChainState(
+      'u1',
+      { ...baseCtx, spellingCheckDone: true, workTab: 'consistency' },
+      keyFor,
+      dismissedMap,
+      { pinAll: false },
+    );
+    expect(chain.showAuxiliaryVerbGuide).toBe(true);
+    expect(chain.showConsistencyLiteralGuide).toBe(false);
   });
 
   it('3단 확인·검수 완료 후 맞춤법 탭이면 표기 통일 탭 전환을 요청한다', () => {
@@ -226,6 +248,7 @@ describe('getWorkGuideChainState', () => {
       [keyFor(WORK_GUIDE_KEYS.FIRST_RESULT)]: true,
       [keyFor(WORK_GUIDE_KEYS.CONSISTENCY_INTRO)]: true,
       [keyFor(WORK_GUIDE_KEYS.CONSISTENCY_UNIFY_PIN)]: true,
+      [keyFor(WORK_GUIDE_KEYS.CONSISTENCY_LITERAL_FIND)]: true,
       [keyFor(WORK_GUIDE_KEYS.AUXILIARY_VERB_INTRO)]: true,
       [keyFor(WORK_GUIDE_KEYS.RULE_SET_SAVE)]: true,
       [keyFor(WORK_GUIDE_KEYS.WORK_EXIT)]: true,
@@ -249,6 +272,7 @@ describe('getWorkGuideChainState', () => {
       [keyFor(WORK_GUIDE_KEYS.FIRST_RESULT)]: true,
       [keyFor(WORK_GUIDE_KEYS.CONSISTENCY_INTRO)]: true,
       [keyFor(WORK_GUIDE_KEYS.CONSISTENCY_UNIFY_PIN)]: true,
+      [keyFor(WORK_GUIDE_KEYS.CONSISTENCY_LITERAL_FIND)]: true,
       [keyFor(WORK_GUIDE_KEYS.AUXILIARY_VERB_INTRO)]: true,
     };
     const chain = getWorkGuideChainState(
@@ -276,6 +300,7 @@ describe('getWorkGuideChainState', () => {
       [keyFor(WORK_GUIDE_KEYS.FIRST_RESULT)]: true,
       [keyFor(WORK_GUIDE_KEYS.CONSISTENCY_INTRO)]: true,
       [keyFor(WORK_GUIDE_KEYS.CONSISTENCY_UNIFY_PIN)]: true,
+      [keyFor(WORK_GUIDE_KEYS.CONSISTENCY_LITERAL_FIND)]: true,
       [keyFor(WORK_GUIDE_KEYS.AUXILIARY_VERB_INTRO)]: true,
     };
     const chain = getWorkGuideChainState(
@@ -304,6 +329,7 @@ describe('getWorkGuideChainState', () => {
       [keyFor(WORK_GUIDE_KEYS.FIRST_RESULT)]: true,
       [keyFor(WORK_GUIDE_KEYS.CONSISTENCY_INTRO)]: true,
       [keyFor(WORK_GUIDE_KEYS.CONSISTENCY_UNIFY_PIN)]: true,
+      [keyFor(WORK_GUIDE_KEYS.CONSISTENCY_LITERAL_FIND)]: true,
       [keyFor(WORK_GUIDE_KEYS.AUXILIARY_VERB_INTRO)]: true,
     };
     const chain = getWorkGuideChainState(
@@ -331,6 +357,7 @@ describe('getWorkGuideChainState', () => {
       [keyFor(WORK_GUIDE_KEYS.FIRST_RESULT)]: true,
       [keyFor(WORK_GUIDE_KEYS.CONSISTENCY_INTRO)]: true,
       [keyFor(WORK_GUIDE_KEYS.CONSISTENCY_UNIFY_PIN)]: true,
+      [keyFor(WORK_GUIDE_KEYS.CONSISTENCY_LITERAL_FIND)]: true,
       [keyFor(WORK_GUIDE_KEYS.AUXILIARY_VERB_INTRO)]: true,
       [keyFor(WORK_GUIDE_KEYS.RULE_SET_SAVE)]: true,
     };
@@ -476,6 +503,7 @@ describe('getWorkGuideChainState', () => {
       [keyFor(WORK_GUIDE_KEYS.FIRST_RESULT)]: true,
       [keyFor(WORK_GUIDE_KEYS.CONSISTENCY_INTRO)]: true,
       [keyFor(WORK_GUIDE_KEYS.CONSISTENCY_UNIFY_PIN)]: true,
+      [keyFor(WORK_GUIDE_KEYS.CONSISTENCY_LITERAL_FIND)]: true,
       [keyFor(WORK_GUIDE_KEYS.AUXILIARY_VERB_INTRO)]: true,
     };
     const locked = getWorkGuideChainState(
