@@ -18,6 +18,7 @@ function emptyWorkGuideChainState(pinAll) {
     showFirstResultGuide: false,
     showConsistencyGuide: false,
     showConsistencyUnifyPinGuide: false,
+    showConsistencyLiteralGuide: false,
     showAuxiliaryVerbGuide: false,
     showConsistencyStartCheckGuide: false,
     showRuleSetSaveGuide: false,
@@ -43,6 +44,9 @@ export function activeWorkGuideKeyFromChain(chain) {
   if (chain.showConsistencyUnifyPinGuide) {
     return WORK_GUIDE_KEYS.CONSISTENCY_UNIFY_PIN;
   }
+  if (chain.showConsistencyLiteralGuide) {
+    return WORK_GUIDE_KEYS.CONSISTENCY_LITERAL_FIND;
+  }
   if (chain.showAuxiliaryVerbGuide) return WORK_GUIDE_KEYS.AUXILIARY_VERB_INTRO;
   if (chain.showRuleSetSaveGuide) return WORK_GUIDE_KEYS.RULE_SET_SAVE;
   if (chain.showWorkExitGuide) return WORK_GUIDE_KEYS.WORK_EXIT;
@@ -63,7 +67,8 @@ export function devWorkGuideStepFromChain(chain) {
   if (chain.showPdfOpenedGuide) return 4;
   if (chain.showConsistencyGuide) return 5;
   if (chain.showConsistencyUnifyPinGuide) return 6;
-  if (chain.showAuxiliaryVerbGuide) return 7;
+  if (chain.showConsistencyLiteralGuide) return 7;
+  if (chain.showAuxiliaryVerbGuide) return 8;
   if (chain.showRuleSetSaveGuide) return 9;
   /** PRE_UPLOAD 가 10 — 종료는 11 */
   if (chain.showWorkExitGuide) return 11;
@@ -140,11 +145,11 @@ function getDevForcedWorkGuideChain(
       if (d(WORK_GUIDE_KEYS.CONSISTENCY_UNIFY_PIN)) return null;
       return { ...base, showConsistencyUnifyPinGuide: true };
     case 7:
+      if (d(WORK_GUIDE_KEYS.CONSISTENCY_LITERAL_FIND)) return null;
+      return { ...base, showConsistencyLiteralGuide: true };
+    case 8:
       if (d(WORK_GUIDE_KEYS.AUXILIARY_VERB_INTRO)) return null;
       return { ...base, showAuxiliaryVerbGuide: true };
-    case 8:
-      if (d(WORK_GUIDE_KEYS.RULE_SET_SAVE)) return null;
-      return { ...base, showRuleSetSaveGuide: true };
     case 9:
       if (guestBrowse) {
         if (d(WORK_GUIDE_KEYS.WORK_EXIT)) return null;
@@ -287,6 +292,22 @@ function computeGuestBrowseWorkGuideChain(ctx, keyFor, dismissedMap, options) {
     spellingStepsDone &&
     d(WORK_GUIDE_KEYS.CONSISTENCY_INTRO) &&
     d(WORK_GUIDE_KEYS.CONSISTENCY_UNIFY_PIN) &&
+    !d(WORK_GUIDE_KEYS.CONSISTENCY_LITERAL_FIND)
+  ) {
+    return {
+      ...empty,
+      showConsistencyLiteralGuide: true,
+      workGuideOpen: true,
+    };
+  }
+
+  if (
+    consistencyActive &&
+    spellingCheckDone &&
+    spellingStepsDone &&
+    d(WORK_GUIDE_KEYS.CONSISTENCY_INTRO) &&
+    d(WORK_GUIDE_KEYS.CONSISTENCY_UNIFY_PIN) &&
+    d(WORK_GUIDE_KEYS.CONSISTENCY_LITERAL_FIND) &&
     !d(WORK_GUIDE_KEYS.AUXILIARY_VERB_INTRO)
   ) {
     return {
@@ -302,6 +323,7 @@ function computeGuestBrowseWorkGuideChain(ctx, keyFor, dismissedMap, options) {
     spellingStepsDone &&
     d(WORK_GUIDE_KEYS.CONSISTENCY_INTRO) &&
     d(WORK_GUIDE_KEYS.CONSISTENCY_UNIFY_PIN) &&
+    d(WORK_GUIDE_KEYS.CONSISTENCY_LITERAL_FIND) &&
     d(WORK_GUIDE_KEYS.AUXILIARY_VERB_INTRO) &&
     !d(WORK_GUIDE_KEYS.RULE_SET_SAVE)
   ) {
@@ -319,6 +341,7 @@ function computeGuestBrowseWorkGuideChain(ctx, keyFor, dismissedMap, options) {
     spellingStepsDone &&
     d(WORK_GUIDE_KEYS.CONSISTENCY_INTRO) &&
     d(WORK_GUIDE_KEYS.CONSISTENCY_UNIFY_PIN) &&
+    d(WORK_GUIDE_KEYS.CONSISTENCY_LITERAL_FIND) &&
     d(WORK_GUIDE_KEYS.AUXILIARY_VERB_INTRO) &&
     d(WORK_GUIDE_KEYS.RULE_SET_SAVE) &&
     !d(WORK_GUIDE_KEYS.WORK_EXIT)
@@ -353,6 +376,8 @@ function computeMemberWorkGuideChain(ctx, keyFor, dismissedMap, options) {
     if (key === WORK_GUIDE_KEYS.PRE_UPLOAD && hasPdf) return true;
     // 표기 통일 「기준 검수」말풍선은 쓰지 않음
     if (key === WORK_GUIDE_KEYS.CONSISTENCY_START_CHECK) return true;
+    // 여러 항목 찾기 안내는 둘러보기 전용
+    if (key === WORK_GUIDE_KEYS.CONSISTENCY_LITERAL_FIND) return true;
     return dismissed(keyFor(key), dismissedMap);
   };
   const empty = emptyWorkGuideChainState(pinAll);

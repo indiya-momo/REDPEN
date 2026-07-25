@@ -1579,6 +1579,21 @@ details[open] > summary .details-chevron::before {
   line-height: 1;
 }
 
+.results-header__total-label {
+  display: inline;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  font-size: inherit;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--color-text);
+  white-space: nowrap;
+}
+
 .results-header__applied {
   display: inline-flex;
   flex-wrap: wrap;
