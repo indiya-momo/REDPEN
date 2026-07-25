@@ -1452,13 +1452,6 @@ details[open] > summary .details-chevron::before {
   color: var(--c-soft);
 }
 
-.faq-modal__footer {
-  display: flex;
-  justify-content: flex-end;
-  flex-shrink: 0;
-  padding-top: 4px;
-}
-
 .link-btn {
   border: none;
   background: none;
@@ -2862,9 +2855,12 @@ details[open] > summary .details-chevron::before {
 }
 
 .pdf-dropzone__open {
-  width: 100%;
-  max-width: 14.5rem;
+  width: auto;
+  max-width: 100%;
   margin: 0 auto;
+  padding-left: 1.35rem;
+  padding-right: 1.35rem;
+  white-space: nowrap;
 }
 
 .pdf-dropzone__reconnect {

@@ -66,7 +66,10 @@ export function PreUploadMessage() {
       <br />
       원고 PDF는 서버에 저장되지 않으니 안심하라냥
       <br />
-      <span className="tooltip-guide__run-btn-look">PDF 열기</span> 후
+      <span className="tooltip-guide__run-btn-look">
+        인디자인 PDF를 브라우저에 업로드
+      </span>{' '}
+      후
       설명을 계속한다냥
     </>
   );
