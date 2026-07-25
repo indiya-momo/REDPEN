@@ -330,7 +330,7 @@ export function trackPdfOpened(input) {
 
 /**
  * @param {{
- *   scope: 'spelling' | 'consistency' | 'toc-body',
+ *   scope: string,
  *   findingCount: number,
  *   activeRuleCount: number,
  * }} input
@@ -343,6 +343,31 @@ export async function trackCheckRun(input, identity = {}) {
     finding_count_bucket: bucketFindingCount(input.findingCount),
     active_rule_count_bucket: bucketRuleCount(input.activeRuleCount),
   });
+}
+
+/**
+ * 외래어 표기(변환) 도구 — 「변환」성공 시. 입력 문자열은 보내지 않음.
+ * @param {{
+ *   mode?: string,
+ *   hasOfficial?: boolean,
+ *   hasEngine?: boolean,
+ * }} [input]
+ * @param {{ uid?: string, email?: string }} [identity]
+ */
+export async function trackLoanwordConvert(input = {}, identity = {}) {
+  await ensureAnalyticsIdentified(identity.uid ?? '', identity.email ?? '');
+  /** @type {Record<string, string | number | boolean>} */
+  const props = {};
+  if (typeof input.mode === 'string' && input.mode.trim()) {
+    props.mode = input.mode.trim();
+  }
+  if (typeof input.hasOfficial === 'boolean') {
+    props.has_official = input.hasOfficial;
+  }
+  if (typeof input.hasEngine === 'boolean') {
+    props.has_engine = input.hasEngine;
+  }
+  captureAnalytics('loanword_convert', props);
 }
 
 /**

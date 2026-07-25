@@ -21,6 +21,8 @@ const PROJECT_ID = process.env.POSTHOG_PROJECT_ID?.trim() ?? '';
 const COHORT_NAME = '베타 실사용자 (내부 제외)';
 const RETURN_UPLOADER_COHORT_NAME = '재업로드 2회+ (로그인)';
 const DASHBOARD_NAME = '인디야 오픈베타';
+const LOANWORD_DASHBOARD_NAME = '인디야 — 외래어 표기 (일별)';
+const UNIFY_DASHBOARD_NAME = '인디야 — 통일형 만들기 검수 (일별)';
 const TAG = 'indiya-beta';
 
 /** 코호트 API용 (레거시 filters 형식) */
@@ -464,6 +466,137 @@ function buildInsightSpecs(cohortId, returnUploaderCohortId) {
 ];
 }
 
+/** 외래어 표기(변환) 도구 — loanword_convert */
+function buildLoanwordInsightSpecs(cohortId) {
+  return [
+    {
+      name: '[외래어 표기] 일별 변환 사용자·횟수',
+      description:
+        '로그인 후 맞춤법 탭 「외래어 표기」변환(loanword_convert). Unique(dau)=사람 수, Total=횟수. 내부 제외. 입력 문자열은 수집하지 않음.',
+      query: insightQuery(
+        {
+          kind: 'TrendsQuery',
+          interval: 'day',
+          dateRange: DATE_7D,
+          series: [
+            {
+              kind: 'EventsNode',
+              event: 'loanword_convert',
+              name: '외래어 표기 사용자',
+              math: 'dau',
+            },
+            {
+              kind: 'EventsNode',
+              event: 'loanword_convert',
+              name: '외래어 표기 횟수',
+              math: 'total',
+            },
+          ],
+          trendsFilter: {},
+          version: 2,
+        },
+        cohortId,
+      ),
+    },
+    {
+      name: '[외래어 표기] 사용자별 변환 횟수',
+      description:
+        '기간 내 사용자(distinct_id)별 loanword_convert 횟수 표. 내부 제외. 로그인 identify 이후 uid 기준.',
+      query: insightQuery(
+        {
+          kind: 'TrendsQuery',
+          interval: 'day',
+          dateRange: DATE_7D,
+          series: [
+            {
+              kind: 'EventsNode',
+              event: 'loanword_convert',
+              name: '변환 횟수',
+              math: 'total',
+            },
+          ],
+          breakdownFilter: {
+            breakdown: 'distinct_id',
+            breakdown_type: 'event',
+          },
+          trendsFilter: {
+            display: 'ActionsTable',
+          },
+          version: 2,
+        },
+        cohortId,
+      ),
+    },
+  ];
+}
+
+/** 통일형 만들기 카드 「검수」— scope=consistency-unify */
+function buildUnifyInsightSpecs(cohortId) {
+  return [
+    {
+      name: '[통일형] 일별 검수 사용자·횟수',
+      description:
+        '로그인 후 통일형 만들기 카드 검수(check_run scope=consistency-unify). Unique(dau)=사람 수, Total=횟수. 내부 제외.',
+      query: insightQuery(
+        {
+          kind: 'TrendsQuery',
+          interval: 'day',
+          dateRange: DATE_7D,
+          series: [
+            {
+              kind: 'EventsNode',
+              event: 'check_run',
+              name: '통일형 검수 사용자',
+              math: 'dau',
+              properties: [eventPropertyFilter('scope', 'consistency-unify')],
+            },
+            {
+              kind: 'EventsNode',
+              event: 'check_run',
+              name: '통일형 검수 횟수',
+              math: 'total',
+              properties: [eventPropertyFilter('scope', 'consistency-unify')],
+            },
+          ],
+          trendsFilter: {},
+          version: 2,
+        },
+        cohortId,
+      ),
+    },
+    {
+      name: '[통일형] 사용자별 검수 횟수',
+      description:
+        '기간 내 사용자(distinct_id)별 통일형 검수(check_run scope=consistency-unify) 횟수 표. 내부 제외.',
+      query: insightQuery(
+        {
+          kind: 'TrendsQuery',
+          interval: 'day',
+          dateRange: DATE_7D,
+          series: [
+            {
+              kind: 'EventsNode',
+              event: 'check_run',
+              name: '검수 횟수',
+              math: 'total',
+              properties: [eventPropertyFilter('scope', 'consistency-unify')],
+            },
+          ],
+          breakdownFilter: {
+            breakdown: 'distinct_id',
+            breakdown_type: 'event',
+          },
+          trendsFilter: {
+            display: 'ActionsTable',
+          },
+          version: 2,
+        },
+        cohortId,
+      ),
+    },
+  ];
+}
+
 async function ensureInsight(projectId, spec, dashboardId) {
   const existing = await findByName(
     `/api/projects/${projectId}/insights/?limit=200`,
@@ -493,32 +626,35 @@ async function ensureInsight(projectId, spec, dashboardId) {
   return { id: created.id, shortId: created.short_id };
 }
 
-async function ensureDashboard(projectId) {
+/**
+ * @param {string} projectId
+ * @param {{ name: string, description: string }} spec
+ */
+async function ensureNamedDashboard(projectId, spec) {
   try {
     const existing = await findByName(
       `/api/projects/${projectId}/dashboards/?limit=200`,
-      DASHBOARD_NAME,
+      spec.name,
     );
     if (existing) {
-      console.log(`[posthog-setup] dashboard exists: ${existing.id}`);
+      console.log(`[posthog-setup] dashboard exists: ${existing.id} ${spec.name}`);
       return existing.id;
     }
     const created = await api(`/api/projects/${projectId}/dashboards/`, {
       method: 'POST',
       body: {
-        name: DASHBOARD_NAME,
-        description:
-          '인디야 오픈베타 — 내부(is_internal) 제외. 6/9 이후 로그인·검수 지표 중심.',
+        name: spec.name,
+        description: spec.description,
         tags: [TAG],
         pinned: true,
       },
     });
-    console.log(`[posthog-setup] dashboard created: ${created.id}`);
+    console.log(`[posthog-setup] dashboard created: ${created.id} ${spec.name}`);
     return created.id;
   } catch (err) {
     if (isScopeDenied(err)) {
       console.warn(
-        '[posthog-setup] 대시보드 스킵 (dashboard:read/write 없음). 인사이트만 생성합니다.',
+        `[posthog-setup] 대시보드 스킵 (${spec.name}) — dashboard:read/write 없음`,
       );
       return null;
     }
@@ -526,11 +662,34 @@ async function ensureDashboard(projectId) {
   }
 }
 
+async function ensureDashboard(projectId) {
+  return ensureNamedDashboard(projectId, {
+    name: DASHBOARD_NAME,
+    description:
+      '인디야 오픈베타 — 내부(is_internal) 제외. 6/9 이후 로그인·검수 지표 중심.',
+  });
+}
+
+/**
+ * @param {string} projectId
+ * @param {number | null} dashboardId
+ * @param {ReturnType<typeof buildInsightSpecs>} insightSpecs
+ */
+async function ensureInsightList(projectId, dashboardId, insightSpecs) {
+  /** @type {{ id: number, shortId?: string, name: string }[]} */
+  const insights = [];
+  for (const spec of insightSpecs) {
+    const row = await ensureInsight(projectId, spec, dashboardId);
+    insights.push({ ...row, name: spec.name });
+  }
+  return insights;
+}
+
 async function main() {
   if (!API_KEY.startsWith('phx_')) {
     fail(
       'POSTHOG_PERSONAL_API_KEY(phx_…)가 필요합니다.\n' +
-        'PostHog → Settings → Personal API keys → insight:write, cohort:write',
+        'PostHog → Settings → Personal API keys → insight:write, cohort:write, dashboard:write',
     );
   }
 
@@ -538,21 +697,49 @@ async function main() {
   const projectId = await resolveProjectId();
   const cohortId = await ensureCohort(projectId);
   const returnUploaderCohortId = await ensureReturnUploaderCohort(projectId);
-  const dashboardId = await ensureDashboard(projectId);
-  const insightSpecs = buildInsightSpecs(cohortId, returnUploaderCohortId);
-  /** @type {{ id: number, shortId?: string, name: string }[]} */
-  const insights = [];
-  for (const spec of insightSpecs) {
-    const row = await ensureInsight(projectId, spec, dashboardId);
-    insights.push({ ...row, name: spec.name });
-  }
+
+  const betaDashboardId = await ensureDashboard(projectId);
+  const loanwordDashboardId = await ensureNamedDashboard(projectId, {
+    name: LOANWORD_DASHBOARD_NAME,
+    description:
+      '로그인 회원 · 맞춤법 탭 「외래어 표기」변환(loanword_convert). 일별 Unique·Total. 내부 제외.',
+  });
+  const unifyDashboardId = await ensureNamedDashboard(projectId, {
+    name: UNIFY_DASHBOARD_NAME,
+    description:
+      '로그인 회원 · 통일형 만들기 카드 검수(check_run scope=consistency-unify). 일별 Unique·Total. 내부 제외.',
+  });
+
+  const insights = [
+    ...(await ensureInsightList(
+      projectId,
+      betaDashboardId,
+      buildInsightSpecs(cohortId, returnUploaderCohortId),
+    )),
+    ...(await ensureInsightList(
+      projectId,
+      loanwordDashboardId,
+      buildLoanwordInsightSpecs(cohortId),
+    )),
+    ...(await ensureInsightList(
+      projectId,
+      unifyDashboardId,
+      buildUnifyInsightSpecs(cohortId),
+    )),
+  ];
 
   console.log('\n[posthog-setup] 완료');
-  if (dashboardId) {
-    console.log(`  대시보드: ${HOST}/project/${projectId}/dashboard/${dashboardId}`);
-  } else {
+  for (const [label, id] of [
+    ['오픈베타', betaDashboardId],
+    ['외래어 표기', loanwordDashboardId],
+    ['통일형 만들기 검수', unifyDashboardId],
+  ]) {
+    if (id) {
+      console.log(`  ${label}: ${HOST}/project/${projectId}/dashboard/${id}`);
+    }
+  }
+  if (!betaDashboardId && !loanwordDashboardId && !unifyDashboardId) {
     console.log(`  인사이트 목록: ${HOST}/project/${projectId}/insights`);
-    console.log('  (대시보드는 UI에서 New dashboard → 위 인사이트 추가)');
   }
   for (const row of insights) {
     const path = row.shortId

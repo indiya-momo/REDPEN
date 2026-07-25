@@ -1646,10 +1646,16 @@ export default function MainScreen({
                 guestWorkGuide.dismiss(WORK_GUIDE_KEYS.LOANWORD_INTRO)
               }
             >
-              <LoanwordConverter guideSpotlight />
+              <LoanwordConverter
+                guideSpotlight
+                authUid={authUid}
+                authEmail={authEmail}
+              />
             </TooltipGuide>
           ) : (
             <LoanwordConverter
+              authUid={authUid}
+              authEmail={authEmail}
               onConvertClick={() => {
                 if (guestWorkGuide.showLeftCriteriaGuide) {
                   guestWorkGuide.dismiss(WORK_GUIDE_KEYS.LEFT_CRITERIA);

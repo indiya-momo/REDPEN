@@ -44,7 +44,7 @@ npx -y @posthog/wizard@latest --region eu
 ```
 
 - **대화형**으로 React/Vite를 고르면 `@posthog/react`·autocapture 설정을 **추가**할 수 있습니다.  
-- **이 프로젝트는 autocapture OFF·이벤트 6개만** 쓰도록 맞춰 두었으므로, wizard로 코드를 덮어쓰지 말고 **키만 .env에 넣는 쪽**을 권장합니다.  
+- **이 프로젝트는 autocapture OFF·수동 capture만** 쓰도록 맞춰 두었으므로, wizard로 코드를 덮어쓰지 말고 **키만 .env에 넣는 쪽**을 권장합니다.  
 - 점검만: `npx -y @posthog/wizard@latest events-audit` (로그인/API 키 필요)
 
 키가 없으면 SDK는 **로드하지 않습니다** (로컬·Pages 빌드 그대로 동작).
@@ -61,7 +61,8 @@ npx -y @posthog/wizard@latest --region eu
 |--------|------|-----------|
 | `session_start` | 세션당 1회 (탭) | `app_version`, `build_id`, `deploy_mode` |
 | `pdf_opened` | PDF 로드·추출 완료 | `page_count_bucket`, `size_mb_bucket`, `text_extracted`, `upload_index_bucket` (1/2/3/4+), `is_return_upload` |
-| `check_run` | 맞춤법/일관성 검사 끝 | `scope`, `finding_count_bucket`, `active_rule_count_bucket` |
+| `check_run` | 맞춤법/일관성/통일형 검사 끝 | `scope` (`spelling` · `consistency` · `consistency-unify` · …), `finding_count_bucket`, `active_rule_count_bucket` |
+| `loanword_convert` | 맞춤법 탭 「외래어 표기」변환 성공 | `mode`, `has_official`, `has_engine` (입력 문자열 없음) |
 | `result_viewed` | 검사 완료 직후 (결과 패널로 전환) | `scope`, `finding_count_bucket` |
 | `ruleset_saved` | 규칙 세트 「저장」 클릭 | `builtin_bucket`, `spacing_bucket`, `consistency_bucket` |
 | `feedback_opened` | 피드백 모달 열기 | — |
@@ -107,8 +108,13 @@ npm run posthog:setup-beta
 
 `project:read` 권한이 없으면 **2번 PROJECT_ID는 필수**입니다.
 
-생성물: 대시보드 **「인디야 오픈베타」** — **둘러보기 시작·완료** / 방문 / 로그인 전환 / 로그인 후 검수 / `check_run` identify 연결 / **PDF 업로드·재업로드** / 재방문 후 업로드 퍼널.  
-필터: Person **`is_internal` is not true** (내부 테스트 계정 제외). 둘러보기 인사이트는 익명이라 코호트 필터 없음. 재업로드 지표는 `pdf_opened`의 `is_return_upload`·`upload_index_bucket` 및 person `pdf_upload_count` 사용.
+생성물:
+- 대시보드 **「인디야 오픈베타」** — 둘러보기 / 방문 / 로그인 전환 / 로그인 후 검수 / PDF 업로드·재업로드 등
+- 대시보드 **「인디야 — 외래어 표기 (일별)」** — Unique·Total + **사용자별 횟수 표**
+- 대시보드 **「인디야 — 통일형 만들기 검수 (일별)」** — Unique·Total + **사용자별 횟수 표**
+
+필터: Person **`is_internal` is not true** (내부 테스트 계정 제외). 둘러보기 인사이트는 익명이라 코호트 필터 없음.  
+`loanword_convert`·외래어 대시보드는 **해당 이벤트 배포 이후**부터 집계됩니다. 통일형 `consistency-unify`는 기존 이벤트도 포함됩니다.
 
 **6/9 이후** 로그인·검수 지표만 제품 판단에 쓰세요. 그 이전은 identify 미연결로 참고만.
 
