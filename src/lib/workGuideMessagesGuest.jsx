@@ -2,7 +2,7 @@
  * 둘러보기(게스트) 작업 가이드 말풍선 문구.
  * 로그인 온보딩 문구는 workGuideMessagesMember.jsx — 여기서 가져오지 않는다.
  */
-import { Check, MessageSquare, Save } from 'lucide-react';
+import { Check, Save } from 'lucide-react';
 import { AUXILIARY_VERB_FEATURE_LABEL } from './bonBojoRules.js';
 import {
   LITERAL_FIND_FEATURE_LABEL,
@@ -40,17 +40,15 @@ export function LeftCriteriaMessage() {
 export function SpellingStartCheckMessage() {
   return (
     <>
-      <span className="tooltip-guide__criteria-summary-label tooltip-guide__criteria-summary-label--caution">
+      <span className="tooltip-guide__criteria-summary-label">
         편집자 검토 필요
       </span>{' '}
-      <span className="tooltip-guide__criteria-summary-label tooltip-guide__criteria-summary-label--spelling">
-        맞춤법 규칙
-      </span>
+      <span className="tooltip-guide__criteria-summary-label">맞춤법 규칙</span>
       <br />
-      <span className="tooltip-guide__criteria-summary-label tooltip-guide__criteria-summary-label--loanword">
+      <span className="tooltip-guide__criteria-summary-label">
         {LOANWORD_FEATURE_LABEL}
-      </span>{' '}
-      항목이 있다냥
+      </span>
+      을 검수할 수 있다냥
       <br />
       <span className="tooltip-guide__folder-icon" aria-hidden>
         📁
@@ -153,7 +151,7 @@ export function AuxiliaryVerbMessage() {
       <br />
       맞춤법 공부 많이 해서
       <br />
-      자기전에 생각난다냥...
+      자기 전에 생각난다냥
     </>
   );
 }
@@ -165,7 +163,9 @@ export function RuleSetSaveMessage() {
       <span className="tooltip-guide__export-btn-look">검수 결과 다운로드</span>{' '}
       가능하고
       <br />
-      검수 기준을 프로젝트로{' '}
+      <SpellingTabChip /> <ConsistencyTabChip /> 검수 기준을
+      <br />
+      프로젝트로{' '}
       <span className="tooltip-guide__save-rules-btn-look" aria-hidden>
         <Save size={16} strokeWidth={2} />
       </span>{' '}
@@ -181,16 +181,11 @@ export function WorkExitMessage() {
         모모는 늘 여기에 있다냥
       </span>
       <span className="tooltip-guide__message-line">
-        궁금한 부분은 <FaqBtnLook />와{' '}
-        <span className="tooltip-guide__feedback-btn-look">
-          <MessageSquare
-            size={18}
-            aria-hidden
-            className="tooltip-guide__feedback-btn-look__icon"
-          />
-          피드백
-        </span>
-        을 이용하라냥
+        어려워 보여도, 천천히 따라하며 활용하면
+      </span>
+      <span className="tooltip-guide__message-line">
+        실무가 편해질 거다냥(<FaqBtnLook />
+        참조)
       </span>
       <span className="tooltip-guide__message-line">
         <LogoutBtnLook /> 후 <IndiyaBrandLook />에서 만나자냥
