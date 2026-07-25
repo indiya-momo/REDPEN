@@ -31,8 +31,8 @@
  * @property {string} [displayLabel] — 체크·결과 표시 이름(비우면 finds·find로 생성)
  * @property {string} [spellingRuleId] — 검사용 그룹 키(런타임, ruleId에서 유도)
  * @property {string[]} [spellingFinds] — 검사용 변형 목록(런타임)
- * @property {boolean} [consistencyUnifyEntry] — 통일형 만들기에서 등록한 일관성 항목
- * @property {boolean} [consistencyUnifyPinned] — 통일형 만들기에서 📌로 지정한 통일형
+ * @property {boolean} [consistencyUnifyEntry] — 표기 통일하기에서 등록한 일관성 항목
+ * @property {boolean} [consistencyUnifyPinned] — 표기 통일하기에서 📌로 지정한 통일형
  * @property {boolean} [consistencyLiteralEntry] — 일관성 찾기에서 등록한 항목
  * @property {boolean} [requireLeadingBoundary] — true면 앞에 글자/숫자가 붙은 매칭은 제외
  * @property {string} [bonBojoItemId] — bon-bojo 시트 item_id; 목록·체크는 항목 단위

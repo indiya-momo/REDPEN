@@ -2,15 +2,15 @@ import { listConsistencyLiteralEntries } from './compoundPairRegister.js';
 import { listPhraseSlotEntries } from './phraseSlotRegister.js';
 
 /** UI 표기 — 쉼표로 여러 표기를 등록해 찾기 */
-export const LITERAL_FIND_FEATURE_LABEL = '여러 개 찾기';
+export const LITERAL_FIND_FEATURE_LABEL = '여러 항목 찾기';
 
-/** UI 표기 — 통일형 만들기(결과 뱃지·헤더·팝업 공통) */
-export const UNIFY_FEATURE_LABEL = '통일형 만들기';
+/** UI 표기 — 표기 통일하기(결과 뱃지·헤더·팝업 공통) */
+export const UNIFY_FEATURE_LABEL = '표기 통일하기';
 
-/** 여러 개 찾기 — 등록 상한 (쉼표 항목마다 1건) */
+/** 여러 항목 찾기 — 등록 상한 (쉼표 항목마다 1건) */
 export const MAX_CONSISTENCY_CRITERIA_SLOTS = 5;
 
-/** 통일형 만들기 — 등록 상한 (쉼표 항목마다 1건) */
+/** 표기 통일하기 — 등록 상한 (쉼표 항목마다 1건) */
 export const MAX_CONSISTENCY_UNIFY_SLOTS = 3;
 
 /** 공통 항목 찾기(@ 패턴) 등록 상한 */

@@ -1951,7 +1951,7 @@ details[open] > summary .details-chevron::before {
   color: color-mix(in srgb, var(--accent-terracotta) 78%, #3a2418 22%);
 }
 
-/* 통일형 만들기 — 진한 블루그레이(정책·확정) */
+/* 표기 통일하기 — 진한 블루그레이(정책·확정) */
 .result-pillar--consistency-unify,
 .results-header-badge.result-pillar--consistency-unify {
   background: color-mix(in srgb, var(--pillar-consistency) 22%, #fffdfb);
@@ -1959,7 +1959,7 @@ details[open] > summary .details-chevron::before {
   color: color-mix(in srgb, var(--pillar-consistency) 92%, #1e2936 8%);
 }
 
-/* 여러 개 찾기 — 옅은 블루그레이(수집·탐색) */
+/* 여러 항목 찾기 — 옅은 블루그레이(수집·탐색) */
 .result-pillar--consistency,
 .result-pillar--consistency-literal,
 .results-header-badge.result-pillar--consistency,
@@ -1971,7 +1971,7 @@ details[open] > summary .details-chevron::before {
   color: color-mix(in srgb, var(--pillar-consistency) 78%, #5c6b7a 22%);
 }
 
-/* 공통 문자열 — 여러 개와 비슷, 테두리만 또렷하게 */
+/* 공통 문자열 — 여러 항목 찾기와 비슷, 테두리만 또렷하게 */
 .result-pillar--consistency-common,
 .results-header-badge.result-pillar--consistency-common,
 .consistency-badge-inline.result-pillar--consistency-common {

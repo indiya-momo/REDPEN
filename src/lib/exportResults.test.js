@@ -181,9 +181,9 @@ describe('exportResults compose', () => {
       totalFindings: 2,
       customRules,
     });
-    expect(model.rows[0].category).toBe('통일형 만들기');
+    expect(model.rows[0].category).toBe('표기 통일하기');
     expect(model.rows[0].tip).toBe('통일형 📌');
-    expect(model.rows[1].category).toBe('통일형 만들기');
+    expect(model.rows[1].category).toBe('표기 통일하기');
     expect(model.rows[1].tip).toBe('통일 필요 항목');
   });
 });

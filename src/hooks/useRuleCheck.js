@@ -168,7 +168,7 @@ export function useRuleCheck({
     [resolvedCustomRules],
   );
 
-  /** 기준 검수 — 통일형 만들기는 카드 「검수」전용 */
+  /** 기준 검수 — 표기 통일하기는 카드 「검수」전용 */
   const consistencyCriteriaActiveRules = useMemo(
     () =>
       consistencyActiveRules.filter(

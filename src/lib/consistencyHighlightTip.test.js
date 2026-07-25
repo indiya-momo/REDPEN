@@ -42,7 +42,7 @@ describe('getConsistencyHighlightTip', () => {
         category: 'consistency',
         instances: [],
       }),
-    ).toBe('여러 개 찾기 : 세계경제');
+    ).toBe('여러 항목 찾기 : 세계경제');
   });
 
   it('uses tailWord for compound rules', () => {
@@ -55,7 +55,7 @@ describe('getConsistencyHighlightTip', () => {
         tailWord: '세계경제',
         instances: [],
       }),
-    ).toBe('여러 개 찾기 : 세계경제');
+    ).toBe('여러 항목 찾기 : 세계경제');
   });
 
   it('통일형·공통 문자열 — 결과 카드와 동일 배지', () => {
@@ -84,7 +84,7 @@ describe('getConsistencyHighlightTip', () => {
         },
         unifyRules,
       ),
-    ).toBe('통일형 만들기 : 미국˅정부 → 미국정부 📌');
+    ).toBe('표기 통일하기 : 미국˅정부 → 미국정부 📌');
     expect(
       getConsistencyHighlightTip(
         {
@@ -111,7 +111,7 @@ describe('getConsistencyResultCardParts', () => {
         tailWord: '세계경제',
         instances: [{}, {}, {}],
       }),
-    ).toEqual({ badge: '여러 개 찾기', label: '세계경제' });
+    ).toEqual({ badge: '여러 항목 찾기', label: '세계경제' });
     expect(
       getConsistencyResultCardParts({
         find: '세계 경제',
@@ -121,7 +121,7 @@ describe('getConsistencyResultCardParts', () => {
         tailWord: '세계 경제',
         instances: [{}],
       }),
-    ).toEqual({ badge: '여러 개 찾기', label: '세계˅경제' });
+    ).toEqual({ badge: '여러 항목 찾기', label: '세계˅경제' });
   });
 
   it('통일형 — 배지·📌 표시', () => {
@@ -150,7 +150,7 @@ describe('getConsistencyResultCardParts', () => {
         },
         unifyRules,
       ),
-    ).toEqual({ badge: '통일형 만들기', label: '세계경제 📌' });
+    ).toEqual({ badge: '표기 통일하기', label: '세계경제 📌' });
     expect(
       getConsistencyResultCardParts(
         {
@@ -164,12 +164,12 @@ describe('getConsistencyResultCardParts', () => {
         unifyRules,
       ),
     ).toEqual({
-      badge: '통일형 만들기',
+      badge: '표기 통일하기',
       label: '세계˅경제 → 세계경제 📌',
     });
   });
 
-  it('tailWord 없이도 라벨로 통일형 만들기 배지를 판별한다', () => {
+  it('tailWord 없이도 라벨로 표기 통일하기 배지를 판별한다', () => {
     const unifyRules = [
       {
         patternKind: 'compound-find',
@@ -194,7 +194,7 @@ describe('getConsistencyResultCardParts', () => {
         },
         unifyRules,
       ),
-    ).toEqual({ badge: '통일형 만들기', label: '캐나다정부 📌' });
+    ).toEqual({ badge: '표기 통일하기', label: '캐나다정부 📌' });
     expect(
       getConsistencyResultCardParts(
         {
@@ -207,7 +207,7 @@ describe('getConsistencyResultCardParts', () => {
         unifyRules,
       ),
     ).toEqual({
-      badge: '통일형 만들기',
+      badge: '표기 통일하기',
       label: '캐나다˅정부 → 캐나다정부 📌',
     });
   });
@@ -251,7 +251,7 @@ describe('getConsistencyResultCardTitle', () => {
         tailWord: '세계경제',
         instances: [{}],
       }),
-    ).toBe('여러 개 찾기 세계경제');
+    ).toBe('여러 항목 찾기 세계경제');
   });
 });
 

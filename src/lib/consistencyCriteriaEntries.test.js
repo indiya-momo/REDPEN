@@ -65,7 +65,7 @@ describe('consistencyCriteriaEntries', () => {
     expect(countActiveConsistencyCriteria(next).commonString).toBe(1);
   });
 
-  it('활성 건수는 통일형·여러 개 찾기를 find에 합산한다', () => {
+  it('활성 건수는 통일형·여러 항목 찾기를 find에 합산한다', () => {
     const rules = [
       {
         find: 'a',

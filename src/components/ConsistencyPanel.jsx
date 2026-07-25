@@ -310,12 +310,12 @@ export default function ConsistencyPanel({
       {/* 외래어 변환처럼 탭 맨 위 분리 카드 */}
       <section
         className="consistency-unify-hero"
-        aria-label="통일형 만들기"
+        aria-label="표기 통일하기"
         data-work-guide="consistency-unify-hero"
       >
         <div className="consistency-unify-hero__summary panel-criteria-heading">
           <span className="consistency-unify-hero__summary-title">
-            통일형 만들기
+            표기 통일하기
             <span className="panel-criteria-heading-meta">
               (최대 {MAX_CONSISTENCY_UNIFY_SLOTS}항목, 통일형 1항목)
             </span>

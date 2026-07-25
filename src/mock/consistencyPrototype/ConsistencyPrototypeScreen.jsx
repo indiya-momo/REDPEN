@@ -20,7 +20,7 @@ function splitCommaInput(raw) {
 
 /**
  * DEV: ?window=consistency-mock
- * 통일형 만들기를 외래어 변환처럼 탭 맨 위 분리 카드로 둔 목업
+ * 표기 통일하기를 외래어 변환처럼 탭 맨 위 분리 카드로 둔 목업
  */
 export default function ConsistencyPrototypeScreen() {
   const [literalInput, setLiteralInput] = useState('');
@@ -121,11 +121,11 @@ export default function ConsistencyPrototypeScreen() {
         <div className="consistency-embed">
           <section
             className="consistency-unify-hero"
-            aria-label="통일형 만들기"
+            aria-label="표기 통일하기"
           >
             <div className="consistency-unify-hero__summary panel-criteria-heading">
               <span className="consistency-unify-hero__summary-title">
-                통일형 만들기
+                표기 통일하기
                 <span className="panel-criteria-heading-meta">
                   (최대 3항목, 통일형 1항목)
                 </span>
@@ -161,7 +161,7 @@ export default function ConsistencyPrototypeScreen() {
                   onChange={setCorrectionDraft}
                   onRegister={addMapping}
                   placeholder="조선시대,조선˅시대"
-                  ariaLabel="통일형 만들기"
+                  ariaLabel="표기 통일하기"
                   addLabel="등록"
                 />
               </div>
@@ -203,9 +203,9 @@ export default function ConsistencyPrototypeScreen() {
             ) : null}
           </section>
 
-          <section className="consistency-unified-box" aria-label="여러 개 찾기">
+          <section className="consistency-unified-box" aria-label="여러 항목 찾기">
             <p className="printed-page-setup__title consistency-panel-section-title panel-criteria-heading">
-              여러 개 찾기
+              여러 항목 찾기
               <span className="panel-criteria-heading-meta">
                 (최대 5항목, 영문 대소문자 지원)
               </span>
@@ -226,7 +226,7 @@ export default function ConsistencyPrototypeScreen() {
                 onChange={setLiteralInput}
                 onRegister={registerLiteral}
                 placeholder={SPACE_INPUT_PLACEHOLDER}
-                ariaLabel="여러 개 찾기"
+                ariaLabel="여러 항목 찾기"
               />
               {findTerms.length > 0 ? (
                 <ul

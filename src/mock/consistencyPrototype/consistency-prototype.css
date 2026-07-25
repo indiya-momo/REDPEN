@@ -1,4 +1,4 @@
-/* DEV: ?window=consistency-mock — 배너·통일형 만들기·핀 목록만 (나머지는 main-screen.css) */
+/* DEV: ?window=consistency-mock — 배너·표기 통일하기·핀 목록만 (나머지는 main-screen.css) */
 
 .consistency-proto-page {
   min-height: 100dvh;
@@ -74,7 +74,7 @@
   cursor: not-allowed;
 }
 
-/* 통일형 만들기 — 2열 + 수정형 옆 추가 */
+/* 표기 통일하기 — 2열 + 수정형 옆 추가 */
 .consistency-proto-unify-cols {
   display: grid;
   grid-template-columns: 1fr 1fr;

@@ -41,7 +41,7 @@ describe('resultBadgeTone', () => {
     expect(resultBadgeTone('spelling', {})).toBe('spelling-builtin');
   });
 
-  it('표기 통일 안에서 여러 개·통일형·공통 문자열을 나눈다', () => {
+  it('표기 통일 안에서 여러 항목·통일형·공통 문자열을 나눈다', () => {
     expect(
       resultBadgeTone('consistency', { patternKind: 'compound-find' }),
     ).toBe('consistency-literal');
