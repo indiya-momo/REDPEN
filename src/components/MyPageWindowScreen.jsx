@@ -21,7 +21,7 @@ import {
   getUserBadgeCollection,
   syncBadgeShowcase,
 } from '../lib/userBadges.js';
-import { resolveQuotaAuthEmail, isBetaQuotaAdminExempt } from '../lib/betaDailyQuota.js';
+import { resolveQuotaAuthEmail, isBetaQuotaAdminExempt, BETA_UNIFY_LIMIT_DEFAULT } from '../lib/betaDailyQuota.js';
 import { clearRewardNotice } from '../lib/rewardNotice.js';
 import { getEarnedBadgeIds } from '../lib/userBadges.js';
 import { useBetaDailyQuota } from '../hooks/useBetaDailyQuota.js';
@@ -97,19 +97,19 @@ const MEMBER_BENEFIT_TIERS = [
   {
     name: '오픈베타 테스터',
     description:
-      '오픈베타 기간 프로젝트 저장 [1개] · 매일 맞춤법 [1회] + 표기 통일 [5회] 제공',
+      '오픈베타 기간 프로젝트 저장 [1개] · 매일 맞춤법·표기 통일 각 [1회] · 통일형 [5회] 제공',
     tabLimit: 1,
   },
   {
     name: '비밀 연구원',
     description:
-      '오픈베타 기간 프로젝트 저장 [1개] · 매일 맞춤법 [2회] + 표기 통일 [10회] 제공',
+      '오픈베타 기간 프로젝트 저장 [1개] · 매일 맞춤법·표기 통일 각 [2회] · 통일형 [10회] 제공',
     tabLimit: 2,
   },
   {
     name: '수석 검증관',
     description:
-      '오픈베타 기간 프로젝트 저장 [1개] · 매일 맞춤법 [3회] + 표기 통일 [10회] 제공',
+      '오픈베타 기간 프로젝트 저장 [1개] · 매일 맞춤법·표기 통일 각 [3회] · 통일형 [15회] 제공',
     tabLimit: 3,
   },
 ];
@@ -276,6 +276,17 @@ function MemberOverviewCard({ quota, authUid = '', loginAtMs = null, onOpen }) {
               {formatQuotaUsageLabel(
                 quota.consistencyRemaining,
                 quota.consistencyTabLimit ?? quota.tabLimit,
+              )}
+            </dd>
+          </div>
+          <div
+            className={`mypage__quota-stat${quota.unifyRemaining <= 0 ? ' mypage__quota-stat--depleted' : ''}`}
+          >
+            <dt>통일형</dt>
+            <dd className="mypage__quota-usage">
+              {formatQuotaUsageLabel(
+                quota.unifyRemaining,
+                quota.unifyTabLimit ?? BETA_UNIFY_LIMIT_DEFAULT,
               )}
             </dd>
           </div>

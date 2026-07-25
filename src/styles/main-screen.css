@@ -1499,6 +1499,16 @@
   flex-shrink: 0;
 }
 
+/* 말풍선 안 — PDF 하단 ◀▶ 페이지 이동 버튼 묶음 */
+.tooltip-guide .tooltip-guide__pdf-page-nav-look {
+  align-items: center;
+  gap: 0.35em;
+}
+
+.tooltip-guide .tooltip-guide__pdf-page-nav-look .pdf-preview-bar__nav {
+  font-size: 1.05em;
+}
+
 .tooltip-guide__mypage-btn-look {
   display: inline-flex;
   align-items: center;
