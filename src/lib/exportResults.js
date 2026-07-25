@@ -6,10 +6,20 @@ import {
   formatConsistencyExcelSummaryLine,
   formatSpellingExcelSummaryLine,
 } from './checkResultSummaryFormat.js';
-import { LITERAL_FIND_FEATURE_LABEL } from './consistencyRuleLimit.js';
+import {
+  LITERAL_FIND_FEATURE_LABEL,
+  UNIFY_FEATURE_LABEL,
+} from './consistencyRuleLimit.js';
+import {
+  getConsistencyUnifyPinnedTailWord,
+  isConsistencyUnifyResultGroup,
+  resolveConsistencyGroupTailWord,
+} from './consistencyUnifyRegister.js';
 import { formatAuxiliaryVerbResultLabel } from './patternDisplayLabels.js';
 
 const AUXILIARY_EXPORT_CATEGORY = AUXILIARY_VERB_BADGE_LABEL;
+const UNIFY_PINNED_EXPORT_TIP = '통일형 📌';
+const UNIFY_NEED_EXPORT_TIP = '통일 필요 항목';
 
 const HEADER_BG = 'FF3E2723';
 const HEADER_FG = 'FFFFFFFF';
@@ -517,11 +527,35 @@ export async function downloadSpellingExportModel(model, filename) {
 
 /**
  * @param {import('./ruleEngine.js').GroupedResult} group
+ * @param {import('./ruleTypes.js').Rule[]} [customRules]
  */
-function consistencyCategoryOf(group) {
-  return group.patternKind === 'auxiliary-verb'
-    ? AUXILIARY_EXPORT_CATEGORY
-    : LITERAL_FIND_FEATURE_LABEL;
+function consistencyCategoryOf(group, customRules = []) {
+  if (group.patternKind === 'auxiliary-verb') {
+    return AUXILIARY_EXPORT_CATEGORY;
+  }
+  if (group.patternKind === 'phrase-slot-find') {
+    return '공통 항목 찾기';
+  }
+  if (isConsistencyUnifyResultGroup(customRules, group)) {
+    return UNIFY_FEATURE_LABEL;
+  }
+  return LITERAL_FIND_FEATURE_LABEL;
+}
+
+/**
+ * @param {import('./ruleEngine.js').GroupedResult} group
+ * @param {import('./ruleTypes.js').Rule[]} [customRules]
+ */
+function consistencyExportTip(group, customRules = []) {
+  if (isConsistencyUnifyResultGroup(customRules, group)) {
+    const pinned = getConsistencyUnifyPinnedTailWord(customRules);
+    const tail = resolveConsistencyGroupTailWord(group);
+    if (pinned && tail === pinned) {
+      return UNIFY_PINNED_EXPORT_TIP;
+    }
+    return UNIFY_NEED_EXPORT_TIP;
+  }
+  return (group.tip || '').trim();
 }
 
 /**
@@ -593,6 +627,7 @@ function consistencyEntryLabel(group) {
  *   unifySelected?: boolean,
  *   commonStringSelected?: boolean,
  *   auxiliarySelected?: boolean,
+ *   customRules?: import('./ruleTypes.js').Rule[],
  *   filename?: string,
  * }} options
  * @returns {ConsistencyExportModel}
@@ -616,6 +651,7 @@ export function buildConsistencyExportModel({
   unifySelected = true,
   commonStringSelected = true,
   auxiliarySelected = true,
+  customRules = [],
   filename = '표기통일_검사결과.xlsx',
 }) {
   const summary = {
@@ -637,9 +673,9 @@ export function buildConsistencyExportModel({
   const rows = [];
 
   for (const { group, source } of entries ?? []) {
-    const category = consistencyCategoryOf(group);
+    const category = consistencyCategoryOf(group, customRules);
     const isAuxiliary = category === AUXILIARY_EXPORT_CATEGORY;
-    const tipText = (group.tip || '').trim();
+    const tipText = consistencyExportTip(group, customRules);
     const visMode = groupVisibilityMode ? groupVisibilityMode(source, group) : 'visible';
     const totalCount = group.instances.length;
     const shownCount = visibleInstanceCount ? visibleInstanceCount(source, group) : totalCount;

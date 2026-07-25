@@ -127,7 +127,7 @@ export default function ConsistencyPrototypeScreen() {
               <span className="consistency-unify-hero__summary-title">
                 통일형 만들기
                 <span className="panel-criteria-heading-meta">
-                  (1회 3항목까지 가능, 통일형 1항목 지원)
+                  (최대 3항목, 통일형 1항목)
                 </span>
                 <span
                   className="consistency-unify-hero__badge"
@@ -207,7 +207,7 @@ export default function ConsistencyPrototypeScreen() {
             <p className="printed-page-setup__title consistency-panel-section-title panel-criteria-heading">
               여러 개 찾기
               <span className="panel-criteria-heading-meta">
-                (1회 5항목까지 가능, 영문 대소문자 지원)
+                (최대 5항목, 영문 대소문자 지원)
               </span>
             </p>
             <div className="consistency-subsection consistency-subsection--first">

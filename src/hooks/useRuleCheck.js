@@ -43,6 +43,7 @@ import { runRuleCheckAsync } from '../lib/ruleEngine.js';
 import {
   consistencyGroupScope,
   filterCustomRulesByConsistencyScope,
+  LITERAL_SLOT_PATTERN_KINDS,
 } from '../lib/consistencyCheckScopes.js';
 import { ensureDefaultAuxiliaryVerbs } from '../lib/defaultAuxiliaryVerbs.js';
 import { AUXILIARY_VERB_FEATURE_LABEL } from '../lib/bonBojoRules.js';
@@ -50,7 +51,11 @@ import {
   LITERAL_FIND_FEATURE_LABEL,
   UNIFY_FEATURE_LABEL,
 } from '../lib/consistencyRuleLimit.js';
-import { isConsistencyUnifyResultGroup } from '../lib/consistencyUnifyRegister.js';
+import {
+  isConsistencyUnifyResultGroup,
+  resolveConsistencyGroupTailWord,
+} from '../lib/consistencyUnifyRegister.js';
+import { normalizeConsistencyVariant } from '../lib/compoundPairRegister.js';
 import { assertBetaDailyCheckOrAlert } from '../lib/betaDailyQuota.js';
 import {
   alertConsistencyCheckAfterRun,
@@ -486,7 +491,7 @@ export function useRuleCheck({
       }
 
       if (
-        subset !== 'auxiliary' &&
+        subset === 'literal-slot' &&
         !(await assertConsistencyUnifyPinnedForCheck(resolvedCustomRules))
       ) {
         return;
@@ -520,6 +525,7 @@ export function useRuleCheck({
           authEmail,
           checkTab: 'consistency',
           onConsumed: onBetaQuotaConsumed,
+          skipConsumedAlert: true,
         }))
       ) {
         return;
@@ -542,13 +548,32 @@ export function useRuleCheck({
       const withZeroRows = finalizeConsistencyCheckResults(grouped, rules);
 
       setConsistencyResults((prev) => {
+        const literalTails = new Set(
+          filterCustomRulesByConsistencyScope(
+            consistencyActiveRules,
+            'literal-slot',
+          )
+            .map((r) => normalizeConsistencyVariant(r.tailWord))
+            .filter(Boolean),
+        );
         const kept =
           subset === 'unify'
-            ? prev.filter(
-                (g) =>
-                  !isConsistencyUnifyResultGroup(resolvedCustomRules, g),
-              )
-            : prev.filter((g) => consistencyGroupScope(g) !== subset);
+            ? prev.filter((g) => {
+                if (consistencyGroupScope(g) === 'auxiliary') return true;
+                if (g.patternKind === 'phrase-slot-find') return true;
+                if (!LITERAL_SLOT_PATTERN_KINDS.includes(g.patternKind ?? '')) {
+                  return true;
+                }
+                const tail = resolveConsistencyGroupTailWord(g);
+                return Boolean(tail && literalTails.has(tail));
+              })
+            : subset === 'literal-slot'
+              ? prev.filter(
+                  (g) =>
+                    consistencyGroupScope(g) !== 'literal-slot' ||
+                    isConsistencyUnifyResultGroup(resolvedCustomRules, g),
+                )
+              : prev.filter((g) => consistencyGroupScope(g) !== subset);
         return finalizeConsistencyCheckResults(
           [...kept, ...withZeroRows],
           rules,
@@ -592,6 +617,20 @@ export function useRuleCheck({
         { uid: authUid, email: authEmail },
       );
       trackResultViewed({ scope: 'consistency', findingCount });
+
+      if (subset === 'unify') {
+        await alertConsistencyCheckAfterRun(
+          withZeroRows,
+          findingCount,
+          resolvedCustomRules,
+          {
+            literalSelected: false,
+            unifySelected: true,
+            commonStringSelected: false,
+            auxiliarySelected: false,
+          },
+        );
+      }
 
       setCurrentPage(inst?.pageNum ?? 1);
       setIsProcessing(false);

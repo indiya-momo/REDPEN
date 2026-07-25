@@ -121,7 +121,7 @@ export default function ConsistencyUnifySection({
           <p className="printed-page-setup__title consistency-subsection-title panel-criteria-heading">
             통일형 만들기
             <span className="panel-criteria-heading-meta">
-              (1회 {MAX_CONSISTENCY_UNIFY_SLOTS}항목까지 가능, 통일형 1항목 지원)
+              (최대 {MAX_CONSISTENCY_UNIFY_SLOTS}항목, 통일형 1항목)
             </span>
           </p>
           <p className="hint consistency-hint-block">
