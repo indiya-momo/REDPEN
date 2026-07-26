@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildInstancePills,
+  fitPillsIntoTwoRows,
   getInstanceFragmentLabel,
 } from './ResultPageSummary.jsx';
 
@@ -13,6 +14,42 @@ function inst(pageNum, index) {
     suggestedText: 'b',
     pageNum,
     index,
+  };
+}
+
+/**
+ * @param {{
+ *   tops: number[],
+ *   height?: number,
+ *   width?: number,
+ *   clientWidth?: number,
+ * }} opts
+ */
+function mockPillRoot({ tops, height = 20, width = 40, clientWidth = 200 }) {
+  const children = tops.map((top, i) => {
+    const left = (i % 5) * (width + 6);
+    return {
+      hasAttribute: (name) => name === 'data-result-pill',
+      offsetTop: top,
+      offsetHeight: height,
+      getBoundingClientRect: () => ({
+        right: left + width,
+        left,
+        top,
+        bottom: top + height,
+        width,
+        height,
+      }),
+    };
+  });
+  return {
+    children,
+    clientWidth,
+    getBoundingClientRect: () => ({
+      right: clientWidth,
+      left: 0,
+      width: clientWidth,
+    }),
   };
 }
 
@@ -54,5 +91,31 @@ describe('getInstanceFragmentLabel', () => {
   it('never returns ×N style labels', () => {
     expect(getInstanceFragmentLabel(1, 3)).toBe('1/3');
     expect(getInstanceFragmentLabel(2, 3)).toBe('2/3');
+  });
+});
+
+describe('fitPillsIntoTwoRows', () => {
+  it('한 줄에 다 들어가면 접지 않는다', () => {
+    const root = mockPillRoot({
+      tops: Array.from({ length: 8 }, () => 0),
+    });
+    expect(fitPillsIntoTwoRows(/** @type {any} */ (root), 8)).toEqual({
+      needsCollapse: false,
+      visibleCount: 8,
+    });
+  });
+
+  it('세 줄이면 접고 보이는 개수를 줄인다', () => {
+    const root = mockPillRoot({
+      tops: [
+        ...Array.from({ length: 5 }, () => 0),
+        ...Array.from({ length: 5 }, () => 28),
+        ...Array.from({ length: 5 }, () => 56),
+      ],
+    });
+    const result = fitPillsIntoTwoRows(/** @type {any} */ (root), 15);
+    expect(result.needsCollapse).toBe(true);
+    expect(result.visibleCount).toBeLessThan(15);
+    expect(result.visibleCount).toBeGreaterThan(0);
   });
 });

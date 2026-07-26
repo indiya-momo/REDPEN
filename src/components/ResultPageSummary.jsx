@@ -60,15 +60,23 @@ export function getInstanceFragmentLabel(indexOnPage, totalOnPage) {
 export function fitPillsIntoTwoRows(root, totalCount) {
   const pillEls = /** @type {HTMLElement[]} */ (
     [...root.children].filter(
-      (el) => el instanceof HTMLElement && el.hasAttribute('data-result-pill'),
+      (el) =>
+        el != null &&
+        typeof el === 'object' &&
+        'hasAttribute' in el &&
+        /** @type {{ hasAttribute: (name: string) => boolean }} */ (el).hasAttribute(
+          'data-result-pill',
+        ),
     )
   );
   if (pillEls.length === 0) {
     return { needsCollapse: false, visibleCount: 0 };
   }
 
-  const rowGap = Number.parseFloat(getComputedStyle(root).rowGap) || 0;
-  const colGap = Number.parseFloat(getComputedStyle(root).columnGap) || 0;
+  const styles =
+    typeof getComputedStyle === 'function' ? getComputedStyle(root) : null;
+  const rowGap = Number.parseFloat(styles?.rowGap ?? '') || 0;
+  const colGap = Number.parseFloat(styles?.columnGap ?? '') || 0;
   const top0 = pillEls[0].offsetTop;
   const chipH = Math.max(pillEls[0].offsetHeight, 1);
   const maxBottom =
@@ -78,9 +86,9 @@ export function fitPillsIntoTwoRows(root, totalCount) {
 
   const last = pillEls[pillEls.length - 1];
   const fitsInTwoRows = last.offsetTop + last.offsetHeight <= maxBottom + 0.5;
-  const distinctTops = new Set(pillEls.map((el) => el.offsetTop));
-  // 레이아웃 미완료(전부 같은 top)면 보수적으로 접기
-  if (fitsInTwoRows && distinctTops.size <= 1 && totalCount > 12) {
+  const layoutReady = pillEls[0].offsetHeight > 1 && root.clientWidth > 0;
+  // 레이아웃 미완료면 보수적으로 접기 (한 줄에 다 들어간 정상 케이스는 유지)
+  if (!layoutReady && totalCount > 12) {
     return { needsCollapse: true, visibleCount: 12 };
   }
   if (fitsInTwoRows) {
