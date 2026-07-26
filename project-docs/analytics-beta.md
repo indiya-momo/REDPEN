@@ -116,6 +116,30 @@ npm run posthog:setup-beta
 필터: Person **`is_internal` is not true** (내부 테스트 계정 제외). 둘러보기 인사이트는 익명이라 코호트 필터 없음.  
 `loanword_convert`·외래어 대시보드는 **해당 이벤트 배포 이후**부터 집계됩니다. 통일형 `consistency-unify`는 기존 이벤트도 포함됩니다.
 
+**내부(통계 제외) 등록**
+
+| 환경 변수 | 역할 |
+|-----------|------|
+| `VITE_BETA_QUOTA_ADMIN_EMAILS` / `UIDS` | 어드민 + 한도 면제 + `is_internal` |
+| `VITE_ANALYTICS_INTERNAL_EMAILS` / `UIDS` | **테스터만** `is_internal` (어드민 UI·한도 면제 없음) |
+
+Vercel에 넣고 재배포한 뒤, 해당 계정으로 **한 번 로그인**하면 Person에 `is_internal: true`가 붙습니다. 이메일은 PostHog로 보내지 않습니다.
+
+### 특정 테스터 활동 대시보드
+
+Firebase uid로 필터된 인사이트·대시보드를 만듭니다.
+
+```powershell
+$env:POSTHOG_PERSONAL_API_KEY="phx_…"
+$env:POSTHOG_HOST="https://us.posthog.com"
+$env:POSTHOG_PROJECT_ID="12345"
+$env:POSTHOG_TESTER_UID="oEU5prc1hFTh4e9OfqGDW8vIBOi1"
+$env:POSTHOG_TESTER_LABEL="hyeonjinan"
+npm run posthog:setup-tester
+```
+
+대시보드 이름: **테스터 — hyeonjinan** (오픈베타 대시보드와 별도).
+
 **6/9 이후** 로그인·검수 지표만 제품 판단에 쓰세요. 그 이전은 identify 미연결로 참고만.
 
 ---

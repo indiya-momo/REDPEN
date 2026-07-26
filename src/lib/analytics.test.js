@@ -15,15 +15,20 @@ function stubAnalyticsHost(hostname) {
 }
 
 describe('buildAnalyticsPersonProperties', () => {
-  const prevEmails = import.meta.env.VITE_BETA_QUOTA_ADMIN_EMAILS;
+  const prevAdminEmails = import.meta.env.VITE_BETA_QUOTA_ADMIN_EMAILS;
+  const prevInternalEmails = import.meta.env.VITE_ANALYTICS_INTERNAL_EMAILS;
+  const prevInternalUids = import.meta.env.VITE_ANALYTICS_INTERNAL_UIDS;
 
   afterEach(() => {
-    import.meta.env.VITE_BETA_QUOTA_ADMIN_EMAILS = prevEmails;
+    import.meta.env.VITE_BETA_QUOTA_ADMIN_EMAILS = prevAdminEmails;
+    import.meta.env.VITE_ANALYTICS_INTERNAL_EMAILS = prevInternalEmails;
+    import.meta.env.VITE_ANALYTICS_INTERNAL_UIDS = prevInternalUids;
     vi.resetModules();
   });
 
   it('면제 이메일이면 is_internal true (이메일은 PostHog로 안 감)', async () => {
     import.meta.env.VITE_BETA_QUOTA_ADMIN_EMAILS = 'dev@test.io';
+    import.meta.env.VITE_ANALYTICS_INTERNAL_EMAILS = '';
     vi.resetModules();
     const mod = await import('./analytics.js');
     expect(mod.buildAnalyticsPersonProperties('any-uid', 'dev@test.io')).toEqual({
@@ -31,8 +36,36 @@ describe('buildAnalyticsPersonProperties', () => {
     });
   });
 
+  it('테스터 이메일이면 is_internal true (어드민 아님)', async () => {
+    import.meta.env.VITE_BETA_QUOTA_ADMIN_EMAILS = '';
+    import.meta.env.VITE_ANALYTICS_INTERNAL_EMAILS =
+      'hyeonjinan@gmail.com, Other@Test.io';
+    vi.resetModules();
+    const { isBetaQuotaAdminExempt } = await import('./betaDailyQuota.js');
+    const mod = await import('./analytics.js');
+    expect(isBetaQuotaAdminExempt('uid-t', 'hyeonjinan@gmail.com')).toBe(false);
+    expect(
+      mod.buildAnalyticsPersonProperties('uid-t', 'hyeonjinan@gmail.com'),
+    ).toEqual({ is_internal: true });
+    expect(mod.isAnalyticsInternalTester('uid-t', 'hyeonjinan@gmail.com')).toBe(
+      true,
+    );
+  });
+
+  it('테스터 uid면 is_internal true', async () => {
+    import.meta.env.VITE_BETA_QUOTA_ADMIN_EMAILS = '';
+    import.meta.env.VITE_ANALYTICS_INTERNAL_EMAILS = '';
+    import.meta.env.VITE_ANALYTICS_INTERNAL_UIDS = 'firebase-uid-xyz';
+    vi.resetModules();
+    const mod = await import('./analytics.js');
+    expect(mod.buildAnalyticsPersonProperties('firebase-uid-xyz', '')).toEqual({
+      is_internal: true,
+    });
+  });
+
   it('일반 회원은 is_internal false', async () => {
     import.meta.env.VITE_BETA_QUOTA_ADMIN_EMAILS = 'dev@test.io';
+    import.meta.env.VITE_ANALYTICS_INTERNAL_EMAILS = 'tester@test.io';
     vi.resetModules();
     const mod = await import('./analytics.js');
     expect(mod.buildAnalyticsPersonProperties('uid-1', 'beta@test.io')).toEqual({
