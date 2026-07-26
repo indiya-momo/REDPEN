@@ -21,7 +21,11 @@ import {
   getUserBadgeCollection,
   syncBadgeShowcase,
 } from '../lib/userBadges.js';
-import { resolveQuotaAuthEmail, isBetaQuotaAdminExempt } from '../lib/betaDailyQuota.js';
+import {
+  resolveQuotaAuthEmail,
+  isBetaQuotaAdminExempt,
+  SIGNUP_BONUS_TAB_CHECKS,
+} from '../lib/betaDailyQuota.js';
 import { clearRewardNotice } from '../lib/rewardNotice.js';
 import { getEarnedBadgeIds } from '../lib/userBadges.js';
 import { useBetaDailyQuota } from '../hooks/useBetaDailyQuota.js';
@@ -97,13 +101,13 @@ const MEMBER_BENEFIT_TIERS = [
   {
     name: '오픈베타 테스터',
     description:
-      '가입 시 맞춤법·표기 통일 각 [10회] · 매일 각 [1회] 제공(미사용 일일분은 다음날로 넘어가지 않음)',
+      `가입 시 맞춤법·표기 통일 각 [${SIGNUP_BONUS_TAB_CHECKS}회] · 매일 각 [1회] 제공(미사용 일일분은 다음날로 넘어가지 않음)`,
     tabLimit: 1,
   },
   {
     name: '비밀 연구원',
     description:
-      '가입 시 맞춤법·표기 통일 각 [10회] · 피드백 당일 매일 각 [2회] 제공(미사용 일일분은 다음날로 넘어가지 않음)',
+      `가입 시 맞춤법·표기 통일 각 [${SIGNUP_BONUS_TAB_CHECKS}회] · 피드백 당일 매일 각 [2회] 제공(미사용 일일분은 다음날로 넘어가지 않음)`,
     tabLimit: 2,
   },
 ];
