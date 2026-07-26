@@ -55,6 +55,10 @@ import {
 } from './lib/analytics.js';
 import { resolveQuotaAuthEmail } from './lib/betaDailyQuota.js';
 import {
+  consumeSignupBonusLoginNotice,
+  peekSignupBonusLoginPending,
+} from './lib/signupBonusNotice.js';
+import {
   hasValidFeedbackFormSubmitPending,
   resolveFeedbackThankYouOnLoad,
 } from './lib/feedbackFormSubmitReturn.js';
@@ -242,11 +246,36 @@ export default function App() {
     if (!authReady || auxWindow || screen !== 'welcome') return;
     if (welcomeManualReturnRef.current) return;
     if (!shouldAutoEnterMainFromWelcome()) return;
+    // Google 로그인 직후 검수권 안내는 아래 effect에서 처리·진입
+    const pending = peekSignupBonusLoginPending();
+    if (pending.pendingEnter || pending.pendingNotice) return;
     const uid = authSession?.uid?.trim();
     if (!uid || !isOnboardingComplete(uid)) return;
     setMainWorkTab('spelling');
     setScreen('main');
   }, [authReady, auxWindow, screen, authSession?.uid]);
+
+  // 리다이렉트 로그인 복귀 — welcome을 건너뛰어도 검수권 선물 안내
+  useEffect(() => {
+    if (!authReady || auxWindow) return;
+    const uid = authSession?.uid?.trim();
+    if (!uid || !isOnboardingComplete(uid)) return;
+    const pending = peekSignupBonusLoginPending();
+    if (!pending.pendingEnter && !pending.pendingNotice) return;
+
+    let cancelled = false;
+    void (async () => {
+      const result = await consumeSignupBonusLoginNotice(uid);
+      if (cancelled || !result.handled) return;
+      if (!shouldAutoEnterMainFromWelcome()) return;
+      setMainWorkTab('spelling');
+      setScreen('main');
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authReady, auxWindow, authSession?.uid]);
 
   const { profileSyncDone } = useUserProfileSync(authSession?.uid ?? '');
 
