@@ -61,16 +61,16 @@ export default function SharePackageReadPanel({
     const customRules = ruleSet?.customRules ?? [];
     return [
       {
-        label: LITERAL_FIND_FEATURE_LABEL,
-        tone: /** @type {const} */ ('consistency-literal'),
-        count: listConsistencyLiteralEntries(customRules).filter((entry) =>
+        label: UNIFY_FEATURE_LABEL,
+        tone: /** @type {const} */ ('consistency-unify'),
+        count: listConsistencyUnifyEntries(customRules).filter((entry) =>
           isConsistencyEntryEnabled(customRules, entry.tailWord),
         ).length,
       },
       {
-        label: UNIFY_FEATURE_LABEL,
-        tone: /** @type {const} */ ('consistency-unify'),
-        count: listConsistencyUnifyEntries(customRules).filter((entry) =>
+        label: LITERAL_FIND_FEATURE_LABEL,
+        tone: /** @type {const} */ ('consistency-literal'),
+        count: listConsistencyLiteralEntries(customRules).filter((entry) =>
           isConsistencyEntryEnabled(customRules, entry.tailWord),
         ).length,
       },
@@ -197,7 +197,7 @@ export default function SharePackageReadPanel({
                 >
                   <span className="results-header__stat project-hub-settings__criteria-stat">
                     <span
-                      className={`results-header-badge ${resultPillarToneClass('spelling-caution')}`}
+                      className={`project-hub-settings__criteria-label ${resultPillarToneClass('spelling-caution')}`}
                     >
                       편집자 검토 필요
                     </span>
@@ -207,7 +207,7 @@ export default function SharePackageReadPanel({
                   </span>
                   <span className="results-header__stat project-hub-settings__criteria-stat">
                     <span
-                      className={`results-header-badge ${resultPillarToneClass('spelling-builtin')}`}
+                      className={`project-hub-settings__criteria-label ${resultPillarToneClass('spelling-builtin')}`}
                     >
                       맞춤법 규칙
                     </span>
@@ -217,7 +217,7 @@ export default function SharePackageReadPanel({
                   </span>
                   <span className="results-header__stat project-hub-settings__criteria-stat">
                     <span
-                      className={`results-header-badge ${resultPillarToneClass('spelling-loanword')}`}
+                      className={`project-hub-settings__criteria-label ${resultPillarToneClass('spelling-loanword')}`}
                     >
                       {LOANWORD_FEATURE_LABEL}
                     </span>
@@ -256,7 +256,7 @@ export default function SharePackageReadPanel({
                       className="results-header__stat project-hub-settings__criteria-stat"
                     >
                       <span
-                        className={`results-header-badge ${resultPillarToneClass(stat.tone)}`}
+                        className={`project-hub-settings__criteria-label ${resultPillarToneClass(stat.tone)}`}
                       >
                         {stat.label}
                       </span>

@@ -13,6 +13,15 @@
   transform: translate(-50%, -50%);
 }
 
+.app-dialog--over-manuscript {
+  /* left/top은 JS로 원고창(.panel-right) 중앙에 맞춤 */
+  max-height: calc(100vh - 2rem);
+}
+
+.app-dialog--over-manuscript .app-dialog__panel {
+  max-width: min(100%, calc(100vw - 2rem));
+}
+
 .app-dialog:not([open]) {
   display: none;
 }

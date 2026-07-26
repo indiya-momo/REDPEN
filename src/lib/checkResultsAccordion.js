@@ -87,7 +87,7 @@ export function partitionConsistencyResultEntries(entries, customRules = []) {
 }
 
 /**
- * 기본으로 펼칠 표기 통일 카테고리 — 여러 항목 찾기 우선.
+ * 기본으로 펼칠 표기 통일 카테고리 — 표기 통일하기 우선.
  * @param {{
  *   literal: unknown[],
  *   unify: unknown[],
@@ -97,8 +97,8 @@ export function partitionConsistencyResultEntries(entries, customRules = []) {
  * @returns {'literal' | 'unify' | 'common' | 'auxiliary' | null}
  */
 export function defaultOpenConsistencyCategory(parts) {
-  if (parts.literal.length) return 'literal';
   if (parts.unify.length) return 'unify';
+  if (parts.literal.length) return 'literal';
   if (parts.common.length) return 'common';
   if (parts.auxiliary.length) return 'auxiliary';
   return null;

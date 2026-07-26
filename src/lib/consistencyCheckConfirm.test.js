@@ -346,7 +346,7 @@ describe('formatConsistencyCheckCompleteMessage', () => {
         totalFindings: 40,
       }),
     ).toBe(
-      '여러 항목 찾기 2기준, 표기 통일하기 0기준, 공통 항목 찾기 1기준, 본용언+보조용언 1기준 전체 발견 40',
+      '표기 통일하기 0기준, 여러 항목 찾기 2기준, 공통 항목 찾기 1기준, 본용언+보조용언 1기준 전체 발견 40',
     );
   });
 });
@@ -373,7 +373,7 @@ describe('alertConsistencyCheckAfterRun', () => {
 
     expect(alertMock).toHaveBeenCalledWith(
       '검수를 진행했습니다\n\n' +
-        '여러 항목 찾기 0기준, 표기 통일하기 0기준, 공통 항목 찾기 1기준, 본용언+보조용언 1기준 전체 발견 3',
+        '표기 통일하기 0기준, 여러 항목 찾기 0기준, 공통 항목 찾기 1기준, 본용언+보조용언 1기준 전체 발견 3',
     );
   });
 });

@@ -1,7 +1,38 @@
-import { Fragment, useEffect, useId, useRef, useState } from 'react';
+import { Fragment, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { Copy, X } from 'lucide-react';
 import { buildAppDialogHighlightPattern } from '../lib/appDialogFeatureLabels.js';
 import './app-dialog.css';
+
+const MANUSCRIPT_PANE_SELECTOR = '.panel-right';
+
+/**
+ * 검수 작업면이면 원고창(.panel-right) 중앙, 아니면 뷰포트 중앙.
+ * @param {HTMLDialogElement} dialog
+ */
+function placeAppDialog(dialog) {
+  const pane = document.querySelector(MANUSCRIPT_PANE_SELECTOR);
+  if (!(pane instanceof HTMLElement)) {
+    dialog.style.top = '50%';
+    dialog.style.left = '50%';
+    dialog.style.maxWidth = '';
+    dialog.classList.remove('app-dialog--over-manuscript');
+    return;
+  }
+
+  const rect = pane.getBoundingClientRect();
+  if (rect.width < 80 || rect.height < 80) {
+    dialog.style.top = '50%';
+    dialog.style.left = '50%';
+    dialog.style.maxWidth = '';
+    dialog.classList.remove('app-dialog--over-manuscript');
+    return;
+  }
+
+  dialog.style.top = `${rect.top + rect.height / 2}px`;
+  dialog.style.left = `${rect.left + rect.width / 2}px`;
+  dialog.style.maxWidth = `${Math.max(200, rect.width - 32)}px`;
+  dialog.classList.add('app-dialog--over-manuscript');
+}
 
 /**
  * ≪프로젝트명≫ · 기능 항목명에 강조 CSS 적용
@@ -90,12 +121,34 @@ export default function AppDialog({
   );
   const url = String(copyableUrl ?? '').trim();
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const dialog = dialogRef.current;
     if (!dialog) return;
+
     if (open && !dialog.open) dialog.showModal();
     if (!open && dialog.open) dialog.close();
-  }, [open]);
+    if (!open) return;
+
+    const sync = () => placeAppDialog(dialog);
+    sync();
+
+    const pane = document.querySelector(MANUSCRIPT_PANE_SELECTOR);
+    const ro =
+      pane instanceof HTMLElement && typeof ResizeObserver !== 'undefined'
+        ? new ResizeObserver(sync)
+        : null;
+    if (pane instanceof HTMLElement && ro) ro.observe(pane);
+
+    window.addEventListener('resize', sync);
+    return () => {
+      window.removeEventListener('resize', sync);
+      ro?.disconnect();
+      dialog.style.top = '';
+      dialog.style.left = '';
+      dialog.style.maxWidth = '';
+      dialog.classList.remove('app-dialog--over-manuscript');
+    };
+  }, [open, title, message, messageNode, mode]);
 
   useEffect(() => {
     if (!open) setCopyState('idle');

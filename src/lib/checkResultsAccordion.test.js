@@ -114,7 +114,7 @@ describe('partitionConsistencyResultEntries', () => {
 });
 
 describe('defaultOpenConsistencyCategory', () => {
-  it('여러 항목 찾기를 우선 펼친다', () => {
+  it('표기 통일하기를 우선 펼친다', () => {
     expect(
       defaultOpenConsistencyCategory({
         literal: [{}],
@@ -122,7 +122,7 @@ describe('defaultOpenConsistencyCategory', () => {
         common: [],
         auxiliary: [],
       }),
-    ).toBe('literal');
+    ).toBe('unify');
   });
 
   it('없으면 다음 칸', () => {
