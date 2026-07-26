@@ -991,6 +991,73 @@
     var(--results-findings-pad-end, var(--space-sm)) -
       var(--results-category-border, 1px)
   );
+  /* 제목 줄 발견수 배지 자리 — 설명·페이지 칩·구분선 오른쪽 맞춤 */
+  --result-card-findings-slot: calc(
+    var(--results-findings-circle-size, 1.35rem) + 0.9em
+  );
+}
+
+/* 설명·칩 오른쪽을 발견수 배지 열에 맞추고, 칩과 같은 폭의 회색 구분선 */
+.panel-left
+  .spelling-tab-layout
+  .results-panel--spelling
+  .results-list--nested
+  .result-card-detail,
+.panel-left
+  .panel-left-work-scroll
+  .results-panel--consistency
+  .results-list--nested
+  .result-card-detail {
+  box-sizing: border-box;
+  width: 100%;
+  padding-inline-end: var(--result-card-findings-slot);
+}
+
+.panel-left
+  .spelling-tab-layout
+  .results-panel--spelling
+  .results-list--nested
+  .result-card-tip-inline,
+.panel-left
+  .panel-left-work-scroll
+  .results-panel--consistency
+  .results-list--nested
+  .result-card-tip-inline {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.panel-left
+  .spelling-tab-layout
+  .results-panel--spelling
+  .results-list--nested
+  .result-card-detail::after,
+.panel-left
+  .panel-left-work-scroll
+  .results-panel--consistency
+  .results-list--nested
+  .result-card-detail::after {
+  content: '';
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+  border-bottom: 1px solid var(--panel-border-soft, #cfc7bc);
+}
+
+.panel-left
+  .spelling-tab-layout
+  .results-panel--spelling
+  .results-list--nested
+  > li:last-child
+  .result-card-detail::after,
+.panel-left
+  .panel-left-work-scroll
+  .results-panel--consistency
+  .results-list--nested
+  > li:last-child
+  .result-card-detail::after {
+  display: none;
 }
 
 .panel-left

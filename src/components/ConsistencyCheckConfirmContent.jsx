@@ -67,17 +67,19 @@ export default function ConsistencyCheckConfirmContent({
   auxiliaryTotal,
   showQuota = true,
 }) {
-  const row1 = [
-    {
-      key: 'literal',
-      label: LITERAL_FIND_FEATURE_LABEL,
-      meta: itemMeta(literalActive),
-    },
+  const rowUnifyLiteral = [
     {
       key: 'unify',
       label: UNIFY_FEATURE_LABEL,
       meta: unifyMeta(unifyActive, pinnedTailWord),
     },
+    {
+      key: 'literal',
+      label: LITERAL_FIND_FEATURE_LABEL,
+      meta: itemMeta(literalActive),
+    },
+  ];
+  const rowCommonExclude = [
     {
       key: 'common',
       label: '공통 항목 찾기',
@@ -89,7 +91,7 @@ export default function ConsistencyCheckConfirmContent({
       meta: findingMeta(excludeActive),
     },
   ];
-  const row2 = {
+  const rowAuxiliary = {
     key: 'auxiliary',
     label: AUXILIARY_VERB_FEATURE_LABEL,
     meta:
@@ -97,6 +99,22 @@ export default function ConsistencyCheckConfirmContent({
         ? `(${auxiliaryActive}/${auxiliaryTotal})`
         : '(없음)',
   };
+
+  /**
+   * @param {{ key: string, label: string, meta: string }[]} items
+   */
+  function renderCriteriaRow(items) {
+    return (
+      <p className="app-dialog__confirm-line app-dialog__confirm-line--criteria">
+        {items.map((item, index) => (
+          <Fragment key={item.key}>
+            {index > 0 ? ', ' : null}
+            <AppDialogCriteriaLabel label={item.label} meta={item.meta} />
+          </Fragment>
+        ))}
+      </p>
+    );
+  }
 
   return (
     <>
@@ -107,16 +125,13 @@ export default function ConsistencyCheckConfirmContent({
           가능합니다
         </p>
       ) : null}
+      {renderCriteriaRow(rowUnifyLiteral)}
+      {renderCriteriaRow(rowCommonExclude)}
       <p className="app-dialog__confirm-line app-dialog__confirm-line--criteria">
-        {row1.map((item, index) => (
-          <Fragment key={item.key}>
-            {index > 0 ? ', ' : null}
-            <AppDialogCriteriaLabel label={item.label} meta={item.meta} />
-          </Fragment>
-        ))}
-      </p>
-      <p className="app-dialog__confirm-line app-dialog__confirm-line--criteria">
-        <AppDialogCriteriaLabel label={row2.label} meta={row2.meta} />
+        <AppDialogCriteriaLabel
+          label={rowAuxiliary.label}
+          meta={rowAuxiliary.meta}
+        />
       </p>
       <p className="app-dialog__confirm-line app-dialog__confirm-line--question">
         검수를 진행할까요?

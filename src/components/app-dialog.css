@@ -238,8 +238,7 @@
   width: 100%;
 }
 
-.app-dialog__footer--confirm .app-dialog__cancel,
-.app-dialog__footer--confirm .app-dialog__confirm {
+.app-dialog__footer--confirm .app-dialog__cancel {
   flex: 0 0 auto;
   box-sizing: border-box;
   min-width: 5.5rem;
@@ -247,8 +246,20 @@
   padding: 0 1rem;
 }
 
+.app-dialog__footer--confirm .app-dialog__confirm {
+  flex: 0 0 auto;
+  box-sizing: border-box;
+}
+
 .app-dialog__confirm {
   min-width: 5.5rem;
+}
+
+/* 확인 버튼: 상하좌우 패딩 절반 (btn-run 12px 16px → 6px 8px), 글씨 크기 유지 */
+.app-dialog__confirm.btn-run {
+  width: auto;
+  height: auto;
+  padding: 6px 8px;
 }
 
 .app-dialog__confirm-hand-wrap {
