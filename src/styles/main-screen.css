@@ -791,11 +791,49 @@
   justify-content: flex-end;
 }
 
+/* 전체 발견 · 기준 · 노란 원 오른쪽 끝선 공유 */
+.panel-left .results-panel--spelling {
+  --results-findings-pad-end: var(--space-sm);
+  --results-findings-meta-gap: 0.35em;
+  --results-findings-label-width: 5.5em;
+  --results-findings-circle-size: 1.85em;
+}
+
 .panel-left .results-accordion {
   display: flex;
   flex-direction: column;
   gap: 8px;
   padding: 0 0 12px;
+}
+
+.panel-left .results-panel--spelling .results-header--total-only {
+  padding-inline-end: var(--results-findings-pad-end, var(--space-sm));
+}
+
+.panel-left .results-panel--spelling .results-findings-meta {
+  display: grid;
+  grid-template-columns:
+    var(--results-findings-label-width, 5.5em)
+    var(--results-findings-circle-size, 1.85em);
+  column-gap: var(--results-findings-meta-gap, 0.35em);
+  align-items: center;
+  margin-left: auto;
+}
+
+.panel-left .results-panel--spelling .results-findings-meta__label {
+  justify-self: end;
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.panel-left .results-panel--spelling .results-findings-meta .result-findings-count-circle {
+  justify-self: end;
+  box-sizing: border-box;
+  width: var(--results-findings-circle-size, 1.85em);
+  height: var(--results-findings-circle-size, 1.85em);
+  min-width: var(--results-findings-circle-size, 1.85em);
+  min-height: var(--results-findings-circle-size, 1.85em);
 }
 
 .panel-left .results-category {
@@ -805,7 +843,8 @@
   --criteria-summary-rail: calc(
     var(--criteria-checkbox-size) + var(--criteria-summary-gap)
   );
-  border: 1px solid var(--panel-border-soft);
+  --results-category-border: 1px;
+  border: var(--results-category-border) solid var(--panel-border-soft);
   border-radius: 0;
   background: var(--panel-surface-group, #f6f1e7);
   overflow: hidden;
@@ -834,9 +873,14 @@
   list-style: none;
   /* 맞춤법 검수 체크리스트 summary와 동일 패딩·간격 */
   gap: var(--criteria-summary-gap, calc(8px * var(--panel-ui-scale, 1)));
-  padding: calc(8px * var(--panel-ui-scale)) var(--criteria-pad-inline, 10px);
-  min-height: 2.35rem;
   padding-block: 10px;
+  padding-inline-start: var(--criteria-pad-inline, 10px);
+  /* 전체 발견 오른쪽 끝선과 맞춤 (카테고리 border 보정) */
+  padding-inline-end: calc(
+    var(--results-findings-pad-end, var(--space-sm)) -
+      var(--results-category-border, 1px)
+  );
+  min-height: 2.35rem;
   font-size: calc(1.05rem * var(--panel-ui-scale));
   font-weight: 600;
   line-height: 1.2;
@@ -877,10 +921,6 @@
 }
 
 .panel-left .results-category__meta {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25em;
-  margin-left: auto;
   flex-shrink: 0;
   font-size: 0.8em;
   font-weight: 800;
@@ -931,24 +971,36 @@
   padding-inline-start: calc(
     var(--criteria-pad-inline, 10px) + var(--criteria-summary-rail, 23px)
   );
-  padding-inline-end: var(--criteria-pad-inline, 10px);
+  padding-inline-end: calc(
+    var(--results-findings-pad-end, var(--space-sm)) -
+      var(--results-category-border, 1px)
+  );
 }
 
 .panel-left
   .spelling-tab-layout
   .results-panel--spelling
   .results-list--nested
-  .page-chip,
+  .result-card-head
+  .result-findings-count-circle,
 .panel-left
   .spelling-tab-layout
   .results-panel--spelling
   .results-list--nested
-  .caution-badge-inline,
+  .result-card-head__findings-count.result-findings-count-circle {
+  box-sizing: border-box;
+  width: var(--results-findings-circle-size, 1.85em);
+  height: var(--results-findings-circle-size, 1.85em);
+  min-width: var(--results-findings-circle-size, 1.85em);
+  min-height: var(--results-findings-circle-size, 1.85em);
+  font-size: calc(0.85rem * var(--panel-ui-scale, 1) * 0.9 * 1.1);
+}
+
 .panel-left
   .spelling-tab-layout
   .results-panel--spelling
   .results-list--nested
-  .spelling-badge-inline {
+  .page-chip {
   border-radius: 0;
 }
 

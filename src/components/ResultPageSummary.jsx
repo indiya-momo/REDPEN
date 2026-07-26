@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { formatSystemPageLabel } from '../lib/printedPageDisplay.js';
 import { instanceVisibilityKey, instancesMatch } from '../lib/checkResultUtils.js';
 
-const RESULT_PILL_COLLAPSE_THRESHOLD = 15;
+/** 접힌 상태에서 페이지 칩이 차지할 최대 줄 수 */
+export const RESULT_PAGES_MAX_COLLAPSED_ROWS = 2;
 
 /**
  * @typedef {{
@@ -51,6 +52,77 @@ export function getInstanceFragmentLabel(indexOnPage, totalOnPage) {
 }
 
 /**
+ * 전체 칩이 렌더된 루트에서, 두 줄 +「더 보기」버튼이 들어가게 보일 칩 개수를 계산.
+ * @param {HTMLElement} root
+ * @param {number} totalCount
+ * @returns {{ needsCollapse: boolean, visibleCount: number }}
+ */
+export function fitPillsIntoTwoRows(root, totalCount) {
+  const pillEls = /** @type {HTMLElement[]} */ (
+    [...root.children].filter(
+      (el) => el instanceof HTMLElement && el.hasAttribute('data-result-pill'),
+    )
+  );
+  if (pillEls.length === 0) {
+    return { needsCollapse: false, visibleCount: 0 };
+  }
+
+  const rowGap = Number.parseFloat(getComputedStyle(root).rowGap) || 0;
+  const colGap = Number.parseFloat(getComputedStyle(root).columnGap) || 0;
+  const top0 = pillEls[0].offsetTop;
+  const chipH = Math.max(pillEls[0].offsetHeight, 1);
+  const maxBottom =
+    top0 +
+    RESULT_PAGES_MAX_COLLAPSED_ROWS * chipH +
+    (RESULT_PAGES_MAX_COLLAPSED_ROWS - 1) * rowGap;
+
+  const last = pillEls[pillEls.length - 1];
+  const fitsInTwoRows = last.offsetTop + last.offsetHeight <= maxBottom + 0.5;
+  const distinctTops = new Set(pillEls.map((el) => el.offsetTop));
+  // 레이아웃 미완료(전부 같은 top)면 보수적으로 접기
+  if (fitsInTwoRows && distinctTops.size <= 1 && totalCount > 12) {
+    return { needsCollapse: true, visibleCount: 12 };
+  }
+  if (fitsInTwoRows) {
+    return { needsCollapse: false, visibleCount: totalCount };
+  }
+
+  /** 2줄 안에 들어오는 마지막 칩 개수 */
+  let fitCount = 0;
+  for (let i = 0; i < pillEls.length; i += 1) {
+    const el = pillEls[i];
+    if (el.offsetTop + el.offsetHeight <= maxBottom + 0.5) fitCount = i + 1;
+    else break;
+  }
+  if (fitCount <= 0) {
+    return { needsCollapse: true, visibleCount: 0 };
+  }
+
+  const hiddenIfFit = Math.max(0, totalCount - fitCount);
+  const btnLabel = `＋ ${Math.max(hiddenIfFit, 1)}개 더 보기`;
+  const btnWidth = Math.min(
+    Math.max(root.clientWidth, 0) || 240,
+    Math.max(96, 24 + btnLabel.length * 7.2),
+  );
+
+  const rootRight = root.getBoundingClientRect().right;
+  let visibleCount = fitCount;
+  while (visibleCount > 0) {
+    const el = pillEls[visibleCount - 1];
+    const spaceRight = rootRight - el.getBoundingClientRect().right - colGap;
+    const onFirstRow = el.offsetTop <= top0 + chipH * 0.5;
+    // 첫 줄 끝이면 버튼이 둘째 줄로 내려가도 OK
+    if (onFirstRow || spaceRight >= btnWidth) break;
+    visibleCount -= 1;
+  }
+
+  return {
+    needsCollapse: true,
+    visibleCount: Math.max(0, visibleCount),
+  };
+}
+
+/**
  * @param {{
  *   instances: import('../lib/ruleEngine.js').MatchInstance[],
  *   currentPage: number,
@@ -77,40 +149,93 @@ export default function ResultPageSummary({
     () => pills.map((entry) => instanceVisibilityKey(entry.inst)).join('\0'),
     [pills],
   );
+  const rootRef = useRef(/** @type {HTMLDivElement | null} */ (null));
   const [expanded, setExpanded] = useState(false);
+  /** null = 아직 측정 전(전체 칩 렌더) */
+  const [collapse, setCollapse] = useState(
+    /** @type {{ needsCollapse: boolean, visibleCount: number } | null} */ (
+      null
+    ),
+  );
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     setExpanded(false);
+    setCollapse(null);
   }, [pillsSignature]);
 
-  useEffect(() => {
-    if (expanded) return;
-    if (!selectedInstance || pills.length <= RESULT_PILL_COLLAPSE_THRESHOLD) {
-      return;
-    }
+  useLayoutEffect(() => {
+    if (expanded || collapse !== null) return undefined;
+
+    let cancelled = false;
+    // collapse=null 로 전체 칩을 그린 다음 프레임에서 측정
+    const frame = requestAnimationFrame(() => {
+      if (cancelled) return;
+      const root = rootRef.current;
+      if (!root || pills.length === 0) {
+        setCollapse({ needsCollapse: false, visibleCount: 0 });
+        return;
+      }
+      setCollapse(fitPillsIntoTwoRows(root, pills.length));
+    });
+
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(frame);
+    };
+  }, [collapse, expanded, pills.length, pillsSignature]);
+
+  useLayoutEffect(() => {
+    const root = rootRef.current;
+    if (!root) return undefined;
+
+    let lastWidth = root.getBoundingClientRect().width;
+    let frame = 0;
+    const ro = new ResizeObserver((entries) => {
+      const width = entries[0]?.contentRect?.width;
+      if (width == null || Math.abs(width - lastWidth) < 1) return;
+      lastWidth = width;
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        setExpanded(false);
+        setCollapse(null);
+      });
+    });
+    ro.observe(root);
+    return () => {
+      cancelAnimationFrame(frame);
+      ro.disconnect();
+    };
+  }, [pillsSignature]);
+
+  useLayoutEffect(() => {
+    if (expanded || !collapse?.needsCollapse || !selectedInstance) return;
     const selectedIndex = pills.findIndex((entry) =>
       instancesMatch(entry.inst, selectedInstance),
     );
-    if (selectedIndex >= RESULT_PILL_COLLAPSE_THRESHOLD) {
+    if (selectedIndex >= collapse.visibleCount) {
       setExpanded(true);
     }
-  }, [pills, selectedInstance, expanded]);
+  }, [pills, selectedInstance, expanded, collapse]);
 
   if (!pills.length) return null;
 
-  const needsCollapse = pills.length > RESULT_PILL_COLLAPSE_THRESHOLD;
+  const measuring = !expanded && collapse === null;
+  const needsCollapse = Boolean(collapse?.needsCollapse);
   const visiblePills =
-    needsCollapse && !expanded
-      ? pills.slice(0, RESULT_PILL_COLLAPSE_THRESHOLD)
-      : pills;
-  const hiddenPills =
-    needsCollapse && !expanded
-      ? pills.slice(RESULT_PILL_COLLAPSE_THRESHOLD)
-      : [];
-  const hiddenCount = hiddenPills.length;
+    expanded || measuring || !needsCollapse
+      ? pills
+      : pills.slice(0, collapse?.visibleCount ?? 0);
+  const hiddenCount = needsCollapse
+    ? Math.max(0, pills.length - (collapse?.visibleCount ?? 0))
+    : 0;
+  const showExpandBtn = needsCollapse || expanded;
 
   return (
-    <div className="result-pages" role="list">
+    <div
+      ref={rootRef}
+      className={`result-pages${measuring ? ' result-pages--measuring' : ''}`}
+      role="list"
+    >
       {visiblePills.map((entry) => (
         <InstancePill
           key={instanceVisibilityKey(entry.inst)}
@@ -124,10 +249,11 @@ export default function ResultPageSummary({
           onToggleInstanceVisibility={onToggleInstanceVisibility}
         />
       ))}
-      {needsCollapse ? (
+      {showExpandBtn ? (
         <div
           className="result-page-chip-wrap"
           role="listitem"
+          data-result-expand=""
         >
           <button
             type="button"
@@ -181,7 +307,7 @@ function InstancePill({
   }
 
   return (
-    <div className="result-page-chip-wrap" role="listitem">
+    <div className="result-page-chip-wrap" role="listitem" data-result-pill="">
       <button
         type="button"
         className={`page-chip${selected ? ' page-chip--current' : ''}${

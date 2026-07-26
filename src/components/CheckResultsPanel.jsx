@@ -19,15 +19,14 @@ import {
 import {
   formatResultsStatCount,
   EDITOR_REVIEW_BADGE_LABEL,
-  EDITOR_REVIEW_BADGE_SHORT,
   SPELLING_RULE_BADGE_LABEL,
-  SPELLING_RULE_BADGE_SHORT,
   LOANWORD_BADGE_LABEL,
-  LOANWORD_BADGE_SHORT,
 } from '../lib/checkResultSummaryFormat.js';
 import {
   defaultOpenSpellingCategory,
   partitionSpellingResultEntries,
+  sumVisibleFindings,
+  countGroupsWithVisibleFindings,
 } from '../lib/checkResultsAccordion.js';
 
 /**
@@ -44,22 +43,17 @@ function ResultFindingsCountCircle({
   className = '',
   ariaLabel,
 }) {
-  if (shownCount < count) {
-    return (
-      <span
-        className={`result-card-findings-count result-card-findings-count--partial ${className}`.trim()}
-      >
-        [표시 {shownCount}/{count}]
-      </span>
-    );
-  }
-
+  const partial = shownCount < count;
   return (
     <span
       className={`result-findings-count-circle ${className}`.trim()}
-      aria-label={ariaLabel ?? `${count}건`}
+      aria-label={
+        ariaLabel ??
+        (partial ? `표시 ${shownCount}건 / 전체 ${count}건` : `${count}건`)
+      }
+      title={partial ? `표시 ${shownCount}/${count}` : undefined}
     >
-      {count}
+      {shownCount}
     </span>
   );
 }
@@ -151,6 +145,7 @@ function ResultHeaderStat({ badge, count, findingsCount, tone }) {
  *   spellingCheckDone: boolean,
  *   ruleCount: number,
  *   totalFindings: number,
+ *   visibleTotalFindings?: number,
  *   cautionWithFindingsCount?: number,
  *   builtinWithFindingsCount?: number,
  *   cautionFindingsCount?: number,
@@ -176,6 +171,7 @@ function ResultHeaderSummary({
   spellingCheckDone,
   ruleCount,
   totalFindings,
+  visibleTotalFindings,
   cautionWithFindingsCount = 0,
   builtinWithFindingsCount = 0,
   loanwordWithFindingsCount = 0,
@@ -198,11 +194,14 @@ function ResultHeaderSummary({
   commonStringCriteriaSelected = false,
   auxiliaryCriteriaSelected = false,
 }) {
+  const totalShown =
+    visibleTotalFindings === undefined ? totalFindings : visibleTotalFindings;
   const totalFindingsNode = (
-    <span className="results-header__total-findings">
-      전체 발견{' '}
+    <span className="results-header__total-findings results-findings-meta">
+      <span className="results-findings-meta__label">전체 발견</span>
       <ResultFindingsCountCircle
         count={totalFindings}
+        shownCount={totalShown}
         className="results-header__total-count"
       />
     </span>
@@ -273,8 +272,8 @@ function ResultHeaderSummary({
       <div className="results-header__stats">
         기준 <span className="results-header__rule-chip">{ruleCount}</span> 적용
       </div>
-      <span className="results-header__total-findings">
-        전체 발견 기준{' '}
+      <span className="results-header__total-findings results-findings-meta">
+        <span className="results-findings-meta__label">전체 발견 기준</span>
         <ResultFindingsCountCircle
           count={totalFindings}
           className="results-header__total-count"
@@ -482,51 +481,24 @@ export default function CheckResultsPanel({
                       ) : null}
                     </>
                   );
-                })(                ) : isCaution ? (
-                  <>
-                    <span
-                      className={`caution-badge-inline ${resultPillarToneClass('spelling-caution')}`.trim()}
-                      title={EDITOR_REVIEW_BADGE_LABEL}
-                      aria-label={EDITOR_REVIEW_BADGE_LABEL}
-                    >
-                      {EDITOR_REVIEW_BADGE_SHORT}
-                    </span>{' '}
-                    <span className="caution-result-chip">
-                      {cautionResultChipLabel(group)}
-                    </span>
-                  </>
+                })() : isCaution ? (
+                  <span className="caution-result-chip">
+                    {cautionResultChipLabel(group)}
+                  </span>
                 ) : isLoanword ? (
-                  <>
-                    <span
-                      className={`spelling-badge-inline ${resultPillarToneClass('spelling-loanword')}`.trim()}
-                      title={LOANWORD_BADGE_LABEL}
-                      aria-label={LOANWORD_BADGE_LABEL}
-                    >
-                      {LOANWORD_BADGE_SHORT}
-                    </span>{' '}
-                    <span className="spelling-result-chip">
-                      {group.label ||
-                        (first
-                          ? `${first.matchedText} → ${first.suggestedText}`
-                          : '')}
-                    </span>
-                  </>
+                  <span className="spelling-result-chip">
+                    {group.label ||
+                      (first
+                        ? `${first.matchedText} → ${first.suggestedText}`
+                        : '')}
+                  </span>
                 ) : (
-                  <>
-                    <span
-                      className={`spelling-badge-inline ${resultPillarToneClass('spelling-builtin')}`.trim()}
-                      title={SPELLING_RULE_BADGE_LABEL}
-                      aria-label={SPELLING_RULE_BADGE_LABEL}
-                    >
-                      {SPELLING_RULE_BADGE_SHORT}
-                    </span>{' '}
-                    <span className="spelling-result-chip">
-                      {group.label ||
-                        (first
-                          ? `${first.matchedText} → ${first.suggestedText}`
-                          : '')}
-                    </span>
-                  </>
+                  <span className="spelling-result-chip">
+                    {group.label ||
+                      (first
+                        ? `${first.matchedText} → ${first.suggestedText}`
+                        : '')}
+                  </span>
                 )}
               </span>
             </div>
@@ -573,30 +545,62 @@ export default function CheckResultsPanel({
     );
   };
 
-  /** @type {{ id: 'caution' | 'builtin' | 'loanword', label: string, criteriaCount: number, findingsCount: number, entries: ResultEntry[] }[]} */
+  /** @type {{ id: 'caution' | 'builtin' | 'loanword', label: string, criteriaCount: number, findingsCount: number, findingsTotal: number, entries: ResultEntry[] }[]} */
   const spellingSections = [
     {
       id: 'caution',
       label: EDITOR_REVIEW_BADGE_LABEL,
-      criteriaCount: cautionWithFindingsCount,
-      findingsCount: cautionFindingsCount,
+      criteriaCount: countGroupsWithVisibleFindings(
+        spellingParts.caution,
+        visibleInstanceCount,
+      ),
+      findingsCount: sumVisibleFindings(
+        spellingParts.caution,
+        visibleInstanceCount,
+      ),
+      findingsTotal: sumVisibleFindings(spellingParts.caution),
       entries: spellingParts.caution,
     },
     {
       id: 'builtin',
       label: SPELLING_RULE_BADGE_LABEL,
-      criteriaCount: builtinWithFindingsCount,
-      findingsCount: builtinFindingsCount,
+      criteriaCount: countGroupsWithVisibleFindings(
+        spellingParts.builtin,
+        visibleInstanceCount,
+      ),
+      findingsCount: sumVisibleFindings(
+        spellingParts.builtin,
+        visibleInstanceCount,
+      ),
+      findingsTotal: sumVisibleFindings(spellingParts.builtin),
       entries: spellingParts.builtin,
     },
     {
       id: 'loanword',
       label: LOANWORD_BADGE_LABEL,
-      criteriaCount: loanwordWithFindingsCount,
-      findingsCount: loanwordFindingsCount,
+      criteriaCount: countGroupsWithVisibleFindings(
+        spellingParts.loanword,
+        visibleInstanceCount,
+      ),
+      findingsCount: sumVisibleFindings(
+        spellingParts.loanword,
+        visibleInstanceCount,
+      ),
+      findingsTotal: sumVisibleFindings(spellingParts.loanword),
       entries: spellingParts.loanword,
     },
   ].filter((section) => section.entries.length > 0);
+
+  const spellingEntriesAll = [
+    ...spellingParts.caution,
+    ...spellingParts.builtin,
+    ...spellingParts.loanword,
+  ];
+  const visibleSpellingTotalFindings = sumVisibleFindings(
+    spellingEntriesAll,
+    visibleInstanceCount,
+  );
+  const spellingTotalFindingsFromEntries = sumVisibleFindings(spellingEntriesAll);
 
   return (
     <section
@@ -608,7 +612,16 @@ export default function CheckResultsPanel({
             viewSource={viewSource}
             spellingCheckDone={spellingCheckDone}
             ruleCount={ruleCount}
-            totalFindings={totalFindings}
+            totalFindings={
+              viewSource === 'spelling'
+                ? spellingTotalFindingsFromEntries
+                : totalFindings
+            }
+            visibleTotalFindings={
+              viewSource === 'spelling'
+                ? visibleSpellingTotalFindings
+                : undefined
+            }
             cautionWithFindingsCount={cautionWithFindingsCount}
             builtinWithFindingsCount={builtinWithFindingsCount}
             loanwordWithFindingsCount={loanwordWithFindingsCount}
@@ -650,15 +663,19 @@ export default function CheckResultsPanel({
                     <span className="results-category__label">
                       {section.label}
                     </span>
-                    <span className="results-category__meta">
-                      <span className="results-category__criteria-num">
-                        {section.criteriaCount}
-                      </span>
-                      <span className="results-category__criteria-unit">
-                        기준
+                    <span className="results-category__meta results-findings-meta">
+                      <span className="results-findings-meta__label">
+                        <span className="results-category__criteria-num">
+                          {section.criteriaCount}
+                        </span>
+                        <span className="results-category__criteria-unit">
+                          {' '}
+                          기준
+                        </span>
                       </span>
                       <ResultFindingsCountCircle
-                        count={section.findingsCount}
+                        count={section.findingsTotal}
+                        shownCount={section.findingsCount}
                         className="results-category__findings"
                       />
                     </span>

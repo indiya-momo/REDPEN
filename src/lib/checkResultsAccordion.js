@@ -37,3 +37,36 @@ export function defaultOpenSpellingCategory(parts) {
   if (parts.loanword.length) return 'loanword';
   return null;
 }
+
+/**
+ * PDF 표시 중인 발견 건수 합.
+ * @param {Array<{ source: string, group: { instances?: unknown[] } }>} entries
+ * @param {(source: string, group: object) => number} [visibleInstanceCount]
+ */
+export function sumVisibleFindings(entries, visibleInstanceCount) {
+  let sum = 0;
+  for (const { source, group } of entries ?? []) {
+    if (visibleInstanceCount) {
+      sum += visibleInstanceCount(source, group);
+    } else {
+      sum += group?.instances?.length ?? 0;
+    }
+  }
+  return sum;
+}
+
+/**
+ * PDF 표시 중인 발견이 1건 이상인 기준(그룹) 수.
+ * @param {Array<{ source: string, group: { instances?: unknown[] } }>} entries
+ * @param {(source: string, group: object) => number} [visibleInstanceCount]
+ */
+export function countGroupsWithVisibleFindings(entries, visibleInstanceCount) {
+  let n = 0;
+  for (const { source, group } of entries ?? []) {
+    const shown = visibleInstanceCount
+      ? visibleInstanceCount(source, group)
+      : (group?.instances?.length ?? 0);
+    if (shown > 0) n += 1;
+  }
+  return n;
+}

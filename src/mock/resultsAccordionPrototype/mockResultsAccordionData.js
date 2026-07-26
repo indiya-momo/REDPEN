@@ -31,7 +31,6 @@ export const MOCK_CATEGORIES = [
   {
     id: 'caution',
     label: '편집자 검토 필요',
-    shortBadge: '편',
     criteriaCount: 20,
     findingsCount: 1181,
     defaultOpen: true,
@@ -40,7 +39,6 @@ export const MOCK_CATEGORIES = [
   {
     id: 'spelling',
     label: '맞춤법 규칙',
-    shortBadge: '맞',
     criteriaCount: 29,
     findingsCount: 537,
     defaultOpen: false,
@@ -56,7 +54,6 @@ export const MOCK_CATEGORIES = [
   {
     id: 'loanword',
     label: '외래어 표기법',
-    shortBadge: '외',
     criteriaCount: 9,
     findingsCount: 33,
     defaultOpen: false,
