@@ -775,6 +775,19 @@ export default function MainScreen({
 
   const handleSaveCriteria = useCallback(async () => {
     if (criteriaSavePending) return;
+    // 이미 저장된 프로젝트면 덮어쓰기 확인
+    if (activeRuleSet?.savedAt) {
+      const label = formatProjectDialogLabel(
+        criteriaNameInput.trim() || activeRuleSet.name,
+      );
+      const confirmed = await showAppConfirm({
+        title: '덮어쓰기',
+        message: `${label} 프로젝트를 덮어쓸까요?\n\n기존에 저장된 내용이 현재 작업 내용으로 바뀝니다.`,
+        confirmLabel: '덮어쓰기',
+        cancelLabel: '취소',
+      });
+      if (!confirmed) return;
+    }
     setCriteriaSavePending(true);
     try {
       const patch = buildProjectContextWorkPatch({
@@ -808,6 +821,8 @@ export default function MainScreen({
   }, [
     criteriaSavePending,
     criteriaNameInput,
+    activeRuleSet?.savedAt,
+    activeRuleSet?.name,
     onSaveCriteriaPreset,
     pdf.pdf,
     pdf.pdfFileName,
@@ -2024,18 +2039,6 @@ export default function MainScreen({
                                 {savedLabel}
                               </span>
                             ) : null}
-                          </button>
-                          <button
-                            type="button"
-                            className="panel-left__criteria-picker-delete"
-                            aria-label={`${label} 삭제`}
-                            title="기준 삭제"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              handleDeleteCriteria(set.id);
-                            }}
-                          >
-                            <Trash2 size={14} aria-hidden />
                           </button>
                         </li>
                       );

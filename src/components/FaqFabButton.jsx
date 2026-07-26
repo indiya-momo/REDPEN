@@ -2,7 +2,7 @@ import { useState } from 'react';
 import FaqModal from './FaqModal.jsx';
 import { publicAssetUrl } from '../lib/publicAssetUrl.js';
 
-const FAQ_PAW_ICON = publicAssetUrl('momo/faq-paw.png');
+const FAQ_PAW_ICON = publicAssetUrl('momo/faq-paw.png', { cacheBust: true });
 
 /**
  * 원고 영역 오른쪽 아래 — 자주 묻는 질문 원형 버튼.
@@ -26,8 +26,8 @@ export default function FaqFabButton({ className = '' }) {
         <img
           src={FAQ_PAW_ICON}
           alt=""
-          width={22}
-          height={22}
+          width={42}
+          height={42}
           draggable={false}
         />
       </button>
