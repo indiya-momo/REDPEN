@@ -48,15 +48,7 @@ export default function ResultsAccordionPrototypeScreen() {
               <div className="results-acc-proto__body">
                 {cat.cards.map((card) => (
                   <article key={card.id} className="results-acc-proto__card">
-                    <h3 className="results-acc-proto__card-title">
-                      <span
-                        className="results-acc-proto__card-badge"
-                        title={cat.label}
-                      >
-                        {cat.shortBadge}
-                      </span>{' '}
-                      {card.title}
-                    </h3>
+                    <h3 className="results-acc-proto__card-title">{card.title}</h3>
                     <p className="results-acc-proto__card-tip">{card.tip}</p>
                     <div className="results-acc-proto__pages">
                       {card.pages.map((page) => (

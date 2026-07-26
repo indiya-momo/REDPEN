@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
+  countGroupsWithVisibleFindings,
   defaultOpenSpellingCategory,
   partitionSpellingResultEntries,
+  sumVisibleFindings,
 } from './checkResultsAccordion.js';
 
 describe('partitionSpellingResultEntries', () => {
@@ -45,5 +47,32 @@ describe('defaultOpenSpellingCategory', () => {
         loanword: [{}],
       }),
     ).toBe('builtin');
+  });
+});
+
+describe('sumVisibleFindings / countGroupsWithVisibleFindings', () => {
+  const entries = [
+    {
+      source: 'spelling',
+      group: { label: 'a', instances: [1, 2, 3] },
+    },
+    {
+      source: 'spelling',
+      group: { label: 'b', instances: [1, 2] },
+    },
+  ];
+
+  it('visibleInstanceCount 없으면 전체 합', () => {
+    expect(sumVisibleFindings(entries)).toBe(5);
+    expect(countGroupsWithVisibleFindings(entries)).toBe(2);
+  });
+
+  it('표시 건수에 맞춰 합·기준 수를 줄인다', () => {
+    const visibleInstanceCount = (_source, group) =>
+      group.label === 'a' ? 0 : 2;
+    expect(sumVisibleFindings(entries, visibleInstanceCount)).toBe(2);
+    expect(
+      countGroupsWithVisibleFindings(entries, visibleInstanceCount),
+    ).toBe(1);
   });
 });

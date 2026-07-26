@@ -2103,6 +2103,12 @@ details[open] > summary .details-chevron::before {
   width: 100%;
 }
 
+/* 측정 중 3줄 이상 깜빡임 방지 — 두 줄까지만 보이게 */
+.result-pages--measuring {
+  max-height: calc(2 * 1.625rem + 8px);
+  overflow: hidden;
+}
+
 .result-pages-expand-btn {
   display: inline-flex;
   align-items: center;

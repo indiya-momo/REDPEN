@@ -172,19 +172,6 @@
   font-weight: 800;
 }
 
-.results-acc-proto__card-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.05em 0.35em;
-  border: 1px solid var(--proto-border);
-  border-radius: 0;
-  background: transparent;
-  font-size: 0.72em;
-  font-weight: 800;
-  color: var(--proto-muted);
-  vertical-align: middle;
-}
-
 .results-acc-proto__card-tip {
   margin: 0 0 8px;
   font-size: 0.78rem;
