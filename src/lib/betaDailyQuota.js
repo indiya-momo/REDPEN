@@ -1,5 +1,5 @@
 /**
- * 오픈베타 검수 한도: 가입 보너스(맞춤법·표기 통일 각 10, 1회) + KST 일일 1회(피드백 당일 2회).
+ * 오픈베타 검수 한도: 가입 보너스(맞춤법·표기 통일 각 5, 1회) + KST 일일 1회(피드백 당일 2회).
  * 일일 미사용분은 다음날로 넘어가지 않음. 통일형·우수 피드백 별도 한도 없음.
  * 검수 직전 assertBetaDailyCheckOrAlert, 소비 후 배지·피드백 보너스 연동.
  */
@@ -48,8 +48,13 @@ export const BETA_TAB_LIMIT_FEEDBACK = 2;
 /** @deprecated 우수 티어 폐지 — 피드백과 동일(2) */
 export const BETA_TAB_LIMIT_BOOSTED = BETA_TAB_LIMIT_FEEDBACK;
 
-/** 가입 시 1회 지급 — 맞춤법·표기 통일 각 10회(소진형, 리필 없음) */
-export const SIGNUP_BONUS_TAB_CHECKS = 10;
+/** 가입 시 1회 지급 — 맞춤법·표기 통일 각 5회(소진형, 리필 없음) */
+export const SIGNUP_BONUS_TAB_CHECKS = 5;
+/**
+ * 가입 보너스 정책 버전.
+ * 바뀌면 이미 지급된 계정도 잔여를 SIGNUP_BONUS_TAB_CHECKS로 다시 맞춘다.
+ */
+export const SIGNUP_BONUS_POLICY_VERSION = 2;
 
 /**
  * @deprecated 통일형 별도 한도 폐지 — 표기 통일 탭과 동일 풀
@@ -68,7 +73,7 @@ export const BETA_CONSISTENCY_LIMIT_FEEDBACK = BETA_TAB_LIMIT_FEEDBACK;
 export const BETA_CONSISTENCY_LIMIT_BOOSTED = BETA_TAB_LIMIT_FEEDBACK;
 
 const BETA_QUOTA_POLICY_SUMMARY =
-  '오픈베타 기간에는 가입 시 맞춤법·표기 통일 검수를 각 10회 드리며, ' +
+  '오픈베타 기간에는 가입 시 맞춤법·표기 통일 검수를 각 5회 드리며, ' +
   '매일(한국 시간) 각 1회가 새로 생깁니다(당일 미사용분은 다음날로 넘어가지 않습니다). ' +
   '피드백을 남기면 그날 일일 지급이 각 2회로 늘어납니다. ';
 
@@ -407,11 +412,62 @@ function readSignupBonusState(data) {
       : granted
         ? 0
         : SIGNUP_BONUS_TAB_CHECKS;
+  const policyVersion = Math.max(
+    0,
+    Number(data?.signupBonusPolicyVersion) || 0,
+  );
   return {
     signupBonusGranted: granted,
     signupBonusSpellingRemaining: spelling,
     signupBonusConsistencyRemaining: consistency,
+    signupBonusPolicyVersion: policyVersion,
   };
+}
+
+/**
+ * 가입 보너스 지급·정책 재정렬 필드 (Firestore·local 공통).
+ * @returns {{
+ *   signupBonusGranted: true,
+ *   signupBonusSpellingRemaining: number,
+ *   signupBonusConsistencyRemaining: number,
+ *   signupBonusPolicyVersion: number,
+ * }}
+ */
+export function buildSignupBonusGrantFields() {
+  return {
+    signupBonusGranted: true,
+    signupBonusSpellingRemaining: SIGNUP_BONUS_TAB_CHECKS,
+    signupBonusConsistencyRemaining: SIGNUP_BONUS_TAB_CHECKS,
+    signupBonusPolicyVersion: SIGNUP_BONUS_POLICY_VERSION,
+  };
+}
+
+/**
+ * @param {{ signupBonusPolicyVersion?: number } | null | undefined} bonus
+ */
+export function needsSignupBonusPolicyAlign(bonus) {
+  const version = Math.max(0, Number(bonus?.signupBonusPolicyVersion) || 0);
+  return version !== SIGNUP_BONUS_POLICY_VERSION;
+}
+
+/**
+ * 로그인·가입 직후 검수권 안내 팝업 문구.
+ * @returns {{ title: string, message: string }}
+ */
+export function buildSignupBonusGrantAlert() {
+  return {
+    title: '검수권 선물이 도착했어요!  ฅ•ω•ฅ',
+    message:
+      `회원님께 감사의 의미로 맞춤법·표기 통일 ${SIGNUP_BONUS_TAB_CHECKS}회 검수권을 드립니다\n` +
+      `일일 검수권은 1회 제공되며, 당일 미사용분은 소멸됩니다(한국 시간 기준)\n` +
+      `피드백을 남기면 일일 검수권이 2배로 늘어납니다!\n` +
+      `인디야와 함께 더운 여름 건강히 보내세요🍉`,
+  };
+}
+
+/** 로그인 직후 검수권 안내 팝업 */
+export async function notifySignupBonusGranted() {
+  await showAppAlert(buildSignupBonusGrantAlert());
 }
 
 /**
@@ -423,6 +479,7 @@ function readSignupBonusState(data) {
  *   signupBonusGranted: boolean,
  *   signupBonusSpellingRemaining: number,
  *   signupBonusConsistencyRemaining: number,
+ *   signupBonusPolicyVersion?: number,
  * }} bonus
  */
 function buildTabQuotaView(uid, dayId, feedbackBonusDayId, counts, bonus) {
@@ -449,6 +506,10 @@ function buildTabQuotaView(uid, dayId, feedbackBonusDayId, counts, bonus) {
     signupBonusGranted: bonus.signupBonusGranted,
     signupBonusSpellingRemaining: bonus.signupBonusSpellingRemaining,
     signupBonusConsistencyRemaining: bonus.signupBonusConsistencyRemaining,
+    signupBonusPolicyVersion: Math.max(
+      0,
+      Number(bonus.signupBonusPolicyVersion) || 0,
+    ),
     spellingAvailable,
     consistencyAvailable,
     /** @deprecated 맞춤법 한도와 동일 — 하위 호환 */
@@ -525,6 +586,7 @@ function readLocalQuota(uid, dayId) {
  *   signupBonusGranted?: boolean,
  *   signupBonusSpellingRemaining?: number,
  *   signupBonusConsistencyRemaining?: number,
+ *   signupBonusPolicyVersion?: number,
  * }} state
  */
 function writeLocalQuota(uid, state) {
@@ -552,6 +614,10 @@ function writeLocalQuota(uid, state) {
           state.signupBonusConsistencyRemaining !== undefined
             ? state.signupBonusConsistencyRemaining
             : prev.signupBonusConsistencyRemaining,
+        signupBonusPolicyVersion:
+          state.signupBonusPolicyVersion !== undefined
+            ? state.signupBonusPolicyVersion
+            : prev.signupBonusPolicyVersion,
         updatedAt: Date.now(),
       }),
     );
@@ -628,6 +694,8 @@ export function mergeSignupBonusState(firestoreBonus, localBonus) {
       signupBonusSpellingRemaining: firestoreBonus.signupBonusSpellingRemaining,
       signupBonusConsistencyRemaining:
         firestoreBonus.signupBonusConsistencyRemaining,
+      signupBonusPolicyVersion:
+        firestoreBonus.signupBonusPolicyVersion ?? 0,
     };
   }
   if (localBonus.signupBonusGranted) {
@@ -636,88 +704,131 @@ export function mergeSignupBonusState(firestoreBonus, localBonus) {
       signupBonusSpellingRemaining: localBonus.signupBonusSpellingRemaining,
       signupBonusConsistencyRemaining:
         localBonus.signupBonusConsistencyRemaining,
+      signupBonusPolicyVersion: localBonus.signupBonusPolicyVersion ?? 0,
     };
   }
   return {
     signupBonusGranted: false,
     signupBonusSpellingRemaining: SIGNUP_BONUS_TAB_CHECKS,
     signupBonusConsistencyRemaining: SIGNUP_BONUS_TAB_CHECKS,
+    signupBonusPolicyVersion: 0,
   };
 }
 
 /**
- * 계정당 1회 — 맞춤법·표기 통일 각 10회 지급(멱등).
+ * 계정당 가입 보너스 지급·정책 정렬(멱등).
+ * 미지급이면 각 SIGNUP_BONUS_TAB_CHECKS회 지급하고,
+ * 이미 지급됐어도 정책 버전이 다르면 잔여를 다시 각 N회로 맞춘다.
  * @param {string} uid
  * @param {string} [email]
  */
 export async function ensureSignupBonusGranted(uid, email = '') {
   const dayId = getKstDayId();
   if (!uid.trim()) {
-    return { ok: false, granted: false, alreadyGranted: false };
+    return { ok: false, granted: false, alreadyGranted: false, realigned: false };
   }
+
+  const grantFields = buildSignupBonusGrantFields();
 
   const applyLocal = () => {
     const local = readLocalQuota(uid, dayId);
-    if (local.signupBonusGranted) {
-      return { ok: true, granted: false, alreadyGranted: true };
+    if (
+      local.signupBonusGranted &&
+      !needsSignupBonusPolicyAlign(local)
+    ) {
+      return {
+        ok: true,
+        granted: false,
+        alreadyGranted: true,
+        realigned: false,
+      };
     }
+    const wasGranted = local.signupBonusGranted;
     writeLocalQuota(uid, {
       dayId,
       spellingCount: local.spellingCount,
       consistencyCount: local.consistencyCount,
       feedbackBonusDayId: local.feedbackBonusDayId,
-      signupBonusGranted: true,
-      signupBonusSpellingRemaining: SIGNUP_BONUS_TAB_CHECKS,
-      signupBonusConsistencyRemaining: SIGNUP_BONUS_TAB_CHECKS,
+      ...grantFields,
     });
-    return { ok: true, granted: true, alreadyGranted: false };
+    return {
+      ok: true,
+      granted: !wasGranted,
+      alreadyGranted: wasGranted,
+      realigned: wasGranted,
+    };
   };
 
   if (!isBetaDailyQuotaEnforcedForUser(uid, email)) {
     if (isLocalDevQuotaRelaxed()) return applyLocal();
-    return { ok: true, granted: false, alreadyGranted: false };
+    return {
+      ok: true,
+      granted: false,
+      alreadyGranted: false,
+      realigned: false,
+    };
   }
 
   try {
     let alreadyGranted = false;
     let grantedNow = false;
+    let realigned = false;
+    let wrote = false;
     await runTransaction(getFirestore(firebaseApp), async (tx) => {
       const userRef = userDocRef(uid);
       const snap = await tx.get(userRef);
       const data = snap.exists() ? snap.data() : undefined;
-      if (data?.signupBonusGranted === true) {
+      const bonus = readSignupBonusState(data);
+      if (
+        bonus.signupBonusGranted &&
+        !needsSignupBonusPolicyAlign(bonus)
+      ) {
         alreadyGranted = true;
         return;
       }
-      grantedNow = true;
-      tx.set(
-        userRef,
-        {
-          signupBonusGranted: true,
-          signupBonusSpellingRemaining: SIGNUP_BONUS_TAB_CHECKS,
-          signupBonusConsistencyRemaining: SIGNUP_BONUS_TAB_CHECKS,
-        },
-        { merge: true },
-      );
+      alreadyGranted = bonus.signupBonusGranted;
+      grantedNow = !bonus.signupBonusGranted;
+      realigned = bonus.signupBonusGranted;
+      wrote = true;
+      tx.set(userRef, grantFields, { merge: true });
     });
     const local = readLocalQuota(uid, dayId);
-    writeLocalQuota(uid, {
-      dayId,
-      spellingCount: local.spellingCount,
-      consistencyCount: local.consistencyCount,
-      feedbackBonusDayId: local.feedbackBonusDayId,
-      signupBonusGranted: true,
-      signupBonusSpellingRemaining: alreadyGranted
-        ? local.signupBonusSpellingRemaining
-        : SIGNUP_BONUS_TAB_CHECKS,
-      signupBonusConsistencyRemaining: alreadyGranted
-        ? local.signupBonusConsistencyRemaining
-        : SIGNUP_BONUS_TAB_CHECKS,
-    });
+    if (wrote) {
+      writeLocalQuota(uid, {
+        dayId,
+        spellingCount: local.spellingCount,
+        consistencyCount: local.consistencyCount,
+        feedbackBonusDayId: local.feedbackBonusDayId,
+        ...grantFields,
+      });
+    } else {
+      try {
+        const snap = await getDoc(userDocRef(uid));
+        const remote = readSignupBonusState(
+          snap.exists() ? snap.data() : undefined,
+        );
+        if (remote.signupBonusGranted) {
+          writeLocalQuota(uid, {
+            dayId,
+            spellingCount: local.spellingCount,
+            consistencyCount: local.consistencyCount,
+            feedbackBonusDayId: local.feedbackBonusDayId,
+            signupBonusGranted: true,
+            signupBonusSpellingRemaining: remote.signupBonusSpellingRemaining,
+            signupBonusConsistencyRemaining:
+              remote.signupBonusConsistencyRemaining,
+            signupBonusPolicyVersion: remote.signupBonusPolicyVersion,
+          });
+        }
+      } catch {
+        /* keep local */
+      }
+    }
     return {
       ok: true,
       granted: grantedNow,
       alreadyGranted,
+      realigned,
     };
   } catch {
     return applyLocal();
@@ -745,9 +856,10 @@ async function readQuotaFlags(uid, dayId) {
       signupBonusGranted: local.signupBonusGranted,
       signupBonusSpellingRemaining: local.signupBonusSpellingRemaining,
       signupBonusConsistencyRemaining: local.signupBonusConsistencyRemaining,
+      signupBonusPolicyVersion: local.signupBonusPolicyVersion,
     };
     let bonus = mergeSignupBonusState(firestoreBonus, localBonus);
-    if (!bonus.signupBonusGranted) {
+    if (!bonus.signupBonusGranted || needsSignupBonusPolicyAlign(bonus)) {
       await ensureSignupBonusGranted(uid);
       const refreshed = readLocalQuota(uid, dayId);
       bonus = {
@@ -755,6 +867,7 @@ async function readQuotaFlags(uid, dayId) {
         signupBonusSpellingRemaining: refreshed.signupBonusSpellingRemaining,
         signupBonusConsistencyRemaining:
           refreshed.signupBonusConsistencyRemaining,
+        signupBonusPolicyVersion: refreshed.signupBonusPolicyVersion,
       };
     }
     const firestoreCounts = daySnap.exists()
@@ -779,6 +892,7 @@ async function readQuotaFlags(uid, dayId) {
       signupBonusGranted: bonus.signupBonusGranted,
       signupBonusSpellingRemaining: bonus.signupBonusSpellingRemaining,
       signupBonusConsistencyRemaining: bonus.signupBonusConsistencyRemaining,
+      signupBonusPolicyVersion: bonus.signupBonusPolicyVersion,
     });
     return view;
   } catch {
@@ -1028,21 +1142,10 @@ export async function consumeBetaDailyQuota(uid, email = '', tab = 'spelling') {
       const userData = userSnap.exists() ? userSnap.data() : undefined;
       const { feedbackBonusDayId } = readUserBonusDayIds(userData);
       let bonus = readSignupBonusState(userData);
-      if (!bonus.signupBonusGranted) {
-        bonus = {
-          signupBonusGranted: true,
-          signupBonusSpellingRemaining: SIGNUP_BONUS_TAB_CHECKS,
-          signupBonusConsistencyRemaining: SIGNUP_BONUS_TAB_CHECKS,
-        };
-        tx.set(
-          userRef,
-          {
-            signupBonusGranted: true,
-            signupBonusSpellingRemaining: SIGNUP_BONUS_TAB_CHECKS,
-            signupBonusConsistencyRemaining: SIGNUP_BONUS_TAB_CHECKS,
-          },
-          { merge: true },
-        );
+      if (!bonus.signupBonusGranted || needsSignupBonusPolicyAlign(bonus)) {
+        const grantFields = buildSignupBonusGrantFields();
+        bonus = grantFields;
+        tx.set(userRef, grantFields, { merge: true });
       }
       const dailyLimit = getTabCheckLimit(
         feedbackBonusDayId,
@@ -1100,6 +1203,8 @@ export async function consumeBetaDailyQuota(uid, email = '', tab = 'spelling') {
       signupBonusGranted: true,
       signupBonusSpellingRemaining: planned.nextSpellingBonus,
       signupBonusConsistencyRemaining: planned.nextConsistencyBonus,
+      signupBonusPolicyVersion:
+        flags.signupBonusPolicyVersion || SIGNUP_BONUS_POLICY_VERSION,
     });
     if (isFirstEverCheck) syncFirstCheckBadge(uid);
     return buildConsumeSuccessResult(

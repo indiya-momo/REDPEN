@@ -2,8 +2,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   BETA_TAB_LIMIT_DEFAULT,
   BETA_TAB_LIMIT_FEEDBACK,
+  SIGNUP_BONUS_POLICY_VERSION,
   SIGNUP_BONUS_TAB_CHECKS,
   buildProofreadExportConfirmMessage,
+  buildSignupBonusGrantAlert,
+  buildSignupBonusGrantFields,
   canRunTabCheck,
   getKstDayId,
   getTabAvailableChecks,
@@ -13,6 +16,7 @@ import {
   consumeLocalDevQuotaPreview,
   formatBetaQuotaConsumedAlert,
   isLocalDevQuotaRelaxed,
+  needsSignupBonusPolicyAlign,
   mergeTabQuotaCounts,
   mergeUserBonusDayIds,
   mergeSignupBonusState,
@@ -175,10 +179,11 @@ describe('mergeUserBonusDayIds / mergeSignupBonusState', () => {
       signupBonusGranted: true,
       signupBonusSpellingRemaining: 7,
       signupBonusConsistencyRemaining: 9,
+      signupBonusPolicyVersion: 0,
     });
   });
 
-  it('미지급이면 각 10으로 본다', () => {
+  it('미지급이면 가입 보너스 초기값으로 본다', () => {
     expect(
       mergeSignupBonusState(
         {
@@ -192,7 +197,39 @@ describe('mergeUserBonusDayIds / mergeSignupBonusState', () => {
           signupBonusConsistencyRemaining: SIGNUP_BONUS_TAB_CHECKS,
         },
       ).signupBonusSpellingRemaining,
-    ).toBe(10);
+    ).toBe(SIGNUP_BONUS_TAB_CHECKS);
+  });
+});
+
+describe('signup bonus policy align', () => {
+  it('정책 버전이 다르면 재정렬이 필요하다', () => {
+    expect(needsSignupBonusPolicyAlign({ signupBonusPolicyVersion: 0 })).toBe(
+      true,
+    );
+    expect(needsSignupBonusPolicyAlign({ signupBonusPolicyVersion: 1 })).toBe(
+      true,
+    );
+    expect(
+      needsSignupBonusPolicyAlign({
+        signupBonusPolicyVersion: SIGNUP_BONUS_POLICY_VERSION,
+      }),
+    ).toBe(false);
+  });
+
+  it('지급 필드는 각 5회·현재 정책 버전이다', () => {
+    expect(buildSignupBonusGrantFields()).toEqual({
+      signupBonusGranted: true,
+      signupBonusSpellingRemaining: 5,
+      signupBonusConsistencyRemaining: 5,
+      signupBonusPolicyVersion: SIGNUP_BONUS_POLICY_VERSION,
+    });
+  });
+
+  it('로그인 검수권 안내 문구에 가입 보너스 횟수가 들어간다', () => {
+    const alert = buildSignupBonusGrantAlert();
+    expect(alert.title).toContain('검수권 선물');
+    expect(alert.message).toContain(`${SIGNUP_BONUS_TAB_CHECKS}회`);
+    expect(alert.message).toContain('일일 검수권');
   });
 });
 
@@ -286,12 +323,12 @@ describe('consumeLocalDevQuotaPreview', () => {
     const first = consumeLocalDevQuotaPreview('uid-1', 'spelling', '2026-06-08');
     expect(first.ok).toBe(true);
     expect(first.tabCount).toBe(1);
-    expect(first.tabRemaining).toBe(10);
+    expect(first.tabRemaining).toBe(SIGNUP_BONUS_TAB_CHECKS);
 
     const second = consumeLocalDevQuotaPreview('uid-1', 'spelling', '2026-06-08');
     expect(second.ok).toBe(true);
     expect(second.tabCount).toBe(2);
-    expect(second.bonusRemaining).toBe(9);
+    expect(second.bonusRemaining).toBe(SIGNUP_BONUS_TAB_CHECKS - 1);
     expect(isLocalDevQuotaRelaxed()).toBe(true);
   });
 

@@ -28,7 +28,8 @@ service cloud.firestore {
           'feedbackBonusDayId',
           'signupBonusGranted',
           'signupBonusSpellingRemaining',
-          'signupBonusConsistencyRemaining'
+          'signupBonusConsistencyRemaining',
+          'signupBonusPolicyVersion'
         ])
         && (
           !('feedbackBonusDayId' in request.resource.data)
@@ -43,13 +44,19 @@ service cloud.firestore {
           !('signupBonusSpellingRemaining' in request.resource.data)
           || (request.resource.data.signupBonusSpellingRemaining is int
             && request.resource.data.signupBonusSpellingRemaining >= 0
-            && request.resource.data.signupBonusSpellingRemaining <= 10)
+            && request.resource.data.signupBonusSpellingRemaining <= 5)
         )
         && (
           !('signupBonusConsistencyRemaining' in request.resource.data)
           || (request.resource.data.signupBonusConsistencyRemaining is int
             && request.resource.data.signupBonusConsistencyRemaining >= 0
-            && request.resource.data.signupBonusConsistencyRemaining <= 10)
+            && request.resource.data.signupBonusConsistencyRemaining <= 5)
+        )
+        && (
+          !('signupBonusPolicyVersion' in request.resource.data)
+          || (request.resource.data.signupBonusPolicyVersion is int
+            && request.resource.data.signupBonusPolicyVersion >= 1
+            && request.resource.data.signupBonusPolicyVersion <= 2)
         );
       allow update: if isOwner(userId)
         && request.resource.data.diff(resource.data).affectedKeys()
@@ -57,7 +64,8 @@ service cloud.firestore {
               'feedbackBonusDayId',
               'signupBonusGranted',
               'signupBonusSpellingRemaining',
-              'signupBonusConsistencyRemaining'
+              'signupBonusConsistencyRemaining',
+              'signupBonusPolicyVersion'
             ])
         && (
           !request.resource.data.diff(resource.data).affectedKeys().hasAny(['feedbackBonusDayId'])
@@ -69,26 +77,50 @@ service cloud.firestore {
           || request.resource.data.signupBonusGranted == true
         )
         && (
+          !request.resource.data.diff(resource.data).affectedKeys().hasAny(['signupBonusPolicyVersion'])
+          || (request.resource.data.signupBonusPolicyVersion is int
+            && request.resource.data.signupBonusPolicyVersion >= 1
+            && request.resource.data.signupBonusPolicyVersion <= 2
+            && request.resource.data.signupBonusPolicyVersion
+              >= resource.data.get('signupBonusPolicyVersion', 0))
+        )
+        && (
           !request.resource.data.diff(resource.data).affectedKeys().hasAny(['signupBonusSpellingRemaining'])
           || (request.resource.data.signupBonusSpellingRemaining is int
             && request.resource.data.signupBonusSpellingRemaining >= 0
-            && request.resource.data.signupBonusSpellingRemaining <= 10
-            && request.resource.data.signupBonusSpellingRemaining
-              <= resource.data.get('signupBonusSpellingRemaining', 10))
+            && request.resource.data.signupBonusSpellingRemaining <= 5
+            && (
+              // 검수 소비 — 잔여만 감소
+              request.resource.data.signupBonusSpellingRemaining
+                <= resource.data.get('signupBonusSpellingRemaining', 5)
+              // 정책 재정렬 — 버전과 함께 각 5회로 맞춤
+              || (
+                request.resource.data.diff(resource.data).affectedKeys()
+                  .hasAny(['signupBonusPolicyVersion'])
+                && request.resource.data.signupBonusSpellingRemaining == 5
+              )
+            ))
         )
         && (
           !request.resource.data.diff(resource.data).affectedKeys().hasAny(['signupBonusConsistencyRemaining'])
           || (request.resource.data.signupBonusConsistencyRemaining is int
             && request.resource.data.signupBonusConsistencyRemaining >= 0
-            && request.resource.data.signupBonusConsistencyRemaining <= 10
-            && request.resource.data.signupBonusConsistencyRemaining
-              <= resource.data.get('signupBonusConsistencyRemaining', 10))
+            && request.resource.data.signupBonusConsistencyRemaining <= 5
+            && (
+              request.resource.data.signupBonusConsistencyRemaining
+                <= resource.data.get('signupBonusConsistencyRemaining', 5)
+              || (
+                request.resource.data.diff(resource.data).affectedKeys()
+                  .hasAny(['signupBonusPolicyVersion'])
+                && request.resource.data.signupBonusConsistencyRemaining == 5
+              )
+            ))
         );
       allow delete: if false;
     }
     match /betaDailyUsage/{userId}/days/{dayId} {
       allow read: if isOwner(userId);
-      // 일일 최대 2 + 가입 보너스 10 = 12
+      // 일일 최대 2 + 가입 보너스 5 = 7 (여유 상한 12)
       allow create: if isOwner(userId)
         && request.resource.data.usedAt is timestamp
         && request.resource.data.get('spellingCount', 0) is int
