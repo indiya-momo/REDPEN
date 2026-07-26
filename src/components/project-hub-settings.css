@@ -898,11 +898,11 @@
 .work-history-panel__chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem 0.65rem;
+  gap: 0.35rem;
   margin: 0;
   padding: 0;
   list-style: none;
-  align-items: baseline;
+  align-items: center;
 }
 
 .work-history-panel__chips--parallel {
@@ -968,22 +968,25 @@
 }
 
 .work-history-panel__chip {
-  display: inline;
-  padding: 0;
-  border: none;
-  border-radius: 0;
-  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  max-width: 100%;
+  padding: 3px 6px;
+  border: 1px solid var(--chip-border);
+  border-radius: var(--radius-ui-sm);
+  background: var(--chip-bg);
   font-size: 0.78rem;
   font-weight: 600;
-  line-height: 1.35;
-  color: var(--pillar-consistency);
+  line-height: 1.25;
+  color: var(--color-text);
 }
 
 .work-history-panel__chip--pinned {
-  border: none;
-  background: transparent;
+  border-color: var(--pillar-consistency);
+  background: color-mix(in srgb, var(--pillar-consistency) 8%, var(--chip-bg));
   font-weight: 700;
-  color: var(--pillar-consistency);
+  color: var(--color-text);
 }
 
 .work-history-panel__chip-pin {
@@ -992,7 +995,7 @@
 }
 
 .work-history-panel__chip--more {
-  border: none;
+  border-style: dashed;
   color: var(--color-text-subtle);
   background: transparent;
   font-weight: 600;

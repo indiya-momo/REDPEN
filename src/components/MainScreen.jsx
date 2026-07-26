@@ -1942,8 +1942,8 @@ export default function MainScreen({
               type="button"
               className="btn-ghost btn-ghost--compact panel-header-home"
               onClick={onOpenWelcome}
-              title="홈"
-              aria-label="홈"
+              title="홈 화면으로"
+              aria-label="홈 화면으로"
             >
               <House size={18} />
             </button>

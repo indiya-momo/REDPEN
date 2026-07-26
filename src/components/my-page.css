@@ -100,9 +100,19 @@
 .mypage__back--icon {
   justify-content: center;
   gap: 0;
-  width: 2rem;
-  height: 2rem;
+  width: 2.1rem;
+  height: 2.1rem;
   padding: 0;
+  border: none;
+  border-radius: var(--radius-ui);
+  background: var(--btn-secondary-bg);
+  color: var(--btn-secondary-text);
+}
+
+.mypage__back--icon:hover {
+  border: none;
+  background: var(--btn-secondary-hover-bg);
+  color: var(--btn-secondary-text);
 }
 
 .mypage__user {

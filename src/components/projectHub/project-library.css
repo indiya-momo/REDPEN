@@ -714,7 +714,7 @@
   gap: 0.35rem;
   margin-top: 0.15rem;
   padding-top: 0.55rem;
-  border-top: 1px solid var(--sheet-border);
+  border-top: none;
 }
 
 .sheet-card--readonly .sheet-card__footer {
