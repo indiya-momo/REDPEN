@@ -522,12 +522,12 @@ button {
   position: relative;
   top: 0;
   margin-left: calc(2px * var(--tooltip-scale));
-  min-width: calc(56px * var(--tooltip-scale));
-  height: calc(36px * var(--tooltip-scale));
-  padding: 0 calc(14px * var(--tooltip-scale));
+  min-width: calc(39.2px * var(--tooltip-scale));
+  height: calc(25.2px * var(--tooltip-scale));
+  padding: 0 calc(4.9px * var(--tooltip-scale));
   border: none;
   border-radius: calc(10px * var(--tooltip-scale));
-  font-size: calc(0.9rem * var(--tooltip-scale));
+  font-size: calc(0.72rem * var(--tooltip-scale));
   line-height: 1;
   font-weight: 700;
   white-space: nowrap;
@@ -3473,6 +3473,14 @@ details[open] > summary .details-chevron::before {
     background 0.15s ease,
     box-shadow 0.15s ease,
     transform 0.15s ease;
+}
+
+/* 업로드(원고 없음) 화면 — 원고 영역 오른쪽 아래 */
+.pdf-faq-fab--on-stage {
+  position: absolute;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 40;
 }
 
 .pdf-faq-fab:hover {

@@ -8,23 +8,20 @@ import {
   LITERAL_FIND_FEATURE_LABEL,
   UNIFY_FEATURE_LABEL,
 } from './consistencyRuleLimit.js';
-import { ConsistencyTabChip, IndiyaBrandLook, LoanwordConvertBtnLook, SpellingTabChip } from './workGuideMessageUi.jsx';
+import { ConsistencyTabChip, SpellingTabChip } from './workGuideMessageUi.jsx';
 
 /** 0 — 맞춤법 탭·외래어 소개 */
 export function SpellingTabIntroMessage() {
   return (
     <>
-      나는 교정냥 &apos;모모&apos;, 만나서 반갑다냥
-      <br />
-      <IndiyaBrandLook />는 출판 PDF를 브라우저에서 검수하는 프로그램이다냥(AI를
-      사용하지 않음)
+      교정냥 &apos;모모&apos;다냥
       <br />
       먼저 <SpellingTabChip /> 탭을 소개한다냥
       <br />
       <span className="tooltip-guide__gothic-label">외래어 표기</span>는
-      무제한으로 사용할 수 있으니
+      무제한이다냥
       <br />
-      편안하게 <LoanwordConvertBtnLook /> 해 보라냥
+      필요한 만큼 마음껏 사용하라냥
     </>
   );
 }
@@ -62,15 +59,11 @@ export function LeftCriteriaMessage() {
 export function PreUploadMessage() {
   return (
     <>
-      여기서 PDF를 올리면 되고
+      인디야는 인터넷 브라우저 프로그램이라
       <br />
-      원고 PDF는 서버에 저장되지 않으니 안심하라냥
+      PDF는 서버에 올라가지 않으니 안심하라냥
       <br />
-      <span className="tooltip-guide__run-btn-look">
-        인디자인 PDF를 브라우저에 업로드
-      </span>{' '}
-      후
-      설명을 계속한다냥
+      업로드 후 설명을 계속한다냥
     </>
   );
 }
@@ -178,7 +171,7 @@ export function ConsistencyLiteralFindMessage() {
 export function AuxiliaryVerbMessage() {
   return (
     <>
-      <span className="tooltip-guide__criteria-summary-label">
+      <span className="tooltip-guide__gothic-label">
         {AUXILIARY_VERB_FEATURE_LABEL}
       </span>
       <br />
@@ -203,13 +196,10 @@ export function RuleSetSaveMessage() {
     <>
       <span className="tooltip-guide__message-line">
         <span className="tooltip-guide__export-btn-look">검수 결과 다운받기</span>
-        가 가능하다냥
+        도 가능하다냥
       </span>
       <span className="tooltip-guide__message-line">
-        유료 회원은 프로젝트에도 결과(목록·요약)가 잠시 보관된다냥
-      </span>
-      <span className="tooltip-guide__message-line">
-        이때까지 선택한 기준에 이름을 붙이고
+        선택한 검수 기준에 이름을 붙여
       </span>
       <span className="tooltip-guide__message-line">
         프로젝트로{' '}
@@ -219,7 +209,7 @@ export function RuleSetSaveMessage() {
         하면
       </span>
       <span className="tooltip-guide__message-line">
-        같은 기준으로 작업을 계속할 수 있다냥
+        같은 기준으로 편집을 계속할 수 있다냥
       </span>
     </>
   );

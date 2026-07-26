@@ -1489,6 +1489,8 @@
 .work-guide-anchor--greeting {
   display: block;
   min-width: 0;
+  width: auto;
+  max-width: 100%;
 }
 
 .work-guide-anchor--greeting .pdf-work-pane__greeting {
@@ -1498,11 +1500,21 @@
 .pdf-work-pane__topbar > .tooltip-guide-anchor {
   display: block;
   grid-column: 1;
+  grid-row: 1;
   min-width: 0;
+}
+
+.pdf-work-pane__topbar > .work-guide-anchor--greeting {
+  grid-column: 1;
+  grid-row: 1;
+  min-width: 0;
+  width: auto;
+  max-width: 100%;
 }
 
 .pdf-work-pane__topbar > .pdf-work-pane__greeting {
   grid-column: 1;
+  grid-row: 1;
 }
 
 .pdf-work-pane__topbar-actions .tooltip-guide-anchor {
@@ -1510,11 +1522,17 @@
   flex: 0 0 auto;
   flex-shrink: 0;
   align-items: center;
+  width: auto;
+  max-width: none;
 }
 
 .work-guide-anchor--logout {
   display: inline-flex;
+  flex: 0 0 auto;
   flex-shrink: 0;
+  /* .work-guide-anchor { width:100% } 를 덮어씀 — 안 그러면 피드백이 헤더 밖으로 밀려 잘림 */
+  width: auto;
+  max-width: none;
 }
 
 .panel-left.panel-left--work-guide .spelling-tab-scroll {
@@ -4208,6 +4226,7 @@
 
 .pdf-work-pane {
   flex: 1;
+  min-width: 0;
   min-height: 0;
   display: flex;
   flex-direction: column;
@@ -4215,8 +4234,8 @@
   --pdf-work-pane-chrome-pad-block: var(--work-chrome-pad-block, 10px);
   --pdf-work-pane-chrome-pad-inline: 14px;
   --pdf-work-pane-chrome-row-min: var(--work-chrome-row-min, 32px);
-  /* 1번 말풍선이 헤더 아래로 내려와도 잘리지 않게 — 스크롤은 __content에만 */
-  overflow: visible;
+  /* 가로 스크롤·밀림 방지 — 말풍선은 fixed 포털, 스크롤은 __content */
+  overflow: hidden;
 }
 
 .pdf-work-pane__content {
@@ -4234,18 +4253,28 @@
   flex-shrink: 0;
   background: var(--color-surface-raised);
   border-bottom: 1px solid var(--color-border);
+  overflow: visible;
 }
 
+/*
+ * 헤더: 1행 = 인사 + 액션(피드백 맨 오른쪽), 2행 = 줌.
+ * 줌·액션 가로 경쟁을 없애 피드백이 뷰포트 밖으로 밀리지 않게 함.
+ */
 .pdf-work-pane__topbar {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto auto;
   align-items: center;
-  gap: 8px 12px;
+  column-gap: 12px;
+  row-gap: 8px;
   box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
   min-height: var(--work-chrome-bar-min-height, 52px);
   padding: var(--pdf-work-pane-chrome-pad-block) var(--pdf-work-pane-chrome-pad-inline);
   background: var(--color-surface-raised);
+  min-width: 0;
 }
 
 .pdf-work-pane__greeting {
@@ -4288,37 +4317,51 @@
     0 1px 3px rgb(42 33 24 / 0.06);
 }
 
+.pdf-work-pane__topbar > .tooltip-guide-anchor,
+.pdf-work-pane__topbar > .work-guide-anchor--greeting,
+.pdf-work-pane__topbar > .pdf-work-pane__greeting {
+  grid-column: 1;
+  grid-row: 1;
+  min-width: 0;
+}
+
+.pdf-work-pane__topbar-actions {
+  display: flex;
+  flex-shrink: 0;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 8px;
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: end;
+  z-index: 2;
+  /* shrink-wrap — 자식 width:100% 때문에 남는 폭을 다 먹지 않게 */
+  width: fit-content;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.pdf-work-pane__topbar-actions > * {
+  flex: 0 0 auto;
+  width: auto;
+  max-width: none;
+}
+
+.pdf-work-pane__topbar-actions .tooltip-guide-anchor {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  width: auto;
+}
+
 .pdf-work-pane__zoom-axis {
   position: static;
-  grid-column: 2;
+  grid-column: 1 / -1;
+  grid-row: 2;
   justify-self: center;
   z-index: 1;
   transform: none;
   pointer-events: auto;
-}
-
-@media (max-width: 900px) {
-  .pdf-work-pane__topbar {
-    grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-rows: auto auto;
-  }
-
-  .pdf-work-pane__topbar > .tooltip-guide-anchor,
-  .pdf-work-pane__topbar > .pdf-work-pane__greeting {
-    grid-column: 1;
-    grid-row: 1;
-  }
-
-  .pdf-work-pane__topbar-actions {
-    grid-column: 2;
-    grid-row: 1;
-  }
-
-  .pdf-work-pane__zoom-axis {
-    grid-column: 1 / -1;
-    grid-row: 2;
-    justify-self: center;
-  }
 }
 
 .pdf-work-pane__notice {
@@ -4334,15 +4377,6 @@
   line-height: 1.45;
   color: var(--color-text-muted);
   white-space: nowrap;
-}
-
-.pdf-work-pane__topbar-actions {
-  display: inline-flex;
-  flex-shrink: 0;
-  align-items: center;
-  gap: 8px;
-  grid-column: 3;
-  justify-self: end;
 }
 
 .pdf-work-pane__aux-btn-wrap {
@@ -4371,6 +4405,14 @@
   padding: 7px 10px;
   font-size: 0.78rem;
   white-space: nowrap;
+}
+
+.pdf-work-pane__aux-btn--icon {
+  justify-content: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  padding: 0;
+  gap: 0;
 }
 
 .ruleset-panel__feedback {
@@ -4464,7 +4506,9 @@
 .pdf-work-pane .pdf-center-stage {
   flex: 1 1 0;
   min-height: 0;
-  overflow: auto;
+  min-width: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
   padding: clamp(1.25rem, 4vw, 2.5rem) clamp(1rem, 3vw, 1.5rem);
   background: var(--color-surface-raised);
   display: flex;

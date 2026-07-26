@@ -1,11 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import CurrentPageStatus from './CurrentPageStatus.jsx';
-import FaqModal from './FaqModal.jsx';
+import FaqFabButton from './FaqFabButton.jsx';
 import PdfThumbnailStrip from './PdfThumbnailStrip.jsx';
-import { publicAssetUrl } from '../lib/publicAssetUrl.js';
-
-const FAQ_PAW_ICON = publicAssetUrl('momo/faq-paw.png');
 
 /**
  * @param {{
@@ -47,7 +44,6 @@ export default function PdfPreviewBar({
   const displayCurrent = formatPageText(currentPage);
   const displayTotal = formatPageText(numPages);
   const [value, setValue] = useState(displayCurrent);
-  const [faqOpen, setFaqOpen] = useState(false);
 
   useEffect(() => {
     setValue(displayCurrent);
@@ -83,138 +79,121 @@ export default function PdfPreviewBar({
 
   return (
     <div className="pdf-preview-dock">
-      <button
-        type="button"
-        className="pdf-faq-fab"
-        onClick={() => setFaqOpen(true)}
-        aria-haspopup="dialog"
-        aria-expanded={faqOpen}
-        aria-label="자주 묻는 질문과 답변"
-        title="자주 묻는 질문과 답변"
-      >
-        <img
-          src={FAQ_PAW_ICON}
-          alt=""
-          width={22}
-          height={22}
-          draggable={false}
-        />
-      </button>
+      <FaqFabButton />
 
       <div
         className={`pdf-preview-bar${
           !thumbStripOpen ? ' pdf-preview-bar--chrome-only' : ''
         }`}
       >
-      <div className="pdf-preview-bar__toolbar">
-        <div className="pdf-preview-bar__status-col">
-          {pageStatus ? (
-            <CurrentPageStatus
-              {...pageStatus}
-              className="current-page-status--in-preview-bar"
-            />
-          ) : null}
-        </div>
+        <div className="pdf-preview-bar__toolbar">
+          <div className="pdf-preview-bar__status-col">
+            {pageStatus ? (
+              <CurrentPageStatus
+                {...pageStatus}
+                className="current-page-status--in-preview-bar"
+              />
+            ) : null}
+          </div>
 
-        <div
-          className="pdf-preview-bar__jump-row"
-          role="navigation"
-          aria-label="페이지 이동"
-        >
-          <button
-            type="button"
-            className="pdf-preview-bar__nav pdf-preview-bar__nav--prev"
-            disabled={currentPage <= 1}
-            onClick={() => onGoToPage(currentPage - 1)}
-            aria-label="이전 페이지"
+          <div
+            className="pdf-preview-bar__jump-row"
+            role="navigation"
+            aria-label="페이지 이동"
           >
-            ◀
-          </button>
-          <form
-            className="pdf-preview-bar__jump"
-            onSubmit={(e) => {
-              e.preventDefault();
-              submit();
-            }}
-          >
-            <label className="sr-only" htmlFor="pdf-page-jump-input">
-              {printedPagesEnabled ? '현재 인쇄 쪽수' : '현재 페이지'}
-            </label>
-            <input
-              id="pdf-page-jump-input"
-              type={printedPagesEnabled ? 'text' : 'number'}
-              inputMode="numeric"
-              className={`pdf-preview-bar__input pdf-preview-bar__jump-input${
-                printedPagesEnabled ? ' pdf-preview-bar__input--spread' : ''
-              }`}
-              min={printedPagesEnabled ? undefined : 1}
-              max={printedPagesEnabled ? undefined : numPages}
-              value={value}
-              onChange={(e) => setValue(e.target.value)}
-              aria-label={
-                printedPagesEnabled
-                  ? printedPagesActive
-                    ? '인쇄 쪽수 입력 (예: 6-7). 입력 후 엔터로 이동'
-                    : '인쇄 쪽수 입력 (보정 전: 6-7 등으로 이동 가능). 입력 후 엔터로 이동'
-                  : `페이지 1–${numPages}. 입력 후 엔터로 이동`
-              }
-            />
-          </form>
-          <span className="pdf-preview-bar__slash" aria-hidden="true">
-            /
-          </span>
-          <span className="pdf-preview-bar__total">{displayTotal}</span>
-          <button
-            type="button"
-            className="pdf-preview-bar__nav pdf-preview-bar__nav--next"
-            disabled={currentPage >= numPages}
-            onClick={() => onGoToPage(currentPage + 1)}
-            aria-label="다음 페이지"
-          >
-            ▶
-          </button>
-        </div>
-
-        <div className="pdf-preview-bar__actions-col">
-          {onToggleThumbStrip ? (
             <button
               type="button"
-              className={`pdf-work-pane__aux-btn pdf-preview-bar__toggle${
-                thumbStripOpen ? ' pdf-preview-bar__toggle--open' : ''
-              }`}
-              onClick={onToggleThumbStrip}
-              aria-expanded={thumbStripOpen}
-              aria-controls="pdf-thumb-strip"
-              aria-label={thumbStripOpen ? '미리보기 숨기기' : '미리보기 보기'}
+              className="pdf-preview-bar__nav pdf-preview-bar__nav--prev"
+              disabled={currentPage <= 1}
+              onClick={() => onGoToPage(currentPage - 1)}
+              aria-label="이전 페이지"
             >
-              {thumbStripOpen ? (
-                <EyeOff size={16} aria-hidden />
-              ) : (
-                <Eye size={16} aria-hidden />
-              )}
-              {thumbStripOpen ? '숨기기' : '미리보기'}
+              ◀
             </button>
-          ) : null}
-        </div>
-      </div>
+            <form
+              className="pdf-preview-bar__jump"
+              onSubmit={(e) => {
+                e.preventDefault();
+                submit();
+              }}
+            >
+              <label className="sr-only" htmlFor="pdf-page-jump-input">
+                {printedPagesEnabled ? '현재 인쇄 쪽수' : '현재 페이지'}
+              </label>
+              <input
+                id="pdf-page-jump-input"
+                type={printedPagesEnabled ? 'text' : 'number'}
+                inputMode="numeric"
+                className={`pdf-preview-bar__input pdf-preview-bar__jump-input${
+                  printedPagesEnabled ? ' pdf-preview-bar__input--spread' : ''
+                }`}
+                min={printedPagesEnabled ? undefined : 1}
+                max={printedPagesEnabled ? undefined : numPages}
+                value={value}
+                onChange={(e) => setValue(e.target.value)}
+                aria-label={
+                  printedPagesEnabled
+                    ? printedPagesActive
+                      ? '인쇄 쪽수 입력 (예: 6-7). 입력 후 엔터로 이동'
+                      : '인쇄 쪽수 입력 (보정 전: 6-7 등으로 이동 가능). 입력 후 엔터로 이동'
+                    : `페이지 1–${numPages}. 입력 후 엔터로 이동`
+                }
+              />
+            </form>
+            <span className="pdf-preview-bar__slash" aria-hidden="true">
+              /
+            </span>
+            <span className="pdf-preview-bar__total">{displayTotal}</span>
+            <button
+              type="button"
+              className="pdf-preview-bar__nav pdf-preview-bar__nav--next"
+              disabled={currentPage >= numPages}
+              onClick={() => onGoToPage(currentPage + 1)}
+              aria-label="다음 페이지"
+            >
+              ▶
+            </button>
+          </div>
 
-      {pdf ? (
-        <div
-          className={`pdf-preview-bar__strip-shell${
-            thumbStripOpen ? '' : ' pdf-preview-bar__strip-shell--collapsed'
-          }`}
-        >
-          <PdfThumbnailStrip
-            pdf={pdf}
-            currentPage={currentPage}
-            onSelectPage={onGoToPage}
-            formatPageLabel={formatPageLabel}
-            idle={!thumbStripOpen}
-          />
+          <div className="pdf-preview-bar__actions-col">
+            {onToggleThumbStrip ? (
+              <button
+                type="button"
+                className={`pdf-work-pane__aux-btn pdf-preview-bar__toggle${
+                  thumbStripOpen ? ' pdf-preview-bar__toggle--open' : ''
+                }`}
+                onClick={onToggleThumbStrip}
+                aria-expanded={thumbStripOpen}
+                aria-controls="pdf-thumb-strip"
+                aria-label={thumbStripOpen ? '미리보기 숨기기' : '미리보기 보기'}
+              >
+                {thumbStripOpen ? (
+                  <EyeOff size={16} aria-hidden />
+                ) : (
+                  <Eye size={16} aria-hidden />
+                )}
+                {thumbStripOpen ? '숨기기' : '미리보기'}
+              </button>
+            ) : null}
+          </div>
         </div>
-      ) : null}
+
+        {pdf ? (
+          <div
+            className={`pdf-preview-bar__strip-shell${
+              thumbStripOpen ? '' : ' pdf-preview-bar__strip-shell--collapsed'
+            }`}
+          >
+            <PdfThumbnailStrip
+              pdf={pdf}
+              currentPage={currentPage}
+              onSelectPage={onGoToPage}
+              formatPageLabel={formatPageLabel}
+              idle={!thumbStripOpen}
+            />
+          </div>
+        ) : null}
       </div>
-      <FaqModal open={faqOpen} onClose={() => setFaqOpen(false)} />
     </div>
   );
 }
