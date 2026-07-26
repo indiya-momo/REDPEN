@@ -14,6 +14,13 @@
   min-height: 0;
   min-width: 0;
   overflow: hidden;
+  /* 좌측 툴바 ↔ 우측 원고 상단바 높이 공유 */
+  --work-chrome-pad-block: 10px;
+  --work-chrome-pad-inline: 12px;
+  --work-chrome-row-min: 32px;
+  --work-chrome-bar-min-height: calc(
+    var(--work-chrome-row-min) + (var(--work-chrome-pad-block) * 2)
+  );
 }
 
 .panel-left {
@@ -984,6 +991,9 @@
   border: none;
   box-shadow: none;
   background: var(--panel-surface-sheet, #fff);
+  /* 구분선 위·아래 동일 — 기존 아래쪽(다음 카드 padding-top)에 맞춤 */
+  --result-card-divider-pad: var(--space-sm);
+  padding-block: var(--result-card-divider-pad);
   padding-inline-start: calc(
     var(--criteria-pad-inline, 10px) + var(--criteria-summary-rail, 23px)
   );
@@ -991,13 +1001,15 @@
     var(--results-findings-pad-end, var(--space-sm)) -
       var(--results-category-border, 1px)
   );
+  /* ::after 구분선에 flex gap이 더해지지 않게 — 제목↔상세만 detail margin */
+  gap: 0;
   /* 제목 줄 발견수 배지 자리 — 설명·페이지 칩·구분선 오른쪽 맞춤 */
   --result-card-findings-slot: calc(
     var(--results-findings-circle-size, 1.35rem) + 0.9em
   );
 }
 
-/* 설명·칩 오른쪽을 발견수 배지 열에 맞추고, 칩과 같은 폭의 회색 구분선 */
+/* 설명·칩 오른쪽을 발견수 배지 열에 맞춤 */
 .panel-left
   .spelling-tab-layout
   .results-panel--spelling
@@ -1010,7 +1022,39 @@
   .result-card-detail {
   box-sizing: border-box;
   width: 100%;
+  margin-top: var(--panel-gap-title-body);
   padding-inline-end: var(--result-card-findings-slot);
+}
+
+/* 구분선 아래 여백은 ::after margin만 쓰고, 카드 padding이 겹치지 않게 */
+.panel-left
+  .spelling-tab-layout
+  .results-panel--spelling
+  .results-list--nested
+  > li:not(:last-child)
+  .result-card,
+.panel-left
+  .panel-left-work-scroll
+  .results-panel--consistency
+  .results-list--nested
+  > li:not(:last-child)
+  .result-card {
+  padding-bottom: 0;
+}
+
+.panel-left
+  .spelling-tab-layout
+  .results-panel--spelling
+  .results-list--nested
+  > li + li
+  .result-card,
+.panel-left
+  .panel-left-work-scroll
+  .results-panel--consistency
+  .results-list--nested
+  > li + li
+  .result-card {
+  padding-top: 0;
 }
 
 .panel-left
@@ -1028,36 +1072,26 @@
   box-sizing: border-box;
 }
 
+/* 구분선은 카드 단위 — 발견 0건에도 표시, 위·아래 패딩 동일 */
 .panel-left
   .spelling-tab-layout
   .results-panel--spelling
   .results-list--nested
-  .result-card-detail::after,
+  > li:not(:last-child)
+  .result-card::after,
 .panel-left
   .panel-left-work-scroll
   .results-panel--consistency
   .results-list--nested
-  .result-card-detail::after {
+  > li:not(:last-child)
+  .result-card::after {
   content: '';
   display: block;
-  width: 100%;
-  margin-top: 10px;
+  box-sizing: border-box;
+  width: calc(100% - var(--result-card-findings-slot));
+  margin-top: var(--result-card-divider-pad);
+  margin-bottom: var(--result-card-divider-pad);
   border-bottom: 1px solid var(--panel-border-soft, #cfc7bc);
-}
-
-.panel-left
-  .spelling-tab-layout
-  .results-panel--spelling
-  .results-list--nested
-  > li:last-child
-  .result-card-detail::after,
-.panel-left
-  .panel-left-work-scroll
-  .results-panel--consistency
-  .results-list--nested
-  > li:last-child
-  .result-card-detail::after {
-  display: none;
 }
 
 .panel-left
@@ -2162,8 +2196,8 @@
   gap: 8px;
   width: 100%;
   min-width: 0;
-  min-height: 44px;
-  padding: 6px 12px;
+  min-height: var(--work-chrome-bar-min-height, 52px);
+  padding: var(--work-chrome-pad-block, 10px) var(--work-chrome-pad-inline, 12px);
   box-sizing: border-box;
   border-bottom: 1px solid var(--color-border);
   background: var(--color-surface-raised);
@@ -2194,7 +2228,7 @@
   display: flex;
   align-items: stretch;
   min-width: 0;
-  border: none;
+  border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-ui);
   background: var(--btn-secondary-bg);
   overflow: hidden;
@@ -2203,6 +2237,7 @@
 .panel-left__criteria-picker-field:focus-within {
   outline: 2px solid var(--focus-ring);
   outline-offset: 1px;
+  border-color: var(--focus-border, var(--color-border-strong));
 }
 
 .panel-left__criteria-name {
@@ -4178,10 +4213,10 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
-  /* 상·하단 크롬 바(헤더·미리보기 바) 공통 */
-  --pdf-work-pane-chrome-pad-block: 10px;
+  /* 상·하단 크롬 바(헤더·미리보기 바) — 좌측 툴바와 동일 토큰 */
+  --pdf-work-pane-chrome-pad-block: var(--work-chrome-pad-block, 10px);
   --pdf-work-pane-chrome-pad-inline: 14px;
-  --pdf-work-pane-chrome-row-min: 32px;
+  --pdf-work-pane-chrome-row-min: var(--work-chrome-row-min, 32px);
   /* 1번 말풍선이 헤더 아래로 내려와도 잘리지 않게 — 스크롤은 __content에만 */
   overflow: visible;
 }
@@ -4209,6 +4244,8 @@
   grid-template-columns: minmax(0, 1fr) auto auto;
   align-items: center;
   gap: 8px 12px;
+  box-sizing: border-box;
+  min-height: var(--work-chrome-bar-min-height, 52px);
   padding: var(--pdf-work-pane-chrome-pad-block) var(--pdf-work-pane-chrome-pad-inline);
   background: var(--color-surface-raised);
 }
@@ -4342,20 +4379,19 @@
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 9px 18px;
+  gap: 6px;
+  padding: 7px 10px;
   border: none;
   border-radius: var(--radius-ui);
   background: var(--accent-terracotta-deep);
   color: var(--accent-on-terracotta);
-  font-size: 0.92rem;
+  font-size: 0.78rem;
   font-weight: 700;
   line-height: 1;
   cursor: pointer;
   white-space: nowrap;
   box-shadow: 0 2px 8px rgba(115, 75, 50, 0.22);
   transition:
-    transform 0.15s ease,
     box-shadow 0.15s ease,
     background 0.15s ease;
 }
@@ -4363,11 +4399,9 @@
 .ruleset-panel__feedback:hover {
   background: #5f3d28;
   box-shadow: 0 4px 12px rgba(115, 75, 50, 0.28);
-  transform: translateY(-1px);
 }
 
 .ruleset-panel__feedback:active {
-  transform: translateY(0);
   box-shadow: 0 2px 6px rgba(115, 75, 50, 0.2);
 }
 .panel-left input[type='checkbox'] {
@@ -4475,9 +4509,10 @@
 }
 
 .panel-left .panel-header-toolbar {
+  /* 상단 크롬은 우측 topbar와 동일 높이 — panel-ui-scale 미적용 */
   gap: calc(8px * var(--panel-ui-scale));
-  min-height: calc(44px * var(--panel-ui-scale));
-  padding: calc(6px * var(--panel-ui-scale)) calc(12px * var(--panel-ui-scale));
+  min-height: var(--work-chrome-bar-min-height);
+  padding: var(--work-chrome-pad-block) var(--work-chrome-pad-inline);
 }
 
 .panel-left .panel-left__criteria-name {
