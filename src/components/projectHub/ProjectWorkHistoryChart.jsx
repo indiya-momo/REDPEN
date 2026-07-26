@@ -91,7 +91,7 @@ function SparklineRow({
       >
         {hideLabel ? null : badgeTone ? (
           <span
-            className={`results-header-badge ${resultPillarToneClass(badgeTone)}`}
+            className={`project-hub-settings__criteria-label ${resultPillarToneClass(badgeTone)}`}
           >
             {label}
           </span>

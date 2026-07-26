@@ -421,20 +421,6 @@ export default function CheckResultsPanel({
   /** @type {{ id: string, label: string, criteriaCount: number, findingsCount: number, findingsTotal: number, entries: ResultEntry[] }[]} */
   const consistencySections = [
     {
-      id: 'literal',
-      label: LITERAL_FIND_FEATURE_LABEL,
-      criteriaCount: countGroupsWithVisibleFindings(
-        consistencyParts.literal,
-        visibleInstanceCount,
-      ),
-      findingsCount: sumVisibleFindings(
-        consistencyParts.literal,
-        visibleInstanceCount,
-      ),
-      findingsTotal: sumVisibleFindings(consistencyParts.literal),
-      entries: consistencyParts.literal,
-    },
-    {
       id: 'unify',
       label: UNIFY_FEATURE_LABEL,
       criteriaCount: countGroupsWithVisibleFindings(
@@ -447,6 +433,20 @@ export default function CheckResultsPanel({
       ),
       findingsTotal: sumVisibleFindings(consistencyParts.unify),
       entries: consistencyParts.unify,
+    },
+    {
+      id: 'literal',
+      label: LITERAL_FIND_FEATURE_LABEL,
+      criteriaCount: countGroupsWithVisibleFindings(
+        consistencyParts.literal,
+        visibleInstanceCount,
+      ),
+      findingsCount: sumVisibleFindings(
+        consistencyParts.literal,
+        visibleInstanceCount,
+      ),
+      findingsTotal: sumVisibleFindings(consistencyParts.literal),
+      entries: consistencyParts.literal,
     },
     {
       id: 'common',
@@ -484,8 +484,8 @@ export default function CheckResultsPanel({
     ...spellingParts.loanword,
   ];
   const consistencyEntriesAll = [
-    ...consistencyParts.literal,
     ...consistencyParts.unify,
+    ...consistencyParts.literal,
     ...consistencyParts.common,
     ...consistencyParts.auxiliary,
   ];
@@ -523,7 +523,7 @@ export default function CheckResultsPanel({
             {accordionSections.map((section) => (
               <details
                 key={section.id}
-                className="results-category"
+                className={`results-category results-category--${section.id}`}
                 defaultOpen={openAccordionCategory === section.id}
               >
                 <summary className="results-category__summary panel-criteria-heading">

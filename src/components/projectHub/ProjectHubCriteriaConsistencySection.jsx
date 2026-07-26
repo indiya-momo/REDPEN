@@ -19,7 +19,9 @@ import { resultPillarToneClass } from '../../lib/resultPillarTone.js';
 function CriteriaStatBadge({ badge, count, tone }) {
   return (
     <span className="results-header__stat project-hub-settings__criteria-stat">
-      <span className={`results-header-badge ${resultPillarToneClass(tone)}`}>
+      <span
+        className={`project-hub-settings__criteria-label ${resultPillarToneClass(tone)}`}
+      >
         {badge}
       </span>
       <span className="results-header__stat-count">{count}건</span>
@@ -62,14 +64,14 @@ export default function ProjectHubCriteriaConsistencySection({
             aria-label="표기 통일 항목 수"
           >
             <CriteriaStatBadge
-              badge={LITERAL_FIND_FEATURE_LABEL}
-              count={findCount}
-              tone="consistency-literal"
-            />
-            <CriteriaStatBadge
               badge={UNIFY_FEATURE_LABEL}
               count={unifyCount}
               tone="consistency-unify"
+            />
+            <CriteriaStatBadge
+              badge={LITERAL_FIND_FEATURE_LABEL}
+              count={findCount}
+              tone="consistency-literal"
             />
           </div>
           <div className="project-hub-settings__criteria-actions">

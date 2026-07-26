@@ -123,21 +123,21 @@ export function formatConsistencyExcelSummaryLine({
   auxiliarySelected = true,
 }) {
   const parts = [];
-  if (literalSelected) {
-    parts.push(
-      formatExcelCategoryStat(
-        LITERAL_FIND_FEATURE_LABEL,
-        literalCriteriaCount,
-        literalFindingsCount,
-      ),
-    );
-  }
   if (unifySelected) {
     parts.push(
       formatExcelCategoryStat(
         UNIFY_FEATURE_LABEL,
         unifyCriteriaCount,
         unifyFindingsCount,
+      ),
+    );
+  }
+  if (literalSelected) {
+    parts.push(
+      formatExcelCategoryStat(
+        LITERAL_FIND_FEATURE_LABEL,
+        literalCriteriaCount,
+        literalFindingsCount,
       ),
     );
   }
@@ -232,13 +232,13 @@ export function formatConsistencyResultsSummaryLine({
   auxiliarySelected = true,
 }) {
   const parts = [];
+  if (unifySelected) {
+    parts.push(`${UNIFY_FEATURE_LABEL} ${formatResultsStatCount(unifyWithFindings)}`);
+  }
   if (literalSelected) {
     parts.push(
       `${LITERAL_FIND_FEATURE_LABEL} ${formatResultsStatCount(literalWithFindings)}`,
     );
-  }
-  if (unifySelected) {
-    parts.push(`${UNIFY_FEATURE_LABEL} ${formatResultsStatCount(unifyWithFindings)}`);
   }
   if (commonStringSelected) {
     parts.push(
@@ -341,20 +341,20 @@ export function buildConsistencyResultSummaryStats({
   auxiliarySelected = true,
 }) {
   const stats = [];
-  if (literalSelected) {
-    stats.push({
-      badge: LITERAL_FIND_FEATURE_LABEL,
-      count: literalWithFindings,
-      findingsCount: literalFindings,
-      tone: 'consistency-literal',
-    });
-  }
   if (unifySelected) {
     stats.push({
       badge: UNIFY_FEATURE_LABEL,
       count: unifyWithFindings,
       findingsCount: unifyFindings,
       tone: 'consistency-unify',
+    });
+  }
+  if (literalSelected) {
+    stats.push({
+      badge: LITERAL_FIND_FEATURE_LABEL,
+      count: literalWithFindings,
+      findingsCount: literalFindings,
+      tone: 'consistency-literal',
     });
   }
   if (commonStringSelected) {

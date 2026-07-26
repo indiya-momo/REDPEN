@@ -437,7 +437,7 @@ export function useRuleCheck({
           customRules,
           {
             literalSelected: consistencyCriteria.literalActive > 0,
-            unifySelected: false,
+            unifySelected: consistencyCriteria.unifyActive > 0,
             commonStringSelected: consistencyCriteria.commonStringActive > 0,
             auxiliarySelected: consistencyCriteria.auxiliaryActive > 0,
           },

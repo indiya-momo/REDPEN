@@ -48,7 +48,7 @@ export default function ProjectHubCriteriaToggleSection({
           >
             <span className="results-header__stat">
               <span
-                className={`results-header-badge ${resultPillarToneClass('auxiliary')}`}
+                className={`project-hub-settings__criteria-label ${resultPillarToneClass('auxiliary')}`}
               >
                 {pillarKey === 'auxiliary'
                   ? AUXILIARY_VERB_BADGE_LABEL
