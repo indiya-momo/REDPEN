@@ -1,14 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-  BETA_UNIFY_LIMIT_BOOSTED,
-  BETA_UNIFY_LIMIT_DEFAULT,
-  BETA_UNIFY_LIMIT_FEEDBACK,
-  BETA_TAB_LIMIT_BOOSTED,
   BETA_TAB_LIMIT_DEFAULT,
   BETA_TAB_LIMIT_FEEDBACK,
+  SIGNUP_BONUS_TAB_CHECKS,
   buildProofreadExportConfirmMessage,
   canRunTabCheck,
   getKstDayId,
+  getTabAvailableChecks,
   getTabCheckLimit,
   isBetaDailyQuotaEnabled,
   isBetaQuotaAdminExempt,
@@ -17,6 +15,8 @@ import {
   isLocalDevQuotaRelaxed,
   mergeTabQuotaCounts,
   mergeUserBonusDayIds,
+  mergeSignupBonusState,
+  normalizeBetaQuotaTab,
 } from './betaDailyQuota.js';
 
 describe('getKstDayId', () => {
@@ -44,16 +44,13 @@ describe('getTabCheckLimit', () => {
     );
   });
 
-  it('맞춤법 우수 피드백 선정 당일이면 3회', () => {
+  it('우수 티어(boost)는 무시하고 피드백만 본다', () => {
     expect(getTabCheckLimit(null, '2026-06-05', '2026-06-05', 'spelling')).toBe(
-      BETA_TAB_LIMIT_BOOSTED,
+      BETA_TAB_LIMIT_DEFAULT,
     );
-  });
-
-  it('맞춤법 피드백과 선정이 겹치면 3회', () => {
     expect(
       getTabCheckLimit('2026-06-05', '2026-06-05', '2026-06-05', 'spelling'),
-    ).toBe(BETA_TAB_LIMIT_BOOSTED);
+    ).toBe(BETA_TAB_LIMIT_FEEDBACK);
   });
 
   it('맞춤법 보너스가 다른 날이면 1회', () => {
@@ -62,43 +59,31 @@ describe('getTabCheckLimit', () => {
     );
   });
 
-  it('표기 통일 기준 검수 기본은 하루 1회', () => {
+  it('표기 통일·통일형도 일일 한도는 동일', () => {
     expect(getTabCheckLimit(null, null, '2026-06-05', 'consistency')).toBe(
       BETA_TAB_LIMIT_DEFAULT,
     );
-  });
-
-  it('표기 통일 기준 검수 피드백이면 2회·선정이면 3회', () => {
+    expect(getTabCheckLimit(null, null, '2026-06-05', 'unify')).toBe(
+      BETA_TAB_LIMIT_DEFAULT,
+    );
     expect(
       getTabCheckLimit('2026-06-05', null, '2026-06-05', 'consistency'),
     ).toBe(BETA_TAB_LIMIT_FEEDBACK);
-    expect(
-      getTabCheckLimit(null, '2026-06-05', '2026-06-05', 'consistency'),
-    ).toBe(BETA_TAB_LIMIT_BOOSTED);
+  });
+});
+
+describe('getTabAvailableChecks / normalizeBetaQuotaTab', () => {
+  it('일일 잔여 + 가입 보너스를 합친다', () => {
+    expect(getTabAvailableChecks(1, 0, 10)).toBe(11);
+    expect(getTabAvailableChecks(1, 1, 10)).toBe(10);
+    expect(getTabAvailableChecks(1, 3, 8)).toBe(8);
+    expect(getTabAvailableChecks(2, 1, 0)).toBe(1);
+    expect(getTabAvailableChecks(1, 1, 0)).toBe(0);
   });
 
-  it('통일형 검수 기본은 하루 5회', () => {
-    expect(getTabCheckLimit(null, null, '2026-06-05', 'unify')).toBe(
-      BETA_UNIFY_LIMIT_DEFAULT,
-    );
-  });
-
-  it('통일형 검수 피드백이면 하루 10회', () => {
-    expect(getTabCheckLimit('2026-06-05', null, '2026-06-05', 'unify')).toBe(
-      BETA_UNIFY_LIMIT_FEEDBACK,
-    );
-  });
-
-  it('통일형 검수 우수 선정이면 하루 15회', () => {
-    expect(getTabCheckLimit(null, '2026-06-05', '2026-06-05', 'unify')).toBe(
-      BETA_UNIFY_LIMIT_BOOSTED,
-    );
-  });
-
-  it('통일형 피드백과 선정이 겹치면 15회', () => {
-    expect(
-      getTabCheckLimit('2026-06-05', '2026-06-05', '2026-06-05', 'unify'),
-    ).toBe(BETA_UNIFY_LIMIT_BOOSTED);
+  it('unify는 consistency로 정규화', () => {
+    expect(normalizeBetaQuotaTab('unify')).toBe('consistency');
+    expect(normalizeBetaQuotaTab('spelling')).toBe('spelling');
   });
 });
 
@@ -121,55 +106,93 @@ describe('buildProofreadExportConfirmMessage', () => {
 
 describe('formatBetaQuotaConsumedAlert', () => {
   it('맞춤법 차감 후 사용·남은 횟수를 표시한다', () => {
-    expect(formatBetaQuotaConsumedAlert('spelling', 1, 2)).toBe(
-      '오늘 맞춤법 검수 횟수가 1회 차감되었습니다.\n\n사용: 1/2회\n남음: 1회',
+    expect(formatBetaQuotaConsumedAlert('spelling', 1, 11)).toBe(
+      '오늘 맞춤법 검수 횟수가 1회 차감되었습니다.\n\n사용: 1회\n남음: 10회',
     );
   });
 
   it('일관성 한도 소진 시 남음 0회', () => {
-    expect(formatBetaQuotaConsumedAlert('consistency', 3, 3)).toBe(
-      '오늘 표기 통일 검수 횟수가 1회 차감되었습니다.\n\n사용: 3/3회\n남음: 0회',
+    expect(formatBetaQuotaConsumedAlert('consistency', 11, 11)).toBe(
+      '오늘 표기 통일 검수 횟수가 1회 차감되었습니다.\n\n사용: 11회\n남음: 0회',
     );
   });
 
-  it('통일형 차감 후 사용·남은 횟수를 표시한다', () => {
-    expect(formatBetaQuotaConsumedAlert('unify', 1, 5)).toBe(
-      '오늘 통일형 검수 횟수가 1회 차감되었습니다.\n\n사용: 1/5회\n남음: 4회',
+  it('unify 라벨도 표기 통일로 표시', () => {
+    expect(formatBetaQuotaConsumedAlert('unify', 1, 11)).toBe(
+      '오늘 표기 통일 검수 횟수가 1회 차감되었습니다.\n\n사용: 1회\n남음: 10회',
     );
   });
 });
 
 describe('mergeTabQuotaCounts', () => {
-  it('Firestore가 0이고 local이 있으면 local을 유지한다', () => {
+  it('firestore가 0이고 local이 있으면 local을 유지한다', () => {
     expect(
       mergeTabQuotaCounts(
-        { spellingCount: 0, consistencyCount: 0, unifyCount: 0 },
-        { spellingCount: 1, consistencyCount: 0, unifyCount: 2 },
+        { spellingCount: 0, consistencyCount: 0 },
+        { spellingCount: 1, consistencyCount: 0 },
       ),
-    ).toEqual({ spellingCount: 1, consistencyCount: 0, unifyCount: 2 });
+    ).toEqual({ spellingCount: 1, consistencyCount: 0 });
   });
 
-  it('Firestore가 더 크면 Firestore를 따른다', () => {
+  it('firestore가 더 크면 Firestore를 따른다', () => {
     expect(
       mergeTabQuotaCounts(
-        { spellingCount: 2, consistencyCount: 1, unifyCount: 3 },
-        { spellingCount: 1, consistencyCount: 0, unifyCount: 1 },
+        { spellingCount: 2, consistencyCount: 1 },
+        { spellingCount: 1, consistencyCount: 0 },
       ),
-    ).toEqual({ spellingCount: 2, consistencyCount: 1, unifyCount: 3 });
+    ).toEqual({ spellingCount: 2, consistencyCount: 1 });
   });
 });
 
-describe('mergeUserBonusDayIds', () => {
-  it('Firestore 보너스가 없으면 local 보너스를 쓴다', () => {
+describe('mergeUserBonusDayIds / mergeSignupBonusState', () => {
+  it('firestore 보너스가 없으면 local 보너스를 쓴다', () => {
     expect(
       mergeUserBonusDayIds(
-        { feedbackBonusDayId: null, boostApprovedDayId: null },
-        { feedbackBonusDayId: '2026-06-05', boostApprovedDayId: null },
+        { feedbackBonusDayId: null },
+        { feedbackBonusDayId: '2026-06-05' },
       ),
     ).toEqual({
       feedbackBonusDayId: '2026-06-05',
       boostApprovedDayId: null,
     });
+  });
+
+  it('가입 보너스는 firestore granted를 우선한다', () => {
+    expect(
+      mergeSignupBonusState(
+        {
+          signupBonusGranted: true,
+          signupBonusSpellingRemaining: 7,
+          signupBonusConsistencyRemaining: 9,
+        },
+        {
+          signupBonusGranted: true,
+          signupBonusSpellingRemaining: 10,
+          signupBonusConsistencyRemaining: 10,
+        },
+      ),
+    ).toEqual({
+      signupBonusGranted: true,
+      signupBonusSpellingRemaining: 7,
+      signupBonusConsistencyRemaining: 9,
+    });
+  });
+
+  it('미지급이면 각 10으로 본다', () => {
+    expect(
+      mergeSignupBonusState(
+        {
+          signupBonusGranted: false,
+          signupBonusSpellingRemaining: SIGNUP_BONUS_TAB_CHECKS,
+          signupBonusConsistencyRemaining: SIGNUP_BONUS_TAB_CHECKS,
+        },
+        {
+          signupBonusGranted: false,
+          signupBonusSpellingRemaining: SIGNUP_BONUS_TAB_CHECKS,
+          signupBonusConsistencyRemaining: SIGNUP_BONUS_TAB_CHECKS,
+        },
+      ).signupBonusSpellingRemaining,
+    ).toBe(10);
   });
 });
 
@@ -177,13 +200,11 @@ describe('canRunTabCheck', () => {
   it('한도 미만이면 허용', () => {
     expect(canRunTabCheck(0, 1)).toBe(true);
     expect(canRunTabCheck(1, 2)).toBe(true);
-    expect(canRunTabCheck(2, 3)).toBe(true);
   });
 
   it('한도에 도달하면 차단', () => {
     expect(canRunTabCheck(1, 1)).toBe(false);
-    expect(canRunTabCheck(2, 2)).toBe(false);
-    expect(canRunTabCheck(3, 3)).toBe(false);
+    expect(canRunTabCheck(11, 11)).toBe(false);
   });
 });
 
@@ -261,15 +282,24 @@ describe('consumeLocalDevQuotaPreview', () => {
     vi.unstubAllGlobals();
   });
 
-  it('RELAX_LOCAL일 때 맞춤법 검수 횟수를 local에 누적한다', () => {
+  it('일일 1회 쓴 뒤에도 가입 보너스로 계속 쓸 수 있다', () => {
     const first = consumeLocalDevQuotaPreview('uid-1', 'spelling', '2026-06-08');
+    expect(first.ok).toBe(true);
     expect(first.tabCount).toBe(1);
-    expect(first.tabLimit).toBe(1);
-    expect(first.tabRemaining).toBe(0);
+    expect(first.tabRemaining).toBe(10);
 
     const second = consumeLocalDevQuotaPreview('uid-1', 'spelling', '2026-06-08');
+    expect(second.ok).toBe(true);
     expect(second.tabCount).toBe(2);
+    expect(second.bonusRemaining).toBe(9);
     expect(isLocalDevQuotaRelaxed()).toBe(true);
+  });
+
+  it('unify 소비는 consistency 풀을 쓴다', () => {
+    const r = consumeLocalDevQuotaPreview('uid-2', 'unify', '2026-06-08');
+    expect(r.ok).toBe(true);
+    expect(r.tab).toBe('consistency');
+    expect(r.tabCount).toBe(1);
   });
 });
 

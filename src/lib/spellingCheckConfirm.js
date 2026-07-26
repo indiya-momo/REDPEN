@@ -23,7 +23,9 @@ import {
 import {
   betaQuotaAlertForTab,
   canRunTabCheck,
+  formatQuotaAvailabilityParen,
   getBetaDailyQuotaStatus,
+  getTabRemainingBreakdown,
   isBetaDailyQuotaEnabled,
   isBetaDailyQuotaEnforcedForUser,
 } from './betaDailyQuota.js';
@@ -32,21 +34,26 @@ import {
   showAppAlert,
   showAppConfirm,
 } from './appDialog.js';
+import SpellingCheckConfirmContent from '../components/SpellingCheckConfirmContent.jsx';
 
 /**
  * 맞춤법 검수 시작 전 confirm 본문
  * @param {{
  *   remaining: number,
- *   tabLimit: number,
+ *   dailyRemaining: number,
+ *   bonusRemaining: number,
  *   builtinActive: number,
  *   builtinTotal: number,
  *   cautionActive: number,
  *   cautionTotal: number,
+ *   loanwordActive?: number,
+ *   loanwordTotal?: number,
  * }} input
  */
 export function formatSpellingCheckConfirmMessage({
   remaining,
-  tabLimit,
+  dailyRemaining,
+  bonusRemaining,
   builtinActive,
   builtinTotal,
   cautionActive,
@@ -59,7 +66,7 @@ export function formatSpellingCheckConfirmMessage({
     : '';
   return (
     `[맞춤법 검수 진행]\n` +
-    `오늘 맞춤법 검수는 ${remaining}회(한도 ${tabLimit}회) 가능합니다\n` +
+    `오늘 맞춤법 검수는 ${remaining}회(${formatQuotaAvailabilityParen(dailyRemaining, bonusRemaining)}) 가능합니다\n` +
     `편집자 검토 필요(${cautionActive}/${cautionTotal}), 맞춤법 규칙(${builtinTotal}/${builtinActive})${loanwordPart}\n` +
     `\n` +
     '검수를 진행할까요?'
@@ -118,10 +125,19 @@ export async function confirmSpellingCheckBeforeRun(
     isBetaDailyQuotaEnabled() && Boolean(uid.trim());
 
   let message;
+  /** @type {import('react').ReactElement | null} */
+  let messageNode = null;
   if (quotaDisplayEnabled) {
     const status = await getBetaDailyQuotaStatus(uid, email);
     const tabCount = status.spellingCount;
     const tabLimit = status.spellingTabLimit ?? status.tabLimit;
+    const dailyLimit = status.dailyLimit ?? 1;
+    const bonusRemaining = status.signupBonusSpellingRemaining ?? 0;
+    const { dailyRemaining } = getTabRemainingBreakdown(
+      tabCount,
+      dailyLimit,
+      bonusRemaining,
+    );
     if (
       isBetaDailyQuotaEnforcedForUser(uid, email) &&
       !canRunTabCheck(tabCount, tabLimit)
@@ -129,29 +145,46 @@ export async function confirmSpellingCheckBeforeRun(
       alert(betaQuotaAlertForTab('spelling'));
       return false;
     }
-    message = formatSpellingCheckConfirmMessage({
-      remaining: Math.max(0, tabLimit - tabCount),
-      tabLimit,
+    const remaining = Math.max(0, tabLimit - tabCount);
+    const counts = {
       builtinActive,
       builtinTotal,
       cautionActive,
       cautionTotal,
       loanwordActive,
       loanwordTotal,
+    };
+    message = formatSpellingCheckConfirmMessage({
+      remaining,
+      dailyRemaining,
+      bonusRemaining,
+      ...counts,
+    });
+    messageNode = createElement(SpellingCheckConfirmContent, {
+      remaining,
+      dailyRemaining,
+      bonusRemaining,
+      showQuota: true,
+      ...counts,
     });
   } else {
-    message = formatSpellingCheckConfirmMessageWithoutQuota({
+    const counts = {
       builtinActive,
       builtinTotal,
       cautionActive,
       cautionTotal,
       loanwordActive,
       loanwordTotal,
+    };
+    message = formatSpellingCheckConfirmMessageWithoutQuota(counts);
+    messageNode = createElement(SpellingCheckConfirmContent, {
+      showQuota: false,
+      ...counts,
     });
   }
 
   const { title, message: body } = parseBracketTitleMessage(message);
-  return showAppConfirm({ title, message: body });
+  return showAppConfirm({ title, message: body, messageNode });
 }
 
 /**

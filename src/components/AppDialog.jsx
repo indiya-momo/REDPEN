@@ -1,13 +1,17 @@
 import { Fragment, useEffect, useId, useRef, useState } from 'react';
 import { Copy, X } from 'lucide-react';
+import { buildAppDialogHighlightPattern } from '../lib/appDialogFeatureLabels.js';
 import './app-dialog.css';
 
-/** ≪프로젝트명≫ 구간을 고딕 강조로 렌더 */
+/**
+ * ≪프로젝트명≫ · 기능 항목명에 강조 CSS 적용
+ * @param {string} message
+ */
 function renderDialogMessage(message) {
-  if (!message?.includes('≪')) return message;
+  if (!message) return message;
 
+  const re = buildAppDialogHighlightPattern();
   const parts = [];
-  const re = /≪([^≫]+)≫/g;
   let lastIndex = 0;
   let match;
   let key = 0;
@@ -16,11 +20,19 @@ function renderDialogMessage(message) {
     if (match.index > lastIndex) {
       parts.push(message.slice(lastIndex, match.index));
     }
-    parts.push(
-      <span key={key} className="app-dialog__project-name">
-        ≪{match[1]}≫
-      </span>,
-    );
+    if (match[1] != null) {
+      parts.push(
+        <span key={key} className="app-dialog__project-name">
+          ≪{match[1]}≫
+        </span>,
+      );
+    } else if (match[2] != null) {
+      parts.push(
+        <span key={key} className="app-dialog__criteria-label">
+          {match[2]}
+        </span>,
+      );
+    }
     key += 1;
     lastIndex = match.index + match[0].length;
   }
@@ -30,7 +42,7 @@ function renderDialogMessage(message) {
   }
 
   if (parts.length === 0) return message;
-  if (parts.length === 1) return parts[0];
+  if (parts.length === 1 && typeof parts[0] === 'string') return parts[0];
   return parts.map((part, index) =>
     typeof part === 'string' ? (
       <Fragment key={`t-${index}`}>{part}</Fragment>

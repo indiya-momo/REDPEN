@@ -21,7 +21,7 @@ import {
   getUserBadgeCollection,
   syncBadgeShowcase,
 } from '../lib/userBadges.js';
-import { resolveQuotaAuthEmail, isBetaQuotaAdminExempt, BETA_UNIFY_LIMIT_DEFAULT } from '../lib/betaDailyQuota.js';
+import { resolveQuotaAuthEmail, isBetaQuotaAdminExempt } from '../lib/betaDailyQuota.js';
 import { clearRewardNotice } from '../lib/rewardNotice.js';
 import { getEarnedBadgeIds } from '../lib/userBadges.js';
 import { useBetaDailyQuota } from '../hooks/useBetaDailyQuota.js';
@@ -97,20 +97,14 @@ const MEMBER_BENEFIT_TIERS = [
   {
     name: '오픈베타 테스터',
     description:
-      '오픈베타 기간 프로젝트 저장 [1개] · 매일 맞춤법·표기 통일 각 [1회] · 통일형 [5회] 제공',
+      '가입 시 맞춤법·표기 통일 각 [10회] · 매일 각 [1회] 제공(미사용 일일분은 다음날로 넘어가지 않음)',
     tabLimit: 1,
   },
   {
     name: '비밀 연구원',
     description:
-      '오픈베타 기간 프로젝트 저장 [1개] · 매일 맞춤법·표기 통일 각 [2회] · 통일형 [10회] 제공',
+      '가입 시 맞춤법·표기 통일 각 [10회] · 피드백 당일 매일 각 [2회] 제공(미사용 일일분은 다음날로 넘어가지 않음)',
     tabLimit: 2,
-  },
-  {
-    name: '수석 검증관',
-    description:
-      '오픈베타 기간 프로젝트 저장 [1개] · 매일 맞춤법·표기 통일 각 [3회] · 통일형 [15회] 제공',
-    tabLimit: 3,
   },
 ];
 
@@ -175,27 +169,26 @@ function formatMypageUsageDate(timestampMs) {
  * @param {string} [uid]
  */
 function resolveMemberBenefitTier(quota, uid = '') {
-  if (quota.hasBoostApprovedToday) return MEMBER_BENEFIT_TIERS[2];
   if (quota.hasFeedbackBonusToday) return MEMBER_BENEFIT_TIERS[1];
 
   const earned = getEarnedBadgeIds(uid.trim());
-  if (earned.has('slot-3')) return MEMBER_BENEFIT_TIERS[2];
   if (earned.has('slot-2')) return MEMBER_BENEFIT_TIERS[1];
 
   const match =
-    MEMBER_BENEFIT_TIERS.find((tier) => tier.tabLimit === quota.tabLimit) ??
-    MEMBER_BENEFIT_TIERS[0];
+    MEMBER_BENEFIT_TIERS.find(
+      (tier) => tier.tabLimit === (quota.dailyLimit ?? quota.tabLimit),
+    ) ?? MEMBER_BENEFIT_TIERS[0];
   return match;
 }
 
 /**
  * @param {number} remaining
- * @param {number} tabLimit
+ * @param {number} [_tabLimit]
  */
-function formatQuotaUsageLabel(remaining, tabLimit) {
+function formatQuotaUsageLabel(remaining, _tabLimit) {
   const left =
-    remaining <= 0 ? '오늘 한도 소진' : `${remaining}회 남음`;
-  return `${left} / 일 ${tabLimit}회`;
+    remaining <= 0 ? '사용 가능 횟수 소진' : `${remaining}회 남음`;
+  return left;
 }
 
 /**
@@ -276,17 +269,6 @@ function MemberOverviewCard({ quota, authUid = '', loginAtMs = null, onOpen }) {
               {formatQuotaUsageLabel(
                 quota.consistencyRemaining,
                 quota.consistencyTabLimit ?? quota.tabLimit,
-              )}
-            </dd>
-          </div>
-          <div
-            className={`mypage__quota-stat${quota.unifyRemaining <= 0 ? ' mypage__quota-stat--depleted' : ''}`}
-          >
-            <dt>통일형</dt>
-            <dd className="mypage__quota-usage">
-              {formatQuotaUsageLabel(
-                quota.unifyRemaining,
-                quota.unifyTabLimit ?? BETA_UNIFY_LIMIT_DEFAULT,
               )}
             </dd>
           </div>

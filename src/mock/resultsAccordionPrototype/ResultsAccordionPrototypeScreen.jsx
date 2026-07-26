@@ -67,7 +67,8 @@ export default function ResultsAccordionPrototypeScreen() {
 
       <p className="results-acc-proto__note">
         실제 MainScreen·CheckResultsPanel은 변경하지 않은 목업입니다. 구조만
-        확인용.
+        확인용. 표기 통일 flat 안은{' '}
+        <code>?window=consistency-results-mock</code>
       </p>
     </div>
   );

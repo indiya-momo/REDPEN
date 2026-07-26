@@ -9,6 +9,7 @@ import {
   saveUserProfile,
 } from '../../lib/userProfileStorage.js';
 import { saveUserProfileCloud } from '../../lib/userProfileCloud.js';
+import { ensureSignupBonusGranted } from '../../lib/betaDailyQuota.js';
 import { publicAssetUrl } from '../../lib/publicAssetUrl.js';
 import './profile-onboarding.css';
 
@@ -47,6 +48,9 @@ export default function WelcomeProfileOnboarding({
     if (!saved) return;
     void saveUserProfileCloud(uid, saved).catch(() => {
       /* localStorage 저장은 완료 — 클라우드는 다음 로그인 때 재시도 */
+    });
+    void ensureSignupBonusGranted(uid).catch(() => {
+      /* 다음 검수/상태 조회 시 멱등 재시도 */
     });
     onComplete();
   }

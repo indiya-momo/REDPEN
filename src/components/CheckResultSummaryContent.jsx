@@ -1,9 +1,10 @@
 /**
- * 검수 완료 팝업·결과 헤더와 동일한 뱃지·기준수·원형 발견수 UI
+ * 검수 완료 팝업 — 검수 전 confirm과 동일한 라벨·meta CSS + 발견 수
+ * 레이아웃: 전체 발견 한 줄 → 아래 줄에 카테고리 항목
  */
 
-import { resultPillarToneClass } from '../lib/resultPillarTone.js';
-import { formatResultsStatCount } from '../lib/checkResultSummaryFormat.js';
+import { AppDialogCriteriaLabel } from './AppDialogCriteriaLabel.jsx';
+import { formatCategoryFindingCount } from '../lib/checkResultSummaryFormat.js';
 
 /**
  * @param {{ count: number, className?: string, ariaLabel?: string }} props
@@ -28,18 +29,15 @@ export function ResultFindingsCountCircle({
  *   badge: string,
  *   count: number,
  *   findingsCount: number,
- *   tone?: import('../lib/resultPillarTone.js').ResultBadgeTone,
  * }} props
  */
-function ResultHeaderStat({ badge, count, findingsCount, tone }) {
-  const toneClass = tone ? resultPillarToneClass(tone) : '';
+function ResultHeaderStat({ badge, count, findingsCount }) {
   return (
-    <span className="results-header__stat">
-      <span className={`results-header-badge ${toneClass}`.trim()}>{badge}</span>
-      <span className="results-header__stat-count" aria-label={formatResultsStatCount(count)}>
-        <span className="results-header__stat-num">{count}</span>
-        <span className="results-header__stat-unit">기준</span>
-      </span>
+    <span className="results-header__stat app-dialog__results-stat">
+      <AppDialogCriteriaLabel
+        label={badge}
+        meta={formatCategoryFindingCount(count)}
+      />
       <ResultFindingsCountCircle
         count={findingsCount}
         className="results-header__stat-circle"
@@ -47,42 +45,6 @@ function ResultHeaderStat({ badge, count, findingsCount, tone }) {
       />
     </span>
   );
-}
-
-/**
- * @param {Array<{
- *   badge: string,
- *   count: number,
- *   findingsCount: number,
- *   tone?: import('../lib/resultPillarTone.js').ResultBadgeTone,
- * }>} stats
- * @param {number} totalFindings
- */
-function buildSummaryCells(stats, totalFindings) {
-  /** @type {import('react').ReactNode[]} */
-  const cells = stats.map(({ badge, count, findingsCount, tone }) => (
-    <ResultHeaderStat
-      key={badge}
-      badge={badge}
-      count={count}
-      findingsCount={findingsCount}
-      tone={tone}
-    />
-  ));
-  cells.push(
-    <span
-      key="__total__"
-      className="results-header__stat results-header__stat--total"
-    >
-      <span className="results-header__total-label">전체 발견</span>
-      <ResultFindingsCountCircle
-        count={totalFindings}
-        className="results-header__total-count"
-        ariaLabel={`전체 ${totalFindings}건`}
-      />
-    </span>,
-  );
-  return cells;
 }
 
 /**
@@ -110,14 +72,39 @@ function chunkRows(cells, perRow = 2) {
  * }} props
  */
 export default function CheckResultSummaryContent({ stats, totalFindings }) {
-  const rows = chunkRows(buildSummaryCells(stats, totalFindings), 2);
+  const totalRow = (
+    <span
+      key="__total__"
+      className="results-header__stat results-header__stat--total app-dialog__results-stat"
+    >
+      <AppDialogCriteriaLabel label="전체 발견" />
+      <ResultFindingsCountCircle
+        count={totalFindings}
+        className="results-header__total-count"
+        ariaLabel={`전체 ${totalFindings}건`}
+      />
+    </span>
+  );
+
+  const categoryCells = stats.map(({ badge, count, findingsCount }) => (
+    <ResultHeaderStat
+      key={badge}
+      badge={badge}
+      count={count}
+      findingsCount={findingsCount}
+    />
+  ));
+  const categoryRows = chunkRows(categoryCells, 3);
 
   return (
     <div className="results-header app-dialog__results-summary">
-      {rows.map((row, rowIndex) => (
+      <div className="app-dialog__results-summary-row app-dialog__results-summary-row--total">
+        {totalRow}
+      </div>
+      {categoryRows.map((row, rowIndex) => (
         <div
           key={`summary-row-${rowIndex}`}
-          className="app-dialog__results-summary-row"
+          className="app-dialog__results-summary-row app-dialog__results-summary-row--categories"
         >
           {row}
         </div>

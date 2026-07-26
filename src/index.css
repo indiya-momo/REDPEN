@@ -1509,7 +1509,7 @@ details[open] > summary .details-chevron::before {
 .result-card-head .result-findings-count-circle,
 .result-card-head__findings-count.result-findings-count-circle {
   min-width: 1.65em;
-  min-height: 1.65em;
+  min-height: 1.2em;
   font-size: calc(0.85rem * 0.9);
 }
 
@@ -1648,11 +1648,14 @@ details[open] > summary .details-chevron::before {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  box-sizing: border-box;
   flex-shrink: 0;
   min-width: 1.7em;
-  min-height: 1.7em;
-  padding: 0;
-  border-radius: 50%;
+  min-height: 1.25em;
+  width: auto;
+  height: auto;
+  padding: 0.1em 0.45em;
+  border-radius: var(--radius-ui-sm, 6px);
   font-size: 0.85rem;
   font-weight: 800;
   line-height: 1;
@@ -1660,12 +1663,13 @@ details[open] > summary .details-chevron::before {
   background: var(--pdf-highlight-primary-fill);
   box-shadow: var(--pdf-highlight-primary-shadow);
   font-variant-numeric: tabular-nums;
+  text-shadow: none;
 }
 
 .results-header .result-findings-count-circle,
 .results-header__total-count {
   min-width: 1.85em;
-  min-height: 1.85em;
+  min-height: 1.35em;
   font-size: calc(0.85rem * 0.9 * 1.1);
 }
 
@@ -2360,7 +2364,7 @@ details[open] > summary .details-chevron::before {
 .current-page-status .result-findings-count-circle,
 .current-page-status__findings-count {
   min-width: 1.65em;
-  min-height: 1.65em;
+  min-height: 1.2em;
   font-size: 0.85em;
 }
 
