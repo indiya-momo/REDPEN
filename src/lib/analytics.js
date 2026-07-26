@@ -13,6 +13,43 @@ const SESSION_SENT_KEY = 'pdf-proofread-analytics-session';
 const PDF_UPLOAD_COUNT_KEY = 'pdf-proofread-analytics-upload-count';
 
 /**
+ * @param {unknown} raw
+ * @param {{ lowercase?: boolean }} [options]
+ * @returns {string[]}
+ */
+function parseCsvAllowlist(raw, options = {}) {
+  return String(raw ?? '')
+    .split(',')
+    .map((entry) => {
+      const trimmed = entry.trim();
+      return options.lowercase ? trimmed.toLowerCase() : trimmed;
+    })
+    .filter(Boolean);
+}
+
+/**
+ * 통계 제외용 내부 테스터 (어드민 권한 없음).
+ * VITE_ANALYTICS_INTERNAL_EMAILS / VITE_ANALYTICS_INTERNAL_UIDS
+ * @param {string} uid
+ * @param {string} [email]
+ */
+export function isAnalyticsInternalTester(uid, email = '') {
+  const id = String(uid ?? '').trim();
+  const mail = String(email ?? '').trim().toLowerCase();
+  const emails = new Set(
+    parseCsvAllowlist(import.meta.env.VITE_ANALYTICS_INTERNAL_EMAILS, {
+      lowercase: true,
+    }),
+  );
+  const uids = new Set(
+    parseCsvAllowlist(import.meta.env.VITE_ANALYTICS_INTERNAL_UIDS),
+  );
+  if (id && uids.has(id)) return true;
+  if (mail && emails.has(mail)) return true;
+  return false;
+}
+
+/**
  * localhost / 127.0.0.1 — PostHog로 보내지 않음 (로컬 키가 있어도)
  * @returns {boolean}
  */
@@ -91,13 +128,16 @@ export function isAnalyticsConfigured() {
 }
 
 /**
- * PostHog person — 이메일 없이 uid + 내부 테스트 여부만 (VITE_BETA_QUOTA_ADMIN_*)
+ * PostHog person — 이메일 없이 uid + 내부 여부만.
+ * 어드민(VITE_BETA_QUOTA_ADMIN_*) 또는 테스터(VITE_ANALYTICS_INTERNAL_*) → is_internal
  * @param {string} uid
  * @param {string} [email]
  */
 export function buildAnalyticsPersonProperties(uid, email = '') {
   return {
-    is_internal: isBetaQuotaAdminExempt(uid, email),
+    is_internal:
+      isBetaQuotaAdminExempt(uid, email) ||
+      isAnalyticsInternalTester(uid, email),
   };
 }
 

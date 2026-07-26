@@ -1,7 +1,7 @@
 {
   "name": "pdf-publish-proofread",
   "private": true,
-  "version": "1.050",
+  "version": "1.051",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -27,6 +27,7 @@
     "firebase:paid-admin:deploy": "npx --yes firebase-tools@14.2.1 deploy --only functions,firestore:rules --project indiya-757ba",
     "firebase:firestore:setup": "powershell -ExecutionPolicy Bypass -File scripts/Deploy-FirestoreBetaQuota.ps1",
     "posthog:setup-beta": "node scripts/posthog-beta-dashboard-setup.mjs",
+    "posthog:setup-tester": "node scripts/posthog-tester-insight-setup.mjs",
     "prepare": "husky"
   },
   "dependencies": {
