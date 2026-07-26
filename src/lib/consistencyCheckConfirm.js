@@ -159,12 +159,13 @@ function formatConsistencyCheckCriteriaBlock({
   auxiliaryTotal,
 }) {
   const line1 =
-    `${LITERAL_FIND_FEATURE_LABEL}${formatConfirmItemCount(literalActive)}, ` +
     `${formatConsistencyUnifyConfirmLine(unifyActive, pinnedTailWord)}, ` +
+    `${LITERAL_FIND_FEATURE_LABEL}${formatConfirmItemCount(literalActive)}`;
+  const line2 =
     `공통 항목 찾기${formatConfirmActiveCount(commonStringActive)}, ` +
     `검수 제외 항목${formatConfirmActiveCount(excludeActive)}`;
-  const line2 = `${AUXILIARY_VERB_FEATURE_LABEL}${formatConfirmAuxiliaryCount(auxiliaryActive, auxiliaryTotal)}`;
-  return `${line1}\n${line2}`;
+  const line3 = `${AUXILIARY_VERB_FEATURE_LABEL}${formatConfirmAuxiliaryCount(auxiliaryActive, auxiliaryTotal)}`;
+  return `${line1}\n${line2}\n${line3}`;
 }
 
 /**
