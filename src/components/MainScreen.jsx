@@ -1577,21 +1577,6 @@ export default function MainScreen({
         activeGroup={ruleCheck.activeGroup}
         totalFindings={spellingTabTotalFindings}
         ruleCount={spellingTabEntries.length}
-        cautionWithFindingsCount={
-          spellingGroupsWithFindings.cautionWithFindings
-        }
-        builtinWithFindingsCount={
-          spellingGroupsWithFindings.builtinWithFindings
-        }
-        loanwordWithFindingsCount={
-          spellingGroupsWithFindings.loanwordWithFindings
-        }
-        cautionFindingsCount={spellingFindingsByCategory.editorReview}
-        builtinFindingsCount={spellingFindingsByCategory.spelling}
-        loanwordFindingsCount={spellingFindingsByCategory.loanword}
-        cautionCriteriaSelected={spellingCriteriaSelection.cautionSelected}
-        builtinCriteriaSelected={spellingCriteriaSelection.builtinSelected}
-        loanwordCriteriaSelected={spellingCriteriaSelection.loanwordSelected}
         spellingCheckDone={ruleCheck.spellingCheckDone}
         isGroupVisible={ruleCheck.isGroupVisible}
         onToggleVisibility={ruleCheck.toggleResultVisibility}
@@ -2330,36 +2315,6 @@ export default function MainScreen({
                 activeGroup={ruleCheck.activeGroup}
                 totalFindings={consistencyTabTotalFindings}
                 ruleCount={consistencyTabEntries.length}
-                literalWithFindingsCount={
-                  consistencyGroupsWithFindings.literalWithFindings
-                }
-                unifyWithFindingsCount={
-                  consistencyGroupsWithFindings.unifyWithFindings
-                }
-                commonStringWithFindingsCount={
-                  consistencyGroupsWithFindings.commonStringWithFindings
-                }
-                auxiliaryWithFindingsCount={
-                  consistencyGroupsWithFindings.auxiliaryWithFindings
-                }
-                literalFindingsCount={consistencyFindingsByType.find}
-                unifyFindingsCount={consistencyFindingsByType.unify}
-                commonStringFindingsCount={
-                  consistencyFindingsByType.commonString
-                }
-                auxiliaryFindingsCount={consistencyFindingsByType.bonBojo}
-                literalCriteriaSelected={
-                  consistencyCriteriaSelection.literalSelected
-                }
-                unifyCriteriaSelected={
-                  consistencyCriteriaSelection.unifySelected
-                }
-                commonStringCriteriaSelected={
-                  consistencyCriteriaSelection.commonStringSelected
-                }
-                auxiliaryCriteriaSelected={
-                  consistencyCriteriaSelection.auxiliarySelected
-                }
                 spellingCheckDone={ruleCheck.consistencyCheckDone}
                 isGroupVisible={ruleCheck.isGroupVisible}
                 onToggleVisibility={ruleCheck.toggleResultVisibility}

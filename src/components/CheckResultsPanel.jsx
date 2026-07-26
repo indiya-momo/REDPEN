@@ -5,25 +5,21 @@ import { useEffect, useMemo, useRef } from 'react';
 import { getBuiltInTip } from '../lib/builtInRules.js';
 import { formatSystemPageLabel } from '../lib/printedPageDisplay.js';
 import { cautionResultChipLabel } from '../lib/cautionRules.js';
-import { getConsistencyHighlightTip, getConsistencyResultCardParts } from '../lib/consistencyHighlightTip.js';
-import { isConsistencyUnifyResultGroup } from '../lib/consistencyUnifyRegister.js';
+import { getConsistencyResultCardParts } from '../lib/consistencyHighlightTip.js';
 import { AUXILIARY_VERB_BADGE_LABEL } from '../lib/bonBojoRules.js';
 import {
   LITERAL_FIND_FEATURE_LABEL,
   UNIFY_FEATURE_LABEL,
 } from '../lib/consistencyRuleLimit.js';
 import {
-  resultBadgeTone,
-  resultPillarToneClass,
-} from '../lib/resultPillarTone.js';
-import {
-  formatResultsStatCount,
   EDITOR_REVIEW_BADGE_LABEL,
   SPELLING_RULE_BADGE_LABEL,
   LOANWORD_BADGE_LABEL,
 } from '../lib/checkResultSummaryFormat.js';
 import {
+  defaultOpenConsistencyCategory,
   defaultOpenSpellingCategory,
+  partitionConsistencyResultEntries,
   partitionSpellingResultEntries,
   sumVisibleFindings,
   countGroupsWithVisibleFindings,
@@ -109,33 +105,6 @@ function ResultsCategorySelectAll({
 }
 
 /**
- * @param {{
- *   badge: string,
- *   count: number,
- *   findingsCount: number,
- *   tone?: import('../lib/resultPillarTone.js').ResultBadgeTone,
- * }} props
- */
-function ResultHeaderStat({ badge, count, findingsCount, tone }) {
-  const toneClass = tone ? resultPillarToneClass(tone) : '';
-  return (
-    <span className="results-header__stat">
-      <span className={`results-header-badge ${toneClass}`.trim()}>{badge}</span>
-      <span className="results-header__stat-count" aria-label={formatResultsStatCount(count)}>
-        <span className="results-header__stat-num">{count}</span>
-        <span className="results-header__stat-unit">기준</span>
-      </span>
-      <ResultFindingsCountCircle
-        count={findingsCount}
-        className="results-header__stat-circle"
-        ariaLabel={`${findingsCount}건`}
-      />
-    </span>
-  );
-}
-
-/**
-
  * @typedef {import('../utils/main-screen-helpers.js').TabEntry} ResultEntry
  */
 
@@ -146,24 +115,6 @@ function ResultHeaderStat({ badge, count, findingsCount, tone }) {
  *   ruleCount: number,
  *   totalFindings: number,
  *   visibleTotalFindings?: number,
- *   cautionWithFindingsCount?: number,
- *   builtinWithFindingsCount?: number,
- *   cautionFindingsCount?: number,
- *   builtinFindingsCount?: number,
- *   cautionCriteriaSelected?: boolean,
- *   builtinCriteriaSelected?: boolean,
- *   literalWithFindingsCount?: number,
- *   unifyWithFindingsCount?: number,
- *   commonStringWithFindingsCount?: number,
- *   auxiliaryWithFindingsCount?: number,
- *   literalFindingsCount?: number,
- *   unifyFindingsCount?: number,
- *   commonStringFindingsCount?: number,
- *   auxiliaryFindingsCount?: number,
- *   literalCriteriaSelected?: boolean,
- *   unifyCriteriaSelected?: boolean,
- *   commonStringCriteriaSelected?: boolean,
- *   auxiliaryCriteriaSelected?: boolean,
  * }} props
  */
 function ResultHeaderSummary({
@@ -172,27 +123,6 @@ function ResultHeaderSummary({
   ruleCount,
   totalFindings,
   visibleTotalFindings,
-  cautionWithFindingsCount = 0,
-  builtinWithFindingsCount = 0,
-  loanwordWithFindingsCount = 0,
-  cautionFindingsCount = 0,
-  builtinFindingsCount = 0,
-  loanwordFindingsCount = 0,
-  cautionCriteriaSelected = false,
-  builtinCriteriaSelected = false,
-  loanwordCriteriaSelected = false,
-  literalWithFindingsCount = 0,
-  unifyWithFindingsCount = 0,
-  commonStringWithFindingsCount = 0,
-  auxiliaryWithFindingsCount = 0,
-  literalFindingsCount = 0,
-  unifyFindingsCount = 0,
-  commonStringFindingsCount = 0,
-  auxiliaryFindingsCount = 0,
-  literalCriteriaSelected = false,
-  unifyCriteriaSelected = false,
-  commonStringCriteriaSelected = false,
-  auxiliaryCriteriaSelected = false,
 }) {
   const totalShown =
     visibleTotalFindings === undefined ? totalFindings : visibleTotalFindings;
@@ -207,64 +137,15 @@ function ResultHeaderSummary({
     </span>
   );
 
-  const renderCategoryHeader = (categoryStats) => (
-    <div className="results-header">
-      <div className="results-header__stats">
-        {categoryStats}
-      </div>
-      {totalFindingsNode}
-    </div>
-  );
-
-  if (viewSource === 'spelling' && spellingCheckDone) {
+  if (
+    (viewSource === 'spelling' || viewSource === 'consistency') &&
+    spellingCheckDone
+  ) {
     return (
       <div className="results-header results-header--total-only">
         {totalFindingsNode}
       </div>
     );
-  }
-
-  if (viewSource === 'consistency' && spellingCheckDone) {
-    const categoryStats = [
-        literalCriteriaSelected ? (
-          <ResultHeaderStat
-            key="literal"
-            badge={LITERAL_FIND_FEATURE_LABEL}
-            count={literalWithFindingsCount}
-            findingsCount={literalFindingsCount}
-            tone="consistency-literal"
-          />
-        ) : null,
-        unifyCriteriaSelected ? (
-          <ResultHeaderStat
-            key="unify"
-            badge={UNIFY_FEATURE_LABEL}
-            count={unifyWithFindingsCount}
-            findingsCount={unifyFindingsCount}
-            tone="consistency-unify"
-          />
-        ) : null,
-        commonStringCriteriaSelected ? (
-          <ResultHeaderStat
-            key="common"
-            badge="공통 항목 찾기"
-            count={commonStringWithFindingsCount}
-            findingsCount={commonStringFindingsCount}
-            tone="consistency-common"
-          />
-        ) : null,
-        auxiliaryCriteriaSelected ? (
-          <ResultHeaderStat
-            key="auxiliary"
-            badge={AUXILIARY_VERB_BADGE_LABEL}
-            count={auxiliaryWithFindingsCount}
-            findingsCount={auxiliaryFindingsCount}
-            tone="auxiliary"
-          />
-        ) : null,
-    ].filter(Boolean);
-
-    return renderCategoryHeader(categoryStats);
   }
 
   return (
@@ -291,24 +172,6 @@ function ResultHeaderSummary({
  *   totalFindings: number,
  *   ruleCount: number,
  *   viewSource: 'spelling' | 'consistency',
- *   cautionWithFindingsCount?: number,
- *   builtinWithFindingsCount?: number,
- *   cautionFindingsCount?: number,
- *   builtinFindingsCount?: number,
- *   cautionCriteriaSelected?: boolean,
- *   builtinCriteriaSelected?: boolean,
- *   literalWithFindingsCount?: number,
- *   unifyWithFindingsCount?: number,
- *   commonStringWithFindingsCount?: number,
- *   auxiliaryWithFindingsCount?: number,
- *   literalFindingsCount?: number,
- *   unifyFindingsCount?: number,
- *   commonStringFindingsCount?: number,
- *   auxiliaryFindingsCount?: number,
- *   literalCriteriaSelected?: boolean,
- *   unifyCriteriaSelected?: boolean,
- *   commonStringCriteriaSelected?: boolean,
- *   auxiliaryCriteriaSelected?: boolean,
  *   spellingCheckDone: boolean,
  *   isGroupVisible: (source: 'spelling' | 'consistency', group: import('../lib/ruleEngine.js').GroupedResult) => boolean,
  *   groupVisibilityMode?: (source: 'spelling' | 'consistency', group: import('../lib/ruleEngine.js').GroupedResult) => 'visible' | 'partial' | 'hidden',
@@ -332,27 +195,6 @@ export default function CheckResultsPanel({
   totalFindings,
   ruleCount,
   viewSource,
-  cautionWithFindingsCount = 0,
-  builtinWithFindingsCount = 0,
-  loanwordWithFindingsCount = 0,
-  cautionFindingsCount = 0,
-  builtinFindingsCount = 0,
-  loanwordFindingsCount = 0,
-  cautionCriteriaSelected = false,
-  builtinCriteriaSelected = false,
-  loanwordCriteriaSelected = false,
-  literalWithFindingsCount = 0,
-  unifyWithFindingsCount = 0,
-  commonStringWithFindingsCount = 0,
-  auxiliaryWithFindingsCount = 0,
-  literalFindingsCount = 0,
-  unifyFindingsCount = 0,
-  commonStringFindingsCount = 0,
-  auxiliaryFindingsCount = 0,
-  literalCriteriaSelected = false,
-  unifyCriteriaSelected = false,
-  commonStringCriteriaSelected = false,
-  auxiliaryCriteriaSelected = false,
   spellingCheckDone,
   isGroupVisible,
   groupVisibilityMode,
@@ -383,6 +225,13 @@ export default function CheckResultsPanel({
   );
   const openSpellingCategory = defaultOpenSpellingCategory(spellingParts);
 
+  const consistencyParts = useMemo(
+    () => partitionConsistencyResultEntries(entries, customRules),
+    [entries, customRules],
+  );
+  const openConsistencyCategory =
+    defaultOpenConsistencyCategory(consistencyParts);
+
   /** @param {ResultEntry} entry */
   const renderResultEntry = ({ group, source }) => {
     const first = group.instances[0];
@@ -402,13 +251,14 @@ export default function CheckResultsPanel({
     const shownCount = visibleInstanceCount
       ? visibleInstanceCount(source, group)
       : count;
+    const consistencyPartsForCard = isConsistency
+      ? getConsistencyResultCardParts(group, customRules)
+      : null;
     const tipText =
       (group.tip || '').trim() ||
       (source === 'spelling' && !isCaution
         ? getBuiltInTip(group.find, group.replace, group.spellingRuleId)
-        : isConsistency
-          ? getConsistencyHighlightTip(group, customRules)
-          : '');
+        : '');
     const selected = isSameGroupAsSelected(group, source);
 
     return (
@@ -452,36 +302,13 @@ export default function CheckResultsPanel({
             </label>
             <div className="result-card-head-main">
               <span className="result-rule">
-                {isConsistency ? (() => {
-                  const { badge, label } =
-                    getConsistencyResultCardParts(group, customRules);
-                  const toneClass = resultPillarToneClass(
-                    resultBadgeTone('consistency', {
-                      patternKind: group.patternKind,
-                      isUnify: isConsistencyUnifyResultGroup(
-                        customRules,
-                        group,
-                      ),
-                    }),
-                  );
-                  return (
-                    <>
-                      <span
-                        className={`consistency-badge-inline ${toneClass}`.trim()}
-                      >
-                        {badge}
-                      </span>
-                      {label ? (
-                        <>
-                          {' '}
-                          <span className="consistency-result-chip">
-                            {label}
-                          </span>
-                        </>
-                      ) : null}
-                    </>
-                  );
-                })() : isCaution ? (
+                {isConsistency ? (
+                  <span className="consistency-result-chip">
+                    {consistencyPartsForCard?.label ||
+                      group.label ||
+                      ''}
+                  </span>
+                ) : isCaution ? (
                   <span className="caution-result-chip">
                     {cautionResultChipLabel(group)}
                   </span>
@@ -545,7 +372,7 @@ export default function CheckResultsPanel({
     );
   };
 
-  /** @type {{ id: 'caution' | 'builtin' | 'loanword', label: string, criteriaCount: number, findingsCount: number, findingsTotal: number, entries: ResultEntry[] }[]} */
+  /** @type {{ id: string, label: string, criteriaCount: number, findingsCount: number, findingsTotal: number, entries: ResultEntry[] }[]} */
   const spellingSections = [
     {
       id: 'caution',
@@ -591,16 +418,90 @@ export default function CheckResultsPanel({
     },
   ].filter((section) => section.entries.length > 0);
 
+  /** @type {{ id: string, label: string, criteriaCount: number, findingsCount: number, findingsTotal: number, entries: ResultEntry[] }[]} */
+  const consistencySections = [
+    {
+      id: 'literal',
+      label: LITERAL_FIND_FEATURE_LABEL,
+      criteriaCount: countGroupsWithVisibleFindings(
+        consistencyParts.literal,
+        visibleInstanceCount,
+      ),
+      findingsCount: sumVisibleFindings(
+        consistencyParts.literal,
+        visibleInstanceCount,
+      ),
+      findingsTotal: sumVisibleFindings(consistencyParts.literal),
+      entries: consistencyParts.literal,
+    },
+    {
+      id: 'unify',
+      label: UNIFY_FEATURE_LABEL,
+      criteriaCount: countGroupsWithVisibleFindings(
+        consistencyParts.unify,
+        visibleInstanceCount,
+      ),
+      findingsCount: sumVisibleFindings(
+        consistencyParts.unify,
+        visibleInstanceCount,
+      ),
+      findingsTotal: sumVisibleFindings(consistencyParts.unify),
+      entries: consistencyParts.unify,
+    },
+    {
+      id: 'common',
+      label: '공통 항목 찾기',
+      criteriaCount: countGroupsWithVisibleFindings(
+        consistencyParts.common,
+        visibleInstanceCount,
+      ),
+      findingsCount: sumVisibleFindings(
+        consistencyParts.common,
+        visibleInstanceCount,
+      ),
+      findingsTotal: sumVisibleFindings(consistencyParts.common),
+      entries: consistencyParts.common,
+    },
+    {
+      id: 'auxiliary',
+      label: AUXILIARY_VERB_BADGE_LABEL,
+      criteriaCount: countGroupsWithVisibleFindings(
+        consistencyParts.auxiliary,
+        visibleInstanceCount,
+      ),
+      findingsCount: sumVisibleFindings(
+        consistencyParts.auxiliary,
+        visibleInstanceCount,
+      ),
+      findingsTotal: sumVisibleFindings(consistencyParts.auxiliary),
+      entries: consistencyParts.auxiliary,
+    },
+  ].filter((section) => section.entries.length > 0);
+
   const spellingEntriesAll = [
     ...spellingParts.caution,
     ...spellingParts.builtin,
     ...spellingParts.loanword,
   ];
-  const visibleSpellingTotalFindings = sumVisibleFindings(
-    spellingEntriesAll,
+  const consistencyEntriesAll = [
+    ...consistencyParts.literal,
+    ...consistencyParts.unify,
+    ...consistencyParts.common,
+    ...consistencyParts.auxiliary,
+  ];
+  const accordionSections =
+    viewSource === 'spelling' ? spellingSections : consistencySections;
+  const openAccordionCategory =
+    viewSource === 'spelling'
+      ? openSpellingCategory
+      : openConsistencyCategory;
+  const findingsEntriesAll =
+    viewSource === 'spelling' ? spellingEntriesAll : consistencyEntriesAll;
+  const visibleTotalFindings = sumVisibleFindings(
+    findingsEntriesAll,
     visibleInstanceCount,
   );
-  const spellingTotalFindingsFromEntries = sumVisibleFindings(spellingEntriesAll);
+  const totalFindingsFromEntries = sumVisibleFindings(findingsEntriesAll);
 
   return (
     <section
@@ -612,84 +513,52 @@ export default function CheckResultsPanel({
             viewSource={viewSource}
             spellingCheckDone={spellingCheckDone}
             ruleCount={ruleCount}
-            totalFindings={
-              viewSource === 'spelling'
-                ? spellingTotalFindingsFromEntries
-                : totalFindings
-            }
-            visibleTotalFindings={
-              viewSource === 'spelling'
-                ? visibleSpellingTotalFindings
-                : undefined
-            }
-            cautionWithFindingsCount={cautionWithFindingsCount}
-            builtinWithFindingsCount={builtinWithFindingsCount}
-            loanwordWithFindingsCount={loanwordWithFindingsCount}
-            cautionFindingsCount={cautionFindingsCount}
-            builtinFindingsCount={builtinFindingsCount}
-            loanwordFindingsCount={loanwordFindingsCount}
-            cautionCriteriaSelected={cautionCriteriaSelected}
-            builtinCriteriaSelected={builtinCriteriaSelected}
-            loanwordCriteriaSelected={loanwordCriteriaSelected}
-            literalWithFindingsCount={literalWithFindingsCount}
-            unifyWithFindingsCount={unifyWithFindingsCount}
-            commonStringWithFindingsCount={commonStringWithFindingsCount}
-            auxiliaryWithFindingsCount={auxiliaryWithFindingsCount}
-            literalFindingsCount={literalFindingsCount}
-            unifyFindingsCount={unifyFindingsCount}
-            commonStringFindingsCount={commonStringFindingsCount}
-            auxiliaryFindingsCount={auxiliaryFindingsCount}
-            literalCriteriaSelected={literalCriteriaSelected}
-            unifyCriteriaSelected={unifyCriteriaSelected}
-            commonStringCriteriaSelected={commonStringCriteriaSelected}
-            auxiliaryCriteriaSelected={auxiliaryCriteriaSelected}
+            totalFindings={totalFindingsFromEntries}
+            visibleTotalFindings={visibleTotalFindings}
           />
-          {viewSource === 'spelling' ? (
-            <div className="results-accordion" key={`spelling-acc-${totalFindings}`}>
-              {spellingSections.map((section) => (
-                <details
-                  key={section.id}
-                  className="results-category"
-                  defaultOpen={openSpellingCategory === section.id}
-                >
-                  <summary className="results-category__summary panel-criteria-heading">
-                    <DetailsChevron />
-                    <ResultsCategorySelectAll
-                      label={section.label}
-                      entries={section.entries}
-                      isGroupVisible={isGroupVisible}
-                      onToggleVisibility={onToggleVisibility}
-                    />
-                    <span className="results-category__label">
-                      {section.label}
-                    </span>
-                    <span className="results-category__meta results-findings-meta">
-                      <span className="results-findings-meta__label">
-                        <span className="results-category__criteria-num">
-                          {section.criteriaCount}
-                        </span>
-                        <span className="results-category__criteria-unit">
-                          기준
-                        </span>
+          <div
+            className="results-accordion"
+            key={`${viewSource}-acc-${totalFindings}`}
+          >
+            {accordionSections.map((section) => (
+              <details
+                key={section.id}
+                className="results-category"
+                defaultOpen={openAccordionCategory === section.id}
+              >
+                <summary className="results-category__summary panel-criteria-heading">
+                  <DetailsChevron />
+                  <ResultsCategorySelectAll
+                    label={section.label}
+                    entries={section.entries}
+                    isGroupVisible={isGroupVisible}
+                    onToggleVisibility={onToggleVisibility}
+                  />
+                  <span className="results-category__label">
+                    {section.label}
+                  </span>
+                  <span className="results-category__meta results-findings-meta">
+                    <span className="results-findings-meta__label">
+                      <span className="results-category__criteria-num">
+                        {section.criteriaCount}
                       </span>
-                      <ResultFindingsCountCircle
-                        count={section.findingsTotal}
-                        shownCount={section.findingsCount}
-                        className="results-category__findings"
-                      />
+                      <span className="results-category__criteria-unit">
+                        기준
+                      </span>
                     </span>
-                  </summary>
-                  <ul className="results-list results-list--nested">
-                    {section.entries.map(renderResultEntry)}
-                  </ul>
-                </details>
-              ))}
-            </div>
-          ) : (
-            <ul className="results-list">
-              {entries.map(renderResultEntry)}
-            </ul>
-          )}
+                    <ResultFindingsCountCircle
+                      count={section.findingsTotal}
+                      shownCount={section.findingsCount}
+                      className="results-category__findings"
+                    />
+                  </span>
+                </summary>
+                <ul className="results-list results-list--nested">
+                  {section.entries.map(renderResultEntry)}
+                </ul>
+              </details>
+            ))}
+          </div>
         </>
       ) : (
         <p className="hint results-empty-hint">발견된 항목이 없습니다.</p>
