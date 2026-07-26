@@ -473,7 +473,7 @@ function MyPageFaq() {
     <aside className="mypage__faq" aria-labelledby="mypage-faq-title">
       <section className="mypage__card mypage__faq-card">
         <h2 id="mypage-faq-title" className="mypage__card-title">
-          FAQ
+          자주 묻는 질문과 답변
         </h2>
         <div className="mypage__faq-list">
           {FAQ_ITEMS.map((item) => (

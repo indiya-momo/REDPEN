@@ -3442,6 +3442,61 @@ details[open] > summary .details-chevron::before {
   scrollbar-width: thin;
 }
 
+/* 노션형 FAQ — 미리보기 바 위 오른쪽 원형 발바닥 */
+.pdf-preview-dock {
+  position: relative;
+  flex-shrink: 0;
+  min-width: 0;
+}
+
+.pdf-faq-fab {
+  position: absolute;
+  right: 12px;
+  bottom: calc(100% + 12px);
+  z-index: 35;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: #4a4a4a;
+  color: #fff;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1px rgba(55, 53, 47, 0.12),
+    0 2px 8px rgba(55, 53, 47, 0.18);
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.15s ease;
+}
+
+.pdf-faq-fab:hover {
+  background: #3d3d3d;
+  box-shadow:
+    0 0 0 1px rgba(55, 53, 47, 0.16),
+    0 4px 12px rgba(55, 53, 47, 0.22);
+}
+
+.pdf-faq-fab:focus-visible {
+  outline: 2px solid var(--focus-ring, var(--accent-terracotta));
+  outline-offset: 2px;
+}
+
+.pdf-faq-fab img {
+  display: block;
+  width: 2.6325rem;
+  height: 2.6325rem;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+  filter: brightness(0) invert(1);
+}
+
 /* 미리보기 스트립 닫힘 — 상단 헤더(.pdf-work-pane__topbar)와 동일 높이·패딩 */
 .pdf-preview-bar--chrome-only {
   gap: 0;
@@ -3481,10 +3536,6 @@ details[open] > summary .details-chevron::before {
   display: flex;
   align-items: center;
   gap: 10px;
-}
-
-.pdf-preview-bar__faq-btn {
-  flex-shrink: 0;
 }
 
 .pdf-preview-bar__status-col .current-page-status--in-preview-bar {
