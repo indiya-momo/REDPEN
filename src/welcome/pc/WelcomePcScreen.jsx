@@ -19,9 +19,11 @@ import {
 import { useUserProfileSync } from '../../hooks/useUserProfileSync.js';
 import { publicAssetUrl } from '../../lib/publicAssetUrl.js';
 import {
-  ensureSignupBonusGranted,
-  notifySignupBonusGranted,
-} from '../../lib/betaDailyQuota.js';
+  clearSignupBonusLoginPending,
+  consumeSignupBonusLoginNotice,
+  markEnterMainAfterGoogle,
+  markSignupBonusNoticePending,
+} from '../../lib/signupBonusNotice.js';
 import WelcomeProfileOnboarding from './WelcomeProfileOnboarding.jsx';
 import './welcome-pc.css';
 
@@ -38,27 +40,6 @@ const BA_BRIDGE_DISC_VIEWBOX = '0 0 100 100';
 const BA_BRIDGE_CX = 50;
 const BA_BRIDGE_CY = 50;
 const BA_BRIDGE_R_DISC = 50;
-const ENTER_MAIN_AFTER_GOOGLE_KEY = 'indiya-enter-main-after-google';
-/** Google 로그인(리다이렉트 포함) 직후 검수권 안내를 한 번 띄우기 위한 표시 */
-const SIGNUP_BONUS_NOTICE_PENDING_KEY = 'indiya-signup-bonus-notice-pending';
-
-/**
- * @param {string} forUid
- */
-async function presentSignupBonusNotice(forUid) {
-  if (!forUid) return;
-  try {
-    await ensureSignupBonusGranted(forUid);
-    await notifySignupBonusGranted();
-  } catch {
-    /* 안내 실패해도 화면 진입은 진행 */
-  }
-}
-
-function markSignupBonusNoticePending() {
-  if (typeof sessionStorage === 'undefined') return;
-  sessionStorage.setItem(SIGNUP_BONUS_NOTICE_PENDING_KEY, '1');
-}
 
 const SPARKLE_PATH = 'M12 0l2.4 9.6L24 12l-9.6 2.4L12 24l-2.4-9.6L0 12l9.6-2.4z';
 /** 방패 실루엣 — currentColor로 금색 적용 */
@@ -105,8 +86,6 @@ export default function WelcomePcScreen({
   const [authError, setAuthError] = useState('');
   const [authPending, setAuthPending] = useState(false);
   const enterMainAfterLoginRef = useRef(false);
-  /** 같은 로그인 시도에서 검수권 안내가 두 번 뜨지 않게 */
-  const signupBonusNoticeShownRef = useRef(false);
 
   const session = authSession ?? getCurrentUserSession();
   const uid = session?.uid ?? '';
@@ -120,51 +99,25 @@ export default function WelcomePcScreen({
     onStart();
   }
 
-  /**
-   * @param {string} forUid
-   * @param {{ enterMain?: boolean }} [opts]
-   */
-  async function finishLoginWithBonusNotice(forUid, opts = {}) {
-    const enterMain = opts.enterMain !== false;
-    enterMainAfterLoginRef.current = false;
-    sessionStorage.removeItem(ENTER_MAIN_AFTER_GOOGLE_KEY);
-    sessionStorage.removeItem(SIGNUP_BONUS_NOTICE_PENDING_KEY);
-
-    if (!signupBonusNoticeShownRef.current) {
-      signupBonusNoticeShownRef.current = true;
-      await presentSignupBonusNotice(forUid);
-    }
-    if (enterMain) handleStart();
-  }
-
   useEffect(() => {
     if (authBootstrapError) setAuthError(authBootstrapError);
   }, [authBootstrapError]);
 
+  // 리다이렉트 복귀 안내는 App에서 처리. 팝업 로그인·대문 잔류 시만 여기서 보완.
   useEffect(() => {
-    if (!authReady || !uid) return;
-
-    const pendingEnter =
-      enterMainAfterLoginRef.current ||
-      sessionStorage.getItem(ENTER_MAIN_AFTER_GOOGLE_KEY) === '1';
-    const pendingNotice =
-      sessionStorage.getItem(SIGNUP_BONUS_NOTICE_PENDING_KEY) === '1';
-
-    // 온보딩 전: 자동 진입만 취소. 안내 플래그는 닉네임 완료 후 온보딩에서 처리.
-    if (!onboardingComplete) {
-      if (pendingEnter) {
+    if (!authReady || !uid || !onboardingComplete) {
+      if (uid && !onboardingComplete && enterMainAfterLoginRef.current) {
         enterMainAfterLoginRef.current = false;
-        sessionStorage.removeItem(ENTER_MAIN_AFTER_GOOGLE_KEY);
       }
       return;
     }
-
-    if (!pendingEnter && !pendingNotice) return;
+    if (!enterMainAfterLoginRef.current) return;
 
     let cancelled = false;
     void (async () => {
-      await finishLoginWithBonusNotice(uid, { enterMain: pendingEnter });
-      if (cancelled) return;
+      enterMainAfterLoginRef.current = false;
+      await consumeSignupBonusLoginNotice(uid);
+      if (!cancelled) handleStart();
     })();
 
     return () => {
@@ -191,21 +144,21 @@ export default function WelcomePcScreen({
     }
     setAuthPending(true);
     setAuthError('');
-    signupBonusNoticeShownRef.current = false;
     enterMainAfterLoginRef.current = true;
-    sessionStorage.setItem(ENTER_MAIN_AFTER_GOOGLE_KEY, '1');
+    markEnterMainAfterGoogle();
     markSignupBonusNoticePending();
     try {
       await onGoogleSignIn();
-      // 팝업 로그인만 여기까지 옴. 리다이렉트는 페이지가 떠났다가 위 useEffect로 복귀.
+      // 팝업 로그인만 여기까지 옴. 리다이렉트는 페이지가 떠났다가 App effect로 복귀.
       const uidAfterSignIn = getCurrentUserSession()?.uid;
       if (uidAfterSignIn && isOnboardingComplete(uidAfterSignIn)) {
-        await finishLoginWithBonusNotice(uidAfterSignIn, { enterMain: true });
+        enterMainAfterLoginRef.current = false;
+        await consumeSignupBonusLoginNotice(uidAfterSignIn);
+        handleStart();
       }
     } catch (error) {
       enterMainAfterLoginRef.current = false;
-      sessionStorage.removeItem(ENTER_MAIN_AFTER_GOOGLE_KEY);
-      sessionStorage.removeItem(SIGNUP_BONUS_NOTICE_PENDING_KEY);
+      clearSignupBonusLoginPending();
       setAuthError(mapFirebaseAuthError(error));
     } finally {
       setAuthPending(false);
