@@ -7,8 +7,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ChevronDown,
   FilePlus,
-  FolderOpen,
   House,
+  Inbox,
   Loader2,
   LogOut,
   MessageSquare,
@@ -1942,8 +1942,8 @@ export default function MainScreen({
               type="button"
               className="btn-ghost btn-ghost--compact panel-header-home"
               onClick={onOpenWelcome}
-              title="대문화면"
-              aria-label="대문화면"
+              title="홈"
+              aria-label="홈"
             >
               <House size={18} />
             </button>
@@ -2050,8 +2050,8 @@ export default function MainScreen({
                   onClick={() => void handleSaveCriteria()}
                   disabled={criteriaSavePending}
                   aria-busy={criteriaSavePending}
-                  aria-label={criteriaSavePending ? '프로젝트 저장 중' : '기준 저장'}
-                  title={criteriaSavePending ? '저장 중…' : '기준 저장'}
+                  aria-label={criteriaSavePending ? '프로젝트 저장 중' : '프로젝트 저장'}
+                  title={criteriaSavePending ? '저장 중…' : '프로젝트 저장'}
                 >
                   {criteriaSavePending ? (
                     <Loader2
@@ -2067,8 +2067,8 @@ export default function MainScreen({
                   type="button"
                   className="panel-left__delete-rules"
                   onClick={() => handleDeleteCriteria(activeSetId)}
-                  aria-label="기준 삭제"
-                  title="기준 삭제"
+                  aria-label="프로젝트 삭제"
+                  title="프로젝트 삭제"
                   disabled={!activeRuleSet?.savedAt}
                 >
                   <Trash2 size={16} aria-hidden />
@@ -2080,7 +2080,7 @@ export default function MainScreen({
                   aria-label="프로젝트 관리"
                   title="프로젝트 관리"
                 >
-                  <FolderOpen size={16} aria-hidden />
+                  <Inbox size={16} aria-hidden />
                 </button>
               </div>
             </div>
@@ -2608,7 +2608,7 @@ export default function MainScreen({
                         openFeedbackFormForUser(authUid);
                       }}
                     >
-                      <MessageSquare size={18} aria-hidden />
+                      <MessageSquare size={16} aria-hidden />
                       피드백
                     </button>
                   </TooltipGuide>
@@ -2621,7 +2621,7 @@ export default function MainScreen({
                       openFeedbackFormForUser(authUid);
                     }}
                   >
-                    <MessageSquare size={18} aria-hidden />
+                    <MessageSquare size={16} aria-hidden />
                     피드백
                   </button>
                 )}
