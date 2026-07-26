@@ -1,7 +1,10 @@
 /**
  * 작업 가이드 말풍선 공통 UI — 둘러보기·로그인 문구에서 같이 쓴다.
  */
-import { CircleHelp, LogOut } from 'lucide-react';
+import { LogOut } from 'lucide-react';
+import { publicAssetUrl } from './publicAssetUrl.js';
+
+const FAQ_PAW_ICON = publicAssetUrl('momo/faq-paw.png');
 
 export function SpellingTabChip() {
   return (
@@ -37,16 +40,11 @@ export function RegisterBtnLook() {
   );
 }
 
-/** 말풍선 안 — FAQ 버튼 모양 (미리보기 바 FAQ) */
+/** 말풍선 안 — FAQ 원형 발바닥 버튼 모양 */
 export function FaqBtnLook() {
   return (
-    <span className="tooltip-guide__faq-btn-look" aria-hidden>
-      <CircleHelp
-        size={16}
-        strokeWidth={2}
-        className="tooltip-guide__faq-btn-look__icon"
-      />
-      FAQ
+    <span className="tooltip-guide__faq-fab-look" aria-hidden>
+      <img src={FAQ_PAW_ICON} alt="" width={16} height={16} draggable={false} />
     </span>
   );
 }

@@ -2087,32 +2087,30 @@
   height: calc(18px * var(--tooltip-ui-scale));
 }
 
-/* 말풍선 안 — FAQ (미리보기 바 aux · CircleHelp) */
-.tooltip-guide__faq-btn-look {
+/* 말풍선 안 — FAQ 원형 발바닥 FAB */
+.tooltip-guide__faq-fab-look {
   display: inline-flex;
   align-items: center;
-  gap: calc(6px * var(--tooltip-ui-scale));
-  margin: 0 2px;
-  padding: calc(7px * var(--tooltip-ui-scale))
-    calc(10px * var(--tooltip-ui-scale));
-  border: none;
-  border-radius: calc(var(--radius-ui) * var(--tooltip-ui-scale));
-  font-family: inherit;
-  font-size: calc(0.78rem * var(--tooltip-ui-scale));
-  font-weight: 700;
-  line-height: 1.2;
+  justify-content: center;
   vertical-align: middle;
-  white-space: nowrap;
-  background: #fff;
-  color: var(--btn-secondary-text);
+  margin: 0 2px;
+  width: calc(1.75rem * var(--tooltip-ui-scale));
+  height: calc(1.75rem * var(--tooltip-ui-scale));
+  border-radius: 50%;
+  background: #4a4a4a;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1px rgba(55, 53, 47, 0.12),
+    0 1px 4px rgba(55, 53, 47, 0.14);
   box-sizing: border-box;
-  box-shadow: 0 1px 2px rgb(42 33 24 / 8%);
 }
 
-.tooltip-guide__faq-btn-look__icon {
-  flex-shrink: 0;
-  width: calc(16px * var(--tooltip-ui-scale));
-  height: calc(16px * var(--tooltip-ui-scale));
+.tooltip-guide__faq-fab-look img {
+  display: block;
+  width: calc(1.8525rem * var(--tooltip-ui-scale));
+  height: calc(1.8525rem * var(--tooltip-ui-scale));
+  object-fit: contain;
+  filter: brightness(0) invert(1);
 }
 
 /* 말풍선 안 — 브랜드 「인디야」(대문 MapoDaCapo 타이포) */

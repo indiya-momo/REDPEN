@@ -117,6 +117,7 @@ export default function ConsistencyUnifySection({
             <span className="panel-criteria-heading-meta">
               (최대 {MAX_CONSISTENCY_UNIFY_SLOTS}항목, 통일형 1항목)
             </span>
+            <span className="loanword-converter__free-badge">추천</span>
           </p>
           <p className="hint consistency-hint-block">
             여러 항목 중 하나를 통일형📌으로 지정하고, 나머지를 찾아 바꿀 수 있습니다

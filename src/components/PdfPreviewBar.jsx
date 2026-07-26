@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react';
-import { CircleHelp, Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import CurrentPageStatus from './CurrentPageStatus.jsx';
 import FaqModal from './FaqModal.jsx';
 import PdfThumbnailStrip from './PdfThumbnailStrip.jsx';
+import { publicAssetUrl } from '../lib/publicAssetUrl.js';
+
+const FAQ_PAW_ICON = publicAssetUrl('momo/faq-paw.png');
 
 /**
  * @param {{
@@ -79,23 +82,32 @@ export default function PdfPreviewBar({
   }
 
   return (
-    <div
-      className={`pdf-preview-bar${
-        !thumbStripOpen ? ' pdf-preview-bar--chrome-only' : ''
-      }`}
-    >
+    <div className="pdf-preview-dock">
+      <button
+        type="button"
+        className="pdf-faq-fab"
+        onClick={() => setFaqOpen(true)}
+        aria-haspopup="dialog"
+        aria-expanded={faqOpen}
+        aria-label="자주 묻는 질문과 답변"
+        title="자주 묻는 질문과 답변"
+      >
+        <img
+          src={FAQ_PAW_ICON}
+          alt=""
+          width={22}
+          height={22}
+          draggable={false}
+        />
+      </button>
+
+      <div
+        className={`pdf-preview-bar${
+          !thumbStripOpen ? ' pdf-preview-bar--chrome-only' : ''
+        }`}
+      >
       <div className="pdf-preview-bar__toolbar">
         <div className="pdf-preview-bar__status-col">
-          <button
-            type="button"
-            className="pdf-work-pane__aux-btn pdf-preview-bar__faq-btn"
-            onClick={() => setFaqOpen(true)}
-            aria-haspopup="dialog"
-            aria-expanded={faqOpen}
-          >
-            <CircleHelp size={16} aria-hidden />
-            FAQ
-          </button>
           {pageStatus ? (
             <CurrentPageStatus
               {...pageStatus}
@@ -201,6 +213,7 @@ export default function PdfPreviewBar({
           />
         </div>
       ) : null}
+      </div>
       <FaqModal open={faqOpen} onClose={() => setFaqOpen(false)} />
     </div>
   );

@@ -321,6 +321,7 @@ export default function ConsistencyPanel({
             <span className="panel-criteria-heading-meta">
               (최대 {MAX_CONSISTENCY_UNIFY_SLOTS}항목, 통일형 1항목)
             </span>
+            <span className="loanword-converter__free-badge">추천</span>
           </p>
           <div className="consistency-subsection consistency-subsection--first">
             <p className="hint consistency-hint-block">

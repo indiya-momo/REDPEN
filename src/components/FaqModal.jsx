@@ -92,7 +92,7 @@ export default function FaqModal({ open, onClose }) {
           onPointerCancel={endDrag}
         >
           <h2 id={titleId} className="faq-modal__title">
-            FAQ
+            자주 묻는 질문과 답변
           </h2>
           <button
             type="button"
