@@ -827,6 +827,12 @@
   font-variant-numeric: tabular-nums;
 }
 
+.panel-left .results-category__meta .results-findings-meta__label {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.25em;
+}
+
 .panel-left .results-panel--spelling .results-findings-meta .result-findings-count-circle {
   justify-self: end;
   box-sizing: border-box;

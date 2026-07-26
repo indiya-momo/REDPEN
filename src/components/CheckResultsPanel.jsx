@@ -669,7 +669,6 @@ export default function CheckResultsPanel({
                           {section.criteriaCount}
                         </span>
                         <span className="results-category__criteria-unit">
-                          {' '}
                           기준
                         </span>
                       </span>
