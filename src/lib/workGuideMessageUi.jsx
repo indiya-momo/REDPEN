@@ -4,7 +4,7 @@
 import { LogOut } from 'lucide-react';
 import { publicAssetUrl } from './publicAssetUrl.js';
 
-const FAQ_PAW_ICON = publicAssetUrl('momo/faq-paw.png');
+const FAQ_PAW_ICON = publicAssetUrl('momo/faq-paw.png', { cacheBust: true });
 
 export function SpellingTabChip() {
   return (

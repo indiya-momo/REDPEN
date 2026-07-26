@@ -2117,9 +2117,7 @@
   border-radius: 50%;
   background: #4a4a4a;
   overflow: hidden;
-  box-shadow:
-    0 0 0 1px rgba(55, 53, 47, 0.12),
-    0 1px 4px rgba(55, 53, 47, 0.14);
+  box-shadow: 0 1px 4px rgba(55, 53, 47, 0.14);
   box-sizing: border-box;
 }
 
@@ -2341,25 +2339,6 @@
   font: inherit;
   text-align: left;
   cursor: pointer;
-}
-
-.panel-left__criteria-picker-delete {
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2rem;
-  padding: 0;
-  border: none;
-  border-radius: var(--radius-ui-sm);
-  background: transparent;
-  color: var(--color-text-muted);
-  cursor: pointer;
-}
-
-.panel-left__criteria-picker-delete:hover {
-  color: var(--accent-terracotta-deep);
-  background: var(--color-surface-inset);
 }
 
 .panel-left__criteria-picker-option:hover {
@@ -4232,7 +4211,7 @@
   flex-direction: column;
   /* 상·하단 크롬 바(헤더·미리보기 바) — 좌측 툴바와 동일 토큰 */
   --pdf-work-pane-chrome-pad-block: var(--work-chrome-pad-block, 10px);
-  --pdf-work-pane-chrome-pad-inline: 14px;
+  --pdf-work-pane-chrome-pad-inline: var(--work-chrome-pad-inline, 12px);
   --pdf-work-pane-chrome-row-min: var(--work-chrome-row-min, 32px);
   /* 가로 스크롤·밀림 방지 — 말풍선은 fixed 포털, 스크롤은 __content */
   overflow: hidden;
@@ -4257,17 +4236,15 @@
 }
 
 /*
- * 헤더: 1행 = 인사 + 액션(피드백 맨 오른쪽), 2행 = 줌.
- * 줌·액션 가로 경쟁을 없애 피드백이 뷰포트 밖으로 밀리지 않게 함.
+ * 헤더: 좌 인사 | 중앙 줌 | 우 액션 — 아래 미리보기 바와 같이
+ * minmax(0,1fr) auto minmax(0,1fr) 로 줌(100%)이 원고창 정중앙에 고정.
  */
 .pdf-work-pane__topbar {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  grid-template-rows: auto auto;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  column-gap: 12px;
-  row-gap: 8px;
+  gap: 8px 12px;
   box-sizing: border-box;
   width: 100%;
   max-width: 100%;
@@ -4322,7 +4299,19 @@
 .pdf-work-pane__topbar > .pdf-work-pane__greeting {
   grid-column: 1;
   grid-row: 1;
+  justify-self: start;
   min-width: 0;
+  max-width: 100%;
+}
+
+.pdf-work-pane__zoom-axis {
+  position: static;
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: center;
+  z-index: 1;
+  transform: none;
+  pointer-events: auto;
 }
 
 .pdf-work-pane__topbar-actions {
@@ -4331,11 +4320,10 @@
   flex-wrap: nowrap;
   align-items: center;
   gap: 8px;
-  grid-column: 2;
+  grid-column: 3;
   grid-row: 1;
   justify-self: end;
   z-index: 2;
-  /* shrink-wrap — 자식 width:100% 때문에 남는 폭을 다 먹지 않게 */
   width: fit-content;
   max-width: 100%;
   box-sizing: border-box;
@@ -4354,14 +4342,30 @@
   width: auto;
 }
 
-.pdf-work-pane__zoom-axis {
-  position: static;
-  grid-column: 1 / -1;
-  grid-row: 2;
-  justify-self: center;
-  z-index: 1;
-  transform: none;
-  pointer-events: auto;
+/* 좁은 뷰포트 — 줌만 아래로 (좌측 크롬과 1행 높이 우선, 필요 시에만 2행) */
+@media (max-width: 900px) {
+  .pdf-work-pane__topbar {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: auto auto;
+  }
+
+  .pdf-work-pane__topbar > .tooltip-guide-anchor,
+  .pdf-work-pane__topbar > .work-guide-anchor--greeting,
+  .pdf-work-pane__topbar > .pdf-work-pane__greeting {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .pdf-work-pane__topbar-actions {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .pdf-work-pane__zoom-axis {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-self: center;
+  }
 }
 
 .pdf-work-pane__notice {
