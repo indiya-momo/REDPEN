@@ -1,0 +1,215 @@
+.results-acc-proto {
+  --proto-stage: #e5ddd0;
+  --proto-sheet: #f6f1e7;
+  --proto-border: #dcd2bf;
+  --proto-ink: #2a2118;
+  --proto-muted: #6b5e52;
+  --proto-pill: rgb(42 33 24 / 6%);
+  --proto-highlight: #f5e6a8;
+  box-sizing: border-box;
+  min-height: 100vh;
+  margin: 0;
+  padding: 16px 20px 40px;
+  background: #f3eee6;
+  color: var(--proto-ink);
+  font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+}
+
+.results-acc-proto *,
+.results-acc-proto *::before,
+.results-acc-proto *::after {
+  box-sizing: border-box;
+}
+
+.results-acc-proto__banner {
+  margin: 0 0 12px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--proto-muted);
+}
+
+.results-acc-proto__shell {
+  width: min(420px, 100%);
+  margin: 0 auto;
+  padding: 12px;
+  background: #faf7f1;
+  border: 1px solid var(--proto-border);
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgb(42 33 24 / 6%);
+}
+
+.results-acc-proto__total {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.35em;
+  margin: 0 0 10px;
+  padding: 8px 12px;
+  background: var(--proto-stage);
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.results-acc-proto__total-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.65em;
+  min-height: 1.65em;
+  padding: 0 0.35em;
+  border-radius: 999px;
+  background: var(--proto-highlight);
+  font-size: 0.85em;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.results-acc-proto__list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.results-acc-proto__cat {
+  border: 1px solid var(--proto-border);
+  border-radius: 8px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.results-acc-proto__cat[open] {
+  background: #fff;
+}
+
+.results-acc-proto__cat[open] > .results-acc-proto__summary {
+  background: color-mix(in srgb, var(--proto-stage) 55%, #fff 45%);
+}
+
+.results-acc-proto__summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  cursor: pointer;
+  list-style: none;
+  font-weight: 700;
+  font-size: 0.88rem;
+  line-height: 1.25;
+}
+
+.results-acc-proto__summary::-webkit-details-marker {
+  display: none;
+}
+
+.results-acc-proto__chevron {
+  flex-shrink: 0;
+  width: 0.65em;
+  color: var(--proto-muted);
+  font-size: 0.75em;
+}
+
+.results-acc-proto__cat:not([open]) .results-acc-proto__chevron {
+  transform: rotate(-90deg);
+}
+
+.results-acc-proto__cat-label {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.results-acc-proto__cat-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25em;
+  margin-left: auto;
+  flex-shrink: 0;
+  font-size: 0.8em;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.results-acc-proto__criteria {
+  color: var(--proto-ink);
+}
+
+.results-acc-proto__criteria-unit {
+  font-size: 0.9em;
+  font-weight: 700;
+  color: var(--proto-muted);
+}
+
+.results-acc-proto__findings {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.55em;
+  min-height: 1.55em;
+  padding: 0 0.3em;
+  border-radius: 999px;
+  background: var(--proto-highlight);
+  font-size: 0.95em;
+  line-height: 1;
+}
+
+.results-acc-proto__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
+}
+
+.results-acc-proto__card {
+  padding: 10px 12px 10px calc(12px + 15px + 8px);
+  border: none;
+  border-radius: 0;
+  background: #fff;
+}
+
+.results-acc-proto__card-title {
+  margin: 0 0 4px;
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.results-acc-proto__card-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.05em 0.35em;
+  border: 1px solid var(--proto-border);
+  border-radius: 0;
+  background: transparent;
+  font-size: 0.72em;
+  font-weight: 800;
+  color: var(--proto-muted);
+  vertical-align: middle;
+}
+
+.results-acc-proto__card-tip {
+  margin: 0 0 8px;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: var(--proto-muted);
+}
+
+.results-acc-proto__pages {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.results-acc-proto__page {
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--proto-pill);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--proto-muted);
+}
+
+.results-acc-proto__note {
+  margin: 14px 0 0;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--proto-muted);
+}
