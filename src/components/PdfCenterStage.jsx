@@ -17,7 +17,6 @@ import TooltipGuide from './TooltipGuide.jsx';
  *   onOpenPicker: () => void,
  *   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void,
  *   onLoadPdfFile: (file: File) => void | Promise<void>,
- *   onReconnect: () => void,
  *   onClearSession: () => void,
  *   onRunCheck?: () => void,
  *   showRunButton?: boolean,
@@ -29,7 +28,6 @@ import TooltipGuide from './TooltipGuide.jsx';
  *   isDemoSample?: boolean,
  *   pdfByteLength: number | undefined,
  *   pageTextsLength: number,
- *   fileHandleActive: boolean,
  *   loadError: string | null,
  *   sessionHint: string | null,
  *   runLabel: string,
@@ -49,7 +47,6 @@ export default function PdfCenterStage({
   onOpenPicker,
   onFileChange,
   onLoadPdfFile,
-  onReconnect,
   onClearSession,
   onRunCheck = () => {},
   showRunButton = true,
@@ -61,7 +58,6 @@ export default function PdfCenterStage({
   isDemoSample = false,
   pdfByteLength,
   pageTextsLength,
-  fileHandleActive,
   loadError,
   sessionHint,
   runLabel,
@@ -219,16 +215,6 @@ export default function PdfCenterStage({
                     <Upload size={16} />
                     인디자인 PDF를 브라우저에 업로드
                   </button>
-                  {fileHandleActive && !pdf && (
-                    <button
-                      type="button"
-                      className="btn-upload-secondary pdf-dropzone__reconnect"
-                      onClick={onReconnect}
-                      disabled={isProcessing}
-                    >
-                      PDF 다시 연결
-                    </button>
-                  )}
                   <footer className="pdf-dropzone__footer">
                     <p className="pdf-dropzone__limit">
                       <strong>100MB 이하</strong>
@@ -265,16 +251,6 @@ export default function PdfCenterStage({
               <Upload size={16} />
               인디자인 PDF를 브라우저에 업로드
             </button>
-            {fileHandleActive && !pdf && (
-              <button
-                type="button"
-                className="btn-upload-secondary pdf-dropzone__reconnect"
-                onClick={onReconnect}
-                disabled={isProcessing}
-              >
-                PDF 다시 연결
-              </button>
-            )}
             <footer className="pdf-dropzone__footer">
               <p className="pdf-dropzone__limit">
                 <strong>100MB 이하</strong>

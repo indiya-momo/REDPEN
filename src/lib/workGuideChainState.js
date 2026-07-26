@@ -151,10 +151,6 @@ function getDevForcedWorkGuideChain(
       if (d(WORK_GUIDE_KEYS.AUXILIARY_VERB_INTRO)) return null;
       return { ...base, showAuxiliaryVerbGuide: true };
     case 9:
-      if (guestBrowse) {
-        if (d(WORK_GUIDE_KEYS.WORK_EXIT)) return null;
-        return { ...base, showWorkExitGuide: true };
-      }
       if (d(WORK_GUIDE_KEYS.RULE_SET_SAVE)) return null;
       return { ...base, showRuleSetSaveGuide: true };
     case 11:
