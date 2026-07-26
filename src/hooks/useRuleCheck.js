@@ -168,14 +168,9 @@ export function useRuleCheck({
     [resolvedCustomRules],
   );
 
-  /** 기준 검수 — 표기 통일하기는 카드 「검수」전용 */
+  /** 기준 검수 — 여러 항목·표기 통일하기·공통·본+보 모두 포함 */
   const consistencyCriteriaActiveRules = useMemo(
-    () =>
-      consistencyActiveRules.filter(
-        (r) =>
-          r.consistencyUnifyEntry !== true &&
-          r.consistencyUnifyPinned !== true,
-      ),
+    () => consistencyActiveRules,
     [consistencyActiveRules],
   );
 
@@ -274,7 +269,7 @@ export function useRuleCheck({
       }
       if (runConsistency && consistencyCriteriaActiveRules.length === 0) {
         alert(
-          `${LITERAL_FIND_FEATURE_LABEL}·${AUXILIARY_VERB_FEATURE_LABEL}에서 검사할 항목을 등록·선택하세요.`,
+          `${LITERAL_FIND_FEATURE_LABEL}·${UNIFY_FEATURE_LABEL}·${AUXILIARY_VERB_FEATURE_LABEL}에서 검사할 항목을 등록·선택하세요.`,
         );
         return;
       }
@@ -374,15 +369,7 @@ export function useRuleCheck({
           grouped,
           consistencyCriteriaActiveRules,
         );
-        setConsistencyResults((prev) => {
-          const keptUnify = prev.filter((g) =>
-            isConsistencyUnifyResultGroup(resolvedCustomRules, g),
-          );
-          return finalizeConsistencyCheckResults(
-            [...keptUnify, ...withZeroRows],
-            consistencyCriteriaActiveRules,
-          );
-        });
+        setConsistencyResults(withZeroRows);
         setConsistencyCheckDone(true);
         scopeResults = withZeroRows;
         const inst =

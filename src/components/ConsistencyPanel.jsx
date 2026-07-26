@@ -92,7 +92,6 @@ import TooltipGuide from './TooltipGuide.jsx';
  *   hasPdf?: boolean,
  *   isProcessing?: boolean,
  *   checkQuotaBlocked?: boolean,
- *   unifyQuotaBlocked?: boolean,
  *   auxiliaryVerbGuide?: {
  *     storageKey: string,
  *     alignToBubbleChain: readonly object[],
@@ -114,7 +113,6 @@ import TooltipGuide from './TooltipGuide.jsx';
  *     showConfirm?: boolean,
  *     onDismiss: () => void,
  *   } | null,
- *   onUnifyRunClick?: () => void,
  * }} props
  */
 export default function ConsistencyPanel({
@@ -143,7 +141,6 @@ export default function ConsistencyPanel({
   hasPdf = false,
   isProcessing = false,
   checkQuotaBlocked = false,
-  unifyQuotaBlocked = false,
   auxiliaryVerbGuide = null,
   onLiteralAddButtonClick,
   onUnifyAddButtonClick,
@@ -151,7 +148,6 @@ export default function ConsistencyPanel({
   onGuidePinClick,
   guideSpotlight = false,
   consistencyUnifyPinGuide = null,
-  onUnifyRunClick,
 }) {
   const [literalInput, setLiteralInput] = useState('');
   const [slotInput, setSlotInput] = useState('');
@@ -307,78 +303,6 @@ export default function ConsistencyPanel({
 
   return (
     <div className="consistency-embed">
-      {/* 외래어 변환처럼 탭 맨 위 분리 카드 */}
-      <section
-        className="consistency-unify-hero"
-        aria-label="표기 통일하기"
-        data-work-guide="consistency-unify-hero"
-      >
-        <div className="consistency-unify-hero__summary panel-criteria-heading">
-          <span className="consistency-unify-hero__summary-title">
-            표기 통일하기
-            <span className="panel-criteria-heading-meta">
-              (최대 {MAX_CONSISTENCY_UNIFY_SLOTS}항목, 통일형 1항목)
-            </span>
-            <span
-              className="consistency-unify-hero__badge"
-              aria-label="하루 5회"
-            >
-              1일 5회
-            </span>
-            <span
-              className="consistency-unify-hero__badge consistency-unify-hero__badge--feedback"
-              aria-label="피드백 시 10회"
-              title="피드백을 남기면 하루 10회"
-            >
-              ×2 피드백
-            </span>
-          </span>
-        </div>
-        <p className="hint consistency-hint-block consistency-unify-hero__hint">
-          여러 항목 중 하나를 통일형📌으로 지정하고, 나머지를 찾아 바꿀 수 있습니다
-          <br />
-          <ConsistencyHintExample>
-            &apos;조선시대,조선˅시대&apos; 입력 → &apos;조선시대&apos; 통일형
-            📌지정하고 찾기
-          </ConsistencyHintExample>
-        </p>
-        <ConsistencyUnifySection
-          customRules={customRules}
-          onApplyRules={applyCustomRules}
-          consistencyDecisions={consistencyDecisions}
-          decisionByUid={decisionByUid}
-          addButtonGuideAttr="unify-add"
-          onAddButtonClick={onUnifyAddButtonClick}
-          guidePinTailWord={guidePinTailWord}
-          onGuidePinClick={onGuidePinClick}
-          hideHeading
-          showRunButton
-          runDisabled={!hasPdf || isProcessing || unifyQuotaBlocked}
-          onRunClick={onUnifyRunClick}
-        />
-        {consistencyUnifyPinGuide ? (
-          <TooltipGuide
-            storageKey={consistencyUnifyPinGuide.storageKey}
-            placement="right"
-            bubbleType="left"
-            useFixedLayer
-            alignToBubble={consistencyUnifyPinGuide.alignToBubble}
-            bubbleGuideStep="4b"
-            offsetX={8}
-            offsetY={0}
-            pinned={consistencyUnifyPinGuide.pinned}
-            showConfirm={Boolean(consistencyUnifyPinGuide.showConfirm)}
-            message={consistencyUnifyPinGuide.message}
-            onDismiss={consistencyUnifyPinGuide.onDismiss}
-          >
-            <span
-              className="work-guide-anchor work-guide-anchor--unify-pin"
-              aria-hidden
-            />
-          </TooltipGuide>
-        ) : null}
-      </section>
-
       <section
         className={[
           'consistency-unified-box',
@@ -386,8 +310,63 @@ export default function ConsistencyPanel({
         ]
           .filter(Boolean)
           .join(' ')}
-        aria-label={LITERAL_FIND_FEATURE_LABEL}
+        aria-label="표기 통일 검수 기준"
       >
+        <div
+          className="consistency-unify-block"
+          data-work-guide="consistency-unify-hero"
+        >
+          <p className="printed-page-setup__title consistency-panel-section-title panel-criteria-heading">
+            표기 통일하기
+            <span className="panel-criteria-heading-meta">
+              (최대 {MAX_CONSISTENCY_UNIFY_SLOTS}항목, 통일형 1항목)
+            </span>
+          </p>
+          <div className="consistency-subsection consistency-subsection--first">
+            <p className="hint consistency-hint-block">
+              여러 항목 중 하나를 통일형📌으로 지정하고, 나머지를 찾아 바꿀 수
+              있습니다
+              <br />
+              <ConsistencyHintExample>
+                &apos;조선시대,조선˅시대&apos; 입력 → &apos;조선시대&apos; 통일형
+                📌지정하고 찾기
+              </ConsistencyHintExample>
+            </p>
+            <ConsistencyUnifySection
+              customRules={customRules}
+              onApplyRules={applyCustomRules}
+              consistencyDecisions={consistencyDecisions}
+              decisionByUid={decisionByUid}
+              addButtonGuideAttr="unify-add"
+              onAddButtonClick={onUnifyAddButtonClick}
+              guidePinTailWord={guidePinTailWord}
+              onGuidePinClick={onGuidePinClick}
+              hideHeading
+            />
+            {consistencyUnifyPinGuide ? (
+              <TooltipGuide
+                storageKey={consistencyUnifyPinGuide.storageKey}
+                placement="right"
+                bubbleType="left"
+                useFixedLayer
+                alignToBubble={consistencyUnifyPinGuide.alignToBubble}
+                bubbleGuideStep="4b"
+                offsetX={8}
+                offsetY={0}
+                pinned={consistencyUnifyPinGuide.pinned}
+                showConfirm={Boolean(consistencyUnifyPinGuide.showConfirm)}
+                message={consistencyUnifyPinGuide.message}
+                onDismiss={consistencyUnifyPinGuide.onDismiss}
+              >
+                <span
+                  className="work-guide-anchor work-guide-anchor--unify-pin"
+                  aria-hidden
+                />
+              </TooltipGuide>
+            ) : null}
+          </div>
+        </div>
+
         <p className="printed-page-setup__title consistency-panel-section-title panel-criteria-heading">
           {LITERAL_FIND_FEATURE_LABEL}
           <span className="panel-criteria-heading-meta">

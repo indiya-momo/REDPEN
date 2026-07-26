@@ -13,6 +13,7 @@ import MyPagePrototypeScreen from './mock/mypagePrototype/MyPagePrototypeScreen.
 import WorkHistoryPrototypeScreen from './mock/workHistoryPrototype/WorkHistoryPrototypeScreen.jsx';
 import ConsistencyPrototypeScreen from './mock/consistencyPrototype/ConsistencyPrototypeScreen.jsx';
 import ResultsAccordionPrototypeScreen from './mock/resultsAccordionPrototype/ResultsAccordionPrototypeScreen.jsx';
+import ConsistencyResultsFlatPrototypeScreen from './mock/consistencyResultsFlatPrototype/ConsistencyResultsFlatPrototypeScreen.jsx';
 import {
   defaultCautionEnabled,
 } from './lib/cautionRules.js';
@@ -378,6 +379,15 @@ export default function App() {
     return (
       <>
         <ResultsAccordionPrototypeScreen />
+        <AppDialogHost />
+      </>
+    );
+  }
+
+  if (import.meta.env.DEV && auxWindow === 'consistency-results-mock') {
+    return (
+      <>
+        <ConsistencyResultsFlatPrototypeScreen />
         <AppDialogHost />
       </>
     );

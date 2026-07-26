@@ -4,9 +4,7 @@
  * 검수 버튼 비활성·안내 문구의 데이터 소스.
  */
 import { useCallback, useEffect, useState } from 'react';
-import { syncBoostApprovedBadge } from '../lib/badgeGrants.js';
 import {
-  BETA_UNIFY_LIMIT_DEFAULT,
   BETA_TAB_LIMIT_DEFAULT,
   getBetaDailyQuotaStatus,
   isBetaDailyQuotaEnforcedForUser,
@@ -28,9 +26,14 @@ export function useBetaDailyQuota(uid, email = '', plan) {
   const [consistencyTabLimit, setConsistencyTabLimit] = useState(
     BETA_TAB_LIMIT_DEFAULT,
   );
-  const [unifyTabLimit, setUnifyTabLimit] = useState(BETA_UNIFY_LIMIT_DEFAULT);
+  const [unifyTabLimit, setUnifyTabLimit] = useState(BETA_TAB_LIMIT_DEFAULT);
   const [hasFeedbackBonusToday, setHasFeedbackBonusToday] = useState(false);
   const [hasBoostApprovedToday, setHasBoostApprovedToday] = useState(false);
+  const [dailyLimit, setDailyLimit] = useState(BETA_TAB_LIMIT_DEFAULT);
+  const [signupBonusSpellingRemaining, setSignupBonusSpellingRemaining] =
+    useState(0);
+  const [signupBonusConsistencyRemaining, setSignupBonusConsistencyRemaining] =
+    useState(0);
   const [dayId, setDayId] = useState('');
 
   const refresh = useCallback(async () => {
@@ -45,9 +48,12 @@ export function useBetaDailyQuota(uid, email = '', plan) {
       setUnifyCount(0);
       setSpellingTabLimit(BETA_TAB_LIMIT_DEFAULT);
       setConsistencyTabLimit(BETA_TAB_LIMIT_DEFAULT);
-      setUnifyTabLimit(BETA_UNIFY_LIMIT_DEFAULT);
+      setUnifyTabLimit(BETA_TAB_LIMIT_DEFAULT);
       setHasFeedbackBonusToday(false);
       setHasBoostApprovedToday(false);
+      setDailyLimit(BETA_TAB_LIMIT_DEFAULT);
+      setSignupBonusSpellingRemaining(0);
+      setSignupBonusConsistencyRemaining(0);
       setDayId('');
       return;
     }
@@ -65,14 +71,18 @@ export function useBetaDailyQuota(uid, email = '', plan) {
     setConsistencyTabLimit(
       status.consistencyTabLimit ?? BETA_TAB_LIMIT_DEFAULT,
     );
-    setUnifyTabLimit(status.unifyTabLimit ?? BETA_UNIFY_LIMIT_DEFAULT);
+    setUnifyTabLimit(status.unifyTabLimit ?? BETA_TAB_LIMIT_DEFAULT);
     setHasFeedbackBonusToday(status.hasFeedbackBonusToday);
-    setHasBoostApprovedToday(status.hasBoostApprovedToday);
+    setHasBoostApprovedToday(false);
+    setDailyLimit(status.dailyLimit ?? BETA_TAB_LIMIT_DEFAULT);
+    setSignupBonusSpellingRemaining(
+      status.signupBonusSpellingRemaining ?? 0,
+    );
+    setSignupBonusConsistencyRemaining(
+      status.signupBonusConsistencyRemaining ?? 0,
+    );
     setDayId(status.dayId);
     setLoading(false);
-    if (status.hasBoostApprovedToday) {
-      syncBoostApprovedBadge(uid);
-    }
   }, [uid, email, plan]);
 
   useEffect(() => {
@@ -114,6 +124,9 @@ export function useBetaDailyQuota(uid, email = '', plan) {
     tabLimit: spellingTabLimit,
     hasFeedbackBonusToday,
     hasBoostApprovedToday,
+    dailyLimit,
+    signupBonusSpellingRemaining,
+    signupBonusConsistencyRemaining,
     dayId,
     refresh,
   };

@@ -112,7 +112,7 @@ export default function ConsistencyPrototypeScreen() {
   return (
     <div className="consistency-proto-page">
       <div className="consistency-proto__dev-banner" role="status">
-        DEV 목업 · <code>?window=consistency-mock</code> · 통일형 맨 위 분리
+        DEV 목업 · <code>?window=consistency-mock</code> · 기준 한 박스
         {' · '}
         <a href="/?devPdf=1">실제 작업대</a>
       </div>
@@ -120,42 +120,27 @@ export default function ConsistencyPrototypeScreen() {
       <div className="consistency-proto__frame panel-left">
         <div className="consistency-embed">
           <section
-            className="consistency-unify-hero"
-            aria-label="표기 통일하기"
+            className="consistency-unified-box"
+            aria-label="표기 통일 검수 기준"
           >
-            <div className="consistency-unify-hero__summary panel-criteria-heading">
-              <span className="consistency-unify-hero__summary-title">
+            <div className="consistency-unify-block">
+              <p className="printed-page-setup__title consistency-panel-section-title panel-criteria-heading">
                 표기 통일하기
                 <span className="panel-criteria-heading-meta">
                   (최대 3항목, 통일형 1항목)
                 </span>
-                <span
-                  className="consistency-unify-hero__badge"
-                  aria-label="하루 5회"
-                >
-                  1일 5회
-                </span>
-                <span
-                  className="consistency-unify-hero__badge consistency-unify-hero__badge--feedback"
-                  aria-label="피드백 시 10회"
-                  title="피드백을 남기면 하루 10회"
-                >
-                  ×2 피드백
-                </span>
-              </span>
-            </div>
-            <p className="hint consistency-hint-block consistency-unify-hero__hint">
-              여러 항목 중 하나를 통일형📌으로 지정하고, 나머지를 찾아 바꿀 수
-              있습니다
-              <br />
-              예:{' '}
-              <span className="consistency-hint-example">
-                &apos;조선시대,조선˅시대&apos;
-              </span>{' '}
-              입력 → &apos;조선시대&apos; 통일형 📌지정하고 찾기
-            </p>
-            <div className="consistency-unify-action-row">
-              <div className="consistency-unify-action-row__field">
+              </p>
+              <div className="consistency-subsection consistency-subsection--first">
+                <p className="hint consistency-hint-block">
+                  여러 항목 중 하나를 통일형📌으로 지정하고, 나머지를 찾아 바꿀 수
+                  있습니다
+                  <br />
+                  예:{' '}
+                  <span className="consistency-hint-example">
+                    &apos;조선시대,조선˅시대&apos;
+                  </span>{' '}
+                  입력 → &apos;조선시대&apos; 통일형 📌지정하고 찾기
+                </p>
                 <ConsistencyRegisterField
                   value={correctionDraft}
                   onChange={setCorrectionDraft}
@@ -164,46 +149,36 @@ export default function ConsistencyPrototypeScreen() {
                   ariaLabel="표기 통일하기"
                   addLabel="등록"
                 />
+                {mappings.length > 0 ? (
+                  <ul
+                    className="tail-list consistency-proto__pin-list"
+                    aria-label="통일 매핑"
+                  >
+                    {mappings.map((row) => (
+                      <li key={row.id} className="consistency-proto__pin-item">
+                        <span className="consistency-proto__pin-chip consistency-proto__pin-chip--on">
+                          <span className="consistency-proto__pin-btn" aria-hidden>
+                            📌
+                          </span>
+                          <span>
+                            {row.correction} → {row.unified}
+                          </span>
+                          <button
+                            type="button"
+                            className="consistency-proto__pin-remove"
+                            aria-label={`${row.correction} → ${row.unified} 삭제`}
+                            onClick={() => removeMapping(row.id)}
+                          >
+                            ×
+                          </button>
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
               </div>
-              <button
-                type="button"
-                className="consistency-unify-run-btn"
-                disabled={mappings.length === 0}
-                title="목업 — 등록한 통일형만 검수"
-              >
-                검수
-              </button>
             </div>
-            {mappings.length > 0 ? (
-              <ul
-                className="tail-list consistency-proto__pin-list"
-                aria-label="통일 매핑"
-              >
-                {mappings.map((row) => (
-                  <li key={row.id} className="consistency-proto__pin-item">
-                    <span className="consistency-proto__pin-chip consistency-proto__pin-chip--on">
-                      <span className="consistency-proto__pin-btn" aria-hidden>
-                        📌
-                      </span>
-                      <span>
-                        {row.correction} → {row.unified}
-                      </span>
-                      <button
-                        type="button"
-                        className="consistency-proto__pin-remove"
-                        aria-label={`${row.correction} → ${row.unified} 삭제`}
-                        onClick={() => removeMapping(row.id)}
-                      >
-                        ×
-                      </button>
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-          </section>
 
-          <section className="consistency-unified-box" aria-label="여러 항목 찾기">
             <p className="printed-page-setup__title consistency-panel-section-title panel-criteria-heading">
               여러 항목 찾기
               <span className="panel-criteria-heading-meta">

@@ -30,9 +30,6 @@ import { CONSISTENCY_UNIFY_INPUT_PLACEHOLDER, GUEST_BROWSE_UNIFY_INPUT_PLACEHOLD
  *   guidePinTailWord?: string | null,
  *   onGuidePinClick?: (tailWord: string) => void,
  *   hideHeading?: boolean,
- *   showRunButton?: boolean,
- *   runDisabled?: boolean,
- *   onRunClick?: () => void,
  * }} props
  */
 export default function ConsistencyUnifySection({
@@ -46,9 +43,6 @@ export default function ConsistencyUnifySection({
   guidePinTailWord = null,
   onGuidePinClick,
   hideHeading = false,
-  showRunButton = false,
-  runDisabled = false,
-  onRunClick,
 }) {
   const [unifiedDraft, setUnifiedDraft] = useState('');
   const unifyEntries = useMemo(
@@ -158,49 +152,18 @@ export default function ConsistencyUnifySection({
         </div>
       ) : (
         <>
-          <div
-            className={
-              showRunButton
-                ? 'consistency-unify-action-row'
-                : undefined
-            }
-          >
-            <div
-              className={
-                showRunButton
-                  ? 'consistency-unify-action-row__field'
-                  : undefined
-              }
-            >
-              <ConsistencyRegisterField
-                value={unifiedDraft}
-                onChange={setUnifiedDraft}
-                onRegister={registerUnified}
-                placeholder={unifyPlaceholder}
-                ariaLabel="표기 통일하기"
-                registerDisabled={registerBlocked}
-                hideLimitTitle={suppressLimitMessage}
-                addButtonGuideAttr={addButtonGuideAttr}
-                onAddButtonClick={onAddButtonClick}
-                addLabel="등록"
-              />
-            </div>
-            {showRunButton ? (
-              <button
-                type="button"
-                className="consistency-unify-run-btn"
-                disabled={runDisabled || unifyEntries.length === 0}
-                onClick={() => onRunClick?.()}
-                title={
-                  unifyEntries.length === 0
-                    ? '통일형을 먼저 등록해 주세요'
-                    : '등록한 통일형만 검수합니다'
-                }
-              >
-                검수
-              </button>
-            ) : null}
-          </div>
+          <ConsistencyRegisterField
+            value={unifiedDraft}
+            onChange={setUnifiedDraft}
+            onRegister={registerUnified}
+            placeholder={unifyPlaceholder}
+            ariaLabel="표기 통일하기"
+            registerDisabled={registerBlocked}
+            hideLimitTitle={suppressLimitMessage}
+            addButtonGuideAttr={addButtonGuideAttr}
+            onAddButtonClick={onAddButtonClick}
+            addLabel="등록"
+          />
           <UnifyRegisteredList
             entries={unifyEntries}
             pinnedTailWord={pinnedTailWord}

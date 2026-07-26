@@ -48,8 +48,10 @@ export default function AppDialogHost() {
           mode: 'confirm',
           title: opts.title || '안내',
           message: opts.message,
+          messageNode: opts.messageNode,
           confirmLabel: opts.confirmLabel || '확인',
           cancelLabel: opts.cancelLabel || '취소',
+          showGuideHand: Boolean(opts.showGuideHand),
         });
       }),
   });

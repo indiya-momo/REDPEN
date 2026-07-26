@@ -25,16 +25,19 @@ import { assertLoggedInForCheckOrAlert } from './checkAuthGate.js';
 import { AUXILIARY_VERB_FEATURE_LABEL } from './bonBojoRules.js';
 import { createElement } from 'react';
 import CheckResultSummaryContent from '../components/CheckResultSummaryContent.jsx';
+import ConsistencyCheckConfirmContent from '../components/ConsistencyCheckConfirmContent.jsx';
 import {
   buildConsistencyResultSummaryStats,
   formatCategoryFindingCount,
   formatConsistencyResultsSummaryLine,
 } from './checkResultSummaryFormat.js';
 import {
-  BETA_UNIFY_LIMIT_DEFAULT,
+  BETA_TAB_LIMIT_DEFAULT,
   betaQuotaAlertForTab,
   canRunTabCheck,
+  formatQuotaAvailabilityParen,
   getBetaDailyQuotaStatus,
+  getTabRemainingBreakdown,
   isBetaDailyQuotaEnabled,
   isBetaDailyQuotaEnforcedForUser,
 } from './betaDailyQuota.js';
@@ -148,6 +151,8 @@ function formatConfirmAuxiliaryCount(active, total) {
  */
 function formatConsistencyCheckCriteriaBlock({
   literalActive,
+  unifyActive = 0,
+  pinnedTailWord = null,
   commonStringActive,
   excludeActive,
   auxiliaryActive,
@@ -155,6 +160,7 @@ function formatConsistencyCheckCriteriaBlock({
 }) {
   const line1 =
     `${LITERAL_FIND_FEATURE_LABEL}${formatConfirmItemCount(literalActive)}, ` +
+    `${formatConsistencyUnifyConfirmLine(unifyActive, pinnedTailWord)}, ` +
     `공통 항목 찾기${formatConfirmActiveCount(commonStringActive)}, ` +
     `검수 제외 항목${formatConfirmActiveCount(excludeActive)}`;
   const line2 = `${AUXILIARY_VERB_FEATURE_LABEL}${formatConfirmAuxiliaryCount(auxiliaryActive, auxiliaryTotal)}`;
@@ -164,11 +170,12 @@ function formatConsistencyCheckCriteriaBlock({
 /**
  * @param {{
  *   remaining: number,
- *   tabLimit: number,
+ *   dailyRemaining: number,
+ *   bonusRemaining: number,
  *   literalActive: number,
- *   literalTotal: number,
+ *   unifyActive?: number,
+ *   pinnedTailWord?: string | null,
  *   commonStringActive: number,
- *   commonStringTotal: number,
  *   excludeActive: number,
  *   auxiliaryActive: number,
  *   auxiliaryTotal: number,
@@ -176,8 +183,11 @@ function formatConsistencyCheckCriteriaBlock({
  */
 export function formatConsistencyCheckConfirmMessage({
   remaining,
-  tabLimit,
+  dailyRemaining,
+  bonusRemaining,
   literalActive,
+  unifyActive = 0,
+  pinnedTailWord = null,
   commonStringActive,
   excludeActive,
   auxiliaryActive,
@@ -186,9 +196,11 @@ export function formatConsistencyCheckConfirmMessage({
   return (
     `[표기 통일 검수]\n` +
     `\n` +
-    `오늘 표기 통일 검수는 ${remaining}회(한도 ${tabLimit}회) 가능합니다\n` +
+    `오늘 표기 통일 검수는 ${remaining}회(${formatQuotaAvailabilityParen(dailyRemaining, bonusRemaining)}) 가능합니다\n` +
     `${formatConsistencyCheckCriteriaBlock({
       literalActive,
+      unifyActive,
+      pinnedTailWord,
       commonStringActive,
       excludeActive,
       auxiliaryActive,
@@ -202,21 +214,24 @@ export function formatConsistencyCheckConfirmMessage({
 /**
  * @param {{
  *   remaining: number,
- *   tabLimit: number,
+ *   dailyRemaining: number,
+ *   bonusRemaining: number,
  *   unifyActive: number,
  *   pinnedTailWord?: string | null,
  * }} input
  */
 export function formatConsistencyUnifyCheckConfirmMessage({
   remaining,
-  tabLimit,
+  dailyRemaining,
+  bonusRemaining,
   unifyActive,
   pinnedTailWord = null,
 }) {
   return (
-    `[통일형 검수 진행]\n` +
+    `[표기 통일하기 검수 진행]\n` +
     `\n` +
-    `오늘 통일형 검수는 ${remaining}회(한도 ${tabLimit}회) 가능합니다\n` +
+    `오늘 표기 통일 검수는 ${remaining}회(${formatQuotaAvailabilityParen(dailyRemaining, bonusRemaining)}) 가능합니다\n` +
+    `(표기 통일하기는 표기 통일 검수 횟수를 사용합니다)\n` +
     `${formatConsistencyUnifyConfirmLine(unifyActive, pinnedTailWord)}\n` +
     `\n` +
     '검수를 진행할까요?'
@@ -256,6 +271,8 @@ export function formatConsistencyCheckConfirmMessageWithoutQuota(counts) {
     `\n` +
     `${formatConsistencyCheckCriteriaBlock({
       literalActive: counts.literalActive,
+      unifyActive: counts.unifyActive ?? 0,
+      pinnedTailWord: counts.pinnedTailWord ?? null,
       commonStringActive: counts.commonStringActive,
       excludeActive: counts.excludeActive,
       auxiliaryActive: counts.auxiliaryActive,
@@ -283,12 +300,17 @@ export async function confirmConsistencyCheckBeforeRun(
     return false;
   }
 
+  if (!(await assertConsistencyUnifyPinnedForCheck(customRules))) {
+    return false;
+  }
+
   if (guestBrowseSkipsCheckConfirm()) {
     return true;
   }
 
   const {
     literalActive,
+    unifyActive,
     commonStringActive,
     auxiliaryActive,
     excludeActive,
@@ -296,11 +318,23 @@ export async function confirmConsistencyCheckBeforeRun(
   const literalTotal = listConsistencyLiteralEntries(customRules).length;
   const commonStringTotal = listPhraseSlotEntries(customRules).length;
   const auxiliaryTotal = listAuxiliaryVerbEntries(customRules).length;
+  const pinnedTailWord = getConsistencyUnifyPinnedTailWord(customRules);
 
   const quotaDisplayEnabled =
     isBetaDailyQuotaEnabled() && Boolean(uid.trim());
 
   let message;
+  /** @type {import('react').ReactElement | null} */
+  let messageNode = null;
+  const criteriaProps = {
+    literalActive,
+    unifyActive,
+    pinnedTailWord,
+    commonStringActive,
+    excludeActive,
+    auxiliaryActive,
+    auxiliaryTotal,
+  };
   if (quotaDisplayEnabled) {
     const status = await getBetaDailyQuotaStatus(uid, email);
     const tabCount = status.consistencyCount;
@@ -314,31 +348,42 @@ export async function confirmConsistencyCheckBeforeRun(
       return false;
     }
     const remaining = Math.max(0, tabLimit - tabCount);
+    const dailyLimit = status.dailyLimit ?? 1;
+    const bonusRemaining = status.signupBonusConsistencyRemaining ?? 0;
+    const { dailyRemaining } = getTabRemainingBreakdown(
+      tabCount,
+      dailyLimit,
+      bonusRemaining,
+    );
     message = formatConsistencyCheckConfirmMessage({
       remaining,
-      tabLimit,
-      literalActive,
+      dailyRemaining,
+      bonusRemaining,
+      ...criteriaProps,
       literalTotal,
-      commonStringActive,
       commonStringTotal,
-      excludeActive,
-      auxiliaryActive,
-      auxiliaryTotal,
+    });
+    messageNode = createElement(ConsistencyCheckConfirmContent, {
+      remaining,
+      dailyRemaining,
+      bonusRemaining,
+      showQuota: true,
+      ...criteriaProps,
     });
   } else {
     message = formatConsistencyCheckConfirmMessageWithoutQuota({
-      literalActive,
+      ...criteriaProps,
       literalTotal,
-      commonStringActive,
       commonStringTotal,
-      excludeActive,
-      auxiliaryActive,
-      auxiliaryTotal,
+    });
+    messageNode = createElement(ConsistencyCheckConfirmContent, {
+      showQuota: false,
+      ...criteriaProps,
     });
   }
 
   const { title, message: body } = parseBracketTitleMessage(message);
-  return showAppConfirm({ title, message: body });
+  return showAppConfirm({ title, message: body, messageNode });
 }
 
 /**
@@ -381,19 +426,27 @@ export async function confirmConsistencyUnifyCheckBeforeRun(
   let message;
   if (quotaDisplayEnabled) {
     const status = await getBetaDailyQuotaStatus(uid, email);
-    const tabCount = status.unifyCount ?? 0;
-    const tabLimit = status.unifyTabLimit ?? BETA_UNIFY_LIMIT_DEFAULT;
+    const tabCount = status.consistencyCount ?? 0;
+    const tabLimit = status.consistencyTabLimit ?? BETA_TAB_LIMIT_DEFAULT;
     if (
       isBetaDailyQuotaEnforcedForUser(uid, email) &&
       !canRunTabCheck(tabCount, tabLimit)
     ) {
-      alert(betaQuotaAlertForTab('unify'));
+      alert(betaQuotaAlertForTab('consistency'));
       return false;
     }
     const remaining = Math.max(0, tabLimit - tabCount);
+    const dailyLimit = status.dailyLimit ?? 1;
+    const bonusRemaining = status.signupBonusConsistencyRemaining ?? 0;
+    const { dailyRemaining } = getTabRemainingBreakdown(
+      tabCount,
+      dailyLimit,
+      bonusRemaining,
+    );
     message = formatConsistencyUnifyCheckConfirmMessage({
       remaining,
-      tabLimit,
+      dailyRemaining,
+      bonusRemaining,
       unifyActive,
       pinnedTailWord,
     });
