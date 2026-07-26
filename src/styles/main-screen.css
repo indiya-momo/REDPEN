@@ -401,7 +401,7 @@
 
 .panel-left .results-panel--spelling .results-header__stat-circle,
 .panel-left .results-panel--consistency .results-header__stat-circle {
-  font-size: calc(0.85rem * var(--panel-ui-scale) * 0.9 * 0.8);
+  font-size: calc(0.85rem * var(--panel-ui-scale) * 0.9 * 0.8 * 0.85);
 }
 
 .panel-left .results-panel--spelling .result-rule,
@@ -786,6 +786,172 @@
 .panel-left .results-header {
   padding-bottom: calc((var(--space-sm) + 2px) * 0.7);
 }
+
+.panel-left .results-header--total-only {
+  justify-content: flex-end;
+}
+
+.panel-left .results-accordion {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 0 12px;
+}
+
+.panel-left .results-category {
+  --criteria-pad-inline: calc(10px * var(--panel-ui-scale, 1));
+  --criteria-checkbox-size: calc(15px * var(--panel-ui-scale, 1));
+  --criteria-summary-gap: calc(8px * var(--panel-ui-scale, 1));
+  --criteria-summary-rail: calc(
+    var(--criteria-checkbox-size) + var(--criteria-summary-gap)
+  );
+  border: 1px solid var(--panel-border-soft);
+  border-radius: 0;
+  background: var(--panel-surface-group, #f6f1e7);
+  overflow: hidden;
+}
+
+.panel-left .results-category[open] {
+  /* 카드 사이 스테이지 베이지가 비치지 않게 */
+  background: var(--panel-surface-sheet, #fff);
+}
+
+.panel-left .results-category[open] > .results-category__summary {
+  background: var(
+    --panel-accordion-bg-open,
+    color-mix(in srgb, var(--panel-surface-stage) 50%, #fff 50%)
+  );
+}
+
+.panel-left .results-category__summary.panel-criteria-heading {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  cursor: pointer;
+  list-style: none;
+  /* 맞춤법 검수 체크리스트 summary와 동일 패딩·간격 */
+  gap: var(--criteria-summary-gap, calc(8px * var(--panel-ui-scale, 1)));
+  padding: calc(8px * var(--panel-ui-scale)) var(--criteria-pad-inline, 10px);
+  min-height: 2.35rem;
+  padding-block: 10px;
+  font-size: calc(1.05rem * var(--panel-ui-scale));
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--c-ink, #2a2118);
+}
+
+.panel-left .results-category__summary::-webkit-details-marker {
+  display: none;
+}
+
+.panel-left .results-category__select-all {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  flex-shrink: 0;
+  width: var(--criteria-checkbox-size, 15px);
+  height: var(--criteria-checkbox-size, 15px);
+  line-height: 0;
+}
+
+.panel-left .results-category__select-all input {
+  display: block;
+  margin: 0;
+  width: var(--criteria-checkbox-size, 15px);
+  height: var(--criteria-checkbox-size, 15px);
+}
+
+.panel-left .results-category__label {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: baseline;
+  align-self: center;
+  gap: 6px;
+  line-height: 1.2;
+}
+
+.panel-left .results-category__meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25em;
+  margin-left: auto;
+  flex-shrink: 0;
+  font-size: 0.8em;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.panel-left .results-category__criteria-unit {
+  font-size: 0.9em;
+  font-weight: 700;
+  color: var(--c-soft, #6b5e52);
+}
+
+.panel-left .results-category__findings {
+  font-size: 0.95em;
+}
+
+.panel-left .results-list--nested {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  background: transparent;
+}
+
+/* spelling-tab-scroll .results-list 의 gap·padding 보다 우선 */
+.panel-left .spelling-tab-scroll .results-list.results-list--nested {
+  gap: 0;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+}
+
+/* spelling result-card 의 radius·border 보다 우선 — 네모·사이 바탕 없음
+   카테고리 체크박스 열에 맞춰 시작줄 들여쓰기 (chevron+gap) */
+.panel-left
+  .spelling-tab-layout
+  .results-panel--spelling
+  .results-list--nested
+  .result-card {
+  margin: 0;
+  margin-inline: 0;
+  border-radius: 0;
+  border: none;
+  box-shadow: none;
+  background: var(--panel-surface-sheet, #fff);
+  padding-inline-start: calc(
+    var(--criteria-pad-inline, 10px) + var(--criteria-summary-rail, 23px)
+  );
+  padding-inline-end: var(--criteria-pad-inline, 10px);
+}
+
+.panel-left
+  .spelling-tab-layout
+  .results-panel--spelling
+  .results-list--nested
+  .page-chip,
+.panel-left
+  .spelling-tab-layout
+  .results-panel--spelling
+  .results-list--nested
+  .caution-badge-inline,
+.panel-left
+  .spelling-tab-layout
+  .results-panel--spelling
+  .results-list--nested
+  .spelling-badge-inline {
+  border-radius: 0;
+}
+
 
 .panel-left .current-page-status {
   padding-bottom: calc(var(--space-sm) + 2px);

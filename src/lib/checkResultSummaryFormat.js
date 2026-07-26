@@ -12,6 +12,13 @@ export const SPELLING_RULE_BADGE_LABEL = '맞춤법 규칙';
 /** 결과 헤더·팝업·카드 뱃지 — 외래어 표기법 */
 export const LOANWORD_BADGE_LABEL = LOANWORD_FEATURE_LABEL;
 
+/** 결과 카드 인라인 뱃지 짧은 표기 — 편집자 검토 */
+export const EDITOR_REVIEW_BADGE_SHORT = '편';
+/** 결과 카드 인라인 뱃지 짧은 표기 — 맞춤법 규칙 */
+export const SPELLING_RULE_BADGE_SHORT = '맞';
+/** 결과 카드 인라인 뱃지 짧은 표기 — 외래어 표기법 */
+export const LOANWORD_BADGE_SHORT = '외';
+
 /** confirm 등 — 활성 기준 개수 표기 */
 export function formatCategoryFindingCount(count) {
   return `(${count}기준)`;
