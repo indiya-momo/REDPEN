@@ -1,6 +1,6 @@
 /**
- * 작업 이력 — 맞춤법(편집자 검토·맞춤법·외래어) · 표기 통일(현재 기준+확정) · 본·보조.
- * 유료 회원만 표시. 검수 세션이 없으면 빈 안내만 두고 자리·현재 기준 목록을 채우지 않는다.
+ * 작업 이력 — 맞춤법(편집자 검토·맞춤법·외래어) · 표기 통일 · 본·보조.
+ * 유료 회원만 표시. 검수 세션이 없으면 빈 안내만 두고 자리·목록을 채우지 않는다.
  */
 import { useEffect, useState } from 'react';
 import {
@@ -365,7 +365,7 @@ function ConsistencyCriteriaBlock({
 
   return (
     <section className="work-history-panel__block work-history-panel__block--consistency">
-      <h4 className="work-history-panel__block-title">표기 통일(현재 기준)</h4>
+      <h4 className="work-history-panel__block-title">표기 통일</h4>
       <dl className="work-history-panel__criteria-groups">
         {WORK_HISTORY_CONSISTENCY_GROUPS.map((group) => {
           const tall = TALL_CRITERIA_GROUP_IDS.has(group.id);

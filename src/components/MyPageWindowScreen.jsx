@@ -711,8 +711,8 @@ export default function MyPageWindowScreen({ authSession, authReady }) {
               type="button"
               className="mypage__back mypage__back--icon"
               onClick={returnToWorkspace}
-              aria-label="검수 화면으로 돌아가기"
-              title="검수 화면으로 돌아가기"
+              aria-label="검수 화면으로"
+              title="검수 화면으로"
             >
               <ArrowLeft size={18} aria-hidden />
             </button>
@@ -741,8 +741,8 @@ export default function MyPageWindowScreen({ authSession, authReady }) {
               type="button"
               className="mypage__back mypage__back--icon"
               onClick={handleSidebarBack}
-              aria-label="검수 화면으로 돌아가기"
-              title="검수 화면으로 돌아가기"
+              aria-label="검수 화면으로"
+              title="검수 화면으로"
             >
               <Pencil size={18} aria-hidden />
             </button>
