@@ -27,8 +27,8 @@ import {
 import WelcomeProfileOnboarding from './WelcomeProfileOnboarding.jsx';
 import './welcome-pc.css';
 
-const WELCOME_PC_BEFORE = `${import.meta.env.BASE_URL}welcome/before_after22-crop1.png`;
-const WELCOME_PC_AFTER = `${import.meta.env.BASE_URL}welcome/before_after22-crop2.png`;
+const WELCOME_PC_BEFORE = `${import.meta.env.BASE_URL}welcome/before1.png`;
+const WELCOME_PC_AFTER = `${import.meta.env.BASE_URL}welcome/after1.png`;
 const WELCOME_PC_PDF_FULL = `${import.meta.env.BASE_URL}welcome/pdf-full.png`;
 const BA_BRIDGE_LABEL = '모모가 빨간펜을 들고 살펴봅니다';
 
@@ -180,7 +180,7 @@ export default function WelcomePcScreen({
       <div className="welcome-pc__brand-block">
         <h1 className="welcome-pc__brand-row">
           <span className="welcome-pc__title-main">인디야</span>
-          <span className="welcome-pc__title-sub">검수냥 모모 이야기</span>
+          <span className="welcome-pc__title-sub">편집자가 만든 출판 검수 서비스</span>
         </h1>
         {!needsWelcomeMessage ? (
           <div className="welcome-pc__desc">
@@ -191,7 +191,7 @@ export default function WelcomePcScreen({
               >
                 ✓
               </span>
-              선택한 맞춤법 · 표기 통일 기준에 따라 PDF 원고를 검수합니다
+              브라우저에서 작동하는 검수 프로그램으로, 결과를 원고에 표시합니다 (AI X)
             </p>
             <p className="welcome-pc__desc-line">
               <span
@@ -201,7 +201,7 @@ export default function WelcomePcScreen({
                 <WelcomePcShield className="welcome-pc__desc-shield" />
               </span>
               <span className="welcome-pc__desc-emphasis">
-                AI가 글을 고치지 않으며, 원고는 서버에 저장되지 않습니다
+                원고는 서버에 업로드되지 않으며, 검수 후 브라우저에서 삭제됩니다.
               </span>
             </p>
           </div>
@@ -284,22 +284,17 @@ export default function WelcomePcScreen({
     <div className="welcome-pc__cta-group welcome-pc__cta-group--in-top">
       <div className="welcome-pc__perf-ribbon">
         <p className="welcome-pc__perf-l1">
-          외래어 표기 · 맞춤법 · 표기 통일 · 본+보조용언
+          기계적인 부담을 줄여, 문장에 깊이를 더하도록
         </p>
 
         <p className="welcome-pc__perf-l2">
           <span className="welcome-pc__perf-anc welcome-pc__perf-anc--left">
             <WelcomePcSparkle className="welcome-pc__perf-spk welcome-pc__perf-spk--big" />
           </span>
-          이 모든 검수를{' '}
-          <span className="welcome-pc__perf-l2__gold">3초만에</span>
-          <span className="welcome-pc__perf-l2__end">
-            {' '}
-            완료!
-            <span className="welcome-pc__perf-anc welcome-pc__perf-anc--right">
-              <WelcomePcSparkle className="welcome-pc__perf-spk welcome-pc__perf-spk--big" />
-            </span>
-            <span className="welcome-pc__perf-l2-note">300페이지 PDF기준</span>
+          맞춤법과 표기 통일 검수 3초!
+          <span className="welcome-pc__perf-l2-note">(300페이지 기준)</span>
+          <span className="welcome-pc__perf-anc welcome-pc__perf-anc--right">
+            <WelcomePcSparkle className="welcome-pc__perf-spk welcome-pc__perf-spk--big" />
           </span>
         </p>
       </div>
@@ -339,11 +334,20 @@ export default function WelcomePcScreen({
 
   const heroCtaButton = showSignedInLanding ? signedInStartButton : guestAuthButton;
 
-  const foldCapText =
-    '사용자의 이해를 돕고자 재구성한 장면으로 맞춤법과 표기 통일 검수는 각각 진행합니다';
+  const landingRef = useRef(null);
+
+  useEffect(() => {
+    if (!isHeroLanding) return;
+    const band = landingRef.current?.closest('.welcome-pc__top-band');
+    if (band instanceof HTMLElement) {
+      band.scrollTop = 0;
+    }
+  }, [isHeroLanding]);
+
+  const foldCapText = '이해를 돕고자 재구성한 장면입니다';
 
   const landingPageBlock = (
-    <div className="welcome-pc__landing">
+    <div className="welcome-pc__landing" ref={landingRef}>
     <div
       className={[
         'welcome-pc__page',
@@ -372,7 +376,6 @@ export default function WelcomePcScreen({
           </div>
         </div>
         <aside className="welcome-pc__hero-right" aria-label="검수냥 모모">
-          <p className="welcome-pc__guest-hero-bubble">편집자가 직접 만들었습니다🐾</p>
           <div className="welcome-pc__guest-portrait-wrap">{portraitBlock}</div>
         </aside>
       </section>
@@ -387,8 +390,8 @@ export default function WelcomePcScreen({
             <img
               className="welcome-pc__ba-img"
               src={WELCOME_PC_BEFORE}
-              width={986}
-              height={709}
+              width={833}
+              height={600}
               alt="검수 전 예시 — 원고"
               loading="lazy"
               decoding="async"
@@ -429,8 +432,8 @@ export default function WelcomePcScreen({
             <img
               className="welcome-pc__ba-img"
               src={WELCOME_PC_AFTER}
-              width={1028}
-              height={713}
+              width={833}
+              height={600}
               alt="검수 후 예시 — 맞춤법·표기 통일·본용언+보조용언 표기 하이라이트"
               loading="lazy"
               decoding="async"
@@ -458,8 +461,6 @@ export default function WelcomePcScreen({
           </div>
         </div>
         </section>
-
-        <p className="welcome-pc__fold-cap">{foldCapText}</p>
       </div>
       </div>
     </div>
@@ -504,8 +505,12 @@ export default function WelcomePcScreen({
 
         <div className="welcome-pc__bottom-notes">
           <p className="welcome-pc__footer-line">
+            <span className="welcome-pc__footer-part">{foldCapText}</span>
+            <span className="welcome-pc__footer-sep" aria-hidden="true">
+              |
+            </span>
             <span className="welcome-pc__footer-part">
-              오픈베타 기간 동안 기능 향상을 위해 사용자의 이용 데이터를 익명으로 수집합니다
+              오픈베타 기간 기능 향상을 위해 이용 데이터를 익명으로 수집합니다
             </span>
             <span className="welcome-pc__footer-sep" aria-hidden="true">
               |

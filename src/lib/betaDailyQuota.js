@@ -337,6 +337,24 @@ export function formatConsistencyCheckQuotaAvailabilityLine(
 }
 
 /**
+ * 맞춤법 검수 직전 confirm — 가능 횟수 한 줄
+ * @param {number} remaining
+ * @param {number} dailyRemaining
+ * @param {number} bonusRemaining
+ */
+export function formatSpellingCheckQuotaAvailabilityLine(
+  remaining,
+  dailyRemaining,
+  bonusRemaining,
+) {
+  return (
+    `오늘 맞춤법 검수는 ${remaining}회(` +
+    `${formatQuotaTicketAvailabilityParen(dailyRemaining, bonusRemaining)}) ` +
+    `가능합니다`
+  );
+}
+
+/**
  * @param {number} tabCount
  * @param {number} dailyLimit
  * @param {number} bonusRemaining

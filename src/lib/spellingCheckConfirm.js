@@ -24,7 +24,7 @@ import {
   betaQuotaAlertForTab,
   buildCheckResultQuotaConsumedLine,
   canRunTabCheck,
-  formatQuotaAvailabilityParen,
+  formatSpellingCheckQuotaAvailabilityLine,
   getBetaDailyQuotaStatus,
   getTabRemainingBreakdown,
   isBetaDailyQuotaEnabled,
@@ -67,7 +67,7 @@ export function formatSpellingCheckConfirmMessage({
     : '';
   return (
     `[맞춤법 검수 진행]\n` +
-    `오늘 맞춤법 검수는 ${remaining}회(${formatQuotaAvailabilityParen(dailyRemaining, bonusRemaining)}) 가능합니다\n` +
+    `${formatSpellingCheckQuotaAvailabilityLine(remaining, dailyRemaining, bonusRemaining)}\n` +
     `편집자 검토 필요(${cautionActive}/${cautionTotal}), 맞춤법 규칙(${builtinTotal}/${builtinActive})${loanwordPart}\n` +
     `\n` +
     '검수를 진행할까요?'

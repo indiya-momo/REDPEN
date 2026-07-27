@@ -17,6 +17,7 @@ import {
   formatBetaQuotaConsumedAlert,
   formatCheckQuotaConsumedLine,
   formatConsistencyCheckQuotaAvailabilityLine,
+  formatSpellingCheckQuotaAvailabilityLine,
   getTabQuotaRemainingFromStatus,
   isLocalDevQuotaRelaxed,
   needsSignupBonusPolicyAlign,
@@ -263,6 +264,14 @@ describe('formatConsistencyCheckQuotaAvailabilityLine', () => {
   it('표기 통일 검수 직전 가능 횟수를 한 줄로 만든다', () => {
     expect(formatConsistencyCheckQuotaAvailabilityLine(6, 1, 5)).toBe(
       '표기 통일 검수는 6회(1일 검수권 1회, 선물 검수권 5회) 가능합니다',
+    );
+  });
+});
+
+describe('formatSpellingCheckQuotaAvailabilityLine', () => {
+  it('맞춤법 검수 직전 가능 횟수를 한 줄로 만든다', () => {
+    expect(formatSpellingCheckQuotaAvailabilityLine(5, 0, 5)).toBe(
+      '오늘 맞춤법 검수는 5회(1일 검수권 0회, 선물 검수권 5회) 가능합니다',
     );
   });
 });

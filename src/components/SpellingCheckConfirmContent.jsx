@@ -4,7 +4,7 @@
 
 import { Fragment } from 'react';
 import { LOANWORD_FEATURE_LABEL } from '../lib/loanwordCheckRules.js';
-import { formatQuotaAvailabilityParen } from '../lib/betaDailyQuota.js';
+import { formatSpellingCheckQuotaAvailabilityLine } from '../lib/betaDailyQuota.js';
 import { AppDialogCriteriaLabel } from './AppDialogCriteriaLabel.jsx';
 
 /**
@@ -58,9 +58,11 @@ export default function SpellingCheckConfirmContent({
     <>
       {showQuota ? (
         <p className="app-dialog__confirm-line">
-          오늘 맞춤법 검수는 {remaining}회(
-          {formatQuotaAvailabilityParen(dailyRemaining, bonusRemaining)})
-          가능합니다
+          {formatSpellingCheckQuotaAvailabilityLine(
+            remaining,
+            dailyRemaining,
+            bonusRemaining,
+          )}
         </p>
       ) : null}
       <p className="app-dialog__confirm-line app-dialog__confirm-line--criteria">
