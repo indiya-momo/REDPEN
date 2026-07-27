@@ -83,7 +83,7 @@
   );
 
   --welcome-showcase-caption-scale: 0.72;
-  --welcome-perf-l1-scale: 0.9;
+  --welcome-perf-l1-scale: 0.81;
   --welcome-perf-l2-scale: 0.9;
   --welcome-header-title-scale: 1;
 
@@ -598,6 +598,16 @@
   flex-direction: column;
   align-items: flex-start;
   gap: calc(3px * var(--welcome-scale));
+  width: auto;
+  margin: 0;
+}
+
+.welcome-pc__page .welcome-pc__desc-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: calc(0.75rem * var(--welcome-scale) * var(--welcome-desc-scale));
   width: 100%;
   margin: 0;
 }
@@ -989,6 +999,13 @@
 
 .welcome-pc__landing .welcome-pc__page .welcome-pc__title-main {
   margin-inline-start: 0;
+}
+
+.welcome-pc__landing .welcome-pc__page .welcome-pc__desc-row {
+  justify-content: center;
+  width: max-content;
+  max-width: 100%;
+  margin-inline: auto;
 }
 
 .welcome-pc__landing .welcome-pc__page .welcome-pc__desc {
@@ -1589,11 +1606,11 @@
 
 .welcome-pc__perf-l2-note {
   position: absolute;
-  left: 100%;
-  top: 0.4em;
-  margin-inline-start: calc(0.12em * var(--welcome-perf-l2-decor, 1));
+  left: 0;
+  bottom: 100%;
+  transform: none;
   font-family: var(--welcome-perf-font-info);
-  font-size: 0.266em;
+  font-size: 0.2128em;
   font-weight: 500;
   line-height: 1;
   letter-spacing: 0.01em;
@@ -2213,40 +2230,30 @@
   margin-inline: auto;
 }
 
-.welcome-pc__page .welcome-pc__hero-cta .welcome-pc__cta-bar-action--with-sticker {
-  width: max-content;
-  max-width: 100%;
-}
-
-.welcome-pc__page .welcome-pc__hero-cta .welcome-pc__cta-no-ai {
+.welcome-pc__desc-row .welcome-pc__cta-no-ai {
+  position: relative;
   flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: calc(
-    43px * var(--welcome-scale) * var(--welcome-ba-img-scale) *
-      var(--welcome-hero-cta-scale, 1)
-  );
-  height: calc(
-    43px * var(--welcome-scale) * var(--welcome-ba-img-scale) *
-      var(--welcome-hero-cta-scale, 1)
-  );
+  width: calc(47.3px * var(--welcome-scale) * var(--welcome-desc-scale));
+  height: calc(47.3px * var(--welcome-scale) * var(--welcome-desc-scale));
   filter: drop-shadow(0 5px 8px rgba(40, 28, 12, 0.18));
 }
 
-.welcome-pc__page .welcome-pc__hero-cta .welcome-pc__cta-no-ai-disc {
+.welcome-pc__desc-row .welcome-pc__cta-no-ai-disc {
   position: relative;
   box-sizing: border-box;
   display: block;
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  background: #faf6ec;
-  border: 1.5px solid rgba(40, 28, 12, 0.12);
+  background: transparent;
+  border: none;
   overflow: visible;
 }
 
-.welcome-pc__page .welcome-pc__hero-cta .welcome-pc__cta-no-ai-disc svg {
+.welcome-pc__desc-row .welcome-pc__cta-no-ai-disc svg {
   position: absolute;
   inset: 6%;
   width: 88%;
@@ -2255,15 +2262,15 @@
   display: block;
 }
 
-.welcome-pc__page .welcome-pc__hero-cta .welcome-pc__cta-no-ai-pen {
+.welcome-pc__desc-row .welcome-pc__cta-no-ai-pen {
   position: absolute;
   z-index: 2;
   left: 50%;
   top: 50%;
-  width: 102.4%;
+  width: 112.5%;
   max-width: none;
   height: auto;
-  transform: translate(-50%, -50%) rotate(-42deg);
+  transform: translate(-50%, -50%) rotate(-42deg) scaleY(1.3225);
   image-rendering: pixelated;
   image-rendering: crisp-edges;
   pointer-events: none;
