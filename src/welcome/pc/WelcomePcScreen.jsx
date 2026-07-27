@@ -166,28 +166,67 @@ export default function WelcomePcScreen({
   const isHeroLanding = !needsWelcomeMessage;
   const showSignedInLanding = loggedIn && isHeroLanding;
 
+  const noAiSticker = (
+    <span className="welcome-pc__cta-no-ai" aria-hidden="true">
+      <span className="welcome-pc__cta-no-ai-disc">
+        <svg viewBox="0 0 64 64" focusable="false" width="64" height="64">
+          <circle
+            cx="32"
+            cy="32"
+            r="26"
+            fill="none"
+            stroke="#c62828"
+            strokeWidth="5"
+          />
+          <text
+            x="32"
+            y="40"
+            textAnchor="middle"
+            fontFamily="Pretendard, sans-serif"
+            fontSize="32.4"
+            fontWeight="900"
+            fill="#f5efe3"
+            letterSpacing="0.5"
+          >
+            AI
+          </text>
+        </svg>
+        <img
+          className="welcome-pc__cta-no-ai-pen"
+          src={WELCOME_PC_PEN}
+          alt=""
+          decoding="async"
+          draggable={false}
+        />
+      </span>
+    </span>
+  );
+
   const descBlock = (
-    <div className="welcome-pc__desc">
-      <p className="welcome-pc__desc-line">
-        <span
-          className="welcome-pc__desc-icon welcome-pc__desc-icon--ok symbol-gold"
-          aria-hidden
-        >
-          ✓
-        </span>
-        인터넷 브라우저에서 작동하는 원고 검수 프로그램입니다
-      </p>
-      <p className="welcome-pc__desc-line">
-        <span
-          className="welcome-pc__desc-icon welcome-pc__desc-icon--no symbol-gold"
-          aria-hidden
-        >
-          <WelcomePcShield className="welcome-pc__desc-shield" />
-        </span>
-        <span className="welcome-pc__desc-emphasis">
-          원고는 서버에 업로드되지 않으며, 검수 후 브라우저에서 삭제됩니다.
-        </span>
-      </p>
+    <div className="welcome-pc__desc-row">
+      <div className="welcome-pc__desc">
+        <p className="welcome-pc__desc-line">
+          <span
+            className="welcome-pc__desc-icon welcome-pc__desc-icon--ok symbol-gold"
+            aria-hidden
+          >
+            ✓
+          </span>
+          인터넷 브라우저에서 작동하는 인디자인 PDF 검수 프로그램입니다
+        </p>
+        <p className="welcome-pc__desc-line">
+          <span
+            className="welcome-pc__desc-icon welcome-pc__desc-icon--no symbol-gold"
+            aria-hidden
+          >
+            <WelcomePcShield className="welcome-pc__desc-shield" />
+          </span>
+          <span className="welcome-pc__desc-emphasis">
+            원고는 서버에 업로드되지 않으며, 검수 후 브라우저에서 삭제됩니다
+          </span>
+        </p>
+      </div>
+      {noAiSticker}
     </div>
   );
 
@@ -229,44 +268,8 @@ export default function WelcomePcScreen({
     </header>
   );
 
-  const noAiSticker = (
-    <span className="welcome-pc__cta-no-ai" aria-hidden="true">
-      <span className="welcome-pc__cta-no-ai-disc">
-        <svg viewBox="0 0 64 64" focusable="false" width="64" height="64">
-          <circle
-            cx="32"
-            cy="32"
-            r="26"
-            fill="none"
-            stroke="#c62828"
-            strokeWidth="5"
-          />
-          <text
-            x="32"
-            y="40"
-            textAnchor="middle"
-            fontFamily="Pretendard, sans-serif"
-            fontSize="32.4"
-            fontWeight="900"
-            fill="#1a1612"
-            letterSpacing="0.5"
-          >
-            AI
-          </text>
-        </svg>
-        <img
-          className="welcome-pc__cta-no-ai-pen"
-          src={WELCOME_PC_PEN}
-          alt=""
-          decoding="async"
-          draggable={false}
-        />
-      </span>
-    </span>
-  );
-
   const guestAuthButton = (
-    <div className="welcome-pc__cta-bar-action welcome-pc__cta-bar-action--pair welcome-pc__cta-bar-action--with-sticker">
+    <div className="welcome-pc__cta-bar-action welcome-pc__cta-bar-action--pair">
       {!authReady ? (
         <button
           type="button"
@@ -293,7 +296,6 @@ export default function WelcomePcScreen({
           >
             먼저 둘러보기
           </button>
-          {noAiSticker}
         </>
       )}
     </div>
@@ -321,11 +323,14 @@ export default function WelcomePcScreen({
             <span className="welcome-pc__perf-anc welcome-pc__perf-anc--left">
               <WelcomePcSparkle className="welcome-pc__perf-spk welcome-pc__perf-spk--big" />
             </span>
-            맞춤법과 표기 통일을 3초만에!
+            맞춤법과 표기 통일을 3초만에{' '}
+            <span className="welcome-pc__perf-l2__end">
+              검수!
+              <span className="welcome-pc__perf-l2-note">(300페이지 기준)</span>
+            </span>
             <span className="welcome-pc__perf-anc welcome-pc__perf-anc--right">
               <WelcomePcSparkle className="welcome-pc__perf-spk welcome-pc__perf-spk--big" />
             </span>
-            <span className="welcome-pc__perf-l2-note">(300페이지 기준)</span>
           </span>
         </p>
       </div>
