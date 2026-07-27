@@ -97,6 +97,7 @@ function renderDialogMessage(message) {
  *   onCancel?: () => void,
  *   onClose?: () => void,
  *   showGuideHand?: boolean,
+ *   titleAlign?: 'start' | 'center',
  * }} props
  */
 export default function AppDialog({
@@ -112,6 +113,7 @@ export default function AppDialog({
   onCancel,
   onClose,
   showGuideHand = false,
+  titleAlign = 'center',
 }) {
   const titleId = useId();
   const dialogRef = useRef(/** @type {HTMLDialogElement | null} */ (null));

@@ -22,6 +22,7 @@ import {
 } from './checkResultSummaryFormat.js';
 import {
   betaQuotaAlertForTab,
+  buildCheckResultQuotaConsumedLine,
   canRunTabCheck,
   formatQuotaAvailabilityParen,
   getBetaDailyQuotaStatus,
@@ -267,18 +268,22 @@ export function formatSpellingCheckCompleteMessage({
  * @param {{
  *   cautionSelected?: boolean,
  *   builtinSelected?: boolean,
+ *   loanwordSelected?: boolean,
  * }} [criteriaSelection]
+ * @param {{ uid?: string, email?: string }} [quotaContext]
  */
 export async function alertSpellingCheckAfterRun(
   groups = [],
   totalFindings = 0,
   criteriaSelection = {},
+  quotaContext = {},
 ) {
   const {
     cautionSelected = true,
     builtinSelected = true,
     loanwordSelected = false,
   } = criteriaSelection;
+  const { uid = '', email = '' } = quotaContext;
   const withFindings = countSpellingGroupsWithFindings(groups);
   const findingsByCategory = countSpellingFindingsByCategory(groups);
   const summaryInput = {
@@ -298,6 +303,12 @@ export async function alertSpellingCheckAfterRun(
     loanwordFindings: findingsByCategory.loanword,
   });
 
+  const quotaConsumedLine = await buildCheckResultQuotaConsumedLine(
+    uid,
+    email,
+    'spelling',
+  );
+
   await finishGuestBrowseResultThenUnlockNextGuide(async (extra = {}) => {
     await showAppAlert({
       title: '검수를 진행했습니다',
@@ -305,6 +316,7 @@ export async function alertSpellingCheckAfterRun(
       messageNode: createElement(CheckResultSummaryContent, {
         stats,
         totalFindings,
+        quotaConsumedLine,
       }),
       ...extra,
     });

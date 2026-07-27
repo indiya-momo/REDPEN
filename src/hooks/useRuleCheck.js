@@ -424,7 +424,7 @@ export function useRuleCheck({
           builtinSelected: builtinCriteriaCount > 0,
           loanwordSelected:
             countLoanwordActiveRules({ builtInEnabled }) > 0,
-        });
+        }, { uid: authUid, email: authEmail });
       }
       if (runConsistency) {
         const consistencyCriteria = countConsistencyCheckActiveRules(
@@ -441,6 +441,7 @@ export function useRuleCheck({
             commonStringSelected: consistencyCriteria.commonStringActive > 0,
             auxiliarySelected: consistencyCriteria.auxiliaryActive > 0,
           },
+          { uid: authUid, email: authEmail, tab: 'consistency' },
         );
       }
       setLastCompletedCheckScope(scope);
@@ -629,6 +630,7 @@ export function useRuleCheck({
             commonStringSelected: false,
             auxiliarySelected: false,
           },
+          { uid: authUid, email: authEmail, tab: 'consistency' },
         );
       }
 

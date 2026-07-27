@@ -15,6 +15,9 @@ import {
   isBetaQuotaAdminExempt,
   consumeLocalDevQuotaPreview,
   formatBetaQuotaConsumedAlert,
+  formatCheckQuotaConsumedLine,
+  formatConsistencyCheckQuotaAvailabilityLine,
+  getTabQuotaRemainingFromStatus,
   isLocalDevQuotaRelaxed,
   needsSignupBonusPolicyAlign,
   mergeTabQuotaCounts,
@@ -228,8 +231,11 @@ describe('signup bonus policy align', () => {
   it('로그인 검수권 안내 문구에 가입 보너스 횟수가 들어간다', () => {
     const alert = buildSignupBonusGrantAlert();
     expect(alert.title).toContain('검수권 선물');
-    expect(alert.message).toContain(`${SIGNUP_BONUS_TAB_CHECKS}회`);
+    expect(alert.message).toContain(
+      `맞춤법·표기 통일 ${SIGNUP_BONUS_TAB_CHECKS}회 검수권🎫`,
+    );
     expect(alert.message).toContain('일일 검수권');
+    expect(alert.messageNode).toBeTruthy();
   });
 });
 
@@ -242,6 +248,39 @@ describe('canRunTabCheck', () => {
   it('한도에 도달하면 차단', () => {
     expect(canRunTabCheck(1, 1)).toBe(false);
     expect(canRunTabCheck(11, 11)).toBe(false);
+  });
+});
+
+describe('formatCheckQuotaConsumedLine', () => {
+  it('차감 직후 남은 일일·선물 검수권을 한 줄로 만든다', () => {
+    expect(formatCheckQuotaConsumedLine(0, 4)).toBe(
+      '검수권 1회를 사용했습니다(1일 검수권 0회, 선물 검수권 4회 남음)',
+    );
+  });
+});
+
+describe('formatConsistencyCheckQuotaAvailabilityLine', () => {
+  it('표기 통일 검수 직전 가능 횟수를 한 줄로 만든다', () => {
+    expect(formatConsistencyCheckQuotaAvailabilityLine(6, 1, 5)).toBe(
+      '표기 통일 검수는 6회(1일 검수권 1회, 선물 검수권 5회) 가능합니다',
+    );
+  });
+});
+
+describe('getTabQuotaRemainingFromStatus', () => {
+  it('맞춤법 탭 사용 후 일일·선물 잔여를 계산한다', () => {
+    expect(
+      getTabQuotaRemainingFromStatus(
+        {
+          spellingCount: 1,
+          consistencyCount: 0,
+          dailyLimit: 1,
+          signupBonusSpellingRemaining: 4,
+          signupBonusConsistencyRemaining: 5,
+        },
+        'spelling',
+      ),
+    ).toEqual({ dailyRemaining: 0, bonusRemaining: 4 });
   });
 });
 

@@ -11,6 +11,7 @@ import {
   serverTimestamp,
   setDoc,
 } from 'firebase/firestore';
+import { createElement, Fragment } from 'react';
 import { syncFirstCheckBadge } from './badgeGrants.js';
 import { assertLoggedInForCheckOrAlert } from './checkAuthGate.js';
 import {
@@ -306,6 +307,36 @@ export function formatQuotaAvailabilityParen(dailyRemaining, bonusRemaining) {
 }
 
 /**
+ * 검수 직전 confirm — 1일·선물 검수권 구성
+ * @param {number} dailyRemaining
+ * @param {number} bonusRemaining
+ */
+export function formatQuotaTicketAvailabilityParen(dailyRemaining, bonusRemaining) {
+  return (
+    `1일 검수권 ${Math.max(0, dailyRemaining)}회, ` +
+    `선물 검수권 ${Math.max(0, bonusRemaining)}회`
+  );
+}
+
+/**
+ * 표기 통일 검수 직전 confirm — 가능 횟수 한 줄
+ * @param {number} remaining
+ * @param {number} dailyRemaining
+ * @param {number} bonusRemaining
+ */
+export function formatConsistencyCheckQuotaAvailabilityLine(
+  remaining,
+  dailyRemaining,
+  bonusRemaining,
+) {
+  return (
+    `표기 통일 검수는 ${remaining}회(` +
+    `${formatQuotaTicketAvailabilityParen(dailyRemaining, bonusRemaining)}) ` +
+    `가능합니다`
+  );
+}
+
+/**
  * @param {number} tabCount
  * @param {number} dailyLimit
  * @param {number} bonusRemaining
@@ -316,6 +347,66 @@ export function getTabRemainingBreakdown(tabCount, dailyLimit, bonusRemaining) {
     dailyRemaining: Math.max(0, dailyLimit - dailyUsed),
     bonusRemaining: Math.max(0, bonusRemaining),
   };
+}
+
+/**
+ * 검수 완료 팝업 — 차감 직후 남은 검수권
+ * @param {number} dailyRemaining
+ * @param {number} bonusRemaining
+ */
+export function formatCheckQuotaConsumedLine(dailyRemaining, bonusRemaining) {
+  return (
+    `검수권 1회를 사용했습니다(` +
+    `1일 검수권 ${Math.max(0, dailyRemaining)}회, ` +
+    `선물 검수권 ${Math.max(0, bonusRemaining)}회 남음)`
+  );
+}
+
+/**
+ * @param {ReturnType<typeof statusFromFlags>} status
+ * @param {BetaQuotaTab} [tab]
+ */
+export function getTabQuotaRemainingFromStatus(status, tab = 'spelling') {
+  const normalized = normalizeBetaQuotaTab(tab);
+  const tabCount =
+    normalized === 'spelling'
+      ? Math.max(0, Number(status.spellingCount) || 0)
+      : Math.max(0, Number(status.consistencyCount) || 0);
+  const dailyLimit = Math.max(0, Number(status.dailyLimit) || 1);
+  const bonusRemaining =
+    normalized === 'spelling'
+      ? Math.max(0, Number(status.signupBonusSpellingRemaining) || 0)
+      : Math.max(0, Number(status.signupBonusConsistencyRemaining) || 0);
+  return getTabRemainingBreakdown(tabCount, dailyLimit, bonusRemaining);
+}
+
+/**
+ * 검수 완료 팝업 상단 한 줄 (차감 후 최신 잔여)
+ * @param {string} uid
+ * @param {string} [email]
+ * @param {BetaQuotaTab} [tab]
+ * @returns {Promise<string | null>}
+ */
+export async function buildCheckResultQuotaConsumedLine(
+  uid,
+  email = '',
+  tab = 'spelling',
+) {
+  if (!isBetaDailyQuotaEnabled() || !uid.trim()) {
+    return null;
+  }
+  if (
+    !isBetaDailyQuotaEnforcedForUser(uid, email) &&
+    !isLocalDevQuotaRelaxed()
+  ) {
+    return null;
+  }
+  const status = await getBetaDailyQuotaStatus(uid, email);
+  const { dailyRemaining, bonusRemaining } = getTabQuotaRemainingFromStatus(
+    status,
+    tab,
+  );
+  return formatCheckQuotaConsumedLine(dailyRemaining, bonusRemaining);
 }
 
 /**
@@ -452,16 +543,44 @@ export function needsSignupBonusPolicyAlign(bonus) {
 
 /**
  * 로그인·가입 직후 검수권 안내 팝업 문구.
- * @returns {{ title: string, message: string }}
+ * @returns {{ title: string, message: string, messageNode: import('react').ReactNode }}
  */
 export function buildSignupBonusGrantAlert() {
+  const bonusLabel = `맞춤법·표기 통일 ${SIGNUP_BONUS_TAB_CHECKS}회 검수권`;
   return {
     title: '검수권 선물이 도착했어요!  ฅ•ω•ฅ',
+    titleAlign: 'center',
     message:
-      `회원님께 감사의 의미로 맞춤법·표기 통일 ${SIGNUP_BONUS_TAB_CHECKS}회 검수권을 드립니다\n` +
+      `회원님께 감사의 의미로 ${bonusLabel}🎫을 드립니다\n` +
       `일일 검수권은 1회 제공되며, 당일 미사용분은 소멸됩니다(한국 시간 기준)\n` +
-      `피드백을 남기면 일일 검수권이 2배로 늘어납니다!\n` +
-      `인디야와 함께 더운 여름 건강히 보내세요🍉`,
+      `피드백을 남기면 일일 검수권이 2배로 늘어납니다!\n\n` +
+      `인디야와 함께 건강한 여름 되세요🍉`,
+    messageNode: createElement(
+      Fragment,
+      null,
+      createElement(
+        'p',
+        { className: 'app-dialog__confirm-line' },
+        '회원님께 감사의 의미로 ',
+        createElement('strong', null, bonusLabel),
+        '🎫을 드립니다',
+      ),
+      createElement(
+        'p',
+        { className: 'app-dialog__confirm-line' },
+        '일일 검수권은 1회 제공되며, 당일 미사용분은 소멸됩니다(한국 시간 기준)',
+      ),
+      createElement(
+        'p',
+        { className: 'app-dialog__confirm-line' },
+        '피드백을 남기면 일일 검수권이 2배로 늘어납니다!',
+      ),
+      createElement(
+        'p',
+        { className: 'app-dialog__confirm-line app-dialog__confirm-line--spaced' },
+        '인디야와 함께 건강한 여름 되세요🍉',
+      ),
+    ),
   };
 }
 
