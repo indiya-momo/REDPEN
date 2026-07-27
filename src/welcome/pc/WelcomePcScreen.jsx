@@ -17,29 +17,20 @@ import {
   isOnboardingComplete,
 } from '../../lib/userProfileStorage.js';
 import { useUserProfileSync } from '../../hooks/useUserProfileSync.js';
-import { publicAssetUrl } from '../../lib/publicAssetUrl.js';
 import {
   clearSignupBonusLoginPending,
   consumeSignupBonusLoginNotice,
   markEnterMainAfterGoogle,
   markSignupBonusNoticePending,
 } from '../../lib/signupBonusNotice.js';
+import WelcomePcBaInteractive from './WelcomePcBaInteractive.jsx';
 import WelcomeProfileOnboarding from './WelcomeProfileOnboarding.jsx';
+import { publicAssetUrl } from '../../lib/publicAssetUrl.js';
 import './welcome-pc.css';
 
 const WELCOME_PC_BEFORE = `${import.meta.env.BASE_URL}welcome/before1.png`;
 const WELCOME_PC_AFTER = `${import.meta.env.BASE_URL}welcome/after1.png`;
-const WELCOME_PC_PDF_FULL = `${import.meta.env.BASE_URL}welcome/pdf-full.png`;
-const BA_BRIDGE_LABEL = '모모가 빨간펜을 들고 살펴봅니다';
-
-/** 검수 전·후 ↔ 원 사이 빨간펜 (가로형 투명 PNG, width 기준) */
-const BA_GAP_PEN = publicAssetUrl('momo/pen_transparent.png');
-
-/** 브릿지 SVG — 흰 원(disc)만 */
-const BA_BRIDGE_DISC_VIEWBOX = '0 0 100 100';
-const BA_BRIDGE_CX = 50;
-const BA_BRIDGE_CY = 50;
-const BA_BRIDGE_R_DISC = 50;
+const WELCOME_PC_PEN = publicAssetUrl('momo/pen_transparent.png');
 
 const SPARKLE_PATH = 'M12 0l2.4 9.6L24 12l-9.6 2.4L12 24l-2.4-9.6L0 12l9.6-2.4z';
 /** 방패 실루엣 — currentColor로 금색 적용 */
@@ -175,6 +166,31 @@ export default function WelcomePcScreen({
   const isHeroLanding = !needsWelcomeMessage;
   const showSignedInLanding = loggedIn && isHeroLanding;
 
+  const descBlock = (
+    <div className="welcome-pc__desc">
+      <p className="welcome-pc__desc-line">
+        <span
+          className="welcome-pc__desc-icon welcome-pc__desc-icon--ok symbol-gold"
+          aria-hidden
+        >
+          ✓
+        </span>
+        인터넷 브라우저에서 작동하는 원고 검수 프로그램입니다
+      </p>
+      <p className="welcome-pc__desc-line">
+        <span
+          className="welcome-pc__desc-icon welcome-pc__desc-icon--no symbol-gold"
+          aria-hidden
+        >
+          <WelcomePcShield className="welcome-pc__desc-shield" />
+        </span>
+        <span className="welcome-pc__desc-emphasis">
+          원고는 서버에 업로드되지 않으며, 검수 후 브라우저에서 삭제됩니다.
+        </span>
+      </p>
+    </div>
+  );
+
   const headerBlock = (
     <header className="welcome-pc__header">
       <div className="welcome-pc__brand-block">
@@ -182,30 +198,7 @@ export default function WelcomePcScreen({
           <span className="welcome-pc__title-main">인디야</span>
           <span className="welcome-pc__title-sub">편집자가 만든 출판 검수 서비스</span>
         </h1>
-        {!needsWelcomeMessage ? (
-          <div className="welcome-pc__desc">
-            <p className="welcome-pc__desc-line">
-              <span
-                className="welcome-pc__desc-icon welcome-pc__desc-icon--ok symbol-gold"
-                aria-hidden
-              >
-                ✓
-              </span>
-              브라우저에서 작동하는 검수 프로그램으로, 결과를 원고에 표시합니다 (AI X)
-            </p>
-            <p className="welcome-pc__desc-line">
-              <span
-                className="welcome-pc__desc-icon welcome-pc__desc-icon--no symbol-gold"
-                aria-hidden
-              >
-                <WelcomePcShield className="welcome-pc__desc-shield" />
-              </span>
-              <span className="welcome-pc__desc-emphasis">
-                원고는 서버에 업로드되지 않으며, 검수 후 브라우저에서 삭제됩니다.
-              </span>
-            </p>
-          </div>
-        ) : null}
+        {!needsWelcomeMessage ? descBlock : null}
       </div>
     </header>
   );
@@ -225,8 +218,55 @@ export default function WelcomePcScreen({
     </div>
   );
 
+  const landingHeaderBlock = (
+    <header className="welcome-pc__header welcome-pc__header--landing">
+      <div className="welcome-pc__brand-block">
+        <div className="welcome-pc__hero-portrait-slot" aria-label="검수냥 모모">
+          <div className="welcome-pc__guest-portrait-wrap">{portraitBlock}</div>
+        </div>
+        {descBlock}
+      </div>
+    </header>
+  );
+
+  const noAiSticker = (
+    <span className="welcome-pc__cta-no-ai" aria-hidden="true">
+      <span className="welcome-pc__cta-no-ai-disc">
+        <svg viewBox="0 0 64 64" focusable="false" width="64" height="64">
+          <circle
+            cx="32"
+            cy="32"
+            r="26"
+            fill="none"
+            stroke="#c62828"
+            strokeWidth="5"
+          />
+          <text
+            x="32"
+            y="40"
+            textAnchor="middle"
+            fontFamily="Pretendard, sans-serif"
+            fontSize="32.4"
+            fontWeight="900"
+            fill="#1a1612"
+            letterSpacing="0.5"
+          >
+            AI
+          </text>
+        </svg>
+        <img
+          className="welcome-pc__cta-no-ai-pen"
+          src={WELCOME_PC_PEN}
+          alt=""
+          decoding="async"
+          draggable={false}
+        />
+      </span>
+    </span>
+  );
+
   const guestAuthButton = (
-    <div className="welcome-pc__cta-bar-action welcome-pc__cta-bar-action--pair">
+    <div className="welcome-pc__cta-bar-action welcome-pc__cta-bar-action--pair welcome-pc__cta-bar-action--with-sticker">
       {!authReady ? (
         <button
           type="button"
@@ -243,7 +283,7 @@ export default function WelcomePcScreen({
             onClick={handleGoogleAuth}
             disabled={authPending}
           >
-            {authPending ? '구글 로그인 연결 중…' : '구글로 시작하기'}
+            {authPending ? '시작하는 중…' : '인디야 시작하기'}
           </button>
           <button
             type="button"
@@ -253,18 +293,9 @@ export default function WelcomePcScreen({
           >
             먼저 둘러보기
           </button>
+          {noAiSticker}
         </>
       )}
-    </div>
-  );
-
-  const perfBetaBlock = (
-    <div className="welcome-pc__perf-beta welcome-pc__perf-beta--guest">
-      <span className="welcome-pc__perf-badge-beta">오픈베타 중</span>
-      <span className="welcome-pc__perf-quota">
-        매일 모든 기능 무료
-        <span className="welcome-pc__perf-quota-hint">(크롬 브라우저 권장)</span>
-      </span>
     </div>
   );
 
@@ -278,8 +309,6 @@ export default function WelcomePcScreen({
     </div>
   );
 
-  const heroStatusBlock = showSignedInLanding ? signedInStatusBlock : perfBetaBlock;
-
   const perfBlock = (
     <div className="welcome-pc__cta-group welcome-pc__cta-group--in-top">
       <div className="welcome-pc__perf-ribbon">
@@ -288,13 +317,15 @@ export default function WelcomePcScreen({
         </p>
 
         <p className="welcome-pc__perf-l2">
-          <span className="welcome-pc__perf-anc welcome-pc__perf-anc--left">
-            <WelcomePcSparkle className="welcome-pc__perf-spk welcome-pc__perf-spk--big" />
-          </span>
-          맞춤법과 표기 통일 검수 3초!
-          <span className="welcome-pc__perf-l2-note">(300페이지 기준)</span>
-          <span className="welcome-pc__perf-anc welcome-pc__perf-anc--right">
-            <WelcomePcSparkle className="welcome-pc__perf-spk welcome-pc__perf-spk--big" />
+          <span className="welcome-pc__perf-l2-center">
+            <span className="welcome-pc__perf-anc welcome-pc__perf-anc--left">
+              <WelcomePcSparkle className="welcome-pc__perf-spk welcome-pc__perf-spk--big" />
+            </span>
+            맞춤법과 표기 통일을 3초만에!
+            <span className="welcome-pc__perf-anc welcome-pc__perf-anc--right">
+              <WelcomePcSparkle className="welcome-pc__perf-spk welcome-pc__perf-spk--big" />
+            </span>
+            <span className="welcome-pc__perf-l2-note">(300페이지 기준)</span>
           </span>
         </p>
       </div>
@@ -346,6 +377,35 @@ export default function WelcomePcScreen({
 
   const foldCapText = '이해를 돕고자 재구성한 장면입니다';
 
+  const footerBlock = (
+    <div className="welcome-pc__bottom-notes">
+      <p className="welcome-pc__footer-line">
+        <span className="welcome-pc__footer-part">{foldCapText}</span>
+        <span className="welcome-pc__footer-sep" aria-hidden="true">
+          |
+        </span>
+        <span className="welcome-pc__footer-part">
+          오픈베타 기간 기능 향상을 위해 이용 데이터를 익명으로 수집합니다
+        </span>
+        <span className="welcome-pc__footer-sep" aria-hidden="true">
+          |
+        </span>
+        <span className="welcome-pc__footer-meta">
+          <AppVersionBadge dateOnly />
+          <button
+            type="button"
+            className="welcome-pc__room-entry"
+            onClick={onOpenRoom}
+            aria-label="모모의 방"
+            title="모모의 방"
+          >
+            <BookOpen size={24} strokeWidth={1.6} aria-hidden />
+          </button>
+        </span>
+      </p>
+    </div>
+  );
+
   const landingPageBlock = (
     <div className="welcome-pc__landing" ref={landingRef}>
     <div
@@ -358,10 +418,10 @@ export default function WelcomePcScreen({
     >
       <section className="welcome-pc__hero" aria-label="서비스 소개">
         <div className="welcome-pc__hero-left">
-          {headerBlock}
+          {landingHeaderBlock}
           {perfBlock}
           <div className="welcome-pc__guest-cta-match">
-            {heroStatusBlock}
+            {showSignedInLanding ? signedInStatusBlock : null}
             <div
               className="welcome-pc__hero-cta"
               aria-label={showSignedInLanding ? '검수 계속' : '시작하기'}
@@ -375,9 +435,6 @@ export default function WelcomePcScreen({
             </div>
           </div>
         </div>
-        <aside className="welcome-pc__hero-right" aria-label="검수냥 모모">
-          <div className="welcome-pc__guest-portrait-wrap">{portraitBlock}</div>
-        </aside>
       </section>
 
     </div>
@@ -385,84 +442,18 @@ export default function WelcomePcScreen({
       <div className="welcome-pc__ba-showcase-bleed">
       <div className="welcome-pc__ba-showcase">
         <section className="welcome-pc__ba" aria-label="검수 전·후 예시">
-        <div className="welcome-pc__ba-split">
-          <figure className="welcome-pc__ba-pane welcome-pc__ba-pane--before">
-            <img
-              className="welcome-pc__ba-img"
-              src={WELCOME_PC_BEFORE}
-              width={833}
-              height={600}
-              alt="검수 전 예시 — 원고"
-              loading="lazy"
-              decoding="async"
+          <div className="welcome-pc__ba-stage">
+            <WelcomePcBaInteractive
+              beforeSrc={WELCOME_PC_BEFORE}
+              afterSrc={WELCOME_PC_AFTER}
+              beforeAlt="검수 전 예시 — 원고"
+              afterAlt="검수 후 예시 — 맞춤법·표기 통일·본용언+보조용언 표기 하이라이트"
             />
-          </figure>
-          <div className="welcome-pc__ba-bridge" aria-label={BA_BRIDGE_LABEL}>
-            <div className="welcome-pc__ba-bridge-mid">
-              <div className="welcome-pc__ba-bridge-stack">
-                <div className="welcome-pc__ba-bridge-momo-wrap">
-                  <svg
-                    className="welcome-pc__ba-bridge-disc"
-                    viewBox={BA_BRIDGE_DISC_VIEWBOX}
-                    aria-hidden="true"
-                    focusable="false"
-                  >
-                    <circle
-                      className="welcome-pc__ba-bridge-disc-fill"
-                      cx={BA_BRIDGE_CX}
-                      cy={BA_BRIDGE_CY}
-                      r={BA_BRIDGE_R_DISC}
-                    />
-                  </svg>
-                  <img
-                    className="welcome-pc__ba-bridge-img"
-                    src={WELCOME_PC_PDF_FULL}
-                    width={142}
-                    height={142}
-                    alt=""
-                    loading="lazy"
-                    decoding="async"
-                  />
-                </div>
-                <p className="welcome-pc__ba-bridge-caption">{BA_BRIDGE_LABEL}</p>
-              </div>
-            </div>
           </div>
-          <figure className="welcome-pc__ba-pane welcome-pc__ba-pane--after">
-            <img
-              className="welcome-pc__ba-img"
-              src={WELCOME_PC_AFTER}
-              width={833}
-              height={600}
-              alt="검수 후 예시 — 맞춤법·표기 통일·본용언+보조용언 표기 하이라이트"
-              loading="lazy"
-              decoding="async"
-            />
-          </figure>
-          <div className="welcome-pc__ba-gaps" aria-hidden="true">
-            <div className="welcome-pc__ba-gap welcome-pc__ba-gap--before">
-              <img
-                className="welcome-pc__ba-gap-illus"
-                src={BA_GAP_PEN}
-                alt=""
-                loading="lazy"
-                decoding="async"
-              />
-            </div>
-            <div className="welcome-pc__ba-gap welcome-pc__ba-gap--after">
-              <img
-                className="welcome-pc__ba-gap-illus welcome-pc__ba-gap-illus--flip"
-                src={BA_GAP_PEN}
-                alt=""
-                loading="lazy"
-                decoding="async"
-              />
-            </div>
-          </div>
-        </div>
         </section>
       </div>
       </div>
+      {footerBlock}
     </div>
   );
 
@@ -503,32 +494,7 @@ export default function WelcomePcScreen({
           </div>
         ) : null}
 
-        <div className="welcome-pc__bottom-notes">
-          <p className="welcome-pc__footer-line">
-            <span className="welcome-pc__footer-part">{foldCapText}</span>
-            <span className="welcome-pc__footer-sep" aria-hidden="true">
-              |
-            </span>
-            <span className="welcome-pc__footer-part">
-              오픈베타 기간 기능 향상을 위해 이용 데이터를 익명으로 수집합니다
-            </span>
-            <span className="welcome-pc__footer-sep" aria-hidden="true">
-              |
-            </span>
-            <span className="welcome-pc__footer-meta">
-              <AppVersionBadge dateOnly />
-              <button
-                type="button"
-                className="welcome-pc__room-entry"
-                onClick={onOpenRoom}
-                aria-label="모모의 방"
-                title="모모의 방"
-              >
-                <BookOpen size={24} strokeWidth={1.6} aria-hidden />
-              </button>
-            </span>
-          </p>
-        </div>
+        {!isHeroLanding ? footerBlock : null}
       </div>
     </div>
   );

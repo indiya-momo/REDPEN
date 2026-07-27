@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Welcome PC · BA 옆 스티커 목업</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Pretendard:wght@600;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --cream: #f2e9d2;
+        --ink: #1a1612;
+        --muted: rgba(61, 52, 40, 0.7);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: #0d0d0d;
+        color: #f5f0e6;
+        font-family: 'Pretendard', 'Gowun Batang', serif;
+      }
+
+      .note {
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 1.1rem 1.5rem 0.4rem;
+        font-size: 0.88rem;
+        line-height: 1.55;
+        color: rgba(245, 240, 230, 0.78);
+      }
+
+      .note strong {
+        color: #f6ead4;
+      }
+
+      .note ol {
+        margin: 0.35rem 0 0;
+        padding-left: 1.15rem;
+      }
+
+      .hero-stub {
+        max-width: 680px;
+        margin: 0.35rem auto 1rem;
+        text-align: center;
+        opacity: 0.5;
+        pointer-events: none;
+        font-size: 0.82rem;
+      }
+
+      .hero-stub h1 {
+        margin: 0.3rem 0 0;
+        font-family: 'Gowun Batang', serif;
+        font-size: 1rem;
+        font-weight: 700;
+      }
+
+      .ba-bleed {
+        background: var(--cream);
+        padding: 2.25rem 1.5rem 2.5rem;
+      }
+
+      .ba-stage {
+        position: relative;
+        width: min(980px, 100%);
+        margin: 0 auto;
+        min-height: 360px;
+      }
+
+      .card {
+        position: relative;
+        z-index: 2;
+        width: min(420px, 58%);
+        margin: 0 auto;
+        padding: 14px;
+      }
+
+      .card img {
+        display: block;
+        width: 100%;
+        height: auto;
+        border-radius: 2px;
+        box-shadow: 0 12px 30px rgba(40, 28, 12, 0.2);
+        user-select: none;
+      }
+
+      .sticker {
+        position: absolute;
+        z-index: 3;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.3rem;
+        filter: drop-shadow(0 7px 12px rgba(40, 28, 12, 0.2));
+      }
+
+      .sticker__label {
+        font-size: 0.65rem;
+        font-weight: 800;
+        letter-spacing: 0.03em;
+        color: var(--muted);
+        white-space: nowrap;
+      }
+
+      .disc {
+        display: grid;
+        place-items: center;
+        border-radius: 50%;
+        background: #faf6ec;
+        border: 2px solid rgba(40, 28, 12, 0.12);
+      }
+
+      /* 1 AI 아님 — 왼쪽 위 */
+      .sticker--no-ai {
+        left: 4%;
+        top: 8%;
+        transform: rotate(-8deg);
+      }
+
+      .sticker--no-ai .disc {
+        width: 96px;
+        height: 96px;
+      }
+
+      .sticker--no-ai svg {
+        width: 70px;
+        height: 70px;
+      }
+
+      /* 4 INDIYA — 왼쪽 아래 */
+      .sticker--indiya {
+        left: 7%;
+        bottom: 14%;
+        transform: rotate(-5deg);
+      }
+
+      .sticker--indiya .word {
+        font-weight: 800;
+        font-size: 1rem;
+        letter-spacing: 0.16em;
+        color: var(--ink);
+        opacity: 0.88;
+      }
+
+      /* 3 MOMO — 오른쪽 위, 텍스트만 */
+      .sticker--momo {
+        right: 8%;
+        top: 12%;
+        transform: rotate(-4deg);
+      }
+
+      /* 2 빨간 펜 — 오른쪽 아래 (제공 이미지) */
+      .sticker--pen {
+        right: 5%;
+        bottom: 14%;
+        transform: rotate(8deg);
+      }
+
+      .sticker--pen .pen-img {
+        width: 108px;
+        height: auto;
+        display: block;
+        image-rendering: pixelated;
+        image-rendering: crisp-edges;
+      }
+
+      .sticker--momo .word {
+        font-weight: 800;
+        font-size: 1.45rem;
+        letter-spacing: 0.04em;
+        color: var(--ink);
+        line-height: 1;
+      }
+
+      .legend {
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 1rem 1.5rem 2rem;
+        font-size: 0.84rem;
+        color: rgba(245, 240, 230, 0.62);
+      }
+
+      .legend code {
+        color: #e7c9a0;
+      }
+
+      @media (max-width: 720px) {
+        .card {
+          width: 78%;
+        }
+
+        .sticker--no-ai {
+          left: 0;
+          top: -0.5rem;
+          transform: scale(0.78) rotate(-8deg);
+        }
+
+        .sticker--indiya {
+          left: 0;
+          bottom: 0.25rem;
+          transform: scale(0.85) rotate(-5deg);
+        }
+
+        .sticker--momo {
+          right: 0;
+          top: -0.25rem;
+          transform: scale(0.85) rotate(-4deg);
+        }
+
+        .sticker--pen {
+          right: 0;
+          bottom: 0.5rem;
+          transform: scale(0.78) rotate(8deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="note">
+      <strong>목업 · 확정 방향</strong>
+      <ol>
+        <li><strong>왼쪽 위</strong> — AI 아님 (1)</li>
+        <li><strong>왼쪽 아래</strong> — INDIYA (4)</li>
+        <li><strong>오른쪽 위</strong> — MOMO 텍스트만 (3)</li>
+        <li><strong>오른쪽 아래</strong> — 빨간 펜 이미지 (2)</li>
+      </ol>
+    </div>
+
+    <div class="hero-stub" aria-hidden="true">
+      <div>✓ 검수 결과를 원고에 표시하는 브라우저 프로그램입니다</div>
+      <h1>맞춤법과 표기 통일 검수 3초!</h1>
+    </div>
+
+    <section class="ba-bleed" aria-label="검수 전·후 옆 스티커 목업">
+      <div class="ba-stage">
+        <div class="sticker sticker--no-ai">
+          <div class="disc" aria-hidden="true">
+            <svg viewBox="0 0 64 64" role="img" aria-label="AI 아님">
+              <circle
+                cx="32"
+                cy="32"
+                r="26"
+                fill="none"
+                stroke="#c62828"
+                stroke-width="4.5"
+              />
+              <text
+                x="32"
+                y="38"
+                text-anchor="middle"
+                font-family="Pretendard, sans-serif"
+                font-size="18"
+                font-weight="800"
+                fill="#1a1612"
+                letter-spacing="1"
+              >
+                AI
+              </text>
+              <line
+                x1="14"
+                y1="50"
+                x2="50"
+                y2="14"
+                stroke="#c62828"
+                stroke-width="4.5"
+                stroke-linecap="round"
+              />
+            </svg>
+          </div>
+          <span class="sticker__label">1 · AI 아님</span>
+        </div>
+
+        <div class="sticker sticker--indiya">
+          <div class="word">INDIYA</div>
+          <span class="sticker__label">4 · 인디야</span>
+        </div>
+
+        <div class="card">
+          <img
+            src="../welcome/before1.png"
+            width="833"
+            height="600"
+            alt="검수 전 예시 카드"
+          />
+        </div>
+
+        <div class="sticker sticker--momo">
+          <div class="word">MOMO</div>
+          <span class="sticker__label">3 · 모모</span>
+        </div>
+
+        <div class="sticker sticker--pen">
+          <img
+            class="pen-img"
+            src="../momo/pen_transparent.png"
+            width="128"
+            height="48"
+            alt="빨간 펜"
+          />
+          <span class="sticker__label">2 · 빨간 펜</span>
+        </div>
+      </div>
+    </section>
+
+    <p class="legend">
+      파일: <code>public/mock/welcome-ba-stickers-mock.html</code> ·
+      열기:
+      <a href="/mock/welcome-ba-stickers-mock.html" style="color: #e7c9a0"
+        >http://127.0.0.1:5173/mock/welcome-ba-stickers-mock.html</a
+      >
+      · 펜 이미지: <code>public/momo/pen_transparent.png</code>
+    </p>
+  </body>
+</html>
