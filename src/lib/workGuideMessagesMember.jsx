@@ -92,9 +92,7 @@ export function SpellingStartCheckMessage() {
 export function FirstResultMessage() {
   return (
     <>
-      왼쪽에는 검수 결과를 정리했다냥
-      <br />
-      오른쪽에서는 원고를 볼 수 있다냥
+      왼쪽: 검수 결과, 오른쪽: 반영 원고
       <br />
       위{' '}
       <span
@@ -256,7 +254,7 @@ export function WorkExitMessage() {
         을 보내고 화면을 새로고침하면
       </span>
       <span className="tooltip-guide__message-line">
-        곧바로 선물을 받을 수 있다냥!
+        곧바로 일일 검수권이 2배가 된다냥!
       </span>
     </>
   );
