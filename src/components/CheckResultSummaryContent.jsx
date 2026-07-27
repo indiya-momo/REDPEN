@@ -69,9 +69,14 @@ function chunkRows(cells, perRow = 2) {
  *     tone?: import('../lib/resultPillarTone.js').ResultBadgeTone,
  *   }>,
  *   totalFindings: number,
+ *   quotaConsumedLine?: string | null,
  * }} props
  */
-export default function CheckResultSummaryContent({ stats, totalFindings }) {
+export default function CheckResultSummaryContent({
+  stats,
+  totalFindings,
+  quotaConsumedLine = null,
+}) {
   const totalRow = (
     <span
       key="__total__"
@@ -98,6 +103,9 @@ export default function CheckResultSummaryContent({ stats, totalFindings }) {
 
   return (
     <div className="results-header app-dialog__results-summary">
+      {quotaConsumedLine ? (
+        <p className="app-dialog__quota-consumed-line">{quotaConsumedLine}</p>
+      ) : null}
       <div className="app-dialog__results-summary-row app-dialog__results-summary-row--total">
         {totalRow}
       </div>

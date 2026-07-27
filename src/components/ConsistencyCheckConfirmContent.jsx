@@ -10,7 +10,9 @@ import {
 import { AUXILIARY_VERB_FEATURE_LABEL } from '../lib/bonBojoRules.js';
 import { formatConsistencyListLabel } from '../lib/patternDisplayLabels.js';
 import { formatCategoryFindingCount } from '../lib/checkResultSummaryFormat.js';
-import { formatQuotaAvailabilityParen } from '../lib/betaDailyQuota.js';
+import {
+  formatConsistencyCheckQuotaAvailabilityLine,
+} from '../lib/betaDailyQuota.js';
 import { AppDialogCriteriaLabel } from './AppDialogCriteriaLabel.jsx';
 
 /**
@@ -120,9 +122,11 @@ export default function ConsistencyCheckConfirmContent({
     <>
       {showQuota ? (
         <p className="app-dialog__confirm-line">
-          오늘 표기 통일 검수는 {remaining}회(
-          {formatQuotaAvailabilityParen(dailyRemaining, bonusRemaining)})
-          가능합니다
+          {formatConsistencyCheckQuotaAvailabilityLine(
+            remaining,
+            dailyRemaining,
+            bonusRemaining,
+          )}
         </p>
       ) : null}
       {renderCriteriaRow(rowUnifyLiteral)}

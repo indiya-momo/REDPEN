@@ -75,12 +75,13 @@ export function PreUploadMessage() {
 export function SpellingStartCheckMessage() {
   return (
     <>
-      멋지다냥, 업로드에 성공했다냥!
+      업로드 성공!
       <br />
-      <span className="tooltip-guide__gothic-label">편집자 검토 필요</span>,{' '}
-      <span className="tooltip-guide__gothic-label">맞춤법 규칙</span>에서
+      이제 <span className="tooltip-guide__gothic-label">편집자 검토 필요</span>,{' '}
+      <span className="tooltip-guide__gothic-label">맞춤법 규칙</span>,{' '}
+      <span className="tooltip-guide__gothic-label">외래어 표기법</span>
       <br />
-      적용할 기준을 정하고
+      세 가지 체크박스에서 적용할 기준을 확인하고
       <br />
       <span className="tooltip-guide__run-btn-look">기준 검수</span>를 해
       보자냥

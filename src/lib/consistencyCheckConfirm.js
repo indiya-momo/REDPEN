@@ -34,8 +34,9 @@ import {
 import {
   BETA_TAB_LIMIT_DEFAULT,
   betaQuotaAlertForTab,
+  buildCheckResultQuotaConsumedLine,
   canRunTabCheck,
-  formatQuotaAvailabilityParen,
+  formatConsistencyCheckQuotaAvailabilityLine,
   getBetaDailyQuotaStatus,
   getTabRemainingBreakdown,
   isBetaDailyQuotaEnabled,
@@ -197,7 +198,7 @@ export function formatConsistencyCheckConfirmMessage({
   return (
     `[표기 통일 검수]\n` +
     `\n` +
-    `오늘 표기 통일 검수는 ${remaining}회(${formatQuotaAvailabilityParen(dailyRemaining, bonusRemaining)}) 가능합니다\n` +
+    `${formatConsistencyCheckQuotaAvailabilityLine(remaining, dailyRemaining, bonusRemaining)}\n` +
     `${formatConsistencyCheckCriteriaBlock({
       literalActive,
       unifyActive,
@@ -231,7 +232,7 @@ export function formatConsistencyUnifyCheckConfirmMessage({
   return (
     `[표기 통일하기 검수 진행]\n` +
     `\n` +
-    `오늘 표기 통일 검수는 ${remaining}회(${formatQuotaAvailabilityParen(dailyRemaining, bonusRemaining)}) 가능합니다\n` +
+    `${formatConsistencyCheckQuotaAvailabilityLine(remaining, dailyRemaining, bonusRemaining)}\n` +
     `(표기 통일하기는 표기 통일 검수 횟수를 사용합니다)\n` +
     `${formatConsistencyUnifyConfirmLine(unifyActive, pinnedTailWord)}\n` +
     `\n` +
@@ -576,12 +577,14 @@ export function formatConsistencyCheckCompleteMessage({
  *   commonStringSelected?: boolean,
  *   auxiliarySelected?: boolean,
  * }} [criteriaSelection]
+ * @param {{ uid?: string, email?: string, tab?: import('./betaDailyQuota.js').BetaQuotaTab }} [quotaContext]
  */
 export async function alertConsistencyCheckAfterRun(
   groups = [],
   totalFindings = 0,
   customRules = [],
   criteriaSelection = {},
+  quotaContext = {},
 ) {
   const {
     literalSelected = true,
@@ -589,6 +592,7 @@ export async function alertConsistencyCheckAfterRun(
     commonStringSelected = true,
     auxiliarySelected = true,
   } = criteriaSelection;
+  const { uid = '', email = '', tab = 'consistency' } = quotaContext;
   const withFindings = countConsistencyGroupsWithFindings(
     groups,
     customRules,
@@ -614,6 +618,12 @@ export async function alertConsistencyCheckAfterRun(
     auxiliaryFindings: findingsByType.bonBojo,
   });
 
+  const quotaConsumedLine = await buildCheckResultQuotaConsumedLine(
+    uid,
+    email,
+    tab,
+  );
+
   await finishGuestBrowseConsistencyResultThenUnlockExportGuide(
     async (extra = {}) => {
       await showAppAlert({
@@ -622,6 +632,7 @@ export async function alertConsistencyCheckAfterRun(
         messageNode: createElement(CheckResultSummaryContent, {
           stats,
           totalFindings,
+          quotaConsumedLine,
         }),
         ...extra,
       });

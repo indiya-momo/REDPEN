@@ -18,6 +18,7 @@ import {
  *   confirmLabel?: string,
  *   cancelLabel?: string,
  *   showGuideHand?: boolean,
+ *   titleAlign?: 'start' | 'center',
  * }} DialogState
  */
 
@@ -39,6 +40,7 @@ export default function AppDialogHost() {
           copyableUrl: opts.copyableUrl,
           confirmLabel: opts.confirmLabel || '확인',
           showGuideHand: Boolean(opts.showGuideHand),
+          titleAlign: opts.titleAlign === 'start' ? 'start' : 'center',
         });
       }),
     confirm: (opts) =>
@@ -52,6 +54,7 @@ export default function AppDialogHost() {
           confirmLabel: opts.confirmLabel || '확인',
           cancelLabel: opts.cancelLabel || '취소',
           showGuideHand: Boolean(opts.showGuideHand),
+          titleAlign: opts.titleAlign === 'start' ? 'start' : 'center',
         });
       }),
   });
@@ -84,6 +87,7 @@ export default function AppDialogHost() {
       confirmLabel={state.confirmLabel}
       cancelLabel={state.cancelLabel}
       showGuideHand={Boolean(state.showGuideHand)}
+      titleAlign={state.titleAlign === 'start' ? 'start' : 'center'}
       onConfirm={() => finish(state.mode === 'confirm')}
       onCancel={() => finish(false)}
     />

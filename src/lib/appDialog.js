@@ -13,6 +13,7 @@
  *   confirmLabel?: string,
  *   cancelLabel?: string,
  *   showGuideHand?: boolean,
+ *   titleAlign?: 'start' | 'center',
  * }} AppDialogOptions */
 
 const HOST_REGISTRY_KEY = Symbol.for('pdf-publish-proofread.appDialogHost');
