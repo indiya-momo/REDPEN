@@ -269,11 +269,12 @@
   container-type: inline-size;
   container-name: welcome-page;
   width: 100%;
-  flex: 1;
+  flex: 0 1 auto;
   min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--welcome-ba-cream-outer-gap);
+  justify-content: flex-start;
+  gap: calc(var(--welcome-ba-cream-outer-gap) - var(--welcome-ba-cream-inner-pad) * 0.35);
   --welcome-ba-fold-shift-y: 0;
   /* 크림 전시 패널 (비포·애프터 묶음) */
   --welcome-ba-panel-cream: #f2e9d2;
@@ -304,6 +305,15 @@
   --welcome-ba-bridge-caption-scale: 1.3;
   --welcome-fold-cap-text-scale: 1.69;
   --welcome-ba-fold-cap-scale: 0.9;
+  --welcome-ba-fold-cap-line-height: calc(
+    1.45 * 0.68rem * var(--welcome-scale) * var(--welcome-showcase-caption-scale) *
+      var(--welcome-ba-img-scale) * var(--welcome-fold-cap-text-scale, 1) *
+      var(--welcome-ba-fold-cap-scale, 1)
+  );
+  --welcome-ba-fold-cap-slot-height: calc(
+    var(--welcome-ba-cream-inner-pad) / 2 + var(--welcome-ba-fold-cap-line-height) +
+      var(--welcome-ba-cream-inner-pad) / 2
+  );
   --welcome-hero-frame-end-nudge-left: 0px;
   --welcome-page-content-end: calc(
     (100cqw + min(100cqw, var(--welcome-page-max-width))) / 2 -
@@ -318,11 +328,11 @@
       var(--welcome-guest-portrait-size-scale)
   );
   --welcome-compare-img-brightness-panel: 1;
-  /* 검수 전·후 PNG 실제 크기 — before_after22-crop1/2 */
-  --welcome-ba-shot-w-before: 986;
-  --welcome-ba-shot-h-before: 709;
-  --welcome-ba-shot-w-after: 1028;
-  --welcome-ba-shot-h-after: 713;
+  /* 검수 전·후 PNG 실제 크기 — before1/after1 */
+  --welcome-ba-shot-w-before: 833;
+  --welcome-ba-shot-h-before: 600;
+  --welcome-ba-shot-w-after: 833;
+  --welcome-ba-shot-h-after: 600;
   --welcome-ba-split-inner: calc(
     var(--welcome-ba-showcase-inner-width) - 2 * var(--welcome-ba-split-gap) -
       var(--welcome-ba-bridge-col-width)
@@ -710,13 +720,13 @@
 
 .welcome-pc__landing > .welcome-pc__page {
   padding-bottom: 0;
-  flex: 1 1 auto;
-  min-height: 0;
+  flex: 0 0 auto;
+  min-height: auto;
 }
 
 .welcome-pc__landing > .welcome-pc__page > .welcome-pc__hero {
-  flex: 1 1 auto;
-  min-height: 0;
+  flex: 0 0 auto;
+  min-height: auto;
 }
 
 .welcome-pc__landing .welcome-pc__ba-showcase-bleed {
@@ -802,7 +812,8 @@
   max-width: var(--welcome-ba-showcase-width);
   margin-left: var(--welcome-ba-showcase-inset-left);
   margin-right: auto;
-  padding: var(--welcome-ba-panel-pad-top) var(--welcome-ba-panel-pad-inline) 0 0;
+  padding: var(--welcome-ba-panel-pad-top) var(--welcome-ba-panel-pad-inline)
+    var(--welcome-ba-panel-pad-bottom) 0;
   background: transparent;
   border-radius: var(--welcome-ba-panel-radius);
   overflow: visible;
@@ -840,18 +851,6 @@
 
 .welcome-pc__ba-showcase .welcome-pc__ba-pane--after .welcome-pc__ba-img {
   object-position: bottom right;
-}
-
-.welcome-pc__ba-showcase .welcome-pc__fold-cap {
-  width: 100%;
-  max-width: 100%;
-  color: var(--welcome-ba-panel-caption-muted);
-  margin-top: calc(var(--welcome-ba-cream-inner-pad) / 2);
-  padding-bottom: calc(var(--welcome-ba-cream-inner-pad) / 2);
-  font-size: calc(
-    0.68rem * var(--welcome-scale) * var(--welcome-showcase-caption-scale) * var(--welcome-ba-img-scale) *
-      var(--welcome-fold-cap-text-scale, 1) * var(--welcome-ba-fold-cap-scale, 1)
-  );
 }
 
 .welcome-pc__ba {
@@ -1180,19 +1179,17 @@
   }
 
   .welcome-pc__page .welcome-pc__hero-left {
-    min-height: 100%;
+    min-height: auto;
   }
 
   .welcome-pc__page .welcome-pc__guest-cta-match {
-    margin-top: auto;
-    padding-top: calc(
-      var(--welcome-hero-perf-beta-gap) * 1.15 * var(--welcome-hero-perf-beta-gap-ratio)
-    );
-    transform: translateY(var(--welcome-hero-bottom-align-nudge));
+    margin-top: calc(0.45rem * var(--welcome-scale));
+    padding-top: 0;
+    transform: none;
   }
 
   .welcome-pc__page .welcome-pc__hero-right .welcome-pc__guest-portrait-wrap {
-    margin-top: auto;
+    margin-top: 0;
     transform: translateY(
       calc(-1 * (var(--welcome-hero-portrait-lift) + var(--welcome-hero-momo-nudge-y)))
     );
@@ -1201,7 +1198,7 @@
   .welcome-pc__page .welcome-pc__hero-right {
     justify-self: end;
     margin-inline-end: var(--welcome-hero-frame-end-offset);
-    min-height: 100%;
+    min-height: auto;
   }
 
   .welcome-pc__landing .welcome-pc__page .welcome-pc__hero-right {
