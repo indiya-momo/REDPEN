@@ -48,6 +48,7 @@ import {
 import ConsistencyRegisterField from './consistency/ConsistencyRegisterField.jsx';
 import ConsistencyHintExample from './consistency/ConsistencyHintExample.jsx';
 import ConsistencyUnifySection from './consistency/ConsistencyUnifySection.jsx';
+import UnifyCandidateFindPanel from './consistency/UnifyCandidateFindPanel.jsx';
 import ExcludePhraseList from './consistency/ExcludePhraseList.jsx';
 import RegisteredList from './consistency/RegisteredList.jsx';
 import {
@@ -303,6 +304,7 @@ export default function ConsistencyPanel({
 
   return (
     <div className="consistency-embed">
+      <UnifyCandidateFindPanel hasPdf={hasPdf} />
       <section
         className={[
           'consistency-unified-box',

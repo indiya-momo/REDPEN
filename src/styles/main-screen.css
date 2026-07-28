@@ -1601,6 +1601,32 @@
   box-sizing: border-box;
 }
 
+/* 표기 통일 후보 찾기 — 외래어 표기(변환)와 같은 흰 박스 + 전용 버튼 */
+.panel-left .unify-candidate-find.loanword-converter {
+  margin: 0 0 calc(10px * var(--panel-ui-scale, 1));
+  padding: 8px 12px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.92);
+  box-sizing: border-box;
+}
+
+.panel-left .unify-candidate-find__hint {
+  margin: 8px 0 6px;
+}
+
+.panel-left .unify-candidate-find__field.loanword-converter__field {
+  justify-content: flex-end;
+  border: none;
+  background: transparent;
+  overflow: visible;
+}
+
+.panel-left .unify-candidate-find__submit.loanword-converter__submit {
+  border-radius: var(--radius-search);
+  min-width: 4.5em;
+}
+
 /* 3번(보정) — 텍스트 열 폭 */
 .spelling-tab-layout__calibration .tooltip-guide {
   --tooltip-text-max: calc(360px * var(--tooltip-scale));
