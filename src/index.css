@@ -1718,6 +1718,13 @@ details[open] > summary .details-chevron::before {
   flex: 1;
 }
 
+/* 배포(PROD): 검수 결과 리스트만 드래그 복사 방지 — 로컬 npm run dev 는 그대로 */
+html[data-build='prod'] .results-list,
+html[data-build='prod'] .unify-candidate-find__list {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
 .result-card {
   width: 100%;
   text-align: left;
