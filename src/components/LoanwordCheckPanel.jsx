@@ -9,6 +9,7 @@ import BuiltinSpellingPanel from './BuiltinSpellingPanel.jsx';
 import { LOANWORD_QUOTA_RULES_UI } from '../lib/builtInRules.js';
 import { LOANWORD_FEATURE_LABEL } from '../lib/loanwordCheckRules.js';
 import { LOANWORD_ORTHOGRAPHY_URL } from '../lib/koreanNormsLinks.js';
+import { SPELLING_CRITERIA_HEADING_DESCRIPTIONS } from '../lib/spellingCriteriaHeadingTips.js';
 
 /**
  * @param {{
@@ -30,6 +31,7 @@ export default function LoanwordCheckPanel({
       quotaRules={LOANWORD_QUOTA_RULES_UI}
       guideRules={[]}
       title={LOANWORD_FEATURE_LABEL}
+      description={SPELLING_CRITERIA_HEADING_DESCRIPTIONS.loanword}
       sourceHref={LOANWORD_ORTHOGRAPHY_URL}
       sourceLabel="외래어 표기법"
       classPrefix="loanword-check"

@@ -3,6 +3,7 @@ import {
   PDF_ZOOM_PERCENT_MAX,
   PDF_ZOOM_PERCENT_MIN,
 } from '../lib/pdfService.js';
+import CriteriaHoverTip from './CriteriaHoverTip.jsx';
 
 /**
  * @param {{
@@ -49,17 +50,19 @@ export default function PdfZoomBar({
 
   return (
     <div className="pdf-zoom-bar" role="toolbar" aria-label="PDF 확대/축소">
-      <button
-        type="button"
-        className="pdf-zoom-bar__btn"
-        onClick={onZoomOut}
-        disabled={!canZoomOut}
-        aria-label="축소"
-      >
-        <span className="pdf-zoom-bar__sign" aria-hidden="true">
-          −
-        </span>
-      </button>
+      <CriteriaHoverTip tip="축소">
+        <button
+          type="button"
+          className="pdf-zoom-bar__btn"
+          onClick={onZoomOut}
+          disabled={!canZoomOut}
+          aria-label="축소"
+        >
+          <span className="pdf-zoom-bar__sign" aria-hidden="true">
+            −
+          </span>
+        </button>
+      </CriteriaHoverTip>
       <label className="pdf-zoom-bar__percent-wrap">
         <span className="sr-only">확대 배율(퍼센트)</span>
         <input
@@ -85,17 +88,19 @@ export default function PdfZoomBar({
           %
         </span>
       </label>
-      <button
-        type="button"
-        className="pdf-zoom-bar__btn"
-        onClick={onZoomIn}
-        disabled={!canZoomIn}
-        aria-label="확대"
-      >
-        <span className="pdf-zoom-bar__sign" aria-hidden="true">
-          +
-        </span>
-      </button>
+      <CriteriaHoverTip tip="확대">
+        <button
+          type="button"
+          className="pdf-zoom-bar__btn"
+          onClick={onZoomIn}
+          disabled={!canZoomIn}
+          aria-label="확대"
+        >
+          <span className="pdf-zoom-bar__sign" aria-hidden="true">
+            +
+          </span>
+        </button>
+      </CriteriaHoverTip>
     </div>
   );
 }

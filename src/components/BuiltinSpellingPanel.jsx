@@ -22,6 +22,7 @@ import { spellingRuleChecklistParts } from '../lib/spellingRuleEntry.js';
  *   quotaRules?: import('../lib/ruleTypes.js').Rule[],
  *   guideRules?: import('../lib/ruleTypes.js').Rule[],
  *   title?: string,
+ *   description?: string,
  *   sourceHref?: string,
  *   sourceLabel?: string,
  *   classPrefix?: string,
@@ -37,6 +38,7 @@ export default function BuiltinSpellingPanel({
   quotaRules = SPELLING_QUOTA_RULES_UI,
   guideRules = BUILT_IN_GUIDE_RULES_UI,
   title = '맞춤법 규칙',
+  description = '',
   sourceHref = '',
   sourceLabel = '',
   classPrefix = 'builtin-spelling',
@@ -102,7 +104,6 @@ export default function BuiltinSpellingPanel({
             {useInlineTipToggle ? (
               <span
                 className={`builtin-rule-label caution-inline-tip-trigger${tipOpen ? ' caution-inline-tip-trigger--open' : ''}`}
-                data-hover-tip="설명"
                 role="button"
                 tabIndex={0}
                 onClick={onToggleTip}
@@ -267,6 +268,9 @@ export default function BuiltinSpellingPanel({
           <span className="panel-criteria-heading-meta">
             {`(${enabled}/${total})`}
           </span>
+          {description ? (
+            <span className="panel-criteria-heading-desc">{description}</span>
+          ) : null}
           {sourceHref && sourceLabel ? (
             <a
               className="panel-criteria-source-link"

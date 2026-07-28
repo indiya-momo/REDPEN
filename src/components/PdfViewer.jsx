@@ -376,7 +376,6 @@ export default function PdfViewer({
                   }}
                   role={(r.tip || '').trim() ? 'button' : undefined}
                   tabIndex={(r.tip || '').trim() ? 0 : undefined}
-                  title={(r.tip || '').trim() ? '설명' : undefined}
                   {...(isGuidePdfAnchor
                     ? { 'data-work-guide-pdf-highlight': '' }
                     : {})}
