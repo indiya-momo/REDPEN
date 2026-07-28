@@ -91,8 +91,21 @@ import TooltipGuide from './TooltipGuide.jsx';
  *   onCalibrateFromInput?: (raw: string, isSpread: boolean) => void,
  *   onRunTocCheck?: () => void | Promise<void>,
  *   hasPdf?: boolean,
+ *   pageTexts?: { pageNum?: number, text?: string }[],
  *   isProcessing?: boolean,
  *   checkQuotaBlocked?: boolean,
+ *   authUid?: string,
+ *   authEmail?: string,
+ *   onBetaQuotaConsumed?: () => void,
+ *   currentPage?: number,
+ *   selectedInstance?: import('../lib/ruleEngine.js').MatchInstance | null,
+ *   onSelectUnifyCandidateInstance?: (
+ *     inst: import('../lib/ruleEngine.js').MatchInstance,
+ *   ) => void,
+ *   onUnifyCandidatePreviewGroupsChange?: (
+ *     groups: import('../lib/ruleEngine.js').GroupedResult[],
+ *   ) => void,
+ *   formatPageLabel?: (systemPage: number) => string,
  *   auxiliaryVerbGuide?: {
  *     storageKey: string,
  *     alignToBubbleChain: readonly object[],
@@ -140,8 +153,17 @@ export default function ConsistencyPanel({
   onCalibrateFromInput = () => {},
   onRunTocCheck = () => {},
   hasPdf = false,
+  pageTexts = [],
   isProcessing = false,
   checkQuotaBlocked = false,
+  authUid = '',
+  authEmail = '',
+  onBetaQuotaConsumed,
+  currentPage = 1,
+  selectedInstance = null,
+  onSelectUnifyCandidateInstance,
+  onUnifyCandidatePreviewGroupsChange,
+  formatPageLabel,
   auxiliaryVerbGuide = null,
   onLiteralAddButtonClick,
   onUnifyAddButtonClick,
@@ -304,7 +326,23 @@ export default function ConsistencyPanel({
 
   return (
     <div className="consistency-embed">
-      <UnifyCandidateFindPanel hasPdf={hasPdf} />
+      <UnifyCandidateFindPanel
+        hasPdf={hasPdf}
+        pageTexts={pageTexts}
+        customRules={customRules}
+        onApplyRules={applyCustomRules}
+        consistencyDecisions={consistencyDecisions}
+        decisionByUid={decisionByUid}
+        authUid={authUid}
+        authEmail={authEmail}
+        onBetaQuotaConsumed={onBetaQuotaConsumed}
+        checkQuotaBlocked={checkQuotaBlocked}
+        currentPage={currentPage}
+        selectedInstance={selectedInstance}
+        onSelectInstance={onSelectUnifyCandidateInstance}
+        onPreviewGroupsChange={onUnifyCandidatePreviewGroupsChange}
+        formatPageLabel={formatPageLabel}
+      />
       <section
         className={[
           'consistency-unified-box',

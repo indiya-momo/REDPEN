@@ -342,6 +342,11 @@ export default function MainScreen({
   const [workTab, setWorkTab] = useState(initialWorkTab);
   /** @type {['toc' | 'rules', import('react').Dispatch<import('react').SetStateAction<'toc' | 'rules'>>]} */
   const [consistencyFocus, setConsistencyFocus] = useState('rules');
+  /** 표기 통일 후보 찾기 — 소수 이형태 임시 하이라이트 그룹 */
+  const [unifyCandidatePreviewResults, setUnifyCandidatePreviewResults] =
+    useState(
+      /** @type {import('../lib/ruleEngine.js').GroupedResult[]} */ ([]),
+    );
   /** 목차·표기 결과가 둘 다 있을 때 어느 패널을 보여줄지 (겹쳐 쌓지 않음) */
   const [lastConsistencyPane, setLastConsistencyPane] = useState(
     /** @type {'toc' | 'rules'} */ ('rules'),
@@ -622,6 +627,7 @@ export default function MainScreen({
   const clearConsistencyTabWork = useCallback(() => {
     tocCheck.clearTocCheckState();
     ruleCheck.clearConsistencyCheckState();
+    setUnifyCandidatePreviewResults([]);
     setConsistencyFocus('rules');
     setLastConsistencyPane('rules');
   }, [tocCheck, ruleCheck]);
@@ -647,7 +653,10 @@ export default function MainScreen({
     currentPage: pdf.currentPage,
     currentPageData: pdf.currentPageData,
     spellingResults: ruleCheck.spellingResults,
-    consistencyResults: ruleCheck.consistencyResults,
+    consistencyResults: [
+      ...ruleCheck.consistencyResults,
+      ...unifyCandidatePreviewResults,
+    ],
     resultVisibility: ruleCheck.resultVisibility,
     highlightTab: workTab === 'spelling' ? 'spelling' : 'consistency',
     activeSource: ruleCheck.activeSource,
@@ -2431,8 +2440,25 @@ export default function MainScreen({
                       : undefined
                   }
                   hasPdf={pdf.pageTexts.length > 0}
+                  pageTexts={pdf.pageTexts}
                   isProcessing={pdf.isProcessing}
                   checkQuotaBlocked={checkSessionBlocked}
+                  authUid={authUid}
+                  authEmail={authEmail}
+                  onBetaQuotaConsumed={() => void betaQuota.refresh()}
+                  currentPage={pdf.currentPage}
+                  selectedInstance={ruleCheck.selectedInstance}
+                  onSelectUnifyCandidateInstance={(inst) => {
+                    setConsistencyFocus('rules');
+                    setLastConsistencyPane('rules');
+                    ruleCheck.selectInstance(inst, 'consistency');
+                  }}
+                  onUnifyCandidatePreviewGroupsChange={
+                    setUnifyCandidatePreviewResults
+                  }
+                  formatPageLabel={(systemPage) =>
+                    pageDisplay.formatLabel(systemPage)
+                  }
                 />
               </div>
             ) : null}

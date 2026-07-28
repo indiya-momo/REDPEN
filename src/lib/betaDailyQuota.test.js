@@ -254,8 +254,11 @@ describe('canRunTabCheck', () => {
 
 describe('formatCheckQuotaConsumedLine', () => {
   it('차감 직후 남은 일일·선물 검수권을 한 줄로 만든다', () => {
-    expect(formatCheckQuotaConsumedLine(0, 4)).toBe(
-      '검수권 1회를 사용했습니다(1일 검수권 0회, 선물 검수권 4회 남음)',
+    expect(formatCheckQuotaConsumedLine(0, 4, 'spelling')).toBe(
+      '맞춤법 검수권 1회가 사용되었습니다(1일 검수권 0회, 선물 검수권 4회 사용 가능)',
+    );
+    expect(formatCheckQuotaConsumedLine(1, 5, 'consistency')).toBe(
+      '표기 통일 검수권 1회가 사용되었습니다(1일 검수권 1회, 선물 검수권 5회 사용 가능)',
     );
   });
 });

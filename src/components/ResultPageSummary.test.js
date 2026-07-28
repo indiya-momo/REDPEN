@@ -3,6 +3,7 @@ import {
   buildInstancePills,
   fitPillsIntoTwoRows,
   getInstanceFragmentLabel,
+  shrinkVisibleCountForExpandOverflow,
 } from './ResultPageSummary.jsx';
 
 /** @param {number} pageNum @param {number} index */
@@ -117,5 +118,68 @@ describe('fitPillsIntoTwoRows', () => {
     expect(result.needsCollapse).toBe(true);
     expect(result.visibleCount).toBeLessThan(15);
     expect(result.visibleCount).toBeGreaterThan(0);
+  });
+
+  it('둘째 줄 끝이 좁으면 「더 보기」 자리만큼 칩을 더 줄인다', () => {
+    // 둘째 줄 마지막 칩이 오른쪽 끝에 거의 붙어 있음 (right ≈ 196, clientWidth 200)
+    const root = mockPillRoot({
+      tops: [
+        ...Array.from({ length: 5 }, () => 0),
+        ...Array.from({ length: 5 }, () => 28),
+        ...Array.from({ length: 5 }, () => 56),
+      ],
+      width: 40,
+      clientWidth: 200,
+    });
+    const result = fitPillsIntoTwoRows(/** @type {any} */ (root), 15);
+    expect(result.needsCollapse).toBe(true);
+    // fitCount=10이면 둘째 줄 끝 칩 right=196 → 여유 4px ≪ 버튼 폭 → 줄임
+    expect(result.visibleCount).toBeLessThan(10);
+    expect(result.visibleCount).toBeGreaterThan(0);
+  });
+});
+
+describe('shrinkVisibleCountForExpandOverflow', () => {
+  it('더 보기가 오른쪽을 넘치면 visibleCount를 1 줄인다', () => {
+    const root = {
+      querySelector: (sel) =>
+        sel === '[data-result-expand]'
+          ? {
+              offsetTop: 28,
+              offsetHeight: 20,
+              getBoundingClientRect: () => ({ right: 220 }),
+            }
+          : null,
+      querySelectorAll: () => [
+        { offsetTop: 0, offsetHeight: 20 },
+        { offsetTop: 28, offsetHeight: 20 },
+      ],
+      getBoundingClientRect: () => ({ right: 200 }),
+    };
+    expect(shrinkVisibleCountForExpandOverflow(/** @type {any} */ (root), 8)).toBe(
+      7,
+    );
+  });
+
+  it('더 보기가 안에 들어가면 그대로 둔다', () => {
+    const root = {
+      querySelector: (sel) =>
+        sel === '[data-result-expand]'
+          ? {
+              // 2줄 maxBottom=40 (rowGap 0) 안에 들어감
+              offsetTop: 20,
+              offsetHeight: 20,
+              getBoundingClientRect: () => ({ right: 180 }),
+            }
+          : null,
+      querySelectorAll: () => [
+        { offsetTop: 0, offsetHeight: 20 },
+        { offsetTop: 20, offsetHeight: 20 },
+      ],
+      getBoundingClientRect: () => ({ right: 200 }),
+    };
+    expect(shrinkVisibleCountForExpandOverflow(/** @type {any} */ (root), 8)).toBe(
+      8,
+    );
   });
 });

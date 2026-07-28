@@ -288,6 +288,14 @@ export function betaQuotaTabLabel(tab) {
   return '표기 통일 검수';
 }
 
+/**
+ * 검수권 종류 짧은 라벨 (「맞춤법 검수권」「표기 통일 검수권」)
+ * @param {BetaQuotaTab} tab
+ */
+export function betaQuotaTicketKindLabel(tab) {
+  return normalizeBetaQuotaTab(tab) === 'spelling' ? '맞춤법' : '표기 통일';
+}
+
 export function formatBetaExportConsumedAlert(exportCount, exportLimit) {
   const remaining = Math.max(0, exportLimit - exportCount);
   return (
@@ -368,15 +376,21 @@ export function getTabRemainingBreakdown(tabCount, dailyLimit, bonusRemaining) {
 }
 
 /**
- * 검수 완료 팝업 — 차감 직후 남은 검수권
+ * 검수 완료 팝업 — 차감 직후 남은 검수권 (맨 첫 줄)
  * @param {number} dailyRemaining
  * @param {number} bonusRemaining
+ * @param {BetaQuotaTab} [tab]
  */
-export function formatCheckQuotaConsumedLine(dailyRemaining, bonusRemaining) {
+export function formatCheckQuotaConsumedLine(
+  dailyRemaining,
+  bonusRemaining,
+  tab = 'spelling',
+) {
+  const kind = betaQuotaTicketKindLabel(tab);
   return (
-    `검수권 1회를 사용했습니다(` +
+    `${kind} 검수권 1회가 사용되었습니다(` +
     `1일 검수권 ${Math.max(0, dailyRemaining)}회, ` +
-    `선물 검수권 ${Math.max(0, bonusRemaining)}회 남음)`
+    `선물 검수권 ${Math.max(0, bonusRemaining)}회 사용 가능)`
   );
 }
 
@@ -400,6 +414,7 @@ export function getTabQuotaRemainingFromStatus(status, tab = 'spelling') {
 
 /**
  * 검수 완료 팝업 상단 한 줄 (차감 후 최신 잔여)
+ * 검수 전 confirm과 같이 로그인+베타 검수권이면 공통 표시
  * @param {string} uid
  * @param {string} [email]
  * @param {BetaQuotaTab} [tab]
@@ -413,18 +428,12 @@ export async function buildCheckResultQuotaConsumedLine(
   if (!isBetaDailyQuotaEnabled() || !uid.trim()) {
     return null;
   }
-  if (
-    !isBetaDailyQuotaEnforcedForUser(uid, email) &&
-    !isLocalDevQuotaRelaxed()
-  ) {
-    return null;
-  }
   const status = await getBetaDailyQuotaStatus(uid, email);
   const { dailyRemaining, bonusRemaining } = getTabQuotaRemainingFromStatus(
     status,
     tab,
   );
-  return formatCheckQuotaConsumedLine(dailyRemaining, bonusRemaining);
+  return formatCheckQuotaConsumedLine(dailyRemaining, bonusRemaining, tab);
 }
 
 /**
