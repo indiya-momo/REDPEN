@@ -42,3 +42,14 @@ export function isLoanwordConverterEnabled() {
   if (import.meta.env.VITE_FEATURE_LOANWORD_CONVERTER === 'false') return false;
   return true;
 }
+
+/**
+ * 표기 통일 탭 「표기 통일 후보 찾기」(띄어쓰기 이형태).
+ * - `npm run dev`: 항상 켜짐
+ * - 프로덕션·Pages 빌드: 기본 꺼짐
+ * - 로컬 preview에서 켜려면 `.env`에 `VITE_FEATURE_UNIFY_CANDIDATE_FIND=true`
+ */
+export function isUnifyCandidateFindEnabled() {
+  if (import.meta.env.DEV) return true;
+  return import.meta.env.VITE_FEATURE_UNIFY_CANDIDATE_FIND === 'true';
+}
