@@ -15,24 +15,26 @@ export default function FaqFabButton({ className = '' }) {
 
   return (
     <>
-      <CriteriaHoverTip tip="자주 묻는 질문과 답변" className={rootClass}>
-        <button
-          type="button"
-          className="pdf-faq-fab__btn"
-          onClick={() => setFaqOpen(true)}
-          aria-haspopup="dialog"
-          aria-expanded={faqOpen}
-          aria-label="자주 묻는 질문과 답변"
-        >
-          <img
-            src={FAQ_PAW_ICON}
-            alt=""
-            width={42}
-            height={42}
-            draggable={false}
-          />
-        </button>
-      </CriteriaHoverTip>
+      <span className={rootClass}>
+        <CriteriaHoverTip tip="자주 묻는 질문과 답변">
+          <button
+            type="button"
+            className="pdf-faq-fab__btn"
+            onClick={() => setFaqOpen(true)}
+            aria-haspopup="dialog"
+            aria-expanded={faqOpen}
+            aria-label="자주 묻는 질문과 답변"
+          >
+            <img
+              src={FAQ_PAW_ICON}
+              alt=""
+              width={42}
+              height={42}
+              draggable={false}
+            />
+          </button>
+        </CriteriaHoverTip>
+      </span>
       <FaqModal open={faqOpen} onClose={() => setFaqOpen(false)} />
     </>
   );
