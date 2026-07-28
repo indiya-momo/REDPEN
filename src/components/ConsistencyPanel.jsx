@@ -58,7 +58,7 @@ import {
   GUEST_BROWSE_LITERAL_INPUT_PLACEHOLDER,
 } from './consistency/constants.js';
 import TocBodySetupPanel from '../toc-body/components/TocBodySetupPanel.jsx';
-import { isTocBodyCheckEnabled } from '../lib/featureFlags.js';
+import { isTocBodyCheckEnabled, isUnifyCandidateFindEnabled } from '../lib/featureFlags.js';
 import { isGuestBrowseActive } from '../lib/guestBrowsePolicy.js';
 import DetailsChevron from './DetailsChevron.jsx';
 import TooltipGuide from './TooltipGuide.jsx';
@@ -326,23 +326,25 @@ export default function ConsistencyPanel({
 
   return (
     <div className="consistency-embed">
-      <UnifyCandidateFindPanel
-        hasPdf={hasPdf}
-        pageTexts={pageTexts}
-        customRules={customRules}
-        onApplyRules={applyCustomRules}
-        consistencyDecisions={consistencyDecisions}
-        decisionByUid={decisionByUid}
-        authUid={authUid}
-        authEmail={authEmail}
-        onBetaQuotaConsumed={onBetaQuotaConsumed}
-        checkQuotaBlocked={checkQuotaBlocked}
-        currentPage={currentPage}
-        selectedInstance={selectedInstance}
-        onSelectInstance={onSelectUnifyCandidateInstance}
-        onPreviewGroupsChange={onUnifyCandidatePreviewGroupsChange}
-        formatPageLabel={formatPageLabel}
-      />
+      {isUnifyCandidateFindEnabled() ? (
+        <UnifyCandidateFindPanel
+          hasPdf={hasPdf}
+          pageTexts={pageTexts}
+          customRules={customRules}
+          onApplyRules={applyCustomRules}
+          consistencyDecisions={consistencyDecisions}
+          decisionByUid={decisionByUid}
+          authUid={authUid}
+          authEmail={authEmail}
+          onBetaQuotaConsumed={onBetaQuotaConsumed}
+          checkQuotaBlocked={checkQuotaBlocked}
+          currentPage={currentPage}
+          selectedInstance={selectedInstance}
+          onSelectInstance={onSelectUnifyCandidateInstance}
+          onPreviewGroupsChange={onUnifyCandidatePreviewGroupsChange}
+          formatPageLabel={formatPageLabel}
+        />
+      ) : null}
       <section
         className={[
           'consistency-unified-box',
