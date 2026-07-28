@@ -2105,12 +2105,20 @@ details[open] > summary .details-chevron::before {
   margin: 0;
   line-height: 1;
   width: 100%;
+  min-width: 0;
+  overflow: visible;
 }
 
 /* 측정 중 3줄 이상 깜빡임 방지 — 두 줄까지만 보이게 */
 .result-pages--measuring {
   max-height: calc(2 * 1.625rem + 8px);
   overflow: hidden;
+}
+
+/* 펼친 목록은 잘리지 않게 */
+.result-pages--expanded {
+  max-height: none;
+  overflow: visible;
 }
 
 .result-pages-expand-btn {

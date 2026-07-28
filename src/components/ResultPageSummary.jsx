@@ -52,6 +52,46 @@ export function getInstanceFragmentLabel(indexOnPage, totalOnPage) {
 }
 
 /**
+ * 「＋ N개 더 보기」 래퍼 폭. DOM에 프로브로 재거나, 불가 시 한글 폭에 맞춘 추정.
+ * @param {HTMLElement} root
+ * @param {number} hiddenCount
+ * @returns {number}
+ */
+export function estimateExpandBtnWidth(root, hiddenCount) {
+  const label = `＋ ${Math.max(hiddenCount, 1)}개 더 보기`;
+  const fallback = Math.min(
+    Math.max(root.clientWidth, 0) || 240,
+    // 0.72rem + padding — 한글·전각은 char*7.2로는 너무 좁음
+    Math.max(120, 32 + [...label].length * 11),
+  );
+
+  if (
+    typeof document === 'undefined' ||
+    typeof root.appendChild !== 'function' ||
+    typeof root.removeChild !== 'function'
+  ) {
+    return fallback;
+  }
+
+  const wrap = document.createElement('div');
+  wrap.className = 'result-page-chip-wrap';
+  wrap.setAttribute('data-result-expand', '');
+  wrap.setAttribute('aria-hidden', 'true');
+  wrap.style.cssText =
+    'position:absolute;visibility:hidden;pointer-events:none;left:0;top:0;';
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'result-pages-expand-btn';
+  btn.textContent = label;
+  wrap.appendChild(btn);
+  root.appendChild(wrap);
+  const width = wrap.getBoundingClientRect().width;
+  root.removeChild(wrap);
+  // 서브픽셀·보더 오차
+  return Math.max(width + 4, 1);
+}
+
+/**
  * 전체 칩이 렌더된 루트에서, 두 줄 +「더 보기」버튼이 들어가게 보일 칩 개수를 계산.
  * @param {HTMLElement} root
  * @param {number} totalCount
@@ -106,16 +146,11 @@ export function fitPillsIntoTwoRows(root, totalCount) {
     return { needsCollapse: true, visibleCount: 0 };
   }
 
-  const hiddenIfFit = Math.max(0, totalCount - fitCount);
-  const btnLabel = `＋ ${Math.max(hiddenIfFit, 1)}개 더 보기`;
-  const btnWidth = Math.min(
-    Math.max(root.clientWidth, 0) || 240,
-    Math.max(96, 24 + btnLabel.length * 7.2),
-  );
-
   const rootRight = root.getBoundingClientRect().right;
   let visibleCount = fitCount;
   while (visibleCount > 0) {
+    const hiddenCount = Math.max(0, totalCount - visibleCount);
+    const btnWidth = estimateExpandBtnWidth(root, hiddenCount);
     const el = pillEls[visibleCount - 1];
     const spaceRight = rootRight - el.getBoundingClientRect().right - colGap;
     const onFirstRow = el.offsetTop <= top0 + chipH * 0.5;
@@ -128,6 +163,42 @@ export function fitPillsIntoTwoRows(root, totalCount) {
     needsCollapse: true,
     visibleCount: Math.max(0, visibleCount),
   };
+}
+
+/**
+ * 접힌 렌더에서 「더 보기」가 넘치면 칩을 더 줄인 visibleCount.
+ * @param {HTMLElement} root
+ * @param {number} visibleCount
+ * @returns {number}
+ */
+export function shrinkVisibleCountForExpandOverflow(root, visibleCount) {
+  if (visibleCount <= 0) return 0;
+  const expandEl = /** @type {HTMLElement | null} */ (
+    root.querySelector('[data-result-expand]')
+  );
+  if (!expandEl) return visibleCount;
+
+  const pillEls = /** @type {HTMLElement[]} */ ([
+    ...root.querySelectorAll('[data-result-pill]'),
+  ]);
+  if (pillEls.length === 0) return visibleCount;
+
+  const styles =
+    typeof getComputedStyle === 'function' ? getComputedStyle(root) : null;
+  const rowGap = Number.parseFloat(styles?.rowGap ?? '') || 0;
+  const top0 = pillEls[0].offsetTop;
+  const chipH = Math.max(pillEls[0].offsetHeight, 1);
+  const maxBottom =
+    top0 +
+    RESULT_PAGES_MAX_COLLAPSED_ROWS * chipH +
+    (RESULT_PAGES_MAX_COLLAPSED_ROWS - 1) * rowGap;
+  const rootRight = root.getBoundingClientRect().right;
+  const expandRect = expandEl.getBoundingClientRect();
+  const overflowRight = expandRect.right > rootRight + 0.5;
+  const overflowBottom =
+    expandEl.offsetTop + expandEl.offsetHeight > maxBottom + 0.5;
+  if (!overflowRight && !overflowBottom) return visibleCount;
+  return visibleCount - 1;
 }
 
 /**
@@ -158,6 +229,9 @@ export default function ResultPageSummary({
     [pills],
   );
   const rootRef = useRef(/** @type {HTMLDivElement | null} */ (null));
+  const expandedRef = useRef(false);
+  /** 펼침/접힘으로 스크롤바가 생겨 폭이 변할 때 Remeasure 무시 */
+  const ignoreWidthResizeUntilRef = useRef(0);
   const [expanded, setExpanded] = useState(false);
   /** null = 아직 측정 전(전체 칩 렌더) */
   const [collapse, setCollapse] = useState(
@@ -166,8 +240,11 @@ export default function ResultPageSummary({
     ),
   );
 
+  expandedRef.current = expanded;
+
   useLayoutEffect(() => {
     setExpanded(false);
+    expandedRef.current = false;
     setCollapse(null);
   }, [pillsSignature]);
 
@@ -194,7 +271,7 @@ export default function ResultPageSummary({
 
   useLayoutEffect(() => {
     const root = rootRef.current;
-    if (!root) return undefined;
+    if (!root || typeof ResizeObserver === 'undefined') return undefined;
 
     let lastWidth = root.getBoundingClientRect().width;
     let frame = 0;
@@ -202,9 +279,14 @@ export default function ResultPageSummary({
       const width = entries[0]?.contentRect?.width;
       if (width == null || Math.abs(width - lastWidth) < 1) return;
       lastWidth = width;
+
+      // 펼침으로 부모 스크롤바가 생겨 폭이 줄어도 접지 않음 (잔상 버그 방지)
+      if (expandedRef.current) return;
+      if (performance.now() < ignoreWidthResizeUntilRef.current) return;
+
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() => {
-        setExpanded(false);
+        if (expandedRef.current) return;
         setCollapse(null);
       });
     });
@@ -220,10 +302,32 @@ export default function ResultPageSummary({
     const selectedIndex = pills.findIndex((entry) =>
       instancesMatch(entry.inst, selectedInstance),
     );
-    if (selectedIndex >= collapse.visibleCount) {
+    if (selectedIndex >= 0 && selectedIndex >= collapse.visibleCount) {
+      ignoreWidthResizeUntilRef.current = performance.now() + 400;
       setExpanded(true);
     }
   }, [pills, selectedInstance, expanded, collapse]);
+
+  // 접힌 뒤 실제 「더 보기」가 넘치면 칩을 한 개 더 줄임 (펼친 상태에서는 실행하지 않음)
+  useLayoutEffect(() => {
+    if (expanded || !collapse?.needsCollapse || collapse.visibleCount <= 0) {
+      return undefined;
+    }
+    const root = rootRef.current;
+    if (!root) return undefined;
+
+    const next = shrinkVisibleCountForExpandOverflow(
+      root,
+      collapse.visibleCount,
+    );
+    if (next >= collapse.visibleCount) return undefined;
+
+    setCollapse({
+      needsCollapse: true,
+      visibleCount: next,
+    });
+    return undefined;
+  }, [collapse, expanded, pillsSignature]);
 
   if (!pills.length) return null;
 
@@ -241,7 +345,9 @@ export default function ResultPageSummary({
   return (
     <div
       ref={rootRef}
-      className={`result-pages${measuring ? ' result-pages--measuring' : ''}`}
+      className={`result-pages${measuring ? ' result-pages--measuring' : ''}${
+        expanded ? ' result-pages--expanded' : ''
+      }`}
       role="list"
     >
       {visiblePills.map((entry) => (
@@ -269,7 +375,15 @@ export default function ResultPageSummary({
             aria-expanded={expanded}
             onClick={(event) => {
               event.stopPropagation();
-              setExpanded((open) => !open);
+              // 펼침/접힘 직후 스크롤바 폭 변화를 Remeasure로 오인하지 않음
+              ignoreWidthResizeUntilRef.current = performance.now() + 400;
+              setExpanded((open) => {
+                if (open) {
+                  // 접을 때: 스크롤바가 사라진 폭으로 다시 측정
+                  setCollapse(null);
+                }
+                return !open;
+              });
             }}
           >
             {expanded ? '접기' : `＋ ${hiddenCount}개 더 보기`}

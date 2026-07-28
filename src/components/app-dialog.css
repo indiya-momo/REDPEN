@@ -178,10 +178,14 @@
 
 .app-dialog__quota-consumed-line {
   margin: 0 0 0.85em;
+  width: 100%;
+  max-width: 100%;
   text-align: center;
   font-size: 0.92em;
   line-height: 1.45;
   color: var(--color-text-secondary, #5c534a);
+  overflow-wrap: break-word;
+  box-sizing: border-box;
 }
 
 /* 검수 완료 요약 — 검수 전 criteria-label/meta 와 동일 타이포 */
