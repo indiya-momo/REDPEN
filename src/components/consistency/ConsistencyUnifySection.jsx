@@ -124,7 +124,7 @@ export default function ConsistencyUnifySection({
             <br />
             <ConsistencyHintExample>
               &apos;조선시대,조선˅시대&apos; 입력 → &apos;조선시대&apos; 통일형
-              📌지정하고 찾기
+              📌지정하고 &apos;조선˅시대&apos; 바꾸기
             </ConsistencyHintExample>
           </p>
         </>
