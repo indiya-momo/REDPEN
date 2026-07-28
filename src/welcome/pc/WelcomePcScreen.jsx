@@ -167,8 +167,13 @@ export default function WelcomePcScreen({
   const showSignedInLanding = loggedIn && isHeroLanding;
 
   const noAiSticker = (
-    <span className="welcome-pc__cta-no-ai" aria-hidden="true">
-      <span className="welcome-pc__cta-no-ai-disc">
+    <span
+      className="welcome-pc__cta-no-ai"
+      tabIndex={0}
+      role="img"
+      aria-label="AI로 문장을 고치거나 학습하지 않음"
+    >
+      <span className="welcome-pc__cta-no-ai-disc" aria-hidden="true">
         <svg viewBox="0 0 64 64" focusable="false" width="64" height="64">
           <circle
             cx="32"
@@ -198,6 +203,9 @@ export default function WelcomePcScreen({
           decoding="async"
           draggable={false}
         />
+      </span>
+      <span className="welcome-pc__cta-no-ai-tip" role="tooltip">
+        AI로 문장을 고치거나 학습하지 않음
       </span>
     </span>
   );
