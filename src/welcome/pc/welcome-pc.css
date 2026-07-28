@@ -2281,8 +2281,8 @@
 
 .welcome-pc__desc-row .welcome-pc__cta-no-ai-tip {
   position: absolute;
-  left: 50%;
-  top: calc(100% + 0.45rem);
+  left: 100%;
+  top: 0;
   z-index: 5;
   width: max-content;
   max-width: 14rem;
@@ -2297,18 +2297,18 @@
   font-weight: 500;
   line-height: 1.35;
   letter-spacing: 0.01em;
-  text-align: center;
+  text-align: left;
   white-space: nowrap;
   pointer-events: none;
   opacity: 0;
-  transform: translate(-50%, -0.2rem);
+  transform: translate(0.28rem, -0.55rem);
   transition: opacity 0.15s ease, transform 0.15s ease;
 }
 
 .welcome-pc__desc-row .welcome-pc__cta-no-ai:hover .welcome-pc__cta-no-ai-tip,
 .welcome-pc__desc-row .welcome-pc__cta-no-ai:focus-visible .welcome-pc__cta-no-ai-tip {
   opacity: 1;
-  transform: translate(-50%, 0);
+  transform: translate(0.35rem, -0.7rem);
 }
 
 .welcome-pc__page .welcome-pc__hero-cta .welcome-pc__cta-bar-action--pair .btn-welcome-primary.welcome-pc__auth-submit--single {
