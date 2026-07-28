@@ -8,6 +8,7 @@ import {
 } from '../lib/cautionRules.js';
 import { STANDARD_KOREAN_DICT_URL } from '../lib/koreanNormsLinks.js';
 import DetailsChevron from './DetailsChevron.jsx';
+import { SPELLING_CRITERIA_HEADING_DESCRIPTIONS } from '../lib/spellingCriteriaHeadingTips.js';
 
 /**
  * @param {import('../lib/cautionRules.js').CautionItem} item
@@ -84,7 +85,6 @@ export default function CautionChecklist({
             {canShowTip ? (
               <span
                 className={`caution-chip-label caution-inline-tip-trigger${tipOpen ? ' caution-inline-tip-trigger--open' : ''}`}
-                data-hover-tip="설명"
                 data-work-guide={markGuideTip ? 'criteria-tip' : undefined}
                 role="button"
                 tabIndex={0}
@@ -182,6 +182,9 @@ export default function CautionChecklist({
           편집자 검토 필요
           <span className="panel-criteria-heading-meta">
             {`(${activeCount}/${total})`}
+          </span>
+          <span className="panel-criteria-heading-desc">
+            {SPELLING_CRITERIA_HEADING_DESCRIPTIONS.caution}
           </span>
           <a
             className="panel-criteria-source-link"

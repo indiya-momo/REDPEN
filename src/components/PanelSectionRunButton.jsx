@@ -1,3 +1,5 @@
+import CriteriaHoverTip from './CriteriaHoverTip.jsx';
+
 /**
  * @param {{
  *   onClick: () => void | Promise<void>,
@@ -18,15 +20,18 @@ export default function PanelSectionRunButton({
   className = '',
   title,
 }) {
-  return (
+  const button = (
     <button
       type="button"
       className={`btn-add panel-section-run-btn ${className}`.trim()}
       disabled={disabled || isProcessing}
-      title={title}
       onClick={() => onClick()}
     >
       {isProcessing ? processingLabel : label}
     </button>
   );
+
+  if (!title) return button;
+
+  return <CriteriaHoverTip tip={title}>{button}</CriteriaHoverTip>;
 }

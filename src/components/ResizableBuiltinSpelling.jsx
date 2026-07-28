@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { HANGUL_ORTHOGRAPHY_URL } from '../lib/koreanNormsLinks.js';
+import { SPELLING_CRITERIA_HEADING_DESCRIPTIONS } from '../lib/spellingCriteriaHeadingTips.js';
 import BuiltinSpellingPanel from './BuiltinSpellingPanel.jsx';
 import CautionChecklist from './CautionChecklist.jsx';
 import LoanwordCheckPanel from './LoanwordCheckPanel.jsx';
+import CriteriaHoverTip from './CriteriaHoverTip.jsx';
 
 const STORAGE_KEY = 'builtin-spelling-panel-height-v2';
 // 기본 진입 시 맞춤법 기준 항목이 충분히 보이도록 하단 패널 비중을 높인다.
@@ -148,22 +150,23 @@ export default function ResizableBuiltinSpelling({
   return (
     <>
       {!fillPanel && (
-        <div
-          ref={handleRef}
-          className="builtin-spelling-resize-handle"
-          role="separator"
-          aria-orientation="horizontal"
-          aria-valuenow={height}
-          aria-valuemin={MIN_HEIGHT}
-          aria-valuemax={MAX_HEIGHT}
-          aria-label="아래 패널 높이 조절 — 위로 끌면 편집자 검토·맞춤법 확인 영역이 넓어집니다"
-          title="높이 조절 (드래그)"
-          onPointerDown={startDrag}
-        >
-          <span className="builtin-spelling-resize-grip" aria-hidden>
-            ⋮⋮
-          </span>
-        </div>
+        <CriteriaHoverTip tip="높이 조절 (드래그)" variant="block">
+          <div
+            ref={handleRef}
+            className="builtin-spelling-resize-handle"
+            role="separator"
+            aria-orientation="horizontal"
+            aria-valuenow={height}
+            aria-valuemin={MIN_HEIGHT}
+            aria-valuemax={MAX_HEIGHT}
+            aria-label="아래 패널 높이 조절 — 위로 끌면 편집자 검토·맞춤법 확인 영역이 넓어집니다"
+            onPointerDown={startDrag}
+          >
+            <span className="builtin-spelling-resize-grip" aria-hidden>
+              ⋮⋮
+            </span>
+          </div>
+        </CriteriaHoverTip>
       )}
       <section
         className={`panel-section panel-section--builtin-spelling${
@@ -186,6 +189,7 @@ export default function ResizableBuiltinSpelling({
               onBuiltInToggle={onBuiltInToggle}
               onBuiltInSetAll={onBuiltInSetAll}
               guideSpotlight={guideSpotlight}
+              description={SPELLING_CRITERIA_HEADING_DESCRIPTIONS.spelling}
               sourceHref={HANGUL_ORTHOGRAPHY_URL}
               sourceLabel="한글 맞춤법"
             />

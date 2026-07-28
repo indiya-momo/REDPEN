@@ -1,6 +1,7 @@
 import ResultPageSummary from './ResultPageSummary.jsx';
 import GroupVisibilityCheckbox from './GroupVisibilityCheckbox.jsx';
 import DetailsChevron from './DetailsChevron.jsx';
+import CriteriaHoverTip from './CriteriaHoverTip.jsx';
 import { useEffect, useMemo, useRef } from 'react';
 import { getBuiltInTip } from '../lib/builtInRules.js';
 import { formatSystemPageLabel } from '../lib/printedPageDisplay.js';
@@ -40,17 +41,19 @@ function ResultFindingsCountCircle({
   ariaLabel,
 }) {
   const partial = shownCount < count;
+  const partialTip = partial ? `표시 ${shownCount}/${count}` : undefined;
   return (
-    <span
-      className={`result-findings-count-circle ${className}`.trim()}
-      aria-label={
-        ariaLabel ??
-        (partial ? `표시 ${shownCount}건 / 전체 ${count}건` : `${count}건`)
-      }
-      title={partial ? `표시 ${shownCount}/${count}` : undefined}
-    >
-      {shownCount}
-    </span>
+    <CriteriaHoverTip tip={partialTip} variant="wrap">
+      <span
+        className={`result-findings-count-circle ${className}`.trim()}
+        aria-label={
+          ariaLabel ??
+          (partial ? `표시 ${shownCount}건 / 전체 ${count}건` : `${count}건`)
+        }
+      >
+        {shownCount}
+      </span>
+    </CriteriaHoverTip>
   );
 }
 
@@ -288,18 +291,19 @@ export default function CheckResultsPanel({
           }}
         >
           <div className="result-card-head">
-            <label
-              className="result-visibility-toggle"
-              title="PDF에 표시"
-              onClick={(e) => e.stopPropagation()}
-              onKeyDown={(e) => e.stopPropagation()}
-            >
-              <GroupVisibilityCheckbox
-                mode={visMode}
-                label={group.label}
-                onToggle={() => onToggleVisibility(source, group)}
-              />
-            </label>
+            <CriteriaHoverTip tip="PDF에 표시">
+              <label
+                className="result-visibility-toggle"
+                onClick={(e) => e.stopPropagation()}
+                onKeyDown={(e) => e.stopPropagation()}
+              >
+                <GroupVisibilityCheckbox
+                  mode={visMode}
+                  label={group.label}
+                  onToggle={() => onToggleVisibility(source, group)}
+                />
+              </label>
+            </CriteriaHoverTip>
             <div className="result-card-head-main">
               <span className="result-rule">
                 {isConsistency ? (

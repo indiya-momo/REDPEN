@@ -21,6 +21,7 @@ import ResizableBuiltinSpelling from './ResizableBuiltinSpelling.jsx';
 import LoanwordConverter from './LoanwordConverter.jsx';
 import ConsistencyPanel from './ConsistencyPanel.jsx';
 import PanelSectionRunButton from './PanelSectionRunButton.jsx';
+import CriteriaHoverTip from './CriteriaHoverTip.jsx';
 import PdfPreviewBar from './PdfPreviewBar.jsx';
 import FaqFabButton from './FaqFabButton.jsx';
 import PdfZoomBar from './PdfZoomBar.jsx';
@@ -1712,7 +1713,6 @@ export default function MainScreen({
         <span
           className="spelling-tab-layout__criteria-run-wrap"
           data-work-guide-criteria-run
-          title={criteriaRunDisabledReason || undefined}
         >
           {guestWorkGuide.showLeftCriteriaGuide && isGuestBrowseActive() ? (
             <TooltipGuide
@@ -1737,6 +1737,7 @@ export default function MainScreen({
                   onClick={handleCriteriaSpellingCheck}
                   disabled={criteriaRunBlocked}
                   isProcessing={criteriaRunChecking}
+                  title={criteriaRunDisabledReason || undefined}
                 />
               </span>
             </TooltipGuide>
@@ -1768,6 +1769,7 @@ export default function MainScreen({
                   onClick={handleCriteriaSpellingCheck}
                   disabled={criteriaRunBlocked}
                   isProcessing={criteriaRunChecking}
+                  title={criteriaRunDisabledReason || undefined}
                 />
               </span>
             </TooltipGuide>
@@ -1778,6 +1780,7 @@ export default function MainScreen({
               onClick={handleCriteriaSpellingCheck}
               disabled={criteriaRunBlocked}
               isProcessing={criteriaRunChecking}
+              title={criteriaRunDisabledReason || undefined}
             />
           )}
         </span>
@@ -1954,15 +1957,16 @@ export default function MainScreen({
       >
         <header className="panel-header panel-header--tabs">
           <div className="panel-header-toolbar">
-            <button
-              type="button"
-              className="btn-ghost btn-ghost--compact panel-header-home"
-              onClick={onOpenWelcome}
-              title="홈 화면으로"
-              aria-label="홈 화면으로"
-            >
-              <House size={18} />
-            </button>
+            <CriteriaHoverTip tip="홈 화면으로">
+              <button
+                type="button"
+                className="btn-ghost btn-ghost--compact panel-header-home"
+                onClick={onOpenWelcome}
+                aria-label="홈 화면으로"
+              >
+                <House size={18} />
+              </button>
+            </CriteriaHoverTip>
             {guestBrowseHidesProjectSaveUi() ? null : (
             <div className="panel-left__criteria-save">
               <div
@@ -2047,50 +2051,57 @@ export default function MainScreen({
                 ) : null}
               </div>
               <div className="panel-left__criteria-actions">
-                <button
-                  type="button"
-                  className="panel-left__save-rules"
-                  data-work-guide="save-rules"
-                  onClick={() => {
-                    if (guestWorkGuide.showRuleSetSaveGuide) {
-                      guestWorkGuide.dismiss(WORK_GUIDE_KEYS.RULE_SET_SAVE);
+                <CriteriaHoverTip
+                  tip={criteriaSavePending ? '저장 중…' : '프로젝트 저장'}
+                >
+                  <button
+                    type="button"
+                    className="panel-left__save-rules"
+                    data-work-guide="save-rules"
+                    onClick={() => {
+                      if (guestWorkGuide.showRuleSetSaveGuide) {
+                        guestWorkGuide.dismiss(WORK_GUIDE_KEYS.RULE_SET_SAVE);
+                      }
+                      void handleSaveCriteria();
+                    }}
+                    disabled={criteriaSavePending}
+                    aria-busy={criteriaSavePending}
+                    aria-label={
+                      criteriaSavePending ? '프로젝트 저장 중' : '프로젝트 저장'
                     }
-                    void handleSaveCriteria();
-                  }}
-                  disabled={criteriaSavePending}
-                  aria-busy={criteriaSavePending}
-                  aria-label={criteriaSavePending ? '프로젝트 저장 중' : '프로젝트 저장'}
-                  title={criteriaSavePending ? '저장 중…' : '프로젝트 저장'}
-                >
-                  {criteriaSavePending ? (
-                    <Loader2
-                      size={16}
-                      aria-hidden
-                      className="panel-left__save-rules-spinner"
-                    />
-                  ) : (
-                    <Save size={16} aria-hidden />
-                  )}
-                </button>
-                <button
-                  type="button"
-                  className="panel-left__delete-rules"
-                  onClick={() => handleDeleteCriteria(activeSetId)}
-                  aria-label="프로젝트 삭제"
-                  title="프로젝트 삭제"
-                  disabled={!activeRuleSet?.savedAt}
-                >
-                  <Trash2 size={16} aria-hidden />
-                </button>
-                <button
-                  type="button"
-                  className="panel-left__open-projects"
-                  onClick={() => onOpenMyPageWindow('projects')}
-                  aria-label="프로젝트 관리"
-                  title="프로젝트 관리"
-                >
-                  <Inbox size={16} aria-hidden />
-                </button>
+                  >
+                    {criteriaSavePending ? (
+                      <Loader2
+                        size={16}
+                        aria-hidden
+                        className="panel-left__save-rules-spinner"
+                      />
+                    ) : (
+                      <Save size={16} aria-hidden />
+                    )}
+                  </button>
+                </CriteriaHoverTip>
+                <CriteriaHoverTip tip="프로젝트 삭제">
+                  <button
+                    type="button"
+                    className="panel-left__delete-rules"
+                    onClick={() => handleDeleteCriteria(activeSetId)}
+                    aria-label="프로젝트 삭제"
+                    disabled={!activeRuleSet?.savedAt}
+                  >
+                    <Trash2 size={16} aria-hidden />
+                  </button>
+                </CriteriaHoverTip>
+                <CriteriaHoverTip tip="프로젝트 관리">
+                  <button
+                    type="button"
+                    className="panel-left__open-projects"
+                    onClick={() => onOpenMyPageWindow('projects')}
+                    aria-label="프로젝트 관리"
+                  >
+                    <Inbox size={16} aria-hidden />
+                  </button>
+                </CriteriaHoverTip>
               </div>
             </div>
             )}
@@ -2225,6 +2236,7 @@ export default function MainScreen({
                         checkSessionBlocked
                       }
                       isProcessing={pdf.isProcessing}
+                      title={criteriaRunDisabledReason || undefined}
                     />
                   </span>
                 </div>
@@ -2429,22 +2441,23 @@ export default function MainScreen({
 
       </aside>
 
-      <div
-        ref={handleRef}
-        className="layout-col-resize-handle"
-        role="separator"
-        aria-orientation="vertical"
-        aria-valuenow={panelStyle.width}
-        aria-valuemin={PANEL_LEFT_MIN_WIDTH}
-        aria-valuemax={PANEL_LEFT_MAX_WIDTH}
-        aria-label="좌우 패널 너비 조절"
-        title="드래그하여 너비 조절"
-        onPointerDown={startDrag}
-      >
-        <span className="layout-col-resize-grip" aria-hidden>
-          ⋮
-        </span>
-      </div>
+      <CriteriaHoverTip tip="드래그하여 너비 조절" variant="block">
+        <div
+          ref={handleRef}
+          className="layout-col-resize-handle"
+          role="separator"
+          aria-orientation="vertical"
+          aria-valuenow={panelStyle.width}
+          aria-valuemin={PANEL_LEFT_MIN_WIDTH}
+          aria-valuemax={PANEL_LEFT_MAX_WIDTH}
+          aria-label="좌우 패널 너비 조절"
+          onPointerDown={startDrag}
+        >
+          <span className="layout-col-resize-grip" aria-hidden>
+            ⋮
+          </span>
+        </div>
+      </CriteriaHoverTip>
 
       <main className="panel-right">
         <div className="pdf-work-pane">
@@ -2503,18 +2516,19 @@ export default function MainScreen({
               ) : null}
               <div className="pdf-work-pane__topbar-actions">
                 <span className="pdf-work-pane__aux-btn-wrap">
-                  <button
-                    type="button"
-                    className="pdf-work-pane__aux-btn pdf-work-pane__aux-btn--icon"
-                    aria-label="마이페이지"
-                    title="마이페이지"
-                    onClick={() => {
-                      rewardNotice.dismiss();
-                      onOpenMyPageWindow();
-                    }}
-                  >
-                    <UserRound size={16} aria-hidden />
-                  </button>
+                  <CriteriaHoverTip tip="마이페이지">
+                    <button
+                      type="button"
+                      className="pdf-work-pane__aux-btn pdf-work-pane__aux-btn--icon"
+                      aria-label="마이페이지"
+                      onClick={() => {
+                        rewardNotice.dismiss();
+                        onOpenMyPageWindow();
+                      }}
+                    >
+                      <UserRound size={16} aria-hidden />
+                    </button>
+                  </CriteriaHoverTip>
                   {rewardNotice.visible ? (
                     <span
                       className="pdf-work-pane__aux-notice"
@@ -2522,24 +2536,25 @@ export default function MainScreen({
                     />
                   ) : null}
                 </span>
-                <button
-                  type="button"
-                  className="pdf-work-pane__aux-btn pdf-work-pane__aux-btn--icon"
-                  aria-label="새 업로드"
-                  title="새 업로드"
-                  onClick={() => {
-                    // 둘러보기: 로그인 안내만 / 로그인: 작업 종료 확인 후 대기 화면
-                    if (isGuestBrowseActive()) {
-                      void showAppAlert({
-                        message: '로그인 후 새 업로드를 이용할 수 있습니다',
-                      });
-                      return;
-                    }
-                    void session.handleEndWork();
-                  }}
-                >
-                  <FilePlus size={16} aria-hidden />
-                </button>
+                <CriteriaHoverTip tip="새 업로드">
+                  <button
+                    type="button"
+                    className="pdf-work-pane__aux-btn pdf-work-pane__aux-btn--icon"
+                    aria-label="새 업로드"
+                    onClick={() => {
+                      // 둘러보기: 로그인 안내만 / 로그인: 작업 종료 확인 후 대기 화면
+                      if (isGuestBrowseActive()) {
+                        void showAppAlert({
+                          message: '로그인 후 새 업로드를 이용할 수 있습니다',
+                        });
+                        return;
+                      }
+                      void session.handleEndWork();
+                    }}
+                  >
+                    <FilePlus size={16} aria-hidden />
+                  </button>
+                </CriteriaHoverTip>
                 {guestWorkGuide.showWorkExitGuide ? (
                   <TooltipGuide
                     storageKey={guestWorkGuide.storageKey(WORK_GUIDE_KEYS.WORK_EXIT)}
@@ -2559,14 +2574,42 @@ export default function MainScreen({
                     }}
                   >
                     <span className="work-guide-anchor work-guide-anchor--logout">
+                      <CriteriaHoverTip
+                        tip={
+                          isGuestBrowseActive() ? '로그아웃' : '메인 화면으로'
+                        }
+                      >
+                        <button
+                          type="button"
+                          className="pdf-work-pane__aux-btn pdf-work-pane__aux-btn--icon"
+                          aria-label={
+                            isGuestBrowseActive() ? '로그아웃' : '메인 화면으로'
+                          }
+                          onClick={() => {
+                            void onLogout();
+                          }}
+                        >
+                          <LogOut size={16} aria-hidden />
+                        </button>
+                      </CriteriaHoverTip>
+                    </span>
+                  </TooltipGuide>
+                ) : (
+                  <span className="work-guide-anchor work-guide-anchor--logout">
+                    <CriteriaHoverTip
+                      tip={
+                        isGuestBrowseActive() || authUid
+                          ? '로그아웃'
+                          : '메인 화면으로'
+                      }
+                    >
                       <button
                         type="button"
                         className="pdf-work-pane__aux-btn pdf-work-pane__aux-btn--icon"
                         aria-label={
-                          isGuestBrowseActive() ? '로그아웃' : '메인 화면으로'
-                        }
-                        title={
-                          isGuestBrowseActive() ? '로그아웃' : '메인 화면으로'
+                          isGuestBrowseActive() || authUid
+                            ? '로그아웃'
+                            : '메인 화면으로'
                         }
                         onClick={() => {
                           void onLogout();
@@ -2574,29 +2617,7 @@ export default function MainScreen({
                       >
                         <LogOut size={16} aria-hidden />
                       </button>
-                    </span>
-                  </TooltipGuide>
-                ) : (
-                  <span className="work-guide-anchor work-guide-anchor--logout">
-                    <button
-                      type="button"
-                      className="pdf-work-pane__aux-btn pdf-work-pane__aux-btn--icon"
-                      aria-label={
-                        isGuestBrowseActive() || authUid
-                          ? '로그아웃'
-                          : '메인 화면으로'
-                      }
-                      title={
-                        isGuestBrowseActive() || authUid
-                          ? '로그아웃'
-                          : '메인 화면으로'
-                      }
-                      onClick={() => {
-                        void onLogout();
-                      }}
-                    >
-                      <LogOut size={16} aria-hidden />
-                    </button>
+                    </CriteriaHoverTip>
                   </span>
                 )}
                 {feedbackThankYouOpen ? (

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import CurrentPageStatus from './CurrentPageStatus.jsx';
 import FaqFabButton from './FaqFabButton.jsx';
+import CriteriaHoverTip from './CriteriaHoverTip.jsx';
 import PdfThumbnailStrip from './PdfThumbnailStrip.jsx';
 
 /**
@@ -102,15 +103,17 @@ export default function PdfPreviewBar({
             aria-label="페이지 이동"
           >
             <div className="pdf-preview-bar__jump-lead">
-              <button
-                type="button"
-                className="pdf-preview-bar__nav pdf-preview-bar__nav--prev"
-                disabled={currentPage <= 1}
-                onClick={() => onGoToPage(currentPage - 1)}
-                aria-label="이전 페이지"
-              >
-                ◀
-              </button>
+              <CriteriaHoverTip tip="이전 페이지">
+                <button
+                  type="button"
+                  className="pdf-preview-bar__nav pdf-preview-bar__nav--prev"
+                  disabled={currentPage <= 1}
+                  onClick={() => onGoToPage(currentPage - 1)}
+                  aria-label="이전 페이지"
+                >
+                  ◀
+                </button>
+              </CriteriaHoverTip>
               <form
                 className="pdf-preview-bar__jump"
                 onSubmit={(e) => {
@@ -147,37 +150,43 @@ export default function PdfPreviewBar({
             </span>
             <div className="pdf-preview-bar__jump-trail">
               <span className="pdf-preview-bar__total">{displayTotal}</span>
-              <button
-                type="button"
-                className="pdf-preview-bar__nav pdf-preview-bar__nav--next"
-                disabled={currentPage >= numPages}
-                onClick={() => onGoToPage(currentPage + 1)}
-                aria-label="다음 페이지"
-              >
-                ▶
-              </button>
+              <CriteriaHoverTip tip="다음 페이지">
+                <button
+                  type="button"
+                  className="pdf-preview-bar__nav pdf-preview-bar__nav--next"
+                  disabled={currentPage >= numPages}
+                  onClick={() => onGoToPage(currentPage + 1)}
+                  aria-label="다음 페이지"
+                >
+                  ▶
+                </button>
+              </CriteriaHoverTip>
             </div>
           </div>
 
           <div className="pdf-preview-bar__actions-col">
             {onToggleThumbStrip ? (
-              <button
-                type="button"
-                className={`pdf-work-pane__aux-btn pdf-preview-bar__toggle${
-                  thumbStripOpen ? ' pdf-preview-bar__toggle--open' : ''
-                }`}
-                onClick={onToggleThumbStrip}
-                aria-expanded={thumbStripOpen}
-                aria-controls="pdf-thumb-strip"
-                aria-label={thumbStripOpen ? '미리보기 숨기기' : '미리보기 보기'}
+              <CriteriaHoverTip
+                tip={thumbStripOpen ? '미리보기 숨기기' : '미리보기 보기'}
               >
-                {thumbStripOpen ? (
-                  <EyeOff size={16} aria-hidden />
-                ) : (
-                  <Eye size={16} aria-hidden />
-                )}
-                {thumbStripOpen ? '숨기기' : '미리보기'}
-              </button>
+                <button
+                  type="button"
+                  className={`pdf-work-pane__aux-btn pdf-preview-bar__toggle${
+                    thumbStripOpen ? ' pdf-preview-bar__toggle--open' : ''
+                  }`}
+                  onClick={onToggleThumbStrip}
+                  aria-expanded={thumbStripOpen}
+                  aria-controls="pdf-thumb-strip"
+                  aria-label={thumbStripOpen ? '미리보기 숨기기' : '미리보기 보기'}
+                >
+                  {thumbStripOpen ? (
+                    <EyeOff size={16} aria-hidden />
+                  ) : (
+                    <Eye size={16} aria-hidden />
+                  )}
+                  {thumbStripOpen ? '숨기기' : '미리보기'}
+                </button>
+              </CriteriaHoverTip>
             ) : null}
           </div>
         </div>

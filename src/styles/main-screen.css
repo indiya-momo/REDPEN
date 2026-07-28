@@ -636,15 +636,7 @@
   box-shadow: none;
   outline: none;
 }
-/* 설명 뱃지 — 기준 항목(라벨) 안쪽 오른쪽에 표시 */
-.panel-left .builtin-spelling-caution-scroll .caution-inline-tip-trigger:hover::after,
-.panel-left .builtin-spelling-rules-scroll .caution-inline-tip-trigger:hover::after,
-.panel-left .builtin-spelling-loanword-scroll .caution-inline-tip-trigger:hover::after {
-  left: auto;
-  right: 2px;
-  top: 50%;
-  transform: translateY(-50%);
-}
+/* 설명 뱃지 — 기준 항목 라벨 우측 하단 (criteria-hover-tip 과 동일 위치) */
 
 .panel-left .consistency-embed .tail-list:not(.tail-list--grid) {
   border-top: none;
@@ -4327,6 +4319,7 @@
   width: fit-content;
   max-width: 100%;
   box-sizing: border-box;
+  overflow: visible;
 }
 
 .pdf-work-pane__topbar-actions > * {
@@ -4624,6 +4617,22 @@
   line-height: inherit;
 }
 
+.panel-left .panel-criteria-heading-desc {
+  flex-shrink: 1;
+  min-width: 0;
+  font-size: 0.554em;
+  font-weight: 500;
+  line-height: inherit;
+  color: var(--c-soft);
+  white-space: nowrap;
+}
+
+.panel-left .caution-checklist-summary,
+.panel-left .builtin-spelling-summary,
+.panel-left .loanword-check-summary {
+  overflow: visible;
+}
+
 .panel-left .panel-criteria-source-link {
   flex-shrink: 0;
   margin-left: auto;
@@ -4633,7 +4642,9 @@
   font-weight: 500;
   line-height: inherit;
   color: var(--c-soft);
-  text-decoration: none;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-color: color-mix(in srgb, var(--c-soft) 72%, transparent);
   white-space: nowrap;
   cursor: pointer;
   transition:
@@ -4647,6 +4658,7 @@
   background-color: rgba(15, 23, 42, 0.08);
   text-decoration: underline;
   text-underline-offset: 2px;
+  text-decoration-color: var(--c-ink);
 }
 
 .panel-left .panel-criteria-source-link:focus-visible {

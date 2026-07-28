@@ -3455,6 +3455,12 @@ details[open] > summary .details-chevron::before {
   bottom: calc(100% + 12px);
   z-index: 35;
   display: inline-flex;
+  cursor: inherit;
+  overflow: visible;
+}
+
+.pdf-faq-fab__btn {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 2.5rem;
@@ -3475,23 +3481,22 @@ details[open] > summary .details-chevron::before {
 
 /* 업로드(원고 없음) 화면 — 원고 영역 오른쪽 아래 */
 .pdf-faq-fab--on-stage {
-  position: absolute;
   right: 1rem;
   bottom: 1rem;
   z-index: 40;
 }
 
-.pdf-faq-fab:hover {
+.pdf-faq-fab__btn:hover {
   background: #3d3d3d;
   box-shadow: 0 3px 10px rgba(55, 53, 47, 0.2);
 }
 
-.pdf-faq-fab:focus-visible {
+.pdf-faq-fab__btn:focus-visible {
   outline: 2px solid var(--focus-ring, var(--accent-terracotta));
   outline-offset: 2px;
 }
 
-.pdf-faq-fab img {
+.pdf-faq-fab__btn img {
   display: block;
   width: 2.6325rem;
   height: 2.6325rem;
@@ -4038,25 +4043,98 @@ details[open] > summary .details-chevron::before {
   box-shadow: none;
 }
 
-.builtin-inline-tip-hoverable:hover::after {
-  content: '설명';
+.builtin-inline-tip-hoverable:hover::after,
+.caution-inline-tip-trigger:hover::after,
+.pdf-highlight--has-tip:hover::after {
+  content: none;
+}
+
+.criteria-hover-tip__bubble {
   position: absolute;
-  right: 2px;
+  right: 0;
   left: auto;
-  top: 50%;
-  transform: translateY(-50%);
+  top: calc(100% + 4px);
+  bottom: auto;
+  transform: none;
   font-size: 0.64rem;
   font-weight: 600;
-  line-height: 1;
+  line-height: 1.35;
   color: #1f2937;
   background: #ffffff;
   border: 1px solid #d1d5db;
   border-radius: 6px;
   padding: 4px 6px;
-  white-space: nowrap;
   box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
   pointer-events: none;
-  z-index: 3;
+  z-index: 300;
+  max-width: calc(100vw - 16px);
+  box-sizing: border-box;
+}
+
+.criteria-hover-tip {
+  position: relative;
+  display: inline;
+  cursor: inherit;
+}
+
+.criteria-hover-tip--heading {
+  position: static;
+  display: inline;
+  cursor: inherit;
+}
+
+.criteria-hover-tip--wrap {
+  display: inline-flex;
+  position: relative;
+  vertical-align: middle;
+  max-width: 100%;
+  cursor: inherit;
+}
+
+.criteria-hover-tip--wrap > :disabled,
+.criteria-hover-tip--wrap > [aria-disabled='true'] {
+  pointer-events: none;
+}
+
+.criteria-hover-tip--wrap-block {
+  display: block;
+  width: 100%;
+  position: relative;
+  cursor: inherit;
+}
+
+.panel-header-toolbar .criteria-hover-tip__bubble,
+.pdf-work-pane__topbar-actions .criteria-hover-tip__bubble,
+.pdf-preview-bar .criteria-hover-tip__bubble,
+.pdf-zoom-bar .criteria-hover-tip__bubble,
+.layout-col-resize-handle .criteria-hover-tip__bubble,
+.builtin-spelling-resize-handle .criteria-hover-tip__bubble,
+.pdf-faq-fab .criteria-hover-tip__bubble {
+  z-index: 400;
+}
+
+.panel-left .caution-checklist-summary-title,
+.panel-left .builtin-spelling-summary-title,
+.panel-left .loanword-check-summary-title {
+  position: relative;
+}
+
+.criteria-hover-tip__bubble {
+  opacity: 0;
+  visibility: hidden;
+  min-width: 0;
+  padding: 8px 10px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition:
+    opacity 0.15s ease,
+    visibility 0.15s ease;
+}
+
+.criteria-hover-tip:hover .criteria-hover-tip__bubble,
+.criteria-hover-tip:focus-within .criteria-hover-tip__bubble {
+  opacity: 1;
+  visibility: visible;
 }
 
 .caution-inline-tip-trigger {
@@ -4070,27 +4148,6 @@ details[open] > summary .details-chevron::before {
 .caution-inline-tip-trigger:not(.caution-inline-tip-trigger--open):hover {
   border-color: #d1d5db;
   background: #f8fafc;
-}
-
-.caution-inline-tip-trigger:hover::after {
-  content: '설명';
-  position: absolute;
-  right: 2px;
-  left: auto;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 0.64rem;
-  font-weight: 600;
-  line-height: 1;
-  color: #1f2937;
-  background: #ffffff;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  padding: 4px 6px;
-  white-space: nowrap;
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
-  pointer-events: none;
-  z-index: 3;
 }
 
 .builtin-spelling-caution-scroll .caution-group-title {

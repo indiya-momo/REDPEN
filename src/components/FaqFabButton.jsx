@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import FaqModal from './FaqModal.jsx';
+import CriteriaHoverTip from './CriteriaHoverTip.jsx';
 import { publicAssetUrl } from '../lib/publicAssetUrl.js';
 
 const FAQ_PAW_ICON = publicAssetUrl('momo/faq-paw.png', { cacheBust: true });
@@ -14,23 +15,24 @@ export default function FaqFabButton({ className = '' }) {
 
   return (
     <>
-      <button
-        type="button"
-        className={rootClass}
-        onClick={() => setFaqOpen(true)}
-        aria-haspopup="dialog"
-        aria-expanded={faqOpen}
-        aria-label="자주 묻는 질문과 답변"
-        title="자주 묻는 질문과 답변"
-      >
-        <img
-          src={FAQ_PAW_ICON}
-          alt=""
-          width={42}
-          height={42}
-          draggable={false}
-        />
-      </button>
+      <CriteriaHoverTip tip="자주 묻는 질문과 답변" className={rootClass}>
+        <button
+          type="button"
+          className="pdf-faq-fab__btn"
+          onClick={() => setFaqOpen(true)}
+          aria-haspopup="dialog"
+          aria-expanded={faqOpen}
+          aria-label="자주 묻는 질문과 답변"
+        >
+          <img
+            src={FAQ_PAW_ICON}
+            alt=""
+            width={42}
+            height={42}
+            draggable={false}
+          />
+        </button>
+      </CriteriaHoverTip>
       <FaqModal open={faqOpen} onClose={() => setFaqOpen(false)} />
     </>
   );

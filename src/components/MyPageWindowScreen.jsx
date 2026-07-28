@@ -6,6 +6,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, Pencil } from 'lucide-react';
 import { returnToWorkspace } from '../lib/returnToWorkspace.js';
+import CriteriaHoverTip from './CriteriaHoverTip.jsx';
 import {
   resolveSessionEmail,
   resolveSessionEmailAsync,
@@ -233,16 +234,17 @@ function MemberOverviewCard({ quota, authUid = '', loginAtMs = null, onOpen }) {
             불러오는 중…
           </span>
         ) : tier ? (
-          <span
-            className="mypage__tier-badge"
-            title={tier.description}
-            aria-label={`회원 등급: ${tier.name}. ${tier.description}`}
-          >
-            <span className="mypage__tier-badge__icon" aria-hidden>
-              ★
+          <CriteriaHoverTip tip={tier.description} variant="wrap">
+            <span
+              className="mypage__tier-badge"
+              aria-label={`회원 등급: ${tier.name}. ${tier.description}`}
+            >
+              <span className="mypage__tier-badge__icon" aria-hidden>
+                ★
+              </span>
+              {tier.name}
             </span>
-            {tier.name}
-          </span>
+          </CriteriaHoverTip>
         ) : null}
       </div>
 
@@ -711,15 +713,16 @@ export default function MyPageWindowScreen({ authSession, authReady }) {
         <main className="mypage__main">
           <div className="mypage__guest-card">
             <p>로그인 후 마이페이지를 이용할 수 있습니다.</p>
-            <button
-              type="button"
-              className="mypage__back mypage__back--icon"
-              onClick={returnToWorkspace}
-              aria-label="검수 화면으로"
-              title="검수 화면으로"
-            >
-              <ArrowLeft size={18} aria-hidden />
-            </button>
+            <CriteriaHoverTip tip="검수 화면으로">
+              <button
+                type="button"
+                className="mypage__back mypage__back--icon"
+                onClick={returnToWorkspace}
+                aria-label="검수 화면으로"
+              >
+                <ArrowLeft size={18} aria-hidden />
+              </button>
+            </CriteriaHoverTip>
           </div>
         </main>
       </div>
@@ -741,15 +744,16 @@ export default function MyPageWindowScreen({ authSession, authReady }) {
             >
               마이페이지
             </button>
-            <button
-              type="button"
-              className="mypage__back mypage__back--icon"
-              onClick={handleSidebarBack}
-              aria-label="검수 화면으로"
-              title="검수 화면으로"
-            >
-              <Pencil size={18} aria-hidden />
-            </button>
+            <CriteriaHoverTip tip="검수 화면으로">
+              <button
+                type="button"
+                className="mypage__back mypage__back--icon"
+                onClick={handleSidebarBack}
+                aria-label="검수 화면으로"
+              >
+                <Pencil size={18} aria-hidden />
+              </button>
+            </CriteriaHoverTip>
           </div>
         </header>
         <div className="mypage__user">
