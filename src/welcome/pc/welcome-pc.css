@@ -2238,7 +2238,8 @@
   justify-content: center;
   width: calc(47.3px * var(--welcome-scale) * var(--welcome-desc-scale));
   height: calc(47.3px * var(--welcome-scale) * var(--welcome-desc-scale));
-  filter: drop-shadow(0 5px 8px rgba(40, 28, 12, 0.18));
+  outline: none;
+  cursor: help;
 }
 
 .welcome-pc__desc-row .welcome-pc__cta-no-ai-disc {
@@ -2251,6 +2252,7 @@
   background: transparent;
   border: none;
   overflow: visible;
+  filter: drop-shadow(0 5px 8px rgba(40, 28, 12, 0.18));
 }
 
 .welcome-pc__desc-row .welcome-pc__cta-no-ai-disc svg {
@@ -2275,6 +2277,38 @@
   image-rendering: crisp-edges;
   pointer-events: none;
   user-select: none;
+}
+
+.welcome-pc__desc-row .welcome-pc__cta-no-ai-tip {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 0.45rem);
+  z-index: 5;
+  width: max-content;
+  max-width: 14rem;
+  padding: 0.4rem 0.55rem;
+  border-radius: 0.35rem;
+  background: rgba(28, 22, 16, 0.94);
+  border: 1px solid rgba(201, 176, 130, 0.35);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+  color: #f0e6d4;
+  font-family: var(--welcome-perf-font-info);
+  font-size: calc(11px * var(--welcome-scale) * var(--welcome-desc-scale));
+  font-weight: 500;
+  line-height: 1.35;
+  letter-spacing: 0.01em;
+  text-align: center;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, -0.2rem);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.welcome-pc__desc-row .welcome-pc__cta-no-ai:hover .welcome-pc__cta-no-ai-tip,
+.welcome-pc__desc-row .welcome-pc__cta-no-ai:focus-visible .welcome-pc__cta-no-ai-tip {
+  opacity: 1;
+  transform: translate(-50%, 0);
 }
 
 .welcome-pc__page .welcome-pc__hero-cta .welcome-pc__cta-bar-action--pair .btn-welcome-primary.welcome-pc__auth-submit--single {
