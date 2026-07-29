@@ -13,6 +13,8 @@
  * 추출: 한글·숫자 토큰 + 연속 2~4그램(원문 슬라이스) / 단일 토큰.
  */
 
+import { buildSeriesHints } from './unifyCandidateSeriesTrend.js';
+
 /**
  * @typedef {{
  *   pageNum: number,
@@ -29,6 +31,7 @@
  *   occurrencesByVariant: Record<string, UnifyVariantOccurrence[]>,
  *   recommendedUnify: string,
  *   totalCount: number,
+ *   seriesHint?: import('./unifyCandidateSeriesTrend.js').SeriesHint,
  * }} UnifySpacingCluster
  */
 
@@ -357,7 +360,16 @@ export function discoverSpacingUnifyCandidates(pageTexts, opts = {}) {
   clusters.sort((a, b) =>
     a.recommendedUnify.localeCompare(b.recommendedUnify, 'ko'),
   );
-  return clusters.slice(0, maxClusters);
+  const trimmed = clusters.slice(0, maxClusters);
+
+  // 2단계: 계열 경향 hint
+  const hints = buildSeriesHints(trimmed);
+  for (const cluster of trimmed) {
+    const hint = hints.get(cluster.key);
+    if (hint) cluster.seriesHint = hint;
+  }
+
+  return trimmed;
 }
 
 /**

@@ -2,17 +2,16 @@
  * 표기 통일 추천 — 맞춤법 탭 외래어 표기와 같은 박스·버튼 크롬.
  * 문서 내 띄어쓰기 이형태만 (규범 검증 아님).
  * 소수 이형태만 페이지 칩 → 원고 이동·하이라이트.
+ *
+ * v2: 계열 그룹핑 + variant별 즉시 등록 + 그룹 일괄 등록.
  */
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import {
   buildUnifyCandidatePreviewGroups,
   discoverSpacingUnifyCandidates,
-  formatUnifyClusterRegisterInput,
   instancesForUnifyVariant,
 } from '../../lib/unifyCandidateDiscover.js';
-import { registerConsistencyUnifyBatch } from '../../lib/consistencyLiteralRegister.js';
-import { applyUnifyPinWithLedger } from '../../lib/consistencyDecisions.js';
-import { MAX_CONSISTENCY_UNIFY_SLOTS } from '../../lib/consistencyRuleLimit.js';
+import { groupAndSortClusters } from '../../lib/unifyCandidateGrouping.js';
 import { formatSystemPageLabel } from '../../lib/printedPageDisplay.js';
 import { assertBetaDailyCheckOrAlert } from '../../lib/betaDailyQuota.js';
 import ConsistencyHintExample from './ConsistencyHintExample.jsx';
@@ -68,7 +67,14 @@ export default function UnifyCandidateFindPanel({
     /** @type {UnifySpacingCluster[]} */ ([]),
   );
   const [searched, setSearched] = useState(false);
-  const [addedKeys, setAddedKeys] = useState(() => new Set());
+  // key → 선택된 variant (즉시 등록됨)
+  const [registeredVariants, setRegisteredVariants] = useState(
+    /** @type {Map<string, string>} */ (new Map()),
+  );
+  // key → pre-select된 variant (같은 그룹 자동 선택, 아직 미등록)
+  const [preSelected, setPreSelected] = useState(
+    /** @type {Map<string, string>} */ (new Map()),
+  );
 
   async function handleFind() {
     if (!hasPdf || !pageTexts.length) {
@@ -95,7 +101,8 @@ export default function UnifyCandidateFindPanel({
       const next = discoverSpacingUnifyCandidates(pageTexts);
       setClusters(next);
       setSearched(true);
-      setAddedKeys(new Set());
+      setRegisteredVariants(new Map());
+      setPreSelected(new Map());
       onPreviewGroupsChange?.(buildUnifyCandidatePreviewGroups(next));
     } finally {
       setFinding(false);
@@ -103,27 +110,49 @@ export default function UnifyCandidateFindPanel({
   }
 
   /**
+   * variant를 선택하여 즉시 등록.
+   * @param {UnifySpacingCluster} cluster
+   * @param {string} chosenVariant
+   * @param {UnifySpacingCluster[]} [groupClusters] 같은 계열 그룹
+   */
+  const handleSelectVariant = useCallback(
+    (cluster, chosenVariant, groupClusters) => {
+      setRegisteredVariants((prev) => {
+        const next = new Map(prev);
+        next.set(cluster.key, chosenVariant);
+        return next;
+      });
+
+      // 같은 그룹 내 동일 방향 auto pre-select
+      if (groupClusters && groupClusters.length > 1) {
+        const isGlued = !/\s/.test(chosenVariant);
+        setPreSelected((prev) => {
+          const next = new Map(prev);
+          for (const gc of groupClusters) {
+            if (gc.key === cluster.key) continue;
+            if (registeredVariants.has(gc.key)) continue;
+            const sameDir = gc.variants.find((v) =>
+              isGlued ? !/\s/.test(v) : /\s/.test(v),
+            );
+            if (sameDir) next.set(gc.key, sameDir);
+          }
+          return next;
+        });
+      }
+    },
+    [registeredVariants],
+  );
+
+  /**
+   * 등록 취소.
    * @param {UnifySpacingCluster} cluster
    */
-  function handleAddToUnify(cluster) {
-    const input = formatUnifyClusterRegisterInput(
-      cluster,
-      MAX_CONSISTENCY_UNIFY_SLOTS,
-    );
-    const ok = registerConsistencyUnifyBatch(input, customRules, (next) => {
-      const pinned = applyUnifyPinWithLedger(
-        next,
-        consistencyDecisions,
-        cluster.recommendedUnify,
-        { byUid: decisionByUid },
-      );
-      return onApplyRules(pinned.nextRules, {
-        consistencyDecisions: pinned.nextDecisions,
-      });
+  function handleCancelVariant(cluster) {
+    setRegisteredVariants((prev) => {
+      const next = new Map(prev);
+      next.delete(cluster.key);
+      return next;
     });
-    if (ok) {
-      setAddedKeys((prev) => new Set(prev).add(cluster.key));
-    }
   }
 
   return (
@@ -169,74 +198,142 @@ export default function UnifyCandidateFindPanel({
               띄어쓰기만 다른 표기 후보를 찾지 못했습니다.
             </p>
           ) : (
-            <ul className="unify-candidate-find__list">
-              {clusters.map((cluster) => {
-                const added = addedKeys.has(cluster.key);
-                return (
-                  <li key={cluster.key} className="unify-candidate-find__card">
-                    <div className="unify-candidate-find__card-head">
-                      <p className="unify-candidate-find__recommend">
-                        <span className="unify-candidate-find__recommend-label">
-                          다수형
-                        </span>
-                        <strong>{cluster.recommendedUnify}</strong>
-                        <span className="unify-candidate-find__total">
-                          (총 {cluster.totalCount}회)
-                        </span>
-                      </p>
-                      <button
-                        type="button"
-                        className="consistency-register-add-btn consistency-register-add-btn--label unify-candidate-find__add"
-                        disabled={added}
-                        onClick={() => handleAddToUnify(cluster)}
-                      >
-                        {added ? '넣음' : '표기 통일하기 등록'}
-                      </button>
+            <div className="unify-candidate-find__grouped">
+              {groupAndSortClusters(clusters).map((group) => (
+                <div
+                  key={
+                    group.type === 'series'
+                      ? `series-${group.affix}`
+                      : 'singles'
+                  }
+                  className={
+                    group.type === 'series'
+                      ? 'unify-candidate-find__series-group'
+                      : 'unify-candidate-find__singles'
+                  }
+                >
+                  {group.type === 'series' ? (
+                    <div className="unify-candidate-find__group-header">
+                      <span className="unify-candidate-find__group-label">
+                        {group.label}
+                      </span>
+                      <span className="result-findings-count-circle unify-candidate-find__group-count">
+                        {group.clusters.length}
+                      </span>
                     </div>
-                    <ul className="unify-candidate-find__variants">
-                      {cluster.variants.map((variant) => {
-                        const isMinority =
-                          variant !== cluster.recommendedUnify;
-                        const instances = isMinority
-                          ? instancesForUnifyVariant(cluster, variant)
-                          : [];
-                        return (
-                          <li key={variant}>
-                            <div className="unify-candidate-find__variant-row">
-                              <span className="unify-candidate-find__variant">
-                                {variant}
-                              </span>
-                              <span className="unify-candidate-find__count">
-                                {cluster.counts[variant]}회
-                              </span>
-                            </div>
-                            {isMinority && instances.length > 0 ? (
-                              <ResultPageSummary
-                                instances={instances}
-                                currentPage={currentPage}
-                                selectedInstance={selectedInstance}
-                                formatPageLabel={formatPageLabel}
-                                isInstanceVisible={() => true}
-                                onSelectPage={(pageNum) => {
-                                  const first = instances.find(
-                                    (inst) => inst.pageNum === pageNum,
-                                  );
-                                  if (first) onSelectInstance?.(first);
-                                }}
-                                onSelectInstance={onSelectInstance}
-                              />
-                            ) : null}
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  </li>
-                );
-              })}
-            </ul>
+                  ) : null}
+                  <ul className="unify-candidate-find__list">
+                    {group.clusters.map((cluster) => (
+                      <ClusterCard
+                        key={cluster.key}
+                        cluster={cluster}
+                        registeredVariant={registeredVariants.get(cluster.key)}
+                        preSelectedVariant={preSelected.get(cluster.key)}
+                        groupClusters={
+                          group.type === 'series' ? group.clusters : undefined
+                        }
+                        onSelectVariant={handleSelectVariant}
+                        onCancelVariant={handleCancelVariant}
+                        currentPage={currentPage}
+                        selectedInstance={selectedInstance}
+                        formatPageLabel={formatPageLabel}
+                        onSelectInstance={onSelectInstance}
+                      />
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
           )}
         </div>
       ) : null}
     </div>
+  );
+}
+
+/**
+ * 개별 클러스터 카드 — variant별 "표기 통일" 버튼 포함.
+ */
+function ClusterCard({
+  cluster,
+  registeredVariant,
+  preSelectedVariant,
+  groupClusters,
+  onSelectVariant,
+  onCancelVariant,
+  currentPage,
+  selectedInstance,
+  formatPageLabel,
+  onSelectInstance,
+}) {
+  const isRegistered = !!registeredVariant;
+
+  return (
+    <li className="unify-candidate-find__card">
+      <div className="unify-candidate-find__card-head">
+        <span className="unify-candidate-find__total">
+          총 {cluster.totalCount}회
+        </span>
+        {cluster.seriesHint ? (
+          <span className="unify-candidate-find__series-hint">
+            {cluster.seriesHint.reason}
+          </span>
+        ) : null}
+      </div>
+      <ul className="unify-candidate-find__variants">
+        {cluster.variants.map((variant) => {
+          const count = cluster.counts[variant];
+          const isChosen = registeredVariant === variant;
+          const isPreSelected = !isRegistered && preSelectedVariant === variant;
+          const instances = instancesForUnifyVariant(cluster, variant);
+
+          return (
+            <li key={variant} className="unify-candidate-find__variant-item">
+              <div className="unify-candidate-find__variant-row">
+                <span className="unify-candidate-find__variant">
+                  {variant}
+                </span>
+                <span className="unify-candidate-find__count">
+                  {count}회
+                </span>
+                <button
+                  type="button"
+                  className={[
+                    'unify-candidate-find__unify-btn',
+                    isChosen && 'unify-candidate-find__unify-btn--chosen',
+                    isPreSelected && 'unify-candidate-find__unify-btn--preselect',
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
+                  onClick={() =>
+                    isChosen
+                      ? onCancelVariant(cluster)
+                      : onSelectVariant(cluster, variant, groupClusters)
+                  }
+                >
+                  표기 통일
+                </button>
+              </div>
+              {instances.length > 0 ? (
+                <ResultPageSummary
+                  instances={instances}
+                  currentPage={currentPage}
+                  selectedInstance={selectedInstance}
+                  formatPageLabel={formatPageLabel}
+                  isInstanceVisible={() => true}
+                  onSelectPage={(pageNum) => {
+                    const first = instances.find(
+                      (inst) => inst.pageNum === pageNum,
+                    );
+                    if (first) onSelectInstance?.(first);
+                  }}
+                  onSelectInstance={onSelectInstance}
+                />
+              ) : null}
+            </li>
+          );
+        })}
+      </ul>
+    </li>
   );
 }

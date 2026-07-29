@@ -1290,6 +1290,8 @@
   flex-shrink: 0;
   border-radius: var(--radius-search);
   margin: 0;
+  min-width: 4.5em;
+  text-align: center;
 }
 
 .panel-left .consistency-embed .unify-candidate-find .hint.consistency-hint-block {
@@ -1738,8 +1740,6 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  max-height: 14rem;
-  overflow: auto;
 }
 
 .panel-left .unify-candidate-find__card {
@@ -1785,6 +1785,94 @@
   font-weight: 500;
   color: var(--c-soft);
   font-size: 0.9em;
+}
+
+.panel-left .unify-candidate-find__series-hint {
+  display: block;
+  margin-top: 3px;
+  font-size: 0.78em;
+  font-weight: 400;
+  color: var(--panel-accent, #b06030);
+  line-height: 1.4;
+}
+
+/* ── 계열 그룹핑 ── */
+.panel-left .unify-candidate-find__series-group {
+  border: 1px solid var(--work-chrome-border, #ddd);
+  border-radius: var(--radius-search, 6px);
+  padding: var(--spelling-calibration-block-pad-y, 9px)
+    var(--spelling-calibration-block-pad-x, 12px);
+  margin-bottom: var(--spelling-calibration-block-pad-y, 9px);
+  background: color-mix(in srgb, var(--search-action-bg, #4a7c59) 15%, transparent);
+}
+
+.panel-left .unify-candidate-find__singles {
+  margin-bottom: var(--spelling-calibration-block-pad-y, 9px);
+}
+
+.panel-left .unify-candidate-find__group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.panel-left .unify-candidate-find__group-label {
+  font-size: calc(0.78rem * var(--panel-ui-scale, 1));
+  font-weight: 600;
+  color: var(--panel-accent, #b06030);
+}
+
+.panel-left .unify-candidate-find__batch-btn {
+  font-size: calc(0.7rem * var(--panel-ui-scale, 1)) !important;
+  padding: 3px 8px !important;
+}
+
+/* ── variant별 표기 통일 버튼 ── */
+.panel-left .unify-candidate-find__unify-btn {
+  flex-shrink: 0;
+  margin-left: auto;
+  padding: 2px 8px;
+  font-size: calc(0.7rem * var(--panel-ui-scale, 1));
+  font-weight: 400;
+  line-height: 1.4;
+  border: 1px solid var(--work-chrome-border, #ccc);
+  border-radius: var(--radius-search, 6px);
+  background: transparent;
+  color: var(--panel-text, #333);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.panel-left .unify-candidate-find__unify-btn:hover:not(:disabled) {
+  border-color: var(--search-action-bg, #4a7c59);
+  background: color-mix(in srgb, var(--search-action-bg, #4a7c59) 10%, transparent);
+}
+
+.panel-left .unify-candidate-find__unify-btn--preselect {
+  border-color: var(--search-action-bg, #4a7c59);
+  background: color-mix(in srgb, var(--search-action-bg, #4a7c59) 15%, transparent);
+  color: var(--search-action-bg, #4a7c59);
+  font-weight: 500;
+}
+
+.panel-left .unify-candidate-find__unify-btn--chosen {
+  border-color: var(--search-action-bg, #4a7c59);
+  background: var(--search-action-bg, #4a7c59);
+  color: #fff;
+  font-weight: 500;
+  cursor: default;
+}
+
+.panel-left .unify-candidate-find__unify-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.panel-left .unify-candidate-find__variant-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .panel-left .unify-candidate-find__variants {
