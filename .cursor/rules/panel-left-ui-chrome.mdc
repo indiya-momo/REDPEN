@@ -1,0 +1,65 @@
+---
+description: 좌측 패널(맞춤법·표기 통일) 카드·간격·입력·버튼 UI 크롬 통일 기준
+globs: src/styles/main-screen.css,src/components/**/*Panel*.jsx,src/components/consistency/**,src/components/LoanwordConverter.jsx,src/components/PanelSectionRunButton.jsx
+alwaysApply: false
+---
+
+# 좌측 패널 UI 크롬 (panel-left)
+
+새 블록·카드·입력·버튼을 만들 때 **기존 토큰·패턴을 재사용**한다. 임의 `padding`/`margin`/`gap`을 새로 두지 않는다.
+
+## 1. 간격 토큰 (`.panel-left` — `main-screen.css`)
+
+| 토큰 | 용도 |
+|------|------|
+| `--panel-gap-block` (8px×scale) | 카드 **내부** 행 간격 — 제목↔설명, 설명↔입력 |
+| `--panel-gap-section` (14px×scale) | 카드 **사이**·섹션 macro |
+| `--spelling-calibration-block-pad-y/x` (9px/10px) | 보정 카드(원고 페이지·외래어) 상하·좌우 |
+| `--consistency-input-padding-block` | 검색·등록 입력 세로 패딩 |
+| `--panel-action-btn-pad-y/x`, `--panel-action-btn-font` | 등록·변환·찾기 등 **액션 버튼** |
+
+**다시 검수 행 아래** 첫 콘텐츠까지: `8px` (= `.spelling-tab-layout__calibration` padding-top 또는 `.consistency-embed` padding-top after run-row).
+
+## 2. 카드 내부 stack (표기 통일하기 = 기준)
+
+제목·설명·예시·입력을 **세로 stack**으로 쌓을 때:
+
+```css
+/* flex column, gap: 0 — margin으로만 간격 */
+.title / summary     → margin-bottom: var(--panel-gap-block);
+.hint              → margin: 0;
+.consistency-hint-example → margin-top: calc(var(--panel-gap-block) * 0.75);
+.field / tail-form → margin-top: var(--panel-gap-block);
+```
+
+적용 예: `.spelling-tab-layout__calibration .loanword-converter`, `.consistency-embed .unify-candidate-find`.
+
+## 3. 검색·등록 한 덩어리
+
+- **컨테이너**: `.consistency-register-field` 또는 `.loanword-converter__field` — `border: 1px solid #c5c9d0`, `border-radius: var(--radius-search)`, `background: var(--color-surface-overlay)`
+- **입력**: `.consistency-register-field__input` / `.loanword-converter__input` — `--consistency-input-padding-block`, `--consistency-register-text`
+- **버튼**: `.consistency-register-add-btn--label` / `.loanword-converter__submit` — `--panel-action-btn-*`, `var(--search-action-bg)`
+
+외래어·표기 통일하기·표기 통일 추천(등록)은 **같은 크롬**을 공유한다.
+
+## 4. 보조 카드 박스
+
+- 외래어 표기·표기 통일 추천: `.loanword-converter` 박스 (`border`, `8px 12px` padding, `rgba(255,255,255,0.6)` 배경)
+- 원고 페이지 맞추기: `.printed-page-setup` + `--spelling-calibration-block-pad-*`
+
+## 5. 검수 실행 행 (run-row)
+
+- 공통 클래스: `.panel-section-run-btn` (+ variant `--primary`, `.btn-export-results`)
+- **다시 검수 · 검수 결과 다운로드 · 기준 검수** — 동일 `--panel-run-btn-pad-y/x` (별도 padding-block 오버라이드 금지)
+- 색만 variant: secondary(다시 검수) / export / primary(기준 검수)
+
+## 6. 표기통일 박스(표기 통일 추천) 특수
+
+- 설명 첫 줄 + 찾기: `.unify-candidate-find__intro-row` (flex, `align-items: flex-start`)
+- 찾기·등록 버튼: `.consistency-register-add-btn--label` — 표기 통일하기 등록 버튼과 동일 `--panel-action-btn-*` 크롬 (별도 높이·padding 하드코딩 금지)
+
+## 금지
+
+- 같은 의미의 버튼에 서로 다른 `padding`/`font-size` 하드코딩
+- 카드 안 `gap`과 자식 `margin`을 동시에 쌓아 이중 여백 만들기
+- `consistency-register-field`와 다른 입력 테두리·패딩을 외래어에만 따로 두기
