@@ -1607,7 +1607,7 @@
   box-sizing: border-box;
 }
 
-/* 표기 통일 후보 찾기 — 외래어 표기(LoanwordConverter styles.wrap)와 동일 박스 */
+/* 표기 통일 추천 — 외래어 표기(LoanwordConverter styles.wrap)와 동일 박스 */
 .panel-left .unify-candidate-find.loanword-converter {
   margin: 6px 0 0;
   padding: 8px 12px;
@@ -1663,21 +1663,19 @@
 
 .panel-left .unify-candidate-find__card {
   display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  gap: 8px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
   padding: 8px 10px;
   border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 6px;
   background: #fff;
 }
 
-.panel-left .unify-candidate-find__card-main {
-  flex: 1;
-  min-width: 0;
+.panel-left .unify-candidate-find__card-head {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  align-items: flex-start;
+  gap: 8px;
 }
 
 .panel-left .unify-candidate-find__recommend {
@@ -1743,6 +1741,9 @@
 .panel-left .unify-candidate-find__variants .result-pages {
   margin-top: 2px;
   padding-left: 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .panel-left .unify-candidate-find__add {

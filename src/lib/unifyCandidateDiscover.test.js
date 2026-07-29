@@ -219,6 +219,21 @@ describe('discoverSpacingUnifyCandidates', () => {
     expect(hit.counts['경제 성장']).toBe(2);
   });
 
+  it('결과 클러스터는 추천 통일형 가나다순으로 정렬한다', () => {
+    const clusters = discoverSpacingUnifyCandidates([
+      {
+        pageNum: 1,
+        text:
+          '노동시장 노동 시장 경제성장 경제 성장 서울시장 서울 시장',
+      },
+    ]);
+    expect(clusters.map((c) => c.recommendedUnify)).toEqual([
+      '경제성장',
+      '노동시장',
+      '서울시장',
+    ]);
+  });
+
   it('변형이 하나뿐이면 제외한다', () => {
     const clusters = discoverSpacingUnifyCandidates([
       { pageNum: 1, text: '경제성장 경제성장 경제성장' },

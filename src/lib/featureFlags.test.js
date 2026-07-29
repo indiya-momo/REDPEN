@@ -24,7 +24,7 @@ describe('featureFlags', () => {
     import.meta.env.VITE_FEATURE_UNIFY_CANDIDATE_FIND = prevUnifyCandidate;
   });
 
-  it('dev에서는 목차·본문·엑셀 export·프로젝트 허브·외래어 변환·후보 찾기가 켜진다', () => {
+  it('dev에서는 목차·본문·엑셀 export·프로젝트 허브·외래어 변환·표기 통일 추천이 켜진다', () => {
     import.meta.env.DEV = true;
     expect(isTocBodyCheckEnabled()).toBe(true);
     expect(isSpellingExportEnabled()).toBe(true);
@@ -33,7 +33,7 @@ describe('featureFlags', () => {
     expect(isUnifyCandidateFindEnabled()).toBe(true);
   });
 
-  it('프로덕션에서는 목차·프로젝트 허브·후보 찾기만 env 없으면 꺼지고 export·외래어 변환은 기본 켜진다', () => {
+  it('프로덕션에서는 목차·프로젝트 허브·표기 통일 추천만 env 없으면 꺼지고 export·외래어 변환은 기본 켜진다', () => {
     import.meta.env.DEV = false;
     import.meta.env.VITE_FEATURE_TOC_BODY_CHECK = undefined;
     import.meta.env.VITE_FEATURE_SPELLING_EXPORT = undefined;

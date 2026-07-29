@@ -1,5 +1,5 @@
 /**
- * 표기 통일 후보 찾기 — 문서 내 띄어쓰기 이형태만 (규범 판단 아님).
+ * 표기 통일 추천 — 문서 내 띄어쓰기 이형태만 (규범 판단 아님).
  *
  * 정책: project-docs/unify-candidate-spacing-redesign-2026-07-29.md
  * - 스캔은 page.textLayout 우선(음절 자간 가짜 공백 제외), 없으면 text
@@ -354,9 +354,8 @@ export function discoverSpacingUnifyCandidates(pageTexts, opts = {}) {
     });
   }
 
-  clusters.sort(
-    (a, b) =>
-      b.totalCount - a.totalCount || a.key.localeCompare(b.key, 'ko'),
+  clusters.sort((a, b) =>
+    a.recommendedUnify.localeCompare(b.recommendedUnify, 'ko'),
   );
   return clusters.slice(0, maxClusters);
 }

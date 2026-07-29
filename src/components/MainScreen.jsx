@@ -342,7 +342,7 @@ export default function MainScreen({
   const [workTab, setWorkTab] = useState(initialWorkTab);
   /** @type {['toc' | 'rules', import('react').Dispatch<import('react').SetStateAction<'toc' | 'rules'>>]} */
   const [consistencyFocus, setConsistencyFocus] = useState('rules');
-  /** 표기 통일 후보 찾기 — 소수 이형태 임시 하이라이트 그룹 */
+  /** 표기 통일 추천 — 소수 이형태 임시 하이라이트 그룹 */
   const [unifyCandidatePreviewResults, setUnifyCandidatePreviewResults] =
     useState(
       /** @type {import('../lib/ruleEngine.js').GroupedResult[]} */ ([]),
