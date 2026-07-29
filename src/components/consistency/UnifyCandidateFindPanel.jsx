@@ -11,9 +11,10 @@ import {
   discoverSpacingUnifyCandidates,
   instancesForUnifyVariant,
 } from '../../lib/unifyCandidateDiscover.js';
-import { groupAndSortClusters } from '../../lib/unifyCandidateGrouping.js';
+import { groupSortAndFillSatellites } from '../../lib/unifyCandidateGrouping.js';
 import { formatSystemPageLabel } from '../../lib/printedPageDisplay.js';
 import { assertBetaDailyCheckOrAlert } from '../../lib/betaDailyQuota.js';
+import { confirmUnifyCandidateFindBeforeRun, alertUnifyCandidateFindAfterRun } from '../../lib/consistencyCheckConfirm.js';
 import ConsistencyHintExample from './ConsistencyHintExample.jsx';
 import ResultPageSummary from '../ResultPageSummary.jsx';
 
@@ -66,6 +67,12 @@ export default function UnifyCandidateFindPanel({
   const [clusters, setClusters] = useState(
     /** @type {UnifySpacingCluster[]} */ ([]),
   );
+  /** @type {[Map<string, import('../../lib/unifyCandidateDiscover.js').ClusterAcc> | null, Function]} */
+  const [rawByKey, setRawByKey] = useState(
+    /** @type {Map<string, import('../../lib/unifyCandidateDiscover.js').ClusterAcc> | null} */ (
+      null
+    ),
+  );
   const [searched, setSearched] = useState(false);
   // key → 선택된 variant (즉시 등록됨)
   const [registeredVariants, setRegisteredVariants] = useState(
@@ -88,22 +95,32 @@ export default function UnifyCandidateFindPanel({
     if (finding) return;
     setFinding(true);
     try {
+      if (!(await confirmUnifyCandidateFindBeforeRun(authUid, authEmail))) {
+        return;
+      }
       if (
         !(await assertBetaDailyCheckOrAlert(authUid, {
           authEmail,
           checkTab: 'consistency',
           onConsumed: onBetaQuotaConsumed,
+          skipConsumedAlert: true,
         }))
       ) {
         return;
       }
       await new Promise((r) => setTimeout(r, 0));
-      const next = discoverSpacingUnifyCandidates(pageTexts);
+      const result = discoverSpacingUnifyCandidates(pageTexts, { includeRaw: true });
+      const next = result.clusters;
       setClusters(next);
+      setRawByKey(result.rawByKey);
       setSearched(true);
       setRegisteredVariants(new Map());
       setPreSelected(new Map());
       onPreviewGroupsChange?.(buildUnifyCandidatePreviewGroups(next));
+      await alertUnifyCandidateFindAfterRun(next, {
+        uid: authUid,
+        email: authEmail,
+      });
     } finally {
       setFinding(false);
     }
@@ -123,14 +140,19 @@ export default function UnifyCandidateFindPanel({
         return next;
       });
 
-      // 같은 그룹 내 동일 방향 auto pre-select
+      // 그룹 첫 선택만 자동 선택. 이후 선택은 예외 — preselect를 덮어쓰지 않음.
       if (groupClusters && groupClusters.length > 1) {
         const isGlued = !/\s/.test(chosenVariant);
         setPreSelected((prev) => {
+          const alreadySeeded = groupClusters.some((gc) => prev.has(gc.key));
+          if (alreadySeeded) return prev;
           const next = new Map(prev);
           for (const gc of groupClusters) {
-            if (gc.key === cluster.key) continue;
-            if (registeredVariants.has(gc.key)) continue;
+            if (gc.key === cluster.key) {
+              // 기준 카드도 넣어 두면, 취소·반대 선택 시 예외 판별이 가능
+              next.set(gc.key, chosenVariant);
+              continue;
+            }
             const sameDir = gc.variants.find((v) =>
               isGlued ? !/\s/.test(v) : /\s/.test(v),
             );
@@ -140,11 +162,11 @@ export default function UnifyCandidateFindPanel({
         });
       }
     },
-    [registeredVariants],
+    [],
   );
 
   /**
-   * 등록 취소.
+   * 등록 취소 — 그룹 자동선택(preselect) 기준은 유지한다.
    * @param {UnifySpacingCluster} cluster
    */
   function handleCancelVariant(cluster) {
@@ -199,7 +221,10 @@ export default function UnifyCandidateFindPanel({
             </p>
           ) : (
             <div className="unify-candidate-find__grouped">
-              {groupAndSortClusters(clusters).map((group) => (
+              {(rawByKey
+                ? groupSortAndFillSatellites(clusters, rawByKey)
+                : []
+              ).map((group) => (
                 <div
                   key={
                     group.type === 'series'
@@ -268,6 +293,14 @@ function ClusterCard({
 }) {
   const isRegistered = !!registeredVariant;
 
+  // 예외: pre-select 방향과 반대로 등록된 경우
+  const isException = (() => {
+    if (!isRegistered || !preSelectedVariant) return false;
+    const preIsGlued = !/\s/.test(preSelectedVariant);
+    const chosenIsGlued = !/\s/.test(registeredVariant);
+    return preIsGlued !== chosenIsGlued;
+  })();
+
   return (
     <li className="unify-candidate-find__card">
       <div className="unify-candidate-find__card-head">
@@ -282,20 +315,36 @@ function ClusterCard({
       </div>
       <ul className="unify-candidate-find__variants">
         {cluster.variants.map((variant) => {
-          const count = cluster.counts[variant];
+          const count = cluster.counts[variant] ?? 0;
+          const isDerived = count === 0;
           const isChosen = registeredVariant === variant;
           const isPreSelected = !isRegistered && preSelectedVariant === variant;
           const instances = instancesForUnifyVariant(cluster, variant);
 
           return (
-            <li key={variant} className="unify-candidate-find__variant-item">
+            <li
+              key={variant}
+              className={[
+                'unify-candidate-find__variant-item',
+                isDerived && 'unify-candidate-find__variant-item--derived',
+              ]
+                .filter(Boolean)
+                .join(' ')}
+            >
               <div className="unify-candidate-find__variant-row">
                 <span className="unify-candidate-find__variant">
                   {variant}
                 </span>
-                <span className="unify-candidate-find__count">
-                  {count}회
-                </span>
+                {count > 0 ? (
+                  <span className="unify-candidate-find__count">
+                    {count}회
+                  </span>
+                ) : null}
+                {isException && isChosen ? (
+                  <span className="unify-candidate-find__exception-badge">
+                    표기 통일 예외
+                  </span>
+                ) : null}
                 <button
                   type="button"
                   className={[

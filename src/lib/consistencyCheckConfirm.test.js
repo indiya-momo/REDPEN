@@ -10,6 +10,9 @@ import {
   formatConsistencyCheckConfirmMessage,
   formatConsistencyUnifyCheckConfirmMessage,
   formatConsistencyUnifyCheckConfirmMessageWithoutQuota,
+  formatUnifyCandidateFindConfirmMessage,
+  formatUnifyCandidateFindCompleteMessage,
+  alertUnifyCandidateFindAfterRun,
 } from './consistencyCheckConfirm.js';
 import { parseBracketTitleMessage } from './appDialog.js';
 import { UNIFY_FEATURE_LABEL } from './consistencyRuleLimit.js';
@@ -331,6 +334,60 @@ describe('formatConsistencyUnifyCheckConfirmMessage', () => {
         `${UNIFY_FEATURE_LABEL}(1항목, 통일형: 조선시대📌)\n` +
         '\n' +
         '검수를 진행할까요?',
+    );
+  });
+});
+
+describe('formatUnifyCandidateFindConfirmMessage', () => {
+  it('표기 통일 추천 찾기 confirm 문구를 만든다', () => {
+    expect(formatUnifyCandidateFindConfirmMessage(6, 1, 5)).toBe(
+      '[표기 통일 추천]\n' +
+        '\n' +
+        '표기 통일 검수는 6회(1일 검수권 1회, 선물 검수권 5회) 가능합니다\n' +
+        '(표기 통일 추천 찾기는 표기 통일 검수 횟수를 사용합니다)\n' +
+        '\n' +
+        '찾기를 진행할까요?',
+    );
+  });
+});
+
+describe('formatUnifyCandidateFindCompleteMessage', () => {
+  it('발견 항목·총 횟수를 완료 alert 본문으로 만든다', () => {
+    expect(formatUnifyCandidateFindCompleteMessage(3, 6)).toBe(
+      '표기 통일 추천 3항목 전체 6회',
+    );
+  });
+
+  it('후보가 없으면 안내 문구만 반환한다', () => {
+    expect(formatUnifyCandidateFindCompleteMessage(0, 0)).toBe(
+      '띄어쓰기만 다른 표기 후보를 찾지 못했습니다.',
+    );
+  });
+});
+
+describe('alertUnifyCandidateFindAfterRun', () => {
+  it('찾기 완료 alert를 띄운다', async () => {
+    const alertMock = vi.fn();
+    vi.stubGlobal('alert', alertMock);
+
+    await alertUnifyCandidateFindAfterRun(
+      [
+        {
+          key: '개인소득',
+          variants: ['개인소득', '개인 소득'],
+          counts: { 개인소득: 1, '개인 소득': 1 },
+          totalCount: 2,
+          recommendedUnify: '개인소득',
+          occurrencesByVariant: {},
+        },
+      ],
+      { uid: 'u1', email: 'a@b.c' },
+    );
+
+    expect(alertMock).toHaveBeenCalledWith(
+      '찾기를 진행했습니다\n\n' +
+        '표기 통일 추천 1항목 전체 2회\n\n' +
+        '표기 통일 검수권 1회가 사용되었습니다(1일 검수권 1회, 선물 검수권 5회 사용 가능)',
     );
   });
 });

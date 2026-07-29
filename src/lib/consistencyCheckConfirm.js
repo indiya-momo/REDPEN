@@ -46,6 +46,7 @@ import {
   finishGuestBrowseConsistencyResultThenUnlockExportGuide,
   guestBrowseSkipsCheckConfirm,
 } from './guestBrowsePolicy.js';
+import { normalizeSpacingClusters } from './unifyCandidateCollapse.js';
 import {
   parseBracketTitleMessage,
   showAppAlert,
@@ -253,6 +254,144 @@ export function formatConsistencyUnifyCheckConfirmMessageWithoutQuota({
     `${formatConsistencyUnifyConfirmLine(unifyActive, pinnedTailWord)}\n` +
     `\n` +
     '검수를 진행할까요?'
+  );
+}
+
+/**
+ * 표기 통일 추천 — 찾기 직전 confirm
+ * @param {number} remaining
+ * @param {number} dailyRemaining
+ * @param {number} bonusRemaining
+ */
+export function formatUnifyCandidateFindConfirmMessage(
+  remaining,
+  dailyRemaining,
+  bonusRemaining,
+) {
+  return (
+    `[표기 통일 추천]\n` +
+    `\n` +
+    `${formatConsistencyCheckQuotaAvailabilityLine(remaining, dailyRemaining, bonusRemaining)}\n` +
+    `(표기 통일 추천 찾기는 표기 통일 검수 횟수를 사용합니다)\n` +
+    `\n` +
+    '찾기를 진행할까요?'
+  );
+}
+
+/** @returns {string} */
+export function formatUnifyCandidateFindConfirmMessageWithoutQuota() {
+  return (
+    `[표기 통일 추천]\n` +
+    `\n` +
+    '띄어쓰기가 다른 표기 후보를 문서에서 찾습니다.\n' +
+    `\n` +
+    '찾기를 진행할까요?'
+  );
+}
+
+/**
+ * 표기 통일 추천 찾기 직전 — 검수권 confirm (차감 전)
+ * @param {string} uid
+ * @param {string} [email]
+ */
+export async function confirmUnifyCandidateFindBeforeRun(uid, email = '') {
+  if (!assertLoggedInForCheckOrAlert(uid)) {
+    return false;
+  }
+
+  if (guestBrowseSkipsCheckConfirm()) {
+    return true;
+  }
+
+  const quotaDisplayEnabled =
+    isBetaDailyQuotaEnabled() && Boolean(uid.trim());
+
+  let message;
+  if (quotaDisplayEnabled) {
+    const status = await getBetaDailyQuotaStatus(uid, email);
+    const tabCount = status.consistencyCount ?? 0;
+    const tabLimit = status.consistencyTabLimit ?? BETA_TAB_LIMIT_DEFAULT;
+    if (
+      isBetaDailyQuotaEnforcedForUser(uid, email) &&
+      !canRunTabCheck(tabCount, tabLimit)
+    ) {
+      alert(betaQuotaAlertForTab('consistency'));
+      return false;
+    }
+    const remaining = Math.max(0, tabLimit - tabCount);
+    const dailyLimit = status.dailyLimit ?? 1;
+    const bonusRemaining = status.signupBonusConsistencyRemaining ?? 0;
+    const { dailyRemaining } = getTabRemainingBreakdown(
+      tabCount,
+      dailyLimit,
+      bonusRemaining,
+    );
+    message = formatUnifyCandidateFindConfirmMessage(
+      remaining,
+      dailyRemaining,
+      bonusRemaining,
+    );
+  } else {
+    message = formatUnifyCandidateFindConfirmMessageWithoutQuota();
+  }
+
+  const { title, message: body } = parseBracketTitleMessage(message);
+  return showAppConfirm({ title, message: body });
+}
+
+/**
+ * 표기 통일 추천 찾기 완료 alert 본문
+ * @param {number} clusterCount
+ * @param {number} totalOccurrences
+ */
+export function formatUnifyCandidateFindCompleteMessage(
+  clusterCount,
+  totalOccurrences,
+) {
+  if (clusterCount <= 0) {
+    return '띄어쓰기만 다른 표기 후보를 찾지 못했습니다.';
+  }
+  return `표기 통일 추천 ${clusterCount}항목 전체 ${totalOccurrences}회`;
+}
+
+/**
+ * 표기 통일 추천 찾기 직후 — 발견 항목·검수권 사용 alert
+ * @param {import('./unifyCandidateDiscover.js').UnifySpacingCluster[]} clusters
+ * @param {{ uid?: string, email?: string }} [quotaContext]
+ */
+export async function alertUnifyCandidateFindAfterRun(
+  clusters = [],
+  quotaContext = {},
+) {
+  const { uid = '', email = '' } = quotaContext;
+  const collapsed = normalizeSpacingClusters(clusters);
+  const clusterCount = collapsed.length;
+  const totalOccurrences = collapsed.reduce(
+    (sum, cluster) => sum + (cluster.totalCount ?? 0),
+    0,
+  );
+  let message = formatUnifyCandidateFindCompleteMessage(
+    clusterCount,
+    totalOccurrences,
+  );
+
+  const quotaConsumedLine = await buildCheckResultQuotaConsumedLine(
+    uid,
+    email,
+    'consistency',
+  );
+  if (quotaConsumedLine) {
+    message = `${message}\n\n${quotaConsumedLine}`;
+  }
+
+  await finishGuestBrowseConsistencyResultThenUnlockExportGuide(
+    async (extra = {}) => {
+      await showAppAlert({
+        title: '찾기를 진행했습니다',
+        message,
+        ...extra,
+      });
+    },
   );
 }
 
