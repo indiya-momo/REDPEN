@@ -213,13 +213,7 @@ export function fillSeriesSatellites(groups, conflictClusters, rawByKey) {
     if (satellites.length === 0) continue;
 
     group.clusters = [...group.clusters, ...satellites];
-    group.clusters.sort((a, b) => {
-      const aSpaced = a.variants.find((v) => /\s/.test(v)) || '';
-      const bSpaced = b.variants.find((v) => /\s/.test(v)) || '';
-      const aFirst = aSpaced.split(/\s+/)[0] || a.key;
-      const bFirst = bSpaced.split(/\s+/)[0] || b.key;
-      return aFirst.length - bFirst.length || a.key.localeCompare(b.key, 'ko');
-    });
+    // 최종 가나다 정렬은 groupSortAndFillSatellites / sortClusterGroups 에서 수행
   }
 
   return groups;

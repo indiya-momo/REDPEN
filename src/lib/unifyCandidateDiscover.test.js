@@ -15,6 +15,12 @@ import {
   stripTrailingJosa,
   unifySpacingKey,
 } from './unifyCandidateDiscover.js';
+import { normalizeSpacingClusters } from './unifyCandidateCollapse.js';
+
+/** discover 후 정규화(공통 접두·짧은 단위 흡수) */
+function discoverNormalized(pageTexts) {
+  return normalizeSpacingClusters(discoverSpacingUnifyCandidates(pageTexts));
+}
 
 describe('splitUnifyScanLines', () => {
   it('줄마다 자르고 줄 경계는 이어 붙이지 않는다', () => {
@@ -64,7 +70,7 @@ describe('isExcludedUnifyCandidateRaw', () => {
 });
 
 describe('stripTrailingUnifyAffixes', () => {
-  it('조사·기를 떼어 경기 침체로 만든다', () => {
+  it('유틸: 조사·기를 떼면 경기 침체가 된다(파이프라인에서는 미사용)', () => {
     expect(stripTrailingUnifyAffixes('경기 침체에서')).toBe('경기 침체');
     expect(stripTrailingUnifyAffixes('경기침체기')).toBe('경기침체');
     expect(stripTrailingUnifyAffixes('경기 침체나')).toBe('경기 침체');
@@ -72,19 +78,26 @@ describe('stripTrailingUnifyAffixes', () => {
     expect(stripTrailingUnifyAffixes('경기침체기인지')).toBe('경기침체');
   });
 
-  it('끝 기호가 붙은 뉴욕타임스는 작은 단위로 합친다', () => {
+  it('끝 기호가 붙은 뉴욕타임스는 기호만 제거한다', () => {
     expect(stripTrailingUnifyAffixes('뉴욕타임스>')).toBe('뉴욕타임스');
     expect(stripTrailingUnifyAffixes('뉴욕 타임스>')).toBe('뉴욕 타임스');
     expect(unifySpacingKey('뉴욕타임스>')).toBe(unifySpacingKey('뉴욕타임스'));
   });
+
+  it('키는 기호만 제거하고 조사·활용은 남긴다', () => {
+    expect(unifySpacingKey("경제 왕국'이기")).toBe('경제왕국이기');
+    expect(unifySpacingKey("경제왕국'이라")).toBe('경제왕국이라');
+    expect(unifySpacingKey('경제 이론들')).toBe('경제이론들');
+    expect(unifySpacingKey('경제이론이다')).toBe('경제이론이다');
+    expect(unifySpacingKey('경제왕국의')).toBe('경제왕국의');
+  });
 });
 
 describe('stripTrailingJosa', () => {
-  it('경제왕국·경제왕국의를 같은 어간으로 만든다', () => {
+  it('유틸: 경제왕국의를 경제왕국으로 만든다(파이프라인에서는 미사용)', () => {
     expect(stripTrailingJosa('경제왕국')).toBe('경제왕국');
     expect(stripTrailingJosa('경제왕국의')).toBe('경제왕국');
     expect(stripTrailingJosa('경제왕국을')).toBe('경제왕국');
-    expect(unifySpacingKey('경제왕국의')).toBe(unifySpacingKey('경제왕국'));
   });
 
   it('띄움형 마지막 어절 조사만 제거한다', () => {
@@ -93,6 +106,12 @@ describe('stripTrailingJosa', () => {
 
   it('어간이 너무 짧으면 조사를 떼지 않는다', () => {
     expect(stripTrailingJosa('나이')).toBe('나이');
+  });
+
+  it('4음절 어절에서는 가·이를 떼지 않는다', () => {
+    expect(stripTrailingJosa('가치평가')).toBe('가치평가');
+    expect(stripTrailingJosa('경제왕국')).toBe('경제왕국');
+    expect(stripTrailingUnifyAffixes('가치평가')).toBe('가치평가');
   });
 });
 
@@ -150,8 +169,8 @@ describe('discoverSpacingUnifyCandidates', () => {
     expect(hit.occurrencesByVariant['경제 성장'][0].pageNum).toBe(1);
   });
 
-  it('조사가 붙은 표기는 어간으로 합친다', () => {
-    const clusters = discoverSpacingUnifyCandidates([
+  it('짧은 단위가 있으면 조사 붙은 긴 키를 흡수한다(조사는 떼지 않음)', () => {
+    const clusters = discoverNormalized([
       {
         pageNum: 1,
         text: '경제왕국 경제 왕국 경제왕국의 경제 왕국의',
@@ -163,7 +182,52 @@ describe('discoverSpacingUnifyCandidates', () => {
     expect(hit.variants).toEqual(
       expect.arrayContaining(['경제왕국', '경제 왕국']),
     );
-    expect(hit.variants.some((v) => v.endsWith('의'))).toBe(false);
+  });
+
+  it('가치 평가도·평가에 는 가치 평가로 합친다', () => {
+    const clusters = discoverNormalized([
+      { pageNum: 90, text: '가치 평가에 가치평가에' },
+      { pageNum: 114, text: '주식의 가치 평가도 비슷해서 가치평가도' },
+    ]);
+    expect(clusters.find((c) => c.key === '가치평')).toBeUndefined();
+    const hit = clusters.find((c) => c.key === '가치평가');
+    expect(hit).toBeTruthy();
+    expect(hit.variants).toEqual(
+      expect.arrayContaining(['가치평가', '가치 평가']),
+    );
+    expect(hit.totalCount).toBeGreaterThanOrEqual(4);
+  });
+
+  it("경제 왕국'이기·이라 는 공통 접두로 경제 왕국으로 합친다", () => {
+    const clusters = discoverNormalized([
+      {
+        pageNum: 4,
+        text: "경제왕국'이라 경제 왕국'이라",
+      },
+      {
+        pageNum: 15,
+        text: "경제 왕국'이기 경제왕국'이기",
+      },
+    ]);
+    const hit = clusters.find((c) => c.key === '경제왕국');
+    expect(hit).toBeTruthy();
+    expect(hit.variants).toEqual(
+      expect.arrayContaining(['경제왕국', '경제 왕국']),
+    );
+    expect(hit.totalCount).toBeGreaterThanOrEqual(4);
+  });
+
+  it('경제 이론들·이다 는 공통 접두로 경제 이론으로 합친다', () => {
+    const clusters = discoverNormalized([
+      { pageNum: 22, text: '경제이론이다 경제 이론이다' },
+      { pageNum: 170, text: '경제 이론들 경제이론들' },
+    ]);
+    const hit = clusters.find((c) => c.key === '경제이론');
+    expect(hit).toBeTruthy();
+    expect(hit.variants).toEqual(
+      expect.arrayContaining(['경제이론', '경제 이론']),
+    );
+    expect(hit.totalCount).toBeGreaterThanOrEqual(4);
   });
 
   it('조사만 띄운 경기 에서는 후보에서 뺀다', () => {
@@ -176,8 +240,8 @@ describe('discoverSpacingUnifyCandidates', () => {
     expect(clusters.find((c) => c.key === '경기에서')).toBeUndefined();
   });
 
-  it('경기 침체 계열(기·나·에서 등)은 경기 침체로 합친다', () => {
-    const clusters = discoverSpacingUnifyCandidates([
+  it('경기 침체 계열은 짧은 단위 흡수로 경기 침체로 합친다', () => {
+    const clusters = discoverNormalized([
       {
         pageNum: 1,
         text:
@@ -361,7 +425,7 @@ describe('formatUnifyClusterRegisterInput', () => {
 });
 
 describe('buildUnifyCandidatePreviewGroups', () => {
-  it('다수형을 제외한 이형태만 인스턴스 그룹으로 만든다', () => {
+  it('다수형 칩은 숨기고 소수형·1회만 인스턴스 그룹으로 만든다', () => {
     const clusters = discoverSpacingUnifyCandidates([
       {
         pageNum: 2,
@@ -373,11 +437,23 @@ describe('buildUnifyCandidatePreviewGroups', () => {
     const spaced = groups.find((g) => g.find === '경제 성장');
     expect(spaced?.instances?.length).toBe(1);
     expect(spaced?.instances[0].pageNum).toBe(2);
-    expect(
-      instancesForUnifyVariant(
-        clusters.find((c) => c.key === '경제성장'),
-        '경제성장',
-      ),
-    ).toEqual([]);
+    const cluster = clusters.find((c) => c.key === '경제성장');
+    expect(instancesForUnifyVariant(cluster, '경제성장')).toEqual([]);
+    expect(instancesForUnifyVariant(cluster, '경제 성장')).toHaveLength(1);
+  });
+
+  it('양쪽이 1회면 둘 다 칩을 만든다', () => {
+    const clusters = discoverSpacingUnifyCandidates([
+      { pageNum: 1, text: '공생관계' },
+      { pageNum: 2, text: '공생 관계' },
+    ]);
+    const cluster = clusters.find((c) => c.key === '공생관계');
+    expect(cluster).toBeTruthy();
+    expect(instancesForUnifyVariant(cluster, '공생관계')).toHaveLength(1);
+    expect(instancesForUnifyVariant(cluster, '공생 관계')).toHaveLength(1);
+    const groups = buildUnifyCandidatePreviewGroups(clusters);
+    expect(groups.map((g) => g.find).sort()).toEqual(
+      ['공생 관계', '공생관계'].sort(),
+    );
   });
 });

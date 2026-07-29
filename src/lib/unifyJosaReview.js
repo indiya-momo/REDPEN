@@ -1,0 +1,251 @@
+/**
+ * 표기 통일 — 조사·어간 접미 「검토」 후보.
+ * 자동 merge 없음. 확정 병합(흡수·LCP)과 직교.
+ *
+ * - 저위험 조사(에서·으로…) + 고위험 단음절 조사(은/는/이/가…) + 어간 접미「적」
+ * - 띄움에서 조사가 단독 어절인 경우(역학 은)도 어간으로 묶음
+ */
+
+import {
+  hangulSyllableCount,
+  UNIFY_SPACED_PART_MIN_HANGUL,
+} from './unifyCandidateDiscover.js';
+
+/**
+ * 다다음절·저위험 조사(결합형 통째 명시).
+ * @type {readonly string[]}
+ */
+export const UNIFY_LOW_RISK_JOSA = Object.freeze(
+  [
+    '에서부터',
+    '으로부터',
+    '에게서',
+    '으로서',
+    '으로써',
+    '에서는',
+    '에서도',
+    '으로는',
+    '으로도',
+    '로부터',
+    '로서',
+    '로써',
+    '에서',
+    '으로',
+    '부터',
+    '까지',
+    '에게',
+    '보다',
+    '처럼',
+    '만큼',
+    '밖에',
+  ].toSorted((a, b) => b.length - a.length || a.localeCompare(b, 'ko')),
+);
+
+/**
+ * 검토용 고위험 단음절 조사(자동 merge 금지, 어간 추정만).
+ * @type {readonly string[]}
+ */
+export const UNIFY_HIGH_RISK_JOSA = Object.freeze([
+  '은',
+  '는',
+  '이',
+  '가',
+  '을',
+  '를',
+  '의',
+  '도',
+  '만',
+]);
+
+/**
+ * 조사가 아닌 어간·접미(역학적 → 역학). 검토 추정에만 사용.
+ * @type {readonly string[]}
+ */
+export const UNIFY_REVIEW_STEM_AFFIXES = Object.freeze(['적']);
+
+/**
+ * 검토 어간 추정용 접미 전체 — 항상 길이 내림차순.
+ * @type {readonly string[]}
+ */
+export const UNIFY_REVIEW_STEM_SUFFIXES = Object.freeze(
+  [
+    ...UNIFY_LOW_RISK_JOSA,
+    ...UNIFY_HIGH_RISK_JOSA,
+    ...UNIFY_REVIEW_STEM_AFFIXES,
+  ].toSorted((a, b) => b.length - a.length || a.localeCompare(b, 'ko')),
+);
+
+/**
+ * @param {string} lastEojeol
+ * @returns {{ stemLast: string, suffix: string, bare: boolean } | null}
+ */
+export function matchLongestReviewStemSuffix(lastEojeol) {
+  const last = String(lastEojeol ?? '');
+  if (!last) return null;
+
+  for (const suffix of UNIFY_REVIEW_STEM_SUFFIXES) {
+    if (last === suffix) {
+      return { stemLast: '', suffix, bare: true };
+    }
+  }
+
+  for (const suffix of UNIFY_REVIEW_STEM_SUFFIXES) {
+    if (!last.endsWith(suffix) || last.length <= suffix.length) continue;
+    const stemLast = last.slice(0, -suffix.length);
+    if (hangulSyllableCount(stemLast) < UNIFY_SPACED_PART_MIN_HANGUL) continue;
+    // 가·이: 4음절 어절에서는 어간 끝과 구분 불가(가치평가→가치평)
+    if (
+      (suffix === '가' || suffix === '이') &&
+      hangulSyllableCount(last) === 4
+    ) {
+      continue;
+    }
+    return { stemLast, suffix, bare: false };
+  }
+  return null;
+}
+
+/** @deprecated 저위험만 — matchLongestReviewStemSuffix 사용 */
+export function matchLongestLowRiskJosa(lastEojeol) {
+  const last = String(lastEojeol ?? '');
+  if (!last) return null;
+  for (const josa of UNIFY_LOW_RISK_JOSA) {
+    if (!last.endsWith(josa) || last.length <= josa.length) continue;
+    const stemLast = last.slice(0, -josa.length);
+    if (hangulSyllableCount(stemLast) < UNIFY_SPACED_PART_MIN_HANGUL) continue;
+    return { stemLast, josa };
+  }
+  return null;
+}
+
+/**
+ * 조사·어간 접미를 떼어 검토용 어간. 떼지 못하면 null.
+ * @param {string} variant
+ * @returns {string | null}
+ */
+export function stripReviewStemSuffix(variant) {
+  const v = String(variant ?? '')
+    .trim()
+    .replace(/\s+/g, ' ');
+  if (!v) return null;
+  const parts = v.split(/\s+/).filter(Boolean);
+  if (!parts.length) return null;
+  const last = parts[parts.length - 1];
+  const hit = matchLongestReviewStemSuffix(last);
+  if (!hit) return null;
+
+  let stem;
+  if (hit.bare) {
+    if (parts.length < 2) return null;
+    stem = parts.slice(0, -1).join(' ');
+  } else {
+    parts[parts.length - 1] = hit.stemLast;
+    stem = parts.join(' ');
+  }
+  if (hangulSyllableCount(stem.replace(/\s+/g, '')) < UNIFY_SPACED_PART_MIN_HANGUL) {
+    return null;
+  }
+  return stem;
+}
+
+/** @deprecated stripReviewStemSuffix */
+export function stripLowRiskJosaForReview(variant) {
+  return stripReviewStemSuffix(variant);
+}
+
+/**
+ * @param {string} stemVariant
+ * @returns {string}
+ */
+export function josaReviewStemKey(stemVariant) {
+  return String(stemVariant ?? '').replace(/\s+/g, '');
+}
+
+/**
+ * @param {import('./unifyCandidateDiscover.js').UnifySpacingCluster} cluster
+ * @returns {{ stemKey: string, stemSpaced: string, stemGlued: string } | null}
+ */
+export function stemFromClusterForJosaReview(cluster) {
+  const spaced =
+    cluster.variants?.find((v) => /\s/.test(v) && (cluster.counts?.[v] ?? 0) > 0) ||
+    cluster.variants?.find((v) => /\s/.test(v)) ||
+    '';
+  const glued =
+    cluster.variants?.find((v) => !/\s/.test(v) && (cluster.counts?.[v] ?? 0) > 0) ||
+    cluster.variants?.find((v) => !/\s/.test(v)) ||
+    cluster.key ||
+    '';
+
+  const fromSpaced = spaced ? stripReviewStemSuffix(spaced) : null;
+  const fromGlued = glued ? stripReviewStemSuffix(glued) : null;
+
+  if (fromSpaced && fromGlued) {
+    if (josaReviewStemKey(fromSpaced) !== josaReviewStemKey(fromGlued)) {
+      return null;
+    }
+  }
+  const stem = fromSpaced || fromGlued;
+  if (!stem) return null;
+  const stemKey = josaReviewStemKey(stem);
+  if (hangulSyllableCount(stemKey) < UNIFY_SPACED_PART_MIN_HANGUL) return null;
+
+  return {
+    stemKey,
+    stemSpaced: fromSpaced || stemKey,
+    stemGlued: stemKey,
+  };
+}
+
+/**
+ * 같은 추정 어간끼리 검토 링크로 연결(횟수 합치지 않음).
+ * @param {import('./unifyCandidateDiscover.js').UnifySpacingCluster[]} clusters
+ * @returns {import('./unifyCandidateDiscover.js').UnifySpacingCluster[]}
+ */
+export function attachJosaReviewHints(clusters) {
+  if (!clusters?.length) return clusters;
+
+  /** @type {Map<string, { cluster: import('./unifyCandidateDiscover.js').UnifySpacingCluster, stemKey: string }[]>} */
+  const byStem = new Map();
+
+  for (const cluster of clusters) {
+    const stem = stemFromClusterForJosaReview(cluster);
+    if (!stem) continue;
+    if (cluster.key === stem.stemKey) continue;
+    if (!byStem.has(stem.stemKey)) byStem.set(stem.stemKey, []);
+    byStem.get(stem.stemKey).push({ cluster, stemKey: stem.stemKey });
+  }
+
+  /** @type {Map<string, string[]>} */
+  const peersByKey = new Map();
+  for (const [, members] of byStem) {
+    if (members.length < 2) continue;
+    const keys = [...new Set(members.map((m) => m.cluster.key))];
+    if (keys.length < 2) continue;
+    for (const key of keys) {
+      peersByKey.set(
+        key,
+        keys.filter((k) => k !== key).sort((a, b) => a.localeCompare(b, 'ko')),
+      );
+    }
+  }
+
+  return clusters.map((cluster) => {
+    const peerKeys = peersByKey.get(cluster.key);
+    if (!peerKeys?.length) {
+      if (cluster.josaReview) {
+        const { josaReview: _drop, ...rest } = cluster;
+        return rest;
+      }
+      return cluster;
+    }
+    const stem = stemFromClusterForJosaReview(cluster);
+    return {
+      ...cluster,
+      josaReview: {
+        stemKey: stem?.stemKey || cluster.key,
+        peerKeys,
+        status: /** @type {const} */ ('review'),
+      },
+    };
+  });
+}

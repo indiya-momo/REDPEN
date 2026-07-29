@@ -4,7 +4,7 @@
  * 정책: project-docs/unify-candidate-spacing-redesign-2026-07-29.md
  * - 스캔은 page.textLayout 우선(음절 자간 가짜 공백 제외), 없으면 text
  * - **줄 단위만 스캔** — 줄바꿈으로 생긴 붙임/띄움 이형태는 전부 제외
- * - **쉼표(,)**·**조사 붙은 형태**는 후보에서 제외
+ * - **쉼표(,)** 는 후보에서 제외. 기호만 스캔 시 제거. **끝 조사는 제거하지 않음**(짧은 단위 흡수·공통 접두로 합침)
  * - 띄움 variant: 각 덩어리 한글 2음절 이상(숫자·영문은 음절·면제 없음, 숫자만 탈락)
  * - 클러스터 키: 공백 제거 / 붙임+유효 띄움 동시
  * - 추천: 출현 수 최대 / 동률 시 붙임 — 내부 정책(규범 아님)
@@ -32,6 +32,11 @@ import { buildSeriesHints } from './unifyCandidateSeriesTrend.js';
  *   totalCount: number,
  *   seriesHint?: import('./unifyCandidateSeriesTrend.js').SeriesHint,
  *   kind?: 'conflict' | 'single-form',
+ *   josaReview?: {
+ *     stemKey: string,
+ *     peerKeys: string[],
+ *     status: 'review',
+ *   },
  * }} UnifySpacingCluster
  */
 
@@ -65,8 +70,18 @@ export const UNIFY_TRAILING_JOSA = Object.freeze([
   '만큼',
   '보다',
   '대로',
+  '이라고',
+  '이라서',
+  '이라면',
+  '이라도',
+  '입니다',
+  '입니까',
+  '이었다',
   '이나',
   '이란',
+  '이라',
+  '이기',
+  '이다',
   '인지',
   '은',
   '는',
@@ -85,7 +100,11 @@ export const UNIFY_TRAILING_JOSA = Object.freeze([
   '로',
   '요',
   '께',
+  '들',
 ]);
+
+/** 인용부호 — 어절 중간에 끼어도 제거 (경제왕국’이기 → 경제왕국이기) */
+const UNIFY_QUOTE_CHARS_RE = /[''`´‘’“”„«»「」『』]/gu;
 
 /**
  * 마지막 어절 끝 조사만 제거. 어간이 한글 2음절 미만이면 유지.
@@ -106,6 +125,13 @@ export function stripTrailingJosa(
     if (!last.endsWith(josa) || last.length <= josa.length) continue;
     const stemLast = last.slice(0, -josa.length);
     if (hangulSyllableCount(stemLast) < minStemHangul) continue;
+    // 가·이: 4음절 어절에서는 어간 끝 음절과 구분 불가(가치평가→가치평). 건너뜀.
+    if (
+      (josa === '가' || josa === '이') &&
+      hangulSyllableCount(last) === 4
+    ) {
+      continue;
+    }
     parts[parts.length - 1] = stemLast;
     return parts.join(' ');
   }
@@ -155,12 +181,12 @@ export function normalizeUnifyVariant(s) {
 }
 
 /**
- * 클러스터 키 — 조사 제거·NFC·공백 제거.
+ * 클러스터 키 — 기호 제거·NFC·공백 제거(조사는 떼지 않음).
  * @param {string} s
  * @returns {string}
  */
 export function unifySpacingKey(s) {
-  return stripTrailingUnifyAffixes(normalizeUnifyVariant(s)).replace(/\s+/g, '');
+  return stripUnifyPunctuationNoise(normalizeUnifyVariant(s)).replace(/\s+/g, '');
 }
 
 /**
@@ -214,15 +240,17 @@ export function spacedPartIsBareJosa(variant) {
 }
 
 /**
- * 기호·문장부호 제거 — 각 어절 앞뒤 기호만 제거(한글·숫자·공백 유지).
- * 뉴욕타임스> / 뉴욕 타임스> → 뉴욕타임스 / 뉴욕 타임스
+ * 기호·문장부호 제거 — 인용부호는 어절 중간도 제거, 그 외는 앞뒤만.
+ * 뉴욕타임스> / 경제왕국’이기 → 뉴욕타임스 / 경제왕국이기
  * @param {string} s
  */
 export function stripUnifyPunctuationNoise(s) {
   return normalizeUnifyVariant(s)
     .split(/\s+/)
     .map((part) =>
-      part.replace(/^[^\uAC00-\uD7A3\d]+|[^\uAC00-\uD7A3\d]+$/gu, ''),
+      part
+        .replace(UNIFY_QUOTE_CHARS_RE, '')
+        .replace(/^[^\uAC00-\uD7A3\d]+|[^\uAC00-\uD7A3\d]+$/gu, ''),
     )
     .filter(Boolean)
     .join(' ');
@@ -311,7 +339,8 @@ function addOccurrence(byKey, pageNum, index, rawMatched, minHangul) {
   if (/\n/.test(String(rawMatched ?? ''))) return;
   if (isExcludedUnifyCandidateRaw(rawMatched)) return;
   const matchedText = normalizeUnifyScanText(rawMatched);
-  const variant = stripTrailingUnifyAffixes(normalizeUnifyVariant(matchedText));
+  // 스캔: 기호만 제거. 끝 조사는 제거하지 않음.
+  const variant = stripUnifyPunctuationNoise(normalizeUnifyVariant(matchedText));
   if (!variant) return;
   if (/\s/.test(variant) && !isValidSpacedUnifyVariant(variant)) return;
   if (/\s/.test(variant) && spacedPartIsBareJosa(variant)) return;
@@ -520,7 +549,20 @@ export function formatUnifyClusterRegisterInput(cluster, slotLimit = 3) {
 }
 
 /**
- * 소수 이형태만 MatchInstance 그룹으로 — PDF 하이라이트·페이지 칩용.
+ * 페이지 칩·미리보기용 — 소수형, 또는 1회만 등장한 표기.
+ * 다수형(추천형이고 2회 이상)은 제외.
+ * @param {UnifySpacingCluster} cluster
+ * @param {string} variant
+ */
+export function shouldShowUnifyVariantPages(cluster, variant) {
+  const count = cluster.counts?.[variant] ?? 0;
+  if (count <= 0) return false;
+  if (count === 1) return true;
+  return variant !== cluster.recommendedUnify;
+}
+
+/**
+ * 소수형·1회 표기만 MatchInstance 그룹으로 — PDF 하이라이트·페이지 칩용.
  * @param {UnifySpacingCluster[]} clusters
  * @returns {import('./ruleEngine.js').GroupedResult[]}
  */
@@ -530,7 +572,7 @@ export function buildUnifyCandidatePreviewGroups(clusters) {
   for (const cluster of clusters ?? []) {
     const recommended = cluster.recommendedUnify;
     for (const variant of cluster.variants) {
-      if (variant === recommended) continue;
+      if (!shouldShowUnifyVariantPages(cluster, variant)) continue;
       const occs = cluster.occurrencesByVariant?.[variant] ?? [];
       if (!occs.length) continue;
       groups.push({
@@ -538,7 +580,10 @@ export function buildUnifyCandidatePreviewGroups(clusters) {
         replace: recommended,
         label: variant,
         category: 'consistency',
-        tip: `문서 내 다수형 「${recommended}」와 띄어쓰기가 다른 표기`,
+        tip:
+          variant === recommended
+            ? `문서 내 「${variant}」 표기`
+            : `문서 내 다수형 「${recommended}」와 띄어쓰기가 다른 표기`,
         instances: occs.map((occ) => ({
           find: variant,
           replace: recommended,
@@ -559,7 +604,7 @@ export function buildUnifyCandidatePreviewGroups(clusters) {
  * @returns {import('./ruleEngine.js').MatchInstance[]}
  */
 export function instancesForUnifyVariant(cluster, variant) {
-  if (variant === cluster.recommendedUnify) return [];
+  if (!shouldShowUnifyVariantPages(cluster, variant)) return [];
   const occs = cluster.occurrencesByVariant?.[variant] ?? [];
   return occs.map((occ) => ({
     find: variant,

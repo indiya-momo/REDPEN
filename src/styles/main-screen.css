@@ -1820,6 +1820,15 @@
   line-height: 1.4;
 }
 
+.panel-left .unify-candidate-find__josa-review {
+  display: block;
+  margin-top: 3px;
+  font-size: 0.78em;
+  font-weight: 500;
+  color: #6b5b2e;
+  line-height: 1.4;
+}
+
 /* ── 계열 그룹핑 ── */
 .panel-left .unify-candidate-find__series-group {
   border: 1px solid #1e2a3a;
