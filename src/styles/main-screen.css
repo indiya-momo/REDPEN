@@ -62,6 +62,14 @@
   --panel-gap-block: calc(8px * var(--panel-ui-scale));
   --panel-gap-section-list: calc(10px * var(--panel-ui-scale));
   --panel-gap-group: calc(10px * var(--panel-ui-scale));
+  /* 좌측 패널 — 기준 카드·입력·액션 버튼 (표기 통일하기·외래어·추천 공통) */
+  --consistency-input-padding-block: calc(10px * var(--panel-ui-scale, 1) * 0.6);
+  --consistency-register-text: var(--color-text-muted);
+  --panel-action-btn-pad-y: 6px;
+  --panel-action-btn-pad-x: 14px;
+  --panel-action-btn-font: calc(0.85rem * var(--panel-ui-scale, 1));
+  --spelling-calibration-block-pad-y: 9px;
+  --spelling-calibration-block-pad-x: 10px;
   /* 5순위 accent — 패널 내 단일 강조(선택·CTA) */
   --panel-accent: var(--accent-terracotta);
   --panel-accent-deep: var(--accent-terracotta-deep);
@@ -1193,11 +1201,106 @@
 
 .panel-left .spelling-tab-layout__calibration .printed-page-setup {
   margin: 0;
-  padding: 9px 10px;
+  padding: var(--spelling-calibration-block-pad-y)
+    var(--spelling-calibration-block-pad-x);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.panel-left .spelling-tab-layout__calibration .printed-page-setup__title {
+  margin: 0;
+}
+
+.panel-left .spelling-tab-layout__calibration .printed-page-setup__body {
+  margin-top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.panel-left .spelling-tab-layout__calibration .printed-page-setup__hint {
+  margin-bottom: 0;
+}
+
+/* 맞춤법 탭 — 외래어 표기: 원고 페이지 맞추기와 동일한 상·하 패딩 */
+.panel-left .spelling-tab-layout__calibration .loanword-converter {
+  margin: 6px 0 0 !important;
+  padding: var(--spelling-calibration-block-pad-y)
+    var(--spelling-calibration-block-pad-x) !important;
+}
+
+/* 외래어 표기·표기 통일 추천 — 행 간격 (표기 통일하기와 동일 stack) */
+.panel-left .spelling-tab-layout__calibration .loanword-converter,
+.panel-left .consistency-embed .unify-candidate-find.loanword-converter {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.panel-left .spelling-tab-layout__calibration .loanword-converter__summary,
+.panel-left .consistency-embed .unify-candidate-find .loanword-converter__summary {
+  margin: 0 0 var(--panel-gap-block);
+}
+
+.panel-left .spelling-tab-layout__calibration .loanword-converter .hint.consistency-hint-block,
+.panel-left
+  .consistency-embed
+  .unify-candidate-find
+  .hint.consistency-hint-block:not(.unify-candidate-find__example) {
+  margin: 0 !important;
+}
+
+.panel-left
+  .spelling-tab-layout__calibration
+  .loanword-converter
+  .consistency-hint-example {
+  display: inline-block;
+  margin-top: calc(var(--panel-gap-block) * 0.75);
+}
+
+.panel-left .consistency-embed .unify-candidate-find__example {
+  margin: 0 !important;
+}
+
+.panel-left .spelling-tab-layout__calibration .loanword-converter__field {
+  margin: var(--panel-gap-block) 0 0 !important;
+}
+
+.panel-left .consistency-embed .unify-candidate-find__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.panel-left .unify-candidate-find__intro-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 !important;
+}
+
+.panel-left .unify-candidate-find__intro-row .unify-candidate-find__hint {
+  flex: 1;
+  min-width: 0;
+  margin: 0 !important;
+}
+
+.panel-left .unify-candidate-find__intro-row .unify-candidate-find__submit {
+  flex-shrink: 0;
+  border-radius: var(--radius-search);
+  margin: 0;
+}
+
+.panel-left .consistency-embed .unify-candidate-find .hint.consistency-hint-block {
+  color: #333;
+  font-size: 12px;
+  line-height: 1.55;
 }
 
 .panel-left .consistency-unified-box {
-  padding: calc(16px * var(--panel-ui-scale, 1));
+  padding: var(--spelling-calibration-block-pad-y)
+    var(--spelling-calibration-block-pad-x);
 }
 
 .panel-left .consistency-unified-box .consistency-hint-block {
@@ -1618,30 +1721,8 @@
   font-size: 13px;
 }
 
-/* 설명 + 찾기 — 입력란 없이 버튼을 설명 옆에 (외래어 field/submit 크롬 유지) */
-.panel-left .unify-candidate-find__body {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.panel-left .unify-candidate-find__hint {
-  flex: 1;
-  min-width: 0;
-  margin: 6px 0 8px;
-  color: #333;
-  font-size: 12px;
-  line-height: 1.55;
-}
-
-.panel-left .unify-candidate-find__field.loanword-converter__field {
-  flex: 0 0 auto;
-  width: auto;
-  margin: 6px 0 8px;
-}
-
 .panel-left .unify-candidate-find__results {
-  margin-top: 8px;
+  margin-top: var(--panel-gap-block);
 }
 
 .panel-left .unify-candidate-find__empty {
@@ -1746,26 +1827,30 @@
   box-sizing: border-box;
 }
 
-.panel-left .unify-candidate-find__add {
-  flex-shrink: 0;
+.panel-left .unify-candidate-find .consistency-register-add-btn,
+.panel-left .unify-candidate-find .consistency-register-add-btn--label {
+  min-width: auto;
   margin: 0;
-  padding: 6px 10px;
+  padding: var(--panel-action-btn-pad-y) var(--panel-action-btn-pad-x);
+  font-size: var(--panel-action-btn-font);
+  font-weight: 400;
+  line-height: 1.2;
   border: none;
   border-radius: var(--radius-search);
   background: var(--search-action-bg);
   color: #fff;
-  font-size: calc(0.72rem * var(--panel-ui-scale, 1));
   white-space: nowrap;
   cursor: pointer;
+  transition: background 0.15s ease;
 }
 
-.panel-left .unify-candidate-find__add:hover:not(:disabled) {
+.panel-left .unify-candidate-find .consistency-register-add-btn:hover:not(:disabled) {
   background: var(--search-action-bg-hover);
 }
 
-.panel-left .unify-candidate-find__add:disabled {
+.panel-left .unify-candidate-find .consistency-register-add-btn:disabled {
   opacity: 0.55;
-  cursor: default;
+  cursor: not-allowed;
 }
 
 /* 3번(보정) — 텍스트 열 폭 */
@@ -2829,9 +2914,11 @@
 
 .btn-add.panel-section-run-btn {
   --panel-run-btn-scale: 0.8;
+  --panel-run-btn-pad-y: calc(6px * var(--panel-run-btn-scale));
+  --panel-run-btn-pad-x: calc(16px * var(--panel-run-btn-scale));
   font-size: calc(0.78rem * 1.5 * var(--panel-run-btn-scale));
   font-weight: 700;
-  padding: calc(6px * var(--panel-run-btn-scale)) calc(16px * var(--panel-run-btn-scale));
+  padding: var(--panel-run-btn-pad-y) var(--panel-run-btn-pad-x);
   white-space: nowrap;
   background: var(--btn-secondary-bg);
   border: 1px solid var(--work-chrome-border);
@@ -2842,11 +2929,7 @@
     border-color 0.15s ease;
 }
 
-.btn-add.panel-section-run-btn--primary,
-.btn-add.panel-section-run-btn.btn-export-results {
-  padding-block: calc(8px * var(--panel-run-btn-scale));
-  padding-inline: calc(16px * var(--panel-run-btn-scale));
-}
+/* 다시 검수 · 검수 결과 다운로드 · 기준 검수 — 동일 패딩(위 규칙), 색만 variant */
 
 .btn-add.panel-section-run-btn:hover:not(:disabled) {
   background: var(--btn-secondary-hover-bg);
@@ -3144,7 +3227,11 @@
   background: var(--panel-accordion-bg-open);
 }
 
-.builtin-spelling-resize-body .caution-checklist-details[open] .caution-checklist {
+.builtin-spelling-resize-body .caution-checklist-details[open] .caution-checklist.caution-checklist--bundles {
+  padding-bottom: calc(10px * 0.7);
+}
+
+.builtin-spelling-resize-body .caution-checklist-details[open] .caution-checklist:not(.caution-checklist--bundles) {
   padding-bottom: 10px;
 }
 
@@ -3262,10 +3349,16 @@
 }
 
 /* 편집자 검토 — 그룹 묶음 아코디언 (맞춤법 quota와 동일 패턴) */
+.panel-left
+  .builtin-spelling-resize-body
+  .caution-checklist-details[open]
+  > .caution-checklist.caution-checklist--bundles,
 .builtin-spelling-resize-body .caution-checklist--bundles {
   list-style: none;
   margin: 0;
-  padding: var(--panel-gap-section-list) var(--criteria-pad-inline, 10px) 10px;
+  padding-top: calc(var(--panel-gap-section-list) * 0.7);
+  padding-inline: var(--criteria-pad-inline, 10px);
+  padding-bottom: calc(10px * 0.7);
   display: flex;
   flex-direction: column;
   gap: calc(6px * var(--panel-ui-scale) * 0.7);
@@ -3472,6 +3565,22 @@
 .panel-left-work-scroll > .consistency-tab-layout__run-row + .results-panel,
 .panel-left-work-scroll > .spelling-tab-layout__calibration + .results-panel,
 .panel-left-work-scroll > .consistency-tab-layout__run-row + .consistency-rules-scroll {
+  margin-top: 0;
+}
+
+/* 표기 통일 탭 — 다시 검수 아래 여백을 맞춤법 탭 보정(8px)과 동일 */
+.panel-left-work-scroll
+  > .consistency-tab-layout__run-row
+  + .consistency-rules-scroll
+  .consistency-embed {
+  padding-top: 8px;
+}
+
+.panel-left-work-scroll
+  > .consistency-tab-layout__run-row
+  + .consistency-rules-scroll
+  .consistency-embed
+  > .loanword-converter.unify-candidate-find:first-child {
   margin-top: 0;
 }
 
@@ -4058,7 +4167,8 @@
 }
 
 .consistency-unified-box {
-  padding: 16px;
+  padding: var(--spelling-calibration-block-pad-y, 9px)
+    var(--spelling-calibration-block-pad-x, 10px);
   border: none;
   border-radius: var(--radius-ui);
   background: var(--color-surface-raised);
@@ -4067,7 +4177,7 @@
   --consistency-example-line-height: 1.45;
   /* 블록 내부 micro / 섹션 구분 macro */
   --consistency-stack-gap: calc(8px * var(--panel-ui-scale, 1));
-  --consistency-section-gap: calc(14px * var(--panel-ui-scale, 1));
+  --consistency-section-gap: var(--spelling-calibration-block-pad-y, 9px);
   --consistency-item-gap: var(--consistency-stack-gap);
   --consistency-input-padding-block: calc(10px * var(--panel-ui-scale, 1) * 0.6);
   --consistency-register-text: var(--color-text-muted);
@@ -4251,8 +4361,8 @@
 .consistency-unified-box .consistency-register-add-btn--label {
   min-width: auto;
   margin: 0;
-  padding: 6px 14px;
-  font-size: calc(0.85rem * var(--panel-ui-scale, 1));
+  padding: var(--panel-action-btn-pad-y, 6px) var(--panel-action-btn-pad-x, 14px);
+  font-size: var(--panel-action-btn-font, calc(0.85rem * var(--panel-ui-scale, 1)));
   font-weight: 400;
   line-height: 1.2;
   border: none;
@@ -4905,13 +5015,14 @@
   min-width: 0;
   box-sizing: border-box;
   margin: 0;
-  padding: 6px 10px;
+  padding: var(--consistency-input-padding-block, calc(10px * var(--panel-ui-scale, 1) * 0.6))
+    calc(12px * var(--panel-ui-scale, 1));
   border: none;
   border-radius: 0;
   background: transparent;
-  font-size: calc(0.85rem * var(--panel-ui-scale, 1));
+  font-size: calc(0.875rem * var(--panel-ui-scale, 1));
   font-weight: 400;
-  color: var(--c-ink, var(--color-text));
+  color: var(--consistency-register-text, var(--color-text-muted));
   outline: none;
 }
 
@@ -4929,12 +5040,12 @@
 .loanword-converter__submit {
   flex-shrink: 0;
   margin: 0;
-  padding: 6px 14px;
+  padding: var(--panel-action-btn-pad-y, 6px) var(--panel-action-btn-pad-x, 14px);
   border: none;
   border-radius: 0;
   background: var(--search-action-bg);
   color: #fff;
-  font-size: calc(0.85rem * var(--panel-ui-scale, 1));
+  font-size: var(--panel-action-btn-font, calc(0.85rem * var(--panel-ui-scale, 1)));
   white-space: nowrap;
   cursor: pointer;
   transition: background 0.15s ease;
@@ -5177,9 +5288,9 @@
 
 .panel-left .consistency-unified-box .consistency-register-add-btn,
 .panel-left .consistency-unified-box .consistency-register-add-btn--label {
-  font-size: calc(0.85rem * var(--panel-ui-scale));
+  font-size: var(--panel-action-btn-font);
   font-weight: 400;
-  padding: 6px 14px;
+  padding: var(--panel-action-btn-pad-y) var(--panel-action-btn-pad-x);
 }
 
 .panel-left .field-label {

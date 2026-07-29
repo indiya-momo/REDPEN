@@ -136,18 +136,13 @@ export default function UnifyCandidateFindPanel({
       </div>
 
       <div className="unify-candidate-find__body">
-        <p className="hint consistency-hint-block unify-candidate-find__hint">
-          띄어쓰기가 다른 항목을 자동으로 찾아 표기 통일을 제안합니다(줄바꿈 공백은 제외)
-          <br />
-          <ConsistencyHintExample>
-            &apos;뉴욕 타임스&apos; 3회, &apos;뉴욕타임스&apos; 1회 → 다수형
-            &apos;뉴욕 타임스&apos;
-          </ConsistencyHintExample>
-        </p>
-        <div className="loanword-converter__field unify-candidate-find__field">
+        <div className="unify-candidate-find__intro-row">
+          <p className="hint consistency-hint-block unify-candidate-find__hint">
+            띄어쓰기가 다른 항목을 자동으로 찾아 제안합니다(줄바꿈 공백은 제외)
+          </p>
           <button
             type="button"
-            className="loanword-converter__submit unify-candidate-find__submit"
+            className="consistency-register-add-btn consistency-register-add-btn--label unify-candidate-find__submit"
             onClick={() => void handleFind()}
             disabled={finding || checkQuotaBlocked}
             aria-busy={finding}
@@ -155,6 +150,12 @@ export default function UnifyCandidateFindPanel({
             {finding ? '찾는 중…' : '찾기'}
           </button>
         </div>
+        <p className="hint consistency-hint-block unify-candidate-find__example">
+          <ConsistencyHintExample>
+            &apos;뉴욕 타임스&apos; 3회, &apos;뉴욕타임스&apos; 1회 → 다수형
+            &apos;뉴욕 타임스&apos;
+          </ConsistencyHintExample>
+        </p>
       </div>
 
       {searched ? (
@@ -185,7 +186,7 @@ export default function UnifyCandidateFindPanel({
                       </p>
                       <button
                         type="button"
-                        className="unify-candidate-find__add"
+                        className="consistency-register-add-btn consistency-register-add-btn--label unify-candidate-find__add"
                         disabled={added}
                         onClick={() => handleAddToUnify(cluster)}
                       >
