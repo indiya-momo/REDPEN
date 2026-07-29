@@ -1,11 +1,18 @@
 /**
- * 같은 띄어쓰기 경계의 긴 n-gram을 affix 옆 한 칸까지만 남긴다.
- * - 경제@ → 「경제 ○○」 (앞말 + 다음 한 어절)
- * - @정부 → 「○○ 정부」 (이전 한 어절 + 뒷말)
- * - 3어절 이상 일반 충돌 → 앞 두 어절(또는 뒤 두 어절)로 자름
+ * 띄어쓰기 이형태 클러스터 정규화.
+ * - 문장부호 노이즈 제거
+ * - 중첩 n-gram(개인 소득 ⊂ 개인 소득 등이)은 짧은 단위로 합침
+ * - 1·2어절 공통 접두(접두/접미)를 공유하면 작은 단위로 합침
+ * - 이미 있는 짧은 단위로 긴 키 흡수(가치평가에 → 가치평가)
+ * - 끝 조사는 제거하지 않음(짧은 단위 흡수·공통 접두로 합침)
  */
 
-import { pickRecommendedUnify, stripUnifyPunctuationNoise } from './unifyCandidateDiscover.js';
+import {
+  hangulSyllableCount,
+  pickRecommendedUnify,
+  stripUnifyPunctuationNoise,
+  UNIFY_SPACED_PART_MIN_HANGUL,
+} from './unifyCandidateDiscover.js';
 
 /**
  * @typedef {import('./unifyCandidateDiscover.js').UnifySpacingCluster} UnifySpacingCluster
@@ -28,17 +35,43 @@ function gluedVariant(cluster) {
 }
 
 /**
+ * @param {string} a
+ * @param {string} b
+ */
+function stringPrefix(a, b) {
+  let i = 0;
+  const n = Math.min(a.length, b.length);
+  while (i < n && a[i] === b[i]) i += 1;
+  return a.slice(0, i);
+}
+
+/**
+ * 2어절 띄움 충돌만 — { first, second }
  * @param {UnifySpacingCluster} cluster
- * @param {string} coreSpaced
- * @param {string} coreGlued
- * @param {string} spaced
- * @param {string} glued
+ * @returns {{ first: string, second: string } | null}
+ */
+function twoEojeolParts(cluster) {
+  const spaced = spacedVariant(cluster);
+  if (!spaced) return null;
+  const parts = spaced.split(/\s+/).filter(Boolean);
+  if (parts.length !== 2) return null;
+  return { first: parts[0], second: parts[1] };
+}
+
+/**
+ * @param {UnifySpacingCluster} cluster
+ * @param {string} first
+ * @param {string} second
  * @returns {UnifySpacingCluster}
  */
-function rebuildTrimmedCluster(cluster, coreSpaced, coreGlued, spaced, glued) {
+function rebuildClusterToCorePair(cluster, first, second) {
+  const coreSpaced = `${first} ${second}`;
+  const coreGlued = `${first}${second}`;
+  const oldGlued = gluedVariant(cluster);
+  const oldSpaced = spacedVariant(cluster);
   const ranked = [
-    { variant: coreGlued, count: cluster.counts[glued] ?? 0 },
-    { variant: coreSpaced, count: cluster.counts[spaced] ?? 0 },
+    { variant: coreGlued, count: cluster.counts[oldGlued] ?? 0 },
+    { variant: coreSpaced, count: cluster.counts[oldSpaced] ?? 0 },
   ].sort(
     (a, b) =>
       b.count - a.count ||
@@ -46,87 +79,18 @@ function rebuildTrimmedCluster(cluster, coreSpaced, coreGlued, spaced, glued) {
         (b.variant.match(/\s/g)?.length ?? 0) ||
       a.variant.localeCompare(b.variant, 'ko'),
   );
-
   return {
     ...cluster,
-    key: coreGlued.replace(/\s+/g, ''),
+    key: coreGlued,
     variants: ranked.map((row) => row.variant),
     counts: Object.fromEntries(ranked.map((row) => [row.variant, row.count])),
     occurrencesByVariant: {
-      [coreGlued]: cluster.occurrencesByVariant[glued] ?? [],
-      [coreSpaced]: cluster.occurrencesByVariant[spaced] ?? [],
+      [coreGlued]: cluster.occurrencesByVariant[oldGlued] ?? [],
+      [coreSpaced]: cluster.occurrencesByVariant[oldSpaced] ?? [],
     },
     recommendedUnify: pickRecommendedUnify(ranked),
     totalCount: ranked.reduce((sum, row) => sum + row.count, 0),
   };
-}
-
-/**
- * 경제@ / @정부 — affix 바로 옆 띄어쓰기 한 칸(어절 하나)까지만.
- * @param {UnifySpacingCluster} cluster
- * @param {string} affix
- * @param {'prefix' | 'suffix'} affixType
- * @returns {UnifySpacingCluster | null}
- */
-export function trimClusterToAffixBoundary(cluster, affix, affixType) {
-  const spaced = spacedVariant(cluster);
-  const glued = gluedVariant(cluster);
-  if (!spaced || !glued) return null;
-
-  const parts = spaced.split(/\s+/).filter(Boolean);
-  if (parts.length < 2) return null;
-
-  let coreSpaced;
-  let coreGlued;
-  if (affixType === 'prefix') {
-    if (parts[0] !== affix) return null;
-    coreSpaced = `${parts[0]} ${parts[1]}`;
-    coreGlued = parts[0] + parts[1];
-  } else {
-    if (parts[parts.length - 1] !== affix) return null;
-    coreSpaced = `${parts[parts.length - 2]} ${parts[parts.length - 1]}`;
-    coreGlued = parts[parts.length - 2] + parts[parts.length - 1];
-  }
-
-  if (!glued.includes(coreGlued) && !glued.startsWith(coreGlued) && !glued.endsWith(coreGlued)) {
-    // 붙임형이 해당 두 어절을 포함해야 함
-    if (!cluster.key.includes(coreGlued.replace(/\s+/g, ''))) return null;
-  }
-  if (spaced === coreSpaced && glued === coreGlued) return cluster;
-  if (!glued.includes(coreGlued) && cluster.key !== coreGlued.replace(/\s+/g, '')) {
-    if (affixType === 'prefix' && !glued.startsWith(coreGlued)) return null;
-    if (affixType === 'suffix' && !glued.endsWith(coreGlued)) return null;
-  }
-
-  return rebuildTrimmedCluster(cluster, coreSpaced, coreGlued, spaced, glued);
-}
-
-/**
- * 어절 3개 이상이면 앞 두 어절(또는 뒤 두 어절)로 자른다.
- * @param {UnifySpacingCluster} cluster
- * @returns {UnifySpacingCluster}
- */
-export function trimClusterToCoreSpacingPair(cluster) {
-  const spaced = spacedVariant(cluster);
-  const glued = gluedVariant(cluster);
-  if (!spaced || !glued) return cluster;
-
-  const parts = spaced.split(/\s+/).filter(Boolean);
-  if (parts.length <= 2) return cluster;
-
-  const headSpaced = `${parts[0]} ${parts[1]}`;
-  const headGlued = parts[0] + parts[1];
-  const tailSpaced = `${parts[parts.length - 2]} ${parts[parts.length - 1]}`;
-  const tailGlued = parts[parts.length - 2] + parts[parts.length - 1];
-
-  if (glued.startsWith(headGlued) && cluster.key.startsWith(headGlued)) {
-    return rebuildTrimmedCluster(cluster, headSpaced, headGlued, spaced, glued);
-  }
-  if (glued.endsWith(tailGlued) && cluster.key.endsWith(tailGlued)) {
-    return rebuildTrimmedCluster(cluster, tailSpaced, tailGlued, spaced, glued);
-  }
-  // 기본: 앞 두 어절
-  return rebuildTrimmedCluster(cluster, headSpaced, headGlued, spaced, glued);
 }
 
 /**
@@ -283,15 +247,139 @@ function cleanClusterPunctuation(cluster) {
 }
 
 /**
+ * 같은 고정 어절끼리, 맞은편 어절 공통 접두(≥2음절)면 작은 단위로 합친다.
+ * @param {UnifySpacingCluster[]} clusters
+ * @param {'first' | 'second'} pivot
+ * @returns {UnifySpacingCluster[]}
+ */
+function collapseBySharedNeighborPrefix(clusters, pivot) {
+  if (clusters.length < 2) return clusters;
+
+  const partsOf = clusters.map(twoEojeolParts);
+  /** @type {Map<string, number[]>} */
+  const byPivot = new Map();
+  for (let i = 0; i < clusters.length; i++) {
+    const parts = partsOf[i];
+    if (!parts) continue;
+    const pivotKey = pivot === 'first' ? parts.first : parts.second;
+    if (!byPivot.has(pivotKey)) byPivot.set(pivotKey, []);
+    byPivot.get(pivotKey).push(i);
+  }
+
+  /** @type {Map<number, { first: string, second: string }>} */
+  const coreByIndex = new Map();
+
+  for (const indices of byPivot.values()) {
+    if (indices.length < 2) continue;
+    for (const i of indices) {
+      const parts = partsOf[i];
+      const moving = pivot === 'first' ? parts.second : parts.first;
+      let best = '';
+      for (const j of indices) {
+        if (i === j) continue;
+        const other = partsOf[j];
+        const otherMoving = pivot === 'first' ? other.second : other.first;
+        const prefix = stringPrefix(moving, otherMoving);
+        if (hangulSyllableCount(prefix) < UNIFY_SPACED_PART_MIN_HANGUL) {
+          continue;
+        }
+        if (prefix.length > best.length) best = prefix;
+      }
+      if (best && moving.length > best.length && moving.startsWith(best)) {
+        coreByIndex.set(
+          i,
+          pivot === 'first'
+            ? { first: parts.first, second: best }
+            : { first: best, second: parts.second },
+        );
+      }
+    }
+  }
+
+  if (coreByIndex.size === 0) return clusters;
+
+  const next = clusters.map((cluster, i) => {
+    const core = coreByIndex.get(i);
+    if (!core) return cluster;
+    return rebuildClusterToCorePair(cluster, core.first, core.second);
+  });
+  return mergeClustersByKey(next);
+}
+
+/**
+ * 접두·접미·1·2어절 — 작은 단위 접두를 공유하면 그 기준으로 합친다.
+ * 경제 회복력+회복세법 → 경제 회복 / (뒷말 동일 시 앞말 접두도 동일)
+ * @param {UnifySpacingCluster[]} clusters
+ * @returns {UnifySpacingCluster[]}
+ */
+export function collapseSharedSecondPrefixClusters(clusters) {
+  const byFirst = collapseBySharedNeighborPrefix(clusters, 'first');
+  return collapseBySharedNeighborPrefix(byFirst, 'second');
+}
+
+/**
+ * 유효한 2어절 띄움(각 덩어리 ≥2음절)이 있는 짧은 단위인지.
+ * @param {UnifySpacingCluster} cluster
+ */
+function hasValidShortSpacedUnit(cluster) {
+  const spaced = spacedVariant(cluster);
+  if (!spaced) return false;
+  const parts = spaced.split(/\s+/).filter(Boolean);
+  if (parts.length !== 2) return false;
+  return parts.every(
+    (p) => hangulSyllableCount(p) >= UNIFY_SPACED_PART_MIN_HANGUL,
+  );
+}
+
+/**
+ * 이미 있는 짧은 단위로 긴 키를 흡수.
+ * 가치평가에 → 가치평가, 가치 평가도 → 가치 평가 (짧은 박스가 있을 때)
+ * @param {UnifySpacingCluster[]} clusters
+ * @returns {UnifySpacingCluster[]}
+ */
+export function collapseLongerIntoShorterUnits(clusters) {
+  if (clusters.length < 2) return clusters;
+
+  const list = clusters.map(cloneCluster);
+  const removed = new Set();
+
+  // 긴 것부터 — 짧은 목표를 고른 뒤 흡수
+  const order = [...list.keys()].sort(
+    (a, b) =>
+      list[b].key.length - list[a].key.length ||
+      list[a].key.localeCompare(list[b].key, 'ko'),
+  );
+
+  for (const li of order) {
+    if (removed.has(li)) continue;
+    const longer = list[li];
+    let best = -1;
+    for (let si = 0; si < list.length; si++) {
+      if (si === li || removed.has(si)) continue;
+      const shorter = list[si];
+      if (longer.key.length <= shorter.key.length) continue;
+      if (!longer.key.startsWith(shorter.key)) continue;
+      if (!hasValidShortSpacedUnit(shorter)) continue;
+      if (best < 0 || shorter.key.length > list[best].key.length) best = si;
+    }
+    if (best < 0) continue;
+    mergeClusterInto(list[best], longer);
+    removed.add(li);
+  }
+
+  return list.filter((_, i) => !removed.has(i));
+}
+
+/**
  * @param {UnifySpacingCluster[]} clusters
  * @returns {UnifySpacingCluster[]}
  */
 export function normalizeSpacingClusters(clusters) {
   if (clusters.length === 0) return clusters;
-  const trimmed = clusters
-    .map(trimClusterToCoreSpacingPair)
-    .map(cleanClusterPunctuation);
-  return collapseNestedSpacingClusters(mergeClustersByKey(trimmed));
+  const cleaned = clusters.map(cleanClusterPunctuation);
+  const nested = collapseNestedSpacingClusters(mergeClustersByKey(cleaned));
+  const shared = collapseSharedSecondPrefixClusters(nested);
+  return collapseLongerIntoShorterUnits(shared);
 }
 
 /**

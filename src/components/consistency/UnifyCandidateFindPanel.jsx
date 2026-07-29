@@ -1,7 +1,7 @@
 /**
  * 표기 통일 추천 — 맞춤법 탭 외래어 표기와 같은 박스·버튼 크롬.
  * 문서 내 띄어쓰기 이형태만 (규범 검증 아님).
- * 소수 이형태만 페이지 칩 → 원고 이동·하이라이트.
+ * 소수형·1회 표기만 페이지 칩 → 원고 이동·하이라이트.
  *
  * v2: 계열 그룹핑 + variant별 즉시 등록 + 그룹 일괄 등록.
  */
@@ -116,7 +116,9 @@ export default function UnifyCandidateFindPanel({
       setSearched(true);
       setRegisteredVariants(new Map());
       setPreSelected(new Map());
-      onPreviewGroupsChange?.(buildUnifyCandidatePreviewGroups(next));
+      const grouped = groupSortAndFillSatellites(next, result.rawByKey);
+      const previewClusters = grouped.flatMap((g) => g.clusters);
+      onPreviewGroupsChange?.(buildUnifyCandidatePreviewGroups(previewClusters));
       await alertUnifyCandidateFindAfterRun(next, {
         uid: authUid,
         email: authEmail,
@@ -310,6 +312,18 @@ function ClusterCard({
         {cluster.seriesHint ? (
           <span className="unify-candidate-find__series-hint">
             {cluster.seriesHint.reason}
+          </span>
+        ) : null}
+        {cluster.josaReview?.status === 'review' ? (
+          <span
+            className="unify-candidate-find__josa-review"
+            title={
+              cluster.josaReview.peerKeys?.length
+                ? `같은 어간 추정: ${cluster.josaReview.stemKey} · 연결 ${cluster.josaReview.peerKeys.join(', ')}`
+                : undefined
+            }
+          >
+            조사 · 어간 추정, 검토 필요
           </span>
         ) : null}
       </div>
