@@ -34,12 +34,34 @@ export const SERIES_SPACED_THRESHOLD = 0.3;
  */
 
 /**
- * 클러스터 key에서 한글 접두어(2~4음절)를 추출.
- * key는 공백 제거된 한글+숫자 문자열.
+ * 클러스터에서 의미 단위 접두어를 추출.
+ * 띄어쓰기 variant에서 첫 번째 단어를 prefix로 사용.
+ * 예: "경제 상황" → "경제", "개인 소득" → "개인"
+ * fallback: key에서 한글 앞쪽 2~4음절.
  * @param {string} key
+ * @param {string[]} [variants] 클러스터의 variants
  * @returns {string[]} 가능한 접두어 목록 (긴 것부터)
  */
-export function extractPrefixes(key) {
+export function extractPrefixes(key, variants = []) {
+  // 띄어쓰기 variant에서 첫 단어 추출
+  const spacedVariant = variants.find((v) => /\s/.test(v));
+  if (spacedVariant) {
+    const words = spacedVariant.trim().split(/\s+/);
+    if (words.length >= 2) {
+      const firstWord = words[0];
+      if (firstWord.length >= SERIES_PREFIX_MIN_HANGUL) {
+        // 첫 단어 자체 + 첫 단어의 앞부분도 후보로 추가
+        // 예: "국가채무" → ["국가채무", "국가채", "국가"]
+        const result = [firstWord];
+        for (let len = firstWord.length - 1; len >= SERIES_PREFIX_MIN_HANGUL; len--) {
+          result.push(firstWord.slice(0, len));
+        }
+        return result;
+      }
+    }
+  }
+
+  // fallback: key에서 기계적 추출
   const hangul = key.match(/[\uAC00-\uD7A3]+/g);
   if (!hangul) return [];
   const first = hangul[0];
@@ -53,11 +75,34 @@ export function extractPrefixes(key) {
 }
 
 /**
- * 클러스터 key에서 한글 접미사(2~4음절)를 추출.
+ * 클러스터에서 의미 단위 접미사를 추출.
+ * 띄어쓰기 variant에서 마지막 단어를 suffix로 사용.
+ * 예: "공공 서비스" → "서비스", "미국 정부" → "정부"
+ * fallback: key에서 한글 뒤쪽 2~4음절.
  * @param {string} key
+ * @param {string[]} [variants] 클러스터의 variants
  * @returns {string[]} 가능한 접미사 목록 (긴 것부터)
  */
-export function extractSuffixes(key) {
+export function extractSuffixes(key, variants = []) {
+  // 띄어쓰기 variant에서 마지막 단어 추출
+  const spacedVariant = variants.find((v) => /\s/.test(v));
+  if (spacedVariant) {
+    const words = spacedVariant.trim().split(/\s+/);
+    if (words.length >= 2) {
+      const lastWord = words[words.length - 1];
+      if (lastWord.length >= SERIES_PREFIX_MIN_HANGUL) {
+        // 마지막 단어 자체 + 마지막 단어의 뒷부분도 후보로 추가
+        // 예: "참가율" → ["참가율", "가율", (2글자만)]
+        const result = [lastWord];
+        for (let len = lastWord.length - 1; len >= SERIES_PREFIX_MIN_HANGUL; len--) {
+          result.push(lastWord.slice(lastWord.length - len));
+        }
+        return result;
+      }
+    }
+  }
+
+  // fallback: key에서 기계적 추출
   const hangul = key.match(/[\uAC00-\uD7A3]+/g);
   if (!hangul) return [];
   const last = hangul[hangul.length - 1];
@@ -81,7 +126,7 @@ export function groupClustersBySeries(clusters) {
   const prefixMembers = new Map();
 
   for (let i = 0; i < clusters.length; i++) {
-    const prefixes = extractPrefixes(clusters[i].key);
+    const prefixes = extractPrefixes(clusters[i].key, clusters[i].variants);
     for (const p of prefixes) {
       if (!prefixMembers.has(p)) prefixMembers.set(p, new Set());
       prefixMembers.get(p).add(i);
@@ -121,7 +166,7 @@ export function groupClustersBySuffix(clusters, excludeIndices = new Set()) {
 
   for (let i = 0; i < clusters.length; i++) {
     if (excludeIndices.has(i)) continue;
-    const suffixes = extractSuffixes(clusters[i].key);
+    const suffixes = extractSuffixes(clusters[i].key, clusters[i].variants);
     for (const s of suffixes) {
       if (!suffixMembers.has(s)) suffixMembers.set(s, new Set());
       suffixMembers.get(s).add(i);
@@ -132,9 +177,9 @@ export function groupClustersBySuffix(clusters, excludeIndices = new Set()) {
   /** @type {Map<string, UnifySpacingCluster[]>} */
   const result = new Map();
 
-  // 짧은 suffix 우선 — 의미 단위("정부")가 "국정부"보다 우선
+  // 긴 suffix 우선 — 의미 단위("서비스")가 "비스"보다 우선
   const sorted = [...suffixMembers.keys()].sort(
-    (a, b) => a.length - b.length || a.localeCompare(b, 'ko'),
+    (a, b) => b.length - a.length || a.localeCompare(b, 'ko'),
   );
 
   for (const suffix of sorted) {
