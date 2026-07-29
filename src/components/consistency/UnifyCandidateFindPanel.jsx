@@ -1,5 +1,5 @@
 /**
- * 표기 통일 후보 찾기 — 맞춤법 탭 외래어 표기와 같은 박스·버튼 크롬.
+ * 표기 통일 추천 — 맞춤법 탭 외래어 표기와 같은 박스·버튼 크롬.
  * 문서 내 띄어쓰기 이형태만 (규범 검증 아님).
  * 소수 이형태만 페이지 칩 → 원고 이동·하이라이트.
  */
@@ -130,8 +130,8 @@ export default function UnifyCandidateFindPanel({
     <div className="loanword-converter unify-candidate-find">
       <div className="loanword-converter__summary panel-criteria-heading">
         <span className="loanword-converter__summary-title">
-          표기 통일 후보 찾기
-          <span className="loanword-converter__free-badge">강력 추천</span>
+          표기 통일 추천
+          <span className="loanword-converter__free-badge">BEST</span>
         </span>
       </div>
 
@@ -161,7 +161,7 @@ export default function UnifyCandidateFindPanel({
         <div
           className="unify-candidate-find__results"
           role="region"
-          aria-label="표기 통일 후보"
+          aria-label="표기 통일 추천"
         >
           {clusters.length === 0 ? (
             <p className="unify-candidate-find__empty">
@@ -173,7 +173,7 @@ export default function UnifyCandidateFindPanel({
                 const added = addedKeys.has(cluster.key);
                 return (
                   <li key={cluster.key} className="unify-candidate-find__card">
-                    <div className="unify-candidate-find__card-main">
+                    <div className="unify-candidate-find__card-head">
                       <p className="unify-candidate-find__recommend">
                         <span className="unify-candidate-find__recommend-label">
                           다수형
@@ -183,52 +183,52 @@ export default function UnifyCandidateFindPanel({
                           (총 {cluster.totalCount}회)
                         </span>
                       </p>
-                      <ul className="unify-candidate-find__variants">
-                        {cluster.variants.map((variant) => {
-                          const isMinority =
-                            variant !== cluster.recommendedUnify;
-                          const instances = isMinority
-                            ? instancesForUnifyVariant(cluster, variant)
-                            : [];
-                          return (
-                            <li key={variant}>
-                              <div className="unify-candidate-find__variant-row">
-                                <span className="unify-candidate-find__variant">
-                                  {variant}
-                                </span>
-                                <span className="unify-candidate-find__count">
-                                  {cluster.counts[variant]}회
-                                </span>
-                              </div>
-                              {isMinority && instances.length > 0 ? (
-                                <ResultPageSummary
-                                  instances={instances}
-                                  currentPage={currentPage}
-                                  selectedInstance={selectedInstance}
-                                  formatPageLabel={formatPageLabel}
-                                  isInstanceVisible={() => true}
-                                  onSelectPage={(pageNum) => {
-                                    const first = instances.find(
-                                      (inst) => inst.pageNum === pageNum,
-                                    );
-                                    if (first) onSelectInstance?.(first);
-                                  }}
-                                  onSelectInstance={onSelectInstance}
-                                />
-                              ) : null}
-                            </li>
-                          );
-                        })}
-                      </ul>
+                      <button
+                        type="button"
+                        className="unify-candidate-find__add"
+                        disabled={added}
+                        onClick={() => handleAddToUnify(cluster)}
+                      >
+                        {added ? '넣음' : '표기 통일하기 등록'}
+                      </button>
                     </div>
-                    <button
-                      type="button"
-                      className="unify-candidate-find__add"
-                      disabled={added}
-                      onClick={() => handleAddToUnify(cluster)}
-                    >
-                      {added ? '넣음' : '표기 통일하기 등록'}
-                    </button>
+                    <ul className="unify-candidate-find__variants">
+                      {cluster.variants.map((variant) => {
+                        const isMinority =
+                          variant !== cluster.recommendedUnify;
+                        const instances = isMinority
+                          ? instancesForUnifyVariant(cluster, variant)
+                          : [];
+                        return (
+                          <li key={variant}>
+                            <div className="unify-candidate-find__variant-row">
+                              <span className="unify-candidate-find__variant">
+                                {variant}
+                              </span>
+                              <span className="unify-candidate-find__count">
+                                {cluster.counts[variant]}회
+                              </span>
+                            </div>
+                            {isMinority && instances.length > 0 ? (
+                              <ResultPageSummary
+                                instances={instances}
+                                currentPage={currentPage}
+                                selectedInstance={selectedInstance}
+                                formatPageLabel={formatPageLabel}
+                                isInstanceVisible={() => true}
+                                onSelectPage={(pageNum) => {
+                                  const first = instances.find(
+                                    (inst) => inst.pageNum === pageNum,
+                                  );
+                                  if (first) onSelectInstance?.(first);
+                                }}
+                                onSelectInstance={onSelectInstance}
+                              />
+                            ) : null}
+                          </li>
+                        );
+                      })}
+                    </ul>
                   </li>
                 );
               })}
