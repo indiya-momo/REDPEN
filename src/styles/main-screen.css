@@ -1786,6 +1786,31 @@
   font-size: 0.9em;
 }
 
+.panel-left .unify-candidate-find__exception-badge {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 1px 7px;
+  border-radius: var(--radius-ui-sm, 6px);
+  border: 1px solid #b45309;
+  background: #fef3c7;
+  color: #92400e;
+  font-size: calc(0.68rem * var(--panel-ui-scale, 1));
+  font-weight: 600;
+  white-space: nowrap;
+  margin-left: auto;
+}
+
+.panel-left
+  .unify-candidate-find__variant-row:has(.unify-candidate-find__exception-badge)
+  .unify-candidate-find__unify-btn {
+  margin-left: 0;
+}
+
+.panel-left .unify-candidate-find__variant-item--derived .unify-candidate-find__variant {
+  color: var(--c-soft, #666);
+}
+
 .panel-left .unify-candidate-find__series-hint {
   display: block;
   margin-top: 3px;
@@ -1849,18 +1874,15 @@
   background: color-mix(in srgb, var(--search-action-bg, #4a7c59) 10%, transparent);
 }
 
-.panel-left .unify-candidate-find__unify-btn--preselect {
-  border-color: var(--search-action-bg, #4a7c59);
-  background: color-mix(in srgb, var(--search-action-bg, #4a7c59) 15%, transparent);
-  color: var(--search-action-bg, #4a7c59);
-  font-weight: 500;
-}
-
+.panel-left .unify-candidate-find__unify-btn--preselect,
 .panel-left .unify-candidate-find__unify-btn--chosen {
   border-color: var(--search-action-bg, #4a7c59);
   background: var(--search-action-bg, #4a7c59);
   color: #fff;
   font-weight: 500;
+}
+
+.panel-left .unify-candidate-find__unify-btn--chosen {
   cursor: default;
 }
 

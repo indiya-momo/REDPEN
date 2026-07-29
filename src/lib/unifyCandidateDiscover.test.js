@@ -5,6 +5,9 @@ import {
   buildUnifyCandidatePreviewGroups,
   instancesForUnifyVariant,
   isValidSpacedUnifyVariant,
+  isExcludedUnifyCandidateRaw,
+  spacedPartIsBareJosa,
+  stripTrailingUnifyAffixes,
   normalizeUnifyVariant,
   pickRecommendedUnify,
   prepareUnifyScanText,
@@ -43,6 +46,36 @@ describe('isValidSpacedUnifyVariant', () => {
     expect(isValidSpacedUnifyVariant('안 되다')).toBe(false);
     expect(isValidSpacedUnifyVariant('1차 세계')).toBe(false);
     expect(isValidSpacedUnifyVariant('2024 년도')).toBe(false);
+  });
+});
+
+describe('isExcludedUnifyCandidateRaw', () => {
+  it('쉼표·조사만 띄운 형태는 true', () => {
+    expect(isExcludedUnifyCandidateRaw('개인, 은행')).toBe(true);
+    expect(isExcludedUnifyCandidateRaw('경기 에서')).toBe(true);
+    expect(spacedPartIsBareJosa('경기 에서')).toBe(true);
+  });
+
+  it('어간에 조사가 붙은 형태는 제외하지 않는다(어간 합침)', () => {
+    expect(isExcludedUnifyCandidateRaw('경제왕국의')).toBe(false);
+    expect(isExcludedUnifyCandidateRaw('경기침체에서')).toBe(false);
+    expect(isExcludedUnifyCandidateRaw('개인 소득')).toBe(false);
+  });
+});
+
+describe('stripTrailingUnifyAffixes', () => {
+  it('조사·기를 떼어 경기 침체로 만든다', () => {
+    expect(stripTrailingUnifyAffixes('경기 침체에서')).toBe('경기 침체');
+    expect(stripTrailingUnifyAffixes('경기침체기')).toBe('경기침체');
+    expect(stripTrailingUnifyAffixes('경기 침체나')).toBe('경기 침체');
+    expect(stripTrailingUnifyAffixes('경기 침체란')).toBe('경기 침체');
+    expect(stripTrailingUnifyAffixes('경기침체기인지')).toBe('경기침체');
+  });
+
+  it('끝 기호가 붙은 뉴욕타임스는 작은 단위로 합친다', () => {
+    expect(stripTrailingUnifyAffixes('뉴욕타임스>')).toBe('뉴욕타임스');
+    expect(stripTrailingUnifyAffixes('뉴욕 타임스>')).toBe('뉴욕 타임스');
+    expect(unifySpacingKey('뉴욕타임스>')).toBe(unifySpacingKey('뉴욕타임스'));
   });
 });
 
@@ -117,11 +150,11 @@ describe('discoverSpacingUnifyCandidates', () => {
     expect(hit.occurrencesByVariant['경제 성장'][0].pageNum).toBe(1);
   });
 
-  it('조사만 다른 경제왕국·경제왕국의는 한 어간으로 합친다', () => {
+  it('조사가 붙은 표기는 어간으로 합친다', () => {
     const clusters = discoverSpacingUnifyCandidates([
       {
         pageNum: 1,
-        text: '경제왕국과 경제 왕국, 경제왕국의 경제 왕국의',
+        text: '경제왕국 경제 왕국 경제왕국의 경제 왕국의',
       },
     ]);
     const hit = clusters.find((c) => c.key === '경제왕국');
@@ -131,6 +164,59 @@ describe('discoverSpacingUnifyCandidates', () => {
       expect.arrayContaining(['경제왕국', '경제 왕국']),
     );
     expect(hit.variants.some((v) => v.endsWith('의'))).toBe(false);
+  });
+
+  it('조사만 띄운 경기 에서는 후보에서 뺀다', () => {
+    const clusters = discoverSpacingUnifyCandidates([
+      {
+        pageNum: 1,
+        text: '경기에서 경기 에서 경기에서',
+      },
+    ]);
+    expect(clusters.find((c) => c.key === '경기에서')).toBeUndefined();
+  });
+
+  it('경기 침체 계열(기·나·에서 등)은 경기 침체로 합친다', () => {
+    const clusters = discoverSpacingUnifyCandidates([
+      {
+        pageNum: 1,
+        text:
+          '경기침체 경기 침체 경기침체기 경기 침체기 경기침체에서 경기 침체에서 경기침체나 경기 침체나',
+      },
+    ]);
+    const hit = clusters.find((c) => c.key === '경기침체');
+    expect(hit).toBeTruthy();
+    expect(clusters.filter((c) => c.key.startsWith('경기침체'))).toHaveLength(1);
+    expect(hit.variants).toEqual(
+      expect.arrayContaining(['경기침체', '경기 침체']),
+    );
+  });
+
+  it('뉴욕타임스> 는 뉴욕타임스와 한 클러스터로 합친다', () => {
+    const clusters = discoverSpacingUnifyCandidates([
+      {
+        pageNum: 1,
+        text: '뉴욕타임스 뉴욕 타임스 뉴욕타임스> 뉴욕 타임스>',
+      },
+    ]);
+    const hit = clusters.find((c) => c.key === '뉴욕타임스');
+    expect(hit).toBeTruthy();
+    expect(clusters.filter((c) => /뉴욕타임스/.test(c.key))).toHaveLength(1);
+    expect(hit.variants.some((v) => v.includes('>'))).toBe(false);
+    expect(hit.totalCount).toBe(4);
+  });
+
+  it('쉼표가 포함된 개인, 은행·개인,은행은 후보에서 제외한다', () => {
+    const clusters = discoverSpacingUnifyCandidates([
+      {
+        pageNum: 1,
+        text: '개인, 은행과 개인,은행, 개인, 은행, 기업 등',
+      },
+    ]);
+    expect(clusters.some((c) => c.key.includes(','))).toBe(false);
+    expect(clusters.some((c) => c.variants.some((v) => v.includes(',')))).toBe(
+      false,
+    );
   });
 
   it('금융위기·금융 위기를 잡는다', () => {

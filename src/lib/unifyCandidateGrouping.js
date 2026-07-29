@@ -7,6 +7,11 @@ import {
   extractSuffixes,
   SERIES_MIN_CLUSTER_COUNT,
 } from './unifyCandidateSeriesTrend.js';
+import { normalizeSpacingClusters, trimClusterToAffixBoundary } from './unifyCandidateCollapse.js';
+import {
+  clusterBelongsToSeriesAffix,
+  fillSeriesSatellites,
+} from './unifyCandidateSatellites.js';
 
 /**
  * @typedef {import('./unifyCandidateDiscover.js').UnifySpacingCluster} UnifySpacingCluster
@@ -27,25 +32,23 @@ import {
 
 /**
  * 클러스터를 가나다순 정렬 후 계열 그룹핑.
- * - prefix/suffix 공유 클러스터 2개 이상 → series 그룹
- * - 나머지 → single 그룹 (그룹 헤더 없음)
- * - 그룹 간 정렬: 그룹 내 첫 클러스터 key 가나다순
+ * - prefix: 띄움 첫 어절 === affix 인 충돌만 (개인 소득 ✓ / 개인적인 슬픔 ✗)
+ * - suffix: 띄움 끝 어절 === affix
  * @param {UnifySpacingCluster[]} clusters
  * @returns {ClusterGroup[]}
  */
 export function groupAndSortClusters(clusters) {
   if (clusters.length === 0) return [];
 
-  // 가나다순 정렬
   const sorted = [...clusters].sort((a, b) =>
     a.key.localeCompare(b.key, 'ko'),
   );
 
-  // prefix series 찾기
   /** @type {Map<string, Set<number>>} */
   const prefixMembers = new Map();
   for (let i = 0; i < sorted.length; i++) {
     for (const p of extractPrefixes(sorted[i].key, sorted[i].variants)) {
+      if (!clusterBelongsToSeriesAffix(sorted[i], p, 'prefix')) continue;
       if (!prefixMembers.has(p)) prefixMembers.set(p, new Set());
       prefixMembers.get(p).add(i);
     }
@@ -55,7 +58,6 @@ export function groupAndSortClusters(clusters) {
   /** @type {ClusterGroup[]} */
   const groups = [];
 
-  // prefix: 짧은 것 우선 (넓은 그룹이 먼저 형성 — "경제@"가 "경제활동참가율"도 포함)
   const prefixKeys = [...prefixMembers.keys()].sort(
     (a, b) => a.length - b.length || a.localeCompare(b, 'ko'),
   );
@@ -66,15 +68,20 @@ export function groupAndSortClusters(clusters) {
     );
     if (members.length < SERIES_MIN_CLUSTER_COUNT) continue;
     for (const i of members) assigned.add(i);
-    // 그룹 내 정렬: 첫 단어가 짧은(단순한) 것 먼저, 긴(복합) 것 뒤로
-    // 예: 경제 상황 → 경제 성장 → 경제활동 참가율
-    const groupClusters = members.map((i) => sorted[i]).sort((a, b) => {
+    const groupClusters = members
+      .map((i) => trimClusterToAffixBoundary(sorted[i], prefix, 'prefix'))
+      .filter(Boolean)
+      .sort((a, b) => {
       const aSpaced = a.variants.find((v) => /\s/.test(v)) || '';
       const bSpaced = b.variants.find((v) => /\s/.test(v)) || '';
       const aFirst = aSpaced.split(/\s+/)[0] || a.key;
       const bFirst = bSpaced.split(/\s+/)[0] || b.key;
       return aFirst.length - bFirst.length || a.key.localeCompare(b.key, 'ko');
     });
+    if (groupClusters.length < SERIES_MIN_CLUSTER_COUNT) {
+      for (const i of members) assigned.delete(i);
+      continue;
+    }
     groups.push({
       type: /** @type {const} */ ('series'),
       affix: prefix,
@@ -84,12 +91,12 @@ export function groupAndSortClusters(clusters) {
     });
   }
 
-  // suffix series (prefix 미할당만)
   /** @type {Map<string, Set<number>>} */
   const suffixMembers = new Map();
   for (let i = 0; i < sorted.length; i++) {
     if (assigned.has(i)) continue;
     for (const s of extractSuffixes(sorted[i].key, sorted[i].variants)) {
+      if (!clusterBelongsToSeriesAffix(sorted[i], s, 'suffix')) continue;
       if (!suffixMembers.has(s)) suffixMembers.set(s, new Set());
       suffixMembers.get(s).add(i);
     }
@@ -105,16 +112,22 @@ export function groupAndSortClusters(clusters) {
     );
     if (members.length < SERIES_MIN_CLUSTER_COUNT) continue;
     for (const i of members) assigned.add(i);
+    const groupClusters = members
+      .map((i) => trimClusterToAffixBoundary(sorted[i], suffix, 'suffix'))
+      .filter(Boolean);
+    if (groupClusters.length < SERIES_MIN_CLUSTER_COUNT) {
+      for (const i of members) assigned.delete(i);
+      continue;
+    }
     groups.push({
       type: /** @type {const} */ ('series'),
       affix: suffix,
       affixType: /** @type {const} */ ('suffix'),
       label: `@${suffix}`,
-      clusters: members.map((i) => sorted[i]),
+      clusters: groupClusters,
     });
   }
 
-  // 미할당 → single 그룹 (개별)
   const singles = [];
   for (let i = 0; i < sorted.length; i++) {
     if (!assigned.has(i)) singles.push(sorted[i]);
@@ -126,7 +139,6 @@ export function groupAndSortClusters(clusters) {
     });
   }
 
-  // 정렬: single(가나다순) → prefix series(가나다순) → suffix series(가나다순)
   const order = (g) =>
     g.type === 'single' ? 0 : g.affixType === 'prefix' ? 1 : 2;
   groups.sort((a, b) => {
@@ -136,4 +148,71 @@ export function groupAndSortClusters(clusters) {
   });
 
   return groups;
+}
+
+/**
+ * @param {UnifySpacingCluster[]} clusters
+ * @param {Map<string, import('./unifyCandidateDiscover.js').ClusterAcc>} rawByKey
+ * @returns {ClusterGroup[]}
+ */
+export function groupSortAndFillSatellites(clusters, rawByKey) {
+  // 1) 붙임·띄움 쌍이 있는 충돌만으로 @ 그룹 형성
+  const normalized = normalizeSpacingClusters(clusters).filter(
+    isRealSpacingConflict,
+  );
+  let groups = groupAndSortClusters(normalized);
+
+  // 2) 이미 생긴 @ 그룹에만 1회 등장 위성(개인 사정 등) 편입
+  groups = fillSeriesSatellites(groups, normalized, rawByKey ?? new Map());
+
+  for (const group of groups) {
+    if (group.type === 'series') {
+      // 충돌은 유지, 위성(single-form)은 그대로 둠
+      const conflicts = group.clusters.filter(isRealSpacingConflict);
+      const satellites = group.clusters.filter((c) => c.kind === 'single-form');
+      if (conflicts.length < SERIES_MIN_CLUSTER_COUNT) {
+        group.clusters = [];
+        continue;
+      }
+      group.clusters = [...conflicts, ...satellites];
+      continue;
+    }
+    group.clusters = normalizeSpacingClusters(group.clusters).filter(
+      isRealSpacingConflict,
+    );
+  }
+
+  const order = (g) =>
+    g.type === 'single' ? 0 : g.affixType === 'prefix' ? 1 : 2;
+  groups.sort((a, b) => {
+    const o = order(a) - order(b);
+    if (o !== 0) return o;
+    if (a.clusters.length === 0 || b.clusters.length === 0) return 0;
+    return a.clusters[0].key.localeCompare(b.clusters[0].key, 'ko');
+  });
+
+  return groups.filter((g) => {
+    if (g.type === 'series') {
+      return (
+        g.clusters.filter(isRealSpacingConflict).length >=
+        SERIES_MIN_CLUSTER_COUNT
+      );
+    }
+    return g.clusters.length > 0;
+  });
+}
+
+/**
+ * 붙임·띄움이 문서에 각각 1회 이상 있는 실제 충돌인지.
+ * @param {UnifySpacingCluster} cluster
+ */
+export function isRealSpacingConflict(cluster) {
+  let glued = 0;
+  let spaced = 0;
+  for (const [variant, count] of Object.entries(cluster.counts ?? {})) {
+    if (count <= 0) continue;
+    if (/\s/.test(variant)) spaced += count;
+    else glued += count;
+  }
+  return glued > 0 && spaced > 0;
 }
