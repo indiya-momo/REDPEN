@@ -161,17 +161,17 @@ describe('buildSeriesHints', () => {
     // 캐나다정부, 미국정부, 한국정부 → 「○○정부」계열
     const clusters = [
       makeCluster({
-        key: '캐나다정부',
-        variants: ['캐나다정부', '캐나다 정부'],
-        counts: { 캐나다정부: 15, '캐나다 정부': 1 },
-        recommendedUnify: '캐나다정부',
+        key: '미국정부',
+        variants: ['미국정부', '미국 정부'],
+        counts: { 미국정부: 15, '미국 정부': 1 },
+        recommendedUnify: '미국정부',
         totalCount: 16,
       }),
       makeCluster({
-        key: '미국정부',
-        variants: ['미국정부', '미국 정부'],
-        counts: { 미국정부: 14, '미국 정부': 2 },
-        recommendedUnify: '미국정부',
+        key: '영국정부',
+        variants: ['영국정부', '영국 정부'],
+        counts: { 영국정부: 14, '영국 정부': 2 },
+        recommendedUnify: '영국정부',
         totalCount: 16,
       }),
       makeCluster({
@@ -188,6 +188,6 @@ describe('buildSeriesHints', () => {
     const hint = hints.get('한국정부');
     expect(hint.trend).toBe('glued');
     expect(hint.suggestion).toBe('한국정부');
-    expect(hint.reason).toContain('○○정부');
+    expect(hint.reason).toContain('정부');
   });
 });

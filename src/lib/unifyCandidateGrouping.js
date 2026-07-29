@@ -45,7 +45,7 @@ export function groupAndSortClusters(clusters) {
   /** @type {Map<string, Set<number>>} */
   const prefixMembers = new Map();
   for (let i = 0; i < sorted.length; i++) {
-    for (const p of extractPrefixes(sorted[i].key)) {
+    for (const p of extractPrefixes(sorted[i].key, sorted[i].variants)) {
       if (!prefixMembers.has(p)) prefixMembers.set(p, new Set());
       prefixMembers.get(p).add(i);
     }
@@ -55,7 +55,7 @@ export function groupAndSortClusters(clusters) {
   /** @type {ClusterGroup[]} */
   const groups = [];
 
-  // prefix: 짧은 것 우선 (넓은 그룹 형성)
+  // prefix: 짧은 것 우선 (넓은 그룹이 먼저 형성 — "경제@"가 "경제활동참가율"도 포함)
   const prefixKeys = [...prefixMembers.keys()].sort(
     (a, b) => a.length - b.length || a.localeCompare(b, 'ko'),
   );
@@ -66,12 +66,21 @@ export function groupAndSortClusters(clusters) {
     );
     if (members.length < SERIES_MIN_CLUSTER_COUNT) continue;
     for (const i of members) assigned.add(i);
+    // 그룹 내 정렬: 첫 단어가 짧은(단순한) 것 먼저, 긴(복합) 것 뒤로
+    // 예: 경제 상황 → 경제 성장 → 경제활동 참가율
+    const groupClusters = members.map((i) => sorted[i]).sort((a, b) => {
+      const aSpaced = a.variants.find((v) => /\s/.test(v)) || '';
+      const bSpaced = b.variants.find((v) => /\s/.test(v)) || '';
+      const aFirst = aSpaced.split(/\s+/)[0] || a.key;
+      const bFirst = bSpaced.split(/\s+/)[0] || b.key;
+      return aFirst.length - bFirst.length || a.key.localeCompare(b.key, 'ko');
+    });
     groups.push({
       type: /** @type {const} */ ('series'),
       affix: prefix,
       affixType: /** @type {const} */ ('prefix'),
       label: `${prefix}@`,
-      clusters: members.map((i) => sorted[i]),
+      clusters: groupClusters,
     });
   }
 
@@ -80,14 +89,14 @@ export function groupAndSortClusters(clusters) {
   const suffixMembers = new Map();
   for (let i = 0; i < sorted.length; i++) {
     if (assigned.has(i)) continue;
-    for (const s of extractSuffixes(sorted[i].key)) {
+    for (const s of extractSuffixes(sorted[i].key, sorted[i].variants)) {
       if (!suffixMembers.has(s)) suffixMembers.set(s, new Set());
       suffixMembers.get(s).add(i);
     }
   }
 
   const suffixKeys = [...suffixMembers.keys()].sort(
-    (a, b) => a.length - b.length || a.localeCompare(b, 'ko'),
+    (a, b) => b.length - a.length || a.localeCompare(b, 'ko'),
   );
 
   for (const suffix of suffixKeys) {
@@ -117,10 +126,14 @@ export function groupAndSortClusters(clusters) {
     });
   }
 
-  // 그룹 간 정렬: 첫 클러스터 key 가나다순
-  groups.sort((a, b) =>
-    a.clusters[0].key.localeCompare(b.clusters[0].key, 'ko'),
-  );
+  // 정렬: single(가나다순) → prefix series(가나다순) → suffix series(가나다순)
+  const order = (g) =>
+    g.type === 'single' ? 0 : g.affixType === 'prefix' ? 1 : 2;
+  groups.sort((a, b) => {
+    const o = order(a) - order(b);
+    if (o !== 0) return o;
+    return a.clusters[0].key.localeCompare(b.clusters[0].key, 'ko');
+  });
 
   return groups;
 }

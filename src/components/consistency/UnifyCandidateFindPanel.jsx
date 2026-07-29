@@ -176,7 +176,7 @@ export default function UnifyCandidateFindPanel({
             disabled={finding || checkQuotaBlocked}
             aria-busy={finding}
           >
-            {finding ? '찾는 중…' : '찾기'}
+            {finding ? '·\u2009·\u2009·' : '찾기'}
           </button>
         </div>
         <p className="hint consistency-hint-block unify-candidate-find__example">

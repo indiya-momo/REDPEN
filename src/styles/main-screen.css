@@ -1781,9 +1781,8 @@
 }
 
 .panel-left .unify-candidate-find__total {
-  margin-left: 0.35em;
-  font-weight: 500;
-  color: var(--c-soft);
+  font-weight: 700;
+  color: var(--c-ink, #333);
   font-size: 0.9em;
 }
 
@@ -1798,7 +1797,7 @@
 
 /* ── 계열 그룹핑 ── */
 .panel-left .unify-candidate-find__series-group {
-  border: 1px solid var(--work-chrome-border, #ddd);
+  border: 1px solid #1e2a3a;
   border-radius: var(--radius-search, 6px);
   padding: var(--spelling-calibration-block-pad-y, 9px)
     var(--spelling-calibration-block-pad-x, 12px);
@@ -1815,12 +1814,13 @@
   align-items: center;
   justify-content: space-between;
   margin-bottom: 6px;
+  padding-left: 10px;
 }
 
 .panel-left .unify-candidate-find__group-label {
   font-size: calc(0.78rem * var(--panel-ui-scale, 1));
   font-weight: 600;
-  color: var(--panel-accent, #b06030);
+  color: #1e2a3a;
 }
 
 .panel-left .unify-candidate-find__batch-btn {
@@ -1836,7 +1836,7 @@
   font-size: calc(0.7rem * var(--panel-ui-scale, 1));
   font-weight: 400;
   line-height: 1.4;
-  border: 1px solid var(--work-chrome-border, #ccc);
+  border: 1px solid #aaa;
   border-radius: var(--radius-search, 6px);
   background: transparent;
   color: var(--panel-text, #333);
@@ -1873,6 +1873,23 @@
   display: flex;
   align-items: center;
   gap: 6px;
+}
+
+.panel-left .unify-candidate-find .page-chip {
+  background: transparent;
+  border-color: #aaa;
+  color: #555;
+}
+
+.panel-left .unify-candidate-find .page-chip:hover {
+  background: #e5e7eb;
+  border-color: #888;
+}
+
+.panel-left .unify-candidate-find .page-chip--current {
+  background: #6b7280;
+  border-color: #6b7280;
+  color: #fff;
 }
 
 .panel-left .unify-candidate-find__variants {
