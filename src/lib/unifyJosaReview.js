@@ -29,6 +29,7 @@ export const UNIFY_LOW_RISK_JOSA = Object.freeze(
     '로부터',
     '로서',
     '로써',
+    '보다는',
     '에서',
     '으로',
     '부터',
@@ -38,6 +39,21 @@ export const UNIFY_LOW_RISK_JOSA = Object.freeze(
     '처럼',
     '만큼',
     '밖에',
+    '가량',
+    '커녕',
+    '투성이',
+    '가지',
+    '정도',
+    '같이',
+    '이나',
+    '이다',
+    '라고도',
+    '인지',
+    '사이',
+    '같은',
+    '역시',
+    '또한',
+    '대비',
   ].toSorted((a, b) => b.length - a.length || a.localeCompare(b, 'ko')),
 );
 
@@ -55,13 +71,52 @@ export const UNIFY_HIGH_RISK_JOSA = Object.freeze([
   '의',
   '도',
   '만',
+  '쯤',
+  '뿐',
+  '에',
+  '안',
+  '밖',
+  '와',
+  '과',
+  '들',
+  '인',
+  '나',
+  '다',
+  '로',
+  '별',
+  '으',
+  '질',
+  '한',
 ]);
 
 /**
- * 조사가 아닌 어간·접미(역학적 → 역학). 검토 추정에만 사용.
+ * 조사가 아닌 어간·접미(역학적 → 역학, 되다·하다 활용형 등). 검토 추정에만 사용.
  * @type {readonly string[]}
  */
-export const UNIFY_REVIEW_STEM_AFFIXES = Object.freeze(['적']);
+export const UNIFY_REVIEW_STEM_AFFIXES = Object.freeze([
+  '적으로',
+  '되므로',
+  '되어',
+  '되며',
+  '되지',
+  '되었',
+  '된다',
+  '됨',
+  '됐',
+  '된',
+  '하기가',
+  '하며',
+  '하는',
+  '하고',
+  '해서',
+  '하다',
+  '하지',
+  '해도',
+  '할',
+  '하',
+  '적',
+  '성',
+]);
 
 /**
  * 검토 어간 추정용 접미 전체 — 항상 길이 내림차순.

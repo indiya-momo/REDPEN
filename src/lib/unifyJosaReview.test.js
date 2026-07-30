@@ -57,6 +57,292 @@ describe('matchLongestReviewStemSuffix', () => {
   it('가치평가에서 가·이 과잉 제거를 막는다', () => {
     expect(matchLongestReviewStemSuffix('가치평가')).toBeNull();
   });
+
+  it('가량·쯤·뿐·같이 등 추가 조사를 인식한다', () => {
+    expect(matchLongestReviewStemSuffix('열명가량')).toEqual({
+      stemLast: '열명',
+      suffix: '가량',
+      bare: false,
+    });
+    expect(matchLongestReviewStemSuffix('백명쯤')).toEqual({
+      stemLast: '백명',
+      suffix: '쯤',
+      bare: false,
+    });
+    expect(matchLongestReviewStemSuffix('생각뿐')).toEqual({
+      stemLast: '생각',
+      suffix: '뿐',
+      bare: false,
+    });
+    expect(matchLongestReviewStemSuffix('구름같이')).toEqual({
+      stemLast: '구름',
+      suffix: '같이',
+      bare: false,
+    });
+    expect(matchLongestReviewStemSuffix('두세가지')).toEqual({
+      stemLast: '두세',
+      suffix: '가지',
+      bare: false,
+    });
+    expect(matchLongestReviewStemSuffix('어느정도')).toEqual({
+      stemLast: '어느',
+      suffix: '정도',
+      bare: false,
+    });
+    expect(matchLongestReviewStemSuffix('상처투성이')).toEqual({
+      stemLast: '상처',
+      suffix: '투성이',
+      bare: false,
+    });
+    expect(matchLongestReviewStemSuffix('말은커녕')).toEqual({
+      stemLast: '말은',
+      suffix: '커녕',
+      bare: false,
+    });
+  });
+
+  it('이나·이다·보다는·에를 인식한다', () => {
+    expect(matchLongestReviewStemSuffix('사과이나')).toEqual({
+      stemLast: '사과',
+      suffix: '이나',
+      bare: false,
+    });
+    expect(matchLongestReviewStemSuffix('사실이다')).toEqual({
+      stemLast: '사실',
+      suffix: '이다',
+      bare: false,
+    });
+    expect(matchLongestReviewStemSuffix('사과보다는')).toEqual({
+      stemLast: '사과',
+      suffix: '보다는',
+      bare: false,
+    });
+    expect(matchLongestReviewStemSuffix('학교에')).toEqual({
+      stemLast: '학교',
+      suffix: '에',
+      bare: false,
+    });
+  });
+
+  it('안·밖·와·과·성을 인식한다', () => {
+    expect(matchLongestReviewStemSuffix('건물안')).toEqual({
+      stemLast: '건물',
+      suffix: '안',
+      bare: false,
+    });
+    expect(matchLongestReviewStemSuffix('건물밖')).toEqual({
+      stemLast: '건물',
+      suffix: '밖',
+      bare: false,
+    });
+    expect(matchLongestReviewStemSuffix('친구와')).toEqual({
+      stemLast: '친구',
+      suffix: '와',
+      bare: false,
+    });
+    expect(matchLongestReviewStemSuffix('사과과')).toEqual({
+      stemLast: '사과',
+      suffix: '과',
+      bare: false,
+    });
+    expect(matchLongestReviewStemSuffix('경제성')).toEqual({
+      stemLast: '경제',
+      suffix: '성',
+      bare: false,
+    });
+  });
+
+  it('되다 활용·적으로·들·인을 인식한다', () => {
+    expect(matchLongestReviewStemSuffix('결정되어')).toEqual({
+      stemLast: '결정',
+      suffix: '되어',
+      bare: false,
+    });
+    expect(matchLongestReviewStemSuffix('결정되며')).toEqual({
+      stemLast: '결정',
+      suffix: '되며',
+      bare: false,
+    });
+    expect(matchLongestReviewStemSuffix('결정되므로')).toEqual({
+      stemLast: '결정',
+      suffix: '되므로',
+      bare: false,
+    });
+    expect(matchLongestReviewStemSuffix('결정되지')).toEqual({
+      stemLast: '결정',
+      suffix: '되지',
+      bare: false,
+    });
+    expect(matchLongestReviewStemSuffix('결정됨')).toEqual({
+      stemLast: '결정',
+      suffix: '됨',
+      bare: false,
+    });
+    expect(matchLongestReviewStemSuffix('결정되었')).toEqual({
+      stemLast: '결정',
+      suffix: '되었',
+      bare: false,
+    });
+    expect(matchLongestReviewStemSuffix('결정됐')).toEqual({
+      stemLast: '결정',
+      suffix: '됐',
+      bare: false,
+    });
+    expect(matchLongestReviewStemSuffix('결정된')).toEqual({
+      stemLast: '결정',
+      suffix: '된',
+      bare: false,
+    });
+    expect(matchLongestReviewStemSuffix('경제적으로')).toEqual({
+      stemLast: '경제',
+      suffix: '적으로',
+      bare: false,
+    });
+    expect(matchLongestReviewStemSuffix('사람들')).toEqual({
+      stemLast: '사람',
+      suffix: '들',
+      bare: false,
+    });
+    expect(matchLongestReviewStemSuffix('사람인')).toEqual({
+      stemLast: '사람',
+      suffix: '인',
+      bare: false,
+    });
+  });
+
+  it('나·다·로·별·하 계열·라고도·인지를 인식한다', () => {
+    expect(matchLongestReviewStemSuffix('사과나')).toEqual({
+      stemLast: '사과',
+      suffix: '나',
+      bare: false,
+    });
+    expect(matchLongestReviewStemSuffix('사과다')).toEqual({
+      stemLast: '사과',
+      suffix: '다',
+      bare: false,
+    });
+    expect(matchLongestReviewStemSuffix('학교로')).toEqual({
+      stemLast: '학교',
+      suffix: '로',
+      bare: false,
+    });
+    expect(matchLongestReviewStemSuffix('종류별')).toEqual({
+      stemLast: '종류',
+      suffix: '별',
+      bare: false,
+    });
+    expect(matchLongestReviewStemSuffix('결정하')).toEqual({
+      stemLast: '결정',
+      suffix: '하',
+      bare: false,
+    });
+    expect(matchLongestReviewStemSuffix('결정하며')).toEqual({
+      stemLast: '결정',
+      suffix: '하며',
+      bare: false,
+    });
+    expect(matchLongestReviewStemSuffix('결정할')).toEqual({
+      stemLast: '결정',
+      suffix: '할',
+      bare: false,
+    });
+    expect(matchLongestReviewStemSuffix('결정해도')).toEqual({
+      stemLast: '결정',
+      suffix: '해도',
+      bare: false,
+    });
+    expect(matchLongestReviewStemSuffix('사과라고도')).toEqual({
+      stemLast: '사과',
+      suffix: '라고도',
+      bare: false,
+    });
+    expect(matchLongestReviewStemSuffix('사실인지')).toEqual({
+      stemLast: '사실',
+      suffix: '인지',
+      bare: false,
+    });
+  });
+
+  it('하는·사이·같은·역시·또한·으를 인식한다', () => {
+    expect(matchLongestReviewStemSuffix('결정하는')).toEqual({
+      stemLast: '결정',
+      suffix: '하는',
+      bare: false,
+    });
+    expect(matchLongestReviewStemSuffix('사람사이')).toEqual({
+      stemLast: '사람',
+      suffix: '사이',
+      bare: false,
+    });
+    expect(matchLongestReviewStemSuffix('사과같은')).toEqual({
+      stemLast: '사과',
+      suffix: '같은',
+      bare: false,
+    });
+    expect(matchLongestReviewStemSuffix('사실역시')).toEqual({
+      stemLast: '사실',
+      suffix: '역시',
+      bare: false,
+    });
+    expect(matchLongestReviewStemSuffix('사실또한')).toEqual({
+      stemLast: '사실',
+      suffix: '또한',
+      bare: false,
+    });
+    expect(matchLongestReviewStemSuffix('학교으')).toEqual({
+      stemLast: '학교',
+      suffix: '으',
+      bare: false,
+    });
+  });
+
+  it('대비·질·된다·하고·하기가·해서·한·하다·하지를 인식한다', () => {
+    expect(matchLongestReviewStemSuffix('부채대비')).toEqual({
+      stemLast: '부채',
+      suffix: '대비',
+      bare: false,
+    });
+    expect(matchLongestReviewStemSuffix('경제질')).toEqual({
+      stemLast: '경제',
+      suffix: '질',
+      bare: false,
+    });
+    expect(matchLongestReviewStemSuffix('결정된다')).toEqual({
+      stemLast: '결정',
+      suffix: '된다',
+      bare: false,
+    });
+    expect(matchLongestReviewStemSuffix('결정하고')).toEqual({
+      stemLast: '결정',
+      suffix: '하고',
+      bare: false,
+    });
+    expect(matchLongestReviewStemSuffix('결정하기가')).toEqual({
+      stemLast: '결정',
+      suffix: '하기가',
+      bare: false,
+    });
+    expect(matchLongestReviewStemSuffix('결정해서')).toEqual({
+      stemLast: '결정',
+      suffix: '해서',
+      bare: false,
+    });
+    expect(matchLongestReviewStemSuffix('결정한')).toEqual({
+      stemLast: '결정',
+      suffix: '한',
+      bare: false,
+    });
+    expect(matchLongestReviewStemSuffix('결정하다')).toEqual({
+      stemLast: '결정',
+      suffix: '하다',
+      bare: false,
+    });
+    expect(matchLongestReviewStemSuffix('결정하지')).toEqual({
+      stemLast: '결정',
+      suffix: '하지',
+      bare: false,
+    });
+  });
 });
 
 describe('stripReviewStemSuffix', () => {
