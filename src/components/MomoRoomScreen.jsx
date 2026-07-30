@@ -5,6 +5,7 @@ import EventRewardLayer from './EventRewardLayer.jsx';
 import { momoRoomStoryPages } from '../data/momoRoomStory.js';
 import { syncMomoRoomBadge } from '../lib/badgeGrants.js';
 import { publicAssetUrl } from '../lib/publicAssetUrl.js';
+import CriteriaHoverTip from './CriteriaHoverTip.jsx';
 
 const GUESTBOOK_KEY = 'momo-room-guestbook-v1';
 const GUESTBOOK_USER_KEY = 'momo-room-guestbook-user-id';
@@ -285,15 +286,16 @@ export default function MomoRoomScreen({ onClose, authUid = '' }) {
           <p className="momo-room__eyebrow">◆ 어서오세요 ◆</p>
           <div className="momo-room__title-row">
             <h1 className="momo-room__title">모모의 방</h1>
-            <button
-              type="button"
-              className="momo-room__book-fallback"
-              onClick={openStory}
-              aria-label="책장의 작은 책 — 이야기 읽기"
-              title="작은 책"
-            >
-              <BookOpen size={20} strokeWidth={2.2} aria-hidden />
-            </button>
+            <CriteriaHoverTip tip="작은 책">
+              <button
+                type="button"
+                className="momo-room__book-fallback"
+                onClick={openStory}
+                aria-label="책장의 작은 책 — 이야기 읽기"
+              >
+                <BookOpen size={20} strokeWidth={2.2} aria-hidden />
+              </button>
+            </CriteriaHoverTip>
           </div>
           <p className="momo-room__lead">
             이곳은 모모와 집사의 비밀 공간입니다
@@ -341,15 +343,16 @@ export default function MomoRoomScreen({ onClose, authUid = '' }) {
                   <p className="momo-room__guestbook-item-name">{row.name}</p>
                   <p className="momo-room__guestbook-item-message">{row.message}</p>
                   {row.authorId && row.authorId === guestbookUserId ? (
-                    <button
-                      type="button"
-                      className="momo-room__guestbook-delete"
-                      onClick={() => removeGuestbookRow(row.id)}
-                      aria-label="내 글 삭제"
-                      title="내 글 삭제"
-                    >
-                      <X size={12} strokeWidth={2.4} aria-hidden />
-                    </button>
+                    <CriteriaHoverTip tip="내 글 삭제">
+                      <button
+                        type="button"
+                        className="momo-room__guestbook-delete"
+                        onClick={() => removeGuestbookRow(row.id)}
+                        aria-label="내 글 삭제"
+                      >
+                        <X size={12} strokeWidth={2.4} aria-hidden />
+                      </button>
+                    </CriteriaHoverTip>
                   ) : null}
                 </li>
               ))}
@@ -365,28 +368,32 @@ export default function MomoRoomScreen({ onClose, authUid = '' }) {
           </div>
 
           <span className="momo-room__title-actions">
-            <button
-              type="button"
-              className="momo-room__ambient-toggle"
-              onClick={toggleAmbient}
-              aria-label={ambientMuted ? '촛불 소리 켜기' : '촛불 소리 끄기'}
-              title={ambientMuted ? '촛불 소리 켜기' : '촛불 소리 끄기'}
+            <CriteriaHoverTip
+              tip={ambientMuted ? '촛불 소리 켜기' : '촛불 소리 끄기'}
             >
-              {ambientMuted ? (
-                <VolumeX size={18} strokeWidth={2.2} aria-hidden />
-              ) : (
-                <Volume2 size={18} strokeWidth={2.2} aria-hidden />
-              )}
-            </button>
-            <button
-              type="button"
-              className="momo-room__close"
-              onClick={handleCloseRoom}
-              aria-label="돌아가기"
-              title="돌아가기"
-            >
-              <ArrowLeft size={20} strokeWidth={2.2} aria-hidden />
-            </button>
+              <button
+                type="button"
+                className="momo-room__ambient-toggle"
+                onClick={toggleAmbient}
+                aria-label={ambientMuted ? '촛불 소리 켜기' : '촛불 소리 끄기'}
+              >
+                {ambientMuted ? (
+                  <VolumeX size={18} strokeWidth={2.2} aria-hidden />
+                ) : (
+                  <Volume2 size={18} strokeWidth={2.2} aria-hidden />
+                )}
+              </button>
+            </CriteriaHoverTip>
+            <CriteriaHoverTip tip="돌아가기">
+              <button
+                type="button"
+                className="momo-room__close"
+                onClick={handleCloseRoom}
+                aria-label="돌아가기"
+              >
+                <ArrowLeft size={20} strokeWidth={2.2} aria-hidden />
+              </button>
+            </CriteriaHoverTip>
           </span>
         </aside>
 

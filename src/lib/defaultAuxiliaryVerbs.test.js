@@ -76,7 +76,7 @@ describe('ensureDefaultAuxiliaryVerbs', () => {
 
     );
 
-    expect(list.length).toBe(11);
+    expect(list.length).toBe(12);
 
     expect(labels).toContain('(아/어) + 하다');
     expect(labels).not.toContain('아는체하다');
@@ -86,6 +86,8 @@ describe('ensureDefaultAuxiliaryVerbs', () => {
     expect(labels).toContain('(아/어) + 있다');
 
     expect(labels).toContain('(아/어) + 나다');
+
+    expect(labels).toContain('(아/어) + 내다');
 
     const withBon = rules.filter((r) => r.bonBojoItemId === 'verb-boda1');
 
@@ -253,7 +255,7 @@ describe('ensureDefaultAuxiliaryVerbs', () => {
     expect(list.some((e) => (e.displayLabel || e.tailWord) === '러')).toBe(
       false,
     );
-    expect(list.length).toBe(11);
+    expect(list.length).toBe(12);
   });
 
   it('bon-bojo 본조 — stems마다 띄움 regex 1개(붙임 없음)', () => {

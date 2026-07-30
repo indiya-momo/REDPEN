@@ -1,5 +1,6 @@
 import ResultPageSummary from '../../components/ResultPageSummary.jsx';
 import GroupVisibilityCheckbox from '../../components/GroupVisibilityCheckbox.jsx';
+import CriteriaHoverTip from '../../components/CriteriaHoverTip.jsx';
 import { TOC_STATUS_LABELS } from '../lib/tocBodyCheck.js';
 import { countTocBodyTabFindings } from '../utils/toc-body-result-entries.js';
 
@@ -122,19 +123,20 @@ export default function TocBodyResultsPanel({
                         ) : null}
                       </div>
                       <div className="result-card-head-actions">
-                        <label
-                          className="result-visibility-toggle"
-                          title="PDF에 표시"
-                          onClick={(e) => e.stopPropagation()}
-                          onKeyDown={(e) => e.stopPropagation()}
-                        >
-                          <GroupVisibilityCheckbox
-                            mode={visMode}
-                            label={group.label}
-                            onToggle={() => onToggleVisibility(group)}
-                          />
-                          <span className="result-visibility-label">표시</span>
-                        </label>
+                        <CriteriaHoverTip tip="PDF에 표시">
+                          <label
+                            className="result-visibility-toggle"
+                            onClick={(e) => e.stopPropagation()}
+                            onKeyDown={(e) => e.stopPropagation()}
+                          >
+                            <GroupVisibilityCheckbox
+                              mode={visMode}
+                              label={group.label}
+                              onToggle={() => onToggleVisibility(group)}
+                            />
+                            <span className="result-visibility-label">표시</span>
+                          </label>
+                        </CriteriaHoverTip>
                         <span className="result-count result-count--toc">
                           {tocStatus === 'missing'
                             ? '본문 없음'

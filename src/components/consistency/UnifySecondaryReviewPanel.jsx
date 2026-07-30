@@ -28,8 +28,13 @@
  *     needsReview: ReviewItem[],
  *   },
  *   stdict?: {
+ *     ran?: boolean,
  *     reviewed?: number,
  *     movedNounToPredicate?: ReviewItem[],
+ *     confirmedNoun?: ReviewItem[],
+ *     confirmedPredicate?: ReviewItem[],
+ *     missing?: ReviewItem[],
+ *     error?: string,
  *   },
  * }} SecondaryReviewSummary
  */
@@ -58,6 +63,18 @@ export default function UnifySecondaryReviewPanel({ summary }) {
   const predicateEstCount = ambiguous.length;
   const ruleCount = ruleExcluded.length;
   const stdictMoved = stdict?.movedNounToPredicate ?? [];
+  const stdictKeptNoun = stdict?.confirmedNoun ?? [];
+  const stdictMissing = stdict?.missing ?? [];
+  const stdictRan = Boolean(stdict?.ran);
+  const stdictError = String(stdict?.error ?? '').trim();
+  const stdictReviewed = stdict?.reviewed ?? 0;
+
+  const stdictWithItems = [
+    { title: '명사→용언 이동', items: stdictMoved },
+    { title: '용언 확인', items: stdict?.confirmedPredicate ?? [] },
+    { title: '명사 유지', items: stdictKeptNoun },
+    { title: '미등재·혼재', items: stdictMissing },
+  ].filter((s) => s.items.length > 0);
 
   const josaWithItems = [
     { title: '규칙으로 배지', items: josa?.rulePromoted ?? [] },
@@ -78,7 +95,8 @@ export default function UnifySecondaryReviewPanel({ summary }) {
     !ruleCount &&
     !josaWithItems.length &&
     !predWithItems.length &&
-    !stdictMoved.length
+    !stdictWithItems.length &&
+    !stdictRan
   ) {
     return null;
   }
@@ -116,8 +134,14 @@ export default function UnifySecondaryReviewPanel({ summary }) {
     if (pred?.needsReview?.length) bits.push(`실패 ${pred.needsReview.length}`);
     if (bits.length) extraBits.push(`모델 ${bits.join('·')}`);
   }
-  if (stdictMoved.length) {
-    extraBits.push(`사전이동 ${stdictMoved.length}`);
+  if (stdictRan) {
+    if (stdictError) {
+      extraBits.push('사전실패');
+    } else if (stdictMoved.length) {
+      extraBits.push(`사전이동 ${stdictMoved.length}`);
+    } else {
+      extraBits.push(`사전검토 ${stdictReviewed}`);
+    }
   }
   if (extraBits.length) {
     summaryText = `${summaryText} · ${extraBits.join(' · ')}`;
@@ -127,7 +151,8 @@ export default function UnifySecondaryReviewPanel({ summary }) {
     ruleCount > 0 ||
     josaWithItems.length > 0 ||
     predWithItems.length > 0 ||
-    stdictMoved.length > 0;
+    stdictWithItems.length > 0 ||
+    Boolean(stdictError);
   const excludedPhrase = ruleExcluded.map(formatExcludedItem).join(', ');
 
   return (
@@ -143,12 +168,24 @@ export default function UnifySecondaryReviewPanel({ summary }) {
             </p>
           ) : null}
 
-          {stdictMoved.length > 0 ? (
+          {stdictError ? (
+            <p className="unify-candidate-find__secondary-review-note">
+              사전 검토 실패: {stdictError}
+            </p>
+          ) : null}
+
+          {stdictWithItems.length > 0 ? (
             <div className="unify-candidate-find__secondary-review-block">
               <div className="unify-candidate-find__secondary-review-block-title">
-                사전: 명사→용언 이동
+                표준국어대사전
               </div>
-              <ProcessedList items={stdictMoved} />
+              {stdictWithItems.map((section) => (
+                <ProcessedSection
+                  key={section.title}
+                  title={section.title}
+                  items={section.items}
+                />
+              ))}
             </div>
           ) : null}
 

@@ -24,6 +24,7 @@ import {
   isUnifyPredicateCluster,
   looksLikePredicateKey,
 } from './unifyPredicateBucket.js';
+import { markSeriesBySlotMajority } from './unifyListStemTriage.js';
 
 /**
  * @typedef {import('./unifyCandidateDiscover.js').UnifySpacingCluster} UnifySpacingCluster
@@ -323,8 +324,8 @@ export function groupSortAndFillSatellites(clusters, rawByKey) {
   for (const group of kept) {
     group.clusters = group.clusters.map((c) => byKey.get(c.key) || c);
   }
-  // auxReview·어미 휴리스틱 반영 후 용언을 맨 아래로
-  return splitPredicateSingles(kept);
+  // `@` 채움말 다수결(보조·용언 vs 명사)로 계열 dictPos — 그다음 용언을 맨 아래로
+  return splitPredicateSingles(markSeriesBySlotMajority(kept));
 }
 
 /**

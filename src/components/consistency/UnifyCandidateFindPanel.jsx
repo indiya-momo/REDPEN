@@ -5,6 +5,7 @@
  * 페이지 칩은 다수·소수 모두(접히면 최대 4개 + 더 보기).
  */
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import CriteriaHoverTip from '../CriteriaHoverTip.jsx';
 import {
   buildUnifyCandidatePreviewGroups,
   discoverSpacingUnifyCandidates,
@@ -112,15 +113,19 @@ function UnifyCategorySelectAll({
 function UnifyFindingsCount({ count, shownCount = count, className = '' }) {
   const partial = shownCount < count;
   return (
-    <span
-      className={`result-findings-count-circle ${className}`.trim()}
-      aria-label={
-        partial ? `표시 ${shownCount}건 / 전체 ${count}건` : `${count}건`
-      }
-      title={partial ? `표시 ${shownCount}/${count}` : undefined}
+    <CriteriaHoverTip
+      tip={partial ? `표시 ${shownCount}/${count}` : undefined}
+      variant="wrap"
     >
-      {partial ? `${shownCount}/${count}` : shownCount}
-    </span>
+      <span
+        className={`result-findings-count-circle ${className}`.trim()}
+        aria-label={
+          partial ? `표시 ${shownCount}건 / 전체 ${count}건` : `${count}건`
+        }
+      >
+        {partial ? `${shownCount}/${count}` : shownCount}
+      </span>
+    </CriteriaHoverTip>
   );
 }
 
@@ -199,8 +204,13 @@ export default function UnifyCandidateFindPanel({
      *     needsReview: { id: string, label: string }[],
      *   },
      *   stdict?: {
+     *     ran?: boolean,
      *     reviewed?: number,
      *     movedNounToPredicate?: { id: string, label: string, reason?: string }[],
+     *     confirmedNoun?: { id: string, label: string, reason?: string }[],
+     *     confirmedPredicate?: { id: string, label: string, reason?: string }[],
+     *     missing?: { id: string, label: string, reason?: string }[],
+     *     error?: string,
      *   },
      * }} */ (null),
   );
@@ -352,13 +362,25 @@ export default function UnifyCandidateFindPanel({
       if (needSlm || needStdict) setSlmReviewing(true);
       try {
         if (needStdict) {
-          const stdictResult = await runStdictPosReviewOnClusterGroups(
-            workingGroups,
-          );
-          workingGroups = stdictResult.groups;
-          stdictSeriesIds = stdictResult.marks.seriesIds;
-          stdictClusterKeys = stdictResult.marks.clusterKeys;
-          stdictSummary = stdictResult.summary;
+          try {
+            const stdictResult = await runStdictPosReviewOnClusterGroups(
+              workingGroups,
+            );
+            workingGroups = stdictResult.groups;
+            stdictSeriesIds = stdictResult.marks.seriesIds;
+            stdictClusterKeys = stdictResult.marks.clusterKeys;
+            stdictSummary = {
+              ...stdictResult.summary,
+              ran: true,
+            };
+          } catch (err) {
+            stdictSummary = {
+              ran: true,
+              reviewed: 0,
+              movedNounToPredicate: [],
+              error: err instanceof Error ? err.message : String(err),
+            };
+          }
         }
 
         if (isUnifyJosaSlmReviewEnabled()) {
@@ -736,7 +758,8 @@ export default function UnifyCandidateFindPanel({
                       kindTag={
                         group.type === 'predicate' ||
                         (group.type === 'series' &&
-                          looksLikePredicateKey(group.affix)) ||
+                          (looksLikePredicateKey(group.affix) ||
+                            group.dictPos === 'predicate')) ||
                         isUnifyPredicateCluster(cluster)
                           ? '용언'
                           : '명사'
@@ -853,19 +876,20 @@ function ClusterCard({
         .join(' ')}
     >
       <div className="unify-candidate-find__card-head">
-        <label
-          className="result-visibility-toggle"
-          title="PDF에 표시"
-          onClick={(e) => e.stopPropagation()}
-          onKeyDown={(e) => e.stopPropagation()}
-        >
-          <input
-            type="checkbox"
-            checked={pdfVisible}
-            onChange={() => onTogglePdfVisibility(cluster)}
-            aria-label={`총 ${cluster.totalCount}회 PDF 표시`}
-          />
-        </label>
+        <CriteriaHoverTip tip="PDF에 표시">
+          <label
+            className="result-visibility-toggle"
+            onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => e.stopPropagation()}
+          >
+            <input
+              type="checkbox"
+              checked={pdfVisible}
+              onChange={() => onTogglePdfVisibility(cluster)}
+              aria-label={`총 ${cluster.totalCount}회 PDF 표시`}
+            />
+          </label>
+        </CriteriaHoverTip>
         <div className="unify-candidate-find__card-head-main">
           <div className="unify-candidate-find__card-title-row">
             <span className="unify-candidate-find__total">
@@ -873,26 +897,20 @@ function ClusterCard({
             </span>
             {cluster.josaReview?.status === 'review' &&
             cluster.auxReview?.status !== 'review' ? (
-              <span
-                className="unify-candidate-find__josa-review"
-                title={
+              <CriteriaHoverTip
+                tip={
                   cluster.josaReview.peerKeys?.length
                     ? `같은 어간 추정: ${cluster.josaReview.stemKey} · 연결 ${cluster.josaReview.peerKeys.join(', ')}`
                     : undefined
                 }
               >
-                조사 · 어간 추정, 검토 필요
-              </span>
+                <span className="unify-candidate-find__josa-review">
+                  조사 · 어간 추정, 검토 필요
+                </span>
+              </CriteriaHoverTip>
             ) : null}
             {cluster.auxReview?.status === 'review' ? (
-              <span
-                className="unify-candidate-find__aux-review"
-                title={
-                  cluster.auxReview.displayLabel
-                    ? `본용언+보조용언 시트: ${cluster.auxReview.displayLabel} · ${cluster.auxReview.stemSpaced}`
-                    : `본용언+보조용언 시트 stem: ${cluster.auxReview.stemSpaced}`
-                }
-              >
+              <span className="unify-candidate-find__aux-review">
                 본용언+ 보조용언 표기로 추정, 검토 필요
               </span>
             ) : null}

@@ -6,6 +6,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { BookOpen } from 'lucide-react';
 import AppVersionBadge from '../../components/AppVersionBadge.jsx';
+import CriteriaHoverTip from '../../components/CriteriaHoverTip.jsx';
 import MomoHero from '../../components/MomoHero.jsx';
 import welcomeMomoFramePc from '../../assets/welcome/welcome_momo_frame_pc.png';
 import {
@@ -405,15 +406,16 @@ export default function WelcomePcScreen({
         </span>
         <span className="welcome-pc__footer-meta">
           <AppVersionBadge dateOnly />
-          <button
-            type="button"
-            className="welcome-pc__room-entry"
-            onClick={onOpenRoom}
-            aria-label="모모의 방"
-            title="모모의 방"
-          >
-            <BookOpen size={24} strokeWidth={1.6} aria-hidden />
-          </button>
+          <CriteriaHoverTip tip="모모의 방">
+            <button
+              type="button"
+              className="welcome-pc__room-entry"
+              onClick={onOpenRoom}
+              aria-label="모모의 방"
+            >
+              <BookOpen size={24} strokeWidth={1.6} aria-hidden />
+            </button>
+          </CriteriaHoverTip>
         </span>
       </p>
     </div>

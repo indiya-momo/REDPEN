@@ -198,7 +198,7 @@
     "tip": "표준국어대사전  '경제관념' 등재",
     "dividerGroup": "A1",
     "dividerLabel": "표준국어대사전 등재(명사)",
-    "overlayReplace": "→경제⁀관념"
+    "overlayReplace": "→경제^관념"
   },
   {
     "find": "경제 생활",
@@ -207,7 +207,7 @@
     "tip": "표준국어대사전  '경제생활' 등재",
     "dividerGroup": "A1",
     "dividerLabel": "표준국어대사전 등재(명사)",
-    "overlayReplace": "→경제⁀생활"
+    "overlayReplace": "→경제^생활"
   },
   {
     "find": "그 중",
@@ -216,7 +216,7 @@
     "tip": "표준국어대사전  '그중' 등재_주의: '이중' 미등재",
     "dividerGroup": "A1",
     "dividerLabel": "표준국어대사전 등재(명사)",
-    "overlayReplace": "→그⁀중"
+    "overlayReplace": "→그^중"
   },
   {
     "find": "긴 긴 밤",
@@ -225,7 +225,7 @@
     "tip": "표준국어대사전  '긴긴밤' 등재_주의: '긴밤' 미등재",
     "dividerGroup": "A1",
     "dividerLabel": "표준국어대사전 등재(명사)",
-    "overlayReplace": "→긴⁀긴⁀밤"
+    "overlayReplace": "→긴^긴^밤"
   },
   {
     "find": "무염 식사",
@@ -234,7 +234,7 @@
     "tip": "표준국어대사전  '무염식사' 등재",
     "dividerGroup": "A1",
     "dividerLabel": "표준국어대사전 등재(명사)",
-    "overlayReplace": "→무염⁀식사"
+    "overlayReplace": "→무염^식사"
   },
   {
     "find": "살아 생전",
@@ -243,7 +243,7 @@
     "tip": "표준국어대사전  '살아생전' 등재",
     "dividerGroup": "A1",
     "dividerLabel": "표준국어대사전 등재(명사)",
-    "overlayReplace": "→살아⁀생전"
+    "overlayReplace": "→살아^생전"
   },
   {
     "find": "생과일 주스",
@@ -252,7 +252,7 @@
     "tip": "표준국어대사전  '생과일', '생과일주스' 등재",
     "dividerGroup": "A1",
     "dividerLabel": "표준국어대사전 등재(명사)",
-    "overlayReplace": "→생과일⁀주스"
+    "overlayReplace": "→생과일^주스"
   },
   {
     "find": "시간 제한",
@@ -261,7 +261,7 @@
     "tip": "표준국어대사전  '시간제한' 등재",
     "dividerGroup": "A1",
     "dividerLabel": "표준국어대사전 등재(명사)",
-    "overlayReplace": "→시간⁀제한"
+    "overlayReplace": "→시간^제한"
   },
   {
     "find": "어제 저녁",
@@ -270,7 +270,7 @@
     "tip": "표준국어대사전  '어제저녁' 등재_주의: '오늘저녁' 미등재",
     "dividerGroup": "A1",
     "dividerLabel": "표준국어대사전 등재(명사)",
-    "overlayReplace": "→어제⁀저녁"
+    "overlayReplace": "→어제^저녁"
   },
   {
     "find": "집안 사람",
@@ -279,7 +279,7 @@
     "tip": "표준국어대사전  '집안사람' 등재",
     "dividerGroup": "A1",
     "dividerLabel": "표준국어대사전 등재(명사)",
-    "overlayReplace": "→집안⁀사람"
+    "overlayReplace": "→집안^사람"
   },
   {
     "find": "그럴 듯",
@@ -288,7 +288,7 @@
     "tip": "표준국어대사전 '그럴듯하다' 등재",
     "dividerGroup": "A",
     "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
-    "overlayReplace": "→그럴⁀듯"
+    "overlayReplace": "→그럴^듯"
   },
   {
     "find": "그럴 싸",
@@ -297,7 +297,7 @@
     "tip": "표준국어대사전 '그럴싸하다' 등재",
     "dividerGroup": "A",
     "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
-    "overlayReplace": "→그럴⁀싸"
+    "overlayReplace": "→그럴^싸"
   },
   {
     "find": "자신만만 하",
@@ -311,7 +311,7 @@
     "tip": "표준국어대사전 '자신만만하다' 등재",
     "dividerGroup": "A",
     "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
-    "overlayReplace": "→자신만만⁀"
+    "overlayReplace": "→자신만만^"
   },
   {
     "find": "보잘 것",
@@ -320,7 +320,7 @@
     "tip": "표준국어대사전 '보잘것없다' 등재",
     "dividerGroup": "A",
     "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
-    "overlayReplace": "→보잘⁀것없"
+    "overlayReplace": "→보잘^것없"
   },
   {
     "find": "하잘 것",
@@ -329,7 +329,7 @@
     "tip": "표준국어대사전 '하잘것없다' 등재",
     "dividerGroup": "A",
     "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
-    "overlayReplace": "→하잘⁀것없"
+    "overlayReplace": "→하잘^것없"
   },
   {
     "find": "머지 않",
@@ -338,7 +338,7 @@
     "tip": "표준국어대사전 '머지않다' 등재",
     "dividerGroup": "A",
     "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
-    "overlayReplace": "→머지⁀않"
+    "overlayReplace": "→머지^않"
   },
   {
     "find": "세상 모르",
@@ -347,7 +347,7 @@
     "tip": "표준국어대사전 '세상모르다' 등재",
     "dividerGroup": "A",
     "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
-    "overlayReplace": "→세상⁀모"
+    "overlayReplace": "→세상^모"
   },
   {
     "find": "되풀이 되",
@@ -359,7 +359,8 @@
     "enabled": true,
     "tip": "표준국어대사전  '되풀이되다' 등재",
     "dividerGroup": "A",
-    "dividerLabel": "표준국어대사전 등재(동사 · 형용사)"
+    "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
+    "overlayReplace": "→되풀이^되"
   },
   {
     "find": "부끄러워 하",
@@ -372,7 +373,8 @@
     "enabled": true,
     "tip": "표준국어대사전  '부끄러워하다' 등재",
     "dividerGroup": "A",
-    "dividerLabel": "표준국어대사전 등재(동사 · 형용사)"
+    "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
+    "overlayReplace": "→부끄러워^하"
   },
   {
     "find": "기꺼워 하",
@@ -385,7 +387,8 @@
     "enabled": true,
     "tip": "표준국어대사전  '기꺼워하다' 등재",
     "dividerGroup": "A",
-    "dividerLabel": "표준국어대사전 등재(동사 · 형용사)"
+    "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
+    "overlayReplace": "→기꺼워^하"
   },
   {
     "find": "마다 하",
@@ -398,7 +401,8 @@
     "enabled": true,
     "tip": "표준국어대사전  '마다하다' 등재",
     "dividerGroup": "A",
-    "dividerLabel": "표준국어대사전 등재(동사 · 형용사)"
+    "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
+    "overlayReplace": "→마다^하"
   },
   {
     "find": "가 닿",
@@ -407,7 +411,7 @@
     "tip": "표준국어대사전  '가닿다' 등재",
     "dividerGroup": "A",
     "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
-    "overlayReplace": "→가⁀닿"
+    "overlayReplace": "→가^닿"
   },
   {
     "find": "때 맞",
@@ -416,7 +420,7 @@
     "tip": "표준국어대사전  '때맞추다' 등재",
     "dividerGroup": "A",
     "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
-    "overlayReplace": "→때⁀맞"
+    "overlayReplace": "→때^맞"
   },
   {
     "find": "장난 삼",
@@ -425,7 +429,7 @@
     "tip": "표준국어대사전  '장난삼다' 등재 참고: '친구삼다' 미등재",
     "dividerGroup": "A",
     "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
-    "overlayReplace": "→장난⁀삼"
+    "overlayReplace": "→장난^삼"
   },
   {
     "find": "검정색",
@@ -686,7 +690,7 @@
     "tip": "표준국어대사전 미등재(참고 : 동일한 뜻의 '이외以外'는 등재)",
     "dividerGroup": "B0",
     "dividerLabel": "잘못된 표현(명사)",
-    "overlayReplace": "→그 외"
+    "overlayReplace": "→그∨외"
   },
   {
     "find": "군중들",

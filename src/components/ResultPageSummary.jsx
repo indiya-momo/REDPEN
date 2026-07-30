@@ -1,6 +1,7 @@
 import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { formatSystemPageLabel } from '../lib/printedPageDisplay.js';
 import { instanceVisibilityKey, instancesMatch } from '../lib/checkResultUtils.js';
+import CriteriaHoverTip from './CriteriaHoverTip.jsx';
 
 /** 접힌 상태에서 페이지 칩이 차지할 최대 줄 수 */
 export const RESULT_PAGES_MAX_COLLAPSED_ROWS = 2;
@@ -475,39 +476,40 @@ function InstancePill({
     else onSelectPage(inst.pageNum);
   }
 
+  const tip = onToggleInstanceVisibility
+    ? visible
+      ? '좌클릭: 해당 위치로 이동 · 우클릭: 표시 제외'
+      : '좌클릭: 해당 위치로 이동 · 우클릭: 표시 복원'
+    : undefined;
+
   return (
     <div className="result-page-chip-wrap" role="listitem" data-result-pill="">
-      <button
-        type="button"
-        className={`page-chip${selected ? ' page-chip--current' : ''}${
-          onCurrentPage && !selected ? ' page-chip--on-page' : ''
-        }${!visible ? ' page-chip--hidden-instance' : ''}`}
-        title={
-          onToggleInstanceVisibility
-            ? visible
-              ? '좌클릭: 해당 위치로 이동 · 우클릭: 표시 제외'
-              : '좌클릭: 해당 위치로 이동 · 우클릭: 표시 복원'
-            : undefined
-        }
-        onClick={(event) => {
-          event.stopPropagation();
-          navigateToInstance();
-        }}
-        onContextMenu={(event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          if (onToggleInstanceVisibility) {
-            onToggleInstanceVisibility(inst);
-          }
-        }}
-      >
-        <span className="page-chip__page">{formatPageLabel(inst.pageNum)}</span>
-        {fragmentLabel ? (
-          <span className="page-chip__bundle page-chip__bundle--fragment">
-            {fragmentLabel}
-          </span>
-        ) : null}
-      </button>
+      <CriteriaHoverTip tip={tip} variant="wrap">
+        <button
+          type="button"
+          className={`page-chip${selected ? ' page-chip--current' : ''}${
+            onCurrentPage && !selected ? ' page-chip--on-page' : ''
+          }${!visible ? ' page-chip--hidden-instance' : ''}`}
+          onClick={(event) => {
+            event.stopPropagation();
+            navigateToInstance();
+          }}
+          onContextMenu={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            if (onToggleInstanceVisibility) {
+              onToggleInstanceVisibility(inst);
+            }
+          }}
+        >
+          <span className="page-chip__page">{formatPageLabel(inst.pageNum)}</span>
+          {fragmentLabel ? (
+            <span className="page-chip__bundle page-chip__bundle--fragment">
+              {fragmentLabel}
+            </span>
+          ) : null}
+        </button>
+      </CriteriaHoverTip>
     </div>
   );
 }

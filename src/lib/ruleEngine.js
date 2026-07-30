@@ -44,6 +44,7 @@ import { cautionHighlightSpan } from './cautionRules.js';
  * @property {import('./ruleTypes.js').RuleKind} [patternKind]
  * @property {string} [tailWord]
  * @property {string} [groupDisplayLabel]
+ * @property {string} [bonBojoItemId] — 본용언+보조용언 시트 item_id(필수 뱃지 등)
  * @property {string} [dividerGroup] — 맞춤법 묶음 키(엑셀 묶음 열 정렬·병합용)
  * @property {string} [dividerLabel] — 묶음 표시 이름(엑셀 묶음 열 표시용)
  * @property {string} [overlayReplace] — PDF 하이라이트 위 표시 문구(표기 통일 추천 등)
@@ -193,6 +194,9 @@ function pushCompoundFindInstance(rule, page, byKey, globalIndex, matchedText) {
       ...(rule.tailWord ? { tailWord: rule.tailWord } : {}),
       ...(rule.patternKind === 'auxiliary-verb' && rule.label?.trim()
         ? { groupDisplayLabel: rule.label.trim() }
+        : {}),
+      ...(rule.bonBojoItemId?.trim()
+        ? { bonBojoItemId: rule.bonBojoItemId.trim() }
         : {}),
       ...(rule.dividerGroup ? { dividerGroup: rule.dividerGroup } : {}),
       ...(rule.dividerLabel ? { dividerLabel: rule.dividerLabel } : {}),
@@ -371,6 +375,9 @@ function applyRuleToPages(rule, pages, byKey, globalExcludePhrases, errors) {
           ...(rule.tailWord ? { tailWord: rule.tailWord } : {}),
           ...(rule.patternKind === 'auxiliary-verb' && rule.label?.trim()
             ? { groupDisplayLabel: rule.label.trim() }
+            : {}),
+          ...(rule.bonBojoItemId?.trim()
+            ? { bonBojoItemId: rule.bonBojoItemId.trim() }
             : {}),
           ...(rule.dividerGroup ? { dividerGroup: rule.dividerGroup } : {}),
           ...(rule.dividerLabel ? { dividerLabel: rule.dividerLabel } : {}),

@@ -11,6 +11,7 @@ import {
 } from '../../lib/paidPlanGate.js';
 import { buildCheckResultsZipBasename } from '../../lib/proofreadExportFilename.js';
 import { showAppAlert } from '../../lib/appDialog.js';
+import CriteriaHoverTip from '../CriteriaHoverTip.jsx';
 
 /**
  * @param {{
@@ -133,22 +134,23 @@ export default function ProjectHubCheckResultsPanel({
           <span className="project-hub-check-results__download-count">
             {countLabel}
           </span>
-          <button
-            type="button"
-            className="project-hub-settings__secondary-btn project-hub-settings__secondary-btn--check-results"
-            disabled={zipBusy || paid !== true}
-            aria-busy={zipBusy || loading}
-            title={
-              paid === false ? '유료회원 전용 · 준비중' : undefined
-            }
-            onClick={() => void handleZipDownload()}
+          <CriteriaHoverTip
+            tip={paid === false ? '유료회원 전용 · 준비중' : undefined}
           >
-            {zipBusy
-              ? '받는 중…'
-              : paid === false
-                ? '준비중'
-                : '검수 이력 다운받기'}
-          </button>
+            <button
+              type="button"
+              className="project-hub-settings__secondary-btn project-hub-settings__secondary-btn--check-results"
+              disabled={zipBusy || paid !== true}
+              aria-busy={zipBusy || loading}
+              onClick={() => void handleZipDownload()}
+            >
+              {zipBusy
+                ? '받는 중…'
+                : paid === false
+                  ? '준비중'
+                  : '검수 이력 다운받기'}
+            </button>
+          </CriteriaHoverTip>
         </div>
       </div>
 

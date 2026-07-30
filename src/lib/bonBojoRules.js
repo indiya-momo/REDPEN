@@ -146,7 +146,7 @@ export function auxiliarySearchTailsFromBonBojoItem(item) {
         .filter(Boolean)
         .filter((s) => isAllowedBonBojoSearchStem(item, s))
     : [];
-  if (stems.length > 0) return stems;
+  if (stems.length > 0) return [...new Set(stems)];
   const label = String(item.label ?? '').trim();
   return label ? [label] : [];
 }

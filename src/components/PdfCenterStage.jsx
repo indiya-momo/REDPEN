@@ -10,6 +10,7 @@ import {
   PDF_SIZE_MAX_MESSAGE,
 } from '../lib/pdfSizeLimits.js';
 import TooltipGuide from './TooltipGuide.jsx';
+import CriteriaHoverTip from './CriteriaHoverTip.jsx';
 
 /**
  * @param {{
@@ -311,13 +312,11 @@ export default function PdfCenterStage({
                   )}
                 </p>
               </div>
-              <span
-                className="pdf-ready-file__status"
-                title={extractBusy ? '준비 중' : '업로드 완료'}
-                aria-hidden
-              >
-                <CheckCircle2 size={24} strokeWidth={2} />
-              </span>
+              <CriteriaHoverTip tip={extractBusy ? '준비 중' : '업로드 완료'}>
+                <span className="pdf-ready-file__status" aria-hidden>
+                  <CheckCircle2 size={24} strokeWidth={2} />
+                </span>
+              </CriteriaHoverTip>
             </div>
 
             {showRunButton ? (

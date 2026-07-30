@@ -10,6 +10,7 @@ import {
   setUserPlanByEmailCloud,
 } from '../lib/paidPlanAdminCloud.js';
 import { syncUserPlanFromCloud } from '../lib/userProfileStorage.js';
+import CriteriaHoverTip from './CriteriaHoverTip.jsx';
 
 /**
  * @param {{
@@ -173,14 +174,15 @@ export default function PaidPlanAdminSection({
               {paidUsers.map((user) => (
                 <tr key={user.uid}>
                   <td>
-                    <button
-                      type="button"
-                      className="mypage__paid-admin-email-btn"
-                      onClick={() => setEmail(user.email)}
-                      title="입력란에 넣기"
-                    >
-                      {user.email || '(이메일 없음)'}
-                    </button>
+                    <CriteriaHoverTip tip="입력란에 넣기">
+                      <button
+                        type="button"
+                        className="mypage__paid-admin-email-btn"
+                        onClick={() => setEmail(user.email)}
+                      >
+                        {user.email || '(이메일 없음)'}
+                      </button>
+                    </CriteriaHoverTip>
                   </td>
                   <td>{formatPaidUpdatedAt(user.paidUpdatedAt)}</td>
                 </tr>

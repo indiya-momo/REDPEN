@@ -2491,12 +2491,13 @@ export default function MainScreen({
         aria-valuemin={PANEL_LEFT_MIN_WIDTH}
         aria-valuemax={PANEL_LEFT_MAX_WIDTH}
         aria-label="좌우 패널 너비 조절"
-        title="드래그하여 너비 조절"
         onPointerDown={startDrag}
       >
-        <span className="layout-col-resize-grip" aria-hidden>
-          ⋮
-        </span>
+        <CriteriaHoverTip tip="드래그하여 너비 조절">
+          <span className="layout-col-resize-grip" aria-hidden>
+            ⋮
+          </span>
+        </CriteriaHoverTip>
       </div>
 
       <main className="panel-right">
