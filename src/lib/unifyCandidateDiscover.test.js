@@ -4,6 +4,7 @@ import {
   formatUnifyClusterRegisterInput,
   formatUnifySpacingDecisionOverlay,
   buildUnifyCandidatePreviewGroups,
+  firstWrongUnifyInstance,
   instancesForUnifyVariant,
   isValidSpacedUnifyVariant,
   isExcludedUnifyCandidateRaw,
@@ -485,5 +486,25 @@ describe('buildUnifyCandidatePreviewGroups', () => {
     expect(groups.map((g) => g.find)).toEqual(['조선시대']);
     expect(groups[0].overlayReplace).toBe('→조선∨시대');
     expect(groups[0].instances?.length).toBe(2);
+  });
+
+  it('선택 후 페이지 칩은 틀린 표기만·replace=선택형', () => {
+    const clusters = discoverSpacingUnifyCandidates([
+      { pageNum: 1, text: '조선시대 조선시대 조선 시대' },
+    ]);
+    const cluster = clusters.find((c) => c.key === '조선시대');
+    expect(
+      instancesForUnifyVariant(cluster, '조선시대', {
+        chosenVariant: '조선시대',
+      }),
+    ).toEqual([]);
+    const wrong = instancesForUnifyVariant(cluster, '조선 시대', {
+      chosenVariant: '조선시대',
+    });
+    expect(wrong).toHaveLength(1);
+    expect(wrong[0].replace).toBe('조선시대');
+    expect(firstWrongUnifyInstance(cluster, '조선시대')?.find).toBe(
+      '조선 시대',
+    );
   });
 });

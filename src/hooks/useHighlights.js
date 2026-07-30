@@ -115,7 +115,8 @@ export function useHighlights({
           patternKind: group.patternKind,
           isUnify:
             source === 'consistency' &&
-            isConsistencyUnifyTailWord(customRules, group.tailWord),
+            (isConsistencyUnifyTailWord(customRules, group.tailWord) ||
+              Boolean(group.overlayReplace)),
         });
         return {
           ...range,

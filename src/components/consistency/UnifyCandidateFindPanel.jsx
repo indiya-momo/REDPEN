@@ -10,6 +10,7 @@ import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import {
   buildUnifyCandidatePreviewGroups,
   discoverSpacingUnifyCandidates,
+  firstWrongUnifyInstance,
   instancesForUnifyVariant,
 } from '../../lib/unifyCandidateDiscover.js';
 import { groupSortAndFillSatellites } from '../../lib/unifyCandidateGrouping.js';
@@ -527,6 +528,9 @@ export default function UnifyCandidateFindPanel({
         return next;
       });
 
+      const firstWrong = firstWrongUnifyInstance(cluster, chosenVariant);
+      if (firstWrong) onSelectInstance?.(firstWrong);
+
       // 그룹 첫 선택만 자동 선택. 이후 선택은 예외 — preselect를 덮어쓰지 않음.
       if (groupClusters && groupClusters.length > 1) {
         const isGlued = !/\s/.test(chosenVariant);
@@ -558,6 +562,7 @@ export default function UnifyCandidateFindPanel({
       predicateDropClusterKeys,
       predicateNeedsReviewByKey,
       publishPreview,
+      onSelectInstance,
     ],
   );
 
@@ -864,7 +869,9 @@ function ClusterCard({
           const isDerived = count === 0;
           const isChosen = registeredVariant === variant;
           const isPreSelected = !isRegistered && preSelectedVariant === variant;
-          const instances = instancesForUnifyVariant(cluster, variant);
+          const instances = instancesForUnifyVariant(cluster, variant, {
+            chosenVariant: registeredVariant ?? null,
+          });
 
           return (
             <li
