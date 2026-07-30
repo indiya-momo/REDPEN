@@ -1,0 +1,121 @@
+{
+  "chips": [
+    { "slug": "getting-started/first-check", "label": "첫 검수" },
+    { "slug": "spelling/highlights", "label": "하이라이트" },
+    { "slug": "reference/privacy", "label": "원고 저장" },
+    { "slug": "account/quota", "label": "검수권" },
+    { "slug": "reference/supported-pdf", "label": "PDF 형식" }
+  ],
+  "popular": [
+    {
+      "slug": "getting-started/first-check",
+      "title": "첫 검수하기",
+      "description": "PDF 업로드부터 기준 검수, 결과 확인까지의 기본 흐름"
+    },
+    {
+      "slug": "getting-started/panels",
+      "title": "검수 화면 읽는 법",
+      "description": "왼쪽 검수 결과와 오른쪽 반영 원고의 역할"
+    },
+    {
+      "slug": "spelling/highlights",
+      "title": "하이라이트는 전부 틀린 건가요?",
+      "description": "검수 결과를 읽고 원고에 반영하는 방법"
+    },
+    {
+      "slug": "consistency/tabs",
+      "title": "맞춤법과 표기 통일",
+      "description": "두 검수 방식의 차이와 사용 순서"
+    },
+    {
+      "slug": "reference/privacy",
+      "title": "원고는 서버에 올라가나요?",
+      "description": "브라우저에서만 처리되는 방식"
+    },
+    {
+      "slug": "account/quota",
+      "title": "검수권과 피드백",
+      "description": "일일 검수권, 가입 보너스, 피드백 보너스"
+    }
+  ],
+  "groups": [
+    {
+      "id": "getting-started",
+      "label": "시작하기",
+      "items": [
+        { "slug": "getting-started/first-check", "label": "첫 검수하기" },
+        { "slug": "getting-started/panels", "label": "검수 화면 읽는 법" }
+      ]
+    },
+    {
+      "id": "spelling",
+      "label": "맞춤법 검수",
+      "items": [
+        {
+          "slug": "spelling/highlights",
+          "label": "하이라이트 의미",
+          "index": true,
+          "children": [
+            {
+              "slug": "spelling/highlights/overview",
+              "label": "개요",
+              "description": "하이라이트가 전부 오류는 아닌 이유, 권장 확인 순서."
+            },
+            {
+              "slug": "spelling/highlights/spacing",
+              "label": "띄어쓰기",
+              "description": "띄어쓰기 검수 결과를 읽을 때 문맥·의도를 함께 보는 방법."
+            },
+            {
+              "slug": "spelling/highlights/notation",
+              "label": "표기 통일",
+              "description": "같은 대상이 여러 방식으로 쓰였을 때 하이라이트가 의미하는 바."
+            },
+            {
+              "slug": "spelling/highlights/loanword",
+              "label": "외래어 표기",
+              "description": "외래어 표기 검수와 맞춤법 탭 결과의 관계."
+            },
+            {
+              "slug": "spelling/highlights/rules",
+              "label": "맞춤법 규칙",
+              "description": "내장·사용자 규칙에 따른 표시와 설명 보기."
+            },
+            {
+              "slug": "spelling/highlights/editor",
+              "label": "편집자 검토",
+              "description": "자동 규칙만으로 판단하기 어려운 항목을 구분하는 방법."
+            }
+          ]
+        },
+        { "slug": "spelling/export", "label": "결과 다운로드" }
+      ]
+    },
+    {
+      "id": "consistency",
+      "label": "표기 통일",
+      "items": [
+        { "slug": "consistency/tabs", "label": "맞춤법과 표기 통일" },
+        { "slug": "consistency/unify", "label": "통일형·여러 항목 찾기" }
+      ]
+    },
+    {
+      "id": "project",
+      "label": "프로젝트·기준",
+      "items": [{ "slug": "project/what-is-project", "label": "프로젝트란" }]
+    },
+    {
+      "id": "account",
+      "label": "계정·검수권",
+      "items": [{ "slug": "account/quota", "label": "검수권·피드백" }]
+    },
+    {
+      "id": "reference",
+      "label": "환경·자료",
+      "items": [
+        { "slug": "reference/privacy", "label": "원고 저장 여부" },
+        { "slug": "reference/supported-pdf", "label": "지원 PDF·환경" }
+      ]
+    }
+  ]
+}
