@@ -1,10 +1,10 @@
 # 표기 통일 추천 — 목록 정리(규칙 1단계 → SLM 2단계)
 
 **상위:** `unify-candidate-spacing-redesign-2026-07-29.md`, `unify-josa-review-slm-sketch.md`  
-**상태:** **1단계 출시 방향** (규칙만). 용언/유지·삭제 SLM은 **2단계 후보**로 보류.  
-**작성·개정:** 2026-07-30  
+**상태:** **1단계 출시 방향** (규칙만). **사전 2차**는 `unify-stdict-pos-review-design-2026-07-31.md`. 용언 SLM은 보류.  
+**작성·개정:** 2026-07-30 · 2026-07-31(사전 경로 링크)  
 **관련 구현:** `unifyDependentNounGenitive.js`, DEV 「2차 검토」패널.  
-**보류 코드:** `unifyPredicateReviewSlm/` (`VITE_UNIFY_PREDICATE_SLM`, 기본 off) — 기존 조사 SLM 배관 재사용 전제.
+**보류 코드:** `unifyPredicateReviewSlm/` (`VITE_UNIFY_PREDICATE_SLM`, 기본 off).
 
 ---
 
@@ -87,13 +87,12 @@
 
 ---
 
-## 6. 비범위 (1단계)
+## 6. 비범위 (1단계 규칙만 문서 기준)
 
 - 애매 칸 SLM 삭제
-- 사전 API
+- ~~사전 API~~ → **채택:** `unify-stdict-pos-review-design-2026-07-31.md`
 - 클라우드 GPU
 - 「용언 미등록 = 명사」 취급
-
 ---
 
 ## 7. 성공 기준 (1단계)

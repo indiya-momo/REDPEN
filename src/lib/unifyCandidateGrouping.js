@@ -36,6 +36,7 @@ import {
  *   affixType: 'prefix' | 'suffix',
  *   label: string,
  *   clusters: UnifySpacingCluster[],
+ *   dictPos?: 'predicate' | 'noun',
  * } | {
  *   type: 'single',
  *   clusters: UnifySpacingCluster[],
@@ -63,7 +64,12 @@ export function sortClusterGroups(groups) {
   const section = (g) => {
     if (g.type === 'single') return 0;
     if (g.type === 'predicate') return 3;
-    if (g.type === 'series' && looksLikePredicateKey(g.affix)) return 3;
+    if (
+      g.type === 'series' &&
+      (looksLikePredicateKey(g.affix) || g.dictPos === 'predicate')
+    ) {
+      return 3;
+    }
     return g.affixType === 'prefix' ? 1 : 2;
   };
 

@@ -71,3 +71,12 @@ export function isUnifyJosaSlmReviewEnabled() {
 export function isUnifyPredicateSlmReviewEnabled() {
   return import.meta.env.VITE_UNIFY_PREDICATE_SLM === 'true';
 }
+
+/**
+ * 표기 통일 추천 — 표준국어대사전 품사 2차 (규칙 후 보완, 목록 이동).
+ * - 기본 꺼짐 (`VITE_UNIFY_STDICT=true` 일 때만)
+ * @see project-docs/unify-stdict-pos-review-design-2026-07-31.md
+ */
+export function isUnifyStdictPosReviewEnabled() {
+  return import.meta.env.VITE_UNIFY_STDICT === 'true';
+}

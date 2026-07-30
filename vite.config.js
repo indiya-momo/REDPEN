@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
+import { stdictDevProxyPlugin } from './scripts/stdictDevProxyPlugin.js';
 
 for (const name of ['pdf-empty.png', 'pdf-momo.png', 'pdf-full.png']) {
   const fromPublic = path.resolve('public/momo', name);
@@ -69,7 +70,13 @@ export default defineConfig(({ mode }) => {
     'import.meta.env.VITE_PUBLIC_POSTHOG_KEY': JSON.stringify(posthog.key),
     'import.meta.env.VITE_PUBLIC_POSTHOG_HOST': JSON.stringify(posthog.host),
   },
-  plugins: [react()],
+  plugins: [
+    react(),
+    stdictDevProxyPlugin({
+      getKey: () =>
+        buildEnv.STDICT_API_KEY || buildEnv.VITE_STDICT_API_KEY || '',
+    }),
+  ],
   test: {
     environment: 'node',
     include: ['src/**/*.test.js', 'src/**/*.test.jsx'],
