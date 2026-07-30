@@ -76,7 +76,7 @@ describe('ensureDefaultAuxiliaryVerbs', () => {
 
     );
 
-    expect(list.length).toBe(10);
+    expect(list.length).toBe(11);
 
     expect(labels).toContain('(아/어) + 하다');
     expect(labels).not.toContain('아는체하다');
@@ -84,6 +84,8 @@ describe('ensureDefaultAuxiliaryVerbs', () => {
     expect(labels).toContain('(아/어) + 지다');
 
     expect(labels).toContain('(아/어) + 있다');
+
+    expect(labels).toContain('(아/어) + 나다');
 
     const withBon = rules.filter((r) => r.bonBojoItemId === 'verb-boda1');
 

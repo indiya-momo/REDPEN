@@ -5,6 +5,7 @@
 
 import { AppDialogCriteriaLabel } from './AppDialogCriteriaLabel.jsx';
 import { formatCategoryFindingCount } from '../lib/checkResultSummaryFormat.js';
+import AppDialogQuotaConsumedLine from './AppDialogQuotaConsumedLine.jsx';
 
 /**
  * @param {{ count: number, className?: string, ariaLabel?: string }} props
@@ -103,9 +104,7 @@ export default function CheckResultSummaryContent({
 
   return (
     <div className="results-header app-dialog__results-summary">
-      {quotaConsumedLine ? (
-        <p className="app-dialog__quota-consumed-line">{quotaConsumedLine}</p>
-      ) : null}
+      <AppDialogQuotaConsumedLine line={quotaConsumedLine} />
       <div className="app-dialog__results-summary-row app-dialog__results-summary-row--total">
         {totalRow}
       </div>

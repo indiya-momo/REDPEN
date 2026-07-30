@@ -6,6 +6,7 @@ import {
   matchLongestReviewStemSuffix,
   stripReviewStemSuffix,
   attachJosaReviewHints,
+  isUnifyListDroppedMonoJosaCluster,
 } from './unifyJosaReview.js';
 
 describe('UNIFY_LOW_RISK_JOSA', () => {
@@ -56,6 +57,35 @@ describe('matchLongestReviewStemSuffix', () => {
 
   it('가치평가에서 가·이 과잉 제거를 막는다', () => {
     expect(matchLongestReviewStemSuffix('가치평가')).toBeNull();
+  });
+
+  it('게·는지·서를 접미로 인식한다', () => {
+    expect(matchLongestReviewStemSuffix('분명하게')).toEqual({
+      stemLast: '분명하',
+      suffix: '게',
+      bare: false,
+    });
+    expect(matchLongestReviewStemSuffix('확인하는지')).toEqual({
+      stemLast: '확인하',
+      suffix: '는지',
+      bare: false,
+    });
+    expect(matchLongestReviewStemSuffix('만나서')).toEqual({
+      stemLast: '만나',
+      suffix: '서',
+      bare: false,
+    });
+    // 더 긴 결합형이 우선
+    expect(matchLongestReviewStemSuffix('학생에게')).toEqual({
+      stemLast: '학생',
+      suffix: '에게',
+      bare: false,
+    });
+    expect(matchLongestReviewStemSuffix('학교에서')).toEqual({
+      stemLast: '학교',
+      suffix: '에서',
+      bare: false,
+    });
   });
 
   it('가량·쯤·뿐·같이 등 추가 조사를 인식한다', () => {
@@ -531,5 +561,69 @@ describe('attachJosaReviewHints', () => {
     ]);
     expect(out[0].josaReview?.stemKey).toBe('활동');
     expect(out[1].josaReview?.stemKey).toBe('활동');
+  });
+
+  it('게·는지·서도 조사·어간 검토 배지를 붙인다', () => {
+    const mk = (key, spaced, glued) => ({
+      key,
+      variants: [glued, spaced],
+      counts: { [glued]: 1, [spaced]: 1 },
+      occurrencesByVariant: {},
+      recommendedUnify: glued,
+      totalCount: 2,
+      kind: 'conflict',
+    });
+    const out = attachJosaReviewHints([
+      mk('분명하게', '분명하 게', '분명하게'),
+      mk('확인하는지', '확인하 는지', '확인하는지'),
+      mk('만나서', '만나 서', '만나서'),
+    ]);
+    expect(out[0].josaReview?.status).toBe('review');
+    expect(out[0].josaReview?.stemKey).toBe('분명하');
+    expect(out[1].josaReview?.status).toBe('review');
+    expect(out[1].josaReview?.stemKey).toBe('확인하');
+    expect(out[2].josaReview?.status).toBe('review');
+    expect(out[2].josaReview?.stemKey).toBe('만나');
+  });
+
+  it('조사·어간 접미 충돌(짧은·긴 결합형)은 목록 제외 대상', () => {
+    const mk = (key, spaced, glued) => ({
+      key,
+      variants: [glued, spaced],
+      counts: { [glued]: 1, [spaced]: 1 },
+      occurrencesByVariant: {},
+      recommendedUnify: glued,
+      totalCount: 2,
+      kind: 'conflict',
+    });
+    expect(
+      isUnifyListDroppedMonoJosaCluster(mk('역학은', '역학 은', '역학은')),
+    ).toBe(true);
+    expect(
+      isUnifyListDroppedMonoJosaCluster(
+        mk('체계에서는', '체계 에서는', '체계에서는'),
+      ),
+    ).toBe(true);
+    expect(
+      isUnifyListDroppedMonoJosaCluster(
+        mk('경제정책으로', '경제 정책으로', '경제정책으로'),
+      ),
+    ).toBe(true);
+    expect(
+      isUnifyListDroppedMonoJosaCluster(
+        mk('활동이며', '활동 이며', '활동이며'),
+      ),
+    ).toBe(true);
+    expect(
+      isUnifyListDroppedMonoJosaCluster(
+        mk('활동하도록', '활동 하도록', '활동하도록'),
+      ),
+    ).toBe(true);
+    // 접미 없는 순수 띄움 충돌은 유지
+    expect(
+      isUnifyListDroppedMonoJosaCluster(
+        mk('세계경제', '세계 경제', '세계경제'),
+      ),
+    ).toBe(false);
   });
 });

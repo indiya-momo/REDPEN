@@ -265,7 +265,7 @@ describe('formatConsistencyCheckConfirmMessage', () => {
     ).toBe(
       '[표기 통일 검수]\n' +
         '\n' +
-        '표기 통일 검수는 11회(1일 검수권 1회, 선물 검수권 10회) 가능합니다\n' +
+        '표기 통일 검수는 11회(1일 검수권 1장, 선물 검수권 10장) 가능합니다\n' +
         '표기 통일하기(없음), 여러 항목 찾기(3항목)\n' +
         '공통 항목 찾기(1기준), 검수 제외 항목(1기준)\n' +
         '본용언(-아/어) + 보조용언 표기(2/10)\n' +
@@ -291,7 +291,7 @@ describe('formatConsistencyCheckConfirmMessage', () => {
     ).toBe(
       '[표기 통일 검수]\n' +
         '\n' +
-        '표기 통일 검수는 1회(1일 검수권 1회, 선물 검수권 0회) 가능합니다\n' +
+        '표기 통일 검수는 1회(1일 검수권 1장, 선물 검수권 0장) 가능합니다\n' +
         '표기 통일하기(없음), 여러 항목 찾기(없음)\n' +
         '공통 항목 찾기(없음), 검수 제외 항목(없음)\n' +
         '본용언(-아/어) + 보조용언 표기(10/10)\n' +
@@ -314,7 +314,7 @@ describe('formatConsistencyUnifyCheckConfirmMessage', () => {
     ).toBe(
       '[표기 통일하기 검수 진행]\n' +
         '\n' +
-        '표기 통일 검수는 4회(1일 검수권 1회, 선물 검수권 3회) 가능합니다\n' +
+        '표기 통일 검수는 4회(1일 검수권 1장, 선물 검수권 3장) 가능합니다\n' +
         '(표기 통일하기는 표기 통일 검수 횟수를 사용합니다)\n' +
         `${UNIFY_FEATURE_LABEL}(2항목, 통일형: 조선시대📌)\n` +
         '\n' +
@@ -341,10 +341,10 @@ describe('formatConsistencyUnifyCheckConfirmMessage', () => {
 describe('formatUnifyCandidateFindConfirmMessage', () => {
   it('표기 통일 추천 찾기 confirm 문구를 만든다', () => {
     expect(formatUnifyCandidateFindConfirmMessage(6, 1, 5)).toBe(
-      '[표기 통일 추천]\n' +
+      '[표기 통일 추천하기]\n' +
         '\n' +
-        '표기 통일 검수는 6회(1일 검수권 1회, 선물 검수권 5회) 가능합니다\n' +
-        '(표기 통일 추천 찾기는 표기 통일 검수 횟수를 사용합니다)\n' +
+        '표기 통일 검수는 6회(1일 검수권 1장, 선물 검수권 5장) 가능합니다\n' +
+        '표기 통일 검수권 1장을 사용합니다\n' +
         '\n' +
         '찾기를 진행할까요?',
     );
@@ -354,7 +354,7 @@ describe('formatUnifyCandidateFindConfirmMessage', () => {
 describe('formatUnifyCandidateFindCompleteMessage', () => {
   it('발견 항목·총 횟수를 완료 alert 본문으로 만든다', () => {
     expect(formatUnifyCandidateFindCompleteMessage(3, 6)).toBe(
-      '표기 통일 추천 3항목 전체 6회',
+      '표기 통일 추천하기 3항목 전체 6회',
     );
   });
 
@@ -386,8 +386,8 @@ describe('alertUnifyCandidateFindAfterRun', () => {
 
     expect(alertMock).toHaveBeenCalledWith(
       '찾기를 진행했습니다\n\n' +
-        '표기 통일 추천 1항목 전체 2회\n\n' +
-        '표기 통일 검수권 1회가 사용되었습니다(1일 검수권 1회, 선물 검수권 5회 사용 가능)',
+        '표기 통일 추천하기 1항목 전체 2회\n\n' +
+        '표기 통일 검수권 1장이 사용되었습니다(1일 검수권 1장, 선물 검수권 5장 사용 가능)',
     );
   });
 });

@@ -3,9 +3,9 @@
  *
  * 목록 순서 (합의):
  * 1) 단일 항목(명사 위주) 가나다순
- * 2) 접두 계열(가나다@) 가나다순 — 그룹 안도 가나다
- * 3) 접미 계열(@가나다) 가나다순 — 그룹 안도 가나다
- * 4) 용언(동사·형용사·보조용언 어간 추정) 가나다순
+ * 2) 접두 계열(가나다@) 명사 — 그룹 안도 가나다
+ * 3) 접미 계열(@가나다) 명사 — 그룹 안도 가나다
+ * 4) 용언 — 단일 추정 + 접두·접미 용언 계열(만들어@ 등) 모두 명사 뒤
  */
 
 import {
@@ -18,9 +18,12 @@ import {
   clusterBelongsToSeriesAffix,
   fillSeriesSatellites,
 } from './unifyCandidateSatellites.js';
-import { attachJosaReviewHints } from './unifyJosaReview.js';
+import { attachJosaReviewHints, isUnifyListDroppedMonoJosaCluster } from './unifyJosaReview.js';
 import { attachAuxiliaryReviewHints } from './unifyAuxReview.js';
-import { isUnifyPredicateCluster } from './unifyPredicateBucket.js';
+import {
+  isUnifyPredicateCluster,
+  looksLikePredicateKey,
+} from './unifyPredicateBucket.js';
 
 /**
  * @typedef {import('./unifyCandidateDiscover.js').UnifySpacingCluster} UnifySpacingCluster
@@ -51,7 +54,8 @@ function sortClustersByKey(clusters) {
 }
 
 /**
- * 단일 → 가나다@ → @가나다 → 용언. 같은 구간 안에서는 affix(또는 키) 가나다.
+ * 단일 명사 → 명사 접두@ → 명사 @접미 → 용언(단일·계열).
+ * 같은 구간 안에서는 affix(또는 키) 가나다.
  * @param {ClusterGroup[]} groups
  * @returns {ClusterGroup[]}
  */
@@ -59,6 +63,7 @@ export function sortClusterGroups(groups) {
   const section = (g) => {
     if (g.type === 'single') return 0;
     if (g.type === 'predicate') return 3;
+    if (g.type === 'series' && looksLikePredicateKey(g.affix)) return 3;
     return g.affixType === 'prefix' ? 1 : 2;
   };
 
@@ -68,6 +73,12 @@ export function sortClusterGroups(groups) {
     .sort((a, b) => {
       const o = section(a) - section(b);
       if (o !== 0) return o;
+      // 용언 구간: 「용언」단일 묶음 → 용언 계열(접두·접미 가나다)
+      if (section(a) === 3) {
+        const aSeries = a.type === 'series' ? 1 : 0;
+        const bSeries = b.type === 'series' ? 1 : 0;
+        if (aSeries !== bSeries) return aSeries - bSeries;
+      }
       if (a.type !== 'series' || b.type !== 'series') return 0;
       return a.affix.localeCompare(b.affix, 'ko');
     });
@@ -226,9 +237,10 @@ function shouldKeepSeriesGroup(clusters) {
  */
 export function groupSortAndFillSatellites(clusters, rawByKey) {
   // 1) 충돌만으로 @ 후보 형성 (1개도 잠정 허용 → 위성 붙인 뒤 유지 여부 결정)
-  const normalized = normalizeSpacingClusters(clusters).filter(
-    isRealSpacingConflict,
-  );
+  //    어간+뿐/을/를/은/는/이/가 단음절만 다른 충돌은 목록에서 제외
+  const normalized = normalizeSpacingClusters(clusters)
+    .filter(isRealSpacingConflict)
+    .filter((c) => !isUnifyListDroppedMonoJosaCluster(c));
   let groups = groupAndSortClusters(normalized, { minSeriesMembers: 1 });
 
   // 2) @ 후보에 1회 위성 편입 (세계경제만 있어도 세계 시장 위성 가능)
@@ -275,13 +287,23 @@ export function groupSortAndFillSatellites(clusters, rawByKey) {
       normalizeSpacingClusters([
         ...singles.clusters,
         ...demoted,
-      ]).filter(isRealSpacingConflict),
+      ])
+        .filter(isRealSpacingConflict)
+        .filter((c) => !isUnifyListDroppedMonoJosaCluster(c)),
     );
   }
 
   const kept = sortClusterGroups(
     groups.filter((g) => {
-      if (g.type === 'series') return shouldKeepSeriesGroup(g.clusters);
+      if (g.type === 'series') {
+        g.clusters = g.clusters.filter(
+          (c) => !isUnifyListDroppedMonoJosaCluster(c),
+        );
+        return shouldKeepSeriesGroup(g.clusters);
+      }
+      g.clusters = g.clusters.filter(
+        (c) => !isUnifyListDroppedMonoJosaCluster(c),
+      );
       return g.clusters.length > 0;
     }),
   );

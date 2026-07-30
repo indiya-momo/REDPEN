@@ -221,23 +221,67 @@
           "groupLabel": "띄어쓰기로 뜻이 달라지는 경우"
         },
         {
-          "id": "bon-bojo-maehada",
-          "label": "뭐 하다, 뭐하다",
+          "id": "bon-bojo-chataboda",
+          "label": "찾아 보다, 찾아보다",
           "enabled": true,
           "matchMode": "spaced-before",
           "inventoryOnly": false,
           "stems": [
-            "뭐 하",
-            "뭐하",
-            "뭐한",
-            "뭐 한",
-            "뭐 했",
-            "뭐했",
-            "뭐할",
-            "뭐 할"
+            "찾아 보",
+            "찾아보",
+            "찾아 본",
+            "찾아본",
+            "찾아 볼",
+            "찾아볼",
+            "찾아 봤",
+            "찾아봤"
           ],
-          "displayLabel": "뭐 하다, 뭐하다",
-          "tip": "'뭐 하다':무엇을 하다, '뭐하다': 내키지 않거나 무안한 느낌을 나타내는 '무엇하다'의 준말",
+          "displayLabel": "찾아 보다, 찾아보다",
+          "tip": "'찾아 보다': 현재 위치에서 뒤지거나 살피다, '찾아보다'(본용언+보조용언) :조사하다",
+          "groupLabel": "띄어쓰기로 뜻이 달라지는 경우"
+        },
+        {
+          "id": "bon-bojo-jalhada",
+          "label": "잘 하다, 잘하다",
+          "enabled": false,
+          "matchMode": "spaced-before",
+          "inventoryOnly": false,
+          "stems": [
+            "잘 하",
+            "잘하",
+            "잘 한",
+            "잘한",
+            "잘했",
+            "잘 했",
+            "잘해",
+            "잘 해",
+            "잘 함",
+            "잘함"
+          ],
+          "displayLabel": "잘 하다, 잘하다",
+          "tip": "'잘 하다': 순조롭게 하다-부사 '잘'(순조롭게)이 '하다'를 수식 '잘하다':바르게 /훌륭하게 /능란하게 하다",
+          "groupLabel": "띄어쓰기로 뜻이 달라지는 경우"
+        },
+        {
+          "id": "bon-bojo-anda",
+          "label": "안 되다, 안되다",
+          "enabled": false,
+          "matchMode": "any-before",
+          "inventoryOnly": false,
+          "stems": [
+            "안 되",
+            "안되",
+            "안 됐",
+            "안됐",
+            "안 됨",
+            "안됨",
+            "안 될",
+            "안될",
+            "안 돼",
+            "안돼"
+          ],
+          "displayLabel": "안 되다, 안되다",
+          "tip": "'잘 하다': 순조롭게 하다-부사 '잘'(순조롭게)이 '하다'를 수식 '잘하다':바르게 /훌륭하게 /능란하게 하다",
           "groupLabel": "띄어쓰기로 뜻이 달라지는 경우"
         },
         {
@@ -305,26 +349,6 @@
           "displayLabel": "먹고 살다, 먹고살다",
           "tip": "'먹고 살다': 먹으면서 살다, '먹고살다': 생계를 유지하다",
           "groupLabel": "띄어쓰기로 뜻이 달라지는 경우"
-        },
-        {
-          "id": "bon-bojo-chataboda",
-          "label": "찾아 보다, 찾아보다",
-          "enabled": true,
-          "matchMode": "spaced-before",
-          "inventoryOnly": false,
-          "stems": [
-            "찾아 보",
-            "찾아보",
-            "찾아 본",
-            "찾아본",
-            "찾아 볼",
-            "찾아볼",
-            "찾아 봤",
-            "찾아봤"
-          ],
-          "displayLabel": "찾아 보다, 찾아보다",
-          "tip": "'찾아 보다': 현재 위치에서 뒤지거나 살피다, '찾아보다'(본용언+보조용언) :조사하다",
-          "groupLabel": "띄어쓰기로 뜻이 달라지는 경우"
         }
       ]
     },
@@ -333,6 +357,18 @@
       "tip": "못 하다'(부정 부사 + 동사) : 상황이나 여건이 되지 않아 행동 자체를 하지 못할 때(상황),  '못하다':어떤 일을 일정한 수준에 못 미치게 하거나, 그 일을 할 능력이 없다(능력).",
       "title": "띄어쓰기로 뜻이 달라지는 경우",
       "items": [
+        {
+          "id": "eogan-eomi-motd",
+          "label": "못 되다, 못되다",
+          "enabled": false,
+          "matchMode": "any-before",
+          "inventoryOnly": false,
+          "stems": [
+            "못"
+          ],
+          "displayLabel": "못 되다, 못되다",
+          "groupLabel": "띄어쓰기로 뜻이 달라지는 경우"
+        },
         {
           "id": "eogan-eomi-mot",
           "label": "못하다, 못 하다",
@@ -505,6 +541,48 @@
           "groupLabel": "띄어쓰기로 뜻이 달라지는 경우"
         },
         {
+          "id": "noun-noun-kun",
+          "label": "큰일, 큰 일",
+          "enabled": true,
+          "matchMode": "spaced-before",
+          "inventoryOnly": false,
+          "stems": [
+            "큰일",
+            "큰 일"
+          ],
+          "displayLabel": "큰일, 큰 일",
+          "tip": "큰 일': 크기가 큰 일(관형어+명사) 큰일 : 중대한 일(합성어),",
+          "groupLabel": "띄어쓰기로 뜻이 달라지는 경우"
+        },
+        {
+          "id": "noun-noun-hanbu",
+          "label": "한번, 한 번",
+          "enabled": true,
+          "matchMode": "spaced-before",
+          "inventoryOnly": false,
+          "stems": [
+            "한번",
+            "한 번"
+          ],
+          "displayLabel": "한번, 한 번",
+          "tip": "'한 번': 횟수로 1회(예: 한 번 더 해보자), 한번': 지난 어느 때, 기회 있을 때(예: 한번 만나자),",
+          "groupLabel": "띄어쓰기로 뜻이 달라지는 경우"
+        },
+        {
+          "id": "noun-noun-kunso",
+          "label": "큰소리, 큰 소리",
+          "enabled": true,
+          "matchMode": "spaced-before",
+          "inventoryOnly": false,
+          "stems": [
+            "큰소리",
+            "큰 소리"
+          ],
+          "displayLabel": "큰소리, 큰 소리",
+          "tip": "큰 소리: 물리적으로 음량이 큰 소리, 큰소리': 남에게 뽐내거나 다짐하는 말, 또는 화내어 지르는 소리(합성어)",
+          "groupLabel": "띄어쓰기로 뜻이 달라지는 경우"
+        },
+        {
           "id": "noun-noun-gyuljae",
           "label": "결제, 결재",
           "enabled": true,
@@ -543,14 +621,14 @@
             "결딴"
           ],
           "displayLabel": "결딴, 결단",
-          "tip": "결단'은 결심, '결딴'은 어떤 일이나 물건 따위가 망가진 상태",
+          "tip": "'결단'은 결심, '결딴'은 어떤 일이나 물건 따위가 망가진 상태",
           "groupLabel": "헷갈리기 쉬운 경우"
         },
         {
           "id": "noun-noun-jugi",
           "label": "주기, 주년",
           "enabled": true,
-          "matchMode": "any-before",
+          "matchMode": "spaced-before",
           "inventoryOnly": false,
           "displayLabel": "주기, 주년",
           "except": [
@@ -560,6 +638,104 @@
             "관주기"
           ],
           "tip": "'주기周忌'는 죽은 사람의 기일이 돌아온 횟수, '주년周年'은 매년 특정한 날이 돌아오는 횟수",
+          "groupLabel": "헷갈리기 쉬운 경우"
+        },
+        {
+          "id": "noun-noun-gue",
+          "label": "개발, 계발",
+          "enabled": true,
+          "matchMode": "spaced-before",
+          "inventoryOnly": false,
+          "stems": [
+            "개발",
+            "계발"
+          ],
+          "displayLabel": "개발, 계발",
+          "tip": "개발(開發): 토지·자원을 유용하게 만들거나 새로운 것을 만들어 냄, 계발(啓發): 슬기·재능 등을 일깨워 줌(정신적인 면에만 사용)",
+          "groupLabel": "헷갈리기 쉬운 경우"
+        },
+        {
+          "id": "noun-noun-jihy",
+          "label": "지향, 지양",
+          "enabled": true,
+          "matchMode": "spaced-before",
+          "inventoryOnly": false,
+          "stems": [
+            "지향",
+            "지양"
+          ],
+          "displayLabel": "지향, 지양",
+          "tip": "지향(志向): 어떤 목표로 뜻이  향함, 지양(止揚):  어떤 것을 하지 않음",
+          "groupLabel": "헷갈리기 쉬운 경우"
+        },
+        {
+          "id": "noun-noun-gae",
+          "label": "개량, 계량",
+          "enabled": true,
+          "matchMode": "spaced-before",
+          "inventoryOnly": false,
+          "stems": [
+            "개량",
+            "계량"
+          ],
+          "displayLabel": "개량, 계량",
+          "tip": "개량(改良): 품질·구조·성능 등을 고쳐서 더 좋게 만듦, 계량(計量): 분량이나 무게를 재서 알아냄",
+          "groupLabel": "헷갈리기 쉬운 경우"
+        },
+        {
+          "id": "noun-noun-sil",
+          "label": "실재, 실제",
+          "enabled": true,
+          "matchMode": "spaced-before",
+          "inventoryOnly": false,
+          "stems": [
+            "실재",
+            "실제"
+          ],
+          "displayLabel": "실재, 실제",
+          "tip": "실재(實在): 실제로 존재함, 실제(實際): 사실의 경우나 형편",
+          "groupLabel": "헷갈리기 쉬운 경우"
+        },
+        {
+          "id": "noun-noun-ei",
+          "label": "이의, 의의",
+          "enabled": true,
+          "matchMode": "spaced-before",
+          "inventoryOnly": false,
+          "stems": [
+            "이의",
+            "의의"
+          ],
+          "displayLabel": "이의, 의의",
+          "tip": "이의(異議): 다른 의견이나 논의, 의의(意義): 어떤 사실이나 행위의 중요성",
+          "groupLabel": "헷갈리기 쉬운 경우"
+        },
+        {
+          "id": "noun-noun-chul",
+          "label": "출연, 출현",
+          "enabled": true,
+          "matchMode": "spaced-before",
+          "inventoryOnly": false,
+          "stems": [
+            "출연",
+            "출현"
+          ],
+          "displayLabel": "출연, 출현",
+          "tip": "출연(出演): 공연·연설 등을 하기 위해 무대나 연단에 나감, 출현(出現): 나타나서 보임",
+          "groupLabel": "헷갈리기 쉬운 경우"
+        },
+        {
+          "id": "noun-noun-jung",
+          "label": "중개, 중계",
+          "enabled": true,
+          "matchMode": "spaced-before",
+          "inventoryOnly": false,
+          "stems": [
+            "중개",
+            "중계"
+          ],
+          "displayLabel": "중개, 중계",
+          "tip": "중개(仲介): 제3자로서 두 당사자 사이에 일을 주선함, 중계(中繼): 중간에서 이어 줌 (예:중계방송)",
           "groupLabel": "헷갈리기 쉬운 경우"
         }
       ]
@@ -720,7 +896,7 @@
           "except": [
             "얇실"
           ],
-          "tip": "얇다'는 두께(종이), '가늘다'는 굵기(기둥)",
+          "tip": "'얇다'는 두께(종이), '가늘다'는 굵기(기둥)",
           "groupLabel": "헷갈리기 쉬운 경우"
         }
       ]
