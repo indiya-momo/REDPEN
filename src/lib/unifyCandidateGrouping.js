@@ -136,6 +136,8 @@ export function splitPredicateSingles(groups) {
 
 /**
  * 클러스터를 가나다순 정렬 후 계열 그룹핑.
+ * 접두(`affix@`)·접미(`@affix`) 후보를 각각 만든 뒤, 멤버가 많은 계열부터 배정.
+ * 동률이면 접두(`어쩌고@`) 우선. 클러스터는 한 계열에만 속한다.
  * - prefix: 띄움 첫 어절 === affix 인 충돌만 (개인 소득 ✓ / 개인적인 슬픔 ✗)
  * - suffix: 띄움 끝 어절 === affix
  * @param {UnifySpacingCluster[]} clusters
@@ -150,42 +152,15 @@ export function groupAndSortClusters(clusters, opts = {}) {
 
   /** @type {Map<string, Set<number>>} */
   const prefixMembers = new Map();
+  /** @type {Map<string, Set<number>>} */
+  const suffixMembers = new Map();
+
   for (let i = 0; i < sorted.length; i++) {
     for (const p of extractPrefixes(sorted[i].key, sorted[i].variants)) {
       if (!clusterBelongsToSeriesAffix(sorted[i], p, 'prefix')) continue;
       if (!prefixMembers.has(p)) prefixMembers.set(p, new Set());
       prefixMembers.get(p).add(i);
     }
-  }
-
-  const assigned = new Set();
-  /** @type {ClusterGroup[]} */
-  const groups = [];
-
-  // 배정용: 짧은 affix 우선. 화면 순서는 sortClusterGroups가 affix 가나다로 재정렬.
-  const prefixKeys = [...prefixMembers.keys()].sort(
-    (a, b) => a.length - b.length || a.localeCompare(b, 'ko'),
-  );
-
-  for (const prefix of prefixKeys) {
-    const members = [...prefixMembers.get(prefix)].filter(
-      (i) => !assigned.has(i),
-    );
-    if (members.length < minSeriesMembers) continue;
-    for (const i of members) assigned.add(i);
-    groups.push({
-      type: /** @type {const} */ ('series'),
-      affix: prefix,
-      affixType: /** @type {const} */ ('prefix'),
-      label: `${prefix}@`,
-      clusters: sortClustersByKey(members.map((i) => sorted[i])),
-    });
-  }
-
-  /** @type {Map<string, Set<number>>} */
-  const suffixMembers = new Map();
-  for (let i = 0; i < sorted.length; i++) {
-    if (assigned.has(i)) continue;
     for (const s of extractSuffixes(sorted[i].key, sorted[i].variants)) {
       if (!clusterBelongsToSeriesAffix(sorted[i], s, 'suffix')) continue;
       if (!suffixMembers.has(s)) suffixMembers.set(s, new Set());
@@ -193,22 +168,63 @@ export function groupAndSortClusters(clusters, opts = {}) {
     }
   }
 
-  const suffixKeys = [...suffixMembers.keys()].sort(
-    (a, b) => b.length - a.length || a.localeCompare(b, 'ko'),
-  );
+  /**
+   * @typedef {{
+   *   affix: string,
+   *   affixType: 'prefix' | 'suffix',
+   *   label: string,
+   *   members: number[],
+   * }} SeriesCandidate
+   */
 
-  for (const suffix of suffixKeys) {
-    const members = [...suffixMembers.get(suffix)].filter(
-      (i) => !assigned.has(i),
-    );
+  /** @type {SeriesCandidate[]} */
+  const candidates = [];
+  for (const [affix, set] of prefixMembers) {
+    const members = [...set];
     if (members.length < minSeriesMembers) continue;
-    for (const i of members) assigned.add(i);
+    candidates.push({
+      affix,
+      affixType: 'prefix',
+      label: `${affix}@`,
+      members,
+    });
+  }
+  for (const [affix, set] of suffixMembers) {
+    const members = [...set];
+    if (members.length < minSeriesMembers) continue;
+    candidates.push({
+      affix,
+      affixType: 'suffix',
+      label: `@${affix}`,
+      members,
+    });
+  }
+
+  // 멤버 많은 순 → 동률이면 접두 우선 → affix 가나다
+  candidates.sort((a, b) => {
+    if (b.members.length !== a.members.length) {
+      return b.members.length - a.members.length;
+    }
+    if (a.affixType !== b.affixType) {
+      return a.affixType === 'prefix' ? -1 : 1;
+    }
+    return a.affix.localeCompare(b.affix, 'ko');
+  });
+
+  const assigned = new Set();
+  /** @type {ClusterGroup[]} */
+  const groups = [];
+
+  for (const cand of candidates) {
+    const free = cand.members.filter((i) => !assigned.has(i));
+    if (free.length < minSeriesMembers) continue;
+    for (const i of free) assigned.add(i);
     groups.push({
       type: /** @type {const} */ ('series'),
-      affix: suffix,
-      affixType: /** @type {const} */ ('suffix'),
-      label: `@${suffix}`,
-      clusters: sortClustersByKey(members.map((i) => sorted[i])),
+      affix: cand.affix,
+      affixType: cand.affixType,
+      label: cand.label,
+      clusters: sortClustersByKey(free.map((i) => sorted[i])),
     });
   }
 
