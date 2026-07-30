@@ -270,7 +270,7 @@ export function formatUnifyCandidateFindConfirmMessage(
   bonusRemaining,
 ) {
   return (
-    `[표기 통일 추천하기]\n` +
+    `[표기 통일 추천]\n` +
     `\n` +
     `${formatConsistencyCheckQuotaAvailabilityLine(remaining, dailyRemaining, bonusRemaining)}\n` +
     `표기 통일 검수권 1장을 사용합니다\n` +
@@ -282,7 +282,7 @@ export function formatUnifyCandidateFindConfirmMessage(
 /** @returns {string} */
 export function formatUnifyCandidateFindConfirmMessageWithoutQuota() {
   return (
-    `[표기 통일 추천하기]\n` +
+    `[표기 통일 추천]\n` +
     `\n` +
     '띄어쓰기가 다른 표기 후보를 문서에서 찾습니다.\n' +
     `\n` +
@@ -359,7 +359,7 @@ export function formatUnifyCandidateFindCompleteMessage(
   if (clusterCount <= 0) {
     return '띄어쓰기만 다른 표기 후보를 찾지 못했습니다.';
   }
-  return `표기 통일 추천하기 ${clusterCount}항목 전체 ${totalOccurrences}회`;
+  return `표기 통일 추천 ${clusterCount}항목 전체 ${totalOccurrences}회`;
 }
 
 /**

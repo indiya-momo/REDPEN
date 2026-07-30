@@ -427,7 +427,7 @@ describe('formatUnifyClusterRegisterInput', () => {
 });
 
 describe('buildUnifyCandidatePreviewGroups', () => {
-  it('다수형 칩은 숨기고 소수형·1회만 인스턴스 그룹으로 만든다', () => {
+  it('다수형·소수형 모두 인스턴스 그룹으로 만든다', () => {
     const clusters = discoverSpacingUnifyCandidates([
       {
         pageNum: 2,
@@ -435,12 +435,15 @@ describe('buildUnifyCandidatePreviewGroups', () => {
       },
     ]);
     const groups = buildUnifyCandidatePreviewGroups(clusters);
-    expect(groups.every((g) => g.find !== '경제성장')).toBe(true);
+    expect(groups.map((g) => g.find).sort()).toEqual(
+      ['경제 성장', '경제성장'].sort(),
+    );
+    const glued = groups.find((g) => g.find === '경제성장');
     const spaced = groups.find((g) => g.find === '경제 성장');
+    expect(glued?.instances?.length).toBe(2);
     expect(spaced?.instances?.length).toBe(1);
-    expect(spaced?.instances[0].pageNum).toBe(2);
     const cluster = clusters.find((c) => c.key === '경제성장');
-    expect(instancesForUnifyVariant(cluster, '경제성장')).toEqual([]);
+    expect(instancesForUnifyVariant(cluster, '경제성장')).toHaveLength(2);
     expect(instancesForUnifyVariant(cluster, '경제 성장')).toHaveLength(1);
   });
 
