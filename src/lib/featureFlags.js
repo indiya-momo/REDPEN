@@ -53,3 +53,12 @@ export function isUnifyCandidateFindEnabled() {
   if (import.meta.env.DEV) return true;
   return import.meta.env.VITE_FEATURE_UNIFY_CANDIDATE_FIND === 'true';
 }
+
+/**
+ * 표기 통일 추천 — 조사·어간 2차 SLM 필터 (카나나 SLM + 추론 서버).
+ * - 기본 꺼짐 (`VITE_UNIFY_JOSA_SLM=true` 일 때만)
+ * @see project-docs/unify-josa-review-slm-sketch.md §0·§8
+ */
+export function isUnifyJosaSlmReviewEnabled() {
+  return import.meta.env.VITE_UNIFY_JOSA_SLM === 'true';
+}

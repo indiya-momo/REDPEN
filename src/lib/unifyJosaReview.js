@@ -54,14 +54,17 @@ export const UNIFY_LOW_RISK_JOSA = Object.freeze(
     '역시',
     '또한',
     '대비',
+    '에도',
+    '이외',
   ].toSorted((a, b) => b.length - a.length || a.localeCompare(b, 'ko')),
 );
 
 /**
- * 검토용 고위험 단음절 조사(자동 merge 금지, 어간 추정만).
+ * 애매한 단음절 조사 접미 — 자동 merge 금지, tier `risky`·SLM 후보.
+ * (`tier: 'high'`·`UNIFY_JOSA_HIGH_CONFIDENCE_SUFFIXES`와 혼동 금지.)
  * @type {readonly string[]}
  */
-export const UNIFY_HIGH_RISK_JOSA = Object.freeze([
+export const UNIFY_AMBIGUOUS_JOSA_SUFFIXES = Object.freeze([
   '은',
   '는',
   '이',
@@ -87,10 +90,14 @@ export const UNIFY_HIGH_RISK_JOSA = Object.freeze([
   '으',
   '질',
   '한',
+  '면',
+  '야',
+  '준',
+  '외',
 ]);
 
 /**
- * 조사가 아닌 어간·접미(역학적 → 역학, 되다·하다 활용형 등). 검토 추정에만 사용.
+ * 조사가 아닌 어간·접미(역학적 → 역학, 되다·하다·주다 활용형 등). 검토 추정에만 사용.
  * @type {readonly string[]}
  */
 export const UNIFY_REVIEW_STEM_AFFIXES = Object.freeze([
@@ -105,6 +112,7 @@ export const UNIFY_REVIEW_STEM_AFFIXES = Object.freeze([
   '됐',
   '된',
   '하기가',
+  '하도록',
   '하며',
   '하는',
   '하고',
@@ -114,6 +122,12 @@ export const UNIFY_REVIEW_STEM_AFFIXES = Object.freeze([
   '해도',
   '할',
   '하',
+  '해',
+  '적이고',
+  '이며',
+  '주려는',
+  '주는',
+  '주던',
   '적',
   '성',
 ]);
@@ -125,10 +139,37 @@ export const UNIFY_REVIEW_STEM_AFFIXES = Object.freeze([
 export const UNIFY_REVIEW_STEM_SUFFIXES = Object.freeze(
   [
     ...UNIFY_LOW_RISK_JOSA,
-    ...UNIFY_HIGH_RISK_JOSA,
+    ...UNIFY_AMBIGUOUS_JOSA_SUFFIXES,
     ...UNIFY_REVIEW_STEM_AFFIXES,
   ].toSorted((a, b) => b.length - a.length || a.localeCompare(b, 'ko')),
 );
+
+/**
+ * SLM 우회·규칙만으로 배지 (unify-josa-review-slm-sketch.md §10.2).
+ * @type {ReadonlySet<string>}
+ */
+export const UNIFY_JOSA_HIGH_CONFIDENCE_SUFFIXES = new Set([
+  '이며',
+  '하도록',
+  '적이고',
+]);
+
+/** @type {ReadonlySet<string>} */
+const UNIFY_LOW_RISK_JOSA_SET = new Set(UNIFY_LOW_RISK_JOSA);
+
+/**
+ * @param {string | undefined} suffix
+ * @param {{ stemMismatch?: boolean }} [opts]
+ * @returns {'high' | 'low' | 'risky'}
+ */
+export function classifyJosaReviewTier(suffix, { stemMismatch = false } = {}) {
+  if (stemMismatch) return 'risky';
+  const s = String(suffix ?? '').trim();
+  if (!s) return 'risky';
+  if (UNIFY_JOSA_HIGH_CONFIDENCE_SUFFIXES.has(s)) return 'high';
+  if (UNIFY_LOW_RISK_JOSA_SET.has(s)) return 'low';
+  return 'risky';
+}
 
 /**
  * @param {string} lastEojeol
@@ -174,11 +215,11 @@ export function matchLongestLowRiskJosa(lastEojeol) {
 }
 
 /**
- * 조사·어간 접미를 떼어 검토용 어간. 떼지 못하면 null.
+ * 조사·어간 접미를 떼어 검토용 어간·접미. 떼지 못하면 null.
  * @param {string} variant
- * @returns {string | null}
+ * @returns {{ stem: string, suffix: string } | null}
  */
-export function stripReviewStemSuffix(variant) {
+export function parseReviewStemSuffix(variant) {
   const v = String(variant ?? '')
     .trim()
     .replace(/\s+/g, ' ');
@@ -200,7 +241,16 @@ export function stripReviewStemSuffix(variant) {
   if (hangulSyllableCount(stem.replace(/\s+/g, '')) < UNIFY_SPACED_PART_MIN_HANGUL) {
     return null;
   }
-  return stem;
+  return { stem, suffix: hit.suffix };
+}
+
+/**
+ * 조사·어간 접미를 떼어 검토용 어간. 떼지 못하면 null.
+ * @param {string} variant
+ * @returns {string | null}
+ */
+export function stripReviewStemSuffix(variant) {
+  return parseReviewStemSuffix(variant)?.stem ?? null;
 }
 
 /** @deprecated stripReviewStemSuffix */
@@ -217,10 +267,25 @@ export function josaReviewStemKey(stemVariant) {
 }
 
 /**
- * @param {import('./unifyCandidateDiscover.js').UnifySpacingCluster} cluster
- * @returns {{ stemKey: string, stemSpaced: string, stemGlued: string } | null}
+ * @typedef {import('./unifyCandidateDiscover.js').UnifySpacingCluster} UnifySpacingCluster
  */
-export function stemFromClusterForJosaReview(cluster) {
+
+/**
+ * @typedef {{
+ *   stemKey: string,
+ *   stemSpaced: string,
+ *   stemGlued: string,
+ *   suffix: string,
+ *   stemMismatch: boolean,
+ *   tier: 'high' | 'low' | 'risky',
+ * }} JosaReviewStemDetail
+ */
+
+/**
+ * @param {UnifySpacingCluster} cluster
+ * @returns {JosaReviewStemDetail | null}
+ */
+export function reviewStemDetailFromCluster(cluster) {
   const spaced =
     cluster.variants?.find((v) => /\s/.test(v) && (cluster.counts?.[v] ?? 0) > 0) ||
     cluster.variants?.find((v) => /\s/.test(v)) ||
@@ -231,23 +296,53 @@ export function stemFromClusterForJosaReview(cluster) {
     cluster.key ||
     '';
 
-  const fromSpaced = spaced ? stripReviewStemSuffix(spaced) : null;
-  const fromGlued = glued ? stripReviewStemSuffix(glued) : null;
+  const spacedParsed = spaced ? parseReviewStemSuffix(spaced) : null;
+  const gluedParsed = glued ? parseReviewStemSuffix(glued) : null;
 
-  if (fromSpaced && fromGlued) {
-    if (josaReviewStemKey(fromSpaced) !== josaReviewStemKey(fromGlued)) {
-      return null;
+  if (spacedParsed && gluedParsed) {
+    const spacedKey = josaReviewStemKey(spacedParsed.stem);
+    const gluedKey = josaReviewStemKey(gluedParsed.stem);
+    if (spacedKey !== gluedKey) {
+      const stemKey = spacedKey || gluedKey;
+      const suffix = spacedParsed.suffix || gluedParsed.suffix;
+      if (hangulSyllableCount(stemKey) < UNIFY_SPACED_PART_MIN_HANGUL) return null;
+      return {
+        stemKey,
+        stemSpaced: spacedParsed.stem,
+        stemGlued: gluedKey,
+        suffix,
+        stemMismatch: true,
+        tier: classifyJosaReviewTier(suffix, { stemMismatch: true }),
+      };
     }
   }
-  const stem = fromSpaced || fromGlued;
-  if (!stem) return null;
-  const stemKey = josaReviewStemKey(stem);
+
+  const parsed = spacedParsed || gluedParsed;
+  if (!parsed) return null;
+  const stemKey = josaReviewStemKey(parsed.stem);
   if (hangulSyllableCount(stemKey) < UNIFY_SPACED_PART_MIN_HANGUL) return null;
 
   return {
     stemKey,
-    stemSpaced: fromSpaced || stemKey,
+    stemSpaced: spacedParsed?.stem || stemKey,
     stemGlued: stemKey,
+    suffix: parsed.suffix,
+    stemMismatch: false,
+    tier: classifyJosaReviewTier(parsed.suffix),
+  };
+}
+
+/**
+ * @param {UnifySpacingCluster} cluster
+ * @returns {{ stemKey: string, stemSpaced: string, stemGlued: string } | null}
+ */
+export function stemFromClusterForJosaReview(cluster) {
+  const detail = reviewStemDetailFromCluster(cluster);
+  if (!detail || detail.stemMismatch) return null;
+  return {
+    stemKey: detail.stemKey,
+    stemSpaced: detail.stemSpaced,
+    stemGlued: detail.stemGlued,
   };
 }
 
@@ -285,19 +380,30 @@ export function attachJosaReviewHints(clusters) {
   }
 
   return clusters.map((cluster) => {
-    const peerKeys = peersByKey.get(cluster.key);
-    if (!peerKeys?.length) {
-      if (cluster.josaReview) {
-        const { josaReview: _drop, ...rest } = cluster;
+    const detail = reviewStemDetailFromCluster(cluster);
+    if (!detail || cluster.key === detail.stemKey) {
+      if (cluster.josaReview || cluster.josaReviewCandidate) {
+        const { josaReview: _j, josaReviewCandidate: _c, ...rest } = cluster;
         return rest;
       }
       return cluster;
     }
-    const stem = stemFromClusterForJosaReview(cluster);
+    const peerKeys = peersByKey.get(cluster.key) ?? [];
+    const candidate = {
+      stemKey: detail.stemKey,
+      stemSpaced: detail.stemSpaced,
+      suffix: detail.suffix,
+      tier: detail.tier,
+      peerKeys,
+    };
+    if (detail.stemMismatch) {
+      return { ...cluster, josaReviewCandidate: candidate };
+    }
     return {
       ...cluster,
+      josaReviewCandidate: candidate,
       josaReview: {
-        stemKey: stem?.stemKey || cluster.key,
+        stemKey: detail.stemKey,
         peerKeys,
         status: /** @type {const} */ ('review'),
       },

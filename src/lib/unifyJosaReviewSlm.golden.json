@@ -1,0 +1,334 @@
+{
+  "version": 1,
+  "description": "조사·어간 SLM 2차 필터 골든셋 — parse 승격 10건 + pipeline 10건",
+  "parseCases": [
+    {
+      "id": "parse-promote-josa-01",
+      "raw": {
+        "id": "역학은",
+        "isBoundary": true,
+        "kind": "josa_or_suffix",
+        "confidence": "high"
+      },
+      "expectNormalized": true,
+      "expectPromote": true
+    },
+    {
+      "id": "parse-promote-josa-02",
+      "raw": {
+        "id": "지속되었는가",
+        "isBoundary": true,
+        "kind": "josa_or_suffix",
+        "confidence": "high",
+        "reason": "지속+되었는가 활용형"
+      },
+      "expectNormalized": true,
+      "expectPromote": true
+    },
+    {
+      "id": "parse-reject-compound",
+      "raw": {
+        "id": "가치평가가",
+        "isBoundary": false,
+        "kind": "compound_word",
+        "confidence": "high"
+      },
+      "expectNormalized": true,
+      "expectPromote": false
+    },
+    {
+      "id": "parse-reject-uncertain",
+      "raw": {
+        "id": "역학은",
+        "isBoundary": true,
+        "kind": "uncertain",
+        "confidence": "high"
+      },
+      "expectNormalized": true,
+      "expectPromote": false
+    },
+    {
+      "id": "parse-reject-medium",
+      "raw": {
+        "id": "역학은",
+        "isBoundary": true,
+        "kind": "josa_or_suffix",
+        "confidence": "medium"
+      },
+      "expectNormalized": true,
+      "expectPromote": false
+    },
+    {
+      "id": "parse-reject-low-confidence",
+      "raw": {
+        "id": "역학은",
+        "isBoundary": true,
+        "kind": "josa_or_suffix",
+        "confidence": "low"
+      },
+      "expectNormalized": true,
+      "expectPromote": false
+    },
+    {
+      "id": "parse-reject-not-boundary",
+      "raw": {
+        "id": "역학은",
+        "isBoundary": false,
+        "kind": "josa_or_suffix",
+        "confidence": "high"
+      },
+      "expectNormalized": true,
+      "expectPromote": false
+    },
+    {
+      "id": "parse-invalid-kind",
+      "raw": {
+        "id": "역학은",
+        "isBoundary": true,
+        "kind": "typo_kind",
+        "confidence": "high"
+      },
+      "expectNormalized": false,
+      "expectPromote": false
+    },
+    {
+      "id": "parse-missing-id",
+      "raw": {
+        "isBoundary": true,
+        "kind": "josa_or_suffix",
+        "confidence": "high"
+      },
+      "expectNormalized": false,
+      "expectPromote": false
+    },
+    {
+      "id": "parse-compound-boundary-true",
+      "raw": {
+        "id": "가치평가가",
+        "isBoundary": true,
+        "kind": "compound_word",
+        "confidence": "high"
+      },
+      "expectNormalized": true,
+      "expectPromote": false
+    }
+  ],
+  "pipelineCases": [
+    {
+      "id": "pipe-tier-high",
+      "note": "tier high — SLM 없이 josaReview 유지",
+      "cluster": {
+        "key": "활동이며",
+        "variants": ["활동이며", "활동 이며"],
+        "counts": { "활동이며": 2, "활동 이며": 1 },
+        "occurrencesByVariant": {},
+        "recommendedUnify": "활동이며",
+        "totalCount": 3,
+        "kind": "conflict"
+      },
+      "useAttachHints": true,
+      "slmResponse": null,
+      "expectJosaReview": true,
+      "expectTier": "high"
+    },
+    {
+      "id": "pipe-tier-low",
+      "note": "tier low — SLM 없이 josaReview 유지",
+      "cluster": {
+        "key": "체계에서는",
+        "variants": ["체계에서는", "체계 에서는"],
+        "counts": { "체계에서는": 2, "체계 에서는": 1 },
+        "occurrencesByVariant": {},
+        "recommendedUnify": "체계에서는",
+        "totalCount": 3,
+        "kind": "conflict"
+      },
+      "useAttachHints": true,
+      "slmResponse": null,
+      "expectJosaReview": true,
+      "expectTier": "low"
+    },
+    {
+      "id": "pipe-risky-slm-approve",
+      "note": "tier risky + SLM high josa → 승격",
+      "cluster": {
+        "key": "역학은",
+        "variants": ["역학은", "역학 은"],
+        "counts": { "역학은": 2, "역학 은": 1 },
+        "occurrencesByVariant": {},
+        "recommendedUnify": "역학은",
+        "totalCount": 3,
+        "kind": "conflict"
+      },
+      "useAttachHints": true,
+      "slmResponse": {
+        "id": "역학은",
+        "isBoundary": true,
+        "kind": "josa_or_suffix",
+        "confidence": "high"
+      },
+      "expectJosaReview": true,
+      "expectTier": "risky"
+    },
+    {
+      "id": "pipe-risky-slm-reject-compound",
+      "note": "tier risky + compound → 배지 없음",
+      "cluster": {
+        "key": "역학은",
+        "variants": ["역학은", "역학 은"],
+        "counts": { "역학은": 2, "역학 은": 1 },
+        "occurrencesByVariant": {},
+        "recommendedUnify": "역학은",
+        "totalCount": 3,
+        "kind": "conflict"
+      },
+      "useAttachHints": true,
+      "slmResponse": {
+        "id": "역학은",
+        "isBoundary": false,
+        "kind": "compound_word",
+        "confidence": "high"
+      },
+      "expectJosaReview": false,
+      "expectTier": "risky"
+    },
+    {
+      "id": "pipe-risky-slm-uncertain",
+      "note": "tier risky + uncertain → 배지 없음",
+      "cluster": {
+        "key": "지속되었는가",
+        "variants": ["지속되었는가", "지속 되었는가"],
+        "counts": { "지속되었는가": 2, "지속 되었는가": 1 },
+        "occurrencesByVariant": {},
+        "recommendedUnify": "지속되었는가",
+        "totalCount": 3,
+        "kind": "conflict"
+      },
+      "useAttachHints": true,
+      "slmResponse": {
+        "id": "지속되었는가",
+        "isBoundary": true,
+        "kind": "uncertain",
+        "confidence": "high"
+      },
+      "expectJosaReview": false,
+      "expectTier": "risky"
+    },
+    {
+      "id": "pipe-tier-high-hadorok",
+      "note": "하도록 tier high",
+      "cluster": {
+        "key": "활동하도록",
+        "variants": ["활동하도록", "활동 하도록"],
+        "counts": { "활동하도록": 2, "활동 하도록": 1 },
+        "occurrencesByVariant": {},
+        "recommendedUnify": "활동하도록",
+        "totalCount": 3,
+        "kind": "conflict"
+      },
+      "useAttachHints": true,
+      "slmResponse": null,
+      "expectJosaReview": true,
+      "expectTier": "high"
+    },
+    {
+      "id": "pipe-tier-high-jeokigo",
+      "note": "적이고 tier high",
+      "cluster": {
+        "key": "경제적으로",
+        "variants": ["경제적으로", "경제 적이고"],
+        "counts": { "경제적으로": 1, "경제 적이고": 2 },
+        "occurrencesByVariant": {},
+        "recommendedUnify": "경제적으로",
+        "totalCount": 3,
+        "kind": "conflict"
+      },
+      "useAttachHints": true,
+      "slmResponse": null,
+      "expectJosaReview": true,
+      "expectTier": "high"
+    },
+    {
+      "id": "pipe-stem-mismatch-slm-approve",
+      "note": "stemMismatch risky — SLM 승격 시에만 josaReview",
+      "cluster": {
+        "key": "가치평가가",
+        "variants": ["가치평가가", "가치 평가 가"],
+        "counts": { "가치평가가": 2, "가치 평가 가": 1 },
+        "occurrencesByVariant": {},
+        "recommendedUnify": "가치평가가",
+        "totalCount": 3,
+        "kind": "conflict"
+      },
+      "useAttachHints": true,
+      "slmResponse": {
+        "id": "가치평가가",
+        "isBoundary": true,
+        "kind": "josa_or_suffix",
+        "confidence": "high"
+      },
+      "expectJosaReview": true,
+      "expectTier": "risky",
+      "expectStemMismatch": true
+    },
+    {
+      "id": "pipe-stem-mismatch-no-slm",
+      "note": "stemMismatch — SLM 미응답 시 배지 없음",
+      "cluster": {
+        "key": "가치평가가",
+        "variants": ["가치평가가", "가치 평가 가"],
+        "counts": { "가치평가가": 2, "가치 평가 가": 1 },
+        "occurrencesByVariant": {},
+        "recommendedUnify": "가치평가가",
+        "totalCount": 3,
+        "kind": "conflict"
+      },
+      "useAttachHints": true,
+      "slmResponse": null,
+      "omitSlmResponse": true,
+      "expectJosaReview": false,
+      "expectTier": "risky",
+      "expectStemMismatch": true
+    },
+    {
+      "id": "pipe-aux-excluded-slm",
+      "note": "auxReview — josa SLM 큐 제외, 기존 josaReview 유지",
+      "cluster": {
+        "key": "역학은",
+        "variants": ["역학은", "역학 은"],
+        "counts": { "역학은": 2, "역학 은": 1 },
+        "occurrencesByVariant": {},
+        "recommendedUnify": "역학은",
+        "totalCount": 3,
+        "kind": "conflict",
+        "josaReviewCandidate": {
+          "stemKey": "역학",
+          "stemSpaced": "역학",
+          "suffix": "은",
+          "tier": "risky",
+          "peerKeys": []
+        },
+        "josaReview": {
+          "stemKey": "역학",
+          "peerKeys": [],
+          "status": "review"
+        },
+        "auxReview": {
+          "stemKey": "역학",
+          "stemSpaced": "역학",
+          "itemId": "test-bon-bojo",
+          "status": "review"
+        }
+      },
+      "useAttachHints": false,
+      "slmResponse": {
+        "id": "역학은",
+        "isBoundary": false,
+        "kind": "compound_word",
+        "confidence": "high"
+      },
+      "expectJosaReview": true,
+      "expectAuxReview": true
+    }
+  ]
+}

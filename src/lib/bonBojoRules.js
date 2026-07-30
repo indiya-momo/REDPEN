@@ -164,6 +164,37 @@ export function bonBojoItemIdForSearchTail(tailWord) {
   return undefined;
 }
 
+/**
+ * 표기 통일 추천 — 보조용언 검토용 시트 stems (띄움·붙임).
+ * @returns {readonly { spaced: string, glued: string, itemId: string, displayLabel?: string }[]}
+ */
+export function listBonBojoUnifyReviewStems() {
+  /** @type {{ spaced: string, glued: string, itemId: string, displayLabel?: string }[]} */
+  const out = [];
+  /** @type {Set<string>} */
+  const seen = new Set();
+  for (const group of runtime.groups) {
+    for (const item of group.items ?? []) {
+      const itemId = String(item.id ?? '').trim();
+      if (!itemId) continue;
+      const displayLabel =
+        item.displayLabel?.trim() || item.label?.trim() || undefined;
+      for (const raw of item.stems ?? []) {
+        const spaced = String(raw ?? '')
+          .trim()
+          .replace(/\s+/g, ' ');
+        if (!spaced || !/\s/.test(spaced)) continue;
+        const glued = spaced.replace(/\s+/g, '');
+        const dedupe = `${itemId}\0${glued}`;
+        if (seen.has(dedupe)) continue;
+        seen.add(dedupe);
+        out.push({ spaced, glued, itemId, displayLabel });
+      }
+    }
+  }
+  return out;
+}
+
 /** 시트·UI에서 기본 체크·「필수」 표시 대상 */
 export const BON_BOJO_REQUIRED_ITEM_IDS_LIST = ['verb-hada', 'verb-jida'];
 
