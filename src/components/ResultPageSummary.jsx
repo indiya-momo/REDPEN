@@ -202,6 +202,32 @@ export function shrinkVisibleCountForExpandOverflow(root, visibleCount) {
 }
 
 /**
+ * 레이아웃 접힘 결과에 하드 상한을 적용 (예: 표기 통일 추천 4개).
+ * @param {{ needsCollapse: boolean, visibleCount: number }} fitted
+ * @param {number} pillCount
+ * @param {number | null | undefined} limit
+ */
+export function applyCollapsedVisibleLimit(fitted, pillCount, limit) {
+  if (limit == null || limit < 1 || pillCount <= 0) return fitted;
+  if (pillCount <= limit) {
+    if (!fitted.needsCollapse) {
+      return { needsCollapse: false, visibleCount: pillCount };
+    }
+    return {
+      needsCollapse: true,
+      visibleCount: Math.min(fitted.visibleCount, pillCount),
+    };
+  }
+  const layoutCap = fitted.needsCollapse
+    ? fitted.visibleCount
+    : pillCount;
+  return {
+    needsCollapse: true,
+    visibleCount: Math.max(1, Math.min(layoutCap, limit)),
+  };
+}
+
+/**
  * @param {{
  *   instances: import('../lib/ruleEngine.js').MatchInstance[],
  *   currentPage: number,
@@ -211,6 +237,7 @@ export function shrinkVisibleCountForExpandOverflow(root, visibleCount) {
  *   onSelectInstance?: (inst: import('../lib/ruleEngine.js').MatchInstance) => void,
  *   isInstanceVisible?: (inst: import('../lib/ruleEngine.js').MatchInstance) => boolean,
  *   onToggleInstanceVisibility?: (inst: import('../lib/ruleEngine.js').MatchInstance) => void,
+ *   collapsedVisibleLimit?: number | null,
  * }} props
  */
 export default function ResultPageSummary({
@@ -222,6 +249,7 @@ export default function ResultPageSummary({
   onSelectInstance,
   isInstanceVisible = () => true,
   onToggleInstanceVisibility,
+  collapsedVisibleLimit = null,
 }) {
   const pills = useMemo(() => buildInstancePills(instances), [instances]);
   const pillsSignature = useMemo(
@@ -260,14 +288,27 @@ export default function ResultPageSummary({
         setCollapse({ needsCollapse: false, visibleCount: 0 });
         return;
       }
-      setCollapse(fitPillsIntoTwoRows(root, pills.length));
+      const fitted = fitPillsIntoTwoRows(root, pills.length);
+      setCollapse(
+        applyCollapsedVisibleLimit(
+          fitted,
+          pills.length,
+          collapsedVisibleLimit,
+        ),
+      );
     });
 
     return () => {
       cancelled = true;
       cancelAnimationFrame(frame);
     };
-  }, [collapse, expanded, pills.length, pillsSignature]);
+  }, [
+    collapse,
+    expanded,
+    pills.length,
+    pillsSignature,
+    collapsedVisibleLimit,
+  ]);
 
   useLayoutEffect(() => {
     const root = rootRef.current;
@@ -322,12 +363,18 @@ export default function ResultPageSummary({
     );
     if (next >= collapse.visibleCount) return undefined;
 
+    const capped =
+      collapsedVisibleLimit != null && collapsedVisibleLimit > 0
+        ? Math.min(next, collapsedVisibleLimit)
+        : next;
+    if (capped < 1) return undefined;
+
     setCollapse({
       needsCollapse: true,
-      visibleCount: next,
+      visibleCount: capped,
     });
     return undefined;
-  }, [collapse, expanded, pillsSignature]);
+  }, [collapse, expanded, pillsSignature, collapsedVisibleLimit]);
 
   if (!pills.length) return null;
 

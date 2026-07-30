@@ -23,7 +23,7 @@ export default function UnifyCandidateFindCompleteContent({
       <div className="app-dialog__results-summary-row app-dialog__results-summary-row--total">
         <span className="results-header__stat app-dialog__results-stat">
           <AppDialogCriteriaLabel
-            label="표기 통일 추천하기"
+            label="표기 통일 추천"
             meta={`${clusterCount}항목 전체`}
           />
           <ResultFindingsCountCircle

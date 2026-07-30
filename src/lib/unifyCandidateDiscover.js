@@ -576,8 +576,7 @@ export function formatUnifySpacingDecisionOverlay(chosenVariant, cluster) {
 }
 
 /**
- * 페이지 칩·미리보기용 — 소수형, 또는 1회만 등장한 표기.
- * 다수형(추천형이고 2회 이상)은 제외.
+ * 소수형·1회 표기 — 레거시 필터(페이지 칩은 다수·소수 모두 표시).
  * @param {UnifySpacingCluster} cluster
  * @param {string} variant
  */
@@ -589,8 +588,8 @@ export function shouldShowUnifyVariantPages(cluster, variant) {
 }
 
 /**
- * 소수형·1회 표기만 MatchInstance 그룹으로 — PDF 하이라이트·페이지 칩용.
- * 표기 통일 선택 시: 틀린(비선택) 표기만 하이라이트 + overlayReplace.
+ * 소수형·1회만이 아니라, 출현 있는 표기 전부의 MatchInstance 그룹 —
+ * PDF 하이라이트·페이지 칩용. 표기 통일 선택 시엔 틀린 표기만 + overlay.
  * @param {UnifySpacingCluster[]} clusters
  * @param {{ registeredByKey?: Map<string, string> | null }} [options]
  * @returns {import('./ruleEngine.js').GroupedResult[]}
@@ -630,7 +629,6 @@ export function buildUnifyCandidatePreviewGroups(clusters, options = {}) {
 
     const recommended = cluster.recommendedUnify;
     for (const variant of cluster.variants) {
-      if (!shouldShowUnifyVariantPages(cluster, variant)) continue;
       const occs = cluster.occurrencesByVariant?.[variant] ?? [];
       if (!occs.length) continue;
       groups.push({
@@ -677,8 +675,8 @@ export function instancesForUnifyVariant(cluster, variant, opts = {}) {
       index: occ.index,
     }));
   }
-  if (!shouldShowUnifyVariantPages(cluster, variant)) return [];
   const occs = cluster.occurrencesByVariant?.[variant] ?? [];
+  if (!occs.length) return [];
   return occs.map((occ) => ({
     find: variant,
     replace: cluster.recommendedUnify,

@@ -5451,6 +5451,11 @@
   vertical-align: middle;
 }
 
+.panel-left .loanword-converter__free-badge--yellow {
+  background: #eab308;
+  color: #1f2937;
+}
+
 /* 외래어 입력+변환 — 표기 통일 검색창과 같이 한 덩어리 */
 .loanword-converter__field {
   display: flex;

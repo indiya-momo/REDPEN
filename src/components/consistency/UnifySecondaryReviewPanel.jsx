@@ -31,6 +31,14 @@
  */
 
 /**
+ * @param {ReviewItem} item
+ */
+function formatExcludedItem(item) {
+  if (item.reason) return `${item.label} -${item.reason}`;
+  return item.label;
+}
+
+/**
  * @param {{ summary: SecondaryReviewSummary | null }} props
  */
 export default function UnifySecondaryReviewPanel({ summary }) {
@@ -70,13 +78,13 @@ export default function UnifySecondaryReviewPanel({ summary }) {
 
   /** @type {string[]} */
   const discoveryBits = [];
-  if (nounCount) discoveryBits.push(`명사 ${nounCount}건`);
+  if (nounCount) discoveryBits.push(`[명사] ${nounCount}건`);
   if (predicateEstCount) discoveryBits.push(`용언(추정) ${predicateEstCount}건`);
-  if (ruleCount) discoveryBits.push(`규칙 제외 ${ruleCount}건`);
+  if (ruleCount) discoveryBits.push(`제외 ${ruleCount}건`);
 
-  let summaryText = '2차 검토';
+  let summaryText = '2차 검토 결과';
   if (discoveryBits.length) {
-    summaryText = `2차 검토에서 ${discoveryBits.join(', ')}이 발견되었습니다`;
+    summaryText = `2차 검토 결과 : ${discoveryBits.join(', ')}`;
   }
 
   /** @type {string[]} */
@@ -105,66 +113,54 @@ export default function UnifySecondaryReviewPanel({ summary }) {
     summaryText = `${summaryText} · ${extraBits.join(' · ')}`;
   }
 
+  const hasBody =
+    ruleCount > 0 || josaWithItems.length > 0 || predWithItems.length > 0;
+  const excludedPhrase = ruleExcluded.map(formatExcludedItem).join(', ');
+
   return (
     <details className="unify-candidate-find__secondary-review" open>
       <summary className="unify-candidate-find__secondary-review-summary">
         {summaryText}
       </summary>
-      <div className="unify-candidate-find__secondary-review-body">
-        <details className="unify-candidate-find__secondary-review-help">
-          <summary>이 패널 안내</summary>
-          <p className="unify-candidate-find__secondary-review-note">
-            [명사] [용언(추정)]에 속하지 않는 항목은 목록에서 제외했습니다. 용언은
-            빈도를 확인하여 추정합니다.
-          </p>
-        </details>
+      {hasBody ? (
+        <div className="unify-candidate-find__secondary-review-body">
+          {ruleCount > 0 ? (
+            <p className="unify-candidate-find__secondary-review-note">
+              제외는 {excludedPhrase}입니다
+            </p>
+          ) : null}
 
-        {ruleCount > 0 ? (
-          <div className="unify-candidate-find__secondary-review-block">
-            <div className="unify-candidate-find__secondary-review-block-title">
-              목록 제외
+          {josaWithItems.length > 0 ? (
+            <div className="unify-candidate-find__secondary-review-block">
+              <div className="unify-candidate-find__secondary-review-block-title">
+                조사·어간
+              </div>
+              {josaWithItems.map((section) => (
+                <ProcessedSection
+                  key={section.title}
+                  title={section.title}
+                  items={section.items}
+                />
+              ))}
             </div>
-            <ProcessedList
-              items={ruleExcluded.map((item) => ({
-                ...item,
-                label: item.reason
-                  ? `${item.label} -${item.reason}`
-                  : item.label,
-              }))}
-            />
-          </div>
-        ) : null}
+          ) : null}
 
-        {josaWithItems.length > 0 ? (
-          <div className="unify-candidate-find__secondary-review-block">
-            <div className="unify-candidate-find__secondary-review-block-title">
-              조사·어간
+          {predWithItems.length > 0 ? (
+            <div className="unify-candidate-find__secondary-review-block">
+              <div className="unify-candidate-find__secondary-review-block-title">
+                유지/삭제 모델
+              </div>
+              {predWithItems.map((section) => (
+                <ProcessedSection
+                  key={section.title}
+                  title={section.title}
+                  items={section.items}
+                />
+              ))}
             </div>
-            {josaWithItems.map((section) => (
-              <ProcessedSection
-                key={section.title}
-                title={section.title}
-                items={section.items}
-              />
-            ))}
-          </div>
-        ) : null}
-
-        {predWithItems.length > 0 ? (
-          <div className="unify-candidate-find__secondary-review-block">
-            <div className="unify-candidate-find__secondary-review-block-title">
-              유지/삭제 모델
-            </div>
-            {predWithItems.map((section) => (
-              <ProcessedSection
-                key={section.title}
-                title={section.title}
-                items={section.items}
-              />
-            ))}
-          </div>
-        ) : null}
-      </div>
+          ) : null}
+        </div>
+      ) : null}
     </details>
   );
 }

@@ -1,10 +1,8 @@
 /**
  * 표기 통일 추천 — 맞춤법 탭 외래어 표기와 같은 박스·버튼 크롬.
  * 문서 내 띄어쓰기 이형태만 (규범 검증 아님).
- * 소수형·1회 표기만 페이지 칩 → 원고 이동·하이라이트.
- *
- * v2: 계열 그룹핑 + variant별 즉시 등록 + 그룹 일괄 등록.
  * 결과 목록은 맞춤법 결과 리스트와 같은 아코디언(전체 발견 / N기준).
+ * 페이지 칩은 다수·소수 모두(접히면 최대 4개 + 더 보기).
  */
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import {
@@ -592,8 +590,11 @@ export default function UnifyCandidateFindPanel({
     <div className="loanword-converter unify-candidate-find">
       <div className="loanword-converter__summary panel-criteria-heading">
         <span className="loanword-converter__summary-title">
-          표기 통일 추천하기
+          표기 통일 추천
           <span className="loanword-converter__free-badge">BEST</span>
+          <span className="loanword-converter__free-badge loanword-converter__free-badge--yellow">
+            V 0.7
+          </span>
         </span>
       </div>
 
@@ -633,7 +634,7 @@ export default function UnifyCandidateFindPanel({
         <div
           className="unify-candidate-find__results"
           role="region"
-          aria-label="표기 통일 추천하기"
+          aria-label="표기 통일 추천"
         >
           {clusters.length === 0 ? (
             <p className="unify-candidate-find__empty">
@@ -665,7 +666,7 @@ export default function UnifyCandidateFindPanel({
                         : 'single';
                   const label =
                     group.type === 'series'
-                      ? group.label
+                      ? `[${group.label}]`
                       : group.type === 'predicate'
                         ? '용언'
                         : '단일 항목';
@@ -922,6 +923,7 @@ function ClusterCard({
                   selectedInstance={selectedInstance}
                   formatPageLabel={formatPageLabel}
                   isInstanceVisible={() => true}
+                  collapsedVisibleLimit={4}
                   onSelectPage={(pageNum) => {
                     const first = instances.find(
                       (inst) => inst.pageNum === pageNum,

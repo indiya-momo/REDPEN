@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  applyCollapsedVisibleLimit,
   buildInstancePills,
   fitPillsIntoTwoRows,
   getInstanceFragmentLabel,
@@ -181,5 +182,34 @@ describe('shrinkVisibleCountForExpandOverflow', () => {
     expect(shrinkVisibleCountForExpandOverflow(/** @type {any} */ (root), 8)).toBe(
       8,
     );
+  });
+});
+
+describe('applyCollapsedVisibleLimit', () => {
+  it('개수가 상한 이하면 레이아웃 결과를 유지한다', () => {
+    expect(
+      applyCollapsedVisibleLimit(
+        { needsCollapse: false, visibleCount: 3 },
+        3,
+        4,
+      ),
+    ).toEqual({ needsCollapse: false, visibleCount: 3 });
+  });
+
+  it('개수가 상한을 넘으면 접고 visibleCount를 상한으로 자른다', () => {
+    expect(
+      applyCollapsedVisibleLimit(
+        { needsCollapse: false, visibleCount: 12 },
+        12,
+        4,
+      ),
+    ).toEqual({ needsCollapse: true, visibleCount: 4 });
+    expect(
+      applyCollapsedVisibleLimit(
+        { needsCollapse: true, visibleCount: 6 },
+        12,
+        4,
+      ),
+    ).toEqual({ needsCollapse: true, visibleCount: 4 });
   });
 });
