@@ -321,8 +321,8 @@ export function formatQuotaAvailabilityParen(dailyRemaining, bonusRemaining) {
  */
 export function formatQuotaTicketAvailabilityParen(dailyRemaining, bonusRemaining) {
   return (
-    `1일 검수권 ${Math.max(0, dailyRemaining)}회, ` +
-    `선물 검수권 ${Math.max(0, bonusRemaining)}회`
+    `1일 검수권 ${Math.max(0, dailyRemaining)}장, ` +
+    `선물 검수권 ${Math.max(0, bonusRemaining)}장`
   );
 }
 
@@ -388,9 +388,8 @@ export function formatCheckQuotaConsumedLine(
 ) {
   const kind = betaQuotaTicketKindLabel(tab);
   return (
-    `${kind} 검수권 1회가 사용되었습니다(` +
-    `1일 검수권 ${Math.max(0, dailyRemaining)}회, ` +
-    `선물 검수권 ${Math.max(0, bonusRemaining)}회 사용 가능)`
+    `${kind} 검수권 1장이 사용되었습니다(` +
+    `${formatQuotaTicketAvailabilityParen(dailyRemaining, bonusRemaining)} 사용 가능)`
   );
 }
 

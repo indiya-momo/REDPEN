@@ -188,6 +188,32 @@
   box-sizing: border-box;
 }
 
+/* 「맞춤법 검수권🎫」「표기 통일 검수권🎫」 */
+.app-dialog__quota-ticket-kind {
+  font-weight: 700;
+  color: var(--color-text);
+  white-space: nowrap;
+}
+
+.app-dialog__quota-ticket-kind::after {
+  content: '🎫';
+  margin-inline-start: 0.08em;
+}
+
+.app-dialog__unify-find-confirm .app-dialog__confirm-line {
+  text-align: center;
+}
+
+.app-dialog__unify-find-complete .app-dialog__quota-consumed-line {
+  margin: 0.85em 0 0;
+}
+
+.app-dialog__findings-unit {
+  font-weight: 700;
+  color: var(--color-text);
+  line-height: 1;
+}
+
 /* 검수 완료 요약 — 검수 전 criteria-label/meta 와 동일 타이포 */
 .app-dialog__results-summary {
   --dialog-result-ui-scale: 0.9;

@@ -1,7 +1,7 @@
 # 조사·어간 검토 — SLM 2차 필터 구현 스케치
 
 **상위 문서:** `unify-candidate-spacing-redesign-2026-07-29.md` §11.5  
-**상태:** 구현 중 (단계 0–4 + §3.2·3c POC 완료) — **§6 C안(버튼·서버리스) 설계 확정, 코드는 A안 POC 잔존**  
+**상태:** 구현 중 (단계 0–4 + §3.2·3c POC 완료) — **현행: 로컬에서만 SLM 시험** (`VITE_UNIFY_JOSA_SLM` 기본 off). 클라우드·서버리스 GPU **보류**.  
 **작성:** 2026-07-30
 
 ---
@@ -44,7 +44,7 @@ flowchart TD
   E --> F{2차 SLM 필터 ON?}
   F -->|no| G[high·low tier → josaReview 즉시 승격]
   F -->|no| G2[risky → SLM 미호출, 배지 없음]
-  F -->|yes| H[enqueue + cap 50 + filterJosaReviewBySlm]
+  F -->|yes| H[enqueue + 우선필터 + cap 10 + filterJosaReviewBySlm]
   G --> I[UI 배지]
   G2 --> I
   H --> I
@@ -204,32 +204,32 @@ src/lib/unifyJosaReviewSlm.test.js  # parse·enqueue·golden mock
 
 | 조건 | 이유 |
 |------|------|
-| `auxReview` 있음 | 본보조 배지만. josa SLM 큐·50건 한도에 **넣지 않음** |
+| `auxReview` 있음 | 본보조 배지만. josa SLM 큐·10건 한도에 **넣지 않음** |
 | `tier === 'high'` | 규칙 확신 — SLM 생략, `josaReview` 즉시 (§12) |
 | `tier === 'low'` | 저위험 조사 peer만 — SLM 생략, 정책에 따라 배지 유지 |
 | bon-bojo stem만 해당 | aux 단계에서 처리됨 |
+| `tier === 'risky'`이지만 우선 아님 | SLM **생략** — 규칙이 준 `josaReview` **유지** |
 
-**SLM 큐에 넣는 조건 (`tier === 'risky'`):**
+**SLM 큐에 넣는 조건 (`tier === 'risky'` + 우선 필터):**
 
-| 조건 | 비고 |
-|------|------|
-| suffix ∈ `UNIFY_AMBIGUOUS_JOSA_SUFFIXES` | `이`/`가`/`하` 등 — tier `risky` 입력. (`UNIFY_JOSA_HIGH_CONFIDENCE_SUFFIXES`·tier `high`와 혼동 금지) |
-| suffix ∈ `UNIFY_REVIEW_STEM_AFFIXES` 단, §12 high 목록 제외 | |
-| 4음절 가드 우회한 긴 접미 | |
-| 띄움·붙임 `stemKey` 불일치 | |
+| 조건 (OR) | 비고 |
+|-----------|------|
+| `stemMismatch === true` | 띄움·붙임 `stemKey` 불일치 |
+| `suffix` ∈ `가` / `이` | 조사 vs 합성어 오탐이 큰 접미 (`JOSA_SLM_PRIORITY_SUFFIXES`) |
 
-### 5.1 배치 상한 50건 — 초과 시 (확정)
+그 외 risky(예: `은`/`는` 규칙 배지만)는 큐에 넣지 않는다.
 
-상수: `JOSA_SLM_BATCH_CAP = 50`
+### 5.1 배치 상한 10건 — 초과 시 (확정, 코드 반영)
+
+상수: `JOSA_SLM_BATCH_CAP = 10` (`enqueue.js`)
 
 **정렬 키 (동일 입력이면 항상 동일 결과):**
 
-1. `tier`: `risky`만 큐에 들어가므로 동일
+1. 우선 필터 통과분만 풀에 진입
 2. `totalCount` **내림차순** (문서에서 더 자주 나온 후보 우선)
 3. `cluster.key` **가나다순** (`localeCompare('ko')`) — 동점 tie-break
-4. (선택) `suffix` 길이 내림차순 — 동일 key는 없으므로 보조 불필요
 
-**초과분:** SLM **미호출** → `josaReview` **미부여** (배지 없음). 규칙 1차 배지도 SLM ON 모드에서는 노출하지 않음(오탐·불일치 방지).
+**초과분 (`riskyDropped`):** SLM **미호출** → `josaReview` **제거** (배지 없음).
 
 **재현성:** 찾기 1회당 `documentFingerprint` + 정렬 키로 큐 순서 고정. 같은 PDF·같은 discover 결과면 잘리는 항목 집합 동일.
 
@@ -253,30 +253,36 @@ src/lib/unifyJosaReviewSlm.test.js  # parse·enqueue·golden mock
 
 ## 6. 호출 시점
 
-> **2026-07-30 방향 확정:** 베타·상용은 **C안**. 아래 A안은 로컬 POC(현재 `UnifyCandidateFindPanel` 구현)이며 **채택하지 않음**.
+> **2026-07-30 방향:** 제품(베타)은 **SLM 기본 off**. 카나나는 **로컬 시험만**.  
+> §6 **C안·서버리스**는 장기 설계로 남겨 두고, **당장 채택하지 않음**. A안 코드는 플래그 ON일 때만 POC로 동작.
 
 ### 6.0 안 요약
 
 | 안 | 트리거 | SLM 시점 | 비고 |
 |----|--------|----------|------|
-| ~~**A**~~ | 찾기 완료 직후 **자동** | 동기(로딩 블로킹) | POC만. CPU·서버리스에 부적합 |
-| ~~**B**~~ | 찾기 후 **백그라운드 자동** | 비동기 | UX 복잡 — **C안에 흡수** |
-| **C (권장)** | 사용자 **「2차 검토」 버튼** | 비동기 | 호출 빈도·비용 구조적 절감 |
+| **로컬 POC (현행 코드)** | 찾기 직후 자동 (플래그 ON) | 동기 | `kanana-openai-server` / mock. **기본 OFF** |
+| ~~**A**~~ 배포 자동 | 찾기 완료 직후 | 동기 | 채택 안 함 |
+| ~~**B**~~ | 백그라운드 자동 | 비동기 | 채택 안 함 |
+| **C (장기 옵션)** | 「2차 검토」 버튼 | 비동기 | 서버리스 검토 시 재개 |
 
-### 6.0.1 추천 조합 (확정, 2026-07-30)
+### 6.0.1 현행 방침 — 로컬에서만 써 보기 (확정, 2026-07-30)
 
-**금액 최소 + SLM 의미 유지** — 아래를 한 세트로 채택한다.
+**클라우드 GPU·서버리스·유료 추론 API는 당분간 쓰지 않는다.**  
+카나나 SLM은 **개발자 PC에서만** 품질·프롬프트·골든셋을 확인하는 용도.
 
 | 레이어 | 내용 |
 |--------|------|
-| 호출 | §6 **C안** — 찾기 즉시 규칙만, **버튼**으로만 SLM |
-| 인프라 | 서버리스 GPU scale-to-zero, **버튼 1회 = HTTP 1회·모델 1회** (§6.2) |
-| 범위 | tier `risky`만, cap 50·캐시 §5.2 |
-| 쿼터 | §6.4 — **일 단위**, 초과 시 **SLM만 끔**(규칙·찾기는 유지) |
+| **베타·배포** | `VITE_UNIFY_JOSA_SLM` **기본 off** — 사용자는 규칙만 (보조용언·조사 tier·용언 정렬 포함) |
+| **로컬 시험** | `VITE_UNIFY_JOSA_SLM=true` + `scripts/kanana-openai-server.py` 또는 vLLM (§13) |
+| **비용** | 클라우드 청구 **0**. 전기·PC 시간만. CPU면 건당 ~십수 초 → **1건·소수 샘플**만 |
+| **실사용 큐 (코드)** | risky 중 stemMismatch·`가`/`이` 우선 + **cap 10** (§5·`enqueue.js`) |
+| **§6 C안·서버리스·쿼터** | **설계 보류** (§6.2~6.4). 로컬 검증 후 재검토 |
+
+§6.2~6.4·서버리스 쿼터 문구는 **향후 옵션**으로 남겨 둔다. 지금 구현·운영 우선순위는 **로컬 OFF가 기본**.
 
 ---
 
-### 6.1 C안 — 명시적 버튼 + 비동기 (권장)
+### 6.1 C안 — 명시적 버튼 + 비동기 (향후 옵션, 미채택)
 
 **흐름:**
 
@@ -471,10 +477,10 @@ export function isUnifyJosaSlmReviewEnabled() {
 | **3** | `serverRunner` POC — 추론 서버(vLLM/transformers) + SLM | **골격 완료** — `prompt.js`, `runner/serverRunner.js` |
 | **3b** | §3.2 맥락 40자 — `contextBefore`/`contextAfter` | **완료** — `context.js`, `filter`·패널 `pageTexts` 연동 |
 | **3c** | dev Vite 프록시 — CORS 회피 | **완료** — `/api/josa-slm` → `:8000`, `resolveEndpoint.js` |
-| **4** | Panel 연동 + 로딩 UX | **POC 완료** (§6 A안 동기) — C안으로 **교체 예정** |
-| **5** | §6 C안 — 버튼·비동기·`slmReviewStatus` UI | 미구현 |
-| **5b** | 서버리스 배치 API + §6.4 쿼터(1/5/100) + §5.2 캐시 | 미구현 |
-| **6** | (선택) 상용 배포·`kananaRunner` | ONNX·라이선스 후 |
+| **4** | Panel 연동 + 로딩 UX | **POC 완료** (플래그 ON 시 A안 동기). **기본 OFF** |
+| **5** | §6 C안 — 버튼·비동기·서버리스 | **보류** — 로컬 검증 충분할 때까지 |
+| **5b** | 쿼터·캐시·배치 API | **보류** |
+| **6** | (선택) 상용·`kananaRunner` | ONNX·라이선스·비용 재검토 후 |
 
 **로컬 E2E:** 추론 서버 + 앱 플래그 — **§13** 체크리스트.
 
@@ -521,24 +527,24 @@ export function isUnifyJosaSlmReviewEnabled() {
 ## 11. 확정 사항 (2026-07-30 리뷰 반영)
 
 1. aux 겹침 → **SLM enqueue 전** 제외 (§2·§5)
-2. cap 50 초과 → `totalCount` ↓, `key` 가나다 tie-break (§5.1)
+2. 우선 필터 + cap 10 초과 → `totalCount` ↓, `key` 가나다 tie-break (§5.1)
 3. 맥락 → **앞 40 + 뒤 40자**, 같은 줄, 부호 경계 우선 (§3.2)
 4. 배지 → `kind === josa_or_suffix` && `confidence === high` only (§3.3)
 5. `이며`/`하도록` 등 → **tier high 승격**, SLM 제외·배지 유지 (§10.2)
-6. **호출 시점 → §6 C안** (버튼·비동기). ~~A안 자동~~·~~B안 자동 백그라운드~~ 폐기
-7. **서버리스:** 버튼 1회 = **HTTP 1회·모델 로드 1회**, 내부 5~10건 순차 (§6.2)
-8. **쿼터:** 무료 **1회/일/인**, 유료 **5회/일/인**, 전역 **100회/일**, 로컬 무제한 — 초과 시 **SLM만 OFF** (§6.4)
-9. **UX:** 검토 대기 vs 검토 완료·해당 없음 구분 (§3.3·§6.3)
-10. **캐시:** `(documentFingerprint, cluster.key)` (§5.2)
+6. **현행 운영 → 로컬 SLM만** (클라우드 GPU·서버리스 **보류**). 베타 기본 플래그 **off** (§6.0.1)
+7. **장기 옵션:** §6 C안 + 서버리스 (§6.2) — 채택 전제: 로컬에서 품질·큐 필터 검증 후
+8. **쿼터·캐시 설계** (§6.4·§5.2) — 서버리스 재개 시 적용. 지금은 미구현
+9. **UX 구분** (대기 vs 완료) — C안 재개 시 (§3.3·§6.3)
+10. **실사용 후보 축소(코드):** risky 중 stemMismatch·`가`/`이` 우선, `JOSA_SLM_BATCH_CAP = 10`
 
 ## 12. 열린 질문
 
 1. SLM 실패 시 — **배지 숨김** 확정 (`medium`·`low` confidence도 동일). 관대 모드는 별 플래그·필드만 검토 (`josaReview.slm`에 `medium` 보존하지 않음).
 2. ~~`medium` confidence~~ → 기본 숨김 (§3.3)
 3. 카나나-2 1.3B vs 3B — **2a 정찰: 1.3B 우선** (골든셋 오탐 시 3B 재시험)
-4. 브라우저 WebGPU — **2a: 보류** (SLM ONNX/GGUF 없음). **서버리스 GPU** + `serverRunner` 우선.
-5. ~~표기 통일 찾기와 SLM 1회 묶음~~ → **C안:** 찾기와 **분리**; 2차 검토 버튼·별도 쿼터 (§6.4)
-6. 서버리스 벤더 — Modal vs RunPod vs HF (크레딧·카나나 `trust-remote-code` 호환)
+4. 브라우저 WebGPU — **2a: 보류** (SLM ONNX/GGUF 없음)
+5. ~~표기 통일 찾기와 SLM 1회 묶음~~ → 장기 C안 시 분리; **지금은 로컬 플래그만**
+6. ~~서버리스 벤더~~ → **보류**. 로컬 `kanana-openai-server.py` / vLLM만 사용
 
 ---
 

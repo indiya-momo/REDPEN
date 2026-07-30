@@ -1864,6 +1864,26 @@
 .panel-left
   .unify-candidate-find
   .results-panel--unify-candidate
+  .unify-candidate-find__card
+  .result-visibility-toggle {
+  width: var(--criteria-checkbox-size, 15px);
+  height: var(--criteria-checkbox-size, 15px);
+}
+
+.panel-left
+  .unify-candidate-find
+  .results-panel--unify-candidate
+  .unify-candidate-find__card
+  .result-visibility-toggle
+  input {
+  width: var(--criteria-checkbox-size, 15px);
+  height: var(--criteria-checkbox-size, 15px);
+  accent-color: #6b7280;
+}
+
+.panel-left
+  .unify-candidate-find
+  .results-panel--unify-candidate
   .results-list--nested.unify-candidate-find__list {
   list-style: none;
   margin: 0;
@@ -1880,6 +1900,10 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+.panel-left .unify-candidate-find__list--flat-single {
+  padding: 0 0 12px;
 }
 
 .panel-left
@@ -3504,8 +3528,9 @@
 .builtin-spelling-resize-body .builtin-rule-bundle-body .builtin-rule-row > input[type='checkbox'] {
   display: block;
   margin: 0;
-  width: var(--criteria-item-checkbox-size, calc(var(--criteria-checkbox-size, 15px) * 0.85));
-  height: var(--criteria-item-checkbox-size, calc(var(--criteria-checkbox-size, 15px) * 0.85));
+  width: var(--criteria-item-checkbox-size, var(--criteria-checkbox-size, 15px));
+  height: var(--criteria-item-checkbox-size, var(--criteria-checkbox-size, 15px));
+  accent-color: #6b7280;
 }
 
 .builtin-spelling-resize-body .caution-checklist-summary-title,
@@ -4232,7 +4257,7 @@
   --criteria-summary-rail: calc(
     var(--criteria-checkbox-size) + var(--criteria-summary-gap)
   );
-  --criteria-item-checkbox-size: calc(var(--criteria-checkbox-size) * 0.85);
+  --criteria-item-checkbox-size: var(--criteria-checkbox-size);
   /* 1단 체크박스 왼쪽 = pad + chevron + gap */
   --criteria-check-col-start: calc(
     var(--criteria-pad-inline) + var(--criteria-summary-rail)
@@ -4327,7 +4352,7 @@
   font-size: 0.8rem;
   --auxiliary-chip-checkbox: var(
     --criteria-item-checkbox-size,
-    calc(var(--criteria-checkbox-size, 15px) * 0.85)
+    var(--criteria-checkbox-size, 15px)
   );
 }
 
@@ -5154,7 +5179,7 @@
   --criteria-summary-rail: calc(
     var(--criteria-checkbox-size) + var(--criteria-summary-gap)
   );
-  --criteria-item-checkbox-size: calc(var(--criteria-checkbox-size) * 0.85);
+  --criteria-item-checkbox-size: var(--criteria-checkbox-size);
   --criteria-chevron-inset: var(--criteria-summary-rail);
   font-size: calc(1.05rem * var(--panel-ui-scale));
   margin: 0 0 calc(10px * var(--panel-ui-scale));
@@ -5416,6 +5441,7 @@
 .panel-left .builtin-rule-row > input[type='checkbox'] {
   width: var(--criteria-checkbox-size, 15px);
   height: var(--criteria-checkbox-size, 15px);
+  accent-color: #6b7280;
 }
 
 .panel-left .caution-rule-bundle-body .caution-chip > input[type='checkbox'],
@@ -5424,8 +5450,9 @@
   .consistency-section-box[data-work-guide-step='auxiliary-box']
   .auxiliary-chip
   > input[type='checkbox'] {
-  width: var(--criteria-item-checkbox-size, calc(var(--criteria-checkbox-size, 15px) * 0.85));
-  height: var(--criteria-item-checkbox-size, calc(var(--criteria-checkbox-size, 15px) * 0.85));
+  width: var(--criteria-item-checkbox-size, var(--criteria-checkbox-size, 15px));
+  height: var(--criteria-item-checkbox-size, var(--criteria-checkbox-size, 15px));
+  accent-color: #6b7280;
 }
 
 .panel-left .caution-chip {
@@ -5435,6 +5462,9 @@
 
 .panel-left .caution-chip > input[type='checkbox'] {
   margin: 0;
+  accent-color: #6b7280;
+  width: var(--criteria-checkbox-size, 15px);
+  height: var(--criteria-checkbox-size, 15px);
 }
 
 .panel-left .caution-chip-label {
@@ -5559,7 +5589,7 @@
   --criteria-summary-rail: calc(
     var(--criteria-checkbox-size) + var(--criteria-summary-gap)
   );
-  --criteria-item-checkbox-size: calc(var(--criteria-checkbox-size) * 0.85);
+  --criteria-item-checkbox-size: var(--criteria-checkbox-size);
   --criteria-check-col-start: calc(
     var(--criteria-pad-inline) + var(--criteria-summary-rail)
   );

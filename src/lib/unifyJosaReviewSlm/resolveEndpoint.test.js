@@ -27,6 +27,7 @@ describe('resolveJosaSlmEndpoint', () => {
   });
 
   it('플래그 OFF면 빈 문자열', () => {
+    vi.stubEnv('VITE_UNIFY_JOSA_SLM', 'false');
     vi.stubEnv('DEV', true);
     expect(resolveJosaSlmEndpoint()).toBe('');
   });

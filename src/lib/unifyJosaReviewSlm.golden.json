@@ -150,19 +150,19 @@
     },
     {
       "id": "pipe-risky-slm-approve",
-      "note": "tier risky + SLM high josa → 승격",
+      "note": "우선 risky(접미 가) + SLM high josa → 승격",
       "cluster": {
-        "key": "역학은",
-        "variants": ["역학은", "역학 은"],
-        "counts": { "역학은": 2, "역학 은": 1 },
+        "key": "가치평가가",
+        "variants": ["가치평가가", "가치평가 가"],
+        "counts": { "가치평가가": 2, "가치평가 가": 1 },
         "occurrencesByVariant": {},
-        "recommendedUnify": "역학은",
+        "recommendedUnify": "가치평가가",
         "totalCount": 3,
         "kind": "conflict"
       },
       "useAttachHints": true,
       "slmResponse": {
-        "id": "역학은",
+        "id": "가치평가가",
         "isBoundary": true,
         "kind": "josa_or_suffix",
         "confidence": "high"
@@ -172,19 +172,19 @@
     },
     {
       "id": "pipe-risky-slm-reject-compound",
-      "note": "tier risky + compound → 배지 없음",
+      "note": "우선 risky(접미 가) + compound → 배지 없음",
       "cluster": {
-        "key": "역학은",
-        "variants": ["역학은", "역학 은"],
-        "counts": { "역학은": 2, "역학 은": 1 },
+        "key": "가치평가가",
+        "variants": ["가치평가가", "가치평가 가"],
+        "counts": { "가치평가가": 2, "가치평가 가": 1 },
         "occurrencesByVariant": {},
-        "recommendedUnify": "역학은",
+        "recommendedUnify": "가치평가가",
         "totalCount": 3,
         "kind": "conflict"
       },
       "useAttachHints": true,
       "slmResponse": {
-        "id": "역학은",
+        "id": "가치평가가",
         "isBoundary": false,
         "kind": "compound_word",
         "confidence": "high"

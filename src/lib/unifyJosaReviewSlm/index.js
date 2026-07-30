@@ -1,5 +1,7 @@
 export {
   JOSA_SLM_BATCH_CAP,
+  JOSA_SLM_PRIORITY_SUFFIXES,
+  isJosaSlmPriorityCandidate,
   partitionJosaSlmQueue,
   sortClustersForJosaSlmBatch,
 } from './enqueue.js';

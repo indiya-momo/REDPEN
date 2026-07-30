@@ -14,6 +14,10 @@ import {
 } from '../../lib/unifyCandidateDiscover.js';
 import { groupSortAndFillSatellites } from '../../lib/unifyCandidateGrouping.js';
 import {
+  isUnifyPredicateCluster,
+  looksLikePredicateKey,
+} from '../../lib/unifyPredicateBucket.js';
+import {
   mergeReviewedClustersIntoGroups,
   runJosaSlmReviewOnClusterGroups,
 } from '../../lib/unifyJosaReviewSlm/index.js';
@@ -35,6 +39,11 @@ import DetailsChevron from '../DetailsChevron.jsx';
  */
 function sumClusterFindings(clusters) {
   return clusters.reduce((sum, c) => sum + (c.totalCount || 0), 0);
+}
+
+/** 보조용언 추정(검토 필요) — 목록엔 두되 기본은 PDF·전체 발견에서 제외 */
+function isAuxReviewDeferredCluster(cluster) {
+  return cluster?.auxReview?.status === 'review';
 }
 
 /**
@@ -96,7 +105,7 @@ function UnifyFindingsCount({ count, shownCount = count, className = '' }) {
       }
       title={partial ? `표시 ${shownCount}/${count}` : undefined}
     >
-      {shownCount}
+      {partial ? `${shownCount}/${count}` : shownCount}
     </span>
   );
 }
@@ -242,6 +251,19 @@ export default function UnifyCandidateFindPanel({
         }
       }
 
+      const displayGrouped = mergeReviewedClustersIntoGroups(
+        baseGrouped,
+        slmByKey,
+      );
+      const listClusters = displayGrouped.flatMap((g) => g.clusters);
+      // 보조용언 추정은 목록에만 두고, 체크·전체 발견·PDF는 사용자가 켤 때까지 제외
+      const hidden = new Set(
+        listClusters
+          .filter(isAuxReviewDeferredCluster)
+          .map((c) => c.key),
+      );
+      const countedClusters = listClusters.filter((c) => !hidden.has(c.key));
+
       setClusters(next);
       setRawByKey(result.rawByKey);
       setSlmReviewedByKey(slmByKey);
@@ -249,10 +271,10 @@ export default function UnifyCandidateFindPanel({
       setSearched(true);
       setRegisteredVariants(new Map());
       setPreSelected(new Map());
-      const hidden = new Set();
       setHiddenPdfKeys(hidden);
       publishPreview(next, result.rawByKey, hidden, slmByKey);
-      await alertUnifyCandidateFindAfterRun(next, {
+      // 팝업 = 기본 체크된 항목만 (목록「전체 발견」과 동일)
+      await alertUnifyCandidateFindAfterRun(countedClusters, {
         uid: authUid,
         email: authEmail,
       });
@@ -296,13 +318,22 @@ export default function UnifyCandidateFindPanel({
     return mergeReviewedClustersIntoGroups(base, slmReviewedByKey);
   }, [clusters, rawByKey, slmReviewedByKey]);
 
+  /** 목록에 실제로 보이는 클러스터만 (조사·어간 접미로 제외된 후) */
+  const listClusters = useMemo(
+    () => grouped.flatMap((g) => g.clusters),
+    [grouped],
+  );
+
   const busy = finding || slmReviewing;
 
-  const totalFindings = useMemo(() => sumClusterFindings(clusters), [clusters]);
+  const totalFindings = useMemo(
+    () => sumClusterFindings(listClusters),
+    [listClusters],
+  );
   const visibleFindings = useMemo(
     () =>
-      sumClusterFindings(clusters.filter((c) => !hiddenPdfKeys.has(c.key))),
-    [clusters, hiddenPdfKeys],
+      sumClusterFindings(listClusters.filter((c) => !hiddenPdfKeys.has(c.key))),
+    [listClusters, hiddenPdfKeys],
   );
   const defaultOpenId =
     grouped[0]?.type === 'series'
@@ -419,7 +450,7 @@ export default function UnifyCandidateFindPanel({
                 <span className="results-header__total-findings results-findings-meta">
                   <span className="results-findings-meta__label">전체 발견</span>
                   <UnifyFindingsCount
-                    count={totalFindings}
+                    count={visibleFindings}
                     shownCount={visibleFindings}
                     className="results-header__total-count"
                   />
@@ -460,6 +491,44 @@ export default function UnifyCandidateFindPanel({
                         ? 'predicate'
                         : 'single';
 
+                  const clusterCards = group.clusters.map((cluster) => (
+                    <ClusterCard
+                      key={cluster.key}
+                      cluster={cluster}
+                      showPredicateTag={
+                        group.type === 'predicate' ||
+                        (group.type === 'series' &&
+                          looksLikePredicateKey(group.affix)) ||
+                        isUnifyPredicateCluster(cluster)
+                      }
+                      pdfVisible={!hiddenPdfKeys.has(cluster.key)}
+                      onTogglePdfVisibility={handleTogglePdfVisibility}
+                      registeredVariant={registeredVariants.get(cluster.key)}
+                      preSelectedVariant={preSelected.get(cluster.key)}
+                      groupClusters={
+                        group.type === 'series' ? group.clusters : undefined
+                      }
+                      onSelectVariant={handleSelectVariant}
+                      onCancelVariant={handleCancelVariant}
+                      currentPage={currentPage}
+                      selectedInstance={selectedInstance}
+                      formatPageLabel={formatPageLabel}
+                      onSelectInstance={onSelectInstance}
+                    />
+                  ));
+
+                  // 단일·용언 — 「용언」헤더·체크박스 없이 카드만 바로 표시
+                  if (group.type === 'single' || group.type === 'predicate') {
+                    return (
+                      <ul
+                        key={sectionId}
+                        className="results-list results-list--nested unify-candidate-find__list unify-candidate-find__list--flat-single"
+                      >
+                        {clusterCards}
+                      </ul>
+                    );
+                  }
+
                   return (
                     <details
                       key={sectionId}
@@ -492,29 +561,7 @@ export default function UnifyCandidateFindPanel({
                         </span>
                       </summary>
                       <ul className="results-list results-list--nested unify-candidate-find__list">
-                        {group.clusters.map((cluster) => (
-                          <ClusterCard
-                            key={cluster.key}
-                            cluster={cluster}
-                            pdfVisible={!hiddenPdfKeys.has(cluster.key)}
-                            onTogglePdfVisibility={handleTogglePdfVisibility}
-                            registeredVariant={registeredVariants.get(
-                              cluster.key,
-                            )}
-                            preSelectedVariant={preSelected.get(cluster.key)}
-                            groupClusters={
-                              group.type === 'series'
-                                ? group.clusters
-                                : undefined
-                            }
-                            onSelectVariant={handleSelectVariant}
-                            onCancelVariant={handleCancelVariant}
-                            currentPage={currentPage}
-                            selectedInstance={selectedInstance}
-                            formatPageLabel={formatPageLabel}
-                            onSelectInstance={onSelectInstance}
-                          />
-                        ))}
+                        {clusterCards}
                       </ul>
                     </details>
                   );
@@ -533,6 +580,7 @@ export default function UnifyCandidateFindPanel({
  */
 function ClusterCard({
   cluster,
+  showPredicateTag = false,
   pdfVisible,
   onTogglePdfVisibility,
   registeredVariant,
@@ -631,7 +679,7 @@ function ClusterCard({
             >
               <div className="unify-candidate-find__variant-row">
                 <span className="unify-candidate-find__variant">
-                  {variant}
+                  {showPredicateTag ? `[용언]${variant}` : variant}
                 </span>
                 {count > 0 ? (
                   <span className="unify-candidate-find__count">

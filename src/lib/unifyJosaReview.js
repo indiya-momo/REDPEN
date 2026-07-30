@@ -128,6 +128,11 @@ export const UNIFY_REVIEW_STEM_AFFIXES = Object.freeze([
   '주려는',
   '주는',
   '주던',
+  '는지',
+  '또는',
+  '라고',
+  '게',
+  '서',
   '적',
   '성',
 ]);
@@ -143,6 +148,15 @@ export const UNIFY_REVIEW_STEM_SUFFIXES = Object.freeze(
     ...UNIFY_REVIEW_STEM_AFFIXES,
   ].toSorted((a, b) => b.length - a.length || a.localeCompare(b, 'ko')),
 );
+
+/**
+ * 표기 통일 **목록에서 제외** — 조사·어간 접미로 추정되는 띄움/붙임 충돌 전부.
+ * 짧은 조사·어미뿐 아니라 `에서는`·`으로`·`하도록`·`적이고` 등 긴 결합형도 포함.
+ * @type {readonly string[]}
+ */
+export const UNIFY_LIST_DROP_MONO_JOSA = UNIFY_REVIEW_STEM_SUFFIXES;
+
+const UNIFY_LIST_DROP_MONO_JOSA_SET = new Set(UNIFY_LIST_DROP_MONO_JOSA);
 
 /**
  * SLM 우회·규칙만으로 배지 (unify-josa-review-slm-sketch.md §10.2).
@@ -333,6 +347,23 @@ export function reviewStemDetailFromCluster(cluster) {
 }
 
 /**
+ * 어간 직후 뿐/을/를/은/는/이/가만 다른 충돌 → 표기 통일 목록에서 제외.
+ * @param {UnifySpacingCluster} cluster
+ * @returns {boolean}
+ */
+export function isUnifyListDroppedMonoJosaCluster(cluster) {
+  const detail = reviewStemDetailFromCluster(cluster);
+  if (detail?.suffix && UNIFY_LIST_DROP_MONO_JOSA_SET.has(detail.suffix)) {
+    return true;
+  }
+  // detail 없을 때 glued key 끝만으로도 판별 (위성·단순 키)
+  const glued =
+    cluster?.variants?.find((v) => !/\s/.test(v)) || cluster?.key || '';
+  const hit = matchLongestReviewStemSuffix(String(glued).replace(/\s+/g, ''));
+  return Boolean(hit && !hit.bare && UNIFY_LIST_DROP_MONO_JOSA_SET.has(hit.suffix));
+}
+
+/**
  * @param {UnifySpacingCluster} cluster
  * @returns {{ stemKey: string, stemSpaced: string, stemGlued: string } | null}
  */
@@ -394,6 +425,7 @@ export function attachJosaReviewHints(clusters) {
       stemSpaced: detail.stemSpaced,
       suffix: detail.suffix,
       tier: detail.tier,
+      stemMismatch: detail.stemMismatch,
       peerKeys,
     };
     if (detail.stemMismatch) {

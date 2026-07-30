@@ -255,10 +255,10 @@ describe('canRunTabCheck', () => {
 describe('formatCheckQuotaConsumedLine', () => {
   it('차감 직후 남은 일일·선물 검수권을 한 줄로 만든다', () => {
     expect(formatCheckQuotaConsumedLine(0, 4, 'spelling')).toBe(
-      '맞춤법 검수권 1회가 사용되었습니다(1일 검수권 0회, 선물 검수권 4회 사용 가능)',
+      '맞춤법 검수권 1장이 사용되었습니다(1일 검수권 0장, 선물 검수권 4장 사용 가능)',
     );
     expect(formatCheckQuotaConsumedLine(1, 5, 'consistency')).toBe(
-      '표기 통일 검수권 1회가 사용되었습니다(1일 검수권 1회, 선물 검수권 5회 사용 가능)',
+      '표기 통일 검수권 1장이 사용되었습니다(1일 검수권 1장, 선물 검수권 5장 사용 가능)',
     );
   });
 });
@@ -266,7 +266,7 @@ describe('formatCheckQuotaConsumedLine', () => {
 describe('formatConsistencyCheckQuotaAvailabilityLine', () => {
   it('표기 통일 검수 직전 가능 횟수를 한 줄로 만든다', () => {
     expect(formatConsistencyCheckQuotaAvailabilityLine(6, 1, 5)).toBe(
-      '표기 통일 검수는 6회(1일 검수권 1회, 선물 검수권 5회) 가능합니다',
+      '표기 통일 검수는 6회(1일 검수권 1장, 선물 검수권 5장) 가능합니다',
     );
   });
 });
@@ -274,7 +274,7 @@ describe('formatConsistencyCheckQuotaAvailabilityLine', () => {
 describe('formatSpellingCheckQuotaAvailabilityLine', () => {
   it('맞춤법 검수 직전 가능 횟수를 한 줄로 만든다', () => {
     expect(formatSpellingCheckQuotaAvailabilityLine(5, 0, 5)).toBe(
-      '오늘 맞춤법 검수는 5회(1일 검수권 0회, 선물 검수권 5회) 가능합니다',
+      '오늘 맞춤법 검수는 5회(1일 검수권 0장, 선물 검수권 5장) 가능합니다',
     );
   });
 });
