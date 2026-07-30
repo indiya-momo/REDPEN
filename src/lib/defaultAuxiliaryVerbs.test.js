@@ -253,7 +253,7 @@ describe('ensureDefaultAuxiliaryVerbs', () => {
     expect(list.some((e) => (e.displayLabel || e.tailWord) === '러')).toBe(
       false,
     );
-    expect(list.length).toBe(10);
+    expect(list.length).toBe(11);
   });
 
   it('bon-bojo 본조 — stems마다 띄움 regex 1개(붙임 없음)', () => {
