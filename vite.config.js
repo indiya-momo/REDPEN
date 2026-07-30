@@ -54,6 +54,8 @@ export default defineConfig(({ mode }) => {
   const fileEnv = loadEnv(mode, process.cwd(), '');
   const buildEnv = { ...fileEnv, ...process.env };
   const devPort = Number(buildEnv.DEV_PORT) || 5173;
+  const josaSlmProxyTarget =
+    buildEnv.JOSA_SLM_PROXY_TARGET?.trim() || 'http://127.0.0.1:8000';
   const deployTarget = buildEnv.VERCEL
     ? 'vercel'
     : buildEnv.VITE_DEPLOY_TARGET?.trim() || '';
@@ -85,6 +87,12 @@ export default defineConfig(({ mode }) => {
         changeOrigin: true,
         secure: true,
         rewrite: (p) => p.replace(/^\/api\/kornorms/, '/kornorms'),
+      },
+      // 조사·어간 2차 SLM — 로컬 vLLM (:8000). 스케치 §13
+      '/api/josa-slm': {
+        target: josaSlmProxyTarget,
+        changeOrigin: true,
+        rewrite: (p) => p.replace(/^\/api\/josa-slm/, ''),
       },
     },
   },

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   UNIFY_LOW_RISK_JOSA,
-  UNIFY_HIGH_RISK_JOSA,
+  UNIFY_AMBIGUOUS_JOSA_SUFFIXES,
   matchLongestLowRiskJosa,
   matchLongestReviewStemSuffix,
   stripReviewStemSuffix,
@@ -17,8 +17,8 @@ describe('UNIFY_LOW_RISK_JOSA', () => {
     }
   });
 
-  it('고위험 단음절은 저위험 목록에 없다', () => {
-    for (const j of UNIFY_HIGH_RISK_JOSA) {
+  it('애매한 단음절 조사는 저위험 목록에 없다', () => {
+    for (const j of UNIFY_AMBIGUOUS_JOSA_SUFFIXES) {
       expect(UNIFY_LOW_RISK_JOSA).not.toContain(j);
     }
   });
@@ -343,6 +343,54 @@ describe('matchLongestReviewStemSuffix', () => {
       bare: false,
     });
   });
+
+  it('에도·면·야·주는·주던·주려는·준·외·이외를 인식한다', () => {
+    expect(matchLongestReviewStemSuffix('학교에도')).toEqual({
+      stemLast: '학교',
+      suffix: '에도',
+      bare: false,
+    });
+    expect(matchLongestReviewStemSuffix('결정면')).toEqual({
+      stemLast: '결정',
+      suffix: '면',
+      bare: false,
+    });
+    expect(matchLongestReviewStemSuffix('사실야')).toEqual({
+      stemLast: '사실',
+      suffix: '야',
+      bare: false,
+    });
+    expect(matchLongestReviewStemSuffix('도움주는')).toEqual({
+      stemLast: '도움',
+      suffix: '주는',
+      bare: false,
+    });
+    expect(matchLongestReviewStemSuffix('도움주던')).toEqual({
+      stemLast: '도움',
+      suffix: '주던',
+      bare: false,
+    });
+    expect(matchLongestReviewStemSuffix('도움주려는')).toEqual({
+      stemLast: '도움',
+      suffix: '주려는',
+      bare: false,
+    });
+    expect(matchLongestReviewStemSuffix('도움준')).toEqual({
+      stemLast: '도움',
+      suffix: '준',
+      bare: false,
+    });
+    expect(matchLongestReviewStemSuffix('학교외')).toEqual({
+      stemLast: '학교',
+      suffix: '외',
+      bare: false,
+    });
+    expect(matchLongestReviewStemSuffix('학교이외')).toEqual({
+      stemLast: '학교',
+      suffix: '이외',
+      bare: false,
+    });
+  });
 });
 
 describe('stripReviewStemSuffix', () => {
@@ -364,6 +412,21 @@ describe('stripReviewStemSuffix', () => {
 
   it('경제 정책에서 → 경제 정책', () => {
     expect(stripReviewStemSuffix('경제 정책에서')).toBe('경제 정책');
+  });
+
+  it('지속 되었는가·지속적이고·지속 해', () => {
+    expect(stripReviewStemSuffix('지속되었는가')).toBe('지속되었는');
+    expect(stripReviewStemSuffix('지속 적이고')).toBe('지속');
+    expect(stripReviewStemSuffix('지속적이고')).toBe('지속');
+    expect(stripReviewStemSuffix('지속 해')).toBe('지속');
+    expect(stripReviewStemSuffix('지속해')).toBe('지속');
+  });
+
+  it('활동 이며·활동 하도록', () => {
+    expect(stripReviewStemSuffix('활동이며')).toBe('활동');
+    expect(stripReviewStemSuffix('활동 이며')).toBe('활동');
+    expect(stripReviewStemSuffix('활동하도록')).toBe('활동');
+    expect(stripReviewStemSuffix('활동 하도록')).toBe('활동');
   });
 });
 
@@ -424,5 +487,49 @@ describe('attachJosaReviewHints', () => {
       expect(c.totalCount).toBe(2);
     }
     expect(out[0].key).toBe('역학은');
+  });
+
+  it('같은 어간 peer가 없어도 접미가 떨어지면 검토 라벨을 붙인다', () => {
+    const mk = (key, spaced, glued) => ({
+      key,
+      variants: [glued, spaced],
+      counts: { [glued]: 1, [spaced]: 1 },
+      occurrencesByVariant: {},
+      recommendedUnify: glued,
+      totalCount: 2,
+      kind: 'conflict',
+    });
+    const out = attachJosaReviewHints([
+      mk('지속되었는가', '지속 되었는가', '지속되었는가'),
+      mk('지속적이고', '지속 적이고', '지속적이고'),
+      mk('지속해', '지속 해', '지속해'),
+    ]);
+    for (const c of out) {
+      expect(c.josaReview?.status).toBe('review');
+    }
+    expect(out[0].josaReview?.stemKey).toBe('지속되었는');
+    expect(out[0].josaReview?.peerKeys).toEqual([]);
+    expect(out[1].josaReview?.stemKey).toBe('지속');
+    expect(out[2].josaReview?.stemKey).toBe('지속');
+    expect(out[1].josaReview?.peerKeys).toEqual(['지속해']);
+    expect(out[2].josaReview?.peerKeys).toEqual(['지속적이고']);
+  });
+
+  it('활동 이며·활동 하도록도 단독 검토 라벨', () => {
+    const mk = (key, spaced, glued) => ({
+      key,
+      variants: [glued, spaced],
+      counts: { [glued]: 1, [spaced]: 1 },
+      occurrencesByVariant: {},
+      recommendedUnify: glued,
+      totalCount: 2,
+      kind: 'conflict',
+    });
+    const out = attachJosaReviewHints([
+      mk('활동이며', '활동 이며', '활동이며'),
+      mk('활동하도록', '활동 하도록', '활동하도록'),
+    ]);
+    expect(out[0].josaReview?.stemKey).toBe('활동');
+    expect(out[1].josaReview?.stemKey).toBe('활동');
   });
 });

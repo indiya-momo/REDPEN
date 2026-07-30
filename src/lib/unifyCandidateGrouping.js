@@ -2,9 +2,10 @@
  * 표기 통일 추천 — 클러스터를 가나다순 정렬 + 계열(prefix/suffix) 그룹핑.
  *
  * 목록 순서 (합의):
- * 1) 단일 항목 가나다순
+ * 1) 단일 항목(명사 위주) 가나다순
  * 2) 접두 계열(가나다@) 가나다순 — 그룹 안도 가나다
  * 3) 접미 계열(@가나다) 가나다순 — 그룹 안도 가나다
+ * 4) 용언(동사·형용사·보조용언 어간 추정) 가나다순
  */
 
 import {
@@ -18,6 +19,8 @@ import {
   fillSeriesSatellites,
 } from './unifyCandidateSatellites.js';
 import { attachJosaReviewHints } from './unifyJosaReview.js';
+import { attachAuxiliaryReviewHints } from './unifyAuxReview.js';
+import { isUnifyPredicateCluster } from './unifyPredicateBucket.js';
 
 /**
  * @typedef {import('./unifyCandidateDiscover.js').UnifySpacingCluster} UnifySpacingCluster
@@ -33,6 +36,9 @@ import { attachJosaReviewHints } from './unifyJosaReview.js';
  * } | {
  *   type: 'single',
  *   clusters: UnifySpacingCluster[],
+ * } | {
+ *   type: 'predicate',
+ *   clusters: UnifySpacingCluster[],
  * }} ClusterGroup
  */
 
@@ -45,27 +51,69 @@ function sortClustersByKey(clusters) {
 }
 
 /**
- * 단일 → 가나다@ → @가나다. 같은 구간 안에서는 affix(또는 단일 키) 가나다.
+ * 단일 → 가나다@ → @가나다 → 용언. 같은 구간 안에서는 affix(또는 키) 가나다.
  * @param {ClusterGroup[]} groups
  * @returns {ClusterGroup[]}
  */
 export function sortClusterGroups(groups) {
-  const section = (g) =>
-    g.type === 'single' ? 0 : g.affixType === 'prefix' ? 1 : 2;
+  const section = (g) => {
+    if (g.type === 'single') return 0;
+    if (g.type === 'predicate') return 3;
+    return g.affixType === 'prefix' ? 1 : 2;
+  };
 
   return [...groups]
-    .map((g) =>
-      g.type === 'single'
-        ? { ...g, clusters: sortClustersByKey(g.clusters) }
-        : { ...g, clusters: sortClustersByKey(g.clusters) },
-    )
+    .map((g) => ({ ...g, clusters: sortClustersByKey(g.clusters) }))
     .filter((g) => g.clusters.length > 0)
     .sort((a, b) => {
       const o = section(a) - section(b);
       if (o !== 0) return o;
-      if (a.type === 'single' || b.type === 'single') return 0;
+      if (a.type !== 'series' || b.type !== 'series') return 0;
       return a.affix.localeCompare(b.affix, 'ko');
     });
+}
+
+/**
+ * 단일 그룹에서 용언 추정 항목을 빼 `predicate` 그룹으로 옮긴다.
+ * auxReview는 attach 이후에 붙으므로 힌트 부착 후 호출.
+ * @param {ClusterGroup[]} groups
+ * @returns {ClusterGroup[]}
+ */
+export function splitPredicateSingles(groups) {
+  if (!groups?.length) return groups;
+
+  /** @type {ClusterGroup[]} */
+  const next = [];
+  /** @type {UnifySpacingCluster[]} */
+  const predicates = [];
+
+  for (const group of groups) {
+    if (group.type !== 'single') {
+      next.push(group);
+      continue;
+    }
+    /** @type {UnifySpacingCluster[]} */
+    const nouns = [];
+    for (const cluster of group.clusters) {
+      if (isUnifyPredicateCluster(cluster)) predicates.push(cluster);
+      else nouns.push(cluster);
+    }
+    if (nouns.length > 0) {
+      next.push({
+        type: /** @type {const} */ ('single'),
+        clusters: sortClustersByKey(nouns),
+      });
+    }
+  }
+
+  if (predicates.length > 0) {
+    next.push({
+      type: /** @type {const} */ ('predicate'),
+      clusters: sortClustersByKey(predicates),
+    });
+  }
+
+  return sortClusterGroups(next);
 }
 
 /**
@@ -239,12 +287,16 @@ export function groupSortAndFillSatellites(clusters, rawByKey) {
   );
 
   // 조사·어간 접미 검토 링크(자동 merge 없음, 전체 목록 기준)
-  const hinted = attachJosaReviewHints(kept.flatMap((g) => g.clusters));
+  // bon-bojo stems 보조용언 추정 검토(자동 merge 없음)
+  const hinted = attachAuxiliaryReviewHints(
+    attachJosaReviewHints(kept.flatMap((g) => g.clusters)),
+  );
   const byKey = new Map(hinted.map((c) => [c.key, c]));
   for (const group of kept) {
     group.clusters = group.clusters.map((c) => byKey.get(c.key) || c);
   }
-  return kept;
+  // auxReview·어미 휴리스틱 반영 후 용언을 맨 아래로
+  return splitPredicateSingles(kept);
 }
 
 /**

@@ -1300,6 +1300,18 @@
   line-height: 1.55;
 }
 
+.panel-left .unify-candidate-find__slm-status,
+.panel-left .unify-candidate-find__slm-cap {
+  margin: 6px 0 0;
+  color: #555;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.panel-left .unify-candidate-find__slm-cap {
+  padding: 0 2px 8px;
+}
+
 .panel-left .consistency-unified-box {
   padding: var(--spelling-calibration-block-pad-y)
     var(--spelling-calibration-block-pad-x);
@@ -1804,9 +1816,10 @@
   min-height: var(--results-findings-circle-size, 1.35rem);
   padding: 0.1em 0.45em;
   border-radius: var(--radius-ui-sm, 6px);
-  background: #9ca3af;
-  color: #fff;
-  box-shadow: none;
+  /* 맞춤법·일관성 결과 「전체 발견」원문자와 동일 */
+  background: var(--pdf-highlight-primary-fill);
+  color: var(--color-surface-inverse, #2a2118);
+  box-shadow: var(--pdf-highlight-primary-shadow);
   text-shadow: none;
 }
 
@@ -1873,7 +1886,19 @@
   .unify-candidate-find
   .results-panel--unify-candidate
   .unify-candidate-find__card {
-  margin-inline: var(--criteria-pad-inline, 10px);
+  /* 카테고리 summary 체크박스(쉐브론 다음)와 카드 체크박스 왼쪽 맞춤 */
+  margin-inline: 0;
+  box-sizing: border-box;
+  padding-inline-start: calc(
+    var(--criteria-pad-inline, 10px) + var(--criteria-summary-rail, 23px)
+  );
+  padding-inline-end: calc(
+    var(--results-findings-pad-end, var(--space-sm)) -
+      var(--results-category-border, 1px)
+  );
+  border-radius: 0;
+  border-left: none;
+  border-right: none;
 }
 
 .panel-left .unify-candidate-find__card {
@@ -1971,16 +1996,8 @@
   color: var(--c-soft, #666);
 }
 
-.panel-left .unify-candidate-find__series-hint {
-  display: block;
-  margin-top: 0;
-  font-size: 0.78em;
-  font-weight: 400;
-  color: var(--panel-accent, #b06030);
-  line-height: 1.4;
-}
-
-.panel-left .unify-candidate-find__josa-review {
+.panel-left .unify-candidate-find__josa-review,
+.panel-left .unify-candidate-find__aux-review {
   display: inline;
   margin-top: 0;
   font-size: 0.78em;
@@ -1988,6 +2005,10 @@
   color: #6b5b2e;
   line-height: 1.4;
   white-space: nowrap;
+}
+
+.panel-left .unify-candidate-find__aux-review {
+  color: #4a5568;
 }
 
 /* ── variant별 표기 통일 버튼 ── */

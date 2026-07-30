@@ -10,6 +10,7 @@ import {
   groupSortAndFillSatellites,
   isRealSpacingConflict,
   sortClusterGroups,
+  splitPredicateSingles,
 } from './unifyCandidateGrouping.js';
 
 /** @param {Partial<import('./unifyCandidateDiscover.js').UnifySpacingCluster>} overrides */
@@ -300,8 +301,18 @@ describe('groupSortAndFillSatellites', () => {
 });
 
 describe('sortClusterGroups', () => {
-  it('단일 가나다 → 가나다@ → @가나다', () => {
+  it('단일 가나다 → 가나다@ → @가나다 → 용언', () => {
     const groups = sortClusterGroups([
+      {
+        type: 'predicate',
+        clusters: [
+          makeCluster({
+            key: '만들어',
+            variants: ['만들어', '만들 어'],
+            counts: { 만들어: 1, '만들 어': 1 },
+          }),
+        ],
+      },
       {
         type: 'series',
         affix: '시장',
@@ -347,7 +358,12 @@ describe('sortClusterGroups', () => {
       },
     ]);
 
-    expect(groups.map((g) => g.type)).toEqual(['single', 'series', 'series']);
+    expect(groups.map((g) => g.type)).toEqual([
+      'single',
+      'series',
+      'series',
+      'predicate',
+    ]);
     expect(groups[0].clusters.map((c) => c.key)).toEqual([
       '가정해보자',
       '얽혀있다',
@@ -358,6 +374,61 @@ describe('sortClusterGroups', () => {
       '경제회복',
     ]);
     expect(groups[2].label).toBe('@시장');
+    expect(groups[3].clusters.map((c) => c.key)).toEqual(['만들어']);
+  });
+});
+
+describe('splitPredicateSingles', () => {
+  it('단일에서 용언을 빼 맨 아래로 보낸다', () => {
+    const groups = splitPredicateSingles([
+      {
+        type: 'single',
+        clusters: [
+          makeCluster({
+            key: '만들어',
+            variants: ['만들어', '만들 어'],
+            counts: { 만들어: 2, '만들 어': 1 },
+            totalCount: 3,
+          }),
+          makeCluster({
+            key: '물가',
+            variants: ['물가', '물 가'],
+            counts: { 물가: 2, '물 가': 1 },
+            totalCount: 3,
+          }),
+          makeCluster({
+            key: '생각해',
+            variants: ['생각해', '생각 해'],
+            counts: { 생각해: 1, '생각 해': 1 },
+            totalCount: 2,
+          }),
+        ],
+      },
+      {
+        type: 'series',
+        affix: '세계',
+        affixType: 'prefix',
+        label: '세계@',
+        clusters: [
+          makeCluster({
+            key: '세계경제',
+            variants: ['세계경제', '세계 경제'],
+            counts: { 세계경제: 1, '세계 경제': 1 },
+          }),
+        ],
+      },
+    ]);
+
+    expect(groups.map((g) => g.type)).toEqual([
+      'single',
+      'series',
+      'predicate',
+    ]);
+    expect(groups[0].clusters.map((c) => c.key)).toEqual(['물가']);
+    expect(groups[2].clusters.map((c) => c.key)).toEqual([
+      '만들어',
+      '생각해',
+    ]);
   });
 });
 

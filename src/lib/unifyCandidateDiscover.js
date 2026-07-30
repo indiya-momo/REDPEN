@@ -12,8 +12,6 @@
  * 추출: 한글·숫자 토큰 + 연속 2~4그램(원문 슬라이스) / 단일 토큰.
  */
 
-import { buildSeriesHints } from './unifyCandidateSeriesTrend.js';
-
 /**
  * @typedef {{
  *   pageNum: number,
@@ -30,11 +28,25 @@ import { buildSeriesHints } from './unifyCandidateSeriesTrend.js';
  *   occurrencesByVariant: Record<string, UnifyVariantOccurrence[]>,
  *   recommendedUnify: string,
  *   totalCount: number,
- *   seriesHint?: import('./unifyCandidateSeriesTrend.js').SeriesHint,
  *   kind?: 'conflict' | 'single-form',
  *   josaReview?: {
  *     stemKey: string,
  *     peerKeys: string[],
+ *     status: 'review',
+ *     slm?: { model: string; confidence: 'high' },
+ *   },
+ *   josaReviewCandidate?: {
+ *     stemKey: string,
+ *     stemSpaced: string,
+ *     suffix: string,
+ *     tier: 'high' | 'low' | 'risky',
+ *     peerKeys: string[],
+ *   },
+ *   auxReview?: {
+ *     stemKey: string,
+ *     stemSpaced: string,
+ *     itemId: string,
+ *     displayLabel?: string,
  *     status: 'review',
  *   },
  * }} UnifySpacingCluster
@@ -507,12 +519,6 @@ export function buildSpacingConflictClustersFromIndex(byKey, opts = {}) {
     a.recommendedUnify.localeCompare(b.recommendedUnify, 'ko'),
   );
   const trimmed = clusters.slice(0, maxClusters);
-
-  const hints = buildSeriesHints(trimmed);
-  for (const cluster of trimmed) {
-    const hint = hints.get(cluster.key);
-    if (hint) cluster.seriesHint = hint;
-  }
 
   return trimmed;
 }

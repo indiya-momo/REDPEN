@@ -13,6 +13,11 @@ import {
   instancesForUnifyVariant,
 } from '../../lib/unifyCandidateDiscover.js';
 import { groupSortAndFillSatellites } from '../../lib/unifyCandidateGrouping.js';
+import {
+  mergeReviewedClustersIntoGroups,
+  runJosaSlmReviewOnClusterGroups,
+} from '../../lib/unifyJosaReviewSlm/index.js';
+import { isUnifyJosaSlmReviewEnabled } from '../../lib/featureFlags.js';
 import { formatSystemPageLabel } from '../../lib/printedPageDisplay.js';
 import { assertBetaDailyCheckOrAlert } from '../../lib/betaDailyQuota.js';
 import { confirmUnifyCandidateFindBeforeRun, alertUnifyCandidateFindAfterRun } from '../../lib/consistencyCheckConfirm.js';
@@ -138,6 +143,11 @@ export default function UnifyCandidateFindPanel({
   formatPageLabel = formatSystemPageLabel,
 }) {
   const [finding, setFinding] = useState(false);
+  const [slmReviewing, setSlmReviewing] = useState(false);
+  const [slmDroppedCount, setSlmDroppedCount] = useState(0);
+  const [slmReviewedByKey, setSlmReviewedByKey] = useState(
+    /** @type {Map<string, UnifySpacingCluster>} */ (new Map()),
+  );
   const [clusters, setClusters] = useState(
     /** @type {UnifySpacingCluster[]} */ ([]),
   );
@@ -167,17 +177,18 @@ export default function UnifyCandidateFindPanel({
    * @param {Set<string>} hidden
    */
   const publishPreview = useCallback(
-    (allClusters, raw, hidden) => {
+    (allClusters, raw, hidden, slmByKey = slmReviewedByKey) => {
       if (!onPreviewGroupsChange) return;
-      const grouped = raw
+      let grouped = raw
         ? groupSortAndFillSatellites(allClusters, raw)
         : [];
+      grouped = mergeReviewedClustersIntoGroups(grouped, slmByKey);
       const previewClusters = grouped
         .flatMap((g) => g.clusters)
         .filter((c) => !hidden.has(c.key));
       onPreviewGroupsChange(buildUnifyCandidatePreviewGroups(previewClusters));
     },
-    [onPreviewGroupsChange],
+    [onPreviewGroupsChange, slmReviewedByKey],
   );
 
   async function handleFind() {
@@ -189,7 +200,7 @@ export default function UnifyCandidateFindPanel({
       alert('지금은 검수를 진행할 수 없습니다. 로그인·검수권을 확인해 주세요.');
       return;
     }
-    if (finding) return;
+    if (finding || slmReviewing) return;
     setFinding(true);
     try {
       if (!(await confirmUnifyCandidateFindBeforeRun(authUid, authEmail))) {
@@ -208,14 +219,39 @@ export default function UnifyCandidateFindPanel({
       await new Promise((r) => setTimeout(r, 0));
       const result = discoverSpacingUnifyCandidates(pageTexts, { includeRaw: true });
       const next = result.clusters;
+      const baseGrouped = groupSortAndFillSatellites(next, result.rawByKey);
+      /** @type {Map<string, UnifySpacingCluster>} */
+      let slmByKey = new Map();
+      let dropped = 0;
+
+      if (isUnifyJosaSlmReviewEnabled()) {
+        setSlmReviewing(true);
+        try {
+          const { loadJosaSlmRunnerIfEnabled } = await import(
+            '../../lib/unifyJosaReviewSlm/loadRunner.js'
+          );
+          const runnerOpts = await loadJosaSlmRunnerIfEnabled();
+          const slmResult = await runJosaSlmReviewOnClusterGroups(
+            baseGrouped,
+            { ...(runnerOpts ?? {}), pageTexts },
+          );
+          slmByKey = slmResult.reviewedByKey;
+          dropped = slmResult.droppedCount;
+        } finally {
+          setSlmReviewing(false);
+        }
+      }
+
       setClusters(next);
       setRawByKey(result.rawByKey);
+      setSlmReviewedByKey(slmByKey);
+      setSlmDroppedCount(dropped);
       setSearched(true);
       setRegisteredVariants(new Map());
       setPreSelected(new Map());
       const hidden = new Set();
       setHiddenPdfKeys(hidden);
-      publishPreview(next, result.rawByKey, hidden);
+      publishPreview(next, result.rawByKey, hidden, slmByKey);
       await alertUnifyCandidateFindAfterRun(next, {
         uid: authUid,
         email: authEmail,
@@ -254,10 +290,13 @@ export default function UnifyCandidateFindPanel({
     });
   }
 
-  const grouped = useMemo(
-    () => (rawByKey ? groupSortAndFillSatellites(clusters, rawByKey) : []),
-    [clusters, rawByKey],
-  );
+  const grouped = useMemo(() => {
+    if (!rawByKey) return [];
+    const base = groupSortAndFillSatellites(clusters, rawByKey);
+    return mergeReviewedClustersIntoGroups(base, slmReviewedByKey);
+  }, [clusters, rawByKey, slmReviewedByKey]);
+
+  const busy = finding || slmReviewing;
 
   const totalFindings = useMemo(() => sumClusterFindings(clusters), [clusters]);
   const visibleFindings = useMemo(
@@ -327,7 +366,7 @@ export default function UnifyCandidateFindPanel({
     <div className="loanword-converter unify-candidate-find">
       <div className="loanword-converter__summary panel-criteria-heading">
         <span className="loanword-converter__summary-title">
-          표기 통일 추천
+          표기 통일 추천하기
           <span className="loanword-converter__free-badge">BEST</span>
         </span>
       </div>
@@ -341,12 +380,21 @@ export default function UnifyCandidateFindPanel({
             type="button"
             className="consistency-register-add-btn consistency-register-add-btn--label unify-candidate-find__submit"
             onClick={() => void handleFind()}
-            disabled={finding || checkQuotaBlocked}
-            aria-busy={finding}
+            disabled={busy || checkQuotaBlocked}
+            aria-busy={busy}
           >
-            {finding ? '·\u2009·\u2009·' : '찾기'}
+            {busy ? '·\u2009·\u2009·' : '찾기'}
           </button>
         </div>
+        {slmReviewing ? (
+          <p
+            className="hint consistency-hint-block unify-candidate-find__slm-status"
+            role="status"
+            aria-live="polite"
+          >
+            조사·어간 2차 검토 중…
+          </p>
+        ) : null}
         <p className="hint consistency-hint-block unify-candidate-find__example">
           <ConsistencyHintExample>
             &apos;뉴욕 타임스&apos; 3회, &apos;뉴욕타임스&apos; 1회 → 다수형
@@ -359,7 +407,7 @@ export default function UnifyCandidateFindPanel({
         <div
           className="unify-candidate-find__results"
           role="region"
-          aria-label="표기 통일 추천"
+          aria-label="표기 통일 추천하기"
         >
           {clusters.length === 0 ? (
             <p className="unify-candidate-find__empty">
@@ -381,26 +429,41 @@ export default function UnifyCandidateFindPanel({
                 className="results-accordion"
                 key={`unify-acc-${clusters.length}-${totalFindings}`}
               >
+                {slmDroppedCount > 0 ? (
+                  <p className="hint consistency-hint-block unify-candidate-find__slm-cap">
+                    조사·어간 2차 검토 {slmDroppedCount}건은 한도로 생략됐습니다.
+                  </p>
+                ) : null}
                 {grouped.map((group) => {
                   const sectionId =
                     group.type === 'series'
                       ? `series-${group.affixType}-${group.affix}`
-                      : 'single';
+                      : group.type === 'predicate'
+                        ? 'predicate'
+                        : 'single';
                   const label =
-                    group.type === 'series' ? group.label : '단일 항목';
+                    group.type === 'series'
+                      ? group.label
+                      : group.type === 'predicate'
+                        ? '용언'
+                        : '단일 항목';
                   const findingsTotal = sumClusterFindings(group.clusters);
                   const visibleClusters = group.clusters.filter(
                     (c) => !hiddenPdfKeys.has(c.key),
                   );
                   const findingsShown = sumClusterFindings(visibleClusters);
                   const criteriaCount = visibleClusters.length;
+                  const categoryMod =
+                    group.type === 'series'
+                      ? 'series'
+                      : group.type === 'predicate'
+                        ? 'predicate'
+                        : 'single';
 
                   return (
                     <details
                       key={sectionId}
-                      className={`results-category results-category--unify-${
-                        group.type === 'series' ? 'series' : 'single'
-                      }`}
+                      className={`results-category results-category--unify-${categoryMod}`}
                       defaultOpen={defaultOpenId === sectionId}
                     >
                       <summary className="results-category__summary panel-criteria-heading">
@@ -520,7 +583,8 @@ function ClusterCard({
             <span className="unify-candidate-find__total">
               총 {cluster.totalCount}회
             </span>
-            {cluster.josaReview?.status === 'review' ? (
+            {cluster.josaReview?.status === 'review' &&
+            cluster.auxReview?.status !== 'review' ? (
               <span
                 className="unify-candidate-find__josa-review"
                 title={
@@ -532,12 +596,19 @@ function ClusterCard({
                 조사 · 어간 추정, 검토 필요
               </span>
             ) : null}
+            {cluster.auxReview?.status === 'review' ? (
+              <span
+                className="unify-candidate-find__aux-review"
+                title={
+                  cluster.auxReview.displayLabel
+                    ? `본용언+보조용언 시트: ${cluster.auxReview.displayLabel} · ${cluster.auxReview.stemSpaced}`
+                    : `본용언+보조용언 시트 stem: ${cluster.auxReview.stemSpaced}`
+                }
+              >
+                보조용언 추정, 검토 필요
+              </span>
+            ) : null}
           </div>
-          {cluster.seriesHint ? (
-            <span className="unify-candidate-find__series-hint">
-              {cluster.seriesHint.reason}
-            </span>
-          ) : null}
         </div>
       </div>
       <ul className="unify-candidate-find__variants">
