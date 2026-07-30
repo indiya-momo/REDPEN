@@ -612,6 +612,7 @@ export function buildUnifyCandidatePreviewGroups(clusters, options = {}) {
           replace: chosen,
           label: variant,
           category: 'consistency',
+          patternKind: 'compound-spacing',
           tip: `「${chosen}」으로 통일`,
           ...(overlay ? { overlayReplace: overlay } : {}),
           instances: occs.map((occ) => ({
@@ -658,9 +659,24 @@ export function buildUnifyCandidatePreviewGroups(clusters, options = {}) {
 /**
  * @param {UnifySpacingCluster} cluster
  * @param {string} variant
+ * @param {{ chosenVariant?: string | null }} [opts]
  * @returns {import('./ruleEngine.js').MatchInstance[]}
  */
-export function instancesForUnifyVariant(cluster, variant) {
+export function instancesForUnifyVariant(cluster, variant, opts = {}) {
+  const chosen = opts.chosenVariant ?? null;
+  if (chosen) {
+    // 선택 후: 틀린(비선택) 표기만 칩·하이라이트 대상
+    if (variant === chosen) return [];
+    const occs = cluster.occurrencesByVariant?.[variant] ?? [];
+    return occs.map((occ) => ({
+      find: variant,
+      replace: chosen,
+      matchedText: occ.matchedText,
+      suggestedText: chosen,
+      pageNum: occ.pageNum,
+      index: occ.index,
+    }));
+  }
   if (!shouldShowUnifyVariantPages(cluster, variant)) return [];
   const occs = cluster.occurrencesByVariant?.[variant] ?? [];
   return occs.map((occ) => ({
@@ -671,4 +687,20 @@ export function instancesForUnifyVariant(cluster, variant) {
     pageNum: occ.pageNum,
     index: occ.index,
   }));
+}
+
+/**
+ * 표기 통일 선택 직후 PDF primary용 — 틀린 표기 첫 인스턴스.
+ * @param {UnifySpacingCluster} cluster
+ * @param {string} chosenVariant
+ * @returns {import('./ruleEngine.js').MatchInstance | null}
+ */
+export function firstWrongUnifyInstance(cluster, chosenVariant) {
+  for (const variant of cluster.variants ?? []) {
+    const insts = instancesForUnifyVariant(cluster, variant, {
+      chosenVariant,
+    });
+    if (insts.length) return insts[0];
+  }
+  return null;
 }
