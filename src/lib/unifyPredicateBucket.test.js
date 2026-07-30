@@ -23,9 +23,12 @@ describe('looksLikePredicateKey', () => {
     expect(looksLikePredicateKey('만들어내다')).toBe(true);
   });
 
-  it('알려진 용언 어간(오래·개의)을 잡는다', () => {
+  it('알려진 용언 어간(오래)을 잡는다', () => {
     expect(looksLikePredicateKey('오래')).toBe(true);
-    expect(looksLikePredicateKey('개의')).toBe(true);
+  });
+
+  it('개의(의존명사+의)는 휴리스틱 용언이 아니다', () => {
+    expect(looksLikePredicateKey('개의')).toBe(false);
   });
 
   it('명사 위주 표기는 제외한다', () => {

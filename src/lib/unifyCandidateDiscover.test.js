@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   discoverSpacingUnifyCandidates,
   formatUnifyClusterRegisterInput,
+  formatUnifySpacingDecisionOverlay,
   buildUnifyCandidatePreviewGroups,
   instancesForUnifyVariant,
   isValidSpacedUnifyVariant,
@@ -455,5 +456,34 @@ describe('buildUnifyCandidatePreviewGroups', () => {
     expect(groups.map((g) => g.find).sort()).toEqual(
       ['공생 관계', '공생관계'].sort(),
     );
+  });
+
+  it('붙임 선택 시 띄움 인스턴스에 →…^… 오버레이', () => {
+    const clusters = discoverSpacingUnifyCandidates([
+      { pageNum: 1, text: '조선시대 조선시대 조선 시대' },
+    ]);
+    const cluster = clusters.find((c) => c.key === '조선시대');
+    expect(cluster).toBeTruthy();
+    const groups = buildUnifyCandidatePreviewGroups(clusters, {
+      registeredByKey: new Map([[cluster.key, '조선시대']]),
+    });
+    expect(groups.map((g) => g.find)).toEqual(['조선 시대']);
+    expect(groups[0].overlayReplace).toBe('→조선^시대');
+    expect(formatUnifySpacingDecisionOverlay('조선시대', cluster)).toBe(
+      '→조선^시대',
+    );
+  });
+
+  it('띄움 선택 시 붙임 인스턴스에 →…∨… 오버레이', () => {
+    const clusters = discoverSpacingUnifyCandidates([
+      { pageNum: 1, text: '조선시대 조선시대 조선 시대' },
+    ]);
+    const cluster = clusters.find((c) => c.key === '조선시대');
+    const groups = buildUnifyCandidatePreviewGroups(clusters, {
+      registeredByKey: new Map([[cluster.key, '조선 시대']]),
+    });
+    expect(groups.map((g) => g.find)).toEqual(['조선시대']);
+    expect(groups[0].overlayReplace).toBe('→조선∨시대');
+    expect(groups[0].instances?.length).toBe(2);
   });
 });

@@ -1,6 +1,7 @@
 # 조사·어간 검토 — SLM 2차 필터 구현 스케치
 
 **상위 문서:** `unify-candidate-spacing-redesign-2026-07-29.md` §11.5  
+**관련:** 용언 2차 검토(목록 삭제) — `unify-predicate-review-slm-design-2026-07-30.md`  
 **상태:** 구현 중 (단계 0–4 + §3.2·3c POC 완료) — **현행: 로컬에서만 SLM 시험** (`VITE_UNIFY_JOSA_SLM` 기본 off). 클라우드·서버리스 GPU **보류**.  
 **작성:** 2026-07-30
 

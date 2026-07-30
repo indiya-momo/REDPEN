@@ -46,6 +46,7 @@ import { cautionHighlightSpan } from './cautionRules.js';
  * @property {string} [groupDisplayLabel]
  * @property {string} [dividerGroup] — 맞춤법 묶음 키(엑셀 묶음 열 정렬·병합용)
  * @property {string} [dividerLabel] — 묶음 표시 이름(엑셀 묶음 열 표시용)
+ * @property {string} [overlayReplace] — PDF 하이라이트 위 표시 문구(표기 통일 추천 등)
  * @property {MatchInstance[]} instances
  */
 

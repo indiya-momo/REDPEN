@@ -6,6 +6,7 @@ import {
   isTocBodyCheckEnabled,
   isUnifyCandidateFindEnabled,
   isUnifyJosaSlmReviewEnabled,
+  isUnifyPredicateSlmReviewEnabled,
 } from './featureFlags.js';
 
 describe('featureFlags', () => {
@@ -16,6 +17,7 @@ describe('featureFlags', () => {
   const prevLoanword = import.meta.env.VITE_FEATURE_LOANWORD_CONVERTER;
   const prevUnifyCandidate = import.meta.env.VITE_FEATURE_UNIFY_CANDIDATE_FIND;
   const prevJosaSlm = import.meta.env.VITE_UNIFY_JOSA_SLM;
+  const prevPredicateSlm = import.meta.env.VITE_UNIFY_PREDICATE_SLM;
 
   afterEach(() => {
     import.meta.env.DEV = prevDev;
@@ -25,6 +27,7 @@ describe('featureFlags', () => {
     import.meta.env.VITE_FEATURE_LOANWORD_CONVERTER = prevLoanword;
     import.meta.env.VITE_FEATURE_UNIFY_CANDIDATE_FIND = prevUnifyCandidate;
     import.meta.env.VITE_UNIFY_JOSA_SLM = prevJosaSlm;
+    import.meta.env.VITE_UNIFY_PREDICATE_SLM = prevPredicateSlm;
   });
 
   it('dev에서는 목차·본문·엑셀 export·프로젝트 허브·외래어 변환·표기 통일 추천이 켜진다', () => {
@@ -75,5 +78,12 @@ describe('featureFlags', () => {
     expect(isUnifyJosaSlmReviewEnabled()).toBe(false);
     import.meta.env.VITE_UNIFY_JOSA_SLM = 'true';
     expect(isUnifyJosaSlmReviewEnabled()).toBe(true);
+  });
+
+  it('용언 2차 SLM은 VITE_UNIFY_PREDICATE_SLM=true 일 때만 켜진다', () => {
+    import.meta.env.VITE_UNIFY_PREDICATE_SLM = undefined;
+    expect(isUnifyPredicateSlmReviewEnabled()).toBe(false);
+    import.meta.env.VITE_UNIFY_PREDICATE_SLM = 'true';
+    expect(isUnifyPredicateSlmReviewEnabled()).toBe(true);
   });
 });

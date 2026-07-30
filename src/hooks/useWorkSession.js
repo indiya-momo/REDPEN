@@ -25,8 +25,12 @@ import {
  * @param {ReturnType<import('./usePdfDocument.js').usePdfDocument>} pdf
  * @param {ReturnType<import('./useRuleCheck.js').useRuleCheck>} ruleCheck
  * @param {ReturnType<import('../toc-body/hooks/useTocBodyCheck.js').useTocBodyCheck>} tocCheck
+ * @param {{ onClearedForNewPdf?: () => void }} [options]
  */
-export function useWorkSession(pdf, ruleCheck, tocCheck) {
+export function useWorkSession(pdf, ruleCheck, tocCheck, options = {}) {
+  const { onClearedForNewPdf } = options;
+  const onClearedForNewPdfRef = useRef(onClearedForNewPdf);
+  onClearedForNewPdfRef.current = onClearedForNewPdf;
   const [sessionHint, setSessionHint] = useState(null);
   const [isRestoring, setIsRestoring] = useState(true);
   const restoreGenerationRef = useRef(0);
@@ -361,6 +365,7 @@ export function useWorkSession(pdf, ruleCheck, tocCheck) {
 
   const openPdfWithPicker = useCallback(async () => {
     clearAllCheckState();
+    onClearedForNewPdfRef.current?.();
     clearFileHandle();
     invalidateRestore();
 
@@ -447,6 +452,7 @@ export function useWorkSession(pdf, ruleCheck, tocCheck) {
       }
 
       clearAllCheckState();
+      onClearedForNewPdfRef.current?.();
       clearFileHandle();
       invalidateRestore();
 

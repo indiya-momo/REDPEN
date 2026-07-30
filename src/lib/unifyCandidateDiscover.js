@@ -555,6 +555,27 @@ export function formatUnifyClusterRegisterInput(cluster, slotLimit = 3) {
 }
 
 /**
+ * 표기 통일 추천 — 사용자 선택 표기 기준 PDF 위 오버레이.
+ * 붙임 선택 → `→조선^시대` (띄움 경계를 ^로)
+ * 띄움 선택 → `→조선∨시대` (공백을 ∨로)
+ * @param {string} chosenVariant
+ * @param {{ variants?: string[] } | null} [cluster]
+ * @returns {string | null}
+ */
+export function formatUnifySpacingDecisionOverlay(chosenVariant, cluster) {
+  const chosen = String(chosenVariant ?? '').trim();
+  if (!chosen) return null;
+  if (/\s/.test(chosen)) {
+    return `→${chosen.replace(/\s+/g, '∨')}`;
+  }
+  const spaced = (cluster?.variants ?? []).find((v) => /\s/.test(String(v)));
+  if (spaced) {
+    return `→${String(spaced).trim().replace(/\s+/g, '^')}`;
+  }
+  return `→${chosen}`;
+}
+
+/**
  * 페이지 칩·미리보기용 — 소수형, 또는 1회만 등장한 표기.
  * 다수형(추천형이고 2회 이상)은 제외.
  * @param {UnifySpacingCluster} cluster
@@ -569,13 +590,43 @@ export function shouldShowUnifyVariantPages(cluster, variant) {
 
 /**
  * 소수형·1회 표기만 MatchInstance 그룹으로 — PDF 하이라이트·페이지 칩용.
+ * 표기 통일 선택 시: 틀린(비선택) 표기만 하이라이트 + overlayReplace.
  * @param {UnifySpacingCluster[]} clusters
+ * @param {{ registeredByKey?: Map<string, string> | null }} [options]
  * @returns {import('./ruleEngine.js').GroupedResult[]}
  */
-export function buildUnifyCandidatePreviewGroups(clusters) {
+export function buildUnifyCandidatePreviewGroups(clusters, options = {}) {
+  const registeredByKey = options.registeredByKey ?? null;
   /** @type {import('./ruleEngine.js').GroupedResult[]} */
   const groups = [];
   for (const cluster of clusters ?? []) {
+    const chosen = registeredByKey?.get(cluster.key);
+    if (chosen) {
+      const overlay = formatUnifySpacingDecisionOverlay(chosen, cluster);
+      for (const variant of cluster.variants) {
+        if (variant === chosen) continue;
+        const occs = cluster.occurrencesByVariant?.[variant] ?? [];
+        if (!occs.length) continue;
+        groups.push({
+          find: variant,
+          replace: chosen,
+          label: variant,
+          category: 'consistency',
+          tip: `「${chosen}」으로 통일`,
+          ...(overlay ? { overlayReplace: overlay } : {}),
+          instances: occs.map((occ) => ({
+            find: variant,
+            replace: chosen,
+            matchedText: occ.matchedText,
+            suggestedText: chosen,
+            pageNum: occ.pageNum,
+            index: occ.index,
+          })),
+        });
+      }
+      continue;
+    }
+
     const recommended = cluster.recommendedUnify;
     for (const variant of cluster.variants) {
       if (!shouldShowUnifyVariantPages(cluster, variant)) continue;
