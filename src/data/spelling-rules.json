@@ -131,7 +131,7 @@
     "tip": "표준국어대사전  '어린것,젊은것,늙은것' 등재",
     "dividerGroup": "A1",
     "dividerLabel": "표준국어대사전 등재(명사)",
-    "displayLabel": "→어린것, 젊은것, 늙은것, 앞엣것, 뒤엣것"
+    "displayLabel": "→어린것, 젊은것, 늙은것"
   },
   {
     "find": "점심 때",
@@ -1640,6 +1640,15 @@
     "overlayReplace": "→드래건"
   },
   {
+    "find": "라스베가스",
+    "replace": "라스베이거스",
+    "enabled": true,
+    "tip": "영어 Las vegas.",
+    "dividerGroup": "C",
+    "dividerLabel": "외래어 표기법(영어)",
+    "overlayReplace": "→라스베이거스"
+  },
+  {
     "find": "라이센스",
     "replace": "라이선스",
     "enabled": true,
@@ -1668,6 +1677,7 @@
     "tip": "영어 rocker rɑːkə(r). 록rock[rɒk]이 표준이며 무성 파열음 p, t, k가 모음 사이에 오면 넘겨 적음",
     "dividerGroup": "C",
     "dividerLabel": "외래어 표기법(영어)",
+    "overlayReplace": "→로커",
     "ruleId": "foreign-name-rocker"
   },
   {
@@ -1779,6 +1789,15 @@
     "overlayReplace": "→보디"
   },
   {
+    "find": "바베큐",
+    "replace": "바비큐",
+    "enabled": true,
+    "tip": "영어 barbecue[bɑːrbɪkjuː].. 'be'를 [비]로 적음",
+    "dividerGroup": "C",
+    "dividerLabel": "외래어 표기법(영어)",
+    "overlayReplace": "→바비큐"
+  },
+  {
     "find": "뱃지",
     "replace": "배지",
     "enabled": false,
@@ -1869,6 +1888,15 @@
     "overlayReplace": "→샌들"
   },
   {
+    "find": "샵",
+    "replace": "숍",
+    "enabled": true,
+    "tip": "영어 shop. o가 [오]  단모음 뒤의 자음 끝소리는 받침으로 적음",
+    "dividerGroup": "C",
+    "dividerLabel": "외래어 표기법(영어)",
+    "overlayReplace": "→숍"
+  },
+  {
     "find": "샷다",
     "replace": "셔터",
     "enabled": true,
@@ -1935,6 +1963,15 @@
     "dividerGroup": "C",
     "dividerLabel": "외래어 표기법(영어)",
     "overlayReplace": "→심벌"
+  },
+  {
+    "find": "싸이버",
+    "replace": "사이버",
+    "enabled": true,
+    "tip": "영어 cyber. 된소리로 적지 않",
+    "dividerGroup": "C",
+    "dividerLabel": "외래어 표기법(영어)",
+    "overlayReplace": "→사이버"
   },
   {
     "find": "싸이코",
@@ -2023,15 +2060,6 @@
     "overlayReplace": "→윈도"
   },
   {
-    "find": "유니온",
-    "replace": "유니언",
-    "enabled": true,
-    "tip": "영어 union",
-    "dividerGroup": "C",
-    "dividerLabel": "외래어 표기법(영어)",
-    "overlayReplace": "→유니언"
-  },
-  {
     "find": "윌리암",
     "replace": "윌리엄",
     "enabled": true,
@@ -2039,6 +2067,15 @@
     "dividerGroup": "C",
     "dividerLabel": "외래어 표기법(영어)",
     "overlayReplace": "→윌리엄"
+  },
+  {
+    "find": "유니온",
+    "replace": "유니언",
+    "enabled": true,
+    "tip": "영어 union",
+    "dividerGroup": "C",
+    "dividerLabel": "외래어 표기법(영어)",
+    "overlayReplace": "→유니언"
   },
   {
     "find": "자켓",
@@ -2141,6 +2178,15 @@
     "overlayReplace": "→커튼"
   },
   {
+    "find": "컨셉",
+    "replace": "콘셉트",
+    "enabled": true,
+    "tip": "영어 concept. 'con-'은 [콘]으로 적으므로 '컨셉'이 아닌 '콘셉트'.",
+    "dividerGroup": "C",
+    "dividerLabel": "외래어 표기법(영어)",
+    "overlayReplace": "→콘셉트"
+  },
+  {
     "find": "컨텐츠",
     "replace": "콘텐츠",
     "enabled": true,
@@ -2236,6 +2282,15 @@
     "overlayReplace": "→패러독스"
   },
   {
+    "find": "팜플렛",
+    "replace": "팸플릿",
+    "enabled": true,
+    "tip": "영어 pamphlet.[pæmflət]",
+    "dividerGroup": "C",
+    "dividerLabel": "외래어 표기법(영어)",
+    "overlayReplace": "→팸플릿"
+  },
+  {
     "find": "패러랠",
     "replace": "패럴렐",
     "enabled": false,
@@ -2306,6 +2361,24 @@
     "dividerGroup": "C",
     "dividerLabel": "외래어 표기법(영어)",
     "overlayReplace": "→포일"
+  },
+  {
+    "find": "화이팅",
+    "replace": "파이팅",
+    "enabled": true,
+    "tip": "영어 fighting. 외래어 표기법상 [f] 발음은 'ㅍ'으로 적으므로 '화이팅'이 아닌 '파이팅'.",
+    "dividerGroup": "C",
+    "dividerLabel": "외래어 표기법(영어)",
+    "overlayReplace": "→파이팅"
+  },
+  {
+    "find": "후라이팬",
+    "replace": "프라이팬",
+    "enabled": true,
+    "tip": "영어 frypan. [f] 발음은 'ㅍ'으로 적으므로 '후라이팬'이 아닌 '프라이팬'.",
+    "dividerGroup": "C",
+    "dividerLabel": "외래어 표기법(영어)",
+    "overlayReplace": "→프라이팬"
   },
   {
     "find": "게오르그",
@@ -2817,6 +2890,15 @@
     "dividerGroup": "C1",
     "dividerLabel": "외래어 표기법(프랑스어 · 독일어)",
     "overlayReplace": "→팜 파탈"
+  },
+  {
+    "find": "팡파레",
+    "replace": "팡파르",
+    "enabled": true,
+    "tip": "프랑스어 fanfare. re는 [르]",
+    "dividerGroup": "C1",
+    "dividerLabel": "외래어 표기법(프랑스어 · 독일어)",
+    "overlayReplace": "→팡파르"
   },
   {
     "find": "포르쉐",
