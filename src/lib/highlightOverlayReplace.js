@@ -41,6 +41,12 @@ export function getHighlightOverlayReplace(inst, options = {}) {
     }
   }
 
+  // 표기 통일 추천 preview 등 — 그룹에 직접 실린 오버레이
+  if (!group?.tailWord) {
+    const direct = String(group?.overlayReplace ?? '').trim();
+    if (direct) return direct;
+  }
+
   const text = String(
     getBuiltInOverlayReplace(inst.find, inst.replace, group?.spellingRuleId) ??
       '',

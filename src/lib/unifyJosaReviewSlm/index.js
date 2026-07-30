@@ -33,6 +33,7 @@ export {
   filterJosaReviewBySlm,
   mergeReviewedClustersIntoGroups,
   runJosaSlmReviewOnClusterGroups,
+  summarizeJosaSlmRun,
 } from './filter.js';
 
 export { loadJosaSlmRunnerIfEnabled } from './loadRunner.js';

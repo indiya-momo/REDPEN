@@ -49,6 +49,29 @@ describe('getHighlightOverlayReplace', () => {
     ).toBeNull();
   });
 
+  it('표기 통일 추천 group.overlayReplace를 그대로 쓴다', () => {
+    expect(
+      getHighlightOverlayReplace(
+        {
+          find: '조선 시대',
+          replace: '조선시대',
+          matchedText: '조선 시대',
+          pageNum: 20,
+          index: 0,
+        },
+        {
+          group: {
+            find: '조선 시대',
+            replace: '조선시대',
+            label: '조선 시대',
+            overlayReplace: '→조선^시대',
+            instances: [],
+          },
+        },
+      ),
+    ).toBe('→조선^시대');
+  });
+
   it('통일형 오버레이 — 통일형 문자열만 표시', () => {
     const inst = {
       find: '세계 경제',

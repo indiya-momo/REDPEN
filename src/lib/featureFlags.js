@@ -62,3 +62,12 @@ export function isUnifyCandidateFindEnabled() {
 export function isUnifyJosaSlmReviewEnabled() {
   return import.meta.env.VITE_UNIFY_JOSA_SLM === 'true';
 }
+
+/**
+ * 표기 통일 추천 — 용언 여부 2차 SLM (목록에서 비용언 제거).
+ * - 기본 꺼짐 (`VITE_UNIFY_PREDICATE_SLM=true` 일 때만)
+ * @see project-docs/unify-predicate-review-slm-design-2026-07-30.md
+ */
+export function isUnifyPredicateSlmReviewEnabled() {
+  return import.meta.env.VITE_UNIFY_PREDICATE_SLM === 'true';
+}

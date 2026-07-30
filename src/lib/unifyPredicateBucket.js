@@ -74,11 +74,11 @@ const NOUN_FALSE_POSITIVES = new Set([
 
 /**
  * 끝 음절 휴리스틱에 안 잡히지만 용언·부사 어간으로 뒤로 보낼 표기.
- * (`오래`←오래다 — 끝이 `래`; `개의`←개의하다 — 끝이 `의`.
- *  해당 음절 전체 허용은 노래·미래·의미 등 오탐)
+ * (`오래`←오래다 — 끝이 `래`.
+ *  해당 음절 전체 허용은 노래·미래 등 오탐. `개의`는 의존명사+의 — 화이트리스트 금지, 용언 2차 SLM에 위임)
  * @type {ReadonlySet<string>}
  */
-const PREDICATE_KNOWN_STEMS = new Set(['오래', '개의']);
+const PREDICATE_KNOWN_STEMS = new Set(['오래']);
 
 /**
  * 외래 지명·국명 등 -ia → ~아 표기 (캘리포니아·펜실베니아·아시아).

@@ -621,7 +621,12 @@ export default function MainScreen({
     authEmail,
     onBetaQuotaConsumed: () => void betaQuota.refresh(),
   });
-  const session = useWorkSession(pdf, ruleCheck, tocCheck);
+  const resetUiForNewPdfRef = useRef(
+    /** @type {null | (() => void)} */ (null),
+  );
+  const session = useWorkSession(pdf, ruleCheck, tocCheck, {
+    onClearedForNewPdf: () => resetUiForNewPdfRef.current?.(),
+  });
   afterCheckRef.current = session.persistSession;
 
   const clearConsistencyTabWork = useCallback(() => {
@@ -635,6 +640,16 @@ export default function MainScreen({
   const clearSpellingTabWork = useCallback(() => {
     ruleCheck.clearSpellingCheckState();
   }, [ruleCheck]);
+
+  /** 새 PDF 업로드 — 발견 리스트·표기통일 미리보기 비우고 맞춤법 탭 기본 화면 */
+  const resetUiForNewPdf = useCallback(() => {
+    setUnifyCandidatePreviewResults([]);
+    setConsistencyFocus('rules');
+    setLastConsistencyPane('rules');
+    setWorkTab('spelling');
+    ruleCheck.syncSelectionForTab('spelling');
+  }, [ruleCheck]);
+  resetUiForNewPdfRef.current = resetUiForNewPdf;
 
   const prevActiveSetIdRef = useRef(null);
   useEffect(() => {

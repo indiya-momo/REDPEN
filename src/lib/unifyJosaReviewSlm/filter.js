@@ -158,22 +158,71 @@ export function mergeReviewedClustersIntoGroups(groups, reviewedByKey) {
 }
 
 /**
+ * @param {UnifySpacingCluster[]} before
+ * @param {UnifySpacingCluster[]} after
+ * @param {{ cap?: number }} [opts]
+ * @returns {{
+ *   ran: true,
+ *   droppedCap: number,
+ *   rulePromoted: { id: string, label: string }[],
+ *   slmConfirmed: { id: string, label: string }[],
+ *   slmCleared: { id: string, label: string }[],
+ *   capSkipped: { id: string, label: string }[],
+ * }}
+ */
+export function summarizeJosaSlmRun(before, after, opts = {}) {
+  const part = partitionJosaSlmQueue(before, opts);
+  const afterByKey = new Map((after ?? []).map((c) => [c.key, c]));
+  /** @param {UnifySpacingCluster} c */
+  const item = (c) => ({
+    id: c.key,
+    label: c.josaReviewCandidate?.stemKey
+      ? `${c.key} (…${c.josaReviewCandidate.suffix ?? ''})`
+      : c.key,
+  });
+
+  const rulePromoted = [...part.high, ...part.low].map(item);
+  /** @type {{ id: string, label: string }[]} */
+  const slmConfirmed = [];
+  /** @type {{ id: string, label: string }[]} */
+  const slmCleared = [];
+  for (const { cluster } of part.riskyForSlm) {
+    const next = afterByKey.get(cluster.key);
+    if (next?.josaReview?.status === 'review') slmConfirmed.push(item(cluster));
+    else slmCleared.push(item(cluster));
+  }
+  const capSkipped = part.riskyDropped.map(item);
+
+  return {
+    ran: true,
+    droppedCap: capSkipped.length,
+    rulePromoted,
+    slmConfirmed,
+    slmCleared,
+    capSkipped,
+  };
+}
+
+/**
  * @param {{ clusters: import('../unifyCandidateDiscover.js').UnifySpacingCluster[] }[]} groups
  * @param {Parameters<typeof filterJosaReviewBySlm>[1]} [opts]
  * @returns {Promise<{
  *   groups: typeof groups,
  *   reviewedByKey: Map<string, import('../unifyCandidateDiscover.js').UnifySpacingCluster>,
  *   droppedCount: number,
+ *   summary: ReturnType<typeof summarizeJosaSlmRun>,
  * }>}
  */
 export async function runJosaSlmReviewOnClusterGroups(groups, opts = {}) {
   const flat = groups.flatMap((g) => g.clusters);
-  const droppedCount = partitionJosaSlmQueue(flat, opts).riskyDropped.length;
+  const part = partitionJosaSlmQueue(flat, opts);
+  const droppedCount = part.riskyDropped.length;
   const reviewed = await filterJosaReviewBySlm(flat, opts);
   const reviewedByKey = new Map(reviewed.map((c) => [c.key, c]));
   return {
     groups: mergeReviewedClustersIntoGroups(groups, reviewedByKey),
     reviewedByKey,
     droppedCount,
+    summary: summarizeJosaSlmRun(flat, reviewed, opts),
   };
 }

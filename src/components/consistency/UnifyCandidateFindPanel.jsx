@@ -21,11 +21,21 @@ import {
   mergeReviewedClustersIntoGroups,
   runJosaSlmReviewOnClusterGroups,
 } from '../../lib/unifyJosaReviewSlm/index.js';
-import { isUnifyJosaSlmReviewEnabled } from '../../lib/featureFlags.js';
+import {
+  applyPredicateSlmDropsToGroups,
+  runPredicateSlmReviewOnClusterGroups,
+} from '../../lib/unifyPredicateReviewSlm/index.js';
+import { stripDependentNounGenitiveFromGroups } from '../../lib/unifyDependentNounGenitive.js';
+import { collectUnifyListTriage } from '../../lib/unifyListStemTriage.js';
+import {
+  isUnifyJosaSlmReviewEnabled,
+  isUnifyPredicateSlmReviewEnabled,
+} from '../../lib/featureFlags.js';
 import { formatSystemPageLabel } from '../../lib/printedPageDisplay.js';
 import { assertBetaDailyCheckOrAlert } from '../../lib/betaDailyQuota.js';
 import { confirmUnifyCandidateFindBeforeRun, alertUnifyCandidateFindAfterRun } from '../../lib/consistencyCheckConfirm.js';
 import ConsistencyHintExample from './ConsistencyHintExample.jsx';
+import UnifySecondaryReviewPanel from './UnifySecondaryReviewPanel.jsx';
 import ResultPageSummary from '../ResultPageSummary.jsx';
 import DetailsChevron from '../DetailsChevron.jsx';
 
@@ -157,6 +167,29 @@ export default function UnifyCandidateFindPanel({
   const [slmReviewedByKey, setSlmReviewedByKey] = useState(
     /** @type {Map<string, UnifySpacingCluster>} */ (new Map()),
   );
+  const [predicateDropSeriesIds, setPredicateDropSeriesIds] = useState(
+    /** @type {string[]} */ ([]),
+  );
+  const [predicateDropClusterKeys, setPredicateDropClusterKeys] = useState(
+    /** @type {string[]} */ ([]),
+  );
+  const [predicateNeedsReviewByKey, setPredicateNeedsReviewByKey] = useState(
+    /** @type {Map<string, { status: 'needs_review' }>} */ (new Map()),
+  );
+  const [ruleExcludedItems, setRuleExcludedItems] = useState(
+    /** @type {{ id: string, label: string, reason?: string }[]} */ ([]),
+  );
+  const [secondaryReviewSummary, setSecondaryReviewSummary] = useState(
+    /** @type {null | {
+     *   josa?: { droppedCap?: number, ran?: boolean },
+     *   predicate?: {
+     *     reviewed: number,
+     *     dropped: { id: string, label: string }[],
+     *     kept: { id: string, label: string }[],
+     *     needsReview: { id: string, label: string }[],
+     *   },
+     * }} */ (null),
+  );
   const [clusters, setClusters] = useState(
     /** @type {UnifySpacingCluster[]} */ ([]),
   );
@@ -184,20 +217,51 @@ export default function UnifyCandidateFindPanel({
    * @param {UnifySpacingCluster[]} allClusters
    * @param {Map<string, import('../../lib/unifyCandidateDiscover.js').ClusterAcc> | null} raw
    * @param {Set<string>} hidden
+   * @param {Map<string, UnifySpacingCluster>} [slmByKey]
+   * @param {string[]} [dropSeriesIds]
+   * @param {string[]} [dropClusterKeys]
+   * @param {Map<string, true>} [needsReviewByKey]
+   * @param {Map<string, string>} [registeredByKey]
    */
   const publishPreview = useCallback(
-    (allClusters, raw, hidden, slmByKey = slmReviewedByKey) => {
+    (
+      allClusters,
+      raw,
+      hidden,
+      slmByKey = slmReviewedByKey,
+      dropSeriesIds = predicateDropSeriesIds,
+      dropClusterKeys = predicateDropClusterKeys,
+      needsReviewByKey = predicateNeedsReviewByKey,
+      registeredByKey = registeredVariants,
+    ) => {
       if (!onPreviewGroupsChange) return;
-      let grouped = raw
+      let nextGroups = raw
         ? groupSortAndFillSatellites(allClusters, raw)
         : [];
-      grouped = mergeReviewedClustersIntoGroups(grouped, slmByKey);
-      const previewClusters = grouped
+      nextGroups = stripDependentNounGenitiveFromGroups(nextGroups).groups;
+      nextGroups = mergeReviewedClustersIntoGroups(nextGroups, slmByKey);
+      nextGroups = applyPredicateSlmDropsToGroups(
+        nextGroups,
+        { seriesIds: dropSeriesIds, clusterKeys: dropClusterKeys },
+        needsReviewByKey,
+      );
+      const previewClusters = nextGroups
         .flatMap((g) => g.clusters)
         .filter((c) => !hidden.has(c.key));
-      onPreviewGroupsChange(buildUnifyCandidatePreviewGroups(previewClusters));
+      onPreviewGroupsChange(
+        buildUnifyCandidatePreviewGroups(previewClusters, {
+          registeredByKey,
+        }),
+      );
     },
-    [onPreviewGroupsChange, slmReviewedByKey],
+    [
+      onPreviewGroupsChange,
+      slmReviewedByKey,
+      predicateDropSeriesIds,
+      predicateDropClusterKeys,
+      predicateNeedsReviewByKey,
+      registeredVariants,
+    ],
   );
 
   async function handleFind() {
@@ -228,34 +292,81 @@ export default function UnifyCandidateFindPanel({
       await new Promise((r) => setTimeout(r, 0));
       const result = discoverSpacingUnifyCandidates(pageTexts, { includeRaw: true });
       const next = result.clusters;
-      const baseGrouped = groupSortAndFillSatellites(next, result.rawByKey);
+      let workingGroups = groupSortAndFillSatellites(next, result.rawByKey);
+      const ruleStrip = stripDependentNounGenitiveFromGroups(workingGroups);
+      workingGroups = ruleStrip.groups;
+      const ruleExcluded = ruleStrip.dropped;
+      const triage = collectUnifyListTriage(workingGroups);
       /** @type {Map<string, UnifySpacingCluster>} */
       let slmByKey = new Map();
       let dropped = 0;
+      let josaRan = false;
+      /** @type {null | {
+       *   ran?: boolean,
+       *   droppedCap?: number,
+       *   rulePromoted?: { id: string, label: string }[],
+       *   slmConfirmed?: { id: string, label: string }[],
+       *   slmCleared?: { id: string, label: string }[],
+       *   capSkipped?: { id: string, label: string }[],
+       * }} */
+      let josaSummary = null;
+      /** @type {string[]} */
+      let dropSeriesIds = [];
+      /** @type {string[]} */
+      let dropClusterKeys = [];
+      /** @type {Map<string, { status: 'needs_review' }>} */
+      let needsReviewByKey = new Map();
+      /** @type {null | {
+       *   reviewed: number,
+       *   dropped: { id: string, label: string }[],
+       *   kept: { id: string, label: string }[],
+       *   needsReview: { id: string, label: string }[],
+       * }} */
+      let predicateSummary = null;
 
-      if (isUnifyJosaSlmReviewEnabled()) {
-        setSlmReviewing(true);
-        try {
+      const needSlm =
+        isUnifyJosaSlmReviewEnabled() || isUnifyPredicateSlmReviewEnabled();
+      if (needSlm) setSlmReviewing(true);
+      try {
+        if (isUnifyJosaSlmReviewEnabled()) {
           const { loadJosaSlmRunnerIfEnabled } = await import(
             '../../lib/unifyJosaReviewSlm/loadRunner.js'
           );
           const runnerOpts = await loadJosaSlmRunnerIfEnabled();
           const slmResult = await runJosaSlmReviewOnClusterGroups(
-            baseGrouped,
+            workingGroups,
             { ...(runnerOpts ?? {}), pageTexts },
           );
           slmByKey = slmResult.reviewedByKey;
           dropped = slmResult.droppedCount;
-        } finally {
-          setSlmReviewing(false);
+          josaRan = true;
+          josaSummary = slmResult.summary;
+          workingGroups = mergeReviewedClustersIntoGroups(
+            workingGroups,
+            slmByKey,
+          );
         }
+
+        if (isUnifyPredicateSlmReviewEnabled()) {
+          const { loadPredicateSlmRunnerIfEnabled } = await import(
+            '../../lib/unifyPredicateReviewSlm/loadRunner.js'
+          );
+          const predRunner = await loadPredicateSlmRunnerIfEnabled();
+          const predResult = await runPredicateSlmReviewOnClusterGroups(
+            workingGroups,
+            { ...(predRunner ?? {}) },
+          );
+          workingGroups = predResult.groups;
+          dropSeriesIds = predResult.drop.seriesIds;
+          dropClusterKeys = predResult.drop.clusterKeys;
+          needsReviewByKey = predResult.needsReviewByClusterKey;
+          predicateSummary = predResult.summary;
+        }
+      } finally {
+        if (needSlm) setSlmReviewing(false);
       }
 
-      const displayGrouped = mergeReviewedClustersIntoGroups(
-        baseGrouped,
-        slmByKey,
-      );
-      const listClusters = displayGrouped.flatMap((g) => g.clusters);
+      const listClusters = workingGroups.flatMap((g) => g.clusters);
       // 보조용언 추정은 목록에만 두고, 체크·전체 발견·PDF는 사용자가 켤 때까지 제외
       const hidden = new Set(
         listClusters
@@ -268,11 +379,42 @@ export default function UnifyCandidateFindPanel({
       setRawByKey(result.rawByKey);
       setSlmReviewedByKey(slmByKey);
       setSlmDroppedCount(dropped);
+      setPredicateDropSeriesIds(dropSeriesIds);
+      setPredicateDropClusterKeys(dropClusterKeys);
+      setPredicateNeedsReviewByKey(needsReviewByKey);
+      setRuleExcludedItems(ruleExcluded);
+      setSecondaryReviewSummary(
+        josaSummary ||
+          predicateSummary ||
+          ruleExcluded.length ||
+          triage.ambiguous.length ||
+          triage.certainNoun.length
+          ? {
+              ...(ruleExcluded.length ? { ruleExcluded } : {}),
+              triage: {
+                certainNoun: triage.certainNoun,
+                ambiguous: triage.ambiguous,
+              },
+              ...(josaSummary ? { josa: josaSummary } : {}),
+              ...(predicateSummary ? { predicate: predicateSummary } : {}),
+              phase: 'rule_only',
+            }
+          : null,
+      );
       setSearched(true);
       setRegisteredVariants(new Map());
       setPreSelected(new Map());
       setHiddenPdfKeys(hidden);
-      publishPreview(next, result.rawByKey, hidden, slmByKey);
+      publishPreview(
+        next,
+        result.rawByKey,
+        hidden,
+        slmByKey,
+        dropSeriesIds,
+        dropClusterKeys,
+        needsReviewByKey,
+        new Map(),
+      );
       // 팝업 = 기본 체크된 항목만 (목록「전체 발견」과 동일)
       await alertUnifyCandidateFindAfterRun(countedClusters, {
         uid: authUid,
@@ -315,8 +457,27 @@ export default function UnifyCandidateFindPanel({
   const grouped = useMemo(() => {
     if (!rawByKey) return [];
     const base = groupSortAndFillSatellites(clusters, rawByKey);
-    return mergeReviewedClustersIntoGroups(base, slmReviewedByKey);
-  }, [clusters, rawByKey, slmReviewedByKey]);
+    const stripped = stripDependentNounGenitiveFromGroups(base).groups;
+    const withJosa = mergeReviewedClustersIntoGroups(
+      stripped,
+      slmReviewedByKey,
+    );
+    return applyPredicateSlmDropsToGroups(
+      withJosa,
+      {
+        seriesIds: predicateDropSeriesIds,
+        clusterKeys: predicateDropClusterKeys,
+      },
+      predicateNeedsReviewByKey,
+    );
+  }, [
+    clusters,
+    rawByKey,
+    slmReviewedByKey,
+    predicateDropSeriesIds,
+    predicateDropClusterKeys,
+    predicateNeedsReviewByKey,
+  ]);
 
   /** 목록에 실제로 보이는 클러스터만 (조사·어간 접미로 제외된 후) */
   const listClusters = useMemo(
@@ -353,6 +514,16 @@ export default function UnifyCandidateFindPanel({
       setRegisteredVariants((prev) => {
         const next = new Map(prev);
         next.set(cluster.key, chosenVariant);
+        publishPreview(
+          clusters,
+          rawByKey,
+          hiddenPdfKeys,
+          slmReviewedByKey,
+          predicateDropSeriesIds,
+          predicateDropClusterKeys,
+          predicateNeedsReviewByKey,
+          next,
+        );
         return next;
       });
 
@@ -378,7 +549,16 @@ export default function UnifyCandidateFindPanel({
         });
       }
     },
-    [],
+    [
+      clusters,
+      rawByKey,
+      hiddenPdfKeys,
+      slmReviewedByKey,
+      predicateDropSeriesIds,
+      predicateDropClusterKeys,
+      predicateNeedsReviewByKey,
+      publishPreview,
+    ],
   );
 
   /**
@@ -389,6 +569,16 @@ export default function UnifyCandidateFindPanel({
     setRegisteredVariants((prev) => {
       const next = new Map(prev);
       next.delete(cluster.key);
+      publishPreview(
+        clusters,
+        rawByKey,
+        hiddenPdfKeys,
+        slmReviewedByKey,
+        predicateDropSeriesIds,
+        predicateDropClusterKeys,
+        predicateNeedsReviewByKey,
+        next,
+      );
       return next;
     });
   }
@@ -423,7 +613,7 @@ export default function UnifyCandidateFindPanel({
             role="status"
             aria-live="polite"
           >
-            조사·어간 2차 검토 중…
+            2차 검토 중…
           </p>
         ) : null}
         <p className="hint consistency-hint-block unify-candidate-find__example">
@@ -460,11 +650,7 @@ export default function UnifyCandidateFindPanel({
                 className="results-accordion"
                 key={`unify-acc-${clusters.length}-${totalFindings}`}
               >
-                {slmDroppedCount > 0 ? (
-                  <p className="hint consistency-hint-block unify-candidate-find__slm-cap">
-                    조사·어간 2차 검토 {slmDroppedCount}건은 한도로 생략됐습니다.
-                  </p>
-                ) : null}
+                <UnifySecondaryReviewPanel summary={secondaryReviewSummary} />
                 {grouped.map((group) => {
                   const sectionId =
                     group.type === 'series'
@@ -495,11 +681,13 @@ export default function UnifyCandidateFindPanel({
                     <ClusterCard
                       key={cluster.key}
                       cluster={cluster}
-                      showPredicateTag={
+                      kindTag={
                         group.type === 'predicate' ||
                         (group.type === 'series' &&
                           looksLikePredicateKey(group.affix)) ||
                         isUnifyPredicateCluster(cluster)
+                          ? '용언'
+                          : '명사'
                       }
                       pdfVisible={!hiddenPdfKeys.has(cluster.key)}
                       onTogglePdfVisibility={handleTogglePdfVisibility}
@@ -580,7 +768,7 @@ export default function UnifyCandidateFindPanel({
  */
 function ClusterCard({
   cluster,
-  showPredicateTag = false,
+  kindTag = '명사',
   pdfVisible,
   onTogglePdfVisibility,
   registeredVariant,
@@ -653,11 +841,22 @@ function ClusterCard({
                     : `본용언+보조용언 시트 stem: ${cluster.auxReview.stemSpaced}`
                 }
               >
-                보조용언 추정, 검토 필요
+                본용언+ 보조용언 표기로 추정, 검토 필요
+              </span>
+            ) : null}
+            {cluster.predicateReview?.status === 'needs_review' &&
+            cluster.auxReview?.status !== 'review' ? (
+              <span className="unify-candidate-find__predicate-review">
+                용언 추정, 검토 필요
               </span>
             ) : null}
           </div>
         </div>
+        <UnifyFindingsCount
+          count={cluster.totalCount}
+          shownCount={pdfVisible ? cluster.totalCount : 0}
+          className="result-card-head__findings-count"
+        />
       </div>
       <ul className="unify-candidate-find__variants">
         {cluster.variants.map((variant) => {
@@ -679,7 +878,7 @@ function ClusterCard({
             >
               <div className="unify-candidate-find__variant-row">
                 <span className="unify-candidate-find__variant">
-                  {showPredicateTag ? `[용언]${variant}` : variant}
+                  {`[${kindTag}] ${variant}`}
                 </span>
                 {count > 0 ? (
                   <span className="unify-candidate-find__count">
