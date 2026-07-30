@@ -131,7 +131,7 @@
     "tip": "표준국어대사전  '어린것,젊은것,늙은것' 등재",
     "dividerGroup": "A1",
     "dividerLabel": "표준국어대사전 등재(명사)",
-    "displayLabel": "→어린것, 젊은것, 늙은것, 앞엣것, 뒤엣것"
+    "displayLabel": "→어린것, 젊은것, 늙은것"
   },
   {
     "find": "점심 때",
@@ -198,7 +198,7 @@
     "tip": "표준국어대사전  '경제관념' 등재",
     "dividerGroup": "A1",
     "dividerLabel": "표준국어대사전 등재(명사)",
-    "overlayReplace": "→경제⁀관념"
+    "overlayReplace": "→경제^관념"
   },
   {
     "find": "경제 생활",
@@ -207,7 +207,7 @@
     "tip": "표준국어대사전  '경제생활' 등재",
     "dividerGroup": "A1",
     "dividerLabel": "표준국어대사전 등재(명사)",
-    "overlayReplace": "→경제⁀생활"
+    "overlayReplace": "→경제^생활"
   },
   {
     "find": "그 중",
@@ -216,7 +216,7 @@
     "tip": "표준국어대사전  '그중' 등재_주의: '이중' 미등재",
     "dividerGroup": "A1",
     "dividerLabel": "표준국어대사전 등재(명사)",
-    "overlayReplace": "→그⁀중"
+    "overlayReplace": "→그^중"
   },
   {
     "find": "긴 긴 밤",
@@ -225,7 +225,7 @@
     "tip": "표준국어대사전  '긴긴밤' 등재_주의: '긴밤' 미등재",
     "dividerGroup": "A1",
     "dividerLabel": "표준국어대사전 등재(명사)",
-    "overlayReplace": "→긴⁀긴⁀밤"
+    "overlayReplace": "→긴^긴^밤"
   },
   {
     "find": "무염 식사",
@@ -234,7 +234,7 @@
     "tip": "표준국어대사전  '무염식사' 등재",
     "dividerGroup": "A1",
     "dividerLabel": "표준국어대사전 등재(명사)",
-    "overlayReplace": "→무염⁀식사"
+    "overlayReplace": "→무염^식사"
   },
   {
     "find": "살아 생전",
@@ -243,7 +243,7 @@
     "tip": "표준국어대사전  '살아생전' 등재",
     "dividerGroup": "A1",
     "dividerLabel": "표준국어대사전 등재(명사)",
-    "overlayReplace": "→살아⁀생전"
+    "overlayReplace": "→살아^생전"
   },
   {
     "find": "생과일 주스",
@@ -252,7 +252,7 @@
     "tip": "표준국어대사전  '생과일', '생과일주스' 등재",
     "dividerGroup": "A1",
     "dividerLabel": "표준국어대사전 등재(명사)",
-    "overlayReplace": "→생과일⁀주스"
+    "overlayReplace": "→생과일^주스"
   },
   {
     "find": "시간 제한",
@@ -261,7 +261,7 @@
     "tip": "표준국어대사전  '시간제한' 등재",
     "dividerGroup": "A1",
     "dividerLabel": "표준국어대사전 등재(명사)",
-    "overlayReplace": "→시간⁀제한"
+    "overlayReplace": "→시간^제한"
   },
   {
     "find": "어제 저녁",
@@ -270,7 +270,7 @@
     "tip": "표준국어대사전  '어제저녁' 등재_주의: '오늘저녁' 미등재",
     "dividerGroup": "A1",
     "dividerLabel": "표준국어대사전 등재(명사)",
-    "overlayReplace": "→어제⁀저녁"
+    "overlayReplace": "→어제^저녁"
   },
   {
     "find": "집안 사람",
@@ -279,7 +279,7 @@
     "tip": "표준국어대사전  '집안사람' 등재",
     "dividerGroup": "A1",
     "dividerLabel": "표준국어대사전 등재(명사)",
-    "overlayReplace": "→집안⁀사람"
+    "overlayReplace": "→집안^사람"
   },
   {
     "find": "그럴 듯",
@@ -288,7 +288,7 @@
     "tip": "표준국어대사전 '그럴듯하다' 등재",
     "dividerGroup": "A",
     "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
-    "overlayReplace": "→그럴⁀듯"
+    "overlayReplace": "→그럴^듯"
   },
   {
     "find": "그럴 싸",
@@ -297,7 +297,7 @@
     "tip": "표준국어대사전 '그럴싸하다' 등재",
     "dividerGroup": "A",
     "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
-    "overlayReplace": "→그럴⁀싸"
+    "overlayReplace": "→그럴^싸"
   },
   {
     "find": "자신만만 하",
@@ -311,7 +311,7 @@
     "tip": "표준국어대사전 '자신만만하다' 등재",
     "dividerGroup": "A",
     "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
-    "overlayReplace": "→자신만만⁀"
+    "overlayReplace": "→자신만만^"
   },
   {
     "find": "보잘 것",
@@ -320,7 +320,7 @@
     "tip": "표준국어대사전 '보잘것없다' 등재",
     "dividerGroup": "A",
     "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
-    "overlayReplace": "→보잘⁀것없"
+    "overlayReplace": "→보잘^것없"
   },
   {
     "find": "하잘 것",
@@ -329,7 +329,7 @@
     "tip": "표준국어대사전 '하잘것없다' 등재",
     "dividerGroup": "A",
     "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
-    "overlayReplace": "→하잘⁀것없"
+    "overlayReplace": "→하잘^것없"
   },
   {
     "find": "머지 않",
@@ -338,7 +338,7 @@
     "tip": "표준국어대사전 '머지않다' 등재",
     "dividerGroup": "A",
     "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
-    "overlayReplace": "→머지⁀않"
+    "overlayReplace": "→머지^않"
   },
   {
     "find": "세상 모르",
@@ -347,7 +347,7 @@
     "tip": "표준국어대사전 '세상모르다' 등재",
     "dividerGroup": "A",
     "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
-    "overlayReplace": "→세상⁀모"
+    "overlayReplace": "→세상^모"
   },
   {
     "find": "되풀이 되",
@@ -359,7 +359,8 @@
     "enabled": true,
     "tip": "표준국어대사전  '되풀이되다' 등재",
     "dividerGroup": "A",
-    "dividerLabel": "표준국어대사전 등재(동사 · 형용사)"
+    "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
+    "overlayReplace": "→되풀이^되"
   },
   {
     "find": "부끄러워 하",
@@ -372,7 +373,8 @@
     "enabled": true,
     "tip": "표준국어대사전  '부끄러워하다' 등재",
     "dividerGroup": "A",
-    "dividerLabel": "표준국어대사전 등재(동사 · 형용사)"
+    "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
+    "overlayReplace": "→부끄러워^하"
   },
   {
     "find": "기꺼워 하",
@@ -385,7 +387,8 @@
     "enabled": true,
     "tip": "표준국어대사전  '기꺼워하다' 등재",
     "dividerGroup": "A",
-    "dividerLabel": "표준국어대사전 등재(동사 · 형용사)"
+    "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
+    "overlayReplace": "→기꺼워^하"
   },
   {
     "find": "마다 하",
@@ -398,7 +401,8 @@
     "enabled": true,
     "tip": "표준국어대사전  '마다하다' 등재",
     "dividerGroup": "A",
-    "dividerLabel": "표준국어대사전 등재(동사 · 형용사)"
+    "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
+    "overlayReplace": "→마다^하"
   },
   {
     "find": "가 닿",
@@ -407,7 +411,7 @@
     "tip": "표준국어대사전  '가닿다' 등재",
     "dividerGroup": "A",
     "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
-    "overlayReplace": "→가⁀닿"
+    "overlayReplace": "→가^닿"
   },
   {
     "find": "때 맞",
@@ -416,7 +420,7 @@
     "tip": "표준국어대사전  '때맞추다' 등재",
     "dividerGroup": "A",
     "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
-    "overlayReplace": "→때⁀맞"
+    "overlayReplace": "→때^맞"
   },
   {
     "find": "장난 삼",
@@ -425,7 +429,7 @@
     "tip": "표준국어대사전  '장난삼다' 등재 참고: '친구삼다' 미등재",
     "dividerGroup": "A",
     "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
-    "overlayReplace": "→장난⁀삼"
+    "overlayReplace": "→장난^삼"
   },
   {
     "find": "검정색",
@@ -686,7 +690,7 @@
     "tip": "표준국어대사전 미등재(참고 : 동일한 뜻의 '이외以外'는 등재)",
     "dividerGroup": "B0",
     "dividerLabel": "잘못된 표현(명사)",
-    "overlayReplace": "→그 외"
+    "overlayReplace": "→그∨외"
   },
   {
     "find": "군중들",
@@ -1640,6 +1644,15 @@
     "overlayReplace": "→드래건"
   },
   {
+    "find": "라스베가스",
+    "replace": "라스베이거스",
+    "enabled": true,
+    "tip": "영어 Las vegas.",
+    "dividerGroup": "C",
+    "dividerLabel": "외래어 표기법(영어)",
+    "overlayReplace": "→라스베이거스"
+  },
+  {
     "find": "라이센스",
     "replace": "라이선스",
     "enabled": true,
@@ -1668,6 +1681,7 @@
     "tip": "영어 rocker rɑːkə(r). 록rock[rɒk]이 표준이며 무성 파열음 p, t, k가 모음 사이에 오면 넘겨 적음",
     "dividerGroup": "C",
     "dividerLabel": "외래어 표기법(영어)",
+    "overlayReplace": "→로커",
     "ruleId": "foreign-name-rocker"
   },
   {
@@ -1779,6 +1793,15 @@
     "overlayReplace": "→보디"
   },
   {
+    "find": "바베큐",
+    "replace": "바비큐",
+    "enabled": true,
+    "tip": "영어 barbecue[bɑːrbɪkjuː].. 'be'를 [비]로 적음",
+    "dividerGroup": "C",
+    "dividerLabel": "외래어 표기법(영어)",
+    "overlayReplace": "→바비큐"
+  },
+  {
     "find": "뱃지",
     "replace": "배지",
     "enabled": false,
@@ -1869,6 +1892,15 @@
     "overlayReplace": "→샌들"
   },
   {
+    "find": "샵",
+    "replace": "숍",
+    "enabled": true,
+    "tip": "영어 shop. o가 [오]  단모음 뒤의 자음 끝소리는 받침으로 적음",
+    "dividerGroup": "C",
+    "dividerLabel": "외래어 표기법(영어)",
+    "overlayReplace": "→숍"
+  },
+  {
     "find": "샷다",
     "replace": "셔터",
     "enabled": true,
@@ -1935,6 +1967,15 @@
     "dividerGroup": "C",
     "dividerLabel": "외래어 표기법(영어)",
     "overlayReplace": "→심벌"
+  },
+  {
+    "find": "싸이버",
+    "replace": "사이버",
+    "enabled": true,
+    "tip": "영어 cyber. 된소리로 적지 않",
+    "dividerGroup": "C",
+    "dividerLabel": "외래어 표기법(영어)",
+    "overlayReplace": "→사이버"
   },
   {
     "find": "싸이코",
@@ -2023,15 +2064,6 @@
     "overlayReplace": "→윈도"
   },
   {
-    "find": "유니온",
-    "replace": "유니언",
-    "enabled": true,
-    "tip": "영어 union",
-    "dividerGroup": "C",
-    "dividerLabel": "외래어 표기법(영어)",
-    "overlayReplace": "→유니언"
-  },
-  {
     "find": "윌리암",
     "replace": "윌리엄",
     "enabled": true,
@@ -2039,6 +2071,15 @@
     "dividerGroup": "C",
     "dividerLabel": "외래어 표기법(영어)",
     "overlayReplace": "→윌리엄"
+  },
+  {
+    "find": "유니온",
+    "replace": "유니언",
+    "enabled": true,
+    "tip": "영어 union",
+    "dividerGroup": "C",
+    "dividerLabel": "외래어 표기법(영어)",
+    "overlayReplace": "→유니언"
   },
   {
     "find": "자켓",
@@ -2141,6 +2182,15 @@
     "overlayReplace": "→커튼"
   },
   {
+    "find": "컨셉",
+    "replace": "콘셉트",
+    "enabled": true,
+    "tip": "영어 concept. 'con-'은 [콘]으로 적으므로 '컨셉'이 아닌 '콘셉트'.",
+    "dividerGroup": "C",
+    "dividerLabel": "외래어 표기법(영어)",
+    "overlayReplace": "→콘셉트"
+  },
+  {
     "find": "컨텐츠",
     "replace": "콘텐츠",
     "enabled": true,
@@ -2236,6 +2286,15 @@
     "overlayReplace": "→패러독스"
   },
   {
+    "find": "팜플렛",
+    "replace": "팸플릿",
+    "enabled": true,
+    "tip": "영어 pamphlet.[pæmflət]",
+    "dividerGroup": "C",
+    "dividerLabel": "외래어 표기법(영어)",
+    "overlayReplace": "→팸플릿"
+  },
+  {
     "find": "패러랠",
     "replace": "패럴렐",
     "enabled": false,
@@ -2306,6 +2365,24 @@
     "dividerGroup": "C",
     "dividerLabel": "외래어 표기법(영어)",
     "overlayReplace": "→포일"
+  },
+  {
+    "find": "화이팅",
+    "replace": "파이팅",
+    "enabled": true,
+    "tip": "영어 fighting. 외래어 표기법상 [f] 발음은 'ㅍ'으로 적으므로 '화이팅'이 아닌 '파이팅'.",
+    "dividerGroup": "C",
+    "dividerLabel": "외래어 표기법(영어)",
+    "overlayReplace": "→파이팅"
+  },
+  {
+    "find": "후라이팬",
+    "replace": "프라이팬",
+    "enabled": true,
+    "tip": "영어 frypan. [f] 발음은 'ㅍ'으로 적으므로 '후라이팬'이 아닌 '프라이팬'.",
+    "dividerGroup": "C",
+    "dividerLabel": "외래어 표기법(영어)",
+    "overlayReplace": "→프라이팬"
   },
   {
     "find": "게오르그",
@@ -2817,6 +2894,15 @@
     "dividerGroup": "C1",
     "dividerLabel": "외래어 표기법(프랑스어 · 독일어)",
     "overlayReplace": "→팜 파탈"
+  },
+  {
+    "find": "팡파레",
+    "replace": "팡파르",
+    "enabled": true,
+    "tip": "프랑스어 fanfare. re는 [르]",
+    "dividerGroup": "C1",
+    "dividerLabel": "외래어 표기법(프랑스어 · 독일어)",
+    "overlayReplace": "→팡파르"
   },
   {
     "find": "포르쉐",
