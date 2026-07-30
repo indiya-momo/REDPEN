@@ -785,15 +785,15 @@ export default function MainScreen({
 
   const handleSaveCriteria = useCallback(async () => {
     if (criteriaSavePending) return;
-    // 이미 저장된 프로젝트면 덮어쓰기 확인
+    // 이미 저장된 프로젝트 재저장 확인
     if (activeRuleSet?.savedAt) {
       const label = formatProjectDialogLabel(
         criteriaNameInput.trim() || activeRuleSet.name,
       );
       const confirmed = await showAppConfirm({
-        title: '덮어쓰기',
-        message: `${label} 프로젝트를 덮어쓸까요?\n\n기존에 저장된 내용이 현재 작업 내용으로 바뀝니다.`,
-        confirmLabel: '덮어쓰기',
+        title: '저장하기',
+        message: `${label} 프로젝트를 저장할까요?`,
+        confirmLabel: '저장하기',
         cancelLabel: '취소',
       });
       if (!confirmed) return;
