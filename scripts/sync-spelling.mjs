@@ -127,23 +127,30 @@ const SPELLING_HEADER_ALIASES = {
   이형태: 'finds',
   표시이름: 'display_label',
   'display label': 'display_label',
+  // 관리용 열 — normalize에서 무시
+  흥미도: '_interest',
+  interest: '_interest',
 };
+
+function normalizeHeaderKey(raw) {
+  const key = String(raw || '')
+    .trim()
+    .toLowerCase();
+  return SPELLING_HEADER_ALIASES[key] ?? key;
+}
 
 function rowsToObjects(rows) {
   if (!rows.length) return [];
 
-  const firstCell = rows[0][0]?.trim().toLowerCase() ?? '';
-  if (firstCell === 'find') {
-    const [headers, ...dataRows] = rows;
-    const cleanHeaders = headers.map((h) => {
-      const key = h.trim().toLowerCase();
-      return SPELLING_HEADER_ALIASES[key] ?? key;
-    });
+  const headerKeys = rows[0].map((h) => normalizeHeaderKey(h));
+  // 첫 열이 find가 아니어도(흥미도 등 앞에 붙은 경우) 헤더 행으로 인식
+  if (headerKeys.includes('find')) {
+    const dataRows = rows.slice(1);
 
     return dataRows
       .map((row) =>
-        cleanHeaders.reduce((obj, header, index) => {
-          if (!header) return obj;
+        headerKeys.reduce((obj, header, index) => {
+          if (!header || header.startsWith('_')) return obj;
           obj[header] = (row[index] || '').trim();
           return obj;
         }, {}),
