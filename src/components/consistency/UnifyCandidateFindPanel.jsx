@@ -27,8 +27,13 @@ import {
 import { stripDependentNounGenitiveFromGroups } from '../../lib/unifyDependentNounGenitive.js';
 import { collectUnifyListTriage } from '../../lib/unifyListStemTriage.js';
 import {
+  applyStdictPosMarksToGroups,
+  runStdictPosReviewOnClusterGroups,
+} from '../../lib/unifyStdictPos.js';
+import {
   isUnifyJosaSlmReviewEnabled,
   isUnifyPredicateSlmReviewEnabled,
+  isUnifyStdictPosReviewEnabled,
 } from '../../lib/featureFlags.js';
 import { formatSystemPageLabel } from '../../lib/printedPageDisplay.js';
 import { assertBetaDailyCheckOrAlert } from '../../lib/betaDailyQuota.js';
@@ -175,6 +180,12 @@ export default function UnifyCandidateFindPanel({
   const [predicateNeedsReviewByKey, setPredicateNeedsReviewByKey] = useState(
     /** @type {Map<string, { status: 'needs_review' }>} */ (new Map()),
   );
+  const [stdictPredicateSeriesIds, setStdictPredicateSeriesIds] = useState(
+    /** @type {string[]} */ ([]),
+  );
+  const [stdictPredicateClusterKeys, setStdictPredicateClusterKeys] = useState(
+    /** @type {string[]} */ ([]),
+  );
   const [ruleExcludedItems, setRuleExcludedItems] = useState(
     /** @type {{ id: string, label: string, reason?: string }[]} */ ([]),
   );
@@ -186,6 +197,10 @@ export default function UnifyCandidateFindPanel({
      *     dropped: { id: string, label: string }[],
      *     kept: { id: string, label: string }[],
      *     needsReview: { id: string, label: string }[],
+     *   },
+     *   stdict?: {
+     *     reviewed?: number,
+     *     movedNounToPredicate?: { id: string, label: string, reason?: string }[],
      *   },
      * }} */ (null),
   );
@@ -295,7 +310,15 @@ export default function UnifyCandidateFindPanel({
       const ruleStrip = stripDependentNounGenitiveFromGroups(workingGroups);
       workingGroups = ruleStrip.groups;
       const ruleExcluded = ruleStrip.dropped;
-      const triage = collectUnifyListTriage(workingGroups);
+      /** @type {null | {
+       *   reviewed?: number,
+       *   movedNounToPredicate?: { id: string, label: string, reason?: string }[],
+       * }} */
+      let stdictSummary = null;
+      /** @type {string[]} */
+      let stdictSeriesIds = [];
+      /** @type {string[]} */
+      let stdictClusterKeys = [];
       /** @type {Map<string, UnifySpacingCluster>} */
       let slmByKey = new Map();
       let dropped = 0;
@@ -325,8 +348,19 @@ export default function UnifyCandidateFindPanel({
 
       const needSlm =
         isUnifyJosaSlmReviewEnabled() || isUnifyPredicateSlmReviewEnabled();
-      if (needSlm) setSlmReviewing(true);
+      const needStdict = isUnifyStdictPosReviewEnabled();
+      if (needSlm || needStdict) setSlmReviewing(true);
       try {
+        if (needStdict) {
+          const stdictResult = await runStdictPosReviewOnClusterGroups(
+            workingGroups,
+          );
+          workingGroups = stdictResult.groups;
+          stdictSeriesIds = stdictResult.marks.seriesIds;
+          stdictClusterKeys = stdictResult.marks.clusterKeys;
+          stdictSummary = stdictResult.summary;
+        }
+
         if (isUnifyJosaSlmReviewEnabled()) {
           const { loadJosaSlmRunnerIfEnabled } = await import(
             '../../lib/unifyJosaReviewSlm/loadRunner.js'
@@ -362,8 +396,10 @@ export default function UnifyCandidateFindPanel({
           predicateSummary = predResult.summary;
         }
       } finally {
-        if (needSlm) setSlmReviewing(false);
+        if (needSlm || needStdict) setSlmReviewing(false);
       }
+
+      const triage = collectUnifyListTriage(workingGroups);
 
       const listClusters = workingGroups.flatMap((g) => g.clusters);
       // 보조용언 추정은 목록에만 두고, 체크·전체 발견·PDF는 사용자가 켤 때까지 제외
@@ -381,10 +417,13 @@ export default function UnifyCandidateFindPanel({
       setPredicateDropSeriesIds(dropSeriesIds);
       setPredicateDropClusterKeys(dropClusterKeys);
       setPredicateNeedsReviewByKey(needsReviewByKey);
+      setStdictPredicateSeriesIds(stdictSeriesIds);
+      setStdictPredicateClusterKeys(stdictClusterKeys);
       setRuleExcludedItems(ruleExcluded);
       setSecondaryReviewSummary(
         josaSummary ||
           predicateSummary ||
+          stdictSummary ||
           ruleExcluded.length ||
           triage.ambiguous.length ||
           triage.certainNoun.length
@@ -396,7 +435,8 @@ export default function UnifyCandidateFindPanel({
               },
               ...(josaSummary ? { josa: josaSummary } : {}),
               ...(predicateSummary ? { predicate: predicateSummary } : {}),
-              phase: 'rule_only',
+              ...(stdictSummary ? { stdict: stdictSummary } : {}),
+              phase: stdictSummary ? 'rule_stdict' : 'rule_only',
             }
           : null,
       );
@@ -461,8 +501,12 @@ export default function UnifyCandidateFindPanel({
       stripped,
       slmReviewedByKey,
     );
+    const withStdict = applyStdictPosMarksToGroups(withJosa, {
+      seriesIds: stdictPredicateSeriesIds,
+      clusterKeys: stdictPredicateClusterKeys,
+    });
     return applyPredicateSlmDropsToGroups(
-      withJosa,
+      withStdict,
       {
         seriesIds: predicateDropSeriesIds,
         clusterKeys: predicateDropClusterKeys,
@@ -473,6 +517,8 @@ export default function UnifyCandidateFindPanel({
     clusters,
     rawByKey,
     slmReviewedByKey,
+    stdictPredicateSeriesIds,
+    stdictPredicateClusterKeys,
     predicateDropSeriesIds,
     predicateDropClusterKeys,
     predicateNeedsReviewByKey,

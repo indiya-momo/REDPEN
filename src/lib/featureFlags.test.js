@@ -7,6 +7,7 @@ import {
   isUnifyCandidateFindEnabled,
   isUnifyJosaSlmReviewEnabled,
   isUnifyPredicateSlmReviewEnabled,
+  isUnifyStdictPosReviewEnabled,
 } from './featureFlags.js';
 
 describe('featureFlags', () => {
@@ -18,6 +19,7 @@ describe('featureFlags', () => {
   const prevUnifyCandidate = import.meta.env.VITE_FEATURE_UNIFY_CANDIDATE_FIND;
   const prevJosaSlm = import.meta.env.VITE_UNIFY_JOSA_SLM;
   const prevPredicateSlm = import.meta.env.VITE_UNIFY_PREDICATE_SLM;
+  const prevStdict = import.meta.env.VITE_UNIFY_STDICT;
 
   afterEach(() => {
     import.meta.env.DEV = prevDev;
@@ -28,6 +30,7 @@ describe('featureFlags', () => {
     import.meta.env.VITE_FEATURE_UNIFY_CANDIDATE_FIND = prevUnifyCandidate;
     import.meta.env.VITE_UNIFY_JOSA_SLM = prevJosaSlm;
     import.meta.env.VITE_UNIFY_PREDICATE_SLM = prevPredicateSlm;
+    import.meta.env.VITE_UNIFY_STDICT = prevStdict;
   });
 
   it('dev에서는 목차·본문·엑셀 export·프로젝트 허브·외래어 변환·표기 통일 추천이 켜진다', () => {
@@ -85,5 +88,12 @@ describe('featureFlags', () => {
     expect(isUnifyPredicateSlmReviewEnabled()).toBe(false);
     import.meta.env.VITE_UNIFY_PREDICATE_SLM = 'true';
     expect(isUnifyPredicateSlmReviewEnabled()).toBe(true);
+  });
+
+  it('표준국어대사전 품사 2차는 VITE_UNIFY_STDICT=true 일 때만 켜진다', () => {
+    import.meta.env.VITE_UNIFY_STDICT = undefined;
+    expect(isUnifyStdictPosReviewEnabled()).toBe(false);
+    import.meta.env.VITE_UNIFY_STDICT = 'true';
+    expect(isUnifyStdictPosReviewEnabled()).toBe(true);
   });
 });

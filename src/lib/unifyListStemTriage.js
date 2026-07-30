@@ -62,7 +62,7 @@ function labelForKeys(keys) {
 /**
  * strip 이후 그룹에서 명사 / 용언(추정) 목록.
  * 집계 단위 = 화면 카드(계열 1, 띄어쓰기 변형은 hangul 어근 1).
- * @param {{ type: string, affix?: string, affixType?: string, label?: string, clusters?: { key: string }[] }[]} groups
+ * @param {{ type: string, affix?: string, affixType?: string, label?: string, dictPos?: string, clusters?: { key: string }[] }[]} groups
  * @returns {{
  *   certainNoun: { id: string, label: string }[],
  *   ambiguous: { id: string, label: string }[],
@@ -85,6 +85,13 @@ export function collectUnifyListTriage(groups) {
 
   for (const group of groups ?? []) {
     if (group.type === 'series') {
+      if (group.dictPos === 'predicate') {
+        pushKind('ambiguous', {
+          id: `series:${group.affixType}:${group.affix}`,
+          label: group.label || `${group.affix}@`,
+        });
+        continue;
+      }
       pushKind(classifyUnifyListStem(group.affix), {
         id: `series:${group.affixType}:${group.affix}`,
         label: group.label || `${group.affix}@`,

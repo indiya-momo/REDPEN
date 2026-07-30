@@ -27,6 +27,10 @@
  *     kept: ReviewItem[],
  *     needsReview: ReviewItem[],
  *   },
+ *   stdict?: {
+ *     reviewed?: number,
+ *     movedNounToPredicate?: ReviewItem[],
+ *   },
  * }} SecondaryReviewSummary
  */
 
@@ -46,12 +50,14 @@ export default function UnifySecondaryReviewPanel({ summary }) {
 
   const pred = summary.predicate;
   const josa = summary.josa;
+  const stdict = summary.stdict;
   const ruleExcluded = summary.ruleExcluded ?? [];
   const ambiguous = summary.triage?.ambiguous ?? [];
   const certainNoun = summary.triage?.certainNoun ?? [];
   const nounCount = certainNoun.length;
   const predicateEstCount = ambiguous.length;
   const ruleCount = ruleExcluded.length;
+  const stdictMoved = stdict?.movedNounToPredicate ?? [];
 
   const josaWithItems = [
     { title: '규칙으로 배지', items: josa?.rulePromoted ?? [] },
@@ -71,7 +77,8 @@ export default function UnifySecondaryReviewPanel({ summary }) {
     !predicateEstCount &&
     !ruleCount &&
     !josaWithItems.length &&
-    !predWithItems.length
+    !predWithItems.length &&
+    !stdictMoved.length
   ) {
     return null;
   }
@@ -109,12 +116,18 @@ export default function UnifySecondaryReviewPanel({ summary }) {
     if (pred?.needsReview?.length) bits.push(`실패 ${pred.needsReview.length}`);
     if (bits.length) extraBits.push(`모델 ${bits.join('·')}`);
   }
+  if (stdictMoved.length) {
+    extraBits.push(`사전이동 ${stdictMoved.length}`);
+  }
   if (extraBits.length) {
     summaryText = `${summaryText} · ${extraBits.join(' · ')}`;
   }
 
   const hasBody =
-    ruleCount > 0 || josaWithItems.length > 0 || predWithItems.length > 0;
+    ruleCount > 0 ||
+    josaWithItems.length > 0 ||
+    predWithItems.length > 0 ||
+    stdictMoved.length > 0;
   const excludedPhrase = ruleExcluded.map(formatExcludedItem).join(', ');
 
   return (
@@ -128,6 +141,15 @@ export default function UnifySecondaryReviewPanel({ summary }) {
             <p className="unify-candidate-find__secondary-review-note">
               제외는 {excludedPhrase}입니다
             </p>
+          ) : null}
+
+          {stdictMoved.length > 0 ? (
+            <div className="unify-candidate-find__secondary-review-block">
+              <div className="unify-candidate-find__secondary-review-block-title">
+                사전: 명사→용언 이동
+              </div>
+              <ProcessedList items={stdictMoved} />
+            </div>
           ) : null}
 
           {josaWithItems.length > 0 ? (
