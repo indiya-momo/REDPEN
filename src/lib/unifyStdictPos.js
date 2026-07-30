@@ -18,7 +18,8 @@ export function hangulOnlyKey(key) {
 }
 
 /**
- * 보조용언 카드는 본용언 쪽만 조회 (띄움 첫 어절).
+ * 보조용언 카드는 본용언 쪽만 조회.
+ * 띄움이면 첫 어절(`계산해 보자`→`계산해`), 붙임이면 `…해보자`→`…해`.
  * @param {{ key?: string, variants?: string[], auxReview?: { stemSpaced?: string, stemKey?: string } | null }} cluster
  */
 export function queryStemForCluster(cluster) {
@@ -29,25 +30,103 @@ export function queryStemForCluster(cluster) {
       const h = hangulOnlyKey(first);
       if (h.length >= 2) return h;
     }
+    const glued = hangulOnlyKey(cluster?.key ?? '');
+    // 계산해보자·답해보자 → 계산해·답해 (「보자」 제거)
+    if (glued.endsWith('보자') && glued.length > 3) {
+      return glued.slice(0, -2);
+    }
+    const auxGlued = hangulOnlyKey(cluster.auxReview.stemKey ?? '');
+    if (
+      auxGlued.length >= 2 &&
+      glued.endsWith(auxGlued) &&
+      glued.length > auxGlued.length
+    ) {
+      return glued.slice(0, -auxGlued.length);
+    }
   }
   return hangulOnlyKey(cluster?.key ?? '') || String(cluster?.key ?? '').trim();
 }
 
 /**
- * 활용형 → 기본형 후보. 명사에 하다를 붙이지 않음(호출측에서만 사용).
+ * 활용형 → 사전(기본형) 후보. 용언 경로에서만 사용. 명사에 하다를 붙이지 않음.
+ * 예: 날아→날다, 들어→들다, 대어→대다, 밀려→밀리다, 돌아가→돌아가다, 가정해→가정하다
  * @param {string} q
  * @returns {string[]}
  */
 export function lemmaCandidatesForConjugation(q) {
   const h = hangulOnlyKey(q);
   if (h.length < 2) return [];
+  if (h.endsWith('다')) return [];
+
+  /** @type {string[]} */
+  const out = [];
+  const push = (lemma) => {
+    if (!lemma || lemma === h || lemma.length < 2) return;
+    if (!out.includes(lemma)) out.push(lemma);
+  };
+
+  // 계산해보자·답해보자 → 계산하다·답하다 (본용언+보조 붙임형)
+  if (h.endsWith('해보자') && h.length >= 4) {
+    push(`${h.slice(0, -3)}하다`);
+    return out;
+  }
+
   if (h.endsWith('해') && h.length >= 3) {
-    return [`${h.slice(0, -1)}하다`];
+    push(`${h.slice(0, -1)}하다`);
+    return out;
   }
-  if (!h.endsWith('다')) {
-    return [`${h}다`];
+
+  // 돌아가·들어가 — 가다 계열 연결형
+  const digraphs = [
+    '아가',
+    '어가',
+    '여가',
+    '해가',
+    '혀가',
+    '워가',
+    '와가',
+    '려가',
+  ];
+  for (const d of digraphs) {
+    if (h.endsWith(d) && h.length > d.length) {
+      push(`${h}다`);
+      return out;
+    }
   }
-  return [];
+
+  // 밀려·알려 — 리다 활용 (려 ← 리+어)
+  if (h.endsWith('려') && h.length >= 2) {
+    const stem = h.slice(0, -1);
+    push(`${stem}리다`);
+    push(`${stem}다`);
+    return out;
+  }
+
+  // 날아·들어·대어·만들어 — 끝 아/어/여… 제거 후 다
+  const endSyllables = ['아', '어', '여', '혀', '켜', '펴', '워', '와'];
+  for (const end of endSyllables) {
+    if (h.endsWith(end) && h.length > end.length) {
+      push(`${h.slice(0, -1)}다`);
+      return out;
+    }
+  }
+
+  push(`${h}다`);
+  return out;
+}
+
+/**
+ * 명사 → 어근 그대로. 용언 → 사전형 우선(+ 실패 시 원형).
+ * @param {StdictPosTarget} target
+ * @returns {string[]}
+ */
+export function buildStdictQueryList(target) {
+  const q = hangulOnlyKey(target.q) || String(target.q ?? '').trim();
+  if (!q) return [];
+  if (!target.allowLemmaTry) return [q];
+  const lemmas = lemmaCandidatesForConjugation(q);
+  if (!lemmas.length) return [q];
+  return [...lemmas, q];
 }
 
 /**
@@ -80,13 +159,17 @@ export function parseStdictSearchHits(data) {
     const senses = Array.isArray(sense) ? sense : sense ? [sense] : [];
     /** @type {string[]} */
     const poses = [];
+    // 표준국어대사전 JSON: 품사가 item.pos 에 있고 sense 에는 없을 때가 많음
+    if (it.pos) poses.push(String(it.pos).trim());
     for (const s of senses) {
       if (!s || typeof s !== 'object') continue;
-      const pos = String(/** @type {Record<string, unknown>} */ (s).pos ?? '').trim();
+      const pos = String(
+        /** @type {Record<string, unknown>} */ (s).pos ?? '',
+      ).trim();
       if (pos) poses.push(pos);
     }
-    if (!poses.length && it.pos) poses.push(String(it.pos).trim());
-    for (const pos of poses.length ? poses : []) {
+    const uniquePos = [...new Set(poses.filter(Boolean))];
+    for (const pos of uniquePos) {
       hits.push({ word: word || '?', pos });
     }
   }
@@ -140,7 +223,12 @@ export function enqueueStdictPosTargets(groups) {
   for (const group of groups ?? []) {
     if (group.type === 'series') {
       const affix = String(group.affix ?? '');
-      const ruleKind = classifyUnifyListStem(affix);
+      const ruleKind =
+        group.dictPos === 'predicate'
+          ? 'ambiguous'
+          : group.dictPos === 'noun'
+            ? 'certain_noun'
+            : classifyUnifyListStem(affix);
       if (ruleKind === 'drop_rule') continue;
       out.push({
         id: `series:${group.affixType}:${affix}`,
@@ -216,14 +304,14 @@ export async function fetchStdictExact(q, opts = {}) {
  * @param {{ fetchImpl?: typeof fetch, timeoutMs?: number }} [opts]
  */
 export async function resolveStdictPosForTarget(target, opts = {}) {
-  let usedQ = target.q;
-  let result = await fetchStdictExact(usedQ, opts);
-  if (result.error === 'STDICT_KEY_MISSING') {
+  const queries = buildStdictQueryList(target);
+  if (!queries.length) {
     return {
       id: target.id,
-      q: usedQ,
-      verdict: /** @type {const} */ ('error'),
-      error: result.error,
+      q: target.q,
+      verdict: /** @type {const} */ ('missing'),
+      error: null,
+      poses: [],
       label: target.label,
       ruleKind: target.ruleKind,
       kind: target.kind,
@@ -232,26 +320,63 @@ export async function resolveStdictPosForTarget(target, opts = {}) {
       clusterKey: target.clusterKey,
     };
   }
-  let verdict = verdictFromStdictHits(result.hits);
-  if (verdict === 'missing' && target.allowLemmaTry) {
-    for (const lemma of lemmaCandidatesForConjugation(target.q)) {
-      const second = await fetchStdictExact(lemma, opts);
-      if (second.error === 'STDICT_KEY_MISSING') break;
-      const v2 = verdictFromStdictHits(second.hits);
-      if (v2 !== 'missing') {
-        usedQ = lemma;
-        verdict = v2;
-        result = second;
-        break;
-      }
+
+  /** @type {{ q: string, verdict: 'noun' | 'predicate' | 'mixed' | 'missing', hits: { word: string, pos: string }[], error: string | null } | null} */
+  let fallback = null;
+
+  for (const usedQ of queries) {
+    const result = await fetchStdictExact(usedQ, opts);
+    if (result.error === 'STDICT_KEY_MISSING') {
+      return {
+        id: target.id,
+        q: usedQ,
+        verdict: /** @type {const} */ ('error'),
+        error: result.error,
+        label: target.label,
+        ruleKind: target.ruleKind,
+        kind: target.kind,
+        seriesAffixType: target.seriesAffixType,
+        seriesAffix: target.seriesAffix,
+        clusterKey: target.clusterKey,
+      };
     }
+    const verdict = verdictFromStdictHits(result.hits);
+    if (verdict === 'predicate') {
+      return {
+        id: target.id,
+        q: usedQ,
+        verdict,
+        error: result.error,
+        poses: result.hits?.map((h) => h.pos) ?? [],
+        label: target.label,
+        ruleKind: target.ruleKind,
+        kind: target.kind,
+        seriesAffixType: target.seriesAffixType,
+        seriesAffix: target.seriesAffix,
+        clusterKey: target.clusterKey,
+      };
+    }
+    if (verdict === 'missing') continue;
+    // 명사·혼재 — 용언 경로면 다음 사전형 후보를 더 보고, 명사 경로는 여기서 확정
+    if (!fallback) {
+      fallback = {
+        q: usedQ,
+        verdict,
+        hits: result.hits ?? [],
+        error: result.error,
+      };
+    }
+    if (!target.allowLemmaTry) break;
   }
+
+  const usedQ = fallback?.q ?? queries[queries.length - 1];
+  const verdict = fallback?.verdict ?? 'missing';
   return {
     id: target.id,
     q: usedQ,
     verdict,
-    error: result.error,
-    poses: result.hits?.map((h) => h.pos) ?? [],
+    error: fallback?.error ?? null,
+    poses: fallback?.hits?.map((h) => h.pos) ?? [],
     label: target.label,
     ruleKind: target.ruleKind,
     kind: target.kind,
@@ -287,6 +412,8 @@ export async function runStdictPosReviewOnClusterGroups(groups, opts = {}) {
   /** @type {{ id: string, label: string, reason?: string }[]} */
   const confirmedNoun = [];
   /** @type {{ id: string, label: string, reason?: string }[]} */
+  const confirmedPredicate = [];
+  /** @type {{ id: string, label: string, reason?: string }[]} */
   const missing = [];
 
   for (const r of resolved) {
@@ -313,11 +440,23 @@ export async function runStdictPosReviewOnClusterGroups(groups, opts = {}) {
           label: r.label,
           reason: `사전 ${r.q}`,
         });
+      } else {
+        confirmedPredicate.push({
+          id: r.id,
+          label: r.label,
+          reason: `사전 ${r.q}`,
+        });
       }
     } else if (r.clusterKey) {
       clusterKeysToPredicate.add(r.clusterKey);
       if (r.ruleKind === 'certain_noun') {
         movedNounToPredicate.push({
+          id: r.id,
+          label: r.label,
+          reason: `사전 ${r.q}`,
+        });
+      } else {
+        confirmedPredicate.push({
           id: r.id,
           label: r.label,
           reason: `사전 ${r.q}`,
@@ -370,10 +509,16 @@ export async function runStdictPosReviewOnClusterGroups(groups, opts = {}) {
   return {
     groups: sortClusterGroups(next),
     summary: {
+      ran: true,
       reviewed: resolved.filter((r) => r.verdict !== 'error').length,
+      failed: resolved.filter((r) => r.verdict === 'error').length,
       movedNounToPredicate,
       confirmedNoun,
+      confirmedPredicate,
       missing,
+      ...(resolved.some((r) => r.error === 'STDICT_KEY_MISSING')
+        ? { error: 'STDICT_KEY_MISSING' }
+        : {}),
     },
     marks: {
       seriesIds: [...seriesToPredicate.keys()],

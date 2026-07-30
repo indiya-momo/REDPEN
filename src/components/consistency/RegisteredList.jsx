@@ -110,27 +110,24 @@ export default function RegisteredList({
         );
         return ia - ib;
       });
+    // 필수(하다·지다)도 같은 그리드에 이어 붙임 — 아래 줄·구분선으로 떨어뜨리지 않음
+    const ordered = [...optionalEntries, ...requiredEntries];
     const itemProps = { customRules, isEnabled, onToggle, isRequired, disabled };
 
     return (
       <div className="auxiliary-checklist">
-        {optionalEntries.length > 0 ? (
-          <ul className="tail-list tail-list--grid tail-list--grid-3">
-            {optionalEntries.map((row) => (
-              <AuxiliaryGridItem key={consistencyEntryKey(row)} row={row} {...itemProps} />
-            ))}
-          </ul>
-        ) : null}
-        {requiredEntries.length > 0 ? (
-          <ul
-            className="tail-list tail-list--grid tail-list--grid-3 tail-list--grid-required"
-            aria-label="필수 본용언+보조용언"
-          >
-            {requiredEntries.map((row) => (
-              <AuxiliaryGridItem key={consistencyEntryKey(row)} row={row} {...itemProps} />
-            ))}
-          </ul>
-        ) : null}
+        <ul
+          className="tail-list tail-list--grid tail-list--grid-3"
+          aria-label="본용언+보조용언"
+        >
+          {ordered.map((row) => (
+            <AuxiliaryGridItem
+              key={consistencyEntryKey(row)}
+              row={row}
+              {...itemProps}
+            />
+          ))}
+        </ul>
       </div>
     );
   }

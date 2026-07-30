@@ -4413,8 +4413,9 @@ html[data-build='prod'] .unify-candidate-find__list {
   grid-row: 1;
   min-width: 0;
   line-height: 1.35;
-  word-break: keep-all;
-  overflow-wrap: anywhere;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .auxiliary-chip:has(.bon-bojo-required-badge) {

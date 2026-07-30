@@ -15,6 +15,7 @@ import {
 import { PROJECT_HUB_TOGGLE_CRITERIA } from '../lib/projectHubCriteriaSections.js';
 import { resultPillarToneClass } from '../lib/resultPillarTone.js';
 import { LOANWORD_FEATURE_LABEL } from '../lib/loanwordCheckRules.js';
+import CriteriaHoverTip from './CriteriaHoverTip.jsx';
 import {
   buildProjectWorkSummary,
   WORK_SUMMARY_NONE_LABEL,
@@ -351,14 +352,15 @@ export default function SharePackageReadPanel({
                     <span className="project-hub-check-results__download-count">
                       {checkCountLabel}
                     </span>
-                    <button
-                      type="button"
-                      className="project-hub-settings__secondary-btn project-hub-settings__secondary-btn--check-results"
-                      disabled
-                      title={ACTIONS_CHECK_RESULTS_DESC}
-                    >
-                      준비중
-                    </button>
+                    <CriteriaHoverTip tip={ACTIONS_CHECK_RESULTS_DESC}>
+                      <button
+                        type="button"
+                        className="project-hub-settings__secondary-btn project-hub-settings__secondary-btn--check-results"
+                        disabled
+                      >
+                        준비중
+                      </button>
+                    </CriteriaHoverTip>
                   </div>
                 </div>
                 {checkResultsLoading ? (

@@ -4,6 +4,7 @@ import {
   versionDateLabel,
   versionLabel,
 } from '../lib/appVersion.js';
+import CriteriaHoverTip from './CriteriaHoverTip.jsx';
 
 /**
  * @param {{ prominent?: boolean, dateOnly?: boolean }} props
@@ -16,33 +17,35 @@ export default function AppVersionBadge({ prominent = false, dateOnly = false })
   if (dateOnly) {
     const displayLabel = `V ${label}`;
     return (
-      <div
-        className="app-version-badge app-version-badge--prominent app-version-badge--date-only"
-        title={detailTitle}
-        aria-label={`앱 버전 ${displayLabel}`}
-      >
-        <span className="app-version-badge__label">V</span>
-        <code className="app-version-badge__code">{label}</code>
-      </div>
+      <CriteriaHoverTip tip={detailTitle}>
+        <div
+          className="app-version-badge app-version-badge--prominent app-version-badge--date-only"
+          aria-label={`앱 버전 ${displayLabel}`}
+        >
+          <span className="app-version-badge__label">V</span>
+          <code className="app-version-badge__code">{label}</code>
+        </div>
+      </CriteriaHoverTip>
     );
   }
 
   return (
-    <div
-      className={
-        prominent ? 'app-version-badge app-version-badge--prominent' : 'app-version-badge'
-      }
-      title={detailTitle}
-      aria-label={`앱 버전 ${label}`}
-    >
-      {prominent ? (
-        <>
-          <span className="app-version-badge__label">버전</span>
-          <code className="app-version-badge__code">{label}</code>
-        </>
-      ) : (
-        label
-      )}
-    </div>
+    <CriteriaHoverTip tip={detailTitle}>
+      <div
+        className={
+          prominent ? 'app-version-badge app-version-badge--prominent' : 'app-version-badge'
+        }
+        aria-label={`앱 버전 ${label}`}
+      >
+        {prominent ? (
+          <>
+            <span className="app-version-badge__label">버전</span>
+            <code className="app-version-badge__code">{label}</code>
+          </>
+        ) : (
+          label
+        )}
+      </div>
+    </CriteriaHoverTip>
   );
 }

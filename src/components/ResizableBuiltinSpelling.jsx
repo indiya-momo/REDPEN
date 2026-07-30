@@ -3,6 +3,7 @@ import { HANGUL_ORTHOGRAPHY_URL } from '../lib/koreanNormsLinks.js';
 import { SPELLING_CRITERIA_HEADING_DESCRIPTIONS } from '../lib/spellingCriteriaHeadingTips.js';
 import BuiltinSpellingPanel from './BuiltinSpellingPanel.jsx';
 import CautionChecklist from './CautionChecklist.jsx';
+import CriteriaHoverTip from './CriteriaHoverTip.jsx';
 import LoanwordCheckPanel from './LoanwordCheckPanel.jsx';
 
 const STORAGE_KEY = 'builtin-spelling-panel-height-v2';
@@ -158,12 +159,13 @@ export default function ResizableBuiltinSpelling({
           aria-valuemin={MIN_HEIGHT}
           aria-valuemax={MAX_HEIGHT}
           aria-label="아래 패널 높이 조절 — 위로 끌면 편집자 검토·맞춤법 확인 영역이 넓어집니다"
-          title="높이 조절 (드래그)"
           onPointerDown={startDrag}
         >
-          <span className="builtin-spelling-resize-grip" aria-hidden>
-            ⋮⋮
-          </span>
+          <CriteriaHoverTip tip="높이 조절 (드래그)">
+            <span className="builtin-spelling-resize-grip" aria-hidden>
+              ⋮⋮
+            </span>
+          </CriteriaHoverTip>
         </div>
       )}
       <section

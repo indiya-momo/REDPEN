@@ -28,6 +28,7 @@ import {
   WORK_HISTORY_SPARKLINE_HEIGHT,
   WORK_HISTORY_SPARKLINE_WIDTH,
 } from '../../presentation/workHistorySparkline.js';
+import CriteriaHoverTip from '../CriteriaHoverTip.jsx';
 
 const SPARK_W = WORK_HISTORY_SPARKLINE_WIDTH;
 const SPARK_H = WORK_HISTORY_SPARKLINE_HEIGHT;
@@ -124,17 +125,20 @@ function SparklineRow({
               ? formatSessionAxisTick(sessionAts[index])
               : `${index + 1}회차`;
             return (
-              <span
+              <CriteriaHoverTip
                 key={`${label}-${index}`}
-                className="result-findings-count-circle work-history-panel__spark-value"
-                style={{
-                  left: `${(point.x / SPARK_W) * 100}%`,
-                  top: `${(point.y / SPARK_H) * 100}%`,
-                }}
-                title={`${label} ${atLabel} · ${point.value}건`}
+                tip={`${label} ${atLabel} · ${point.value}건`}
               >
-                {point.value}
-              </span>
+                <span
+                  className="result-findings-count-circle work-history-panel__spark-value"
+                  style={{
+                    left: `${(point.x / SPARK_W) * 100}%`,
+                    top: `${(point.y / SPARK_H) * 100}%`,
+                  }}
+                >
+                  {point.value}
+                </span>
+              </CriteriaHoverTip>
             );
           })}
         </div>
@@ -173,14 +177,17 @@ function SessionDateAxis({ sessions }) {
         {sessions.map((entry, index) => {
           const leftPct = count === 1 ? 50 : (index / (count - 1)) * 100;
           return (
-            <span
+            <CriteriaHoverTip
               key={entry.at}
-              className="work-history-panel__session-date-tick"
-              style={{ left: `${leftPct}%` }}
-              title={`${index + 1}회차 ${formatSessionAxisTick(entry.at)}`}
+              tip={`${index + 1}회차 ${formatSessionAxisTick(entry.at)}`}
             >
-              {formatSessionAxisTick(entry.at)}
-            </span>
+              <span
+                className="work-history-panel__session-date-tick"
+                style={{ left: `${leftPct}%` }}
+              >
+                {formatSessionAxisTick(entry.at)}
+              </span>
+            </CriteriaHoverTip>
           );
         })}
       </div>

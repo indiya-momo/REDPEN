@@ -7,7 +7,10 @@ import { getBuiltInTip } from '../lib/builtInRules.js';
 import { formatSystemPageLabel } from '../lib/printedPageDisplay.js';
 import { cautionResultChipLabel } from '../lib/cautionRules.js';
 import { getConsistencyResultCardParts } from '../lib/consistencyHighlightTip.js';
-import { AUXILIARY_VERB_BADGE_LABEL } from '../lib/bonBojoRules.js';
+import {
+  AUXILIARY_VERB_BADGE_LABEL,
+  isBonBojoRequiredItem,
+} from '../lib/bonBojoRules.js';
 import {
   LITERAL_FIND_FEATURE_LABEL,
   UNIFY_FEATURE_LABEL,
@@ -307,11 +310,17 @@ export default function CheckResultsPanel({
             <div className="result-card-head-main">
               <span className="result-rule">
                 {isConsistency ? (
-                  <span className="consistency-result-chip">
-                    {consistencyPartsForCard?.label ||
-                      group.label ||
-                      ''}
-                  </span>
+                  <>
+                    <span className="consistency-result-chip">
+                      {consistencyPartsForCard?.label ||
+                        group.label ||
+                        ''}
+                    </span>
+                    {group.patternKind === 'auxiliary-verb' &&
+                    isBonBojoRequiredItem(group.bonBojoItemId) ? (
+                      <span className="bon-bojo-required-badge">필수</span>
+                    ) : null}
+                  </>
                 ) : isCaution ? (
                   <span className="caution-result-chip">
                     {cautionResultChipLabel(group)}

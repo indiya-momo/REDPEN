@@ -1,3 +1,4 @@
+import CriteriaHoverTip from '../CriteriaHoverTip.jsx';
 import SpaceVisibleInput from '../SpaceVisibleInput.jsx';
 
 /**
@@ -48,6 +49,33 @@ export default function ConsistencyRegisterField({
   };
 
   const isTextAdd = addLabel !== '+';
+  const limitTip =
+    registerDisabled && !hideLimitTitle
+      ? '등록 한도에 도달했습니다'
+      : undefined;
+
+  const addButton = (
+    <button
+      type="button"
+      className={[
+        'btn-add',
+        'consistency-register-add-btn',
+        'consistency-register-field__add',
+        isTextAdd ? 'consistency-register-add-btn--label' : '',
+      ]
+        .filter(Boolean)
+        .join(' ')}
+      data-work-guide={addButtonGuideAttr || undefined}
+      onClick={() => {
+        onAddButtonClick?.();
+        if (!registerDisabled) onRegister();
+      }}
+      disabled={registerDisabled}
+      aria-label={addAriaLabel}
+    >
+      {addLabel}
+    </button>
+  );
 
   return (
     <div className="tail-form">
@@ -74,31 +102,11 @@ export default function ConsistencyRegisterField({
             spellCheck={false}
           />
         )}
-        <button
-          type="button"
-          className={[
-            'btn-add',
-            'consistency-register-add-btn',
-            'consistency-register-field__add',
-            isTextAdd ? 'consistency-register-add-btn--label' : '',
-          ]
-            .filter(Boolean)
-            .join(' ')}
-          data-work-guide={addButtonGuideAttr || undefined}
-          onClick={() => {
-            onAddButtonClick?.();
-            if (!registerDisabled) onRegister();
-          }}
-          disabled={registerDisabled}
-          aria-label={addAriaLabel}
-          title={
-            registerDisabled && !hideLimitTitle
-              ? '등록 한도에 도달했습니다'
-              : undefined
-          }
-        >
-          {addLabel}
-        </button>
+        {limitTip ? (
+          <CriteriaHoverTip tip={limitTip}>{addButton}</CriteriaHoverTip>
+        ) : (
+          addButton
+        )}
       </div>
     </div>
   );

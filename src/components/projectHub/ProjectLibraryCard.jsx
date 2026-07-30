@@ -6,6 +6,7 @@ import {
   formatProjectCardEditionValues,
   formatProjectCardLastModifiedLabel,
 } from '../../presentation/projectCardViewModel.js';
+import CriteriaHoverTip from '../CriteriaHoverTip.jsx';
 
 /**
  * @param {{ title: string, className?: string, titleAttr?: string }} props
@@ -111,23 +112,26 @@ export default function ProjectLibraryCard({
       />
     </label>
   ) : allowNameEdit ? (
-    <button
-      type="button"
-      className="sheet-card__title-field"
-      onClick={(event) => {
-        event.stopPropagation();
-        setNameDraft(card.title);
-        setEditingName(true);
-      }}
-      aria-label={`프로젝트 이름 수정: ${card.title}`}
-      title={`《${card.title}》`}
-    >
-      <SheetCardBookTitle title={card.title} />
-    </button>
+    <CriteriaHoverTip tip={`《${card.title}》`}>
+      <button
+        type="button"
+        className="sheet-card__title-field"
+        onClick={(event) => {
+          event.stopPropagation();
+          setNameDraft(card.title);
+          setEditingName(true);
+        }}
+        aria-label={`프로젝트 이름 수정: ${card.title}`}
+      >
+        <SheetCardBookTitle title={card.title} />
+      </button>
+    </CriteriaHoverTip>
   ) : (
-    <h2 className="sheet-card__title" title={`《${card.title}》`}>
-      <SheetCardBookTitle title={card.title} />
-    </h2>
+    <CriteriaHoverTip tip={`《${card.title}》`}>
+      <h2 className="sheet-card__title">
+        <SheetCardBookTitle title={card.title} />
+      </h2>
+    </CriteriaHoverTip>
   );
 
   if (compact) {
@@ -151,9 +155,11 @@ export default function ProjectLibraryCard({
         aria-label={`${card.title}${compactDateLine ? `, ${compactDateLine}` : ''}`}
       >
         <div className="sheet-card__body sheet-card__body--folder">
-          <p className="sheet-card__folder-title" title={`《${card.title}》`}>
-            <SheetCardBookTitle title={card.title} />
-          </p>
+          <CriteriaHoverTip tip={`《${card.title}》`}>
+            <p className="sheet-card__folder-title">
+              <SheetCardBookTitle title={card.title} />
+            </p>
+          </CriteriaHoverTip>
           {compactDateLine ? (
             <p className="sheet-card__folder-date">{compactDateLine}</p>
           ) : null}
@@ -266,19 +272,22 @@ export default function ProjectLibraryCard({
                     삭제
                   </button>
                 ) : null}
-                <button
-                  type="button"
-                  className="sheet-card__btn sheet-card__btn--secondary"
-                  disabled={!shareAvailable}
-                  title={shareAvailable ? undefined : '유료회원 전용 · 준비중'}
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    if (!shareAvailable) return;
-                    onSharePreview();
-                  }}
+                <CriteriaHoverTip
+                  tip={shareAvailable ? undefined : '유료회원 전용 · 준비중'}
                 >
-                  {shareAvailable ? '공유하기' : '준비중'}
-                </button>
+                  <button
+                    type="button"
+                    className="sheet-card__btn sheet-card__btn--secondary"
+                    disabled={!shareAvailable}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      if (!shareAvailable) return;
+                      onSharePreview();
+                    }}
+                  >
+                    {shareAvailable ? '공유하기' : '준비중'}
+                  </button>
+                </CriteriaHoverTip>
               </>
             ) : null}
           </footer>

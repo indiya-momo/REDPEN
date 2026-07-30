@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { Copy, X } from 'lucide-react';
 import { buildAppDialogHighlightPattern } from '../lib/appDialogFeatureLabels.js';
+import CriteriaHoverTip from './CriteriaHoverTip.jsx';
 import './app-dialog.css';
 
 const MANUSCRIPT_PANE_SELECTOR = '.panel-right';
@@ -231,18 +232,19 @@ export default function AppDialog({
 
         {url ? (
           <div className="app-dialog__link-row">
-            <code className="app-dialog__link-url" title={url}>
-              {url}
-            </code>
-            <button
-              type="button"
-              className="app-dialog__link-copy"
-              onClick={() => void handleCopyUrl()}
-              aria-label={copyLabel}
-              title={copyLabel}
-            >
-              <Copy size={16} strokeWidth={2} aria-hidden />
-            </button>
+            <CriteriaHoverTip tip={url}>
+              <code className="app-dialog__link-url">{url}</code>
+            </CriteriaHoverTip>
+            <CriteriaHoverTip tip={copyLabel}>
+              <button
+                type="button"
+                className="app-dialog__link-copy"
+                onClick={() => void handleCopyUrl()}
+                aria-label={copyLabel}
+              >
+                <Copy size={16} strokeWidth={2} aria-hidden />
+              </button>
+            </CriteriaHoverTip>
           </div>
         ) : null}
 

@@ -167,7 +167,7 @@ export default function PdfPreviewBar({
           <div className="pdf-preview-bar__actions-col">
             {onToggleThumbStrip ? (
               <CriteriaHoverTip
-                tip={thumbStripOpen ? '미리보기 숨기기' : '미리보기 보기'}
+                tip={thumbStripOpen ? '미리보기 숨기기' : '썸네일 미리보기'}
               >
                 <button
                   type="button"
@@ -177,7 +177,7 @@ export default function PdfPreviewBar({
                   onClick={onToggleThumbStrip}
                   aria-expanded={thumbStripOpen}
                   aria-controls="pdf-thumb-strip"
-                  aria-label={thumbStripOpen ? '미리보기 숨기기' : '미리보기 보기'}
+                  aria-label={thumbStripOpen ? '미리보기 숨기기' : '썸네일 미리보기'}
                 >
                   {thumbStripOpen ? (
                     <EyeOff size={16} aria-hidden />

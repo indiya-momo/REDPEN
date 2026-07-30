@@ -428,6 +428,9 @@ function zeroFindGroupFromRule(rule) {
           ...(rule.label?.trim()
             ? { groupDisplayLabel: rule.label.trim() }
             : {}),
+          ...(rule.bonBojoItemId?.trim()
+            ? { bonBojoItemId: rule.bonBojoItemId.trim() }
+            : {}),
         }
       : {}),
     instances: [],
@@ -515,11 +518,17 @@ export function mergeAuxiliaryResultsByBonBojoItem(results) {
         find: `auxiliary-item:${tag}`,
         label: tag,
         groupDisplayLabel: tag,
+        ...(g.bonBojoItemId?.trim()
+          ? { bonBojoItemId: g.bonBojoItemId.trim() }
+          : {}),
         instances: [...g.instances],
       });
       continue;
     }
     existing.instances.push(...g.instances);
+    if (!existing.bonBojoItemId && g.bonBojoItemId?.trim()) {
+      existing.bonBojoItemId = g.bonBojoItemId.trim();
+    }
   }
 
   return [...rest, ...merged.values()];

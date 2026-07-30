@@ -425,6 +425,18 @@
   line-height: 1.2;
 }
 
+.panel-left .results-panel--consistency .result-rule:has(.bon-bojo-required-badge) {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 4px;
+  min-width: 0;
+}
+
+.panel-left .results-panel--consistency .result-rule .bon-bojo-required-badge {
+  flex-shrink: 0;
+}
+
 .panel-left .results-panel--consistency .result-card--consistency .result-aux-group-tag {
   background: var(--panel-result-pill-muted);
   color: var(--c-ink);
@@ -4482,6 +4494,7 @@
   line-height: 1.2;
   color: var(--color-text-secondary);
   min-width: 0;
+  white-space: nowrap;
 }
 
 .consistency-section-box[data-work-guide-step='auxiliary-box'] .bon-bojo-required-badge {
@@ -4780,6 +4793,42 @@
   overflow: hidden;
 }
 
+/* SpaceVisibleInput·한도 툴팁 래퍼가 flex 칸을 깨지 않게 */
+.consistency-register-field > .criteria-hover-tip,
+.consistency-register-field > .criteria-hover-tip--wrap,
+.consistency-register-field > .criteria-hover-tip--wrap-block {
+  display: flex;
+  align-items: stretch;
+  min-width: 0;
+  max-width: none;
+  width: auto;
+  position: relative;
+}
+
+.consistency-register-field > .criteria-hover-tip:has(input),
+.consistency-register-field > .criteria-hover-tip--wrap-block:has(input) {
+  flex: 1 1 auto;
+  width: 0; /* flex 형제(등록 버튼) 자리 확보 */
+}
+
+.consistency-register-field > .criteria-hover-tip:has(input) > input,
+.consistency-register-field > .criteria-hover-tip--wrap-block:has(input) > input {
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+}
+
+.consistency-register-field > .criteria-hover-tip:has(.consistency-register-add-btn),
+.consistency-register-field > .criteria-hover-tip:has(.consistency-register-field__add) {
+  flex: 0 0 auto;
+  width: auto;
+}
+
+.consistency-register-field > .consistency-register-add-btn,
+.consistency-register-field > .consistency-register-field__add {
+  flex: 0 0 auto;
+}
+
 .panel-left .consistency-unified-box .consistency-register-field {
   border: 1px solid #c5c9d0;
   background: var(--color-surface-overlay);
@@ -4811,7 +4860,11 @@
 }
 
 .consistency-unified-box .consistency-register-add-btn,
-.consistency-unified-box .consistency-register-add-btn--label {
+.consistency-unified-box .consistency-register-add-btn--label,
+.consistency-unified-box .criteria-hover-tip .consistency-register-add-btn,
+.consistency-unified-box .criteria-hover-tip .consistency-register-add-btn--label {
+  flex: 0 0 auto;
+  align-self: stretch;
   min-width: auto;
   margin: 0;
   padding: var(--panel-action-btn-pad-y, 6px) var(--panel-action-btn-pad-x, 14px);

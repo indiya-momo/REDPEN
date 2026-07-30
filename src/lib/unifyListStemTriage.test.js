@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
+  classifyUnifyListSeries,
   classifyUnifyListStem,
   collectUnifyListTriage,
+  markSeriesBySlotMajority,
+  seriesSlotFiller,
+  seriesSlotVote,
 } from './unifyListStemTriage.js';
 
 describe('classifyUnifyListStem', () => {
@@ -17,6 +21,127 @@ describe('classifyUnifyListStem', () => {
   it('일반 명사 계열은 certain_noun', () => {
     expect(classifyUnifyListStem('문화')).toBe('certain_noun');
     expect(classifyUnifyListStem('캘리포니아')).toBe('certain_noun');
+  });
+});
+
+describe('seriesSlotFiller / seriesSlotVote', () => {
+  it('접두 계열에서 띄움 뒤 어절을 채움말로 쓴다', () => {
+    expect(
+      seriesSlotFiller(
+        { key: '과학기술', variants: ['과학 기술', '과학기술'] },
+        '과학',
+        'prefix',
+      ),
+    ).toBe('기술');
+    expect(
+      seriesSlotFiller(
+        { key: '과학해보', variants: ['과학 해 보', '과학해보'] },
+        '과학',
+        'prefix',
+      ),
+    ).toBe('해보');
+  });
+
+  it('보조용언 힌트·용언형 채움은 aux, 명사 채움은 noun', () => {
+    expect(
+      seriesSlotVote(
+        {
+          key: '과학해보',
+          variants: ['과학 해 보'],
+          auxReview: { status: 'review' },
+        },
+        '과학',
+        'prefix',
+      ),
+    ).toBe('aux');
+    expect(
+      seriesSlotVote(
+        { key: '과학기술', variants: ['과학 기술'] },
+        '과학',
+        'prefix',
+      ),
+    ).toBe('noun');
+  });
+});
+
+describe('classifyUnifyListSeries', () => {
+  it('@ 채움이 명사 다수면 명사', () => {
+    expect(
+      classifyUnifyListSeries({
+        affix: '과학',
+        affixType: 'prefix',
+        clusters: [
+          { key: '과학기술', variants: ['과학 기술'] },
+          { key: '과학실험', variants: ['과학 실험'] },
+          { key: '과학공원', variants: ['과학 공원'] },
+        ],
+      }),
+    ).toBe('certain_noun');
+  });
+
+  it('@ 채움이 보조·용언 다수면 용언(추정)', () => {
+    expect(
+      classifyUnifyListSeries({
+        affix: '과학',
+        affixType: 'prefix',
+        clusters: [
+          {
+            key: '과학해보',
+            variants: ['과학 해 보'],
+            auxReview: { status: 'review' },
+          },
+          {
+            key: '과학해보았',
+            variants: ['과학 해 보았'],
+            auxReview: { status: 'review' },
+          },
+          { key: '과학기술', variants: ['과학 기술'] },
+        ],
+      }),
+    ).toBe('ambiguous');
+  });
+
+  it('채움 없으면 affix 휴리스틱', () => {
+    expect(
+      classifyUnifyListSeries({
+        affix: '만들어',
+        affixType: 'prefix',
+        clusters: [],
+      }),
+    ).toBe('ambiguous');
+    expect(
+      classifyUnifyListSeries({
+        affix: '문화',
+        affixType: 'prefix',
+        clusters: [],
+      }),
+    ).toBe('certain_noun');
+  });
+});
+
+describe('markSeriesBySlotMajority', () => {
+  it('보조 다수 계열에 dictPos=predicate를 붙인다', () => {
+    const [marked] = markSeriesBySlotMajority([
+      {
+        type: 'series',
+        affix: '과학',
+        affixType: 'prefix',
+        label: '과학@',
+        clusters: [
+          {
+            key: '과학해보',
+            variants: ['과학 해 보'],
+            auxReview: { status: 'review' },
+          },
+          {
+            key: '과학내보',
+            variants: ['과학 내 보'],
+            auxReview: { status: 'review' },
+          },
+        ],
+      },
+    ]);
+    expect(marked.dictPos).toBe('predicate');
   });
 });
 
@@ -120,5 +245,26 @@ describe('collectUnifyListTriage', () => {
       '미국@',
     ]);
     expect(ambiguous).toEqual([]);
+  });
+
+  it('계열 @ 채움 보조 다수면 용언(추정)으로 센다', () => {
+    const { certainNoun, ambiguous } = collectUnifyListTriage([
+      {
+        type: 'series',
+        affixType: 'prefix',
+        affix: '과학',
+        label: '과학@',
+        dictPos: 'predicate',
+        clusters: [
+          {
+            key: '과학해보',
+            variants: ['과학 해 보'],
+            auxReview: { status: 'review' },
+          },
+        ],
+      },
+    ]);
+    expect(certainNoun).toEqual([]);
+    expect(ambiguous.map((x) => x.label)).toEqual(['과학@']);
   });
 });

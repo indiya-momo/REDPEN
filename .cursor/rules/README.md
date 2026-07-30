@@ -6,6 +6,7 @@
 | `pc-forbid-mobile.mdc` | 항상 — welcome-mo 금지 |
 | `mobile-worktree-pointer.mdc` | 항상 — 모바일은 별도 worktree |
 | `beta-freeze.mdc` | 항상 — 베타 freeze |
+| `panel-left-ui-chrome.mdc` | 좌측 패널 CSS·기준 카드·run-row 버튼 작업 시 |
 | `pc-welcome-momo.mdc` | welcome-pc·MainScreen·momo-room 파일 열 때 |
 
 모바일 worktree(`pdf-publish-proofread-mobile`)에는 별도 `.cursor/rules/`가 있다.
