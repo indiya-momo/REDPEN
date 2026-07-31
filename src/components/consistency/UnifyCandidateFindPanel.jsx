@@ -60,6 +60,67 @@ function formatUnifySingleClusterLabel(cluster) {
   return variants.join('-');
 }
 
+/**
+ * 계열에서 표기 통일(또는 자동선택)된 붙임/띄움 방향.
+ * @param {{ clusters?: { key?: string }[] }} group
+ * @param {Map<string, string>} registeredVariants
+ * @param {Map<string, string>} preSelected
+ * @returns {'glued' | 'spaced' | null}
+ */
+function resolveSeriesChosenSpacing(group, registeredVariants, preSelected) {
+  for (const c of group?.clusters ?? []) {
+    const key = c?.key;
+    if (!key) continue;
+    const chosen = registeredVariants.get(key) ?? preSelected.get(key);
+    if (chosen == null || chosen === '') continue;
+    return /\s/.test(chosen) ? 'spaced' : 'glued';
+  }
+  return null;
+}
+
+/**
+ * 계열 체크박스 라벨 — 선택 후 `금융@ → 금융^@` / `금융@ → 금융∨@`.
+ * @param {{ affix?: string, affixType?: string, label?: string }} group
+ * @param {'glued' | 'spaced' | null} spacing
+ */
+function formatSeriesCategoryLabelText(group, spacing) {
+  const affix = String(group?.affix ?? '');
+  const isSuffix = group?.affixType === 'suffix';
+  const before = isSuffix ? `@${affix}` : `${affix}@`;
+  if (spacing === 'glued') {
+    return isSuffix ? `${before} → ^@${affix}` : `${before} → ${affix}^@`;
+  }
+  if (spacing === 'spaced') {
+    return isSuffix ? `${before} → ∨@${affix}` : `${before} → ${affix}∨@`;
+  }
+  return group?.label || before;
+}
+
+/**
+ * @param {{
+ *   group: { affix?: string, affixType?: string, label?: string },
+ *   spacing: 'glued' | 'spaced' | null,
+ * }} props
+ */
+function SeriesCategoryLabel({ group, spacing }) {
+  const affix = String(group?.affix ?? '');
+  const isSuffix = group?.affixType === 'suffix';
+  // JSX 줄바꿈·들여쓰기는 공백 텍스트 노드가 되므로 한 줄로 붙인다.
+  const before = isSuffix ? <>@{affix}</> : <>{affix}@</>;
+
+  if (spacing !== 'glued' && spacing !== 'spaced') {
+    return before;
+  }
+
+  const markChar = spacing === 'glued' ? '^' : '∨';
+  const mark = (
+    <span className="unify-candidate-find__series-spacing-mark">{markChar}</span>
+  );
+  const after = isSuffix ? <>{mark}@{affix}</> : <>{affix}{mark}@</>;
+
+  return <>{before}{' → '}{after}</>;
+}
+
 /** 보조용언 추정(검토 필요) — 목록엔 두되 기본은 PDF·전체 발견에서 제외 */
 function isAuxReviewDeferredCluster(cluster) {
   return cluster?.auxReview?.status === 'review';
@@ -752,6 +813,18 @@ export default function UnifyCandidateFindPanel({
                       : group.type === 'predicate'
                         ? '용언'
                         : '단일 항목';
+                  const seriesSpacing =
+                    group.type === 'series'
+                      ? resolveSeriesChosenSpacing(
+                          group,
+                          registeredVariants,
+                          preSelected,
+                        )
+                      : null;
+                  const seriesLabelText =
+                    group.type === 'series'
+                      ? formatSeriesCategoryLabelText(group, seriesSpacing)
+                      : label;
                   const findingsTotal = sumClusterFindings(group.clusters);
                   const visibleClusters = group.clusters.filter(
                     (c) => !hiddenPdfKeys.has(c.key),
@@ -843,12 +916,17 @@ export default function UnifyCandidateFindPanel({
                       <summary className="results-category__summary panel-criteria-heading">
                         <DetailsChevron />
                         <UnifyCategorySelectAll
-                          label={label}
+                          label={seriesLabelText}
                           clusters={group.clusters}
                           hiddenPdfKeys={hiddenPdfKeys}
                           onToggleAll={handleToggleCategoryPdf}
                         />
-                        <span className="results-category__label">{label}</span>
+                        <span className="results-category__label">
+                          <SeriesCategoryLabel
+                            group={group}
+                            spacing={seriesSpacing}
+                          />
+                        </span>
                         <span className="results-category__meta results-findings-meta">
                           <span className="results-findings-meta__label">
                             <span className="results-category__criteria-num">
@@ -998,6 +1076,12 @@ function ClusterCard({
                 {count > 0 ? (
                   <span className="unify-candidate-find__count">
                     {count}회
+                  </span>
+                ) : null}
+                {count > 0 &&
+                variant === cluster.recommendedUnify ? (
+                  <span className="unify-candidate-find__majority-badge">
+                    다수형
                   </span>
                 ) : null}
                 {isException && isChosen ? (

@@ -338,7 +338,7 @@ describe('groupSortAndFillSatellites', () => {
 });
 
 describe('sortClusterGroups', () => {
-  it('단일 가나다 → 가나다@ → @가나다 → 용언', () => {
+  it('단일(발견↓) → ○○@ → @○○ → 용언, 동률이면 가나다', () => {
     const groups = sortClusterGroups([
       {
         type: 'predicate',
@@ -347,6 +347,7 @@ describe('sortClusterGroups', () => {
             key: '만들어',
             variants: ['만들어', '만들 어'],
             counts: { 만들어: 1, '만들 어': 1 },
+            totalCount: 2,
           }),
         ],
       },
@@ -356,7 +357,24 @@ describe('sortClusterGroups', () => {
         affixType: 'suffix',
         label: '@시장',
         clusters: [
-          makeCluster({ key: '세계시장', variants: ['세계시장', '세계 시장'] }),
+          makeCluster({
+            key: '세계시장',
+            variants: ['세계시장', '세계 시장'],
+            totalCount: 20,
+          }),
+        ],
+      },
+      {
+        type: 'series',
+        affix: '금융',
+        affixType: 'prefix',
+        label: '금융@',
+        clusters: [
+          makeCluster({
+            key: '금융시장',
+            variants: ['금융시장', '금융 시장'],
+            totalCount: 3,
+          }),
         ],
       },
       {
@@ -369,11 +387,13 @@ describe('sortClusterGroups', () => {
             key: '경제성장',
             variants: ['경제성장', '경제 성장'],
             counts: { 경제성장: 1, '경제 성장': 1 },
+            totalCount: 2,
           }),
           makeCluster({
             key: '경제회복',
             variants: ['경제회복', '경제 회복'],
-            counts: { 경제회복: 1, '경제 회복': 1 },
+            counts: { 경제회복: 5, '경제 회복': 5 },
+            totalCount: 10,
           }),
         ],
       },
@@ -384,12 +404,19 @@ describe('sortClusterGroups', () => {
             key: '얽혀있다',
             variants: ['얽혀있다', '얽혀 있다'],
             counts: { 얽혀있다: 1, '얽혀 있다': 1 },
+            totalCount: 2,
           }),
           makeCluster({
             key: '가정해보자',
             variants: ['가정해보자', '가정해 보자'],
             counts: { 가정해보자: 1, '가정해 보자': 5 },
             totalCount: 6,
+          }),
+          makeCluster({
+            key: '가나표기',
+            variants: ['가나표기', '가나 표기'],
+            counts: { 가나표기: 1, '가나 표기': 1 },
+            totalCount: 2,
           }),
         ],
       },
@@ -399,19 +426,24 @@ describe('sortClusterGroups', () => {
       'single',
       'series',
       'series',
+      'series',
       'predicate',
     ]);
+    // 단일: 6회 → 2회 동률 가나다(가나·얽혀)
     expect(groups[0].clusters.map((c) => c.key)).toEqual([
       '가정해보자',
+      '가나표기',
       '얽혀있다',
     ]);
+    // 접두@: 합계 많은 경제@(12) → 금융@(3)
     expect(groups[1].label).toBe('경제@');
     expect(groups[1].clusters.map((c) => c.key)).toEqual([
-      '경제성장',
       '경제회복',
+      '경제성장',
     ]);
-    expect(groups[2].label).toBe('@시장');
-    expect(groups[3].clusters.map((c) => c.key)).toEqual(['만들어']);
+    expect(groups[2].label).toBe('금융@');
+    expect(groups[3].label).toBe('@시장');
+    expect(groups[4].clusters.map((c) => c.key)).toEqual(['만들어']);
   });
 
   it('접두·접미 용언 계열은 명사 계열 뒤로 보낸다', () => {

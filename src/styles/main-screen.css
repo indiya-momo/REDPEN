@@ -2283,6 +2283,25 @@
   font-variant-numeric: tabular-nums;
 }
 
+.panel-left .unify-candidate-find__majority-badge {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 1px 7px;
+  border-radius: var(--radius-ui-sm, 6px);
+  border: 1px solid #1e3a5f;
+  background: #1e3a5f;
+  color: #f8fafc;
+  font-size: calc(0.68rem * var(--panel-ui-scale, 1));
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.panel-left .unify-candidate-find__series-spacing-mark {
+  color: #1e3a5f;
+  font-weight: 700;
+}
+
 .panel-left .unify-candidate-find__variants .result-pages {
   margin-top: 2px;
   padding-left: 0;
