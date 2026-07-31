@@ -341,15 +341,61 @@
 }
 
 .panel-left .unify-candidate-find .page-chip,
-.panel-left .results-panel--unify-candidate .page-chip {
+.panel-left .results-panel--unify-candidate .page-chip,
+.panel-left
+  .results-panel--consistency
+  .results-category--auxiliary
+  .page-chip {
   font-size: calc(0.72rem * 0.8);
   min-height: calc(1.625rem * 0.8);
   padding: var(--space-xs-tight) calc(var(--space-md-tight) * 0.85);
+  border-radius: 999px;
 }
 
 .panel-left .unify-candidate-find .page-chip__bundle,
-.panel-left .results-panel--unify-candidate .page-chip__bundle {
+.panel-left .results-panel--unify-candidate .page-chip__bundle,
+.panel-left
+  .results-panel--consistency
+  .results-category--auxiliary
+  .page-chip__bundle {
   font-size: calc(0.68rem * 0.8);
+}
+
+/* 본보조 결과 행 — 표기 통일 추천 「경제 왕국」 variant 행과 동일 글씨·체크박스 */
+.panel-left
+  .results-panel--consistency
+  .results-category--auxiliary
+  .result-rule,
+.panel-left
+  .results-panel--consistency
+  .results-category--auxiliary
+  .consistency-result-chip {
+  font-size: calc(0.72rem * 1.2 * var(--panel-ui-scale, 1));
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.panel-left
+  .results-panel--consistency
+  .results-category--auxiliary
+  .result-visibility-toggle,
+.panel-left
+  .results-panel--consistency
+  .results-category--auxiliary
+  .result-visibility-toggle
+  input {
+  width: var(--criteria-checkbox-size, calc(15px * var(--panel-ui-scale, 1)));
+  height: var(--criteria-checkbox-size, calc(15px * var(--panel-ui-scale, 1)));
+  font-size: inherit;
+  line-height: 0;
+}
+
+.panel-left
+  .results-panel--consistency
+  .results-category--auxiliary
+  .result-pages {
+  /* 표기 통일 variant 칩과 같이 체크박스 열 들여쓰기 */
+  padding-left: calc(var(--criteria-checkbox-size, 15px) + 6px);
 }
 
 .panel-left .results-panel--spelling .page-chip:hover,
@@ -1181,6 +1227,16 @@
   border-radius: 0;
 }
 
+/* 본보조 — 표기 통일 칩과 동일 캡슐 (위 nested 사각 덮어씀) */
+.panel-left
+  .panel-left-work-scroll
+  .results-panel--consistency
+  .results-category--auxiliary
+  .results-list--nested
+  .page-chip {
+  border-radius: 999px;
+}
+
 
 .panel-left .current-page-status {
   padding-bottom: calc(var(--space-sm) + 2px);
@@ -1774,12 +1830,18 @@
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.6);
   box-sizing: border-box;
+}
+
+/* 입력·안내만 13px — 결과 항목 제목은 본용언 summary 스케일 유지 */
+.panel-left .unify-candidate-find__body {
   font-size: 13px;
 }
 
 .panel-left .unify-candidate-find__results {
   margin-top: var(--panel-gap-block);
   overflow: visible;
+  /* 부모 13px 상속 차단 — 항목 제목·체크박스는 criteria heading 기준 */
+  font-size: calc(1.05rem * var(--panel-ui-scale));
 }
 
 .panel-left .unify-candidate-find__empty {
@@ -1804,7 +1866,7 @@
   --results-findings-pad-end: var(--unify-edge-pad);
   --results-findings-meta-gap: 0.35rem;
   --results-findings-circle-size: 1.35rem;
-  --unify-spacing-btn-width: 3.55rem;
+  --unify-spacing-btn-width: calc(3.55rem * 1.2);
   --unify-badge-col-width: 2.75rem;
   --unify-btns-width: calc(var(--unify-spacing-btn-width) * 2 + 4px);
   --unify-trail-width: calc(
@@ -1898,6 +1960,8 @@
   min-height: var(--results-findings-circle-size, 1.35rem);
   padding: 0.1em 0.45em;
   border-radius: var(--radius-ui-sm, 6px);
+  /* 전체 발견(584)과 동일 — 항목 배지(3·123)도 같은 크기 */
+  font-size: calc(0.85rem * var(--panel-ui-scale) * 0.9 * 1.1);
   background: var(--pdf-highlight-primary-fill);
   color: var(--color-surface-inverse, #2a2118);
   box-shadow: var(--pdf-highlight-primary-shadow);
@@ -1908,6 +1972,13 @@
   .unify-candidate-find
   .results-panel--unify-candidate
   .results-category {
+  /* 본용언(-아/어)+보조용언 표기 summary와 동일 기준 토큰 */
+  --criteria-pad-inline: calc(14px * var(--panel-ui-scale));
+  --criteria-checkbox-size: calc(15px * var(--panel-ui-scale));
+  --criteria-summary-gap: calc(8px * var(--panel-ui-scale));
+  --criteria-summary-rail: calc(
+    var(--criteria-checkbox-size) + var(--criteria-summary-gap)
+  );
   background: var(--panel-surface-group);
   border-color: var(--panel-border-soft);
   /* 체크박스 툴팁이 카테고리 overflow에 잘리지 않게 */
@@ -1943,6 +2014,17 @@
   position: relative;
   display: flex;
   align-items: center;
+  /* 본용언(-아/어)+보조용언 표기 .caution-checklist-summary 와 동일 */
+  gap: var(--criteria-summary-gap, calc(8px * var(--panel-ui-scale, 1)));
+  font-size: calc(1.05rem * var(--panel-ui-scale));
+  font-weight: 600;
+  line-height: 1.2;
+  min-height: 0;
+  padding-block: calc(8px * var(--panel-ui-scale));
+  padding-inline-start: var(
+    --criteria-pad-inline,
+    calc(14px * var(--panel-ui-scale))
+  );
   /* 헤더와 같은 오른쪽 여백 — trail 절대위치 기준 */
   padding-inline-end: calc(
     var(--unify-edge-pad) + var(--unify-trail-width)
@@ -1959,6 +2041,22 @@
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+}
+
+.panel-left
+  .unify-candidate-find
+  .results-panel--unify-candidate
+  .results-category__select-all,
+.panel-left
+  .unify-candidate-find
+  .results-panel--unify-candidate
+  .results-category__select-all
+  input {
+  width: var(--criteria-checkbox-size, calc(15px * var(--panel-ui-scale)));
+  height: var(--criteria-checkbox-size, calc(15px * var(--panel-ui-scale)));
 }
 
 .panel-left
@@ -1974,8 +2072,8 @@
   .results-panel--unify-candidate
   .unify-candidate-find__card
   .result-visibility-toggle {
-  width: var(--criteria-checkbox-size, 15px);
-  height: var(--criteria-checkbox-size, 15px);
+  width: var(--unify-variant-checkbox-size);
+  height: var(--unify-variant-checkbox-size);
 }
 
 .panel-left
@@ -1984,8 +2082,8 @@
   .unify-candidate-find__card
   .result-visibility-toggle
   input {
-  width: var(--criteria-checkbox-size, 15px);
-  height: var(--criteria-checkbox-size, 15px);
+  width: var(--unify-variant-checkbox-size);
+  height: var(--unify-variant-checkbox-size);
   accent-color: #6b7280;
 }
 
@@ -2018,7 +2116,14 @@
   .unify-candidate-find
   .results-panel--unify-candidate
   .unify-candidate-find__card {
-  /* 카테고리 summary 체크박스(쉐브론 다음)와 카드 체크박스 왼쪽 맞춤 */
+  /* 표기 행 체크박스 — 기준 크기 대비 30% 축소 */
+  --unify-variant-checkbox-size: calc(
+    var(--criteria-checkbox-size, 15px) * 0.7
+  );
+  /*
+   * 카드 시작 = 헤더 체크박스 열
+   * 표기명·칩 시작 = 그 다음 gap 뒤 = 경제@ 라벨과 동일
+   */
   margin-inline: 0;
   box-sizing: border-box;
   padding-block: 4px;
@@ -2033,6 +2138,20 @@
   border: none;
   border-top: 1px solid rgba(0, 0, 0, 0.06);
   background: transparent;
+}
+
+.panel-left
+  .unify-candidate-find
+  .results-panel--unify-candidate
+  .unify-candidate-find__card.unify-candidate-find__card {
+  /* 일반 .unify-candidate-find__card 의 padding: 4px 10px 덮어씀 */
+  padding-left: calc(
+    var(--criteria-pad-inline, 10px) + var(--criteria-summary-rail, 23px)
+  );
+  padding-right: calc(
+    var(--results-findings-pad-end, var(--space-sm)) -
+      var(--results-category-border, 1px)
+  );
 }
 
 .panel-left .unify-candidate-find__card {
@@ -2084,18 +2203,6 @@
   font-weight: 600;
   white-space: nowrap;
   margin-left: 0;
-}
-
-.panel-left .unify-candidate-find__variant-row .result-visibility-toggle {
-  flex-shrink: 0;
-  align-self: center;
-  margin: 0;
-}
-
-.panel-left .unify-candidate-find__checkbox-spacer {
-  flex: 0 0 auto;
-  width: var(--criteria-checkbox-size, 15px);
-  height: var(--criteria-checkbox-size, 15px);
 }
 
 .panel-left .unify-candidate-find__variant-item--derived .unify-candidate-find__variant {
@@ -2230,12 +2337,17 @@
   flex-shrink: 0;
   margin-left: 0;
   min-width: auto;
-  padding: 2px 4px;
-  font-size: calc(0.7rem * var(--panel-ui-scale, 1));
+  padding: calc(2px * 0.85) calc(4px * 0.85);
+  font-size: calc(0.7rem * var(--panel-ui-scale, 1) * 0.85);
   font-weight: 400;
   line-height: 1.4;
   text-align: center;
-  border: 1px solid color-mix(in srgb, #aaa 70%, #fff 30%);
+  border: 1px solid
+    color-mix(
+      in srgb,
+      color-mix(in srgb, #aaa 70%, #fff 30%) 80%,
+      #fff 20%
+    );
   border-radius: var(--radius-search, 6px);
   background: transparent;
   color: var(--panel-text, #333);
@@ -2269,8 +2381,20 @@
   font-weight: 600;
 }
 
-.panel-left .unify-candidate-find__unify-btn--chosen {
-  cursor: default;
+/* 선택 상태 호버 = 선택 전(대기) 모습 — 재클릭 해제 미리보기 */
+.panel-left
+  .unify-candidate-find__unify-btn--preselect:hover:not(:disabled),
+.panel-left
+  .unify-candidate-find__unify-btn--chosen:hover:not(:disabled) {
+  border: 1px solid
+    color-mix(
+      in srgb,
+      color-mix(in srgb, #aaa 70%, #fff 30%) 80%,
+      #fff 20%
+    );
+  background: transparent;
+  color: var(--panel-text, #333);
+  font-weight: 400;
 }
 
 .panel-left .unify-candidate-find__unify-btn:disabled {
@@ -2281,7 +2405,42 @@
 .panel-left .unify-candidate-find__variant-row {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--criteria-summary-gap, calc(8px * var(--panel-ui-scale, 1)));
+}
+
+/*
+ * 체크 열 = 헤더 체크박스 폭. tip 래퍼·스페이서 모두 같은 열
+ * → 표기명 시작 = 아래 페이지 칩 시작 = 경제@
+ */
+.panel-left
+  .unify-candidate-find__variant-row
+  > .criteria-hover-tip,
+.panel-left
+  .unify-candidate-find__variant-row
+  > .result-visibility-toggle,
+.panel-left .unify-candidate-find__checkbox-spacer {
+  flex: 0 0 var(--criteria-checkbox-size, 15px);
+  width: var(--criteria-checkbox-size, 15px);
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin: 0;
+}
+
+.panel-left .unify-candidate-find__variant-row .result-visibility-toggle {
+  flex-shrink: 0;
+  align-self: center;
+  width: var(--unify-variant-checkbox-size);
+  height: var(--unify-variant-checkbox-size);
+  margin: 0;
+}
+
+.panel-left .unify-candidate-find__checkbox-spacer {
+  height: var(
+    --unify-variant-checkbox-size,
+    calc(var(--criteria-checkbox-size, 15px) * 0.7)
+  );
 }
 
 .panel-left .unify-candidate-find__variants {
@@ -2350,8 +2509,8 @@
   box-sizing: border-box;
   display: grid;
   grid-template-columns:
-    var(--unify-spacing-btn-width, 3.55rem)
-    var(--unify-spacing-btn-width, 3.55rem);
+    var(--unify-spacing-btn-width, calc(3.55rem * 1.2))
+    var(--unify-spacing-btn-width, calc(3.55rem * 1.2));
   align-items: center;
   gap: 0;
   width: var(--unify-btns-width);
@@ -2367,8 +2526,8 @@
   box-sizing: border-box;
   width: 100%;
   margin: 0;
-  padding: 2px 1px;
-  font-size: calc(0.68rem * var(--panel-ui-scale, 1));
+  padding: calc(2px * 1.2) calc(1px * 1.2);
+  font-size: calc(0.68rem * var(--panel-ui-scale, 1) * 1.2);
   font-weight: 500;
   line-height: 1.4;
   text-align: center;
@@ -2411,8 +2570,11 @@
 .panel-left .unify-candidate-find__variants .result-pages {
   margin-top: 0;
   margin-bottom: 6px;
-  /* 체크박스 열과 맞추어 페이지 칩 들여쓰기 */
-  padding-left: calc(var(--criteria-checkbox-size, 15px) + 6px);
+  /* 표기명과 동일 — 체크 열 + gap 만큼 들여쓰기 */
+  padding-left: calc(
+    var(--criteria-checkbox-size, 15px) +
+      var(--criteria-summary-gap, calc(8px * var(--panel-ui-scale, 1)))
+  );
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;

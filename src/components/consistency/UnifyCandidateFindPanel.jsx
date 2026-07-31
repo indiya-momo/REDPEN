@@ -830,13 +830,29 @@ export default function UnifyCandidateFindPanel({
   );
 
   /**
-   * 등록 취소 — 그룹 자동선택(preselect) 기준은 유지한다.
+   * 등록·자동선택 취소 — 선택 대기 모드.
+   * 계열에 남은 등록이 없으면 그룹 자동선택도 전부 해제한다.
    * @param {UnifySpacingCluster} cluster
+   * @param {UnifySpacingCluster[]} [groupClusters]
    */
-  function handleCancelVariant(cluster) {
+  function handleCancelVariant(cluster, groupClusters) {
+    const siblings =
+      groupClusters?.length > 0 ? groupClusters : [cluster];
+
     setRegisteredVariants((prev) => {
-      const next = new Map(prev);
-      next.delete(cluster.key);
+      const nextReg = new Map(prev);
+      nextReg.delete(cluster.key);
+      const anyRegisteredLeft = siblings.some((gc) => nextReg.has(gc.key));
+
+      setPreSelected((prevPre) => {
+        const nextPre = new Map(prevPre);
+        nextPre.delete(cluster.key);
+        if (!anyRegisteredLeft) {
+          for (const gc of siblings) nextPre.delete(gc.key);
+        }
+        return nextPre;
+      });
+
       publishPreview(
         clusters,
         rawByKey,
@@ -845,9 +861,9 @@ export default function UnifyCandidateFindPanel({
         predicateDropSeriesIds,
         predicateDropClusterKeys,
         predicateNeedsReviewByKey,
-        next,
+        nextReg,
       );
-      return next;
+      return nextReg;
     });
   }
 
@@ -1184,8 +1200,8 @@ function ClusterCard({
                     .filter(Boolean)
                     .join(' ')}
                   onClick={() =>
-                    isChosen
-                      ? onCancelVariant(cluster)
+                    isChosen || isPreSelected
+                      ? onCancelVariant(cluster, groupClusters)
                       : onSelectVariant(cluster, variant, groupClusters)
                   }
                 >
