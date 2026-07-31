@@ -359,7 +359,7 @@ export function formatUnifyCandidateFindCompleteMessage(
   if (clusterCount <= 0) {
     return '띄어쓰기만 다른 표기 후보를 찾지 못했습니다.';
   }
-  return `표기 통일 추천 ${clusterCount}항목 전체 ${totalOccurrences}회`;
+  return `표기 통일 추천 ${clusterCount}항목 전체 발견 ${totalOccurrences}`;
 }
 
 /**

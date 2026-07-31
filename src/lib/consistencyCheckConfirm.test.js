@@ -354,7 +354,7 @@ describe('formatUnifyCandidateFindConfirmMessage', () => {
 describe('formatUnifyCandidateFindCompleteMessage', () => {
   it('발견 항목·총 횟수를 완료 alert 본문으로 만든다', () => {
     expect(formatUnifyCandidateFindCompleteMessage(3, 6)).toBe(
-      '표기 통일 추천 3항목 전체 6회',
+      '표기 통일 추천 3항목 전체 발견 6',
     );
   });
 
@@ -386,7 +386,7 @@ describe('alertUnifyCandidateFindAfterRun', () => {
 
     expect(alertMock).toHaveBeenCalledWith(
       '찾기를 진행했습니다\n\n' +
-        '표기 통일 추천 1항목 전체 2회\n\n' +
+        '표기 통일 추천 1항목 전체 발견 2\n\n' +
         '표기 통일 검수권 1장이 사용되었습니다(1일 검수권 1장, 선물 검수권 5장 사용 가능)',
     );
   });
@@ -418,7 +418,7 @@ describe('alertUnifyCandidateFindAfterRun', () => {
     );
 
     expect(alertMock).toHaveBeenCalledWith(
-      expect.stringContaining('표기 통일 추천 1항목 전체 5회'),
+      expect.stringContaining('표기 통일 추천 1항목 전체 발견 5'),
     );
   });
 });

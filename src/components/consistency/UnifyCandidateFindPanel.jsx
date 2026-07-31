@@ -2,7 +2,7 @@
  * 표기 통일 추천 — 맞춤법 탭 외래어 표기와 같은 박스·버튼 크롬.
  * 문서 내 띄어쓰기 이형태만 (규범 검증 아님).
  * 결과 목록은 맞춤법 결과 리스트와 같은 아코디언(N항목 전체 발견).
- * 페이지 칩은 다수·소수 모두(접히면 최대 4개 + 더 보기).
+ * 페이지 칩은 접히면 최대 3개 +「더 보기」.
  */
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import CriteriaHoverTip from '../CriteriaHoverTip.jsx';
@@ -1122,65 +1122,13 @@ function ClusterCard({
         .filter(Boolean)
         .join(' ')}
     >
-      <div className="unify-candidate-find__card-head">
-        <CriteriaHoverTip tip="PDF에 표시">
-          <label
-            className="result-visibility-toggle"
-            onClick={(e) => e.stopPropagation()}
-            onKeyDown={(e) => e.stopPropagation()}
-          >
-            <input
-              type="checkbox"
-              checked={pdfVisible}
-              onChange={() => onTogglePdfVisibility(cluster)}
-              aria-label={`총 ${cluster.totalCount}회 PDF 표시`}
-            />
-          </label>
-        </CriteriaHoverTip>
-        <div className="unify-candidate-find__card-head-main">
-          <div className="unify-candidate-find__card-title-row">
-            <span className="unify-candidate-find__total">
-              총 {cluster.totalCount}회
-            </span>
-            {cluster.josaReview?.status === 'review' &&
-            cluster.auxReview?.status !== 'review' ? (
-              <CriteriaHoverTip
-                tip={
-                  cluster.josaReview.peerKeys?.length
-                    ? `같은 어간 추정: ${cluster.josaReview.stemKey} · 연결 ${cluster.josaReview.peerKeys.join(', ')}`
-                    : undefined
-                }
-              >
-                <span className="unify-candidate-find__josa-review">
-                  조사 · 어간 추정, 검토 필요
-                </span>
-              </CriteriaHoverTip>
-            ) : null}
-            {cluster.auxReview?.status === 'review' ? (
-              <span className="unify-candidate-find__aux-review">
-                본용언+ 보조용언 표기로 추정, 검토 필요
-              </span>
-            ) : null}
-            {cluster.predicateReview?.status === 'needs_review' &&
-            cluster.auxReview?.status !== 'review' ? (
-              <span className="unify-candidate-find__predicate-review">
-                용언 추정, 검토 필요
-              </span>
-            ) : null}
-          </div>
-        </div>
-        <UnifyFindingsCount
-          count={cluster.totalCount}
-          shownCount={pdfVisible ? cluster.totalCount : 0}
-          className="result-card-head__findings-count"
-        />
-      </div>
       <ul className="unify-candidate-find__variants">
-        {cluster.variants.map((variant) => {
+        {cluster.variants.map((variant, variantIndex) => {
           const count = cluster.counts[variant] ?? 0;
           const isDerived = count === 0;
           const isChosen = registeredVariant === variant;
           const isPreSelected = !isRegistered && preSelectedVariant === variant;
+          const isFirst = variantIndex === 0;
           const instances = instancesForUnifyVariant(cluster, variant, {
             chosenVariant: registeredVariant ?? null,
           });
@@ -1190,29 +1138,40 @@ function ClusterCard({
               key={variant}
               className={[
                 'unify-candidate-find__variant-item',
+                isFirst && 'unify-candidate-find__variant-item--first',
                 isDerived && 'unify-candidate-find__variant-item--derived',
               ]
                 .filter(Boolean)
                 .join(' ')}
             >
               <div className="unify-candidate-find__variant-row">
+                {isFirst ? (
+                  <CriteriaHoverTip tip="PDF에 표시">
+                    <label
+                      className="result-visibility-toggle"
+                      onClick={(e) => e.stopPropagation()}
+                      onKeyDown={(e) => e.stopPropagation()}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={pdfVisible}
+                        onChange={() => onTogglePdfVisibility(cluster)}
+                        aria-label={`${cluster.totalCount}회 표기 후보 PDF 표시`}
+                      />
+                    </label>
+                  </CriteriaHoverTip>
+                ) : (
+                  <span
+                    className="unify-candidate-find__checkbox-spacer"
+                    aria-hidden
+                  />
+                )}
                 <span className="unify-candidate-find__variant">
                   {variant}
                 </span>
                 {count > 0 ? (
                   <span className="unify-candidate-find__count">
                     {count}회
-                  </span>
-                ) : null}
-                {count > 0 &&
-                variant === cluster.recommendedUnify ? (
-                  <span className="unify-candidate-find__majority-badge">
-                    다수형
-                  </span>
-                ) : null}
-                {isException && isChosen ? (
-                  <span className="unify-candidate-find__exception-badge">
-                    표기 통일 예외
                   </span>
                 ) : null}
                 <button
@@ -1230,8 +1189,40 @@ function ClusterCard({
                       : onSelectVariant(cluster, variant, groupClusters)
                   }
                 >
-                  표기 통일
+                  이 표기로 📌통일
                 </button>
+                {isException && isChosen ? (
+                  <span className="unify-candidate-find__exception-badge">
+                    예외
+                  </span>
+                ) : null}
+                {isFirst &&
+                cluster.josaReview?.status === 'review' &&
+                cluster.auxReview?.status !== 'review' ? (
+                  <CriteriaHoverTip
+                    tip={
+                      cluster.josaReview.peerKeys?.length
+                        ? `같은 어간 추정: ${cluster.josaReview.stemKey} · 연결 ${cluster.josaReview.peerKeys.join(', ')}`
+                        : undefined
+                    }
+                  >
+                    <span className="unify-candidate-find__josa-review">
+                      조사 · 어간 추정, 검토 필요
+                    </span>
+                  </CriteriaHoverTip>
+                ) : null}
+                {isFirst && cluster.auxReview?.status === 'review' ? (
+                  <span className="unify-candidate-find__aux-review">
+                    본용언+ 보조용언 표기로 추정, 검토 필요
+                  </span>
+                ) : null}
+                {isFirst &&
+                cluster.predicateReview?.status === 'needs_review' &&
+                cluster.auxReview?.status !== 'review' ? (
+                  <span className="unify-candidate-find__predicate-review">
+                    용언 추정, 검토 필요
+                  </span>
+                ) : null}
               </div>
               {instances.length > 0 ? (
                 <ResultPageSummary
@@ -1240,7 +1231,7 @@ function ClusterCard({
                   selectedInstance={selectedInstance}
                   formatPageLabel={formatPageLabel}
                   isInstanceVisible={() => true}
-                  collapsedVisibleLimit={4}
+                  collapsedVisibleLimit={3}
                   onSelectPage={(pageNum) => {
                     const first = instances.find(
                       (inst) => inst.pageNum === pageNum,

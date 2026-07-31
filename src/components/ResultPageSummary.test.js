@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 import {
   applyCollapsedVisibleLimit,
   buildInstancePills,
+  collapseByVisibleLimit,
   fitPillsIntoTwoRows,
+  formatResultPagesExpandLabel,
   getInstanceFragmentLabel,
   shrinkVisibleCountForExpandOverflow,
 } from './ResultPageSummary.jsx';
@@ -211,5 +213,33 @@ describe('applyCollapsedVisibleLimit', () => {
         4,
       ),
     ).toEqual({ needsCollapse: true, visibleCount: 4 });
+  });
+});
+
+describe('collapseByVisibleLimit', () => {
+  it('상한 이하면 접지 않는다', () => {
+    expect(collapseByVisibleLimit(3, 3)).toEqual({
+      needsCollapse: false,
+      visibleCount: 3,
+    });
+  });
+
+  it('상한을 넘으면 상한만큼만 보이고 접는다', () => {
+    expect(collapseByVisibleLimit(11, 3)).toEqual({
+      needsCollapse: true,
+      visibleCount: 3,
+    });
+  });
+});
+
+describe('formatResultPagesExpandLabel', () => {
+  it('기본은 「더 보기」 문구를 쓴다', () => {
+    expect(formatResultPagesExpandLabel(false, 5)).toBe('＋ 5개 더 보기');
+    expect(formatResultPagesExpandLabel(true, 5)).toBe('접기');
+  });
+
+  it('elsewhere 모드는 「외 N곳」을 쓴다', () => {
+    expect(formatResultPagesExpandLabel(false, 5, 'elsewhere')).toBe('외 5곳');
+    expect(formatResultPagesExpandLabel(true, 5, 'elsewhere')).toBe('접기');
   });
 });
