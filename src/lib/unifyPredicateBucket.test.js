@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
   isUnifyPredicateCluster,
   looksLikePredicateKey,
+  isUnifyJosaPlusPredicateKey,
+  dropJosaPlusPredicateFromGroups,
 } from './unifyPredicateBucket.js';
 
 describe('looksLikePredicateKey', () => {
@@ -69,5 +71,81 @@ describe('isUnifyPredicateCluster', () => {
   it('어미 휴리스틱만으로도 판단한다', () => {
     expect(isUnifyPredicateCluster({ key: '만들어' })).toBe(true);
     expect(isUnifyPredicateCluster({ key: '인구' })).toBe(false);
+  });
+});
+
+describe('isUnifyJosaPlusPredicateKey', () => {
+  it('조사+용언·어간+조사+용언을 잡는다', () => {
+    expect(isUnifyJosaPlusPredicateKey('을하다')).toBe(true);
+    expect(isUnifyJosaPlusPredicateKey('이되다')).toBe(true);
+    expect(isUnifyJosaPlusPredicateKey('역할을하다')).toBe(true);
+    expect(isUnifyJosaPlusPredicateKey('회사에서하다')).toBe(true);
+  });
+
+  it('활용형 꼬리(보자)도 조사+용언으로 잡는다', () => {
+    expect(isUnifyJosaPlusPredicateKey('금리인상을보자')).toBe(true);
+    expect(isUnifyJosaPlusPredicateKey('담론을보자')).toBe(true);
+    expect(isUnifyJosaPlusPredicateKey('답변을보자')).toBe(true);
+    expect(isUnifyJosaPlusPredicateKey('을보자')).toBe(true);
+  });
+
+  it('사전 API 용언 키면 활용 휴리스틱 밖 꼬리도 조사 구조로 잡는다', () => {
+    expect(
+      isUnifyJosaPlusPredicateKey('정책을펼치자', {
+        stdictPredicateKeys: new Set(['정책을펼치자']),
+      }),
+    ).toBe(true);
+    expect(isUnifyJosaPlusPredicateKey('정책을펼치자')).toBe(false);
+  });
+
+  it('일반 용언·보조 꼬리는 제외하지 않는다', () => {
+    expect(isUnifyJosaPlusPredicateKey('살펴보다')).toBe(false);
+    expect(isUnifyJosaPlusPredicateKey('하다')).toBe(false);
+    expect(isUnifyJosaPlusPredicateKey('보다')).toBe(false);
+    expect(isUnifyJosaPlusPredicateKey('만들어')).toBe(false);
+  });
+});
+
+describe('dropJosaPlusPredicateFromGroups', () => {
+  it('용언 단일에서 역할을하다를 빼고 살펴보다는 남긴다', () => {
+    const groups = dropJosaPlusPredicateFromGroups([
+      {
+        type: 'predicate',
+        clusters: [
+          { key: '역할을하다', variants: ['역할을하다', '역할을 하다'] },
+          { key: '살펴보다', variants: ['살펴보다', '살펴 보다'] },
+        ],
+      },
+    ]);
+    expect(groups).toHaveLength(1);
+    expect(groups[0].clusters.map((c) => c.key)).toEqual(['살펴보다']);
+  });
+
+  it('단일 구간에서도 금리인상을보자를 뺀다', () => {
+    const groups = dropJosaPlusPredicateFromGroups([
+      {
+        type: 'single',
+        clusters: [
+          { key: '금리인상을보자', variants: ['금리인상을 보자', '금리인상을보자'] },
+          { key: '금융시장', variants: ['금융 시장', '금융시장'] },
+        ],
+      },
+    ]);
+    expect(groups[0].clusters.map((c) => c.key)).toEqual(['금융시장']);
+  });
+
+  it('@을하다 계열은 통째로 뺀다', () => {
+    const groups = dropJosaPlusPredicateFromGroups([
+      {
+        type: 'series',
+        affix: '을하다',
+        affixType: 'suffix',
+        label: '@을하다',
+        clusters: [
+          { key: '역할을하다', variants: ['역할을하다', '역할을 하다'] },
+        ],
+      },
+    ]);
+    expect(groups).toEqual([]);
   });
 });

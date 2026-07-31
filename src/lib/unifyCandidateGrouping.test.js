@@ -64,4 +64,69 @@ describe('groupAndSortClusters — 접두·접미 멤버 수 우선', () => {
       true,
     );
   });
+
+  it('affix가 단음절이면 가@·@가 계열을 만들지 않는다', () => {
+    const clusters = [
+      conflict('가시장', '가 시장'),
+      conflict('가경제', '가 경제'),
+      conflict('시가', '시 가'),
+      conflict('증가', '증 가'),
+    ];
+    const groups = groupAndSortClusters(clusters, { minSeriesMembers: 1 });
+    const labels = groups
+      .filter((g) => g.type === 'series')
+      .map((g) => g.label);
+    expect(labels).not.toContain('가@');
+    expect(labels).not.toContain('@가');
+  });
+
+  it('@을하다·역할을하다 는 목록에 넣지 않는다', () => {
+    const clusters = [
+      conflict('역할을하다', '역할을 하다'),
+      conflict('회사를하다', '회사를 하다'),
+      conflict('공공서비스', '공공 서비스'),
+      conflict('미국서비스', '미국 서비스'),
+    ];
+    const groups = groupSortAndFillSatellites(clusters, new Map());
+    const keys = groups.flatMap((g) => g.clusters.map((c) => c.key));
+    const labels = groups
+      .filter((g) => g.type === 'series')
+      .map((g) => g.label);
+    expect(keys).not.toContain('역할을하다');
+    expect(keys).not.toContain('회사를하다');
+    expect(labels.some((l) => l.includes('을하다'))).toBe(false);
+    expect(labels).toContain('@서비스');
+  });
+
+  it('금융@에서 @채움 단음절(금융업·금융학)은 처음부터 넣지 않는다', () => {
+    const clusters = [
+      conflict('금융시장', '금융 시장'),
+      conflict('금융위기', '금융 위기'),
+      conflict('금융업', '금융 업'),
+      conflict('금융학', '금융 학'),
+    ];
+    const groups = groupSortAndFillSatellites(clusters, new Map());
+    const keys = groups.flatMap((g) => g.clusters.map((c) => c.key));
+    expect(keys).not.toContain('금융업');
+    expect(keys).not.toContain('금융학');
+    expect(keys).toEqual(expect.arrayContaining(['금융시장', '금융위기']));
+    const series = groups.find((g) => g.type === 'series' && g.affix === '금융');
+    expect(series).toBeTruthy();
+    expect(series.clusters.map((c) => c.key).sort()).toEqual([
+      '금융시장',
+      '금융위기',
+    ]);
+  });
+
+  it('@채움에 숫자(기술 58)가 있으면 처음부터 넣지 않는다', () => {
+    const clusters = [
+      conflict('기술혁신', '기술 혁신'),
+      conflict('기술개발', '기술 개발'),
+      conflict('기술58', '기술 58'),
+    ];
+    const groups = groupSortAndFillSatellites(clusters, new Map());
+    const keys = groups.flatMap((g) => g.clusters.map((c) => c.key));
+    expect(keys).not.toContain('기술58');
+    expect(keys).toEqual(expect.arrayContaining(['기술혁신', '기술개발']));
+  });
 });

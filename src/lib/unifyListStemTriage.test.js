@@ -6,6 +6,8 @@ import {
   markSeriesBySlotMajority,
   seriesSlotFiller,
   seriesSlotVote,
+  isExcludedSeriesSlotFiller,
+  isUnifyListDroppedMonoSlotCluster,
 } from './unifyListStemTriage.js';
 
 describe('classifyUnifyListStem', () => {
@@ -40,6 +42,55 @@ describe('seriesSlotFiller / seriesSlotVote', () => {
         'prefix',
       ),
     ).toBe('해보');
+  });
+
+  it('금융업·금융학은 @ 채움 단음절, 기술 58은 @ 채움 숫자', () => {
+    expect(
+      isExcludedSeriesSlotFiller(
+        { key: '금융업', variants: ['금융 업', '금융업'] },
+        '금융',
+        'prefix',
+      ),
+    ).toBe(true);
+    expect(
+      isExcludedSeriesSlotFiller(
+        { key: '금융시장', variants: ['금융 시장', '금융시장'] },
+        '금융',
+        'prefix',
+      ),
+    ).toBe(false);
+    expect(
+      isExcludedSeriesSlotFiller(
+        { key: '기술58', variants: ['기술 58', '기술58'] },
+        '기술',
+        'prefix',
+      ),
+    ).toBe(true);
+    expect(
+      isExcludedSeriesSlotFiller(
+        { key: '기술58은행', variants: ['기술 58 은행', '기술58은행'] },
+        '은행',
+        'suffix',
+      ),
+    ).toBe(true);
+    expect(
+      isUnifyListDroppedMonoSlotCluster({
+        key: '금융학',
+        variants: ['금융 학', '금융학'],
+      }),
+    ).toBe(true);
+    expect(
+      isUnifyListDroppedMonoSlotCluster({
+        key: '기술58',
+        variants: ['기술 58', '기술58'],
+      }),
+    ).toBe(true);
+    expect(
+      isUnifyListDroppedMonoSlotCluster({
+        key: '금융시장',
+        variants: ['금융 시장', '금융시장'],
+      }),
+    ).toBe(false);
   });
 
   it('보조용언 힌트·용언형 채움은 aux, 명사 채움은 noun', () => {

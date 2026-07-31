@@ -13,10 +13,7 @@ import {
   instancesForUnifyVariant,
 } from '../../lib/unifyCandidateDiscover.js';
 import { groupSortAndFillSatellites } from '../../lib/unifyCandidateGrouping.js';
-import {
-  isUnifyPredicateCluster,
-  looksLikePredicateKey,
-} from '../../lib/unifyPredicateBucket.js';
+import { dropJosaPlusPredicateFromGroups } from '../../lib/unifyPredicateBucket.js';
 import {
   mergeReviewedClustersIntoGroups,
   runJosaSlmReviewOnClusterGroups,
@@ -54,6 +51,13 @@ import DetailsChevron from '../DetailsChevron.jsx';
  */
 function sumClusterFindings(clusters) {
   return clusters.reduce((sum, c) => sum + (c.totalCount || 0), 0);
+}
+
+/** 단일 카드 카테고리명 — 예: 골드만삭스-골드만 삭스 */
+function formatUnifySingleClusterLabel(cluster) {
+  const variants = cluster?.variants ?? [];
+  if (!variants.length) return cluster?.key || '';
+  return variants.join('-');
 }
 
 /** 보조용언 추정(검토 필요) — 목록엔 두되 기본은 PDF·전체 발견에서 제외 */
@@ -369,6 +373,10 @@ export default function UnifyCandidateFindPanel({
             workingGroups = stdictResult.groups;
             stdictSeriesIds = stdictResult.marks.seriesIds;
             stdictClusterKeys = stdictResult.marks.clusterKeys;
+            // 사전에서 용언으로 확정된 키 + 조사 구조면 @+조사+용언으로 제외
+            workingGroups = dropJosaPlusPredicateFromGroups(workingGroups, {
+              stdictPredicateKeys: stdictClusterKeys,
+            });
             stdictSummary = {
               ...stdictResult.summary,
               ran: true,
@@ -381,6 +389,9 @@ export default function UnifyCandidateFindPanel({
               error: err instanceof Error ? err.message : String(err),
             };
           }
+        } else {
+          // API 없이도 규칙 안전망(하다·보자 등)으로 한 번 더
+          workingGroups = dropJosaPlusPredicateFromGroups(workingGroups);
         }
 
         if (isUnifyJosaSlmReviewEnabled()) {
@@ -527,8 +538,11 @@ export default function UnifyCandidateFindPanel({
       seriesIds: stdictPredicateSeriesIds,
       clusterKeys: stdictPredicateClusterKeys,
     });
+    const withoutJosaPred = dropJosaPlusPredicateFromGroups(withStdict, {
+      stdictPredicateKeys: stdictPredicateClusterKeys,
+    });
     return applyPredicateSlmDropsToGroups(
-      withStdict,
+      withoutJosaPred,
       {
         seriesIds: predicateDropSeriesIds,
         clusterKeys: predicateDropClusterKeys,
@@ -734,7 +748,7 @@ export default function UnifyCandidateFindPanel({
                         : 'single';
                   const label =
                     group.type === 'series'
-                      ? `[${group.label}]`
+                      ? group.label
                       : group.type === 'predicate'
                         ? '용언'
                         : '단일 항목';
@@ -751,19 +765,10 @@ export default function UnifyCandidateFindPanel({
                         ? 'predicate'
                         : 'single';
 
-                  const clusterCards = group.clusters.map((cluster) => (
+                  const renderClusterCard = (cluster) => (
                     <ClusterCard
                       key={cluster.key}
                       cluster={cluster}
-                      kindTag={
-                        group.type === 'predicate' ||
-                        (group.type === 'series' &&
-                          (looksLikePredicateKey(group.affix) ||
-                            group.dictPos === 'predicate')) ||
-                        isUnifyPredicateCluster(cluster)
-                          ? '용언'
-                          : '명사'
-                      }
                       pdfVisible={!hiddenPdfKeys.has(cluster.key)}
                       onTogglePdfVisibility={handleTogglePdfVisibility}
                       registeredVariant={registeredVariants.get(cluster.key)}
@@ -778,18 +783,55 @@ export default function UnifyCandidateFindPanel({
                       formatPageLabel={formatPageLabel}
                       onSelectInstance={onSelectInstance}
                     />
-                  ));
+                  );
 
-                  // 단일·용언 — 「용언」헤더·체크박스 없이 카드만 바로 표시
+                  // 단일·용언 — 항목마다 계열과 같은 체크박스 헤더 (골드만삭스-골드만 삭스)
                   if (group.type === 'single' || group.type === 'predicate') {
-                    return (
-                      <ul
-                        key={sectionId}
-                        className="results-list results-list--nested unify-candidate-find__list unify-candidate-find__list--flat-single"
-                      >
-                        {clusterCards}
-                      </ul>
-                    );
+                    return group.clusters.map((cluster) => {
+                      const itemLabel = formatUnifySingleClusterLabel(cluster);
+                      const itemFindings = cluster.totalCount || 0;
+                      const itemShown = hiddenPdfKeys.has(cluster.key)
+                        ? 0
+                        : itemFindings;
+                      return (
+                        <details
+                          key={`${sectionId}-${cluster.key}`}
+                          className={`results-category results-category--unify-${categoryMod}`}
+                          defaultOpen={defaultOpenId === sectionId}
+                        >
+                          <summary className="results-category__summary panel-criteria-heading">
+                            <DetailsChevron />
+                            <UnifyCategorySelectAll
+                              label={itemLabel}
+                              clusters={[cluster]}
+                              hiddenPdfKeys={hiddenPdfKeys}
+                              onToggleAll={handleToggleCategoryPdf}
+                            />
+                            <span className="results-category__label">
+                              {itemLabel}
+                            </span>
+                            <span className="results-category__meta results-findings-meta">
+                              <span className="results-findings-meta__label">
+                                <span className="results-category__criteria-num">
+                                  1
+                                </span>
+                                <span className="results-category__criteria-unit">
+                                  기준
+                                </span>
+                              </span>
+                              <UnifyFindingsCount
+                                count={itemFindings}
+                                shownCount={itemShown}
+                                className="results-category__findings"
+                              />
+                            </span>
+                          </summary>
+                          <ul className="results-list results-list--nested unify-candidate-find__list">
+                            {renderClusterCard(cluster)}
+                          </ul>
+                        </details>
+                      );
+                    });
                   }
 
                   return (
@@ -824,7 +866,9 @@ export default function UnifyCandidateFindPanel({
                         </span>
                       </summary>
                       <ul className="results-list results-list--nested unify-candidate-find__list">
-                        {clusterCards}
+                        {group.clusters.map((cluster) =>
+                          renderClusterCard(cluster),
+                        )}
                       </ul>
                     </details>
                   );
@@ -843,7 +887,6 @@ export default function UnifyCandidateFindPanel({
  */
 function ClusterCard({
   cluster,
-  kindTag = '명사',
   pdfVisible,
   onTogglePdfVisibility,
   registeredVariant,
@@ -950,7 +993,7 @@ function ClusterCard({
             >
               <div className="unify-candidate-find__variant-row">
                 <span className="unify-candidate-find__variant">
-                  {`[${kindTag}] ${variant}`}
+                  {variant}
                 </span>
                 {count > 0 ? (
                   <span className="unify-candidate-find__count">

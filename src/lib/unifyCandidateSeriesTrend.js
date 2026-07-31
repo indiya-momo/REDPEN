@@ -20,6 +20,17 @@ export const SERIES_GLUED_THRESHOLD = 0.7;
 export const SERIES_SPACED_THRESHOLD = 0.3;
 
 /**
+ * 계열 affix로 쓰지 않음 — 순수 숫자·한글 단음절.
+ * @param {string} affix
+ */
+export function isExcludedSeriesAffix(affix) {
+  const a = String(affix ?? '').trim();
+  if (!a) return true;
+  if (/^\d+$/.test(a)) return true;
+  return hangulSyllableCount(a) < SERIES_PREFIX_MIN_HANGUL;
+}
+
+/**
  * @typedef {import('./unifyCandidateDiscover.js').UnifySpacingCluster} UnifySpacingCluster
  */
 
@@ -49,12 +60,16 @@ export function extractPrefixes(key, variants = []) {
     const words = spacedVariant.trim().split(/\s+/);
     if (words.length >= 2) {
       const firstWord = words[0];
-      if (firstWord.length >= SERIES_PREFIX_MIN_HANGUL) {
-        // 첫 단어 자체 + 첫 단어의 앞부분도 후보로 추가
-        // 예: "국가채무" → ["국가채무", "국가채", "국가"]
+      // 숫자·단음절 affix는 처음부터 후보에 넣지 않음
+      if (!isExcludedSeriesAffix(firstWord)) {
         const result = [firstWord];
-        for (let len = firstWord.length - 1; len >= SERIES_PREFIX_MIN_HANGUL; len--) {
-          result.push(firstWord.slice(0, len));
+        for (
+          let len = firstWord.length - 1;
+          len >= SERIES_PREFIX_MIN_HANGUL;
+          len--
+        ) {
+          const slice = firstWord.slice(0, len);
+          if (!isExcludedSeriesAffix(slice)) result.push(slice);
         }
         return result;
       }
@@ -69,7 +84,8 @@ export function extractPrefixes(key, variants = []) {
   const prefixes = [];
   const maxLen = Math.min(4, first.length - 1);
   for (let len = maxLen; len >= SERIES_PREFIX_MIN_HANGUL; len--) {
-    prefixes.push(first.slice(0, len));
+    const slice = first.slice(0, len);
+    if (!isExcludedSeriesAffix(slice)) prefixes.push(slice);
   }
   return prefixes;
 }
@@ -90,12 +106,15 @@ export function extractSuffixes(key, variants = []) {
     const words = spacedVariant.trim().split(/\s+/);
     if (words.length >= 2) {
       const lastWord = words[words.length - 1];
-      if (lastWord.length >= SERIES_PREFIX_MIN_HANGUL) {
-        // 마지막 단어 자체 + 마지막 단어의 뒷부분도 후보로 추가
-        // 예: "참가율" → ["참가율", "가율", (2글자만)]
+      if (!isExcludedSeriesAffix(lastWord)) {
         const result = [lastWord];
-        for (let len = lastWord.length - 1; len >= SERIES_PREFIX_MIN_HANGUL; len--) {
-          result.push(lastWord.slice(lastWord.length - len));
+        for (
+          let len = lastWord.length - 1;
+          len >= SERIES_PREFIX_MIN_HANGUL;
+          len--
+        ) {
+          const slice = lastWord.slice(lastWord.length - len);
+          if (!isExcludedSeriesAffix(slice)) result.push(slice);
         }
         return result;
       }
@@ -110,7 +129,8 @@ export function extractSuffixes(key, variants = []) {
   const suffixes = [];
   const maxLen = Math.min(4, last.length - 1);
   for (let len = maxLen; len >= SERIES_PREFIX_MIN_HANGUL; len--) {
-    suffixes.push(last.slice(last.length - len));
+    const slice = last.slice(last.length - len);
+    if (!isExcludedSeriesAffix(slice)) suffixes.push(slice);
   }
   return suffixes;
 }

@@ -4,12 +4,13 @@
  * 정책: project-docs/unify-candidate-spacing-redesign-2026-07-29.md
  * - 스캔은 page.textLayout 우선(음절 자간 가짜 공백 제외), 없으면 text
  * - **줄 단위만 스캔** — 줄바꿈으로 생긴 붙임/띄움 이형태는 전부 제외
- * - **쉼표(,)** 는 후보에서 제외. 기호만 스캔 시 제거. **끝 조사는 제거하지 않음**(짧은 단위 흡수·공통 접두로 합침)
+ * - **쉼표(,)** 는 후보에서 제외. 기호만 스캔 시 제거. **끝 조사는 키·variant에서 제거**(붉은표시가/붉은표시를 → 붉은표시)
+ * - **순수 숫자 토큰·어절 앞뒤 숫자**는 제거(각주·줄번호 174노동시장 / 175노동시장 → 노동시장)
  * - 띄움 variant: 각 덩어리 한글 2음절 이상(숫자·영문은 음절·면제 없음, 숫자만 탈락)
- * - 클러스터 키: 공백 제거 / 붙임+유효 띄움 동시
+ * - 클러스터 키: 조사 제거 후 공백 제거 / 붙임+유효 띄움 동시
  * - 추천: 출현 수 최대 / 동률 시 붙임 — 내부 정책(규범 아님)
  *
- * 추출: 한글·숫자 토큰 + 연속 2~4그램(원문 슬라이스) / 단일 토큰.
+ * 추출: 한글·숫자 토큰 + 줄 안 연속 n-gram(원문 슬라이스, 길이 상한 없음) / 단일 토큰.
  */
 
 /**
@@ -53,7 +54,6 @@
  */
 
 const TOKEN_RE = /[\uAC00-\uD7A3\d]+/gu;
-const MAX_NGRAM = 4;
 /** 띄움 덩어리 최소 한글 음절 */
 export const UNIFY_SPACED_PART_MIN_HANGUL = 2;
 
@@ -269,6 +269,36 @@ export function stripUnifyPunctuationNoise(s) {
 }
 
 /**
+ * 각주·줄번호 등 주변 숫자 제거.
+ * - 순수 숫자 어절은 앞·뒤에서 제거 (174 노동 시장 → 노동 시장)
+ * - 한글과 붙은 앞·뒤 숫자는 남은 한글이 2음절 이상일 때만 제거
+ *   (174노동시장 → 노동시장, 2024년 → 유지, 코로나19 → 코로나)
+ * @param {string} s
+ */
+export function stripUnifyPeripheralDigits(s) {
+  let parts = normalizeUnifyVariant(s).split(/\s+/).filter(Boolean);
+  while (parts.length && /^\d+$/.test(parts[0])) parts = parts.slice(1);
+  while (parts.length && /^\d+$/.test(parts[parts.length - 1])) {
+    parts = parts.slice(0, -1);
+  }
+  parts = parts.map((part) => {
+    const lead = part.match(/^(\d+)([\uAC00-\uD7A3].*)$/u);
+    if (lead && hangulSyllableCount(lead[2]) >= UNIFY_SPACED_PART_MIN_HANGUL) {
+      return lead[2];
+    }
+    const trail = part.match(/^([\uAC00-\uD7A3].*?)(\d+)$/u);
+    if (
+      trail &&
+      hangulSyllableCount(trail[1]) >= UNIFY_SPACED_PART_MIN_HANGUL
+    ) {
+      return trail[1];
+    }
+    return part;
+  });
+  return parts.filter(Boolean).join(' ');
+}
+
+/**
  * 끝 조사·접미(기) 제거 후 표기 통일 어간.
  * 경기 침체에서 → 경기 침체, 경기침체기 → 경기침체
  * @param {string} s
@@ -351,11 +381,20 @@ function addOccurrence(byKey, pageNum, index, rawMatched, minHangul) {
   if (/\n/.test(String(rawMatched ?? ''))) return;
   if (isExcludedUnifyCandidateRaw(rawMatched)) return;
   const matchedText = normalizeUnifyScanText(rawMatched);
-  // 스캔: 기호만 제거. 끝 조사는 제거하지 않음.
-  const variant = stripUnifyPunctuationNoise(normalizeUnifyVariant(matchedText));
+  // 스캔: 기호·주변 숫자 제거 후 끝 조사 제거 → 같은 표기를 한 키로 묶음
+  const withPunctStripped = stripUnifyPeripheralDigits(
+    stripUnifyPunctuationNoise(normalizeUnifyVariant(matchedText)),
+  );
+  if (!withPunctStripped) return;
+  if (/\s/.test(withPunctStripped) && !isValidSpacedUnifyVariant(withPunctStripped)) {
+    return;
+  }
+  if (/\s/.test(withPunctStripped) && spacedPartIsBareJosa(withPunctStripped)) {
+    return;
+  }
+  const variant = stripTrailingJosa(withPunctStripped);
   if (!variant) return;
   if (/\s/.test(variant) && !isValidSpacedUnifyVariant(variant)) return;
-  if (/\s/.test(variant) && spacedPartIsBareJosa(variant)) return;
   const key = variant.replace(/\s+/g, '');
   if (hangulSyllableCount(key) < minHangul) return;
   let acc = byKey.get(key);
@@ -453,7 +492,7 @@ export function buildUnifyOccurrenceIndex(pageTexts, opts = {}) {
           tokenRaw,
           minHangul,
         );
-        for (let n = 2; n <= MAX_NGRAM && i + n <= tokens.length; n += 1) {
+        for (let n = 2; i + n <= tokens.length; n += 1) {
           const first = tokens[i];
           const last = tokens[i + n - 1];
           const raw = sliceUnifyRaw(line, first, last);
