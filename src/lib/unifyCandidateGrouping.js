@@ -55,6 +55,23 @@ import {
  */
 
 /**
+ * 목록 아코디언 행 수 — 단일·용언은 클러스터마다 1, 계열은 그룹당 1.
+ * @param {ClusterGroup[]} groups
+ * @returns {number}
+ */
+export function countUnifyListAccordionItems(groups) {
+  let n = 0;
+  for (const g of groups ?? []) {
+    if (g.type === 'single' || g.type === 'predicate') {
+      n += (g.clusters ?? []).length;
+    } else if ((g.clusters ?? []).length > 0) {
+      n += 1;
+    }
+  }
+  return n;
+}
+
+/**
  * @param {UnifySpacingCluster} cluster
  */
 function clusterFindings(cluster) {

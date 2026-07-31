@@ -11,6 +11,7 @@ import {
   isRealSpacingConflict,
   sortClusterGroups,
   splitPredicateSingles,
+  countUnifyListAccordionItems,
 } from './unifyCandidateGrouping.js';
 
 /** @param {Partial<import('./unifyCandidateDiscover.js').UnifySpacingCluster>} overrides */
@@ -334,6 +335,37 @@ describe('groupSortAndFillSatellites', () => {
       ]),
     );
     expect(groups.some((g) => g.type === 'series')).toBe(false);
+  });
+});
+
+describe('countUnifyListAccordionItems', () => {
+  it('단일·용언은 클러스터 수, 계열은 그룹당 1', () => {
+    expect(
+      countUnifyListAccordionItems([
+        {
+          type: 'single',
+          clusters: [
+            makeCluster({ key: '가나' }),
+            makeCluster({ key: '다라' }),
+          ],
+        },
+        {
+          type: 'series',
+          affix: '경제',
+          affixType: 'prefix',
+          label: '경제@',
+          clusters: [
+            makeCluster({ key: '경제성장' }),
+            makeCluster({ key: '경제회복' }),
+            makeCluster({ key: '경제왕국' }),
+          ],
+        },
+        {
+          type: 'predicate',
+          clusters: [makeCluster({ key: '살펴보다' })],
+        },
+      ]),
+    ).toBe(4);
   });
 });
 

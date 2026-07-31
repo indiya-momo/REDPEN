@@ -1,7 +1,7 @@
 /**
  * 표기 통일 추천 — 맞춤법 탭 외래어 표기와 같은 박스·버튼 크롬.
  * 문서 내 띄어쓰기 이형태만 (규범 검증 아님).
- * 결과 목록은 맞춤법 결과 리스트와 같은 아코디언(전체 발견 / N기준).
+ * 결과 목록은 맞춤법 결과 리스트와 같은 아코디언(N항목 전체 발견).
  * 페이지 칩은 다수·소수 모두(접히면 최대 4개 + 더 보기).
  */
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
@@ -12,7 +12,7 @@ import {
   firstWrongUnifyInstance,
   instancesForUnifyVariant,
 } from '../../lib/unifyCandidateDiscover.js';
-import { groupSortAndFillSatellites } from '../../lib/unifyCandidateGrouping.js';
+import { groupSortAndFillSatellites, countUnifyListAccordionItems } from '../../lib/unifyCandidateGrouping.js';
 import { dropJosaPlusPredicateFromGroups } from '../../lib/unifyPredicateBucket.js';
 import {
   mergeReviewedClustersIntoGroups,
@@ -79,46 +79,77 @@ function resolveSeriesChosenSpacing(group, registeredVariants, preSelected) {
 }
 
 /**
- * 계열 체크박스 라벨 — 선택 후 `금융@ → 금융^@` / `금융@ → 금융∨@`.
- * @param {{ affix?: string, affixType?: string, label?: string }} group
- * @param {'glued' | 'spaced' | null} spacing
+ * @param {{ variants?: string[] }} cluster
+ * @param {'glued' | 'spaced'} spacing
+ * @returns {string | undefined}
  */
-function formatSeriesCategoryLabelText(group, spacing) {
-  const affix = String(group?.affix ?? '');
-  const isSuffix = group?.affixType === 'suffix';
-  const before = isSuffix ? `@${affix}` : `${affix}@`;
-  if (spacing === 'glued') {
-    return isSuffix ? `${before} → ^@${affix}` : `${before} → ${affix}^@`;
-  }
-  if (spacing === 'spaced') {
-    return isSuffix ? `${before} → ∨@${affix}` : `${before} → ${affix}∨@`;
-  }
-  return group?.label || before;
+function variantForSpacing(cluster, spacing) {
+  return (cluster?.variants ?? []).find((v) =>
+    spacing === 'glued' ? !/\s/.test(v) : /\s/.test(v),
+  );
 }
 
 /**
+ * @param {{ affix?: string, affixType?: string, label?: string }} group
+ */
+function formatSeriesCategoryLabelText(group) {
+  const affix = String(group?.affix ?? '');
+  if (group?.affixType === 'suffix') return group?.label || `@${affix}`;
+  return group?.label || `${affix}@`;
+}
+
+/**
+ * 계열 헤더 — 붙여쓰기 / 띄어쓰기 일괄 선택.
  * @param {{
- *   group: { affix?: string, affixType?: string, label?: string },
  *   spacing: 'glued' | 'spaced' | null,
+ *   onSelect: (spacing: 'glued' | 'spaced') => void,
  * }} props
  */
-function SeriesCategoryLabel({ group, spacing }) {
-  const affix = String(group?.affix ?? '');
-  const isSuffix = group?.affixType === 'suffix';
-  // JSX 줄바꿈·들여쓰기는 공백 텍스트 노드가 되므로 한 줄로 붙인다.
-  const before = isSuffix ? <>@{affix}</> : <>{affix}@</>;
-
-  if (spacing !== 'glued' && spacing !== 'spaced') {
-    return before;
-  }
-
-  const markChar = spacing === 'glued' ? '^' : '∨';
-  const mark = (
-    <span className="unify-candidate-find__series-spacing-mark">{markChar}</span>
+function SeriesSpacingButtons({ spacing, onSelect }) {
+  return (
+    <span
+      className="unify-candidate-find__series-spacing-btns"
+      onClick={(e) => e.stopPropagation()}
+      onKeyDown={(e) => e.stopPropagation()}
+    >
+      <button
+        type="button"
+        className={[
+          'unify-candidate-find__series-spacing-btn',
+          spacing === 'glued' &&
+            'unify-candidate-find__series-spacing-btn--chosen',
+        ]
+          .filter(Boolean)
+          .join(' ')}
+        aria-pressed={spacing === 'glued'}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          onSelect('glued');
+        }}
+      >
+        붙여쓰기
+      </button>
+      <button
+        type="button"
+        className={[
+          'unify-candidate-find__series-spacing-btn',
+          spacing === 'spaced' &&
+            'unify-candidate-find__series-spacing-btn--chosen',
+        ]
+          .filter(Boolean)
+          .join(' ')}
+        aria-pressed={spacing === 'spaced'}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          onSelect('spaced');
+        }}
+      >
+        띄어쓰기
+      </button>
+    </span>
   );
-  const after = isSuffix ? <>{mark}@{affix}</> : <>{affix}{mark}@</>;
-
-  return <>{before}{' → '}{after}</>;
 }
 
 /** 보조용언 추정(검토 필요) — 목록엔 두되 기본은 PDF·전체 발견에서 제외 */
@@ -548,10 +579,11 @@ export default function UnifyCandidateFindPanel({
         needsReviewByKey,
         new Map(),
       );
-      // 팝업 = 기본 체크된 항목만 (목록「전체 발견」과 동일)
+      // 팝업 항목 수 = 목록 아코디언 행, 횟수 = 기본 체크된 클러스터
       await alertUnifyCandidateFindAfterRun(countedClusters, {
         uid: authUid,
         email: authEmail,
+        itemCount: countUnifyListAccordionItems(workingGroups),
       });
     } finally {
       setFinding(false);
@@ -638,6 +670,11 @@ export default function UnifyCandidateFindPanel({
       sumClusterFindings(listClusters.filter((c) => !hiddenPdfKeys.has(c.key))),
     [listClusters, hiddenPdfKeys],
   );
+  /** 목록 아코디언 행 수 (단일·용언=클러스터, 계열=그룹 1) */
+  const listItemCount = useMemo(
+    () => countUnifyListAccordionItems(grouped),
+    [grouped],
+  );
   const defaultOpenId =
     grouped[0]?.type === 'series'
       ? `series-${grouped[0].affixType}-${grouped[0].affix}`
@@ -708,6 +745,91 @@ export default function UnifyCandidateFindPanel({
   );
 
   /**
+   * 계열 헤더 붙여쓰기/띄어쓰기 — 같은 계열 전부 표기 통일.
+   * 같은 방향 재클릭 시 계열 등록을 해제한다.
+   * @param {UnifySpacingCluster[]} groupClusters
+   * @param {'glued' | 'spaced'} spacing
+   * @param {'glued' | 'spaced' | null} currentSpacing
+   */
+  const handleSeriesSpacingSelect = useCallback(
+    (groupClusters, spacing, currentSpacing) => {
+      if (!groupClusters?.length) return;
+
+      if (currentSpacing === spacing) {
+        setRegisteredVariants((prev) => {
+          const next = new Map(prev);
+          for (const gc of groupClusters) next.delete(gc.key);
+          publishPreview(
+            clusters,
+            rawByKey,
+            hiddenPdfKeys,
+            slmReviewedByKey,
+            predicateDropSeriesIds,
+            predicateDropClusterKeys,
+            predicateNeedsReviewByKey,
+            next,
+          );
+          return next;
+        });
+        setPreSelected((prev) => {
+          const next = new Map(prev);
+          for (const gc of groupClusters) next.delete(gc.key);
+          return next;
+        });
+        return;
+      }
+
+      setRegisteredVariants((prev) => {
+        const next = new Map(prev);
+        for (const gc of groupClusters) {
+          const v = variantForSpacing(gc, spacing);
+          if (v) next.set(gc.key, v);
+        }
+        publishPreview(
+          clusters,
+          rawByKey,
+          hiddenPdfKeys,
+          slmReviewedByKey,
+          predicateDropSeriesIds,
+          predicateDropClusterKeys,
+          predicateNeedsReviewByKey,
+          next,
+        );
+        return next;
+      });
+      setPreSelected((prev) => {
+        const next = new Map(prev);
+        for (const gc of groupClusters) {
+          const v = variantForSpacing(gc, spacing);
+          if (v) next.set(gc.key, v);
+        }
+        return next;
+      });
+
+      for (const gc of groupClusters) {
+        const v = variantForSpacing(gc, spacing);
+        if (!v) continue;
+        const firstWrong = firstWrongUnifyInstance(gc, v);
+        if (firstWrong) {
+          onSelectInstance?.(firstWrong);
+          break;
+        }
+      }
+    },
+    [
+      clusters,
+      rawByKey,
+      hiddenPdfKeys,
+      slmReviewedByKey,
+      predicateDropSeriesIds,
+      predicateDropClusterKeys,
+      predicateNeedsReviewByKey,
+      publishPreview,
+      onSelectInstance,
+    ],
+  );
+
+  /**
    * 등록 취소 — 그룹 자동선택(preselect) 기준은 유지한다.
    * @param {UnifySpacingCluster} cluster
    */
@@ -756,15 +878,6 @@ export default function UnifyCandidateFindPanel({
             {busy ? '·\u2009·\u2009·' : '찾기'}
           </button>
         </div>
-        {slmReviewing ? (
-          <p
-            className="hint consistency-hint-block unify-candidate-find__slm-status"
-            role="status"
-            aria-live="polite"
-          >
-            2차 검토 중…
-          </p>
-        ) : null}
         <p className="hint consistency-hint-block unify-candidate-find__example">
           <ConsistencyHintExample>
             &apos;뉴욕 타임스&apos; 3회, &apos;뉴욕타임스&apos; 1회 → 다수형
@@ -787,12 +900,16 @@ export default function UnifyCandidateFindPanel({
             <section className="results-panel results-panel--consistency results-panel--unify-candidate">
               <div className="results-header results-header--total-only">
                 <span className="results-header__total-findings results-findings-meta">
-                  <span className="results-findings-meta__label">전체 발견</span>
-                  <UnifyFindingsCount
-                    count={visibleFindings}
-                    shownCount={visibleFindings}
-                    className="results-header__total-count"
-                  />
+                  <span className="results-findings-meta__label">
+                    {listItemCount}항목 전체 발견
+                  </span>
+                  <span className="unify-candidate-find__badge-slot">
+                    <UnifyFindingsCount
+                      count={visibleFindings}
+                      shownCount={visibleFindings}
+                      className="results-header__total-count"
+                    />
+                  </span>
                 </span>
               </div>
               <div
@@ -823,14 +940,13 @@ export default function UnifyCandidateFindPanel({
                       : null;
                   const seriesLabelText =
                     group.type === 'series'
-                      ? formatSeriesCategoryLabelText(group, seriesSpacing)
+                      ? formatSeriesCategoryLabelText(group)
                       : label;
                   const findingsTotal = sumClusterFindings(group.clusters);
                   const visibleClusters = group.clusters.filter(
                     (c) => !hiddenPdfKeys.has(c.key),
                   );
                   const findingsShown = sumClusterFindings(visibleClusters);
-                  const criteriaCount = visibleClusters.length;
                   const categoryMod =
                     group.type === 'series'
                       ? 'series'
@@ -866,6 +982,11 @@ export default function UnifyCandidateFindPanel({
                       const itemShown = hiddenPdfKeys.has(cluster.key)
                         ? 0
                         : itemFindings;
+                      const itemSpacing = resolveSeriesChosenSpacing(
+                        { clusters: [cluster] },
+                        registeredVariants,
+                        preSelected,
+                      );
                       return (
                         <details
                           key={`${sectionId}-${cluster.key}`}
@@ -883,20 +1004,24 @@ export default function UnifyCandidateFindPanel({
                             <span className="results-category__label">
                               {itemLabel}
                             </span>
-                            <span className="results-category__meta results-findings-meta">
-                              <span className="results-findings-meta__label">
-                                <span className="results-category__criteria-num">
-                                  1
-                                </span>
-                                <span className="results-category__criteria-unit">
-                                  기준
-                                </span>
-                              </span>
-                              <UnifyFindingsCount
-                                count={itemFindings}
-                                shownCount={itemShown}
-                                className="results-category__findings"
+                            <span className="unify-candidate-find__summary-trail">
+                              <SeriesSpacingButtons
+                                spacing={itemSpacing}
+                                onSelect={(spacing) =>
+                                  handleSeriesSpacingSelect(
+                                    [cluster],
+                                    spacing,
+                                    itemSpacing,
+                                  )
+                                }
                               />
+                              <span className="unify-candidate-find__badge-slot">
+                                <UnifyFindingsCount
+                                  count={itemFindings}
+                                  shownCount={itemShown}
+                                  className="results-category__findings"
+                                />
+                              </span>
                             </span>
                           </summary>
                           <ul className="results-list results-list--nested unify-candidate-find__list">
@@ -922,25 +1047,26 @@ export default function UnifyCandidateFindPanel({
                           onToggleAll={handleToggleCategoryPdf}
                         />
                         <span className="results-category__label">
-                          <SeriesCategoryLabel
-                            group={group}
-                            spacing={seriesSpacing}
-                          />
+                          {seriesLabelText}
                         </span>
-                        <span className="results-category__meta results-findings-meta">
-                          <span className="results-findings-meta__label">
-                            <span className="results-category__criteria-num">
-                              {criteriaCount}
-                            </span>
-                            <span className="results-category__criteria-unit">
-                              기준
-                            </span>
-                          </span>
-                          <UnifyFindingsCount
-                            count={findingsTotal}
-                            shownCount={findingsShown}
-                            className="results-category__findings"
+                        <span className="unify-candidate-find__summary-trail">
+                          <SeriesSpacingButtons
+                            spacing={seriesSpacing}
+                            onSelect={(spacing) =>
+                              handleSeriesSpacingSelect(
+                                group.clusters,
+                                spacing,
+                                seriesSpacing,
+                              )
+                            }
                           />
+                          <span className="unify-candidate-find__badge-slot">
+                            <UnifyFindingsCount
+                              count={findingsTotal}
+                              shownCount={findingsShown}
+                              className="results-category__findings"
+                            />
+                          </span>
                         </span>
                       </summary>
                       <ul className="results-list results-list--nested unify-candidate-find__list">

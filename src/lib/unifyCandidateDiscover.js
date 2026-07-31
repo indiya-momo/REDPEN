@@ -701,26 +701,14 @@ export function buildUnifyCandidatePreviewGroups(clusters, options = {}) {
  */
 export function instancesForUnifyVariant(cluster, variant, opts = {}) {
   const chosen = opts.chosenVariant ?? null;
-  if (chosen) {
-    // 선택 후: 틀린(비선택) 표기만 칩·하이라이트 대상
-    if (variant === chosen) return [];
-    const occs = cluster.occurrencesByVariant?.[variant] ?? [];
-    return occs.map((occ) => ({
-      find: variant,
-      replace: chosen,
-      matchedText: occ.matchedText,
-      suggestedText: chosen,
-      pageNum: occ.pageNum,
-      index: occ.index,
-    }));
-  }
   const occs = cluster.occurrencesByVariant?.[variant] ?? [];
   if (!occs.length) return [];
+  const replace = chosen || cluster.recommendedUnify;
   return occs.map((occ) => ({
     find: variant,
-    replace: cluster.recommendedUnify,
+    replace,
     matchedText: occ.matchedText,
-    suggestedText: cluster.recommendedUnify,
+    suggestedText: replace,
     pageNum: occ.pageNum,
     index: occ.index,
   }));
@@ -734,6 +722,7 @@ export function instancesForUnifyVariant(cluster, variant, opts = {}) {
  */
 export function firstWrongUnifyInstance(cluster, chosenVariant) {
   for (const variant of cluster.variants ?? []) {
+    if (variant === chosenVariant) continue;
     const insts = instancesForUnifyVariant(cluster, variant, {
       chosenVariant,
     });

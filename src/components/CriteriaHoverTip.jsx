@@ -32,18 +32,18 @@ function placeBubble(rootEl, bubbleEl, variant) {
 
   const anchorRect = anchorEl.getBoundingClientRect();
   let top = anchorRect.bottom + TIP_GAP;
-  let left = anchorRect.right;
+  // 왼쪽 가장자리 잘림 방지 — 앵커 왼쪽부터 오른쪽으로 펼침
+  let left = anchorRect.left;
 
   bubbleEl.style.top = `${top}px`;
   bubbleEl.style.left = `${left}px`;
 
   let bubbleRect = bubbleEl.getBoundingClientRect();
-  left = anchorRect.right - bubbleRect.width;
 
-  if (left < VIEWPORT_MARGIN) left = VIEWPORT_MARGIN;
   if (left + bubbleRect.width > window.innerWidth - VIEWPORT_MARGIN) {
     left = window.innerWidth - VIEWPORT_MARGIN - bubbleRect.width;
   }
+  if (left < VIEWPORT_MARGIN) left = VIEWPORT_MARGIN;
 
   if (top + bubbleRect.height > window.innerHeight - VIEWPORT_MARGIN) {
     top = anchorRect.top - bubbleRect.height - TIP_GAP;

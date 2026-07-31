@@ -554,16 +554,16 @@ describe('buildUnifyCandidatePreviewGroups', () => {
     expect(groups[0].instances?.length).toBe(2);
   });
 
-  it('선택 후 페이지 칩은 틀린 표기만·replace=선택형', () => {
+  it('선택 후에도 통일형·틀린 표기 모두 페이지 칩을 만든다', () => {
     const clusters = discoverSpacingUnifyCandidates([
       { pageNum: 1, text: '조선시대 조선시대 조선 시대' },
     ]);
     const cluster = clusters.find((c) => c.key === '조선시대');
-    expect(
-      instancesForUnifyVariant(cluster, '조선시대', {
-        chosenVariant: '조선시대',
-      }),
-    ).toEqual([]);
+    const chosen = instancesForUnifyVariant(cluster, '조선시대', {
+      chosenVariant: '조선시대',
+    });
+    expect(chosen).toHaveLength(2);
+    expect(chosen[0].replace).toBe('조선시대');
     const wrong = instancesForUnifyVariant(cluster, '조선 시대', {
       chosenVariant: '조선시대',
     });
