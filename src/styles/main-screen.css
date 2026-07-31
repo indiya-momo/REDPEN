@@ -327,51 +327,81 @@
   border: 1px solid var(--panel-result-badge-border);
 }
 
+/* 페이지 칩 — 맞춤법·표기통일 공통: 회색조 캡슐 (보조 정보, 골드톤 없음) */
 .panel-left .results-panel--spelling .page-chip,
-.panel-left .results-panel--consistency .page-chip {
+.panel-left .results-panel--consistency .page-chip,
+.panel-left .unify-candidate-find .page-chip,
+.panel-left .results-panel--unify-candidate .page-chip {
   border: none;
   box-shadow: none;
-  background: var(--panel-result-pill);
-  color: var(--c-ink);
+  border-radius: 999px;
+  background: #e8e8ea;
+  color: #52525b;
+  font-weight: var(--w-item);
+}
+
+.panel-left .unify-candidate-find .page-chip,
+.panel-left .results-panel--unify-candidate .page-chip {
+  font-size: calc(0.72rem * 0.8);
+  min-height: calc(1.625rem * 0.8);
+  padding: var(--space-xs-tight) calc(var(--space-md-tight) * 0.85);
+}
+
+.panel-left .unify-candidate-find .page-chip__bundle,
+.panel-left .results-panel--unify-candidate .page-chip__bundle {
+  font-size: calc(0.68rem * 0.8);
 }
 
 .panel-left .results-panel--spelling .page-chip:hover,
-.panel-left .results-panel--consistency .page-chip:hover {
+.panel-left .results-panel--consistency .page-chip:hover,
+.panel-left .unify-candidate-find .page-chip:hover,
+.panel-left .results-panel--unify-candidate .page-chip:hover {
   border: none;
-  background: color-mix(in srgb, var(--panel-result-pill) 88%, var(--c-ink) 12%);
+  background: #dcdce0;
+  color: #3f3f46;
 }
 
 .panel-left .results-panel--spelling .page-chip--current,
-.panel-left .results-panel--consistency .page-chip--current {
-  background: color-mix(in srgb, var(--panel-result-pill) 66%, var(--panel-accent) 34%);
-  color: var(--c-ink);
+.panel-left .results-panel--consistency .page-chip--current,
+.panel-left .unify-candidate-find .page-chip--current,
+.panel-left .results-panel--unify-candidate .page-chip--current {
+  background: #d4d4d8;
+  color: #3f3f46;
   border: none;
   box-shadow: none;
 }
 
 .panel-left .results-panel--spelling .page-chip--current:hover,
-.panel-left .results-panel--consistency .page-chip--current:hover {
-  background: color-mix(in srgb, var(--panel-result-pill) 58%, var(--panel-accent) 42%);
+.panel-left .results-panel--consistency .page-chip--current:hover,
+.panel-left .unify-candidate-find .page-chip--current:hover,
+.panel-left .results-panel--unify-candidate .page-chip--current:hover {
+  background: #c4c4c8;
   border: none;
 }
 
 .panel-left .results-panel--spelling .page-chip--current .page-chip__bundle,
-.panel-left .results-panel--consistency .page-chip--current .page-chip__bundle {
-  background: color-mix(in srgb, var(--panel-result-pill-muted) 70%, var(--c-ink) 30%);
-  color: var(--c-ink);
+.panel-left .results-panel--consistency .page-chip--current .page-chip__bundle,
+.panel-left .unify-candidate-find .page-chip--current .page-chip__bundle,
+.panel-left .results-panel--unify-candidate .page-chip--current .page-chip__bundle {
+  background: rgb(63 63 70 / 14%);
+  color: #3f3f46;
 }
 .panel-left .results-panel--spelling .page-chip--on-page:not(.page-chip--current),
-.panel-left .results-panel--consistency .page-chip--on-page:not(.page-chip--current) {
+.panel-left .results-panel--consistency .page-chip--on-page:not(.page-chip--current),
+.panel-left .unify-candidate-find .page-chip--on-page:not(.page-chip--current),
+.panel-left .results-panel--unify-candidate .page-chip--on-page:not(.page-chip--current) {
   border: none;
-  background: color-mix(in srgb, var(--panel-result-pill) 82%, var(--panel-accent) 18%);
-  color: var(--c-ink);
+  background: #dedee2;
+  color: #3f3f46;
 }
 
 .panel-left .results-panel--spelling .page-chip__bundle,
-.panel-left .results-panel--consistency .page-chip__bundle {
+.panel-left .results-panel--consistency .page-chip__bundle,
+.panel-left .unify-candidate-find .page-chip__bundle,
+.panel-left .results-panel--unify-candidate .page-chip__bundle {
   border: none;
-  background: var(--panel-result-pill-muted);
-  color: var(--c-soft);
+  background: rgb(63 63 70 / 10%);
+  color: #71717a;
 }
 
 .panel-left .results-panel--spelling .result-count,
@@ -2020,55 +2050,6 @@
   opacity: 0.52;
 }
 
-.panel-left .unify-candidate-find__card-head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.panel-left
-  .unify-candidate-find
-  .results-panel--unify-candidate
-  .unify-candidate-find__card-head
-  .result-card-head__findings-count.result-findings-count-circle {
-  align-self: flex-start;
-  margin-top: 0;
-  box-sizing: border-box;
-  width: auto;
-  height: auto;
-  min-width: var(--results-findings-circle-size, 1.35rem);
-  min-height: var(--results-findings-circle-size, 1.35rem);
-  padding: 0.1em 0.45em;
-  border-radius: var(--radius-ui-sm, 6px);
-  background: var(--pdf-highlight-primary-fill);
-  color: var(--color-surface-inverse, #2a2118);
-  box-shadow: var(--pdf-highlight-primary-shadow);
-  text-shadow: none;
-  font-size: calc(0.85rem * var(--panel-ui-scale, 1) * 0.9 * 1.1);
-}
-
-.panel-left .unify-candidate-find__card-head-main {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-  min-width: 0;
-  flex: 1;
-}
-
-.panel-left .unify-candidate-find__card-title-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 6px 8px;
-  min-width: 0;
-}
-
-.panel-left .unify-candidate-find__card-head .result-visibility-toggle {
-  align-self: flex-start;
-  margin-top: 1px;
-}
-
 .panel-left .unify-candidate-find__recommend {
   flex: 1;
   min-width: 0;
@@ -2090,12 +2071,6 @@
   vertical-align: middle;
 }
 
-.panel-left .unify-candidate-find__total {
-  font-weight: 700;
-  color: var(--c-ink, #333);
-  font-size: 0.9em;
-}
-
 .panel-left .unify-candidate-find__exception-badge {
   display: inline-flex;
   align-items: center;
@@ -2108,13 +2083,19 @@
   font-size: calc(0.68rem * var(--panel-ui-scale, 1));
   font-weight: 600;
   white-space: nowrap;
-  margin-left: auto;
+  margin-left: 0;
 }
 
-.panel-left
-  .unify-candidate-find__variant-row:has(.unify-candidate-find__exception-badge)
-  .unify-candidate-find__unify-btn {
-  margin-left: 0;
+.panel-left .unify-candidate-find__variant-row .result-visibility-toggle {
+  flex-shrink: 0;
+  align-self: center;
+  margin: 0;
+}
+
+.panel-left .unify-candidate-find__checkbox-spacer {
+  flex: 0 0 auto;
+  width: var(--criteria-checkbox-size, 15px);
+  height: var(--criteria-checkbox-size, 15px);
 }
 
 .panel-left .unify-candidate-find__variant-item--derived .unify-candidate-find__variant {
@@ -2243,35 +2224,49 @@
   padding-left: 0.15rem;
 }
 
-/* ── variant별 표기 통일 버튼 ── */
+/* ── 하단 「이 표기로 📌통일」— 항목(횟수) 바로 옆 상대 위치 ── */
 .panel-left .unify-candidate-find__unify-btn {
+  box-sizing: border-box;
   flex-shrink: 0;
-  margin-left: auto;
-  min-width: 4.6em;
-  padding: 2px 8px;
+  margin-left: 0;
+  min-width: auto;
+  padding: 2px 4px;
   font-size: calc(0.7rem * var(--panel-ui-scale, 1));
   font-weight: 400;
   line-height: 1.4;
   text-align: center;
-  border: 1px solid #aaa;
+  border: 1px solid color-mix(in srgb, #aaa 70%, #fff 30%);
   border-radius: var(--radius-search, 6px);
   background: transparent;
   color: var(--panel-text, #333);
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  white-space: nowrap;
 }
 
 .panel-left .unify-candidate-find__unify-btn:hover:not(:disabled) {
-  border-color: var(--search-action-bg, #4a7c59);
-  background: color-mix(in srgb, var(--search-action-bg, #4a7c59) 10%, transparent);
+  border-color: color-mix(
+    in srgb,
+    var(--pillar-consistency, #5c6b7a) 70%,
+    #fff 30%
+  );
+  background: color-mix(
+    in srgb,
+    var(--pillar-consistency, #5c6b7a) 10%,
+    transparent
+  );
 }
 
 .panel-left .unify-candidate-find__unify-btn--preselect,
 .panel-left .unify-candidate-find__unify-btn--chosen {
-  border-color: var(--search-action-bg, #4a7c59);
-  background: var(--search-action-bg, #4a7c59);
+  border-color: color-mix(
+    in srgb,
+    var(--pillar-consistency, #5c6b7a) 70%,
+    #fff 30%
+  );
+  background: var(--pillar-consistency, #5c6b7a);
   color: #fff;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .panel-left .unify-candidate-find__unify-btn--chosen {
@@ -2289,46 +2284,6 @@
   gap: 6px;
 }
 
-.panel-left .unify-candidate-find .page-chip,
-.panel-left
-  .unify-candidate-find
-  .results-panel--unify-candidate
-  .page-chip {
-  background: transparent;
-  border: 1px solid #aaa;
-  box-shadow: none;
-  color: #555;
-}
-
-.panel-left .unify-candidate-find .page-chip:hover,
-.panel-left
-  .unify-candidate-find
-  .results-panel--unify-candidate
-  .page-chip:hover {
-  background: #e5e7eb;
-  border: 1px solid #888;
-}
-
-.panel-left .unify-candidate-find .page-chip--current,
-.panel-left
-  .unify-candidate-find
-  .results-panel--unify-candidate
-  .page-chip--current {
-  background: #6b7280;
-  border: 1px solid #6b7280;
-  color: #fff;
-  box-shadow: none;
-}
-
-.panel-left .unify-candidate-find .page-chip--current:hover,
-.panel-left
-  .unify-candidate-find
-  .results-panel--unify-candidate
-  .page-chip--current:hover {
-  background: #4b5563;
-  border: 1px solid #4b5563;
-}
-
 .panel-left .unify-candidate-find__variants {
   list-style: none;
   margin: 0;
@@ -2341,32 +2296,24 @@
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 4px;
+  gap: 6px;
   line-height: 1.4;
 }
 
 .panel-left .unify-candidate-find__variant {
   min-width: 0;
   word-break: keep-all;
+  font-weight: 700;
+  font-size: calc(0.72rem * 1.2 * var(--panel-ui-scale, 1));
+  color: var(--c-ink, #333);
 }
 
 .panel-left .unify-candidate-find__count {
   flex-shrink: 0;
+  font-weight: 400;
+  font-size: calc(0.72rem * 1.2 * var(--panel-ui-scale, 1));
   font-variant-numeric: tabular-nums;
-}
-
-.panel-left .unify-candidate-find__majority-badge {
-  display: inline-flex;
-  align-items: center;
-  flex-shrink: 0;
-  padding: 1px 7px;
-  border-radius: var(--radius-ui-sm, 6px);
-  border: 1px solid #1e3a5f;
-  background: #1e3a5f;
-  color: #f8fafc;
-  font-size: calc(0.68rem * var(--panel-ui-scale, 1));
-  font-weight: 600;
-  white-space: nowrap;
+  color: var(--c-soft, #666);
 }
 
 .panel-left
@@ -2406,42 +2353,66 @@
     var(--unify-spacing-btn-width, 3.55rem)
     var(--unify-spacing-btn-width, 3.55rem);
   align-items: center;
-  gap: 4px;
+  gap: 0;
   width: var(--unify-btns-width);
   margin: 0;
+  /* 상단 = 세그먼트 토글 (하단 단독 액션 버튼과 구분) */
+  border: 1px solid color-mix(in srgb, #aaa 70%, #fff 30%);
+  border-radius: var(--radius-search, 6px);
+  overflow: hidden;
+  background: color-mix(in srgb, #fff 88%, var(--panel-surface-group, #f6f1e7));
 }
 
 .panel-left .unify-candidate-find__series-spacing-btn {
   box-sizing: border-box;
   width: 100%;
-  padding: 2px 2px;
-  font-size: calc(0.7rem * var(--panel-ui-scale, 1));
-  font-weight: 400;
+  margin: 0;
+  padding: 2px 1px;
+  font-size: calc(0.68rem * var(--panel-ui-scale, 1));
+  font-weight: 500;
   line-height: 1.4;
   text-align: center;
-  border: 1px solid #aaa;
-  border-radius: var(--radius-search, 6px);
+  border: none;
+  border-radius: 0;
   background: transparent;
-  color: var(--panel-text, #333);
+  color: var(--c-soft, #666);
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  transition: background 0.15s, color 0.15s;
+}
+
+.panel-left .unify-candidate-find__series-spacing-btn + .unify-candidate-find__series-spacing-btn {
+  border-left: 1px solid color-mix(in srgb, #aaa 70%, #fff 30%);
 }
 
 .panel-left .unify-candidate-find__series-spacing-btn:hover {
-  border-color: #1e3a5f;
-  background: color-mix(in srgb, #1e3a5f 10%, transparent);
+  background: color-mix(
+    in srgb,
+    var(--pillar-consistency, #5c6b7a) 8%,
+    transparent
+  );
+  color: var(--panel-text, #333);
 }
 
 .panel-left .unify-candidate-find__series-spacing-btn--chosen {
-  border-color: #1e3a5f;
-  background: #1e3a5f;
-  color: #f8fafc;
-  font-weight: 600;
+  background: color-mix(
+    in srgb,
+    var(--pillar-consistency, #5c6b7a) 18%,
+    #fff
+  );
+  color: color-mix(
+    in srgb,
+    var(--pillar-consistency, #5c6b7a) 88%,
+    #1e2936 12%
+  );
+  font-weight: 700;
+  box-shadow: inset 0 -2px 0 var(--pillar-consistency, #5c6b7a);
 }
 
 .panel-left .unify-candidate-find__variants .result-pages {
-  margin-top: 2px;
-  padding-left: 0;
+  margin-top: 0;
+  margin-bottom: 6px;
+  /* 체크박스 열과 맞추어 페이지 칩 들여쓰기 */
+  padding-left: calc(var(--criteria-checkbox-size, 15px) + 6px);
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;

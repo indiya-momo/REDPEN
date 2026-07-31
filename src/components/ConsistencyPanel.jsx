@@ -367,12 +367,12 @@ export default function ConsistencyPanel({
           </p>
           <div className="consistency-subsection consistency-subsection--first">
             <p className="hint consistency-hint-block">
-              여러 항목 중 하나를 통일형📌으로 지정하고, 나머지를 찾아 바꿀 수
-              있습니다
+              여러 항목 중 하나를 📌통일형으로 지정하면, 나머지가 원고에 바뀌어
+              표시됩니다
               <br />
               <ConsistencyHintExample>
-                &apos;조선시대,조선˅시대&apos; 입력 → &apos;조선시대&apos; 통일형
-                📌지정하고 &apos;조선˅시대&apos; 바꾸기
+                &apos;조선시대,조선˅시대&apos; 입력 → &apos;조선시대&apos; 📌통일형
+                지정하면 &apos;조선˅시대&apos; 가 원고에서 바뀌어 표시됨
               </ConsistencyHintExample>
             </p>
             <ConsistencyUnifySection

@@ -203,7 +203,7 @@ export function shrinkVisibleCountForExpandOverflow(root, visibleCount) {
 }
 
 /**
- * 레이아웃 접힘 결과에 하드 상한을 적용 (예: 표기 통일 추천 4개).
+ * 레이아웃 접힘 결과에 하드 상한을 적용 (예: 표기 통일 추천 3개).
  * @param {{ needsCollapse: boolean, visibleCount: number }} fitted
  * @param {number} pillCount
  * @param {number | null | undefined} limit
@@ -229,6 +229,39 @@ export function applyCollapsedVisibleLimit(fitted, pillCount, limit) {
 }
 
 /**
+ * 개수 상한만으로 접힘 결정 (폭 측정 없음 — 너비 변경에 흔들리지 않음)
+ * @param {number} pillCount
+ * @param {number} limit
+ * @returns {{ needsCollapse: boolean, visibleCount: number }}
+ */
+export function collapseByVisibleLimit(pillCount, limit) {
+  if (pillCount <= 0) return { needsCollapse: false, visibleCount: 0 };
+  if (limit < 1 || pillCount <= limit) {
+    return { needsCollapse: false, visibleCount: pillCount };
+  }
+  return {
+    needsCollapse: true,
+    visibleCount: limit,
+  };
+}
+
+/**
+ * 접힘 펼침 버튼 문구
+ * @param {boolean} expanded
+ * @param {number} hiddenCount
+ * @param {'more' | 'elsewhere'} mode
+ */
+export function formatResultPagesExpandLabel(
+  expanded,
+  hiddenCount,
+  mode = 'more',
+) {
+  if (expanded) return '접기';
+  if (mode === 'elsewhere') return `외 ${hiddenCount}곳`;
+  return `＋ ${Math.max(hiddenCount, 1)}개 더 보기`;
+}
+
+/**
  * @param {{
  *   instances: import('../lib/ruleEngine.js').MatchInstance[],
  *   currentPage: number,
@@ -239,6 +272,7 @@ export function applyCollapsedVisibleLimit(fitted, pillCount, limit) {
  *   isInstanceVisible?: (inst: import('../lib/ruleEngine.js').MatchInstance) => boolean,
  *   onToggleInstanceVisibility?: (inst: import('../lib/ruleEngine.js').MatchInstance) => void,
  *   collapsedVisibleLimit?: number | null,
+ *   expandLabelMode?: 'more' | 'elsewhere',
  * }} props
  */
 export default function ResultPageSummary({
@@ -251,6 +285,7 @@ export default function ResultPageSummary({
   isInstanceVisible = () => true,
   onToggleInstanceVisibility,
   collapsedVisibleLimit = null,
+  expandLabelMode = 'more',
 }) {
   const pills = useMemo(() => buildInstancePills(instances), [instances]);
   const pillsSignature = useMemo(
@@ -261,11 +296,29 @@ export default function ResultPageSummary({
   const expandedRef = useRef(false);
   /** 펼침/접힘으로 스크롤바가 생겨 폭이 변할 때 Remeasure 무시 */
   const ignoreWidthResizeUntilRef = useRef(0);
+  const hardCountLimit =
+    expandLabelMode === 'elsewhere' ||
+    (collapsedVisibleLimit != null && collapsedVisibleLimit > 0);
+
+  const resolveHardCollapse = () => {
+    const limit =
+      collapsedVisibleLimit != null && collapsedVisibleLimit > 0
+        ? collapsedVisibleLimit
+        : 1;
+    if (expandLabelMode === 'elsewhere' && pills.length > 1) {
+      return {
+        needsCollapse: true,
+        visibleCount: Math.min(limit, Math.max(1, pills.length - 1)),
+      };
+    }
+    return collapseByVisibleLimit(pills.length, limit);
+  };
+
   const [expanded, setExpanded] = useState(false);
-  /** null = 아직 측정 전(전체 칩 렌더) */
+  /** null = 아직 측정 전(전체 칩 렌더). 개수 상한 모드는 처음부터 확정 */
   const [collapse, setCollapse] = useState(
     /** @type {{ needsCollapse: boolean, visibleCount: number } | null} */ (
-      null
+      () => (hardCountLimit ? resolveHardCollapse() : null)
     ),
   );
 
@@ -274,11 +327,15 @@ export default function ResultPageSummary({
   useLayoutEffect(() => {
     setExpanded(false);
     expandedRef.current = false;
-    setCollapse(null);
-  }, [pillsSignature]);
+    // 개수 상한: null로 풀지 않음(전체 칩 깜빡임·너비 버그 재발 방지)
+    setCollapse(hardCountLimit ? resolveHardCollapse() : null);
+  }, [pillsSignature, hardCountLimit, collapsedVisibleLimit, expandLabelMode, pills.length]);
 
   useLayoutEffect(() => {
     if (expanded || collapse !== null) return undefined;
+
+    // 개수 상한은 위 effect에서 이미 확정
+    if (hardCountLimit) return undefined;
 
     let cancelled = false;
     // collapse=null 로 전체 칩을 그린 다음 프레임에서 측정
@@ -290,13 +347,9 @@ export default function ResultPageSummary({
         return;
       }
       const fitted = fitPillsIntoTwoRows(root, pills.length);
-      setCollapse(
-        applyCollapsedVisibleLimit(
-          fitted,
-          pills.length,
-          collapsedVisibleLimit,
-        ),
-      );
+      setCollapse(fitted);
+      // 접힘 후 스크롤바·폭 변화로 ResizeObserver가 즉시 재측정하지 않게
+      ignoreWidthResizeUntilRef.current = performance.now() + 400;
     });
 
     return () => {
@@ -306,14 +359,17 @@ export default function ResultPageSummary({
   }, [
     collapse,
     expanded,
+    hardCountLimit,
     pills.length,
     pillsSignature,
-    collapsedVisibleLimit,
   ]);
 
   useLayoutEffect(() => {
     const root = rootRef.current;
     if (!root || typeof ResizeObserver === 'undefined') return undefined;
+
+    // 개수 상한 모드에서는 너비와 무관 — 리사이즈 재측정 불필요
+    if (hardCountLimit) return undefined;
 
     let lastWidth = root.getBoundingClientRect().width;
     let frame = 0;
@@ -337,7 +393,7 @@ export default function ResultPageSummary({
       cancelAnimationFrame(frame);
       ro.disconnect();
     };
-  }, [pillsSignature]);
+  }, [pillsSignature, hardCountLimit]);
 
   useLayoutEffect(() => {
     if (expanded || !collapse?.needsCollapse || !selectedInstance) return;
@@ -350,9 +406,14 @@ export default function ResultPageSummary({
     }
   }, [pills, selectedInstance, expanded, collapse]);
 
-  // 접힌 뒤 실제 「더 보기」가 넘치면 칩을 한 개 더 줄임 (펼친 상태에서는 실행하지 않음)
+  // 접힌 뒤 실제 「더 보기」가 넘치면 칩을 한 개 더 줄임 (개수 상한·펼침 제외)
   useLayoutEffect(() => {
-    if (expanded || !collapse?.needsCollapse || collapse.visibleCount <= 0) {
+    if (
+      hardCountLimit ||
+      expanded ||
+      !collapse?.needsCollapse ||
+      collapse.visibleCount <= 0
+    ) {
       return undefined;
     }
     const root = rootRef.current;
@@ -363,23 +424,19 @@ export default function ResultPageSummary({
       collapse.visibleCount,
     );
     if (next >= collapse.visibleCount) return undefined;
-
-    const capped =
-      collapsedVisibleLimit != null && collapsedVisibleLimit > 0
-        ? Math.min(next, collapsedVisibleLimit)
-        : next;
-    if (capped < 1) return undefined;
+    if (next < 1) return undefined;
 
     setCollapse({
       needsCollapse: true,
-      visibleCount: capped,
+      visibleCount: next,
     });
+    ignoreWidthResizeUntilRef.current = performance.now() + 400;
     return undefined;
-  }, [collapse, expanded, pillsSignature, collapsedVisibleLimit]);
+  }, [collapse, expanded, pillsSignature, hardCountLimit]);
 
   if (!pills.length) return null;
 
-  const measuring = !expanded && collapse === null;
+  const measuring = !expanded && collapse === null && !hardCountLimit;
   const needsCollapse = Boolean(collapse?.needsCollapse);
   const visiblePills =
     expanded || measuring || !needsCollapse
@@ -427,14 +484,18 @@ export default function ResultPageSummary({
               ignoreWidthResizeUntilRef.current = performance.now() + 400;
               setExpanded((open) => {
                 if (open) {
-                  // 접을 때: 스크롤바가 사라진 폭으로 다시 측정
-                  setCollapse(null);
+                  // 접을 때: 개수 상한은 즉시 복구, 그 외는 폭 재측정
+                  setCollapse(hardCountLimit ? resolveHardCollapse() : null);
                 }
                 return !open;
               });
             }}
           >
-            {expanded ? '접기' : `＋ ${hiddenCount}개 더 보기`}
+            {formatResultPagesExpandLabel(
+              expanded,
+              hiddenCount,
+              expandLabelMode,
+            )}
           </button>
         </div>
       ) : null}

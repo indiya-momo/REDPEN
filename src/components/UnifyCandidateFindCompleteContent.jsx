@@ -21,17 +21,16 @@ export default function UnifyCandidateFindCompleteContent({
   return (
     <div className="results-header app-dialog__results-summary app-dialog__unify-find-complete">
       <div className="app-dialog__results-summary-row app-dialog__results-summary-row--total">
-        <span className="results-header__stat app-dialog__results-stat">
+        <span className="results-header__stat app-dialog__results-stat app-dialog__unify-find-complete-stat">
           <AppDialogCriteriaLabel
             label="표기 통일 추천"
-            meta={`${clusterCount}항목 전체`}
+            meta={`${clusterCount}항목 전체 발견`}
           />
           <ResultFindingsCountCircle
             count={totalOccurrences}
             className="results-header__total-count"
-            ariaLabel={`전체 ${totalOccurrences}회`}
+            ariaLabel={`전체 발견 ${totalOccurrences}`}
           />
-          <span className="app-dialog__findings-unit">회</span>
         </span>
       </div>
       <AppDialogQuotaConsumedLine line={quotaConsumedLine} />
