@@ -390,6 +390,37 @@ describe('alertUnifyCandidateFindAfterRun', () => {
         '표기 통일 검수권 1장이 사용되었습니다(1일 검수권 1장, 선물 검수권 5장 사용 가능)',
     );
   });
+
+  it('itemCount가 있으면 클러스터 수 대신 아코디언 행 수를 쓴다', async () => {
+    const alertMock = vi.fn();
+    vi.stubGlobal('alert', alertMock);
+
+    await alertUnifyCandidateFindAfterRun(
+      [
+        {
+          key: '경제성장',
+          variants: ['경제성장', '경제 성장'],
+          counts: { 경제성장: 2, '경제 성장': 1 },
+          totalCount: 3,
+          recommendedUnify: '경제성장',
+          occurrencesByVariant: {},
+        },
+        {
+          key: '경제회복',
+          variants: ['경제회복', '경제 회복'],
+          counts: { 경제회복: 1, '경제 회복': 1 },
+          totalCount: 2,
+          recommendedUnify: '경제회복',
+          occurrencesByVariant: {},
+        },
+      ],
+      { uid: 'u1', email: 'a@b.c', itemCount: 1 },
+    );
+
+    expect(alertMock).toHaveBeenCalledWith(
+      expect.stringContaining('표기 통일 추천 1항목 전체 5회'),
+    );
+  });
 });
 
 describe('formatConsistencyCheckCompleteMessage', () => {

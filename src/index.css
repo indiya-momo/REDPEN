@@ -4066,8 +4066,8 @@ html[data-build='prod'] .unify-candidate-find__list {
 
 .criteria-hover-tip__bubble {
   position: absolute;
-  right: 0;
-  left: auto;
+  left: 0;
+  right: auto;
   top: calc(100% + 4px);
   bottom: auto;
   transform: none;

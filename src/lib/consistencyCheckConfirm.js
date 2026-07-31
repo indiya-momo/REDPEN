@@ -364,16 +364,17 @@ export function formatUnifyCandidateFindCompleteMessage(
 
 /**
  * 표기 통일 추천 찾기 직후 — 발견 항목·검수권 사용 alert
- * 목록「전체 발견」과 같게, 이미 그룹·위성·필터 반영된 목록 클러스터를 그대로 합산한다.
+ * 항목 수 = 목록 아코디언 행(계열은 1), 횟수 = 기본 체크된 클러스터 합.
  * @param {import('./unifyCandidateDiscover.js').UnifySpacingCluster[]} clusters
- * @param {{ uid?: string, email?: string }} [quotaContext]
+ * @param {{ uid?: string, email?: string, itemCount?: number }} [quotaContext]
  */
 export async function alertUnifyCandidateFindAfterRun(
   clusters = [],
   quotaContext = {},
 ) {
-  const { uid = '', email = '' } = quotaContext;
-  const clusterCount = clusters.length;
+  const { uid = '', email = '', itemCount } = quotaContext;
+  const clusterCount =
+    typeof itemCount === 'number' ? itemCount : clusters.length;
   const totalOccurrences = clusters.reduce(
     (sum, cluster) => sum + (cluster.totalCount ?? 0),
     0,
