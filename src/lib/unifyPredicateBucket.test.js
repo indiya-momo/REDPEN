@@ -3,6 +3,9 @@ import {
   isUnifyPredicateCluster,
   looksLikePredicateKey,
   isUnifyJosaPlusPredicateKey,
+  isUnifyJosaPlusNounKey,
+  isUnifyNounPlusJosaKey,
+  isUnifyJosaGluedNoiseKey,
   dropJosaPlusPredicateFromGroups,
 } from './unifyPredicateBucket.js';
 
@@ -106,6 +109,35 @@ describe('isUnifyJosaPlusPredicateKey', () => {
   });
 });
 
+describe('isUnifyJosaPlusNounKey / isUnifyNounPlusJosaKey', () => {
+  it('@+조사+명사·어간+조사+명사를 잡는다', () => {
+    expect(isUnifyJosaPlusNounKey('을시장')).toBe(true);
+    expect(isUnifyJosaPlusNounKey('가치를평가')).toBe(true);
+    expect(isUnifyJosaPlusNounKey('시장을개방')).toBe(true);
+  });
+
+  it('명사+조사(시장을@)를 잡는다', () => {
+    expect(isUnifyNounPlusJosaKey('시장을')).toBe(true);
+    expect(isUnifyNounPlusJosaKey('정부에서')).toBe(true);
+    expect(isUnifyNounPlusJosaKey('경제가', { asSeriesAffix: true })).toBe(
+      true,
+    );
+    // 가치평가 끝 '가' — 키 전체 STRICT에서는 제외
+    expect(isUnifyNounPlusJosaKey('가치평가')).toBe(false);
+  });
+
+  it('일반 명사·용언은 제외하지 않는다', () => {
+    expect(isUnifyJosaPlusNounKey('금융시장')).toBe(false);
+    expect(isUnifyJosaPlusNounKey('살펴보다')).toBe(false);
+    expect(isUnifyNounPlusJosaKey('살펴보다')).toBe(false);
+    expect(isUnifyNounPlusJosaKey('금융시장')).toBe(false);
+    expect(isUnifyJosaGluedNoiseKey('역할을하다')).toBe(true);
+    expect(isUnifyJosaGluedNoiseKey('가치를평가')).toBe(true);
+    expect(isUnifyJosaGluedNoiseKey('시장을')).toBe(true);
+    expect(isUnifyJosaGluedNoiseKey('금융시장')).toBe(false);
+  });
+});
+
 describe('dropJosaPlusPredicateFromGroups', () => {
   it('용언 단일에서 역할을하다를 빼고 살펴보다는 남긴다', () => {
     const groups = dropJosaPlusPredicateFromGroups([
@@ -119,6 +151,20 @@ describe('dropJosaPlusPredicateFromGroups', () => {
     ]);
     expect(groups).toHaveLength(1);
     expect(groups[0].clusters.map((c) => c.key)).toEqual(['살펴보다']);
+  });
+
+  it('단일에서 가치를평가·시장을 도 뺀다', () => {
+    const groups = dropJosaPlusPredicateFromGroups([
+      {
+        type: 'single',
+        clusters: [
+          { key: '가치를평가', variants: ['가치를 평가', '가치를평가'] },
+          { key: '시장을', variants: ['시장을', '시장 을'] },
+          { key: '금융시장', variants: ['금융 시장', '금융시장'] },
+        ],
+      },
+    ]);
+    expect(groups[0].clusters.map((c) => c.key)).toEqual(['금융시장']);
   });
 
   it('단일 구간에서도 금리인상을보자를 뺀다', () => {
@@ -143,6 +189,21 @@ describe('dropJosaPlusPredicateFromGroups', () => {
         label: '@을하다',
         clusters: [
           { key: '역할을하다', variants: ['역할을하다', '역할을 하다'] },
+        ],
+      },
+    ]);
+    expect(groups).toEqual([]);
+  });
+
+  it('시장을@ 계열도 통째로 뺀다', () => {
+    const groups = dropJosaPlusPredicateFromGroups([
+      {
+        type: 'series',
+        affix: '시장을',
+        affixType: 'prefix',
+        label: '시장을@',
+        clusters: [
+          { key: '시장을개방', variants: ['시장을 개방', '시장을개방'] },
         ],
       },
     ]);

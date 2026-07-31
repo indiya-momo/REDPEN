@@ -1,11 +1,11 @@
 /**
- * 표기 통일 추천 — 클러스터를 가나다순 정렬 + 계열(prefix/suffix) 그룹핑.
+ * 표기 통일 추천 — 클러스터 정렬 + 계열(prefix/suffix) 그룹핑.
  *
  * 목록 순서 (합의):
- * 1) 단일 항목(명사 위주) 가나다순
- * 2) 접두 계열(가나다@) 명사 — 그룹 안도 가나다
- * 3) 접미 계열(@가나다) 명사 — 그룹 안도 가나다
- * 4) 용언 — 단일 추정 + 접두·접미 용언 계열(만들어@ 등) 모두 명사 뒤
+ * 1) 단일 항목 — 발견 횟수 ↓, 동률이면 가나다
+ * 2) 접두 계열(○○@) — 계열 합계 발견 ↓, 동률이면 affix 가나다 / 안도 동일
+ * 3) 접미 계열(@○○) — 동일
+ * 4) 용언 — 단일 추정 + 접두·접미 용언 계열, 안은 발견 ↓·가나다
  */
 
 import {
@@ -25,7 +25,7 @@ import {
   isUnifyPredicateCluster,
   looksLikePredicateKey,
   dropJosaPlusPredicateFromGroups,
-  isUnifyJosaPlusPredicateKey,
+  isUnifyJosaGluedNoiseKey,
 } from './unifyPredicateBucket.js';
 import {
   markSeriesBySlotMajority,
@@ -55,16 +55,43 @@ import {
  */
 
 /**
- * @param {UnifySpacingCluster[]} clusters
- * @returns {UnifySpacingCluster[]}
+ * @param {UnifySpacingCluster} cluster
  */
-function sortClustersByKey(clusters) {
-  return [...clusters].sort((a, b) => a.key.localeCompare(b.key, 'ko'));
+function clusterFindings(cluster) {
+  return cluster?.totalCount ?? 0;
 }
 
 /**
- * 단일 명사 → 명사 접두@ → 명사 @접미 → 용언(단일·계열).
- * 같은 구간 안에서는 affix(또는 키) 가나다.
+ * @param {ClusterGroup} group
+ */
+function groupFindings(group) {
+  return (group?.clusters ?? []).reduce(
+    (sum, c) => sum + clusterFindings(c),
+    0,
+  );
+}
+
+/**
+ * 발견 횟수 많은 순 → 동률이면 키 가나다.
+ * @param {UnifySpacingCluster[]} clusters
+ * @returns {UnifySpacingCluster[]}
+ */
+export function sortClustersByFindingsThenKey(clusters) {
+  return [...clusters].sort((a, b) => {
+    const d = clusterFindings(b) - clusterFindings(a);
+    if (d !== 0) return d;
+    return String(a.key ?? '').localeCompare(String(b.key ?? ''), 'ko');
+  });
+}
+
+/** @deprecated 가나다만 — {@link sortClustersByFindingsThenKey} 사용 */
+function sortClustersByKey(clusters) {
+  return sortClustersByFindingsThenKey(clusters);
+}
+
+/**
+ * 단일 → ○○@ → @○○ → 용언.
+ * 같은 구간: 발견 합계(또는 항목 횟수) ↓, 동률이면 affix/키 가나다.
  * @param {ClusterGroup[]} groups
  * @returns {ClusterGroup[]}
  */
@@ -82,19 +109,23 @@ export function sortClusterGroups(groups) {
   };
 
   return [...groups]
-    .map((g) => ({ ...g, clusters: sortClustersByKey(g.clusters) }))
+    .map((g) => ({ ...g, clusters: sortClustersByFindingsThenKey(g.clusters) }))
     .filter((g) => g.clusters.length > 0)
     .sort((a, b) => {
       const o = section(a) - section(b);
       if (o !== 0) return o;
-      // 용언 구간: 「용언」단일 묶음 → 용언 계열(접두·접미 가나다)
+      // 용언 구간: 「용언」단일 묶음 → 용언 계열
       if (section(a) === 3) {
         const aSeries = a.type === 'series' ? 1 : 0;
         const bSeries = b.type === 'series' ? 1 : 0;
         if (aSeries !== bSeries) return aSeries - bSeries;
       }
-      if (a.type !== 'series' || b.type !== 'series') return 0;
-      return a.affix.localeCompare(b.affix, 'ko');
+      const findDiff = groupFindings(b) - groupFindings(a);
+      if (findDiff !== 0) return findDiff;
+      if (a.type === 'series' && b.type === 'series') {
+        return a.affix.localeCompare(b.affix, 'ko');
+      }
+      return 0;
     });
 }
 
@@ -191,7 +222,10 @@ export function groupAndSortClusters(clusters, opts = {}) {
   const candidates = [];
   for (const [affix, set] of prefixMembers) {
     // 숫자·조사+용언 affix / 계열 최소 음절 미달 affix는 후보에서 제외
-    if (isExcludedSeriesAffix(affix) || isUnifyJosaPlusPredicateKey(affix)) {
+    if (
+      isExcludedSeriesAffix(affix) ||
+      isUnifyJosaGluedNoiseKey(affix, { asSeriesAffix: true })
+    ) {
       continue;
     }
     const members = [...set];
@@ -204,7 +238,10 @@ export function groupAndSortClusters(clusters, opts = {}) {
     });
   }
   for (const [affix, set] of suffixMembers) {
-    if (isExcludedSeriesAffix(affix) || isUnifyJosaPlusPredicateKey(affix)) {
+    if (
+      isExcludedSeriesAffix(affix) ||
+      isUnifyJosaGluedNoiseKey(affix, { asSeriesAffix: true })
+    ) {
       continue;
     }
     const members = [...set];
@@ -283,7 +320,7 @@ export function groupSortAndFillSatellites(clusters, rawByKey) {
   const normalized = normalizeSpacingClusters(clusters)
     .filter(isRealSpacingConflict)
     .filter((c) => !isUnifyListDroppedMonoJosaCluster(c))
-    .filter((c) => !isUnifyJosaPlusPredicateKey(c.key))
+    .filter((c) => !isUnifyJosaGluedNoiseKey(c.key))
     .filter((c) => !isUnifyListDroppedMonoSlotCluster(c));
   let groups = groupAndSortClusters(normalized, { minSeriesMembers: 1 });
 
@@ -314,14 +351,11 @@ export function groupSortAndFillSatellites(clusters, rawByKey) {
         group.clusters = [];
         continue;
       }
-      // 충돌 가나다 → 위성 가나다 (구간 안 가나다, 충돌을 위에)
-      group.clusters = [
-        ...sortClustersByKey(conflicts),
-        ...sortClustersByKey(satellites),
-      ];
+      // 발견 횟수 ↓ → 동률 가나다 (충돌·위성 구분 없이)
+      group.clusters = sortClustersByFindingsThenKey(absorbed);
       continue;
     }
-    group.clusters = sortClustersByKey(
+    group.clusters = sortClustersByFindingsThenKey(
       normalizeSpacingClusters(group.clusters).filter(isRealSpacingConflict),
     );
   }
@@ -332,14 +366,14 @@ export function groupSortAndFillSatellites(clusters, rawByKey) {
       singles = { type: /** @type {const} */ ('single'), clusters: [] };
       groups.push(singles);
     }
-    singles.clusters = sortClustersByKey(
+    singles.clusters = sortClustersByFindingsThenKey(
       normalizeSpacingClusters([
         ...singles.clusters,
         ...demoted,
       ])
         .filter(isRealSpacingConflict)
         .filter((c) => !isUnifyListDroppedMonoJosaCluster(c))
-        .filter((c) => !isUnifyJosaPlusPredicateKey(c.key))
+        .filter((c) => !isUnifyJosaGluedNoiseKey(c.key))
         .filter((c) => !isUnifyListDroppedMonoSlotCluster(c)),
     );
   }
@@ -350,14 +384,14 @@ export function groupSortAndFillSatellites(clusters, rawByKey) {
         // 숫자·조사+용언 affix 계열은 유지하지 않음
         if (
           isExcludedSeriesAffix(g.affix) ||
-          isUnifyJosaPlusPredicateKey(g.affix)
+          isUnifyJosaGluedNoiseKey(g.affix, { asSeriesAffix: true })
         ) {
           return false;
         }
         g.clusters = g.clusters.filter(
           (c) =>
             !isUnifyListDroppedMonoJosaCluster(c) &&
-            !isUnifyJosaPlusPredicateKey(c.key) &&
+            !isUnifyJosaGluedNoiseKey(c.key) &&
             !isExcludedSeriesSlotFiller(c, g.affix, g.affixType),
         );
         return shouldKeepSeriesGroup(g.clusters);
@@ -365,7 +399,7 @@ export function groupSortAndFillSatellites(clusters, rawByKey) {
       g.clusters = g.clusters.filter(
         (c) =>
           !isUnifyListDroppedMonoJosaCluster(c) &&
-          !isUnifyJosaPlusPredicateKey(c.key) &&
+          !isUnifyJosaGluedNoiseKey(c.key) &&
           !isUnifyListDroppedMonoSlotCluster(c),
       );
       return g.clusters.length > 0;

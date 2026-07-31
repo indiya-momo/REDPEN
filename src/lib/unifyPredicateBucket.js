@@ -265,8 +265,176 @@ export function isUnifyJosaPlusPredicateKey(keyOrAffix, opts = {}) {
 }
 
 /**
- * 목록 전 구간에서 조사+용언 패턴 제거.
- * `@을하다` 계열·`역할을하다`·`금리인상을보자` 등.
+ * 조사 바로 뒤가 명사 꼬리인지 (용언 꼬리 제외, 한글 2음절+).
+ * @param {string} tail
+ */
+export function isNounTailHeuristic(tail) {
+  const t = hangulKey(tail);
+  if (hangulSyllableCount(t) < 2) return false;
+  if (isPredicateTailHeuristic(t)) return false;
+  return true;
+}
+
+/**
+ * `명사+조사` 계열 affix용 — 끝이 격조사·보조사인 경우.
+ * 키 전체에 쓸 때는 이/가 등 어휘 끝음절 오탐이 커서 STRICT만 쓴다.
+ * @type {readonly string[]}
+ */
+const NOUN_PLUS_JOSA_ENDINGS_STRICT = Object.freeze(
+  [
+    '에서부터',
+    '에게서',
+    '으로부터',
+    '으로서',
+    '으로써',
+    '에서는',
+    '에서도',
+    '에서',
+    '에도',
+    '에게',
+    '한테',
+    '으로',
+    '로서',
+    '로써',
+    '부터',
+    '까지',
+    '처럼',
+    '만큼',
+    '대로',
+    '을',
+    '를',
+    '은',
+    '는',
+  ].toSorted((a, b) => b.length - a.length || a.localeCompare(b, 'ko')),
+);
+
+/** 계열 affix(`경제가@`)용 — 이/가 등 포함 */
+const NOUN_PLUS_JOSA_ENDINGS_AFFIX = Object.freeze(
+  [
+    ...NOUN_PLUS_JOSA_ENDINGS_STRICT,
+    '이',
+    '가',
+    '의',
+    '에',
+    '와',
+    '과',
+    '도',
+    '만',
+    '로',
+    '께',
+  ].toSorted((a, b) => b.length - a.length || a.localeCompare(b, 'ko')),
+);
+
+/** `@`+조사+명사(어간 없음) — 명사 첫음절과 겹치는 이/가 등은 제외 */
+const BARE_JOSA_PLUS_NOUN = new Set([
+  '을',
+  '를',
+  '은',
+  '는',
+  '에서',
+  '에도',
+  '에게',
+  '한테',
+  '으로',
+  '로서',
+  '로써',
+  '부터',
+  '까지',
+  '처럼',
+  '만큼',
+  '대로',
+  '에서부터',
+  '에게서',
+  '으로부터',
+  '으로서',
+  '으로써',
+  '에서는',
+  '에서도',
+]);
+
+/**
+ * `@`+조사+명사 — 예: 을시장·가치를평가.
+ * @param {string} keyOrAffix
+ * @returns {{ stem: string, josa: string, tail: string } | null}
+ */
+export function parseUnifyJosaPlusNoun(keyOrAffix) {
+  const h = hangulKey(keyOrAffix);
+  if (h.length < 3) return null;
+
+  for (const josa of JOSA_BEFORE_PREDICATE) {
+    const maxTail = h.length - josa.length;
+    for (let tailLen = maxTail; tailLen >= 2; tailLen--) {
+      const tail = h.slice(-tailLen);
+      const before = h.slice(0, -tailLen);
+      if (!before.endsWith(josa)) continue;
+      const stem = before.slice(0, -josa.length);
+      if (stem && hangulSyllableCount(stem) < 2) continue;
+      if (!isNounTailHeuristic(tail)) continue;
+      // @을시장 — 가/이로 시작하는 명사(가치·이상) 오탐 방지
+      if (!stem && !BARE_JOSA_PLUS_NOUN.has(josa)) continue;
+      return { stem, josa, tail };
+    }
+  }
+  return null;
+}
+
+/**
+ * 명사+조사(+끝) — 계열 `시장을@`·`경제가@` 등.
+ * @param {string} keyOrAffix
+ * @param {{ asSeriesAffix?: boolean }} [opts]
+ * @returns {{ stem: string, josa: string } | null}
+ */
+export function parseUnifyNounPlusJosa(keyOrAffix, opts = {}) {
+  const h = hangulKey(keyOrAffix);
+  if (h.length < 3) return null;
+  const endings = opts.asSeriesAffix
+    ? NOUN_PLUS_JOSA_ENDINGS_AFFIX
+    : NOUN_PLUS_JOSA_ENDINGS_STRICT;
+  for (const josa of endings) {
+    if (!h.endsWith(josa) || h.length <= josa.length) continue;
+    const stem = h.slice(0, -josa.length);
+    if (hangulSyllableCount(stem) < 2) continue;
+    if (isPredicateTailHeuristic(stem)) continue;
+    return { stem, josa };
+  }
+  return null;
+}
+
+/**
+ * `@`+조사+명사 또는 어간+조사+명사.
+ * @param {string} keyOrAffix
+ */
+export function isUnifyJosaPlusNounKey(keyOrAffix) {
+  return parseUnifyJosaPlusNoun(keyOrAffix) != null;
+}
+
+/**
+ * 명사+조사 — `시장을@` 형태.
+ * @param {string} keyOrAffix
+ * @param {{ asSeriesAffix?: boolean }} [opts]
+ */
+export function isUnifyNounPlusJosaKey(keyOrAffix, opts = {}) {
+  return parseUnifyNounPlusJosa(keyOrAffix, opts) != null;
+}
+
+/**
+ * 조사 끼인 띄움 잡음 — 용언·명사 패턴 모두.
+ * @param {string} keyOrAffix
+ * @param {{
+ *   isPredicateTail?: (tail: string) => boolean,
+ *   stdictPredicateKeys?: Set<string> | Iterable<string>,
+ *   asSeriesAffix?: boolean,
+ * }} [opts]
+ */
+export function isUnifyJosaGluedNoiseKey(keyOrAffix, opts = {}) {
+  if (isUnifyJosaPlusPredicateKey(keyOrAffix, opts)) return true;
+  if (isUnifyJosaPlusNounKey(keyOrAffix)) return true;
+  if (isUnifyNounPlusJosaKey(keyOrAffix, opts)) return true;
+  return false;
+}
+
+/**
+ * 목록 전 구간에서 조사+용언·조사+명사·명사+조사 패턴 제거.
  * @param {import('./unifyCandidateGrouping.js').ClusterGroup[]} groups
  * @param {{
  *   isPredicateTail?: (tail: string) => boolean,
@@ -277,7 +445,7 @@ export function isUnifyJosaPlusPredicateKey(keyOrAffix, opts = {}) {
 export function dropJosaPlusPredicateFromGroups(groups, opts = {}) {
   if (!groups?.length) return groups;
 
-  const dropKey = (key) => isUnifyJosaPlusPredicateKey(key, opts);
+  const dropKey = (key) => isUnifyJosaGluedNoiseKey(key, opts);
 
   /** @type {import('./unifyCandidateGrouping.js').ClusterGroup[]} */
   const next = [];
@@ -287,7 +455,6 @@ export function dropJosaPlusPredicateFromGroups(groups, opts = {}) {
       if (dropKey(group.affix)) continue;
       const clusters = group.clusters.filter((c) => !dropKey(c.key));
       if (clusters.length === 0) continue;
-      // 계열이 너무 작아지면 단일로 내리지 않고 버림(조사+용언 잔여 방지)
       const conflicts = clusters.filter((c) => c.kind !== 'single-form');
       if (conflicts.length === 0 && clusters.length < 2) continue;
       next.push({ ...group, clusters });
