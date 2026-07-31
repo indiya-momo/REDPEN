@@ -7,6 +7,7 @@ import {
   extractPrefixes,
   extractSuffixes,
 } from './unifyCandidateSeriesTrend.js';
+import { isExcludedSeriesSlotFiller } from './unifyListStemTriage.js';
 
 /**
  * @typedef {import('./unifyCandidateDiscover.js').UnifySpacingCluster} UnifySpacingCluster
@@ -182,6 +183,8 @@ function collectSatellitesForAffix(rawByKey, usedKeys, affixType, affix) {
     const satellite = buildSingleFormCluster(key, acc, affixType, affix);
     if (!satellite) continue;
     if (!matchesSeriesAffix(satellite, affix, affixType)) continue;
+    // 금융업·기술 58처럼 @ 채움 단음절·숫자 위성은 넣지 않음
+    if (isExcludedSeriesSlotFiller(satellite, affix, affixType)) continue;
     satellites.push(satellite);
     usedKeys.add(key);
   }

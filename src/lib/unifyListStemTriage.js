@@ -74,6 +74,111 @@ export function seriesSlotFiller(cluster, affix, affixType) {
 }
 
 /**
+ * 계열 `@` 채움말이 목록 제외 대상인지.
+ * - 한글 단음절: 금융업(업)·금융학(학)
+ * - 숫자 포함: 기술58·「기술 58」
+ * @param {{ key?: string, variants?: string[] }} cluster
+ * @param {string} affix
+ * @param {'prefix' | 'suffix'} affixType
+ */
+export function isExcludedSeriesSlotFiller(cluster, affix, affixType) {
+  const raw = seriesSlotFillerRaw(cluster, affix, affixType);
+  if (!raw) return false;
+  if (/\d/.test(raw)) return true;
+  return hangulOnly(raw).length < 2;
+}
+
+/** @deprecated 이름만 호환 — {@link isExcludedSeriesSlotFiller} */
+export function isMonosyllableSeriesSlotFiller(cluster, affix, affixType) {
+  return isExcludedSeriesSlotFiller(cluster, affix, affixType);
+}
+
+/**
+ * 띄움에 순수 숫자 어절이 있거나, 「2음절+ · (단음절|숫자)」패턴이면 처음부터 목록 제외.
+ * 예: 금융 업·기술 58·가 시장
+ * @param {{ key?: string, variants?: string[] }} cluster
+ */
+export function isUnifyListDroppedMonoSlotCluster(cluster) {
+  for (const variant of cluster?.variants ?? []) {
+    const words = String(variant)
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean);
+    // 기술 58 · 58 은행 — @/어절에 순수 숫자
+    if (words.some((w) => /^\d+$/.test(w))) return true;
+    if (words.length !== 2) continue;
+    const aH = hangulOnly(words[0]);
+    const bH = hangulOnly(words[1]);
+    const aHasDigit = /\d/.test(words[0]);
+    const bHasDigit = /\d/.test(words[1]);
+    if (aH.length >= 2 && (bHasDigit || bH.length === 1)) return true;
+    if (bH.length >= 2 && (aHasDigit || aH.length === 1)) return true;
+  }
+  return false;
+}
+
+/**
+ * seriesSlotFiller와 같되 숫자는 남김 (`@` 숫자 판별용).
+ * @param {{ key?: string, variants?: string[] }} cluster
+ * @param {string} affix
+ * @param {'prefix' | 'suffix'} affixType
+ * @returns {string}
+ */
+function seriesSlotFillerRaw(cluster, affix, affixType) {
+  const affixH = hangulOnly(affix);
+  if (!affixH) return '';
+
+  const spaced = (cluster?.variants ?? []).find((v) => /\s/.test(String(v)));
+  if (spaced) {
+    const words = String(spaced)
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean);
+    if (affixType === 'prefix' && hangulOnly(words[0]) === affixH && words.length >= 2) {
+      return words.slice(1).join('').replace(/[^\uAC00-\uD7A3\d]/gu, '');
+    }
+    if (
+      affixType === 'suffix' &&
+      hangulOnly(words[words.length - 1]) === affixH &&
+      words.length >= 2
+    ) {
+      return words
+        .slice(0, -1)
+        .join('')
+        .replace(/[^\uAC00-\uD7A3\d]/gu, '');
+    }
+  }
+
+  const key = String(cluster?.key ?? '')
+    .normalize('NFC')
+    .replace(/[^\uAC00-\uD7A3\d]/gu, '');
+  const keyH = hangulOnly(key);
+  if (affixType === 'prefix' && keyH.startsWith(affixH) && key.length > affix.length) {
+    // 기술58 / 기술58은행 — affix 뒤 잔여(숫자 포함)
+    if (key.startsWith(affix)) return key.slice(affix.length);
+    // affix는 한글만 비교됐을 때 키 앞 한글 길이만큼
+    let i = 0;
+    let h = 0;
+    while (i < key.length && h < affixH.length) {
+      if (/[\uAC00-\uD7A3]/.test(key[i])) h += 1;
+      i += 1;
+    }
+    return key.slice(i);
+  }
+  if (affixType === 'suffix' && keyH.endsWith(affixH) && key.length > affix.length) {
+    if (key.endsWith(affix)) return key.slice(0, -affix.length);
+    let i = key.length;
+    let h = 0;
+    while (i > 0 && h < affixH.length) {
+      i -= 1;
+      if (/[\uAC00-\uD7A3]/.test(key[i])) h += 1;
+    }
+    return key.slice(0, i);
+  }
+  return '';
+}
+
+/**
  * `@` 채움말 한 표 → 용언(보조 포함) / 명사 / 집계 제외
  * @param {{ key?: string, variants?: string[], auxReview?: { status?: string } | null }} cluster
  * @param {string} affix

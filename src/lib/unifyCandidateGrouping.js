@@ -12,6 +12,7 @@ import {
   extractPrefixes,
   extractSuffixes,
   SERIES_MIN_CLUSTER_COUNT,
+  isExcludedSeriesAffix,
 } from './unifyCandidateSeriesTrend.js';
 import { normalizeSpacingClusters } from './unifyCandidateCollapse.js';
 import {
@@ -23,8 +24,14 @@ import { attachAuxiliaryReviewHints } from './unifyAuxReview.js';
 import {
   isUnifyPredicateCluster,
   looksLikePredicateKey,
+  dropJosaPlusPredicateFromGroups,
+  isUnifyJosaPlusPredicateKey,
 } from './unifyPredicateBucket.js';
-import { markSeriesBySlotMajority } from './unifyListStemTriage.js';
+import {
+  markSeriesBySlotMajority,
+  isExcludedSeriesSlotFiller,
+  isUnifyListDroppedMonoSlotCluster,
+} from './unifyListStemTriage.js';
 
 /**
  * @typedef {import('./unifyCandidateDiscover.js').UnifySpacingCluster} UnifySpacingCluster
@@ -158,11 +165,14 @@ export function groupAndSortClusters(clusters, opts = {}) {
   for (let i = 0; i < sorted.length; i++) {
     for (const p of extractPrefixes(sorted[i].key, sorted[i].variants)) {
       if (!clusterBelongsToSeriesAffix(sorted[i], p, 'prefix')) continue;
+      // 금융@ — @ 채움이 단음절(금융업·금융학)이면 처음부터 넣지 않음
+      if (isExcludedSeriesSlotFiller(sorted[i], p, 'prefix')) continue;
       if (!prefixMembers.has(p)) prefixMembers.set(p, new Set());
       prefixMembers.get(p).add(i);
     }
     for (const s of extractSuffixes(sorted[i].key, sorted[i].variants)) {
       if (!clusterBelongsToSeriesAffix(sorted[i], s, 'suffix')) continue;
+      if (isExcludedSeriesSlotFiller(sorted[i], s, 'suffix')) continue;
       if (!suffixMembers.has(s)) suffixMembers.set(s, new Set());
       suffixMembers.get(s).add(i);
     }
@@ -180,6 +190,10 @@ export function groupAndSortClusters(clusters, opts = {}) {
   /** @type {SeriesCandidate[]} */
   const candidates = [];
   for (const [affix, set] of prefixMembers) {
+    // 숫자·조사+용언 affix / 계열 최소 음절 미달 affix는 후보에서 제외
+    if (isExcludedSeriesAffix(affix) || isUnifyJosaPlusPredicateKey(affix)) {
+      continue;
+    }
     const members = [...set];
     if (members.length < minSeriesMembers) continue;
     candidates.push({
@@ -190,6 +204,9 @@ export function groupAndSortClusters(clusters, opts = {}) {
     });
   }
   for (const [affix, set] of suffixMembers) {
+    if (isExcludedSeriesAffix(affix) || isUnifyJosaPlusPredicateKey(affix)) {
+      continue;
+    }
     const members = [...set];
     if (members.length < minSeriesMembers) continue;
     candidates.push({
@@ -260,10 +277,14 @@ function shouldKeepSeriesGroup(clusters) {
  */
 export function groupSortAndFillSatellites(clusters, rawByKey) {
   // 1) 충돌만으로 @ 후보 형성 (1개도 잠정 허용 → 위성 붙인 뒤 유지 여부 결정)
-  //    어간+뿐/을/를/은/는/이/가 단음절만 다른 충돌은 목록에서 제외
+  //    · 어간+뿐/을/를/은/는/이/가 단음절만 다른 충돌은 목록에서 제외
+  //    · @+조사+용언(을하다·역할을하다)도 목록에 넣지 않음
+  //    · 금융 업·금융 학처럼 @ 채움이 단음절인 표는 처음부터 제외
   const normalized = normalizeSpacingClusters(clusters)
     .filter(isRealSpacingConflict)
-    .filter((c) => !isUnifyListDroppedMonoJosaCluster(c));
+    .filter((c) => !isUnifyListDroppedMonoJosaCluster(c))
+    .filter((c) => !isUnifyJosaPlusPredicateKey(c.key))
+    .filter((c) => !isUnifyListDroppedMonoSlotCluster(c));
   let groups = groupAndSortClusters(normalized, { minSeriesMembers: 1 });
 
   // 2) @ 후보에 1회 위성 편입 (세계경제만 있어도 세계 시장 위성 가능)
@@ -275,12 +296,17 @@ export function groupSortAndFillSatellites(clusters, rawByKey) {
   for (const group of groups) {
     if (group.type === 'series') {
       // 위성 편입 후 — 짧은 공통 단위로 합침 (둔화다·둔화라→둔화, 부양금·부양책→부양)
-      const absorbed = normalizeSpacingClusters(group.clusters).map(
-        (cluster) =>
+      // @ 채움 단음절(금융업·금융학)은 계열·목록에 남기지 않음
+      const absorbed = normalizeSpacingClusters(group.clusters)
+        .filter(
+          (c) =>
+            !isExcludedSeriesSlotFiller(c, group.affix, group.affixType),
+        )
+        .map((cluster) =>
           isRealSpacingConflict(cluster)
             ? { ...cluster, kind: /** @type {const} */ ('conflict') }
             : cluster,
-      );
+        );
       const conflicts = absorbed.filter(isRealSpacingConflict);
       const satellites = absorbed.filter((c) => !isRealSpacingConflict(c));
       if (!shouldKeepSeriesGroup([...conflicts, ...satellites])) {
@@ -312,20 +338,35 @@ export function groupSortAndFillSatellites(clusters, rawByKey) {
         ...demoted,
       ])
         .filter(isRealSpacingConflict)
-        .filter((c) => !isUnifyListDroppedMonoJosaCluster(c)),
+        .filter((c) => !isUnifyListDroppedMonoJosaCluster(c))
+        .filter((c) => !isUnifyJosaPlusPredicateKey(c.key))
+        .filter((c) => !isUnifyListDroppedMonoSlotCluster(c)),
     );
   }
 
   const kept = sortClusterGroups(
     groups.filter((g) => {
       if (g.type === 'series') {
+        // 숫자·조사+용언 affix 계열은 유지하지 않음
+        if (
+          isExcludedSeriesAffix(g.affix) ||
+          isUnifyJosaPlusPredicateKey(g.affix)
+        ) {
+          return false;
+        }
         g.clusters = g.clusters.filter(
-          (c) => !isUnifyListDroppedMonoJosaCluster(c),
+          (c) =>
+            !isUnifyListDroppedMonoJosaCluster(c) &&
+            !isUnifyJosaPlusPredicateKey(c.key) &&
+            !isExcludedSeriesSlotFiller(c, g.affix, g.affixType),
         );
         return shouldKeepSeriesGroup(g.clusters);
       }
       g.clusters = g.clusters.filter(
-        (c) => !isUnifyListDroppedMonoJosaCluster(c),
+        (c) =>
+          !isUnifyListDroppedMonoJosaCluster(c) &&
+          !isUnifyJosaPlusPredicateKey(c.key) &&
+          !isUnifyListDroppedMonoSlotCluster(c),
       );
       return g.clusters.length > 0;
     }),
@@ -341,7 +382,10 @@ export function groupSortAndFillSatellites(clusters, rawByKey) {
     group.clusters = group.clusters.map((c) => byKey.get(c.key) || c);
   }
   // `@` 채움말 다수결(보조·용언 vs 명사)로 계열 dictPos — 그다음 용언을 맨 아래로
-  return splitPredicateSingles(markSeriesBySlotMajority(kept));
+  // 용언 구간: @+조사+용언(을하다·역할을하다) 제외
+  return dropJosaPlusPredicateFromGroups(
+    splitPredicateSingles(markSeriesBySlotMajority(kept)),
+  );
 }
 
 /**

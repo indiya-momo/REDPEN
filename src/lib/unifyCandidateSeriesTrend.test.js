@@ -7,6 +7,7 @@ import {
   calcSeriesTrend,
   buildSeriesHints,
   SERIES_PREFIX_MIN_HANGUL,
+  isExcludedSeriesAffix,
 } from './unifyCandidateSeriesTrend.js';
 
 /** @param {Partial<import('./unifyCandidateDiscover.js').UnifySpacingCluster>} overrides */
@@ -21,6 +22,16 @@ function makeCluster(overrides) {
     ...overrides,
   };
 }
+
+describe('isExcludedSeriesAffix', () => {
+  it('순수 숫자·단음절은 제외', () => {
+    expect(isExcludedSeriesAffix('2024')).toBe(true);
+    expect(isExcludedSeriesAffix('12')).toBe(true);
+    expect(isExcludedSeriesAffix('가')).toBe(true);
+    expect(isExcludedSeriesAffix('가치')).toBe(false);
+    expect(isExcludedSeriesAffix('시장')).toBe(false);
+  });
+});
 
 describe('extractPrefixes', () => {
   it('한글 2~4음절 접두어를 긴 것부터 반환', () => {

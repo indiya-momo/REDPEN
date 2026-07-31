@@ -15,6 +15,7 @@ import {
   prepareUnifyScanText,
   splitUnifyScanLines,
   stripTrailingJosa,
+  stripUnifyPeripheralDigits,
   unifySpacingKey,
 } from './unifyCandidateDiscover.js';
 import { normalizeSpacingClusters } from './unifyCandidateCollapse.js';
@@ -23,6 +24,18 @@ import { normalizeSpacingClusters } from './unifyCandidateCollapse.js';
 function discoverNormalized(pageTexts) {
   return normalizeSpacingClusters(discoverSpacingUnifyCandidates(pageTexts));
 }
+
+describe('stripUnifyPeripheralDigits', () => {
+  it('앞 숫자 어절·붙임 숫자를 떼어 노동시장으로 만든다', () => {
+    expect(stripUnifyPeripheralDigits('174 노동 시장')).toBe('노동 시장');
+    expect(stripUnifyPeripheralDigits('174노동시장')).toBe('노동시장');
+    expect(stripUnifyPeripheralDigits('노동시장175')).toBe('노동시장');
+  });
+
+  it('남은 한글이 짧으면 앞 숫자를 유지한다', () => {
+    expect(stripUnifyPeripheralDigits('2024년')).toBe('2024년');
+  });
+});
 
 describe('splitUnifyScanLines', () => {
   it('줄마다 자르고 줄 경계는 이어 붙이지 않는다', () => {
@@ -96,7 +109,7 @@ describe('stripTrailingUnifyAffixes', () => {
 });
 
 describe('stripTrailingJosa', () => {
-  it('유틸: 경제왕국의를 경제왕국으로 만든다(파이프라인에서는 미사용)', () => {
+  it('유틸: 경제왕국의를 경제왕국으로 만든다(스캔 키에도 사용)', () => {
     expect(stripTrailingJosa('경제왕국')).toBe('경제왕국');
     expect(stripTrailingJosa('경제왕국의')).toBe('경제왕국');
     expect(stripTrailingJosa('경제왕국을')).toBe('경제왕국');
@@ -171,7 +184,57 @@ describe('discoverSpacingUnifyCandidates', () => {
     expect(hit.occurrencesByVariant['경제 성장'][0].pageNum).toBe(1);
   });
 
-  it('짧은 단위가 있으면 조사 붙은 긴 키를 흡수한다(조사는 떼지 않음)', () => {
+  it('조사만 다른 붉은 표시가·붉은표시를 은 같은 후보로 묶는다', () => {
+    const clusters = discoverSpacingUnifyCandidates([
+      {
+        pageNum: 1,
+        textLayout: '붉은 표시가 나타난다. 다른 문장. 붉은표시를 본다.',
+      },
+    ]);
+    const hit = clusters.find((c) => c.key === '붉은표시');
+    expect(hit).toBeTruthy();
+    expect(hit.variants).toEqual(
+      expect.arrayContaining(['붉은표시', '붉은 표시']),
+    );
+  });
+
+  it('줄번호·각주 숫자가 붙어도 노동시장은 한 후보로 합친다', () => {
+    const clusters = discoverSpacingUnifyCandidates([
+      {
+        pageNum: 20,
+        textLayout: '174 노동 시장 구조를 본다. 174노동시장도 있다.',
+      },
+      {
+        pageNum: 21,
+        textLayout: '175 노동 시장을 말한다. 175노동시장을 본다.',
+      },
+    ]);
+    const hits = clusters.filter((c) => c.key === '노동시장');
+    expect(hits).toHaveLength(1);
+    expect(hits[0].variants).toEqual(
+      expect.arrayContaining(['노동시장', '노동 시장']),
+    );
+    expect(hits[0].totalCount).toBeGreaterThanOrEqual(4);
+    expect(clusters.some((c) => c.key.startsWith('174'))).toBe(false);
+    expect(clusters.some((c) => c.key.startsWith('175'))).toBe(false);
+  });
+
+  it('5토큰 이상 합성어도 붙임·띄움 이형태를 잡는다', () => {
+    const clusters = discoverSpacingUnifyCandidates([
+      {
+        pageNum: 1,
+        textLayout:
+          '남북한경제협력사업 추진과 남북한 경제 협력 사업 검토',
+      },
+    ]);
+    const hit = clusters.find((c) => c.key === '남북한경제협력사업');
+    expect(hit).toBeTruthy();
+    expect(hit.variants).toEqual(
+      expect.arrayContaining(['남북한경제협력사업', '남북한 경제 협력 사업']),
+    );
+  });
+
+  it('짧은 단위가 있으면 조사 붙은 긴 키를 흡수한다', () => {
     const clusters = discoverNormalized([
       {
         pageNum: 1,
