@@ -14,6 +14,9 @@ import {
 import {
   buildPageText,
   dedupeOverlayTextItems,
+  hangulSoftWrapSeparator,
+  rejoinHangulSoftLineBreaks,
+  isLikelyHangulEojeolBoundary,
   shouldInsertLayoutSpaceBetweenPdfItems,
   shouldInsertSpaceBetweenPdfItems,
 } from './pdfPageText.js';
@@ -21,6 +24,9 @@ import {
 export {
   buildPageText,
   dedupeOverlayTextItems,
+  hangulSoftWrapSeparator,
+  rejoinHangulSoftLineBreaks,
+  isLikelyHangulEojeolBoundary,
   shouldInsertLayoutSpaceBetweenPdfItems,
   shouldInsertSpaceBetweenPdfItems,
 };

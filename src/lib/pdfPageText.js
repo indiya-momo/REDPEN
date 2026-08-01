@@ -12,22 +12,256 @@ import { splitSpreadColumns } from './spreadColumnSplit.js';
  */
 
 /** @typedef {{ item: import('pdfjs-dist').TextItem, itemIndex: number }} TextEntry */
-/** @typedef {{ y: number, entries: TextEntry[] }} BuiltLine */
+/**
+ * @typedef {{
+ *   y: number,
+ *   entries: TextEntry[],
+ *   text: string,
+ *   textLayout: string,
+ *   lineRefs: TextItemRef[],
+ *   lineRefsLayout: TextItemRef[],
+ *   startFont: number,
+ *   endFont: number,
+ * }} BuiltLine
+ */
+
+/** @param {string} ch */
+export function isHangulSyllableChar(ch) {
+  return typeof ch === 'string' && ch.length > 0 && ch >= '\uAC00' && ch <= '\uD7A3';
+}
 
 /** @param {string} s */
 function endsWithHangulSyllable(s) {
   const t = String(s).trimEnd();
   if (!t) return false;
-  const ch = t[t.length - 1];
-  return ch >= '\uAC00' && ch <= '\uD7A3';
+  return isHangulSyllableChar(t[t.length - 1]);
 }
 
 /** @param {string} s */
 function startsWithHangulSyllable(s) {
   const t = String(s).trimStart();
   if (!t) return false;
-  const ch = t[0];
-  return ch >= '\uAC00' && ch <= '\uD7A3';
+  return isHangulSyllableChar(t[0]);
+}
+
+/** soft-wrap 다음 줄이 인용·괄호로 시작하면 줄바꿈 유지 */
+const SOFT_BREAK_KEEP_NEXT = new Set([
+  '"',
+  "'",
+  '\u201c',
+  '\u201d',
+  '\u2018',
+  '\u2019',
+  '(',
+  '[',
+  '{',
+  '「',
+  '『',
+  '〈',
+  '《',
+]);
+
+/**
+ * 줄끝이 조사·어미 경계로 보이면 soft wrap 하지 않음.
+ * 단음절 `다`만 보면 `바다`도 막히거나, 반대로 어간 음절까지 과차단되므로
+ * 2~3음절 접미 + 좁은 조사 + (다/요/까 + 다음 줄 어절) 조합을 쓴다.
+ */
+const HANGUL_LINE_END_SUFFIXES = [
+  '습니다',
+  '입니다',
+  '합니다',
+  '됩니다',
+  '습니까',
+  '는다',
+  '한다',
+  '된다',
+  '인다',
+  '운다',
+  '린다',
+  '진다',
+  '았다',
+  '었다',
+  '였다',
+  '했다',
+  '까요',
+  '네요',
+  '군요',
+  '구나',
+  '는데',
+  '니까',
+  '면서',
+  '지만',
+  '도록',
+  '으러',
+  '으로',
+  '로서',
+  '로써',
+  '부터',
+  '까지',
+  '처럼',
+  '만큼',
+  '마저',
+  '조차',
+  '이다',
+];
+
+/** 단독으로도 어절 끝 조사로 보는 음절(종결 `다`·연결 `고` 등은 여기 넣지 않음) */
+const HANGUL_NARROW_JOSA = new Set(
+  Array.from('은는이가을를의만와과도'),
+);
+
+/** 종결·의문 후보 — 다음 줄이 새 어절로 보일 때만 줄바꿈 유지 */
+const HANGUL_CLOSING_TAIL = new Set(['다', '요', '까', '네']);
+
+/**
+ * @param {string} leftText
+ * @param {string} rightLine
+ */
+export function isLikelyHangulEojeolBoundary(leftText, rightLine) {
+  const left = String(leftText ?? '').replace(INLINE_SPACE_RE_END, '');
+  const rightRaw = String(rightLine ?? '');
+  let ri = 0;
+  while (ri < rightRaw.length && isInlineSpaceChar(rightRaw[ri])) ri += 1;
+  const right = rightRaw.slice(ri);
+  if (!left || !right) return true;
+
+  for (const suf of HANGUL_LINE_END_SUFFIXES) {
+    if (left.endsWith(suf)) return true;
+  }
+
+  const L = left[left.length - 1];
+  if (HANGUL_NARROW_JOSA.has(L)) return true;
+
+  const R = right[0];
+  // 명사 끝 등 + 다음 줄이 조사로만/조사+공백으로 시작 (바다\n가 …)
+  if (
+    isHangulSyllableChar(L) &&
+    HANGUL_NARROW_JOSA.has(R) &&
+    (right.length === 1 ||
+      isInlineSpaceChar(right[1]) ||
+      !isHangulSyllableChar(right[1]))
+  ) {
+    return true;
+  }
+
+  // 종결 후보 + 다음 줄이 2음절 이상 한글 어절 (보인다\n그래서)
+  if (
+    HANGUL_CLOSING_TAIL.has(L) &&
+    right.length >= 2 &&
+    isHangulSyllableChar(R) &&
+    isHangulSyllableChar(right[1])
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
+/** soft wrap으로 볼 y 간격(포인트): fontSize 배수 */
+const SOFT_WRAP_DY_MIN_RATIO = 0.4;
+const SOFT_WRAP_DY_MAX_RATIO = 1.85;
+/** 짧은 한 줄(쪽번호·단음절)은 soft wrap으로 붙이지 않음 — 연속 soft-wrap 조각(2~3자)은 허용 */
+const SOFT_WRAP_MIN_LEFT_CHARS = 2;
+
+/**
+ * soft-wrap 판별용 가로 공백(개행 제외).
+ * ASCII 공백·탭·NBSP + Thin/Ideographic 등 유니코드 가로 공백.
+ * `\s` 전체는 `\\n`을 포함하므로 쓰지 않는다.
+ */
+const INLINE_SPACE_RE = /[\t \u00A0\u1680\u2000-\u200A\u202F\u205F\u3000\u200B]/;
+const INLINE_SPACE_RE_END = /[\t \u00A0\u1680\u2000-\u200A\u202F\u205F\u3000\u200B]+$/u;
+
+/** @param {string} ch */
+function isInlineSpaceChar(ch) {
+  return typeof ch === 'string' && ch.length === 1 && INLINE_SPACE_RE.test(ch);
+}
+
+/**
+ * 한글 음절 사이 soft wrap(`자\\n리`)만 제거. 줄끝 공백이 있으면 \\n만 지워 어절 경계 유지.
+ * @param {string} text
+ * @param {TextItemRef[]} [itemRefs]
+ * @returns {{ text: string, itemRefs: TextItemRef[] }}
+ */
+export function rejoinHangulSoftLineBreaks(text, itemRefs = []) {
+  const src = String(text ?? '');
+  if (!src.includes('\n')) {
+    return { text: src, itemRefs: itemRefs.map((r) => ({ ...r })) };
+  }
+
+  let out = '';
+  /** @type {number[]} 원본에서 삭제된 인덱스(오름차순) */
+  const removed = [];
+  let i = 0;
+
+  while (i < src.length) {
+    const ch = src[i];
+    if (ch !== '\n') {
+      out += ch;
+      i += 1;
+      continue;
+    }
+
+    let left = i - 1;
+    while (left >= 0 && isInlineSpaceChar(src[left])) {
+      left -= 1;
+    }
+    const L = left >= 0 ? src[left] : '';
+
+    let right = i + 1;
+    while (right < src.length && isInlineSpaceChar(src[right])) {
+      right += 1;
+    }
+
+    if (right >= src.length || src[right] === '\n') {
+      out += '\n';
+      i += 1;
+      continue;
+    }
+
+    const R = src[right];
+    if (SOFT_BREAK_KEEP_NEXT.has(R)) {
+      out += '\n';
+      i += 1;
+      continue;
+    }
+
+    if (isHangulSyllableChar(L) && isHangulSyllableChar(R)) {
+      if (isLikelyHangulEojeolBoundary(out, src.slice(right))) {
+        out += '\n';
+        i += 1;
+        continue;
+      }
+      // \\n 및 다음 줄 머리 공백 삭제. 줄끝 공백은 이미 out에 있음.
+      for (let p = i; p < right; p += 1) removed.push(p);
+      i = right;
+      continue;
+    }
+
+    out += '\n';
+    i += 1;
+  }
+
+  const shiftedRefs = shiftItemRefsAfterRemovals(itemRefs, removed);
+  return { text: out, itemRefs: shiftedRefs };
+}
+
+/**
+ * @param {TextItemRef[]} itemRefs
+ * @param {number[]} removedAsc
+ */
+function shiftItemRefsAfterRemovals(itemRefs, removedAsc) {
+  if (!itemRefs.length || !removedAsc.length) {
+    return itemRefs.map((r) => ({ ...r }));
+  }
+  return itemRefs.map((ref) => {
+    let start = ref.start;
+    let end = ref.end;
+    for (const p of removedAsc) {
+      if (p < start) start -= 1;
+      if (p < end) end -= 1;
+    }
+    return { ...ref, start, end };
+  });
 }
 
 /** 조판 자간 수준 gap — 이보다 좁으면 같은 어절로 보고 공백을 넣지 않음 */
@@ -230,9 +464,11 @@ function shouldStartNewTextLine(prev, item) {
  * @param {string} text
  * @param {TextItemRef[]} itemRefs
  * @param {(gap: number, lineH: number, left: string, right: string) => boolean} shouldGapSpace
+ * @param {{ trailingNewline?: boolean }} [opts]
  */
-function appendBuiltLine(entries, text, itemRefs, shouldGapSpace) {
+function appendBuiltLine(entries, text, itemRefs, shouldGapSpace, opts = {}) {
   if (!entries.length) return text;
+  const trailingNewline = opts.trailingNewline !== false;
 
   entries.sort(
     (a, b) => (a.item.transform?.[4] ?? 0) - (b.item.transform?.[4] ?? 0),
@@ -258,8 +494,125 @@ function appendBuiltLine(entries, text, itemRefs, shouldGapSpace) {
       }
     }
   }
-  return `${text}\n`;
+  return trailingNewline ? `${text}\n` : text;
 }
+
+/**
+ * @param {TextEntry[]} entries
+ * @param {(gap: number, lineH: number, left: string, right: string) => boolean} shouldGapSpace
+ * @returns {{ text: string, itemRefs: TextItemRef[] }}
+ */
+function joinLineEntries(entries, shouldGapSpace) {
+  /** @type {TextItemRef[]} */
+  const itemRefs = [];
+  const text = appendBuiltLine(entries, '', itemRefs, shouldGapSpace, {
+    trailingNewline: false,
+  });
+  return { text, itemRefs };
+}
+
+/**
+ * 줄 문자열·refs·폰트를 한 번만 조립해 BuiltLine에 붙인다.
+ * @param {{ y: number, entries: TextEntry[] }} line
+ */
+function materializeBuiltLine(line) {
+  const sorted = [...line.entries].sort(
+    (a, b) => (a.item.transform?.[4] ?? 0) - (b.item.transform?.[4] ?? 0),
+  );
+  const joined = joinLineEntries(sorted, shouldInsertSpaceBetweenPdfItems);
+  const joinedLayout = joinLineEntries(sorted, (gap, lineH) =>
+    shouldInsertLayoutSpaceBetweenPdfItems(gap, lineH),
+  );
+  return {
+    y: line.y,
+    entries: sorted,
+    text: joined.text,
+    textLayout: joinedLayout.text,
+    lineRefs: joined.itemRefs,
+    lineRefsLayout: joinedLayout.itemRefs,
+    startFont: lineFirstFontSize(sorted),
+    endFont: lineFontSize(sorted),
+  };
+}
+
+/**
+ * @param {{ y: number, entries: TextEntry[] }[]} builtLines
+ */
+function materializeBuiltLines(builtLines) {
+  return builtLines.map((line) => materializeBuiltLine(line));
+}
+
+/**
+ * @param {string} leftText — 직전 줄
+ * @param {string} rightLine — 다음 줄
+ * @param {number} leftFont
+ * @param {number} rightFont
+ * @param {{ prevY?: number, nextY?: number, leftLineOnly?: string }} [layout]
+ * @returns {'' | '\n'}
+ */
+export function hangulSoftWrapSeparator(
+  leftText,
+  rightLine,
+  leftFont,
+  rightFont,
+  layout = {},
+) {
+  const left = String(leftText ?? '');
+  const right = String(rightLine ?? '');
+  if (!left || !right) return '\n';
+
+  const fontLo = Math.min(leftFont, rightFont);
+  const fontHi = Math.max(leftFont, rightFont);
+  if (fontLo > 0 && fontHi / fontLo > FONT_LINE_SPLIT_RATIO) return '\n';
+
+  const { prevY, nextY } = layout;
+  if (Number.isFinite(prevY) && Number.isFinite(nextY)) {
+    const dy = prevY - nextY;
+    const ref = Math.max(leftFont, rightFont, 8);
+    if (dy < ref * SOFT_WRAP_DY_MIN_RATIO || dy > ref * SOFT_WRAP_DY_MAX_RATIO) {
+      return '\n';
+    }
+  }
+
+  const leftLine = String(layout.leftLineOnly ?? left);
+  if (
+    Number.isFinite(prevY) &&
+    leftLine.replace(INLINE_SPACE_RE_END, '').length < SOFT_WRAP_MIN_LEFT_CHARS
+  ) {
+    return '\n';
+  }
+
+  let li = left.length - 1;
+  while (li >= 0 && isInlineSpaceChar(left[li])) li -= 1;
+  const L = li >= 0 ? left[li] : '';
+
+  let ri = 0;
+  while (ri < right.length && isInlineSpaceChar(right[ri])) ri += 1;
+  if (ri >= right.length) return '\n';
+  const R = right[ri];
+
+  if (SOFT_BREAK_KEEP_NEXT.has(R)) return '\n';
+  if (isLikelyHangulEojeolBoundary(left, right)) return '\n';
+  if (isHangulSyllableChar(L) && isHangulSyllableChar(R)) return '';
+  return '\n';
+}
+
+/**
+ * @param {TextEntry[]} entries
+ */
+function lineFontSize(entries) {
+  if (!entries.length) return 12;
+  return pdfItemFontSize(entries[entries.length - 1].item);
+}
+
+/**
+ * @param {TextEntry[]} entries
+ */
+function lineFirstFontSize(entries) {
+  if (!entries.length) return 12;
+  return pdfItemFontSize(entries[0].item);
+}
+
 
 /**
  * @param {TextEntry[]} orderedEntries — sourceItems 순서의 부분집합
@@ -288,7 +641,7 @@ function buildBuiltLinesFromEntries(orderedEntries) {
   flush();
 
   builtLines.sort((a, b) => b.y - a.y);
-  return dedupeOverlayBuiltLines(builtLines);
+  return materializeBuiltLines(dedupeOverlayBuiltLines(builtLines));
 }
 
 /**
@@ -327,19 +680,56 @@ export function buildPageText(items) {
   const itemRefs = [];
   /** @type {TextItemRef[]} */
   const itemRefsLayout = [];
-  for (const line of uniqueLines) {
-    text = appendBuiltLine(
-      line.entries,
-      text,
-      itemRefs,
-      shouldInsertSpaceBetweenPdfItems,
-    );
-    textLayout = appendBuiltLine(
-      line.entries,
-      textLayout,
-      itemRefsLayout,
-      (gap, lineH) => shouldInsertLayoutSpaceBetweenPdfItems(gap, lineH),
-    );
+
+  for (let li = 0; li < uniqueLines.length; li += 1) {
+    const line = uniqueLines[li];
+    if (li > 0) {
+      const prev = uniqueLines[li - 1];
+      const softLayout = {
+        prevY: prev.y,
+        nextY: line.y,
+        leftLineOnly: prev.text,
+      };
+      text += hangulSoftWrapSeparator(
+        prev.text,
+        line.text,
+        prev.endFont,
+        line.startFont,
+        softLayout,
+      );
+      textLayout += hangulSoftWrapSeparator(
+        prev.textLayout,
+        line.textLayout,
+        prev.endFont,
+        line.startFont,
+        { ...softLayout, leftLineOnly: prev.textLayout },
+      );
+    }
+
+    const base = text.length;
+    text += line.text;
+    for (const ref of line.lineRefs) {
+      itemRefs.push({
+        start: base + ref.start,
+        end: base + ref.end,
+        itemIndex: ref.itemIndex,
+      });
+    }
+
+    const baseLayout = textLayout.length;
+    textLayout += line.textLayout;
+    for (const ref of line.lineRefsLayout) {
+      itemRefsLayout.push({
+        start: baseLayout + ref.start,
+        end: baseLayout + ref.end,
+        itemIndex: ref.itemIndex,
+      });
+    }
+  }
+
+  if (uniqueLines.length > 0) {
+    text += '\n';
+    textLayout += '\n';
   }
 
   return { text, itemRefs, textLayout, itemRefsLayout };
