@@ -11,6 +11,7 @@ import {
 } from './remoteCache.js';
 import { analyzeLine, clearKiwiAnalyzeCache } from './analyze.js';
 import { clearKiwiInstance, setKiwiServerMode } from './runtime.js';
+import { collectRuleCheckKiwiPrefetchSurfaces } from './prefetchSurfaces.js';
 
 describe('kiwiMorph serverContract', () => {
   it('clampAnalyzeText는 최대 길이를 자른다', () => {
@@ -49,5 +50,16 @@ describe('kiwiMorph remoteCache + analyzeLine', () => {
 
     clearRemoteAnalyzeCache();
     clearKiwiAnalyzeCache();
+  });
+});
+
+describe('collectRuleCheckKiwiPrefetchSurfaces', () => {
+  it('페이지 본문과 줄을 모은다', () => {
+    const surfaces = collectRuleCheckKiwiPrefetchSurfaces([
+      { text: '경제학을 배운다\n초콜렛을 먹는다' },
+    ]);
+    expect(surfaces).toContain('경제학을 배운다\n초콜렛을 먹는다');
+    expect(surfaces).toContain('경제학을 배운다');
+    expect(surfaces).toContain('초콜렛을 먹는다');
   });
 });

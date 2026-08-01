@@ -28,6 +28,10 @@ import { cautionHighlightSpan } from './cautionRules.js';
  * @property {number} [highlightIndex] — highlightText 시작 위치 (없으면 matchedText 안에서 유도)
  * @property {number} pageNum
  * @property {number} index
+ * @property {number[]} [itemIndexes] — PDF.js TextItem 직접 하이라이트(표기통일 B)
+ * @property {number} [x]
+ * @property {number} [y]
+ * @property {number} [column] — 0 왼 / 1 오른 (B 경로 고정)
  */
 
 /**
@@ -312,23 +316,34 @@ function applyRuleToPages(rule, pages, byKey, globalExcludePhrases, errors) {
       ) {
         continue;
       }
-      const matchEnd = match.index + match[0].length;
-      if (ruleRequiresLeadingBoundary(rule) && match.index > 0) {
+      let matchStart = match.index;
+      let matchedRaw = match[0];
+      // 공통 항목: 예전 PHRASE_START가 앞 공백을 매치에 넣던 경우 제거
+      if (
+        rule.patternKind === 'phrase-slot-find' &&
+        matchedRaw.length > 1 &&
+        /^[\s\u00A0]/.test(matchedRaw)
+      ) {
+        matchedRaw = matchedRaw.slice(1);
+        matchStart += 1;
+      }
+      const matchEnd = matchStart + matchedRaw.length;
+      if (ruleRequiresLeadingBoundary(rule) && matchStart > 0) {
         let atLineStart = false;
         if (page.itemRefs?.length) {
-          const ctx = getLineContextAtTextIndex(page, match.index);
-          if (ctx && match.index <= ctx.lineStart + 2) {
+          const ctx = getLineContextAtTextIndex(page, matchStart);
+          if (ctx && matchStart <= ctx.lineStart + 2) {
             atLineStart = true;
           }
         }
         if (!atLineStart) {
-          const prevChar = text[match.index - 1] ?? '';
+          const prevChar = text[matchStart - 1] ?? '';
           if (prevChar && isLetterOrDigit(prevChar)) {
             continue;
           }
         }
       }
-      const matchSlice = text.slice(match.index, matchEnd);
+      const matchSlice = text.slice(matchStart, matchEnd);
       const isAuxiliaryVerb = rule.patternKind === 'auxiliary-verb';
       const isCompoundRule =
         rule.patternKind === 'compound-find' ||
@@ -345,16 +360,18 @@ function applyRuleToPages(rule, pages, byKey, globalExcludePhrases, errors) {
       }
       if (
         page.itemRefs?.length &&
-        !isMatchSpatiallyCoherent(page, match.index, matchEnd, maxLineGap)
+        !isMatchSpatiallyCoherent(page, matchStart, matchEnd, maxLineGap)
       ) {
         continue;
       }
       const suggested =
         rule.category === 'caution'
-          ? match[0]
-          : rule.pattern === 'regex'
-            ? applyReplaceTemplate(rule.replace, match)
-            : rule.replace;
+          ? matchedRaw
+          : rule.patternKind === 'phrase-slot-find'
+            ? matchedRaw
+            : rule.pattern === 'regex'
+              ? applyReplaceTemplate(rule.replace, match)
+              : rule.replace;
       const key =
         rule.category === 'caution' && rule.cautionId
           ? `caution:${rule.cautionId}`
@@ -387,17 +404,17 @@ function applyRuleToPages(rule, pages, byKey, globalExcludePhrases, errors) {
       let highlightText;
       let highlightIndex;
       if (rule.category === 'caution' && rule.cautionStems?.length) {
-        const span = cautionHighlightSpan(match[0], rule.cautionStems);
+        const span = cautionHighlightSpan(matchedRaw, rule.cautionStems);
         highlightText = span.text;
-        highlightIndex = match.index + span.indexOffset;
+        highlightIndex = matchStart + span.indexOffset;
       }
       byKey.get(key).instances.push({
         find: rule.find,
         replace: rule.replace,
-        matchedText: match[0],
+        matchedText: matchedRaw,
         suggestedText: suggested,
         pageNum: page.pageNum,
-        index: match.index,
+        index: matchStart,
         ...(highlightText ? { highlightText, highlightIndex } : {}),
       });
     }
@@ -450,6 +467,9 @@ export async function runRuleCheckAsync(pages, rules, options = {}) {
     return { results: [], errors };
   }
 
+  // 시나리오 C: 맞춤법 Kiwi 경계 — 줄·페이지 텍스트 prefetch (매칭 로직 변경 없음)
+  await prefetchKiwiBoundaryForRuleCheck(pages);
+
   for (let start = 0; start < total; start += pagesPerChunk) {
     const chunk = pages.slice(start, start + pagesPerChunk);
     for (const rule of active) {
@@ -463,6 +483,25 @@ export async function runRuleCheckAsync(pages, rules, options = {}) {
   }
 
   return { results: finalizeResults(byKey, pages), errors: [...new Set(errors)] };
+}
+
+/**
+ * @param {{ text?: string }[]} pages
+ */
+async function prefetchKiwiBoundaryForRuleCheck(pages) {
+  try {
+    const { isSpellingKiwiBoundaryEnabled } = await import('./featureFlags.js');
+    if (!isSpellingKiwiBoundaryEnabled()) return;
+    const { isKiwiServerMode } = await import('./kiwiMorph/runtime.js');
+    if (!isKiwiServerMode()) return;
+    const { collectRuleCheckKiwiPrefetchSurfaces } = await import(
+      './kiwiMorph/prefetchSurfaces.js'
+    );
+    const { prefetchKiwiAnalyze } = await import('./kiwiMorph/serverRunner.js');
+    await prefetchKiwiAnalyze(collectRuleCheckKiwiPrefetchSurfaces(pages));
+  } catch {
+    /* heuristic 유지 */
+  }
 }
 
 /**
