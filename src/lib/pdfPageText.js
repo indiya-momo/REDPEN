@@ -3,6 +3,7 @@
  */
 
 import { splitSpreadColumns } from './spreadColumnSplit.js';
+import { splitPageColumns } from './pageColumnSplit.js';
 
 /**
  * @typedef {Object} TextItemRef
@@ -657,14 +658,22 @@ function buildUniqueLines(sourceItems) {
   });
 
   const spread = splitSpreadColumns(sourceItems);
-  if (!spread) {
-    return buildBuiltLinesFromEntries(allEntries);
+  if (spread) {
+    return [
+      ...buildBuiltLinesFromEntries(spread.left),
+      ...buildBuiltLinesFromEntries(spread.right),
+    ];
   }
 
-  return [
-    ...buildBuiltLinesFromEntries(spread.left),
-    ...buildBuiltLinesFromEntries(spread.right),
-  ];
+  const columns = splitPageColumns(sourceItems);
+  if (columns) {
+    return [
+      ...buildBuiltLinesFromEntries(columns.left),
+      ...buildBuiltLinesFromEntries(columns.right),
+    ];
+  }
+
+  return buildBuiltLinesFromEntries(allEntries);
 }
 
 /**
