@@ -74,6 +74,16 @@ export function isUnifyKiwiJosaEnabled() {
 }
 
 /**
+ * 맞춤법/외래어 — Kiwi 형태소 경계로 복합어 부분일치 스킵.
+ * - 기본 꺼짐 (`VITE_SPELLING_KIWI_BOUNDARY=true` 일 때만)
+ * - ON이어도 모델 미로드·분석 실패면 현행(스킵 안 함)
+ * @see project-docs/kiwi-morph-boundary-plan-2026-08-02.md §P2
+ */
+export function isSpellingKiwiBoundaryEnabled() {
+  return import.meta.env.VITE_SPELLING_KIWI_BOUNDARY === 'true';
+}
+
+/**
  * 표기 통일 추천 — 용언 여부 2차 SLM (목록에서 비용언 제거).
  * - 기본 꺼짐 (`VITE_UNIFY_PREDICATE_SLM=true` 일 때만)
  * @see project-docs/unify-predicate-review-slm-design-2026-07-30.md

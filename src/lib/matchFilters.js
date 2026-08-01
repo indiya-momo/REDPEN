@@ -16,6 +16,9 @@ export function parseCommaList(input) {
 }
 
 import { shouldSkipAuxiliaryVerbMatch } from './auxiliaryVerbMatchFilters.js';
+import { isSpellingKiwiBoundaryEnabled } from './featureFlags.js';
+import { shouldSkipMatchByKiwiBoundary } from './kiwiMorph/boundaryGate.js';
+import { isKiwiReady } from './kiwiMorph/runtime.js';
 
 /**
  * @param {string} matched
@@ -95,6 +98,21 @@ export function shouldSkipMatch(rule, match, sourceText) {
       ) {
         return true;
       }
+    }
+  }
+
+  if (
+    isSpellingKiwiBoundaryEnabled() &&
+    isKiwiReady() &&
+    sourceText != null &&
+    match.index != null
+  ) {
+    try {
+      if (shouldSkipMatchByKiwiBoundary(matchedRaw, sourceText, match.index)) {
+        return true;
+      }
+    } catch {
+      /* 현행 유지 */
     }
   }
 
