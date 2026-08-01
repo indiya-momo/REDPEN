@@ -169,10 +169,6 @@
           "enabled": true,
           "matchMode": "any-before",
           "inventoryOnly": false,
-          "stems": [
-            "같이",
-            "같"
-          ],
           "displayLabel": "같이(조사 또는 부사)",
           "except": [
             "감쪽같이",
@@ -440,6 +436,14 @@
           ],
           "displayLabel": "-던지, -든지",
           "except": [
+            "던지는",
+            "던지고",
+            "던지며",
+            "던지길",
+            "던지다",
+            "던지면",
+            "던지네",
+            "던지던",
             "던지기",
             "히드라",
             "맨드라미",
