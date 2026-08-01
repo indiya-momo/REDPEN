@@ -364,7 +364,7 @@ export function formatUnifyCandidateFindCompleteMessage(
 
 /**
  * 표기 통일 추천 찾기 직후 — 발견 항목·검수권 사용 alert
- * 항목 수 = 목록 아코디언 행(계열은 1), 횟수 = 기본 체크된 클러스터 합.
+ * 항목 수 = 목록 아코디언 행(계열은 1), 횟수 = 목록과 동일(item 재집계·보조용언 추정 제외).
  * @param {import('./unifyCandidateDiscover.js').UnifySpacingCluster[]} clusters
  * @param {{ uid?: string, email?: string, itemCount?: number }} [quotaContext]
  */

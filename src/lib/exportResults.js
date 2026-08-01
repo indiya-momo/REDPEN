@@ -16,8 +16,11 @@ import {
   resolveConsistencyGroupTailWord,
 } from './consistencyUnifyRegister.js';
 import { formatAuxiliaryVerbResultLabel } from './patternDisplayLabels.js';
+import { groupPhraseSlotInstancesByFill } from './phraseSlotResultGroups.js';
+import { encodeSpacesVisible } from './spaceVisibleText.js';
 
 const AUXILIARY_EXPORT_CATEGORY = AUXILIARY_VERB_BADGE_LABEL;
+const UNIFY_CANDIDATE_EXPORT_CATEGORY = '표기 통일 추천';
 const UNIFY_PINNED_EXPORT_TIP = '통일형 📌';
 const UNIFY_NEED_EXPORT_TIP = '통일 필요 항목';
 
@@ -584,6 +587,14 @@ function consistencyEntryLabel(group) {
 
 /**
  * @typedef {{
+ *   sheetName: string,
+ *   summaryLine: string,
+ *   rows: ConsistencyExportRow[],
+ * }} ConsistencyExportSheet
+ */
+
+/**
+ * @typedef {{
  *   kind: 'consistency',
  *   sheetName: string,
  *   filename: string,
@@ -604,8 +615,17 @@ function consistencyEntryLabel(group) {
  *     auxiliarySelected: boolean,
  *   },
  *   rows: ConsistencyExportRow[],
+ *   recommend: ConsistencyExportSheet | null,
  * }} ConsistencyExportModel
  */
+
+/**
+ * @param {number} itemCount
+ * @param {number} findingsCount
+ */
+export function formatUnifyCandidateExcelSummaryLine(itemCount, findingsCount) {
+  return `표기 통일 추천 ${itemCount}항목 전체 발견 ${findingsCount}`;
+}
 
 /**
  * @param {{
@@ -628,6 +648,7 @@ function consistencyEntryLabel(group) {
  *   commonStringSelected?: boolean,
  *   auxiliarySelected?: boolean,
  *   customRules?: import('./ruleTypes.js').Rule[],
+ *   recommendEntries?: {group: import('./ruleEngine.js').GroupedResult, source: string}[],
  *   filename?: string,
  * }} options
  * @returns {ConsistencyExportModel}
@@ -652,6 +673,7 @@ export function buildConsistencyExportModel({
   commonStringSelected = true,
   auxiliarySelected = true,
   customRules = [],
+  recommendEntries = [],
   filename = '표기통일_검사결과.xlsx',
 }) {
   const summary = {
@@ -677,6 +699,52 @@ export function buildConsistencyExportModel({
     const isAuxiliary = category === AUXILIARY_EXPORT_CATEGORY;
     const tipText = consistencyExportTip(group, customRules);
     const visMode = groupVisibilityMode ? groupVisibilityMode(source, group) : 'visible';
+    const pagesHidden = visMode === 'hidden';
+
+    // 공통 항목 — 화면과 같이 채워진 표기별 행 (여러 항목 찾기와 같은 기준 분할)
+    if (group.patternKind === 'phrase-slot-find') {
+      const fills = groupPhraseSlotInstancesByFill(group.instances);
+      for (const fill of fills) {
+        const fillShown = pagesHidden
+          ? []
+          : fill.instances.filter((inst) =>
+              isInstanceVisible ? isInstanceVisible(source, group, inst) : true,
+            );
+        const totalCount = fill.instances.length;
+        const shownCount = pagesHidden ? 0 : fillShown.length;
+        const countText =
+          pagesHidden || shownCount === 0
+            ? `0/${totalCount}`
+            : shownCount < totalCount
+              ? `${shownCount}/${totalCount}`
+              : `${totalCount}`;
+        const pills =
+          pagesHidden || fillShown.length === 0
+            ? []
+            : buildInstancePills(fillShown);
+        const pageRuns =
+          pagesHidden || pills.length === 0
+            ? []
+            : buildPageRuns(
+                pills,
+                formatPageLabel,
+                source,
+                group,
+                isInstanceVisible,
+              );
+        rows.push({
+          category,
+          label: encodeSpacesVisible(fill.text),
+          tip: tipText,
+          countText,
+          isAuxiliary: false,
+          pagesHidden: pagesHidden || fillShown.length === 0,
+          pageRuns,
+        });
+      }
+      continue;
+    }
+
     const totalCount = group.instances.length;
     const shownCount = visibleInstanceCount ? visibleInstanceCount(source, group) : totalCount;
     const countText =
@@ -685,7 +753,6 @@ export function buildConsistencyExportModel({
         : visMode === 'partial'
           ? `${shownCount}/${totalCount}`
           : `${totalCount}`;
-    const pagesHidden = visMode === 'hidden';
     const pills = pagesHidden ? [] : buildInstancePills(group.instances);
     const pageRuns = pagesHidden
       ? []
@@ -702,6 +769,44 @@ export function buildConsistencyExportModel({
     });
   }
 
+  /** @type {ConsistencyExportRow[]} */
+  const recommendRows = [];
+  let recommendFindings = 0;
+  for (const { group, source } of recommendEntries ?? []) {
+    if (!group?.instances?.length) continue;
+    const totalCount = group.instances.length;
+    recommendFindings += totalCount;
+    const pills = buildInstancePills(group.instances);
+    recommendRows.push({
+      category: UNIFY_CANDIDATE_EXPORT_CATEGORY,
+      label: consistencyEntryLabel(group) || group.label || group.find || '',
+      tip: String(group.tip ?? '').trim(),
+      countText: `${totalCount}`,
+      isAuxiliary: false,
+      pagesHidden: false,
+      pageRuns: buildPageRuns(
+        pills,
+        formatPageLabel,
+        source || 'consistency',
+        group,
+        () => true,
+      ),
+    });
+  }
+
+  /** @type {ConsistencyExportSheet | null} */
+  const recommend =
+    recommendRows.length > 0
+      ? {
+          sheetName: UNIFY_CANDIDATE_EXPORT_CATEGORY,
+          summaryLine: formatUnifyCandidateExcelSummaryLine(
+            recommendRows.length,
+            recommendFindings,
+          ),
+          rows: recommendRows,
+        }
+      : null;
+
   return {
     kind: 'consistency',
     sheetName: '표기 통일 확인',
@@ -709,18 +814,20 @@ export function buildConsistencyExportModel({
     summaryLine: formatConsistencyExcelSummaryLine(summary),
     summary,
     rows,
+    recommend,
   };
 }
 
 /**
- * @param {ConsistencyExportModel} model
- * @returns {Promise<ArrayBuffer>}
+ * @param {import('exceljs').Workbook} wb
+ * @param {{
+ *   sheetName: string,
+ *   summaryLine: string,
+ *   rows: ConsistencyExportRow[],
+ * }} sheet
  */
-export async function writeConsistencyWorkbook(model) {
-  const ExcelJS = (await import('exceljs')).default;
-  const wb = new ExcelJS.Workbook();
-  wb.creator = '인디야';
-  const ws = wb.addWorksheet(model.sheetName || '표기 통일 확인');
+function addConsistencyWorksheet(wb, sheet) {
+  const ws = wb.addWorksheet(sheet.sheetName || '표기 통일 확인');
 
   ws.columns = [
     { width: 18 },
@@ -740,7 +847,7 @@ export async function writeConsistencyWorkbook(model) {
 
   ws.mergeCells('A2:E2');
   const summaryCell = ws.getCell('A2');
-  summaryCell.value = model.summaryLine;
+  summaryCell.value = sheet.summaryLine;
   summaryCell.font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FF000000' } };
   summaryCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFFFF' } };
   summaryCell.alignment = { horizontal: 'left', vertical: 'center', indent: 1, wrapText: false };
@@ -756,7 +863,7 @@ export async function writeConsistencyWorkbook(model) {
 
   const categoryRanges = [];
   let currentRange = null;
-  const rows = model.rows ?? [];
+  const rows = sheet.rows ?? [];
 
   for (let i = 0; i < rows.length; i++) {
     const excelRowNum = i + 4;
@@ -812,6 +919,42 @@ export async function writeConsistencyWorkbook(model) {
     cell.value = range.category;
     applyStyle(cell, { bg: range.bg, hAlign: 'center', vAlign: 'middle' });
   }
+}
+
+/**
+ * @param {ConsistencyExportModel} model
+ * @returns {Promise<ArrayBuffer>}
+ */
+export async function writeConsistencyWorkbook(model) {
+  const ExcelJS = (await import('exceljs')).default;
+  const wb = new ExcelJS.Workbook();
+  wb.creator = '인디야';
+
+  const recommend = model.recommend;
+  if (recommend?.rows?.length) {
+    addConsistencyWorksheet(wb, {
+      sheetName: recommend.sheetName || UNIFY_CANDIDATE_EXPORT_CATEGORY,
+      summaryLine: recommend.summaryLine || '',
+      rows: recommend.rows,
+    });
+  }
+
+  if ((model.rows ?? []).length > 0) {
+    addConsistencyWorksheet(wb, {
+      sheetName: model.sheetName || '표기 통일 확인',
+      summaryLine: model.summaryLine || '',
+      rows: model.rows,
+    });
+  }
+
+  // 둘 다 비면 빈 등록 시트라도 만들어 기존 호출처·스냅숏 재다운로드가 깨지지 않게 함
+  if (wb.worksheets.length === 0) {
+    addConsistencyWorksheet(wb, {
+      sheetName: model.sheetName || '표기 통일 확인',
+      summaryLine: model.summaryLine || '',
+      rows: [],
+    });
+  }
 
   return wb.xlsx.writeBuffer();
 }
@@ -821,6 +964,11 @@ export async function writeConsistencyWorkbook(model) {
  */
 export async function exportConsistencyResults(options) {
   const model = buildConsistencyExportModel(options);
+  const hasRecommend = Boolean(model.recommend?.rows?.length);
+  const hasRegistered = (model.rows ?? []).length > 0;
+  if (!hasRecommend && !hasRegistered) {
+    return model;
+  }
   const buffer = await writeConsistencyWorkbook(model);
   downloadXlsxBuffer(buffer, model.filename);
   return model;

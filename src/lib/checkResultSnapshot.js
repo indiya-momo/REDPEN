@@ -85,6 +85,19 @@ export function buildCheckResultSnapshot({
       ? exportModel.summary
       : {},
     rows: Array.isArray(exportModel.rows) ? [...exportModel.rows] : [],
+    recommend:
+      exportModel.recommend &&
+      typeof exportModel.recommend === 'object' &&
+      Array.isArray(exportModel.recommend.rows) &&
+      exportModel.recommend.rows.length > 0
+        ? {
+            sheetName: String(
+              exportModel.recommend.sheetName || '표기 통일 추천',
+            ),
+            summaryLine: String(exportModel.recommend.summaryLine ?? ''),
+            rows: [...exportModel.recommend.rows],
+          }
+        : null,
     truncated: false,
   };
 
@@ -130,6 +143,18 @@ export function exportModelFromSnapshot(snapshot) {
     summaryLine: String(snapshot.summaryLine ?? ''),
     summary: snapshot.summary && typeof snapshot.summary === 'object' ? snapshot.summary : {},
     rows: Array.isArray(snapshot.rows) ? snapshot.rows : [],
+    recommend:
+      snapshot.kind === 'consistency' &&
+      snapshot.recommend &&
+      typeof snapshot.recommend === 'object' &&
+      Array.isArray(snapshot.recommend.rows) &&
+      snapshot.recommend.rows.length > 0
+        ? {
+            sheetName: String(snapshot.recommend.sheetName || '표기 통일 추천'),
+            summaryLine: String(snapshot.recommend.summaryLine ?? ''),
+            rows: snapshot.recommend.rows,
+          }
+        : null,
   };
 }
 
