@@ -83,6 +83,28 @@ describe('findPhraseHitsInPdfItems', () => {
     expect(hits[0].itemIndexes).toEqual([0, 1]);
   });
 
+  it('같은 줄에 가로로 갈라진 「경제」「침체」를 line-run으로 찾는다', () => {
+    const items = [
+      item('경제', 120, 400, 24),
+      item('침체', 146, 400, 24),
+      item('(전미경제연구소)', 172, 400, 90),
+    ];
+    const hits = findPhraseHitsInPdfItems(items, '경제침체');
+    expect(hits.length).toBeGreaterThanOrEqual(1);
+    expect(hits.some((h) => h.kind === 'line-run')).toBe(true);
+    expect(hits[0].itemIndexes).toEqual([0, 1]);
+  });
+
+  it('이중 드로잉 차트 라벨은 xy dedupe로 1회만 센다', () => {
+    const items = [
+      item('경제침체(전미경제연구소)', 120, 400, 160),
+      item('경제침체(전미경제연구소)', 120.5, 400.5, 160),
+    ];
+    const hits = findPhraseHitsInPdfItems(items, '경제침체');
+    expect(hits).toHaveLength(1);
+    expect(hits[0].kind).toBe('in-item');
+  });
+
   it('띄움 「명지 계곡」은 붙임 제목 글리프를 칩으로 세지 않는다', () => {
     const items = [
       item('명', 698, 1157, 0.2),

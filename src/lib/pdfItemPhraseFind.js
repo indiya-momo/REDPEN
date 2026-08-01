@@ -18,13 +18,17 @@ import { isUnifyHangulMidWordSoftWrap } from './pdfPageText.js';
  * @property {number[]} itemIndexes — 매칭에 참여한 item
  * @property {number} x
  * @property {number} y
- * @property {'in-item' | 'glyph-run' | 'soft-wrap'} kind
- * @property {string} [run] — glyph-run 전체 문자열
+ * @property {'in-item' | 'glyph-run' | 'soft-wrap' | 'line-run'} kind
+ * @property {string} [run] — glyph-run / line-run 전체 문자열
  * @property {string} snippet
  */
 
 const DEDUP_XY_TOL = 2;
 const SAME_X_TOL = 1.25;
+/** 같은 줄로 볼 y 허용 (PDF user unit) */
+const SAME_LINE_Y_TOL = 3.5;
+/** 어절 간격으로 끊을 최대 gap (fontSize 배수) — 이하면 붙여 읽기 */
+const LINE_JOIN_GAP_EM = 0.45;
 
 /** @param {string} s */
 function glue(s) {
@@ -163,6 +167,136 @@ function spacingFidelityOk(needleHasSpace, matchHasSpace) {
 }
 
 /**
+ * 같은 줄(y)에서 x 순으로 이어 붙인 item 연쇄.
+ * 큰 가로 간격이면 새 연쇄로 끊는다.
+ * @param {PdfTextItem[]} items
+ * @returns {{
+ *   itemIndexes: number[],
+ *   compact: string,
+ *   charItemIndexes: number[],
+ *   hasSpaceInRange: (start: number, endExclusive: number) => boolean,
+ * }[]}
+ */
+function collectSameLineItemChains(items) {
+  /** @type {{ idx: number, x: number, y: number, fs: number, str: string, right: number }[]} */
+  const rows = [];
+  for (let i = 0; i < items.length; i += 1) {
+    const it = items[i];
+    const str = it?.str ?? '';
+    if (!str) continue;
+    const fs = Math.abs(it.transform?.[0] ?? it.height ?? 10) || 10;
+    const x = it.transform?.[4] ?? 0;
+    const width = typeof it.width === 'number' ? it.width : fs * str.length * 0.55;
+    rows.push({
+      idx: i,
+      x,
+      y: it.transform?.[5] ?? 0,
+      fs,
+      str,
+      right: x + width,
+    });
+  }
+  if (!rows.length) return [];
+
+  rows.sort((a, b) => b.y - a.y || a.x - b.x || a.idx - b.idx);
+
+  /** @type {typeof rows[]} */
+  const lines = [];
+  /** @type {typeof rows} */
+  let line = [];
+  let lineY = /** @type {number | null} */ (null);
+  for (const row of rows) {
+    if (lineY == null || Math.abs(row.y - lineY) <= SAME_LINE_Y_TOL) {
+      line.push(row);
+      lineY =
+        lineY == null
+          ? row.y
+          : (lineY * (line.length - 1) + row.y) / line.length;
+      continue;
+    }
+    lines.push(line);
+    line = [row];
+    lineY = row.y;
+  }
+  if (line.length) lines.push(line);
+
+  /** @type {ReturnType<typeof collectSameLineItemChains>} */
+  const chains = [];
+
+  /**
+   * @param {typeof rows} chunk
+   */
+  const pushChain = (chunk) => {
+    if (chunk.length < 2) return;
+    /** @type {number[]} */
+    const itemIndexes = [];
+    /** @type {number[]} */
+    const charItemIndexes = [];
+    let compact = '';
+    for (const row of chunk) {
+      itemIndexes.push(row.idx);
+      for (let k = 0; k < row.str.length; k += 1) {
+        if (/\s/.test(row.str[k])) continue;
+        charItemIndexes.push(row.idx);
+        compact += row.str[k];
+      }
+    }
+    if (compact.length < 2) return;
+    chains.push({
+      itemIndexes,
+      compact,
+      charItemIndexes,
+      hasSpaceInRange(start, endExclusive) {
+        if (endExclusive - start <= 1) return false;
+        for (let p = start + 1; p < endExclusive; p += 1) {
+          const a = charItemIndexes[p - 1];
+          const b = charItemIndexes[p];
+          if (a == null || b == null || a === b) continue;
+          const left = items[a];
+          const right = items[b];
+          const ls = left?.str ?? '';
+          const rs = right?.str ?? '';
+          if (/\s$/.test(ls) || /^\s/.test(rs)) return true;
+          const lfs = Math.abs(left?.transform?.[0] ?? 10) || 10;
+          const lx =
+            (left?.transform?.[4] ?? 0) +
+            (typeof left?.width === 'number' ? left.width : lfs);
+          const rx = right?.transform?.[4] ?? 0;
+          if (rx - lx > lfs * LINE_JOIN_GAP_EM) return true;
+        }
+        return false;
+      },
+    });
+  };
+
+  for (const band of lines) {
+    band.sort((a, b) => a.x - b.x || a.idx - b.idx);
+    /** @type {typeof rows} */
+    let chunk = [];
+    for (const row of band) {
+      if (chunk.length) {
+        const prev = chunk[chunk.length - 1];
+        const gap = row.x - prev.right;
+        const dx = row.x - prev.x;
+        const em = Math.max(prev.fs, row.fs);
+        // 세로 스택(지도 글리프): x가 거의 같으면 가로 연쇄에 넣지 않음
+        if (Math.abs(dx) < em * 0.35) {
+          pushChain(chunk);
+          chunk = [];
+        } else if (gap > em * 2.5) {
+          // 어절·블록 사이 큰 간격은 연쇄 분리
+          pushChain(chunk);
+          chunk = [];
+        }
+      }
+      chunk.push(row);
+    }
+    pushChain(chunk);
+  }
+  return chains;
+}
+
+/**
  * @param {PdfTextItem[]} items
  * @param {string} phrase
  * @returns {PdfItemPhraseHit[]}
@@ -274,7 +408,56 @@ export function findPhraseHitsInPdfItems(items, phrase) {
     }
   }
 
-  // 3) soft-wrap: 단어가 item 두 개에 갈라진 경우
+  // 3) 같은 줄·작은 간격 item 연쇄 (차트 라벨 「경제」「침체」등).
+  //    soft-wrap(1음절 어미)과 세로 글리프 런이 못 잡는 가로 분할을 보완.
+  for (const chain of collectSameLineItemChains(items)) {
+    if (chain.itemIndexes.length < 2) continue;
+    if (chain.compact.length < needleGlued.length) continue;
+    let pos = 0;
+    while (pos <= chain.compact.length - needleGlued.length) {
+      const at = chain.compact.indexOf(needleGlued, pos);
+      if (at < 0) break;
+      const end = at + needleGlued.length;
+      const matchHasSpace = chain.hasSpaceInRange(at, end);
+      if (!spacingFidelityOk(needleHasSpace, matchHasSpace)) {
+        pos = at + 1;
+        continue;
+      }
+      /** @type {number[]} */
+      const used = [];
+      for (let k = at; k < end; k += 1) {
+        const ii = chain.charItemIndexes[k];
+        if (ii == null) continue;
+        if (used[used.length - 1] !== ii) used.push(ii);
+      }
+      if (!used.length) {
+        pos = at + 1;
+        continue;
+      }
+      const startItem = used[0];
+      const endItem = used[used.length - 1];
+      const x0 = items[startItem].transform?.[4] ?? 0;
+      const y0 = items[startItem].transform?.[5] ?? 0;
+      const x1 = items[endItem].transform?.[4] ?? x0;
+      const y1 = items[endItem].transform?.[5] ?? y0;
+      hits.push({
+        phrase: needle,
+        itemIndex: startItem,
+        itemIndexes: used,
+        x: Number((((x0 + x1) / 2)).toFixed(2)),
+        y: Number((((y0 + y1) / 2)).toFixed(2)),
+        kind: 'line-run',
+        run: chain.compact,
+        snippet: chain.compact.slice(
+          Math.max(0, at - 4),
+          Math.min(chain.compact.length, end + 8),
+        ),
+      });
+      pos = at + 1;
+    }
+  }
+
+  // 4) soft-wrap: 단어가 item 두 개에 갈라진 경우
   for (let i = 0; i < items.length - 1; i += 1) {
     const a = items[i];
     const b = items[i + 1];

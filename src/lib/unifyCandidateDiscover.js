@@ -689,7 +689,7 @@ export function enrichOccurrencesWithItemHits(occs, pageByNum) {
     const page = pageByNum.get(pageNum);
     const list = byPage.get(pageNum) ?? [];
     const rebased = rebaseUnifyOccurrencesFromItemHits(list, page);
-    if (rebased) {
+    if (rebased !== null) {
       out.push(...rebased);
       continue;
     }
@@ -757,6 +757,22 @@ export function enrichClustersWithItemHits(clusters, pages) {
     };
   });
   return enriched.filter(Boolean);
+}
+
+/**
+ * 계열 위성 포함 그룹 전체 클러스터를 item hit으로 재집계 (횟수·칩 동기화).
+ * @param {import('./unifyCandidateGrouping.js').ClusterGroup[]} groups
+ * @param {import('./pdfService.js').PageData[]} pages
+ * @returns {import('./unifyCandidateGrouping.js').ClusterGroup[]}
+ */
+export function enrichClusterGroupsWithItemHits(groups, pages) {
+  if (!pages?.length) return groups ?? [];
+  return (groups ?? [])
+    .map((group) => ({
+      ...group,
+      clusters: enrichClustersWithItemHits(group.clusters ?? [], pages),
+    }))
+    .filter((group) => (group.clusters?.length ?? 0) > 0);
 }
 
 /**

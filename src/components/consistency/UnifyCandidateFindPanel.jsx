@@ -10,6 +10,7 @@ import {
   buildUnifyCandidatePreviewGroups,
   discoverSpacingUnifyCandidatesAsync,
   enrichClustersWithItemHits,
+  enrichClusterGroupsWithItemHits,
   firstWrongUnifyInstance,
   instancesForUnifyVariant,
 } from '../../lib/unifyCandidateDiscover.js';
@@ -708,7 +709,7 @@ export default function UnifyCandidateFindPanel({
     const withoutJosaPred = dropJosaPlusPredicateFromGroups(withStdict, {
       stdictPredicateKeys: stdictPredicateClusterKeys,
     });
-    return applyPredicateSlmDropsToGroups(
+    const afterPredicate = applyPredicateSlmDropsToGroups(
       withoutJosaPred,
       {
         seriesIds: predicateDropSeriesIds,
@@ -716,9 +717,12 @@ export default function UnifyCandidateFindPanel({
       },
       predicateNeedsReviewByKey,
     );
+    // 위성은 raw 횟수라 item 없는 유령·이중 드로잉이 남음 → 목록 직전에 재집계
+    return enrichClusterGroupsWithItemHits(afterPredicate, pageTexts);
   }, [
     clusters,
     rawByKey,
+    pageTexts,
     slmReviewedByKey,
     stdictPredicateSeriesIds,
     stdictPredicateClusterKeys,
