@@ -357,13 +357,25 @@ export function pruneResultVisibilityForToc(state, results) {
 /** @param {import('./ruleEngine.js').MatchInstance} b */
 export function instancesMatch(a, b) {
   if (!a || !b) return false;
-  return (
-    a.pageNum === b.pageNum &&
-    a.index === b.index &&
-    a.matchedText === b.matchedText &&
-    a.find === b.find &&
-    a.replace === b.replace
-  );
+  if (
+    a.pageNum !== b.pageNum ||
+    a.matchedText !== b.matchedText ||
+    a.find !== b.find ||
+    a.replace !== b.replace
+  ) {
+    return false;
+  }
+  // 표기통일 B: itemIndexes가 있으면 index(합성값)보다 bbox 정체성을 우선
+  if (
+    Array.isArray(a.itemIndexes) &&
+    Array.isArray(b.itemIndexes) &&
+    a.itemIndexes.length &&
+    b.itemIndexes.length
+  ) {
+    if (a.itemIndexes.length !== b.itemIndexes.length) return false;
+    return a.itemIndexes.every((v, i) => v === b.itemIndexes[i]);
+  }
+  return a.index === b.index;
 }
 
 /** @param {import('./ruleEngine.js').GroupedResult[]} results */

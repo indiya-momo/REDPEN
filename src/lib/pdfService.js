@@ -15,6 +15,7 @@ import {
   buildPageText,
   dedupeOverlayTextItems,
   hangulSoftWrapSeparator,
+  hangulSoftWrapSeparatorLegacy,
   rejoinHangulSoftLineBreaks,
   isLikelyHangulEojeolBoundary,
   shouldInsertLayoutSpaceBetweenPdfItems,
@@ -25,6 +26,7 @@ export {
   buildPageText,
   dedupeOverlayTextItems,
   hangulSoftWrapSeparator,
+  hangulSoftWrapSeparatorLegacy,
   rejoinHangulSoftLineBreaks,
   isLikelyHangulEojeolBoundary,
   shouldInsertLayoutSpaceBetweenPdfItems,
@@ -70,8 +72,9 @@ export function buildPdfDocumentInit(buffer) {
 /**
  * @typedef {Object} PageData
  * @property {number} pageNum
- * @property {string} text — 음절 경계 공백 포함(맞춤법·일관성 찾기·하이라이트)
- * @property {string} [textLayout] — PDF 실제 띄움만(본용언+보조용언 검사)
+ * @property {string} text — @deprecated 이행기 alias. Visual canonical과 동일 (`visualText` 사용)
+ * @property {string} [visualText] — Visual canonical (줄 경계 `\n` 보존, eager soft-wrap 없음)
+ * @property {string} [textLayout] — PDF 실제 띄움만(본용언+보조용언 검사); 줄 경계도 유지
  * @property {import('pdfjs-dist').TextItem[]} items
  * @property {TextItemRef[]} itemRefs
  * @property {TextItemRef[]} [itemRefsLayout]
@@ -102,11 +105,12 @@ export async function extractAllPagesText(pdf, onProgress) {
     const items = dedupeOverlayTextItems(
       content.items.filter((it) => 'str' in it),
     );
-    const { text, itemRefs, textLayout, itemRefsLayout } =
+    const { text, visualText, itemRefs, textLayout, itemRefsLayout } =
       buildPageText(items);
     pages.push({
       pageNum: i,
       text,
+      visualText: visualText ?? text,
       textLayout,
       items,
       itemRefs,
@@ -425,6 +429,93 @@ function highlightRectsFromLineContext(pageData, page, viewport, matchStart, mat
 }
 
 /**
+ * itemIndexes에 걸친 phrase(공백 무시)의 item별 문자 구간.
+ * soft-wrap(명|지 계곡)에서 줄 전체 박스를 막기 위함.
+ * @param {import('pdfjs-dist').TextItem[]} items
+ * @param {number[]} itemIndexes
+ * @param {string} phrase
+ * @returns {Map<number, { start: number, end: number }> | null}
+ */
+export function phraseLocalRangesInItems(items, itemIndexes, phrase) {
+  const needle = String(phrase ?? '').replace(/\s+/g, '');
+  if (!needle || !items?.length || !itemIndexes?.length) return null;
+
+  /** @type {{ itemIndex: number, local: number }[]} */
+  const map = [];
+  let compact = '';
+  for (const idx of itemIndexes) {
+    const str = items[idx]?.str ?? '';
+    for (let c = 0; c < str.length; c += 1) {
+      if (/\s/.test(str[c])) continue;
+      map.push({ itemIndex: idx, local: c });
+      compact += str[c];
+    }
+  }
+  const at = compact.indexOf(needle);
+  if (at < 0) return null;
+
+  /** @type {Map<number, { start: number, end: number }>} */
+  const ranges = new Map();
+  for (let k = at; k < at + needle.length; k += 1) {
+    const m = map[k];
+    if (!m) continue;
+    const prev = ranges.get(m.itemIndex);
+    if (!prev) {
+      ranges.set(m.itemIndex, { start: m.local, end: m.local + 1 });
+    } else {
+      prev.start = Math.min(prev.start, m.local);
+      prev.end = Math.max(prev.end, m.local + 1);
+    }
+  }
+  return ranges.size ? ranges : null;
+}
+
+/**
+ * TextItem 인덱스로 직접 하이라이트 (깨진 itemRefs 우회).
+ * @param {import('pdfjs-dist').PDFPageProxy} page
+ * @param {import('pdfjs-dist').PageViewport} viewport
+ * @param {import('pdfjs-dist').TextItem[]} items
+ * @param {number[]} itemIndexes
+ * @param {string} [phrase]
+ * @returns {Array<{ left: number, top: number, width: number, height: number }>}
+ */
+export function highlightRectsForItemIndexes(
+  page,
+  viewport,
+  items,
+  itemIndexes,
+  phrase = '',
+) {
+  /** @type {Array<{ left: number, top: number, width: number, height: number }>} */
+  const rects = [];
+  if (!items?.length || !itemIndexes?.length) return rects;
+
+  const ranges = phraseLocalRangesInItems(items, itemIndexes, phrase);
+  for (const idx of itemIndexes) {
+    const item = items[idx];
+    if (!item || !('str' in item) || !item.str) continue;
+    const range = ranges?.get(idx);
+    if (range) {
+      rects.push(
+        viewportBoxForTextItem(page, viewport, item, range.start, range.end),
+      );
+      continue;
+    }
+    // phrase를 못 찾으면(글리프 오차 등) 해당 item 전체 — multi soft-wrap은 ranges가 있어야 함
+    if (ranges) continue;
+    rects.push(
+      viewportBoxForTextItem(page, viewport, item, 0, item.str.length),
+    );
+  }
+  // 지도/제목 1글자 글리프는 width≈0 → 최소 박스로 빨간줄이 보이게
+  for (const r of rects) {
+    r.width = Math.max(r.width, 4);
+    r.height = Math.max(r.height, 6);
+  }
+  return rects;
+}
+
+/**
  * 매칭 구간만 좁혀 하이라이트 (문장 전체 text item 방지)
  * @param {import('pdfjs-dist').PDFPageProxy} page
  * @param {import('pdfjs-dist').PageViewport} viewport
@@ -453,9 +544,18 @@ export function highlightRectsForTextRange(
     const item = items[ref.itemIndex];
     if (!item || !('str' in item) || !item.str) continue;
 
+    const spanLen = Math.max(ref.end - ref.start, 0);
     const localStart = Math.max(0, matchStart - ref.start);
-    const localEnd = Math.min(item.str.length, matchEnd - ref.start);
-    if (localEnd <= localStart) continue;
+    const localEnd = Math.min(spanLen || item.str.length, matchEnd - ref.start);
+    if (localEnd <= localStart) {
+      // 공백 구간만 걸치거나 오프셋 드리프트 — 글자 item 전체라도 칠한다
+      if (spanLen > 0 || item.str.length > 0) {
+        rects.push(
+          viewportBoxForTextItem(page, viewport, item, 0, item.str.length),
+        );
+      }
+      continue;
+    }
 
     rects.push(
       viewportBoxForTextItem(page, viewport, item, localStart, localEnd),

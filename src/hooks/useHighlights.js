@@ -3,7 +3,6 @@ import { getBuiltInTip } from '../lib/builtInRules.js';
 import { getConsistencyHighlightTip } from '../lib/consistencyHighlightTip.js';
 import {
   findActiveGroup,
-  groupKey,
   instancesMatch,
   isInstanceVisible,
 } from '../lib/checkResultUtils.js';
@@ -58,7 +57,6 @@ export function useHighlights({
   const activeResults =
     activeSource === 'spelling' ? spellingResults : consistencyResults;
   const activeGroup = findActiveGroup(activeResults, selectedInstance);
-  const activeGroupKey = activeGroup ? groupKey(activeGroup) : null;
 
   const pageHighlights = useMemo(() => {
     if (!currentPageData) return [];
@@ -77,15 +75,12 @@ export function useHighlights({
             : source === 'consistency'
               ? getConsistencyHighlightTip(group, customRules)
               : '');
-        const isActiveGroup =
-          activeGroupKey != null && groupKey(group) === activeGroupKey;
         for (const inst of group.instances) {
           if (inst.pageNum !== currentPage) continue;
           if (!isInstanceVisible(resultVisibility, source, group, inst)) continue;
           onPage.push({
             inst,
             tip: tipText,
-            isActiveGroup,
             isCaution: group.category === 'caution',
             source,
             group,
@@ -95,14 +90,22 @@ export function useHighlights({
     }
     onPage.sort((a, b) => compareOnPage(a.inst, b.inst));
     return onPage
-      .map(({ inst, tip, isActiveGroup, isCaution, source, group }) => {
-        const range = isCaution
-          ? highlightRangeForCaution(currentPageData, inst)
-          : highlightRangeForSpelling(currentPageData, inst);
+      .map(({ inst, tip, isCaution, source, group }) => {
+        const hasItemIndexes =
+          Array.isArray(inst.itemIndexes) && inst.itemIndexes.length > 0;
+        const range = hasItemIndexes
+          ? {
+              start: inst.index,
+              end:
+                inst.index +
+                Math.max(String(inst.matchedText ?? '').length, 1),
+            }
+          : isCaution
+            ? highlightRangeForCaution(currentPageData, inst)
+            : highlightRangeForSpelling(currentPageData, inst);
         if (!range) return null;
         const primary = Boolean(
-          isActiveGroup &&
-            selectedInstance != null &&
+          selectedInstance != null &&
             instancesMatch(inst, selectedInstance),
         );
         const overlayReplace = getHighlightOverlayReplace(inst, {
@@ -124,6 +127,7 @@ export function useHighlights({
           id: `${inst.pageNum}-${inst.index}-${inst.find}`,
           tip,
           matchedText: inst.matchedText,
+          ...(hasItemIndexes ? { itemIndexes: inst.itemIndexes } : {}),
           pillarTone,
           pillarClass: [
             pdfHighlightPillarClass(pillarTone),
@@ -143,7 +147,6 @@ export function useHighlights({
     currentPage,
     currentPageData,
     selectedInstance,
-    activeGroupKey,
     customRules,
     compareOnPage,
   ]);

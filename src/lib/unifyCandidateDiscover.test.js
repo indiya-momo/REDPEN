@@ -1,24 +1,34 @@
 import { describe, expect, it } from 'vitest';
+import { buildPageByNum } from './matchReadingOrder.js';
 import {
   discoverSpacingUnifyCandidates,
   formatUnifyClusterRegisterInput,
   formatUnifySpacingDecisionOverlay,
   buildUnifyCandidatePreviewGroups,
+  buildUnifyOccurrenceIndex,
   firstWrongUnifyInstance,
   instancesForUnifyVariant,
   isValidSpacedUnifyVariant,
   isExcludedUnifyCandidateRaw,
+  mapLayoutIndexToVisualIndex,
+  assignUniqueUnifyHighlightIndices,
+  enrichOccurrencesWithItemHits,
+  collectUnifyPhraseStarts,
   spacedPartIsBareJosa,
   stripTrailingUnifyAffixes,
   normalizeUnifyVariant,
   pickRecommendedUnify,
   prepareUnifyScanText,
+  resolveHighlightIndex,
   splitUnifyScanLines,
   stripTrailingJosa,
   stripUnifyPeripheralDigits,
   unifySpacingKey,
+  mergeUnifyHangulSoftWrapScanLines,
 } from './unifyCandidateDiscover.js';
 import { normalizeSpacingClusters } from './unifyCandidateCollapse.js';
+import { highlightRangeForSpelling } from './pdfHighlightRange.js';
+import { buildPageText } from './pdfPageText.js';
 
 /** discover 후 정규화(공통 접두·짧은 단위 흡수) */
 function discoverNormalized(pageTexts) {
@@ -46,6 +56,36 @@ describe('splitUnifyScanLines', () => {
 
   it('같은 줄 공백만 한 칸으로 합친다', () => {
     expect(splitUnifyScanLines('금융  위기')).toEqual(['금융 위기']);
+  });
+});
+
+describe('mergeUnifyHangulSoftWrapScanLines', () => {
+  it('단어 중간 soft-wrap(명|지 계곡)만 잇고 어절 경계는 유지한다', () => {
+    const lines = [
+      {
+        line: '우리 나라에는 명',
+        absIndex: (i) => i,
+      },
+      {
+        line: '지 계곡 외에도 영월',
+        absIndex: (i) => 100 + i,
+      },
+      {
+        line: '수도',
+        absIndex: (i) => 200 + i,
+      },
+      {
+        line: '있다',
+        absIndex: (i) => 300 + i,
+      },
+    ];
+    const merged = mergeUnifyHangulSoftWrapScanLines(lines);
+    expect(merged.map((l) => l.line)).toEqual([
+      '우리 나라에는 명지 계곡 외에도 영월',
+      '수도',
+      '있다',
+    ]);
+    expect(merged[0].line.includes('명지 계곡')).toBe(true);
   });
 });
 
@@ -161,6 +201,111 @@ describe('pickRecommendedUnify', () => {
         { variant: '경제성장', count: 3 },
       ]),
     ).toBe('경제성장');
+  });
+});
+
+describe('resolveHighlightIndex / 같은 페이지 다중 출현', () => {
+  it('preferNear에 가까운 출현을 고른다 (첫 indexOf 고정 금지)', () => {
+    const text = 'AAA 고상 가옥 BBB 고상 가옥 CCC';
+    const first = text.indexOf('고상 가옥');
+    const second = text.indexOf('고상 가옥', first + 1);
+    expect(resolveHighlightIndex(text, '고상 가옥', first)).toBe(first);
+    expect(resolveHighlightIndex(text, '고상 가옥', second)).toBe(second);
+  });
+
+  it('한 페이지에 같은 띄움 표기가 두 번이면 occurrence index가 서로 다르다', () => {
+    const text = [
+      '열대 기후에서는 고상 가옥을 짓는다.',
+      '한대 기후 지역에서도 고상 가옥을 짓는다.',
+    ].join('\n');
+    const byKey = buildUnifyOccurrenceIndex([{ pageNum: 22, text }]);
+    const acc = byKey.get('고상가옥');
+    expect(acc).toBeTruthy();
+    const spaced = [...(acc.occurrences.get('고상 가옥') ?? [])];
+    expect(spaced.length).toBeGreaterThanOrEqual(2);
+    const indices = spaced.map((o) => o.index);
+    expect(new Set(indices).size).toBe(indices.length);
+    expect(indices[0]).not.toBe(indices[1]);
+
+    const pageData = { text, itemRefs: [], items: [] };
+    const r0 = highlightRangeForSpelling(pageData, {
+      index: indices[0],
+      matchedText: spaced[0].matchedText,
+    });
+    const r1 = highlightRangeForSpelling(pageData, {
+      index: indices[1],
+      matchedText: spaced[1].matchedText,
+    });
+    expect(r0?.start).toBe(indices[0]);
+    expect(r1?.start).toBe(indices[1]);
+    expect(r0?.start).not.toBe(r1?.start);
+  });
+
+  it('지도처럼 가로로 먼 라벨은 녹아내림강수량 이형태로 묶지 않는다', () => {
+    const font = 11;
+    /** @param {{ str: string, x: number, w?: number }[]} parts @param {number} y */
+    function items(parts, y) {
+      return parts.map((p) => ({
+        str: p.str,
+        transform: [font, 0, 0, font, p.x, y],
+        width: p.w ?? p.str.length * font * 0.48,
+      }));
+    }
+    const pageItems = [
+      ...items([{ str: '빙하', x: 80, w: 28 }, { str: '녹아내림', x: 112, w: 48 }], 400),
+      ...items([{ str: '강수량', x: 320, w: 40 }, { str: '증가', x: 364, w: 28 }], 398),
+    ];
+    const { text, textLayout } = buildPageText(pageItems);
+    const clusters = discoverSpacingUnifyCandidates([
+      { pageNum: 5, text, textLayout },
+    ]);
+    expect(clusters.some((c) => c.key === '녹아내림강수량')).toBe(false);
+    expect(text).not.toMatch(/녹아내림강수량/);
+    expect(text.includes('녹아내림 강수량')).toBe(false);
+  });
+});
+
+describe('unify_should_not_cross_visual_line_boundary', () => {
+  it('시각 줄로 나뉜 시간적/관점은 시간적관점 후보가 없다', () => {
+    const visualText = '(1) 시간적\n관점\n';
+    const clusters = discoverSpacingUnifyCandidates([
+      { pageNum: 4, text: visualText, textLayout: visualText },
+    ]);
+    expect(clusters.some((c) => c.key === '시간적관점')).toBe(false);
+    expect(
+      clusters.some((c) => (c.variants ?? []).includes('시간적관점')),
+    ).toBe(false);
+  });
+
+  it('buildPageText 목록 들여쓰기 줄도 시간적관점으로 묶지 않는다', () => {
+    const font = 12;
+    function line(parts, y) {
+      return parts.map((p) => ({
+        str: p.str,
+        transform: [font, 0, 0, font, p.x, y],
+        width: p.w ?? p.str.length * font * 0.5,
+      }));
+    }
+    const { text, textLayout, visualText } = buildPageText([
+      ...line([{ str: '(1) 시간적', x: 48, w: 72 }], 220),
+      ...line([{ str: '관점', x: 78, w: 28 }], 205),
+    ]);
+    expect(visualText).toBe(text);
+    expect(text).toMatch(/시간적\n관점/);
+    const clusters = discoverSpacingUnifyCandidates([
+      { pageNum: 4, text, textLayout },
+    ]);
+    expect(clusters.some((c) => c.key === '시간적관점')).toBe(false);
+  });
+
+  it('동해/태평양 줄 분리는 동해태평양 후보가 없다', () => {
+    const visualText = '동해\n태평양\n동해 태평양\n';
+    const clusters = discoverSpacingUnifyCandidates([
+      { pageNum: 22, text: visualText, textLayout: visualText },
+    ]);
+    // 띄움만 있으면 붙임 이형태가 없어 클러스터 자체가 안 생기거나,
+    // 붙임형이 줄 경계로 만들어지지 않는다.
+    expect(clusters.some((c) => c.key === '동해태평양')).toBe(false);
   });
 });
 
@@ -572,5 +717,110 @@ describe('buildUnifyCandidatePreviewGroups', () => {
     expect(firstWrongUnifyInstance(cluster, '조선시대')?.find).toBe(
       '조선 시대',
     );
+  });
+});
+
+describe('reading-order S1 — 칩/occurrence 기하 정렬', () => {
+  it('펼침면에서 왼쪽 위→아래 후 오른쪽 순으로 occurrence를 정렬한다', () => {
+    const size = 10;
+    const yTop = 520;
+    const yMid = 360;
+    const yBottom = 200;
+    const items = [
+      // stream 순: 오른 → 왼하단 → 왼상단 (index 순이면 뒤섞임)
+      { str: '명지', transform: [size, 0, 0, size, 420, yMid], width: 24 },
+      { str: '명지', transform: [size, 0, 0, size, 72, yBottom], width: 24 },
+      { str: '명지', transform: [size, 0, 0, size, 72, yTop], width: 24 },
+    ];
+    const text = '명지\n명지\n명지\n';
+    const textLayout = text;
+    const itemRefs = [
+      { start: 0, end: 2, itemIndex: 0 },
+      { start: 3, end: 5, itemIndex: 1 },
+      { start: 6, end: 8, itemIndex: 2 },
+    ];
+    const page = {
+      pageNum: 40,
+      text,
+      textLayout,
+      items,
+      itemRefs,
+      itemRefsLayout: itemRefs,
+    };
+    // 붙임/띄움 충돌 클러스터가 아니어도 occurrence index는 정렬됨
+    const byKey = buildUnifyOccurrenceIndex([
+      page,
+      { pageNum: 41, text: '명 지\n', textLayout: '명 지\n' },
+    ]);
+    const acc = byKey.get('명지');
+    expect(acc).toBeTruthy();
+    const glued = acc.occurrences.get('명지') ?? [];
+    const on40raw = glued.filter((o) => o.pageNum === 40);
+    expect(on40raw).toHaveLength(3);
+    const pageByNum = buildPageByNum([page]);
+    const on40 = enrichOccurrencesWithItemHits(on40raw, pageByNum);
+    // item+bbox 경로: 왼 단 위→아래 후 오른 단 (itemIndexes 기준)
+    expect(on40.map((o) => o.itemIndexes?.[0])).toEqual([2, 1, 0]);
+    expect(on40.every((o) => typeof o.x === 'number')).toBe(true);
+  });
+
+  it('mapLayoutIndexToVisualIndex — 자간 길이 차이를 itemRefs로 투영한다', () => {
+    const page = {
+      itemRefs: [{ start: 10, end: 13, itemIndex: 0 }],
+      itemRefsLayout: [{ start: 4, end: 6, itemIndex: 0 }],
+    };
+    expect(mapLayoutIndexToVisualIndex(page, 4)).toBe(10);
+    expect(mapLayoutIndexToVisualIndex(page, 5)).toBe(11);
+  });
+
+  it('resolveHighlightIndex — 자간 공백이 있어도 preferNear에 가까운 출현을 고른다', () => {
+    const text = 'AAA 명 지 BBB 명 지 CCC';
+    const first = text.indexOf('명');
+    const second = text.indexOf('명', first + 1);
+    expect(resolveHighlightIndex(text, '명지', second)).toBe(second);
+    expect(resolveHighlightIndex(text, '명지', first)).toBe(first);
+  });
+
+  it('enrichOccurrencesWithItemHits — items가 있으면 item hit으로 재배치한다', () => {
+    const size = 10;
+    const items = [
+      { str: '명지 위', transform: [size, 0, 0, size, 80, 500], width: 40 },
+      { str: '명지 아래', transform: [size, 0, 0, size, 80, 200], width: 48 },
+      { str: '명지 오른', transform: [size, 0, 0, size, 420, 350], width: 48 },
+      { str: 'padL', transform: [size, 0, 0, size, 40, 100], width: 20 },
+      { str: 'padR', transform: [size, 0, 0, size, 700, 100], width: 20 },
+    ];
+    const page = {
+      pageNum: 81,
+      text: '명지 위 명지 아래 명지 오른',
+      items,
+    };
+    const assigned = enrichOccurrencesWithItemHits(
+      [
+        { pageNum: 81, index: 0, matchedText: '명지' },
+        { pageNum: 81, index: 0, matchedText: '명지' },
+        { pageNum: 81, index: 0, matchedText: '명지' },
+      ],
+      buildPageByNum([page]),
+    );
+    expect(assigned).toHaveLength(3);
+    expect(new Set(assigned.map((o) => o.itemIndexes?.[0])).size).toBe(3);
+    expect(assigned.map((o) => o.itemIndexes?.[0])).toEqual([0, 1, 2]);
+  });
+
+  it('assignUniqueUnifyHighlightIndices — items 없어도 텍스트 슬롯 배정', () => {
+    const text = '명지 위 명지 아래 명지 오른';
+    const slots = collectUnifyPhraseStarts(text, '명지');
+    expect(slots).toHaveLength(3);
+    const assigned = assignUniqueUnifyHighlightIndices(
+      [
+        { pageNum: 81, index: slots[0], matchedText: '명지' },
+        { pageNum: 81, index: slots[0], matchedText: '명지' },
+        { pageNum: 81, index: slots[0], matchedText: '명지' },
+      ],
+      { pageNum: 81, text },
+    );
+    expect(assigned.map((o) => o.index).sort((a, b) => a - b)).toEqual(slots);
+    expect(new Set(assigned.map((o) => o.index)).size).toBe(3);
   });
 });

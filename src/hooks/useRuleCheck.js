@@ -692,8 +692,11 @@ export function useRuleCheck({
       if (!selectedInstance) return;
 
       const group = findActiveGroup(activeResults, selectedInstance);
-      const onPage = group?.instances.filter((i) => i.pageNum === pageNum) ?? [];
+      // 표기 통일 미리보기 등은 activeResults 밖 — 그룹을 못 찾아도 선택을 지우지 않음
+      if (!group) return;
+      const onPage = group.instances.filter((i) => i.pageNum === pageNum) ?? [];
       const next = onPage[0] ?? null;
+      if (!next) return;
       if (activeSource === 'spelling') {
         setSpellingSelected(next);
       } else {

@@ -46,6 +46,31 @@ describe('compareInstancesReadingOrder', () => {
     ).toBeLessThan(0);
   });
 
+  it('매치 index가 어절 공백(itemRefs 밖)이어도 근처 글자로 정렬한다', () => {
+    const size = 10;
+    const items = [
+      { str: '명', transform: [size, 0, 0, size, 72, 400], width: 10 },
+      { str: '지', transform: [size, 0, 0, size, 90, 400], width: 10 },
+      { str: '명', transform: [size, 0, 0, size, 72, 200], width: 10 },
+      { str: '지', transform: [size, 0, 0, size, 90, 200], width: 10 },
+    ];
+    // "명 지\n명 지\n" — index 1·5는 공백(refs 밖). end=index+1이면 overlap 없음
+    const text = '명 지\n명 지\n';
+    const itemRefs = [
+      { start: 0, end: 1, itemIndex: 0 },
+      { start: 2, end: 3, itemIndex: 1 },
+      { start: 4, end: 5, itemIndex: 2 },
+      { start: 6, end: 7, itemIndex: 3 },
+    ];
+    const page = { pageNum: 81, text, items, itemRefs };
+    const pageByNum = buildPageByNum([page]);
+    const sorted = sortInstancesReadingOrder(
+      [inst(81, 5, 'x'), inst(81, 1, 'x')],
+      pageByNum,
+    );
+    expect(sorted.map((i) => i.index)).toEqual([1, 5]);
+  });
+
   it('단면 페이지는 위→아래·왼→오른 순으로 정렬한다', () => {
     const size = 10;
     const items = [

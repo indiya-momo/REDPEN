@@ -673,9 +673,13 @@ export default function MainScreen({
       ...unifyCandidatePreviewResults,
     ],
     resultVisibility: ruleCheck.resultVisibility,
+    // 탭이 일관성이면 통일 미리보기 선택도 primary에 쓰이게 — activeSource와 분리
     highlightTab: workTab === 'spelling' ? 'spelling' : 'consistency',
-    activeSource: ruleCheck.activeSource,
-    selectedInstance: ruleCheck.selectedInstance,
+    activeSource: workTab === 'spelling' ? 'spelling' : 'consistency',
+    selectedInstance:
+      workTab === 'spelling'
+        ? ruleCheck.spellingSelected
+        : ruleCheck.consistencySelected,
     customRules,
     pageTexts: pdf.pageTexts,
   });
@@ -997,6 +1001,10 @@ export default function MainScreen({
           }
         : {
             entries: consistencyTabEntries,
+            recommendEntries: unifyCandidatePreviewResults.map((group) => ({
+              group,
+              source: 'consistency',
+            })),
             formatPageLabel: pageDisplay.formatLabel,
             isInstanceVisible: ruleCheck.isInstanceVisible,
             groupVisibilityMode: ruleCheck.groupVisibilityMode,
@@ -1062,6 +1070,7 @@ export default function MainScreen({
     spellingGroupsWithFindings.cautionWithFindings,
     spellingTabEntries,
     spellingTabTotalFindings,
+    unifyCandidatePreviewResults,
   ]);
 
   const showTocResultsPanel =
@@ -1080,7 +1089,17 @@ export default function MainScreen({
     consistencyFocus === 'toc' &&
     tocCheck.checkDone
       ? tocCheck.countVisibleOnPage(pdf.currentPage)
-      : ruleCheck.countVisibleOnPage(pdf.currentPage, workTab);
+      : (() => {
+          let n = ruleCheck.countVisibleOnPage(pdf.currentPage, workTab);
+          if (workTab === 'consistency') {
+            for (const group of unifyCandidatePreviewResults) {
+              for (const inst of group.instances) {
+                if (inst.pageNum === pdf.currentPage) n += 1;
+              }
+            }
+          }
+          return n;
+        })();
 
   const tabCheckDone = useMemo(
     () =>
@@ -1092,8 +1111,11 @@ export default function MainScreen({
     [workTab, ruleCheck.spellingCheckDone, consistencyWorkDone],
   );
 
+  const unifyPreviewActive = unifyCandidatePreviewResults.length > 0;
+
   const pdfPageStatus = useMemo(() => {
-    if (!pdf.pdf || !tabCheckDone) return null;
+    // 표기 통일 추천만 돌려도 하단「해당 페이지 발견」노란 원을 보여 준다
+    if (!pdf.pdf || (!tabCheckDone && !unifyPreviewActive)) return null;
     const isToc =
       tocBodyCheckEnabled &&
       workTab === 'consistency' &&
@@ -1121,6 +1143,7 @@ export default function MainScreen({
     pdf.pdf,
     pdf.currentPage,
     tabCheckDone,
+    unifyPreviewActive,
     visibleOnCurrentPage,
     pageDisplay.formatLabel,
     pageDisplay.active,
@@ -1529,6 +1552,16 @@ export default function MainScreen({
     }
     if (guestBrowseBlocksResultExport()) return;
     if (!spellingExportEnabled) return;
+    const recommendEntries = unifyCandidatePreviewResults.map((group) => ({
+      group,
+      source: 'consistency',
+    }));
+    if (
+      !ruleCheck.consistencyCheckDone &&
+      recommendEntries.length === 0
+    ) {
+      return;
+    }
     const filename = buildProofreadExportFilename(
       pdf.pdfFileName,
       proofreadExportLabelForKind('consistency'),
@@ -1541,7 +1574,10 @@ export default function MainScreen({
       .then((allowed) => {
         if (!allowed) return;
         return exportConsistencyResults({
-          entries: consistencyTabEntries,
+          entries: ruleCheck.consistencyCheckDone
+            ? consistencyTabEntries
+            : [],
+          recommendEntries,
           formatPageLabel: pageDisplay.formatLabel,
           isInstanceVisible: ruleCheck.isInstanceVisible,
           groupVisibilityMode: ruleCheck.groupVisibilityMode,
@@ -1557,7 +1593,9 @@ export default function MainScreen({
           auxiliaryCriteriaCount:
             consistencyGroupsWithFindings.auxiliaryWithFindings,
           auxiliaryFindingsCount: consistencyFindingsByType.bonBojo,
-          totalFindings: consistencyTabTotalFindings,
+          totalFindings: ruleCheck.consistencyCheckDone
+            ? consistencyTabTotalFindings
+            : 0,
           literalSelected: consistencyCriteriaSelection.literalSelected,
           unifySelected: consistencyCriteriaSelection.unifySelected,
           commonStringSelected:
@@ -1576,10 +1614,12 @@ export default function MainScreen({
     authEmail,
     pdf.pdfFileName,
     consistencyTabEntries,
+    unifyCandidatePreviewResults,
     pageDisplay.formatLabel,
     ruleCheck.isInstanceVisible,
     ruleCheck.groupVisibilityMode,
     ruleCheck.visibleInstanceCount,
+    ruleCheck.consistencyCheckDone,
     consistencyGroupsWithFindings.literalWithFindings,
     consistencyGroupsWithFindings.unifyWithFindings,
     consistencyGroupsWithFindings.commonStringWithFindings,
@@ -2239,7 +2279,10 @@ export default function MainScreen({
                     className="btn-add panel-section-run-btn btn-export-results"
                     data-work-guide="consistency-export"
                     onClick={handleConsistencyExport}
-                    disabled={!ruleCheck.consistencyCheckDone}
+                    disabled={
+                      !ruleCheck.consistencyCheckDone &&
+                      unifyCandidatePreviewResults.length === 0
+                    }
                   >
                     검수 결과 다운로드
                   </button>
@@ -2462,7 +2505,7 @@ export default function MainScreen({
                   authEmail={authEmail}
                   onBetaQuotaConsumed={() => void betaQuota.refresh()}
                   currentPage={pdf.currentPage}
-                  selectedInstance={ruleCheck.selectedInstance}
+                  selectedInstance={ruleCheck.consistencySelected}
                   onSelectUnifyCandidateInstance={(inst) => {
                     setConsistencyFocus('rules');
                     setLastConsistencyPane('rules');
