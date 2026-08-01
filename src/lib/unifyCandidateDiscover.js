@@ -712,7 +712,6 @@ export function enrichClustersWithItemHits(clusters, pages) {
     const occurrencesByVariant = {};
     /** @type {Record<string, number>} */
     const counts = {};
-    let totalCount = 0;
     for (const variant of cluster.variants ?? []) {
       const occs = cluster.occurrencesByVariant?.[variant] ?? [];
       if (!occs.length) {
@@ -723,31 +722,38 @@ export function enrichClustersWithItemHits(clusters, pages) {
       const next = enrichOccurrencesWithItemHits(occs, pageByNum);
       occurrencesByVariant[variant] = next;
       counts[variant] = next.length;
-      totalCount += next.length;
     }
-    const variants = (cluster.variants ?? []).filter((v) => (counts[v] ?? 0) > 0);
-    const hasGlued = variants.some((v) => !/\s/.test(v));
-    const hasSpaced = variants.some((v) => /\s/.test(v));
-    if (!hasGlued || !hasSpaced || variants.length < 2) {
+    // 출현 있는 표기만으로 추천·합계. 0회 이형태(위성·예상형)는 UI용으로 유지.
+    const positive = (cluster.variants ?? []).filter(
+      (v) => (counts[v] ?? 0) > 0,
+    );
+    if (!positive.length) {
       return null;
     }
-    const ranked = variants
-      .map((variant) => ({ variant, count: counts[variant] }))
+    // 목록 순서: 횟수 ↓, 그다음 0회 이형태. 0회 키도 variants에 남김.
+    const ranked = (cluster.variants ?? [])
+      .map((variant) => ({ variant, count: counts[variant] ?? 0 }))
       .sort(
         (a, b) =>
           b.count - a.count ||
           spaceCount(a.variant) - spaceCount(b.variant) ||
           a.variant.localeCompare(b.variant, 'ko'),
       );
+    const positiveRanked = ranked.filter((row) => row.count > 0);
+    const hasGlued = positive.some((v) => !/\s/.test(v));
+    const hasSpaced = positive.some((v) => /\s/.test(v));
+    const keepAsSingleForm =
+      cluster.kind === 'single-form' || !hasGlued || !hasSpaced;
     return {
       ...cluster,
+      ...(keepAsSingleForm ? { kind: /** @type {const} */ ('single-form') } : {}),
       variants: ranked.map((row) => row.variant),
       counts: Object.fromEntries(ranked.map((row) => [row.variant, row.count])),
       occurrencesByVariant: Object.fromEntries(
-        ranked.map((row) => [row.variant, occurrencesByVariant[row.variant]]),
+        ranked.map((row) => [row.variant, occurrencesByVariant[row.variant] ?? []]),
       ),
-      recommendedUnify: pickRecommendedUnify(ranked),
-      totalCount: ranked.reduce((sum, row) => sum + row.count, 0),
+      recommendedUnify: pickRecommendedUnify(positiveRanked),
+      totalCount: positiveRanked.reduce((sum, row) => sum + row.count, 0),
     };
   });
   return enriched.filter(Boolean);
@@ -1074,7 +1080,45 @@ export function buildUnifyOccurrenceIndex(pageTexts, opts = {}) {
 }
 
 /**
+ * 시나리오 C prefetch용 — addOccurrence와 같은 전처리 표면형 수집.
+ * @param {{ pageNum?: number, text?: string, textLayout?: string }[]} pageTexts
+ * @returns {string[]}
+ */
+function collectUnifyKiwiPrefetchSurfaces(pageTexts) {
+  /** @type {Set<string>} */
+  const out = new Set();
+  for (const page of pageTexts ?? []) {
+    const sourceText =
+      typeof page?.textLayout === 'string' && page.textLayout.length > 0
+        ? page.textLayout
+        : (page?.text ?? '');
+    if (!sourceText) continue;
+    for (const { line } of splitUnifyScanLinesWithAbs(sourceText)) {
+      const tokens = extractTokensWithIndex(line);
+      for (let i = 0; i < tokens.length; i += 1) {
+        const tokenRaw = sliceUnifyRaw(line, tokens[i], tokens[i]);
+        const one = stripUnifyPeripheralDigits(
+          stripUnifyPunctuationNoise(normalizeUnifyVariant(tokenRaw)),
+        );
+        if (one) out.add(one);
+        const maxN = Math.min(UNIFY_MAX_NGRAM_TOKENS, tokens.length - i);
+        for (let n = 2; n <= maxN; n += 1) {
+          const raw = sliceUnifyRaw(line, tokens[i], tokens[i + n - 1]);
+          const prep = stripUnifyPeripheralDigits(
+            stripUnifyPunctuationNoise(normalizeUnifyVariant(raw)),
+          );
+          if (prep) out.add(prep);
+        }
+      }
+    }
+  }
+  // 요청 폭주 방지
+  return [...out].slice(0, 800);
+}
+
+/**
  * 페이지마다 이벤트 루프에 양보 — 메인 스레드 '응답 없음' 방지.
+ * 시나리오 C: Kiwi 서버 모드면 표면형 prefetch 후 누적.
  * @param {{ pageNum?: number, text?: string, textLayout?: string }[]} pageTexts
  * @param {{ minHangulSyllables?: number }} [opts]
  * @returns {Promise<Map<string, ClusterAcc>>}
@@ -1084,6 +1128,21 @@ export async function buildUnifyOccurrenceIndexAsync(pageTexts, opts = {}) {
   /** @type {Map<string, ClusterAcc>} */
   const byKey = new Map();
   const pages = pageTexts ?? [];
+
+  if (isUnifyKiwiJosaEnabled()) {
+    try {
+      const { isKiwiServerMode } = await import('./kiwiMorph/runtime.js');
+      if (isKiwiServerMode()) {
+        const { prefetchKiwiAnalyze } = await import(
+          './kiwiMorph/serverRunner.js'
+        );
+        await prefetchKiwiAnalyze(collectUnifyKiwiPrefetchSurfaces(pages));
+      }
+    } catch {
+      /* heuristic */
+    }
+  }
+
   for (let i = 0; i < pages.length; i += 1) {
     accumulateUnifyPageOccurrences(byKey, pages[i], minHangul);
     if (i + 1 < pages.length) {

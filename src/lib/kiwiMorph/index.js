@@ -11,8 +11,10 @@ export {
   setKiwiInstance,
   clearKiwiInstance,
   isKiwiReady,
+  isKiwiServerMode,
+  setKiwiServerMode,
 } from './runtime.js';
-export { analyzeLine, KIWI_MATCH_ALL } from './analyze.js';
+export { analyzeLine, KIWI_MATCH_ALL, clearKiwiAnalyzeCache } from './analyze.js';
 export {
   stripTrailingJosaKiwi,
   stripTrailingJosaFromTokens,
@@ -31,3 +33,18 @@ export {
   shouldSkipMatchByKiwiBoundary,
   shouldSkipMatchByKiwiTokens,
 } from './boundaryGate.js';
+export {
+  shouldBootKiwi,
+  shouldBootKiwiLocal,
+  bootKiwiIfNeeded,
+  bootKiwiLocalIfNeeded,
+} from './bootLocal.js';
+export {
+  KIWI_ANALYZE_PATH,
+  clampAnalyzeText,
+  parseAnalyzeRequestBody,
+} from './serverContract.js';
+export { resolveKiwiAnalyzeEndpoint } from './resolveEndpoint.js';
+export { prefetchKiwiAnalyze, pingKiwiAnalyze } from './serverRunner.js';
+export { clearRemoteAnalyzeCache } from './remoteCache.js';
+// loadNode / loadBrowser / serverAnalyzeService 는 환경별 직접 import

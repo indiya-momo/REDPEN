@@ -2,9 +2,11 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { mapLayoutIndexToVisualIndex } from '../unifyCandidateDiscover.js';
 import {
   analyzeLine,
+  clearKiwiAnalyzeCache,
   clearKiwiInstance,
   isJosaTag,
   mapRestoredToVisual,
+  setKiwiInstance,
   stripTrailingJosaFromTokens,
   stripTrailingJosaKiwi,
 } from './index.js';
@@ -31,6 +33,39 @@ describe('kiwiMorph tokens helpers', () => {
   it('조사가 없으면 null', () => {
     const tokens = [{ str: '경제학', tag: 'NNG', position: 0, length: 3 }];
     expect(stripTrailingJosaFromTokens('경제학', tokens)).toBeNull();
+  });
+});
+
+describe('shouldAnalyzeWithKiwi', () => {
+  it('한 글자 공백 나열은 스킵', async () => {
+    const { shouldAnalyzeWithKiwi } = await import('./shouldAnalyze.js');
+    expect(shouldAnalyzeWithKiwi('명 지 계 곡')).toBe(false);
+    expect(shouldAnalyzeWithKiwi('경제학자로서')).toBe(true);
+  });
+});
+
+describe('analyzeLine cache', () => {
+  it('동일 입력 두 번째는 analyze를 다시 호출하지 않는다', () => {
+    clearKiwiAnalyzeCache();
+    let calls = 0;
+    const kiwi = {
+      ready: () => true,
+      analyze: (s) => {
+        calls += 1;
+        return {
+          tokens: [{ str: s, tag: 'NNG', position: 0, length: s.length }],
+          score: 0,
+        };
+      },
+    };
+    setKiwiInstance(/** @type {any} */ (kiwi));
+    expect(analyzeLine('경제학', { kiwi })).toBeTruthy();
+    expect(analyzeLine('경제학', { kiwi })).toBeTruthy();
+    expect(calls).toBe(1);
+    expect(analyzeLine('경제학', { kiwi, skipCache: true })).toBeTruthy();
+    expect(calls).toBe(2);
+    clearKiwiInstance();
+    clearKiwiAnalyzeCache();
   });
 });
 

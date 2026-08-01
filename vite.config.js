@@ -3,6 +3,8 @@ import path from 'node:path';
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import { stdictDevProxyPlugin } from './scripts/stdictDevProxyPlugin.js';
+import { kiwiDevModelsPlugin } from './scripts/kiwiDevModelsPlugin.js';
+import { kiwiAnalyzeDevPlugin } from './scripts/kiwiAnalyzeDevPlugin.js';
 
 for (const name of ['pdf-empty.png', 'pdf-momo.png', 'pdf-full.png']) {
   const fromPublic = path.resolve('public/momo', name);
@@ -76,6 +78,10 @@ export default defineConfig(({ mode }) => {
       getKey: () =>
         buildEnv.STDICT_API_KEY || buildEnv.VITE_STDICT_API_KEY || '',
     }),
+    // 로컬만: tmp/kiwi-models + wasm. 배포 번들에 모델 미포함.
+    kiwiDevModelsPlugin(),
+    // 시나리오 C: POST /api/kiwi/analyze (Node Kiwi, 브라우저에 wasm 미전송)
+    kiwiAnalyzeDevPlugin(),
   ],
   test: {
     environment: 'node',

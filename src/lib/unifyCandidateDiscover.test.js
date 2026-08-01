@@ -8,6 +8,7 @@ import {
   buildUnifyOccurrenceIndex,
   firstWrongUnifyInstance,
   instancesForUnifyVariant,
+  enrichClustersWithItemHits,
   isValidSpacedUnifyVariant,
   isExcludedUnifyCandidateRaw,
   mapLayoutIndexToVisualIndex,
@@ -717,6 +718,59 @@ describe('buildUnifyCandidatePreviewGroups', () => {
     expect(firstWrongUnifyInstance(cluster, '조선시대')?.find).toBe(
       '조선 시대',
     );
+  });
+
+  it('0회 이형태(위성)가 있어도 출현 있는 표기는 미리보기·하이라이트 그룹을 만든다', () => {
+    const pages = [
+      {
+        pageNum: 1,
+        text: '경제학자로서 칼럼니스트인 폴',
+        items: [
+          {
+            str: '경제학자로서 칼럼니스트인 폴',
+            transform: [10, 0, 0, 10, 72, 700],
+            width: 200,
+            height: 12,
+          },
+        ],
+        itemRefs: [{ start: 0, end: 16, itemIndex: 0 }],
+      },
+      {
+        pageNum: 2,
+        text: '경제학자는 이론을',
+        items: [
+          {
+            str: '경제학자는 이론을',
+            transform: [10, 0, 0, 10, 72, 700],
+            width: 120,
+            height: 12,
+          },
+        ],
+        itemRefs: [{ start: 0, end: 9, itemIndex: 0 }],
+      },
+    ];
+    const satellite = {
+      key: '경제학자',
+      kind: /** @type {const} */ ('single-form'),
+      variants: ['경제학자', '경제 학자'],
+      counts: { 경제학자: 2, '경제 학자': 0 },
+      occurrencesByVariant: {
+        경제학자: [
+          { pageNum: 1, index: 0, matchedText: '경제학자' },
+          { pageNum: 2, index: 0, matchedText: '경제학자' },
+        ],
+        '경제 학자': [],
+      },
+      recommendedUnify: '경제학자',
+      totalCount: 2,
+    };
+    const enriched = enrichClustersWithItemHits([satellite], pages);
+    expect(enriched).toHaveLength(1);
+    expect(enriched[0].counts.경제학자).toBeGreaterThan(0);
+    expect(enriched[0].counts['경제 학자']).toBe(0);
+    const groups = buildUnifyCandidatePreviewGroups(enriched, { pages });
+    const hit = groups.find((g) => g.find === '경제학자');
+    expect(hit?.instances?.length).toBeGreaterThan(0);
   });
 });
 

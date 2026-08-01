@@ -110,7 +110,8 @@ discoverSpacingUnifyCandidates(Async)
 - [x] `Match.all` / `allWithNormalizing` / `none` 표면형 1:1 → **전부 통과** (문어 샘플)
 - [x] `초콜렛/NNG`+`을/JKO` 확인
 - [x] `명지 계곡` → `명/NNB 지/NNG 계곡` **오분리** 관측 (user dict 필요)
-- [ ] LGPL/WASM 법무 확인 (미결)
+- [x] LGPL/WASM **법무 질문지** 작성 (`kiwi-legal-questions-2026-08-02.md`) — **회신 대기**
+- [ ] LGPL/WASM 법무 **회신·고지 반영** (미결)
 
 **통과 기준:** 조건부 통과 — P1은 플래그 OFF + heuristic 폴백 + user dict 전제.
 
@@ -141,13 +142,14 @@ discoverSpacingUnifyCandidates(Async)
 - [x] `ruleEngine` 본문 미변경 (호출은 기존 `shouldSkipMatch`만)
 
 **통과 기준:** OFF·미로드 회귀, ON+Node에서 `경제⊂경제학` skip·`초콜렛`+조사 keep.
-### P3 — 운영 (선택)
+### P3 — 운영 (로컬 우선)
 
-- [ ] 페이지 캐시: `pageNum + text hash → tokens`
-- [ ] **모델 8파일** 브라우저 캐시 (Cache API / IndexedDB; SW는 선택)
-- [ ] Worker 풀 / `analyze` 배치
-- [ ] 출판 고유명사 user dict
-- [ ] soft-wrap 복원 문장만 analyze (깨진 줄은 heuristic)
+- [x] 페이지/줄 캐시: `analyzeLine` 문자열 키 Map (max 256, 인스턴스 교체 시 clear)
+- [ ] **모델** 브라우저 캐시 (Cache API / IndexedDB) — 배포용, 법무 후
+- [x] 로컬 DEV 로드: `kiwiDevModelsPlugin` + `bootLocal` (`kiwi-local-dev-2026-08-02.md`)
+- [x] 출판 고유명사 user dict 초안 확장 (명지·크루그먼)
+- [x] soft-wrap/자간 유령 줄은 analyze 스킵 (`shouldAnalyzeWithKiwi`)
+- [ ] Worker 풀 / `analyze` 배치 — 다음
 
 ## 4. 아키텍처 스케치
 
@@ -225,8 +227,9 @@ P1 착수 전 아래를 픽스처로 고정한다 (건수는 하한).
 
 ## 7. 다음 액션 (승인 게이트)
 
-1. **법무:** LGPL v3(코어) vs 2.1-or-later(npm), **WASM/Emscripten 정적 링크 해당 여부**, 고지 문구
-2. **P0 스파이크** (UI 미연결) → 버전·모델·Match·용량 메모
-3. P0 통과 후 **P1 플래그·좌표 어댑터** 설계 확정
-4. **P2 태그 화이트리스트** (`NNG`/`NNP`/… 허용 목록) — **사용자(로사) 승인 후**에만 코드 반영
+1. **법무:** Q3 서버 = Relinking/소스공개 의무 없음 · Q2 브라우저 WASM = 동적링킹 + 고지·소스·약관 조건 (`kiwi-legal-questions-2026-08-02.md` §5)
+2. **배포 기본 경로 = 서버 API (C).** B는 준수 준비 전까지 프로덕션 OFF
+3. ~~P0 / P1 / P2~~ 완료 · 로컬 A 유지
+4. **구현:** Kiwi 서버 엔드포인트 C (`kiwi-server-c-2026-08-02.md`) — 로컬 Vite 플러그인 + 클라이언트 prefetch
 5. `ruleEngine` 본문 변경은 **별도 승인** 전까지 금지
+6. 맞춤법 경계의 줄 단위 서버 prefetch는 후속 (지금은 서버 모드+캐시 히트 시만)
