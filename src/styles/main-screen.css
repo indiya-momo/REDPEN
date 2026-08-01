@@ -860,6 +860,62 @@
   margin-bottom: 0;
 }
 
+/* 공통 항목 찾기 — 카드 안 표기별 묶음 */
+.panel-left .phrase-slot-fills {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.panel-left .phrase-slot-fills__item {
+  margin: 0;
+  padding: 6px 0;
+  border-top: 1px solid color-mix(in srgb, var(--panel-border-soft, #dcd2bf) 70%, transparent);
+}
+
+.panel-left .phrase-slot-fills__item:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.panel-left .phrase-slot-fills__item:last-child {
+  padding-bottom: 0;
+}
+
+.panel-left .phrase-slot-fills__row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+  margin-bottom: 4px;
+}
+
+.panel-left .phrase-slot-fills__text {
+  flex: 1 1 auto;
+  min-width: 0;
+  /* RidiBatang 등 본문 서체는 ˅(U+02C5) 글리프가 없어 � 로 깨짐 → 고딕 */
+  font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+  font-size: calc(0.72rem * 1.15 * var(--panel-ui-scale, 1));
+  font-weight: 700;
+  color: var(--c-ink, #333);
+  word-break: keep-all;
+}
+
+.panel-left .phrase-slot-fills__count {
+  flex: 0 0 auto;
+  font-size: calc(0.72rem * 1.1 * var(--panel-ui-scale, 1));
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--c-soft, #666);
+}
+
+.panel-left .phrase-slot-fills .result-pages {
+  margin-top: 0;
+}
+
 .panel-left .result-detail {
   margin-top: var(--panel-gap-title-body);
 }

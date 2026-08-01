@@ -1,6 +1,6 @@
 import ResultPageSummary from './ResultPageSummary.jsx';
-import GroupVisibilityCheckbox from './GroupVisibilityCheckbox.jsx';
-import DetailsChevron from './DetailsChevron.jsx';
+import PhraseSlotResultSummary from './PhraseSlotResultSummary.jsx';
+import GroupVisibilityCheckbox from './GroupVisibilityCheckbox.jsx';import DetailsChevron from './DetailsChevron.jsx';
 import CriteriaHoverTip from './CriteriaHoverTip.jsx';
 import { useEffect, useMemo, useRef } from 'react';
 import { getBuiltInTip } from '../lib/builtInRules.js';
@@ -353,31 +353,59 @@ export default function CheckResultsPanel({
               {tipText && !isConsistency ? (
                 <span className="result-card-tip-inline">{tipText}</span>
               ) : null}
-              <ResultPageSummary
-                instances={group.instances}
-                currentPage={currentPage}
-                selectedInstance={selectedInstance}
-                formatPageLabel={pageLabel}
-                onSelectPage={(pageNum) =>
-                  onSelectPageInGroup(pageNum, group.instances, source)
-                }
-                onSelectInstance={
-                  onSelectInstance
-                    ? (inst) => onSelectInstance(inst, source)
-                    : undefined
-                }
-                isInstanceVisible={
-                  isInstanceVisible
-                    ? (inst) => isInstanceVisible(source, group, inst)
-                    : undefined
-                }
-                onToggleInstanceVisibility={
-                  onToggleInstanceVisibility
-                    ? (inst) =>
-                        onToggleInstanceVisibility(source, group, inst)
-                    : undefined
-                }
-              />
+              {group.patternKind === 'phrase-slot-find' ? (
+                <PhraseSlotResultSummary
+                  instances={group.instances}
+                  currentPage={currentPage}
+                  selectedInstance={selectedInstance}
+                  formatPageLabel={pageLabel}
+                  onSelectPage={(pageNum, fillInstances) =>
+                    onSelectPageInGroup(pageNum, fillInstances, source)
+                  }
+                  onSelectInstance={
+                    onSelectInstance
+                      ? (inst) => onSelectInstance(inst, source)
+                      : undefined
+                  }
+                  isInstanceVisible={
+                    isInstanceVisible
+                      ? (inst) => isInstanceVisible(source, group, inst)
+                      : undefined
+                  }
+                  onToggleInstanceVisibility={
+                    onToggleInstanceVisibility
+                      ? (inst) =>
+                          onToggleInstanceVisibility(source, group, inst)
+                      : undefined
+                  }
+                />
+              ) : (
+                <ResultPageSummary
+                  instances={group.instances}
+                  currentPage={currentPage}
+                  selectedInstance={selectedInstance}
+                  formatPageLabel={pageLabel}
+                  onSelectPage={(pageNum) =>
+                    onSelectPageInGroup(pageNum, group.instances, source)
+                  }
+                  onSelectInstance={
+                    onSelectInstance
+                      ? (inst) => onSelectInstance(inst, source)
+                      : undefined
+                  }
+                  isInstanceVisible={
+                    isInstanceVisible
+                      ? (inst) => isInstanceVisible(source, group, inst)
+                      : undefined
+                  }
+                  onToggleInstanceVisibility={
+                    onToggleInstanceVisibility
+                      ? (inst) =>
+                          onToggleInstanceVisibility(source, group, inst)
+                      : undefined
+                  }
+                />
+              )}
             </div>
           ) : null}
         </div>
