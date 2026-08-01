@@ -29,7 +29,17 @@ import {
   sortPhraseHitsReadingOrder,
 } from './pdfItemPhraseFind.js';
 import { isUnifyHangulMidWordSoftWrap } from './pdfPageText.js';
-import { isUnifyKiwiJosaEnabled } from './featureFlags.js';
+import {
+  isSpellingKiwiBoundaryEnabled,
+  isUnifyKiwiJosaEnabled,
+} from './featureFlags.js';
+import { shouldSkipMatchByKiwiBoundary } from './kiwiMorph/boundaryGate.js';
+import {
+  isKiwiCopulaEndingSurface,
+  isKiwiEnumerationSurface,
+  isKiwiNounVerbalConnectiveSurface,
+  shouldRejectUnifySatelliteSpacedByPos,
+} from './kiwiMorph/unifyExclude.js';
 import { stripTrailingJosaKiwi } from './kiwiMorph/stripTrailingJosa.js';
 import { isKiwiReady } from './kiwiMorph/runtime.js';
 
@@ -272,11 +282,20 @@ export function isValidSpacedUnifyVariant(variant) {
 
 /**
  * 쉼표 나열(개인, 은행), 또는 띄움 덩어리가 조사만인 경우(경기 에서)는 제외.
+ * 한글 사이에 끼인 문장부호(경제다!라)도 제외.
  * 끝에만 붙은 쉼표·기호는 제외 대상이 아님.
  * @param {string} rawMatched
  */
 export function isExcludedUnifyCandidateRaw(rawMatched) {
   const matchedText = normalizeUnifyScanText(rawMatched);
+  // 경제다!라 · 경제학·철학 — 한글 사이 기호(가운데점·감탄 등), 공백 허용
+  if (
+    /[\uAC00-\uD7A3]\s*[^\uAC00-\uD7A3\d\s]+\s*[\uAC00-\uD7A3]/u.test(
+      matchedText,
+    )
+  ) {
+    return true;
+  }
   const withoutTrailingPunct = matchedText
     .replace(/[^\uAC00-\uD7A3\d\s]+$/gu, '')
     .trim();
@@ -426,6 +445,13 @@ function addOccurrence(byKey, pageNum, index, rawMatched, minHangul) {
   // 줄 단위 스캔만 하므로, 줄바꿈이 섞인 raw는 버림
   if (/\n/.test(String(rawMatched ?? ''))) return;
   if (isExcludedUnifyCandidateRaw(rawMatched)) return;
+  if (
+    isKiwiReady() &&
+    (isKiwiEnumerationSurface(rawMatched) ||
+      isKiwiEnumerationSurface(normalizeUnifyScanText(rawMatched)))
+  ) {
+    return;
+  }
   const matchedText = normalizeUnifyScanText(rawMatched);
   // 스캔: 기호·주변 숫자 제거 후 끝 조사 제거 → 같은 표기를 한 키로 묶음
   const withPunctStripped = stripUnifyPeripheralDigits(
@@ -438,11 +464,44 @@ function addOccurrence(byKey, pageNum, index, rawMatched, minHangul) {
   if (/\s/.test(withPunctStripped) && spacedPartIsBareJosa(withPunctStripped)) {
     return;
   }
-  const variant = stripTrailingJosa(withPunctStripped);
+  // 끝 조사: Kiwi 준비 시 형태소 경계로 제거(경제학이→경제학). 플래그 무관.
+  let variant = stripTrailingJosaHeuristic(withPunctStripped, minHangul);
+  if (isKiwiReady()) {
+    try {
+      const kiwiStem = stripTrailingJosaKiwi(withPunctStripped, minHangul);
+      if (kiwiStem != null) variant = kiwiStem;
+    } catch {
+      /* heuristic 유지 */
+    }
+  }
   if (!variant) return;
   if (/\s/.test(variant) && !isValidSpacedUnifyVariant(variant)) return;
+  // 결국 시장·보통 시장 — 명사+명사/동사+동사 아니면 발견 단계에서도 제외
+  if (
+    isKiwiReady() &&
+    /\s/.test(variant) &&
+    shouldRejectUnifySatelliteSpacedByPos(variant, undefined)
+  ) {
+    return;
+  }
   const key = variant.replace(/\s+/g, '');
   if (hangulSyllableCount(key) < minHangul) return;
+  // 이다 종결·연결·명사+동사화(상환하기·가치있다고·구성되며)는 발견에서 제외.
+  if (isKiwiReady() && isKiwiCopulaEndingSurface(key)) return;
+  if (isKiwiReady() && isKiwiNounVerbalConnectiveSurface(key)) return;
+  if (
+    isKiwiReady() &&
+    !/\s/.test(withPunctStripped) &&
+    isKiwiCopulaEndingSurface(withPunctStripped.replace(/\s+/g, ''))
+  ) {
+    return;
+  }
+  if (
+    isKiwiReady() &&
+    isKiwiNounVerbalConnectiveSurface(withPunctStripped.replace(/\s+/g, ''))
+  ) {
+    return;
+  }
   let acc = byKey.get(key);
   if (!acc) {
     acc = { counts: new Map(), occurrences: new Map() };
@@ -665,6 +724,42 @@ export function assignUniqueUnifyHighlightIndices(occs, page) {
 }
 
 /**
+ * 칩·하이라이트용 — 맞춤법과 같은 Kiwi 경계 게이트.
+ * 발견 스캔(raw 횟수)은 그대로 두고, enrich 직전(텍스트 index 유효할 때)만 적용.
+ * @param {UnifyVariantOccurrence[]} occs
+ * @param {{ text?: string } | null | undefined} page
+ * @returns {UnifyVariantOccurrence[]}
+ */
+export function filterUnifyOccurrencesByKiwiBoundary(occs, page) {
+  if (!occs?.length) return [];
+  if (!isSpellingKiwiBoundaryEnabled() || !isKiwiReady()) {
+    return [...occs];
+  }
+  const source = prepareUnifyScanText(page?.text ?? '');
+  if (!source) return [...occs];
+
+  return occs.filter((occ) => {
+    const matched = String(occ.matchedText ?? '');
+    if (!matched) return true;
+    const index = Number(occ.index);
+    if (
+      !Number.isFinite(index) ||
+      index < 0 ||
+      index + matched.length > source.length ||
+      source.slice(index, index + matched.length) !== matched
+    ) {
+      // rebase 후 합성 index 등 — 판정 불가면 현행 유지
+      return true;
+    }
+    try {
+      return !shouldSkipMatchByKiwiBoundary(matched, source, index);
+    } catch {
+      return true;
+    }
+  });
+}
+
+/**
  * 표시·하이라이트용 — 페이지별 item+bbox로 출현을 재배치 (클러스터 확정 후·소수 variant만).
  * @param {UnifyVariantOccurrence[]} occs
  * @param {Map<number, import('./pdfService.js').PageData>} pageByNum
@@ -687,7 +782,11 @@ export function enrichOccurrencesWithItemHits(occs, pageByNum) {
   const out = [];
   for (const pageNum of [...byPage.keys()].sort((a, b) => a - b)) {
     const page = pageByNum.get(pageNum);
-    const list = byPage.get(pageNum) ?? [];
+    const list = filterUnifyOccurrencesByKiwiBoundary(
+      byPage.get(pageNum) ?? [],
+      page,
+    );
+    if (!list.length) continue;
     const rebased = rebaseUnifyOccurrencesFromItemHits(list, page);
     if (rebased !== null) {
       out.push(...rebased);
@@ -1102,7 +1201,9 @@ export function buildUnifyOccurrenceIndex(pageTexts, opts = {}) {
  */
 function collectUnifyKiwiPrefetchSurfaces(pageTexts) {
   /** @type {Set<string>} */
-  const out = new Set();
+  const eojeols = new Set();
+  /** @type {Set<string>} */
+  const ngrams = new Set();
   for (const page of pageTexts ?? []) {
     const sourceText =
       typeof page?.textLayout === 'string' && page.textLayout.length > 0
@@ -1116,20 +1217,30 @@ function collectUnifyKiwiPrefetchSurfaces(pageTexts) {
         const one = stripUnifyPeripheralDigits(
           stripUnifyPunctuationNoise(normalizeUnifyVariant(tokenRaw)),
         );
-        if (one) out.add(one);
+        if (one) {
+          eojeols.add(one);
+          const hangul = one.replace(/[^\uAC00-\uD7A3]/gu, '');
+          if (hangul) eojeols.add(hangul);
+        }
         const maxN = Math.min(UNIFY_MAX_NGRAM_TOKENS, tokens.length - i);
         for (let n = 2; n <= maxN; n += 1) {
           const raw = sliceUnifyRaw(line, tokens[i], tokens[i + n - 1]);
           const prep = stripUnifyPeripheralDigits(
             stripUnifyPunctuationNoise(normalizeUnifyVariant(raw)),
           );
-          if (prep) out.add(prep);
+          if (!prep) continue;
+          ngrams.add(prep);
+          for (const part of prep.split(/\s+/).filter(Boolean)) {
+            eojeols.add(part);
+            const hangul = part.replace(/[^\uAC00-\uD7A3]/gu, '');
+            if (hangul) eojeols.add(hangul);
+          }
         }
       }
     }
   }
-  // 요청 폭주 방지
-  return [...out].slice(0, 800);
+  // 어절 단독을 앞에 — 위성 POS·명사동사화 게이트가 캐시 미스 나지 않게
+  return [...eojeols, ...ngrams].slice(0, 1200);
 }
 
 /**
@@ -1145,18 +1256,40 @@ export async function buildUnifyOccurrenceIndexAsync(pageTexts, opts = {}) {
   const byKey = new Map();
   const pages = pageTexts ?? [];
 
-  if (isUnifyKiwiJosaEnabled()) {
-    try {
-      const { isKiwiServerMode } = await import('./kiwiMorph/runtime.js');
-      if (isKiwiServerMode()) {
-        const { prefetchKiwiAnalyze } = await import(
-          './kiwiMorph/serverRunner.js'
-        );
-        await prefetchKiwiAnalyze(collectUnifyKiwiPrefetchSurfaces(pages));
+  // 표기통일 잡음 제외·조사 strip용 — App boot보다 먼저 찾기 눌러도 준비
+  try {
+    const { bootKiwiIfNeeded } = await import('./kiwiMorph/bootLocal.js');
+    await bootKiwiIfNeeded();
+  } catch {
+    /* heuristic */
+  }
+
+  // 서버 모드면 표면 prefetch. 위성 동종 판별은 어절 단독 분석이 필요하므로
+  // DEV는 prefetch 결과와 무관하게 wasm을 올려 analyzeLine이 로컬로 가게 함.
+  try {
+    const {
+      isKiwiServerMode,
+      setKiwiServerMode,
+      getKiwiInstance,
+    } = await import('./kiwiMorph/runtime.js');
+    if (isKiwiServerMode()) {
+      const { prefetchKiwiAnalyze } = await import(
+        './kiwiMorph/serverRunner.js'
+      );
+      const stored = await prefetchKiwiAnalyze(
+        collectUnifyKiwiPrefetchSurfaces(pages),
+      );
+      if (stored === 0 && import.meta.env.DEV) {
+        setKiwiServerMode(false);
       }
-    } catch {
-      /* heuristic */
     }
+    if (import.meta.env.DEV && !getKiwiInstance()?.ready?.()) {
+      const { loadKiwiBrowser } = await import('./kiwiMorph/loadBrowser.js');
+      // force: 서버 모드 ready와 무관하게 로컬 인스턴스 확보
+      await loadKiwiBrowser({ force: true });
+    }
+  } catch {
+    /* heuristic */
   }
 
   for (let i = 0; i < pages.length; i += 1) {

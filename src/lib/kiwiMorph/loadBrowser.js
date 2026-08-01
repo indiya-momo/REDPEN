@@ -4,7 +4,7 @@
  */
 import { KiwiBuilder } from 'kiwi-nlp';
 import { KIWI_DEFAULT_USER_WORDS } from './userDict.js';
-import { setKiwiInstance, getKiwiInstance, isKiwiReady } from './runtime.js';
+import { setKiwiInstance, getKiwiInstance } from './runtime.js';
 
 const MODEL_FILES = [
   'combiningRule.txt',
@@ -43,7 +43,10 @@ async function fetchBytes(url) {
  * @returns {Promise<import('kiwi-nlp').Kiwi | null>}
  */
 export async function loadKiwiBrowser(opts = {}) {
-  if (!opts.force && isKiwiReady()) {
+  // 서버 모드만으로 isKiwiReady()==true인 경우 wasm을 건너뛰면
+  // analyze가 캐시 미스 null → morph 제외가 전부 fail-open 된다.
+  // 로컬 인스턴스 유무로만 short-circuit.
+  if (!opts.force && getKiwiInstance()?.ready?.()) {
     return getKiwiInstance();
   }
   if (!opts.force && loadPromise) return loadPromise;
