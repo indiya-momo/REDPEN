@@ -230,11 +230,7 @@
   margin-inline: 0;
   padding-inline: var(--welcome-page-padding-inline);
   padding-top: calc(0.5rem * var(--welcome-scale));
-  padding-bottom: clamp(
-    calc(0.5rem * var(--welcome-scale)),
-    1vw,
-    calc(0.85rem * var(--welcome-scale))
-  );
+  padding-bottom: calc(0.5rem * var(--welcome-scale));
   text-align: center;
 }
 
@@ -290,10 +286,6 @@
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  gap: calc(
-    (var(--welcome-ba-cream-outer-gap) - var(--welcome-ba-cream-inner-pad) * 0.35 +
-      var(--welcome-landing-cta-ba-gap-boost)) * var(--welcome-landing-cta-ba-gap-ratio)
-  );
   --welcome-landing-cta-ba-gap-ratio: 0.4;
   --welcome-landing-hero-top-pad: clamp(
     calc(0.875rem * var(--welcome-scale)),
@@ -304,6 +296,10 @@
     calc(0.875rem * var(--welcome-scale)),
     1.4vw,
     calc(1.125rem * var(--welcome-scale))
+  );
+  gap: calc(
+    (var(--welcome-ba-cream-outer-gap) - var(--welcome-ba-cream-inner-pad) * 0.35 +
+      var(--welcome-landing-cta-ba-gap-boost)) * var(--welcome-landing-cta-ba-gap-ratio)
   );
   --welcome-ba-fold-shift-y: 0;
   /* 크림 전시 패널 (비포·애프터 묶음) */
@@ -2350,6 +2346,47 @@
   background: rgba(255, 248, 235, 0.04);
   border: 1px solid rgba(180, 152, 96, 0.52);
   box-shadow: none;
+}
+
+/* 「먼저 둘러보기」옆 — 버튼 안 글씨 아랫선과 동일 높이 */
+.welcome-pc__page .welcome-pc__hero-cta .welcome-pc__auth-browse-wrap {
+  position: relative;
+  flex: 0 1 auto;
+  display: block;
+  width: max-content;
+  max-width: none;
+}
+
+.welcome-pc__page .welcome-pc__hero-cta .welcome-pc__cta-browser-note {
+  position: absolute;
+  left: 100%;
+  /* 버튼 padding-bottom만큼 올려 「먼저 둘러보기」글씨 아랫선에 맞춤 */
+  bottom: calc(
+    0.875rem * var(--welcome-scale) * var(--welcome-ba-img-scale) *
+      var(--welcome-hero-cta-scale, 1)
+  );
+  margin: 0;
+  margin-inline-start: calc(
+    1.35rem * var(--welcome-scale) * var(--welcome-ba-img-scale) *
+      var(--welcome-hero-cta-scale, 1)
+  );
+  padding: 0;
+  font-family: var(--welcome-perf-font-info);
+  font-size: calc(
+    0.2128 *
+      clamp(
+        calc(2.2rem * var(--welcome-scale) * var(--welcome-perf-l2-scale, 1)),
+        calc(4.2vw * var(--welcome-perf-l2-scale, 1)),
+        calc(3.38rem * var(--welcome-scale) * var(--welcome-perf-l2-scale, 1))
+      )
+  );
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  color: color-mix(in srgb, #ecd6a6 72%, #8a7a60);
+  -webkit-text-stroke: 0;
+  text-shadow: none;
 }
 
 .welcome-pc__page .welcome-pc__hero-cta .btn-welcome-primary.welcome-pc__auth-browse--single:hover:not(:disabled) {
