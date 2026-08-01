@@ -6,6 +6,7 @@ import {
   isTocBodyCheckEnabled,
   isUnifyCandidateFindEnabled,
   isUnifyJosaSlmReviewEnabled,
+  isUnifyKiwiJosaEnabled,
   isUnifyPredicateSlmReviewEnabled,
   isUnifyStdictPosReviewEnabled,
 } from './featureFlags.js';
@@ -18,6 +19,7 @@ describe('featureFlags', () => {
   const prevLoanword = import.meta.env.VITE_FEATURE_LOANWORD_CONVERTER;
   const prevUnifyCandidate = import.meta.env.VITE_FEATURE_UNIFY_CANDIDATE_FIND;
   const prevJosaSlm = import.meta.env.VITE_UNIFY_JOSA_SLM;
+  const prevKiwiJosa = import.meta.env.VITE_UNIFY_KIWI_JOSA;
   const prevPredicateSlm = import.meta.env.VITE_UNIFY_PREDICATE_SLM;
   const prevStdict = import.meta.env.VITE_UNIFY_STDICT;
 
@@ -29,6 +31,7 @@ describe('featureFlags', () => {
     import.meta.env.VITE_FEATURE_LOANWORD_CONVERTER = prevLoanword;
     import.meta.env.VITE_FEATURE_UNIFY_CANDIDATE_FIND = prevUnifyCandidate;
     import.meta.env.VITE_UNIFY_JOSA_SLM = prevJosaSlm;
+    import.meta.env.VITE_UNIFY_KIWI_JOSA = prevKiwiJosa;
     import.meta.env.VITE_UNIFY_PREDICATE_SLM = prevPredicateSlm;
     import.meta.env.VITE_UNIFY_STDICT = prevStdict;
   });
@@ -81,6 +84,13 @@ describe('featureFlags', () => {
     expect(isUnifyJosaSlmReviewEnabled()).toBe(false);
     import.meta.env.VITE_UNIFY_JOSA_SLM = 'true';
     expect(isUnifyJosaSlmReviewEnabled()).toBe(true);
+  });
+
+  it('Kiwi 조사 경계는 VITE_UNIFY_KIWI_JOSA=true 일 때만 켜진다', () => {
+    import.meta.env.VITE_UNIFY_KIWI_JOSA = undefined;
+    expect(isUnifyKiwiJosaEnabled()).toBe(false);
+    import.meta.env.VITE_UNIFY_KIWI_JOSA = 'true';
+    expect(isUnifyKiwiJosaEnabled()).toBe(true);
   });
 
   it('용언 2차 SLM은 VITE_UNIFY_PREDICATE_SLM=true 일 때만 켜진다', () => {

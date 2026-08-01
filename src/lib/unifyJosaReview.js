@@ -10,6 +10,9 @@ import {
   hangulSyllableCount,
   UNIFY_SPACED_PART_MIN_HANGUL,
 } from './unifyCandidateDiscover.js';
+import { isUnifyKiwiJosaEnabled } from './featureFlags.js';
+import { stripTrailingJosaKiwi } from './kiwiMorph/stripTrailingJosa.js';
+import { isKiwiReady } from './kiwiMorph/runtime.js';
 
 /**
  * 다다음절·저위험 조사(결합형 통째 명시).
@@ -281,6 +284,22 @@ export function josaReviewStemKey(stemVariant) {
 }
 
 /**
+ * Kiwi 어간 키 (플래그·로드 시에만). SLM 대체 아님.
+ * @param {string} variant
+ * @returns {string | null}
+ */
+export function kiwiJosaStemKey(variant) {
+  if (!isUnifyKiwiJosaEnabled() || !isKiwiReady()) return null;
+  try {
+    const stem = stripTrailingJosaKiwi(variant, UNIFY_SPACED_PART_MIN_HANGUL);
+    if (stem == null) return null;
+    return josaReviewStemKey(stem);
+  } catch {
+    return null;
+  }
+}
+
+/**
  * @typedef {import('./unifyCandidateDiscover.js').UnifySpacingCluster} UnifySpacingCluster
  */
 
@@ -420,6 +439,10 @@ export function attachJosaReviewHints(clusters) {
       return cluster;
     }
     const peerKeys = peersByKey.get(cluster.key) ?? [];
+    const kiwiStemKey = kiwiJosaStemKey(
+      cluster.variants?.find((v) => (cluster.counts?.[v] ?? 0) > 0) ||
+        cluster.key,
+    );
     const candidate = {
       stemKey: detail.stemKey,
       stemSpaced: detail.stemSpaced,
@@ -427,6 +450,12 @@ export function attachJosaReviewHints(clusters) {
       tier: detail.tier,
       stemMismatch: detail.stemMismatch,
       peerKeys,
+      ...(kiwiStemKey
+        ? {
+            kiwiStemKey,
+            kiwiAgrees: kiwiStemKey === detail.stemKey,
+          }
+        : {}),
     };
     if (detail.stemMismatch) {
       return { ...cluster, josaReviewCandidate: candidate };
