@@ -268,6 +268,8 @@ export function shouldRejectUnifySatelliteGlued(surface, opts = {}) {
  * 어절이 단독으로 명사(복합 성분)만인지.
  * `결국`은 문맥에선 NNG로도 붙지만 단독 분석은 MAG → false.
  * `이는`(이/NP+는/JX)처럼 대명사만 있는 어절은 명사 복합 성분이 아님.
+ * `안에`·`점을`·`후의`처럼 조사가 붙은 어절도 복합 성분이 아님
+ * (조사 제거 후 NNG만 보면 오탐).
  * @param {string} eojeol
  * @param {{ kiwi?: { ready?: () => boolean, analyze: Function } | null }} [opts]
  * @returns {boolean} 분석 불가면 true(fail-open — 명사로 간주)
@@ -281,9 +283,9 @@ export function isKiwiNounCompoundEojeol(eojeol, opts = {}) {
   if (!hangulOnly(part)) return false;
   const tokens = analyzeTokens(part, opts);
   if (!tokens) return true;
-  const content = tokens.filter(
-    (t) => !isSkippableTrailingTag(t.tag) && !isJosaTag(t.tag),
-  );
+  // 조사 부착 어절은 띄움 명사복합 성분이 아님
+  if (tokens.some((t) => isJosaTag(t.tag))) return false;
+  const content = tokens.filter((t) => !isSkippableTrailingTag(t.tag));
   if (!content.length) return false;
   if (!content.every((t) => isKiwiBoundaryStemTag(t.tag))) return false;
   // NNG/NNP/외래어만 복합 명사 성분. NP·숫자(SN)는 제외.
@@ -378,18 +380,19 @@ export function classifyKiwiSpacedEojeolPos(eojeol, opts = {}) {
   const tokens = analyzeTokens(part, opts);
   if (!tokens) return 'unknown';
 
-  const nounContent = tokens.filter(
-    (t) => !isSkippableTrailingTag(t.tag) && !isJosaTag(t.tag),
-  );
-  if (
-    nounContent.length &&
-    nounContent.every((t) => isKiwiBoundaryStemTag(t.tag)) &&
-    nounContent.some((t) => {
-      const b = tagBase(t.tag);
-      return b === 'NNG' || b === 'NNP' || b === 'SL' || b === 'SH';
-    })
-  ) {
-    return 'noun';
+  // 조사 부착(안에·점을·후의)은 명사 복합 성분이 아님
+  if (!tokens.some((t) => isJosaTag(t.tag))) {
+    const nounContent = tokens.filter((t) => !isSkippableTrailingTag(t.tag));
+    if (
+      nounContent.length &&
+      nounContent.every((t) => isKiwiBoundaryStemTag(t.tag)) &&
+      nounContent.some((t) => {
+        const b = tagBase(t.tag);
+        return b === 'NNG' || b === 'NNP' || b === 'SL' || b === 'SH';
+      })
+    ) {
+      return 'noun';
+    }
   }
 
   const verbContent = tokens.filter((t) => !isVerbSkippableTag(t.tag));
