@@ -259,6 +259,15 @@ describe('hangulSoftWrapSeparatorLegacy (참고·Semantic 이전)', () => {
     expect(isLikelyHangulEojeolBoundary('그래서 한글중', '간강제')).toBe(false);
   });
 
+  it('1음절 독립 어절 「간」 뒤는 어절 경계(물가 간\\n악순환)', () => {
+    expect(isLikelyHangulEojeolBoundary('임금과 물가 간', '악순환으로')).toBe(
+      true,
+    );
+    expect(
+      hangulSoftWrapSeparatorLegacy('임금과 물가 간', '악순환으로', 12, 12),
+    ).toBe('\n');
+  });
+
   it('y 간격이 본문 행간 밖이면 줄바꿈 유지', () => {
     expect(
       hangulSoftWrapSeparatorLegacy('긴문장의끝자', '리는', 12, 12, {
@@ -304,6 +313,13 @@ describe('rejoinHangulSoftLineBreaks', () => {
   it('조사·어미로 끝나면 붙이지 않는다', () => {
     const { text } = rejoinHangulSoftLineBreaks('그는\n사과를\n');
     expect(text).toBe('그는\n사과를\n');
+  });
+
+  it('의존명사 「간」 줄바꿈은 붙이지 않는다', () => {
+    const { text } = rejoinHangulSoftLineBreaks(
+      '임금과 물가 간\n악순환으로 보이는\n',
+    );
+    expect(text).toBe('임금과 물가 간\n악순환으로 보이는\n');
   });
 
   it('두 번 연속 soft-wrap을 붙인다', () => {

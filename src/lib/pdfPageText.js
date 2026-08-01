@@ -116,6 +116,24 @@ const HANGUL_NARROW_JOSA = new Set(
   Array.from('은는이가을를의만와과도'),
 );
 
+/**
+ * 1음절이지만 독립 어절인 의존명사·접속(「물가 간」\n「악순환」).
+ * 마지막 *어절 전체*가 이것과 같으면 soft-wrap으로 붙이지 않음.
+ * (끝 글자만 보면 `시간`·`중간` 줄바꿈까지 막히므로 어절 단위로만 본다.)
+ */
+const HANGUL_STANDALONE_ONE_SYLLABLE_EOJEOL = new Set([
+  '간',
+  '및',
+  '등',
+  '중',
+  '후',
+  '전',
+  '겸',
+  '즉',
+  '곧',
+  '또',
+]);
+
 /** 종결·의문 후보 — 다음 줄이 새 어절로 보일 때만 줄바꿈 유지 */
 const HANGUL_CLOSING_TAIL = new Set(['다', '요', '까', '네']);
 
@@ -187,6 +205,11 @@ export function isLikelyHangulEojeolBoundary(leftText, rightLine) {
   const L = left[left.length - 1];
   if (HANGUL_NARROW_JOSA.has(L)) return true;
 
+  const leftPartsForTail = left.split(INLINE_SPACE_RE).filter(Boolean);
+  const lastEojeolOnly = leftPartsForTail[leftPartsForTail.length - 1] ?? '';
+  // 「물가 간」\n「악순환」 — 1음절 독립 어절 뒤는 단어 중간 soft-wrap이 아님
+  if (HANGUL_STANDALONE_ONE_SYLLABLE_EOJEOL.has(lastEojeolOnly)) return true;
+
   const R = right[0];
   // 명사 끝 등 + 다음 줄이 조사로만/조사+공백으로 시작 (바다\n가 …)
   if (
@@ -213,7 +236,7 @@ export function isLikelyHangulEojeolBoundary(leftText, rightLine) {
   // 앞줄에 띄어쓰기가 있고 마지막 어절이 ≥2이며, 다음 첫 어절이 조사·접미로 완결되면
   // 단어 경계로 본다. (한글중\n간강제 · 내자\n리는 는 soft-wrap 유지)
   if (INLINE_SPACE_RE.test(left)) {
-    const leftParts = left.split(INLINE_SPACE_RE).filter(Boolean);
+    const leftParts = leftPartsForTail;
     const rightParts = right.split(INLINE_SPACE_RE).filter(Boolean);
     const lastEojeol = leftParts[leftParts.length - 1] ?? '';
     const firstEojeol = rightParts[0] ?? '';
