@@ -64,6 +64,16 @@ export function isUnifyJosaSlmReviewEnabled() {
 }
 
 /**
+ * 표기 통일 — Kiwi 형태소로 끝 조사 어간 보조.
+ * - 기본 꺼짐 (`VITE_UNIFY_KIWI_JOSA=true` 일 때만)
+ * - ON이어도 모델 미로드면 heuristic 폴백
+ * @see project-docs/kiwi-morph-boundary-plan-2026-08-02.md §P1
+ */
+export function isUnifyKiwiJosaEnabled() {
+  return import.meta.env.VITE_UNIFY_KIWI_JOSA === 'true';
+}
+
+/**
  * 표기 통일 추천 — 용언 여부 2차 SLM (목록에서 비용언 제거).
  * - 기본 꺼짐 (`VITE_UNIFY_PREDICATE_SLM=true` 일 때만)
  * @see project-docs/unify-predicate-review-slm-design-2026-07-30.md

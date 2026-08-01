@@ -29,6 +29,9 @@ import {
   sortPhraseHitsReadingOrder,
 } from './pdfItemPhraseFind.js';
 import { isUnifyHangulMidWordSoftWrap } from './pdfPageText.js';
+import { isUnifyKiwiJosaEnabled } from './featureFlags.js';
+import { stripTrailingJosaKiwi } from './kiwiMorph/stripTrailingJosa.js';
+import { isKiwiReady } from './kiwiMorph/runtime.js';
 
 /**
  * @typedef {{
@@ -140,12 +143,12 @@ export const UNIFY_TRAILING_JOSA = Object.freeze([
 const UNIFY_QUOTE_CHARS_RE = /[''`´‘’“”„«»「」『』]/gu;
 
 /**
- * 마지막 어절 끝 조사만 제거. 어간이 한글 2음절 미만이면 유지.
+ * 마지막 어절 끝 조사만 제거 (heuristic). 어간이 한글 2음절 미만이면 유지.
  * @param {string} s
  * @param {number} [minStemHangul]
  * @returns {string}
  */
-export function stripTrailingJosa(
+export function stripTrailingJosaHeuristic(
   s,
   minStemHangul = UNIFY_SPACED_PART_MIN_HANGUL,
 ) {
@@ -169,6 +172,28 @@ export function stripTrailingJosa(
     return parts.join(' ');
   }
   return v;
+}
+
+/**
+ * 마지막 어절 끝 조사만 제거.
+ * `VITE_UNIFY_KIWI_JOSA=true` 이고 Kiwi 로드됨 → morph 경계, 실패 시 heuristic.
+ * @param {string} s
+ * @param {number} [minStemHangul]
+ * @returns {string}
+ */
+export function stripTrailingJosa(
+  s,
+  minStemHangul = UNIFY_SPACED_PART_MIN_HANGUL,
+) {
+  if (isUnifyKiwiJosaEnabled() && isKiwiReady()) {
+    try {
+      const kiwiStem = stripTrailingJosaKiwi(s, minStemHangul);
+      if (kiwiStem != null) return kiwiStem;
+    } catch {
+      /* heuristic */
+    }
+  }
+  return stripTrailingJosaHeuristic(s, minStemHangul);
 }
 
 /**

@@ -1,7 +1,7 @@
 {
   "name": "pdf-publish-proofread",
   "private": true,
-  "version": "1.110",
+  "version": "1.111",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -48,6 +48,7 @@
     "ffmpeg-static": "^5.3.0",
     "husky": "^9.1.7",
     "jsdom": "^29.1.1",
+    "kiwi-nlp": "^0.23.0",
     "pngjs": "^7.0.0",
     "sharp": "^0.34.5",
     "vite": "^6.3.5",
