@@ -32,6 +32,7 @@ VITE_UNIFY_KIWI_JOSA=true
 3. `npm run dev` → `http://127.0.0.1:5173`
 4. App boot이 `GET /api/kiwi/analyze` → `ready:true` 이면 **서버 모드**(브라우저에 wasm 안 받음)
 5. 표기 통일 찾기 시 표면형 배치 prefetch 후 조사 strip
+6. 맞춤법 `runRuleCheckAsync` 시작 시 줄·페이지 텍스트 prefetch 후 경계 게이트
 
 헬스 확인:
 
