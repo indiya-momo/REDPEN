@@ -1,8 +1,8 @@
 # 표기 통일 추천 — 1차 / 2차 순차 플로우 (pattern 확장)
 
-**상태:** 1차 플로우 구현됨 · **추천 엔진(Score/Explain/Preview)은 미구현 — 아래 §4 로드맵**  
+**상태:** 1차 플로우 구현됨 · **P0 추천 엔진(증거 하한·Score·support·Preview) 구현** · P0.5~P2 미구현  
 **날짜:** 2026-07-31  
-**개정:** 2026-08-01 — Discover는 유지, 패턴 단계를 추천 엔진으로 보강하는 우선순위 합의  
+**개정:** 2026-08-01 — Discover는 유지, 패턴 단계를 추천 엔진으로 보강하는 우선순위 합의 · P0 구현  
 **관련:** `unify-pattern-rule-session-2026-07-31.md` (초기 세션 confirm 안 — **본 문서로 대체**)
 
 ## 의도 (한 줄)
@@ -224,10 +224,10 @@ P0에서는 `support` 숫자로 UI를 조립하고, 카피·점수식이 안정�
 
 ### 추천 엔진 (§4)
 
-- [ ] P0: 증거 하한
-- [ ] P0: Score + Rank
-- [ ] P0: `support` 메타 (Explain 데이터)
-- [ ] P0: 패턴 Preview UI 연결
+- [x] P0: 증거 하한
+- [x] P0: Score + Rank
+- [x] P0: `support` 메타 (Explain 데이터)
+- [x] P0: 패턴 Preview UI 연결
 - [ ] P0.5: Reason ID
 - [ ] P1: Pattern·Score 회귀 테스트
 - [ ] P1: 1음절 증거 기반 허용

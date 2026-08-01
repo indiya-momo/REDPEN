@@ -1850,6 +1850,204 @@
   color: var(--c-soft);
 }
 
+/* 1차→2차 순차 플로우 */
+.panel-left .unify-candidate-find__phase-banner {
+  margin: 0 0 8px;
+  padding: 8px 10px;
+  font-size: calc(0.78rem * var(--panel-ui-scale, 1));
+  line-height: 1.45;
+  color: var(--c-soft, #555);
+  background: var(--panel-surface-group, #f6f1e7);
+  border: 1px solid var(--panel-border-soft, #dcd2bf);
+}
+
+.panel-left .unify-candidate-find__phase-banner-title {
+  margin: 0 0 4px;
+  font-weight: 700;
+  color: var(--c-ink, #333);
+}
+
+.panel-left .unify-candidate-find__phase-banner-conditions,
+.panel-left .unify-candidate-find__phase-banner-line {
+  margin: 0;
+  font-weight: 600;
+  color: var(--c-ink, #333);
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.panel-left .unify-candidate-find__pattern-explain {
+  margin: 0;
+  padding: 4px 10px 8px 28px;
+  font-size: calc(0.7rem * var(--panel-ui-scale, 1));
+  line-height: 1.4;
+  color: var(--c-soft, #666);
+  word-break: keep-all;
+}
+
+.panel-left .unify-candidate-find__phase2-entry,
+.panel-left .unify-candidate-find__phase2-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin: 0 0 10px;
+}
+
+.panel-left .unify-pattern-pick {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  background: var(--panel-surface-group, #f6f1e7);
+  border: 1px solid var(--panel-border-soft, #dcd2bf);
+}
+
+.panel-left .unify-pattern-pick__hint,
+.panel-left .unify-pattern-pick__empty,
+.panel-left .unify-pattern-pick__examples {
+  margin: 0 0 8px;
+  font-size: calc(0.72rem * var(--panel-ui-scale, 1));
+  line-height: 1.4;
+  color: var(--c-soft, #555);
+}
+
+.panel-left .unify-pattern-pick__group {
+  margin-bottom: 10px;
+}
+
+.panel-left .unify-pattern-pick__group-title {
+  margin: 0 0 6px;
+  font-size: calc(0.78rem * var(--panel-ui-scale, 1));
+  font-weight: 700;
+}
+
+.panel-left .unify-pattern-pick__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.panel-left .unify-pattern-pick__item {
+  margin-bottom: 8px;
+}
+
+.panel-left .unify-pattern-pick__label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 8px;
+  font-size: calc(0.78rem * var(--panel-ui-scale, 1));
+  cursor: pointer;
+}
+
+.panel-left .unify-pattern-pick__template {
+  font-weight: 700;
+}
+
+.panel-left .unify-pattern-pick__dir {
+  color: var(--c-soft, #666);
+}
+
+.panel-left .unify-pattern-pick__count {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.panel-left .unify-pattern-pick__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+/* 세션 patternRule — 접미 계열 편측 확장 미리보기 (구 UI, 유틸 재사용) */
+.panel-left .unify-pattern-rule-preview {
+  margin-top: var(--panel-gap-section, 12px);
+  padding: 10px 12px;
+  background: var(--panel-surface-group, #f6f1e7);
+  border: 1px solid var(--panel-border-soft, #dcd2bf);
+}
+
+.panel-left .unify-pattern-rule-preview__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.panel-left .unify-pattern-rule-preview__title {
+  margin: 0;
+  font-size: calc(0.78rem * var(--panel-ui-scale, 1));
+  font-weight: 800;
+  color: var(--c-ink, #333);
+}
+
+.panel-left .unify-pattern-rule-preview__meta {
+  font-size: calc(0.72rem * var(--panel-ui-scale, 1));
+  font-weight: 700;
+  color: var(--c-soft, #666);
+  font-variant-numeric: tabular-nums;
+}
+
+.panel-left .unify-pattern-rule-preview__hint,
+.panel-left .unify-pattern-rule-preview__empty {
+  margin: 0 0 8px;
+  font-size: calc(0.72rem * var(--panel-ui-scale, 1));
+  line-height: 1.35;
+  color: var(--c-soft, #666);
+}
+
+.panel-left .unify-pattern-rule-preview__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.panel-left .unify-pattern-rule-preview__item {
+  margin: 0;
+  padding: 7px 0;
+  border-top: 1px solid color-mix(in srgb, var(--panel-border-soft, #dcd2bf) 70%, transparent);
+}
+
+.panel-left .unify-pattern-rule-preview__item:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.panel-left .unify-pattern-rule-preview__row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.panel-left .unify-pattern-rule-preview__map {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: calc(0.82rem * var(--panel-ui-scale, 1));
+  font-weight: 700;
+}
+
+.panel-left .unify-pattern-rule-preview__arrow {
+  font-weight: 400;
+  color: var(--c-soft, #666);
+}
+
+.panel-left .unify-pattern-rule-preview__count {
+  flex: 0 0 auto;
+  font-size: calc(0.72rem * var(--panel-ui-scale, 1));
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--c-soft, #666);
+}
+
+.panel-left .unify-pattern-rule-preview__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 10px;
+}
+
 /* 표기 통일 추천 결과 — 맞춤법 결과 리스트와 동일 구조, 회색조만 */
 .panel-left .unify-candidate-find .results-panel--unify-candidate {
   --panel-surface-stage: #e8e8e8;
@@ -2565,6 +2763,21 @@
   );
   font-weight: 700;
   box-shadow: inset 0 -2px 0 var(--pillar-consistency, #5c6b7a);
+}
+
+/* 2차 — 1차에서 고른 방향 힌트(확정 전 약한 음영) */
+.panel-left .unify-candidate-find__series-spacing-btn--hint {
+  background: color-mix(
+    in srgb,
+    var(--pillar-consistency, #5c6b7a) 9%,
+    #fff
+  );
+  color: color-mix(
+    in srgb,
+    var(--pillar-consistency, #5c6b7a) 55%,
+    #666 45%
+  );
+  font-weight: 600;
 }
 
 .panel-left .unify-candidate-find__variants .result-pages {
