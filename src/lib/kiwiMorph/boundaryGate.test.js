@@ -282,6 +282,45 @@ describe.skipIf(!HAS_KIWI_MODEL)('이다 종결 잡음 제외 (Node 모델)', ()
     setKiwiInstance(saved);
   });
 
+  it('안에·점을·후의 시장은 조사 부착 → 위성 제외', async () => {
+    const {
+      isKiwiNounCompoundEojeol,
+      classifyKiwiSpacedEojeolPos,
+      shouldRejectUnifySatelliteSpacedByPos,
+    } = await import('./unifyExclude.js');
+    const { buildSingleFormCluster } = await import(
+      '../unifyCandidateSatellites.js'
+    );
+
+    // 안/NNG+에/JKB, 점/NNG+을/JKO, 후/NNG+의/JKG
+    expect(classifyKiwiSpacedEojeolPos('안에')).toBe('other');
+    expect(classifyKiwiSpacedEojeolPos('점을')).toBe('other');
+    expect(classifyKiwiSpacedEojeolPos('후의')).toBe('other');
+    expect(isKiwiNounCompoundEojeol('안에')).toBe(false);
+    expect(isKiwiNounCompoundEojeol('점을')).toBe(false);
+    expect(isKiwiNounCompoundEojeol('후의')).toBe(false);
+    expect(shouldRejectUnifySatelliteSpacedByPos('안에 시장', undefined)).toBe(
+      true,
+    );
+    expect(shouldRejectUnifySatelliteSpacedByPos('점을 시장', undefined)).toBe(
+      true,
+    );
+    expect(shouldRejectUnifySatelliteSpacedByPos('후의 시장', undefined)).toBe(
+      true,
+    );
+    expect(
+      buildSingleFormCluster(
+        '안에시장',
+        {
+          counts: new Map([['안에 시장', 1]]),
+          occurrences: new Map([['안에 시장', []]]),
+        },
+        'suffix',
+        '시장',
+      ),
+    ).toBeNull();
+  });
+
   it('규제하려·이는 시장·결국/그냥 시장 제외', async () => {
     const {
       isKiwiNounVerbalConnectiveSurface,
