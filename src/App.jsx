@@ -119,6 +119,13 @@ export default function App() {
     }
   }, []);
 
+  // Kiwi 플래그 ON → 서버 analyze(C) 우선, DEV만 실패 시 브라우저 wasm(A)
+  useEffect(() => {
+    void import('./lib/kiwiMorph/bootLocal.js').then((m) =>
+      m.bootKiwiIfNeeded(),
+    );
+  }, []);
+
   useEffect(() => {
     if (!authReady || auxWindow || !authSession?.uid) return;
     void resolveFeedbackThankYouOnLoad(

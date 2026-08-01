@@ -7,4 +7,6 @@
 export const KIWI_DEFAULT_USER_WORDS = Object.freeze([
   { word: '명지', tag: 'NNP', score: 10 },
   { word: '명지계곡', tag: 'NNP', score: 12 },
+  { word: '폴크루그먼', tag: 'NNP', score: 10 },
+  { word: '크루그먼', tag: 'NNP', score: 10 },
 ]);

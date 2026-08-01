@@ -1590,11 +1590,9 @@ function ClusterCard({
                 <span className="unify-candidate-find__variant">
                   {variant}
                 </span>
-                {count > 0 ? (
-                  <span className="unify-candidate-find__count">
-                    {count}회
-                  </span>
-                ) : null}
+                <span className="unify-candidate-find__count">
+                  {count}회
+                </span>
                 <button
                   type="button"
                   className={[
