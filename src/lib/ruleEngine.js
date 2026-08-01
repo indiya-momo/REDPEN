@@ -28,10 +28,6 @@ import { cautionHighlightSpan } from './cautionRules.js';
  * @property {number} [highlightIndex] — highlightText 시작 위치 (없으면 matchedText 안에서 유도)
  * @property {number} pageNum
  * @property {number} index
- * @property {number[]} [itemIndexes] — PDF.js TextItem 직접 하이라이트(표기통일 B)
- * @property {number} [x]
- * @property {number} [y]
- * @property {number} [column] — 0 왼 / 1 오른 (B 경로 고정)
  */
 
 /**
@@ -316,34 +312,23 @@ function applyRuleToPages(rule, pages, byKey, globalExcludePhrases, errors) {
       ) {
         continue;
       }
-      let matchStart = match.index;
-      let matchedRaw = match[0];
-      // 공통 항목: 예전 PHRASE_START가 앞 공백을 매치에 넣던 경우 제거
-      if (
-        rule.patternKind === 'phrase-slot-find' &&
-        matchedRaw.length > 1 &&
-        /^[\s\u00A0]/.test(matchedRaw)
-      ) {
-        matchedRaw = matchedRaw.slice(1);
-        matchStart += 1;
-      }
-      const matchEnd = matchStart + matchedRaw.length;
-      if (ruleRequiresLeadingBoundary(rule) && matchStart > 0) {
+      const matchEnd = match.index + match[0].length;
+      if (ruleRequiresLeadingBoundary(rule) && match.index > 0) {
         let atLineStart = false;
         if (page.itemRefs?.length) {
-          const ctx = getLineContextAtTextIndex(page, matchStart);
-          if (ctx && matchStart <= ctx.lineStart + 2) {
+          const ctx = getLineContextAtTextIndex(page, match.index);
+          if (ctx && match.index <= ctx.lineStart + 2) {
             atLineStart = true;
           }
         }
         if (!atLineStart) {
-          const prevChar = text[matchStart - 1] ?? '';
+          const prevChar = text[match.index - 1] ?? '';
           if (prevChar && isLetterOrDigit(prevChar)) {
             continue;
           }
         }
       }
-      const matchSlice = text.slice(matchStart, matchEnd);
+      const matchSlice = text.slice(match.index, matchEnd);
       const isAuxiliaryVerb = rule.patternKind === 'auxiliary-verb';
       const isCompoundRule =
         rule.patternKind === 'compound-find' ||
@@ -360,18 +345,16 @@ function applyRuleToPages(rule, pages, byKey, globalExcludePhrases, errors) {
       }
       if (
         page.itemRefs?.length &&
-        !isMatchSpatiallyCoherent(page, matchStart, matchEnd, maxLineGap)
+        !isMatchSpatiallyCoherent(page, match.index, matchEnd, maxLineGap)
       ) {
         continue;
       }
       const suggested =
         rule.category === 'caution'
-          ? matchedRaw
-          : rule.patternKind === 'phrase-slot-find'
-            ? matchedRaw
-            : rule.pattern === 'regex'
-              ? applyReplaceTemplate(rule.replace, match)
-              : rule.replace;
+          ? match[0]
+          : rule.pattern === 'regex'
+            ? applyReplaceTemplate(rule.replace, match)
+            : rule.replace;
       const key =
         rule.category === 'caution' && rule.cautionId
           ? `caution:${rule.cautionId}`
@@ -404,17 +387,17 @@ function applyRuleToPages(rule, pages, byKey, globalExcludePhrases, errors) {
       let highlightText;
       let highlightIndex;
       if (rule.category === 'caution' && rule.cautionStems?.length) {
-        const span = cautionHighlightSpan(matchedRaw, rule.cautionStems);
+        const span = cautionHighlightSpan(match[0], rule.cautionStems);
         highlightText = span.text;
-        highlightIndex = matchStart + span.indexOffset;
+        highlightIndex = match.index + span.indexOffset;
       }
       byKey.get(key).instances.push({
         find: rule.find,
         replace: rule.replace,
-        matchedText: matchedRaw,
+        matchedText: match[0],
         suggestedText: suggested,
         pageNum: page.pageNum,
-        index: matchStart,
+        index: match.index,
         ...(highlightText ? { highlightText, highlightIndex } : {}),
       });
     }
