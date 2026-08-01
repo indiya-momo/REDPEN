@@ -8,7 +8,8 @@ import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import CriteriaHoverTip from '../CriteriaHoverTip.jsx';
 import {
   buildUnifyCandidatePreviewGroups,
-  discoverSpacingUnifyCandidates,
+  discoverSpacingUnifyCandidatesAsync,
+  enrichClustersWithItemHits,
   firstWrongUnifyInstance,
   instancesForUnifyVariant,
 } from '../../lib/unifyCandidateDiscover.js';
@@ -375,6 +376,10 @@ export default function UnifyCandidateFindPanel({
   const [hiddenPdfKeys, setHiddenPdfKeys] = useState(
     /** @type {Set<string>} */ (new Set()),
   );
+  /** 칩·하이라이트 동일 소스 (publishPreview가 갱신) */
+  const [publishedPreviewGroups, setPublishedPreviewGroups] = useState(
+    /** @type {import('../../lib/ruleEngine.js').GroupedResult[]} */ ([]),
+  );
 
   /**
    * @param {UnifySpacingCluster[]} allClusters
@@ -399,37 +404,39 @@ export default function UnifyCandidateFindPanel({
       registeredByKey = registeredVariants,
       overrideClusters = null,
     ) => {
-      if (!onPreviewGroupsChange) return;
+      /** @type {import('../../lib/ruleEngine.js').GroupedResult[]} */
+      let groups = [];
       if (overrideClusters) {
-        onPreviewGroupsChange(
-          buildUnifyCandidatePreviewGroups(
-            overrideClusters.filter((c) => !hidden.has(c.key)),
-            { registeredByKey },
-          ),
+        groups = buildUnifyCandidatePreviewGroups(
+          overrideClusters.filter((c) => !hidden.has(c.key)),
+          { registeredByKey, pages: pageTexts },
         );
-        return;
-      }
-      let nextGroups = raw
-        ? groupSortAndFillSatellites(allClusters, raw)
-        : [];
-      nextGroups = stripDependentNounGenitiveFromGroups(nextGroups).groups;
-      nextGroups = mergeReviewedClustersIntoGroups(nextGroups, slmByKey);
-      nextGroups = applyPredicateSlmDropsToGroups(
-        nextGroups,
-        { seriesIds: dropSeriesIds, clusterKeys: dropClusterKeys },
-        needsReviewByKey,
-      );
-      const previewClusters = nextGroups
-        .flatMap((g) => g.clusters)
-        .filter((c) => !hidden.has(c.key));
-      onPreviewGroupsChange(
-        buildUnifyCandidatePreviewGroups(previewClusters, {
+      } else {
+        let nextGroups = raw
+          ? groupSortAndFillSatellites(allClusters, raw)
+          : [];
+        nextGroups = stripDependentNounGenitiveFromGroups(nextGroups).groups;
+        nextGroups = mergeReviewedClustersIntoGroups(nextGroups, slmByKey);
+        nextGroups = applyPredicateSlmDropsToGroups(
+          nextGroups,
+          { seriesIds: dropSeriesIds, clusterKeys: dropClusterKeys },
+          needsReviewByKey,
+        );
+        const previewClusters = nextGroups
+          .flatMap((g) => g.clusters)
+          .filter((c) => !hidden.has(c.key));
+        groups = buildUnifyCandidatePreviewGroups(previewClusters, {
           registeredByKey,
-        }),
-      );
+          pages: pageTexts,
+        });
+      }
+      setPublishedPreviewGroups(groups);
+      onPreviewGroupsChange?.(groups);
+      return groups;
     },
     [
       onPreviewGroupsChange,
+      pageTexts,
       slmReviewedByKey,
       predicateDropSeriesIds,
       predicateDropClusterKeys,
@@ -464,8 +471,15 @@ export default function UnifyCandidateFindPanel({
         return;
       }
       await new Promise((r) => setTimeout(r, 0));
-      const result = discoverSpacingUnifyCandidates(pageTexts, { includeRaw: true });
-      const next = result.clusters;
+      // 페이지마다 양보 — 동기 discover/enrich 전량 실행은 '응답 없음'을 유발함
+      const result = await discoverSpacingUnifyCandidatesAsync(pageTexts, {
+        includeRaw: true,
+      });
+      // item 근거 없는 유령 출현(지도 글리프→붙임) 제거 후 목록·칩 동기화
+      const next = enrichClustersWithItemHits(
+        result.clusters ?? [],
+        pageTexts,
+      );
       let workingGroups = groupSortAndFillSatellites(next, result.rawByKey);
       const ruleStrip = stripDependentNounGenitiveFromGroups(workingGroups);
       workingGroups = ruleStrip.groups;
@@ -754,32 +768,41 @@ export default function UnifyCandidateFindPanel({
       nextRegistered.set(cluster.key, chosenVariant);
       setRegisteredVariants(nextRegistered);
 
-      if (unifyPhase === 'secondary_pairs') {
-        publishPreview(
-          clusters,
-          rawByKey,
-          hiddenPdfKeys,
-          slmReviewedByKey,
-          predicateDropSeriesIds,
-          predicateDropClusterKeys,
-          predicateNeedsReviewByKey,
-          nextRegistered,
-          secondaryClusters,
-        );
-      } else {
-        publishPreview(
-          clusters,
-          rawByKey,
-          hiddenPdfKeys,
-          slmReviewedByKey,
-          predicateDropSeriesIds,
-          predicateDropClusterKeys,
-          predicateNeedsReviewByKey,
-          nextRegistered,
-        );
-      }
+      const previewGroups =
+        unifyPhase === 'secondary_pairs'
+          ? publishPreview(
+              clusters,
+              rawByKey,
+              hiddenPdfKeys,
+              slmReviewedByKey,
+              predicateDropSeriesIds,
+              predicateDropClusterKeys,
+              predicateNeedsReviewByKey,
+              nextRegistered,
+              secondaryClusters,
+            )
+          : publishPreview(
+              clusters,
+              rawByKey,
+              hiddenPdfKeys,
+              slmReviewedByKey,
+              predicateDropSeriesIds,
+              predicateDropClusterKeys,
+              predicateNeedsReviewByKey,
+              nextRegistered,
+            );
 
-      const firstWrong = firstWrongUnifyInstance(cluster, chosenVariant);
+      // publish와 동일한 인스턴스를 선택해야 primary 빨간줄이 맞음
+      const firstWrong =
+        (previewGroups ?? []).find(
+          (g) =>
+            g.replace === chosenVariant &&
+            g.find !== chosenVariant &&
+            g.instances?.length,
+        )?.instances?.[0] ??
+        firstWrongUnifyInstance(cluster, chosenVariant, {
+          pages: pageTexts,
+        });
       if (firstWrong) onSelectInstance?.(firstWrong);
 
       if (
@@ -819,6 +842,7 @@ export default function UnifyCandidateFindPanel({
       registeredVariants,
       unifyPhase,
       secondaryClusters,
+      pageTexts,
     ],
   );
 
@@ -1042,7 +1066,9 @@ export default function UnifyCandidateFindPanel({
       for (const gc of groupClusters) {
         const v = variantForSpacing(gc, spacing);
         if (!v) continue;
-        const firstWrong = firstWrongUnifyInstance(gc, v);
+        const firstWrong = firstWrongUnifyInstance(gc, v, {
+          pages: pageTexts,
+        });
         if (firstWrong) {
           onSelectInstance?.(firstWrong);
           break;
@@ -1286,6 +1312,8 @@ export default function UnifyCandidateFindPanel({
                                   selectedInstance={selectedInstance}
                                   formatPageLabel={formatPageLabel}
                                   onSelectInstance={onSelectInstance}
+                                  pageTexts={pageTexts}
+                                  previewGroups={publishedPreviewGroups}
                                 />
                               ))}
                             </ul>
@@ -1351,6 +1379,8 @@ export default function UnifyCandidateFindPanel({
                       selectedInstance={selectedInstance}
                       formatPageLabel={formatPageLabel}
                       onSelectInstance={onSelectInstance}
+                      pageTexts={pageTexts}
+                      previewGroups={publishedPreviewGroups}
                     />
                   );
 
@@ -1483,6 +1513,8 @@ function ClusterCard({
   selectedInstance,
   formatPageLabel,
   onSelectInstance,
+  pageTexts = [],
+  previewGroups = [],
 }) {
   const isRegistered = !!registeredVariant;
 
@@ -1510,9 +1542,17 @@ function ClusterCard({
           const isChosen = registeredVariant === variant;
           const isPreSelected = !isRegistered && preSelectedVariant === variant;
           const isFirst = variantIndex === 0;
-          const instances = instancesForUnifyVariant(cluster, variant, {
-            chosenVariant: registeredVariant ?? null,
-          });
+          const replace = registeredVariant || cluster.recommendedUnify;
+          const previewGroup = previewGroups.find(
+            (g) => g.find === variant && g.replace === replace,
+          );
+          const instances =
+            previewGroup?.instances?.length > 0
+              ? previewGroup.instances
+              : instancesForUnifyVariant(cluster, variant, {
+                  chosenVariant: registeredVariant ?? null,
+                  pages: pageTexts,
+                });
 
           return (
             <li

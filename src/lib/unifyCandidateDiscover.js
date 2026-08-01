@@ -9,15 +9,36 @@
  * - 띄움 variant: 각 덩어리 한글 2음절 이상(숫자·영문은 음절·면제 없음, 숫자만 탈락)
  * - 클러스터 키: 조사 제거 후 공백 제거 / 붙임+유효 띄움 동시
  * - 추천: 출현 수 최대 / 동률 시 붙임 — 내부 정책(규범 아님)
+ * - 칩/Next 순: 시각 reading order `(page, column, -y, x)` — hit 집합은 유지
  *
- * 추출: 한글·숫자 토큰 + 줄 안 연속 n-gram(원문 슬라이스, 길이 상한 없음) / 단일 토큰.
+ * 추출: 한글·숫자 토큰 + 줄 안 연속 n-gram(원문 슬라이스, 토큰 수 상한) / 단일 토큰.
+ * 성능: 스캔 중 highlightRange 스냅·전 키 finalize 금지 → 충돌 클러스터에만 후처리.
  */
+
+/** 줄 안 n-gram 최대 토큰 수 (띄어쓰기 이형태는 보통 2~4어절) */
+const UNIFY_MAX_NGRAM_TOKENS = 6;
+
+import { findRefForTextIndex } from '../toc-body/lib/pdfHeadingExtract.js';
+import {
+  buildPageByNum,
+  sortInstancesReadingOrder,
+} from './matchReadingOrder.js';
+import { findPhraseInSpan, highlightRangeForSpelling } from './pdfHighlightRange.js';
+import {
+  findPhraseHitsInPdfItems,
+  sortPhraseHitsReadingOrder,
+} from './pdfItemPhraseFind.js';
+import { isUnifyHangulMidWordSoftWrap } from './pdfPageText.js';
 
 /**
  * @typedef {{
  *   pageNum: number,
  *   index: number,
  *   matchedText: string,
+ *   itemIndexes?: number[],
+ *   x?: number,
+ *   y?: number,
+ *   column?: number,
  * }} UnifyVariantOccurrence
  */
 
@@ -450,17 +471,563 @@ function sliceUnifyRaw(line, first, last) {
 }
 
 /**
- * 하이라이트용 — page.text 쪽 좌표를 우선 찾고, 없으면 스캔 인덱스.
+ * textLayout 오프셋 → page.text(visual) 오프셋.
+ * 같은 itemIndex의 itemRefsLayout ↔ itemRefs로 투영 (자간 가짜 공백 길이 차이 보정).
+ * @param {{ itemRefs?: import('./pdfPageText.js').TextItemRef[], itemRefsLayout?: import('./pdfPageText.js').TextItemRef[] }} page
+ * @param {number} layoutIndex
+ * @returns {number}
+ */
+export function mapLayoutIndexToVisualIndex(page, layoutIndex) {
+  const prefer = Math.max(0, layoutIndex);
+  const layoutRefs = page?.itemRefsLayout;
+  const visualRefs = page?.itemRefs;
+  if (!layoutRefs?.length || !visualRefs?.length) return prefer;
+
+  const hit = findRefForTextIndex(layoutRefs, prefer);
+  if (!hit) return prefer;
+
+  const visualRef = visualRefs.find((r) => r.itemIndex === hit.itemIndex);
+  if (!visualRef) return prefer;
+
+  const layoutLen = Math.max(1, hit.end - hit.start);
+  const visualLen = Math.max(0, visualRef.end - visualRef.start);
+  const local = Math.max(0, prefer - hit.start);
+  if (visualLen <= 0) return visualRef.start;
+  if (layoutLen === visualLen) {
+    return visualRef.start + Math.min(local, visualLen - 1);
+  }
+  const visualLocal = Math.min(
+    Math.floor((local / layoutLen) * visualLen),
+    visualLen - 1,
+  );
+  return visualRef.start + visualLocal;
+}
+
+/**
+ * @param {UnifyVariantOccurrence[]} occs
+ * @param {Map<number, import('./pdfService.js').PageData>} pageByNum
+ * @returns {UnifyVariantOccurrence[]}
+ */
+export function sortUnifyOccurrencesReadingOrder(occs, pageByNum) {
+  if (!occs?.length || !pageByNum?.size) return [...(occs ?? [])];
+  return sortInstancesReadingOrder(
+    occs.map((o) => ({
+      pageNum: o.pageNum,
+      index: o.index,
+      matchedText: o.matchedText,
+      find: o.matchedText,
+      ...(Array.isArray(o.itemIndexes) ? { itemIndexes: o.itemIndexes } : {}),
+      ...(typeof o.x === 'number' ? { x: o.x } : {}),
+      ...(typeof o.y === 'number' ? { y: o.y } : {}),
+      ...(typeof o.column === 'number' ? { column: o.column } : {}),
+    })),
+    pageByNum,
+  ).map((o) => ({
+    pageNum: o.pageNum,
+    index: o.index,
+    matchedText: o.matchedText,
+    ...(Array.isArray(o.itemIndexes) ? { itemIndexes: o.itemIndexes } : {}),
+    ...(typeof o.x === 'number' ? { x: o.x } : {}),
+    ...(typeof o.y === 'number' ? { y: o.y } : {}),
+    ...(typeof o.column === 'number' ? { column: o.column } : {}),
+  }));
+}
+
+/**
+ * page.text에서 variant 출현 시작 오프셋 전부 (연속 문자열 우선, 없으면 자간 공백 무시).
+ * @param {string} highlightSource
+ * @param {string} rawMatched
+ * @returns {number[]}
+ */
+export function collectUnifyPhraseStarts(highlightSource, rawMatched) {
+  const variant = normalizeUnifyVariant(rawMatched);
+  if (!variant || !highlightSource) return [];
+  /** @type {number[]} */
+  const starts = [];
+  let pos = 0;
+  while (pos <= highlightSource.length - variant.length) {
+    const idx = highlightSource.indexOf(variant, pos);
+    if (idx < 0) break;
+    starts.push(idx);
+    pos = idx + 1;
+  }
+  if (starts.length) return starts;
+
+  pos = 0;
+  while (pos < highlightSource.length) {
+    const hit = findPhraseInSpan(highlightSource.slice(pos), variant);
+    if (!hit) break;
+    const idx = pos + hit.start;
+    starts.push(idx);
+    pos = idx + 1;
+  }
+  return starts;
+}
+
+/**
+ * visual/itemRefs가 깨진 페이지에서도 출현·순·하이라이트 기준을 item+bbox로 맞춤.
+ * @param {UnifyVariantOccurrence[]} occs
+ * @param {import('./pdfService.js').PageData | { pageNum?: number, text?: string, items?: import('pdfjs-dist').TextItem[] } | null | undefined} page
+ * @returns {UnifyVariantOccurrence[] | null} 재배치 불가면 null
+ */
+export function rebaseUnifyOccurrencesFromItemHits(occs, page) {
+  if (!occs?.length) return null;
+  if (!page?.items?.length) return null;
+  const pageNum =
+    Number(page.pageNum) || Number(occs[0].pageNum) || occs[0].pageNum;
+  const matchedText = occs[0].matchedText;
+  const needle = normalizeUnifyVariant(matchedText);
+  if (!needle) return null;
+
+  const hits = sortPhraseHitsReadingOrder(
+    findPhraseHitsInPdfItems(page.items, needle),
+    page.items,
+    pageNum,
+  );
+  // items는 있는데 hit 없음 = 텍스트 조립 유령(지도 1글자 글리프 등) → 칩에서 제거
+  if (!hits.length) return [];
+
+  // 정렬에 쓴 것과 같은 gutter로 column을 고정 (페이지 전체 midpoint 재계산 금지)
+  const xs = hits.map((h) => h.x);
+  const span = Math.max(...xs) - Math.min(...xs);
+  const gutterX = span >= 120 ? (Math.min(...xs) + Math.max(...xs)) / 2 : null;
+
+  return hits.map((h, i) => ({
+    pageNum,
+    index: h.itemIndex * 100000 + i,
+    matchedText,
+    itemIndexes: h.itemIndexes,
+    x: h.x,
+    y: h.y,
+    ...(gutterX != null
+      ? { column: h.x >= gutterX ? 1 : 0 }
+      : {}),
+  }));
+}
+
+/**
+ * 같은 페이지·같은 표기에 칩이 여러 개일 때 index가 한 출현에 몰리지 않게 슬롯을 배정.
+ * (7번 칩만 있고 분홍이 없는 전형: 오른 면 출현이 왼 면 index로 스냅됨)
+ * @param {UnifyVariantOccurrence[]} occs
+ * @param {{ pageNum?: number, text?: string, items?: import('pdfjs-dist').TextItem[] } | null | undefined} page
+ * @returns {UnifyVariantOccurrence[]}
+ */
+export function assignUniqueUnifyHighlightIndices(occs, page) {
+  if (!occs?.length) return [];
+  // item+bbox 재배치는 인덱스 전체(수천 variant)에서 돌리면 메인 스레드가 멈춤.
+  // → enrichOccurrencesWithItemHits / instances 경로에서만 수행.
+  if (!page?.text) return [...occs];
+  const source = prepareUnifyScanText(page.text);
+  const slots = collectUnifyPhraseStarts(source, occs[0].matchedText);
+  if (!slots.length) return [...occs];
+
+  const used = new Set();
+  return occs.map((occ) => {
+    let best = -1;
+    let bestDist = Infinity;
+    for (const slot of slots) {
+      if (used.has(slot)) continue;
+      const dist = Math.abs(slot - occ.index);
+      if (dist < bestDist) {
+        bestDist = dist;
+        best = slot;
+      }
+    }
+    if (best < 0) return { ...occ };
+    used.add(best);
+    return { ...occ, index: best };
+  });
+}
+
+/**
+ * 표시·하이라이트용 — 페이지별 item+bbox로 출현을 재배치 (클러스터 확정 후·소수 variant만).
+ * @param {UnifyVariantOccurrence[]} occs
+ * @param {Map<number, import('./pdfService.js').PageData>} pageByNum
+ * @returns {UnifyVariantOccurrence[]}
+ */
+export function enrichOccurrencesWithItemHits(occs, pageByNum) {
+  if (!occs?.length) return [];
+  if (!pageByNum?.size) return [...occs];
+
+  /** @type {Map<number, UnifyVariantOccurrence[]>} */
+  const byPage = new Map();
+  for (const occ of occs) {
+    const pageNum = Number(occ.pageNum);
+    const list = byPage.get(pageNum) ?? [];
+    list.push(occ);
+    byPage.set(pageNum, list);
+  }
+
+  /** @type {UnifyVariantOccurrence[]} */
+  const out = [];
+  for (const pageNum of [...byPage.keys()].sort((a, b) => a - b)) {
+    const page = pageByNum.get(pageNum);
+    const list = byPage.get(pageNum) ?? [];
+    const rebased = rebaseUnifyOccurrencesFromItemHits(list, page);
+    if (rebased) {
+      out.push(...rebased);
+      continue;
+    }
+    out.push(...assignUniqueUnifyHighlightIndices(list, page));
+  }
+  return sortUnifyOccurrencesReadingOrder(out, pageByNum);
+}
+
+/**
+ * 클러스터 출현을 item+bbox로 한 번 고정 (칩·미리보기·하이라이트 동일 소스).
+ * @param {UnifySpacingCluster[]} clusters
+ * @param {import('./pdfService.js').PageData[]} pages
+ * @returns {UnifySpacingCluster[]}
+ */
+export function enrichClustersWithItemHits(clusters, pages) {
+  const pageByNum = buildPageByNum(pages ?? []);
+  if (!pageByNum.size) return clusters ?? [];
+  const enriched = (clusters ?? []).map((cluster) => {
+    /** @type {Record<string, UnifyVariantOccurrence[]>} */
+    const occurrencesByVariant = {};
+    /** @type {Record<string, number>} */
+    const counts = {};
+    let totalCount = 0;
+    for (const variant of cluster.variants ?? []) {
+      const occs = cluster.occurrencesByVariant?.[variant] ?? [];
+      if (!occs.length) {
+        occurrencesByVariant[variant] = [];
+        counts[variant] = 0;
+        continue;
+      }
+      const next = enrichOccurrencesWithItemHits(occs, pageByNum);
+      occurrencesByVariant[variant] = next;
+      counts[variant] = next.length;
+      totalCount += next.length;
+    }
+    const variants = (cluster.variants ?? []).filter((v) => (counts[v] ?? 0) > 0);
+    const hasGlued = variants.some((v) => !/\s/.test(v));
+    const hasSpaced = variants.some((v) => /\s/.test(v));
+    if (!hasGlued || !hasSpaced || variants.length < 2) {
+      return null;
+    }
+    const ranked = variants
+      .map((variant) => ({ variant, count: counts[variant] }))
+      .sort(
+        (a, b) =>
+          b.count - a.count ||
+          spaceCount(a.variant) - spaceCount(b.variant) ||
+          a.variant.localeCompare(b.variant, 'ko'),
+      );
+    return {
+      ...cluster,
+      variants: ranked.map((row) => row.variant),
+      counts: Object.fromEntries(ranked.map((row) => [row.variant, row.count])),
+      occurrencesByVariant: Object.fromEntries(
+        ranked.map((row) => [row.variant, occurrencesByVariant[row.variant]]),
+      ),
+      recommendedUnify: pickRecommendedUnify(ranked),
+      totalCount: ranked.reduce((sum, row) => sum + row.count, 0),
+    };
+  });
+  return enriched.filter(Boolean);
+}
+
+/**
+ * @param {UnifyVariantOccurrence[]} occs
+ * @param {Map<number, import('./pdfService.js').PageData>} pageByNum
+ * @param {Map<number, { pageNum?: number, text?: string }>} pageTextByNum
+ * @returns {UnifyVariantOccurrence[]}
+ */
+function finalizeUnifyOccurrenceList(occs, pageByNum, pageTextByNum) {
+  /** @type {Map<number, UnifyVariantOccurrence[]>} */
+  const byPage = new Map();
+  for (const occ of occs) {
+    const list = byPage.get(occ.pageNum) ?? [];
+    list.push(occ);
+    byPage.set(occ.pageNum, list);
+  }
+  /** @type {UnifyVariantOccurrence[]} */
+  const out = [];
+  for (const pageNum of [...byPage.keys()].sort((a, b) => a - b)) {
+    const page = pageByNum.get(pageNum) ?? pageTextByNum.get(pageNum);
+    const assigned = assignUniqueUnifyHighlightIndices(
+      byPage.get(pageNum) ?? [],
+      page,
+    );
+    out.push(...sortUnifyOccurrencesReadingOrder(assigned, pageByNum));
+  }
+  return out;
+}
+
+/**
+ * 하이라이트용 — page.text에서 needle의 **preferNear에 가장 가까운** 출현.
+ * (indexOf 첫 출현만 쓰면 같은 페이지 2/2 하이라이트가 1/2로만 간다)
  * @param {string} highlightSource prepareUnifyScanText(page.text)
  * @param {string} rawMatched
- * @param {number} scanIndex
+ * @param {number} preferNear 스캔 소스 기준 절대 오프셋(가급적)
  */
-function resolveHighlightIndex(highlightSource, rawMatched, scanIndex) {
+export function resolveHighlightIndex(
+  highlightSource,
+  rawMatched,
+  preferNear = 0,
+) {
   const variant = normalizeUnifyVariant(rawMatched);
-  if (!variant || !highlightSource) return scanIndex;
-  const exact = highlightSource.indexOf(variant);
-  if (exact >= 0) return exact;
-  return scanIndex;
+  if (!variant || !highlightSource) return Math.max(0, preferNear);
+  const prefer = Math.max(0, preferNear);
+  if (highlightSource.slice(prefer, prefer + variant.length) === variant) {
+    return prefer;
+  }
+  let best = -1;
+  let bestDist = Infinity;
+  let pos = 0;
+  while (pos <= highlightSource.length - variant.length) {
+    const idx = highlightSource.indexOf(variant, pos);
+    if (idx < 0) break;
+    const dist = Math.abs(idx - prefer);
+    if (dist < bestDist) {
+      bestDist = dist;
+      best = idx;
+    }
+    pos = idx + 1;
+  }
+  if (best >= 0) return best;
+
+  // page.text에 자간 가짜 공백이 있으면 연속 부분문자열이 없음 → 공백 무시 탐색
+  pos = 0;
+  while (pos < highlightSource.length) {
+    const hit = findPhraseInSpan(highlightSource.slice(pos), variant);
+    if (!hit) break;
+    const idx = pos + hit.start;
+    const dist = Math.abs(idx - prefer);
+    if (dist < bestDist) {
+      bestDist = dist;
+      best = idx;
+    }
+    pos = idx + 1;
+  }
+  return best >= 0 ? best : prefer;
+}
+
+/**
+ * resolveHighlightIndex 결과를 page.text·하이라이트 가능 오프셋으로 고정.
+ * (자간 공백·layout 투영 오차로 index만 있고 분홍 박스가 안 나오는 경우 방지)
+ * @param {{ pageNum?: number, text?: string, items?: unknown[], itemRefs?: unknown[] }} page
+ * @param {string} highlightSource
+ * @param {string} rawMatched
+ * @param {number} preferNear
+ */
+export function resolveAndSnapUnifyHighlightIndex(
+  page,
+  highlightSource,
+  rawMatched,
+  preferNear = 0,
+) {
+  const resolved = resolveHighlightIndex(
+    highlightSource,
+    rawMatched,
+    preferNear,
+  );
+  const variant = normalizeUnifyVariant(rawMatched);
+  const pageNum = Number(page?.pageNum) || 0;
+  if (!variant || !page?.text || !pageNum) return resolved;
+  const range = highlightRangeForSpelling(
+    {
+      pageNum,
+      text: page.text,
+      items: page.items,
+      itemRefs: page.itemRefs,
+    },
+    {
+      pageNum,
+      index: resolved,
+      matchedText: variant,
+    },
+  );
+  return range ? range.start : resolved;
+}
+
+/**
+ * 줄 단위 스캔 + 토큰 인덱스 → 페이지 절대 오프셋 매핑.
+ * splitUnifyScanLines와 동일하게 공백 압축·trim.
+ * @param {string} pageText
+ * @returns {{ line: string, absIndex: (i: number) => number }[]}
+ */
+function splitUnifyScanLinesWithAbs(pageText) {
+  const prepared = prepareUnifyScanText(pageText);
+  /** @type {{ line: string, absIndex: (i: number) => number }[]} */
+  const out = [];
+  const re = /[^\n]+/g;
+  let m;
+  while ((m = re.exec(prepared)) !== null) {
+    const raw = m[0];
+    const lineStart = m.index ?? 0;
+    /** @type {number[]} */
+    const map = [];
+    let line = '';
+    let i = 0;
+    while (i < raw.length && (raw[i] === ' ' || raw[i] === '\t')) i += 1;
+    let lastSpace = false;
+    for (; i < raw.length; i += 1) {
+      const ch = raw[i];
+      if (ch === ' ' || ch === '\t') {
+        if (lastSpace) continue;
+        line += ' ';
+        map.push(lineStart + i);
+        lastSpace = true;
+        continue;
+      }
+      line += ch;
+      map.push(lineStart + i);
+      lastSpace = false;
+    }
+    while (line.endsWith(' ')) {
+      line = line.slice(0, -1);
+      map.pop();
+    }
+    if (!line) continue;
+    out.push({
+      line,
+      absIndex: (idx) => {
+        if (!map.length) return lineStart;
+        const clamped = Math.min(Math.max(0, idx), map.length - 1);
+        return map[clamped] ?? lineStart;
+      },
+    });
+  }
+  return mergeUnifyHangulSoftWrapScanLines(out);
+}
+
+/**
+ * 줄끝·줄머리 한글 음절이 맞닿은 soft-wrap만 스캔용으로 이음.
+ * 어절 경계(수도|있다 등)는 붙이지 않음. 단어 중간 갈라짐(명|지 계곡)만 이음.
+ * @param {{ line: string, absIndex: (i: number) => number }[]} lines
+ */
+export function mergeUnifyHangulSoftWrapScanLines(lines) {
+  if (!lines?.length) return [];
+  /** @type {{ line: string, absIndex: (i: number) => number }[]} */
+  const out = [];
+  let cur = lines[0];
+  for (let i = 1; i < lines.length; i += 1) {
+    const next = lines[i];
+    const a = cur.line;
+    const b = next.line;
+    if (isUnifyHangulMidWordSoftWrap(a, b)) {
+      const aLen = a.length;
+      const aAbs = cur.absIndex;
+      const bAbs = next.absIndex;
+      cur = {
+        line: a + b,
+        absIndex: (idx) => {
+          if (idx < aLen) return aAbs(idx);
+          return bAbs(idx - aLen);
+        },
+      };
+      continue;
+    }
+    out.push(cur);
+    cur = next;
+  }
+  out.push(cur);
+  return out;
+}
+
+/**
+ * 한 페이지분 토큰·n-gram을 byKey에 누적 (스냅·finalize 없음).
+ * @param {Map<string, ClusterAcc>} byKey
+ * @param {{ pageNum?: number, text?: string, textLayout?: string }} page
+ * @param {number} minHangul
+ */
+function accumulateUnifyPageOccurrences(byKey, page, minHangul) {
+  const pageNum = Number(page?.pageNum) || 0;
+  const sourceText =
+    typeof page?.textLayout === 'string' && page.textLayout.length > 0
+      ? page.textLayout
+      : (page?.text ?? '');
+  if (!sourceText || !pageNum) return;
+  const highlightSource = prepareUnifyScanText(page?.text ?? sourceText);
+  const usingLayout =
+    typeof page?.textLayout === 'string' &&
+    page.textLayout.length > 0 &&
+    page.textLayout !== (page?.text ?? '');
+  for (const { line, absIndex } of splitUnifyScanLinesWithAbs(sourceText)) {
+    const tokens = extractTokensWithIndex(line);
+    for (let i = 0; i < tokens.length; i += 1) {
+      const tokenRaw = sliceUnifyRaw(line, tokens[i], tokens[i]);
+      const preferNear = usingLayout
+        ? mapLayoutIndexToVisualIndex(page, absIndex(tokens[i].index))
+        : absIndex(tokens[i].index);
+      // 스캔 단계: 가벼운 resolve만. highlightRange 스냅은 충돌 클러스터 finalize에서.
+      addOccurrence(
+        byKey,
+        pageNum,
+        resolveHighlightIndex(highlightSource, tokenRaw, preferNear),
+        tokenRaw,
+        minHangul,
+      );
+      const maxN = Math.min(UNIFY_MAX_NGRAM_TOKENS, tokens.length - i);
+      for (let n = 2; n <= maxN; n += 1) {
+        const first = tokens[i];
+        const last = tokens[i + n - 1];
+        const raw = sliceUnifyRaw(line, first, last);
+        const preferNgram = usingLayout
+          ? mapLayoutIndexToVisualIndex(page, absIndex(first.index))
+          : absIndex(first.index);
+        addOccurrence(
+          byKey,
+          pageNum,
+          resolveHighlightIndex(highlightSource, raw, preferNgram),
+          raw,
+          minHangul,
+        );
+      }
+    }
+  }
+}
+
+/**
+ * 붙임+띄움 충돌 키의 occurrence만 슬롯 배정·정렬 (전체 raw 키 finalize 금지).
+ * @param {Map<string, ClusterAcc>} byKey
+ * @param {{ pageNum?: number, text?: string, textLayout?: string, items?: unknown[] }[]} pageTexts
+ */
+function finalizeConflictOccurrencesOnly(byKey, pageTexts) {
+  const pageByNum = buildPageByNum(pageTexts ?? []);
+  /** @type {Map<number, { pageNum?: number, text?: string }>} */
+  const pageTextByNum = new Map();
+  for (const page of pageTexts ?? []) {
+    const n = Number(page?.pageNum) || 0;
+    if (n) pageTextByNum.set(n, page);
+  }
+  for (const acc of byKey.values()) {
+    const variants = [...acc.counts.keys()];
+    const hasGlued = variants.some((v) => !/\s/.test(v));
+    const hasSpaced = variants.some((v) => /\s/.test(v));
+    if (!hasGlued || !hasSpaced) continue;
+    for (const [variant, list] of acc.occurrences) {
+      const snapped = snapUnifyOccurrenceIndices(list, pageByNum);
+      acc.occurrences.set(
+        variant,
+        finalizeUnifyOccurrenceList(snapped, pageByNum, pageTextByNum),
+      );
+    }
+  }
+}
+
+/**
+ * 충돌 variant occurrence index를 highlightRange로 한 번만 고정.
+ * @param {UnifyVariantOccurrence[]} occs
+ * @param {Map<number, import('./pdfService.js').PageData>} pageByNum
+ * @returns {UnifyVariantOccurrence[]}
+ */
+function snapUnifyOccurrenceIndices(occs, pageByNum) {
+  if (!occs?.length) return [];
+  return occs.map((occ) => {
+    const page = pageByNum.get(Number(occ.pageNum));
+    if (!page?.text) return occ;
+    const source = prepareUnifyScanText(page.text);
+    const snapped = resolveAndSnapUnifyHighlightIndex(
+      page,
+      source,
+      occ.matchedText,
+      occ.index,
+    );
+    return snapped === occ.index ? occ : { ...occ, index: snapped };
+  });
 }
 
 /**
@@ -474,40 +1041,31 @@ export function buildUnifyOccurrenceIndex(pageTexts, opts = {}) {
   const byKey = new Map();
 
   for (const page of pageTexts ?? []) {
-    const pageNum = Number(page?.pageNum) || 0;
-    const sourceText =
-      typeof page?.textLayout === 'string' && page.textLayout.length > 0
-        ? page.textLayout
-        : (page?.text ?? '');
-    if (!sourceText || !pageNum) continue;
-    const highlightSource = prepareUnifyScanText(page?.text ?? sourceText);
-    for (const line of splitUnifyScanLines(sourceText)) {
-      const tokens = extractTokensWithIndex(line);
-      for (let i = 0; i < tokens.length; i += 1) {
-        const tokenRaw = sliceUnifyRaw(line, tokens[i], tokens[i]);
-        addOccurrence(
-          byKey,
-          pageNum,
-          resolveHighlightIndex(highlightSource, tokenRaw, tokens[i].index),
-          tokenRaw,
-          minHangul,
-        );
-        for (let n = 2; i + n <= tokens.length; n += 1) {
-          const first = tokens[i];
-          const last = tokens[i + n - 1];
-          const raw = sliceUnifyRaw(line, first, last);
-          addOccurrence(
-            byKey,
-            pageNum,
-            resolveHighlightIndex(highlightSource, raw, first.index),
-            raw,
-            minHangul,
-          );
-        }
-      }
-    }
+    accumulateUnifyPageOccurrences(byKey, page, minHangul);
   }
 
+  finalizeConflictOccurrencesOnly(byKey, pageTexts ?? []);
+  return byKey;
+}
+
+/**
+ * 페이지마다 이벤트 루프에 양보 — 메인 스레드 '응답 없음' 방지.
+ * @param {{ pageNum?: number, text?: string, textLayout?: string }[]} pageTexts
+ * @param {{ minHangulSyllables?: number }} [opts]
+ * @returns {Promise<Map<string, ClusterAcc>>}
+ */
+export async function buildUnifyOccurrenceIndexAsync(pageTexts, opts = {}) {
+  const minHangul = opts.minHangulSyllables ?? 2;
+  /** @type {Map<string, ClusterAcc>} */
+  const byKey = new Map();
+  const pages = pageTexts ?? [];
+  for (let i = 0; i < pages.length; i += 1) {
+    accumulateUnifyPageOccurrences(byKey, pages[i], minHangul);
+    if (i + 1 < pages.length) {
+      await new Promise((r) => setTimeout(r, 0));
+    }
+  }
+  finalizeConflictOccurrencesOnly(byKey, pages);
   return byKey;
 }
 
@@ -581,6 +1139,25 @@ export function discoverSpacingUnifyCandidates(pageTexts, opts = {}) {
 }
 
 /**
+ * UI용 — 페이지 단위 양보 후 충돌 클러스터 생성.
+ * @param {{ pageNum?: number, text?: string, textLayout?: string }[]} pageTexts
+ * @param {{
+ *   minHangulSyllables?: number,
+ *   maxClusters?: number,
+ *   includeRaw?: boolean,
+ * }} [opts]
+ * @returns {Promise<UnifySpacingCluster[] | { clusters: UnifySpacingCluster[], rawByKey: Map<string, ClusterAcc> }>}
+ */
+export async function discoverSpacingUnifyCandidatesAsync(pageTexts, opts = {}) {
+  const byKey = await buildUnifyOccurrenceIndexAsync(pageTexts, opts);
+  const clusters = buildSpacingConflictClustersFromIndex(byKey, opts);
+  if (opts.includeRaw) {
+    return { clusters, rawByKey: byKey };
+  }
+  return clusters;
+}
+
+/**
  * 통일하기 등록용 입력 문자열 (최대 slotLimit개, 추천형 우선).
  * @param {UnifySpacingCluster} cluster
  * @param {number} [slotLimit]
@@ -627,17 +1204,58 @@ export function shouldShowUnifyVariantPages(cluster, variant) {
 }
 
 /**
+ * @param {UnifyVariantOccurrence[]} occs
+ * @param {string} variant
+ * @param {string} replace
+ * @param {Map<number, import('./pdfService.js').PageData>} pageByNum
+ * @returns {import('./ruleEngine.js').MatchInstance[]}
+ */
+function instancesFromOccs(occs, variant, replace, pageByNum) {
+  const alreadyEnriched =
+    occs.length > 0 &&
+    occs.every(
+      (o) => Array.isArray(o.itemIndexes) && o.itemIndexes.length > 0,
+    );
+  const enriched = alreadyEnriched
+    ? occs
+    : enrichOccurrencesWithItemHits(occs, pageByNum);
+  const instances = enriched.map((occ) => ({
+    find: variant,
+    replace,
+    matchedText: occ.matchedText,
+    suggestedText: replace,
+    pageNum: occ.pageNum,
+    index: occ.index,
+    ...(Array.isArray(occ.itemIndexes) && occ.itemIndexes.length
+      ? { itemIndexes: occ.itemIndexes }
+      : {}),
+    ...(typeof occ.x === 'number' ? { x: occ.x } : {}),
+    ...(typeof occ.y === 'number' ? { y: occ.y } : {}),
+    ...(typeof occ.column === 'number' ? { column: occ.column } : {}),
+  }));
+  return pageByNum.size
+    ? sortInstancesReadingOrder(instances, pageByNum)
+    : instances;
+}
+
+/**
  * 소수형·1회만이 아니라, 출현 있는 표기 전부의 MatchInstance 그룹 —
  * PDF 하이라이트·페이지 칩용. 표기 통일 선택 시엔 틀린 표기만 + overlay.
  * @param {UnifySpacingCluster[]} clusters
- * @param {{ registeredByKey?: Map<string, string> | null }} [options]
+ * @param {{
+ *   registeredByKey?: Map<string, string> | null,
+ *   pages?: import('./pdfService.js').PageData[],
+ * }} [options]
  * @returns {import('./ruleEngine.js').GroupedResult[]}
  */
 export function buildUnifyCandidatePreviewGroups(clusters, options = {}) {
   const registeredByKey = options.registeredByKey ?? null;
+  const pages = options.pages ?? [];
+  const enrichedClusters = enrichClustersWithItemHits(clusters ?? [], pages);
+  const pageByNum = buildPageByNum(pages);
   /** @type {import('./ruleEngine.js').GroupedResult[]} */
   const groups = [];
-  for (const cluster of clusters ?? []) {
+  for (const cluster of enrichedClusters) {
     const chosen = registeredByKey?.get(cluster.key);
     if (chosen) {
       const overlay = formatUnifySpacingDecisionOverlay(chosen, cluster);
@@ -653,14 +1271,7 @@ export function buildUnifyCandidatePreviewGroups(clusters, options = {}) {
           patternKind: 'compound-spacing',
           tip: `「${chosen}」으로 통일`,
           ...(overlay ? { overlayReplace: overlay } : {}),
-          instances: occs.map((occ) => ({
-            find: variant,
-            replace: chosen,
-            matchedText: occ.matchedText,
-            suggestedText: chosen,
-            pageNum: occ.pageNum,
-            index: occ.index,
-          })),
+          instances: instancesFromOccs(occs, variant, chosen, pageByNum),
         });
       }
       continue;
@@ -675,18 +1286,12 @@ export function buildUnifyCandidatePreviewGroups(clusters, options = {}) {
         replace: recommended,
         label: variant,
         category: 'consistency',
+        patternKind: 'compound-spacing',
         tip:
           variant === recommended
             ? `문서 내 「${variant}」 표기`
             : `문서 내 다수형 「${recommended}」와 띄어쓰기가 다른 표기`,
-        instances: occs.map((occ) => ({
-          find: variant,
-          replace: recommended,
-          matchedText: occ.matchedText,
-          suggestedText: recommended,
-          pageNum: occ.pageNum,
-          index: occ.index,
-        })),
+        instances: instancesFromOccs(occs, variant, recommended, pageByNum),
       });
     }
   }
@@ -696,7 +1301,10 @@ export function buildUnifyCandidatePreviewGroups(clusters, options = {}) {
 /**
  * @param {UnifySpacingCluster} cluster
  * @param {string} variant
- * @param {{ chosenVariant?: string | null }} [opts]
+ * @param {{
+ *   chosenVariant?: string | null,
+ *   pages?: import('./pdfService.js').PageData[],
+ * }} [opts]
  * @returns {import('./ruleEngine.js').MatchInstance[]}
  */
 export function instancesForUnifyVariant(cluster, variant, opts = {}) {
@@ -704,27 +1312,27 @@ export function instancesForUnifyVariant(cluster, variant, opts = {}) {
   const occs = cluster.occurrencesByVariant?.[variant] ?? [];
   if (!occs.length) return [];
   const replace = chosen || cluster.recommendedUnify;
-  return occs.map((occ) => ({
-    find: variant,
+  return instancesFromOccs(
+    occs,
+    variant,
     replace,
-    matchedText: occ.matchedText,
-    suggestedText: replace,
-    pageNum: occ.pageNum,
-    index: occ.index,
-  }));
+    buildPageByNum(opts.pages ?? []),
+  );
 }
 
 /**
  * 표기 통일 선택 직후 PDF primary용 — 틀린 표기 첫 인스턴스.
  * @param {UnifySpacingCluster} cluster
  * @param {string} chosenVariant
+ * @param {{ pages?: import('./pdfService.js').PageData[] }} [opts]
  * @returns {import('./ruleEngine.js').MatchInstance | null}
  */
-export function firstWrongUnifyInstance(cluster, chosenVariant) {
+export function firstWrongUnifyInstance(cluster, chosenVariant, opts = {}) {
   for (const variant of cluster.variants ?? []) {
     if (variant === chosenVariant) continue;
     const insts = instancesForUnifyVariant(cluster, variant, {
       chosenVariant,
+      pages: opts.pages,
     });
     if (insts.length) return insts[0];
   }

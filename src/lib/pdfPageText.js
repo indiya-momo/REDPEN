@@ -1,9 +1,14 @@
 /**
- * PDF 텍스트 항목 → page.text 조립 (pdfjs·Vite worker 없음 — Node 스크립트·테스트용)
+ * PDF 텍스트 항목 → Visual 페이지 문자열 조립 (pdfjs·Vite worker 없음 — Node 스크립트·테스트용)
+ *
+ * P0-1 (`visual-semantic-text-layers-2026-08-02.md`):
+ * Visual canonical은 줄 경계를 유지한다. eager 한글 soft-wrap 결합은 하지 않는다.
+ * SoftWrapGraph(Semantic)는 이후 단계에서 후보 edge로만 연결한다.
  */
 
 import { splitSpreadColumns } from './spreadColumnSplit.js';
 import { splitPageColumns } from './pageColumnSplit.js';
+import { sanitizePdfTextFragment } from './spaceVisibleText.js';
 
 /**
  * @typedef {Object} TextItemRef
@@ -114,6 +119,55 @@ const HANGUL_NARROW_JOSA = new Set(
 /** 종결·의문 후보 — 다음 줄이 새 어절로 보일 때만 줄바꿈 유지 */
 const HANGUL_CLOSING_TAIL = new Set(['다', '요', '까', '네']);
 
+/** @param {string} s */
+function hangulSyllableCount(s) {
+  return (String(s ?? '').match(/[\uAC00-\uD7A3]/g) || []).length;
+}
+
+/**
+ * 다음 줄 첫 어절이 「어간(≥2) + 조사/접미」면 새 어절로 본다.
+ * `성의`(어간 1) · `간강제`(접미 없음)는 soft-wrap 조각으로 둔다.
+ * @param {string} eojeol
+ */
+function eojeolLooksLikeCompleteWordWithParticle(eojeol) {
+  const s = String(eojeol ?? '');
+  if (!s) return false;
+  for (const suf of HANGUL_LINE_END_SUFFIXES) {
+    if (!s.endsWith(suf)) continue;
+    if (hangulSyllableCount(s.slice(0, -suf.length)) >= 2) return true;
+  }
+  const last = s[s.length - 1];
+  if (HANGUL_NARROW_JOSA.has(last)) {
+    return hangulSyllableCount(s.slice(0, -1)) >= 2;
+  }
+  return false;
+}
+
+/**
+ * 통일 스캔·item find용: 단어 중간 soft-wrap(명|지)만 true.
+ * 앞줄 마지막 어절이 한글 1음절이고 어절 경계가 아닐 때.
+ * @param {string} left
+ * @param {string} right
+ */
+export function isUnifyHangulMidWordSoftWrap(left, right) {
+  const a = String(left ?? '');
+  const b = String(right ?? '');
+  if (!a || !b) return false;
+  const aLast = a[a.length - 1];
+  const bFirst = b[0];
+  if (
+    aLast < '\uAC00' ||
+    aLast > '\uD7A3' ||
+    bFirst < '\uAC00' ||
+    bFirst > '\uD7A3'
+  ) {
+    return false;
+  }
+  if (isLikelyHangulEojeolBoundary(a, b)) return false;
+  const lastEojeol = a.split(/\s+/u).filter(Boolean).pop() ?? '';
+  return hangulSyllableCount(lastEojeol) === 1;
+}
+
 /**
  * @param {string} leftText
  * @param {string} rightLine
@@ -153,6 +207,22 @@ export function isLikelyHangulEojeolBoundary(leftText, rightLine) {
     isHangulSyllableChar(right[1])
   ) {
     return true;
+  }
+
+  // 본문 어절 줄바꿈: 「… 고상」\n「가옥을…」·「…가 반드시」\n「행복감의…」
+  // 앞줄에 띄어쓰기가 있고 마지막 어절이 ≥2이며, 다음 첫 어절이 조사·접미로 완결되면
+  // 단어 경계로 본다. (한글중\n간강제 · 내자\n리는 는 soft-wrap 유지)
+  if (INLINE_SPACE_RE.test(left)) {
+    const leftParts = left.split(INLINE_SPACE_RE).filter(Boolean);
+    const rightParts = right.split(INLINE_SPACE_RE).filter(Boolean);
+    const lastEojeol = leftParts[leftParts.length - 1] ?? '';
+    const firstEojeol = rightParts[0] ?? '';
+    if (
+      hangulSyllableCount(lastEojeol) >= 2 &&
+      eojeolLooksLikeCompleteWordWithParticle(firstEojeol)
+    ) {
+      return true;
+    }
   }
 
   return false;
@@ -321,6 +391,18 @@ export function shouldInsertSpaceBetweenPdfItems(gap, lineH, leftStr, rightStr) 
 const FONT_LINE_SPLIT_RATIO = 1.18;
 /** 왼쪽 여백으로 다시 돌아오면 새 줄(인디자인 소제목) */
 const LINE_X_RESET_PT = 36;
+/** 같은 y 밴드라도 가로로 멀리 떨어진 덩어리(지도 콜아웃 등)는 다른 줄 — fontSize 배수 */
+const LINE_X_LARGE_GAP_EM = 8;
+/**
+ * soft-wrap: 다음 줄 시작 x가 앞줄과 이 배수 이상 다르면 결합하지 않음.
+ * 본문 soft-wrap은 같은 왼쪽 여백. 목록·제목은 들여쓰기로 x가 어긋남.
+ * 또한 다음 줄이 앞줄 끝보다 이 배수 이상 오른쪽이면(지도 라벨) 결합하지 않음.
+ */
+const LINE_X_RIGHTWARD_GAP_EM = 0.5;
+/** width 미기재·과장 시 글자 수 추정(한글 전각 ≈ 1em) */
+const WIDTH_ESTIMATE_EM = 1;
+/** 보고 width가 추정의 이 배 초과면 과장으로 보고 추정 사용 */
+const WIDTH_INFLATE_RATIO = 1.75;
 /** 조판 PDF 검색·출력 이중 레이어 — 좌표 양자화(한컴 등 x·y 1~2pt 흔들림) */
 const OVERLAY_POS_BUCKET_PT = 2;
 
@@ -425,6 +507,27 @@ function pdfItemFontSize(item) {
 }
 
 /**
+ * 진행 폭 — 지도·한컴 등에서 width가 다음 라벨까지 과장된 경우 추정으로 보정.
+ * @param {import('pdfjs-dist').TextItem} item
+ */
+function pdfItemAdvanceWidth(item) {
+  const fs = pdfItemFontSize(item);
+  const len = Math.max((item.str ?? '').length, 1);
+  const estimate = fs * len * WIDTH_ESTIMATE_EM;
+  const reported = item.width ?? 0;
+  if (reported <= 0) return estimate;
+  if (reported > estimate * WIDTH_INFLATE_RATIO) return estimate;
+  return reported;
+}
+
+/**
+ * @param {import('pdfjs-dist').TextItem} item
+ */
+function pdfItemXEnd(item) {
+  return (item.transform?.[4] ?? 0) + pdfItemAdvanceWidth(item);
+}
+
+/**
  * @param {{ item: import('pdfjs-dist').TextItem, itemIndex: number }} prev
  * @param {import('pdfjs-dist').TextItem} item
  */
@@ -448,13 +551,18 @@ function shouldStartNewTextLine(prev, item) {
   if (f0 && f1 && f0 !== f1) return true;
 
   const prevStr = prevItem.str ?? '';
+  const nextStr = item.str ?? '';
   // Hancom 등: 공백 항목 width가 다음 글자까지 넓게 잡혀 x-reset 오탐 → 어절마다 줄바꿈
   if (!/^\s+$/.test(prevStr)) {
-    const xEnd =
-      (prevItem.transform?.[4] ?? 0) +
-      (prevItem.width ?? prevItem.str.length * s0 * 0.5);
+    const xEnd = pdfItemXEnd(prevItem);
     const xStart = item.transform?.[4] ?? 0;
     if (xStart < xEnd - LINE_X_RESET_PT) return true;
+    // 지도 라벨·콜아웃: 가로로 크게 떨어진 덩어리는 한 줄로 이어 붙이지 않음
+    // (다음이 공백 항목이면 어절 간격 — 분리하지 않음)
+    if (!/^\s+$/.test(nextStr)) {
+      const gapX = xStart - xEnd;
+      if (gapX > Math.max(s0, s1) * LINE_X_LARGE_GAP_EM) return true;
+    }
   }
 
   return false;
@@ -478,19 +586,27 @@ function appendBuiltLine(entries, text, itemRefs, shouldGapSpace, opts = {}) {
   for (let i = 0; i < entries.length; i++) {
     const { item, itemIndex } = entries[i];
     const start = text.length;
-    text += item.str;
+    // �(U+FFFD) → 공백: 길이 동일해 itemRefs 오프셋 유지
+    text += sanitizePdfTextFragment(item.str);
     itemRefs.push({ start, end: text.length, itemIndex });
     if (i < entries.length - 1) {
       const gap =
         (entries[i + 1].item.transform?.[4] ?? 0) -
-        ((item.transform?.[4] ?? 0) + (item.width ?? 0));
+        ((item.transform?.[4] ?? 0) + pdfItemAdvanceWidth(item));
       const lineH =
         Math.max(
           Math.hypot(item.transform?.[2] ?? 0, item.transform?.[3] ?? 0),
           8,
         ) * 0.35;
-      const nextStr = entries[i + 1].item.str ?? '';
-      if (shouldGapSpace(gap, lineH, item.str, nextStr)) {
+      const nextStr = sanitizePdfTextFragment(entries[i + 1].item.str ?? '');
+      if (
+        shouldGapSpace(
+          gap,
+          lineH,
+          sanitizePdfTextFragment(item.str),
+          nextStr,
+        )
+      ) {
         text += ' ';
       }
     }
@@ -544,14 +660,44 @@ function materializeBuiltLines(builtLines) {
 }
 
 /**
+ * Visual 줄 사이 구분자 — P0-1 이후 항상 줄바꿈 유지.
+ * (과거: 한글+한글 soft-wrap 시 '' 반환해 Visual 문자열을 오염시킴)
+ * SoftWrapGraph 후보 판정은 별도 모듈에서 하며, 이 함수는 Visual 조립·레거시 테스트용.
+ * @param {string} leftText
+ * @param {string} rightLine
+ * @param {number} leftFont
+ * @param {number} rightFont
+ * @param {object} [layout]
+ * @returns {'\n'}
+ */
+export function hangulSoftWrapSeparator(
+  _leftText,
+  _rightLine,
+  _leftFont,
+  _rightFont,
+  _layout = {},
+) {
+  return '\n';
+}
+
+/**
+ * @deprecated SoftWrapGraph 이전의 eager 결합 판정. Visual 경로에서는 사용하지 않음.
+ * 단위 테스트·향후 Semantic 필터 참고용으로 로직만 유지.
  * @param {string} leftText — 직전 줄
  * @param {string} rightLine — 다음 줄
  * @param {number} leftFont
  * @param {number} rightFont
- * @param {{ prevY?: number, nextY?: number, leftLineOnly?: string }} [layout]
+ * @param {{
+ *   prevY?: number,
+ *   nextY?: number,
+ *   leftLineOnly?: string,
+ *   prevStartX?: number,
+ *   prevEndX?: number,
+ *   nextStartX?: number,
+ * }} [layout]
  * @returns {'' | '\n'}
  */
-export function hangulSoftWrapSeparator(
+export function hangulSoftWrapSeparatorLegacy(
   leftText,
   rightLine,
   leftFont,
@@ -566,13 +712,25 @@ export function hangulSoftWrapSeparator(
   const fontHi = Math.max(leftFont, rightFont);
   if (fontLo > 0 && fontHi / fontLo > FONT_LINE_SPLIT_RATIO) return '\n';
 
-  const { prevY, nextY } = layout;
+  const { prevY, nextY, prevStartX, prevEndX, nextStartX } = layout;
   if (Number.isFinite(prevY) && Number.isFinite(nextY)) {
     const dy = prevY - nextY;
     const ref = Math.max(leftFont, rightFont, 8);
     if (dy < ref * SOFT_WRAP_DY_MIN_RATIO || dy > ref * SOFT_WRAP_DY_MAX_RATIO) {
       return '\n';
     }
+  }
+
+  const fontRef = Math.max(leftFont, rightFont, 8);
+  const xRef = fontRef * LINE_X_LARGE_GAP_EM;
+  const alignRef = fontRef * LINE_X_RIGHTWARD_GAP_EM;
+  if (Number.isFinite(prevEndX) && Number.isFinite(nextStartX)) {
+    const gapX = nextStartX - prevEndX;
+    if (gapX > alignRef) return '\n';
+    if (gapX > xRef) return '\n';
+  }
+  if (Number.isFinite(prevStartX) && Number.isFinite(nextStartX)) {
+    if (Math.abs(nextStartX - prevStartX) > alignRef) return '\n';
   }
 
   const leftLine = String(layout.leftLineOnly ?? left);
@@ -678,6 +836,13 @@ function buildUniqueLines(sourceItems) {
 
 /**
  * @param {import('pdfjs-dist').TextItem[]} items
+ * @returns {{
+ *   text: string,
+ *   visualText: string,
+ *   itemRefs: TextItemRef[],
+ *   textLayout: string,
+ *   itemRefsLayout: TextItemRef[],
+ * }}
  */
 export function buildPageText(items) {
   const sourceItems = dedupeOverlayTextItems(items);
@@ -692,27 +857,10 @@ export function buildPageText(items) {
 
   for (let li = 0; li < uniqueLines.length; li += 1) {
     const line = uniqueLines[li];
+    // P0-1: Visual은 줄 사이 항상 \n — eager soft-wrap 결합 없음
     if (li > 0) {
-      const prev = uniqueLines[li - 1];
-      const softLayout = {
-        prevY: prev.y,
-        nextY: line.y,
-        leftLineOnly: prev.text,
-      };
-      text += hangulSoftWrapSeparator(
-        prev.text,
-        line.text,
-        prev.endFont,
-        line.startFont,
-        softLayout,
-      );
-      textLayout += hangulSoftWrapSeparator(
-        prev.textLayout,
-        line.textLayout,
-        prev.endFont,
-        line.startFont,
-        { ...softLayout, leftLineOnly: prev.textLayout },
-      );
+      text += '\n';
+      textLayout += '\n';
     }
 
     const base = text.length;
@@ -741,5 +889,6 @@ export function buildPageText(items) {
     textLayout += '\n';
   }
 
-  return { text, itemRefs, textLayout, itemRefsLayout };
+  // visualText = canonical. text는 이행기 deprecated alias (동일 내용).
+  return { text, visualText: text, itemRefs, textLayout, itemRefsLayout };
 }

@@ -1,4 +1,9 @@
-import { getTextItemFontSize } from '../toc-body/lib/pdfHeadingExtract.js';
+import {
+  findRefForTextIndex,
+  getTextItemFontSize,
+} from '../toc-body/lib/pdfHeadingExtract.js';
+import { findPhraseInSpan } from './pdfHighlightRange.js';
+import { detectPageColumns } from './pageColumnSplit.js';
 
 /** @typedef {import('./pdfService.js').PageData} PageData */
 /** @typedef {import('./ruleEngine.js').MatchInstance} MatchInstance */
@@ -9,6 +14,19 @@ const SPREAD_MIN_WIDTH_PT = 360;
 
 /** @type {WeakMap<PageData, { isSpread: boolean, gutterX: number, lineH: number }>} */
 const layoutCache = new WeakMap();
+
+/** @type {WeakMap<object, ReturnType<typeof detectPageColumns>>} */
+const pageColumnsCache = new WeakMap();
+
+/** @param {PageData['items']} items */
+function cachedDetectPageColumns(items) {
+  if (!items?.length) return null;
+  const hit = pageColumnsCache.get(items);
+  if (hit !== undefined) return hit;
+  const cols = detectPageColumns(items);
+  pageColumnsCache.set(items, cols);
+  return cols;
+}
 
 /** @param {PageData['items'][number]} item */
 function getItemXSpan(item) {
@@ -92,12 +110,19 @@ export function getPageSpreadLayout(pageData) {
  * @param {number} startIndex
  * @param {number} endIndex
  */
-function getMatchAnchor(pageData, startIndex, endIndex) {
-  const refs =
-    pageData.itemRefs?.filter(
+export function getMatchAnchor(pageData, startIndex, endIndex) {
+  const items = pageData.items ?? [];
+  const itemRefs = pageData.itemRefs ?? [];
+  let refs =
+    itemRefs.filter(
       (ref) => ref.end > startIndex && ref.start < endIndex,
     ) ?? [];
-  const items = pageData.items ?? [];
+  // 자간·어절 공백은 itemRefs에 없음 → overlap 없으면 가장 글자 ref로 폴백
+  // (폴백 없으면 hasSpatial=false → index 순 정렬로 되돌아가 칩 순서가 안 바뀜)
+  if (!refs.length && itemRefs.length) {
+    const hit = findRefForTextIndex(itemRefs, startIndex);
+    if (hit) refs = [hit];
+  }
   if (!refs.length) return null;
 
   let minX = Infinity;
@@ -126,12 +151,58 @@ function getMatchAnchor(pageData, startIndex, endIndex) {
 }
 
 /**
+ * @param {PageData} pageData
+ * @param {MatchInstance} inst
+ */
+function matchEndIndex(pageData, inst) {
+  const start = inst.index ?? 0;
+  const phrase = String(inst.matchedText ?? '').trim();
+  const minEnd = start + Math.max(phrase.length, 1);
+  if (!pageData?.text || !phrase) return minEnd;
+  const window = pageData.text.slice(
+    start,
+    start + Math.max(phrase.length * 4, 32),
+  );
+  const hit = findPhraseInSpan(window, phrase);
+  if (hit) return start + hit.end;
+  return minEnd;
+}
+
+/**
  * @param {MatchInstance} inst
  * @param {Map<number, PageData>} pageByNum
  */
 function getReadingSortKey(inst, pageByNum) {
-  const page = pageByNum.get(inst.pageNum);
-  const end = inst.index + (inst.matchedText?.length ?? 1);
+  const page = pageByNum.get(Number(inst.pageNum));
+
+  // 표기통일 B경로: occurrence에 실좌표가 있으면 itemRefs 투영을 건너뛴다
+  if (
+    page &&
+    typeof inst.x === 'number' &&
+    typeof inst.y === 'number' &&
+    Number.isFinite(inst.x) &&
+    Number.isFinite(inst.y)
+  ) {
+    const layout = getPageSpreadLayout(page);
+    let column = typeof inst.column === 'number' ? inst.column : null;
+    if (column == null) {
+      const pageCols = cachedDetectPageColumns(page.items ?? []);
+      const gutterX = pageCols?.gutterX
+        ?? (layout.isSpread ? layout.gutterX : null);
+      column = gutterX != null && inst.x >= gutterX ? 1 : 0;
+    }
+    return {
+      pageNum: inst.pageNum,
+      column,
+      y: inst.y,
+      x: inst.x,
+      index: inst.index,
+      hasSpatial: true,
+      lineH: layout.lineH,
+    };
+  }
+
+  const end = page ? matchEndIndex(page, inst) : inst.index + 1;
   const anchor = page ? getMatchAnchor(page, inst.index, end) : null;
   if (!page || !anchor) {
     return {
@@ -208,8 +279,11 @@ export function buildPageByNum(pages) {
   /** @type {Map<number, PageData>} */
   const map = new Map();
   for (const page of pages) {
-    if (page?.items?.length && page.itemRefs?.length) {
-      map.set(page.pageNum, /** @type {PageData} */ (page));
+    const pageNum = Number(page?.pageNum);
+    if (!Number.isFinite(pageNum) || pageNum < 1) continue;
+    // items 우선. 없으면 text만 있어도 등록(슬롯 배정·정렬 폴백).
+    if (page?.items?.length || page?.text || page?.textLayout) {
+      map.set(pageNum, /** @type {PageData} */ (page));
     }
   }
   return map;

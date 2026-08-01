@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import {
   cancelRenderTask,
   computePdfRenderScale,
+  highlightRectsForItemIndexes,
   highlightRectsForTextRange,
   renderPageToCanvas,
   scaleToFitContainer,
@@ -65,6 +66,38 @@ export default function PdfViewer({
   useEffect(() => {
     setOpenTip(null);
   }, [pageNum, highlightsKey]);
+
+  /** 펼침면 오른쪽 등 — primary가 화면 밖이면 스테이지를 그쪽으로 스크롤 */
+  useEffect(() => {
+    const stage = stageRef.current;
+    if (!stage || !rects.length) return;
+    const primary = rects.find((r) => r.primary);
+    if (!primary) return;
+
+    const pad = 48;
+    const viewL = stage.scrollLeft;
+    const viewT = stage.scrollTop;
+    const viewR = viewL + stage.clientWidth;
+    const viewB = viewT + stage.clientHeight;
+    const left = primary.left;
+    const top = primary.top;
+    const right = left + primary.width;
+    const bottom = top + primary.height;
+
+    let nextL = viewL;
+    let nextT = viewT;
+    if (left < viewL + pad) nextL = Math.max(0, left - pad);
+    else if (right > viewR - pad) {
+      nextL = Math.max(0, right + pad - stage.clientWidth);
+    }
+    if (top < viewT + pad) nextT = Math.max(0, top - pad);
+    else if (bottom > viewB - pad) {
+      nextT = Math.max(0, bottom + pad - stage.clientHeight);
+    }
+    if (nextL !== viewL || nextT !== viewT) {
+      stage.scrollTo({ left: nextL, top: nextT, behavior: 'smooth' });
+    }
+  }, [rects]);
 
   useEffect(() => {
     if (!openTip) return;
@@ -180,15 +213,24 @@ export default function PdfViewer({
         if (highlights.length && pageData) {
           const allBoxes = [];
           for (const h of highlights) {
-            const boxes = highlightRectsForTextRange(
-              page,
-              viewport,
-              pageData.items,
-              pageData.itemRefs,
-              h.start,
-              h.end,
-              pageData,
-            );
+            const boxes =
+              Array.isArray(h.itemIndexes) && h.itemIndexes.length
+                ? highlightRectsForItemIndexes(
+                    page,
+                    viewport,
+                    pageData.items,
+                    h.itemIndexes,
+                    h.matchedText ?? '',
+                  )
+                : highlightRectsForTextRange(
+                    page,
+                    viewport,
+                    pageData.items,
+                    pageData.itemRefs,
+                    h.start,
+                    h.end,
+                    pageData,
+                  );
             for (const box of boxes) {
               allBoxes.push({
                 ...box,
