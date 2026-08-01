@@ -1,6 +1,7 @@
 /**
  * 표기 통일 추천 — DEV 전용 「2차 검토」인라인 요약.
- * 요약만 보이고, 눌러야 항목이 나온다.
+ * 상단 안내 문구는 UnifyCandidateFindPanel 배너로 옮김.
+ * @see project-docs/unify-phase2-pattern-2026-07-31.md
  * @see project-docs/unify-predicate-review-slm-design-2026-07-30.md
  */
 
@@ -82,7 +83,7 @@ export default function UnifySecondaryReviewPanel({ summary }) {
   return (
     <details className="unify-candidate-find__secondary-review">
       <summary className="unify-candidate-find__secondary-review-summary">
-        표준국어대사전 검토 결과
+        표준국어대사전 검토 상세 (DEV)
       </summary>
       {hasBody ? (
         <div className="unify-candidate-find__secondary-review-body">
