@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { HANGUL_ORTHOGRAPHY_URL } from '../lib/koreanNormsLinks.js';
+import { HANGUL_ORTHOGRAPHY_TIP, HANGUL_ORTHOGRAPHY_URL } from '../lib/koreanNormsLinks.js';
 import { SPELLING_CRITERIA_HEADING_DESCRIPTIONS } from '../lib/spellingCriteriaHeadingTips.js';
 import BuiltinSpellingPanel from './BuiltinSpellingPanel.jsx';
 import CautionChecklist from './CautionChecklist.jsx';
@@ -192,6 +192,7 @@ export default function ResizableBuiltinSpelling({
               description={SPELLING_CRITERIA_HEADING_DESCRIPTIONS.spelling}
               sourceHref={HANGUL_ORTHOGRAPHY_URL}
               sourceLabel="한글 맞춤법"
+              sourceTip={HANGUL_ORTHOGRAPHY_TIP}
             />
           </div>
           <div className="builtin-spelling-loanword-scroll">

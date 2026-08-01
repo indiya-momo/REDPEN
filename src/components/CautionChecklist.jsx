@@ -6,8 +6,9 @@ import {
   cautionDisplayLabel,
   cautionItemTip,
 } from '../lib/cautionRules.js';
-import { STANDARD_KOREAN_DICT_URL } from '../lib/koreanNormsLinks.js';
+import { STANDARD_KOREAN_DICT_TIP, STANDARD_KOREAN_DICT_URL } from '../lib/koreanNormsLinks.js';
 import DetailsChevron from './DetailsChevron.jsx';
+import CriteriaHoverTip from './CriteriaHoverTip.jsx';
 import { SPELLING_CRITERIA_HEADING_DESCRIPTIONS } from '../lib/spellingCriteriaHeadingTips.js';
 
 /**
@@ -186,15 +187,17 @@ export default function CautionChecklist({
           <span className="panel-criteria-heading-desc">
             {SPELLING_CRITERIA_HEADING_DESCRIPTIONS.caution}
           </span>
-          <a
-            className="panel-criteria-source-link"
-            href={STANDARD_KOREAN_DICT_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={(e) => e.stopPropagation()}
-          >
-            표준국어대사전
-          </a>
+          <CriteriaHoverTip tip={STANDARD_KOREAN_DICT_TIP} variant="wrap">
+            <a
+              className="panel-criteria-source-link"
+              href={STANDARD_KOREAN_DICT_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+            >
+              표준국어대사전
+            </a>
+          </CriteriaHoverTip>
         </span>
       </summary>
       <ul className="caution-checklist caution-checklist--bundles">

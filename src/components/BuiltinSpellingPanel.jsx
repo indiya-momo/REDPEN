@@ -11,6 +11,7 @@ import {
   groupRulesByDivider,
 } from '../lib/spellingRuleBundles.js';
 import DetailsChevron from './DetailsChevron.jsx';
+import CriteriaHoverTip from './CriteriaHoverTip.jsx';
 import { spellingRuleChecklistParts } from '../lib/spellingRuleEntry.js';
 
 /**
@@ -25,6 +26,7 @@ import { spellingRuleChecklistParts } from '../lib/spellingRuleEntry.js';
  *   description?: string,
  *   sourceHref?: string,
  *   sourceLabel?: string,
+ *   sourceTip?: string,
  *   classPrefix?: string,
  *   dataWorkGuide?: string,
  *   selectAllAriaLabel?: string,
@@ -41,6 +43,7 @@ export default function BuiltinSpellingPanel({
   description = '',
   sourceHref = '',
   sourceLabel = '',
+  sourceTip = '',
   classPrefix = 'builtin-spelling',
   dataWorkGuide = 'criteria-spelling-heading',
   selectAllAriaLabel = '맞춤법 확인 규칙 전체 선택',
@@ -272,15 +275,17 @@ export default function BuiltinSpellingPanel({
             <span className="panel-criteria-heading-desc">{description}</span>
           ) : null}
           {sourceHref && sourceLabel ? (
-            <a
-              className="panel-criteria-source-link"
-              href={sourceHref}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {sourceLabel}
-            </a>
+            <CriteriaHoverTip tip={sourceTip || sourceLabel} variant="wrap">
+              <a
+                className="panel-criteria-source-link"
+                href={sourceHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {sourceLabel}
+              </a>
+            </CriteriaHoverTip>
           ) : null}
         </span>
       </summary>

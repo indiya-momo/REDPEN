@@ -5712,9 +5712,19 @@
   overflow: visible;
 }
 
-.panel-left .panel-criteria-source-link {
+/* 툴팁 wrap이 flex 자식이 되므로 auto는 wrap에 — 링크만 두면 우측정렬이 깨짐 */
+.panel-left .caution-checklist-summary-title > .criteria-hover-tip:has(.panel-criteria-source-link),
+.panel-left .builtin-spelling-summary-title > .criteria-hover-tip:has(.panel-criteria-source-link),
+.panel-left .loanword-check-summary-title > .criteria-hover-tip:has(.panel-criteria-source-link),
+.panel-left .caution-checklist-summary-title > .panel-criteria-source-link,
+.panel-left .builtin-spelling-summary-title > .panel-criteria-source-link,
+.panel-left .loanword-check-summary-title > .panel-criteria-source-link {
   flex-shrink: 0;
   margin-left: auto;
+}
+
+.panel-left .panel-criteria-source-link {
+  flex-shrink: 0;
   padding: 0.12em 0.35em;
   border-radius: 3px;
   font-size: 0.554em;
