@@ -3,6 +3,7 @@ import {
   isLoanwordConverterEnabled,
   isMyPageProjectHubEnabled,
   isSpellingExportEnabled,
+  isSpellingKiwiBoundaryEnabled,
   isTocBodyCheckEnabled,
   isUnifyCandidateFindEnabled,
   isUnifyJosaSlmReviewEnabled,
@@ -20,6 +21,7 @@ describe('featureFlags', () => {
   const prevUnifyCandidate = import.meta.env.VITE_FEATURE_UNIFY_CANDIDATE_FIND;
   const prevJosaSlm = import.meta.env.VITE_UNIFY_JOSA_SLM;
   const prevKiwiJosa = import.meta.env.VITE_UNIFY_KIWI_JOSA;
+  const prevKiwiBoundary = import.meta.env.VITE_SPELLING_KIWI_BOUNDARY;
   const prevPredicateSlm = import.meta.env.VITE_UNIFY_PREDICATE_SLM;
   const prevStdict = import.meta.env.VITE_UNIFY_STDICT;
 
@@ -32,6 +34,7 @@ describe('featureFlags', () => {
     import.meta.env.VITE_FEATURE_UNIFY_CANDIDATE_FIND = prevUnifyCandidate;
     import.meta.env.VITE_UNIFY_JOSA_SLM = prevJosaSlm;
     import.meta.env.VITE_UNIFY_KIWI_JOSA = prevKiwiJosa;
+    import.meta.env.VITE_SPELLING_KIWI_BOUNDARY = prevKiwiBoundary;
     import.meta.env.VITE_UNIFY_PREDICATE_SLM = prevPredicateSlm;
     import.meta.env.VITE_UNIFY_STDICT = prevStdict;
   });
@@ -91,6 +94,13 @@ describe('featureFlags', () => {
     expect(isUnifyKiwiJosaEnabled()).toBe(false);
     import.meta.env.VITE_UNIFY_KIWI_JOSA = 'true';
     expect(isUnifyKiwiJosaEnabled()).toBe(true);
+  });
+
+  it('맞춤법 Kiwi 경계는 VITE_SPELLING_KIWI_BOUNDARY=true 일 때만 켜진다', () => {
+    import.meta.env.VITE_SPELLING_KIWI_BOUNDARY = undefined;
+    expect(isSpellingKiwiBoundaryEnabled()).toBe(false);
+    import.meta.env.VITE_SPELLING_KIWI_BOUNDARY = 'true';
+    expect(isSpellingKiwiBoundaryEnabled()).toBe(true);
   });
 
   it('용언 2차 SLM은 VITE_UNIFY_PREDICATE_SLM=true 일 때만 켜진다', () => {

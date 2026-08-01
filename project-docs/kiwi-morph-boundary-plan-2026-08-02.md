@@ -114,7 +114,7 @@ discoverSpacingUnifyCandidates(Async)
 
 **통과 기준:** 조건부 통과 — P1은 플래그 OFF + heuristic 폴백 + user dict 전제.
 
-### P1 — 표기통일 조사 경계 (플래그 OFF 기본) — **진행 중 2026-08-02**
+### P1 — 표기통일 조사 경계 (플래그 OFF 기본) — **완료 2026-08-02**
 
 목표: `stripTrailingJosa` / josa review에 Kiwi 보조 + **restored→visual 매핑**.
 방식: **Node/테스트 우선** (≈104MB 브라우저는 나중). ON이어도 미로드 시 heuristic.
@@ -129,17 +129,18 @@ discoverSpacingUnifyCandidates(Async)
 - [ ] 브라우저 lazy 모델 로드 (P1 범위 밖 — 권장 방식 1)
 
 **통과 기준:** ON+Node 로드에서 조사 strip 골든 통과, OFF 현행 동일, 어댑터 경로 존재.
-### P2 — 맞춤법/외래어 후단 필터 (플래그)
+### P2 — 맞춤법/외래어 후단 필터 (플래그) — **진행 2026-08-02**
 
 목표: 조사 붙은 표면은 잡고, 복합어 내부 부분 일치는 스킵.
+방식: Node/테스트 · `VITE_SPELLING_KIWI_BOUNDARY` · `ruleEngine` 본문 변경 없음.
 
-- [ ] `shouldSkipMatch` optional Kiwi gate
-- [ ] find 어간 ↔ Kiwi 토큰 경계 정렬 + **태그 화이트리스트** (§7 승인 게이트에서 확정)
-- [ ] 외래어: 뒤 조사 허용 유지, 어간 확장은 morph 경계
-- [ ] `ruleEngine` 본문 최소 변경
+- [x] `shouldSkipMatch` optional Kiwi gate (`matchFilters`)
+- [x] find 어간 ↔ Kiwi 토큰 경계 + **태그 화이트리스트** 승인분 반영  
+      (`NNG`/`NNP`/`NNB`/`NR`/`NP`/`SL`/`SH`/`SN`/`XSN`/`XPN`)
+- [x] 외래어·명사: 뒤 조사 허용(어간 토큰 정확 스팬), 부분일치는 skip
+- [x] `ruleEngine` 본문 미변경 (호출은 기존 `shouldSkipMatch`만)
 
-**통과 기준:** 기존 스냅샷·테스트 대다수 유지, 합의 오탐 세트만 개선, freeze diff 없음.
-
+**통과 기준:** OFF·미로드 회귀, ON+Node에서 `경제⊂경제학` skip·`초콜렛`+조사 keep.
 ### P3 — 운영 (선택)
 
 - [ ] 페이지 캐시: `pageNum + text hash → tokens`

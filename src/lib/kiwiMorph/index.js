@@ -25,3 +25,9 @@ export {
   surfaceMatchesTokens,
   pickPublicTokens,
 } from './tokens.js';
+export {
+  KIWI_BOUNDARY_STEM_TAGS,
+  isKiwiBoundaryStemTag,
+  shouldSkipMatchByKiwiBoundary,
+  shouldSkipMatchByKiwiTokens,
+} from './boundaryGate.js';
