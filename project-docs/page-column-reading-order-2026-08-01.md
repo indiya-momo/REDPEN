@@ -1,7 +1,7 @@
 # 페이지 내 2단(column) 읽기 순서 (2026-08-01)
 
 **상태:** 합의 · **구현됨** (`pageColumnSplit.js`)  
-**관련:** `spreadColumnSplit.js`(펼침면) · `pdfPageText.js` · `hangul-soft-wrap-rejoin-2026-08-01.md`
+**관련:** `spreadColumnSplit.js`(펼침면) · `pdfPageText.js` · `visual-semantic-text-layers-2026-08-02.md` (§12 PDF.js raw vs visualText 비교) · `hangul-soft-wrap-rejoin-2026-08-01.md`(구 soft-wrap)
 
 ## 목표
 
@@ -81,12 +81,12 @@ column 2: y 정렬 → line 생성
 히스토그램(가운데 빈 x) **단독으로 판단하지 않는다.**  
 표·캡션·사이드바·인용 박스·머리말/꼬리말도 빈 공간을 만든다.
 
-1. **gutter 비율** — `gutterWidth / pageWidth ≥ ~8–10%` (절대 pt 금지에 가깝게)
+1. **gutter 비율** — `gutterWidth / pageWidth ≥ ~5%` (점선 단 구분 포함; 절대 pt 지양)
 2. **좌우 텍스트량** — 양쪽 모두 충분한 아이템·문자 수
 3. **라인 구조 독립** — 좌·우 각각 여러 y 밴드(본문 줄)가 형성됨
 4. **gutter 띠에 글이 거의 없음**
 5. **펼침면 후보가 아님** — 가로로 긴 스캔은 spread 모듈에 맡김
-6. **지배적 gutter** — 표처럼 비슷한 x 간격이 여러 개면 분리하지 않음 (best gap ≫ 2번째·중앙값)
+6. **후보 점수** — gap × 좌우 균형(아이템·문자·y밴드). 표 안 칸 경계는 균형이 낮아 탈락하고, 점수 비슷한 유효 후보가 여럿이면 격자로 보고 분리하지 않음
 
 ### 기본 정책
 
