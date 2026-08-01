@@ -15,6 +15,7 @@ import {
   instancesForUnifyVariant,
 } from '../../lib/unifyCandidateDiscover.js';
 import { groupSortAndFillSatellites, countUnifyListAccordionItems } from '../../lib/unifyCandidateGrouping.js';
+import { filterSeriesSatellitesByMorphPos } from '../../lib/unifyCandidateSatellites.js';
 import {
   buildPatternRulePreviewGroups,
   buildSecondaryGroupsFromCandidates,
@@ -538,6 +539,8 @@ export default function UnifyCandidateFindPanel({
             workingGroups = dropJosaPlusPredicateFromGroups(workingGroups, {
               stdictPredicateKeys: stdictClusterKeys,
             });
+            // stdict가 dictPos를 붙인 뒤 — 이형태 없는 위성만 동종 복합 검증
+            workingGroups = filterSeriesSatellitesByMorphPos(workingGroups);
             stdictSummary = {
               ...stdictResult.summary,
               ran: true,
@@ -594,6 +597,14 @@ export default function UnifyCandidateFindPanel({
       }
 
       const triage = collectUnifyListTriage(workingGroups);
+
+      // 목록(grouped)과 동일: item 근거로 재집계 후 횟수·팝업 집계
+      workingGroups = enrichClusterGroupsWithItemHits(
+        workingGroups,
+        pageTexts,
+      );
+      // enrich가 conflict→single-form으로 바꾼 뒤 동종 복합 재검증
+      workingGroups = filterSeriesSatellitesByMorphPos(workingGroups);
 
       const listClusters = workingGroups.flatMap((g) => g.clusters);
       // 보조용언 추정은 목록에만 두고, 체크·전체 발견·PDF는 사용자가 켤 때까지 제외
@@ -706,7 +717,8 @@ export default function UnifyCandidateFindPanel({
       seriesIds: stdictPredicateSeriesIds,
       clusterKeys: stdictPredicateClusterKeys,
     });
-    const withoutJosaPred = dropJosaPlusPredicateFromGroups(withStdict, {
+    const withMorphSat = filterSeriesSatellitesByMorphPos(withStdict);
+    const withoutJosaPred = dropJosaPlusPredicateFromGroups(withMorphSat, {
       stdictPredicateKeys: stdictPredicateClusterKeys,
     });
     const afterPredicate = applyPredicateSlmDropsToGroups(
@@ -718,7 +730,10 @@ export default function UnifyCandidateFindPanel({
       predicateNeedsReviewByKey,
     );
     // 위성은 raw 횟수라 item 없는 유령·이중 드로잉이 남음 → 목록 직전에 재집계
-    return enrichClusterGroupsWithItemHits(afterPredicate, pageTexts);
+    // enrich 후 single-form으로 바뀐 항목에 morph 재적용
+    return filterSeriesSatellitesByMorphPos(
+      enrichClusterGroupsWithItemHits(afterPredicate, pageTexts),
+    );
   }, [
     clusters,
     rawByKey,

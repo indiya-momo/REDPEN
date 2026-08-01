@@ -18,6 +18,7 @@ import { normalizeSpacingClusters } from './unifyCandidateCollapse.js';
 import {
   clusterBelongsToSeriesAffix,
   fillSeriesSatellites,
+  filterSeriesSatellitesByMorphPos,
 } from './unifyCandidateSatellites.js';
 import { attachJosaReviewHints, isUnifyListDroppedMonoJosaCluster } from './unifyJosaReview.js';
 import { attachAuxiliaryReviewHints } from './unifyAuxReview.js';
@@ -433,9 +434,12 @@ export function groupSortAndFillSatellites(clusters, rawByKey) {
     group.clusters = group.clusters.map((c) => byKey.get(c.key) || c);
   }
   // `@` 채움말 다수결(보조·용언 vs 명사)로 계열 dictPos — 그다음 용언을 맨 아래로
+  // dictPos 붙은 계열만 위성 띄움 동종 복합(명사+명사 / 동사+동사) 검증
   // 용언 구간: @+조사+용언(을하다·역할을하다) 제외
   return dropJosaPlusPredicateFromGroups(
-    splitPredicateSingles(markSeriesBySlotMajority(kept)),
+    splitPredicateSingles(
+      filterSeriesSatellitesByMorphPos(markSeriesBySlotMajority(kept)),
+    ),
   );
 }
 

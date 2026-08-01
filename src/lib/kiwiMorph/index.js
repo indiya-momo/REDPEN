@@ -22,6 +22,22 @@ export {
 export { mapRestoredToVisual } from './mapRestoredToVisual.js';
 export { KIWI_DEFAULT_USER_WORDS } from './userDict.js';
 export {
+  isKiwiCopulaEndingSurface,
+  isKiwiEnumerationSurface,
+  isKiwiAtomicNounLexeme,
+  classifyKiwiGluedNoun,
+  shouldExcludeUnifyGluedByKiwi,
+  shouldRejectUnifySatelliteGlued,
+  isKiwiNounHadaConnectiveSurface,
+  isKiwiNounVerbalConnectiveSurface,
+  isKiwiNounCompoundEojeol,
+  isKiwiVerbCompoundEojeol,
+  isKiwiNonNounCompoundSpaced,
+  isKiwiNonVerbCompoundSpaced,
+  classifyKiwiSpacedEojeolPos,
+  shouldRejectUnifySatelliteSpacedByPos,
+} from './unifyExclude.js';
+export {
   isJosaTag,
   isSkippableTrailingTag,
   surfaceMatchesTokens,

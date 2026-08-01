@@ -22,17 +22,18 @@
 ## 로컬
 
 1. 모델: `tmp/kiwi-models/models/cong/base/` (기존 A와 동일)
-2. `.env.local`:
+2. `.env.local` (선택 — 맞춤법 경계·조사 리뷰용):
 
 ```
-VITE_UNIFY_KIWI_JOSA=true
-# 선택: VITE_SPELLING_KIWI_BOUNDARY=true
+# 표기통일 잡음 제외(경제학상·이다 연결 등)는 플래그 없이 부트만 되면 동작
+# VITE_UNIFY_KIWI_JOSA=true
+# VITE_SPELLING_KIWI_BOUNDARY=true
 ```
 
 3. `npm run dev` → `http://127.0.0.1:5173`
-4. App boot이 `GET /api/kiwi/analyze` → `ready:true` 이면 **서버 모드**(브라우저에 wasm 안 받음)
-5. 표기 통일 찾기 시 표면형 배치 prefetch 후 조사 strip
-6. 맞춤법 `runRuleCheckAsync` 시작 시 줄·페이지 텍스트 prefetch 후 경계 게이트
+4. App boot이 `GET /api/kiwi/analyze` → `ready:true` 이면 **서버 모드**(브라우저에 wasm 안 받음). ping 실패 시 DEV만 wasm 폴백.
+5. 표기 통일 찾기 시 `bootKiwiIfNeeded` + 표면형 배치 prefetch 후 조사 strip·잡음 제외
+6. 맞춤법 `runRuleCheckAsync` 시작 시 줄·페이지 텍스트 prefetch 후 경계 게이트 (`VITE_SPELLING_KIWI_BOUNDARY`)
 
 헬스 확인:
 

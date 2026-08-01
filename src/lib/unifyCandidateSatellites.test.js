@@ -40,6 +40,18 @@ describe('isSeriesSatelliteCandidate', () => {
       isSeriesSatelliteCandidate('구분하지', 1, '구분', 'prefix'),
     ).toBe(true);
   });
+
+  it('이중 드로잉 등으로 raw 2회여도 위성 후보로 허용', () => {
+    expect(isSeriesSatelliteCandidate('경제침체', 2, '경제', 'prefix')).toBe(
+      true,
+    );
+  });
+
+  it('0회는 거부', () => {
+    expect(isSeriesSatelliteCandidate('경제침체', 0, '경제', 'prefix')).toBe(
+      false,
+    );
+  });
 });
 
 describe('isRealSpacingConflict', () => {
@@ -661,6 +673,26 @@ describe('buildSingleFormCluster', () => {
     const cluster = buildSingleFormCluster('개인사정', acc, 'prefix', '개인');
     expect(cluster?.variants).toEqual(['개인 사정', '개인사정']);
     expect(cluster?.counts.개인사정).toBe(0);
+  });
+
+  it('경제학상처럼 반대형이 1음절 띄움이면 위성 거부', () => {
+    const acc = {
+      counts: new Map([['경제학상', 1]]),
+      occurrences: new Map([['경제학상', []]]),
+    };
+    // Kiwi 없으면 경제 학상(2·2)이 유효해 통과할 수 있음 — 원자 명사 게이트는 Node 테스트에서
+    const cluster = buildSingleFormCluster('경제학상', acc, 'prefix', '경제');
+    if (cluster) {
+      expect(cluster.counts['경제 학상'] ?? 0).toBe(0);
+    }
+  });
+
+  it('경제학(조사 제거 후)도 경제 학 띄움이 무효면 위성 거부', () => {
+    const acc = {
+      counts: new Map([['경제학', 1]]),
+      occurrences: new Map([['경제학', []]]),
+    };
+    expect(buildSingleFormCluster('경제학', acc, 'prefix', '경제')).toBeNull();
   });
 });
 

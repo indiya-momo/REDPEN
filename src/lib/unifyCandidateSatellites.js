@@ -4,6 +4,16 @@
  */
 
 import {
+  shouldRejectUnifySatelliteGlued,
+  shouldRejectUnifySatelliteSpacedByPos,
+} from './kiwiMorph/unifyExclude.js';
+import { isKiwiReady } from './kiwiMorph/runtime.js';
+import {
+  hangulSyllableCount,
+  isValidSpacedUnifyVariant,
+  UNIFY_TRAILING_JOSA,
+} from './unifyCandidateDiscover.js';
+import {
   extractPrefixes,
   extractSuffixes,
 } from './unifyCandidateSeriesTrend.js';
@@ -38,7 +48,8 @@ export function deriveOppositeVariant(key, existingVariant, affixType, affix) {
 }
 
 /**
- * 위성 후보 — 1회만.
+ * 위성 후보 — 문서에 한 형태만 있는 표기.
+ * - 횟수 ≥1 (차트 이중 드로잉 등으로 raw>1이어도 편입 → enrich가 item 기준으로 맞춤)
  * - 붙임: affix를 앞/뒤에 가진 단일어
  * - 띄움: affix 바로 옆 한 어절만 (개인 사정 / 미국 정부)
  * @param {string} existingVariant
@@ -52,7 +63,7 @@ export function isSeriesSatelliteCandidate(
   affix,
   affixType,
 ) {
-  if (count !== 1) return false;
+  if (count < 1) return false;
   if (!/\s/.test(existingVariant)) {
     if (affixType === 'prefix') {
       return (
@@ -72,6 +83,29 @@ export function isSeriesSatelliteCandidate(
 }
 
 /**
+ * 반대 띄움이 「경제 학이」처럼 조사만 남은 잔해면 true (Kiwi 없이도 거부).
+ * @param {string} opposite
+ * @param {string} affix
+ * @param {'prefix' | 'suffix'} affixType
+ */
+function oppositeLooksLikeTrailingJosaDebris(opposite, affix, affixType) {
+  const parts = String(opposite ?? '')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+  if (parts.length !== 2) return false;
+  const other = affixType === 'prefix' ? parts[1] : parts[0];
+  if (parts[0] !== affix && affixType === 'prefix') return false;
+  if (parts[1] !== affix && affixType === 'suffix') return false;
+  for (const josa of UNIFY_TRAILING_JOSA) {
+    if (!other.endsWith(josa) || other.length <= josa.length) continue;
+    const stem = other.slice(0, -josa.length);
+    if (hangulSyllableCount(stem) < 2) return true;
+  }
+  return false;
+}
+
+/**
  * @param {string} key
  * @param {ClusterAcc} acc
  * @param {'prefix' | 'suffix'} affixType
@@ -88,6 +122,37 @@ export function buildSingleFormCluster(key, acc, affixType, affix) {
 
   const opposite = deriveOppositeVariant(key, existing, affixType, affix);
   if (opposite === existing) return null;
+  // 경제학상→경제 학상 등 1음절·무효 띄움은 위성 거부
+  if (/\s/.test(opposite) && !isValidSpacedUnifyVariant(opposite)) {
+    return null;
+  }
+  if (/\s/.test(existing) && !isValidSpacedUnifyVariant(existing)) {
+    return null;
+  }
+  // 경제학이 → 경제 학이 (조사 잔해) — Kiwi 없이도 거부
+  if (oppositeLooksLikeTrailingJosaDebris(opposite, affix, affixType)) {
+    return null;
+  }
+
+  // 보통 시장·말해 시장 — 띄움이 명사+명사/동사+동사가 아니면 위성 거부
+  const spacedForMorph = /\s/.test(existing) ? existing : opposite;
+  if (/\s/.test(spacedForMorph) && isKiwiReady()) {
+    try {
+      if (shouldRejectUnifySatelliteSpacedByPos(spacedForMorph, undefined)) {
+        return null;
+      }
+    } catch {
+      /* keep */
+    }
+  }
+
+  const glued = String(existing).replace(/\s+/g, '');
+  // 분석된 닫힌 명사·이다·명사+하다만 위성 거부. unknown은 위성 유지.
+  try {
+    if (shouldRejectUnifySatelliteGlued(glued)) return null;
+  } catch {
+    /* keep */
+  }
 
   const isSpaced = /\s/.test(existing);
   const variants = isSpaced ? [existing, opposite] : [opposite, existing];
@@ -220,6 +285,49 @@ export function fillSeriesSatellites(groups, conflictClusters, rawByKey) {
   }
 
   return groups;
+}
+
+/**
+ * 이형태 없는 위성의 띄움형 — 명사+명사 / 동사+동사만 유지.
+ * 진짜 충돌(붙임·띄움 둘 다 count>0)은 유지. kind 누락도 count로 판별.
+ * @param {ClusterGroup[]} groups
+ * @returns {ClusterGroup[]}
+ */
+export function filterSeriesSatellitesByMorphPos(groups) {
+  if (!isKiwiReady()) return groups ?? [];
+  return (groups ?? []).map((group) => {
+    if (group.type !== 'series') return group;
+    const dictPos = group.dictPos;
+    const next = (group.clusters ?? []).filter((cluster) => {
+      if (isRealConflictCounts(cluster)) return true;
+      const spaced =
+        cluster.variants?.find((v) => /\s/.test(String(v))) ??
+        Object.keys(cluster.counts ?? {}).find((v) => /\s/.test(v)) ??
+        '';
+      if (!spaced || !/\s/.test(spaced)) return true;
+      try {
+        return !shouldRejectUnifySatelliteSpacedByPos(spaced, dictPos);
+      } catch {
+        return true;
+      }
+    });
+    if (next.length === (group.clusters ?? []).length) return group;
+    return { ...group, clusters: next };
+  });
+}
+
+/** @param {{ counts?: Record<string, number>, kind?: string }} cluster */
+function isRealConflictCounts(cluster) {
+  if (cluster.kind === 'conflict') return true;
+  if (cluster.kind === 'single-form') return false;
+  let glued = 0;
+  let spaced = 0;
+  for (const [variant, count] of Object.entries(cluster.counts ?? {})) {
+    if (count <= 0) continue;
+    if (/\s/.test(variant)) spaced += count;
+    else glued += count;
+  }
+  return glued > 0 && spaced > 0;
 }
 
 export { spacedFirstWord, spacedLastWord };

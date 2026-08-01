@@ -9,11 +9,12 @@ import {
   firstWrongUnifyInstance,
   instancesForUnifyVariant,
   enrichClustersWithItemHits,
+  enrichOccurrencesWithItemHits,
+  filterUnifyOccurrencesByKiwiBoundary,
   isValidSpacedUnifyVariant,
   isExcludedUnifyCandidateRaw,
   mapLayoutIndexToVisualIndex,
   assignUniqueUnifyHighlightIndices,
-  enrichOccurrencesWithItemHits,
   collectUnifyPhraseStarts,
   spacedPartIsBareJosa,
   stripTrailingUnifyAffixes,
@@ -88,6 +89,17 @@ describe('mergeUnifyHangulSoftWrapScanLines', () => {
     ]);
     expect(merged[0].line.includes('명지 계곡')).toBe(true);
   });
+
+  it('의존명사 「간」 뒤 줄바꿈은 붙이지 않는다(물가 간|악순환)', () => {
+    const merged = mergeUnifyHangulSoftWrapScanLines([
+      { line: '임금과 물가 간', absIndex: (i) => i },
+      { line: '악순환으로 보이는', absIndex: (i) => 100 + i },
+    ]);
+    expect(merged.map((l) => l.line)).toEqual([
+      '임금과 물가 간',
+      '악순환으로 보이는',
+    ]);
+  });
 });
 
 describe('prepareUnifyScanText', () => {
@@ -122,6 +134,18 @@ describe('isExcludedUnifyCandidateRaw', () => {
     expect(isExcludedUnifyCandidateRaw('경제왕국의')).toBe(false);
     expect(isExcludedUnifyCandidateRaw('경기침체에서')).toBe(false);
     expect(isExcludedUnifyCandidateRaw('개인 소득')).toBe(false);
+  });
+
+  it('한글 사이 문장부호(경제다!라)는 제외', () => {
+    expect(isExcludedUnifyCandidateRaw('경제다!라')).toBe(true);
+    expect(isExcludedUnifyCandidateRaw('경제다라')).toBe(false);
+  });
+
+  it('가운데점 나열(경제학·철학)은 공백 있어도 제외', () => {
+    expect(isExcludedUnifyCandidateRaw('경제학·철학')).toBe(true);
+    expect(isExcludedUnifyCandidateRaw('경제학· 철학')).toBe(true);
+    expect(isExcludedUnifyCandidateRaw('경제학상')).toBe(false);
+    expect(isExcludedUnifyCandidateRaw('경제학이')).toBe(false);
   });
 });
 
@@ -920,5 +944,13 @@ describe('reading-order S1 — 칩/occurrence 기하 정렬', () => {
     expect(instancesForUnifyVariant(next[0], '경제침체', { pages: [page] })).toHaveLength(
       1,
     );
+  });
+
+  it('filterUnifyOccurrencesByKiwiBoundary — 플래그 OFF면 출현 유지', () => {
+    import.meta.env.VITE_SPELLING_KIWI_BOUNDARY = undefined;
+    const occs = [{ pageNum: 1, index: 0, matchedText: '경제' }];
+    expect(
+      filterUnifyOccurrencesByKiwiBoundary(occs, { text: '경제학' }),
+    ).toEqual(occs);
   });
 });
