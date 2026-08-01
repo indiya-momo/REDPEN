@@ -877,4 +877,48 @@ describe('reading-order S1 — 칩/occurrence 기하 정렬', () => {
     expect(assigned.map((o) => o.index).sort((a, b) => a - b)).toEqual(slots);
     expect(new Set(assigned.map((o) => o.index)).size).toBe(3);
   });
+
+  it('enrichClustersWithItemHits — 이중 드로잉 텍스트 2회를 item dedupe 1회로 맞춘다', () => {
+    const size = 10;
+    const page = {
+      pageNum: 83,
+      text: '경제침체(전미경제연구소) 경제침체(전미경제연구소)',
+      items: [
+        {
+          str: '경제침체(전미경제연구소)',
+          transform: [size, 0, 0, size, 120, 400],
+          width: 160,
+        },
+        {
+          str: '경제침체(전미경제연구소)',
+          transform: [size, 0, 0, size, 120.4, 400.3],
+          width: 160,
+        },
+      ],
+    };
+    const clusters = [
+      {
+        key: '경제침체',
+        variants: ['경제침체', '경제 침체'],
+        counts: { 경제침체: 2, '경제 침체': 0 },
+        occurrencesByVariant: {
+          경제침체: [
+            { pageNum: 83, index: 0, matchedText: '경제침체' },
+            { pageNum: 83, index: 20, matchedText: '경제침체' },
+          ],
+          '경제 침체': [],
+        },
+        recommendedUnify: '경제침체',
+        totalCount: 2,
+        kind: /** @type {const} */ ('single-form'),
+      },
+    ];
+    const next = enrichClustersWithItemHits(clusters, [page]);
+    expect(next).toHaveLength(1);
+    expect(next[0].counts['경제침체']).toBe(1);
+    expect(next[0].occurrencesByVariant['경제침체']).toHaveLength(1);
+    expect(instancesForUnifyVariant(next[0], '경제침체', { pages: [page] })).toHaveLength(
+      1,
+    );
+  });
 });
