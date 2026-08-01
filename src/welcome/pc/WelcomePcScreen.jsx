@@ -297,14 +297,19 @@ export default function WelcomePcScreen({
           >
             {authPending ? '시작하는 중…' : '인디야 시작하기'}
           </button>
-          <button
-            type="button"
-            className="btn-welcome-primary welcome-pc__start welcome-pc__auth-submit welcome-pc__auth-submit--single welcome-pc__auth-browse--single"
-            onClick={() => onBrowse?.()}
-            disabled={!onBrowse || authPending}
-          >
-            먼저 둘러보기
-          </button>
+          <span className="welcome-pc__auth-browse-wrap">
+            <button
+              type="button"
+              className="btn-welcome-primary welcome-pc__start welcome-pc__auth-submit welcome-pc__auth-submit--single welcome-pc__auth-browse--single"
+              onClick={() => onBrowse?.()}
+              disabled={!onBrowse || authPending}
+            >
+              먼저 둘러보기
+            </button>
+            <span className="welcome-pc__cta-browser-note">
+              Chrome, Edge 브라우저 권장
+            </span>
+          </span>
         </>
       )}
     </div>
