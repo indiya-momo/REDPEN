@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { buildCompoundFindRules } from './compoundFindPattern.js';
 import {
   buildPageText,
+  hangulSoftWrapSeparator,
+  rejoinHangulSoftLineBreaks,
   shouldInsertLayoutSpaceBetweenPdfItems,
   shouldInsertSpaceBetweenPdfItems,
 } from './pdfService.js';
@@ -129,6 +131,164 @@ describe('shouldInsertLayoutSpaceBetweenPdfItems', () => {
     expect(shouldInsertLayoutSpaceBetweenPdfItems(5, lineH)).toBe(true);
     expect(shouldInsertLayoutSpaceBetweenPdfItems(1, lineH)).toBe(false);
     expect(shouldInsertLayoutSpaceBetweenPdfItems(0.5, lineH)).toBe(false);
+  });
+});
+
+describe('hangulSoftWrapSeparator', () => {
+  it('같은 크기 음절-음절은 빈 구분자', () => {
+    expect(hangulSoftWrapSeparator('내자', '리는', 12, 12)).toBe('');
+  });
+
+  it('줄끝 공백이 있어도 음절이면 soft wrap', () => {
+    expect(hangulSoftWrapSeparator('내 ', '자리는', 12, 12)).toBe('');
+  });
+
+  it('문장부호 뒤는 줄바꿈 유지', () => {
+    expect(hangulSoftWrapSeparator('좋다.', '그래서', 12, 12)).toBe('\n');
+  });
+
+  it('글자 크기 차이가 크면 줄바꿈 유지(소제목)', () => {
+    expect(hangulSoftWrapSeparator('경제', '불확실성의', 10, 14)).toBe('\n');
+  });
+
+  it('조사·어미 접미/좁은 조사로 끝나는 줄은 줄바꿈 유지', () => {
+    expect(hangulSoftWrapSeparator('자리를', '잡는다', 12, 12)).toBe('\n');
+    expect(hangulSoftWrapSeparator('보인다', '그래서', 12, 12)).toBe('\n');
+  });
+
+  it('명사 끝 다 + 다음 줄 조사는 줄바꿈 유지(바다\\n가)', () => {
+    expect(hangulSoftWrapSeparator('바다', '가 아름답다', 12, 12)).toBe('\n');
+  });
+
+  it('어간 음절 다로만 끝나도 soft wrap은 붙일 수 있다', () => {
+    // 단음절 `다` 단독 차단이 아님 — 다음이 어간 조각이면 결합
+    expect(hangulSoftWrapSeparator('바라보', '다보니', 12, 12)).toBe('');
+  });
+
+  it('y 간격이 본문 행간 밖이면 줄바꿈 유지', () => {
+    expect(
+      hangulSoftWrapSeparator('긴문장의끝자', '리는', 12, 12, {
+        prevY: 400,
+        nextY: 340,
+        leftLineOnly: '긴문장의끝자',
+      }),
+    ).toBe('\n');
+  });
+
+  it('짧은 한 줄은 soft wrap하지 않음', () => {
+    expect(
+      hangulSoftWrapSeparator('첫', '둘', 12, 12, {
+        prevY: 400,
+        nextY: 385,
+        leftLineOnly: '첫',
+      }),
+    ).toBe('\n');
+  });
+});
+
+describe('rejoinHangulSoftLineBreaks', () => {
+  it('음절-음절 soft wrap은 붙인다', () => {
+    const { text } = rejoinHangulSoftLineBreaks('내자\n리는\n');
+    expect(text).toBe('내자리는\n');
+  });
+
+  it('줄끝 공백이 있으면 어절 경계를 유지한다', () => {
+    const { text } = rejoinHangulSoftLineBreaks('내 \n자리는\n');
+    expect(text).toBe('내 자리는\n');
+  });
+
+  it('문장부호 뒤 줄바꿈은 유지한다', () => {
+    const { text } = rejoinHangulSoftLineBreaks('좋다.\n그래서\n');
+    expect(text).toBe('좋다.\n그래서\n');
+  });
+
+  it('다음 줄이 따옴표로 시작하면 유지한다', () => {
+    const { text } = rejoinHangulSoftLineBreaks('말했다.\n“그래\n');
+    expect(text).toBe('말했다.\n“그래\n');
+  });
+
+  it('조사·어미로 끝나면 붙이지 않는다', () => {
+    const { text } = rejoinHangulSoftLineBreaks('그는\n사과를\n');
+    expect(text).toBe('그는\n사과를\n');
+  });
+
+  it('두 번 연속 soft-wrap을 붙인다', () => {
+    const { text } = rejoinHangulSoftLineBreaks('그래서 한글중\n간강제\n개행임\n');
+    expect(text).toBe('그래서 한글중간강제개행임\n');
+  });
+
+  it('빈 줄(단락)은 유지한다 — 가\\n\\n나다', () => {
+    const { text } = rejoinHangulSoftLineBreaks('가\n\n나다\n');
+    expect(text).toBe('가\n\n나다\n');
+  });
+
+  it('줄머리 공백이 여러 개여도 soft wrap한다', () => {
+    const { text } = rejoinHangulSoftLineBreaks('내자\n   리는\n');
+    expect(text).toBe('내자리는\n');
+  });
+
+  it('줄머리 Thin Space 등 유니코드 공백도 제거한다', () => {
+    const { text } = rejoinHangulSoftLineBreaks('내자\n\u2009리는\n');
+    expect(text).toBe('내자리는\n');
+  });
+
+  it('빈 줄(단락)은 유지한다', () => {
+    const { text } = rejoinHangulSoftLineBreaks('첫줄\n\n다음\n');
+    expect(text).toBe('첫줄\n\n다음\n');
+  });
+
+  it('명사 끝 + 다음 줄 조사는 붙이지 않는다', () => {
+    const { text } = rejoinHangulSoftLineBreaks('바다\n가 아름답다\n');
+    expect(text).toBe('바다\n가 아름답다\n');
+  });
+
+  it('itemRefs 오프셋을 줄바꿈 삭제에 맞게 당긴다', () => {
+    const refs = [
+      { start: 0, end: 2, itemIndex: 0 },
+      { start: 3, end: 5, itemIndex: 1 },
+    ];
+    const { text, itemRefs } = rejoinHangulSoftLineBreaks('내자\n리는', refs);
+    expect(text).toBe('내자리는');
+    expect(itemRefs[0]).toEqual({ start: 0, end: 2, itemIndex: 0 });
+    expect(itemRefs[1]).toEqual({ start: 2, end: 4, itemIndex: 1 });
+  });
+});
+
+describe('buildPageText — 한글 soft wrap', () => {
+  it('서로 다른 y의 음절 줄을 이어 붙인다', () => {
+    const items = [
+      ...mockLineItems([{ str: '그래서 내자', x: 48, w: 72 }], 220),
+      ...mockLineItems([{ str: '리는', x: 48, w: 24 }], 206),
+    ];
+    const { text } = buildPageText(items);
+    expect(text.replace(/\n+$/, '')).toBe('그래서 내자리는');
+    expect(text).not.toMatch(/자\n리/);
+  });
+
+  it('연속 soft-wrap 두 줄을 이어서 붙인다', () => {
+    const items = [
+      ...mockLineItems([{ str: '그래서 한글중', x: 48, w: 80 }], 240),
+      ...mockLineItems([{ str: '간강제', x: 48, w: 36 }], 226),
+      ...mockLineItems([{ str: '개행임', x: 48, w: 36 }], 212),
+    ];
+    const { text } = buildPageText(items);
+    expect(text.replace(/\n+$/, '')).toBe('그래서 한글중간강제개행임');
+  });
+
+  it('줄끝 공백이 있으면 띄어쓰기를 지치지 않는다', () => {
+    const items = [
+      ...mockLineItems(
+        [
+          { str: '그래서 내', x: 48, w: 48 },
+          { str: ' ', x: 100, w: 6 },
+        ],
+        220,
+      ),
+      ...mockLineItems([{ str: '자리는', x: 48, w: 36 }], 206),
+    ];
+    const { text } = buildPageText(items);
+    expect(text).toMatch(/내\s+자리는/);
+    expect(text).not.toMatch(/내자리는/);
   });
 });
 
