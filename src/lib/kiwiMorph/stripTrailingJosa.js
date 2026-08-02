@@ -47,7 +47,11 @@ export function stripTrailingJosaFromTokens(
 /**
  * @param {string} surface
  * @param {number} [minStemHangul]
- * @param {{ kiwi?: import('kiwi-nlp').Kiwi | null }} [opts]
+ * @param {{
+ *   kiwi?: import('kiwi-nlp').Kiwi | null,
+ *   tokens?: import('./tokens.js').KiwiToken[],
+ *   surface1to1?: boolean,
+ * }} [opts]
  * @returns {string | null}
  */
 export function stripTrailingJosaKiwi(surface, minStemHangul = 2, opts = {}) {
@@ -56,7 +60,16 @@ export function stripTrailingJosaKiwi(surface, minStemHangul = 2, opts = {}) {
     .replace(/\s+/g, ' ');
   if (!v) return null;
 
-  const analyzed = analyzeLine(v, opts);
+  /** @type {{ tokens: import('./tokens.js').KiwiToken[], surface1to1?: boolean } | null} */
+  let analyzed = null;
+  if (opts.tokens?.length) {
+    analyzed = {
+      tokens: opts.tokens,
+      surface1to1: opts.surface1to1 !== false,
+    };
+  } else {
+    analyzed = analyzeLine(v, opts);
+  }
   if (!analyzed?.tokens?.length) return null;
   if (!analyzed.surface1to1) return null;
 
