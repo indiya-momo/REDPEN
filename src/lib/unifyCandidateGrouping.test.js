@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   groupAndSortClusters,
   groupSortAndFillSatellites,
+  sortClusterGroups,
 } from './unifyCandidateGrouping.js';
 
 /** @param {string} key @param {string} spaced */
@@ -128,5 +129,65 @@ describe('groupAndSortClusters — 접두·접미 멤버 수 우선', () => {
     const keys = groups.flatMap((g) => g.clusters.map((c) => c.key));
     expect(keys).not.toContain('기술58');
     expect(keys).toEqual(expect.arrayContaining(['기술혁신', '기술개발']));
+  });
+});
+
+describe('sortClusterGroups — 용언 계열 발견 횟수', () => {
+  it('용언 구간에서 발견 합계가 큰 계열이 앞이다(@보자 > @나가)', () => {
+    const sorted = sortClusterGroups([
+      {
+        type: 'series',
+        affix: '나가',
+        affixType: 'suffix',
+        label: '@나가',
+        dictPos: 'predicate',
+        clusters: [
+          {
+            key: '빠져나가',
+            variants: ['빠져나가', '빠져 나가'],
+            counts: { 빠져나가: 6, '빠져 나가': 6 },
+            totalCount: 12,
+          },
+        ],
+      },
+      {
+        type: 'series',
+        affix: '보자',
+        affixType: 'suffix',
+        label: '@보자',
+        dictPos: 'predicate',
+        clusters: [
+          {
+            key: '살펴보자',
+            variants: ['살펴보자', '살펴 보자'],
+            counts: { 살펴보자: 134, '살펴 보자': 134 },
+            totalCount: 268,
+          },
+        ],
+      },
+      {
+        type: 'series',
+        affix: '들어',
+        affixType: 'prefix',
+        label: '들어@',
+        clusters: [
+          {
+            key: '들어보다',
+            variants: ['들어보다', '들어 보다'],
+            counts: { 들어보다: 50, '들어 보다': 53 },
+            totalCount: 103,
+          },
+        ],
+      },
+    ]);
+    const predLabels = sorted
+      .filter(
+        (g) =>
+          g.type === 'series' &&
+          (g.dictPos === 'predicate' || g.affix === '들어'),
+      )
+      .map((g) => g.label);
+    expect(predLabels[0]).toBe('@보자');
+    expect(predLabels).toEqual(['@보자', '들어@', '@나가']);
   });
 });

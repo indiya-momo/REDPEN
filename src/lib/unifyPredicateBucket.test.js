@@ -18,6 +18,8 @@ describe('looksLikePredicateKey', () => {
     expect(looksLikePredicateKey('싶어')).toBe(true);
     expect(looksLikePredicateKey('알려')).toBe(true);
     expect(looksLikePredicateKey('올려')).toBe(true);
+    expect(looksLikePredicateKey('빠져')).toBe(true);
+    expect(looksLikePredicateKey('깨져')).toBe(true);
   });
 
   it('기본형·보조용언 꼬리(@보다·@내다)를 잡는다', () => {
@@ -28,8 +30,10 @@ describe('looksLikePredicateKey', () => {
     expect(looksLikePredicateKey('만들어내다')).toBe(true);
   });
 
-  it('알려진 용언 어간(오래)을 잡는다', () => {
+  it('알려진 용언 어간(오래·보자·나가)을 잡는다', () => {
     expect(looksLikePredicateKey('오래')).toBe(true);
+    expect(looksLikePredicateKey('보자')).toBe(true);
+    expect(looksLikePredicateKey('나가')).toBe(true);
   });
 
   it('개의(의존명사+의)는 휴리스틱 용언이 아니다', () => {

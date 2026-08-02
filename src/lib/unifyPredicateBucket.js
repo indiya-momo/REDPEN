@@ -9,7 +9,7 @@ import {
   UNIFY_LOW_RISK_JOSA,
 } from './unifyJosaReview.js';
 
-/** 활용형·연결어미로 흔한 끝 음절 (만들어·보여·생각해·알려·싶어) */
+/** 활용형·연결어미로 흔한 끝 음절 (만들어·보여·생각해·알려·싶어·빠져) */
 const PREDICATE_END_SYLLABLES = new Set([
   '아',
   '어',
@@ -21,6 +21,7 @@ const PREDICATE_END_SYLLABLES = new Set([
   '워',
   '와',
   '려', // 알리다→알려, 올리다→올려
+  '져', // 빠지다→빠져, 깨지다→깨져
 ]);
 
 /**
@@ -36,6 +37,7 @@ const PREDICATE_END_DIGRAPHS = new Set([
   '워가',
   '와가',
   '려가',
+  '져가',
 ]);
 
 /**
@@ -90,10 +92,11 @@ const NOUN_FALSE_POSITIVES = new Set([
 /**
  * 끝 음절 휴리스틱에 안 잡히지만 용언·부사 어간으로 뒤로 보낼 표기.
  * (`오래`←오래다 — 끝이 `래`.
- *  해당 음절 전체 허용은 노래·미래 등 오탐. `개의`는 의존명사+의 — 화이트리스트 금지, 용언 2차 SLM에 위임)
+ *  `보자`·`나가` — 청유·보조 활용형. 해당 음절 전체 허용은 명사 오탐.
+ *  `개의`는 의존명사+의 — 화이트리스트 금지, 용언 2차 SLM에 위임)
  * @type {ReadonlySet<string>}
  */
-const PREDICATE_KNOWN_STEMS = new Set(['오래']);
+const PREDICATE_KNOWN_STEMS = new Set(['오래', '보자', '나가']);
 
 /**
  * 외래 지명·국명 등 -ia → ~아 표기 (캘리포니아·펜실베니아·아시아).
