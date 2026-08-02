@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
   clearWorkSession,
+  isWorkSessionRestoreEnabled,
   loadWorkSession,
   markTabSessionActive,
   saveWorkSession,
@@ -20,6 +21,34 @@ afterEach(() => {
 });
 
 describe('sessionStore defensive', () => {
+  it('DEV에서만 작업 복원이 켜진다', () => {
+    expect(isWorkSessionRestoreEnabled()).toBe(true);
+  });
+
+  it('PROD(DEV=false)에서는 마커·IDB가 있어도 복원하지 않는다', async () => {
+    const prev = import.meta.env.DEV;
+    import.meta.env.DEV = false;
+    try {
+      expect(isWorkSessionRestoreEnabled()).toBe(false);
+      await seedSessionRow({
+        id: 'current',
+        fileName: 'prod-no-restore.pdf',
+        pdfStorage: 'opfs',
+        groupedResults: [],
+      });
+      markTabSessionActive();
+      await expect(loadWorkSession()).resolves.toBeNull();
+      const saved = await saveWorkSession({
+        fileName: 'x.pdf',
+        pdfBuffer: new ArrayBuffer(8),
+        pageTexts: [],
+      });
+      expect(saved).toEqual({ ok: true, mode: 'disabled' });
+    } finally {
+      import.meta.env.DEV = prev;
+    }
+  });
+
   it('fileName이 없는 오염 레코드는 null을 반환한다', async () => {
     await seedSessionRow({
       id: 'current',
