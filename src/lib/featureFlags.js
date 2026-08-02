@@ -46,7 +46,7 @@ export function isLoanwordConverterEnabled() {
 /**
  * 표기 통일 탭 「표기 통일 추천」(띄어쓰기 이형태).
  * - `npm run dev`: 항상 켜짐
- * - 프로덕션·Pages 빌드: 기본 꺼짐
+ * - 프로덕션·Pages: `VITE_FEATURE_UNIFY_CANDIDATE_FIND=true` 일 때 (CI deploy-pages.yml)
  * - 로컬 preview에서 켜려면 `.env`에 `VITE_FEATURE_UNIFY_CANDIDATE_FIND=true`
  */
 export function isUnifyCandidateFindEnabled() {
