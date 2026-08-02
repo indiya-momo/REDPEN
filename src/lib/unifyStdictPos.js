@@ -86,6 +86,7 @@ export function lemmaCandidatesForConjugation(q) {
     '워가',
     '와가',
     '려가',
+    '져가',
   ];
   for (const d of digraphs) {
     if (h.endsWith(d) && h.length > d.length) {
@@ -98,6 +99,14 @@ export function lemmaCandidatesForConjugation(q) {
   if (h.endsWith('려') && h.length >= 2) {
     const stem = h.slice(0, -1);
     push(`${stem}리다`);
+    push(`${stem}다`);
+    return out;
+  }
+
+  // 빠져·깨져 — 지다 활용 (져 ← 지+어). 끝만 떼면 빠다 오생성.
+  if (h.endsWith('져') && h.length >= 2) {
+    const stem = h.slice(0, -1);
+    push(`${stem}지다`);
     push(`${stem}다`);
     return out;
   }

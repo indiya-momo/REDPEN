@@ -19,6 +19,8 @@ describe('lemmaCandidatesForConjugation', () => {
     expect(lemmaCandidatesForConjugation('대어')).toEqual(['대다']);
     expect(lemmaCandidatesForConjugation('밀려')).toEqual(['밀리다', '밀다']);
     expect(lemmaCandidatesForConjugation('만들어')).toEqual(['만들다']);
+    expect(lemmaCandidatesForConjugation('빠져')).toEqual(['빠지다', '빠다']);
+    expect(lemmaCandidatesForConjugation('깨져')).toEqual(['깨지다', '깨다']);
     expect(lemmaCandidatesForConjugation('계산해보자')).toEqual(['계산하다']);
     expect(lemmaCandidatesForConjugation('답해보자')).toEqual(['답하다']);
     expect(lemmaCandidatesForConjugation('계산해')).toEqual(['계산하다']);

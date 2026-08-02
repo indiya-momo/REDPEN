@@ -15,7 +15,7 @@ import {
   instancesForUnifyVariant,
   prefetchUnifyKiwiSurfaces,
 } from '../../lib/unifyCandidateDiscover.js';
-import { groupSortAndFillSatellites, countUnifyListAccordionItems } from '../../lib/unifyCandidateGrouping.js';
+import { groupSortAndFillSatellites, countUnifyListAccordionItems, sortClusterGroups } from '../../lib/unifyCandidateGrouping.js';
 import { filterSeriesSatellitesByMorphPos } from '../../lib/unifyCandidateSatellites.js';
 import {
   buildPatternRulePreviewGroups,
@@ -619,6 +619,8 @@ export default function UnifyCandidateFindPanel({
       );
       // enrich가 conflict→single-form으로 바꾼 뒤 동종 복합 재검증
       workingGroups = filterSeriesSatellitesByMorphPos(workingGroups);
+      // 위성 제거·item 재집계로 횟수가 바뀌므로 발견 횟수 순 재정렬
+      workingGroups = sortClusterGroups(workingGroups);
 
       const listClusters = workingGroups.flatMap((g) => g.clusters);
       // 보조용언 추정은 목록에만 두고, 체크·전체 발견·PDF는 사용자가 켤 때까지 제외
@@ -744,9 +746,11 @@ export default function UnifyCandidateFindPanel({
       predicateNeedsReviewByKey,
     );
     // 위성은 raw 횟수라 item 없는 유령·이중 드로잉이 남음 → 목록 직전에 재집계
-    // enrich 후 single-form으로 바뀐 항목에 morph 재적용
-    return filterSeriesSatellitesByMorphPos(
-      enrichClusterGroupsWithItemHits(afterPredicate, pageTexts),
+    // enrich 후 single-form으로 바뀐 항목에 morph 재적용 → 횟수 반영해 재정렬
+    return sortClusterGroups(
+      filterSeriesSatellitesByMorphPos(
+        enrichClusterGroupsWithItemHits(afterPredicate, pageTexts),
+      ),
     );
   }, [
     clusters,
