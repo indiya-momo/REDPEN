@@ -17,6 +17,15 @@ const CHUNK_SIZE = 512 * 1024;
 /** 같은 탭·F5 동안만 복원. 탭/브라우저를 닫으면 sessionStorage가 비워져 복원하지 않음 */
 export const WORK_TAB_SESSION_KEY = 'pdf-proofread-work-tab';
 
+/**
+ * 이전 PDF·검수 자동 복원.
+ * - 로컬 `npm run dev` 만 허용 (F5 편의)
+ * - 배포(PROD): 로그인·리다이렉트·새로고침 후 복원하지 않음
+ */
+export function isWorkSessionRestoreEnabled() {
+  return import.meta.env.DEV === true;
+}
+
 export function isTabSessionActive() {
   try {
     return sessionStorage.getItem(WORK_TAB_SESSION_KEY) === '1';
@@ -249,6 +258,10 @@ async function ensureFileReadPermission(handle) {
  * }} data
  */
 export async function saveWorkSession(data) {
+  if (!isWorkSessionRestoreEnabled()) {
+    return { ok: true, mode: 'disabled' };
+  }
+
   await requestPersistentStorage();
 
   try {
@@ -376,6 +389,10 @@ export async function saveWorkSession(data) {
 
 /** @returns {Promise<object | null>} */
 export async function loadWorkSession() {
+  if (!isWorkSessionRestoreEnabled()) {
+    return null;
+  }
+
   if (!isTabSessionActive()) {
     await clearWorkSession();
     return null;
