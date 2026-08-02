@@ -360,23 +360,22 @@ export default function ConsistencyPanel({
         >
           <p className="printed-page-setup__title consistency-panel-section-title panel-criteria-heading">
             표기 통일하기
-            <span className="panel-criteria-heading-meta">
-              (최대 {MAX_CONSISTENCY_UNIFY_SLOTS}항목, 통일형 1항목)
-            </span>
             <span className="loanword-converter__free-badge">추천</span>
           </p>
           <div className="consistency-subsection consistency-subsection--first">
             <p className="hint consistency-hint-block">
-              여러 항목 중 하나를 📌통일형으로 지정하면, 나머지가 원고에 바뀌어
-              표시됩니다
+              최대 {MAX_CONSISTENCY_UNIFY_SLOTS}항목 입력 후 하나를
+              📌통일형으로 지정하면, 나머지가 원고에 바뀌어 표시됩니다
               <br />
               <ConsistencyHintExample>
                 <span className="consistency-hint-batang">
                   조선시대, 조선˅시대
                 </span>{' '}
-                등록 →{' '}
+                등록 후{' '}
                 <span className="consistency-hint-batang">조선시대</span>{' '}
-                📌사용자 지정 후 검수
+                📌사용자 지정 →{' '}
+                <span className="consistency-hint-batang">조선˅시대</span> 찾아
+                변경 표시
               </ConsistencyHintExample>
             </p>
             <ConsistencyUnifySection
@@ -416,13 +415,11 @@ export default function ConsistencyPanel({
 
         <p className="printed-page-setup__title consistency-panel-section-title panel-criteria-heading">
           {LITERAL_FIND_FEATURE_LABEL}
-          <span className="panel-criteria-heading-meta">
-            (최대 {MAX_CONSISTENCY_CRITERIA_SLOTS}항목, 영문 대소문자 지원)
-          </span>
         </p>
         <div className="consistency-subsection consistency-subsection--first">
           <p className="hint consistency-hint-block">
-            여러 항목 사이 &apos;,&apos;를 넣어 입력하면 한 번에 찾을 수 있습니다
+            최대 {MAX_CONSISTENCY_CRITERIA_SLOTS}항목 사이에 ,를 넣어 입력하면 한
+            번에 찾을 수 있습니다(영문 대소문자 지원)
             <br />
             <ConsistencyHintExample>
               <span className="consistency-hint-batang">
@@ -461,7 +458,6 @@ export default function ConsistencyPanel({
           <div className="consistency-subsection consistency-subsection--half">
             <p className="printed-page-setup__title consistency-subsection-title panel-criteria-heading">
               공통 항목 찾기
-              <span className="panel-criteria-heading-meta">(1항목)</span>
             </p>
             <p className="hint consistency-hint-block">
               @을 포함한 항목을 찾아 순서대로 표시합니다
@@ -502,7 +498,6 @@ export default function ConsistencyPanel({
           <div className="consistency-subsection consistency-subsection--half consistency-subsection--exclude">
             <p className="printed-page-setup__title consistency-subsection-title panel-criteria-heading">
               검수 제외 항목
-              <span className="panel-criteria-heading-meta">(1항목)</span>
             </p>
             <p className="hint consistency-hint-block">
               입력한 항목은 찾지 않습니다

@@ -1384,41 +1384,44 @@
     var(--spelling-calibration-block-pad-x) !important;
 }
 
-/* 외래어 표기·표기 통일 추천 — 행 간격 (표기 통일하기와 동일 stack) */
+/* 외래어 표기·표기 통일 추천 — 제목·설명·예 간격 (표기 통일하기와 동일) */
 .panel-left .spelling-tab-layout__calibration .loanword-converter,
 .panel-left .consistency-embed .unify-candidate-find.loanword-converter {
   display: flex;
   flex-direction: column;
   gap: 0;
+  --consistency-stack-gap: calc(8px * var(--panel-ui-scale, 1));
+  --consistency-example-font-size: calc(var(--panel-guide-font-size, 0.828rem) * 0.9);
+  --consistency-example-line-height: 1.45;
 }
 
+/* 제목 → 설명 */
 .panel-left .spelling-tab-layout__calibration .loanword-converter__summary,
 .panel-left .consistency-embed .unify-candidate-find .loanword-converter__summary {
-  margin: 0 0 var(--panel-gap-block);
+  margin: 0 0 var(--consistency-stack-gap);
 }
 
 .panel-left .spelling-tab-layout__calibration .loanword-converter .hint.consistency-hint-block,
-.panel-left
-  .consistency-embed
-  .unify-candidate-find
-  .hint.consistency-hint-block:not(.unify-candidate-find__example) {
+.panel-left .consistency-embed .unify-candidate-find .hint.consistency-hint-block {
   margin: 0 !important;
 }
 
+/* 설명 → 예 (통일하기: .consistency-hint-example margin-top) */
 .panel-left
   .spelling-tab-layout__calibration
   .loanword-converter
+  .consistency-hint-example,
+.panel-left
+  .consistency-embed
+  .unify-candidate-find
   .consistency-hint-example {
   display: inline-block;
-  margin-top: calc(var(--panel-gap-block) * 0.75);
+  margin-top: calc(var(--consistency-stack-gap) * 0.75);
 }
 
-.panel-left .consistency-embed .unify-candidate-find__example {
-  margin: 0 !important;
-}
-
+/* 예 → 입력 (통일하기: .tail-form margin-top) */
 .panel-left .spelling-tab-layout__calibration .loanword-converter__field {
-  margin: var(--panel-gap-block) 0 0 !important;
+  margin: var(--consistency-stack-gap) 0 0 !important;
 }
 
 .panel-left .consistency-embed .unify-candidate-find__body {
@@ -1429,7 +1432,7 @@
 
 .panel-left .unify-candidate-find__intro-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 10px;
   margin: 0 !important;
 }
@@ -1878,10 +1881,11 @@
   box-sizing: border-box;
 }
 
-/* 표기 통일 추천 — 외래어 표기(LoanwordConverter styles.wrap)와 동일 박스 */
+/* 표기 통일 추천 — 외래어·통일하기 박스와 동일 패딩 토큰 */
 .panel-left .unify-candidate-find.loanword-converter {
   margin: 6px 0 0;
-  padding: 8px 12px;
+  padding: var(--spelling-calibration-block-pad-y)
+    var(--spelling-calibration-block-pad-x);
   border: 1px solid rgba(0, 0, 0, 0.12);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.6);
