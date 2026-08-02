@@ -46,12 +46,13 @@ export function isLoanwordConverterEnabled() {
 /**
  * 표기 통일 탭 「표기 통일 추천」(띄어쓰기 이형태).
  * - `npm run dev`: 항상 켜짐
- * - 프로덕션·Pages: `VITE_FEATURE_UNIFY_CANDIDATE_FIND=true` 일 때 (CI deploy-pages.yml)
- * - 로컬 preview에서 켜려면 `.env`에 `VITE_FEATURE_UNIFY_CANDIDATE_FIND=true`
+ * - 프로덕션(Vercel·Pages): 기본 켜짐 (`VITE_FEATURE_UNIFY_CANDIDATE_FIND=false` 로만 끔)
+ * - Pages CI는 deploy-pages.yml 에서도 `true` 명시
  */
 export function isUnifyCandidateFindEnabled() {
   if (import.meta.env.DEV) return true;
-  return import.meta.env.VITE_FEATURE_UNIFY_CANDIDATE_FIND === 'true';
+  if (import.meta.env.VITE_FEATURE_UNIFY_CANDIDATE_FIND === 'false') return false;
+  return true;
 }
 
 /**
