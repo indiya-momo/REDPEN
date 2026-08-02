@@ -4,11 +4,7 @@
  */
 import { Check, FilePlus, LogOut, MessageSquare, Save } from 'lucide-react';
 import { AUXILIARY_VERB_FEATURE_LABEL } from './bonBojoRules.js';
-import {
-  LITERAL_FIND_FEATURE_LABEL,
-  UNIFY_FEATURE_LABEL,
-} from './consistencyRuleLimit.js';
-import { ConsistencyTabChip, SpellingTabChip } from './workGuideMessageUi.jsx';
+import { ConsistencyTabChip, FindBtnLook, SeriesSpacingBtnsLook, SpellingTabChip } from './workGuideMessageUi.jsx';
 
 /** 0 — 맞춤법 탭·외래어 소개 */
 export function SpellingTabIntroMessage() {
@@ -125,16 +121,16 @@ export function FirstResultMessage() {
 export function ConsistencyIntroMessage(_props = {}) {
   return (
     <>
-      <ConsistencyTabChip />을 살펴보자냥
+      <ConsistencyTabChip /> 고민이었다면 ✋
       <br />
-      <span className="tooltip-guide__criteria-heading-look">
-        {UNIFY_FEATURE_LABEL}
+      <span className="tooltip-guide__criteria-summary-label">
+        표기 통일 추천
       </span>
-      는 유용한 기능이다냥
+      은 원고에서 자동으로!
       <br />
-      여러 항목을 입력한 다음
+      통일이 필요한 항목을 <FindBtnLook /> 제안한다냥
       <br />
-      통일하고 싶은 항목에📌를 붙이면 된다냥
+      좋은 기능이니 꼭 활용해달라냥
     </>
   );
 }
@@ -142,22 +138,11 @@ export function ConsistencyIntroMessage(_props = {}) {
 export function ConsistencyUnifyPinMessage() {
   return (
     <>
-      <span className="tooltip-guide__criteria-heading-look">
-        {LITERAL_FIND_FEATURE_LABEL}
-      </span>
-      에서는
+      표기 통일이 필요한 페이지를 볼 수 있고
       <br />
-      여러 항목을 한 번에 찾을 수 있다냥
+      <SeriesSpacingBtnsLook /> 하나를 결정하면
       <br />
-      <span className="tooltip-guide__criteria-heading-look">
-        공통 항목 찾기
-      </span>
-      는 @을 포함한 항목을 모두 찾고
-      <br />
-      <span className="tooltip-guide__criteria-heading-look">
-        검수 제외 항목
-      </span>
-      에 등록한 항목은 찾지 않는다냥
+      원고에 자동으로 반영된다냥
     </>
   );
 }

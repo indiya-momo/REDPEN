@@ -38,7 +38,6 @@ import {
   countPhraseSlotRegisteredEntries,
   MAX_PHRASE_SLOT_REGISTERED_ENTRIES,
   MAX_GLOBAL_EXCLUDE_REGISTERED_ENTRIES,
-  MAX_CONSISTENCY_UNIFY_SLOTS,
   MAX_CONSISTENCY_CRITERIA_SLOTS,
   canAddGlobalExcludeRegisteredEntries,
   globalExcludeRegistrationBlockedMessage,
@@ -116,6 +115,8 @@ import TooltipGuide from './TooltipGuide.jsx';
  *   } | null,
  *   onLiteralAddButtonClick?: () => void,
  *   onUnifyAddButtonClick?: () => void,
+ *   onSeriesSpacingGuideSelect?: () => void,
+ *   seriesSpacingGuideActive?: boolean,
  *   guidePinTailWord?: string | null,
  *   onGuidePinClick?: (tailWord: string) => void,
  *   guideSpotlight?: boolean,
@@ -167,6 +168,8 @@ export default function ConsistencyPanel({
   auxiliaryVerbGuide = null,
   onLiteralAddButtonClick,
   onUnifyAddButtonClick,
+  onSeriesSpacingGuideSelect,
+  seriesSpacingGuideActive = false,
   guidePinTailWord = null,
   onGuidePinClick,
   guideSpotlight = false,
@@ -343,15 +346,16 @@ export default function ConsistencyPanel({
           onSelectInstance={onSelectUnifyCandidateInstance}
           onPreviewGroupsChange={onUnifyCandidatePreviewGroupsChange}
           formatPageLabel={formatPageLabel}
+          guideSpotlight={guideSpotlight}
+          onFindButtonClick={onUnifyAddButtonClick}
+          seriesSpacingGuideAttr={
+            seriesSpacingGuideActive ? 'unify-series-spacing' : undefined
+          }
+          onSeriesSpacingGuideSelect={onSeriesSpacingGuideSelect}
         />
       ) : null}
       <section
-        className={[
-          'consistency-unified-box',
-          guideSpotlight ? 'work-guide-spotlight' : '',
-        ]
-          .filter(Boolean)
-          .join(' ')}
+        className="consistency-unified-box"
         aria-label="표기 통일 검수 기준"
       >
         <div
@@ -360,12 +364,10 @@ export default function ConsistencyPanel({
         >
           <p className="printed-page-setup__title consistency-panel-section-title panel-criteria-heading">
             표기 통일하기
-            <span className="loanword-converter__free-badge">추천</span>
           </p>
           <div className="consistency-subsection consistency-subsection--first">
             <p className="hint consistency-hint-block">
-              최대 {MAX_CONSISTENCY_UNIFY_SLOTS}항목 입력 후 하나를
-              📌통일형으로 지정하면, 나머지가 원고에 바뀌어 표시됩니다
+              여러 항목을 입력하고 하나를 📌통일형으로 지정하세요
               <br />
               <ConsistencyHintExample>
                 <span className="consistency-hint-batang">
@@ -383,33 +385,10 @@ export default function ConsistencyPanel({
               onApplyRules={applyCustomRules}
               consistencyDecisions={consistencyDecisions}
               decisionByUid={decisionByUid}
-              addButtonGuideAttr="unify-add"
-              onAddButtonClick={onUnifyAddButtonClick}
               guidePinTailWord={guidePinTailWord}
               onGuidePinClick={onGuidePinClick}
               hideHeading
             />
-            {consistencyUnifyPinGuide ? (
-              <TooltipGuide
-                storageKey={consistencyUnifyPinGuide.storageKey}
-                placement="right"
-                bubbleType="left"
-                useFixedLayer
-                alignToBubble={consistencyUnifyPinGuide.alignToBubble}
-                bubbleGuideStep="4b"
-                offsetX={8}
-                offsetY={0}
-                pinned={consistencyUnifyPinGuide.pinned}
-                showConfirm={Boolean(consistencyUnifyPinGuide.showConfirm)}
-                message={consistencyUnifyPinGuide.message}
-                onDismiss={consistencyUnifyPinGuide.onDismiss}
-              >
-                <span
-                  className="work-guide-anchor work-guide-anchor--unify-pin"
-                  aria-hidden
-                />
-              </TooltipGuide>
-            ) : null}
           </div>
         </div>
 

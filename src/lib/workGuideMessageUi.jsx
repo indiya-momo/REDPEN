@@ -40,6 +40,25 @@ export function RegisterBtnLook() {
   );
 }
 
+/** 말풍선 안 — 표기 통일 추천 「찾기」버튼 모양 */
+export function FindBtnLook() {
+  return (
+    <span className="tooltip-guide__register-btn-look" aria-hidden>
+      찾기
+    </span>
+  );
+}
+
+/** 말풍선 안 — 계열 「붙여쓰기|띄어쓰기」세그먼트 버튼 모양 */
+export function SeriesSpacingBtnsLook() {
+  return (
+    <span className="tooltip-guide__series-spacing-btns-look" aria-hidden>
+      <span className="tooltip-guide__series-spacing-btn-look">붙여쓰기</span>
+      <span className="tooltip-guide__series-spacing-btn-look">띄어쓰기</span>
+    </span>
+  );
+}
+
 /** 말풍선 안 — FAQ 원형 발바닥 버튼 모양 */
 export function FaqBtnLook() {
   return (
