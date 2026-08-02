@@ -55,7 +55,7 @@ export function LeftCriteriaMessage() {
 export function PreUploadMessage() {
   return (
     <>
-      인디야는 인터넷 브라우저 프로그램이라
+      인디야는 브라우저 프로그램(웹앱)이라
       <br />
       PDF는 서버에 올라가지 않으니 안심하라냥
       <br />
@@ -88,7 +88,7 @@ export function SpellingStartCheckMessage() {
 export function FirstResultMessage() {
   return (
     <>
-      왼쪽: 검수 결과, 오른쪽: 반영 원고
+      왼쪽은 결과창, 오른쪽은 원고창이다냥
       <br />
       위{' '}
       <span

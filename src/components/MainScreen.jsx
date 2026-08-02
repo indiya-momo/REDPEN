@@ -125,11 +125,11 @@ const WORK_GUIDE_1_ALIGN = {
   topFromTargetBottom: 10,
 };
 
-/** 1b — 기준 검수 안내 (1번보다 200px 아래) */
+/** 1b — 기준 검수 안내 (원고 하단·책장 아래쪽) */
 const WORK_GUIDE_1B_ALIGN = {
   selector: '[data-work-guide-criteria-run]',
   leftFromTargetLeft: 0,
-  topFromTargetBottom: 210,
+  topFromTargetBottom: 450,
 };
 
 /** 4번 — 우측 상단 인사말(○○님 안녕하세요) 아래 120px */
