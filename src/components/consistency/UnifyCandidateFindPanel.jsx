@@ -1177,7 +1177,8 @@ export default function UnifyCandidateFindPanel({
       <div className="unify-candidate-find__body">
         <div className="unify-candidate-find__intro-row">
           <p className="hint consistency-hint-block unify-candidate-find__hint">
-            띄어쓰기가 다른 항목을 자동으로 찾아 제안합니다(줄바꿈 공백은 제외)
+            표기 통일에 적합한 항목을 찾아 통일합니다(1차: 띄어쓰기 이형태, 2차:
+            공통 항목)
           </p>
           <button
             type="button"
@@ -1191,8 +1192,15 @@ export default function UnifyCandidateFindPanel({
         </div>
         <p className="hint consistency-hint-block unify-candidate-find__example">
           <ConsistencyHintExample>
-            &apos;뉴욕 타임스&apos; 3회, &apos;뉴욕타임스&apos; 1회 → 다수형
-            &apos;뉴욕 타임스&apos;
+            ①
+            <span className="consistency-hint-batang">
+              경제˅학자, 경제학자
+            </span>{' '}
+            자동 찾기 ②
+            <span className="consistency-hint-batang">경제학자</span> 📌사용자
+            지정 ③
+            <span className="consistency-hint-batang">경제뉴스</span>
+            📌자동 제안
           </ConsistencyHintExample>
         </p>
       </div>

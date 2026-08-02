@@ -371,8 +371,12 @@ export default function ConsistencyPanel({
               표시됩니다
               <br />
               <ConsistencyHintExample>
-                &apos;조선시대,조선˅시대&apos; 입력 → &apos;조선시대&apos; 📌통일형
-                지정하면 &apos;조선˅시대&apos; 가 원고에서 바뀌어 표시됨
+                <span className="consistency-hint-batang">
+                  조선시대, 조선˅시대
+                </span>{' '}
+                등록 →{' '}
+                <span className="consistency-hint-batang">조선시대</span>{' '}
+                📌사용자 지정 후 검수
               </ConsistencyHintExample>
             </p>
             <ConsistencyUnifySection
@@ -421,7 +425,10 @@ export default function ConsistencyPanel({
             여러 항목 사이 &apos;,&apos;를 넣어 입력하면 한 번에 찾을 수 있습니다
             <br />
             <ConsistencyHintExample>
-              &apos;고구려,백제,신라,Silla&apos; 입력 → 4항목 한 번에 찾기
+              <span className="consistency-hint-batang">
+                고구려,백제,신라,Silla
+              </span>{' '}
+              → 4항목 한 번에 찾기
             </ConsistencyHintExample>
           </p>
           <ConsistencyRegisterField
@@ -457,10 +464,14 @@ export default function ConsistencyPanel({
               <span className="panel-criteria-heading-meta">(1항목)</span>
             </p>
             <p className="hint consistency-hint-block">
-              @을 포함한 항목을 모두 찾습니다
+              @을 포함한 항목을 찾아 순서대로 표시합니다
               <br />
               <ConsistencyHintExample>
-                &apos;@시대&apos; 입력 → &apos;조선시대, 고려시대, 신라시대⋯&apos;
+                <span className="consistency-hint-batang">@시대</span>
+                {' → '}
+                <span className="consistency-hint-batang">조선시대</span> 4건,{' '}
+                <span className="consistency-hint-batang">고려시대</span> 3건,{' '}
+                <span className="consistency-hint-batang">신라시대</span> 2건⋯
               </ConsistencyHintExample>
             </p>
             <ConsistencyRegisterField
@@ -469,7 +480,6 @@ export default function ConsistencyPanel({
               onRegister={registerSlot}
               placeholder={CONSISTENCY_PHRASE_SLOT_INPUT_PLACEHOLDER}
               ariaLabel="공통 항목 찾기(1항목)"
-              inputClassName="field-input mono"
               registerDisabled={phraseSlotRegisterFull}
             />
             <RegisteredList
@@ -498,7 +508,7 @@ export default function ConsistencyPanel({
               입력한 항목은 찾지 않습니다
               <br />
               <ConsistencyHintExample>
-                &apos;소녀시대&apos;
+                <span className="consistency-hint-batang">소녀시대</span>
               </ConsistencyHintExample>
             </p>
             <ConsistencyRegisterField

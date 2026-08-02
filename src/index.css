@@ -3916,7 +3916,8 @@ html[data-build='prod'] .unify-candidate-find__list {
 }
 
 .field-input--space-visible {
-  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  /* 검색창 예시·입력 — OS 일반 바탕 */
+  font-family: 'Batang', 'BatangChe', 'Gungsuh', serif;
   letter-spacing: 0.02em;
 }
 
