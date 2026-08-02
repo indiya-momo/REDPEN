@@ -67,11 +67,8 @@ export function FirstResultMessage() {
     <>
       검수가 완료되었다냥!
       <br />
-      왼쪽은{' '}
-      <span className="tooltip-guide__criteria-summary-label">전체 발견</span>{' '}
-      한 결과 화면,
+      왼쪽은 결과창, 오른쪽은 원고창,
       <br />
-      오른쪽은 원고 화면,{' '}
       <span className="tooltip-guide__pdf-highlight-look">하이라이트</span>를
       클릭하면
       <br />

@@ -163,7 +163,7 @@ export default function PdfCenterStage({
         <p className="pdf-center-stage__upload-fail">
           텍스트 선택이 가능한
           <br />
-          인디자인 PDF인지 확인해 주세요
+          PDF파일인지 확인해주세요
         </p>
       )}
 
@@ -205,7 +205,7 @@ export default function PdfCenterStage({
                   <div className="pdf-dropzone__icon" aria-hidden>
                     <FileText size={32} strokeWidth={1.35} />
                   </div>
-                  <p className="pdf-dropzone__drag">인디자인 PDF 파일을 여기로 옮기거나</p>
+                  <p className="pdf-dropzone__drag">인디자인 / 한글 PDF를 옮기거나</p>
                   <button
                     type="button"
                     className="btn-upload pdf-dropzone__open"
@@ -214,7 +214,7 @@ export default function PdfCenterStage({
                     disabled={isProcessing}
                   >
                     <Upload size={16} />
-                    인디자인 PDF를 브라우저에 업로드
+                    PDF 파일을 브라우저에 업로드
                   </button>
                   <footer className="pdf-dropzone__footer">
                     <p className="pdf-dropzone__limit">
@@ -241,7 +241,7 @@ export default function PdfCenterStage({
             <div className="pdf-dropzone__icon" aria-hidden>
               <FileText size={32} strokeWidth={1.35} />
             </div>
-            <p className="pdf-dropzone__drag">인디자인 PDF 파일을 여기로 옮기거나</p>
+            <p className="pdf-dropzone__drag">인디자인 / 한글 PDF를 옮기거나</p>
             <button
               type="button"
               className="btn-upload pdf-dropzone__open"
@@ -250,7 +250,7 @@ export default function PdfCenterStage({
               disabled={isProcessing}
             >
               <Upload size={16} />
-              인디자인 PDF를 브라우저에 업로드
+              PDF 파일을 브라우저에 업로드
             </button>
             <footer className="pdf-dropzone__footer">
               <p className="pdf-dropzone__limit">
