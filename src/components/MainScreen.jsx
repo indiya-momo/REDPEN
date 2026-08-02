@@ -139,11 +139,11 @@ const WORK_GUIDE_GREETING_ALIGN = {
   topFromTargetTop: 120,
 };
 
-/** 여러 항목 찾기 — 인사말 아래 320px (4번보다 200px 아래) */
+/** 여러 항목 찾기 — 인사말 아래 책장 하단 쪽 */
 const WORK_GUIDE_LITERAL_FIND_ALIGN = {
   selector: '.work-guide-anchor--greeting',
   leftFromTargetLeft: 0,
-  topFromTargetTop: 320,
+  topFromTargetTop: 450,
 };
 
 /** 다운로드 가이드 — 검수 결과 다운로드 버튼 아래 */
@@ -189,18 +189,18 @@ const WORK_GUIDE_5_ALIGN_CHAIN = [
   },
 ];
 
-/** 통일형 📌 — 둘러보기 통일형(붉은 표시) 핀 오른쪽 */
+/** 통일형 📌 — 오른쪽 원고(인사말 앵커) 아래 · 책장 중단 */
 const WORK_GUIDE_UNIFY_PIN_ALIGN = {
-  selector: '[data-work-guide="unify-pin-silla"]',
-  leftFromTargetLeft: 186,
-  topFromTargetTop: -4,
+  selector: '.work-guide-anchor--greeting',
+  leftFromTargetLeft: 0,
+  topFromTargetTop: 220,
 };
 
-/** 회원 통일형 📌 — 오른쪽 원고(인사말) 아래 330px */
+/** 회원 통일형 📌 — 둘러보기와 동일 위치 */
 const WORK_GUIDE_UNIFY_PIN_MEMBER_ALIGN = {
-  selector: '.pdf-work-pane__greeting',
+  selector: '.work-guide-anchor--greeting',
   leftFromTargetLeft: 0,
-  topFromTargetTop: 330,
+  topFromTargetTop: 220,
 };
 
 /** 둘러보기 핀 가이드 대상 — 통일형 */
@@ -1397,6 +1397,11 @@ export default function MainScreen({
     [guestWorkGuide.showConsistencyUnifyPinGuide, guestWorkGuide.dismiss],
   );
 
+  const handleConsistencyUnifySeriesSpacingGuide = useCallback(() => {
+    if (!guestWorkGuide.showConsistencyUnifyPinGuide) return;
+    guestWorkGuide.dismiss(WORK_GUIDE_KEYS.CONSISTENCY_UNIFY_PIN);
+  }, [guestWorkGuide.showConsistencyUnifyPinGuide, guestWorkGuide.dismiss]);
+
   const goToPdfPage = (pageNum) => {
     if (!pdf.pdf) return;
     const page = clampPageNumber(pageNum, pdf.pdf.numPages);
@@ -1981,6 +1986,31 @@ export default function MainScreen({
     >
       {greetingAnchor}
     </TooltipGuide>
+  ) : guestWorkGuide.showConsistencyUnifyPinGuide ? (
+    <TooltipGuide
+      storageKey={guestWorkGuide.storageKey(
+        WORK_GUIDE_KEYS.CONSISTENCY_UNIFY_PIN,
+      )}
+      placement="bottom"
+      bubbleType="left"
+      useFixedLayer
+      alignToBubble={
+        isGuestBrowseActive()
+          ? WORK_GUIDE_UNIFY_PIN_ALIGN
+          : WORK_GUIDE_UNIFY_PIN_MEMBER_ALIGN
+      }
+      bubbleGuideStep="4b"
+      offsetX={0}
+      offsetY={8}
+      pinned={guestWorkGuide.pinAll}
+      showConfirm={!isGuestBrowseActive()}
+      message={<guideMessages.ConsistencyUnifyPinMessage />}
+      onDismiss={() =>
+        guestWorkGuide.dismiss(WORK_GUIDE_KEYS.CONSISTENCY_UNIFY_PIN)
+      }
+    >
+      {greetingAnchor}
+    </TooltipGuide>
   ) : guestWorkGuide.showConsistencyLiteralGuide ? (
     <TooltipGuide
       storageKey={guestWorkGuide.storageKey(
@@ -2413,10 +2443,7 @@ export default function MainScreen({
             {!consistencyWorkDone ? (
               <div className="consistency-rules-scroll custom-scrollbar">
                 <ConsistencyPanel
-                  guideSpotlight={
-                    !isGuestBrowseActive() &&
-                    guestWorkGuide.showConsistencyGuide
-                  }
+                  guideSpotlight={guestWorkGuide.showConsistencyGuide}
                   auxiliaryVerbGuide={
                     guestWorkGuide.showAuxiliaryVerbGuide
                       ? {
@@ -2434,24 +2461,12 @@ export default function MainScreen({
                         }
                       : null
                   }
-                  consistencyUnifyPinGuide={
-                    guestWorkGuide.showConsistencyUnifyPinGuide
-                      ? {
-                          storageKey: guestWorkGuide.storageKey(
-                            WORK_GUIDE_KEYS.CONSISTENCY_UNIFY_PIN,
-                          ),
-                          alignToBubble: isGuestBrowseActive()
-                            ? WORK_GUIDE_UNIFY_PIN_ALIGN
-                            : WORK_GUIDE_UNIFY_PIN_MEMBER_ALIGN,
-                          pinned: guestWorkGuide.pinAll,
-                          showConfirm: !isGuestBrowseActive(),
-                          message: <guideMessages.ConsistencyUnifyPinMessage />,
-                          onDismiss: () =>
-                            guestWorkGuide.dismiss(
-                              WORK_GUIDE_KEYS.CONSISTENCY_UNIFY_PIN,
-                            ),
-                        }
-                      : null
+                  consistencyUnifyPinGuide={null}
+                  seriesSpacingGuideActive={
+                    Boolean(
+                      guestWorkGuide.showConsistencyUnifyPinGuide &&
+                        unifyPreviewActive,
+                    )
                   }
                   guidePinTailWord={
                     guestWorkGuide.showConsistencyUnifyPinGuide
@@ -2459,6 +2474,9 @@ export default function MainScreen({
                       : null
                   }
                   onGuidePinClick={handleConsistencyUnifyPinGuideClick}
+                  onSeriesSpacingGuideSelect={
+                    handleConsistencyUnifySeriesSpacingGuide
+                  }
                   onLiteralAddButtonClick={handleConsistencyLiteralAddGuideClick}
                   onUnifyAddButtonClick={handleConsistencyUnifyAddGuideClick}
                   customRules={customRules}
@@ -2550,15 +2568,17 @@ export default function MainScreen({
               {greetingParagraph}
               <GuideClickHand
                 active={
-                  isGuestBrowseActive() &&
                   guestWorkGuide.showConsistencyGuide &&
                   !consistencyGuideUnifyAddClicked
                 }
-                anchorSelector='[data-work-guide="unify-add"]'
+                anchorSelector='[data-work-guide="unify-find"]'
               />
               <GuideClickHand
-                active={guestWorkGuide.showConsistencyUnifyPinGuide}
-                anchorSelector='[data-work-guide="unify-pin-silla"]'
+                active={
+                  guestWorkGuide.showConsistencyUnifyPinGuide &&
+                  unifyPreviewActive
+                }
+                anchorSelector='[data-work-guide="unify-series-spacing"]'
                 align="center"
               />
               <GuideClickHand

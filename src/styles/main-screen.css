@@ -3057,6 +3057,41 @@
   color: #fff;
 }
 
+/* 말풍선 안 — 「붙여쓰기|띄어쓰기」세그먼트 (표기 통일 추천과 동일) */
+.tooltip-guide__series-spacing-btns-look {
+  box-sizing: border-box;
+  display: inline-grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: 0;
+  margin: 0 2px;
+  vertical-align: middle;
+  border: 1px solid color-mix(in srgb, #aaa 70%, #fff 30%);
+  border-radius: var(--radius-search, 6px);
+  overflow: hidden;
+  background: color-mix(in srgb, #fff 88%, var(--panel-surface-group, #f6f1e7));
+}
+
+.tooltip-guide__series-spacing-btn-look {
+  box-sizing: border-box;
+  display: block;
+  margin: 0;
+  padding: calc(2px * 1.2 * var(--tooltip-ui-scale, 1))
+    calc(4px * var(--tooltip-ui-scale, 1));
+  font-family: inherit;
+  font-size: calc(0.68rem * 1.2 * var(--tooltip-ui-scale, 1));
+  font-weight: 500;
+  line-height: 1.4;
+  text-align: center;
+  white-space: nowrap;
+  color: var(--c-soft, #666);
+  background: transparent;
+}
+
+.tooltip-guide__series-spacing-btn-look + .tooltip-guide__series-spacing-btn-look {
+  border-left: 1px solid color-mix(in srgb, #aaa 70%, #fff 30%);
+}
+
 .spelling-tab-layout__criteria-run-wrap {
   overflow: visible;
 }

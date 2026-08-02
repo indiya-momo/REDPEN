@@ -6,16 +6,16 @@ import { Check, Save } from 'lucide-react';
 import { AUXILIARY_VERB_FEATURE_LABEL } from './bonBojoRules.js';
 import {
   LITERAL_FIND_FEATURE_LABEL,
-  UNIFY_FEATURE_LABEL,
 } from './consistencyRuleLimit.js';
 import { LOANWORD_FEATURE_LABEL } from './loanwordCheckRules.js';
 import {
   ConsistencyTabChip,
-  FaqBtnLook,
+  FindBtnLook,
   IndiyaBrandLook,
   LoanwordConvertBtnLook,
   LogoutBtnLook,
   RegisterBtnLook,
+  SeriesSpacingBtnsLook,
   SpellingTabChip,
 } from './workGuideMessageUi.jsx';
 
@@ -86,19 +86,16 @@ export function FirstResultMessage() {
 export function ConsistencyIntroMessage() {
   return (
     <>
-      <ConsistencyTabChip /> 탭에도 여러 기능이 있다냥
+      <ConsistencyTabChip /> 고민이었다면 ✋
       <br />
-      먼저{' '}
       <span className="tooltip-guide__criteria-summary-label">
-        {UNIFY_FEATURE_LABEL}
+        표기 통일 추천
       </span>
-      에서는
+      은 원고에서 자동으로!
       <br />
-      여러 항목을 통일📌할 수 있다냥
+      통일이 필요한 항목을 <FindBtnLook /> 제안한다냥
       <br />
-      좋은 기능이니 꼭 활용해 달라냥
-      <br />
-      <RegisterBtnLook />을 눌러 예시 항목을 추가해 보자냥
+      좋은 기능이니 꼭 활용해달라냥
     </>
   );
 }
@@ -106,9 +103,11 @@ export function ConsistencyIntroMessage() {
 export function ConsistencyUnifyPinMessage() {
   return (
     <>
-      통일형으로 지정하고 싶은 항목에
+      표기 통일이 필요한 페이지를 볼 수 있고
       <br />
-      📌를 붙이면 된다냥
+      <SeriesSpacingBtnsLook /> 하나를 결정하면
+      <br />
+      원고에 자동으로 반영된다냥
     </>
   );
 }
@@ -178,11 +177,10 @@ export function WorkExitMessage() {
         모모는 늘 여기에 있다냥
       </span>
       <span className="tooltip-guide__message-line">
-        어려워 보여도, 천천히 따라하며 활용하면
+        처음에는 어색해도, 천천히 따라해보면
       </span>
       <span className="tooltip-guide__message-line">
-        실무가 편해질 거다냥(<FaqBtnLook />
-        참조)
+        검수가 훨씬 편해질 거다냥
       </span>
       <span className="tooltip-guide__message-line">
         <LogoutBtnLook /> 후 <IndiyaBrandLook />에서 만나자냥

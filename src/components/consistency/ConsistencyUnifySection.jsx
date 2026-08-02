@@ -114,11 +114,9 @@ export default function ConsistencyUnifySection({
         <>
           <p className="printed-page-setup__title consistency-subsection-title panel-criteria-heading">
             표기 통일하기
-            <span className="loanword-converter__free-badge">추천</span>
           </p>
           <p className="hint consistency-hint-block">
-            최대 {MAX_CONSISTENCY_UNIFY_SLOTS}항목 입력 후 하나를 📌통일형으로
-            지정하면, 나머지가 원고에 바뀌어 표시됩니다
+            여러 항목을 입력하고 하나를 📌통일형으로 지정하세요
             <br />
             <ConsistencyHintExample>
               <span className="consistency-hint-batang">

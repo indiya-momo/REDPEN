@@ -26,6 +26,7 @@ import {
   isPrimaryUnifyComplete,
 } from '../../lib/unifyPatternRule.js';
 import { showAppConfirm } from '../../lib/appDialog.js';
+import { isGuestBrowseActive } from '../../lib/guestBrowsePolicy.js';
 import { dropJosaPlusPredicateFromGroups } from '../../lib/unifyPredicateBucket.js';
 import {
   mergeReviewedClustersIntoGroups,
@@ -118,10 +119,16 @@ function formatSeriesCategoryLabelText(group) {
  *   onSelect: (spacing: 'glued' | 'spaced') => void,
  * }} props
  */
-function SeriesSpacingButtons({ spacing, hintSpacing = null, onSelect }) {
+function SeriesSpacingButtons({
+  spacing,
+  hintSpacing = null,
+  onSelect,
+  dataWorkGuide,
+}) {
   return (
     <span
       className="unify-candidate-find__series-spacing-btns"
+      data-work-guide={dataWorkGuide || undefined}
       onClick={(e) => e.stopPropagation()}
       onKeyDown={(e) => e.stopPropagation()}
     >
@@ -266,6 +273,10 @@ function UnifyFindingsCount({ count, shownCount = count, className = '' }) {
  *     groups: import('../../lib/ruleEngine.js').GroupedResult[],
  *   ) => void,
  *   formatPageLabel?: (systemPage: number) => string,
+ *   guideSpotlight?: boolean,
+ *   onFindButtonClick?: () => void,
+ *   seriesSpacingGuideAttr?: string,
+ *   onSeriesSpacingGuideSelect?: () => void,
  * }} props
  */
 export default function UnifyCandidateFindPanel({
@@ -284,6 +295,10 @@ export default function UnifyCandidateFindPanel({
   onSelectInstance,
   onPreviewGroupsChange,
   formatPageLabel = formatSystemPageLabel,
+  guideSpotlight = false,
+  onFindButtonClick,
+  seriesSpacingGuideAttr,
+  onSeriesSpacingGuideSelect,
 }) {
   const [finding, setFinding] = useState(false);
   const [slmReviewing, setSlmReviewing] = useState(false);
@@ -986,6 +1001,8 @@ export default function UnifyCandidateFindPanel({
     if (!searched || phase2PromptedRef.current) return;
     if (!isPrimaryUnifyComplete(grouped, registeredVariants)) return;
     phase2PromptedRef.current = true;
+    // 미리 둘러보기 — 2차 진행 확인 팝업·진입 생략
+    if (isGuestBrowseActive()) return;
     void (async () => {
       const ok = await showAppConfirm({
         title: '표기 통일 추천',
@@ -1111,6 +1128,7 @@ export default function UnifyCandidateFindPanel({
           break;
         }
       }
+      onSeriesSpacingGuideSelect?.();
     },
     [
       clusters,
@@ -1122,6 +1140,7 @@ export default function UnifyCandidateFindPanel({
       predicateNeedsReviewByKey,
       publishPreview,
       onSelectInstance,
+      onSeriesSpacingGuideSelect,
       unifyPhase,
       secondaryClusters,
     ],
@@ -1167,7 +1186,14 @@ export default function UnifyCandidateFindPanel({
   }
 
   return (
-    <div className="loanword-converter unify-candidate-find">
+    <div
+      className={[
+        'loanword-converter unify-candidate-find',
+        guideSpotlight ? 'work-guide-spotlight' : '',
+      ]
+        .filter(Boolean)
+        .join(' ')}
+    >
       <div className="loanword-converter__summary panel-criteria-heading">
         <span className="loanword-converter__summary-title">
           표기 통일 추천
@@ -1181,8 +1207,7 @@ export default function UnifyCandidateFindPanel({
       <div className="unify-candidate-find__body">
         <div className="unify-candidate-find__intro-row">
           <p className="hint consistency-hint-block unify-candidate-find__hint">
-            표기 통일에 적합한 항목을 찾아 통일합니다(1차: 띄어쓰기 이형태, 2차:
-            공통 항목)
+            표기 통일이 필요한 항목(띄어쓰기, 이형태)을 자동으로 제안합니다
             <br />
             <ConsistencyHintExample>
               <span className="consistency-hint-batang">
@@ -1198,7 +1223,11 @@ export default function UnifyCandidateFindPanel({
           <button
             type="button"
             className="consistency-register-add-btn consistency-register-add-btn--label unify-candidate-find__submit"
-            onClick={() => void handleFind()}
+            data-work-guide="unify-find"
+            onClick={() => {
+              onFindButtonClick?.();
+              void handleFind();
+            }}
             disabled={busy || checkQuotaBlocked}
             aria-busy={busy}
           >
@@ -1313,6 +1342,7 @@ export default function UnifyCandidateFindPanel({
                                       ? group.direction
                                       : null
                                   }
+                                  dataWorkGuide={seriesSpacingGuideAttr}
                                   onSelect={(spacing) =>
                                     handleSeriesSpacingSelect(
                                       group.clusters,
@@ -1460,6 +1490,7 @@ export default function UnifyCandidateFindPanel({
                             <span className="unify-candidate-find__summary-trail">
                               <SeriesSpacingButtons
                                 spacing={itemSpacing}
+                                dataWorkGuide={seriesSpacingGuideAttr}
                                 onSelect={(spacing) =>
                                   handleSeriesSpacingSelect(
                                     [cluster],
@@ -1505,6 +1536,7 @@ export default function UnifyCandidateFindPanel({
                         <span className="unify-candidate-find__summary-trail">
                           <SeriesSpacingButtons
                             spacing={seriesSpacing}
+                            dataWorkGuide={seriesSpacingGuideAttr}
                             onSelect={(spacing) =>
                               handleSeriesSpacingSelect(
                                 group.clusters,
