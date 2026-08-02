@@ -1179,6 +1179,17 @@ export default function UnifyCandidateFindPanel({
           <p className="hint consistency-hint-block unify-candidate-find__hint">
             표기 통일에 적합한 항목을 찾아 통일합니다(1차: 띄어쓰기 이형태, 2차:
             공통 항목)
+            <br />
+            <ConsistencyHintExample>
+              <span className="consistency-hint-batang">
+                경제˅학자, 경제학자
+              </span>{' '}
+              자동 제안,{' '}
+              <span className="consistency-hint-batang">경제학자</span> 📌사용자
+              지정 →{' '}
+              <span className="consistency-hint-batang">경제뉴스</span>
+              📌자동 제안
+            </ConsistencyHintExample>
           </p>
           <button
             type="button"
@@ -1190,19 +1201,6 @@ export default function UnifyCandidateFindPanel({
             {busy ? '·\u2009·\u2009·' : '찾기'}
           </button>
         </div>
-        <p className="hint consistency-hint-block unify-candidate-find__example">
-          <ConsistencyHintExample>
-            ①
-            <span className="consistency-hint-batang">
-              경제˅학자, 경제학자
-            </span>{' '}
-            자동 찾기 ②
-            <span className="consistency-hint-batang">경제학자</span> 📌사용자
-            지정 ③
-            <span className="consistency-hint-batang">경제뉴스</span>
-            📌자동 제안
-          </ConsistencyHintExample>
-        </p>
       </div>
 
       {searched ? (

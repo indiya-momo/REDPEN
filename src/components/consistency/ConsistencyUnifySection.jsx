@@ -114,22 +114,21 @@ export default function ConsistencyUnifySection({
         <>
           <p className="printed-page-setup__title consistency-subsection-title panel-criteria-heading">
             표기 통일하기
-            <span className="panel-criteria-heading-meta">
-              (최대 {MAX_CONSISTENCY_UNIFY_SLOTS}항목, 통일형 1항목)
-            </span>
             <span className="loanword-converter__free-badge">추천</span>
           </p>
           <p className="hint consistency-hint-block">
-            여러 항목 중 하나를 📌통일형으로 지정하면, 나머지가 원고에 바뀌어
-            표시됩니다
+            최대 {MAX_CONSISTENCY_UNIFY_SLOTS}항목 입력 후 하나를 📌통일형으로
+            지정하면, 나머지가 원고에 바뀌어 표시됩니다
             <br />
             <ConsistencyHintExample>
               <span className="consistency-hint-batang">
                 조선시대, 조선˅시대
               </span>{' '}
-              등록 →{' '}
-              <span className="consistency-hint-batang">조선시대</span>{' '}
-              📌사용자 지정 후 검수
+              등록 후{' '}
+              <span className="consistency-hint-batang">조선시대</span> 📌사용자
+              지정 →{' '}
+              <span className="consistency-hint-batang">조선˅시대</span> 찾아
+              변경 표시
             </ConsistencyHintExample>
           </p>
         </>

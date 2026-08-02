@@ -146,9 +146,10 @@ const styles = {
     width: '100%',
   },
   noteAbove: {
+    /* 제목↔설명↔예 간격은 main-screen.css (표기 통일하기와 동일 stack) */
     color: '#333',
     fontSize: 12,
-    margin: '6px 0 8px',
+    margin: 0,
     lineHeight: 1.55,
   },
   error: { color: '#b91c1c', marginTop: 6, fontSize: 12 },
