@@ -2,7 +2,7 @@
  * 표준국어대사전 검색 프록시 (Vercel).
  * 브라우저 CORS 회피 + key 는 서버 env 만 사용.
  *
- * env: STDICT_API_KEY (또는 VITE_STDICT_API_KEY — 로컬 호환, 빌드에 넣지 말 것)
+ * env: STDICT_API_KEY (권장). VITE_STDICT_API_KEY 는 이전 호환만 — 빌드/클라이언트에 넣지 말 것.
  *
  * GET /api/stdict?q=공개
  */

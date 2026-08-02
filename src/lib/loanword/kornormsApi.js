@@ -3,26 +3,32 @@
  * @see https://korean.go.kr/kornorms/main/openAPI.do
  *
  * 브라우저 CORS 회피: 항상 동일 출처 `/api/kornorms`
- * - 로컬: Vite proxy → korean.go.kr (클라이언트에 VITE_KORNORMS_SERVICE_KEY)
- * - Vercel: api/kornorms/[...path].js 가 서버 env 키를 붙여 전달
+ * - 로컬: Vite `kornormsDevProxyPlugin` 이 서버 env 키를 붙여 전달
+ * - Vercel: `api/kornorms/[...path].js` 가 서버 env 키를 붙여 전달
+ * 키는 클라이언트·번들에 넣지 않는다 (`KORNORMS_SERVICE_KEY`).
  *
  * 주의: resultType=json 은 StatsVO만 돌아오는 경우가 있어 **xml** 을 사용한다.
  */
 
 export const KORNORMS_LANG_FOREIGN = '0003';
 
-/** @returns {string} */
-export function getKornormsServiceKey() {
-  return String(import.meta.env.VITE_KORNORMS_SERVICE_KEY ?? '').trim();
+/** 최근 검색에서 서버 키 미설정(503)을 봤는지 — UI 안내용 */
+let kornormsKeyMissingSeen = false;
+
+/** @returns {boolean} */
+export function consumeKornormsKeyMissing() {
+  const seen = kornormsKeyMissingSeen;
+  kornormsKeyMissingSeen = false;
+  return seen;
 }
 
-/** Vercel 배포 — 서버 프록시가 키를 붙이므로 클라이언트 키가 없어도 조회 가능 */
-export function isKornormsServerProxy() {
-  return import.meta.env.VITE_DEPLOY_TARGET === 'vercel';
-}
-
+/**
+ * 키는 서버만 보유. 클라이언트는 항상 프록시를 호출하고,
+ * 미설정 시 503 `KORNORMS_KEY_MISSING` 으로 알 수 있다.
+ * @returns {boolean}
+ */
 export function isKornormsConfigured() {
-  return Boolean(getKornormsServiceKey()) || isKornormsServerProxy();
+  return true;
 }
 
 /** @returns {string} */
@@ -90,7 +96,7 @@ function xmlTag(xml, tag) {
 }
 
 /**
- * 어문회 XML 응답 파싱 (items 가 형제 반복).
+ * 어문회 XML 응답 파싱 (items 가 항목 반복).
  * @param {string} xml
  * @returns {{ totalCount: number, resultCode: string, resultMsg: string, items: ReturnType<typeof mapKornormsItem>[] }}
  */
@@ -131,10 +137,6 @@ export function parseKornormsXmlResponse(xml) {
  * @returns {Promise<{ totalCount: number, items: ReturnType<typeof mapKornormsItem>[] }>}
  */
 export async function searchKornormsExamples(opts) {
-  const serviceKey = getKornormsServiceKey();
-  if (!serviceKey && !isKornormsServerProxy()) {
-    throw new Error('KORNORMS_KEY_MISSING');
-  }
   const {
     searchKeyword,
     searchCondition,
@@ -146,7 +148,7 @@ export async function searchKornormsExamples(opts) {
   const keyword = String(searchKeyword ?? '').trim();
   if (!keyword) return { totalCount: 0, items: [] };
 
-  // json 모드는 StatsVO만 오는 경우가 있어 xml 고정
+  // json 모드는 StatsVO만 오는 경우가 있어 xml 고정. serviceKey 는 서버 프록시만 붙임.
   const params = new URLSearchParams({
     pageNo: String(pageNo),
     numOfRows: String(numOfRows),
@@ -156,22 +158,24 @@ export async function searchKornormsExamples(opts) {
     searchEquals,
     searchKeyword: keyword,
   });
-  // Vercel 서버 프록시가 키를 붙임. 로컬(Vite proxy)은 클라이언트 키 필요.
-  if (serviceKey) params.set('serviceKey', serviceKey);
 
   const res = await fetch(`${getKornormsRequestUrl()}?${params}`, {
     method: 'GET',
     signal,
     headers: { Accept: 'application/xml, text/xml, */*' },
   });
+  const body = await res.text();
+  if (res.status === 503 && body.includes('KORNORMS_KEY_MISSING')) {
+    kornormsKeyMissingSeen = true;
+    throw new Error('KORNORMS_KEY_MISSING');
+  }
   if (!res.ok) {
     throw new Error(`KORNORMS_HTTP_${res.status}`);
   }
-  const xml = await res.text();
-  if (xml.includes('"StatsVO"') || xml.trimStart().startsWith('{')) {
+  if (body.includes('"StatsVO"') || body.trimStart().startsWith('{')) {
     throw new Error('KORNORMS_BAD_PAYLOAD');
   }
-  const parsed = parseKornormsXmlResponse(xml);
+  const parsed = parseKornormsXmlResponse(body);
   // 명세 샘플은 00, 실제 응답은 0
   if (
     parsed.resultCode &&

@@ -2,8 +2,9 @@
  * 국립국어원 어문 규범 API 프록시 (Vercel).
  * 브라우저 CORS 회피 + serviceKey 는 서버 env 만 사용.
  *
- * 필요 env (Production/Preview 중 하나):
- *   KORNORMS_SERVICE_KEY 또는 VITE_KORNORMS_SERVICE_KEY
+ * 필요 env (Production/Preview):
+ *   KORNORMS_SERVICE_KEY  (권장)
+ *   또는 VITE_KORNORMS_SERVICE_KEY (이전 호환 — 빌드/클라이언트에 넣지 말 것)
  */
 
 export default async function handler(req, res) {

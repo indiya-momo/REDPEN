@@ -3,6 +3,7 @@ import path from 'node:path';
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import { stdictDevProxyPlugin } from './scripts/stdictDevProxyPlugin.js';
+import { kornormsDevProxyPlugin } from './scripts/kornormsDevProxyPlugin.js';
 import { kiwiDevModelsPlugin } from './scripts/kiwiDevModelsPlugin.js';
 import { kiwiAnalyzeDevPlugin } from './scripts/kiwiAnalyzeDevPlugin.js';
 
@@ -78,6 +79,12 @@ export default defineConfig(({ mode }) => {
       getKey: () =>
         buildEnv.STDICT_API_KEY || buildEnv.VITE_STDICT_API_KEY || '',
     }),
+    kornormsDevProxyPlugin({
+      getKey: () =>
+        buildEnv.KORNORMS_SERVICE_KEY ||
+        buildEnv.VITE_KORNORMS_SERVICE_KEY ||
+        '',
+    }),
     // 로컬만: tmp/kiwi-models + wasm. 배포 번들에 모델 미포함.
     kiwiDevModelsPlugin(),
     // 시나리오 C: POST /api/kiwi/analyze (Node Kiwi, 브라우저에 wasm 미전송)
@@ -93,14 +100,7 @@ export default defineConfig(({ mode }) => {
     port: devPort,
     strictPort: true,
     open: '/',
-    // 국립국어원 어문 규범 Open API — 브라우저 CORS 회피
     proxy: {
-      '/api/kornorms': {
-        target: 'https://korean.go.kr',
-        changeOrigin: true,
-        secure: true,
-        rewrite: (p) => p.replace(/^\/api\/kornorms/, '/kornorms'),
-      },
       // 조사·어간 2차 SLM — 로컬 vLLM (:8000). 스케치 §13
       '/api/josa-slm': {
         target: josaSlmProxyTarget,

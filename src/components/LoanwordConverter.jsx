@@ -13,7 +13,7 @@
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { loadCmuDictionary } from '../lib/loanword/cmuDictionary.js';
-import { isKornormsConfigured } from '../lib/loanword/kornormsApi.js';
+import { consumeKornormsKeyMissing } from '../lib/loanword/kornormsApi.js';
 import {
   normalizeLoanwordQuery,
   queryHasHangul,
@@ -247,6 +247,7 @@ export default function LoanwordConverter({
     busyRef.current = true;
     setLoading(true);
     setError('');
+    void consumeKornormsKeyMissing();
     try {
       const yongrye = await loadYongryeDictionary();
       /** @type {Awaited<ReturnType<typeof resolveLatinLoanwordQuery>> | null} */
@@ -254,9 +255,13 @@ export default function LoanwordConverter({
       if (queryHasHangul(word)) {
         next = await resolveHangulLoanwordQuery(word, yongrye);
         setOutcome(next);
-        if (!next.official.length && !next.engine?.found && !isKornormsConfigured()) {
+        if (
+          !next.official.length &&
+          !next.engine?.found &&
+          consumeKornormsKeyMissing()
+        ) {
           setError(
-            '한글·오표기 검색은 어문 규범 API 키가 필요합니다 (.env.local의 VITE_KORNORMS_SERVICE_KEY)',
+            '한글·오표기 검색은 어문 규범 API 키가 필요합니다 (.env.local의 KORNORMS_SERVICE_KEY)',
           );
         }
       } else if (queryNeedsSourceLookup(word)) {
@@ -265,10 +270,10 @@ export default function LoanwordConverter({
         if (
           !next.official.length &&
           !next.engine?.found &&
-          !isKornormsConfigured()
+          consumeKornormsKeyMissing()
         ) {
           setError(
-            '원어 검색은 어문 규범 API 키가 필요합니다 (.env.local의 VITE_KORNORMS_SERVICE_KEY)',
+            '원어 검색은 어문 규범 API 키가 필요합니다 (.env.local의 KORNORMS_SERVICE_KEY)',
           );
         }
       } else if (queryLooksLatin(word)) {
