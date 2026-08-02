@@ -124,8 +124,12 @@ export default function ConsistencyUnifySection({
             표시됩니다
             <br />
             <ConsistencyHintExample>
-              &apos;조선시대,조선˅시대&apos; 입력 → &apos;조선시대&apos; 📌통일형
-              지정하면 &apos;조선˅시대&apos; 가 원고에서 바뀌어 표시됨
+              <span className="consistency-hint-batang">
+                조선시대, 조선˅시대
+              </span>{' '}
+              등록 →{' '}
+              <span className="consistency-hint-batang">조선시대</span>{' '}
+              📌사용자 지정 후 검수
             </ConsistencyHintExample>
           </p>
         </>

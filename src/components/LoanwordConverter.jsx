@@ -360,8 +360,13 @@ export default function LoanwordConverter({
         {'를 제공합니다'}
         <br />
         <ConsistencyHintExample>
-          &apos;そん まさよし&apos; → &apos;손 마사요시&apos; &apos;momo&apos;
-          → &apos;모모&apos;
+          <span className="consistency-hint-batang">そん まさよし</span>
+          {' → '}
+          <span className="consistency-hint-batang">손 마사요시</span>
+          {', '}
+          <span className="consistency-hint-batang">momo</span>
+          {' → '}
+          <span className="consistency-hint-batang">모모</span>
         </ConsistencyHintExample>
       </p>
 
