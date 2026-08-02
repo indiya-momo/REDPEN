@@ -14,6 +14,8 @@ import WorkHistoryPrototypeScreen from './mock/workHistoryPrototype/WorkHistoryP
 import ConsistencyPrototypeScreen from './mock/consistencyPrototype/ConsistencyPrototypeScreen.jsx';
 import ResultsAccordionPrototypeScreen from './mock/resultsAccordionPrototype/ResultsAccordionPrototypeScreen.jsx';
 import ConsistencyResultsFlatPrototypeScreen from './mock/consistencyResultsFlatPrototype/ConsistencyResultsFlatPrototypeScreen.jsx';
+import CommonSlotGroupPrototypeScreen from './mock/commonSlotGroupPrototype/CommonSlotGroupPrototypeScreen.jsx';
+import PatternRulePrototypeScreen from './mock/patternRulePrototype/PatternRulePrototypeScreen.jsx';
 import {
   defaultCautionEnabled,
 } from './lib/cautionRules.js';
@@ -424,6 +426,24 @@ export default function App() {
     return (
       <>
         <ConsistencyResultsFlatPrototypeScreen />
+        <AppDialogHost />
+      </>
+    );
+  }
+
+  if (import.meta.env.DEV && auxWindow === 'common-slot-group-mock') {
+    return (
+      <>
+        <CommonSlotGroupPrototypeScreen />
+        <AppDialogHost />
+      </>
+    );
+  }
+
+  if (import.meta.env.DEV && auxWindow === 'pattern-rule-mock') {
+    return (
+      <>
+        <PatternRulePrototypeScreen />
         <AppDialogHost />
       </>
     );
