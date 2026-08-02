@@ -48,7 +48,7 @@ describe('featureFlags', () => {
     expect(isUnifyCandidateFindEnabled()).toBe(true);
   });
 
-  it('프로덕션에서는 목차·프로젝트 허브·표기 통일 추천만 env 없으면 꺼지고 export·외래어 변환은 기본 켜진다', () => {
+  it('프로덕션에서는 목차·프로젝트 허브만 env 없으면 꺼지고 export·외래어·표기 통일 추천은 기본 켜진다', () => {
     import.meta.env.DEV = false;
     import.meta.env.VITE_FEATURE_TOC_BODY_CHECK = undefined;
     import.meta.env.VITE_FEATURE_SPELLING_EXPORT = undefined;
@@ -57,7 +57,7 @@ describe('featureFlags', () => {
     import.meta.env.VITE_FEATURE_UNIFY_CANDIDATE_FIND = undefined;
     expect(isTocBodyCheckEnabled()).toBe(false);
     expect(isMyPageProjectHubEnabled()).toBe(false);
-    expect(isUnifyCandidateFindEnabled()).toBe(false);
+    expect(isUnifyCandidateFindEnabled()).toBe(true);
     expect(isLoanwordConverterEnabled()).toBe(true);
     expect(isSpellingExportEnabled()).toBe(true);
   });
@@ -72,6 +72,12 @@ describe('featureFlags', () => {
     import.meta.env.DEV = false;
     import.meta.env.VITE_FEATURE_LOANWORD_CONVERTER = 'false';
     expect(isLoanwordConverterEnabled()).toBe(false);
+  });
+
+  it('프로덕션에서 VITE_FEATURE_UNIFY_CANDIDATE_FIND=false면 표기 통일 추천을 끈다', () => {
+    import.meta.env.DEV = false;
+    import.meta.env.VITE_FEATURE_UNIFY_CANDIDATE_FIND = 'false';
+    expect(isUnifyCandidateFindEnabled()).toBe(false);
   });
 
   it('프로덕션 preview는 env true로 명시해도 켜진다', () => {

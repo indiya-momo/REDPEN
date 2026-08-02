@@ -4,6 +4,9 @@
   "installCommand": "npm ci",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
+  "env": {
+    "VITE_FEATURE_UNIFY_CANDIDATE_FIND": "true"
+  },
   "rewrites": [
     {
       "source": "/((?!api/).*)",
