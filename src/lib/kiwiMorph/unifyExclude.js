@@ -22,10 +22,14 @@ function hangulOnly(surface) {
 
 /**
  * @param {string} surface
- * @param {{ kiwi?: { ready?: () => boolean, analyze: Function } | null }} [opts]
+ * @param {{
+ *   kiwi?: { ready?: () => boolean, analyze: Function } | null,
+ *   tokens?: import('./tokens.js').KiwiToken[] | null,
+ * }} [opts]
  * @returns {import('./tokens.js').KiwiToken[] | null} null = 분석 불가(캐시 미스·미로드)
  */
 function analyzeTokens(surface, opts = {}) {
+  if (opts.tokens?.length) return opts.tokens;
   const hangul = hangulOnly(surface);
   if (hangul.length < 2) return null;
   const analyzed = analyzeLine(hangul, opts);

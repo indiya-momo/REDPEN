@@ -12,7 +12,8 @@ import { shouldAnalyzeWithKiwi } from './shouldAnalyze.js';
 /** @see kiwi-nlp Match.all — 정규화 없음 */
 export const KIWI_MATCH_ALL = 8388671;
 
-const MAX_CACHE = 256;
+/** prefetch(≤1200) + 스캔 unique 표면을 담을 여유 */
+const MAX_CACHE = 2048;
 
 /** @type {Map<string, { tokens: import('./tokens.js').KiwiToken[], score?: number, surface1to1: boolean }>} */
 const resultCache = new Map();

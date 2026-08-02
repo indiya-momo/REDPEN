@@ -5,7 +5,8 @@
 /** @type {Map<string, { tokens: import('./tokens.js').KiwiToken[], score?: number, surface1to1: boolean }>} */
 const remoteCache = new Map();
 
-const MAX_REMOTE = 512;
+/** unify prefetch 상한(1200)보다 크게 — 배치 저장 중 조기 eviction 방지 */
+const MAX_REMOTE = 2048;
 
 export function clearRemoteAnalyzeCache() {
   remoteCache.clear();

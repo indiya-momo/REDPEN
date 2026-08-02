@@ -13,6 +13,7 @@ import {
   enrichClusterGroupsWithItemHits,
   firstWrongUnifyInstance,
   instancesForUnifyVariant,
+  prefetchUnifyKiwiSurfaces,
 } from '../../lib/unifyCandidateDiscover.js';
 import { groupSortAndFillSatellites, countUnifyListAccordionItems } from '../../lib/unifyCandidateGrouping.js';
 import { filterSeriesSatellitesByMorphPos } from '../../lib/unifyCandidateSatellites.js';
@@ -286,6 +287,19 @@ export default function UnifyCandidateFindPanel({
 }) {
   const [finding, setFinding] = useState(false);
   const [slmReviewing, setSlmReviewing] = useState(false);
+
+  // PDF 준비되면 찾기 전에 Kiwi 표면 prefetch (서버 모드) — 클릭 직후 대기 완화
+  useEffect(() => {
+    if (!hasPdf || !pageTexts?.length) return;
+    let cancelled = false;
+    void prefetchUnifyKiwiSurfaces(pageTexts).then(() => {
+      if (cancelled) return;
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [hasPdf, pageTexts]);
+
   const [slmDroppedCount, setSlmDroppedCount] = useState(0);
   const [slmReviewedByKey, setSlmReviewedByKey] = useState(
     /** @type {Map<string, UnifySpacingCluster>} */ (new Map()),

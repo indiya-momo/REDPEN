@@ -40,7 +40,11 @@ import {
   isKiwiNounVerbalConnectiveSurface,
   shouldRejectUnifySatelliteSpacedByPos,
 } from './kiwiMorph/unifyExclude.js';
-import { stripTrailingJosaKiwi } from './kiwiMorph/stripTrailingJosa.js';
+import {
+  stripTrailingJosaFromTokens,
+  stripTrailingJosaKiwi,
+} from './kiwiMorph/stripTrailingJosa.js';
+import { analyzeLine } from './kiwiMorph/analyze.js';
 import { isKiwiReady } from './kiwiMorph/runtime.js';
 
 /**
@@ -445,8 +449,10 @@ function addOccurrence(byKey, pageNum, index, rawMatched, minHangul) {
   // 줄 단위 스캔만 하므로, 줄바꿈이 섞인 raw는 버림
   if (/\n/.test(String(rawMatched ?? ''))) return;
   if (isExcludedUnifyCandidateRaw(rawMatched)) return;
+  // 가운데점 나열만 Kiwi — 불필요 analyze 줄임
   if (
     isKiwiReady() &&
+    /[·ㆍ]/.test(String(rawMatched ?? '')) &&
     (isKiwiEnumerationSurface(rawMatched) ||
       isKiwiEnumerationSurface(normalizeUnifyScanText(rawMatched)))
   ) {
@@ -465,11 +471,24 @@ function addOccurrence(byKey, pageNum, index, rawMatched, minHangul) {
     return;
   }
   // 끝 조사: Kiwi 준비 시 형태소 경계로 제거(경제학이→경제학). 플래그 무관.
+  // 동일 표면 analyze 1회로 strip·이다·동사화 게이트에 재사용.
   let variant = stripTrailingJosaHeuristic(withPunctStripped, minHangul);
+  /** @type {import('./kiwiMorph/tokens.js').KiwiToken[] | null} */
+  let punctTokens = null;
   if (isKiwiReady()) {
     try {
-      const kiwiStem = stripTrailingJosaKiwi(withPunctStripped, minHangul);
-      if (kiwiStem != null) variant = kiwiStem;
+      const analyzed = analyzeLine(withPunctStripped);
+      if (analyzed?.tokens?.length) {
+        punctTokens = analyzed.tokens;
+        if (analyzed.surface1to1) {
+          const kiwiStem = stripTrailingJosaFromTokens(
+            withPunctStripped,
+            punctTokens,
+            minHangul,
+          );
+          if (kiwiStem != null) variant = kiwiStem;
+        }
+      }
     } catch {
       /* heuristic 유지 */
     }
@@ -486,21 +505,23 @@ function addOccurrence(byKey, pageNum, index, rawMatched, minHangul) {
   }
   const key = variant.replace(/\s+/g, '');
   if (hangulSyllableCount(key) < minHangul) return;
-  // 이다 종결·연결·명사+동사화(상환하기·가치있다고·구성되며)는 발견에서 제외.
-  if (isKiwiReady() && isKiwiCopulaEndingSurface(key)) return;
-  if (isKiwiReady() && isKiwiNounVerbalConnectiveSurface(key)) return;
-  if (
-    isKiwiReady() &&
-    !/\s/.test(withPunctStripped) &&
-    isKiwiCopulaEndingSurface(withPunctStripped.replace(/\s+/g, ''))
-  ) {
-    return;
-  }
-  if (
-    isKiwiReady() &&
-    isKiwiNounVerbalConnectiveSurface(withPunctStripped.replace(/\s+/g, ''))
-  ) {
-    return;
+  // 이다 종결·연결·명사+동사화 — 붙임형은 punctTokens 재사용, 키만 다를 때 추가 분석
+  if (isKiwiReady()) {
+    const gluedPunct = withPunctStripped.replace(/\s+/g, '');
+    const tokenOpts =
+      punctTokens && key === gluedPunct ? { tokens: punctTokens } : {};
+    if (isKiwiCopulaEndingSurface(key, tokenOpts)) return;
+    if (isKiwiNounVerbalConnectiveSurface(key, tokenOpts)) return;
+    if (
+      !/\s/.test(withPunctStripped) &&
+      gluedPunct !== key &&
+      (isKiwiCopulaEndingSurface(gluedPunct, { tokens: punctTokens ?? undefined }) ||
+        isKiwiNounVerbalConnectiveSurface(gluedPunct, {
+          tokens: punctTokens ?? undefined,
+        }))
+    ) {
+      return;
+    }
   }
   let acc = byKey.get(key);
   if (!acc) {
@@ -1264,8 +1285,8 @@ export async function buildUnifyOccurrenceIndexAsync(pageTexts, opts = {}) {
     /* heuristic */
   }
 
-  // 서버 모드면 표면 prefetch. 위성 동종 판별은 어절 단독 분석이 필요하므로
-  // DEV는 prefetch 결과와 무관하게 wasm을 올려 analyzeLine이 로컬로 가게 함.
+  // 서버 모드: 표면 prefetch만으로 스캔 게이트 동작 (remoteCache).
+  // DEV wasm은 스캔을 막지 않음 — 서버 실패·미준비일 때만 로컬 폴백.
   try {
     const {
       isKiwiServerMode,
@@ -1283,10 +1304,13 @@ export async function buildUnifyOccurrenceIndexAsync(pageTexts, opts = {}) {
         setKiwiServerMode(false);
       }
     }
-    if (import.meta.env.DEV && !getKiwiInstance()?.ready?.()) {
+    if (
+      import.meta.env.DEV &&
+      !isKiwiServerMode() &&
+      !getKiwiInstance()?.ready?.()
+    ) {
       const { loadKiwiBrowser } = await import('./kiwiMorph/loadBrowser.js');
-      // force: 서버 모드 ready와 무관하게 로컬 인스턴스 확보
-      await loadKiwiBrowser({ force: true });
+      await loadKiwiBrowser();
     }
   } catch {
     /* heuristic */
@@ -1300,6 +1324,28 @@ export async function buildUnifyOccurrenceIndexAsync(pageTexts, opts = {}) {
   }
   finalizeConflictOccurrencesOnly(byKey, pages);
   return byKey;
+}
+
+/**
+ * 표기통일 찾기 전·PDF 준비 후 — Kiwi 표면 prefetch만 (클릭 대기 완화).
+ * @param {{ pageNum?: number, text?: string, textLayout?: string }[]} pageTexts
+ * @returns {Promise<number>} stored count
+ */
+export async function prefetchUnifyKiwiSurfaces(pageTexts) {
+  try {
+    const { bootKiwiIfNeeded } = await import('./kiwiMorph/bootLocal.js');
+    await bootKiwiIfNeeded();
+    const { isKiwiServerMode } = await import('./kiwiMorph/runtime.js');
+    if (!isKiwiServerMode()) return 0;
+    const { prefetchKiwiAnalyze } = await import(
+      './kiwiMorph/serverRunner.js'
+    );
+    return await prefetchKiwiAnalyze(
+      collectUnifyKiwiPrefetchSurfaces(pageTexts ?? []),
+    );
+  } catch {
+    return 0;
+  }
 }
 
 /**
