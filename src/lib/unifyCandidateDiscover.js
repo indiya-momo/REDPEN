@@ -444,8 +444,16 @@ export function pickRecommendedUnify(ranked) {
  * @param {number} index
  * @param {string} rawMatched
  * @param {number} minHangul
+ * @param {string[] | null} [visualLines] page.text soft-wrap 병합 줄 — 붙임 오탐 검증
  */
-function addOccurrence(byKey, pageNum, index, rawMatched, minHangul) {
+function addOccurrence(
+  byKey,
+  pageNum,
+  index,
+  rawMatched,
+  minHangul,
+  visualLines = null,
+) {
   // 줄 단위 스캔만 하므로, 줄바꿈이 섞인 raw는 버림
   if (/\n/.test(String(rawMatched ?? ''))) return;
   if (isExcludedUnifyCandidateRaw(rawMatched)) return;
@@ -505,6 +513,14 @@ function addOccurrence(byKey, pageNum, index, rawMatched, minHangul) {
   }
   const key = variant.replace(/\s+/g, '');
   if (hangulSyllableCount(key) < minHangul) return;
+  // textLayout만 붙임으로 읽힌 경우: Visual(page.text)에 연속 붙임이 없으면 유령
+  if (
+    !/\s/.test(variant) &&
+    visualLines &&
+    !visualLinesCorroborateGlued(visualLines, variant)
+  ) {
+    return;
+  }
   // 이다 종결·연결·명사+동사화 — 붙임형은 punctTokens 재사용, 키만 다를 때 추가 분석
   if (isKiwiReady()) {
     const gluedPunct = withPunctStripped.replace(/\s+/g, '');
@@ -536,6 +552,48 @@ function addOccurrence(byKey, pageNum, index, rawMatched, minHangul) {
     matchedText: matchedText.length ? matchedText : variant,
   });
   acc.occurrences.set(variant, list);
+}
+
+/**
+ * Visual **원본 줄**(soft-wrap 병합 전)에 붙임형이 연속 부분문자열로 있는지.
+ * soft-wrap 병합 줄로 입증하면 「명|지계곡」이 원문에 없는데도 붙임이 된다.
+ * 「명지 계곡」만 있으면 「명지계곡」은 false — 공백 제거 검색 금지.
+ * @param {string[]} visualLines
+ * @param {string} glued
+ */
+export function visualLinesCorroborateGlued(visualLines, glued) {
+  const g = String(glued ?? '');
+  if (!g || /\s/.test(g)) return true;
+  if (!visualLines?.length) return true;
+  return visualLines.some((line) => String(line ?? '').includes(g));
+}
+
+/**
+ * page.text → 줄바꿈만 나눈 Visual 줄 (붙임 입증용, soft-wrap 병합 없음).
+ * @param {string} pageText
+ * @returns {string[]}
+ */
+export function buildRawVisualLinesForUnify(pageText) {
+  const source = String(pageText ?? '');
+  if (!source) return [];
+  return source
+    .split(/\n/u)
+    .map((line) => line.replace(/\s+$/u, ''))
+    .filter((line) => line.length > 0);
+}
+
+/**
+ * @deprecated 붙임 입증에는 {@link buildRawVisualLinesForUnify}를 쓴다.
+ * soft-wrap 병합 줄은 「명|지계곡」유령 붙임을 만들 수 있다.
+ * @param {string} pageText
+ * @returns {string[]}
+ */
+export function buildVisualSoftWrapLinesForUnify(pageText) {
+  const source = String(pageText ?? '');
+  if (!source) return [];
+  return mergeUnifyHangulSoftWrapScanLines(
+    splitUnifyScanLinesWithAbs(source),
+  ).map((row) => row.line);
 }
 
 /**
@@ -1108,6 +1166,8 @@ function accumulateUnifyPageOccurrences(byKey, page, minHangul) {
       : (page?.text ?? '');
   if (!sourceText || !pageNum) return;
   const highlightSource = prepareUnifyScanText(page?.text ?? sourceText);
+  // 붙임 입증은 soft-wrap 병합 전 원본 줄만. 병합 줄은 「명|지계곡」을 발명한다.
+  const visualLines = buildRawVisualLinesForUnify(page?.text ?? '');
   const usingLayout =
     typeof page?.textLayout === 'string' &&
     page.textLayout.length > 0 &&
@@ -1126,6 +1186,7 @@ function accumulateUnifyPageOccurrences(byKey, page, minHangul) {
         resolveHighlightIndex(highlightSource, tokenRaw, preferNear),
         tokenRaw,
         minHangul,
+        visualLines,
       );
       const maxN = Math.min(UNIFY_MAX_NGRAM_TOKENS, tokens.length - i);
       for (let n = 2; n <= maxN; n += 1) {
@@ -1141,6 +1202,7 @@ function accumulateUnifyPageOccurrences(byKey, page, minHangul) {
           resolveHighlightIndex(highlightSource, raw, preferNgram),
           raw,
           minHangul,
+          visualLines,
         );
       }
     }

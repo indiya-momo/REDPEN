@@ -464,6 +464,12 @@ PDF는 보통 “문장 순서 배열”이 아니라 **좌표+그리기 명령*
 | 7번 미하이라이트 | occurrence index ↔ `itemRefs` / 하이라이트 범위 | 아님 |
 | `명지 계곡` vs `명지계곡` 이형태 | Visual 공백·줄 조립 (별도) | 부분 가능 |
 
+**회귀 (2026-08-02):** 차트용 `line-run`이 어절 간격 item을 붙임으로 세고, `textLayout`만 좁은 gap을 붙임으로 읽으면 Visual에 없는 「명지계곡」이 다시 생김.
+→ (1) 본문에 띄움 입증이 있으면 multi-item 붙임 line-run 거부 (2) Visual 줄에 연속 붙임이 없으면 layout 스캔 붙임 기각.
+
+**회귀 (명지계곡×5만):** 줄끝 1음절「명」+ 다음「지계곡」soft-wrap이 붙임을 발명(다른 표기엔 이 줄바꿈 패턴 없음).
+→ (3) 붙임 입증은 soft-wrap 병합 전 Visual 원본 줄 (4) soft-wrap 붙임 hit는 item에 연속 붙임 리터럴이 있을 때만.
+
 → §12.3 비교 시 **이 페이지를 필수 샘플**로 넣고, raw item 순서가 이미 `4523617`인지 / 조립·칩 정렬이 섞는지 분리한다.  
 실행: **`scripts/bench-reading-order.mjs`** · 기록·C→B/A 결정: **`reading-order-find-benchmark-2026-08-02.md` §C**.
 

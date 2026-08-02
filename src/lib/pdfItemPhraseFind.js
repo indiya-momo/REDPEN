@@ -27,8 +27,12 @@ const DEDUP_XY_TOL = 2;
 const SAME_X_TOL = 1.25;
 /** 같은 줄로 볼 y 허용 (PDF user unit) */
 const SAME_LINE_Y_TOL = 3.5;
-/** 어절 간격으로 끊을 최대 gap (fontSize 배수) — 이하면 붙여 읽기 */
-const LINE_JOIN_GAP_EM = 0.45;
+/**
+ * item 사이 가로 gap이 이(fontSize 배수)보다 크면 어절 공백으로 본다.
+ * 차트 라벨 「경제」「침체」(≈0.2em)는 붙임으로 유지하고,
+ * 본문 「명지」「계곡」어절 간격(≈0.3em+)은 띄움으로 본다.
+ */
+const LINE_JOIN_GAP_EM = 0.25;
 
 /** @param {string} s */
 function glue(s) {
@@ -164,6 +168,64 @@ function spanHasInternalSpace(str, localStart, localEnd) {
  */
 function spacingFidelityOk(needleHasSpace, matchHasSpace) {
   return needleHasSpace === matchHasSpace;
+}
+
+/**
+ * 본문 item에 붙임형이 **공백 없이 연속**으로 있으면 true.
+ * glue(띄움 본문)로는 입증하지 않음 — 「명지 계곡」→「명지계곡」 오인 방지.
+ * @param {PdfTextItem[]} items
+ * @param {string} needleGlued
+ */
+function pageAttestsLiteralGluedForm(items, needleGlued) {
+  if (!needleGlued || /\s/.test(needleGlued)) return false;
+  for (const it of items) {
+    const str = it?.str ?? '';
+    if (str.includes(needleGlued)) return true;
+  }
+  return false;
+}
+
+/**
+ * 본문에 같은 glue의 **띄움** 표기가 있으면 true.
+ * 단일 item 내부 + 같은 줄 item 연쇄(간격·끝공백)를 본다.
+ * 「명지 계곡」이 있으면 「명지」「계곡」가로 분할·soft-wrap 붙임을 칩으로 쓰지 않음.
+ * @param {PdfTextItem[]} items
+ * @param {string} needleGlued
+ */
+function pageAttestsSpacedForm(items, needleGlued) {
+  if (!needleGlued) return false;
+  for (const it of items) {
+    const str = it?.str ?? '';
+    if (!/\s/.test(str) || str.length < needleGlued.length) continue;
+    /** @type {number[]} */
+    const map = [];
+    let compact = '';
+    for (let c = 0; c < str.length; c += 1) {
+      if (/\s/.test(str[c])) continue;
+      map.push(c);
+      compact += str[c];
+    }
+    let pos = 0;
+    while (pos <= compact.length - needleGlued.length) {
+      const at = compact.indexOf(needleGlued, pos);
+      if (at < 0) break;
+      const localStart = map[at] ?? 0;
+      const localEnd = (map[at + needleGlued.length - 1] ?? localStart) + 1;
+      if (spanHasInternalSpace(str, localStart, localEnd)) return true;
+      pos = at + 1;
+    }
+  }
+  for (const chain of collectSameLineItemChains(items)) {
+    if (chain.compact.length < needleGlued.length) continue;
+    let pos = 0;
+    while (pos <= chain.compact.length - needleGlued.length) {
+      const at = chain.compact.indexOf(needleGlued, pos);
+      if (at < 0) break;
+      if (chain.hasSpaceInRange(at, at + needleGlued.length)) return true;
+      pos = at + 1;
+    }
+  }
+  return false;
 }
 
 /**
@@ -434,6 +496,16 @@ export function findPhraseHitsInPdfItems(items, phrase) {
         pos = at + 1;
         continue;
       }
+      // 본문에 「명지 계곡」이 있는데 「명지」「계곡」만 이어 붙임으로 세는 오탐 차단
+      if (
+        !needleHasSpace &&
+        !matchHasSpace &&
+        used.length >= 2 &&
+        pageAttestsSpacedForm(items, needleGlued)
+      ) {
+        pos = at + 1;
+        continue;
+      }
       const startItem = used[0];
       const endItem = used[used.length - 1];
       const x0 = items[startItem].transform?.[4] ?? 0;
@@ -507,6 +579,18 @@ export function findPhraseHitsInPdfItems(items, phrase) {
       if (!spacingFidelityOk(needleHasSpace, matchHasSpace)) {
         pos = at + 1;
         continue;
+      }
+      // 붙임 soft-wrap: 「명|지계곡」처럼 줄바꿈이 붙임을 발명하는 경우.
+      // 본문에 연속 붙임이 없고/띄움이 있으면 거부. (띄움 soft-wrap 「명|지 계곡」은 유지)
+      if (!needleHasSpace && !matchHasSpace) {
+        if (pageAttestsSpacedForm(items, needleGlued)) {
+          pos = at + 1;
+          continue;
+        }
+        if (!pageAttestsLiteralGluedForm(items, needleGlued)) {
+          pos = at + 1;
+          continue;
+        }
       }
 
       const x0 = a.transform?.[4] ?? 0;

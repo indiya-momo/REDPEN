@@ -577,6 +577,44 @@ describe('discoverSpacingUnifyCandidates', () => {
     expect(clusters.find((c) => c.key === '인플레이션을')).toBeUndefined();
   });
 
+  it('textLayout만 붙임(명지계곡)이고 Visual은 띄움이면 충돌로 잡지 않는다', () => {
+    const clusters = discoverSpacingUnifyCandidates([
+      {
+        pageNum: 81,
+        text: '항아리 바위로 유명한 명지 계곡. 여기가 명지 계곡이라고. 명지 계곡에 도착.',
+        textLayout:
+          '항아리 바위로 유명한 명지계곡. 여기가 명지계곡이라고. 명지계곡에 도착.',
+      },
+    ]);
+    const hit = clusters.find((c) => c.key === '명지계곡');
+    expect(hit).toBeUndefined();
+  });
+
+  it('Visual soft-wrap「명|지계곡」발명 붙임은 raw 줄 입증 실패로 잡지 않는다', () => {
+    const { clusters, rawByKey } = discoverSpacingUnifyCandidates(
+      [
+        {
+          pageNum: 81,
+          text: [
+            '우리 나라에는 명',
+            '지계곡 외에도.',
+            '여기가 명',
+            '지계곡이라고.',
+            '벌써 명',
+            '지계곡에 도착.',
+            '유명한 명',
+            '지계곡과.',
+            '널려 있는 명',
+            '지계곡',
+          ].join('\n'),
+        },
+      ],
+      { includeRaw: true },
+    );
+    expect(clusters.find((c) => c.key === '명지계곡')).toBeUndefined();
+    expect(rawByKey.get('명지계곡')).toBeUndefined();
+  });
+
   it('textLayout에 있는 진짜 띄어쓰기 혼재는 잡는다', () => {
     const clusters = discoverSpacingUnifyCandidates([
       {

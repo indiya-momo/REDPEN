@@ -136,6 +136,61 @@ describe('findPhraseHitsInPdfItems', () => {
     expect(glued).toHaveLength(0);
   });
 
+  it('soft-wrap 「명|지계곡」(2줄·공백 없음)만으로는 붙임 칩을 만들지 않는다', () => {
+    // 81p: 줄끝이 1음절「명」이고 다음 줄이「지계곡」이면 soft-wrap이 붙임을 발명함.
+    // 본문에 연속「명지계곡」이 없으면 거부 — 화면의「명지 계곡」과 다름.
+    const items = [
+      item('우리 나라에는 명', 100, 532, 140),
+      item('지계곡 외에도', 100, 518, 100),
+      item('여기가 명', 100, 500, 80),
+      item('지계곡이라고', 100, 486, 100),
+      item('벌써 명', 100, 470, 60),
+      item('지계곡에 도착', 100, 456, 100),
+      item('유명한 명', 100, 440, 70),
+      item('지계곡과', 100, 426, 70),
+      item('널려 있는 명', 100, 410, 100),
+      item('지계곡', 100, 396, 50),
+    ];
+    expect(findPhraseHitsInPdfItems(items, '명지계곡')).toHaveLength(0);
+    expect(findPhraseHitsInPdfItems(items, '명지 계곡')).toHaveLength(0);
+  });
+
+  it('가로 분할 「명지」「계곡」(어절 간격)을 붙임 needle로 세지 않는다', () => {
+    const fs = 10;
+    const gap = fs * 0.3; // 실제 어절 간격 < 구 LINE_JOIN 0.45
+    const items = [
+      item('항아리 바위로 유명한 명지 계곡', 100, 700, 200),
+      {
+        str: '명지',
+        transform: [fs, 0, 0, fs, 100, 500],
+        width: 24,
+        height: fs,
+      },
+      {
+        str: '계곡',
+        transform: [fs, 0, 0, fs, 100 + 24 + gap, 500],
+        width: 24,
+        height: fs,
+      },
+      {
+        str: '명지',
+        transform: [fs, 0, 0, fs, 100, 400],
+        width: 24,
+        height: fs,
+      },
+      {
+        str: '계곡',
+        transform: [fs, 0, 0, fs, 100 + 24 + gap, 400],
+        width: 24,
+        height: fs,
+      },
+    ];
+    expect(findPhraseHitsInPdfItems(items, '명지계곡')).toHaveLength(0);
+    const spaced = findPhraseHitsInPdfItems(items, '명지 계곡');
+    expect(spaced.length).toBeGreaterThanOrEqual(1);
+    expect(spaced.some((h) => h.kind === 'in-item')).toBe(true);
+  });
+
   it('펼침면에서 왼 단 위→아래 후 오른 단으로 정렬한다', () => {
     const items = [
       item('명지 계곡 A', 100, 500, 80),
