@@ -2176,6 +2176,9 @@
     var(--unify-btns-width) + var(--results-findings-meta-gap) +
       var(--unify-badge-col-width)
   );
+  /* 제목「표기 통일」시작·찾기 버튼 끝과 맞추기 — 부모 카드 패딩만 쓰고 패널 inset 제거 */
+  --results-panel-inset-x: 0px;
+  padding-inline: 0;
   background: transparent;
   border-bottom: none;
 }
@@ -2917,6 +2920,70 @@
     #666 45%
   );
   font-weight: 600;
+}
+
+/* 1차 배너 일괄 — 붙여쓰기/띄어쓰기 앞에만 체크 표시 */
+.panel-left .unify-candidate-find__series-spacing-btns--with-check {
+  --unify-spacing-btn-width: calc(4.35rem * 1.2);
+  --unify-btns-width: calc(var(--unify-spacing-btn-width) * 2 + 4px);
+  --unify-banner-spacing-check-size: var(
+    --unify-variant-checkbox-size,
+    calc(var(--criteria-checkbox-size, 15px) * 0.7)
+  );
+  width: var(--unify-btns-width);
+  grid-template-columns:
+    var(--unify-spacing-btn-width)
+    var(--unify-spacing-btn-width);
+  align-items: stretch;
+}
+
+.panel-left
+  .unify-candidate-find__series-spacing-btns--with-check
+  .unify-candidate-find__series-spacing-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-block: 4px;
+  padding-inline: calc(4px * 1.2);
+  line-height: 1.2;
+  min-height: calc(
+    var(--unify-banner-spacing-check-size) + 8px
+  );
+}
+
+.panel-left .unify-candidate-find__series-spacing-btn-inner {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.28em;
+  width: 100%;
+  line-height: 1.2;
+}
+
+.panel-left .unify-candidate-find__series-spacing-btn-inner input[type='checkbox'] {
+  box-sizing: border-box;
+  width: var(--unify-banner-spacing-check-size);
+  height: var(--unify-banner-spacing-check-size);
+  min-width: var(--unify-banner-spacing-check-size);
+  min-height: var(--unify-banner-spacing-check-size);
+  max-width: var(--unify-banner-spacing-check-size);
+  max-height: var(--unify-banner-spacing-check-size);
+  margin: 0;
+  padding: 0;
+  flex: 0 0 var(--unify-banner-spacing-check-size);
+  pointer-events: none;
+  accent-color: var(--pillar-consistency, #5c6b7a);
+  vertical-align: middle;
+}
+
+.panel-left .unify-candidate-find__phase-banner-line-row {
+  align-items: center;
+}
+
+.panel-left
+  .unify-candidate-find__phase-banner-line-row
+  .unify-candidate-find__phase-banner-line {
+  padding-block: 4px;
 }
 
 .panel-left .unify-candidate-find__variants .result-pages {

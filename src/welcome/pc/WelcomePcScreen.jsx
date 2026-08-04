@@ -336,9 +336,9 @@ export default function WelcomePcScreen({
             <span className="welcome-pc__perf-anc welcome-pc__perf-anc--left">
               <WelcomePcSparkle className="welcome-pc__perf-spk welcome-pc__perf-spk--big" />
             </span>
-            맞춤법 · 외래어 · 표기 통일 검수를{' '}
+            맞춤법·외래어·표기 통일을 3분 만에{' '}
             <span className="welcome-pc__perf-l2__end">
-              3분 만에!
+              검수!
               <span className="welcome-pc__perf-l2-note">(300페이지 기준)</span>
             </span>
             <span className="welcome-pc__perf-anc welcome-pc__perf-anc--right">
