@@ -231,17 +231,20 @@ export default function PdfViewer({
                     h.end,
                     pageData,
                   );
-            for (const box of boxes) {
+            // 여러 item 하이라이트에 교정문을 각각 그리면 같은 문구가 겹침
+            // (과반수 이상×2, 긴 긴 밤×3). 첫 박스에만 표시.
+            boxes.forEach((box, boxIndex) => {
               allBoxes.push({
                 ...box,
                 primary: Boolean(h.primary),
                 highlightId: h.id,
                 tip: h.tip ?? '',
                 matchedText: h.matchedText ?? '',
-                overlayReplace: h.overlayReplace ?? '',
+                overlayReplace:
+                  boxIndex === 0 ? (h.overlayReplace ?? '') : '',
                 pillarClass: h.pillarClass ?? '',
               });
-            }
+            });
           }
           setRects(allBoxes);
         } else {
