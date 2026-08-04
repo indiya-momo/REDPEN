@@ -1,8 +1,14 @@
 /**
  * 표기통일 잡음 — 1차 정적 리스트 매처 (Kiwi 런타임 불필요).
  *
+ * 변경 전 체크 (`.cursor/rules/unify-noise-list.mdc`):
+ * 1) `kiwi:harvest-noise-list`로 되는가? → 먼저 수확
+ * 2) 새 하드코딩 리스트인가? → JSON/`--add` 우선
+ * 3) 불가피 휴리스틱만 여기 (`source: manual-heuristic` 주석)
+ *
  * @see src/data/unify-noise-list.json
  * @see src/lib/bonBojoMorphPatterns.js
+ * @see project-docs/unify-kiwi-noise-filter-b-design-2026-08-04.md
  */
 import {
   UNIFY_NOISE_BON_BOJO_REFS,
@@ -15,10 +21,10 @@ import {
   UNIFY_NOISE_VERBAL_TAILS,
   hangulOnlyNoise,
   hasUnifyNoiseDenyEojeol,
-  isSpacedLeftJosaNoiseEojeol,
   matchesNoiseListMorphTail,
   shouldRejectNoiseListDataSurface,
 } from './unifyNoiseListData.js';
+import { isSpacedLeftJosaNoiseEojeol } from './unifyNoiseListLeftHeuristic.js';
 import { matchesBonBojoVerbalConnectiveHeuristic } from './bonBojoMorphPatterns.js';
 import { isUnifyJosaGluedNoiseKey } from './unifyPredicateBucket.js';
 
@@ -57,8 +63,8 @@ export function spacedVariantHitsNoiseDenylist(spacedVariant) {
 }
 
 /**
- * 띄움 왼쪽 어절 잡음 — 조사 끼인 짧은 체언·용언 연결 (내가·들어서·등이·보면).
- * 붙임키 전체에 조사 휴리스틱을 쓰지 않고 왼쪽만 본다 (캐나다정부 오탐 방지).
+ * 띄움 왼쪽 어절 잡음 — 리스트 표면 + 짧은 체언+조사.
+ * source: manual-heuristic (조사 쪽) + JSON/본보조 (표면).
  * @param {string} eojeol
  */
 export function isSpacedLeftNoiseEojeol(eojeol) {

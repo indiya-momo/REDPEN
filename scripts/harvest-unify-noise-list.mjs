@@ -1,9 +1,12 @@
 /**
  * 표기통일 잡음 1차 리스트 수확 — 예외 어절 + 패턴 꼬리(명사 어간 제외).
+ * 런타임에 휴리스틱을 늘리기 전에 여기로 표면을 넣는 것이 기본 경로.
  *
  *   npm run kiwi:harvest-noise-list
  *   npm run kiwi:harvest-noise-list -- 가정하고 가치있다고
  *   npm run kiwi:harvest-noise-list -- --add 대부분
+ *
+ * @see .cursor/rules/unify-noise-list.mdc
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -27,6 +30,14 @@ const DEFAULT_SURFACES = [
   '것이고',
   '경제다',
   '학생이며',
+  // 세션 수확 후보 (런타임 휴리스틱 대신 꼬리 JSON으로)
+  '담당하던',
+  '광고니까',
+  '결혼하고자',
+  '결혼하려고',
+  '결혼하였고',
+  '결혼했어',
+  '들어서',
 ];
 
 const DEFAULT_EXCEPTION_SPACED = [
@@ -39,6 +50,10 @@ const DEFAULT_EXCEPTION_SPACED = [
   '나머지 시장',
   '정도 시장',
   '기타 시장',
+  '가족 모두',
+  '가족 끼리',
+  '결혼 직전',
+  '등이 공무원',
 ];
 
 function hangulOnly(s) {
