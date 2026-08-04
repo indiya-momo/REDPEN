@@ -5,7 +5,7 @@ import { shouldRejectByNoiseList } from './unifyNoiseList.js';
 import { isPatternRuleHeadBlacklisted } from './unifyPatternRule.js';
 
 describe('isSpacedLeftAdnominalNoiseEojeol', () => {
-  it('관형형 -는/-던/-은 앞말을 잡는다', () => {
+  it('관형형 -는/-던/-은/-된 앞말을 잡는다', () => {
     for (const left of [
       '아는',
       '못하는',
@@ -17,6 +17,8 @@ describe('isSpacedLeftAdnominalNoiseEojeol', () => {
       '않은',
       '높은',
       '맑은',
+      '과열된',
+      '관련된',
     ]) {
       expect(isSpacedLeftAdnominalNoiseEojeol(left), left).toBe(true);
     }

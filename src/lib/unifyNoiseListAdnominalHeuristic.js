@@ -4,13 +4,14 @@
  * harvest로 어간을 다 넣을 수 없고, Kiwi 2차 ready 전 fail-open 창을 메운다.
  *
  * `은`도 관형형(붉은·않은·높은) — 명사 아님 → 후보에서 DROP.
+ * `된`(과열된·관련된) — 되다 관형형. 수확 어간 무한 → 닫힌 어미에 포함.
  * 조사 오탐(`붉`+`은`) 가드는 {@link ./unifyNoiseListLeftHeuristic.js}가 별도로 담당.
  * `가진`·`만한`(종성 ㄴ만)은 시민·북한과 겹쳐 여기 밖 → Kiwi 2차.
  */
 import { hangulOnlyNoise } from './unifyNoiseListData.js';
 
 /** 긴 것 우선 */
-const ADNOMINAL_TAILS = Object.freeze(['던', '는', '은']);
+const ADNOMINAL_TAILS = Object.freeze(['던', '는', '은', '된']);
 
 /**
  * @param {string} eojeol

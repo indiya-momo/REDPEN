@@ -354,18 +354,14 @@ describe('discoverSpacingUnifyCandidates', () => {
     expect(hit.occurrencesByVariant['경제 성장'][0].pageNum).toBe(1);
   });
 
-  it('조사만 다른 붉은 표시가·붉은표시를 은 같은 후보로 묶는다', () => {
+  it('관형형 붉은 표시는 잡음 DROP — 붙임·띄움 후보로 안 묶는다', () => {
     const clusters = discoverSpacingUnifyCandidates([
       {
         pageNum: 1,
         textLayout: '붉은 표시가 나타난다. 다른 문장. 붉은표시를 본다.',
       },
     ]);
-    const hit = clusters.find((c) => c.key === '붉은표시');
-    expect(hit).toBeTruthy();
-    expect(hit.variants).toEqual(
-      expect.arrayContaining(['붉은표시', '붉은 표시']),
-    );
+    expect(clusters.find((c) => c.key === '붉은표시')).toBeUndefined();
   });
 
   it('줄번호·각주 숫자가 붙어도 노동시장은 한 후보로 합친다', () => {
@@ -419,18 +415,26 @@ describe('discoverSpacingUnifyCandidates', () => {
     );
   });
 
-  it('가치 평가도·평가에 는 가치 평가로 합친다', () => {
+  it('주식 시장도·시장에 는 주식 시장으로 합친다', () => {
+    const clusters = discoverNormalized([
+      { pageNum: 90, text: '주식 시장에 주식시장에' },
+      { pageNum: 114, text: '국내의 주식 시장도 비슷해서 주식시장도' },
+    ]);
+    expect(clusters.find((c) => c.key === '주식시')).toBeUndefined();
+    const hit = clusters.find((c) => c.key === '주식시장');
+    expect(hit).toBeTruthy();
+    expect(hit.variants).toEqual(
+      expect.arrayContaining(['주식시장', '주식 시장']),
+    );
+    expect(hit.totalCount).toBeGreaterThanOrEqual(4);
+  });
+
+  it('평가=평+가 조사 휴리스틱 — 가치 평가는 후보에서 DROP', () => {
     const clusters = discoverNormalized([
       { pageNum: 90, text: '가치 평가에 가치평가에' },
       { pageNum: 114, text: '주식의 가치 평가도 비슷해서 가치평가도' },
     ]);
-    expect(clusters.find((c) => c.key === '가치평')).toBeUndefined();
-    const hit = clusters.find((c) => c.key === '가치평가');
-    expect(hit).toBeTruthy();
-    expect(hit.variants).toEqual(
-      expect.arrayContaining(['가치평가', '가치 평가']),
-    );
-    expect(hit.totalCount).toBeGreaterThanOrEqual(4);
+    expect(clusters.find((c) => c.key === '가치평가')).toBeUndefined();
   });
 
   it("경제 왕국'이기·이라 는 공통 접두로 경제 왕국으로 합친다", () => {

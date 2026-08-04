@@ -23,11 +23,15 @@ describe('unifyNoiseList (1차 정적 리스트)', () => {
     expect(hasUnifyNoiseDenyEojeol('가정하고')).toBe(false);
   });
 
-  it('예외는 NNG 오통과만', () => {
+  it('예외는 NNG 오통과만 — 70개 미만(재검토 알람)', () => {
     expect(hasUnifyNoiseDenyEojeol('대부분')).toBe(true);
     expect(hasUnifyNoiseDenyEojeol('일부')).toBe(true);
     expect(hasUnifyNoiseDenyEojeol('공무원')).toBe(false);
-    expect(UNIFY_NOISE_EXCEPTION_EOJEOLS.size).toBeLessThanOrEqual(20);
+    // 합의(2026-08-04): 예외 ≥70 → 서버 C→D3 / DEV 2차 boot 재검토. 사용자에게 알릴 것.
+    expect(
+      UNIFY_NOISE_EXCEPTION_EOJEOLS.size,
+      `예외 ${UNIFY_NOISE_EXCEPTION_EOJEOLS.size}개 ≥70 — 형태소(서버 C·DEV 2차 boot) 방향 재검토 시점`,
+    ).toBeLessThan(70);
   });
 
   it('unifyNoiseListData에는 조사 휴리스틱 하드코딩이 없다', async () => {
@@ -64,6 +68,13 @@ describe('unifyNoiseList (1차 정적 리스트)', () => {
     expect(spacedVariantHitsNoiseDenylist('결혼 직전')).toBe(true);
     expect(shouldRejectByNoiseList('가족 모두')).toBe(true);
     expect(shouldRejectByNoiseList('결혼 직전')).toBe(true);
+    // 좌우 동일 — 예외·관형 휴리스틱
+    expect(shouldRejectByNoiseList('이런 공무원')).toBe(true);
+    expect(shouldRejectByNoiseList('공무원 이런')).toBe(true);
+    expect(shouldRejectByNoiseList('금융 관련')).toBe(true);
+    expect(shouldRejectByNoiseList('관련 금융')).toBe(true);
+    expect(shouldRejectByNoiseList('아는 사람')).toBe(true);
+    expect(shouldRejectByNoiseList('사람 아는')).toBe(true);
   });
 
   it('활용·이다 꼬리 — 담당하던·광고니까', () => {
@@ -97,5 +108,19 @@ describe('unifyNoiseList (1차 정적 리스트)', () => {
     // 조사 가드: 붉은 ≠ 붉+은 (후보는 관형형으로 DROP)
     expect(isSpacedLeftJosaNoiseEojeol('붉은')).toBe(false);
     expect(shouldRejectByNoiseList('붉은 표시')).toBe(true);
+    // Kiwi NNG+JKB — 처소격은 음절 수 무제한
+    expect(isSpacedLeftJosaNoiseEojeol('앞에')).toBe(true);
+    expect(isSpacedLeftJosaNoiseEojeol('뒤에')).toBe(true);
+    expect(isSpacedLeftJosaNoiseEojeol('끝에')).toBe(true);
+    expect(isSpacedLeftJosaNoiseEojeol('곳에서')).toBe(true);
+    expect(isSpacedLeftJosaNoiseEojeol('금융에')).toBe(true);
+    expect(isSpacedLeftJosaNoiseEojeol('시장에')).toBe(true);
+    expect(isSpacedLeftJosaNoiseEojeol('캐나다에')).toBe(true);
+    expect(isSpacedLeftJosaNoiseEojeol('이제')).toBe(false);
+    expect(isSpacedLeftJosaNoiseEojeol('아예')).toBe(false);
+    expect(shouldRejectByNoiseList('앞에 주택')).toBe(true);
+    expect(shouldRejectByNoiseList('금융에 시장')).toBe(true);
+    expect(shouldRejectByNoiseList('캐나다에 정부')).toBe(true);
+    expect(shouldRejectByNoiseList('캐나다 정부')).toBe(false);
   });
 });
