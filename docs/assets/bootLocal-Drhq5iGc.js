@@ -1,1 +1,0 @@
-import{i as o}from"./index-DIFbzsyW.js";function t(){return o()}function r(){return!1}async function i(n={}){return!1}async function u(){return i()}export{i as bootKiwiIfNeeded,u as bootKiwiLocalIfNeeded,t as shouldBootKiwi,r as shouldBootKiwiLocal};
