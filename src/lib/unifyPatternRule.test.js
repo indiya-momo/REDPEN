@@ -9,6 +9,7 @@ import {
   findPatternMismatches,
   findSuffixPatternMismatches,
   formatPatternRuleConditionLabel,
+  groupPatternConditionLabelsByDirection,
   formatPatternSupportExplain,
   formatSuffixPatternRuleConfirmMessage,
   glueSpacedAffixMatch,
@@ -17,6 +18,7 @@ import {
   isPrimaryUnifyComplete,
   meetsPatternSupportThreshold,
   passesPatternRuleUnifyFilter,
+  shouldRejectPatternMismatchByNoiseAndCompound,
   PATTERN_SCORE_WEIGHT_HEAD,
   scorePatternRuleCandidate,
   spaceGluedAffixMatch,
@@ -75,12 +77,65 @@ describe('unifyPatternRule', () => {
 
   it('블랙리스트 앞말을 거른다', () => {
     expect(isPatternRuleHeadBlacklisted('여러')).toBe(true);
+    expect(isPatternRuleHeadBlacklisted('다른')).toBe(true);
+    expect(isPatternRuleHeadBlacklisted('하는')).toBe(true);
+    expect(isPatternRuleHeadBlacklisted('있는')).toBe(true);
+    expect(isPatternRuleHeadBlacklisted('가난한')).toBe(true);
     expect(isPatternRuleHeadBlacklisted('캐나다')).toBe(false);
   });
 
-  it('공유 필터: 조사만 어절·쉼표 제외', () => {
+  it('공유 필터: 조사만 어절·쉼표·잡음 리스트 제외', () => {
     expect(passesPatternRuleUnifyFilter('캐나다 정부')).toBe(true);
     expect(passesPatternRuleUnifyFilter('경기 에서')).toBe(false);
+    expect(passesPatternRuleUnifyFilter('대부분 공무원')).toBe(false);
+    expect(passesPatternRuleUnifyFilter('가정하고 공무원')).toBe(false);
+    expect(passesPatternRuleUnifyFilter('가족 모두')).toBe(false);
+    expect(passesPatternRuleUnifyFilter('결혼 직전')).toBe(false);
+    expect(passesPatternRuleUnifyFilter('담당하던')).toBe(false);
+    expect(passesPatternRuleUnifyFilter('광고니까')).toBe(false);
+  });
+
+  it('잡음·관형 head는 @사람 패턴 mismatch에서 빠진다', () => {
+    const mismatches = findPatternMismatches(
+      [
+        {
+          pageNum: 1,
+          text:
+            '직장 사람과 다른 사람과 하는 사람과 있는 사람과 가난한 사람이 있다.',
+        },
+      ],
+      {
+        id: 'suffix:사람:spaced',
+        template: '@사람',
+        affix: '사람',
+        affixType: 'suffix',
+        direction: 'spaced',
+        confirmedFrom: '직장 사람',
+        confirmedKey: '직장사람',
+      },
+    );
+    const froms = mismatches.map((m) => m.from);
+    expect(froms.some((f) => f.includes('다른'))).toBe(false);
+    expect(froms.some((f) => f.includes('하는'))).toBe(false);
+    expect(froms.some((f) => f.includes('있는'))).toBe(false);
+    expect(froms.some((f) => f.includes('가난한'))).toBe(false);
+  });
+
+  it('shouldRejectPatternMismatchByNoiseAndCompound — 리스트 잡음', () => {
+    expect(
+      shouldRejectPatternMismatchByNoiseAndCompound(
+        '대부분 공무원',
+        '대부분공무원',
+        '대부분공무원',
+      ),
+    ).toBe(true);
+    expect(
+      shouldRejectPatternMismatchByNoiseAndCompound(
+        '경리 업무',
+        '경리업무',
+        '경리업무',
+      ),
+    ).toBe(false);
   });
 
   it('붙임/띄움 변환', () => {
@@ -323,6 +378,19 @@ describe('unifyPatternRule', () => {
         direction: 'spaced',
       }),
     ).toBe('백자@(띄어쓰기)');
+  });
+
+  it('조건형 라벨을 붙여쓰기·띄어쓰기로 묶는다', () => {
+    expect(
+      groupPatternConditionLabelsByDirection([
+        '@강사(붙여쓰기)',
+        '@경쟁(붙여쓰기)',
+        '백자@(띄어쓰기)',
+      ]),
+    ).toEqual({
+      glued: ['@강사', '@경쟁'],
+      spaced: ['백자@'],
+    });
   });
 
   it('2차 그룹은 접두/접미 템플릿 헤더로 묶인다', () => {

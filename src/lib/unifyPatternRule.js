@@ -17,8 +17,16 @@ import { isExcludedSeriesAffix } from './unifyCandidateSeriesTrend.js';
 import { buildPhraseSlotFindRules } from './phraseSlotPattern.js';
 import { runRuleCheck } from './ruleEngine.js';
 import { escapeRegex } from './compoundPatternCommon.js';
+import {
+  shouldRejectByNoiseListSurface,
+  spacedVariantHitsNoiseDenylist,
+  isSpacedLeftNoiseEojeol,
+} from './unifyNoiseList.js';
+import { hangulOnlyNoise } from './unifyNoiseListData.js';
+import { shouldRejectUnifySatelliteSpacedByPos } from './kiwiMorph/unifyExclude.js';
+import { isUnifyKiwiNoisePhase2Available } from './kiwiMorph/noiseFilterGate.js';
 
-/** 관형·수식 앞말 — 접미(@affix) 패턴의 변수(head)에서 제외 */
+/** 관형·수식·용언형 앞말 — 접미(@affix) 패턴의 변수(head)에서 제외 */
 export const PATTERN_RULE_HEAD_BLACKLIST = new Set([
   '여러',
   '전',
@@ -38,6 +46,33 @@ export const PATTERN_RULE_HEAD_BLACKLIST = new Set([
   '이런',
   '그런',
   '저런',
+  // 관형사·관형형·의존 수식 (명사+명사 아님)
+  '다른',
+  '같은',
+  '많은',
+  '적은',
+  '큰',
+  '작은',
+  '좋은',
+  '나쁜',
+  '새로운',
+  '오래된',
+  '가난한',
+  '없는',
+  '있는',
+  '하는',
+  '되는',
+  '된',
+  '할',
+  '될',
+  '한',
+  '온',
+  '전한',
+  '어떤',
+  '아무',
+  '몇몇',
+  '온갖',
+  '각종',
 ]);
 
 /**
@@ -100,7 +135,7 @@ export function isPatternRuleHeadBlacklisted(head) {
 }
 
 /**
- * 1차 discover와 같은 제외·정규화 (복제 금지 — 공유 export 호출).
+ * 1차 discover와 같은 제외·정규화 + 1차 정적 잡음 리스트(조사끼임 휴리스틱 제외).
  * @param {string} matchedText
  */
 export function passesPatternRuleUnifyFilter(matchedText) {
@@ -110,8 +145,49 @@ export function passesPatternRuleUnifyFilter(matchedText) {
   const cleaned = stripUnifyPunctuationNoise(raw);
   if (!cleaned) return false;
   if (/\s/.test(cleaned) && !isValidSpacedUnifyVariant(cleaned)) return false;
-  if (!unifySpacingKey(cleaned)) return false;
+  const key = unifySpacingKey(cleaned);
+  if (!key) return false;
+  // discover와 동일: 정적 리스트·본보조만 (캐나다정부 ≠ 조사끼임)
+  if (shouldRejectByNoiseListSurface(key)) return false;
+  if (/\s/.test(cleaned)) {
+    if (spacedVariantHitsNoiseDenylist(cleaned)) return false;
+    const left = hangulOnlyNoise(cleaned.trim().split(/\s+/).filter(Boolean)[0]);
+    if (left && isSpacedLeftNoiseEojeol(left)) return false;
+  }
   return true;
+}
+
+/**
+ * 2차 패턴 mismatch — 1차 잡음 리스트 + (Kiwi ready 시) 명사+명사/동사+동사만.
+ * 공통성(@affix)으로 모은 뒤, 최종은 N+N·V+V(또는 리스트)로 거른다.
+ * @param {string} from
+ * @param {string} to
+ * @param {string} key
+ * @returns {boolean} true면 제외
+ */
+export function shouldRejectPatternMismatchByNoiseAndCompound(from, to, key) {
+  const surfaces = [from, to, key].map((s) => String(s ?? '').trim()).filter(Boolean);
+  const spaced = surfaces.find((s) => /\s/.test(s)) || '';
+  const glued = surfaces.find((s) => s && !/\s/.test(s)) || key;
+
+  if (glued && shouldRejectByNoiseListSurface(glued)) return true;
+  if (key && shouldRejectByNoiseListSurface(key)) return true;
+  if (spaced) {
+    if (spacedVariantHitsNoiseDenylist(spaced)) return true;
+    const left = hangulOnlyNoise(spaced.trim().split(/\s+/).filter(Boolean)[0]);
+    if (left && isSpacedLeftNoiseEojeol(left)) return true;
+    // boot 없이 이미 ready일 때만 POS — 명사+명사·동사+동사 아니면 제외
+    if (isUnifyKiwiNoisePhase2Available()) {
+      try {
+        if (shouldRejectUnifySatelliteSpacedByPos(spaced, undefined)) {
+          return true;
+        }
+      } catch {
+        /* fail-open for POS only; list already applied */
+      }
+    }
+  }
+  return false;
 }
 
 /**
@@ -390,18 +466,27 @@ function normalizeMismatchPair(from, rule) {
         ? glueSpacedPrefixMatch(cleaned, rule.affix)
         : spaceGluedPrefixMatch(cleaned, rule.affix);
     if (!to || to === cleaned) return null;
-    return { key: unifySpacingKey(key) || key, from: cleaned, to };
+    const pairKey = unifySpacingKey(key) || key;
+    if (shouldRejectPatternMismatchByNoiseAndCompound(cleaned, to, pairKey)) {
+      return null;
+    }
+    return { key: pairKey, from: cleaned, to };
   }
 
   const head = headBeforeAffix(cleaned, rule.affix);
   if (isPatternRuleHeadBlacklisted(head)) return null;
+  if (shouldRejectByNoiseListSurface(head)) return null;
   const key = `${head}${rule.affix}`;
   const to =
     rule.direction === 'glued'
       ? glueSpacedAffixMatch(cleaned, rule.affix)
       : spaceGluedAffixMatch(cleaned, rule.affix);
   if (!to || to === cleaned) return null;
-  return { key: unifySpacingKey(key) || key, from: cleaned, to };
+  const pairKey = unifySpacingKey(key) || key;
+  if (shouldRejectPatternMismatchByNoiseAndCompound(cleaned, to, pairKey)) {
+    return null;
+  }
+  return { key: pairKey, from: cleaned, to };
 }
 
 /**
@@ -511,6 +596,29 @@ export function formatPatternRuleConditionLabel(rule) {
   if (!template) return '';
   const dir = rule.direction === 'spaced' ? '띄어쓰기' : '붙여쓰기';
   return `${template}(${dir})`;
+}
+
+/**
+ * `청자@(붙여쓰기)` 형태 라벨을 붙여쓰기/띄어쓰기 묶음으로 나눈다.
+ * @param {string[]} labels
+ * @returns {{ glued: string[], spaced: string[] }}
+ */
+export function groupPatternConditionLabelsByDirection(labels) {
+  /** @type {string[]} */
+  const glued = [];
+  /** @type {string[]} */
+  const spaced = [];
+  for (const raw of labels ?? []) {
+    const label = String(raw ?? '').trim();
+    if (!label) continue;
+    const m = label.match(/^(.*)\((붙여쓰기|띄어쓰기)\)$/u);
+    if (!m) continue;
+    const template = m[1].trim();
+    if (!template) continue;
+    if (m[2] === '띄어쓰기') spaced.push(template);
+    else glued.push(template);
+  }
+  return { glued, spaced };
 }
 
 /**

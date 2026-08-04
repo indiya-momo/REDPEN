@@ -51,7 +51,10 @@ import {
 } from './kiwiMorph/stripTrailingJosa.js';
 import { analyzeLine } from './kiwiMorph/analyze.js';
 import { isKiwiReady } from './kiwiMorph/runtime.js';
-import { shouldRejectNoiseListDataSurface } from './unifyNoiseListData.js';
+import {
+  shouldRejectNoiseListDataSurface,
+  isSpacedLeftJosaNoiseEojeol,
+} from './unifyNoiseListData.js';
 
 /** 찾기 UI — 이 ms 동안 sync 작업하면 이벤트 루프에 양보 (ops 횟수 양보는 대형 PDF에서 사실상 무한 대기) */
 const UNIFY_FIND_YIELD_MS = 40;
@@ -541,11 +544,12 @@ function prepareUnifyOccurrenceCandidate(rawMatched, minHangul) {
   }
   const key = variant.replace(/\s+/g, '');
   if (hangulSyllableCount(key) < minHangul) return null;
-  // 1차 정적 리스트 (예외·수확 꼬리) — Kiwi 없이
+  // 1차 정적 리스트 (예외·수확 꼬리) — Kiwi 없이. 띄움은 왼쪽·오른쪽 모두.
   if (shouldRejectNoiseListDataSurface(key)) return null;
   if (/\s/.test(variant)) {
-    const left = variant.trim().split(/\s+/).filter(Boolean)[0];
-    if (left && shouldRejectNoiseListDataSurface(left)) return null;
+    const parts = variant.trim().split(/\s+/).filter(Boolean);
+    if (parts.some((p) => shouldRejectNoiseListDataSurface(p))) return null;
+    if (parts[0] && isSpacedLeftJosaNoiseEojeol(parts[0])) return null;
   }
   // 이다 종결·연결·명사+동사화 — 붙임형은 punctTokens 재사용, 키만 다를 때 추가 분석
   if (isUnifyKiwiNoiseMorphActive()) {

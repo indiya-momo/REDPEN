@@ -73,7 +73,11 @@ export default function AppDialogHost() {
     const resolver = resolverRef.current;
     resolverRef.current = null;
     setState(null);
-    resolver?.resolve(result);
+    // confirm→alert 연속 호출 시 setState(null)이 alert를 덮지 않도록
+    // 닫힘을 커밋한 뒤 resolve (같은 틱 배칭 레이스 방지)
+    queueMicrotask(() => {
+      resolver?.resolve(result);
+    });
   };
 
   return (

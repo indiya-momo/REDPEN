@@ -44,5 +44,43 @@ describe('unifyNoiseList (1차 정적 리스트)', () => {
     expect(shouldRejectByNoiseList('구성되며 시장')).toBe(true);
     expect(shouldRejectByNoiseList('기록하여 결과')).toBe(true);
     expect(shouldRejectByNoiseList('경리 업무')).toBe(false);
+    // 오른쪽 예외·의존명사
+    expect(spacedVariantHitsNoiseDenylist('가족 모두')).toBe(true);
+    expect(spacedVariantHitsNoiseDenylist('가족 끼리')).toBe(true);
+    expect(spacedVariantHitsNoiseDenylist('결혼 직전')).toBe(true);
+    expect(shouldRejectByNoiseList('가족 모두')).toBe(true);
+    expect(shouldRejectByNoiseList('결혼 직전')).toBe(true);
+  });
+
+  it('활용·이다 꼬리 — 담당하던·광고니까', () => {
+    expect(matchesNoiseListMorphTail('담당하던')).toBe(true);
+    expect(matchesNoiseListMorphTail('광고니까')).toBe(true);
+    expect(matchesNoiseListMorphTail('가족끼리')).toBe(true);
+    expect(matchesNoiseListMorphTail('결혼직전')).toBe(true);
+  });
+
+  it('명사+하다 활용 — 결혼하고자·하려고·하였고·했어', () => {
+    expect(matchesNoiseListMorphTail('결혼하고자')).toBe(true);
+    expect(matchesNoiseListMorphTail('결혼하려고')).toBe(true);
+    expect(matchesNoiseListMorphTail('결혼하였고')).toBe(true);
+    expect(matchesNoiseListMorphTail('결혼했어')).toBe(true);
+    expect(matchesNoiseListMorphTail('하고자')).toBe(true);
+    expect(matchesNoiseListMorphTail('했어')).toBe(true);
+    expect(shouldRejectByNoiseList('결혼 하고자')).toBe(true);
+    expect(shouldRejectByNoiseList('결혼 하려고')).toBe(true);
+    expect(shouldRejectByNoiseList('결혼 하였고')).toBe(true);
+    expect(shouldRejectByNoiseList('결혼 했어')).toBe(true);
+    expect(shouldRejectByNoiseList('경리 업무')).toBe(false);
+  });
+
+  it('띄움 왼쪽 조사·용언 연결 — 내가·들어서·등이·보면', () => {
+    expect(shouldRejectByNoiseList('내가 공무원')).toBe(true);
+    expect(shouldRejectByNoiseList('들어서 공무원')).toBe(true);
+    expect(shouldRejectByNoiseList('등이 공무원')).toBe(true);
+    expect(shouldRejectByNoiseList('보면 공무원')).toBe(true);
+    expect(shouldRejectByNoiseList('경리 업무')).toBe(false);
+    expect(shouldRejectByNoiseList('캐나다 정부')).toBe(false);
+    // 관형형 붉은 ≠ 붉+은
+    expect(shouldRejectByNoiseList('붉은 표시')).toBe(false);
   });
 });
