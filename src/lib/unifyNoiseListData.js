@@ -1,6 +1,10 @@
 /**
  * 잡음 리스트 데이터만 — 순환 import 방지용 (discover / unifyExclude).
- * 본보조·조사 휴리스틱은 {@link ./unifyNoiseList.js}.
+ *
+ * 변경 전: `.cursor/rules/unify-noise-list.mdc` 체크리스트.
+ * 이 파일에는 JSON 파생 export + 꼬리/예외 매칭만. 조사·품사 휴리스틱 하드코딩 금지
+ * → 런타임 휴리스틱은 {@link ./unifyNoiseList.js}.
+ * 리스트 추가는 `npm run kiwi:harvest-noise-list` 우선.
  */
 import noiseListJson from '../data/unify-noise-list.json' with { type: 'json' };
 
@@ -114,39 +118,6 @@ function endsWithAllowedTail(h, tails) {
 export function hasUnifyNoiseDenyEojeol(eojeol) {
   const h = hangulOnlyNoise(eojeol);
   return Boolean(h) && UNIFY_NOISE_EXCEPTION_EOJEOLS.has(h);
-}
-
-/** 띄움 왼쪽 — 짧은 체언+격조사 (내가·등이). 은/는은 관형형(붉은) 오탐이 커서 대명사만. */
-const SPACED_LEFT_SHORT_JOSA = Object.freeze(
-  ['에서', '에게', '으로', '은', '는', '이', '가', '을', '를', '의', '에', '와', '과', '도', '만'].toSorted(
-    (a, b) => b.length - a.length || a.localeCompare(b, 'ko'),
-  ),
-);
-const SPACED_LEFT_CASE_JOSA = new Set(['이', '가', '을', '를']);
-const SPACED_LEFT_TOPIC_JOSA = new Set(['은', '는']);
-const SPACED_LEFT_PRONOUN_STEMS = new Set(['나', '너', '저', '그', '이']);
-
-/**
- * 띄움 왼쪽 짧은 체언+조사 (내가·등이).
- * @param {string} eojeol
- */
-export function isSpacedLeftJosaNoiseEojeol(eojeol) {
-  const h = hangulOnlyNoise(eojeol);
-  if (!h) return false;
-  for (const josa of SPACED_LEFT_SHORT_JOSA) {
-    if (!h.endsWith(josa) || h.length <= josa.length) continue;
-    const stem = h.slice(0, -josa.length);
-    const n = hangulOnlyNoise(stem).length;
-    if (n < 1 || n > 2) continue;
-    if (UNIFY_NOISE_EXCEPTION_EOJEOLS.has(stem)) return true;
-    if (n !== 1) continue;
-    // 내가·등이 — 격조사. 나는 — 대명사+은/는. 붉은(관형)은 제외.
-    if (SPACED_LEFT_CASE_JOSA.has(josa)) return true;
-    if (SPACED_LEFT_TOPIC_JOSA.has(josa) && SPACED_LEFT_PRONOUN_STEMS.has(stem)) {
-      return true;
-    }
-  }
-  return false;
 }
 
 /**

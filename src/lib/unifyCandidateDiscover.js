@@ -53,8 +53,8 @@ import { analyzeLine } from './kiwiMorph/analyze.js';
 import { isKiwiReady } from './kiwiMorph/runtime.js';
 import {
   shouldRejectNoiseListDataSurface,
-  isSpacedLeftJosaNoiseEojeol,
 } from './unifyNoiseListData.js';
+import { isSpacedLeftJosaNoiseEojeol } from './unifyNoiseListLeftHeuristic.js';
 
 /** 찾기 UI — 이 ms 동안 sync 작업하면 이벤트 루프에 양보 (ops 횟수 양보는 대형 PDF에서 사실상 무한 대기) */
 const UNIFY_FIND_YIELD_MS = 40;

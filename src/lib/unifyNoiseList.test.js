@@ -29,6 +29,19 @@ describe('unifyNoiseList (1차 정적 리스트)', () => {
     expect(UNIFY_NOISE_EXCEPTION_EOJEOLS.size).toBeLessThanOrEqual(20);
   });
 
+  it('unifyNoiseListData에는 조사 휴리스틱 하드코딩이 없다', async () => {
+    const { readFileSync } = await import('node:fs');
+    const { fileURLToPath } = await import('node:url');
+    const path = await import('node:path');
+    const file = path.join(
+      path.dirname(fileURLToPath(import.meta.url)),
+      'unifyNoiseListData.js',
+    );
+    const src = readFileSync(file, 'utf8');
+    expect(src).not.toMatch(/SPACED_LEFT/);
+    expect(src).not.toMatch(/isSpacedLeftJosaNoiseEojeol/);
+  });
+
   it('수확 꼬리로 가치있다고·구성되며·것이고를 잡는다', () => {
     expect(matchesNoiseListMorphTail('가치있다고')).toBe(true);
     expect(matchesNoiseListMorphTail('구성되며')).toBe(true);
