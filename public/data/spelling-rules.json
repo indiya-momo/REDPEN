@@ -1051,7 +1051,8 @@
     "enabled": true,
     "tip": "자동사에 불필요한 사동 접미사 '-이'삽입",
     "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사 · 형용사)"
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
+    "overlayReplace": "→설레"
   },
   {
     "find": "되뇌이",
@@ -1064,7 +1065,8 @@
     "enabled": true,
     "tip": "자동사에 불필요한 사동 접미사 '-이'삽입",
     "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사 · 형용사)"
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
+    "overlayReplace": "→되뇌"
   },
   {
     "find": "헤메이",
@@ -1076,7 +1078,8 @@
     "enabled": true,
     "tip": "자동사에 불필요한 사동 접미사 '-이'삽입",
     "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사 · 형용사)"
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
+    "overlayReplace": "→헤메"
   },
   {
     "find": "에이는",
@@ -1088,7 +1091,8 @@
     "enabled": true,
     "tip": "자동사에 불필요한 사동 접미사 '-이'삽입",
     "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사 · 형용사)"
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
+    "overlayReplace": "→에는"
   },
   {
     "find": "녹록치",
