@@ -9,14 +9,16 @@ import CriteriaHoverTip from '../CriteriaHoverTip.jsx';
 import {
   buildUnifyCandidatePreviewGroups,
   discoverSpacingUnifyCandidatesAsync,
-  enrichClustersWithItemHits,
+  enrichClustersWithItemHitsAsync,
   enrichClusterGroupsWithItemHits,
+  enrichClusterGroupsWithItemHitsAsync,
   firstWrongUnifyInstance,
   instancesForUnifyVariant,
   prefetchUnifyKiwiSurfaces,
 } from '../../lib/unifyCandidateDiscover.js';
 import { groupSortAndFillSatellites, countUnifyListAccordionItems, sortClusterGroups } from '../../lib/unifyCandidateGrouping.js';
 import { filterSeriesSatellitesByMorphPos } from '../../lib/unifyCandidateSatellites.js';
+import { filterSeriesSatellitesByKiwiPhase2 } from '../../lib/unifyNoisePhase2.js';
 import {
   buildPatternRulePreviewGroups,
   buildSecondaryGroupsFromCandidates,
@@ -38,6 +40,7 @@ import {
 } from '../../lib/unifyPredicateReviewSlm/index.js';
 import { stripDependentNounGenitiveFromGroups } from '../../lib/unifyDependentNounGenitive.js';
 import { collectUnifyListTriage } from '../../lib/unifyListStemTriage.js';
+import { createUnifyFindBench, snapshotUnifyFindDiag } from '../../lib/unifyFindBench.js';
 import {
   applyStdictPosMarksToGroups,
   runStdictPosReviewOnClusterGroups,
@@ -52,7 +55,7 @@ import { assertBetaDailyCheckOrAlert } from '../../lib/betaDailyQuota.js';
 import { confirmUnifyCandidateFindBeforeRun, alertUnifyCandidateFindAfterRun } from '../../lib/consistencyCheckConfirm.js';
 import ConsistencyHintExample from './ConsistencyHintExample.jsx';
 import ResultPageSummary from '../ResultPageSummary.jsx';
-import DetailsChevron from '../DetailsChevron.jsx';
+import DetailsChevron, { detailsOpenOnceRef } from '../DetailsChevron.jsx';
 
 /**
  * @typedef {import('../../lib/unifyCandidateDiscover.js').UnifySpacingCluster} UnifySpacingCluster
@@ -302,6 +305,8 @@ export default function UnifyCandidateFindPanel({
 }) {
   const [finding, setFinding] = useState(false);
   const [slmReviewing, setSlmReviewing] = useState(false);
+  /** confirm·Firestore 대기 중에도 중복 클릭 방지 (finding UI와 분리) */
+  const findInFlightRef = useRef(false);
 
   // PDF 준비되면 찾기 전에 Kiwi 표면 prefetch (서버 모드) — 클릭 직후 대기 완화
   useEffect(() => {
@@ -403,10 +408,25 @@ export default function UnifyCandidateFindPanel({
   );
   const phase2PromptedRef = useRef(false);
   const phase2CompletePromptedRef = useRef(false);
+  /** handleFind → 다음 listMemo enrich 1회 계측 */
+  const findBenchRef = useRef(
+    /** @type {ReturnType<typeof createUnifyFindBench> | null} */ (null),
+  );
   /** PDF 하이라이트에서 뺀 클러스터 key (기본은 모두 표시) */
   const [hiddenPdfKeys, setHiddenPdfKeys] = useState(
     /** @type {Set<string>} */ (new Set()),
   );
+  /**
+   * 찾기 직후 이미 만든 목록 그룹 — useMemo가 group+enrich를 다시 돌리지 않게.
+   * 새 찾기 시작 시 null.
+   */
+  const [findListGroups, setFindListGroups] = useState(
+    /** @type {import('../../lib/unifyCandidateGrouping.js').ClusterGroup[] | null} */ (
+      null
+    ),
+  );
+  /** NOISE_FILTER ON인데 Kiwi 미ready — 형태소 필터 미적용 배지 */
+  const [morphFilterInactive, setMorphFilterInactive] = useState(false);
   /** 칩·하이라이트 동일 소스 (publishPreview가 갱신) */
   const [publishedPreviewGroups, setPublishedPreviewGroups] = useState(
     /** @type {import('../../lib/ruleEngine.js').GroupedResult[]} */ ([]),
@@ -485,9 +505,10 @@ export default function UnifyCandidateFindPanel({
       alert('지금은 검수를 진행할 수 없습니다. 로그인·검수권을 확인해 주세요.');
       return;
     }
-    if (finding || slmReviewing) return;
-    setFinding(true);
+    if (finding || slmReviewing || findInFlightRef.current) return;
+    findInFlightRef.current = true;
     try {
+      // confirm·검수권 조회 전에는 ··· 표시하지 않음 (Firestore 지연·대화상자 대기가 무한 로딩처럼 보임)
       if (!(await confirmUnifyCandidateFindBeforeRun(authUid, authEmail))) {
         return;
       }
@@ -501,20 +522,37 @@ export default function UnifyCandidateFindPanel({
       ) {
         return;
       }
+      setFinding(true);
       await new Promise((r) => setTimeout(r, 0));
+      setMorphFilterInactive(false);
+      setFindListGroups(null);
+      const kiwiDiagBefore = await snapshotUnifyFindDiag();
+      const bench = createUnifyFindBench({
+        pages: pageTexts.length,
+        slmJosa: isUnifyJosaSlmReviewEnabled(),
+        slmPred: isUnifyPredicateSlmReviewEnabled(),
+        stdict: isUnifyStdictPosReviewEnabled(),
+        ...kiwiDiagBefore,
+      });
+      findBenchRef.current = bench;
       // 페이지마다 양보 — 동기 discover/enrich 전량 실행은 '응답 없음'을 유발함
       const result = await discoverSpacingUnifyCandidatesAsync(pageTexts, {
         includeRaw: true,
       });
+      bench.mark('1_discover');
+      const kiwiDiagAfterDiscover = await snapshotUnifyFindDiag();
       // item 근거 없는 유령 출현(지도 글리프→붙임) 제거 후 목록·칩 동기화
-      const next = enrichClustersWithItemHits(
+      const next = await enrichClustersWithItemHitsAsync(
         result.clusters ?? [],
         pageTexts,
       );
+      bench.mark('2_enrichClusters');
+      const kiwiDiagAfterEnrich1 = await snapshotUnifyFindDiag();
       let workingGroups = groupSortAndFillSatellites(next, result.rawByKey);
       const ruleStrip = stripDependentNounGenitiveFromGroups(workingGroups);
       workingGroups = ruleStrip.groups;
       const ruleExcluded = ruleStrip.dropped;
+      bench.mark('3_groupStrip');
       /** @type {null | {
        *   reviewed?: number,
        *   movedNounToPredicate?: { id: string, label: string, reason?: string }[],
@@ -624,11 +662,12 @@ export default function UnifyCandidateFindPanel({
       } finally {
         if (needSlm || needStdict) setSlmReviewing(false);
       }
+      bench.mark('4_review_slm_stdict');
 
       const triage = collectUnifyListTriage(workingGroups);
 
       // 목록(grouped)과 동일: item 근거로 재집계 후 횟수·팝업 집계
-      workingGroups = enrichClusterGroupsWithItemHits(
+      workingGroups = await enrichClusterGroupsWithItemHitsAsync(
         workingGroups,
         pageTexts,
       );
@@ -636,6 +675,7 @@ export default function UnifyCandidateFindPanel({
       workingGroups = filterSeriesSatellitesByMorphPos(workingGroups);
       // 위성 제거·item 재집계로 횟수가 바뀌므로 발견 횟수 순 재정렬
       workingGroups = sortClusterGroups(workingGroups);
+      bench.mark('5_enrichGroups_sort');
 
       const listClusters = workingGroups.flatMap((g) => g.clusters);
       // 보조용언 추정은 목록에만 두고, 체크·전체 발견·PDF는 사용자가 켤 때까지 제외
@@ -645,7 +685,18 @@ export default function UnifyCandidateFindPanel({
           .map((c) => c.key),
       );
       const countedClusters = listClusters.filter((c) => !hidden.has(c.key));
+      const occTotal = countedClusters.reduce(
+        (n, c) =>
+          n +
+          Object.values(c.counts ?? {}).reduce((a, b) => a + (b || 0), 0),
+        0,
+      );
+      const zeroOccClusters = listClusters.filter(
+        (c) => (c.totalCount ?? 0) === 0,
+      ).length;
+      const kiwiDiagDone = await snapshotUnifyFindDiag();
 
+      setFindListGroups(workingGroups);
       setClusters(next);
       setRawByKey(result.rawByKey);
       setSlmReviewedByKey(slmByKey);
@@ -686,6 +737,8 @@ export default function UnifyCandidateFindPanel({
       phase2PromptedRef.current = false;
       phase2CompletePromptedRef.current = false;
       setHiddenPdfKeys(hidden);
+      // listMemo는 findListGroups로 스킵됨
+      // overrideClusters로 재그룹 생략 — alert 전에 짧게 preview (idle 지연은 다음 찾기와 경합함)
       publishPreview(
         next,
         result.rawByKey,
@@ -695,29 +748,91 @@ export default function UnifyCandidateFindPanel({
         dropClusterKeys,
         needsReviewByKey,
         new Map(),
+        listClusters,
       );
-      // 팝업 항목 수 = 목록 아코디언 행, 횟수 = 기본 체크된 클러스터
+      bench.mark('6_publishPreview_override');
+      // 목록을 먼저 보여 준 뒤, Kiwi가 이미 ready일 때만 2차(후보·양보)
+      setFinding(false);
+      let phase2Applied = false;
+      try {
+        const phase2 = await filterSeriesSatellitesByKiwiPhase2(workingGroups);
+        phase2Applied = phase2.applied;
+        if (phase2.applied && phase2.dropped > 0) {
+          workingGroups = sortClusterGroups(phase2.groups);
+          setFindListGroups(workingGroups);
+          const list2 = workingGroups.flatMap((g) => g.clusters);
+          const hidden2 = new Set(
+            list2.filter(isAuxReviewDeferredCluster).map((c) => c.key),
+          );
+          setHiddenPdfKeys(hidden2);
+          publishPreview(
+            next,
+            result.rawByKey,
+            hidden2,
+            slmByKey,
+            dropSeriesIds,
+            dropClusterKeys,
+            needsReviewByKey,
+            new Map(),
+            list2,
+          );
+        }
+      } catch {
+        phase2Applied = false;
+      }
+      // 2차 미적용(Kiwi 미ready·OFF)일 때만 배지
+      const morphInactive =
+        Boolean(kiwiDiagDone.noiseFilterEnabled) && !phase2Applied;
+      setMorphFilterInactive(morphInactive);
+      if (morphInactive && import.meta.env.DEV) {
+        console.warn(
+          '[unify-kiwi-noise] 1차 리스트만 — Kiwi 2차 미적용 (ready 아님·boot 안 함)',
+        );
+      }
+      bench.done({
+        clusters: next.length,
+        listClusters: listClusters.length,
+        countedClusters: countedClusters.length,
+        listItemCount: countUnifyListAccordionItems(workingGroups),
+        occTotal,
+        zeroOccClusters,
+        kiwiBefore: kiwiDiagBefore,
+        kiwiAfterDiscover: kiwiDiagAfterDiscover,
+        kiwiAfterEnrich1: kiwiDiagAfterEnrich1,
+        kiwiDone: kiwiDiagDone,
+        morphFilterActive: phase2Applied,
+        morphFilterInactive: morphInactive,
+        note: '1차=정적 리스트 · 2차=ready일 때만 후보 Kiwi',
+      });
       await alertUnifyCandidateFindAfterRun(countedClusters, {
         uid: authUid,
         email: authEmail,
         itemCount: countUnifyListAccordionItems(workingGroups),
+        morphFilterInactive: morphInactive,
       });
     } finally {
       setFinding(false);
+      findInFlightRef.current = false;
     }
   }
 
-  /**
-   * @param {UnifySpacingCluster} cluster
-   */
   function handleTogglePdfVisibility(cluster) {
-    setHiddenPdfKeys((prev) => {
-      const next = new Set(prev);
-      if (next.has(cluster.key)) next.delete(cluster.key);
-      else next.add(cluster.key);
-      publishPreview(clusters, rawByKey, next);
-      return next;
-    });
+    const next = new Set(hiddenPdfKeys);
+    if (next.has(cluster.key)) next.delete(cluster.key);
+    else next.add(cluster.key);
+    setHiddenPdfKeys(next);
+    const override = findListGroups?.flatMap((g) => g.clusters) ?? null;
+    publishPreview(
+      clusters,
+      rawByKey,
+      next,
+      slmReviewedByKey,
+      predicateDropSeriesIds,
+      predicateDropClusterKeys,
+      predicateNeedsReviewByKey,
+      registeredVariants,
+      override,
+    );
   }
 
   /**
@@ -725,19 +840,30 @@ export default function UnifyCandidateFindPanel({
    * @param {boolean} nextVisible
    */
   function handleToggleCategoryPdf(groupClusters, nextVisible) {
-    setHiddenPdfKeys((prev) => {
-      const next = new Set(prev);
-      for (const c of groupClusters) {
-        if (nextVisible) next.delete(c.key);
-        else next.add(c.key);
-      }
-      publishPreview(clusters, rawByKey, next);
-      return next;
-    });
+    const next = new Set(hiddenPdfKeys);
+    for (const c of groupClusters) {
+      if (nextVisible) next.delete(c.key);
+      else next.add(c.key);
+    }
+    setHiddenPdfKeys(next);
+    const override = findListGroups?.flatMap((g) => g.clusters) ?? null;
+    publishPreview(
+      clusters,
+      rawByKey,
+      next,
+      slmReviewedByKey,
+      predicateDropSeriesIds,
+      predicateDropClusterKeys,
+      predicateNeedsReviewByKey,
+      registeredVariants,
+      override,
+    );
   }
 
   const grouped = useMemo(() => {
+    if (findListGroups) return findListGroups;
     if (!rawByKey) return [];
+    const t0 = performance.now();
     const base = groupSortAndFillSatellites(clusters, rawByKey);
     const stripped = stripDependentNounGenitiveFromGroups(base).groups;
     const withJosa = mergeReviewedClustersIntoGroups(
@@ -762,12 +888,15 @@ export default function UnifyCandidateFindPanel({
     );
     // 위성은 raw 횟수라 item 없는 유령·이중 드로잉이 남음 → 목록 직전에 재집계
     // enrich 후 single-form으로 바뀐 항목에 morph 재적용 → 횟수 반영해 재정렬
-    return sortClusterGroups(
+    const out = sortClusterGroups(
       filterSeriesSatellitesByMorphPos(
         enrichClusterGroupsWithItemHits(afterPredicate, pageTexts),
       ),
     );
+    findBenchRef.current?.maybeLogListMemo(performance.now() - t0);
+    return out;
   }, [
+    findListGroups,
     clusters,
     rawByKey,
     pageTexts,
@@ -842,6 +971,7 @@ export default function UnifyCandidateFindPanel({
               predicateDropClusterKeys,
               predicateNeedsReviewByKey,
               nextRegistered,
+              findListGroups?.flatMap((g) => g.clusters) ?? listClusters,
             );
 
       // publish와 동일한 인스턴스를 선택해야 primary 빨간줄이 맞음
@@ -895,6 +1025,8 @@ export default function UnifyCandidateFindPanel({
       unifyPhase,
       secondaryClusters,
       pageTexts,
+      findListGroups,
+      listClusters,
     ],
   );
 
@@ -982,6 +1114,7 @@ export default function UnifyCandidateFindPanel({
       predicateDropClusterKeys,
       predicateNeedsReviewByKey,
       registeredVariants,
+      findListGroups?.flatMap((g) => g.clusters) ?? null,
     );
   }, [
     secondaryGroups,
@@ -994,6 +1127,7 @@ export default function UnifyCandidateFindPanel({
     predicateNeedsReviewByKey,
     registeredVariants,
     publishPreview,
+    findListGroups,
   ]);
 
   useEffect(() => {
@@ -1062,39 +1196,19 @@ export default function UnifyCandidateFindPanel({
     (groupClusters, spacing, currentSpacing) => {
       if (!groupClusters?.length) return;
       const previewOverride =
-        unifyPhase === 'secondary_pairs' ? secondaryClusters : null;
+        unifyPhase === 'secondary_pairs'
+          ? secondaryClusters
+          : (findListGroups?.flatMap((g) => g.clusters) ?? listClusters);
 
       if (currentSpacing === spacing) {
-        setRegisteredVariants((prev) => {
-          const next = new Map(prev);
-          for (const gc of groupClusters) next.delete(gc.key);
-          publishPreview(
-            clusters,
-            rawByKey,
-            hiddenPdfKeys,
-            slmReviewedByKey,
-            predicateDropSeriesIds,
-            predicateDropClusterKeys,
-            predicateNeedsReviewByKey,
-            next,
-            previewOverride,
-          );
-          return next;
-        });
+        const next = new Map(registeredVariants);
+        for (const gc of groupClusters) next.delete(gc.key);
+        setRegisteredVariants(next);
         setPreSelected((prev) => {
-          const next = new Map(prev);
-          for (const gc of groupClusters) next.delete(gc.key);
-          return next;
+          const nextPre = new Map(prev);
+          for (const gc of groupClusters) nextPre.delete(gc.key);
+          return nextPre;
         });
-        return;
-      }
-
-      setRegisteredVariants((prev) => {
-        const next = new Map(prev);
-        for (const gc of groupClusters) {
-          const v = variantForSpacing(gc, spacing);
-          if (v) next.set(gc.key, v);
-        }
         publishPreview(
           clusters,
           rawByKey,
@@ -1106,17 +1220,34 @@ export default function UnifyCandidateFindPanel({
           next,
           previewOverride,
         );
-        return next;
-      });
+        return;
+      }
+
+      const next = new Map(registeredVariants);
+      for (const gc of groupClusters) {
+        const v = variantForSpacing(gc, spacing);
+        if (v) next.set(gc.key, v);
+      }
+      setRegisteredVariants(next);
       setPreSelected((prev) => {
-        const next = new Map(prev);
+        const nextPre = new Map(prev);
         for (const gc of groupClusters) {
           const v = variantForSpacing(gc, spacing);
-          if (v) next.set(gc.key, v);
+          if (v) nextPre.set(gc.key, v);
         }
-        return next;
+        return nextPre;
       });
-
+      publishPreview(
+        clusters,
+        rawByKey,
+        hiddenPdfKeys,
+        slmReviewedByKey,
+        predicateDropSeriesIds,
+        predicateDropClusterKeys,
+        predicateNeedsReviewByKey,
+        next,
+        previewOverride,
+      );
       for (const gc of groupClusters) {
         const v = variantForSpacing(gc, spacing);
         if (!v) continue;
@@ -1143,6 +1274,10 @@ export default function UnifyCandidateFindPanel({
       onSeriesSpacingGuideSelect,
       unifyPhase,
       secondaryClusters,
+      findListGroups,
+      listClusters,
+      pageTexts,
+      registeredVariants,
     ],
   );
 
@@ -1156,33 +1291,33 @@ export default function UnifyCandidateFindPanel({
     const siblings =
       groupClusters?.length > 0 ? groupClusters : [cluster];
 
-    setRegisteredVariants((prev) => {
-      const nextReg = new Map(prev);
-      nextReg.delete(cluster.key);
-      const anyRegisteredLeft = siblings.some((gc) => nextReg.has(gc.key));
+    const nextReg = new Map(registeredVariants);
+    nextReg.delete(cluster.key);
+    const anyRegisteredLeft = siblings.some((gc) => nextReg.has(gc.key));
 
-      setPreSelected((prevPre) => {
-        const nextPre = new Map(prevPre);
-        nextPre.delete(cluster.key);
-        if (!anyRegisteredLeft) {
-          for (const gc of siblings) nextPre.delete(gc.key);
-        }
-        return nextPre;
-      });
-
-      publishPreview(
-        clusters,
-        rawByKey,
-        hiddenPdfKeys,
-        slmReviewedByKey,
-        predicateDropSeriesIds,
-        predicateDropClusterKeys,
-        predicateNeedsReviewByKey,
-        nextReg,
-        unifyPhase === 'secondary_pairs' ? secondaryClusters : null,
-      );
-      return nextReg;
+    setRegisteredVariants(nextReg);
+    setPreSelected((prevPre) => {
+      const nextPre = new Map(prevPre);
+      nextPre.delete(cluster.key);
+      if (!anyRegisteredLeft) {
+        for (const gc of siblings) nextPre.delete(gc.key);
+      }
+      return nextPre;
     });
+
+    publishPreview(
+      clusters,
+      rawByKey,
+      hiddenPdfKeys,
+      slmReviewedByKey,
+      predicateDropSeriesIds,
+      predicateDropClusterKeys,
+      predicateNeedsReviewByKey,
+      nextReg,
+      unifyPhase === 'secondary_pairs'
+        ? secondaryClusters
+        : (findListGroups?.flatMap((g) => g.clusters) ?? null),
+    );
   }
 
   return (
@@ -1240,7 +1375,7 @@ export default function UnifyCandidateFindPanel({
         <div
           className="unify-candidate-find__results"
           role="region"
-          aria-label="표기 통일 추천"
+          aria-label="1차 표기 통일"
         >
           {clusters.length === 0 ? (
             <p className="unify-candidate-find__empty">
@@ -1251,7 +1386,7 @@ export default function UnifyCandidateFindPanel({
               <div className="results-header results-header--total-only">
                 <span className="results-header__total-findings results-findings-meta">
                   <span className="results-findings-meta__label">
-                    {listItemCount}항목 전체 발견
+                    1차 표기 통일 : 추천 항목 {listItemCount} 전체 발견
                   </span>
                   <span className="unify-candidate-find__badge-slot">
                     <UnifyFindingsCount
@@ -1260,6 +1395,14 @@ export default function UnifyCandidateFindPanel({
                       className="results-header__total-count"
                     />
                   </span>
+                  {morphFilterInactive ? (
+                    <span
+                      className="unify-candidate-find__morph-inactive"
+                      role="status"
+                    >
+                      형태소 필터 미적용
+                    </span>
+                  ) : null}
                 </span>
               </div>
               <div
@@ -1320,7 +1463,7 @@ export default function UnifyCandidateFindPanel({
                           <details
                             key={sectionId}
                             className="results-category results-category--unify-series"
-                            defaultOpen={isFirst}
+                            ref={detailsOpenOnceRef(isFirst)}
                           >
                             <summary className="results-category__summary panel-criteria-heading">
                               <DetailsChevron />
@@ -1474,7 +1617,7 @@ export default function UnifyCandidateFindPanel({
                         <details
                           key={`${sectionId}-${cluster.key}`}
                           className={`results-category results-category--unify-${categoryMod}`}
-                          defaultOpen={defaultOpenId === sectionId}
+                          ref={detailsOpenOnceRef(defaultOpenId === sectionId)}
                         >
                           <summary className="results-category__summary panel-criteria-heading">
                             <DetailsChevron />
@@ -1520,7 +1663,7 @@ export default function UnifyCandidateFindPanel({
                     <details
                       key={sectionId}
                       className={`results-category results-category--unify-${categoryMod}`}
-                      defaultOpen={defaultOpenId === sectionId}
+                      ref={detailsOpenOnceRef(defaultOpenId === sectionId)}
                     >
                       <summary className="results-category__summary panel-criteria-heading">
                         <DetailsChevron />

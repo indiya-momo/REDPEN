@@ -1,6 +1,6 @@
 import ResultPageSummary from './ResultPageSummary.jsx';
 import PhraseSlotResultSummary from './PhraseSlotResultSummary.jsx';
-import GroupVisibilityCheckbox from './GroupVisibilityCheckbox.jsx';import DetailsChevron from './DetailsChevron.jsx';
+import GroupVisibilityCheckbox from './GroupVisibilityCheckbox.jsx';import DetailsChevron, { detailsOpenOnceRef } from './DetailsChevron.jsx';
 import CriteriaHoverTip from './CriteriaHoverTip.jsx';
 import { useEffect, useMemo, useRef } from 'react';
 import { getBuiltInTip } from '../lib/builtInRules.js';
@@ -565,7 +565,7 @@ export default function CheckResultsPanel({
               <details
                 key={section.id}
                 className={`results-category results-category--${section.id}`}
-                defaultOpen={openAccordionCategory === section.id}
+                ref={detailsOpenOnceRef(openAccordionCategory === section.id)}
               >
                 <summary className="results-category__summary panel-criteria-heading">
                   <DetailsChevron />

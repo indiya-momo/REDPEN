@@ -63,7 +63,20 @@ export function createServerRunner(opts = {}) {
 
   return {
     async reviewBatch(items) {
-      if (!endpoint) {
+      if (!endpoint || !items?.length) {
+        return (items ?? []).map((item) => slmReviewFallback(item.id));
+      }
+
+      // 서버 미기동 시 항목마다 긴 timeout 대기하지 않음 (DEV 기본 180s×N 방지)
+      try {
+        const ping = await fetchImpl(`${endpoint.replace(/\/$/, '')}/models`, {
+          method: 'GET',
+          signal: AbortSignal.timeout(2_000),
+        });
+        if (!ping.ok) {
+          return items.map((item) => slmReviewFallback(item.id));
+        }
+      } catch {
         return items.map((item) => slmReviewFallback(item.id));
       }
 

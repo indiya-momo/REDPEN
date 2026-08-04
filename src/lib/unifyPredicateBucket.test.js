@@ -6,6 +6,8 @@ import {
   isUnifyJosaPlusNounKey,
   isUnifyNounPlusJosaKey,
   isUnifyJosaGluedNoiseKey,
+  isUnifyHadaConjugationKey,
+  isUnifyIdaConjugationKey,
   dropJosaPlusPredicateFromGroups,
 } from './unifyPredicateBucket.js';
 
@@ -65,19 +67,64 @@ describe('looksLikePredicateKey', () => {
   });
 });
 
-describe('isUnifyPredicateCluster', () => {
-  it('auxReview가 있으면 용언으로 본다', () => {
-    expect(
-      isUnifyPredicateCluster({
-        key: '해보',
-        auxReview: { status: 'review', stemKey: '해보', stemSpaced: '해 보' },
-      }),
-    ).toBe(true);
+describe('isUnifyHadaConjugationKey', () => {
+  it('명사+하다 활용·명령을 잡는다', () => {
+    expect(isUnifyHadaConjugationKey('기록하라')).toBe(true);
+    expect(isUnifyHadaConjugationKey('기록하여')).toBe(true);
+    expect(isUnifyHadaConjugationKey('기록하였던')).toBe(true);
+    expect(isUnifyHadaConjugationKey('기록해라')).toBe(true);
+    expect(isUnifyHadaConjugationKey('기록하다')).toBe(true);
+    expect(isUnifyHadaConjugationKey('기록하고')).toBe(true);
   });
 
-  it('어미 휴리스틱만으로도 판단한다', () => {
-    expect(isUnifyPredicateCluster({ key: '만들어' })).toBe(true);
-    expect(isUnifyPredicateCluster({ key: '인구' })).toBe(false);
+  it('단음절 어간·명사 자체는 제외한다', () => {
+    expect(isUnifyHadaConjugationKey('하라')).toBe(false);
+    expect(isUnifyHadaConjugationKey('북한')).toBe(false);
+    expect(isUnifyHadaConjugationKey('기록')).toBe(false);
+    expect(isUnifyHadaConjugationKey('경리업무')).toBe(false);
+  });
+
+  it('단합하여도 잡는다', () => {
+    expect(isUnifyHadaConjugationKey('단합하여')).toBe(true);
+  });
+});
+
+describe('isUnifyIdaConjugationKey', () => {
+  it('명사+이다 활용을 잡는다', () => {
+    expect(isUnifyIdaConjugationKey('과학자였던')).toBe(true);
+    expect(isUnifyIdaConjugationKey('교사였다')).toBe(true);
+    expect(isUnifyIdaConjugationKey('학생이다')).toBe(true);
+    expect(isUnifyIdaConjugationKey('학생이며')).toBe(true);
+  });
+
+  it('의존명사 1음절+이다 활용을 잡는다', () => {
+    expect(isUnifyIdaConjugationKey('것이고')).toBe(true);
+    expect(isUnifyIdaConjugationKey('것인데')).toBe(true);
+  });
+
+  it('단음절 어간·일반 명사는 제외한다', () => {
+    expect(isUnifyIdaConjugationKey('였던')).toBe(false);
+    expect(isUnifyIdaConjugationKey('과학자')).toBe(false);
+    expect(isUnifyIdaConjugationKey('한국인')).toBe(false);
+    expect(isUnifyIdaConjugationKey('경리업무')).toBe(false);
+  });
+});
+
+describe('isUnifyJosaGluedNoiseKey', () => {
+  it('명사+하다·이다 활용도 목록 잡음으로 본다', () => {
+    expect(isUnifyJosaGluedNoiseKey('기록하라')).toBe(true);
+    expect(isUnifyJosaGluedNoiseKey('기록하였던')).toBe(true);
+    expect(isUnifyJosaGluedNoiseKey('단합하여')).toBe(true);
+    expect(isUnifyJosaGluedNoiseKey('과학자였던')).toBe(true);
+  });
+
+  it('의존명사+조사+명사·활용+명사 글루도 1차 리스트로 잡는다', () => {
+    expect(isUnifyJosaGluedNoiseKey('것을공무원')).toBe(true);
+    expect(isUnifyJosaGluedNoiseKey('것도공무원')).toBe(true);
+    expect(isUnifyJosaGluedNoiseKey('곳에서공무원')).toBe(true);
+    expect(isUnifyJosaGluedNoiseKey('글은공무원')).toBe(true);
+    expect(isUnifyJosaGluedNoiseKey('것이고공무원')).toBe(true);
+    expect(isUnifyJosaGluedNoiseKey('가정하고공무원')).toBe(true);
   });
 });
 

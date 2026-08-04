@@ -36,7 +36,18 @@ export {
   isKiwiNonVerbCompoundSpaced,
   classifyKiwiSpacedEojeolPos,
   shouldRejectUnifySatelliteSpacedByPos,
+  UNIFY_NON_NOUN_COMPOUND_EOJEOLS,
 } from './unifyExclude.js';
+export {
+  UNIFY_NOISE_DENY_EOJEOLS,
+  UNIFY_NOISE_PATTERNS,
+  UNIFY_NOISE_LIST_META,
+  UNIFY_NOISE_DENYLIST_META,
+  hasUnifyNoiseDenyEojeol,
+  spacedVariantHitsNoiseDenylist,
+  shouldRejectByNoiseList,
+  shouldRejectByNoiseListEojeol,
+} from '../unifyNoiseList.js';
 export {
   isJosaTag,
   isSkippableTrailingTag,
@@ -55,6 +66,16 @@ export {
   bootKiwiIfNeeded,
   bootKiwiLocalIfNeeded,
 } from './bootLocal.js';
+export {
+  isUnifyKiwiNoiseMorphActive,
+  isUnifyKiwiLocalAnalyzeReady,
+  isUnifyKiwiNoisePhase2Available,
+  getUnifyKiwiNoiseFilterStatus,
+  beginUnifyKiwiNoiseMorphScan,
+  endUnifyKiwiNoiseMorphScan,
+  setUnifyFindSkipMorph,
+  isUnifyFindSkipMorph,
+} from './noiseFilterGate.js';
 export {
   KIWI_ANALYZE_PATH,
   clampAnalyzeText,

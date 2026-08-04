@@ -121,10 +121,10 @@ export default function App() {
     }
   }, []);
 
-  // Kiwi 플래그 ON → 서버 analyze(C) 우선, DEV만 실패 시 브라우저 wasm(A)
+  // Kiwi 플래그(JOSA·BOUNDARY·NOISE) 명시 ON일 때만 boot. 오픈베타 기본은 전부 OFF.
   useEffect(() => {
     void import('./lib/kiwiMorph/bootLocal.js').then((m) =>
-      m.bootKiwiIfNeeded(),
+      m.bootKiwiIfNeeded({ maxWaitMs: 60_000 }),
     );
   }, []);
 

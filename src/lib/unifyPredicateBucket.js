@@ -129,6 +129,25 @@ function hangulKey(key) {
 }
 
 /**
+ * 의존명사·대용 1음절 — 조사·이다 활용 잡음 어간으로 허용 (것/곳/글…).
+ * 일반 1음절 명사(집·말)는 넣지 않음.
+ * @type {ReadonlySet<string>}
+ */
+const SHORT_DEPENDENT_NOUN_STEMS = Object.freeze(
+  new Set(['것', '곳', '글', '수', '줄', '데', '바', '때', '중', '듯', '양', '체', '지']),
+);
+
+/**
+ * @param {string} stem
+ * @returns {boolean}
+ */
+function isAllowedNoiseStem(stem) {
+  const n = hangulSyllableCount(stem);
+  if (n >= 2) return true;
+  return n === 1 && SHORT_DEPENDENT_NOUN_STEMS.has(stem);
+}
+
+/**
  * @param {string} h hangul-only
  * @returns {boolean}
  */
@@ -159,6 +178,8 @@ export function looksLikePredicateKey(key) {
   if (NOUN_FALSE_POSITIVES.has(h)) return false;
   if (PREDICATE_KNOWN_STEMS.has(h)) return true;
   if (endsWithPredicateDictionaryTail(h)) return true;
+  if (isUnifyHadaConjugationKey(h)) return true;
+  if (isUnifyIdaConjugationKey(h)) return true;
   if (h.length >= 2 && PREDICATE_END_DIGRAPHS.has(h.slice(-2))) return true;
   // 캘리포니아·아시아 등 —ia 외래 지명 (끝 `아`/`어` 오탐 방지)
   if (endsWithLoanwordIaTail(h)) return false;
@@ -193,6 +214,151 @@ const INFLECTED_PREDICATE_TAILS = new Set([
 ]);
 
 /**
+ * 명사+하다 활용·명령·연결 — 표기통일 띄어쓰기 후보에서 제외.
+ * 긴 것부터 매칭. 어간 한글 2음절+ 일 때만 (북한·전함 등 단음절 어간 명사 보호).
+ * @type {readonly string[]}
+ */
+const HADA_CONJUGATION_TAILS = Object.freeze(
+  [
+    '하였습니다',
+    '하겠습니다',
+    '했습니다',
+    '합니다',
+    '합니까',
+    '하였다가',
+    '하였으나',
+    '하였으니',
+    '하였을',
+    '하였다',
+    '하였던',
+    '하였',
+    '합시다',
+    '하자고',
+    '하도록',
+    '한다면',
+    '하려면',
+    '하므로',
+    '함으로',
+    '함과',
+    '함이',
+    '함을',
+    '하자',
+    '하라',
+    '하여',
+    '해라',
+    '한다',
+    '했다',
+    '했던',
+    '하면',
+    '하니',
+    '하고',
+    '해서',
+    '할지',
+    '할',
+    '함',
+    '해',
+    '하다',
+  ].toSorted((a, b) => b.length - a.length || a.localeCompare(b, 'ko')),
+);
+
+/**
+ * 명사 어간(≥2음절, 또는 의존명사 1음절)+하다 활용형인가.
+ * 예: 기록하라·기록하여·기록하였던·기록해라·기록하다
+ * @param {string} key
+ * @returns {boolean}
+ */
+export function isUnifyHadaConjugationKey(key) {
+  const h = hangulKey(key);
+  if (h.length < 3) return false;
+  for (const tail of HADA_CONJUGATION_TAILS) {
+    if (!h.endsWith(tail)) continue;
+    const stem = h.slice(0, -tail.length);
+    if (isAllowedNoiseStem(stem)) return true;
+  }
+  return false;
+}
+
+/**
+ * 명사+이다 활용 — 표기통일 띄어쓰기 후보에서 제외.
+ * `인`/`일` 단음절은 한국인·내일 등 오탐이 커서 넣지 않음.
+ * @type {readonly string[]}
+ */
+const IDA_CONJUGATION_TAILS = Object.freeze(
+  [
+    '이었던',
+    '이었다가',
+    '이었으나',
+    '이었으니',
+    '이었을',
+    '이었다',
+    '이었',
+    '였던',
+    '였다가',
+    '였으나',
+    '였으니',
+    '였을',
+    '였다',
+    '이라고',
+    '이라는',
+    '이라니',
+    '이라도',
+    '이라서',
+    '이라면',
+    '이라',
+    '이면서',
+    '이지만',
+    '이며',
+    '이고',
+    '이면',
+    '이니',
+    '인데',
+    '인지',
+    '인가',
+    '임을',
+    '임이',
+    '임과',
+    '임으로',
+    '이다',
+  ].toSorted((a, b) => b.length - a.length || a.localeCompare(b, 'ko')),
+);
+
+/**
+ * 명사 어간(≥2음절, 또는 의존명사 1음절)+이다 활용형인가.
+ * 예: 과학자였던·교사였다·학생이다·것이고
+ * @param {string} key
+ * @returns {boolean}
+ */
+export function isUnifyIdaConjugationKey(key) {
+  const h = hangulKey(key);
+  if (h.length < 3) return false;
+  for (const tail of IDA_CONJUGATION_TAILS) {
+    if (!h.endsWith(tail)) continue;
+    const stem = h.slice(0, -tail.length);
+    if (isAllowedNoiseStem(stem)) return true;
+  }
+  return false;
+}
+
+/**
+ * 하다/이다 활용형 뒤에 명사가 붙은 글루 키 — 가정하고공무원·것이고공무원.
+ * @param {string} key
+ * @returns {boolean}
+ */
+export function isUnifyConjugationPlusNounKey(key) {
+  const h = hangulKey(key);
+  if (h.length < 5) return false;
+  for (let split = 3; split <= h.length - 2; split += 1) {
+    const left = h.slice(0, split);
+    const right = h.slice(split);
+    if (!isNounTailHeuristic(right)) continue;
+    if (isUnifyHadaConjugationKey(left) || isUnifyIdaConjugationKey(left)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
  * 조사 바로 뒤 꼬리가 용언인지 (규칙 안전망).
  * @param {string} tail
  */
@@ -201,6 +367,9 @@ export function isPredicateTailHeuristic(tail) {
   if (t.length < 1) return false;
   if (endsWithPredicateDictionaryTail(t)) return true;
   if (INFLECTED_PREDICATE_TAILS.has(t)) return true;
+  if (isUnifyHadaConjugationKey(t) || HADA_CONJUGATION_TAILS.some((x) => t === x)) {
+    return true;
+  }
   return looksLikePredicateKey(t);
 }
 
@@ -371,7 +540,7 @@ export function parseUnifyJosaPlusNoun(keyOrAffix) {
       const before = h.slice(0, -tailLen);
       if (!before.endsWith(josa)) continue;
       const stem = before.slice(0, -josa.length);
-      if (stem && hangulSyllableCount(stem) < 2) continue;
+      if (stem && !isAllowedNoiseStem(stem)) continue;
       if (!isNounTailHeuristic(tail)) continue;
       // @을시장 — 가/이로 시작하는 명사(가치·이상) 오탐 방지
       if (!stem && !BARE_JOSA_PLUS_NOUN.has(josa)) continue;
@@ -430,6 +599,9 @@ export function isUnifyNounPlusJosaKey(keyOrAffix, opts = {}) {
  * }} [opts]
  */
 export function isUnifyJosaGluedNoiseKey(keyOrAffix, opts = {}) {
+  if (isUnifyHadaConjugationKey(keyOrAffix)) return true;
+  if (isUnifyIdaConjugationKey(keyOrAffix)) return true;
+  if (isUnifyConjugationPlusNounKey(keyOrAffix)) return true;
   if (isUnifyJosaPlusPredicateKey(keyOrAffix, opts)) return true;
   if (isUnifyJosaPlusNounKey(keyOrAffix)) return true;
   if (isUnifyNounPlusJosaKey(keyOrAffix, opts)) return true;

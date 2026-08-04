@@ -1,0 +1,99 @@
+{
+  "version": 1,
+  "updatedAt": "2026-08-04",
+  "description": "표기통일 잡음 1차 정적 리스트. Kiwi boot/analyze 없이 사용. 활용형 단어장 금지.",
+  "harvestNote": "npm run kiwi:harvest-noise-list — 예외 어절·패턴 꼬리만 갱신",
+  "exceptionEojeols": [
+    "기타",
+    "나머지",
+    "다수",
+    "대부분",
+    "상당수",
+    "소수",
+    "일부",
+    "전체",
+    "정도"
+  ],
+  "exceptionNote": "Kiwi가 NNG로 줘도 띄움 명사복합 성분이 아닌 대용·수량 어절만.",
+  "verbalTails": [
+    "하였으며",
+    "있다고",
+    "하였다",
+    "하였던",
+    "되고",
+    "되기",
+    "되며",
+    "되어",
+    "있고",
+    "있다",
+    "있어",
+    "하고",
+    "하기",
+    "하니",
+    "하다",
+    "하라",
+    "하려",
+    "하며",
+    "하면",
+    "하어",
+    "하여",
+    "한다",
+    "해라",
+    "했다",
+    "했던"
+  ],
+  "copulaTails": [
+    "이라고",
+    "이라는",
+    "이면서",
+    "이었다",
+    "이었던",
+    "이지만",
+    "였다",
+    "였던",
+    "이고",
+    "이니",
+    "이다",
+    "이라",
+    "이며",
+    "이면",
+    "이었"
+  ],
+  "hagoJcTails": [
+    "하고"
+  ],
+  "bonBojoRefs": [
+    "verb-hada",
+    "verb-jida",
+    "verb-boda1",
+    "verb-juda1",
+    "verb-gada",
+    "verb-oda",
+    "verb-nada",
+    "verb-naeda",
+    "verb-notda",
+    "verb-duda",
+    "verb-delda",
+    "verb-itta"
+  ],
+  "tagTemplates": [
+    {
+      "id": "noun-verbal-connective",
+      "tags": "NNG+(XSV|VV|VX)+E*",
+      "pass": 2,
+      "filter": "isKiwiNounVerbalConnectiveSurface"
+    },
+    {
+      "id": "copula-ending",
+      "tags": "N*+VCP+(EF|EC)",
+      "pass": 2,
+      "filter": "isKiwiCopulaEndingSurface"
+    },
+    {
+      "id": "noun-hago-jc",
+      "tags": "NNG+하고/JC",
+      "pass": 2,
+      "filter": "isKiwiNounVerbalConnectiveSurface"
+    }
+  ]
+}

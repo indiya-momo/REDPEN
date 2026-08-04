@@ -3,6 +3,7 @@ import {
   groupAndSortClusters,
   groupSortAndFillSatellites,
   sortClusterGroups,
+  sortClustersByFindingsThenKey,
 } from './unifyCandidateGrouping.js';
 
 /** @param {string} key @param {string} spaced */
@@ -99,6 +100,27 @@ describe('groupAndSortClusters — 접두·접미 멤버 수 우선', () => {
     expect(labels).toContain('@서비스');
   });
 
+  it('명사+하다·이다 활용은 목록에 넣지 않는다', () => {
+    const clusters = [
+      conflict('기록하라', '기록 하라'),
+      conflict('기록하여', '기록 하여'),
+      conflict('기록하였던', '기록 하였던'),
+      conflict('기록해라', '기록 해라'),
+      conflict('단합하여', '단합 하여'),
+      conflict('과학자였던', '과학자 였던'),
+      conflict('경리업무', '경리 업무'),
+    ];
+    const groups = groupSortAndFillSatellites(clusters, new Map());
+    const keys = groups.flatMap((g) => g.clusters.map((c) => c.key));
+    expect(keys).not.toContain('기록하라');
+    expect(keys).not.toContain('기록하여');
+    expect(keys).not.toContain('기록하였던');
+    expect(keys).not.toContain('기록해라');
+    expect(keys).not.toContain('단합하여');
+    expect(keys).not.toContain('과학자였던');
+    expect(keys).toContain('경리업무');
+  });
+
   it('금융@에서 @채움 단음절(금융업·금융학)은 처음부터 넣지 않는다', () => {
     const clusters = [
       conflict('금융시장', '금융 시장'),
@@ -189,5 +211,27 @@ describe('sortClusterGroups — 용언 계열 발견 횟수', () => {
       .map((g) => g.label);
     expect(predLabels[0]).toBe('@보자');
     expect(predLabels).toEqual(['@보자', '들어@', '@나가']);
+  });
+});
+
+describe('sortClustersByFindingsThenKey — 이형태 양쪽 출현 우선', () => {
+  it('1회씩이라도 양쪽 이형태가 있으면 합계가 커도 0회 위성 항목보다 앞', () => {
+    const dual = {
+      key: '경리직원',
+      variants: ['경리직원', '경리 직원'],
+      counts: { 경리직원: 1, '경리 직원': 1 },
+      totalCount: 2,
+    };
+    const withZeroSatellite = {
+      key: '경리업무',
+      variants: ['경리 업무', '경리업무'],
+      counts: { '경리 업무': 3, 경리업무: 0 },
+      totalCount: 3,
+    };
+    const sorted = sortClustersByFindingsThenKey([
+      withZeroSatellite,
+      dual,
+    ]);
+    expect(sorted.map((c) => c.key)).toEqual(['경리직원', '경리업무']);
   });
 });
