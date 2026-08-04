@@ -264,10 +264,9 @@ export function formatConsistencyUnifyCheckConfirmMessageWithoutQuota({
  */
 export function formatUnifyCandidateFindConfirmMessage() {
   return (
-    `[1차 표기 통일 추천]\n` +
+    `[표기 통일 추천(띄어쓰기-붙여쓰기)]\n` +
     `\n` +
     `표기 통일 검수권 1장을 사용합니다\n` +
-    `브라우저에서 형태소 분석을 진행하는 과정에서\n` +
     `사용자의 PC 성능에 따라 10초 ~ 1분 정도 시간이 소요됩니다\n` +
     `\n` +
     '찾기를 진행할까요?'
@@ -277,10 +276,9 @@ export function formatUnifyCandidateFindConfirmMessage() {
 /** @returns {string} */
 export function formatUnifyCandidateFindConfirmMessageWithoutQuota() {
   return (
-    `[1차 표기 통일 추천]\n` +
+    `[표기 통일 추천(띄어쓰기-붙여쓰기)]\n` +
     `\n` +
     '띄어쓰기가 다른 표기 후보를 문서에서 찾습니다.\n' +
-    `브라우저에서 형태소 분석을 진행하는 과정에서\n` +
     `사용자의 PC 성능에 따라 10초 ~ 1분 정도 시간이 소요됩니다\n` +
     `\n` +
     '찾기를 진행할까요?'
@@ -366,7 +364,6 @@ export function formatUnifyCandidatePhase2CompleteMessage(
  *   uid?: string,
  *   email?: string,
  *   itemCount?: number,
- *   morphFilterInactive?: boolean,
  * }} [quotaContext]
  */
 export async function alertUnifyCandidateFindAfterRun(
@@ -377,7 +374,6 @@ export async function alertUnifyCandidateFindAfterRun(
     uid = '',
     email = '',
     itemCount,
-    morphFilterInactive = false,
   } = quotaContext;
   const clusterCount =
     typeof itemCount === 'number' ? itemCount : clusters.length;
@@ -389,9 +385,6 @@ export async function alertUnifyCandidateFindAfterRun(
     clusterCount,
     totalOccurrences,
   );
-  if (morphFilterInactive) {
-    message = `${message}\n\n형태소 필터 미적용`;
-  }
 
   const quotaConsumedLine = await buildCheckResultQuotaConsumedLine(
     uid,
@@ -413,7 +406,6 @@ export async function alertUnifyCandidateFindAfterRun(
                 clusterCount,
                 totalOccurrences,
                 quotaConsumedLine,
-                morphFilterInactive,
                 phaseLabel: '1차 표기 통일 :',
               })
             : undefined,

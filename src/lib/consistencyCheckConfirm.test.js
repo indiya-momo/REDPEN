@@ -343,10 +343,9 @@ describe('formatConsistencyUnifyCheckConfirmMessage', () => {
 describe('formatUnifyCandidateFindConfirmMessage', () => {
   it('표기 통일 추천 찾기 confirm 문구를 만든다', () => {
     expect(formatUnifyCandidateFindConfirmMessage()).toBe(
-      '[1차 표기 통일 추천]\n' +
+      '[표기 통일 추천(띄어쓰기-붙여쓰기)]\n' +
         '\n' +
         '표기 통일 검수권 1장을 사용합니다\n' +
-        '브라우저에서 형태소 분석을 진행하는 과정에서\n' +
         '사용자의 PC 성능에 따라 10초 ~ 1분 정도 시간이 소요됩니다\n' +
         '\n' +
         '찾기를 진행할까요?',
@@ -408,7 +407,7 @@ describe('alertUnifyCandidateFindAfterRun', () => {
     );
   });
 
-  it('morphFilterInactive면 본문에 형태소 필터 미적용을 넣는다', async () => {
+  it('morphFilterInactive여도 완료 팝업에 형태소 필터 문구를 넣지 않는다', async () => {
     const alertMock = vi.fn();
     vi.stubGlobal('alert', alertMock);
 
@@ -427,7 +426,7 @@ describe('alertUnifyCandidateFindAfterRun', () => {
     );
 
     const text = String(alertMock.mock.calls[0]?.[0] ?? '');
-    expect(text).toContain('형태소 필터 미적용');
+    expect(text).not.toContain('형태소 필터 미적용');
   });
 
   it('itemCount가 있으면 클러스터 수 대신 아코디언 행 수를 쓴다', async () => {

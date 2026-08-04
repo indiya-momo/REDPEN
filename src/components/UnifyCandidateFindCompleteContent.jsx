@@ -11,7 +11,6 @@ import AppDialogQuotaConsumedLine from './AppDialogQuotaConsumedLine.jsx';
  *   clusterCount: number,
  *   totalOccurrences: number,
  *   quotaConsumedLine?: string | null,
- *   morphFilterInactive?: boolean,
  *   phaseLabel?: string,
  * }} props
  */
@@ -19,7 +18,6 @@ export default function UnifyCandidateFindCompleteContent({
   clusterCount,
   totalOccurrences,
   quotaConsumedLine = null,
-  morphFilterInactive = false,
   phaseLabel = '1차 표기 통일 :',
 }) {
   return (
@@ -37,14 +35,6 @@ export default function UnifyCandidateFindCompleteContent({
           />
         </span>
       </div>
-      {morphFilterInactive ? (
-        <p
-          className="app-dialog__unify-morph-inactive"
-          role="status"
-        >
-          형태소 필터 미적용
-        </p>
-      ) : null}
       <AppDialogQuotaConsumedLine line={quotaConsumedLine} />
     </div>
   );

@@ -140,17 +140,25 @@ function formatSeriesCategoryLabelText(group) {
  *   spacing: 'glued' | 'spaced' | null,
  *   hintSpacing?: 'glued' | 'spaced' | null,
  *   onSelect: (spacing: 'glued' | 'spaced') => void,
+ *   withCheckbox?: boolean,
+ *   dataWorkGuide?: string,
  * }} props
  */
 function SeriesSpacingButtons({
   spacing,
   hintSpacing = null,
   onSelect,
+  withCheckbox = false,
   dataWorkGuide,
 }) {
   return (
     <span
-      className="unify-candidate-find__series-spacing-btns"
+      className={[
+        'unify-candidate-find__series-spacing-btns',
+        withCheckbox && 'unify-candidate-find__series-spacing-btns--with-check',
+      ]
+        .filter(Boolean)
+        .join(' ')}
       data-work-guide={dataWorkGuide || undefined}
       onClick={(e) => e.stopPropagation()}
       onKeyDown={(e) => e.stopPropagation()}
@@ -174,7 +182,20 @@ function SeriesSpacingButtons({
           onSelect('glued');
         }}
       >
-        붙여쓰기
+        {withCheckbox ? (
+          <span className="unify-candidate-find__series-spacing-btn-inner">
+            <input
+              type="checkbox"
+              tabIndex={-1}
+              checked={spacing === 'glued'}
+              readOnly
+              aria-hidden
+            />
+            <span>붙여쓰기</span>
+          </span>
+        ) : (
+          '붙여쓰기'
+        )}
       </button>
       <button
         type="button"
@@ -195,7 +216,20 @@ function SeriesSpacingButtons({
           onSelect('spaced');
         }}
       >
-        띄어쓰기
+        {withCheckbox ? (
+          <span className="unify-candidate-find__series-spacing-btn-inner">
+            <input
+              type="checkbox"
+              tabIndex={-1}
+              checked={spacing === 'spaced'}
+              readOnly
+              aria-hidden
+            />
+            <span>띄어쓰기</span>
+          </span>
+        ) : (
+          '띄어쓰기'
+        )}
       </button>
     </span>
   );
@@ -1536,17 +1570,14 @@ export default function UnifyCandidateFindPanel({
       <div className="unify-candidate-find__body">
         <div className="unify-candidate-find__intro-row">
           <p className="hint consistency-hint-block unify-candidate-find__hint">
-            표기 통일이 필요한 항목(띄어쓰기, 이형태)을 자동으로 제안합니다
+            표기 통일이 필요한 항목을 자동으로 찾아 제안합니다
             <br />
             <ConsistencyHintExample>
               <span className="consistency-hint-batang">
                 경제˅학자, 경제학자
-              </span>{' '}
-              자동 제안,{' '}
-              <span className="consistency-hint-batang">경제학자</span> 📌사용자
-              지정 →{' '}
-              <span className="consistency-hint-batang">경제뉴스</span>
-              📌자동 제안
+              </span>
+              {' → '}
+              붙여쓰기/띄어쓰기 📌표기 통일 제안
             </ConsistencyHintExample>
           </p>
           <button
@@ -1580,14 +1611,6 @@ export default function UnifyCandidateFindPanel({
               <div className="results-header results-header--total-only">
                 <div className="unify-candidate-find__findings-stack">
                   <div className="unify-candidate-find__findings-row">
-                    {morphFilterInactive ? (
-                      <span
-                        className="unify-candidate-find__morph-inactive"
-                        role="status"
-                      >
-                        형태소 필터 미적용
-                      </span>
-                    ) : null}
                     <span className="results-header__total-findings results-findings-meta">
                       <span className="results-findings-meta__label">
                         1차 표기 통일 : 추천 항목 {listItemCount} 전체 발견
@@ -1651,11 +1674,12 @@ export default function UnifyCandidateFindPanel({
                     <div className="unify-candidate-find__phase-banner-line-row">
                       {phase2PatternEnabled ? (
                         <p className="unify-candidate-find__phase-banner-line">
-                          1차 표기 통일을 완료하면 2차 표기 통일이 진행됩니다
+                          띄어쓰기 이형태를 기준으로 표기 통일 제안
                         </p>
                       ) : null}
                       {listClusters.length > 0 ? (
                         <SeriesSpacingButtons
+                          withCheckbox
                           spacing={globalListSpacing}
                           onSelect={(spacing) =>
                             handleSeriesSpacingSelect(

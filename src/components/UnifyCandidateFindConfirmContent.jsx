@@ -11,8 +11,6 @@ export default function UnifyCandidateFindConfirmContent() {
         1장을 사용합니다
       </p>
       <p className="app-dialog__confirm-line">
-        브라우저에서 형태소 분석을 진행하는 과정에서
-        <br />
         사용자의 PC 성능에 따라 10초 ~ 1분 정도 시간이 소요됩니다
       </p>
       <p className="app-dialog__confirm-line app-dialog__confirm-line--question">
