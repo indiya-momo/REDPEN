@@ -24,7 +24,6 @@ import {
   markEnterMainAfterGoogle,
   markSignupBonusNoticePending,
 } from '../../lib/signupBonusNotice.js';
-import WelcomePcBaInteractive from './WelcomePcBaInteractive.jsx';
 import WelcomeProfileOnboarding from './WelcomeProfileOnboarding.jsx';
 import { publicAssetUrl } from '../../lib/publicAssetUrl.js';
 import './welcome-pc.css';
@@ -337,9 +336,9 @@ export default function WelcomePcScreen({
             <span className="welcome-pc__perf-anc welcome-pc__perf-anc--left">
               <WelcomePcSparkle className="welcome-pc__perf-spk welcome-pc__perf-spk--big" />
             </span>
-            맞춤법과 표기 통일을 3초만에{' '}
+            맞춤법 · 외래어 · 표기 통일 검수를{' '}
             <span className="welcome-pc__perf-l2__end">
-              검수!
+              3분 만에!
               <span className="welcome-pc__perf-l2-note">(300페이지 기준)</span>
             </span>
             <span className="welcome-pc__perf-anc welcome-pc__perf-anc--right">
@@ -463,12 +462,30 @@ export default function WelcomePcScreen({
       <div className="welcome-pc__ba-showcase">
         <section className="welcome-pc__ba" aria-label="검수 전·후 예시">
           <div className="welcome-pc__ba-stage">
-            <WelcomePcBaInteractive
-              beforeSrc={WELCOME_PC_BEFORE}
-              afterSrc={WELCOME_PC_AFTER}
-              beforeAlt="검수 전 예시 — 원고"
-              afterAlt="검수 후 예시 — 맞춤법·표기 통일·본용언+보조용언 표기 하이라이트"
-            />
+            <div className="welcome-pc__ba-split">
+              <figure className="welcome-pc__ba-pane welcome-pc__ba-pane--before">
+                <img
+                  className="welcome-pc__ba-img"
+                  src={WELCOME_PC_BEFORE}
+                  width={833}
+                  height={600}
+                  alt="검수 전 예시 — 원고"
+                  loading="lazy"
+                  decoding="async"
+                />
+              </figure>
+              <figure className="welcome-pc__ba-pane welcome-pc__ba-pane--after">
+                <img
+                  className="welcome-pc__ba-img"
+                  src={WELCOME_PC_AFTER}
+                  width={833}
+                  height={600}
+                  alt="검수 후 예시 — 맞춤법·표기 통일·본용언+보조용언 표기 하이라이트"
+                  loading="lazy"
+                  decoding="async"
+                />
+              </figure>
+            </div>
           </div>
         </section>
       </div>
