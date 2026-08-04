@@ -23,10 +23,11 @@ import {
   isSpacedLeftNoiseEojeol,
 } from './unifyNoiseList.js';
 import { hangulOnlyNoise } from './unifyNoiseListData.js';
+import { isSpacedLeftAdnominalNoiseEojeol } from './unifyNoiseListAdnominalHeuristic.js';
 import { shouldRejectUnifySatelliteSpacedByPos } from './kiwiMorph/unifyExclude.js';
 import { isUnifyKiwiNoisePhase2Available } from './kiwiMorph/noiseFilterGate.js';
 
-/** 관형·수식·용언형 앞말 — 접미(@affix) 패턴의 변수(head)에서 제외 */
+/** 관형·수식·용언형 앞말 — 접미(@affix) 패턴의 변수(head)에서 제외 (닫힌 낱말) */
 export const PATTERN_RULE_HEAD_BLACKLIST = new Set([
   '여러',
   '전',
@@ -46,7 +47,7 @@ export const PATTERN_RULE_HEAD_BLACKLIST = new Set([
   '이런',
   '그런',
   '저런',
-  // 관형사·관형형·의존 수식 (명사+명사 아님)
+  // 관형사·관형형·의존 수식 (명사+명사 아님) — 닫힌 어미 휴리스틱 보완용
   '다른',
   '같은',
   '많은',
@@ -131,6 +132,7 @@ export function isPatternRuleHeadBlacklisted(head) {
   if (!h) return true;
   if (PATTERN_RULE_HEAD_BLACKLIST.has(h)) return true;
   if (hangulSyllableCount(h) < 2) return true;
+  if (isSpacedLeftAdnominalNoiseEojeol(h)) return true;
   return false;
 }
 

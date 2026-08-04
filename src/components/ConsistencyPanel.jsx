@@ -104,6 +104,7 @@ import TooltipGuide from './TooltipGuide.jsx';
  *   onUnifyCandidatePreviewGroupsChange?: (
  *     groups: import('../lib/ruleEngine.js').GroupedResult[],
  *   ) => void,
+ *   onUnifyPrimaryCompleteChange?: (complete: boolean) => void,
  *   formatPageLabel?: (systemPage: number) => string,
  *   auxiliaryVerbGuide?: {
  *     storageKey: string,
@@ -164,6 +165,7 @@ export default function ConsistencyPanel({
   selectedInstance = null,
   onSelectUnifyCandidateInstance,
   onUnifyCandidatePreviewGroupsChange,
+  onUnifyPrimaryCompleteChange,
   formatPageLabel,
   auxiliaryVerbGuide = null,
   onLiteralAddButtonClick,
@@ -345,6 +347,7 @@ export default function ConsistencyPanel({
           selectedInstance={selectedInstance}
           onSelectInstance={onSelectUnifyCandidateInstance}
           onPreviewGroupsChange={onUnifyCandidatePreviewGroupsChange}
+          onPrimaryCompleteChange={onUnifyPrimaryCompleteChange}
           formatPageLabel={formatPageLabel}
           guideSpotlight={guideSpotlight}
           onFindButtonClick={onUnifyAddButtonClick}

@@ -25,6 +25,7 @@ import {
   shouldRejectNoiseListDataSurface,
 } from './unifyNoiseListData.js';
 import { isSpacedLeftJosaNoiseEojeol } from './unifyNoiseListLeftHeuristic.js';
+import { isSpacedLeftAdnominalNoiseEojeol } from './unifyNoiseListAdnominalHeuristic.js';
 import { matchesBonBojoVerbalConnectiveHeuristic } from './bonBojoMorphPatterns.js';
 import { isUnifyJosaGluedNoiseKey } from './unifyPredicateBucket.js';
 
@@ -63,8 +64,8 @@ export function spacedVariantHitsNoiseDenylist(spacedVariant) {
 }
 
 /**
- * 띄움 왼쪽 어절 잡음 — 리스트 표면 + 짧은 체언+조사.
- * source: manual-heuristic (조사 쪽) + JSON/본보조 (표면).
+ * 띄움 왼쪽 어절 잡음 — 리스트 표면 + 짧은 체언+조사 + 관형형 어미.
+ * source: manual-heuristic (조사·관형) + JSON/본보조 (표면).
  * @param {string} eojeol
  */
 export function isSpacedLeftNoiseEojeol(eojeol) {
@@ -72,6 +73,7 @@ export function isSpacedLeftNoiseEojeol(eojeol) {
   if (!h) return false;
   if (shouldRejectByNoiseListSurface(h)) return true;
   if (isSpacedLeftJosaNoiseEojeol(h)) return true;
+  if (isSpacedLeftAdnominalNoiseEojeol(h)) return true;
   return false;
 }
 

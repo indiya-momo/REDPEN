@@ -1936,6 +1936,23 @@
   overflow-wrap: anywhere;
 }
 
+.panel-left .unify-candidate-find__phase-banner-line-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 10px;
+}
+
+.panel-left .unify-candidate-find__phase-banner-line-row .unify-candidate-find__phase-banner-line {
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+
+.panel-left .unify-candidate-find__phase-banner-line-row .unify-candidate-find__series-spacing-btns {
+  flex: 0 0 auto;
+}
+
 .panel-left .unify-candidate-find__phase-banner-conditions-block {
   display: flex;
   flex-direction: column;
