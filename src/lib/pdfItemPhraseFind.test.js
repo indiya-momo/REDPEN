@@ -95,6 +95,24 @@ describe('findPhraseHitsInPdfItems', () => {
     expect(hits[0].itemIndexes).toEqual([0, 1]);
   });
 
+  it('어절 사이 공백-only item이 있으면 「교정 표시」띄움을 잡는다', () => {
+    // 데모 PDF: 교정 + ' ' + 표시 + 에
+    // 공백 item x가 다음 어절과 가까워 세로스택 분리에 걸리면 띄움 hit 0이 된다
+    const items = [
+      item('교정', 572.5, 451, 33.2),
+      item(' ', 605.7, 451, 5.5),
+      item('표시', 609.8, 451, 33.2),
+      item('에', 643.1, 451, 16.6),
+      item('교정표시에', 496.3, 400, 83.5),
+    ];
+    const spaced = findPhraseHitsInPdfItems(items, '교정 표시');
+    expect(spaced.length).toBeGreaterThanOrEqual(1);
+    expect(spaced.some((h) => h.kind === 'line-run')).toBe(true);
+    expect(spaced.some((h) => h.itemIndexes?.includes(0))).toBe(true);
+    const glued = findPhraseHitsInPdfItems(items, '교정표시');
+    expect(glued.some((h) => h.kind === 'in-item')).toBe(true);
+  });
+
   it('이중 드로잉 차트 라벨은 xy dedupe로 1회만 센다', () => {
     const items = [
       item('경제침체(전미경제연구소)', 120, 400, 160),

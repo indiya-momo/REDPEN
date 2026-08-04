@@ -314,6 +314,14 @@ function collectSameLineItemChains(items) {
           const a = charItemIndexes[p - 1];
           const b = charItemIndexes[p];
           if (a == null || b == null || a === b) continue;
+          // 「교정」「 」「표시」처럼 공백만 있는 item이 끼면 띄움
+          // (compact에는 공백 item이 안 들어가 gap만으로는 놓칠 수 있음)
+          const lo = Math.min(a, b);
+          const hi = Math.max(a, b);
+          for (let ii = lo + 1; ii < hi; ii += 1) {
+            const mid = items[ii]?.str ?? '';
+            if (mid.length > 0 && /^\s+$/u.test(mid)) return true;
+          }
           const left = items[a];
           const right = items[b];
           const ls = left?.str ?? '';
@@ -341,8 +349,12 @@ function collectSameLineItemChains(items) {
         const gap = row.x - prev.right;
         const dx = row.x - prev.x;
         const em = Math.max(prev.fs, row.fs);
+        const prevWs = /^\s+$/u.test(prev.str);
+        const rowWs = /^\s+$/u.test(row.str);
         // 세로 스택(지도 글리프): x가 거의 같으면 가로 연쇄에 넣지 않음
-        if (Math.abs(dx) < em * 0.35) {
+        // 단, 공백-only item은 x가 다음 어절과 겹쳐도 세로 스택이 아님
+        // (데모 PDF 「교정」「 」「표시」가 여기서 끊기면 띄움 hit 0)
+        if (!prevWs && !rowWs && Math.abs(dx) < em * 0.35) {
           pushChain(chunk);
           chunk = [];
         } else if (gap > em * 2.5) {
