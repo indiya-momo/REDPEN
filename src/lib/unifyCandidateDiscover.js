@@ -1902,7 +1902,8 @@ function instancesFromOccs(occs, variant, replace, pageByNum) {
 
 /**
  * 소수형·1회만이 아니라, 출현 있는 표기 전부의 MatchInstance 그룹 —
- * PDF 하이라이트·페이지 칩용. 표기 통일 선택 시엔 틀린 표기만 + overlay.
+ * PDF 하이라이트·페이지 칩용.
+ * 표기 통일 선택 시: 틀린 표기(+ overlay)와 통일형(칩·하이라이트) 모두 포함.
  * @param {UnifySpacingCluster[]} clusters
  * @param {{
  *   registeredByKey?: Map<string, string> | null,
@@ -1923,17 +1924,19 @@ export function buildUnifyCandidatePreviewGroups(clusters, options = {}) {
     if (chosen) {
       const overlay = formatUnifySpacingDecisionOverlay(chosen, cluster);
       for (const variant of cluster.variants) {
-        if (variant === chosen) continue;
         const occs = cluster.occurrencesByVariant?.[variant] ?? [];
         if (!occs.length) continue;
+        const isChosen = variant === chosen;
         groups.push({
           find: variant,
           replace: chosen,
           label: variant,
           category: 'consistency',
           patternKind: 'compound-spacing',
-          tip: `「${chosen}」으로 통일`,
-          ...(overlay ? { overlayReplace: overlay } : {}),
+          tip: isChosen
+            ? `문서 내 「${variant}」 표기 (통일형)`
+            : `「${chosen}」으로 통일`,
+          ...(!isChosen && overlay ? { overlayReplace: overlay } : {}),
           instances: instancesFromOccs(occs, variant, chosen, pageByNum),
         });
       }

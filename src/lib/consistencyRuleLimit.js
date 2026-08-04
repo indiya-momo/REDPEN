@@ -16,7 +16,7 @@ export const MAX_CONSISTENCY_UNIFY_SLOTS = 3;
 /** 공통 항목 찾기(@ 패턴) 등록 상한 */
 export const MAX_PHRASE_SLOT_REGISTERED_ENTRIES = 1;
 
-/** 검수 제외 항목 등록 상한 */
+/** 찾기 제외 항목 등록 상한 */
 export const MAX_GLOBAL_EXCLUDE_REGISTERED_ENTRIES = 1;
 
 const COMPOUND_LITERAL_KINDS = new Set([
@@ -129,9 +129,9 @@ export function phraseSlotRegistrationBlockedMessage(current, adding = 1) {
 export function globalExcludeRegistrationBlockedMessage(current, adding = 1) {
   const max = MAX_GLOBAL_EXCLUDE_REGISTERED_ENTRIES;
   if (adding > 1) {
-    return `검수 제외 항목은 최대 ${max}항목까지 등록할 수 있습니다. (현재 ${current}항목, ${adding}항목 추가 시도)`;
+    return `찾기 제외 항목은 최대 ${max}항목까지 등록할 수 있습니다. (현재 ${current}항목, ${adding}항목 추가 시도)`;
   }
-  return `검수 제외 항목은 최대 ${max}항목까지 등록할 수 있습니다. (현재 ${current}항목)`;
+  return `찾기 제외 항목은 최대 ${max}항목까지 등록할 수 있습니다. (현재 ${current}항목)`;
 }
 
 /**

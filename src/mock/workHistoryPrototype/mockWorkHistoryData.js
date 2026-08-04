@@ -93,7 +93,7 @@ export const MOCK_CONSISTENCY_GROUPS = [
   { id: 'find', label: '여러 항목 찾기' },
   { id: 'unify', label: '표기 통일하기' },
   { id: 'commonString', label: '공통 항목 찾기' },
-  { id: 'exclude', label: '검수 제외 항목' },
+  { id: 'exclude', label: '찾기 제외 항목' },
 ];
 
 /** @type {{

@@ -27,7 +27,7 @@ export const APP_DIALOG_FEATURE_LABELS = Object.freeze(
     LITERAL_FIND_FEATURE_LABEL,
     UNIFY_FEATURE_LABEL,
     '공통 항목 찾기',
-    '검수 제외 항목',
+    '찾기 제외 항목',
     '전체 발견',
     '표기 통일 검수',
     '맞춤법 검수',

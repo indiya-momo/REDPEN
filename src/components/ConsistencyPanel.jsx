@@ -303,7 +303,7 @@ export default function ConsistencyPanel({
       return;
     }
     if (parsed.length > 1) {
-      alert('검수 제외 항목은 1항목만 등록할 수 있습니다.');
+      alert('찾기 제외 항목은 1항목만 등록할 수 있습니다.');
       return;
     }
     if (excludeRegisterFull) {
@@ -476,7 +476,7 @@ export default function ConsistencyPanel({
 
           <div className="consistency-subsection consistency-subsection--half consistency-subsection--exclude">
             <p className="printed-page-setup__title consistency-subsection-title panel-criteria-heading">
-              검수 제외 항목
+              찾기 제외 항목
             </p>
             <p className="hint consistency-hint-block">
               입력한 항목은 찾지 않습니다
@@ -490,7 +490,7 @@ export default function ConsistencyPanel({
               onChange={setGlobalExcludeInput}
               onRegister={addGlobalExcludePhrases}
               placeholder={CONSISTENCY_EXCLUDE_INPUT_PLACEHOLDER}
-              ariaLabel="검수 제외 항목(1항목)"
+              ariaLabel="찾기 제외 항목(1항목)"
               registerDisabled={excludeRegisterFull}
             />
             <ExcludePhraseList

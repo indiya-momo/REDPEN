@@ -49,7 +49,7 @@ describe('buildProjectCardViewModelFromRuleSet', () => {
       ]),
     );
     expect(card.headline).toContain('일관성 2건');
-    expect(card.headline).toContain('검수 제외 1개');
+    expect(card.headline).toContain('찾기 제외 1개');
   });
 
   it('활성 항목이 없으면 기본 headline을 쓴다', () => {

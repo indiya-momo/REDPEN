@@ -89,7 +89,7 @@ export default function ConsistencyCheckConfirmContent({
     },
     {
       key: 'exclude',
-      label: '검수 제외 항목',
+      label: '찾기 제외 항목',
       meta: findingMeta(excludeActive),
     },
   ];

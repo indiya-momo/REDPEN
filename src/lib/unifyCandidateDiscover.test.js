@@ -733,7 +733,7 @@ describe('buildUnifyCandidatePreviewGroups', () => {
     );
   });
 
-  it('붙임 선택 시 띄움 인스턴스에 →…^… 오버레이', () => {
+  it('붙임 선택 시 통일형·띄움 모두 그룹에 두고 띄움에만 →…^… 오버레이', () => {
     const clusters = discoverSpacingUnifyCandidates([
       { pageNum: 1, text: '조선시대 조선시대 조선 시대' },
     ]);
@@ -742,14 +742,20 @@ describe('buildUnifyCandidatePreviewGroups', () => {
     const groups = buildUnifyCandidatePreviewGroups(clusters, {
       registeredByKey: new Map([[cluster.key, '조선시대']]),
     });
-    expect(groups.map((g) => g.find)).toEqual(['조선 시대']);
-    expect(groups[0].overlayReplace).toBe('→조선^시대');
+    expect(groups.map((g) => g.find).sort()).toEqual(
+      ['조선 시대', '조선시대'].sort(),
+    );
+    const chosen = groups.find((g) => g.find === '조선시대');
+    const wrong = groups.find((g) => g.find === '조선 시대');
+    expect(chosen?.overlayReplace).toBeUndefined();
+    expect(chosen?.instances?.length).toBe(2);
+    expect(wrong?.overlayReplace).toBe('→조선^시대');
     expect(formatUnifySpacingDecisionOverlay('조선시대', cluster)).toBe(
       '→조선^시대',
     );
   });
 
-  it('띄움 선택 시 붙임 인스턴스에 →…∨… 오버레이', () => {
+  it('띄움 선택 시 통일형·붙임 모두 그룹에 두고 붙임에만 →…∨… 오버레이', () => {
     const clusters = discoverSpacingUnifyCandidates([
       { pageNum: 1, text: '조선시대 조선시대 조선 시대' },
     ]);
@@ -757,9 +763,14 @@ describe('buildUnifyCandidatePreviewGroups', () => {
     const groups = buildUnifyCandidatePreviewGroups(clusters, {
       registeredByKey: new Map([[cluster.key, '조선 시대']]),
     });
-    expect(groups.map((g) => g.find)).toEqual(['조선시대']);
-    expect(groups[0].overlayReplace).toBe('→조선∨시대');
-    expect(groups[0].instances?.length).toBe(2);
+    expect(groups.map((g) => g.find).sort()).toEqual(
+      ['조선 시대', '조선시대'].sort(),
+    );
+    const chosen = groups.find((g) => g.find === '조선 시대');
+    const wrong = groups.find((g) => g.find === '조선시대');
+    expect(chosen?.overlayReplace).toBeUndefined();
+    expect(wrong?.overlayReplace).toBe('→조선∨시대');
+    expect(wrong?.instances?.length).toBe(2);
   });
 
   it('선택 후에도 통일형·틀린 표기 모두 페이지 칩을 만든다', () => {
