@@ -147,9 +147,15 @@ export function matchesNoiseListMorphTail(eojeol) {
  * 예외 또는 형태소 꼬리 — discover 1차 (순환 없는 경로).
  * @param {string} eojeolOrKey
  */
+const noiseRejectCache = new Map();
+
 export function shouldRejectNoiseListDataSurface(eojeolOrKey) {
   const h = hangulOnlyNoise(eojeolOrKey);
   if (!h) return false;
-  if (UNIFY_NOISE_EXCEPTION_EOJEOLS.has(h)) return true;
-  return matchesNoiseListMorphTail(h);
+  const cached = noiseRejectCache.get(h);
+  if (cached !== undefined) return cached;
+  const reject =
+    UNIFY_NOISE_EXCEPTION_EOJEOLS.has(h) || matchesNoiseListMorphTail(h);
+  noiseRejectCache.set(h, reject);
+  return reject;
 }
