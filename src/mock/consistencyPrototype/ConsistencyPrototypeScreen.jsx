@@ -290,7 +290,7 @@ export default function ConsistencyPrototypeScreen() {
 
               <div className="consistency-subsection consistency-subsection--half consistency-subsection--exclude">
                 <p className="printed-page-setup__title consistency-subsection-title panel-criteria-heading">
-                  검수 제외 항목
+                  찾기 제외 항목
                   <span className="panel-criteria-heading-meta">(1항목)</span>
                 </p>
                 <div className="consistency-subsection__hints-area">
@@ -308,7 +308,7 @@ export default function ConsistencyPrototypeScreen() {
                   onChange={setExcludeInput}
                   onRegister={registerExclude}
                   placeholder={SPACE_INPUT_PLACEHOLDER}
-                  ariaLabel="검수 제외 항목"
+                  ariaLabel="찾기 제외 항목"
                 />
                 <ExcludePhraseList
                   phrases={excludePhrases}

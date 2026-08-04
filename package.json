@@ -1,7 +1,7 @@
 {
   "name": "pdf-publish-proofread",
   "private": true,
-  "version": "1.138",
+  "version": "1.139",
   "type": "module",
   "scripts": {
     "dev": "vite",

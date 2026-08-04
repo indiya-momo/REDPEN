@@ -105,7 +105,7 @@ function buildHeadline(counts, excludePhrases) {
   if (consistencyTotal > 0) parts.push(`일관성 ${consistencyTotal}건`);
   if (counts.auxiliary > 0) parts.push(`본보조 ${counts.auxiliary}쌍`);
   const excludeCount = (excludePhrases ?? []).filter((p) => String(p).trim()).length;
-  if (excludeCount > 0) parts.push(`검수 제외 ${excludeCount}개`);
+  if (excludeCount > 0) parts.push(`찾기 제외 ${excludeCount}개`);
   return parts.length
     ? parts.join(' · ')
     : '맞춤법·표기 통일 기준을 설정하세요';

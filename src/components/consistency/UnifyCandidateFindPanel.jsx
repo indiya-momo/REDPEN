@@ -1139,8 +1139,9 @@ export default function UnifyCandidateFindPanel({
     if (isGuestBrowseActive()) return;
     void (async () => {
       const ok = await showAppConfirm({
-        title: '표기 통일 추천',
-        message: '2차 표기 통일을 진행합니다',
+        title: '표기 통일 추천(2차)',
+        message:
+          '1차 표기 통일의 내용을 확장하여\n2차 표기 통일을 진행합니다',
         confirmLabel: '네',
         cancelLabel: '아니오',
       });
