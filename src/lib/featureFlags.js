@@ -56,6 +56,19 @@ export function isUnifyCandidateFindEnabled() {
 }
 
 /**
+ * 표기 통일 추천 — 2차 패턴 확장(@affix mismatch).
+ * - `npm run dev`: 기본 켜짐 (`VITE_FEATURE_UNIFY_PHASE2_PATTERN=false`로만 끔)
+ * - 프로덕션·Pages: 기본 꺼짐 — 1차 추천만 (`=== 'true'`일 때만 ON)
+ * @see project-docs/unify-phase2-pattern-2026-07-31.md
+ */
+export function isUnifyPhase2PatternEnabled() {
+  if (import.meta.env.DEV) {
+    return import.meta.env.VITE_FEATURE_UNIFY_PHASE2_PATTERN !== 'false';
+  }
+  return import.meta.env.VITE_FEATURE_UNIFY_PHASE2_PATTERN === 'true';
+}
+
+/**
  * 표기 통일 추천 — 조사·어간 2차 SLM 필터 (카나나 SLM + 추론 서버).
  * - 기본 꺼짐 (`VITE_UNIFY_JOSA_SLM=true` 일 때만)
  * @see project-docs/unify-josa-review-slm-sketch.md §0·§8

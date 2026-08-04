@@ -347,6 +347,7 @@ export default function MainScreen({
     useState(
       /** @type {import('../lib/ruleEngine.js').GroupedResult[]} */ ([]),
     );
+  const [unifyPrimaryComplete, setUnifyPrimaryComplete] = useState(false);
   /** 목차·표기 결과가 둘 다 있을 때 어느 패널을 보여줄지 (겹쳐 쌓지 않음) */
   const [lastConsistencyPane, setLastConsistencyPane] = useState(
     /** @type {'toc' | 'rules'} */ ('rules'),
@@ -633,6 +634,7 @@ export default function MainScreen({
     tocCheck.clearTocCheckState();
     ruleCheck.clearConsistencyCheckState();
     setUnifyCandidatePreviewResults([]);
+    setUnifyPrimaryComplete(false);
     setConsistencyFocus('rules');
     setLastConsistencyPane('rules');
   }, [tocCheck, ruleCheck]);
@@ -644,6 +646,7 @@ export default function MainScreen({
   /** 새 PDF 업로드 — 발견 리스트·표기통일 미리보기 비우고 맞춤법 탭 기본 화면 */
   const resetUiForNewPdf = useCallback(() => {
     setUnifyCandidatePreviewResults([]);
+    setUnifyPrimaryComplete(false);
     setConsistencyFocus('rules');
     setLastConsistencyPane('rules');
     setWorkTab('spelling');
@@ -2311,7 +2314,10 @@ export default function MainScreen({
                     onClick={handleConsistencyExport}
                     disabled={
                       !ruleCheck.consistencyCheckDone &&
-                      unifyCandidatePreviewResults.length === 0
+                      !(
+                        unifyPrimaryComplete &&
+                        unifyCandidatePreviewResults.length > 0
+                      )
                     }
                   >
                     검수 결과 다운로드
@@ -2532,6 +2538,7 @@ export default function MainScreen({
                   onUnifyCandidatePreviewGroupsChange={
                     setUnifyCandidatePreviewResults
                   }
+                  onUnifyPrimaryCompleteChange={setUnifyPrimaryComplete}
                   formatPageLabel={(systemPage) =>
                     pageDisplay.formatLabel(systemPage)
                   }

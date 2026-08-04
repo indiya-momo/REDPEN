@@ -5,6 +5,7 @@ import {
   UNIFY_NOISE_TAG_TEMPLATES,
   UNIFY_NOISE_VERBAL_TAILS,
   hasUnifyNoiseDenyEojeol,
+  isSpacedLeftJosaNoiseEojeol,
   matchesNoiseListMorphTail,
   shouldRejectByNoiseList,
   spacedVariantHitsNoiseDenylist,
@@ -93,7 +94,8 @@ describe('unifyNoiseList (1차 정적 리스트)', () => {
     expect(shouldRejectByNoiseList('보면 공무원')).toBe(true);
     expect(shouldRejectByNoiseList('경리 업무')).toBe(false);
     expect(shouldRejectByNoiseList('캐나다 정부')).toBe(false);
-    // 관형형 붉은 ≠ 붉+은
-    expect(shouldRejectByNoiseList('붉은 표시')).toBe(false);
+    // 조사 가드: 붉은 ≠ 붉+은 (후보는 관형형으로 DROP)
+    expect(isSpacedLeftJosaNoiseEojeol('붉은')).toBe(false);
+    expect(shouldRejectByNoiseList('붉은 표시')).toBe(true);
   });
 });

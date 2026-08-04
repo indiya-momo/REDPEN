@@ -29,8 +29,10 @@ export function isSpacedLeftJosaNoiseEojeol(eojeol) {
     if (!h.endsWith(josa) || h.length <= josa.length) continue;
     const stem = h.slice(0, -josa.length);
     const n = hangulOnlyNoise(stem).length;
-    if (n < 1 || n > 2) continue;
+    if (n < 1) continue;
+    // 대부분+의 — 예외 어절은 길이 제한 없이
     if (UNIFY_NOISE_EXCEPTION_EOJEOLS.has(stem)) return true;
+    if (n > 2) continue;
     if (n !== 1) continue;
     if (SPACED_LEFT_CASE_JOSA.has(josa)) return true;
     if (SPACED_LEFT_TOPIC_JOSA.has(josa) && SPACED_LEFT_PRONOUN_STEMS.has(stem)) {

@@ -28,8 +28,9 @@ import {
   groupPatternConditionLabelsByDirection,
   isPrimaryUnifyComplete,
 } from '../../lib/unifyPatternRule.js';
-import { showAppConfirm } from '../../lib/appDialog.js';
+import { showAppAlert, showAppConfirm } from '../../lib/appDialog.js';
 import { isGuestBrowseActive } from '../../lib/guestBrowsePolicy.js';
+import { isUnifyPhase2PatternEnabled } from '../../lib/featureFlags.js';
 import { dropJosaPlusPredicateFromGroups } from '../../lib/unifyPredicateBucket.js';
 import {
   mergeReviewedClustersIntoGroups,
@@ -93,6 +94,24 @@ function resolveSeriesChosenSpacing(group, registeredVariants, preSelected) {
     return /\s/.test(chosen) ? 'spaced' : 'glued';
   }
   return null;
+}
+
+/**
+ * 목록 전체 일괄 선택 상태. 전 항목이 같은 방향일 때만 강조, 섞이면 null.
+ * @returns {'glued' | 'spaced' | null}
+ */
+function resolveGlobalChosenSpacing(clusters, registeredVariants, preSelected) {
+  let seen = null;
+  for (const c of clusters ?? []) {
+    const key = c?.key;
+    if (!key) continue;
+    const chosen = registeredVariants.get(key) ?? preSelected.get(key);
+    if (chosen == null || chosen === '') continue;
+    const dir = /\s/.test(chosen) ? 'spaced' : 'glued';
+    if (seen == null) seen = dir;
+    else if (seen !== dir) return null;
+  }
+  return seen;
 }
 
 /**
@@ -182,7 +201,7 @@ function SeriesSpacingButtons({
   );
 }
 
-/** 보조용언 추정(검토 필요) — 목록엔 두되 완료 팝업·전체 발견 집계에서 제외 */
+/** 보조용언 추정(검토 필요) — 목록엔 두되 기본은 PDF·완료 집계에서 제외 */
 function isAuxReviewDeferredCluster(cluster) {
   return cluster?.auxReview?.status === 'review';
 }
@@ -364,6 +383,7 @@ function Phase2ConditionSummary({
  *   onPreviewGroupsChange?: (
  *     groups: import('../../lib/ruleEngine.js').GroupedResult[],
  *   ) => void,
+ *   onPrimaryCompleteChange?: (complete: boolean) => void,
  *   formatPageLabel?: (systemPage: number) => string,
  *   guideSpotlight?: boolean,
  *   onFindButtonClick?: () => void,
@@ -386,6 +406,7 @@ export default function UnifyCandidateFindPanel({
   selectedInstance = null,
   onSelectInstance,
   onPreviewGroupsChange,
+  onPrimaryCompleteChange,
   formatPageLabel = formatSystemPageLabel,
   guideSpotlight = false,
   onFindButtonClick,
@@ -507,7 +528,7 @@ export default function UnifyCandidateFindPanel({
   const findBenchRef = useRef(
     /** @type {ReturnType<typeof createUnifyFindBench> | null} */ (null),
   );
-  /** PDF 하이라이트에서 뺀 클러스터 key (기본은 체크 해제 = 미표시) */
+  /** PDF 하이라이트에서 뺀 클러스터 key (기본은 표시=체크) */
   const [hiddenPdfKeys, setHiddenPdfKeys] = useState(
     /** @type {Set<string>} */ (new Set()),
   );
@@ -773,8 +794,12 @@ export default function UnifyCandidateFindPanel({
       bench.mark('5_enrichGroups_sort');
 
       const listClusters = workingGroups.flatMap((g) => g.clusters);
-      // PDF 표시 체크 — 기본 해제. 보조용언 추정은 완료 집계에서도 제외.
-      const hidden = new Set(listClusters.map((c) => c.key));
+      // PDF 표시 체크 — 기본 체크. 보조용언 추정만 완료 집계·PDF에서 제외.
+      const hidden = new Set(
+        listClusters
+          .filter(isAuxReviewDeferredCluster)
+          .map((c) => c.key),
+      );
       const countedClusters = listClusters.filter(
         (c) => !isAuxReviewDeferredCluster(c),
       );
@@ -856,7 +881,9 @@ export default function UnifyCandidateFindPanel({
           workingGroups = sortClusterGroups(phase2.groups);
           setFindListGroups(workingGroups);
           const list2 = workingGroups.flatMap((g) => g.clusters);
-          const hidden2 = new Set(list2.map((c) => c.key));
+          const hidden2 = new Set(
+            list2.filter(isAuxReviewDeferredCluster).map((c) => c.key),
+          );
           setHiddenPdfKeys(hidden2);
           publishPreview(
             next,
@@ -1023,6 +1050,25 @@ export default function UnifyCandidateFindPanel({
     () => countUnifyListAccordionItems(grouped),
     [grouped],
   );
+  const primaryUnifyComplete = useMemo(
+    () =>
+      searched &&
+      listClusters.length > 0 &&
+      isPrimaryUnifyComplete(grouped, registeredVariants),
+    [searched, listClusters.length, grouped, registeredVariants],
+  );
+
+  useEffect(() => {
+    onPrimaryCompleteChange?.(primaryUnifyComplete);
+  }, [primaryUnifyComplete, onPrimaryCompleteChange]);
+
+  useEffect(
+    () => () => {
+      onPrimaryCompleteChange?.(false);
+    },
+    [onPrimaryCompleteChange],
+  );
+
   const phase2LiveItemCount = useMemo(
     () => countUnifyListAccordionItems(secondaryGroups),
     [secondaryGroups],
@@ -1039,8 +1085,10 @@ export default function UnifyCandidateFindPanel({
     unifyPhase === 'secondary_pairs'
       ? phase2LiveFindings
       : (phase2ResultSummary?.findings ?? 0);
+  const phase2PatternEnabled = isUnifyPhase2PatternEnabled();
   const showPhase2Header =
-    unifyPhase === 'secondary_pairs' || phase2ResultSummary != null;
+    phase2PatternEnabled &&
+    (unifyPhase === 'secondary_pairs' || phase2ResultSummary != null);
 
   /**
    * variant를 선택하여 즉시 등록 (1차 또는 2차-B).
@@ -1137,6 +1185,7 @@ export default function UnifyCandidateFindPanel({
 
   /** 2차 — 패턴 후보(증거·score)를 모아 계열 목록 + 패턴 Preview로 진입 */
   const enterPhase2 = useCallback(() => {
+    if (!isUnifyPhase2PatternEnabled()) return;
     const rules = collectPatternRulesFromRegistrations(
       registeredVariants,
       clusters,
@@ -1161,8 +1210,8 @@ export default function UnifyCandidateFindPanel({
       itemCount: countUnifyListAccordionItems(nextGroups),
       findings: sumClusterFindings(nextClusters),
     });
-    // 2차 목록도 PDF 표시 체크 기본 해제
-    setHiddenPdfKeys(new Set(nextClusters.map((c) => c.key)));
+    // 2차도 PDF 표시 기본 체크 (숨김 없음)
+    setHiddenPdfKeys(new Set());
     setUnifyPhase('secondary_pairs');
     phase2CompletePromptedRef.current = false;
 
@@ -1173,7 +1222,7 @@ export default function UnifyCandidateFindPanel({
       publishPreview(
         clusters,
         rawByKey,
-        new Set(nextClusters.map((c) => c.key)),
+        new Set(),
         slmReviewedByKey,
         predicateDropSeriesIds,
         predicateDropClusterKeys,
@@ -1257,9 +1306,18 @@ export default function UnifyCandidateFindPanel({
     if (!searched || phase2PromptedRef.current) return;
     if (!isPrimaryUnifyComplete(grouped, registeredVariants)) return;
     phase2PromptedRef.current = true;
-    // 미리 둘러보기 — 2차 진행 확인 팝업·진입 생략
+    // 미리 둘러보기 — 완료/2차 팝업 생략
     if (isGuestBrowseActive()) return;
     void (async () => {
+      // 배포·브라우저: 2차 대신 1차 종료 안내
+      if (!isUnifyPhase2PatternEnabled()) {
+        await showAppAlert({
+          title: '표기 통일 추천',
+          message:
+            '표기 통일 추천이 종료되었습니다.\n검수 결과 다운로드로 받을 수 있습니다.',
+        });
+        return;
+      }
       const ok = await showAppConfirm({
         title: '표기 통일 추천(2차)',
         message:
@@ -1278,6 +1336,7 @@ export default function UnifyCandidateFindPanel({
   ]);
 
   useEffect(() => {
+    if (!isUnifyPhase2PatternEnabled()) return;
     if (unifyPhase !== 'secondary_pairs') return;
     if (!secondaryClusters.length) {
       finishSecondary();
@@ -1403,6 +1462,17 @@ export default function UnifyCandidateFindPanel({
       pageTexts,
       registeredVariants,
     ],
+  );
+
+  /** 1차 목록 전체 붙여쓰기/띄어쓰기 (항목별 버튼으로 이후 덮어쓰기 가능) */
+  const globalListSpacing = useMemo(
+    () =>
+      resolveGlobalChosenSpacing(
+        listClusters,
+        registeredVariants,
+        preSelected,
+      ),
+    [listClusters, registeredVariants, preSelected],
   );
 
   /**
@@ -1578,9 +1648,25 @@ export default function UnifyCandidateFindPanel({
                       heading="2차 표기 통일 선택"
                     />
                   ) : (
-                    <p className="unify-candidate-find__phase-banner-line">
-                      1차 표기 통일을 완료하면 2차 표기 통일이 진행됩니다
-                    </p>
+                    <div className="unify-candidate-find__phase-banner-line-row">
+                      {phase2PatternEnabled ? (
+                        <p className="unify-candidate-find__phase-banner-line">
+                          1차 표기 통일을 완료하면 2차 표기 통일이 진행됩니다
+                        </p>
+                      ) : null}
+                      {listClusters.length > 0 ? (
+                        <SeriesSpacingButtons
+                          spacing={globalListSpacing}
+                          onSelect={(spacing) =>
+                            handleSeriesSpacingSelect(
+                              listClusters,
+                              spacing,
+                              globalListSpacing,
+                            )
+                          }
+                        />
+                      ) : null}
+                    </div>
                   )}
                 </div>
 

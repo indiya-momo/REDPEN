@@ -9,6 +9,7 @@ globs:
   - src/lib/unifyNoiseRegressionCorpus.test.js
   - scripts/harvest-unify-noise-list.mjs
   - src/lib/unifyNoiseListLeftHeuristic.js
+  - src/lib/unifyNoiseListAdnominalHeuristic.js
 alwaysApply: false
 ---
 
@@ -18,16 +19,17 @@ alwaysApply: false
 
 | 구간 | Kiwi | 하는 일 |
 |------|------|---------|
-| **런타임** (찾기·필터) | 안 씀 | `unify-noise-list.json` + 본보조 라벨 휴리스틱만 |
+| **런타임** (찾기·필터) | 안 씀 | `unify-noise-list.json` + 본보조·조사·관형형(는/던) 휴리스틱 |
 | **수확** (`npm run kiwi:harvest-noise-list`) | 씀 | 예외 어절·verbal/copula 꼬리를 JSON에 반영 |
+| **2차** (목록 후) | ready일 때만 | N+N/V+V POS — `가진`(종성ㄴ) 등 리스트 밖 관형 |
 
 ## 변경 전 체크 (필수)
 
 1. 이 변경이 `kiwi:harvest-noise-list`로 커버 가능한가? → **먼저 수확 시도**
-2. 런타임에 새 배열·정규식·조사 리스트를 추가하려 하는가? → **기본 금지**. JSON/`--add`로 足り는지 확인
+2. 런타임에 새 배열·정규식·조사 리스트를 추가하려 하는가? → **기본 금지**. JSON/`--add`로 부족하는지 확인
 3. `unifyNoiseListData.js`에는 **JSON에서 파생된 것 + 꼬리 매칭만**. 하드코딩 품사/조사 휴리스틱 금지
-4. 불가피한 런타임 휴리스틱은 `unifyNoiseList.js`(또는 LeftHeuristic)에만, 주석에 `source: manual-heuristic`과 이유를 남긴다
-5. **`unifyNoiseRegressionCorpus.js` KEEP/DROP을 갱신·통과** — 캐나다/붉은형 회귀 방지
+4. 불가피한 런타임 휴리스틱은 `unifyNoiseList.js` / `LeftHeuristic` / `AdnominalHeuristic`에만, 주석에 `source: manual-heuristic`과 이유를 남긴다
+5. **`unifyNoiseRegressionCorpus.js` KEEP/DROP을 갱신·통과** — 캐나다/붉은형 회귀 방지 (`가진 사람`은 `DROP_KIWI_ADNOMINAL`)
 
 ## 회귀 코퍼스
 

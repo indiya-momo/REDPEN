@@ -9,6 +9,7 @@ import {
   isUnifyJosaSlmReviewEnabled,
   isUnifyKiwiJosaEnabled,
   isUnifyKiwiNoiseFilterEnabled,
+  isUnifyPhase2PatternEnabled,
   isUnifyPredicateSlmReviewEnabled,
   isUnifyStdictPosReviewEnabled,
 } from './featureFlags.js';
@@ -20,6 +21,7 @@ describe('featureFlags', () => {
   const prevProjectHub = import.meta.env.VITE_FEATURE_MYPAGE_PROJECT_HUB;
   const prevLoanword = import.meta.env.VITE_FEATURE_LOANWORD_CONVERTER;
   const prevUnifyCandidate = import.meta.env.VITE_FEATURE_UNIFY_CANDIDATE_FIND;
+  const prevUnifyPhase2 = import.meta.env.VITE_FEATURE_UNIFY_PHASE2_PATTERN;
   const prevJosaSlm = import.meta.env.VITE_UNIFY_JOSA_SLM;
   const prevKiwiJosa = import.meta.env.VITE_UNIFY_KIWI_JOSA;
   const prevKiwiBoundary = import.meta.env.VITE_SPELLING_KIWI_BOUNDARY;
@@ -34,6 +36,7 @@ describe('featureFlags', () => {
     import.meta.env.VITE_FEATURE_MYPAGE_PROJECT_HUB = prevProjectHub;
     import.meta.env.VITE_FEATURE_LOANWORD_CONVERTER = prevLoanword;
     import.meta.env.VITE_FEATURE_UNIFY_CANDIDATE_FIND = prevUnifyCandidate;
+    import.meta.env.VITE_FEATURE_UNIFY_PHASE2_PATTERN = prevUnifyPhase2;
     import.meta.env.VITE_UNIFY_JOSA_SLM = prevJosaSlm;
     import.meta.env.VITE_UNIFY_KIWI_JOSA = prevKiwiJosa;
     import.meta.env.VITE_SPELLING_KIWI_BOUNDARY = prevKiwiBoundary;
@@ -133,6 +136,20 @@ describe('featureFlags', () => {
     expect(isUnifyPredicateSlmReviewEnabled()).toBe(false);
     import.meta.env.VITE_UNIFY_PREDICATE_SLM = 'true';
     expect(isUnifyPredicateSlmReviewEnabled()).toBe(true);
+  });
+
+  it('표기 통일 2차 패턴 — DEV 기본 ON, prod 기본 OFF', () => {
+    import.meta.env.DEV = true;
+    import.meta.env.VITE_FEATURE_UNIFY_PHASE2_PATTERN = undefined;
+    expect(isUnifyPhase2PatternEnabled()).toBe(true);
+    import.meta.env.VITE_FEATURE_UNIFY_PHASE2_PATTERN = 'false';
+    expect(isUnifyPhase2PatternEnabled()).toBe(false);
+
+    import.meta.env.DEV = false;
+    import.meta.env.VITE_FEATURE_UNIFY_PHASE2_PATTERN = undefined;
+    expect(isUnifyPhase2PatternEnabled()).toBe(false);
+    import.meta.env.VITE_FEATURE_UNIFY_PHASE2_PATTERN = 'true';
+    expect(isUnifyPhase2PatternEnabled()).toBe(true);
   });
 
   it('표준국어대사전 품사 2차는 VITE_UNIFY_STDICT=true 일 때만 켜진다', () => {
