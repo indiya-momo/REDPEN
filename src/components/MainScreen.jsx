@@ -643,15 +643,14 @@ export default function MainScreen({
     ruleCheck.clearSpellingCheckState();
   }, [ruleCheck]);
 
-  /** 새 PDF 업로드 — 발견 리스트·표기통일 미리보기 비우고 맞춤법 탭 기본 화면 */
+  /** 새 PDF 업로드 — 발견 리스트·표기통일 미리보기만 비우고 현재 작업 탭은 유지 */
   const resetUiForNewPdf = useCallback(() => {
     setUnifyCandidatePreviewResults([]);
     setUnifyPrimaryComplete(false);
     setConsistencyFocus('rules');
     setLastConsistencyPane('rules');
-    setWorkTab('spelling');
-    ruleCheck.syncSelectionForTab('spelling');
-  }, [ruleCheck]);
+    ruleCheck.syncSelectionForTab(workTab);
+  }, [ruleCheck, workTab]);
   resetUiForNewPdfRef.current = resetUiForNewPdf;
 
   const prevActiveSetIdRef = useRef(null);

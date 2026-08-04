@@ -10,6 +10,7 @@ globs:
   - scripts/harvest-unify-noise-list.mjs
   - src/lib/unifyNoiseListLeftHeuristic.js
   - src/lib/unifyNoiseListAdnominalHeuristic.js
+  - src/lib/unifyNoiseListLexicalHeuristic.js
 alwaysApply: false
 ---
 
@@ -30,6 +31,7 @@ alwaysApply: false
 3. `unifyNoiseListData.js`에는 **JSON에서 파생된 것 + 꼬리 매칭만**. 하드코딩 품사/조사 휴리스틱 금지
 4. 불가피한 런타임 휴리스틱은 `unifyNoiseList.js` / `LeftHeuristic` / `AdnominalHeuristic`에만, 주석에 `source: manual-heuristic`과 이유를 남긴다
 5. **`unifyNoiseRegressionCorpus.js` KEEP/DROP을 갱신·통과** — 캐나다/붉은형 회귀 방지 (`가진 사람`은 `DROP_KIWI_ADNOMINAL`)
+6. **예외 ≥70** → 테스트가 깨지며 알람. **사용자에게 알리고** 서버 C→D3 / DEV 2차 boot 재검토 (100이 아니라 70). `--add`만 하고 넘어가지 말 것.
 
 ## 회귀 코퍼스
 

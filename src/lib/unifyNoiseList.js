@@ -26,6 +26,10 @@ import {
 } from './unifyNoiseListData.js';
 import { isSpacedLeftJosaNoiseEojeol } from './unifyNoiseListLeftHeuristic.js';
 import { isSpacedLeftAdnominalNoiseEojeol } from './unifyNoiseListAdnominalHeuristic.js';
+import {
+  isSpacedAdverbHiNoiseEojeol,
+  isSpacedClosedConjunctionNoiseEojeol,
+} from './unifyNoiseListLexicalHeuristic.js';
 import { matchesBonBojoVerbalConnectiveHeuristic } from './bonBojoMorphPatterns.js';
 import { isUnifyJosaGluedNoiseKey } from './unifyPredicateBucket.js';
 
@@ -64,8 +68,9 @@ export function spacedVariantHitsNoiseDenylist(spacedVariant) {
 }
 
 /**
- * 띄움 왼쪽 어절 잡음 — 리스트 표면 + 짧은 체언+조사 + 관형형 어미.
- * source: manual-heuristic (조사·관형) + JSON/본보조 (표면).
+ * 띄움 어절 잡음 — 리스트 표면 + 조사·관형·접속·부사(-히).
+ * 왼쪽·오른쪽 동일 적용 ({@link shouldRejectByNoiseList}).
+ * source: manual-heuristic (조사·관형·접속·-히) + JSON/본보조 (표면).
  * @param {string} eojeol
  */
 export function isSpacedLeftNoiseEojeol(eojeol) {
@@ -74,8 +79,13 @@ export function isSpacedLeftNoiseEojeol(eojeol) {
   if (shouldRejectByNoiseListSurface(h)) return true;
   if (isSpacedLeftJosaNoiseEojeol(h)) return true;
   if (isSpacedLeftAdnominalNoiseEojeol(h)) return true;
+  if (isSpacedClosedConjunctionNoiseEojeol(h)) return true;
+  if (isSpacedAdverbHiNoiseEojeol(h)) return true;
   return false;
 }
+
+/** @deprecated 이름만 왼쪽 — 실제로는 좌우 공통. {@link isSpacedLeftNoiseEojeol} */
+export const isSpacedEojeolNoise = isSpacedLeftNoiseEojeol;
 
 /**
  * 1차 정적 리스트·본보조만 (조사끼임 붙임키 휴리스틱 제외).
@@ -103,7 +113,8 @@ export function shouldRejectByNoiseListEojeol(eojeolOrKey) {
 }
 
 /**
- * 1차 리스트 — 띄움 이형태(왼쪽·키)가 잡음이면 true.
+ * 1차 리스트 — 띄움 이형태(왼쪽·오른쪽·키)가 잡음이면 true.
+ * 예외 어절·표면 꼬리·조사·관형 휴리스틱은 **모든 띄움 칸**에 동일 적용.
  * @param {string} spacedVariant
  * @param {string} [clusterKey]
  */
@@ -118,13 +129,10 @@ export function shouldRejectByNoiseList(spacedVariant, clusterKey = '') {
     const alone = hangulOnlyNoise(spacedVariant) || hangulOnlyNoise(clusterKey);
     return alone ? shouldRejectByNoiseListEojeol(alone) : false;
   }
-  const left = hangulOnlyNoise(parts[0]);
-  if (left && (shouldRejectByNoiseListEojeol(left) || isSpacedLeftNoiseEojeol(left))) {
-    return true;
-  }
-  for (let i = 1; i < parts.length; i++) {
-    const p = hangulOnlyNoise(parts[i]);
-    if (p && shouldRejectByNoiseListSurface(p)) return true;
+  for (const part of parts) {
+    const h = hangulOnlyNoise(part);
+    if (!h) continue;
+    if (shouldRejectByNoiseListEojeol(h) || isSpacedLeftNoiseEojeol(h)) return true;
   }
   const key = hangulOnlyNoise(clusterKey) || hangulOnlyNoise(parts.join(''));
   if (key && shouldRejectByNoiseListSurface(key)) return true;

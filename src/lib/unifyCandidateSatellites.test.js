@@ -211,7 +211,7 @@ describe('groupSortAndFillSatellites', () => {
     );
   });
 
-  it('가치평가 충돌이 있으면 가치평가에 위성은 흡수한다', () => {
+  it('가치평가 충돌 — 가치평가에 위성은 잡음 반대로 미편입', () => {
     const conflict = [
       makeCluster({
         key: '가치평가',
@@ -244,12 +244,13 @@ describe('groupSortAndFillSatellites', () => {
     const groups = groupSortAndFillSatellites(conflict, rawByKey);
     const series = groups.find((g) => g.type === 'series' && g.affix === '가치');
     expect(series).toBeTruthy();
+    // 반대 띄움「가치 평가에」는 평가(평+가)·에 휴리스틱으로 거부 → 위성 미편입
     expect(series.clusters.find((c) => c.key === '가치평가에')).toBeUndefined();
     const hit = series.clusters.find((c) => c.key === '가치평가');
     expect(hit?.kind).toBe('conflict');
     expect(hit?.variants.some((v) => v.includes('에'))).toBe(false);
-    expect(hit?.totalCount).toBe(6);
-    expect(hit?.counts.가치평가).toBe(2);
+    expect(hit?.totalCount).toBe(5);
+    expect(hit?.counts.가치평가).toBe(1);
   });
 
   it('경기@ 위성 둔화다·둔화라·부양금·부양책은 최소단위로 합친다', () => {

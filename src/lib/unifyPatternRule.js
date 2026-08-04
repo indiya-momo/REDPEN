@@ -152,9 +152,13 @@ export function passesPatternRuleUnifyFilter(matchedText) {
   // discover와 동일: 정적 리스트·본보조만 (캐나다정부 ≠ 조사끼임)
   if (shouldRejectByNoiseListSurface(key)) return false;
   if (/\s/.test(cleaned)) {
+    // 띄움 좌우 — 예외·꼬리·조사·관형 (shouldRejectByNoiseList와 동일)
     if (spacedVariantHitsNoiseDenylist(cleaned)) return false;
-    const left = hangulOnlyNoise(cleaned.trim().split(/\s+/).filter(Boolean)[0]);
-    if (left && isSpacedLeftNoiseEojeol(left)) return false;
+    const parts = cleaned.trim().split(/\s+/).filter(Boolean);
+    for (const part of parts) {
+      const h = hangulOnlyNoise(part);
+      if (h && isSpacedLeftNoiseEojeol(h)) return false;
+    }
   }
   return true;
 }
