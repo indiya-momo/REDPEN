@@ -13,18 +13,22 @@
 | `typo.dict` | 미사용 (오타 교정 금지) |
 | `ruleEngine` regex 코어 | 변경 없음 (베타 freeze). 맞춤법 쪽은 **매칭 후 필터**만 |
 | 런타임 | 시나리오 C 서버 analyze 우선, DEV ping 실패 시 wasm 폴백 |
-| **부트** | 표기통일 잡음 제외가 `isKiwiReady()`에만 의존하므로 **플래그와 무관하게** `bootKiwiIfNeeded` 시도. 통일 찾기(`buildUnifyOccurrenceIndexAsync`)에서도 한 번 더 await |
+| **부트** | `shouldBootKiwi()` = JOSA \|\| BOUNDARY \|\| NOISE_FILTER. 통일 찾기에서도 await. 상세: `unify-kiwi-noise-filter-b-design-2026-08-04.md` |
 
 ### 플래그
 
 | 환경 변수 | 기본 | 영향 |
 |-----------|------|------|
-| (부트) | 항상 시도 | 서버 ping → DEV면 wasm. **없으면** 경제학상·경제학이 등이 heuristic으로 목록에 남음 |
+| (부트) | `shouldBootKiwi` OR | JOSA \|\| BOUNDARY \|\| **NOISE_FILTER** — 세션당 1회 |
 | `VITE_UNIFY_KIWI_JOSA` | OFF | 조사 리뷰 등 **플래그 경로**의 Kiwi 조사 strip |
-| `VITE_SPELLING_KIWI_BOUNDARY` | OFF | 맞춤법/외래어 히트 + 표기통일 **칩·하이라이트** 경계 게이트 |
+| `VITE_SPELLING_KIWI_BOUNDARY` | OFF | 맞춤법/외래어 히트 + 표기통일 **칩·하이라이트** 경계 게이트 · **대량 surface prefetch** |
+| **`VITE_UNIFY_KIWI_NOISE_FILTER`** | 웹앱 **기본 OFF** (`=== 'true'`만 ON) | 오픈베타: 사용자 찾기·검수에 미사용. Node/CI·배치(리스트 등록)용. 유료·서버 C 후 웹앱 재연결. 상세: `unify-kiwi-noise-filter-b-design-2026-08-04.md` |
 | `VITE_KIWI_ANALYZE_ENDPOINT` | (선택) | 외부 analyze URL. 미설정 시 DEV `/api/kiwi/analyze` |
 
-> 아래 **「Kiwi 준비 시 항상」** 항목은 플래그와 무관하게 `isKiwiReady()`일 때만 동작한다.
+> **NOISE_FILTER**는 JOSA/BOUNDARY와 독립. 오픈베타 웹앱에서는 셋 다 기본 OFF → `shouldBootKiwi` false → wasm 미로드.
+> NOISE_FILTER ON · Kiwi 미ready → 휴리스틱 폴백 + UI「형태소 필터 미적용」.
+
+> 아래 **「Kiwi 준비 시」** 잡음 제외는 `isUnifyKiwiNoiseMorphActive()` (= NOISE_FILTER && ready)일 때만.
 
 ---
 
@@ -126,6 +130,7 @@ DEV는 서버 모드일 때 스캔 앞단 wasm 강제 로드를 하지 않는다
 | `주식 시장` / `사실상 시장`(NNG+XSN) | 명사+명사 | **유지** |
 | `안에 시장` / `점을 시장` / `후의 시장`(NNG+조사) | 조사 부착 → 명사복합 아님 | **제외** |
 | `보통 시장` / `또는 시장` / `말해 시장` / `손쉽게 시장` | 둘 다 아님 | **제외** |
+| `대부분 공무원` / `일부 시장` | `UNIFY_NON_NOUN_COMPOUND_EOJEOLS` (Kiwi NNG여도) | **제외** |
 | dictPos=`noun` | 명사+명사만 | 동사+동사 위성도 제외 |
 | dictPos=`predicate` | 동사+동사만 (`VV`/`VX`/`XSV`, 형용사 VA 제외) | 명사+명사 위성도 제외 |
 | 어절 분석 실패(unknown) | — | **유지**(fail-open). 명사·동사 양쪽에 fail-open을 겹치지 않음 |

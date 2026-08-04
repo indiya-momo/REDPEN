@@ -14,13 +14,12 @@ export async function loadJosaSlmRunnerIfEnabled() {
     './runner/serverRunner.js'
   );
   const timeoutRaw = String(import.meta.env.VITE_UNIFY_JOSA_SLM_TIMEOUT_MS ?? '').trim();
-  const timeoutMs = timeoutRaw
-    ? Number(timeoutRaw)
-    : import.meta.env.DEV
-      ? 180_000
-      : 15_000;
+  // DEV도 기본 15s — 카나나 미기동 시 180s×N 대기 방지 (명시 env로만 늘림)
+  const timeoutMs = timeoutRaw ? Number(timeoutRaw) : 15_000;
   return {
-    runner: createServerRunner({ timeoutMs: Number.isFinite(timeoutMs) ? timeoutMs : 180_000 }),
+    runner: createServerRunner({
+      timeoutMs: Number.isFinite(timeoutMs) ? timeoutMs : 15_000,
+    }),
     slmModel: DEFAULT_JOSA_SLM_MODEL,
   };
 }

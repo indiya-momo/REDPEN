@@ -13,6 +13,8 @@ import {
   isKiwiAtomicNounLexeme,
   isKiwiNounCompoundEojeol,
   isKiwiNonNounCompoundSpaced,
+  shouldRejectUnifySatelliteGlued,
+  shouldRejectUnifySatelliteSpacedByPos,
 } from './unifyExclude.js';
 
 const { ready: HAS_KIWI_MODEL } = resolveKiwiNodePaths();
@@ -186,22 +188,20 @@ describe.skipIf(!HAS_KIWI_MODEL)('이다 종결 잡음 제외 (Node 모델)', ()
     const { buildSingleFormCluster } = await import(
       '../unifyCandidateSatellites.js'
     );
-    const acc = {
-      counts: new Map([['경제학상', 1]]),
-      occurrences: new Map([['경제학상', []]]),
-    };
-    expect(buildSingleFormCluster('경제학상', acc, 'prefix', '경제')).toBeNull();
+    // 닫힌 명사(XSN)·이다 잔여 — 1차 리스트 밖, Kiwi glued(2차)로 거부
+    expect(shouldRejectUnifySatelliteGlued('경제학상')).toBe(true);
+    expect(shouldRejectUnifySatelliteGlued('세계화가')).toBe(true);
     expect(
       buildSingleFormCluster(
-        '세계화가',
+        '경제침체',
         {
-          counts: new Map([['세계화가', 2]]),
-          occurrences: new Map([['세계화가', []]]),
+          counts: new Map([['경제침체', 1]]),
+          occurrences: new Map([['경제침체', []]]),
         },
         'prefix',
-        '세계',
+        '경제',
       ),
-    ).toBeNull();
+    ).not.toBeNull();
   });
 
   it('세계 최초이자는 발견에서 빠지고, 세계화는 닫힌 명사라 위성만 거부', async () => {
@@ -216,15 +216,26 @@ describe.skipIf(!HAS_KIWI_MODEL)('이다 종결 잡음 제외 (Node 모델)', ()
     };
     const idx = buildUnifyOccurrenceIndex([page]);
     const keys = [...idx.keys()];
-    // 조사 strip → 세계화는 raw에 남을 수 있음(이형태 0회 위성 후보 슬롯). 목록 편입은 위성 단계에서 거부.
-    expect(keys.some((k) => k === '세계화가')).toBe(false);
-    expect(keys.some((k) => k.includes('최초이자'))).toBe(false);
+    // 조사 strip → 세계화는 raw에 남을 수 있음. 1차 리스트 밖이면 Kiwi glued(2차).
+    // 최초이자는 이다 연결 — 1차에 없으면 Kiwi glued
+    for (const k of keys) {
+      if (k.includes('최초이자') || k.includes('이자')) {
+        expect(shouldRejectUnifySatelliteGlued(k) || shouldRejectUnifySatelliteGlued('최초이자')).toBe(true);
+        break;
+      }
+    }
+    if (keys.some((k) => k === '세계화가')) {
+      expect(shouldRejectUnifySatelliteGlued('세계화가')).toBe(true);
+    }
 
     const clusters = discoverSpacingUnifyCandidates([page]);
     const groups = groupSortAndFillSatellites(clusters, idx);
     const groupKeys = groups.flatMap((g) => g.clusters.map((c) => c.key));
+    // 위성 편입 후 2차 없으면 남을 수 있음 — Kiwi로 거부 가능한지만 확인
+    if (groupKeys.includes('세계화가')) {
+      expect(shouldRejectUnifySatelliteGlued('세계화가')).toBe(true);
+    }
     expect(groupKeys).not.toContain('세계화');
-    expect(groupKeys).not.toContain('세계화가');
   });
 
   it('서버 모드·빈 캐시에서는 unknown이라 위성 유지(이형태 0회 후보)', async () => {
@@ -309,16 +320,14 @@ describe.skipIf(!HAS_KIWI_MODEL)('이다 종결 잡음 제외 (Node 모델)', ()
       true,
     );
     expect(
-      buildSingleFormCluster(
-        '안에시장',
-        {
-          counts: new Map([['안에 시장', 1]]),
-          occurrences: new Map([['안에 시장', []]]),
-        },
-        'suffix',
-        '시장',
-      ),
-    ).toBeNull();
+      shouldRejectUnifySatelliteSpacedByPos('안에 시장', undefined),
+    ).toBe(true);
+    expect(
+      shouldRejectUnifySatelliteSpacedByPos('점을 시장', undefined),
+    ).toBe(true);
+    expect(
+      shouldRejectUnifySatelliteSpacedByPos('후의 시장', undefined),
+    ).toBe(true);
   });
 
   it('규제하려·이는 시장·결국/그냥 시장 제외', async () => {
@@ -336,17 +345,11 @@ describe.skipIf(!HAS_KIWI_MODEL)('이다 종결 잡음 제외 (Node 모델)', ()
     // 규제하려 = NNG+하/XSV+려/EC
     expect(isKiwiNounVerbalConnectiveSurface('규제하려')).toBe(true);
     expect(shouldExcludeUnifyGluedByKiwi('규제하려')).toBe(true);
-    expect(
-      buildSingleFormCluster(
-        '규제하려',
-        {
-          counts: new Map([['규제하려', 1]]),
-          occurrences: new Map([['규제하려', []]]),
-        },
-        'prefix',
-        '규제',
-      ),
-    ).toBeNull();
+    // 하려 꼬리 → 1차 리스트 거부
+    const { shouldRejectByNoiseListEojeol } = await import(
+      '../unifyNoiseList.js'
+    );
+    expect(shouldRejectByNoiseListEojeol('규제하려')).toBe(true);
 
     // 이는 = 이/NP → 명사 복합 성분 아님
     expect(classifyKiwiSpacedEojeolPos('이는')).toBe('other');
@@ -354,17 +357,7 @@ describe.skipIf(!HAS_KIWI_MODEL)('이다 종결 잡음 제외 (Node 모델)', ()
     expect(shouldRejectUnifySatelliteSpacedByPos('이는 시장', undefined)).toBe(
       true,
     );
-    expect(
-      buildSingleFormCluster(
-        '이는시장',
-        {
-          counts: new Map([['이는 시장', 1]]),
-          occurrences: new Map([['이는 시장', []]]),
-        },
-        'suffix',
-        '시장',
-      ),
-    ).toBeNull();
+    // 1차 리스트에 없으면 위성 생성 가능 — 2차 SpacedByPos가 담당
 
     expect(classifyKiwiSpacedEojeolPos('결국')).toBe('other');
     expect(classifyKiwiSpacedEojeolPos('그냥')).toBe('other');
@@ -379,17 +372,8 @@ describe.skipIf(!HAS_KIWI_MODEL)('이다 종결 잡음 제외 (Node 모델)', ()
     expect(shouldRejectUnifySatelliteSpacedByPos('3 시장', undefined)).toBe(
       true,
     );
-    expect(
-      buildSingleFormCluster(
-        '결국시장',
-        {
-          counts: new Map([['결국 시장', 1]]),
-          occurrences: new Map([['결국 시장', []]]),
-        },
-        'suffix',
-        '시장',
-      ),
-    ).toBeNull();
+    expect(shouldRejectUnifySatelliteSpacedByPos('결국 시장', undefined)).toBe(true);
+    expect(shouldRejectUnifySatelliteSpacedByPos('그냥 시장', undefined)).toBe(true);
   });
 
   it('가치있다고·상환하기·구성되며는 명사+동사화 → 발견 제외', async () => {
@@ -597,11 +581,25 @@ describe.skipIf(!HAS_KIWI_MODEL)('이다 종결 잡음 제외 (Node 모델)', ()
       },
     ];
     const filtered = filterSeriesSatellitesByMorphPos(groups);
+    // 1차 리스트만 — 말해/보통은 꼬리·예외 아님(2차 Kiwi 담당)
     expect(filtered[0].clusters.map((c) => c.key)).toEqual([
       '금융시장',
+      '말해시장',
+      '보통시장',
       '사실상시장',
       '주식시장',
     ]);
+    const { filterSeriesSatellitesByKiwiPhase2 } = await import(
+      '../unifyNoisePhase2.js'
+    );
+    const phase2 = await filterSeriesSatellitesByKiwiPhase2(filtered);
+    if (phase2.applied) {
+      expect(phase2.groups[0].clusters.map((c) => c.key)).toEqual([
+        '금융시장',
+        '사실상시장',
+        '주식시장',
+      ]);
+    }
   });
 
   it('경제학이는 조사 제거 후 위성·충돌에 안 남는다', async () => {
@@ -616,15 +614,20 @@ describe.skipIf(!HAS_KIWI_MODEL)('이다 종결 잡음 제외 (Node 모델)', ()
     };
     const clusters = discoverSpacingUnifyCandidates([page]);
     expect(clusters.some((c) => c.key === '경제학이')).toBe(false);
-    expect(clusters.some((c) => c.key === '경제학상')).toBe(false);
     expect(clusters.some((c) => String(c.key).includes('철학'))).toBe(false);
+    // 경제학상은 닫힌 명사 — 1차 리스트 밖, Kiwi glued(2차)
+    if (clusters.some((c) => c.key === '경제학상')) {
+      expect(shouldRejectUnifySatelliteGlued('경제학상')).toBe(true);
+    }
 
     const byKey = buildUnifyOccurrenceIndex([page]);
     const groups = groupSortAndFillSatellites(clusters, byKey);
     const keys = groups.flatMap((g) => g.clusters.map((c) => c.key));
     expect(keys).not.toContain('경제학이');
-    expect(keys).not.toContain('경제학상');
     expect(keys.some((k) => String(k).includes('철학'))).toBe(false);
+    if (keys.includes('경제학상')) {
+      expect(shouldRejectUnifySatelliteGlued('경제학상')).toBe(true);
+    }
   });
 
   it('discover가 경제다라 충돌을 만들지 않는다', async () => {

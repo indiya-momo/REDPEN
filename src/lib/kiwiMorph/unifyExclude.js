@@ -6,6 +6,13 @@
 import { analyzeLine } from './analyze.js';
 import { isJosaTag, isSkippableTrailingTag } from './tokens.js';
 import { isKiwiBoundaryStemTag } from './boundaryGate.js';
+import {
+  UNIFY_NOISE_DENY_EOJEOLS,
+  UNIFY_NON_NOUN_COMPOUND_EOJEOLS,
+  hasUnifyNoiseDenyEojeol,
+} from '../unifyNoiseListData.js';
+
+export { UNIFY_NON_NOUN_COMPOUND_EOJEOLS };
 
 /**
  * @param {string} tag
@@ -274,6 +281,7 @@ export function shouldRejectUnifySatelliteGlued(surface, opts = {}) {
  * `이는`(이/NP+는/JX)처럼 대명사만 있는 어절은 명사 복합 성분이 아님.
  * `안에`·`점을`·`후의`처럼 조사가 붙은 어절도 복합 성분이 아님
  * (조사 제거 후 NNG만 보면 오탐).
+ * `대부분` 등은 Kiwi가 NNG로 줘도 복합 성분이 아님 → {@link UNIFY_NOISE_DENY_EOJEOLS}.
  * @param {string} eojeol
  * @param {{ kiwi?: { ready?: () => boolean, analyze: Function } | null }} [opts]
  * @returns {boolean} 분석 불가면 true(fail-open — 명사로 간주)
@@ -284,7 +292,10 @@ export function isKiwiNounCompoundEojeol(eojeol, opts = {}) {
     .trim();
   if (!part) return false;
   // 숫자·기호만(한글 없음) → 명사 복합 성분 아님
-  if (!hangulOnly(part)) return false;
+  const hangul = hangulOnly(part);
+  if (!hangul) return false;
+  // Kiwi NNG 오통과 — 부사·수량·대용 (대부분 공무원 등)
+  if (UNIFY_NOISE_DENY_EOJEOLS.has(hangul)) return false;
   const tokens = analyzeTokens(part, opts);
   if (!tokens) return true;
   // 조사 부착 어절은 띄움 명사복합 성분이 아님
@@ -298,6 +309,12 @@ export function isKiwiNounCompoundEojeol(eojeol, opts = {}) {
     return b === 'NNG' || b === 'NNP' || b === 'SL' || b === 'SH';
   });
 }
+
+/**
+ * Kiwi가 NNG로 태깅해도 표기통일 띄움 「명사+명사」 성분이 아닌 어절.
+ * 브라우저 1차: {@link UNIFY_NOISE_DENY_EOJEOLS} (`unify-noise-list.json`).
+ * 조사·용언 활용 등 미등록분은 2차 Kiwi morph가 담당.
+ */
 
 /** 동사 어간 태그 (VV·보조용언·동사화 접미사). 형용사 VA/XSA 제외. */
 const KIWI_VERB_STEM_TAGS = new Set(['VV', 'VX', 'XSV']);
@@ -350,6 +367,11 @@ export function isKiwiNonNounCompoundSpaced(spacedVariant, opts = {}) {
     .split(/\s+/)
     .filter(Boolean);
   if (parts.length < 2) return false;
+  if (
+    parts.some((p) => hasUnifyNoiseDenyEojeol(p))
+  ) {
+    return true;
+  }
   return parts.some((p) => !isKiwiNounCompoundEojeol(p, opts));
 }
 
@@ -380,7 +402,9 @@ export function classifyKiwiSpacedEojeolPos(eojeol, opts = {}) {
     .normalize('NFC')
     .trim();
   if (!part) return 'other';
-  if (!hangulOnly(part)) return 'other';
+  const hangul = hangulOnly(part);
+  if (!hangul) return 'other';
+  if (hasUnifyNoiseDenyEojeol(hangul)) return 'other';
   const tokens = analyzeTokens(part, opts);
   if (!tokens) return 'unknown';
 
@@ -431,6 +455,12 @@ export function shouldRejectUnifySatelliteSpacedByPos(
       .split(/\s+/)
       .filter(Boolean);
     if (parts.length < 2) return false;
+    // denylist는 Kiwi 실패(fail-open)와 무관하게 제외
+    if (
+      parts.some((p) => hasUnifyNoiseDenyEojeol(p))
+    ) {
+      return true;
+    }
     const classes = parts.map((p) => classifyKiwiSpacedEojeolPos(p, opts));
     if (classes.some((c) => c === 'unknown')) return false;
     const allNoun = classes.every((c) => c === 'noun');

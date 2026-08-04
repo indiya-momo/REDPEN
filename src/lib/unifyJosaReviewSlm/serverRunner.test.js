@@ -49,19 +49,24 @@ describe('createServerRunner', () => {
   });
 
   it('HTTP 응답 JSON을 파싱한다', async () => {
-    const fetchImpl = vi.fn(async () => ({
-      ok: true,
-      json: async () => ({
-        choices: [
-          {
-            message: {
-              content:
-                '{"id":"역학은","isBoundary":true,"kind":"josa_or_suffix","confidence":"high"}',
+    const fetchImpl = vi.fn(async (url) => {
+      if (String(url).includes('/models')) {
+        return { ok: true, json: async () => ({ data: [] }) };
+      }
+      return {
+        ok: true,
+        json: async () => ({
+          choices: [
+            {
+              message: {
+                content:
+                  '{"id":"역학은","isBoundary":true,"kind":"josa_or_suffix","confidence":"high"}',
+              },
             },
-          },
-        ],
-      }),
-    }));
+          ],
+        }),
+      };
+    });
     const runner = createServerRunner({
       endpoint: 'http://127.0.0.1:8000/v1',
       fetchImpl,
@@ -77,6 +82,29 @@ describe('createServerRunner', () => {
     ]);
     expect(result.kind).toBe('josa_or_suffix');
     expect(result.confidence).toBe('high');
+    expect(fetchImpl).toHaveBeenCalled();
+  });
+
+  it('서버 ping 실패 시 전 항목 uncertain fallback (긴 timeout 회피)', async () => {
+    const fetchImpl = vi.fn(async () => {
+      throw new Error('connect refused');
+    });
+    const runner = createServerRunner({
+      endpoint: 'http://127.0.0.1:8000/v1',
+      fetchImpl,
+      timeoutMs: 180_000,
+    });
+    const results = await runner.reviewBatch([
+      {
+        id: '역학은',
+        variant: '역학 은',
+        gluedVariant: '역학은',
+        ruleStem: '역학',
+        ruleSuffix: '은',
+      },
+    ]);
+    expect(results).toHaveLength(1);
+    expect(results[0].kind).toBe('uncertain');
     expect(fetchImpl).toHaveBeenCalledOnce();
   });
 });

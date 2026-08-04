@@ -2203,6 +2203,17 @@
 .panel-left
   .unify-candidate-find
   .results-panel--unify-candidate
+  .unify-candidate-find__morph-inactive {
+  margin-inline-start: 0.45em;
+  font-size: calc(0.72rem * var(--panel-ui-scale, 1));
+  font-weight: 600;
+  color: #8a6d1d;
+  white-space: nowrap;
+}
+
+.panel-left
+  .unify-candidate-find
+  .results-panel--unify-candidate
   .results-findings-meta
   .result-findings-count-circle,
 .panel-left

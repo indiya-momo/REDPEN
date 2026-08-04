@@ -2,7 +2,7 @@
  * 표기 통일 추천 — 클러스터 정렬 + 계열(prefix/suffix) 그룹핑.
  *
  * 목록 순서 (합의):
- * 1) 단일 항목 — 발견 횟수 ↓, 동률이면 가나다
+ * 1) 단일 항목 — **이형태가 양쪽 모두 1회+** 우선, 그다음 발견 횟수 ↓, 동률이면 가나다
  * 2) 접두 계열(○○@) — 계열 합계 발견 ↓, 동률이면 affix 가나다 / 안도 동일
  * 3) 접미 계열(@○○) — 동일
  * 4) 용언 — 단일 추정 + 접두·접미 용언 계열, 안은 발견 ↓·가나다
@@ -80,6 +80,24 @@ function clusterFindings(cluster) {
 }
 
 /**
+ * 붙여쓰기·띄어쓰기 이형태가 각각 1회 이상 있는지 (0회 위성만 있는 항목보다 앞).
+ * @param {UnifySpacingCluster} cluster
+ * @returns {boolean}
+ */
+export function clusterHasDualFormFindings(cluster) {
+  const counts = cluster?.counts ?? {};
+  let hasGlued = false;
+  let hasSpaced = false;
+  for (const [variant, n] of Object.entries(counts)) {
+    if ((n ?? 0) <= 0) continue;
+    if (/\s/.test(variant)) hasSpaced = true;
+    else hasGlued = true;
+    if (hasGlued && hasSpaced) return true;
+  }
+  return false;
+}
+
+/**
  * @param {ClusterGroup} group
  */
 function groupFindings(group) {
@@ -90,12 +108,16 @@ function groupFindings(group) {
 }
 
 /**
- * 발견 횟수 많은 순 → 동률이면 키 가나다.
+ * 이형태 양쪽 출현 우선 → 발견 횟수 ↓ → 키 가나다.
  * @param {UnifySpacingCluster[]} clusters
  * @returns {UnifySpacingCluster[]}
  */
 export function sortClustersByFindingsThenKey(clusters) {
   return [...clusters].sort((a, b) => {
+    const dual =
+      Number(clusterHasDualFormFindings(b)) -
+      Number(clusterHasDualFormFindings(a));
+    if (dual !== 0) return dual;
     const d = clusterFindings(b) - clusterFindings(a);
     if (d !== 0) return d;
     return String(a.key ?? '').localeCompare(String(b.key ?? ''), 'ko');

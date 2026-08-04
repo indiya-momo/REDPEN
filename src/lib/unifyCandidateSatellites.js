@@ -4,20 +4,32 @@
  */
 
 import {
-  shouldRejectUnifySatelliteGlued,
-  shouldRejectUnifySatelliteSpacedByPos,
-} from './kiwiMorph/unifyExclude.js';
-import { isKiwiReady } from './kiwiMorph/runtime.js';
-import {
   hangulSyllableCount,
   isValidSpacedUnifyVariant,
   UNIFY_TRAILING_JOSA,
 } from './unifyCandidateDiscover.js';
 import {
+  shouldRejectByNoiseList,
+  shouldRejectByNoiseListEojeol,
+} from './unifyNoiseList.js';
+import {
   extractPrefixes,
   extractSuffixes,
 } from './unifyCandidateSeriesTrend.js';
 import { isExcludedSeriesSlotFiller } from './unifyListStemTriage.js';
+
+/**
+ * 1차 리스트 — {@link shouldRejectByNoiseList} 별칭.
+ * @param {string} spacedVariant
+ * @param {string} [clusterKey]
+ * @returns {boolean} true면 제외
+ */
+export function shouldRejectUnifySatelliteSpacedByList(
+  spacedVariant,
+  clusterKey = '',
+) {
+  return shouldRejectByNoiseList(spacedVariant, clusterKey);
+}
 
 /**
  * @typedef {import('./unifyCandidateDiscover.js').UnifySpacingCluster} UnifySpacingCluster
@@ -134,24 +146,18 @@ export function buildSingleFormCluster(key, acc, affixType, affix) {
     return null;
   }
 
-  // 보통 시장·말해 시장 — 띄움이 명사+명사/동사+동사가 아니면 위성 거부
-  const spacedForMorph = /\s/.test(existing) ? existing : opposite;
-  if (/\s/.test(spacedForMorph) && isKiwiReady()) {
-    try {
-      if (shouldRejectUnifySatelliteSpacedByPos(spacedForMorph, undefined)) {
-        return null;
-      }
-    } catch {
-      /* keep */
-    }
+  // 1차 리스트만 — 동기 Kiwi POS/글루 분석은 찾기 경로에서 쓰지 않음
+  const spacedForList = /\s/.test(existing) ? existing : opposite;
+  if (
+    /\s/.test(spacedForList) &&
+    shouldRejectByNoiseList(spacedForList)
+  ) {
+    return null;
   }
 
   const glued = String(existing).replace(/\s+/g, '');
-  // 분석된 닫힌 명사·이다·명사+하다만 위성 거부. unknown은 위성 유지.
-  try {
-    if (shouldRejectUnifySatelliteGlued(glued)) return null;
-  } catch {
-    /* keep */
+  if (shouldRejectByNoiseListEojeol(glued)) {
+    return null;
   }
 
   const isSpaced = /\s/.test(existing);
@@ -288,32 +294,33 @@ export function fillSeriesSatellites(groups, conflictClusters, rawByKey) {
 }
 
 /**
- * 이형태 없는 위성의 띄움형 — 명사+명사 / 동사+동사만 유지.
- * 진짜 충돌(붙임·띄움 둘 다 count>0)은 유지. kind 누락도 count로 판별.
+ * 이형태 없는 위성·단일형 — 1차 리스트만으로 잡음 제외.
+ * (본보조·Kiwi 수확 꼬리·예외 어절·조사 휴리스틱. 동기 Kiwi 분석 없음.)
+ * 진짜 충돌(붙임·띄움 둘 다 count>0)은 유지.
  * @param {ClusterGroup[]} groups
  * @returns {ClusterGroup[]}
  */
 export function filterSeriesSatellitesByMorphPos(groups) {
-  if (!isKiwiReady()) return groups ?? [];
-  return (groups ?? []).map((group) => {
-    if (group.type !== 'series') return group;
-    const dictPos = group.dictPos;
-    const next = (group.clusters ?? []).filter((cluster) => {
-      if (isRealConflictCounts(cluster)) return true;
-      const spaced =
-        cluster.variants?.find((v) => /\s/.test(String(v))) ??
-        Object.keys(cluster.counts ?? {}).find((v) => /\s/.test(v)) ??
-        '';
-      if (!spaced || !/\s/.test(spaced)) return true;
-      try {
-        return !shouldRejectUnifySatelliteSpacedByPos(spaced, dictPos);
-      } catch {
-        return true;
-      }
-    });
-    if (next.length === (group.clusters ?? []).length) return group;
-    return { ...group, clusters: next };
-  });
+  return (groups ?? [])
+    .map((group) => {
+      const next = (group.clusters ?? []).filter((cluster) => {
+        if (isRealConflictCounts(cluster)) return true;
+        const spaced =
+          cluster.variants?.find((v) => /\s/.test(String(v))) ??
+          Object.keys(cluster.counts ?? {}).find((v) => /\s/.test(v)) ??
+          '';
+        if (!spaced || !/\s/.test(spaced)) return true;
+        try {
+          return !shouldRejectByNoiseList(spaced, cluster.key);
+        } catch {
+          return true;
+        }
+      });
+      if (next.length === 0) return null;
+      if (next.length === (group.clusters ?? []).length) return group;
+      return { ...group, clusters: next };
+    })
+    .filter(Boolean);
 }
 
 /** @param {{ counts?: Record<string, number>, kind?: string }} cluster */

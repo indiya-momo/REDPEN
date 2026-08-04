@@ -78,11 +78,29 @@ export function isUnifyKiwiJosaEnabled() {
  * 맞춤법/외래어 + 표기통일 칩·하이라이트 — Kiwi 형태소 경계로 복합어 부분일치 스킵.
  * - 기본 꺼짐 (`VITE_SPELLING_KIWI_BOUNDARY=true` 일 때만)
  * - ON이어도 모델 미로드·분석 실패면 현행(스킵 안 함)
- * - 표기통일: 발견 스캔은 그대로, enrich(칩·하이라이트)만 동일 게이트
+ * - **공유 플래그:** `matchFilters`(맞춤법 매칭 후처리) + `unifyCandidateDiscover` enrich.
+ *   이름에 SPELLING이 있어도 표기통일 enrich와 코드·플래그를 공유한다.
+ *   ruleEngine 매칭 키/정규식은 건드리지 않음(게이트·prefetch만).
  * @see project-docs/kiwi-morph-boundary-plan-2026-08-02.md §P2
  */
 export function isSpellingKiwiBoundaryEnabled() {
   return import.meta.env.VITE_SPELLING_KIWI_BOUNDARY === 'true';
+}
+
+/**
+ * 표기 통일 — 후보 잡음 1차 리스트(denylist·패턴 꼬리·휴리스틱).
+ * - 찾기 핫패스는 **리스트만** (동기 Kiwi 분석 없음).
+ * - 로컬 `npm run dev`: 기본 ON (`VITE_UNIFY_KIWI_NOISE_FILTER=false`로만 끔)
+ * - 프로덕션·Pages: 기본 OFF (`=== 'true'`일 때만)
+ * - Kiwi 2차는 별도(후보 온디맨드). boot 조건에 넣지 않음.
+ * - JOSA·BOUNDARY와 독립.
+ * @see project-docs/unify-kiwi-noise-filter-b-design-2026-08-04.md
+ */
+export function isUnifyKiwiNoiseFilterEnabled() {
+  if (import.meta.env.DEV) {
+    return import.meta.env.VITE_UNIFY_KIWI_NOISE_FILTER !== 'false';
+  }
+  return import.meta.env.VITE_UNIFY_KIWI_NOISE_FILTER === 'true';
 }
 
 /**

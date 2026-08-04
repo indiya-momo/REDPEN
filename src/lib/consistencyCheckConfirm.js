@@ -260,20 +260,15 @@ export function formatConsistencyUnifyCheckConfirmMessageWithoutQuota({
 
 /**
  * 표기 통일 추천 — 찾기 직전 confirm
- * @param {number} remaining
- * @param {number} dailyRemaining
- * @param {number} bonusRemaining
+ * @returns {string}
  */
-export function formatUnifyCandidateFindConfirmMessage(
-  remaining,
-  dailyRemaining,
-  bonusRemaining,
-) {
+export function formatUnifyCandidateFindConfirmMessage() {
   return (
-    `[표기 통일 추천]\n` +
+    `[1차 표기 통일 추천]\n` +
     `\n` +
-    `${formatConsistencyCheckQuotaAvailabilityLine(remaining, dailyRemaining, bonusRemaining)}\n` +
     `표기 통일 검수권 1장을 사용합니다\n` +
+    `브라우저에서 형태소 분석을 진행하는 과정에서\n` +
+    `사용자의 PC 성능에 따라 10초 ~ 1분 정도 시간이 소요됩니다\n` +
     `\n` +
     '찾기를 진행할까요?'
   );
@@ -282,9 +277,11 @@ export function formatUnifyCandidateFindConfirmMessage(
 /** @returns {string} */
 export function formatUnifyCandidateFindConfirmMessageWithoutQuota() {
   return (
-    `[표기 통일 추천]\n` +
+    `[1차 표기 통일 추천]\n` +
     `\n` +
     '띄어쓰기가 다른 표기 후보를 문서에서 찾습니다.\n' +
+    `브라우저에서 형태소 분석을 진행하는 과정에서\n` +
+    `사용자의 PC 성능에 따라 10초 ~ 1분 정도 시간이 소요됩니다\n` +
     `\n` +
     '찾기를 진행할까요?'
   );
@@ -321,24 +318,8 @@ export async function confirmUnifyCandidateFindBeforeRun(uid, email = '') {
       alert(betaQuotaAlertForTab('consistency'));
       return false;
     }
-    const remaining = Math.max(0, tabLimit - tabCount);
-    const dailyLimit = status.dailyLimit ?? 1;
-    const bonusRemaining = status.signupBonusConsistencyRemaining ?? 0;
-    const { dailyRemaining } = getTabRemainingBreakdown(
-      tabCount,
-      dailyLimit,
-      bonusRemaining,
-    );
-    message = formatUnifyCandidateFindConfirmMessage(
-      remaining,
-      dailyRemaining,
-      bonusRemaining,
-    );
-    messageNode = createElement(UnifyCandidateFindConfirmContent, {
-      remaining,
-      dailyRemaining,
-      bonusRemaining,
-    });
+    message = formatUnifyCandidateFindConfirmMessage();
+    messageNode = createElement(UnifyCandidateFindConfirmContent);
   } else {
     message = formatUnifyCandidateFindConfirmMessageWithoutQuota();
   }
@@ -359,20 +340,30 @@ export function formatUnifyCandidateFindCompleteMessage(
   if (clusterCount <= 0) {
     return '띄어쓰기만 다른 표기 후보를 찾지 못했습니다.';
   }
-  return `표기 통일 추천 ${clusterCount}항목 전체 발견 ${totalOccurrences}`;
+  return `1차 표기 통일 : 추천 항목 ${clusterCount} 전체 발견 ${totalOccurrences}`;
 }
 
 /**
  * 표기 통일 추천 찾기 직후 — 발견 항목·검수권 사용 alert
  * 항목 수 = 목록 아코디언 행(계열은 1), 횟수 = 목록과 동일(item 재집계·보조용언 추정 제외).
  * @param {import('./unifyCandidateDiscover.js').UnifySpacingCluster[]} clusters
- * @param {{ uid?: string, email?: string, itemCount?: number }} [quotaContext]
+ * @param {{
+ *   uid?: string,
+ *   email?: string,
+ *   itemCount?: number,
+ *   morphFilterInactive?: boolean,
+ * }} [quotaContext]
  */
 export async function alertUnifyCandidateFindAfterRun(
   clusters = [],
   quotaContext = {},
 ) {
-  const { uid = '', email = '', itemCount } = quotaContext;
+  const {
+    uid = '',
+    email = '',
+    itemCount,
+    morphFilterInactive = false,
+  } = quotaContext;
   const clusterCount =
     typeof itemCount === 'number' ? itemCount : clusters.length;
   const totalOccurrences = clusters.reduce(
@@ -383,6 +374,9 @@ export async function alertUnifyCandidateFindAfterRun(
     clusterCount,
     totalOccurrences,
   );
+  if (morphFilterInactive) {
+    message = `${message}\n\n형태소 필터 미적용`;
+  }
 
   const quotaConsumedLine = await buildCheckResultQuotaConsumedLine(
     uid,
@@ -404,6 +398,7 @@ export async function alertUnifyCandidateFindAfterRun(
                 clusterCount,
                 totalOccurrences,
                 quotaConsumedLine,
+                morphFilterInactive,
               })
             : undefined,
         ...extra,

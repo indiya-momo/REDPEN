@@ -340,11 +340,12 @@ describe('formatConsistencyUnifyCheckConfirmMessage', () => {
 
 describe('formatUnifyCandidateFindConfirmMessage', () => {
   it('표기 통일 추천 찾기 confirm 문구를 만든다', () => {
-    expect(formatUnifyCandidateFindConfirmMessage(6, 1, 5)).toBe(
-      '[표기 통일 추천]\n' +
+    expect(formatUnifyCandidateFindConfirmMessage()).toBe(
+      '[1차 표기 통일 추천]\n' +
         '\n' +
-        '표기 통일 검수는 6회(1일 검수권 1장, 선물 검수권 5장) 가능합니다\n' +
         '표기 통일 검수권 1장을 사용합니다\n' +
+        '브라우저에서 형태소 분석을 진행하는 과정에서\n' +
+        '사용자의 PC 성능에 따라 10초 ~ 1분 정도 시간이 소요됩니다\n' +
         '\n' +
         '찾기를 진행할까요?',
     );
@@ -354,7 +355,7 @@ describe('formatUnifyCandidateFindConfirmMessage', () => {
 describe('formatUnifyCandidateFindCompleteMessage', () => {
   it('발견 항목·총 횟수를 완료 alert 본문으로 만든다', () => {
     expect(formatUnifyCandidateFindCompleteMessage(3, 6)).toBe(
-      '표기 통일 추천 3항목 전체 발견 6',
+      '1차 표기 통일 : 추천 항목 3 전체 발견 6',
     );
   });
 
@@ -386,9 +387,31 @@ describe('alertUnifyCandidateFindAfterRun', () => {
 
     expect(alertMock).toHaveBeenCalledWith(
       '찾기를 진행했습니다\n\n' +
-        '표기 통일 추천 1항목 전체 발견 2\n\n' +
+        '1차 표기 통일 : 추천 항목 1 전체 발견 2\n\n' +
         '표기 통일 검수권 1장이 사용되었습니다(1일 검수권 1장, 선물 검수권 5장 사용 가능)',
     );
+  });
+
+  it('morphFilterInactive면 본문에 형태소 필터 미적용을 넣는다', async () => {
+    const alertMock = vi.fn();
+    vi.stubGlobal('alert', alertMock);
+
+    await alertUnifyCandidateFindAfterRun(
+      [
+        {
+          key: '개인소득',
+          variants: ['개인소득', '개인 소득'],
+          counts: { 개인소득: 1, '개인 소득': 1 },
+          totalCount: 2,
+          recommendedUnify: '개인소득',
+          occurrencesByVariant: {},
+        },
+      ],
+      { uid: 'u1', email: 'a@b.c', morphFilterInactive: true },
+    );
+
+    const text = String(alertMock.mock.calls[0]?.[0] ?? '');
+    expect(text).toContain('형태소 필터 미적용');
   });
 
   it('itemCount가 있으면 클러스터 수 대신 아코디언 행 수를 쓴다', async () => {
@@ -418,7 +441,7 @@ describe('alertUnifyCandidateFindAfterRun', () => {
     );
 
     expect(alertMock).toHaveBeenCalledWith(
-      expect.stringContaining('표기 통일 추천 1항목 전체 발견 5'),
+      expect.stringContaining('1차 표기 통일 : 추천 항목 1 전체 발견 5'),
     );
   });
 });

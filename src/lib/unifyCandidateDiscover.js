@@ -32,6 +32,7 @@ import { isUnifyHangulMidWordSoftWrap } from './pdfPageText.js';
 import {
   isSpellingKiwiBoundaryEnabled,
   isUnifyKiwiJosaEnabled,
+  isUnifyKiwiNoiseFilterEnabled,
 } from './featureFlags.js';
 import { shouldSkipMatchByKiwiBoundary } from './kiwiMorph/boundaryGate.js';
 import {
@@ -41,11 +42,31 @@ import {
   shouldRejectUnifySatelliteSpacedByPos,
 } from './kiwiMorph/unifyExclude.js';
 import {
+  isUnifyKiwiLocalAnalyzeReady,
+  isUnifyKiwiNoiseMorphActive,
+} from './kiwiMorph/noiseFilterGate.js';
+import {
   stripTrailingJosaFromTokens,
   stripTrailingJosaKiwi,
 } from './kiwiMorph/stripTrailingJosa.js';
 import { analyzeLine } from './kiwiMorph/analyze.js';
 import { isKiwiReady } from './kiwiMorph/runtime.js';
+import { shouldRejectNoiseListDataSurface } from './unifyNoiseListData.js';
+
+/** 찾기 UI — 이 ms 동안 sync 작업하면 이벤트 루프에 양보 (ops 횟수 양보는 대형 PDF에서 사실상 무한 대기) */
+const UNIFY_FIND_YIELD_MS = 40;
+
+/**
+ * 출현 누적에서 Kiwi analyze가 필요할 때만 — 플래그 없이 ready만으로 전량 분석하지 않음.
+ * (NOISE_FILTER DEV 기본 ON → wasm 웜업 후 찾기 무한 체감의 주원인)
+ */
+function shouldAnalyzeUnifyOccurrenceWithKiwi() {
+  return (
+    isUnifyKiwiJosaEnabled() ||
+    isSpellingKiwiBoundaryEnabled() ||
+    isUnifyKiwiNoiseMorphActive()
+  );
+}
 
 /**
  * @typedef {{
@@ -457,9 +478,9 @@ function addOccurrence(
   // 줄 단위 스캔만 하므로, 줄바꿈이 섞인 raw는 버림
   if (/\n/.test(String(rawMatched ?? ''))) return;
   if (isExcludedUnifyCandidateRaw(rawMatched)) return;
-  // 가운데점 나열만 Kiwi — 불필요 analyze 줄임
+  // 가운데점 나열만 Kiwi — NOISE_FILTER morph 활성 시
   if (
-    isKiwiReady() &&
+    isUnifyKiwiNoiseMorphActive() &&
     /[·ㆍ]/.test(String(rawMatched ?? '')) &&
     (isKiwiEnumerationSurface(rawMatched) ||
       isKiwiEnumerationSurface(normalizeUnifyScanText(rawMatched)))
@@ -478,12 +499,12 @@ function addOccurrence(
   if (/\s/.test(withPunctStripped) && spacedPartIsBareJosa(withPunctStripped)) {
     return;
   }
-  // 끝 조사: Kiwi 준비 시 형태소 경계로 제거(경제학이→경제학). 플래그 무관.
+  // 끝 조사: JOSA/BOUNDARY/NOISE morph 활성일 때만 Kiwi (플래그 없이 ready만으로 전량 금지).
   // 동일 표면 analyze 1회로 strip·이다·동사화 게이트에 재사용.
   let variant = stripTrailingJosaHeuristic(withPunctStripped, minHangul);
   /** @type {import('./kiwiMorph/tokens.js').KiwiToken[] | null} */
   let punctTokens = null;
-  if (isKiwiReady()) {
+  if (shouldAnalyzeUnifyOccurrenceWithKiwi() && isKiwiReady()) {
     try {
       const analyzed = analyzeLine(withPunctStripped);
       if (analyzed?.tokens?.length) {
@@ -505,7 +526,7 @@ function addOccurrence(
   if (/\s/.test(variant) && !isValidSpacedUnifyVariant(variant)) return;
   // 결국 시장·보통 시장 — 명사+명사/동사+동사 아니면 발견 단계에서도 제외
   if (
-    isKiwiReady() &&
+    isUnifyKiwiNoiseMorphActive() &&
     /\s/.test(variant) &&
     shouldRejectUnifySatelliteSpacedByPos(variant, undefined)
   ) {
@@ -513,6 +534,12 @@ function addOccurrence(
   }
   const key = variant.replace(/\s+/g, '');
   if (hangulSyllableCount(key) < minHangul) return;
+  // 1차 정적 리스트 (예외·수확 꼬리) — Kiwi 없이
+  if (shouldRejectNoiseListDataSurface(key)) return;
+  if (/\s/.test(variant)) {
+    const left = variant.trim().split(/\s+/).filter(Boolean)[0];
+    if (left && shouldRejectNoiseListDataSurface(left)) return;
+  }
   // textLayout만 붙임으로 읽힌 경우: Visual(page.text)에 연속 붙임이 없으면 유령
   if (
     !/\s/.test(variant) &&
@@ -522,7 +549,7 @@ function addOccurrence(
     return;
   }
   // 이다 종결·연결·명사+동사화 — 붙임형은 punctTokens 재사용, 키만 다를 때 추가 분석
-  if (isKiwiReady()) {
+  if (isUnifyKiwiNoiseMorphActive()) {
     const gluedPunct = withPunctStripped.replace(/\s+/g, '');
     const tokenOpts =
       punctTokens && key === gluedPunct ? { tokens: punctTokens } : {};
@@ -847,6 +874,14 @@ export function filterUnifyOccurrencesByKiwiBoundary(occs, page) {
 export function enrichOccurrencesWithItemHits(occs, pageByNum) {
   if (!occs?.length) return [];
   if (!pageByNum?.size) return [...occs];
+  // 이미 item+bbox로 고정된 출현 — 재검색·Kiwi boundary 재적용 생략
+  if (
+    occs.every(
+      (o) => Array.isArray(o.itemIndexes) && o.itemIndexes.length > 0,
+    )
+  ) {
+    return sortUnifyOccurrencesReadingOrder([...occs], pageByNum);
+  }
 
   /** @type {Map<number, UnifyVariantOccurrence[]>} */
   const byPage = new Map();
@@ -885,56 +920,88 @@ export function enrichOccurrencesWithItemHits(occs, pageByNum) {
 export function enrichClustersWithItemHits(clusters, pages) {
   const pageByNum = buildPageByNum(pages ?? []);
   if (!pageByNum.size) return clusters ?? [];
-  const enriched = (clusters ?? []).map((cluster) => {
-    /** @type {Record<string, UnifyVariantOccurrence[]>} */
-    const occurrencesByVariant = {};
-    /** @type {Record<string, number>} */
-    const counts = {};
-    for (const variant of cluster.variants ?? []) {
-      const occs = cluster.occurrencesByVariant?.[variant] ?? [];
-      if (!occs.length) {
-        occurrencesByVariant[variant] = [];
-        counts[variant] = 0;
-        continue;
-      }
-      const next = enrichOccurrencesWithItemHits(occs, pageByNum);
-      occurrencesByVariant[variant] = next;
-      counts[variant] = next.length;
-    }
-    // 출현 있는 표기만으로 추천·합계. 0회 이형태(위성·예상형)는 UI용으로 유지.
-    const positive = (cluster.variants ?? []).filter(
-      (v) => (counts[v] ?? 0) > 0,
-    );
-    if (!positive.length) {
-      return null;
-    }
-    // 목록 순서: 횟수 ↓, 그다음 0회 이형태. 0회 키도 variants에 남김.
-    const ranked = (cluster.variants ?? [])
-      .map((variant) => ({ variant, count: counts[variant] ?? 0 }))
-      .sort(
-        (a, b) =>
-          b.count - a.count ||
-          spaceCount(a.variant) - spaceCount(b.variant) ||
-          a.variant.localeCompare(b.variant, 'ko'),
-      );
-    const positiveRanked = ranked.filter((row) => row.count > 0);
-    const hasGlued = positive.some((v) => !/\s/.test(v));
-    const hasSpaced = positive.some((v) => /\s/.test(v));
-    const keepAsSingleForm =
-      cluster.kind === 'single-form' || !hasGlued || !hasSpaced;
-    return {
-      ...cluster,
-      ...(keepAsSingleForm ? { kind: /** @type {const} */ ('single-form') } : {}),
-      variants: ranked.map((row) => row.variant),
-      counts: Object.fromEntries(ranked.map((row) => [row.variant, row.count])),
-      occurrencesByVariant: Object.fromEntries(
-        ranked.map((row) => [row.variant, occurrencesByVariant[row.variant] ?? []]),
-      ),
-      recommendedUnify: pickRecommendedUnify(positiveRanked),
-      totalCount: positiveRanked.reduce((sum, row) => sum + row.count, 0),
-    };
-  });
+  const enriched = (clusters ?? []).map((cluster) =>
+    enrichOneClusterWithItemHits(cluster, pageByNum),
+  );
   return enriched.filter(Boolean);
+}
+
+/**
+ * UI용 — 클러스터 단위로 양보하며 item enrich (finding ··· 동결 방지).
+ * @param {UnifySpacingCluster[]} clusters
+ * @param {import('./pdfService.js').PageData[]} pages
+ * @param {{ yieldMs?: number }} [opts]
+ * @returns {Promise<UnifySpacingCluster[]>}
+ */
+export async function enrichClustersWithItemHitsAsync(clusters, pages, opts = {}) {
+  const yieldMs = opts.yieldMs ?? UNIFY_FIND_YIELD_MS;
+  const pageByNum = buildPageByNum(pages ?? []);
+  if (!pageByNum.size) return clusters ?? [];
+  /** @type {UnifySpacingCluster[]} */
+  const out = [];
+  let lastYield = performance.now();
+  for (const cluster of clusters ?? []) {
+    const next = enrichOneClusterWithItemHits(cluster, pageByNum);
+    if (next) out.push(next);
+    if (yieldMs > 0 && performance.now() - lastYield >= yieldMs) {
+      await new Promise((r) => setTimeout(r, 0));
+      lastYield = performance.now();
+    }
+  }
+  return out;
+}
+
+/**
+ * @param {UnifySpacingCluster} cluster
+ * @param {Map<number, import('./pdfService.js').PageData>} pageByNum
+ * @returns {UnifySpacingCluster | null}
+ */
+function enrichOneClusterWithItemHits(cluster, pageByNum) {
+  /** @type {Record<string, UnifyVariantOccurrence[]>} */
+  const occurrencesByVariant = {};
+  /** @type {Record<string, number>} */
+  const counts = {};
+  for (const variant of cluster.variants ?? []) {
+    const occs = cluster.occurrencesByVariant?.[variant] ?? [];
+    if (!occs.length) {
+      occurrencesByVariant[variant] = [];
+      counts[variant] = 0;
+      continue;
+    }
+    const next = enrichOccurrencesWithItemHits(occs, pageByNum);
+    occurrencesByVariant[variant] = next;
+    counts[variant] = next.length;
+  }
+  const positive = (cluster.variants ?? []).filter(
+    (v) => (counts[v] ?? 0) > 0,
+  );
+  if (!positive.length) {
+    return null;
+  }
+  const ranked = (cluster.variants ?? [])
+    .map((variant) => ({ variant, count: counts[variant] ?? 0 }))
+    .sort(
+      (a, b) =>
+        b.count - a.count ||
+        spaceCount(a.variant) - spaceCount(b.variant) ||
+        a.variant.localeCompare(b.variant, 'ko'),
+    );
+  const positiveRanked = ranked.filter((row) => row.count > 0);
+  const hasGlued = positive.some((v) => !/\s/.test(v));
+  const hasSpaced = positive.some((v) => /\s/.test(v));
+  const keepAsSingleForm =
+    cluster.kind === 'single-form' || !hasGlued || !hasSpaced;
+  return {
+    ...cluster,
+    ...(keepAsSingleForm ? { kind: /** @type {const} */ ('single-form') } : {}),
+    variants: ranked.map((row) => row.variant),
+    counts: Object.fromEntries(ranked.map((row) => [row.variant, row.count])),
+    occurrencesByVariant: Object.fromEntries(
+      ranked.map((row) => [row.variant, occurrencesByVariant[row.variant] ?? []]),
+    ),
+    recommendedUnify: pickRecommendedUnify(positiveRanked),
+    totalCount: positiveRanked.reduce((sum, row) => sum + row.count, 0),
+  };
 }
 
 /**
@@ -951,6 +1018,39 @@ export function enrichClusterGroupsWithItemHits(groups, pages) {
       clusters: enrichClustersWithItemHits(group.clusters ?? [], pages),
     }))
     .filter((group) => (group.clusters?.length ?? 0) > 0);
+}
+
+/**
+ * UI용 — 그룹별 enrich + 양보.
+ * @param {import('./unifyCandidateGrouping.js').ClusterGroup[]} groups
+ * @param {import('./pdfService.js').PageData[]} pages
+ * @param {{ yieldMs?: number }} [opts]
+ */
+export async function enrichClusterGroupsWithItemHitsAsync(
+  groups,
+  pages,
+  opts = {},
+) {
+  if (!pages?.length) return groups ?? [];
+  const yieldMs = opts.yieldMs ?? UNIFY_FIND_YIELD_MS;
+  /** @type {import('./unifyCandidateGrouping.js').ClusterGroup[]} */
+  const out = [];
+  let lastYield = performance.now();
+  for (const group of groups ?? []) {
+    const clusters = await enrichClustersWithItemHitsAsync(
+      group.clusters ?? [],
+      pages,
+      { yieldMs },
+    );
+    if (clusters.length > 0) {
+      out.push({ ...group, clusters });
+    }
+    if (yieldMs > 0 && performance.now() - lastYield >= yieldMs) {
+      await new Promise((r) => setTimeout(r, 0));
+      lastYield = performance.now();
+    }
+  }
+  return out;
 }
 
 /**
@@ -1153,7 +1253,7 @@ export function mergeUnifyHangulSoftWrapScanLines(lines) {
 }
 
 /**
- * 한 페이지분 토큰·n-gram을 byKey에 누적 (스냅·finalize 없음).
+ * 한 페이지분 토큰·n-gram을 byKey에 누적 (스냅·finalize 없음). sync — 테스트·동기 discover용.
  * @param {Map<string, ClusterAcc>} byKey
  * @param {{ pageNum?: number, text?: string, textLayout?: string }} page
  * @param {number} minHangul
@@ -1166,12 +1266,12 @@ function accumulateUnifyPageOccurrences(byKey, page, minHangul) {
       : (page?.text ?? '');
   if (!sourceText || !pageNum) return;
   const highlightSource = prepareUnifyScanText(page?.text ?? sourceText);
-  // 붙임 입증은 soft-wrap 병합 전 원본 줄만. 병합 줄은 「명|지계곡」을 발명한다.
   const visualLines = buildRawVisualLinesForUnify(page?.text ?? '');
   const usingLayout =
     typeof page?.textLayout === 'string' &&
     page.textLayout.length > 0 &&
     page.textLayout !== (page?.text ?? '');
+
   for (const { line, absIndex } of splitUnifyScanLinesWithAbs(sourceText)) {
     const tokens = extractTokensWithIndex(line);
     for (let i = 0; i < tokens.length; i += 1) {
@@ -1179,7 +1279,6 @@ function accumulateUnifyPageOccurrences(byKey, page, minHangul) {
       const preferNear = usingLayout
         ? mapLayoutIndexToVisualIndex(page, absIndex(tokens[i].index))
         : absIndex(tokens[i].index);
-      // 스캔 단계: 가벼운 resolve만. highlightRange 스냅은 충돌 클러스터 finalize에서.
       addOccurrence(
         byKey,
         pageNum,
@@ -1204,6 +1303,78 @@ function accumulateUnifyPageOccurrences(byKey, page, minHangul) {
           minHangul,
           visualLines,
         );
+      }
+    }
+  }
+}
+
+/**
+ * UI용 — yieldMs마다 양보하며 한 페이지 누적.
+ * @param {Map<string, ClusterAcc>} byKey
+ * @param {{ pageNum?: number, text?: string, textLayout?: string }} page
+ * @param {number} minHangul
+ * @param {number} [yieldMs]
+ */
+async function accumulateUnifyPageOccurrencesAsync(
+  byKey,
+  page,
+  minHangul,
+  yieldMs = UNIFY_FIND_YIELD_MS,
+) {
+  const pageNum = Number(page?.pageNum) || 0;
+  const sourceText =
+    typeof page?.textLayout === 'string' && page.textLayout.length > 0
+      ? page.textLayout
+      : (page?.text ?? '');
+  if (!sourceText || !pageNum) return;
+  const highlightSource = prepareUnifyScanText(page?.text ?? sourceText);
+  const visualLines = buildRawVisualLinesForUnify(page?.text ?? '');
+  const usingLayout =
+    typeof page?.textLayout === 'string' &&
+    page.textLayout.length > 0 &&
+    page.textLayout !== (page?.text ?? '');
+
+  let lastYield = performance.now();
+  const maybeYield = async () => {
+    if (!(yieldMs > 0)) return;
+    if (performance.now() - lastYield < yieldMs) return;
+    await new Promise((r) => setTimeout(r, 0));
+    lastYield = performance.now();
+  };
+
+  for (const { line, absIndex } of splitUnifyScanLinesWithAbs(sourceText)) {
+    const tokens = extractTokensWithIndex(line);
+    for (let i = 0; i < tokens.length; i += 1) {
+      const tokenRaw = sliceUnifyRaw(line, tokens[i], tokens[i]);
+      const preferNear = usingLayout
+        ? mapLayoutIndexToVisualIndex(page, absIndex(tokens[i].index))
+        : absIndex(tokens[i].index);
+      addOccurrence(
+        byKey,
+        pageNum,
+        resolveHighlightIndex(highlightSource, tokenRaw, preferNear),
+        tokenRaw,
+        minHangul,
+        visualLines,
+      );
+      await maybeYield();
+      const maxN = Math.min(UNIFY_MAX_NGRAM_TOKENS, tokens.length - i);
+      for (let n = 2; n <= maxN; n += 1) {
+        const first = tokens[i];
+        const last = tokens[i + n - 1];
+        const raw = sliceUnifyRaw(line, first, last);
+        const preferNgram = usingLayout
+          ? mapLayoutIndexToVisualIndex(page, absIndex(first.index))
+          : absIndex(first.index);
+        addOccurrence(
+          byKey,
+          pageNum,
+          resolveHighlightIndex(highlightSource, raw, preferNgram),
+          raw,
+          minHangul,
+          visualLines,
+        );
+        await maybeYield();
       }
     }
   }
@@ -1331,7 +1502,7 @@ function collectUnifyKiwiPrefetchSurfaces(pageTexts) {
  * 시나리오 C: Kiwi 서버 모드면 표면형 prefetch 후 누적.
  * @param {{ pageNum?: number, text?: string, textLayout?: string }[]} pageTexts
  * @param {{ minHangulSyllables?: number }} [opts]
- * @returns {Promise<Map<string, ClusterAcc>>}
+ * @returns {Promise<{ byKey: Map<string, ClusterAcc>, morphFilterActive: boolean }>}
  */
 export async function buildUnifyOccurrenceIndexAsync(pageTexts, opts = {}) {
   const minHangul = opts.minHangulSyllables ?? 2;
@@ -1339,53 +1510,53 @@ export async function buildUnifyOccurrenceIndexAsync(pageTexts, opts = {}) {
   const byKey = new Map();
   const pages = pageTexts ?? [];
 
-  // 표기통일 잡음 제외·조사 strip용 — App boot보다 먼저 찾기 눌러도 준비
+  // 오픈베타: 찾기에서 Kiwi boot/대기·동기 morph 생략 (웜업돼 있어도 전량 analyze 동결 방지).
+  // BOUNDARY prefetch만 필요할 때 boot (서버 배치).
   try {
-    const { bootKiwiIfNeeded } = await import('./kiwiMorph/bootLocal.js');
-    await bootKiwiIfNeeded();
-  } catch {
-    /* heuristic */
-  }
-
-  // 서버 모드: 표면 prefetch만으로 스캔 게이트 동작 (remoteCache).
-  // DEV wasm은 스캔을 막지 않음 — 서버 실패·미준비일 때만 로컬 폴백.
-  try {
-    const {
-      isKiwiServerMode,
-      setKiwiServerMode,
-      getKiwiInstance,
-    } = await import('./kiwiMorph/runtime.js');
-    if (isKiwiServerMode()) {
-      const { prefetchKiwiAnalyze } = await import(
-        './kiwiMorph/serverRunner.js'
+    if (isSpellingKiwiBoundaryEnabled()) {
+      const { shouldBootKiwi, bootKiwiIfNeeded } = await import(
+        './kiwiMorph/bootLocal.js'
       );
-      const stored = await prefetchKiwiAnalyze(
-        collectUnifyKiwiPrefetchSurfaces(pages),
-      );
-      if (stored === 0 && import.meta.env.DEV) {
-        setKiwiServerMode(false);
+      if (shouldBootKiwi()) {
+        await bootKiwiIfNeeded({ maxWaitMs: 2_500 });
+        const { isKiwiServerMode, setKiwiServerMode } = await import(
+          './kiwiMorph/runtime.js'
+        );
+        if (isKiwiServerMode()) {
+          const { prefetchKiwiAnalyze } = await import(
+            './kiwiMorph/serverRunner.js'
+          );
+          const stored = await prefetchKiwiAnalyze(
+            collectUnifyKiwiPrefetchSurfaces(pages),
+            { maxMs: 10_000, timeoutMs: 6_000 },
+          );
+          if (stored === 0 && import.meta.env.DEV) {
+            setKiwiServerMode(false);
+          }
+        }
       }
     }
-    if (
-      import.meta.env.DEV &&
-      !isKiwiServerMode() &&
-      !getKiwiInstance()?.ready?.()
-    ) {
-      const { loadKiwiBrowser } = await import('./kiwiMorph/loadBrowser.js');
-      await loadKiwiBrowser();
-    }
   } catch {
     /* heuristic */
   }
 
+  // 1차 = 정적 리스트만. 동기 Kiwi morph 없음.
   for (let i = 0; i < pages.length; i += 1) {
-    accumulateUnifyPageOccurrences(byKey, pages[i], minHangul);
+    await accumulateUnifyPageOccurrencesAsync(
+      byKey,
+      pages[i],
+      minHangul,
+      UNIFY_FIND_YIELD_MS,
+    );
     if (i + 1 < pages.length) {
       await new Promise((r) => setTimeout(r, 0));
     }
   }
   finalizeConflictOccurrencesOnly(byKey, pages);
-  return byKey;
+  // morphFilterActive: 2차 가능 여부(이미 ready). 1차 스캔은 항상 리스트.
+  const morphFilterActive =
+    isUnifyKiwiNoiseFilterEnabled() && isUnifyKiwiLocalAnalyzeReady();
+  return { byKey, morphFilterActive };
 }
 
 /**
@@ -1395,8 +1566,13 @@ export async function buildUnifyOccurrenceIndexAsync(pageTexts, opts = {}) {
  */
 export async function prefetchUnifyKiwiSurfaces(pageTexts) {
   try {
-    const { bootKiwiIfNeeded } = await import('./kiwiMorph/bootLocal.js');
-    await bootKiwiIfNeeded();
+    if (!isSpellingKiwiBoundaryEnabled()) return 0;
+    const { shouldBootKiwi, bootKiwiIfNeeded } = await import(
+      './kiwiMorph/bootLocal.js'
+    );
+    if (!shouldBootKiwi()) return 0;
+    // PDF 준비 백그라운드 — UI 클릭과 무관하지만 wasm에 무기한 묶이지 않음
+    await bootKiwiIfNeeded({ maxWaitMs: 12_000 });
     const { isKiwiServerMode } = await import('./kiwiMorph/runtime.js');
     if (!isKiwiServerMode()) return 0;
     const { prefetchKiwiAnalyze } = await import(
@@ -1404,6 +1580,7 @@ export async function prefetchUnifyKiwiSurfaces(pageTexts) {
     );
     return await prefetchKiwiAnalyze(
       collectUnifyKiwiPrefetchSurfaces(pageTexts ?? []),
+      { maxMs: 15_000, timeoutMs: 6_000 },
     );
   } catch {
     return 0;
@@ -1487,13 +1664,23 @@ export function discoverSpacingUnifyCandidates(pageTexts, opts = {}) {
  *   maxClusters?: number,
  *   includeRaw?: boolean,
  * }} [opts]
- * @returns {Promise<UnifySpacingCluster[] | { clusters: UnifySpacingCluster[], rawByKey: Map<string, ClusterAcc> }>}
+ * @returns {Promise<
+ *   | UnifySpacingCluster[]
+ *   | {
+ *       clusters: UnifySpacingCluster[],
+ *       rawByKey: Map<string, ClusterAcc>,
+ *       morphFilterActive: boolean,
+ *     }
+ * >}
  */
 export async function discoverSpacingUnifyCandidatesAsync(pageTexts, opts = {}) {
-  const byKey = await buildUnifyOccurrenceIndexAsync(pageTexts, opts);
+  const { byKey, morphFilterActive } = await buildUnifyOccurrenceIndexAsync(
+    pageTexts,
+    opts,
+  );
   const clusters = buildSpacingConflictClustersFromIndex(byKey, opts);
   if (opts.includeRaw) {
-    return { clusters, rawByKey: byKey };
+    return { clusters, rawByKey: byKey, morphFilterActive };
   }
   return clusters;
 }
@@ -1592,6 +1779,7 @@ function instancesFromOccs(occs, variant, replace, pageByNum) {
 export function buildUnifyCandidatePreviewGroups(clusters, options = {}) {
   const registeredByKey = options.registeredByKey ?? null;
   const pages = options.pages ?? [];
+  // enrichOccurrences가 itemIndexes 있으면 no-op — 이미 enrich된 목록 재사용
   const enrichedClusters = enrichClustersWithItemHits(clusters ?? [], pages);
   const pageByNum = buildPageByNum(pages);
   /** @type {import('./ruleEngine.js').GroupedResult[]} */

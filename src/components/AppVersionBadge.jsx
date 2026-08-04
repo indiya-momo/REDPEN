@@ -18,20 +18,20 @@ export default function AppVersionBadge({ prominent = false, dateOnly = false })
     const displayLabel = `V ${label}`;
     return (
       <CriteriaHoverTip tip={detailTitle}>
-        <div
+        <span
           className="app-version-badge app-version-badge--prominent app-version-badge--date-only"
           aria-label={`앱 버전 ${displayLabel}`}
         >
           <span className="app-version-badge__label">V</span>
           <code className="app-version-badge__code">{label}</code>
-        </div>
+        </span>
       </CriteriaHoverTip>
     );
   }
 
   return (
     <CriteriaHoverTip tip={detailTitle}>
-      <div
+      <span
         className={
           prominent ? 'app-version-badge app-version-badge--prominent' : 'app-version-badge'
         }
@@ -45,7 +45,7 @@ export default function AppVersionBadge({ prominent = false, dateOnly = false })
         ) : (
           label
         )}
-      </div>
+      </span>
     </CriteriaHoverTip>
   );
 }

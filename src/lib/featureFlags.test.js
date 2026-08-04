@@ -8,6 +8,7 @@ import {
   isUnifyCandidateFindEnabled,
   isUnifyJosaSlmReviewEnabled,
   isUnifyKiwiJosaEnabled,
+  isUnifyKiwiNoiseFilterEnabled,
   isUnifyPredicateSlmReviewEnabled,
   isUnifyStdictPosReviewEnabled,
 } from './featureFlags.js';
@@ -22,6 +23,7 @@ describe('featureFlags', () => {
   const prevJosaSlm = import.meta.env.VITE_UNIFY_JOSA_SLM;
   const prevKiwiJosa = import.meta.env.VITE_UNIFY_KIWI_JOSA;
   const prevKiwiBoundary = import.meta.env.VITE_SPELLING_KIWI_BOUNDARY;
+  const prevKiwiNoise = import.meta.env.VITE_UNIFY_KIWI_NOISE_FILTER;
   const prevPredicateSlm = import.meta.env.VITE_UNIFY_PREDICATE_SLM;
   const prevStdict = import.meta.env.VITE_UNIFY_STDICT;
 
@@ -35,6 +37,7 @@ describe('featureFlags', () => {
     import.meta.env.VITE_UNIFY_JOSA_SLM = prevJosaSlm;
     import.meta.env.VITE_UNIFY_KIWI_JOSA = prevKiwiJosa;
     import.meta.env.VITE_SPELLING_KIWI_BOUNDARY = prevKiwiBoundary;
+    import.meta.env.VITE_UNIFY_KIWI_NOISE_FILTER = prevKiwiNoise;
     import.meta.env.VITE_UNIFY_PREDICATE_SLM = prevPredicateSlm;
     import.meta.env.VITE_UNIFY_STDICT = prevStdict;
   });
@@ -107,6 +110,22 @@ describe('featureFlags', () => {
     expect(isSpellingKiwiBoundaryEnabled()).toBe(false);
     import.meta.env.VITE_SPELLING_KIWI_BOUNDARY = 'true';
     expect(isSpellingKiwiBoundaryEnabled()).toBe(true);
+  });
+
+  it('표기통일 Kiwi 잡음 필터는 dev 기본 ON, prod는 true일 때만', () => {
+    import.meta.env.DEV = true;
+    import.meta.env.VITE_UNIFY_KIWI_NOISE_FILTER = undefined;
+    expect(isUnifyKiwiNoiseFilterEnabled()).toBe(true);
+    import.meta.env.VITE_UNIFY_KIWI_NOISE_FILTER = 'false';
+    expect(isUnifyKiwiNoiseFilterEnabled()).toBe(false);
+    import.meta.env.VITE_UNIFY_KIWI_NOISE_FILTER = 'true';
+    expect(isUnifyKiwiNoiseFilterEnabled()).toBe(true);
+
+    import.meta.env.DEV = false;
+    import.meta.env.VITE_UNIFY_KIWI_NOISE_FILTER = undefined;
+    expect(isUnifyKiwiNoiseFilterEnabled()).toBe(false);
+    import.meta.env.VITE_UNIFY_KIWI_NOISE_FILTER = 'true';
+    expect(isUnifyKiwiNoiseFilterEnabled()).toBe(true);
   });
 
   it('용언 2차 SLM은 VITE_UNIFY_PREDICATE_SLM=true 일 때만 켜진다', () => {
