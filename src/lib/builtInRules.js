@@ -208,6 +208,13 @@ const overlayByRuleId = new Map(
 export function getBuiltInOverlayReplace(find, replace, spellingRuleId) {
   const id = String(spellingRuleId ?? '').trim();
   if (id && overlayByRuleId.has(id)) return overlayByRuleId.get(id) ?? null;
+  // finds 이형태 묶음: spellingRuleId가 시트 대표 find(설레이)인 경우가 많음.
+  // inst.find는 정규식 alternation이라 find\0replace 키가 안 맞는다.
+  const repl = String(replace ?? '').trim();
+  if (id && repl) {
+    const byPrimaryFind = overlayReplaceLookup.get(`${id}\0${repl}`);
+    if (byPrimaryFind) return byPrimaryFind;
+  }
   return overlayReplaceLookup.get(`${find}\0${replace}`) ?? null;
 }
 

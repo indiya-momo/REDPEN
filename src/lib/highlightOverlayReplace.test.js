@@ -72,6 +72,30 @@ describe('getHighlightOverlayReplace', () => {
     ).toBe('→조선^시대');
   });
 
+  it('맞춤법 finds 묶음 — group.overlayReplace를 PDF에 표시한다', () => {
+    expect(
+      getHighlightOverlayReplace(
+        {
+          find: '(?:설레이|설레였)',
+          replace: '설레',
+          matchedText: '설레이는',
+          pageNum: 1,
+          index: 0,
+        },
+        {
+          group: {
+            find: '(?:설레이|설레였)',
+            replace: '설레',
+            label: '설레이, 설레였 → 설레',
+            spellingRuleId: '설레이',
+            overlayReplace: '→설레',
+            instances: [],
+          },
+        },
+      ),
+    ).toBe('→설레');
+  });
+
   it('통일형 오버레이 — 통일형 문자열만 표시', () => {
     const inst = {
       find: '세계 경제',

@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
+  isSpacedAdverbGeNoiseEojeol,
   isSpacedAdverbHiNoiseEojeol,
   isSpacedClosedConjunctionNoiseEojeol,
+  SPACED_ADVERB_GE_NOUN_EXCLUDE,
   SPACED_CLOSED_CONJUNCTIONS,
 } from './unifyNoiseListLexicalHeuristic.js';
 import { shouldRejectByNoiseList } from './unifyNoiseList.js';
@@ -53,6 +55,24 @@ describe('unifyNoiseListLexicalHeuristic', () => {
     expect(hasUnifyNoiseDenyEojeol('신속히')).toBe(false);
     expect(shouldRejectByNoiseList('꾸준히 성장')).toBe(true);
     expect(shouldRejectByNoiseList('신속히 자금')).toBe(true);
+  });
+
+  it('부사 -게 — 가게·집게만 제외 (단계는 계)', () => {
+    expect(isSpacedAdverbGeNoiseEojeol('쉽게')).toBe(true);
+    expect(isSpacedAdverbGeNoiseEojeol('빠르게')).toBe(true);
+    expect(isSpacedAdverbGeNoiseEojeol('높게')).toBe(true);
+    expect(isSpacedAdverbGeNoiseEojeol('게')).toBe(false);
+    expect(isSpacedAdverbGeNoiseEojeol('단계')).toBe(false);
+    expect(isSpacedAdverbGeNoiseEojeol('가게')).toBe(false);
+    expect(isSpacedAdverbGeNoiseEojeol('집게')).toBe(false);
+    expect(SPACED_ADVERB_GE_NOUN_EXCLUDE.has('가게')).toBe(true);
+    expect(SPACED_ADVERB_GE_NOUN_EXCLUDE.has('집게')).toBe(true);
+    expect(hasUnifyNoiseDenyEojeol('쉽게')).toBe(false);
+    expect(shouldRejectByNoiseList('쉽게 대출')).toBe(true);
+    expect(shouldRejectByNoiseList('빠르게 성장')).toBe(true);
+    expect(shouldRejectByNoiseList('가게 주인')).toBe(false);
+    expect(shouldRejectByNoiseList('집게 도구')).toBe(false);
+    expect(shouldRejectByNoiseList('성장 단계')).toBe(false);
   });
 
   it('중복 예외 제거분 — 관형·꼬리로 유지', () => {

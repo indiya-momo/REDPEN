@@ -8,6 +8,7 @@ import {
   isSpacedLeftJosaNoiseEojeol,
   matchesNoiseListMorphTail,
   shouldRejectByNoiseList,
+  shouldRejectByNoiseListEojeol,
   spacedVariantHitsNoiseDenylist,
 } from './unifyNoiseList.js';
 
@@ -122,5 +123,13 @@ describe('unifyNoiseList (1차 정적 리스트)', () => {
     expect(shouldRejectByNoiseList('금융에 시장')).toBe(true);
     expect(shouldRejectByNoiseList('캐나다에 정부')).toBe(true);
     expect(shouldRejectByNoiseList('캐나다 정부')).toBe(false);
+    // 선택·열거 이든 — JSON 예외/꼬리 없이 조사 휴리스틱
+    expect(isSpacedLeftJosaNoiseEojeol('이든')).toBe(true);
+    expect(isSpacedLeftJosaNoiseEojeol('기업이든')).toBe(true);
+    expect(isSpacedLeftJosaNoiseEojeol('학생이든')).toBe(true);
+    expect(shouldRejectByNoiseList('기업 이든')).toBe(true);
+    expect(shouldRejectByNoiseListEojeol('기업이든')).toBe(true);
+    expect(hasUnifyNoiseDenyEojeol('이든')).toBe(false);
+    expect(matchesNoiseListMorphTail('기업이든')).toBe(false);
   });
 });

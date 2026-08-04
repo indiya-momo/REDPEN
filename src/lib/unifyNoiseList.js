@@ -27,8 +27,10 @@ import {
 import { isSpacedLeftJosaNoiseEojeol } from './unifyNoiseListLeftHeuristic.js';
 import { isSpacedLeftAdnominalNoiseEojeol } from './unifyNoiseListAdnominalHeuristic.js';
 import {
+  isSpacedAdverbGeNoiseEojeol,
   isSpacedAdverbHiNoiseEojeol,
   isSpacedClosedConjunctionNoiseEojeol,
+  SPACED_ADVERB_GE_NOUN_EXCLUDE,
 } from './unifyNoiseListLexicalHeuristic.js';
 import { matchesBonBojoVerbalConnectiveHeuristic } from './bonBojoMorphPatterns.js';
 import { isUnifyJosaGluedNoiseKey } from './unifyPredicateBucket.js';
@@ -68,9 +70,9 @@ export function spacedVariantHitsNoiseDenylist(spacedVariant) {
 }
 
 /**
- * 띄움 어절 잡음 — 리스트 표면 + 조사·관형·접속·부사(-히).
+ * 띄움 어절 잡음 — 리스트 표면 + 조사·관형·접속·부사(-히/-게).
  * 왼쪽·오른쪽 동일 적용 ({@link shouldRejectByNoiseList}).
- * source: manual-heuristic (조사·관형·접속·-히) + JSON/본보조 (표면).
+ * source: manual-heuristic (조사·관형·접속·-히/-게) + JSON/본보조 (표면).
  * @param {string} eojeol
  */
 export function isSpacedLeftNoiseEojeol(eojeol) {
@@ -81,6 +83,7 @@ export function isSpacedLeftNoiseEojeol(eojeol) {
   if (isSpacedLeftAdnominalNoiseEojeol(h)) return true;
   if (isSpacedClosedConjunctionNoiseEojeol(h)) return true;
   if (isSpacedAdverbHiNoiseEojeol(h)) return true;
+  if (isSpacedAdverbGeNoiseEojeol(h)) return true;
   return false;
 }
 
@@ -90,24 +93,29 @@ export const isSpacedEojeolNoise = isSpacedLeftNoiseEojeol;
 /**
  * 1차 정적 리스트·본보조만 (조사끼임 붙임키 휴리스틱 제외).
  * discover / 2차 패턴 — `캐나다정부`처럼 끝음절이 조사처럼 보이는 명사복합 오탐 방지.
+ * `가게`는 본보조 꼬리(가+게)와 명사가 충돌 → -게 명사 제외 Set과 동일하게 본보조 단독 매칭 생략.
  * @param {string} eojeolOrKey
  */
 export function shouldRejectByNoiseListSurface(eojeolOrKey) {
   if (shouldRejectNoiseListDataSurface(eojeolOrKey)) return true;
   const h = hangulOnlyNoise(eojeolOrKey);
   if (!h) return false;
+  // source: manual-heuristic — verb-gada「가게」= 가+게 EC vs 명사 가게
+  if (SPACED_ADVERB_GE_NOUN_EXCLUDE.has(h)) return false;
   return matchesBonBojoVerbalConnectiveHeuristic(h);
 }
 
 /**
  * 1차 리스트 — 어절/붙임 키가 잡음이면 true.
- * (위성·버킷용 — 조사끼임 휴리스틱 포함)
+ * (위성·버킷용 — 조사끼임·이든 등 LeftHeuristic 포함)
  * @param {string} eojeolOrKey
  */
 export function shouldRejectByNoiseListEojeol(eojeolOrKey) {
   if (shouldRejectByNoiseListSurface(eojeolOrKey)) return true;
   const h = hangulOnlyNoise(eojeolOrKey);
   if (!h) return false;
+  // 붙임키 기업이든·캐나다에 — 띄움 칸과 동일 조사 휴리스틱
+  if (isSpacedLeftJosaNoiseEojeol(h)) return true;
   if (isUnifyJosaGluedNoiseKey(h)) return true;
   return false;
 }

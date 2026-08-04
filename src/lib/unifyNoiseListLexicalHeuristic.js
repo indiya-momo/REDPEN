@@ -1,6 +1,7 @@
 /**
- * 띄움 어절 — 닫힌 접속·부사(-히) 휴리스틱 (좌우 공통).
- * source: manual-heuristic — Kiwi: MAJ/접속·MAG(*히). 생산 패턴 없음 → 닫힌 Set.
+ * 띄움 어절 — 닫힌 접속·부사(-히/-게) 휴리스틱 (좌우 공통).
+ * source: manual-heuristic — Kiwi: MAJ/접속·MAG(*히/*게).
+ * -히/-게는 생산 패턴 → 끝음절 매칭. -게 명사(가게·집게)만 닫힌 제외.
  * 구(句)「뿐만 아니라」「다시 말해」는 어절 단위만 (아니라·다시는 예외/별도).
  * 짧은 형태(또·단·즉·그럼…)는 완전 일치만 — 베타 원고 오탐 점검 권장.
  */
@@ -70,6 +71,15 @@ export const SPACED_CLOSED_CONJUNCTIONS = Object.freeze(
 );
 
 /**
+ * -게로 끝나지만 부사가 아닌 명사 (닫힌 제외).
+ * `단계`·`세계` 등은 끝음절이 `계`라 본 휴리스틱에 안 걸림.
+ * @type {ReadonlySet<string>}
+ */
+export const SPACED_ADVERB_GE_NOUN_EXCLUDE = Object.freeze(
+  new Set(['가게', '집게']),
+);
+
+/**
  * @param {string} eojeol
  */
 export function isSpacedClosedConjunctionNoiseEojeol(eojeol) {
@@ -86,4 +96,17 @@ export function isSpacedAdverbHiNoiseEojeol(eojeol) {
   const h = hangulOnlyNoise(eojeol);
   if (!h || h.length < 2) return false;
   return h.endsWith('히');
+}
+
+/**
+ * 부사 파생 -게 (쉽게·빠르게…).
+ * source: manual-heuristic — 한글 2음절 이상 + 끝음절 게.
+ * 명사 가게·집게만 제외 (`단계`는 계).
+ * @param {string} eojeol
+ */
+export function isSpacedAdverbGeNoiseEojeol(eojeol) {
+  const h = hangulOnlyNoise(eojeol);
+  if (!h || h.length < 2) return false;
+  if (!h.endsWith('게')) return false;
+  return !SPACED_ADVERB_GE_NOUN_EXCLUDE.has(h);
 }

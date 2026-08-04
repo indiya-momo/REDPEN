@@ -17,6 +17,8 @@ export const UNIFY_NOISE_REGRESSION_KEEP = Object.freeze([
   { spaced: '미국 정부', note: '명사+명사 유지' },
   { spaced: '미국 최고', note: '명사+명사 유지' },
   { spaced: '직장 사람', note: '명사+명사(@사람) 유지' },
+  { spaced: '가게 주인', note: '명사 가게 — -게 제외' },
+  { spaced: '집게 도구', note: '명사 집게 — -게 제외' },
 ]);
 
 /** @type {readonly UnifyNoiseCorpusCase[]} */
@@ -98,6 +100,12 @@ export const UNIFY_NOISE_REGRESSION_DROP = Object.freeze([
   { spaced: '금융에 시장', note: '2음절+에 (Kiwi NNG+JKB)' },
   { spaced: '시장 금융에', note: '금융에 오른쪽' },
   { spaced: '캐나다에 정부', note: '3음절+에 — 명사+조사' },
+  // 세션 추가 (용언 연결·부사·조사 이든)
+  { spaced: '빌려 자금', note: '용언 연결 빌려' },
+  { spaced: '터라 자금', note: '용언·종결 조각 터라' },
+  { spaced: '쉽게 대출', note: '부사 -게' },
+  { spaced: '빠르게 성장', note: '부사 -게' },
+  { spaced: '기업 이든', note: '조사·접속 이든 (휴리스틱)' },
 ]);
 
 /**

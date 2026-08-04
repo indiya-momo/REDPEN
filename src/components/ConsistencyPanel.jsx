@@ -335,6 +335,7 @@ export default function ConsistencyPanel({
         <UnifyCandidateFindPanel
           hasPdf={hasPdf}
           pageTexts={pageTexts}
+          isProcessing={isProcessing}
           customRules={customRules}
           onApplyRules={applyCustomRules}
           consistencyDecisions={consistencyDecisions}
