@@ -239,31 +239,6 @@ export function clusterBelongsToSeriesAffix(cluster, affix, affixType) {
 }
 
 /**
- * @param {Map<string, ClusterAcc>} rawByKey
- * @param {Set<string>} usedKeys
- * @param {'prefix' | 'suffix'} affixType
- * @param {string} affix
- * @returns {UnifySpacingCluster[]}
- */
-function collectSatellitesForAffix(rawByKey, usedKeys, affixType, affix) {
-  /** @type {UnifySpacingCluster[]} */
-  const satellites = [];
-  for (const [key, acc] of rawByKey) {
-    if (usedKeys.has(key)) continue;
-    if (acc.counts.size !== 1) continue;
-    const satellite = buildSingleFormCluster(key, acc, affixType, affix);
-    if (!satellite) continue;
-    if (!matchesSeriesAffix(satellite, affix, affixType)) continue;
-    // 금융업·기술 58처럼 @ 채움 단음절·숫자 위성은 넣지 않음
-    if (isExcludedSeriesSlotFiller(satellite, affix, affixType)) continue;
-    satellites.push(satellite);
-    usedKeys.add(key);
-  }
-  satellites.sort((a, b) => a.key.localeCompare(b.key, 'ko'));
-  return satellites;
-}
-
-/**
  * @param {ClusterGroup[]} groups
  * @param {UnifySpacingCluster[]} conflictClusters
  * @param {Map<string, ClusterAcc>} rawByKey
@@ -275,19 +250,66 @@ export function fillSeriesSatellites(groups, conflictClusters, rawByKey) {
     for (const c of group.clusters) usedKeys.add(c.key);
   }
 
+  /** @type {ClusterGroup[]} */
+  const seriesGroups = [];
+  /** @type {Map<ClusterGroup, UnifySpacingCluster[]>} */
+  const pendingByGroup = new Map();
   for (const group of groups) {
     if (group.type !== 'series') continue;
+    seriesGroups.push(group);
+    pendingByGroup.set(group, []);
+  }
 
-    const satellites = collectSatellitesForAffix(
-      rawByKey,
-      usedKeys,
-      group.affixType,
-      group.affix,
-    );
+  if (seriesGroups.length && rawByKey?.size) {
+    for (const [key, acc] of rawByKey) {
+      if (usedKeys.has(key)) continue;
+      if (acc.counts.size !== 1) continue;
+      let existing = '';
+      let count = 0;
+      for (const [variant, n] of acc.counts) {
+        existing = variant;
+        count = n;
+        break;
+      }
+      if (!existing) continue;
+
+      for (const group of seriesGroups) {
+        // 싼 사전 필터 — 계열마다 buildSingleForm 전량 호출 방지
+        if (
+          !isSeriesSatelliteCandidate(
+            existing,
+            count,
+            group.affix,
+            group.affixType,
+          )
+        ) {
+          continue;
+        }
+        const satellite = buildSingleFormCluster(
+          key,
+          acc,
+          group.affixType,
+          group.affix,
+        );
+        if (!satellite) continue;
+        if (!matchesSeriesAffix(satellite, group.affix, group.affixType)) {
+          continue;
+        }
+        if (isExcludedSeriesSlotFiller(satellite, group.affix, group.affixType)) {
+          continue;
+        }
+        pendingByGroup.get(group)?.push(satellite);
+        usedKeys.add(key);
+        break;
+      }
+    }
+  }
+
+  for (const group of seriesGroups) {
+    const satellites = pendingByGroup.get(group) ?? [];
     if (satellites.length === 0) continue;
-
+    satellites.sort((a, b) => a.key.localeCompare(b.key, 'ko'));
     group.clusters = [...group.clusters, ...satellites];
-    // 최종 가나다 정렬은 groupSortAndFillSatellites / sortClusterGroups 에서 수행
   }
 
   return groups;
