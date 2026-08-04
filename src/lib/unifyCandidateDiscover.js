@@ -467,17 +467,16 @@ export function pickRecommendedUnify(ranked) {
  * @param {number} minHangul
  * @param {string[] | null} [visualLines] page.text soft-wrap 병합 줄 — 붙임 오탐 검증
  */
-function addOccurrence(
-  byKey,
-  pageNum,
-  index,
-  rawMatched,
-  minHangul,
-  visualLines = null,
-) {
+/**
+ * resolveHighlightIndex 전에 싼 거절·정규화만. 통과 시 누적에 쓸 필드.
+ * @param {string} rawMatched
+ * @param {number} minHangul
+ * @returns {{ variant: string, key: string, matchedText: string, withPunctStripped: string, punctTokens: import('./kiwiMorph/tokens.js').KiwiToken[] | null } | null}
+ */
+function prepareUnifyOccurrenceCandidate(rawMatched, minHangul) {
   // 줄 단위 스캔만 하므로, 줄바꿈이 섞인 raw는 버림
-  if (/\n/.test(String(rawMatched ?? ''))) return;
-  if (isExcludedUnifyCandidateRaw(rawMatched)) return;
+  if (/\n/.test(String(rawMatched ?? ''))) return null;
+  if (isExcludedUnifyCandidateRaw(rawMatched)) return null;
   // 가운데점 나열만 Kiwi — NOISE_FILTER morph 활성 시
   if (
     isUnifyKiwiNoiseMorphActive() &&
@@ -485,19 +484,19 @@ function addOccurrence(
     (isKiwiEnumerationSurface(rawMatched) ||
       isKiwiEnumerationSurface(normalizeUnifyScanText(rawMatched)))
   ) {
-    return;
+    return null;
   }
   const matchedText = normalizeUnifyScanText(rawMatched);
   // 스캔: 기호·주변 숫자 제거 후 끝 조사 제거 → 같은 표기를 한 키로 묶음
   const withPunctStripped = stripUnifyPeripheralDigits(
     stripUnifyPunctuationNoise(normalizeUnifyVariant(matchedText)),
   );
-  if (!withPunctStripped) return;
+  if (!withPunctStripped) return null;
   if (/\s/.test(withPunctStripped) && !isValidSpacedUnifyVariant(withPunctStripped)) {
-    return;
+    return null;
   }
   if (/\s/.test(withPunctStripped) && spacedPartIsBareJosa(withPunctStripped)) {
-    return;
+    return null;
   }
   // 끝 조사: JOSA/BOUNDARY/NOISE morph 활성일 때만 Kiwi (플래그 없이 ready만으로 전량 금지).
   // 동일 표면 analyze 1회로 strip·이다·동사화 게이트에 재사용.
@@ -522,39 +521,31 @@ function addOccurrence(
       /* heuristic 유지 */
     }
   }
-  if (!variant) return;
-  if (/\s/.test(variant) && !isValidSpacedUnifyVariant(variant)) return;
+  if (!variant) return null;
+  if (/\s/.test(variant) && !isValidSpacedUnifyVariant(variant)) return null;
   // 결국 시장·보통 시장 — 명사+명사/동사+동사 아니면 발견 단계에서도 제외
   if (
     isUnifyKiwiNoiseMorphActive() &&
     /\s/.test(variant) &&
     shouldRejectUnifySatelliteSpacedByPos(variant, undefined)
   ) {
-    return;
+    return null;
   }
   const key = variant.replace(/\s+/g, '');
-  if (hangulSyllableCount(key) < minHangul) return;
+  if (hangulSyllableCount(key) < minHangul) return null;
   // 1차 정적 리스트 (예외·수확 꼬리) — Kiwi 없이
-  if (shouldRejectNoiseListDataSurface(key)) return;
+  if (shouldRejectNoiseListDataSurface(key)) return null;
   if (/\s/.test(variant)) {
     const left = variant.trim().split(/\s+/).filter(Boolean)[0];
-    if (left && shouldRejectNoiseListDataSurface(left)) return;
-  }
-  // textLayout만 붙임으로 읽힌 경우: Visual(page.text)에 연속 붙임이 없으면 유령
-  if (
-    !/\s/.test(variant) &&
-    visualLines &&
-    !visualLinesCorroborateGlued(visualLines, variant)
-  ) {
-    return;
+    if (left && shouldRejectNoiseListDataSurface(left)) return null;
   }
   // 이다 종결·연결·명사+동사화 — 붙임형은 punctTokens 재사용, 키만 다를 때 추가 분석
   if (isUnifyKiwiNoiseMorphActive()) {
     const gluedPunct = withPunctStripped.replace(/\s+/g, '');
     const tokenOpts =
       punctTokens && key === gluedPunct ? { tokens: punctTokens } : {};
-    if (isKiwiCopulaEndingSurface(key, tokenOpts)) return;
-    if (isKiwiNounVerbalConnectiveSurface(key, tokenOpts)) return;
+    if (isKiwiCopulaEndingSurface(key, tokenOpts)) return null;
+    if (isKiwiNounVerbalConnectiveSurface(key, tokenOpts)) return null;
     if (
       !/\s/.test(withPunctStripped) &&
       gluedPunct !== key &&
@@ -563,9 +554,20 @@ function addOccurrence(
           tokens: punctTokens ?? undefined,
         }))
     ) {
-      return;
+      return null;
     }
   }
+  return { variant, key, matchedText, withPunctStripped, punctTokens };
+}
+
+/**
+ * @param {Map<string, ClusterAcc>} byKey
+ * @param {number} pageNum
+ * @param {number} index
+ * @param {{ variant: string, key: string, matchedText: string }} prepared
+ */
+function recordUnifyOccurrence(byKey, pageNum, index, prepared) {
+  const { variant, key, matchedText } = prepared;
   let acc = byKey.get(key);
   if (!acc) {
     acc = { counts: new Map(), occurrences: new Map() };
@@ -579,6 +581,35 @@ function addOccurrence(
     matchedText: matchedText.length ? matchedText : variant,
   });
   acc.occurrences.set(variant, list);
+}
+
+/**
+ * @param {Map<string, ClusterAcc>} byKey
+ * @param {number} pageNum
+ * @param {number} index
+ * @param {string} rawMatched
+ * @param {number} minHangul
+ * @param {string[] | null} [visualLines]
+ */
+function addOccurrence(
+  byKey,
+  pageNum,
+  index,
+  rawMatched,
+  minHangul,
+  visualLines = null,
+) {
+  const prepared = prepareUnifyOccurrenceCandidate(rawMatched, minHangul);
+  if (!prepared) return;
+  // textLayout만 붙임으로 읽힌 경우: Visual(page.text)에 연속 붙임이 없으면 유령
+  if (
+    !/\s/.test(prepared.variant) &&
+    visualLines &&
+    !visualLinesCorroborateGlued(visualLines, prepared.variant)
+  ) {
+    return;
+  }
+  recordUnifyOccurrence(byKey, pageNum, index, prepared);
 }
 
 /**
@@ -667,6 +698,26 @@ function sliceUnifyRaw(line, first, last) {
  * @param {number} layoutIndex
  * @returns {number}
  */
+/** @type {WeakMap<object, Map<number, import('./pdfPageText.js').TextItemRef>>} */
+const visualRefByItemCache = new WeakMap();
+
+/**
+ * @param {{ itemRefs?: import('./pdfPageText.js').TextItemRef[] }} page
+ */
+function getVisualRefByItemIndex(page) {
+  const visualRefs = page?.itemRefs;
+  if (!visualRefs?.length) return null;
+  let map = visualRefByItemCache.get(page);
+  if (!map) {
+    map = new Map();
+    for (const r of visualRefs) {
+      if (r && typeof r.itemIndex === 'number') map.set(r.itemIndex, r);
+    }
+    visualRefByItemCache.set(page, map);
+  }
+  return map;
+}
+
 export function mapLayoutIndexToVisualIndex(page, layoutIndex) {
   const prefer = Math.max(0, layoutIndex);
   const layoutRefs = page?.itemRefsLayout;
@@ -676,7 +727,7 @@ export function mapLayoutIndexToVisualIndex(page, layoutIndex) {
   const hit = findRefForTextIndex(layoutRefs, prefer);
   if (!hit) return prefer;
 
-  const visualRef = visualRefs.find((r) => r.itemIndex === hit.itemIndex);
+  const visualRef = getVisualRefByItemIndex(page)?.get(hit.itemIndex);
   if (!visualRef) return prefer;
 
   const layoutLen = Math.max(1, hit.end - hit.start);
@@ -1098,35 +1149,62 @@ export function resolveHighlightIndex(
   if (highlightSource.slice(prefer, prefer + variant.length) === variant) {
     return prefer;
   }
-  let best = -1;
-  let bestDist = Infinity;
-  let pos = 0;
-  while (pos <= highlightSource.length - variant.length) {
-    const idx = highlightSource.indexOf(variant, pos);
-    if (idx < 0) break;
-    const dist = Math.abs(idx - prefer);
-    if (dist < bestDist) {
-      bestDist = dist;
-      best = idx;
+
+  /** prefer 근처만 먼저 — 전 페이지 indexOf/자간탐색 비용 회피 */
+  const WINDOW = 2048;
+  const findNearestExact = (from, to) => {
+    let best = -1;
+    let bestDist = Infinity;
+    let pos = Math.max(0, from);
+    const limit = Math.min(highlightSource.length, to);
+    while (pos <= limit - variant.length) {
+      const idx = highlightSource.indexOf(variant, pos);
+      if (idx < 0 || idx > limit - variant.length) break;
+      const dist = Math.abs(idx - prefer);
+      if (dist < bestDist) {
+        bestDist = dist;
+        best = idx;
+      }
+      // prefer보다 훨씬 멀어지면 중단 (이미 가까운 쪽을 지남)
+      if (idx > prefer && dist > bestDist && best >= 0) break;
+      pos = idx + 1;
     }
-    pos = idx + 1;
-  }
-  if (best >= 0) return best;
+    return best;
+  };
+
+  const nearExact = findNearestExact(prefer - WINDOW, prefer + WINDOW + variant.length);
+  if (nearExact >= 0) return nearExact;
+
+  const farExact = findNearestExact(0, highlightSource.length);
+  if (farExact >= 0) return farExact;
 
   // page.text에 자간 가짜 공백이 있으면 연속 부분문자열이 없음 → 공백 무시 탐색
-  pos = 0;
-  while (pos < highlightSource.length) {
-    const hit = findPhraseInSpan(highlightSource.slice(pos), variant);
-    if (!hit) break;
-    const idx = pos + hit.start;
-    const dist = Math.abs(idx - prefer);
-    if (dist < bestDist) {
-      bestDist = dist;
-      best = idx;
+  // 전 위치에서 slice+find 반복은 O(n²) — prefer 창 → 전체 1패스만
+  const findNearestSoft = (from, to) => {
+    let best = -1;
+    let bestDist = Infinity;
+    let pos = Math.max(0, from);
+    const limit = Math.min(highlightSource.length, to);
+    while (pos < limit) {
+      const hit = findPhraseInSpan(highlightSource.slice(pos, limit), variant);
+      if (!hit) break;
+      const idx = pos + hit.start;
+      const dist = Math.abs(idx - prefer);
+      if (dist < bestDist) {
+        bestDist = dist;
+        best = idx;
+      }
+      const step = Math.max(1, (hit.end ?? hit.start + 1) - hit.start);
+      pos = idx + step;
     }
-    pos = idx + 1;
-  }
-  return best >= 0 ? best : prefer;
+    return best;
+  };
+
+  const nearSoft = findNearestSoft(prefer - WINDOW, prefer + WINDOW + variant.length * 4);
+  if (nearSoft >= 0) return nearSoft;
+
+  const farSoft = findNearestSoft(0, highlightSource.length);
+  return farSoft >= 0 ? farSoft : prefer;
 }
 
 /**
@@ -1272,6 +1350,24 @@ function accumulateUnifyPageOccurrences(byKey, page, minHangul) {
     page.textLayout.length > 0 &&
     page.textLayout !== (page?.text ?? '');
 
+  /**
+   * @param {string} raw
+   * @param {number} preferNear
+   */
+  const tryAdd = (raw, preferNear) => {
+    const prepared = prepareUnifyOccurrenceCandidate(raw, minHangul);
+    if (!prepared) return;
+    if (
+      !/\s/.test(prepared.variant) &&
+      visualLines &&
+      !visualLinesCorroborateGlued(visualLines, prepared.variant)
+    ) {
+      return;
+    }
+    const index = resolveHighlightIndex(highlightSource, raw, preferNear);
+    recordUnifyOccurrence(byKey, pageNum, index, prepared);
+  };
+
   for (const { line, absIndex } of splitUnifyScanLinesWithAbs(sourceText)) {
     const tokens = extractTokensWithIndex(line);
     for (let i = 0; i < tokens.length; i += 1) {
@@ -1279,14 +1375,7 @@ function accumulateUnifyPageOccurrences(byKey, page, minHangul) {
       const preferNear = usingLayout
         ? mapLayoutIndexToVisualIndex(page, absIndex(tokens[i].index))
         : absIndex(tokens[i].index);
-      addOccurrence(
-        byKey,
-        pageNum,
-        resolveHighlightIndex(highlightSource, tokenRaw, preferNear),
-        tokenRaw,
-        minHangul,
-        visualLines,
-      );
+      tryAdd(tokenRaw, preferNear);
       const maxN = Math.min(UNIFY_MAX_NGRAM_TOKENS, tokens.length - i);
       for (let n = 2; n <= maxN; n += 1) {
         const first = tokens[i];
@@ -1295,14 +1384,7 @@ function accumulateUnifyPageOccurrences(byKey, page, minHangul) {
         const preferNgram = usingLayout
           ? mapLayoutIndexToVisualIndex(page, absIndex(first.index))
           : absIndex(first.index);
-        addOccurrence(
-          byKey,
-          pageNum,
-          resolveHighlightIndex(highlightSource, raw, preferNgram),
-          raw,
-          minHangul,
-          visualLines,
-        );
+        tryAdd(raw, preferNgram);
       }
     }
   }
@@ -1342,6 +1424,24 @@ async function accumulateUnifyPageOccurrencesAsync(
     lastYield = performance.now();
   };
 
+  /**
+   * @param {string} raw
+   * @param {number} preferNear
+   */
+  const tryAdd = (raw, preferNear) => {
+    const prepared = prepareUnifyOccurrenceCandidate(raw, minHangul);
+    if (!prepared) return;
+    if (
+      !/\s/.test(prepared.variant) &&
+      visualLines &&
+      !visualLinesCorroborateGlued(visualLines, prepared.variant)
+    ) {
+      return;
+    }
+    const index = resolveHighlightIndex(highlightSource, raw, preferNear);
+    recordUnifyOccurrence(byKey, pageNum, index, prepared);
+  };
+
   for (const { line, absIndex } of splitUnifyScanLinesWithAbs(sourceText)) {
     const tokens = extractTokensWithIndex(line);
     for (let i = 0; i < tokens.length; i += 1) {
@@ -1349,14 +1449,7 @@ async function accumulateUnifyPageOccurrencesAsync(
       const preferNear = usingLayout
         ? mapLayoutIndexToVisualIndex(page, absIndex(tokens[i].index))
         : absIndex(tokens[i].index);
-      addOccurrence(
-        byKey,
-        pageNum,
-        resolveHighlightIndex(highlightSource, tokenRaw, preferNear),
-        tokenRaw,
-        minHangul,
-        visualLines,
-      );
+      tryAdd(tokenRaw, preferNear);
       await maybeYield();
       const maxN = Math.min(UNIFY_MAX_NGRAM_TOKENS, tokens.length - i);
       for (let n = 2; n <= maxN; n += 1) {
@@ -1366,14 +1459,7 @@ async function accumulateUnifyPageOccurrencesAsync(
         const preferNgram = usingLayout
           ? mapLayoutIndexToVisualIndex(page, absIndex(first.index))
           : absIndex(first.index);
-        addOccurrence(
-          byKey,
-          pageNum,
-          resolveHighlightIndex(highlightSource, raw, preferNgram),
-          raw,
-          minHangul,
-          visualLines,
-        );
+        tryAdd(raw, preferNgram);
         await maybeYield();
       }
     }
