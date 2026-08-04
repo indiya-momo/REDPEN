@@ -13,22 +13,6 @@ export function hangulOnlyNoise(surface) {
     .replace(/[^\uAC00-\uD7A3]/gu, '');
 }
 
-const SHORT_STEMS = new Set([
-  '것',
-  '곳',
-  '글',
-  '수',
-  '줄',
-  '데',
-  '바',
-  '때',
-  '중',
-  '듯',
-  '양',
-  '체',
-  '지',
-]);
-
 /**
  * @param {unknown} list
  * @returns {readonly string[]}
@@ -105,8 +89,9 @@ export const UNIFY_NOISE_LIST_META = Object.freeze({
  */
 function isAllowedStem(stem) {
   const n = hangulOnlyNoise(stem).length;
-  if (n >= 2) return true;
-  return n === 1 && SHORT_STEMS.has(stem);
+  // 1음절 용언 어간(들·보) + 연결어미 허용
+  if (n >= 1) return true;
+  return false;
 }
 
 /**
@@ -117,7 +102,8 @@ function endsWithAllowedTail(h, tails) {
   for (const tail of tails) {
     if (!h.endsWith(tail)) continue;
     const stem = h.slice(0, -tail.length);
-    if (isAllowedStem(stem)) return true;
+    // 빈 어간 = 꼬리 어절 단독 (결혼 하고자 → 하고자)
+    if (!stem || isAllowedStem(stem)) return true;
   }
   return false;
 }
@@ -130,16 +116,60 @@ export function hasUnifyNoiseDenyEojeol(eojeol) {
   return Boolean(h) && UNIFY_NOISE_EXCEPTION_EOJEOLS.has(h);
 }
 
+/** 띄움 왼쪽 — 짧은 체언+격조사 (내가·등이). 은/는은 관형형(붉은) 오탐이 커서 대명사만. */
+const SPACED_LEFT_SHORT_JOSA = Object.freeze(
+  ['에서', '에게', '으로', '은', '는', '이', '가', '을', '를', '의', '에', '와', '과', '도', '만'].toSorted(
+    (a, b) => b.length - a.length || a.localeCompare(b, 'ko'),
+  ),
+);
+const SPACED_LEFT_CASE_JOSA = new Set(['이', '가', '을', '를']);
+const SPACED_LEFT_TOPIC_JOSA = new Set(['은', '는']);
+const SPACED_LEFT_PRONOUN_STEMS = new Set(['나', '너', '저', '그', '이']);
+
+/**
+ * 띄움 왼쪽 짧은 체언+조사 (내가·등이).
+ * @param {string} eojeol
+ */
+export function isSpacedLeftJosaNoiseEojeol(eojeol) {
+  const h = hangulOnlyNoise(eojeol);
+  if (!h) return false;
+  for (const josa of SPACED_LEFT_SHORT_JOSA) {
+    if (!h.endsWith(josa) || h.length <= josa.length) continue;
+    const stem = h.slice(0, -josa.length);
+    const n = hangulOnlyNoise(stem).length;
+    if (n < 1 || n > 2) continue;
+    if (UNIFY_NOISE_EXCEPTION_EOJEOLS.has(stem)) return true;
+    if (n !== 1) continue;
+    // 내가·등이 — 격조사. 나는 — 대명사+은/는. 붉은(관형)은 제외.
+    if (SPACED_LEFT_CASE_JOSA.has(josa)) return true;
+    if (SPACED_LEFT_TOPIC_JOSA.has(josa) && SPACED_LEFT_PRONOUN_STEMS.has(stem)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 /**
  * 예외·수확 꼬리만 (본보조·조사 제외). discover/exclude용.
  * @param {string} eojeol
  */
 export function matchesNoiseListMorphTail(eojeol) {
   const h = hangulOnlyNoise(eojeol);
-  if (h.length < 3) return false;
+  // 했어(2)·하고자(3) 등 꼬리 단독·붙임키
+  if (h.length < 2) return false;
   if (endsWithAllowedTail(h, UNIFY_NOISE_VERBAL_TAILS)) return true;
   if (endsWithAllowedTail(h, UNIFY_NOISE_COPULA_TAILS)) return true;
   if (endsWithAllowedTail(h, UNIFY_NOISE_HAGO_JC_TAILS)) return true;
+  // 붙임키 끝의 예외 어절 (가족끼리·결혼직전)
+  if (
+    h.length >= 3 &&
+    endsWithAllowedTail(
+      h,
+      freezeSortedTails([...UNIFY_NOISE_EXCEPTION_EOJEOLS]),
+    )
+  ) {
+    return true;
+  }
   return false;
 }
 

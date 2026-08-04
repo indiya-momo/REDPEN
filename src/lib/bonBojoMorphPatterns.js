@@ -251,7 +251,8 @@ function nonHadaConjugationTails() {
  */
 export function matchesBonBojoVerbalConnectiveHeuristic(eojeol) {
   const h = hangulOnly(eojeol);
-  if (h.length < 3) return false;
+  // 보면(2)·하여(2) 등 짧은 연결 표면
+  if (h.length < 2) return false;
 
   // verb-hada / 명사+하다 — 본보조 핵심 패턴의 활용 표면
   if (isUnifyHadaConjugationKey(h)) return true;
@@ -261,6 +262,8 @@ export function matchesBonBojoVerbalConnectiveHeuristic(eojeol) {
   for (const tail of nonHadaConjugationTails()) {
     if (!h.endsWith(tail)) continue;
     const stem = h.slice(0, -tail.length);
+    // 꼬리 단독(보면)만 1·0음절 허용 — 캐나다⊃나다 오탐 방지
+    if (!stem) return true;
     if (stem.length < 2) continue;
     if (!/^[\uAC00-\uD7A3]+$/u.test(stem)) continue;
     return true;

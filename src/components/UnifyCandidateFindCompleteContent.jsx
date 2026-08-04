@@ -12,6 +12,7 @@ import AppDialogQuotaConsumedLine from './AppDialogQuotaConsumedLine.jsx';
  *   totalOccurrences: number,
  *   quotaConsumedLine?: string | null,
  *   morphFilterInactive?: boolean,
+ *   phaseLabel?: string,
  * }} props
  */
 export default function UnifyCandidateFindCompleteContent({
@@ -19,13 +20,14 @@ export default function UnifyCandidateFindCompleteContent({
   totalOccurrences,
   quotaConsumedLine = null,
   morphFilterInactive = false,
+  phaseLabel = '1차 표기 통일 :',
 }) {
   return (
     <div className="results-header app-dialog__results-summary app-dialog__unify-find-complete">
       <div className="app-dialog__results-summary-row app-dialog__results-summary-row--total">
         <span className="results-header__stat app-dialog__results-stat app-dialog__unify-find-complete-stat">
           <AppDialogCriteriaLabel
-            label="1차 표기 통일 :"
+            label={phaseLabel}
             meta={`추천 항목 ${clusterCount} 전체 발견`}
           />
           <ResultFindingsCountCircle

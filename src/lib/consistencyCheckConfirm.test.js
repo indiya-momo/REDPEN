@@ -12,7 +12,9 @@ import {
   formatConsistencyUnifyCheckConfirmMessageWithoutQuota,
   formatUnifyCandidateFindConfirmMessage,
   formatUnifyCandidateFindCompleteMessage,
+  formatUnifyCandidatePhase2CompleteMessage,
   alertUnifyCandidateFindAfterRun,
+  alertUnifyCandidatePhase2AfterComplete,
 } from './consistencyCheckConfirm.js';
 import { parseBracketTitleMessage } from './appDialog.js';
 import { UNIFY_FEATURE_LABEL } from './consistencyRuleLimit.js';
@@ -366,6 +368,20 @@ describe('formatUnifyCandidateFindCompleteMessage', () => {
   });
 });
 
+describe('formatUnifyCandidatePhase2CompleteMessage', () => {
+  it('2차 완료 본문을 만든다', () => {
+    expect(formatUnifyCandidatePhase2CompleteMessage(2, 5)).toBe(
+      '2차 표기 통일 : 추천 항목 2 전체 발견 5',
+    );
+  });
+
+  it('2차 후보가 없으면 안내 문구만 반환한다', () => {
+    expect(formatUnifyCandidatePhase2CompleteMessage(0, 0)).toBe(
+      '확장할 표기 후보가 없었습니다.',
+    );
+  });
+});
+
 describe('alertUnifyCandidateFindAfterRun', () => {
   it('찾기 완료 alert를 띄운다', async () => {
     const alertMock = vi.fn();
@@ -442,6 +458,40 @@ describe('alertUnifyCandidateFindAfterRun', () => {
 
     expect(alertMock).toHaveBeenCalledWith(
       expect.stringContaining('1차 표기 통일 : 추천 항목 1 전체 발견 5'),
+    );
+  });
+});
+
+describe('alertUnifyCandidatePhase2AfterComplete', () => {
+  it('2차 완료 alert를 띄운다', async () => {
+    const alertMock = vi.fn();
+    vi.stubGlobal('alert', alertMock);
+
+    await alertUnifyCandidatePhase2AfterComplete({
+      itemCount: 2,
+      clusters: [
+        {
+          key: '경제왕국',
+          variants: ['경제왕국', '경제 왕국'],
+          counts: { 경제왕국: 1, '경제 왕국': 2 },
+          totalCount: 3,
+          recommendedUnify: '경제왕국',
+          occurrencesByVariant: {},
+        },
+        {
+          key: '경제회복',
+          variants: ['경제회복', '경제 회복'],
+          counts: { 경제회복: 1, '경제 회복': 1 },
+          totalCount: 2,
+          recommendedUnify: '경제회복',
+          occurrencesByVariant: {},
+        },
+      ],
+    });
+
+    expect(alertMock).toHaveBeenCalledWith(
+      '2차 표기 통일을 완료했습니다\n\n' +
+        '2차 표기 통일 : 추천 항목 2 전체 발견 5',
     );
   });
 });

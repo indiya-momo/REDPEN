@@ -1936,6 +1936,34 @@
   overflow-wrap: anywhere;
 }
 
+.panel-left .unify-candidate-find__phase-banner-conditions-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.panel-left .unify-candidate-find__phase-banner-conditions--heading {
+  margin-bottom: 2px;
+  font-weight: 700;
+}
+
+.panel-left .unify-candidate-find__phase-more {
+  margin-inline-start: 0.35em;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-weight: 700;
+  color: var(--c-accent, #2f6fed);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.panel-left .unify-candidate-find__phase-more:hover {
+  color: var(--c-ink, #222);
+}
+
 .panel-left .unify-candidate-find__pattern-explain {
   margin: 0;
   padding: 4px 10px 8px 28px;
@@ -2167,12 +2195,35 @@
 .panel-left
   .unify-candidate-find
   .results-panel--unify-candidate
+  .unify-candidate-find__findings-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  width: 100%;
+}
+
+.panel-left
+  .unify-candidate-find
+  .results-panel--unify-candidate
+  .unify-candidate-find__findings-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.45em;
+  width: 100%;
+}
+
+.panel-left
+  .unify-candidate-find
+  .results-panel--unify-candidate
   .results-findings-meta {
   display: grid;
   grid-template-columns: auto var(--unify-badge-col-width);
   column-gap: var(--results-findings-meta-gap, 0.35rem);
   align-items: center;
-  margin-left: auto;
+  margin-left: 0;
 }
 
 .panel-left
@@ -2204,7 +2255,7 @@
   .unify-candidate-find
   .results-panel--unify-candidate
   .unify-candidate-find__morph-inactive {
-  margin-inline-start: 0.45em;
+  margin: 0;
   font-size: calc(0.72rem * var(--panel-ui-scale, 1));
   font-weight: 600;
   color: #8a6d1d;

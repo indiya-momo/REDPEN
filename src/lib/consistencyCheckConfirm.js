@@ -344,6 +344,21 @@ export function formatUnifyCandidateFindCompleteMessage(
 }
 
 /**
+ * 2차 표기 통일 완료 alert 본문
+ * @param {number} clusterCount
+ * @param {number} totalOccurrences
+ */
+export function formatUnifyCandidatePhase2CompleteMessage(
+  clusterCount,
+  totalOccurrences,
+) {
+  if (clusterCount <= 0) {
+    return '확장할 표기 후보가 없었습니다.';
+  }
+  return `2차 표기 통일 : 추천 항목 ${clusterCount} 전체 발견 ${totalOccurrences}`;
+}
+
+/**
  * 표기 통일 추천 찾기 직후 — 발견 항목·검수권 사용 alert
  * 항목 수 = 목록 아코디언 행(계열은 1), 횟수 = 목록과 동일(item 재집계·보조용언 추정 제외).
  * @param {import('./unifyCandidateDiscover.js').UnifySpacingCluster[]} clusters
@@ -399,12 +414,47 @@ export async function alertUnifyCandidateFindAfterRun(
                 totalOccurrences,
                 quotaConsumedLine,
                 morphFilterInactive,
+                phaseLabel: '1차 표기 통일 :',
               })
             : undefined,
         ...extra,
       });
     },
   );
+}
+
+/**
+ * 2차 표기 통일 완료 후 — 추천 항목·전체 발견 alert
+ * @param {{
+ *   itemCount?: number,
+ *   clusters?: import('./unifyCandidateDiscover.js').UnifySpacingCluster[],
+ * }} [opts]
+ */
+export async function alertUnifyCandidatePhase2AfterComplete(opts = {}) {
+  const clusters = opts.clusters ?? [];
+  const clusterCount =
+    typeof opts.itemCount === 'number' ? opts.itemCount : clusters.length;
+  const totalOccurrences = clusters.reduce(
+    (sum, cluster) => sum + (cluster.totalCount ?? 0),
+    0,
+  );
+  const message = formatUnifyCandidatePhase2CompleteMessage(
+    clusterCount,
+    totalOccurrences,
+  );
+
+  await showAppAlert({
+    title: '2차 표기 통일을 완료했습니다',
+    message,
+    messageNode:
+      clusterCount > 0
+        ? createElement(UnifyCandidateFindCompleteContent, {
+            clusterCount,
+            totalOccurrences,
+            phaseLabel: '2차 표기 통일 :',
+          })
+        : undefined,
+  });
 }
 
 /**
