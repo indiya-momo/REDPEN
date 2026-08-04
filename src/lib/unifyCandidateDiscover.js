@@ -174,6 +174,9 @@ export const UNIFY_TRAILING_JOSA = Object.freeze([
   '들',
 ]);
 
+/** @type {ReadonlySet<string>} */
+const UNIFY_TRAILING_JOSA_SET = new Set(UNIFY_TRAILING_JOSA);
+
 /** 인용부호 — 어절 중간에 끼어도 제거 (경제왕국’이기 → 경제왕국이기) */
 const UNIFY_QUOTE_CHARS_RE = /[''`´‘’“”„«»「」『』]/gu;
 
@@ -287,7 +290,13 @@ export function unifySpacingKey(s) {
  * @returns {number}
  */
 export function hangulSyllableCount(s) {
-  return (s.match(/[\uAC00-\uD7A3]/g) || []).length;
+  const str = String(s ?? '');
+  let n = 0;
+  for (let i = 0; i < str.length; i += 1) {
+    const c = str.charCodeAt(i);
+    if (c >= 0xac00 && c <= 0xd7a3) n += 1;
+  }
+  return n;
 }
 
 /**
@@ -337,8 +346,7 @@ export function isExcludedUnifyCandidateRaw(rawMatched) {
  */
 export function spacedPartIsBareJosa(variant) {
   const parts = normalizeUnifyVariant(variant).split(/\s+/).filter(Boolean);
-  const josaSet = new Set(UNIFY_TRAILING_JOSA);
-  return parts.some((part) => josaSet.has(part));
+  return parts.some((part) => UNIFY_TRAILING_JOSA_SET.has(part));
 }
 
 /**
@@ -1345,22 +1353,42 @@ function accumulateUnifyPageOccurrences(byKey, page, minHangul) {
   if (!sourceText || !pageNum) return;
   const highlightSource = prepareUnifyScanText(page?.text ?? sourceText);
   const visualLines = buildRawVisualLinesForUnify(page?.text ?? '');
+  const visualBlob = visualLines.join('\n');
+  /** @type {Map<string, boolean>} */
+  const gluedOkCache = new Map();
+  /** @type {Map<string, ReturnType<typeof prepareUnifyOccurrenceCandidate>>} */
+  const prepareCache = new Map();
   const usingLayout =
     typeof page?.textLayout === 'string' &&
     page.textLayout.length > 0 &&
     page.textLayout !== (page?.text ?? '');
 
   /**
+   * @param {string} glued
+   */
+  const corroborateGlued = (glued) => {
+    const hit = gluedOkCache.get(glued);
+    if (hit !== undefined) return hit;
+    const ok = visualBlob.includes(glued);
+    gluedOkCache.set(glued, ok);
+    return ok;
+  };
+
+  /**
    * @param {string} raw
    * @param {number} preferNear
    */
   const tryAdd = (raw, preferNear) => {
-    const prepared = prepareUnifyOccurrenceCandidate(raw, minHangul);
+    let prepared = prepareCache.get(raw);
+    if (prepared === undefined) {
+      prepared = prepareUnifyOccurrenceCandidate(raw, minHangul);
+      prepareCache.set(raw, prepared);
+    }
     if (!prepared) return;
     if (
       !/\s/.test(prepared.variant) &&
-      visualLines &&
-      !visualLinesCorroborateGlued(visualLines, prepared.variant)
+      visualLines.length > 0 &&
+      !corroborateGlued(prepared.variant)
     ) {
       return;
     }
@@ -1378,13 +1406,10 @@ function accumulateUnifyPageOccurrences(byKey, page, minHangul) {
       tryAdd(tokenRaw, preferNear);
       const maxN = Math.min(UNIFY_MAX_NGRAM_TOKENS, tokens.length - i);
       for (let n = 2; n <= maxN; n += 1) {
-        const first = tokens[i];
         const last = tokens[i + n - 1];
-        const raw = sliceUnifyRaw(line, first, last);
-        const preferNgram = usingLayout
-          ? mapLayoutIndexToVisualIndex(page, absIndex(first.index))
-          : absIndex(first.index);
-        tryAdd(raw, preferNgram);
+        const raw = sliceUnifyRaw(line, tokens[i], last);
+        // n-gram 시작 오프셋 = 첫 토큰과 동일 — layout 매핑 재계산 불필요
+        tryAdd(raw, preferNear);
       }
     }
   }
@@ -1396,12 +1421,14 @@ function accumulateUnifyPageOccurrences(byKey, page, minHangul) {
  * @param {{ pageNum?: number, text?: string, textLayout?: string }} page
  * @param {number} minHangul
  * @param {number} [yieldMs]
+ * @param {{ last: number, sinceCheck: number }} [yieldState] 전체 스캔 공유
  */
 async function accumulateUnifyPageOccurrencesAsync(
   byKey,
   page,
   minHangul,
   yieldMs = UNIFY_FIND_YIELD_MS,
+  yieldState = null,
 ) {
   const pageNum = Number(page?.pageNum) || 0;
   const sourceText =
@@ -1411,17 +1438,40 @@ async function accumulateUnifyPageOccurrencesAsync(
   if (!sourceText || !pageNum) return;
   const highlightSource = prepareUnifyScanText(page?.text ?? sourceText);
   const visualLines = buildRawVisualLinesForUnify(page?.text ?? '');
+  const visualBlob = visualLines.join('\n');
+  /** @type {Map<string, boolean>} */
+  const gluedOkCache = new Map();
+  /** @type {Map<string, ReturnType<typeof prepareUnifyOccurrenceCandidate>>} */
+  const prepareCache = new Map();
   const usingLayout =
     typeof page?.textLayout === 'string' &&
     page.textLayout.length > 0 &&
     page.textLayout !== (page?.text ?? '');
 
-  let lastYield = performance.now();
+  const state = yieldState ?? {
+    last: performance.now(),
+    sinceCheck: 0,
+  };
+  const YIELD_CHECK_EVERY = 64;
   const maybeYield = async () => {
     if (!(yieldMs > 0)) return;
-    if (performance.now() - lastYield < yieldMs) return;
+    state.sinceCheck += 1;
+    if (state.sinceCheck < YIELD_CHECK_EVERY) return;
+    state.sinceCheck = 0;
+    if (performance.now() - state.last < yieldMs) return;
     await new Promise((r) => setTimeout(r, 0));
-    lastYield = performance.now();
+    state.last = performance.now();
+  };
+
+  /**
+   * @param {string} glued
+   */
+  const corroborateGlued = (glued) => {
+    const hit = gluedOkCache.get(glued);
+    if (hit !== undefined) return hit;
+    const ok = visualBlob.includes(glued);
+    gluedOkCache.set(glued, ok);
+    return ok;
   };
 
   /**
@@ -1429,12 +1479,16 @@ async function accumulateUnifyPageOccurrencesAsync(
    * @param {number} preferNear
    */
   const tryAdd = (raw, preferNear) => {
-    const prepared = prepareUnifyOccurrenceCandidate(raw, minHangul);
+    let prepared = prepareCache.get(raw);
+    if (prepared === undefined) {
+      prepared = prepareUnifyOccurrenceCandidate(raw, minHangul);
+      prepareCache.set(raw, prepared);
+    }
     if (!prepared) return;
     if (
       !/\s/.test(prepared.variant) &&
-      visualLines &&
-      !visualLinesCorroborateGlued(visualLines, prepared.variant)
+      visualLines.length > 0 &&
+      !corroborateGlued(prepared.variant)
     ) {
       return;
     }
@@ -1453,13 +1507,8 @@ async function accumulateUnifyPageOccurrencesAsync(
       await maybeYield();
       const maxN = Math.min(UNIFY_MAX_NGRAM_TOKENS, tokens.length - i);
       for (let n = 2; n <= maxN; n += 1) {
-        const first = tokens[i];
-        const last = tokens[i + n - 1];
-        const raw = sliceUnifyRaw(line, first, last);
-        const preferNgram = usingLayout
-          ? mapLayoutIndexToVisualIndex(page, absIndex(first.index))
-          : absIndex(first.index);
-        tryAdd(raw, preferNgram);
+        const raw = sliceUnifyRaw(line, tokens[i], tokens[i + n - 1]);
+        tryAdd(raw, preferNear);
         await maybeYield();
       }
     }
@@ -1627,16 +1676,15 @@ export async function buildUnifyOccurrenceIndexAsync(pageTexts, opts = {}) {
   }
 
   // 1차 = 정적 리스트만. 동기 Kiwi morph 없음.
+  const yieldState = { last: performance.now(), sinceCheck: 0 };
   for (let i = 0; i < pages.length; i += 1) {
     await accumulateUnifyPageOccurrencesAsync(
       byKey,
       pages[i],
       minHangul,
       UNIFY_FIND_YIELD_MS,
+      yieldState,
     );
-    if (i + 1 < pages.length) {
-      await new Promise((r) => setTimeout(r, 0));
-    }
   }
   finalizeConflictOccurrencesOnly(byKey, pages);
   // morphFilterActive: 2차 가능 여부(이미 ready). 1차 스캔은 항상 리스트.
