@@ -1672,11 +1672,9 @@ export default function UnifyCandidateFindPanel({
                     />
                   ) : (
                     <div className="unify-candidate-find__phase-banner-line-row">
-                      {phase2PatternEnabled ? (
-                        <p className="unify-candidate-find__phase-banner-line">
-                          띄어쓰기 이형태를 기준으로 표기 통일 제안
-                        </p>
-                      ) : null}
+                      <p className="unify-candidate-find__phase-banner-line">
+                        띄어쓰기 이형태를 기준으로 표기 통일 제안
+                      </p>
                       {listClusters.length > 0 ? (
                         <SeriesSpacingButtons
                           withCheckbox
