@@ -381,6 +381,9 @@ function applyRuleToPages(rule, pages, byKey, globalExcludePhrases, errors) {
             : {}),
           ...(rule.dividerGroup ? { dividerGroup: rule.dividerGroup } : {}),
           ...(rule.dividerLabel ? { dividerLabel: rule.dividerLabel } : {}),
+          ...(String(rule.overlayReplace ?? '').trim()
+            ? { overlayReplace: String(rule.overlayReplace).trim() }
+            : {}),
           instances: [],
         });
       }

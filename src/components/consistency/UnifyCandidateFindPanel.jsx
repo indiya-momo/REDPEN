@@ -241,6 +241,30 @@ function isAuxReviewDeferredCluster(cluster) {
 }
 
 /**
+ * 헤더·팝업·배지용 단일 집계 스냅샷.
+ * 나중에 C(항상 1차)로 바꿀 때는 넘기는 groups만 1차 스냅샷으로 바꾸면 된다.
+ * @param {import('../../lib/unifyCandidateGrouping.js').ClusterGroup[]} groups
+ */
+function summarizeUnifyListSnapshot(groups) {
+  const listClusters = (groups ?? []).flatMap((g) => g.clusters ?? []);
+  const countedClusters = listClusters.filter(
+    (c) => !isAuxReviewDeferredCluster(c),
+  );
+  return {
+    listClusters,
+    countedClusters,
+    itemCount: countUnifyListAccordionItems(groups),
+    findings: countedClusters.reduce(
+      (n, c) => n + (c.totalCount ?? 0),
+      0,
+    ),
+    hiddenPdfKeys: new Set(
+      listClusters.filter(isAuxReviewDeferredCluster).map((c) => c.key),
+    ),
+  };
+}
+
+/**
  * @param {{
  *   label: string,
  *   clusters: UnifySpacingCluster[],
@@ -400,6 +424,7 @@ function Phase2ConditionSummary({
  * @param {{
  *   hasPdf?: boolean,
  *   pageTexts?: { pageNum?: number, text?: string }[],
+ *   isProcessing?: boolean,
  *   customRules: import('../../lib/ruleTypes.js').Rule[],
  *   onApplyRules: (
  *     next: import('../../lib/ruleTypes.js').Rule[],
@@ -428,6 +453,7 @@ function Phase2ConditionSummary({
 export default function UnifyCandidateFindPanel({
   hasPdf = false,
   pageTexts = [],
+  isProcessing = false,
   customRules,
   onApplyRules,
   consistencyDecisions = [],
@@ -651,6 +677,10 @@ export default function UnifyCandidateFindPanel({
       alert('먼저 PDF를 업로드하세요.');
       return;
     }
+    if (isProcessing) {
+      alert('PDF 텍스트 추출이 끝날 때까지 기다려 주세요.');
+      return;
+    }
     if (checkQuotaBlocked) {
       alert('지금은 검수를 진행할 수 없습니다. 로그인·검수권을 확인해 주세요.');
       return;
@@ -827,27 +857,9 @@ export default function UnifyCandidateFindPanel({
       workingGroups = sortClusterGroups(workingGroups);
       bench.mark('5_enrichGroups_sort');
 
-      const listClusters = workingGroups.flatMap((g) => g.clusters);
-      // PDF 표시 체크 — 기본 체크. 보조용언 추정만 완료 집계·PDF에서 제외.
-      const hidden = new Set(
-        listClusters
-          .filter(isAuxReviewDeferredCluster)
-          .map((c) => c.key),
-      );
-      const countedClusters = listClusters.filter(
-        (c) => !isAuxReviewDeferredCluster(c),
-      );
-      const occTotal = countedClusters.reduce(
-        (n, c) =>
-          n +
-          Object.values(c.counts ?? {}).reduce((a, b) => a + (b || 0), 0),
-        0,
-      );
-      const zeroOccClusters = listClusters.filter(
-        (c) => (c.totalCount ?? 0) === 0,
-      ).length;
-      const kiwiDiagDone = await snapshotUnifyFindDiag();
-
+      // 목록을 먼저 보여 준 뒤, Kiwi가 이미 ready일 때만 2차(후보·양보)
+      // 팝업·헤더·배지 숫자는 2차 반영 후 최종 스냅샷 하나로만 센다 (A).
+      const prePhase2Snap = summarizeUnifyListSnapshot(workingGroups);
       setFindListGroups(workingGroups);
       setClusters(next);
       setRawByKey(result.rawByKey);
@@ -890,22 +902,19 @@ export default function UnifyCandidateFindPanel({
       setPhase2ConditionsExpanded(false);
       phase2PromptedRef.current = false;
       phase2CompletePromptedRef.current = false;
-      setHiddenPdfKeys(hidden);
-      // listMemo는 findListGroups로 스킵됨
-      // overrideClusters로 재그룹 생략 — alert 전에 짧게 preview (idle 지연은 다음 찾기와 경합함)
+      setHiddenPdfKeys(prePhase2Snap.hiddenPdfKeys);
       publishPreview(
         next,
         result.rawByKey,
-        hidden,
+        prePhase2Snap.hiddenPdfKeys,
         slmByKey,
         dropSeriesIds,
         dropClusterKeys,
         needsReviewByKey,
         new Map(),
-        listClusters,
+        prePhase2Snap.listClusters,
       );
       bench.mark('6_publishPreview_override');
-      // 목록을 먼저 보여 준 뒤, Kiwi가 이미 ready일 때만 2차(후보·양보)
       setFinding(false);
       let phase2Applied = false;
       try {
@@ -913,27 +922,27 @@ export default function UnifyCandidateFindPanel({
         phase2Applied = phase2.applied;
         if (phase2.applied && phase2.dropped > 0) {
           workingGroups = sortClusterGroups(phase2.groups);
-          setFindListGroups(workingGroups);
-          const list2 = workingGroups.flatMap((g) => g.clusters);
-          const hidden2 = new Set(
-            list2.filter(isAuxReviewDeferredCluster).map((c) => c.key),
-          );
-          setHiddenPdfKeys(hidden2);
-          publishPreview(
-            next,
-            result.rawByKey,
-            hidden2,
-            slmByKey,
-            dropSeriesIds,
-            dropClusterKeys,
-            needsReviewByKey,
-            new Map(),
-            list2,
-          );
         }
       } catch {
         phase2Applied = false;
       }
+
+      const snap = summarizeUnifyListSnapshot(workingGroups);
+      setFindListGroups(workingGroups);
+      setHiddenPdfKeys(snap.hiddenPdfKeys);
+      publishPreview(
+        next,
+        result.rawByKey,
+        snap.hiddenPdfKeys,
+        slmByKey,
+        dropSeriesIds,
+        dropClusterKeys,
+        needsReviewByKey,
+        new Map(),
+        snap.listClusters,
+      );
+
+      const kiwiDiagDone = await snapshotUnifyFindDiag();
       // 2차 미적용(Kiwi 미ready·OFF)일 때만 배지
       const morphInactive =
         Boolean(kiwiDiagDone.noiseFilterEnabled) && !phase2Applied;
@@ -943,12 +952,15 @@ export default function UnifyCandidateFindPanel({
           '[unify-kiwi-noise] 1차 리스트만 — Kiwi 2차 미적용 (ready 아님·boot 안 함)',
         );
       }
+      const zeroOccClusters = snap.listClusters.filter(
+        (c) => (c.totalCount ?? 0) === 0,
+      ).length;
       bench.done({
         clusters: next.length,
-        listClusters: listClusters.length,
-        countedClusters: countedClusters.length,
-        listItemCount: countUnifyListAccordionItems(workingGroups),
-        occTotal,
+        listClusters: snap.listClusters.length,
+        countedClusters: snap.countedClusters.length,
+        listItemCount: snap.itemCount,
+        occTotal: snap.findings,
         zeroOccClusters,
         kiwiBefore: kiwiDiagBefore,
         kiwiAfterDiscover: kiwiDiagAfterDiscover,
@@ -956,12 +968,12 @@ export default function UnifyCandidateFindPanel({
         kiwiDone: kiwiDiagDone,
         morphFilterActive: phase2Applied,
         morphFilterInactive: morphInactive,
-        note: '1차=정적 리스트 · 2차=ready일 때만 후보 Kiwi',
+        note: '1차=정적 리스트 · 2차=ready일 때만 후보 Kiwi · 집계=최종 스냅샷',
       });
-      await alertUnifyCandidateFindAfterRun(countedClusters, {
+      await alertUnifyCandidateFindAfterRun(snap.countedClusters, {
         uid: authUid,
         email: authEmail,
-        itemCount: countUnifyListAccordionItems(workingGroups),
+        itemCount: snap.itemCount,
         morphFilterInactive: morphInactive,
       });
     } finally {
@@ -1068,7 +1080,7 @@ export default function UnifyCandidateFindPanel({
     [grouped],
   );
 
-  const busy = finding || slmReviewing;
+  const busy = finding || slmReviewing || isProcessing;
 
   const totalFindings = useMemo(
     () => sumClusterFindings(listClusters),

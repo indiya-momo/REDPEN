@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   SPELLING_RULES_FP,
+  getBuiltInOverlayReplace,
   isBuiltInRuleVisible,
   migrateBuiltInEnabled,
 } from './builtInRules.js';
@@ -34,6 +35,20 @@ describe('migrateBuiltInEnabled', () => {
     const merged = migrateBuiltInEnabled(withoutNew, SPELLING_RULES_FP);
     expect(merged['봄 비']).toBe(true);
     expect(merged['봄 날']).toBe(true);
+  });
+});
+
+describe('getBuiltInOverlayReplace', () => {
+  it('finds 이형태 규칙 — spellingRuleId(대표 find)로 overlay를 찾는다', () => {
+    // 설레이|설레였 → find가 regex로 바뀌어도 spellingRuleId=설레이
+    expect(
+      getBuiltInOverlayReplace(
+        '(?:설레[\\n\\r]*이|설레[\\n\\r]*였)',
+        '설레',
+        '설레이',
+      ),
+    ).toBe('→설레');
+    expect(getBuiltInOverlayReplace('설레이', '설레')).toBe('→설레');
   });
 });
 

@@ -204,7 +204,7 @@ const WORK_GUIDE_UNIFY_PIN_MEMBER_ALIGN = {
 };
 
 /** 둘러보기 핀 가이드 대상 — 통일형 */
-const GUEST_BROWSE_UNIFY_PIN_TAIL = '붉은 표시';
+const GUEST_BROWSE_UNIFY_PIN_TAIL = '붉은 잉크';
 
 /** 2번 — 가로: 인사말 왼쪽, 세로: 3번(보정) 아래 또는 실행 행 */
 const WORK_GUIDE_2_ALIGN_CHAIN = [

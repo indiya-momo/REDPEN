@@ -110,7 +110,7 @@ export function useHighlights({
         );
         const overlayReplace = getHighlightOverlayReplace(inst, {
           customRules,
-          group: source === 'consistency' ? group : null,
+          group,
         });
         const pillarTone = resultPillarTone(source, group);
         const badgeTone = resultBadgeTone(source, {

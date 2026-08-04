@@ -800,8 +800,7 @@
     "replace": "치러",
     "finds": [
       "치뤄",
-      "치뤘",
-      "치루었"
+      "치뤘"
     ],
     "enabled": true,
     "tip": "'치르다'의 잘못된 표현, 과거형은 '치렀다'",
@@ -826,7 +825,7 @@
     "replace": "불리",
     "finds": [
       "불려",
-      "불리어"
+      "불렸"
     ],
     "enabled": true,
     "tip": "'불리다'의 잘못된 표현, 과겨형은 '불렸다'",
@@ -888,11 +887,6 @@
   {
     "find": "불려지",
     "replace": "불려",
-    "finds": [
-      "불려지",
-      "불려졌",
-      "불려진"
-    ],
     "enabled": true,
     "tip": "이중피동, 과거형은 '불렸다'",
     "dividerGroup": "B1",
@@ -901,10 +895,6 @@
   {
     "find": "쓰여지",
     "replace": "쓰여",
-    "finds": [
-      "쓰여지",
-      "쓰여졌"
-    ],
     "enabled": true,
     "tip": "아중피동, 과겨형은 '쓰였다'",
     "dividerGroup": "B1",
@@ -913,11 +903,6 @@
   {
     "find": "읽혀지",
     "replace": "읽히",
-    "finds": [
-      "읽혀지",
-      "읽혀진",
-      "읽혀졌"
-    ],
     "enabled": true,
     "tip": "이중피동, 과거형은 '읽혔다'",
     "dividerGroup": "B1",
@@ -926,10 +911,6 @@
   {
     "find": "잊혀",
     "replace": "잊힌",
-    "finds": [
-      "잊혀",
-      "잊혀진"
-    ],
     "enabled": true,
     "tip": "이중피동, 과겨형은 '잊혔다'",
     "dividerGroup": "B1",
@@ -938,10 +919,6 @@
   {
     "find": "짜여진",
     "replace": "짜여",
-    "finds": [
-      "짜여진",
-      "짜여졌"
-    ],
     "enabled": true,
     "tip": "이중피동, 과겨형은 '짜였다'",
     "dividerGroup": "B1",
@@ -1044,10 +1021,6 @@
   {
     "find": "설레이",
     "replace": "설레",
-    "finds": [
-      "설레이",
-      "설레였"
-    ],
     "enabled": true,
     "tip": "자동사에 불필요한 사동 접미사 '-이'삽입",
     "dividerGroup": "B1",
@@ -1057,11 +1030,6 @@
   {
     "find": "되뇌이",
     "replace": "되뇌",
-    "finds": [
-      "되뇌이",
-      "되네이",
-      "되뇌였"
-    ],
     "enabled": true,
     "tip": "자동사에 불필요한 사동 접미사 '-이'삽입",
     "dividerGroup": "B1",
@@ -1071,10 +1039,6 @@
   {
     "find": "헤메이",
     "replace": "헤메",
-    "finds": [
-      "헤메이",
-      "헤메였"
-    ],
     "enabled": true,
     "tip": "자동사에 불필요한 사동 접미사 '-이'삽입",
     "dividerGroup": "B1",
@@ -1084,10 +1048,6 @@
   {
     "find": "에이는",
     "replace": "에는",
-    "finds": [
-      "에이는",
-      "에이던"
-    ],
     "enabled": true,
     "tip": "자동사에 불필요한 사동 접미사 '-이'삽입",
     "dividerGroup": "B1",

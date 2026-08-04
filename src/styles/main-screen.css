@@ -2169,7 +2169,8 @@
   --results-findings-pad-end: var(--unify-edge-pad);
   --results-findings-meta-gap: 0.35rem;
   --results-findings-circle-size: 1.35rem;
-  --unify-spacing-btn-width: calc(3.55rem * 1.2);
+  /* 양옆 여백 ≈ 이전(3.55rem×1.2)의 절반 — 글자폭에 가깝게 */
+  --unify-spacing-btn-width: 3.55rem;
   --unify-badge-col-width: 2.75rem;
   --unify-btns-width: calc(var(--unify-spacing-btn-width) * 2 + 4px);
   --unify-trail-width: calc(
@@ -2849,8 +2850,8 @@
   box-sizing: border-box;
   display: grid;
   grid-template-columns:
-    var(--unify-spacing-btn-width, calc(3.55rem * 1.2))
-    var(--unify-spacing-btn-width, calc(3.55rem * 1.2));
+    var(--unify-spacing-btn-width, 3.55rem)
+    var(--unify-spacing-btn-width, 3.55rem);
   align-items: center;
   gap: 0;
   width: var(--unify-btns-width);
@@ -2866,7 +2867,7 @@
   box-sizing: border-box;
   width: 100%;
   margin: 0;
-  padding: calc(2px * 1.2) calc(1px * 1.2);
+  padding: calc(2px * 1.2) calc(0.5px * 1.2);
   font-size: calc(0.68rem * var(--panel-ui-scale, 1) * 1.2);
   font-weight: 500;
   line-height: 1.4;
@@ -2924,7 +2925,7 @@
 
 /* 1차 배너 일괄 — 붙여쓰기/띄어쓰기 앞에만 체크 표시 */
 .panel-left .unify-candidate-find__series-spacing-btns--with-check {
-  --unify-spacing-btn-width: calc(4.35rem * 1.2);
+  --unify-spacing-btn-width: 4.35rem;
   --unify-btns-width: calc(var(--unify-spacing-btn-width) * 2 + 4px);
   --unify-banner-spacing-check-size: var(
     --unify-variant-checkbox-size,
@@ -2944,7 +2945,7 @@
   align-items: center;
   justify-content: center;
   padding-block: 4px;
-  padding-inline: calc(4px * 1.2);
+  padding-inline: calc(2px * 1.2);
   line-height: 1.2;
   min-height: calc(
     var(--unify-banner-spacing-check-size) + 8px
@@ -3223,7 +3224,7 @@
   display: block;
   margin: 0;
   padding: calc(2px * 1.2 * var(--tooltip-ui-scale, 1))
-    calc(4px * var(--tooltip-ui-scale, 1));
+    calc(2px * var(--tooltip-ui-scale, 1));
   font-family: inherit;
   font-size: calc(0.68rem * 1.2 * var(--tooltip-ui-scale, 1));
   font-weight: 500;
