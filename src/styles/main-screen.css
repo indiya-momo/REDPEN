@@ -1913,7 +1913,8 @@
 /* 1차→2차 순차 플로우 */
 .panel-left .unify-candidate-find__phase-banner {
   margin: 0 0 8px;
-  padding: 8px 10px;
+  /* 행 버튼과 오른쪽 끝선 맞춤 — edge-pad와 동일 */
+  padding: 8px var(--unify-edge-pad, var(--space-sm));
   font-size: calc(0.78rem * var(--panel-ui-scale, 1));
   line-height: 1.45;
   color: var(--c-soft, #555);
@@ -2162,8 +2163,8 @@
   --panel-accordion-bg-open: #e4e4e4;
   /*
    * 기준선「견」= 띄어쓰기 오른쪽 테두리
-   * 레이아웃(오른쪽부터): [edge-pad][뱃지고정칸][gap][붙여쓰기][띄어쓰기]
-   * 뱃지 칸 폭을 고정해야 숫자(3/123/584)에 버튼이 밀리지 않음
+   * 레이아웃(오른쪽부터): [edge-pad][붙여쓰기][띄어쓰기]
+   * 붙임·띄움 분해 숫자는 라벨 옆(trail 밖)
    */
   --unify-edge-pad: var(--space-sm);
   --results-findings-pad-end: var(--unify-edge-pad);
@@ -2173,10 +2174,9 @@
   --unify-spacing-btn-width: 3.55rem;
   --unify-badge-col-width: 2.75rem;
   --unify-btns-width: calc(var(--unify-spacing-btn-width) * 2 + 4px);
-  --unify-trail-width: calc(
-    var(--unify-btns-width) + var(--results-findings-meta-gap) +
-      var(--unify-badge-col-width)
-  );
+  /* 행 trail = 버튼만 (큰 발견 배지 제거) — 상단 배너 버튼 끝선과 동일 */
+  --unify-trail-width: var(--unify-btns-width);
+  --unify-spacing-count-circle-size: 1.05rem;
   /* 제목「표기 통일」시작·찾기 버튼 끝과 맞추기 — 부모 카드 패딩만 쓰고 패널 inset 제거 */
   --results-panel-inset-x: 0px;
   padding-inline: 0;
@@ -2827,7 +2827,7 @@
   column-gap: 0;
 }
 
-/* 기준선 그리드: [버튼들][gap][뱃지고정칸] — 띄어쓰기 오른쪽 = 견 */
+/* 기준선 그리드: [버튼들]만 — 띄어쓰기 오른쪽 = 견 (= 상단 배너 버튼 끝) */
 .panel-left .unify-candidate-find__summary-trail {
   position: absolute;
   right: calc(
@@ -2837,13 +2837,48 @@
   top: 50%;
   transform: translateY(-50%);
   display: grid;
-  grid-template-columns: var(--unify-btns-width) var(--unify-badge-col-width);
-  column-gap: var(--results-findings-meta-gap, 0.35rem);
+  grid-template-columns: var(--unify-btns-width);
+  column-gap: 0;
   align-items: center;
   width: var(--unify-trail-width);
   margin: 0;
   flex-shrink: 0;
   z-index: 2;
+}
+
+/* 라벨 옆 — 붙임·띄움 출현 분해 (버튼과 간격) */
+.panel-left .unify-candidate-find__spacing-breakdown {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.55em;
+  margin: 0;
+  /* 붙여쓰기 버튼과의 간격 */
+  margin-inline-end: 0.85em;
+  padding-inline-end: 0.15em;
+  font-size: calc(0.72rem * var(--panel-ui-scale, 1));
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--c-soft, #666);
+  white-space: nowrap;
+}
+
+.panel-left .unify-candidate-find__spacing-breakdown-part {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28em;
+}
+
+.panel-left
+  .unify-candidate-find
+  .unify-candidate-find__spacing-count-circle.result-findings-count-circle {
+  box-sizing: border-box;
+  min-width: var(--unify-spacing-count-circle-size, 1.05rem);
+  min-height: var(--unify-spacing-count-circle-size, 1.05rem);
+  padding: 0 0.28em;
+  font-size: calc(0.62rem * var(--panel-ui-scale, 1));
+  font-weight: 700;
+  line-height: 1;
 }
 
 .panel-left .unify-candidate-find__series-spacing-btns {

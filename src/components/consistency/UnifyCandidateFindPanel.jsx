@@ -71,6 +71,44 @@ function sumClusterFindings(clusters) {
   return clusters.reduce((sum, c) => sum + (c.totalCount || 0), 0);
 }
 
+/**
+ * 계열·항목 출현을 붙임/띄움으로 나눈다 (counts 기준).
+ * 통일형을 고른 항목은 그 표기 출현을 빼서 「남은 발견」만 센다.
+ * PDF 표시 해제 항목은 제외.
+ * @param {UnifySpacingCluster[]} clusters
+ * @param {{
+ *   registeredVariants?: Map<string, string>,
+ *   preSelected?: Map<string, string>,
+ *   hiddenPdfKeys?: Set<string>,
+ * }} [opts]
+ * @returns {{ glued: number, spaced: number }}
+ */
+function sumClusterSpacingFindings(clusters, opts = {}) {
+  const {
+    registeredVariants = null,
+    preSelected = null,
+    hiddenPdfKeys = null,
+  } = opts;
+  let glued = 0;
+  let spaced = 0;
+  for (const c of clusters ?? []) {
+    const key = c?.key;
+    if (key && hiddenPdfKeys?.has(key)) continue;
+    const chosen =
+      (key && registeredVariants?.get(key)) ||
+      (key && preSelected?.get(key)) ||
+      '';
+    for (const [variant, n] of Object.entries(c.counts ?? {})) {
+      const v = Number(n) || 0;
+      if (v <= 0) continue;
+      if (chosen && variant === chosen) continue;
+      if (/\s/.test(variant)) spaced += v;
+      else glued += v;
+    }
+  }
+  return { glued, spaced };
+}
+
 /** 단일 카드 카테고리명 — 예: 골드만삭스-골드만 삭스 */
 function formatUnifySingleClusterLabel(cluster) {
   const variants = cluster?.variants ?? [];
@@ -329,6 +367,34 @@ function UnifyFindingsCount({ count, shownCount = count, className = '' }) {
         {partial ? `${shownCount}/${count}` : shownCount}
       </span>
     </CriteriaHoverTip>
+  );
+}
+
+/**
+ * 계열 헤더 — 붙임·띄움 출현 횟수 (작은 금색 원).
+ * @param {{ glued: number, spaced: number }} props
+ */
+function SeriesSpacingBreakdown({ glued, spaced }) {
+  return (
+    <span
+      className="unify-candidate-find__spacing-breakdown"
+      aria-label={`붙임 ${glued}건, 띄움 ${spaced}건`}
+      onClick={(e) => e.stopPropagation()}
+      onKeyDown={(e) => e.stopPropagation()}
+    >
+      <span className="unify-candidate-find__spacing-breakdown-part">
+        붙임{' '}
+        <span className="result-findings-count-circle unify-candidate-find__spacing-count-circle">
+          {glued}
+        </span>
+      </span>
+      <span className="unify-candidate-find__spacing-breakdown-part">
+        띄움{' '}
+        <span className="result-findings-count-circle unify-candidate-find__spacing-count-circle">
+          {spaced}
+        </span>
+      </span>
+    </span>
   );
 }
 
@@ -1720,14 +1786,14 @@ export default function UnifyCandidateFindPanel({
                           registeredVariants,
                           new Map(),
                         );
-                        const findingsTotal = sumClusterFindings(
+                        const spacingFindings = sumClusterSpacingFindings(
                           group.clusters,
+                          {
+                            registeredVariants,
+                            preSelected,
+                            hiddenPdfKeys,
+                          },
                         );
-                        const visibleClusters = group.clusters.filter(
-                          (c) => !hiddenPdfKeys.has(c.key),
-                        );
-                        const findingsShown =
-                          sumClusterFindings(visibleClusters);
                         const sectionId = `phase2-series-${group.affixType}-${group.affix}`;
                         return (
                           <details
@@ -1745,6 +1811,10 @@ export default function UnifyCandidateFindPanel({
                               <span className="results-category__label">
                                 {seriesLabelText}
                               </span>
+                              <SeriesSpacingBreakdown
+                                glued={spacingFindings.glued}
+                                spaced={spacingFindings.spaced}
+                              />
                               <span className="unify-candidate-find__summary-trail">
                                 <SeriesSpacingButtons
                                   spacing={seriesSpacing}
@@ -1763,13 +1833,6 @@ export default function UnifyCandidateFindPanel({
                                     )
                                   }
                                 />
-                                <span className="unify-candidate-find__badge-slot">
-                                  <UnifyFindingsCount
-                                    count={findingsTotal}
-                                    shownCount={findingsShown}
-                                    className="results-category__findings"
-                                  />
-                                </span>
                               </span>
                             </summary>
                             {group.supportExplain ? (
@@ -1835,11 +1898,6 @@ export default function UnifyCandidateFindPanel({
                     group.type === 'series'
                       ? formatSeriesCategoryLabelText(group)
                       : label;
-                  const findingsTotal = sumClusterFindings(group.clusters);
-                  const visibleClusters = group.clusters.filter(
-                    (c) => !hiddenPdfKeys.has(c.key),
-                  );
-                  const findingsShown = sumClusterFindings(visibleClusters);
                   const categoryMod =
                     group.type === 'series'
                       ? 'series'
@@ -1873,10 +1931,14 @@ export default function UnifyCandidateFindPanel({
                   if (group.type === 'single' || group.type === 'predicate') {
                     return group.clusters.map((cluster) => {
                       const itemLabel = formatUnifySingleClusterLabel(cluster);
-                      const itemFindings = cluster.totalCount || 0;
-                      const itemShown = hiddenPdfKeys.has(cluster.key)
-                        ? 0
-                        : itemFindings;
+                      const itemSpacingFindings = sumClusterSpacingFindings(
+                        [cluster],
+                        {
+                          registeredVariants,
+                          preSelected,
+                          hiddenPdfKeys,
+                        },
+                      );
                       const itemSpacing = resolveSeriesChosenSpacing(
                         { clusters: [cluster] },
                         registeredVariants,
@@ -1898,6 +1960,10 @@ export default function UnifyCandidateFindPanel({
                             <span className="results-category__label">
                               {itemLabel}
                             </span>
+                            <SeriesSpacingBreakdown
+                              glued={itemSpacingFindings.glued}
+                              spaced={itemSpacingFindings.spaced}
+                            />
                             <span className="unify-candidate-find__summary-trail">
                               <SeriesSpacingButtons
                                 spacing={itemSpacing}
@@ -1910,13 +1976,6 @@ export default function UnifyCandidateFindPanel({
                                   )
                                 }
                               />
-                              <span className="unify-candidate-find__badge-slot">
-                                <UnifyFindingsCount
-                                  count={itemFindings}
-                                  shownCount={itemShown}
-                                  className="results-category__findings"
-                                />
-                              </span>
                             </span>
                           </summary>
                           <ul className="results-list results-list--nested unify-candidate-find__list">
@@ -1943,6 +2002,13 @@ export default function UnifyCandidateFindPanel({
                         <span className="results-category__label">
                           {seriesLabelText}
                         </span>
+                        <SeriesSpacingBreakdown
+                          {...sumClusterSpacingFindings(group.clusters, {
+                            registeredVariants,
+                            preSelected,
+                            hiddenPdfKeys,
+                          })}
+                        />
                         <span className="unify-candidate-find__summary-trail">
                           <SeriesSpacingButtons
                             spacing={seriesSpacing}
@@ -1955,13 +2021,6 @@ export default function UnifyCandidateFindPanel({
                               )
                             }
                           />
-                          <span className="unify-candidate-find__badge-slot">
-                            <UnifyFindingsCount
-                              count={findingsTotal}
-                              shownCount={findingsShown}
-                              className="results-category__findings"
-                            />
-                          </span>
                         </span>
                       </summary>
                       <ul className="results-list results-list--nested unify-candidate-find__list">
