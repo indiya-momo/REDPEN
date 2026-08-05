@@ -267,7 +267,7 @@ export function formatUnifyCandidateFindConfirmMessage() {
     `[표기 통일 추천(띄어쓰기-붙여쓰기)]\n` +
     `\n` +
     `표기 통일 검수권 1장을 사용합니다\n` +
-    `사용자의 PC 성능에 따라 10초 ~ 1분 정도 시간이 소요됩니다\n` +
+    `사용자의 PC 환경에 따라 10초~ 1분 정도 소요됩니다\n` +
     `\n` +
     '찾기를 진행할까요?'
   );
@@ -279,7 +279,7 @@ export function formatUnifyCandidateFindConfirmMessageWithoutQuota() {
     `[표기 통일 추천(띄어쓰기-붙여쓰기)]\n` +
     `\n` +
     '띄어쓰기가 다른 표기 후보를 문서에서 찾습니다.\n' +
-    `사용자의 PC 성능에 따라 10초 ~ 1분 정도 시간이 소요됩니다\n` +
+    `사용자의 PC 환경에 따라 10초~ 1분 정도 소요됩니다\n` +
     `\n` +
     '찾기를 진행할까요?'
   );
@@ -338,7 +338,7 @@ export function formatUnifyCandidateFindCompleteMessage(
   if (clusterCount <= 0) {
     return '띄어쓰기만 다른 표기 후보를 찾지 못했습니다.';
   }
-  return `1차 표기 통일 : 추천 항목 ${clusterCount} 전체 발견 ${totalOccurrences}`;
+  return `1차 표기 통일 : 추천 이형태쌍 ${clusterCount} 전체 발견 ${totalOccurrences}`;
 }
 
 /**
@@ -353,7 +353,7 @@ export function formatUnifyCandidatePhase2CompleteMessage(
   if (clusterCount <= 0) {
     return '확장할 표기 후보가 없었습니다.';
   }
-  return `2차 표기 통일 : 추천 항목 ${clusterCount} 전체 발견 ${totalOccurrences}`;
+  return `2차 표기 통일 : 추천 이형태쌍 ${clusterCount} 전체 발견 ${totalOccurrences}`;
 }
 
 /**

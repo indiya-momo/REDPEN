@@ -6,6 +6,7 @@
  */
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import CriteriaHoverTip from '../CriteriaHoverTip.jsx';
+import unifyFindPenSrc from '../../assets/momo/unify-find-pen.png';
 import {
   buildUnifyCandidatePreviewGroups,
   discoverSpacingUnifyCandidatesAsync,
@@ -180,6 +181,7 @@ function formatSeriesCategoryLabelText(group) {
  *   onSelect: (spacing: 'glued' | 'spaced') => void,
  *   withCheckbox?: boolean,
  *   dataWorkGuide?: string,
+ *   tip?: string,
  * }} props
  */
 function SeriesSpacingButtons({
@@ -188,8 +190,9 @@ function SeriesSpacingButtons({
   onSelect,
   withCheckbox = false,
   dataWorkGuide,
+  tip,
 }) {
-  return (
+  const buttons = (
     <span
       className={[
         'unify-candidate-find__series-spacing-btns',
@@ -270,6 +273,13 @@ function SeriesSpacingButtons({
         )}
       </button>
     </span>
+  );
+
+  if (!tip) return buttons;
+  return (
+    <CriteriaHoverTip tip={tip} variant="wrap">
+      {buttons}
+    </CriteriaHoverTip>
   );
 }
 
@@ -367,6 +377,63 @@ function UnifyFindingsCount({ count, shownCount = count, className = '' }) {
         {partial ? `${shownCount}/${count}` : shownCount}
       </span>
     </CriteriaHoverTip>
+  );
+}
+
+const UNIFY_FIND_LOADING_TEXT = '표기 통일 후보를 찾고 있습니다';
+
+/**
+ * 찾기 중 — 문구를 한 글자씩 쓴 뒤 펜 아이콘 1→2→3 반복.
+ */
+function UnifyFindLoadingStatus() {
+  const [charCount, setCharCount] = useState(0);
+  const [penCount, setPenCount] = useState(0);
+
+  useEffect(() => {
+    const textLen = UNIFY_FIND_LOADING_TEXT.length;
+    let chars = 0;
+    let penTimer = 0;
+    const typeTimer = window.setInterval(() => {
+      chars += 1;
+      setCharCount(chars);
+      if (chars < textLen) return;
+      window.clearInterval(typeTimer);
+      let pens = 0;
+      penTimer = window.setInterval(() => {
+        pens = pens >= 3 ? 0 : pens + 1;
+        setPenCount(pens);
+      }, 600);
+    }, 100);
+    return () => {
+      window.clearInterval(typeTimer);
+      window.clearInterval(penTimer);
+    };
+  }, []);
+
+  return (
+    <div
+      className="unify-candidate-find__loading"
+      role="status"
+      aria-live="polite"
+      aria-label={UNIFY_FIND_LOADING_TEXT}
+    >
+      <span className="unify-candidate-find__loading-text">
+        {UNIFY_FIND_LOADING_TEXT.slice(0, charCount)}
+      </span>
+      {penCount > 0 ? (
+        <span className="unify-candidate-find__loading-pens" aria-hidden>
+          {Array.from({ length: penCount }, (_, i) => (
+            <img
+              key={i}
+              className="unify-candidate-find__loading-pen"
+              src={unifyFindPenSrc}
+              alt=""
+              draggable={false}
+            />
+          ))}
+        </span>
+      ) : null}
+    </div>
   );
 }
 
@@ -1648,14 +1715,14 @@ export default function UnifyCandidateFindPanel({
       <div className="unify-candidate-find__body">
         <div className="unify-candidate-find__intro-row">
           <p className="hint consistency-hint-block unify-candidate-find__hint">
-            표기 통일이 필요한 항목을 자동으로 찾아 제안합니다
+            표기 통일이 필요한 단어를 자동으로 찾아 제안합니다
             <br />
             <ConsistencyHintExample>
               <span className="consistency-hint-batang">
-                경제˅학자, 경제학자
+                경제˅학자(띄어쓰기), 경제학자(붙여쓰기)
               </span>
               {' → '}
-              붙여쓰기/띄어쓰기 📌표기 통일 제안
+              📌표기 통일 제안
             </ConsistencyHintExample>
           </p>
           <button
@@ -1672,9 +1739,10 @@ export default function UnifyCandidateFindPanel({
             {busy ? '·\u2009·\u2009·' : '찾기'}
           </button>
         </div>
+        {finding ? <UnifyFindLoadingStatus /> : null}
       </div>
 
-      {searched ? (
+      {searched && !finding ? (
         <div
           className="unify-candidate-find__results"
           role="region"
@@ -1691,7 +1759,7 @@ export default function UnifyCandidateFindPanel({
                   <div className="unify-candidate-find__findings-row">
                     <span className="results-header__total-findings results-findings-meta">
                       <span className="results-findings-meta__label">
-                        1차 표기 통일 : 추천 항목 {listItemCount} 전체 발견
+                        1차 표기 통일 : 추천 이형태쌍 {listItemCount} 전체 발견
                       </span>
                       <span className="unify-candidate-find__badge-slot">
                         <UnifyFindingsCount
@@ -1706,7 +1774,7 @@ export default function UnifyCandidateFindPanel({
                     <div className="unify-candidate-find__findings-row">
                       <span className="results-header__total-findings results-findings-meta">
                         <span className="results-findings-meta__label">
-                          2차 표기 통일 : 추천 항목 {phase2HeaderItemCount}{' '}
+                          2차 표기 통일 : 추천 이형태쌍 {phase2HeaderItemCount}{' '}
                           전체 발견
                         </span>
                         <span className="unify-candidate-find__badge-slot">
@@ -1751,11 +1819,12 @@ export default function UnifyCandidateFindPanel({
                   ) : (
                     <div className="unify-candidate-find__phase-banner-line-row">
                       <p className="unify-candidate-find__phase-banner-line">
-                        띄어쓰기 이형태를 기준으로 표기 통일 제안
+                        띄어쓰기 이형태를 기준으로 제안한 표기 통일입니다
                       </p>
                       {listClusters.length > 0 ? (
                         <SeriesSpacingButtons
                           withCheckbox
+                          tip="전체 단어 붙여쓰기/띄어쓰기 선택"
                           spacing={globalListSpacing}
                           onSelect={(spacing) =>
                             handleSeriesSpacingSelect(
@@ -1801,16 +1870,20 @@ export default function UnifyCandidateFindPanel({
                             className="results-category results-category--unify-series"
                           >
                             <summary className="results-category__summary panel-criteria-heading">
-                              <DetailsChevron />
+                              <CriteriaHoverTip tip="이형태쌍 리스트 보기">
+                                <DetailsChevron />
+                              </CriteriaHoverTip>
                               <UnifyCategorySelectAll
                                 label={seriesLabelText}
                                 clusters={group.clusters}
                                 hiddenPdfKeys={hiddenPdfKeys}
                                 onToggleAll={handleToggleCategoryPdf}
                               />
-                              <span className="results-category__label">
-                                {seriesLabelText}
-                              </span>
+                              <CriteriaHoverTip tip="이형태쌍 리스트 보기">
+                                <span className="results-category__label">
+                                  {seriesLabelText}
+                                </span>
+                              </CriteriaHoverTip>
                               <SeriesSpacingBreakdown
                                 glued={spacingFindings.glued}
                                 spaced={spacingFindings.spaced}
@@ -1818,6 +1891,7 @@ export default function UnifyCandidateFindPanel({
                               <span className="unify-candidate-find__summary-trail">
                                 <SeriesSpacingButtons
                                   spacing={seriesSpacing}
+                                  tip="단어별 붙여쓰기/띄어쓰기 선택"
                                   hintSpacing={
                                     group.direction === 'glued' ||
                                     group.direction === 'spaced'
@@ -1950,16 +2024,20 @@ export default function UnifyCandidateFindPanel({
                           className={`results-category results-category--unify-${categoryMod}`}
                         >
                           <summary className="results-category__summary panel-criteria-heading">
-                            <DetailsChevron />
+                            <CriteriaHoverTip tip="이형태쌍 리스트 보기">
+                              <DetailsChevron />
+                            </CriteriaHoverTip>
                             <UnifyCategorySelectAll
                               label={itemLabel}
                               clusters={[cluster]}
                               hiddenPdfKeys={hiddenPdfKeys}
                               onToggleAll={handleToggleCategoryPdf}
                             />
-                            <span className="results-category__label">
-                              {itemLabel}
-                            </span>
+                            <CriteriaHoverTip tip="이형태쌍 리스트 보기">
+                              <span className="results-category__label">
+                                {itemLabel}
+                              </span>
+                            </CriteriaHoverTip>
                             <SeriesSpacingBreakdown
                               glued={itemSpacingFindings.glued}
                               spaced={itemSpacingFindings.spaced}
@@ -1967,6 +2045,7 @@ export default function UnifyCandidateFindPanel({
                             <span className="unify-candidate-find__summary-trail">
                               <SeriesSpacingButtons
                                 spacing={itemSpacing}
+                                tip="단어별 붙여쓰기/띄어쓰기 선택"
                                 dataWorkGuide={seriesSpacingGuideAttr}
                                 onSelect={(spacing) =>
                                   handleSeriesSpacingSelect(
@@ -1992,16 +2071,20 @@ export default function UnifyCandidateFindPanel({
                       className={`results-category results-category--unify-${categoryMod}`}
                     >
                       <summary className="results-category__summary panel-criteria-heading">
-                        <DetailsChevron />
+                        <CriteriaHoverTip tip="이형태쌍 리스트 보기">
+                          <DetailsChevron />
+                        </CriteriaHoverTip>
                         <UnifyCategorySelectAll
                           label={seriesLabelText}
                           clusters={group.clusters}
                           hiddenPdfKeys={hiddenPdfKeys}
                           onToggleAll={handleToggleCategoryPdf}
                         />
-                        <span className="results-category__label">
-                          {seriesLabelText}
-                        </span>
+                        <CriteriaHoverTip tip="이형태쌍 리스트 보기">
+                          <span className="results-category__label">
+                            {seriesLabelText}
+                          </span>
+                        </CriteriaHoverTip>
                         <SeriesSpacingBreakdown
                           {...sumClusterSpacingFindings(group.clusters, {
                             registeredVariants,
@@ -2012,6 +2095,7 @@ export default function UnifyCandidateFindPanel({
                         <span className="unify-candidate-find__summary-trail">
                           <SeriesSpacingButtons
                             spacing={seriesSpacing}
+                            tip="단어별 붙여쓰기/띄어쓰기 선택"
                             dataWorkGuide={seriesSpacingGuideAttr}
                             onSelect={(spacing) =>
                               handleSeriesSpacingSelect(
@@ -2137,23 +2221,26 @@ function ClusterCard({
                 <span className="unify-candidate-find__count">
                   {count}회
                 </span>
-                <button
-                  type="button"
-                  className={[
-                    'unify-candidate-find__unify-btn',
-                    isChosen && 'unify-candidate-find__unify-btn--chosen',
-                    isPreSelected && 'unify-candidate-find__unify-btn--preselect',
-                  ]
-                    .filter(Boolean)
-                    .join(' ')}
-                  onClick={() =>
-                    isChosen || isPreSelected
-                      ? onCancelVariant(cluster, groupClusters)
-                      : onSelectVariant(cluster, variant, groupClusters)
-                  }
-                >
-                  이 표기로 📌통일
-                </button>
+                <CriteriaHoverTip tip="단어별 붙여쓰기/띄어쓰기 선택">
+                  <button
+                    type="button"
+                    className={[
+                      'unify-candidate-find__unify-btn',
+                      isChosen && 'unify-candidate-find__unify-btn--chosen',
+                      isPreSelected &&
+                        'unify-candidate-find__unify-btn--preselect',
+                    ]
+                      .filter(Boolean)
+                      .join(' ')}
+                    onClick={() =>
+                      isChosen || isPreSelected
+                        ? onCancelVariant(cluster, groupClusters)
+                        : onSelectVariant(cluster, variant, groupClusters)
+                    }
+                  >
+                    이 표기로 📌통일
+                  </button>
+                </CriteriaHoverTip>
                 {isException && isChosen ? (
                   <span className="unify-candidate-find__exception-badge">
                     예외

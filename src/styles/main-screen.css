@@ -1451,6 +1451,37 @@
   text-align: center;
 }
 
+.panel-left .unify-candidate-find__loading {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4em 0.55em;
+  margin: 10px 0 2px;
+  min-height: 1.8em;
+  color: #333;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.panel-left .unify-candidate-find__loading-text {
+  min-height: 1.45em;
+}
+
+.panel-left .unify-candidate-find__loading-pens {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.12em;
+}
+
+.panel-left .unify-candidate-find__loading-pen {
+  display: block;
+  width: auto;
+  height: 1.5em;
+  object-fit: contain;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
 .panel-left .consistency-embed .unify-candidate-find .hint.consistency-hint-block {
   color: #333;
   font-size: 12px;
@@ -1954,6 +1985,13 @@
   flex: 0 0 auto;
 }
 
+.panel-left
+  .unify-candidate-find__phase-banner-line-row
+  > .criteria-hover-tip--wrap {
+  flex: 0 0 auto;
+  display: inline-flex;
+}
+
 .panel-left .unify-candidate-find__phase-banner-conditions-block {
   display: flex;
   flex-direction: column;
@@ -2375,6 +2413,16 @@
 .panel-left
   .unify-candidate-find
   .results-panel--unify-candidate
+  .results-category__summary
+  > .criteria-hover-tip--wrap:has(.results-category__label) {
+  display: block;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.panel-left
+  .unify-candidate-find
+  .results-panel--unify-candidate
   .results-category__label {
   display: block;
   flex: 1 1 auto;
@@ -2755,7 +2803,7 @@
  */
 .panel-left
   .unify-candidate-find__variant-row
-  > .criteria-hover-tip,
+  > .criteria-hover-tip:has(.result-visibility-toggle),
 .panel-left
   .unify-candidate-find__variant-row
   > .result-visibility-toggle,
@@ -2844,6 +2892,13 @@
   margin: 0;
   flex-shrink: 0;
   z-index: 2;
+}
+
+.panel-left
+  .unify-candidate-find__summary-trail
+  > .criteria-hover-tip--wrap {
+  display: block;
+  width: 100%;
 }
 
 /* 라벨 옆 — 붙임·띄움 출현 분해 (버튼과 간격) */

@@ -128,7 +128,7 @@ export function ConsistencyIntroMessage(_props = {}) {
       </span>
       은 원고에서 자동으로!
       <br />
-      통일이 필요한 항목을 <FindBtnLook /> 제안한다냥
+      통일이 필요한 단어를 <FindBtnLook /> 제안한다냥
       <br />
       좋은 기능이니 꼭 활용해달라냥
     </>

@@ -26,7 +26,7 @@ export default function UnifyCandidateFindCompleteContent({
         <span className="results-header__stat app-dialog__results-stat app-dialog__unify-find-complete-stat">
           <AppDialogCriteriaLabel
             label={phaseLabel}
-            meta={`추천 항목 ${clusterCount} 전체 발견`}
+            meta={`추천 이형태쌍 ${clusterCount} 전체 발견`}
           />
           <ResultFindingsCountCircle
             count={totalOccurrences}

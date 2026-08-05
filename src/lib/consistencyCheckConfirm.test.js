@@ -346,7 +346,7 @@ describe('formatUnifyCandidateFindConfirmMessage', () => {
       '[표기 통일 추천(띄어쓰기-붙여쓰기)]\n' +
         '\n' +
         '표기 통일 검수권 1장을 사용합니다\n' +
-        '사용자의 PC 성능에 따라 10초 ~ 1분 정도 시간이 소요됩니다\n' +
+        '사용자의 PC 환경에 따라 10초~ 1분 정도 소요됩니다\n' +
         '\n' +
         '찾기를 진행할까요?',
     );
@@ -356,7 +356,7 @@ describe('formatUnifyCandidateFindConfirmMessage', () => {
 describe('formatUnifyCandidateFindCompleteMessage', () => {
   it('발견 항목·총 횟수를 완료 alert 본문으로 만든다', () => {
     expect(formatUnifyCandidateFindCompleteMessage(3, 6)).toBe(
-      '1차 표기 통일 : 추천 항목 3 전체 발견 6',
+      '1차 표기 통일 : 추천 이형태쌍 3 전체 발견 6',
     );
   });
 
@@ -370,7 +370,7 @@ describe('formatUnifyCandidateFindCompleteMessage', () => {
 describe('formatUnifyCandidatePhase2CompleteMessage', () => {
   it('2차 완료 본문을 만든다', () => {
     expect(formatUnifyCandidatePhase2CompleteMessage(2, 5)).toBe(
-      '2차 표기 통일 : 추천 항목 2 전체 발견 5',
+      '2차 표기 통일 : 추천 이형태쌍 2 전체 발견 5',
     );
   });
 
@@ -402,7 +402,7 @@ describe('alertUnifyCandidateFindAfterRun', () => {
 
     expect(alertMock).toHaveBeenCalledWith(
       '찾기를 진행했습니다\n\n' +
-        '1차 표기 통일 : 추천 항목 1 전체 발견 2\n\n' +
+        '1차 표기 통일 : 추천 이형태쌍 1 전체 발견 2\n\n' +
         '표기 통일 검수권 1장이 사용되었습니다(1일 검수권 1장, 선물 검수권 5장 사용 가능)',
     );
   });
@@ -456,7 +456,7 @@ describe('alertUnifyCandidateFindAfterRun', () => {
     );
 
     expect(alertMock).toHaveBeenCalledWith(
-      expect.stringContaining('1차 표기 통일 : 추천 항목 1 전체 발견 5'),
+      expect.stringContaining('1차 표기 통일 : 추천 이형태쌍 1 전체 발견 5'),
     );
   });
 });
@@ -490,7 +490,7 @@ describe('alertUnifyCandidatePhase2AfterComplete', () => {
 
     expect(alertMock).toHaveBeenCalledWith(
       '2차 표기 통일을 완료했습니다\n\n' +
-        '2차 표기 통일 : 추천 항목 2 전체 발견 5',
+        '2차 표기 통일 : 추천 이형태쌍 2 전체 발견 5',
     );
   });
 });
