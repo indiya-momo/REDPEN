@@ -220,7 +220,7 @@ export default function WelcomePcScreen({
           >
             ✓
           </span>
-          인터넷 브라우저에서 작동하는 인디자인 PDF 검수 프로그램입니다
+          인터넷 브라우저에서 작동하는 인디자인 · 한글 PDF 검수 프로그램입니다
         </p>
         <p className="welcome-pc__desc-line">
           <span
