@@ -116,7 +116,7 @@ export default function ConsistencyUnifySection({
             표기 통일하기
           </p>
           <p className="hint consistency-hint-block">
-            여러 항목을 입력하고 하나를 📌통일형으로 지정하세요
+            여러 단어를 입력하고 하나를 📌통일형으로 지정하세요
             <br />
             <ConsistencyHintExample>
               <span className="consistency-hint-batang">

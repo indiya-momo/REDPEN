@@ -263,7 +263,7 @@ export default function ConsistencyPanel({
       return;
     }
     if (variants.length > 1) {
-      alert('공통 항목 찾기는 1항목만 등록할 수 있습니다.');
+      alert('공통 항목 찾기는 1단어만 등록할 수 있습니다.');
       return;
     }
     if (phraseSlotRegisterFull) {
@@ -301,11 +301,11 @@ export default function ConsistencyPanel({
       globalExcludeInput.trim() || CONSISTENCY_EXCLUDE_INPUT_PLACEHOLDER;
     const parsed = parseCommaList(input);
     if (!parsed.length) {
-      alert('제외할 항목을 입력하세요.');
+      alert('제외할 단어를 입력하세요.');
       return;
     }
     if (parsed.length > 1) {
-      alert('찾기 제외 항목은 1항목만 등록할 수 있습니다.');
+      alert('찾기 제외 항목은 1단어만 등록할 수 있습니다.');
       return;
     }
     if (excludeRegisterFull) {
@@ -316,7 +316,7 @@ export default function ConsistencyPanel({
     }
     const phrase = parsed[0];
     if (globalExcludePhrases.some((p) => p === phrase)) {
-      alert('입력한 항목은 이미 등록되어 있습니다.');
+      alert('입력한 단어는 이미 등록되어 있습니다.');
       return;
     }
     onGlobalExcludePhrasesChange([...globalExcludePhrases, phrase]);
@@ -371,7 +371,7 @@ export default function ConsistencyPanel({
           </p>
           <div className="consistency-subsection consistency-subsection--first">
             <p className="hint consistency-hint-block">
-              여러 항목을 입력하고 하나를 📌통일형으로 지정하세요
+              여러 단어를 입력하고 하나를 📌통일형으로 지정하세요
               <br />
               <ConsistencyHintExample>
                 <span className="consistency-hint-batang">
@@ -401,14 +401,14 @@ export default function ConsistencyPanel({
         </p>
         <div className="consistency-subsection consistency-subsection--first">
           <p className="hint consistency-hint-block">
-            최대 {MAX_CONSISTENCY_CRITERIA_SLOTS}항목 사이에 ,를 넣어 입력하면 한
+            최대 {MAX_CONSISTENCY_CRITERIA_SLOTS}단어 사이에 ,를 넣어 입력하면 한
             번에 찾을 수 있습니다(영문 대소문자 지원)
             <br />
             <ConsistencyHintExample>
               <span className="consistency-hint-batang">
                 고구려,백제,신라,Silla
               </span>{' '}
-              → 4항목 한 번에 찾기
+              → 4단어 한 번에 찾기
             </ConsistencyHintExample>
           </p>
           <ConsistencyRegisterField
@@ -443,7 +443,7 @@ export default function ConsistencyPanel({
               공통 항목 찾기
             </p>
             <p className="hint consistency-hint-block">
-              @을 포함한 항목을 찾아 순서대로 표시합니다
+              @을 포함한 단어를 찾아 순서대로 표시합니다
               <br />
               <ConsistencyHintExample>
                 <span className="consistency-hint-batang">@시대</span>
@@ -458,7 +458,7 @@ export default function ConsistencyPanel({
               onChange={setSlotInput}
               onRegister={registerSlot}
               placeholder={CONSISTENCY_PHRASE_SLOT_INPUT_PLACEHOLDER}
-              ariaLabel="공통 항목 찾기(1항목)"
+              ariaLabel="공통 항목 찾기(1단어)"
               registerDisabled={phraseSlotRegisterFull}
             />
             <RegisteredList
@@ -483,7 +483,7 @@ export default function ConsistencyPanel({
               찾기 제외 항목
             </p>
             <p className="hint consistency-hint-block">
-              입력한 항목은 찾지 않습니다
+              입력한 단어는 찾지 않습니다
               <br />
               <ConsistencyHintExample>
                 <span className="consistency-hint-batang">소녀시대</span>
@@ -494,7 +494,7 @@ export default function ConsistencyPanel({
               onChange={setGlobalExcludeInput}
               onRegister={addGlobalExcludePhrases}
               placeholder={CONSISTENCY_EXCLUDE_INPUT_PLACEHOLDER}
-              ariaLabel="찾기 제외 항목(1항목)"
+              ariaLabel="찾기 제외 항목(1단어)"
               registerDisabled={excludeRegisterFull}
             />
             <ExcludePhraseList

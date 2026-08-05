@@ -11,7 +11,7 @@ export default function UnifyCandidateFindConfirmContent() {
         1장을 사용합니다
       </p>
       <p className="app-dialog__confirm-line">
-        사용자의 PC 성능에 따라 10초 ~ 1분 정도 시간이 소요됩니다
+        사용자의 PC 환경에 따라 10초~ 1분 정도 소요됩니다
       </p>
       <p className="app-dialog__confirm-line app-dialog__confirm-line--question">
         찾기를 진행할까요?
