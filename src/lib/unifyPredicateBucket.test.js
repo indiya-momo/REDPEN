@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
   isUnifyPredicateCluster,
   looksLikePredicateKey,
+  looksLikeInflectedPredicateKey,
+  attachPredicateReviewHints,
   isUnifyJosaPlusPredicateKey,
   isUnifyJosaPlusNounKey,
   isUnifyNounPlusJosaKey,
@@ -22,6 +24,12 @@ describe('looksLikePredicateKey', () => {
     expect(looksLikePredicateKey('올려')).toBe(true);
     expect(looksLikePredicateKey('빠져')).toBe(true);
     expect(looksLikePredicateKey('깨져')).toBe(true);
+  });
+
+  it('연결어미 활용(알아내고·알아듣지)은 looksLikePredicateKey만으로는 약하다', () => {
+    expect(looksLikePredicateKey('알아내고')).toBe(false);
+    expect(looksLikePredicateKey('알아듣지')).toBe(false);
+    expect(looksLikePredicateKey('알아차리지')).toBe(false);
   });
 
   it('기본형·보조용언 꼬리(@보다·@내다)를 잡는다', () => {
@@ -64,6 +72,50 @@ describe('looksLikePredicateKey', () => {
     expect(looksLikePredicateKey('러시아')).toBe(false);
     expect(looksLikePredicateKey('좋아')).toBe(true);
     expect(looksLikePredicateKey('살아')).toBe(true);
+  });
+});
+
+describe('looksLikeInflectedPredicateKey', () => {
+  it('알아내고·알아듣지·알아차리지를 용언 활용으로 본다', () => {
+    expect(looksLikeInflectedPredicateKey('알아내고')).toBe(true);
+    expect(looksLikeInflectedPredicateKey('알아듣지')).toBe(true);
+    expect(looksLikeInflectedPredicateKey('알아차리지')).toBe(true);
+  });
+
+  it('일반 명사는 그대로 둔다', () => {
+    expect(looksLikeInflectedPredicateKey('생활')).toBe(false);
+    expect(looksLikeInflectedPredicateKey('경제')).toBe(false);
+    expect(looksLikeInflectedPredicateKey('편지')).toBe(false);
+  });
+});
+
+describe('attachPredicateReviewHints', () => {
+  it('용언 활용에 predicateReview를 붙이고 본+보조는 건너뛴다', () => {
+    const out = attachPredicateReviewHints([
+      {
+        key: '알아내고',
+        variants: ['알아내고', '알아 내고'],
+        counts: { 알아내고: 5, '알아 내고': 1 },
+        recommendedUnify: '알아내고',
+        totalCount: 6,
+      },
+      {
+        key: '해보',
+        variants: ['해보', '해 보'],
+        counts: { 해보: 1, '해 보': 1 },
+        recommendedUnify: '해보',
+        totalCount: 2,
+        auxReview: {
+          status: 'review',
+          stemKey: '해보',
+          stemSpaced: '해 보',
+          itemId: 'x',
+        },
+      },
+    ]);
+    expect(out[0].predicateReview?.status).toBe('needs_review');
+    expect(out[1].predicateReview).toBeUndefined();
+    expect(out[1].auxReview?.status).toBe('review');
   });
 });
 

@@ -207,9 +207,15 @@ function SeriesSpacingButtons({
   );
 }
 
-/** 보조용언 추정(검토 필요) — 목록엔 두되 기본은 PDF·완료 집계에서 제외 */
-function isAuxReviewDeferredCluster(cluster) {
-  return cluster?.auxReview?.status === 'review';
+/**
+ * 보조용언·용언 추정(검토 필요) — 목록엔 두되 기본은 PDF 체크·완료 집계에서 제외
+ * @param {import('../../lib/unifyCandidateDiscover.js').UnifySpacingCluster} cluster
+ */
+function isReviewDeferredCluster(cluster) {
+  return (
+    cluster?.auxReview?.status === 'review' ||
+    cluster?.predicateReview?.status === 'needs_review'
+  );
 }
 
 /**
@@ -220,7 +226,7 @@ function isAuxReviewDeferredCluster(cluster) {
 function summarizeUnifyListSnapshot(groups) {
   const listClusters = (groups ?? []).flatMap((g) => g.clusters ?? []);
   const countedClusters = listClusters.filter(
-    (c) => !isAuxReviewDeferredCluster(c),
+    (c) => !isReviewDeferredCluster(c),
   );
   return {
     listClusters,
@@ -231,7 +237,7 @@ function summarizeUnifyListSnapshot(groups) {
       0,
     ),
     hiddenPdfKeys: new Set(
-      listClusters.filter(isAuxReviewDeferredCluster).map((c) => c.key),
+      listClusters.filter(isReviewDeferredCluster).map((c) => c.key),
     ),
   };
 }
@@ -2349,9 +2355,16 @@ function ClusterCard({
                     예외
                   </span>
                 ) : null}
-                {isFirst &&
-                cluster.josaReview?.status === 'review' &&
-                cluster.auxReview?.status !== 'review' ? (
+                {isFirst && cluster.auxReview?.status === 'review' ? (
+                  <span className="unify-candidate-find__aux-review">
+                    본용언+ 보조용언 표기로 추정, 검토 필요
+                  </span>
+                ) : isFirst &&
+                  cluster.predicateReview?.status === 'needs_review' ? (
+                  <span className="unify-candidate-find__predicate-review">
+                    용언 추정, 검토 필요
+                  </span>
+                ) : isFirst && cluster.josaReview?.status === 'review' ? (
                   <CriteriaHoverTip
                     tip={
                       cluster.josaReview.peerKeys?.length
@@ -2363,18 +2376,6 @@ function ClusterCard({
                       조사 · 어간 추정, 검토 필요
                     </span>
                   </CriteriaHoverTip>
-                ) : null}
-                {isFirst && cluster.auxReview?.status === 'review' ? (
-                  <span className="unify-candidate-find__aux-review">
-                    본용언+ 보조용언 표기로 추정, 검토 필요
-                  </span>
-                ) : null}
-                {isFirst &&
-                cluster.predicateReview?.status === 'needs_review' &&
-                cluster.auxReview?.status !== 'review' ? (
-                  <span className="unify-candidate-find__predicate-review">
-                    용언 추정, 검토 필요
-                  </span>
                 ) : null}
               </div>
               {instances.length > 0 ? (
