@@ -16,6 +16,9 @@ alwaysApply: false
 
 # 표기통일 잡음 리스트
 
+- **동기(왜 꼬리인가):** 맞춤법 시트에 활용·관형 find를 표면형으로 다 넣을 수 없어, 생산적 꼬리·닫힌 예외로 **압축**한다. (활용형 단어장 금지와 같은 이유)
+- **직무(어디에 쓰나):** 표기통일 찾기 **1차 잡음 제거**(명사 복합이 아닌 띄움/붙임 후보 제외). 맞춤법 find→replace의 대리·공유 엔진이 아님. 시트 미수록 finds를 교정하는 기능으로 확장하지 말 것.
+
 ## 역할 분리
 
 | 구간 | Kiwi | 하는 일 |
@@ -32,7 +35,29 @@ alwaysApply: false
 4. 불가피한 런타임 휴리스틱은 `unifyNoiseList.js` / `LeftHeuristic` / `AdnominalHeuristic`에만, 주석에 `source: manual-heuristic`과 이유를 남긴다
 5. **`unifyNoiseRegressionCorpus.js` KEEP/DROP을 갱신·통과** — 캐나다/붉은형 회귀 방지 (`가진 사람`은 `DROP_KIWI_ADNOMINAL`)
 6. **예외 ≥70** → 테스트가 깨지며 알람. **사용자에게 알리고** 서버 C→D3 / DEV 2차 boot 재검토 (100이 아니라 70). `--add`만 하고 넘어가지 말 것.  
-   (C = 서버 C Kiwi morph 호스트, D3 = C 검증 후 `NOISE_FILTER` 기본 ON. reading-order의 C→B와 무관 — design doc §0.0·§8)
+   (C = 서버 C Kiwi morph 호스트, D3 = C 검증 후 `NOISE_FILTER` 기본 ON. reading-order의 C→B와 무관 — design doc §0.0·§8)  
+   **성능 상한이 아님** — 리스트 유지보수·형태소 경로 재검토용 정책 알람. 매칭 타임아웃을 예외 개수에 걸지 말 것.
+
+## 매칭 구조 · 성능 축
+
+구조: 문서 전체를 예외마다 훑지 않음. **후보 표면(짧은 어절·붙임키) × 리스트 조회**, 동일 한글 표면은 `noiseRejectCache`로 1회만.
+
+| 검사 | 구조 | 비용 |
+|------|------|------|
+| 예외 완전일치 | `Set.has` | O(1) — 개수(70·150)만으로 체감 차이 없음 |
+| verbal/copula 꼬리 · 예외 접두 | 배열 + `endsWith`/`startsWith` | 후보당 **선형** |
+| 꼬리+명사 infix (붙임) | 분할점 × 꼬리 | 후보당 가장 큼 |
+
+- **닫힌 표면 → 예외 Set**: 매칭 비용 거의 free.  
+- **꼬리 일반화 → verbalTails**: 예외 억제에는 맞지만, 후보 × 꼬리 스캔 비용이 붙는 축.  
+- 로딩 무한 대기는 Kiwi prefetch/boot 예산·enrich 쪽이 담당. 예외 Set 크기는 관여하지 않음.
+
+대략적 관측 지점 (새 임계값·알람은 당장 만들지 않음):
+
+- 꼬리(verbal+copula) **~300 미만**: 현재 전략 OK  
+- **~500**: 대형 PDF에서 “목록이 커져 느려졌나”를 의심할 첫 지점 → 벤치  
+- **~1000+**: 개수 상한보다 매칭 구조(트라이/Aho 등) 검토  
+- 예외 Set: 수백까지도 `has`는 안전. 접두 루프는 **~1000+**에서나 신경
 
 ## 회귀 코퍼스
 
@@ -65,7 +90,7 @@ KEEP = 목록에 남아야 함, DROP = 잡음으로 빠져야 함.
    일반화 혜택 밖 → 필요 시 **닫힌 예외/꼬리로 개별** 유지. **(TODO — JSON 미등록)**
 
 이 기준으로 `exceptionEojeols`가 70에 근접하면 **변경 전 체크 6번**(서버 C→D3 / DEV 2차 boot 재검토)을 먼저 따를 것.  
-(`verbalTails`는 70 카운트 밖 — 테스트는 `exceptionEojeols`만 셈.)
+(`verbalTails`는 70 카운트 밖 — 테스트는 `exceptionEojeols`만 셈. 70은 유지보수 알람이지 꼬리 선형 스캔 상한이 아님 — 위 **매칭 구조 · 성능 축**.)
 
 ## 수확 예
 
