@@ -5861,7 +5861,8 @@
   margin-top: 0;
   margin-inline-start: 0;
   font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
-  font-size: var(--consistency-example-font-size);
+  /* 예시 고딕(등록 후·(띄어쓰기) 등) — 표기 샘플(바탕)보다 1px 작게 */
+  font-size: calc(var(--consistency-example-font-size) - 1px);
   font-weight: 400;
   line-height: var(--consistency-example-line-height);
   letter-spacing: 0;
@@ -5878,10 +5879,11 @@
   color: inherit;
 }
 
-/* 안내 예시 문구 중 표기 샘플 — OS 일반 바탕(Batang). 리디바탕 아님. */
+/* 안내 예시 문구 중 표기 샘플 — 학교안심 바른바탕. 리디바탕 아님. */
 .consistency-hint-example .consistency-hint-batang,
 .consistency-hint-example-body .consistency-hint-batang {
-  font-family: 'Batang', 'BatangChe', 'Gungsuh', serif;
+  font-family: var(--font-family-example-batang);
+  font-size: var(--consistency-example-font-size);
 }
 
 .consistency-hint-term {
@@ -6497,8 +6499,8 @@
   border: none;
   border-radius: 0;
   background: transparent;
-  /* Jo March 등 검색창 예시·입력 — OS 일반 바탕 */
-  font-family: 'Batang', 'BatangChe', 'Gungsuh', serif;
+  /* Jo March 등 검색창 예시·입력 — 학교안심 바른바탕 */
+  font-family: var(--font-family-example-batang);
   font-size: calc(0.875rem * var(--panel-ui-scale, 1));
   font-weight: 400;
   color: var(--consistency-register-text, var(--color-text-muted));

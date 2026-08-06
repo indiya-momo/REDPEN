@@ -1710,9 +1710,10 @@ export default function UnifyCandidateFindPanel({
             표기 통일이 필요한 단어를 자동으로 찾아 제안합니다
             <br />
             <ConsistencyHintExample>
-              <span className="consistency-hint-batang">
-                경제˅학자(띄어쓰기), 경제학자(붙여쓰기)
-              </span>
+              <span className="consistency-hint-batang">경제˅학자</span>
+              (띄어쓰기),{' '}
+              <span className="consistency-hint-batang">경제학자</span>
+              (붙여쓰기)
               {' → '}
               📌표기 통일 제안
             </ConsistencyHintExample>

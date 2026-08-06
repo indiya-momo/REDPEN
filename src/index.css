@@ -58,6 +58,9 @@ body:has(.welcome-pc) {
 :root {
   --font-family-title: 'MapoDaCapo', 'Malgun Gothic', 'Apple SD Gothic Neo', serif;
   --font-family-body-brand: 'RidiBatang', 'Malgun Gothic', 'Apple SD Gothic Neo', serif;
+  /* 안내 예시 문구·검색 예시 입력 — 학교안심 바른바탕 (리디바탕·OS Batang 아님) */
+  --font-family-example-batang: 'HakgyoansimBareonBatang', 'Batang', 'BatangChe',
+    serif;
 
   /* 좌측 리스트 본문 — ink 2단계 (텍스트 가독성) */
   --ink: #1a1a1a;
@@ -3916,8 +3919,8 @@ html[data-build='prod'] .unify-candidate-find__list {
 }
 
 .field-input--space-visible {
-  /* 검색창 예시·입력 — OS 일반 바탕 */
-  font-family: 'Batang', 'BatangChe', 'Gungsuh', serif;
+  /* 검색창 예시·입력 — 학교안심 바른바탕 */
+  font-family: var(--font-family-example-batang);
   letter-spacing: 0.02em;
 }
 
