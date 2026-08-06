@@ -40,10 +40,10 @@ describe('looksLikePredicateKey', () => {
     expect(looksLikePredicateKey('만들어내다')).toBe(true);
   });
 
-  it('알려진 용언 어간(오래·보자·나가)을 잡는다', () => {
-    expect(looksLikePredicateKey('오래')).toBe(true);
+  it('알려진 용언 어간(보자·나가)을 잡고, 오래(부사)·오래다(형용사)는 용언 시드가 아니다', () => {
     expect(looksLikePredicateKey('보자')).toBe(true);
     expect(looksLikePredicateKey('나가')).toBe(true);
+    expect(looksLikePredicateKey('오래')).toBe(false);
   });
 
   it('개의(의존명사+의)는 휴리스틱 용언이 아니다', () => {

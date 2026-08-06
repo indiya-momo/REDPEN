@@ -5,6 +5,8 @@ import {
   buildSecondaryGroupsFromCandidates,
   buildSuffixPatternRuleFromChoice,
   collectPatternRuleCandidates,
+  collectPatternRulesFromRegistrations,
+  isUnifyPatternSeedEligibleCluster,
   dedupeMismatchesSuffixOverPrefix,
   findPatternMismatches,
   findSuffixPatternMismatches,
@@ -288,6 +290,54 @@ describe('unifyPatternRule', () => {
       [{ pageNum: 1, text: '경제 성장이 둔화됐다.' }],
     );
     expect(candidates.find((c) => c.rule.template === '@성장')).toBeFalsy();
+  });
+
+  it('본+보조·용언 검토 클러스터는 @시드에서 빼고, soft 확정 명사는 시드한다', () => {
+    expect(
+      isUnifyPatternSeedEligibleCluster({
+        key: '해보',
+        auxReview: { status: 'review' },
+      }),
+    ).toBe(false);
+    expect(
+      isUnifyPatternSeedEligibleCluster({
+        key: '알아내고',
+        predicateReview: { status: 'needs_review' },
+      }),
+    ).toBe(false);
+    expect(
+      isUnifyPatternSeedEligibleCluster({
+        key: '미국정부',
+        variants: ['미국정부', '미국 정부'],
+      }),
+    ).toBe(true);
+
+    const rules = collectPatternRulesFromRegistrations(
+      new Map([
+        ['미국정부', '미국정부'],
+        ['해보', '해보'],
+        ['알아내고', '알아내고'],
+      ]),
+      [
+        {
+          key: '미국정부',
+          variants: ['미국정부', '미국 정부'],
+        },
+        {
+          key: '해보',
+          variants: ['해보', '해 보'],
+          auxReview: { status: 'review' },
+        },
+        {
+          key: '알아내고',
+          variants: ['알아내고', '알아 내고'],
+          predicateReview: { status: 'needs_review' },
+        },
+      ],
+    );
+    expect(rules.some((r) => r.confirmedKey === '미국정부')).toBe(true);
+    expect(rules.some((r) => r.confirmedKey === '해보')).toBe(false);
+    expect(rules.some((r) => r.confirmedKey === '알아내고')).toBe(false);
   });
 
   it('다 head면 @성장 후보와 score를 만든다', () => {

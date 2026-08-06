@@ -86,6 +86,8 @@ export const UNIFY_NOISE_REGRESSION_DROP = Object.freeze([
   { spaced: '엄청난 성장', note: '관형 형용사 엄청난' },
   { spaced: '언제 성장', note: '의문 부사 언제' },
   { spaced: '조선 어느', note: '관형사·대명사 어느' },
+  { spaced: '벗어난 정책', note: '용언 관형 벗어난(종성ㄴ)' },
+  { spaced: '각종 대출', note: '수량·종류 관형 각종' },
   { spaced: '오래 볼수', note: '부사 오래 + 용언 조각' },
   { spaced: '오래 뜻깊', note: '부사 오래 + 형용사 조각' },
   { spaced: '오래 머무르며', note: '부사 오래 + 용언 연결' },

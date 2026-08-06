@@ -44,6 +44,7 @@ export const PATTERN_RULE_HEAD_BLACKLIST = new Set([
   '첫',
   '모든',
   '어떤',
+  '어느',
   '이런',
   '그런',
   '저런',
@@ -58,6 +59,8 @@ export const PATTERN_RULE_HEAD_BLACKLIST = new Set([
   '나쁜',
   '새로운',
   '오래된',
+  '오래',
+  '오래도록',
   '가난한',
   '없는',
   '있는',
@@ -69,11 +72,11 @@ export const PATTERN_RULE_HEAD_BLACKLIST = new Set([
   '한',
   '온',
   '전한',
-  '어떤',
   '아무',
   '몇몇',
   '온갖',
   '각종',
+  '벗어난',
 ]);
 
 /**
@@ -628,7 +631,22 @@ export function groupPatternConditionLabelsByDirection(labels) {
 }
 
 /**
- * 1차 등록에서 접두·접미 패턴 규칙만 모은다 (매칭 전).
+ * 제품 2단(@확장) 시드에 쓸 1차 클러스터인지.
+ * soft 80%·확정 등록은 동일 취급. 용언·본+보조 **검토** 항목만 시드에서 뺀다.
+ * @param {import('./unifyCandidateDiscover.js').UnifySpacingCluster | null | undefined} cluster
+ * @returns {boolean}
+ */
+export function isUnifyPatternSeedEligibleCluster(cluster) {
+  if (!cluster?.key) return false;
+  if (cluster.auxReview?.status === 'review') return false;
+  if (cluster.predicateReview?.status === 'needs_review') return false;
+  return true;
+}
+
+/**
+ * 1차 등록(및 soft 미리찍기 병합 chosen)에서 접두·접미 패턴 규칙만 모은다 (매칭 전).
+ * soft 80%는 사용자가 안 건드린 채택이므로 확정 등록과 동일하게 시드한다.
+ * 검토(본+보조·용언 추정) 클러스터는 시드에서 제외한다.
  * @param {Map<string, string> | Iterable<[string, string]>} registeredVariants
  * @param {import('./unifyCandidateDiscover.js').UnifySpacingCluster[]} clusters
  * @returns {UnifyPatternRule[]}
@@ -647,7 +665,7 @@ export function collectPatternRulesFromRegistrations(
   const rulesById = new Map();
   for (const [key, chosen] of entries) {
     const cluster = clusterByKey.get(key);
-    if (!cluster) continue;
+    if (!isUnifyPatternSeedEligibleCluster(cluster)) continue;
     for (const builder of [
       buildSuffixPatternRuleFromChoice,
       buildPrefixPatternRuleFromChoice,
@@ -670,7 +688,7 @@ export function collectPatternRulesFromRegistrations(
 
 /**
  * 1차 등록에서 2차 패턴 후보(+건수·예시·score)를 모은다.
- * 증거 하한 미달 후보는 제외한다.
+ * 증거 하한(uniqueHeads·occurrence) 미달·시드 부적격 후보는 제외한다.
  * @param {Map<string, string> | Iterable<[string, string]>} registeredVariants
  * @param {import('./unifyCandidateDiscover.js').UnifySpacingCluster[]} clusters
  * @param {{ pageNum?: number, text?: string, textLayout?: string }[]} pageTexts

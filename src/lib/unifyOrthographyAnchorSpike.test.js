@@ -153,10 +153,10 @@ describe('unifyOrthographyAnchorSpike', () => {
     expect(mixClusters[0].pagesByVariant['도널드']).toEqual([1]);
   });
 
-  it('명사만 앵커·변형으로 쓰고 용언·…다는 버린다', () => {
+  it('명사만 앵커·변형으로 쓰고 용언·부사 잡음·…다는 버린다', () => {
     expect(isOrthoNounSurface('도널드')).toBe(true);
     expect(isOrthoNounSurface('만들어')).toBe(false);
-    expect(isOrthoNounSurface('오래')).toBe(false);
+    expect(isOrthoNounSurface('오래')).toBe(false); // 부사 — 잡음 예외
     expect(isOrthoNounSurface('좋다')).toBe(false);
     expect(isOrthoNounSurface('조사로')).toBe(false);
     expect(isOrthoNounSurface('말아라')).toBe(false);
