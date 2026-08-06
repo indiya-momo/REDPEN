@@ -2039,8 +2039,8 @@
   font-size: calc(0.78rem * var(--panel-ui-scale, 1));
   line-height: 1.45;
   color: var(--c-soft, #555);
-  background: var(--panel-surface-group, #f6f1e7);
-  border: 1px solid var(--panel-border-soft, #dcd2bf);
+  background: var(--panel-surface-group, #f0f0f0);
+  border: 1px solid var(--panel-border-soft, #d0d0d0);
 }
 
 .panel-left .unify-candidate-find__phase-banner-title {
@@ -2049,10 +2049,17 @@
   color: var(--c-ink, #333);
 }
 
-.panel-left .unify-candidate-find__phase-banner-conditions,
-.panel-left .unify-candidate-find__phase-banner-line {
+.panel-left .unify-candidate-find__phase-banner-conditions {
   margin: 0;
   font-weight: 600;
+  color: var(--c-ink, #333);
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.panel-left .unify-candidate-find__phase-banner-line {
+  margin: 0;
+  font-weight: 400;
   color: var(--c-ink, #333);
   word-break: keep-all;
   overflow-wrap: anywhere;
@@ -2143,8 +2150,8 @@
 .panel-left .unify-pattern-pick {
   margin: 0 0 12px;
   padding: 10px 12px;
-  background: var(--panel-surface-group, #f6f1e7);
-  border: 1px solid var(--panel-border-soft, #dcd2bf);
+  background: var(--panel-surface-group, #f0f0f0);
+  border: 1px solid var(--panel-border-soft, #d0d0d0);
 }
 
 .panel-left .unify-pattern-pick__hint,
@@ -2210,8 +2217,8 @@
 .panel-left .unify-pattern-rule-preview {
   margin-top: var(--panel-gap-section, 12px);
   padding: 10px 12px;
-  background: var(--panel-surface-group, #f6f1e7);
-  border: 1px solid var(--panel-border-soft, #dcd2bf);
+  background: var(--panel-surface-group, #f0f0f0);
+  border: 1px solid var(--panel-border-soft, #d0d0d0);
 }
 
 .panel-left .unify-pattern-rule-preview__head {
@@ -2399,6 +2406,8 @@
   text-align: right;
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
+  /* 헤더 본문 대비 20% 축소 */
+  font-size: calc(0.98rem * var(--panel-ui-scale) * 0.9 * 1.1 * 0.8);
 }
 
 .panel-left
@@ -2407,7 +2416,7 @@
   .unify-candidate-find__badge-slot {
   box-sizing: border-box;
   width: 100%;
-  min-height: var(--results-findings-circle-size, 1.35rem);
+  min-height: calc(var(--results-findings-circle-size, 1.35rem) * 0.8);
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -2438,12 +2447,12 @@
   box-sizing: border-box;
   width: auto;
   height: auto;
-  min-width: var(--results-findings-circle-size, 1.35rem);
-  min-height: var(--results-findings-circle-size, 1.35rem);
+  min-width: calc(var(--results-findings-circle-size, 1.35rem) * 0.8);
+  min-height: calc(var(--results-findings-circle-size, 1.35rem) * 0.8);
   padding: 0.1em 0.45em;
   border-radius: var(--radius-ui-sm, 6px);
-  /* 전체 발견(584)과 동일 — 항목 배지(3·123)도 같은 크기 */
-  font-size: calc(0.85rem * var(--panel-ui-scale) * 0.9 * 1.1);
+  /* 배지 숫자도 헤더와 같이 20% 축소 */
+  font-size: calc(0.85rem * var(--panel-ui-scale) * 0.9 * 1.1 * 0.8);
   background: var(--pdf-highlight-primary-fill);
   color: var(--color-surface-inverse, #2a2118);
   box-shadow: var(--pdf-highlight-primary-shadow);

@@ -31,9 +31,9 @@ import {
   buildPatternRulePreviewGroups,
   buildSecondaryGroupsFromCandidates,
   collectPatternRuleCandidates,
-  collectPatternRulesFromRegistrations,
+  collectPrimaryFormsForPatternGroup,
   formatPatternRuleConditionLabel,
-  formatPatternSupportExplain,
+  formatPhase2PrimaryFormsLine,
   groupPatternConditionLabelsByDirection,
   isPrimaryUnifyComplete,
 } from '../../lib/unifyPatternRule.js';
@@ -641,9 +641,9 @@ export default function UnifyCandidateFindPanel({
   const [preSelected, setPreSelected] = useState(
     /** @type {Map<string, string>} */ (new Map()),
   );
-  /** @type {['primary' | 'pattern_pick' | 'secondary_pairs', Function]} */
+  /** @type {['primary' | 'secondary_pairs', Function]} */
   const [unifyPhase, setUnifyPhase] = useState(
-    /** @type {'primary' | 'pattern_pick' | 'secondary_pairs'} */ ('primary'),
+    /** @type {'primary' | 'secondary_pairs'} */ ('primary'),
   );
   const [secondaryGroups, setSecondaryGroups] = useState(
     /** @type {{
@@ -654,19 +654,6 @@ export default function UnifyCandidateFindPanel({
      *   template: string,
      *   clusters: UnifySpacingCluster[],
      * }[]} */ ([]),
-  );
-  /** 2차-A — 패턴 후보(건수·Explain). 선택 후 2차-B로 */
-  const [phase2Candidates, setPhase2Candidates] = useState(
-    /** @type {import('../../lib/unifyPatternRule.js').PatternRuleCandidate[]} */ (
-      []
-    ),
-  );
-  const [selectedPatternIds, setSelectedPatternIds] = useState(
-    /** @type {Set<string>} */ (new Set()),
-  );
-  /** 2차 진행 중 — 1차에서 확정된 조건형 라벨 */
-  const [phase2ConditionLabels, setPhase2ConditionLabels] = useState(
-    /** @type {string[]} */ ([]),
   );
   /** 2차 완료 후 — 2차에서 고른 조건형 라벨 */
   const [phase2DoneLabels, setPhase2DoneLabels] = useState(
@@ -1027,9 +1014,6 @@ export default function UnifyCandidateFindPanel({
       setPreSelected(softEarly);
       setUnifyPhase('primary');
       setSecondaryGroups([]);
-      setPhase2Candidates([]);
-      setSelectedPatternIds(new Set());
-      setPhase2ConditionLabels([]);
       setPhase2DoneLabels([]);
       setPhase2ResultSummary(null);
       setPhase2ConditionsExpanded(false);
@@ -1236,37 +1220,19 @@ export default function UnifyCandidateFindPanel({
     () => sumClusterFindings(secondaryClusters),
     [secondaryClusters],
   );
-  const phase2PickPreview = useMemo(() => {
-    if (unifyPhase !== 'pattern_pick') return null;
-    const groups = buildSecondaryGroupsFromCandidates(
-      phase2Candidates,
-      selectedPatternIds,
-    );
-    const cls = groups.flatMap((g) => g.clusters);
-    return {
-      itemCount: countUnifyListAccordionItems(groups),
-      findings: sumClusterFindings(cls),
-    };
-  }, [unifyPhase, phase2Candidates, selectedPatternIds]);
 
   const phase2HeaderItemCount =
     unifyPhase === 'secondary_pairs'
       ? phase2LiveItemCount
-      : unifyPhase === 'pattern_pick'
-        ? (phase2PickPreview?.itemCount ?? 0)
-        : (phase2ResultSummary?.itemCount ?? 0);
+      : (phase2ResultSummary?.itemCount ?? 0);
   const phase2HeaderFindings =
     unifyPhase === 'secondary_pairs'
       ? phase2LiveFindings
-      : unifyPhase === 'pattern_pick'
-        ? (phase2PickPreview?.findings ?? 0)
-        : (phase2ResultSummary?.findings ?? 0);
+      : (phase2ResultSummary?.findings ?? 0);
   const phase2PatternEnabled = isUnifyPhase2PatternEnabled();
   const showPhase2Header =
     phase2PatternEnabled &&
-    (unifyPhase === 'pattern_pick' ||
-      unifyPhase === 'secondary_pairs' ||
-      phase2ResultSummary != null);
+    (unifyPhase === 'secondary_pairs' || phase2ResultSummary != null);
 
   /**
    * variant를 선택하여 즉시 등록 (1차 또는 2차-B).
@@ -1350,15 +1316,10 @@ export default function UnifyCandidateFindPanel({
     ],
   );
 
-  /** 2차-A — 패턴 후보 수집·Explain Preview (전부 자동 선택 후 고르게) */
+  /** 2차 — 패턴 후보 전부로 바로 단어 세트 목록 (pattern_pick 생략) */
   const enterPhase2 = useCallback(() => {
     if (!isUnifyPhase2PatternEnabled()) return;
     const chosen = mergeUnifyChosenMaps(registeredVariants, preSelected);
-    const rules = collectPatternRulesFromRegistrations(chosen, clusters);
-    const labels = rules
-      .map((r) => formatPatternRuleConditionLabel(r))
-      .filter(Boolean);
-    setPhase2ConditionLabels(labels);
 
     const candidates = collectPatternRuleCandidates(chosen, clusters, pageTexts);
     setSecondaryGroups([]);
@@ -1368,12 +1329,9 @@ export default function UnifyCandidateFindPanel({
     setHiddenPdfKeys(new Set());
     phase2CompletePromptedRef.current = false;
 
-    // 후보 없음 → 2차-A 생략, 1차로 복귀
+    // 후보 없음 → 2차 생략, 1차로 복귀
     if (!candidates.length) {
-      setPhase2Candidates([]);
-      setSelectedPatternIds(new Set());
       setUnifyPhase('primary');
-      setPhase2ConditionLabels([]);
       publishPreview({
         hidden: new Set(),
         chosenByKey: chosen,
@@ -1383,17 +1341,24 @@ export default function UnifyCandidateFindPanel({
     }
 
     const ids = new Set(candidates.map((c) => c.id));
-    setPhase2Candidates(candidates);
-    setSelectedPatternIds(ids);
-    setUnifyPhase('pattern_pick');
+    const nextGroups = buildSecondaryGroupsFromCandidates(candidates, ids);
+    const nextClusters = nextGroups.flatMap((g) => g.clusters);
+    setSecondaryGroups(nextGroups);
+    setPhase2ResultSummary({
+      itemCount: countUnifyListAccordionItems(nextGroups),
+      findings: sumClusterFindings(nextClusters),
+    });
+    setUnifyPhase('secondary_pairs');
 
     const previewMismatches = candidates.flatMap((c) => c.mismatches ?? []);
-    if (onPreviewGroupsChange) {
-      onPreviewGroupsChange(
-        previewMismatches.length
-          ? buildPatternRulePreviewGroups(previewMismatches)
-          : [],
-      );
+    if (onPreviewGroupsChange && previewMismatches.length) {
+      onPreviewGroupsChange(buildPatternRulePreviewGroups(previewMismatches));
+    } else {
+      publishPreview({
+        hidden: new Set(),
+        chosenByKey: chosen,
+        overrideClusters: nextClusters,
+      });
     }
   }, [
     registeredVariants,
@@ -1407,98 +1372,6 @@ export default function UnifyCandidateFindPanel({
     predicateNeedsReviewByKey,
     publishPreview,
     findListGroups,
-    onPreviewGroupsChange,
-  ]);
-
-  /** 2차-A → 2차-B: 고른 패턴만 이형태쌍 목록 */
-  const confirmPhase2Patterns = useCallback(() => {
-    if (selectedPatternIds.size === 0) return;
-    const nextGroups = buildSecondaryGroupsFromCandidates(
-      phase2Candidates,
-      selectedPatternIds,
-    );
-    const nextClusters = nextGroups.flatMap((g) => g.clusters);
-    setSecondaryGroups(nextGroups);
-    setPhase2ResultSummary({
-      itemCount: countUnifyListAccordionItems(nextGroups),
-      findings: sumClusterFindings(nextClusters),
-    });
-    setUnifyPhase('secondary_pairs');
-    phase2CompletePromptedRef.current = false;
-
-    const chosen = mergeUnifyChosenMaps(registeredVariants, preSelected);
-    const previewMismatches = phase2Candidates
-      .filter((c) => selectedPatternIds.has(c.id))
-      .flatMap((c) => c.mismatches ?? []);
-    if (onPreviewGroupsChange && previewMismatches.length) {
-      onPreviewGroupsChange(buildPatternRulePreviewGroups(previewMismatches));
-    } else {
-      publishPreview({
-        hidden: new Set(),
-        chosenByKey: chosen,
-        overrideClusters: nextClusters,
-      });
-    }
-  }, [
-    phase2Candidates,
-    selectedPatternIds,
-    registeredVariants,
-    preSelected,
-    clusters,
-    rawByKey,
-    slmReviewedByKey,
-    predicateDropSeriesIds,
-    predicateDropClusterKeys,
-    predicateNeedsReviewByKey,
-    publishPreview,
-    onPreviewGroupsChange,
-  ]);
-
-  const cancelPhase2PatternPick = useCallback(() => {
-    setUnifyPhase('primary');
-    setPhase2Candidates([]);
-    setSelectedPatternIds(new Set());
-    setPhase2ConditionLabels([]);
-    setSecondaryGroups([]);
-    publishPreview({
-      chosenByKey: mergeUnifyChosenMaps(registeredVariants, preSelected),
-      overrideClusters: findListGroups?.flatMap((g) => g.clusters) ?? null,
-    });
-  }, [
-    clusters,
-    rawByKey,
-    hiddenPdfKeys,
-    slmReviewedByKey,
-    predicateDropSeriesIds,
-    predicateDropClusterKeys,
-    predicateNeedsReviewByKey,
-    registeredVariants,
-    preSelected,
-    publishPreview,
-    findListGroups,
-  ]);
-
-  const togglePatternPickId = useCallback((id) => {
-    setSelectedPatternIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  }, []);
-
-  useEffect(() => {
-    if (unifyPhase !== 'pattern_pick' || !onPreviewGroupsChange) return;
-    const mismatches = phase2Candidates
-      .filter((c) => selectedPatternIds.has(c.id))
-      .flatMap((c) => c.mismatches ?? []);
-    onPreviewGroupsChange(
-      mismatches.length ? buildPatternRulePreviewGroups(mismatches) : [],
-    );
-  }, [
-    unifyPhase,
-    phase2Candidates,
-    selectedPatternIds,
     onPreviewGroupsChange,
   ]);
 
@@ -1523,9 +1396,6 @@ export default function UnifyCandidateFindPanel({
     setPhase2DoneLabels(doneLabels);
     setUnifyPhase('primary');
     setSecondaryGroups([]);
-    setPhase2Candidates([]);
-    setSelectedPatternIds(new Set());
-    setPhase2ConditionLabels([]);
     setPhase2ConditionsExpanded(false);
     publishPreview({
       chosenByKey: mergeUnifyChosenMaps(registeredVariants, preSelected),
@@ -1815,7 +1685,7 @@ export default function UnifyCandidateFindPanel({
                   <div className="unify-candidate-find__findings-row">
                     <span className="results-header__total-findings results-findings-meta">
                       <span className="results-findings-meta__label">
-                        1차 표기 통일 : 추천 이형태쌍 {listItemCount} 전체 발견
+                        1차 표기 통일 : 추천 단어 세트 {listItemCount} 전체 발견
                       </span>
                       <span className="unify-candidate-find__badge-slot">
                         <UnifyFindingsCount
@@ -1830,7 +1700,7 @@ export default function UnifyCandidateFindPanel({
                     <div className="unify-candidate-find__findings-row">
                       <span className="results-header__total-findings results-findings-meta">
                         <span className="results-findings-meta__label">
-                          2차 표기 통일 : 추천 이형태쌍 {phase2HeaderItemCount}{' '}
+                          2차 표기 통일 : 추천 단어 세트 {phase2HeaderItemCount}{' '}
                           전체 발견
                         </span>
                         <span className="unify-candidate-find__badge-slot">
@@ -1850,32 +1720,10 @@ export default function UnifyCandidateFindPanel({
                 key={`unify-acc-${listEpoch}-${unifyPhase}`}
               >
                 <div className="unify-candidate-find__phase-banner">
-                  {unifyPhase === 'pattern_pick' ? (
-                    <>
-                      <p className="unify-candidate-find__phase-banner-title">
-                        2차 표기 통일 — 패턴 선택
-                      </p>
-                      <Phase2ConditionSummary
-                        labels={phase2ConditionLabels}
-                        expanded={phase2ConditionsExpanded}
-                        onToggleExpand={() =>
-                          setPhase2ConditionsExpanded((v) => !v)
-                        }
-                      />
-                    </>
-                  ) : unifyPhase === 'secondary_pairs' ? (
-                    <>
-                      <p className="unify-candidate-find__phase-banner-title">
-                        2차 표기 통일 중
-                      </p>
-                      <Phase2ConditionSummary
-                        labels={phase2ConditionLabels}
-                        expanded={phase2ConditionsExpanded}
-                        onToggleExpand={() =>
-                          setPhase2ConditionsExpanded((v) => !v)
-                        }
-                      />
-                    </>
+                  {unifyPhase === 'secondary_pairs' ? (
+                    <p className="unify-candidate-find__phase-banner-title">
+                      2차 표기 통일 중 : 1차 표기 통일형을 참고하세요
+                    </p>
                   ) : phase2DoneLabels.length > 0 ? (
                     <Phase2ConditionSummary
                       labels={phase2DoneLabels}
@@ -1909,16 +1757,6 @@ export default function UnifyCandidateFindPanel({
                   )}
                 </div>
 
-                {unifyPhase === 'pattern_pick' ? (
-                  <PatternPickPanel
-                    candidates={phase2Candidates}
-                    selectedIds={selectedPatternIds}
-                    onToggle={togglePatternPickId}
-                    onNext={confirmPhase2Patterns}
-                    onCancel={cancelPhase2PatternPick}
-                  />
-                ) : null}
-
                 {unifyPhase === 'secondary_pairs' ? (
                   <div className="unify-candidate-find__secondary-pairs">
                     {secondaryGroups.length === 0 ? (
@@ -1944,13 +1782,24 @@ export default function UnifyCandidateFindPanel({
                           },
                         );
                         const sectionId = `phase2-series-${group.affixType}-${group.affix}`;
+                        const primaryFormsLine = formatPhase2PrimaryFormsLine(
+                          group.template || seriesLabelText,
+                          collectPrimaryFormsForPatternGroup(
+                            group,
+                            clusters,
+                            mergeUnifyChosenMaps(
+                              registeredVariants,
+                              preSelected,
+                            ),
+                          ),
+                        );
                         return (
                           <details
                             key={sectionId}
                             className="results-category results-category--unify-series"
                           >
                             <summary className="results-category__summary panel-criteria-heading">
-                              <CriteriaHoverTip tip="이형태쌍 리스트 보기">
+                              <CriteriaHoverTip tip="단어 세트 리스트 보기">
                                 <DetailsChevron />
                               </CriteriaHoverTip>
                               <UnifyCategorySelectAll
@@ -1959,7 +1808,7 @@ export default function UnifyCandidateFindPanel({
                                 hiddenPdfKeys={hiddenPdfKeys}
                                 onToggleAll={handleToggleCategoryPdf}
                               />
-                              <CriteriaHoverTip tip="이형태쌍 리스트 보기">
+                              <CriteriaHoverTip tip="단어 세트 리스트 보기">
                                 <span className="results-category__label">
                                   {seriesLabelText}
                                 </span>
@@ -1990,9 +1839,9 @@ export default function UnifyCandidateFindPanel({
                                 />
                               </span>
                             </summary>
-                            {group.supportExplain ? (
+                            {primaryFormsLine ? (
                               <p className="unify-candidate-find__pattern-explain">
-                                {group.supportExplain}
+                                {primaryFormsLine}
                               </p>
                             ) : null}
                             <ul className="results-list results-list--nested unify-candidate-find__list">
@@ -2007,7 +1856,17 @@ export default function UnifyCandidateFindPanel({
                                   registeredVariant={registeredVariants.get(
                                     cluster.key,
                                   )}
-                                  preSelectedVariant={undefined}
+                                  preSelectedVariant={
+                                    group.direction === 'spaced'
+                                      ? cluster.variants.find((v) =>
+                                          /\s/.test(v),
+                                        )
+                                      : group.direction === 'glued'
+                                        ? cluster.variants.find(
+                                            (v) => !/\s/.test(v),
+                                          )
+                                        : cluster.recommendedUnify
+                                  }
                                   groupClusters={group.clusters}
                                   onSelectVariant={handleSelectVariant}
                                   onCancelVariant={handleCancelVariant}
@@ -2104,7 +1963,7 @@ export default function UnifyCandidateFindPanel({
                           className={`results-category results-category--unify-${categoryMod}`}
                         >
                           <summary className="results-category__summary panel-criteria-heading">
-                            <CriteriaHoverTip tip="이형태쌍 리스트 보기">
+                            <CriteriaHoverTip tip="단어 세트 리스트 보기">
                               <DetailsChevron />
                             </CriteriaHoverTip>
                             <UnifyCategorySelectAll
@@ -2113,7 +1972,7 @@ export default function UnifyCandidateFindPanel({
                               hiddenPdfKeys={hiddenPdfKeys}
                               onToggleAll={handleToggleCategoryPdf}
                             />
-                            <CriteriaHoverTip tip="이형태쌍 리스트 보기">
+                            <CriteriaHoverTip tip="단어 세트 리스트 보기">
                               <span className="results-category__label">
                                 {itemLabel}
                               </span>
@@ -2152,7 +2011,7 @@ export default function UnifyCandidateFindPanel({
                       className={`results-category results-category--unify-${categoryMod}`}
                     >
                       <summary className="results-category__summary panel-criteria-heading">
-                        <CriteriaHoverTip tip="이형태쌍 리스트 보기">
+                        <CriteriaHoverTip tip="단어 세트 리스트 보기">
                           <DetailsChevron />
                         </CriteriaHoverTip>
                         <UnifyCategorySelectAll
@@ -2161,7 +2020,7 @@ export default function UnifyCandidateFindPanel({
                           hiddenPdfKeys={hiddenPdfKeys}
                           onToggleAll={handleToggleCategoryPdf}
                         />
-                        <CriteriaHoverTip tip="이형태쌍 리스트 보기">
+                        <CriteriaHoverTip tip="단어 세트 리스트 보기">
                           <span className="results-category__label">
                             {seriesLabelText}
                           </span>
@@ -2204,100 +2063,6 @@ export default function UnifyCandidateFindPanel({
         </div>
       ) : null}
     </div>
-  );
-}
-
-/**
- * 2차-A — 접두/접미 패턴 선택 (건수·예시·Explain).
- */
-function PatternPickPanel({
-  candidates,
-  selectedIds,
-  onToggle,
-  onNext,
-  onCancel,
-}) {
-  const suffix = (candidates ?? []).filter(
-    (c) => c.rule.affixType === 'suffix',
-  );
-  const prefix = (candidates ?? []).filter(
-    (c) => c.rule.affixType === 'prefix',
-  );
-
-  function renderGroup(title, list) {
-    if (!list.length) return null;
-    return (
-      <div className="unify-pattern-pick__group">
-        <h4 className="unify-pattern-pick__group-title">{title}</h4>
-        <ul className="unify-pattern-pick__list">
-          {list.map((c) => {
-            const dir =
-              c.rule.direction === 'glued' ? '붙여 쓰기' : '띄어 쓰기';
-            const explain = formatPatternSupportExplain(c.support, c.score);
-            return (
-              <li key={c.id} className="unify-pattern-pick__item">
-                <label className="unify-pattern-pick__label">
-                  <input
-                    type="checkbox"
-                    checked={selectedIds.has(c.id)}
-                    onChange={() => onToggle(c.id)}
-                  />
-                  <span className="unify-pattern-pick__template">
-                    {c.rule.template}
-                  </span>
-                  <span className="unify-pattern-pick__dir">({dir})</span>
-                  <span className="unify-pattern-pick__count">
-                    {c.mismatchCount}건
-                  </span>
-                </label>
-                {explain ? (
-                  <p className="unify-pattern-pick__examples">{explain}</p>
-                ) : null}
-              </li>
-            );
-          })}
-        </ul>
-      </div>
-    );
-  }
-
-  return (
-    <section
-      className="unify-pattern-pick"
-      aria-label="2차 표기 통일 패턴 선택"
-    >
-      <p className="unify-pattern-pick__hint">
-        적용할 앞말·뒷말 계열을 고른 뒤 다음을 누르세요. 체크를 바꾸면 PDF
-        미리보기도 함께 바뀝니다.
-      </p>
-      {(candidates?.length ?? 0) === 0 ? (
-        <p className="unify-pattern-pick__empty">
-          확장할 패턴 후보가 없습니다.
-        </p>
-      ) : (
-        <>
-          {renderGroup('뒷말 계열', suffix)}
-          {renderGroup('앞말 계열', prefix)}
-        </>
-      )}
-      <div className="unify-pattern-pick__actions">
-        <button
-          type="button"
-          className="btn-add panel-section-run-btn"
-          onClick={onCancel}
-        >
-          취소
-        </button>
-        <button
-          type="button"
-          className="btn-add panel-section-run-btn panel-section-run-btn--primary"
-          onClick={onNext}
-          disabled={!selectedIds.size}
-        >
-          다음
-        </button>
-      </div>
-    </section>
   );
 }
 
