@@ -210,37 +210,18 @@ function SeriesSpacingButtons({
 }
 
 /**
- * 보조용언·용언 추정(검토 필요) — 목록엔 두되 기본은 PDF 체크·완료 집계에서 제외
- * @param {import('../../lib/unifyCandidateDiscover.js').UnifySpacingCluster} cluster
- */
-function isReviewDeferredCluster(cluster) {
-  return (
-    cluster?.auxReview?.status === 'review' ||
-    cluster?.predicateReview?.status === 'needs_review'
-  );
-}
-
-/**
  * 헤더·팝업·배지용 단일 집계 스냅샷.
- * 나중에 C(항상 1차)로 바꿀 때는 넘기는 groups만 1차 스냅샷으로 바꾸면 된다.
+ * 검토 필요(본+보조·용언)도 체크·발견 횟수에 포함한다 (1·2차 공통).
  * @param {import('../../lib/unifyCandidateGrouping.js').ClusterGroup[]} groups
  */
 function summarizeUnifyListSnapshot(groups) {
   const listClusters = (groups ?? []).flatMap((g) => g.clusters ?? []);
-  const countedClusters = listClusters.filter(
-    (c) => !isReviewDeferredCluster(c),
-  );
   return {
     listClusters,
-    countedClusters,
+    countedClusters: listClusters,
     itemCount: countUnifyListAccordionItems(groups),
-    findings: countedClusters.reduce(
-      (n, c) => n + (c.totalCount ?? 0),
-      0,
-    ),
-    hiddenPdfKeys: new Set(
-      listClusters.filter(isReviewDeferredCluster).map((c) => c.key),
-    ),
+    findings: listClusters.reduce((n, c) => n + (c.totalCount ?? 0), 0),
+    hiddenPdfKeys: new Set(),
   };
 }
 
@@ -1343,6 +1324,8 @@ export default function UnifyCandidateFindPanel({
     const ids = new Set(candidates.map((c) => c.id));
     const nextGroups = buildSecondaryGroupsFromCandidates(candidates, ids);
     const nextClusters = nextGroups.flatMap((g) => g.clusters);
+    // 2차는 soft 미리찍기 없음 — 사용자가 직접 선택
+    setPreSelected(new Map());
     setSecondaryGroups(nextGroups);
     setPhase2ResultSummary({
       itemCount: countUnifyListAccordionItems(nextGroups),
@@ -1423,40 +1406,86 @@ export default function UnifyCandidateFindPanel({
     findListGroups,
   ]);
 
+  /** 1차 완료 후 — 2차 OFF(배포)일 때만 종료 안내. 2차 ON은 하단 버튼으로 진행 */
   useEffect(() => {
     if (unifyPhase !== 'primary') return;
     if (!searched || phase2PromptedRef.current) return;
     if (!isPrimaryUnifyComplete(grouped, registeredVariants, preSelected)) return;
-    phase2PromptedRef.current = true;
-    // 미리 둘러보기 — 완료/2차 팝업 생략
     if (isGuestBrowseActive()) return;
-    void (async () => {
-      // 배포·브라우저: 2차 대신 1차 종료 안내
-      if (!isUnifyPhase2PatternEnabled()) {
-        await showAppAlert({
-          title: '표기 통일 추천',
-          message:
-            '표기 통일 추천이 종료되었습니다.\n검수 결과 다운로드로 받을 수 있습니다.',
-        });
-        return;
-      }
-      const ok = await showAppConfirm({
-        title: '표기 통일 추천(2차)',
-        message:
-          '1차 표기 통일의 내용을 적용하여\n2차 표기 통일을 진행합니다',
-        confirmLabel: '네',
-        cancelLabel: '아니오',
-      });
-      if (ok) enterPhase2();
-    })();
+    if (isUnifyPhase2PatternEnabled()) return;
+    phase2PromptedRef.current = true;
+    void showAppAlert({
+      title: '표기 통일 추천',
+      message:
+        '표기 통일 추천이 종료되었습니다.\n검수 결과 다운로드로 받을 수 있습니다.',
+    });
   }, [
     unifyPhase,
     searched,
     grouped,
     registeredVariants,
     preSelected,
-    enterPhase2,
   ]);
+
+  useEffect(() => {
+    if (!primaryUnifyComplete) {
+      phase2PromptedRef.current = false;
+    }
+  }, [primaryUnifyComplete]);
+
+  const handlePhase2EntryClick = useCallback(async () => {
+    if (!primaryUnifyComplete || !isUnifyPhase2PatternEnabled()) return;
+    if (isGuestBrowseActive()) return;
+    const ok = await showAppConfirm({
+      title: '표기 통일 추천(2차)',
+      message:
+        '1차 표기 통일(띄어쓰기 이형태)을 바탕으로\n2차 표기 통일(명사·동사 합성)을 제안합니다',
+      confirmLabel: '네',
+      cancelLabel: '아니오',
+    });
+    if (ok) enterPhase2();
+  }, [primaryUnifyComplete, enterPhase2]);
+
+  /** 2차 목록 → 1차로 되돌림 (2차 선택·미리보기 폐기) */
+  const returnToPrimaryFromPhase2 = useCallback(() => {
+    const primaryKeys = new Set(listClusters.map((c) => c.key));
+    const primaryReg = new Map();
+    for (const [k, v] of registeredVariants) {
+      if (primaryKeys.has(k)) primaryReg.set(k, v);
+    }
+    setRegisteredVariants(primaryReg);
+    const soft = buildSeriesMajoritySoftPreselect(grouped);
+    setPreSelected(soft);
+    setSecondaryGroups([]);
+    setPhase2DoneLabels([]);
+    setPhase2ResultSummary(null);
+    setPhase2ConditionsExpanded(false);
+    phase2CompletePromptedRef.current = false;
+    setUnifyPhase('primary');
+    setHiddenPdfKeys(new Set());
+    publishPreview({
+      hidden: new Set(),
+      chosenByKey: mergeUnifyChosenMaps(primaryReg, soft),
+      overrideClusters: findListGroups?.flatMap((g) => g.clusters) ?? null,
+    });
+  }, [
+    listClusters,
+    grouped,
+    registeredVariants,
+    publishPreview,
+    findListGroups,
+  ]);
+
+  const handleEndUnifyClick = useCallback(async () => {
+    if (isGuestBrowseActive()) return;
+    const ok = await showAppConfirm({
+      title: '표기 통일 추천',
+      message: '표기 통일을 종료하시겠습니까?',
+      confirmLabel: '예',
+      cancelLabel: '아니오',
+    });
+    if (ok) await finishSecondary();
+  }, [finishSecondary]);
 
   useEffect(() => {
     if (!isUnifyPhase2PatternEnabled()) return;
@@ -1771,7 +1800,7 @@ export default function UnifyCandidateFindPanel({
                         const seriesSpacing = resolveSeriesChosenSpacing(
                           group,
                           registeredVariants,
-                          new Map(),
+                          preSelected,
                         );
                         const spacingFindings = sumClusterSpacingFindings(
                           group.clusters,
@@ -1822,12 +1851,6 @@ export default function UnifyCandidateFindPanel({
                                 <SeriesSpacingButtons
                                   spacing={seriesSpacing}
                                   tip="단어별 붙여쓰기/띄어쓰기 선택"
-                                  hintSpacing={
-                                    group.direction === 'glued' ||
-                                    group.direction === 'spaced'
-                                      ? group.direction
-                                      : null
-                                  }
                                   dataWorkGuide={seriesSpacingGuideAttr}
                                   onSelect={(spacing) =>
                                     handleSeriesSpacingSelect(
@@ -1856,17 +1879,7 @@ export default function UnifyCandidateFindPanel({
                                   registeredVariant={registeredVariants.get(
                                     cluster.key,
                                   )}
-                                  preSelectedVariant={
-                                    group.direction === 'spaced'
-                                      ? cluster.variants.find((v) =>
-                                          /\s/.test(v),
-                                        )
-                                      : group.direction === 'glued'
-                                        ? cluster.variants.find(
-                                            (v) => !/\s/.test(v),
-                                          )
-                                        : cluster.recommendedUnify
-                                  }
+                                  preSelectedVariant={null}
                                   groupClusters={group.clusters}
                                   onSelectVariant={handleSelectVariant}
                                   onCancelVariant={handleCancelVariant}
@@ -2057,6 +2070,54 @@ export default function UnifyCandidateFindPanel({
                   );
                 })
                   : null}
+
+                {unifyPhase === 'primary' && phase2PatternEnabled ? (
+                  <div className="unify-candidate-find__phase2-entry">
+                    <CriteriaHoverTip
+                      tip={
+                        primaryUnifyComplete
+                          ? '1차 선택을 반영해 2차로 진행'
+                          : '모든 단어 세트를 선택한 뒤 누를 수 있습니다'
+                      }
+                    >
+                      <button
+                        type="button"
+                        className="consistency-register-add-btn consistency-register-add-btn--label unify-candidate-find__submit"
+                        disabled={!primaryUnifyComplete}
+                        onClick={() => {
+                          void handlePhase2EntryClick();
+                        }}
+                      >
+                        2차 표기 통일
+                      </button>
+                    </CriteriaHoverTip>
+                  </div>
+                ) : null}
+
+                {unifyPhase === 'secondary_pairs' ? (
+                  <div className="unify-candidate-find__phase2-actions">
+                    <CriteriaHoverTip tip="2차 목록을 닫고 1차로 돌아갑니다">
+                      <button
+                        type="button"
+                        className="consistency-register-add-btn consistency-register-add-btn--label unify-candidate-find__submit"
+                        onClick={returnToPrimaryFromPhase2}
+                      >
+                        1차 표기 통일로
+                      </button>
+                    </CriteriaHoverTip>
+                    <CriteriaHoverTip tip="2차 선택을 반영하고 표기 통일을 마칩니다">
+                      <button
+                        type="button"
+                        className="consistency-register-add-btn consistency-register-add-btn--label unify-candidate-find__submit"
+                        onClick={() => {
+                          void handleEndUnifyClick();
+                        }}
+                      >
+                        표기 통일 종료
+                      </button>
+                    </CriteriaHoverTip>
+                  </div>
+                ) : null}
               </div>
             </section>
           )}

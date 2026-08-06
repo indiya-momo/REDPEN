@@ -2144,7 +2144,20 @@
   display: flex;
   justify-content: flex-end;
   gap: 8px;
-  margin: 0 0 10px;
+  margin: 10px 0 4px;
+  padding-inline: var(--unify-edge-pad, var(--space-sm));
+}
+
+.panel-left
+  .unify-candidate-find
+  .results-panel--unify-candidate
+  .unify-candidate-find__phase2-entry,
+.panel-left
+  .unify-candidate-find
+  .results-panel--unify-candidate
+  .unify-candidate-find__phase2-actions {
+  margin-top: 12px;
+  padding-inline: 0;
 }
 
 .panel-left .unify-pattern-pick {
@@ -2377,10 +2390,10 @@
   .results-panel--unify-candidate
   .unify-candidate-find__findings-row {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   justify-content: flex-end;
-  gap: 0.45em;
+  gap: 0.35em;
   width: 100%;
 }
 
@@ -2388,11 +2401,13 @@
   .unify-candidate-find
   .results-panel--unify-candidate
   .results-findings-meta {
-  display: grid;
-  grid-template-columns: auto var(--unify-badge-col-width);
+  display: inline-grid;
+  grid-template-columns: max-content max-content;
   column-gap: var(--results-findings-meta-gap, 0.35rem);
   align-items: center;
-  margin-left: 0;
+  width: max-content;
+  max-width: 100%;
+  margin-left: auto;
 }
 
 .panel-left
@@ -2415,9 +2430,10 @@
   .results-panel--unify-candidate
   .unify-candidate-find__badge-slot {
   box-sizing: border-box;
-  width: 100%;
+  width: auto;
+  min-width: 0;
   min-height: calc(var(--results-findings-circle-size, 1.35rem) * 0.8);
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: flex-end;
 }

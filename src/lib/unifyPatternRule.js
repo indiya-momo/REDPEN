@@ -17,12 +17,7 @@ import { isExcludedSeriesAffix } from './unifyCandidateSeriesTrend.js';
 import { buildPhraseSlotFindRules } from './phraseSlotPattern.js';
 import { runRuleCheck } from './ruleEngine.js';
 import { escapeRegex } from './compoundPatternCommon.js';
-import {
-  shouldRejectByNoiseListSurface,
-  spacedVariantHitsNoiseDenylist,
-  isSpacedLeftNoiseEojeol,
-} from './unifyNoiseList.js';
-import { hangulOnlyNoise } from './unifyNoiseListData.js';
+import { shouldRejectUnifyCandidateNoise } from './unifyNoiseList.js';
 import { isSpacedLeftAdnominalNoiseEojeol } from './unifyNoiseListAdnominalHeuristic.js';
 import { shouldRejectUnifySatelliteSpacedByPos } from './kiwiMorph/unifyExclude.js';
 import { isUnifyKiwiNoisePhase2Available } from './kiwiMorph/noiseFilterGate.js';
@@ -140,7 +135,7 @@ export function isPatternRuleHeadBlacklisted(head) {
 }
 
 /**
- * 1차 discover와 같은 제외·정규화 + 1차 정적 잡음 리스트(조사끼임 휴리스틱 제외).
+ * 1차 discover와 같은 제외·정규화 + 공통 잡음 경로({@link shouldRejectUnifyCandidateNoise}).
  * @param {string} matchedText
  */
 export function passesPatternRuleUnifyFilter(matchedText) {
@@ -152,39 +147,29 @@ export function passesPatternRuleUnifyFilter(matchedText) {
   if (/\s/.test(cleaned) && !isValidSpacedUnifyVariant(cleaned)) return false;
   const key = unifySpacingKey(cleaned);
   if (!key) return false;
-  // discover와 동일: 정적 리스트·본보조만 (캐나다정부 ≠ 조사끼임)
-  if (shouldRejectByNoiseListSurface(key)) return false;
-  if (/\s/.test(cleaned)) {
-    // 띄움 좌우 — 예외·꼬리·조사·관형 (shouldRejectByNoiseList와 동일)
-    if (spacedVariantHitsNoiseDenylist(cleaned)) return false;
-    const parts = cleaned.trim().split(/\s+/).filter(Boolean);
-    for (const part of parts) {
-      const h = hangulOnlyNoise(part);
-      if (h && isSpacedLeftNoiseEojeol(h)) return false;
-    }
-  }
+  if (shouldRejectUnifyCandidateNoise(cleaned, key)) return false;
   return true;
 }
 
 /**
- * 2차 패턴 mismatch — 1차 잡음 리스트 + (Kiwi ready 시) 명사+명사/동사+동사만.
- * 공통성(@affix)으로 모은 뒤, 최종은 N+N·V+V(또는 리스트)로 거른다.
+ * 2차 패턴 mismatch — 1차와 동일 잡음 경로 + (Kiwi ready 시) 명사+명사/동사+동사만.
  * @param {string} from
  * @param {string} to
  * @param {string} key
  * @returns {boolean} true면 제외
  */
 export function shouldRejectPatternMismatchByNoiseAndCompound(from, to, key) {
-  const surfaces = [from, to, key].map((s) => String(s ?? '').trim()).filter(Boolean);
+  const surfaces = [from, to, key]
+    .map((s) => String(s ?? '').trim())
+    .filter(Boolean);
   const spaced = surfaces.find((s) => /\s/.test(s)) || '';
-  const glued = surfaces.find((s) => s && !/\s/.test(s)) || key;
+  const pairKey = String(key ?? '').trim();
 
-  if (glued && shouldRejectByNoiseListSurface(glued)) return true;
-  if (key && shouldRejectByNoiseListSurface(key)) return true;
+  if (from && shouldRejectUnifyCandidateNoise(from, pairKey)) return true;
+  if (to && shouldRejectUnifyCandidateNoise(to, pairKey)) return true;
+  if (pairKey && shouldRejectUnifyCandidateNoise(pairKey, pairKey)) return true;
+
   if (spaced) {
-    if (spacedVariantHitsNoiseDenylist(spaced)) return true;
-    const left = hangulOnlyNoise(spaced.trim().split(/\s+/).filter(Boolean)[0]);
-    if (left && isSpacedLeftNoiseEojeol(left)) return true;
     // boot 없이 이미 ready일 때만 POS — 명사+명사·동사+동사 아니면 제외
     if (isUnifyKiwiNoisePhase2Available()) {
       try {
@@ -447,13 +432,14 @@ export function formatPatternSupportExplain(support, score) {
 export const PHASE2_PRIMARY_FORMS_MAX = 4;
 
 /**
- * 2차 계열 헤더 아래: `1차 표기 통일 @무늬 : 오려낸무늬 …` (최대 4개).
+ * 2차 계열 헤더 아래: `1차 표기 통일 @무늬 : 오려낸무늬 두꺼비 무늬 …` (최대 4개).
+ * 1차에서 고른 표기(띄어쓰기 포함)를 그대로 보여 준다.
  * @param {string} template
  * @param {string[]} forms
  */
 export function formatPhase2PrimaryFormsLine(template, forms) {
   const list = (forms ?? [])
-    .map((f) => String(f ?? '').replace(/\s+/g, '').trim())
+    .map((f) => String(f ?? '').replace(/\s+/g, ' ').trim())
     .filter(Boolean);
   const uniq = [];
   for (const f of list) {
@@ -462,11 +448,12 @@ export function formatPhase2PrimaryFormsLine(template, forms) {
   }
   if (!uniq.length) return '';
   const t = String(template ?? '').trim() || '@';
-  return `1차 표기 통일 ${t} : ${uniq.join(' ')}`;
+  return `1차 표기 통일 ${t} : ${uniq.join(' · ')}`;
 }
 
 /**
  * 1차에서 고른 표기 중 이 패턴(접두/접미)에 해당하는 것을 발견 수 순으로 모은다.
+ * 반환 문자열은 선택값 그대로(띄어쓰기 유지).
  * @param {{
  *   affixType?: string,
  *   affix?: string,
@@ -490,14 +477,15 @@ export function collectPrimaryFormsForPatternGroup(
     const key = String(cluster?.key ?? '');
     const chosen = chosenByKey.get(key);
     if (!chosen) continue;
-    const surface = String(chosen).replace(/\s+/g, '');
-    if (!surface) continue;
+    const form = String(chosen).replace(/\s+/g, ' ').trim();
+    if (!form) continue;
+    const compact = form.replace(/\s+/g, '');
     if (isPrefix) {
-      if (!surface.startsWith(affix)) continue;
-    } else if (!surface.endsWith(affix)) {
+      if (!compact.startsWith(affix)) continue;
+    } else if (!compact.endsWith(affix)) {
       continue;
     }
-    scored.push({ form: surface, count: Number(cluster.totalCount) || 0 });
+    scored.push({ form, count: Number(cluster.totalCount) || 0 });
   }
   scored.sort(
     (a, b) =>
@@ -553,7 +541,7 @@ function normalizeMismatchPair(from, rule) {
 
   const head = headBeforeAffix(cleaned, rule.affix);
   if (isPatternRuleHeadBlacklisted(head)) return null;
-  if (shouldRejectByNoiseListSurface(head)) return null;
+  if (shouldRejectUnifyCandidateNoise(head, head)) return null;
   const key = `${head}${rule.affix}`;
   const to =
     rule.direction === 'glued'
@@ -701,21 +689,21 @@ export function groupPatternConditionLabelsByDirection(labels) {
 
 /**
  * 제품 2단(@확장) 시드에 쓸 1차 클러스터인지.
- * soft 80%·확정 등록은 동일 취급. 용언·본+보조 **검토** 항목만 시드에서 뺀다.
+ * soft 80%·확정 등록은 동일 취급. 본+보조 **검토**만 시드에서 빼고,
+ * 용언 추정(검토 필요)은 2차 확장에 포함한다.
  * @param {import('./unifyCandidateDiscover.js').UnifySpacingCluster | null | undefined} cluster
  * @returns {boolean}
  */
 export function isUnifyPatternSeedEligibleCluster(cluster) {
   if (!cluster?.key) return false;
   if (cluster.auxReview?.status === 'review') return false;
-  if (cluster.predicateReview?.status === 'needs_review') return false;
   return true;
 }
 
 /**
  * 1차 등록(및 soft 미리찍기 병합 chosen)에서 접두·접미 패턴 규칙만 모은다 (매칭 전).
  * soft 80%는 사용자가 안 건드린 채택이므로 확정 등록과 동일하게 시드한다.
- * 검토(본+보조·용언 추정) 클러스터는 시드에서 제외한다.
+ * 본+보조 검토 클러스터만 시드에서 제외한다 (용언 검토는 포함).
  * @param {Map<string, string> | Iterable<[string, string]>} registeredVariants
  * @param {import('./unifyCandidateDiscover.js').UnifySpacingCluster[]} clusters
  * @returns {UnifyPatternRule[]}

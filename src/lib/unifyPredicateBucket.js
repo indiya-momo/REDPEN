@@ -3,7 +3,7 @@
  * SLM 없이 규칙만. 정렬용 버킷 (단일 → @계열 → 용언).
  */
 
-import { hangulSyllableCount, UNIFY_TRAILING_JOSA } from './unifyCandidateDiscover.js';
+import { hangulSyllableCount, UNIFY_TRAILING_JOSA } from './unifyHangulBasics.js';
 import {
   UNIFY_AMBIGUOUS_JOSA_SUFFIXES,
   UNIFY_LOW_RISK_JOSA,

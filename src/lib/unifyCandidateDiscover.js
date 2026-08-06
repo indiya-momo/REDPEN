@@ -52,14 +52,17 @@ import {
 import { analyzeLine } from './kiwiMorph/analyze.js';
 import { isKiwiReady } from './kiwiMorph/runtime.js';
 import {
-  shouldRejectNoiseListDataSurface,
-} from './unifyNoiseListData.js';
-import { isSpacedLeftJosaNoiseEojeol } from './unifyNoiseListLeftHeuristic.js';
-import { isSpacedLeftAdnominalNoiseEojeol } from './unifyNoiseListAdnominalHeuristic.js';
-import {
-  isSpacedAdverbHiNoiseEojeol,
-  isSpacedClosedConjunctionNoiseEojeol,
-} from './unifyNoiseListLexicalHeuristic.js';
+  hangulSyllableCount,
+  UNIFY_SPACED_PART_MIN_HANGUL,
+  UNIFY_TRAILING_JOSA,
+} from './unifyHangulBasics.js';
+import { shouldRejectUnifyCandidateNoise } from './unifyNoiseList.js';
+
+export {
+  hangulSyllableCount,
+  UNIFY_SPACED_PART_MIN_HANGUL,
+  UNIFY_TRAILING_JOSA,
+} from './unifyHangulBasics.js';
 
 /** 찾기 UI — 이 ms 동안 sync 작업하면 이벤트 루프에 양보 (ops 횟수 양보는 대형 PDF에서 사실상 무한 대기) */
 const UNIFY_FIND_YIELD_MS = 40;
@@ -126,66 +129,6 @@ function shouldAnalyzeUnifyOccurrenceWithKiwi() {
 
 const TOKEN_RE = /[\uAC00-\uD7A3\d]+/gu;
 /** 띄움 덩어리 최소 한글 음절 */
-export const UNIFY_SPACED_PART_MIN_HANGUL = 2;
-
-/**
- * 어절 끝 조사·보조사 (긴 것 우선). 경제왕국/경제왕국의 → 경제왕국.
- * @type {readonly string[]}
- */
-export const UNIFY_TRAILING_JOSA = Object.freeze([
-  '에서부터',
-  '에게서',
-  '으로부터',
-  '으로서',
-  '으로써',
-  '에서는',
-  '에서도',
-  '에서',
-  '에도',
-  '에게',
-  '한테',
-  '으로',
-  '로서',
-  '로써',
-  '부터',
-  '까지',
-  '처럼',
-  '만큼',
-  '보다',
-  '대로',
-  '이라고',
-  '이라서',
-  '이라면',
-  '이라도',
-  '입니다',
-  '입니까',
-  '이었다',
-  '이나',
-  '이란',
-  '이라',
-  '이기',
-  '이다',
-  '인지',
-  '은',
-  '는',
-  '이',
-  '가',
-  '을',
-  '를',
-  '의',
-  '에',
-  '와',
-  '과',
-  '도',
-  '만',
-  '나',
-  '란',
-  '로',
-  '요',
-  '께',
-  '들',
-]);
-
 /** @type {ReadonlySet<string>} */
 const UNIFY_TRAILING_JOSA_SET = new Set(UNIFY_TRAILING_JOSA);
 
@@ -295,20 +238,6 @@ export function normalizeUnifyVariant(s) {
  */
 export function unifySpacingKey(s) {
   return stripUnifyPunctuationNoise(normalizeUnifyVariant(s)).replace(/\s+/g, '');
-}
-
-/**
- * @param {string} s
- * @returns {number}
- */
-export function hangulSyllableCount(s) {
-  const str = String(s ?? '');
-  let n = 0;
-  for (let i = 0; i < str.length; i += 1) {
-    const c = str.charCodeAt(i);
-    if (c >= 0xac00 && c <= 0xd7a3) n += 1;
-  }
-  return n;
 }
 
 /**
@@ -553,18 +482,8 @@ function prepareUnifyOccurrenceCandidate(rawMatched, minHangul) {
   }
   const key = variant.replace(/\s+/g, '');
   if (hangulSyllableCount(key) < minHangul) return null;
-  // 1차 잡음 — 붙임키 + 띄움 좌우(예외·꼬리·조사·관형·접속·-히). unifyNoiseList 순환 import 금지.
-  if (shouldRejectNoiseListDataSurface(key)) return null;
-  if (/\s/.test(variant)) {
-    const parts = variant.trim().split(/\s+/).filter(Boolean);
-    for (const part of parts) {
-      if (shouldRejectNoiseListDataSurface(part)) return null;
-      if (isSpacedLeftJosaNoiseEojeol(part)) return null;
-      if (isSpacedLeftAdnominalNoiseEojeol(part)) return null;
-      if (isSpacedClosedConjunctionNoiseEojeol(part)) return null;
-      if (isSpacedAdverbHiNoiseEojeol(part)) return null;
-    }
-  }
+  // 1·2차 공통 잡음 경로
+  if (shouldRejectUnifyCandidateNoise(variant, key)) return null;
   // 이다 종결·연결·명사+동사화 — 붙임형은 punctTokens 재사용, 키만 다를 때 추가 분석
   if (isUnifyKiwiNoiseMorphActive()) {
     const gluedPunct = withPunctStripped.replace(/\s+/g, '');
