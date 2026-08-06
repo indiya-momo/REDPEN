@@ -5,6 +5,7 @@
   "harvestNote": "npm run kiwi:harvest-noise-list — 예외 어절·패턴 꼬리만 갱신",
   "exceptionEojeols": [
     "각각",
+    "각종",
     "게도",
     "경우",
     "곳곳",
@@ -32,6 +33,7 @@
     "모두",
     "모든",
     "물론",
+    "벗어난",
     "사실상",
     "상당수",
     "소수",

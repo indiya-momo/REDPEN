@@ -7,6 +7,7 @@
  */
 
 import { classifyUnifyListStem } from './unifyListStemTriage.js';
+import { hasUnifyNoiseDenyEojeol } from './unifyNoiseListData.js';
 
 const HANGUL_SYL = '\uAC00-\uD7A3';
 /** 한글덩어리 + 선택 공백 + (Latin…) — 예: 도널드(Donald), 초콜릿 (Chocolate) */
@@ -199,6 +200,7 @@ export function jamoEditDistance(a, b) {
 export function isOrthoNounSurface(surface) {
   const s = nfc(surface);
   if (!s || [...s].length < 2) return false;
+  if (hasUnifyNoiseDenyEojeol(s)) return false;
   if (endsWithTrailingJosa(s)) return false;
   if (endsWithDictionaryDa(s) && !NOUN_ENDING_DA.has(s)) return false;
   if (endsWithSpeechPredicateTail(s)) return false;

@@ -17,7 +17,10 @@ describe('classifyUnifyListStem', () => {
 
   it('용언처럼 보이면 ambiguous', () => {
     expect(classifyUnifyListStem('만들어')).toBe('ambiguous');
-    expect(classifyUnifyListStem('오래')).toBe('ambiguous');
+  });
+
+  it('부사 오래는 용언 시드가 아니라 명사 휴리스틱 쪽(잡음 예외로 제외)', () => {
+    expect(classifyUnifyListStem('오래')).toBe('certain_noun');
   });
 
   it('일반 명사 계열은 certain_noun', () => {
