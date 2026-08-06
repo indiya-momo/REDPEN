@@ -117,6 +117,10 @@ function shouldAnalyzeUnifyOccurrenceWithKiwi() {
  *     displayLabel?: string,
  *     status: 'review',
  *   },
+ *   predicateReview?: {
+ *     status: 'needs_review',
+ *     source?: string,
+ *   },
  * }} UnifySpacingCluster
  */
 

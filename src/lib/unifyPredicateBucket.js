@@ -188,12 +188,133 @@ export function looksLikePredicateKey(key) {
 }
 
 /**
+ * 연결·종결 어미가 붙은 활용형 — 알아내고·알아듣지·알아차리지.
+ * 시트에 없어도 「용언 추정」 표시용. 긴 어미 우선.
+ * @type {readonly string[]}
+ */
+const PREDICATE_CONNECTIVE_ECS = Object.freeze(
+  [
+    '으면서',
+    '으면',
+    '아서',
+    '어서',
+    '여서',
+    '고서',
+    '지만',
+    '으며',
+    '면서',
+    '고',
+    '지',
+    '며',
+    '면',
+    '니',
+    '냐',
+    '네',
+    '세',
+  ].toSorted((a, b) => b.length - a.length || a.localeCompare(b, 'ko')),
+);
+
+/**
+ * 어간에 자주 오는 용언 줄기 끝 (EC 앞) — 내·듣·리·하 등.
+ * @type {ReadonlySet<string>}
+ */
+const PREDICATE_STEM_END_SYLLABLES = Object.freeze(
+  new Set([
+    ...PREDICATE_END_SYLLABLES,
+    '하',
+    '내',
+    '듣',
+    '리',
+    '키',
+    '기',
+    '지',
+    '추',
+    '우',
+    '이',
+  ]),
+);
+
+/**
+ * @param {string} stem
+ * @returns {boolean}
+ */
+function stemLooksLikeVerbBeforeEc(stem) {
+  const s = hangulKey(stem);
+  if (s.length < 2) return false;
+  if (looksLikePredicateKey(s)) return true;
+  const lemma = `${s}다`;
+  if (endsWithPredicateDictionaryTail(lemma)) return true;
+  if (isUnifyHadaConjugationKey(lemma)) return true;
+  // 알아듣다·알아차리다 등 사전 꼬리에 없는 복합 동사 어간
+  if (s.length >= 3 && PREDICATE_STEM_END_SYLLABLES.has(s.slice(-1))) {
+    return true;
+  }
+  return false;
+}
+
+/**
+ * 활용형까지 포함한 용언 추정 (표기통일 배지·용언 구간).
+ * @param {string} key
+ * @returns {boolean}
+ */
+export function looksLikeInflectedPredicateKey(key) {
+  const h = hangulKey(key);
+  if (h.length < 3) return looksLikePredicateKey(h);
+  if (looksLikePredicateKey(h)) return true;
+  for (const ec of PREDICATE_CONNECTIVE_ECS) {
+    if (!h.endsWith(ec)) continue;
+    if (h.length <= ec.length + 1) continue;
+    const stem = h.slice(0, -ec.length);
+    if (stemLooksLikeVerbBeforeEc(stem)) return true;
+  }
+  return false;
+}
+
+/**
+ * @param {import('./unifyCandidateDiscover.js').UnifySpacingCluster} cluster
+ * @returns {boolean}
+ */
+function clusterLooksLikeInflectedPredicate(cluster) {
+  const key = cluster?.key ?? '';
+  if (looksLikeInflectedPredicateKey(key)) return true;
+  for (const v of cluster?.variants ?? []) {
+    if (looksLikeInflectedPredicateKey(String(v).replace(/\s+/g, ''))) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
  * @param {import('./unifyCandidateDiscover.js').UnifySpacingCluster} cluster
  * @returns {boolean}
  */
 export function isUnifyPredicateCluster(cluster) {
   if (cluster?.auxReview?.status === 'review') return true;
-  return looksLikePredicateKey(cluster?.key ?? '');
+  if (cluster?.predicateReview?.status === 'needs_review') return true;
+  return clusterLooksLikeInflectedPredicate(cluster);
+}
+
+/**
+ * 본+보조가 아닌 용언 활용에 「용언 추정, 검토 필요」.
+ * SLM이 이미 붙인 predicateReview는 유지. auxReview가 있으면 안 붙임(본+보조 문구 우선).
+ * @param {import('./unifyCandidateDiscover.js').UnifySpacingCluster[]} clusters
+ * @returns {import('./unifyCandidateDiscover.js').UnifySpacingCluster[]}
+ */
+export function attachPredicateReviewHints(clusters) {
+  if (!clusters?.length) return clusters;
+  return clusters.map((cluster) => {
+    if (cluster?.auxReview?.status === 'review') return cluster;
+    if (cluster?.predicateReview?.status === 'needs_review') return cluster;
+    if (!clusterLooksLikeInflectedPredicate(cluster)) return cluster;
+    return {
+      ...cluster,
+      predicateReview: {
+        status: /** @type {const} */ ('needs_review'),
+        source: 'heuristic',
+      },
+    };
+  });
 }
 
 /**
