@@ -33,6 +33,15 @@ export function isMyPageProjectHubEnabled() {
 }
 
 /**
+ * 마이페이지 「인디야 가이드북」 메뉴.
+ * - `npm run dev` 로컬만 표시
+ * - 프로덕션·Pages 빌드: 숨김
+ */
+export function isIndiyaGuidebookNavEnabled() {
+  return Boolean(import.meta.env.DEV);
+}
+
+/**
  * 맞춤법 탭 「외래어 표기(영어 → 한글 지원)」.
  * - 둘러보기·로그인 작업 모두 기본 표시
  * - 끌 때만 `VITE_FEATURE_LOANWORD_CONVERTER=false`

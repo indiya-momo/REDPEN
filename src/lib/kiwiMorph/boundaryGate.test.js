@@ -468,7 +468,7 @@ describe.skipIf(!HAS_KIWI_MODEL)('이다 종결 잡음 제외 (Node 모델)', ()
     expect(isKiwiNonNounCompoundSpaced('미국 시장')).toBe(false);
   });
 
-  it('dictPos 없어도 명사+명사·동사+동사 아니면 위성 거부(사실상은 유지)', async () => {
+  it('dictPos 없어도 명사+명사·동사+동사 아니면 위성 거부(denylist·주식 유지)', async () => {
     const {
       shouldRejectUnifySatelliteSpacedByPos,
       isKiwiVerbCompoundEojeol,
@@ -493,8 +493,9 @@ describe.skipIf(!HAS_KIWI_MODEL)('이다 종결 잡음 제외 (Node 모델)', ()
     expect(
       shouldRejectUnifySatelliteSpacedByPos('떨어뜨리고 시장', undefined),
     ).toBe(true);
+    // 사실상 = exceptionEojeols → denylist가 POS(NNG+XSN)보다 앞선다
     expect(shouldRejectUnifySatelliteSpacedByPos('사실상 시장', undefined)).toBe(
-      false,
+      true,
     );
     expect(shouldRejectUnifySatelliteSpacedByPos('주식 시장', undefined)).toBe(
       false,
@@ -581,12 +582,10 @@ describe.skipIf(!HAS_KIWI_MODEL)('이다 종결 잡음 제외 (Node 모델)', ()
       },
     ];
     const filtered = filterSeriesSatellitesByMorphPos(groups);
-    // 1차 리스트만 — 말해/보통은 꼬리·예외 아님(2차 Kiwi 담당)
+    // 1차 리스트 — 사실상·말해는 예외, 보통은 꼬리·예외 아님(2차 Kiwi 담당)
     expect(filtered[0].clusters.map((c) => c.key)).toEqual([
       '금융시장',
-      '말해시장',
       '보통시장',
-      '사실상시장',
       '주식시장',
     ]);
     const { filterSeriesSatellitesByKiwiPhase2 } = await import(
@@ -596,7 +595,6 @@ describe.skipIf(!HAS_KIWI_MODEL)('이다 종결 잡음 제외 (Node 모델)', ()
     if (phase2.applied) {
       expect(phase2.groups[0].clusters.map((c) => c.key)).toEqual([
         '금융시장',
-        '사실상시장',
         '주식시장',
       ]);
     }

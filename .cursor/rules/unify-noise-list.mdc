@@ -20,9 +20,9 @@ alwaysApply: false
 
 | 구간 | Kiwi | 하는 일 |
 |------|------|---------|
-| **런타임** (찾기·필터) | 안 씀 | `unify-noise-list.json` + 본보조·조사·관형형(는/던) 휴리스틱 |
+| **1차 noise-list 매칭** | 안 씀 (이 모듈 한정) | `unify-noise-list.json` + 본보조·조사·관형형(는/던) 휴리스틱. 찾기 흐름의 조사/경계 Kiwi(`VITE_UNIFY_KIWI_JOSA`·`VITE_SPELLING_KIWI_BOUNDARY`)와는 별개 |
 | **수확** (`npm run kiwi:harvest-noise-list`) | 씀 | 예외 어절·verbal/copula 꼬리를 JSON에 반영 |
-| **2차** (목록 후) | ready일 때만 | N+N/V+V POS — `가진`(종성ㄴ) 등 리스트 밖 관형 |
+| **2차** (목록 후) | ready일 때만 | N+N/V+V POS — `가진`(종성ㄴ) 등 리스트 밖 관형. **`JOSA`/`BOUNDARY`/`NOISE_FILTER` 기본 OFF면 boot 안 되어 2차 사실상 비활성** → 1차 리스트가 주 안전망 |
 
 ## 변경 전 체크 (필수)
 
@@ -31,12 +31,42 @@ alwaysApply: false
 3. `unifyNoiseListData.js`에는 **JSON에서 파생된 것 + 꼬리 매칭만**. 하드코딩 품사/조사 휴리스틱 금지
 4. 불가피한 런타임 휴리스틱은 `unifyNoiseList.js` / `LeftHeuristic` / `AdnominalHeuristic`에만, 주석에 `source: manual-heuristic`과 이유를 남긴다
 5. **`unifyNoiseRegressionCorpus.js` KEEP/DROP을 갱신·통과** — 캐나다/붉은형 회귀 방지 (`가진 사람`은 `DROP_KIWI_ADNOMINAL`)
-6. **예외 ≥70** → 테스트가 깨지며 알람. **사용자에게 알리고** 서버 C→D3 / DEV 2차 boot 재검토 (100이 아니라 70). `--add`만 하고 넘어가지 말 것.
+6. **예외 ≥70** → 테스트가 깨지며 알람. **사용자에게 알리고** 서버 C→D3 / DEV 2차 boot 재검토 (100이 아니라 70). `--add`만 하고 넘어가지 말 것.  
+   (C = 서버 C Kiwi morph 호스트, D3 = C 검증 후 `NOISE_FILTER` 기본 ON. reading-order의 C→B와 무관 — design doc §0.0·§8)
 
 ## 회귀 코퍼스
 
 `src/lib/unifyNoiseRegressionCorpus.js` + `*.test.js`  
 KEEP = 목록에 남아야 함, DROP = 잡음으로 빠져야 함.
+
+## verbalTails / 예외 확장 판단 기준
+
+관형·용언 표면을 넣을 때 (강한/속한 · 스러운 · 약탈적 논의 요약).
+
+1. **불규칙 관형 사각지대?**  
+   `은/는/던/된` 휴리스틱 밖인 경우 — `하+ㄴ`→`한`, `스럽+은`→`스러운`, 앞으로 `-러운`·`-다운` 등.  
+   → 먼저 “사각지대인지” 확인하고, 닫힌 꼬리 또는 **긴 접미 일반화**로 처리.  
+   예: `강한`·`속한`·`스러운` → verbalTails **(적용됨)**
+
+2. **짧은 접미 + 명사 충돌?** (`한`·`적`·`대한` …)  
+   - 맨꼬리 일반화 **금지**.  
+   - **기본: 닫힌 표면 수확** (`강한`·`속한`·`약탈적` **적용됨**).  
+   - 런타임 어간 길이 가드(`stem≥2` 등)는 후순위 — 휴리스틱 최소화 원칙.
+
+3. **길고 충돌 적은 접미?** (`스러운`)  
+   → `verbalTails`에 접미 일반화 OK. 예외 어절 전체형(`의심스러운`)은 제거 가능. **(적용됨)**
+
+4. **띄움과 붙임(infix) 동일 집합**  
+   꼬리를 넣으면 붙임도 본다. infix는 **왼쪽이 그 꼬리로 끝나야** 함(임의 substring 금지).  
+   가드/블랙리스트도 띄움·붙임에 같이 적용.  
+   수확 금지 예: `대한`(대한민국), `고서`(보고서) — `scripts/harvest-unify-noise-list.mjs` blocklist **(적용됨)**
+
+5. **짧은 어간 관형** (`사적`·`지적`·`공적`)  
+   일반화 혜택 밖 → 필요 시 **닫힌 예외/꼬리로 개별** 유지. **(TODO — JSON 미등록)**
+
+이 기준으로 `exceptionEojeols`가 70에 근접하면 **변경 전 체크 6번**(서버 C→D3 / DEV 2차 boot 재검토)을 먼저 따를 것.  
+(`verbalTails`는 70 카운트 밖 — 테스트는 `exceptionEojeols`만 셈.)
+
 ## 수확 예
 
 ```bash
@@ -46,4 +76,5 @@ npm run kiwi:harvest-noise-list -- --add 모두 끼리 직전 등
 
 ## 참고
 
-- `project-docs/unify-kiwi-noise-filter-b-design-2026-08-04.md` §0.0
+- `project-docs/unify-kiwi-noise-filter-b-design-2026-08-04.md` §0.0  
+  (C = 서버 C, D3 = C 검증 후 `NOISE_FILTER` 기본 ON — §8)

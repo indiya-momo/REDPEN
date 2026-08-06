@@ -433,7 +433,8 @@ export function classifyKiwiSpacedEojeolPos(eojeol, opts = {}) {
 /**
  * 이형태 없는 위성의 띄움형 — 동종 복합이 아니면 true(거부).
  * - 명사+명사도 동사+동사도 아니면 거부 (보통·손쉽게·말해 시장)
- * - `사실상 시장`(NNG+XSN)은 명사+명사로 유지
+ * - denylist 어절은 POS와 무관하게 거부
+ * - NNG+XSN 등 명사 복합은 denylist가 아니면 유지
  * - dictPos=noun → 명사+명사만 / predicate → 동사+동사만
  * - 어절 분석 실패(unknown) → false(fail-open). 단, 명사·동사 양쪽에
  *   fail-open을 겹치면 잡음이 통과하므로 unknown은 여기서만 별도 처리.

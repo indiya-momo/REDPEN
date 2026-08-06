@@ -1765,7 +1765,7 @@ export default function UnifyCandidateFindPanel({
                     <div className="unify-candidate-find__phase-banner-line-row">
                       <ul className="unify-candidate-find__phase-banner-line unify-candidate-find__phase-banner-line-list">
                         <li>띄어쓰기만 다른 표기를 찾아 보여드립니다</li>
-                        <li>80% 넘게 쓰인 형태는 자동 선택되었습니다</li>
+                        <li>80% 넘게 쓰인 형태는 자동 선택되어 있습니다</li>
                       </ul>
                       {listClusters.length > 0 ? (
                         <SeriesSpacingButtons
