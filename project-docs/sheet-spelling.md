@@ -40,6 +40,7 @@ Language Map 프로젝트의 `sync-data`와 같은 방식(공개 CSV export)입�
 - 서로 다른 find↔replace 쌍은 **행을 나눠** 입력합니다. (예전 「find/replace를 공백으로 여러 쌍」 bulk 입력은 지원하지 않습니다.)
 - `finds`가 **비어 있거나 1개**면 기존과 같이 평면 규칙 1개입니다. **기존 행은 수정하지 않아도** 그대로 동작합니다.
 - sync 후 같은 `divider_group` 묶음 안에서는 **대표 find** 기준 가나다순 정렬됩니다.
+- **B1**(`잘못된 표현(동사 · 형용사)`): sync 후 `npm run kiwi:expand-b1-finds`로 관형·연결 표면을 `finds`에 펼친다(규칙 수 유지·어간형 replace). 설계: `b1-stem-finds-expand-design-2026-08-06.md`
 
 템플릿: `[templates/spelling_rules.csv](templates/spelling_rules.csv)` → 시트에 붙여넣기
 
