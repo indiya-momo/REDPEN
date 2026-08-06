@@ -48,6 +48,14 @@ import {
   applyStdictPosMarksToGroups,
   runStdictPosReviewOnClusterGroups,
 } from '../../lib/unifyStdictPos.js';
+import { buildSeriesMajoritySoftPreselect } from '../../lib/unifySeriesMajorityPreselect.js';
+import {
+  mergeUnifyChosenMaps,
+  resolveGlobalChosenSpacing,
+  resolveSeriesChosenSpacing,
+  sumClusterSpacingFindings,
+  variantForSpacing,
+} from '../../lib/unifySeriesSpacingUi.js';
 import {
   isUnifyJosaSlmReviewEnabled,
   isUnifyPredicateSlmReviewEnabled,
@@ -72,96 +80,11 @@ function sumClusterFindings(clusters) {
   return clusters.reduce((sum, c) => sum + (c.totalCount || 0), 0);
 }
 
-/**
- * 계열·항목 출현을 붙임/띄움으로 나눈다 (counts 기준).
- * 통일형을 고른 항목은 그 표기 출현을 빼서 「남은 발견」만 센다.
- * PDF 표시 해제 항목은 제외.
- * @param {UnifySpacingCluster[]} clusters
- * @param {{
- *   registeredVariants?: Map<string, string>,
- *   preSelected?: Map<string, string>,
- *   hiddenPdfKeys?: Set<string>,
- * }} [opts]
- * @returns {{ glued: number, spaced: number }}
- */
-function sumClusterSpacingFindings(clusters, opts = {}) {
-  const {
-    registeredVariants = null,
-    preSelected = null,
-    hiddenPdfKeys = null,
-  } = opts;
-  let glued = 0;
-  let spaced = 0;
-  for (const c of clusters ?? []) {
-    const key = c?.key;
-    if (key && hiddenPdfKeys?.has(key)) continue;
-    const chosen =
-      (key && registeredVariants?.get(key)) ||
-      (key && preSelected?.get(key)) ||
-      '';
-    for (const [variant, n] of Object.entries(c.counts ?? {})) {
-      const v = Number(n) || 0;
-      if (v <= 0) continue;
-      if (chosen && variant === chosen) continue;
-      if (/\s/.test(variant)) spaced += v;
-      else glued += v;
-    }
-  }
-  return { glued, spaced };
-}
-
 /** 단일 카드 카테고리명 — 예: 골드만삭스-골드만 삭스 */
 function formatUnifySingleClusterLabel(cluster) {
   const variants = cluster?.variants ?? [];
   if (!variants.length) return cluster?.key || '';
   return variants.join('-');
-}
-
-/**
- * 계열에서 표기 통일(또는 자동선택)된 붙임/띄움 방향.
- * @param {{ clusters?: { key?: string }[] }} group
- * @param {Map<string, string>} registeredVariants
- * @param {Map<string, string>} preSelected
- * @returns {'glued' | 'spaced' | null}
- */
-function resolveSeriesChosenSpacing(group, registeredVariants, preSelected) {
-  for (const c of group?.clusters ?? []) {
-    const key = c?.key;
-    if (!key) continue;
-    const chosen = registeredVariants.get(key) ?? preSelected.get(key);
-    if (chosen == null || chosen === '') continue;
-    return /\s/.test(chosen) ? 'spaced' : 'glued';
-  }
-  return null;
-}
-
-/**
- * 목록 전체 일괄 선택 상태. 전 항목이 같은 방향일 때만 강조, 섞이면 null.
- * @returns {'glued' | 'spaced' | null}
- */
-function resolveGlobalChosenSpacing(clusters, registeredVariants, preSelected) {
-  let seen = null;
-  for (const c of clusters ?? []) {
-    const key = c?.key;
-    if (!key) continue;
-    const chosen = registeredVariants.get(key) ?? preSelected.get(key);
-    if (chosen == null || chosen === '') continue;
-    const dir = /\s/.test(chosen) ? 'spaced' : 'glued';
-    if (seen == null) seen = dir;
-    else if (seen !== dir) return null;
-  }
-  return seen;
-}
-
-/**
- * @param {{ variants?: string[] }} cluster
- * @param {'glued' | 'spaced'} spacing
- * @returns {string | undefined}
- */
-function variantForSpacing(cluster, spacing) {
-  return (cluster?.variants ?? []).find((v) =>
-    spacing === 'glued' ? !/\s/.test(v) : /\s/.test(v),
-  );
 }
 
 /**
@@ -439,9 +362,14 @@ function UnifyFindLoadingStatus() {
 
 /**
  * 계열 헤더 — 붙임·띄움 출현 횟수 (작은 금색 원).
- * @param {{ glued: number, spaced: number }} props
+ * 선택이 끝난 쪽 원에는 검정 테두리.
+ * @param {{
+ *   glued: number,
+ *   spaced: number,
+ *   chosenSpacing?: 'glued' | 'spaced' | null,
+ * }} props
  */
-function SeriesSpacingBreakdown({ glued, spaced }) {
+function SeriesSpacingBreakdown({ glued, spaced, chosenSpacing = null }) {
   return (
     <span
       className="unify-candidate-find__spacing-breakdown"
@@ -451,13 +379,31 @@ function SeriesSpacingBreakdown({ glued, spaced }) {
     >
       <span className="unify-candidate-find__spacing-breakdown-part">
         붙임{' '}
-        <span className="result-findings-count-circle unify-candidate-find__spacing-count-circle">
+        <span
+          className={[
+            'result-findings-count-circle',
+            'unify-candidate-find__spacing-count-circle',
+            chosenSpacing === 'glued' &&
+              'unify-candidate-find__spacing-count-circle--chosen',
+          ]
+            .filter(Boolean)
+            .join(' ')}
+        >
           {glued}
         </span>
       </span>
       <span className="unify-candidate-find__spacing-breakdown-part">
         띄움{' '}
-        <span className="result-findings-count-circle unify-candidate-find__spacing-count-circle">
+        <span
+          className={[
+            'result-findings-count-circle',
+            'unify-candidate-find__spacing-count-circle',
+            chosenSpacing === 'spaced' &&
+              'unify-candidate-find__spacing-count-circle--chosen',
+          ]
+            .filter(Boolean)
+            .join(' ')}
+        >
           {spaced}
         </span>
       </span>
@@ -1025,8 +971,10 @@ export default function UnifyCandidateFindPanel({
           : null,
       );
       setSearched(true);
+      // soft = preSelected만 (발견 수는 확정 등록 후에만 「남은 발견」으로 줄어듦)
+      const softEarly = buildSeriesMajoritySoftPreselect(workingGroups);
       setRegisteredVariants(new Map());
-      setPreSelected(new Map());
+      setPreSelected(softEarly);
       setUnifyPhase('primary');
       setSecondaryGroups([]);
       setPhase2ConditionLabels([]);
@@ -1044,7 +992,7 @@ export default function UnifyCandidateFindPanel({
         dropSeriesIds,
         dropClusterKeys,
         needsReviewByKey,
-        new Map(),
+        softEarly,
         prePhase2Snap.listClusters,
       );
       bench.mark('6_publishPreview_override');
@@ -1061,8 +1009,12 @@ export default function UnifyCandidateFindPanel({
       }
 
       const snap = summarizeUnifyListSnapshot(workingGroups);
+      // 계열만 soft 미리 찍기 → preSelected만 (registered 아님)
+      const softPre = buildSeriesMajoritySoftPreselect(workingGroups);
       setFindListGroups(workingGroups);
       setHiddenPdfKeys(snap.hiddenPdfKeys);
+      setRegisteredVariants(new Map());
+      setPreSelected(softPre);
       publishPreview(
         next,
         result.rawByKey,
@@ -1071,7 +1023,7 @@ export default function UnifyCandidateFindPanel({
         dropSeriesIds,
         dropClusterKeys,
         needsReviewByKey,
-        new Map(),
+        softPre,
         snap.listClusters,
       );
 
@@ -1129,7 +1081,7 @@ export default function UnifyCandidateFindPanel({
       predicateDropSeriesIds,
       predicateDropClusterKeys,
       predicateNeedsReviewByKey,
-      registeredVariants,
+      effectiveChosen,
       override,
     );
   }
@@ -1154,7 +1106,7 @@ export default function UnifyCandidateFindPanel({
       predicateDropSeriesIds,
       predicateDropClusterKeys,
       predicateNeedsReviewByKey,
-      registeredVariants,
+      effectiveChosen,
       override,
     );
   }
@@ -1213,6 +1165,12 @@ export default function UnifyCandidateFindPanel({
     [grouped],
   );
 
+  /** soft + 확정 병합 — PDF·2차·완료 판정 공통 */
+  const effectiveChosen = useMemo(
+    () => mergeUnifyChosenMaps(registeredVariants, preSelected),
+    [registeredVariants, preSelected],
+  );
+
   const busy = finding || slmReviewing || isProcessing;
 
   const totalFindings = useMemo(
@@ -1233,8 +1191,8 @@ export default function UnifyCandidateFindPanel({
     () =>
       searched &&
       listClusters.length > 0 &&
-      isPrimaryUnifyComplete(grouped, registeredVariants),
-    [searched, listClusters.length, grouped, registeredVariants],
+      isPrimaryUnifyComplete(grouped, registeredVariants, preSelected),
+    [searched, listClusters.length, grouped, registeredVariants, preSelected],
   );
 
   useEffect(() => {
@@ -1280,6 +1238,7 @@ export default function UnifyCandidateFindPanel({
       const nextRegistered = new Map(registeredVariants);
       nextRegistered.set(cluster.key, chosenVariant);
       setRegisteredVariants(nextRegistered);
+      const previewChosen = mergeUnifyChosenMaps(nextRegistered, preSelected);
 
       const previewGroups =
         unifyPhase === 'secondary_pairs'
@@ -1291,7 +1250,7 @@ export default function UnifyCandidateFindPanel({
               predicateDropSeriesIds,
               predicateDropClusterKeys,
               predicateNeedsReviewByKey,
-              nextRegistered,
+              previewChosen,
               secondaryClusters,
             )
           : publishPreview(
@@ -1302,7 +1261,7 @@ export default function UnifyCandidateFindPanel({
               predicateDropSeriesIds,
               predicateDropClusterKeys,
               predicateNeedsReviewByKey,
-              nextRegistered,
+              previewChosen,
               findListGroups?.flatMap((g) => g.clusters) ?? listClusters,
             );
 
@@ -1354,6 +1313,7 @@ export default function UnifyCandidateFindPanel({
       publishPreview,
       onSelectInstance,
       registeredVariants,
+      preSelected,
       unifyPhase,
       secondaryClusters,
       pageTexts,
@@ -1365,20 +1325,14 @@ export default function UnifyCandidateFindPanel({
   /** 2차 — 패턴 후보(증거·score)를 모아 계열 목록 + 패턴 Preview로 진입 */
   const enterPhase2 = useCallback(() => {
     if (!isUnifyPhase2PatternEnabled()) return;
-    const rules = collectPatternRulesFromRegistrations(
-      registeredVariants,
-      clusters,
-    );
+    const chosen = mergeUnifyChosenMaps(registeredVariants, preSelected);
+    const rules = collectPatternRulesFromRegistrations(chosen, clusters);
     const labels = rules
       .map((r) => formatPatternRuleConditionLabel(r))
       .filter(Boolean);
     setPhase2ConditionLabels(labels);
 
-    const candidates = collectPatternRuleCandidates(
-      registeredVariants,
-      clusters,
-      pageTexts,
-    );
+    const candidates = collectPatternRuleCandidates(chosen, clusters, pageTexts);
     const ids = candidates.map((c) => c.id);
     const nextGroups = buildSecondaryGroupsFromCandidates(candidates, ids);
     const nextClusters = nextGroups.flatMap((g) => g.clusters);
@@ -1406,12 +1360,13 @@ export default function UnifyCandidateFindPanel({
         predicateDropSeriesIds,
         predicateDropClusterKeys,
         predicateNeedsReviewByKey,
-        registeredVariants,
+        chosen,
         nextClusters,
       );
     }
   }, [
     registeredVariants,
+    preSelected,
     clusters,
     pageTexts,
     publishPreview,
@@ -1429,13 +1384,11 @@ export default function UnifyCandidateFindPanel({
       countUnifyListAccordionItems(secondaryGroups) || countedClusters.length;
     const doneLabels = [];
     for (const group of secondaryGroups) {
-      let direction = null;
-      for (const c of group.clusters ?? []) {
-        const chosen = registeredVariants.get(c.key);
-        if (chosen == null || chosen === '') continue;
-        direction = /\s/.test(chosen) ? 'spaced' : 'glued';
-        break;
-      }
+      const direction = resolveSeriesChosenSpacing(
+        group,
+        registeredVariants,
+        preSelected,
+      );
       if (!direction) continue;
       const label = formatPatternRuleConditionLabel({
         template: group.template || group.label,
@@ -1456,7 +1409,7 @@ export default function UnifyCandidateFindPanel({
       predicateDropSeriesIds,
       predicateDropClusterKeys,
       predicateNeedsReviewByKey,
-      registeredVariants,
+      mergeUnifyChosenMaps(registeredVariants, preSelected),
       findListGroups?.flatMap((g) => g.clusters) ?? null,
     );
     if (countedClusters.length > 0 || itemCount > 0) {
@@ -1476,6 +1429,7 @@ export default function UnifyCandidateFindPanel({
     predicateDropClusterKeys,
     predicateNeedsReviewByKey,
     registeredVariants,
+    preSelected,
     publishPreview,
     findListGroups,
   ]);
@@ -1483,7 +1437,7 @@ export default function UnifyCandidateFindPanel({
   useEffect(() => {
     if (unifyPhase !== 'primary') return;
     if (!searched || phase2PromptedRef.current) return;
-    if (!isPrimaryUnifyComplete(grouped, registeredVariants)) return;
+    if (!isPrimaryUnifyComplete(grouped, registeredVariants, preSelected)) return;
     phase2PromptedRef.current = true;
     // 미리 둘러보기 — 완료/2차 팝업 생략
     if (isGuestBrowseActive()) return;
@@ -1511,6 +1465,7 @@ export default function UnifyCandidateFindPanel({
     searched,
     grouped,
     registeredVariants,
+    preSelected,
     enterPhase2,
   ]);
 
@@ -1565,12 +1520,10 @@ export default function UnifyCandidateFindPanel({
       if (currentSpacing === spacing) {
         const next = new Map(registeredVariants);
         for (const gc of groupClusters) next.delete(gc.key);
+        const nextPre = new Map(preSelected);
+        for (const gc of groupClusters) nextPre.delete(gc.key);
         setRegisteredVariants(next);
-        setPreSelected((prev) => {
-          const nextPre = new Map(prev);
-          for (const gc of groupClusters) nextPre.delete(gc.key);
-          return nextPre;
-        });
+        setPreSelected(nextPre);
         publishPreview(
           clusters,
           rawByKey,
@@ -1579,26 +1532,23 @@ export default function UnifyCandidateFindPanel({
           predicateDropSeriesIds,
           predicateDropClusterKeys,
           predicateNeedsReviewByKey,
-          next,
+          mergeUnifyChosenMaps(next, nextPre),
           previewOverride,
         );
         return;
       }
 
       const next = new Map(registeredVariants);
+      const nextPre = new Map(preSelected);
       for (const gc of groupClusters) {
         const v = variantForSpacing(gc, spacing);
-        if (v) next.set(gc.key, v);
+        if (v) {
+          next.set(gc.key, v);
+          nextPre.set(gc.key, v);
+        }
       }
       setRegisteredVariants(next);
-      setPreSelected((prev) => {
-        const nextPre = new Map(prev);
-        for (const gc of groupClusters) {
-          const v = variantForSpacing(gc, spacing);
-          if (v) nextPre.set(gc.key, v);
-        }
-        return nextPre;
-      });
+      setPreSelected(nextPre);
       publishPreview(
         clusters,
         rawByKey,
@@ -1607,7 +1557,7 @@ export default function UnifyCandidateFindPanel({
         predicateDropSeriesIds,
         predicateDropClusterKeys,
         predicateNeedsReviewByKey,
-        next,
+        mergeUnifyChosenMaps(next, nextPre),
         previewOverride,
       );
       for (const gc of groupClusters) {
@@ -1640,18 +1590,15 @@ export default function UnifyCandidateFindPanel({
       listClusters,
       pageTexts,
       registeredVariants,
+      preSelected,
     ],
   );
 
-  /** 1차 목록 전체 붙여쓰기/띄어쓰기 (항목별 버튼으로 이후 덮어쓰기 가능) */
+  /** 1차 목록 전체 — soft 미리찍기 제외, 확정 등록만 반영 */
   const globalListSpacing = useMemo(
     () =>
-      resolveGlobalChosenSpacing(
-        listClusters,
-        registeredVariants,
-        preSelected,
-      ),
-    [listClusters, registeredVariants, preSelected],
+      resolveGlobalChosenSpacing(listClusters, registeredVariants, new Map()),
+    [listClusters, registeredVariants],
   );
 
   /**
@@ -1668,15 +1615,13 @@ export default function UnifyCandidateFindPanel({
     nextReg.delete(cluster.key);
     const anyRegisteredLeft = siblings.some((gc) => nextReg.has(gc.key));
 
+    const nextPre = new Map(preSelected);
+    nextPre.delete(cluster.key);
+    if (!anyRegisteredLeft) {
+      for (const gc of siblings) nextPre.delete(gc.key);
+    }
     setRegisteredVariants(nextReg);
-    setPreSelected((prevPre) => {
-      const nextPre = new Map(prevPre);
-      nextPre.delete(cluster.key);
-      if (!anyRegisteredLeft) {
-        for (const gc of siblings) nextPre.delete(gc.key);
-      }
-      return nextPre;
-    });
+    setPreSelected(nextPre);
 
     publishPreview(
       clusters,
@@ -1686,7 +1631,7 @@ export default function UnifyCandidateFindPanel({
       predicateDropSeriesIds,
       predicateDropClusterKeys,
       predicateNeedsReviewByKey,
-      nextReg,
+      mergeUnifyChosenMaps(nextReg, nextPre),
       unifyPhase === 'secondary_pairs'
         ? secondaryClusters
         : (findListGroups?.flatMap((g) => g.clusters) ?? null),
@@ -1859,8 +1804,8 @@ export default function UnifyCandidateFindPanel({
                           group.clusters,
                           {
                             registeredVariants,
-                            preSelected,
                             hiddenPdfKeys,
+                            seriesSpacing,
                           },
                         );
                         const sectionId = `phase2-series-${group.affixType}-${group.affix}`;
@@ -1887,6 +1832,7 @@ export default function UnifyCandidateFindPanel({
                               <SeriesSpacingBreakdown
                                 glued={spacingFindings.glued}
                                 spaced={spacingFindings.spaced}
+                                chosenSpacing={seriesSpacing}
                               />
                               <span className="unify-candidate-find__summary-trail">
                                 <SeriesSpacingButtons
@@ -2009,7 +1955,6 @@ export default function UnifyCandidateFindPanel({
                         [cluster],
                         {
                           registeredVariants,
-                          preSelected,
                           hiddenPdfKeys,
                         },
                       );
@@ -2041,6 +1986,7 @@ export default function UnifyCandidateFindPanel({
                             <SeriesSpacingBreakdown
                               glued={itemSpacingFindings.glued}
                               spaced={itemSpacingFindings.spaced}
+                              chosenSpacing={itemSpacing}
                             />
                             <span className="unify-candidate-find__summary-trail">
                               <SeriesSpacingButtons
@@ -2088,9 +2034,10 @@ export default function UnifyCandidateFindPanel({
                         <SeriesSpacingBreakdown
                           {...sumClusterSpacingFindings(group.clusters, {
                             registeredVariants,
-                            preSelected,
                             hiddenPdfKeys,
+                            seriesSpacing,
                           })}
+                          chosenSpacing={seriesSpacing}
                         />
                         <span className="unify-candidate-find__summary-trail">
                           <SeriesSpacingButtons

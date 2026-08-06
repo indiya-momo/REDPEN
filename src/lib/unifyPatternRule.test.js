@@ -229,6 +229,16 @@ describe('unifyPatternRule', () => {
         ]),
       ),
     ).toBe(true);
+    expect(
+      isPrimaryUnifyComplete(
+        grouped,
+        new Map([['a', 'A']]),
+        new Map([
+          ['b', 'B'],
+          ['c', 'C'],
+        ]),
+      ),
+    ).toBe(true);
   });
 
   it('등록에서 패턴 후보를 모은다(건수·예시·score)', () => {

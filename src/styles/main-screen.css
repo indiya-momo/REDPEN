@@ -2936,6 +2936,13 @@
   line-height: 1;
 }
 
+.panel-left
+  .unify-candidate-find
+  .unify-candidate-find__spacing-count-circle--chosen.result-findings-count-circle {
+  border: 1.5px solid #111;
+  box-shadow: none;
+}
+
 .panel-left .unify-candidate-find__series-spacing-btns {
   box-sizing: border-box;
   display: grid;
