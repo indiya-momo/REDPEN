@@ -6,11 +6,13 @@ import {
   buildSuffixPatternRuleFromChoice,
   collectPatternRuleCandidates,
   collectPatternRulesFromRegistrations,
+  collectPrimaryFormsForPatternGroup,
   isUnifyPatternSeedEligibleCluster,
   dedupeMismatchesSuffixOverPrefix,
   findPatternMismatches,
   findSuffixPatternMismatches,
   formatPatternRuleConditionLabel,
+  formatPhase2PrimaryFormsLine,
   groupPatternConditionLabelsByDirection,
   formatPatternSupportExplain,
   formatSuffixPatternRuleConfirmMessage,
@@ -22,6 +24,7 @@ import {
   passesPatternRuleUnifyFilter,
   shouldRejectPatternMismatchByNoiseAndCompound,
   PATTERN_SCORE_WEIGHT_HEAD,
+  PHASE2_PRIMARY_FORMS_MAX,
   scorePatternRuleCandidate,
   spaceGluedAffixMatch,
   spaceGluedPrefixMatch,
@@ -502,6 +505,36 @@ describe('unifyPatternRule', () => {
     expect(groups).toHaveLength(1);
     expect(groups[0].label).toBe('백자@');
     expect(groups[0].clusters).toHaveLength(2);
-    expect(groups[0].supportExplain).toContain('2회 발견');
+    expect(groups[0].supportExplain).toBeUndefined();
+  });
+
+  it('2차 1차 표기 줄은 최대 4개·공백 제거', () => {
+    expect(
+      formatPhase2PrimaryFormsLine('@무늬', [
+        '오려낸무늬',
+        '그려진 무늬',
+        '섬세한무늬',
+        '꽃무늬',
+        '다섯번째무늬',
+      ]),
+    ).toBe(
+      '1차 표기 통일 @무늬 : 오려낸무늬 그려진무늬 섬세한무늬 꽃무늬',
+    );
+    expect(PHASE2_PRIMARY_FORMS_MAX).toBe(4);
+    expect(
+      collectPrimaryFormsForPatternGroup(
+        { affixType: 'suffix', affix: '무늬', template: '@무늬' },
+        [
+          { key: '오려낸무늬', totalCount: 5 },
+          { key: '그려진무늬', totalCount: 3 },
+          { key: '다른것', totalCount: 9 },
+        ],
+        new Map([
+          ['오려낸무늬', '오려낸무늬'],
+          ['그려진무늬', '그려진 무늬'],
+          ['다른것', '다른것'],
+        ]),
+      ),
+    ).toEqual(['오려낸무늬', '그려진무늬']);
   });
 });

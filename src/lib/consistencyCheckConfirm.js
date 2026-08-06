@@ -338,7 +338,7 @@ export function formatUnifyCandidateFindCompleteMessage(
   if (clusterCount <= 0) {
     return '띄어쓰기만 다른 표기 후보를 찾지 못했습니다.';
   }
-  return `1차 표기 통일 : 추천 이형태쌍 ${clusterCount} 전체 발견 ${totalOccurrences}`;
+  return `1차 표기 통일 : 추천 단어 세트 ${clusterCount} 전체 발견 ${totalOccurrences}`;
 }
 
 /**
@@ -353,7 +353,7 @@ export function formatUnifyCandidatePhase2CompleteMessage(
   if (clusterCount <= 0) {
     return '확장할 표기 후보가 없었습니다.';
   }
-  return `2차 표기 통일 : 추천 이형태쌍 ${clusterCount} 전체 발견 ${totalOccurrences}`;
+  return `2차 표기 통일 : 추천 단어 세트 ${clusterCount} 전체 발견 ${totalOccurrences}`;
 }
 
 /**

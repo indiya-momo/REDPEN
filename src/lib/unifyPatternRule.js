@@ -425,7 +425,8 @@ export function meetsPatternSupportThreshold(support) {
 }
 
 /**
- * UI용 한 줄 설명 (Rule 메타 → 표시).
+ * UI용 한 줄 설명 (Rule 메타 → 표시). DEV·테스트용. 2차 목록에는
+ * {@link formatPhase2PrimaryFormsLine} 을 쓴다.
  * @param {PatternRuleSupport} support
  * @param {number} [score]
  */
@@ -440,6 +441,74 @@ export function formatPatternSupportExplain(support, score) {
     parts.push(`예) ${support.examples.slice(0, 3).join(' · ')}`);
   }
   return parts.join(' · ');
+}
+
+/** 2차 계열 아래 — 1차 표기 표기명 최대 개수 */
+export const PHASE2_PRIMARY_FORMS_MAX = 4;
+
+/**
+ * 2차 계열 헤더 아래: `1차 표기 통일 @무늬 : 오려낸무늬 …` (최대 4개).
+ * @param {string} template
+ * @param {string[]} forms
+ */
+export function formatPhase2PrimaryFormsLine(template, forms) {
+  const list = (forms ?? [])
+    .map((f) => String(f ?? '').replace(/\s+/g, '').trim())
+    .filter(Boolean);
+  const uniq = [];
+  for (const f of list) {
+    if (!uniq.includes(f)) uniq.push(f);
+    if (uniq.length >= PHASE2_PRIMARY_FORMS_MAX) break;
+  }
+  if (!uniq.length) return '';
+  const t = String(template ?? '').trim() || '@';
+  return `1차 표기 통일 ${t} : ${uniq.join(' ')}`;
+}
+
+/**
+ * 1차에서 고른 표기 중 이 패턴(접두/접미)에 해당하는 것을 발견 수 순으로 모은다.
+ * @param {{
+ *   affixType?: string,
+ *   affix?: string,
+ *   template?: string,
+ * }} group
+ * @param {import('./unifyCandidateDiscover.js').UnifySpacingCluster[]} primaryClusters
+ * @param {Map<string, string>} chosenByKey
+ * @returns {string[]}
+ */
+export function collectPrimaryFormsForPatternGroup(
+  group,
+  primaryClusters,
+  chosenByKey,
+) {
+  const affix = String(group?.affix ?? '').trim();
+  if (!affix || !(chosenByKey instanceof Map)) return [];
+  const isPrefix = group?.affixType === 'prefix';
+  /** @type {{ form: string, count: number }[]} */
+  const scored = [];
+  for (const cluster of primaryClusters ?? []) {
+    const key = String(cluster?.key ?? '');
+    const chosen = chosenByKey.get(key);
+    if (!chosen) continue;
+    const surface = String(chosen).replace(/\s+/g, '');
+    if (!surface) continue;
+    if (isPrefix) {
+      if (!surface.startsWith(affix)) continue;
+    } else if (!surface.endsWith(affix)) {
+      continue;
+    }
+    scored.push({ form: surface, count: Number(cluster.totalCount) || 0 });
+  }
+  scored.sort(
+    (a, b) =>
+      b.count - a.count || a.form.localeCompare(b.form, 'ko'),
+  );
+  const out = [];
+  for (const row of scored) {
+    if (!out.includes(row.form)) out.push(row.form);
+    if (out.length >= PHASE2_PRIMARY_FORMS_MAX) break;
+  }
+  return out;
 }
 
 /**
@@ -752,7 +821,6 @@ export function collectPatternRuleCandidates(
  *   clusters: import('./unifyCandidateDiscover.js').UnifySpacingCluster[],
  *   support?: PatternRuleSupport,
  *   score?: number,
- *   supportExplain?: string,
  * }[]}
  */
 export function buildSecondaryGroupsFromCandidates(candidates, selectedIds) {
@@ -783,10 +851,9 @@ export function buildSecondaryGroupsFromCandidates(candidates, selectedIds) {
    *   template: string,
    *   direction: PatternRuleDirection,
    *   clusters: import('./unifyCandidateDiscover.js').UnifySpacingCluster[],
-   *   support?: PatternRuleSupport,
-   *   score?: number,
-   *   supportExplain?: string,
-   * }>} */
+ *   support?: PatternRuleSupport,
+ *   score?: number,
+ * }>} */
   const byPattern = new Map();
 
   for (const m of deduped) {
@@ -818,9 +885,6 @@ export function buildSecondaryGroupsFromCandidates(candidates, selectedIds) {
         clusters: [],
         support: cand?.support,
         score: cand?.score,
-        supportExplain: cand?.support
-          ? formatPatternSupportExplain(cand.support, cand.score)
-          : undefined,
       };
       byPattern.set(groupKey, group);
     }
