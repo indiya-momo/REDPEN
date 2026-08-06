@@ -9,7 +9,7 @@
 import {
   hangulSyllableCount,
   UNIFY_SPACED_PART_MIN_HANGUL,
-} from './unifyCandidateDiscover.js';
+} from './unifyHangulBasics.js';
 import { isUnifyKiwiJosaEnabled } from './featureFlags.js';
 import { stripTrailingJosaKiwi } from './kiwiMorph/stripTrailingJosa.js';
 import { isKiwiReady } from './kiwiMorph/runtime.js';

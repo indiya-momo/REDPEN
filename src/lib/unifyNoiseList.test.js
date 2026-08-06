@@ -9,6 +9,7 @@ import {
   matchesNoiseListMorphTail,
   shouldRejectByNoiseList,
   shouldRejectByNoiseListEojeol,
+  shouldRejectUnifyCandidateNoise,
   spacedVariantHitsNoiseDenylist,
 } from './unifyNoiseList.js';
 
@@ -131,5 +132,17 @@ describe('unifyNoiseList (1차 정적 리스트)', () => {
     expect(shouldRejectByNoiseListEojeol('기업이든')).toBe(true);
     expect(hasUnifyNoiseDenyEojeol('이든')).toBe(false);
     expect(matchesNoiseListMorphTail('기업이든')).toBe(false);
+  });
+
+  it('1·2차 공통 경로 — 띄움은 리스트·휴리스틱, 붙임키는 Surface(캐나다정부 유지)', () => {
+    expect(shouldRejectUnifyCandidateNoise('캐나다 정부', '캐나다정부')).toBe(
+      false,
+    );
+    expect(shouldRejectUnifyCandidateNoise('캐나다정부', '캐나다정부')).toBe(
+      false,
+    );
+    expect(shouldRejectUnifyCandidateNoise('붉은 표시', '붉은표시')).toBe(true);
+    expect(shouldRejectUnifyCandidateNoise('쉽게 대출', '쉽게대출')).toBe(true);
+    expect(shouldRejectUnifyCandidateNoise('내가 공무원')).toBe(true);
   });
 });

@@ -146,3 +146,26 @@ export function shouldRejectByNoiseList(spacedVariant, clusterKey = '') {
   if (key && shouldRejectByNoiseListSurface(key)) return true;
   return false;
 }
+
+/**
+ * 1·2차 공통 잡음 경로 (discover · 패턴 mismatch).
+ * - 띄움: {@link shouldRejectByNoiseList} (어절 휴리스틱 + 키 Surface)
+ * - 붙임만: {@link shouldRejectByNoiseListSurface} (캐나다정부 ≠ 조사끼임)
+ * @param {string} variant
+ * @param {string} [clusterKey]
+ * @returns {boolean} true면 제외
+ */
+export function shouldRejectUnifyCandidateNoise(variant, clusterKey = '') {
+  const v = String(variant ?? '')
+    .normalize('NFC')
+    .trim();
+  if (!v) return false;
+  if (/\s/.test(v)) {
+    return shouldRejectByNoiseList(v, clusterKey);
+  }
+  const key =
+    hangulOnlyNoise(clusterKey) ||
+    hangulOnlyNoise(v) ||
+    String(clusterKey || v).replace(/\s+/g, '');
+  return key ? shouldRejectByNoiseListSurface(key) : false;
+}

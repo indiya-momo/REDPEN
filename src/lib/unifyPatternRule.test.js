@@ -295,7 +295,7 @@ describe('unifyPatternRule', () => {
     expect(candidates.find((c) => c.rule.template === '@성장')).toBeFalsy();
   });
 
-  it('본+보조·용언 검토 클러스터는 @시드에서 빼고, soft 확정 명사는 시드한다', () => {
+  it('본+보조 검토만 @시드에서 빼고, 용언 검토·soft 확정 명사는 시드한다', () => {
     expect(
       isUnifyPatternSeedEligibleCluster({
         key: '해보',
@@ -307,7 +307,7 @@ describe('unifyPatternRule', () => {
         key: '알아내고',
         predicateReview: { status: 'needs_review' },
       }),
-    ).toBe(false);
+    ).toBe(true);
     expect(
       isUnifyPatternSeedEligibleCluster({
         key: '미국정부',
@@ -340,7 +340,7 @@ describe('unifyPatternRule', () => {
     );
     expect(rules.some((r) => r.confirmedKey === '미국정부')).toBe(true);
     expect(rules.some((r) => r.confirmedKey === '해보')).toBe(false);
-    expect(rules.some((r) => r.confirmedKey === '알아내고')).toBe(false);
+    expect(rules.some((r) => r.confirmedKey === '알아내고')).toBe(true);
   });
 
   it('다 head면 @성장 후보와 score를 만든다', () => {
@@ -508,7 +508,7 @@ describe('unifyPatternRule', () => {
     expect(groups[0].supportExplain).toBeUndefined();
   });
 
-  it('2차 1차 표기 줄은 최대 4개·공백 제거', () => {
+  it('2차 1차 표기 줄은 선택 띄어쓰기를 유지하고 최대 4개', () => {
     expect(
       formatPhase2PrimaryFormsLine('@무늬', [
         '오려낸무늬',
@@ -518,7 +518,7 @@ describe('unifyPatternRule', () => {
         '다섯번째무늬',
       ]),
     ).toBe(
-      '1차 표기 통일 @무늬 : 오려낸무늬 그려진무늬 섬세한무늬 꽃무늬',
+      '1차 표기 통일 @무늬 : 오려낸무늬 · 그려진 무늬 · 섬세한무늬 · 꽃무늬',
     );
     expect(PHASE2_PRIMARY_FORMS_MAX).toBe(4);
     expect(
@@ -526,15 +526,17 @@ describe('unifyPatternRule', () => {
         { affixType: 'suffix', affix: '무늬', template: '@무늬' },
         [
           { key: '오려낸무늬', totalCount: 5 },
+          { key: '두꺼비무늬', totalCount: 4 },
           { key: '그려진무늬', totalCount: 3 },
           { key: '다른것', totalCount: 9 },
         ],
         new Map([
           ['오려낸무늬', '오려낸무늬'],
+          ['두꺼비무늬', '두꺼비 무늬'],
           ['그려진무늬', '그려진 무늬'],
           ['다른것', '다른것'],
         ]),
       ),
-    ).toEqual(['오려낸무늬', '그려진무늬']);
+    ).toEqual(['오려낸무늬', '두꺼비 무늬', '그려진 무늬']);
   });
 });
