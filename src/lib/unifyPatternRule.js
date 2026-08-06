@@ -911,11 +911,16 @@ export function buildPatternRulePreviewGroups(mismatches) {
 }
 
 /**
- * 보이는 1차 목록 키가 모두 등록됐는지.
+ * 보이는 1차 목록 키가 모두 채워졌는지 (확정 등록 또는 soft 미리 찍기).
  * @param {{ clusters?: { key?: string }[] }[]} grouped
  * @param {Map<string, string>} registeredVariants
+ * @param {Map<string, string>} [preSelected]
  */
-export function isPrimaryUnifyComplete(grouped, registeredVariants) {
+export function isPrimaryUnifyComplete(
+  grouped,
+  registeredVariants,
+  preSelected,
+) {
   const keys = [];
   for (const g of grouped ?? []) {
     for (const c of g.clusters ?? []) {
@@ -923,5 +928,7 @@ export function isPrimaryUnifyComplete(grouped, registeredVariants) {
     }
   }
   if (!keys.length) return false;
-  return keys.every((k) => registeredVariants.has(k));
+  return keys.every(
+    (k) => registeredVariants.has(k) || Boolean(preSelected?.has(k)),
+  );
 }
