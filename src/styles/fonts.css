@@ -17,6 +17,23 @@
   font-display: swap;
 }
 
+/** 일관성·외래어 안내 예시 문구용 바탕 (학교안심 바른바탕) */
+@font-face {
+  font-family: 'HakgyoansimBareonBatang';
+  src: url('/fonts/HakgyoansimBareonbatangR.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'HakgyoansimBareonBatang';
+  src: url('/fonts/HakgyoansimBareonbatangB.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 @font-face {
   font-family: 'GanaChocolate';
   src: url('/fonts/Ghanachocolate.otf') format('opentype');
