@@ -1941,6 +1941,96 @@
   color: var(--c-soft);
 }
 
+/* 3단 철자 이형태 스파이크 (병기 앵커) */
+.panel-left .unify-candidate-find__ortho-spike {
+  margin-top: var(--panel-gap-block);
+  padding: 8px var(--unify-edge-pad, var(--space-sm));
+  font-size: calc(0.78rem * var(--panel-ui-scale, 1));
+  line-height: 1.45;
+  color: var(--c-soft, #555);
+  background: var(--panel-surface-group, #f6f1e7);
+  border: 1px solid var(--panel-border-soft, #dcd2bf);
+  border-radius: 8px;
+  box-sizing: border-box;
+}
+
+.panel-left .unify-candidate-find__ortho-spike-title {
+  margin: 0 0 4px;
+  font-weight: 700;
+  color: var(--c-ink, #333);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.panel-left .unify-candidate-find__ortho-spike-hint {
+  margin: 0 0 8px;
+}
+
+.panel-left .unify-candidate-find__ortho-spike-status {
+  margin: 0;
+}
+
+.panel-left .unify-candidate-find__ortho-spike-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.panel-left .unify-candidate-find__ortho-spike-item {
+  padding: 6px 8px;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 6px;
+}
+
+.panel-left .unify-candidate-find__ortho-spike-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
+  color: var(--c-ink, #333);
+}
+
+.panel-left .unify-candidate-find__ortho-spike-latin {
+  color: var(--c-soft, #555);
+  font-weight: 400;
+}
+
+.panel-left .unify-candidate-find__ortho-spike-verify {
+  font-size: 0.85em;
+  color: #8a5a00;
+  background: #fff3cd;
+  border-radius: 4px;
+  padding: 1px 6px;
+}
+
+.panel-left .unify-candidate-find__ortho-spike-meta,
+.panel-left .unify-candidate-find__ortho-spike-pages {
+  margin-top: 4px;
+  font-size: 0.95em;
+}
+
+.panel-left .unify-candidate-find__ortho-spike-page-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.panel-left .unify-candidate-find__ortho-spike-page-word {
+  margin-right: 2px;
+}
+
+.panel-left .unify-candidate-find__ortho-spike-more {
+  color: var(--c-soft, #555);
+}
+
 /* 1차→2차 순차 플로우 */
 .panel-left .unify-candidate-find__phase-banner {
   margin: 0 0 8px;

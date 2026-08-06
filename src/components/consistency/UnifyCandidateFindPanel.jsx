@@ -32,6 +32,7 @@ import {
 import { showAppAlert, showAppConfirm } from '../../lib/appDialog.js';
 import { isGuestBrowseActive } from '../../lib/guestBrowsePolicy.js';
 import { isUnifyPhase2PatternEnabled } from '../../lib/featureFlags.js';
+import { discoverOrthographyFromPages, isOrthoNounSurface } from '../../lib/unifyOrthographyAnchorSpike.js';
 import { dropJosaPlusPredicateFromGroups } from '../../lib/unifyPredicateBucket.js';
 import {
   mergeReviewedClustersIntoGroups,
@@ -61,7 +62,7 @@ import {
   isUnifyPredicateSlmReviewEnabled,
   isUnifyStdictPosReviewEnabled,
 } from '../../lib/featureFlags.js';
-import { formatSystemPageLabel } from '../../lib/printedPageDisplay.js';
+import { formatSystemPageLabel, stripPageLabelPrefix } from '../../lib/printedPageDisplay.js';
 import { assertBetaDailyCheckOrAlert } from '../../lib/betaDailyQuota.js';
 import { confirmUnifyCandidateFindBeforeRun, alertUnifyCandidateFindAfterRun, alertUnifyCandidatePhase2AfterComplete } from '../../lib/consistencyCheckConfirm.js';
 import ConsistencyHintExample from './ConsistencyHintExample.jsx';
@@ -568,6 +569,46 @@ export default function UnifyCandidateFindPanel({
       cancelled = true;
     };
   }, [hasPdf, pageTexts]);
+
+  /** 3단 스파이크 — 로컬(DEV)만 · 명사 오표기(개발 중) */
+  const [orthoMixClusters, setOrthoMixClusters] = useState(
+    /** @type {Array<import('../../lib/unifyOrthographyAnchorSpike.js').OrthoAnchorCluster & { pagesByVariant?: Record<string, number[]> }>} */ (
+      []
+    ),
+  );
+  const [orthoScanning, setOrthoScanning] = useState(false);
+
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+    if (!hasPdf || !pageTexts?.length || isProcessing) {
+      setOrthoMixClusters([]);
+      setOrthoScanning(false);
+      return;
+    }
+    let cancelled = false;
+    setOrthoScanning(true);
+    const t = window.setTimeout(() => {
+      try {
+        const result = discoverOrthographyFromPages(pageTexts);
+        if (cancelled) return;
+        const mix = (result.mixClusters ?? [])
+          .map((c) => ({
+            ...c,
+            variants: (c.variants ?? []).filter(isOrthoNounSurface),
+          }))
+          .filter((c) => c.variants.length >= 2);
+        setOrthoMixClusters(mix);
+      } catch {
+        if (!cancelled) setOrthoMixClusters([]);
+      } finally {
+        if (!cancelled) setOrthoScanning(false);
+      }
+    }, 0);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(t);
+    };
+  }, [hasPdf, pageTexts, isProcessing]);
 
   const [slmDroppedCount, setSlmDroppedCount] = useState(0);
   const [slmReviewedByKey, setSlmReviewedByKey] = useState(
@@ -1687,6 +1728,120 @@ export default function UnifyCandidateFindPanel({
         {finding ? <UnifyFindLoadingStatus /> : null}
       </div>
 
+      {import.meta.env.DEV && hasPdf && pageTexts.length > 0 ? (
+        <div
+          className="unify-candidate-find__ortho-spike"
+          role="region"
+          aria-label="오표기 찾기"
+        >
+          <p className="unify-candidate-find__ortho-spike-title">
+            오표기 찾기(개발 중)
+            <span className="loanword-converter__free-badge loanword-converter__free-badge--yellow">
+              3단·명사만
+            </span>
+          </p>
+          {isProcessing || orthoScanning ? (
+            <p className="unify-candidate-find__ortho-spike-status">
+              {isProcessing ? 'PDF 텍스트 추출 중…' : '찾는 중…'}
+            </p>
+          ) : (
+            <>
+              <p className="unify-candidate-find__ortho-spike-status">
+                병기 발견: {orthoMixClusters.length}건
+              </p>
+              {orthoMixClusters.length > 0 ? (
+                <ul className="unify-candidate-find__ortho-spike-list">
+                  {orthoMixClusters.map((c) => (
+                    <li
+                      key={c.key}
+                      className="unify-candidate-find__ortho-spike-item"
+                    >
+                      <div className="unify-candidate-find__ortho-spike-head">
+                        <strong>{c.variants.join(' · ')}</strong>
+                        <span className="unify-candidate-find__ortho-spike-latin">
+                          ({c.latin})
+                        </span>
+                        <span className="unify-candidate-find__ortho-spike-verify">
+                          검토 필요
+                        </span>
+                      </div>
+                      <div className="unify-candidate-find__ortho-spike-meta">
+                        추천(다수형) 「{c.recommendedUnify}」 ·{' '}
+                        {c.variants
+                          .map((v) => `${v} ${c.counts[v] ?? 0}`)
+                          .join(' / ')}
+                      </div>
+                      {c.pagesByVariant ? (
+                        <div className="unify-candidate-find__ortho-spike-pages">
+                          {c.variants.map((v) => {
+                            const pages = c.pagesByVariant?.[v] ?? [];
+                            if (!pages.length) return null;
+                            return (
+                              <div
+                                key={v}
+                                className="unify-candidate-find__ortho-spike-page-row"
+                              >
+                                <span className="unify-candidate-find__ortho-spike-page-word">
+                                  {v}:
+                                </span>{' '}
+                                {pages.slice(0, 8).map((systemPage) => {
+                                  const label = formatPageLabel(systemPage);
+                                  const printed = stripPageLabelPrefix(label);
+                                  const printedDiffers =
+                                    printed !== String(systemPage);
+                                  return (
+                                    <button
+                                      key={`${v}-${systemPage}`}
+                                      type="button"
+                                      className={[
+                                        'page-chip',
+                                        currentPage === systemPage
+                                          ? 'page-chip--current'
+                                          : '',
+                                      ]
+                                        .filter(Boolean)
+                                        .join(' ')}
+                                      title={
+                                        printedDiffers
+                                          ? `판형 ${printed}쪽 = PDF ${systemPage}쪽`
+                                          : `PDF ${systemPage}쪽`
+                                      }
+                                      onClick={() => {
+                                        onSelectInstance?.({
+                                          find: v,
+                                          replace: c.recommendedUnify,
+                                          matchedText: v,
+                                          suggestedText: c.recommendedUnify,
+                                          pageNum: systemPage,
+                                          index: 0,
+                                        });
+                                      }}
+                                    >
+                                      <span className="page-chip__page">
+                                        {label}
+                                      </span>
+                                    </button>
+                                  );
+                                })}
+                                {pages.length > 8 ? (
+                                  <span className="unify-candidate-find__ortho-spike-more">
+                                    …
+                                  </span>
+                                ) : null}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : null}
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </>
+          )}
+        </div>
+      ) : null}
+
       {searched && !finding ? (
         <div
           className="unify-candidate-find__results"
@@ -1765,7 +1920,7 @@ export default function UnifyCandidateFindPanel({
                     <div className="unify-candidate-find__phase-banner-line-row">
                       <ul className="unify-candidate-find__phase-banner-line unify-candidate-find__phase-banner-line-list">
                         <li>띄어쓰기만 다른 표기를 찾아 보여드립니다</li>
-                        <li>80% 넘게 쓰인 형태는 자동 선택되어 있습니다</li>
+                        <li>표기 형태가 80%이면 자동으로 표기됩니다</li>
                       </ul>
                       {listClusters.length > 0 ? (
                         <SeriesSpacingButtons
