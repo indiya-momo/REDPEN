@@ -56,6 +56,12 @@ const DEFAULT_EXCEPTION_SPACED = [
   '등이 공무원',
 ];
 
+/**
+ * 수확 금지 꼬리 — 명사·고유명사 접두와 충돌 (대한→대한민국, 고서→보고서).
+ * @see .cursor/rules/unify-noise-list.mdc verbalTails 확장 판단 기준
+ */
+const VERBAL_TAIL_HARVEST_BLOCKLIST = new Set(['대한', '고서']);
+
 function hangulOnly(s) {
   return String(s ?? '')
     .normalize('NFC')
@@ -189,6 +195,14 @@ async function main() {
         }
         const tail = hangulOnly(hit.tail);
         if (tail.length < 2) continue;
+        if (
+          hit.kind !== 'copula' &&
+          hit.kind !== 'hagoJc' &&
+          VERBAL_TAIL_HARVEST_BLOCKLIST.has(tail)
+        ) {
+          console.log(`[skip-blocklist] ${surface} → ${tail}`);
+          continue;
+        }
         const bucket =
           hit.kind === 'copula' ? copula : hit.kind === 'hagoJc' ? hagoJc : verbal;
         const before = bucket.has(tail);

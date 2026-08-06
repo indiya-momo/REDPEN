@@ -93,6 +93,9 @@ const UNIFY_NOISE_EXCEPTION_PREFIXES = freezeSortedTails([
   ...UNIFY_NOISE_EXCEPTION_EOJEOLS,
 ]);
 
+/** 붙임키 접미용 예외 어절 — 긴 것 우선 */
+const UNIFY_NOISE_EXCEPTION_AS_TAILS = UNIFY_NOISE_EXCEPTION_PREFIXES;
+
 /**
  * @param {string} stem
  */
@@ -137,13 +140,7 @@ export function matchesNoiseListMorphTail(eojeol) {
   if (endsWithAllowedTail(h, UNIFY_NOISE_COPULA_TAILS)) return true;
   if (endsWithAllowedTail(h, UNIFY_NOISE_HAGO_JC_TAILS)) return true;
   // 붙임키 끝의 예외 어절 (가족끼리·결혼직전)
-  if (
-    h.length >= 3 &&
-    endsWithAllowedTail(
-      h,
-      freezeSortedTails([...UNIFY_NOISE_EXCEPTION_EOJEOLS]),
-    )
-  ) {
+  if (h.length >= 3 && endsWithAllowedTail(h, UNIFY_NOISE_EXCEPTION_AS_TAILS)) {
     return true;
   }
   return false;
@@ -167,6 +164,25 @@ export function matchesNoiseListExceptionPrefix(eojeolOrKey) {
 }
 
 /**
+ * 붙임키 = (용언·이다 꼬리로 끝나는 왼쪽) + (한글 2음절+ 오른쪽).
+ * 짧은 꼬리의 임의 substring 매칭(보고서⊃고서)을 피한다.
+ * @param {string} eojeolOrKey
+ */
+export function matchesNoiseListVerbalTailPlusNounInfix(eojeolOrKey) {
+  const h = hangulOnlyNoise(eojeolOrKey);
+  // 말해시장(4) · 깨달았듯시장(6)
+  if (h.length < 4) return false;
+  for (let split = 2; split <= h.length - 2; split += 1) {
+    const left = h.slice(0, split);
+    const right = h.slice(split);
+    if (right.length < 2) continue;
+    if (endsWithAllowedTail(left, UNIFY_NOISE_VERBAL_TAILS)) return true;
+    if (endsWithAllowedTail(left, UNIFY_NOISE_COPULA_TAILS)) return true;
+  }
+  return false;
+}
+
+/**
  * 예외 또는 형태소 꼬리 — discover 1차 (순환 없는 경로).
  * @param {string} eojeolOrKey
  */
@@ -180,7 +196,8 @@ export function shouldRejectNoiseListDataSurface(eojeolOrKey) {
   const reject =
     UNIFY_NOISE_EXCEPTION_EOJEOLS.has(h) ||
     matchesNoiseListMorphTail(h) ||
-    matchesNoiseListExceptionPrefix(h);
+    matchesNoiseListExceptionPrefix(h) ||
+    matchesNoiseListVerbalTailPlusNounInfix(h);
   noiseRejectCache.set(h, reject);
   return reject;
 }

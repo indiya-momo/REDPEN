@@ -47,7 +47,7 @@ import BadgeCollectionGrid from './BadgeCollectionGrid.jsx';
 import ProjectHubEditorPage from './projectHub/ProjectHubEditorPage.jsx';
 import ProjectHubEditorShell from './projectHub/ProjectHubEditorShell.jsx';
 import ProjectHubLibraryPanel from './projectHub/ProjectHubLibraryPanel.jsx';
-import { isMyPageProjectHubEnabled } from '../lib/featureFlags.js';
+import { isMyPageProjectHubEnabled, isIndiyaGuidebookNavEnabled } from '../lib/featureFlags.js';
 import { FAQ_ITEMS } from '../lib/faqItems.js';
 import './my-page.css';
 import './project-hub-settings.css';
@@ -582,8 +582,11 @@ export default function MyPageWindowScreen({ authSession, authReady }) {
   );
   const resolvedNav = resolveMypageNav(activeNav, isAdmin);
   const sidebarNav = useMemo(() => {
-    if (!isAdmin) return SIDEBAR_NAV;
-    return [...SIDEBAR_NAV, { id: 'paid-admin', label: '유료 회원 등록' }];
+    const base = isIndiyaGuidebookNavEnabled()
+      ? SIDEBAR_NAV
+      : SIDEBAR_NAV.filter((item) => item.id !== 'guide');
+    if (!isAdmin) return base;
+    return [...base, { id: 'paid-admin', label: '유료 회원 등록' }];
   }, [isAdmin]);
 
   useEffect(() => {

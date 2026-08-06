@@ -351,7 +351,8 @@ export default function WelcomePcScreen({
   );
 
   const signedInStartButton = (
-    <div className="welcome-pc__cta-bar-action welcome-pc__cta-bar-action--pair">
+    <div className="welcome-pc__cta-bar-action welcome-pc__cta-bar-action--pair welcome-pc__cta-bar-action--signed-in">
+      {signedInStatusBlock}
       {!authReady ? (
         <button
           type="button"
@@ -440,7 +441,6 @@ export default function WelcomePcScreen({
           {landingHeaderBlock}
           {perfBlock}
           <div className="welcome-pc__guest-cta-match">
-            {showSignedInLanding ? signedInStatusBlock : null}
             <div
               className="welcome-pc__hero-cta"
               aria-label={showSignedInLanding ? '검수 계속' : '시작하기'}
