@@ -88,6 +88,11 @@ export const UNIFY_NOISE_LIST_META = Object.freeze({
   size: UNIFY_NOISE_EXCEPTION_EOJEOLS.size,
 });
 
+/** 예외 어절 접두 — 긴 것 우선 (따른 vs 따라) */
+const UNIFY_NOISE_EXCEPTION_PREFIXES = freezeSortedTails([
+  ...UNIFY_NOISE_EXCEPTION_EOJEOLS,
+]);
+
 /**
  * @param {string} stem
  */
@@ -145,6 +150,23 @@ export function matchesNoiseListMorphTail(eojeol) {
 }
 
 /**
+ * 붙임키가 예외 어절로 시작하고 뒤에 한글 2음절+가 이어지면 잡음.
+ * 넘어박물관·대부분공무원·경제따위(접미는 morphTail) 등.
+ * @param {string} eojeolOrKey
+ */
+export function matchesNoiseListExceptionPrefix(eojeolOrKey) {
+  const h = hangulOnlyNoise(eojeolOrKey);
+  if (h.length < 4) return false;
+  for (const ex of UNIFY_NOISE_EXCEPTION_PREFIXES) {
+    if (ex.length < 2 || h.length <= ex.length) continue;
+    if (!h.startsWith(ex)) continue;
+    const rest = h.slice(ex.length);
+    if (rest.length >= 2) return true;
+  }
+  return false;
+}
+
+/**
  * 예외 또는 형태소 꼬리 — discover 1차 (순환 없는 경로).
  * @param {string} eojeolOrKey
  */
@@ -156,7 +178,9 @@ export function shouldRejectNoiseListDataSurface(eojeolOrKey) {
   const cached = noiseRejectCache.get(h);
   if (cached !== undefined) return cached;
   const reject =
-    UNIFY_NOISE_EXCEPTION_EOJEOLS.has(h) || matchesNoiseListMorphTail(h);
+    UNIFY_NOISE_EXCEPTION_EOJEOLS.has(h) ||
+    matchesNoiseListMorphTail(h) ||
+    matchesNoiseListExceptionPrefix(h);
   noiseRejectCache.set(h, reject);
   return reject;
 }

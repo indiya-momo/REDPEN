@@ -1,6 +1,6 @@
 /**
  * 1차 찾기 직후 — 계열만 soft 미리 찍기.
- * 붙임/띄움 한쪽 ≥80% 이고, 목록 전체 발견 횟수에서 합 < cut(동률 cut 제외).
+ * 붙임/띄움 한쪽 ≥80%이면 해당 계열 전체 soft.
  */
 
 /** @typedef {import('./unifyCandidateDiscover.js').UnifySpacingCluster} UnifySpacingCluster */
@@ -31,21 +31,6 @@ export function sumGroupSpacingFindings(clusters) {
     }
   }
   return { glued, spaced, total: glued + spaced };
-}
-
-/**
- * 목록 전체 발견 합의 cut — 이 값 **미만**만 하위 절반.
- * 동률(합 === cut)은 제외.
- * @param {number[]} totals
- * @returns {number}
- */
-export function exclusiveBottomHalfCut(totals) {
-  const nums = (totals ?? [])
-    .map((n) => Number(n) || 0)
-    .filter((n) => Number.isFinite(n));
-  if (!nums.length) return 0;
-  const sorted = [...nums].sort((a, b) => a - b);
-  return sorted[Math.floor(sorted.length / 2)] ?? 0;
 }
 
 /**
@@ -85,16 +70,9 @@ export function variantForSpacing(cluster, spacing) {
 export function buildSeriesMajoritySoftPreselect(groups) {
   /** @type {Map<string, string>} */
   const out = new Map();
-  const list = groups ?? [];
-  if (!list.length) return out;
-
-  const totals = list.map((g) => sumGroupSpacingFindings(g.clusters).total);
-  const cut = exclusiveBottomHalfCut(totals);
-
-  for (const group of list) {
+  for (const group of groups ?? []) {
     if (group?.type !== 'series') continue;
-    const { glued, spaced, total } = sumGroupSpacingFindings(group.clusters);
-    if (!(total < cut)) continue;
+    const { glued, spaced } = sumGroupSpacingFindings(group.clusters);
     const spacing = pickDominantSpacing(glued, spaced);
     if (!spacing) continue;
     for (const c of group.clusters ?? []) {

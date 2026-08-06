@@ -1981,6 +1981,19 @@
   min-width: 0;
 }
 
+.panel-left .unify-candidate-find__phase-banner-line-list {
+  list-style: none;
+  padding: 0;
+}
+
+.panel-left .unify-candidate-find__phase-banner-line-list li::before {
+  content: '- ';
+}
+
+.panel-left .unify-candidate-find__phase-banner-line-list li + li {
+  margin-top: 2px;
+}
+
 .panel-left .unify-candidate-find__phase-banner-line-row .unify-candidate-find__series-spacing-btns {
   flex: 0 0 auto;
 }
@@ -2939,7 +2952,7 @@
 .panel-left
   .unify-candidate-find
   .unify-candidate-find__spacing-count-circle--chosen.result-findings-count-circle {
-  border: 1.5px solid #111;
+  border: 1.5px solid var(--pillar-consistency, #5c6b7a);
   box-shadow: none;
 }
 
