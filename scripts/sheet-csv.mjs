@@ -70,7 +70,13 @@ export function rowsToObjects(rows) {
   if (!rows.length) return [];
 
   const firstCell = rows[0][0]?.trim().toLowerCase() ?? '';
-  if (firstCell === 'group_id' || firstCell === 'labels') {
+  // group_id/labels = 맞춤법·주의·본보조 / kind|surface = 표기통일 잡음 리스트
+  if (
+    firstCell === 'group_id' ||
+    firstCell === 'labels' ||
+    firstCell === 'kind' ||
+    firstCell === 'surface'
+  ) {
     const [headers, ...dataRows] = rows;
     const cleanHeaders = headers.map((h) => h.trim().toLowerCase());
 

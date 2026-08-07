@@ -47,6 +47,30 @@ describe('isSpacedLeftAdnominalNoiseEojeol', () => {
     expect(shouldRejectByNoiseList('붉은 표시')).toBe(true);
   });
 
+  it('관형 -적 (NNG+XSN) — 어간≥2, 명사 적(목적·면적·인적) 제외', () => {
+    for (const left of [
+      '정치적',
+      '사회적',
+      '약탈적',
+      '자본주의적',
+      '비이성적',
+      '극단적',
+      '인간적',
+    ]) {
+      expect(isSpacedLeftAdnominalNoiseEojeol(left), left).toBe(true);
+      expect(shouldRejectByNoiseList(`${left} 시장`), left).toBe(true);
+    }
+    for (const keep of ['목적', '실적', '기적', '면적', '인적', '치적', '내적']) {
+      expect(isSpacedLeftAdnominalNoiseEojeol(keep), keep).toBe(false);
+    }
+    expect(shouldRejectByNoiseList('목적 의식')).toBe(false);
+    expect(shouldRejectByNoiseList('면적 관리')).toBe(false);
+    expect(shouldRejectByNoiseList('인적 자원')).toBe(false);
+    expect(shouldRejectByNoiseList('기적 기간')).toBe(false);
+    expect(shouldRejectByNoiseList('약탈적시장')).toBe(true);
+    expect(shouldRejectByNoiseList('가게 주인')).toBe(false);
+  });
+
   it('가진·만한(종성 ㄴ)·사진·지진·대한·북한·재난·개인·어린·바쁜·비싼·남북한은 휴리스틱 밖', () => {
     expect(isSpacedLeftAdnominalNoiseEojeol('가진')).toBe(false);
     expect(isSpacedLeftAdnominalNoiseEojeol('만한')).toBe(false);
@@ -59,6 +83,8 @@ describe('isSpacedLeftAdnominalNoiseEojeol', () => {
     expect(isSpacedLeftAdnominalNoiseEojeol('남북한')).toBe(false);
     expect(isSpacedLeftAdnominalNoiseEojeol('재난')).toBe(false);
     expect(isSpacedLeftAdnominalNoiseEojeol('개인')).toBe(false);
+    expect(isSpacedLeftAdnominalNoiseEojeol('외국인')).toBe(false);
+    expect(isSpacedLeftAdnominalNoiseEojeol('한국인')).toBe(false);
     expect(isSpacedLeftAdnominalNoiseEojeol('어린')).toBe(false);
     expect(isSpacedLeftAdnominalNoiseEojeol('바쁜')).toBe(false);
     expect(isSpacedLeftAdnominalNoiseEojeol('비싼')).toBe(false);

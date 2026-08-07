@@ -1,7 +1,7 @@
 {
   "name": "pdf-publish-proofread",
   "private": true,
-  "version": "1.173",
+  "version": "1.174",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -16,6 +16,8 @@
     "bench:reading-order": "node scripts/bench-reading-order.mjs",
     "kiwi:spike": "node scripts/kiwi-p0-spike.mjs",
     "kiwi:harvest-noise-list": "node scripts/harvest-unify-noise-list.mjs",
+    "sync-unify-noise-list": "node scripts/sync-unify-noise-list.mjs",
+    "export-unify-noise-list-sheet": "node scripts/export-unify-noise-list-sheet.mjs",
     "kiwi:expand-b1-finds": "node scripts/expand-b1-spelling-finds.mjs",
     "spike:unify-ortho-anchors": "node scripts/spike-unify-orthography-anchors.mjs",
     "version:bump": "node scripts/bump-version.mjs",

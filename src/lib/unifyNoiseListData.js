@@ -97,25 +97,39 @@ const UNIFY_NOISE_EXCEPTION_PREFIXES = freezeSortedTails([
 const UNIFY_NOISE_EXCEPTION_AS_TAILS = UNIFY_NOISE_EXCEPTION_PREFIXES;
 
 /**
+ * verbalTail이 실사 명사와 겹칠 때 — 표제어 단독(빈 어간) 매칭 금지.
+ * `-적` 관형(어간≥2)은 AdnominalHeuristic. 인적·치적은 어간1 명사 — 재수확 시 가드.
+ * @type {ReadonlySet<string>}
+ */
+const VERBAL_BARE_TAIL_BLOCKLIST = Object.freeze(new Set(['인적', '치적']));
+
+/**
+ * 꼬리 앞 어간 허용 — 비어 있지 않은 한글 어간.
+ * (빈 어간=꼬리 단독은 endsWithAllowedTail에서 별도 처리)
  * @param {string} stem
  */
 function isAllowedStem(stem) {
-  const n = hangulOnlyNoise(stem).length;
-  // 1음절 용언 어간(들·보) + 연결어미 허용
-  if (n >= 1) return true;
-  return false;
+  return hangulOnlyNoise(stem).length >= 1;
 }
 
 /**
  * @param {string} h
  * @param {readonly string[]} tails
+ * @param {{ allowBareTail?: boolean }} [opts]
  */
-function endsWithAllowedTail(h, tails) {
+function endsWithAllowedTail(h, tails, opts = {}) {
+  const allowBareTail = opts.allowBareTail !== false;
   for (const tail of tails) {
     if (!h.endsWith(tail)) continue;
     const stem = h.slice(0, -tail.length);
-    // 빈 어간 = 꼬리 어절 단독 (결혼 하고자 → 하고자)
-    if (!stem || isAllowedStem(stem)) return true;
+    if (!stem) {
+      // 예외 접미 경로: 완전일치는 Set.has — 여기선 단독 매칭 안 함
+      if (!allowBareTail) continue;
+      // 인적·치적 등 실사와 겹치는 꼬리 — 단독 DROP 금지
+      if (VERBAL_BARE_TAIL_BLOCKLIST.has(tail)) continue;
+      return true;
+    }
+    if (isAllowedStem(stem)) return true;
   }
   return false;
 }
@@ -139,8 +153,13 @@ export function matchesNoiseListMorphTail(eojeol) {
   if (endsWithAllowedTail(h, UNIFY_NOISE_VERBAL_TAILS)) return true;
   if (endsWithAllowedTail(h, UNIFY_NOISE_COPULA_TAILS)) return true;
   if (endsWithAllowedTail(h, UNIFY_NOISE_HAGO_JC_TAILS)) return true;
-  // 붙임키 끝의 예외 어절 (가족끼리·결혼직전)
-  if (h.length >= 3 && endsWithAllowedTail(h, UNIFY_NOISE_EXCEPTION_AS_TAILS)) {
+  // 붙임키 끝의 예외 어절 (가족끼리·결혼직전). 단독은 exception Set.
+  if (
+    h.length >= 3 &&
+    endsWithAllowedTail(h, UNIFY_NOISE_EXCEPTION_AS_TAILS, {
+      allowBareTail: false,
+    })
+  ) {
     return true;
   }
   return false;
