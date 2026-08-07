@@ -9,10 +9,17 @@ import {
   collectPrimaryFormsForPatternGroup,
   isUnifyPatternSeedEligibleCluster,
   dedupeMismatchesSuffixOverPrefix,
+  findPatternCompliantForms,
   findPatternMismatches,
   findSuffixPatternMismatches,
   formatPatternRuleConditionLabel,
+  formatPhase2CompliantAppliedLabel,
+  formatPhase2CompliantFormsLine,
+  formatPhase2InProgressBannerModel,
+  formatPhase2InProgressBannerTitle,
+  formatPhase2InProgressSegment,
   formatPhase2PrimaryFormsLine,
+  formatPhase2SeriesCriterionLine,
   groupPatternConditionLabelsByDirection,
   formatPatternSupportExplain,
   formatSuffixPatternRuleConfirmMessage,
@@ -24,6 +31,7 @@ import {
   passesPatternRuleUnifyFilter,
   shouldRejectPatternMismatchByNoiseAndCompound,
   PATTERN_SCORE_WEIGHT_HEAD,
+  PHASE2_COMPLIANT_FORMS_PREVIEW,
   PHASE2_PRIMARY_FORMS_MAX,
   scorePatternRuleCandidate,
   spaceGluedAffixMatch,
@@ -87,6 +95,63 @@ describe('unifyPatternRule', () => {
     expect(isPatternRuleHeadBlacklisted('있는')).toBe(true);
     expect(isPatternRuleHeadBlacklisted('가난한')).toBe(true);
     expect(isPatternRuleHeadBlacklisted('캐나다')).toBe(false);
+    expect(isPatternRuleHeadBlacklisted('나라의')).toBe(true);
+    expect(isPatternRuleHeadBlacklisted('무역이나')).toBe(true);
+    expect(isPatternRuleHeadBlacklisted('더해')).toBe(true);
+    expect(isPatternRuleHeadBlacklisted('미친')).toBe(true);
+    expect(isPatternRuleHeadBlacklisted('바로')).toBe(true);
+    expect(isPatternRuleHeadBlacklisted('빠진')).toBe(true);
+    expect(isPatternRuleHeadBlacklisted('방식의')).toBe(true);
+    expect(isPatternRuleHeadBlacklisted('재빨리')).toBe(true);
+    expect(isPatternRuleHeadBlacklisted('조카의')).toBe(true);
+    expect(isPatternRuleHeadBlacklisted('직접적인')).toBe(true);
+    expect(isPatternRuleHeadBlacklisted('최악의')).toBe(true);
+    expect(isPatternRuleHeadBlacklisted('나라라면')).toBe(true);
+    expect(isPatternRuleHeadBlacklisted('낮았고')).toBe(true);
+    expect(isPatternRuleHeadBlacklisted('년짜리')).toBe(true);
+    expect(isPatternRuleHeadBlacklisted('달러만이')).toBe(true);
+    expect(isPatternRuleHeadBlacklisted('실제로')).toBe(true);
+    expect(isPatternRuleHeadBlacklisted('걸쳐')).toBe(true);
+    expect(isPatternRuleHeadBlacklisted('현재의')).toBe(true);
+    expect(isPatternRuleHeadBlacklisted('주식시장이')).toBe(true);
+    expect(isPatternRuleHeadBlacklisted('부문도')).toBe(true);
+    expect(isPatternRuleHeadBlacklisted('호황과')).toBe(true);
+    expect(isPatternRuleHeadBlacklisted('거의')).toBe(true);
+    expect(isPatternRuleHeadBlacklisted('이미')).toBe(true);
+    expect(isPatternRuleHeadBlacklisted('되자')).toBe(true);
+    expect(isPatternRuleHeadBlacklisted('드러난')).toBe(true);
+    expect(isPatternRuleHeadBlacklisted('일어난')).toBe(true);
+    expect(isPatternRuleHeadBlacklisted('사실')).toBe(true);
+    expect(isPatternRuleHeadBlacklisted('시장심리가')).toBe(true);
+    expect(isPatternRuleHeadBlacklisted('작금의')).toBe(true);
+    expect(isPatternRuleHeadBlacklisted('마치')).toBe(true);
+    expect(isPatternRuleHeadBlacklisted('빠른')).toBe(true);
+    expect(isPatternRuleHeadBlacklisted('빠져도')).toBe(true);
+    expect(isPatternRuleHeadBlacklisted('속도로')).toBe(true);
+    expect(isPatternRuleHeadBlacklisted('전국적인')).toBe(true);
+    expect(isPatternRuleHeadBlacklisted('갖가지')).toBe(true);
+    expect(isPatternRuleHeadBlacklisted('오르면서')).toBe(true);
+    expect(isPatternRuleHeadBlacklisted('않았다')).toBe(true);
+    expect(isPatternRuleHeadBlacklisted('달랐다')).toBe(true);
+    expect(isPatternRuleHeadBlacklisted('쪼개어')).toBe(true);
+    expect(isPatternRuleHeadBlacklisted('터지자')).toBe(true);
+    expect(isPatternRuleHeadBlacklisted('해보자')).toBe(true);
+    expect(isPatternRuleHeadBlacklisted('휩싸인')).toBe(true);
+    expect(isPatternRuleHeadBlacklisted('설령')).toBe(true);
+    expect(isPatternRuleHeadBlacklisted('아니다')).toBe(true);
+    expect(isPatternRuleHeadBlacklisted('안겨주었다')).toBe(true);
+    expect(isPatternRuleHeadBlacklisted('이들')).toBe(true);
+    expect(isPatternRuleHeadBlacklisted('없다')).toBe(true);
+    expect(isPatternRuleHeadBlacklisted('휩쓴')).toBe(true);
+    expect(isPatternRuleHeadBlacklisted('깨뜨렸다')).toBe(true);
+    expect(isPatternRuleHeadBlacklisted('달리')).toBe(true);
+    expect(isPatternRuleHeadBlacklisted('아니면')).toBe(true);
+    expect(isPatternRuleHeadBlacklisted('나왔다')).toBe(true);
+    expect(isPatternRuleHeadBlacklisted('오로지')).toBe(true);
+    expect(isPatternRuleHeadBlacklisted('좀먹고')).toBe(true);
+    expect(isPatternRuleHeadBlacklisted('사고')).toBe(false);
+    expect(isPatternRuleHeadBlacklisted('투자')).toBe(false);
+    expect(isPatternRuleHeadBlacklisted('국제')).toBe(false);
   });
 
   it('공유 필터: 조사만 어절·쉼표·잡음 리스트 제외', () => {
@@ -172,6 +237,32 @@ describe('unifyPatternRule', () => {
     expect(froms).toContain('캐나다 정부');
     expect(froms).not.toContain('미국 정부');
     expect(froms.some((f) => f.includes('여러'))).toBe(false);
+  });
+
+  it('@무늬 붙임 규칙에서 관형·형용사 앞말(오려낸·섬세한·아름다운)은 제외', () => {
+    const mismatches = findSuffixPatternMismatches(
+      [
+        {
+          pageNum: 1,
+          text:
+            '오려낸 무늬와 섬세한 무늬, 아름다운 무늬. 넝쿨 무늬는 명사.',
+        },
+      ],
+      {
+        id: 'suffix:무늬:glued',
+        template: '@무늬',
+        affix: '무늬',
+        affixType: 'suffix',
+        direction: 'glued',
+        confirmedFrom: '두꺼비무늬',
+        confirmedKey: '두꺼비무늬',
+      },
+    );
+    const froms = mismatches.map((m) => m.from);
+    expect(froms).toContain('넝쿨 무늬');
+    expect(froms).not.toContain('오려낸 무늬');
+    expect(froms).not.toContain('섬세한 무늬');
+    expect(froms).not.toContain('아름다운 무늬');
   });
 
   it('접두 패턴 어긋남을 찾는다', () => {
@@ -295,13 +386,48 @@ describe('unifyPatternRule', () => {
     expect(candidates.find((c) => c.rule.template === '@성장')).toBeFalsy();
   });
 
-  it('본+보조 검토만 @시드에서 빼고, 용언 검토·soft 확정 명사는 시드한다', () => {
+  it('전부 붙여쓰기라 mismatch가 없어도 적용 표기가 충분하면 2차 후보가 된다', () => {
+    const candidates = collectPatternRuleCandidates(
+      new Map([['두꺼비무늬', '두꺼비무늬']]),
+      [
+        {
+          key: '두꺼비무늬',
+          variants: ['두꺼비무늬', '두꺼비 무늬'],
+          counts: { 두꺼비무늬: 3 },
+          occurrencesByVariant: {},
+          recommendedUnify: '두꺼비무늬',
+          totalCount: 3,
+        },
+      ],
+      [
+        {
+          pageNum: 1,
+          text:
+            '넝쿨무늬 넝쿨무늬 넝쿨무늬. 얼굴무늬 얼굴무늬. 산수무늬. 연꽃무늬.',
+        },
+      ],
+    );
+    const suffix = candidates.find((c) => c.rule.template === '@무늬');
+    expect(suffix).toBeTruthy();
+    expect(suffix.mismatches).toHaveLength(0);
+    expect(suffix.compliantForms.length).toBeGreaterThanOrEqual(3);
+    expect(suffix.support.uniqueHeads).toBeGreaterThanOrEqual(2);
+    const groups = buildSecondaryGroupsFromCandidates(candidates, [
+      suffix.id,
+    ]);
+    expect(groups).toHaveLength(1);
+    expect(groups[0].clusters).toHaveLength(0);
+    expect(groups[0].compliantForms.length).toBeGreaterThanOrEqual(3);
+    expect(groups[0].direction).toBe('glued');
+  });
+
+  it('본+보조·용언 검토도 @시드에 포함하고, soft 확정 명사도 시드한다', () => {
     expect(
       isUnifyPatternSeedEligibleCluster({
         key: '해보',
         auxReview: { status: 'review' },
       }),
-    ).toBe(false);
+    ).toBe(true);
     expect(
       isUnifyPatternSeedEligibleCluster({
         key: '알아내고',
@@ -314,11 +440,12 @@ describe('unifyPatternRule', () => {
         variants: ['미국정부', '미국 정부'],
       }),
     ).toBe(true);
+    expect(isUnifyPatternSeedEligibleCluster({})).toBe(false);
 
     const rules = collectPatternRulesFromRegistrations(
       new Map([
         ['미국정부', '미국정부'],
-        ['해보', '해보'],
+        ['살펴보다', '살펴보다'],
         ['알아내고', '알아내고'],
       ]),
       [
@@ -327,8 +454,8 @@ describe('unifyPatternRule', () => {
           variants: ['미국정부', '미국 정부'],
         },
         {
-          key: '해보',
-          variants: ['해보', '해 보'],
+          key: '살펴보다',
+          variants: ['살펴보다', '살펴 보다'],
           auxReview: { status: 'review' },
         },
         {
@@ -339,7 +466,7 @@ describe('unifyPatternRule', () => {
       ],
     );
     expect(rules.some((r) => r.confirmedKey === '미국정부')).toBe(true);
-    expect(rules.some((r) => r.confirmedKey === '해보')).toBe(false);
+    expect(rules.some((r) => r.confirmedKey === '살펴보다')).toBe(true);
     expect(rules.some((r) => r.confirmedKey === '알아내고')).toBe(true);
   });
 
@@ -508,19 +635,58 @@ describe('unifyPatternRule', () => {
     expect(groups[0].supportExplain).toBeUndefined();
   });
 
-  it('2차 1차 표기 줄은 선택 띄어쓰기를 유지하고 최대 4개', () => {
+  it('2차 진행 배너·적용 라벨 문구', () => {
     expect(
-      formatPhase2PrimaryFormsLine('@무늬', [
-        '오려낸무늬',
-        '그려진 무늬',
-        '섬세한무늬',
-        '꽃무늬',
-        '다섯번째무늬',
-      ]),
+      formatPhase2InProgressSegment(
+        '@무늬',
+        [
+          '오려낸무늬',
+          '그려진 무늬',
+          '섬세한무늬',
+          '꽃무늬',
+          '다섯번째무늬',
+        ],
+        'glued',
+      ),
     ).toBe(
-      '1차 표기 통일 @무늬 : 오려낸무늬 · 그려진 무늬 · 섬세한무늬 · 꽃무늬',
+      '@무늬(붙여쓰기)  → 오려낸무늬 · 그려진 무늬 · 섬세한무늬 · 꽃무늬',
+    );
+    expect(
+      formatPhase2SeriesCriterionLine('glued', ['국제금융', '부실투자']),
+    ).toBe('1차 통일형: 국제금융 · 부실투자(붙여쓰기)');
+    expect(
+      formatPhase2InProgressBannerModel([
+        {
+          template: '@무늬',
+          direction: 'glued',
+          forms: ['두꺼비무늬'],
+        },
+      ]),
+    ).toEqual({
+      title: '2차 표기 통일 기준(1차 표기 통일형)',
+      lines: [],
+    });
+    expect(
+      formatPhase2InProgressBannerTitle([
+        {
+          template: '@무늬',
+          direction: 'glued',
+          forms: ['두꺼비무늬'],
+        },
+      ]),
+    ).toBe('2차 표기 통일 기준(1차 표기 통일형)');
+    expect(formatPhase2CompliantAppliedLabel('glued')).toBe(
+      '1차 통일형(붙여쓰기) 적용 단어',
+    );
+    expect(formatPhase2CompliantAppliedLabel('spaced')).toBe(
+      '1차 통일형(띄어쓰기) 적용 단어',
     );
     expect(PHASE2_PRIMARY_FORMS_MAX).toBe(4);
+    expect(
+      formatPhase2PrimaryFormsLine('@무늬', ['두꺼비무늬'], 'glued'),
+    ).toBe(
+      '2차 표기 통일 기준(1차 표기 통일형)\n@무늬(붙여쓰기)  → 두꺼비무늬',
+    );
     expect(
       collectPrimaryFormsForPatternGroup(
         { affixType: 'suffix', affix: '무늬', template: '@무늬' },
@@ -538,5 +704,77 @@ describe('unifyPatternRule', () => {
         ]),
       ),
     ).toEqual(['오려낸무늬', '두꺼비 무늬', '그려진 무늬']);
+  });
+
+  it('이미 맞는 표기(붙임)를 출현 순으로 모으고 요약은 상위 3', () => {
+    const rule = {
+      id: 'suffix:무늬:glued',
+      template: '@무늬',
+      affix: '무늬',
+      affixType: 'suffix',
+      direction: 'glued',
+      confirmedFrom: '두꺼비무늬',
+      confirmedKey: '두꺼비무늬',
+    };
+    const forms = findPatternCompliantForms(
+      [
+        {
+          pageNum: 1,
+          text:
+            '넝쿨무늬 넝쿨무늬 넝쿨무늬. 얼굴무늬 얼굴무늬. 산수무늬. ' +
+            '연꽃무늬. 국화무늬. 오려낸 무늬 그려진 무늬는 어긋남.',
+        },
+      ],
+      rule,
+    );
+    expect(forms.slice(0, 3).map((c) => `${c.key}:${c.totalCount}`)).toEqual([
+      '넝쿨무늬:3',
+      '얼굴무늬:2',
+      '국화무늬:1',
+    ]);
+    expect(forms[0].counts['넝쿨무늬']).toBe(3);
+    expect(forms[0].counts['넝쿨 무늬']).toBe(0);
+    expect(forms[0].variants).toEqual(['넝쿨무늬', '넝쿨 무늬']);
+    expect(PHASE2_COMPLIANT_FORMS_PREVIEW).toBe(3);
+    expect(formatPhase2CompliantFormsLine('glued', forms)).toBe(
+      '1차 통일형이 적용된 단어 · 넝쿨무늬 3 · 얼굴무늬 2 · 국화무늬 1',
+    );
+    expect(
+      formatPhase2CompliantFormsLine('glued', forms, { expanded: true }),
+    ).toContain('연꽃무늬 1');
+  });
+
+  it('@개혁 잡음(과·적인)은 mismatch·compliant 모두 제외', () => {
+    const pages = [
+      {
+        pageNum: 1,
+        text: '안정과 개혁이 필요하다. 근본적인 개혁, 급진적인 개혁도 있다. 구조 개혁은 유지.',
+      },
+    ];
+    const spacedRule = {
+      id: 'suffix:개혁:spaced',
+      template: '@개혁',
+      affix: '개혁',
+      affixType: 'suffix',
+      direction: 'spaced',
+      confirmedFrom: '구조 개혁',
+      confirmedKey: '구조개혁',
+    };
+    const gluedRule = {
+      ...spacedRule,
+      id: 'suffix:개혁:glued',
+      direction: 'glued',
+      confirmedFrom: '구조개혁',
+    };
+    const compliant = findPatternCompliantForms(pages, spacedRule);
+    const mismatches = findPatternMismatches(pages, gluedRule);
+    const keys = [
+      ...compliant.map((c) => c.key),
+      ...mismatches.map((m) => m.key),
+    ];
+    expect(keys.some((k) => k.includes('안정과') || k.includes('적인'))).toBe(
+      false,
+    );
+    expect(keys).toContain('구조개혁');
   });
 });

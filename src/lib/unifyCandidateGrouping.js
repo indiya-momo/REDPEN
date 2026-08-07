@@ -66,7 +66,10 @@ export function countUnifyListAccordionItems(groups) {
   for (const g of groups ?? []) {
     if (g.type === 'single' || g.type === 'predicate') {
       n += (g.clusters ?? []).length;
-    } else if ((g.clusters ?? []).length > 0) {
+    } else if (
+      (g.clusters ?? []).length > 0 ||
+      (g.compliantForms ?? []).length > 0
+    ) {
       n += 1;
     }
   }

@@ -57,6 +57,17 @@ describe.skipIf(!HAS_KIWI_MODEL)('adnominal+사람 Kiwi phase2', () => {
     );
   });
 
+  it('가진·만한은 예외 JSON으로 DROP (Kiwi OFF 안전망)', () => {
+    expect(shouldRejectByNoiseList('가진 사람')).toBe(true);
+    expect(shouldRejectByNoiseList('만한 사람')).toBe(true);
+    expect(shouldRejectUnifySatelliteSpacedByPos('가진 사람', 'noun')).toBe(
+      true,
+    );
+    expect(shouldRejectUnifySatelliteSpacedByPos('만한 사람', 'noun')).toBe(
+      true,
+    );
+  });
+
   it.each(
     UNIFY_NOISE_REGRESSION_DROP_KIWI_ADNOMINAL.map((c) => [
       c.spaced,

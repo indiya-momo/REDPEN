@@ -338,7 +338,7 @@ export function formatUnifyCandidateFindCompleteMessage(
   if (clusterCount <= 0) {
     return '띄어쓰기만 다른 표기 후보를 찾지 못했습니다.';
   }
-  return `1차 표기 통일 : 추천 단어 세트 ${clusterCount} 전체 발견 ${totalOccurrences}`;
+  return `1차 표기 통일(띄어쓰기) : 추천 단어 세트 ${clusterCount} 전체 발견 ${totalOccurrences}`;
 }
 
 /**
@@ -353,7 +353,7 @@ export function formatUnifyCandidatePhase2CompleteMessage(
   if (clusterCount <= 0) {
     return '확장할 표기 후보가 없었습니다.';
   }
-  return `2차 표기 통일 : 추천 단어 세트 ${clusterCount} 전체 발견 ${totalOccurrences}`;
+  return `추천 단어 세트 ${clusterCount} 전체 발견 ${totalOccurrences}`;
 }
 
 /**
@@ -406,7 +406,7 @@ export async function alertUnifyCandidateFindAfterRun(
                 clusterCount,
                 totalOccurrences,
                 quotaConsumedLine,
-                phaseLabel: '1차 표기 통일 :',
+                phaseLabel: '1차 표기 통일(띄어쓰기) :',
               })
             : undefined,
         ...extra,
@@ -416,7 +416,7 @@ export async function alertUnifyCandidateFindAfterRun(
 }
 
 /**
- * 2차 표기 통일 완료 후 — 추천 항목·전체 발견 alert
+ * 2차 표기 통일 진입 직후 — 완료 안내 alert
  * @param {{
  *   itemCount?: number,
  *   clusters?: import('./unifyCandidateDiscover.js').UnifySpacingCluster[],
@@ -436,14 +436,14 @@ export async function alertUnifyCandidatePhase2AfterComplete(opts = {}) {
   );
 
   await showAppAlert({
-    title: '2차 표기 통일을 완료했습니다',
+    title: '2차 표기 통일 완료',
     message,
     messageNode:
       clusterCount > 0
         ? createElement(UnifyCandidateFindCompleteContent, {
             clusterCount,
             totalOccurrences,
-            phaseLabel: '2차 표기 통일 :',
+            phaseLabel: '',
           })
         : undefined,
   });

@@ -151,6 +151,23 @@ export function guestBrowseAllowsCheckAndResults() {
   );
 }
 
+/**
+ * 둘러보기 + 로컬 DEV만 — 표기 통일 2차·「새 업로드」등 개발용 예외.
+ * 배포(프로덕션 빌드·비로컬 호스트)에서는 게스트 제한 유지.
+ */
+export function guestBrowseAllowsLocalDevExtras() {
+  if (!isGuestBrowseActive()) return false;
+  if (!import.meta.env.DEV) return false;
+  if (typeof window === 'undefined') return false;
+  const host = window.location.hostname;
+  return host === 'localhost' || host === '127.0.0.1' || host === '[::1]';
+}
+
+/** @see guestBrowseAllowsLocalDevExtras */
+export function guestBrowseAllowsUnifyPhase2Local() {
+  return guestBrowseAllowsLocalDevExtras();
+}
+
 /** 프로젝트 저장·선택 UI 숨김 */
 export function guestBrowseHidesProjectSaveUi() {
   return isGuestBrowseActive() && GUEST_BROWSE_CAPABILITIES.hideProjectSaveUi;
