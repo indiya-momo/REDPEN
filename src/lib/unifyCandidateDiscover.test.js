@@ -44,6 +44,13 @@ describe('stripUnifyPeripheralDigits', () => {
     expect(stripUnifyPeripheralDigits('노동시장175')).toBe('노동시장');
   });
 
+  it('숫자와 한글 사이 목차 세로선(┃)도 떼어 낸다', () => {
+    expect(stripUnifyPeripheralDigits('331┃케인즈 경제')).toBe('케인즈 경제');
+    expect(stripUnifyPeripheralDigits('38┃무드등 경제')).toBe('무드등 경제');
+    expect(stripUnifyPeripheralDigits('331┃케인즈')).toBe('케인즈');
+    expect(stripUnifyPeripheralDigits('331┃ 케인즈 경제')).toBe('케인즈 경제');
+  });
+
   it('남은 한글이 짧으면 앞 숫자를 유지한다', () => {
     expect(stripUnifyPeripheralDigits('2024년')).toBe('2024년');
   });

@@ -28,6 +28,8 @@ const SPACED_CLOSED_CONJUNCTION_LIST = Object.freeze([
   '반면에',
   '오히려',
   '도리어',
+  // 비교·대조 담화
+  '그보다',
   // 인과
   '그래서',
   '그래야',
