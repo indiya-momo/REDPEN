@@ -317,25 +317,18 @@ export function stripUnifyPunctuationNoise(s) {
  * @param {string} s
  */
 export function stripUnifyPeripheralDigits(s) {
-  /** 쪽번호·목차 세로선 등 숫자↔한글 사이 구분 */
-  const sepClass = '│｜┃|ㆍ·.\\-‒–—';
-  const digitSepOnly = new RegExp(`^\\d+[${sepClass}]*$`, 'u');
-  const leadDigitHangul = new RegExp(
-    `^(\\d+)[${sepClass}]*([\\uAC00-\\uD7A3].*)$`,
-    'u',
-  );
-  const trailHangulDigit = new RegExp(
-    `^([\\uAC00-\\uD7A3].*?)[${sepClass}]*(\\d+)$`,
-    'u',
-  );
+  /** 쪽번호·목차 세로선·ZWSP 등 — 숫자 뒤 비한글은 전부 구분 잡음으로 본다 */
+  const digitJunkOnly = /^\d+[^\uAC00-\uD7A3]*$/u;
+  const leadDigitHangul = /^(\d+)[^\uAC00-\uD7A3]*([\uAC00-\uD7A3].*)$/u;
+  const trailHangulDigit = /^([\uAC00-\uD7A3].*?)[^\uAC00-\uD7A3]*(\d+)$/u;
 
   let parts = normalizeUnifyVariant(s).split(/\s+/).filter(Boolean);
   while (parts.length && /^\d+$/.test(parts[0])) parts = parts.slice(1);
-  while (parts.length && digitSepOnly.test(parts[0])) parts = parts.slice(1);
+  while (parts.length && digitJunkOnly.test(parts[0])) parts = parts.slice(1);
   while (parts.length && /^\d+$/.test(parts[parts.length - 1])) {
     parts = parts.slice(0, -1);
   }
-  while (parts.length && digitSepOnly.test(parts[parts.length - 1])) {
+  while (parts.length && digitJunkOnly.test(parts[parts.length - 1])) {
     parts = parts.slice(0, -1);
   }
   parts = parts.map((part) => {

@@ -44,11 +44,15 @@ describe('stripUnifyPeripheralDigits', () => {
     expect(stripUnifyPeripheralDigits('노동시장175')).toBe('노동시장');
   });
 
-  it('숫자와 한글 사이 목차 세로선(┃)도 떼어 낸다', () => {
+  it('숫자와 한글 사이 목차 세로선(┃)·ZWSP 등도 떼어 낸다', () => {
     expect(stripUnifyPeripheralDigits('331┃케인즈 경제')).toBe('케인즈 경제');
     expect(stripUnifyPeripheralDigits('38┃무드등 경제')).toBe('무드등 경제');
     expect(stripUnifyPeripheralDigits('331┃케인즈')).toBe('케인즈');
     expect(stripUnifyPeripheralDigits('331┃ 케인즈 경제')).toBe('케인즈 경제');
+    expect(stripUnifyPeripheralDigits('331\u200B케인즈 경제')).toBe(
+      '케인즈 경제',
+    );
+    expect(stripUnifyPeripheralDigits('38¦무드등 경제')).toBe('무드등 경제');
   });
 
   it('남은 한글이 짧으면 앞 숫자를 유지한다', () => {
@@ -390,6 +394,30 @@ describe('discoverSpacingUnifyCandidates', () => {
     expect(hits[0].totalCount).toBeGreaterThanOrEqual(4);
     expect(clusters.some((c) => c.key.startsWith('174'))).toBe(false);
     expect(clusters.some((c) => c.key.startsWith('175'))).toBe(false);
+  });
+
+  it('목차 쪽번호+┃가 붙은 띄움도 숫자 없이 묶인다', () => {
+    const clusters = discoverSpacingUnifyCandidates([
+      {
+        pageNum: 1,
+        text: '케인즈경제가 있다. 331┃케인즈 경제도 있다. 케인즈경제 다시.',
+        textLayout: '케인즈경제가 있다. 331┃케인즈 경제도 있다. 케인즈경제 다시.',
+      },
+    ]);
+    const hit = clusters.find((c) => c.key === '케인즈경제');
+    expect(hit).toBeTruthy();
+    for (const v of hit.variants) {
+      expect(v).not.toMatch(/\d/);
+      expect(v).not.toMatch(/[│｜┃|]/);
+    }
+    expect(hit.variants).toEqual(
+      expect.arrayContaining(['케인즈경제', '케인즈 경제']),
+    );
+    const groups = buildUnifyCandidatePreviewGroups([hit]);
+    for (const g of groups) {
+      expect(g.label).not.toMatch(/\d/);
+      expect(g.find).not.toMatch(/┃/);
+    }
   });
 
   it('5토큰 이상 합성어도 붙임·띄움 이형태를 잡는다', () => {
