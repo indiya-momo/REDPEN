@@ -19,10 +19,11 @@
  * `온`(살아온·들어온) — 오다 관형. 어간 ≥2.
  * `픈`(배고픈) — 프+ㄴ. 어간 ≥2 (`바쁜` 어간1·예외).
  * `싼`(헐싼…) — 싸+ㄴ. 어간 ≥2 (`비싼` 어간1·예외).
- * `적인`(직접적인·효과적인) — 적+관형 인. 어간 ≥1 (`적인` 단독 제외는 길이).
+ * `적인`(직접적인·효과적인) — 적+관형 인. 어간 ≥1. 단독 `적인`(줄바꿈 잘림)도 DROP.
  * `적`(정치적·사회적·자본주의적) — NNG+XSN. 어간 ≥2.
- *   명사 적(목적·실적·기적·면적·인적·치적)은 어간 1이라 제외. 시트/`--add`로 어간1 관형만 보완.
- * `스런`(고통스런…) — 스럽다 준말 관형. 어간 ≥1 (`스러운`은 verbalTails).
+ *   명사 적(목적·견적·국적…)은 {@link SPACED_JEOK_NOUN_EXCLUDE} + 어간1.
+ *   어간1 관형(내적 등)만 시트/`--add`로 DROP 보완.
+ * `스런`(고통스런…) — 스럽다 준말 관형. 어간 ≥1. `스러운`도 관형(…운)으로 동일.
  * 조사 오탐(`붉`+`은`) 가드는 {@link ./unifyNoiseListLeftHeuristic.js}가 별도로 담당.
  * `가진`·`만한`(종성 ㄴ만)은 시민·북한과 겹쳐 여기 밖 → verbalTails·예외 수확.
  */
@@ -71,6 +72,36 @@ const ADNOMINAL_TAIL_MIN_STEM = Object.freeze({
 });
 
 /**
+ * 접미 -적이 아닌 명사 적 (KEEP).
+ * 어간≥2 규칙과 별도로 닫힌 가드 — 어간 완화·오표기 대비.
+ * @type {ReadonlySet<string>}
+ */
+export const SPACED_JEOK_NOUN_EXCLUDE = Object.freeze(
+  new Set([
+    '목적',
+    '실적',
+    '기적',
+    '면적',
+    '인적',
+    '치적',
+    '거적',
+    '강적',
+    '경적',
+    '견적',
+    '연적',
+    '공적',
+    '과적',
+    '광적',
+    '국적',
+    '궤적',
+    '극적',
+    '도적',
+    '무적',
+    '흔적',
+  ]),
+);
+
+/**
  * -한 관형 오탐 — 지명·체언 (남북+한 ≠ 하다 관형).
  * @type {ReadonlySet<string>}
  */
@@ -94,7 +125,10 @@ export function isSpacedLeftAdnominalNoiseEojeol(eojeol) {
   const h = hangulOnlyNoise(eojeol);
   if (!h || h.length < 2) return false;
   if (SPACED_ADNOMINAL_HAN_NOUN_EXCLUDE.has(h)) return false;
+  if (SPACED_JEOK_NOUN_EXCLUDE.has(h)) return false;
   if (isNationalityInNoun(h)) return false;
+  // OCR/줄바꿈으로 잘린 `적인` 단독 (어간 0 — minStem 가드 밖)
+  if (h === '적인') return true;
 
   for (const tail of ADNOMINAL_TAILS) {
     if (!h.endsWith(tail)) continue;
@@ -115,6 +149,7 @@ export function isSpacedLeftAdnominalNoiseEojeol(eojeol) {
 export function isSpacedJeokAdnominalNoiseEojeol(eojeolOrKey) {
   const h = hangulOnlyNoise(eojeolOrKey);
   if (!h || h.length < 2) return false;
+  if (SPACED_JEOK_NOUN_EXCLUDE.has(h)) return false;
   for (const tail of ['적인', '적']) {
     if (!h.endsWith(tail)) continue;
     const stemLen = hangulOnlyNoise(h.slice(0, -tail.length)).length;

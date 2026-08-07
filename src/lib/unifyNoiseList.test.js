@@ -17,7 +17,7 @@ import { isSpacedLeftAdnominalNoiseEojeol } from './unifyNoiseListAdnominalHeuri
 describe('unifyNoiseList (1차 정적 리스트)', () => {
   it('예외·꼬리·본보조 ref 메타가 있다', () => {
     expect(UNIFY_NOISE_EXCEPTION_EOJEOLS.has('대부분')).toBe(true);
-    expect(UNIFY_NOISE_VERBAL_TAILS).toContain('있다고');
+    expect(UNIFY_NOISE_VERBAL_TAILS).toContain('물어보아라');
     expect(UNIFY_NOISE_BON_BOJO_REFS).toContain('verb-hada');
     expect(UNIFY_NOISE_TAG_TEMPLATES.some((t) => t.id === 'noun-verbal-connective')).toBe(
       true,
@@ -50,10 +50,10 @@ describe('unifyNoiseList (1차 정적 리스트)', () => {
     expect(src).not.toMatch(/isSpacedLeftJosaNoiseEojeol/);
   });
 
-  it('수확 꼬리로 가치있다고·구성되며·것이고를 잡는다', () => {
-    expect(matchesNoiseListMorphTail('가치있다고')).toBe(true);
-    expect(matchesNoiseListMorphTail('구성되며')).toBe(true);
-    expect(matchesNoiseListMorphTail('것이고')).toBe(true);
+  it('수확 꼬리·휴리스틱으로 가치있다고·구성되며·것이고를 잡는다', () => {
+    expect(shouldRejectByNoiseListEojeol('가치있다고')).toBe(true);
+    expect(shouldRejectByNoiseListEojeol('구성되며')).toBe(true);
+    expect(shouldRejectByNoiseListEojeol('것이고')).toBe(true);
     expect(matchesNoiseListMorphTail('주식')).toBe(false);
   });
 
@@ -81,19 +81,27 @@ describe('unifyNoiseList (1차 정적 리스트)', () => {
   });
 
   it('활용·이다 꼬리 — 담당하던·광고니까', () => {
-    expect(matchesNoiseListMorphTail('담당하던')).toBe(true);
+    // 하던은 관형 휴리스틱 이관 — morphTail(JSON)이 아니라 어절 경로
+    expect(shouldRejectByNoiseListEojeol('담당하던')).toBe(true);
+    expect(shouldRejectByNoiseList('담당하던 업무')).toBe(true);
     expect(matchesNoiseListMorphTail('광고니까')).toBe(true);
     expect(matchesNoiseListMorphTail('가족끼리')).toBe(true);
     expect(matchesNoiseListMorphTail('결혼직전')).toBe(true);
   });
 
   it('명사+하다 활용 — 결혼하고자·하려고·하였고·했어', () => {
-    expect(matchesNoiseListMorphTail('결혼하고자')).toBe(true);
-    expect(matchesNoiseListMorphTail('결혼하려고')).toBe(true);
-    expect(matchesNoiseListMorphTail('결혼하였고')).toBe(true);
-    expect(matchesNoiseListMorphTail('결혼했어')).toBe(true);
-    expect(matchesNoiseListMorphTail('하고자')).toBe(true);
-    expect(matchesNoiseListMorphTail('했어')).toBe(true);
+    expect(shouldRejectByNoiseListEojeol('결혼하고자')).toBe(true);
+    expect(shouldRejectByNoiseListEojeol('결혼하려고')).toBe(true);
+    expect(shouldRejectByNoiseListEojeol('결혼하였고')).toBe(true);
+    expect(shouldRejectByNoiseListEojeol('하고자')).toBe(true);
+    // 했어는 본보조/목록 꼬리 경로
+    expect(
+      matchesNoiseListMorphTail('결혼했어') ||
+        shouldRejectByNoiseListEojeol('결혼했어'),
+    ).toBe(true);
+    expect(
+      matchesNoiseListMorphTail('했어') || shouldRejectByNoiseListEojeol('했어'),
+    ).toBe(true);
     expect(shouldRejectByNoiseList('결혼 하고자')).toBe(true);
     expect(shouldRejectByNoiseList('결혼 하려고')).toBe(true);
     expect(shouldRejectByNoiseList('결혼 하였고')).toBe(true);

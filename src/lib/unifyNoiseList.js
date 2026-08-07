@@ -38,6 +38,8 @@ import {
   isSpacedDependentSuffixNoiseEojeol,
   isSpacedOrdinalNoiseEojeol,
   isSpacedVerbalConnectiveNoiseEojeol,
+  isSpacedVerbalLikeNoiseEojeol,
+  matchesVerbalLikePlusNounInfix,
   SPACED_ADVERB_GE_NOUN_EXCLUDE,
 } from './unifyNoiseListLexicalHeuristic.js';
 import { matchesBonBojoVerbalConnectiveHeuristic } from './bonBojoMorphPatterns.js';
@@ -116,8 +118,10 @@ export function shouldRejectByNoiseListSurface(eojeolOrKey) {
   if (SPACED_ADVERB_GE_NOUN_EXCLUDE.has(h)) return false;
   // `-적`/`-적인`만 전체 키에 적용 (전 관형 적용 시 가게주인→…인 오탐)
   if (isSpacedJeokAdnominalNoiseEojeol(h)) return true;
-  // 붙임키 약탈적시장 — JSON -적 이관분
+  // 용언 연결 전체 키 적용 금지 — 대한투자·미국최고가 …자/…고로 오탐.
+  // 붙임은 infix만 (떨어뜨리고시장·가치있다고시장).
   if (matchesAdnominalPlusNounInfix(h)) return true;
+  if (matchesVerbalLikePlusNounInfix(h)) return true;
   return matchesBonBojoVerbalConnectiveHeuristic(h);
 }
 
@@ -131,6 +135,7 @@ export function shouldRejectByNoiseListEojeol(eojeolOrKey) {
   const h = hangulOnlyNoise(eojeolOrKey);
   if (!h) return false;
   if (isSpacedLeftAdnominalNoiseEojeol(h)) return true;
+  if (isSpacedVerbalLikeNoiseEojeol(h)) return true;
   // 붙임키 기업이든·캐나다에 — 띄움 칸과 동일 조사 휴리스틱
   if (isSpacedLeftJosaNoiseEojeol(h)) return true;
   if (isUnifyJosaGluedNoiseKey(h)) return true;
@@ -159,9 +164,24 @@ export function shouldRejectByNoiseList(spacedVariant, clusterKey = '') {
     if (!h) continue;
     if (shouldRejectByNoiseListEojeol(h) || isSpacedLeftNoiseEojeol(h)) return true;
   }
-  const key = hangulOnlyNoise(clusterKey) || hangulOnlyNoise(parts.join(''));
-  if (key && shouldRejectByNoiseListSurface(key)) return true;
-  return false;
+  // clusterKey(붙임) — 띄움 칸 경계에서만 관형/용언 왼쪽 판정.
+  // 음절 전수 infix는 중앙은행금리→중앙은|행·공공인프라→공개인|프라 오탐.
+  const key = hangulOnlyNoise(clusterKey);
+  if (!key) return false;
+  if (parts.length >= 2) {
+    for (let i = 1; i < parts.length; i += 1) {
+      const left = hangulOnlyNoise(parts.slice(0, i).join(''));
+      const right = hangulOnlyNoise(parts.slice(i).join(''));
+      if (!left || right.length < 2) continue;
+      if (isSpacedLeftAdnominalNoiseEojeol(left)) return true;
+      if (isSpacedVerbalLikeNoiseEojeol(left)) return true;
+    }
+    if (shouldRejectNoiseListDataSurface(key)) return true;
+    if (isSpacedJeokAdnominalNoiseEojeol(key)) return true;
+    if (matchesBonBojoVerbalConnectiveHeuristic(key)) return true;
+    return false;
+  }
+  return shouldRejectByNoiseListSurface(key);
 }
 
 /**
@@ -184,5 +204,9 @@ export function shouldRejectUnifyCandidateNoise(variant, clusterKey = '') {
     hangulOnlyNoise(clusterKey) ||
     hangulOnlyNoise(v) ||
     String(clusterKey || v).replace(/\s+/g, '');
-  return key ? shouldRejectByNoiseListSurface(key) : false;
+  if (!key) return false;
+  if (shouldRejectByNoiseListSurface(key)) return true;
+  // 단독 용언 연결·닫힌 용언만 (관형 전체 키는 가게주인→…인 오탐).
+  if (isSpacedVerbalLikeNoiseEojeol(key)) return true;
+  return false;
 }
