@@ -33,12 +33,15 @@ import {
 import {
   isSpacedAdverbGeNoiseEojeol,
   isSpacedAdverbHiNoiseEojeol,
+  isSpacedClosedAdverbNoiseEojeol,
   isSpacedClosedConjunctionNoiseEojeol,
   isSpacedClosedVerbalNoiseEojeol,
   isSpacedDependentSuffixNoiseEojeol,
   isSpacedOrdinalNoiseEojeol,
   isSpacedVerbalConnectiveNoiseEojeol,
   isSpacedVerbalLikeNoiseEojeol,
+  matchesClosedAdverbPlusNounPrefix,
+  matchesClosedConjunctionPlusNounPrefix,
   matchesVerbalLikePlusNounInfix,
   SPACED_ADVERB_GE_NOUN_EXCLUDE,
 } from './unifyNoiseListLexicalHeuristic.js';
@@ -80,9 +83,9 @@ export function spacedVariantHitsNoiseDenylist(spacedVariant) {
 }
 
 /**
- * 띄움 어절 잡음 — 리스트 표면 + 조사·관형·접속·부사(-히/-게)·서수(-째).
+ * 띄움 어절 잡음 — 리스트 표면 + 조사·관형·접속·닫힌 부사·부사(-히/-게)·서수(-째).
  * 왼쪽·오른쪽 동일 적용 ({@link shouldRejectByNoiseList}).
- * source: manual-heuristic (조사·관형·접속·-히/-게·-째) + JSON/본보조 (표면).
+ * source: manual-heuristic (조사·관형·접속·닫힌 부사·-히/-게·-째) + JSON/본보조 (표면).
  * @param {string} eojeol
  */
 export function isSpacedLeftNoiseEojeol(eojeol) {
@@ -92,6 +95,7 @@ export function isSpacedLeftNoiseEojeol(eojeol) {
   if (isSpacedLeftJosaNoiseEojeol(h)) return true;
   if (isSpacedLeftAdnominalNoiseEojeol(h)) return true;
   if (isSpacedClosedConjunctionNoiseEojeol(h)) return true;
+  if (isSpacedClosedAdverbNoiseEojeol(h)) return true;
   if (isSpacedClosedVerbalNoiseEojeol(h)) return true;
   if (isSpacedAdverbHiNoiseEojeol(h)) return true;
   if (isSpacedAdverbGeNoiseEojeol(h)) return true;
@@ -122,6 +126,8 @@ export function shouldRejectByNoiseListSurface(eojeolOrKey) {
   // 붙임은 infix만 (떨어뜨리고시장·가치있다고시장).
   if (matchesAdnominalPlusNounInfix(h)) return true;
   if (matchesVerbalLikePlusNounInfix(h)) return true;
+  if (matchesClosedConjunctionPlusNounPrefix(h)) return true;
+  if (matchesClosedAdverbPlusNounPrefix(h)) return true;
   return matchesBonBojoVerbalConnectiveHeuristic(h);
 }
 
@@ -178,6 +184,8 @@ export function shouldRejectByNoiseList(spacedVariant, clusterKey = '') {
     }
     if (shouldRejectNoiseListDataSurface(key)) return true;
     if (isSpacedJeokAdnominalNoiseEojeol(key)) return true;
+    if (matchesClosedConjunctionPlusNounPrefix(key)) return true;
+    if (matchesClosedAdverbPlusNounPrefix(key)) return true;
     if (matchesBonBojoVerbalConnectiveHeuristic(key)) return true;
     return false;
   }
