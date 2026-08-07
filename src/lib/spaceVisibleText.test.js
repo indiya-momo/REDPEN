@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   SPACE_VISIBLE_CHAR,
   encodeSpacesVisible,
+  normalizePhraseSlotFillText,
   sanitizePdfTextFragment,
 } from './spaceVisibleText.js';
 
@@ -21,5 +22,11 @@ describe('spaceVisibleText', () => {
     const out = sanitizePdfTextFragment(raw);
     expect(out).toBe('한대 기후');
     expect(out.length).toBe(raw.length);
+  });
+
+  it('normalizePhraseSlotFillText는 앞뒤 공백·� 를 제거한다', () => {
+    expect(normalizePhraseSlotFillText(' 실물경제')).toBe('실물경제');
+    expect(normalizePhraseSlotFillText('\uFFFD\uFFFD경제')).toBe('경제');
+    expect(normalizePhraseSlotFillText('조선 시대')).toBe('조선 시대');
   });
 });

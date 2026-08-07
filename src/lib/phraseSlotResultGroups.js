@@ -2,6 +2,7 @@
  * 공통 항목 찾기(@패턴) 결과를 채워진 표기별로 묶고 정렬한다.
  * 정렬: 건수 내림차순 → 같으면 첫 등장 페이지 오름차순 → 표기 문자열.
  */
+import { normalizePhraseSlotFillText } from './spaceVisibleText.js';
 
 /**
  * @typedef {{
@@ -20,7 +21,7 @@ export function groupPhraseSlotInstancesByFill(instances) {
   /** @type {Map<string, import('./ruleEngine.js').MatchInstance[]>} */
   const byText = new Map();
   for (const inst of instances ?? []) {
-    const text = String(inst?.matchedText ?? '');
+    const text = normalizePhraseSlotFillText(String(inst?.matchedText ?? ''));
     if (!text) continue;
     const list = byText.get(text);
     if (list) list.push(inst);
