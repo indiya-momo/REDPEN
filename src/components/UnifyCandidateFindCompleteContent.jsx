@@ -18,7 +18,7 @@ export default function UnifyCandidateFindCompleteContent({
   clusterCount,
   totalOccurrences,
   quotaConsumedLine = null,
-  phaseLabel = '1차 표기 통일 :',
+  phaseLabel = '1차 표기 통일(띄어쓰기) :',
 }) {
   return (
     <div className="results-header app-dialog__results-summary app-dialog__unify-find-complete">

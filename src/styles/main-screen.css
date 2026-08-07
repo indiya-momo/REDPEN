@@ -1935,8 +1935,27 @@
   font-size: calc(1.05rem * var(--panel-ui-scale));
 }
 
+/* 빈 계열 안내 — 표기 카드 체크박스와 같은 시작선 */
+.panel-left
+  .unify-candidate-find
+  .results-panel--unify-candidate
+  .unify-candidate-find__empty-row {
+  margin: 0;
+  padding-block: 6px 4px;
+  padding-inline-start: calc(
+    var(--criteria-pad-inline, 10px) + var(--criteria-summary-rail, 23px)
+  );
+  padding-inline-end: calc(
+    var(--results-findings-pad-end, var(--space-sm)) -
+      var(--results-category-border, 1px)
+  );
+  box-sizing: border-box;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  list-style: none;
+}
+
 .panel-left .unify-candidate-find__empty {
-  margin: 6px 0 0;
+  margin: 0;
   font-size: calc(0.72rem * var(--panel-ui-scale, 1));
   color: var(--c-soft);
 }
@@ -2049,6 +2068,162 @@
   color: var(--c-ink, #333);
 }
 
+.panel-left .unify-candidate-find__phase-banner-title-block {
+  margin: 0;
+}
+
+.panel-left .unify-candidate-find__phase-banner-apply-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-weight: 600;
+  color: var(--c-ink, #333);
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.panel-left .unify-candidate-find__phase-banner-apply-list li {
+  margin: 0;
+  line-height: 1.45;
+}
+
+/* 2차 계열 summary — @라벨 + 1차 통일형(우측정렬 방지, 간격 3px) */
+.panel-left
+  .unify-candidate-find
+  .results-panel--unify-candidate
+  .results-category--unify-series
+  > .results-category__summary.panel-criteria-heading {
+  flex-wrap: nowrap;
+  row-gap: 0;
+}
+
+.panel-left
+  .unify-candidate-find
+  .results-panel--unify-candidate
+  .results-category--unify-series
+  > .results-category__summary
+  .unify-candidate-find__summary-trail {
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.panel-left .unify-candidate-find__series-label-block {
+  display: inline-flex;
+  flex: 1 1 auto;
+  align-items: baseline;
+  gap: 3px;
+  min-width: 0;
+}
+
+.panel-left
+  .unify-candidate-find
+  .results-panel--unify-candidate
+  .results-category--unify-series
+  > .results-category__summary
+  .unify-candidate-find__series-label-block
+  > .criteria-hover-tip--wrap {
+  display: inline-flex;
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.panel-left
+  .unify-candidate-find
+  .results-panel--unify-candidate
+  .results-category--unify-series
+  > .results-category__summary
+  .unify-candidate-find__series-label-block
+  .results-category__label {
+  flex: 0 1 auto;
+}
+
+.panel-left .unify-candidate-find__series-criterion {
+  flex: 0 1 auto;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-size: 70%;
+  font-weight: 400;
+  color: var(--c-ink, #333);
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 계열 안 — 적용 단어 헤더: @무늬 summary와 동일 박스·글씨 */
+.panel-left
+  .unify-candidate-find
+  .results-panel--unify-candidate
+  .results-category--unify-series
+  > .unify-candidate-find__compliant-heading.results-category__summary {
+  position: relative;
+  margin: 8px 0 0;
+  cursor: default;
+  background: var(--panel-accordion-bg-open);
+  list-style: none;
+}
+
+.panel-left
+  .unify-candidate-find
+  .results-panel--unify-candidate
+  .results-category--unify-series
+  > .unify-candidate-find__compliant-heading
+  .results-category__label {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding-inline-end: 6em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* +N개 더 보기 — 붙임/띄움과 동일 글씨, summary-trail과 같이 우측 끝 */
+.panel-left
+  .unify-candidate-find
+  .results-panel--unify-candidate
+  .results-category--unify-series
+  > .unify-candidate-find__compliant-heading
+  .unify-candidate-find__compliant-more {
+  position: absolute;
+  right: calc(
+    var(--unify-edge-pad, var(--space-sm)) -
+      var(--results-category-border, 1px)
+  );
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: calc(0.72rem * var(--panel-ui-scale, 1));
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--c-soft, #666);
+  white-space: nowrap;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.panel-left
+  .unify-candidate-find
+  .results-panel--unify-candidate
+  .results-category--unify-series
+  > .unify-candidate-find__compliant-heading
+  .unify-candidate-find__compliant-more:hover {
+  color: var(--c-ink, #2a2118);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 .panel-left .unify-candidate-find__phase-banner-conditions {
   margin: 0;
   font-weight: 600;
@@ -2137,6 +2312,34 @@
   line-height: 1.4;
   color: var(--c-soft, #666);
   word-break: keep-all;
+}
+
+.panel-left .unify-candidate-find__compliant-block {
+  margin: 0 0 6px;
+}
+
+.panel-left .unify-candidate-find__pattern-compliant-label {
+  padding-bottom: 4px;
+}
+
+.panel-left .unify-candidate-find__compliant-list-wrap {
+  position: relative;
+  pointer-events: none;
+  user-select: none;
+}
+
+.panel-left .unify-candidate-find__compliant-list-wrap::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: color-mix(in srgb, var(--c-surface, #fff) 45%, transparent);
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+.panel-left .unify-candidate-find__compliant-list {
+  opacity: 0.72;
 }
 
 .panel-left .unify-candidate-find__phase2-entry,
@@ -4251,6 +4454,12 @@
   flex: 1 1 0;
   min-height: 0;
   overflow: hidden;
+}
+
+/* keep-mounted 탭: display:flex 규칙이 [hidden]을 덮지 않게 */
+.panel-left .spelling-tab-layout[hidden],
+.panel-left .panel-left-work-scroll[hidden] {
+  display: none !important;
 }
 
 .spelling-tab-layout__calibration {

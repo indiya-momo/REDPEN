@@ -52,6 +52,7 @@ import { isOnboardingSamplePdfName } from '../lib/onboardingSamplePdf.js';
 import {
   findGuestBrowseDemoSpellingGroup,
   guestBrowseAllowsDemoPdfAutoLoad,
+  guestBrowseAllowsLocalDevExtras,
   guestBrowseAutoRunsCriteriaCheck,
   guestBrowseBlocksResultExport,
   guestBrowseHidesGreetingText,
@@ -2220,10 +2221,11 @@ export default function MainScreen({
           </nav>
         </header>
 
-        {workTab === 'spelling' && (
-          <div
-            className={spellingTabLayoutClassName}
-          >
+        <div
+          className={spellingTabLayoutClassName}
+          hidden={workTab !== 'spelling'}
+          aria-hidden={workTab !== 'spelling'}
+        >
             <div className="panel-left-work-scroll spelling-tab-scroll custom-scrollbar">
               {spellingRunRowEl}
               {spellingCalibrationEl}
@@ -2282,10 +2284,12 @@ export default function MainScreen({
               ) : null}
             </div>
           </div>
-        )}
 
-        {workTab === 'consistency' && (
-          <div className="panel-left-work-scroll custom-scrollbar">
+        <div
+          className="panel-left-work-scroll custom-scrollbar"
+          hidden={workTab !== 'consistency'}
+          aria-hidden={workTab !== 'consistency'}
+        >
             {showConsistencyRunRow ? (
               <div
                 className="consistency-tab-layout__run-row spelling-tab-layout__run-row"
@@ -2545,7 +2549,6 @@ export default function MainScreen({
               </div>
             ) : null}
           </div>
-        )}
 
       </aside>
 
@@ -2652,8 +2655,11 @@ export default function MainScreen({
                     className="pdf-work-pane__aux-btn pdf-work-pane__aux-btn--icon"
                     aria-label="새 업로드"
                     onClick={() => {
-                      // 둘러보기: 로그인 안내만 / 로그인: 작업 종료 확인 후 대기 화면
-                      if (isGuestBrowseActive()) {
+                      // 둘러보기(배포): 로그인 안내 / 로컬 DEV·로그인: 작업 종료 확인 후 대기 화면
+                      if (
+                        isGuestBrowseActive() &&
+                        !guestBrowseAllowsLocalDevExtras()
+                      ) {
                         void showAppAlert({
                           message: '로그인 후 새 업로드를 이용할 수 있습니다',
                         });

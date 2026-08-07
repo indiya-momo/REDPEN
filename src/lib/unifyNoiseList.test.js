@@ -25,15 +25,15 @@ describe('unifyNoiseList (1차 정적 리스트)', () => {
     expect(hasUnifyNoiseDenyEojeol('가정하고')).toBe(false);
   });
 
-  it('예외는 NNG 오통과만 — 70개 미만(재검토 알람)', () => {
+  it('예외는 NNG 오통과만 — 100개 미만(재검토 알람)', () => {
     expect(hasUnifyNoiseDenyEojeol('대부분')).toBe(true);
     expect(hasUnifyNoiseDenyEojeol('일부')).toBe(true);
     expect(hasUnifyNoiseDenyEojeol('공무원')).toBe(false);
-    // 합의(2026-08-04): 예외 ≥70 → 서버 C→D3 / DEV 2차 boot 재검토. 사용자에게 알릴 것.
+    // 합의(2026-08-07): 예외 ≥100 → 형태소 재검토. 세이노 수확 후 형태소 이동으로 다시 100 미만.
     expect(
       UNIFY_NOISE_EXCEPTION_EOJEOLS.size,
-      `예외 ${UNIFY_NOISE_EXCEPTION_EOJEOLS.size}개 ≥70 — 형태소(서버 C·DEV 2차 boot) 방향 재검토 시점`,
-    ).toBeLessThan(70);
+      `예외 ${UNIFY_NOISE_EXCEPTION_EOJEOLS.size}개 ≥100 — 형태소(서버 C·DEV 2차 boot) 방향 재검토 시점`,
+    ).toBeLessThan(100);
   });
 
   it('unifyNoiseListData에는 조사 휴리스틱 하드코딩이 없다', async () => {
@@ -124,6 +124,95 @@ describe('unifyNoiseList (1차 정적 리스트)', () => {
     expect(shouldRejectByNoiseList('금융에 시장')).toBe(true);
     expect(shouldRejectByNoiseList('캐나다에 정부')).toBe(true);
     expect(shouldRejectByNoiseList('캐나다 정부')).toBe(false);
+    // 2음절+격조사 (마음이 시대)
+    expect(isSpacedLeftJosaNoiseEojeol('마음이')).toBe(true);
+    expect(isSpacedLeftJosaNoiseEojeol('시장을')).toBe(true);
+    expect(shouldRejectByNoiseList('마음이 시대')).toBe(true);
+    // 양보·관형격·접속격 (@금융 앞)
+    expect(isSpacedLeftJosaNoiseEojeol('아시아의')).toBe(true);
+    expect(isSpacedLeftJosaNoiseEojeol('경제라도')).toBe(true);
+    expect(isSpacedLeftJosaNoiseEojeol('규제와')).toBe(true);
+    // 거+의 오탐 가드(조사 휴리스틱만) — 예외 표면 DROP은 별도
+    expect(isSpacedLeftJosaNoiseEojeol('거의')).toBe(false);
+    expect(isSpacedLeftJosaNoiseEojeol('사과')).toBe(false);
+    expect(isSpacedLeftJosaNoiseEojeol('주식시장이')).toBe(true);
+    expect(isSpacedLeftJosaNoiseEojeol('부문도')).toBe(true);
+    expect(isSpacedLeftJosaNoiseEojeol('호황과')).toBe(true);
+    expect(shouldRejectByNoiseList('아시아의 금융')).toBe(true);
+    expect(shouldRejectByNoiseList('이번 금융')).toBe(true);
+    expect(shouldRejectByNoiseList('경제라도 금융')).toBe(true);
+    expect(shouldRejectByNoiseList('규제와 금융')).toBe(true);
+    expect(shouldRejectByNoiseList('그래도 금융')).toBe(true);
+    expect(shouldRejectByNoiseList('나라의 금융')).toBe(true);
+    expect(shouldRejectByNoiseList('무역이나 금융')).toBe(true);
+    expect(shouldRejectByNoiseList('더해 금융')).toBe(true);
+    expect(shouldRejectByNoiseList('미친 금융')).toBe(true);
+    expect(shouldRejectByNoiseList('바로 금융')).toBe(true);
+    expect(shouldRejectByNoiseList('방식의 금융')).toBe(true);
+    expect(shouldRejectByNoiseList('빠진 금융')).toBe(true);
+    expect(shouldRejectByNoiseList('재빨리 금융')).toBe(true);
+    expect(shouldRejectByNoiseList('조카의 금융')).toBe(true);
+    expect(shouldRejectByNoiseList('직접적인 금융')).toBe(true);
+    expect(shouldRejectByNoiseList('최악의 금융')).toBe(true);
+    expect(shouldRejectByNoiseList('나라라면 투자')).toBe(true);
+    expect(shouldRejectByNoiseList('낮았고 투자')).toBe(true);
+    expect(shouldRejectByNoiseList('년짜리 투자')).toBe(true);
+    expect(shouldRejectByNoiseList('달러만이 투자')).toBe(true);
+    expect(shouldRejectByNoiseList('실제로 위기')).toBe(true);
+    expect(shouldRejectByNoiseList('걸쳐 위기')).toBe(true);
+    expect(shouldRejectByNoiseList('이번 위기')).toBe(true);
+    expect(shouldRejectByNoiseList('현재의 위기')).toBe(true);
+    expect(shouldRejectByNoiseList('이미 붕괴')).toBe(true);
+    expect(shouldRejectByNoiseList('주식시장이 붕괴')).toBe(true);
+    expect(shouldRejectByNoiseList('호황과 붕괴')).toBe(true);
+    expect(shouldRejectByNoiseList('부문도 붕괴')).toBe(true);
+    expect(shouldRejectByNoiseList('거의 붕괴')).toBe(true);
+    expect(shouldRejectByNoiseList('되자 상황')).toBe(true);
+    expect(shouldRejectByNoiseList('드러난 상황')).toBe(true);
+    expect(shouldRejectByNoiseList('일어난 상황')).toBe(true);
+    expect(shouldRejectByNoiseList('사실 상황')).toBe(true);
+    expect(shouldRejectByNoiseList('시장심리가 상황')).toBe(true);
+    expect(shouldRejectByNoiseList('작금의 상황')).toBe(true);
+    expect(shouldRejectByNoiseList('재난 상황')).toBe(false);
+    expect(shouldRejectByNoiseList('마치 성장')).toBe(true);
+    expect(shouldRejectByNoiseList('빠른 성장')).toBe(true);
+    expect(shouldRejectByNoiseList('빠져도 성장')).toBe(true);
+    expect(shouldRejectByNoiseList('속도로 성장')).toBe(true);
+    expect(shouldRejectByNoiseList('경로 성장')).toBe(false);
+    expect(shouldRejectByNoiseList('전국적인 거품')).toBe(true);
+    expect(shouldRejectByNoiseList('갖가지 거품')).toBe(true);
+    expect(shouldRejectByNoiseList('오르면서 거품')).toBe(true);
+    expect(shouldRejectByNoiseList('급진적인 개혁')).toBe(true);
+    expect(shouldRejectByNoiseList('않았다 투자')).toBe(true);
+    expect(shouldRejectByNoiseList('달랐다 투자')).toBe(true);
+    expect(shouldRejectByNoiseList('쪼개어 투자')).toBe(true);
+    expect(shouldRejectByNoiseList('터지자 투자')).toBe(true);
+    expect(shouldRejectByNoiseList('해보자 투자')).toBe(true);
+    expect(shouldRejectByNoiseList('휩싸인 투자')).toBe(true);
+    expect(shouldRejectByNoiseList('투자 시장')).toBe(false);
+    expect(shouldRejectByNoiseList('개인 투자')).toBe(false);
+    expect(shouldRejectByNoiseList('설령 금융')).toBe(true);
+    expect(shouldRejectByNoiseList('아니다 금융')).toBe(true);
+    expect(shouldRejectByNoiseList('안겨주었다 금융')).toBe(true);
+    expect(shouldRejectByNoiseList('이들 금융')).toBe(true);
+    expect(shouldRejectByNoiseList('없다 금융')).toBe(true);
+    expect(shouldRejectByNoiseList('휩쓴 금융')).toBe(true);
+    expect(shouldRejectByNoiseList('깨뜨렸다 통화')).toBe(true);
+    expect(shouldRejectByNoiseList('달리 통화')).toBe(true);
+    expect(shouldRejectByNoiseList('아니다 통화')).toBe(true);
+    expect(shouldRejectByNoiseList('아니면 통화')).toBe(true);
+    expect(shouldRejectByNoiseList('나왔다 시장')).toBe(true);
+    expect(shouldRejectByNoiseList('만들었다 시장')).toBe(true);
+    expect(shouldRejectByNoiseList('오로지 시장')).toBe(true);
+    expect(shouldRejectByNoiseList('있었다 시장')).toBe(true);
+    expect(shouldRejectByNoiseList('좀먹고 시장')).toBe(true);
+    expect(shouldRejectByNoiseList('사고 시장')).toBe(false);
+    expect(isSpacedLeftJosaNoiseEojeol('속도로')).toBe(true);
+    expect(isSpacedLeftJosaNoiseEojeol('경로')).toBe(false);
+    expect(isSpacedLeftJosaNoiseEojeol('무역이나')).toBe(true);
+    expect(isSpacedLeftJosaNoiseEojeol('나라라면')).toBe(true);
+    expect(isSpacedLeftJosaNoiseEojeol('달러만이')).toBe(true);
+    expect(isSpacedLeftJosaNoiseEojeol('나라의')).toBe(true);
     // 선택·열거 이든 — JSON 예외/꼬리 없이 조사 휴리스틱
     expect(isSpacedLeftJosaNoiseEojeol('이든')).toBe(true);
     expect(isSpacedLeftJosaNoiseEojeol('기업이든')).toBe(true);

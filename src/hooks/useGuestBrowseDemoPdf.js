@@ -2,7 +2,10 @@
  * 둘러보기 전용 — 데모 원고 자동 로드 (로그인 온보딩 PRE_UPLOAD 경로와 분리)
  */
 import { useEffect, useRef } from 'react';
-import { guestBrowseAllowsDemoPdfAutoLoad } from '../lib/guestBrowsePolicy.js';
+import {
+  guestBrowseAllowsDemoPdfAutoLoad,
+  guestBrowseAllowsLocalDevExtras,
+} from '../lib/guestBrowsePolicy.js';
 import { fetchOnboardingSamplePdfFile } from '../lib/onboardingSamplePdf.js';
 
 /**
@@ -25,12 +28,16 @@ export function useGuestBrowseDemoPdf({
 
   useEffect(() => {
     if (!hasPdf && loadRef.current === 'done') {
+      // 로컬 DEV: 「새 업로드」후 데모가 다시 덮어쓰지 않도록 유지
+      if (guestBrowseAllowsLocalDevExtras()) return;
       loadRef.current = 'idle';
     }
   }, [hasPdf]);
 
   useEffect(() => {
     if (!guestBrowseAllowsDemoPdfAutoLoad()) return undefined;
+    // 로컬 DEV: 데모 대신 직접 PDF 업로드
+    if (guestBrowseAllowsLocalDevExtras()) return undefined;
     if (isRestoring) return undefined;
     if (hasPdf || loadRef.current !== 'idle') return undefined;
     if (import.meta.env.DEV) {

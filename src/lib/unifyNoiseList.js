@@ -30,6 +30,9 @@ import {
   isSpacedAdverbGeNoiseEojeol,
   isSpacedAdverbHiNoiseEojeol,
   isSpacedClosedConjunctionNoiseEojeol,
+  isSpacedClosedVerbalNoiseEojeol,
+  isSpacedDependentSuffixNoiseEojeol,
+  isSpacedVerbalConnectiveNoiseEojeol,
   SPACED_ADVERB_GE_NOUN_EXCLUDE,
 } from './unifyNoiseListLexicalHeuristic.js';
 import { matchesBonBojoVerbalConnectiveHeuristic } from './bonBojoMorphPatterns.js';
@@ -82,8 +85,11 @@ export function isSpacedLeftNoiseEojeol(eojeol) {
   if (isSpacedLeftJosaNoiseEojeol(h)) return true;
   if (isSpacedLeftAdnominalNoiseEojeol(h)) return true;
   if (isSpacedClosedConjunctionNoiseEojeol(h)) return true;
+  if (isSpacedClosedVerbalNoiseEojeol(h)) return true;
   if (isSpacedAdverbHiNoiseEojeol(h)) return true;
   if (isSpacedAdverbGeNoiseEojeol(h)) return true;
+  if (isSpacedVerbalConnectiveNoiseEojeol(h)) return true;
+  if (isSpacedDependentSuffixNoiseEojeol(h)) return true;
   return false;
 }
 

@@ -17,7 +17,10 @@ import { isExcludedSeriesAffix } from './unifyCandidateSeriesTrend.js';
 import { buildPhraseSlotFindRules } from './phraseSlotPattern.js';
 import { runRuleCheck } from './ruleEngine.js';
 import { escapeRegex } from './compoundPatternCommon.js';
-import { shouldRejectUnifyCandidateNoise } from './unifyNoiseList.js';
+import {
+  isSpacedLeftNoiseEojeol,
+  shouldRejectUnifyCandidateNoise,
+} from './unifyNoiseList.js';
 import { isSpacedLeftAdnominalNoiseEojeol } from './unifyNoiseListAdnominalHeuristic.js';
 import { shouldRejectUnifySatelliteSpacedByPos } from './kiwiMorph/unifyExclude.js';
 import { isUnifyKiwiNoisePhase2Available } from './kiwiMorph/noiseFilterGate.js';
@@ -105,6 +108,11 @@ export const PATTERN_RULE_HEAD_BLACKLIST = new Set([
  * }} PatternRuleSupport
  *
  * @typedef {{
+ *   form: string,
+ *   count: number,
+ * }} PatternCompliantForm
+ *
+ * @typedef {{
  *   id: string,
  *   rule: UnifyPatternRule,
  *   mismatchCount: number,
@@ -112,6 +120,7 @@ export const PATTERN_RULE_HEAD_BLACKLIST = new Set([
  *   mismatches: PatternRuleMismatch[],
  *   support: PatternRuleSupport,
  *   score: number,
+ *   compliantForms?: import('./unifyCandidateDiscover.js').UnifySpacingCluster[],
  * }} PatternRuleCandidate
  */
 
@@ -130,6 +139,8 @@ export function isPatternRuleHeadBlacklisted(head) {
   if (!h) return true;
   if (PATTERN_RULE_HEAD_BLACKLIST.has(h)) return true;
   if (hangulSyllableCount(h) < 2) return true;
+  // 붙임 head(나라의·무역이나·더해) — Surface-only 경로를 우회해 좌측 잡음과 동일 적용
+  if (isSpacedLeftNoiseEojeol(h)) return true;
   if (isSpacedLeftAdnominalNoiseEojeol(h)) return true;
   return false;
 }
@@ -385,6 +396,47 @@ export function buildPatternRuleSupport(rule, mismatches) {
 }
 
 /**
+ * mismatch 없이 이미 맞는 표기만 있을 때 지지 점수 (전부 붙여쓰기 등).
+ * @param {UnifyPatternRule} rule
+ * @param {import('./unifyCandidateDiscover.js').UnifySpacingCluster[]} compliantForms
+ * @returns {PatternRuleSupport}
+ */
+export function buildPatternRuleSupportFromCompliant(rule, compliantForms) {
+  /** @type {Set<string>} */
+  const heads = new Set();
+  const confirmedVar = patternRuleVariablePart(rule, rule.confirmedFrom);
+  if (confirmedVar) heads.add(confirmedVar);
+
+  let occurrenceCount = 0;
+  /** @type {string[]} */
+  const examples = [];
+  for (const c of compliantForms ?? []) {
+    const n = Number(c?.totalCount) || 0;
+    if (n <= 0) continue;
+    occurrenceCount += n;
+    const sample =
+      (c.variants ?? []).find((v) =>
+        rule.direction === 'spaced' ? /\s/.test(v) : !/\s/.test(v),
+      ) ||
+      c.variants?.[0] ||
+      c.key;
+    const v =
+      patternRuleVariablePart(rule, sample) ||
+      patternRuleVariablePart(rule, c.key);
+    if (v) heads.add(v);
+    if (sample && examples.length < 3 && !examples.includes(sample)) {
+      examples.push(String(sample));
+    }
+  }
+
+  return {
+    occurrenceCount,
+    uniqueHeads: heads.size,
+    examples,
+  };
+}
+
+/**
  * @param {PatternRuleSupport} support
  * @param {number} [exceptionCount]
  */
@@ -430,14 +482,42 @@ export function formatPatternSupportExplain(support, score) {
 
 /** 2차 계열 아래 — 1차 표기 표기명 최대 개수 */
 export const PHASE2_PRIMARY_FORMS_MAX = 4;
+/** 2차 「1차 통일형(…) 적용 단어」요약 — 접힘 시 상위 개수 */
+export const PHASE2_COMPLIANT_FORMS_PREVIEW = 3;
 
 /**
- * 2차 계열 헤더 아래: `1차 표기 통일 @무늬 : 오려낸무늬 두꺼비 무늬 …` (최대 4개).
- * 1차에서 고른 표기(띄어쓰기 포함)를 그대로 보여 준다.
- * @param {string} template
+ * 2차 계열 박스 summary용: `1차 통일형: 국제금융(붙여쓰기)`
+ * @param {'glued' | 'spaced' | null | undefined} direction
  * @param {string[]} forms
  */
-export function formatPhase2PrimaryFormsLine(template, forms) {
+export function formatPhase2SeriesCriterionLine(direction, forms) {
+  const list = (forms ?? [])
+    .map((f) => String(f ?? '').replace(/\s+/g, ' ').trim())
+    .filter(Boolean);
+  const uniq = [];
+  for (const f of list) {
+    if (!uniq.includes(f)) uniq.push(f);
+    if (uniq.length >= PHASE2_PRIMARY_FORMS_MAX) break;
+  }
+  if (!uniq.length) return '';
+  const dir =
+    direction === 'spaced'
+      ? '띄어쓰기'
+      : direction === 'glued'
+        ? '붙여쓰기'
+        : '';
+  const formsText = uniq.join(' · ');
+  if (!dir) return `1차 통일형: ${formsText}`;
+  return `1차 통일형: ${formsText}(${dir})`;
+}
+
+/**
+ * 2차 진행 배너 한 줄(레거시): `@무늬(붙여쓰기)  → 두꺼비무늬`
+ * @param {string} template
+ * @param {string[]} forms
+ * @param {'glued' | 'spaced' | null | undefined} [direction]
+ */
+export function formatPhase2InProgressSegment(template, forms, direction) {
   const list = (forms ?? [])
     .map((f) => String(f ?? '').replace(/\s+/g, ' ').trim())
     .filter(Boolean);
@@ -448,7 +528,63 @@ export function formatPhase2PrimaryFormsLine(template, forms) {
   }
   if (!uniq.length) return '';
   const t = String(template ?? '').trim() || '@';
-  return `1차 표기 통일 ${t} : ${uniq.join(' · ')}`;
+  const dir =
+    direction === 'spaced'
+      ? '띄어쓰기'
+      : direction === 'glued'
+        ? '붙여쓰기'
+        : '';
+  const dirParen = dir ? `(${dir})` : '';
+  return `${t}${dirParen}  → ${uniq.join(' · ')}`;
+}
+
+/**
+ * 2차 상단 배너 모델 — 제목만(적용 줄은 계열 박스로 이동).
+ * @param {{ template?: string, direction?: 'glued' | 'spaced' | null, forms?: string[] }[]} [_entries]
+ * @returns {{ title: string, lines: string[] }}
+ */
+export function formatPhase2InProgressBannerModel(_entries) {
+  return {
+    title: '2차 표기 통일 기준(1차 표기 통일형)',
+    lines: [],
+  };
+}
+
+/**
+ * @param {{ template?: string, direction?: 'glued' | 'spaced' | null, forms?: string[] }[]} entries
+ * @returns {string}
+ */
+export function formatPhase2InProgressBannerTitle(entries) {
+  const { title, lines } = formatPhase2InProgressBannerModel(entries);
+  if (!lines.length) return title;
+  return [title, ...lines].join('\n');
+}
+
+/**
+ * 계열 안 라벨: `1차 통일형(붙여쓰기) 적용 단어`
+ * @param {'glued' | 'spaced' | null | undefined} direction
+ */
+export function formatPhase2CompliantAppliedLabel(direction) {
+  const dir =
+    direction === 'spaced'
+      ? '띄어쓰기'
+      : direction === 'glued'
+        ? '붙여쓰기'
+        : '';
+  if (!dir) return '1차 통일형 적용 단어';
+  return `1차 통일형(${dir}) 적용 단어`;
+}
+
+/**
+ * @deprecated 배너는 {@link formatPhase2InProgressBannerModel} 사용
+ * @param {string} template
+ * @param {string[]} forms
+ * @param {'glued' | 'spaced' | null | undefined} [direction]
+ */
+export function formatPhase2PrimaryFormsLine(template, forms, direction) {
+  const seg = formatPhase2InProgressSegment(template, forms, direction);
+  if (!seg) return '';
+  return `2차 표기 통일 기준(1차 표기 통일형)\n${seg}`;
 }
 
 /**
@@ -517,7 +653,6 @@ function pagesForRuleCheck(pageTexts) {
  * @returns {{ key: string, to: string } | null}
  */
 function normalizeMismatchPair(from, rule) {
-  if (!passesPatternRuleUnifyFilter(from)) return null;
   const cleaned = stripTrailingJosa(
     normalizeUnifyVariant(stripUnifyPunctuationNoise(from)),
   );
@@ -541,7 +676,6 @@ function normalizeMismatchPair(from, rule) {
 
   const head = headBeforeAffix(cleaned, rule.affix);
   if (isPatternRuleHeadBlacklisted(head)) return null;
-  if (shouldRejectUnifyCandidateNoise(head, head)) return null;
   const key = `${head}${rule.affix}`;
   const to =
     rule.direction === 'glued'
@@ -622,6 +756,192 @@ export function findPatternMismatches(pageTexts, rule, opts = {}) {
 }
 
 /**
+ * 규칙 방향에 **이미 맞는** 표기(어긋남 목록의 반대쪽)를 출현 수 순으로 모은다.
+ * 붙임 규칙 → 붙인 `@affix` / 띄움 규칙 → 띄운 `@ affix`.
+ * 반환 클러스터는 붙임·띄움 두 줄(한쪽 count, 반대 0).
+ * @param {{ pageNum?: number, text?: string, textLayout?: string }[]} pageTexts
+ * @param {UnifyPatternRule} rule
+ * @returns {import('./unifyCandidateDiscover.js').UnifySpacingCluster[]}
+ */
+export function findPatternCompliantForms(pageTexts, rule) {
+  if (!rule?.affix || !rule.direction || !rule.affixType) return [];
+  const pages = pagesForRuleCheck(pageTexts);
+  if (!pages.length) return [];
+
+  let pattern;
+  if (rule.affixType === 'prefix') {
+    pattern =
+      rule.direction === 'glued' ? `${rule.affix}@` : `${rule.affix} @`;
+  } else {
+    pattern = rule.direction === 'glued' ? `@${rule.affix}` : `@ ${rule.affix}`;
+  }
+
+  const rules = buildPhraseSlotFindRules(pattern);
+  if (!rules.length) return [];
+
+  const { results } = runRuleCheck(pages, rules);
+  /** @type {Map<string, { form: string, instances: import('./ruleEngine.js').MatchInstance[] }>} */
+  const byKey = new Map();
+
+  for (const group of results ?? []) {
+    for (const inst of group.instances ?? []) {
+      const from = String(inst.matchedText ?? '');
+      if (!from) continue;
+      const pair = normalizeCompliantForm(from, rule);
+      if (!pair) continue;
+
+      const existing = byKey.get(pair.key);
+      if (existing) {
+        existing.instances.push(inst);
+      } else {
+        byKey.set(pair.key, { form: pair.form, instances: [inst] });
+      }
+    }
+  }
+
+  return [...byKey.entries()]
+    .map(([key, row]) =>
+      compliantToUnifyCluster({
+        key,
+        form: row.form,
+        instances: row.instances,
+        direction: rule.direction,
+        affix: rule.affix,
+        affixType: rule.affixType,
+      }),
+    )
+    .sort(
+      (a, b) =>
+        (b.totalCount || 0) - (a.totalCount || 0) ||
+        a.key.localeCompare(b.key, 'ko'),
+    );
+}
+
+/**
+ * @param {{
+ *   key: string,
+ *   form: string,
+ *   instances: import('./ruleEngine.js').MatchInstance[],
+ *   direction: PatternRuleDirection,
+ *   affix: string,
+ *   affixType: PatternAffixType,
+ * }} row
+ * @returns {import('./unifyCandidateDiscover.js').UnifySpacingCluster}
+ */
+function compliantToUnifyCluster(row) {
+  const glued = String(row.form).replace(/\s+/g, '');
+  const spaced =
+    row.affixType === 'prefix'
+      ? spaceGluedPrefixMatch(glued, row.affix)
+      : spaceGluedAffixMatch(glued, row.affix);
+  const count = row.instances?.length || 0;
+  const isGlued = row.direction === 'glued';
+  const variants =
+    glued === spaced ? [glued] : [glued, spaced];
+  /** @type {Record<string, number>} */
+  const counts = {};
+  /** @type {Record<string, import('./unifyCandidateDiscover.js').UnifyVariantOccurrence[]>} */
+  const occurrencesByVariant = {};
+  for (const v of variants) {
+    const hit = isGlued ? !/\s/.test(v) : /\s/.test(v);
+    counts[v] = hit ? count : 0;
+    occurrencesByVariant[v] = hit
+      ? (row.instances ?? []).map((inst) => ({
+          pageNum: inst.pageNum,
+          index: inst.index,
+          matchedText: inst.matchedText || v,
+        }))
+      : [];
+  }
+  return {
+    key: row.key,
+    variants,
+    counts,
+    occurrencesByVariant,
+    recommendedUnify: isGlued ? glued : spaced,
+    totalCount: count,
+    kind: 'conflict',
+  };
+}
+
+/**
+ * @param {string} from
+ * @param {UnifyPatternRule} rule
+ * @returns {{ key: string, form: string } | null}
+ */
+function normalizeCompliantForm(from, rule) {
+  const cleaned = stripTrailingJosa(
+    normalizeUnifyVariant(stripUnifyPunctuationNoise(from)),
+  );
+  if (!cleaned || !passesPatternRuleUnifyFilter(cleaned)) return null;
+
+  const wantSpaced = rule.direction === 'spaced';
+  if (wantSpaced !== /\s/.test(cleaned)) return null;
+
+  if (rule.affixType === 'prefix') {
+    const tail = tailAfterPrefix(cleaned, rule.affix);
+    if (!tail || hangulSyllableCount(tail) < 2) return null;
+    const key = `${rule.affix}${tail}`;
+    const pairKey = unifySpacingKey(key) || key;
+    if (
+      shouldRejectPatternMismatchByNoiseAndCompound(cleaned, cleaned, pairKey)
+    ) {
+      return null;
+    }
+    return { key: pairKey, form: cleaned };
+  }
+
+  const head = headBeforeAffix(cleaned, rule.affix);
+  if (isPatternRuleHeadBlacklisted(head)) return null;
+  const key = `${head}${rule.affix}`;
+  const pairKey = unifySpacingKey(key) || key;
+  if (
+    shouldRejectPatternMismatchByNoiseAndCompound(cleaned, cleaned, pairKey)
+  ) {
+    return null;
+  }
+  return { key: pairKey, form: cleaned };
+}
+
+/**
+ * UI/테스트: `1차 표기 통일형이 적용된 단어 · 넝쿨무늬 16 · …` (클러스터 또는 {form,count}).
+ * @param {PatternRuleDirection} direction
+ * @param {(PatternCompliantForm | import('./unifyCandidateDiscover.js').UnifySpacingCluster)[]} forms
+ * @param {{ expanded?: boolean, previewMax?: number }} [opts]
+ */
+export function formatPhase2CompliantFormsLine(direction, forms, opts = {}) {
+  /** @type {PatternCompliantForm[]} */
+  const list = [];
+  for (const f of forms ?? []) {
+    if (!f) continue;
+    if ('form' in f && f.form) {
+      const count = Number(f.count) || 0;
+      if (count > 0) list.push({ form: String(f.form), count });
+      continue;
+    }
+    const cluster = /** @type {import('./unifyCandidateDiscover.js').UnifySpacingCluster} */ (
+      f
+    );
+    const count = Number(cluster.totalCount) || 0;
+    if (count <= 0) continue;
+    const form =
+      direction === 'spaced'
+        ? (cluster.variants ?? []).find((v) => /\s/.test(v)) ||
+          cluster.variants?.[0]
+        : (cluster.variants ?? []).find((v) => !/\s/.test(v)) ||
+          cluster.variants?.[0];
+    if (!form) continue;
+    list.push({ form: String(form), count });
+  }
+  if (!list.length) return '';
+  const previewMax = opts.previewMax ?? PHASE2_COMPLIANT_FORMS_PREVIEW;
+  const expanded = Boolean(opts.expanded);
+  const shown = expanded ? list : list.slice(0, previewMax);
+  const parts = shown.map((f) => `${f.form} ${f.count}`);
+  return `1차 통일형이 적용된 단어 · ${parts.join(' · ')}`;
+}
+
+/**
  * @param {{ pageNum?: number, text?: string, textLayout?: string }[]} pageTexts
  * @param {UnifyPatternRule} rule
  * @param {{ skipKeys?: Set<string> | string[] }} [opts]
@@ -689,21 +1009,17 @@ export function groupPatternConditionLabelsByDirection(labels) {
 
 /**
  * 제품 2단(@확장) 시드에 쓸 1차 클러스터인지.
- * soft 80%·확정 등록은 동일 취급. 본+보조 **검토**만 시드에서 빼고,
- * 용언 추정(검토 필요)은 2차 확장에 포함한다.
+ * soft 80%·확정 등록은 동일 취급. 본+보조·용언 검토도 2차 시드에 포함한다.
  * @param {import('./unifyCandidateDiscover.js').UnifySpacingCluster | null | undefined} cluster
  * @returns {boolean}
  */
 export function isUnifyPatternSeedEligibleCluster(cluster) {
-  if (!cluster?.key) return false;
-  if (cluster.auxReview?.status === 'review') return false;
-  return true;
+  return Boolean(cluster?.key);
 }
 
 /**
  * 1차 등록(및 soft 미리찍기 병합 chosen)에서 접두·접미 패턴 규칙만 모은다 (매칭 전).
  * soft 80%는 사용자가 안 건드린 채택이므로 확정 등록과 동일하게 시드한다.
- * 본+보조 검토 클러스터만 시드에서 제외한다 (용언 검토는 포함).
  * @param {Map<string, string> | Iterable<[string, string]>} registeredVariants
  * @param {import('./unifyCandidateDiscover.js').UnifySpacingCluster[]} clusters
  * @returns {UnifyPatternRule[]}
@@ -746,6 +1062,7 @@ export function collectPatternRulesFromRegistrations(
 /**
  * 1차 등록에서 2차 패턴 후보(+건수·예시·score)를 모은다.
  * 증거 하한(uniqueHeads·occurrence) 미달·시드 부적격 후보는 제외한다.
+ * mismatch가 없어도(전부 붙여쓰기 등) 이미 맞는 표기가 충분하면 후보로 둔다.
  * @param {Map<string, string> | Iterable<[string, string]>} registeredVariants
  * @param {import('./unifyCandidateDiscover.js').UnifySpacingCluster[]} clusters
  * @param {{ pageNum?: number, text?: string, textLayout?: string }[]} pageTexts
@@ -770,8 +1087,12 @@ export function collectPatternRuleCandidates(
   const out = [];
   for (const rule of rules) {
     const mismatches = findPatternMismatches(pageTexts, rule, { skipKeys });
-    if (!mismatches.length) continue;
-    const support = buildPatternRuleSupport(rule, mismatches);
+    const compliantForms = findPatternCompliantForms(pageTexts, rule);
+    if (!mismatches.length && !compliantForms.length) continue;
+
+    const support = mismatches.length
+      ? buildPatternRuleSupport(rule, mismatches)
+      : buildPatternRuleSupportFromCompliant(rule, compliantForms);
     if (!meetsPatternSupportThreshold(support)) continue;
     const score = scorePatternRuleCandidate(support, 0);
     out.push({
@@ -782,6 +1103,7 @@ export function collectPatternRuleCandidates(
       mismatches,
       support,
       score,
+      compliantForms,
     });
   }
 
@@ -809,6 +1131,7 @@ export function collectPatternRuleCandidates(
  *   clusters: import('./unifyCandidateDiscover.js').UnifySpacingCluster[],
  *   support?: PatternRuleSupport,
  *   score?: number,
+ *   compliantForms?: import('./unifyCandidateDiscover.js').UnifySpacingCluster[],
  * }[]}
  */
 export function buildSecondaryGroupsFromCandidates(candidates, selectedIds) {
@@ -841,6 +1164,7 @@ export function buildSecondaryGroupsFromCandidates(candidates, selectedIds) {
    *   clusters: import('./unifyCandidateDiscover.js').UnifySpacingCluster[],
  *   support?: PatternRuleSupport,
  *   score?: number,
+ *   compliantForms?: import('./unifyCandidateDiscover.js').UnifySpacingCluster[],
  * }>} */
   const byPattern = new Map();
 
@@ -873,10 +1197,35 @@ export function buildSecondaryGroupsFromCandidates(candidates, selectedIds) {
         clusters: [],
         support: cand?.support,
         score: cand?.score,
+        compliantForms: cand?.compliantForms ?? [],
       };
       byPattern.set(groupKey, group);
     }
     group.clusters.push(mismatchToUnifyCluster(m));
+  }
+
+  // mismatch 0이어도(전부 붙여쓰기) 선택 후보는 계열로 남긴다
+  for (const [groupKey, cand] of candidateByTemplate) {
+    if (byPattern.has(groupKey)) continue;
+    const rule = cand.rule;
+    const affixType = rule.affixType === 'prefix' ? 'prefix' : 'suffix';
+    const template = rule.template;
+    const affix =
+      affixType === 'suffix'
+        ? String(template).replace(/^@/, '')
+        : String(template).replace(/@$/, '');
+    byPattern.set(groupKey, {
+      type: 'series',
+      affixType,
+      affix,
+      label: template,
+      template,
+      direction: rule.direction,
+      clusters: [],
+      support: cand.support,
+      score: cand.score,
+      compliantForms: cand.compliantForms ?? [],
+    });
   }
 
   const groups = [...byPattern.values()];

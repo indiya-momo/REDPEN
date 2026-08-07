@@ -356,7 +356,7 @@ describe('formatUnifyCandidateFindConfirmMessage', () => {
 describe('formatUnifyCandidateFindCompleteMessage', () => {
   it('발견 항목·총 횟수를 완료 alert 본문으로 만든다', () => {
     expect(formatUnifyCandidateFindCompleteMessage(3, 6)).toBe(
-      '1차 표기 통일 : 추천 단어 세트 3 전체 발견 6',
+      '1차 표기 통일(띄어쓰기) : 추천 단어 세트 3 전체 발견 6',
     );
   });
 
@@ -370,7 +370,7 @@ describe('formatUnifyCandidateFindCompleteMessage', () => {
 describe('formatUnifyCandidatePhase2CompleteMessage', () => {
   it('2차 완료 본문을 만든다', () => {
     expect(formatUnifyCandidatePhase2CompleteMessage(2, 5)).toBe(
-      '2차 표기 통일 : 추천 단어 세트 2 전체 발견 5',
+      '추천 단어 세트 2 전체 발견 5',
     );
   });
 
@@ -402,7 +402,7 @@ describe('alertUnifyCandidateFindAfterRun', () => {
 
     expect(alertMock).toHaveBeenCalledWith(
       '찾기를 진행했습니다\n\n' +
-        '1차 표기 통일 : 추천 단어 세트 1 전체 발견 2\n\n' +
+        '1차 표기 통일(띄어쓰기) : 추천 단어 세트 1 전체 발견 2\n\n' +
         '표기 통일 검수권 1장이 사용되었습니다(1일 검수권 1장, 선물 검수권 5장 사용 가능)',
     );
   });
@@ -456,13 +456,13 @@ describe('alertUnifyCandidateFindAfterRun', () => {
     );
 
     expect(alertMock).toHaveBeenCalledWith(
-      expect.stringContaining('1차 표기 통일 : 추천 단어 세트 1 전체 발견 5'),
+      expect.stringContaining('1차 표기 통일(띄어쓰기) : 추천 단어 세트 1 전체 발견 5'),
     );
   });
 });
 
 describe('alertUnifyCandidatePhase2AfterComplete', () => {
-  it('2차 완료 alert를 띄운다', async () => {
+  it('2차 진입 alert를 띄운다', async () => {
     const alertMock = vi.fn();
     vi.stubGlobal('alert', alertMock);
 
@@ -489,8 +489,7 @@ describe('alertUnifyCandidatePhase2AfterComplete', () => {
     });
 
     expect(alertMock).toHaveBeenCalledWith(
-      '2차 표기 통일을 완료했습니다\n\n' +
-        '2차 표기 통일 : 추천 단어 세트 2 전체 발견 5',
+      '2차 표기 통일 완료\n\n' + '추천 단어 세트 2 전체 발견 5',
     );
   });
 });

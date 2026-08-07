@@ -10,6 +10,8 @@ import {
   finishGuestBrowseResultThenUnlockNextGuide,
   guestBrowseAllowsCheckAndResults,
   guestBrowseAllowsDemoPdfAutoLoad,
+  guestBrowseAllowsLocalDevExtras,
+  guestBrowseAllowsUnifyPhase2Local,
   guestBrowseAllowsWorkspaceStay,
   guestBrowseAutoRunsCriteriaCheck,
   guestBrowseHidesGreetingText,
@@ -29,6 +31,24 @@ describe('guestBrowsePolicy', () => {
   beforeEach(() => {
     endGuestBrowse();
     vi.useRealTimers();
+  });
+
+  it('로컬 DEV 둘러보기만 2차·새 업로드 예외 허용', () => {
+    expect(guestBrowseAllowsLocalDevExtras()).toBe(false);
+    expect(guestBrowseAllowsUnifyPhase2Local()).toBe(false);
+    beginGuestBrowse();
+    const host =
+      typeof window !== 'undefined' ? window.location.hostname : '';
+    const localHost =
+      host === 'localhost' || host === '127.0.0.1' || host === '[::1]';
+    if (import.meta.env.DEV && localHost) {
+      expect(guestBrowseAllowsLocalDevExtras()).toBe(true);
+      expect(guestBrowseAllowsUnifyPhase2Local()).toBe(true);
+    } else {
+      expect(guestBrowseAllowsLocalDevExtras()).toBe(false);
+    }
+    endGuestBrowse();
+    expect(guestBrowseAllowsLocalDevExtras()).toBe(false);
   });
 
   it('둘러보기 — 프로젝트 목록 숨김·표시 이름', () => {
