@@ -5,7 +5,7 @@
  *
  * 처소·여격(에/에서/에게): Kiwi 프로브상 N*+JKB (앞에·곳에서·금융에·캐나다에).
  * 선택·열거(이든)·양보(라도/이라도): JC 계열 — 어간 길이 무제한.
- * 관형격(의)·접속(와/과)·선택(나): 어간 2음절 이상 (아시아의·규제와; 거의·사과 1음절 제외).
+ * 관형격(의): 어간 ≥1 (집의·거의·국의 OCR·조사조각). 접속(와/과)·선택(나): 어간 ≥2 (규제와; 사과 1음절 제외).
  * 선택(이나)·조건(라면/이라면)·한정(만이): 라면은 어간≥2(신라면 제외), 이라면·만이는 무제한·≥2.
  * 격조사(이/가/을/를)·보조사(도/만): 어간 길이 무제한 (내가·주식시장이·부문도).
  * 수단·방향(으로): 무제한. 로(모음어간): 어간 ≥2 (속도로; 경로·자료 1음절 제외).
@@ -65,9 +65,17 @@ const SPACED_LEFT_UNLIMITED_STEM_JOSA = new Set([
   '도',
   '만',
 ]);
-/** 관형격·접속·선택(나)·조건(라면)·로·든(모음어간 이든) — 어간 2음절 이상 */
+/** 관형격(의) — 어간 1음절 이상 (거의·집의·국의). 어휘 명사(합의)는 제외. */
+const SPACED_LEFT_MIN1_STEM_JOSA = new Set(['의']);
+/**
+ * …의 형태지만 관형격이 아닌 닫힌 명사 (합+의 오탐 방지).
+ * @type {ReadonlySet<string>}
+ */
+const SPACED_LEFT_UI_LEXICAL_NOUNS = Object.freeze(
+  new Set(['합의', '동의', '항의', '정의', '유의', '주의', '사의', '이의']),
+);
+/** 접속·선택(나)·조건(라면)·로·든(모음어간 이든) — 어간 2음절 이상 */
 const SPACED_LEFT_MIN2_STEM_JOSA = new Set([
-  '의',
   '와',
   '과',
   '나',
@@ -84,6 +92,7 @@ const SPACED_LEFT_PRONOUN_STEMS = new Set(['나', '너', '저', '그', '이']);
 export function isSpacedLeftJosaNoiseEojeol(eojeol) {
   const h = hangulOnlyNoise(eojeol);
   if (!h) return false;
+  if (SPACED_LEFT_UI_LEXICAL_NOUNS.has(h)) return false;
   // 띄움 칸 단독 조사·접속 (기업 이든)
   if (
     h === '이든' ||
@@ -105,7 +114,9 @@ export function isSpacedLeftJosaNoiseEojeol(eojeol) {
     if (UNIFY_NOISE_EXCEPTION_EOJEOLS.has(stem)) return true;
     // 처소·여격·격조사·도/만·으로·이든·라도 — 음절 수와 무관
     if (SPACED_LEFT_UNLIMITED_STEM_JOSA.has(josa)) return true;
-    // 의·와·과·로 — 2음절 이상 (거의·사과·경로 1음절 어간 오탐 방지)
+    // 의 — 1음절 이상 (거의·집의·국의; 합의는 위 어휘 제외)
+    if (SPACED_LEFT_MIN1_STEM_JOSA.has(josa) && n >= 1) return true;
+    // 와·과·로 — 2음절 이상 (사과·경로 1음절 어간 오탐 방지)
     if (SPACED_LEFT_MIN2_STEM_JOSA.has(josa) && n >= 2) return true;
     if (n > 2) continue;
     if (
