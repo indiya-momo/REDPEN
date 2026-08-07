@@ -1,9 +1,9 @@
 /**
- * 띄움 어절 — 닫힌 접속·부사(-히/-게) 휴리스틱 (좌우 공통).
- * source: manual-heuristic — Kiwi: MAJ/접속·MAG(*히/*게).
+ * 띄움 어절 — 닫힌 접속·닫힌 부사(태도)·부사 파생(-히/-게) 휴리스틱 (좌우 공통).
+ * source: manual-heuristic — Kiwi: MAJ/접속·MAG.
  * -히/-게는 생산 패턴 → 끝음절 매칭. -게 명사(가게·집게)만 닫힌 제외.
- * 구(句)「뿐만 아니라」「다시 말해」는 어절 단위만 (아니라·다시는 예외/별도).
- * 짧은 형태(또·단·즉·그럼…)는 완전 일치만 — 베타 원고 오탐 점검 권장.
+ * 구(句)「뿐만 아니라」「다시 말해」는 어절 단위만 (아니라·다시는 접속 Set).
+ * 짧은 형태(또·단·즉·그럼…)·닫힌 부사는 완전 일치만 — 관형사·대명사는 예외 JSON 유지.
  */
 import { hangulOnlyNoise } from './unifyNoiseListData.js';
 
@@ -69,6 +69,24 @@ const SPACED_CLOSED_CONJUNCTION_LIST = Object.freeze([
   '이후',
   '먼저',
   '우선',
+  // 담화·부사성 (예외 JSON에서 이관 — 완전일치)
+  '역시',
+  '이미',
+  '바로',
+  '만약',
+  '물론',
+  '함께',
+  '직접',
+  '계속',
+  '다시',
+  '그냥',
+  '그저',
+  '따로',
+  '달리',
+  '과연',
+  '사실',
+  '실제',
+  '아니',
 ]);
 
 /** @type {ReadonlySet<string>} */
@@ -91,6 +109,79 @@ export const SPACED_ADVERB_GE_NOUN_EXCLUDE = Object.freeze(
 export function isSpacedClosedConjunctionNoiseEojeol(eojeol) {
   const h = hangulOnlyNoise(eojeol);
   return Boolean(h) && SPACED_CLOSED_CONJUNCTIONS.has(h);
+}
+
+/**
+ * 붙임키 = (닫힌 접속·담화) + (한글 2음절+).
+ * 예외 접두와 동일 — `그냥시장`·`물론기업`이 예외→접속 이관 후에도 DROP.
+ * source: manual-heuristic
+ * @param {string} eojeolOrKey
+ */
+export function matchesClosedConjunctionPlusNounPrefix(eojeolOrKey) {
+  const h = hangulOnlyNoise(eojeolOrKey);
+  if (h.length < 4) return false;
+  const conjs = [...SPACED_CLOSED_CONJUNCTION_LIST].toSorted(
+    (a, b) => b.length - a.length || a.localeCompare(b, 'ko'),
+  );
+  for (const conj of conjs) {
+    if (conj.length < 2 || h.length <= conj.length) continue;
+    if (!h.startsWith(conj)) continue;
+    if (hangulOnlyNoise(h.slice(conj.length)).length >= 2) return true;
+  }
+  return false;
+}
+
+/**
+ * 닫힌 부사 — 문장 연결·태도·시점 표지만 (완전 일치).
+ * 관형사(모든·이런)·대명(우리·이번)·수량(일부)은 예외 JSON에 둔다.
+ * source: manual-heuristic — Kiwi: MAG
+ */
+const SPACED_CLOSED_ADVERB_LIST = Object.freeze([
+  // 태도·평가
+  '주로',
+  '정작',
+  '이른바',
+  '꽤나',
+  // 문장 연결·결과
+  '이로써',
+  // 시점·지속 (명사복합 드묾)
+  '앞서',
+  '지금',
+  '현재',
+  '줄곧',
+  '즉시',
+]);
+
+/** @type {ReadonlySet<string>} */
+export const SPACED_CLOSED_ADVERBS = Object.freeze(
+  new Set(SPACED_CLOSED_ADVERB_LIST),
+);
+
+/**
+ * @param {string} eojeol
+ */
+export function isSpacedClosedAdverbNoiseEojeol(eojeol) {
+  const h = hangulOnlyNoise(eojeol);
+  return Boolean(h) && SPACED_CLOSED_ADVERBS.has(h);
+}
+
+/**
+ * 붙임키 = (닫힌 부사) + (한글 2음절+). `주로시장`·`앞서시장`.
+ * source: manual-heuristic
+ * @param {string} eojeolOrKey
+ */
+export function matchesClosedAdverbPlusNounPrefix(eojeolOrKey) {
+  const h = hangulOnlyNoise(eojeolOrKey);
+  if (h.length < 4) return false;
+  const advs = [...SPACED_CLOSED_ADVERB_LIST].toSorted(
+    (a, b) => b.length - a.length || a.localeCompare(b, 'ko'),
+  );
+  for (const adv of advs) {
+    if (adv.length < 2 || h.length <= adv.length) continue;
+    if (!h.startsWith(adv)) continue;
+    if (hangulOnlyNoise(h.slice(adv.length)).length >= 2) return true;
+  }
+  return false;
 }
 
 /**

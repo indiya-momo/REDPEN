@@ -2,9 +2,11 @@ import { describe, expect, it } from 'vitest';
 import {
   isSpacedAdverbGeNoiseEojeol,
   isSpacedAdverbHiNoiseEojeol,
+  isSpacedClosedAdverbNoiseEojeol,
   isSpacedClosedConjunctionNoiseEojeol,
   isSpacedOrdinalNoiseEojeol,
   SPACED_ADVERB_GE_NOUN_EXCLUDE,
+  SPACED_CLOSED_ADVERBS,
   SPACED_CLOSED_CONJUNCTIONS,
 } from './unifyNoiseListLexicalHeuristic.js';
 import { shouldRejectByNoiseList } from './unifyNoiseList.js';
@@ -28,6 +30,16 @@ describe('unifyNoiseListLexicalHeuristic', () => {
       '우선',
       '먼저',
       '게다가',
+      '역시',
+      '이미',
+      '바로',
+      '만약',
+      '함께',
+      '직접',
+      '계속',
+      '아니',
+      '사실',
+      '실제',
       '뿐만',
       '단',
       '또',
@@ -44,6 +56,31 @@ describe('unifyNoiseListLexicalHeuristic', () => {
     expect(shouldRejectByNoiseList('정책 따라서')).toBe(true);
     expect(shouldRejectByNoiseList('또한 공무원')).toBe(true);
     expect(shouldRejectByNoiseList('경리 업무')).toBe(false);
+  });
+
+  it('닫힌 부사 Set — 태도·문장연결·시점만 (관형사·대명 제외)', () => {
+    for (const w of [
+      '주로',
+      '정작',
+      '이른바',
+      '꽤나',
+      '이로써',
+      '앞서',
+      '지금',
+      '현재',
+      '줄곧',
+      '즉시',
+    ]) {
+      expect(SPACED_CLOSED_ADVERBS.has(w), w).toBe(true);
+      expect(isSpacedClosedAdverbNoiseEojeol(w), w).toBe(true);
+      expect(hasUnifyNoiseDenyEojeol(w), w).toBe(false);
+      expect(shouldRejectByNoiseList(`${w} 시장`), w).toBe(true);
+    }
+    expect(shouldRejectByNoiseList('주로시장')).toBe(true);
+    expect(shouldRejectByNoiseList('앞서시장')).toBe(true);
+    expect(isSpacedClosedAdverbNoiseEojeol('모든')).toBe(false);
+    expect(isSpacedClosedAdverbNoiseEojeol('우리')).toBe(false);
+    expect(isSpacedClosedAdverbNoiseEojeol('이번')).toBe(false);
   });
 
   it('부사 -히 (Kiwi MAG) — 예외 JSON 없이도 DROP', () => {
