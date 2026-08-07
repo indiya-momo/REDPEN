@@ -16,6 +16,17 @@ export function sanitizePdfTextFragment(value) {
   return String(value ?? '').replaceAll(PDF_REPLACEMENT_CHAR, ' ');
 }
 
+/**
+ * 공통 항목 채움 표기 — PDF �·앞뒤 공백을 묶어 키로 쓴다.
+ * (규칙 매치에 경계 공백·깨진 글리프가 섞여도 ˅˅경제처럼 안 보이게)
+ * @param {string} value
+ */
+export function normalizePhraseSlotFillText(value) {
+  return sanitizePdfTextFragment(value)
+    .replace(/^[\s\u00A0]+|[\s\u00A0]+$/g, '')
+    .normalize('NFC');
+}
+
 /** @param {string} value */
 export function encodeSpacesVisible(value) {
   return sanitizePdfTextFragment(value).replace(SPACE_CHARS, SPACE_VISIBLE_CHAR);

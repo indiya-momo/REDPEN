@@ -101,7 +101,8 @@ function tokenizePlusPattern(t) {
 function tokensToRegexFrag(tokens) {
   let frag = '';
   for (const tok of tokens) {
-    if (tok.type === 'slot') frag += String.raw`\S+`;
+    // 슬롯: 공백·PDF �(U+FFFD) 제외 — �가 \S로 잡혀 ˅˅경제 같은 가짜 채움이 생기지 않게
+    if (tok.type === 'slot') frag += String.raw`[^\s\uFFFD]+`;
     else if (tok.type === 'space') frag += FLEX_SPACE;
     else if (tok.type === 'lit' && tok.value) frag += escapeRegex(tok.value);
   }

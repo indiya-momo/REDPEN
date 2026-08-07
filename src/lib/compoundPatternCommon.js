@@ -16,8 +16,8 @@ export const STEM_TAIL_END = String.raw`(?:${HANGUL_SUFFIX})?`;
 /** stem 매칭 뒤 경계 — 왔다"고·왔다'고 등 인용 직후 */
 export const STEM_TAIL_BOUNDARY = String.raw`(?=$|[ \u00A0,.!?…「」『』\]"'\u2018\u2019\u201C\u201D\r\n])`;
 
-/** 문장/어절 앞 경계 */
-export const PHRASE_START = String.raw`(?:^|[\s\u00A0])`;
+/** 문장/어절 앞 경계 — 소비하지 않음(앞 공백이 matchedText·˅ 표시에 안 섞이게) */
+export const PHRASE_START = String.raw`(?<=^|[\s\u00A0])`;
 
 /** @param {string} s */
 export function escapeRegex(s) {

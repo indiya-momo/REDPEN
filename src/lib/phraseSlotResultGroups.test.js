@@ -52,4 +52,17 @@ describe('groupPhraseSlotInstancesByFill', () => {
       ]),
     ).toEqual([]);
   });
+
+  it('앞뒤 공백·PDF � 는 같은 표기로 묶고 표시 키에서 뺀다', () => {
+    const groups = groupPhraseSlotInstancesByFill([
+      inst(1, ' 실물경제'),
+      inst(2, '\uFFFD실물경제'),
+      inst(3, '실물경제'),
+      inst(4, '\uFFFD\uFFFD경제'),
+    ]);
+    expect(groups.map((g) => [g.text, g.count])).toEqual([
+      ['실물경제', 3],
+      ['경제', 1],
+    ]);
+  });
 });
