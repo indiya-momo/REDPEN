@@ -13,9 +13,13 @@
 export const UNIFY_NOISE_REGRESSION_KEEP = Object.freeze([
   { spaced: '캐나다 정부', note: '체언 내부 …나다 ≠ 용언 어미' },
   { spaced: '대한 민국', note: '어간1+한 ≠ 관형 -한' },
+  { spaced: '대한 투자', note: '대한 KEEP (depressione) ≠ 관형' },
   { spaced: '남북한 경제', note: '지명 남북한 ≠ 관형 -한(어간2)' },
   { spaced: '경리 업무', note: '명사+명사 유지' },
   { spaced: '주식 시장', note: '명사+명사 유지' },
+  { spaced: '금융 시스템', note: '명사+명사 유지 (depressione)' },
+  { spaced: '기적 기간', note: '명사 기적 ≠ 접미 -적' },
+  { spaced: '합의 위기', note: '명사 합의 ≠ 조사 의' },
   { spaced: '미국 정부', note: '명사+명사 유지' },
   { spaced: '미국 최고', note: '명사+명사 유지' },
   { spaced: '직장 사람', note: '명사+명사(@사람) 유지' },
@@ -303,6 +307,19 @@ export const UNIFY_NOISE_REGRESSION_DROP = Object.freeze([
   { spaced: '다니면 사람', note: '용언 연결 -면 어간≥2' },
   { spaced: '하는데 사람', note: '용언 연결 -는데' },
   { spaced: '것일까 사람', note: '용언 연결 -일까' },
+  // 2026-08-07 depressione 표기통일검수 엑셀 수확
+  { spaced: '비이성적 과열', note: '접미 -적 닫힌(verbalTail)' },
+  { spaced: '극단적 금융', note: '접미 -적 닫힌(verbalTail)' },
+  { spaced: '고통스런 정책', note: '관형 -스런' },
+  { spaced: '같다 거품', note: '닫힌 용언 같다' },
+  { spaced: '떠들어댔다 금융', note: '용언 종결 -댔다' },
+  { spaced: '취한 정책', note: '관형 취한 어간1(verbalTail)' },
+  { spaced: '직접 대출', note: '부사 직접(예외)' },
+  { spaced: '계속 성장', note: '부사 계속(예외)' },
+  { spaced: '집의 가치', note: '조사조각 집의(예외)' },
+  { spaced: '림자 금융', note: 'OCR 조각 림자(예외)' },
+  { spaced: '년대 금융', note: 'OCR 조각 년대(예외)' },
+  { spaced: '단위든 통화', note: '선택 든(모음어간 이든)' },
 ]);
 
 /**

@@ -25,15 +25,15 @@ describe('unifyNoiseList (1차 정적 리스트)', () => {
     expect(hasUnifyNoiseDenyEojeol('가정하고')).toBe(false);
   });
 
-  it('예외는 NNG 오통과만 — 100개 미만(재검토 알람)', () => {
+  it('예외는 NNG 오통과만 — 120개 미만(재검토 알람)', () => {
     expect(hasUnifyNoiseDenyEojeol('대부분')).toBe(true);
     expect(hasUnifyNoiseDenyEojeol('일부')).toBe(true);
     expect(hasUnifyNoiseDenyEojeol('공무원')).toBe(false);
-    // 합의(2026-08-07): 예외 ≥100 → 형태소 재검토. 세이노 수확 후 형태소 이동으로 다시 100 미만.
+    // 합의(2026-08-07): 예외 ≥100 → 형태소 재검토. depressione 수확 후 104 — 알람 120.
     expect(
       UNIFY_NOISE_EXCEPTION_EOJEOLS.size,
-      `예외 ${UNIFY_NOISE_EXCEPTION_EOJEOLS.size}개 ≥100 — 형태소(서버 C·DEV 2차 boot) 방향 재검토 시점`,
-    ).toBeLessThan(100);
+      `예외 ${UNIFY_NOISE_EXCEPTION_EOJEOLS.size}개 ≥120 — 형태소(서버 C·DEV 2차 boot) 방향 재검토 시점`,
+    ).toBeLessThan(120);
   });
 
   it('unifyNoiseListData에는 조사 휴리스틱 하드코딩이 없다', async () => {

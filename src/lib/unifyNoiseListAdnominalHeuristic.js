@@ -19,14 +19,17 @@
  * `픈`(배고픈) — 프+ㄴ. 어간 ≥2 (`바쁜` 어간1·예외).
  * `싼`(헐싼…) — 싸+ㄴ. 어간 ≥2 (`비싼` 어간1·예외).
  * `적인`(직접적인·효과적인) — 적+관형 인. 어간 ≥1 (`적인` 단독 제외는 길이).
+ * `스런`(고통스런…) — 스럽다 준말 관형. 어간 ≥1 (`스러운`은 verbalTails).
  * 조사 오탐(`붉`+`은`) 가드는 {@link ./unifyNoiseListLeftHeuristic.js}가 별도로 담당.
  * `가진`·`만한`(종성 ㄴ만)은 시민·북한과 겹쳐 여기 밖 → verbalTails·예외 수확.
+ * `-적` 맨꼬리 일반화 금지 — `약탈적`·닫힌 표면만 verbalTails 수확.
  */
 import { hangulOnlyNoise } from './unifyNoiseListData.js';
 
 /** 긴 것 우선 */
 const ADNOMINAL_TAILS = Object.freeze([
   '적인',
+  '스런',
   '던',
   '는',
   '은',
@@ -60,6 +63,7 @@ const ADNOMINAL_TAIL_MIN_STEM = Object.freeze({
   싼: 2,
   쓴: 1,
   적인: 1,
+  스런: 1,
 });
 
 /**

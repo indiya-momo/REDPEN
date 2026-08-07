@@ -5,7 +5,7 @@ import { shouldRejectByNoiseList } from './unifyNoiseList.js';
 import { isPatternRuleHeadBlacklisted } from './unifyPatternRule.js';
 
 describe('isSpacedLeftAdnominalNoiseEojeol', () => {
-  it('관형형 -는/-던/-은/-된/-진/-한/-운/-낸/-난/-린/-른/-온/-픈/-싼 앞말을 잡는다', () => {
+  it('관형형 -는/-던/-은/-된/-진/-한/-운/-낸/-난/-린/-른/-온/-픈/-싼/-스런 앞말을 잡는다', () => {
     for (const left of [
       '아는',
       '못하는',
@@ -36,6 +36,7 @@ describe('isSpacedLeftAdnominalNoiseEojeol', () => {
       '살아온',
       '직접적인',
       '효과적인',
+      '고통스런',
     ]) {
       expect(isSpacedLeftAdnominalNoiseEojeol(left), left).toBe(true);
     }

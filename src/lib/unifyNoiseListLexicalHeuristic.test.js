@@ -81,4 +81,11 @@ describe('unifyNoiseListLexicalHeuristic', () => {
     expect(shouldRejectByNoiseList('과열된 시장')).toBe(true);
     expect(shouldRejectByNoiseList('야기시킨 공무원')).toBe(true);
   });
+
+  it('닫힌 용언 같다·연결 -댔다/-으며/-며 (depressione 수확)', () => {
+    expect(shouldRejectByNoiseList('같다 거품')).toBe(true);
+    expect(shouldRejectByNoiseList('떠들어댔다 금융')).toBe(true);
+    expect(shouldRejectByNoiseList('있으며 성장')).toBe(true);
+    expect(shouldRejectByNoiseList('다니며 투자')).toBe(true);
+  });
 });
