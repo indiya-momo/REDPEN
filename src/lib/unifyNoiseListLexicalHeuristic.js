@@ -30,6 +30,7 @@ const SPACED_CLOSED_CONJUNCTION_LIST = Object.freeze([
   '도리어',
   // 인과
   '그래서',
+  '그래야',
   '그래도',
   '그러므로',
   '따라서',
@@ -220,4 +221,32 @@ export function isSpacedOrdinalNoiseEojeol(eojeol) {
   if (!h || h.length < 2) return false;
   if (!h.endsWith('째')) return false;
   return hangulOnlyNoise(h.slice(0, -1)).length >= 1;
+}
+
+/**
+ * 용언 연결·종결 + 닫힌 용언(있다·없다…) — Surface/어절 공통.
+ * @param {string} eojeol
+ */
+export function isSpacedVerbalLikeNoiseEojeol(eojeol) {
+  return (
+    isSpacedVerbalConnectiveNoiseEojeol(eojeol) ||
+    isSpacedClosedVerbalNoiseEojeol(eojeol)
+  );
+}
+
+/**
+ * 붙임키 = (용언 연결·닫힌 용언 왼쪽) + (한글 2음절+ 오른쪽).
+ * JSON verbalTail 이관용 — `떨어뜨리고시장`·`가치있다고시장`.
+ * @param {string} eojeolOrKey
+ */
+export function matchesVerbalLikePlusNounInfix(eojeolOrKey) {
+  const h = hangulOnlyNoise(eojeolOrKey);
+  if (h.length < 4) return false;
+  for (let split = 2; split <= h.length - 2; split += 1) {
+    const left = h.slice(0, split);
+    const right = h.slice(split);
+    if (right.length < 2) continue;
+    if (isSpacedVerbalLikeNoiseEojeol(left)) return true;
+  }
+  return false;
 }

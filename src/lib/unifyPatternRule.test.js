@@ -161,7 +161,8 @@ describe('unifyPatternRule', () => {
     expect(passesPatternRuleUnifyFilter('가정하고 공무원')).toBe(false);
     expect(passesPatternRuleUnifyFilter('가족 모두')).toBe(false);
     expect(passesPatternRuleUnifyFilter('결혼 직전')).toBe(false);
-    expect(passesPatternRuleUnifyFilter('담당하던')).toBe(false);
+    // 하던은 JSON 이관 — 단독 키보다 띄움·어절 경로
+    expect(passesPatternRuleUnifyFilter('담당하던 업무')).toBe(false);
     expect(passesPatternRuleUnifyFilter('광고니까')).toBe(false);
   });
 

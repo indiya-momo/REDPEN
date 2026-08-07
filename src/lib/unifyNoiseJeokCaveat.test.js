@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { isSpacedLeftAdnominalNoiseEojeol } from './unifyNoiseListAdnominalHeuristic.js';
+import {
+  isSpacedLeftAdnominalNoiseEojeol,
+  SPACED_JEOK_NOUN_EXCLUDE,
+} from './unifyNoiseListAdnominalHeuristic.js';
 import {
   shouldRejectByNoiseList,
   shouldRejectByNoiseListEojeol,
@@ -20,8 +23,30 @@ describe('unifyNoiseList -적 주의사항', () => {
     }
   });
 
-  it('명사 적 어간1 KEEP', () => {
-    for (const w of ['목적', '실적', '기적', '면적', '인적', '치적', '내적']) {
+  it('명사 적 KEEP (어간1 + 닫힌 가드)', () => {
+    for (const w of [
+      '목적',
+      '실적',
+      '기적',
+      '면적',
+      '인적',
+      '치적',
+      '거적',
+      '강적',
+      '경적',
+      '견적',
+      '연적',
+      '공적',
+      '과적',
+      '광적',
+      '국적',
+      '궤적',
+      '극적',
+      '도적',
+      '무적',
+      '흔적',
+    ]) {
+      expect(SPACED_JEOK_NOUN_EXCLUDE.has(w), w).toBe(true);
       expect(isSpacedLeftAdnominalNoiseEojeol(w), w).toBe(false);
       expect(shouldRejectByNoiseList(`${w} 시장`), w).toBe(false);
     }
@@ -40,6 +65,7 @@ describe('unifyNoiseList -적 주의사항', () => {
 
     expect(shouldRejectByNoiseList('목적의식')).toBe(false);
     expect(shouldRejectByNoiseList('실적관리')).toBe(false);
+    expect(shouldRejectByNoiseList('국적요건')).toBe(false);
     expect(shouldRejectByNoiseList('가게 주인')).toBe(false);
     expect(shouldRejectUnifyCandidateNoise('가게주인')).toBe(false);
   });
@@ -51,6 +77,7 @@ describe('unifyNoiseList -적 주의사항', () => {
   });
 
   it('어간1 관형(내적)은 휴리스틱 DROP 안 함 — 목록 보완 영역', () => {
+    expect(SPACED_JEOK_NOUN_EXCLUDE.has('내적')).toBe(false);
     expect(isSpacedLeftAdnominalNoiseEojeol('내적')).toBe(false);
     expect(shouldRejectByNoiseList('내적 동기')).toBe(false);
   });

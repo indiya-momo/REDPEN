@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   matchesNoiseListMorphTail,
   shouldRejectByNoiseList,
+  shouldRejectByNoiseListEojeol,
 } from './unifyNoiseList.js';
 import { passesPatternRuleUnifyFilter } from './unifyPatternRule.js';
 import {
@@ -44,8 +45,11 @@ describe('unifyNoiseRegressionCorpus', () => {
 
   it.each(
     UNIFY_NOISE_REGRESSION_DROP_SURFACES.map((c) => [c.surface, c.note ?? '']),
-  )('DROP surface matchesNoiseListMorphTail(%s) — %s', (surface) => {
-    expect(matchesNoiseListMorphTail(surface)).toBe(true);
+  )('DROP surface morphTail|휴리스틱(%s) — %s', (surface) => {
+    expect(
+      matchesNoiseListMorphTail(surface) ||
+        shouldRejectByNoiseListEojeol(surface),
+    ).toBe(true);
   });
 
   it('코퍼스 규모 — KEEP/DROP이 비어 있지 않다', () => {

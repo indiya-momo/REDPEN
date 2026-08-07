@@ -47,7 +47,7 @@ describe('isSpacedLeftAdnominalNoiseEojeol', () => {
     expect(shouldRejectByNoiseList('붉은 표시')).toBe(true);
   });
 
-  it('관형 -적 (NNG+XSN) — 어간≥2, 명사 적(목적·면적·인적) 제외', () => {
+  it('관형 -적 (NNG+XSN) — 어간≥2, 명사 적(목적·면적·견적·국적) 제외', () => {
     for (const left of [
       '정치적',
       '사회적',
@@ -60,11 +60,28 @@ describe('isSpacedLeftAdnominalNoiseEojeol', () => {
       expect(isSpacedLeftAdnominalNoiseEojeol(left), left).toBe(true);
       expect(shouldRejectByNoiseList(`${left} 시장`), left).toBe(true);
     }
-    for (const keep of ['목적', '실적', '기적', '면적', '인적', '치적', '내적']) {
+    for (const keep of [
+      '목적',
+      '실적',
+      '기적',
+      '면적',
+      '인적',
+      '치적',
+      '견적',
+      '국적',
+      '공적',
+      '궤적',
+      '도적',
+      '무적',
+      '흔적',
+      '내적',
+    ]) {
       expect(isSpacedLeftAdnominalNoiseEojeol(keep), keep).toBe(false);
     }
     expect(shouldRejectByNoiseList('목적 의식')).toBe(false);
     expect(shouldRejectByNoiseList('면적 관리')).toBe(false);
+    expect(shouldRejectByNoiseList('견적 금액')).toBe(false);
+    expect(shouldRejectByNoiseList('국적 요건')).toBe(false);
     expect(shouldRejectByNoiseList('인적 자원')).toBe(false);
     expect(shouldRejectByNoiseList('기적 기간')).toBe(false);
     expect(shouldRejectByNoiseList('약탈적시장')).toBe(true);
