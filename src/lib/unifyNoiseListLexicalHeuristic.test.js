@@ -40,6 +40,7 @@ describe('unifyNoiseListLexicalHeuristic', () => {
       '아니',
       '사실',
       '실제',
+      '그보다',
       '뿐만',
       '단',
       '또',

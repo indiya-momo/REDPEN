@@ -5,7 +5,8 @@
  * - 스캔은 page.textLayout 우선(음절 자간 가짜 공백 제외), 없으면 text
  * - **줄 단위만 스캔** — 줄바꿈으로 생긴 붙임/띄움 이형태는 전부 제외
  * - **쉼표(,)** 는 후보에서 제외. 기호만 스캔 시 제거. **끝 조사는 키·variant에서 제거**(붉은표시가/붉은표시를 → 붉은표시)
- * - **순수 숫자 토큰·어절 앞뒤 숫자**는 제거(각주·줄번호 174노동시장 / 175노동시장 → 노동시장)
+ * - **순수 숫자 토큰·어절 앞뒤 숫자**는 제거(각주·줄번호 174노동시장 / 175노동시장 → 노동시장).
+ *   목차·쪽번호 세로선(`┃` 등)이 숫자와 한글 사이에 끼어도 동일 (`331┃케인즈` → `케인즈`).
  * - 띄움 variant: 각 덩어리 한글 2음절 이상(숫자·영문은 음절·면제 없음, 숫자만 탈락)
  * - 클러스터 키: 조사 제거 후 공백 제거 / 붙임+유효 띄움 동시
  * - 추천: 출현 수 최대 / 동률 시 붙임 — 내부 정책(규범 아님)
@@ -310,22 +311,39 @@ export function stripUnifyPunctuationNoise(s) {
 /**
  * 각주·줄번호 등 주변 숫자 제거.
  * - 순수 숫자 어절은 앞·뒤에서 제거 (174 노동 시장 → 노동 시장)
+ * - `331┃`처럼 숫자(+목차 세로선)만인 앞 어절도 제거
  * - 한글과 붙은 앞·뒤 숫자는 남은 한글이 2음절 이상일 때만 제거
- *   (174노동시장 → 노동시장, 2024년 → 유지, 코로나19 → 코로나)
+ *   (174노동시장 → 노동시장, 331┃케인즈 → 케인즈, 2024년 → 유지, 코로나19 → 코로나)
  * @param {string} s
  */
 export function stripUnifyPeripheralDigits(s) {
+  /** 쪽번호·목차 세로선 등 숫자↔한글 사이 구분 */
+  const sepClass = '│｜┃|ㆍ·.\\-‒–—';
+  const digitSepOnly = new RegExp(`^\\d+[${sepClass}]*$`, 'u');
+  const leadDigitHangul = new RegExp(
+    `^(\\d+)[${sepClass}]*([\\uAC00-\\uD7A3].*)$`,
+    'u',
+  );
+  const trailHangulDigit = new RegExp(
+    `^([\\uAC00-\\uD7A3].*?)[${sepClass}]*(\\d+)$`,
+    'u',
+  );
+
   let parts = normalizeUnifyVariant(s).split(/\s+/).filter(Boolean);
   while (parts.length && /^\d+$/.test(parts[0])) parts = parts.slice(1);
+  while (parts.length && digitSepOnly.test(parts[0])) parts = parts.slice(1);
   while (parts.length && /^\d+$/.test(parts[parts.length - 1])) {
     parts = parts.slice(0, -1);
   }
+  while (parts.length && digitSepOnly.test(parts[parts.length - 1])) {
+    parts = parts.slice(0, -1);
+  }
   parts = parts.map((part) => {
-    const lead = part.match(/^(\d+)([\uAC00-\uD7A3].*)$/u);
+    const lead = part.match(leadDigitHangul);
     if (lead && hangulSyllableCount(lead[2]) >= UNIFY_SPACED_PART_MIN_HANGUL) {
       return lead[2];
     }
-    const trail = part.match(/^([\uAC00-\uD7A3].*?)(\d+)$/u);
+    const trail = part.match(trailHangulDigit);
     if (
       trail &&
       hangulSyllableCount(trail[1]) >= UNIFY_SPACED_PART_MIN_HANGUL
