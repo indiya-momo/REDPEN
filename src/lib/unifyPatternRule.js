@@ -10,6 +10,7 @@ import {
   isValidSpacedUnifyVariant,
   normalizeUnifyVariant,
   stripTrailingJosa,
+  stripUnifyPeripheralDigits,
   stripUnifyPunctuationNoise,
   unifySpacingKey,
 } from './unifyCandidateDiscover.js';
@@ -146,6 +147,16 @@ export function isPatternRuleHeadBlacklisted(head) {
 }
 
 /**
+ * 1차 discover와 같은 표면 정규화 — 기호·주변 숫자(쪽번호┃) 제거.
+ * @param {string} s
+ */
+function cleanPatternSurface(s) {
+  return stripUnifyPeripheralDigits(
+    stripUnifyPunctuationNoise(normalizeUnifyVariant(s)),
+  );
+}
+
+/**
  * 1차 discover와 같은 제외·정규화 + 공통 잡음 경로({@link shouldRejectUnifyCandidateNoise}).
  * @param {string} matchedText
  */
@@ -153,7 +164,7 @@ export function passesPatternRuleUnifyFilter(matchedText) {
   const raw = String(matchedText ?? '');
   if (!raw.trim()) return false;
   if (isExcludedUnifyCandidateRaw(raw)) return false;
-  const cleaned = stripUnifyPunctuationNoise(raw);
+  const cleaned = cleanPatternSurface(raw);
   if (!cleaned) return false;
   if (/\s/.test(cleaned) && !isValidSpacedUnifyVariant(cleaned)) return false;
   const key = unifySpacingKey(cleaned);
@@ -653,9 +664,7 @@ function pagesForRuleCheck(pageTexts) {
  * @returns {{ key: string, to: string } | null}
  */
 function normalizeMismatchPair(from, rule) {
-  const cleaned = stripTrailingJosa(
-    normalizeUnifyVariant(stripUnifyPunctuationNoise(from)),
-  );
+  const cleaned = stripTrailingJosa(cleanPatternSurface(from));
   if (!cleaned || !passesPatternRuleUnifyFilter(cleaned)) return null;
 
   if (rule.affixType === 'prefix') {
@@ -870,9 +879,7 @@ function compliantToUnifyCluster(row) {
  * @returns {{ key: string, form: string } | null}
  */
 function normalizeCompliantForm(from, rule) {
-  const cleaned = stripTrailingJosa(
-    normalizeUnifyVariant(stripUnifyPunctuationNoise(from)),
-  );
+  const cleaned = stripTrailingJosa(cleanPatternSurface(from));
   if (!cleaned || !passesPatternRuleUnifyFilter(cleaned)) return null;
 
   const wantSpaced = rule.direction === 'spaced';

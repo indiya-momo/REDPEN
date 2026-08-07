@@ -166,6 +166,35 @@ describe('unifyPatternRule', () => {
     expect(passesPatternRuleUnifyFilter('광고니까')).toBe(false);
   });
 
+  it('2차 패턴: 쪽번호+┃ 접두는 벗겨 케인즈 경제로 정규화한다', () => {
+    expect(passesPatternRuleUnifyFilter('331┃케인즈 경제')).toBe(true);
+    const mismatches = findPatternMismatches(
+      [
+        {
+          pageNum: 1,
+          text: '케인즈경제와 331┃케인즈 경제를 비교한다.',
+        },
+      ],
+      {
+        id: 'suffix:경제:glued',
+        template: '@경제',
+        affix: '경제',
+        affixType: 'suffix',
+        direction: 'glued',
+        confirmedFrom: '세계경제',
+        confirmedKey: '세계경제',
+      },
+    );
+    const froms = mismatches.map((m) => m.from);
+    expect(froms).toContain('케인즈 경제');
+    expect(froms.some((f) => /\d/.test(f) || /┃/.test(f))).toBe(false);
+    const groups = buildPatternRulePreviewGroups(mismatches);
+    const labels = groups.flatMap((g) =>
+      (g.clusters ?? []).flatMap((c) => c.variants ?? []),
+    );
+    expect(labels.some((v) => String(v).includes('┃'))).toBe(false);
+  });
+
   it('잡음·관형 head는 @사람 패턴 mismatch에서 빠진다', () => {
     const mismatches = findPatternMismatches(
       [

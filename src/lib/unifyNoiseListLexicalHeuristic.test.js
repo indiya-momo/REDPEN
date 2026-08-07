@@ -65,12 +65,18 @@ describe('unifyNoiseListLexicalHeuristic', () => {
       '정작',
       '이른바',
       '꽤나',
+      '단언컨대',
+      '예로',
       '이로써',
+      '이처럼',
       '앞서',
       '지금',
       '현재',
       '줄곧',
       '즉시',
+      '때로',
+      '일찌감치',
+      '빨리',
     ]) {
       expect(SPACED_CLOSED_ADVERBS.has(w), w).toBe(true);
       expect(isSpacedClosedAdverbNoiseEojeol(w), w).toBe(true);
