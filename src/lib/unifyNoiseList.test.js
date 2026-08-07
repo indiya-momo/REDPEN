@@ -29,7 +29,7 @@ describe('unifyNoiseList (1차 정적 리스트)', () => {
     expect(hasUnifyNoiseDenyEojeol('대부분')).toBe(true);
     expect(hasUnifyNoiseDenyEojeol('일부')).toBe(true);
     expect(hasUnifyNoiseDenyEojeol('공무원')).toBe(false);
-    // 합의(2026-08-07): 예외 ≥100 → 형태소 재검토. depressione 수확 후 104 — 알람 120.
+    // 합의(2026-08-07): 예외 ≥100 → 형태소 재검토. 재검토 후 116 — 알람 120.
     expect(
       UNIFY_NOISE_EXCEPTION_EOJEOLS.size,
       `예외 ${UNIFY_NOISE_EXCEPTION_EOJEOLS.size}개 ≥120 — 형태소(서버 C·DEV 2차 boot) 방향 재검토 시점`,
@@ -132,8 +132,9 @@ describe('unifyNoiseList (1차 정적 리스트)', () => {
     expect(isSpacedLeftJosaNoiseEojeol('아시아의')).toBe(true);
     expect(isSpacedLeftJosaNoiseEojeol('경제라도')).toBe(true);
     expect(isSpacedLeftJosaNoiseEojeol('규제와')).toBe(true);
-    // 거+의 오탐 가드(조사 휴리스틱만) — 예외 표면 DROP은 별도
-    expect(isSpacedLeftJosaNoiseEojeol('거의')).toBe(false);
+    // 의 어간≥1 — 거의(거+의) DROP. 합의는 어휘 명사 제외.
+    expect(isSpacedLeftJosaNoiseEojeol('거의')).toBe(true);
+    expect(isSpacedLeftJosaNoiseEojeol('합의')).toBe(false);
     expect(isSpacedLeftJosaNoiseEojeol('사과')).toBe(false);
     expect(isSpacedLeftJosaNoiseEojeol('주식시장이')).toBe(true);
     expect(isSpacedLeftJosaNoiseEojeol('부문도')).toBe(true);

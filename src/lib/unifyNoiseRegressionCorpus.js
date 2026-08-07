@@ -247,8 +247,8 @@ export const UNIFY_NOISE_REGRESSION_DROP = Object.freeze([
   { spaced: '주식시장이 붕괴', note: '긴 체언+격조사 이' },
   { spaced: '호황과 붕괴', note: '2음절+과' },
   { spaced: '부문도 붕괴', note: '보조사 도' },
-  { spaced: '거의 붕괴', note: '부사 거의(예외) ≠ 거+의만 가드' },
-  { spaced: '거의 성장', note: '부사 거의(예외)' },
+  { spaced: '거의 붕괴', note: '거의=거+의 조사 휴리스틱(재검토)' },
+  { spaced: '거의 성장', note: '거의=거+의 조사 휴리스틱(재검토)' },
   { spaced: '되자 상황', note: '용언 연결 되자(예외)' },
   { spaced: '드러난 상황', note: '관형 -난 드러난' },
   { spaced: '일어난 상황', note: '관형 -난 일어난' },
@@ -316,10 +316,20 @@ export const UNIFY_NOISE_REGRESSION_DROP = Object.freeze([
   { spaced: '취한 정책', note: '관형 취한 어간1(verbalTail)' },
   { spaced: '직접 대출', note: '부사 직접(예외)' },
   { spaced: '계속 성장', note: '부사 계속(예외)' },
-  { spaced: '집의 가치', note: '조사조각 집의(예외)' },
+  { spaced: '집의 가치', note: '조사조각 집의(의 어간≥1)' },
   { spaced: '림자 금융', note: 'OCR 조각 림자(예외)' },
   { spaced: '년대 금융', note: 'OCR 조각 년대(예외)' },
   { spaced: '단위든 통화', note: '선택 든(모음어간 이든)' },
+  // 2026-08-07 추가 원고 수확
+  { spaced: '당신 생각', note: '대명사 당신(예외)' },
+  { spaced: '오직 사람', note: '부사 오직(예외)' },
+  { spaced: '함께 성장', note: '부사 함께(예외)' },
+  { spaced: '사회적 금융', note: '접미 -적 닫힌(verbalTail)' },
+  { spaced: '인간적 관계', note: '접미 -적 닫힌(verbalTail)' },
+  { spaced: '이렇다 시장', note: '닫힌 용언 이렇다(verbalTail)' },
+  { spaced: '는다 시장', note: '용언 종결 조각 는다(연결 완전일치)' },
+  { spaced: '라고 금융', note: '인용 라고(verbalTail)' },
+  { spaced: '아닌 사람', note: '관형 아닌(verbalTail·재검토)' },
 ]);
 
 /**

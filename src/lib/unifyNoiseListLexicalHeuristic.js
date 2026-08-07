@@ -188,7 +188,9 @@ export function isSpacedVerbalConnectiveNoiseEojeol(eojeol) {
   const h = hangulOnlyNoise(eojeol);
   if (!h || h.length < 2) return false;
   for (const tail of SPACED_VERBAL_CONNECTIVE_TAILS) {
-    if (!h.endsWith(tail) || h.length <= tail.length) continue;
+    if (!h.endsWith(tail)) continue;
+    // OCR·단독 어미 조각(는다·었고) — 완전일치도 DROP
+    if (h.length === tail.length) return true;
     const stemLen = hangulOnlyNoise(h.slice(0, -tail.length)).length;
     const minStem = SPACED_VERBAL_CONNECTIVE_MIN_STEM[tail] ?? 1;
     if (stemLen >= minStem) return true;
