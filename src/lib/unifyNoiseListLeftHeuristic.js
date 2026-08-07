@@ -26,6 +26,7 @@ const SPACED_LEFT_SHORT_JOSA = Object.freeze(
     '이라도',
     '이나',
     '이든',
+    '든',
     '만이',
     '라면',
     '라도',
@@ -64,7 +65,7 @@ const SPACED_LEFT_UNLIMITED_STEM_JOSA = new Set([
   '도',
   '만',
 ]);
-/** 관형격·접속·선택(나)·조건(라면)·로 — 어간 2음절 이상 */
+/** 관형격·접속·선택(나)·조건(라면)·로·든(모음어간 이든) — 어간 2음절 이상 */
 const SPACED_LEFT_MIN2_STEM_JOSA = new Set([
   '의',
   '와',
@@ -72,6 +73,7 @@ const SPACED_LEFT_MIN2_STEM_JOSA = new Set([
   '나',
   '라면',
   '로',
+  '든',
 ]);
 const SPACED_LEFT_TOPIC_JOSA = new Set(['은', '는']);
 const SPACED_LEFT_PRONOUN_STEMS = new Set(['나', '너', '저', '그', '이']);

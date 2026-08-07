@@ -101,6 +101,7 @@ const SPACED_CLOSED_VERBAL_EOJEOL_LIST = Object.freeze([
   '있다',
   '아니다',
   '된다',
+  '같다',
 ]);
 
 /** @type {ReadonlySet<string>} */
@@ -140,7 +141,7 @@ export function isSpacedAdverbGeNoiseEojeol(eojeol) {
   return !SPACED_ADVERB_GE_NOUN_EXCLUDE.has(h);
 }
 
-/** 용언 연결·종결 꼬리 (낮았고·오르면서·않았다·터지자·않는다·없으면…) */
+/** 용언 연결·종결 꼬리 (낮았고·오르면서·않았다·터지자·않는다·없으면·떠들어댔다…) */
 const SPACED_VERBAL_CONNECTIVE_TAILS = Object.freeze(
   [
     '았고',
@@ -149,12 +150,14 @@ const SPACED_VERBAL_CONNECTIVE_TAILS = Object.freeze(
     '으면서',
     '면서',
     '으면',
+    '으며',
     '았다',
     '었다',
     '였다',
     '렸다',
     '랐다',
     '왔다',
+    '댔다',
     '는다',
     '든다',
     '겠다',
@@ -162,16 +165,18 @@ const SPACED_VERBAL_CONNECTIVE_TAILS = Object.freeze(
     '을까',
     '일까',
     '면',
+    '며',
     '고',
     '자',
   ].toSorted((a, b) => b.length - a.length),
 );
 
-/** 꼬리별 최소 어간 — `자`·`고`·`면`은 투자·사고·화면 등 명사 오탐 방지 */
+/** 꼬리별 최소 어간 — `자`·`고`·`면`·`며`는 투자·사고·화면·며느리 등 명사 오탐 방지 */
 const SPACED_VERBAL_CONNECTIVE_MIN_STEM = Object.freeze({
   자: 2,
   고: 2,
   면: 2,
+  며: 2,
 });
 
 /**
