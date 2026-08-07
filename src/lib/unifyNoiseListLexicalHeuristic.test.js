@@ -3,6 +3,7 @@ import {
   isSpacedAdverbGeNoiseEojeol,
   isSpacedAdverbHiNoiseEojeol,
   isSpacedClosedConjunctionNoiseEojeol,
+  isSpacedOrdinalNoiseEojeol,
   SPACED_ADVERB_GE_NOUN_EXCLUDE,
   SPACED_CLOSED_CONJUNCTIONS,
 } from './unifyNoiseListLexicalHeuristic.js';
@@ -73,6 +74,21 @@ describe('unifyNoiseListLexicalHeuristic', () => {
     expect(shouldRejectByNoiseList('가게 주인')).toBe(false);
     expect(shouldRejectByNoiseList('집게 도구')).toBe(false);
     expect(shouldRejectByNoiseList('성장 단계')).toBe(false);
+  });
+
+  it('서수 -째 — 예외 JSON 없이 DROP (Kiwi NR|…+XSN)', () => {
+    expect(isSpacedOrdinalNoiseEojeol('첫째')).toBe(true);
+    expect(isSpacedOrdinalNoiseEojeol('둘째')).toBe(true);
+    expect(isSpacedOrdinalNoiseEojeol('일곱째')).toBe(true);
+    expect(isSpacedOrdinalNoiseEojeol('스물한째')).toBe(true);
+    expect(isSpacedOrdinalNoiseEojeol('며칠째')).toBe(true);
+    expect(isSpacedOrdinalNoiseEojeol('째')).toBe(false);
+    expect(isSpacedOrdinalNoiseEojeol('시장')).toBe(false);
+    expect(hasUnifyNoiseDenyEojeol('첫째')).toBe(false);
+    expect(hasUnifyNoiseDenyEojeol('일곱째')).toBe(false);
+    expect(shouldRejectByNoiseList('첫째 시장')).toBe(true);
+    expect(shouldRejectByNoiseList('일곱째 정책')).toBe(true);
+    expect(shouldRejectByNoiseList('시장 둘째')).toBe(true);
   });
 
   it('중복 예외 제거분 — 관형·꼬리로 유지', () => {

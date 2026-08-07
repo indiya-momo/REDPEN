@@ -8,6 +8,8 @@ globs:
   - src/lib/unifyNoiseRegressionCorpus.js
   - src/lib/unifyNoiseRegressionCorpus.test.js
   - scripts/harvest-unify-noise-list.mjs
+  - scripts/sync-unify-noise-list.mjs
+  - scripts/export-unify-noise-list-sheet.mjs
   - src/lib/unifyNoiseListLeftHeuristic.js
   - src/lib/unifyNoiseListAdnominalHeuristic.js
   - src/lib/unifyNoiseListLexicalHeuristic.js
@@ -23,20 +25,21 @@ alwaysApply: false
 
 | 구간 | Kiwi | 하는 일 |
 |------|------|---------|
-| **1차 noise-list 매칭** | 안 씀 (이 모듈 한정) | `unify-noise-list.json` + 본보조·조사·관형형(는/던) 휴리스틱. 찾기 흐름의 조사/경계 Kiwi(`VITE_UNIFY_KIWI_JOSA`·`VITE_SPELLING_KIWI_BOUNDARY`)와는 별개 |
+| **1차 noise-list 매칭** | 안 씀 (이 모듈 한정) | `unify-noise-list.json` + 본보조·조사·관형형(는/던)·서수(-째)·관형 -적(어간≥2) 등 휴리스틱. 찾기 흐름의 조사/경계 Kiwi와는 별개 |
 | **수확** (`npm run kiwi:harvest-noise-list`) | 씀 | 예외 어절·verbal/copula 꼬리를 JSON에 반영 |
+| **시트 sync** (`npm run sync-unify-noise-list`) | 안 씀 | 구글 시트/엑셀/CSV → `unify-noise-list.json` (사람 확정 목록). export 시드에 `kiwi_pattern`·`kiwi_morph`·`kiwi_role` 참고 열 포함(sync는 kind/surface/enabled만) |
 | **2차** (목록 후) | ready일 때만 | N+N/V+V POS — `가진`(종성ㄴ) 등 리스트 밖 관형. **`JOSA`/`BOUNDARY`/`NOISE_FILTER` 기본 OFF면 boot 안 되어 2차 사실상 비활성** → 1차 리스트가 주 안전망 |
 
 ## 변경 전 체크 (필수)
 
-1. 이 변경이 `kiwi:harvest-noise-list`로 커버 가능한가? → **먼저 수확 시도**
-2. 런타임에 새 배열·정규식·조사 리스트를 추가하려 하는가? → **기본 금지**. JSON/`--add`로 부족하는지 확인
+1. 이 변경이 `kiwi:harvest-noise-list` 또는 **시트 sync**로 커버 가능한가? → **먼저 수확·시트 시도**
+2. 런타임에 새 배열·정규식·조사 리스트를 추가하려 하는가? → **기본 금지**. JSON/`--add`/시트로 부족하는지 확인
 3. `unifyNoiseListData.js`에는 **JSON에서 파생된 것 + 꼬리 매칭만**. 하드코딩 품사/조사 휴리스틱 금지
 4. 불가피한 런타임 휴리스틱은 `unifyNoiseList.js` / `LeftHeuristic` / `AdnominalHeuristic`에만, 주석에 `source: manual-heuristic`과 이유를 남긴다
 5. **`unifyNoiseRegressionCorpus.js` KEEP/DROP을 갱신·통과** — 캐나다/붉은형 회귀 방지 (`가진 사람`은 `DROP_KIWI_ADNOMINAL`)
 6. **예외 ≥100** → 테스트가 깨지며 알람. **사용자에게 알리고** 서버 C→D3 / DEV 2차 boot 재검토. `--add`만 하고 넘어가지 말 것.  
    (용언·관형 표면은 Kiwi 감사 후 `verbalTails`로 옮기는 것을 우선 — `scripts/audit-unify-noise-exceptions.mjs`.)  
-   (2026-08-07 예외 재검토 후 116개·테스트 알람 상한 120. 정책 취지·100 기준은 동일 — 서버 C→D3 / DEV 2차 boot 재검토 유지.)  
+   (2026-08-07 예외 재검토 후 회귀 수정: 118개·테스트 알람 상한 120. 정책 취지·100 기준은 동일 — 서버 C→D3 / DEV 2차 boot 재검토 유지.)  
    (C = 서버 C Kiwi morph 호스트, D3 = C 검증 후 `NOISE_FILTER` 기본 ON. reading-order의 C→B와 무관 — design doc §0.0·§8)  
    **성능 상한이 아님** — 리스트 유지보수·형태소 경로 재검토용 정책 알람. 매칭 타임아웃을 예외 개수에 걸지 말 것.
 

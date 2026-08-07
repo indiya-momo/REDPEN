@@ -12,6 +12,7 @@
  * `낸`(오려낸·알아낸) — 내다 관형형. 어간 ≥2.
  * `난`(드러난·일어난·나타난) — 나다 관형형. 어간 ≥2 (`재난` 어간1 제외).
  * `인`(휩싸인·쌓인…) — 히다/이다 관형. 어간 ≥2 (`개인`·`요인` 어간1 제외).
+ *   `…국인`(한국인·외국인)은 국가+인 명사복합 → 닫힌 제외.
  * `쓴`(휩쓴·가로쓴…) — 쓸다 관형. 어간 ≥1.
  * `린`(굶주린·시달린) — ㄹ 불규칙 관형. 어간 ≥2 (`어린` 어간1·예외).
  * `른`(게으른·배부른) — 르+ㄴ. 어간 ≥2.
@@ -19,10 +20,11 @@
  * `픈`(배고픈) — 프+ㄴ. 어간 ≥2 (`바쁜` 어간1·예외).
  * `싼`(헐싼…) — 싸+ㄴ. 어간 ≥2 (`비싼` 어간1·예외).
  * `적인`(직접적인·효과적인) — 적+관형 인. 어간 ≥1 (`적인` 단독 제외는 길이).
+ * `적`(정치적·사회적·자본주의적) — NNG+XSN. 어간 ≥2.
+ *   명사 적(목적·실적·기적·면적·인적·치적)은 어간 1이라 제외. 시트/`--add`로 어간1 관형만 보완.
  * `스런`(고통스런…) — 스럽다 준말 관형. 어간 ≥1 (`스러운`은 verbalTails).
  * 조사 오탐(`붉`+`은`) 가드는 {@link ./unifyNoiseListLeftHeuristic.js}가 별도로 담당.
  * `가진`·`만한`(종성 ㄴ만)은 시민·북한과 겹쳐 여기 밖 → verbalTails·예외 수확.
- * `-적` 맨꼬리 일반화 금지 — `약탈적`·닫힌 표면만 verbalTails 수확.
  */
 import { hangulOnlyNoise } from './unifyNoiseListData.js';
 
@@ -46,6 +48,7 @@ const ADNOMINAL_TAILS = Object.freeze([
   '온',
   '픈',
   '싼',
+  '적',
 ]);
 
 /** 어간 최소 음절 — 짧은 체언 오탐 방지 */
@@ -64,6 +67,7 @@ const ADNOMINAL_TAIL_MIN_STEM = Object.freeze({
   쓴: 1,
   적인: 1,
   스런: 1,
+  적: 2,
 });
 
 /**
@@ -75,6 +79,14 @@ const SPACED_ADNOMINAL_HAN_NOUN_EXCLUDE = Object.freeze(
 );
 
 /**
+ * -인 관형 오탐 — 국가+인 명사복합 (한국+인 ≠ 히다 관형).
+ * @param {string} h hangul-only
+ */
+function isNationalityInNoun(h) {
+  return h.length >= 3 && h.endsWith('국인');
+}
+
+/**
  * @param {string} eojeol
  * @returns {boolean}
  */
@@ -82,6 +94,7 @@ export function isSpacedLeftAdnominalNoiseEojeol(eojeol) {
   const h = hangulOnlyNoise(eojeol);
   if (!h || h.length < 2) return false;
   if (SPACED_ADNOMINAL_HAN_NOUN_EXCLUDE.has(h)) return false;
+  if (isNationalityInNoun(h)) return false;
 
   for (const tail of ADNOMINAL_TAILS) {
     if (!h.endsWith(tail)) continue;
@@ -91,5 +104,40 @@ export function isSpacedLeftAdnominalNoiseEojeol(eojeol) {
     if (stemLen >= minStem) return true;
   }
 
+  return false;
+}
+
+/**
+ * 붙임키 Surface용 — `-적`/`-적인`만.
+ * 전체 관형 휴리스틱을 붙임키에 쓰면 `가게주인`이 `…인`으로 오탐한다.
+ * @param {string} eojeolOrKey
+ */
+export function isSpacedJeokAdnominalNoiseEojeol(eojeolOrKey) {
+  const h = hangulOnlyNoise(eojeolOrKey);
+  if (!h || h.length < 2) return false;
+  for (const tail of ['적인', '적']) {
+    if (!h.endsWith(tail)) continue;
+    const stemLen = hangulOnlyNoise(h.slice(0, -tail.length)).length;
+    const minStem = ADNOMINAL_TAIL_MIN_STEM[tail] ?? 1;
+    if (stemLen >= minStem) return true;
+  }
+  return false;
+}
+
+/**
+ * 붙임키 = (관형 휴리스틱 왼쪽) + (한글 2음절+ 오른쪽).
+ * verbalTailPlusNounInfix와 동일 역할 — `-적` 등을 JSON에서 휴리스틱으로 옮긴 뒤
+ * `약탈적시장` 같은 붙임 후보를 유지한다.
+ * @param {string} eojeolOrKey
+ */
+export function matchesAdnominalPlusNounInfix(eojeolOrKey) {
+  const h = hangulOnlyNoise(eojeolOrKey);
+  if (h.length < 4) return false;
+  for (let split = 2; split <= h.length - 2; split += 1) {
+    const left = h.slice(0, split);
+    const right = h.slice(split);
+    if (right.length < 2) continue;
+    if (isSpacedLeftAdnominalNoiseEojeol(left)) return true;
+  }
   return false;
 }

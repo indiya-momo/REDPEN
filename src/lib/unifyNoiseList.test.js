@@ -12,6 +12,7 @@ import {
   shouldRejectUnifyCandidateNoise,
   spacedVariantHitsNoiseDenylist,
 } from './unifyNoiseList.js';
+import { isSpacedLeftAdnominalNoiseEojeol } from './unifyNoiseListAdnominalHeuristic.js';
 
 describe('unifyNoiseList (1차 정적 리스트)', () => {
   it('예외·꼬리·본보조 ref 메타가 있다', () => {
@@ -29,7 +30,7 @@ describe('unifyNoiseList (1차 정적 리스트)', () => {
     expect(hasUnifyNoiseDenyEojeol('대부분')).toBe(true);
     expect(hasUnifyNoiseDenyEojeol('일부')).toBe(true);
     expect(hasUnifyNoiseDenyEojeol('공무원')).toBe(false);
-    // 합의(2026-08-07): 예외 ≥100 → 형태소 재검토. 재검토 후 116 — 알람 120.
+    // 합의(2026-08-07): 예외 ≥100 → 형태소 재검토. 서수 -째 휴리스틱 이관 후 예외 감소 — 알람 120.
     expect(
       UNIFY_NOISE_EXCEPTION_EOJEOLS.size,
       `예외 ${UNIFY_NOISE_EXCEPTION_EOJEOLS.size}개 ≥120 — 형태소(서버 C·DEV 2차 boot) 방향 재검토 시점`,
@@ -132,9 +133,10 @@ describe('unifyNoiseList (1차 정적 리스트)', () => {
     expect(isSpacedLeftJosaNoiseEojeol('아시아의')).toBe(true);
     expect(isSpacedLeftJosaNoiseEojeol('경제라도')).toBe(true);
     expect(isSpacedLeftJosaNoiseEojeol('규제와')).toBe(true);
-    // 의 어간≥1 — 거의(거+의) DROP. 합의는 어휘 명사 제외.
-    expect(isSpacedLeftJosaNoiseEojeol('거의')).toBe(true);
+    // 의 어간≥2 — 거의·집의·국의는 예외 등재. 합의·회의는 어휘 명사.
+    expect(isSpacedLeftJosaNoiseEojeol('거의')).toBe(false);
     expect(isSpacedLeftJosaNoiseEojeol('합의')).toBe(false);
+    expect(isSpacedLeftJosaNoiseEojeol('회의')).toBe(false);
     expect(isSpacedLeftJosaNoiseEojeol('사과')).toBe(false);
     expect(isSpacedLeftJosaNoiseEojeol('주식시장이')).toBe(true);
     expect(isSpacedLeftJosaNoiseEojeol('부문도')).toBe(true);
@@ -168,6 +170,14 @@ describe('unifyNoiseList (1차 정적 리스트)', () => {
     expect(shouldRejectByNoiseList('호황과 붕괴')).toBe(true);
     expect(shouldRejectByNoiseList('부문도 붕괴')).toBe(true);
     expect(shouldRejectByNoiseList('거의 붕괴')).toBe(true);
+    expect(shouldRejectByNoiseList('외국인 학생')).toBe(false);
+    expect(shouldRejectByNoiseList('한국인 학생')).toBe(false);
+    expect(shouldRejectByNoiseList('회의 참석')).toBe(false);
+    expect(shouldRejectByNoiseList('인적 자원')).toBe(false);
+    expect(shouldRejectByNoiseListEojeol('인적')).toBe(false);
+    expect(shouldRejectByNoiseListEojeol('정치적')).toBe(true);
+    expect(isSpacedLeftAdnominalNoiseEojeol('외국인')).toBe(false);
+    expect(isSpacedLeftAdnominalNoiseEojeol('휩싸인')).toBe(true);
     expect(shouldRejectByNoiseList('되자 상황')).toBe(true);
     expect(shouldRejectByNoiseList('드러난 상황')).toBe(true);
     expect(shouldRejectByNoiseList('일어난 상황')).toBe(true);

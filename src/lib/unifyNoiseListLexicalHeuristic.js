@@ -208,3 +208,16 @@ export function isSpacedDependentSuffixNoiseEojeol(eojeol) {
   if (!h || !h.endsWith('짜리')) return false;
   return hangulOnlyNoise(h.slice(0, -2)).length >= 1;
 }
+
+/**
+ * 서수 접미 -째 (첫째·일곱째·스물한째·며칠째…).
+ * source: manual-heuristic — Kiwi: NR | NR+XSN(째) | MM+XSN(째).
+ * 생산적이라 예외 JSON 나열 대신 끝음절 매칭. 시트/`--add`로 보완·KEEP 가능.
+ * @param {string} eojeol
+ */
+export function isSpacedOrdinalNoiseEojeol(eojeol) {
+  const h = hangulOnlyNoise(eojeol);
+  if (!h || h.length < 2) return false;
+  if (!h.endsWith('째')) return false;
+  return hangulOnlyNoise(h.slice(0, -1)).length >= 1;
+}

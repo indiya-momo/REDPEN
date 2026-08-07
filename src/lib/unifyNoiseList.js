@@ -25,13 +25,18 @@ import {
   shouldRejectNoiseListDataSurface,
 } from './unifyNoiseListData.js';
 import { isSpacedLeftJosaNoiseEojeol } from './unifyNoiseListLeftHeuristic.js';
-import { isSpacedLeftAdnominalNoiseEojeol } from './unifyNoiseListAdnominalHeuristic.js';
+import {
+  isSpacedJeokAdnominalNoiseEojeol,
+  isSpacedLeftAdnominalNoiseEojeol,
+  matchesAdnominalPlusNounInfix,
+} from './unifyNoiseListAdnominalHeuristic.js';
 import {
   isSpacedAdverbGeNoiseEojeol,
   isSpacedAdverbHiNoiseEojeol,
   isSpacedClosedConjunctionNoiseEojeol,
   isSpacedClosedVerbalNoiseEojeol,
   isSpacedDependentSuffixNoiseEojeol,
+  isSpacedOrdinalNoiseEojeol,
   isSpacedVerbalConnectiveNoiseEojeol,
   SPACED_ADVERB_GE_NOUN_EXCLUDE,
 } from './unifyNoiseListLexicalHeuristic.js';
@@ -73,9 +78,9 @@ export function spacedVariantHitsNoiseDenylist(spacedVariant) {
 }
 
 /**
- * 띄움 어절 잡음 — 리스트 표면 + 조사·관형·접속·부사(-히/-게).
+ * 띄움 어절 잡음 — 리스트 표면 + 조사·관형·접속·부사(-히/-게)·서수(-째).
  * 왼쪽·오른쪽 동일 적용 ({@link shouldRejectByNoiseList}).
- * source: manual-heuristic (조사·관형·접속·-히/-게) + JSON/본보조 (표면).
+ * source: manual-heuristic (조사·관형·접속·-히/-게·-째) + JSON/본보조 (표면).
  * @param {string} eojeol
  */
 export function isSpacedLeftNoiseEojeol(eojeol) {
@@ -90,6 +95,7 @@ export function isSpacedLeftNoiseEojeol(eojeol) {
   if (isSpacedAdverbGeNoiseEojeol(h)) return true;
   if (isSpacedVerbalConnectiveNoiseEojeol(h)) return true;
   if (isSpacedDependentSuffixNoiseEojeol(h)) return true;
+  if (isSpacedOrdinalNoiseEojeol(h)) return true;
   return false;
 }
 
@@ -108,6 +114,10 @@ export function shouldRejectByNoiseListSurface(eojeolOrKey) {
   if (!h) return false;
   // source: manual-heuristic — verb-gada「가게」= 가+게 EC vs 명사 가게
   if (SPACED_ADVERB_GE_NOUN_EXCLUDE.has(h)) return false;
+  // `-적`/`-적인`만 전체 키에 적용 (전 관형 적용 시 가게주인→…인 오탐)
+  if (isSpacedJeokAdnominalNoiseEojeol(h)) return true;
+  // 붙임키 약탈적시장 — JSON -적 이관분
+  if (matchesAdnominalPlusNounInfix(h)) return true;
   return matchesBonBojoVerbalConnectiveHeuristic(h);
 }
 
@@ -120,6 +130,7 @@ export function shouldRejectByNoiseListEojeol(eojeolOrKey) {
   if (shouldRejectByNoiseListSurface(eojeolOrKey)) return true;
   const h = hangulOnlyNoise(eojeolOrKey);
   if (!h) return false;
+  if (isSpacedLeftAdnominalNoiseEojeol(h)) return true;
   // 붙임키 기업이든·캐나다에 — 띄움 칸과 동일 조사 휴리스틱
   if (isSpacedLeftJosaNoiseEojeol(h)) return true;
   if (isUnifyJosaGluedNoiseKey(h)) return true;
