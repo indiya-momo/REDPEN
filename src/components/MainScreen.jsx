@@ -1555,7 +1555,14 @@ export default function MainScreen({
     if (guestWorkGuide.showRuleSetSaveGuide) {
       guestWorkGuide.dismiss(WORK_GUIDE_KEYS.RULE_SET_SAVE);
     }
-    if (guestBrowseBlocksResultExport()) return;
+    if (guestBrowseBlocksResultExport()) {
+      void showAppAlert({
+        title: '검수 결과 다운로드',
+        message:
+          '둘러보기에서는 엑셀 파일을 저장할 수 없습니다.\n로그인 후 이용해 주세요.',
+      });
+      return;
+    }
     if (!spellingExportEnabled) return;
     const recommendEntries = unifyCandidatePreviewResults.map((group) => ({
       group,
@@ -1565,6 +1572,11 @@ export default function MainScreen({
       !ruleCheck.consistencyCheckDone &&
       recommendEntries.length === 0
     ) {
+      void showAppAlert({
+        title: '검수 결과 다운로드',
+        message:
+          '표기 통일 추천 찾기 또는 기준 검수가 끝난 뒤 받을 수 있습니다.',
+      });
       return;
     }
     const filename = buildProofreadExportFilename(
@@ -1576,9 +1588,9 @@ export default function MainScreen({
       authEmail,
       exportTab: 'consistency',
     })
-      .then((allowed) => {
+      .then(async (allowed) => {
         if (!allowed) return;
-        return exportConsistencyResults({
+        const model = await exportConsistencyResults({
           entries: ruleCheck.consistencyCheckDone
             ? consistencyTabEntries
             : [],
@@ -1609,8 +1621,23 @@ export default function MainScreen({
           customRules,
           filename,
         });
+        const hasRecommend = Boolean(model?.recommend?.rows?.length);
+        const hasRegistered = (model?.rows ?? []).length > 0;
+        if (!hasRecommend && !hasRegistered) {
+          await showAppAlert({
+            title: '검수 결과 다운로드',
+            message: '내보낼 검수 결과가 없습니다.',
+          });
+        }
       })
-      .catch((err) => console.error('일관성 엑셀보내기 오류:', err));
+      .catch((err) => {
+        console.error('일관성 엑셀보내기 오류:', err);
+        void showAppAlert({
+          title: '검수 결과 다운로드',
+          message:
+            '엑셀 파일을 만드는 중 오류가 났습니다. 잠시 후 다시 시도해 주세요.',
+        });
+      });
   }, [
     guestWorkGuide.showRuleSetSaveGuide,
     guestWorkGuide.dismiss,
