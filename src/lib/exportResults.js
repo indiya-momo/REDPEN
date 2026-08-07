@@ -236,10 +236,12 @@ export function downloadXlsxBuffer(buffer, filename) {
   const a = document.createElement('a');
   a.href = url;
   a.download = filename;
+  a.rel = 'noopener';
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  // 클릭 직후 즉시 revoke하면 큰 xlsx에서 브라우저가 다운로드를 취소하는 경우가 있음
+  window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }
 
 // ── 맞춤법 조판 ───────────────────────────────────────────────────
