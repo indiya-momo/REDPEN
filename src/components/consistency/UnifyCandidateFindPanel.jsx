@@ -1192,18 +1192,10 @@ export default function UnifyCandidateFindPanel({
       setPhase2ConditionsExpanded(false);
       phase2PromptedRef.current = false;
 
-      // 목록·로딩 해제 먼저 (phase2 대기 중 finding 고착 방지)
-      // Preview onListReady는 phase2 후 한 번만.
-      const softEarly = buildSeriesMajoritySoftPreselect(workingGroups);
-      const snapEarly = summarizeUnifyListSnapshot(workingGroups);
-      setFindListGroups(workingGroups);
-      setHiddenPdfKeys(snapEarly.hiddenPdfKeys);
-      setRegisteredVariants(new Map());
-      setPreSelected(softEarly);
-      setSearched(true);
+      // finding만 먼저 해제 (phase2 대기 중 ··· 고착 방지).
+      // 목록(searched)은 phase2 후 1회만 — 조기 공개+재설정이 1차가 두 번 나온 것처럼 보임.
       setFinding(false);
       bench.mark('6_list_ui_ready');
-      // phase2 전에 스피너 해제 페인트 보장
       await afterPaint();
 
       let phase2Applied = false;
@@ -1217,27 +1209,19 @@ export default function UnifyCandidateFindPanel({
         phase2Applied = phase2.kiwi.applied;
         docSuffixDropped = phase2.docSuffix.dropped;
         if (import.meta.env.DEV) {
-          const { collectDocSuffixContextFromPageTexts } = await import(
-            '../../lib/unifyNoiseDocSuffixOrphan.js'
-          );
-          const { witnesses, adjacentPairs } =
-            collectDocSuffixContextFromPageTexts(pageTexts);
           const keys = workingGroups.flatMap((g) =>
             (g.clusters ?? []).map((c) => String(c.key ?? '')),
           );
           console.info('[unify-doc-suffix-diag]', {
             applied: phase2.docSuffix.applied,
             dropped: docSuffixDropped,
+            kiwiDropped: phase2.kiwi.dropped,
             still로그램지출: keys.some(
               (k) => k.replace(/\s+/g, '') === '로그램지출',
             ),
             still비스지출: keys.some(
               (k) => k.replace(/\s+/g, '') === '비스지출',
             ),
-            adjacent비스: adjacentPairs.filter((p) => p.curr === '비스'),
-            adjacent로그램: adjacentPairs.filter((p) => p.curr === '로그램'),
-            has프로그램: [...witnesses].some((w) => w.includes('프로그램')),
-            has서비스: [...witnesses].some((w) => w.includes('서비스')),
           });
         }
       } catch (err) {
@@ -1253,6 +1237,7 @@ export default function UnifyCandidateFindPanel({
       setHiddenPdfKeys(snap.hiddenPdfKeys);
       setRegisteredVariants(new Map());
       setPreSelected(softPre);
+      setSearched(true);
       bench.mark('7_list_after_phase2');
 
       await afterPaint();
