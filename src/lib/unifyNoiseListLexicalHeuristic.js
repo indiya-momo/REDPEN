@@ -154,6 +154,8 @@ const SPACED_CLOSED_ADVERB_LIST = Object.freeze([
   '전혀',
   '홀로',
   '흔히들',
+  '항상',
+  '최근',
   // 문장 연결·결과
   '이로써',
   '이처럼',
@@ -210,6 +212,7 @@ const SPACED_CLOSED_VERBAL_EOJEOL_LIST = Object.freeze([
   '아니다',
   '된다',
   '같다',
+  '많다',
 ]);
 
 /** @type {ReadonlySet<string>} */
