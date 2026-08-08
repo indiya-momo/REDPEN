@@ -18,6 +18,8 @@
  * 2) 인접: 공백 앞 어절 P(길이 무관)+**왼쪽 조각** F 이음이 문서 어절과 같거나
  *    그 접두이면 F는 잘림 (`환매조`+`건부` → `환매조건부`).
  *    같은 줄 연속 토큰 + **이전 줄 마지막 ↔ 현재 줄 첫** (OCR 줄바꿈 앞잘림).
+ *    줄바꿈 인접은 긴 형태 증인이 추출에 없어도 DROP 가능
+ *    (`서`\\n`비스` — `서비스` 토큰이 본문에 없는 경우). P는 1~2음절.
  *    오른쪽 칸에는 적용하지 않음 (`서울`+`시장`이 `노동 시장`을 지우지 않게).
  *
  * 조사 strip은 증인(W) 쪽만 — needle(F)에는 적용하지 않음.
@@ -118,21 +120,27 @@ function buildHeadCutFragmentIndex(witnesses) {
 }
 
 /**
- * 인접쌍을 curr(왼쪽 칸) → prev[] 로 묶어 전수 스캔을 피함.
- * @param {Iterable<{ prev: string, curr: string }> | null | undefined} adjacentPairs
- * @returns {Map<string, string[]> | null}
+ * 인접쌍을 curr(왼쪽 칸) → { prev, crossLine }[] 로 묶어 전수 스캔을 피함.
+ * @param {Iterable<{ prev: string, curr: string, crossLine?: boolean }> | null | undefined} adjacentPairs
+ * @returns {Map<string, { prev: string, crossLine: boolean }[]> | null}
  */
 function buildAdjacentPrevByCurr(adjacentPairs) {
   if (!adjacentPairs) return null;
-  /** @type {Map<string, string[]>} */
+  /** @type {Map<string, { prev: string, crossLine: boolean }[]>} */
   const byCurr = new Map();
   for (const pair of adjacentPairs) {
     const prev = hangulOnlyNoise(pair?.prev);
     const curr = hangulOnlyNoise(pair?.curr);
     if (!prev || !curr) continue;
+    const crossLine = Boolean(pair?.crossLine);
     const list = byCurr.get(curr);
-    if (list) list.push(prev);
-    else byCurr.set(curr, [prev]);
+    if (list) {
+      const existing = list.find((x) => x.prev === prev);
+      if (existing) existing.crossLine = existing.crossLine || crossLine;
+      else list.push({ prev, crossLine });
+    } else {
+      byCurr.set(curr, [{ prev, crossLine }]);
+    }
   }
   return byCurr.size > 0 ? byCurr : null;
 }
@@ -150,23 +158,28 @@ export function noteDocHangulEojeolForOrphan(docHangulEojeols, tokenHangulOrRaw)
 }
 
 /**
- * @param {{ prev: string, curr: string }[]} adjacentPairs
+ * @param {{ prev: string, curr: string, crossLine?: boolean }[]} adjacentPairs
  * @param {string} prevRaw
  * @param {string} currRaw
+ * @param {{ crossLine?: boolean }} [opts]
  */
-export function noteAdjacentHangulPair(adjacentPairs, prevRaw, currRaw) {
+export function noteAdjacentHangulPair(adjacentPairs, prevRaw, currRaw, opts = {}) {
   if (!adjacentPairs) return;
   const prev = hangulOnlyNoise(prevRaw);
   const curr = hangulOnlyNoise(currRaw);
   if (!prev || !curr) return;
-  adjacentPairs.push({ prev, curr });
+  adjacentPairs.push({
+    prev,
+    curr,
+    ...(opts.crossLine ? { crossLine: true } : {}),
+  });
 }
 
 /**
  * @param {string} spacedVariant
  * @param {Iterable<string> | null | undefined} docHangulEojeols
  * @param {Set<string>} headCutHits
- * @param {Map<string, string[]> | null} adjacentByCurr
+ * @param {Map<string, { prev: string, crossLine: boolean }[]> | null} adjacentByCurr
  */
 function spacedVariantHitsDocSuffixOrphanIndexed(
   spacedVariant,
@@ -193,9 +206,17 @@ function spacedVariantHitsDocSuffixOrphanIndexed(
   if (left.length < DOC_SUFFIX_ORPHAN_MIN_FRAGMENT) return false;
   const prevs = adjacentByCurr.get(left);
   if (!prevs?.length) return false;
-  for (const P of prevs) {
+  for (const { prev: P, crossLine } of prevs) {
     if (P.length < 1) continue;
     if (documentEojeolHasWordOrPrefix(docHangulEojeols, P + left)) return true;
+    // 줄바꿈 OCR: 서\n비스 — 본문에 '서비스' 토큰이 없어도 DROP
+    if (
+      crossLine &&
+      P.length <= 2 &&
+      left.length >= DOC_SUFFIX_ORPHAN_MIN_FRAGMENT
+    ) {
+      return true;
+    }
   }
   return false;
 }
@@ -315,7 +336,9 @@ function ingestDocSuffixPage(page, witnesses, adjacentPairs) {
       const tokens = line.match(DOC_SUFFIX_HANGUL_TOKEN_RE) || [];
       if (tokens.length > 0 && prevLineLast) {
         // OCR 줄바꿈: 이전 줄 끝 + 현재 줄 첫 (서\n비스 → 서비스)
-        noteAdjacentHangulPair(adjacentPairs, prevLineLast, tokens[0]);
+        noteAdjacentHangulPair(adjacentPairs, prevLineLast, tokens[0], {
+          crossLine: true,
+        });
       }
       for (let i = 0; i < tokens.length; i += 1) {
         noteDocHangulEojeolForOrphan(witnesses, tokens[i]);

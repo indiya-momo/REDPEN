@@ -181,6 +181,32 @@ describe('2차 filterGroupsByDocSuffixOrphan', () => {
     expect(
       ctx.adjacentPairs.some((p) => p.prev === '프' && p.curr === '로그램'),
     ).toBe(true);
+    expect(
+      ctx.adjacentPairs.some(
+        (p) => p.prev === '서' && p.curr === '비스' && p.crossLine,
+      ),
+    ).toBe(true);
+  });
+
+  it('줄바꿈 — 긴 형태 증인 없어도 서\\n비스·프\\n로그램 띄움 DROP', async () => {
+    const groups = singleGroup([
+      spacedCluster('비스지출', '비스 지출'),
+      spacedCluster('로그램지출', '로그램 지출'),
+      spacedCluster('경제성장', '경제 성장'),
+    ]);
+    const pageTexts = [
+      {
+        pageNum: 1,
+        text: '예산 서\n비스 지출과 비스지출 해당 프\n로그램 지출과 로그램지출 경제 성장 경제성장',
+        textLayout:
+          '예산 서\n비스 지출과 비스지출 해당 프\n로그램 지출과 로그램지출 경제 성장 경제성장',
+      },
+    ];
+    const out = await filterGroupsByDocSuffixOrphan(groups, pageTexts);
+    const keys = out.groups.flatMap((g) => g.clusters.map((c) => c.key));
+    expect(keys).not.toContain('비스지출');
+    expect(keys).not.toContain('로그램지출');
+    expect(keys).toContain('경제성장');
   });
 
   it('대기업·부시장 있어도 기업/시장 띄움 KEEP', async () => {
