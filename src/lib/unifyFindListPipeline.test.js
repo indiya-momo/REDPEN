@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   applyUnifyListReviewMarks,
+  assembleUnifyListBase,
   buildUnifyListGroups,
   finalizeUnifyListGroups,
 } from './unifyFindListPipeline.js';
@@ -17,6 +18,13 @@ function conflict(key, spaced) {
 }
 
 describe('unifyFindListPipeline', () => {
+  it('assembleUnifyListBase: raw 없으면 빈 그룹', () => {
+    expect(assembleUnifyListBase([], null)).toEqual({
+      groups: [],
+      ruleExcluded: [],
+    });
+  });
+
   it('buildUnifyListGroups: raw 없으면 빈 배열', () => {
     expect(
       buildUnifyListGroups(

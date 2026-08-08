@@ -16,7 +16,6 @@ import {
   prefetchUnifyKiwiSurfaces,
 } from '../../lib/unifyCandidateDiscover.js';
 import {
-  groupSortAndFillSatellites,
   countUnifyListAccordionItems,
   sortClusterGroups,
 } from '../../lib/unifyCandidateGrouping.js';
@@ -24,6 +23,7 @@ import { filterSeriesSatellitesByNoiseList } from '../../lib/unifyCandidateSatel
 import { filterSeriesSatellitesByKiwiPhase2 } from '../../lib/unifyNoisePhase2.js';
 import {
   applyUnifyListReviewMarks,
+  assembleUnifyListBase,
   buildUnifyListGroups,
   finalizeUnifyListGroupsAsync,
 } from '../../lib/unifyFindListPipeline.js';
@@ -49,7 +49,6 @@ import {
   runJosaSlmReviewOnClusterGroups,
 } from '../../lib/unifyJosaReviewSlm/index.js';
 import { runPredicateSlmReviewOnClusterGroups } from '../../lib/unifyPredicateReviewSlm/index.js';
-import { stripDependentNounGenitiveFromGroups } from '../../lib/unifyDependentNounGenitive.js';
 import { collectUnifyListTriage } from '../../lib/unifyListStemTriage.js';
 import { createUnifyFindBench, snapshotUnifyFindDiag } from '../../lib/unifyFindBench.js';
 import { runStdictPosReviewOnClusterGroups } from '../../lib/unifyStdictPos.js';
@@ -852,11 +851,8 @@ export default function UnifyCandidateFindPanel({
           { registeredByKey: chosenByKey, pages: pageTexts },
         );
       } else {
-        let nextGroups = raw
-          ? groupSortAndFillSatellites(allClusters, raw)
-          : [];
-        nextGroups = stripDependentNounGenitiveFromGroups(nextGroups).groups;
-        nextGroups = applyUnifyListReviewMarks(nextGroups, {
+        const { groups: assembled } = assembleUnifyListBase(allClusters, raw);
+        let nextGroups = applyUnifyListReviewMarks(assembled, {
           slmReviewedByKey: slmByKey,
           stdictPredicateSeriesIds: stdictSeriesIds,
           stdictPredicateClusterKeys: stdictClusterKeys,
@@ -959,10 +955,10 @@ export default function UnifyCandidateFindPanel({
       );
       bench.mark('2_enrichClusters');
       const kiwiDiagAfterEnrich1 = await snapshotUnifyFindDiag();
-      let workingGroups = groupSortAndFillSatellites(next, result.rawByKey);
-      const ruleStrip = stripDependentNounGenitiveFromGroups(workingGroups);
+      let workingGroups;
+      const ruleStrip = assembleUnifyListBase(next, result.rawByKey);
       workingGroups = ruleStrip.groups;
-      const ruleExcluded = ruleStrip.dropped;
+      const ruleExcluded = ruleStrip.ruleExcluded;
       bench.mark('3_groupStrip');
       /** @type {null | {
        *   reviewed?: number,

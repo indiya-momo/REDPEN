@@ -95,6 +95,20 @@ export async function finalizeUnifyListGroupsAsync(groups, pageTexts) {
 }
 
 /**
+ * clusters+raw → 계열 그룹 + 의존명사 속격 strip (리뷰·enrich 이전 공통 베이스).
+ * handleFind / buildUnifyListGroups / publishPreview가 같은 순서를 쓰게 한다.
+ * @param {UnifySpacingCluster[]} clusters
+ * @param {Map<string, import('./unifyCandidateDiscover.js').ClusterAcc> | null | undefined} rawByKey
+ * @returns {{ groups: ClusterGroup[], ruleExcluded: ReturnType<typeof stripDependentNounGenitiveFromGroups>['dropped'] }}
+ */
+export function assembleUnifyListBase(clusters, rawByKey) {
+  if (!rawByKey) return { groups: [], ruleExcluded: [] };
+  const base = groupSortAndFillSatellites(clusters, rawByKey);
+  const stripped = stripDependentNounGenitiveFromGroups(base);
+  return { groups: stripped.groups, ruleExcluded: stripped.dropped };
+}
+
+/**
  * clusters+raw+리뷰 마크 → 목록에 올릴 그룹 (동기, useMemo 경로).
  * @param {UnifySpacingCluster[]} clusters
  * @param {Map<string, import('./unifyCandidateDiscover.js').ClusterAcc> | null} rawByKey
@@ -109,8 +123,7 @@ export function buildUnifyListGroups(
   marks = {},
 ) {
   if (!rawByKey) return [];
-  const base = groupSortAndFillSatellites(clusters, rawByKey);
-  const stripped = stripDependentNounGenitiveFromGroups(base).groups;
+  const { groups: stripped } = assembleUnifyListBase(clusters, rawByKey);
   const marked = applyUnifyListReviewMarks(stripped, marks);
   return finalizeUnifyListGroups(marked, pageTexts);
 }
