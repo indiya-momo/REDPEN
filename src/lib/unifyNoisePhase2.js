@@ -1,6 +1,6 @@
 /**
  * 표기통일 잡음 2차 — 목록 표시 후 후보 단위 비동기 필터.
- * - DocSuffix: OCR 앞잘림 (Kiwi 무관, text∪layout)
+ * - DocSuffix: OCR 앞잘림 orphan DROP (복원·merge 없음, Kiwi 무관, text∪layout)
  * - Kiwi POS: ready일 때만 (boot 시도 없음, 동기 전량 analyze 금지)
  *
  * 공유 진입: {@link runUnifyListPhase2Filters} — 패널은 여기만 호출.

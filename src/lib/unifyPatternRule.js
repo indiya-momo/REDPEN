@@ -18,6 +18,7 @@ import { isExcludedSeriesAffix } from './unifyCandidateSeriesTrend.js';
 import { buildPhraseSlotFindRules } from './phraseSlotPattern.js';
 import { runRuleCheck } from './ruleEngine.js';
 import { escapeRegex } from './compoundPatternCommon.js';
+import { findPhraseInSpan } from './pdfHighlightRange.js';
 import {
   isSpacedLeftNoiseEojeol,
   shouldRejectUnifyCandidateNoise,
@@ -693,6 +694,69 @@ function pagesForRuleCheck(pageTexts) {
 }
 
 /**
+ * page.text 기준 — 직전 한글이 줄바꿈만 건너뛴 채 이어지면 soft-wrap 앞잘림.
+ * 어절 사이 일반 공백은 경계로 본다.
+ * @param {string} source
+ * @param {number} idx
+ */
+function hangulContinuesBeforeVisual(source, idx) {
+  let i = idx - 1;
+  while (i >= 0 && (source[i] === '\n' || source[i] === '\r')) i -= 1;
+  if (i < 0) return false;
+  const c = source.charCodeAt(i);
+  return c >= 0xac00 && c <= 0xd7a3;
+}
+
+/**
+ * 2차 mismatch/compliant — layout 스캔 결과를 page.text에 실재할 때만 인정.
+ * `세\n계금융위기 경제`처럼 줄바꿈 앞잘림 조각은 거부.
+ * @param {string} pageText visual (`page.text`)
+ * @param {string} surface
+ * @returns {boolean}
+ */
+export function visualAttestsPatternSurface(pageText, surface) {
+  const source = String(pageText ?? '').normalize('NFC');
+  const needle = normalizeUnifyVariant(surface);
+  if (!source || !needle) return false;
+
+  let pos = 0;
+  while (pos <= source.length) {
+    const idx = source.indexOf(needle, pos);
+    if (idx < 0) break;
+    if (!hangulContinuesBeforeVisual(source, idx)) return true;
+    pos = idx + 1;
+  }
+
+  if (!/\s/.test(needle)) return false;
+
+  pos = 0;
+  while (pos < source.length) {
+    const hit = findPhraseInSpan(source.slice(pos), needle);
+    if (!hit) break;
+    const idx = pos + hit.start;
+    if (!hangulContinuesBeforeVisual(source, idx)) return true;
+    pos = idx + 1;
+  }
+  return false;
+}
+
+/**
+ * @param {{ pageNum?: number, text?: string, textLayout?: string }[]} pageTexts
+ * @returns {Map<number, string>}
+ */
+function buildVisualTextByPageNum(pageTexts) {
+  /** @type {Map<number, string>} */
+  const map = new Map();
+  for (let i = 0; i < (pageTexts ?? []).length; i += 1) {
+    const p = pageTexts[i];
+    const n = Number(p?.pageNum) || i + 1;
+    const visual = String(p?.text ?? '');
+    if (n && visual) map.set(n, visual);
+  }
+  return map;
+}
+
+/**
  * @param {string} from
  * @param {UnifyPatternRule} rule
  * @returns {{ key: string, to: string } | null}
@@ -742,6 +806,7 @@ export function findPatternMismatches(pageTexts, rule, opts = {}) {
   if (!rule?.affix || !rule.direction || !rule.affixType) return [];
   const pages = pagesForRuleCheck(pageTexts);
   if (!pages.length) return [];
+  const visualByPage = buildVisualTextByPageNum(pageTexts);
 
   const skipKeys = new Set(
     opts.skipKeys instanceof Set
@@ -774,6 +839,9 @@ export function findPatternMismatches(pageTexts, rule, opts = {}) {
       const pair = normalizeMismatchPair(from, rule);
       if (!pair) continue;
       if (skipKeys.has(pair.key)) continue;
+      const pageNum = Number(inst.pageNum) || 0;
+      const visual = visualByPage.get(pageNum) ?? '';
+      if (!visualAttestsPatternSurface(visual, pair.from)) continue;
 
       const existing = byKey.get(pair.key);
       if (existing) {
@@ -825,6 +893,7 @@ export function findPatternCompliantForms(pageTexts, rule) {
   const { results } = runRuleCheck(pages, rules);
   /** @type {Map<string, { form: string, instances: import('./ruleEngine.js').MatchInstance[] }>} */
   const byKey = new Map();
+  const visualByPage = buildVisualTextByPageNum(pageTexts);
 
   for (const group of results ?? []) {
     for (const inst of group.instances ?? []) {
@@ -832,6 +901,9 @@ export function findPatternCompliantForms(pageTexts, rule) {
       if (!from) continue;
       const pair = normalizeCompliantForm(from, rule);
       if (!pair) continue;
+      const pageNum = Number(inst.pageNum) || 0;
+      const visual = visualByPage.get(pageNum) ?? '';
+      if (!visualAttestsPatternSurface(visual, pair.form)) continue;
 
       const existing = byKey.get(pair.key);
       if (existing) {
