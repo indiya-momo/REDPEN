@@ -141,6 +141,48 @@ describe('2차 filterGroupsByDocSuffixOrphan', () => {
     expect(out.groups.flatMap((g) => g.clusters)).toHaveLength(0);
   });
 
+  it('줄바꿈 인접 — 이전 줄 끝+현재 줄 첫(환매조\\n건부)으로 DROP', async () => {
+    const groups = singleGroup([
+      spacedCluster('건부채권', '건부 채권'),
+      spacedCluster('경제성장', '경제 성장'),
+    ]);
+    // 전역 slice(1)로는 건부가 안 잡힘 — 줄바꿈 인접(환매조+건부→환매조건부)만
+    const pageTexts = [
+      {
+        pageNum: 1,
+        text: '약정 환매조\n건부 채권과 건부채권 환매조건부 경제 성장 경제성장',
+        textLayout:
+          '약정 환매조\n건부 채권과 건부채권 환매조건부 경제 성장 경제성장',
+      },
+    ];
+    const ctx = collectDocSuffixContextFromPageTexts(pageTexts);
+    expect(
+      ctx.adjacentPairs.some(
+        (p) => p.prev === '환매조' && p.curr === '건부',
+      ),
+    ).toBe(true);
+    const out = await filterGroupsByDocSuffixOrphan(groups, pageTexts);
+    const keys = out.groups.flatMap((g) => g.clusters.map((c) => c.key));
+    expect(keys).not.toContain('건부채권');
+    expect(keys).toContain('경제성장');
+  });
+
+  it('줄바꿈 인접쌍 수집 — 서\\n비스·프\\n로그램', () => {
+    const ctx = collectDocSuffixContextFromPageTexts([
+      {
+        pageNum: 1,
+        text: '예산 서\n비스 지출 해당 프\n로그램 지출',
+        textLayout: '예산 서\n비스 지출 해당 프\n로그램 지출',
+      },
+    ]);
+    expect(
+      ctx.adjacentPairs.some((p) => p.prev === '서' && p.curr === '비스'),
+    ).toBe(true);
+    expect(
+      ctx.adjacentPairs.some((p) => p.prev === '프' && p.curr === '로그램'),
+    ).toBe(true);
+  });
+
   it('대기업·부시장 있어도 기업/시장 띄움 KEEP', async () => {
     const groups = singleGroup([
       spacedCluster('기업문화', '기업 문화'),
