@@ -74,6 +74,8 @@ describe('unifyNoiseListLexicalHeuristic', () => {
       '전혀',
       '홀로',
       '흔히들',
+      '항상',
+      '최근',
       '이로써',
       '이처럼',
       '앞서',
@@ -149,8 +151,9 @@ describe('unifyNoiseListLexicalHeuristic', () => {
     expect(shouldRejectByNoiseList('야기시킨 공무원')).toBe(true);
   });
 
-  it('닫힌 용언 같다·연결 -댔다/-으며/-며·완전일치 는다/었고 (depressione·재검토)', () => {
+  it('닫힌 용언 같다·많다·연결 -댔다/-으며/-며·완전일치 는다/었고 (depressione·재검토)', () => {
     expect(shouldRejectByNoiseList('같다 거품')).toBe(true);
+    expect(shouldRejectByNoiseList('많다 식물')).toBe(true);
     expect(shouldRejectByNoiseList('떠들어댔다 금융')).toBe(true);
     expect(shouldRejectByNoiseList('있으며 성장')).toBe(true);
     expect(shouldRejectByNoiseList('다니며 투자')).toBe(true);

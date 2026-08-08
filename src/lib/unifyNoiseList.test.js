@@ -197,6 +197,8 @@ describe('unifyNoiseList (1차 정적 리스트)', () => {
     expect(shouldRejectByNoiseList('빠른 성장')).toBe(true);
     expect(shouldRejectByNoiseList('빠져도 성장')).toBe(true);
     expect(shouldRejectByNoiseList('속도로 성장')).toBe(true);
+    expect(shouldRejectByNoiseList('달처럼 구조')).toBe(true);
+    expect(isSpacedLeftJosaNoiseEojeol('달처럼')).toBe(true);
     expect(shouldRejectByNoiseList('경로 성장')).toBe(false);
     expect(shouldRejectByNoiseList('전국적인 거품')).toBe(true);
     expect(shouldRejectByNoiseList('갖가지 거품')).toBe(true);
