@@ -59,6 +59,8 @@ alwaysApply: false
   (예: Satellite UI 편입 ≠ Morph POS 거부 — 같은 어휘로 다른 개념을 가리키지 말 것.)
 - 특히 `filterSeriesSatellitesByNoiseList` = **1차 noise-list**.
   `shouldRejectUnifySatelliteSpacedByPos` = **Kiwi POS**. MorphPos를 noise-list 필터 이름에 쓰지 말 것.
+- DocSuffix(`spacedVariantHitsDocSuffixOrphan` / `filterGroupsByDocSuffixOrphan`)는
+  **2차**만. discover·1차 위성 생성에 prune/증인 수집을 붙이지 말 것.
 ## 작업 루프 (매 경계 작업)
 
 1. Grep로 정책 함수 호출부 전수 → 결과를 보여 줌
