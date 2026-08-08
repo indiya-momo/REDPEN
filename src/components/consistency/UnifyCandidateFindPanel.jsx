@@ -183,16 +183,18 @@ function firstUnifyListChipInstance(groups, chosenByKey, hiddenKeys) {
 }
 
 /**
- * 쪽 칩용 출현 — 표기 키에 없으면 클러스터 전체에서 모은다.
- * (이형태 없음·키 불일치·derived 0회 칸도 칩이 뜨게)
+ * 쪽 칩용 출현 — variant가 있으면 그 표기만. 빈 문자열이면 클러스터 전체(폴백).
+ * 0회(derived) 칸에 다른 이형태 칩을 빌려 쓰지 않는다.
  * @param {import('../../lib/unifyCandidateDiscover.js').UnifySpacingCluster | null | undefined} cluster
  * @param {string} variant
  * @returns {import('../../lib/unifyCandidateDiscover.js').UnifyVariantOccurrence[]}
  */
 function resolveUnifyVariantOccurrences(cluster, variant) {
   const byVar = cluster?.occurrencesByVariant ?? {};
-  const direct = variant ? byVar[variant] : null;
-  if (Array.isArray(direct) && direct.length) return direct;
+  if (variant) {
+    const direct = byVar[variant];
+    return Array.isArray(direct) ? direct : [];
+  }
   /** @type {import('../../lib/unifyCandidateDiscover.js').UnifyVariantOccurrence[]} */
   const pooled = [];
   const seen = new Set();
@@ -2036,11 +2038,40 @@ export default function UnifyCandidateFindPanel({
                                     {seriesLabelText}
                                   </span>
                                 </CriteriaHoverTip>
-                                {primaryCriterion.text ? (
-                                  <span className="unify-candidate-find__series-criterion">
-                                    {primaryCriterion.text}
+                                {primaryCriterion.dirLabel ? (
+                                  <span
+                                    className="unify-candidate-find__series-criterion-row"
+                                    title="1차에서 정한 통일 방향"
+                                  >
+                                    <span className="unify-candidate-find__series-criterion-prefix">
+                                      {primaryCriterion.prefix}
+                                    </span>
+                                    <span className="unify-candidate-find__series-spacing-btns unify-candidate-find__series-criterion-dir-wrap">
+                                      <span
+                                        className="unify-candidate-find__series-spacing-btn unify-candidate-find__series-spacing-btn--chosen"
+                                        aria-hidden
+                                      >
+                                        {primaryCriterion.dirLabel}
+                                      </span>
+                                    </span>
                                   </span>
                                 ) : null}
+                                {(primaryCriterion.exceptions ?? []).map(
+                                  (form) => (
+                                    <span
+                                      key={form}
+                                      className="unify-candidate-find__series-exception"
+                                      title="1차 예외 표기"
+                                    >
+                                      <span className="unify-candidate-find__series-exception-form">
+                                        {form}
+                                      </span>
+                                      <span className="unify-candidate-find__exception-badge">
+                                        예외
+                                      </span>
+                                    </span>
+                                  ),
+                                )}
                               </span>
                               <SeriesSpacingBreakdown
                                 glued={spacingFindings.glued}
@@ -2464,7 +2495,9 @@ function ClusterCard({
           const isPreSelected = !isRegistered && preSelectedVariant === variant;
           const isFirst = variantIndex === 0;
           const replace = registeredVariant || cluster.recommendedUnify;
-          const occs = resolveUnifyVariantOccurrences(cluster, variant);
+          const occs = isDerived
+            ? []
+            : resolveUnifyVariantOccurrences(cluster, variant);
           const chipExpanded = chipExpandedByVariant.get(variant) === true;
           const CHIP_PREVIEW = 3;
           const srcOccs = !pageChipsReady
