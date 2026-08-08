@@ -1,29 +1,23 @@
 /**
- * 문서 내 앞잘림 조각 — DROP.
+ * 문서 내 앞잘림 조각 — 2차에서 복원·같은 단어 세트로 merge (목록 DROP 아님).
  *
  * ## Public API (공유 정책 진입점)
  * - {@link spacedVariantHitsDocSuffixOrphan} — 띄움 이형태 판정 (adjacentPairs 포함 완전판)
  * - {@link pruneUnifyIndexDocSuffixOrphans} — occurrence index에서 위 판정으로 정리
- * - {@link filterGroupsByDocSuffixOrphan} — **2차** 목록 필터 (page text∪layout 증인)
+ * - {@link filterGroupsByDocSuffixOrphan} — **2차** 목록: head-cut은 복원+merge, 인접 orphan만 DROP
  * - {@link noteDocHangulEojeolForOrphan} / {@link noteAdjacentHangulPair} /
  *   {@link collectDocHangulEojeolsFromRawByKey} / {@link collectDocSuffixContextFromPageTexts}
  *
- * 1차 discover·위성 생성 핫패스에 붙이지 말 것.
+ * 1차 discover·위성 생성 핫패스에 붙이지 말 것. 1차 목록(띄어쓰기 이형태)은 수정하지 않음.
  * 전역-only·어절-only 헬퍼는 export하지 않는다 (약식 진입점 금지).
  *
- * 1) 전역: 증인 W의 첫 1음절을 뺀 나머지가 F로 시작
- *    (`프로그램지출`.slice(1).startsWith(`로그램`)).
- *    증인 첫 음절이 생산적 한자어 접두면 제외 (`대기업`↛`기업`).
- *    띄움 후보에서는 **왼쪽 칸만** 전역 검사 (`노동 시장`의 시장 제외).
- * 2) 인접: 공백 앞 어절 P(길이 무관)+**왼쪽 조각** F 이음이 문서 어절과 같거나
- *    그 접두이면 F는 잘림 (`환매조`+`건부` → `환매조건부`).
- *    같은 줄 연속 토큰 + **이전 줄 마지막 ↔ 현재 줄 첫** (OCR 줄바꿈 앞잘림).
- *    짧은 앞조각(P 1~2음절)+F 인접은 긴 형태 증인 없이도 DROP
- *    (`서` `비스` / `서`\\n`비스` — 본문에 `서비스` 토큰이 없어도).
- *    짧은P·줄바꿈 인접의 P+F는 증인에 합류 (`서`+`비스`→`서비스`) → 전역 앞잘림도 동작.
- *    오른쪽 칸에는 적용하지 않음 (`서울`+`시장`이 `노동 시장`을 지우지 않게).
+ * 1) 전역(head-cut): **1·2차 목록**(계열 affix·rawByKey 포함) 증인 W로
+ *    왼쪽 칸 F를 W로 복원 (`로그램`→`프로그램`) 후 동일 key 단어 세트로 merge.
+ *    음절 꼬리 전개 금지. 생산적 한자어 접두 제외 (`대기업`↛`기업`).
+ * 2) 인접: P+F 이음이 목록 증인에 있을 때만 항목 DROP (복원 키 애매).
+ *    본문만으로 soft DROP 금지.
  *
- * 조사 strip은 증인(W) 쪽만 — needle(F)에는 적용하지 않음.
+ * 줄 위치(P)만 page text∪layout. 복원·DROP 증거는 1·2차 목록(±rawByKey).
  * source: manual-heuristic (문서 의존)
  */
 import { hangulOnlyNoise } from './unifyNoiseListData.js';
@@ -121,6 +115,51 @@ function buildHeadCutFragmentIndex(witnesses) {
 }
 
 /**
+ * 조각 F → 복원 증인 W (로그램→프로그램).
+ * 같은 F에 여러 W면 본문 정확 일치(W.slice(1)===F) 우선, 같으면 더 짧은 W.
+ * @param {Iterable<string>} witnesses
+ * @returns {Map<string, string>}
+ */
+function buildHeadCutRestoreMap(witnesses) {
+  /** @type {Map<string, string>} */
+  const map = new Map();
+  for (const raw of witnesses ?? []) {
+    const W = hangulOnlyNoise(raw);
+    if (
+      !W ||
+      W.length < DOC_SUFFIX_ORPHAN_MIN_FRAGMENT + DOC_SUFFIX_ORPHAN_PREFIX_LEN
+    ) {
+      continue;
+    }
+    const head = W.slice(0, DOC_SUFFIX_ORPHAN_PREFIX_LEN);
+    if (DOC_GLOBAL_HEAD_CUT_PREFIX_BLOCK.has(head)) continue;
+    const body = W.slice(DOC_SUFFIX_ORPHAN_PREFIX_LEN);
+    for (
+      let len = DOC_SUFFIX_ORPHAN_MIN_FRAGMENT;
+      len <= body.length;
+      len += 1
+    ) {
+      const F = body.slice(0, len);
+      const prev = map.get(F);
+      if (!prev) {
+        map.set(F, W);
+        continue;
+      }
+      const prevExact = hangulOnlyNoise(prev).slice(DOC_SUFFIX_ORPHAN_PREFIX_LEN) === F;
+      const newExact = body === F;
+      if (newExact && !prevExact) map.set(F, W);
+      else if (
+        newExact === prevExact &&
+        W.length < hangulOnlyNoise(prev).length
+      ) {
+        map.set(F, W);
+      }
+    }
+  }
+  return map;
+}
+
+/**
  * 인접쌍을 curr(왼쪽 칸) → { prev, crossLine }[] 로 묶어 전수 스캔을 피함.
  * @param {Iterable<{ prev: string, curr: string, crossLine?: boolean }> | null | undefined} adjacentPairs
  * @returns {Map<string, { prev: string, crossLine: boolean }[]> | null}
@@ -182,11 +221,18 @@ export function noteAdjacentHangulPair(adjacentPairs, prevRaw, currRaw, opts = {
  * @param {Set<string>} headCutHits
  * @param {Map<string, { prev: string, crossLine: boolean }[]> | null} adjacentByCurr
  */
+/**
+ * @param {string} spacedVariant
+ * @param {Set<string>} headCutHits
+ * @param {Map<string, { prev: string }[]> | null} adjacentByCurr
+ * @param {Iterable<string> | null | undefined} adjacentEvidence
+ *   인접 DROP용 P+F 증거(전체 발견). null이면 인접 검사 생략.
+ */
 function spacedVariantHitsDocSuffixOrphanIndexed(
   spacedVariant,
-  docHangulEojeols,
   headCutHits,
   adjacentByCurr,
+  adjacentEvidence,
 ) {
   const parts = String(spacedVariant ?? '')
     .normalize('NFC')
@@ -203,20 +249,14 @@ function spacedVariantHitsDocSuffixOrphanIndexed(
     return true;
   }
 
-  if (!adjacentByCurr) return false;
+  if (!adjacentByCurr || !adjacentEvidence) return false;
   if (left.length < DOC_SUFFIX_ORPHAN_MIN_FRAGMENT) return false;
   const prevs = adjacentByCurr.get(left);
   if (!prevs?.length) return false;
   for (const { prev: P } of prevs) {
     if (P.length < 1) continue;
-    if (documentEojeolHasWordOrPrefix(docHangulEojeols, P + left)) return true;
-    // 짧은 앞조각 OCR (서 비스 / 서\n비스) — 긴 형태 증인 없어도 DROP
-    if (
-      P.length <= 2 &&
-      left.length >= DOC_SUFFIX_ORPHAN_MIN_FRAGMENT
-    ) {
-      return true;
-    }
+    // 전체 발견 증인에 P+F가 있을 때만 (본문-only soft DROP 금지)
+    if (documentEojeolHasWordOrPrefix(adjacentEvidence, P + left)) return true;
   }
   return false;
 }
@@ -239,9 +279,9 @@ export function spacedVariantHitsDocSuffixOrphan(
   const adjacentByCurr = buildAdjacentPrevByCurr(adjacentPairs);
   return spacedVariantHitsDocSuffixOrphanIndexed(
     spacedVariant,
-    docHangulEojeols,
     headCutHits,
     adjacentByCurr,
+    docHangulEojeols,
   );
 }
 
@@ -270,9 +310,9 @@ export function pruneUnifyIndexDocSuffixOrphans(
       if (
         !spacedVariantHitsDocSuffixOrphanIndexed(
           variant,
-          witnesses,
           headCutHits,
           adjacentByCurr,
+          witnesses,
         )
       ) {
         continue;
@@ -354,24 +394,49 @@ function ingestDocSuffixPage(page, witnesses, adjacentPairs) {
 }
 
 /**
- * OCR로 쪼갠 인접을 이어 증인에 합류 (서+비스→서비스, 프+로그램→프로그램).
- * 긴 앞토큰 일반 인접은 넣지 않음 (대기업과+기업 → 기업 오탐 방지).
- * @param {Set<string>} witnesses
- * @param {{ prev: string, curr: string, crossLine?: boolean }[]} adjacentPairs
+ * 전체 발견에서 DROP 증인 수집 — 목록 그룹(+계열 affix) · rawByKey.
+ * 음절 꼬리 전개 금지 — 중간 조각(시경제 등)이 head-cut 증인이 되면 목록이 붕괴한다.
+ * @param {import('./unifyCandidateGrouping.js').ClusterGroup[] | null | undefined} groups
+ * @param {Map<string, { counts?: Map<string, number> | Record<string, number> }> | null | undefined} [rawByKey]
+ * @returns {Set<string>}
  */
-function addJoinedAdjacentWitnesses(witnesses, adjacentPairs) {
-  for (const pair of adjacentPairs ?? []) {
-    const prev = hangulOnlyNoise(pair?.prev);
-    const curr = hangulOnlyNoise(pair?.curr);
-    if (!prev || !curr) continue;
-    if (!pair?.crossLine && prev.length > 2) continue;
-    noteDocHangulEojeolForOrphan(witnesses, prev + curr);
+export function collectFindingsHangulWitnesses(groups, rawByKey = null) {
+  /** @type {Set<string>} */
+  const out = new Set();
+  for (const group of groups ?? []) {
+    // @서비스 계열 — 멤버 key만 보면 affix「서비스」가 빠져 비스를 못 지움
+    if (group?.type === 'series' && group.affix) {
+      noteDocHangulEojeolForOrphan(out, String(group.affix));
+    }
+    for (const cluster of group.clusters ?? []) {
+      const key = String(cluster?.key ?? '');
+      noteDocHangulEojeolForOrphan(out, key);
+      noteDocHangulEojeolForOrphan(out, key.replace(/\s+/g, ''));
+      const variants = [
+        ...(cluster.variants ?? []),
+        ...Object.keys(cluster.counts ?? {}),
+      ];
+      for (const v of variants) {
+        const s = String(v ?? '');
+        noteDocHangulEojeolForOrphan(out, s);
+        noteDocHangulEojeolForOrphan(out, s.replace(/\s+/g, ''));
+        for (const part of s.split(/\s+/).filter(Boolean)) {
+          noteDocHangulEojeolForOrphan(out, part);
+        }
+      }
+    }
   }
+  if (rawByKey?.size) {
+    for (const h of collectDocHangulEojeolsFromRawByKey(rawByKey)) {
+      noteDocHangulEojeolForOrphan(out, h);
+    }
+  }
+  return out;
 }
 
 /**
- * 2차용 — page.text ∪ textLayout에서 증인·인접쌍 수집 (1차 discover와 무관).
- * layout이 잘려도 text에 온전한 어절이 있으면 증인에 남는다.
+ * 2차용 — page.text ∪ textLayout에서 **인접쌍만** 수집 (줄 위치용).
+ * DROP 증거 증인은 {@link collectFindingsHangulWitnesses}.
  * @param {{ text?: string, textLayout?: string }[] | null | undefined} pageTexts
  * @returns {{ witnesses: Set<string>, adjacentPairs: { prev: string, curr: string, crossLine?: boolean }[] }}
  */
@@ -383,12 +448,11 @@ export function collectDocSuffixContextFromPageTexts(pageTexts) {
   for (const page of pageTexts ?? []) {
     ingestDocSuffixPage(page, witnesses, adjacentPairs);
   }
-  addJoinedAdjacentWitnesses(witnesses, adjacentPairs);
   return { witnesses, adjacentPairs };
 }
 
 /**
- * collect와 동일 결과 + 페이지마다 메인스레드 양보 (목록 표시 후 2차에서도 UI 동결 완화).
+ * collect와 동일 결과 + 페이지마다 메인스레드 양보.
  * @param {{ text?: string, textLayout?: string }[] | null | undefined} pageTexts
  * @param {{ yieldEveryPages?: number }} [opts]
  * @returns {Promise<{ witnesses: Set<string>, adjacentPairs: { prev: string, curr: string, crossLine?: boolean }[] }>}
@@ -409,19 +473,154 @@ export async function collectDocSuffixContextFromPageTextsAsync(
       await new Promise((r) => setTimeout(r, 0));
     }
   }
-  addJoinedAdjacentWitnesses(witnesses, adjacentPairs);
   return { witnesses, adjacentPairs };
 }
 
 /**
- * 목록 그룹에서 DocSuffix 앞잘림 띄움 클러스터 제거 (2차 facade).
- * 충돌·위성 모두 — spaced variant가 orphan이면 항목 제외.
+ * @param {object} cluster
+ * @returns {Record<string, number>}
+ */
+function clusterCountsObject(cluster) {
+  const counts = cluster?.counts ?? {};
+  if (counts instanceof Map) return Object.fromEntries(counts);
+  return { ...counts };
+}
+
+/**
+ * head-cut 복원 — 성공 시 새 클러스터, 아니면 null.
+ * counts·occurrencesByVariant 키를 같이 옮겨 쪽 칩이 비지 않게 한다.
+ * @param {object} cluster
+ * @param {Map<string, string>} restoreMap
+ * @returns {object | null}
+ */
+function remapClusterByHeadCut(cluster, restoreMap) {
+  if (!restoreMap?.size) return null;
+
+  /**
+   * @param {string} variant
+   * @returns {{ next: string, changed: boolean }}
+   */
+  function remapVariantKey(variant) {
+    const s = String(variant ?? '');
+    if (/\s/.test(s)) {
+      const parts = s
+        .normalize('NFC')
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean);
+      if (parts.length >= 2) {
+        const left = hangulOnlyNoise(parts[0]);
+        const W = restoreMap.get(left);
+        if (W && W !== left) {
+          return { next: [W, ...parts.slice(1)].join(' '), changed: true };
+        }
+      }
+      return { next: s, changed: false };
+    }
+    const h = hangulOnlyNoise(s);
+    let bestF = '';
+    let bestW = '';
+    for (const [F, W] of restoreMap) {
+      if (h.startsWith(F) && F.length >= bestF.length) {
+        bestF = F;
+        bestW = W;
+      }
+    }
+    if (bestW && bestF && bestW !== bestF) {
+      return { next: bestW + h.slice(bestF.length), changed: true };
+    }
+    return { next: h || s, changed: false };
+  }
+
+  const counts = clusterCountsObject(cluster);
+  /** @type {Record<string, number>} */
+  const nextCounts = {};
+  let changed = false;
+
+  for (const [variant, count] of Object.entries(counts)) {
+    if (count <= 0) continue;
+    const { next, changed: ch } = remapVariantKey(variant);
+    if (ch) changed = true;
+    nextCounts[next] = (nextCounts[next] || 0) + count;
+  }
+
+  if (!changed) return null;
+
+  /** @type {Record<string, unknown[]>} */
+  const nextOcc = {};
+  const prevOcc = cluster.occurrencesByVariant || {};
+  for (const [variant, list] of Object.entries(prevOcc)) {
+    const { next } = remapVariantKey(variant);
+    nextOcc[next] = [...(nextOcc[next] || []), ...(list || [])];
+  }
+
+  const gluedKeys = Object.keys(nextCounts).filter((v) => !/\s/.test(v));
+  const spacedKeys = Object.keys(nextCounts).filter((v) => /\s/.test(v));
+  const gluedKey =
+    gluedKeys.sort((a, b) => b.length - a.length)[0] ||
+    hangulOnlyNoise((spacedKeys[0] || '').replace(/\s+/g, ''));
+  if (!gluedKey) return null;
+
+  const totalCount = Object.values(nextCounts).reduce((a, b) => a + b, 0);
+  return {
+    ...cluster,
+    key: gluedKey,
+    counts: nextCounts,
+    variants: Object.keys(nextCounts),
+    totalCount,
+    kind: cluster.kind || 'conflict',
+    ...(Object.keys(nextOcc).length
+      ? { occurrencesByVariant: nextOcc }
+      : {}),
+  };
+}
+
+/**
+ * @param {object} target
+ * @param {object} source
+ */
+function mergeRemappedClusterInto(target, source) {
+  const counts = clusterCountsObject(target);
+  for (const [v, n] of Object.entries(clusterCountsObject(source))) {
+    counts[v] = (counts[v] || 0) + n;
+  }
+  target.counts = counts;
+  target.variants = [
+    ...new Set([
+      ...(target.variants ?? []),
+      ...(source.variants ?? []),
+      ...Object.keys(counts),
+    ]),
+  ];
+  target.totalCount = Object.values(counts).reduce((a, b) => a + b, 0);
+  const tOcc = target.occurrencesByVariant;
+  const sOcc = source.occurrencesByVariant;
+  if (tOcc || sOcc) {
+    /** @type {Record<string, unknown[]>} */
+    const occ = { ...(tOcc || {}) };
+    for (const [v, list] of Object.entries(sOcc || {})) {
+      occ[v] = [...(occ[v] || []), ...(list || [])];
+    }
+    target.occurrencesByVariant = occ;
+  }
+}
+
+/**
+ * 목록 그룹 — head-cut은 복원 후 같은 key로 merge, 인접 orphan만 DROP.
+ * 증인은 기본적으로 필터 대상 groups+rawByKey.
+ * 2차에서는 `witnessGroups`에 1차·2차 목록을 합쳐 넘긴다 (1차 목록 자체는 수정하지 않음).
  * @param {import('./unifyCandidateGrouping.js').ClusterGroup[]} groups
  * @param {{ text?: string, textLayout?: string }[] | null | undefined} pageTexts
- * @param {{ yieldEvery?: number, yieldEveryPages?: number }} [opts]
+ * @param {{
+ *   yieldEvery?: number,
+ *   yieldEveryPages?: number,
+ *   rawByKey?: Map<string, { counts?: Map<string, number> | Record<string, number> }> | null,
+ *   witnessGroups?: import('./unifyCandidateGrouping.js').ClusterGroup[] | null,
+ * }} [opts]
  * @returns {Promise<{
  *   groups: import('./unifyCandidateGrouping.js').ClusterGroup[],
  *   applied: boolean,
+ *   remapped: number,
  *   dropped: number,
  * }>}
  */
@@ -430,57 +629,109 @@ export async function filterGroupsByDocSuffixOrphan(
   pageTexts,
   opts = {},
 ) {
-  const { witnesses, adjacentPairs } =
-    await collectDocSuffixContextFromPageTextsAsync(pageTexts, {
+  const findingsWitnesses = collectFindingsHangulWitnesses(
+    opts.witnessGroups ?? groups,
+    opts.rawByKey ?? null,
+  );
+  const { adjacentPairs } = await collectDocSuffixContextFromPageTextsAsync(
+    pageTexts,
+    {
       yieldEveryPages: opts.yieldEveryPages ?? 1,
-    });
-  if (!witnesses.size) {
-    return { groups: groups ?? [], applied: false, dropped: 0 };
+    },
+  );
+  if (!findingsWitnesses.size) {
+    return {
+      groups: groups ?? [],
+      applied: false,
+      remapped: 0,
+      dropped: 0,
+    };
   }
-  const headCutHits = buildHeadCutFragmentIndex(witnesses);
+  const restoreMap = buildHeadCutRestoreMap(findingsWitnesses);
+  const headCutHits = buildHeadCutFragmentIndex(findingsWitnesses);
   const adjacentByCurr = buildAdjacentPrevByCurr(adjacentPairs);
-  // 인덱스 구축 직후에도 한 번 양보 — 대형 PDF에서 스피너 프레임
   await new Promise((r) => setTimeout(r, 0));
 
   const yieldEvery = opts.yieldEvery ?? 8;
+  let remapped = 0;
   let dropped = 0;
   let ops = 0;
   /** @type {import('./unifyCandidateGrouping.js').ClusterGroup[]} */
   const nextGroups = [];
 
   for (const group of groups ?? []) {
-    /** @type {typeof group.clusters} */
-    const kept = [];
+    /** @type {Map<string, object>} */
+    const byKey = new Map();
+    let groupChanged = false;
     for (const cluster of group.clusters ?? []) {
       ops += 1;
       if (ops % yieldEvery === 0) {
         await new Promise((r) => setTimeout(r, 0));
       }
-      const spacedVariants = [
-        ...(cluster.variants ?? []),
-        ...Object.keys(cluster.counts ?? {}),
-      ].filter((v) => /\s/.test(String(v)));
-      const hit = spacedVariants.some((v) =>
-        spacedVariantHitsDocSuffixOrphanIndexed(
-          v,
-          witnesses,
-          headCutHits,
-          adjacentByCurr,
-        ),
-      );
-      if (hit) {
-        dropped += 1;
+
+      const restored = remapClusterByHeadCut(cluster, restoreMap);
+      if (restored) {
+        remapped += 1;
+        groupChanged = true;
+        const existing = byKey.get(restored.key);
+        if (existing) mergeRemappedClusterInto(existing, restored);
+        else byKey.set(restored.key, restored);
         continue;
       }
-      kept.push(cluster);
+
+      const spacedVariants = [
+        ...(cluster.variants ?? []),
+        ...Object.keys(clusterCountsObject(cluster)),
+      ].filter((v) => /\s/.test(String(v)));
+      const adjacentHit = spacedVariants.some((v) => {
+        const parts = String(v)
+          .normalize('NFC')
+          .trim()
+          .split(/\s+/)
+          .filter(Boolean);
+        if (parts.length < 2) return false;
+        const left = hangulOnlyNoise(parts[0]);
+        // head-cut으로 복원 가능한 조각은 위에서 처리됨 — 여기선 인접만
+        if (restoreMap.has(left)) return false;
+        return spacedVariantHitsDocSuffixOrphanIndexed(
+          v,
+          headCutHits,
+          adjacentByCurr,
+          findingsWitnesses,
+        );
+      });
+      if (adjacentHit) {
+        dropped += 1;
+        groupChanged = true;
+        continue;
+      }
+
+      const key = hangulOnlyNoise(String(cluster.key ?? '').replace(/\s+/g, ''));
+      const normalized = {
+        ...cluster,
+        key: key || String(cluster.key ?? ''),
+        counts: clusterCountsObject(cluster),
+      };
+      const existing = byKey.get(normalized.key);
+      if (existing) {
+        groupChanged = true;
+        mergeRemappedClusterInto(existing, normalized);
+      } else byKey.set(normalized.key, normalized);
     }
-    if (kept.length === 0) continue;
-    if (kept.length === (group.clusters ?? []).length) {
+
+    const clusters = [...byKey.values()];
+    if (clusters.length === 0) continue;
+    if (!groupChanged && clusters.length === (group.clusters ?? []).length) {
       nextGroups.push(group);
     } else {
-      nextGroups.push({ ...group, clusters: kept });
+      nextGroups.push({ ...group, clusters });
     }
   }
 
-  return { groups: nextGroups, applied: true, dropped };
+  return {
+    groups: nextGroups,
+    applied: true,
+    remapped,
+    dropped,
+  };
 }

@@ -367,52 +367,12 @@ export function formatUnifyCandidatePhase2CompleteMessage(
  * }} [quotaContext]
  */
 export async function alertUnifyCandidateFindAfterRun(
-  clusters = [],
-  quotaContext = {},
+  _clusters = [],
+  _quotaContext = {},
 ) {
-  const {
-    uid = '',
-    email = '',
-    itemCount,
-  } = quotaContext;
-  const clusterCount =
-    typeof itemCount === 'number' ? itemCount : clusters.length;
-  const totalOccurrences = clusters.reduce(
-    (sum, cluster) => sum + (cluster.totalCount ?? 0),
-    0,
-  );
-  let message = formatUnifyCandidateFindCompleteMessage(
-    clusterCount,
-    totalOccurrences,
-  );
-
-  const quotaConsumedLine = await buildCheckResultQuotaConsumedLine(
-    uid,
-    email,
-    'consistency',
-  );
-  if (quotaConsumedLine) {
-    message = `${message}\n\n${quotaConsumedLine}`;
-  }
-
-  await finishGuestBrowseConsistencyResultThenUnlockExportGuide(
-    async (extra = {}) => {
-      await showAppAlert({
-        title: '찾기를 진행했습니다',
-        message,
-        messageNode:
-          clusterCount > 0
-            ? createElement(UnifyCandidateFindCompleteContent, {
-                clusterCount,
-                totalOccurrences,
-                quotaConsumedLine,
-                phaseLabel: '1차 표기 통일(띄어쓰기) :',
-              })
-            : undefined,
-        ...extra,
-      });
-    },
-  );
+  // 1차 찾기 직후 「찾기를 진행했습니다」모달은 띄우지 않음.
+  // 게스트 둘러보기만 결과→다운로드 가이드 해금 유지.
+  await finishGuestBrowseConsistencyResultThenUnlockExportGuide(async () => {});
 }
 
 /**

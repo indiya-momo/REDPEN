@@ -28,6 +28,10 @@ import {
   sumVisibleFindings,
   countGroupsWithVisibleFindings,
 } from '../lib/checkResultsAccordion.js';
+import {
+  formatPhraseSlotStemStyleSignalText,
+  interleavePhraseSlotStemStyleSignals,
+} from '../lib/phraseSlotStyleSignal.js';
 
 /**
  * @param {{
@@ -595,7 +599,31 @@ export default function CheckResultsPanel({
                   </span>
                 </summary>
                 <ul className="results-list results-list--nested">
-                  {section.entries.map(renderResultEntry)}
+                  {section.id === 'common'
+                    ? interleavePhraseSlotStemStyleSignals(section.entries).map(
+                        (row) => {
+                          if (row.kind === 'stem-signal') {
+                            const { signal } = row;
+                            return (
+                              <li
+                                key={`stem-signal-${signal.stem}`}
+                                className="phrase-slot-stem-signal"
+                                data-stem={signal.stem}
+                                data-mixed={signal.mixed ? '1' : '0'}
+                              >
+                                <span className="phrase-slot-stem-signal__stem">
+                                  {signal.stem}
+                                </span>
+                                <span className="phrase-slot-stem-signal__counts">
+                                  {formatPhraseSlotStemStyleSignalText(signal)}
+                                </span>
+                              </li>
+                            );
+                          }
+                          return renderResultEntry(row.entry);
+                        },
+                      )
+                    : section.entries.map(renderResultEntry)}
                 </ul>
               </details>
             ))}

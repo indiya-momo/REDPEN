@@ -382,7 +382,7 @@ describe('formatUnifyCandidatePhase2CompleteMessage', () => {
 });
 
 describe('alertUnifyCandidateFindAfterRun', () => {
-  it('찾기 완료 alert를 띄운다', async () => {
+  it('1차 찾기 직후 완료 팝업은 no-op (뜨지 않음)', async () => {
     const alertMock = vi.fn();
     vi.stubGlobal('alert', alertMock);
 
@@ -400,14 +400,10 @@ describe('alertUnifyCandidateFindAfterRun', () => {
       { uid: 'u1', email: 'a@b.c' },
     );
 
-    expect(alertMock).toHaveBeenCalledWith(
-      '찾기를 진행했습니다\n\n' +
-        '1차 표기 통일(띄어쓰기) : 추천 단어 세트 1 전체 발견 2\n\n' +
-        '표기 통일 검수권 1장이 사용되었습니다(1일 검수권 1장, 선물 검수권 5장 사용 가능)',
-    );
+    expect(alertMock).not.toHaveBeenCalled();
   });
 
-  it('morphFilterInactive여도 완료 팝업에 형태소 필터 문구를 넣지 않는다', async () => {
+  it('morphFilterInactive여도 alert를 호출하지 않는다', async () => {
     const alertMock = vi.fn();
     vi.stubGlobal('alert', alertMock);
 
@@ -425,11 +421,10 @@ describe('alertUnifyCandidateFindAfterRun', () => {
       { uid: 'u1', email: 'a@b.c', morphFilterInactive: true },
     );
 
-    const text = String(alertMock.mock.calls[0]?.[0] ?? '');
-    expect(text).not.toContain('형태소 필터 미적용');
+    expect(alertMock).not.toHaveBeenCalled();
   });
 
-  it('itemCount가 있으면 클러스터 수 대신 아코디언 행 수를 쓴다', async () => {
+  it('itemCount가 있어도 팝업 no-op', async () => {
     const alertMock = vi.fn();
     vi.stubGlobal('alert', alertMock);
 
@@ -443,21 +438,11 @@ describe('alertUnifyCandidateFindAfterRun', () => {
           recommendedUnify: '경제성장',
           occurrencesByVariant: {},
         },
-        {
-          key: '경제회복',
-          variants: ['경제회복', '경제 회복'],
-          counts: { 경제회복: 1, '경제 회복': 1 },
-          totalCount: 2,
-          recommendedUnify: '경제회복',
-          occurrencesByVariant: {},
-        },
       ],
       { uid: 'u1', email: 'a@b.c', itemCount: 1 },
     );
 
-    expect(alertMock).toHaveBeenCalledWith(
-      expect.stringContaining('1차 표기 통일(띄어쓰기) : 추천 단어 세트 1 전체 발견 5'),
-    );
+    expect(alertMock).not.toHaveBeenCalled();
   });
 });
 

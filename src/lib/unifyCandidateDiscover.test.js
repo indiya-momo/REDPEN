@@ -12,6 +12,7 @@ import {
   instancesForUnifyVariant,
   enrichClustersWithItemHits,
   enrichOccurrencesWithItemHits,
+  rematerializeConflictOccurrencesFromPageText,
   filterUnifyOccurrencesByKiwiBoundary,
   isValidSpacedUnifyVariant,
   isExcludedUnifyCandidateRaw,
@@ -23,6 +24,7 @@ import {
   normalizeUnifyVariant,
   pickRecommendedUnify,
   prepareUnifyScanText,
+  resolveGluedHighlightIndexNear,
   resolveHighlightIndex,
   splitUnifyScanLines,
   stripTrailingJosa,
@@ -201,10 +203,14 @@ describe('stripTrailingJosa', () => {
     expect(stripTrailingJosa('나이')).toBe('나이');
   });
 
-  it('4음절 어절에서는 가·이를 떼지 않는다', () => {
+  it('가·이는 휴리스틱으로 떼지 않는다(경제분석가·분석가)', () => {
     expect(stripTrailingJosa('가치평가')).toBe('가치평가');
     expect(stripTrailingJosa('경제왕국')).toBe('경제왕국');
+    expect(stripTrailingJosa('경제분석가')).toBe('경제분석가');
+    expect(stripTrailingJosa('경제 분석가')).toBe('경제 분석가');
+    expect(stripTrailingJosa('분석가')).toBe('분석가');
     expect(stripTrailingUnifyAffixes('가치평가')).toBe('가치평가');
+    expect(stripTrailingUnifyAffixes('경제분석가')).toBe('경제분석가');
   });
 });
 
@@ -671,6 +677,32 @@ describe('discoverSpacingUnifyCandidates', () => {
     );
   });
 
+  it('layout이 띄움을 붙임으로 읽어도 같은 위치는 붙임으로 중복 세지 않는다', () => {
+    const visual =
+      '국가채무 상한선을 놓고. 국가채무상한선을 둘러싼.';
+    // 띄움 자리(index 0)에서 붙임 exact 스냅 금지
+    expect(resolveGluedHighlightIndexNear(visual, '국가채무상한선', 0)).toBe(
+      -1,
+    );
+    const gluedAt = visual.indexOf('국가채무상한선');
+    expect(gluedAt).toBeGreaterThan(0);
+    expect(
+      resolveGluedHighlightIndexNear(visual, '국가채무상한선', gluedAt),
+    ).toBe(gluedAt);
+    // 진짜 혼재는 그대로 1:1
+    const hit = discoverSpacingUnifyCandidates([
+      { pageNum: 55, text: visual, textLayout: visual },
+    ]).find((c) => c.key === '국가채무상한선');
+    expect(hit?.counts['국가채무 상한선']).toBe(1);
+    expect(hit?.counts['국가채무상한선']).toBe(1);
+  });
+
+  it('붙임 collectUnifyPhraseStarts는 soft로 띄움 슬롯을 만들지 않는다', () => {
+    expect(
+      collectUnifyPhraseStarts('국가채무 상한선을 놓고.', '국가채무상한선'),
+    ).toEqual([]);
+  });
+
   it('공백 개수만 다른 표기는 한 variant로 합친다', () => {
     const clusters = discoverSpacingUnifyCandidates([
       {
@@ -1113,6 +1145,190 @@ describe('reading-order S1 — 칩/occurrence 기하 정렬', () => {
     );
     expect(assigned.map((o) => o.index).sort((a, b) => a - b)).toEqual(slots);
     expect(new Set(assigned.map((o) => o.index)).size).toBe(3);
+  });
+
+  it('assignUnique — visual 슬롯보다 많은 occ는 버린다', () => {
+    const text = '국가채무상한선만';
+    const assigned = assignUniqueUnifyHighlightIndices(
+      [
+        { pageNum: 55, index: 0, matchedText: '국가채무상한선' },
+        { pageNum: 55, index: 0, matchedText: '국가채무상한선' },
+      ],
+      { pageNum: 55, text },
+    );
+    expect(assigned).toHaveLength(1);
+    expect(assigned[0].index).toBe(0);
+  });
+
+  it('rematerialize — page.text에 없는 붙임 유령은 칩에서 제거', () => {
+    const text = '국가채무 상한선만 있다.';
+    /** @type {Record<string, import('./unifyCandidateDiscover.js').UnifyVariantOccurrence[]>} */
+    const occurrencesByVariant = {
+      국가채무상한선: [
+        { pageNum: 55, index: 0, matchedText: '국가채무상한선' },
+        { pageNum: 55, index: 0, matchedText: '국가채무상한선' },
+      ],
+      '국가채무 상한선': [
+        { pageNum: 55, index: 0, matchedText: '국가채무 상한선' },
+      ],
+    };
+    /** @type {Record<string, number>} */
+    const counts = {
+      국가채무상한선: 2,
+      '국가채무 상한선': 1,
+    };
+    const pageByNum = buildPageByNum([{ pageNum: 55, text }]);
+    rematerializeConflictOccurrencesFromPageText(
+      occurrencesByVariant,
+      counts,
+      pageByNum,
+    );
+    expect(counts['국가채무상한선']).toBe(0);
+    expect(counts['국가채무 상한선']).toBe(1);
+    expect(occurrencesByVariant['국가채무상한선']).toHaveLength(0);
+  });
+
+  it('이형태 목록은 횟수 동률이면 페이지에서 위쪽 출현이 위에 온다', () => {
+    const text = '국가채무 상한선과 국가채무상한선';
+    const next = enrichClustersWithItemHits(
+      [
+        {
+          key: '국가채무상한선',
+          variants: ['국가채무상한선', '국가채무 상한선'],
+          counts: { 국가채무상한선: 1, '국가채무 상한선': 1 },
+          occurrencesByVariant: {
+            국가채무상한선: [
+              {
+                pageNum: 55,
+                index: text.indexOf('국가채무상한선'),
+                matchedText: '국가채무상한선',
+              },
+            ],
+            '국가채무 상한선': [
+              { pageNum: 55, index: 0, matchedText: '국가채무 상한선' },
+            ],
+          },
+          recommendedUnify: '국가채무상한선',
+          totalCount: 2,
+          kind: /** @type {const} */ ('conflict'),
+        },
+      ],
+      [{ pageNum: 55, text }],
+    );
+    expect(next).toHaveLength(1);
+    expect(next[0].variants[0]).toBe('국가채무 상한선');
+    expect(next[0].variants[1]).toBe('국가채무상한선');
+    // 추천(통일형)은 동률 붙임 정책 유지
+    expect(next[0].recommendedUnify).toBe('국가채무상한선');
+  });
+
+  it('같은 page.text 자리에는 visual과 일치하는 이형태만 남긴다', () => {
+    const text =
+      '국가채무 상한선을 놓고. 국가채무상한선을 둘러싼.';
+    const clusters = discoverSpacingUnifyCandidates([
+      {
+        pageNum: 55,
+        text,
+        // layout은 둘 다 붙임으로 읽어도
+        textLayout:
+          '국가채무상한선을 놓고. 국가채무상한선을 둘러싼.',
+      },
+    ]);
+    const hit = clusters.find((c) => c.key === '국가채무상한선');
+    // 띄움이 layout에 없으면 conflict 자체가 없을 수 있음 → enrich 경로로 검증
+    const enriched = enrichClustersWithItemHits(
+      [
+        {
+          key: '국가채무상한선',
+          variants: ['국가채무상한선', '국가채무 상한선'],
+          counts: { 국가채무상한선: 2, '국가채무 상한선': 1 },
+          occurrencesByVariant: {
+            국가채무상한선: [
+              { pageNum: 55, index: 0, matchedText: '국가채무상한선' },
+              {
+                pageNum: 55,
+                index: text.indexOf('국가채무상한선'),
+                matchedText: '국가채무상한선',
+              },
+            ],
+            '국가채무 상한선': [
+              { pageNum: 55, index: 0, matchedText: '국가채무 상한선' },
+            ],
+          },
+          recommendedUnify: '국가채무상한선',
+          totalCount: 3,
+          kind: /** @type {const} */ ('conflict'),
+        },
+      ],
+      [{ pageNum: 55, text }],
+    );
+    expect(enriched).toHaveLength(1);
+    expect(enriched[0].counts['국가채무 상한선']).toBe(1);
+    expect(enriched[0].counts['국가채무상한선']).toBe(1);
+    const gluedIdx =
+      enriched[0].occurrencesByVariant['국가채무상한선']?.[0]?.index;
+    const spacedIdx =
+      enriched[0].occurrencesByVariant['국가채무 상한선']?.[0]?.index;
+    expect(gluedIdx).not.toBe(spacedIdx);
+    expect(text.slice(spacedIdx, spacedIdx + '국가채무 상한선'.length)).toBe(
+      '국가채무 상한선',
+    );
+    expect(text.slice(gluedIdx, gluedIdx + '국가채무상한선'.length)).toBe(
+      '국가채무상한선',
+    );
+  });
+
+  it('enrich — visual locus 단일화로 붙임·띄움 이중 칩을 막는다', () => {
+    const size = 10;
+    const text = '국가채무 상한선과 국가채무상한선';
+    const page = {
+      pageNum: 55,
+      text,
+      items: [
+        {
+          str: '국가채무',
+          transform: [size, 0, 0, size, 100, 400],
+          width: 40,
+        },
+        {
+          str: '상한선',
+          transform: [size, 0, 0, size, 148, 400],
+          width: 30,
+        },
+        {
+          str: '국가채무상한선',
+          transform: [size, 0, 0, size, 100, 360],
+          width: 70,
+        },
+      ],
+    };
+    const clusters = [
+      {
+        key: '국가채무상한선',
+        variants: ['국가채무상한선', '국가채무 상한선'],
+        counts: { 국가채무상한선: 2, '국가채무 상한선': 1 },
+        occurrencesByVariant: {
+          국가채무상한선: [
+            { pageNum: 55, index: 0, matchedText: '국가채무상한선' },
+            {
+              pageNum: 55,
+              index: text.indexOf('국가채무상한선'),
+              matchedText: '국가채무상한선',
+            },
+          ],
+          '국가채무 상한선': [
+            { pageNum: 55, index: 0, matchedText: '국가채무 상한선' },
+          ],
+        },
+        recommendedUnify: '국가채무상한선',
+        totalCount: 3,
+        kind: /** @type {const} */ ('conflict'),
+      },
+    ];
+    const next = enrichClustersWithItemHits(clusters, [page]);
+    expect(next).toHaveLength(1);
+    expect(next[0].counts['국가채무 상한선']).toBe(1);
+    expect(next[0].counts['국가채무상한선']).toBe(1);
   });
 
   it('enrichClustersWithItemHits — 이중 드로잉 텍스트 2회를 item dedupe 1회로 맞춘다', () => {

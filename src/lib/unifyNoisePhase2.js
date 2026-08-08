@@ -84,7 +84,10 @@ export async function filterSeriesSatellitesByKiwiPhase2(groups, opts = {}) {
  * 목록 표시 후 2차 필터 묶음 (DocSuffix → Kiwi). 서로 try 분리.
  * @param {import('./unifyCandidateGrouping.js').ClusterGroup[]} groups
  * @param {{ text?: string, textLayout?: string }[] | null | undefined} pageTexts
- * @param {{ yieldEvery?: number }} [opts]
+ * @param {{
+ *   yieldEvery?: number,
+ *   rawByKey?: Map<string, { counts?: Map<string, number> | Record<string, number> }> | null,
+ * }} [opts]
  * @returns {Promise<{
  *   groups: import('./unifyCandidateGrouping.js').ClusterGroup[],
  *   docSuffix: { applied: boolean, dropped: number },
@@ -100,8 +103,14 @@ export async function runUnifyListPhase2Filters(groups, pageTexts, opts = {}) {
 
   try {
     const suffix = await filterGroupsByDocSuffixOrphan(next, pageTexts, opts);
-    docSuffix = { applied: suffix.applied, dropped: suffix.dropped };
-    if (suffix.applied && suffix.dropped > 0) {
+    docSuffix = {
+      applied: suffix.applied,
+      dropped: (suffix.remapped ?? 0) + (suffix.dropped ?? 0),
+    };
+    if (
+      suffix.applied &&
+      ((suffix.remapped ?? 0) > 0 || (suffix.dropped ?? 0) > 0)
+    ) {
       next = sortClusterGroups(suffix.groups);
     }
   } catch (err) {
