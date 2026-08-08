@@ -218,8 +218,25 @@ describe('2차 filterGroupsByDocSuffixOrphan', () => {
         textLayout: '예산 서 비스 지출과 비스지출',
       },
     ];
+    const ctx = collectDocSuffixContextFromPageTexts(pageTexts);
+    expect(ctx.witnesses.has('서비스')).toBe(true);
     const out = await filterGroupsByDocSuffixOrphan(groups, pageTexts);
     expect(out.dropped).toBeGreaterThanOrEqual(1);
+    expect(out.groups.flatMap((g) => g.clusters)).toHaveLength(0);
+  });
+
+  it('서\\n비스 합류 증인으로 전역 앞잘림(비스) DROP', async () => {
+    const groups = singleGroup([spacedCluster('비스지출', '비스 지출')]);
+    const pageTexts = [
+      {
+        pageNum: 1,
+        text: '예산 서\n비스 지출과 비스지출',
+        textLayout: '예산 서\n비스 지출과 비스지출',
+      },
+    ];
+    const ctx = collectDocSuffixContextFromPageTexts(pageTexts);
+    expect(ctx.witnesses.has('서비스')).toBe(true);
+    const out = await filterGroupsByDocSuffixOrphan(groups, pageTexts);
     expect(out.groups.flatMap((g) => g.clusters)).toHaveLength(0);
   });
 

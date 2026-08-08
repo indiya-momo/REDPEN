@@ -20,6 +20,7 @@
  *    같은 줄 연속 토큰 + **이전 줄 마지막 ↔ 현재 줄 첫** (OCR 줄바꿈 앞잘림).
  *    짧은 앞조각(P 1~2음절)+F 인접은 긴 형태 증인 없이도 DROP
  *    (`서` `비스` / `서`\\n`비스` — 본문에 `서비스` 토큰이 없어도).
+ *    짧은P·줄바꿈 인접의 P+F는 증인에 합류 (`서`+`비스`→`서비스`) → 전역 앞잘림도 동작.
  *    오른쪽 칸에는 적용하지 않음 (`서울`+`시장`이 `노동 시장`을 지우지 않게).
  *
  * 조사 strip은 증인(W) 쪽만 — needle(F)에는 적용하지 않음.
@@ -353,19 +354,36 @@ function ingestDocSuffixPage(page, witnesses, adjacentPairs) {
 }
 
 /**
+ * OCR로 쪼갠 인접을 이어 증인에 합류 (서+비스→서비스, 프+로그램→프로그램).
+ * 긴 앞토큰 일반 인접은 넣지 않음 (대기업과+기업 → 기업 오탐 방지).
+ * @param {Set<string>} witnesses
+ * @param {{ prev: string, curr: string, crossLine?: boolean }[]} adjacentPairs
+ */
+function addJoinedAdjacentWitnesses(witnesses, adjacentPairs) {
+  for (const pair of adjacentPairs ?? []) {
+    const prev = hangulOnlyNoise(pair?.prev);
+    const curr = hangulOnlyNoise(pair?.curr);
+    if (!prev || !curr) continue;
+    if (!pair?.crossLine && prev.length > 2) continue;
+    noteDocHangulEojeolForOrphan(witnesses, prev + curr);
+  }
+}
+
+/**
  * 2차용 — page.text ∪ textLayout에서 증인·인접쌍 수집 (1차 discover와 무관).
  * layout이 잘려도 text에 온전한 어절이 있으면 증인에 남는다.
  * @param {{ text?: string, textLayout?: string }[] | null | undefined} pageTexts
- * @returns {{ witnesses: Set<string>, adjacentPairs: { prev: string, curr: string }[] }}
+ * @returns {{ witnesses: Set<string>, adjacentPairs: { prev: string, curr: string, crossLine?: boolean }[] }}
  */
 export function collectDocSuffixContextFromPageTexts(pageTexts) {
   /** @type {Set<string>} */
   const witnesses = new Set();
-  /** @type {{ prev: string, curr: string }[]} */
+  /** @type {{ prev: string, curr: string, crossLine?: boolean }[]} */
   const adjacentPairs = [];
   for (const page of pageTexts ?? []) {
     ingestDocSuffixPage(page, witnesses, adjacentPairs);
   }
+  addJoinedAdjacentWitnesses(witnesses, adjacentPairs);
   return { witnesses, adjacentPairs };
 }
 
@@ -373,7 +391,7 @@ export function collectDocSuffixContextFromPageTexts(pageTexts) {
  * collect와 동일 결과 + 페이지마다 메인스레드 양보 (목록 표시 후 2차에서도 UI 동결 완화).
  * @param {{ text?: string, textLayout?: string }[] | null | undefined} pageTexts
  * @param {{ yieldEveryPages?: number }} [opts]
- * @returns {Promise<{ witnesses: Set<string>, adjacentPairs: { prev: string, curr: string }[] }>}
+ * @returns {Promise<{ witnesses: Set<string>, adjacentPairs: { prev: string, curr: string, crossLine?: boolean }[] }>}
  */
 export async function collectDocSuffixContextFromPageTextsAsync(
   pageTexts,
@@ -382,7 +400,7 @@ export async function collectDocSuffixContextFromPageTextsAsync(
   const yieldEveryPages = opts.yieldEveryPages ?? 1;
   /** @type {Set<string>} */
   const witnesses = new Set();
-  /** @type {{ prev: string, curr: string }[]} */
+  /** @type {{ prev: string, curr: string, crossLine?: boolean }[]} */
   const adjacentPairs = [];
   const pages = pageTexts ?? [];
   for (let i = 0; i < pages.length; i += 1) {
@@ -391,6 +409,7 @@ export async function collectDocSuffixContextFromPageTextsAsync(
       await new Promise((r) => setTimeout(r, 0));
     }
   }
+  addJoinedAdjacentWitnesses(witnesses, adjacentPairs);
   return { witnesses, adjacentPairs };
 }
 
