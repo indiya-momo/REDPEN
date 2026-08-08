@@ -5,7 +5,7 @@
 import {
   prepareUnifyScanText,
   splitUnifyScanLines,
-} from '../unifyCandidateDiscover.js';
+} from '../unifyCandidateNormalize.js';
 
 /** @typedef {import('../unifyCandidateDiscover.js').UnifySpacingCluster} UnifySpacingCluster */
 /** @typedef {import('../unifyCandidateDiscover.js').UnifyVariantOccurrence} UnifyVariantOccurrence */

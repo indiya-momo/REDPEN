@@ -9,10 +9,10 @@
 
 import {
   hangulSyllableCount,
-  pickRecommendedUnify,
-  stripUnifyPunctuationNoise,
   UNIFY_SPACED_PART_MIN_HANGUL,
-} from './unifyCandidateDiscover.js';
+} from './unifyHangulBasics.js';
+import { stripUnifyPunctuationNoise } from './unifyCandidateNormalize.js';
+import { pickRecommendedUnify } from './unifyCandidateDiscover.js';
 
 /**
  * @typedef {import('./unifyCandidateDiscover.js').UnifySpacingCluster} UnifySpacingCluster
