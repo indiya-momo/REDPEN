@@ -209,6 +209,20 @@ describe('2차 filterGroupsByDocSuffixOrphan', () => {
     expect(keys).toContain('경제성장');
   });
 
+  it('같은 줄 짧은P — 서비스 증인 없어도 서 비스 띄움 DROP', async () => {
+    const groups = singleGroup([spacedCluster('비스지출', '비스 지출')]);
+    const pageTexts = [
+      {
+        pageNum: 1,
+        text: '예산 서 비스 지출과 비스지출',
+        textLayout: '예산 서 비스 지출과 비스지출',
+      },
+    ];
+    const out = await filterGroupsByDocSuffixOrphan(groups, pageTexts);
+    expect(out.dropped).toBeGreaterThanOrEqual(1);
+    expect(out.groups.flatMap((g) => g.clusters)).toHaveLength(0);
+  });
+
   it('대기업·부시장 있어도 기업/시장 띄움 KEEP', async () => {
     const groups = singleGroup([
       spacedCluster('기업문화', '기업 문화'),

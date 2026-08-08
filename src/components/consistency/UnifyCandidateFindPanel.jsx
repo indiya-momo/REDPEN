@@ -1216,6 +1216,30 @@ export default function UnifyCandidateFindPanel({
         workingGroups = phase2.groups;
         phase2Applied = phase2.kiwi.applied;
         docSuffixDropped = phase2.docSuffix.dropped;
+        if (import.meta.env.DEV) {
+          const { collectDocSuffixContextFromPageTexts } = await import(
+            '../../lib/unifyNoiseDocSuffixOrphan.js'
+          );
+          const { witnesses, adjacentPairs } =
+            collectDocSuffixContextFromPageTexts(pageTexts);
+          const keys = workingGroups.flatMap((g) =>
+            (g.clusters ?? []).map((c) => String(c.key ?? '')),
+          );
+          console.info('[unify-doc-suffix-diag]', {
+            applied: phase2.docSuffix.applied,
+            dropped: docSuffixDropped,
+            still로그램지출: keys.some(
+              (k) => k.replace(/\s+/g, '') === '로그램지출',
+            ),
+            still비스지출: keys.some(
+              (k) => k.replace(/\s+/g, '') === '비스지출',
+            ),
+            adjacent비스: adjacentPairs.filter((p) => p.curr === '비스'),
+            adjacent로그램: adjacentPairs.filter((p) => p.curr === '로그램'),
+            has프로그램: [...witnesses].some((w) => w.includes('프로그램')),
+            has서비스: [...witnesses].some((w) => w.includes('서비스')),
+          });
+        }
       } catch (err) {
         phase2Applied = false;
         if (import.meta.env.DEV) {

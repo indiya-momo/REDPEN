@@ -18,8 +18,8 @@
  * 2) 인접: 공백 앞 어절 P(길이 무관)+**왼쪽 조각** F 이음이 문서 어절과 같거나
  *    그 접두이면 F는 잘림 (`환매조`+`건부` → `환매조건부`).
  *    같은 줄 연속 토큰 + **이전 줄 마지막 ↔ 현재 줄 첫** (OCR 줄바꿈 앞잘림).
- *    줄바꿈 인접은 긴 형태 증인이 추출에 없어도 DROP 가능
- *    (`서`\\n`비스` — `서비스` 토큰이 본문에 없는 경우). P는 1~2음절.
+ *    짧은 앞조각(P 1~2음절)+F 인접은 긴 형태 증인 없이도 DROP
+ *    (`서` `비스` / `서`\\n`비스` — 본문에 `서비스` 토큰이 없어도).
  *    오른쪽 칸에는 적용하지 않음 (`서울`+`시장`이 `노동 시장`을 지우지 않게).
  *
  * 조사 strip은 증인(W) 쪽만 — needle(F)에는 적용하지 않음.
@@ -206,12 +206,11 @@ function spacedVariantHitsDocSuffixOrphanIndexed(
   if (left.length < DOC_SUFFIX_ORPHAN_MIN_FRAGMENT) return false;
   const prevs = adjacentByCurr.get(left);
   if (!prevs?.length) return false;
-  for (const { prev: P, crossLine } of prevs) {
+  for (const { prev: P } of prevs) {
     if (P.length < 1) continue;
     if (documentEojeolHasWordOrPrefix(docHangulEojeols, P + left)) return true;
-    // 줄바꿈 OCR: 서\n비스 — 본문에 '서비스' 토큰이 없어도 DROP
+    // 짧은 앞조각 OCR (서 비스 / 서\n비스) — 긴 형태 증인 없어도 DROP
     if (
-      crossLine &&
       P.length <= 2 &&
       left.length >= DOC_SUFFIX_ORPHAN_MIN_FRAGMENT
     ) {
