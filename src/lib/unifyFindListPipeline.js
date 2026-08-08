@@ -11,7 +11,7 @@ import {
   groupSortAndFillSatellites,
   sortClusterGroups,
 } from './unifyCandidateGrouping.js';
-import { filterSeriesSatellitesByMorphPos } from './unifyCandidateSatellites.js';
+import { filterSeriesSatellitesByNoiseList } from './unifyCandidateSatellites.js';
 import { stripDependentNounGenitiveFromGroups } from './unifyDependentNounGenitive.js';
 import { mergeReviewedClustersIntoGroups } from './unifyJosaReviewSlm/index.js';
 import { dropJosaPlusPredicateFromGroups } from './unifyPredicateBucket.js';
@@ -53,8 +53,8 @@ export function applyUnifyListReviewMarks(groups, marks = {}) {
     seriesIds: stdictPredicateSeriesIds,
     clusterKeys: stdictPredicateClusterKeys,
   });
-  const withMorphSat = filterSeriesSatellitesByMorphPos(withStdict);
-  const withoutJosaPred = dropJosaPlusPredicateFromGroups(withMorphSat, {
+  const withNoiseSat = filterSeriesSatellitesByNoiseList(withStdict);
+  const withoutJosaPred = dropJosaPlusPredicateFromGroups(withNoiseSat, {
     stdictPredicateKeys: stdictPredicateClusterKeys,
   });
   return applyPredicateSlmDropsToGroups(
@@ -68,14 +68,14 @@ export function applyUnifyListReviewMarks(groups, marks = {}) {
 }
 
 /**
- * item 재집계 → 위성 morph → 발견 순 정렬.
+ * item 재집계 → 위성 1차 noise-list → 발견 순 정렬.
  * @param {ClusterGroup[]} groups
  * @param {{ pageNum?: number, text?: string, textLayout?: string }[]} pageTexts
  * @returns {ClusterGroup[]}
  */
 export function finalizeUnifyListGroups(groups, pageTexts) {
   return sortClusterGroups(
-    filterSeriesSatellitesByMorphPos(
+    filterSeriesSatellitesByNoiseList(
       enrichClusterGroupsWithItemHits(groups, pageTexts),
     ),
   );
@@ -91,7 +91,7 @@ export async function finalizeUnifyListGroupsAsync(groups, pageTexts) {
     groups,
     pageTexts,
   );
-  return sortClusterGroups(filterSeriesSatellitesByMorphPos(enriched));
+  return sortClusterGroups(filterSeriesSatellitesByNoiseList(enriched));
 }
 
 /**

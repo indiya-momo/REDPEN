@@ -438,6 +438,9 @@ export function classifyKiwiSpacedEojeolPos(eojeol, opts = {}) {
  * - dictPos=noun → 명사+명사만 / predicate → 동사+동사만
  * - 어절 분석 실패(unknown) → false(fail-open). 단, 명사·동사 양쪽에
  *   fail-open을 겹치면 잡음이 통과하므로 unknown은 여기서만 별도 처리.
+ *
+ * 이름에 Satellite가 있어도 **UI 위성 편입과 무관** — Kiwi POS 정책.
+ * 1차 목록 필터는 `filterSeriesSatellitesByNoiseList`.
  * @param {string} spacedVariant
  * @param {'noun' | 'predicate' | string | undefined | null} dictPos
  * @param {{ kiwi?: { ready?: () => boolean, analyze: Function } | null }} [opts]

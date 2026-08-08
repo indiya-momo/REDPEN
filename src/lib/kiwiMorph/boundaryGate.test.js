@@ -474,7 +474,7 @@ describe.skipIf(!HAS_KIWI_MODEL)('이다 종결 잡음 제외 (Node 모델)', ()
       isKiwiVerbCompoundEojeol,
       classifyKiwiSpacedEojeolPos,
     } = await import('./unifyExclude.js');
-    const { filterSeriesSatellitesByMorphPos } = await import(
+    const { filterSeriesSatellitesByNoiseList } = await import(
       '../unifyCandidateSatellites.js'
     );
 
@@ -581,7 +581,7 @@ describe.skipIf(!HAS_KIWI_MODEL)('이다 종결 잡음 제외 (Node 모델)', ()
         ],
       },
     ];
-    const filtered = filterSeriesSatellitesByMorphPos(groups);
+    const filtered = filterSeriesSatellitesByNoiseList(groups);
     // 1차 리스트 — 사실상·말해는 예외, 보통은 꼬리·예외 아님(2차 Kiwi 담당)
     expect(filtered[0].clusters.map((c) => c.key)).toEqual([
       '금융시장',
