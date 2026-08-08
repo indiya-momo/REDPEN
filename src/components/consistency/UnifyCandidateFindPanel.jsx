@@ -4,15 +4,13 @@
  * 결과 목록은 맞춤법 결과 리스트와 같은 아코디언(N항목 전체 발견).
  * 페이지 칩은 접히면 최대 3개 +「더 보기」.
  */
-import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef, Fragment, startTransition } from 'react';
 import CriteriaHoverTip from '../CriteriaHoverTip.jsx';
 import unifyFindPenSrc from '../../assets/momo/unify-find-pen.png';
 import {
-  buildUnifyCandidatePreviewGroups,
   discoverSpacingUnifyCandidatesAsync,
   enrichClustersWithItemHitsAsync,
   firstWrongUnifyInstance,
-  instancesForUnifyVariant,
   prefetchUnifyKiwiSurfaces,
 } from '../../lib/unifyCandidateDiscover.js';
 import {
@@ -21,13 +19,11 @@ import {
 import { filterSeriesSatellitesByNoiseList } from '../../lib/unifyCandidateSatellites.js';
 import { runUnifyListPhase2Filters } from '../../lib/unifyNoisePhase2.js';
 import {
-  applyUnifyListReviewMarks,
   assembleUnifyListBase,
   buildUnifyListGroups,
   finalizeUnifyListGroupsAsync,
 } from '../../lib/unifyFindListPipeline.js';
 import {
-  buildPatternRulePreviewGroups,
   buildSecondaryGroupsFromCandidates,
   collectPatternRuleCandidates,
   collectPrimaryFormsForPatternGroup,
@@ -98,6 +94,132 @@ function formatSeriesCategoryLabelText(group) {
   const affix = String(group?.affix ?? '');
   if (group?.affixType === 'suffix') return group?.label || `@${affix}`;
   return group?.label || `${affix}@`;
+}
+
+/**
+ * PDF 선택·쪽 이동 — defer는 selectInstance(deferPage) 한 층만.
+ * @param {(inst: import('../../lib/ruleEngine.js').MatchInstance) => void} [onSelectInstance]
+ * @param {import('../../lib/ruleEngine.js').MatchInstance | null | undefined} inst
+ */
+function jumpUnifyPdf(onSelectInstance, inst) {
+  if (!onSelectInstance || !inst) return;
+  onSelectInstance(inst);
+}
+
+/**
+ * 목록 페인트 후 preview/jump/alert 직렬화용.
+ * @returns {Promise<void>}
+ */
+function afterPaint() {
+  return new Promise((resolve) => {
+    if (typeof requestAnimationFrame === 'function') {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => resolve());
+      });
+      return;
+    }
+    setTimeout(resolve, 0);
+  });
+}
+
+/**
+ * 목록 첫 체크(첫 카드)의 첫 쪽 칩 — 찾기 직후 PDF 포커스용.
+ * @param {import('../../lib/unifyCandidateGrouping.js').ClusterGroup[] | null | undefined} groups
+ * @param {Map<string, string>} chosenByKey
+ * @param {Set<string>} [hiddenKeys]
+ * @returns {import('../../lib/ruleEngine.js').MatchInstance | null}
+ */
+function firstUnifyListChipInstance(groups, chosenByKey, hiddenKeys) {
+  for (const group of groups ?? []) {
+    for (const cluster of group.clusters ?? []) {
+      if (hiddenKeys?.has(cluster.key)) continue;
+      if ((cluster.totalCount ?? 0) <= 0) continue;
+      const chosen =
+        chosenByKey?.get(cluster.key) || cluster.recommendedUnify;
+      for (const variant of cluster.variants ?? []) {
+        const occs = cluster.occurrencesByVariant?.[variant] ?? [];
+        if (!occs.length) continue;
+        const occ = occs[0];
+        return {
+          find: variant,
+          replace: chosen,
+          matchedText: occ.matchedText,
+          suggestedText: chosen,
+          pageNum: occ.pageNum,
+          index: occ.index,
+          ...(Array.isArray(occ.itemIndexes) && occ.itemIndexes.length
+            ? { itemIndexes: occ.itemIndexes }
+            : {}),
+          ...(typeof occ.x === 'number' ? { x: occ.x } : {}),
+          ...(typeof occ.y === 'number' ? { y: occ.y } : {}),
+          ...(typeof occ.column === 'number' ? { column: occ.column } : {}),
+        };
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * 아코디언 펼침 시 카드를 나눠 마운트 — 첫 박스 열기 동결 완화.
+ * @param {{
+ *   clusters: import('../../lib/unifyCandidateDiscover.js').UnifySpacingCluster[],
+ *   renderClusterCard: (cluster: import('../../lib/unifyCandidateDiscover.js').UnifySpacingCluster) => import('react').ReactNode,
+ *   initialCount?: number,
+ *   step?: number,
+ * }} props
+ */
+function ProgressiveClusterCards({
+  clusters,
+  renderClusterCard,
+  initialCount = 8,
+  step = 6,
+  /** false면 initialCount까지만 (프리웜). true면 나머지 idle 마운트 */
+  expandFully = true,
+}) {
+  const list = clusters ?? [];
+  const listSig = `${list.length}:${list[0]?.key ?? ''}:${list[list.length - 1]?.key ?? ''}`;
+  const [visibleCount, setVisibleCount] = useState(() =>
+    Math.min(initialCount, list.length),
+  );
+
+  useEffect(() => {
+    setVisibleCount(Math.min(initialCount, list.length));
+  }, [listSig, initialCount, list.length]);
+
+  useEffect(() => {
+    if (!expandFully) return undefined;
+    if (visibleCount >= list.length) return undefined;
+    let cancelled = false;
+    /** @type {number | null} */
+    let idleId = null;
+    /** @type {ReturnType<typeof setTimeout> | null} */
+    let timeoutId = null;
+    const bump = () => {
+      if (cancelled) return;
+      setVisibleCount((n) => Math.min(n + step, list.length));
+    };
+    if (typeof requestIdleCallback === 'function') {
+      idleId = requestIdleCallback(bump, { timeout: 48 });
+    } else {
+      timeoutId = setTimeout(bump, 0);
+    }
+    return () => {
+      cancelled = true;
+      if (idleId != null && typeof cancelIdleCallback === 'function') {
+        cancelIdleCallback(idleId);
+      }
+      if (timeoutId != null) clearTimeout(timeoutId);
+    };
+  }, [visibleCount, list.length, step, expandFully]);
+
+  return (
+    <ul className="results-list results-list--nested unify-candidate-find__list">
+      {list.slice(0, visibleCount).map((cluster) => (
+        <Fragment key={cluster.key}>{renderClusterCard(cluster)}</Fragment>
+      ))}
+    </ul>
+  );
 }
 
 /**
@@ -625,9 +747,15 @@ function Phase2ConditionSummary({
  *   currentPage?: number,
  *   selectedInstance?: import('../../lib/ruleEngine.js').MatchInstance | null,
  *   onSelectInstance?: (inst: import('../../lib/ruleEngine.js').MatchInstance) => void,
- *   onPreviewGroupsChange?: (
- *     groups: import('../../lib/ruleEngine.js').GroupedResult[],
- *   ) => void,
+ *   onListReady?: (payload: {
+ *     clusters: UnifySpacingCluster[],
+ *     chosenByKey: Map<string, string>,
+ *     hiddenKeys: Set<string>,
+ *     focusInst?: import('../../lib/ruleEngine.js').MatchInstance | null,
+ *   }) => void,
+ *   onChosenChange?: (chosenByKey: Map<string, string>) => void,
+ *   onPreviewClear?: () => void,
+ *   onPreviewHiddenChange?: (hiddenKeys: Set<string>) => void,
  *   onPrimaryCompleteChange?: (complete: boolean) => void,
  *   formatPageLabel?: (systemPage: number) => string,
  *   guideSpotlight?: boolean,
@@ -651,7 +779,10 @@ export default function UnifyCandidateFindPanel({
   currentPage = 1,
   selectedInstance = null,
   onSelectInstance,
-  onPreviewGroupsChange,
+  onListReady,
+  onChosenChange,
+  onPreviewClear,
+  onPreviewHiddenChange,
   onPrimaryCompleteChange,
   formatPageLabel = formatSystemPageLabel,
   guideSpotlight = false,
@@ -767,6 +898,27 @@ export default function UnifyCandidateFindPanel({
   const [compliantFormsExpandedKeys, setCompliantFormsExpandedKeys] = useState(
     () => /** @type {Set<string>} */ (new Set()),
   );
+  /** 아코디언 펼침 추적 — 쪽 칩·카드 마운트용 (details open은 네이티브) */
+  const [openUnifySectionIds, setOpenUnifySectionIds] = useState(
+    () => /** @type {Set<string>} */ (new Set()),
+  );
+  const handleUnifySectionToggle = useCallback((sectionId, open) => {
+    // 네이티브 <details> 펼침 페인트를 막지 않음 — 칩·추가 카드는 transition으로
+    startTransition(() => {
+      setOpenUnifySectionIds((prev) => {
+        const has = prev.has(sectionId);
+        if (open === has) return prev;
+        const next = new Set(prev);
+        if (open) next.add(sectionId);
+        else next.delete(sectionId);
+        return next;
+      });
+    });
+  }, []);
+  const shouldMountUnifySection = useCallback(
+    (sectionId) => openUnifySectionIds.has(sectionId),
+    [openUnifySectionIds],
+  );
   /** 2차 진입 직전 1차 선택 스냅샷 — soft 포함, 계열 기준 문구용 */
   const [phase2PrimaryChosen, setPhase2PrimaryChosen] = useState(
     () => /** @type {Map<string, string>} */ (new Map()),
@@ -799,92 +951,11 @@ export default function UnifyCandidateFindPanel({
   );
   /** NOISE_FILTER ON인데 Kiwi 미ready — 형태소 필터 미적용 배지 */
   const [morphFilterInactive, setMorphFilterInactive] = useState(false);
-  /** 칩·하이라이트 동일 소스 (publishPreview가 갱신) */
-  const [publishedPreviewGroups, setPublishedPreviewGroups] = useState(
-    /** @type {import('../../lib/ruleEngine.js').GroupedResult[]} */ ([]),
-  );
-
-  /**
-   * PDF 미리보기 발행. 생략한 필드는 현재 상태값 사용.
-   * @param {{
-   *   allClusters?: UnifySpacingCluster[],
-   *   raw?: Map<string, import('../../lib/unifyCandidateDiscover.js').ClusterAcc> | null,
-   *   hidden?: Set<string>,
-   *   slmByKey?: Map<string, UnifySpacingCluster>,
-   *   dropSeriesIds?: string[],
-   *   dropClusterKeys?: string[],
-   *   needsReviewByKey?: Map<string, { status: 'needs_review' }>,
-   *   stdictSeriesIds?: string[],
-   *   stdictClusterKeys?: string[],
-   *   chosenByKey?: Map<string, string>,
-   *   overrideClusters?: UnifySpacingCluster[] | null,
-   * }} [overrides]
-   */
-  const publishPreview = useCallback(
-    (overrides = {}) => {
-      const allClusters = overrides.allClusters ?? clusters;
-      const raw = overrides.raw !== undefined ? overrides.raw : rawByKey;
-      const hidden = overrides.hidden ?? hiddenPdfKeys;
-      const slmByKey = overrides.slmByKey ?? slmReviewedByKey;
-      const dropSeriesIds =
-        overrides.dropSeriesIds ?? predicateDropSeriesIds;
-      const dropClusterKeys =
-        overrides.dropClusterKeys ?? predicateDropClusterKeys;
-      const needsReviewByKey =
-        overrides.needsReviewByKey ?? predicateNeedsReviewByKey;
-      const stdictSeriesIds =
-        overrides.stdictSeriesIds ?? stdictPredicateSeriesIds;
-      const stdictClusterKeys =
-        overrides.stdictClusterKeys ?? stdictPredicateClusterKeys;
-      const chosenByKey = overrides.chosenByKey ?? registeredVariants;
-      const overrideClusters =
-        overrides.overrideClusters !== undefined
-          ? overrides.overrideClusters
-          : null;
-
-      /** @type {import('../../lib/ruleEngine.js').GroupedResult[]} */
-      let groups = [];
-      if (overrideClusters) {
-        groups = buildUnifyCandidatePreviewGroups(
-          overrideClusters.filter((c) => !hidden.has(c.key)),
-          { registeredByKey: chosenByKey, pages: pageTexts },
-        );
-      } else {
-        const { groups: assembled } = assembleUnifyListBase(allClusters, raw);
-        let nextGroups = applyUnifyListReviewMarks(assembled, {
-          slmReviewedByKey: slmByKey,
-          stdictPredicateSeriesIds: stdictSeriesIds,
-          stdictPredicateClusterKeys: stdictClusterKeys,
-          predicateDropSeriesIds: dropSeriesIds,
-          predicateDropClusterKeys: dropClusterKeys,
-          predicateNeedsReviewByKey: needsReviewByKey,
-        });
-        const previewClusters = nextGroups
-          .flatMap((g) => g.clusters)
-          .filter((c) => !hidden.has(c.key));
-        groups = buildUnifyCandidatePreviewGroups(previewClusters, {
-          registeredByKey: chosenByKey,
-          pages: pageTexts,
-        });
-      }
-      setPublishedPreviewGroups(groups);
-      onPreviewGroupsChange?.(groups);
-      return groups;
+  const notifyChosenChange = useCallback(
+    (registered, pre) => {
+      onChosenChange?.(mergeUnifyChosenMaps(registered, pre));
     },
-    [
-      clusters,
-      rawByKey,
-      hiddenPdfKeys,
-      onPreviewGroupsChange,
-      pageTexts,
-      slmReviewedByKey,
-      predicateDropSeriesIds,
-      predicateDropClusterKeys,
-      predicateNeedsReviewByKey,
-      stdictPredicateSeriesIds,
-      stdictPredicateClusterKeys,
-      registeredVariants,
-    ],
+    [onChosenChange],
   );
 
   async function handleFind() {
@@ -928,6 +999,8 @@ export default function UnifyCandidateFindPanel({
         return;
       }
       setFinding(true);
+      onPreviewClear?.();
+      setOpenUnifySectionIds(new Set());
       setListEpoch((n) => n + 1);
       await new Promise((r) => setTimeout(r, 0));
       setMorphFilterInactive(false);
@@ -1081,10 +1154,7 @@ export default function UnifyCandidateFindPanel({
       );
       bench.mark('5_enrichGroups_sort');
 
-      // 목록을 먼저 보여 준 뒤, Kiwi가 이미 ready일 때만 2차(후보·양보)
-      // 팝업·헤더·배지 숫자는 2차 반영 후 최종 스냅샷 하나로만 센다 (A).
-      const prePhase2Snap = summarizeUnifyListSnapshot(workingGroups);
-      setFindListGroups(workingGroups);
+      // marks는 미리 두고, listReady는 phase2 끝난 뒤 한 번만
       setClusters(next);
       setRawByKey(result.rawByKey);
       setSlmReviewedByKey(slmByKey);
@@ -1115,33 +1185,27 @@ export default function UnifyCandidateFindPanel({
             }
           : null,
       );
-      setSearched(true);
-      // soft = preSelected만 (발견 수는 확정 등록 후에만 「남은 발견」으로 줄어듦)
-      const softEarly = buildSeriesMajoritySoftPreselect(workingGroups);
-      setRegisteredVariants(new Map());
-      setPreSelected(softEarly);
       setUnifyPhase('primary');
       setSecondaryGroups([]);
       setPhase2DoneLabels([]);
       setPhase2ResultSummary(null);
       setPhase2ConditionsExpanded(false);
       phase2PromptedRef.current = false;
-      setHiddenPdfKeys(prePhase2Snap.hiddenPdfKeys);
-      publishPreview({
-        allClusters: next,
-        raw: result.rawByKey,
-        hidden: prePhase2Snap.hiddenPdfKeys,
-        slmByKey,
-        dropSeriesIds,
-        dropClusterKeys,
-        needsReviewByKey,
-        stdictSeriesIds,
-        stdictClusterKeys,
-        chosenByKey: softEarly,
-        overrideClusters: prePhase2Snap.listClusters,
-      });
-      bench.mark('6_publishPreview_override');
+
+      // 목록·로딩 해제 먼저 (phase2 대기 중 finding 고착 방지)
+      // Preview onListReady는 phase2 후 한 번만.
+      const softEarly = buildSeriesMajoritySoftPreselect(workingGroups);
+      const snapEarly = summarizeUnifyListSnapshot(workingGroups);
+      setFindListGroups(workingGroups);
+      setHiddenPdfKeys(snapEarly.hiddenPdfKeys);
+      setRegisteredVariants(new Map());
+      setPreSelected(softEarly);
+      setSearched(true);
       setFinding(false);
+      bench.mark('6_list_ui_ready');
+      // phase2 전에 스피너 해제 페인트 보장
+      await afterPaint();
+
       let phase2Applied = false;
       let docSuffixDropped = 0;
       try {
@@ -1160,25 +1224,32 @@ export default function UnifyCandidateFindPanel({
       }
 
       const snap = summarizeUnifyListSnapshot(workingGroups);
-      // 계열만 soft 미리 찍기 → preSelected만 (registered 아님)
       const softPre = buildSeriesMajoritySoftPreselect(workingGroups);
       setFindListGroups(workingGroups);
       setHiddenPdfKeys(snap.hiddenPdfKeys);
       setRegisteredVariants(new Map());
       setPreSelected(softPre);
-      publishPreview({
-        allClusters: next,
-        raw: result.rawByKey,
-        hidden: snap.hiddenPdfKeys,
-        slmByKey,
-        dropSeriesIds,
-        dropClusterKeys,
-        needsReviewByKey,
-        stdictSeriesIds,
-        stdictClusterKeys,
-        chosenByKey: softPre,
-        overrideClusters: snap.listClusters,
-      });
+      bench.mark('7_list_after_phase2');
+
+      await afterPaint();
+      const focusInst = firstUnifyListChipInstance(
+        workingGroups,
+        softPre,
+        snap.hiddenPdfKeys,
+      );
+      const listClustersReady = workingGroups.flatMap((g) => g.clusters);
+      try {
+        onListReady?.({
+          clusters: listClustersReady,
+          chosenByKey: mergeUnifyChosenMaps(new Map(), softPre),
+          hiddenKeys: snap.hiddenPdfKeys,
+          focusInst,
+        });
+      } catch (err) {
+        if (import.meta.env.DEV) {
+          console.warn('[unify-preview] onListReady failed', err);
+        }
+      }
 
       const kiwiDiagDone = await snapshotUnifyFindDiag();
       // 2차 미적용(Kiwi 미ready·OFF)일 때만 배지
@@ -1265,12 +1336,7 @@ export default function UnifyCandidateFindPanel({
     if (nextHidden.has(cluster.key)) nextHidden.delete(cluster.key);
     else nextHidden.add(cluster.key);
     setHiddenPdfKeys(nextHidden);
-    const override = findListGroups?.flatMap((g) => g.clusters) ?? null;
-    publishPreview({
-      hidden: nextHidden,
-      chosenByKey: effectiveChosen,
-      overrideClusters: override,
-    });
+    onPreviewHiddenChange?.(nextHidden);
   }
 
   /**
@@ -1284,12 +1350,7 @@ export default function UnifyCandidateFindPanel({
       else nextHidden.add(c.key);
     }
     setHiddenPdfKeys(nextHidden);
-    const override = findListGroups?.flatMap((g) => g.clusters) ?? null;
-    publishPreview({
-      hidden: nextHidden,
-      chosenByKey: effectiveChosen,
-      overrideClusters: override,
-    });
+    onPreviewHiddenChange?.(nextHidden);
   }
 
   const busy = finding || slmReviewing || isProcessing;
@@ -1355,75 +1416,48 @@ export default function UnifyCandidateFindPanel({
     (cluster, chosenVariant, groupClusters) => {
       const nextRegistered = new Map(registeredVariants);
       nextRegistered.set(cluster.key, chosenVariant);
-      setRegisteredVariants(nextRegistered);
-      const previewChosen = mergeUnifyChosenMaps(nextRegistered, preSelected);
 
-      const previewGroups =
-        unifyPhase === 'secondary_pairs'
-          ? publishPreview({
-              chosenByKey: previewChosen,
-              overrideClusters: secondaryClusters,
-            })
-          : publishPreview({
-              chosenByKey: previewChosen,
-              overrideClusters:
-                findListGroups?.flatMap((g) => g.clusters) ?? listClusters,
-            });
-
-      // publish와 동일한 인스턴스를 선택해야 primary 빨간줄이 맞음
-      const firstWrong =
-        (previewGroups ?? []).find(
-          (g) =>
-            g.replace === chosenVariant &&
-            g.find !== chosenVariant &&
-            g.instances?.length,
-        )?.instances?.[0] ??
-        firstWrongUnifyInstance(cluster, chosenVariant, {
-          pages: pageTexts,
-        });
-      if (firstWrong) onSelectInstance?.(firstWrong);
-
+      let nextPre = preSelected;
       if (
         unifyPhase === 'primary' &&
         groupClusters &&
         groupClusters.length > 1
       ) {
         const isGlued = !/\s/.test(chosenVariant);
-        setPreSelected((prev) => {
-          const alreadySeeded = groupClusters.some((gc) => prev.has(gc.key));
-          if (alreadySeeded) return prev;
-          const next = new Map(prev);
+        const alreadySeeded = groupClusters.some((gc) =>
+          preSelected.has(gc.key),
+        );
+        if (!alreadySeeded) {
+          nextPre = new Map(preSelected);
           for (const gc of groupClusters) {
             if (gc.key === cluster.key) {
-              next.set(gc.key, chosenVariant);
+              nextPre.set(gc.key, chosenVariant);
               continue;
             }
             const sameDir = gc.variants.find((v) =>
               isGlued ? !/\s/.test(v) : /\s/.test(v),
             );
-            if (sameDir) next.set(gc.key, sameDir);
+            if (sameDir) nextPre.set(gc.key, sameDir);
           }
-          return next;
-        });
+        }
       }
+
+      setRegisteredVariants(nextRegistered);
+      if (nextPre !== preSelected) setPreSelected(nextPre);
+      notifyChosenChange(nextRegistered, nextPre);
+
+      const firstWrong = firstWrongUnifyInstance(cluster, chosenVariant, {
+        pages: pageTexts,
+      });
+      jumpUnifyPdf(onSelectInstance, firstWrong);
     },
     [
-      clusters,
-      rawByKey,
-      hiddenPdfKeys,
-      slmReviewedByKey,
-      predicateDropSeriesIds,
-      predicateDropClusterKeys,
-      predicateNeedsReviewByKey,
-      publishPreview,
       onSelectInstance,
       registeredVariants,
       preSelected,
       unifyPhase,
-      secondaryClusters,
       pageTexts,
-      findListGroups,
-      listClusters,
+      notifyChosenChange,
     ],
   );
 
@@ -1443,11 +1477,7 @@ export default function UnifyCandidateFindPanel({
     // 후보 없음 → 안내 후 1차 유지
     if (!candidates.length) {
       setUnifyPhase('primary');
-      publishPreview({
-        hidden: new Set(),
-        chosenByKey: chosen,
-        overrideClusters: findListGroups?.flatMap((g) => g.clusters) ?? null,
-      });
+      onPreviewClear?.();
       await showAppAlert({
         title: '2차 표기 통일',
         message:
@@ -1469,17 +1499,20 @@ export default function UnifyCandidateFindPanel({
       findings: sumClusterFindings(nextClusters),
     });
     setUnifyPhase('secondary_pairs');
+    setOpenUnifySectionIds(new Set());
+    setListEpoch((n) => n + 1);
 
-    const previewMismatches = candidates.flatMap((c) => c.mismatches ?? []);
-    if (onPreviewGroupsChange && previewMismatches.length) {
-      onPreviewGroupsChange(buildPatternRulePreviewGroups(previewMismatches));
-    } else {
-      publishPreview({
-        hidden: new Set(),
-        chosenByKey: chosen,
-        overrideClusters: nextClusters,
-      });
-    }
+    await afterPaint();
+    onListReady?.({
+      clusters: nextClusters,
+      chosenByKey: mergeUnifyChosenMaps(registeredVariants, new Map()),
+      hiddenKeys: new Set(),
+      focusInst: firstUnifyListChipInstance(
+        nextGroups,
+        mergeUnifyChosenMaps(registeredVariants, new Map()),
+        new Set(),
+      ),
+    });
 
     await alertUnifyCandidatePhase2AfterComplete({
       itemCount,
@@ -1490,14 +1523,9 @@ export default function UnifyCandidateFindPanel({
     preSelected,
     clusters,
     pageTexts,
-    rawByKey,
-    slmReviewedByKey,
-    predicateDropSeriesIds,
-    predicateDropClusterKeys,
-    predicateNeedsReviewByKey,
-    publishPreview,
     findListGroups,
-    onPreviewGroupsChange,
+    onPreviewClear,
+    onListReady,
   ]);
 
   /** 2차 후보 없음 등 — 팝업 없이 1차 목록으로만 복귀 */
@@ -1521,32 +1549,22 @@ export default function UnifyCandidateFindPanel({
     setSecondaryGroups([]);
     setPhase2ConditionsExpanded(false);
     setPhase2PrimaryChosen(new Map());
-    publishPreview({
+    onListReady?.({
+      clusters: listClusters,
       chosenByKey: mergeUnifyChosenMaps(registeredVariants, preSelected),
-      overrideClusters: findListGroups?.flatMap((g) => g.clusters) ?? null,
+      hiddenKeys: new Set(),
+      focusInst: null,
     });
   }, [
     secondaryGroups,
     registeredVariants,
     preSelected,
-    publishPreview,
-    findListGroups,
+    listClusters,
+    onListReady,
   ]);
 
   /** 「표기 통일 종료」— 확인·완료 팝업 없이 최초 UI로 */
   const endUnifyToInitialUi = useCallback(() => {
-    const chosen = mergeUnifyChosenMaps(registeredVariants, preSelected);
-    const byKey = new Map();
-    for (const c of findListGroups?.flatMap((g) => g.clusters) ?? listClusters) {
-      byKey.set(c.key, c);
-    }
-    for (const c of secondaryClusters) {
-      byKey.set(c.key, c);
-    }
-    publishPreview({
-      chosenByKey: chosen,
-      overrideClusters: [...byKey.values()],
-    });
     setSearched(false);
     setFinding(false);
     setUnifyPhase('primary');
@@ -1563,15 +1581,10 @@ export default function UnifyCandidateFindPanel({
     setRegisteredVariants(new Map());
     setPreSelected(new Map());
     setListEpoch((n) => n + 1);
+    setOpenUnifySectionIds(new Set());
     phase2PromptedRef.current = false;
-  }, [
-    registeredVariants,
-    preSelected,
-    findListGroups,
-    listClusters,
-    secondaryClusters,
-    publishPreview,
-  ]);
+    onPreviewClear?.();
+  }, [onPreviewClear]);
 
   /** 1차 완료 후 — 2차 OFF(배포)일 때만 종료 안내. 2차 ON은 하단 버튼으로 진행 */
   useEffect(() => {
@@ -1624,17 +1637,17 @@ export default function UnifyCandidateFindPanel({
     setPhase2PrimaryChosen(new Map());
     setUnifyPhase('primary');
     setHiddenPdfKeys(new Set());
-    publishPreview({
-      hidden: new Set(),
+    onListReady?.({
+      clusters: listClusters,
       chosenByKey: mergeUnifyChosenMaps(primaryReg, soft),
-      overrideClusters: findListGroups?.flatMap((g) => g.clusters) ?? null,
+      hiddenKeys: new Set(),
+      focusInst: null,
     });
   }, [
     listClusters,
     grouped,
     registeredVariants,
-    publishPreview,
-    findListGroups,
+    onListReady,
   ]);
 
   const handleEndUnifyClick = useCallback(() => {
@@ -1653,6 +1666,7 @@ export default function UnifyCandidateFindPanel({
   /**
    * 계열 헤더 붙여쓰기/띄어쓰기 — 같은 계열 전부 표기 통일.
    * 같은 방향 재클릭 시 계열 등록을 해제한다.
+   * 선택은 즉시 반영. PDF는 chosenChanged→remap만 (publish/jump 없음).
    * @param {UnifySpacingCluster[]} groupClusters
    * @param {'glued' | 'spaced'} spacing
    * @param {'glued' | 'spaced' | null} currentSpacing
@@ -1660,10 +1674,6 @@ export default function UnifyCandidateFindPanel({
   const handleSeriesSpacingSelect = useCallback(
     (groupClusters, spacing, currentSpacing) => {
       if (!groupClusters?.length) return;
-      const previewOverride =
-        unifyPhase === 'secondary_pairs'
-          ? secondaryClusters
-          : (findListGroups?.flatMap((g) => g.clusters) ?? listClusters);
 
       if (currentSpacing === spacing) {
         const next = new Map(registeredVariants);
@@ -1672,63 +1682,29 @@ export default function UnifyCandidateFindPanel({
         for (const gc of groupClusters) nextPre.delete(gc.key);
         setRegisteredVariants(next);
         setPreSelected(nextPre);
-        // 체크 UI가 먼저 그려지게 PDF 미리보기·점프는 다음 매크로태스크
-        const chosenByKey = mergeUnifyChosenMaps(next, nextPre);
-        setTimeout(() => {
-          publishPreview({
-            chosenByKey,
-            overrideClusters: previewOverride,
-          });
-        }, 0);
+        notifyChosenChange(next, nextPre);
+        onSeriesSpacingGuideSelect?.();
         return;
       }
 
       const next = new Map(registeredVariants);
       const nextPre = new Map(preSelected);
-      /** @type {import('../../lib/ruleEngine.js').MatchInstance | null} */
-      let jumpTo = null;
       for (const gc of groupClusters) {
         const v = variantForSpacing(gc, spacing);
         if (!v) continue;
         next.set(gc.key, v);
         nextPre.set(gc.key, v);
-        if (!jumpTo) {
-          jumpTo = firstWrongUnifyInstance(gc, v, { pages: pageTexts });
-        }
       }
       setRegisteredVariants(next);
       setPreSelected(nextPre);
-      const chosenByKey = mergeUnifyChosenMaps(next, nextPre);
-      setTimeout(() => {
-        publishPreview({
-          chosenByKey,
-          overrideClusters: previewOverride,
-        });
-        // preview 반영 후 점프 — 같은 틱 canvas 이중 render 방지
-        setTimeout(() => {
-          if (jumpTo) onSelectInstance?.(jumpTo);
-          onSeriesSpacingGuideSelect?.();
-        }, 0);
-      }, 0);
+      notifyChosenChange(next, nextPre);
+      onSeriesSpacingGuideSelect?.();
     },
     [
-      clusters,
-      rawByKey,
-      hiddenPdfKeys,
-      slmReviewedByKey,
-      predicateDropSeriesIds,
-      predicateDropClusterKeys,
-      predicateNeedsReviewByKey,
-      publishPreview,
-      onSelectInstance,
       onSeriesSpacingGuideSelect,
-      unifyPhase,
-      secondaryClusters,
-      findListGroups,
-      listClusters,
-      pageTexts,
       registeredVariants,
       preSelected,
+      notifyChosenChange,
     ],
   );
 
@@ -1760,14 +1736,7 @@ export default function UnifyCandidateFindPanel({
     }
     setRegisteredVariants(nextReg);
     setPreSelected(nextPre);
-
-    publishPreview({
-      chosenByKey: mergeUnifyChosenMaps(nextReg, nextPre),
-      overrideClusters:
-        unifyPhase === 'secondary_pairs'
-          ? secondaryClusters
-          : (findListGroups?.flatMap((g) => g.clusters) ?? null),
-    });
+    notifyChosenChange(nextReg, nextPre);
   }
 
   return (
@@ -1978,6 +1947,12 @@ export default function UnifyCandidateFindPanel({
                           <details
                             key={sectionId}
                             className="results-category results-category--unify-series"
+                            onToggle={(e) =>
+                              handleUnifySectionToggle(
+                                sectionId,
+                                e.currentTarget.open,
+                              )
+                            }
                           >
                             <summary className="results-category__summary panel-criteria-heading">
                               <CriteriaHoverTip tip="단어 세트 리스트 보기">
@@ -2021,55 +1996,61 @@ export default function UnifyCandidateFindPanel({
                                 />
                               </span>
                             </summary>
-                            <ul className="results-list results-list--nested unify-candidate-find__list">
-                              {group.clusters.length === 0 ? (
-                                <li className="unify-candidate-find__empty-row">
-                                  <p className="unify-candidate-find__empty">
-                                    ※ 더 고칠 표기가 없습니다
-                                  </p>
-                                </li>
-                              ) : (
-                                group.clusters.map((cluster) => (
-                                  <ClusterCard
-                                    key={cluster.key}
-                                    cluster={cluster}
-                                    pdfVisible={!hiddenPdfKeys.has(cluster.key)}
-                                    onTogglePdfVisibility={
-                                      handleTogglePdfVisibility
-                                    }
-                                    registeredVariant={registeredVariants.get(
-                                      cluster.key,
+                            {openUnifySectionIds.has(sectionId) ? (
+                              <>
+                                {group.clusters.length === 0 ? (
+                                  <ul className="results-list results-list--nested unify-candidate-find__list">
+                                    <li className="unify-candidate-find__empty-row">
+                                      <p className="unify-candidate-find__empty">
+                                        ※ 더 고칠 표기가 없습니다
+                                      </p>
+                                    </li>
+                                  </ul>
+                                ) : (
+                                  <ProgressiveClusterCards
+                                    clusters={group.clusters}
+                                    renderClusterCard={(cluster) => (
+                                      <ClusterCard
+                                        cluster={cluster}
+                                        pdfVisible={
+                                          !hiddenPdfKeys.has(cluster.key)
+                                        }
+                                        onTogglePdfVisibility={
+                                          handleTogglePdfVisibility
+                                        }
+                                        registeredVariant={registeredVariants.get(
+                                          cluster.key,
+                                        )}
+                                        preSelectedVariant={null}
+                                        groupClusters={group.clusters}
+                                        onSelectVariant={handleSelectVariant}
+                                        onCancelVariant={handleCancelVariant}
+                                        currentPage={currentPage}
+                                        selectedInstance={selectedInstance}
+                                        formatPageLabel={formatPageLabel}
+                                        onSelectInstance={onSelectInstance}
+                                        pageTexts={pageTexts}
+                                      />
                                     )}
-                                    preSelectedVariant={null}
-                                    groupClusters={group.clusters}
-                                    onSelectVariant={handleSelectVariant}
-                                    onCancelVariant={handleCancelVariant}
-                                    currentPage={currentPage}
-                                    selectedInstance={selectedInstance}
-                                    formatPageLabel={formatPageLabel}
-                                    onSelectInstance={onSelectInstance}
-                                    pageTexts={pageTexts}
-                                    previewGroups={publishedPreviewGroups}
                                   />
-                                ))
-                              )}
-                            </ul>
-                            <Phase2CompliantFormsBanner
-                              direction={group.direction}
-                              clusterCount={compliantList.length}
-                              expanded={compliantExpanded}
-                              onToggleExpand={toggleCompliantExpand}
-                            />
-                            <Phase2CompliantFormsSummary
-                              direction={group.direction}
-                              clusters={group.compliantForms ?? []}
-                              expanded={compliantExpanded}
-                              currentPage={currentPage}
-                              selectedInstance={selectedInstance}
-                              formatPageLabel={formatPageLabel}
-                              pageTexts={pageTexts}
-                              previewGroups={publishedPreviewGroups}
-                            />
+                                )}
+                                <Phase2CompliantFormsBanner
+                                  direction={group.direction}
+                                  clusterCount={compliantList.length}
+                                  expanded={compliantExpanded}
+                                  onToggleExpand={toggleCompliantExpand}
+                                />
+                                <Phase2CompliantFormsSummary
+                                  direction={group.direction}
+                                  clusters={group.compliantForms ?? []}
+                                  expanded={compliantExpanded}
+                                  currentPage={currentPage}
+                                  selectedInstance={selectedInstance}
+                                  formatPageLabel={formatPageLabel}
+                                  pageTexts={pageTexts}
+                                />
+                              </>
+                            ) : null}
                           </details>
                         );
                       })
@@ -2110,9 +2091,8 @@ export default function UnifyCandidateFindPanel({
                         ? 'predicate'
                         : 'single';
 
-                  const renderClusterCard = (cluster) => (
+                  const renderClusterCard = (cluster, pageChipsEnabled = true) => (
                     <ClusterCard
-                      key={cluster.key}
                       cluster={cluster}
                       pdfVisible={!hiddenPdfKeys.has(cluster.key)}
                       onTogglePdfVisibility={handleTogglePdfVisibility}
@@ -2128,7 +2108,7 @@ export default function UnifyCandidateFindPanel({
                       formatPageLabel={formatPageLabel}
                       onSelectInstance={onSelectInstance}
                       pageTexts={pageTexts}
-                      previewGroups={publishedPreviewGroups}
+                      pageChipsEnabled={pageChipsEnabled}
                     />
                   );
 
@@ -2152,6 +2132,12 @@ export default function UnifyCandidateFindPanel({
                         <details
                           key={`${sectionId}-${cluster.key}`}
                           className={`results-category results-category--unify-${categoryMod}`}
+                          onToggle={(e) =>
+                            handleUnifySectionToggle(
+                              `${sectionId}-${cluster.key}`,
+                              e.currentTarget.open,
+                            )
+                          }
                         >
                           <summary className="results-category__summary panel-criteria-heading">
                             <CriteriaHoverTip tip="단어 세트 리스트 보기">
@@ -2188,9 +2174,20 @@ export default function UnifyCandidateFindPanel({
                               />
                             </span>
                           </summary>
-                          <ul className="results-list results-list--nested unify-candidate-find__list">
-                            {renderClusterCard(cluster)}
-                          </ul>
+                          {shouldMountUnifySection(
+                            `${sectionId}-${cluster.key}`,
+                          ) ? (
+                            <ul className="results-list results-list--nested unify-candidate-find__list">
+                              <Fragment key={cluster.key}>
+                                {renderClusterCard(
+                                  cluster,
+                                  openUnifySectionIds.has(
+                                    `${sectionId}-${cluster.key}`,
+                                  ),
+                                )}
+                              </Fragment>
+                            </ul>
+                          ) : null}
                         </details>
                       );
                     });
@@ -2200,6 +2197,12 @@ export default function UnifyCandidateFindPanel({
                     <details
                       key={sectionId}
                       className={`results-category results-category--unify-${categoryMod}`}
+                      onToggle={(e) =>
+                        handleUnifySectionToggle(
+                          sectionId,
+                          e.currentTarget.open,
+                        )
+                      }
                     >
                       <summary className="results-category__summary panel-criteria-heading">
                         <CriteriaHoverTip tip="단어 세트 리스트 보기">
@@ -2239,11 +2242,18 @@ export default function UnifyCandidateFindPanel({
                           />
                         </span>
                       </summary>
-                      <ul className="results-list results-list--nested unify-candidate-find__list">
-                        {group.clusters.map((cluster) =>
-                          renderClusterCard(cluster),
-                        )}
-                      </ul>
+                      {shouldMountUnifySection(sectionId) ? (
+                        <ProgressiveClusterCards
+                          clusters={group.clusters}
+                          expandFully={openUnifySectionIds.has(sectionId)}
+                          renderClusterCard={(cluster) =>
+                            renderClusterCard(
+                              cluster,
+                              openUnifySectionIds.has(sectionId),
+                            )
+                          }
+                        />
+                      ) : null}
                     </details>
                   );
                 })
@@ -2319,10 +2329,46 @@ function ClusterCard({
   selectedInstance,
   formatPageLabel,
   onSelectInstance,
-  pageTexts = [],
-  previewGroups = [],
+  pageTexts: _pageTexts = [],
+  previewGroups: _previewGroups = [],
+  pageChipsEnabled = true,
 }) {
   const isRegistered = !!registeredVariant;
+  /** 쪽 칩·레이아웃 측정은 펼침 직후 프레임에 미룸 — 체크·통일 버튼이 먼저 보이게 */
+  const [pageChipsReady, setPageChipsReady] = useState(false);
+  /** variant별 쪽 칩「더 보기」— 접힌 동안 occ 전체 매핑 안 함 */
+  const [chipExpandedByVariant, setChipExpandedByVariant] = useState(
+    () => /** @type {Map<string, boolean>} */ (new Map()),
+  );
+  useEffect(() => {
+    if (!pageChipsEnabled) {
+      setPageChipsReady(false);
+      setChipExpandedByVariant(new Map());
+      return undefined;
+    }
+    setPageChipsReady(false);
+    let cancelled = false;
+    /** @type {number | null} */
+    let idleId = null;
+    /** @type {ReturnType<typeof setTimeout> | null} */
+    let timeoutId = null;
+    const ready = () => {
+      if (!cancelled) setPageChipsReady(true);
+    };
+    // 펼침 페인트 이후 — 쪽 칩은 idle에 (클릭 프레임과 분리)
+    if (typeof requestIdleCallback === 'function') {
+      idleId = requestIdleCallback(ready, { timeout: 64 });
+    } else {
+      timeoutId = setTimeout(ready, 0);
+    }
+    return () => {
+      cancelled = true;
+      if (idleId != null && typeof cancelIdleCallback === 'function') {
+        cancelIdleCallback(idleId);
+      }
+      if (timeoutId != null) clearTimeout(timeoutId);
+    };
+  }, [cluster.key, pageChipsEnabled]);
 
   // 예외: pre-select 방향과 반대로 등록된 경우
   const isException = (() => {
@@ -2349,16 +2395,27 @@ function ClusterCard({
           const isPreSelected = !isRegistered && preSelectedVariant === variant;
           const isFirst = variantIndex === 0;
           const replace = registeredVariant || cluster.recommendedUnify;
-          const previewGroup = previewGroups.find(
-            (g) => g.find === variant && g.replace === replace,
-          );
-          const instances =
-            previewGroup?.instances?.length > 0
-              ? previewGroup.instances
-              : instancesForUnifyVariant(cluster, variant, {
-                  chosenVariant: registeredVariant ?? null,
-                  pages: pageTexts,
-                });
+          const occs = cluster.occurrencesByVariant?.[variant] ?? [];
+          const chipExpanded = chipExpandedByVariant.get(variant) === true;
+          const CHIP_PREVIEW = 3;
+          const srcOccs = !pageChipsReady
+            ? []
+            : chipExpanded
+              ? occs
+              : occs.slice(0, CHIP_PREVIEW);
+          const instances = srcOccs.map((occ) => ({
+            find: variant,
+            replace,
+            matchedText: occ.matchedText,
+            suggestedText: replace,
+            pageNum: occ.pageNum,
+            index: occ.index,
+            ...(Array.isArray(occ.itemIndexes) && occ.itemIndexes.length
+              ? { itemIndexes: occ.itemIndexes }
+              : {}),
+            ...(typeof occ.x === 'number' ? { x: occ.x } : {}),
+            ...(typeof occ.y === 'number' ? { y: occ.y } : {}),
+          }));
 
           return (
             <li
@@ -2447,21 +2504,44 @@ function ClusterCard({
                   </CriteriaHoverTip>
                 ) : null}
               </div>
-              {instances.length > 0 ? (
+              {pageChipsReady && occs.length > 0 ? (
                 <ResultPageSummary
                   instances={instances}
+                  totalInstanceCount={occs.length}
                   currentPage={currentPage}
                   selectedInstance={selectedInstance}
                   formatPageLabel={formatPageLabel}
                   isInstanceVisible={() => true}
                   collapsedVisibleLimit={3}
-                  onSelectPage={(pageNum) => {
-                    const first = instances.find(
-                      (inst) => inst.pageNum === pageNum,
-                    );
-                    if (first) onSelectInstance?.(first);
+                  onExpandedChange={(exp) => {
+                    setChipExpandedByVariant((prev) => {
+                      const next = new Map(prev);
+                      if (exp) next.set(variant, true);
+                      else next.delete(variant);
+                      return next;
+                    });
                   }}
-                  onSelectInstance={onSelectInstance}
+                  onSelectPage={(pageNum) => {
+                    const occ = occs.find((o) => o.pageNum === pageNum);
+                    if (!occ) return;
+                    jumpUnifyPdf(onSelectInstance, {
+                      find: variant,
+                      replace,
+                      matchedText: occ.matchedText,
+                      suggestedText: replace,
+                      pageNum: occ.pageNum,
+                      index: occ.index,
+                      ...(Array.isArray(occ.itemIndexes) &&
+                      occ.itemIndexes.length
+                        ? { itemIndexes: occ.itemIndexes }
+                        : {}),
+                      ...(typeof occ.x === 'number' ? { x: occ.x } : {}),
+                      ...(typeof occ.y === 'number' ? { y: occ.y } : {}),
+                    });
+                  }}
+                  onSelectInstance={(inst) =>
+                    jumpUnifyPdf(onSelectInstance, inst)
+                  }
                 />
               ) : null}
             </li>

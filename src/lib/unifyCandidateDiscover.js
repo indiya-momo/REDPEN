@@ -1614,6 +1614,70 @@ function instancesFromOccs(occs, variant, replace, pageByNum) {
 }
 
 /**
+ * @param {UnifySpacingCluster} cluster
+ * @param {number} pageNum
+ */
+function clusterHasOccurrenceOnPage(cluster, pageNum) {
+  for (const variant of cluster.variants ?? []) {
+    const occs = cluster.occurrencesByVariant?.[variant] ?? [];
+    for (const o of occs) {
+      if (o.pageNum === pageNum) return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * preview용 — 지정 쪽 출현만 item enrich (문서 전 occ 동기 enrich 금지).
+ * @param {UnifySpacingCluster[]} clusters
+ * @param {import('./pdfService.js').PageData[]} pages
+ * @param {number} pageNum
+ * @returns {UnifySpacingCluster[]}
+ */
+function enrichClustersWithItemHitsForPage(clusters, pages, pageNum) {
+  const pageByNum = buildPageByNum(pages ?? []);
+  if (!pageByNum.size) return clusters ?? [];
+  return (clusters ?? []).map((cluster) => {
+    /** @type {Record<string, UnifyVariantOccurrence[]>} */
+    const nextByVariant = { ...(cluster.occurrencesByVariant ?? {}) };
+    for (const variant of cluster.variants ?? []) {
+      const occs = nextByVariant[variant] ?? [];
+      if (!occs.length) continue;
+      const onPage = [];
+      const other = [];
+      for (const o of occs) {
+        if (o.pageNum === pageNum) onPage.push(o);
+        else other.push(o);
+      }
+      if (!onPage.length) continue;
+      const enrichedPage = enrichOccurrencesWithItemHits(onPage, pageByNum);
+      nextByVariant[variant] = other.length
+        ? other.concat(enrichedPage)
+        : enrichedPage;
+    }
+    return {
+      ...cluster,
+      occurrencesByVariant: nextByVariant,
+    };
+  });
+}
+
+/**
+ * @param {UnifyVariantOccurrence[]} occs
+ * @param {number | null} pageNum
+ */
+function previewOccsAlreadyHaveItemHits(occs, pageNum) {
+  const scoped =
+    pageNum == null ? occs : occs.filter((o) => o.pageNum === pageNum);
+  return (
+    scoped.length === 0 ||
+    scoped.every(
+      (o) => Array.isArray(o.itemIndexes) && o.itemIndexes.length > 0,
+    )
+  );
+}
+
+/**
  * 소수형·1회만이 아니라, 출현 있는 표기 전부의 MatchInstance 그룹 —
  * PDF 하이라이트·페이지 칩용.
  * 표기 통일 선택 시: 틀린 표기(+ overlay)와 통일형(칩·하이라이트) 모두 포함.
@@ -1621,30 +1685,38 @@ function instancesFromOccs(occs, variant, replace, pageByNum) {
  * @param {{
  *   registeredByKey?: Map<string, string> | null,
  *   pages?: import('./pdfService.js').PageData[],
- * }} [options]
+ *   pageNum?: number | null,
+ * }} [options] pageNum이 있으면 그 쪽 출현이 있는 클러스터·출현만 MatchInstance로 만든다.
  * @returns {import('./ruleEngine.js').GroupedResult[]}
  */
 export function buildUnifyCandidatePreviewGroups(clusters, options = {}) {
   const registeredByKey = options.registeredByKey ?? null;
   const pages = options.pages ?? [];
-  const list = clusters ?? [];
+  const pageNum =
+    options.pageNum != null && Number(options.pageNum) > 0
+      ? Number(options.pageNum)
+      : null;
+  // 쪽 지정 시 — 그 쪽 출현 없는 클러스터는 enrich·루프에서 제외
+  const list =
+    pageNum == null
+      ? (clusters ?? [])
+      : (clusters ?? []).filter((c) => clusterHasOccurrenceOnPage(c, pageNum));
+  // pageNum이면 **그 쪽 occ만** itemIndexes 검사 — 다른 쪽 미enrich로 전량 sync enrich 금지
   const alreadyEnriched =
     list.length > 0 &&
     list.every((c) =>
-      (c.variants ?? []).every((variant) => {
-        const occs = c.occurrencesByVariant?.[variant] ?? [];
-        return (
-          occs.length === 0 ||
-          occs.every(
-            (o) => Array.isArray(o.itemIndexes) && o.itemIndexes.length > 0,
-          )
-        );
-      }),
+      (c.variants ?? []).every((variant) =>
+        previewOccsAlreadyHaveItemHits(
+          c.occurrencesByVariant?.[variant] ?? [],
+          pageNum,
+        ),
+      ),
     );
-  // 찾기 후 이미 enrich된 목록이면 재검색 생략 (전체 붙여쓰기 등 일괄 선택 동결 방지)
   const enrichedClusters = alreadyEnriched
     ? list
-    : enrichClustersWithItemHits(list, pages);
+    : pageNum != null
+      ? enrichClustersWithItemHitsForPage(list, pages, pageNum)
+      : enrichClustersWithItemHits(list, pages);
   const pageByNum = buildPageByNum(pages);
   /** @type {import('./ruleEngine.js').GroupedResult[]} */
   const groups = [];
@@ -1653,7 +1725,10 @@ export function buildUnifyCandidatePreviewGroups(clusters, options = {}) {
     if (chosen) {
       const overlay = formatUnifySpacingDecisionOverlay(chosen, cluster);
       for (const variant of cluster.variants) {
-        const occs = cluster.occurrencesByVariant?.[variant] ?? [];
+        let occs = cluster.occurrencesByVariant?.[variant] ?? [];
+        if (pageNum != null) {
+          occs = occs.filter((o) => o.pageNum === pageNum);
+        }
         if (!occs.length) continue;
         const isChosen = variant === chosen;
         groups.push({
@@ -1662,6 +1737,7 @@ export function buildUnifyCandidatePreviewGroups(clusters, options = {}) {
           label: variant,
           category: 'consistency',
           patternKind: 'compound-spacing',
+          unifyClusterKey: cluster.key,
           tip: isChosen
             ? `문서 내 「${variant}」 표기 (통일형)`
             : `「${chosen}」으로 통일`,
@@ -1674,7 +1750,10 @@ export function buildUnifyCandidatePreviewGroups(clusters, options = {}) {
 
     const recommended = cluster.recommendedUnify;
     for (const variant of cluster.variants) {
-      const occs = cluster.occurrencesByVariant?.[variant] ?? [];
+      let occs = cluster.occurrencesByVariant?.[variant] ?? [];
+      if (pageNum != null) {
+        occs = occs.filter((o) => o.pageNum === pageNum);
+      }
       if (!occs.length) continue;
       groups.push({
         find: variant,
@@ -1682,6 +1761,7 @@ export function buildUnifyCandidatePreviewGroups(clusters, options = {}) {
         label: variant,
         category: 'consistency',
         patternKind: 'compound-spacing',
+        unifyClusterKey: cluster.key,
         tip:
           variant === recommended
             ? `문서 내 「${variant}」 표기`
@@ -1691,6 +1771,110 @@ export function buildUnifyCandidatePreviewGroups(clusters, options = {}) {
     }
   }
   return groups;
+}
+
+/**
+ * 선택(표기)만 기존 preview 그룹에 반영. instances 배열·객체는 재사용한다.
+ * 전체 붙여쓰기 등 선택이 바뀔 때마다 occurrence 전량 재생성하지 않기 위함.
+ *
+ * @param {import('./ruleEngine.js').GroupedResult[]} groups
+ * @param {Map<string, string> | null | undefined} registeredByKey
+ * @param {UnifySpacingCluster[]} [clusters]
+ * @param {{ onlyPageNum?: number }} [opts] 지정 시 해당 페이지 출현이 있는 그룹만 패치
+ * @returns {import('./ruleEngine.js').GroupedResult[]}
+ */
+export function applyUnifyCandidatePreviewChoices(
+  groups,
+  registeredByKey,
+  clusters = [],
+  opts = {},
+) {
+  if (!groups?.length) return groups ?? [];
+  const clusterByKey = new Map((clusters ?? []).map((c) => [c.key, c]));
+  const onlyPage =
+    opts.onlyPageNum != null ? Number(opts.onlyPageNum) : null;
+  let any = false;
+  for (const g of groups) {
+    const key = g.unifyClusterKey;
+    if (!key) continue;
+    const cluster = clusterByKey.get(key);
+    if (!cluster) continue;
+    if (
+      onlyPage != null &&
+      !(g.instances ?? []).some((i) => i.pageNum === onlyPage)
+    ) {
+      continue;
+    }
+
+    const explicit = registeredByKey?.has(key)
+      ? String(registeredByKey.get(key) ?? '').trim()
+      : '';
+    const recommended = String(cluster.recommendedUnify ?? '').trim();
+    const chosen = explicit || recommended;
+    if (!chosen) continue;
+
+    const isChosenVariant = g.find === chosen;
+    /** @type {string} */
+    let tip;
+    /** @type {string | undefined} */
+    let overlayReplace;
+    if (explicit) {
+      tip = isChosenVariant
+        ? `문서 내 「${g.find}」 표기 (통일형)`
+        : `「${chosen}」으로 통일`;
+      if (!isChosenVariant) {
+        const overlay = formatUnifySpacingDecisionOverlay(chosen, cluster);
+        if (overlay) overlayReplace = overlay;
+      }
+    } else {
+      tip =
+        g.find === recommended
+          ? `문서 내 「${g.find}」 표기`
+          : `문서 내 다수형 「${recommended}」와 띄어쓰기가 다른 표기`;
+    }
+
+    const prevOverlay = g.overlayReplace ?? undefined;
+    if (
+      g.replace === chosen &&
+      g.tip === tip &&
+      prevOverlay === overlayReplace
+    ) {
+      continue;
+    }
+
+    any = true;
+    g.replace = chosen;
+    g.tip = tip;
+    if (overlayReplace) g.overlayReplace = overlayReplace;
+    else delete g.overlayReplace;
+    for (const inst of g.instances ?? []) {
+      if (onlyPage != null && inst.pageNum !== onlyPage) continue;
+      inst.replace = chosen;
+      inst.suggestedText = chosen;
+    }
+  }
+  return any ? groups.slice() : groups;
+}
+
+/**
+ * PDF 하이라이트용 — 현재 페이지 출현만 남긴 얕은 복사.
+ * 패널 칩용 전체 그룹은 그대로 두고, MainScreen에는 이것만 넘긴다.
+ *
+ * @param {import('./ruleEngine.js').GroupedResult[]} groups
+ * @param {number} pageNum
+ * @returns {import('./ruleEngine.js').GroupedResult[]}
+ */
+export function sliceUnifyPreviewGroupsToPage(groups, pageNum) {
+  const page = Number(pageNum) || 0;
+  if (!groups?.length || page <= 0) return [];
+  /** @type {import('./ruleEngine.js').GroupedResult[]} */
+  const out = [];
+  for (const g of groups) {
+    const instances = (g.instances ?? []).filter((i) => i.pageNum === page);
+    if (!instances.length) continue;
+    out.push(instances === g.instances ? g : { ...g, instances });
+  }
+  return out;
 }
 
 /**

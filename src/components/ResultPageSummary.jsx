@@ -16,9 +16,10 @@ export const RESULT_PAGES_MAX_COLLAPSED_ROWS = 2;
 
 /**
  * @param {import('../lib/ruleEngine.js').MatchInstance[]} instances
+ * @param {number} [maxPills]
  * @returns {InstancePillEntry[]}
  */
-export function buildInstancePills(instances) {
+export function buildInstancePills(instances, maxPills = Infinity) {
   const byPage = new Map();
   for (const inst of instances) {
     const list = byPage.get(inst.pageNum) ?? [];
@@ -28,16 +29,19 @@ export function buildInstancePills(instances) {
 
   /** @type {InstancePillEntry[]} */
   const pills = [];
+  const limit =
+    Number.isFinite(maxPills) && maxPills > 0 ? maxPills : Infinity;
   for (const pageNum of [...byPage.keys()].sort((a, b) => a - b)) {
     const pageInstances = byPage.get(pageNum) ?? [];
     const totalOnPage = pageInstances.length;
-    pageInstances.forEach((inst, index) => {
+    for (let index = 0; index < pageInstances.length; index++) {
       pills.push({
-        inst,
+        inst: pageInstances[index],
         indexOnPage: index + 1,
         totalOnPage,
       });
-    });
+      if (pills.length >= limit) return pills;
+    }
   }
   return pills;
 }
@@ -273,6 +277,8 @@ export function formatResultPagesExpandLabel(
  *   onToggleInstanceVisibility?: (inst: import('../lib/ruleEngine.js').MatchInstance) => void,
  *   collapsedVisibleLimit?: number | null,
  *   expandLabelMode?: 'more' | 'elsewhere',
+ *   totalInstanceCount?: number,
+ *   onExpandedChange?: (expanded: boolean) => void,
  * }} props
  */
 export default function ResultPageSummary({
@@ -286,8 +292,41 @@ export default function ResultPageSummary({
   onToggleInstanceVisibility,
   collapsedVisibleLimit = null,
   expandLabelMode = 'more',
+  totalInstanceCount = null,
+  onExpandedChange,
 }) {
-  const pills = useMemo(() => buildInstancePills(instances), [instances]);
+  const hardCountLimit =
+    expandLabelMode === 'elsewhere' ||
+    (collapsedVisibleLimit != null && collapsedVisibleLimit > 0);
+  const instanceCount =
+    totalInstanceCount != null && totalInstanceCount >= 0
+      ? totalInstanceCount
+      : instances.length;
+
+  const [expanded, setExpanded] = useState(false);
+  const setExpandedAndNotify = (next) => {
+    setExpanded((prev) => {
+      const value = typeof next === 'function' ? next(prev) : next;
+      onExpandedChange?.(value);
+      return value;
+    });
+  };
+  const pills = useMemo(() => {
+    // 접힌 개수 상한: 보이는 칩만 조립 (수백~수천 pills 생성 방지)
+    if (
+      hardCountLimit &&
+      !expanded &&
+      collapsedVisibleLimit != null &&
+      collapsedVisibleLimit > 0
+    ) {
+      return buildInstancePills(instances, collapsedVisibleLimit);
+    }
+    return buildInstancePills(instances);
+  }, [instances, hardCountLimit, expanded, collapsedVisibleLimit]);
+  /** 인스턴스 집합 시그니처 — expanded로 pills가 늘어나도 리셋하지 않음 */
+  const instancesLayoutSig = useMemo(() => {
+    return `n:${instanceCount}|lim:${collapsedVisibleLimit ?? ''}|exp:${expandLabelMode}`;
+  }, [instanceCount, collapsedVisibleLimit, expandLabelMode]);
   const pillsSignature = useMemo(
     () => pills.map((entry) => instanceVisibilityKey(entry.inst)).join('\0'),
     [pills],
@@ -296,25 +335,21 @@ export default function ResultPageSummary({
   const expandedRef = useRef(false);
   /** 펼침/접힘으로 스크롤바가 생겨 폭이 변할 때 Remeasure 무시 */
   const ignoreWidthResizeUntilRef = useRef(0);
-  const hardCountLimit =
-    expandLabelMode === 'elsewhere' ||
-    (collapsedVisibleLimit != null && collapsedVisibleLimit > 0);
 
   const resolveHardCollapse = () => {
     const limit =
       collapsedVisibleLimit != null && collapsedVisibleLimit > 0
         ? collapsedVisibleLimit
         : 1;
-    if (expandLabelMode === 'elsewhere' && pills.length > 1) {
+    if (expandLabelMode === 'elsewhere' && instanceCount > 1) {
       return {
         needsCollapse: true,
-        visibleCount: Math.min(limit, Math.max(1, pills.length - 1)),
+        visibleCount: Math.min(limit, Math.max(1, instanceCount - 1)),
       };
     }
-    return collapseByVisibleLimit(pills.length, limit);
+    return collapseByVisibleLimit(instanceCount, limit);
   };
 
-  const [expanded, setExpanded] = useState(false);
   /** null = 아직 측정 전(전체 칩 렌더). 개수 상한 모드는 처음부터 확정 */
   const [collapse, setCollapse] = useState(
     /** @type {{ needsCollapse: boolean, visibleCount: number } | null} */ (
@@ -322,14 +357,17 @@ export default function ResultPageSummary({
     ),
   );
 
+  const layoutResetSig = hardCountLimit ? instancesLayoutSig : pillsSignature;
+
   expandedRef.current = expanded;
 
   useLayoutEffect(() => {
     setExpanded(false);
     expandedRef.current = false;
+    onExpandedChange?.(false);
     // 개수 상한: null로 풀지 않음(전체 칩 깜빡임·너비 버그 재발 방지)
     setCollapse(hardCountLimit ? resolveHardCollapse() : null);
-  }, [pillsSignature, hardCountLimit, collapsedVisibleLimit, expandLabelMode, pills.length]);
+  }, [layoutResetSig, hardCountLimit, collapsedVisibleLimit, expandLabelMode]);
 
   useLayoutEffect(() => {
     if (expanded || collapse !== null) return undefined;
@@ -402,7 +440,7 @@ export default function ResultPageSummary({
     );
     if (selectedIndex >= 0 && selectedIndex >= collapse.visibleCount) {
       ignoreWidthResizeUntilRef.current = performance.now() + 400;
-      setExpanded(true);
+      setExpandedAndNotify(true);
     }
   }, [pills, selectedInstance, expanded, collapse]);
 
@@ -443,7 +481,7 @@ export default function ResultPageSummary({
       ? pills
       : pills.slice(0, collapse?.visibleCount ?? 0);
   const hiddenCount = needsCollapse
-    ? Math.max(0, pills.length - (collapse?.visibleCount ?? 0))
+    ? Math.max(0, instanceCount - (collapse?.visibleCount ?? 0))
     : 0;
   const showExpandBtn = needsCollapse || expanded;
 
@@ -482,7 +520,7 @@ export default function ResultPageSummary({
               event.stopPropagation();
               // 펼침/접힘 직후 스크롤바 폭 변화를 Remeasure로 오인하지 않음
               ignoreWidthResizeUntilRef.current = performance.now() + 400;
-              setExpanded((open) => {
+              setExpandedAndNotify((open) => {
                 if (open) {
                   // 접을 때: 개수 상한은 즉시 복구, 그 외는 폭 재측정
                   setCollapse(hardCountLimit ? resolveHardCollapse() : null);

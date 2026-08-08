@@ -101,9 +101,15 @@ import TooltipGuide from './TooltipGuide.jsx';
  *   onSelectUnifyCandidateInstance?: (
  *     inst: import('../lib/ruleEngine.js').MatchInstance,
  *   ) => void,
- *   onUnifyCandidatePreviewGroupsChange?: (
- *     groups: import('../lib/ruleEngine.js').GroupedResult[],
- *   ) => void,
+ *   onUnifyListReady?: (payload: {
+ *     clusters: import('../lib/unifyCandidateDiscover.js').UnifySpacingCluster[],
+ *     chosenByKey: Map<string, string>,
+ *     hiddenKeys: Set<string>,
+ *     focusInst?: import('../lib/ruleEngine.js').MatchInstance | null,
+ *   }) => void,
+ *   onUnifyChosenChange?: (chosenByKey: Map<string, string>) => void,
+ *   onUnifyPreviewClear?: () => void,
+ *   onUnifyPreviewHiddenChange?: (hiddenKeys: Set<string>) => void,
  *   onUnifyPrimaryCompleteChange?: (complete: boolean) => void,
  *   formatPageLabel?: (systemPage: number) => string,
  *   auxiliaryVerbGuide?: {
@@ -164,7 +170,10 @@ export default function ConsistencyPanel({
   currentPage = 1,
   selectedInstance = null,
   onSelectUnifyCandidateInstance,
-  onUnifyCandidatePreviewGroupsChange,
+  onUnifyListReady,
+  onUnifyChosenChange,
+  onUnifyPreviewClear,
+  onUnifyPreviewHiddenChange,
   onUnifyPrimaryCompleteChange,
   formatPageLabel,
   auxiliaryVerbGuide = null,
@@ -347,7 +356,10 @@ export default function ConsistencyPanel({
           currentPage={currentPage}
           selectedInstance={selectedInstance}
           onSelectInstance={onSelectUnifyCandidateInstance}
-          onPreviewGroupsChange={onUnifyCandidatePreviewGroupsChange}
+          onListReady={onUnifyListReady}
+          onChosenChange={onUnifyChosenChange}
+          onPreviewClear={onUnifyPreviewClear}
+          onPreviewHiddenChange={onUnifyPreviewHiddenChange}
           onPrimaryCompleteChange={onUnifyPrimaryCompleteChange}
           formatPageLabel={formatPageLabel}
           guideSpotlight={guideSpotlight}
