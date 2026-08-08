@@ -1,12 +1,17 @@
 /**
- * 표기통일 잡음 2차 — 목록 표시 후, Kiwi ready일 때만 후보 단위 비동기 필터.
- * boot 시도 없음. 동기 전량 analyze 금지.
+ * 표기통일 잡음 2차 — 목록 표시 후 후보 단위 비동기 필터.
+ * - DocSuffix: OCR 앞잘림 (Kiwi 무관, text∪layout)
+ * - Kiwi POS: ready일 때만 (boot 시도 없음, 동기 전량 analyze 금지)
+ *
+ * 공유 진입: {@link runUnifyListPhase2Filters} — 패널은 여기만 호출.
  */
 import {
   shouldRejectUnifySatelliteGlued,
   shouldRejectUnifySatelliteSpacedByPos,
 } from './kiwiMorph/unifyExclude.js';
 import { isUnifyKiwiNoisePhase2Available } from './kiwiMorph/noiseFilterGate.js';
+import { filterGroupsByDocSuffixOrphan } from './unifyNoiseDocSuffixOrphan.js';
+import { sortClusterGroups } from './unifyCandidateGrouping.js';
 
 const YIELD_EVERY = 8;
 
@@ -73,6 +78,51 @@ export async function filterSeriesSatellitesByKiwiPhase2(groups, opts = {}) {
   }
 
   return { groups: nextGroups, applied: true, dropped };
+}
+
+/**
+ * 목록 표시 후 2차 필터 묶음 (DocSuffix → Kiwi). 서로 try 분리.
+ * @param {import('./unifyCandidateGrouping.js').ClusterGroup[]} groups
+ * @param {{ text?: string, textLayout?: string }[] | null | undefined} pageTexts
+ * @param {{ yieldEvery?: number }} [opts]
+ * @returns {Promise<{
+ *   groups: import('./unifyCandidateGrouping.js').ClusterGroup[],
+ *   docSuffix: { applied: boolean, dropped: number },
+ *   kiwi: { applied: boolean, dropped: number },
+ * }>}
+ */
+export async function runUnifyListPhase2Filters(groups, pageTexts, opts = {}) {
+  let next = groups ?? [];
+  /** @type {{ applied: boolean, dropped: number }} */
+  let docSuffix = { applied: false, dropped: 0 };
+  /** @type {{ applied: boolean, dropped: number }} */
+  let kiwi = { applied: false, dropped: 0 };
+
+  try {
+    const suffix = await filterGroupsByDocSuffixOrphan(next, pageTexts, opts);
+    docSuffix = { applied: suffix.applied, dropped: suffix.dropped };
+    if (suffix.applied && suffix.dropped > 0) {
+      next = sortClusterGroups(suffix.groups);
+    }
+  } catch (err) {
+    if (import.meta.env?.DEV) {
+      console.warn('[unify-doc-suffix] phase2 filter failed', err);
+    }
+  }
+
+  try {
+    const phase2 = await filterSeriesSatellitesByKiwiPhase2(next, opts);
+    kiwi = { applied: phase2.applied, dropped: phase2.dropped };
+    if (phase2.applied && phase2.dropped > 0) {
+      next = sortClusterGroups(phase2.groups);
+    }
+  } catch (err) {
+    if (import.meta.env?.DEV) {
+      console.warn('[unify-kiwi-noise] phase2 filter failed', err);
+    }
+  }
+
+  return { groups: next, docSuffix, kiwi };
 }
 
 /** @param {{ counts?: Record<string, number>, kind?: string }} cluster */

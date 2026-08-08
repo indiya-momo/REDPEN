@@ -17,11 +17,9 @@ import {
 } from '../../lib/unifyCandidateDiscover.js';
 import {
   countUnifyListAccordionItems,
-  sortClusterGroups,
 } from '../../lib/unifyCandidateGrouping.js';
 import { filterSeriesSatellitesByNoiseList } from '../../lib/unifyCandidateSatellites.js';
-import { filterSeriesSatellitesByKiwiPhase2 } from '../../lib/unifyNoisePhase2.js';
-import { filterGroupsByDocSuffixOrphan } from '../../lib/unifyNoiseDocSuffixOrphan.js';
+import { runUnifyListPhase2Filters } from '../../lib/unifyNoisePhase2.js';
 import {
   applyUnifyListReviewMarks,
   assembleUnifyListBase,
@@ -1145,24 +1143,19 @@ export default function UnifyCandidateFindPanel({
       bench.mark('6_publishPreview_override');
       setFinding(false);
       let phase2Applied = false;
+      let docSuffixDropped = 0;
       try {
-        // 2차: DocSuffix(문서 앞잘림) — Kiwi 무관, text∪layout 증인
-        const docSuffix = await filterGroupsByDocSuffixOrphan(
+        const phase2 = await runUnifyListPhase2Filters(
           workingGroups,
           pageTexts,
         );
-        if (docSuffix.applied && docSuffix.dropped > 0) {
-          workingGroups = sortClusterGroups(docSuffix.groups);
-        }
-        const phase2 = await filterSeriesSatellitesByKiwiPhase2(workingGroups);
-        phase2Applied = phase2.applied;
-        if (phase2.applied && phase2.dropped > 0) {
-          workingGroups = sortClusterGroups(phase2.groups);
-        }
+        workingGroups = phase2.groups;
+        phase2Applied = phase2.kiwi.applied;
+        docSuffixDropped = phase2.docSuffix.dropped;
       } catch (err) {
         phase2Applied = false;
         if (import.meta.env.DEV) {
-          console.warn('[unify-kiwi-noise] phase2 filter failed', err);
+          console.warn('[unify-phase2] filters failed', err);
         }
       }
 
@@ -1213,7 +1206,8 @@ export default function UnifyCandidateFindPanel({
         kiwiDone: kiwiDiagDone,
         morphFilterActive: phase2Applied,
         morphFilterInactive: morphInactive,
-        note: '1차=정적 리스트 · 2차=ready일 때만 후보 Kiwi · 집계=최종 스냅샷',
+        docSuffixDropped,
+        note: '1차=정적 리스트 · 2차=DocSuffix+ready시 Kiwi · 집계=최종 스냅샷',
       });
       await alertUnifyCandidateFindAfterRun(snap.countedClusters, {
         uid: authUid,

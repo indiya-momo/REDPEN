@@ -61,6 +61,7 @@ alwaysApply: false
   `shouldRejectUnifySatelliteSpacedByPos` = **Kiwi POS**. MorphPos를 noise-list 필터 이름에 쓰지 말 것.
 - DocSuffix(`spacedVariantHitsDocSuffixOrphan` / `filterGroupsByDocSuffixOrphan`)는
   **2차**만. discover·1차 위성 생성에 prune/증인 수집을 붙이지 말 것.
+  패널 2차 진입은 `runUnifyListPhase2Filters` 하나만 (DocSuffix→Kiwi, try 분리).
 ## 작업 루프 (매 경계 작업)
 
 1. Grep로 정책 함수 호출부 전수 → 결과를 보여 줌
