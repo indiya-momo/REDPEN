@@ -1514,7 +1514,7 @@ export default function UnifyCandidateFindPanel({
       const ids = new Set(candidates.map((c) => c.id));
       let nextGroups = buildSecondaryGroupsFromCandidates(candidates, ids);
 
-      // 머리 잘림(DocSuffix): 2차 목록에서 복원·같은 단어 세트로 merge. 증인=1·2차 목록.
+      // 머리 잘림(DocSuffix): 2차 목록에서 orphan DROP만 (라벨 복원·merge 없음). 증인=1·2차 목록.
       try {
         const primaryGroups = findListGroups ?? [];
         const suffix = await filterGroupsByDocSuffixOrphan(
@@ -1535,6 +1535,37 @@ export default function UnifyCandidateFindPanel({
         if (import.meta.env?.DEV) {
           console.warn('[unify-doc-suffix] phase2 list filter failed', err);
         }
+      }
+
+      // item·visual 근거로 유령 출현 제거 (1차 enrich와 동일 — 하이라이트·칩)
+      {
+        /** @type {import('../../lib/unifyCandidateDiscover.js').UnifySpacingCluster[]} */
+        const flat = [];
+        for (const g of nextGroups) {
+          for (const c of g.clusters ?? []) flat.push(c);
+          for (const c of g.compliantForms ?? []) flat.push(c);
+        }
+        const enriched = await enrichClustersWithItemHitsAsync(flat, pageTexts);
+        /** @type {Map<string, import('../../lib/unifyCandidateDiscover.js').UnifySpacingCluster>} */
+        const byKey = new Map();
+        for (const c of enriched) {
+          if (c?.key) byKey.set(c.key, c);
+        }
+        nextGroups = nextGroups
+          .map((g) => ({
+            ...g,
+            clusters: (g.clusters ?? [])
+              .map((c) => byKey.get(c.key))
+              .filter(Boolean),
+            compliantForms: (g.compliantForms ?? [])
+              .map((c) => byKey.get(c.key))
+              .filter(Boolean),
+          }))
+          .filter(
+            (g) =>
+              (g.clusters?.length ?? 0) > 0 ||
+              (g.compliantForms?.length ?? 0) > 0,
+          );
       }
 
       const nextClusters = nextGroups.flatMap((g) => g.clusters ?? []);

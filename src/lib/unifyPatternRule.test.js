@@ -31,6 +31,7 @@ import {
   meetsPatternSupportThreshold,
   passesPatternRuleUnifyFilter,
   shouldRejectPatternMismatchByNoiseAndCompound,
+  visualAttestsPatternSurface,
   PATTERN_SCORE_WEIGHT_HEAD,
   PHASE2_COMPLIANT_FORMS_PREVIEW,
   PHASE2_PRIMARY_FORMS_MAX,
@@ -830,5 +831,47 @@ describe('unifyPatternRule', () => {
       false,
     );
     expect(keys).toContain('구조개혁');
+  });
+
+  it('visualAttests: 줄바꿈 앞잘림 계금융위기는 거부하고 온전한 표기는 통과', () => {
+    expect(
+      visualAttestsPatternSurface(
+        '세\n계금융위기 경제를 논한다.',
+        '계금융위기 경제',
+      ),
+    ).toBe(false);
+    expect(
+      visualAttestsPatternSurface(
+        '세계금융위기 경제를 논한다.',
+        '세계금융위기 경제',
+      ),
+    ).toBe(true);
+    expect(
+      visualAttestsPatternSurface('케인즈 경제를 비교한다.', '케인즈 경제'),
+    ).toBe(true);
+  });
+
+  it('layout만 잘린 계금융위기 경제는 mismatch에서 빠진다', () => {
+    const mismatches = findPatternMismatches(
+      [
+        {
+          pageNum: 7,
+          text: '세\n계금융위기 경제를 논한다. 케인즈 경제도 있다.',
+          textLayout: '계금융위기 경제를 논한다. 케인즈 경제도 있다.',
+        },
+      ],
+      {
+        id: 'suffix:경제:glued',
+        template: '@경제',
+        affix: '경제',
+        affixType: 'suffix',
+        direction: 'glued',
+        confirmedFrom: '세계경제',
+        confirmedKey: '세계경제',
+      },
+    );
+    const froms = mismatches.map((m) => m.from);
+    expect(froms).not.toContain('계금융위기 경제');
+    expect(froms).toContain('케인즈 경제');
   });
 });

@@ -110,7 +110,7 @@ describe('2차 filterGroupsByDocSuffixOrphan', () => {
     };
   }
 
-  it('전체 발견에 프로그램 증인 → 로그램을 프로그램으로 복원·merge', async () => {
+  it('전체 발견에 프로그램 증인 → 로그램 orphan DROP (복원·merge 없음)', async () => {
     const groups = singleGroup([
       spacedCluster('로그램지출', '로그램 지출'),
       spacedCluster('프로그램지출', '프로그램 지출'),
@@ -125,13 +125,15 @@ describe('2차 filterGroupsByDocSuffixOrphan', () => {
     ];
     const out = await filterGroupsByDocSuffixOrphan(groups, pageTexts);
     expect(out.applied).toBe(true);
-    expect(out.remapped).toBeGreaterThanOrEqual(1);
+    expect(out.remapped).toBe(0);
+    expect(out.dropped).toBeGreaterThanOrEqual(1);
     const keys = out.groups.flatMap((g) => g.clusters.map((c) => c.key));
     expect(keys).not.toContain('로그램지출');
     expect(keys).toContain('프로그램지출');
     expect(keys).toContain('경제성장');
     const prog = out.groups[0].clusters.find((c) => c.key === '프로그램지출');
-    expect(prog.totalCount).toBeGreaterThanOrEqual(4);
+    // merge 없음 — 프로그램 쪽 count는 그대로
+    expect(prog.totalCount).toBe(2);
   });
 
   it('본문에만 프로그램·발견에는 없으면 로그램 KEEP', async () => {
@@ -238,7 +240,7 @@ describe('2차 filterGroupsByDocSuffixOrphan', () => {
     expect(keys).toContain('경제성장');
   });
 
-  it('줄바꿈 — 발견에 서비스·프로그램 있으면 복원·merge', async () => {
+  it('줄바꿈 — 발견에 서비스·프로그램 있으면 orphan DROP (복원 키 없음)', async () => {
     const groups = singleGroup([
       spacedCluster('비스지출', '비스 지출'),
       spacedCluster('로그램지출', '로그램 지출'),
@@ -258,8 +260,10 @@ describe('2차 filterGroupsByDocSuffixOrphan', () => {
     const keys = out.groups.flatMap((g) => g.clusters.map((c) => c.key));
     expect(keys).not.toContain('비스지출');
     expect(keys).not.toContain('로그램지출');
-    expect(keys).toContain('서비스지출');
-    expect(keys).toContain('프로그램지출');
+    expect(keys).not.toContain('서비스지출');
+    expect(keys).not.toContain('프로그램지출');
+    expect(keys).toContain('서비스');
+    expect(keys).toContain('프로그램');
     expect(keys).toContain('경제성장');
   });
 
@@ -282,7 +286,7 @@ describe('2차 filterGroupsByDocSuffixOrphan', () => {
     expect(keys).toEqual(expect.arrayContaining(['기업문화', '노동시장']));
   });
 
-  it('@서비스 계열 affix만 있어도 비스 → 서비스로 복원', async () => {
+  it('@서비스 계열 affix만 있어도 비스 orphan DROP (서비스지출로 복원 안 함)', async () => {
     const groups = [
       {
         type: 'series',
@@ -301,11 +305,132 @@ describe('2차 filterGroupsByDocSuffixOrphan', () => {
     const keys = out.groups.flatMap((g) => g.clusters.map((c) => c.key));
     expect(keys).not.toContain('비스지출');
     expect(keys).toContain('금융서비스');
-    expect(keys).toContain('서비스지출');
+    expect(keys).not.toContain('서비스지출');
+  });
+
+  it('접두 미국@ — 하미국 증인이 있어도 미국 칸을 바꾸거나 지우지 않는다', async () => {
+    const groups = [
+      {
+        type: 'series',
+        affix: '미국',
+        affixType: 'prefix',
+        label: '미국@',
+        clusters: [
+          spacedCluster('미국노동통계국', '미국 노동통계국'),
+          spacedCluster('미국경제분석국', '미국 경제분석국'),
+        ],
+      },
+    ];
+    const witnessGroups = [
+      ...groups,
+      {
+        type: 'pair',
+        clusters: [spacedCluster('하미국', '하 미국')],
+      },
+    ];
+    const out = await filterGroupsByDocSuffixOrphan(
+      groups,
+      [
+        {
+          pageNum: 1,
+          text: '미국 노동통계국. 미국 경제분석국.',
+          textLayout: '미국 노동통계국. 미국 경제분석국.',
+        },
+      ],
+      { witnessGroups },
+    );
+    const variants = out.groups.flatMap((g) =>
+      g.clusters.flatMap((c) => Object.keys(c.counts ?? {})),
+    );
+    expect(out.remapped).toBe(0);
+    expect(variants).toEqual(
+      expect.arrayContaining(['미국 노동통계국', '미국 경제분석국']),
+    );
+    expect(variants).not.toContain('하미국 노동통계국');
+    expect(variants).not.toContain('하미국노동통계국');
+  });
+
+  it('하미국 증인만으로 pair 미국 칸을 하미국으로 바꾸지 않는다', async () => {
+    const groups = [
+      {
+        type: 'pair',
+        clusters: [spacedCluster('미국노동통계국', '미국 노동통계국')],
+      },
+    ];
+    const witnessGroups = [
+      ...groups,
+      {
+        type: 'pair',
+        clusters: [spacedCluster('하미국', '하 미국')],
+      },
+    ];
+    const out = await filterGroupsByDocSuffixOrphan(
+      groups,
+      [
+        {
+          pageNum: 1,
+          text: '미국 노동통계국',
+          textLayout: '미국 노동통계국',
+        },
+      ],
+      { witnessGroups },
+    );
+    const variants = out.groups.flatMap((g) =>
+      g.clusters.flatMap((c) => Object.keys(c.counts ?? {})),
+    );
+    expect(out.remapped).toBe(0);
+    expect(variants).toContain('미국 노동통계국');
+    expect(variants).not.toContain('하미국 노동통계국');
+  });
+
+  it('접미 @세계 — 탈세계화 증인이 있어도 세계 칸을 바꾸지 않는다', async () => {
+    const groups = [
+      {
+        type: 'series',
+        affix: '세계',
+        affixType: 'suffix',
+        label: '@세계',
+        clusters: [spacedCluster('세계경제', '세계 경제')],
+      },
+    ];
+    const witnessGroups = [
+      ...groups,
+      {
+        type: 'pair',
+        clusters: [
+          {
+            key: '탈세계화',
+            variants: ['탈세계화'],
+            counts: { 탈세계화: 1 },
+            kind: /** @type {const} */ ('single-form'),
+            totalCount: 1,
+          },
+        ],
+      },
+    ];
+    const out = await filterGroupsByDocSuffixOrphan(
+      groups,
+      [
+        {
+          pageNum: 1,
+          text: '세계 경제. 탈세계화.',
+          textLayout: '세계 경제. 탈세계화.',
+        },
+      ],
+      { witnessGroups },
+    );
+    const variants = out.groups.flatMap((g) =>
+      g.clusters.flatMap((c) => Object.keys(c.counts ?? {})),
+    );
+    expect(out.remapped).toBe(0);
+    expect(out.dropped).toBe(0);
+    expect(variants).toContain('세계 경제');
+    expect(variants).not.toContain('탈세계화 경제');
+    expect(variants).not.toContain('탈세계화경제');
   });
 
   it('금융서비스 붙임만(띄움 이형태 없음)이면 비스 KEEP', async () => {
-    // "금융 서비스" 이형태가 있으면 part「서비스」증인으로 비스 복원 — 그건 정상
+    // 붙임「금융서비스」만으로는 exact F「비스」증인(서비스)이 안 생김
     const groups = singleGroup([
       {
         key: '금융서비스',
@@ -324,7 +449,7 @@ describe('2차 filterGroupsByDocSuffixOrphan', () => {
     expect(keys).toContain('금융서비스');
   });
 
-  it('rawByKey에 프로그램만 있어도 로그램 → 프로그램으로 복원', async () => {
+  it('rawByKey에 프로그램만 있어도 로그램 orphan DROP', async () => {
     const groups = singleGroup([
       spacedCluster('로그램지출', '로그램 지출'),
       spacedCluster('경제성장', '경제 성장'),
@@ -352,7 +477,7 @@ describe('2차 filterGroupsByDocSuffixOrphan', () => {
     );
     const keys = out.groups.flatMap((g) => g.clusters.map((c) => c.key));
     expect(keys).not.toContain('로그램지출');
-    expect(keys).toContain('프로그램지출');
+    expect(keys).not.toContain('프로그램지출');
     expect(keys).toContain('경제성장');
   });
 
@@ -364,7 +489,7 @@ describe('2차 filterGroupsByDocSuffixOrphan', () => {
     expect(out.groups.flatMap((g) => g.clusters).length).toBe(1);
   });
 
-  it('2차: 증인=1차 목록, 2차 로그램만 프로그램으로 복원', async () => {
+  it('2차: 증인=1차 목록, 2차 로그램만 orphan DROP', async () => {
     const primary = singleGroup([
       spacedCluster('프로그램지출', '프로그램 지출'),
       spacedCluster('경제성장', '경제 성장'),
@@ -380,7 +505,7 @@ describe('2차 filterGroupsByDocSuffixOrphan', () => {
     );
     const keys = out.groups.flatMap((g) => g.clusters.map((c) => c.key));
     expect(keys).not.toContain('로그램지출');
-    expect(keys).toContain('프로그램지출');
+    expect(keys).not.toContain('프로그램지출');
     expect(keys).toContain('경제성장');
     expect(primary[0].clusters.map((c) => c.key)).toContain('프로그램지출');
   });

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { runUnifyListPhase2Filters } from './unifyNoisePhase2.js';
 
 describe('runUnifyListPhase2Filters', () => {
-  it('DocSuffix로 로그램을 프로그램으로 복원·merge한다', async () => {
+  it('DocSuffix로 로그램 orphan을 DROP한다 (복원·merge 없음)', async () => {
     const groups = [
       {
         type: 'single',

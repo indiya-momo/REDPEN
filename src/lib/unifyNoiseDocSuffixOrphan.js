@@ -1,23 +1,23 @@
 /**
- * 문서 내 앞잘림 조각 — 2차에서 복원·같은 단어 세트로 merge (목록 DROP 아님).
+ * 문서 내 앞잘림 조각 — 2차에서 **orphan DROP만** (라벨 복원·merge 없음).
  *
  * ## Public API (공유 정책 진입점)
  * - {@link spacedVariantHitsDocSuffixOrphan} — 띄움 이형태 판정 (adjacentPairs 포함 완전판)
  * - {@link pruneUnifyIndexDocSuffixOrphans} — occurrence index에서 위 판정으로 정리
- * - {@link filterGroupsByDocSuffixOrphan} — **2차** 목록: head-cut은 복원+merge, 인접 orphan만 DROP
+ * - {@link filterGroupsByDocSuffixOrphan} — **2차** 목록: exact head-cut·인접 orphan DROP (rewrite 금지)
  * - {@link noteDocHangulEojeolForOrphan} / {@link noteAdjacentHangulPair} /
  *   {@link collectDocHangulEojeolsFromRawByKey} / {@link collectDocSuffixContextFromPageTexts}
  *
  * 1차 discover·위성 생성 핫패스에 붙이지 말 것. 1차 목록(띄어쓰기 이형태)은 수정하지 않음.
  * 전역-only·어절-only 헬퍼는 export하지 않는다 (약식 진입점 금지).
  *
- * 1) 전역(head-cut): **1·2차 목록**(계열 affix·rawByKey 포함) 증인 W로
- *    왼쪽 칸 F를 W로 복원 (`로그램`→`프로그램`) 후 동일 key 단어 세트로 merge.
- *    음절 꼬리 전개 금지. 생산적 한자어 접두 제외 (`대기업`↛`기업`).
- * 2) 인접: P+F 이음이 목록 증인에 있을 때만 항목 DROP (복원 키 애매).
+ * 1) 전역(exact head-cut): 증인 W가 **정확히** `1글자+F`일 때만 F를 orphan으로 DROP.
+ *    body 접두 전개 금지 (`탈세계화`↛`세계`). 계열 핵·다른 복합 접두 F는 보호.
+ * 2) 인접: P+F 이음이 목록 증인에 있을 때만 항목 DROP.
  *    본문만으로 soft DROP 금지.
  *
- * 줄 위치(P)만 page text∪layout. 복원·DROP 증거는 1·2차 목록(±rawByKey).
+ * 라벨을 W로 고쳐 붙이지 않음 (하미국·탈세계화 오염 방지).
+ * 줄 위치(P)만 page text∪layout. DROP 증거는 1·2차 목록(±rawByKey).
  * source: manual-heuristic (문서 의존)
  */
 import { hangulOnlyNoise } from './unifyNoiseListData.js';
@@ -115,14 +115,14 @@ function buildHeadCutFragmentIndex(witnesses) {
 }
 
 /**
- * 조각 F → 복원 증인 W (로그램→프로그램).
- * 같은 F에 여러 W면 본문 정확 일치(W.slice(1)===F) 우선, 같으면 더 짧은 W.
+ * exact head-cut만: W === 1글자+F 인 F만 orphan 조각.
+ * (`탈세계화` → `세계화`만, body 접두 `세계`는 넣지 않음)
  * @param {Iterable<string>} witnesses
- * @returns {Map<string, string>}
+ * @returns {Set<string>}
  */
-function buildHeadCutRestoreMap(witnesses) {
-  /** @type {Map<string, string>} */
-  const map = new Map();
+function buildExactHeadCutFragmentIndex(witnesses) {
+  /** @type {Set<string>} */
+  const hits = new Set();
   for (const raw of witnesses ?? []) {
     const W = hangulOnlyNoise(raw);
     if (
@@ -133,30 +133,39 @@ function buildHeadCutRestoreMap(witnesses) {
     }
     const head = W.slice(0, DOC_SUFFIX_ORPHAN_PREFIX_LEN);
     if (DOC_GLOBAL_HEAD_CUT_PREFIX_BLOCK.has(head)) continue;
-    const body = W.slice(DOC_SUFFIX_ORPHAN_PREFIX_LEN);
-    for (
-      let len = DOC_SUFFIX_ORPHAN_MIN_FRAGMENT;
-      len <= body.length;
-      len += 1
-    ) {
-      const F = body.slice(0, len);
-      const prev = map.get(F);
-      if (!prev) {
-        map.set(F, W);
-        continue;
-      }
-      const prevExact = hangulOnlyNoise(prev).slice(DOC_SUFFIX_ORPHAN_PREFIX_LEN) === F;
-      const newExact = body === F;
-      if (newExact && !prevExact) map.set(F, W);
-      else if (
-        newExact === prevExact &&
-        W.length < hangulOnlyNoise(prev).length
-      ) {
-        map.set(F, W);
-      }
+    const F = W.slice(DOC_SUFFIX_ORPHAN_PREFIX_LEN);
+    if (F.length >= DOC_SUFFIX_ORPHAN_MIN_FRAGMENT) hits.add(F);
+  }
+  return hits;
+}
+
+/**
+ * F가 계열 핵·긴 복합어 접두이면 head-cut DROP 금지.
+ * - `미국노동통계국`(긴 복합) + 증인 `하미국` → KEEP
+ * - `로그램지출` / `비스지출`(왼쪽+짧은 오른쪽) + 증인 `프로그램`/`서비스` → DROP 허용
+ * @param {string} left
+ * @param {import('./unifyCandidateGrouping.js').ClusterGroup[]} groups
+ * @param {string} currentClusterKey
+ */
+function shouldProtectLeftFromHeadCutDrop(left, groups, currentClusterKey) {
+  const L = hangulOnlyNoise(left);
+  if (!L) return true;
+  const cur = hangulOnlyNoise(
+    String(currentClusterKey ?? '').replace(/\s+/g, ''),
+  );
+  // 자기 key가 「왼쪽 + 2음절 초과」이면 잘린 조각 후보가 아니라 복합어
+  if (cur.startsWith(L) && cur.length > L.length + 2) return true;
+  for (const g of groups ?? []) {
+    if (g?.type === 'series' && hangulOnlyNoise(String(g.affix ?? '')) === L) {
+      return true;
+    }
+    for (const c of g.clusters ?? []) {
+      const key = hangulOnlyNoise(String(c?.key ?? '').replace(/\s+/g, ''));
+      if (!key || key === cur) continue;
+      if (key.startsWith(L) && key.length > L.length) return true;
     }
   }
-  return map;
+  return false;
 }
 
 /**
@@ -487,99 +496,10 @@ function clusterCountsObject(cluster) {
 }
 
 /**
- * head-cut 복원 — 성공 시 새 클러스터, 아니면 null.
- * counts·occurrencesByVariant 키를 같이 옮겨 쪽 칩이 비지 않게 한다.
- * @param {object} cluster
- * @param {Map<string, string>} restoreMap
- * @returns {object | null}
- */
-function remapClusterByHeadCut(cluster, restoreMap) {
-  if (!restoreMap?.size) return null;
-
-  /**
-   * @param {string} variant
-   * @returns {{ next: string, changed: boolean }}
-   */
-  function remapVariantKey(variant) {
-    const s = String(variant ?? '');
-    if (/\s/.test(s)) {
-      const parts = s
-        .normalize('NFC')
-        .trim()
-        .split(/\s+/)
-        .filter(Boolean);
-      if (parts.length >= 2) {
-        const left = hangulOnlyNoise(parts[0]);
-        const W = restoreMap.get(left);
-        if (W && W !== left) {
-          return { next: [W, ...parts.slice(1)].join(' '), changed: true };
-        }
-      }
-      return { next: s, changed: false };
-    }
-    const h = hangulOnlyNoise(s);
-    let bestF = '';
-    let bestW = '';
-    for (const [F, W] of restoreMap) {
-      if (h.startsWith(F) && F.length >= bestF.length) {
-        bestF = F;
-        bestW = W;
-      }
-    }
-    if (bestW && bestF && bestW !== bestF) {
-      return { next: bestW + h.slice(bestF.length), changed: true };
-    }
-    return { next: h || s, changed: false };
-  }
-
-  const counts = clusterCountsObject(cluster);
-  /** @type {Record<string, number>} */
-  const nextCounts = {};
-  let changed = false;
-
-  for (const [variant, count] of Object.entries(counts)) {
-    if (count <= 0) continue;
-    const { next, changed: ch } = remapVariantKey(variant);
-    if (ch) changed = true;
-    nextCounts[next] = (nextCounts[next] || 0) + count;
-  }
-
-  if (!changed) return null;
-
-  /** @type {Record<string, unknown[]>} */
-  const nextOcc = {};
-  const prevOcc = cluster.occurrencesByVariant || {};
-  for (const [variant, list] of Object.entries(prevOcc)) {
-    const { next } = remapVariantKey(variant);
-    nextOcc[next] = [...(nextOcc[next] || []), ...(list || [])];
-  }
-
-  const gluedKeys = Object.keys(nextCounts).filter((v) => !/\s/.test(v));
-  const spacedKeys = Object.keys(nextCounts).filter((v) => /\s/.test(v));
-  const gluedKey =
-    gluedKeys.sort((a, b) => b.length - a.length)[0] ||
-    hangulOnlyNoise((spacedKeys[0] || '').replace(/\s+/g, ''));
-  if (!gluedKey) return null;
-
-  const totalCount = Object.values(nextCounts).reduce((a, b) => a + b, 0);
-  return {
-    ...cluster,
-    key: gluedKey,
-    counts: nextCounts,
-    variants: Object.keys(nextCounts),
-    totalCount,
-    kind: cluster.kind || 'conflict',
-    ...(Object.keys(nextOcc).length
-      ? { occurrencesByVariant: nextOcc }
-      : {}),
-  };
-}
-
-/**
  * @param {object} target
  * @param {object} source
  */
-function mergeRemappedClusterInto(target, source) {
+function mergeClusterInto(target, source) {
   const counts = clusterCountsObject(target);
   for (const [v, n] of Object.entries(clusterCountsObject(source))) {
     counts[v] = (counts[v] || 0) + n;
@@ -606,7 +526,7 @@ function mergeRemappedClusterInto(target, source) {
 }
 
 /**
- * 목록 그룹 — head-cut은 복원 후 같은 key로 merge, 인접 orphan만 DROP.
+ * 목록 그룹 — exact head-cut·인접 orphan만 DROP. 라벨 복원·merge 없음.
  * 증인은 기본적으로 필터 대상 groups+rawByKey.
  * 2차에서는 `witnessGroups`에 1차·2차 목록을 합쳐 넘긴다 (1차 목록 자체는 수정하지 않음).
  * @param {import('./unifyCandidateGrouping.js').ClusterGroup[]} groups
@@ -629,8 +549,9 @@ export async function filterGroupsByDocSuffixOrphan(
   pageTexts,
   opts = {},
 ) {
+  const allGroups = groups ?? [];
   const findingsWitnesses = collectFindingsHangulWitnesses(
-    opts.witnessGroups ?? groups,
+    opts.witnessGroups ?? allGroups,
     opts.rawByKey ?? null,
   );
   const { adjacentPairs } = await collectDocSuffixContextFromPageTextsAsync(
@@ -641,25 +562,24 @@ export async function filterGroupsByDocSuffixOrphan(
   );
   if (!findingsWitnesses.size) {
     return {
-      groups: groups ?? [],
+      groups: allGroups,
       applied: false,
       remapped: 0,
       dropped: 0,
     };
   }
-  const restoreMap = buildHeadCutRestoreMap(findingsWitnesses);
-  const headCutHits = buildHeadCutFragmentIndex(findingsWitnesses);
+  // A: rewrite 없음. exact F만 orphan (body 접두 전개 금지).
+  const headCutHits = buildExactHeadCutFragmentIndex(findingsWitnesses);
   const adjacentByCurr = buildAdjacentPrevByCurr(adjacentPairs);
   await new Promise((r) => setTimeout(r, 0));
 
   const yieldEvery = opts.yieldEvery ?? 8;
-  let remapped = 0;
   let dropped = 0;
   let ops = 0;
   /** @type {import('./unifyCandidateGrouping.js').ClusterGroup[]} */
   const nextGroups = [];
 
-  for (const group of groups ?? []) {
+  for (const group of allGroups) {
     /** @type {Map<string, object>} */
     const byKey = new Map();
     let groupChanged = false;
@@ -669,21 +589,11 @@ export async function filterGroupsByDocSuffixOrphan(
         await new Promise((r) => setTimeout(r, 0));
       }
 
-      const restored = remapClusterByHeadCut(cluster, restoreMap);
-      if (restored) {
-        remapped += 1;
-        groupChanged = true;
-        const existing = byKey.get(restored.key);
-        if (existing) mergeRemappedClusterInto(existing, restored);
-        else byKey.set(restored.key, restored);
-        continue;
-      }
-
       const spacedVariants = [
         ...(cluster.variants ?? []),
         ...Object.keys(clusterCountsObject(cluster)),
       ].filter((v) => /\s/.test(String(v)));
-      const adjacentHit = spacedVariants.some((v) => {
+      const orphanHit = spacedVariants.some((v) => {
         const parts = String(v)
           .normalize('NFC')
           .trim()
@@ -691,8 +601,17 @@ export async function filterGroupsByDocSuffixOrphan(
           .filter(Boolean);
         if (parts.length < 2) return false;
         const left = hangulOnlyNoise(parts[0]);
-        // head-cut으로 복원 가능한 조각은 위에서 처리됨 — 여기선 인접만
-        if (restoreMap.has(left)) return false;
+        if (
+          shouldProtectLeftFromHeadCutDrop(left, allGroups, cluster.key)
+        ) {
+          // 계열 핵·복합 접두 — 전역 head-cut은 막고 인접만 허용
+          return spacedVariantHitsDocSuffixOrphanIndexed(
+            v,
+            new Set(),
+            adjacentByCurr,
+            findingsWitnesses,
+          );
+        }
         return spacedVariantHitsDocSuffixOrphanIndexed(
           v,
           headCutHits,
@@ -700,7 +619,7 @@ export async function filterGroupsByDocSuffixOrphan(
           findingsWitnesses,
         );
       });
-      if (adjacentHit) {
+      if (orphanHit) {
         dropped += 1;
         groupChanged = true;
         continue;
@@ -715,7 +634,7 @@ export async function filterGroupsByDocSuffixOrphan(
       const existing = byKey.get(normalized.key);
       if (existing) {
         groupChanged = true;
-        mergeRemappedClusterInto(existing, normalized);
+        mergeClusterInto(existing, normalized);
       } else byKey.set(normalized.key, normalized);
     }
 
@@ -731,7 +650,7 @@ export async function filterGroupsByDocSuffixOrphan(
   return {
     groups: nextGroups,
     applied: true,
-    remapped,
+    remapped: 0,
     dropped,
   };
 }
