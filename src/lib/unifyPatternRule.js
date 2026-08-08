@@ -497,29 +497,44 @@ export const PHASE2_PRIMARY_FORMS_MAX = 4;
 export const PHASE2_COMPLIANT_FORMS_PREVIEW = 3;
 
 /**
- * 2차 계열 박스 summary용: `1차 통일형: 국제금융(붙여쓰기)`
+ * 2차 계열 summary — 1차 통일형 1개만 (`1차: 국제금융(붙여쓰기)`).
+ * 예외 선택 항목은 summary가 아니라 카드의 예외 뱃지로 표시.
  * @param {'glued' | 'spaced' | null | undefined} direction
  * @param {string[]} forms
+ * @returns {{ text: string }}
  */
-export function formatPhase2SeriesCriterionLine(direction, forms) {
+export function formatPhase2SeriesCriterionModel(direction, forms) {
   const list = (forms ?? [])
     .map((f) => String(f ?? '').replace(/\s+/g, ' ').trim())
     .filter(Boolean);
   const uniq = [];
   for (const f of list) {
     if (!uniq.includes(f)) uniq.push(f);
-    if (uniq.length >= PHASE2_PRIMARY_FORMS_MAX) break;
   }
-  if (!uniq.length) return '';
+  if (!uniq.length) return { text: '' };
+  let form = uniq[0];
+  if (direction === 'glued' || direction === 'spaced') {
+    const match = uniq.find((f) =>
+      direction === 'spaced' ? /\s/.test(f) : !/\s/.test(f),
+    );
+    if (match) form = match;
+  }
   const dir =
     direction === 'spaced'
       ? '띄어쓰기'
       : direction === 'glued'
         ? '붙여쓰기'
         : '';
-  const formsText = uniq.join(' · ');
-  if (!dir) return `1차 통일형: ${formsText}`;
-  return `1차 통일형: ${formsText}(${dir})`;
+  return { text: dir ? `1차: ${form}(${dir})` : `1차: ${form}` };
+}
+
+/**
+ * 2차 계열 박스 summary용: `1차: 국제금융(붙여쓰기)`
+ * @param {'glued' | 'spaced' | null | undefined} direction
+ * @param {string[]} forms
+ */
+export function formatPhase2SeriesCriterionLine(direction, forms) {
+  return formatPhase2SeriesCriterionModel(direction, forms).text;
 }
 
 /**
@@ -827,6 +842,25 @@ export function findPatternCompliantForms(pageTexts, rule) {
 }
 
 /**
+ * MatchInstance → 쪽 칩/하이라이트용 occ (itemIndexes·좌표 유지 → 빨간 줄)
+ * @param {import('./ruleEngine.js').MatchInstance} inst
+ * @param {string} fallbackText
+ */
+function occurrenceFromMatchInstance(inst, fallbackText) {
+  return {
+    pageNum: inst.pageNum,
+    index: inst.index,
+    matchedText: inst.matchedText || fallbackText,
+    ...(Array.isArray(inst.itemIndexes) && inst.itemIndexes.length
+      ? { itemIndexes: inst.itemIndexes }
+      : {}),
+    ...(typeof inst.x === 'number' ? { x: inst.x } : {}),
+    ...(typeof inst.y === 'number' ? { y: inst.y } : {}),
+    ...(typeof inst.column === 'number' ? { column: inst.column } : {}),
+  };
+}
+
+/**
  * @param {{
  *   key: string,
  *   form: string,
@@ -849,18 +883,17 @@ function compliantToUnifyCluster(row) {
     glued === spaced ? [glued] : [glued, spaced];
   /** @type {Record<string, number>} */
   const counts = {};
+  /** @type {import('./unifyCandidateDiscover.js').UnifyVariantOccurrence[]} */
+  const occList = (row.instances ?? []).map((inst) =>
+    occurrenceFromMatchInstance(inst, row.form),
+  );
   /** @type {Record<string, import('./unifyCandidateDiscover.js').UnifyVariantOccurrence[]>} */
   const occurrencesByVariant = {};
   for (const v of variants) {
     const hit = isGlued ? !/\s/.test(v) : /\s/.test(v);
     counts[v] = hit ? count : 0;
-    occurrencesByVariant[v] = hit
-      ? (row.instances ?? []).map((inst) => ({
-          pageNum: inst.pageNum,
-          index: inst.index,
-          matchedText: inst.matchedText || v,
-        }))
-      : [];
+    // 이형태(반대 칸)에도 같은 쪽 칩 — 출현 위치는 문서에 있는 표기 기준
+    occurrencesByVariant[v] = occList.map((o) => ({ ...o }));
   }
   return {
     key: row.key,
@@ -1283,15 +1316,18 @@ export function mismatchToUnifyCluster(m) {
   const to = normalizeUnifyVariant(m.to);
   const variants =
     from === to ? [from] : /\s/.test(to) ? [from, to] : [to, from];
+  /** @type {import('./unifyCandidateDiscover.js').UnifyVariantOccurrence[]} */
+  const occList = (m.instances ?? []).map((inst) =>
+    occurrenceFromMatchInstance(inst, from),
+  );
   /** @type {Record<string, import('./unifyCandidateDiscover.js').UnifyVariantOccurrence[]>} */
   const occurrencesByVariant = {
-    [from]: (m.instances ?? []).map((inst) => ({
-      pageNum: inst.pageNum,
-      index: inst.index,
-      matchedText: inst.matchedText || from,
-    })),
+    [from]: occList.map((o) => ({ ...o })),
   };
-  if (to !== from) occurrencesByVariant[to] = [];
+  // 이형태(목표 표기) 칸에도 쪽 칩 — 문서 출현은 from 위치
+  if (to !== from) {
+    occurrencesByVariant[to] = occList.map((o) => ({ ...o }));
+  }
 
   return {
     key: m.key,

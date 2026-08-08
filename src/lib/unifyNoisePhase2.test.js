@@ -1,8 +1,8 @@
-﻿import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { runUnifyListPhase2Filters } from './unifyNoisePhase2.js';
 
 describe('runUnifyListPhase2Filters', () => {
-  it('DocSuffix로 로그램 지출을 걸러내고 groups를 반환한다', async () => {
+  it('DocSuffix로 로그램을 프로그램으로 복원·merge한다', async () => {
     const groups = [
       {
         type: 'single',
@@ -11,6 +11,13 @@ describe('runUnifyListPhase2Filters', () => {
             key: '로그램지출',
             variants: ['로그램지출', '로그램 지출'],
             counts: { 로그램지출: 1, '로그램 지출': 1 },
+            kind: 'conflict',
+            totalCount: 2,
+          },
+          {
+            key: '프로그램지출',
+            variants: ['프로그램지출', '프로그램 지출'],
+            counts: { 프로그램지출: 1, '프로그램 지출': 1 },
             kind: 'conflict',
             totalCount: 2,
           },
@@ -35,6 +42,7 @@ describe('runUnifyListPhase2Filters', () => {
     expect(out.docSuffix.dropped).toBeGreaterThanOrEqual(1);
     const keys = out.groups.flatMap((g) => g.clusters.map((c) => c.key));
     expect(keys).not.toContain('로그램지출');
+    expect(keys).toContain('프로그램지출');
     expect(keys).toContain('경제성장');
   });
 });

@@ -870,6 +870,36 @@
   gap: 0;
 }
 
+/* 공통 항목 — stem 붙임/띄움 스타일 신호 (참고, 슬롯 카드 위 1회) */
+.panel-left .phrase-slot-stem-signal {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 10px;
+  margin: 0;
+  padding: 6px 8px;
+  background: var(--panel-surface-stage, #e8e8e8);
+  border: 1px solid var(--panel-border-soft, #d0d0d0);
+  border-radius: 4px;
+  font-size: calc(0.82rem * var(--panel-ui-scale, 1));
+  color: var(--panel-text-muted, #5a5a5a);
+}
+
+.panel-left .phrase-slot-stem-signal__stem {
+  font-weight: 600;
+  color: var(--panel-text, #1e2a3a);
+}
+
+.panel-left .phrase-slot-stem-signal__counts {
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+}
+
+.panel-left .phrase-slot-stem-signal[data-mixed='1'] .phrase-slot-stem-signal__counts {
+  color: var(--panel-text, #1e2a3a);
+}
+
 .panel-left .phrase-slot-fills__item {
   margin: 0;
   padding: 6px 0;
@@ -1935,6 +1965,18 @@
   font-size: calc(1.05rem * var(--panel-ui-scale));
 }
 
+/* 로딩 중 첫 박스 프리웜 — 화면 밖 실제 폭으로 레이아웃·칩 준비 */
+.panel-left .unify-candidate-find__results--prewarming {
+  position: fixed;
+  left: -10000px;
+  top: 0;
+  width: 360px;
+  max-height: 80vh;
+  overflow: hidden;
+  pointer-events: none;
+  visibility: hidden;
+}
+
 /* 빈 계열 안내 — 표기 카드 체크박스와 같은 시작선 */
 .panel-left
   .unify-candidate-find
@@ -2087,7 +2129,7 @@
   line-height: 1.45;
 }
 
-/* 2차 계열 summary — @라벨 + 1차 통일형(우측정렬 방지, 간격 3px) */
+/* 2차 계열 summary — @라벨 + 1차(우측정렬 방지, 간격 3px) */
 .panel-left
   .unify-candidate-find
   .results-panel--unify-candidate
@@ -2145,13 +2187,23 @@
   box-sizing: border-box;
   font-size: 70%;
   font-weight: 400;
-  color: var(--c-ink, #333);
+  color: var(--c-accent, #2f6fed);
   word-break: keep-all;
   overflow-wrap: anywhere;
   line-height: 1.2;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.panel-left
+  .unify-candidate-find__series-label-block
+  > .unify-candidate-find__exception-badge {
+  flex-shrink: 0;
+  margin-left: 2px;
+  vertical-align: baseline;
 }
 
 /* 계열 안 — 적용 단어 헤더: @무늬 summary와 동일 박스·글씨 */

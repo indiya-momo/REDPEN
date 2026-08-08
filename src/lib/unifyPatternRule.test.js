@@ -683,7 +683,13 @@ describe('unifyPatternRule', () => {
     );
     expect(
       formatPhase2SeriesCriterionLine('glued', ['국제금융', '부실투자']),
-    ).toBe('1차 통일형: 국제금융 · 부실투자(붙여쓰기)');
+    ).toBe('1차: 국제금융(붙여쓰기)');
+    expect(
+      formatPhase2SeriesCriterionLine('spaced', [
+        '국제 금융',
+        '부실투자',
+      ]),
+    ).toBe('1차: 국제 금융(띄어쓰기)');
     expect(
       formatPhase2InProgressBannerModel([
         {

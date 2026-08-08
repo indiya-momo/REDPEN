@@ -59,6 +59,15 @@ function tokenizeSlotPattern(raw) {
 }
 
 /**
+ * 규칙 생성·스타일 집계가 같은 토큰 정의를 쓰도록 export.
+ * @param {string} raw
+ * @returns {Token[] | null}
+ */
+export function tokenizePhraseSlotPattern(raw) {
+  return tokenizeSlotPattern(String(raw ?? ''));
+}
+
+/**
  * @param {string} t
  * @returns {Token[] | null}
  */

@@ -17,7 +17,6 @@ import {
   countUnifyListAccordionItems,
 } from '../../lib/unifyCandidateGrouping.js';
 import { filterSeriesSatellitesByNoiseList } from '../../lib/unifyCandidateSatellites.js';
-import { runUnifyListPhase2Filters } from '../../lib/unifyNoisePhase2.js';
 import {
   assembleUnifyListBase,
   buildUnifyListGroups,
@@ -30,7 +29,7 @@ import {
   formatPatternRuleConditionLabel,
   formatPhase2CompliantAppliedLabel,
   formatPhase2InProgressBannerModel,
-  formatPhase2SeriesCriterionLine,
+  formatPhase2SeriesCriterionModel,
   groupPatternConditionLabelsByDirection,
   isPrimaryUnifyComplete,
   PHASE2_COMPLIANT_FORMS_PREVIEW,
@@ -63,6 +62,7 @@ import {
 import { formatSystemPageLabel } from '../../lib/printedPageDisplay.js';
 import { assertBetaDailyCheckOrAlert } from '../../lib/betaDailyQuota.js';
 import { confirmUnifyCandidateFindBeforeRun, alertUnifyCandidateFindAfterRun, alertUnifyCandidatePhase2AfterComplete } from '../../lib/consistencyCheckConfirm.js';
+import { filterGroupsByDocSuffixOrphan } from '../../lib/unifyNoiseDocSuffixOrphan.js';
 import ConsistencyHintExample from './ConsistencyHintExample.jsx';
 import OrthoSpikeDevPanel from './OrthoSpikeDevPanel.jsx';
 import ResultPageSummary from '../ResultPageSummary.jsx';
@@ -137,9 +137,31 @@ function firstUnifyListChipInstance(groups, chosenByKey, hiddenKeys) {
       const chosen =
         chosenByKey?.get(cluster.key) || cluster.recommendedUnify;
       for (const variant of cluster.variants ?? []) {
-        const occs = cluster.occurrencesByVariant?.[variant] ?? [];
+        const occs = resolveUnifyVariantOccurrences(cluster, variant);
         if (!occs.length) continue;
         const occ = occs[0];
+        return {
+          find: variant,
+          replace: chosen,
+          matchedText: occ.matchedText,
+          suggestedText: chosen,
+          pageNum: occ.pageNum,
+          index: occ.index,
+          ...(Array.isArray(occ.itemIndexes) && occ.itemIndexes.length
+            ? { itemIndexes: occ.itemIndexes }
+            : {}),
+          ...(typeof occ.x === 'number' ? { x: occ.x } : {}),
+          ...(typeof occ.y === 'number' ? { y: occ.y } : {}),
+          ...(typeof occ.column === 'number' ? { column: occ.column } : {}),
+        };
+      }
+      // variants 키가 비어도 출현만 있으면 첫 칸으로
+      const pooled = resolveUnifyVariantOccurrences(cluster, '');
+      if (pooled.length) {
+        const occ = pooled[0];
+        const variant =
+          cluster.variants?.[0] ||
+          String(occ.matchedText || cluster.key || '');
         return {
           find: variant,
           replace: chosen,
@@ -158,6 +180,33 @@ function firstUnifyListChipInstance(groups, chosenByKey, hiddenKeys) {
     }
   }
   return null;
+}
+
+/**
+ * 쪽 칩용 출현 — 표기 키에 없으면 클러스터 전체에서 모은다.
+ * (이형태 없음·키 불일치·derived 0회 칸도 칩이 뜨게)
+ * @param {import('../../lib/unifyCandidateDiscover.js').UnifySpacingCluster | null | undefined} cluster
+ * @param {string} variant
+ * @returns {import('../../lib/unifyCandidateDiscover.js').UnifyVariantOccurrence[]}
+ */
+function resolveUnifyVariantOccurrences(cluster, variant) {
+  const byVar = cluster?.occurrencesByVariant ?? {};
+  const direct = variant ? byVar[variant] : null;
+  if (Array.isArray(direct) && direct.length) return direct;
+  /** @type {import('../../lib/unifyCandidateDiscover.js').UnifyVariantOccurrence[]} */
+  const pooled = [];
+  const seen = new Set();
+  for (const list of Object.values(byVar)) {
+    if (!Array.isArray(list)) continue;
+    for (const occ of list) {
+      if (!occ) continue;
+      const sig = `${occ.pageNum ?? ''}:${occ.index ?? ''}:${occ.matchedText ?? ''}`;
+      if (seen.has(sig)) continue;
+      seen.add(sig);
+      pooled.push(occ);
+    }
+  }
+  return pooled;
 }
 
 /**
@@ -586,7 +635,8 @@ function Phase2CompliantFormsBanner({
  *   selectedInstance: unknown,
  *   formatPageLabel: (pageNum: number, index?: number, total?: number) => string,
  *   pageTexts: unknown[],
- *   previewGroups: unknown[],
+ *   previewGroups?: unknown[],
+ *   onSelectInstance?: (inst: import('../../lib/ruleEngine.js').MatchInstance) => void,
  * }} props
  */
 function Phase2CompliantFormsSummary({
@@ -598,6 +648,7 @@ function Phase2CompliantFormsSummary({
   formatPageLabel,
   pageTexts,
   previewGroups,
+  onSelectInstance,
 }) {
   const list = (clusters ?? []).filter((c) => (c?.totalCount || 0) > 0);
   if (!list.length || (direction !== 'glued' && direction !== 'spaced')) {
@@ -629,7 +680,7 @@ function Phase2CompliantFormsSummary({
               currentPage={currentPage}
               selectedInstance={selectedInstance}
               formatPageLabel={formatPageLabel}
-              onSelectInstance={noop}
+              onSelectInstance={onSelectInstance}
               pageTexts={pageTexts}
               previewGroups={previewGroups}
             />
@@ -932,6 +983,9 @@ export default function UnifyCandidateFindPanel({
     [],
   );
   const phase2PromptedRef = useRef(false);
+  /** 2차 진입 중 재클릭·빈 목록 effect 레이스 방지 */
+  const phase2EnteringRef = useRef(false);
+  const [phase2Entering, setPhase2Entering] = useState(false);
   /** handleFind → 다음 listMemo enrich 1회 계측 */
   const findBenchRef = useRef(
     /** @type {ReturnType<typeof createUnifyFindBench> | null} */ (null),
@@ -1002,6 +1056,8 @@ export default function UnifyCandidateFindPanel({
       onPreviewClear?.();
       setOpenUnifySectionIds(new Set());
       setListEpoch((n) => n + 1);
+      // 이전 목록·폴백(grouped←clusters)이 phase2 전에 다시 보이지 않게
+      setSearched(false);
       await new Promise((r) => setTimeout(r, 0));
       setMorphFilterInactive(false);
       setFindListGroups(null);
@@ -1148,13 +1204,39 @@ export default function UnifyCandidateFindPanel({
       const triage = collectUnifyListTriage(workingGroups);
 
       // 목록(grouped)과 동일: item 재집계 → 1차 noise-list → 정렬
+      // DocSuffix(OCR 앞잘림)는 1차 찾기에 붙이지 않음 → UI 2차 진입(enterPhase2)에서.
       workingGroups = await finalizeUnifyListGroupsAsync(
         workingGroups,
         pageTexts,
       );
       bench.mark('5_enrichGroups_sort');
 
-      // marks는 미리 두고, listReady는 phase2 끝난 뒤 한 번만
+      const snap = summarizeUnifyListSnapshot(workingGroups);
+      const softPre = buildSeriesMajoritySoftPreselect(workingGroups);
+      const kiwiDiagDone = await snapshotUnifyFindDiag();
+      const morphInactive = Boolean(kiwiDiagDone.noiseFilterEnabled);
+      const zeroOccClusters = snap.listClusters.filter(
+        (c) => (c.totalCount ?? 0) === 0,
+      ).length;
+      bench.done({
+        clusters: next.length,
+        listClusters: snap.listClusters.length,
+        countedClusters: snap.countedClusters.length,
+        listItemCount: snap.itemCount,
+        occTotal: snap.findings,
+        zeroOccClusters,
+        kiwiBefore: kiwiDiagBefore,
+        kiwiAfterDiscover: kiwiDiagAfterDiscover,
+        kiwiAfterEnrich1: kiwiDiagAfterEnrich1,
+        kiwiDone: kiwiDiagDone,
+        morphFilterActive: false,
+        morphFilterInactive: morphInactive,
+        docSuffixDropped: 0,
+        note: '1차 찾기=DocSuffix 없음 · 2차 진입 시 적용 · 완료 팝업 없음',
+      });
+
+      // 목록·marks를 한 번에 — 팝업 아래에서 숫자가 바뀌지 않게.
+      // 「찾기를 진행했습니다」모달은 뜨지 않음(1019↔66 혼선·중복 안내 방지).
       setClusters(next);
       setRawByKey(result.rawByKey);
       setSlmReviewedByKey(slmByKey);
@@ -1190,55 +1272,15 @@ export default function UnifyCandidateFindPanel({
       setPhase2DoneLabels([]);
       setPhase2ResultSummary(null);
       setPhase2ConditionsExpanded(false);
-      phase2PromptedRef.current = false;
-
-      // finding만 먼저 해제 (phase2 대기 중 ··· 고착 방지).
-      // 목록(searched)은 phase2 후 1회만 — 조기 공개+재설정이 1차가 두 번 나온 것처럼 보임.
-      setFinding(false);
-      bench.mark('6_list_ui_ready');
-      await afterPaint();
-
-      let phase2Applied = false;
-      let docSuffixDropped = 0;
-      try {
-        const phase2 = await runUnifyListPhase2Filters(
-          workingGroups,
-          pageTexts,
-        );
-        workingGroups = phase2.groups;
-        phase2Applied = phase2.kiwi.applied;
-        docSuffixDropped = phase2.docSuffix.dropped;
-        if (import.meta.env.DEV) {
-          const keys = workingGroups.flatMap((g) =>
-            (g.clusters ?? []).map((c) => String(c.key ?? '')),
-          );
-          console.info('[unify-doc-suffix-diag]', {
-            applied: phase2.docSuffix.applied,
-            dropped: docSuffixDropped,
-            kiwiDropped: phase2.kiwi.dropped,
-            still로그램지출: keys.some(
-              (k) => k.replace(/\s+/g, '') === '로그램지출',
-            ),
-            still비스지출: keys.some(
-              (k) => k.replace(/\s+/g, '') === '비스지출',
-            ),
-          });
-        }
-      } catch (err) {
-        phase2Applied = false;
-        if (import.meta.env.DEV) {
-          console.warn('[unify-phase2] filters failed', err);
-        }
-      }
-
-      const snap = summarizeUnifyListSnapshot(workingGroups);
-      const softPre = buildSeriesMajoritySoftPreselect(workingGroups);
+      // soft로 1차 완료처럼 보여도 직후 「종료」팝업이 또 뜨지 않게
+      phase2PromptedRef.current = true;
+      setMorphFilterInactive(morphInactive);
       setFindListGroups(workingGroups);
       setHiddenPdfKeys(snap.hiddenPdfKeys);
       setRegisteredVariants(new Map());
       setPreSelected(softPre);
       setSearched(true);
-      bench.mark('7_list_after_phase2');
+      setFinding(false);
 
       await afterPaint();
       const focusInst = firstUnifyListChipInstance(
@@ -1259,36 +1301,12 @@ export default function UnifyCandidateFindPanel({
           console.warn('[unify-preview] onListReady failed', err);
         }
       }
-
-      const kiwiDiagDone = await snapshotUnifyFindDiag();
-      // 2차 미적용(Kiwi 미ready·OFF)일 때만 배지
-      const morphInactive =
-        Boolean(kiwiDiagDone.noiseFilterEnabled) && !phase2Applied;
-      setMorphFilterInactive(morphInactive);
       if (morphInactive && import.meta.env.DEV) {
         console.warn(
-          '[unify-kiwi-noise] 1차 리스트만 — Kiwi 2차 미적용 (ready 아님·boot 안 함)',
+          '[unify-kiwi-noise] 1차 찾기 — DocSuffix/Kiwi 미적용 (목록=정적+noise-list)',
         );
       }
-      const zeroOccClusters = snap.listClusters.filter(
-        (c) => (c.totalCount ?? 0) === 0,
-      ).length;
-      bench.done({
-        clusters: next.length,
-        listClusters: snap.listClusters.length,
-        countedClusters: snap.countedClusters.length,
-        listItemCount: snap.itemCount,
-        occTotal: snap.findings,
-        zeroOccClusters,
-        kiwiBefore: kiwiDiagBefore,
-        kiwiAfterDiscover: kiwiDiagAfterDiscover,
-        kiwiAfterEnrich1: kiwiDiagAfterEnrich1,
-        kiwiDone: kiwiDiagDone,
-        morphFilterActive: phase2Applied,
-        morphFilterInactive: morphInactive,
-        docSuffixDropped,
-        note: '1차=정적 리스트 · 2차=DocSuffix+ready시 Kiwi · 집계=최종 스냅샷',
-      });
+      // 팝업은 함수 내부 no-op. 게스트 결과→다운로드 가이드 해금만 수행.
       await alertUnifyCandidateFindAfterRun(snap.countedClusters, {
         uid: authUid,
         email: authEmail,
@@ -1473,72 +1491,127 @@ export default function UnifyCandidateFindPanel({
   /** 2차 — 패턴 후보 전부로 바로 단어 세트 목록 (pattern_pick 생략) */
   const enterPhase2 = useCallback(async () => {
     if (!isUnifyPhase2PatternEnabled()) return;
-    const chosen = mergeUnifyChosenMaps(registeredVariants, preSelected);
+    if (phase2EnteringRef.current) return;
+    phase2EnteringRef.current = true;
+    setPhase2Entering(true);
+    try {
+      const chosen = mergeUnifyChosenMaps(registeredVariants, preSelected);
 
-    const candidates = collectPatternRuleCandidates(chosen, clusters, pageTexts);
-    setSecondaryGroups([]);
-    setPhase2DoneLabels([]);
-    setPhase2ConditionsExpanded(false);
-    setCompliantFormsExpandedKeys(new Set());
-    setPhase2ResultSummary(null);
-    setHiddenPdfKeys(new Set());
+      const candidates = collectPatternRuleCandidates(chosen, clusters, pageTexts);
 
-    // 후보 없음 → 안내 후 1차 유지
-    if (!candidates.length) {
-      setUnifyPhase('primary');
-      onPreviewClear?.();
-      await showAppAlert({
-        title: '2차 표기 통일',
-        message:
-          '확장할 표기 후보가 없습니다.\n1차에서 고른 계열에 더 찾을 어긋남·적용 표기가 없습니다.',
+      // 후보 없음 → 안내 후 1차 유지 (1차 목록·phase는 건드리지 않음)
+      if (!candidates.length) {
+        await showAppAlert({
+          title: '2차 표기 통일',
+          message:
+            '확장할 표기 후보가 없습니다.\n1차에서 고른 계열에 더 찾을 어긋남·적용 표기가 없습니다.',
+        });
+        return;
+      }
+
+      const ids = new Set(candidates.map((c) => c.id));
+      let nextGroups = buildSecondaryGroupsFromCandidates(candidates, ids);
+
+      // 머리 잘림(DocSuffix): 2차 목록에서 복원·같은 단어 세트로 merge. 증인=1·2차 목록.
+      try {
+        const primaryGroups = findListGroups ?? [];
+        const suffix = await filterGroupsByDocSuffixOrphan(
+          nextGroups,
+          pageTexts,
+          {
+            rawByKey,
+            witnessGroups: [...primaryGroups, ...nextGroups],
+          },
+        );
+        if (
+          suffix.applied &&
+          ((suffix.remapped ?? 0) > 0 || (suffix.dropped ?? 0) > 0)
+        ) {
+          nextGroups = suffix.groups;
+        }
+      } catch (err) {
+        if (import.meta.env?.DEV) {
+          console.warn('[unify-doc-suffix] phase2 list filter failed', err);
+        }
+      }
+
+      const nextClusters = nextGroups.flatMap((g) => g.clusters ?? []);
+      const compliantClusters = nextGroups.flatMap((g) =>
+        (g.compliantForms ?? []).filter((c) => (c?.totalCount || 0) > 0),
+      );
+      // PDF 빨간 줄용 — 어긋남 + 이미 맞는 표기 모두 preview snapshot에 포함
+      /** @type {Map<string, import('../../lib/unifyCandidateDiscover.js').UnifySpacingCluster>} */
+      const previewByKey = new Map();
+      for (const c of [...nextClusters, ...compliantClusters]) {
+        if (!c?.key) continue;
+        if (!previewByKey.has(c.key)) previewByKey.set(c.key, c);
+      }
+      const previewClusters = [...previewByKey.values()];
+      if (!nextGroups.length || !previewClusters.length) {
+        await showAppAlert({
+          title: '2차 표기 통일',
+          message:
+            '확장할 표기 후보가 없습니다.\n1차에서 고른 계열에 더 찾을 어긋남·적용 표기가 없습니다.',
+        });
+        return;
+      }
+
+      const itemCount = countUnifyListAccordionItems(nextGroups);
+      // 2차는 soft 미리찍기 없음 — 사용자가 직접 선택
+      // 목록·phase를 한 번에 (빈 secondary_pairs 중간 상태 금지 → 팝업/칩 레이스 방지)
+      setPhase2PrimaryChosen(new Map(chosen));
+      setPreSelected(new Map());
+      setPhase2DoneLabels([]);
+      setPhase2ConditionsExpanded(false);
+      setCompliantFormsExpandedKeys(new Set());
+      setHiddenPdfKeys(new Set());
+      setSecondaryGroups(nextGroups);
+      setPhase2ResultSummary({
+        itemCount,
+        findings: sumClusterFindings(nextClusters),
       });
-      return;
+      setUnifyPhase('secondary_pairs');
+      setOpenUnifySectionIds(new Set());
+      setListEpoch((n) => n + 1);
+
+      await afterPaint();
+      onListReady?.({
+        clusters: previewClusters,
+        chosenByKey: mergeUnifyChosenMaps(registeredVariants, new Map()),
+        hiddenKeys: new Set(),
+        focusInst: firstUnifyListChipInstance(
+          nextGroups.length
+            ? nextGroups
+            : [{ type: 'single', clusters: previewClusters }],
+          mergeUnifyChosenMaps(registeredVariants, new Map()),
+          new Set(),
+        ),
+      });
+
+      // await 하면 모달이 requestIdleCallback(쪽 칩)을 막아「처음에 칩이 안 보임」.
+      // 진입당 1회만, 목록·listReady 이후에 비차단으로.
+      void alertUnifyCandidatePhase2AfterComplete({
+        itemCount,
+        clusters: nextClusters,
+      });
+    } finally {
+      phase2EnteringRef.current = false;
+      setPhase2Entering(false);
     }
-
-    const ids = new Set(candidates.map((c) => c.id));
-    const nextGroups = buildSecondaryGroupsFromCandidates(candidates, ids);
-    const nextClusters = nextGroups.flatMap((g) => g.clusters);
-    const itemCount = countUnifyListAccordionItems(nextGroups);
-    // 2차는 soft 미리찍기 없음 — 사용자가 직접 선택
-    setPhase2PrimaryChosen(new Map(chosen));
-    setPreSelected(new Map());
-    setSecondaryGroups(nextGroups);
-    setPhase2ResultSummary({
-      itemCount,
-      findings: sumClusterFindings(nextClusters),
-    });
-    setUnifyPhase('secondary_pairs');
-    setOpenUnifySectionIds(new Set());
-    setListEpoch((n) => n + 1);
-
-    await afterPaint();
-    onListReady?.({
-      clusters: nextClusters,
-      chosenByKey: mergeUnifyChosenMaps(registeredVariants, new Map()),
-      hiddenKeys: new Set(),
-      focusInst: firstUnifyListChipInstance(
-        nextGroups,
-        mergeUnifyChosenMaps(registeredVariants, new Map()),
-        new Set(),
-      ),
-    });
-
-    await alertUnifyCandidatePhase2AfterComplete({
-      itemCount,
-      clusters: nextClusters,
-    });
   }, [
     registeredVariants,
     preSelected,
     clusters,
     pageTexts,
+    rawByKey,
     findListGroups,
-    onPreviewClear,
     onListReady,
   ]);
 
   /** 2차 후보 없음 등 — 팝업 없이 1차 목록으로만 복귀 */
   const finishSecondary = useCallback(() => {
+    phase2EnteringRef.current = false;
+    setPhase2Entering(false);
     const doneLabels = [];
     for (const group of secondaryGroups) {
       const direction = resolveSeriesChosenSpacing(
@@ -1592,29 +1665,10 @@ export default function UnifyCandidateFindPanel({
     setListEpoch((n) => n + 1);
     setOpenUnifySectionIds(new Set());
     phase2PromptedRef.current = false;
+    phase2EnteringRef.current = false;
+    setPhase2Entering(false);
     onPreviewClear?.();
   }, [onPreviewClear]);
-
-  /** 1차 완료 후 — 2차 OFF(배포)일 때만 종료 안내. 2차 ON은 하단 버튼으로 진행 */
-  useEffect(() => {
-    if (unifyPhase !== 'primary') return;
-    if (!searched || phase2PromptedRef.current) return;
-    if (!isPrimaryUnifyComplete(grouped, registeredVariants, preSelected)) return;
-    if (isGuestBrowseActive()) return;
-    if (isUnifyPhase2PatternEnabled()) return;
-    phase2PromptedRef.current = true;
-    void showAppAlert({
-      title: '표기 통일 추천',
-      message:
-        '표기 통일 추천이 종료되었습니다.\n검수 결과 다운로드로 받을 수 있습니다.',
-    });
-  }, [
-    unifyPhase,
-    searched,
-    grouped,
-    registeredVariants,
-    preSelected,
-  ]);
 
   useEffect(() => {
     if (!primaryUnifyComplete) {
@@ -1625,11 +1679,13 @@ export default function UnifyCandidateFindPanel({
   const handlePhase2EntryClick = useCallback(async () => {
     if (!primaryUnifyComplete || !isUnifyPhase2PatternEnabled()) return;
     if (isGuestBrowseActive() && !guestBrowseAllowsUnifyPhase2Local()) return;
+    if (phase2EnteringRef.current) return;
     await enterPhase2();
   }, [primaryUnifyComplete, enterPhase2]);
 
   /** 2차 목록 → 1차로 되돌림 (2차 선택·미리보기 폐기) */
   const returnToPrimaryFromPhase2 = useCallback(() => {
+    phase2EnteringRef.current = false;
     const primaryKeys = new Set(listClusters.map((c) => c.key));
     const primaryReg = new Map();
     for (const [k, v] of registeredVariants) {
@@ -1664,10 +1720,11 @@ export default function UnifyCandidateFindPanel({
     void endUnifyToInitialUi();
   }, [endUnifyToInitialUi]);
 
-  /** 2차 계열 자체가 없을 때만 자동 종료 (mismatch 0·적용 단어만 있는 계열은 유지) */
+  /** 2차 계열 자체가 없을 때만 자동 종료 (진입 중 빈 목록 레이스는 제외) */
   useEffect(() => {
     if (!isUnifyPhase2PatternEnabled()) return;
     if (unifyPhase !== 'secondary_pairs') return;
+    if (phase2EnteringRef.current) return;
     if (secondaryGroups.length > 0) return;
     finishSecondary();
   }, [unifyPhase, secondaryGroups, finishSecondary]);
@@ -1932,8 +1989,8 @@ export default function UnifyCandidateFindPanel({
                         const compliantList = (group.compliantForms ?? []).filter(
                           (c) => (c?.totalCount || 0) > 0,
                         );
-                        const primaryCriterionLine =
-                          formatPhase2SeriesCriterionLine(
+                        const primaryCriterion =
+                          formatPhase2SeriesCriterionModel(
                             group.direction,
                             collectPrimaryFormsForPatternGroup(
                               group,
@@ -1979,9 +2036,9 @@ export default function UnifyCandidateFindPanel({
                                     {seriesLabelText}
                                   </span>
                                 </CriteriaHoverTip>
-                                {primaryCriterionLine ? (
+                                {primaryCriterion.text ? (
                                   <span className="unify-candidate-find__series-criterion">
-                                    {primaryCriterionLine}
+                                    {primaryCriterion.text}
                                   </span>
                                 ) : null}
                               </span>
@@ -2031,6 +2088,9 @@ export default function UnifyCandidateFindPanel({
                                           cluster.key,
                                         )}
                                         preSelectedVariant={null}
+                                        seriesDirection={
+                                          seriesSpacing ?? group.direction
+                                        }
                                         groupClusters={group.clusters}
                                         onSelectVariant={handleSelectVariant}
                                         onCancelVariant={handleCancelVariant}
@@ -2057,6 +2117,7 @@ export default function UnifyCandidateFindPanel({
                                   selectedInstance={selectedInstance}
                                   formatPageLabel={formatPageLabel}
                                   pageTexts={pageTexts}
+                                  onSelectInstance={onSelectInstance}
                                 />
                               </>
                             ) : null}
@@ -2280,12 +2341,12 @@ export default function UnifyCandidateFindPanel({
                       <button
                         type="button"
                         className="consistency-register-add-btn consistency-register-add-btn--label unify-candidate-find__submit"
-                        disabled={!primaryUnifyComplete}
+                        disabled={!primaryUnifyComplete || phase2Entering}
                         onClick={() => {
                           void handlePhase2EntryClick();
                         }}
                       >
-                        2차 표기 통일
+                        {phase2Entering ? '2차 진행 중…' : '2차 표기 통일'}
                       </button>
                     </CriteriaHoverTip>
                   </div>
@@ -2331,6 +2392,8 @@ function ClusterCard({
   onTogglePdfVisibility,
   registeredVariant,
   preSelectedVariant,
+  /** 2차 계열 통일 방향 — preSelect 없을 때 예외 판정용 */
+  seriesDirection = null,
   groupClusters,
   onSelectVariant,
   onCancelVariant,
@@ -2357,34 +2420,31 @@ function ClusterCard({
     }
     setPageChipsReady(false);
     let cancelled = false;
-    /** @type {number | null} */
-    let idleId = null;
     /** @type {ReturnType<typeof setTimeout> | null} */
     let timeoutId = null;
     const ready = () => {
       if (!cancelled) setPageChipsReady(true);
     };
-    // 펼침 페인트 이후 — 쪽 칩은 idle에 (클릭 프레임과 분리)
-    if (typeof requestIdleCallback === 'function') {
-      idleId = requestIdleCallback(ready, { timeout: 64 });
-    } else {
-      timeoutId = setTimeout(ready, 0);
-    }
+    // 펼침 직후 바로 — idle이면 팝업·메인부하에 쪽 칩이 늦거나 안 보임
+    timeoutId = setTimeout(ready, 0);
     return () => {
       cancelled = true;
-      if (idleId != null && typeof cancelIdleCallback === 'function') {
-        cancelIdleCallback(idleId);
-      }
       if (timeoutId != null) clearTimeout(timeoutId);
     };
   }, [cluster.key, pageChipsEnabled]);
 
-  // 예외: pre-select 방향과 반대로 등록된 경우
+  // 예외: 계열·soft 통일 방향과 반대로 등록된 경우
   const isException = (() => {
-    if (!isRegistered || !preSelectedVariant) return false;
-    const preIsGlued = !/\s/.test(preSelectedVariant);
+    if (!isRegistered) return false;
     const chosenIsGlued = !/\s/.test(registeredVariant);
-    return preIsGlued !== chosenIsGlued;
+    if (preSelectedVariant) {
+      const preIsGlued = !/\s/.test(preSelectedVariant);
+      return preIsGlued !== chosenIsGlued;
+    }
+    if (seriesDirection === 'glued' || seriesDirection === 'spaced') {
+      return (seriesDirection === 'glued') !== chosenIsGlued;
+    }
+    return false;
   })();
 
   return (
@@ -2404,7 +2464,7 @@ function ClusterCard({
           const isPreSelected = !isRegistered && preSelectedVariant === variant;
           const isFirst = variantIndex === 0;
           const replace = registeredVariant || cluster.recommendedUnify;
-          const occs = cluster.occurrencesByVariant?.[variant] ?? [];
+          const occs = resolveUnifyVariantOccurrences(cluster, variant);
           const chipExpanded = chipExpandedByVariant.get(variant) === true;
           const CHIP_PREVIEW = 3;
           const srcOccs = !pageChipsReady
@@ -2533,10 +2593,12 @@ function ClusterCard({
                   onSelectPage={(pageNum) => {
                     const occ = occs.find((o) => o.pageNum === pageNum);
                     if (!occ) return;
+                    // find = PDF에 있는 문자열(matchedText) — variant만 쓰면 빨간 줄이 안 맞음
+                    const findText = occ.matchedText || variant;
                     jumpUnifyPdf(onSelectInstance, {
-                      find: variant,
+                      find: findText,
                       replace,
-                      matchedText: occ.matchedText,
+                      matchedText: findText,
                       suggestedText: replace,
                       pageNum: occ.pageNum,
                       index: occ.index,
@@ -2546,10 +2608,17 @@ function ClusterCard({
                         : {}),
                       ...(typeof occ.x === 'number' ? { x: occ.x } : {}),
                       ...(typeof occ.y === 'number' ? { y: occ.y } : {}),
+                      ...(typeof occ.column === 'number'
+                        ? { column: occ.column }
+                        : {}),
                     });
                   }}
                   onSelectInstance={(inst) =>
-                    jumpUnifyPdf(onSelectInstance, inst)
+                    jumpUnifyPdf(onSelectInstance, {
+                      ...inst,
+                      find: inst.matchedText || inst.find || variant,
+                      matchedText: inst.matchedText || inst.find || variant,
+                    })
                   }
                 />
               ) : null}

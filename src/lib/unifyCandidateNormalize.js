@@ -39,11 +39,9 @@ export function stripTrailingJosaHeuristic(
     if (!last.endsWith(josa) || last.length <= josa.length) continue;
     const stemLast = last.slice(0, -josa.length);
     if (hangulSyllableCount(stemLast) < minStemHangul) continue;
-    // 가·이: 4음절 어절에서는 어간 끝 음절과 구분 불가(가치평가→가치평). 건너뜀.
-    if (
-      (josa === '가' || josa === '이') &&
-      hangulSyllableCount(last) === 4
-    ) {
+    // 가·이: 어간 끝 음절과 조사 구분 불가
+    // (가치평가·경제분석가·분석가). 휴리스틱은 떼지 않고 Kiwi만 제거.
+    if (josa === '가' || josa === '이') {
       continue;
     }
     parts[parts.length - 1] = stemLast;

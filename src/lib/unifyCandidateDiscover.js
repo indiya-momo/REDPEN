@@ -22,6 +22,7 @@ const UNIFY_MAX_NGRAM_TOKENS = 6;
 import { findRefForTextIndex } from '../toc-body/lib/pdfHeadingExtract.js';
 import {
   buildPageByNum,
+  compareInstancesReadingOrder,
   sortInstancesReadingOrder,
 } from './matchReadingOrder.js';
 import { findPhraseInSpan, highlightRangeForSpelling } from './pdfHighlightRange.js';
@@ -156,6 +157,58 @@ const TOKEN_RE = /[\uAC00-\uD7A3\d]+/gu;
  */
 function spaceCount(s) {
   return (s.match(/\s/g) || []).length;
+}
+
+/**
+ * 이형태 카드 줄 순서 — 횟수 ↓, 동률이면 첫 출현 읽기순(쪽·위에서 아래).
+ * @param {{ variant: string, count: number }} a
+ * @param {{ variant: string, count: number }} b
+ * @param {Record<string, UnifyVariantOccurrence[]>} occurrencesByVariant
+ * @param {Map<number, import('./pdfService.js').PageData> | null} [pageByNum]
+ */
+function compareVariantRowsForClusterList(
+  a,
+  b,
+  occurrencesByVariant,
+  pageByNum = null,
+) {
+  const countDiff = b.count - a.count;
+  if (countDiff) return countDiff;
+  const oa = (occurrencesByVariant[a.variant] ?? [])[0];
+  const ob = (occurrencesByVariant[b.variant] ?? [])[0];
+  if (!oa && !ob) return a.variant.localeCompare(b.variant, 'ko');
+  if (!oa) return 1;
+  if (!ob) return -1;
+  if (pageByNum?.size) {
+    const byReading = compareInstancesReadingOrder(
+      {
+        pageNum: oa.pageNum,
+        index: oa.index,
+        matchedText: oa.matchedText,
+        ...(Array.isArray(oa.itemIndexes) ? { itemIndexes: oa.itemIndexes } : {}),
+        ...(typeof oa.x === 'number' ? { x: oa.x } : {}),
+        ...(typeof oa.y === 'number' ? { y: oa.y } : {}),
+        ...(typeof oa.column === 'number' ? { column: oa.column } : {}),
+      },
+      {
+        pageNum: ob.pageNum,
+        index: ob.index,
+        matchedText: ob.matchedText,
+        ...(Array.isArray(ob.itemIndexes) ? { itemIndexes: ob.itemIndexes } : {}),
+        ...(typeof ob.x === 'number' ? { x: ob.x } : {}),
+        ...(typeof ob.y === 'number' ? { y: ob.y } : {}),
+        ...(typeof ob.column === 'number' ? { column: ob.column } : {}),
+      },
+      pageByNum,
+    );
+    if (byReading) return byReading;
+  } else {
+    const pageDiff = (Number(oa.pageNum) || 0) - (Number(ob.pageNum) || 0);
+    if (pageDiff) return pageDiff;
+    const idxDiff = (Number(oa.index) || 0) - (Number(ob.index) || 0);
+    if (idxDiff) return idxDiff;
+  }
+  return a.variant.localeCompare(b.variant, 'ko');
 }
 
 /**
@@ -294,8 +347,18 @@ function recordUnifyOccurrence(byKey, pageNum, index, prepared) {
     acc = { counts: new Map(), occurrences: new Map() };
     byKey.set(key, acc);
   }
-  acc.counts.set(variant, (acc.counts.get(variant) || 0) + 1);
   const list = acc.occurrences.get(variant) ?? [];
+  // 붙임만 — 같은 쪽·같은 index 중복 금지 (띄움은 공백 정규화로 index가 겹칠 수 있음)
+  if (
+    !/\s/.test(variant) &&
+    list.some(
+      (o) =>
+        Number(o.pageNum) === Number(pageNum) && Number(o.index) === Number(index),
+    )
+  ) {
+    return;
+  }
+  acc.counts.set(variant, (acc.counts.get(variant) || 0) + 1);
   list.push({
     pageNum,
     index,
@@ -513,17 +576,76 @@ export function collectUnifyPhraseStarts(highlightSource, rawMatched) {
     starts.push(idx);
     pos = idx + 1;
   }
-  if (starts.length) return starts;
 
+  // 붙임형은 soft(공백 무시) 슬롯 금지 — 띄움 위치를 붙임 출현으로 만들지 않음
+  if (!/\s/.test(variant)) return starts;
+
+  // 띄움: exact 외에 이중 공백 등 soft 출현도 슬롯에 포함
+  const seen = new Set(starts);
   pos = 0;
   while (pos < highlightSource.length) {
     const hit = findPhraseInSpan(highlightSource.slice(pos), variant);
     if (!hit) break;
     const idx = pos + hit.start;
-    starts.push(idx);
+    if (!seen.has(idx)) {
+      seen.add(idx);
+      starts.push(idx);
+    }
     pos = idx + 1;
   }
+  starts.sort((a, b) => a - b);
   return starts;
+}
+
+/**
+ * 붙임 출현 — visual에 연속 문자열이 prefer 근처에 있을 때만.
+ * soft·페이지 먼 exact로 띄움 자리·다른 붙임에 스냅하지 않음.
+ * @param {string} highlightSource
+ * @param {string} gluedVariant
+ * @param {number} preferNear
+ * @param {number} [window]
+ * @returns {number} 없으면 -1
+ */
+export function resolveGluedHighlightIndexNear(
+  highlightSource,
+  gluedVariant,
+  preferNear = 0,
+  window = 256,
+) {
+  const variant = normalizeUnifyVariant(gluedVariant);
+  if (!variant || /\s/.test(variant) || !highlightSource) return -1;
+  const prefer = Math.max(0, preferNear);
+  if (highlightSource.slice(prefer, prefer + variant.length) === variant) {
+    return prefer;
+  }
+  const win = Math.max(0, window);
+  let best = -1;
+  let bestDist = Infinity;
+  const from = Math.max(0, prefer - win);
+  const limit = Math.min(
+    highlightSource.length,
+    prefer + win + variant.length,
+  );
+  let pos = from;
+  while (pos <= limit - variant.length) {
+    const idx = highlightSource.indexOf(variant, pos);
+    if (idx < 0 || idx > limit - variant.length) break;
+    const dist = Math.abs(idx - prefer);
+    if (dist < bestDist) {
+      bestDist = dist;
+      best = idx;
+    }
+    if (idx > prefer && dist > bestDist && best >= 0) break;
+    pos = idx + 1;
+  }
+  if (best < 0) return -1;
+  // prefer가 이 붙임 구간 안(매핑 오차 slack)이어야 함.
+  // 같은 쪽 다른 붙임·띄움 자리에 soft/먼 exact로 스냅하는 것 금지.
+  const slack = 8;
+  if (prefer < best - slack || prefer >= best + variant.length + slack) {
+    return -1;
+  }
+  return best;
 }
 
 /**
@@ -554,17 +676,69 @@ export function rebaseUnifyOccurrencesFromItemHits(occs, page) {
   const span = Math.max(...xs) - Math.min(...xs);
   const gutterX = span >= 120 ? (Math.min(...xs) + Math.max(...xs)) / 2 : null;
 
-  return hits.map((h, i) => ({
-    pageNum,
-    index: h.itemIndex * 100000 + i,
-    matchedText,
-    itemIndexes: h.itemIndexes,
-    x: h.x,
-    y: h.y,
-    ...(gutterX != null
-      ? { column: h.x >= gutterX ? 1 : 0 }
-      : {}),
-  }));
+  // 출현 수만큼만 hit 배정 — item 전수 hit로 늘려 띄움 자리를 붙임 칩으로 복제하지 않음
+  const used = new Set();
+  /** @type {UnifyVariantOccurrence[]} */
+  const out = [];
+  for (const occ of occs) {
+    let bestI = -1;
+    let bestDist = Infinity;
+    const occIndex = Number(occ.index);
+    const textIndex =
+      Number.isFinite(occIndex) && occIndex >= 0 && occIndex < 100000
+        ? occIndex
+        : -1;
+    const textRef =
+      textIndex >= 0 && page.itemRefs?.length
+        ? findRefForTextIndex(page.itemRefs, textIndex)
+        : null;
+    const textItem =
+      textRef && Number.isFinite(textRef.itemIndex)
+        ? page.items?.[textRef.itemIndex]
+        : null;
+    const ox =
+      typeof occ.x === 'number'
+        ? occ.x
+        : (textItem?.transform?.[4] ?? null);
+    const oy =
+      typeof occ.y === 'number'
+        ? occ.y
+        : (textItem?.transform?.[5] ?? null);
+    for (let i = 0; i < hits.length; i += 1) {
+      if (used.has(i)) continue;
+      const h = hits[i];
+      let dist;
+      if (typeof ox === 'number' && typeof h.x === 'number') {
+        dist = Math.hypot(h.x - ox, (h.y ?? 0) - (oy ?? 0));
+      } else if (textRef && Number.isFinite(textRef.itemIndex)) {
+        dist = Math.abs((h.itemIndex ?? 0) - textRef.itemIndex);
+      } else {
+        dist = Math.abs(
+          h.itemIndex - Math.floor(occIndex / 100000 || 0),
+        );
+      }
+      if (dist < bestDist) {
+        bestDist = dist;
+        bestI = i;
+      }
+    }
+    if (bestI < 0) continue;
+    used.add(bestI);
+    const h = hits[bestI];
+    out.push({
+      pageNum,
+      // visual text index를 유지 — synthetic으로 바꾸면 locus 단일화가 깨짐
+      index: textIndex >= 0 ? textIndex : h.itemIndex * 100000 + bestI,
+      matchedText,
+      itemIndexes: h.itemIndexes,
+      x: h.x,
+      y: h.y,
+      ...(gutterX != null
+        ? { column: h.x >= gutterX ? 1 : 0 }
+        : {}),
+    });
+  }
+  return out;
 }
 
 /**
@@ -581,24 +755,29 @@ export function assignUniqueUnifyHighlightIndices(occs, page) {
   if (!page?.text) return [...occs];
   const source = prepareUnifyScanText(page.text);
   const slots = collectUnifyPhraseStarts(source, occs[0].matchedText);
-  if (!slots.length) return [...occs];
+  // visual에 슬롯이 없으면 유령 출현 유지 금지
+  if (!slots.length) return [];
 
   const used = new Set();
-  return occs.map((occ) => {
+  /** @type {UnifyVariantOccurrence[]} */
+  const out = [];
+  for (const occ of occs) {
     let best = -1;
     let bestDist = Infinity;
     for (const slot of slots) {
       if (used.has(slot)) continue;
-      const dist = Math.abs(slot - occ.index);
+      const dist = Math.abs(slot - Number(occ.index));
       if (dist < bestDist) {
         bestDist = dist;
         best = slot;
       }
     }
-    if (best < 0) return { ...occ };
+    // 슬롯 부족 시 남은 occ를 원본 index로 남기면 55P 이중 칩이 된다
+    if (best < 0) continue;
     used.add(best);
-    return { ...occ, index: best };
-  });
+    out.push({ ...occ, index: best });
+  }
+  return out;
 }
 
 /**
@@ -724,6 +903,288 @@ export async function enrichClustersWithItemHitsAsync(clusters, pages, opts = {}
 }
 
 /**
+ * page.text에서 variant가 start에 있으면 구간. 띄움은 공백 개수 차이(soft) 허용.
+ * @param {string} source
+ * @param {number} start
+ * @param {string} variant
+ * @returns {{ start: number, end: number } | null}
+ */
+function visualSpanAt(source, start, variant) {
+  const v = normalizeUnifyVariant(variant);
+  if (!source || !v || start < 0 || start >= source.length) return null;
+  if (source.slice(start, start + v.length) === v) {
+    return { start, end: start + v.length };
+  }
+  if (!/\s/.test(v)) return null;
+  const hit = findPhraseInSpan(source.slice(start), v);
+  if (!hit || hit.start !== 0) return null;
+  const end = start + (hit.end ?? v.length);
+  if (end <= start) return null;
+  return { start, end };
+}
+
+/**
+ * 충돌 클러스터 출현을 page.text 슬롯으로만 재구성 (layout/item 유령 제거).
+ * 스캔은 textLayout을 쓰되, 칩·횟수 속성은 visual만 인정.
+ * @param {Record<string, UnifyVariantOccurrence[]>} occurrencesByVariant
+ * @param {Record<string, number>} counts
+ * @param {Map<number, { pageNum?: number, text?: string, items?: unknown[] }>} pageByNum
+ * @returns {boolean} rematerialize 했으면 true
+ */
+export function rematerializeConflictOccurrencesFromPageText(
+  occurrencesByVariant,
+  counts,
+  pageByNum,
+) {
+  const variants = Object.keys(occurrencesByVariant ?? {});
+  const hasGlued = variants.some((v) => !/\s/.test(normalizeUnifyVariant(v)));
+  const hasSpaced = variants.some((v) => /\s/.test(normalizeUnifyVariant(v)));
+  if (!hasGlued || !hasSpaced) return false;
+
+  const pageNums = new Set();
+  for (const variant of variants) {
+    for (const occ of occurrencesByVariant[variant] ?? []) {
+      const n = Number(occ.pageNum) || 0;
+      if (n) pageNums.add(n);
+    }
+  }
+  if (!pageNums.size) return false;
+
+  let anyText = false;
+  for (const pageNum of pageNums) {
+    if (prepareUnifyScanText(pageByNum?.get(pageNum)?.text ?? '')) {
+      anyText = true;
+      break;
+    }
+  }
+  if (!anyText) return false;
+
+  for (const variant of variants) {
+    const v = normalizeUnifyVariant(variant);
+    /** @type {UnifyVariantOccurrence[]} */
+    const next = [];
+    if (v) {
+      for (const pageNum of [...pageNums].sort((a, b) => a - b)) {
+        const source = prepareUnifyScanText(
+          pageByNum?.get(pageNum)?.text ?? '',
+        );
+        if (!source) continue;
+        for (const start of collectUnifyPhraseStarts(source, v)) {
+          const span = visualSpanAt(source, start, v);
+          if (!span) continue;
+          next.push({
+            pageNum,
+            index: span.start,
+            matchedText: v,
+          });
+        }
+      }
+    }
+    occurrencesByVariant[variant] = next;
+    counts[variant] = next.length;
+  }
+
+  dedupeConflictOccurrencesByVisualLocus(
+    occurrencesByVariant,
+    counts,
+    pageByNum,
+  );
+  return true;
+}
+
+/**
+ * 충돌 클러스터 — 한 highlight locus에는 page.text와 일치하는 이형태 하나만.
+ * (item/xy 근접이 아니라 텍스트 구간 겹침 + visual slice 일치)
+ * @param {Record<string, UnifyVariantOccurrence[]>} occurrencesByVariant
+ * @param {Record<string, number>} counts
+ * @param {Map<number, { pageNum?: number, text?: string, items?: unknown[] }>} pageByNum
+ */
+export function dedupeConflictOccurrencesByVisualLocus(
+  occurrencesByVariant,
+  counts,
+  pageByNum,
+) {
+  const variants = Object.keys(occurrencesByVariant ?? {});
+  const hasGlued = variants.some((v) => !/\s/.test(v));
+  const hasSpaced = variants.some((v) => /\s/.test(v));
+  if (!hasGlued || !hasSpaced) return;
+
+  /** @type {{ variant: string, occ: UnifyVariantOccurrence, pageNum: number, start: number, end: number }[]} */
+  const claims = [];
+
+  for (const variant of variants) {
+    const v = normalizeUnifyVariant(variant);
+    if (!v) continue;
+    const occs = occurrencesByVariant[variant] ?? [];
+    if (!occs.length) continue;
+
+    /** @type {Map<number, UnifyVariantOccurrence[]>} */
+    const byPage = new Map();
+    for (const occ of occs) {
+      const pageNum = Number(occ.pageNum) || 0;
+      if (!pageNum) continue;
+      const list = byPage.get(pageNum) ?? [];
+      list.push(occ);
+      byPage.set(pageNum, list);
+    }
+
+    for (const [pageNum, pageOccs] of byPage) {
+      const page = pageByNum?.get(pageNum);
+      const source = prepareUnifyScanText(page?.text ?? '');
+      if (!source) {
+        for (const occ of pageOccs) {
+          const start = Number(occ.index) || 0;
+          claims.push({
+            variant: v,
+            occ,
+            pageNum,
+            start,
+            end: start + v.length,
+          });
+        }
+        continue;
+      }
+
+      const slots = collectUnifyPhraseStarts(source, v);
+      if (!slots.length) continue;
+
+      const ordered = sortUnifyOccurrencesReadingOrder(
+        pageOccs,
+        pageByNum instanceof Map ? pageByNum : new Map(),
+      );
+      const usedSlots = new Set();
+      const synthetic = ordered.every((o) => Number(o.index) >= 100000);
+
+      if (synthetic) {
+        const n = Math.min(ordered.length, slots.length);
+        for (let i = 0; i < n; i += 1) {
+          const span = visualSpanAt(source, slots[i], v);
+          if (!span) continue;
+          claims.push({
+            variant: v,
+            occ: {
+              ...ordered[i],
+              index: span.start,
+              matchedText: v,
+            },
+            pageNum,
+            start: span.start,
+            end: span.end,
+          });
+        }
+        continue;
+      }
+
+      for (const occ of ordered) {
+        const prefer = Number(occ.index);
+        let best = -1;
+        let bestDist = Infinity;
+        for (const slot of slots) {
+          if (usedSlots.has(slot)) continue;
+          const dist = Math.abs(slot - prefer);
+          if (dist < bestDist) {
+            bestDist = dist;
+            best = slot;
+          }
+        }
+        if (best < 0) continue;
+        const span = visualSpanAt(source, best, v);
+        if (!span) continue;
+        usedSlots.add(best);
+        claims.push({
+          variant: v,
+          occ: { ...occ, index: span.start, matchedText: v },
+          pageNum,
+          start: span.start,
+          end: span.end,
+        });
+      }
+    }
+  }
+
+  /** @type {Map<number, typeof claims>} */
+  const claimsByPage = new Map();
+  for (const claim of claims) {
+    const list = claimsByPage.get(claim.pageNum) ?? [];
+    list.push(claim);
+    claimsByPage.set(claim.pageNum, list);
+  }
+
+  /** @type {typeof claims} */
+  const kept = [];
+
+  for (const [pageNum, pageClaims] of claimsByPage) {
+    const page = pageByNum?.get(pageNum);
+    const source = prepareUnifyScanText(page?.text ?? '');
+    const sorted = [...pageClaims].sort(
+      (a, b) => a.start - b.start || a.end - b.end,
+    );
+    /** @type {typeof claims[]} */
+    const groups = [];
+    /** @type {typeof claims} */
+    let cur = [];
+    let curEnd = -1;
+    for (const claim of sorted) {
+      if (!cur.length || claim.start < curEnd) {
+        cur.push(claim);
+        curEnd = Math.max(curEnd, claim.end);
+        continue;
+      }
+      groups.push(cur);
+      cur = [claim];
+      curEnd = claim.end;
+    }
+    if (cur.length) groups.push(cur);
+
+    for (const group of groups) {
+      const distinctVariants = new Set(group.map((c) => c.variant));
+      if (distinctVariants.size === 1) {
+        const seenStart = new Set();
+        for (const claim of group) {
+          if (seenStart.has(claim.start)) continue;
+          seenStart.add(claim.start);
+          kept.push(claim);
+        }
+        continue;
+      }
+      const unionStart = Math.min(...group.map((c) => c.start));
+      const unionEnd = Math.max(...group.map((c) => c.end));
+      const slice = source ? source.slice(unionStart, unionEnd) : '';
+      const exact = slice ? group.find((c) => c.variant === slice) : null;
+      if (exact) {
+        kept.push(exact);
+        continue;
+      }
+      const withSpace = /\s/.test(slice);
+      const preferred = group.find((c) =>
+        withSpace ? /\s/.test(c.variant) : !/\s/.test(c.variant),
+      );
+      if (preferred && visualSpanAt(source, preferred.start, preferred.variant)) {
+        kept.push(preferred);
+        continue;
+      }
+      const selfOk = group.find((c) =>
+        visualSpanAt(source, c.start, c.variant),
+      );
+      if (selfOk) kept.push(selfOk);
+    }
+  }
+
+  for (const variant of variants) {
+    occurrencesByVariant[variant] = [];
+    counts[variant] = 0;
+  }
+  for (const claim of kept) {
+    const list = occurrencesByVariant[claim.variant] ?? [];
+    list.push(claim.occ);
+    occurrencesByVariant[claim.variant] = list;
+  }
+  for (const variant of Object.keys(occurrencesByVariant)) {
+    counts[variant] = (occurrencesByVariant[variant] ?? []).length;
+  }
+}
+
+/**
  * @param {UnifySpacingCluster} cluster
  * @param {Map<number, import('./pdfService.js').PageData>} pageByNum
  * @returns {UnifySpacingCluster | null}
@@ -734,35 +1195,69 @@ function enrichOneClusterWithItemHits(cluster, pageByNum) {
   /** @type {Record<string, number>} */
   const counts = {};
   for (const variant of cluster.variants ?? []) {
-    const occs = cluster.occurrencesByVariant?.[variant] ?? [];
+    occurrencesByVariant[variant] = [
+      ...(cluster.occurrencesByVariant?.[variant] ?? []),
+    ];
+    counts[variant] = occurrencesByVariant[variant].length;
+  }
+
+  // 충돌: 칩·횟수 = page.text 슬롯만 (layout/item 유령 제거)
+  rematerializeConflictOccurrencesFromPageText(
+    occurrencesByVariant,
+    counts,
+    pageByNum,
+  );
+
+  for (const variant of cluster.variants ?? []) {
+    const occs = occurrencesByVariant[variant] ?? [];
     if (!occs.length) {
-      occurrencesByVariant[variant] = [];
       counts[variant] = 0;
       continue;
     }
+    // rematerialize 직후엔 itemIndexes 없음 → rebase가 visual index 기준으로 붙음
     const next = enrichOccurrencesWithItemHits(occs, pageByNum);
     occurrencesByVariant[variant] = next;
     counts[variant] = next.length;
   }
+  // item 경로가 텍스트 없는 페이지에서만 쓰인 경우 대비
+  dedupeConflictOccurrencesByVisualLocus(
+    occurrencesByVariant,
+    counts,
+    pageByNum,
+  );
   const positive = (cluster.variants ?? []).filter(
     (v) => (counts[v] ?? 0) > 0,
   );
   if (!positive.length) {
     return null;
   }
+  for (const variant of Object.keys(occurrencesByVariant)) {
+    occurrencesByVariant[variant] = sortUnifyOccurrencesReadingOrder(
+      occurrencesByVariant[variant] ?? [],
+      pageByNum,
+    );
+  }
   const ranked = (cluster.variants ?? [])
     .map((variant) => ({ variant, count: counts[variant] ?? 0 }))
-    .sort(
-      (a, b) =>
-        b.count - a.count ||
-        spaceCount(a.variant) - spaceCount(b.variant) ||
-        a.variant.localeCompare(b.variant, 'ko'),
+    .sort((a, b) =>
+      compareVariantRowsForClusterList(
+        a,
+        b,
+        occurrencesByVariant,
+        pageByNum,
+      ),
     );
   const positiveRanked = ranked.filter((row) => row.count > 0);
   const hasGlued = positive.some((v) => !/\s/.test(v));
   const hasSpaced = positive.some((v) => /\s/.test(v));
   const keepAsSingleForm =
     cluster.kind === 'single-form' || !hasGlued || !hasSpaced;
+  const recommendRanked = [...positiveRanked].sort(
+    (a, b) =>
+      b.count - a.count ||
+      spaceCount(a.variant) - spaceCount(b.variant) ||
+      a.variant.localeCompare(b.variant, 'ko'),
+  );
   return {
     ...cluster,
     ...(keepAsSingleForm ? { kind: /** @type {const} */ ('single-form') } : {}),
@@ -771,7 +1266,7 @@ function enrichOneClusterWithItemHits(cluster, pageByNum) {
     occurrencesByVariant: Object.fromEntries(
       ranked.map((row) => [row.variant, occurrencesByVariant[row.variant] ?? []]),
     ),
-    recommendedUnify: pickRecommendedUnify(positiveRanked),
+    recommendedUnify: pickRecommendedUnify(recommendRanked),
     totalCount: positiveRanked.reduce((sum, row) => sum + row.count, 0),
   };
 }
@@ -1098,14 +1593,18 @@ function accumulateUnifyPageOccurrences(byKey, page, minHangul) {
       prepareCache.set(raw, prepared);
     }
     if (!prepared) return;
-    if (
-      !/\s/.test(prepared.variant) &&
-      visualLines.length > 0 &&
-      !corroborateGlued(prepared.variant)
-    ) {
+    const isGlued = !/\s/.test(prepared.variant);
+    if (isGlued && visualLines.length > 0 && !corroborateGlued(prepared.variant)) {
       return;
     }
-    const index = resolveHighlightIndex(highlightSource, raw, preferNear);
+    const index = isGlued
+      ? resolveGluedHighlightIndexNear(
+          highlightSource,
+          prepared.variant,
+          preferNear,
+        )
+      : resolveHighlightIndex(highlightSource, raw, preferNear);
+    if (isGlued && index < 0) return;
     recordUnifyOccurrence(byKey, pageNum, index, prepared);
   };
 
@@ -1198,14 +1697,18 @@ async function accumulateUnifyPageOccurrencesAsync(
       prepareCache.set(raw, prepared);
     }
     if (!prepared) return;
-    if (
-      !/\s/.test(prepared.variant) &&
-      visualLines.length > 0 &&
-      !corroborateGlued(prepared.variant)
-    ) {
+    const isGlued = !/\s/.test(prepared.variant);
+    if (isGlued && visualLines.length > 0 && !corroborateGlued(prepared.variant)) {
       return;
     }
-    const index = resolveHighlightIndex(highlightSource, raw, preferNear);
+    const index = isGlued
+      ? resolveGluedHighlightIndexNear(
+          highlightSource,
+          prepared.variant,
+          preferNear,
+        )
+      : resolveHighlightIndex(highlightSource, raw, preferNear);
+    if (isGlued && index < 0) return;
     recordUnifyOccurrence(byKey, pageNum, index, prepared);
   };
 
@@ -1235,12 +1738,6 @@ async function accumulateUnifyPageOccurrencesAsync(
  */
 function finalizeConflictOccurrencesOnly(byKey, pageTexts) {
   const pageByNum = buildPageByNum(pageTexts ?? []);
-  /** @type {Map<number, { pageNum?: number, text?: string }>} */
-  const pageTextByNum = new Map();
-  for (const page of pageTexts ?? []) {
-    const n = Number(page?.pageNum) || 0;
-    if (n) pageTextByNum.set(n, page);
-  }
   for (const acc of byKey.values()) {
     const variants = [...acc.counts.keys()];
     const hasGlued = variants.some((v) => !/\s/.test(v));
@@ -1248,10 +1745,31 @@ function finalizeConflictOccurrencesOnly(byKey, pageTexts) {
     if (!hasGlued || !hasSpaced) continue;
     for (const [variant, list] of acc.occurrences) {
       const snapped = snapUnifyOccurrenceIndices(list, pageByNum);
-      acc.occurrences.set(
-        variant,
-        finalizeUnifyOccurrenceList(snapped, pageByNum, pageTextByNum),
-      );
+      acc.occurrences.set(variant, snapped);
+    }
+    /** @type {Record<string, UnifyVariantOccurrence[]>} */
+    const occurrencesByVariant = {};
+    /** @type {Record<string, number>} */
+    const counts = {};
+    for (const variant of variants) {
+      occurrencesByVariant[variant] = acc.occurrences.get(variant) ?? [];
+      counts[variant] = occurrencesByVariant[variant].length;
+    }
+    rematerializeConflictOccurrencesFromPageText(
+      occurrencesByVariant,
+      counts,
+      pageByNum,
+    );
+    dedupeConflictOccurrencesByVisualLocus(
+      occurrencesByVariant,
+      counts,
+      pageByNum,
+    );
+    for (const variant of variants) {
+      const list = occurrencesByVariant[variant] ?? [];
+      acc.occurrences.set(variant, list);
+      if (list.length) acc.counts.set(variant, list.length);
+      else acc.counts.delete(variant);
     }
   }
 }
@@ -1264,18 +1782,39 @@ function finalizeConflictOccurrencesOnly(byKey, pageTexts) {
  */
 function snapUnifyOccurrenceIndices(occs, pageByNum) {
   if (!occs?.length) return [];
-  return occs.map((occ) => {
+  /** @type {UnifyVariantOccurrence[]} */
+  const out = [];
+  for (const occ of occs) {
     const page = pageByNum.get(Number(occ.pageNum));
-    if (!page?.text) return occ;
+    if (!page?.text) {
+      out.push(occ);
+      continue;
+    }
     const source = prepareUnifyScanText(page.text);
+    const variant = normalizeUnifyVariant(occ.matchedText);
+    if (!variant) {
+      out.push(occ);
+      continue;
+    }
+    if (!/\s/.test(variant)) {
+      const gluedIdx = resolveGluedHighlightIndexNear(
+        source,
+        variant,
+        occ.index,
+      );
+      if (gluedIdx < 0) continue;
+      out.push(gluedIdx === occ.index ? occ : { ...occ, index: gluedIdx });
+      continue;
+    }
     const snapped = resolveAndSnapUnifyHighlightIndex(
       page,
       source,
       occ.matchedText,
       occ.index,
     );
-    return snapped === occ.index ? occ : { ...occ, index: snapped };
-  });
+    out.push(snapped === occ.index ? occ : { ...occ, index: snapped });
+  }
+  return out;
 }
 
 /**
@@ -1451,21 +1990,24 @@ export function buildSpacingConflictClustersFromIndex(byKey, opts = {}) {
     const hasSpaced = variants.some((v) => /\s/.test(v));
     if (!hasGlued || !hasSpaced) continue;
 
-    const ranked = [...acc.counts.entries()]
-      .map(([variant, count]) => ({ variant, count }))
-      .sort(
-        (a, b) =>
-          b.count - a.count ||
-          spaceCount(a.variant) - spaceCount(b.variant) ||
-          a.variant.localeCompare(b.variant, 'ko'),
-      );
-    const recommendedUnify = pickRecommendedUnify(ranked);
-    const totalCount = ranked.reduce((sum, row) => sum + row.count, 0);
-    /** @type {Record<string, UnifyVariantOccurrence[]>} */
     const occurrencesByVariant = {};
     for (const [variant, list] of acc.occurrences) {
       occurrencesByVariant[variant] = list;
     }
+    const ranked = [...acc.counts.entries()]
+      .map(([variant, count]) => ({ variant, count }))
+      .sort((a, b) =>
+        compareVariantRowsForClusterList(a, b, occurrencesByVariant, null),
+      );
+    const recommendedUnify = pickRecommendedUnify(
+      [...ranked].sort(
+        (a, b) =>
+          b.count - a.count ||
+          spaceCount(a.variant) - spaceCount(b.variant) ||
+          a.variant.localeCompare(b.variant, 'ko'),
+      ),
+    );
+    const totalCount = ranked.reduce((sum, row) => sum + row.count, 0);
     clusters.push({
       key,
       variants: ranked.map((row) => row.variant),
