@@ -75,6 +75,8 @@ function stripTrailingJosaHangulNoise(hangul) {
 function documentEojeolHasWordOrPrefix(docHangulEojeols, needle) {
   const n = hangulOnlyNoise(needle);
   if (!n || n.length < 2 || !docHangulEojeols) return false;
+  // Set이면 정확 일치부터 O(1) — 인접 경로(환매조건부)에서 대부분 여기서 끝남
+  if (docHangulEojeols instanceof Set && docHangulEojeols.has(n)) return true;
   for (const raw of docHangulEojeols) {
     const W = hangulOnlyNoise(raw);
     if (W === n || W.startsWith(n)) return true;
@@ -85,24 +87,53 @@ function documentEojeolHasWordOrPrefix(docHangulEojeols, needle) {
 }
 
 /**
- * @param {string} witnessHangul
- * @param {string} fragmentHangul
+ * 전역 앞잘림: W.slice(1).startsWith(F)인 F를 Set으로 미리 펼침 → 판정 O(1).
+ * @param {Iterable<string>} witnesses
+ * @returns {Set<string>}
  */
-function witnessHasHeadCutFragment(witnessHangul, fragmentHangul) {
-  const W = hangulOnlyNoise(witnessHangul);
-  const F = hangulOnlyNoise(fragmentHangul);
-  if (
-    !W ||
-    !F ||
-    F.length < DOC_SUFFIX_ORPHAN_MIN_FRAGMENT ||
-    W.length < F.length + DOC_SUFFIX_ORPHAN_PREFIX_LEN ||
-    W === F
-  ) {
-    return false;
+function buildHeadCutFragmentIndex(witnesses) {
+  /** @type {Set<string>} */
+  const hits = new Set();
+  for (const raw of witnesses ?? []) {
+    const W = hangulOnlyNoise(raw);
+    if (
+      !W ||
+      W.length < DOC_SUFFIX_ORPHAN_MIN_FRAGMENT + DOC_SUFFIX_ORPHAN_PREFIX_LEN
+    ) {
+      continue;
+    }
+    const head = W.slice(0, DOC_SUFFIX_ORPHAN_PREFIX_LEN);
+    if (DOC_GLOBAL_HEAD_CUT_PREFIX_BLOCK.has(head)) continue;
+    const body = W.slice(DOC_SUFFIX_ORPHAN_PREFIX_LEN);
+    for (
+      let len = DOC_SUFFIX_ORPHAN_MIN_FRAGMENT;
+      len <= body.length;
+      len += 1
+    ) {
+      hits.add(body.slice(0, len));
+    }
   }
-  const head = W.slice(0, DOC_SUFFIX_ORPHAN_PREFIX_LEN);
-  if (DOC_GLOBAL_HEAD_CUT_PREFIX_BLOCK.has(head)) return false;
-  return W.slice(DOC_SUFFIX_ORPHAN_PREFIX_LEN).startsWith(F);
+  return hits;
+}
+
+/**
+ * 인접쌍을 curr(왼쪽 칸) → prev[] 로 묶어 전수 스캔을 피함.
+ * @param {Iterable<{ prev: string, curr: string }> | null | undefined} adjacentPairs
+ * @returns {Map<string, string[]> | null}
+ */
+function buildAdjacentPrevByCurr(adjacentPairs) {
+  if (!adjacentPairs) return null;
+  /** @type {Map<string, string[]>} */
+  const byCurr = new Map();
+  for (const pair of adjacentPairs) {
+    const prev = hangulOnlyNoise(pair?.prev);
+    const curr = hangulOnlyNoise(pair?.curr);
+    if (!prev || !curr) continue;
+    const list = byCurr.get(curr);
+    if (list) list.push(prev);
+    else byCurr.set(curr, [prev]);
+  }
+  return byCurr.size > 0 ? byCurr : null;
 }
 
 /**
@@ -131,20 +162,39 @@ export function noteAdjacentHangulPair(adjacentPairs, prevRaw, currRaw) {
 }
 
 /**
- * 전역 1음절 앞잘림만 (인접 없음) — 모듈 내부용.
- * @param {string} eojeol
+ * @param {string} spacedVariant
  * @param {Iterable<string> | null | undefined} docHangulEojeols
+ * @param {Set<string>} headCutHits
+ * @param {Map<string, string[]> | null} adjacentByCurr
  */
-function isGlobalHeadCutOrphanNoiseEojeol(eojeol, docHangulEojeols) {
-  if (!docHangulEojeols) return false;
-  const F = hangulOnlyNoise(eojeol);
-  if (F.length < DOC_SUFFIX_ORPHAN_MIN_FRAGMENT) return false;
-  for (const raw of docHangulEojeols) {
-    if (witnessHasHeadCutFragment(raw, F)) return true;
-    const stem = stripTrailingJosaHangulNoise(raw);
-    if (stem !== hangulOnlyNoise(raw) && witnessHasHeadCutFragment(stem, F)) {
-      return true;
-    }
+function spacedVariantHitsDocSuffixOrphanIndexed(
+  spacedVariant,
+  docHangulEojeols,
+  headCutHits,
+  adjacentByCurr,
+) {
+  const parts = String(spacedVariant ?? '')
+    .normalize('NFC')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+  if (parts.length < 2) return false;
+
+  const left = hangulOnlyNoise(parts[0]);
+  if (
+    left.length >= DOC_SUFFIX_ORPHAN_MIN_FRAGMENT &&
+    headCutHits.has(left)
+  ) {
+    return true;
+  }
+
+  if (!adjacentByCurr) return false;
+  if (left.length < DOC_SUFFIX_ORPHAN_MIN_FRAGMENT) return false;
+  const prevs = adjacentByCurr.get(left);
+  if (!prevs?.length) return false;
+  for (const P of prevs) {
+    if (P.length < 1) continue;
+    if (documentEojeolHasWordOrPrefix(docHangulEojeols, P + left)) return true;
   }
   return false;
 }
@@ -162,30 +212,15 @@ export function spacedVariantHitsDocSuffixOrphan(
   docHangulEojeols,
   adjacentPairs = null,
 ) {
-  const parts = String(spacedVariant ?? '')
-    .normalize('NFC')
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean);
-  if (parts.length < 2) return false;
-
-  const left = hangulOnlyNoise(parts[0]);
-  if (
-    left.length >= DOC_SUFFIX_ORPHAN_MIN_FRAGMENT &&
-    isGlobalHeadCutOrphanNoiseEojeol(left, docHangulEojeols)
-  ) {
-    return true;
-  }
-
-  if (!adjacentPairs) return false;
-  if (left.length < DOC_SUFFIX_ORPHAN_MIN_FRAGMENT) return false;
-  for (const { prev, curr } of adjacentPairs) {
-    const P = hangulOnlyNoise(prev);
-    const C = hangulOnlyNoise(curr);
-    if (C !== left || P.length < 1) continue;
-    if (documentEojeolHasWordOrPrefix(docHangulEojeols, P + left)) return true;
-  }
-  return false;
+  if (!docHangulEojeols) return false;
+  const headCutHits = buildHeadCutFragmentIndex(docHangulEojeols);
+  const adjacentByCurr = buildAdjacentPrevByCurr(adjacentPairs);
+  return spacedVariantHitsDocSuffixOrphanIndexed(
+    spacedVariant,
+    docHangulEojeols,
+    headCutHits,
+    adjacentByCurr,
+  );
 }
 
 /**
@@ -206,10 +241,17 @@ export function pruneUnifyIndexDocSuffixOrphans(
       ? docHangulEojeols
       : new Set(docHangulEojeols);
   if (!witnesses.size) return;
+  const headCutHits = buildHeadCutFragmentIndex(witnesses);
+  const adjacentByCurr = buildAdjacentPrevByCurr(adjacentPairs);
   for (const [key, acc] of [...byKey.entries()]) {
     for (const variant of [...acc.counts.keys()]) {
       if (
-        !spacedVariantHitsDocSuffixOrphan(variant, witnesses, adjacentPairs)
+        !spacedVariantHitsDocSuffixOrphanIndexed(
+          variant,
+          witnesses,
+          headCutHits,
+          adjacentByCurr,
+        )
       ) {
         continue;
       }
@@ -250,6 +292,35 @@ export function collectDocHangulEojeolsFromRawByKey(rawByKey) {
 const DOC_SUFFIX_HANGUL_TOKEN_RE = /[\uAC00-\uD7A3]+/gu;
 
 /**
+ * 한 페이지의 text∪layout을 증인·인접쌍에 반영.
+ * @param {{ text?: string, textLayout?: string } | null | undefined} page
+ * @param {Set<string>} witnesses
+ * @param {{ prev: string, curr: string }[]} adjacentPairs
+ */
+function ingestDocSuffixPage(page, witnesses, adjacentPairs) {
+  const layout = page?.textLayout != null ? String(page.textLayout) : '';
+  const text = page?.text != null ? String(page.text) : '';
+  /** @type {string[]} */
+  const sources = [];
+  if (layout) sources.push(layout);
+  if (text && text !== layout) sources.push(text);
+  else if (text && !layout) sources.push(text);
+  for (const source of sources) {
+    const prepared = source.normalize('NFC');
+    for (const line of prepared.split(/\n+/)) {
+      DOC_SUFFIX_HANGUL_TOKEN_RE.lastIndex = 0;
+      const tokens = line.match(DOC_SUFFIX_HANGUL_TOKEN_RE) || [];
+      for (let i = 0; i < tokens.length; i += 1) {
+        noteDocHangulEojeolForOrphan(witnesses, tokens[i]);
+        if (i > 0) {
+          noteAdjacentHangulPair(adjacentPairs, tokens[i - 1], tokens[i]);
+        }
+      }
+    }
+  }
+}
+
+/**
  * 2차용 — page.text ∪ textLayout에서 증인·인접쌍 수집 (1차 discover와 무관).
  * layout이 잘려도 text에 온전한 어절이 있으면 증인에 남는다.
  * @param {{ text?: string, textLayout?: string }[] | null | undefined} pageTexts
@@ -261,25 +332,31 @@ export function collectDocSuffixContextFromPageTexts(pageTexts) {
   /** @type {{ prev: string, curr: string }[]} */
   const adjacentPairs = [];
   for (const page of pageTexts ?? []) {
-    const layout = page?.textLayout != null ? String(page.textLayout) : '';
-    const text = page?.text != null ? String(page.text) : '';
-    /** @type {string[]} */
-    const sources = [];
-    if (layout) sources.push(layout);
-    if (text && text !== layout) sources.push(text);
-    else if (text && !layout) sources.push(text);
-    for (const source of sources) {
-      const prepared = source.normalize('NFC');
-      for (const line of prepared.split(/\n+/)) {
-        DOC_SUFFIX_HANGUL_TOKEN_RE.lastIndex = 0;
-        const tokens = line.match(DOC_SUFFIX_HANGUL_TOKEN_RE) || [];
-        for (let i = 0; i < tokens.length; i += 1) {
-          noteDocHangulEojeolForOrphan(witnesses, tokens[i]);
-          if (i > 0) {
-            noteAdjacentHangulPair(adjacentPairs, tokens[i - 1], tokens[i]);
-          }
-        }
-      }
+    ingestDocSuffixPage(page, witnesses, adjacentPairs);
+  }
+  return { witnesses, adjacentPairs };
+}
+
+/**
+ * collect와 동일 결과 + 페이지마다 메인스레드 양보 (목록 표시 후 2차에서도 UI 동결 완화).
+ * @param {{ text?: string, textLayout?: string }[] | null | undefined} pageTexts
+ * @param {{ yieldEveryPages?: number }} [opts]
+ * @returns {Promise<{ witnesses: Set<string>, adjacentPairs: { prev: string, curr: string }[] }>}
+ */
+export async function collectDocSuffixContextFromPageTextsAsync(
+  pageTexts,
+  opts = {},
+) {
+  const yieldEveryPages = opts.yieldEveryPages ?? 1;
+  /** @type {Set<string>} */
+  const witnesses = new Set();
+  /** @type {{ prev: string, curr: string }[]} */
+  const adjacentPairs = [];
+  const pages = pageTexts ?? [];
+  for (let i = 0; i < pages.length; i += 1) {
+    ingestDocSuffixPage(pages[i], witnesses, adjacentPairs);
+    if (yieldEveryPages > 0 && (i + 1) % yieldEveryPages === 0) {
+      await new Promise((r) => setTimeout(r, 0));
     }
   }
   return { witnesses, adjacentPairs };
@@ -290,7 +367,7 @@ export function collectDocSuffixContextFromPageTexts(pageTexts) {
  * 충돌·위성 모두 — spaced variant가 orphan이면 항목 제외.
  * @param {import('./unifyCandidateGrouping.js').ClusterGroup[]} groups
  * @param {{ text?: string, textLayout?: string }[] | null | undefined} pageTexts
- * @param {{ yieldEvery?: number }} [opts]
+ * @param {{ yieldEvery?: number, yieldEveryPages?: number }} [opts]
  * @returns {Promise<{
  *   groups: import('./unifyCandidateGrouping.js').ClusterGroup[],
  *   applied: boolean,
@@ -303,10 +380,17 @@ export async function filterGroupsByDocSuffixOrphan(
   opts = {},
 ) {
   const { witnesses, adjacentPairs } =
-    collectDocSuffixContextFromPageTexts(pageTexts);
+    await collectDocSuffixContextFromPageTextsAsync(pageTexts, {
+      yieldEveryPages: opts.yieldEveryPages ?? 1,
+    });
   if (!witnesses.size) {
     return { groups: groups ?? [], applied: false, dropped: 0 };
   }
+  const headCutHits = buildHeadCutFragmentIndex(witnesses);
+  const adjacentByCurr = buildAdjacentPrevByCurr(adjacentPairs);
+  // 인덱스 구축 직후에도 한 번 양보 — 대형 PDF에서 스피너 프레임
+  await new Promise((r) => setTimeout(r, 0));
+
   const yieldEvery = opts.yieldEvery ?? 8;
   let dropped = 0;
   let ops = 0;
@@ -326,7 +410,12 @@ export async function filterGroupsByDocSuffixOrphan(
         ...Object.keys(cluster.counts ?? {}),
       ].filter((v) => /\s/.test(String(v)));
       const hit = spacedVariants.some((v) =>
-        spacedVariantHitsDocSuffixOrphan(v, witnesses, adjacentPairs),
+        spacedVariantHitsDocSuffixOrphanIndexed(
+          v,
+          witnesses,
+          headCutHits,
+          adjacentByCurr,
+        ),
       );
       if (hit) {
         dropped += 1;
