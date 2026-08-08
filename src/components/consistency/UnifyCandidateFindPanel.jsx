@@ -1672,40 +1672,44 @@ export default function UnifyCandidateFindPanel({
         for (const gc of groupClusters) nextPre.delete(gc.key);
         setRegisteredVariants(next);
         setPreSelected(nextPre);
-        publishPreview({
-          chosenByKey: mergeUnifyChosenMaps(next, nextPre),
-          overrideClusters: previewOverride,
-        });
+        // 체크 UI가 먼저 그려지게 PDF 미리보기·점프는 다음 매크로태스크
+        const chosenByKey = mergeUnifyChosenMaps(next, nextPre);
+        setTimeout(() => {
+          publishPreview({
+            chosenByKey,
+            overrideClusters: previewOverride,
+          });
+        }, 0);
         return;
       }
 
       const next = new Map(registeredVariants);
       const nextPre = new Map(preSelected);
+      /** @type {import('../../lib/ruleEngine.js').MatchInstance | null} */
+      let jumpTo = null;
       for (const gc of groupClusters) {
         const v = variantForSpacing(gc, spacing);
-        if (v) {
-          next.set(gc.key, v);
-          nextPre.set(gc.key, v);
+        if (!v) continue;
+        next.set(gc.key, v);
+        nextPre.set(gc.key, v);
+        if (!jumpTo) {
+          jumpTo = firstWrongUnifyInstance(gc, v, { pages: pageTexts });
         }
       }
       setRegisteredVariants(next);
       setPreSelected(nextPre);
-      publishPreview({
-        chosenByKey: mergeUnifyChosenMaps(next, nextPre),
-        overrideClusters: previewOverride,
-      });
-      for (const gc of groupClusters) {
-        const v = variantForSpacing(gc, spacing);
-        if (!v) continue;
-        const firstWrong = firstWrongUnifyInstance(gc, v, {
-          pages: pageTexts,
+      const chosenByKey = mergeUnifyChosenMaps(next, nextPre);
+      setTimeout(() => {
+        publishPreview({
+          chosenByKey,
+          overrideClusters: previewOverride,
         });
-        if (firstWrong) {
-          onSelectInstance?.(firstWrong);
-          break;
-        }
-      }
-      onSeriesSpacingGuideSelect?.();
+        // preview 반영 후 점프 — 같은 틱 canvas 이중 render 방지
+        setTimeout(() => {
+          if (jumpTo) onSelectInstance?.(jumpTo);
+          onSeriesSpacingGuideSelect?.();
+        }, 0);
+      }, 0);
     },
     [
       clusters,

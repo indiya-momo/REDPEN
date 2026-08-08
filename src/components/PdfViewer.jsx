@@ -4,8 +4,8 @@ import {
   computePdfRenderScale,
   highlightRectsForItemIndexes,
   highlightRectsForTextRange,
-  renderPageToCanvas,
   scaleToFitContainer,
+  startPageRenderOnCanvas,
   stepPdfZoomFactor,
 } from '../lib/pdfService.js';
 import { syncPdfStageScrollAfterLayout } from '../lib/pdfStageScroll.js';
@@ -192,18 +192,30 @@ export default function PdfViewer({
         const page = await pdf.getPage(safePageNum);
         if (cancelled) return;
 
+        // getPage 대기 중 다른 effect가 렌더를 시작했을 수 있음
+        await cancelRenderTask(renderTaskRef.current);
+        renderTaskRef.current = null;
+        if (cancelled) return;
+
         const baseViewport = page.getViewport({ scale: 1 });
         const fitScale = scaleToFitContainer(baseViewport, stageSize);
         const scale = computePdfRenderScale(fitScale, zoomFactor);
-        const { viewport, renderTask } = await renderPageToCanvas(
-          pdf,
-          safePageNum,
+        const { viewport, renderTask } = startPageRenderOnCanvas(
+          page,
           canvasRef.current,
           scale,
-          page,
         );
         renderTaskRef.current = renderTask;
-
+        try {
+          await renderTask.promise;
+        } catch (error) {
+          if (renderTask.cancelled || cancelled) {
+            const err = new Error('Render cancelled');
+            err.code = 'RENDER_CANCELLED';
+            throw err;
+          }
+          throw error;
+        }
         if (cancelled) {
           await cancelRenderTask(renderTask);
           renderTaskRef.current = null;
