@@ -1627,8 +1627,24 @@ function instancesFromOccs(occs, variant, replace, pageByNum) {
 export function buildUnifyCandidatePreviewGroups(clusters, options = {}) {
   const registeredByKey = options.registeredByKey ?? null;
   const pages = options.pages ?? [];
-  // enrichOccurrences가 itemIndexes 있으면 no-op — 이미 enrich된 목록 재사용
-  const enrichedClusters = enrichClustersWithItemHits(clusters ?? [], pages);
+  const list = clusters ?? [];
+  const alreadyEnriched =
+    list.length > 0 &&
+    list.every((c) =>
+      (c.variants ?? []).every((variant) => {
+        const occs = c.occurrencesByVariant?.[variant] ?? [];
+        return (
+          occs.length === 0 ||
+          occs.every(
+            (o) => Array.isArray(o.itemIndexes) && o.itemIndexes.length > 0,
+          )
+        );
+      }),
+    );
+  // 찾기 후 이미 enrich된 목록이면 재검색 생략 (전체 붙여쓰기 등 일괄 선택 동결 방지)
+  const enrichedClusters = alreadyEnriched
+    ? list
+    : enrichClustersWithItemHits(list, pages);
   const pageByNum = buildPageByNum(pages);
   /** @type {import('./ruleEngine.js').GroupedResult[]} */
   const groups = [];
@@ -1701,19 +1717,37 @@ export function instancesForUnifyVariant(cluster, variant, opts = {}) {
 
 /**
  * 표기 통일 선택 직후 PDF primary용 — 틀린 표기 첫 인스턴스.
+ * 전체 occurrence를 만들지 않고 첫 출현만 반환 (일괄 선택 동결 방지).
  * @param {UnifySpacingCluster} cluster
  * @param {string} chosenVariant
  * @param {{ pages?: import('./pdfService.js').PageData[] }} [opts]
  * @returns {import('./ruleEngine.js').MatchInstance | null}
  */
 export function firstWrongUnifyInstance(cluster, chosenVariant, opts = {}) {
+  void opts;
   for (const variant of cluster.variants ?? []) {
     if (variant === chosenVariant) continue;
-    const insts = instancesForUnifyVariant(cluster, variant, {
-      chosenVariant,
-      pages: opts.pages,
-    });
-    if (insts.length) return insts[0];
+    const occs = cluster.occurrencesByVariant?.[variant] ?? [];
+    if (!occs.length) continue;
+    // enrich 후 reading-order 정렬된 출현의 첫 건 (전체 instances 생성 금지)
+    const firstOcc = occs[0];
+    const replace = chosenVariant || cluster.recommendedUnify;
+    return {
+      find: variant,
+      replace,
+      matchedText: firstOcc.matchedText,
+      suggestedText: replace,
+      pageNum: firstOcc.pageNum,
+      index: firstOcc.index,
+      ...(Array.isArray(firstOcc.itemIndexes) && firstOcc.itemIndexes.length
+        ? { itemIndexes: firstOcc.itemIndexes }
+        : {}),
+      ...(typeof firstOcc.x === 'number' ? { x: firstOcc.x } : {}),
+      ...(typeof firstOcc.y === 'number' ? { y: firstOcc.y } : {}),
+      ...(typeof firstOcc.column === 'number'
+        ? { column: firstOcc.column }
+        : {}),
+    };
   }
   return null;
 }

@@ -223,20 +223,13 @@ export function cancelRenderTask(renderTask) {
 }
 
 /**
- * @param {import('pdfjs-dist').PDFDocumentProxy} pdf
- * @param {number} pageNum
+ * 이미 가져온 page로 캔버스 렌더를 **동기 시작**하고 RenderTask를 즉시 반환.
+ * 호출측은 반환 직후 `renderTaskRef`에 넣어 겹친 렌더를 cancel할 수 있다.
+ * @param {import('pdfjs-dist').PDFPageProxy} page
  * @param {HTMLCanvasElement} canvas
  * @param {number} [scale]
- * @param {import('pdfjs-dist').PDFPageProxy} [pageProxy]
  */
-export async function renderPageToCanvas(
-  pdf,
-  pageNum,
-  canvas,
-  scale = 1.2,
-  pageProxy = null,
-) {
-  const page = pageProxy ?? (await pdf.getPage(pageNum));
+export function startPageRenderOnCanvas(page, canvas, scale = 1.2) {
   const viewport = page.getViewport({ scale });
   const outputScale = getPdfOutputScale();
   const ctx = canvas.getContext('2d');
@@ -259,6 +252,31 @@ export async function renderPageToCanvas(
     viewport,
     transform,
   });
+
+  return { viewport, renderTask };
+}
+
+/**
+ * @param {import('pdfjs-dist').PDFDocumentProxy} pdf
+ * @param {number} pageNum
+ * @param {HTMLCanvasElement} canvas
+ * @param {number} [scale]
+ * @param {import('pdfjs-dist').PDFPageProxy} [pageProxy]
+ * @returns {Promise<{
+ *   page: import('pdfjs-dist').PDFPageProxy,
+ *   viewport: import('pdfjs-dist').PageViewport,
+ *   renderTask: import('pdfjs-dist').RenderTask,
+ * }>}
+ */
+export async function renderPageToCanvas(
+  pdf,
+  pageNum,
+  canvas,
+  scale = 1.2,
+  pageProxy = null,
+) {
+  const page = pageProxy ?? (await pdf.getPage(pageNum));
+  const { viewport, renderTask } = startPageRenderOnCanvas(page, canvas, scale);
 
   try {
     await renderTask.promise;
