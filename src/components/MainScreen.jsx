@@ -35,6 +35,7 @@ import { formatProjectDialogLabel } from '../lib/projectDialogLabel.js';
 import TocBodyResultsPanel from '../toc-body/components/TocBodyResultsPanel.jsx';
 import { useTocBodyCheck } from '../toc-body/hooks/useTocBodyCheck.js';
 import { useTocBodyHighlights } from '../toc-body/hooks/useTocBodyHighlights.js';
+import { useUnifyPdfPreview } from '../hooks/useUnifyPdfPreview.js';
 import { buildTocBodyTabEntries } from '../toc-body/utils/toc-body-result-entries.js';
 import { exportSpellingResults, exportConsistencyResults } from '../lib/exportResults.js';
 import { maybeSavePaidCheckResult } from '../lib/maybeSavePaidCheckResult.js';
@@ -343,11 +344,6 @@ export default function MainScreen({
   const [workTab, setWorkTab] = useState(initialWorkTab);
   /** @type {['toc' | 'rules', import('react').Dispatch<import('react').SetStateAction<'toc' | 'rules'>>]} */
   const [consistencyFocus, setConsistencyFocus] = useState('rules');
-  /** 표기 통일 추천 — 소수 이형태 임시 하이라이트 그룹 */
-  const [unifyCandidatePreviewResults, setUnifyCandidatePreviewResults] =
-    useState(
-      /** @type {import('../lib/ruleEngine.js').GroupedResult[]} */ ([]),
-    );
   /** 목차·표기 결과가 둘 다 있을 때 어느 패널을 보여줄지 (겹쳐 쌓지 않음) */
   const [lastConsistencyPane, setLastConsistencyPane] = useState(
     /** @type {'toc' | 'rules'} */ ('rules'),
@@ -468,6 +464,18 @@ export default function MainScreen({
   }, [activeSavedRuleSetName]);
 
   const pdf = usePdfDocument();
+  /** 표기 통일 PDF 미리보기 — ListUI와 분리된 단일 소스 */
+  const unifyPdfPreview = useUnifyPdfPreview({ pageTexts: pdf.pageTexts });
+  const unifyCandidatePreviewResults = unifyPdfPreview.groups;
+  const unifyPreviewOnPageChange = unifyPdfPreview.onPageChange;
+  const unifyPreviewClear = unifyPdfPreview.clear;
+  const unifyPreviewPublish = unifyPdfPreview.publish;
+  const unifyPreviewRemap = unifyPdfPreview.remap;
+  const unifyPreviewSetHidden = unifyPdfPreview.setHiddenKeys;
+
+  useEffect(() => {
+    unifyPreviewOnPageChange(pdf.currentPage);
+  }, [pdf.currentPage, unifyPreviewOnPageChange]);
   const pdfZoom = usePdfZoom(pdf.pdf);
 
   const pageDisplay = usePrintedPageDisplay({
@@ -633,10 +641,10 @@ export default function MainScreen({
   const clearConsistencyTabWork = useCallback(() => {
     tocCheck.clearTocCheckState();
     ruleCheck.clearConsistencyCheckState();
-    setUnifyCandidatePreviewResults([]);
+    unifyPreviewClear();
     setConsistencyFocus('rules');
     setLastConsistencyPane('rules');
-  }, [tocCheck, ruleCheck]);
+  }, [tocCheck, ruleCheck, unifyPreviewClear]);
 
   const clearSpellingTabWork = useCallback(() => {
     ruleCheck.clearSpellingCheckState();
@@ -644,11 +652,11 @@ export default function MainScreen({
 
   /** 새 PDF 업로드 — 발견 리스트·표기통일 미리보기만 비우고 현재 작업 탭은 유지 */
   const resetUiForNewPdf = useCallback(() => {
-    setUnifyCandidatePreviewResults([]);
+    unifyPreviewClear();
     setConsistencyFocus('rules');
     setLastConsistencyPane('rules');
     ruleCheck.syncSelectionForTab(workTab);
-  }, [ruleCheck, workTab]);
+  }, [ruleCheck, workTab, unifyPreviewClear]);
   resetUiForNewPdfRef.current = resetUiForNewPdf;
 
   const prevActiveSetIdRef = useRef(null);
@@ -2563,11 +2571,37 @@ export default function MainScreen({
                   onSelectUnifyCandidateInstance={(inst) => {
                     setConsistencyFocus('rules');
                     setLastConsistencyPane('rules');
-                    ruleCheck.selectInstance(inst, 'consistency');
+                    ruleCheck.selectInstance(inst, 'consistency', {
+                      deferPage: true,
+                    });
                   }}
-                  onUnifyCandidatePreviewGroupsChange={
-                    setUnifyCandidatePreviewResults
-                  }
+                  onUnifyListReady={({
+                    clusters,
+                    chosenByKey,
+                    hiddenKeys,
+                    focusInst,
+                  }) => {
+                    const page =
+                      focusInst?.pageNum != null
+                        ? Number(focusInst.pageNum)
+                        : pdf.currentPage;
+                    unifyPreviewPublish(
+                      page,
+                      clusters,
+                      chosenByKey,
+                      hiddenKeys,
+                    );
+                    if (focusInst) {
+                      setConsistencyFocus('rules');
+                      setLastConsistencyPane('rules');
+                      ruleCheck.selectInstance(focusInst, 'consistency', {
+                        deferPage: true,
+                      });
+                    }
+                  }}
+                  onUnifyChosenChange={unifyPreviewRemap}
+                  onUnifyPreviewClear={unifyPreviewClear}
+                  onUnifyPreviewHiddenChange={unifyPreviewSetHidden}
                   formatPageLabel={(systemPage) =>
                     pageDisplay.formatLabel(systemPage)
                   }

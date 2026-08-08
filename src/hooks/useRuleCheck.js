@@ -674,12 +674,25 @@ export function useRuleCheck({
   );
 
   const selectInstance = useCallback(
-    (inst, source = activeSource) => {
+    (inst, source = activeSource, opts = {}) => {
       setActiveSource(source);
       if (source === 'spelling') {
         setSpellingSelected(inst);
-      } else {
-        setConsistencySelected(inst);
+        setCurrentPage(inst.pageNum);
+        return;
+      }
+      setConsistencySelected(inst);
+      // 표기 통일 등 — 선택(포커스)과 쪽 이동(캔버스)을 틱 분리
+      if (opts?.deferPage) {
+        const pageNum = inst.pageNum;
+        if (typeof requestAnimationFrame === 'function') {
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => setCurrentPage(pageNum));
+          });
+        } else {
+          setTimeout(() => setCurrentPage(pageNum), 0);
+        }
+        return;
       }
       setCurrentPage(inst.pageNum);
     },

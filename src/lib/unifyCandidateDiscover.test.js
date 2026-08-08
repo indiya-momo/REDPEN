@@ -5,7 +5,9 @@ import {
   formatUnifyClusterRegisterInput,
   formatUnifySpacingDecisionOverlay,
   buildUnifyCandidatePreviewGroups,
+  applyUnifyCandidatePreviewChoices,
   buildUnifyOccurrenceIndex,
+  sliceUnifyPreviewGroupsToPage,
   firstWrongUnifyInstance,
   instancesForUnifyVariant,
   enrichClustersWithItemHits,
@@ -830,6 +832,129 @@ describe('buildUnifyCandidatePreviewGroups', () => {
     expect(firstWrongUnifyInstance(cluster, '조선시대')?.find).toBe(
       '조선 시대',
     );
+  });
+
+  it('applyUnifyCandidatePreviewChoices는 instances 객체를 재사용하고 replace만 바꾼다', () => {
+    const clusters = discoverSpacingUnifyCandidates([
+      { pageNum: 1, text: '조선시대 조선시대 조선 시대' },
+    ]);
+    const cluster = clusters.find((c) => c.key === '조선시대');
+    expect(cluster).toBeTruthy();
+    const initial = buildUnifyCandidatePreviewGroups(clusters);
+    const spaced = initial.find((g) => g.find === '조선 시대');
+    const glued = initial.find((g) => g.find === '조선시대');
+    expect(spaced?.unifyClusterKey).toBe(cluster.key);
+    const spacedInst0 = spaced.instances[0];
+    const gluedInst0 = glued.instances[0];
+
+    const remapped = applyUnifyCandidatePreviewChoices(
+      initial,
+      new Map([[cluster.key, '조선시대']]),
+      clusters,
+    );
+    expect(remapped).not.toBe(initial);
+    const spaced2 = remapped.find((g) => g.find === '조선 시대');
+    const glued2 = remapped.find((g) => g.find === '조선시대');
+    expect(spaced2.instances[0]).toBe(spacedInst0);
+    expect(glued2.instances[0]).toBe(gluedInst0);
+    expect(spaced2.replace).toBe('조선시대');
+    expect(spacedInst0.replace).toBe('조선시대');
+    expect(spaced2.overlayReplace).toBe('→조선^시대');
+    expect(glued2.overlayReplace).toBeUndefined();
+  });
+
+  it('sliceUnifyPreviewGroupsToPage는 해당 쪽 출현만 남긴다', () => {
+    const clusters = discoverSpacingUnifyCandidates([
+      { pageNum: 1, text: '조선시대' },
+      { pageNum: 2, text: '조선 시대 조선시대' },
+    ]);
+    const groups = buildUnifyCandidatePreviewGroups(clusters);
+    const page2 = sliceUnifyPreviewGroupsToPage(groups, 2);
+    expect(page2.every((g) => g.instances.every((i) => i.pageNum === 2))).toBe(
+      true,
+    );
+    expect(page2.some((g) => g.instances.length > 0)).toBe(true);
+    expect(sliceUnifyPreviewGroupsToPage(groups, 99)).toEqual([]);
+  });
+
+  it('pageNum이면 다른 쪽 occ에 itemIndexes가 없어도 전량 sync enrich 없이 그 쪽만 만든다', () => {
+    /** @type {import('./unifyCandidateDiscover.js').UnifySpacingCluster[]} */
+    const clusters = [
+      {
+        key: '조선시대',
+        variants: ['조선시대', '조선 시대'],
+        counts: { 조선시대: 2, '조선 시대': 1 },
+        totalCount: 3,
+        recommendedUnify: '조선시대',
+        occurrencesByVariant: {
+          조선시대: [
+            {
+              pageNum: 1,
+              index: 0,
+              matchedText: '조선시대',
+              // 다른 쪽 — itemIndexes 없음 (옛 alreadyEnriched면 전량 enrich 유발)
+            },
+            {
+              pageNum: 2,
+              index: 0,
+              matchedText: '조선시대',
+              itemIndexes: [0],
+              x: 10,
+              y: 20,
+            },
+          ],
+          '조선 시대': [
+            {
+              pageNum: 2,
+              index: 10,
+              matchedText: '조선 시대',
+              itemIndexes: [1],
+              x: 30,
+              y: 40,
+            },
+          ],
+        },
+      },
+    ];
+    const pages = [
+      { pageNum: 1, text: '조선시대' },
+      { pageNum: 2, text: '조선시대 조선 시대' },
+    ];
+    const page2 = buildUnifyCandidatePreviewGroups(clusters, {
+      pageNum: 2,
+      pages,
+      registeredByKey: new Map([['조선시대', '조선시대']]),
+    });
+    expect(page2.length).toBeGreaterThan(0);
+    expect(
+      page2.every((g) => g.instances.every((i) => i.pageNum === 2)),
+    ).toBe(true);
+  });
+
+  it('pageNum 옵션이면 그 쪽 출현만 인스턴스로 만든다', () => {
+    const clusters = discoverSpacingUnifyCandidates([
+      { pageNum: 1, text: '조선시대' },
+      { pageNum: 2, text: '조선 시대 조선시대' },
+    ]);
+    const page2 = buildUnifyCandidatePreviewGroups(clusters, { pageNum: 2 });
+    expect(page2.length).toBeGreaterThan(0);
+    expect(
+      page2.every((g) => g.instances.every((i) => i.pageNum === 2)),
+    ).toBe(true);
+  });
+
+  it('pageNum이면 그 쪽에 출현 없는 클러스터는 그룹에 안 넣는다', () => {
+    const onlyPage1 = discoverSpacingUnifyCandidates([
+      { pageNum: 1, text: '경제성장 경제 성장 경제성장' },
+    ]);
+    const onlyPage2 = discoverSpacingUnifyCandidates([
+      { pageNum: 2, text: '조선시대 조선시대 조선 시대' },
+    ]);
+    const clusters = [...onlyPage1, ...onlyPage2];
+    const page2 = buildUnifyCandidatePreviewGroups(clusters, { pageNum: 2 });
+    const keys = new Set(page2.map((g) => g.unifyClusterKey));
+    expect(keys.has('조선시대')).toBe(true);
+    expect(keys.has('경제성장')).toBe(false);
   });
 
   it('0회 이형태(위성)가 있어도 출현 있는 표기는 미리보기·하이라이트 그룹을 만든다', () => {
