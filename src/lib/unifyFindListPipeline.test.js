@@ -65,4 +65,17 @@ describe('unifyFindListPipeline', () => {
       ),
     ).toBe(true);
   });
+
+  it('applyUnifyListReviewMarks: 빈 마크여도 입력을 깨지 않는다', () => {
+    const groups = [
+      {
+        type: 'single',
+        id: 's1',
+        clusters: [conflict('노동시장', '노동 시장')],
+      },
+    ];
+    const out = applyUnifyListReviewMarks(groups, {});
+    expect(out).toHaveLength(1);
+    expect(out[0].clusters?.some((c) => c.key === '노동시장')).toBe(true);
+  });
 });

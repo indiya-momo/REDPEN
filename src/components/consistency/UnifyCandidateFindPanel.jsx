@@ -1028,8 +1028,10 @@ export default function UnifyCandidateFindPanel({
             };
           }
         } else {
-          // API 없이도 규칙 안전망(하다·보자 등)으로 한 번 더
+          // API 없이도 규칙 안전망(하다·보자 등) + 1차 noise-list
+          // (stdict ON 경로·applyUnifyListReviewMarks와 동일 순서)
           workingGroups = dropJosaPlusPredicateFromGroups(workingGroups);
+          workingGroups = filterSeriesSatellitesByNoiseList(workingGroups);
         }
 
         if (isUnifyJosaSlmReviewEnabled()) {
@@ -1073,7 +1075,7 @@ export default function UnifyCandidateFindPanel({
 
       const triage = collectUnifyListTriage(workingGroups);
 
-      // 목록(grouped)과 동일: item 재집계 → morph → 정렬
+      // 목록(grouped)과 동일: item 재집계 → 1차 noise-list → 정렬
       workingGroups = await finalizeUnifyListGroupsAsync(
         workingGroups,
         pageTexts,
