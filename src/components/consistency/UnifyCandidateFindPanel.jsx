@@ -21,6 +21,7 @@ import {
 } from '../../lib/unifyCandidateGrouping.js';
 import { filterSeriesSatellitesByNoiseList } from '../../lib/unifyCandidateSatellites.js';
 import { filterSeriesSatellitesByKiwiPhase2 } from '../../lib/unifyNoisePhase2.js';
+import { filterGroupsByDocSuffixOrphan } from '../../lib/unifyNoiseDocSuffixOrphan.js';
 import {
   applyUnifyListReviewMarks,
   assembleUnifyListBase,
@@ -1145,6 +1146,14 @@ export default function UnifyCandidateFindPanel({
       setFinding(false);
       let phase2Applied = false;
       try {
+        // 2차: DocSuffix(문서 앞잘림) — Kiwi 무관, text∪layout 증인
+        const docSuffix = await filterGroupsByDocSuffixOrphan(
+          workingGroups,
+          pageTexts,
+        );
+        if (docSuffix.applied && docSuffix.dropped > 0) {
+          workingGroups = sortClusterGroups(docSuffix.groups);
+        }
         const phase2 = await filterSeriesSatellitesByKiwiPhase2(workingGroups);
         phase2Applied = phase2.applied;
         if (phase2.applied && phase2.dropped > 0) {
