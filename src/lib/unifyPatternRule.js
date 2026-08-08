@@ -4,8 +4,8 @@
  * @see project-docs/unify-phase2-pattern-2026-07-31.md
  */
 
+import { hangulSyllableCount } from './unifyHangulBasics.js';
 import {
-  hangulSyllableCount,
   isExcludedUnifyCandidateRaw,
   isValidSpacedUnifyVariant,
   normalizeUnifyVariant,
@@ -13,7 +13,7 @@ import {
   stripUnifyPeripheralDigits,
   stripUnifyPunctuationNoise,
   unifySpacingKey,
-} from './unifyCandidateDiscover.js';
+} from './unifyCandidateNormalize.js';
 import { isExcludedSeriesAffix } from './unifyCandidateSeriesTrend.js';
 import { buildPhraseSlotFindRules } from './phraseSlotPattern.js';
 import { runRuleCheck } from './ruleEngine.js';

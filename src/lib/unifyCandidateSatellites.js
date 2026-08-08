@@ -5,9 +5,9 @@
 
 import {
   hangulSyllableCount,
-  isValidSpacedUnifyVariant,
   UNIFY_TRAILING_JOSA,
-} from './unifyCandidateDiscover.js';
+} from './unifyHangulBasics.js';
+import { isValidSpacedUnifyVariant } from './unifyCandidateNormalize.js';
 import {
   shouldRejectByNoiseList,
   shouldRejectByNoiseListEojeol,

@@ -8,7 +8,7 @@
  * 정책: project-docs/unify-candidate-spacing-redesign-2026-07-29.md §11.3
  */
 
-import { hangulSyllableCount } from './unifyCandidateDiscover.js';
+import { hangulSyllableCount } from './unifyHangulBasics.js';
 
 /** 앞말 최소 한글 음절 */
 export const SERIES_PREFIX_MIN_HANGUL = 2;
