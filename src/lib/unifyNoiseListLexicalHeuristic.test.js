@@ -45,6 +45,10 @@ describe('unifyNoiseListLexicalHeuristic', () => {
       '단',
       '또',
       '그럼',
+      '심지어',
+      '도대체',
+      '대체',
+      '하긴',
     ]) {
       expect(SPACED_CLOSED_CONJUNCTIONS.has(w), w).toBe(true);
       expect(isSpacedClosedConjunctionNoiseEojeol(w), w).toBe(true);
@@ -67,6 +71,9 @@ describe('unifyNoiseListLexicalHeuristic', () => {
       '꽤나',
       '단언컨대',
       '예로',
+      '전혀',
+      '홀로',
+      '흔히들',
       '이로써',
       '이처럼',
       '앞서',

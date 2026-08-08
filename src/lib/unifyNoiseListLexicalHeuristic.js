@@ -89,6 +89,11 @@ const SPACED_CLOSED_CONJUNCTION_LIST = Object.freeze([
   '사실',
   '실제',
   '아니',
+  // 강조·의문 담화 (세이노 검수3)
+  '심지어',
+  '도대체',
+  '대체',
+  '하긴',
 ]);
 
 /** @type {ReadonlySet<string>} */
@@ -146,6 +151,9 @@ const SPACED_CLOSED_ADVERB_LIST = Object.freeze([
   '꽤나',
   '단언컨대',
   '예로',
+  '전혀',
+  '홀로',
+  '흔히들',
   // 문장 연결·결과
   '이로써',
   '이처럼',
