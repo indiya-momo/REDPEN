@@ -18,7 +18,7 @@ import { normalizeSpacingClusters } from './unifyCandidateCollapse.js';
 import {
   clusterBelongsToSeriesAffix,
   fillSeriesSatellites,
-  filterSeriesSatellitesByMorphPos,
+  filterSeriesSatellitesByNoiseList,
 } from './unifyCandidateSatellites.js';
 import { attachJosaReviewHints, isUnifyListDroppedMonoJosaCluster } from './unifyJosaReview.js';
 import { attachAuxiliaryReviewHints } from './unifyAuxReview.js';
@@ -467,7 +467,7 @@ export function groupSortAndFillSatellites(clusters, rawByKey) {
   // 용언 구간: @+조사+용언(을하다·역할을하다) 제외
   return dropJosaPlusPredicateFromGroups(
     splitPredicateSingles(
-      filterSeriesSatellitesByMorphPos(markSeriesBySlotMajority(kept)),
+      filterSeriesSatellitesByNoiseList(markSeriesBySlotMajority(kept)),
     ),
   );
 }

@@ -57,7 +57,8 @@ alwaysApply: false
 - 새 함수/모듈 이름을 짓기 전에 Grep/`rg`로 후보 이름이 기존 용례와 겹치는지 확인한다.
   이미 다른 개념에 쓰이는 이름이면 다른 이름을 고른다.
   (예: Satellite UI 편입 ≠ Morph POS 거부 — 같은 어휘로 다른 개념을 가리키지 말 것.)
-
+- 특히 `filterSeriesSatellitesByNoiseList` = **1차 noise-list**.
+  `shouldRejectUnifySatelliteSpacedByPos` = **Kiwi POS**. MorphPos를 noise-list 필터 이름에 쓰지 말 것.
 ## 작업 루프 (매 경계 작업)
 
 1. Grep로 정책 함수 호출부 전수 → 결과를 보여 줌

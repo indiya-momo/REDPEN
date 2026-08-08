@@ -20,7 +20,7 @@ import {
   countUnifyListAccordionItems,
   sortClusterGroups,
 } from '../../lib/unifyCandidateGrouping.js';
-import { filterSeriesSatellitesByMorphPos } from '../../lib/unifyCandidateSatellites.js';
+import { filterSeriesSatellitesByNoiseList } from '../../lib/unifyCandidateSatellites.js';
 import { filterSeriesSatellitesByKiwiPhase2 } from '../../lib/unifyNoisePhase2.js';
 import {
   applyUnifyListReviewMarks,
@@ -1018,7 +1018,7 @@ export default function UnifyCandidateFindPanel({
               stdictPredicateKeys: stdictClusterKeys,
             });
             // stdict가 dictPos를 붙인 뒤 — 이형태 없는 위성만 동종 복합 검증
-            workingGroups = filterSeriesSatellitesByMorphPos(workingGroups);
+            workingGroups = filterSeriesSatellitesByNoiseList(workingGroups);
             stdictSummary = {
               ...stdictResult.summary,
               ran: true,

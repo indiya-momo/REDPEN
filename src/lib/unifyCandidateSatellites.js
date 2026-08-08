@@ -1,6 +1,11 @@
 /**
  * 표기 통일 추천 — @ 그룹 위성(single-form) 항목.
  * 충돌 클러스터에 없지만 같은 affix 계열에 속하는 1회·단일어절만 그룹에 편입.
+ *
+ * 이름 경계:
+ * - 이 파일의 Satellite = UI 계열 편입·1차 noise-list 필터
+ * - Kiwi morph POS 거부는 `kiwiMorph/unifyExclude`의
+ *   `shouldRejectUnifySatelliteSpacedByPos` / `…Glued` (2차·discover 경로)
  */
 
 import {
@@ -316,13 +321,16 @@ export function fillSeriesSatellites(groups, conflictClusters, rawByKey) {
 }
 
 /**
- * 이형태 없는 위성·단일형 — 1차 리스트만으로 잡음 제외.
+ * 이형태 없는 위성·단일형 — **1차 noise-list**만으로 잡음 제외.
  * (본보조·Kiwi 수확 꼬리·예외 어절·조사 휴리스틱. 동기 Kiwi 분석 없음.)
  * 진짜 충돌(붙임·띄움 둘 다 count>0)은 유지.
+ *
+ * Kiwi POS 거부(`shouldRejectUnifySatelliteSpacedByPos`)와 다름 — 이름에 Morph를
+ * 쓰지 않는다. 2차 phase2는 `unifyNoisePhase2` / unifyExclude 쪽.
  * @param {ClusterGroup[]} groups
  * @returns {ClusterGroup[]}
  */
-export function filterSeriesSatellitesByMorphPos(groups) {
+export function filterSeriesSatellitesByNoiseList(groups) {
   return (groups ?? [])
     .map((group) => {
       const next = (group.clusters ?? []).filter((cluster) => {
@@ -344,6 +352,12 @@ export function filterSeriesSatellitesByMorphPos(groups) {
     })
     .filter(Boolean);
 }
+
+/**
+ * @deprecated MorphPos 오명 — {@link filterSeriesSatellitesByNoiseList} 사용.
+ * (실제로는 1차 noise-list만 돌림. Kiwi morph POS 아님.)
+ */
+export const filterSeriesSatellitesByMorphPos = filterSeriesSatellitesByNoiseList;
 
 /** @param {{ counts?: Record<string, number>, kind?: string }} cluster */
 function isRealConflictCounts(cluster) {
