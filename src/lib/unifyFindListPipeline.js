@@ -34,6 +34,8 @@ import { applyStdictPosMarksToGroups } from './unifyStdictPos.js';
 
 /**
  * 리뷰 마크를 그룹에 적용 (strip 이후 ~ enrich 직전).
+ * 순서는 handleFind 라이브 경로와 동일:
+ * stdict 마크 → @+조사+용언 drop → 1차 noise-list → 조사 SLM merge → 용언 SLM drop.
  * @param {ClusterGroup[]} groups
  * @param {UnifyListReviewMarks} [marks]
  * @returns {ClusterGroup[]}
@@ -48,17 +50,20 @@ export function applyUnifyListReviewMarks(groups, marks = {}) {
     predicateNeedsReviewByKey = new Map(),
   } = marks;
 
-  const withJosa = mergeReviewedClustersIntoGroups(groups, slmReviewedByKey);
-  const withStdict = applyStdictPosMarksToGroups(withJosa, {
+  const withStdict = applyStdictPosMarksToGroups(groups, {
     seriesIds: stdictPredicateSeriesIds,
     clusterKeys: stdictPredicateClusterKeys,
   });
-  const withNoiseSat = filterSeriesSatellitesByNoiseList(withStdict);
-  const withoutJosaPred = dropJosaPlusPredicateFromGroups(withNoiseSat, {
+  const withoutJosaPred = dropJosaPlusPredicateFromGroups(withStdict, {
     stdictPredicateKeys: stdictPredicateClusterKeys,
   });
+  const withNoiseSat = filterSeriesSatellitesByNoiseList(withoutJosaPred);
+  const withJosa = mergeReviewedClustersIntoGroups(
+    withNoiseSat,
+    slmReviewedByKey,
+  );
   return applyPredicateSlmDropsToGroups(
-    withoutJosaPred,
+    withJosa,
     {
       seriesIds: predicateDropSeriesIds,
       clusterKeys: predicateDropClusterKeys,
