@@ -20,6 +20,7 @@ import {
   formatPhase2InProgressSegment,
   formatPhase2PrimaryFormsLine,
   formatPhase2SeriesCriterionLine,
+  formatPhase2SeriesCriterionModel,
   groupPatternConditionLabelsByDirection,
   formatPatternSupportExplain,
   formatSuffixPatternRuleConfirmMessage,
@@ -683,13 +684,30 @@ describe('unifyPatternRule', () => {
     );
     expect(
       formatPhase2SeriesCriterionLine('glued', ['국제금융', '부실투자']),
-    ).toBe('1차: 국제금융(붙여쓰기)');
+    ).toBe('1차 붙여쓰기');
     expect(
       formatPhase2SeriesCriterionLine('spaced', [
         '국제 금융',
         '부실투자',
       ]),
-    ).toBe('1차: 국제 금융(띄어쓰기)');
+    ).toBe('1차 띄어쓰기');
+    expect(
+      formatPhase2SeriesCriterionModel('glued', [
+        '경제왕국',
+        '경제 왕국',
+      ]),
+    ).toEqual({
+      prefix: '1차',
+      dirLabel: '붙여쓰기',
+      text: '1차 붙여쓰기',
+      exceptions: ['경제 왕국'],
+    });
+    expect(formatPhase2SeriesCriterionModel('glued', [])).toEqual({
+      prefix: '1차',
+      dirLabel: '붙여쓰기',
+      text: '1차 붙여쓰기',
+      exceptions: [],
+    });
     expect(
       formatPhase2InProgressBannerModel([
         {

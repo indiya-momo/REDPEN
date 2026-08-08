@@ -497,11 +497,16 @@ export const PHASE2_PRIMARY_FORMS_MAX = 4;
 export const PHASE2_COMPLIANT_FORMS_PREVIEW = 3;
 
 /**
- * 2차 계열 summary — 1차 통일형 1개만 (`1차: 국제금융(붙여쓰기)`).
- * 예외 선택 항목은 summary가 아니라 카드의 예외 뱃지로 표시.
+ * 2차 계열 summary — `1차` + 방향 뱃지(붙여쓰기/띄어쓰기).
+ * 방향과 반대인 1차 선택 표기는 exceptions(뱃지용).
  * @param {'glued' | 'spaced' | null | undefined} direction
  * @param {string[]} forms
- * @returns {{ text: string }}
+ * @returns {{
+ *   prefix: string,
+ *   dirLabel: string,
+ *   text: string,
+ *   exceptions: string[],
+ * }}
  */
 export function formatPhase2SeriesCriterionModel(direction, forms) {
   const list = (forms ?? [])
@@ -511,25 +516,39 @@ export function formatPhase2SeriesCriterionModel(direction, forms) {
   for (const f of list) {
     if (!uniq.includes(f)) uniq.push(f);
   }
-  if (!uniq.length) return { text: '' };
-  let form = uniq[0];
-  if (direction === 'glued' || direction === 'spaced') {
-    const match = uniq.find((f) =>
-      direction === 'spaced' ? /\s/.test(f) : !/\s/.test(f),
-    );
-    if (match) form = match;
-  }
-  const dir =
+  const dirLabel =
     direction === 'spaced'
       ? '띄어쓰기'
       : direction === 'glued'
         ? '붙여쓰기'
         : '';
-  return { text: dir ? `1차: ${form}(${dir})` : `1차: ${form}` };
+  if (!dirLabel) {
+    return { prefix: '', dirLabel: '', text: '', exceptions: [] };
+  }
+  /** @type {string[]} */
+  const exceptions = [];
+  if (direction === 'glued' || direction === 'spaced') {
+    for (const f of uniq) {
+      const spaced = /\s/.test(f);
+      if (
+        (direction === 'glued' && spaced) ||
+        (direction === 'spaced' && !spaced)
+      ) {
+        exceptions.push(f);
+      }
+    }
+  }
+  const prefix = '1차';
+  return {
+    prefix,
+    dirLabel,
+    text: `${prefix} ${dirLabel}`,
+    exceptions,
+  };
 }
 
 /**
- * 2차 계열 박스 summary용: `1차: 국제금융(붙여쓰기)`
+ * 2차 계열 박스 summary용: `1차 붙여쓰기`
  * @param {'glued' | 'spaced' | null | undefined} direction
  * @param {string[]} forms
  */

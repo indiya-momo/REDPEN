@@ -2198,6 +2198,110 @@
   text-underline-offset: 2px;
 }
 
+/* 2차 계열 — `1차` + 붙여쓰기 버튼 CSS · 예외 표기 뱃지 */
+.panel-left .unify-candidate-find__series-criterion-row {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  gap: 4px;
+  margin-left: 6px;
+  min-width: 0;
+  vertical-align: middle;
+}
+
+.panel-left .unify-candidate-find__series-criterion-prefix {
+  flex: 0 0 auto;
+  font-size: calc(0.72rem * var(--panel-ui-scale, 1));
+  font-weight: 500;
+  color: #111;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
+.panel-left
+  .unify-candidate-find__series-label-block
+  .unify-candidate-find__series-criterion-dir-wrap {
+  display: inline-grid;
+  grid-template-columns: minmax(
+    var(--unify-spacing-btn-width, 3.55rem),
+    max-content
+  );
+  width: auto;
+  min-width: var(--unify-spacing-btn-width, 3.55rem);
+  pointer-events: none;
+}
+
+.panel-left
+  .unify-candidate-find__series-label-block
+  .unify-candidate-find__series-criterion-dir-wrap
+  .unify-candidate-find__series-spacing-btn {
+  width: auto;
+  min-width: var(--unify-spacing-btn-width, 3.55rem);
+  padding-inline: calc(6px * 1.2);
+  cursor: default;
+}
+
+.panel-left .unify-candidate-find__series-criterion-badge {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 9.5rem;
+  margin: 0 0 0 4px;
+  padding: calc(2px * 1.2) calc(6px * 1.2);
+  border: 1px solid color-mix(in srgb, #aaa 70%, #fff 30%);
+  border-radius: var(--radius-ui-sm, 6px);
+  box-shadow: 0 1px 0 color-mix(in srgb, #888 35%, transparent);
+  background: color-mix(
+    in srgb,
+    var(--pillar-consistency, #5c6b7a) 18%,
+    #fff
+  );
+  color: color-mix(
+    in srgb,
+    var(--pillar-consistency, #5c6b7a) 88%,
+    #222
+  );
+  font-size: calc(0.68rem * var(--panel-ui-scale, 1) * 1.2);
+  font-weight: 500;
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+}
+
+/* 예외 표기 텍스트 + 「예외」뱃지 */
+.panel-left .unify-candidate-find__series-exception {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 1 auto;
+  min-width: 0;
+  gap: 4px;
+  margin-left: 6px;
+  max-width: 12rem;
+  vertical-align: middle;
+}
+
+.panel-left .unify-candidate-find__series-exception-form {
+  flex: 0 1 auto;
+  min-width: 0;
+  font-size: calc(0.72rem * var(--panel-ui-scale, 1));
+  font-weight: 600;
+  color: #111;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+}
+
+.panel-left
+  .unify-candidate-find__series-exception
+  > .unify-candidate-find__exception-badge {
+  margin-left: 0;
+}
+
 .panel-left
   .unify-candidate-find__series-label-block
   > .unify-candidate-find__exception-badge {
