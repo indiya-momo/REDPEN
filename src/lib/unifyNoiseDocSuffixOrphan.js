@@ -17,6 +17,7 @@
  *    띄움 후보에서는 **왼쪽 칸만** 전역 검사 (`노동 시장`의 시장 제외).
  * 2) 인접: 공백 앞 어절 P(길이 무관)+**왼쪽 조각** F 이음이 문서 어절과 같거나
  *    그 접두이면 F는 잘림 (`환매조`+`건부` → `환매조건부`).
+ *    같은 줄 연속 토큰 + **이전 줄 마지막 ↔ 현재 줄 첫** (OCR 줄바꿈 앞잘림).
  *    오른쪽 칸에는 적용하지 않음 (`서울`+`시장`이 `노동 시장`을 지우지 않게).
  *
  * 조사 strip은 증인(W) 쪽만 — needle(F)에는 적용하지 않음.
@@ -307,14 +308,23 @@ function ingestDocSuffixPage(page, witnesses, adjacentPairs) {
   else if (text && !layout) sources.push(text);
   for (const source of sources) {
     const prepared = source.normalize('NFC');
+    /** @type {string | null} */
+    let prevLineLast = null;
     for (const line of prepared.split(/\n+/)) {
       DOC_SUFFIX_HANGUL_TOKEN_RE.lastIndex = 0;
       const tokens = line.match(DOC_SUFFIX_HANGUL_TOKEN_RE) || [];
+      if (tokens.length > 0 && prevLineLast) {
+        // OCR 줄바꿈: 이전 줄 끝 + 현재 줄 첫 (서\n비스 → 서비스)
+        noteAdjacentHangulPair(adjacentPairs, prevLineLast, tokens[0]);
+      }
       for (let i = 0; i < tokens.length; i += 1) {
         noteDocHangulEojeolForOrphan(witnesses, tokens[i]);
         if (i > 0) {
           noteAdjacentHangulPair(adjacentPairs, tokens[i - 1], tokens[i]);
         }
+      }
+      if (tokens.length > 0) {
+        prevLineLast = tokens[tokens.length - 1];
       }
     }
   }
