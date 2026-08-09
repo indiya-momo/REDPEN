@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   SERIES_MAJORITY_PRESELECT_RATIO,
   buildSeriesMajoritySoftPreselect,
+  buildPatternDirectionSoftPreselect,
   pickDominantSpacing,
   sumGroupSpacingFindings,
 } from './unifySeriesMajorityPreselect.js';
@@ -134,5 +135,27 @@ describe('sumGroupSpacingFindings', () => {
         }),
       ]),
     ).toEqual({ glued: 2, spaced: 3, total: 5 });
+  });
+});
+
+describe('buildPatternDirectionSoftPreselect', () => {
+  it('2차 계열 direction으로 1차 soft와 같은 chosen 맵을 만든다', () => {
+    const group = {
+      type: 'series',
+      direction: 'glued',
+      clusters: [
+        cluster({
+          key: '분위기경제',
+          variants: ['분위기경제', '분위기 경제'],
+        }),
+        cluster({
+          key: '고전파경제',
+          variants: ['고전파경제', '고전파 경제'],
+        }),
+      ],
+    };
+    const map = buildPatternDirectionSoftPreselect([group]);
+    expect(map.get('분위기경제')).toBe('분위기경제');
+    expect(map.get('고전파경제')).toBe('고전파경제');
   });
 });

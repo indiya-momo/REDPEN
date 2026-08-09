@@ -24,6 +24,7 @@ import {
 } from '../../lib/unifyFindListPipeline.js';
 import {
   buildSecondaryGroupsFromCandidates,
+  mergePrimaryConflictsIntoSecondaryGroups,
   collectPatternRuleCandidates,
   collectPrimaryFormsForPatternGroup,
   formatPatternRuleConditionLabel,
@@ -46,7 +47,7 @@ import { runPredicateSlmReviewOnClusterGroups } from '../../lib/unifyPredicateRe
 import { collectUnifyListTriage } from '../../lib/unifyListStemTriage.js';
 import { createUnifyFindBench, snapshotUnifyFindDiag } from '../../lib/unifyFindBench.js';
 import { runStdictPosReviewOnClusterGroups } from '../../lib/unifyStdictPos.js';
-import { buildSeriesMajoritySoftPreselect } from '../../lib/unifySeriesMajorityPreselect.js';
+import { buildSeriesMajoritySoftPreselect, buildPatternDirectionSoftPreselect } from '../../lib/unifySeriesMajorityPreselect.js';
 import {
   mergeUnifyChosenMaps,
   resolveGlobalChosenSpacing,
@@ -73,6 +74,8 @@ import DetailsChevron from '../DetailsChevron.jsx';
  */
 
 /**
+ * 1차 「전체 발견」— 클러스터 totalCount 합.
+ * totalCount는 enrich 후 visual(page.text) 기준 (discover 집계 B). layout-only 합 금지.
  * @param {UnifySpacingCluster[]} clusters
  * @returns {number}
  */
@@ -386,6 +389,7 @@ function SeriesSpacingButtons({
 /**
  * 헤더·팝업·배지용 단일 집계 스냅샷.
  * 검토 필요(본+보조·용언)도 체크·발견 횟수에 포함한다 (1·2차 공통).
+ * findings = visual totalCount 합 (discover 집계 B).
  * @param {import('../../lib/unifyCandidateGrouping.js').ClusterGroup[]} groups
  */
 function summarizeUnifyListSnapshot(groups) {
@@ -468,18 +472,23 @@ function UnifyFindingsCount({ count, shownCount = count, className = '' }) {
 }
 
 const UNIFY_FIND_LOADING_TEXT = '표기 통일 후보를 찾고 있습니다';
+const UNIFY_PHASE2_LOADING_TEXT = '2차 표기 통일을 준비하고 있습니다';
 
 /**
- * 찾기 중 — 문구를 한 글자씩 쓴 뒤 펜 아이콘 1→2→3 반복.
+ * 찾기·2차 진입 중 — 문구를 한 글자씩 쓴 뒤 펜 아이콘 1→2→3 반복.
+ * @param {{ text?: string }} [props]
  */
-function UnifyFindLoadingStatus() {
+function UnifyFindLoadingStatus({ text = UNIFY_FIND_LOADING_TEXT }) {
   const [charCount, setCharCount] = useState(0);
   const [penCount, setPenCount] = useState(0);
 
   useEffect(() => {
-    const textLen = UNIFY_FIND_LOADING_TEXT.length;
+    const label = String(text ?? UNIFY_FIND_LOADING_TEXT);
+    const textLen = label.length;
     let chars = 0;
     let penTimer = 0;
+    setCharCount(0);
+    setPenCount(0);
     const typeTimer = window.setInterval(() => {
       chars += 1;
       setCharCount(chars);
@@ -495,17 +504,18 @@ function UnifyFindLoadingStatus() {
       window.clearInterval(typeTimer);
       window.clearInterval(penTimer);
     };
-  }, []);
+  }, [text]);
 
+  const label = String(text ?? UNIFY_FIND_LOADING_TEXT);
   return (
     <div
       className="unify-candidate-find__loading"
       role="status"
       aria-live="polite"
-      aria-label={UNIFY_FIND_LOADING_TEXT}
+      aria-label={label}
     >
       <span className="unify-candidate-find__loading-text">
-        {UNIFY_FIND_LOADING_TEXT.slice(0, charCount)}
+        {label.slice(0, charCount)}
       </span>
       {penCount > 0 ? (
         <span className="unify-candidate-find__loading-pens" aria-hidden>
@@ -1238,7 +1248,8 @@ export default function UnifyCandidateFindPanel({
       });
 
       // 목록·marks를 한 번에 — 팝업 아래에서 숫자가 바뀌지 않게.
-      // 「찾기를 진행했습니다」모달은 뜨지 않음(1019↔66 혼선·중복 안내 방지).
+      // 「찾기를 진행했습니다」모달은 뜨지 않음(항목수↔전체발견 혼선·중복 안내 방지).
+      // 전체 발견 = visual totalCount 합(B). 옛 layout-only(1019) 기준으로 맞추지 않음.
       setClusters(next);
       setRawByKey(result.rawByKey);
       setSlmReviewedByKey(slmByKey);
@@ -1496,6 +1507,8 @@ export default function UnifyCandidateFindPanel({
     if (phase2EnteringRef.current) return;
     phase2EnteringRef.current = true;
     setPhase2Entering(true);
+    // 로딩 모션이 무거운 동기 작업보다 먼저 그려지게
+    await new Promise((r) => setTimeout(r, 0));
     try {
       const chosen = mergeUnifyChosenMaps(registeredVariants, preSelected);
 
@@ -1537,7 +1550,14 @@ export default function UnifyCandidateFindPanel({
         }
       }
 
-      // item·visual 근거로 유령 출현 제거 (1차 enrich와 동일 — 하이라이트·칩)
+      // DocSuffix·패턴 find 이후: 1차 conflict(분위기 경제 등)를 열린 계열에 다시 합침
+      nextGroups = mergePrimaryConflictsIntoSecondaryGroups(
+        nextGroups,
+        clusters,
+      );
+
+      // item·visual — 칩·하이라이트용 bbox만. 2차 목록 membership/건수는 find 권위.
+      // enrich가 0건·null이어도 pattern mismatch 행을 지우지 않음 (분위기 경제 구멍).
       {
         /** @type {import('../../lib/unifyCandidateDiscover.js').UnifySpacingCluster[]} */
         const flat = [];
@@ -1554,12 +1574,24 @@ export default function UnifyCandidateFindPanel({
         nextGroups = nextGroups
           .map((g) => ({
             ...g,
-            clusters: (g.clusters ?? [])
-              .map((c) => byKey.get(c.key))
-              .filter(Boolean),
+            clusters: (g.clusters ?? []).map((c) => {
+              const en = c?.key ? byKey.get(c.key) : null;
+              if (!en) return c;
+              // find 건수·kind·추천은 유지. 출현 좌표만 enrich에서 가져옴.
+              return {
+                ...c,
+                kind: c.kind === 'conflict' ? 'conflict' : en.kind || c.kind,
+                recommendedUnify: c.recommendedUnify || en.recommendedUnify,
+                occurrencesByVariant:
+                  en.occurrencesByVariant ?? c.occurrencesByVariant,
+                totalCount: Math.max(c.totalCount || 0, en.totalCount || 0),
+                counts: { ...(c.counts ?? {}), ...(en.counts ?? {}) },
+                variants: c.variants?.length ? c.variants : en.variants,
+              };
+            }),
             compliantForms: (g.compliantForms ?? [])
-              .map((c) => byKey.get(c.key))
-              .filter(Boolean),
+              .map((c) => byKey.get(c.key) ?? c)
+              .filter((c) => (c?.totalCount ?? 0) > 0),
           }))
           .filter(
             (g) =>
@@ -1569,18 +1601,9 @@ export default function UnifyCandidateFindPanel({
       }
 
       const nextClusters = nextGroups.flatMap((g) => g.clusters ?? []);
-      const compliantClusters = nextGroups.flatMap((g) =>
-        (g.compliantForms ?? []).filter((c) => (c?.totalCount || 0) > 0),
-      );
-      // PDF 빨간 줄용 — 어긋남 + 이미 맞는 표기 모두 preview snapshot에 포함
-      /** @type {Map<string, import('../../lib/unifyCandidateDiscover.js').UnifySpacingCluster>} */
-      const previewByKey = new Map();
-      for (const c of [...nextClusters, ...compliantClusters]) {
-        if (!c?.key) continue;
-        if (!previewByKey.has(c.key)) previewByKey.set(c.key, c);
-      }
-      const previewClusters = [...previewByKey.values()];
-      if (!nextGroups.length || !previewClusters.length) {
+      // PDF·엑셀 세션 = 목록 「전체 발견」과 동일 (1차와 같은 기준: 어긋남 clusters).
+      // compliantForms는 목록 부가 표시용 — 발견 집계·listReady에 넣지 않음.
+      if (!nextGroups.length || !nextClusters.length) {
         await showAppAlert({
           title: '2차 표기 통일',
           message:
@@ -1590,10 +1613,20 @@ export default function UnifyCandidateFindPanel({
       }
 
       const itemCount = countUnifyListAccordionItems(nextGroups);
-      // 2차는 soft 미리찍기 없음 — 사용자가 직접 선택
+      // 1차와 동일: soft chosen → listReady/엑셀 tip「…으로 통일」
+      // 방향 = 패턴 규칙(1차 통일형), 다수결 soft와 다름
+      const phase2Soft = buildPatternDirectionSoftPreselect(nextGroups);
+      const chosenByKey = mergeUnifyChosenMaps(registeredVariants, phase2Soft);
+      if (import.meta.env?.DEV) {
+        const econ = nextGroups.find((g) => g?.template === '@경제');
+        console.info(
+          '[unify-phase2] @경제 keys',
+          (econ?.clusters ?? []).map((c) => c.key),
+        );
+      }
       // 목록·phase를 한 번에 (빈 secondary_pairs 중간 상태 금지 → 팝업/칩 레이스 방지)
       setPhase2PrimaryChosen(new Map(chosen));
-      setPreSelected(new Map());
+      setPreSelected(phase2Soft);
       setPhase2DoneLabels([]);
       setPhase2ConditionsExpanded(false);
       setCompliantFormsExpandedKeys(new Set());
@@ -1609,14 +1642,14 @@ export default function UnifyCandidateFindPanel({
 
       await afterPaint();
       onListReady?.({
-        clusters: previewClusters,
-        chosenByKey: mergeUnifyChosenMaps(registeredVariants, new Map()),
+        clusters: nextClusters,
+        chosenByKey,
         hiddenKeys: new Set(),
         focusInst: firstUnifyListChipInstance(
           nextGroups.length
             ? nextGroups
-            : [{ type: 'single', clusters: previewClusters }],
-          mergeUnifyChosenMaps(registeredVariants, new Map()),
+            : [{ type: 'single', clusters: nextClusters }],
+          chosenByKey,
           new Set(),
         ),
       });
@@ -2393,6 +2426,9 @@ export default function UnifyCandidateFindPanel({
 
                 {unifyPhase === 'primary' && phase2PatternEnabled ? (
                   <div className="unify-candidate-find__phase2-entry">
+                    {phase2Entering ? (
+                      <UnifyFindLoadingStatus text={UNIFY_PHASE2_LOADING_TEXT} />
+                    ) : null}
                     <CriteriaHoverTip
                       tip={
                         primaryUnifyComplete
@@ -2404,6 +2440,7 @@ export default function UnifyCandidateFindPanel({
                         type="button"
                         className="consistency-register-add-btn consistency-register-add-btn--label unify-candidate-find__submit"
                         disabled={!primaryUnifyComplete || phase2Entering}
+                        aria-busy={phase2Entering}
                         onClick={() => {
                           void handlePhase2EntryClick();
                         }}

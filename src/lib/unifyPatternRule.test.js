@@ -267,7 +267,8 @@ describe('unifyPatternRule', () => {
     );
     const froms = mismatches.map((m) => m.from);
     expect(froms).toContain('캐나다 정부');
-    expect(froms).not.toContain('미국 정부');
+    // 시드 키라도 남은 띄움은 2차 목록에 둔다 (분위기 경제와 동일)
+    expect(froms).toContain('미국 정부');
     expect(froms.some((f) => f.includes('여러'))).toBe(false);
   });
 

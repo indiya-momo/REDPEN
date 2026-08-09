@@ -2502,9 +2502,17 @@
 .panel-left .unify-candidate-find__phase2-actions {
   display: flex;
   justify-content: flex-end;
+  align-items: center;
   gap: 8px;
   margin: 10px 0 4px;
   padding-inline: var(--unify-edge-pad, var(--space-sm));
+}
+
+.panel-left .unify-candidate-find__phase2-entry .unify-candidate-find__loading {
+  margin: 0;
+  margin-right: auto;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .panel-left

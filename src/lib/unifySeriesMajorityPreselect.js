@@ -84,3 +84,30 @@ export function buildSeriesMajoritySoftPreselect(groups) {
   }
   return out;
 }
+
+/**
+ * 2차 계열 — 패턴 규칙 방향(1차 통일형)을 1차 soft와 같은 chosen 맵으로.
+ * 엑셀 tip·PDF가 「문서 내」가 아니라 「…으로 통일」이 되게 함.
+ * @param {Array<{
+ *   type?: string,
+ *   direction?: 'glued' | 'spaced' | null,
+ *   clusters?: UnifySpacingCluster[],
+ * }> | null | undefined} groups
+ * @returns {Map<string, string>}
+ */
+export function buildPatternDirectionSoftPreselect(groups) {
+  /** @type {Map<string, string>} */
+  const out = new Map();
+  for (const group of groups ?? []) {
+    if (group?.type !== 'series') continue;
+    const spacing = group.direction;
+    if (spacing !== 'glued' && spacing !== 'spaced') continue;
+    for (const c of group.clusters ?? []) {
+      const key = c?.key;
+      if (!key) continue;
+      const v = variantForSpacing(c, spacing);
+      if (v) out.set(key, v);
+    }
+  }
+  return out;
+}
