@@ -694,6 +694,116 @@ function pagesForRuleCheck(pageTexts) {
 }
 
 /**
+ * layout과 다른 visual만 — 이형태 없이 visual에만 띄움이 있는 N+N(분위기 경제)용.
+ * layout===visual이면 pagesForRuleCheck와 중복이므로 생략.
+ * @param {{ pageNum?: number, text?: string, textLayout?: string }[]} pageTexts
+ */
+function pagesForVisualDistinctRuleCheck(pageTexts) {
+  return (pageTexts ?? [])
+    .map((p, i) => {
+      const pageNum = Number(p?.pageNum) || i + 1;
+      const visual = String(p?.text ?? '');
+      const layout = String(p?.textLayout ?? '');
+      if (!visual || !layout || visual === layout) return null;
+      return { pageNum, text: visual };
+    })
+    .filter(Boolean);
+}
+
+/**
+ * layout 스캔이 놓친 띄움(또는 visualAttests가 붙임만 인정한 경우)을
+ * page.text∪textLayout에서 직접 보강. runRuleCheck 경로와 별도 안전망.
+ * @param {{ pageNum?: number, text?: string, textLayout?: string }[]} pageTexts
+ * @param {UnifyPatternRule} rule
+ * @param {Map<string, PatternRuleMismatch>} byKey
+ * @param {Set<string>} skipKeys
+ */
+function backfillSpacedAffixMismatchesFromPageText(
+  pageTexts,
+  rule,
+  byKey,
+  skipKeys,
+) {
+  if (rule.affixType !== 'suffix' || rule.direction !== 'glued') return;
+  const affix = String(rule.affix ?? '').trim();
+  if (!affix) return;
+  const re = new RegExp(`([가-힣]{2,})\\s+${escapeRegex(affix)}`, 'gu');
+
+  for (let i = 0; i < (pageTexts ?? []).length; i += 1) {
+    const p = pageTexts[i];
+    const pageNum = Number(p?.pageNum) || i + 1;
+    const visual = String(p?.text ?? '');
+    const layout = String(p?.textLayout ?? '');
+    const sources = [visual, layout].filter(Boolean);
+    /** @type {Set<string>} */
+    const seenAt = new Set();
+    for (const source of sources) {
+      re.lastIndex = 0;
+      let m = re.exec(source);
+      while (m) {
+        const idx = m.index;
+        const head = m[1];
+        const fromRaw = `${head} ${affix}`;
+        const stamp = `${pageNum}:${idx}:${fromRaw}`;
+        if (seenAt.has(stamp)) {
+          m = re.exec(source);
+          continue;
+        }
+        seenAt.add(stamp);
+        if (hangulContinuesBeforeVisual(source, idx)) {
+          m = re.exec(source);
+          continue;
+        }
+        const pair = normalizeMismatchPair(fromRaw, rule);
+        if (!pair || skipKeys.has(pair.key)) {
+          m = re.exec(source);
+          continue;
+        }
+        // soft-wrap orphan 방지: visual에 띄움 또는 붙임 키가 있어야 함
+        if (
+          !visualAttestsPatternSurface(visual, pair.from) &&
+          !visualAttestsPatternSurface(visual, pair.to) &&
+          !visualAttestsPatternSurface(visual, pair.key)
+        ) {
+          m = re.exec(source);
+          continue;
+        }
+        /** @type {import('./ruleEngine.js').MatchInstance} */
+        const inst = {
+          pageNum,
+          index: idx,
+          matchedText: pair.from,
+        };
+        const existing = byKey.get(pair.key);
+        if (existing) {
+          const dup = existing.instances.some(
+            (x) =>
+              Number(x.pageNum) === pageNum &&
+              String(x.matchedText ?? '') === pair.from &&
+              Number(x.index) === idx,
+          );
+          if (!dup) {
+            existing.instances.push(inst);
+            existing.count += 1;
+          }
+        } else {
+          byKey.set(pair.key, {
+            key: pair.key,
+            from: pair.from,
+            to: pair.to,
+            count: 1,
+            instances: [inst],
+            affixType: rule.affixType,
+            template: rule.template,
+          });
+        }
+        m = re.exec(source);
+      }
+    }
+  }
+}
+
+/**
  * page.text 기준 — 직전 한글이 줄바꿈만 건너뛴 채 이어지면 soft-wrap 앞잘림.
  * 어절 사이 일반 공백은 경계로 본다.
  * @param {string} source
@@ -804,10 +914,13 @@ function normalizeMismatchPair(from, rule) {
  */
 export function findPatternMismatches(pageTexts, rule, opts = {}) {
   if (!rule?.affix || !rule.direction || !rule.affixType) return [];
-  const pages = pagesForRuleCheck(pageTexts);
-  if (!pages.length) return [];
+  const layoutPages = pagesForRuleCheck(pageTexts);
+  const visualPages = pagesForVisualDistinctRuleCheck(pageTexts);
+  if (!layoutPages.length && !visualPages.length) return [];
   const visualByPage = buildVisualTextByPageNum(pageTexts);
 
+  // skipKeys는 호출부가 명시할 때만. confirmedKey(시드)를 넣지 않는다 —
+  // 시드 키=붙임키라서 soft 1순위로 시드가 되면「분위기 경제」같은 남은 띄움이 통째로 사라짐.
   const skipKeys = new Set(
     opts.skipKeys instanceof Set
       ? opts.skipKeys
@@ -815,7 +928,6 @@ export function findPatternMismatches(pageTexts, rule, opts = {}) {
         ? opts.skipKeys
         : [],
   );
-  if (rule.confirmedKey) skipKeys.add(rule.confirmedKey);
 
   let pattern;
   if (rule.affixType === 'prefix') {
@@ -828,38 +940,69 @@ export function findPatternMismatches(pageTexts, rule, opts = {}) {
   const rules = buildPhraseSlotFindRules(pattern);
   if (!rules.length) return [];
 
-  const { results } = runRuleCheck(pages, rules);
   /** @type {Map<string, PatternRuleMismatch>} */
   const byKey = new Map();
 
-  for (const group of results ?? []) {
-    for (const inst of group.instances ?? []) {
-      const from = String(inst.matchedText ?? '');
-      if (!from) continue;
-      const pair = normalizeMismatchPair(from, rule);
-      if (!pair) continue;
-      if (skipKeys.has(pair.key)) continue;
-      const pageNum = Number(inst.pageNum) || 0;
-      const visual = visualByPage.get(pageNum) ?? '';
-      if (!visualAttestsPatternSurface(visual, pair.from)) continue;
+  /** @param {import('./ruleEngine.js').GroupedResult[] | undefined} results */
+  const ingest = (results) => {
+    for (const group of results ?? []) {
+      for (const inst of group.instances ?? []) {
+        const from = String(inst.matchedText ?? '');
+        if (!from) continue;
+        const pair = normalizeMismatchPair(from, rule);
+        if (!pair) continue;
+        if (skipKeys.has(pair.key)) continue;
+        const pageNum = Number(inst.pageNum) || 0;
+        const visual = visualByPage.get(pageNum) ?? '';
+        // layout 스캔 결과: visual에 띄움 표면 또는 붙임 키(갭)가 있을 때만
+        if (
+          !visualAttestsPatternSurface(visual, pair.from) &&
+          !visualAttestsPatternSurface(visual, pair.to) &&
+          !visualAttestsPatternSurface(visual, pair.key)
+        ) {
+          continue;
+        }
 
-      const existing = byKey.get(pair.key);
-      if (existing) {
-        existing.instances.push(inst);
-        existing.count += 1;
-      } else {
-        byKey.set(pair.key, {
-          key: pair.key,
-          from: pair.from,
-          to: pair.to,
-          count: 1,
-          instances: [inst],
-          affixType: rule.affixType,
-          template: rule.template,
-        });
+        const existing = byKey.get(pair.key);
+        if (existing) {
+          const dup = existing.instances.some(
+            (x) =>
+              Number(x.pageNum) === pageNum &&
+              String(x.matchedText ?? '') === pair.from &&
+              Number(x.index) === Number(inst.index),
+          );
+          if (dup) continue;
+          existing.instances.push(inst);
+          existing.count += 1;
+        } else {
+          byKey.set(pair.key, {
+            key: pair.key,
+            from: pair.from,
+            to: pair.to,
+            count: 1,
+            instances: [inst],
+            affixType: rule.affixType,
+            template: rule.template,
+          });
+        }
       }
     }
+  };
+
+  if (layoutPages.length) {
+    ingest(runRuleCheck(layoutPages, rules).results);
   }
+  if (visualPages.length) {
+    ingest(runRuleCheck(visualPages, rules).results);
+  }
+
+  // runRuleCheck·visualAttests가 놓친 띄움(@ affix) — 본문 직접 보강
+  backfillSpacedAffixMismatchesFromPageText(
+    pageTexts,
+    rule,
+    byKey,
+    skipKeys,
+  );
 
   return [...byKey.values()].sort(
     (a, b) => b.count - a.count || a.from.localeCompare(b.from, 'ko'),
@@ -1204,20 +1347,17 @@ export function collectPatternRuleCandidates(
   clusters,
   pageTexts,
 ) {
-  const entries =
-    registeredVariants instanceof Map
-      ? [...registeredVariants.entries()]
-      : [...registeredVariants];
   const rules = collectPatternRulesFromRegistrations(
     registeredVariants,
     clusters,
   );
 
-  const skipKeys = new Set(entries.map(([k]) => k));
+  // 1차 soft/등록 키를 skip하지 않음 — 시드 confirmedKey도 mismatch에서 빼지 않음.
+  // (시드 키 skip 시 soft 1순위 N+N이 2차에서 사라짐)
   /** @type {PatternRuleCandidate[]} */
   const out = [];
   for (const rule of rules) {
-    const mismatches = findPatternMismatches(pageTexts, rule, { skipKeys });
+    const mismatches = findPatternMismatches(pageTexts, rule);
     const compliantForms = findPatternCompliantForms(pageTexts, rule);
     if (!mismatches.length && !compliantForms.length) continue;
 
@@ -1248,6 +1388,74 @@ export function collectPatternRuleCandidates(
   return out;
 }
 
+/**
+ * 1차 conflict 클러스터를 열린 2차 계열에 합친다.
+ * 패턴 find/visualAttests가 놓친 N+N(분위기 경제 등)이 1차에 있으면 2차에도 남긴다.
+ * 추가 PDF 스캔 없음.
+ * @param {ReturnType<typeof buildSecondaryGroupsFromCandidates>} groups
+ * @param {import('./unifyCandidateDiscover.js').UnifySpacingCluster[]} primaryClusters
+ * @returns {ReturnType<typeof buildSecondaryGroupsFromCandidates>}
+ */
+export function mergePrimaryConflictsIntoSecondaryGroups(groups, primaryClusters) {
+  if (!groups?.length || !primaryClusters?.length) return groups ?? [];
+  return groups.map((group) => {
+    const affix = String(group?.affix ?? '').trim();
+    if (!affix) return group;
+    const isPrefix = group.affixType === 'prefix';
+    const direction = group.direction === 'spaced' ? 'spaced' : 'glued';
+    const byKey = new Map(
+      (group.clusters ?? [])
+        .filter((c) => c?.key)
+        .map((c) => [String(c.key), c]),
+    );
+    for (const cluster of primaryClusters) {
+      const key = String(cluster?.key ?? '').trim();
+      if (!key || byKey.has(key)) continue;
+      if (isPrefix) {
+        if (!key.startsWith(affix) || key.length <= affix.length) continue;
+      } else if (!key.endsWith(affix) || key.length <= affix.length) {
+        continue;
+      }
+      const variants = cluster.variants ?? [];
+      const spaced = variants.find((v) => /\s/.test(String(v)));
+      const glued = variants.find((v) => !/\s/.test(String(v))) || key;
+      if (!spaced) continue;
+      const spacedCount = Number(cluster.counts?.[spaced]) || 0;
+      const gluedCount = Number(cluster.counts?.[glued]) || 0;
+      const wrongCount = direction === 'glued' ? spacedCount : gluedCount;
+      if (wrongCount <= 0) continue;
+      byKey.set(key, {
+        ...cluster,
+        key,
+        kind: cluster.kind || 'conflict',
+      });
+    }
+    const clusters = [...byKey.values()].sort(
+      (a, b) =>
+        (b.totalCount || 0) - (a.totalCount || 0) ||
+        String(a.key).localeCompare(String(b.key), 'ko'),
+    );
+    return { ...group, clusters };
+  });
+}
+
+/**
+ * 선택된 패턴들의 mismatch → 2차용 계열 그룹 (접미>접두 중복 제거, `백자@` / `@모양` 헤더).
+ * @param {PatternRuleCandidate[]} candidates
+ * @param {Iterable<string>} selectedIds
+ * @returns {{
+ *   type: 'series',
+ *   affixType: PatternAffixType,
+ *   affix: string,
+ *   label: string,
+ *   template: string,
+ *   direction: PatternRuleDirection,
+ *   clusters: import('./unifyCandidateDiscover.js').UnifySpacingCluster[],
+ *   support?: PatternRuleSupport,
+ *   score?: number,
+ *   compliantForms?: import('./unifyCandidateDiscover.js').UnifySpacingCluster[],
+ * }[]}
+ */
 /**
  * 선택된 패턴들의 mismatch → 2차용 계열 그룹 (접미>접두 중복 제거, `백자@` / `@모양` 헤더).
  * @param {PatternRuleCandidate[]} candidates

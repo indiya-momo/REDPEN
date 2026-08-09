@@ -11,6 +11,8 @@
  * - 클러스터 키: 조사 제거 후 공백 제거 / 붙임+유효 띄움 동시
  * - 추천: 출현 수 최대 / 동률 시 붙임 — 내부 정책(규범 아님)
  * - 칩/Next 순: 시각 reading order `(page, column, -y, x)` — hit 집합은 유지
+ * - **전체 발견(1차) 집계 = page.text visual 슬롯** (충돌은 rematerialize 후 totalCount).
+ *   layout-only 합·옛 1019 계열로 되돌리지 않음. 칩·하이라이트·숫자 동일 층(B 고정).
  *
  * 추출: 한글·숫자 토큰 + 줄 안 연속 n-gram(원문 슬라이스, 토큰 수 상한) / 단일 토큰.
  * 성능: 스캔 중 highlightRange 스냅·전 키 finalize 금지 → 충돌 클러스터에만 후처리.
@@ -854,7 +856,10 @@ export function enrichOccurrencesWithItemHits(occs, pageByNum) {
     if (!list.length) continue;
     const rebased = rebaseUnifyOccurrencesFromItemHits(list, page);
     if (rebased !== null) {
-      out.push(...rebased);
+      // item hit 있음 → bbox 고정. hit 0이어도 visual(rematerialize) 슬롯은 유지.
+      // 빈 배열로 지우면 2차 패턴(visualAttests 통과) N+N이 목록에서 사라짐.
+      if (rebased.length > 0) out.push(...rebased);
+      else out.push(...assignUniqueUnifyHighlightIndices(list, page));
       continue;
     }
     out.push(...assignUniqueUnifyHighlightIndices(list, page));
@@ -925,7 +930,8 @@ function visualSpanAt(source, start, variant) {
 
 /**
  * 충돌 클러스터 출현을 page.text 슬롯으로만 재구성 (layout/item 유령 제거).
- * 스캔은 textLayout을 쓰되, 칩·횟수 속성은 visual만 인정.
+ * 스캔은 textLayout을 쓰되, 칩·횟수·「전체 발견」속성은 visual만 인정 (집계 기준 B).
+ * layout-only totalCount로 되돌리지 말 것.
  * @param {Record<string, UnifyVariantOccurrence[]>} occurrencesByVariant
  * @param {Record<string, number>} counts
  * @param {Map<number, { pageNum?: number, text?: string, items?: unknown[] }>} pageByNum
@@ -1250,23 +1256,35 @@ function enrichOneClusterWithItemHits(cluster, pageByNum) {
   const positiveRanked = ranked.filter((row) => row.count > 0);
   const hasGlued = positive.some((v) => !/\s/.test(v));
   const hasSpaced = positive.some((v) => /\s/.test(v));
+  // 2차 패턴 mismatch(분위기 경제→분위기경제)처럼 문서에 한쪽만 있어도
+  // variants에 붙임·띄움 쌍이 있으면 conflict 유지 (single-form 강등 금지).
+  const pairInVariants =
+    (cluster.variants ?? []).some((v) => /\s/.test(String(v))) &&
+    (cluster.variants ?? []).some((v) => !/\s/.test(String(v)));
+  const keepConflictPair = cluster.kind === 'conflict' && pairInVariants;
   const keepAsSingleForm =
-    cluster.kind === 'single-form' || !hasGlued || !hasSpaced;
+    !keepConflictPair &&
+    (cluster.kind === 'single-form' || !hasGlued || !hasSpaced);
   const recommendRanked = [...positiveRanked].sort(
     (a, b) =>
       b.count - a.count ||
       spaceCount(a.variant) - spaceCount(b.variant) ||
       a.variant.localeCompare(b.variant, 'ko'),
   );
+  const preservedRecommend = String(cluster.recommendedUnify ?? '').trim();
   return {
     ...cluster,
     ...(keepAsSingleForm ? { kind: /** @type {const} */ ('single-form') } : {}),
+    ...(keepConflictPair ? { kind: /** @type {const} */ ('conflict') } : {}),
     variants: ranked.map((row) => row.variant),
     counts: Object.fromEntries(ranked.map((row) => [row.variant, row.count])),
     occurrencesByVariant: Object.fromEntries(
       ranked.map((row) => [row.variant, occurrencesByVariant[row.variant] ?? []]),
     ),
-    recommendedUnify: pickRecommendedUnify(recommendRanked),
+    recommendedUnify:
+      keepConflictPair && preservedRecommend
+        ? preservedRecommend
+        : pickRecommendedUnify(recommendRanked),
     totalCount: positiveRanked.reduce((sum, row) => sum + row.count, 0),
   };
 }

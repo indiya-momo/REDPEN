@@ -1,10 +1,13 @@
 /**
  * 표기 통일 PDF 미리보기 전용 — ListUI·Navigation과 분리.
  *
- * listReady  → publish(page)
+ * listReady  → publish(page)  → groups = 그 쪽만 (하이라이트)
  * chosenChanged → remap()   (enrich 금지)
  * pageChanged → publish(page)
  * clear / hidden → publish 또는 clear
+ *
+ * 검수 다운로드는 groups가 아니라 {@link buildSessionExportGroups}
+ * (= 현재 세션 listReady 클러스터 = 화면 「전체 발견」, 1·2차 동일 기준).
  */
 import { useCallback, useRef, useState } from 'react';
 import {
@@ -61,6 +64,8 @@ export function useUnifyPdfPreview({ pageTexts = [] } = {}) {
   const [groups, setGroups] = useState(
     /** @type {import('../lib/ruleEngine.js').GroupedResult[]} */ ([]),
   );
+  /** 세션 스냅샷에 클러스터가 있는지 (쪽 groups와 무관 — 다운로드 활성) */
+  const [sessionActive, setSessionActive] = useState(false);
   const cacheRef = useRef({
     /** @type {import('../lib/ruleEngine.js').GroupedResult[]} */
     groups: [],
@@ -88,6 +93,7 @@ export function useUnifyPdfPreview({ pageTexts = [] } = {}) {
     };
     cacheRef.current = { groups: [], keysSig: '', pageNum: 0 };
     setGroups([]);
+    setSessionActive(false);
   }, []);
 
   /**
@@ -118,6 +124,7 @@ export function useUnifyPdfPreview({ pageTexts = [] } = {}) {
         hiddenKeys: nextHidden,
         active: true,
       };
+      setSessionActive(nextClusters.length > 0);
 
       const pageClusters = clustersForPage(nextClusters, page, nextHidden);
       if (!pageClusters.length || page <= 0) {
@@ -222,8 +229,26 @@ export function useUnifyPdfPreview({ pageTexts = [] } = {}) {
     [publish],
   );
 
+  /**
+   * 검수 다운로드용 — 현재 세션 listReady 클러스터(화면 「전체 발견」과 동일).
+   * PDF Preview `groups`(현재 쪽)와 분리. 1·2차 기준 같음.
+   * @returns {import('../lib/ruleEngine.js').GroupedResult[]}
+   */
+  const buildSessionExportGroups = useCallback(() => {
+    const snap = snapshotRef.current;
+    if (!snap.active || !snap.clusters.length) return [];
+    const list = snap.clusters.filter((c) => !snap.hiddenKeys.has(c.key));
+    if (!list.length) return [];
+    return buildUnifyCandidatePreviewGroups(list, {
+      registeredByKey: snap.chosenByKey,
+      pages: pageTextsRef.current,
+    });
+  }, []);
+
   return {
     groups,
+    sessionActive,
+    buildSessionExportGroups,
     clear,
     publish,
     remap,

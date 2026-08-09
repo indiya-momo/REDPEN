@@ -359,6 +359,7 @@ export function formatUnifyCandidatePhase2CompleteMessage(
 /**
  * 표기 통일 추천 찾기 직후 — 발견 항목·검수권 사용 alert
  * 항목 수 = 목록 아코디언 행(계열은 1), 횟수 = 목록 전체 발견(검토 필요 포함).
+ * 전체 발견 = enrich 후 visual(page.text) totalCount 합 — discover 집계 B.
  * @param {import('./unifyCandidateDiscover.js').UnifySpacingCluster[]} clusters
  * @param {{
  *   uid?: string,

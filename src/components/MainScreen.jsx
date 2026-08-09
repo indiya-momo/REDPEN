@@ -467,6 +467,8 @@ export default function MainScreen({
   /** 표기 통일 PDF 미리보기 — ListUI와 분리된 단일 소스 */
   const unifyPdfPreview = useUnifyPdfPreview({ pageTexts: pdf.pageTexts });
   const unifyCandidatePreviewResults = unifyPdfPreview.groups;
+  const unifySessionActive = unifyPdfPreview.sessionActive;
+  const unifyBuildSessionExportGroups = unifyPdfPreview.buildSessionExportGroups;
   const unifyPreviewOnPageChange = unifyPdfPreview.onPageChange;
   const unifyPreviewClear = unifyPdfPreview.clear;
   const unifyPreviewPublish = unifyPdfPreview.publish;
@@ -1009,7 +1011,7 @@ export default function MainScreen({
           }
         : {
             entries: consistencyTabEntries,
-            recommendEntries: unifyCandidatePreviewResults.map((group) => ({
+            recommendEntries: unifyBuildSessionExportGroups().map((group) => ({
               group,
               source: 'consistency',
             })),
@@ -1078,7 +1080,7 @@ export default function MainScreen({
     spellingGroupsWithFindings.cautionWithFindings,
     spellingTabEntries,
     spellingTabTotalFindings,
-    unifyCandidatePreviewResults,
+    unifyBuildSessionExportGroups,
   ]);
 
   const showTocResultsPanel =
@@ -1572,7 +1574,8 @@ export default function MainScreen({
       return;
     }
     if (!spellingExportEnabled) return;
-    const recommendEntries = unifyCandidatePreviewResults.map((group) => ({
+    // 현재 세션(1차 또는 2차) 전체 — PDF Preview 쪽 조각(groups) 아님
+    const recommendEntries = unifyBuildSessionExportGroups().map((group) => ({
       group,
       source: 'consistency',
     }));
@@ -1654,7 +1657,7 @@ export default function MainScreen({
     authEmail,
     pdf.pdfFileName,
     consistencyTabEntries,
-    unifyCandidatePreviewResults,
+    unifyBuildSessionExportGroups,
     pageDisplay.formatLabel,
     ruleCheck.isInstanceVisible,
     ruleCheck.groupVisibilityMode,
@@ -2349,11 +2352,11 @@ export default function MainScreen({
                     onClick={handleConsistencyExport}
                     disabled={
                       !ruleCheck.consistencyCheckDone &&
-                      unifyCandidatePreviewResults.length === 0
+                      !unifySessionActive
                     }
                     title={
                       !ruleCheck.consistencyCheckDone &&
-                      unifyCandidatePreviewResults.length === 0
+                      !unifySessionActive
                         ? '표기 통일 추천 찾기 또는 기준 검수 후 받을 수 있습니다'
                         : undefined
                     }
