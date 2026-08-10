@@ -104,7 +104,14 @@ export default function FaqModal({ open, onClose }) {
           </button>
         </header>
         <p className="faq-modal__lead">
-          먼저 확인하시고 궁금한 점은 피드백으로 남겨주세요
+          먼저 확인하시고 궁금한 점은 카카오톡 오픈톡방을 이용해주세요{' '}
+          <a
+            href="https://open.kakao.com/o/siI5ckvd"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            https://open.kakao.com/o/siI5ckvd
+          </a>
         </p>
         <div className="faq-modal__list">
           {FAQ_ITEMS.map((item) => (
