@@ -1,5 +1,6 @@
 /**
- * 둘러보기 전용 — 데모 원고 자동 로드 (로그인 온보딩 PRE_UPLOAD 경로와 분리)
+ * 둘러보기 전용 — 데모 원고 자동 로드 (로그인 온보딩 PRE_UPLOAD 경로와 분리).
+ * 로컬 DEV에서도 자동 로드한다. 「새 업로드」로 비운 뒤에는 로컬에서만 재자동로드를 막는다.
  */
 import { useEffect, useRef } from 'react';
 import {
@@ -15,6 +16,7 @@ import { fetchOnboardingSamplePdfFile } from '../lib/onboardingSamplePdf.js';
  *   loadPdfFile: (file: File) => Promise<unknown>,
  *   dismissPreUpload: () => void,
  *   onLoaded?: () => void,
+ *   onError?: (message: string) => void,
  * }} options
  */
 export function useGuestBrowseDemoPdf({
@@ -23,6 +25,7 @@ export function useGuestBrowseDemoPdf({
   loadPdfFile,
   dismissPreUpload,
   onLoaded,
+  onError,
 }) {
   const loadRef = useRef(/** @type {'idle' | 'loading' | 'done'} */ ('idle'));
 
@@ -36,8 +39,6 @@ export function useGuestBrowseDemoPdf({
 
   useEffect(() => {
     if (!guestBrowseAllowsDemoPdfAutoLoad()) return undefined;
-    // 로컬 DEV: 데모 대신 직접 PDF 업로드
-    if (guestBrowseAllowsLocalDevExtras()) return undefined;
     if (isRestoring) return undefined;
     if (hasPdf || loadRef.current !== 'idle') return undefined;
     if (import.meta.env.DEV) {
@@ -62,13 +63,20 @@ export function useGuestBrowseDemoPdf({
         loadRef.current = 'done';
         onLoaded?.();
         dismissPreUpload();
-      } catch {
+      } catch (err) {
         loadRef.current = 'idle';
+        const message =
+          err instanceof Error
+            ? err.message
+            : '샘플 원고를 불러오지 못했습니다';
+        onError?.(message);
       }
     })();
 
     return () => {
       cancelled = true;
+      // Strict Mode 재마운트 시 loading에 고정되면 재시도가 막힌다
+      if (loadRef.current === 'loading') loadRef.current = 'idle';
     };
-  }, [isRestoring, hasPdf, loadPdfFile, dismissPreUpload, onLoaded]);
+  }, [isRestoring, hasPdf, loadPdfFile, dismissPreUpload, onLoaded, onError]);
 }
