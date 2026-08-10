@@ -4,6 +4,7 @@ import CurrentPageStatus from './CurrentPageStatus.jsx';
 import FaqFabButton from './FaqFabButton.jsx';
 import CriteriaHoverTip from './CriteriaHoverTip.jsx';
 import PdfThumbnailStrip from './PdfThumbnailStrip.jsx';
+import PrintedPageMatchControl from './PrintedPageMatchControl.jsx';
 
 /**
  * @param {{
@@ -18,6 +19,19 @@ import PdfThumbnailStrip from './PdfThumbnailStrip.jsx';
  *   printedPagesActive?: boolean,
  *   formatPageText?: (systemPage: number) => string,
  *   toSystemPageFromInput?: (raw: string) => number | null,
+ *   pageMatch?: {
+ *     currentSystemPage: number,
+ *     active: boolean,
+ *     currentPrintedLabel: string,
+ *     previewPrintedLabel?: string,
+ *     spreadInput: boolean,
+ *     onSpreadInputChange: (v: boolean) => void,
+ *     firstPageSingle: boolean,
+ *     onFirstPageSingleChange: (v: boolean) => void,
+ *     onCalibrateFromInput: (raw: string, isSpread: boolean) => void,
+ *     onCalibratePress?: () => void,
+ *     guideSpotlight?: boolean,
+ *   } | null,
  *   pageStatus?: {
  *     currentPage: number,
  *     visibleOnCurrentPage: number,
@@ -40,6 +54,7 @@ export default function PdfPreviewBar({
   printedPagesActive = false,
   formatPageText = (n) => String(n),
   toSystemPageFromInput = () => null,
+  pageMatch = null,
   pageStatus = null,
 }) {
   const displayCurrent = formatPageText(currentPage);
@@ -165,6 +180,7 @@ export default function PdfPreviewBar({
           </div>
 
           <div className="pdf-preview-bar__actions-col">
+            {pageMatch ? <PrintedPageMatchControl {...pageMatch} /> : null}
             {onToggleThumbStrip ? (
               <CriteriaHoverTip
                 tip={thumbStripOpen ? '미리보기 숨기기' : '썸네일 미리보기'}
