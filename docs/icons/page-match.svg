@@ -1,0 +1,9 @@
+﻿<!-- 파일↔원고 쪽수 맞추기 — 맞바꾸기 화살표 -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+  <path d="M8 7h9.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" />
+  <path d="M15.2 4.2 18.5 7l-3.3 2.8" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M8 7c-2.4 0-3.8 1.5-3.8 3.6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" />
+  <path d="M16 17H6.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" />
+  <path d="M8.8 19.8 5.5 17l3.3-2.8" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M16 17c2.4 0 3.8-1.5 3.8-3.6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" />
+</svg>
