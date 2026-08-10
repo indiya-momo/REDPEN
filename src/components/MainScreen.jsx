@@ -1251,12 +1251,20 @@ export default function MainScreen({
     setThumbStripOpen(true);
   }, []);
 
+  const handleGuestDemoPdfError = useCallback(
+    (message) => {
+      pdf.setLoadError(message);
+    },
+    [pdf.setLoadError],
+  );
+
   useGuestBrowseDemoPdf({
     isRestoring: session.isRestoring,
     hasPdf: Boolean(pdf.pdf),
     loadPdfFile: session.loadPdfFile,
     dismissPreUpload: dismissPreUploadGuide,
     onLoaded: openThumbStripAfterDemo,
+    onError: handleGuestDemoPdfError,
   });
 
   const showSpellingRunRow = Boolean(pdf.pdf);
@@ -1704,8 +1712,12 @@ export default function MainScreen({
     [pdf.pdf],
   );
 
+  // 자동 로드가 실제로 도는 동안만 「준비 중」(복원 중·오류면 대기/업로드 UI)
   const guestBrowsePreparingDemo =
-    guestBrowseAllowsDemoPdfAutoLoad() && !showPdfViewer && !pdf.loadError;
+    guestBrowseAllowsDemoPdfAutoLoad() &&
+    !session.isRestoring &&
+    !showPdfViewer &&
+    !pdf.loadError;
 
   const centerRunLabel = useMemo(
     () => getCenterRunLabel(pdf.isProcessing, pdf.progress),
@@ -2817,7 +2829,7 @@ export default function MainScreen({
                   aria-live="polite"
                 >
                   <p className="pdf-center-stage__guest-prep-label">
-                    샘플 원고 준비 중…
+                    {pdf.progressLabel || '샘플 원고 준비 중…'}
                   </p>
                 </div>
               ) : (
