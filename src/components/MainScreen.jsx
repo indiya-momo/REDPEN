@@ -27,7 +27,6 @@ import FaqFabButton from './FaqFabButton.jsx';
 import PdfZoomBar from './PdfZoomBar.jsx';
 import CheckResultsPanel from './CheckResultsPanel.jsx';
 import TooltipGuide from './TooltipGuide.jsx';
-import PrintedPageSetup from './PrintedPageSetup.jsx';
 import PdfCenterStage from './PdfCenterStage.jsx';
 import CriteriaSaveModal from './CriteriaSaveModal.jsx';
 import { showAppAlert, showAppConfirm } from '../lib/appDialog.js';
@@ -1718,73 +1717,48 @@ export default function MainScreen({
     [tabCheckDone],
   );
 
-  const spellingCalibrationEl =
-    pdf.pdf || loanwordConverterEnabled ? (
-      <div
-        className="spelling-tab-layout__calibration"
-        data-work-guide-step="3"
-      >
-        {pdf.pdf ? (
-          <PrintedPageSetup
-            currentSystemPage={pdf.currentPage}
-            active={pageDisplay.active}
-            currentPrintedLabel={pageDisplay.formatLabel(pdf.currentPage)}
-            previewPrintedLabel={
-              pageDisplay.active
-                ? pageDisplay.formatPageText(pdf.currentPage)
-                : pageDisplay.formatNaturalPreview(pdf.currentPage)
-            }
-            spreadInput={pageDisplay.spreadInput}
-            onSpreadInputChange={pageDisplay.setSpreadInput}
-            firstPageSingle={pageDisplay.firstPageSingle}
-            onFirstPageSingleChange={pageDisplay.setFirstPageSingle}
-            onCalibrateFromInput={pageDisplay.calibrateFromInput}
-            guideSpotlight={
-              !isGuestBrowseActive() &&
-              guestWorkGuide.showFirstResultGuide &&
-              guestNextGuideReady
-            }
+  const spellingCalibrationEl = loanwordConverterEnabled ? (
+    <div
+      className="spelling-tab-layout__calibration"
+      data-work-guide-step="3"
+    >
+      {!isGuestBrowseActive() && guestWorkGuide.showLoanwordIntroGuide ? (
+        <TooltipGuide
+          storageKey={guestWorkGuide.storageKey(
+            WORK_GUIDE_KEYS.LOANWORD_INTRO,
+          )}
+          placement="right"
+          bubbleType="left"
+          useFixedLayer
+          offsetX={8}
+          offsetY={0}
+          bubbleGuideStep="0"
+          pinned={guestWorkGuide.pinAll}
+          showConfirm
+          message={<guideMessages.SpellingTabIntroMessage />}
+          onDismiss={() =>
+            guestWorkGuide.dismiss(WORK_GUIDE_KEYS.LOANWORD_INTRO)
+          }
+        >
+          <LoanwordConverter
+            guideSpotlight
+            authUid={authUid}
+            authEmail={authEmail}
           />
-        ) : null}
-        {loanwordConverterEnabled ? (
-          !isGuestBrowseActive() && guestWorkGuide.showLoanwordIntroGuide ? (
-            <TooltipGuide
-              storageKey={guestWorkGuide.storageKey(
-                WORK_GUIDE_KEYS.LOANWORD_INTRO,
-              )}
-              placement="right"
-              bubbleType="left"
-              useFixedLayer
-              offsetX={8}
-              offsetY={0}
-              bubbleGuideStep="0"
-              pinned={guestWorkGuide.pinAll}
-              showConfirm
-              message={<guideMessages.SpellingTabIntroMessage />}
-              onDismiss={() =>
-                guestWorkGuide.dismiss(WORK_GUIDE_KEYS.LOANWORD_INTRO)
-              }
-            >
-              <LoanwordConverter
-                guideSpotlight
-                authUid={authUid}
-                authEmail={authEmail}
-              />
-            </TooltipGuide>
-          ) : (
-            <LoanwordConverter
-              authUid={authUid}
-              authEmail={authEmail}
-              onConvertClick={() => {
-                if (guestWorkGuide.showLeftCriteriaGuide) {
-                  guestWorkGuide.dismiss(WORK_GUIDE_KEYS.LEFT_CRITERIA);
-                }
-              }}
-            />
-          )
-        ) : null}
-      </div>
-    ) : null;
+        </TooltipGuide>
+      ) : (
+        <LoanwordConverter
+          authUid={authUid}
+          authEmail={authEmail}
+          onConvertClick={() => {
+            if (guestWorkGuide.showLeftCriteriaGuide) {
+              guestWorkGuide.dismiss(WORK_GUIDE_KEYS.LEFT_CRITERIA);
+            }
+          }}
+        />
+      )}
+    </div>
+  ) : null;
 
   const spellingRunRowEl = showSpellingRunRow ? (
     <div
@@ -2386,25 +2360,6 @@ export default function MainScreen({
                 </div>
               </div>
             ) : null}
-            {pdf.pdf && consistencyWorkDone ? (
-              <div className="spelling-tab-layout__calibration">
-                <PrintedPageSetup
-                  currentSystemPage={pdf.currentPage}
-                  active={pageDisplay.active}
-                  currentPrintedLabel={pageDisplay.formatLabel(pdf.currentPage)}
-                  previewPrintedLabel={
-                    pageDisplay.active
-                      ? pageDisplay.formatPageText(pdf.currentPage)
-                      : pageDisplay.formatNaturalPreview(pdf.currentPage)
-                  }
-                  spreadInput={pageDisplay.spreadInput}
-                  onSpreadInputChange={pageDisplay.setSpreadInput}
-                  firstPageSingle={pageDisplay.firstPageSingle}
-                  onFirstPageSingleChange={pageDisplay.setFirstPageSingle}
-                  onCalibrateFromInput={pageDisplay.calibrateFromInput}
-                />
-              </div>
-            ) : null}
             {tocBodyCheckEnabled &&
             tocCheck.checkDone &&
             ruleCheck.consistencyCheckDone ? (
@@ -2967,6 +2922,23 @@ export default function MainScreen({
                 formatPageText={pageDisplay.formatPageText}
                 toSystemPageFromInput={pageDisplay.toSystemPageFromInput}
                 pageStatus={pdfPageStatus}
+                pageMatch={{
+                  currentSystemPage: pdf.currentPage,
+                  active: pageDisplay.active,
+                  currentPrintedLabel: pageDisplay.formatLabel(pdf.currentPage),
+                  previewPrintedLabel: pageDisplay.active
+                    ? pageDisplay.formatPageText(pdf.currentPage)
+                    : pageDisplay.formatNaturalPreview(pdf.currentPage),
+                  spreadInput: pageDisplay.spreadInput,
+                  onSpreadInputChange: pageDisplay.setSpreadInput,
+                  firstPageSingle: pageDisplay.firstPageSingle,
+                  onFirstPageSingleChange: pageDisplay.setFirstPageSingle,
+                  onCalibrateFromInput: pageDisplay.calibrateFromInput,
+                  guideSpotlight:
+                    !isGuestBrowseActive() &&
+                    guestWorkGuide.showFirstResultGuide &&
+                    guestNextGuideReady,
+                }}
               />
             </>
           )}

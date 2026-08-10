@@ -18,6 +18,8 @@ import {
  *   onCalibrateFromInput: (raw: string, isSpread: boolean) => void,
  *   onCalibratePress?: () => void,
  *   guideSpotlight?: boolean,
+ *   variant?: 'panel' | 'popover',
+ *   inputId?: string,
  * }} props
  */
 export default function PrintedPageSetup({
@@ -32,6 +34,8 @@ export default function PrintedPageSetup({
   onCalibrateFromInput,
   onCalibratePress,
   guideSpotlight = false,
+  variant = 'panel',
+  inputId = 'printed-page-input',
 }) {
   const [draft, setDraft] = useState('');
 
@@ -63,20 +67,22 @@ export default function PrintedPageSetup({
       (displayTarget !== '…' ? appendPageLabelSuffix(displayTarget) : '…')
     : '';
 
+  const isPopover = variant === 'popover';
+  const title = isPopover ? '페이지 맞추기' : '파일 - 원고 페이지 맞추기';
+
   return (
     <section
       className={[
         'printed-page-setup',
+        isPopover ? 'printed-page-setup--popover' : '',
         guideSpotlight ? 'work-guide-spotlight' : '',
       ]
         .filter(Boolean)
         .join(' ')}
-      data-work-guide="page-calibration"
-      aria-label="파일 - 원고 페이지 맞추기"
+      data-work-guide={isPopover ? undefined : 'page-calibration'}
+      aria-label={title}
     >
-      <p className="printed-page-setup__title panel-criteria-heading">
-        파일 - 원고 페이지 맞추기
-      </p>
+      <p className="printed-page-setup__title panel-criteria-heading">{title}</p>
 
       <div className="printed-page-setup__body">
         <p className="printed-page-setup__hint">
@@ -95,11 +101,11 @@ export default function PrintedPageSetup({
           )}
         </p>
         <div className="printed-page-setup__row">
-          <label className="sr-only" htmlFor="printed-page-input">
+          <label className="sr-only" htmlFor={inputId}>
             PDF 표시 쪽수
           </label>
           <input
-            id="printed-page-input"
+            id={inputId}
             type="text"
             inputMode="numeric"
             className="printed-page-setup__input"

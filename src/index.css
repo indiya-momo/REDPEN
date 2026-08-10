@@ -2512,6 +2512,83 @@ html[data-build='prod'] .unify-candidate-find__list {
   cursor: not-allowed;
 }
 
+/* 하단 툴바 — 페이지 맞추기 팝업 */
+.printed-page-match {
+  position: relative;
+  flex-shrink: 0;
+  z-index: 4;
+}
+
+.printed-page-match__trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  font-size: 0.82rem;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.printed-page-match__trigger--open,
+.printed-page-match__trigger--active {
+  background: var(--btn-secondary-hover-bg);
+}
+
+.printed-page-match__icon {
+  flex-shrink: 0;
+  color: var(--color-text-secondary);
+}
+
+.printed-page-match__popover {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 8px);
+  width: min(420px, calc(100vw - 48px));
+  padding: 12px 14px;
+  border: 1px solid var(--color-border, #d8d4cc);
+  border-radius: var(--radius-ui, 8px);
+  background: var(--color-surface, #fff);
+  box-shadow: 0 8px 28px rgba(40, 32, 24, 0.16);
+  z-index: 20;
+}
+
+.printed-page-match__popover::after {
+  content: '';
+  position: absolute;
+  right: 28px;
+  bottom: -6px;
+  width: 10px;
+  height: 10px;
+  background: var(--color-surface, #fff);
+  border-right: 1px solid var(--color-border, #d8d4cc);
+  border-bottom: 1px solid var(--color-border, #d8d4cc);
+  transform: rotate(45deg);
+}
+
+.printed-page-setup--popover {
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}
+
+.printed-page-setup--popover .printed-page-setup__title {
+  margin: 0 0 8px;
+  font-size: 0.9rem;
+}
+
+.printed-page-setup--popover .printed-page-setup__hint {
+  margin: 0 0 10px;
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.printed-page-setup--popover .printed-page-setup__row {
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .current-page-status--has-findings {
   background: var(--color-surface-raised);
   color: var(--color-text);
@@ -3654,6 +3731,7 @@ html[data-build='prod'] .unify-candidate-find__list {
   flex-shrink: 0;
   align-items: center;
   justify-content: flex-end;
+  gap: 8px;
   min-width: 0;
   z-index: 2;
 }
