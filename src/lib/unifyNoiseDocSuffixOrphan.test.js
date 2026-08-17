@@ -30,6 +30,14 @@ describe('unifyNoiseDocSuffixOrphan', () => {
     );
   });
 
+  it('경제 분위기 증인·인접으로 분위기 경제를 역순 orphan DROP 하지 않음', () => {
+    const doc = new Set(['경제분위기', '분위기경제', '경제', '분위기']);
+    const pairs = [{ prev: '경제', curr: '분위기' }];
+    expect(spacedVariantHitsDocSuffixOrphan('분위기 경제', doc, pairs)).toBe(
+      false,
+    );
+  });
+
   it('프로그램을(조사) 증인 → 로그램 지출 DROP', () => {
     expect(
       spacedVariantHitsDocSuffixOrphan(
@@ -487,6 +495,55 @@ describe('2차 filterGroupsByDocSuffixOrphan', () => {
       { pageNum: 1, text: '엑스 지출과 엑스지출만', textLayout: '엑스 지출과 엑스지출만' },
     ]);
     expect(out.groups.flatMap((g) => g.clusters).length).toBe(1);
+  });
+
+  it('2차: 1차 경제분위기 증인으로 분위기 경제를 지우지 않는다', async () => {
+    const primary = singleGroup([
+      spacedCluster('경제분위기', '경제 분위기'),
+    ]);
+    const secondary = singleGroup([
+      spacedCluster('분위기경제', '분위기 경제'),
+      spacedCluster('세계경제', '세계 경제'),
+    ]);
+    const out = await filterGroupsByDocSuffixOrphan(
+      secondary,
+      [
+        {
+          pageNum: 1,
+          text: '분위기 경제와 경제 분위기',
+          textLayout: '분위기 경제와 경제 분위기',
+        },
+      ],
+      { witnessGroups: [...primary, ...secondary] },
+    );
+    const keys = out.groups.flatMap((g) => g.clusters.map((c) => c.key));
+    expect(keys).toContain('분위기경제');
+    expect(keys).toContain('세계경제');
+  });
+
+  it('rawByKey 보스턴대학만으로는 대학 경제를 인접 orphan DROP 하지 않는다', async () => {
+    const secondary = singleGroup([
+      spacedCluster('대학경제', '대학 경제'),
+      spacedCluster('세계경제', '세계 경제'),
+    ]);
+    const rawByKey = new Map([
+      ['보스턴대학', { counts: new Map([['보스턴 대학', 1], ['보스턴대학', 1]]) }],
+      ['대학경제', { counts: new Map([['대학 경제', 1]]) }],
+    ]);
+    const out = await filterGroupsByDocSuffixOrphan(
+      secondary,
+      [
+        {
+          pageNum: 1,
+          text: '보스턴 대학 경제학과와 대학 경제',
+          textLayout: '보스턴 대학 경제학과와 대학 경제',
+        },
+      ],
+      { rawByKey, witnessGroups: secondary },
+    );
+    const keys = out.groups.flatMap((g) => g.clusters.map((c) => c.key));
+    expect(keys).toContain('대학경제');
+    expect(keys).toContain('세계경제');
   });
 
   it('2차: 증인=1차 목록, 2차 로그램만 orphan DROP', async () => {

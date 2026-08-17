@@ -109,6 +109,96 @@ describe('missing N+N phase2 filters', () => {
     expect(froms).not.toContain('분위기 경제');
   });
 
+  it('4교 실제 표면(목차·장제목)의 분위기 경제를 찾는다', () => {
+    const pages = [
+      {
+        pageNum: 9,
+        text: '장 경제 왕국 → \n장 분위기 경제 → \n장 수요와 공급',
+        textLayout: '장 경제 왕국 → \n장 분위기 경제 → \n장 수요와 공급',
+      },
+      {
+        pageNum: 10,
+        text: 'PART Ⅰ. 분위기 경제\nCHAPTER 2. 분위기 경제',
+        textLayout: 'PART Ⅰ. 분위기 경제\nCHAPTER 2. 분위기 경제',
+      },
+      {
+        pageNum: 13,
+        text: 'PART \nI\n분위기 경제\n',
+        textLayout: 'PART \nI\n분위기 경제\n',
+      },
+      {
+        pageNum: 18,
+        text: 'CHAPTER 2\n분위기 경제\n경제학이란 무엇일까?',
+        textLayout: 'CHAPTER 2\n분위기 경제\n경제학이란 무엇일까?',
+      },
+      {
+        pageNum: 23,
+        text: '우리는 분위기 경제모형을 현실 세상에도 적용할 수 있다.',
+        textLayout: '우리는 분위기 경제모형을 현실 세상에도 적용할 수 있다.',
+      },
+    ];
+    const rule = {
+      id: 'suffix:경제:glued',
+      template: '@경제',
+      affix: '경제',
+      affixType: 'suffix',
+      direction: 'glued',
+      confirmedFrom: '수석경제',
+      confirmedKey: '수석경제',
+    };
+    const bun = findPatternMismatches(pages, rule).find(
+      (m) => m.key === '분위기경제' || m.from === '분위기 경제',
+    );
+    expect(bun, JSON.stringify(findPatternMismatches(pages, rule).map((m) => m.from))).toBeTruthy();
+  });
+
+  it('layout에만 띄움·text에 붙임키 — 분위기 경제를 찾는다', () => {
+    const pages = [
+      {
+        pageNum: 32,
+        text: '이 책은 분위기경제를 설명한다.',
+        textLayout: '이 책은 분위기 경제를 설명한다.',
+      },
+    ];
+    const rule = {
+      id: 'suffix:경제:glued',
+      template: '@경제',
+      affix: '경제',
+      affixType: 'suffix',
+      direction: 'glued',
+      confirmedFrom: '수석경제',
+      confirmedKey: '수석경제',
+    };
+    const froms = findPatternMismatches(pages, rule).map((m) => m.from);
+    expect(froms).toContain('분위기 경제');
+  });
+
+  it('분위기와 경제·분위기·경제 제목형도 mismatch로 잡는다', () => {
+    const pages = [
+      {
+        pageNum: 2,
+        text: 'CHAPTER 2.\n분위기와 경제\n본문',
+        textLayout: 'CHAPTER 2.\n분위기와 경제\n본문',
+      },
+      {
+        pageNum: 3,
+        text: 'PART I\n분위기·경제\n본문',
+        textLayout: 'PART I\n분위기·경제\n본문',
+      },
+    ];
+    const rule = {
+      id: 'suffix:경제:glued',
+      template: '@경제',
+      affix: '경제',
+      affixType: 'suffix',
+      direction: 'glued',
+      confirmedFrom: '수석경제',
+      confirmedKey: '수석경제',
+    };
+    const keys = findPatternMismatches(pages, rule).map((m) => m.key);
+    expect(keys).toContain('분위기경제');
+  });
+
   it('visualAttests는 온전한 분위기 경제를 통과', () => {
     expect(
       visualAttestsPatternSurface(
@@ -118,9 +208,30 @@ describe('missing N+N phase2 filters', () => {
     ).toBe(true);
   });
 
-  it('OCR 조각 head(후의)는 아직 블랙리스트에 없을 수 있다(별 이슈)', () => {
-    // 문서화: 후의·년의가 목록에 남는 현상 — headBL만으로는 안 막힘
+  it('1음절+의 OCR 조각 head는 @패턴에서 제외', () => {
     expect(isPatternRuleHeadBlacklisted('분위기')).toBe(false);
     expect(isPatternRuleHeadBlacklisted('고전파')).toBe(false);
+    expect(isPatternRuleHeadBlacklisted('년의')).toBe(true);
+    expect(isPatternRuleHeadBlacklisted('련의')).toBe(true);
+    expect(isPatternRuleHeadBlacklisted('나라의')).toBe(true);
+    const pages = [
+      {
+        pageNum: 16,
+        text: '…년의 경제가 성장했다.',
+        textLayout: '…년의 경제가 성장했다.',
+      },
+    ];
+    const rule = {
+      id: 'suffix:경제:glued',
+      template: '@경제',
+      affix: '경제',
+      affixType: 'suffix',
+      direction: 'glued',
+      confirmedFrom: '수석경제',
+      confirmedKey: '수석경제',
+    };
+    expect(findPatternMismatches(pages, rule).map((m) => m.from)).not.toContain(
+      '년의 경제',
+    );
   });
 });

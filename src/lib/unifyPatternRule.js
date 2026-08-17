@@ -79,6 +79,9 @@ export const PATTERN_RULE_HEAD_BLACKLIST = new Set([
   '벗어난',
 ]);
 
+/** 줄바꿈 OCR 관형격 조각 — 2차 @패턴 head만. 1차 강의·명의·논의는 건드리지 않음 */
+const PATTERN_RULE_HEAD_OCR_POSSESSIVE = new Set(['년의', '련의']);
+
 /**
  * @typedef {'glued' | 'spaced'} PatternRuleDirection
  * @typedef {'prefix' | 'suffix'} PatternAffixType
@@ -140,6 +143,7 @@ export function isPatternRuleHeadBlacklisted(head) {
   const h = String(head ?? '').trim();
   if (!h) return true;
   if (PATTERN_RULE_HEAD_BLACKLIST.has(h)) return true;
+  if (PATTERN_RULE_HEAD_OCR_POSSESSIVE.has(h)) return true;
   if (hangulSyllableCount(h) < 2) return true;
   // 붙임 head(나라의·무역이나·더해) — Surface-only 경로를 우회해 좌측 잡음과 동일 적용
   if (isSpacedLeftNoiseEojeol(h)) return true;
@@ -759,12 +763,7 @@ function backfillSpacedAffixMismatchesFromPageText(
           m = re.exec(source);
           continue;
         }
-        // soft-wrap orphan 방지: visual에 띄움 또는 붙임 키가 있어야 함
-        if (
-          !visualAttestsPatternSurface(visual, pair.from) &&
-          !visualAttestsPatternSurface(visual, pair.to) &&
-          !visualAttestsPatternSurface(visual, pair.key)
-        ) {
+        if (!patternMismatchAttestedOnPage(p, pair)) {
           m = re.exec(source);
           continue;
         }
@@ -851,6 +850,151 @@ export function visualAttestsPatternSurface(pageText, surface) {
 }
 
 /**
+ * 2차 mismatch — page.text 우선. layout-only 띄움은 붙임키(to/key)가 text에 있을 때만.
+ * @param {{ text?: string, textLayout?: string }} page
+ * @param {{ from: string, to: string, key: string }} pair
+ * @returns {boolean}
+ */
+function patternMismatchAttestedOnPage(page, pair, opts = {}) {
+  const visual = String(page?.text ?? '');
+  const layout = String(page?.textLayout ?? '');
+  if (visualAttestsPatternSurface(visual, pair.from)) return true;
+  if (visualAttestsPatternSurface(visual, pair.to)) return true;
+  if (visualAttestsPatternSurface(visual, pair.key)) return true;
+  if (!layout || layout === visual) {
+    for (const surface of opts.bridgedSurfaces ?? []) {
+      if (visualAttestsPatternSurface(visual, surface)) return true;
+    }
+    return false;
+  }
+  if (visualAttestsPatternSurface(layout, pair.from)) {
+    return (
+      visualAttestsPatternSurface(visual, pair.to) ||
+      visualAttestsPatternSurface(visual, pair.key)
+    );
+  }
+  for (const surface of opts.bridgedSurfaces ?? []) {
+    if (
+      visualAttestsPatternSurface(visual, surface) ||
+      visualAttestsPatternSurface(layout, surface)
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/** @param {string} head @param {string} affix */
+function bridgedAffixSurfaces(head, affix) {
+  const h = String(head ?? '').trim();
+  const a = String(affix ?? '').trim();
+  if (!h || !a) return [];
+  return [
+    `${h}와 ${a}`,
+    `${h}과 ${a}`,
+    `${h}·${a}`,
+    `${h} · ${a}`,
+    `${h}•${a}`,
+    `${h} • ${a}`,
+  ];
+}
+
+/**
+ * layout/runRuleCheck가 놓친 `분위기와 경제`·`분위기·경제` 등 — canonical `head affix` mismatch로 보강.
+ * @param {{ pageNum?: number, text?: string, textLayout?: string }[]} pageTexts
+ * @param {UnifyPatternRule} rule
+ * @param {Map<string, PatternRuleMismatch>} byKey
+ * @param {Set<string>} skipKeys
+ */
+function backfillBridgedAffixMismatchesFromPageText(
+  pageTexts,
+  rule,
+  byKey,
+  skipKeys,
+) {
+  if (rule.affixType !== 'suffix' || rule.direction !== 'glued') return;
+  const affix = String(rule.affix ?? '').trim();
+  if (!affix) return;
+  const re = new RegExp(
+    `([가-힣]{2,})\\s*(?:와|과|[·•・])\\s*${escapeRegex(affix)}`,
+    'gu',
+  );
+
+  for (let i = 0; i < (pageTexts ?? []).length; i += 1) {
+    const p = pageTexts[i];
+    const pageNum = Number(p?.pageNum) || i + 1;
+    const visual = String(p?.text ?? '');
+    const layout = String(p?.textLayout ?? '');
+    const sources = [visual, layout].filter(Boolean);
+    /** @type {Set<string>} */
+    const seenAt = new Set();
+    for (const source of sources) {
+      re.lastIndex = 0;
+      let m = re.exec(source);
+      while (m) {
+        const idx = m.index;
+        const head = m[1];
+        const bridgedRaw = m[0];
+        const fromCanonical = `${head} ${affix}`;
+        const stamp = `${pageNum}:${idx}:${fromCanonical}`;
+        if (seenAt.has(stamp)) {
+          m = re.exec(source);
+          continue;
+        }
+        seenAt.add(stamp);
+        if (hangulContinuesBeforeVisual(source, idx)) {
+          m = re.exec(source);
+          continue;
+        }
+        const pair = normalizeMismatchPair(fromCanonical, rule);
+        if (!pair || skipKeys.has(pair.key)) {
+          m = re.exec(source);
+          continue;
+        }
+        if (
+          !patternMismatchAttestedOnPage(p, pair, {
+            bridgedSurfaces: [bridgedRaw, ...bridgedAffixSurfaces(head, affix)],
+          })
+        ) {
+          m = re.exec(source);
+          continue;
+        }
+        /** @type {import('./ruleEngine.js').MatchInstance} */
+        const inst = {
+          pageNum,
+          index: idx,
+          matchedText: pair.from,
+        };
+        const existing = byKey.get(pair.key);
+        if (existing) {
+          const dup = existing.instances.some(
+            (x) =>
+              Number(x.pageNum) === pageNum &&
+              String(x.matchedText ?? '') === pair.from &&
+              Number(x.index) === idx,
+          );
+          if (!dup) {
+            existing.instances.push(inst);
+            existing.count += 1;
+          }
+        } else {
+          byKey.set(pair.key, {
+            key: pair.key,
+            from: pair.from,
+            to: pair.to,
+            count: 1,
+            instances: [inst],
+            affixType: rule.affixType,
+            template: rule.template,
+          });
+        }
+        m = re.exec(source);
+      }
+    }
+  }
+}
+
+/**
  * @param {{ pageNum?: number, text?: string, textLayout?: string }[]} pageTexts
  * @returns {Map<number, string>}
  */
@@ -862,6 +1006,21 @@ function buildVisualTextByPageNum(pageTexts) {
     const n = Number(p?.pageNum) || i + 1;
     const visual = String(p?.text ?? '');
     if (n && visual) map.set(n, visual);
+  }
+  return map;
+}
+
+/**
+ * @param {{ pageNum?: number, text?: string, textLayout?: string }[]} pageTexts
+ * @returns {Map<number, { pageNum?: number, text?: string, textLayout?: string }>}
+ */
+function buildPageRecordByNum(pageTexts) {
+  /** @type {Map<number, { pageNum?: number, text?: string, textLayout?: string }>} */
+  const map = new Map();
+  for (let i = 0; i < (pageTexts ?? []).length; i += 1) {
+    const p = pageTexts[i];
+    const n = Number(p?.pageNum) || i + 1;
+    if (n) map.set(n, p);
   }
   return map;
 }
@@ -918,6 +1077,7 @@ export function findPatternMismatches(pageTexts, rule, opts = {}) {
   const visualPages = pagesForVisualDistinctRuleCheck(pageTexts);
   if (!layoutPages.length && !visualPages.length) return [];
   const visualByPage = buildVisualTextByPageNum(pageTexts);
+  const pageByNum = buildPageRecordByNum(pageTexts);
 
   // skipKeys는 호출부가 명시할 때만. confirmedKey(시드)를 넣지 않는다 —
   // 시드 키=붙임키라서 soft 1순위로 시드가 되면「분위기 경제」같은 남은 띄움이 통째로 사라짐.
@@ -953,12 +1113,11 @@ export function findPatternMismatches(pageTexts, rule, opts = {}) {
         if (!pair) continue;
         if (skipKeys.has(pair.key)) continue;
         const pageNum = Number(inst.pageNum) || 0;
-        const visual = visualByPage.get(pageNum) ?? '';
-        // layout 스캔 결과: visual에 띄움 표면 또는 붙임 키(갭)가 있을 때만
         if (
-          !visualAttestsPatternSurface(visual, pair.from) &&
-          !visualAttestsPatternSurface(visual, pair.to) &&
-          !visualAttestsPatternSurface(visual, pair.key)
+          !patternMismatchAttestedOnPage(
+            pageByNum.get(pageNum) ?? { text: visualByPage.get(pageNum) ?? '' },
+            pair,
+          )
         ) {
           continue;
         }
@@ -998,6 +1157,12 @@ export function findPatternMismatches(pageTexts, rule, opts = {}) {
 
   // runRuleCheck·visualAttests가 놓친 띄움(@ affix) — 본문 직접 보강
   backfillSpacedAffixMismatchesFromPageText(
+    pageTexts,
+    rule,
+    byKey,
+    skipKeys,
+  );
+  backfillBridgedAffixMismatchesFromPageText(
     pageTexts,
     rule,
     byKey,
@@ -1342,6 +1507,47 @@ export function collectPatternRulesFromRegistrations(
  * @param {{ pageNum?: number, text?: string, textLayout?: string }[]} pageTexts
  * @returns {PatternRuleCandidate[]}
  */
+/**
+ * @param {UnifyPatternRule} rule
+ * @param {{ pageNum?: number, text?: string, textLayout?: string }[]} pageTexts
+ * @returns {PatternRuleCandidate | null}
+ */
+function buildPatternRuleCandidateForRule(rule, pageTexts) {
+  const mismatches = findPatternMismatches(pageTexts, rule);
+  const compliantForms = findPatternCompliantForms(pageTexts, rule);
+  if (!mismatches.length && !compliantForms.length) return null;
+
+  const support = mismatches.length
+    ? buildPatternRuleSupport(rule, mismatches)
+    : buildPatternRuleSupportFromCompliant(rule, compliantForms);
+  if (!meetsPatternSupportThreshold(support)) return null;
+  const score = scorePatternRuleCandidate(support, 0);
+  return {
+    id: rule.id,
+    rule,
+    mismatchCount: support.occurrenceCount,
+    exampleFroms: support.examples.slice(0, 2),
+    mismatches,
+    support,
+    score,
+    compliantForms,
+  };
+}
+
+/**
+ * @param {PatternRuleCandidate[]} candidates
+ * @returns {PatternRuleCandidate[]}
+ */
+function sortPatternRuleCandidates(candidates) {
+  return [...(candidates ?? [])].sort((a, b) => {
+    if (b.score !== a.score) return b.score - a.score;
+    const ta = a.rule.affixType === 'suffix' ? 0 : 1;
+    const tb = b.rule.affixType === 'suffix' ? 0 : 1;
+    if (ta !== tb) return ta - tb;
+    return a.rule.template.localeCompare(b.rule.template, 'ko');
+  });
+}
+
 export function collectPatternRuleCandidates(
   registeredVariants,
   clusters,
@@ -1357,35 +1563,48 @@ export function collectPatternRuleCandidates(
   /** @type {PatternRuleCandidate[]} */
   const out = [];
   for (const rule of rules) {
-    const mismatches = findPatternMismatches(pageTexts, rule);
-    const compliantForms = findPatternCompliantForms(pageTexts, rule);
-    if (!mismatches.length && !compliantForms.length) continue;
-
-    const support = mismatches.length
-      ? buildPatternRuleSupport(rule, mismatches)
-      : buildPatternRuleSupportFromCompliant(rule, compliantForms);
-    if (!meetsPatternSupportThreshold(support)) continue;
-    const score = scorePatternRuleCandidate(support, 0);
-    out.push({
-      id: rule.id,
-      rule,
-      mismatchCount: support.occurrenceCount,
-      exampleFroms: support.examples.slice(0, 2),
-      mismatches,
-      support,
-      score,
-      compliantForms,
-    });
+    const candidate = buildPatternRuleCandidateForRule(rule, pageTexts);
+    if (candidate) out.push(candidate);
   }
+  return sortPatternRuleCandidates(out);
+}
 
-  out.sort((a, b) => {
-    if (b.score !== a.score) return b.score - a.score;
-    const ta = a.rule.affixType === 'suffix' ? 0 : 1;
-    const tb = b.rule.affixType === 'suffix' ? 0 : 1;
-    if (ta !== tb) return ta - tb;
-    return a.rule.template.localeCompare(b.rule.template, 'ko');
-  });
-  return out;
+/**
+ * 2차 진입용 — 규칙마다 양보해 메인 스레드·로딩 UI가 살아 있게.
+ * @param {Map<string, string> | Iterable<[string, string]>} registeredVariants
+ * @param {import('./unifyCandidateDiscover.js').UnifySpacingCluster[]} clusters
+ * @param {{ pageNum?: number, text?: string, textLayout?: string }[]} pageTexts
+ * @param {{ yieldMs?: number }} [opts]
+ * @returns {Promise<PatternRuleCandidate[]>}
+ */
+export async function collectPatternRuleCandidatesAsync(
+  registeredVariants,
+  clusters,
+  pageTexts,
+  opts = {},
+) {
+  const yieldMs = opts.yieldMs ?? 12;
+  const rules = collectPatternRulesFromRegistrations(
+    registeredVariants,
+    clusters,
+  );
+  /** @type {PatternRuleCandidate[]} */
+  const out = [];
+  let lastYield =
+    typeof performance !== 'undefined' ? performance.now() : 0;
+  for (const rule of rules) {
+    const candidate = buildPatternRuleCandidateForRule(rule, pageTexts);
+    if (candidate) out.push(candidate);
+    if (
+      yieldMs > 0 &&
+      typeof performance !== 'undefined' &&
+      performance.now() - lastYield >= yieldMs
+    ) {
+      await new Promise((r) => setTimeout(r, 0));
+      lastYield = performance.now();
+    }
+  }
+  return sortPatternRuleCandidates(out);
 }
 
 /**
