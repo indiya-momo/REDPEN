@@ -13,11 +13,14 @@
  *
  * 1) 전역(exact head-cut): 증인 W가 **정확히** `1글자+F`일 때만 F를 orphan으로 DROP.
  *    body 접두 전개 금지 (`탈세계화`↛`세계`). 계열 핵·다른 복합 접두 F는 보호.
- * 2) 인접: P+F 이음이 목록 증인에 있을 때만 항목 DROP.
- *    본문만으로 soft DROP 금지.
+ * 2) 인접: P+F 이음이 **1·2차 목록** 증인에 있을 때만 항목 DROP.
+ *    본문만으로 soft DROP 금지. rawByKey n-gram은 인접 증인이 아님
+ *    (보스턴대학 원시키로 대학 경제를 지우는 동어반복 방지).
+ *    P가 같은 이형태의 오른쪽 칸이면 역순 복합(경제 분위기 ↛ 분위기 경제) — DROP 안 함.
  *
  * 라벨을 W로 고쳐 붙이지 않음 (하미국·탈세계화 오염 방지).
- * 줄 위치(P)만 page text∪layout. DROP 증거는 1·2차 목록(±rawByKey).
+ * 줄 위치(P)만 page text∪layout.
+ * DROP 증거: 전역 head-cut = 목록±rawByKey, 인접 = 목록만.
  * source: manual-heuristic (문서 의존)
  */
 import { hangulOnlyNoise } from './unifyNoiseListData.js';
@@ -260,10 +263,13 @@ function spacedVariantHitsDocSuffixOrphanIndexed(
 
   if (!adjacentByCurr || !adjacentEvidence) return false;
   if (left.length < DOC_SUFFIX_ORPHAN_MIN_FRAGMENT) return false;
+  const right = hangulOnlyNoise(parts[parts.length - 1]);
   const prevs = adjacentByCurr.get(left);
   if (!prevs?.length) return false;
   for (const { prev: P } of prevs) {
     if (P.length < 1) continue;
+    // 「경제 분위기」증인으로 「분위기 경제」를 앞잘림으로 보지 않음 (환매조+건부는 P≠오른쪽)
+    if (right && P === right) continue;
     // 전체 발견 증인에 P+F가 있을 때만 (본문-only soft DROP 금지)
     if (documentEojeolHasWordOrPrefix(adjacentEvidence, P + left)) return true;
   }
@@ -405,6 +411,7 @@ function ingestDocSuffixPage(page, witnesses, adjacentPairs) {
 /**
  * 전체 발견에서 DROP 증인 수집 — 목록 그룹(+계열 affix) · rawByKey.
  * 음절 꼬리 전개 금지 — 중간 조각(시경제 등)이 head-cut 증인이 되면 목록이 붕괴한다.
+ * 인접 DROP은 호출부가 rawByKey 없이 이 함수를 한 번 더 호출해 목록만 넘긴다.
  * @param {import('./unifyCandidateGrouping.js').ClusterGroup[] | null | undefined} groups
  * @param {Map<string, { counts?: Map<string, number> | Record<string, number> }> | null | undefined} [rawByKey]
  * @returns {Set<string>}
@@ -527,7 +534,8 @@ function mergeClusterInto(target, source) {
 
 /**
  * 목록 그룹 — exact head-cut·인접 orphan만 DROP. 라벨 복원·merge 없음.
- * 증인은 기본적으로 필터 대상 groups+rawByKey.
+ * 전역 head-cut 증인: 필터 대상 groups(+witnessGroups)±rawByKey.
+ * 인접 DROP 증인: 목록만 (rawByKey n-gram 제외).
  * 2차에서는 `witnessGroups`에 1차·2차 목록을 합쳐 넘긴다 (1차 목록 자체는 수정하지 않음).
  * @param {import('./unifyCandidateGrouping.js').ClusterGroup[]} groups
  * @param {{ text?: string, textLayout?: string }[] | null | undefined} pageTexts
@@ -550,6 +558,10 @@ export async function filterGroupsByDocSuffixOrphan(
   opts = {},
 ) {
   const allGroups = groups ?? [];
+  const listWitnesses = collectFindingsHangulWitnesses(
+    opts.witnessGroups ?? allGroups,
+    null,
+  );
   const findingsWitnesses = collectFindingsHangulWitnesses(
     opts.witnessGroups ?? allGroups,
     opts.rawByKey ?? null,
@@ -609,14 +621,14 @@ export async function filterGroupsByDocSuffixOrphan(
             v,
             new Set(),
             adjacentByCurr,
-            findingsWitnesses,
+            listWitnesses,
           );
         }
         return spacedVariantHitsDocSuffixOrphanIndexed(
           v,
           headCutHits,
           adjacentByCurr,
-          findingsWitnesses,
+          listWitnesses,
         );
       });
       if (orphanHit) {

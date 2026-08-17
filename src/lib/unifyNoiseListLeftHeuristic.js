@@ -76,7 +76,7 @@ const SPACED_LEFT_UNLIMITED_STEM_JOSA = new Set([
  * @type {ReadonlySet<string>}
  */
 const SPACED_LEFT_UI_LEXICAL_NOUNS = Object.freeze(
-  new Set(['합의', '동의', '항의', '정의', '유의', '주의', '사의', '이의']),
+  new Set(['합의', '동의', '항의', '정의', '유의', '주의', '사의', '이의', '회의']),
 );
 /** 관형격(의)·접속·선택(나)·조건(라면)·로·든 — 어간 2음절 이상 */
 const SPACED_LEFT_MIN2_STEM_JOSA = new Set([

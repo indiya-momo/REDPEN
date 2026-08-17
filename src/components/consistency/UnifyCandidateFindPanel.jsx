@@ -25,7 +25,7 @@ import {
 import {
   buildSecondaryGroupsFromCandidates,
   mergePrimaryConflictsIntoSecondaryGroups,
-  collectPatternRuleCandidates,
+  collectPatternRuleCandidatesAsync,
   collectPrimaryFormsForPatternGroup,
   formatPatternRuleConditionLabel,
   formatPhase2CompliantAppliedLabel,
@@ -123,6 +123,54 @@ function afterPaint() {
     }
     setTimeout(resolve, 0);
   });
+}
+
+/**
+ * 2차 enrich 결과를 find 권위 목록에 bbox·출현만 병합.
+ * @param {import('../../lib/unifyCandidateGrouping.js').ClusterGroup[]} groups
+ * @param {Map<string, import('../../lib/unifyCandidateDiscover.js').UnifySpacingCluster>} byKey
+ */
+function applyPhase2EnrichPatchToGroups(groups, byKey) {
+  return (groups ?? [])
+    .map((g) => ({
+      ...g,
+      clusters: (g.clusters ?? []).map((c) => {
+        const en = c?.key ? byKey.get(c.key) : null;
+        if (!en) return c;
+        return {
+          ...c,
+          kind: c.kind === 'conflict' ? 'conflict' : en.kind || c.kind,
+          recommendedUnify: c.recommendedUnify || en.recommendedUnify,
+          occurrencesByVariant:
+            en.occurrencesByVariant ?? c.occurrencesByVariant,
+          totalCount: Math.max(c.totalCount || 0, en.totalCount || 0),
+          counts: { ...(c.counts ?? {}), ...(en.counts ?? {}) },
+          variants: c.variants?.length ? c.variants : en.variants,
+        };
+      }),
+      compliantForms: (g.compliantForms ?? [])
+        .map((c) => byKey.get(c.key) ?? c)
+        .filter((c) => (c?.totalCount ?? 0) > 0),
+    }))
+    .filter(
+      (g) =>
+        (g.clusters?.length ?? 0) > 0 ||
+        (g.compliantForms?.length ?? 0) > 0,
+    );
+}
+
+/**
+ * @param {import('../../lib/unifyCandidateGrouping.js').ClusterGroup[]} groups
+ * @returns {import('../../lib/unifyCandidateDiscover.js').UnifySpacingCluster[]}
+ */
+function flattenPhase2ClustersForEnrich(groups) {
+  /** @type {import('../../lib/unifyCandidateDiscover.js').UnifySpacingCluster[]} */
+  const flat = [];
+  for (const g of groups ?? []) {
+    for (const c of g.clusters ?? []) flat.push(c);
+    for (const c of g.compliantForms ?? []) flat.push(c);
+  }
+  return flat;
 }
 
 /**
@@ -997,6 +1045,8 @@ export default function UnifyCandidateFindPanel({
   const phase2PromptedRef = useRef(false);
   /** 2차 진입 중 재클릭·빈 목록 effect 레이스 방지 */
   const phase2EnteringRef = useRef(false);
+  /** 이전 2차 enrich가 늦게 끝나 새 목록을 덮어쓰지 않게 */
+  const phase2EnrichEpochRef = useRef(0);
   const [phase2Entering, setPhase2Entering] = useState(false);
   /** handleFind → 다음 listMemo enrich 1회 계측 */
   const findBenchRef = useRef(
@@ -1507,12 +1557,20 @@ export default function UnifyCandidateFindPanel({
     if (phase2EnteringRef.current) return;
     phase2EnteringRef.current = true;
     setPhase2Entering(true);
+    phase2EnrichEpochRef.current += 1;
+    const enrichEpoch = phase2EnrichEpochRef.current;
     // 로딩 모션이 무거운 동기 작업보다 먼저 그려지게
     await new Promise((r) => setTimeout(r, 0));
+    /** @type {import('../../lib/unifyCandidateGrouping.js').ClusterGroup[] | null} */
+    let groupsForBackgroundEnrich = null;
     try {
       const chosen = mergeUnifyChosenMaps(registeredVariants, preSelected);
 
-      const candidates = collectPatternRuleCandidates(chosen, clusters, pageTexts);
+      const candidates = await collectPatternRuleCandidatesAsync(
+        chosen,
+        clusters,
+        pageTexts,
+      );
 
       // 후보 없음 → 안내 후 1차 유지 (1차 목록·phase는 건드리지 않음)
       if (!candidates.length) {
@@ -1551,54 +1609,20 @@ export default function UnifyCandidateFindPanel({
       }
 
       // DocSuffix·패턴 find 이후: 1차 conflict(분위기 경제 등)를 열린 계열에 다시 합침
+      /** @type {Map<string, import('../../lib/unifyCandidateDiscover.js').UnifySpacingCluster>} */
+      const primaryByKey = new Map();
+      for (const c of clusters ?? []) {
+        if (c?.key) primaryByKey.set(String(c.key), c);
+      }
+      for (const g of findListGroups ?? []) {
+        for (const c of g.clusters ?? []) {
+          if (c?.key) primaryByKey.set(String(c.key), c);
+        }
+      }
       nextGroups = mergePrimaryConflictsIntoSecondaryGroups(
         nextGroups,
-        clusters,
+        [...primaryByKey.values()],
       );
-
-      // item·visual — 칩·하이라이트용 bbox만. 2차 목록 membership/건수는 find 권위.
-      // enrich가 0건·null이어도 pattern mismatch 행을 지우지 않음 (분위기 경제 구멍).
-      {
-        /** @type {import('../../lib/unifyCandidateDiscover.js').UnifySpacingCluster[]} */
-        const flat = [];
-        for (const g of nextGroups) {
-          for (const c of g.clusters ?? []) flat.push(c);
-          for (const c of g.compliantForms ?? []) flat.push(c);
-        }
-        const enriched = await enrichClustersWithItemHitsAsync(flat, pageTexts);
-        /** @type {Map<string, import('../../lib/unifyCandidateDiscover.js').UnifySpacingCluster>} */
-        const byKey = new Map();
-        for (const c of enriched) {
-          if (c?.key) byKey.set(c.key, c);
-        }
-        nextGroups = nextGroups
-          .map((g) => ({
-            ...g,
-            clusters: (g.clusters ?? []).map((c) => {
-              const en = c?.key ? byKey.get(c.key) : null;
-              if (!en) return c;
-              // find 건수·kind·추천은 유지. 출현 좌표만 enrich에서 가져옴.
-              return {
-                ...c,
-                kind: c.kind === 'conflict' ? 'conflict' : en.kind || c.kind,
-                recommendedUnify: c.recommendedUnify || en.recommendedUnify,
-                occurrencesByVariant:
-                  en.occurrencesByVariant ?? c.occurrencesByVariant,
-                totalCount: Math.max(c.totalCount || 0, en.totalCount || 0),
-                counts: { ...(c.counts ?? {}), ...(en.counts ?? {}) },
-                variants: c.variants?.length ? c.variants : en.variants,
-              };
-            }),
-            compliantForms: (g.compliantForms ?? [])
-              .map((c) => byKey.get(c.key) ?? c)
-              .filter((c) => (c?.totalCount ?? 0) > 0),
-          }))
-          .filter(
-            (g) =>
-              (g.clusters?.length ?? 0) > 0 ||
-              (g.compliantForms?.length ?? 0) > 0,
-          );
-      }
 
       const nextClusters = nextGroups.flatMap((g) => g.clusters ?? []);
       // PDF·엑셀 세션 = 목록 「전체 발견」과 동일 (1차와 같은 기준: 어긋남 clusters).
@@ -1611,6 +1635,8 @@ export default function UnifyCandidateFindPanel({
         });
         return;
       }
+
+      groupsForBackgroundEnrich = nextGroups;
 
       const itemCount = countUnifyListAccordionItems(nextGroups);
       // 1차와 동일: soft chosen → listReady/엑셀 tip「…으로 통일」
@@ -1663,6 +1689,30 @@ export default function UnifyCandidateFindPanel({
     } finally {
       phase2EnteringRef.current = false;
       setPhase2Entering(false);
+    }
+
+    // bbox·쪽 칩 enrich — listReady·로딩 해제 이후 비차단 (1차 discover/enrich와 동일 층)
+    if (groupsForBackgroundEnrich?.length) {
+      const flat = flattenPhase2ClustersForEnrich(groupsForBackgroundEnrich);
+      void (async () => {
+        try {
+          const enriched = await enrichClustersWithItemHitsAsync(flat, pageTexts);
+          if (phase2EnrichEpochRef.current !== enrichEpoch) return;
+          /** @type {Map<string, import('../../lib/unifyCandidateDiscover.js').UnifySpacingCluster>} */
+          const byKey = new Map();
+          for (const c of enriched) {
+            if (c?.key) byKey.set(c.key, c);
+          }
+          setSecondaryGroups((prev) => {
+            if (!prev.length) return prev;
+            return applyPhase2EnrichPatchToGroups(prev, byKey);
+          });
+        } catch (err) {
+          if (import.meta.env?.DEV) {
+            console.warn('[unify-phase2] background enrich failed', err);
+          }
+        }
+      })();
     }
   }, [
     registeredVariants,
@@ -1732,6 +1782,7 @@ export default function UnifyCandidateFindPanel({
     setOpenUnifySectionIds(new Set());
     phase2PromptedRef.current = false;
     phase2EnteringRef.current = false;
+    phase2EnrichEpochRef.current += 1;
     setPhase2Entering(false);
     onPreviewClear?.();
   }, [onPreviewClear]);
@@ -1752,6 +1803,7 @@ export default function UnifyCandidateFindPanel({
   /** 2차 목록 → 1차로 되돌림 (2차 선택·미리보기 폐기) */
   const returnToPrimaryFromPhase2 = useCallback(() => {
     phase2EnteringRef.current = false;
+    phase2EnrichEpochRef.current += 1;
     const primaryKeys = new Set(listClusters.map((c) => c.key));
     const primaryReg = new Map();
     for (const [k, v] of registeredVariants) {
