@@ -208,11 +208,108 @@ describe('missing N+N phase2 filters', () => {
     ).toBe(true);
   });
 
+  it('경제학·경제체제 접두는 대학 경제로 인정하지 않는다', () => {
+    expect(
+      visualAttestsPatternSurface('보스턴 대학 경제학과 페리', '대학 경제'),
+    ).toBe(false);
+    expect(
+      visualAttestsPatternSurface('고전파 경제학  331┃케인스 경제학', '케인스 경제'),
+    ).toBe(false);
+    expect(
+      visualAttestsPatternSurface('자국 경제체제에 대한 신뢰', '자국 경제'),
+    ).toBe(false);
+    expect(
+      visualAttestsPatternSurface('현대 경제에서 어떠한 역할', '현대 경제'),
+    ).toBe(true);
+    const rule = {
+      id: 'suffix:경제:glued',
+      template: '@경제',
+      affix: '경제',
+      affixType: 'suffix',
+      direction: 'glued',
+      confirmedFrom: '수석경제',
+      confirmedKey: '수석경제',
+    };
+    const pages = [
+      {
+        pageNum: 40,
+        text: '보스턴 대학 경제학과 페리 멀링',
+        textLayout: '보스턴 대학 경제학과 페리 멀링',
+      },
+    ];
+    expect(findPatternMismatches(pages, rule).map((m) => m.from)).not.toContain(
+      '대학 경제',
+    );
+  });
+
+  it('줄만 다른 서문·경제는 서문 경제로 인정하지 않는다', () => {
+    expect(
+      visualAttestsPatternSurface(
+        '서문\n경제가 어떻게 돌아가는지를 파악하려면',
+        '서문 경제',
+      ),
+    ).toBe(false);
+  });
+
+  it('이전 줄 어절(기분) 다음 줄 무드등 경제는 인정한다', () => {
+    expect(
+      visualAttestsPatternSurface(
+        '기분\n무드등 경제\n우리는 몇 가지 지표로',
+        '무드등 경제',
+      ),
+    ).toBe(true);
+  });
+
+  it('유로존 내의 경제는 내의 경제로 넣지 않는다', () => {
+    const rule = {
+      id: 'suffix:경제:glued',
+      template: '@경제',
+      affix: '경제',
+      affixType: 'suffix',
+      direction: 'glued',
+      confirmedFrom: '수석경제',
+      confirmedKey: '수석경제',
+    };
+    const pages = [
+      {
+        pageNum: 29,
+        text: '유로존 내의 경제 불균형, 은행 부문의 취약성',
+        textLayout: '유로존 내의 경제 불균형, 은행 부문의 취약성',
+      },
+    ];
+    expect(findPatternMismatches(pages, rule).map((m) => m.from)).not.toContain(
+      '내의 경제',
+    );
+  });
+
+  it('주식시장과 경제의 관계는 주식시장 경제로 넣지 않는다', () => {
+    const rule = {
+      id: 'suffix:경제:glued',
+      template: '@경제',
+      affix: '경제',
+      affixType: 'suffix',
+      direction: 'glued',
+      confirmedFrom: '수석경제',
+      confirmedKey: '수석경제',
+    };
+    const pages = [
+      {
+        pageNum: 11,
+        text: '주식시장과 경제의 관계  197',
+        textLayout: '주식시장과 경제의 관계  197',
+      },
+    ];
+    expect(findPatternMismatches(pages, rule).map((m) => m.from)).not.toContain(
+      '주식시장 경제',
+    );
+  });
+
   it('1음절+의 OCR 조각 head는 @패턴에서 제외', () => {
     expect(isPatternRuleHeadBlacklisted('분위기')).toBe(false);
     expect(isPatternRuleHeadBlacklisted('고전파')).toBe(false);
     expect(isPatternRuleHeadBlacklisted('년의')).toBe(true);
     expect(isPatternRuleHeadBlacklisted('련의')).toBe(true);
+    expect(isPatternRuleHeadBlacklisted('내의')).toBe(true);
     expect(isPatternRuleHeadBlacklisted('나라의')).toBe(true);
     const pages = [
       {
