@@ -4,7 +4,7 @@
  * @see project-docs/unify-phase2-pattern-2026-07-31.md
  */
 
-import { hangulSyllableCount } from './unifyHangulBasics.js';
+import { hangulSyllableCount, UNIFY_TRAILING_JOSA } from './unifyHangulBasics.js';
 import {
   isExcludedUnifyCandidateRaw,
   isValidSpacedUnifyVariant,
@@ -80,7 +80,7 @@ export const PATTERN_RULE_HEAD_BLACKLIST = new Set([
 ]);
 
 /** 줄바꿈 OCR 관형격 조각 — 2차 @패턴 head만. 1차 강의·명의·논의는 건드리지 않음 */
-const PATTERN_RULE_HEAD_OCR_POSSESSIVE = new Set(['년의', '련의']);
+const PATTERN_RULE_HEAD_OCR_POSSESSIVE = new Set(['년의', '련의', '내의']);
 
 /**
  * @typedef {'glued' | 'spaced'} PatternRuleDirection
@@ -810,10 +810,53 @@ function backfillSpacedAffixMismatchesFromPageText(
  */
 function hangulContinuesBeforeVisual(source, idx) {
   let i = idx - 1;
-  while (i >= 0 && (source[i] === '\n' || source[i] === '\r')) i -= 1;
+  let crossedNl = false;
+  while (i >= 0 && (source[i] === '\n' || source[i] === '\r')) {
+    crossedNl = true;
+    i -= 1;
+  }
   if (i < 0) return false;
   const c = source.charCodeAt(i);
-  return c >= 0xac00 && c <= 0xd7a3;
+  if (c < 0xac00 || c > 0xd7a3) return false;
+  if (!crossedNl) return true;
+  // 세\n계 — 1음절만 soft-wrap. 기분\n무드등 은 줄 바꿈 어절.
+  let run = 0;
+  while (i >= 0) {
+    const cc = source.charCodeAt(i);
+    if (cc < 0xac00 || cc > 0xd7a3) break;
+    run += 1;
+    i -= 1;
+  }
+  return run === 1;
+}
+
+/**
+ * affix 직후 한글이 조사가 아니면 더 긴 낱말(경제학·경제체제)의 접두.
+ * @param {string} source
+ * @param {number} endIdx
+ */
+function hangulContinuesAfterVisual(source, endIdx) {
+  if (endIdx >= source.length) return false;
+  const c = source.charCodeAt(endIdx);
+  if (c < 0xac00 || c > 0xd7a3) return false;
+  const rest = source.slice(endIdx);
+  for (const josa of UNIFY_TRAILING_JOSA) {
+    if (rest.startsWith(josa)) return false;
+  }
+  return true;
+}
+
+/**
+ * @param {string} source
+ * @param {number} start
+ * @param {number} end
+ * @param {string} needle
+ */
+function visualPatternHitRejected(source, start, end, needle) {
+  if (hangulContinuesBeforeVisual(source, start)) return true;
+  if (hangulContinuesAfterVisual(source, end)) return true;
+  if (/\s/.test(needle) && /[\r\n]/.test(source.slice(start, end))) return true;
+  return false;
 }
 
 /**
@@ -832,7 +875,9 @@ export function visualAttestsPatternSurface(pageText, surface) {
   while (pos <= source.length) {
     const idx = source.indexOf(needle, pos);
     if (idx < 0) break;
-    if (!hangulContinuesBeforeVisual(source, idx)) return true;
+    if (!visualPatternHitRejected(source, idx, idx + needle.length, needle)) {
+      return true;
+    }
     pos = idx + 1;
   }
 
@@ -843,7 +888,8 @@ export function visualAttestsPatternSurface(pageText, surface) {
     const hit = findPhraseInSpan(source.slice(pos), needle);
     if (!hit) break;
     const idx = pos + hit.start;
-    if (!hangulContinuesBeforeVisual(source, idx)) return true;
+    const end = pos + hit.end;
+    if (!visualPatternHitRejected(source, idx, end, needle)) return true;
     pos = idx + 1;
   }
   return false;
@@ -943,6 +989,11 @@ function backfillBridgedAffixMismatchesFromPageText(
         }
         seenAt.add(stamp);
         if (hangulContinuesBeforeVisual(source, idx)) {
+          m = re.exec(source);
+          continue;
+        }
+        // 주식시장과 경제의 관계 — 접속+관형격이지 띄움 이형태가 아님
+        if (source.slice(idx + m[0].length).startsWith('의')) {
           m = re.exec(source);
           continue;
         }
