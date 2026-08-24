@@ -650,6 +650,12 @@ export function resolveGluedHighlightIndexNear(
   return best;
 }
 
+function unifyOccsAreGluedForm(occs) {
+  const sample = occs?.[0]?.matchedText;
+  if (!sample) return false;
+  return !/\s/.test(normalizeUnifyVariant(sample));
+}
+
 /**
  * visual/itemRefs가 깨진 페이지에서도 출현·순·하이라이트 기준을 item+bbox로 맞춤.
  * @param {UnifyVariantOccurrence[]} occs
@@ -856,10 +862,13 @@ export function enrichOccurrencesWithItemHits(occs, pageByNum) {
     if (!list.length) continue;
     const rebased = rebaseUnifyOccurrencesFromItemHits(list, page);
     if (rebased !== null) {
-      // item hit 있음 → bbox 고정. hit 0이어도 visual(rematerialize) 슬롯은 유지.
-      // 빈 배열로 지우면 2차 패턴(visualAttests 통과) N+N이 목록에서 사라짐.
+      // item hit → bbox 고정.
+      // 붙임 hit 0 = 텍스트 조립 유령(지도 1글자 글리프). visual 슬롯으로 되돌리지 않음.
+      // 띄움 hit 0만 visual 복원 — 2차 N+N(주식시장\n경제)이 item find를 못 잡을 때.
       if (rebased.length > 0) out.push(...rebased);
-      else out.push(...assignUniqueUnifyHighlightIndices(list, page));
+      else if (!unifyOccsAreGluedForm(list)) {
+        out.push(...assignUniqueUnifyHighlightIndices(list, page));
+      }
       continue;
     }
     out.push(...assignUniqueUnifyHighlightIndices(list, page));
@@ -1214,6 +1223,12 @@ function enrichOneClusterWithItemHits(cluster, pageByNum) {
     pageByNum,
   );
 
+  let gluedAfterVisual = 0;
+  for (const variant of cluster.variants ?? []) {
+    const n = counts[variant] ?? 0;
+    if (n > 0 && !/\s/.test(variant)) gluedAfterVisual += n;
+  }
+
   for (const variant of cluster.variants ?? []) {
     const occs = occurrencesByVariant[variant] ?? [];
     if (!occs.length) {
@@ -1235,6 +1250,14 @@ function enrichOneClusterWithItemHits(cluster, pageByNum) {
     (v) => (counts[v] ?? 0) > 0,
   );
   if (!positive.length) {
+    return null;
+  }
+  // rematerialize가 Visual 조립 붙임(명지계곡)을 슬롯으로 남긴 뒤
+  // item hit 0으로 빠진 경우 — 1차 충돌이 아님. 2차 derived(원래 0회)는 유지.
+  if (
+    gluedAfterVisual > 0 &&
+    !positive.some((v) => !/\s/.test(v))
+  ) {
     return null;
   }
   for (const variant of Object.keys(occurrencesByVariant)) {
