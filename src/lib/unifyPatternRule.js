@@ -152,6 +152,23 @@ export function isPatternRuleHeadBlacklisted(head) {
 }
 
 /**
+ * 정규화 이후 변수(접미 head / 접두 tail)에 접미·접두 문자열이 이미 있으면 true.
+ * `경제지표경제`·`전미경제연구소경제` — 원문 `와`가 빠진 키에도 적용.
+ * @param {string} part
+ * @param {string} affix
+ */
+export function patternVariableContainsAffix(part, affix) {
+  const p = String(part ?? '')
+    .normalize('NFC')
+    .replace(/[^\uAC00-\uD7A3]/gu, '');
+  const a = String(affix ?? '')
+    .normalize('NFC')
+    .replace(/[^\uAC00-\uD7A3]/gu, '');
+  if (p.length < 2 || a.length < 2) return false;
+  return p.includes(a);
+}
+
+/**
  * 1차 discover와 같은 표면 정규화 — 기호·주변 숫자(쪽번호┃) 제거.
  * @param {string} s
  */
@@ -1088,6 +1105,7 @@ function normalizeMismatchPair(from, rule) {
   if (rule.affixType === 'prefix') {
     const tail = tailAfterPrefix(cleaned, rule.affix);
     if (!tail || hangulSyllableCount(tail) < 2) return null;
+    if (patternVariableContainsAffix(tail, rule.affix)) return null;
     const key = `${rule.affix}${tail}`;
     const to =
       rule.direction === 'glued'
@@ -1103,6 +1121,7 @@ function normalizeMismatchPair(from, rule) {
 
   const head = headBeforeAffix(cleaned, rule.affix);
   if (isPatternRuleHeadBlacklisted(head)) return null;
+  if (patternVariableContainsAffix(head, rule.affix)) return null;
   const key = `${head}${rule.affix}`;
   const to =
     rule.direction === 'glued'
@@ -1371,6 +1390,7 @@ function normalizeCompliantForm(from, rule) {
   if (rule.affixType === 'prefix') {
     const tail = tailAfterPrefix(cleaned, rule.affix);
     if (!tail || hangulSyllableCount(tail) < 2) return null;
+    if (patternVariableContainsAffix(tail, rule.affix)) return null;
     const key = `${rule.affix}${tail}`;
     const pairKey = unifySpacingKey(key) || key;
     if (
@@ -1383,6 +1403,7 @@ function normalizeCompliantForm(from, rule) {
 
   const head = headBeforeAffix(cleaned, rule.affix);
   if (isPatternRuleHeadBlacklisted(head)) return null;
+  if (patternVariableContainsAffix(head, rule.affix)) return null;
   const key = `${head}${rule.affix}`;
   const pairKey = unifySpacingKey(key) || key;
   if (
