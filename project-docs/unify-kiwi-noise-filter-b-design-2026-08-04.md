@@ -241,14 +241,14 @@ prod에서 D2(플래그 OFF)면 배지 불필요. D3 전환 후에는 배지가 
 **이미 로드맵:** 서버 C → §8 D3 (prod morph).
 
 **이번 이슈로 확인된 별도 구멍:** `shouldBootKiwi()` = JOSA ∨ BOUNDARY 뿐.  
-`NOISE_FILTER`는 의도적으로 boot에 안 넣음(찾기 핫패스 동기 analyze 금지).  
-그래서 JOSA·BOUNDARY가 둘 다 OFF인 로컬(`.env.local` 기본)에서는 Kiwi가 안 떠서 **2차 POS(`isUnifyKiwiNoisePhase2Available`)도 영원히 false**.
+`NOISE_FILTER`는 의도적으로 1차 boot에 안 넣음(찾기 핫패스 동기 analyze 금지).  
+2026-08-24: 2차 `enterPhase2`만 `bootKiwiIfNeeded({ phase2: true })`. `shouldBootKiwi`는 그대로. Kiwi 미ready였던 `후의 경제` fail-open은 이 경로에서 POS가 켜진다.
 
 | 구분 | 내용 |
 |------|------|
 | 증상 | 1차 JSON/`--add`만 동작 → 관형사·용언 잡음을 계속 수동 등록 |
 | 하지 말 것 | 잡음 하나 고치려고 JOSA/BOUNDARY를 무분별 ON (조사 strip·맞춤법 경계·prefetch 동반) |
-| 후속 후보 | (a) DEV 전용: 목록 이후 2차만 비동기 boot (찾기 핫패스 금지 유지) · (b) 서버 C ready 후 D3 |
+| 후속 후보 | (a) **함** — 2차 `enterPhase2`만 `{ phase2: true }` boot. 1차 핫패스 금지 유지. · (b) 서버 C ready 후 D3 |
 | 1차 한계 | 예외는 **어절 완전 일치**. `다른데`/`다른지` 등은 morph 또는 표면 `--add` |
 
 관형사 확장(`이런`/`그런`/`저런`/`아무`/`몇몇`/`온갖`/`각종`)은 베타 문서에서 빈도 확인 후 별도 반영.

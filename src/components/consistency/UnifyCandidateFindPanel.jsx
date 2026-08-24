@@ -1566,6 +1566,15 @@ export default function UnifyCandidateFindPanel({
     try {
       const chosen = mergeUnifyChosenMaps(registeredVariants, preSelected);
 
+      try {
+        const { bootKiwiIfNeeded } = await import(
+          '../../lib/kiwiMorph/bootLocal.js'
+        );
+        await bootKiwiIfNeeded({ phase2: true, maxWaitMs: 60_000 });
+      } catch {
+        /* fail-open — POS는 ready일 때만 */
+      }
+
       const candidates = await collectPatternRuleCandidatesAsync(
         chosen,
         clusters,

@@ -13,13 +13,13 @@
 | `typo.dict` | 미사용 (오타 교정 금지) |
 | `ruleEngine` regex 코어 | 변경 없음 (베타 freeze). 맞춤법 쪽은 **매칭 후 필터**만 |
 | 런타임 | 시나리오 C 서버 analyze 우선, DEV ping 실패 시 wasm 폴백 |
-| **부트** | `shouldBootKiwi()` = JOSA \|\| BOUNDARY \|\| NOISE_FILTER. 통일 찾기에서도 await. 상세: `unify-kiwi-noise-filter-b-design-2026-08-04.md` |
+| **부트 (현재 코드)** | `shouldBootKiwi()` = JOSA \|\| BOUNDARY. 1차 찾기는 boot하지 않음. 2차 `enterPhase2`만 `bootKiwiIfNeeded({ phase2: true })` (NOISE_FILTER ON일 때). POS는 ready 후 `isUnifyKiwiNoisePhase2Available`. |
 
 ### 플래그
 
 | 환경 변수 | 기본 | 영향 |
 |-----------|------|------|
-| (부트) | `shouldBootKiwi` OR | JOSA \|\| BOUNDARY \|\| **NOISE_FILTER** — 세션당 1회 |
+| (부트, 현재) | `shouldBootKiwi` OR | JOSA \|\| BOUNDARY. NOISE_FILTER는 미포함 (`bootLocal.js`) |
 | `VITE_UNIFY_KIWI_JOSA` | OFF | 조사 리뷰 등 **플래그 경로**의 Kiwi 조사 strip |
 | `VITE_SPELLING_KIWI_BOUNDARY` | OFF | 맞춤법/외래어 히트 + 표기통일 **칩·하이라이트** 경계 게이트 · **대량 surface prefetch** |
 | **`VITE_UNIFY_KIWI_NOISE_FILTER`** | 웹앱 **기본 OFF** (`=== 'true'`만 ON) | 오픈베타: 사용자 찾기·검수에 미사용. Node/CI·배치(리스트 등록)용. 유료·서버 C 후 웹앱 재연결. 상세: `unify-kiwi-noise-filter-b-design-2026-08-04.md` |
@@ -178,6 +178,7 @@ PDF 텍스트
 |------|-----|------|
 | 1음절 독립 어절(`간` `및` `등` …) 뒤 soft-wrap 금지 | `물가 간`\\n`악순환` → 붙이지 않음 (`물가 간악순환` 칩 방지) | `pdfPageText.js` `isLikelyHangulEojeolBoundary` |
 | 단어 중간 soft-wrap만 이음 | `명`\\n`지 계곡` → `명지 계곡` | `isUnifyHangulMidWordSoftWrap` |
+| 도표·제목 축 줄바꿈 인접 | 4교 103쪽 `주식시장` 다음 줄 `경제` → 2차 `@경제`에 `주식시장 경제`. Kiwi는 N+N으로 유지. `…과 경제의` 문자열 제외와 무관 | 2차 find 표면. 휴리스틱 레이어(미구현). Kiwi POS로 풀지 않음 |
 
 ---
 
