@@ -1188,6 +1188,122 @@ describe('reading-order S1 — 칩/occurrence 기하 정렬', () => {
     expect(occurrencesByVariant['국가채무상한선']).toHaveLength(0);
   });
 
+  it('enrich — Visual 조립 붙임(명지계곡)은 item hit 0이면 복원하지 않는다', () => {
+    const fs = 10;
+    /** @param {string} str @param {number} x @param {number} y @param {number} [w] */
+    const item = (str, x, y, w = 40) => ({
+      str,
+      transform: [fs, 0, 0, fs, x, y],
+      width: w,
+    });
+    const text =
+      '명지계곡\n했다. 항아리 바위가 있는 명지 계곡과 폭포로';
+    const page = {
+      pageNum: 81,
+      text,
+      items: [
+        item('명', 698, 1157, 0.2),
+        item('지', 698, 1158, 0.2),
+        item('계', 698, 1156, 0.2),
+        item('곡', 698, 1157, 0.2),
+        item('했다. 항아리 바위가 있는 명지 계곡과', 100, 1004, 220),
+        item('폭포로', 330, 1004, 80),
+      ],
+    };
+    const glued = enrichOccurrencesWithItemHits(
+      [{ pageNum: 81, index: 0, matchedText: '명지계곡' }],
+      buildPageByNum([page]),
+    );
+    expect(glued).toHaveLength(0);
+
+    const next = enrichClustersWithItemHits(
+      [
+        {
+          key: '명지계곡',
+          variants: ['명지계곡', '명지 계곡'],
+          counts: { 명지계곡: 1, '명지 계곡': 1 },
+          occurrencesByVariant: {
+            명지계곡: [{ pageNum: 81, index: 0, matchedText: '명지계곡' }],
+            '명지 계곡': [
+              {
+                pageNum: 81,
+                index: text.indexOf('명지 계곡'),
+                matchedText: '명지 계곡',
+              },
+            ],
+          },
+          recommendedUnify: '명지 계곡',
+          totalCount: 2,
+          kind: /** @type {const} */ ('conflict'),
+        },
+      ],
+      [page],
+    );
+    expect(next.find((c) => c.key === '명지계곡')).toBeUndefined();
+  });
+
+  it('enrich — 띄움 hit 0은 visual 슬롯을 유지한다(2차 N+N)', () => {
+    const page = {
+      pageNum: 103,
+      text: '주식시장 경제 지표',
+      items: [
+        {
+          str: '다른 문장만',
+          transform: [10, 0, 0, 10, 40, 400],
+          width: 80,
+        },
+      ],
+    };
+    const kept = enrichOccurrencesWithItemHits(
+      [{ pageNum: 103, index: 0, matchedText: '주식시장 경제' }],
+      buildPageByNum([page]),
+    );
+    expect(kept).toHaveLength(1);
+    expect(kept[0].matchedText).toBe('주식시장 경제');
+  });
+
+  it('enrich — 2차 derived 붙임 0회는 충돌 카드를 유지한다', () => {
+    const text = '분위기 경제가 있다. 분위기 경제를 본다.';
+    const page = {
+      pageNum: 4,
+      text,
+      items: [
+        {
+          str: text,
+          transform: [10, 0, 0, 10, 40, 400],
+          width: 200,
+        },
+      ],
+    };
+    const next = enrichClustersWithItemHits(
+      [
+        {
+          key: '분위기경제',
+          variants: ['분위기경제', '분위기 경제'],
+          counts: { 분위기경제: 0, '분위기 경제': 2 },
+          occurrencesByVariant: {
+            분위기경제: [],
+            '분위기 경제': [
+              { pageNum: 4, index: 0, matchedText: '분위기 경제' },
+              {
+                pageNum: 4,
+                index: text.lastIndexOf('분위기 경제'),
+                matchedText: '분위기 경제',
+              },
+            ],
+          },
+          recommendedUnify: '분위기경제',
+          totalCount: 2,
+          kind: /** @type {const} */ ('conflict'),
+        },
+      ],
+      [page],
+    );
+    expect(next).toHaveLength(1);
+    expect(next[0].counts['분위기경제'] ?? 0).toBe(0);
+    expect(next[0].counts['분위기 경제']).toBeGreaterThan(0);
+  });
+
   it('이형태 목록은 횟수 동률이면 페이지에서 위쪽 출현이 위에 온다', () => {
     const text = '국가채무 상한선과 국가채무상한선';
     const next = enrichClustersWithItemHits(
