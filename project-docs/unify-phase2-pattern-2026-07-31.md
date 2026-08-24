@@ -277,7 +277,7 @@ P0에서는 `support` 숫자로 UI를 조립하고, 카피·점수식이 안정�
 
 - **`후의 경제`(p.169 `취임 후의 경제 현황`):** NNG+조사. POS는 `normalizeMismatchPair`에 연결. 2차 `enterPhase2`가 `{ phase2: true }`로 boot. 1차 핫패스는 그대로.
 - **`전미경제연구소 경제`(p.95 원문) / `경제지표 경제`(p.129 `경제지표와 경제` → 정규화):** head에 접미 문자열이 이미 있음. 공유 가드 `patternVariableContainsAffix`는 **정규화 이후 키**에 적용.
-- **`주식시장 경제`(p.103 도표 축 줄바꿈):** Kiwi N+N. `kiwi-morph-product-effects` §6 인접 보완. 2차 find 경계·POS로 적지 않음.
+- **`주식시장 경제`(p.103 도표 축 줄바꿈):** Kiwi N+N. POS·1차 금지. **보류(미구현)** — 설계 중간 기록은 `kiwi-morph-product-effects` §6.1. 재개 시 휴리스틱 승인 후에만 손댐.
 
 ## 구현 시 주요 파일
 
