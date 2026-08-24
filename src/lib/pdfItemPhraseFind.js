@@ -294,12 +294,15 @@ function collectSameLineItemChains(items) {
     const itemIndexes = [];
     /** @type {number[]} */
     const charItemIndexes = [];
+    /** @type {number[]} compact 글자 → 해당 item.str 로컬 오프셋 (in-item map과 동일) */
+    const charLocalIndexes = [];
     let compact = '';
     for (const row of chunk) {
       itemIndexes.push(row.idx);
       for (let k = 0; k < row.str.length; k += 1) {
         if (/\s/.test(row.str[k])) continue;
         charItemIndexes.push(row.idx);
+        charLocalIndexes.push(k);
         compact += row.str[k];
       }
     }
@@ -313,7 +316,19 @@ function collectSameLineItemChains(items) {
         for (let p = start + 1; p < endExclusive; p += 1) {
           const a = charItemIndexes[p - 1];
           const b = charItemIndexes[p];
-          if (a == null || b == null || a === b) continue;
+          if (a == null || b == null) continue;
+          if (a === b) {
+            const locA = charLocalIndexes[p - 1];
+            const locB = charLocalIndexes[p];
+            if (
+              locA != null &&
+              locB != null &&
+              spanHasInternalSpace(items[a].str ?? '', locA, locB + 1)
+            ) {
+              return true;
+            }
+            continue;
+          }
           // 「교정」「 」「표시」처럼 공백만 있는 item이 끼면 띄움
           // (compact에는 공백 item이 안 들어가 gap만으로는 놓칠 수 있음)
           const lo = Math.min(a, b);

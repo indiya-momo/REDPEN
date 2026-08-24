@@ -154,6 +154,20 @@ describe('findPhraseHitsInPdfItems', () => {
     expect(glued).toHaveLength(0);
   });
 
+  it('같은 y 거대 chain에서 item 내부 띄움은 붙임 hit로 세지 않는다', () => {
+    // 81p 본문: 여러 item이 같은 y라 line-run chain이 되고,
+    // compact 매치가 한 item(「명지 계곡과」) 안에 갇혀 used.length===1이 됨.
+    // 다른 y 단일 item 픽스처는 in-item 경로만 타서 이 구멍을 못 막음.
+    const items = [
+      item('했다. 항아리 바위가 있는 명지 계곡과', 100, 1004, 220),
+      item('폭포로 유명한 삼악산으로 탐사를 떠난다', 330, 1004, 200),
+    ];
+    const glued = findPhraseHitsInPdfItems(items, '명지계곡');
+    expect(glued).toHaveLength(0);
+    const spaced = findPhraseHitsInPdfItems(items, '명지 계곡');
+    expect(spaced.some((h) => h.kind === 'in-item')).toBe(true);
+  });
+
   it('soft-wrap 「명|지계곡」(2줄·공백 없음)만으로는 붙임 칩을 만들지 않는다', () => {
     // 81p: 줄끝이 1음절「명」이고 다음 줄이「지계곡」이면 soft-wrap이 붙임을 발명함.
     // 본문에 연속「명지계곡」이 없으면 거부 — 화면의「명지 계곡」과 다름.
