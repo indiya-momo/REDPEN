@@ -178,6 +178,7 @@ PDF 텍스트
 |------|-----|------|
 | 1음절 독립 어절(`간` `및` `등` …) 뒤 soft-wrap 금지 | `물가 간`\\n`악순환` → 붙이지 않음 (`물가 간악순환` 칩 방지) | `pdfPageText.js` `isLikelyHangulEojeolBoundary` |
 | 단어 중간 soft-wrap만 이음 | `명`\\n`지 계곡` → `명지 계곡` | `isUnifyHangulMidWordSoftWrap` |
+| 지도 세로 글리프 (soft-wrap과 무관) | 같은 81p `명`/`지`/`계`/`곡` 갭 0 조립 → 유령 `명지계곡`. 본문 띄움 item을 같은 y chain compact로 붙임 하이라이트하지 않음 | `pdfItemPhraseFind.js` `hasSpaceInRange` |
 | 도표·제목 축 줄바꿈 인접 | 4교 103쪽 `주식시장` 다음 줄 `경제` → 2차 `@경제`에 `주식시장 경제`. Kiwi는 N+N으로 유지. `…과 경제의` 문자열 제외와 무관 | 2차 find 표면. 휴리스틱 레이어(미구현). Kiwi POS로 풀지 않음 |
 
 ---
