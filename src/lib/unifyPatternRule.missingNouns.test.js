@@ -5,6 +5,7 @@ import {
   passesPatternRuleUnifyFilter,
   findPatternMismatches,
   visualAttestsPatternSurface,
+  patternVariableContainsAffix,
 } from './unifyPatternRule.js';
 import { shouldRejectUnifyCandidateNoise } from './unifyNoiseList.js';
 
@@ -330,5 +331,41 @@ describe('missing N+N phase2 filters', () => {
     expect(findPatternMismatches(pages, rule).map((m) => m.from)).not.toContain(
       '년의 경제',
     );
+  });
+
+  it('정규화 키에서 앞말에 접미가 이미 있으면 제외한다', () => {
+    expect(patternVariableContainsAffix('전미경제연구소', '경제')).toBe(true);
+    expect(patternVariableContainsAffix('경제지표', '경제')).toBe(true);
+    expect(patternVariableContainsAffix('분위기', '경제')).toBe(false);
+    const rule = {
+      id: 'suffix:경제:glued',
+      template: '@경제',
+      affix: '경제',
+      affixType: 'suffix',
+      direction: 'glued',
+      confirmedFrom: '세계경제',
+      confirmedKey: '세계경제',
+    };
+    const pages = [
+      {
+        pageNum: 95,
+        text: '전미경제연구소 경제 분석가 에드워드',
+        textLayout: '전미경제연구소 경제 분석가 에드워드',
+      },
+      {
+        pageNum: 129,
+        text: '경제지표와 경제 전반의 분위기를 감지한다.',
+        textLayout: '경제지표와 경제 전반의 분위기를 감지한다.',
+      },
+      {
+        pageNum: 9,
+        text: '분위기 경제를 설명한다.',
+        textLayout: '분위기 경제를 설명한다.',
+      },
+    ];
+    const froms = findPatternMismatches(pages, rule).map((m) => m.from);
+    expect(froms).not.toContain('전미경제연구소 경제');
+    expect(froms).not.toContain('경제지표 경제');
+    expect(froms).toContain('분위기 경제');
   });
 });
