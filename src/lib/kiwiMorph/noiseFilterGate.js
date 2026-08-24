@@ -27,7 +27,8 @@ export function isUnifyKiwiNoiseMorphActive() {
 }
 
 /**
- * 2차: NOISE_FILTER ON 이고 로컬 Kiwi가 이미 ready (boot 시도 없음).
+ * 2차: NOISE_FILTER ON 이고 로컬 Kiwi ready.
+ * boot는 {@link bootKiwiIfNeeded} `{ phase2: true }` (enterPhase2만). 이 함수는 시도하지 않음.
  * @returns {boolean}
  */
 export function isUnifyKiwiNoisePhase2Available() {

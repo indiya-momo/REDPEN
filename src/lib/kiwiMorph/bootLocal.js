@@ -1,6 +1,7 @@
 /**
  * Kiwi 부트 — 시나리오 C(서버) 우선, 실패 시 DEV만 브라우저 wasm(A).
- * JOSA·BOUNDARY ON일 때만 boot. NOISE_FILTER는 1차 리스트라 boot 안 함.
+ * JOSA·BOUNDARY ON일 때만 앱/1차 찾기에서 boot.
+ * NOISE_FILTER는 1차 핫패스에 안 넣음. 2차는 `opts.phase2`로만 허용.
  * 대량 prefetch는 BOUNDARY 전용.
  */
 import {
@@ -13,14 +14,15 @@ import { pingKiwiAnalyze } from './serverRunner.js';
 import {
   isSpellingKiwiBoundaryEnabled,
   isUnifyKiwiJosaEnabled,
+  isUnifyKiwiNoiseFilterEnabled,
 } from '../featureFlags.js';
 
 /**
  * Kiwi boot 여부 — 동기/서버 분석이 필요한 플래그만.
  * - VITE_UNIFY_KIWI_JOSA: 표기통일 조사 strip 등
  * - VITE_SPELLING_KIWI_BOUNDARY: 맞춤법 matchFilters + 표기통일 enrich 경계
- * NOISE_FILTER는 1차 리스트(denylist·패턴 꼬리)만 쓰므로 boot 조건에서 제외.
- * OFF면 isKiwiReady()=false → 전 경로 heuristic (boot/HTTP/wasm 없음).
+ * NOISE_FILTER는 1차 리스트라 이 함수에 넣지 않음.
+ * 2차 목록 이후 boot는 {@link bootKiwiIfNeeded} `phase2`.
  */
 export function shouldBootKiwi() {
   return isUnifyKiwiJosaEnabled() || isSpellingKiwiBoundaryEnabled();
@@ -33,13 +35,21 @@ export function shouldBootKiwiLocal() {
 }
 
 /**
+ * @param {{ maxWaitMs?: number, phase2?: boolean }} [opts]
+ */
+function mayBootKiwi(opts = {}) {
+  if (shouldBootKiwi()) return true;
+  return opts.phase2 === true && isUnifyKiwiNoiseFilterEnabled();
+}
+
+/**
  * 서버 ping → 성공 시 server mode. 실패·미설정 시 DEV만 브라우저 wasm.
- * NOISE_FILTER 등 동기 분석이 필요하면 DEV에서 서버 모드여도 wasm을 함께 올린다.
- * @param {{ maxWaitMs?: number }} [opts] 로컬 wasm 대기 상한(ms). 찾기 UI는 짧게.
+ * 1차 찾기·App는 `shouldBootKiwi()`만. 2차 `enterPhase2`는 `{ phase2: true }`.
+ * @param {{ maxWaitMs?: number, phase2?: boolean }} [opts]
  * @returns {Promise<boolean>}
  */
 export async function bootKiwiIfNeeded(opts = {}) {
-  if (!shouldBootKiwi()) return false;
+  if (!mayBootKiwi(opts)) return false;
   if (isKiwiServerMode()) {
     if (import.meta.env.DEV) await ensureDevLocalWasm(opts);
     return true;
