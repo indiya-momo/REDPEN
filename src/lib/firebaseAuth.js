@@ -36,10 +36,30 @@ const FIREBASE_WEB_DEFAULTS = {
   appId: '1:997633908785:web:0ca96220aae36a2b187510',
 };
 
+/**
+ * 프로덕션(indiya.vercel.app)은 앱 도메인을 authDomain으로 쓴다.
+ * Vercel이 /__/auth/* 를 firebaseapp.com 으로 프록시해야 교차 사이트 저장소 차단을 피한다.
+ * localhost·preview는 기본 firebaseapp.com 유지.
+ * @returns {string}
+ */
+export function resolveFirebaseAuthDomain() {
+  const fromEnv = String(import.meta.env.VITE_FIREBASE_AUTH_DOMAIN ?? '').trim();
+  if (fromEnv) return fromEnv;
+  if (typeof window !== 'undefined' && window.location.hostname === 'indiya.vercel.app') {
+    return 'indiya.vercel.app';
+  }
+  return FIREBASE_WEB_DEFAULTS.authDomain;
+}
+
+function isSameOriginAuthHost() {
+  return (
+    typeof window !== 'undefined' && window.location.hostname === 'indiya.vercel.app'
+  );
+}
+
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || FIREBASE_WEB_DEFAULTS.apiKey,
-  authDomain:
-    import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || FIREBASE_WEB_DEFAULTS.authDomain,
+  authDomain: resolveFirebaseAuthDomain(),
   projectId:
     import.meta.env.VITE_FIREBASE_PROJECT_ID || FIREBASE_WEB_DEFAULTS.projectId,
   appId: import.meta.env.VITE_FIREBASE_APP_ID || FIREBASE_WEB_DEFAULTS.appId,
@@ -367,21 +387,19 @@ export async function completeGoogleRedirectIfNeeded() {
     }
     return { session: toSession(user), error: null };
   } catch (error) {
-    const code = error?.code ?? '';
-    if (code === 'auth/internal-error' && !auth.currentUser) {
-      if (import.meta.env.DEV) {
-        console.warn('[auth] getRedirectResult internal-error (no session, ignored)', error);
-      }
-      return { session: null, error: null };
+    if (import.meta.env.DEV) {
+      console.warn('[auth] getRedirectResult failed:', error?.code ?? '', error);
+    }
+    // 세션이 없으면 대문에 보이게 — 조용히 게스트로 두지 않음
+    if (auth.currentUser) {
+      return { session: toSession(auth.currentUser), error: null };
     }
     return { session: null, error: mapFirebaseAuthError(error) };
   }
 }
 
-const POPUP_REDIRECT_FALLBACK_CODES = new Set([
-  'auth/popup-blocked',
-  'auth/internal-error',
-]);
+/** 팝업 실패 시 redirect로 넘길 코드. internal-error는 same-origin auth일 때만. */
+const POPUP_REDIRECT_FALLBACK_CODES = new Set(['auth/popup-blocked']);
 
 /** 팝업 우선, 실패 시 전체 페이지 리다이렉트 */
 export async function signInWithGoogle() {
@@ -419,7 +437,10 @@ export async function signInWithGoogle() {
     if (import.meta.env.DEV) {
       console.warn('[auth] signInWithPopup failed:', code, error);
     }
-    if (POPUP_REDIRECT_FALLBACK_CODES.has(code)) {
+    const allowRedirectFallback =
+      POPUP_REDIRECT_FALLBACK_CODES.has(code) ||
+      (code === 'auth/internal-error' && isSameOriginAuthHost());
+    if (allowRedirectFallback) {
       await signInWithRedirect(auth, provider);
       return;
     }
