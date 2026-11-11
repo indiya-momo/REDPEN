@@ -2,7 +2,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('./betaDailyQuota.js', () => ({
   ensureSignupBonusGranted: vi.fn(async () => ({ ok: true })),
-  notifySignupBonusGranted: vi.fn(async () => {}),
 }));
 
 import {
@@ -18,10 +17,7 @@ import {
   presentSignupBonusNoticeOnce,
   resetSignupBonusNoticeForTests,
 } from './signupBonusNotice.js';
-import {
-  ensureSignupBonusGranted,
-  notifySignupBonusGranted,
-} from './betaDailyQuota.js';
+import { ensureSignupBonusGranted } from './betaDailyQuota.js';
 
 describe('signupBonusNotice', () => {
   /** @type {Record<string, string>} */
@@ -72,35 +68,26 @@ describe('signupBonusNotice', () => {
     });
   });
 
-  it('소비 시 검수권 안내를 띄우고 확인 후에는 계정별로 다시 안 뜬다', async () => {
+  it('소비 시 검수권은 지급하고 팝업은 띄우지 않는다', async () => {
     markEnterMainAfterGoogle();
     markSignupBonusNoticePending();
     const result = await consumeSignupBonusLoginNotice('uid-1');
     expect(result).toEqual({ handled: true, enterMain: true });
     expect(ensureSignupBonusGranted).toHaveBeenCalledWith('uid-1');
-    expect(notifySignupBonusGranted).toHaveBeenCalledTimes(1);
     expect(hasSeenSignupBonusNotice('uid-1')).toBe(true);
     expect(sessionStorage.getItem(ENTER_MAIN_AFTER_GOOGLE_KEY)).toBeNull();
     expect(sessionStorage.getItem(SIGNUP_BONUS_NOTICE_PENDING_KEY)).toBeNull();
-
-    vi.clearAllMocks();
-    resetSignupBonusNoticeForTests();
-    markEnterMainAfterGoogle();
-    markSignupBonusNoticePending();
-    await consumeSignupBonusLoginNotice('uid-1');
-    expect(notifySignupBonusGranted).not.toHaveBeenCalled();
-    expect(ensureSignupBonusGranted).toHaveBeenCalledWith('uid-1');
   });
 
-  it('플래그가 없으면 안내하지 않는다', async () => {
+  it('플래그가 없으면 지급하지 않는다', async () => {
     const result = await consumeSignupBonusLoginNotice('uid-1');
     expect(result).toEqual({ handled: false, enterMain: false });
-    expect(notifySignupBonusGranted).not.toHaveBeenCalled();
+    expect(ensureSignupBonusGranted).not.toHaveBeenCalled();
   });
 
-  it('이미 본 계정은 presentSignupBonusNoticeOnce도 안내하지 않는다', async () => {
-    markSignupBonusNoticeSeen('uid-2');
+  it('presentSignupBonusNoticeOnce도 팝업 없이 지급만 한다', async () => {
     await presentSignupBonusNoticeOnce('uid-2');
-    expect(notifySignupBonusGranted).not.toHaveBeenCalled();
+    expect(ensureSignupBonusGranted).toHaveBeenCalledWith('uid-2');
+    expect(hasSeenSignupBonusNotice('uid-2')).toBe(true);
   });
 });

@@ -1,5 +1,5 @@
 /**
- * 오픈베타 검수 한도: 가입 보너스(맞춤법·표기 통일 각 5, 1회) + KST 일일 1회(피드백 당일 2회).
+ * 오픈베타 검수 한도: KST 일일 1회(피드백 당일 2회). 가입 보너스 지급은 중단.
  * 일일 미사용분은 다음날로 넘어가지 않음. 통일형·우수 피드백 별도 한도 없음.
  * 검수 직전 assertBetaDailyCheckOrAlert, 소비 후 배지·피드백 보너스 연동.
  */
@@ -49,13 +49,13 @@ export const BETA_TAB_LIMIT_FEEDBACK = 2;
 /** @deprecated 우수 티어 폐지 — 피드백과 동일(2) */
 export const BETA_TAB_LIMIT_BOOSTED = BETA_TAB_LIMIT_FEEDBACK;
 
-/** 가입 시 1회 지급 — 맞춤법·표기 통일 각 5회(소진형, 리필 없음) */
-export const SIGNUP_BONUS_TAB_CHECKS = 5;
+/** 가입 보너스 — 지급 중단(잔여 0). 정책 버전 올리면 기존 계정도 잔여를 맞춘다. */
+export const SIGNUP_BONUS_TAB_CHECKS = 0;
 /**
  * 가입 보너스 정책 버전.
  * 바뀌면 이미 지급된 계정도 잔여를 SIGNUP_BONUS_TAB_CHECKS로 다시 맞춘다.
  */
-export const SIGNUP_BONUS_POLICY_VERSION = 2;
+export const SIGNUP_BONUS_POLICY_VERSION = 3;
 
 /**
  * @deprecated 통일형 별도 한도 폐지 — 표기 통일 탭과 동일 풀
@@ -74,8 +74,7 @@ export const BETA_CONSISTENCY_LIMIT_FEEDBACK = BETA_TAB_LIMIT_FEEDBACK;
 export const BETA_CONSISTENCY_LIMIT_BOOSTED = BETA_TAB_LIMIT_FEEDBACK;
 
 const BETA_QUOTA_POLICY_SUMMARY =
-  '오픈베타 기간에는 가입 시 맞춤법·표기 통일 검수를 각 5회 드리며, ' +
-  '매일(한국 시간) 각 1회가 새로 생깁니다(당일 미사용분은 다음날로 넘어가지 않습니다). ' +
+  '오픈베타 기간에는 매일(한국 시간) 맞춤법·표기 통일 검수가 각 1회 생깁니다(당일 미사용분은 다음날로 넘어가지 않습니다). ' +
   '피드백을 남기면 그날 일일 지급이 각 2회로 늘어납니다. ';
 
 export const BETA_DAILY_QUOTA_ALERT_SPELLING =
@@ -579,8 +578,7 @@ export function buildSignupBonusGrantAlert() {
     message:
       `회원님께 감사의 의미로 ${bonusLabel}🎫을 드립니다\n` +
       `일일 검수권은 1회 제공되며, 당일 미사용분은 소멸됩니다(한국 시간 기준)\n` +
-      `피드백을 남기면 일일 검수권이 2배로 늘어납니다!\n\n` +
-      `인디야와 함께 건강한 여름 되세요🍉`,
+      `피드백을 남기면 일일 검수권이 2배로 늘어납니다!`,
     messageNode: createElement(
       Fragment,
       null,
@@ -601,18 +599,13 @@ export function buildSignupBonusGrantAlert() {
         { className: 'app-dialog__confirm-line' },
         '피드백을 남기면 일일 검수권이 2배로 늘어납니다!',
       ),
-      createElement(
-        'p',
-        { className: 'app-dialog__confirm-line app-dialog__confirm-line--spaced' },
-        '인디야와 함께 건강한 여름 되세요🍉',
-      ),
     ),
   };
 }
 
-/** 로그인 직후 검수권 안내 팝업 */
+/** 로그인 직후 검수권 안내 팝업 — 현재는 끄고 지급만 한다. */
 export async function notifySignupBonusGranted() {
-  await showAppAlert(buildSignupBonusGrantAlert());
+  return;
 }
 
 /**

@@ -746,9 +746,23 @@
     },
     {
       "id": "verb-verb",
-      "tip": "'그러다'는 동사(그리하다), '그렇다'는 형용사(그러하다)",
+      "tip": "대요: 남의 말을 옮김, '다고 해요'의 줄임말 데요: 자신의 말 '~더군요' 의 줄임말",
       "title": "헷갈리기 쉬운 경우",
       "items": [
+        {
+          "id": "verb-verb-daeyo",
+          "label": "대요, 데요",
+          "enabled": true,
+          "matchMode": "spaced-before",
+          "inventoryOnly": false,
+          "stems": [
+            "대요",
+            "데요"
+          ],
+          "displayLabel": "대요, 데요",
+          "tip": "대요: 남의 말을 옮김, '다고 해요'의 줄임말 데요: 자신의 말 '~더군요' 의 줄임말",
+          "groupLabel": "헷갈리기 쉬운 경우"
+        },
         {
           "id": "verb-verb-geureoda",
           "label": "그러다, 그렇다",

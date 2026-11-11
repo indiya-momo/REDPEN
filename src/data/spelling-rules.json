@@ -495,6 +495,33 @@
     "overlayReplace": "→닦달"
   },
   {
+    "find": "되요",
+    "replace": "돼요",
+    "enabled": true,
+    "tip": "'되어요'의 준말은 \"돼요\"",
+    "dividerGroup": "B0",
+    "dividerLabel": "잘못된 표현(명사)",
+    "overlayReplace": "→돼요"
+  },
+  {
+    "find": "몇일",
+    "replace": "며칠",
+    "enabled": true,
+    "tip": "'며칠'의 잘못된 표현",
+    "dividerGroup": "B0",
+    "dividerLabel": "잘못된 표현(명사)",
+    "overlayReplace": "→며칠"
+  },
+  {
+    "find": "바램",
+    "replace": "바람",
+    "enabled": true,
+    "tip": "'바람'의 잘못된 표현",
+    "dividerGroup": "B0",
+    "dividerLabel": "잘못된 표현(명사)",
+    "overlayReplace": "→바람"
+  },
+  {
     "find": "보냉병",
     "replace": "보랭병",
     "enabled": true,
@@ -502,6 +529,15 @@
     "dividerGroup": "B0",
     "dividerLabel": "잘못된 표현(명사)",
     "overlayReplace": "→보랭병"
+  },
+  {
+    "find": "뵈요",
+    "replace": "봬요",
+    "enabled": true,
+    "tip": "'뵈어요'의 준말은 \"봬요\"",
+    "dividerGroup": "B0",
+    "dividerLabel": "잘못된 표현(명사)",
+    "overlayReplace": "→봬요"
   },
   {
     "find": "주구장창",
@@ -831,6 +867,7 @@
     "replace": "치러",
     "finds": [
       "치뤄",
+      "치룬",
       "치뤄고",
       "치뤄는",
       "치뤄어",

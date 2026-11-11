@@ -1,13 +1,10 @@
 /**
- * Google 로그인 직후 검수권 선물 안내.
+ * Google 로그인 직후 검수권 지급.
  * 리다이렉트 복귀 시 App이 welcome을 건너뛰고 main으로 갈 수 있어
  * sessionStorage 플래그 + App 단 소비로 처리한다.
- * 「확인」 후에는 uid별 localStorage에 남겨 재로그인해도 다시 띄우지 않는다.
+ * 검수권 선물 팝업은 끄고, 지급만 한다.
  */
-import {
-  ensureSignupBonusGranted,
-  notifySignupBonusGranted,
-} from './betaDailyQuota.js';
+import { ensureSignupBonusGranted } from './betaDailyQuota.js';
 
 export const ENTER_MAIN_AFTER_GOOGLE_KEY = 'indiya-enter-main-after-google';
 export const SIGNUP_BONUS_NOTICE_PENDING_KEY =
@@ -84,7 +81,7 @@ export function peekSignupBonusLoginPending() {
 }
 
 /**
- * 로그인 직후 플래그가 있으면 검수권 안내를 띄운다(계정당 1회).
+ * 로그인 직후 플래그가 있으면 검수권을 지급한다(팝업 없음).
  * @param {string} uid
  * @returns {Promise<{ handled: boolean, enterMain: boolean }>}
  */
@@ -106,19 +103,8 @@ export async function consumeSignupBonusLoginNotice(uid) {
     /* 지급은 다음 검수 시 재시도 */
   }
 
-  const alreadySeen =
-    hasSeenSignupBonusNotice(uid) || presentedInThisPageLoad;
-
-  if (!alreadySeen) {
-    presentedInThisPageLoad = true;
-    try {
-      await notifySignupBonusGranted();
-      markSignupBonusNoticeSeen(uid);
-    } catch {
-      /* 안내 실패해도 화면 진입은 진행 — 다음 로그인에 재시도 */
-      presentedInThisPageLoad = false;
-    }
-  }
+  presentedInThisPageLoad = true;
+  markSignupBonusNoticeSeen(uid);
 
   return { handled: true, enterMain: pendingEnter || pendingNotice };
 }
@@ -140,14 +126,7 @@ export async function presentSignupBonusNoticeOnce(uid) {
     /* ignore */
   }
 
-  if (hasSeenSignupBonusNotice(id)) return;
-
-  try {
-    await notifySignupBonusGranted();
-    markSignupBonusNoticeSeen(id);
-  } catch {
-    presentedInThisPageLoad = false;
-  }
+  markSignupBonusNoticeSeen(id);
 }
 
 /** @deprecated presentSignupBonusNoticeOnce 사용 */
