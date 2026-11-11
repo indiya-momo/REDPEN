@@ -220,11 +220,11 @@ describe('signup bonus policy align', () => {
     ).toBe(false);
   });
 
-  it('지급 필드는 각 5회·현재 정책 버전이다', () => {
+  it('지급 필드는 각 0회·현재 정책 버전이다', () => {
     expect(buildSignupBonusGrantFields()).toEqual({
       signupBonusGranted: true,
-      signupBonusSpellingRemaining: 5,
-      signupBonusConsistencyRemaining: 5,
+      signupBonusSpellingRemaining: 0,
+      signupBonusConsistencyRemaining: 0,
       signupBonusPolicyVersion: SIGNUP_BONUS_POLICY_VERSION,
     });
   });
@@ -236,6 +236,7 @@ describe('signup bonus policy align', () => {
       `맞춤법·표기 통일 ${SIGNUP_BONUS_TAB_CHECKS}회 검수권🎫`,
     );
     expect(alert.message).toContain('일일 검수권');
+    expect(alert.message).not.toContain('여름');
     expect(alert.messageNode).toBeTruthy();
   });
 });
@@ -370,16 +371,14 @@ describe('consumeLocalDevQuotaPreview', () => {
     vi.unstubAllGlobals();
   });
 
-  it('일일 1회 쓴 뒤에도 가입 보너스로 계속 쓸 수 있다', () => {
+  it('일일 1회를 쓰면 가입 보너스 없이 더 쓸 수 없다', () => {
     const first = consumeLocalDevQuotaPreview('uid-1', 'spelling', '2026-06-08');
     expect(first.ok).toBe(true);
     expect(first.tabCount).toBe(1);
-    expect(first.tabRemaining).toBe(SIGNUP_BONUS_TAB_CHECKS);
+    expect(first.tabRemaining).toBe(0);
 
     const second = consumeLocalDevQuotaPreview('uid-1', 'spelling', '2026-06-08');
-    expect(second.ok).toBe(true);
-    expect(second.tabCount).toBe(2);
-    expect(second.bonusRemaining).toBe(SIGNUP_BONUS_TAB_CHECKS - 1);
+    expect(second.ok).toBe(false);
     expect(isLocalDevQuotaRelaxed()).toBe(true);
   });
 
