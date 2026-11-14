@@ -7,31 +7,14 @@ import {
   hasSpellingFindVariants,
 } from './spellingRuleEntry.js';
 import {
-  findReplacesFingerprintPart,
   hasRowFindReplaces,
   normalizeFindReplaces,
 } from './spellingFindReplaces.js';
-
-function spellingRowFingerprintPart(row) {
-  const finds =
-    row.finds?.length >= 2 ? row.finds.join('\u0001') : '';
-  return `${row.find}\0${row.replace}\0${row.tip ?? ''}\0${
-    row.enabled === true ? 1 : 0
-  }\0${row.countsInQuota === false ? 0 : 1}\0${
-    row.visible === false ? 0 : 1
-  }\0${row.dividerGroup ?? ''}\0${row.dividerLabel ?? ''}\0${
-    row.overlayReplace ?? ''
-  }\0${row.ruleId ?? ''}\0${finds}\0${row.displayLabel ?? ''}${findReplacesFingerprintPart(row)}`;
-}
+import { computeSpellingRulesFingerprint } from './spellingRulesFingerprint.js';
 
 /** @param {typeof spellingRulesJson} rows */
 export function spellingRulesFingerprint(rows = spellingRulesJson) {
-  let hash = 0;
-  const payload = rows.map(spellingRowFingerprintPart).join('\n');
-  for (let i = 0; i < payload.length; i += 1) {
-    hash = (Math.imul(31, hash) + payload.charCodeAt(i)) | 0;
-  }
-  return `${rows.length}:${hash}`;
+  return computeSpellingRulesFingerprint(rows);
 }
 
 /** @param {import('./ruleTypes.js').Rule} rule */
