@@ -6,6 +6,11 @@ import {
   builtInEnabledKey,
   hasSpellingFindVariants,
 } from './spellingRuleEntry.js';
+import {
+  findReplacesFingerprintPart,
+  hasRowFindReplaces,
+  normalizeFindReplaces,
+} from './spellingFindReplaces.js';
 
 function spellingRowFingerprintPart(row) {
   const finds =
@@ -16,7 +21,7 @@ function spellingRowFingerprintPart(row) {
     row.visible === false ? 0 : 1
   }\0${row.dividerGroup ?? ''}\0${row.dividerLabel ?? ''}\0${
     row.overlayReplace ?? ''
-  }\0${row.ruleId ?? ''}\0${finds}\0${row.displayLabel ?? ''}`;
+  }\0${row.ruleId ?? ''}\0${finds}\0${row.displayLabel ?? ''}${findReplacesFingerprintPart(row)}`;
 }
 
 /** @param {typeof spellingRulesJson} rows */
@@ -43,6 +48,9 @@ function builtInRuleFromRow(row) {
       : undefined;
   const ruleId = String(row.ruleId ?? '').trim() || undefined;
   const displayLabel = String(row.displayLabel ?? '').trim() || undefined;
+  const findReplaces = finds
+    ? normalizeFindReplaces(row.findReplaces, finds)
+    : undefined;
 
   return {
     find: row.find,
@@ -57,11 +65,13 @@ function builtInRuleFromRow(row) {
     ...(row.dividerLabel
       ? { dividerLabel: String(row.dividerLabel).trim() }
       : {}),
-    ...(row.overlayReplace
+    // findReplaces 행은 J(overlay_replace)를 쓰지 않는다 — 찾은 말마다 →고칠말
+    ...(row.overlayReplace && !findReplaces
       ? { overlayReplace: String(row.overlayReplace).trim() }
       : {}),
     ...(ruleId ? { ruleId } : {}),
     ...(finds ? { finds } : {}),
+    ...(findReplaces ? { findReplaces } : {}),
     ...(displayLabel ? { displayLabel } : {}),
     ...(row.find === '쳐지' ? { requireLeadingBoundary: true } : {}),
     ...(row.allowAttachedPrefix === true ? { allowAttachedPrefix: true } : {}),
@@ -191,7 +201,7 @@ export function getBuiltInTip(find, replace, spellingRuleId) {
 const overlayReplaceLookup = new Map(
   spellingRulesJson.flatMap((row) => {
     const text = String(row.overlayReplace ?? '').trim();
-    if (!text) return [];
+    if (!text || hasRowFindReplaces(row)) return [];
     return [[`${row.find}\0${row.replace}`, text]];
   }),
 );
@@ -200,7 +210,7 @@ const overlayByRuleId = new Map(
   spellingRulesJson.flatMap((row) => {
     const id = String(row.ruleId ?? '').trim();
     const text = String(row.overlayReplace ?? '').trim();
-    if (!id || !text) return [];
+    if (!id || !text || hasRowFindReplaces(row)) return [];
     return [[id, text]];
   }),
 );

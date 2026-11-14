@@ -74,6 +74,9 @@ export function b1ExpandSkipReason(row) {
   const find = String(row?.find ?? '').trim();
   const replace = String(row?.replace ?? '').trim();
   if (!find || !replace) return 'empty';
+  // 변형마다 고칠 말이 다른 행 — 대표 replace로 전개하면 틀린 제안이 섞인다
+  const fr = row?.findReplaces;
+  if (fr && typeof fr === 'object' && Object.keys(fr).length) return 'find-replaces';
   if (/\s/.test(find)) return 'spaced-find';
   if (/\s/.test(replace) || replace.includes('또는')) return 'complex-replace';
   if (B1_EXPAND_FIND_SKIP.has(find)) return 'batchim-mismatch-skip';

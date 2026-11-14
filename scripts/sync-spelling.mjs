@@ -16,7 +16,10 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { assertValidSpellingRules } from '../src/lib/validateDataJson.js';
-import { parseSpellingFindsColumn } from '../src/lib/spellingRuleEntry.js';
+import {
+  findReplacesFingerprintPart,
+  parseSpellingFindsWithReplaces,
+} from '../src/lib/spellingFindReplaces.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
@@ -247,7 +250,14 @@ function normalizeRow(row) {
   const overlayReplace = normalizeOverlayReplace(row.overlay_replace);
   const ruleId = String(row.rule_id || '').trim() || undefined;
   const displayLabel = String(row.display_label || '').trim() || undefined;
-  const finds = parseSpellingFindsColumn(row.finds, find);
+  // finds 칸: 「찾을말」 또는 「찾을말>고칠말」(구분 기호 > → ＞)
+  const parsedFinds = parseSpellingFindsWithReplaces(row.finds, find, replace);
+  for (const w of parsedFinds.warnings) console.warn(`  ⚠ ${find}: ${w}`);
+  const finds = parsedFinds.finds;
+  const findReplaces = finds ? parsedFinds.findReplaces : null;
+  if (findReplaces && overlayReplace) {
+    console.warn(`  ⚠ ${find}: 찾을말>고칠말 행이라 overlay_replace(J) "${overlayReplace}"는 무시합니다`);
+  }
   const allowAttachedPrefix =
     String(row.allow_attached_prefix ?? '').trim().toLowerCase() === 'true';
 
@@ -259,7 +269,7 @@ function normalizeRow(row) {
     ...(visible === false ? { visible: false } : {}),
     ...(dividerGroup ? { dividerGroup } : {}),
     ...(dividerLabel ? { dividerLabel } : {}),
-    ...(overlayReplace ? { overlayReplace } : {}),
+    ...(overlayReplace && !findReplaces ? { overlayReplace } : {}),
     ...(ruleId ? { ruleId } : {}),
     ...(displayLabel ? { displayLabel } : {}),
     ...(allowAttachedPrefix ? { allowAttachedPrefix: true } : {}),
@@ -270,6 +280,7 @@ function normalizeRow(row) {
       find,
       replace,
       finds,
+      ...(findReplaces ? { findReplaces } : {}),
       ...shared,
     };
   }
@@ -443,7 +454,7 @@ async function main() {
   rules.forEach((r, i) => {
     const label =
       r.finds?.length >= 2
-        ? `${r.finds.join('·')} → ${r.replace}`
+        ? `${r.finds.map((f) => (r.findReplaces?.[f] ? `${f}>${r.findReplaces[f]}` : f)).join('·')} → ${r.replace}`
         : `${r.find} → ${r.replace}`;
     console.log(`  ${i + 1}. ${label}`);
   });
@@ -462,7 +473,7 @@ async function main() {
           r.countsInQuota === false ? 0 : 1
         }\0${r.visible === false ? 0 : 1}\0${r.dividerGroup ?? ''}\0${r.dividerLabel ?? ''}\0${r.overlayReplace ?? ''}\0${r.ruleId ?? ''}\0${
           r.finds?.length >= 2 ? r.finds.join('\u0001') : ''
-        }\0${r.displayLabel ?? ''}`,
+        }\0${r.displayLabel ?? ''}${findReplacesFingerprintPart(r)}`,
     )
     .join('\n');
   for (let i = 0; i < payload.length; i += 1) {

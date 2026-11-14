@@ -30,6 +30,10 @@ export function formatConsistencyUnifyHighlightOverlay(_inst, unifiedRaw) {
 export function getHighlightOverlayReplace(inst, options = {}) {
   if (!inst?.find) return null;
 
+  // findReplaces 행: 찾은 말마다 제 고칠 말(J overlay_replace 무시)
+  const variantReplace = String(inst.variantReplace ?? '').trim();
+  if (variantReplace) return `→${variantReplace}`;
+
   const { customRules = [], group = null } = options;
   if (group?.tailWord) {
     const consistencyOverlay = getConsistencyUnifyOverlayForGroup(
