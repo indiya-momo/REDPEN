@@ -16,10 +16,8 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { assertValidSpellingRules } from '../src/lib/validateDataJson.js';
-import {
-  findReplacesFingerprintPart,
-  parseSpellingFindsWithReplaces,
-} from '../src/lib/spellingFindReplaces.js';
+import { parseSpellingFindsWithReplaces } from '../src/lib/spellingFindReplaces.js';
+import { buildSpellingRulesMeta } from '../src/lib/spellingRulesFingerprint.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
@@ -465,27 +463,10 @@ async function main() {
     console.log(`→ ${path.relative(ROOT, out)}`);
   }
 
-  let hash = 0;
-  const payload = rules
-    .map(
-      (r) =>
-        `${r.find}\0${r.replace}\0${r.tip ?? ''}\0${r.enabled === true ? 1 : 0}\0${
-          r.countsInQuota === false ? 0 : 1
-        }\0${r.visible === false ? 0 : 1}\0${r.dividerGroup ?? ''}\0${r.dividerLabel ?? ''}\0${r.overlayReplace ?? ''}\0${r.ruleId ?? ''}\0${
-          r.finds?.length >= 2 ? r.finds.join('\u0001') : ''
-        }\0${r.displayLabel ?? ''}${findReplacesFingerprintPart(r)}`,
-    )
-    .join('\n');
-  for (let i = 0; i < payload.length; i += 1) {
-    hash = (Math.imul(31, hash) + payload.charCodeAt(i)) | 0;
-  }
-  const fingerprint = `${rules.length}:${hash}`;
-  await writeFile(
-    META_OUT,
-    `${JSON.stringify({ fingerprint, syncedAt: new Date().toISOString(), count: rules.length }, null, 2)}\n`,
-    'utf8',
-  );
-  console.log(`→ ${path.relative(ROOT, META_OUT)} (fingerprint ${fingerprint})`);
+  // 앱과 같은 지문 함수. B1 전개(kiwi:expand-b1-finds)가 finds를 바꾸면 그 스크립트가 다시 쓴다.
+  const meta = buildSpellingRulesMeta(rules, new Date().toISOString());
+  await writeFile(META_OUT, `${JSON.stringify(meta, null, 2)}\n`, 'utf8');
+  console.log(`→ ${path.relative(ROOT, META_OUT)} (fingerprint ${meta.fingerprint})`);
 
   console.log('Done. 브라우저에서 「검사 실행」을 다시 눌러 주세요.');
 }

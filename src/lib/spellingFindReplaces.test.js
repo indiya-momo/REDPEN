@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import spellingRulesJson from '../data/spelling-rules.json';
+import spellingMeta from '../../public/data/spelling-rules-meta.json';
 import { BUILT_IN_RULES, spellingRulesFingerprint } from './builtInRules.js';
 import { b1ExpandSkipReason } from './b1StemFindsExpand.js';
 import { getHighlightOverlayReplace } from './highlightOverlayReplace.js';
@@ -167,6 +168,11 @@ describe('데이터·지문·B1 전개', () => {
       hash = (Math.imul(31, hash) + payload.charCodeAt(i)) | 0;
     }
     expect(spellingRulesFingerprint()).toBe(`${spellingRulesJson.length}:${hash}`);
+  });
+
+  it('메타 파일 지문이 데이터(B1 전개 후)와 같다', () => {
+    expect(spellingMeta.fingerprint).toBe(spellingRulesFingerprint());
+    expect(spellingMeta.count).toBe(spellingRulesJson.length);
     expect(findReplacesFingerprintPart({ find: 'x' })).toBe('');
   });
 

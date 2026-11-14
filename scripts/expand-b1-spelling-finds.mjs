@@ -12,11 +12,30 @@ import {
   b1ExpandSkipReason,
   expandB1SpellingRow,
 } from '../src/lib/b1StemFindsExpand.js';
+import { buildSpellingRulesMeta } from '../src/lib/spellingRulesFingerprint.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, '..');
 const SRC_JSON = path.join(root, 'src/data/spelling-rules.json');
 const PUBLIC_JSON = path.join(root, 'public/data/spelling-rules.json');
+const META_JSON = path.join(root, 'public/data/spelling-rules-meta.json');
+
+/**
+ * 전개 후 데이터로 메타 지문을 다시 계산(syncedAt은 시트 싱크 시각이라 그대로 둠).
+ * @param {object[]} rows
+ */
+function writeSpellingMeta(rows) {
+  let syncedAt = new Date().toISOString();
+  try {
+    const prev = JSON.parse(fs.readFileSync(META_JSON, 'utf8'));
+    if (typeof prev?.syncedAt === 'string' && prev.syncedAt) syncedAt = prev.syncedAt;
+  } catch {
+    /* 메타 없음 — 지금 시각 */
+  }
+  const meta = buildSpellingRulesMeta(rows, syncedAt);
+  fs.writeFileSync(META_JSON, `${JSON.stringify(meta, null, 2)}\n`, 'utf8');
+  console.log(`[expand-b1] meta fingerprint ${meta.fingerprint}`);
+}
 
 async function main() {
   const loadNodeUrl = pathToFileURL(
@@ -72,6 +91,7 @@ async function main() {
   const json = `${JSON.stringify(next, null, 2)}\n`;
   fs.writeFileSync(SRC_JSON, json, 'utf8');
   fs.writeFileSync(PUBLIC_JSON, json, 'utf8');
+  writeSpellingMeta(next);
   console.log(
     `[expand-b1] done — changed=${changedRows} skippedB1=${skipped} total=${next.length}`,
   );
