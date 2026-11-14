@@ -5,6 +5,7 @@
  * 컬럼: find | replace | enabled | tip | memo | counts_in_quota | visible | divider_group | divider_label | overlay_replace
  *   - divider_label: 묶음 이름(예: 사이시옷 법칙). 빈 칸 또는 "-"는 이름 없음으로 처리.
  *   - rule_id · finds · display_label: 이형태 묶음(한 행·한 체크). finds는 쉼표 구분.
+ *   - allow_attached_prefix(선택): TRUE면 띄어쓰기 규칙이라도 앞에 한글이 붙은 형태까지 잡는다(예: 이것 뿐).
  *   - 동기화 시 규칙 순서는 시트 행 순서를 그대로 유지한다.
  *
  * 사용:
@@ -127,6 +128,8 @@ const SPELLING_HEADER_ALIASES = {
   이형태: 'finds',
   표시이름: 'display_label',
   'display label': 'display_label',
+  'allow attached prefix': 'allow_attached_prefix',
+  앞말붙임허용: 'allow_attached_prefix',
   // 관리용 열 — normalize에서 무시
   흥미도: '_interest',
   interest: '_interest',
@@ -245,6 +248,8 @@ function normalizeRow(row) {
   const ruleId = String(row.rule_id || '').trim() || undefined;
   const displayLabel = String(row.display_label || '').trim() || undefined;
   const finds = parseSpellingFindsColumn(row.finds, find);
+  const allowAttachedPrefix =
+    String(row.allow_attached_prefix ?? '').trim().toLowerCase() === 'true';
 
   const shared = {
     enabled,
@@ -257,6 +262,7 @@ function normalizeRow(row) {
     ...(overlayReplace ? { overlayReplace } : {}),
     ...(ruleId ? { ruleId } : {}),
     ...(displayLabel ? { displayLabel } : {}),
+    ...(allowAttachedPrefix ? { allowAttachedPrefix: true } : {}),
   };
 
   if (finds) {

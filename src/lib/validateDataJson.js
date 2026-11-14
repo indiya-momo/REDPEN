@@ -143,6 +143,12 @@ export function validateSpellingRules(data, label = 'spelling-rules.json') {
     if (row.displayLabel !== undefined && typeof row.displayLabel !== 'string') {
       pushIssue(issues, `${base}.displayLabel`, 'must be a string');
     }
+    if (
+      row.allowAttachedPrefix !== undefined &&
+      !isBoolean(row.allowAttachedPrefix)
+    ) {
+      pushIssue(issues, `${base}.allowAttachedPrefix`, 'must be a boolean');
+    }
     if (row.finds !== undefined) {
       if (!Array.isArray(row.finds)) {
         pushIssue(issues, `${base}.finds`, 'must be an array');

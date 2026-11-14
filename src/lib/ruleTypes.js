@@ -35,6 +35,8 @@
  * @property {boolean} [consistencyUnifyPinned] — 표기 통일하기에서 📌로 지정한 통일형
  * @property {boolean} [consistencyLiteralEntry] — 일관성 찾기에서 등록한 항목
  * @property {boolean} [requireLeadingBoundary] — true면 앞에 글자/숫자가 붙은 매칭은 제외
+ * @property {boolean} [spellingLeadingHangulBoundary] — (런타임) 맞춤법 띄어쓰기 규칙: 바로 앞이 한글 음절이면 제외
+ * @property {boolean} [allowAttachedPrefix] — 시트 allow_attached_prefix: 앞 한글이 붙은 형태도 잡음(경계 검사 끔)
  * @property {string} [bonBojoItemId] — bon-bojo 시트 item_id; 목록·체크는 항목 단위
  */
 

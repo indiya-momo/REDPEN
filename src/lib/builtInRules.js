@@ -64,6 +64,7 @@ function builtInRuleFromRow(row) {
     ...(finds ? { finds } : {}),
     ...(displayLabel ? { displayLabel } : {}),
     ...(row.find === '쳐지' ? { requireLeadingBoundary: true } : {}),
+    ...(row.allowAttachedPrefix === true ? { allowAttachedPrefix: true } : {}),
   };
 }
 

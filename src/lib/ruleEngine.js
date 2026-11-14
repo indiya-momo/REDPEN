@@ -11,6 +11,7 @@ import {
   sortInstancesReadingOrder,
 } from './matchReadingOrder.js';
 import { cautionHighlightSpan } from './cautionRules.js';
+import { isHangulSyllable } from './spellingRuleEntry.js';
 
 /**
  * @typedef {Object} PageText
@@ -313,6 +314,15 @@ function applyRuleToPages(rule, pages, byKey, globalExcludePhrases, errors) {
         continue;
       }
       const matchEnd = match.index + match[0].length;
+      // 맞춤법 띄어쓰기 규칙: 「건물 속」「작품 속」처럼 앞 한글 음절이 붙은 부분일치 제외.
+      // lookbehind 대신 매칭 후 앞 글자 검사 — 규칙별 opt-out·구형 Safari 호환.
+      if (
+        rule.spellingLeadingHangulBoundary &&
+        match.index > 0 &&
+        isHangulSyllable(text[match.index - 1])
+      ) {
+        continue;
+      }
       if (ruleRequiresLeadingBoundary(rule) && match.index > 0) {
         let atLineStart = false;
         if (page.itemRefs?.length) {
