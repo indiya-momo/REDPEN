@@ -29,12 +29,12 @@ describe('B1 expanded finds regression (spelling-rules.json)', () => {
     expect(row.replace).toBe('덮이');
   });
 
+  // 짜여진: 자동 전개는 스킵(B1_EXPAND_FIND_SKIP)하지만 시트에 손으로 넣은 finds가 있어 여기서 확인하지 않음
   it('전개 스킵 행은 finds 자동 전개 없음', () => {
     expect(b1Row('스런')?.finds).toBeUndefined();
     expect(b1Row('꺼야')?.finds).toBeUndefined();
     expect(b1Row('안절부절하')?.finds).toBeUndefined();
     expect(b1Row('잊혀')?.finds).toBeUndefined();
-    expect(b1Row('짜여진')?.finds).toBeUndefined();
     expect(b1Row('걸맞는')?.finds).toBeUndefined();
     expect(b1Row('오랫만')?.finds).toBeUndefined();
   });

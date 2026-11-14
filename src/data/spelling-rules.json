@@ -13,7 +13,7 @@
     "tip": "표준국어대사전  '봄밤,여름밤,가을밤,겨울밤,지난밤' 등재",
     "dividerGroup": "A1",
     "dividerLabel": "표준국어대사전 등재(명사)",
-    "displayLabel": "→봄밤, 여름밤, 가을밤, 겨울밤, 지난밤"
+    "displayLabel": "봄 밤 → 봄밤(외)"
   },
   {
     "find": "봄 비",
@@ -28,7 +28,7 @@
     "tip": "표준국어대사전  '봄비,여름비,가을비,겨울비' 등재",
     "dividerGroup": "A1",
     "dividerLabel": "표준국어대사전 등재(명사)",
-    "displayLabel": "→봄비, 여름비, 가을비, 겨울비"
+    "displayLabel": "봄 비 → 봄비(외)"
   },
   {
     "find": "봄 날",
@@ -43,7 +43,7 @@
     "tip": "표준국어대사전  '봄날,여름날,가을날,겨울날' 등재",
     "dividerGroup": "A1",
     "dividerLabel": "표준국어대사전 등재(명사)",
-    "displayLabel": "→봄날, 여름날, 가을날, 겨울날"
+    "displayLabel": "봄 날 → 봄날(외)"
   },
   {
     "find": "올 봄",
@@ -58,7 +58,7 @@
     "tip": "표준국어대사전  '올봄,올여름,올가을,올겨울' 등재",
     "dividerGroup": "A1",
     "dividerLabel": "표준국어대사전 등재(명사)",
-    "displayLabel": "→올봄, 올여름, 올가을, 올겨울"
+    "displayLabel": "올 봄 → 올봄(외)"
   },
   {
     "find": "지난 봄",
@@ -73,7 +73,7 @@
     "tip": "표준국어대사전  '지난봄,지난여름,지난가을,지난겨울' 등재",
     "dividerGroup": "A1",
     "dividerLabel": "표준국어대사전 등재(명사)",
-    "displayLabel": "→지난봄, 지난여름, 지난가을, 지난겨울"
+    "displayLabel": "지난 봄 → 지난봄(외)"
   },
   {
     "find": "맞은 편",
@@ -89,7 +89,7 @@
     "tip": "표준국어대사전  '이편,저편,그편,건너편,맞은편' 등재",
     "dividerGroup": "A1",
     "dividerLabel": "표준국어대사전 등재(명사)",
-    "displayLabel": "→이편, 저편, 그편, 건너편, 맞은편"
+    "displayLabel": "맞은 편 → 맞은편(외)"
   },
   {
     "find": "밝은 색",
@@ -102,22 +102,21 @@
     "tip": "표준국어대사전  '밝은색, 어두운색' 등재",
     "dividerGroup": "A1",
     "dividerLabel": "표준국어대사전 등재(명사)",
-    "displayLabel": "→밝은색, 어두운색"
+    "displayLabel": "밝은 색 → 밝은색(외)"
   },
   {
-    "find": "아무 것",
-    "replace": "아무것",
+    "find": "별 것",
+    "replace": "별것",
     "finds": [
       "별 것",
-      "아무 것",
       "옛 것",
       "헛 것"
     ],
     "enabled": true,
-    "tip": "표준국어대사전 '별것,아무것,옛것,헛것' 등재 참고: '요즘것' 미등재",
+    "tip": "표준국어대사전 '별것,옛것,헛것' 등재 참고: '요즘것' 미등재",
     "dividerGroup": "A1",
     "dividerLabel": "표준국어대사전 등재(명사)",
-    "displayLabel": "→별것, 아무것, 옛것, 헛것"
+    "displayLabel": "별 것 → 별것(외)"
   },
   {
     "find": "젊은 것",
@@ -131,7 +130,7 @@
     "tip": "표준국어대사전  '어린것,젊은것,늙은것' 등재",
     "dividerGroup": "A1",
     "dividerLabel": "표준국어대사전 등재(명사)",
-    "displayLabel": "→어린것, 젊은것, 늙은것"
+    "displayLabel": "젊은 것 → 젊은것(외)"
   },
   {
     "find": "점심 때",
@@ -145,7 +144,7 @@
     "tip": "표준국어대사전 '점심때,저녁때,이맘때'등재",
     "dividerGroup": "A1",
     "dividerLabel": "표준국어대사전 등재(명사)",
-    "displayLabel": "→점심때, 저녁때, 이맘때"
+    "displayLabel": "점심 때 → 점심때(외)"
   },
   {
     "find": "우리 나라",
@@ -159,7 +158,7 @@
     "tip": "표준국어대사전 '우리나라,우리말,우리글'  등재_주의: '우리집·우리가족' 미등재",
     "dividerGroup": "A1",
     "dividerLabel": "표준국어대사전 등재(명사)",
-    "displayLabel": "→우리나라, 우리말, 우리글"
+    "displayLabel": "우리 나라 → 우리나라(외)"
   },
   {
     "find": "부재 중",
@@ -173,7 +172,7 @@
     "tip": "표준국어대사전 '은연중·부지불식중·부재중' 등재",
     "dividerGroup": "A1",
     "dividerLabel": "표준국어대사전 등재(명사)",
-    "displayLabel": "→은연중, 부지불식중,부재중"
+    "displayLabel": "부재 중 → 부재중(외)"
   },
   {
     "find": "북 소리",
@@ -189,25 +188,20 @@
     "tip": "표준국어대사전  '북소리,개소리,끽소리,딴소리,별소리' 등재",
     "dividerGroup": "A1",
     "dividerLabel": "표준국어대사전 등재(명사)",
-    "displayLabel": "→북소리, 개소리, 끽소리, 딴소리, 별소리"
+    "displayLabel": "북 소리 → 북소리(외)"
   },
   {
     "find": "경제 관념",
     "replace": "경제관념",
+    "finds": [
+      "경제 관념",
+      "경제 생활"
+    ],
     "enabled": true,
-    "tip": "표준국어대사전  '경제관념' 등재",
+    "tip": "표준국어대사전  '경제관념, 경제생활' 등재",
     "dividerGroup": "A1",
     "dividerLabel": "표준국어대사전 등재(명사)",
-    "overlayReplace": "→경제^관념"
-  },
-  {
-    "find": "경제 생활",
-    "replace": "경제생활",
-    "enabled": true,
-    "tip": "표준국어대사전  '경제생활' 등재",
-    "dividerGroup": "A1",
-    "dividerLabel": "표준국어대사전 등재(명사)",
-    "overlayReplace": "→경제^생활"
+    "displayLabel": "경제 관념 → 경제관념(외)"
   },
   {
     "find": "그 중",
@@ -235,6 +229,26 @@
     "dividerGroup": "A1",
     "dividerLabel": "표준국어대사전 등재(명사)",
     "overlayReplace": "→무염^식사"
+  },
+  {
+    "find": "물 속",
+    "replace": "물속",
+    "finds": [
+      "물 속",
+      "산 속",
+      "숲 속",
+      "꿈 속",
+      "땅 속",
+      "바닷 속",
+      "빗 속",
+      "굴 속",
+      "몸 속"
+    ],
+    "enabled": true,
+    "tip": "표준국어대사전  '물속,산속,숲속,꿈속,땅속,바닷속,빗속,굴속,몸속' 등재",
+    "dividerGroup": "A1",
+    "dividerLabel": "표준국어대사전 등재(명사)",
+    "displayLabel": "물 속 → 물속(외)"
   },
   {
     "find": "살아 생전",
@@ -273,31 +287,114 @@
     "overlayReplace": "→어제^저녁"
   },
   {
-    "find": "집안 사람",
-    "replace": "집안사람",
+    "find": "마음 속",
+    "replace": "마음속",
+    "finds": [
+      "마음 속",
+      "맘 속",
+      "머릿 속",
+      "귓 속",
+      "입 속",
+      "콧 속",
+      "뼛 속",
+      "핏 속",
+      "품 속"
+    ],
     "enabled": true,
-    "tip": "표준국어대사전  '집안사람' 등재",
+    "tip": "표준국어대사전  '마음속,맘속,머릿속,귓속,입속,콧속,뼛속,핏속,품속' 등재 주의: 뱃속·가슴속·안갯속은 뜻이 갈려 제외",
     "dividerGroup": "A1",
     "dividerLabel": "표준국어대사전 등재(명사)",
-    "overlayReplace": "→집안^사람"
+    "displayLabel": "마음 속 → 마음속(외)"
+  },
+  {
+    "find": "앞 사람",
+    "replace": "앞사람",
+    "finds": [
+      "앞 사람",
+      "뒷 사람",
+      "윗 사람",
+      "아랫 사람",
+      "옛 사람",
+      "집안 사람"
+    ],
+    "enabled": true,
+    "tip": "표준국어대사전  '앞사람,뒷사람,윗사람,아랫사람,옛사람,집안사람' 등재",
+    "dividerGroup": "A1",
+    "dividerLabel": "표준국어대사전 등재(명사)",
+    "displayLabel": "앞 사람 → 앞사람(외)"
+  },
+  {
+    "find": "섬 사람",
+    "replace": "섬사람",
+    "finds": [
+      "섬 사람",
+      "촌 사람",
+      "뱃 사람",
+      "눈 사람",
+      "뭇 사람"
+    ],
+    "enabled": true,
+    "tip": "표준국어대사전  '섬사람,촌사람,뱃사람,눈사람,뭇사람' 등재 주의: 한·새·큰·딴·산 사람은 띄어 써도 맞아 제외",
+    "dividerGroup": "A1",
+    "dividerLabel": "표준국어대사전 등재(명사)",
+    "displayLabel": "섬 사람 → 섬사람(외)"
+  },
+  {
+    "find": "이 것",
+    "replace": "이것",
+    "finds": [
+      "이 것",
+      "그 것",
+      "저 것",
+      "요 것",
+      "고 것",
+      "조 것",
+      "아무 것"
+    ],
+    "enabled": true,
+    "tip": "표준국어대사전  '이것,그것,저것,요것,고것,조것,아무것' 등재",
+    "dividerGroup": "A2",
+    "dividerLabel": "표준국어대사전 등재(대명사)",
+    "displayLabel": "이 것 → 이것(외)"
+  },
+  {
+    "find": "이 곳",
+    "replace": "이곳",
+    "finds": [
+      "이 곳",
+      "그 곳",
+      "저 곳",
+      "곳 곳",
+      "외딴 곳"
+    ],
+    "enabled": true,
+    "tip": "표준국어대사전  '이곳,그곳,저곳,곳곳,외딴곳' 등재 주의: '한 곳'은 띄어 써도 맞음, '아무곳' 미등재",
+    "dividerGroup": "A2",
+    "dividerLabel": "표준국어대사전 등재(대명사)",
+    "displayLabel": "이 곳 → 이곳(외)"
   },
   {
     "find": "그럴 듯",
     "replace": "그럴듯",
+    "finds": [
+      "그럴 듯",
+      "그럴 싸"
+    ],
     "enabled": true,
-    "tip": "표준국어대사전 '그럴듯하다' 등재",
+    "tip": "표준국어대사전 '그럴듯하다,그럴싸하다' 등재",
     "dividerGroup": "A",
     "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
-    "overlayReplace": "→그럴^듯"
+    "overlayReplace": "→그럴^듯",
+    "displayLabel": "그럴 듯 → 그럴듯(외)"
   },
   {
-    "find": "그럴 싸",
-    "replace": "그럴싸",
+    "find": "듯 하",
+    "replace": "듯하",
     "enabled": true,
-    "tip": "표준국어대사전 '그럴싸하다' 등재",
+    "tip": "표준국어대사전 '듯하다' 등재",
     "dividerGroup": "A",
     "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
-    "overlayReplace": "→그럴^싸"
+    "overlayReplace": "→듯^하"
   },
   {
     "find": "자신만만 하",
@@ -305,7 +402,8 @@
     "finds": [
       "자신만만 하",
       "자신만만 한",
-      "자신만만 했"
+      "자신만만 했",
+      "자신만만 할"
     ],
     "enabled": true,
     "tip": "표준국어대사전 '자신만만하다' 등재",
@@ -314,22 +412,18 @@
     "overlayReplace": "→자신만만^"
   },
   {
-    "find": "보잘 것",
+    "find": "보잘 것 없",
     "replace": "보잘것없",
+    "finds": [
+      "보잘 것 없",
+      "하잘 것 없"
+    ],
     "enabled": true,
-    "tip": "표준국어대사전 '보잘것없다' 등재",
+    "tip": "표준국어대사전 '보잘것없다,하잘것없다' 등재",
     "dividerGroup": "A",
     "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
-    "overlayReplace": "→보잘^것없"
-  },
-  {
-    "find": "하잘 것",
-    "replace": "하잘것없",
-    "enabled": true,
-    "tip": "표준국어대사전 '하잘것없다' 등재",
-    "dividerGroup": "A",
-    "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
-    "overlayReplace": "→하잘^것없"
+    "overlayReplace": "→보잘^것없",
+    "displayLabel": "보잘 것 없 → 보잘것없(외)"
   },
   {
     "find": "머지 않",
@@ -354,7 +448,8 @@
     "replace": "되풀이되",
     "finds": [
       "되풀이 되",
-      "되풀이 된"
+      "되풀이 된",
+      "되풀이 될"
     ],
     "enabled": true,
     "tip": "표준국어대사전  '되풀이되다' 등재",
@@ -368,27 +463,103 @@
     "finds": [
       "부끄러워 하",
       "부끄러워 했",
-      "부끄러워 한"
-    ],
-    "enabled": true,
-    "tip": "표준국어대사전  '부끄러워하다' 등재",
-    "dividerGroup": "A",
-    "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
-    "overlayReplace": "→부끄러워^하"
-  },
-  {
-    "find": "기꺼워 하",
-    "replace": "기꺼워하",
-    "finds": [
+      "부끄러워 한",
+      "부끄러워 할",
       "기꺼워 하",
       "기꺼워 했",
-      "기꺼워 한"
+      "기꺼워 한",
+      "기꺼워 할",
+      "가려워 하",
+      "가려워 했",
+      "가려워 한",
+      "가려워 할",
+      "고마워 하",
+      "고마워 했",
+      "고마워 한",
+      "고마워 할",
+      "괴로워 하",
+      "괴로워 했",
+      "괴로워 한",
+      "괴로워 할",
+      "귀여워 하",
+      "귀여워 했",
+      "귀여워 한",
+      "귀여워 할",
+      "그리워 하",
+      "그리워 했",
+      "그리워 한",
+      "그리워 할",
+      "노여워 하",
+      "노여워 했",
+      "노여워 한",
+      "노여워 할",
+      "놀라워 하",
+      "놀라워 했",
+      "놀라워 한",
+      "놀라워 할",
+      "두려워 하",
+      "두려워 했",
+      "두려워 한",
+      "두려워 할",
+      "무서워 하",
+      "무서워 했",
+      "무서워 한",
+      "무서워 할",
+      "미워 하",
+      "미워 했",
+      "미워 한",
+      "미워 할",
+      "반가워 하",
+      "반가워 했",
+      "반가워 한",
+      "반가워 할",
+      "부러워 하",
+      "부러워 했",
+      "부러워 한",
+      "부러워 할",
+      "서러워 하",
+      "서러워 했",
+      "서러워 한",
+      "서러워 할",
+      "아까워 하",
+      "아까워 했",
+      "아까워 한",
+      "아까워 할",
+      "아쉬워 하",
+      "아쉬워 했",
+      "아쉬워 한",
+      "아쉬워 할",
+      "안쓰러워 하",
+      "안쓰러워 했",
+      "안쓰러워 한",
+      "안쓰러워 할",
+      "안타까워 하",
+      "안타까워 했",
+      "안타까워 한",
+      "안타까워 할",
+      "어려워 하",
+      "어려워 했",
+      "어려워 한",
+      "어려워 할",
+      "외로워 하",
+      "외로워 했",
+      "외로워 한",
+      "외로워 할",
+      "즐거워 하",
+      "즐거워 했",
+      "즐거워 한",
+      "즐거워 할",
+      "지겨워 하",
+      "지겨워 했",
+      "지겨워 한",
+      "지겨워 할"
     ],
     "enabled": true,
-    "tip": "표준국어대사전  '기꺼워하다' 등재",
+    "tip": "표준국어대사전 등재 '부끄러워하다,기꺼워하다'",
     "dividerGroup": "A",
     "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
-    "overlayReplace": "→기꺼워^하"
+    "overlayReplace": "→부끄러워^하",
+    "displayLabel": "부끄러워 하 → 부끄러워하(외)"
   },
   {
     "find": "마다 하",
@@ -396,7 +567,8 @@
     "finds": [
       "마다 하",
       "마다 했",
-      "마다 한"
+      "마다 한",
+      "마다 할"
     ],
     "enabled": true,
     "tip": "표준국어대사전  '마다하다' 등재",
@@ -407,11 +579,18 @@
   {
     "find": "가 닿",
     "replace": "가닿",
+    "finds": [
+      "가 닿",
+      "맞 닿",
+      "잇 닿",
+      "들이 닿"
+    ],
     "enabled": true,
-    "tip": "표준국어대사전  '가닿다' 등재",
+    "tip": "표준국어대사전 등재 '가닿다,맞닿다,잇닿다,들이닿다'",
     "dividerGroup": "A",
     "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
-    "overlayReplace": "→가^닿"
+    "overlayReplace": "→가^닿",
+    "displayLabel": "가 닿 → 가닿(외)"
   },
   {
     "find": "때 맞",
@@ -425,11 +604,19 @@
   {
     "find": "장난 삼",
     "replace": "장난삼",
+    "finds": [
+      "장난 삼",
+      "거울 삼",
+      "자랑 삼",
+      "주장 삼",
+      "참고 삼"
+    ],
     "enabled": true,
-    "tip": "표준국어대사전  '장난삼다' 등재 참고: '친구삼다' 미등재",
+    "tip": "표준국어대사전 등재 '장난삼다,거울삼다,자랑삼다,주장삼다,참고삼다'. '친구삼다' 미등재",
     "dividerGroup": "A",
     "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
-    "overlayReplace": "→장난^삼"
+    "overlayReplace": "→장난^삼",
+    "displayLabel": "장난 삼 → 장난삼(외)"
   },
   {
     "find": "검정색",
@@ -567,6 +754,15 @@
     "overlayReplace": "→역대 또는 초유의"
   },
   {
+    "find": "웃사람",
+    "replace": "윗사람",
+    "enabled": true,
+    "tip": "'윗사람'의 잘못된 표현",
+    "dividerGroup": "B0",
+    "dividerLabel": "잘못된 표현(명사)",
+    "overlayReplace": "→윗사람"
+  },
+  {
     "find": "성장율",
     "replace": "성장률",
     "enabled": true,
@@ -612,6 +808,15 @@
     "overlayReplace": "→시가"
   },
   {
+    "find": "싯구",
+    "replace": "시구",
+    "enabled": true,
+    "tip": "두 음절 한자어 6개(곳간庫間, 셋방貰房, 숫자數字, 찻간車間, 툇간退間,횟수回數)만 사이시옷을 넣는다",
+    "dividerGroup": "B0",
+    "dividerLabel": "잘못된 표현(명사)",
+    "overlayReplace": "→시구"
+  },
+  {
     "find": "댓가",
     "replace": "대가",
     "enabled": true,
@@ -646,6 +851,33 @@
     "dividerGroup": "B0",
     "dividerLabel": "잘못된 표현(명사)",
     "overlayReplace": "→뒤풀이"
+  },
+  {
+    "find": "윗층",
+    "replace": "위층",
+    "enabled": true,
+    "tip": "거센소리 ㅊ,ㅋ,ㅌ,ㅍ 앞에는 사이시옷이 붙지 않는다",
+    "dividerGroup": "B0",
+    "dividerLabel": "잘못된 표현(명사)",
+    "overlayReplace": "→위층"
+  },
+  {
+    "find": "뒷편",
+    "replace": "뒤편",
+    "enabled": true,
+    "tip": "거센소리 ㅊ,ㅋ,ㅌ,ㅍ 앞에는 사이시옷이 붙지 않는다",
+    "dividerGroup": "B0",
+    "dividerLabel": "잘못된 표현(명사)",
+    "overlayReplace": "→뒤편"
+  },
+  {
+    "find": "뒷쪽",
+    "replace": "뒤쪽",
+    "enabled": true,
+    "tip": "거센소리 ㅊ,ㅋ,ㅌ,ㅍ 앞에는 사이시옷이 붙지 않는다",
+    "dividerGroup": "B0",
+    "dividerLabel": "잘못된 표현(명사)",
+    "overlayReplace": "→뒤쪽"
   },
   {
     "find": "희노애락(喜怒哀樂)",
@@ -849,6 +1081,7 @@
       "담궈",
       "담겼",
       "담구었",
+      "담굴",
       "담궈고",
       "담궈는",
       "담궈어",
@@ -867,7 +1100,6 @@
     "replace": "치러",
     "finds": [
       "치뤄",
-      "치룬",
       "치뤄고",
       "치뤄는",
       "치뤄어",
@@ -887,6 +1119,7 @@
     "finds": [
       "잠궈",
       "잠구었",
+      "잠굴",
       "잠궈고",
       "잠궈는",
       "잠궈어",
@@ -989,10 +1222,6 @@
   {
     "find": "불려지",
     "replace": "불려",
-    "enabled": true,
-    "tip": "이중피동, 과거형은 '불렸다'",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사 · 형용사)",
     "finds": [
       "불려지",
       "불려져",
@@ -1001,15 +1230,15 @@
       "불려지는",
       "불려진",
       "불려질"
-    ]
+    ],
+    "enabled": true,
+    "tip": "이중피동, 과거형은 '불렸다'",
+    "dividerGroup": "B1",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)"
   },
   {
     "find": "쓰여지",
     "replace": "쓰여",
-    "enabled": true,
-    "tip": "아중피동, 과겨형은 '쓰였다'",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사 · 형용사)",
     "finds": [
       "쓰여지",
       "쓰여져",
@@ -1018,15 +1247,15 @@
       "쓰여지는",
       "쓰여진",
       "쓰여질"
-    ]
+    ],
+    "enabled": true,
+    "tip": "아중피동, 과겨형은 '쓰였다'",
+    "dividerGroup": "B1",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)"
   },
   {
     "find": "읽혀지",
     "replace": "읽히",
-    "enabled": true,
-    "tip": "이중피동, 과거형은 '읽혔다'",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사 · 형용사)",
     "finds": [
       "읽혀지",
       "읽혀져",
@@ -1035,7 +1264,11 @@
       "읽혀지는",
       "읽혀진",
       "읽혀질"
-    ]
+    ],
+    "enabled": true,
+    "tip": "이중피동, 과거형은 '읽혔다'",
+    "dividerGroup": "B1",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)"
   },
   {
     "find": "잊혀",
@@ -1048,6 +1281,12 @@
   {
     "find": "짜여진",
     "replace": "짜여",
+    "finds": [
+      "짜여지",
+      "짜여진",
+      "짜여졌",
+      "짜여질"
+    ],
     "enabled": true,
     "tip": "이중피동, 과겨형은 '짜였다'",
     "dividerGroup": "B1",
@@ -1056,11 +1295,6 @@
   {
     "find": "부비",
     "replace": "비비",
-    "enabled": true,
-    "tip": "'비비다'의 잘못된 표현",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사 · 형용사)",
-    "overlayReplace": "→비비",
     "finds": [
       "부비",
       "부벼",
@@ -1069,7 +1303,12 @@
       "부비는",
       "부빈",
       "부빌"
-    ]
+    ],
+    "enabled": true,
+    "tip": "'비비다'의 잘못된 표현",
+    "dividerGroup": "B1",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
+    "overlayReplace": "→비비"
   },
   {
     "find": "본따",
@@ -1127,11 +1366,6 @@
   {
     "find": "끼여들",
     "replace": "끼어들",
-    "enabled": true,
-    "tip": "'끼어들다'의 잘못된 표현('끼어 있다'는 가능)",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사 · 형용사)",
-    "overlayReplace": "→끼어들",
     "finds": [
       "끼여들",
       "끼여드는",
@@ -1139,7 +1373,12 @@
       "끼여들고",
       "끼여들어",
       "끼여들었"
-    ]
+    ],
+    "enabled": true,
+    "tip": "'끼어들다'의 잘못된 표현('끼어 있다'는 가능)",
+    "dividerGroup": "B1",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
+    "overlayReplace": "→끼어들"
   },
   {
     "find": "걸맞는",
@@ -1180,11 +1419,6 @@
   {
     "find": "설레이",
     "replace": "설레",
-    "enabled": true,
-    "tip": "자동사에 불필요한 사동 접미사 '-이'삽입",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사 · 형용사)",
-    "overlayReplace": "→설레",
     "finds": [
       "설레이",
       "설레여",
@@ -1193,16 +1427,16 @@
       "설레이는",
       "설레인",
       "설레일"
-    ]
-  },
-  {
-    "find": "되뇌이",
-    "replace": "되뇌",
+    ],
     "enabled": true,
     "tip": "자동사에 불필요한 사동 접미사 '-이'삽입",
     "dividerGroup": "B1",
     "dividerLabel": "잘못된 표현(동사 · 형용사)",
-    "overlayReplace": "→되뇌",
+    "overlayReplace": "→설레"
+  },
+  {
+    "find": "되뇌이",
+    "replace": "되뇌",
     "finds": [
       "되뇌이",
       "되뇌여",
@@ -1211,16 +1445,16 @@
       "되뇌이는",
       "되뇌인",
       "되뇌일"
-    ]
-  },
-  {
-    "find": "헤메이",
-    "replace": "헤메",
+    ],
     "enabled": true,
     "tip": "자동사에 불필요한 사동 접미사 '-이'삽입",
     "dividerGroup": "B1",
     "dividerLabel": "잘못된 표현(동사 · 형용사)",
-    "overlayReplace": "→헤메",
+    "overlayReplace": "→되뇌"
+  },
+  {
+    "find": "헤메이",
+    "replace": "헤메",
     "finds": [
       "헤메이",
       "헤메여",
@@ -1229,7 +1463,12 @@
       "헤메이는",
       "헤메인",
       "헤메일"
-    ]
+    ],
+    "enabled": true,
+    "tip": "자동사에 불필요한 사동 접미사 '-이'삽입",
+    "dividerGroup": "B1",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
+    "overlayReplace": "→헤메"
   },
   {
     "find": "에이는",
