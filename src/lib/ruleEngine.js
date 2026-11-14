@@ -12,6 +12,12 @@ import {
 } from './matchReadingOrder.js';
 import { cautionHighlightSpan } from './cautionRules.js';
 import { isHangulSyllable } from './spellingRuleEntry.js';
+import {
+  compileSpellingFindReplacesRegex,
+  formatVariantPairsLabel,
+  hasSpellingFindReplaces,
+  resolveSpellingVariant,
+} from './spellingFindReplaces.js';
 
 /**
  * @typedef {Object} PageText
@@ -29,6 +35,8 @@ import { isHangulSyllable } from './spellingRuleEntry.js';
  * @property {number} [highlightIndex] — highlightText 시작 위치 (없으면 matchedText 안에서 유도)
  * @property {number} pageNum
  * @property {number} index
+ * @property {string} [variantFind] — findReplaces 행: 매칭된 시트 변형(예: 갯수)
+ * @property {string} [variantReplace] — findReplaces 행: 그 변형의 고칠 말(예: 개수)
  */
 
 /**
@@ -49,6 +57,7 @@ import { isHangulSyllable } from './spellingRuleEntry.js';
  * @property {string} [dividerGroup] — 맞춤법 묶음 키(엑셀 묶음 열 정렬·병합용)
  * @property {string} [dividerLabel] — 묶음 표시 이름(엑셀 묶음 열 표시용)
  * @property {string} [overlayReplace] — PDF 하이라이트 위 표시 문구(표기 통일 추천 등)
+ * @property {boolean} [variantPairsLabel] — findReplaces 행: label을 실제로 찾은 쌍으로 바꿈
  * @property {MatchInstance[]} instances
  */
 
@@ -152,6 +161,11 @@ function finalizeResults(byKey, pages = []) {
   const pageByNum = buildPageByNum(pages);
   for (const group of byKey.values()) {
     group.instances = sortInstancesReadingOrder(group.instances, pageByNum);
+    // findReplaces 행: 결과 카드·엑셀은 display_label 대신 실제로 찾은 쌍(갯수 → 개수)만
+    if (group.variantPairsLabel) {
+      const pairs = formatVariantPairsLabel(group.instances);
+      if (pairs) group.label = pairs;
+    }
   }
   return [...byKey.values()].sort((a, b) => {
     const pa = a.instances[0]?.pageNum ?? 0;
@@ -282,7 +296,7 @@ function applyCompoundFindByLines(rule, page, byKey, globalExcludePhrases) {
 }
 
 function applyRuleToPages(rule, pages, byKey, globalExcludePhrases, errors) {
-  const regex = compileRuleRegex(rule);
+  const regex = compileSpellingFindReplacesRegex(rule) ?? compileRuleRegex(rule);
   if (!regex) {
     errors.push(`규칙 문법 오류: ${ruleDisplayLabel(rule)}`);
     return;
@@ -359,8 +373,13 @@ function applyRuleToPages(rule, pages, byKey, globalExcludePhrases, errors) {
       ) {
         continue;
       }
-      const suggested =
-        rule.category === 'caution'
+      const variant =
+        rule.category !== 'caution' && hasSpellingFindReplaces(rule)
+          ? resolveSpellingVariant(rule, match[0])
+          : null;
+      const suggested = variant
+        ? variant.replace
+        : rule.category === 'caution'
           ? match[0]
           : rule.pattern === 'regex'
             ? applyReplaceTemplate(rule.replace, match)
@@ -391,9 +410,10 @@ function applyRuleToPages(rule, pages, byKey, globalExcludePhrases, errors) {
             : {}),
           ...(rule.dividerGroup ? { dividerGroup: rule.dividerGroup } : {}),
           ...(rule.dividerLabel ? { dividerLabel: rule.dividerLabel } : {}),
-          ...(String(rule.overlayReplace ?? '').trim()
+          ...(String(rule.overlayReplace ?? '').trim() && !variant
             ? { overlayReplace: String(rule.overlayReplace).trim() }
             : {}),
+          ...(variant ? { variantPairsLabel: true } : {}),
           instances: [],
         });
       }
@@ -411,6 +431,7 @@ function applyRuleToPages(rule, pages, byKey, globalExcludePhrases, errors) {
         suggestedText: suggested,
         pageNum: page.pageNum,
         index: match.index,
+        ...(variant ? { variantFind: variant.find, variantReplace: variant.replace } : {}),
         ...(highlightText ? { highlightText, highlightIndex } : {}),
       });
     }

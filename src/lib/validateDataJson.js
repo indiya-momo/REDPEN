@@ -167,6 +167,31 @@ export function validateSpellingRules(data, label = 'spelling-rules.json') {
       }
     }
 
+    if (row.findReplaces !== undefined) {
+      const fr = row.findReplaces;
+      if (!fr || typeof fr !== 'object' || Array.isArray(fr)) {
+        pushIssue(issues, `${base}.findReplaces`, 'must be an object');
+      } else if (!(Array.isArray(row.finds) && row.finds.length >= 2)) {
+        pushIssue(issues, `${base}.findReplaces`, 'requires finds with at least two variants');
+      } else {
+        const variantSet = new Set(row.finds.map((f) => String(f).trim()));
+        for (const [key, value] of Object.entries(fr)) {
+          const k = String(key).trim();
+          if (!variantSet.has(k)) {
+            pushIssue(issues, `${base}.findReplaces`, `key "${key}" is not in finds`);
+          }
+          if (isNonEmptyString(row.find) && k === row.find.trim()) {
+            pushIssue(issues, `${base}.findReplaces`, `primary find "${key}" must use replace`);
+          }
+          if (!isNonEmptyString(value)) {
+            pushIssue(issues, `${base}.findReplaces.${key}`, 'required non-empty string');
+          } else if (value.trim() === k) {
+            pushIssue(issues, `${base}.findReplaces.${key}`, 'find and replace must differ');
+          }
+        }
+      }
+    }
+
     const forms =
       Array.isArray(row.finds) && row.finds.length >= 2
         ? row.finds.map((f) => String(f).trim())
