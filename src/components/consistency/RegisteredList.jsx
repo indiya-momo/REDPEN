@@ -110,7 +110,7 @@ export default function RegisteredList({
         );
         return ia - ib;
       });
-    // 필수(하다·지다)도 같은 그리드에 이어 붙임 — 아래 줄·구분선으로 떨어뜨리지 않음
+    // 필수(지다·하다)도 같은 그리드에 이어 붙임 — 아래 줄·구분선으로 떨어뜨리지 않음
     const ordered = [...optionalEntries, ...requiredEntries];
     const itemProps = { customRules, isEnabled, onToggle, isRequired, disabled };
 
