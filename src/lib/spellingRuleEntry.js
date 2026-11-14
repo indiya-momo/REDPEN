@@ -86,10 +86,10 @@ export function hasSpellingFindVariants(entry) {
 }
 
 /**
- * 앞말이 붙은 형태(예: 「이것 뿐」의 「것 뿐」)를 일부러 잡는 띄어쓰기 규칙.
+ * 앞말이 붙은 형태(예: 「이것 뿐」의 「것 뿐」, 「그럴듯 하다」의 「듯 하」)를 일부러 잡는 띄어쓰기 규칙.
  * 시트에 allow_attached_prefix 열이 없을 때를 위한 기본 목록 — 시트 열(TRUE)이 있으면 그쪽이 우선.
  */
-export const SPELLING_ALLOW_ATTACHED_PREFIX_FINDS = new Set(['것 뿐']);
+export const SPELLING_ALLOW_ATTACHED_PREFIX_FINDS = new Set(['것 뿐', '듯 하']);
 
 /** @param {string | undefined} ch */
 export function isHangulSyllable(ch) {

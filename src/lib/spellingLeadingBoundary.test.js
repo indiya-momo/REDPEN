@@ -117,6 +117,32 @@ describe('맞춤법 띄어쓰기 규칙 — 앞 한글 경계', () => {
     expect(hits([rule], '남은 건 이것 뿐이다')).toEqual(['것 뿐']);
   });
 
+  describe('기본 opt-out 목록: 「듯 하」', () => {
+    const rowOf = (find) => {
+      const row = BUILT_IN_RULES.find((r) => r.find === find);
+      expect(row).toBeTruthy();
+      return buildSpellingCheckRuleFromBuiltIn({ ...row, enabled: true });
+    };
+    const deutHa = rowOf('듯 하');
+    const geureolDeut = rowOf('그럴 듯');
+
+    it('경계 검사를 끈다', () => {
+      expect(spellingRuleNeedsLeadingHangulBoundary(deutHa)).toBe(false);
+    });
+
+    it.each([
+      ['그럴듯 하다', ['듯 하']],
+      ['비가 올듯 하다', ['듯 하']],
+      ['비가 올 듯 하다', ['듯 하']],
+    ])('「%s」를 잡는다', (text, expected) => {
+      expect(hits([deutHa, geureolDeut], text)).toEqual(expected);
+    });
+
+    it('「그럴 듯 하다」는 「그럴 듯」 한 번만 잡는다(겹침 중복 없음)', () => {
+      expect(hits([deutHa, geureolDeut], '그럴 듯 하다')).toEqual(['그럴 듯']);
+    });
+  });
+
   it('맞춤법이 아닌 일반 literal 규칙은 그대로(앞 한글 붙어도 잡음)', () => {
     expect(
       hits([{ find: '물 속', replace: '물속', enabled: true }], '건물 속'),
@@ -135,6 +161,7 @@ describe('맞춤법 띄어쓰기 규칙 — 앞 한글 경계', () => {
     }
     expect(flagged.some((r) => r.find === '봄 밤')).toBe(true);
     expect(flagged.some((r) => r.find === '것 뿐')).toBe(false);
+    expect(flagged.some((r) => r.find === '듯 하')).toBe(false);
   });
 
   it('isHangulSyllable', () => {

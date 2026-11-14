@@ -62,91 +62,64 @@ export function groupRulesByDivider(rules) {
 }
 
 /**
- * 시트 divider_group 코드 → 화면에서 합쳐 보여 줄 한 폴더.
- * 일반적인 접두어 병합은 하지 않는다(A1/A2/A, C/C1/C2는 따로 둔다).
- * 규칙의 dividerGroup 값은 바꾸지 않는다(B1 자동 전개·엑셀 내보내기가 원래 코드를 씀).
- * @type {Record<string, { bundleId: string, label: string, order: number }>}
+ * 폴더 안을 「같은 tip 묶음 → find 가나다순」으로 자동 정렬할 divider_group 코드.
+ * 여기 없는 묶음은 시트 순서를 그대로 쓴다.
  */
-export const SPELLING_BUNDLE_MERGE = {
-  B0: { bundleId: 'B', label: '잘못된 표현', order: 0 },
-  B1: { bundleId: 'B', label: '잘못된 표현', order: 1 },
-  B2: { bundleId: 'B', label: '잘못된 표현', order: 2 },
-};
+export const TIP_SORTED_GROUPS = new Set(['B0', 'B1', 'B2']);
 
 /**
- * @param {import('./ruleTypes.js').Rule} a
- * @param {import('./ruleTypes.js').Rule} b
+ * tip 비교 키 — 앞뒤 공백을 지우고 연속 공백은 한 칸으로.
+ * @param {unknown} tip
  */
-function compareMergedBundleRules(a, b) {
-  const oa = SPELLING_BUNDLE_MERGE[String(a.dividerGroup ?? '').trim()]?.order ?? 0;
-  const ob = SPELLING_BUNDLE_MERGE[String(b.dividerGroup ?? '').trim()]?.order ?? 0;
-  if (oa !== ob) return oa - ob;
+export function normalizeTipKey(tip) {
+  return String(tip ?? '').replace(/\s+/g, ' ').trim();
+}
+
+/**
+ * @param {{ find?: string }} a
+ * @param {{ find?: string }} b
+ */
+function compareFindKo(a, b) {
   return String(a.find ?? '').localeCompare(String(b.find ?? ''), 'ko');
 }
 
 /**
- * 합쳐질 묶음(B0~B2)은 목록 어디에 있든 한 폴더로 모은다.
- * 폴더는 처음 나온 코드 자리에 두고, 안에서는 코드 순 → find 가나다순.
- * 나머지는 기존처럼 연속된 dividerGroup끼리 묶는다.
+ * 같은 tip끼리 모으고(묶음 안은 find 가나다순), 묶음끼리는 첫 find 가나다순.
+ * tip이 빈 행은 각자 단독 묶음. 입력 배열은 바꾸지 않는다(시트 정렬 스크립트에서도 재사용).
+ * @template {{ find?: string, tip?: string }} T
+ * @param {T[]} rules
+ * @returns {T[]}
+ */
+export function sortRulesByTipThenFind(rules) {
+  /** @type {Map<string, T[]>} */
+  const clusters = new Map();
+  rules.forEach((rule, i) => {
+    const tip = normalizeTipKey(rule.tip);
+    const key = tip || `\0empty_${i}`;
+    if (!clusters.has(key)) clusters.set(key, []);
+    clusters.get(key).push(rule);
+  });
+  const sorted = [...clusters.values()].map((list) => [...list].sort(compareFindKo));
+  sorted.sort((a, b) => compareFindKo(a[0], b[0]));
+  return sorted.flat();
+}
+
+/**
+ * 연속된 dividerGroup끼리 묶는다. TIP_SORTED_GROUPS 묶음은 안을 tip → 가나다순으로 정렬.
  * @param {import('./ruleTypes.js').Rule[]} rules
  * @returns {{ id: string, label: string, uiNote: string, rules: import('./ruleTypes.js').Rule[], ruleCount: number }[]}
  */
 export function buildSpellingRuleBundles(rules) {
-  /** @type {Map<string, import('./ruleTypes.js').Rule[]>} */
-  const merged = new Map();
-  /** @type {import('./ruleTypes.js').Rule[]} */
-  const rest = [];
-  /** @type {(string | null)[]} 합쳐질 폴더가 처음 나온 자리 표시 */
-  const slots = [];
-  for (const rule of rules) {
-    const conf = SPELLING_BUNDLE_MERGE[String(rule.dividerGroup ?? '').trim()];
-    if (!conf) {
-      rest.push(rule);
-      slots.push(null);
-      continue;
-    }
-    if (!merged.has(conf.bundleId)) {
-      merged.set(conf.bundleId, []);
-      slots.push(conf.bundleId);
-    }
-    merged.get(conf.bundleId).push(rule);
-  }
-
-  /** @type {ReturnType<typeof buildSpellingRuleBundles>} */
-  const out = [];
-  /** @type {import('./ruleTypes.js').Rule[]} */
-  let pending = [];
-  const flush = () => {
-    if (!pending.length) return;
-    for (const group of groupRulesByDivider(pending)) {
-      out.push({
-        id: group.key,
-        label: spellingBundleDisplayLabel(group.rules[0]),
-        uiNote: spellingBundleUiNote(group.key),
-        rules: group.rules,
-        ruleCount: group.rules.length,
-      });
-    }
-    pending = [];
-  };
-  let restIdx = 0;
-  for (const slot of slots) {
-    if (slot === null) {
-      pending.push(rest[restIdx]);
-      restIdx += 1;
-      continue;
-    }
-    flush();
-    const bundleRules = [...merged.get(slot)].sort(compareMergedBundleRules);
-    const conf = Object.values(SPELLING_BUNDLE_MERGE).find((c) => c.bundleId === slot);
-    out.push({
-      id: slot,
-      label: conf?.label ?? slot,
-      uiNote: spellingBundleUiNote(slot),
-      rules: bundleRules,
-      ruleCount: bundleRules.length,
-    });
-  }
-  flush();
-  return out;
+  return groupRulesByDivider(rules).map((group) => {
+    const groupRules = TIP_SORTED_GROUPS.has(group.key)
+      ? sortRulesByTipThenFind(group.rules)
+      : group.rules;
+    return {
+      id: group.key,
+      label: spellingBundleDisplayLabel(group.rules[0]),
+      uiNote: spellingBundleUiNote(group.key),
+      rules: groupRules,
+      ruleCount: groupRules.length,
+    };
+  });
 }
