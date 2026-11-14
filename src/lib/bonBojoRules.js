@@ -196,7 +196,7 @@ export function listBonBojoUnifyReviewStems() {
 }
 
 /** 시트·UI에서 기본 체크·「필수」 표시 대상 */
-export const BON_BOJO_REQUIRED_ITEM_IDS_LIST = ['verb-hada', 'verb-jida'];
+export const BON_BOJO_REQUIRED_ITEM_IDS_LIST = ['verb-jida', 'verb-hada'];
 
 export const BON_BOJO_REQUIRED_ITEM_IDS = new Set(BON_BOJO_REQUIRED_ITEM_IDS_LIST);
 
