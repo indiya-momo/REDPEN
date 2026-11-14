@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
+  TIP_SORTED_GROUPS,
   buildSpellingRuleBundles,
   groupRulesByDivider,
   normalizeDividerLabel,
+  normalizeTipKey,
+  sortRulesByTipThenFind,
   spellingBundleDisplayLabel,
 } from './spellingRuleBundles.js';
 
@@ -75,45 +78,68 @@ describe('buildSpellingRuleBundles', () => {
     });
   });
 
-  it('B0·B1·B2는 한 폴더로 모으고 코드 순 → 가나다순으로 정렬한다', () => {
+  it('B0·B1·B2는 합치지 않고 연속된 묶음 그대로 따로 둔다', () => {
     const bundles = buildSpellingRuleBundles([
-      rule({ find: '역전 앞', dividerGroup: 'A1', dividerLabel: '등재(명사)' }),
+      rule({ find: '역전 앞', dividerGroup: 'A1' }),
       rule({ find: '하마트면', dividerGroup: 'B0', dividerLabel: '잘못된 표현(명사)' }),
       rule({ find: '갯수', dividerGroup: 'B0', dividerLabel: '잘못된 표현(명사)' }),
       rule({ find: '않되', dividerGroup: 'B1', dividerLabel: '잘못된 표현(동사)' }),
       rule({ find: '금새', dividerGroup: 'B2', dividerLabel: '잘못된 표현(그 외)' }),
-      rule({ find: '바나나', dividerGroup: 'C', dividerLabel: '외래어' }),
-      // 시트 맨 아래에 잘못 붙인 행
-      rule({ find: '가르키다', dividerGroup: 'B1', dividerLabel: '잘못된 표현(동사)' }),
-      rule({ find: '간뇌', dividerGroup: 'F', dividerLabel: '교육부 개정 용어' }),
+      rule({ find: '바나나', dividerGroup: 'C' }),
     ]);
-    expect(bundles.map((b) => b.id)).toEqual(['A1', 'B', 'C', 'F']);
-    const b = bundles[1];
-    expect(b).toMatchObject({ id: 'B', label: '잘못된 표현', uiNote: '', ruleCount: 5 });
-    expect(b.rules.map((r) => r.find)).toEqual(['갯수', '하마트면', '가르키다', '않되', '금새']);
-    // 원래 코드는 그대로
-    expect(b.rules.map((r) => r.dividerGroup)).toEqual(['B0', 'B0', 'B1', 'B1', 'B2']);
+    expect(bundles.map((b) => b.id)).toEqual(['A1', 'B0', 'B1', 'B2', 'C']);
+    expect(bundles[1].label).toBe('잘못된 표현(명사)');
+    expect(bundles[1].rules.map((r) => r.find)).toEqual(['갯수', '하마트면']);
   });
 
-  it('A1/A2/A, C/C1/C2는 접두어가 같아도 합치지 않는다', () => {
+  it('B 묶음 안은 같은 tip끼리 모으고, 묶음 안·묶음끼리 가나다순으로 정렬한다', () => {
+    const SAI = '사이시옷 tip';
+    const GEO = '거센소리 tip';
     const bundles = buildSpellingRuleBundles([
-      rule({ find: '1', dividerGroup: 'A1' }),
-      rule({ find: '2', dividerGroup: 'A2' }),
-      rule({ find: '3', dividerGroup: 'A' }),
-      rule({ find: '4', dividerGroup: 'C' }),
-      rule({ find: '5', dividerGroup: 'C1' }),
-      rule({ find: '6', dividerGroup: 'C2' }),
-    ]);
-    expect(bundles.map((b) => b.id)).toEqual(['A1', 'A2', 'A', 'C', 'C1', 'C2']);
-  });
-
-  it('합칠 묶음이 없으면 기존처럼 연속 묶음만 만든다', () => {
-    const bundles = buildSpellingRuleBundles([
-      rule({ find: 'x', dividerGroup: 'E' }),
-      rule({ find: 'y', dividerGroup: 'E' }),
+      rule({ find: '촛점', tip: SAI, dividerGroup: 'B0' }),
+      rule({ find: '뒷풀이', tip: GEO, dividerGroup: 'B0' }),
+      rule({ find: '하마트면', tip: '단독', dividerGroup: 'B0' }),
+      rule({ find: '갯수', tip: SAI, dividerGroup: 'B0' }),
+      rule({ find: '윗층', tip: GEO, dividerGroup: 'B0' }),
+      rule({ find: '댓가', tip: SAI, dividerGroup: 'B0' }),
+      rule({ find: '가르키다', tip: '', dividerGroup: 'B0' }),
     ]);
     expect(bundles).toHaveLength(1);
-    expect(bundles[0].rules.map((r) => r.find)).toEqual(['x', 'y']);
+    expect(bundles[0].rules.map((r) => r.find)).toEqual([
+      '가르키다',
+      '갯수',
+      '댓가',
+      '촛점',
+      '뒷풀이',
+      '윗층',
+      '하마트면',
+    ]);
+  });
+
+  it('tip 비교는 연속 공백을 한 칸으로 본다', () => {
+    expect(normalizeTipKey("  '-이'와  '-히'\t중 ")).toBe("'-이'와 '-히' 중");
+    const sorted = sortRulesByTipThenFind([
+      rule({ find: '빼곡이', tip: "'-이'와 '-히' 중" }),
+      rule({ find: '나른이', tip: '다른 tip' }),
+      rule({ find: '가득이', tip: "'-이'와  '-히'  중" }),
+    ]);
+    expect(sorted.map((r) => r.find)).toEqual(['가득이', '빼곡이', '나른이']);
+  });
+
+  it('sortRulesByTipThenFind는 입력 배열을 바꾸지 않는다', () => {
+    const input = [rule({ find: '나' }), rule({ find: '가' })];
+    const out = sortRulesByTipThenFind(input);
+    expect(out.map((r) => r.find)).toEqual(['가', '나']);
+    expect(input.map((r) => r.find)).toEqual(['나', '가']);
+  });
+
+  it('TIP_SORTED_GROUPS에 없는 묶음은 시트 순서를 그대로 쓴다', () => {
+    expect([...TIP_SORTED_GROUPS]).toEqual(['B0', 'B1', 'B2']);
+    const bundles = buildSpellingRuleBundles([
+      rule({ find: '하', tip: 't', dividerGroup: 'A' }),
+      rule({ find: '가', tip: 't', dividerGroup: 'A' }),
+    ]);
+    expect(bundles[0].rules.map((r) => r.find)).toEqual(['하', '가']);
   });
 
   it('dividerGroup 없는 규칙은 단독 묶음으로 만든다', () => {
