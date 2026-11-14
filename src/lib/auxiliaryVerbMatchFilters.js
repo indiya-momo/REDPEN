@@ -1,4 +1,4 @@
-import { isHaeBoPattern } from './compoundPatternCommon.js';
+import { FLEX_SPACE, isHaeBoPattern } from './compoundPatternCommon.js';
 import { bonVerbAllowForItemId } from './bonBojoRules.js';
 import { isNounRootHaeHead } from './bonNounHaeBlocklist.js';
 
@@ -111,9 +111,15 @@ export function isGluedAuxiliaryMatch(match) {
   return m.length > 0 && !/\s/.test(m);
 }
 
-/** 국어원 (1) 구 결합 — …싶어 하다 / …들어 하다 (붙임 ×) */
+/** 국어원 (1) 구 결합 — …싶어 하다 / …들어 하다 (붙임 ×). 띄어 쓴 경로와 공유하지 않음. */
 const PHRASE_BOUND_TAIL_BEFORE_HADA =
   /(?:싶어|들어|않아|않으|키지|되지|싶지|말고)$/u;
+
+/** 띄어 쓴 하다 여섯 활용. `하`만 빼면 `싶어 했다`가 남는다. */
+const SPACED_HADA_TAILS = new Set(['하', '한', '합', '할', '해', '했']);
+
+const SPACED_EOJEOL_GAP = new RegExp(FLEX_SPACE, 'u');
+const SPACED_EOJEOL_GAP_END = new RegExp(`${FLEX_SPACE}$`, 'u');
 
 /** 조사가 앞말에 붙은 뒤 보조 — 먹어도 보다 (붙임 ×) */
 const PARTICLE_SUFFIX_ON_HEAD =
@@ -146,6 +152,34 @@ export function isPhraseBoundBeforeHada(stemHead, stemTail, headCapture) {
   if (stemTail !== '하') return false;
   if (stemHead !== '어' && stemHead !== '아') return false;
   return PHRASE_BOUND_TAIL_BEFORE_HADA.test(headCapture.trim());
+}
+
+/**
+ * 매치 바로 앞 어절. 줄 단위 검색이라 같은 줄만 본다.
+ * @param {RegExpExecArray} match
+ */
+function previousEojeol(match) {
+  const input = String(match.input ?? '');
+  const index = match.index ?? 0;
+  const before = input.slice(0, index).replace(SPACED_EOJEOL_GAP_END, '');
+  if (!before) return '';
+  const parts = before.split(SPACED_EOJEOL_GAP);
+  return parts[parts.length - 1] ?? '';
+}
+
+/**
+ * 띄어 쓴 하다. `싶어`·`않아`는 그 어절만, `들어`는 바로 앞 어절이 `에`로 끝날 때만.
+ * @param {string} stemHead
+ * @param {string} stemTail
+ * @param {string} headCapture
+ * @param {RegExpExecArray} match
+ */
+function isSpacedPhraseBoundBeforeHada(stemHead, stemTail, headCapture, match) {
+  if (stemHead !== '어' && stemHead !== '아') return false;
+  if (!SPACED_HADA_TAILS.has(stemTail)) return false;
+  const head = headCapture.trim();
+  if (head.endsWith('싶어') || head.endsWith('않아')) return true;
+  return head.endsWith('들어') && previousEojeol(match).endsWith('에');
 }
 
 /**
@@ -189,6 +223,10 @@ export function shouldSkipAuxiliaryVerbMatch(rule, match) {
     if (headEndsWithParticleBeforeAux(headCapture)) return true;
     if (headEndsWithDepNounJosa(headCapture)) return true;
     if (isPhraseBoundBeforeHada(stemHead, stemTail, headCapture)) return true;
+  } else if (
+    isSpacedPhraseBoundBeforeHada(stemHead, stemTail, headCapture, match)
+  ) {
+    return true;
   }
 
   return false;
