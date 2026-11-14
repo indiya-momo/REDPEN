@@ -7,7 +7,7 @@ import {
   shouldSkipAuxiliaryVerbMatch,
 } from './auxiliaryVerbMatchFilters.js';
 import { bonVerbAllowForItemId } from './bonBojoRules.js';
-import { matches } from '../test/matchText.js';
+import { matches, matchesRegex } from '../test/matchText.js';
 
 /** @param {import('./ruleTypes.js').Rule} rule @param {string} text */
 function ruleMatches(rule, text) {
@@ -117,6 +117,53 @@ describe('auxiliaryVerbMatchFilters', () => {
       groups: undefined,
     });
     expect(shouldSkipAuxiliaryVerbMatch(allowRule, blockMatch)).toBe(true);
+  });
+
+  it('띄어 쓴 하다 — 싶어·않아·에 들어는 여섯 활용에서 제외', () => {
+    const skip = [
+      ['어 하', '먹고 싶어 하다'],
+      ['어 한', '먹고 싶어 한다'],
+      ['어 합', '먹고 싶어 합니다'],
+      ['어 할', '먹고 싶어 할'],
+      ['어 해', '먹고 싶어 해서'],
+      ['어 했', '먹고 싶어 했다'],
+      ['아 하', '내키지 않아 하다'],
+      ['아 했', '내키지 않아 했다'],
+      ['어 하', '마음에 들어 하다'],
+      ['어 했', '마음에 들어 했다'],
+    ];
+    for (const [stem, text] of skip) {
+      const rule = buildAuxiliaryVerbFindRules(stem)[0];
+      expect(matchesRegex(rule, text), text).toBe(true);
+      expect(matches(rule, text), text).toBe(false);
+    }
+
+    const keep = [
+      ['뻐 하', '예뻐 하다'],
+      ['아 하', '좋아 하다'],
+      ['어 하', '마음에 잘 들어 하다'],
+      ['어 하', '책을 들어 하다'],
+      ['어 하', '마음에게 들어 하다'],
+    ];
+    for (const [stem, text] of keep) {
+      const rule = buildAuxiliaryVerbFindRules(stem)[0];
+      expect(matchesRegex(rule, text), text).toBe(true);
+      expect(matches(rule, text), text).toBe(true);
+    }
+  });
+
+  it('붙여 쓴 하다 — 기존 구 결합 8개는 그대로 제외', () => {
+    const heads = ['싶어', '들어', '않아', '않으', '키지', '되지', '싶지', '말고'];
+    const rule = { patternKind: 'auxiliary-verb', tailWord: '어 하' };
+    for (const head of heads) {
+      const text = `${head}한다`;
+      const match = Object.assign([text, head], {
+        index: 0,
+        input: text,
+        groups: undefined,
+      });
+      expect(shouldSkipAuxiliaryVerbMatch(rule, match), head).toBe(true);
+    }
   });
 
   it('2 — 의존명사+조사 뒤 붙임(읽은체를하) 제외', () => {
