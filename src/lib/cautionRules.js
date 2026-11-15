@@ -349,7 +349,8 @@ export function cautionFindPattern(label, matchMode) {
   }
   if (matchMode === 'attached-before') {
     // 앞말+label이 한 토큰이고 토큰 끝이 label(예: 여름가지 O, 물가지수 X)
-    return String.raw`([^\s]{1,}${esc})(?!\S)`;
+    // 토큰 끝 뒤 문장부호·닫는 따옴표·괄호는 허용(예: 했데요. / 여름가지,)
+    return String.raw`([^\s]{1,}${esc})(?![^\s.,!?…:;"'”’」』）)\]])`;
   }
   if (matchMode === 'fixed-phrase') {
     const parts = label.trim().split(/\s+/).filter(Boolean);
