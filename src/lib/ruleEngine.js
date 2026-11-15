@@ -16,6 +16,8 @@ import {
   compileSpellingFindReplacesRegex,
   formatVariantPairsLabel,
   hasSpellingFindReplaces,
+  isSpellingCategoryLabelRule,
+  resolveSpellingLabelPair,
   resolveSpellingVariant,
 } from './spellingFindReplaces.js';
 
@@ -37,6 +39,8 @@ import {
  * @property {number} index
  * @property {string} [variantFind] — findReplaces 행: 매칭된 시트 변형(예: 갯수)
  * @property {string} [variantReplace] — findReplaces 행: 그 변형의 고칠 말(예: 개수)
+ * @property {string} [pairFind] — 분류 이름 행(display_label에 → 없음): 매칭된 변형(예: 부재 중)
+ * @property {string} [pairReplace] — 분류 이름 행: 그 고칠 말(예: 부재중)
  */
 
 /**
@@ -57,7 +61,7 @@ import {
  * @property {string} [dividerGroup] — 맞춤법 묶음 키(엑셀 묶음 열 정렬·병합용)
  * @property {string} [dividerLabel] — 묶음 표시 이름(엑셀 묶음 열 표시용)
  * @property {string} [overlayReplace] — PDF 하이라이트 위 표시 문구(표기 통일 추천 등)
- * @property {boolean} [variantPairsLabel] — findReplaces 행: label을 실제로 찾은 쌍으로 바꿈
+ * @property {boolean} [variantPairsLabel] — findReplaces·분류 이름 행: label을 실제로 찾은 쌍으로 바꿈
  * @property {MatchInstance[]} instances
  */
 
@@ -161,7 +165,7 @@ function finalizeResults(byKey, pages = []) {
   const pageByNum = buildPageByNum(pages);
   for (const group of byKey.values()) {
     group.instances = sortInstancesReadingOrder(group.instances, pageByNum);
-    // findReplaces 행: 결과 카드·엑셀은 display_label 대신 실제로 찾은 쌍(갯수 → 개수)만
+    // findReplaces·분류 이름 행: 결과 카드·엑셀은 display_label 대신 실제로 찾은 쌍(갯수 → 개수)만
     if (group.variantPairsLabel) {
       const pairs = formatVariantPairsLabel(group.instances);
       if (pairs) group.label = pairs;
@@ -377,9 +381,21 @@ function applyRuleToPages(rule, pages, byKey, globalExcludePhrases, errors) {
         rule.category !== 'caution' && hasSpellingFindReplaces(rule)
           ? resolveSpellingVariant(rule, match[0])
           : null;
+      // display_label이 분류 이름(→ 없음)인 행: 결과엔 찾은 말 → 고칠 말 쌍
+      const labelPair =
+        !variant &&
+        rule.category !== 'caution' &&
+        isSpellingCategoryLabelRule(rule)
+          ? (resolveSpellingLabelPair(rule, match[0]) ?? {
+              find: match[0].replace(/\s+/g, ' ').trim(),
+              replace: String(rule.replace ?? '').trim(),
+            })
+          : null;
       const suggested = variant
         ? variant.replace
-        : rule.category === 'caution'
+        : labelPair
+          ? labelPair.replace
+          : rule.category === 'caution'
           ? match[0]
           : rule.pattern === 'regex'
             ? applyReplaceTemplate(rule.replace, match)
@@ -413,7 +429,7 @@ function applyRuleToPages(rule, pages, byKey, globalExcludePhrases, errors) {
           ...(String(rule.overlayReplace ?? '').trim() && !variant
             ? { overlayReplace: String(rule.overlayReplace).trim() }
             : {}),
-          ...(variant ? { variantPairsLabel: true } : {}),
+          ...(variant || labelPair ? { variantPairsLabel: true } : {}),
           instances: [],
         });
       }
@@ -432,6 +448,7 @@ function applyRuleToPages(rule, pages, byKey, globalExcludePhrases, errors) {
         pageNum: page.pageNum,
         index: match.index,
         ...(variant ? { variantFind: variant.find, variantReplace: variant.replace } : {}),
+        ...(labelPair ? { pairFind: labelPair.find, pairReplace: labelPair.replace } : {}),
         ...(highlightText ? { highlightText, highlightIndex } : {}),
       });
     }

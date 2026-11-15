@@ -168,16 +168,70 @@ export function resolveSpellingVariant(rule, matchedText) {
 }
 
 /**
+ * 빌트인 행의 display_label이 →가 없는 분류 이름(사잇소리, ^중 등)인지.
+ * 이런 행은 규칙 목록엔 이름 그대로, 결과 카드·엑셀엔 실제로 찾은 쌍을 보인다.
+ * @param {{ builtIn?: boolean, displayLabel?: string } | null | undefined} rule
+ */
+export function isSpellingCategoryLabelRule(rule) {
+  const label = String(rule?.displayLabel ?? '').trim();
+  return Boolean(rule?.builtIn) && Boolean(label) && !label.includes('→');
+}
+
+/** @type {WeakMap<object, { find: string, replace: string, re: RegExp }[]>} */
+const labelPairMatchers = new WeakMap();
+
+/**
+ * 분류 이름 행(findReplaces 없음)의 결과 쌍 — 매칭된 변형과 그 고칠 말.
+ * 붙여쓰기 행(대표 변형에서 공백만 뺀 말이 replace)이면 변형마다 공백을 뺀 말(부재 중 → 부재중),
+ * 그 외는 행 replace.
+ * @param {import('./ruleTypes.js').Rule} rule
+ * @param {string} matchedText
+ * @returns {{ find: string, replace: string } | null}
+ */
+export function resolveSpellingLabelPair(rule, matchedText) {
+  let list = labelPairMatchers.get(rule);
+  if (!list) {
+    const variants = spellingVariantsOf(rule);
+    const forms = variants.length
+      ? variants
+      : rule.pattern === 'regex'
+        ? []
+        : [String(rule.find ?? '').trim()].filter(Boolean);
+    const repl = String(rule.replace ?? '').trim();
+    const strip = (s) => s.replace(/\s+/g, '');
+    const spacing = forms.some((v) => /\s/.test(v) && strip(v) === repl);
+    list = sortVariantsLongestFirst(forms).flatMap((find) => {
+      const body = compileLiteralFindBody(find);
+      if (!body) return [];
+      return [
+        {
+          find,
+          replace: spacing && /\s/.test(find) ? strip(find) : repl,
+          re: new RegExp(`^(?:${body})$`, 'u'),
+        },
+      ];
+    });
+    labelPairMatchers.set(rule, list);
+  }
+  const text = String(matchedText ?? '');
+  const hit = list.find((v) => v.re.test(text));
+  return hit ? { find: hit.find, replace: hit.replace } : null;
+}
+
+/**
  * 결과 카드·엑셀 문구 — 실제로 찾은 쌍만(처음 나온 순, 중복 제거).
- * @param {{ variantFind?: string, variantReplace?: string }[]} instances
+ * findReplaces 행은 variantFind/variantReplace, 분류 이름 행은 pairFind/pairReplace.
+ * @param {{ variantFind?: string, variantReplace?: string, pairFind?: string, pairReplace?: string }[]} instances
  */
 export function formatVariantPairsLabel(instances) {
   const seen = new Set();
   /** @type {string[]} */
   const out = [];
   for (const inst of instances ?? []) {
-    if (!inst?.variantFind || !inst.variantReplace) continue;
-    const pair = `${inst.variantFind} → ${inst.variantReplace}`;
+    const f = inst?.variantFind ?? inst?.pairFind;
+    const r = inst?.variantReplace ?? inst?.pairReplace;
+    if (!f || !r) continue;
+    const pair = `${f} → ${r}`;
     if (seen.has(pair)) continue;
     seen.add(pair);
     out.push(pair);

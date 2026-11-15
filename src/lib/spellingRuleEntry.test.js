@@ -3,6 +3,7 @@ import {
   buildSpellingCheckRuleFromBuiltIn,
   builtInEnabledKey,
   parseSpellingFindsColumn,
+  spellingRuleChecklistParts,
   spellingRuleDisplayLabel,
 } from './spellingRuleEntry.js';
 
@@ -37,7 +38,7 @@ describe('spellingRuleDisplayLabel', () => {
     ).toBe('봄 밤 → 봄밤');
   });
 
-  it('displayLabel이 있으면 표시에 쓴다', () => {
+  it('→ 없는 displayLabel(분류 이름)은 적힌 그대로만 보인다', () => {
     expect(
       spellingRuleDisplayLabel({
         find: '봄 밤',
@@ -45,7 +46,29 @@ describe('spellingRuleDisplayLabel', () => {
         finds: ['봄 밤', '여름 밤'],
         displayLabel: '계절 밤',
       }),
-    ).toBe('계절 밤 → 봄밤');
+    ).toBe('계절 밤');
+    // ^(띄어쓰기 표시)도 그대로
+    const parts = spellingRuleChecklistParts({
+      find: '그 중',
+      replace: '그중',
+      finds: ['그 중', '부재 중'],
+      displayLabel: '^중',
+    });
+    expect(parts).toEqual({ find: '^중', replace: '' });
+    expect(
+      spellingRuleDisplayLabel({ find: '갯수', replace: '개수', displayLabel: '사잇소리' }),
+    ).toBe('사잇소리');
+  });
+
+  it('→가 있는 displayLabel은 기존처럼 좌우로 나눈다', () => {
+    expect(
+      spellingRuleChecklistParts({
+        find: '거북치',
+        replace: '거북지',
+        finds: ['거북치', '깨끗치'],
+        displayLabel: "거북치 → 거북지('하'줄임)",
+      }),
+    ).toEqual({ find: '거북치', replace: "거북지('하'줄임)" });
   });
 
   it('displayLabel이 →로 시작하면 finds를 앞에 붙인다', () => {

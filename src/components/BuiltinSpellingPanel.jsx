@@ -89,8 +89,12 @@ export default function BuiltinSpellingPanel({
     const ruleLine = (
       <>
         <span className="find">{displayFind}</span>
-        <span className="arrow">→</span>
-        <span className="replace">{displayReplace}</span>
+        {displayReplace ? (
+          <>
+            <span className="arrow">→</span>
+            <span className="replace">{displayReplace}</span>
+          </>
+        ) : null}
       </>
     );
     return (
