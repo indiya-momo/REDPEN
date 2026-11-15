@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { BUILT_IN_RULES } from './builtInRules.js';
 import {
   assessExtractionQuality,
   assessHangulExtraction,
@@ -8,6 +9,19 @@ import {
   scorePageExtractionQuality,
   validatePublishablePdf,
 } from './pdfPublishGate.js';
+
+/** pdfPublishGate.probeRules()와 같은 조건의 첫 내장 규칙 find */
+function probeSampleFind() {
+  const rule = BUILT_IN_RULES.find(
+    (r) =>
+      r.enabled &&
+      r.find.length >= 2 &&
+      r.find.length <= 12 &&
+      r.pattern !== 'regex',
+  );
+  expect(rule).toBeTruthy();
+  return rule.find;
+}
 
 describe('pdfPublishGate', () => {
   it('scorePageExtractionQuality flags fragmented extraction', () => {
@@ -62,8 +76,9 @@ describe('pdfPublishGate', () => {
     const pages = [
       {
         pageNum: 1,
-        // probeRules는 대표 find만 본다(이형태 finds는 미적용)
-        text: 'x'.repeat(900) + ' 봄 밤 맞춤법 ',
+        // probeRules는 앞쪽 내장 규칙 10개의 대표 find만 본다(이형태 finds는 미적용).
+        // 시트 순서가 바뀌어도 되게 그 조건의 첫 규칙에서 예문을 뽑는다.
+        text: `${'x'.repeat(900)} ${probeSampleFind()} 맞춤법 `,
         items: [],
       },
     ];
