@@ -419,6 +419,15 @@
     "displayLabel": "시간^때(외)"
   },
   {
+    "find": "손 끝",
+    "replace": "손끝",
+    "enabled": true,
+    "tip": "표준국어대사전  '손끝' 등재",
+    "dividerGroup": "A1",
+    "dividerLabel": "표준국어대사전 등재(명사)",
+    "overlayReplace": "→손^끝"
+  },
+  {
     "find": "이 것",
     "replace": "이것",
     "finds": [
@@ -719,13 +728,15 @@
       "댓가",
       "싯가",
       "싯구",
-      "촛점"
+      "촛점",
+      "날개짓"
     ],
     "findReplaces": {
       "댓가": "대가",
       "싯가": "시가",
       "싯구": "시구",
-      "촛점": "초점"
+      "촛점": "초점",
+      "날개짓": "날갯짓"
     },
     "enabled": true,
     "tip": "두 음절 한자어 6개(곳간庫間, 셋방貰房, 숫자數字, 찻간車間, 툇간退間,횟수回數)만 사이시옷을 넣는다",
@@ -978,6 +989,69 @@
     "dividerLabel": "잘못된 표현(명사)",
     "overlayReplace": "→초파일",
     "displayLabel": "속음八"
+  },
+  {
+    "find": "한켠",
+    "replace": "한편",
+    "enabled": true,
+    "tip": "'한편'의 잘못된 표현",
+    "dividerGroup": "B0",
+    "dividerLabel": "잘못된 표현(명사)",
+    "overlayReplace": "→한편"
+  },
+  {
+    "find": "까짓꺼",
+    "replace": "까짓것",
+    "enabled": true,
+    "tip": "'까짓것'의 잘못된 표현",
+    "dividerGroup": "B0",
+    "dividerLabel": "잘못된 표현(명사)",
+    "overlayReplace": "→까짓것"
+  },
+  {
+    "find": "그날밤",
+    "replace": "그날 밤",
+    "enabled": true,
+    "tip": "표준국어대사전 미등재('그날'과 '밤'은 띄어 쓴다)",
+    "dividerGroup": "B0",
+    "dividerLabel": "잘못된 표현(명사)",
+    "overlayReplace": "→그날∨밤"
+  },
+  {
+    "find": "몇세기",
+    "replace": "몇 세기",
+    "finds": [
+      "몇세기",
+      "몇년",
+      "몇개",
+      "몇번",
+      "몇명",
+      "몇시",
+      "몇살",
+      "몇가지",
+      "몇달",
+      "몇주",
+      "몇차례",
+      "몇마리"
+    ],
+    "findReplaces": {
+      "몇년": "몇 년",
+      "몇개": "몇 개",
+      "몇번": "몇 번",
+      "몇명": "몇 명",
+      "몇시": "몇 시",
+      "몇살": "몇 살",
+      "몇가지": "몇 가지",
+      "몇달": "몇 달",
+      "몇주": "몇 주",
+      "몇차례": "몇 차례",
+      "몇마리": "몇 마리"
+    },
+    "enabled": true,
+    "tip": "수 관형사 '몇' 뒤의 단위 명사는 띄어 쓴다",
+    "dividerGroup": "B0",
+    "dividerLabel": "잘못된 표현(명사)",
+    "displayLabel": "몇^"
   },
   {
     "find": "거북치",
@@ -1711,6 +1785,54 @@
     "dividerGroup": "B2",
     "dividerLabel": "잘못된 표현(그 외)",
     "displayLabel": "/-이/ (부사)"
+  },
+  {
+    "find": "아무데",
+    "replace": "아무 데",
+    "enabled": true,
+    "tip": "'데'는 의존명사로 앞말과 띄어 쓴다",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→아무∨데"
+  },
+  {
+    "find": "모난것",
+    "replace": "모난 것",
+    "enabled": true,
+    "tip": "'것'은 의존명사로 앞말과 띄어 쓴다",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→모난∨것"
+  },
+  {
+    "find": "할때",
+    "replace": "할 때",
+    "finds": [
+      "할때",
+      "갈때",
+      "올때",
+      "될때",
+      "있을때",
+      "없을때",
+      "했을때",
+      "왔을때",
+      "봤을때"
+    ],
+    "findReplaces": {
+      "갈때": "갈 때",
+      "올때": "올 때",
+      "될때": "될 때",
+      "있을때": "있을 때",
+      "없을때": "없을 때",
+      "했을때": "했을 때",
+      "왔을때": "왔을 때",
+      "봤을때": "봤을 때"
+    },
+    "enabled": true,
+    "tip": "'때'는 명사로 관형사형(-ㄹ) 뒤에서 띄어 쓴다",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "displayLabel": "-ㄹ^때"
   },
   {
     "find": "가디건",

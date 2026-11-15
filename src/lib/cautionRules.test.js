@@ -32,6 +32,18 @@ describe('cautionFindPattern', () => {
     expect(matches(find, '소비자물가지수')).toBe(false);
   });
 
+  it('attached-before: 토큰 끝 뒤 문장부호·닫는 따옴표는 허용, 글자가 이어지면 제외', () => {
+    const find = cautionFindPattern('데요', 'attached-before');
+    expect(matches(find, '물리치려고 했데요.')).toBe(true);
+    expect(matches(find, '생각된데요!')).toBe(true);
+    expect(matches(find, '“했데요”')).toBe(true);
+    expect(matches(find, '했데요')).toBe(true);
+    expect(matches(find, '했데요라고')).toBe(false);
+    const gaji = cautionFindPattern('가지', 'attached-before');
+    expect(matches(gaji, '여름가지,')).toBe(true);
+    expect(matches(gaji, '물가지수.')).toBe(false);
+  });
+
   it('spaced-before: 쯤 — 앞 공백만 보며 뒤 조사(을)와 무관', () => {
     const find = cautionFindPattern('쯤', 'spaced-before');
     expect(matches(find, '일 년 쯤')).toBe(true);
