@@ -29,7 +29,7 @@
       "깜깜 밤중"
     ],
     "enabled": true,
-    "tip": "표준국어대사전  '그중, 은연중, 부지불식중, 부재중, 무의식중, 무심중, 한밤중, 야밤중, 깜깜밤중' 등재_주의: '이중' 미등재",
+    "tip": "표준국어대사전  '그중, 은연중, 부지불식중, 부재중, 무의식중, 무심중, 한밤중, 야밤중, 깜깜밤중' 등재\n주의: '이중' 미등재",
     "dividerGroup": "A1",
     "dividerLabel": "표준국어대사전 등재(명사)",
     "displayLabel": "^중"
@@ -38,7 +38,7 @@
     "find": "긴 긴 밤",
     "replace": "긴긴밤",
     "enabled": true,
-    "tip": "표준국어대사전  '긴긴밤' 등재_주의: '긴밤' 미등재",
+    "tip": "표준국어대사전  '긴긴밤' 등재\n주의: '긴밤' 미등재",
     "dividerGroup": "A1",
     "dividerLabel": "표준국어대사전 등재(명사)",
     "overlayReplace": "→긴^긴^밤"
@@ -394,7 +394,7 @@
       "우리 글"
     ],
     "enabled": true,
-    "tip": "표준국어대사전 '우리나라,우리말,우리글'  등재_주의: '우리집·우리가족' 미등재",
+    "tip": "표준국어대사전 '우리나라,우리말,우리글'  등재\n주의: '우리집·우리가족' 미등재",
     "dividerGroup": "A1",
     "dividerLabel": "표준국어대사전 등재(명사)",
     "displayLabel": "우리^"
@@ -456,7 +456,7 @@
       "외딴 곳"
     ],
     "enabled": true,
-    "tip": "표준국어대사전  '이곳,그곳,저곳,곳곳,외딴곳' 등재 주의: '한 곳'은 띄어 써도 맞음, '아무곳' 미등재",
+    "tip": "표준국어대사전  '이곳,그곳,저곳,곳곳,외딴곳' 등재 \n주의: '한 곳'은 띄어 써도 맞음, '아무곳' 미등재",
     "dividerGroup": "A2",
     "dividerLabel": "표준국어대사전 등재(대명사)",
     "displayLabel": "지시사^곳"
@@ -700,7 +700,7 @@
     "tip": "표준국어대사전 '자신만만하다' 등재",
     "dividerGroup": "A",
     "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
-    "overlayReplace": "→자신만만^",
+    "overlayReplace": "→자신만만^하",
     "displayLabel": "자신만만^하다(외)"
   },
   {
@@ -786,7 +786,7 @@
     "find": "그외",
     "replace": "그 외",
     "enabled": true,
-    "tip": "표준국어대사전 미등재(참고 : 동일한 뜻의 '이외以外'는 등재)",
+    "tip": "표준국어대사전 미등재\n주의 : 동일한 뜻의 '이외(以外)는 등재",
     "dividerGroup": "B0",
     "dividerLabel": "잘못된 표현(명사)",
     "overlayReplace": "→그∨외"
@@ -829,7 +829,7 @@
       "희노애락(喜怒哀樂)": "희로애락"
     },
     "enabled": true,
-    "tip": "'怒(노)'를 속음(로)으로 바뀌어 적음 -한글맞춤법 제 52항",
+    "tip": "'怒(노)'를 속음(로)으로 바뀌어 적음-한글맞춤법 제 52항",
     "dividerGroup": "B0",
     "dividerLabel": "잘못된 표현(명사)",
     "displayLabel": "속음 怒"
@@ -838,7 +838,7 @@
     "find": "되요",
     "replace": "돼요",
     "enabled": true,
-    "tip": "'되어요'의 준말은 \"돼요\"",
+    "tip": "'되어요'의 준말은 '돼요'",
     "dividerGroup": "B0",
     "dividerLabel": "잘못된 표현(명사)",
     "overlayReplace": "→돼요"
@@ -930,7 +930,7 @@
       "십월": "시월"
     },
     "enabled": true,
-    "tip": "'十'의 본음은 '십'이나 속음 '시'로 나므로 '시'로 적음-한글맞춤법 제 52항",
+    "tip": "'十'을 속음 '시'로 적는 경우-한글맞춤법 제 52항",
     "dividerGroup": "B0",
     "dividerLabel": "잘못된 표현(명사)",
     "displayLabel": "속음 十"
@@ -948,7 +948,7 @@
     "find": "오륙월",
     "replace": "오뉴월",
     "enabled": true,
-    "tip": "'六'의 본음은 '육'이나 '五六月'에서는 속음 '뉴'로 나므로 '오뉴월'로 적음 -한글맞춤법 제 52항",
+    "tip": "'六'의 속음 '뉴'를 따라 '오뉴월'로 적음 -한글맞춤법 제 52항",
     "dividerGroup": "B0",
     "dividerLabel": "잘못된 표현(명사)",
     "overlayReplace": "→오뉴월"
@@ -957,7 +957,7 @@
     "find": "육월(六月)",
     "replace": "유월",
     "enabled": true,
-    "tip": "'六'의 본음은 '육'이나 '六月'에서는 속음 '유'로 나므로 '유월'로 적음-한글맞춤법 제 52항",
+    "tip": "'六'의 속음 '유'를 따라 '유월'로 적음-한글맞춤법 제 52항",
     "dividerGroup": "B0",
     "dividerLabel": "잘못된 표현(명사)",
     "overlayReplace": "→유월"
@@ -984,7 +984,7 @@
     "find": "초팔일",
     "replace": "초파일",
     "enabled": true,
-    "tip": "'八'의 본음은 '팔'이나 '初八日'에서는 속음 '파'로 나므로 '초파일'로 적음-한글맞춤법 제 52항",
+    "tip": "'八'의 속음 '파'를 따라 '초파일'로 적음-한글맞춤법 제 52항",
     "dividerGroup": "B0",
     "dividerLabel": "잘못된 표현(명사)",
     "overlayReplace": "→초파일",
@@ -1162,7 +1162,7 @@
     "find": "놀래키",
     "replace": "놀래",
     "enabled": true,
-    "tip": "'놀래다' 또는 '놀라다'의 잘못된 표현 주의: '놀래키다'는 표준국어대사전 미등재",
+    "tip": "'놀래다' 또는 '놀라다'의 잘못된 표현 \n주의: '놀래키다'는 표준국어대사전 미등재",
     "dividerGroup": "B1",
     "dividerLabel": "잘못된 표현(동사 · 형용사)",
     "overlayReplace": "→놀래",
@@ -1639,15 +1639,6 @@
     "displayLabel": "/-이/ (-하다X)"
   },
   {
-    "find": "것 뿐",
-    "replace": "것뿐",
-    "enabled": true,
-    "tip": "'것'은 의존명사, '뿐'은 조사로 앞말에 붙여쓴다",
-    "dividerGroup": "B2",
-    "dividerLabel": "잘못된 표현(그 외)",
-    "overlayReplace": "→것뿐"
-  },
-  {
     "find": "겹겹히",
     "replace": "겹겹이",
     "finds": [
@@ -1682,19 +1673,6 @@
     "dividerGroup": "B2",
     "dividerLabel": "잘못된 표현(그 외)",
     "displayLabel": "/-이/ (첩어)"
-  },
-  {
-    "find": "구지",
-    "replace": "굳이",
-    "finds": [
-      "구지",
-      "궂이"
-    ],
-    "enabled": true,
-    "tip": "'굳이'의 잘못된 표기",
-    "dividerGroup": "B2",
-    "dividerLabel": "잘못된 표현(그 외)",
-    "overlayReplace": "→굳이"
   },
   {
     "find": "기꺼히",
@@ -1753,24 +1731,6 @@
     "displayLabel": "/-이/ (ㅅ 받침)"
   },
   {
-    "find": "어짜피",
-    "replace": "어차피",
-    "enabled": true,
-    "tip": "부사 '어차피'의 잘못된 표기",
-    "dividerGroup": "B2",
-    "dividerLabel": "잘못된 표현(그 외)",
-    "overlayReplace": "→어차피"
-  },
-  {
-    "find": "에걔",
-    "replace": "애게 또는 에계",
-    "enabled": true,
-    "tip": "감탄사는 '애걔' 또는 '에계'로 적는다",
-    "dividerGroup": "B2",
-    "dividerLabel": "잘못된 표현(그 외)",
-    "overlayReplace": "→에계 또는 에계"
-  },
-  {
     "find": "일찍히",
     "replace": "일찍이",
     "finds": [
@@ -1785,6 +1745,46 @@
     "dividerGroup": "B2",
     "dividerLabel": "잘못된 표현(그 외)",
     "displayLabel": "/-이/ (부사)"
+  },
+  {
+    "find": "것 뿐",
+    "replace": "것뿐",
+    "enabled": true,
+    "tip": "'것'은 의존명사, '뿐'은 조사로 앞말에 붙여쓴다",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→것뿐"
+  },
+  {
+    "find": "어짜피",
+    "replace": "어차피",
+    "enabled": true,
+    "tip": "부사 '어차피'의 잘못된 표기",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→어차피"
+  },
+  {
+    "find": "구지",
+    "replace": "굳이",
+    "finds": [
+      "구지",
+      "궂이"
+    ],
+    "enabled": true,
+    "tip": "'굳이'의 잘못된 표기",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→굳이"
+  },
+  {
+    "find": "에걔",
+    "replace": "애걔 또는 에계",
+    "enabled": true,
+    "tip": "감탄사는 '애걔' 또는 '에계'로 적는다",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→애걔 또는 에계"
   },
   {
     "find": "아무데",
@@ -1832,7 +1832,7 @@
     "tip": "'때'는 명사로 관형사형(-ㄹ) 뒤에서 띄어 쓴다",
     "dividerGroup": "B2",
     "dividerLabel": "잘못된 표현(그 외)",
-    "displayLabel": "-ㄹ^때"
+    "displayLabel": "(관형사형-ㄹ)^때"
   },
   {
     "find": "가디건",
@@ -2555,7 +2555,7 @@
     "tip": "영어 trombone [trɒmˈboʊn]. 첫 음절 모음 ɒ(영국식 발음 기준)를 '오'로 적어 '트롬본'.",
     "dividerGroup": "C",
     "dividerLabel": "외래어 표기법(영어)",
-    "overlayReplace": "→트럼본"
+    "overlayReplace": "→트롬본"
   },
   {
     "find": "파라독스",
