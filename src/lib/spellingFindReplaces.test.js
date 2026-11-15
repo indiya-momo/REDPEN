@@ -150,6 +150,76 @@ describe('찾은 말별 고칠 말 — 검사', () => {
   });
 });
 
+describe('분류 이름 display_label(→ 없음) — 결과 문구', () => {
+  /** @param {object} row */
+  const build = (row) =>
+    buildSpellingCheckRuleFromBuiltIn({ enabled: true, builtIn: true, category: 'spelling', ...row });
+  /** @param {object} rule @param {string} text */
+  const run = (rule, text) => runRuleCheck([{ pageNum: 1, text }], [rule]).results;
+
+  it('붙여쓰기 행 「^중」: 결과는 찾은 변형 → 공백 뺀 말', () => {
+    const rule = build({
+      find: '그 중',
+      replace: '그중',
+      finds: ['그 중', '부재 중', '한밤 중'],
+      displayLabel: '^중',
+    });
+    expect(rule.label).toBe('^중');
+    const [g] = run(rule, '그는 부재 중이었고 그 중 하나는');
+    expect(g.label).toBe('부재 중 → 부재중, 그 중 → 그중');
+    expect(g.instances.map((i) => i.suggestedText)).toEqual(['부재중', '그중']);
+    // PDF 오버레이는 찾은말>고칠말 전용 — 분류 이름 행은 건드리지 않음
+    expect(g.instances[0].variantReplace).toBeUndefined();
+  });
+
+  it('찾을말>고칠말 행 「사잇소리」: 결과는 기존처럼 찾은 쌍', () => {
+    const rule = build({
+      find: '갯수',
+      replace: '개수',
+      finds: ['갯수', '댓가'],
+      findReplaces: { 댓가: '대가' },
+      displayLabel: '사잇소리',
+    });
+    expect(rule.label).toBe('사잇소리');
+    const [g] = run(rule, '댓가와 갯수');
+    expect(g.label).toBe('댓가 → 대가, 갯수 → 개수');
+  });
+
+  it('finds 없는 행 「속음八」: 결과는 find → replace', () => {
+    const rule = build({ find: '초팔일', replace: '초파일', displayLabel: '속음八' });
+    const [g] = run(rule, '사월 초팔일');
+    expect(g.label).toBe('초팔일 → 초파일');
+    expect(g.instances[0].suggestedText).toBe('초파일');
+  });
+
+  it('→가 있는 display_label 행은 결과도 기존 그대로', () => {
+    const rule = build({
+      find: '봄 비',
+      replace: '봄비',
+      finds: ['봄 비', '여름 비'],
+      displayLabel: '봄 비 → 봄비(외)',
+    });
+    const [g] = run(rule, '여름 비가');
+    expect(g.label).toBe('봄 비 → 봄비(외)');
+    expect(g.instances[0].suggestedText).toBe('봄비');
+    expect(g.instances[0].pairFind).toBeUndefined();
+  });
+
+  it('내장 데이터: 분류 이름 행은 결과 문구가 「찾은 말 → 고칠 말」이다', () => {
+    const rows = BUILT_IN_RULES.filter(
+      (r) => r.displayLabel && !r.displayLabel.includes('→') && !r.findReplaces,
+    );
+    for (const row of rows) {
+      const rule = build(row);
+      const sample = (row.finds?.length >= 2 ? row.finds : [row.find])[0];
+      const res = run(rule, `앞 ${sample} 뒤`);
+      if (!res.length) continue; // 경계·필터로 예문이 안 잡히는 행은 건너뜀
+      expect(res[0].label).toContain(' → ');
+      expect(res[0].label).not.toBe(row.displayLabel);
+    }
+  });
+});
+
 describe('데이터·지문·B1 전개', () => {
   it('findReplaces 없는 행은 지문이 그대로다', () => {
     const plainRows = spellingRulesJson.filter((r) => !r.findReplaces);

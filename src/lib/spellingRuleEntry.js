@@ -57,9 +57,10 @@ export function spellingRuleChecklistParts(entry) {
     };
   }
   if (custom) {
+    // →가 없는 display_label은 분류 이름(예: 사잇소리, ^중) — 적힌 그대로만 보인다(^도 그대로)
     return {
       find: custom,
-      replace: String(entry.replace ?? '').trim(),
+      replace: '',
     };
   }
   return {

@@ -32,7 +32,7 @@
     "tip": "표준국어대사전  '그중, 은연중, 부지불식중, 부재중, 무의식중, 무심중, 한밤중, 야밤중, 깜깜밤중' 등재_주의: '이중' 미등재. '밤중·연중·부지중·개중·병중·와중·취중'은 오검출로 제외",
     "dividerGroup": "A1",
     "dividerLabel": "표준국어대사전 등재(명사)",
-    "displayLabel": "그^"
+    "displayLabel": "^중"
   },
   {
     "find": "긴 긴 밤",
@@ -301,7 +301,7 @@
     "tip": "표준국어대사전  '섬사람,촌사람,뱃사람,눈사람,뭇사람' 등재 주의: 한·새·큰·딴·산 사람은 띄어 써도 맞아 제외",
     "dividerGroup": "A1",
     "dividerLabel": "표준국어대사전 등재(명사)",
-    "displayLabel": "섬 사람 → 섬사람(외)"
+    "displayLabel": "^사람(1)"
   },
   {
     "find": "앞 사람",
@@ -320,7 +320,7 @@
     "tip": "표준국어대사전  '앞사람,뒷사람,윗사람,아랫사람,옛사람,집안사람,손윗사람,손아랫사람' 등재",
     "dividerGroup": "A1",
     "dividerLabel": "표준국어대사전 등재(명사)",
-    "displayLabel": "앞 사람 → 앞사람(외)"
+    "displayLabel": "^사람(2)"
   },
   {
     "find": "시간 제한",
@@ -334,7 +334,7 @@
     "tip": "표준국어대사전  '시간제한, 시간관념, 시간폭탄' 등재_주의: '시간표·시간대·시간차'는 오검출로 제외",
     "dividerGroup": "A1",
     "dividerLabel": "표준국어대사전 등재(명사)",
-    "displayLabel": "시간 제한 → 시간제한(외)"
+    "displayLabel": "시간^"
   },
   {
     "find": "어제 저녁",
@@ -382,7 +382,7 @@
     "tip": "표준국어대사전  '점심때,저녁때,이맘때,한때,한창때,그맘때,요맘때,저맘때' 등재_주의: '제때'는 '제 때문에' 오검출로 제외",
     "dividerGroup": "A1",
     "dividerLabel": "표준국어대사전 등재(명사)",
-    "displayLabel": "점심 때 → 점심때(외)"
+    "displayLabel": "시간^때(외)"
   },
   {
     "find": "이 것",
@@ -400,7 +400,7 @@
     "tip": "표준국어대사전  '이것,그것,저것,요것,고것,조것,아무것' 등재",
     "dividerGroup": "A2",
     "dividerLabel": "표준국어대사전 등재(대명사)",
-    "displayLabel": "이 것 → 이것(외)"
+    "displayLabel": "지시사^것"
   },
   {
     "find": "이 곳",
@@ -416,7 +416,7 @@
     "tip": "표준국어대사전  '이곳,그곳,저곳,곳곳,외딴곳' 등재 주의: '한 곳'은 띄어 써도 맞음, '아무곳' 미등재",
     "dividerGroup": "A2",
     "dividerLabel": "표준국어대사전 등재(대명사)",
-    "displayLabel": "이 곳 → 이곳(외)"
+    "displayLabel": "지시사^곳"
   },
   {
     "find": "가 닿",
@@ -432,7 +432,7 @@
     "dividerGroup": "A",
     "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
     "overlayReplace": "→가^닿",
-    "displayLabel": "가 닿 → 가닿(외)"
+    "displayLabel": "^닿다"
   },
   {
     "find": "그럴 듯",
@@ -446,7 +446,7 @@
     "dividerGroup": "A",
     "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
     "overlayReplace": "→그럴^듯",
-    "displayLabel": "그럴 듯 → 그럴듯(외)"
+    "displayLabel": "그럴 듯 → 그럴듯"
   },
   {
     "find": "듯 하",
@@ -642,7 +642,7 @@
     "tip": "표준국어대사전  '세상모르다,철모르다,남모르다,낯모르다,멋모르다' 등재",
     "dividerGroup": "A",
     "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
-    "displayLabel": "세상 모르 → 세상모르(외)"
+    "displayLabel": "^모르다(외)"
   },
   {
     "find": "자신만만 하",
@@ -657,7 +657,8 @@
     "tip": "표준국어대사전 '자신만만하다' 등재",
     "dividerGroup": "A",
     "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
-    "overlayReplace": "→자신만만^"
+    "overlayReplace": "→자신만만^",
+    "displayLabel": "자신만만^하다(외)"
   },
   {
     "find": "장난 삼",
@@ -674,7 +675,7 @@
     "dividerGroup": "A",
     "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
     "overlayReplace": "→장난^삼",
-    "displayLabel": "장난 삼 → 장난삼(외)"
+    "displayLabel": "장난^삼(외)"
   },
   {
     "find": "갯수",
@@ -696,7 +697,7 @@
     "tip": "두 음절 한자어 6개(곳간庫間, 셋방貰房, 숫자數字, 찻간車間, 툇간退間,횟수回數)만 사이시옷을 넣는다",
     "dividerGroup": "B0",
     "dividerLabel": "잘못된 표현(명사)",
-    "displayLabel": "갯수 → 개수(사잇소리)"
+    "displayLabel": "사잇소리"
   },
   {
     "find": "검정색",
@@ -716,7 +717,7 @@
     "tip": "'검정·노랑·빨강·파랑'에 색이라는 의미 있음",
     "dividerGroup": "B0",
     "dividerLabel": "잘못된 표현(명사)",
-    "displayLabel": "검정색 → 검은색 또는 검정(색 중복)"
+    "displayLabel": "색"
   },
   {
     "find": "과반수 이상",
@@ -786,7 +787,7 @@
     "tip": "'怒(노)'를 속음(로)으로 바뀌어 적음 -한글맞춤법 제 52항",
     "dividerGroup": "B0",
     "dividerLabel": "잘못된 표현(명사)",
-    "displayLabel": "대노 → 대로(속음)"
+    "displayLabel": "속음 怒"
   },
   {
     "find": "되요",
@@ -817,7 +818,7 @@
     "tip": "거센소리 ㅊ,ㅋ,ㅌ,ㅍ 앞에는 사이시옷이 붙지 않는다",
     "dividerGroup": "B0",
     "dividerLabel": "잘못된 표현(명사)",
-    "displayLabel": "뒷쪽 → 뒤쪽(거센소리)"
+    "displayLabel": "거센소리"
   },
   {
     "find": "몇일",
@@ -871,7 +872,7 @@
     "tip": "접미사 '-율率'은 모음이나 'ㄴ' 받침 뒤에서는 '-율' 그 외는 '률'로 표기",
     "dividerGroup": "B0",
     "dividerLabel": "잘못된 표현(명사)",
-    "displayLabel": "성장율 → 성장률(율·률)"
+    "displayLabel": "율·률"
   },
   {
     "find": "십왕",
@@ -887,7 +888,7 @@
     "tip": "'十'의 본음은 '십'이나 속음 '시'로 나므로 '시'로 적음-한글맞춤법 제 52항",
     "dividerGroup": "B0",
     "dividerLabel": "잘못된 표현(명사)",
-    "displayLabel": "십왕 → 시왕(속음)"
+    "displayLabel": "속음 十"
   },
   {
     "find": "역대급",
@@ -941,7 +942,8 @@
     "tip": "'八'의 본음은 '팔'이나 '初八日'에서는 속음 '파'로 나므로 '초파일'로 적음-한글맞춤법 제 52항",
     "dividerGroup": "B0",
     "dividerLabel": "잘못된 표현(명사)",
-    "overlayReplace": "→초파일"
+    "overlayReplace": "→초파일",
+    "displayLabel": "속음八"
   },
   {
     "find": "거북치",
@@ -961,7 +963,7 @@
     "tip": "어간 끝 음절 '하'가 줄어든 대로 적는다",
     "dividerGroup": "B1",
     "dividerLabel": "잘못된 표현(동사 · 형용사)",
-    "displayLabel": "거북치 → 거북지(하 줄임)"
+    "displayLabel": "거북치 → 거북지('하'줄임)"
   },
   {
     "find": "익숙케",
