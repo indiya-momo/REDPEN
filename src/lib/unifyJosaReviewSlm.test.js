@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { attachJosaReviewHints, classifyJosaReviewTier } from './unifyJosaReview.js';
 import {
+  JOSA_SLM_DEV_TIMEOUT_MS,
+  JOSA_SLM_PROD_TIMEOUT_MS,
+  resolveJosaSlmTimeoutMs,
+} from './unifyJosaReviewSlm/loadRunner.js';
+import {
   JOSA_SLM_BATCH_CAP,
   isJosaSlmPriorityCandidate,
   partitionJosaSlmQueue,
@@ -324,5 +329,29 @@ describe('filterJosaReviewBySlm', () => {
     const out = await filterJosaReviewBySlm(risky, { runner: noopRunner });
     expect(out[0].josaReview?.status).toBe('review');
     expect(out[JOSA_SLM_BATCH_CAP].josaReview).toBeUndefined();
+  });
+});
+
+describe('resolveJosaSlmTimeoutMs', () => {
+  it('DEV 기본은 CPU 1건이 끝나는 60초', () => {
+    expect(
+      resolveJosaSlmTimeoutMs({ DEV: true, VITE_UNIFY_JOSA_SLM_TIMEOUT_MS: '' }),
+    ).toBe(JOSA_SLM_DEV_TIMEOUT_MS);
+    expect(JOSA_SLM_DEV_TIMEOUT_MS).toBe(60_000);
+  });
+
+  it('DEV가 아니면 15초', () => {
+    expect(
+      resolveJosaSlmTimeoutMs({ DEV: false, VITE_UNIFY_JOSA_SLM_TIMEOUT_MS: '' }),
+    ).toBe(JOSA_SLM_PROD_TIMEOUT_MS);
+  });
+
+  it('명시 env가 우선이다', () => {
+    expect(
+      resolveJosaSlmTimeoutMs({
+        DEV: true,
+        VITE_UNIFY_JOSA_SLM_TIMEOUT_MS: '45000',
+      }),
+    ).toBe(45_000);
   });
 });
