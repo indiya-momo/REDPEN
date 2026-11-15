@@ -151,8 +151,9 @@ describe('찾은 말별 고칠 말 — 검사', () => {
 });
 
 describe('데이터·지문·B1 전개', () => {
-  it('findReplaces 없는 데이터는 지문이 그대로다', () => {
-    expect(spellingRulesJson.some((r) => r.findReplaces)).toBe(false);
+  it('findReplaces 없는 행은 지문이 그대로다', () => {
+    const plainRows = spellingRulesJson.filter((r) => !r.findReplaces);
+    expect(plainRows.length).toBeGreaterThan(0);
     // findReplaces 도입 전 지문 공식 그대로 계산한 값과 같아야 한다
     const legacyPart = (row) => {
       const finds = row.finds?.length >= 2 ? row.finds.join('\u0001') : '';
@@ -163,11 +164,11 @@ describe('데이터·지문·B1 전개', () => {
       }\0${row.ruleId ?? ''}\0${finds}\0${row.displayLabel ?? ''}`;
     };
     let hash = 0;
-    const payload = spellingRulesJson.map(legacyPart).join('\n');
+    const payload = plainRows.map(legacyPart).join('\n');
     for (let i = 0; i < payload.length; i += 1) {
       hash = (Math.imul(31, hash) + payload.charCodeAt(i)) | 0;
     }
-    expect(spellingRulesFingerprint()).toBe(`${spellingRulesJson.length}:${hash}`);
+    expect(spellingRulesFingerprint(plainRows)).toBe(`${plainRows.length}:${hash}`);
   });
 
   it('메타 파일 지문이 데이터(B1 전개 후)와 같다', () => {
@@ -184,7 +185,23 @@ describe('데이터·지문·B1 전개', () => {
   });
 
   it('빌트인 규칙에 실린다(키 정리, J 제거)', () => {
-    expect(BUILT_IN_RULES.every((r) => r.findReplaces === undefined)).toBe(true);
+    const jsonWith = spellingRulesJson.filter((r) => r.findReplaces);
+    const builtWith = BUILT_IN_RULES.filter((r) => r.findReplaces);
+    expect(builtWith.length).toBe(jsonWith.length);
+    for (const r of builtWith) {
+      // J(overlay_replace)는 쓰지 않고, 키는 모두 finds 안의 변형
+      expect(r.overlayReplace).toBeUndefined();
+      expect(r.finds?.length).toBeGreaterThanOrEqual(2);
+      for (const [k, v] of Object.entries(r.findReplaces)) {
+        expect(r.finds).toContain(k);
+        expect(k).not.toBe(r.find);
+        expect(String(v).trim()).not.toBe('');
+      }
+    }
+    for (const r of BUILT_IN_RULES.filter((x) => !x.findReplaces)) {
+      const row = spellingRulesJson.find((j) => j.find === r.find && j.replace === r.replace);
+      expect(row?.findReplaces).toBeUndefined();
+    }
   });
 
   it('B1 전개는 findReplaces 행을 건너뛴다', () => {

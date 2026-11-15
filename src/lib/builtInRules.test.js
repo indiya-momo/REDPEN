@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
+import spellingRulesJson from '../data/spelling-rules.json';
 import {
+  BUILT_IN_RULES,
   SPELLING_RULES_FP,
+  buildSpellingCheckRuleFromBuiltIn,
   getBuiltInOverlayReplace,
   isBuiltInRuleVisible,
   migrateBuiltInEnabled,
@@ -40,15 +43,28 @@ describe('migrateBuiltInEnabled', () => {
 
 describe('getBuiltInOverlayReplace', () => {
   it('finds 이형태 규칙 — spellingRuleId(대표 find)로 overlay를 찾는다', () => {
-    // 설레이|설레였 → find가 regex로 바뀌어도 spellingRuleId=설레이
-    expect(
-      getBuiltInOverlayReplace(
-        '(?:설레[\\n\\r]*이|설레[\\n\\r]*였)',
-        '설레',
-        '설레이',
-      ),
-    ).toBe('→설레');
-    expect(getBuiltInOverlayReplace('설레이', '설레')).toBe('→설레');
+    // J가 있는 finds 행(시트 순서에 기대지 않고 데이터에서 고름)
+    const row = spellingRulesJson.find(
+      (r) => r.finds?.length >= 2 && r.overlayReplace && !r.findReplaces && !r.ruleId,
+    );
+    expect(row).toBeTruthy();
+    const rule = buildSpellingCheckRuleFromBuiltIn(
+      BUILT_IN_RULES.find((r) => r.find === row.find && r.replace === row.replace),
+    );
+    // find가 regex alternation으로 바뀌어도 spellingRuleId(=대표 find)로 찾는다
+    expect(rule.pattern).toBe('regex');
+    expect(rule.spellingRuleId).toBe(row.find);
+    expect(getBuiltInOverlayReplace(rule.find, row.replace, rule.spellingRuleId)).toBe(
+      row.overlayReplace,
+    );
+    expect(getBuiltInOverlayReplace(row.find, row.replace)).toBe(row.overlayReplace);
+  });
+
+  it('findReplaces 행은 J가 있어도 overlay를 돌려주지 않는다', () => {
+    const row = spellingRulesJson.find((r) => r.findReplaces);
+    if (!row) return;
+    const id = String(row.ruleId ?? '').trim() || row.find;
+    expect(getBuiltInOverlayReplace(row.find, row.replace, id)).toBeNull();
   });
 });
 

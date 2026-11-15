@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import spellingRules from '../data/spelling-rules.json';
+import { b1ExpandSkipReason } from './b1StemFindsExpand.js';
 
 /**
  * B1 finds 전개 회귀 — 커밋된 JSON 표면 (Kiwi 불필요).
@@ -35,7 +36,11 @@ describe('B1 expanded finds regression (spelling-rules.json)', () => {
     expect(b1Row('꺼야')?.finds).toBeUndefined();
     expect(b1Row('안절부절하')?.finds).toBeUndefined();
     expect(b1Row('잊혀')?.finds).toBeUndefined();
-    expect(b1Row('걸맞는')?.finds).toBeUndefined();
+    // 걸맞는: 시트에서 알맞는과 합친 찾을말>고칠말 행 — 전개는 건너뛰고 시트 finds만 남는다
+    const geolmatneun = b1Row('걸맞는');
+    expect(b1ExpandSkipReason(geolmatneun)).toBe('find-replaces');
+    expect(geolmatneun.finds).toEqual(['걸맞는', '알맞는']);
+    expect(geolmatneun.findReplaces).toEqual({ 알맞는: '알맞은' });
     expect(b1Row('오랫만')?.finds).toBeUndefined();
   });
 });
