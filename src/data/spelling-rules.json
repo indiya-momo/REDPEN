@@ -35,15 +35,6 @@
     "displayLabel": "^중"
   },
   {
-    "find": "긴 긴 밤",
-    "replace": "긴긴밤",
-    "enabled": true,
-    "tip": "표준국어대사전  '긴긴밤' 등재\n주의: '긴밤' 미등재",
-    "dividerGroup": "A1",
-    "dividerLabel": "표준국어대사전 등재(명사)",
-    "overlayReplace": "→긴^긴^밤"
-  },
-  {
     "find": "마음 속",
     "replace": "마음속",
     "finds": [
@@ -135,16 +126,7 @@
     "tip": "표준국어대사전  '이편,저편,그편,건너편,맞은편,오른편,왼편,반대편,상대편' 등재",
     "dividerGroup": "A1",
     "dividerLabel": "표준국어대사전 등재(명사)",
-    "displayLabel": "^편"
-  },
-  {
-    "find": "무염 식사",
-    "replace": "무염식사",
-    "enabled": true,
-    "tip": "표준국어대사전  '무염식사' 등재",
-    "dividerGroup": "A1",
-    "dividerLabel": "표준국어대사전 등재(명사)",
-    "overlayReplace": "→무염^식사"
+    "displayLabel": "지시사^편"
   },
   {
     "find": "밝은 색",
@@ -165,27 +147,16 @@
     "finds": [
       "별 것",
       "옛 것",
-      "헛 것"
-    ],
-    "enabled": true,
-    "tip": "표준국어대사전 '별것,옛것,헛것' 등재 참고: '요즘것' 미등재",
-    "dividerGroup": "A1",
-    "dividerLabel": "표준국어대사전 등재(명사)",
-    "displayLabel": "^것(1)"
-  },
-  {
-    "find": "젊은 것",
-    "replace": "젊은것",
-    "finds": [
+      "헛 것",
       "어린 것",
       "젊은 것",
       "늙은 것"
     ],
     "enabled": true,
-    "tip": "표준국어대사전  '어린것,젊은것,늙은것' 등재",
+    "tip": "표준국어대사전 '별것,옛것,헛것,어린 것,젊은 것,늙은 것' 등재 참고: '요즘것' 미등재",
     "dividerGroup": "A1",
     "dividerLabel": "표준국어대사전 등재(명사)",
-    "displayLabel": "^것(2)"
+    "displayLabel": "^것"
   },
   {
     "find": "봄 날",
@@ -304,24 +275,6 @@
     "displayLabel": "^소리"
   },
   {
-    "find": "살아 생전",
-    "replace": "살아생전",
-    "enabled": true,
-    "tip": "표준국어대사전  '살아생전' 등재",
-    "dividerGroup": "A1",
-    "dividerLabel": "표준국어대사전 등재(명사)",
-    "overlayReplace": "→살아^생전"
-  },
-  {
-    "find": "생 과일",
-    "replace": "생과일",
-    "enabled": true,
-    "tip": "표준국어대사전  '생과일', '생과일주스' 등재",
-    "dividerGroup": "A1",
-    "dividerLabel": "표준국어대사전 등재(명사)",
-    "overlayReplace": "→생^과일"
-  },
-  {
     "find": "섬 사람",
     "replace": "섬사람",
     "finds": [
@@ -371,35 +324,6 @@
     "displayLabel": "시간^"
   },
   {
-    "find": "어제 저녁",
-    "replace": "어제저녁",
-    "finds": [
-      "어제 저녁",
-      "엊 저녁",
-      "초 저녁",
-      "늦 저녁"
-    ],
-    "enabled": true,
-    "tip": "표준국어대사전  '어제저녁,엊저녁,초저녁,늦저녁' 등재",
-    "dividerGroup": "A1",
-    "dividerLabel": "표준국어대사전 등재(명사)",
-    "displayLabel": "^저녁"
-  },
-  {
-    "find": "우리 나라",
-    "replace": "우리나라",
-    "finds": [
-      "우리 나라",
-      "우리 말",
-      "우리 글"
-    ],
-    "enabled": true,
-    "tip": "표준국어대사전 '우리나라,우리말,우리글'  등재\n주의: '우리집·우리가족' 미등재",
-    "dividerGroup": "A1",
-    "dividerLabel": "표준국어대사전 등재(명사)",
-    "displayLabel": "우리^"
-  },
-  {
     "find": "점심 때",
     "replace": "점심때",
     "finds": [
@@ -419,13 +343,33 @@
     "displayLabel": "시간^때(외)"
   },
   {
-    "find": "손 끝",
-    "replace": "손끝",
+    "find": "우리 나라",
+    "replace": "우리나라",
+    "finds": [
+      "우리 나라",
+      "우리 말",
+      "우리 글"
+    ],
     "enabled": true,
-    "tip": "표준국어대사전  '손끝' 등재",
+    "tip": "표준국어대사전 '우리나라,우리말,우리글'  등재\n주의: '우리집·우리가족' 미등재",
     "dividerGroup": "A1",
     "dividerLabel": "표준국어대사전 등재(명사)",
-    "overlayReplace": "→손^끝"
+    "displayLabel": "우리^"
+  },
+  {
+    "find": "어제 저녁",
+    "replace": "어제저녁",
+    "finds": [
+      "어제 저녁",
+      "엊 저녁",
+      "초 저녁",
+      "늦 저녁"
+    ],
+    "enabled": true,
+    "tip": "표준국어대사전  '어제저녁,엊저녁,초저녁,늦저녁' 등재",
+    "dividerGroup": "A1",
+    "dividerLabel": "표준국어대사전 등재(명사)",
+    "displayLabel": "^저녁"
   },
   {
     "find": "이 것",
@@ -462,20 +406,88 @@
     "displayLabel": "지시사^곳"
   },
   {
-    "find": "가 닿",
-    "replace": "가닿",
+    "find": "손 끝",
+    "replace": "손끝",
     "finds": [
-      "가 닿",
-      "맞 닿",
-      "잇 닿",
-      "들이 닿"
+      "손 끝",
+      "발 끝",
+      "코 끝",
+      "혀 끝",
+      "칼 끝",
+      "붓 끝",
+      "머리 끝",
+      "땅 끝",
+      "턱 끝",
+      "털 끝",
+      "잎 끝",
+      "명치 끝",
+      "말 끝에",
+      "말 끝을",
+      "말 끝마다",
+      "말 끝이",
+      "뒤 끝 없",
+      "뒤 끝이 없"
     ],
+    "findReplaces": {
+      "발 끝": "발끝",
+      "코 끝": "코끝",
+      "혀 끝": "혀끝",
+      "칼 끝": "칼끝",
+      "붓 끝": "붓끝",
+      "머리 끝": "머리끝",
+      "땅 끝": "땅끝",
+      "턱 끝": "턱끝",
+      "털 끝": "털끝",
+      "잎 끝": "잎끝",
+      "명치 끝": "명치끝",
+      "말 끝에": "말끝에",
+      "말 끝을": "말끝을",
+      "말 끝마다": "말끝마다",
+      "말 끝이": "말끝이",
+      "뒤 끝 없": "뒤끝 없",
+      "뒤 끝이 없": "뒤끝이 없"
+    },
     "enabled": true,
-    "tip": "표준국어대사전 등재 '가닿다,맞닿다,잇닿다,들이닿다'",
-    "dividerGroup": "A",
-    "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
-    "overlayReplace": "→가^닿",
-    "displayLabel": "^닿다"
+    "tip": "표준국어대사전  '손끝' 등재",
+    "dividerGroup": "A1",
+    "dividerLabel": "표준국어대사전 등재(명사)",
+    "displayLabel": "^끝"
+  },
+  {
+    "find": "긴 긴 밤",
+    "replace": "긴긴밤",
+    "enabled": true,
+    "tip": "표준국어대사전  '긴긴밤' 등재\n주의: '긴밤' 미등재",
+    "dividerGroup": "A1",
+    "dividerLabel": "표준국어대사전 등재(명사)",
+    "overlayReplace": "→긴^긴^밤"
+  },
+  {
+    "find": "무염 식사",
+    "replace": "무염식사",
+    "enabled": true,
+    "tip": "표준국어대사전  '무염식사' 등재",
+    "dividerGroup": "A1",
+    "dividerLabel": "표준국어대사전 등재(명사)",
+    "overlayReplace": "→무염^식사"
+  },
+  {
+    "find": "살아 생전",
+    "replace": "살아생전",
+    "enabled": true,
+    "tip": "표준국어대사전  '살아생전' 등재",
+    "dividerGroup": "A1",
+    "dividerLabel": "표준국어대사전 등재(명사)",
+    "overlayReplace": "→살아^생전"
+  },
+  {
+    "find": "생 과일",
+    "replace": "생과일",
+    "enabled": true,
+    "tip": "표준국어대사전  '생과일', '생과일주스' 등재",
+    "dividerGroup": "A1",
+    "dividerLabel": "표준국어대사전 등재(명사)",
+    "overlayReplace": "→생^과일"
   },
   {
     "find": "그럴 듯",
@@ -492,51 +504,37 @@
     "displayLabel": "그럴^"
   },
   {
-    "find": "듯 하",
-    "replace": "듯하",
-    "enabled": true,
-    "tip": "표준국어대사전 '듯하다' 등재",
-    "dividerGroup": "A",
-    "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
-    "overlayReplace": "→듯^하"
-  },
-  {
-    "find": "되풀이 되",
-    "replace": "되풀이되",
+    "find": "가 닿",
+    "replace": "가닿",
     "finds": [
-      "되풀이 되",
-      "되풀이 된",
-      "되풀이 될"
+      "가 닿",
+      "맞 닿",
+      "잇 닿",
+      "들이 닿"
     ],
     "enabled": true,
-    "tip": "표준국어대사전  '되풀이되다' 등재",
+    "tip": "표준국어대사전  '가닿다,맞닿다,잇닿다,들이닿다' 등재",
     "dividerGroup": "A",
     "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
-    "overlayReplace": "→되풀이^되"
+    "overlayReplace": "→가^닿",
+    "displayLabel": "^닿다"
   },
   {
-    "find": "때 맞",
-    "replace": "때맞",
-    "enabled": true,
-    "tip": "표준국어대사전  '때맞추다' 등재",
-    "dividerGroup": "A",
-    "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
-    "overlayReplace": "→때^맞"
-  },
-  {
-    "find": "마다 하",
-    "replace": "마다하",
+    "find": "장난 삼",
+    "replace": "장난삼",
     "finds": [
-      "마다 하",
-      "마다 했",
-      "마다 한",
-      "마다 할"
+      "장난 삼",
+      "거울 삼",
+      "자랑 삼",
+      "주장 삼",
+      "참고 삼"
     ],
     "enabled": true,
-    "tip": "표준국어대사전  '마다하다' 등재",
+    "tip": "표준국어대사전  '장난삼다,거울삼다,자랑삼다,주장삼다,참고삼다' 등재. '친구삼다' 미등재",
     "dividerGroup": "A",
     "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
-    "overlayReplace": "→마다^하"
+    "overlayReplace": "→장난^삼",
+    "displayLabel": "장난^삼(외)"
   },
   {
     "find": "머지 않",
@@ -551,7 +549,7 @@
     "tip": "표준국어대사전  '머지않다,못지않다,마지않다,얼토당토않다' 등재",
     "dividerGroup": "A",
     "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
-    "displayLabel": "머지 않 → 머지않(외)"
+    "displayLabel": "^않다"
   },
   {
     "find": "보잘 것 없",
@@ -565,7 +563,7 @@
     "dividerGroup": "A",
     "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
     "overlayReplace": "→보잘^것없",
-    "displayLabel": "보잘 것 없 → 보잘것없(외)"
+    "displayLabel": "^것없다"
   },
   {
     "find": "부끄러워 하",
@@ -669,7 +667,7 @@
     "dividerGroup": "A",
     "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
     "overlayReplace": "→부끄러워^하",
-    "displayLabel": "부끄러워 하 → 부끄러워하(외)"
+    "displayLabel": "^워하다"
   },
   {
     "find": "세상 모르",
@@ -700,25 +698,54 @@
     "tip": "표준국어대사전 '자신만만하다' 등재",
     "dividerGroup": "A",
     "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
-    "overlayReplace": "→자신만만^하",
-    "displayLabel": "자신만만^하다(외)"
+    "overlayReplace": "→자신만만^하"
   },
   {
-    "find": "장난 삼",
-    "replace": "장난삼",
-    "finds": [
-      "장난 삼",
-      "거울 삼",
-      "자랑 삼",
-      "주장 삼",
-      "참고 삼"
-    ],
+    "find": "듯 하",
+    "replace": "듯하",
     "enabled": true,
-    "tip": "표준국어대사전  '장난삼다,거울삼다,자랑삼다,주장삼다,참고삼다' 등재. '친구삼다' 미등재",
+    "tip": "표준국어대사전 '듯하다' 등재",
     "dividerGroup": "A",
     "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
-    "overlayReplace": "→장난^삼",
-    "displayLabel": "장난^삼(외)"
+    "overlayReplace": "→듯^하"
+  },
+  {
+    "find": "되풀이 되",
+    "replace": "되풀이되",
+    "finds": [
+      "되풀이 되",
+      "되풀이 된",
+      "되풀이 될"
+    ],
+    "enabled": true,
+    "tip": "표준국어대사전  '되풀이되다' 등재",
+    "dividerGroup": "A",
+    "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
+    "overlayReplace": "→되풀이^되"
+  },
+  {
+    "find": "때 맞",
+    "replace": "때맞",
+    "enabled": true,
+    "tip": "표준국어대사전  '때맞추다' 등재",
+    "dividerGroup": "A",
+    "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
+    "overlayReplace": "→때^맞"
+  },
+  {
+    "find": "마다 하",
+    "replace": "마다하",
+    "finds": [
+      "마다 하",
+      "마다 했",
+      "마다 한",
+      "마다 할"
+    ],
+    "enabled": true,
+    "tip": "표준국어대사전  '마다하다' 등재",
+    "dividerGroup": "A",
+    "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
+    "overlayReplace": "→마다^하"
   },
   {
     "find": "갯수",
@@ -762,7 +789,7 @@
     "tip": "'검정·노랑·빨강·파랑'에 색이라는 의미 있음",
     "dividerGroup": "B0",
     "dividerLabel": "잘못된 표현(명사)",
-    "displayLabel": "색"
+    "displayLabel": "검정색→검정 또는 검은색(외)"
   },
   {
     "find": "과반수 이상",
@@ -933,16 +960,7 @@
     "tip": "'十'을 속음 '시'로 적는 경우-한글맞춤법 제 52항",
     "dividerGroup": "B0",
     "dividerLabel": "잘못된 표현(명사)",
-    "displayLabel": "속음 十"
-  },
-  {
-    "find": "역대급",
-    "replace": "역대 또는 초유의",
-    "enabled": true,
-    "tip": "역대(歷代)'는 '그동안'이라는 뜻을 지닌 명사고, '-급(級)'은 '그에 준하는'이라는 뜻을 지닌 접미사로 역대급은 '평상시의' 라는 뜻이나 '초유의' 라는 뜻으로 오용",
-    "dividerGroup": "B0",
-    "dividerLabel": "잘못된 표현(명사)",
-    "overlayReplace": "→역대 또는 초유의"
+    "displayLabel": "속음 十(시)"
   },
   {
     "find": "오륙월",
@@ -951,7 +969,8 @@
     "tip": "'六'의 속음 '뉴'를 따라 '오뉴월'로 적음 -한글맞춤법 제 52항",
     "dividerGroup": "B0",
     "dividerLabel": "잘못된 표현(명사)",
-    "overlayReplace": "→오뉴월"
+    "overlayReplace": "→오뉴월",
+    "displayLabel": "속음 六(뉴)"
   },
   {
     "find": "육월(六月)",
@@ -960,7 +979,18 @@
     "tip": "'六'의 속음 '유'를 따라 '유월'로 적음-한글맞춤법 제 52항",
     "dividerGroup": "B0",
     "dividerLabel": "잘못된 표현(명사)",
-    "overlayReplace": "→유월"
+    "overlayReplace": "→유월",
+    "displayLabel": "속음 六(유)"
+  },
+  {
+    "find": "초팔일",
+    "replace": "초파일",
+    "enabled": true,
+    "tip": "'八'의 속음 '파'를 따라 '초파일'로 적음-한글맞춤법 제 52항",
+    "dividerGroup": "B0",
+    "dividerLabel": "잘못된 표현(명사)",
+    "overlayReplace": "→초파일",
+    "displayLabel": "속음八(파)"
   },
   {
     "find": "전세계",
@@ -981,14 +1011,13 @@
     "overlayReplace": "→주야장천"
   },
   {
-    "find": "초팔일",
-    "replace": "초파일",
+    "find": "역대급",
+    "replace": "역대 또는 초유의",
     "enabled": true,
-    "tip": "'八'의 속음 '파'를 따라 '초파일'로 적음-한글맞춤법 제 52항",
+    "tip": "역대(歷代)'는 '그동안'이라는 명사 '-급(級)'은 '그에 준하는' 접미사로 역대급은 '평소의' 라는 뜻이나 '초유의' 라는 뜻으로 오용",
     "dividerGroup": "B0",
     "dividerLabel": "잘못된 표현(명사)",
-    "overlayReplace": "→초파일",
-    "displayLabel": "속음八"
+    "overlayReplace": "→역대 또는 초유의"
   },
   {
     "find": "한켠",
@@ -1012,7 +1041,7 @@
     "find": "그날밤",
     "replace": "그날 밤",
     "enabled": true,
-    "tip": "표준국어대사전 미등재('그날'과 '밤'은 띄어 쓴다)",
+    "tip": "표준국어대사전 미등재",
     "dividerGroup": "B0",
     "dividerLabel": "잘못된 표현(명사)",
     "overlayReplace": "→그날∨밤"
@@ -1051,7 +1080,7 @@
     "tip": "수 관형사 '몇' 뒤의 단위 명사는 띄어 쓴다",
     "dividerGroup": "B0",
     "dividerLabel": "잘못된 표현(명사)",
-    "displayLabel": "몇^"
+    "displayLabel": "몇∨단위 명사"
   },
   {
     "find": "거북치",
@@ -1071,7 +1100,7 @@
     "tip": "어간 끝 음절 '하'가 줄어든 대로 적는다",
     "dividerGroup": "B1",
     "dividerLabel": "잘못된 표현(동사 · 형용사)",
-    "displayLabel": "거북치 → 거북지('하'줄임)"
+    "displayLabel": "하'줄임(ㅈ)"
   },
   {
     "find": "익숙케",
@@ -1081,6 +1110,7 @@
     "dividerGroup": "B1",
     "dividerLabel": "잘못된 표현(동사 · 형용사)",
     "overlayReplace": "→익숙하게",
+    "displayLabel": "하'줄임(ㄱ)",
     "finds": [
       "익숙케",
       "익숙케고",
@@ -1105,7 +1135,7 @@
     "tip": "형용사에는 'ㄴ'을 붙일 수 없다",
     "dividerGroup": "B1",
     "dividerLabel": "잘못된 표현(동사 · 형용사)",
-    "displayLabel": "걸맞는 → 걸맞은(형용사 ㄴ)"
+    "displayLabel": "형용사 ㄴ(X)"
   },
   {
     "find": "그을은",
