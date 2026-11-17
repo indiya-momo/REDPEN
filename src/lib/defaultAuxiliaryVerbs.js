@@ -4,9 +4,12 @@ import {
   bonBojoDisplayLabelForItem,
   auxiliarySearchTailsFromBonBojoItem,
   isBonBojoLogicOnlyItem,
+  isBonBojoGateOnlyItem,
   isBonBojoRequiredItem,
   BON_BOJO_LONG_COMPOUND_SPLIT_ID,
   BON_BOJO_LONG_COMPOUND_SPLIT_LABEL,
+  BON_BOJO_NON_AEO_SPACE_ID,
+  BON_BOJO_NON_AEO_SPACE_LABEL,
 } from './bonBojoRules.js';
 import { encodeSpacesVisible } from './spaceVisibleText.js';
 
@@ -34,6 +37,7 @@ function spacedStemsFromGroups() {
   for (const group of getBonBojoGroups()) {
     for (const item of group.items) {
       if (item.id === BON_BOJO_LONG_COMPOUND_SPLIT_ID) continue;
+      if (isBonBojoGateOnlyItem(item.id)) continue;
       for (const tail of auxiliarySearchTailsFromBonBojoItem(item)) {
         const parts = String(tail ?? '')
           .trim()
@@ -65,11 +69,32 @@ function rebuildAuxiliaryVerbRulesFromSheet(nonAux, enabledByItem) {
         encodeSpacesVisible(item.label);
 
       const logicOnly = isBonBojoLogicOnlyItem(itemId);
+      const gateOnly = isBonBojoGateOnlyItem(itemId);
+      // 게이트·일반: 저장값 없으면 필수 item만 기본 on (게이트는 기본 off)
       const enabled = logicOnly
         ? true
         : enabledByItem.has(itemId)
           ? enabledByItem.get(itemId)
-          : isBonBojoRequiredItem(itemId);
+          : gateOnly
+            ? false
+            : isBonBojoRequiredItem(itemId);
+
+      if (gateOnly) {
+        aux.push({
+          enabled: Boolean(enabled),
+          pattern: 'regex',
+          patternKind: 'auxiliary-verb',
+          bonBojoItemId: BON_BOJO_NON_AEO_SPACE_ID,
+          auxNonAeoGate: true,
+          // 1차 엔진에 안 넣음(useRuleCheck 필터). enabled 토글용 자리만.
+          find: '(?![\\s\\S])',
+          replace: '$0',
+          tailWord: BON_BOJO_NON_AEO_SPACE_ID,
+          label: listLabel || BON_BOJO_NON_AEO_SPACE_LABEL,
+          tip: '본용언 연결이 -아/-어가 아니면 보조용언을 띄어 씁니다.',
+        });
+        continue;
+      }
 
       if (itemId === BON_BOJO_LONG_COMPOUND_SPLIT_ID) {
         for (const row of buildLongCompoundSplitRules(spacedStems)) {

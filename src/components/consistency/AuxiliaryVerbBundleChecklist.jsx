@@ -6,7 +6,7 @@ import {
 } from '../../lib/auxiliaryVerbRegister.js';
 
 /**
- * 본조 마스터 체크 3줄 — 각 줄이 묶음 itemId 규칙 전체 on/off
+ * 본조 마스터 체크 묶음 — 각 줄이 묶음 itemId 규칙 전체 on/off
  *
  * @param {{
  *   customRules: import('../../lib/ruleTypes.js').Rule[],

@@ -8,6 +8,7 @@ import { parseCommaList } from './matchFilters.js';
 import {
   bonBojoListItem,
   isBonBojoLogicOnlyItem,
+  isBonBojoGateOnlyItem,
   BON_BOJO_LONG_COMPOUND_SPLIT_ID,
   listBonBojoBundleDefinitions,
 } from './bonBojoRules.js';
@@ -44,7 +45,9 @@ export function listAuxiliaryVerbEntries(customRules) {
     if (r.patternKind !== 'auxiliary-verb') continue;
     const itemId = r.bonBojoItemId?.trim();
     if (itemId) {
-      if (isBonBojoLogicOnlyItem(itemId)) continue;
+      if (isBonBojoLogicOnlyItem(itemId) || isBonBojoGateOnlyItem(itemId)) {
+        continue;
+      }
       if (seenItems.has(itemId)) continue;
       seenItems.add(itemId);
       const group = rulesForBonBojoItem(customRules, itemId);
