@@ -3128,6 +3128,8 @@
 
 .panel-left .unify-candidate-find__aux-review {
   color: #4a5568;
+  white-space: normal;
+  max-width: 100%;
 }
 
 .panel-left .unify-candidate-find__predicate-review {

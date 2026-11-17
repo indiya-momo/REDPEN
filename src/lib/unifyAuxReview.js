@@ -59,6 +59,36 @@ export function matchBonBojoStemForCluster(
  * @param {import('./unifyCandidateDiscover.js').UnifySpacingCluster[]} clusters
  * @returns {import('./unifyCandidateDiscover.js').UnifySpacingCluster[]}
  */
+/** @param {{ displayLabel?: string, stemSpaced?: string, stemKey?: string } | null | undefined} auxReview */
+export function formatAuxiliaryReviewShortLabel(auxReview) {
+  const label = auxReview?.displayLabel?.trim();
+  return label || '(아/어) + 보조용언';
+}
+
+/**
+ * @param {{ displayLabel?: string, stemSpaced?: string, stemKey?: string } | null | undefined} auxReview
+ */
+export function formatAuxiliaryReviewBadge(auxReview) {
+  const label = formatAuxiliaryReviewShortLabel(auxReview);
+  return `${label} · 붙임/띄움 짝`;
+}
+
+/**
+ * @param {{ displayLabel?: string, stemSpaced?: string, stemKey?: string } | null | undefined} auxReview
+ */
+export function formatAuxiliaryReviewTip(auxReview) {
+  const label = formatAuxiliaryReviewShortLabel(auxReview);
+  const spaced = auxReview?.stemSpaced?.trim();
+  const glued = auxReview?.stemKey?.trim();
+  const lines = [`본조 시트: ${label}`];
+  if (spaced) lines.push(`띄움 stem: ${spaced}`);
+  if (glued) lines.push(`붙임 stem: ${glued}`);
+  lines.push(
+    '원고에 붙임·띄움이 함께 있으면 여기서 통일하고, 맞춤법 제안은 본용언+보조용언 검사와 같이 보세요.',
+  );
+  return lines.join('\n');
+}
+
 export function attachAuxiliaryReviewHints(clusters) {
   if (!clusters?.length) return clusters;
   const stems = listStemsLongestFirst();

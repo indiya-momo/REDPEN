@@ -559,7 +559,8 @@ export default function ConsistencyPanel({
           <p className="auxiliary-checklist-intro hint">
             ｢한글 맞춤법｣ 기준 본용언(-아/어)+보조용언을 세 가지 기준(붙여쓰기
             가능·붙여쓰기 필수·띄어쓰기 필수)으로 검사합니다. 결과 목록은
-            보조용언별로 표시됩니다.
+            보조용언별로 표시됩니다. 원고에 붙임·띄움이 섞이면 아래 「표기
+            통일 추천」에서 짝으로 함께 보세요.
           </p>
           <AuxiliaryVerbBundleChecklist
             customRules={customRules}
