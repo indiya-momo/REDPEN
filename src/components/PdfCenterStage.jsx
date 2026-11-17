@@ -10,12 +10,14 @@ import {
   PDF_SIZE_MAX_MESSAGE,
 } from '../lib/pdfSizeLimits.js';
 import {
-  convertPdfFileToTxt,
+  buildFinalTxt,
   downloadTextFile,
+  preparePdfTxtReview,
 } from '../lib/pdfTxtExport.js';
 import { showAppAlert } from '../lib/appDialog.js';
 import TooltipGuide from './TooltipGuide.jsx';
 import CriteriaHoverTip from './CriteriaHoverTip.jsx';
+import PdfTxtLinebreakReviewModal from './PdfTxtLinebreakReviewModal.jsx';
 
 /**
  * @param {{
@@ -79,6 +81,9 @@ export default function PdfCenterStage({
 }) {
   const [dragOver, setDragOver] = useState(false);
   const [txtConverting, setTxtConverting] = useState(false);
+  const [txtReview, setTxtReview] = useState(
+    /** @type {null | Awaited<ReturnType<typeof preparePdfTxtReview>>} */ (null),
+  );
   const dragDepth = useRef(0);
   const txtFileRef = useRef(/** @type {HTMLInputElement | null} */ (null));
 
@@ -93,6 +98,10 @@ export default function PdfCenterStage({
     txtFileRef.current?.click();
   }, [onUploadGuideDismiss]);
 
+  const closeTxtReview = useCallback(() => {
+    setTxtReview(null);
+  }, []);
+
   const onTxtFileChange = useCallback(async (e) => {
     const input = e.target;
     const file = input.files?.[0] ?? null;
@@ -100,8 +109,8 @@ export default function PdfCenterStage({
     if (!file) return;
     setTxtConverting(true);
     try {
-      const result = await convertPdfFileToTxt(file);
-      downloadTextFile(result.text, result.filename);
+      const prepared = await preparePdfTxtReview(file);
+      setTxtReview(prepared);
     } catch (err) {
       await showAppAlert(
         err instanceof Error ? err.message : 'TXT 변환에 실패했습니다.',
@@ -110,6 +119,24 @@ export default function PdfCenterStage({
       setTxtConverting(false);
     }
   }, []);
+
+  const onTxtReviewConfirm = useCallback(
+    (decisions) => {
+      if (!txtReview) {
+        closeTxtReview();
+        return;
+      }
+      const text = buildFinalTxt(txtReview.cleanedPages, decisions);
+      downloadTextFile(text, txtReview.finalFilename);
+      closeTxtReview();
+    },
+    [closeTxtReview, txtReview],
+  );
+
+  const onTxtDownloadDraft = useCallback(() => {
+    if (!txtReview) return;
+    downloadTextFile(txtReview.draftWithMarkers, txtReview.draftFilename);
+  }, [txtReview]);
 
   useEffect(() => {
     if (showReady) onUploadGuideDismiss?.();
@@ -259,7 +286,7 @@ export default function PdfCenterStage({
                       className="btn-upload-secondary pdf-dropzone__txt"
                       onClick={openTxtPicker}
                       disabled={isProcessing || txtConverting}
-                      aria-label="PDF를 TXT로 변환"
+                      aria-label="PDF를 검수 전 TXT로 변환"
                     >
                       <FileText size={16} />
                       {txtConverting ? '변환 중…' : 'TXT 변환'}
@@ -268,6 +295,9 @@ export default function PdfCenterStage({
                   <footer className="pdf-dropzone__footer">
                     <p className="pdf-dropzone__limit">
                       100MB 이하 권장 · 신국판 300페이지 내외
+                    </p>
+                    <p className="pdf-dropzone__txt-note">
+                      TXT 변환 후 줄바꿈을 확인하고 최종 파일을 받습니다
                     </p>
                     <p className="pdf-dropzone__scan-note">
                       <span className="pdf-support-msg__scan">
@@ -304,7 +334,7 @@ export default function PdfCenterStage({
                 className="btn-upload-secondary pdf-dropzone__txt"
                 onClick={openTxtPicker}
                 disabled={isProcessing || txtConverting}
-                aria-label="PDF를 TXT로 변환"
+                aria-label="PDF를 검수 전 TXT로 변환"
               >
                 <FileText size={16} />
                 {txtConverting ? '변환 중…' : 'TXT 변환'}
@@ -313,6 +343,9 @@ export default function PdfCenterStage({
             <footer className="pdf-dropzone__footer">
               <p className="pdf-dropzone__limit">
                 100MB 이하 권장 · 신국판 300페이지 내외
+              </p>
+              <p className="pdf-dropzone__txt-note">
+                TXT 변환 후 줄바꿈을 확인하고 최종 파일을 받습니다
               </p>
               <p className="pdf-dropzone__scan-note">
                 <span className="pdf-support-msg__scan">스캔 PDF는 읽을 수 없어요ㅠ</span>
@@ -458,6 +491,15 @@ export default function PdfCenterStage({
           스캔 PDF는 용량이 커질 수 있습니다. 텍스트 PDF 권장
         </p>
       )}
+
+      <PdfTxtLinebreakReviewModal
+        open={Boolean(txtReview)}
+        sourceName={txtReview?.sourceName ?? ''}
+        candidates={txtReview?.candidates ?? []}
+        onCancel={closeTxtReview}
+        onConfirm={onTxtReviewConfirm}
+        onDownloadDraft={onTxtDownloadDraft}
+      />
     </div>
   );
 }
