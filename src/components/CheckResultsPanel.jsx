@@ -1,4 +1,5 @@
 import ResultPageSummary from './ResultPageSummary.jsx';
+import { isAuxiliaryDictSolidInstance } from '../lib/auxiliaryDictSolid.js';
 import PhraseSlotResultSummary from './PhraseSlotResultSummary.jsx';
 import GroupVisibilityCheckbox from './GroupVisibilityCheckbox.jsx';import DetailsChevron, { detailsOpenOnceRef } from './DetailsChevron.jsx';
 import CriteriaHoverTip from './CriteriaHoverTip.jsx';
@@ -270,6 +271,10 @@ export default function CheckResultsPanel({
         ? getBuiltInTip(group.find, group.replace, group.spellingRuleId)
         : '');
     const selected = isSameGroupAsSelected(group, source);
+    const solidCount =
+      group.patternKind === 'auxiliary-verb'
+        ? (group.instances ?? []).filter(isAuxiliaryDictSolidInstance).length
+        : 0;
 
     return (
       <li key={`${source}-${group.label}-${group.find}`}>
@@ -323,6 +328,15 @@ export default function CheckResultsPanel({
                     {group.patternKind === 'auxiliary-verb' &&
                     isBonBojoRequiredItem(group.bonBojoItemId) ? (
                       <span className="bon-bojo-required-badge">필수</span>
+                    ) : null}
+                    {solidCount > 0 ? (
+                      <span className="aux-solid-count">
+                        합성어 등재
+                        <ResultFindingsCountCircle
+                          count={solidCount}
+                          ariaLabel={`합성어 등재 ${solidCount}`}
+                        />
+                      </span>
                     ) : null}
                   </>
                 ) : isCaution ? (
@@ -385,6 +399,14 @@ export default function CheckResultsPanel({
                 />
               ) : (
                 <ResultPageSummary
+                  pillClass={
+                    group.patternKind === 'auxiliary-verb'
+                      ? (inst) =>
+                          isAuxiliaryDictSolidInstance(inst)
+                            ? 'page-chip--aux-solid'
+                            : ''
+                      : undefined
+                  }
                   instances={group.instances}
                   currentPage={currentPage}
                   selectedInstance={selectedInstance}
@@ -581,6 +603,28 @@ export default function CheckResultsPanel({
                   />
                   <span className="results-category__label">
                     {section.label}
+                    {section.id === 'auxiliary'
+                      ? (() => {
+                          const solidTotal = section.entries.reduce(
+                            (n, entry) =>
+                              n +
+                              (entry.group.instances ?? []).filter(
+                                isAuxiliaryDictSolidInstance,
+                              ).length,
+                            0,
+                          );
+                          if (solidTotal <= 0) return null;
+                          return (
+                            <span className="aux-solid-count">
+                              합성어 등재
+                              <ResultFindingsCountCircle
+                                count={solidTotal}
+                                ariaLabel={`합성어 등재 ${solidTotal}`}
+                              />
+                            </span>
+                          );
+                        })()
+                      : null}
                   </span>
                   <span className="results-category__meta results-findings-meta">
                     <span className="results-findings-meta__label">

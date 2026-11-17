@@ -1,3 +1,4 @@
+import { isAuxiliaryDictSolidInstance } from './auxiliaryDictSolid.js';
 import { getBuiltInOverlayReplace } from './builtInRules.js';
 import { getConsistencyUnifyOverlayForGroup } from './consistencyUnifyRegister.js';
 
@@ -30,11 +31,18 @@ export function formatConsistencyUnifyHighlightOverlay(_inst, unifiedRaw) {
 export function getHighlightOverlayReplace(inst, options = {}) {
   if (!inst?.find) return null;
 
+  const { customRules = [], group = null } = options;
+  // 본용언+보조 — 사전 등재 합성어만 하이라이트 위에 붙여 쓴 말을 올린다
+  if (
+    group?.patternKind === 'auxiliary-verb' &&
+    isAuxiliaryDictSolidInstance(inst)
+  ) {
+    return `→${String(inst.suggestedText).trim()}`;
+  }
+
   // findReplaces 행: 찾은 말마다 제 고칠 말(J overlay_replace 무시)
   const variantReplace = String(inst.variantReplace ?? '').trim();
   if (variantReplace) return `→${variantReplace}`;
-
-  const { customRules = [], group = null } = options;
   if (group?.tailWord) {
     const consistencyOverlay = getConsistencyUnifyOverlayForGroup(
       customRules,
