@@ -3,7 +3,7 @@
  * subscribeAuthSession/getCurrentUserSession으로 앱 전역 세션 스냅샷.
  * redirect 복귀·persistence·작업 가이드 세션 연동.
  */
-import { initializeApp } from 'firebase/app';
+import { getApp, getApps, initializeApp } from 'firebase/app';
 import {
   GoogleAuthProvider,
   browserLocalPersistence,
@@ -76,7 +76,7 @@ let provider = null;
 let persistenceReady = Promise.resolve();
 
 if (isFirebaseAuthConfigured) {
-  firebaseApp = initializeApp(firebaseConfig);
+  firebaseApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
   auth = getAuth(firebaseApp);
   provider = new GoogleAuthProvider();
   provider.addScope('email');

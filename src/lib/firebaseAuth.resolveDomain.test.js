@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('firebase/app', () => ({
+  getApps: () => [],
+  getApp: vi.fn(),
   initializeApp: vi.fn(() => ({ name: '[DEFAULT]' })),
 }));
 
