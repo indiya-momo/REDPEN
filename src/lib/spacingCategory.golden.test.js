@@ -238,6 +238,44 @@ describe('spacingCategory golden baseline', () => {
       if (row.skip) continue;
       expect(row.verified, row.id).toBe(!isExpectationUnverified(row.needsCheck));
     }
+
+    const unverifiedIds = golden.cases
+      .filter((row) => !row.skip && row.verified === false)
+      .map((row) => row.id);
+    expect(unverifiedIds).toEqual(['K01', 'K02', 'K03', 'K04']);
+
+    const byId = Object.fromEntries(golden.cases.map((row) => [row.id, row]));
+    expect(byId.F21).toMatchObject({
+      expect: 'KEEP',
+      grade: '침묵',
+      verified: true,
+      stdict: null,
+      expectedOutputs: [],
+    });
+    expect(byId.F07).toMatchObject({
+      expect: 'confirm',
+      expectedOutputs: ['곳 없이'],
+      verified: true,
+      stdict: null,
+    });
+    expect(byId.F08).toMatchObject({
+      expect: 'confirm',
+      expectedOutputs: ['기분 좋'],
+      verified: true,
+      stdict: null,
+    });
+    expect(byId.K07.stdict[0]).toMatchObject({
+      headword: '별-수',
+      pos: '명사',
+    });
+    expect(byId.F13.stdict[0]).toMatchObject({
+      headword: '어루-만지다',
+      pos: '동사',
+    });
+    expect(byId.F20.stdict).toEqual([
+      { query: '칼퇴', headword: null },
+      { query: '칼퇴근', headword: '칼퇴근', pos: '명사' },
+    ]);
   });
 
   it('검증된 KEEP 오탐만 실패하고, 놓친 FIX는 범주별 표로만 남긴다', () => {
