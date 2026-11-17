@@ -45,7 +45,10 @@ describe('auxiliaryVerbBundles', () => {
     const longSplit = bundles.find(
       (b) => b.bundleId === BON_BOJO_UI_GROUP.SPACE_REQUIRED,
     );
-    expect(nonAeo?.itemIds).toEqual([BON_BOJO_NON_AEO_SPACE_ID]);
+    expect(nonAeo?.itemIds).toEqual([
+      'verb-malda',
+      BON_BOJO_NON_AEO_SPACE_ID,
+    ]);
     expect(longSplit?.itemIds).toEqual([BON_BOJO_LONG_COMPOUND_SPLIT_ID]);
 
     let rules = ensureDefaultAuxiliaryVerbs([]);

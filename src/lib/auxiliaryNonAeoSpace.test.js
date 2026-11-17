@@ -115,4 +115,43 @@ describe('auxOnsetsForItem', () => {
   it('보다 항목 onset에 보', () => {
     expect(auxOnsetsForItem('verb-boda1')).toContain('보');
   });
+
+  it('말다 onset에 말·마', () => {
+    expect(auxOnsetsForItem('verb-malda')).toEqual(
+      expect.arrayContaining(['말', '마']),
+    );
+  });
+});
+
+describe('말다 non-aeo', () => {
+  it('게이트+말다 on이면 뛰지말라를 띄움 필수로 잡는다', async () => {
+    let rules = ensureDefaultAuxiliaryVerbs([]);
+    rules = toggleAuxiliaryVerbBundle(
+      rules,
+      BON_BOJO_UI_GROUP.SPACE_REQUIRED_NON_AEO,
+      true,
+    );
+    expect(enabledAuxItemIdsForNonAeo(rules)).toContain('verb-malda');
+
+    const fetchImpl = vi.fn(async () => ({
+      ok: true,
+      status: 200,
+      text: async () => JSON.stringify({ channel: '', item: [] }),
+    }));
+    const out = await enrichAuxiliaryNonAeoSpace(
+      [],
+      [{ pageNum: 1, text: '여기서는뛰지말라' }],
+      { rules, fetchImpl },
+    );
+    const nonAeo = out.filter((g) => g.auxNonAeoSpace);
+    expect(nonAeo.length).toBeGreaterThan(0);
+    const inst = nonAeo.flatMap((g) => g.instances).find((i) =>
+      String(i.matchedText).includes('뛰지말'),
+    );
+    expect(inst).toBeTruthy();
+    expect(inst.suggestedText).toContain(' ');
+    expect(inst.suggestedText.replace(/\s+/g, '')).toBe(
+      inst.matchedText.replace(/\s+/g, ''),
+    );
+  });
 });
