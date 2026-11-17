@@ -1954,7 +1954,7 @@ export default function UnifyCandidateFindPanel({
       <div className="unify-candidate-find__body">
         <div className="unify-candidate-find__intro-row">
           <p className="hint consistency-hint-block unify-candidate-find__hint">
-            표기 통일이 필요한 단어를 자동으로 찾아 제안합니다.
+            표기 통일이 필요한 명사를 자동으로 찾아 제안합니다.
             <br />
             <ConsistencyHintExample>
               <span className="consistency-hint-batang">경제˅학자</span>
