@@ -32,6 +32,27 @@ const BON_BOJO_LOGIC_ONLY_GROUP = {
   ],
 };
 
+/** 비아/어+보조 띄어쓰기 필수 — 2차 게이트만 (1차 find 없음) */
+export const BON_BOJO_NON_AEO_SPACE_ID = 'verb-non-aeo-space';
+
+export const BON_BOJO_NON_AEO_SPACE_LABEL =
+  '본용언이 (-아/-어) 가 아닌 경우 : 띄어쓰기 필수';
+
+/** 시트에 없음 — UI 체크만, 1차 찾기 규칙 없음 */
+const BON_BOJO_GATE_ONLY_GROUP = {
+  id: 'gate-bon',
+  tip: '본용언 연결이 -아/-어가 아닌 보조용언 구성은 띄어 쓴다(2차 검사 스위치).',
+  items: [
+    {
+      id: BON_BOJO_NON_AEO_SPACE_ID,
+      label: '비아어',
+      enabled: false,
+      stems: [],
+      displayLabel: BON_BOJO_NON_AEO_SPACE_LABEL,
+    },
+  ],
+};
+
 /** @param {typeof bonBojoJson} raw */
 export function bonBojoRulesFingerprint(raw) {
   let hash = 0;
@@ -45,7 +66,11 @@ export function bonBojoRulesFingerprint(raw) {
 /** @param {typeof bonBojoJson} source */
 function buildRuntimeFromSource(source) {
   /** @type {BonBojoGroup[]} */
-  const groups = [...(source.groups ?? []), BON_BOJO_LOGIC_ONLY_GROUP];
+  const groups = [
+    ...(source.groups ?? []),
+    BON_BOJO_LOGIC_ONLY_GROUP,
+    BON_BOJO_GATE_ONLY_GROUP,
+  ];
 
   /** @type {Map<string, readonly string[]>} */
   const allowByItemId = new Map();
@@ -212,6 +237,12 @@ export const BON_BOJO_LOGIC_ONLY_ITEM_IDS = new Set(
   BON_BOJO_LOGIC_ONLY_ITEM_IDS_LIST,
 );
 
+export const BON_BOJO_GATE_ONLY_ITEM_IDS_LIST = [BON_BOJO_NON_AEO_SPACE_ID];
+
+export const BON_BOJO_GATE_ONLY_ITEM_IDS = new Set(
+  BON_BOJO_GATE_ONLY_ITEM_IDS_LIST,
+);
+
 /** @param {string | undefined} itemId */
 export function isBonBojoLogicOnlyItem(itemId) {
   return (
@@ -220,16 +251,23 @@ export function isBonBojoLogicOnlyItem(itemId) {
 }
 
 /** @param {string | undefined} itemId */
+export function isBonBojoGateOnlyItem(itemId) {
+  return (
+    itemId != null && BON_BOJO_GATE_ONLY_ITEM_IDS.has(String(itemId).trim())
+  );
+}
+
+/** @param {string | undefined} itemId */
 export function isBonBojoRequiredItem(itemId) {
   return itemId != null && BON_BOJO_REQUIRED_ITEM_IDS.has(String(itemId).trim());
 }
 
-/** 일관성 탭 체크 목록 — 3그룹 제목(엔진·결과 묶음과 무관) */
+/** 일관성 탭 체크 목록 — 그룹 제목(엔진·결과 묶음과 무관) */
 export const BON_BOJO_UI_GROUP = {
   GLUE_OPTIONAL: 'glue-optional',
   GLUE_REQUIRED: 'glue-required',
   SPACE_REQUIRED: 'space-required',
-  /** 화면 안내용 줄 — 검사 묶음은 SPACE_REQUIRED와 같다 */
+  /** 2차 게이트 전용 — 3음절 복합어와 item 공유하지 않음 */
   SPACE_REQUIRED_NON_AEO: 'space-required-non-aeo',
 };
 
@@ -238,8 +276,7 @@ export const BON_BOJO_UI_GROUP_TITLES = {
   [BON_BOJO_UI_GROUP.GLUE_OPTIONAL]:
     '본용언(-아/-어) + 보조용언 : 붙여쓰기 가능, 합성어는 붙여쓰기 필수',
   [BON_BOJO_UI_GROUP.GLUE_REQUIRED]: '본용언(-아/-어) + 지다· 하다 :붙여쓰기 필수',
-  [BON_BOJO_UI_GROUP.SPACE_REQUIRED_NON_AEO]:
-    '본용언이 (-아/-어) 가 아닌 경우 : 띄어쓰기 필수',
+  [BON_BOJO_UI_GROUP.SPACE_REQUIRED_NON_AEO]: BON_BOJO_NON_AEO_SPACE_LABEL,
   [BON_BOJO_UI_GROUP.SPACE_REQUIRED]:
     '본용언이 3음절 이상 복합어·파생어 : 띄어쓰기 필수',
 };
@@ -255,6 +292,9 @@ export const BON_BOJO_UI_GROUP_ORDER = [
 /** @param {string | undefined} itemId */
 export function bonBojoUiGroupForItemId(itemId) {
   const id = String(itemId ?? '').trim();
+  if (id === BON_BOJO_NON_AEO_SPACE_ID) {
+    return BON_BOJO_UI_GROUP.SPACE_REQUIRED_NON_AEO;
+  }
   if (id === BON_BOJO_LONG_COMPOUND_SPLIT_ID) {
     return BON_BOJO_UI_GROUP.SPACE_REQUIRED;
   }
@@ -265,7 +305,7 @@ export function bonBojoUiGroupForItemId(itemId) {
 }
 
 /**
- * UI 마스터 체크 3줄 — 각 줄이 켜면 묶인 itemId 규칙 전부 on
+ * UI 마스터 체크 줄 — 각 줄이 켜면 묶인 itemId 규칙 전부 on
  * @returns {readonly { id: string, label: string, itemIds: readonly string[] }[]}
  */
 export function listBonBojoBundleDefinitions() {
@@ -281,11 +321,6 @@ export function listBonBojoBundleDefinitions() {
       itemIdsByGroup.get(uiGroup)?.push(id);
     }
   }
-  // 안내용 줄은 띄어쓰기 필수 묶음과 같은 규칙을 켜고 끈다
-  itemIdsByGroup.set(
-    BON_BOJO_UI_GROUP.SPACE_REQUIRED_NON_AEO,
-    itemIdsByGroup.get(BON_BOJO_UI_GROUP.SPACE_REQUIRED) ?? [],
-  );
   return BON_BOJO_UI_GROUP_ORDER.map((groupId) => ({
     id: groupId,
     label: BON_BOJO_UI_GROUP_TITLES[groupId] ?? '',

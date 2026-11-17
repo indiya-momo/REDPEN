@@ -6,6 +6,7 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { enrichAuxiliaryDictSolid } from '../lib/auxiliaryDictSolid.js';
 import { enrichAuxiliaryGluedFromSpaced } from '../lib/auxiliaryGluedFromSpaced.js';
+import { enrichAuxiliaryNonAeoSpace } from '../lib/auxiliaryNonAeoSpace.js';
 import { buildCautionCheckRules } from '../lib/cautionRules.js';
 import { sortSpellingResultsForDisplay } from '../utils/main-screen-helpers.js';
 import {
@@ -157,7 +158,8 @@ export function useRuleCheck({
   const consistencyActiveRules = useMemo(
     () =>
       resolvedCustomRules
-        .filter((r) => r.enabled)
+        // 비아/어 게이트는 enabled 토글만 — 1차 ruleEngine에 넣지 않음
+        .filter((r) => r.enabled && !r.auxNonAeoGate)
         .map((r) => ({
           ...r,
           category:
@@ -370,14 +372,21 @@ export function useRuleCheck({
         );
         allErrors.push(...errors);
         const withZeroRows = await enrichAuxiliaryDictSolid(
-          enrichAuxiliaryGluedFromSpaced(
-            finalizeConsistencyCheckResults(
-              grouped,
-              consistencyCriteriaActiveRules,
+          await enrichAuxiliaryNonAeoSpace(
+            enrichAuxiliaryGluedFromSpaced(
+              finalizeConsistencyCheckResults(
+                grouped,
+                consistencyCriteriaActiveRules,
+              ),
+              pageTexts,
+              {
+                rules: consistencyCriteriaActiveRules,
+                globalExcludePhrases,
+              },
             ),
             pageTexts,
             {
-              rules: consistencyCriteriaActiveRules,
+              rules: resolvedCustomRules,
               globalExcludePhrases,
             },
           ),
@@ -588,10 +597,17 @@ export function useRuleCheck({
               )
             : prevResults.filter((g) => consistencyGroupScope(g) !== subset);
       const enrichedResults = await enrichAuxiliaryDictSolid(
-        enrichAuxiliaryGluedFromSpaced(
-          finalizeConsistencyCheckResults([...kept, ...withZeroRows], rules),
+        await enrichAuxiliaryNonAeoSpace(
+          enrichAuxiliaryGluedFromSpaced(
+            finalizeConsistencyCheckResults([...kept, ...withZeroRows], rules),
+            pageTexts,
+            { rules, globalExcludePhrases },
+          ),
           pageTexts,
-          { rules, globalExcludePhrases },
+          {
+            rules: resolvedCustomRules,
+            globalExcludePhrases,
+          },
         ),
       );
       setConsistencyResults(enrichedResults);
