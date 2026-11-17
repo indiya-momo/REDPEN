@@ -142,3 +142,12 @@ export function isUnifyPredicateSlmReviewEnabled() {
 export function isUnifyStdictPosReviewEnabled() {
   return import.meta.env.VITE_UNIFY_STDICT === 'true';
 }
+
+/**
+ * 띄어쓰기 범주 패널 (수사 띄어쓰기).
+ * dev·프로덕션 모두 기본 꺼짐. `VITE_SPACING_CATEGORY=true` 일 때만.
+ * 꺼져 있으면 탭·검사·하이라이트를 만들지 않는다.
+ */
+export function isSpacingCategoryEnabled() {
+  return import.meta.env.VITE_SPACING_CATEGORY === 'true';
+}
