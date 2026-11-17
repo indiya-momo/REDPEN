@@ -2452,6 +2452,7 @@ export default function MainScreen({
                 }}
                 formatPageLabel={pageDisplay.formatLabel}
                 customRules={customRules}
+                pageTexts={pdf.pageTexts}
               />
             ) : null}
             {!consistencyWorkDone ? (

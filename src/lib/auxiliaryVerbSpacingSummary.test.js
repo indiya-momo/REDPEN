@@ -3,6 +3,7 @@ import {
   AUXILIARY_SPACING_BREAKDOWN_TIP,
   countAuxiliaryMatchedSpacingSurfaces,
   formatAuxiliarySpacingBreakdown,
+  formatAuxiliarySpacingDualLine,
 } from './auxiliaryVerbSpacingSummary.js';
 
 describe('auxiliaryVerbSpacingSummary', () => {
@@ -24,5 +25,14 @@ describe('auxiliaryVerbSpacingSummary', () => {
       '띄움 3건',
     );
     expect(AUXILIARY_SPACING_BREAKDOWN_TIP.length).toBeGreaterThan(10);
+  });
+
+  it('원고·검사 이중 표기', () => {
+    expect(
+      formatAuxiliarySpacingDualLine({
+        doc: { spaced: 2, glued: 1 },
+        match: { spaced: 1, glued: 0 },
+      }),
+    ).toBe('원고 띄움 2건 · 붙임 1건 · 검사 띄움 1건');
   });
 });
