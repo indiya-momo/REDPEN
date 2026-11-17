@@ -1330,6 +1330,25 @@
   color: var(--color-text-secondary, #4b5563);
 }
 
+.panel-left .aux-jump-unify-link {
+  display: inline;
+  margin-left: 0.4rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 0.82em;
+  font-weight: 600;
+  color: var(--accent-terracotta-deep);
+  text-decoration: underline;
+  text-underline-offset: 0.12em;
+  cursor: pointer;
+}
+
+.panel-left .aux-jump-unify-link:hover {
+  color: var(--accent-terracotta);
+}
+
 .panel-left .aux-solid-count {
   color: #c0392b;
   font-weight: 400;
@@ -3137,6 +3156,22 @@
   color: #4a5568;
   white-space: normal;
   max-width: 100%;
+}
+
+.panel-left .unify-candidate-find__card.unify-candidate-find__jump-focus {
+  outline: 2px solid var(--accent-terracotta);
+  outline-offset: 2px;
+  background: color-mix(in srgb, var(--accent-terracotta) 10%, transparent);
+}
+
+.panel-left .unify-candidate-find__bon-bojo-jump-miss {
+  margin: 0 0 0.5rem;
+  padding: 0.4rem 0.55rem;
+  border-radius: calc(var(--radius-ui) - 2px);
+  background: var(--color-surface-inset);
+  color: var(--color-text-secondary, #4b5563);
+  font-size: 0.82rem;
+  line-height: 1.4;
 }
 
 .panel-left .unify-candidate-find__predicate-review {
@@ -5362,6 +5397,28 @@
   flex: 0 0 auto;
   min-height: auto;
   overflow: visible;
+}
+
+.consistency-unify-jump-bar {
+  display: flex;
+  align-items: center;
+  padding: 4px var(--spelling-block-inset-x, 12px) 6px;
+}
+
+.consistency-unify-jump-bar__back {
+  margin: 0;
+  padding: 4px 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--accent-terracotta-deep);
+  cursor: pointer;
+}
+
+.consistency-unify-jump-bar__back:hover {
+  text-decoration: underline;
 }
 
 .panel-left-work-scroll .consistency-rules-scroll .consistency-embed {

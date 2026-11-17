@@ -39,4 +39,4 @@
 - 툴팁: 반대 형태만 있으면 표기 통일 추천 안내.
 - **2-1:** `auxiliaryVerbDocStemScan.js` — 활성 itemId의 stem 쌍으로 `pageTexts` 전수 집계. 결과 카드에 `원고 … · 검사 …`.
 - **원고만 행:** 검사 0건·원고 stem 있음 → UI에 빈 결과 카드(`buildAuxiliaryDocOnlyResultGroups`). 엔진 결과에는 넣지 않음.
-- **미구현:** unify 시드 일괄 등록(2-3).
+- **2-3:** `unifyBonBojoStemSeed.js` — discover·enrich **이후** stem 시드. 한글 음절 경계·띄움·붙임 둘 다>0·기존 매칭 있으면 생략·키 `bon-bojo-seed:`·상한 24. 1차 discover 불변.

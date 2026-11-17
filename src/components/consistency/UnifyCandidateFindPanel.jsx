@@ -53,6 +53,7 @@ import {
   formatAuxiliaryReviewBadge,
   formatAuxiliaryReviewTip,
 } from '../../lib/unifyAuxReview.js';
+import { seedBonBojoStemClustersIntoList } from '../../lib/unifyBonBojoStemSeed.js';
 import {
   mergeUnifyChosenMaps,
   resolveGlobalChosenSpacing,
@@ -1160,8 +1161,16 @@ export default function UnifyCandidateFindPanel({
       );
       bench.mark('2_enrichClusters');
       const kiwiDiagAfterEnrich1 = await snapshotUnifyFindDiag();
+      // 2-3: 본조 stem 붙임·띄움 쌍이 있는데 1차 클러스터가 없을 때만 시드 (1차 스캔 불변)
+      const withBonBojoSeeds = seedBonBojoStemClustersIntoList(
+        next,
+        pageTexts,
+      );
       let workingGroups;
-      const ruleStrip = assembleUnifyListBase(next, result.rawByKey);
+      const ruleStrip = assembleUnifyListBase(
+        withBonBojoSeeds,
+        result.rawByKey,
+      );
       workingGroups = ruleStrip.groups;
       const ruleExcluded = ruleStrip.ruleExcluded;
       bench.mark('3_groupStrip');
