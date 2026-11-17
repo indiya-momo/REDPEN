@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import {
   cancelRenderTask,
   computePdfRenderScale,
+  ensureGlyphOffsetsForPage,
   highlightRectsForItemIndexes,
   highlightRectsForTextRange,
   scaleToFitContainer,
@@ -224,6 +225,12 @@ export default function PdfViewer({
           await cancelRenderTask(renderTask);
           renderTaskRef.current = null;
           return;
+        }
+
+        if (highlights.length && pageData) {
+          // 캔버스와 같은 글자 위치 (첫 회만 연산자 목록 1회 — 실패 시 비율 분할)
+          await ensureGlyphOffsetsForPage(page, pageData.items);
+          if (cancelled) return;
         }
 
         if (highlights.length && pageData) {

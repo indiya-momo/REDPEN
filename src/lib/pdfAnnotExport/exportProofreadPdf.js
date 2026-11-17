@@ -5,6 +5,7 @@
 import { collectAnnotFindings } from './collectAnnotFindings.js';
 import { createCharEmMeasurer } from './annotGeometry.js';
 import { writeAnnotatedPdf } from './writeAnnotatedPdf.js';
+import { ensureGlyphOffsetsForPage } from '../pdfService.js';
 
 /** 라벨 글꼴 — 앱이 이미 싣는 학교안심 바른바탕 R (fontkit 부분집합이 깨지지 않음) */
 export const LABEL_FONT_PATH = 'fonts/HakgyoansimBareonbatangR.ttf';
@@ -42,6 +43,17 @@ export async function exportProofreadPdf({
   });
   if (!findings.length) {
     return { filename: '', counts: {}, total: 0 };
+  }
+  // 화면과 같은 글자 위치(캔버스 기준)를 주석 페이지에만 미리 계산 — 실패 시 비율 분할
+  const findingPages = [...new Set(findings.map((f) => f.pageNum))];
+  for (const n of findingPages) {
+    const pd = pageTexts.find((p) => p?.pageNum === n);
+    if (!pd?.items?.length) continue;
+    try {
+      await ensureGlyphOffsetsForPage(await pdfDoc.getPage(n), pd.items);
+    } catch {
+      /* 폴백 */
+    }
   }
   // 로드 때 넘긴 버퍼는 worker로 넘어가 비었을 수 있음 → pdf.js가 가진 원본 바이트 사본
   const [pdfBytes, permissions, { default: fontkit }] = await Promise.all([

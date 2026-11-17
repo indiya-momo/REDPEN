@@ -21,6 +21,31 @@ import {
   shouldInsertLayoutSpaceBetweenPdfItems,
   shouldInsertSpaceBetweenPdfItems,
 } from './pdfPageText.js';
+import {
+  charOffsetsInItem,
+  createCharEmMeasurer,
+} from './pdfTextItemMetrics.js';
+import {
+  ensurePageGlyphOffsets,
+  getItemGlyphOffsets,
+} from './pdfGlyphAdvances.js';
+
+/**
+ * 캔버스와 같은 글자 위치(연산자 목록 기준)를 페이지 items에 캐시.
+ * 하이라이트 계산 전에 await — 실패·불일치 item은 기존 비율 분할로 폴백.
+ * @param {import('pdfjs-dist').PDFPageProxy} page
+ * @param {import('pdfjs-dist').TextItem[]} items
+ */
+export function ensureGlyphOffsetsForPage(page, items) {
+  return ensurePageGlyphOffsets(page, items, pdfjsLib.OPS);
+}
+
+/** @type {((ch: string) => number) | null} */
+let screenCharEmMeasurer = null;
+function getScreenCharEmMeasurer() {
+  if (!screenCharEmMeasurer) screenCharEmMeasurer = createCharEmMeasurer();
+  return screenCharEmMeasurer;
+}
 
 export {
   buildPageText,
@@ -316,52 +341,29 @@ function viewportBoxForTextItem(page, viewport, item, localStart, localEnd) {
   const startIdx = Math.max(0, Math.min(localStart, strLen));
   const endIdx = Math.max(startIdx, Math.min(localEnd, strLen));
 
-  let leftOffset = 0;
-  let rightOffset = 0;
-
-  const uniformAdvance =
-    scaleX > 0 ? scaleX : scaledItemWidth > 0 ? scaledItemWidth / strLen : fallbackCharWidth;
-  const expectedUniformWidth = uniformAdvance * strLen;
-  const useUniformAdvance =
-    scaleX > 0 &&
-    (scaledItemWidth <= 0 ||
-      Math.abs(expectedUniformWidth - scaledItemWidth) / Math.max(scaledItemWidth, 1) <
-        0.2);
-
-  if (useUniformAdvance) {
-    leftOffset = startIdx * uniformAdvance;
-    rightOffset = endIdx * uniformAdvance;
-  } else if (scaledItemWidth > 0) {
-    let spaceCount = 0;
-    for (let i = 0; i < strLen; i += 1) {
-      if (item.str[i] === ' ') spaceCount += 1;
-    }
-    const nonSpaceCount = Math.max(strLen - spaceCount, 0);
-    const tentativeSpaceWidth = Math.min(
-      Math.max(fontHeight * 0.22, 1),
-      scaledItemWidth / Math.max(strLen + 1, 1),
+  // 주석보내기와 동일: 글자 폭 비율 → item.width. 균등 strLen 분할은 긴 줄 뒤쪽이 밀림.
+  const userWidth = Number(item.width) || 0;
+  const [ia, ib] = item.transform ?? [];
+  const userSx = Math.hypot(ia ?? 0, ib ?? 0) || userWidth / Math.max(strLen, 1);
+  // 연산자 목록으로 잰 실제 글자 위치가 있으면 그것(Tw·TJ 반영), 없으면 비율 분할
+  const offsets =
+    getItemGlyphOffsets(item) ??
+    charOffsetsInItem(
+      item.str,
+      userWidth,
+      userSx || fontHeight,
+      getScreenCharEmMeasurer(),
     );
-    const nonSpaceTotal = scaledItemWidth - tentativeSpaceWidth * spaceCount;
-    const nonSpaceWidth =
-      nonSpaceCount > 0 && nonSpaceTotal > 0
-        ? nonSpaceTotal / nonSpaceCount
-        : scaledItemWidth / strLen;
-    /** @type {number[]} */
-    const advances = new Array(strLen).fill(0);
-    for (let i = 0; i < strLen; i += 1) {
-      advances[i] =
-        item.str[i] === ' ' ? tentativeSpaceWidth : Math.max(nonSpaceWidth, 0.5);
-    }
-    /** @type {number[]} */
-    const offsets = [0];
-    for (let i = 0; i < advances.length; i += 1) {
-      offsets.push(offsets[i] + advances[i]);
-    }
-    leftOffset = offsets[startIdx] ?? 0;
-    rightOffset = offsets[endIdx] ?? leftOffset;
-  } else {
-    leftOffset = startIdx * fallbackCharWidth;
-    rightOffset = endIdx * fallbackCharWidth;
+  const scaleAlong =
+    userWidth > 0 && scaledItemWidth > 0
+      ? scaledItemWidth / userWidth
+      : viewport.scale || 1;
+
+  let leftOffset = (offsets[startIdx] ?? 0) * scaleAlong;
+  let rightOffset = (offsets[endIdx] ?? leftOffset) * scaleAlong;
+  if (!(userWidth > 0) && !(scaledItemWidth > 0)) {
+    leftOffset = startIdx * (scaleX || fallbackCharWidth);
+    rightOffset = endIdx * (scaleX || fallbackCharWidth);
   }
 
   if (scaledItemWidth > 0) {

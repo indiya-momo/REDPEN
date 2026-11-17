@@ -6,6 +6,14 @@
  * 글자별 위치: 글꼴로 잰 글자 폭 비율을 item.width(실제 PDF 폭)에 맞춰 나눈다.
  */
 
+export {
+  charOffsetsInItem,
+  createCharEmMeasurer,
+  fallbackCharEm,
+} from '../pdfTextItemMetrics.js';
+import { charOffsetsInItem } from '../pdfTextItemMetrics.js';
+import { getItemGlyphOffsets } from '../pdfGlyphAdvances.js';
+
 /** @typedef {[number, number]} Pt */
 /** @typedef {{ ll: Pt, lr: Pt, ur: Pt, ul: Pt }} Seg 텍스트 방향 기준 사각형 (아래-왼, 아래-오, 위-오, 위-왼) */
 
@@ -21,84 +29,6 @@ export const sub = (p, q) => [p[0] - q[0], p[1] - q[1]];
 export const dot = (p, q) => p[0] * q[0] + p[1] * q[1];
 /** @param {Pt} p */
 const len = (p) => Math.hypot(p[0], p[1]);
-
-/**
- * 캔버스 없을 때(테스트·SSR) 쓰는 글자 폭 추정 (em 단위).
- * @param {string} ch
- */
-export function fallbackCharEm(ch) {
-  if (/\s/.test(ch)) return 0.25;
-  const code = ch.codePointAt(0) ?? 0;
-  // 한글·CJK·전각
-  if (
-    (code >= 0x1100 && code <= 0x11ff) ||
-    (code >= 0x3000 && code <= 0x9fff) ||
-    (code >= 0xac00 && code <= 0xd7a3) ||
-    (code >= 0xf900 && code <= 0xfaff) ||
-    (code >= 0xff00 && code <= 0xffef)
-  ) {
-    return 1;
-  }
-  if (/[.,:;'"!|()[\]{}·‘’“”]/.test(ch)) return 0.3;
-  if (/[A-Z]/.test(ch)) return 0.65;
-  if (/[a-z0-9]/.test(ch)) return 0.52;
-  return 0.6;
-}
-
-/**
- * 브라우저면 canvas measureText, 아니면 {@link fallbackCharEm}.
- * @returns {(ch: string) => number}
- */
-export function createCharEmMeasurer() {
-  /** @type {Map<string, number>} */
-  const cache = new Map();
-  /** @type {CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D | null} */
-  let ctx = null;
-  try {
-    if (typeof OffscreenCanvas !== 'undefined') {
-      ctx = new OffscreenCanvas(8, 8).getContext('2d');
-    } else if (typeof document !== 'undefined') {
-      ctx = document.createElement('canvas').getContext('2d');
-    }
-    if (ctx) ctx.font = '100px sans-serif';
-  } catch {
-    ctx = null;
-  }
-  return (ch) => {
-    let w = cache.get(ch);
-    if (w == null) {
-      const measured = ctx ? ctx.measureText(ch).width / 100 : 0;
-      w = measured > 0 ? measured : fallbackCharEm(ch);
-      cache.set(ch, w);
-    }
-    return w;
-  };
-}
-
-/**
- * item 안 글자 경계 오프셋(텍스트 방향, 사용자 공간 길이). 길이 = str.length + 1.
- * @param {string} str
- * @param {number} itemWidth pdf.js item.width (사용자 공간)
- * @param {number} fontScaleX hypot(transform[0], transform[1])
- * @param {(ch: string) => number} charEm
- * @returns {number[]}
- */
-export function charOffsetsInItem(str, itemWidth, fontScaleX, charEm) {
-  const chars = Array.from(str);
-  const ems = chars.map((c) => Math.max(0, charEm(c)));
-  const total = ems.reduce((a, b) => a + b, 0) || 1;
-  const k = itemWidth > 0 ? itemWidth / total : fontScaleX;
-  /** @type {number[]} */
-  const off = [0];
-  let acc = 0;
-  // 서로게이트 쌍은 str 인덱스 2칸 → 같은 오프셋을 한 번 더 넣어 인덱스를 맞춘다
-  chars.forEach((c, i) => {
-    acc += ems[i] * k;
-    off.push(acc);
-    if (c.length === 2) off.push(acc);
-  });
-  return off;
-}
 
 /**
  * 페이지 텍스트 범위 [start, end) → 텍스트 방향 사각형 목록 (줄마다 1개로 합침).
@@ -149,7 +79,7 @@ export function segmentForItemSpan(item, localStart, localEnd, charEm) {
   const si = Math.max(0, Math.min(localStart, n));
   const ei = Math.max(si, Math.min(localEnd, n));
   const width = Number(item.width) || 0;
-  const off = charOffsetsInItem(item.str, width, sx || fh, charEm);
+  const off = getItemGlyphOffsets(item) ?? charOffsetsInItem(item.str, width, sx || fh, charEm);
   let lo = off[si] ?? 0;
   let hi = off[ei] ?? lo;
   if (width > 0) {
