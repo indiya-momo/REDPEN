@@ -1,79 +1,5 @@
-import {
-  BON_BOJO_LONG_COMPOUND_SPLIT_ID,
-  BON_BOJO_REQUIRED_ITEM_IDS_LIST,
-} from '../../lib/bonBojoRules.js';
 import { consistencyEntryKey, consistencyEntryLabel } from './entryLabel.js';
 import RegisteredChip from './RegisteredChip.jsx';
-
-/**
- * @param {{
- *   row: { tailWord: string, displayLabel?: string, bonBojoItemId?: string },
- *   customRules: import('../../lib/ruleTypes.js').Rule[],
- *   isEnabled: (
- *     rules: import('../../lib/ruleTypes.js').Rule[],
- *     row: { tailWord: string, displayLabel?: string, bonBojoItemId?: string },
- *   ) => boolean,
- *   onToggle: (
- *     row: { tailWord: string, displayLabel?: string, bonBojoItemId?: string },
- *     enabled: boolean,
- *   ) => void,
- *   isRequired?: (row: { bonBojoItemId?: string }) => boolean,
- * }} props
- */
-function AuxiliaryGridChip({
-  row,
-  customRules,
-  isEnabled,
-  onToggle,
-  isRequired,
-  disabled = false,
-}) {
-  const label = consistencyEntryLabel(row);
-  return (
-    <label className="auxiliary-chip">
-      <input
-        type="checkbox"
-        checked={isEnabled(customRules, row)}
-        disabled={disabled}
-        onChange={(e) => onToggle(row, e.target.checked)}
-      />
-      <span className="find">{label}</span>
-      {isRequired?.(row) ? (
-        <span className="bon-bojo-required-badge">필수</span>
-      ) : null}
-    </label>
-  );
-}
-
-/**
- * @param {{
- *   row: { tailWord: string, displayLabel?: string, bonBojoItemId?: string },
- *   customRules: import('../../lib/ruleTypes.js').Rule[],
- *   isEnabled: (
- *     rules: import('../../lib/ruleTypes.js').Rule[],
- *     row: { tailWord: string, displayLabel?: string, bonBojoItemId?: string },
- *   ) => boolean,
- *   onToggle: (
- *     row: { tailWord: string, displayLabel?: string, bonBojoItemId?: string },
- *     enabled: boolean,
- *   ) => void,
- *   isRequired?: (row: { bonBojoItemId?: string }) => boolean,
- * }} props
- */
-function AuxiliaryGridItem(props) {
-  const { row } = props;
-  return (
-    <li
-      className={
-        row.bonBojoItemId === BON_BOJO_LONG_COMPOUND_SPLIT_ID
-          ? 'tail-grid-item tail-grid-item--span'
-          : 'tail-grid-item'
-      }
-    >
-      <AuxiliaryGridChip {...props} />
-    </li>
-  );
-}
 
 /**
  * @param {{
@@ -88,64 +14,13 @@ function AuxiliaryGridItem(props) {
  *     enabled: boolean,
  *   ) => void,
  *   onRemove?: (tw: string) => void,
- *   variant?: 'chips' | 'auxiliary-grid',
- *   isRequired?: (row: { bonBojoItemId?: string }) => boolean,
- *   disabled?: boolean,
  * }} props
  */
 export default function RegisteredList({
   entries,
-  customRules,
-  isEnabled,
-  onToggle,
   onRemove,
-  variant = 'chips',
-  isRequired,
-  disabled = false,
 }) {
   if (!entries.length) return null;
-
-  if (variant === 'auxiliary-grid') {
-    const required = isRequired ?? (() => false);
-    const splitEntries = entries.filter(
-      (row) => row.bonBojoItemId === BON_BOJO_LONG_COMPOUND_SPLIT_ID,
-    );
-    const optionalEntries = entries.filter(
-      (row) =>
-        !required(row) && row.bonBojoItemId !== BON_BOJO_LONG_COMPOUND_SPLIT_ID,
-    );
-    const requiredEntries = entries
-      .filter((row) => required(row))
-      .sort((a, b) => {
-        const ia = BON_BOJO_REQUIRED_ITEM_IDS_LIST.indexOf(
-          a.bonBojoItemId ?? '',
-        );
-        const ib = BON_BOJO_REQUIRED_ITEM_IDS_LIST.indexOf(
-          b.bonBojoItemId ?? '',
-        );
-        return ia - ib;
-      });
-    // 필수(지다·하다)는 같은 그리드에 이어 붙이고, 3음절 띄어쓰기는 맨 뒤에 둔다
-    const ordered = [...optionalEntries, ...requiredEntries, ...splitEntries];
-    const itemProps = { customRules, isEnabled, onToggle, isRequired, disabled };
-
-    return (
-      <div className="auxiliary-checklist">
-        <ul
-          className="tail-list tail-list--grid tail-list--grid-3"
-          aria-label="본용언+보조용언"
-        >
-          {ordered.map((row) => (
-            <AuxiliaryGridItem
-              key={consistencyEntryKey(row)}
-              row={row}
-              {...itemProps}
-            />
-          ))}
-        </ul>
-      </div>
-    );
-  }
 
   return (
     <ul className="tail-list">

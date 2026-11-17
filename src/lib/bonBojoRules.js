@@ -199,7 +199,7 @@ export function listBonBojoUnifyReviewStems() {
 export const BON_BOJO_LONG_COMPOUND_SPLIT_ID = 'verb-long-compound-split';
 
 export const BON_BOJO_LONG_COMPOUND_SPLIT_LABEL =
-  '본용언이 3음절 이상 복합어(띄어쓰기)';
+  '본용언이 3음절 이상 복합어/파생어(띄어쓰기 필수)';
 
 /** 시트·UI에서 기본 체크·「필수」 표시 대상 */
 export const BON_BOJO_REQUIRED_ITEM_IDS_LIST = ['verb-jida', 'verb-hada'];
@@ -222,6 +222,64 @@ export function isBonBojoLogicOnlyItem(itemId) {
 /** @param {string | undefined} itemId */
 export function isBonBojoRequiredItem(itemId) {
   return itemId != null && BON_BOJO_REQUIRED_ITEM_IDS.has(String(itemId).trim());
+}
+
+/** 일관성 탭 체크 목록 — 3그룹 제목(엔진·결과 묶음과 무관) */
+export const BON_BOJO_UI_GROUP = {
+  GLUE_OPTIONAL: 'glue-optional',
+  GLUE_REQUIRED: 'glue-required',
+  SPACE_REQUIRED: 'space-required',
+};
+
+/** @type {Readonly<Record<string, string>>} */
+export const BON_BOJO_UI_GROUP_TITLES = {
+  [BON_BOJO_UI_GROUP.GLUE_OPTIONAL]: '아/어 + 가다 외 (붙여쓰기 가능)',
+  [BON_BOJO_UI_GROUP.GLUE_REQUIRED]: '아/어 + 지다&하다 (붙여쓰기 필수)',
+  [BON_BOJO_UI_GROUP.SPACE_REQUIRED]:
+    '본용언이 3음절 이상 복합어/파생어(띄어쓰기 필수)',
+};
+
+/** @type {readonly string[]} */
+export const BON_BOJO_UI_GROUP_ORDER = [
+  BON_BOJO_UI_GROUP.GLUE_OPTIONAL,
+  BON_BOJO_UI_GROUP.GLUE_REQUIRED,
+  BON_BOJO_UI_GROUP.SPACE_REQUIRED,
+];
+
+/** @param {string | undefined} itemId */
+export function bonBojoUiGroupForItemId(itemId) {
+  const id = String(itemId ?? '').trim();
+  if (id === BON_BOJO_LONG_COMPOUND_SPLIT_ID) {
+    return BON_BOJO_UI_GROUP.SPACE_REQUIRED;
+  }
+  if (isBonBojoRequiredItem(id)) {
+    return BON_BOJO_UI_GROUP.GLUE_REQUIRED;
+  }
+  return BON_BOJO_UI_GROUP.GLUE_OPTIONAL;
+}
+
+/**
+ * UI 마스터 체크 3줄 — 각 줄이 켜면 묶인 itemId 규칙 전부 on
+ * @returns {readonly { id: string, label: string, itemIds: readonly string[] }[]}
+ */
+export function listBonBojoBundleDefinitions() {
+  /** @type {Map<string, string[]>} */
+  const itemIdsByGroup = new Map(
+    BON_BOJO_UI_GROUP_ORDER.map((g) => [g, /** @type {string[]} */ ([])]),
+  );
+  for (const group of getBonBojoGroups()) {
+    for (const item of group.items ?? []) {
+      const id = String(item.id ?? '').trim();
+      if (!id || isBonBojoLogicOnlyItem(id)) continue;
+      const uiGroup = bonBojoUiGroupForItemId(id);
+      itemIdsByGroup.get(uiGroup)?.push(id);
+    }
+  }
+  return BON_BOJO_UI_GROUP_ORDER.map((groupId) => ({
+    id: groupId,
+    label: BON_BOJO_UI_GROUP_TITLES[groupId] ?? '',
+    itemIds: itemIdsByGroup.get(groupId) ?? [],
+  }));
 }
 
 /** @param {string} itemId */

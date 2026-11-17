@@ -1,4 +1,4 @@
-import RegisteredList from '../consistency/RegisteredList.jsx';
+import AuxiliaryVerbBundleChecklist from '../consistency/AuxiliaryVerbBundleChecklist.jsx';
 import { AUXILIARY_VERB_BADGE_LABEL } from '../../lib/bonBojoRules.js';
 import { resultPillarToneClass } from '../../lib/resultPillarTone.js';
 
@@ -57,14 +57,13 @@ export default function ProjectHubCriteriaToggleSection({
             </span>
           </div>
         </div>
-        <RegisteredList
-          entries={entries}
+        <AuxiliaryVerbBundleChecklist
           customRules={customRules}
-          isEnabled={isEnabled}
-          onToggle={onToggle}
-          variant="auxiliary-grid"
-          isRequired={isRequired}
           disabled={criteriaSaving}
+          onToggle={(bundleId, enabled) => {
+            const row = entries.find((e) => e.bundleId === bundleId);
+            if (row) onToggle(row, enabled);
+          }}
         />
       </section>
     </div>

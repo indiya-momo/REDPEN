@@ -12,8 +12,8 @@ import {
   listPhraseSlotEntries,
 } from './phraseSlotRegister.js';
 import {
-  isAuxiliaryVerbEntryEnabled,
-  listAuxiliaryVerbEntries,
+  listAuxiliaryVerbBundles,
+  isAuxiliaryVerbBundleEnabled,
 } from './auxiliaryVerbRegister.js';
 import { formatRuleSetSavedDate } from './ruleSetsStorage.js';
 
@@ -78,9 +78,11 @@ export function buildProjectCardSummary(set) {
   const commonStringWords = listPhraseSlotEntries(customRules)
     .filter((entry) => isPhraseSlotEntryEnabled(customRules, entry.tailWord))
     .map((entry) => entry.tailWord);
-  const auxiliaryWords = listAuxiliaryVerbEntries(customRules)
-    .filter((entry) => isAuxiliaryVerbEntryEnabled(customRules, entry))
-    .map((entry) => entry.displayLabel || entry.tailWord);
+  const auxiliaryWords = listAuxiliaryVerbBundles()
+    .filter((bundle) =>
+      isAuxiliaryVerbBundleEnabled(customRules, bundle.bundleId),
+    )
+    .map((bundle) => bundle.label);
 
   return {
     savedDate: formatRuleSetSavedDate(set?.savedAt),

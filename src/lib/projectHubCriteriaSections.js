@@ -1,10 +1,9 @@
 import {
-  isAuxiliaryVerbEntryEnabled,
-  listAuxiliaryVerbEntries,
-  setAllAuxiliaryVerbEntries,
-  toggleAuxiliaryVerbEntry,
+  isAuxiliaryVerbBundleEnabled,
+  listAuxiliaryVerbBundles,
+  setAllAuxiliaryVerbBundles,
+  toggleAuxiliaryVerbBundle,
 } from './auxiliaryVerbRegister.js';
-import { isBonBojoRequiredItem } from './bonBojoRules.js';
 import {
   isConsistencyCriteriaEntryEnabled,
   listConsistencyCriteriaEntries,
@@ -40,10 +39,22 @@ export const PROJECT_HUB_TOGGLE_CRITERIA = {
     key: 'auxiliary',
     title: '본용언 + 보조용언',
     ariaLabel: '본용언과 보조용언',
-    listEntries: listAuxiliaryVerbEntries,
-    isEnabled: isAuxiliaryVerbEntryEnabled,
-    toggle: toggleAuxiliaryVerbEntry,
-    setAll: setAllAuxiliaryVerbEntries,
-    isRequired: (row) => isBonBojoRequiredItem(row.bonBojoItemId),
+    listEntries: () =>
+      listAuxiliaryVerbBundles().map((b) => ({
+        bundleId: b.bundleId,
+        label: b.label,
+        displayLabel: b.label,
+        tailWord: b.label,
+      })),
+    isEnabled: (rules, row) =>
+      isAuxiliaryVerbBundleEnabled(rules, String(row.bundleId ?? '')),
+    toggle: (rules, row, enabled) =>
+      toggleAuxiliaryVerbBundle(
+        rules,
+        String(row.bundleId ?? ''),
+        enabled,
+      ),
+    setAll: (rules, _entries, enabled) =>
+      setAllAuxiliaryVerbBundles(rules, enabled),
   },
 };
