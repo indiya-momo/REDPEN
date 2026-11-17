@@ -2,7 +2,7 @@
 
 **스펙:** [2026-11-18-bonbojo-non-aeo-space-design.md](../specs/2026-11-18-bonbojo-non-aeo-space-design.md)  
 **날짜:** 2026-11-18  
-**상태:** Step 1–3 구현됨 (게이트·2차 모듈·useRuleCheck). 말다 시드·제47항 목록·원고 스모크는 후속.  
+**상태:** Step 1–3·말다 시드·제47항 방어 목록·픽스처 후보 검증 완료. 실제 PDF 스모크는 사용자 허락 후.  
 **제약:** 1차 `ruleEngine`/stem 찾기 비용 불변 · beta freeze(regex 맞춤법 엔진) 비침 · 다른 PDF는 허락 후에만
 
 ## 목표

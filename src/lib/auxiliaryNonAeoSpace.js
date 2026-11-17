@@ -59,11 +59,23 @@ export const AEO_CONTRACTED_FRONTS = Object.freeze([
 ]);
 
 /**
- * 제47항 계열 등 붙여쓰기 허용 — 규정 확인 후 채움.
- * 표면(연결+보조) 또는 앞조각 키.
+ * 제47항 (2) 관형사형+의존명사+-하다/싶다 — 의존명사와 하다·싶다는 한 단어로 붙임.
+ * 닫힌 연결어미(지·게·고·도록)와는 보통 안 겹치지만, 하다 onset 오탐 방어용.
+ * @see https://www.korean.go.kr/ (한글 맞춤법 제47항)
  * @type {readonly string[]}
  */
-export const NON_AEO_ALLOW_GLUE_SURFACES = Object.freeze([]);
+export const NON_AEO_ALLOW_GLUE_SURFACES = Object.freeze([
+  '듯하',
+  '듯싶',
+  '만하',
+  '법하',
+  '뻔하',
+  '양하',
+  '척하',
+  '체하',
+  '성싶',
+  '직하',
+]);
 
 /** @type {Set<string> | null} */
 let aeoFrontCache = null;

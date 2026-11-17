@@ -123,6 +123,31 @@ describe('auxOnsetsForItem', () => {
   });
 });
 
+describe('제47항·픽스처 후보', () => {
+  it('듯하다·만하다·체하다는 하다 꼬리여도 제외', () => {
+    const hits = collectNonAeoGluedHits(
+      '비가올듯하다 도울만하다 아는체하다 할법하다',
+      'verb-hada',
+    );
+    expect(hits).toEqual([]);
+  });
+
+  it('연결어미 필터: 양성은 남고 해봐·공부하다·듯하다는 탈락', () => {
+    const page =
+      '여기서는뛰지말라 한번먹고봐 해봐 공부하다 비가올듯하다';
+    const hits = [
+      ...collectNonAeoGluedHits(page, 'verb-malda'),
+      ...collectNonAeoGluedHits(page, 'verb-boda1'),
+      ...collectNonAeoGluedHits(page, 'verb-hada'),
+    ];
+    expect(hits.some((h) => h.matchedText.includes('뛰지말'))).toBe(true);
+    expect(hits.some((h) => h.matchedText.includes('먹고봐'))).toBe(true);
+    expect(hits.every((h) => !/듯하|공부하|^해봐$/.test(h.matchedText))).toBe(
+      true,
+    );
+  });
+});
+
 describe('말다 non-aeo', () => {
   it('게이트+말다 on이면 뛰지말라를 띄움 필수로 잡는다', async () => {
     let rules = ensureDefaultAuxiliaryVerbs([]);
