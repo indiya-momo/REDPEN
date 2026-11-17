@@ -5,6 +5,7 @@
  */
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { enrichAuxiliaryDictSolid } from '../lib/auxiliaryDictSolid.js';
+import { enrichAuxiliaryGluedFromSpaced } from '../lib/auxiliaryGluedFromSpaced.js';
 import { buildCautionCheckRules } from '../lib/cautionRules.js';
 import { sortSpellingResultsForDisplay } from '../utils/main-screen-helpers.js';
 import {
@@ -369,9 +370,16 @@ export function useRuleCheck({
         );
         allErrors.push(...errors);
         const withZeroRows = await enrichAuxiliaryDictSolid(
-          finalizeConsistencyCheckResults(
-            grouped,
-            consistencyCriteriaActiveRules,
+          enrichAuxiliaryGluedFromSpaced(
+            finalizeConsistencyCheckResults(
+              grouped,
+              consistencyCriteriaActiveRules,
+            ),
+            pageTexts,
+            {
+              rules: consistencyCriteriaActiveRules,
+              globalExcludePhrases,
+            },
           ),
         );
         setConsistencyResults(withZeroRows);
@@ -580,7 +588,11 @@ export function useRuleCheck({
               )
             : prevResults.filter((g) => consistencyGroupScope(g) !== subset);
       const enrichedResults = await enrichAuxiliaryDictSolid(
-        finalizeConsistencyCheckResults([...kept, ...withZeroRows], rules),
+        enrichAuxiliaryGluedFromSpaced(
+          finalizeConsistencyCheckResults([...kept, ...withZeroRows], rules),
+          pageTexts,
+          { rules, globalExcludePhrases },
+        ),
       );
       setConsistencyResults(enrichedResults);
       setConsistencyCheckDone(true);

@@ -9,7 +9,9 @@ import {
   bonVerbCitation,
   compoundLemma,
   enrichAuxiliaryDictSolid,
+  gluedCompoundLemma,
   headwordHasCompoundHyphen,
+  isAuxiliaryDictSolidInstance,
   longCompoundSplitLemma,
   resetAuxiliaryDictSolidStdictCallCount,
   solidSurface,
@@ -136,6 +138,21 @@ describe('auxiliaryDictSolid', () => {
       '쉬어가다',
     );
     expect(solidSurface('쉬어 가라고')).toBe('쉬어가라고');
+    expect(gluedCompoundLemma('쉬어가라고', 'verb-gada', '(아/어) + 가다')).toBe(
+      '쉬어가다',
+    );
+  });
+
+  it('붙여 쓴 표면도 사전 등재면 합성어로 표시한다', async () => {
+    const groups = [
+      auxGroup('verb-gada', '(아/어) + 가다', '쉬어가라고'),
+    ];
+    const next = await enrichAuxiliaryDictSolid(groups, {
+      fetchImpl: dictFetch('쉬어가다', '동사'),
+    });
+    expect(isAuxiliaryDictSolidInstance(next[0].instances[0])).toBe(true);
+    expect(next[0].instances[0].matchedText).toBe('쉬어가라고');
+    expect(next[0].tip).toContain('쉬어가다');
   });
 
   it('날아 올라 → 날아오르다 / 날아올라, 1차 규칙이 잡는다', () => {

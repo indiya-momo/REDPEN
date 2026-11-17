@@ -8,7 +8,7 @@ import {
 import {
   AUXILIARY_SPACING_BREAKDOWN_TIP,
   countAuxiliaryMatchedSpacingSurfaces,
-  formatAuxiliarySpacingDualLine,
+  listAuxiliarySpacingLineParts,
   shouldShowAuxiliarySpacingBreakdown,
 } from '../lib/auxiliaryVerbSpacingSummary.js';
 import PhraseSlotResultSummary from './PhraseSlotResultSummary.jsx';
@@ -187,6 +187,44 @@ function ResultHeaderSummary({
 }
 
 /**
+ * 본조 페이지 뱃지 — 띄어 쓴 표면, 붙여 쓴 표면 순. 각 묶음은 페이지 순.
+ * @param {import('../lib/ruleEngine.js').MatchInstance[]} instances
+ */
+function auxiliarySpacingBadgeRows(instances) {
+  /** @type {import('../lib/ruleEngine.js').MatchInstance[]} */
+  const spaced = [];
+  /** @type {import('../lib/ruleEngine.js').MatchInstance[]} */
+  const glued = [];
+  for (const inst of instances ?? []) {
+    const text = String(inst?.matchedText ?? '').trim();
+    if (/\s/.test(text)) spaced.push(inst);
+    else glued.push(inst);
+  }
+  return [
+    ['띄', spaced],
+    ['붙', glued],
+  ].filter(([, list]) => list.length > 0);
+}
+
+/**
+ * @param {Record<string, unknown>} props
+ */
+function AuxiliarySpacingPageRows(props) {
+  const rows = auxiliarySpacingBadgeRows(props.instances);
+  if (!rows.length) return null;
+  return (
+    <div className="aux-spacing-pages">
+      {rows.map(([mark, list]) => (
+        <div className="aux-spacing-pages__row" key={mark}>
+          <span className="aux-spacing-pages__mark">{mark}</span>
+          <ResultPageSummary {...props} instances={list} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/**
  * @param {{
  *   entries: ResultEntry[],
  *   currentPage: number,
@@ -306,33 +344,22 @@ export default function CheckResultsPanel({
         ? getBuiltInTip(group.find, group.replace, group.spellingRuleId)
         : '');
     const selected = isSameGroupAsSelected(group, source);
-    const solidCount =
-      group.patternKind === 'auxiliary-verb'
-        ? (group.instances ?? []).filter(isAuxiliaryDictSolidInstance).length
-        : 0;
     const auxiliarySpacing =
       group.patternKind === 'auxiliary-verb'
-        ? countAuxiliaryMatchedSpacingSurfaces(group.instances)
+        ? countAuxiliaryMatchedSpacingSurfaces(
+            group.instances,
+            isAuxiliaryDictSolidInstance,
+          )
         : null;
-    const docStemCounts =
-      group.patternKind === 'auxiliary-verb' && group.bonBojoItemId?.trim()
-        ? bonBojoDocStemCounts?.get(group.bonBojoItemId.trim()) ?? null
-        : null;
-    const auxiliarySpacingLabel =
+    const auxiliarySpacingParts =
       group.patternKind === 'auxiliary-verb'
-        ? formatAuxiliarySpacingDualLine({
-            doc:
-              docStemCounts &&
-              shouldShowAuxiliarySpacingBreakdown(docStemCounts)
-                ? docStemCounts
-                : null,
-            match:
-              auxiliarySpacing &&
+        ? listAuxiliarySpacingLineParts(
+            auxiliarySpacing &&
               shouldShowAuxiliarySpacingBreakdown(auxiliarySpacing)
-                ? auxiliarySpacing
-                : null,
-          })
-        : '';
+              ? auxiliarySpacing
+              : null,
+          )
+        : [];
 
     return (
       <li key={`${source}-${group.label}-${group.find}`}>
@@ -387,21 +414,25 @@ export default function CheckResultsPanel({
                     isBonBojoRequiredItem(group.bonBojoItemId) ? (
                       <span className="bon-bojo-required-badge">필수</span>
                     ) : null}
-                    {auxiliarySpacingLabel ? (
+                    {auxiliarySpacingParts.length > 0 ? (
                       <CriteriaHoverTip tip={AUXILIARY_SPACING_BREAKDOWN_TIP}>
                         <span className="aux-spacing-breakdown">
-                          {auxiliarySpacingLabel}
+                          {auxiliarySpacingParts.map((part, index) => (
+                            <span key={part.text}>
+                              {index > 0 ? ' I ' : null}
+                              {part.text}
+                              {part.solid ? (
+                                <>
+                                  {' - '}
+                                  <span className="aux-spacing-solid">
+                                    {part.solid}
+                                  </span>
+                                </>
+                              ) : null}
+                            </span>
+                          ))}
                         </span>
                       </CriteriaHoverTip>
-                    ) : null}
-                    {solidCount > 0 ? (
-                      <span className="aux-solid-count">
-                        합성어 등재
-                        <ResultFindingsCountCircle
-                          count={solidCount}
-                          ariaLabel={`합성어 등재 ${solidCount}`}
-                        />
-                      </span>
                     ) : null}
                   </>
                 ) : isCaution ? (
@@ -463,16 +494,39 @@ export default function CheckResultsPanel({
                       : undefined
                   }
                 />
-              ) : (
-                <ResultPageSummary
-                  pillClass={
-                    group.patternKind === 'auxiliary-verb'
-                      ? (inst) =>
-                          isAuxiliaryDictSolidInstance(inst)
-                            ? 'page-chip--aux-solid'
-                            : ''
+              ) : group.patternKind === 'auxiliary-verb' ? (
+                <AuxiliarySpacingPageRows
+                  pillClass={(inst) =>
+                    isAuxiliaryDictSolidInstance(inst)
+                      ? 'page-chip--aux-solid'
+                      : ''
+                  }
+                  instances={group.instances}
+                  currentPage={currentPage}
+                  selectedInstance={selectedInstance}
+                  formatPageLabel={pageLabel}
+                  onSelectPage={(pageNum) =>
+                    onSelectPageInGroup(pageNum, group.instances, source)
+                  }
+                  onSelectInstance={
+                    onSelectInstance
+                      ? (inst) => onSelectInstance(inst, source)
                       : undefined
                   }
+                  isInstanceVisible={
+                    isInstanceVisible
+                      ? (inst) => isInstanceVisible(source, group, inst)
+                      : undefined
+                  }
+                  onToggleInstanceVisibility={
+                    onToggleInstanceVisibility
+                      ? (inst) =>
+                          onToggleInstanceVisibility(source, group, inst)
+                      : undefined
+                  }
+                />
+              ) : (
+                <ResultPageSummary
                   instances={group.instances}
                   currentPage={currentPage}
                   selectedInstance={selectedInstance}
@@ -682,10 +736,10 @@ export default function CheckResultsPanel({
                           if (solidTotal <= 0) return null;
                           return (
                             <span className="aux-solid-count">
-                              합성어 등재
+                              합성어
                               <ResultFindingsCountCircle
                                 count={solidTotal}
-                                ariaLabel={`합성어 등재 ${solidTotal}`}
+                                ariaLabel={`합성어 ${solidTotal}`}
                               />
                             </span>
                           );
