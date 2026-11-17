@@ -1,8 +1,14 @@
 import { getBuiltInOverlayReplace } from './builtInRules.js';
+import {
+  BON_BOJO_UI_GROUP,
+  bonBojoUiGroupForItemId,
+} from './bonBojoRules.js';
 import { getConsistencyUnifyOverlayForGroup } from './consistencyUnifyRegister.js';
 
 /** 맞춤법 오버레이와 같은 붙임 표시. `쉬어 가라고` → `→쉬어⁀가라고` */
 const AUX_GLUE_MARK = '\u2040';
+/** 띄움 표시. `뛰지말라` → `→뛰지∨말라` */
+const SPACE_INSERT_MARK = '\u2228';
 
 /**
  * 맞춤법 시트 붙임 표시 `^`를 PDF에서 `⁀`로 보여 준다. `∨`는 띄움이라 그대로 둔다.
@@ -19,6 +25,20 @@ function isSpellingOverlayGroup(group) {
   if (!group) return false;
   if (group.category === 'spelling') return true;
   return Boolean(String(group.spellingRuleId ?? '').trim());
+}
+
+/**
+ * 띄어쓰기 필수 줄(3음절 복합·비아/어·말다).
+ * @param {import('./ruleEngine.js').GroupedResult | null | undefined} group
+ */
+function isAuxiliarySpaceRequiredGroup(group) {
+  if (!group) return false;
+  if (group.auxSplitLongCompound || group.auxNonAeoSpace) return true;
+  const ui = bonBojoUiGroupForItemId(group.bonBojoItemId);
+  return (
+    ui === BON_BOJO_UI_GROUP.SPACE_REQUIRED ||
+    ui === BON_BOJO_UI_GROUP.SPACE_REQUIRED_NON_AEO
+  );
 }
 
 /** 붙여 쓴 말을 띄운 제안. 등재 붙임과 반대다. */
@@ -38,6 +58,25 @@ function auxiliarySpacedGlueOverlay(inst) {
   const matched = String(inst?.matchedText ?? '').trim();
   if (!matched || !/\s/.test(matched)) return null;
   return `→${matched.replace(/\s+/g, AUX_GLUE_MARK)}`;
+}
+
+/**
+ * 띄어쓰기 필수 — 잘못된 붙임→띄움만 ∨. 이미 띄운 올바른 표면은 기호 없음.
+ * @param {import('./ruleEngine.js').MatchInstance} inst
+ * @returns {string | null}
+ */
+function auxiliarySpaceInsertOverlay(inst) {
+  const matched = String(inst?.matchedText ?? '');
+  const suggested = String(inst?.suggestedText ?? '').trim();
+  if (!matched || /\s/.test(matched)) return null;
+  if (
+    suggested &&
+    /\s/.test(suggested) &&
+    suggested.replace(/\s+/g, '') === matched.replace(/\s+/g, '')
+  ) {
+    return `→${suggested.replace(/\s+/g, SPACE_INSERT_MARK)}`;
+  }
+  return null;
 }
 
 /**
@@ -111,11 +150,14 @@ export function getHighlightOverlayReplace(inst, options = {}) {
 
   const { customRules = [], group = null } = options;
   if (group?.patternKind === 'auxiliary-verb') {
-    if (group?.auxSplitLongCompound && isAuxiliaryLongSplitInstance(inst)) {
-      return `→${String(inst.suggestedText).trim()}`;
-    }
-    const glue = auxiliarySpacedGlueOverlay(inst);
-    if (glue) return glue;
+    // 붙임→띄움 제안이면 ∨ (띄어쓰기 필수·아/어 붙임 가능 공통).
+    // 예: 해보이는 → 해 보이는. 예전에 붙임 가능 줄은 띄운 표면만 ⁀해서
+    // PDF에 기호가 없어 «못 잡은 것»처럼 보였다.
+    const spaceInsert = auxiliarySpaceInsertOverlay(inst);
+    if (spaceInsert) return spaceInsert;
+    if (isAuxiliarySpaceRequiredGroup(group)) return null;
+    // 붙여쓰기 가능·필수 — 띄운 표면에 붙임표
+    return auxiliarySpacedGlueOverlay(inst);
   }
 
   // findReplaces 행: 찾은 말마다 제 고칠 말(J overlay_replace 무시)
@@ -153,15 +195,37 @@ export function getHighlightOverlayReplace(inst, options = {}) {
   if (isSpellingOverlayGroup(group) || group?.category === 'spelling') {
     return spacingGlueOverlay(inst.matchedText, suggested);
   }
+  // 검토(caution): 교정 오버레이가 없고 후보 라벨(group.label)만 있다.
+  // collectAnnotFindings의 `overlay || group.label`과 같게 화면도 이 라벨을 쓴다.
+  if (group?.category === 'caution') {
+    const label = String(group.label ?? '').trim();
+    return label || null;
+  }
   return null;
 }
 
-const SPACE_INSERT_MARK = '\u2228';
+/**
+ * 검토 후보 라벨(`한 번, 한번`)은 후보 안의 띄어쓰기를 ∨로 보여 준다 → `한∨번, 한번`.
+ * `→`로 시작하는 단일 교정 라벨은 그대로.
+ * @param {string} overlay
+ * @returns {string}
+ */
+export function markCandidateSpacing(overlay) {
+  const o = String(overlay ?? '');
+  if (!o || o.trim().startsWith('→') || !o.includes(',')) return o;
+  return o
+    .split(',')
+    .map((part) => {
+      const p = part.trim();
+      return p.replace(/\s+/g, SPACE_INSERT_MARK);
+    })
+    .join(', ');
+}
 
 /**
  * 띄어쓰기만 바꾸는 오버레이(`→손⁀끝`, `→할∨때`, `→할 때`)면 교정기호 자리를 matched 오프셋으로 준다.
  * - join: matched[s..e) 공백을 붙임 (⌒)
- * - insert: matched[s-1]과 matched[s] 사이를 띄움 (∨), e === s
+ * - insert: 글자 사이(또는 기존 공백 자리)에 띄움 (∨)
  * 글자가 하나라도 바뀌거나 바뀐 띄어쓰기가 없으면 null — 그때는 라벨을 그대로 쓴다.
  * @param {string} matched
  * @param {string} overlay
@@ -181,7 +245,9 @@ export function spacingOnlyMarks(matched, overlay) {
       let k = i;
       while (k < a.length && /\s/.test(a[k])) k += 1;
       if (o[j] === AUX_GLUE_MARK) marks.push({ type: 'join', s: i, e: k });
-      else if (o[j] !== ' ') return null;
+      else if (o[j] === SPACE_INSERT_MARK) {
+        marks.push({ type: 'insert', s: i, e: k });
+      } else if (o[j] !== ' ') return null;
       i = k;
       j += 1;
       continue;
@@ -209,4 +275,36 @@ export function glueOnlyGapRuns(matched, overlay) {
   const marks = spacingOnlyMarks(matched, overlay);
   if (!marks || marks.some((m) => m.type !== 'join')) return null;
   return marks.map((m) => [m.s, m.e]);
+}
+
+/**
+ * 하이라이트 박스 안에서 matched 글자 폭으로 교정기호 x를 잡는다.
+ * (긴 PDF item 균등분할 누적 오차로 ∨가 한 글자 오른쪽으로 밀리는 것 방지)
+ * @param {{ left: number, top: number, width: number, height: number }} box
+ * @param {number} matchLen
+ * @param {Array<{ type: 'join' | 'insert', s: number, e: number }>} runs
+ * @returns {Array<{ type: 'join' | 'insert', x: number, top: number, size: number }> | null}
+ */
+export function spacingMarkPositionsInBox(box, matchLen, runs) {
+  if (!box || !(matchLen > 0) || !runs?.length) return null;
+  if (!(box.width > 0) || !(box.height > 0)) return null;
+  const charW = box.width / matchLen;
+  return runs.map(({ type, s, e }) => {
+    if (type === 'insert') {
+      return {
+        type,
+        x: box.left + s * charW,
+        top: box.top,
+        size: box.height,
+      };
+    }
+    const left = box.left + s * charW;
+    const right = box.left + Math.max(e, s + 1) * charW;
+    return {
+      type,
+      x: (left + right) / 2,
+      top: box.top,
+      size: box.height,
+    };
+  });
 }

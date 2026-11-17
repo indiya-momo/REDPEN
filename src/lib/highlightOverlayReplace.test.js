@@ -2,6 +2,9 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   formatConsistencyUnifyHighlightOverlay,
   getHighlightOverlayReplace,
+  markCandidateSpacing,
+  spacingMarkPositionsInBox,
+  spacingOnlyMarks,
 } from './highlightOverlayReplace.js';
 
 vi.mock('./builtInRules.js', () => ({
@@ -13,7 +16,7 @@ vi.mock('./builtInRules.js', () => ({
 }));
 
 describe('getHighlightOverlayReplace', () => {
-  it('띄어 쓴 본용언+보조는 공백 자리에 붙임 표시를 올린다', () => {
+  it('붙여쓰기 가능·필수 — 띄운 표면에 붙임 표시', () => {
     expect(
       getHighlightOverlayReplace(
         {
@@ -23,24 +26,58 @@ describe('getHighlightOverlayReplace', () => {
           pageNum: 1,
           index: 0,
         },
-        { group: { patternKind: 'auxiliary-verb' } },
+        {
+          group: {
+            patternKind: 'auxiliary-verb',
+            bonBojoItemId: 'verb-gada',
+          },
+        },
       ),
     ).toBe('→쉬어\u2040가라고');
     expect(
       getHighlightOverlayReplace(
         {
-          find: '어 온',
-          matchedText: '들어 온',
-          suggestedText: '들어온',
+          find: '어 지',
+          matchedText: '만들어 지',
+          suggestedText: '만들어지',
           pageNum: 10,
           index: 0,
         },
-        { group: { patternKind: 'auxiliary-verb' } },
+        {
+          group: {
+            patternKind: 'auxiliary-verb',
+            bonBojoItemId: 'verb-jida',
+          },
+        },
       ),
-    ).toBe('→들어\u2040온');
+    ).toBe('→만들어\u2040지');
   });
 
-  it('붙여 쓴 본용언+보조는 붙임 표시를 올리지 않는다', () => {
+  it('붙여쓰기 가능 — 붙임→띄움 제안이면 ∨ (해보이는)', () => {
+    expect(
+      getHighlightOverlayReplace(
+        {
+          find: '해 보',
+          matchedText: '해보이는',
+          suggestedText: '해 보이는',
+          pageNum: 32,
+          index: 0,
+        },
+        {
+          group: {
+            patternKind: 'auxiliary-verb',
+            bonBojoItemId: 'verb-boda1',
+            label: '(아/어) + 보다',
+          },
+        },
+      ),
+    ).toBe('→해\u2228보이는');
+    expect(spacingOnlyMarks('해보이는', '→해\u2228보이는')).toEqual([
+      { type: 'insert', s: 1, e: 1 },
+    ]);
+  });
+
+  it('붙여쓰기 가능 — 이미 붙이면 기호 없음', () => {
     expect(
       getHighlightOverlayReplace(
         {
@@ -50,7 +87,67 @@ describe('getHighlightOverlayReplace', () => {
           pageNum: 1,
           index: 0,
         },
-        { group: { patternKind: 'auxiliary-verb' } },
+        {
+          group: {
+            patternKind: 'auxiliary-verb',
+            bonBojoItemId: 'verb-gada',
+          },
+        },
+      ),
+    ).toBeNull();
+  });
+
+  it('하이라이트 박스 기준 — 뛰지|말라 사이(s=2)에 ∨ x', () => {
+    const marks = spacingMarkPositionsInBox(
+      { left: 100, top: 50, width: 50, height: 10 },
+      5,
+      [{ type: 'insert', s: 2, e: 2 }],
+    );
+    expect(marks).toEqual([
+      { type: 'insert', x: 120, top: 50, size: 10 },
+    ]);
+  });
+
+  it('띄어쓰기 필수 — 붙임 표면에 ∨', () => {
+    expect(
+      getHighlightOverlayReplace(
+        {
+          find: 'auxiliary:non-aeo:verb-malda',
+          matchedText: '뛰지말라',
+          suggestedText: '뛰지 말라',
+          pageNum: 32,
+          index: 0,
+        },
+        {
+          group: {
+            patternKind: 'auxiliary-verb',
+            bonBojoItemId: 'verb-malda',
+            auxNonAeoSpace: true,
+          },
+        },
+      ),
+    ).toBe('→뛰지\u2228말라');
+    expect(
+      spacingOnlyMarks('뛰지말라', '→뛰지\u2228말라'),
+    ).toEqual([{ type: 'insert', s: 2, e: 2 }]);
+  });
+
+  it('띄어쓰기 필수 — 이미 띄운 올바른 표면은 기호 없음', () => {
+    expect(
+      getHighlightOverlayReplace(
+        {
+          find: '지 말',
+          matchedText: '뛰지 말라',
+          suggestedText: '뛰지 말라',
+          pageNum: 1,
+          index: 0,
+        },
+        {
+          group: {
+            patternKind: 'auxiliary-verb',
+            bonBojoItemId: 'verb-malda',
+          },
+        },
       ),
     ).toBeNull();
   });
@@ -324,5 +421,40 @@ describe('getHighlightOverlayReplace', () => {
         },
       ),
     ).toBe('→ 신라시대 📌');
+  });
+
+  it('검토(caution)는 group.label을 오버레이로 쓴다 (화면=교정본 동일)', () => {
+    expect(
+      getHighlightOverlayReplace(
+        {
+          find: '한번',
+          replace: '(검토)',
+          matchedText: '한번',
+          suggestedText: '한번',
+          pageNum: 1,
+          index: 0,
+        },
+        {
+          group: {
+            category: 'caution',
+            label: '한 번, 한번',
+            cautionId: 'noun-noun-han',
+            instances: [],
+          },
+        },
+      ),
+    ).toBe('한 번, 한번');
+  });
+});
+
+describe('markCandidateSpacing', () => {
+  it('검토 후보 라벨 안의 띄어쓰기를 ∨로 바꾼다', () => {
+    expect(markCandidateSpacing('한 번, 한번')).toBe('한∨번, 한번');
+    expect(markCandidateSpacing('가슴 속, 가슴속')).toBe('가슴∨속, 가슴속');
+  });
+
+  it('→ 교정 라벨·쉼표 없는 문구는 그대로', () => {
+    expect(markCandidateSpacing('→할∨때')).toBe('→할∨때');
+    expect(markCandidateSpacing('한번')).toBe('한번');
   });
 });

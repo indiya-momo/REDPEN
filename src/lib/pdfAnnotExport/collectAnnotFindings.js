@@ -6,7 +6,7 @@ import {
   highlightRangeForSpelling,
   relocateMatchedTextRange,
 } from '../pdfHighlightRange.js';
-import { getHighlightOverlayReplace } from '../highlightOverlayReplace.js';
+import { markCandidateSpacing, getHighlightOverlayReplace } from '../highlightOverlayReplace.js';
 import { classifyAnnotStyle } from './annotClassify.js';
 
 /**
@@ -101,7 +101,7 @@ export function collectAnnotFindings({
         } catch {
           overlay = null;
         }
-        label = String(overlay || group.label || '검토').trim();
+        label = markCandidateSpacing(String(overlay || group.label || '검토').trim());
         contents = `[검토] ${group.label ?? ''}${tip ? `\n${tip}` : ''}\n찾은 말: ${oneLine}`;
       } else {
         label = style === 'strike' ? replacement : '';
