@@ -209,6 +209,10 @@ function ResultHeaderSummary({
  *   formatPageLabel?: (systemPage: number) => string,
  *   customRules?: import('../lib/ruleTypes.js').Rule[],
  *   pageTexts?: { text?: string }[],
+ *   onJumpToUnifyAux?: (payload: {
+ *     itemId: string,
+ *     label: string,
+ *   }) => void,
  * }} props
  */
 export default function CheckResultsPanel({
@@ -233,6 +237,7 @@ export default function CheckResultsPanel({
   formatPageLabel: formatPageLabelProp,
   customRules = [],
   pageTexts = [],
+  onJumpToUnifyAux,
 }) {
   const pageLabel = formatPageLabelProp ?? formatSystemPageLabel;
 
@@ -393,6 +398,26 @@ export default function CheckResultsPanel({
                           {auxiliarySpacingLabel}
                         </span>
                       </CriteriaHoverTip>
+                    ) : null}
+                    {group.patternKind === 'auxiliary-verb' &&
+                    onJumpToUnifyAux &&
+                    group.bonBojoItemId?.trim() ? (
+                      <button
+                        type="button"
+                        className="aux-jump-unify-link"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onJumpToUnifyAux({
+                            itemId: group.bonBojoItemId.trim(),
+                            label:
+                              consistencyPartsForCard?.label ||
+                              group.label ||
+                              group.bonBojoItemId.trim(),
+                          });
+                        }}
+                      >
+                        표기 통일에서 보기
+                      </button>
                     ) : null}
                     {solidCount > 0 ? (
                       <span className="aux-solid-count">
