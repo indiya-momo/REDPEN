@@ -9,6 +9,11 @@ import {
   isPdfSizeOverWarn,
   PDF_SIZE_MAX_MESSAGE,
 } from '../lib/pdfSizeLimits.js';
+import {
+  convertPdfFileToTxt,
+  downloadTextFile,
+} from '../lib/pdfTxtExport.js';
+import { showAppAlert } from '../lib/appDialog.js';
 import TooltipGuide from './TooltipGuide.jsx';
 import CriteriaHoverTip from './CriteriaHoverTip.jsx';
 
@@ -73,13 +78,38 @@ export default function PdfCenterStage({
   checkQuotaBlocked = false,
 }) {
   const [dragOver, setDragOver] = useState(false);
+  const [txtConverting, setTxtConverting] = useState(false);
   const dragDepth = useRef(0);
+  const txtFileRef = useRef(/** @type {HTMLInputElement | null} */ (null));
 
   const openPicker = useCallback(() => {
     onUploadGuideDismiss?.();
     if (supportsFilePicker()) onOpenPicker();
     else fileRef.current?.click();
   }, [fileRef, onOpenPicker, onUploadGuideDismiss]);
+
+  const openTxtPicker = useCallback(() => {
+    onUploadGuideDismiss?.();
+    txtFileRef.current?.click();
+  }, [onUploadGuideDismiss]);
+
+  const onTxtFileChange = useCallback(async (e) => {
+    const input = e.target;
+    const file = input.files?.[0] ?? null;
+    input.value = '';
+    if (!file) return;
+    setTxtConverting(true);
+    try {
+      const result = await convertPdfFileToTxt(file);
+      downloadTextFile(result.text, result.filename);
+    } catch (err) {
+      await showAppAlert(
+        err instanceof Error ? err.message : 'TXT 변환에 실패했습니다.',
+      );
+    } finally {
+      setTxtConverting(false);
+    }
+  }, []);
 
   useEffect(() => {
     if (showReady) onUploadGuideDismiss?.();
@@ -151,6 +181,13 @@ export default function PdfCenterStage({
         className="hidden"
         onChange={onFileChange}
       />
+      <input
+        ref={txtFileRef}
+        type="file"
+        accept=".pdf,application/pdf"
+        className="hidden"
+        onChange={onTxtFileChange}
+      />
 
       {sessionHint && (
         <p
@@ -206,22 +243,31 @@ export default function PdfCenterStage({
                     <FileText size={32} strokeWidth={1.35} />
                   </div>
                   <p className="pdf-dropzone__drag">인디자인 / 한글 PDF를 옮기거나</p>
-                  <button
-                    type="button"
-                    className="btn-upload pdf-dropzone__open"
-                    data-work-guide="pdf-open"
-                    onClick={openPicker}
-                    disabled={isProcessing}
-                  >
-                    <Upload size={16} />
-                    PDF 파일을 브라우저에 업로드
-                  </button>
+                  <div className="pdf-dropzone__actions">
+                    <button
+                      type="button"
+                      className="btn-upload pdf-dropzone__open"
+                      data-work-guide="pdf-open"
+                      onClick={openPicker}
+                      disabled={isProcessing || txtConverting}
+                    >
+                      <Upload size={16} />
+                      PDF 파일을 브라우저에 업로드
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-upload-secondary pdf-dropzone__txt"
+                      onClick={openTxtPicker}
+                      disabled={isProcessing || txtConverting}
+                      aria-label="PDF를 TXT로 변환"
+                    >
+                      <FileText size={16} />
+                      {txtConverting ? '변환 중…' : 'TXT 변환'}
+                    </button>
+                  </div>
                   <footer className="pdf-dropzone__footer">
                     <p className="pdf-dropzone__limit">
-                      <strong>100MB 이하</strong>
-                      <span className="pdf-dropzone__limit-detail">
-                        (50MB 이하 권장 · 신국판 300페이지 내외)
-                      </span>
+                      100MB 이하 권장 · 신국판 300페이지 내외
                     </p>
                     <p className="pdf-dropzone__scan-note">
                       <span className="pdf-support-msg__scan">
@@ -242,22 +288,31 @@ export default function PdfCenterStage({
               <FileText size={32} strokeWidth={1.35} />
             </div>
             <p className="pdf-dropzone__drag">인디자인 / 한글 PDF를 옮기거나</p>
-            <button
-              type="button"
-              className="btn-upload pdf-dropzone__open"
-              data-work-guide="pdf-open"
-              onClick={openPicker}
-              disabled={isProcessing}
-            >
-              <Upload size={16} />
-              PDF 파일을 브라우저에 업로드
-            </button>
+            <div className="pdf-dropzone__actions">
+              <button
+                type="button"
+                className="btn-upload pdf-dropzone__open"
+                data-work-guide="pdf-open"
+                onClick={openPicker}
+                disabled={isProcessing || txtConverting}
+              >
+                <Upload size={16} />
+                PDF 파일을 브라우저에 업로드
+              </button>
+              <button
+                type="button"
+                className="btn-upload-secondary pdf-dropzone__txt"
+                onClick={openTxtPicker}
+                disabled={isProcessing || txtConverting}
+                aria-label="PDF를 TXT로 변환"
+              >
+                <FileText size={16} />
+                {txtConverting ? '변환 중…' : 'TXT 변환'}
+              </button>
+            </div>
             <footer className="pdf-dropzone__footer">
               <p className="pdf-dropzone__limit">
-                <strong>100MB 이하</strong>
-                <span className="pdf-dropzone__limit-detail">
-                  (50MB 이하 권장 · 신국판 300페이지 내외)
-                </span>
+                100MB 이하 권장 · 신국판 300페이지 내외
               </p>
               <p className="pdf-dropzone__scan-note">
                 <span className="pdf-support-msg__scan">스캔 PDF는 읽을 수 없어요ㅠ</span>

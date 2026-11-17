@@ -2959,13 +2959,37 @@ html[data-build='prod'] .unify-candidate-find__list {
   color: var(--color-text-secondary);
 }
 
+.pdf-dropzone__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  justify-content: center;
+  gap: 8px;
+}
+
 .pdf-dropzone__open {
   width: auto;
   max-width: 100%;
-  margin: 0 auto;
+  margin: 0;
   padding-left: 1.35rem;
   padding-right: 1.35rem;
   white-space: nowrap;
+  flex: 1 1 12rem;
+}
+
+.pdf-dropzone .pdf-dropzone__txt.btn-upload-secondary {
+  width: auto;
+  max-width: 100%;
+  margin: 0;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+
+.pdf-dropzone__txt:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .pdf-dropzone__reconnect {
@@ -2992,20 +3016,9 @@ html[data-build='prod'] .unify-candidate-find__list {
 .pdf-dropzone__limit {
   margin-bottom: 8px;
   line-height: 1.45;
-}
-
-.pdf-dropzone__limit strong {
-  display: block;
   font-size: 0.8rem;
-  font-weight: 700;
-  color: var(--color-text-secondary);
-}
-
-.pdf-dropzone__limit-detail {
-  display: block;
-  margin-top: 2px;
   font-weight: 600;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
 }
 
 .pdf-dropzone__scan-note {
