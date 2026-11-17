@@ -1323,6 +1323,13 @@
   border-radius: 999px;
 }
 
+.panel-left .aux-spacing-breakdown {
+  margin-left: 0.35rem;
+  font-size: 0.85em;
+  font-weight: 500;
+  color: var(--color-text-secondary, #4b5563);
+}
+
 .panel-left .aux-solid-count {
   color: #c0392b;
   font-weight: 400;
