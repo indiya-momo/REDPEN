@@ -10,9 +10,9 @@ import {
 import { BON_BOJO_UI_GROUP } from './bonBojoRules.js';
 
 describe('auxiliaryVerbBundles', () => {
-  it('3개 묶음·전체 on/off', () => {
+  it('4개 묶음·전체 on/off', () => {
     const bundles = listAuxiliaryVerbBundles();
-    expect(bundles).toHaveLength(3);
+    expect(bundles).toHaveLength(4);
     expect(bundles[0].bundleId).toBe(BON_BOJO_UI_GROUP.GLUE_OPTIONAL);
     expect(bundles[0].itemIds.length).toBeGreaterThan(10);
 

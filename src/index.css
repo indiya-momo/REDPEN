@@ -4599,6 +4599,8 @@ html[data-build='prod'] .unify-candidate-find__list {
   list-style: none;
   display: flex;
   flex-direction: column;
+  /* .tail-list의 align-items: center를 덮어 왼쪽 정렬 */
+  align-items: stretch;
   gap: 6px;
 }
 
@@ -4695,6 +4697,20 @@ html[data-build='prod'] .unify-candidate-find__list {
   border-radius: var(--radius-ui-sm);
   background: #fef08a;
   color: #854d0e;
+}
+
+.auxiliary-chip--bundle:has(.bon-bojo-required-badge) {
+  grid-template-columns: var(--auxiliary-chip-checkbox) minmax(0, 1fr) auto;
+  column-gap: 6px;
+}
+
+.auxiliary-chip--bundle .auxiliary-chip__desc {
+  font-weight: 400;
+}
+
+.auxiliary-chip--bundle .find .bon-bojo-required-badge {
+  vertical-align: middle;
+  margin: 0 1px;
 }
 
 .bon-bojo-checklist-header {
