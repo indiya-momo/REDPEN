@@ -953,7 +953,7 @@
           "id": "verb-long-compound-split",
           "label": "띄어",
           "enabled": false,
-          "displayLabel": "본용언이 3음절 이상 복합어(띄어쓰기)"
+          "displayLabel": "본용언이 3음절 이상 복합어/파생어(띄어쓰기 필수)"
         }
       ],
       "bonVerbAllow": [
