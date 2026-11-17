@@ -2,7 +2,13 @@
  * 본조 stem 쌍 — 원고 전체에서 띄움/붙임 표면 출현 횟수 (검사 매치와 별도).
  */
 
-import { listBonBojoUnifyReviewStems } from './bonBojoRules.js';
+import {
+  bonBojoDisplayLabelForItem,
+  listBonBojoUnifyReviewStems,
+} from './bonBojoRules.js';
+
+export const AUXILIARY_DOC_ONLY_TIP =
+  '검사에는 잡히지 않았고, 원고에서 stem 붙임·띄움만 집계했습니다. 표기 통일 추천에서 짝을 확인하세요.';
 
 /** @param {string} s */
 function escapeRegExp(s) {
@@ -79,4 +85,52 @@ export function enabledBonBojoItemIdsFromRules(customRules) {
     if (itemId) ids.add(itemId);
   }
   return [...ids];
+}
+
+/**
+ * 검사 매치는 0건인데 원고 stem이 있는 활성 본조 항목 → 결과 카드용 빈 그룹.
+ * (엔진 결과에는 넣지 않고 UI에서 붙인다.)
+ *
+ * @param {{
+ *   customRules?: import('./ruleTypes.js').Rule[],
+ *   existingGroups?: readonly { patternKind?: string, bonBojoItemId?: string }[],
+ *   docCounts?: Map<string, { spaced: number, glued: number }> | null,
+ * }} param
+ * @returns {import('./ruleEngine.js').GroupedResult[]}
+ */
+export function buildAuxiliaryDocOnlyResultGroups({
+  customRules = [],
+  existingGroups = [],
+  docCounts = null,
+}) {
+  if (!docCounts?.size) return [];
+
+  /** @type {Set<string>} */
+  const covered = new Set();
+  for (const g of existingGroups ?? []) {
+    if (g?.patternKind !== 'auxiliary-verb') continue;
+    const id = g.bonBojoItemId?.trim();
+    if (id) covered.add(id);
+  }
+
+  /** @type {import('./ruleEngine.js').GroupedResult[]} */
+  const out = [];
+  for (const itemId of enabledBonBojoItemIdsFromRules(customRules)) {
+    if (covered.has(itemId)) continue;
+    const counts = docCounts.get(itemId);
+    if (!counts || (counts.spaced <= 0 && counts.glued <= 0)) continue;
+    const label = bonBojoDisplayLabelForItem(itemId)?.trim() || itemId;
+    out.push({
+      find: `auxiliary-item:${label}`,
+      replace: '',
+      label,
+      groupDisplayLabel: label,
+      category: 'consistency',
+      patternKind: 'auxiliary-verb',
+      bonBojoItemId: itemId,
+      tip: AUXILIARY_DOC_ONLY_TIP,
+      instances: [],
+    });
+  }
+  return out;
 }
