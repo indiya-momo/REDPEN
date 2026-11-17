@@ -9,7 +9,10 @@ import {
   stepPdfZoomFactor,
 } from '../lib/pdfService.js';
 import { syncPdfStageScrollAfterLayout } from '../lib/pdfStageScroll.js';
-import { spacingOnlyMarks } from '../lib/highlightOverlayReplace.js';
+import {
+  markCandidateSpacing,
+  spacingOnlyMarks,
+} from '../lib/highlightOverlayReplace.js';
 import pdfEmptyIcon from '../assets/momo/pdf-empty.png';
 import PdfHighlightTipBubble from './PdfHighlightTipBubble.jsx';
 
@@ -245,6 +248,7 @@ export default function PdfViewer({
                     pageData,
                   );
             // 띄어쓰기만 바꾸는 교정은 라벨 대신 그 자리에 붙임표 ⌒ / 띄움표 ∨만
+            // 밑줄과 동일 highlightRects 글자 박스 경계만 사용 (별도 추정 없음)
             const glueMarks = [];
             const glueRuns = Number.isFinite(h.start)
               ? spacingOnlyMarks(h.matchedText, h.overlayReplace)
@@ -262,7 +266,7 @@ export default function PdfViewer({
                     pageData,
                   )[0];
                 const prev = s > 0 ? rectAt(s - 1) : null;
-                const next = rectAt(e);
+                const next = rectAt(type === 'insert' ? s : e);
                 if (!prev) break;
                 const sameLine =
                   next && Math.abs(next.top - prev.top) < prev.height * 0.5;
@@ -273,7 +277,9 @@ export default function PdfViewer({
                   type,
                   x,
                   top: sameLine ? Math.min(prev.top, next.top) : prev.top,
-                  size: sameLine ? Math.max(prev.height, next.height) : prev.height,
+                  size: sameLine
+                    ? Math.max(prev.height, next.height)
+                    : prev.height,
                 });
               }
             }
@@ -488,7 +494,7 @@ export default function PdfViewer({
                       }}
                       aria-hidden
                     >
-                      {overlayReplace}
+                      {markCandidateSpacing(overlayReplace)}
                     </span>
                   ) : null}
                 </div>
