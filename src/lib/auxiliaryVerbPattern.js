@@ -48,6 +48,56 @@ function pushSpacedStemRule(rules, base, head, tailSyl) {
 }
 
 /**
+ * 붙여 쓴 본용언+보조. 앞 캡처는 연결 음절을 포함한 3음절 이상.
+ * @param {string[]} stems `어 주` 꼴
+ */
+export function buildLongCompoundSplitRules(stems) {
+  /** @type {Set<string>} */
+  const endings = new Set();
+  /** @type {Map<string, string>} */
+  const tails = new Map();
+  for (const raw of stems) {
+    const parts = String(raw ?? '').trim().split(/\s+/).filter(Boolean);
+    if (parts.length !== 2) continue;
+    endings.add(parts[0]);
+    if (!tails.has(parts[1])) tails.set(parts[1], tailAlternative(parts[1]));
+  }
+  if (!endings.size || !tails.size) return [];
+
+  const endingAlt = [...endings]
+    .sort((a, b) => b.length - a.length)
+    .map(escapeRegex)
+    .join('|');
+  const tailAlt = [...tails.entries()]
+    .sort((a, b) => b[0].length - a[0].length)
+    .map(([, alt]) => alt)
+    .join('|');
+  const find = String.raw`(?<![\uAC00-\uD7A3])([\uAC00-\uD7A3]{2,}(?:${endingAlt}))(${tailAlt})(?!으로)${STEM_TAIL_BOUNDARY}`;
+
+  return [
+    {
+      enabled: false,
+      pattern: 'regex',
+      patternKind: 'auxiliary-verb',
+      auxSplitLongCompound: true,
+      tailWord: '본용언이 3음절 이상 복합어(띄어쓰기)',
+      replace: '$1 $2',
+      label: '본용언이 3음절 이상 복합어(띄어쓰기)',
+      tip: '본용언 활용형이 3음절 이상인 복합어·파생어는 보조용언을 띄어 씁니다.',
+      find,
+    },
+  ];
+}
+
+/** @param {string} tailSyl */
+function tailAlternative(tailSyl) {
+  const forbid = AUX_TAIL_FORBIDDEN_AFTER[tailSyl];
+  const core = escapeRegex(tailSyl);
+  const neg = forbid ? `(?!${forbid})` : '';
+  return `${core}${neg}${STEM_TAIL_END}`;
+}
+
+/**
  * 본용언+보조용언 — 시트 stem 그대로(공백 있는 띄움형만)
  * @param {string} tailWord
  */

@@ -140,10 +140,12 @@ export function buildStdictQueryList(target) {
 
 /**
  * @param {unknown} data
+ * @param {{ keepMarks?: boolean }} [parseOpts] keepMarks면 표제어의 `-` `^`를 남긴다.
  * @returns {{ word: string, pos: string }[]}
  */
-export function parseStdictSearchHits(data) {
+export function parseStdictSearchHits(data, parseOpts = {}) {
   if (!data || typeof data !== 'object') return [];
+  const keepMarks = parseOpts.keepMarks === true;
   const root = /** @type {Record<string, unknown>} */ (data);
   if (root.error || root.error_code) return [];
   const channel =
@@ -161,9 +163,8 @@ export function parseStdictSearchHits(data) {
   for (const raw of list) {
     if (!raw || typeof raw !== 'object') continue;
     const it = /** @type {Record<string, unknown>} */ (raw);
-    const word = String(it.word ?? '')
-      .replace(/[-^]/g, '')
-      .trim();
+    const rawWord = String(it.word ?? '').trim();
+    const word = keepMarks ? rawWord : rawWord.replace(/[-^]/g, '').trim();
     const sense = it.sense;
     const senses = Array.isArray(sense) ? sense : sense ? [sense] : [];
     /** @type {string[]} */
@@ -293,19 +294,23 @@ export async function fetchStdictExact(q, opts = {}) {
     signal: AbortSignal.timeout(timeoutMs),
   });
   if (res.status === 503) {
-    return { error: 'STDICT_KEY_MISSING', hits: [] };
+    return { error: 'STDICT_KEY_MISSING', hits: [], headwords: [] };
   }
   if (!res.ok) {
-    return { error: `HTTP_${res.status}`, hits: [] };
+    return { error: `HTTP_${res.status}`, hits: [], headwords: [] };
   }
   const text = await res.text();
   let data;
   try {
     data = JSON.parse(text);
   } catch {
-    return { error: 'BAD_JSON', hits: [] };
+    return { error: 'BAD_JSON', hits: [], headwords: [] };
   }
-  return { hits: parseStdictSearchHits(data), error: null };
+  return {
+    hits: parseStdictSearchHits(data),
+    headwords: parseStdictSearchHits(data, { keepMarks: true }),
+    error: null,
+  };
 }
 
 /**

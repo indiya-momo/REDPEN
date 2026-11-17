@@ -127,6 +127,18 @@ describe('parseStdictSearchHits', () => {
     expect(hits).toEqual([{ word: '그러다', pos: '동사' }]);
     expect(verdictFromStdictHits(hits)).toBe('predicate');
   });
+
+  it('keepMarks면 표제어의 붙임표를 남긴다', () => {
+    const data = {
+      channel: { item: { word: '어루-만지다', pos: '동사', sense: {} } },
+    };
+    expect(parseStdictSearchHits(data)).toEqual([
+      { word: '어루만지다', pos: '동사' },
+    ]);
+    expect(parseStdictSearchHits(data, { keepMarks: true })).toEqual([
+      { word: '어루-만지다', pos: '동사' },
+    ]);
+  });
 });
 
 describe('enqueueStdictPosTargets', () => {

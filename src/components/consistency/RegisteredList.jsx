@@ -1,4 +1,7 @@
-import { BON_BOJO_REQUIRED_ITEM_IDS_LIST } from '../../lib/bonBojoRules.js';
+import {
+  BON_BOJO_LONG_COMPOUND_SPLIT_ID,
+  BON_BOJO_REQUIRED_ITEM_IDS_LIST,
+} from '../../lib/bonBojoRules.js';
 import { consistencyEntryKey, consistencyEntryLabel } from './entryLabel.js';
 import RegisteredChip from './RegisteredChip.jsx';
 
@@ -60,7 +63,13 @@ function AuxiliaryGridChip({
 function AuxiliaryGridItem(props) {
   const { row } = props;
   return (
-    <li className="tail-grid-item">
+    <li
+      className={
+        row.bonBojoItemId === BON_BOJO_LONG_COMPOUND_SPLIT_ID
+          ? 'tail-grid-item tail-grid-item--span'
+          : 'tail-grid-item'
+      }
+    >
       <AuxiliaryGridChip {...props} />
     </li>
   );
@@ -98,7 +107,13 @@ export default function RegisteredList({
 
   if (variant === 'auxiliary-grid') {
     const required = isRequired ?? (() => false);
-    const optionalEntries = entries.filter((row) => !required(row));
+    const splitEntries = entries.filter(
+      (row) => row.bonBojoItemId === BON_BOJO_LONG_COMPOUND_SPLIT_ID,
+    );
+    const optionalEntries = entries.filter(
+      (row) =>
+        !required(row) && row.bonBojoItemId !== BON_BOJO_LONG_COMPOUND_SPLIT_ID,
+    );
     const requiredEntries = entries
       .filter((row) => required(row))
       .sort((a, b) => {
@@ -110,8 +125,8 @@ export default function RegisteredList({
         );
         return ia - ib;
       });
-    // 필수(지다·하다)도 같은 그리드에 이어 붙임 — 아래 줄·구분선으로 떨어뜨리지 않음
-    const ordered = [...optionalEntries, ...requiredEntries];
+    // 필수(지다·하다)는 같은 그리드에 이어 붙이고, 3음절 띄어쓰기는 맨 뒤에 둔다
+    const ordered = [...optionalEntries, ...requiredEntries, ...splitEntries];
     const itemProps = { customRules, isEnabled, onToggle, isRequired, disabled };
 
     return (

@@ -1,0 +1,28 @@
+{
+  "recordedOn": "2026-11-17",
+  "body": {
+    "channel": {
+      "total": 1,
+      "num": 10,
+      "title": "표준 국어 대사전 개발 지원(Open API) - 사전  검색",
+      "start": 1,
+      "description": "표준 국어 대사전 개발 지원(Open API) – 사전 검색 결과",
+      "item": [
+        {
+          "sup_no": "0",
+          "origin": "",
+          "word": "들어-오다",
+          "target_code": "417681",
+          "sense": {
+            "definition": "일정한 지역이나 공간의 범위와 관련하여 그 밖에서 안으로 이동하다.",
+            "link": "https://stdict.korean.go.kr/search/searchView.do?word_no=417681&searchKeywordTo=3",
+            "type": "일반어"
+          },
+          "pos": "동사"
+        }
+      ],
+      "link": "https://stdict.korean.go.kr",
+      "lastbuilddate": "20261117200851"
+    }
+  }
+}

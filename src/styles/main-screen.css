@@ -5866,6 +5866,13 @@
   white-space: nowrap;
 }
 
+.consistency-section-box[data-work-guide-step='auxiliary-box']
+  .tail-grid-item--span
+  .auxiliary-chip
+  .find {
+  white-space: normal;
+}
+
 .consistency-section-box[data-work-guide-step='auxiliary-box'] .bon-bojo-required-badge {
   font-size: calc(0.54rem * var(--panel-ui-scale, 1));
   line-height: 1.1;

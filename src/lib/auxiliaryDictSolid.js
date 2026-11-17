@@ -1,9 +1,18 @@
 /**
- * 본용언+보조용언 2차 — 합성 기본형이 표준국어대사전에 용언으로 있으면
- * 띄운 발견을 붙여 쓰라고 표시. 1차 찾기(ruleEngine)는 건드리지 않는다.
+ * 본용언+보조용언 2차.
+ * 합성 기본형이 사전에 용언으로 있으면 띄운 발견은 붙여 쓰라고 표시한다.
+ * 3음절 띄어쓰기 칸은 본용언 기본형의 사전 표제어에 `-`가 있을 때만 남긴다.
+ * 키위는 그 기본형을 만들 때만 쓴다. 1차 찾기(ruleEngine)는 건드리지 않는다.
  */
 
-import { bonBojoDisplayLabelForItem, bonBojoListItem } from './bonBojoRules.js';
+import {
+  auxiliarySearchTailsFromBonBojoItem,
+  bonBojoDisplayLabelForItem,
+  bonBojoListItem,
+  getBonBojoGroups,
+  BON_BOJO_LONG_COMPOUND_SPLIT_ID,
+} from './bonBojoRules.js';
+import { analyzeLine } from './kiwiMorph/analyze.js';
 import {
   fetchStdictExact,
   verdictFromStdictHits,
@@ -14,6 +23,25 @@ const DICT_TIP = (lemma) =>
 
 /** @type {Map<string, boolean>} */
 const predicateCache = new Map();
+
+/**
+ * 질의 → 사전 원문. 등재 판정과 붙임표 판정이 같은 조회를 다시 보내지 않게 한다.
+ * @type {Map<string, { error: string | null, hits: { word: string, pos: string }[], headwords: { word: string, pos: string }[] }>}
+ */
+const rawCache = new Map();
+
+/** 합성어 등재가 실제로 보낸 사전 호출. 표제어 문자열은 남기지 않는다. */
+let sessionStdictCalls = 0;
+let lastRunStdictCalls = 0;
+
+export function auxiliaryDictSolidStdictCallCount() {
+  return { lastRun: lastRunStdictCalls, session: sessionStdictCalls };
+}
+
+export function resetAuxiliaryDictSolidStdictCallCount() {
+  sessionStdictCalls = 0;
+  lastRunStdictCalls = 0;
+}
 
 /** @param {string} matchedText */
 export function solidSurface(matchedText) {
@@ -87,8 +115,122 @@ export function compoundLemma(matchedText, itemId, displayLabel) {
   return `${head}${aux}`;
 }
 
+/** @type {[string, string][] | null} */
+let auxOnsetBases = null;
+
+/** 시트 stem의 보조 토큰 → `주다` 같은 기본형. 토큰이 두 기본형에 겹치면 뺀다. */
+function auxOnsetBaseList() {
+  if (auxOnsetBases) return auxOnsetBases;
+  /** @type {Map<string, Set<string>>} */
+  const byOnset = new Map();
+  for (const group of getBonBojoGroups()) {
+    for (const item of group.items) {
+      if (item.id === BON_BOJO_LONG_COMPOUND_SPLIT_ID) continue;
+      const base = auxiliaryBaseForm(item.id, item.displayLabel);
+      if (!base) continue;
+      for (const tail of auxiliarySearchTailsFromBonBojoItem(item)) {
+        const parts = tail.trim().split(/\s+/).filter(Boolean);
+        if (parts.length !== 2 || !parts[1]) continue;
+        const onset = parts[1];
+        if (!byOnset.has(onset)) byOnset.set(onset, new Set());
+        byOnset.get(onset).add(base);
+      }
+    }
+  }
+  auxOnsetBases = [...byOnset.entries()]
+    .filter(([, bases]) => bases.size === 1)
+    .map(([onset, bases]) => [onset, [...bases][0]])
+    .sort(
+      (a, b) => b[0].length - a[0].length || a[0].localeCompare(b[0], 'ko'),
+    );
+  return auxOnsetBases;
+}
+
+/**
+ * 띄어쓰기 제안 `어루만져 주세요` → 사전 표제어 `어루만져주다`.
+ * @param {string} suggestedText
+ */
+export function longCompoundSplitLemma(suggestedText) {
+  const parts = String(suggestedText ?? '').trim().split(/\s+/);
+  if (parts.length < 2) return '';
+  const head = parts[0].replace(/[^\uAC00-\uD7A3]/g, '');
+  const tail = parts.slice(1).join('').replace(/[^\uAC00-\uD7A3]/g, '');
+  if (head.length < 3 || !tail) return '';
+  const hit = auxOnsetBaseList().find(([onset]) => tail.startsWith(onset));
+  if (!hit) return '';
+  return `${head}${hit[1]}`;
+}
+
+const CITATION_STEM = /^(NNG|NNP|XR|XPN|XSN|MAG|VV|VA|VX|XSV|XSA)(-|$)/;
+
+/**
+ * 활용형 분석에서 사전 기본형을 만든다. `어루만지/VV` → `어루만지다`.
+ * 어미·선어말어미는 빼며, 분석이 없으면 빈 문자열이다.
+ * @param {{ str?: string, tag?: string }[] | null | undefined} tokens
+ */
+export function bonVerbCitation(tokens) {
+  if (!Array.isArray(tokens) || tokens.length === 0) return '';
+  const parts = [];
+  for (const token of tokens) {
+    if (!CITATION_STEM.test(String(token?.tag ?? ''))) continue;
+    const piece = String(token?.str ?? '').replace(/[^\uAC00-\uD7A3]/g, '');
+    if (piece) parts.push(piece);
+  }
+  if (!parts.length) return '';
+  const stem = parts.join('');
+  return stem.endsWith('다') ? stem : `${stem}다`;
+}
+
+/**
+ * 표제어 글자가 질의와 같고 `-`가 있으며 품사가 용언이면 합성·파생.
+ * `^`만 있는 표제어는 해당하지 않는다.
+ * @param {{ word?: string, pos?: string }[] | null | undefined} headwords
+ * @param {string} citation
+ */
+export function headwordHasCompoundHyphen(headwords, citation) {
+  const q = String(citation ?? '').trim();
+  if (!q || !Array.isArray(headwords)) return false;
+  return headwords.some((hit) => {
+    const raw = String(hit?.word ?? '').trim();
+    const plain = raw.replace(/[-^]/g, '');
+    return (
+      plain === q &&
+      raw.includes('-') &&
+      /동사|형용사|보조/.test(String(hit?.pos ?? ''))
+    );
+  });
+}
+
+/** @param {string} suggestedText */
+function splitHead(suggestedText) {
+  const head = String(suggestedText ?? '').trim().split(/\s+/)[0] ?? '';
+  return head.replace(/[^\uAC00-\uD7A3]/g, '');
+}
+
 export function clearAuxiliaryDictSolidCache() {
   predicateCache.clear();
+  rawCache.clear();
+}
+
+/**
+ * @param {string} q
+ * @param {{ fetchImpl?: typeof fetch, timeoutMs?: number }} [opts]
+ */
+async function loadStdict(q, opts = {}) {
+  const query = String(q ?? '').trim();
+  if (!query) return { error: 'EMPTY', hits: [], headwords: [] };
+  if (!opts.fetchImpl && rawCache.has(query)) {
+    return rawCache.get(query);
+  }
+  sessionStdictCalls += 1;
+  const result = await fetchStdictExact(query, opts);
+  const packed = {
+    error: result.error ?? null,
+    hits: result.hits ?? [],
+    headwords: result.headwords ?? [],
+  };
+  if (!opts.fetchImpl && !packed.error) rawCache.set(query, packed);
+  return packed;
 }
 
 /**
@@ -101,7 +243,7 @@ export async function isRegisteredPredicateLemma(lemma, opts = {}) {
   if (!q) return false;
   if (!opts.fetchImpl && predicateCache.has(q)) return predicateCache.get(q);
 
-  const result = await fetchStdictExact(q, opts);
+  const result = await loadStdict(q, opts);
   if (result.error) return false;
 
   const exactPred = (result.hits ?? []).some((hit) => {
@@ -127,12 +269,25 @@ export async function isRegisteredPredicateLemma(lemma, opts = {}) {
  */
 export async function enrichAuxiliaryDictSolid(groups, opts = {}) {
   const list = groups ?? [];
-  /** @type {{ groupIndex: number, instIndex: number, lemma: string, solid: string }[]} */
+  /** @type {{ groupIndex: number, instIndex: number, lemma: string, kind: 'solid' | 'registered' | 'plain', solid?: string }[]} */
   const jobs = [];
   const lemmas = new Set();
+  /** @type {{ groupIndex: number, instIndex: number, suggestedText: string }[]} */
+  const pendingSplit = [];
+  const analyze = opts.analyze ?? analyzeLine;
 
   list.forEach((group, groupIndex) => {
     if (group?.patternKind !== 'auxiliary-verb') return;
+    if (group.auxSplitLongCompound) {
+      (group.instances ?? []).forEach((inst, instIndex) => {
+        pendingSplit.push({
+          groupIndex,
+          instIndex,
+          suggestedText: String(inst?.suggestedText ?? ''),
+        });
+      });
+      return;
+    }
     const itemId = group.bonBojoItemId;
     const displayLabel = group.groupDisplayLabel || group.label;
     (group.instances ?? []).forEach((inst, instIndex) => {
@@ -141,35 +296,87 @@ export async function enrichAuxiliaryDictSolid(groups, opts = {}) {
       const lemma = compoundLemma(matched, itemId, displayLabel);
       const solid = solidSurface(matched);
       if (!lemma || !solid || solid === matched.trim()) return;
-      jobs.push({ groupIndex, instIndex, lemma, solid });
+      jobs.push({ groupIndex, instIndex, lemma, kind: 'solid', solid });
       lemmas.add(lemma);
     });
   });
 
-  if (!jobs.length) return list;
+  const callsAtStart = sessionStdictCalls;
+  for (const row of pendingSplit) {
+    const head = splitHead(row.suggestedText);
+    let tokens = null;
+    if (head) {
+      try {
+        tokens = analyze(head)?.tokens ?? null;
+      } catch {
+        tokens = null;
+      }
+    }
+    const citation = bonVerbCitation(tokens);
+    if (!citation) {
+      jobs.push({ ...row, lemma: '', kind: 'plain' });
+      continue;
+    }
+    const packed = await loadStdict(citation, opts);
+    if (packed.error || !headwordHasCompoundHyphen(packed.headwords, citation)) {
+      jobs.push({ ...row, lemma: '', kind: 'plain' });
+      continue;
+    }
+    const lemma = longCompoundSplitLemma(row.suggestedText);
+    if (!lemma) continue;
+    jobs.push({ ...row, lemma, kind: 'registered' });
+    lemmas.add(lemma);
+  }
+
+  if (!jobs.length) {
+    lastRunStdictCalls = sessionStdictCalls - callsAtStart;
+    return list;
+  }
 
   /** @type {Map<string, boolean>} */
   const registered = new Map();
   for (const lemma of lemmas) {
     registered.set(lemma, await isRegisteredPredicateLemma(lemma, opts));
   }
+  lastRunStdictCalls = sessionStdictCalls - callsAtStart;
+  console.info(`[auxiliaryDictSolid] stdictCalls=${lastRunStdictCalls}`);
 
   const hitLemmas = new Set(
     [...registered.entries()].filter(([, ok]) => ok).map(([lemma]) => lemma),
   );
-  if (!hitLemmas.size) return list;
+  const hasPlain = jobs.some((job) => job.kind === 'plain');
+  if (!hitLemmas.size && !hasPlain) return list;
 
-  return list.map((group, groupIndex) => {
-    const mine = jobs.filter(
-      (job) => job.groupIndex === groupIndex && hitLemmas.has(job.lemma),
+  return list.flatMap((group, groupIndex) => {
+    const plainIndexes = new Set(
+      jobs
+        .filter((job) => job.kind === 'plain' && job.groupIndex === groupIndex)
+        .map((job) => job.instIndex),
     );
-    if (!mine.length) return group;
-    const instances = (group.instances ?? []).map((inst, instIndex) => {
-      const job = mine.find((row) => row.instIndex === instIndex);
-      if (!job) return inst;
-      return { ...inst, suggestedText: job.solid };
-    });
-    const tips = [...new Set(mine.map((job) => DICT_TIP(job.lemma)))];
+    const registeredHits = jobs.filter(
+      (job) =>
+        job.groupIndex === groupIndex &&
+        job.kind !== 'plain' &&
+        hitLemmas.has(job.lemma),
+    );
+    if (!plainIndexes.size && !registeredHits.length) return [group];
+    const instances = (group.instances ?? [])
+      .map((inst, instIndex) => {
+        if (plainIndexes.has(instIndex)) return null;
+        const job = registeredHits.find((row) => row.instIndex === instIndex);
+        if (!job) return inst;
+        if (job.kind === 'registered') return null;
+        return { ...inst, suggestedText: job.solid };
+      })
+      .filter(Boolean);
+    if (group.auxSplitLongCompound && instances.length === 0) return [];
+    const tips = [
+      ...new Set(
+        registeredHits
+          .filter((job) => job.kind === 'solid')
+          .map((job) => DICT_TIP(job.lemma)),
+      ),
+    ];
     const prev = String(group.tip ?? '').trim();
     const extra = tips.filter((tip) => !prev.includes(tip));
     const tip = extra.length
@@ -177,6 +384,6 @@ export async function enrichAuxiliaryDictSolid(groups, opts = {}) {
         ? `${prev}\n${extra.join('\n')}`
         : extra.join('\n')
       : prev;
-    return { ...group, instances, tip };
+    return [{ ...group, instances, tip }];
   });
 }

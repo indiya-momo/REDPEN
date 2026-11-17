@@ -948,6 +948,12 @@
             "러 버렸"
           ],
           "displayLabel": "(아/어) + 버리다"
+        },
+        {
+          "id": "verb-long-compound-split",
+          "label": "띄어",
+          "enabled": false,
+          "displayLabel": "본용언이 3음절 이상 복합어(띄어쓰기)"
         }
       ],
       "bonVerbAllow": [

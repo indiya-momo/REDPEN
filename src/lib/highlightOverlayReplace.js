@@ -2,6 +2,14 @@ import { isAuxiliaryDictSolidInstance } from './auxiliaryDictSolid.js';
 import { getBuiltInOverlayReplace } from './builtInRules.js';
 import { getConsistencyUnifyOverlayForGroup } from './consistencyUnifyRegister.js';
 
+/** 붙여 쓴 말을 띄운 제안. 등재 붙임과 반대다. */
+function isAuxiliaryLongSplitInstance(inst) {
+  const matched = String(inst?.matchedText ?? '').replace(/\s+/g, '');
+  const suggested = String(inst?.suggestedText ?? '').trim();
+  if (!matched || !suggested || !/\s/.test(suggested)) return false;
+  return suggested.replace(/\s+/g, '') === matched;
+}
+
 /**
  * 통일형 PDF 오버레이 — 통일형(+📌) 표시. 「→ 통일형 📌」는 화살표 유지
  * @param {import('./ruleEngine.js').MatchInstance} _inst
@@ -36,6 +44,14 @@ export function getHighlightOverlayReplace(inst, options = {}) {
   if (
     group?.patternKind === 'auxiliary-verb' &&
     isAuxiliaryDictSolidInstance(inst)
+  ) {
+    return `→${String(inst.suggestedText).trim()}`;
+  }
+
+  if (
+    group?.patternKind === 'auxiliary-verb' &&
+    group?.auxSplitLongCompound &&
+    isAuxiliaryLongSplitInstance(inst)
   ) {
     return `→${String(inst.suggestedText).trim()}`;
   }
