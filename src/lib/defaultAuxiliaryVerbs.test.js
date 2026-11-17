@@ -76,11 +76,12 @@ describe('ensureDefaultAuxiliaryVerbs', () => {
 
     );
 
-    expect(list.length).toBe(16);
+    expect(list.length).toBe(17);
 
     expect(labels).toContain('(아/어) + 하다');
     expect(labels).toContain('(아/어) + 오르다');
     expect(labels).toContain('(아/어) + 버리다');
+    expect(labels).toContain('(-지/게/고) + 말다');
     expect(labels).not.toContain('아는체하다');
 
     expect(labels).toContain('(아/어) + 지다');
@@ -259,7 +260,7 @@ describe('ensureDefaultAuxiliaryVerbs', () => {
     expect(list.some((e) => (e.displayLabel || e.tailWord) === '러')).toBe(
       false,
     );
-    expect(list.length).toBe(16);
+    expect(list.length).toBe(17);
   });
 
   it('bon-bojo 본조 — stems마다 띄움 regex 1개(붙임 없음)', () => {

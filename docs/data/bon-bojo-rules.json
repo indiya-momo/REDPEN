@@ -950,6 +950,22 @@
           "displayLabel": "(아/어) + 버리다"
         },
         {
+          "id": "verb-malda",
+          "label": "말",
+          "enabled": false,
+          "stems": [
+            "지 말",
+            "지 마",
+            "게 말",
+            "게 마",
+            "고 말",
+            "고 마",
+            "도록 말",
+            "도록 마"
+          ],
+          "displayLabel": "(-지/게/고) + 말다"
+        },
+        {
           "id": "verb-long-compound-split",
           "label": "띄어",
           "enabled": false,

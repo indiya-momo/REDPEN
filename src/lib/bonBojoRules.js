@@ -289,10 +289,19 @@ export const BON_BOJO_UI_GROUP_ORDER = [
   BON_BOJO_UI_GROUP.SPACE_REQUIRED,
 ];
 
+/** 비아/어 띄어쓰기 줄에 묶는 보조 (말다 등) */
+export const BON_BOJO_NON_AEO_AUX_ITEM_IDS = Object.freeze(['verb-malda']);
+
+/** @param {string | undefined} itemId */
+export function isBonBojoNonAeoAuxItem(itemId) {
+  const id = String(itemId ?? '').trim();
+  return BON_BOJO_NON_AEO_AUX_ITEM_IDS.includes(id);
+}
+
 /** @param {string | undefined} itemId */
 export function bonBojoUiGroupForItemId(itemId) {
   const id = String(itemId ?? '').trim();
-  if (id === BON_BOJO_NON_AEO_SPACE_ID) {
+  if (id === BON_BOJO_NON_AEO_SPACE_ID || isBonBojoNonAeoAuxItem(id)) {
     return BON_BOJO_UI_GROUP.SPACE_REQUIRED_NON_AEO;
   }
   if (id === BON_BOJO_LONG_COMPOUND_SPLIT_ID) {
