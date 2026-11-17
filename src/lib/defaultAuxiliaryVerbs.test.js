@@ -76,9 +76,10 @@ describe('ensureDefaultAuxiliaryVerbs', () => {
 
     );
 
-    expect(list.length).toBe(14);
+    expect(list.length).toBe(15);
 
     expect(labels).toContain('(아/어) + 하다');
+    expect(labels).toContain('(아/어) + 오르다');
     expect(labels).toContain('(아/어) + 버리다');
     expect(labels).not.toContain('아는체하다');
 
@@ -258,7 +259,7 @@ describe('ensureDefaultAuxiliaryVerbs', () => {
     expect(list.some((e) => (e.displayLabel || e.tailWord) === '러')).toBe(
       false,
     );
-    expect(list.length).toBe(14);
+    expect(list.length).toBe(15);
   });
 
   it('bon-bojo 본조 — stems마다 띄움 regex 1개(붙임 없음)', () => {
@@ -345,6 +346,32 @@ describe('ensureDefaultAuxiliaryVerbs', () => {
     expect(ryoWat).toBeTruthy();
     expect(ryoWat.enabled).toBe(false);
     expect(matches({ ...ryoWat, enabled: true }, '달려 왔다.')).toBe(true);
+  });
+
+  it('오다 올게·올까·올래는 두고, 올라·올랐·올려는 오다에서 뺀다', () => {
+    const rules = ensureDefaultAuxiliaryVerbs([]);
+    const oda = rules
+      .filter((r) => r.bonBojoItemId === 'verb-oda')
+      .map((r) => ({ ...r, enabled: true }));
+    const oreuda = rules
+      .filter((r) => r.bonBojoItemId === 'verb-oreuda')
+      .map((r) => ({ ...r, enabled: true }));
+    const hit = (list, text) => list.some((r) => matches(r, text));
+
+    expect(hit(oda, '가져 올게')).toBe(true);
+    expect(hit(oda, '가져 올래')).toBe(true);
+    expect(hit(oda, '와 올까')).toBe(true);
+
+    expect(hit(oda, '높이 날아 올라갔다.')).toBe(false);
+    expect(hit(oda, '뛰어 올랐다.')).toBe(false);
+    expect(hit(oda, '끌어 올려')).toBe(false);
+
+    expect(hit(oreuda, '높이 날아 올라갔다.')).toBe(true);
+    expect(hit(oreuda, '뛰어 올랐다.')).toBe(true);
+    expect(hit(oreuda, '끌어 올려')).toBe(false);
+
+    const enabledNow = rules.filter((r) => r.enabled);
+    expect(hit(enabledNow, '높이 날아 올라갔다.')).toBe(false);
   });
 
 });

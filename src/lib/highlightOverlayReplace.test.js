@@ -13,6 +13,36 @@ vi.mock('./builtInRules.js', () => ({
 }));
 
 describe('getHighlightOverlayReplace', () => {
+  it('본용언+보조 사전 등재면 붙여 쓴 말을 하이라이트에 올린다', () => {
+    expect(
+      getHighlightOverlayReplace(
+        {
+          find: '어 온',
+          matchedText: '들어 온',
+          suggestedText: '들어온',
+          pageNum: 10,
+          index: 0,
+        },
+        { group: { patternKind: 'auxiliary-verb' } },
+      ),
+    ).toBe('→들어온');
+  });
+
+  it('본용언+보조라도 수정안이 없으면 오버레이를 안 올린다', () => {
+    expect(
+      getHighlightOverlayReplace(
+        {
+          find: '리 가',
+          matchedText: '멀리 가려고',
+          suggestedText: '멀리 가려고',
+          pageNum: 19,
+          index: 0,
+        },
+        { group: { patternKind: 'auxiliary-verb' } },
+      ),
+    ).toBeNull();
+  });
+
   it('returns overlay_replace text as-is from sheet', () => {
     expect(
       getHighlightOverlayReplace({
