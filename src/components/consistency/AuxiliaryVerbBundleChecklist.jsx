@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, Fragment } from 'react';
 import {
   isAuxiliaryVerbBundleEnabled,
   isAuxiliaryVerbBundlePartial,
@@ -66,8 +66,41 @@ function AuxiliaryBundleRow({ bundle, customRules, onToggle, disabled }) {
           disabled={disabled}
           onChange={(e) => onToggle(bundle.bundleId, e.target.checked)}
         />
-        <span className="find">{bundle.label}</span>
+        <span className="find">{renderLabelWithRequiredBadge(bundle.label)}</span>
       </label>
     </li>
   );
+}
+
+/**
+ * 라벨 속 '필수'를 필수 뱃지로 바꿔 보여 준다.
+ * @param {string} label
+ */
+function renderLabelWithRequiredBadge(label) {
+  const text = String(label ?? '');
+  const colon = text.indexOf(':');
+  if (colon >= 0) {
+    return (
+      <>
+        {renderRequiredParts(text.slice(0, colon + 1), 'h')}
+        <span className="auxiliary-chip__desc">
+          {renderRequiredParts(text.slice(colon + 1), 'd')}
+        </span>
+      </>
+    );
+  }
+  return renderRequiredParts(text, 'h');
+}
+
+/** @param {string} text @param {string} keyPrefix */
+function renderRequiredParts(text, keyPrefix) {
+  const parts = text.split('필수');
+  return parts.map((part, i) => (
+    <Fragment key={`${keyPrefix}${i}`}>
+      {part}
+      {i < parts.length - 1 ? (
+        <span className="bon-bojo-required-badge">필수</span>
+      ) : null}
+    </Fragment>
+  ));
 }

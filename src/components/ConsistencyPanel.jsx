@@ -557,10 +557,7 @@ export default function ConsistencyPanel({
             </span>
           </summary>
           <p className="auxiliary-checklist-intro hint">
-            ｢한글 맞춤법｣ 기준 본용언(-아/어)+보조용언을 세 가지 기준(붙여쓰기
-            가능·붙여쓰기 필수·띄어쓰기 필수)으로 검사합니다. 결과 목록은
-            보조용언별로 표시되며, 원고·검사의 띄움·붙임 건수도 본조 결과에만
-            보입니다.
+            ｢한글 맞춤법｣에 따라 본+보조용언의 붙여쓰기 · 띄어쓰기 · 표기 통일을 검사합니다
           </p>
           <AuxiliaryVerbBundleChecklist
             customRules={customRules}

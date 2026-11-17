@@ -229,20 +229,26 @@ export const BON_BOJO_UI_GROUP = {
   GLUE_OPTIONAL: 'glue-optional',
   GLUE_REQUIRED: 'glue-required',
   SPACE_REQUIRED: 'space-required',
+  /** 화면 안내용 줄 — 검사 묶음은 SPACE_REQUIRED와 같다 */
+  SPACE_REQUIRED_NON_AEO: 'space-required-non-aeo',
 };
 
 /** @type {Readonly<Record<string, string>>} */
 export const BON_BOJO_UI_GROUP_TITLES = {
-  [BON_BOJO_UI_GROUP.GLUE_OPTIONAL]: '아/어 + 가다 외 (붙여쓰기 가능)',
-  [BON_BOJO_UI_GROUP.GLUE_REQUIRED]: '아/어 + 지다&하다 (붙여쓰기 필수)',
+  [BON_BOJO_UI_GROUP.GLUE_OPTIONAL]:
+    '본용언(-아/-어) + 보조용언 : 붙여쓰기 가능, 합성어는 붙여쓰기 필수',
+  [BON_BOJO_UI_GROUP.GLUE_REQUIRED]: '본용언(-아/-어) + 지다· 하다 :붙여쓰기 필수',
+  [BON_BOJO_UI_GROUP.SPACE_REQUIRED_NON_AEO]:
+    '본용언이 (-아/-어) 가 아닌 경우 : 띄어쓰기 필수',
   [BON_BOJO_UI_GROUP.SPACE_REQUIRED]:
-    '본용언이 3음절 이상 복합어/파생어(띄어쓰기 필수)',
+    '본용언이 3음절 이상 복합어·파생어 : 띄어쓰기 필수',
 };
 
 /** @type {readonly string[]} */
 export const BON_BOJO_UI_GROUP_ORDER = [
   BON_BOJO_UI_GROUP.GLUE_OPTIONAL,
   BON_BOJO_UI_GROUP.GLUE_REQUIRED,
+  BON_BOJO_UI_GROUP.SPACE_REQUIRED_NON_AEO,
   BON_BOJO_UI_GROUP.SPACE_REQUIRED,
 ];
 
@@ -275,6 +281,11 @@ export function listBonBojoBundleDefinitions() {
       itemIdsByGroup.get(uiGroup)?.push(id);
     }
   }
+  // 안내용 줄은 띄어쓰기 필수 묶음과 같은 규칙을 켜고 끈다
+  itemIdsByGroup.set(
+    BON_BOJO_UI_GROUP.SPACE_REQUIRED_NON_AEO,
+    itemIdsByGroup.get(BON_BOJO_UI_GROUP.SPACE_REQUIRED) ?? [],
+  );
   return BON_BOJO_UI_GROUP_ORDER.map((groupId) => ({
     id: groupId,
     label: BON_BOJO_UI_GROUP_TITLES[groupId] ?? '',

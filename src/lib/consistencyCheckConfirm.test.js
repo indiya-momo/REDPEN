@@ -143,7 +143,7 @@ describe('confirmConsistencyCheckBeforeRun', () => {
         commonStringTotal: 1,
         excludeActive: 0,
         auxiliaryActive: 0,
-        auxiliaryTotal: 3,
+        auxiliaryTotal: 4,
       });
     const { title, message } = parseBracketTitleMessage(msg);
     expect(confirmMock).toHaveBeenCalledWith(`${title}\n\n${message}`);
