@@ -4599,6 +4599,16 @@ html[data-build='prod'] .unify-candidate-find__list {
   border: none;
 }
 
+.tail-list--grid-3 .tail-grid-item--span {
+  grid-column: 1 / -1;
+}
+
+.tail-grid-item--span .auxiliary-chip .find {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+}
+
 .auxiliary-chip {
   --auxiliary-chip-checkbox: var(--criteria-checkbox-size, 15px);
   display: grid;

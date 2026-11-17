@@ -195,6 +195,12 @@ export function listBonBojoUnifyReviewStems() {
   return out;
 }
 
+/** 붙여 쓴 3음절 이상 복합·파생 본용언을 띄어 쓰라고 보는 체크 */
+export const BON_BOJO_LONG_COMPOUND_SPLIT_ID = 'verb-long-compound-split';
+
+export const BON_BOJO_LONG_COMPOUND_SPLIT_LABEL =
+  '본용언이 3음절 이상 복합어(띄어쓰기)';
+
 /** 시트·UI에서 기본 체크·「필수」 표시 대상 */
 export const BON_BOJO_REQUIRED_ITEM_IDS_LIST = ['verb-jida', 'verb-hada'];
 

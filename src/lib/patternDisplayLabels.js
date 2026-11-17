@@ -24,6 +24,7 @@ export function formatAuxiliaryVerbResultLabel(tailWord, groupDisplayLabel) {
     groupDisplayLabel,
   );
   if (!groupTag) return stem;
+  if (stem === groupTag) return groupTag;
   return `${stem} ${groupTag}`;
 }
 

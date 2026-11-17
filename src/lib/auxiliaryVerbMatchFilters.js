@@ -186,8 +186,34 @@ function isSpacedPhraseBoundBeforeHada(stemHead, stemTail, headCapture, match) {
  * @param {import('./ruleTypes.js').Rule} rule
  * @param {RegExpExecArray} match
  */
+/**
+ * 3음절 복합어 칸. 2음절 이하·허용 목록·거짓 해는 빼고, 명사+해(생각해)는 남긴다.
+ * @param {import('./ruleTypes.js').Rule} rule
+ * @param {RegExpExecArray} match
+ */
+export function shouldSkipLongCompoundSplit(rule, match) {
+  const matched = String(match?.[0] ?? '');
+  if (!matched || /\s/.test(matched)) return true;
+  const head = String(match[1] ?? '').trim();
+  const tail = String(match[2] ?? '').trim();
+  if (!head) return true;
+  /** 연결 `-다가`를 보조 `가다` onset `가`로 오인 (관람하다가 등) */
+  if (matched.endsWith('다가') && head.endsWith('다') && tail === '가') {
+    return true;
+  }
+  if (bonVerbHeadSyllableCount(head) <= BON_VERB_HEAD_MAX_SYLLABLES) return true;
+  if (isLexicalHaeCompoundHead(head)) return true;
+  if (AUX_FALSE_HAE_HEAD_CAPTURES.has(head)) return true;
+  if (headEndsWithParticleBeforeAux(head)) return true;
+  if (headEndsWithDepNounJosa(head)) return true;
+  const allow = bonVerbAllowForItemId(rule?.bonBojoItemId);
+  if (isBonVerbHeadOnAllowList(head, '', allow)) return true;
+  return false;
+}
+
 export function shouldSkipAuxiliaryVerbMatch(rule, match) {
   if (rule.patternKind !== 'auxiliary-verb') return false;
+  if (rule.auxSplitLongCompound) return shouldSkipLongCompoundSplit(rule, match);
 
   const headCapture = String(match[1] ?? '').trim();
   if (headCapture && isNounRootHaeHead(headCapture)) return true;

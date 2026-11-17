@@ -1,17 +1,33 @@
 import { describe, expect, it, beforeEach } from 'vitest';
+import fs from 'node:fs';
 import { ensureDefaultAuxiliaryVerbs } from './defaultAuxiliaryVerbs.js';
 import { matches } from '../test/matchText.js';
 import {
+  auxiliaryDictSolidStdictCallCount,
   auxiliarySolidHitLabel,
   clearAuxiliaryDictSolidCache,
+  bonVerbCitation,
   compoundLemma,
   enrichAuxiliaryDictSolid,
+  headwordHasCompoundHyphen,
+  longCompoundSplitLemma,
+  resetAuxiliaryDictSolidStdictCallCount,
   solidSurface,
 } from './auxiliaryDictSolid.js';
+import deureoodaRecord from './auxiliaryDictSolid.stdict-deureooda-2026-11-17.json';
 
 beforeEach(() => {
   clearAuxiliaryDictSolidCache();
+  resetAuxiliaryDictSolidStdictCallCount();
 });
+
+function recordedDeureoodaFetch() {
+  return async () => ({
+    status: 200,
+    ok: true,
+    text: async () => JSON.stringify(deureoodaRecord.body),
+  });
+}
 
 function dictFetch(word, pos, status = 200) {
   const body =
@@ -34,6 +50,58 @@ function auxGroup(itemId, label, matchedText) {
     tip: '',
     instances: [{ pageNum: 1, matchedText, start: 0, end: matchedText.length }],
   };
+}
+
+function dictByQuery(map) {
+  return async (url) => {
+    const q = new URL(String(url), 'http://127.0.0.1').searchParams.get('q');
+    const row = map[q];
+    if (row?.status) {
+      return {
+        status: row.status,
+        ok: false,
+        text: async () => row.text || 'ERR',
+      };
+    }
+    const body = row
+      ? { channel: { item: { word: row.word, pos: row.pos } } }
+      : { channel: {} };
+    return {
+      status: 200,
+      ok: true,
+      text: async () => JSON.stringify(body),
+    };
+  };
+}
+
+function analyzeHead(head) {
+  const stems = {
+    어루만져: [
+      { str: '어루만지', tag: 'VV' },
+      { str: '어', tag: 'EF' },
+    ],
+    생각해: [
+      { str: '생각', tag: 'NNG' },
+      { str: '하', tag: 'XSV' },
+      { str: '어', tag: 'EF' },
+    ],
+    가르쳐: [
+      { str: '가르치', tag: 'VV' },
+      { str: '어', tag: 'EF' },
+    ],
+    정리해: [
+      { str: '정리', tag: 'NNG' },
+      { str: '하', tag: 'XSV' },
+      { str: '어', tag: 'EF' },
+    ],
+    제출해: [
+      { str: '제출', tag: 'NNG' },
+      { str: '하', tag: 'XSV' },
+      { str: '어', tag: 'EF' },
+    ],
+  };
+  const tokens = stems[head];
+  return tokens ? { tokens } : null;
 }
 
 describe('auxiliaryDictSolid', () => {
@@ -94,6 +162,156 @@ describe('auxiliaryDictSolid', () => {
     expect(next[0].tip).toContain('붙여 씀');
   });
 
+  it('오래 들어 온 노래와 방으로 들어 온을 고정 사전 응답만으로는 가르지 못한다', async () => {
+    expect(deureoodaRecord.recordedOn).toBe('2026-11-17');
+    expect(deureoodaRecord.body.channel.lastbuilddate).toBe('20261117200851');
+    const groups = [
+      {
+        ...auxGroup('verb-oda', '(아/어) + 오다', '들어 온'),
+        sourceText: '오래 들어 온 노래',
+      },
+      {
+        ...auxGroup('verb-oda', '(아/어) + 오다', '들어 온'),
+        sourceText: '방으로 들어 온 사람',
+      },
+    ];
+    const next = await enrichAuxiliaryDictSolid(groups, {
+      fetchImpl: recordedDeureoodaFetch(),
+    });
+    expect(next[0].instances[0].suggestedText).toBe('들어온');
+    expect(next[0].tip).toContain('붙여 씀');
+    expect(next[1].instances[0].suggestedText).toBe('들어온');
+    expect(next[1].sourceText).toBe('방으로 들어 온 사람');
+    const stats = auxiliaryDictSolidStdictCallCount();
+    expect(stats).toEqual({ lastRun: 1, session: 1 });
+  });
+
+  it('3음절 띄어쓰기 표제어는 보조 기본형을 붙인다', () => {
+    expect(
+      bonVerbCitation([
+        { str: '어루만지', tag: 'VV' },
+        { str: '어', tag: 'EF' },
+      ]),
+    ).toBe('어루만지다');
+    expect(
+      bonVerbCitation([
+        { str: '생각', tag: 'NNG' },
+        { str: '하', tag: 'XSV' },
+        { str: '어', tag: 'EF' },
+      ]),
+    ).toBe('생각하다');
+    expect(bonVerbCitation(null)).toBe('');
+    expect(
+      headwordHasCompoundHyphen([{ word: '어루-만지다', pos: '동사' }], '어루만지다'),
+    ).toBe(true);
+    expect(
+      headwordHasCompoundHyphen([{ word: '가르치다', pos: '동사' }], '가르치다'),
+    ).toBe(false);
+    expect(longCompoundSplitLemma('어루만져 주세요')).toBe('어루만져주다');
+    expect(longCompoundSplitLemma('생각해 보세요')).toBe('생각해보다');
+    expect(longCompoundSplitLemma('만져 주세요')).toBe('');
+  });
+
+  it('표제어에 붙임표가 있으면 띄우고, 없으면 뺀다', async () => {
+    const group = {
+      patternKind: 'auxiliary-verb',
+      auxSplitLongCompound: true,
+      bonBojoItemId: 'verb-long-compound-split',
+      tip: '띄어 씀',
+      instances: [
+        { matchedText: '어루만져주세요', suggestedText: '어루만져 주세요' },
+        { matchedText: '생각해주세요', suggestedText: '생각해 주세요' },
+        { matchedText: '가르쳐주세요', suggestedText: '가르쳐 주세요' },
+      ],
+    };
+    const next = await enrichAuxiliaryDictSolid([group], {
+      analyze: analyzeHead,
+      fetchImpl: dictByQuery({
+        어루만지다: { word: '어루-만지다', pos: '동사' },
+        생각하다: { word: '생각-하다', pos: '동사' },
+        가르치다: { word: '가르치다', pos: '동사' },
+      }),
+    });
+    expect(next).toHaveLength(1);
+    expect(next[0].instances).toEqual([
+      { matchedText: '어루만져주세요', suggestedText: '어루만져 주세요' },
+      { matchedText: '생각해주세요', suggestedText: '생각해 주세요' },
+    ]);
+    expect(next[0].tip).toBe('띄어 씀');
+  });
+
+  it('붙임표가 있어도 본용언+보조가 표제어로 등재되면 뺀다', async () => {
+    const group = {
+      patternKind: 'auxiliary-verb',
+      auxSplitLongCompound: true,
+      instances: [
+        { matchedText: '정리해주세요', suggestedText: '정리해 주세요' },
+      ],
+    };
+    const next = await enrichAuxiliaryDictSolid([group], {
+      analyze: analyzeHead,
+      fetchImpl: dictByQuery({
+        정리하다: { word: '정리-하다', pos: '동사' },
+        정리해주다: { word: '정리해주다', pos: '동사' },
+      }),
+    });
+    expect(next).toEqual([]);
+  });
+
+  it('키위가 없으면 3음절만으로 띄우지 않는다', async () => {
+    const group = {
+      patternKind: 'auxiliary-verb',
+      auxSplitLongCompound: true,
+      instances: [
+        { matchedText: '생각해주세요', suggestedText: '생각해 주세요' },
+      ],
+    };
+    const next = await enrichAuxiliaryDictSolid([group], {
+      analyze: () => null,
+      fetchImpl: dictFetch('생각하다', '동사'),
+    });
+    expect(next).toEqual([]);
+    expect(auxiliaryDictSolidStdictCallCount().lastRun).toBe(0);
+  });
+
+  it('본용언 조회가 실패하면 음절 수만으로 띄우지 않는다', async () => {
+    const group = {
+      patternKind: 'auxiliary-verb',
+      auxSplitLongCompound: true,
+      instances: [
+        { matchedText: '제출해주세요', suggestedText: '제출해 주세요' },
+      ],
+    };
+    const next = await enrichAuxiliaryDictSolid([group], {
+      analyze: analyzeHead,
+      fetchImpl: async () => ({
+        status: 503,
+        ok: false,
+        text: async () => 'STDICT_KEY_MISSING',
+      }),
+    });
+    expect(next).toEqual([]);
+    expect(auxiliaryDictSolidStdictCallCount().lastRun).toBe(1);
+  });
+
+  it('붙임표가 확인된 뒤 합성 표제어 조회가 실패하면 띄운 제안을 남긴다', async () => {
+    const group = {
+      patternKind: 'auxiliary-verb',
+      auxSplitLongCompound: true,
+      instances: [
+        { matchedText: '제출해주세요', suggestedText: '제출해 주세요' },
+      ],
+    };
+    const next = await enrichAuxiliaryDictSolid([group], {
+      analyze: analyzeHead,
+      fetchImpl: dictByQuery({
+        제출하다: { word: '제출-하다', pos: '동사' },
+        제출해주다: { status: 503, text: 'STDICT_KEY_MISSING' },
+      }),
+    });
+    expect(next[0].instances[0].suggestedText).toBe('제출해 주세요');
+  });
+
   it('미등재·키 없음이면 그대로 둔다', async () => {
     const groups = [auxGroup('verb-gada', '(아/어) + 가다', '되어 간다')];
     const missing = await enrichAuxiliaryDictSolid(groups, {
@@ -111,4 +329,30 @@ describe('auxiliaryDictSolid', () => {
     });
     expect(noKey[0]).toBe(groups[0]);
   });
+
+  it.skipIf(
+    !fs.existsSync(
+      new URL('../../tmp/kiwi-models/models/cong/base/cong.mdl', import.meta.url),
+    ),
+  )(
+    '키위 실모델은 본용언 기본형만 만든다',
+    async () => {
+      const { loadKiwiNode } = await import('./kiwiMorph/loadNode.js');
+      const { clearKiwiInstance } = await import('./kiwiMorph/runtime.js');
+      const { analyzeLine } = await import('./kiwiMorph/analyze.js');
+      const kiwi = await loadKiwiNode({ register: true });
+      expect(kiwi).toBeTruthy();
+      try {
+        expect(bonVerbCitation(analyzeLine('생각해')?.tokens)).toBe('생각하다');
+        expect(bonVerbCitation(analyzeLine('정리해')?.tokens)).toBe('정리하다');
+        expect(bonVerbCitation(analyzeLine('가르쳐')?.tokens)).toBe('가르치다');
+        expect(bonVerbCitation(analyzeLine('어루만져')?.tokens)).toBe(
+          '어루만지다',
+        );
+      } finally {
+        clearKiwiInstance();
+      }
+    },
+    30_000,
+  );
 });

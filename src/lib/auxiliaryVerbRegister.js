@@ -5,7 +5,7 @@ import {
   removeAuxiliaryVerbFind,
 } from './auxiliaryVerbPattern.js';
 import { parseCommaList } from './matchFilters.js';
-import { bonBojoListItem, isBonBojoLogicOnlyItem } from './bonBojoRules.js';
+import { bonBojoListItem, isBonBojoLogicOnlyItem, BON_BOJO_LONG_COMPOUND_SPLIT_ID } from './bonBojoRules.js';
 
 /**
  * @param {import('./ruleTypes.js').Rule[]} rules
@@ -70,6 +70,9 @@ export function listAuxiliaryVerbEntries(customRules) {
   }
 
   return entries.sort((a, b) => {
+    const aSplit = a.bonBojoItemId === BON_BOJO_LONG_COMPOUND_SPLIT_ID;
+    const bSplit = b.bonBojoItemId === BON_BOJO_LONG_COMPOUND_SPLIT_ID;
+    if (aSplit !== bSplit) return aSplit ? 1 : -1;
     const la = a.displayLabel || a.tailWord;
     const lb = b.displayLabel || b.tailWord;
     return la.localeCompare(lb, 'ko');

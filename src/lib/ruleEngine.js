@@ -199,8 +199,12 @@ function finalizeResults(byKey, pages = []) {
  * @param {number} globalIndex
  * @param {string} matchedText
  */
-function pushCompoundFindInstance(rule, page, byKey, globalIndex, matchedText) {
+function pushCompoundFindInstance(rule, page, byKey, globalIndex, matchedText, match) {
   const key = `${rule.find}\0${rule.replace}\0${rule.pattern ?? 'literal'}`;
+  const suggestedText =
+    rule.auxSplitLongCompound && match
+      ? applyReplaceTemplate(rule.replace, match)
+      : matchedText;
   if (!byKey.has(key)) {
     const tip = String(rule.tip ?? '').trim();
     byKey.set(key, {
@@ -217,6 +221,7 @@ function pushCompoundFindInstance(rule, page, byKey, globalIndex, matchedText) {
       ...(rule.bonBojoItemId?.trim()
         ? { bonBojoItemId: rule.bonBojoItemId.trim() }
         : {}),
+      ...(rule.auxSplitLongCompound ? { auxSplitLongCompound: true } : {}),
       ...(rule.dividerGroup ? { dividerGroup: rule.dividerGroup } : {}),
       ...(rule.dividerLabel ? { dividerLabel: rule.dividerLabel } : {}),
       instances: [],
@@ -226,7 +231,7 @@ function pushCompoundFindInstance(rule, page, byKey, globalIndex, matchedText) {
     find: rule.find,
     replace: rule.replace,
     matchedText,
-    suggestedText: matchedText,
+    suggestedText,
     pageNum: page.pageNum,
     index: globalIndex,
   });
@@ -293,7 +298,7 @@ function applyCompoundFindByLines(rule, page, byKey, globalExcludePhrases) {
           if (prevChar && isLetterOrDigit(prevChar)) continue;
         }
       }
-      pushCompoundFindInstance(rule, page, byKey, globalIndex, match[0]);
+      pushCompoundFindInstance(rule, page, byKey, globalIndex, match[0], match);
     }
   }
 
@@ -421,6 +426,7 @@ function applyRuleToPages(rule, pages, byKey, globalExcludePhrases, errors) {
           ...(rule.patternKind === 'auxiliary-verb' && rule.label?.trim()
             ? { groupDisplayLabel: rule.label.trim() }
             : {}),
+          ...(rule.auxSplitLongCompound ? { auxSplitLongCompound: true } : {}),
           ...(rule.bonBojoItemId?.trim()
             ? { bonBojoItemId: rule.bonBojoItemId.trim() }
             : {}),

@@ -1,10 +1,12 @@
-import { buildAuxiliaryVerbFindRules } from './auxiliaryVerbPattern.js';
+import { buildAuxiliaryVerbFindRules, buildLongCompoundSplitRules } from './auxiliaryVerbPattern.js';
 import {
   getBonBojoGroups,
   bonBojoDisplayLabelForItem,
   auxiliarySearchTailsFromBonBojoItem,
   isBonBojoLogicOnlyItem,
   isBonBojoRequiredItem,
+  BON_BOJO_LONG_COMPOUND_SPLIT_ID,
+  BON_BOJO_LONG_COMPOUND_SPLIT_LABEL,
 } from './bonBojoRules.js';
 import { encodeSpacesVisible } from './spaceVisibleText.js';
 
@@ -25,6 +27,25 @@ function enabledByItemIdFromRules(rules) {
   return map;
 }
 
+/** 다른 본조 항목의 띄움 stem(`져 주`)만 — 3음절 복합어 칸 1차 찾기용 */
+function spacedStemsFromGroups() {
+  /** @type {string[]} */
+  const stems = [];
+  for (const group of getBonBojoGroups()) {
+    for (const item of group.items) {
+      if (item.id === BON_BOJO_LONG_COMPOUND_SPLIT_ID) continue;
+      for (const tail of auxiliarySearchTailsFromBonBojoItem(item)) {
+        const parts = String(tail ?? '')
+          .trim()
+          .split(/\s+/)
+          .filter(Boolean);
+        if (parts.length === 2) stems.push(`${parts[0]} ${parts[1]}`);
+      }
+    }
+  }
+  return [...new Set(stems)];
+}
+
 /**
  * 본조 규칙을 시트 stems에서 매번 재생성 — 저장된 옛 find·tailWord(해왔 등)로 오다만 0건인 문제 방지
  * @param {import('./ruleTypes.js').Rule[]} nonAux
@@ -33,6 +54,7 @@ function enabledByItemIdFromRules(rules) {
 function rebuildAuxiliaryVerbRulesFromSheet(nonAux, enabledByItem) {
   /** @type {import('./ruleTypes.js').Rule[]} */
   const aux = [];
+  const spacedStems = spacedStemsFromGroups();
 
   for (const group of getBonBojoGroups()) {
     for (const item of group.items) {
@@ -48,6 +70,18 @@ function rebuildAuxiliaryVerbRulesFromSheet(nonAux, enabledByItem) {
         : enabledByItem.has(itemId)
           ? enabledByItem.get(itemId)
           : isBonBojoRequiredItem(itemId);
+
+      if (itemId === BON_BOJO_LONG_COMPOUND_SPLIT_ID) {
+        for (const row of buildLongCompoundSplitRules(spacedStems)) {
+          aux.push({
+            ...row,
+            enabled: Boolean(enabled),
+            label: listLabel || BON_BOJO_LONG_COMPOUND_SPLIT_LABEL,
+            bonBojoItemId: itemId,
+          });
+        }
+        continue;
+      }
 
       for (const tail of auxiliarySearchTailsFromBonBojoItem(item)) {
         for (const row of buildAuxiliaryVerbFindRules(tail)) {
