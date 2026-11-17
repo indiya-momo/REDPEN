@@ -105,8 +105,17 @@ export function proofreadExportTabShortLabel(exportTab = 'spelling') {
 /**
  * @param {'spelling' | 'consistency'} [exportTab]
  */
-export function buildProofreadExportConfirmMessage(exportTab = 'spelling') {
+export function buildProofreadExportConfirmMessage(exportTab = 'spelling', format = 'xlsx') {
   const tabLabel = proofreadExportTabShortLabel(exportTab);
+  if (format === 'pdf') {
+    return (
+      '[PDF 교정본 내려받기]\n' +
+      `오늘 ${tabLabel} 검수 결과 다운로드는 1회 가능합니다.\n` +
+      '(엑셀 다운로드와 PDF 교정본을 합쳐 1회로 셉니다.)\n\n' +
+      '다운로드를 진행할까요?\n\n' +
+      '※ 화면에 보이는 검수 결과를 원본 PDF에 교정 주석으로 넣은 파일입니다'
+    );
+  }
   return (
     `[${tabLabel} 검수 결과 다운로드]\n` +
     `오늘 ${tabLabel} 검수 결과 다운로드는 1회 가능합니다.\n\n` +
@@ -115,10 +124,13 @@ export function buildProofreadExportConfirmMessage(exportTab = 'spelling') {
   );
 }
 
-/** @param {'spelling' | 'consistency'} [exportTab] */
-async function confirmProofreadExportOrCancel(exportTab = 'spelling') {
+/**
+ * @param {'spelling' | 'consistency'} [exportTab]
+ * @param {'xlsx' | 'pdf'} [format]
+ */
+async function confirmProofreadExportOrCancel(exportTab = 'spelling', format = 'xlsx') {
   const { title, message } = parseBracketTitleMessage(
-    buildProofreadExportConfirmMessage(exportTab),
+    buildProofreadExportConfirmMessage(exportTab, format),
   );
   return showAppConfirm({ title, message });
 }
@@ -1499,7 +1511,7 @@ export async function consumeBetaDailyExport(uid, email = '', exportTab = 'spell
  */
 export async function assertBetaDailyExportOrAlert(uid, options = {}) {
   const exportTab = options.exportTab ?? 'spelling';
-  if (!(await confirmProofreadExportOrCancel(exportTab))) {
+  if (!(await confirmProofreadExportOrCancel(exportTab, options.format ?? 'xlsx'))) {
     return false;
   }
   if (!assertLoggedInForCheckOrAlert(uid)) {

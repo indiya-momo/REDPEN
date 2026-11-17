@@ -1686,6 +1686,87 @@ export default function MainScreen({
     customRules,
   ]);
 
+  const [proofreadPdfBusy, setProofreadPdfBusy] = useState(false);
+
+  /** 「PDF 교정본 내려받기」 — 화면에 보이는 맞춤법·검토·표기 통일(고른 통일형) 결과를 원본 PDF에 주석으로 */
+  const handleProofreadPdfExport = useCallback(async (exportTab = 'spelling') => {
+    if (guestBrowseBlocksResultExport()) {
+      void showAppAlert({
+        title: 'PDF 교정본 내려받기',
+        message:
+          '둘러보기에서는 PDF 교정본을 저장할 수 없습니다.\n로그인 후 이용해 주세요.',
+      });
+      return;
+    }
+    if (!pdf.pdf || proofreadPdfBusy) return;
+    setProofreadPdfBusy(true);
+    try {
+      const [{ exportProofreadPdf }, { PdfAnnotExportError }, { collectAnnotFindings }] =
+        await Promise.all([
+          import('../lib/pdfAnnotExport/exportProofreadPdf.js'),
+          import('../lib/pdfAnnotExport/writeAnnotatedPdf.js'),
+          import('../lib/pdfAnnotExport/collectAnnotFindings.js'),
+        ]);
+      const exportInput = {
+        pdfDoc: pdf.pdf,
+        pageTexts: pdf.pageTexts,
+        spellingEntries: ruleCheck.spellingCheckDone ? spellingTabEntries : [],
+        unifyGroups: unifyBuildSessionExportGroups(),
+        isInstanceVisible: ruleCheck.isInstanceVisible,
+        pdfFileName: pdf.pdfFileName,
+      };
+      // 넣을 결과가 없으면 하루 다운로드 횟수를 쓰지 않는다
+      if (!collectAnnotFindings(exportInput).length) {
+        await showAppAlert({
+          title: 'PDF 교정본 내려받기',
+          message: '교정본에 넣을 검수 결과가 없습니다.',
+        });
+        return;
+      }
+      // 베타 하루 다운로드 한도 — 「검수 결과 다운로드」(엑셀)와 같은 횟수·안내
+      const allowed = await assertBetaDailyExportOrAlert(authUid, {
+        authEmail,
+        exportTab,
+        format: 'pdf',
+      });
+      if (!allowed) return;
+      try {
+        const result = await exportProofreadPdf(exportInput);
+        if (!result.total) {
+          await showAppAlert({
+            title: 'PDF 교정본 내려받기',
+            message: '교정본에 넣을 검수 결과가 없습니다.',
+          });
+        }
+      } catch (err) {
+        if (err instanceof PdfAnnotExportError) {
+          await showAppAlert({ title: 'PDF 교정본 내려받기', message: err.message });
+          return;
+        }
+        throw err;
+      }
+    } catch (err) {
+      console.error('PDF 교정본 오류:', err);
+      void showAppAlert({
+        title: 'PDF 교정본 내려받기',
+        message: 'PDF 교정본을 만드는 중 오류가 났습니다. 잠시 후 다시 시도해 주세요.',
+      });
+    } finally {
+      setProofreadPdfBusy(false);
+    }
+  }, [
+    authUid,
+    authEmail,
+    pdf.pdf,
+    pdf.pageTexts,
+    pdf.pdfFileName,
+    proofreadPdfBusy,
+    ruleCheck.spellingCheckDone,
+    ruleCheck.isInstanceVisible,
+    spellingTabEntries,
+    unifyBuildSessionExportGroups,
+  ]);
+
   const spellingResultsPanel =
     workTab === 'spelling' && ruleCheck.spellingCheckDone ? (
       <CheckResultsPanel
@@ -1799,6 +1880,15 @@ export default function MainScreen({
             disabled={!ruleCheck.spellingCheckDone}
           >
             검수 결과 다운로드
+          </button>
+          <button
+            type="button"
+            className="btn-add panel-section-run-btn btn-export-results btn-export-proofread-pdf"
+            onClick={() => handleProofreadPdfExport('spelling')}
+            disabled={!ruleCheck.spellingCheckDone || proofreadPdfBusy}
+            title="보이는 검수 결과를 원본 PDF에 교정 주석으로 달아 새 파일로 받습니다"
+          >
+            {proofreadPdfBusy ? 'PDF 교정본 만드는 중…' : 'PDF 교정본 내려받기'}
           </button>
         </div>
       ) : null}
@@ -2348,6 +2438,18 @@ export default function MainScreen({
                     }
                   >
                     검수 결과 다운로드
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-add panel-section-run-btn btn-export-results btn-export-proofread-pdf"
+                    onClick={() => handleProofreadPdfExport('consistency')}
+                    disabled={
+                      (!ruleCheck.spellingCheckDone && !unifySessionActive) ||
+                      proofreadPdfBusy
+                    }
+                    title="보이는 맞춤법 결과와 고른 표기 통일을 원본 PDF에 교정 주석으로 달아 새 파일로 받습니다"
+                  >
+                    {proofreadPdfBusy ? 'PDF 교정본 만드는 중…' : 'PDF 교정본 내려받기'}
                   </button>
                 </div>
                 ) : null}

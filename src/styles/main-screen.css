@@ -4699,6 +4699,7 @@
   min-width: 0;
   display: flex;
   justify-content: center;
+  gap: 6px;
 }
 
 .spelling-tab-layout__run-row-actions--export .btn-export-results {
