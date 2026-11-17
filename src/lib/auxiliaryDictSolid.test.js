@@ -152,7 +152,7 @@ describe('auxiliaryDictSolid', () => {
     });
     expect(isAuxiliaryDictSolidInstance(next[0].instances[0])).toBe(true);
     expect(next[0].instances[0].matchedText).toBe('쉬어가라고');
-    expect(next[0].tip).toContain('쉬어가다');
+    expect(next[0].instances[0].tip).toBe('표준국어대사전 「쉬어가다」 등재');
   });
 
   it('날아 올라 → 날아오르다 / 날아올라, 1차 규칙이 잡는다', () => {
@@ -175,8 +175,7 @@ describe('auxiliaryDictSolid', () => {
       fetchImpl: dictFetch('들어오다', '동사'),
     });
     expect(next[0].instances[0].suggestedText).toBe('들어온');
-    expect(next[0].tip).toContain('들어오다');
-    expect(next[0].tip).toContain('붙여 씀');
+    expect(next[0].instances[0].tip).toBe('표준국어대사전 「들어오다」 등재');
   });
 
   it('오래 들어 온 노래와 방으로 들어 온을 고정 사전 응답만으로는 가르지 못한다', async () => {
@@ -196,7 +195,7 @@ describe('auxiliaryDictSolid', () => {
       fetchImpl: recordedDeureoodaFetch(),
     });
     expect(next[0].instances[0].suggestedText).toBe('들어온');
-    expect(next[0].tip).toContain('붙여 씀');
+    expect(next[0].instances[0].tip).toBe('표준국어대사전 「들어오다」 등재');
     expect(next[1].instances[0].suggestedText).toBe('들어온');
     expect(next[1].sourceText).toBe('방으로 들어 온 사람');
     const stats = auxiliaryDictSolidStdictCallCount();
