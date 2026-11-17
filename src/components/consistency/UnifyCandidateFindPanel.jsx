@@ -49,12 +49,6 @@ import { createUnifyFindBench, snapshotUnifyFindDiag } from '../../lib/unifyFind
 import { runStdictPosReviewOnClusterGroups } from '../../lib/unifyStdictPos.js';
 import { buildSeriesMajoritySoftPreselect, buildPatternDirectionSoftPreselect } from '../../lib/unifySeriesMajorityPreselect.js';
 import {
-  findClusterKeyForBonBojoItemId,
-  formatAuxiliaryReviewBadge,
-  formatAuxiliaryReviewTip,
-} from '../../lib/unifyAuxReview.js';
-import { seedBonBojoStemClustersIntoList } from '../../lib/unifyBonBojoStemSeed.js';
-import {
   mergeUnifyChosenMaps,
   resolveGlobalChosenSpacing,
   resolveSeriesChosenSpacing,
@@ -879,9 +873,6 @@ function Phase2ConditionSummary({
  *   onFindButtonClick?: () => void,
  *   seriesSpacingGuideAttr?: string,
  *   onSeriesSpacingGuideSelect?: () => void,
- *   focusBonBojoItemId?: string | null,
- *   focusBonBojoLabel?: string | null,
- *   onFocusBonBojoConsumed?: () => void,
  * }} props
  */
 export default function UnifyCandidateFindPanel({
@@ -909,18 +900,11 @@ export default function UnifyCandidateFindPanel({
   onFindButtonClick,
   seriesSpacingGuideAttr,
   onSeriesSpacingGuideSelect,
-  focusBonBojoItemId = null,
-  focusBonBojoLabel = null,
-  onFocusBonBojoConsumed,
 }) {
   const [finding, setFinding] = useState(false);
   const [slmReviewing, setSlmReviewing] = useState(false);
   /** confirm·Firestore 대기 중에도 중복 클릭 방지 (finding UI와 분리) */
   const findInFlightRef = useRef(false);
-  const panelRootRef = useRef(/** @type {HTMLDivElement | null} */ (null));
-  const [bonBojoJumpMiss, setBonBojoJumpMiss] = useState(
-    /** @type {string | null} */ (null),
-  );
 
   // PDF 준비되면 찾기 전에 Kiwi 표면 prefetch (서버 모드) — 클릭 직후 대기 완화
   useEffect(() => {
@@ -1161,16 +1145,8 @@ export default function UnifyCandidateFindPanel({
       );
       bench.mark('2_enrichClusters');
       const kiwiDiagAfterEnrich1 = await snapshotUnifyFindDiag();
-      // 2-3: 본조 stem 붙임·띄움 쌍이 있는데 1차 클러스터가 없을 때만 시드 (1차 스캔 불변)
-      const withBonBojoSeeds = seedBonBojoStemClustersIntoList(
-        next,
-        pageTexts,
-      );
       let workingGroups;
-      const ruleStrip = assembleUnifyListBase(
-        withBonBojoSeeds,
-        result.rawByKey,
-      );
+      const ruleStrip = assembleUnifyListBase(next, result.rawByKey);
       workingGroups = ruleStrip.groups;
       const ruleExcluded = ruleStrip.ruleExcluded;
       bench.mark('3_groupStrip');
@@ -1438,56 +1414,6 @@ export default function UnifyCandidateFindPanel({
     () => grouped.flatMap((g) => g.clusters),
     [grouped],
   );
-
-  useEffect(() => {
-    const itemId = String(focusBonBojoItemId ?? '').trim();
-    if (!itemId) {
-      setBonBojoJumpMiss(null);
-      return undefined;
-    }
-    const root = panelRootRef.current;
-    if (!root) return undefined;
-
-    const label =
-      String(focusBonBojoLabel ?? '').trim() || itemId;
-    const key = findClusterKeyForBonBojoItemId(listClusters, itemId);
-    /** @type {HTMLElement | null} */
-    let target = null;
-    if (key) {
-      target = root.querySelector(
-        `[data-unify-cluster-key="${CSS.escape(key)}"]`,
-      );
-    }
-    if (!target) {
-      target = root.querySelector(
-        `[data-aux-item-id="${CSS.escape(itemId)}"]`,
-      );
-    }
-
-    if (target) {
-      setBonBojoJumpMiss(null);
-      const details = target.closest('details');
-      if (details && !details.open) details.open = true;
-      target.classList.add('unify-candidate-find__jump-focus');
-      target.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-      const clearFocus = window.setTimeout(() => {
-        target?.classList.remove('unify-candidate-find__jump-focus');
-      }, 2400);
-      onFocusBonBojoConsumed?.();
-      return () => window.clearTimeout(clearFocus);
-    }
-
-    setBonBojoJumpMiss(label);
-    root.scrollIntoView({ block: 'start', behavior: 'smooth' });
-    onFocusBonBojoConsumed?.();
-    return undefined;
-  }, [
-    focusBonBojoItemId,
-    focusBonBojoLabel,
-    listClusters,
-    searched,
-    onFocusBonBojoConsumed,
-  ]);
 
   /** soft + 확정 병합 — PDF·2차·완료 판정 공통 */
   const effectiveChosen = useMemo(
@@ -2008,14 +1934,12 @@ export default function UnifyCandidateFindPanel({
 
   return (
     <div
-      ref={panelRootRef}
       className={[
         'loanword-converter unify-candidate-find',
         guideSpotlight ? 'work-guide-spotlight' : '',
       ]
         .filter(Boolean)
         .join(' ')}
-      data-work-guide="consistency-unify-recommend"
     >
       <div className="loanword-converter__summary panel-criteria-heading">
         <span className="loanword-converter__summary-title">
@@ -2028,16 +1952,9 @@ export default function UnifyCandidateFindPanel({
       </div>
 
       <div className="unify-candidate-find__body">
-        {bonBojoJumpMiss ? (
-          <p className="hint unify-candidate-find__bon-bojo-jump-miss" role="status">
-            본조 「{bonBojoJumpMiss}」에 맞는 추천이 아직 목록에 없습니다. 위에서
-            찾기 후 보조용언 배지를 확인하세요.
-          </p>
-        ) : null}
         <div className="unify-candidate-find__intro-row">
           <p className="hint consistency-hint-block unify-candidate-find__hint">
-            표기 통일이 필요한 단어를 자동으로 찾아 제안합니다. 본용언+보조용언의
-            붙임·띄움 짝도 여기서 같이 보입니다.
+            표기 통일이 필요한 단어를 자동으로 찾아 제안합니다.
             <br />
             <ConsistencyHintExample>
               <span className="consistency-hint-batang">경제˅학자</span>
@@ -2690,8 +2607,6 @@ function ClusterCard({
     return false;
   })();
 
-  const auxItemId = cluster.auxReview?.itemId?.trim() || undefined;
-
   return (
     <li
       className={[
@@ -2700,8 +2615,6 @@ function ClusterCard({
       ]
         .filter(Boolean)
         .join(' ')}
-      data-unify-cluster-key={cluster.key}
-      {...(auxItemId ? { 'data-aux-item-id': auxItemId } : {})}
     >
       <ul className="unify-candidate-find__variants">
         {cluster.variants.map((variant, variantIndex) => {
@@ -2799,14 +2712,8 @@ function ClusterCard({
                     예외
                   </span>
                 ) : null}
-                {isFirst && cluster.auxReview?.status === 'review' ? (
-                  <CriteriaHoverTip tip={formatAuxiliaryReviewTip(cluster.auxReview)}>
-                    <span className="unify-candidate-find__aux-review">
-                      {formatAuxiliaryReviewBadge(cluster.auxReview)}
-                    </span>
-                  </CriteriaHoverTip>
-                ) : isFirst &&
-                  cluster.predicateReview?.status === 'needs_review' ? (
+                {isFirst &&
+                cluster.predicateReview?.status === 'needs_review' ? (
                   <span className="unify-candidate-find__predicate-review">
                     용언 추정, 검토 필요
                   </span>

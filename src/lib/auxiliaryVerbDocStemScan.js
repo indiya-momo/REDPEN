@@ -8,7 +8,7 @@ import {
 } from './bonBojoRules.js';
 
 export const AUXILIARY_DOC_ONLY_TIP =
-  '검사에는 잡히지 않았고, 원고에서 stem 붙임·띄움만 집계했습니다. 표기 통일 추천에서 짝을 확인하세요.';
+  '본용언+보조용언 검사에는 잡히지 않았고, 원고에서 stem 붙임·띄움만 집계했습니다.';
 
 /** @param {string} s */
 function escapeRegExp(s) {

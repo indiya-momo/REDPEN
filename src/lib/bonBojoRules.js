@@ -165,7 +165,7 @@ export function bonBojoItemIdForSearchTail(tailWord) {
 }
 
 /**
- * 표기 통일 추천 — 보조용언 검토용 시트 stems (띄움·붙임).
+ * 본조 원고 stem 집계용 — 시트 stems (띄움·붙임 쌍).
  * @returns {readonly { spaced: string, glued: string, itemId: string, displayLabel?: string }[]}
  */
 export function listBonBojoUnifyReviewStems() {

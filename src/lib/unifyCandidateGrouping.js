@@ -21,7 +21,6 @@ import {
   filterSeriesSatellitesByNoiseList,
 } from './unifyCandidateSatellites.js';
 import { attachJosaReviewHints, isUnifyListDroppedMonoJosaCluster } from './unifyJosaReview.js';
-import { attachAuxiliaryReviewHints } from './unifyAuxReview.js';
 import {
   attachPredicateReviewHints,
   isUnifyPredicateCluster,
@@ -451,12 +450,9 @@ export function groupSortAndFillSatellites(clusters, rawByKey) {
   );
 
   // 조사·어간 접미 검토 링크(자동 merge 없음, 전체 목록 기준)
-  // bon-bojo stems 보조용언 추정 검토(자동 merge 없음)
-  // 용언 활용 추정(알아내고 등) — auxReview가 없을 때만
+  // 용언 활용 추정(알아내고 등)
   const hinted = attachPredicateReviewHints(
-    attachAuxiliaryReviewHints(
-      attachJosaReviewHints(kept.flatMap((g) => g.clusters)),
-    ),
+    attachJosaReviewHints(kept.flatMap((g) => g.clusters)),
   );
   const byKey = new Map(hinted.map((c) => [c.key, c]));
   for (const group of kept) {

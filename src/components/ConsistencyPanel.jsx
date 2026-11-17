@@ -136,9 +136,6 @@ import TooltipGuide from './TooltipGuide.jsx';
  *     showConfirm?: boolean,
  *     onDismiss: () => void,
  *   } | null,
- *   focusBonBojoItemId?: string | null,
- *   focusBonBojoLabel?: string | null,
- *   onFocusBonBojoConsumed?: () => void,
  * }} props
  */
 export default function ConsistencyPanel({
@@ -189,9 +186,6 @@ export default function ConsistencyPanel({
   onGuidePinClick,
   guideSpotlight = false,
   consistencyUnifyPinGuide = null,
-  focusBonBojoItemId = null,
-  focusBonBojoLabel = null,
-  onFocusBonBojoConsumed,
 }) {
   const [literalInput, setLiteralInput] = useState('');
   const [slotInput, setSlotInput] = useState('');
@@ -373,9 +367,6 @@ export default function ConsistencyPanel({
             seriesSpacingGuideActive ? 'unify-series-spacing' : undefined
           }
           onSeriesSpacingGuideSelect={onSeriesSpacingGuideSelect}
-          focusBonBojoItemId={focusBonBojoItemId}
-          focusBonBojoLabel={focusBonBojoLabel}
-          onFocusBonBojoConsumed={onFocusBonBojoConsumed}
         />
       ) : null}
       <section
@@ -568,8 +559,8 @@ export default function ConsistencyPanel({
           <p className="auxiliary-checklist-intro hint">
             ｢한글 맞춤법｣ 기준 본용언(-아/어)+보조용언을 세 가지 기준(붙여쓰기
             가능·붙여쓰기 필수·띄어쓰기 필수)으로 검사합니다. 결과 목록은
-            보조용언별로 표시됩니다. 원고에 붙임·띄움이 섞이면 아래 「표기
-            통일 추천」에서 짝으로 함께 보세요.
+            보조용언별로 표시되며, 원고·검사의 띄움·붙임 건수도 본조 결과에만
+            보입니다.
           </p>
           <AuxiliaryVerbBundleChecklist
             customRules={customRules}

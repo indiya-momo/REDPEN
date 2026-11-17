@@ -2,12 +2,23 @@ import { describe, expect, it } from 'vitest';
 import {
   bonVerbAllowForItemId,
   bonBojoRulesFingerprint,
+  listBonBojoUnifyReviewStems,
   replaceBonBojoRulesData,
   BON_BOJO_LONG_COMPOUND_SPLIT_ID,
   BON_BOJO_UI_GROUP,
   bonBojoUiGroupForItemId,
 } from './bonBojoRules.js';
 import bonBojoJson from '../data/bon-bojo-rules.json';
+
+describe('listBonBojoUnifyReviewStems', () => {
+  it('시트 stems의 띄움·붙임 쌍을 만든다', () => {
+    const stems = listBonBojoUnifyReviewStems();
+    expect(stems.some((s) => s.spaced === '해 보' && s.glued === '해보')).toBe(
+      true,
+    );
+    expect(stems.every((s) => /\s/.test(s.spaced))).toBe(true);
+  });
+});
 
 describe('bonBojoUiGroupForItemId', () => {
   it('3그룹 UI 분류', () => {
