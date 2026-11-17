@@ -9,6 +9,7 @@ import {
   stepPdfZoomFactor,
 } from '../lib/pdfService.js';
 import { syncPdfStageScrollAfterLayout } from '../lib/pdfStageScroll.js';
+import { spacingOnlyMarks } from '../lib/highlightOverlayReplace.js';
 import pdfEmptyIcon from '../assets/momo/pdf-empty.png';
 import PdfHighlightTipBubble from './PdfHighlightTipBubble.jsx';
 
@@ -243,6 +244,40 @@ export default function PdfViewer({
                     h.end,
                     pageData,
                   );
+            // 띄어쓰기만 바꾸는 교정은 라벨 대신 그 자리에 붙임표 ⌒ / 띄움표 ∨만
+            const glueMarks = [];
+            const glueRuns = Number.isFinite(h.start)
+              ? spacingOnlyMarks(h.matchedText, h.overlayReplace)
+              : null;
+            if (glueRuns) {
+              for (const { type, s, e } of glueRuns) {
+                const rectAt = (idx) =>
+                  highlightRectsForTextRange(
+                    page,
+                    viewport,
+                    pageData.items,
+                    pageData.itemRefs,
+                    h.start + idx,
+                    h.start + idx + 1,
+                    pageData,
+                  )[0];
+                const prev = s > 0 ? rectAt(s - 1) : null;
+                const next = rectAt(e);
+                if (!prev) break;
+                const sameLine =
+                  next && Math.abs(next.top - prev.top) < prev.height * 0.5;
+                const x = sameLine
+                  ? (prev.left + prev.width + next.left) / 2
+                  : prev.left + prev.width;
+                glueMarks.push({
+                  type,
+                  x,
+                  top: sameLine ? Math.min(prev.top, next.top) : prev.top,
+                  size: sameLine ? Math.max(prev.height, next.height) : prev.height,
+                });
+              }
+            }
+            const useGlueMarks = Boolean(glueRuns) && glueMarks.length === glueRuns.length;
             // 여러 item 하이라이트에 교정문을 각각 그리면 같은 문구가 겹침
             // (과반수 이상×2, 긴 긴 밤×3). 첫 박스에만 표시.
             boxes.forEach((box, boxIndex) => {
@@ -253,7 +288,8 @@ export default function PdfViewer({
                 tip: h.tip ?? '',
                 matchedText: h.matchedText ?? '',
                 overlayReplace:
-                  boxIndex === 0 ? (h.overlayReplace ?? '') : '',
+                  boxIndex === 0 && !useGlueMarks ? (h.overlayReplace ?? '') : '',
+                glueMarks: boxIndex === 0 && useGlueMarks ? glueMarks : null,
                 pillarClass: h.pillarClass ?? '',
               });
             });
@@ -458,6 +494,35 @@ export default function PdfViewer({
                 </div>
               );
             })}
+            {rects.flatMap((r, i) =>
+              (r.glueMarks ?? []).map((m, k) => (
+                <svg
+                  key={`glue-${r.highlightId}-${i}-${k}`}
+                  className="pdf-glue-mark"
+                  aria-hidden
+                  viewBox="0 0 100 40"
+                  preserveAspectRatio="none"
+                  style={{
+                    position: 'absolute',
+                    left: m.x - m.size * 0.4,
+                    top: m.type === 'insert' ? m.top - m.size * 0.42 : m.top - m.size * 0.38,
+                    width: m.size * 0.8,
+                    height: m.size * 0.36,
+                    overflow: 'visible',
+                    pointerEvents: 'none',
+                  }}
+                >
+                  <path
+                    d={m.type === 'insert' ? 'M18 -2 L50 40 L82 -2' : 'M4 38 Q50 -14 96 38'}
+                    fill="none"
+                    stroke="#e03131"
+                    strokeWidth={Math.max(1, m.size * 0.08)}
+                    strokeLinecap="round"
+                    vectorEffect="non-scaling-stroke"
+                  />
+                </svg>
+              )),
+            )}
           </div>
           {openTip ? (
             <PdfHighlightTipBubble

@@ -109,7 +109,7 @@ export function buildProofreadExportConfirmMessage(exportTab = 'spelling', forma
   const tabLabel = proofreadExportTabShortLabel(exportTab);
   if (format === 'pdf') {
     return (
-      '[PDF 교정본 내려받기]\n' +
+      '[PDF 교정본 다운로드]\n' +
       `오늘 ${tabLabel} 검수 결과 다운로드는 1회 가능합니다.\n` +
       '(엑셀 다운로드와 PDF 교정본을 합쳐 1회로 셉니다.)\n\n' +
       '다운로드를 진행할까요?\n\n' +
