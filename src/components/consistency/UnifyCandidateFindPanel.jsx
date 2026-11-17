@@ -49,6 +49,10 @@ import { createUnifyFindBench, snapshotUnifyFindDiag } from '../../lib/unifyFind
 import { runStdictPosReviewOnClusterGroups } from '../../lib/unifyStdictPos.js';
 import { buildSeriesMajoritySoftPreselect, buildPatternDirectionSoftPreselect } from '../../lib/unifySeriesMajorityPreselect.js';
 import {
+  formatAuxiliaryReviewBadge,
+  formatAuxiliaryReviewTip,
+} from '../../lib/unifyAuxReview.js';
+import {
   mergeUnifyChosenMaps,
   resolveGlobalChosenSpacing,
   resolveSeriesChosenSpacing,
@@ -1954,7 +1958,8 @@ export default function UnifyCandidateFindPanel({
       <div className="unify-candidate-find__body">
         <div className="unify-candidate-find__intro-row">
           <p className="hint consistency-hint-block unify-candidate-find__hint">
-            표기 통일이 필요한 단어를 자동으로 찾아 제안합니다
+            표기 통일이 필요한 단어를 자동으로 찾아 제안합니다. 본용언+보조용언의
+            붙임·띄움 짝도 여기서 같이 보입니다.
             <br />
             <ConsistencyHintExample>
               <span className="consistency-hint-batang">경제˅학자</span>
@@ -2713,9 +2718,11 @@ function ClusterCard({
                   </span>
                 ) : null}
                 {isFirst && cluster.auxReview?.status === 'review' ? (
-                  <span className="unify-candidate-find__aux-review">
-                    본용언+ 보조용언 표기로 추정, 검토 필요
-                  </span>
+                  <CriteriaHoverTip tip={formatAuxiliaryReviewTip(cluster.auxReview)}>
+                    <span className="unify-candidate-find__aux-review">
+                      {formatAuxiliaryReviewBadge(cluster.auxReview)}
+                    </span>
+                  </CriteriaHoverTip>
                 ) : isFirst &&
                   cluster.predicateReview?.status === 'needs_review' ? (
                   <span className="unify-candidate-find__predicate-review">

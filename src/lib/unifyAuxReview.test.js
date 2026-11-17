@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   attachAuxiliaryReviewHints,
+  formatAuxiliaryReviewBadge,
+  formatAuxiliaryReviewTip,
   matchBonBojoStemForCluster,
 } from './unifyAuxReview.js';
 import { listBonBojoUnifyReviewStems } from './bonBojoRules.js';
@@ -61,6 +63,20 @@ describe('matchBonBojoStemForCluster', () => {
         counts: { 뉴욕타임스: 1, '뉴욕 타임스': 3 },
       }),
     ).toBeNull();
+  });
+});
+
+describe('formatAuxiliaryReview copy', () => {
+  it('stem 쌍·시트 라벨을 배지·툴팁에 넣는다', () => {
+    const aux = {
+      displayLabel: '(아/어) + 보다',
+      stemSpaced: '해 보',
+      stemKey: '해보',
+    };
+    expect(formatAuxiliaryReviewBadge(aux)).toContain('(아/어) + 보다');
+    expect(formatAuxiliaryReviewBadge(aux)).toContain('붙임/띄움 짝');
+    expect(formatAuxiliaryReviewTip(aux)).toContain('해 보');
+    expect(formatAuxiliaryReviewTip(aux)).toContain('해보');
   });
 });
 
