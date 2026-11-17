@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   buildConsistencyExportModel,
   buildSpellingExportModel,
+  formatAuxiliaryExportExamples,
 } from './exportResults.js';
 
 const formatPageLabel = (n) => `${n}P`;
@@ -127,6 +128,42 @@ describe('exportResults compose', () => {
     expect(model.rows[0].label).toBe('컴퓨터');
     expect(model.rows[0].pageRuns.some((r) => r.text.includes('3P'))).toBe(true);
     expect(JSON.parse(JSON.stringify(model))).toEqual(model);
+  });
+
+  it('본용언+보조용언 설명에 발견 문구(쪽)를 넣는다', () => {
+    const group = {
+      patternKind: 'auxiliary-verb',
+      tailWord: '가다',
+      groupDisplayLabel: '(아/어) + 가다',
+      label: '(아/어) + 가다',
+      tip: '',
+      instances: [
+        { pageNum: 1, matchedText: '쉬어 가라고', start: 0, end: 6 },
+        { pageNum: 19, matchedText: '되어 간다는', start: 0, end: 6 },
+        { pageNum: 34, matchedText: '쉬어 가는', start: 0, end: 5 },
+      ],
+    };
+    expect(
+      formatAuxiliaryExportExamples(group, 'consistency', formatPageLabel, alwaysVisible),
+    ).toBe('쉬어 가라고(1P), 되어 간다는(19P), 쉬어 가는(34P)');
+
+    const model = buildConsistencyExportModel({
+      entries: [{ group, source: 'consistency' }],
+      formatPageLabel,
+      isInstanceVisible: alwaysVisible,
+      groupVisibilityMode: allVisibleMode,
+      visibleInstanceCount: visibleCount,
+      literalCriteriaCount: 0,
+      literalFindingsCount: 0,
+      commonStringCriteriaCount: 0,
+      commonStringFindingsCount: 0,
+      auxiliaryCriteriaCount: 1,
+      auxiliaryFindingsCount: 3,
+      totalFindings: 3,
+    });
+    expect(model.rows[0].tip).toBe(
+      '쉬어 가라고(1P), 되어 간다는(19P), 쉬어 가는(34P)',
+    );
   });
 
   it('buildConsistencyExportModel: 통일형 구분·설명을 채운다', () => {

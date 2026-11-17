@@ -564,6 +564,42 @@ function consistencyExportTip(group, customRules = []) {
 }
 
 /**
+ * 본용언+보조용언 설명란 — 발견 문구(쪽).
+ * 예: 쉬어 가라고(1P), 되어 간다는(19P)
+ * @param {import('./ruleEngine.js').GroupedResult} group
+ * @param {string} source
+ * @param {(systemPage: number) => string} formatPageLabel
+ * @param {(source: string, group: object, inst: object) => boolean} [isInstanceVisible]
+ * @returns {string}
+ */
+export function formatAuxiliaryExportExamples(
+  group,
+  source,
+  formatPageLabel,
+  isInstanceVisible,
+) {
+  /** @type {string[]} */
+  const parts = [];
+  for (const inst of group?.instances ?? []) {
+    if (
+      isInstanceVisible &&
+      !isInstanceVisible(source, group, inst)
+    ) {
+      continue;
+    }
+    const text = String(inst.matchedText ?? '').trim();
+    if (!text) continue;
+    let page = formatPageLabel
+      ? String(formatPageLabel(inst.pageNum) ?? '').trim()
+      : `${inst.pageNum}P`;
+    if (!page) page = `${inst.pageNum}P`;
+    else if (!/P$/i.test(page)) page = `${page}P`;
+    parts.push(`${text}(${page})`);
+  }
+  return parts.join(', ');
+}
+
+/**
  * @param {import('./ruleEngine.js').GroupedResult} group
  */
 function consistencyEntryLabel(group) {
@@ -699,9 +735,20 @@ export function buildConsistencyExportModel({
   for (const { group, source } of entries ?? []) {
     const category = consistencyCategoryOf(group, customRules);
     const isAuxiliary = category === AUXILIARY_EXPORT_CATEGORY;
-    const tipText = consistencyExportTip(group, customRules);
     const visMode = groupVisibilityMode ? groupVisibilityMode(source, group) : 'visible';
     const pagesHidden = visMode === 'hidden';
+    let tipText = consistencyExportTip(group, customRules);
+    if (isAuxiliary && !pagesHidden) {
+      const examples = formatAuxiliaryExportExamples(
+        group,
+        source,
+        formatPageLabel,
+        isInstanceVisible,
+      );
+      if (examples) {
+        tipText = tipText ? `${tipText}\n${examples}` : examples;
+      }
+    }
 
     // 공통 항목 — 화면과 같이 채워진 표기별 행 (여러 항목 찾기와 같은 기준 분할)
     if (group.patternKind === 'phrase-slot-find') {
