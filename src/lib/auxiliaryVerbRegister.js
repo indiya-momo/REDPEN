@@ -5,7 +5,12 @@ import {
   removeAuxiliaryVerbFind,
 } from './auxiliaryVerbPattern.js';
 import { parseCommaList } from './matchFilters.js';
-import { bonBojoListItem, isBonBojoLogicOnlyItem, BON_BOJO_LONG_COMPOUND_SPLIT_ID } from './bonBojoRules.js';
+import {
+  bonBojoListItem,
+  isBonBojoLogicOnlyItem,
+  BON_BOJO_LONG_COMPOUND_SPLIT_ID,
+  listBonBojoBundleDefinitions,
+} from './bonBojoRules.js';
 
 /**
  * @param {import('./ruleTypes.js').Rule[]} rules
@@ -153,4 +158,86 @@ export function setAllAuxiliaryVerbEntries(rules, entries, enabled) {
 
 export function parseAuxiliaryInput(input) {
   return parseCommaList(input);
+}
+
+/** @returns {readonly { bundleId: string, label: string, itemIds: readonly string[] }[]} */
+export function listAuxiliaryVerbBundles() {
+  return listBonBojoBundleDefinitions().map((b) => ({
+    bundleId: b.id,
+    label: b.label,
+    itemIds: b.itemIds,
+  }));
+}
+
+/** @param {string} bundleId */
+function bundleDef(bundleId) {
+  return listBonBojoBundleDefinitions().find((b) => b.id === bundleId);
+}
+
+/** @param {import('./ruleTypes.js').Rule[]} rules @param {string} bundleId */
+export function isAuxiliaryVerbBundleEnabled(rules, bundleId) {
+  const def = bundleDef(bundleId);
+  if (!def?.itemIds.length) return false;
+  return def.itemIds.every((itemId) => {
+    const primary = bonBojoListItem(itemId)?.primaryTail ?? '';
+    return isAuxiliaryVerbEntryEnabled(rules, {
+      bonBojoItemId: itemId,
+      tailWord: primary,
+    });
+  });
+}
+
+/** @param {import('./ruleTypes.js').Rule[]} rules @param {string} bundleId */
+export function isAuxiliaryVerbBundlePartial(rules, bundleId) {
+  const def = bundleDef(bundleId);
+  if (!def?.itemIds.length) return false;
+  let on = 0;
+  for (const itemId of def.itemIds) {
+    const primary = bonBojoListItem(itemId)?.primaryTail ?? '';
+    if (
+      isAuxiliaryVerbEntryEnabled(rules, {
+        bonBojoItemId: itemId,
+        tailWord: primary,
+      })
+    ) {
+      on += 1;
+    }
+  }
+  return on > 0 && on < def.itemIds.length;
+}
+
+/**
+ * @param {import('./ruleTypes.js').Rule[]} rules
+ * @param {string} bundleId
+ * @param {boolean} enabled
+ */
+export function toggleAuxiliaryVerbBundle(rules, bundleId, enabled) {
+  const def = bundleDef(bundleId);
+  if (!def) return rules;
+  let next = rules;
+  for (const itemId of def.itemIds) {
+    const primary = bonBojoListItem(itemId)?.primaryTail ?? '';
+    next = toggleAuxiliaryVerbEntry(
+      next,
+      { bonBojoItemId: itemId, tailWord: primary },
+      enabled,
+    );
+  }
+  return next;
+}
+
+/** @param {import('./ruleTypes.js').Rule[]} rules @param {boolean} enabled */
+export function setAllAuxiliaryVerbBundles(rules, enabled) {
+  let next = rules;
+  for (const b of listAuxiliaryVerbBundles()) {
+    next = toggleAuxiliaryVerbBundle(next, b.bundleId, enabled);
+  }
+  return next;
+}
+
+/** @param {import('./ruleTypes.js').Rule[]} rules */
+export function countAuxiliaryVerbBundlesActive(rules) {
+  return listAuxiliaryVerbBundles().filter((b) =>
+    isAuxiliaryVerbBundleEnabled(rules, b.bundleId),
+  ).length;
 }

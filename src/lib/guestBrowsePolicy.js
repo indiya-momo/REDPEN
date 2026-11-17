@@ -11,11 +11,6 @@ import {
   clearAllWorkGuideDismissals,
   setDevWorkGuideForceStep,
 } from './workGuideKeys.js';
-import {
-  listAuxiliaryVerbEntries,
-  setAllAuxiliaryVerbEntries,
-} from './auxiliaryVerbRegister.js';
-
 /** 표기 통일 등록 칩(여러 항목 찾기·통일형·공통 항목) patternKind */
 const GUEST_BROWSE_CONSISTENCY_CHIP_KINDS = new Set([
   'compound-find',
@@ -325,9 +320,7 @@ export function clearGuestBrowseConsistencyChips(customRules) {
  */
 export function prepareGuestBrowseConsistencyRules(customRules) {
   const withoutChips = clearGuestBrowseConsistencyChips(customRules);
-  return setAllAuxiliaryVerbEntries(
-    withoutChips,
-    listAuxiliaryVerbEntries(withoutChips),
-    true,
+  return withoutChips.map((rule) =>
+    rule.patternKind === 'auxiliary-verb' ? { ...rule, enabled: true } : rule,
   );
 }

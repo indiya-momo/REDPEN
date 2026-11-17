@@ -18,10 +18,10 @@ import {
   appendFindDecisions,
 } from '../lib/consistencyDecisions.js';
 import {
-  isAuxiliaryVerbEntryEnabled,
-  listAuxiliaryVerbEntries,
-  setAllAuxiliaryVerbEntries,
-  toggleAuxiliaryVerbEntry,
+  countAuxiliaryVerbBundlesActive,
+  listAuxiliaryVerbBundles,
+  setAllAuxiliaryVerbBundles,
+  toggleAuxiliaryVerbBundle,
 } from '../lib/auxiliaryVerbRegister.js';
 import {
   buildRulesForPhraseSlot,
@@ -33,7 +33,7 @@ import {
   togglePhraseSlotEntry,
 } from '../lib/phraseSlotRegister.js';
 import { parseCommaList } from '../lib/matchFilters.js';
-import { isBonBojoRequiredItem, AUXILIARY_VERB_FEATURE_LABEL } from '../lib/bonBojoRules.js';
+import { AUXILIARY_VERB_FEATURE_LABEL } from '../lib/bonBojoRules.js';
 import {
   countPhraseSlotRegisteredEntries,
   MAX_PHRASE_SLOT_REGISTERED_ENTRIES,
@@ -49,6 +49,7 @@ import ConsistencyHintExample from './consistency/ConsistencyHintExample.jsx';
 import ConsistencyUnifySection from './consistency/ConsistencyUnifySection.jsx';
 import UnifyCandidateFindPanel from './consistency/UnifyCandidateFindPanel.jsx';
 import ExcludePhraseList from './consistency/ExcludePhraseList.jsx';
+import AuxiliaryVerbBundleChecklist from './consistency/AuxiliaryVerbBundleChecklist.jsx';
 import RegisteredList from './consistency/RegisteredList.jsx';
 import {
   CONSISTENCY_EXCLUDE_INPUT_PLACEHOLDER,
@@ -204,14 +205,12 @@ export default function ConsistencyPanel({
     phraseSlotRegisteredCount >= MAX_PHRASE_SLOT_REGISTERED_ENTRIES;
   const excludeRegisterFull =
     globalExcludePhrases.length >= MAX_GLOBAL_EXCLUDE_REGISTERED_ENTRIES;
-  const auxiliaryEntries = listAuxiliaryVerbEntries(customRules);
+  const auxiliaryBundles = listAuxiliaryVerbBundles();
   const auxiliarySelectAllRef = useRef(
     /** @type {HTMLInputElement | null} */ (null),
   );
-  const auxiliaryTotal = auxiliaryEntries.length;
-  const auxiliaryActiveCount = auxiliaryEntries.filter((entry) =>
-    isAuxiliaryVerbEntryEnabled(customRules, entry),
-  ).length;
+  const auxiliaryTotal = auxiliaryBundles.length;
+  const auxiliaryActiveCount = countAuxiliaryVerbBundlesActive(customRules);
   const auxiliaryAllChecked =
     auxiliaryTotal > 0 && auxiliaryActiveCount === auxiliaryTotal;
   const auxiliarySomeChecked =
@@ -539,9 +538,8 @@ export default function ConsistencyPanel({
                 disabled={auxiliaryTotal === 0}
                 onChange={() =>
                   applyCustomRules(
-                    setAllAuxiliaryVerbEntries(
+                    setAllAuxiliaryVerbBundles(
                       customRules,
-                      auxiliaryEntries,
                       !auxiliaryAllChecked,
                     ),
                   )
@@ -559,21 +557,17 @@ export default function ConsistencyPanel({
             </span>
           </summary>
           <p className="auxiliary-checklist-intro hint">
-            ｢한글 맞춤법｣ 기준으로 붙여 쓸 수 있는 ‘본용언(-아/어) + 보조용언’ 을
-            찾습니다
-            <br />
-            (본용언이 3음절 이상 복합어인 경우는 제외{' '}
-            <ConsistencyHintExample>생각하다</ConsistencyHintExample>)
+            ｢한글 맞춤법｣ 기준 본용언(-아/어)+보조용언을 세 가지 기준(붙여쓰기
+            가능·붙여쓰기 필수·띄어쓰기 필수)으로 검사합니다. 결과 목록은
+            보조용언별로 표시됩니다.
           </p>
-          <RegisteredList
-            entries={auxiliaryEntries}
+          <AuxiliaryVerbBundleChecklist
             customRules={customRules}
-            isEnabled={isAuxiliaryVerbEntryEnabled}
-            onToggle={(row, on) =>
-              applyCustomRules(toggleAuxiliaryVerbEntry(customRules, row, on))
+            onToggle={(bundleId, on) =>
+              applyCustomRules(
+                toggleAuxiliaryVerbBundle(customRules, bundleId, on),
+              )
             }
-            variant="auxiliary-grid"
-            isRequired={(row) => isBonBojoRequiredItem(row.bonBojoItemId)}
           />
         </details>
         {auxiliaryVerbGuide ? (

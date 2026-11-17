@@ -1,6 +1,6 @@
 import {
-  isAuxiliaryVerbEntryEnabled,
-  listAuxiliaryVerbEntries,
+  countAuxiliaryVerbBundlesActive,
+  listAuxiliaryVerbBundles,
 } from './auxiliaryVerbRegister.js';
 import {
   isConsistencyEntryEnabled,
@@ -72,9 +72,7 @@ export function countConsistencyCheckActiveRules(
     isPhraseSlotEntryEnabled(customRules, entry.tailWord),
   ).length;
 
-  const auxiliaryActive = listAuxiliaryVerbEntries(customRules).filter(
-    (entry) => isAuxiliaryVerbEntryEnabled(customRules, entry),
-  ).length;
+  const auxiliaryActive = countAuxiliaryVerbBundlesActive(customRules);
 
   const excludeActive = globalExcludePhrases
     .map((p) => String(p ?? '').trim())
@@ -473,7 +471,7 @@ export async function confirmConsistencyCheckBeforeRun(
   } = countConsistencyCheckActiveRules(customRules, globalExcludePhrases);
   const literalTotal = listConsistencyLiteralEntries(customRules).length;
   const commonStringTotal = listPhraseSlotEntries(customRules).length;
-  const auxiliaryTotal = listAuxiliaryVerbEntries(customRules).length;
+  const auxiliaryTotal = listAuxiliaryVerbBundles().length;
   const pinnedTailWord = getConsistencyUnifyPinnedTailWord(customRules);
 
   const quotaDisplayEnabled =

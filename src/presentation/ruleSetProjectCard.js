@@ -16,8 +16,8 @@ import {
   listPhraseSlotEntries,
 } from '../lib/phraseSlotRegister.js';
 import {
-  isAuxiliaryVerbEntryEnabled,
-  listAuxiliaryVerbEntries,
+  listAuxiliaryVerbBundles,
+  isAuxiliaryVerbBundleEnabled,
 } from '../lib/auxiliaryVerbRegister.js';
 import { buildProjectCardSummary } from '../lib/projectCardSummary.js';
 import { criteriaNameForInput } from '../lib/criteriaName.js';
@@ -78,9 +78,9 @@ function buildConsistencyChips(customRules) {
 
 /** @param {import('../lib/ruleTypes.js').Rule[]} customRules */
 function buildAuxiliaryChips(customRules) {
-  return listAuxiliaryVerbEntries(customRules).map((entry) => ({
-    label: entry.displayLabel || entry.tailWord,
-    active: isAuxiliaryVerbEntryEnabled(customRules, entry),
+  return listAuxiliaryVerbBundles().map((bundle) => ({
+    label: bundle.label,
+    active: isAuxiliaryVerbBundleEnabled(customRules, bundle.bundleId),
   }));
 }
 
@@ -142,9 +142,11 @@ export function buildProjectCardViewModelFromRuleSet(set, options = {}) {
   const summary = buildProjectCardSummary(set);
 
   const consistencyCounts = countActiveConsistencyCriteria(customRules);
-  const auxiliaryWords = listAuxiliaryVerbEntries(customRules)
-    .filter((entry) => isAuxiliaryVerbEntryEnabled(customRules, entry))
-    .map((entry) => entry.displayLabel || entry.tailWord);
+  const auxiliaryWords = listAuxiliaryVerbBundles()
+    .filter((bundle) =>
+      isAuxiliaryVerbBundleEnabled(customRules, bundle.bundleId),
+    )
+    .map((bundle) => bundle.label);
 
   const counts = {
     editorReview: summary.spelling.editorReview,

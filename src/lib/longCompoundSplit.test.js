@@ -48,7 +48,7 @@ describe('3음절 이상 복합어 띄어쓰기', () => {
     const entries = listAuxiliaryVerbEntries(rules);
     expect(entries.at(-1)?.bonBojoItemId).toBe(BON_BOJO_LONG_COMPOUND_SPLIT_ID);
     expect(entries.at(-1)?.displayLabel).toBe(
-      '본용언이 3음절 이상 복합어(띄어쓰기)',
+      '본용언이 3음절 이상 복합어/파생어(띄어쓰기 필수)',
     );
     const row = rules.find(
       (r) => r.bonBojoItemId === BON_BOJO_LONG_COMPOUND_SPLIT_ID,

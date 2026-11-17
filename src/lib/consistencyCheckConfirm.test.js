@@ -78,7 +78,7 @@ describe('countConsistencyCheckActiveRules', () => {
       literalActive: 1,
       unifyActive: 0,
       commonStringActive: 1,
-      auxiliaryActive: 2,
+      auxiliaryActive: 0,
       excludeActive: 0,
     });
   });
@@ -142,8 +142,8 @@ describe('confirmConsistencyCheckBeforeRun', () => {
         commonStringActive: 1,
         commonStringTotal: 1,
         excludeActive: 0,
-        auxiliaryActive: 1,
-        auxiliaryTotal: 1,
+        auxiliaryActive: 0,
+        auxiliaryTotal: 3,
       });
     const { title, message } = parseBracketTitleMessage(msg);
     expect(confirmMock).toHaveBeenCalledWith(`${title}\n\n${message}`);

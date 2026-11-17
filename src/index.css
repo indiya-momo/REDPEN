@@ -4582,8 +4582,32 @@ html[data-build='prod'] .unify-candidate-find__list {
 .auxiliary-checklist {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
   min-width: 0;
+}
+
+.auxiliary-checklist-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.auxiliary-checklist--bundles .auxiliary-bundle-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.auxiliary-bundle-row {
+  min-width: 0;
+}
+
+.auxiliary-chip--bundle .find {
+  white-space: normal;
 }
 
 .tail-list--grid-required {

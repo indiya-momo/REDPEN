@@ -6,9 +6,10 @@ import {
   buildMockProjectCards,
 } from './mockProjectRuleSets.js';
 import {
-  isAuxiliaryVerbEntryEnabled,
-  listAuxiliaryVerbEntries,
+  countAuxiliaryVerbBundlesActive,
+  isAuxiliaryVerbBundleEnabled,
 } from '../../lib/auxiliaryVerbRegister.js';
+import { BON_BOJO_UI_GROUP } from '../../lib/bonBojoRules.js';
 import { listPhraseSlotEntries } from '../../lib/phraseSlotRegister.js';
 
 describe('MOCK_PROJECT_RULE_SETS', () => {
@@ -17,16 +18,20 @@ describe('MOCK_PROJECT_RULE_SETS', () => {
     expect(set).toBeTruthy();
 
     const card = buildProjectCardViewModelFromRuleSet(set, { isActive: true });
-    expect(card.counts.auxiliary).toBe(8);
+    const bundleActive = countAuxiliaryVerbBundlesActive(set.customRules);
+    expect(card.counts.auxiliary).toBe(bundleActive);
     expect(card.counts.editorReview + card.counts.spelling + card.counts.loanword).toBe(15);
     expect(card.counts.find).toBe(4);
     expect(card.counts.commonString).toBe(1);
     expect(listPhraseSlotEntries(set.customRules)).toHaveLength(1);
 
-    const enabledAux = listAuxiliaryVerbEntries(set.customRules).filter(
-      (entry) => isAuxiliaryVerbEntryEnabled(set.customRules, entry),
-    );
-    expect(enabledAux).toHaveLength(8);
+    expect(
+      isAuxiliaryVerbBundleEnabled(
+        set.customRules,
+        BON_BOJO_UI_GROUP.GLUE_REQUIRED,
+      ),
+    ).toBe(true);
+    expect(bundleActive).toBe(1);
   });
 
   it('카드는 RuleSet에서 파생된다', () => {
@@ -40,7 +45,7 @@ describe('MOCK_PROJECT_RULE_SETS', () => {
     expect(active?.title).toBe('검수냥 모모 이야기2');
     expect(active?.isActive).toBe(true);
     expect(active?.dirty).toBe(true);
-    expect(active?.counts.auxiliary).toBe(8);
+    expect(active?.counts.auxiliary).toBe(1);
   });
 
   it('기준 패치 후 카드 건수가 갱신된다', () => {
@@ -48,7 +53,7 @@ describe('MOCK_PROJECT_RULE_SETS', () => {
       customRules: MOCK_PROJECT_RULE_SETS.find((set) => set.id === 'proj-3')
         .customRules.map((rule) =>
         rule.patternKind === 'auxiliary-verb' &&
-        rule.bonBojoItemId === 'verb-itta'
+        rule.bonBojoItemId === 'verb-hada'
           ? { ...rule, enabled: false }
           : rule,
       ),
@@ -56,6 +61,6 @@ describe('MOCK_PROJECT_RULE_SETS', () => {
     const card = buildProjectCardViewModelFromRuleSet(
       next.find((set) => set.id === 'proj-3'),
     );
-    expect(card.counts.auxiliary).toBe(2);
+    expect(card.counts.auxiliary).toBe(0);
   });
 });
