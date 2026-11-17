@@ -49,10 +49,13 @@ export function solidSurface(matchedText) {
 }
 
 /**
- * 사전에 등재돼 붙여 쓰기로 바뀐 발견. `들어 온` + `들어온`.
+ * 사전에 등재된 합성어 발견.
+ * - 띄어 쓴 표면 → 붙여 쓴 수정안 (`들어 온` + `들어온`)
+ * - 이미 붙여 쓴 표면이 등재 표제어 (`auxDictSolid`)
  * @param {import('./ruleEngine.js').MatchInstance | null | undefined} inst
  */
 export function isAuxiliaryDictSolidInstance(inst) {
+  if (inst?.auxDictSolid) return true;
   const matched = String(inst?.matchedText ?? '').trim();
   const suggested = String(inst?.suggestedText ?? '').trim();
   return (
@@ -113,6 +116,63 @@ export function compoundLemma(matchedText, itemId, displayLabel) {
   const aux = auxiliaryBaseForm(itemId, displayLabel);
   if (head.length < 2 || !aux) return '';
   return `${head}${aux}`;
+}
+
+/**
+ * 시트 원본 항목(stems 포함). listItem에는 stems가 없다.
+ * @param {string} [itemId]
+ */
+function sheetItemById(itemId) {
+  const id = String(itemId ?? '').trim();
+  if (!id) return null;
+  for (const group of getBonBojoGroups()) {
+    for (const item of group.items ?? []) {
+      if (item.id === id) return item;
+    }
+  }
+  return null;
+}
+
+/**
+ * 시트 stem 뒤절. `아 가` → `가`. 긴 onset부터.
+ * @param {string} [itemId]
+ */
+function stemOnsetsForItem(itemId) {
+  const item = sheetItemById(itemId);
+  if (!item) return [];
+  /** @type {Set<string>} */
+  const onsets = new Set();
+  for (const tail of auxiliarySearchTailsFromBonBojoItem(item)) {
+    const parts = String(tail ?? '')
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean);
+    if (parts.length === 2 && parts[1]) onsets.add(parts[1]);
+  }
+  return [...onsets].sort(
+    (a, b) => b.length - a.length || a.localeCompare(b, 'ko'),
+  );
+}
+
+/**
+ * 붙여 쓴 표면 → 사전 질의. `쉬어가라고` + 가다 → `쉬어가다`.
+ * @param {string} matchedText
+ * @param {string} [itemId]
+ * @param {string} [displayLabel]
+ */
+export function gluedCompoundLemma(matchedText, itemId, displayLabel) {
+  const solid = String(matchedText ?? '').replace(/[^\uAC00-\uD7A3]/g, '');
+  const aux = auxiliaryBaseForm(itemId, displayLabel);
+  if (solid.length < 3 || !aux) return '';
+  for (const onset of stemOnsetsForItem(itemId)) {
+    if (!onset) continue;
+    for (let i = 2; i <= solid.length - onset.length; i += 1) {
+      if (solid.startsWith(onset, i)) {
+        return `${solid.slice(0, i)}${aux}`;
+      }
+    }
+  }
+  return '';
 }
 
 /** @type {[string, string][] | null} */
@@ -269,7 +329,7 @@ export async function isRegisteredPredicateLemma(lemma, opts = {}) {
  */
 export async function enrichAuxiliaryDictSolid(groups, opts = {}) {
   const list = groups ?? [];
-  /** @type {{ groupIndex: number, instIndex: number, lemma: string, kind: 'solid' | 'registered' | 'plain', solid?: string }[]} */
+  /** @type {{ groupIndex: number, instIndex: number, lemma: string, kind: 'solid' | 'glued-solid' | 'registered' | 'plain', solid?: string }[]} */
   const jobs = [];
   const lemmas = new Set();
   /** @type {{ groupIndex: number, instIndex: number, suggestedText: string }[]} */
@@ -292,11 +352,17 @@ export async function enrichAuxiliaryDictSolid(groups, opts = {}) {
     const displayLabel = group.groupDisplayLabel || group.label;
     (group.instances ?? []).forEach((inst, instIndex) => {
       const matched = String(inst?.matchedText ?? '');
-      if (!/\s/.test(matched)) return;
-      const lemma = compoundLemma(matched, itemId, displayLabel);
-      const solid = solidSurface(matched);
-      if (!lemma || !solid || solid === matched.trim()) return;
-      jobs.push({ groupIndex, instIndex, lemma, kind: 'solid', solid });
+      if (/\s/.test(matched)) {
+        const lemma = compoundLemma(matched, itemId, displayLabel);
+        const solid = solidSurface(matched);
+        if (!lemma || !solid || solid === matched.trim()) return;
+        jobs.push({ groupIndex, instIndex, lemma, kind: 'solid', solid });
+        lemmas.add(lemma);
+        return;
+      }
+      const lemma = gluedCompoundLemma(matched, itemId, displayLabel);
+      if (!lemma) return;
+      jobs.push({ groupIndex, instIndex, lemma, kind: 'glued-solid' });
       lemmas.add(lemma);
     });
   });
@@ -366,6 +432,7 @@ export async function enrichAuxiliaryDictSolid(groups, opts = {}) {
         const job = registeredHits.find((row) => row.instIndex === instIndex);
         if (!job) return inst;
         if (job.kind === 'registered') return null;
+        if (job.kind === 'glued-solid') return { ...inst, auxDictSolid: true };
         return { ...inst, suggestedText: job.solid };
       })
       .filter(Boolean);
@@ -373,7 +440,7 @@ export async function enrichAuxiliaryDictSolid(groups, opts = {}) {
     const tips = [
       ...new Set(
         registeredHits
-          .filter((job) => job.kind === 'solid')
+          .filter((job) => job.kind === 'solid' || job.kind === 'glued-solid')
           .map((job) => DICT_TIP(job.lemma)),
       ),
     ];

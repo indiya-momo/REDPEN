@@ -13,7 +13,19 @@ vi.mock('./builtInRules.js', () => ({
 }));
 
 describe('getHighlightOverlayReplace', () => {
-  it('본용언+보조 사전 등재면 붙여 쓴 말을 하이라이트에 올린다', () => {
+  it('띄어 쓴 본용언+보조는 공백 자리에 붙임 표시를 올린다', () => {
+    expect(
+      getHighlightOverlayReplace(
+        {
+          find: '어 가',
+          matchedText: '쉬어 가라고',
+          suggestedText: '쉬어 가라고',
+          pageNum: 1,
+          index: 0,
+        },
+        { group: { patternKind: 'auxiliary-verb' } },
+      ),
+    ).toBe('→쉬어\u2040가라고');
     expect(
       getHighlightOverlayReplace(
         {
@@ -25,22 +37,99 @@ describe('getHighlightOverlayReplace', () => {
         },
         { group: { patternKind: 'auxiliary-verb' } },
       ),
-    ).toBe('→들어온');
+    ).toBe('→들어\u2040온');
   });
 
-  it('본용언+보조라도 수정안이 없으면 오버레이를 안 올린다', () => {
+  it('붙여 쓴 본용언+보조는 붙임 표시를 올리지 않는다', () => {
     expect(
       getHighlightOverlayReplace(
         {
-          find: '리 가',
-          matchedText: '멀리 가려고',
-          suggestedText: '멀리 가려고',
-          pageNum: 19,
+          find: '어 가',
+          matchedText: '쉬어가라고',
+          suggestedText: '쉬어가라고',
+          pageNum: 1,
           index: 0,
         },
         { group: { patternKind: 'auxiliary-verb' } },
       ),
     ).toBeNull();
+  });
+
+  it('findReplaces 붙여쓰기 행은 →손⁀끝 형태로 보인다', () => {
+    expect(
+      getHighlightOverlayReplace(
+        {
+          find: '손 끝',
+          replace: '손끝',
+          matchedText: '손 끝',
+          suggestedText: '손끝',
+          variantReplace: '손끝',
+          pageNum: 1,
+          index: 0,
+        },
+        { group: { category: 'spelling', instances: [] } },
+      ),
+    ).toBe('→손\u2040끝');
+  });
+
+  it('맞춤법 붙임 표시 ^는 PDF에서 ⁀로 보인다', () => {
+    expect(
+      getHighlightOverlayReplace(
+        {
+          find: '살아 생전',
+          replace: '살아생전',
+          matchedText: '살아 생전',
+          pageNum: 1,
+          index: 0,
+        },
+        {
+          group: {
+            category: 'spelling',
+            overlayReplace: '→살아^생전',
+            instances: [],
+          },
+        },
+      ),
+    ).toBe('→살아\u2040생전');
+    expect(
+      getHighlightOverlayReplace(
+        {
+          find: '긴 긴 밤',
+          replace: '긴긴밤',
+          matchedText: '긴 긴 밤',
+          pageNum: 2,
+          index: 0,
+        },
+        {
+          group: {
+            category: 'spelling',
+            overlayReplace: '→긴^긴^밤',
+            instances: [],
+          },
+        },
+      ),
+    ).toBe('→긴\u2040긴\u2040밤');
+  });
+
+  it('맞춤법 띄움 표시 ∨는 그대로 둔다', () => {
+    expect(
+      getHighlightOverlayReplace(
+        {
+          find: '그 외',
+          replace: '그 외',
+          matchedText: '그외',
+          pageNum: 1,
+          index: 0,
+        },
+        {
+          group: {
+            category: 'spelling',
+            overlayReplace: '→그∨외',
+            instances: [],
+          },
+        },
+      ),
+    ).toBe('→그∨외');
   });
 
   it('returns overlay_replace text as-is from sheet', () => {
