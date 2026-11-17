@@ -124,7 +124,8 @@ export function collectAnnotFindings({
 
   for (const group of unifyGroups ?? []) {
     // 사용자가 통일형을 고른 묶음만, 통일형이 아닌 표기만
-    const chosen = String(group?.replace ?? '').trim();
+    // 통일형의 붙임 표시(^, ⁀)는 빼고 띄움 표시(∨)는 공백으로 — 띄어쓰기만 다르면 교정기호로
+    const chosen = String(group?.replace ?? '').replace(/[\^\u2040]/g, '').replace(/\u2228/g, ' ').trim();
     if (!group?.overlayReplace || !chosen || group.find === chosen) continue;
     for (const inst of group.instances ?? []) {
       if (isInstanceVisible && !isInstanceVisible('consistency', group, inst)) continue;

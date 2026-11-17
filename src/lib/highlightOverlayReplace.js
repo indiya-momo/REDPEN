@@ -155,3 +155,58 @@ export function getHighlightOverlayReplace(inst, options = {}) {
   }
   return null;
 }
+
+const SPACE_INSERT_MARK = '\u2228';
+
+/**
+ * 띄어쓰기만 바꾸는 오버레이(`→손⁀끝`, `→할∨때`, `→할 때`)면 교정기호 자리를 matched 오프셋으로 준다.
+ * - join: matched[s..e) 공백을 붙임 (⌒)
+ * - insert: matched[s-1]과 matched[s] 사이를 띄움 (∨), e === s
+ * 글자가 하나라도 바뀌거나 바뀐 띄어쓰기가 없으면 null — 그때는 라벨을 그대로 쓴다.
+ * @param {string} matched
+ * @param {string} overlay
+ * @returns {Array<{ type: 'join' | 'insert', s: number, e: number }> | null}
+ */
+export function spacingOnlyMarks(matched, overlay) {
+  const a = String(matched ?? '');
+  let o = String(overlay ?? '').trim();
+  if (!a || !o.startsWith('→')) return null;
+  o = o.slice(1).trim();
+  /** @type {Array<{ type: 'join' | 'insert', s: number, e: number }>} */
+  const marks = [];
+  let i = 0;
+  let j = 0;
+  while (i < a.length) {
+    if (/\s/.test(a[i])) {
+      let k = i;
+      while (k < a.length && /\s/.test(a[k])) k += 1;
+      if (o[j] === AUX_GLUE_MARK) marks.push({ type: 'join', s: i, e: k });
+      else if (o[j] !== ' ') return null;
+      i = k;
+      j += 1;
+      continue;
+    }
+    if (i > 0 && (o[j] === SPACE_INSERT_MARK || o[j] === ' ')) {
+      marks.push({ type: 'insert', s: i, e: i });
+      j += 1;
+      continue;
+    }
+    if (o[j] !== a[i]) return null;
+    i += 1;
+    j += 1;
+  }
+  if (j !== o.length || !marks.length) return null;
+  return marks;
+}
+
+/**
+ * @deprecated spacingOnlyMarks 사용. 붙임 구간만 [시작, 끝)으로.
+ * @param {string} matched
+ * @param {string} overlay
+ * @returns {Array<[number, number]> | null}
+ */
+export function glueOnlyGapRuns(matched, overlay) {
+  const marks = spacingOnlyMarks(matched, overlay);
+  if (!marks || marks.some((m) => m.type !== 'join')) return null;
+  return marks.map((m) => [m.s, m.e]);
+}

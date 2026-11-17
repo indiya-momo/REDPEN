@@ -141,7 +141,7 @@ describe('pdf 문자열·파일 쓰기', () => {
 
   it('하루 다운로드 확인 문구 — PDF 교정본도 같은 횟수', () => {
     const msg = buildProofreadExportConfirmMessage('spelling', 'pdf');
-    expect(msg.startsWith('[PDF 교정본 내려받기]')).toBe(true);
+    expect(msg.startsWith('[PDF 교정본 다운로드]')).toBe(true);
     expect(msg).toContain('1회');
     expect(msg).not.toContain('준비중');
     expect(buildProofreadExportConfirmMessage('spelling')).toContain('엑셀(.xlsx)');

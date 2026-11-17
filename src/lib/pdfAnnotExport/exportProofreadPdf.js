@@ -1,5 +1,5 @@
 /**
- * 「PDF 교정본 내려받기」 — 브라우저 진입점.
+ * 「PDF 교정본 다운로드」 — 브라우저 진입점.
  * 지금 화면에 보이는 검수 결과(숨긴 항목 제외)를 원본 PDF에 주석으로 달아 새 파일로 받는다.
  */
 import { collectAnnotFindings } from './collectAnnotFindings.js';
