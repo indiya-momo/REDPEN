@@ -1,5 +1,11 @@
 import ResultPageSummary from './ResultPageSummary.jsx';
 import { isAuxiliaryDictSolidInstance } from '../lib/auxiliaryDictSolid.js';
+import {
+  AUXILIARY_SPACING_BREAKDOWN_TIP,
+  countAuxiliaryMatchedSpacingSurfaces,
+  formatAuxiliarySpacingBreakdown,
+  shouldShowAuxiliarySpacingBreakdown,
+} from '../lib/auxiliaryVerbSpacingSummary.js';
 import PhraseSlotResultSummary from './PhraseSlotResultSummary.jsx';
 import GroupVisibilityCheckbox from './GroupVisibilityCheckbox.jsx';import DetailsChevron, { detailsOpenOnceRef } from './DetailsChevron.jsx';
 import CriteriaHoverTip from './CriteriaHoverTip.jsx';
@@ -275,6 +281,15 @@ export default function CheckResultsPanel({
       group.patternKind === 'auxiliary-verb'
         ? (group.instances ?? []).filter(isAuxiliaryDictSolidInstance).length
         : 0;
+    const auxiliarySpacing =
+      group.patternKind === 'auxiliary-verb'
+        ? countAuxiliaryMatchedSpacingSurfaces(group.instances)
+        : null;
+    const auxiliarySpacingLabel =
+      auxiliarySpacing &&
+      shouldShowAuxiliarySpacingBreakdown(auxiliarySpacing)
+        ? formatAuxiliarySpacingBreakdown(auxiliarySpacing)
+        : '';
 
     return (
       <li key={`${source}-${group.label}-${group.find}`}>
@@ -328,6 +343,13 @@ export default function CheckResultsPanel({
                     {group.patternKind === 'auxiliary-verb' &&
                     isBonBojoRequiredItem(group.bonBojoItemId) ? (
                       <span className="bon-bojo-required-badge">필수</span>
+                    ) : null}
+                    {auxiliarySpacingLabel ? (
+                      <CriteriaHoverTip tip={AUXILIARY_SPACING_BREAKDOWN_TIP}>
+                        <span className="aux-spacing-breakdown">
+                          {auxiliarySpacingLabel}
+                        </span>
+                      </CriteriaHoverTip>
                     ) : null}
                     {solidCount > 0 ? (
                       <span className="aux-solid-count">
