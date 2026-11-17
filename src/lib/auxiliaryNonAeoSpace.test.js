@@ -179,4 +179,50 @@ describe('말다 non-aeo', () => {
       inst.matchedText.replace(/\s+/g, ''),
     );
   });
+
+  it('1차 말다 줄이 있으면 새 카드를 만들지 않고 같은 줄에 붙인다', async () => {
+    let rules = ensureDefaultAuxiliaryVerbs([]);
+    rules = toggleAuxiliaryVerbBundle(
+      rules,
+      BON_BOJO_UI_GROUP.SPACE_REQUIRED_NON_AEO,
+      true,
+    );
+    const fetchImpl = vi.fn(async () => ({
+      ok: true,
+      status: 200,
+      text: async () => JSON.stringify({ channel: '', item: [] }),
+    }));
+    const existing = {
+      find: '지 말',
+      replace: '$0',
+      label: '(-지/게/고) + 말다',
+      groupDisplayLabel: '(-지/게/고) + 말다',
+      category: 'consistency',
+      patternKind: 'auxiliary-verb',
+      bonBojoItemId: 'verb-malda',
+      instances: [
+        {
+          find: '지 말',
+          replace: '$0',
+          matchedText: '뛰지 말고',
+          suggestedText: '뛰지 말고',
+          pageNum: 1,
+          index: 10,
+        },
+      ],
+    };
+    const out = await enrichAuxiliaryNonAeoSpace(
+      [existing],
+      [{ pageNum: 32, text: '여기서는뛰지말라' }],
+      { rules, fetchImpl },
+    );
+    const malda = out.filter((g) => g.bonBojoItemId === 'verb-malda');
+    expect(malda).toHaveLength(1);
+    expect(malda[0].instances.some((i) => i.matchedText.includes('뛰지말'))).toBe(
+      true,
+    );
+    expect(malda[0].instances.some((i) => i.matchedText === '뛰지 말고')).toBe(
+      true,
+    );
+  });
 });

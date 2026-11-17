@@ -41,16 +41,8 @@ function isAuxiliarySpaceRequiredGroup(group) {
   );
 }
 
-/** 붙여 쓴 말을 띄운 제안. 등재 붙임과 반대다. */
-function isAuxiliaryLongSplitInstance(inst) {
-  const matched = String(inst?.matchedText ?? '').replace(/\s+/g, '');
-  const suggested = String(inst?.suggestedText ?? '').trim();
-  if (!matched || !suggested || !/\s/.test(suggested)) return false;
-  return suggested.replace(/\s+/g, '') === matched;
-}
-
 /**
- * 띄어 쓴 본조. 공백 자리에 기본 붙임 표시를 넣는다.
+ * 붙여쓰기 가능·필수 — 잘못된 띄움만 ⁀. 이미 붙인 올바른 표면은 기호 없음.
  * @param {import('./ruleEngine.js').MatchInstance} inst
  * @returns {string | null}
  */
@@ -61,7 +53,7 @@ function auxiliarySpacedGlueOverlay(inst) {
 }
 
 /**
- * 띄어쓰기 필수 — 잘못된 붙임→띄움만 ∨. 이미 띄운 올바른 표면은 기호 없음.
+ * 띄어쓰기 필수 — 잘못된 붙임만 ∨. 이미 띄운 올바른 표면은 기호 없음.
  * @param {import('./ruleEngine.js').MatchInstance} inst
  * @returns {string | null}
  */
@@ -150,13 +142,12 @@ export function getHighlightOverlayReplace(inst, options = {}) {
 
   const { customRules = [], group = null } = options;
   if (group?.patternKind === 'auxiliary-verb') {
-    // 붙임→띄움 제안이면 ∨ (띄어쓰기 필수·아/어 붙임 가능 공통).
-    // 예: 해보이는 → 해 보이는. 예전에 붙임 가능 줄은 띄운 표면만 ⁀해서
-    // PDF에 기호가 없어 «못 잡은 것»처럼 보였다.
-    const spaceInsert = auxiliarySpaceInsertOverlay(inst);
-    if (spaceInsert) return spaceInsert;
-    if (isAuxiliarySpaceRequiredGroup(group)) return null;
-    // 붙여쓰기 가능·필수 — 띄운 표면에 붙임표
+    // 4칸 공통: 잘못된 표면에만 기호.
+    // 띄어쓰기 필수(3·비아/어) → 잘못 붙인 것만 ∨. 이미 띄운 올바른 표면은 없음.
+    // 붙여쓰기 가능·필수 → 잘못 띄운 것만 ⁀. 이미 붙인 올바른 표면은 없음.
+    if (isAuxiliarySpaceRequiredGroup(group)) {
+      return auxiliarySpaceInsertOverlay(inst);
+    }
     return auxiliarySpacedGlueOverlay(inst);
   }
 

@@ -95,7 +95,7 @@ describe('3음절 이상 복합어 띄어쓰기', () => {
     const group = results[0];
     const inst = group.instances[0];
     expect(getHighlightOverlayReplace(inst, { group })).toBe(
-      '→어루만져 주세요',
+      '→어루만져\u2228주세요',
     );
   });
 });

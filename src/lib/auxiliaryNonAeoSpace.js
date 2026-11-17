@@ -310,8 +310,18 @@ export async function enrichAuxiliaryNonAeoSpace(groups, pageTexts, opts = {}) {
 
   const excludes = opts.globalExcludePhrases ?? [];
 
+  /** 1차·붙임보강으로 이미 있는 같은 item 줄에 합친다 (말다 이중 카드 방지) */
   /** @type {Map<string, import('./ruleEngine.js').GroupedResult>} */
-  const byKey = new Map();
+  const byItem = new Map();
+  for (const group of list) {
+    const id = group?.bonBojoItemId?.trim();
+    if (group?.patternKind === 'auxiliary-verb' && id && !byItem.has(id)) {
+      byItem.set(id, group);
+    }
+  }
+
+  /** @type {Map<string, import('./ruleEngine.js').GroupedResult>} */
+  const created = new Map();
 
   for (const itemId of itemIds) {
     const display =
@@ -329,11 +339,10 @@ export async function enrichAuxiliaryNonAeoSpace(groups, pageTexts, opts = {}) {
           });
           if (registered) continue;
         }
-        const key = `auxiliary:non-aeo:${itemId}`;
-        let group = byKey.get(key);
+        let group = byItem.get(itemId) ?? created.get(itemId) ?? null;
         if (!group) {
           group = {
-            find: key,
+            find: `auxiliary:non-aeo:${itemId}`,
             replace: '$0',
             label: display,
             category: 'consistency',
@@ -344,28 +353,42 @@ export async function enrichAuxiliaryNonAeoSpace(groups, pageTexts, opts = {}) {
             tip: '본용언 연결이 -아/-어가 아니면 보조용언을 띄어 씁니다.',
             instances: [],
           };
-          byKey.set(key, group);
+          created.set(itemId, group);
+          byItem.set(itemId, group);
         }
-        const dup = group.instances.some(
+        const dup = (group.instances ?? []).some(
           (inst) =>
             inst.pageNum === pageNum &&
-            inst.index === hit.start &&
-            inst.matchedText === hit.matchedText,
+            Math.abs((inst.index ?? 0) - hit.start) <= 4 &&
+            String(inst.matchedText ?? '').replace(/\s+/g, '') ===
+              hit.matchedText.replace(/\s+/g, ''),
         );
         if (dup) continue;
-        group.instances.push({
-          find: key,
+        const nextInst = {
+          find: `auxiliary:non-aeo:${itemId}`,
           replace: hit.suggestedText,
           matchedText: hit.matchedText,
           suggestedText: hit.suggestedText,
           pageNum,
           index: hit.start,
           auxNonAeoSpace: true,
-        });
+        };
+        const existingAt = list.indexOf(group);
+        if (existingAt >= 0) {
+          const nextGroup = {
+            ...group,
+            instances: [...(group.instances ?? []), nextInst],
+          };
+          list[existingAt] = nextGroup;
+          byItem.set(itemId, nextGroup);
+          if (created.has(itemId)) created.set(itemId, nextGroup);
+        } else {
+          group.instances.push(nextInst);
+        }
       }
     }
   }
 
-  if (!byKey.size) return list;
-  return [...list, ...byKey.values()];
+  if (!created.size) return list;
+  return [...list, ...created.values()];
 }

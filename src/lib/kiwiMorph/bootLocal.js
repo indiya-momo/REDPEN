@@ -35,17 +35,18 @@ export function shouldBootKiwiLocal() {
 }
 
 /**
- * @param {{ maxWaitMs?: number, phase2?: boolean }} [opts]
+ * @param {{ maxWaitMs?: number, phase2?: boolean, auxMorph?: boolean }} [opts]
  */
 function mayBootKiwi(opts = {}) {
   if (shouldBootKiwi()) return true;
+  if (opts.auxMorph === true) return true;
   return opts.phase2 === true && isUnifyKiwiNoiseFilterEnabled();
 }
 
 /**
  * 서버 ping → 성공 시 server mode. 실패·미설정 시 DEV만 브라우저 wasm.
  * 1차 찾기·App는 `shouldBootKiwi()`만. 2차 `enterPhase2`는 `{ phase2: true }`.
- * @param {{ maxWaitMs?: number, phase2?: boolean }} [opts]
+ * @param {{ maxWaitMs?: number, phase2?: boolean, auxMorph?: boolean }} [opts]
  * @returns {Promise<boolean>}
  */
 export async function bootKiwiIfNeeded(opts = {}) {

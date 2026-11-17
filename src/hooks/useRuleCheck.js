@@ -73,6 +73,7 @@ import {
 import { isLoanwordSpellingRule } from '../lib/loanwordCheckRules.js';
 import { countLoanwordActiveRules } from '../lib/activeRuleCount.js';
 import { markConsistencyCheckStartedForExportGuide } from '../lib/guestBrowsePolicy.js';
+import { bootKiwiIfNeeded } from '../lib/kiwiMorph/bootLocal.js';
 
 /** @param {{
  *   builtInEnabled: Record<string, boolean>,
@@ -362,6 +363,7 @@ export function useRuleCheck({
       }
 
       if (runConsistency) {
+        await bootKiwiIfNeeded({ auxMorph: true, maxWaitMs: 12_000 });
         const { results: grouped, errors } = await runRuleCheckAsync(
           pageTexts,
           consistencyCriteriaActiveRules,
@@ -371,25 +373,28 @@ export function useRuleCheck({
           },
         );
         allErrors.push(...errors);
-        const withZeroRows = await enrichAuxiliaryDictSolid(
-          await enrichAuxiliaryNonAeoSpace(
-            enrichAuxiliaryGluedFromSpaced(
-              finalizeConsistencyCheckResults(
-                grouped,
-                consistencyCriteriaActiveRules,
+        const withZeroRows = finalizeConsistencyCheckResults(
+          await enrichAuxiliaryDictSolid(
+            await enrichAuxiliaryNonAeoSpace(
+              enrichAuxiliaryGluedFromSpaced(
+                finalizeConsistencyCheckResults(
+                  grouped,
+                  consistencyCriteriaActiveRules,
+                ),
+                pageTexts,
+                {
+                  rules: consistencyCriteriaActiveRules,
+                  globalExcludePhrases,
+                },
               ),
               pageTexts,
               {
-                rules: consistencyCriteriaActiveRules,
+                rules: resolvedCustomRules,
                 globalExcludePhrases,
               },
             ),
-            pageTexts,
-            {
-              rules: resolvedCustomRules,
-              globalExcludePhrases,
-            },
           ),
+          consistencyCriteriaActiveRules,
         );
         setConsistencyResults(withZeroRows);
         setConsistencyCheckDone(true);
@@ -557,6 +562,7 @@ export function useRuleCheck({
       setIsProcessing(true);
       setProgress({ current: 0, total: pageTexts.length, phase: 'check' });
 
+      await bootKiwiIfNeeded({ auxMorph: true, maxWaitMs: 12_000 });
       const { results: grouped, errors } = await runRuleCheckAsync(
         pageTexts,
         rules,
@@ -596,19 +602,25 @@ export function useRuleCheck({
                   isConsistencyUnifyResultGroup(resolvedCustomRules, g),
               )
             : prevResults.filter((g) => consistencyGroupScope(g) !== subset);
-      const enrichedResults = await enrichAuxiliaryDictSolid(
-        await enrichAuxiliaryNonAeoSpace(
-          enrichAuxiliaryGluedFromSpaced(
-            finalizeConsistencyCheckResults([...kept, ...withZeroRows], rules),
+      const enrichedResults = finalizeConsistencyCheckResults(
+        await enrichAuxiliaryDictSolid(
+          await enrichAuxiliaryNonAeoSpace(
+            enrichAuxiliaryGluedFromSpaced(
+              finalizeConsistencyCheckResults(
+                [...kept, ...withZeroRows],
+                rules,
+              ),
+              pageTexts,
+              { rules, globalExcludePhrases },
+            ),
             pageTexts,
-            { rules, globalExcludePhrases },
+            {
+              rules: resolvedCustomRules,
+              globalExcludePhrases,
+            },
           ),
-          pageTexts,
-          {
-            rules: resolvedCustomRules,
-            globalExcludePhrases,
-          },
         ),
+        rules,
       );
       setConsistencyResults(enrichedResults);
       setConsistencyCheckDone(true);

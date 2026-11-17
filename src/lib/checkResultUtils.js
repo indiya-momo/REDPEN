@@ -1,5 +1,9 @@
 import { SPELLING_RULES_FP } from './builtInRules.js';
 import { CAUTION_RULES_FP } from './cautionRules.js';
+import {
+  BON_BOJO_UI_GROUP,
+  bonBojoUiGroupForItemId,
+} from './bonBojoRules.js';
 import { ruleDisplayLabel } from './regexFromFind.js';
 
 /** 일관성 결과 목록 — 발견 0건이어도 표시 */
@@ -502,9 +506,18 @@ export function sortConsistencyGroupedResults(results, activeRules) {
  * 본용언+보조용언 결과 — stem별 줄이 아니라 시트 11항목(displayLabel)당 1줄
  * @param {import('./ruleEngine.js').GroupedResult[]} results
  */
+function auxiliaryInstanceDedupeKey(inst) {
+  const page = inst?.pageNum ?? 0;
+  const index = inst?.index ?? 0;
+  const text = String(inst?.matchedText ?? '').replace(/\s+/g, '');
+  return `${page}\0${index}\0${text}`;
+}
+
 export function mergeAuxiliaryResultsByBonBojoItem(results) {
   /** @type {Map<string, import('./ruleEngine.js').GroupedResult>} */
   const merged = new Map();
+  /** @type {Map<string, Set<string>>} */
+  const seenByTag = new Map();
   /** @type {import('./ruleEngine.js').GroupedResult[]} */
   const rest = [];
 
@@ -513,37 +526,79 @@ export function mergeAuxiliaryResultsByBonBojoItem(results) {
       rest.push(g);
       continue;
     }
-    const tag =
+    const itemId = g.bonBojoItemId?.trim() || '';
+    const labelTag =
       g.groupDisplayLabel?.trim() ||
       g.label?.trim() ||
       g.tailWord?.trim() ||
       '';
+    const tag = itemId
+      ? `bonBojoItemId:${itemId}`
+      : labelTag
+        ? `label:${labelTag}`
+        : '';
     if (!tag) {
       rest.push(g);
       continue;
     }
+    const display = labelTag || itemId;
     const existing = merged.get(tag);
     if (!existing) {
       const { tailWord: _dropTail, ...base } = g;
+      const seen = new Set(
+        (g.instances ?? []).map((inst) => auxiliaryInstanceDedupeKey(inst)),
+      );
+      seenByTag.set(tag, seen);
       merged.set(tag, {
         ...base,
-        find: `auxiliary-item:${tag}`,
-        label: tag,
-        groupDisplayLabel: tag,
-        ...(g.bonBojoItemId?.trim()
-          ? { bonBojoItemId: g.bonBojoItemId.trim() }
-          : {}),
-        instances: [...g.instances],
+        find: `auxiliary-item:${display || tag}`,
+        label: display || tag,
+        groupDisplayLabel: display || tag,
+        ...(itemId ? { bonBojoItemId: itemId } : {}),
+        instances: [...(g.instances ?? [])],
       });
       continue;
     }
-    existing.instances.push(...g.instances);
-    if (!existing.bonBojoItemId && g.bonBojoItemId?.trim()) {
-      existing.bonBojoItemId = g.bonBojoItemId.trim();
+    const seen = seenByTag.get(tag) ?? new Set();
+    for (const inst of g.instances ?? []) {
+      const key = auxiliaryInstanceDedupeKey(inst);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      existing.instances.push(inst);
+    }
+    seenByTag.set(tag, seen);
+    if (!existing.bonBojoItemId && itemId) {
+      existing.bonBojoItemId = itemId;
     }
   }
 
   return [...rest, ...merged.values()];
+}
+
+/**
+ * 띄어쓰기 필수 줄 — 이미 띄운(올바른) 건은 빼고, 붙임→띄움 교정만 남긴다.
+ * @param {import('./ruleEngine.js').GroupedResult[]} results
+ */
+export function pruneAuxiliarySpaceRequiredCorrectInstances(results) {
+  return (results ?? []).flatMap((g) => {
+    if (g?.patternKind !== 'auxiliary-verb') return [g];
+    const ui = bonBojoUiGroupForItemId(g.bonBojoItemId);
+    const spaceRequired =
+      g.auxSplitLongCompound ||
+      g.auxNonAeoSpace ||
+      ui === BON_BOJO_UI_GROUP.SPACE_REQUIRED ||
+      ui === BON_BOJO_UI_GROUP.SPACE_REQUIRED_NON_AEO;
+    if (!spaceRequired) return [g];
+    const instances = (g.instances ?? []).filter((inst) => {
+      const matched = String(inst?.matchedText ?? '');
+      if (!matched || /\s/.test(matched)) return false;
+      const suggested = String(inst?.suggestedText ?? '').trim();
+      if (!suggested || !/\s/.test(suggested)) return false;
+      return suggested.replace(/\s+/g, '') === matched.replace(/\s+/g, '');
+    });
+    if (!instances.length) return [];
+    return [{ ...g, instances }];
+  });
 }
 
 /**
@@ -554,8 +609,10 @@ export function mergeAuxiliaryResultsByBonBojoItem(results) {
  */
 export function finalizeConsistencyCheckResults(grouped, activeRules) {
   return sortConsistencyGroupedResults(
-    mergeAuxiliaryResultsByBonBojoItem(
-      mergeConsistencyZeroFindGroups(grouped, activeRules),
+    pruneAuxiliarySpaceRequiredCorrectInstances(
+      mergeAuxiliaryResultsByBonBojoItem(
+        mergeConsistencyZeroFindGroups(grouped, activeRules),
+      ),
     ),
     activeRules,
   );

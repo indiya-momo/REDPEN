@@ -53,7 +53,7 @@ describe('getHighlightOverlayReplace', () => {
     ).toBe('→만들어\u2040지');
   });
 
-  it('붙여쓰기 가능 — 붙임→띄움 제안이면 ∨ (해보이는)', () => {
+  it('붙여쓰기 가능 — 이미 붙인 올바른 표면은 기호 없음 (해보이는·쉬어가라고)', () => {
     expect(
       getHighlightOverlayReplace(
         {
@@ -71,13 +71,7 @@ describe('getHighlightOverlayReplace', () => {
           },
         },
       ),
-    ).toBe('→해\u2228보이는');
-    expect(spacingOnlyMarks('해보이는', '→해\u2228보이는')).toEqual([
-      { type: 'insert', s: 1, e: 1 },
-    ]);
-  });
-
-  it('붙여쓰기 가능 — 이미 붙이면 기호 없음', () => {
+    ).toBeNull();
     expect(
       getHighlightOverlayReplace(
         {
