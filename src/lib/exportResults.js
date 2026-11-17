@@ -177,25 +177,87 @@ function pageRunsToExcelRichText(pageRuns) {
 }
 
 /**
+ * 기준란에 적힌 표면형(한 번, 한번 / 같이 …) — 페이지 열에 문구를 붙일지 판단용.
+ * @param {object} group
+ * @returns {Set<string>}
+ */
+function spellingCriteriaSurfaceForms(group) {
+  /** @type {Set<string>} */
+  const forms = new Set();
+  const add = (raw) => {
+    const n = String(raw ?? '')
+      .replace(/\s+/g, '')
+      .trim();
+    if (n.length >= 1) forms.add(n);
+  };
+  const pushParts = (raw) => {
+    const base = String(raw ?? '')
+      .replace(/→.*$/u, '')
+      .replace(/（[^）]*）|\([^)]*\)/gu, ' ');
+    for (const part of base.split(/[,|·/]/u)) {
+      const cleaned = part.replace(/[\\^$*+?()[\]{}|]/g, '').trim();
+      if (cleaned) add(cleaned);
+    }
+  };
+  pushParts(group?.find);
+  pushParts(group?.replace);
+  pushParts(group?.label);
+  return forms;
+}
+
+/**
+ * @param {string} matchedText
+ * @param {Set<string>} forms
+ */
+function matchedTextNeedsPageAnnotation(matchedText, forms) {
+  const mt = String(matchedText ?? '').trim();
+  if (!mt) return false;
+  const n = mt.replace(/\s+/g, '');
+  if (!n) return false;
+  if (forms.has(n)) return false;
+  return true;
+}
+
+/**
  * @param {ReturnType<typeof buildInstancePills>} pills
  * @param {(systemPage: number) => string} formatPageLabel
  * @param {string} source
  * @param {object} group
  * @param {(source: string, group: object, inst: object) => boolean} [isInstanceVisible]
+ * @param {{ annotateDistinctMatchedText?: boolean }} [options]
  * @returns {{ text: string, strike?: boolean }[]}
  */
-function buildPageRuns(pills, formatPageLabel, source, group, isInstanceVisible) {
-  /** @type {{ text: string, strike?: boolean }[]} */
-  const runs = [];
-  for (let i = 0; i < pills.length; i++) {
-    const { inst, indexOnPage, totalOnPage } = pills[i];
+function buildPageRuns(
+  pills,
+  formatPageLabel,
+  source,
+  group,
+  isInstanceVisible,
+  options = {},
+) {
+  const annotate = Boolean(options.annotateDistinctMatchedText);
+  const forms = annotate ? spellingCriteriaSurfaceForms(group) : null;
+
+  /** @type {{ label: string, strike: boolean, annotated: boolean }[]} */
+  const items = [];
+  for (const { inst, indexOnPage, totalOnPage } of pills) {
     const pageLabel = formatPageLabel(inst.pageNum);
     const fragment = totalOnPage > 1 ? ` ${indexOnPage}/${totalOnPage}` : '';
-    const label = `${pageLabel}${fragment}`;
+    const pagePart = `${pageLabel}${fragment}`;
+    const mt = String(inst.matchedText ?? '').trim();
+    const annotated =
+      annotate && forms != null && matchedTextNeedsPageAnnotation(mt, forms);
+    const label = annotated ? `${mt} ${pagePart}` : pagePart;
     const hidden = isInstanceVisible ? !isInstanceVisible(source, group, inst) : false;
+    items.push({ label, strike: hidden, annotated });
+  }
 
-    if (i > 0) runs.push({ text: '  ' });
-    runs.push({ text: label, strike: hidden });
+  const sep = items.some((it) => it.annotated) ? ', ' : '  ';
+  /** @type {{ text: string, strike?: boolean }[]} */
+  const runs = [];
+  for (let i = 0; i < items.length; i++) {
+    if (i > 0) runs.push({ text: sep });
+    runs.push({ text: items[i].label, strike: items[i].strike });
   }
   return runs;
 }
@@ -253,12 +315,30 @@ export function downloadXlsxBuffer(buffer, filename) {
  *   dividerGroupKey: string,
  *   label: string,
  *   tip: string,
- *   countText: string,
+ *   matchedText: string,
+ *   suggestedText: string,
+ *   pageText: string,
+ *   pageStrike: boolean,
  *   isCaution: boolean,
  *   pagesHidden: boolean,
- *   pageRuns: { text: string, strike?: boolean }[],
  * }} SpellingExportRow
  */
+
+/**
+ * @param {import('../lib/ruleEngine.js').MatchInstance} inst
+ * @param {number} indexOnPage
+ * @param {number} totalOnPage
+ * @param {(systemPage: number) => string} formatPageLabel
+ */
+function formatInstancePageText(inst, indexOnPage, totalOnPage, formatPageLabel) {
+  let pageLabel = formatPageLabel
+    ? String(formatPageLabel(inst.pageNum) ?? '').trim()
+    : `${inst.pageNum}P`;
+  if (!pageLabel) pageLabel = `${inst.pageNum}P`;
+  else if (!/P$/i.test(pageLabel)) pageLabel = `${pageLabel}P`;
+  const fragment = totalOnPage > 1 ? ` ${indexOnPage}/${totalOnPage}` : '';
+  return `${pageLabel}${fragment}`;
+}
 
 /**
  * @typedef {{
@@ -325,6 +405,8 @@ export function buildSpellingExportModel({
   const orderedEntries = orderEntriesByDividerGroup(entries ?? []);
   /** @type {SpellingExportRow[]} */
   const rows = [];
+  // visibleInstanceCount는 요약 줄용으로 호출부에서 이미 집계됨 — 건별 행에서는 pills만 씀
+  void visibleInstanceCount;
 
   for (const { group, source } of orderedEntries) {
     const isCaution = group.category === 'caution';
@@ -335,31 +417,31 @@ export function buildSpellingExportModel({
         ? getBuiltInTip(group.find, group.replace, group.spellingRuleId) || ''
         : '');
     const visMode = groupVisibilityMode ? groupVisibilityMode(source, group) : 'visible';
-    const totalCount = group.instances.length;
-    const shownCount = visibleInstanceCount ? visibleInstanceCount(source, group) : totalCount;
-    const countText =
-      visMode === 'hidden'
-        ? `0/${totalCount}`
-        : visMode === 'partial'
-          ? `${shownCount}/${totalCount}`
-          : `${totalCount}`;
     const pagesHidden = visMode === 'hidden';
-    const pills = pagesHidden ? [] : buildInstancePills(group.instances);
-    const pageRuns = pagesHidden
-      ? []
-      : buildPageRuns(pills, formatPageLabel, source, group, isInstanceVisible);
+    const criteriaLabel = getEntryLabel(group, source);
+    const pills = buildInstancePills(group.instances ?? []);
+    const fallbackSuggested = String(group.replace ?? '').trim();
 
-    rows.push({
-      category,
-      groupLabel: group.dividerLabel || '-',
-      dividerGroupKey: String(group.dividerGroup ?? ''),
-      label: getEntryLabel(group, source),
-      tip: tipText,
-      countText,
-      isCaution,
-      pagesHidden,
-      pageRuns,
-    });
+    for (const { inst, indexOnPage, totalOnPage } of pills) {
+      const hiddenInst = isInstanceVisible
+        ? !isInstanceVisible(source, group, inst)
+        : false;
+      rows.push({
+        category,
+        groupLabel: group.dividerLabel || '-',
+        dividerGroupKey: String(group.dividerGroup ?? ''),
+        label: criteriaLabel,
+        tip: tipText,
+        matchedText: String(inst.matchedText ?? '').trim(),
+        suggestedText: String(inst.suggestedText ?? fallbackSuggested).trim(),
+        pageText: pagesHidden
+          ? ''
+          : formatInstancePageText(inst, indexOnPage, totalOnPage, formatPageLabel),
+        pageStrike: pagesHidden ? false : hiddenInst,
+        isCaution,
+        pagesHidden,
+      });
+    }
   }
 
   return {
@@ -369,6 +451,52 @@ export function buildSpellingExportModel({
     summaryLine: formatSpellingExcelSummaryLine(summary),
     summary,
     rows,
+  };
+}
+
+/**
+ * 허브에 저장된 옛 집계형 행도 건별 스키마로 맞춰 다시 내려받게 한다.
+ * @param {object} row
+ * @returns {SpellingExportRow}
+ */
+function normalizeSpellingExportRow(row) {
+  if (row && typeof row.matchedText === 'string' && 'pageText' in row) {
+    return /** @type {SpellingExportRow} */ (row);
+  }
+  const pageRuns = Array.isArray(row?.pageRuns) ? row.pageRuns : [];
+  return {
+    category: String(row?.category ?? ''),
+    groupLabel: String(row?.groupLabel ?? '-'),
+    dividerGroupKey: String(row?.dividerGroupKey ?? ''),
+    label: String(row?.label ?? ''),
+    tip: String(row?.tip ?? ''),
+    matchedText: String(row?.label ?? ''),
+    suggestedText: '',
+    pageText: pageRunsToPlainText(pageRuns),
+    pageStrike: false,
+    isCaution: Boolean(row?.isCaution),
+    pagesHidden: Boolean(row?.pagesHidden),
+  };
+}
+
+/**
+ * @param {object} row
+ * @returns {ConsistencyExportRow}
+ */
+function normalizeConsistencyExportRow(row) {
+  if (row && typeof row.matchedText === 'string' && 'pageText' in row) {
+    return /** @type {ConsistencyExportRow} */ (row);
+  }
+  const pageRuns = Array.isArray(row?.pageRuns) ? row.pageRuns : [];
+  return {
+    category: String(row?.category ?? ''),
+    label: String(row?.label ?? ''),
+    tip: String(row?.tip ?? ''),
+    matchedText: String(row?.label ?? ''),
+    pageText: pageRunsToPlainText(pageRuns),
+    pageStrike: false,
+    isAuxiliary: Boolean(row?.isAuxiliary),
+    pagesHidden: Boolean(row?.pagesHidden),
   };
 }
 
@@ -386,13 +514,14 @@ export async function writeSpellingWorkbook(model) {
   ws.columns = [
     { width: 14 },
     { width: 18 },
-    { width: 30 },
-    { width: 40 },
-    { width: 14 },
-    { width: 58 },
+    { width: 28 },
+    { width: 36 },
+    { width: 22 },
+    { width: 16 },
+    { width: 12 },
   ];
 
-  ws.mergeCells('A1:F1');
+  ws.mergeCells('A1:G1');
   const guideCell = ws.getCell('A1');
   guideCell.value = { richText: EXCEL_CLIP_GUIDE_RICHTEXT };
   guideCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFF9C4' } };
@@ -400,7 +529,7 @@ export async function writeSpellingWorkbook(model) {
   guideCell.border = CELL_BORDER;
   ws.getRow(1).height = 30;
 
-  ws.mergeCells('A2:F2');
+  ws.mergeCells('A2:G2');
   const summaryCell = ws.getCell('A2');
   summaryCell.value = model.summaryLine;
   summaryCell.font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FF000000' } };
@@ -409,7 +538,7 @@ export async function writeSpellingWorkbook(model) {
   summaryCell.border = CELL_BORDER;
   ws.getRow(2).height = 30;
 
-  ['구분', '묶음', '기준', '설명', '발견 수', '페이지'].forEach((h, i) => {
+  ['구분', '묶음', '기준', '설명', '발견 문구', '수정안', '페이지'].forEach((h, i) => {
     const cell = ws.getRow(3).getCell(i + 1);
     cell.value = h;
     applyStyle(cell, { bg: HEADER_BG, fg: HEADER_FG, bold: true, hAlign: 'center' });
@@ -420,13 +549,16 @@ export async function writeSpellingWorkbook(model) {
   let currentRange = null;
   const groupRanges = [];
   let currentGroupRange = null;
-  const rows = model.rows ?? [];
+  const criteriaRanges = [];
+  let currentCriteriaRange = null;
+  const rows = (model.rows ?? []).map(normalizeSpellingExportRow);
 
   for (let i = 0; i < rows.length; i++) {
     const excelRowNum = i + 4;
     const rowData = rows[i];
     const bg = rowData.isCaution ? CAUTION_BG : BUILTIN_BG;
     const groupKey = `${rowData.category}\0${rowData.dividerGroupKey ?? ''}`;
+    const criteriaKey = `${groupKey}\0${rowData.label}\0${rowData.tip}`;
 
     if (!currentRange || currentRange.category !== rowData.category) {
       if (currentRange) categoryRanges.push(currentRange);
@@ -448,12 +580,25 @@ export async function writeSpellingWorkbook(model) {
       currentGroupRange.end = excelRowNum;
     }
 
-    const pagePlainText = rowData.pagesHidden ? '' : pageRunsToPlainText(rowData.pageRuns);
-    const linesB = estimateLines(rowData.label, 30);
-    const linesC = estimateLines(rowData.tip, 40);
-    const linesE = estimatePillLines(pagePlainText, 58);
+    if (!currentCriteriaRange || currentCriteriaRange.key !== criteriaKey) {
+      if (currentCriteriaRange) criteriaRanges.push(currentCriteriaRange);
+      currentCriteriaRange = {
+        start: excelRowNum,
+        end: excelRowNum,
+        key: criteriaKey,
+        label: rowData.label,
+        tip: rowData.tip,
+        bg,
+      };
+    } else {
+      currentCriteriaRange.end = excelRowNum;
+    }
+
+    const linesMatch = estimateLines(rowData.matchedText, 22);
+    const linesSuggest = estimateLines(rowData.suggestedText, 16);
+    const linesPage = estimateLines(rowData.pagesHidden ? '-' : rowData.pageText, 12);
     const row = ws.getRow(excelRowNum);
-    row.height = rowHeightPt(linesB, linesC, linesE);
+    row.height = rowHeightPt(linesMatch, linesSuggest, linesPage, 2);
 
     const catCell = row.getCell(1);
     catCell.value = rowData.category;
@@ -471,21 +616,35 @@ export async function writeSpellingWorkbook(model) {
     tipCell.value = rowData.tip;
     applyStyle(tipCell, { bg, hAlign: 'left', vAlign: 'top', wrap: true });
 
-    const countCell = row.getCell(5);
-    countCell.value = rowData.countText;
-    applyStyle(countCell, { bg, hAlign: 'center', vAlign: 'top' });
+    const matchCell = row.getCell(5);
+    matchCell.value = rowData.matchedText;
+    applyStyle(matchCell, { bg, hAlign: 'left', vAlign: 'top', wrap: true });
 
-    const pagesCell = row.getCell(6);
+    const suggestCell = row.getCell(6);
+    suggestCell.value = rowData.suggestedText;
+    applyStyle(suggestCell, { bg, hAlign: 'left', vAlign: 'top', wrap: true });
+
+    const pagesCell = row.getCell(7);
     if (rowData.pagesHidden) {
       pagesCell.value = '-';
+    } else if (rowData.pageStrike) {
+      pagesCell.value = {
+        richText: [
+          {
+            text: rowData.pageText,
+            font: { name: 'Arial', size: 10, strike: true, color: { argb: 'FF999999' } },
+          },
+        ],
+      };
     } else {
-      pagesCell.value = { richText: pageRunsToExcelRichText(rowData.pageRuns) };
+      pagesCell.value = rowData.pageText;
     }
     applyStyle(pagesCell, { bg, hAlign: 'left', vAlign: 'top', wrap: true });
   }
 
   if (currentRange) categoryRanges.push(currentRange);
   if (currentGroupRange) groupRanges.push(currentGroupRange);
+  if (currentCriteriaRange) criteriaRanges.push(currentCriteriaRange);
 
   for (const range of categoryRanges) {
     if (range.start < range.end) {
@@ -503,6 +662,19 @@ export async function writeSpellingWorkbook(model) {
     const cell = ws.getCell(range.start, 2);
     cell.value = range.label;
     applyStyle(cell, { bg: range.bg, hAlign: 'center', vAlign: 'middle' });
+  }
+
+  for (const range of criteriaRanges) {
+    if (range.start < range.end) {
+      ws.mergeCells(range.start, 3, range.end, 3);
+      ws.mergeCells(range.start, 4, range.end, 4);
+    }
+    const labelCell = ws.getCell(range.start, 3);
+    labelCell.value = range.label;
+    applyStyle(labelCell, { bg: range.bg, hAlign: 'left', vAlign: 'middle', wrap: true });
+    const tipCell = ws.getCell(range.start, 4);
+    tipCell.value = range.tip;
+    applyStyle(tipCell, { bg: range.bg, hAlign: 'left', vAlign: 'middle', wrap: true });
   }
 
   return wb.xlsx.writeBuffer();
@@ -616,10 +788,11 @@ function consistencyEntryLabel(group) {
  *   category: string,
  *   label: string,
  *   tip: string,
- *   countText: string,
+ *   matchedText: string,
+ *   pageText: string,
+ *   pageStrike: boolean,
  *   isAuxiliary: boolean,
  *   pagesHidden: boolean,
- *   pageRuns: { text: string, strike?: boolean }[],
  * }} ConsistencyExportRow
  */
 
@@ -731,116 +904,92 @@ export function buildConsistencyExportModel({
   };
   /** @type {ConsistencyExportRow[]} */
   const rows = [];
+  void visibleInstanceCount;
 
   for (const { group, source } of entries ?? []) {
     const category = consistencyCategoryOf(group, customRules);
     const isAuxiliary = category === AUXILIARY_EXPORT_CATEGORY;
     const visMode = groupVisibilityMode ? groupVisibilityMode(source, group) : 'visible';
     const pagesHidden = visMode === 'hidden';
-    let tipText = consistencyExportTip(group, customRules);
-    if (isAuxiliary && !pagesHidden) {
-      const examples = formatAuxiliaryExportExamples(
-        group,
-        source,
-        formatPageLabel,
-        isInstanceVisible,
-      );
-      if (examples) {
-        tipText = tipText ? `${tipText}\n${examples}` : examples;
-      }
-    }
+    const tipText = consistencyExportTip(group, customRules);
 
-    // 공통 항목 — 화면과 같이 채워진 표기별 행 (여러 항목 찾기와 같은 기준 분할)
+    // 공통 항목 — 채워진 표기별로 기준을 나누고, 발견은 건별 행
     if (group.patternKind === 'phrase-slot-find') {
       const fills = groupPhraseSlotInstancesByFill(group.instances);
       for (const fill of fills) {
-        const fillShown = pagesHidden
-          ? []
-          : fill.instances.filter((inst) =>
-              isInstanceVisible ? isInstanceVisible(source, group, inst) : true,
-            );
-        const totalCount = fill.instances.length;
-        const shownCount = pagesHidden ? 0 : fillShown.length;
-        const countText =
-          pagesHidden || shownCount === 0
-            ? `0/${totalCount}`
-            : shownCount < totalCount
-              ? `${shownCount}/${totalCount}`
-              : `${totalCount}`;
-        const pills =
-          pagesHidden || fillShown.length === 0
-            ? []
-            : buildInstancePills(fillShown);
-        const pageRuns =
-          pagesHidden || pills.length === 0
-            ? []
-            : buildPageRuns(
-                pills,
-                formatPageLabel,
-                source,
-                group,
-                isInstanceVisible,
-              );
-        rows.push({
-          category,
-          label: encodeSpacesVisible(fill.text),
-          tip: tipText,
-          countText,
-          isAuxiliary: false,
-          pagesHidden: pagesHidden || fillShown.length === 0,
-          pageRuns,
-        });
+        const pills = buildInstancePills(fill.instances);
+        const fillLabel = encodeSpacesVisible(fill.text);
+        for (const { inst, indexOnPage, totalOnPage } of pills) {
+          const hiddenInst = isInstanceVisible
+            ? !isInstanceVisible(source, group, inst)
+            : false;
+          rows.push({
+            category,
+            label: fillLabel,
+            tip: tipText,
+            matchedText: String(inst.matchedText ?? fill.text ?? '').trim(),
+            pageText: pagesHidden
+              ? ''
+              : formatInstancePageText(inst, indexOnPage, totalOnPage, formatPageLabel),
+            pageStrike: pagesHidden ? false : hiddenInst,
+            isAuxiliary: false,
+            pagesHidden,
+          });
+        }
       }
       continue;
     }
 
-    const totalCount = group.instances.length;
-    const shownCount = visibleInstanceCount ? visibleInstanceCount(source, group) : totalCount;
-    const countText =
-      visMode === 'hidden'
-        ? `0/${totalCount}`
-        : visMode === 'partial'
-          ? `${shownCount}/${totalCount}`
-          : `${totalCount}`;
-    const pills = pagesHidden ? [] : buildInstancePills(group.instances);
-    const pageRuns = pagesHidden
-      ? []
-      : buildPageRuns(pills, formatPageLabel, source, group, isInstanceVisible);
-
-    rows.push({
-      category,
-      label: consistencyEntryLabel(group),
-      tip: tipText,
-      countText,
-      isAuxiliary,
-      pagesHidden,
-      pageRuns,
-    });
+    const pills = buildInstancePills(group.instances ?? []);
+    const criteriaLabel = consistencyEntryLabel(group);
+    for (const { inst, indexOnPage, totalOnPage } of pills) {
+      const hiddenInst = isInstanceVisible
+        ? !isInstanceVisible(source, group, inst)
+        : false;
+      rows.push({
+        category,
+        label: criteriaLabel,
+        tip: tipText,
+        matchedText: String(inst.matchedText ?? '').trim(),
+        pageText: pagesHidden
+          ? ''
+          : formatInstancePageText(inst, indexOnPage, totalOnPage, formatPageLabel),
+        pageStrike: pagesHidden ? false : hiddenInst,
+        isAuxiliary,
+        pagesHidden,
+      });
+    }
   }
 
   /** @type {ConsistencyExportRow[]} */
   const recommendRows = [];
+  let recommendCriteria = 0;
   let recommendFindings = 0;
   for (const { group, source } of recommendEntries ?? []) {
     if (!group?.instances?.length) continue;
-    const totalCount = group.instances.length;
-    recommendFindings += totalCount;
+    recommendCriteria += 1;
+    const criteriaLabel =
+      consistencyEntryLabel(group) || group.label || group.find || '';
+    const tip = String(group.tip ?? '').trim();
     const pills = buildInstancePills(group.instances);
-    recommendRows.push({
-      category: UNIFY_CANDIDATE_EXPORT_CATEGORY,
-      label: consistencyEntryLabel(group) || group.label || group.find || '',
-      tip: String(group.tip ?? '').trim(),
-      countText: `${totalCount}`,
-      isAuxiliary: false,
-      pagesHidden: false,
-      pageRuns: buildPageRuns(
-        pills,
-        formatPageLabel,
-        source || 'consistency',
-        group,
-        () => true,
-      ),
-    });
+    for (const { inst, indexOnPage, totalOnPage } of pills) {
+      recommendFindings += 1;
+      recommendRows.push({
+        category: UNIFY_CANDIDATE_EXPORT_CATEGORY,
+        label: criteriaLabel,
+        tip,
+        matchedText: String(inst.matchedText ?? '').trim(),
+        pageText: formatInstancePageText(
+          inst,
+          indexOnPage,
+          totalOnPage,
+          formatPageLabel,
+        ),
+        pageStrike: false,
+        isAuxiliary: false,
+        pagesHidden: false,
+      });
+    }
   }
 
   /** @type {ConsistencyExportSheet | null} */
@@ -849,7 +998,7 @@ export function buildConsistencyExportModel({
       ? {
           sheetName: UNIFY_CANDIDATE_EXPORT_CATEGORY,
           summaryLine: formatUnifyCandidateExcelSummaryLine(
-            recommendRows.length,
+            recommendCriteria,
             recommendFindings,
           ),
           rows: recommendRows,
@@ -880,10 +1029,10 @@ function addConsistencyWorksheet(wb, sheet) {
 
   ws.columns = [
     { width: 18 },
-    { width: 30 },
-    { width: 40 },
-    { width: 14 },
-    { width: 58 },
+    { width: 28 },
+    { width: 36 },
+    { width: 22 },
+    { width: 12 },
   ];
 
   ws.mergeCells('A1:E1');
@@ -903,7 +1052,7 @@ function addConsistencyWorksheet(wb, sheet) {
   summaryCell.border = CELL_BORDER;
   ws.getRow(2).height = 30;
 
-  ['구분', '기준', '설명', '발견 수', '페이지'].forEach((h, i) => {
+  ['구분', '기준', '설명', '발견 문구', '페이지'].forEach((h, i) => {
     const cell = ws.getRow(3).getCell(i + 1);
     cell.value = h;
     applyStyle(cell, { bg: HEADER_BG, fg: HEADER_FG, bold: true, hAlign: 'center' });
@@ -912,12 +1061,15 @@ function addConsistencyWorksheet(wb, sheet) {
 
   const categoryRanges = [];
   let currentRange = null;
-  const rows = sheet.rows ?? [];
+  const criteriaRanges = [];
+  let currentCriteriaRange = null;
+  const rows = (sheet.rows ?? []).map(normalizeConsistencyExportRow);
 
   for (let i = 0; i < rows.length; i++) {
     const excelRowNum = i + 4;
     const rowData = rows[i];
     const bg = rowData.isAuxiliary ? CAUTION_BG : BUILTIN_BG;
+    const criteriaKey = `${rowData.category}\0${rowData.label}\0${rowData.tip}`;
 
     if (!currentRange || currentRange.category !== rowData.category) {
       if (currentRange) categoryRanges.push(currentRange);
@@ -926,12 +1078,24 @@ function addConsistencyWorksheet(wb, sheet) {
       currentRange.end = excelRowNum;
     }
 
-    const pagePlainText = rowData.pagesHidden ? '' : pageRunsToPlainText(rowData.pageRuns);
-    const linesB = estimateLines(rowData.label, 30);
-    const linesC = estimateLines(rowData.tip, 40);
-    const linesE = estimatePillLines(pagePlainText, 58);
+    if (!currentCriteriaRange || currentCriteriaRange.key !== criteriaKey) {
+      if (currentCriteriaRange) criteriaRanges.push(currentCriteriaRange);
+      currentCriteriaRange = {
+        start: excelRowNum,
+        end: excelRowNum,
+        key: criteriaKey,
+        label: rowData.label,
+        tip: rowData.tip,
+        bg,
+      };
+    } else {
+      currentCriteriaRange.end = excelRowNum;
+    }
+
+    const linesMatch = estimateLines(rowData.matchedText, 22);
+    const linesPage = estimateLines(rowData.pagesHidden ? '-' : rowData.pageText, 12);
     const row = ws.getRow(excelRowNum);
-    row.height = rowHeightPt(linesB, linesC, linesE);
+    row.height = rowHeightPt(linesMatch, linesPage, 2);
 
     const catCell = row.getCell(1);
     catCell.value = rowData.category;
@@ -945,20 +1109,30 @@ function addConsistencyWorksheet(wb, sheet) {
     tipCell.value = rowData.tip;
     applyStyle(tipCell, { bg, hAlign: 'left', vAlign: 'top', wrap: true });
 
-    const countCell = row.getCell(4);
-    countCell.value = rowData.countText;
-    applyStyle(countCell, { bg, hAlign: 'center', vAlign: 'top' });
+    const matchCell = row.getCell(4);
+    matchCell.value = rowData.matchedText;
+    applyStyle(matchCell, { bg, hAlign: 'left', vAlign: 'top', wrap: true });
 
     const pagesCell = row.getCell(5);
     if (rowData.pagesHidden) {
       pagesCell.value = '-';
+    } else if (rowData.pageStrike) {
+      pagesCell.value = {
+        richText: [
+          {
+            text: rowData.pageText,
+            font: { name: 'Arial', size: 10, strike: true, color: { argb: 'FF999999' } },
+          },
+        ],
+      };
     } else {
-      pagesCell.value = { richText: pageRunsToExcelRichText(rowData.pageRuns) };
+      pagesCell.value = rowData.pageText;
     }
     applyStyle(pagesCell, { bg, hAlign: 'left', vAlign: 'top', wrap: true });
   }
 
   if (currentRange) categoryRanges.push(currentRange);
+  if (currentCriteriaRange) criteriaRanges.push(currentCriteriaRange);
 
   for (const range of categoryRanges) {
     if (range.start < range.end) {
@@ -967,6 +1141,19 @@ function addConsistencyWorksheet(wb, sheet) {
     const cell = ws.getCell(range.start, 1);
     cell.value = range.category;
     applyStyle(cell, { bg: range.bg, hAlign: 'center', vAlign: 'middle' });
+  }
+
+  for (const range of criteriaRanges) {
+    if (range.start < range.end) {
+      ws.mergeCells(range.start, 2, range.end, 2);
+      ws.mergeCells(range.start, 3, range.end, 3);
+    }
+    const labelCell = ws.getCell(range.start, 2);
+    labelCell.value = range.label;
+    applyStyle(labelCell, { bg: range.bg, hAlign: 'left', vAlign: 'middle', wrap: true });
+    const tipCell = ws.getCell(range.start, 3);
+    tipCell.value = range.tip;
+    applyStyle(tipCell, { bg: range.bg, hAlign: 'left', vAlign: 'middle', wrap: true });
   }
 }
 

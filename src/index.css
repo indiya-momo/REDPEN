@@ -1903,6 +1903,34 @@ html[data-build='prod'] .unify-candidate-find__list {
   color: var(--color-text-faint);
 }
 
+.aux-solid-count {
+  display: inline-flex;
+  align-items: center;
+  align-self: center;
+  gap: 4px;
+  font-size: 0.78rem;
+  font-weight: 400;
+  line-height: 1.3;
+  color: #c0392b;
+  white-space: nowrap;
+}
+
+.result-card-head .aux-solid-count .result-findings-count-circle {
+  margin-left: 0;
+}
+
+.page-chip.page-chip--aux-solid,
+.page-chip.page-chip--aux-solid:hover {
+  background: #c0392b;
+  border-color: #c0392b;
+  color: #fff;
+}
+
+.page-chip.page-chip--aux-solid .page-chip__bundle {
+  background: rgb(255 255 255 / 22%);
+  color: #fff;
+}
+
 .result-card--caution .result-card-tip-inline {
   color: var(--result-caution-text);
 }
