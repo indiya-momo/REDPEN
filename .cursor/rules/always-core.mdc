@@ -6,6 +6,7 @@ alwaysApply: true
 # 공통 (메인 PC worktree)
 
 - 답변은 항상 한국어로 한다.
+- 바탕화면·다운로드·임시 경로에 **파일을 만들거나 갱신하면**, 그 응답에 **클릭 가능한 경로 링크**를 반드시 넣는다. 파일명만 적거나 “바탕화면에 저장했다”로 끝내지 않는다. 예: `[파일명.xlsx](file:///C:/Users/.../파일명.xlsx)` (공백·한글은 URL 인코딩).
 - 작업 시작 전 **workspace 루트 경로**와 `git status`를 확인한다. 다른 worktree/폴더는 수정하지 않는다.
 - 요청 범위 밖 리팩터·"顺便" 개선·불필요한 테스트 추가는 하지 않는다.
 - `git commit`, `git push`, `git worktree add/remove/move`는 사용자가 명시적으로 요청할 때만 한다.

@@ -3,7 +3,8 @@
  * 실행 전 로그인·베타 일일 한도(assertBetaDailyCheckOrAlert)·규칙 개수 상한 검사.
  * trackCheckRun/trackResultViewed로 PostHog에 검수·결과 열람 기록.
  */
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
+import { enrichAuxiliaryDictSolid } from '../lib/auxiliaryDictSolid.js';
 import { buildCautionCheckRules } from '../lib/cautionRules.js';
 import { sortSpellingResultsForDisplay } from '../utils/main-screen-helpers.js';
 import {
@@ -104,6 +105,8 @@ export function useRuleCheck({
 }) {
   const [spellingResults, setSpellingResults] = useState([]);
   const [consistencyResults, setConsistencyResults] = useState([]);
+  const consistencyResultsRef = useRef(consistencyResults);
+  consistencyResultsRef.current = consistencyResults;
   const [spellingSelected, setSpellingSelected] = useState(null);
   const [consistencySelected, setConsistencySelected] = useState(null);
   const [activeSource, setActiveSource] = useState(
@@ -365,9 +368,11 @@ export function useRuleCheck({
           },
         );
         allErrors.push(...errors);
-        const withZeroRows = finalizeConsistencyCheckResults(
-          grouped,
-          consistencyCriteriaActiveRules,
+        const withZeroRows = await enrichAuxiliaryDictSolid(
+          finalizeConsistencyCheckResults(
+            grouped,
+            consistencyCriteriaActiveRules,
+          ),
         );
         setConsistencyResults(withZeroRows);
         setConsistencyCheckDone(true);
@@ -547,39 +552,37 @@ export function useRuleCheck({
       );
 
       const withZeroRows = finalizeConsistencyCheckResults(grouped, rules);
-
-      setConsistencyResults((prev) => {
-        const literalTails = new Set(
-          filterCustomRulesByConsistencyScope(
-            consistencyActiveRules,
-            'literal-slot',
-          )
-            .map((r) => normalizeConsistencyVariant(r.tailWord))
-            .filter(Boolean),
-        );
-        const kept =
-          subset === 'unify'
-            ? prev.filter((g) => {
-                if (consistencyGroupScope(g) === 'auxiliary') return true;
-                if (g.patternKind === 'phrase-slot-find') return true;
-                if (!LITERAL_SLOT_PATTERN_KINDS.includes(g.patternKind ?? '')) {
-                  return true;
-                }
-                const tail = resolveConsistencyGroupTailWord(g);
-                return Boolean(tail && literalTails.has(tail));
-              })
-            : subset === 'literal-slot'
-              ? prev.filter(
-                  (g) =>
-                    consistencyGroupScope(g) !== 'literal-slot' ||
-                    isConsistencyUnifyResultGroup(resolvedCustomRules, g),
-                )
-              : prev.filter((g) => consistencyGroupScope(g) !== subset);
-        return finalizeConsistencyCheckResults(
-          [...kept, ...withZeroRows],
-          rules,
-        );
-      });
+      const prevResults = consistencyResultsRef.current;
+      const literalTails = new Set(
+        filterCustomRulesByConsistencyScope(
+          consistencyActiveRules,
+          'literal-slot',
+        )
+          .map((r) => normalizeConsistencyVariant(r.tailWord))
+          .filter(Boolean),
+      );
+      const kept =
+        subset === 'unify'
+          ? prevResults.filter((g) => {
+              if (consistencyGroupScope(g) === 'auxiliary') return true;
+              if (g.patternKind === 'phrase-slot-find') return true;
+              if (!LITERAL_SLOT_PATTERN_KINDS.includes(g.patternKind ?? '')) {
+                return true;
+              }
+              const tail = resolveConsistencyGroupTailWord(g);
+              return Boolean(tail && literalTails.has(tail));
+            })
+          : subset === 'literal-slot'
+            ? prevResults.filter(
+                (g) =>
+                  consistencyGroupScope(g) !== 'literal-slot' ||
+                  isConsistencyUnifyResultGroup(resolvedCustomRules, g),
+              )
+            : prevResults.filter((g) => consistencyGroupScope(g) !== subset);
+      const enrichedResults = await enrichAuxiliaryDictSolid(
+        finalizeConsistencyCheckResults([...kept, ...withZeroRows], rules),
+      );
+      setConsistencyResults(enrichedResults);
       setConsistencyCheckDone(true);
       setResultVisibility((prev) => {
         let next = normalizeResultVisibilityState(prev);

@@ -279,6 +279,7 @@ export function formatResultPagesExpandLabel(
  *   expandLabelMode?: 'more' | 'elsewhere',
  *   totalInstanceCount?: number,
  *   onExpandedChange?: (expanded: boolean) => void,
+ *   pillClass?: (inst: import('../lib/ruleEngine.js').MatchInstance) => string,
  * }} props
  */
 export default function ResultPageSummary({
@@ -294,6 +295,7 @@ export default function ResultPageSummary({
   expandLabelMode = 'more',
   totalInstanceCount = null,
   onExpandedChange,
+  pillClass,
 }) {
   const hardCountLimit =
     expandLabelMode === 'elsewhere' ||
@@ -497,6 +499,7 @@ export default function ResultPageSummary({
         <InstancePill
           key={instanceVisibilityKey(entry.inst)}
           entry={entry}
+          chipClass={String(pillClass?.(entry.inst) ?? '').trim()}
           currentPage={currentPage}
           selectedInstance={selectedInstance}
           formatPageLabel={formatPageLabel}
@@ -551,6 +554,7 @@ export default function ResultPageSummary({
  *   onSelectPage: (pageNum: number) => void,
  *   onSelectInstance?: (inst: import('../lib/ruleEngine.js').MatchInstance) => void,
  *   onToggleInstanceVisibility?: (inst: import('../lib/ruleEngine.js').MatchInstance) => void,
+ *   chipClass?: string,
  * }} props
  */
 function InstancePill({
@@ -562,6 +566,7 @@ function InstancePill({
   onSelectPage,
   onSelectInstance,
   onToggleInstanceVisibility,
+  chipClass = '',
 }) {
   const { inst, indexOnPage, totalOnPage } = entry;
   const fragmentLabel = getInstanceFragmentLabel(indexOnPage, totalOnPage);
@@ -582,11 +587,15 @@ function InstancePill({
     : undefined;
 
   return (
-    <div className="result-page-chip-wrap" role="listitem" data-result-pill="">
+    <div
+      className="result-page-chip-wrap"
+      role="listitem"
+      data-result-pill=""
+    >
       <CriteriaHoverTip tip={tip} variant="wrap">
         <button
           type="button"
-          className={`page-chip${selected ? ' page-chip--current' : ''}${
+          className={`page-chip${chipClass ? ` ${chipClass}` : ''}${selected ? ' page-chip--current' : ''}${
             onCurrentPage && !selected ? ' page-chip--on-page' : ''
           }${!visible ? ' page-chip--hidden-instance' : ''}`}
           onClick={(event) => {
