@@ -62,4 +62,10 @@ describe('bootLocal phase2', () => {
     expect(await bootKiwiIfNeeded({ phase2: true, maxWaitMs: 1 })).toBe(false);
     expect(loadKiwiBrowser).not.toHaveBeenCalled();
   });
+
+  it('본조 들다 2차(auxMorph)는 NOISE_FILTER와 무관하게 boot를 시도한다', async () => {
+    import.meta.env.VITE_UNIFY_KIWI_NOISE_FILTER = 'false';
+    expect(await bootKiwiIfNeeded({ auxMorph: true, maxWaitMs: 1 })).toBe(true);
+    expect(loadKiwiBrowser).toHaveBeenCalled();
+  });
 });

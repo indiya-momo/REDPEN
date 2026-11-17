@@ -6,6 +6,7 @@
 import { AUXILIARY_FLEX_SPACE } from './compoundPatternCommon.js';
 import { compileRuleRegex } from './regexFromFind.js';
 import { isGloballyExcluded, shouldSkipMatch } from './matchFilters.js';
+import { pruneAuxiliaryFalseMorph } from './auxiliaryMorphFilter.js';
 
 /**
  * @param {import('./ruleEngine.js').MatchInstance[]} instances
@@ -28,6 +29,26 @@ export function gluedFindFromSpacedAuxFind(find) {
 }
 
 /**
+ * 붙임 매치 → 띄움 제안. 캡처가 `머리+보조`이면 가운데 공백.
+ * @param {RegExpMatchArray} match
+ */
+export function spacedSuggestionFromGluedAuxMatch(match) {
+  const full = String(match?.[0] ?? '');
+  const head = match?.[1];
+  const tail = match?.[2];
+  if (
+    typeof head === 'string' &&
+    typeof tail === 'string' &&
+    head &&
+    tail &&
+    full === `${head}${tail}`
+  ) {
+    return `${head} ${tail}`;
+  }
+  return full;
+}
+
+/**
  * @param {import('./ruleEngine.js').GroupedResult[]} groups
  * @param {readonly { pageNum?: number, text?: string }[]} pageTexts
  * @param {{
@@ -45,8 +66,10 @@ export function enrichAuxiliaryGluedFromSpaced(groups, pageTexts, opts = {}) {
       !rule.auxSplitLongCompound &&
       gluedFindFromSpacedAuxFind(rule.find),
   );
-  if (!list.length && !rules.length) return list;
-  if (!pages.length || !rules.length) return groups ?? [];
+  if (!list.length && !rules.length) return pruneAuxiliaryFalseMorph(list, opts);
+  if (!pages.length || !rules.length) {
+    return pruneAuxiliaryFalseMorph(groups ?? [], opts);
+  }
 
   /** @type {Map<string, import('./ruleEngine.js').GroupedResult>} */
   const byItem = new Map();
@@ -99,7 +122,7 @@ export function enrichAuxiliaryGluedFromSpaced(groups, pageTexts, opts = {}) {
             find: rule.find,
             replace: rule.replace,
             matchedText: match[0],
-            suggestedText: match[0],
+            suggestedText: spacedSuggestionFromGluedAuxMatch(match),
             pageNum,
             index,
           });
@@ -133,5 +156,5 @@ export function enrichAuxiliaryGluedFromSpaced(groups, pageTexts, opts = {}) {
     if (itemId) byItem.set(itemId, nextGroup);
   }
 
-  return list;
+  return pruneAuxiliaryFalseMorph(list, opts);
 }

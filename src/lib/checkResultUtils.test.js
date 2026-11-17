@@ -3,6 +3,7 @@ import {
   mergeAuxiliaryResultsByBonBojoItem,
   mergeAuxiliaryZeroFindByItem,
   mergeConsistencyZeroFindGroups,
+  pruneAuxiliarySpaceRequiredCorrectInstances,
 } from './checkResultUtils.js';
 import { ruleDisplayLabel } from './regexFromFind.js';
 
@@ -154,6 +155,94 @@ describe('mergeConsistencyZeroFindGroups', () => {
     expect(merged[0].groupDisplayLabel).toBe('본(-아/어) + 있다');
     expect(merged[0].instances).toHaveLength(2);
     expect(merged[0].tailWord).toBeUndefined();
+  });
+
+  it('pruneAuxiliarySpaceRequiredCorrectInstances — 이미 띄운 말다 건은 제거', () => {
+    const pruned = pruneAuxiliarySpaceRequiredCorrectInstances([
+      {
+        find: '지 말',
+        replace: '$0',
+        label: '(-지/게/고) + 말다',
+        patternKind: 'auxiliary-verb',
+        bonBojoItemId: 'verb-malda',
+        groupDisplayLabel: '(-지/게/고) + 말다',
+        instances: [
+          {
+            pageNum: 1,
+            index: 10,
+            matchedText: '뛰지 말고',
+            suggestedText: '뛰지 말고',
+            find: '지 말',
+            replace: '$0',
+          },
+          {
+            pageNum: 32,
+            index: 5,
+            matchedText: '뛰지말라',
+            suggestedText: '뛰지 말라',
+            find: '지 말',
+            replace: '$0',
+          },
+        ],
+      },
+    ]);
+    expect(pruned).toHaveLength(1);
+    expect(pruned[0].instances).toHaveLength(1);
+    expect(pruned[0].instances[0].matchedText).toBe('뛰지말라');
+  });
+
+  it('mergeAuxiliaryResultsByBonBojoItem — 말다 1차·비아어 줄을 itemId로 한 줄·중복 건 제거', () => {
+    const groups = [
+      {
+        find: '지 말',
+        replace: '$0',
+        label: '(-지/게/고) + 말다',
+        patternKind: 'auxiliary-verb',
+        bonBojoItemId: 'verb-malda',
+        groupDisplayLabel: '(-지/게/고) + 말다',
+        instances: [
+          {
+            pageNum: 1,
+            index: 10,
+            matchedText: '뛰지 말고',
+            suggestedText: '뛰지 말고',
+            find: '지 말',
+            replace: '$0',
+          },
+          {
+            pageNum: 32,
+            index: 5,
+            matchedText: '뛰지말라',
+            suggestedText: '뛰지 말라',
+            find: '지 말',
+            replace: '$0',
+          },
+        ],
+      },
+      {
+        find: 'auxiliary:non-aeo:verb-malda',
+        replace: '$0',
+        label: '(-지/게/고) + 말다',
+        patternKind: 'auxiliary-verb',
+        bonBojoItemId: 'verb-malda',
+        groupDisplayLabel: '(-지/게/고) + 말다',
+        auxNonAeoSpace: true,
+        instances: [
+          {
+            pageNum: 32,
+            index: 5,
+            matchedText: '뛰지말라',
+            suggestedText: '뛰지 말라',
+            find: 'auxiliary:non-aeo:verb-malda',
+            replace: '뛰지 말라',
+            auxNonAeoSpace: true,
+          },
+        ],
+      },
+    ];
+    const merged = mergeAuxiliaryResultsByBonBojoItem(groups);
+    expect(merged).toHaveLength(1);
+    expect(merged[0].instances).toHaveLength(2);
   });
 
   it('mergeAuxiliaryZeroFindByItem — 본+보 0건 줄은 목록에서 제외', () => {
