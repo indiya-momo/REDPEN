@@ -1,6 +1,6 @@
 {
   "name": "spacing-category-baseline",
-  "description": "띄어쓰기·문법 범주 기준선. FIX는 짚고 기대출력을 제안해야 하는 행, KEEP는 짚으면 안 되는 행. verified:false 는 stdict 확인·Kiwi 태깅(기대가 아직 확정되지 않음)이라 합격/불합격에 넣지 않는다. skip 은 보류.",
+  "description": "띄어쓰기·문법 범주 기준선. FIX는 짚고 기대출력을 제안해야 하는 행, KEEP는 짚으면 안 되는 행. verified:false 는 Kiwi 태깅처럼 기대가 아직 확정되지 않은 행이라 합격/불합격에 넣지 않는다. stdict 는 표준국어대사전 search.do exact 조회 결과로, 등재면 [{ query, headword, pos, gloss? }] 이고 미등재면 null. skip 은 보류.",
   "cases": [
     {
       "id": "F01",
@@ -120,8 +120,16 @@
       "expectedOutputs": [],
       "grade": "침묵",
       "rationale": "'별수' 명사",
-      "needsCheck": "stdict 확인",
-      "verified": false
+      "needsCheck": "",
+      "verified": true,
+      "stdict": [
+        {
+          "query": "별수",
+          "headword": "별-수",
+          "pos": "명사",
+          "gloss": "달리 어떻게 할 방법"
+        }
+      ]
     },
     {
       "id": "K08",
@@ -131,8 +139,9 @@
       "expectedOutputs": [],
       "grade": "침묵",
       "rationale": "'말수' 명사",
-      "needsCheck": "stdict 확인",
-      "verified": false
+      "needsCheck": "",
+      "verified": true,
+      "stdict": [{ "query": "말수", "headword": "말-수", "pos": "명사" }]
     },
     {
       "id": "K09",
@@ -142,8 +151,9 @@
       "expectedOutputs": [],
       "grade": "침묵",
       "rationale": "'살수차' 명사",
-      "needsCheck": "stdict 확인",
-      "verified": false
+      "needsCheck": "",
+      "verified": true,
+      "stdict": [{ "query": "살수차", "headword": "살수-차", "pos": "명사" }]
     },
     {
       "id": "F05",
@@ -174,9 +184,10 @@
       "expect": "confirm",
       "expectedOutputs": ["곳 없이"],
       "grade": "confirm",
-      "rationale": "곳없다/곳없이 표제어 없을 때만",
-      "needsCheck": "stdict 확인(용언·부사 둘 다)",
-      "verified": false
+      "rationale": "곳없다·곳없이 모두 미등재라 '곳 없이' 제안(confirm)을 유지",
+      "needsCheck": "",
+      "verified": true,
+      "stdict": null
     },
     {
       "id": "F08",
@@ -185,9 +196,10 @@
       "expect": "confirm",
       "expectedOutputs": ["기분 좋"],
       "grade": "confirm",
-      "rationale": "기분좋다 표제어 없음",
-      "needsCheck": "stdict 확인",
-      "verified": false
+      "rationale": "기분좋다 미등재라 '기분 좋' 제안(confirm)을 유지",
+      "needsCheck": "",
+      "verified": true,
+      "stdict": null
     },
     {
       "id": "F09",
@@ -210,7 +222,8 @@
       "grade": "침묵",
       "rationale": "표제어",
       "needsCheck": "",
-      "verified": true
+      "verified": true,
+      "stdict": [{ "query": "맛없다", "headword": "맛없다" }]
     },
     {
       "id": "K11",
@@ -221,7 +234,8 @@
       "grade": "침묵",
       "rationale": "표제어",
       "needsCheck": "",
-      "verified": true
+      "verified": true,
+      "stdict": [{ "query": "재미있다", "headword": "재미있다" }]
     },
     {
       "id": "K12",
@@ -232,7 +246,8 @@
       "grade": "침묵",
       "rationale": "부사 표제어(쓸데없다와 별도)",
       "needsCheck": "",
-      "verified": true
+      "verified": true,
+      "stdict": [{ "query": "쓸데없이", "headword": "쓸데없이", "pos": "부사" }]
     },
     {
       "id": "K13",
@@ -243,7 +258,8 @@
       "grade": "침묵",
       "rationale": "표제어",
       "needsCheck": "",
-      "verified": true
+      "verified": true,
+      "stdict": [{ "query": "감쪽같다", "headword": "감쪽같다" }]
     },
     {
       "id": "F10",
@@ -285,9 +301,10 @@
       "expect": "FIX",
       "expectedOutputs": ["어루만져 주세요"],
       "grade": "오류",
-      "rationale": "본용언이 합성 용언(제47항 단서)",
+      "rationale": "본용언이 합성 용언(제47항 단서). 표준국어대사전 어루-만지다[동사] 등재(합성 표기 어루-만지다).",
       "needsCheck": "합성 용언 닫힌 목록",
-      "verified": true
+      "verified": true,
+      "stdict": [{ "query": "어루만지다", "headword": "어루-만지다", "pos": "동사" }]
     },
     {
       "id": "K14",
@@ -342,7 +359,8 @@
       "grade": "오류",
       "rationale": "표제어",
       "needsCheck": "표제어 파일(단계 2) 선행",
-      "verified": true
+      "verified": true,
+      "stdict": [{ "query": "붉은빛", "headword": "붉은빛", "pos": "명사" }]
     },
     {
       "id": "F16",
@@ -351,9 +369,10 @@
       "expect": "confirm",
       "expectedOutputs": ["불꽃같은"],
       "grade": "confirm",
-      "rationale": "'같다' 비교 용법과 합성어 갈림",
+      "rationale": "'같다' 비교 용법과 합성어 갈림. 불꽃같다[형용사]는 등재이나 confirm 유지.",
       "needsCheck": "",
-      "verified": true
+      "verified": true,
+      "stdict": [{ "query": "불꽃같다", "headword": "불꽃같다", "pos": "형용사" }]
     },
     {
       "id": "F17",
@@ -364,7 +383,8 @@
       "grade": "오류",
       "rationale": "닫힌 목록",
       "needsCheck": "",
-      "verified": true
+      "verified": true,
+      "stdict": [{ "query": "둥글둥글", "headword": "둥글둥글", "pos": "부사" }]
     },
     {
       "id": "F18",
@@ -375,7 +395,8 @@
       "grade": "오류",
       "rationale": "닫힌 목록",
       "needsCheck": "",
-      "verified": true
+      "verified": true,
+      "stdict": [{ "query": "휘영청", "headword": "휘영청", "pos": "부사" }]
     },
     {
       "id": "F19",
@@ -395,9 +416,17 @@
       "expect": "KEEP",
       "expectedOutputs": [],
       "grade": "침묵",
-      "rationale": "'천년' 명사 등재 추정",
-      "needsCheck": "stdict 확인",
-      "verified": false
+      "rationale": "천년[명사] '오랜 세월' 등재",
+      "needsCheck": "",
+      "verified": true,
+      "stdict": [
+        {
+          "query": "천년",
+          "headword": "천년",
+          "pos": "명사",
+          "gloss": "오랜 세월"
+        }
+      ]
     },
     {
       "id": "K18",
@@ -406,9 +435,17 @@
       "expect": "KEEP",
       "expectedOutputs": [],
       "grade": "침묵",
-      "rationale": "'꼴등' 등재 추정, 상대 사유 오류 가능",
-      "needsCheck": "stdict 확인",
-      "verified": false
+      "rationale": "꼴-등[명사] '등급의 맨 끝' 등재. 비표준으로 본 사유는 틀림.",
+      "needsCheck": "",
+      "verified": true,
+      "stdict": [
+        {
+          "query": "꼴등",
+          "headword": "꼴-등",
+          "pos": "명사",
+          "gloss": "등급의 맨 끝"
+        }
+      ]
     },
     {
       "id": "F20",
@@ -417,20 +454,25 @@
       "expect": "안내",
       "expectedOutputs": [],
       "grade": "안내(기본 꺼짐)",
-      "rationale": "사전에 없는 줄임말, 오류 아님",
+      "rationale": "칼퇴는 미등재 줄임말, 오류 아님. 칼퇴근[명사]는 등재. 안내(기본 꺼짐) 유지.",
       "needsCheck": "정책",
-      "verified": true
+      "verified": true,
+      "stdict": [
+        { "query": "칼퇴", "headword": null },
+        { "query": "칼퇴근", "headword": "칼퇴근", "pos": "명사" }
+      ]
     },
     {
       "id": "F21",
       "category": "판단",
       "input": "진단 받",
-      "expect": "FIX",
-      "expectedOutputs": ["진단받"],
-      "grade": "confirm",
-      "rationale": "'진단받다' 표제어 있을 때만 붙임, 없으면 침묵",
-      "needsCheck": "stdict 확인",
-      "verified": false
+      "expect": "KEEP",
+      "expectedOutputs": [],
+      "grade": "침묵",
+      "rationale": "'N받다' 표제어가 있을 때만 붙인다. 진단받다는 미등재라 침묵.",
+      "needsCheck": "",
+      "verified": true,
+      "stdict": null
     }
   ]
 }
