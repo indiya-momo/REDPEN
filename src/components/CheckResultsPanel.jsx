@@ -1,9 +1,13 @@
 import ResultPageSummary from './ResultPageSummary.jsx';
 import { isAuxiliaryDictSolidInstance } from '../lib/auxiliaryDictSolid.js';
 import {
+  buildBonBojoDocStemCountsByItemId,
+  enabledBonBojoItemIdsFromRules,
+} from '../lib/auxiliaryVerbDocStemScan.js';
+import {
   AUXILIARY_SPACING_BREAKDOWN_TIP,
   countAuxiliaryMatchedSpacingSurfaces,
-  formatAuxiliarySpacingBreakdown,
+  formatAuxiliarySpacingDualLine,
   shouldShowAuxiliarySpacingBreakdown,
 } from '../lib/auxiliaryVerbSpacingSummary.js';
 import PhraseSlotResultSummary from './PhraseSlotResultSummary.jsx';
@@ -203,6 +207,7 @@ function ResultHeaderSummary({
  *   selectedInstance?: import('../lib/ruleEngine.js').MatchInstance | null,
  *   formatPageLabel?: (systemPage: number) => string,
  *   customRules?: import('../lib/ruleTypes.js').Rule[],
+ *   pageTexts?: { text?: string }[],
  * }} props
  */
 export default function CheckResultsPanel({
@@ -226,8 +231,17 @@ export default function CheckResultsPanel({
   selectedInstance = null,
   formatPageLabel: formatPageLabelProp,
   customRules = [],
+  pageTexts = [],
 }) {
   const pageLabel = formatPageLabelProp ?? formatSystemPageLabel;
+
+  const bonBojoDocStemCounts = useMemo(() => {
+    if (viewSource !== 'consistency' || !pageTexts?.length) return null;
+    return buildBonBojoDocStemCountsByItemId(
+      pageTexts,
+      enabledBonBojoItemIdsFromRules(customRules),
+    );
+  }, [viewSource, pageTexts, customRules]);
 
   const spellingTone =
     viewSource === 'consistency'
@@ -285,10 +299,24 @@ export default function CheckResultsPanel({
       group.patternKind === 'auxiliary-verb'
         ? countAuxiliaryMatchedSpacingSurfaces(group.instances)
         : null;
+    const docStemCounts =
+      group.patternKind === 'auxiliary-verb' && group.bonBojoItemId?.trim()
+        ? bonBojoDocStemCounts?.get(group.bonBojoItemId.trim()) ?? null
+        : null;
     const auxiliarySpacingLabel =
-      auxiliarySpacing &&
-      shouldShowAuxiliarySpacingBreakdown(auxiliarySpacing)
-        ? formatAuxiliarySpacingBreakdown(auxiliarySpacing)
+      group.patternKind === 'auxiliary-verb'
+        ? formatAuxiliarySpacingDualLine({
+            doc:
+              docStemCounts &&
+              shouldShowAuxiliarySpacingBreakdown(docStemCounts)
+                ? docStemCounts
+                : null,
+            match:
+              auxiliarySpacing &&
+              shouldShowAuxiliarySpacingBreakdown(auxiliarySpacing)
+                ? auxiliarySpacing
+                : null,
+          })
         : '';
 
     return (

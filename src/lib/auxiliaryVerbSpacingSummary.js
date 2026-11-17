@@ -32,4 +32,25 @@ export function shouldShowAuxiliarySpacingBreakdown(counts) {
 }
 
 export const AUXILIARY_SPACING_BREAKDOWN_TIP =
-  '이 그룹에서 검사에 잡힌 표면만 집계합니다. 원고에 반대 형태만 있으면 표기 통일 추천에서 붙임·띄움 짝을 확인하세요.';
+  '원고: 시트 stem 쌍으로 전 페이지를 센 값입니다(같은 보조에 stem이 여러 개면 합산). 검사: 맞춤법 검사에 잡힌 matchedText만 집계합니다. 한쪽만 많으면 표기 통일 추천에서 짝을 확인하세요.';
+
+/**
+ * @param {{ spaced: number, glued: number }} counts
+ */
+export function formatAuxiliaryDocSpacingBreakdown(counts) {
+  return formatAuxiliarySpacingBreakdown(counts);
+}
+
+/**
+ * @param {{ doc?: { spaced: number, glued: number } | null, match?: { spaced: number, glued: number } | null }} param
+ */
+export function formatAuxiliarySpacingDualLine({ doc, match }) {
+  const parts = [];
+  if (doc && shouldShowAuxiliarySpacingBreakdown(doc)) {
+    parts.push(`원고 ${formatAuxiliarySpacingBreakdown(doc)}`);
+  }
+  if (match && shouldShowAuxiliarySpacingBreakdown(match)) {
+    parts.push(`검사 ${formatAuxiliarySpacingBreakdown(match)}`);
+  }
+  return parts.join(' · ');
+}
