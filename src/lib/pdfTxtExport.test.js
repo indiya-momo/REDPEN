@@ -1,22 +1,153 @@
 import { describe, expect, it } from 'vitest';
 import {
+  encodeTxtForDownload,
+  finalTxtFilenameFromPdfName,
   joinPagesAsTxt,
   txtFilenameFromPdfName,
 } from './pdfTxtExport.js';
+import {
+  cleanPagesForTxt,
+  isLikelyPageNumberLine,
+  normalizeTxtLineKey,
+  stripGluedPageNumber,
+} from './pdfTxtBodyClean.js';
+import {
+  applyLinebreakDecisions,
+  classifyLinebreakPair,
+  findLinebreakCandidates,
+} from './pdfTxtLinebreakReview.js';
 
 describe('pdfTxtExport', () => {
-  it('pdf 확장자를 txt로 바꾼다', () => {
-    expect(txtFilenameFromPdfName('원고.PDF')).toBe('원고.txt');
-    expect(txtFilenameFromPdfName('note')).toBe('note.txt');
+  it('파일명에 _검수전을 붙인다', () => {
+    expect(txtFilenameFromPdfName('원고.PDF')).toBe('원고_검수전.txt');
+    expect(txtFilenameFromPdfName('note')).toBe('note_검수전.txt');
+    expect(txtFilenameFromPdfName('이미_검수전.pdf')).toBe('이미_검수전.txt');
   });
 
-  it('쪽 텍스트를 빈 줄로 잇는다', () => {
+  it('최종 파일명에는 _검수전이 없다', () => {
+    expect(finalTxtFilenameFromPdfName('원고.PDF')).toBe('원고.txt');
+    expect(finalTxtFilenameFromPdfName('이미_검수전.pdf')).toBe('이미.txt');
+  });
+
+  it('UTF-8 BOM과 CRLF로 인코딩한다', () => {
+    const encoded = encodeTxtForDownload('가\n나');
+    expect(encoded.startsWith('\uFEFF')).toBe(true);
+    expect(encoded.slice(1)).toBe('가\r\n나');
+  });
+
+  it('쪽 사이에 쪽 표식을 넣고 잇는다', () => {
     expect(
       joinPagesAsTxt([
-        { text: '첫 쪽\n' },
-        { visualText: '둘째 쪽' },
-        { text: '   ' },
+        { pageNum: 1, text: '첫 쪽\n' },
+        { pageNum: 2, visualText: '둘째 쪽' },
+        { pageNum: 3, text: '   ' },
       ]),
-    ).toBe('첫 쪽\n\n둘째 쪽');
+    ).toBe('첫 쪽\n\n--- p.2 ---\n둘째 쪽');
+  });
+});
+
+describe('pdfTxtBodyClean', () => {
+  it('쪽수 줄 패턴을 인식한다', () => {
+    expect(isLikelyPageNumberLine('12')).toBe(true);
+    expect(isLikelyPageNumberLine('쪽 3')).toBe(true);
+    expect(isLikelyPageNumberLine('— 4 —')).toBe(true);
+    expect(isLikelyPageNumberLine('본문입니다')).toBe(false);
+  });
+
+  it('반복 머리말·상단 쪽수를 제거한다', () => {
+    const mk = (pageNum, headerY, bodyY, footerY) => ({
+      pageNum,
+      items: [
+        {
+          str: '책 제목',
+          transform: [12, 0, 0, 12, 72, headerY],
+          width: 40,
+          hasEOL: true,
+        },
+        {
+          str: `본문 ${pageNum}`,
+          transform: [12, 0, 0, 12, 72, bodyY],
+          width: 40,
+          hasEOL: true,
+        },
+        {
+          str: String(pageNum),
+          transform: [10, 0, 0, 10, 300, footerY],
+          width: 10,
+          hasEOL: true,
+        },
+      ],
+    });
+    const cleaned = cleanPagesForTxt([
+      mk(1, 800, 400, 40),
+      mk(2, 800, 400, 40),
+      mk(3, 800, 400, 40),
+    ]);
+    expect(cleaned.map((p) => p.text)).toEqual([
+      '본문 1',
+      '본문 2',
+      '본문 3',
+    ]);
+  });
+
+  it('본문만 있는 쪽은 그대로 둔다', () => {
+    const cleaned = cleanPagesForTxt([
+      {
+        pageNum: 1,
+        items: [
+          {
+            str: '서문',
+            transform: [14, 0, 0, 14, 72, 700],
+            width: 28,
+            hasEOL: true,
+          },
+          {
+            str: '첫 문장입니다.',
+            transform: [12, 0, 0, 12, 72, 660],
+            width: 80,
+            hasEOL: true,
+          },
+        ],
+      },
+    ]);
+    expect(cleaned[0].text).toBe('서문\n첫 문장입니다.');
+    expect(normalizeTxtLineKey('  a  b ')).toBe('a b');
+  });
+
+  it('같은 줄에 붙은 쪽수를 걷어 낸다', () => {
+    expect(stripGluedPageNumber('68입력 필요')).toBe('입력 필요');
+    expect(stripGluedPageNumber('66경상북도 경주시 출토')).toBe(
+      '경상북도 경주시 출토',
+    );
+    expect(stripGluedPageNumber('2-08')).toBe('2-08');
+    expect(stripGluedPageNumber('3학년')).toBe('3학년');
+  });
+});
+
+describe('pdfTxtLinebreakReview', () => {
+  it('한글 중간 soft-wrap만 후보이고 기본은 줄 유기다', () => {
+    expect(classifyLinebreakPair('유명한 명', '지 계곡')).toBe('keep');
+    expect(classifyLinebreakPair('봤을 때', '손잡이 윗부분')).toBe(null);
+  });
+
+  it('문장 끝·비한글은 후보가 아니다', () => {
+    expect(classifyLinebreakPair('끝났다.', '다음')).toBe(null);
+    expect(classifyLinebreakPair('Hello', 'world')).toBe(null);
+  });
+
+  it('결정을 반영해 최종 본문을 만든다', () => {
+    const pages = [
+      { pageNum: 1, lines: ['유명한 명', '지 계곡이다.', '다음 문단'] },
+    ];
+    const candidates = findLinebreakCandidates(pages);
+    expect(candidates.some((c) => c.id === '1:0' && c.defaultDecision === 'keep')).toBe(
+      true,
+    );
+    expect(applyLinebreakDecisions(pages, {})).toBe(
+      '유명한 명\n지 계곡이다.\n다음 문단',
+    );
+    expect(
+      applyLinebreakDecisions(pages, { '1:0': 'join', '1:1': 'keep' }),
+    ).toBe('유명한 명지 계곡이다.\n다음 문단');
   });
 });

@@ -1,7 +1,7 @@
 {
   "name": "pdf-publish-proofread",
   "private": true,
-  "version": "1.234",
+  "version": "1.235",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -15,6 +15,7 @@
     "validate-data": "node scripts/validate-data-json.mjs",
     "bench:reading-order": "node scripts/bench-reading-order.mjs",
     "kiwi:spike": "node scripts/kiwi-p0-spike.mjs",
+    "pdf:annot-spike": "node scripts/pdf-annot-spike.mjs",
     "kiwi:harvest-noise-list": "node scripts/harvest-unify-noise-list.mjs",
     "sync-unify-noise-list": "node scripts/sync-unify-noise-list.mjs",
     "export-unify-noise-list-sheet": "node scripts/export-unify-noise-list-sheet.mjs",
@@ -44,6 +45,7 @@
     "firebase": "^12.14.0",
     "jszip": "^3.10.1",
     "lucide-react": "^0.511.0",
+    "pdf-lib": "^1.17.1",
     "pdfjs-dist": "5.2.133",
     "posthog-js": "^1.376.2",
     "react": "^19.1.0",
