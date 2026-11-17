@@ -1,7 +1,7 @@
 {
   "name": "pdf-publish-proofread",
   "private": true,
-  "version": "1.248",
+  "version": "1.249",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -39,6 +39,7 @@
     "prepare": "husky"
   },
   "dependencies": {
+    "@pdf-lib/fontkit": "^1.1.1",
     "cmu-pronouncing-dictionary": "^3.0.0",
     "espeak-ng": "^1.0.2",
     "exceljs": "^4.4.0",
