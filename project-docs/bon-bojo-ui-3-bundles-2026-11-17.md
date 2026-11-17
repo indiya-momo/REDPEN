@@ -38,4 +38,5 @@
 - 결과 카드 헤더: 그룹별 `띄움 N건 · 붙임 M건` (`matchedText` 기준, 잡힌 표면만).
 - 툴팁: 반대 형태만 있으면 표기 통일 추천 안내.
 - **2-1:** `auxiliaryVerbDocStemScan.js` — 활성 itemId의 stem 쌍으로 `pageTexts` 전수 집계. 결과 카드에 `원고 … · 검사 …`.
-- **미구현:** unify 시드 일괄 등록(2-3), 발견 0건인데 원고만 있는 보조 전용 행.
+- **원고만 행:** 검사 0건·원고 stem 있음 → UI에 빈 결과 카드(`buildAuxiliaryDocOnlyResultGroups`). 엔진 결과에는 넣지 않음.
+- **미구현:** unify 시드 일괄 등록(2-3), 본조 결과→통일 패널 점프(1-3).

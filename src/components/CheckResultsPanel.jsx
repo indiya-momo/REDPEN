@@ -1,6 +1,7 @@
 import ResultPageSummary from './ResultPageSummary.jsx';
 import { isAuxiliaryDictSolidInstance } from '../lib/auxiliaryDictSolid.js';
 import {
+  buildAuxiliaryDocOnlyResultGroups,
   buildBonBojoDocStemCountsByItemId,
   enabledBonBojoItemIdsFromRules,
 } from '../lib/auxiliaryVerbDocStemScan.js';
@@ -243,6 +244,20 @@ export default function CheckResultsPanel({
     );
   }, [viewSource, pageTexts, customRules]);
 
+  const displayEntries = useMemo(() => {
+    if (viewSource !== 'consistency') return entries;
+    const docOnly = buildAuxiliaryDocOnlyResultGroups({
+      customRules,
+      existingGroups: entries.map((e) => e.group),
+      docCounts: bonBojoDocStemCounts,
+    });
+    if (!docOnly.length) return entries;
+    return [
+      ...entries,
+      ...docOnly.map((group) => ({ group, source: /** @type {const} */ ('consistency') })),
+    ];
+  }, [viewSource, entries, customRules, bonBojoDocStemCounts]);
+
   const spellingTone =
     viewSource === 'consistency'
       ? 'consistency'
@@ -251,14 +266,14 @@ export default function CheckResultsPanel({
         : 'builtin';
 
   const spellingParts = useMemo(
-    () => partitionSpellingResultEntries(entries),
-    [entries],
+    () => partitionSpellingResultEntries(displayEntries),
+    [displayEntries],
   );
   const openSpellingCategory = defaultOpenSpellingCategory(spellingParts);
 
   const consistencyParts = useMemo(
-    () => partitionConsistencyResultEntries(entries, customRules),
-    [entries, customRules],
+    () => partitionConsistencyResultEntries(displayEntries, customRules),
+    [displayEntries, customRules],
   );
   const openConsistencyCategory =
     defaultOpenConsistencyCategory(consistencyParts);
@@ -416,9 +431,10 @@ export default function CheckResultsPanel({
               className="result-card-head__findings-count"
             />
           </div>
-          {(tipText && !isConsistency) || group.instances.length > 0 ? (
+          {(tipText && (!isConsistency || count === 0)) ||
+          group.instances.length > 0 ? (
             <div className="result-card-detail">
-              {tipText && !isConsistency ? (
+              {tipText && (!isConsistency || count === 0) ? (
                 <span className="result-card-tip-inline">{tipText}</span>
               ) : null}
               {group.patternKind === 'phrase-slot-find' ? (
@@ -624,7 +640,7 @@ export default function CheckResultsPanel({
     <section
       className={`results-panel results-panel--combined results-panel--${viewSource} results-panel--tone-${spellingTone}`}
     >
-      {entries.length > 0 ? (
+      {displayEntries.length > 0 ? (
         <>
           <ResultHeaderSummary
             viewSource={viewSource}

@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
+  AUXILIARY_DOC_ONLY_TIP,
+  buildAuxiliaryDocOnlyResultGroups,
   buildBonBojoDocStemCountsByItemId,
   countBonBojoStemsInDocument,
   countGluedStemInText,
@@ -27,5 +29,43 @@ describe('auxiliaryVerbDocStemScan', () => {
     );
     expect(map.get('verb-oda')?.spaced).toBeGreaterThan(0);
     expect(map.get('verb-oda')?.glued).toBeGreaterThan(0);
+  });
+
+  it('검사 결과 없는 itemId만 원고 전용 행으로 만든다', () => {
+    const docCounts = new Map([
+      ['verb-boda1', { spaced: 0, glued: 2 }],
+      ['verb-oda', { spaced: 1, glued: 0 }],
+    ]);
+    const rules = [
+      {
+        enabled: true,
+        patternKind: 'auxiliary-verb',
+        bonBojoItemId: 'verb-boda1',
+        find: '보다',
+        replace: '',
+      },
+      {
+        enabled: true,
+        patternKind: 'auxiliary-verb',
+        bonBojoItemId: 'verb-oda',
+        find: '오다',
+        replace: '',
+      },
+    ];
+    const groups = buildAuxiliaryDocOnlyResultGroups({
+      customRules: rules,
+      existingGroups: [
+        {
+          patternKind: 'auxiliary-verb',
+          bonBojoItemId: 'verb-oda',
+          instances: [{ matchedText: '들어 와' }],
+        },
+      ],
+      docCounts,
+    });
+    expect(groups).toHaveLength(1);
+    expect(groups[0].bonBojoItemId).toBe('verb-boda1');
+    expect(groups[0].instances).toEqual([]);
+    expect(groups[0].tip).toBe(AUXILIARY_DOC_ONLY_TIP);
   });
 });
