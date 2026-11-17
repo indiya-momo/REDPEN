@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   attachAuxiliaryReviewHints,
+  findClusterKeyForBonBojoItemId,
   formatAuxiliaryReviewBadge,
   formatAuxiliaryReviewTip,
   matchBonBojoStemForCluster,
@@ -105,5 +106,26 @@ describe('attachAuxiliaryReviewHints', () => {
     expect(out[0].auxReview?.status).toBe('review');
     expect(out[0].auxReview?.stemKey).toBe('해보');
     expect(out[1].auxReview).toBeUndefined();
+  });
+});
+
+describe('findClusterKeyForBonBojoItemId', () => {
+  it('auxReview.itemId로 클러스터 키를 찾는다', () => {
+    expect(
+      findClusterKeyForBonBojoItemId(
+        [
+          { key: '해보', auxReview: { itemId: 'verb-boda1' } },
+          { key: '뉴욕타임스' },
+        ],
+        'verb-boda1',
+      ),
+    ).toBe('해보');
+  });
+
+  it('없으면 null — 기존 목록은 건드리지 않는 조회만', () => {
+    const clusters = [{ key: '해보', auxReview: { itemId: 'verb-boda1' } }];
+    expect(findClusterKeyForBonBojoItemId(clusters, 'verb-oda')).toBeNull();
+    expect(clusters).toHaveLength(1);
+    expect(clusters[0].key).toBe('해보');
   });
 });

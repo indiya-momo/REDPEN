@@ -136,6 +136,9 @@ import TooltipGuide from './TooltipGuide.jsx';
  *     showConfirm?: boolean,
  *     onDismiss: () => void,
  *   } | null,
+ *   focusBonBojoItemId?: string | null,
+ *   focusBonBojoLabel?: string | null,
+ *   onFocusBonBojoConsumed?: () => void,
  * }} props
  */
 export default function ConsistencyPanel({
@@ -186,6 +189,9 @@ export default function ConsistencyPanel({
   onGuidePinClick,
   guideSpotlight = false,
   consistencyUnifyPinGuide = null,
+  focusBonBojoItemId = null,
+  focusBonBojoLabel = null,
+  onFocusBonBojoConsumed,
 }) {
   const [literalInput, setLiteralInput] = useState('');
   const [slotInput, setSlotInput] = useState('');
@@ -367,6 +373,9 @@ export default function ConsistencyPanel({
             seriesSpacingGuideActive ? 'unify-series-spacing' : undefined
           }
           onSeriesSpacingGuideSelect={onSeriesSpacingGuideSelect}
+          focusBonBojoItemId={focusBonBojoItemId}
+          focusBonBojoLabel={focusBonBojoLabel}
+          onFocusBonBojoConsumed={onFocusBonBojoConsumed}
         />
       ) : null}
       <section

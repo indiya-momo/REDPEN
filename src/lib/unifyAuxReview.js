@@ -115,3 +115,21 @@ export function attachAuxiliaryReviewHints(clusters) {
     };
   });
 }
+
+/**
+ * 본조 결과 → 표기 통일 점프용. auxReview.itemId가 같은 첫 클러스터 키.
+ * @param {readonly { key?: string, auxReview?: { itemId?: string } | null }[]} clusters
+ * @param {string} itemId
+ * @returns {string | null}
+ */
+export function findClusterKeyForBonBojoItemId(clusters, itemId) {
+  const id = String(itemId ?? '').trim();
+  if (!id) return null;
+  for (const cluster of clusters ?? []) {
+    if (cluster?.auxReview?.itemId?.trim() === id) {
+      const key = String(cluster.key ?? '').trim();
+      if (key) return key;
+    }
+  }
+  return null;
+}

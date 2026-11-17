@@ -347,6 +347,14 @@ export default function MainScreen({
   const [lastConsistencyPane, setLastConsistencyPane] = useState(
     /** @type {'toc' | 'rules'} */ ('rules'),
   );
+  /** 본조 결과 → 표기 통일 추천 점프 (검사 결과 유지, 기준 패널만 잠깐 표시) */
+  const [consistencyUnifyPeek, setConsistencyUnifyPeek] = useState(false);
+  const [jumpBonBojoItemId, setJumpBonBojoItemId] = useState(
+    /** @type {string | null} */ (null),
+  );
+  const [jumpBonBojoLabel, setJumpBonBojoLabel] = useState(
+    /** @type {string | null} */ (null),
+  );
   const [thumbStripOpen, setThumbStripOpen] = useState(() =>
     guestBrowseHidesThumbStrip() ? false : readThumbStripOpenPreference(),
   );
@@ -645,7 +653,22 @@ export default function MainScreen({
     unifyPreviewClear();
     setConsistencyFocus('rules');
     setLastConsistencyPane('rules');
+    setConsistencyUnifyPeek(false);
+    setJumpBonBojoItemId(null);
+    setJumpBonBojoLabel(null);
   }, [tocCheck, ruleCheck, unifyPreviewClear]);
+
+  const handleJumpToUnifyAux = useCallback(({ itemId, label }) => {
+    setConsistencyFocus('rules');
+    setLastConsistencyPane('rules');
+    setConsistencyUnifyPeek(true);
+    setJumpBonBojoItemId(String(itemId ?? '').trim() || null);
+    setJumpBonBojoLabel(String(label ?? '').trim() || null);
+  }, []);
+
+  const handleFocusBonBojoConsumed = useCallback(() => {
+    // 스크롤·하이라이트만 한 뒤 itemId는 유지(재클릭 대비). miss 배너는 패널이 관리.
+  }, []);
 
   const clearSpellingTabWork = useCallback(() => {
     ruleCheck.clearSpellingCheckState();
@@ -2426,7 +2449,7 @@ export default function MainScreen({
                 formatPageLabel={pageDisplay.formatLabel}
               />
             ) : null}
-            {showConsistencyResultsPanel ? (
+            {showConsistencyResultsPanel && !consistencyUnifyPeek ? (
               <CheckResultsPanel
                 entries={consistencyTabEntries}
                 viewSource="consistency"
@@ -2453,11 +2476,29 @@ export default function MainScreen({
                 formatPageLabel={pageDisplay.formatLabel}
                 customRules={customRules}
                 pageTexts={pdf.pageTexts}
+                onJumpToUnifyAux={handleJumpToUnifyAux}
               />
             ) : null}
-            {!consistencyWorkDone ? (
-              <div className="consistency-rules-scroll custom-scrollbar">
-                <ConsistencyPanel
+            <div
+              className="consistency-rules-scroll custom-scrollbar"
+              hidden={showConsistencyResultsPanel && !consistencyUnifyPeek}
+            >
+              {consistencyWorkDone && consistencyUnifyPeek ? (
+                <div className="consistency-unify-jump-bar">
+                  <button
+                    type="button"
+                    className="consistency-unify-jump-bar__back"
+                    onClick={() => {
+                      setConsistencyUnifyPeek(false);
+                      setJumpBonBojoItemId(null);
+                      setJumpBonBojoLabel(null);
+                    }}
+                  >
+                    검사 결과로
+                  </button>
+                </div>
+              ) : null}
+              <ConsistencyPanel
                   guideSpotlight={guestWorkGuide.showConsistencyGuide}
                   auxiliaryVerbGuide={
                     guestWorkGuide.showAuxiliaryVerbGuide
@@ -2576,9 +2617,11 @@ export default function MainScreen({
                   formatPageLabel={(systemPage) =>
                     pageDisplay.formatLabel(systemPage)
                   }
+                  focusBonBojoItemId={jumpBonBojoItemId}
+                  focusBonBojoLabel={jumpBonBojoLabel}
+                  onFocusBonBojoConsumed={handleFocusBonBojoConsumed}
                 />
-              </div>
-            ) : null}
+            </div>
           </div>
 
       </aside>
