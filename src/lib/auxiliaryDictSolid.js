@@ -18,8 +18,7 @@ import {
   verdictFromStdictHits,
 } from './unifyStdictPos.js';
 
-const DICT_TIP = (lemma) =>
-  `표준국어대사전 「${lemma}」 등재 — 붙여 씀`;
+const DICT_TIP = (lemma) => `표준국어대사전 「${lemma}」 등재`;
 
 /** @type {Map<string, boolean>} */
 const predicateCache = new Map();
@@ -432,25 +431,21 @@ export async function enrichAuxiliaryDictSolid(groups, opts = {}) {
         const job = registeredHits.find((row) => row.instIndex === instIndex);
         if (!job) return inst;
         if (job.kind === 'registered') return null;
-        if (job.kind === 'glued-solid') return { ...inst, auxDictSolid: true };
-        return { ...inst, suggestedText: job.solid };
+        if (job.kind === 'glued-solid') {
+          return {
+            ...inst,
+            auxDictSolid: true,
+            tip: DICT_TIP(job.lemma),
+          };
+        }
+        return {
+          ...inst,
+          suggestedText: job.solid,
+          tip: DICT_TIP(job.lemma),
+        };
       })
       .filter(Boolean);
     if (group.auxSplitLongCompound && instances.length === 0) return [];
-    const tips = [
-      ...new Set(
-        registeredHits
-          .filter((job) => job.kind === 'solid' || job.kind === 'glued-solid')
-          .map((job) => DICT_TIP(job.lemma)),
-      ),
-    ];
-    const prev = String(group.tip ?? '').trim();
-    const extra = tips.filter((tip) => !prev.includes(tip));
-    const tip = extra.length
-      ? prev
-        ? `${prev}\n${extra.join('\n')}`
-        : extra.join('\n')
-      : prev;
-    return [{ ...group, instances, tip }];
+    return [{ ...group, instances }];
   });
 }

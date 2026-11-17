@@ -68,7 +68,7 @@ export function useHighlights({
         : [['consistency', consistencyResults]];
     for (const [source, results] of sources) {
       for (const group of results) {
-        const tipText =
+        const groupTip =
           (group.tip || '').trim() ||
           (source === 'spelling' && group.category !== 'caution'
             ? getBuiltInTip(group.find, group.replace, group.spellingRuleId)
@@ -78,6 +78,7 @@ export function useHighlights({
         for (const inst of group.instances) {
           if (inst.pageNum !== currentPage) continue;
           if (!isInstanceVisible(resultVisibility, source, group, inst)) continue;
+          const tipText = String(inst.tip ?? '').trim() || groupTip;
           onPage.push({
             inst,
             tip: tipText,
