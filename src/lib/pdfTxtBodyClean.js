@@ -2,6 +2,8 @@
  * TXT 검수전용 — 쪽 텍스트에서 반복 머리말·바닥글·쪽수 줄을 걷어 낸다.
  * 찾기/하이라이트 핫패스와 무관.
  */
+import { splitSpreadColumns } from './spreadColumnSplit.js';
+import { splitPageColumns } from './pageColumnSplit.js';
 
 /** 상·하단 띠 (쪽 y 범위 대비, PDF y는 위로 큼) */
 const BAND_RATIO = 0.12;
@@ -53,10 +55,35 @@ export function stripGluedPageNumber(text) {
 
 /**
  * item transform y로 줄 묶기 (위→아래).
+ * 펼침면·페이지 내 2단이면 단을 나눈 뒤 왼쪽을 다 읽고 오른쪽을 붙인다.
  * @param {import('pdfjs-dist').TextItem[]} items
  * @returns {{ text: string, y: number }[]}
  */
 export function linesFromPdfItems(items) {
+  const source = items ?? [];
+  const spread = splitSpreadColumns(source);
+  if (spread) {
+    return [
+      ...linesFromPdfItemsInColumn(spread.left.map((row) => row.item)),
+      ...linesFromPdfItemsInColumn(spread.right.map((row) => row.item)),
+    ];
+  }
+  const columns = splitPageColumns(source);
+  if (columns) {
+    return [
+      ...linesFromPdfItemsInColumn(columns.left.map((row) => row.item)),
+      ...linesFromPdfItemsInColumn(columns.right.map((row) => row.item)),
+    ];
+  }
+  return linesFromPdfItemsInColumn(source);
+}
+
+/**
+ * 한 단(또는 단일 열) 안에서만 y 내림차순·같은 줄은 x 오름차순으로 줄을 만든다.
+ * @param {import('pdfjs-dist').TextItem[]} items
+ * @returns {{ text: string, y: number }[]}
+ */
+function linesFromPdfItemsInColumn(items) {
   /** @type {{ str: string, x: number, y: number, fontH: number, hasEOL?: boolean }[]} */
   const glyphs = [];
   for (const item of items ?? []) {
