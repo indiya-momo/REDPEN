@@ -26,6 +26,7 @@ import PdfPreviewBar from './PdfPreviewBar.jsx';
 import FaqFabButton from './FaqFabButton.jsx';
 import PdfZoomBar from './PdfZoomBar.jsx';
 import CheckResultsPanel from './CheckResultsPanel.jsx';
+import SpacingCategoryPanel from './SpacingCategoryPanel.jsx';
 import TooltipGuide from './TooltipGuide.jsx';
 import PdfCenterStage from './PdfCenterStage.jsx';
 import CriteriaSaveModal from './CriteriaSaveModal.jsx';
@@ -40,9 +41,11 @@ import { exportSpellingResults, exportConsistencyResults } from '../lib/exportRe
 import { maybeSavePaidCheckResult } from '../lib/maybeSavePaidCheckResult.js';
 import {
   isLoanwordConverterEnabled,
+  isSpacingCategoryEnabled,
   isSpellingExportEnabled,
   isTocBodyCheckEnabled,
 } from '../lib/featureFlags.js';
+import { countSpacingHitsOnPage } from '../lib/spacingCategoryRegistry.js';
 import { usePdfDocument } from '../hooks/usePdfDocument.js';
 import { usePdfZoom } from '../hooks/usePdfZoom.js';
 import { useRuleCheck } from '../hooks/useRuleCheck.js';
@@ -118,6 +121,9 @@ import {
   buildProofreadExportFilename,
   proofreadExportLabelForKind,
 } from '../lib/proofreadExportFilename.js';
+
+/** 띄어쓰기 탭 하이라이트는 맞춤법 결과의 숨김 목록을 쓰지 않는다. */
+const SPACING_RESULT_VISIBILITY = { hiddenGroups: {}, hiddenInstances: {} };
 
 /** 1번 — 기준 검수 버튼 바로 아래 (좌측 패널 안에 보이도록) */
 const WORK_GUIDE_1_ALIGN = {
@@ -341,6 +347,16 @@ export default function MainScreen({
 }) {
   void onOpenGuideWindow;
   const [workTab, setWorkTab] = useState(initialWorkTab);
+  const [spacingHighlight, setSpacingHighlight] = useState(() => ({
+    groups: /** @type {import('../lib/ruleEngine.js').GroupedResult[]} */ ([]),
+    selected: /** @type {import('../lib/ruleEngine.js').MatchInstance | null} */ (
+      null
+    ),
+    done: false,
+  }));
+  const onSpacingHighlight = useCallback((next) => {
+    setSpacingHighlight(next);
+  }, []);
   /** @type {['toc' | 'rules', import('react').Dispatch<import('react').SetStateAction<'toc' | 'rules'>>]} */
   const [consistencyFocus, setConsistencyFocus] = useState('rules');
   /** 목차·표기 결과가 둘 다 있을 때 어느 패널을 보여줄지 (겹쳐 쌓지 않음) */
@@ -612,6 +628,8 @@ export default function MainScreen({
     onBetaQuotaConsumed: () => void betaQuota.refresh(),
   });
   const tocBodyCheckEnabled = isTocBodyCheckEnabled();
+  const spacingCategoryEnabled = isSpacingCategoryEnabled();
+  const spacingTabActive = spacingCategoryEnabled && workTab === 'spacing';
   const spellingExportEnabled = isSpellingExportEnabled();
   const loanwordConverterEnabled = isLoanwordConverterEnabled();
   const tocCheck = useTocBodyCheck({
@@ -656,7 +674,9 @@ export default function MainScreen({
     unifyPreviewClear();
     setConsistencyFocus('rules');
     setLastConsistencyPane('rules');
-    ruleCheck.syncSelectionForTab(workTab);
+    if (workTab === 'spelling' || workTab === 'consistency') {
+      ruleCheck.syncSelectionForTab(workTab);
+    }
   }, [ruleCheck, workTab, unifyPreviewClear]);
   resetUiForNewPdfRef.current = resetUiForNewPdf;
 
@@ -676,17 +696,30 @@ export default function MainScreen({
   const ruleHighlights = useHighlights({
     currentPage: pdf.currentPage,
     currentPageData: pdf.currentPageData,
-    spellingResults: ruleCheck.spellingResults,
+    spellingResults: spacingTabActive
+      ? spacingHighlight.groups
+      : ruleCheck.spellingResults,
     consistencyResults: [
       ...ruleCheck.consistencyResults,
       ...unifyCandidatePreviewResults,
     ],
-    resultVisibility: ruleCheck.resultVisibility,
+    resultVisibility: spacingTabActive
+      ? SPACING_RESULT_VISIBILITY
+      : ruleCheck.resultVisibility,
     // 탭이 일관성이면 통일 미리보기 선택도 primary에 쓰이게 — activeSource와 분리
-    highlightTab: workTab === 'spelling' ? 'spelling' : 'consistency',
-    activeSource: workTab === 'spelling' ? 'spelling' : 'consistency',
-    selectedInstance:
-      workTab === 'spelling'
+    highlightTab: spacingTabActive
+      ? 'spelling'
+      : workTab === 'spelling'
+        ? 'spelling'
+        : 'consistency',
+    activeSource: spacingTabActive
+      ? 'spelling'
+      : workTab === 'spelling'
+        ? 'spelling'
+        : 'consistency',
+    selectedInstance: spacingTabActive
+      ? spacingHighlight.selected
+      : workTab === 'spelling'
         ? ruleCheck.spellingSelected
         : ruleCheck.consistencySelected,
     customRules,
@@ -1092,11 +1125,12 @@ export default function MainScreen({
     (!tocCheck.checkDone ||
       (tocCheck.checkDone && consistencyFocus === 'rules'));
 
-  const visibleOnCurrentPage =
-    tocBodyCheckEnabled &&
-    workTab === 'consistency' &&
-    consistencyFocus === 'toc' &&
-    tocCheck.checkDone
+  const visibleOnCurrentPage = spacingTabActive
+    ? countSpacingHitsOnPage(spacingHighlight.groups, pdf.currentPage)
+    : tocBodyCheckEnabled &&
+        workTab === 'consistency' &&
+        consistencyFocus === 'toc' &&
+        tocCheck.checkDone
       ? tocCheck.countVisibleOnPage(pdf.currentPage)
       : (() => {
           let n = ruleCheck.countVisibleOnPage(pdf.currentPage, workTab);
@@ -1123,6 +1157,17 @@ export default function MainScreen({
   const unifyPreviewActive = unifyCandidatePreviewResults.length > 0;
 
   const pdfPageStatus = useMemo(() => {
+    if (spacingTabActive) {
+      if (!pdf.pdf || !spacingHighlight.done) return null;
+      return {
+        currentPage: pdf.currentPage,
+        visibleOnCurrentPage,
+        formatPageLabel: pageDisplay.formatLabel,
+        tone: 'builtin',
+        mode: 'criteria',
+        printedPagesActive: pageDisplay.active,
+      };
+    }
     // 표기 통일 추천만 돌려도 하단「해당 페이지 발견」노란 원을 보여 준다
     if (!pdf.pdf || (!tabCheckDone && !unifyPreviewActive)) return null;
     const isToc =
@@ -1161,6 +1206,8 @@ export default function MainScreen({
     consistencyFocus,
     tocCheck.checkDone,
     ruleCheck.activeGroup?.category,
+    spacingTabActive,
+    spacingHighlight.done,
   ]);
 
   /** 둘러보기 1번 — 말풍선 읽은 뒤 손 표시 */
@@ -1336,6 +1383,7 @@ export default function MainScreen({
 
   function switchTab(tab) {
     setWorkTab(tab);
+    if (tab === 'spacing') return;
     ruleCheck.syncSelectionForTab(tab);
   }
 
@@ -2321,7 +2369,10 @@ export default function MainScreen({
             </div>
             )}
           </div>
-          <nav className="work-tabs" aria-label="검수 종류">
+          <nav
+            className={`work-tabs${spacingCategoryEnabled ? ' work-tabs--spacing' : ''}`}
+            aria-label="검수 종류"
+          >
             <button
               type="button"
               className={`work-tab work-tab--spelling ${workTab === 'spelling' ? 'active' : ''}`}
@@ -2336,6 +2387,15 @@ export default function MainScreen({
             >
               표기 통일
             </button>
+            {spacingCategoryEnabled ? (
+              <button
+                type="button"
+                className={`work-tab work-tab--spacing ${workTab === 'spacing' ? 'active' : ''}`}
+                onClick={() => switchTab('spacing')}
+              >
+                띄어쓰기
+              </button>
+            ) : null}
           </nav>
         </header>
 
@@ -2693,6 +2753,21 @@ export default function MainScreen({
             </div>
           </div>
 
+        {spacingCategoryEnabled ? (
+          <div
+            className="panel-left-work-scroll custom-scrollbar"
+            hidden={workTab !== 'spacing'}
+            aria-hidden={workTab !== 'spacing'}
+          >
+            <SpacingCategoryPanel
+              pageTexts={pdf.pageTexts}
+              formatPageLabel={pageDisplay.formatLabel}
+              setCurrentPage={pdf.setCurrentPage}
+              onHighlightChange={onSpacingHighlight}
+            />
+          </div>
+        ) : null}
+
       </aside>
 
       <div
@@ -2956,13 +3031,15 @@ export default function MainScreen({
               onRunCheck={
                 workTab === 'spelling'
                   ? ruleCheck.runSpellingCheck
-                  : async () => {
-                      tocCheck.clearTocCheckState();
-                      ruleCheck.clearConsistencyCheckState();
-                      setConsistencyFocus('rules');
-                      setLastConsistencyPane('rules');
-                      await ruleCheck.runConsistencyCheck();
-                    }
+                  : workTab === 'consistency'
+                    ? async () => {
+                        tocCheck.clearTocCheckState();
+                        ruleCheck.clearConsistencyCheckState();
+                        setConsistencyFocus('rules');
+                        setLastConsistencyPane('rules');
+                        await ruleCheck.runConsistencyCheck();
+                      }
+                    : () => {}
               }
               showRunButton={workTab === 'spelling' || workTab === 'consistency'}
               isProcessing={pdf.isProcessing}
