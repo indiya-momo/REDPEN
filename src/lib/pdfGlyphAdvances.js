@@ -330,16 +330,35 @@ const pageGlyphCache = new WeakMap();
 const itemOffsetCache = new WeakMap();
 
 /**
- * 페이지의 글리프 위치를 (한 번만) 계산하고 items 각각의 오프셋을 캐시.
+ * item 글자 오프셋 캐시 비우기 — 교정본 내보내기 전 null 폴백을 다시 시도할 때.
+ * @param {Array<object | null | undefined>} [items]
+ */
+export function clearItemGlyphOffsets(items) {
+  for (const it of items ?? []) {
+    if (it && typeof it === 'object') itemOffsetCache.delete(it);
+  }
+}
+
+/**
+ * 페이지의 글리프 위치를 계산하고 items 각각의 오프셋을 캐시.
  * 실패해도 throw 하지 않는다 (해당 item은 폴백).
  * @param {{ getOperatorList: Function, commonObjs?: { get: Function } }} page pdf.js PDFPageProxy
  * @param {Array<{ str?: string, transform?: number[] }>} items
  * @param {Record<string, number>} OPS pdfjsLib.OPS
+ * @param {{ force?: boolean }} [opts] force면 기존 캐시(성공·null)를 지우고 다시 잰다
  * @returns {Promise<void>}
  */
-export async function ensurePageGlyphOffsets(page, items, OPS) {
+export async function ensurePageGlyphOffsets(page, items, OPS, opts = {}) {
   if (!page || !items?.length || !OPS) return;
-  if (items.every((it) => !it || typeof it !== 'object' || itemOffsetCache.has(it))) return;
+  if (opts.force) {
+    clearItemGlyphOffsets(items);
+    pageGlyphCache.delete(page);
+  }
+  // null도 has → 예전엔 실패 캐시가 재시도를 막아 비율 분할(밀림)에 고정됨
+  const needs = items.filter(
+    (it) => it && typeof it === 'object' && !itemOffsetCache.has(it),
+  );
+  if (!needs.length) return;
   let p = pageGlyphCache.get(page);
   if (!p) {
     p = (async () => {
@@ -357,8 +376,7 @@ export async function ensurePageGlyphOffsets(page, items, OPS) {
     pageGlyphCache.set(page, p);
   }
   const glyphs = await p;
-  for (const it of items) {
-    if (!it || typeof it !== 'object' || itemOffsetCache.has(it)) continue;
+  for (const it of needs) {
     let off = null;
     if (glyphs && typeof it.str === 'string' && it.str) {
       try {

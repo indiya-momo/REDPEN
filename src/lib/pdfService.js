@@ -32,12 +32,13 @@ import {
 
 /**
  * 캔버스와 같은 글자 위치(연산자 목록 기준)를 페이지 items에 캐시.
- * 하이라이트 계산 전에 await — 실패·불일치 item은 기존 비율 분할로 폴백.
+ * 하이라이트·교정본 전에 await — 실패·불일치 item은 비율 분할로 폴백.
  * @param {import('pdfjs-dist').PDFPageProxy} page
  * @param {import('pdfjs-dist').TextItem[]} items
+ * @param {{ force?: boolean }} [opts]
  */
-export function ensureGlyphOffsetsForPage(page, items) {
-  return ensurePageGlyphOffsets(page, items, pdfjsLib.OPS);
+export function ensureGlyphOffsetsForPage(page, items, opts = {}) {
+  return ensurePageGlyphOffsets(page, items, pdfjsLib.OPS, opts);
 }
 
 /** @type {((ch: string) => number) | null} */
