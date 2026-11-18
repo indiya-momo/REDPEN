@@ -251,6 +251,47 @@ export function toggleInstanceVisibilityState(state, source, group, inst) {
 }
 
 /**
+ * 같은 그룹 안 instance 묶음을 한꺼번에 표시/숨김.
+ * 그룹 전체가 hiddenGroups면 개별 숨김으로 펼친 뒤, 지정 묶음만 맞춘다.
+ * @param {ResultVisibilityState} state
+ * @param {ResultSource} source
+ * @param {import('./ruleEngine.js').GroupedResult} group
+ * @param {import('./ruleEngine.js').MatchInstance[]} instances
+ * @param {boolean} visible
+ */
+export function setInstancesVisibilityState(
+  state,
+  source,
+  group,
+  instances,
+  visible,
+) {
+  const gKey = resultVisibilityKey(source, group);
+  const next = {
+    hiddenGroups: { ...state.hiddenGroups },
+    hiddenInstances: { ...state.hiddenInstances },
+  };
+  if (next.hiddenGroups[gKey]) {
+    delete next.hiddenGroups[gKey];
+    /** @type {Record<string, true>} */
+    const allHidden = {};
+    for (const inst of group.instances ?? []) {
+      allHidden[instanceVisibilityKey(inst)] = true;
+    }
+    next.hiddenInstances[gKey] = allHidden;
+  }
+  const hidden = { ...(next.hiddenInstances[gKey] ?? {}) };
+  for (const inst of instances ?? []) {
+    const iKey = instanceVisibilityKey(inst);
+    if (visible) delete hidden[iKey];
+    else hidden[iKey] = true;
+  }
+  if (Object.keys(hidden).length === 0) delete next.hiddenInstances[gKey];
+  else next.hiddenInstances[gKey] = hidden;
+  return next;
+}
+
+/**
  * @param {import('./ruleEngine.js').GroupedResult[]} _groups
  * @param {ResultSource} _source
  */

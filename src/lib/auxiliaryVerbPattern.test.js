@@ -36,6 +36,15 @@ describe('auxiliaryVerbPattern', () => {
     expect(matches(ji, '먹어 지다')).toBe(true);
   });
 
+  it('어 두 — 어둡다 활용(어두운·어두워) 오탐 없음', () => {
+    const duda = buildAuxiliaryVerbFindRules('어 두')[0];
+    expect(matches(duda, '어두운')).toBe(false);
+    expect(matches(duda, '어두워')).toBe(false);
+    expect(matches(duda, '어두움')).toBe(false);
+    expect(matches(duda, '적어 두고')).toBe(true);
+    expect(matches(duda, '적어 두다')).toBe(true);
+  });
+
   it('해 보·해 가 — 통해+명사(관형어) 오탐 없음', () => {
     const bo = buildAuxiliaryVerbFindRules('해 보')[0];
     const ga = buildAuxiliaryVerbFindRules('해 가')[0];
@@ -45,6 +54,20 @@ describe('auxiliaryVerbPattern', () => {
     expect(matchesRegex(bo, '상상해 보자')).toBe(true);
     expect(matches(ga, '먹어 가')).toBe(false);
     expect(matches(ga, '상상해 가')).toBe(false);
+  });
+
+  it('해 보 — 보이다 활용(보이는·보일·보여)은 보다로 잡지 않는다', () => {
+    const bo = buildAuxiliaryVerbFindRules('해 보')[0];
+    expect(matches(bo, '해 보이는')).toBe(false);
+    expect(matches(bo, '해 보일')).toBe(false);
+    expect(matches(bo, '해 보여')).toBe(false);
+    expect(matchesRegex(bo, '해 보자')).toBe(true);
+  });
+
+  it('해 보이 — 보이다 띄움 표면을 잡는다', () => {
+    const boida = buildAuxiliaryVerbFindRules('해 보이')[0];
+    expect(matches(boida, '해 보이는')).toBe(true);
+    expect(matches(boida, '해보이는')).toBe(false);
   });
 
   it('어 내 — 붙임(만들어내) 오탐 없음, 띄움만', () => {

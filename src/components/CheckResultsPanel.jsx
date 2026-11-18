@@ -1,5 +1,8 @@
 import ResultPageSummary from './ResultPageSummary.jsx';
-import { isAuxiliaryDictSolidInstance } from '../lib/auxiliaryDictSolid.js';
+import {
+  isAuxiliaryDictSolidInstance,
+  isAuxiliaryGluedDictSolidInstance,
+} from '../lib/auxiliaryDictSolid.js';
 import {
   buildAuxiliaryDocOnlyResultGroups,
   buildBonBojoDocStemCountsByItemId,
@@ -207,19 +210,94 @@ function auxiliarySpacingBadgeRows(instances) {
 }
 
 /**
- * @param {Record<string, unknown>} props
+ * @param {Record<string, unknown> & {
+ *   instances: import('../lib/ruleEngine.js').MatchInstance[],
+ *   isInstanceVisible?: (inst: import('../lib/ruleEngine.js').MatchInstance) => boolean,
+ *   onSetInstancesVisibility?: (
+ *     instances: import('../lib/ruleEngine.js').MatchInstance[],
+ *     visible: boolean,
+ *   ) => void,
+ * }} props
  */
 function AuxiliarySpacingPageRows(props) {
-  const rows = auxiliarySpacingBadgeRows(props.instances);
-  if (!rows.length) return null;
+  const { isInstanceVisible, onSetInstancesVisibility, ...summaryProps } =
+    props;
+  /** @type {import('../lib/ruleEngine.js').MatchInstance[]} */
+  const primary = [];
+  /** @type {import('../lib/ruleEngine.js').MatchInstance[]} */
+  const gluedSolid = [];
+  for (const inst of props.instances ?? []) {
+    if (isAuxiliaryGluedDictSolidInstance(inst)) gluedSolid.push(inst);
+    else primary.push(inst);
+  }
+  const rows = auxiliarySpacingBadgeRows(primary);
+  if (!rows.length && !gluedSolid.length) return null;
   return (
     <div className="aux-spacing-pages">
-      {rows.map(([mark, list]) => (
-        <div className="aux-spacing-pages__row" key={mark}>
-          <span className="aux-spacing-pages__mark">{mark}</span>
-          <ResultPageSummary {...props} instances={list} />
-        </div>
-      ))}
+      {rows.map(([mark, list]) => {
+        const visibleCount = list.filter((inst) =>
+          isInstanceVisible ? isInstanceVisible(inst) : true,
+        ).length;
+        const mode =
+          visibleCount === 0
+            ? 'hidden'
+            : visibleCount < list.length
+              ? 'partial'
+              : 'visible';
+        return (
+          <div className="aux-spacing-pages__row" key={mark}>
+            {onSetInstancesVisibility ? (
+              <label
+                className="result-visibility-toggle aux-spacing-pages__toggle"
+                onClick={(e) => e.stopPropagation()}
+                onKeyDown={(e) => e.stopPropagation()}
+              >
+                <GroupVisibilityCheckbox
+                  mode={mode}
+                  label={`${mark}어 쓴`}
+                  onToggle={() =>
+                    onSetInstancesVisibility(list, mode !== 'visible')
+                  }
+                />
+              </label>
+            ) : null}
+            <span className="aux-spacing-pages__mark">{mark}</span>
+            <ResultPageSummary
+              {...summaryProps}
+              instances={list}
+              isInstanceVisible={isInstanceVisible}
+            />
+          </div>
+        );
+      })}
+      {gluedSolid.length > 0 ? (
+        <details
+          className="aux-solid-fold"
+          onClick={(e) => e.stopPropagation()}
+          onToggle={(e) => {
+            const el = /** @type {HTMLDetailsElement} */ (e.currentTarget);
+            console.info('[aux-solid-fold]', {
+              open: el.open,
+              count: gluedSolid.length,
+            });
+          }}
+        >
+          <summary className="aux-solid-fold__summary">
+            합성어
+            <ResultFindingsCountCircle
+              count={gluedSolid.length}
+              ariaLabel={`합성어 ${gluedSolid.length}`}
+            />
+          </summary>
+          <div className="aux-solid-fold__body">
+            <ResultPageSummary
+              {...summaryProps}
+              instances={gluedSolid}
+              isInstanceVisible={isInstanceVisible}
+            />
+          </div>
+        </details>
+      ) : null}
     </div>
   );
 }
@@ -239,6 +317,7 @@ function AuxiliarySpacingPageRows(props) {
  *   isInstanceVisible?: (source: 'spelling' | 'consistency', group: import('../lib/ruleEngine.js').GroupedResult, inst: import('../lib/ruleEngine.js').MatchInstance) => boolean,
  *   onToggleVisibility: (source: 'spelling' | 'consistency', group: import('../lib/ruleEngine.js').GroupedResult) => void,
  *   onToggleInstanceVisibility?: (source: 'spelling' | 'consistency', group: import('../lib/ruleEngine.js').GroupedResult, inst: import('../lib/ruleEngine.js').MatchInstance) => void,
+ *   onSetInstancesVisibility?: (source: 'spelling' | 'consistency', group: import('../lib/ruleEngine.js').GroupedResult, instances: import('../lib/ruleEngine.js').MatchInstance[], visible: boolean) => void,
  *   onSelectInstance?: (inst: import('../lib/ruleEngine.js').MatchInstance, source: 'spelling' | 'consistency') => void,
  *   isSameGroupAsSelected: (group: import('../lib/ruleEngine.js').GroupedResult, source: 'spelling' | 'consistency') => boolean,
  *   onSelectGroup: (group: import('../lib/ruleEngine.js').GroupedResult, source: 'spelling' | 'consistency') => void,
@@ -263,6 +342,7 @@ export default function CheckResultsPanel({
   isInstanceVisible,
   onToggleVisibility,
   onToggleInstanceVisibility,
+  onSetInstancesVisibility,
   onSelectInstance,
   isSameGroupAsSelected,
   onSelectGroup,
@@ -522,6 +602,17 @@ export default function CheckResultsPanel({
                     onToggleInstanceVisibility
                       ? (inst) =>
                           onToggleInstanceVisibility(source, group, inst)
+                      : undefined
+                  }
+                  onSetInstancesVisibility={
+                    onSetInstancesVisibility
+                      ? (instances, visible) =>
+                          onSetInstancesVisibility(
+                            source,
+                            group,
+                            instances,
+                            visible,
+                          )
                       : undefined
                   }
                 />

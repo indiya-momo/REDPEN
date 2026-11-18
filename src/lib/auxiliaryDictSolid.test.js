@@ -12,6 +12,7 @@ import {
   gluedCompoundLemma,
   headwordHasCompoundHyphen,
   isAuxiliaryDictSolidInstance,
+  isAuxiliaryGluedDictSolidInstance,
   longCompoundSplitLemma,
   resetAuxiliaryDictSolidStdictCallCount,
   solidSurface,
@@ -107,6 +108,27 @@ function analyzeHead(head) {
 }
 
 describe('auxiliaryDictSolid', () => {
+  it('접힌 합성어 칸은 auxDictSolid(붙임 등재)만 본다', () => {
+    expect(
+      isAuxiliaryGluedDictSolidInstance({
+        matchedText: '들여다보니',
+        auxDictSolid: true,
+      }),
+    ).toBe(true);
+    expect(
+      isAuxiliaryGluedDictSolidInstance({
+        matchedText: '들어 온',
+        suggestedText: '들어온',
+      }),
+    ).toBe(false);
+    expect(
+      isAuxiliaryDictSolidInstance({
+        matchedText: '들어 온',
+        suggestedText: '들어온',
+      }),
+    ).toBe(true);
+  });
+
   it('등재 표시는 페이지를 붙여 한 줄로 쓴다', () => {
     expect(
       auxiliarySolidHitLabel(

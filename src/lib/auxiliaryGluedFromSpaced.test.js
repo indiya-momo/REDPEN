@@ -2,6 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { buildAuxiliaryVerbFindRules } from './auxiliaryVerbPattern.js';
 import { enrichAuxiliaryGluedFromSpaced } from './auxiliaryGluedFromSpaced.js';
 
+/** 테스트용 — 표면을 용언으로 인정 (실 Kiwi 없이 glue 경로 검증) */
+function confirmAll(text) {
+  const t = String(text ?? '');
+  if (!t) return null;
+  return { tokens: [{ str: t, tag: 'VV' }] };
+}
+
 function gadaRule() {
   const row = buildAuxiliaryVerbFindRules('아 가')[0];
   return {
@@ -13,7 +20,7 @@ function gadaRule() {
 }
 
 describe('enrichAuxiliaryGluedFromSpaced', () => {
-  it('같은 stem 규칙의 붙임 표면을 검사 건으로 보강한다', () => {
+  it('같은 stem 규칙으로 붙임 표면을 검사 건으로 보강한다', async () => {
     const groups = [
       {
         patternKind: 'auxiliary-verb',
@@ -35,8 +42,9 @@ describe('enrichAuxiliaryGluedFromSpaced', () => {
       { pageNum: 1, text: '살아 가는 길' },
       { pageNum: 2, text: '함께 살아가는 사람들' },
     ];
-    const next = enrichAuxiliaryGluedFromSpaced(groups, pages, {
+    const next = await enrichAuxiliaryGluedFromSpaced(groups, pages, {
       rules: [gadaRule()],
+      analyze: confirmAll,
     });
     const texts = next[0].instances.map((i) => i.matchedText);
     expect(texts).toContain('살아 가는');
@@ -46,16 +54,21 @@ describe('enrichAuxiliaryGluedFromSpaced', () => {
     expect(glued?.suggestedText).toBe('살아 가는');
   });
 
-  it('띄움 매치가 없어도 붙임만 있으면 그룹을 만든다', () => {
-    const next = enrichAuxiliaryGluedFromSpaced([], [{ pageNum: 2, text: '함께 살아가는 사람들' }], {
-      rules: [gadaRule()],
-    });
+  it('띄움 매치가 없어도 붙임만 있으면 그룹을 만든다', async () => {
+    const next = await enrichAuxiliaryGluedFromSpaced(
+      [],
+      [{ pageNum: 2, text: '함께 살아가는 사람들' }],
+      {
+        rules: [gadaRule()],
+        analyze: confirmAll,
+      },
+    );
     expect(next).toHaveLength(1);
     expect(next[0].instances.map((i) => i.matchedText)).toEqual(['살아가는']);
     expect(next[0].instances[0].suggestedText).toBe('살아 가는');
   });
 
-  it('아 들·라 들 — 형태소가 복수·명사면 버리고 녹아들어·빠져들어는 유지', () => {
+  it('아 들·라 들 — 형태소가 복수·명사면 버리고 녹아들어·빠져들어는 유지', async () => {
     const aDeul = {
       ...buildAuxiliaryVerbFindRules('아 들')[0],
       enabled: true,
@@ -125,9 +138,9 @@ describe('enrichAuxiliaryGluedFromSpaced', () => {
           ],
         },
       };
-      return table[text] ?? { surface1to1: false, tokens: [] };
+      return table[text] ?? null;
     };
-    const next = enrichAuxiliaryGluedFromSpaced([], pages, {
+    const next = await enrichAuxiliaryGluedFromSpaced([], pages, {
       rules: [aDeul, raDeul, jeoDeul],
       analyze,
     });
@@ -141,7 +154,59 @@ describe('enrichAuxiliaryGluedFromSpaced', () => {
     expect(texts).toContain('빠져들어');
   });
 
-  it('해보이는 → 해 보이는 띄움 제안', () => {
+  it('해보이는 → 보이다 줄에서 해 보이는 띄움 제안', async () => {
+    const row = buildAuxiliaryVerbFindRules('해 보이')[0];
+    const rule = {
+      ...row,
+      enabled: true,
+      bonBojoItemId: 'verb-boida',
+      label: '(아/어) + 보이다',
+    };
+    const analyze = (text) =>
+      text === '해보이는'
+        ? {
+            tokens: [
+              { str: '하', tag: 'VV' },
+              { str: '어', tag: 'EC' },
+              { str: '보이', tag: 'VV' },
+              { str: '는', tag: 'ETM' },
+            ],
+          }
+        : null;
+    const next = await enrichAuxiliaryGluedFromSpaced(
+      [],
+      [{ pageNum: 32, text: '자비롭기만 해보이는 약사여래' }],
+      { rules: [rule], analyze },
+    );
+    const hit = next[0]?.instances?.find((i) => i.matchedText.includes('해보'));
+    expect(hit?.matchedText).toBe('해보이는');
+    expect(hit?.suggestedText).toBe('해 보이는');
+  });
+
+  it('두다 줄은 어두운 붙임을 올리지 않는다', async () => {
+    const row = buildAuxiliaryVerbFindRules('어 두')[0];
+    const rule = {
+      ...row,
+      enabled: true,
+      bonBojoItemId: 'verb-duda',
+      label: '(아/어) + 두다',
+    };
+    const next = await enrichAuxiliaryGluedFromSpaced(
+      [],
+      [
+        {
+          pageNum: 1,
+          text: '어두운 전시실에 적어 두고 적어두고 메모',
+        },
+      ],
+      { rules: [rule], analyze: confirmAll },
+    );
+    const texts = (next[0]?.instances ?? []).map((i) => i.matchedText);
+    expect(texts).not.toContain('어두운');
+    expect(texts).toContain('적어두고');
+  });
+
+  it('보다 줄은 해보이는 붙임을 올리지 않는다', async () => {
     const row = buildAuxiliaryVerbFindRules('해 보')[0];
     const rule = {
       ...row,
@@ -149,26 +214,24 @@ describe('enrichAuxiliaryGluedFromSpaced', () => {
       bonBojoItemId: 'verb-boda1',
       label: '(아/어) + 보다',
     };
-    const next = enrichAuxiliaryGluedFromSpaced(
+    const next = await enrichAuxiliaryGluedFromSpaced(
       [],
       [{ pageNum: 32, text: '자비롭기만 해보이는 약사여래' }],
-      { rules: [rule] },
-    );
-    const hit = next[0]?.instances?.find((i) => i.matchedText.includes('해보'));
-    expect(hit?.matchedText).toBe('해보이는');
-    expect(hit?.suggestedText).toBe('해 보이는');
-  });
-
-  it('다른 글자 안의 짧은 부분일치는 올리지 않는다', () => {
-    const next = enrichAuxiliaryGluedFromSpaced(
-      [],
-      [{ pageNum: 2, text: '가격은 달러가 기준이다' }],
-      { rules: [gadaRule()] },
+      { rules: [rule], analyze: confirmAll },
     );
     expect(next).toHaveLength(0);
   });
 
-  it('라 가 — 명사+조사 신라가는 용언 미확인으로 버리고 살아가는은 남긴다', () => {
+  it('다른 글자 안의 짧은 부분일치는 올리지 않는다', async () => {
+    const next = await enrichAuxiliaryGluedFromSpaced(
+      [],
+      [{ pageNum: 2, text: '가격은 달러가 기준이다' }],
+      { rules: [gadaRule()], analyze: confirmAll },
+    );
+    expect(next).toHaveLength(0);
+  });
+
+  it('라 가 — 명사+조사 신라가는 용언 미확인으로 버리고 살아가는은 남긴다', async () => {
     const raGa = {
       ...buildAuxiliaryVerbFindRules('라 가')[0],
       enabled: true,
@@ -193,9 +256,9 @@ describe('enrichAuxiliaryGluedFromSpaced', () => {
           ],
         };
       }
-      return { tokens: [] };
+      return null;
     };
-    const next = enrichAuxiliaryGluedFromSpaced(
+    const next = await enrichAuxiliaryGluedFromSpaced(
       [],
       [{ pageNum: 1, text: '신라가 망하고 함께 살아가는 길' }],
       { rules: [raGa, aGa], analyze },
@@ -207,7 +270,7 @@ describe('enrichAuxiliaryGluedFromSpaced', () => {
     expect(texts).toContain('살아가는');
   });
 
-  it('이미 가까운 index면 중복 추가하지 않는다', () => {
+  it('이미 가까운 index면 중복 추가하지 않는다', async () => {
     const groups = [
       {
         patternKind: 'auxiliary-verb',
@@ -223,21 +286,22 @@ describe('enrichAuxiliaryGluedFromSpaced', () => {
       },
     ];
     const pages = [{ pageNum: 2, text: '함께 살아가는 사람들' }];
-    const next = enrichAuxiliaryGluedFromSpaced(groups, pages, {
+    const next = await enrichAuxiliaryGluedFromSpaced(groups, pages, {
       rules: [gadaRule()],
+      analyze: confirmAll,
     });
     expect(next[0].instances).toHaveLength(1);
   });
 
-  it('긴복합 분리 규칙은 붙임 보강에 쓰지 않는다', () => {
+  it('긴복합 분리 규칙은 붙임 보강에 쓰지 않는다', async () => {
     const rule = {
       ...gadaRule(),
       auxSplitLongCompound: true,
     };
-    const next = enrichAuxiliaryGluedFromSpaced(
+    const next = await enrichAuxiliaryGluedFromSpaced(
       [],
       [{ pageNum: 1, text: '살아가는' }],
-      { rules: [rule] },
+      { rules: [rule], analyze: confirmAll },
     );
     expect(next).toHaveLength(0);
   });
