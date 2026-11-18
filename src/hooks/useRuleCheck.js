@@ -75,10 +75,17 @@ import { isLoanwordSpellingRule } from '../lib/loanwordCheckRules.js';
 import { countLoanwordActiveRules } from '../lib/activeRuleCount.js';
 import { markConsistencyCheckStartedForExportGuide } from '../lib/guestBrowsePolicy.js';
 import { bootKiwiIfNeeded } from '../lib/kiwiMorph/bootLocal.js';
+import { isSpacingCategoryEnabled } from '../lib/featureFlags.js';
+import {
+  isAnySpacingFolderEnabled,
+  normalizeSpacingFolderEnabled,
+} from '../lib/spacingFolderBundles.js';
+import { mergeSpacingFolderIntoSpellingResults } from '../lib/spacingFolderCheck.js';
 
 /** @param {{
  *   builtInEnabled: Record<string, boolean>,
  *   cautionEnabled: Record<string, boolean>,
+ *   spacingFolderEnabled?: Record<string, boolean>,
  *   customRules: import('../lib/ruleTypes.js').Rule[],
  *   globalExcludePhrases: string[],
  *   pageTexts: import('../lib/pdfService.js').PageData[],
@@ -95,6 +102,7 @@ import { bootKiwiIfNeeded } from '../lib/kiwiMorph/bootLocal.js';
 export function useRuleCheck({
   builtInEnabled,
   cautionEnabled,
+  spacingFolderEnabled,
   customRules,
   globalExcludePhrases,
   pageTexts,
@@ -270,8 +278,18 @@ export function useRuleCheck({
 
       const runSpelling = scope === 'spelling';
       const runConsistency = scope === 'consistency';
+      const spacingEnabledMap = normalizeSpacingFolderEnabled(
+        spacingFolderEnabled,
+      );
+      const spacingModulesMayRun =
+        isSpacingCategoryEnabled() &&
+        isAnySpacingFolderEnabled(spacingEnabledMap);
 
-      if (runSpelling && spellingActiveRules.length === 0) {
+      if (
+        runSpelling &&
+        spellingActiveRules.length === 0 &&
+        !spacingModulesMayRun
+      ) {
         alert('맞춤법 검수를 진행할 기준을 등록해주세요');
         return;
       }
@@ -351,7 +369,18 @@ export function useRuleCheck({
           },
         );
         allErrors.push(...errors);
-        scopeResults = sortSpellingResultsForDisplay(grouped, pageTexts);
+        let merged = grouped;
+        if (spacingModulesMayRun) {
+          const spacingGroups = mergeSpacingFolderIntoSpellingResults(
+            pageTexts,
+            grouped,
+            spacingEnabledMap,
+          );
+          if (spacingGroups.length) {
+            merged = [...grouped, ...spacingGroups];
+          }
+        }
+        scopeResults = sortSpellingResultsForDisplay(merged, pageTexts);
         setSpellingResults(scopeResults);
         setSpellingCheckDone(true);
         const inst = scopeResults[0]?.instances[0] ?? null;
@@ -480,6 +509,7 @@ export function useRuleCheck({
       pageTexts,
       builtInEnabled,
       cautionEnabled,
+      spacingFolderEnabled,
       customRules,
       spellingActiveRules,
       consistencyActiveRules,
@@ -491,6 +521,9 @@ export function useRuleCheck({
       setIsProcessing,
       setProgress,
       afterCheckRef,
+      authUid,
+      authEmail,
+      onBetaQuotaConsumed,
     ],
   );
 

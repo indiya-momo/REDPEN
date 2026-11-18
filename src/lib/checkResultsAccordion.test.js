@@ -28,6 +28,18 @@ describe('partitionSpellingResultEntries', () => {
     ]);
     expect(parts.builtin).toHaveLength(1);
   });
+
+  it('spacing:* 는 builtin 칸에 넣는다', () => {
+    const parts = partitionSpellingResultEntries([
+      {
+        source: 'spelling',
+        group: { category: 'spacing:numberUnit', label: '수사' },
+      },
+    ]);
+    expect(parts.builtin).toHaveLength(1);
+    expect(parts.caution).toHaveLength(0);
+    expect(parts.loanword).toHaveLength(0);
+  });
 });
 
 describe('defaultOpenSpellingCategory', () => {

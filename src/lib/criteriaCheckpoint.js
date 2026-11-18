@@ -8,6 +8,7 @@
  *   import('./ruleSetsStorage.js').RuleSet,
  *   | 'builtInEnabled'
  *   | 'cautionEnabled'
+ *   | 'spacingFolderEnabled'
  *   | 'customRules'
  *   | 'globalExcludePhrases'
  *   | 'consistencyDecisions'
@@ -17,6 +18,7 @@ export function buildCriteriaCheckpoint(set) {
   return JSON.stringify({
     builtInEnabled: set?.builtInEnabled ?? {},
     cautionEnabled: set?.cautionEnabled ?? {},
+    spacingFolderEnabled: set?.spacingFolderEnabled ?? {},
     customRules: set?.customRules ?? [],
     globalExcludePhrases: set?.globalExcludePhrases ?? [],
     consistencyDecisions: set?.consistencyDecisions ?? [],

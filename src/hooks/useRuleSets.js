@@ -43,6 +43,11 @@ import { formatProjectDialogLabel } from '../lib/projectDialogLabel.js';
 import { normalizeRuleSet } from '../lib/ruleSetNormalize.js';
 import { buildCriteriaCheckpoint } from '../lib/criteriaCheckpoint.js';
 import {
+  SPACING_FOLDER_BUNDLE_IDS,
+  defaultSpacingFolderEnabled,
+  normalizeSpacingFolderEnabled,
+} from '../lib/spacingFolderBundles.js';
+import {
   mergeProjectContext,
 } from '../lib/projectMeta.js';
 import { appendWorkHistoryEntry } from '../lib/projectWorkHistory.js';
@@ -426,6 +431,7 @@ export function useRuleSets(authUid = '', authEmail = '', options = {}) {
           const touchesCriteria =
             patch.builtInEnabled !== undefined ||
             patch.cautionEnabled !== undefined ||
+            patch.spacingFolderEnabled !== undefined ||
             patch.customRules !== undefined ||
             patch.consistencyDecisions !== undefined;
           const savedAtBump =
@@ -745,6 +751,9 @@ export function useRuleSets(authUid = '', authEmail = '', options = {}) {
       const config = {
         builtInEnabled: structuredClone(sourceAfterFlush.builtInEnabled ?? {}),
         cautionEnabled: structuredClone(sourceAfterFlush.cautionEnabled ?? {}),
+        spacingFolderEnabled: structuredClone(
+          sourceAfterFlush.spacingFolderEnabled ?? {},
+        ),
         customRules: structuredClone(sourceAfterFlush.customRules ?? []),
         globalExcludePhrases: [...(sourceAfterFlush.globalExcludePhrases ?? [])],
         consistencyDecisions: structuredClone(
@@ -1046,6 +1055,39 @@ export function useRuleSets(authUid = '', authEmail = '', options = {}) {
     [updateActiveSet],
   );
 
+  const handleSpacingFolderToggle = useCallback(
+    (bundleId) => {
+      const activeSet = ruleSetsRef.current.find(
+        (s) => s.id === activeSetIdRef.current,
+      );
+      if (!activeSet) return;
+      if (!SPACING_FOLDER_BUNDLE_IDS.includes(bundleId)) return;
+      const prev = normalizeSpacingFolderEnabled(activeSet.spacingFolderEnabled);
+      updateActiveSet({
+        spacingFolderEnabled: {
+          ...prev,
+          [bundleId]: !prev[bundleId],
+        },
+      });
+    },
+    [updateActiveSet],
+  );
+
+  const handleSpacingFolderSetAll = useCallback(
+    (enabled) => {
+      const activeSet = ruleSetsRef.current.find(
+        (s) => s.id === activeSetIdRef.current,
+      );
+      if (!activeSet) return;
+      const next = defaultSpacingFolderEnabled();
+      for (const id of SPACING_FOLDER_BUNDLE_IDS) {
+        next[id] = enabled === true;
+      }
+      updateActiveSet({ spacingFolderEnabled: next });
+    },
+    [updateActiveSet],
+  );
+
   return {
     rulesReady,
     activeSet,
@@ -1064,6 +1106,8 @@ export function useRuleSets(authUid = '', authEmail = '', options = {}) {
     handleBuiltInSetAll,
     handleCautionToggle,
     handleCautionSetAll,
+    handleSpacingFolderToggle,
+    handleSpacingFolderSetAll,
     flushPendingRuleSetsSave,
     flushPendingRuleSetsSaveAsync,
   };

@@ -2,7 +2,7 @@
 
 **스펙:** [2026-11-19-spacing-folder-in-spelling-tab-design.md](../specs/2026-11-19-spacing-folder-in-spelling-tab-design.md)  
 **날짜:** 2026-11-19  
-**상태:** 플랜 작성 · 구현 대기  
+**상태:** Step 1–4 구현 진행 (패널 제거·파이프라인·persist·UI)  
 **제약:** `ruleEngine`/시트 행 비침 · beta freeze 준수 · `isSpacingCategoryEnabled()` 단일 게이트 · 모듈은 2차(검수 후 병합)만
 
 ## 목표

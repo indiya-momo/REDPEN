@@ -589,8 +589,20 @@
 여백·hover만 (편집자·맞춤법 동일) */
 .panel-left .builtin-spelling-caution-scroll,
 .panel-left .builtin-spelling-rules-scroll,
-.panel-left .builtin-spelling-loanword-scroll {
+.panel-left .builtin-spelling-loanword-scroll,
+.panel-left .builtin-spelling-spacing-folder-scroll {
   --criteria-item-pad-y: calc(5px * var(--panel-ui-scale));
+}
+
+.panel-left .spacing-folder-checklist {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--panel-gap-group);
+}
+
+.panel-left .spacing-folder-row {
+  margin: 0;
 }
 
 .panel-left .caution-checklist-details[open] > .caution-checklist,

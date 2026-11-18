@@ -64,6 +64,7 @@ export function extractShareCriteria(ruleSet) {
   return {
     builtInEnabled: structuredClone(set.builtInEnabled ?? {}),
     cautionEnabled: structuredClone(set.cautionEnabled ?? {}),
+    spacingFolderEnabled: structuredClone(set.spacingFolderEnabled ?? {}),
     customRules: structuredClone(set.customRules ?? []),
     globalExcludePhrases: [...(set.globalExcludePhrases ?? [])],
     consistencyDecisions: structuredClone(set.consistencyDecisions ?? []),
@@ -218,6 +219,7 @@ export function buildRuleSetFromSharePackage(pkg) {
     name: sourceName.slice(0, 80),
     builtInEnabled: criteria.builtInEnabled ?? {},
     cautionEnabled: criteria.cautionEnabled ?? {},
+    spacingFolderEnabled: criteria.spacingFolderEnabled ?? {},
     customRules: criteria.customRules ?? [],
     globalExcludePhrases: criteria.globalExcludePhrases ?? [],
     consistencyDecisions: criteria.consistencyDecisions ?? [],
@@ -300,6 +302,7 @@ export function planApplySharePackage(
     name: finalName,
     builtInEnabled: criteria.builtInEnabled ?? {},
     cautionEnabled: criteria.cautionEnabled ?? {},
+    spacingFolderEnabled: criteria.spacingFolderEnabled ?? {},
     customRules: criteria.customRules ?? [],
     globalExcludePhrases: criteria.globalExcludePhrases ?? [],
     consistencyDecisions: criteria.consistencyDecisions ?? [],
