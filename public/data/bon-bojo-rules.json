@@ -505,6 +505,29 @@
           "displayLabel": "(아/어) + 보다"
         },
         {
+          "id": "verb-boida",
+          "label": "보이",
+          "enabled": false,
+          "stems": [
+            "해 보이",
+            "해 보인",
+            "해 보일",
+            "해 보여",
+            "해 보였",
+            "어 보이",
+            "어 보인",
+            "어 보일",
+            "어 보여",
+            "어 보였",
+            "아 보이",
+            "아 보인",
+            "아 보일",
+            "아 보여",
+            "아 보였"
+          ],
+          "displayLabel": "(아/어) + 보이다"
+        },
+        {
           "id": "verb-oda",
           "label": "오",
           "enabled": false,
@@ -964,12 +987,6 @@
             "도록 마"
           ],
           "displayLabel": "(-지/게/고) + 말다"
-        },
-        {
-          "id": "verb-long-compound-split",
-          "label": "띄어",
-          "enabled": false,
-          "displayLabel": "본용언이 3음절 이상 복합어/파생어(띄어쓰기 필수)"
         }
       ],
       "bonVerbAllow": [
