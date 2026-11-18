@@ -58,7 +58,8 @@ export function findAdnominalDependentNounHits(text) {
 
   // F01: 될수 있 → 될 수 (…수 + 있/없). 선수 등 명사 제외
   {
-    const re = /([가-힣]+수)(?=\s*(?:있|없))/g;
+    // 「없이」는 제외(별수 없이). 있다/없다 계열만.
+    const re = /([가-힣]+수)(?=\s*(?:있|없(?!이)))/g;
     let m;
     while ((m = re.exec(text)) !== null) {
       const whole = m[1];
