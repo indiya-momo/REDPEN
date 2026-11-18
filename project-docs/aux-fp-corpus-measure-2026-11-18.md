@@ -1,6 +1,7 @@
 # 본조 붙임 오탐 · 원고 실측 (2026-11-18)
 
-**상태:** 측정·판단만. 추가 금칙·짧은어절 규칙은 **넣지 않음**.  
+**상태:** 5절 반영 완료(커밋 `8e58d8a`). 추가 금칙·짧은어절 규칙은 **넣지 않음**.  
+**후속:** 접힘 사용은 PostHog `aux_solid_fold`로 집계. 완전 제거는 배포 후 펼침 빈도를 본 뒤.  
 **관련:** `어두운` → `두←운|워|웠|움` + VA 단독 DROP은 이미 반영.
 
 ---
@@ -85,13 +86,28 @@ lemma 없음 예: `해보이는`(본+보이다, 타당), `퍼지며`, `아들인
 `isConfirmedAuxiliaryMorph`: VV/VX/XSV만 인정 (VA·**VCP** 단독 제외).  
 `이어보이다` 등은 VV라 KEEP. 경주멍 lemma없음·등재NO 중 VCP 오탐: `아들인`, `손잡이라지만`, `함께였으려나`.
 
+**freeze 판단:** `auxiliaryMorphFilter.js`는 **매칭 후 필터**다.  
+베타 freeze(`ruleEngine` · regex · spelling/caution **매칭** 로직) 밖으로 해석해 반영했다.  
+(이미 들어간 VA-only DROP과 동일 층. `AUX_TAIL_FORBIDDEN_AFTER` 금칙 추가는 regex라 보류.)
+
 ### (2) 접힌 「합성어」칸 — 완료
 
 - UI만 (`CheckResultsPanel` + CSS). **ruleEngine/regex freeze 파일 아님.**
 - **접는 대상:** `auxDictSolid` (이미 붙여 쓴·사전 등재)만.
 - **안 접음:** 띄움→붙임 제안(spaced solid) — 편집자 판단 대상.
-- 펼침 시 `console.info('[aux-solid-fold]', { open, count })` (사용 빈도 가늠용).
-- 완전 제거는 접힌 칸 사용을 본 뒤.
+- 펼침 시 PostHog `aux_solid_fold` (`open`, `count_bucket`만 · 원고 텍스트 없음).  
+  (`console.info`는 베타 사용자 콘솔을 볼 수 없어 집계에 쓰지 않음.)
+- 완전 제거는 배포 후 펼침 빈도를 본 뒤.
+
+### 테스트 덮개 (보고 보완)
+
+| 동작 | 고정 위치 |
+|------|-----------|
+| VCP-only DROP (`아들인`) | `auxiliaryMorphFilter.test.js` 토큰 fixture |
+| VV KEEP (`이어보이다`) | 같은 파일 — VV+보이 fixture |
+| `해보이는` KEEP | Kiwi `analyzeLine` + `pruneAuxiliaryFalseMorph` |
+| 접힘 대상 = `auxDictSolid`만 | `auxiliaryDictSolid.test.js` 헬퍼 |
+| 접힘 `<details>` 렌더 | **컴포넌트/화면 테스트 없음** (코드 경로만 확인) |
 
 ### 15건 사람 판독 (등재NO 10 + lemma없음 5)
 
@@ -106,7 +122,19 @@ lemma 없음 예: `해보이는`(본+보이다, 타당), `퍼지며`, `아들인
 
 ---
 
-## 6. 재현
+## 6. 남은 소음 · 다음 정리 후보 (별건)
+
+새 규칙이 VV를 모두 KEEP하므로 **단일 동사 vs 보조**를 구분하지 못한다.  
+목록에 계속 남는 예: `튀어나온`·`받아들이고`류, `퍼지며`류.
+
+**lemma 오분석 (코드 확인):** `gluedCompoundLemma`가 표면 안에서 보조 onset을 찾은 뒤  
+`앞부분 + 보조기본형`으로 표제어를 만든다. onset이 짧게 잡히면  
+`튀어나온`→`튀어나다`, `피어오른`→`피어오다`처럼 **꼬리만 맞는 잘못된 lemma**가 난다.  
+이번 슬라이스에서는 손대지 않음. 15건 중 약 10건이 이 계열 → **다음 정리 후보로 기록만.**
+
+---
+
+## 7. 재현
 
 ```text
 node --import ./scripts/_json-import-hook.mjs scripts/_probe_aux_keep_book_part2.mjs "PDF경로"

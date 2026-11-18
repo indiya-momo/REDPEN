@@ -35,6 +35,7 @@ import {
   SPELLING_RULE_BADGE_LABEL,
   LOANWORD_BADGE_LABEL,
 } from '../lib/checkResultSummaryFormat.js';
+import { trackAuxSolidFold } from '../lib/analytics.js';
 import {
   defaultOpenConsistencyCategory,
   defaultOpenSpellingCategory,
@@ -276,7 +277,7 @@ function AuxiliarySpacingPageRows(props) {
           onClick={(e) => e.stopPropagation()}
           onToggle={(e) => {
             const el = /** @type {HTMLDetailsElement} */ (e.currentTarget);
-            console.info('[aux-solid-fold]', {
+            trackAuxSolidFold({
               open: el.open,
               count: gluedSolid.length,
             });
