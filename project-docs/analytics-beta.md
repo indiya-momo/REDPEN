@@ -66,6 +66,7 @@ npx -y @posthog/wizard@latest --region eu
 | `result_viewed` | 검사 완료 직후 (결과 패널로 전환) | `scope`, `finding_count_bucket` |
 | `ruleset_saved` | 규칙 세트 「저장」 클릭 | `builtin_bucket`, `spacing_bucket`, `consistency_bucket` |
 | `feedback_opened` | 피드백 모달 열기 | — |
+| `aux_solid_fold` | 본조 「합성어」접힌 칸 토글 | `open`, `count_bucket` (원고 텍스트 없음) |
 | `guest_browse_started` | 대문 「먼저 둘러보기」 | `source: welcome` |
 | `guest_browse_completed` | 둘러보기 중 7번(`WORK_EXIT`) 확인 | `source: work_exit_guide` |
 

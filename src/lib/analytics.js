@@ -442,6 +442,18 @@ export function trackFeedbackOpened() {
   captureAnalytics('feedback_opened');
 }
 
+/**
+ * 본조 결과 「합성어」접힌 칸 토글.
+ * 원고 텍스트는 보내지 않음 — 펼침 여부·건수 버킷만.
+ * @param {{ open: boolean, count: number }} input
+ */
+export function trackAuxSolidFold(input) {
+  captureAnalytics('aux_solid_fold', {
+    open: Boolean(input.open),
+    count_bucket: bucketFindingCount(input.count),
+  });
+}
+
 /** 대문 「먼저 둘러보기」 */
 export function trackGuestBrowseStarted() {
   captureAnalytics('guest_browse_started', { source: 'welcome' });
