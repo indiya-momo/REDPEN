@@ -3,8 +3,14 @@ import {
   encodeTxtForDownload,
   finalTxtFilenameFromPdfName,
   joinPagesAsTxt,
+  preparePdfTxtReview,
   txtFilenameFromPdfName,
 } from './pdfTxtExport.js';
+import {
+  PDF_SIZE_MAX_BYTES,
+  PDF_SIZE_MAX_BYTES_TERMINAL,
+  PDF_SIZE_MAX_MESSAGE_TERMINAL,
+} from './pdfSizeLimits.js';
 import {
   cleanPagesForTxt,
   isLikelyPageNumberLine,
@@ -43,6 +49,33 @@ describe('pdfTxtExport', () => {
         { pageNum: 3, text: '   ' },
       ]),
     ).toBe('첫 쪽\n\n--- p.2 ---\n둘째 쪽');
+  });
+
+  it('TXT 변환은 100~150MB는 용량 메시지로 막지 않는다', async () => {
+    const mid = {
+      name: 'mid.pdf',
+      type: 'application/pdf',
+      size: PDF_SIZE_MAX_BYTES + 1,
+    };
+    try {
+      await preparePdfTxtReview(/** @type {File} */ (mid));
+      throw new Error('expected throw after size gate');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      expect(message).not.toBe(PDF_SIZE_MAX_MESSAGE_TERMINAL);
+      expect(message).not.toMatch(/100MB/);
+    }
+  });
+
+  it('TXT 변환은 150MB 초과만 막는다', async () => {
+    const over = {
+      name: 'huge.pdf',
+      type: 'application/pdf',
+      size: PDF_SIZE_MAX_BYTES_TERMINAL + 1,
+    };
+    await expect(
+      preparePdfTxtReview(/** @type {File} */ (over)),
+    ).rejects.toThrow(PDF_SIZE_MAX_MESSAGE_TERMINAL);
   });
 });
 

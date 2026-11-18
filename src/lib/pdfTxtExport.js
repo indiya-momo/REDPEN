@@ -3,7 +3,10 @@
  * 검수전 추출 → 줄바꿈 확인 → 최종 TXT.
  */
 import { extractAllPagesText, loadPdfFromBuffer } from './pdfService.js';
-import { isPdfSizeOverMax, PDF_SIZE_MAX_MESSAGE } from './pdfSizeLimits.js';
+import {
+  isPdfSizeOverMaxTerminal,
+  PDF_SIZE_MAX_MESSAGE_TERMINAL,
+} from './pdfSizeLimits.js';
 import { cleanPageLinesForTxt } from './pdfTxtBodyClean.js';
 import {
   applyLinebreakDecisions,
@@ -79,6 +82,8 @@ export function joinPagesAsTxt(pages) {
 }
 
 /**
+ * TXT 변환 — 상한 150MB.
+ * (PDF 검수 열기·업로드는 useWorkSession에서 100MB 유지)
  * @param {File} file
  * @param {{ onProgress?: (current: number, total: number) => void }} [opts]
  * @returns {Promise<{
@@ -97,8 +102,8 @@ export async function preparePdfTxtReview(file, opts = {}) {
       throw new Error('PDF 파일만 TXT로 변환할 수 있습니다.');
     }
   }
-  if (isPdfSizeOverMax(file.size)) {
-    throw new Error(PDF_SIZE_MAX_MESSAGE);
+  if (isPdfSizeOverMaxTerminal(file.size)) {
+    throw new Error(PDF_SIZE_MAX_MESSAGE_TERMINAL);
   }
   const raw = await file.arrayBuffer();
   const buffer = raw.slice(0);
