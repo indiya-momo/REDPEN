@@ -88,6 +88,39 @@ describe('3음절 이상 복합어 띄어쓰기', () => {
     ).toEqual([['어루만져주세요', '어루만져 주세요']]);
   });
 
+  it('지다·하다 붙여 쓴 형태는 3음절 칸에서 띄우라고 하지 않는다', () => {
+    const rules = ensureDefaultAuxiliaryVerbs([]).map((r) =>
+      r.bonBojoItemId === BON_BOJO_LONG_COMPOUND_SPLIT_ID
+        ? { ...r, enabled: true }
+        : { ...r, enabled: false },
+    );
+    for (const text of ['궁금해하다', '선명해집니다', '예뻐한다', '지워진다']) {
+      const { results } = runRuleCheck([{ pageNum: 1, text }], rules);
+      expect(results).toEqual([]);
+    }
+  });
+
+  it('잘못 띄운 지다·하다는 붙여쓰기 필수 칸이 잡는다', () => {
+    const rules = ensureDefaultAuxiliaryVerbs([]).map((r) =>
+      r.bonBojoItemId === 'verb-jida' || r.bonBojoItemId === 'verb-hada'
+        ? { ...r, enabled: true }
+        : { ...r, enabled: false },
+    );
+    const { results } = runRuleCheck(
+      [{ pageNum: 1, text: '예뻐 한다. 지워 진다.' }],
+      rules,
+    );
+    const hits = results.flatMap((g) =>
+      (g.instances ?? []).map((i) => [g.bonBojoItemId, i.matchedText]),
+    );
+    expect(hits).toEqual(
+      expect.arrayContaining([
+        ['verb-hada', '예뻐 한다'],
+        ['verb-jida', '지워 진다'],
+      ]),
+    );
+  });
+
   it('결과 하이라이트에 띄운 말을 올린다', () => {
     const { results } = runRuleCheck([{ pageNum: 1, text: '어루만져주세요' }], [
       rule,

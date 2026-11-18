@@ -34,6 +34,9 @@ describe('bonBojoUiGroupForItemId', () => {
     expect(bonBojoUiGroupForItemId(BON_BOJO_LONG_COMPOUND_SPLIT_ID)).toBe(
       BON_BOJO_UI_GROUP.SPACE_REQUIRED,
     );
+    expect(bonBojoUiGroupForItemId('verb-boida')).toBe(
+      BON_BOJO_UI_GROUP.SPACE_REQUIRED,
+    );
   });
 });
 

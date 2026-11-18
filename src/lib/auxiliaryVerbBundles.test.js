@@ -49,7 +49,10 @@ describe('auxiliaryVerbBundles', () => {
       'verb-malda',
       BON_BOJO_NON_AEO_SPACE_ID,
     ]);
-    expect(longSplit?.itemIds).toEqual([BON_BOJO_LONG_COMPOUND_SPLIT_ID]);
+    expect(longSplit?.itemIds).toEqual([
+      'verb-boida',
+      BON_BOJO_LONG_COMPOUND_SPLIT_ID,
+    ]);
 
     let rules = ensureDefaultAuxiliaryVerbs([]);
     expect(
@@ -89,7 +92,8 @@ describe('auxiliaryVerbBundles', () => {
     const withoutGate = ensureDefaultAuxiliaryVerbs([])
       .filter((r) => r.bonBojoItemId !== BON_BOJO_NON_AEO_SPACE_ID)
       .map((r) =>
-        r.bonBojoItemId === BON_BOJO_LONG_COMPOUND_SPLIT_ID
+        r.bonBojoItemId === BON_BOJO_LONG_COMPOUND_SPLIT_ID ||
+        r.bonBojoItemId === 'verb-boida'
           ? { ...r, enabled: true }
           : r,
       );
@@ -100,5 +104,45 @@ describe('auxiliaryVerbBundles', () => {
     expect(
       isAuxiliaryVerbBundleEnabled(rules, BON_BOJO_UI_GROUP.SPACE_REQUIRED_NON_AEO),
     ).toBe(false);
+  });
+
+  it('띄어쓰기 필수 칸은 3음절·보이다를 같이 켜야 체크가 유지된다', () => {
+    let rules = ensureDefaultAuxiliaryVerbs([]);
+    rules = rules.map((r) =>
+      r.bonBojoItemId === BON_BOJO_LONG_COMPOUND_SPLIT_ID
+        ? { ...r, enabled: true }
+        : r,
+    );
+    // 보이다만 꺼져 있으면 마스터 체크는 꺼진 것으로 본다
+    expect(
+      isAuxiliaryVerbBundleEnabled(rules, BON_BOJO_UI_GROUP.SPACE_REQUIRED),
+    ).toBe(false);
+    rules = toggleAuxiliaryVerbBundle(
+      rules,
+      BON_BOJO_UI_GROUP.SPACE_REQUIRED,
+      true,
+    );
+    expect(
+      isAuxiliaryVerbBundleEnabled(rules, BON_BOJO_UI_GROUP.SPACE_REQUIRED),
+    ).toBe(true);
+    rules = ensureDefaultAuxiliaryVerbs(rules);
+    expect(
+      isAuxiliaryVerbBundleEnabled(rules, BON_BOJO_UI_GROUP.SPACE_REQUIRED),
+    ).toBe(true);
+  });
+
+  it('묶음이 켜진 채 새 item이 생기면 형제도 켜서 마스터 체크를 유지한다', () => {
+    let rules = ensureDefaultAuxiliaryVerbs([])
+      .filter((r) => r.bonBojoItemId !== 'verb-boida')
+      .map((r) =>
+        r.bonBojoItemId === BON_BOJO_LONG_COMPOUND_SPLIT_ID
+          ? { ...r, enabled: true }
+          : r,
+      );
+    // 보이다 규칙이 아직 없을 때 3음절만 on → 재시드 후 보이다도 on
+    rules = ensureDefaultAuxiliaryVerbs(rules);
+    expect(
+      isAuxiliaryVerbBundleEnabled(rules, BON_BOJO_UI_GROUP.SPACE_REQUIRED),
+    ).toBe(true);
   });
 });

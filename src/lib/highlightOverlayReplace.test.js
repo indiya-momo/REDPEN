@@ -53,25 +53,7 @@ describe('getHighlightOverlayReplace', () => {
     ).toBe('→만들어\u2040지');
   });
 
-  it('붙여쓰기 가능 — 이미 붙인 올바른 표면은 기호 없음 (해보이는·쉬어가라고)', () => {
-    expect(
-      getHighlightOverlayReplace(
-        {
-          find: '해 보',
-          matchedText: '해보이는',
-          suggestedText: '해 보이는',
-          pageNum: 32,
-          index: 0,
-        },
-        {
-          group: {
-            patternKind: 'auxiliary-verb',
-            bonBojoItemId: 'verb-boda1',
-            label: '(아/어) + 보다',
-          },
-        },
-      ),
-    ).toBeNull();
+  it('붙여쓰기 가능 — 이미 붙인 올바른 표면은 기호 없음', () => {
     expect(
       getHighlightOverlayReplace(
         {
@@ -89,6 +71,27 @@ describe('getHighlightOverlayReplace', () => {
         },
       ),
     ).toBeNull();
+  });
+
+  it('보이다 띄어쓰기 필수 — 해보이는에 ∨', () => {
+    expect(
+      getHighlightOverlayReplace(
+        {
+          find: '해 보이',
+          matchedText: '해보이는',
+          suggestedText: '해 보이는',
+          pageNum: 32,
+          index: 0,
+        },
+        {
+          group: {
+            patternKind: 'auxiliary-verb',
+            bonBojoItemId: 'verb-boida',
+            label: '(아/어) + 보이다',
+          },
+        },
+      ),
+    ).toBe('→해\u2228보이는');
   });
 
   it('하이라이트 박스 기준 — 뛰지|말라 사이(s=2)에 ∨ x', () => {

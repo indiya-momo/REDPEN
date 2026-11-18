@@ -6,6 +6,7 @@ import {
   isBonBojoLogicOnlyItem,
   isBonBojoGateOnlyItem,
   isBonBojoRequiredItem,
+  listBonBojoBundleDefinitions,
   BON_BOJO_LONG_COMPOUND_SPLIT_ID,
   BON_BOJO_LONG_COMPOUND_SPLIT_LABEL,
   BON_BOJO_NON_AEO_SPACE_ID,
@@ -30,7 +31,26 @@ function enabledByItemIdFromRules(rules) {
   return map;
 }
 
-/** 다른 본조 항목의 띄움 stem(`져 주`)만 — 3음절 복합어 칸 1차 찾기용 */
+/**
+ * 같은 UI 묶음에서 이미 켜진 item만 알고 있으면, 새로 생긴 형제 item도 켠다.
+ * (보이다 추가 후 3음절만 on인 저장 → 마스터 체크가 풀리는 것 방지)
+ * @param {Map<string, boolean>} enabledByItem
+ */
+function inheritEnabledForNewBundleItems(enabledByItem) {
+  for (const bundle of listBonBojoBundleDefinitions()) {
+    const known = bundle.itemIds.filter((id) => enabledByItem.has(id));
+    if (known.length === 0) continue;
+    if (!known.every((id) => enabledByItem.get(id) === true)) continue;
+    for (const id of bundle.itemIds) {
+      if (!enabledByItem.has(id)) enabledByItem.set(id, true);
+    }
+  }
+}
+
+/**
+ * 다른 본조 항목의 띄움 stem(`져 주`)만 — 3음절 복합어 칸 1차 찾기용.
+ * 지다·하다(붙여쓰기 필수) stem은 넣지 않는다 — 붙여 쓴 올바른 형태를 띄우라고 올리지 않기 위함.
+ */
 function spacedStemsFromGroups() {
   /** @type {string[]} */
   const stems = [];
@@ -38,6 +58,7 @@ function spacedStemsFromGroups() {
     for (const item of group.items) {
       if (item.id === BON_BOJO_LONG_COMPOUND_SPLIT_ID) continue;
       if (isBonBojoGateOnlyItem(item.id)) continue;
+      if (isBonBojoRequiredItem(item.id)) continue;
       for (const tail of auxiliarySearchTailsFromBonBojoItem(item)) {
         const parts = String(tail ?? '')
           .trim()
@@ -132,6 +153,7 @@ export function ensureDefaultAuxiliaryVerbs(customRules) {
   const rules = [...(customRules ?? [])];
   const nonAux = rules.filter((r) => r.patternKind !== 'auxiliary-verb');
   const enabledByItem = enabledByItemIdFromRules(rules);
+  inheritEnabledForNewBundleItems(enabledByItem);
   let next = rebuildAuxiliaryVerbRulesFromSheet(nonAux, enabledByItem);
 
   return applyBonBojoDisplayLabels(

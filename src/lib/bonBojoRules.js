@@ -53,6 +53,27 @@ const BON_BOJO_GATE_ONLY_GROUP = {
   ],
 };
 
+/** 붙여 쓴 3음절 이상 복합·파생 본용언을 띄어 쓰라고 보는 체크 */
+export const BON_BOJO_LONG_COMPOUND_SPLIT_ID = 'verb-long-compound-split';
+
+export const BON_BOJO_LONG_COMPOUND_SPLIT_LABEL =
+  '본용언이 3음절 이상 복합어/파생어(띄어쓰기 필수)';
+
+/** 시트 sync에 안 지워지게 런타임만 주입 */
+const BON_BOJO_LONG_COMPOUND_GROUP = {
+  id: 'split-bon',
+  tip: '본용언 활용형이 3음절 이상인 복합어·파생어는 보조용언을 띄어 씁니다.',
+  items: [
+    {
+      id: BON_BOJO_LONG_COMPOUND_SPLIT_ID,
+      label: '3음절복합',
+      enabled: false,
+      stems: [],
+      displayLabel: BON_BOJO_LONG_COMPOUND_SPLIT_LABEL,
+    },
+  ],
+};
+
 /** @param {typeof bonBojoJson} raw */
 export function bonBojoRulesFingerprint(raw) {
   let hash = 0;
@@ -66,10 +87,21 @@ export function bonBojoRulesFingerprint(raw) {
 /** @param {typeof bonBojoJson} source */
 function buildRuntimeFromSource(source) {
   /** @type {BonBojoGroup[]} */
+  const sheetGroups = source.groups ?? [];
+  /** 시트에 같은 id가 있으면 합성 그룹을 넣지 않는다(중복 체크 방지). */
+  const sheetItemIds = new Set(
+    sheetGroups.flatMap((g) =>
+      (g.items ?? []).map((it) => String(it.id ?? '').trim()).filter(Boolean),
+    ),
+  );
+  /** @type {BonBojoGroup[]} */
   const groups = [
-    ...(source.groups ?? []),
+    ...sheetGroups,
     BON_BOJO_LOGIC_ONLY_GROUP,
     BON_BOJO_GATE_ONLY_GROUP,
+    ...(sheetItemIds.has(BON_BOJO_LONG_COMPOUND_SPLIT_ID)
+      ? []
+      : [BON_BOJO_LONG_COMPOUND_GROUP]),
   ];
 
   /** @type {Map<string, readonly string[]>} */
@@ -82,6 +114,17 @@ function buildRuntimeFromSource(source) {
     if (!allow.length) continue;
     for (const item of group.items) {
       allowByItemId.set(item.id, allow);
+    }
+  }
+  // 3음절 칸은 시트 verb-bon allow를 공유(합성 그룹에는 bonVerbAllow 없음)
+  if (!allowByItemId.has(BON_BOJO_LONG_COMPOUND_SPLIT_ID)) {
+    const verbBon = sheetGroups.find((g) => String(g.id ?? '') === 'verb-bon');
+    const rawAllow = Array.isArray(verbBon?.bonVerbAllow)
+      ? verbBon.bonVerbAllow.map((s) => String(s).trim()).filter(Boolean)
+      : [];
+    const { kept: allow } = partitionBonVerbAllowPhrases(rawAllow);
+    if (allow.length) {
+      allowByItemId.set(BON_BOJO_LONG_COMPOUND_SPLIT_ID, allow);
     }
   }
 
@@ -220,12 +263,6 @@ export function listBonBojoUnifyReviewStems() {
   return out;
 }
 
-/** 붙여 쓴 3음절 이상 복합·파생 본용언을 띄어 쓰라고 보는 체크 */
-export const BON_BOJO_LONG_COMPOUND_SPLIT_ID = 'verb-long-compound-split';
-
-export const BON_BOJO_LONG_COMPOUND_SPLIT_LABEL =
-  '본용언이 3음절 이상 복합어/파생어(띄어쓰기 필수)';
-
 /** 시트·UI에서 기본 체크·「필수」 표시 대상 */
 export const BON_BOJO_REQUIRED_ITEM_IDS_LIST = ['verb-jida', 'verb-hada'];
 
@@ -278,7 +315,7 @@ export const BON_BOJO_UI_GROUP_TITLES = {
   [BON_BOJO_UI_GROUP.GLUE_REQUIRED]: '본용언(-아/-어) + 지다· 하다 :붙여쓰기 필수',
   [BON_BOJO_UI_GROUP.SPACE_REQUIRED_NON_AEO]: BON_BOJO_NON_AEO_SPACE_LABEL,
   [BON_BOJO_UI_GROUP.SPACE_REQUIRED]:
-    '본용언이 3음절 이상 복합어·파생어 : 띄어쓰기 필수',
+    '본용언이 3음절 이상 복합어·파생어, (아/어)+보이다 : 띄어쓰기 필수',
 };
 
 /** @type {readonly string[]} */
@@ -304,7 +341,10 @@ export function bonBojoUiGroupForItemId(itemId) {
   if (id === BON_BOJO_NON_AEO_SPACE_ID || isBonBojoNonAeoAuxItem(id)) {
     return BON_BOJO_UI_GROUP.SPACE_REQUIRED_NON_AEO;
   }
-  if (id === BON_BOJO_LONG_COMPOUND_SPLIT_ID) {
+  if (
+    id === BON_BOJO_LONG_COMPOUND_SPLIT_ID ||
+    id === 'verb-boida'
+  ) {
     return BON_BOJO_UI_GROUP.SPACE_REQUIRED;
   }
   if (isBonBojoRequiredItem(id)) {
