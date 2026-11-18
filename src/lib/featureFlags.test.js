@@ -12,6 +12,7 @@ import {
   isUnifyPhase2PatternEnabled,
   isUnifyPredicateSlmReviewEnabled,
   isUnifyStdictPosReviewEnabled,
+  isSpacingCategoryEnabled,
 } from './featureFlags.js';
 
 describe('featureFlags', () => {
@@ -28,6 +29,7 @@ describe('featureFlags', () => {
   const prevKiwiNoise = import.meta.env.VITE_UNIFY_KIWI_NOISE_FILTER;
   const prevPredicateSlm = import.meta.env.VITE_UNIFY_PREDICATE_SLM;
   const prevStdict = import.meta.env.VITE_UNIFY_STDICT;
+  const prevSpacing = import.meta.env.VITE_SPACING_CATEGORY;
 
   afterEach(() => {
     import.meta.env.DEV = prevDev;
@@ -43,6 +45,7 @@ describe('featureFlags', () => {
     import.meta.env.VITE_UNIFY_KIWI_NOISE_FILTER = prevKiwiNoise;
     import.meta.env.VITE_UNIFY_PREDICATE_SLM = prevPredicateSlm;
     import.meta.env.VITE_UNIFY_STDICT = prevStdict;
+    import.meta.env.VITE_SPACING_CATEGORY = prevSpacing;
   });
 
   it('dev에서는 목차·본문·엑셀 export·프로젝트 허브·외래어 변환·표기 통일 추천이 켜진다', () => {
@@ -157,5 +160,19 @@ describe('featureFlags', () => {
     expect(isUnifyStdictPosReviewEnabled()).toBe(false);
     import.meta.env.VITE_UNIFY_STDICT = 'true';
     expect(isUnifyStdictPosReviewEnabled()).toBe(true);
+  });
+
+  it('띄어쓰기 범주는 dev·프로덕션 모두 env가 true일 때만 켜진다', () => {
+    import.meta.env.DEV = true;
+    import.meta.env.VITE_SPACING_CATEGORY = undefined;
+    expect(isSpacingCategoryEnabled()).toBe(false);
+    import.meta.env.VITE_SPACING_CATEGORY = 'true';
+    expect(isSpacingCategoryEnabled()).toBe(true);
+
+    import.meta.env.DEV = false;
+    import.meta.env.VITE_SPACING_CATEGORY = undefined;
+    expect(isSpacingCategoryEnabled()).toBe(false);
+    import.meta.env.VITE_SPACING_CATEGORY = 'true';
+    expect(isSpacingCategoryEnabled()).toBe(true);
   });
 });

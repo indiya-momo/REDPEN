@@ -142,3 +142,13 @@ export function isUnifyPredicateSlmReviewEnabled() {
 export function isUnifyStdictPosReviewEnabled() {
   return import.meta.env.VITE_UNIFY_STDICT === 'true';
 }
+
+/**
+ * 띄어쓰기 탭(세종·수사 등 범주 검사).
+ * - useRuleCheck·ruleEngine에 넣지 않음. 탭·패널만.
+ * - dev·프로덕션 모두 기본 꺼짐. `VITE_SPACING_CATEGORY=true` 일 때만.
+ * - 꺼져 있으면 탭·검사·하이라이트를 만들지 않는다.
+ */
+export function isSpacingCategoryEnabled() {
+  return import.meta.env.VITE_SPACING_CATEGORY === 'true';
+}

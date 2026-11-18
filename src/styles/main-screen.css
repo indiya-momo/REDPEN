@@ -1755,7 +1755,8 @@
 }
 
 .panel-left .work-tab--spelling.active,
-.panel-left .work-tab--consistency.active {
+.panel-left .work-tab--consistency.active,
+.panel-left .work-tab--spacing.active {
   color: var(--panel-accent-deep);
   box-shadow: inset 0 -2px 0 var(--panel-accent);
 }
@@ -4621,6 +4622,10 @@
   border-bottom: 2px solid var(--color-border);
 }
 
+.work-tabs--spacing {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 .work-tab {
   min-width: 0;
   padding: 14px 8px;
@@ -4648,7 +4653,8 @@
   box-shadow: inset 0 -2px 0 var(--accent-terracotta);
 }
 
-.work-tab--consistency.active {
+.work-tab--consistency.active,
+.work-tab--spacing.active {
   color: var(--accent-terracotta-deep);
   box-shadow: inset 0 -2px 0 var(--accent-terracotta);
 }
@@ -4714,9 +4720,85 @@
 }
 
 .panel-left--spelling,
-.panel-left--consistency {
+.panel-left--consistency,
+.panel-left--spacing {
   --spelling-block-inset-x: calc(12px * var(--panel-ui-scale));
   background: var(--color-surface-raised);
+}
+
+.spacing-category {
+  margin: 0;
+  padding: var(--spelling-calibration-block-pad-y)
+    var(--spelling-calibration-block-pad-x);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.6);
+  box-sizing: border-box;
+}
+
+.spacing-category__toggles {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--panel-gap-section);
+}
+
+.spacing-category__toggle-item {
+  margin: 0;
+}
+
+.spacing-category__option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+}
+
+.spacing-category__hint,
+.spacing-category__status {
+  margin: var(--panel-gap-block) 0 0;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.spelling-tab-layout__run-row .spacing-category__status {
+  margin: 0 0 0 auto;
+}
+
+.spacing-category__hits {
+  list-style: none;
+  margin: var(--panel-gap-section) 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--panel-gap-block);
+}
+
+.spacing-category__hit {
+  width: 100%;
+  text-align: left;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+  background: var(--color-surface-overlay);
+  padding: var(--panel-gap-block) 10px;
+  cursor: pointer;
+}
+
+.spacing-category__hit.is-selected {
+  border-color: var(--accent-terracotta);
+}
+
+.spacing-category__hit-meta {
+  display: block;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.spacing-category__hit-text {
+  display: block;
+  margin-top: 2px;
 }
 
 .spelling-tab-layout {
