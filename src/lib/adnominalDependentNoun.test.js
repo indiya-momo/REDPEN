@@ -47,6 +47,12 @@ describe('golden KEEP (오탐 금지)', () => {
   });
 });
 
+describe('ㄹ 수 KEEP (PR #3 K07–K09)', () => {
+  it.each(['별수 없이', '말수가 적다', '살수차'])('%s', (input) => {
+    expect(findAdnominalDependentNounHits(input)).toEqual([]);
+  });
+});
+
 describe('보강 것', () => {
   it('있는것 → 있는 것', () => {
     expect(findAdnominalDependentNounHits('있는것이다')).toEqual([
