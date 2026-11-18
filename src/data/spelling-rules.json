@@ -534,7 +534,7 @@
     "dividerGroup": "A",
     "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
     "overlayReplace": "→장난^삼",
-    "displayLabel": "장난^삼(외)"
+    "displayLabel": "명사^삼다"
   },
   {
     "find": "머지 않",
@@ -683,7 +683,7 @@
     "tip": "표준국어대사전  '세상모르다,철모르다,남모르다,낯모르다,멋모르다' 등재",
     "dividerGroup": "A",
     "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
-    "displayLabel": "^모르다(외)"
+    "displayLabel": "^모르다"
   },
   {
     "find": "자신만만 하",
@@ -813,7 +813,7 @@
     "find": "그외",
     "replace": "그 외",
     "enabled": true,
-    "tip": "표준국어대사전 미등재\n주의 : 동일한 뜻의 '이외(以外)는 등재",
+    "tip": "표준국어대사전 미등재\n주의 : 동일한 뜻의 이외(以外)는 등재",
     "dividerGroup": "B0",
     "dividerLabel": "잘못된 표현(명사)",
     "overlayReplace": "→그∨외"
@@ -1303,7 +1303,7 @@
     "tip": "자동사에 불필요한 사동 접미사 '-이'삽입",
     "dividerGroup": "B1",
     "dividerLabel": "잘못된 표현(동사 · 형용사)",
-    "displayLabel": "되뇌이 → 되뇌(사동 -이)"
+    "displayLabel": "사동  접미사 '-이'"
   },
   {
     "find": "되어지",
@@ -1373,6 +1373,79 @@
     "dividerLabel": "잘못된 표현(동사 · 형용사)"
   },
   {
+    "find": "불려지",
+    "replace": "불려",
+    "finds": [
+      "불려지",
+      "불려져",
+      "불려졌",
+      "불려지고",
+      "불려지는",
+      "불려진",
+      "불려질"
+    ],
+    "enabled": true,
+    "tip": "이중피동, 과거형은 '불렸다'",
+    "dividerGroup": "B1",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)"
+  },
+  {
+    "find": "쓰여지",
+    "replace": "쓰여",
+    "finds": [
+      "쓰여지",
+      "쓰여져",
+      "쓰여졌",
+      "쓰여지고",
+      "쓰여지는",
+      "쓰여진",
+      "쓰여질"
+    ],
+    "enabled": true,
+    "tip": "아중피동, 과겨형은 '쓰였다'",
+    "dividerGroup": "B1",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)"
+  },
+  {
+    "find": "읽혀지",
+    "replace": "읽히",
+    "finds": [
+      "읽혀지",
+      "읽혀져",
+      "읽혀졌",
+      "읽혀지고",
+      "읽혀지는",
+      "읽혀진",
+      "읽혀질"
+    ],
+    "enabled": true,
+    "tip": "이중피동, 과거형은 '읽혔다'",
+    "dividerGroup": "B1",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)"
+  },
+  {
+    "find": "잊혀",
+    "replace": "잊힌",
+    "enabled": true,
+    "tip": "이중피동, 과겨형은 '잊혔다'",
+    "dividerGroup": "B1",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)"
+  },
+  {
+    "find": "짜여진",
+    "replace": "짜여",
+    "finds": [
+      "짜여지",
+      "짜여진",
+      "짜여졌",
+      "짜여질"
+    ],
+    "enabled": true,
+    "tip": "이중피동, 과겨형은 '짜였다'",
+    "dividerGroup": "B1",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)"
+  },
+  {
     "find": "본따",
     "replace": "본떠",
     "finds": [
@@ -1424,23 +1497,6 @@
     "dividerLabel": "잘못된 표현(동사 · 형용사)"
   },
   {
-    "find": "불려지",
-    "replace": "불려",
-    "finds": [
-      "불려지",
-      "불려져",
-      "불려졌",
-      "불려지고",
-      "불려지는",
-      "불려진",
-      "불려질"
-    ],
-    "enabled": true,
-    "tip": "이중피동, 과거형은 '불렸다'",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사 · 형용사)"
-  },
-  {
     "find": "삼가토록",
     "replace": "삼가도록",
     "enabled": true,
@@ -1457,23 +1513,6 @@
     "dividerGroup": "B1",
     "dividerLabel": "잘못된 표현(동사 · 형용사)",
     "overlayReplace": "→스러운"
-  },
-  {
-    "find": "쓰여지",
-    "replace": "쓰여",
-    "finds": [
-      "쓰여지",
-      "쓰여져",
-      "쓰여졌",
-      "쓰여지고",
-      "쓰여지는",
-      "쓰여진",
-      "쓰여질"
-    ],
-    "enabled": true,
-    "tip": "아중피동, 과겨형은 '쓰였다'",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사 · 형용사)"
   },
   {
     "find": "안절부절하",
@@ -1530,31 +1569,6 @@
     "overlayReplace": "→이에요 또는 예요"
   },
   {
-    "find": "읽혀지",
-    "replace": "읽히",
-    "finds": [
-      "읽혀지",
-      "읽혀져",
-      "읽혀졌",
-      "읽혀지고",
-      "읽혀지는",
-      "읽혀진",
-      "읽혀질"
-    ],
-    "enabled": true,
-    "tip": "이중피동, 과거형은 '읽혔다'",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사 · 형용사)"
-  },
-  {
-    "find": "잊혀",
-    "replace": "잊힌",
-    "enabled": true,
-    "tip": "이중피동, 과겨형은 '잊혔다'",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사 · 형용사)"
-  },
-  {
     "find": "잠궈",
     "replace": "잠가",
     "finds": [
@@ -1571,20 +1585,6 @@
     ],
     "enabled": true,
     "tip": "'잠그다'의 잘못된 표현, 과거형은 '잠갔다'",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사 · 형용사)"
-  },
-  {
-    "find": "짜여진",
-    "replace": "짜여",
-    "finds": [
-      "짜여지",
-      "짜여진",
-      "짜여졌",
-      "짜여질"
-    ],
-    "enabled": true,
-    "tip": "이중피동, 과겨형은 '짜였다'",
     "dividerGroup": "B1",
     "dividerLabel": "잘못된 표현(동사 · 형용사)"
   },
@@ -1789,7 +1789,7 @@
     "find": "어짜피",
     "replace": "어차피",
     "enabled": true,
-    "tip": "부사 '어차피'의 잘못된 표기",
+    "tip": "어차피'의 잘못된 표기",
     "dividerGroup": "B2",
     "dividerLabel": "잘못된 표현(그 외)",
     "overlayReplace": "→어차피"
@@ -4109,5 +4109,174 @@
     "dividerGroup": "F",
     "dividerLabel": "교육부 개정 용어",
     "overlayReplace": "→뒤통수엽"
+  },
+  {
+    "find": "에 틀림없",
+    "replace": "이 틀림없",
+    "enabled": true,
+    "tip": "조사는 '이 틀림없다'(세종 표기법·표준 용법). '에 틀림없다'는 틀림",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→이 틀림없",
+    "ruleId": "sejong-teullimeop",
+    "displayLabel": "에 틀림없 → 이 틀림없"
+  },
+  {
+    "find": "불리우",
+    "replace": "불리",
+    "finds": [
+      "불리우",
+      "불리우고",
+      "불리우는",
+      "불리운",
+      "불리울",
+      "불리워",
+      "불리웠",
+      "불리웠다"
+    ],
+    "enabled": true,
+    "tip": "'불리다'의 잘못된 표현(불리우다). 과거형은 '불렸다'",
+    "dividerGroup": "B1",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
+    "overlayReplace": "→불리",
+    "ruleId": "sejong-bulliu",
+    "displayLabel": "불리우 → 불리"
+  },
+  {
+    "find": "치루",
+    "replace": "치르",
+    "finds": [
+      "치루",
+      "치루고",
+      "치루는",
+      "치루어",
+      "치루었"
+    ],
+    "enabled": true,
+    "tip": "'치르다'의 잘못된 표현. 과거형은 '치렀다'(치뤄 계열과 별도 어간)",
+    "dividerGroup": "B1",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
+    "overlayReplace": "→치르",
+    "ruleId": "sejong-chiru",
+    "displayLabel": "치루 → 치르"
+  },
+  {
+    "find": "하게끔",
+    "replace": "하도록",
+    "enabled": true,
+    "tip": "'-게끔'은 표준이 아니며 '-도록'으로 적는다",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→하도록",
+    "ruleId": "sejong-gekkeum",
+    "displayLabel": "하게끔 → 하도록"
+  },
+  {
+    "find": "꺼려했",
+    "replace": "꺼렸",
+    "finds": [
+      "꺼려했",
+      "꺼려한",
+      "꺼려할",
+      "꺼려했고",
+      "꺼려했는",
+      "꺼려했다",
+      "꺼려했어",
+      "꺼려했었",
+      "꺼려했은",
+      "꺼려했을"
+    ],
+    "enabled": true,
+    "tip": "'꺼리다'의 잘못된 표현. '꺼려했다'→'꺼렸다'",
+    "dividerGroup": "B1",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
+    "overlayReplace": "→꺼렸",
+    "ruleId": "sejong-kkeoryeo",
+    "displayLabel": "꺼려했 → 꺼렸"
+  },
+  {
+    "find": "시험을 쳤",
+    "replace": "시험을 치렀",
+    "enabled": true,
+    "tip": "'시험을 치르다'. '치다'가 아님",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→시험을 치렀",
+    "ruleId": "sejong-siheom-chyeot",
+    "displayLabel": "시험을 쳤 → 시험을 치렀"
+  },
+  {
+    "find": "차에 치었",
+    "replace": "차에 치였",
+    "enabled": true,
+    "tip": "'치이다'의 피동. '차에 치였다'(세종 오용 사례)",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→차에 치였",
+    "ruleId": "sejong-chaye-chiyeot",
+    "displayLabel": "차에 치었 → 차에 치였"
+  },
+  {
+    "find": "어른마냥",
+    "replace": "어른처럼",
+    "enabled": true,
+    "tip": "'마냥' 대신 '처럼·모양'으로 적는다(세종 오용 사례)",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→어른처럼",
+    "ruleId": "sejong-eoreunmanyang",
+    "displayLabel": "어른마냥 → 어른처럼"
+  },
+  {
+    "find": "수출을 늘여",
+    "replace": "수출을 늘려",
+    "enabled": true,
+    "tip": "수량을 늘릴 때는 '늘리다'(세종 오용 사례). '늘이다'는 길이·공간",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→수출을 늘려",
+    "ruleId": "sejong-suchul-neullyeo",
+    "displayLabel": "수출을 늘여 → 수출을 늘려"
+  },
+  {
+    "find": "물을 덥혔",
+    "replace": "물을 데웠",
+    "finds": [
+      "물을 덥혔",
+      "물을 덥혀",
+      "물을 덥히"
+    ],
+    "findReplaces": {
+      "물을 덥혀": "물을 데워",
+      "물을 덥히": "물을 데우"
+    },
+    "enabled": true,
+    "tip": "'물을 데우다'. '덥히다'는 분위기·기온을 따뜻하게 할 때(세종 오용 사례)",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "ruleId": "sejong-mul-deopyeot",
+    "displayLabel": "물을 덥혔 → 물을 데웠"
+  },
+  {
+    "find": "개인 날",
+    "replace": "갠 날",
+    "enabled": true,
+    "tip": "'갠 날'(날이 갬). '개인 날'은 오용(세종 오용 사례)",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→갠 날",
+    "ruleId": "sejong-gaen-nal",
+    "displayLabel": "개인 날 → 갠 날"
+  },
+  {
+    "find": "에 대신하",
+    "replace": "을 대신하",
+    "enabled": true,
+    "tip": "'-을 대신하다'가 옳고 '-에 대신하다'는 틀림(세종 표기법)",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "overlayReplace": "→을 대신하",
+    "ruleId": "sejong-daesinha",
+    "displayLabel": "에 대신하 → 을 대신하"
   }
 ]
