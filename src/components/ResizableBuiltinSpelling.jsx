@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { isSpacingCategoryEnabled } from '../lib/featureFlags.js';
 import { HANGUL_ORTHOGRAPHY_TIP, HANGUL_ORTHOGRAPHY_URL } from '../lib/koreanNormsLinks.js';
 import { SPELLING_CRITERIA_HEADING_DESCRIPTIONS } from '../lib/spellingCriteriaHeadingTips.js';
 import BuiltinSpellingPanel from './BuiltinSpellingPanel.jsx';
 import CautionChecklist from './CautionChecklist.jsx';
 import CriteriaHoverTip from './CriteriaHoverTip.jsx';
 import LoanwordCheckPanel from './LoanwordCheckPanel.jsx';
+import SpacingFolderChecklist from './SpacingFolderChecklist.jsx';
 
 const STORAGE_KEY = 'builtin-spelling-panel-height-v2';
 // 기본 진입 시 맞춤법 기준 항목이 충분히 보이도록 하단 패널 비중을 높인다.
@@ -39,6 +41,9 @@ function computeDefaultHeight(layoutEl) {
  *   cautionEnabled: Record<string, boolean>,
  *   onCautionToggle: (id: string) => void,
  *   onCautionSetAll: (enabled: boolean) => void,
+ *   spacingFolderEnabled?: Record<string, boolean>,
+ *   onSpacingFolderToggle?: (bundleId: string) => void,
+ *   onSpacingFolderSetAll?: (enabled: boolean) => void,
  *   fillPanel?: boolean,
  *   guideSpotlight?: boolean,
  * }} props
@@ -50,9 +55,16 @@ export default function ResizableBuiltinSpelling({
   cautionEnabled,
   onCautionToggle,
   onCautionSetAll,
+  spacingFolderEnabled,
+  onSpacingFolderToggle,
+  onSpacingFolderSetAll,
   fillPanel = false,
   guideSpotlight = false,
 }) {
+  const showSpacingFolder =
+    isSpacingCategoryEnabled() &&
+    typeof onSpacingFolderToggle === 'function' &&
+    typeof onSpacingFolderSetAll === 'function';
   const [height, setHeight] = useState(
     () => readStoredHeight() ?? FALLBACK_HEIGHT,
   );
@@ -202,6 +214,15 @@ export default function ResizableBuiltinSpelling({
               onBuiltInSetAll={onBuiltInSetAll}
             />
           </div>
+          {showSpacingFolder ? (
+            <div className="builtin-spelling-spacing-folder-scroll">
+              <SpacingFolderChecklist
+                spacingFolderEnabled={spacingFolderEnabled}
+                onSpacingFolderToggle={onSpacingFolderToggle}
+                onSpacingFolderSetAll={onSpacingFolderSetAll}
+              />
+            </div>
+          ) : null}
         </div>
       </section>
     </>

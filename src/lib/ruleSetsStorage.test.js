@@ -55,6 +55,7 @@ describe('duplicateRuleSet', () => {
       customRules: [{ find: 'RED PEN', replace: '' }],
       globalExcludePhrases: ['테스트'],
       cautionEnabled: { c1: true },
+      spacingFolderEnabled: { numberUnit: true },
     };
     const copy = duplicateRuleSet(source);
     expect(copy.id).not.toBe(source.id);
@@ -63,6 +64,8 @@ describe('duplicateRuleSet', () => {
     expect(copy.builtInEnabled).not.toBe(source.builtInEnabled);
     expect(copy.cautionEnabled).toEqual({ c1: true });
     expect(copy.cautionEnabled).not.toBe(source.cautionEnabled);
+    expect(copy.spacingFolderEnabled).toEqual({ numberUnit: true });
+    expect(copy.spacingFolderEnabled).not.toBe(source.spacingFolderEnabled);
     expect(copy.customRules).toEqual(source.customRules);
     expect(copy.customRules).not.toBe(source.customRules);
     expect(copy.globalExcludePhrases).toEqual(['테스트']);

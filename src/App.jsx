@@ -306,6 +306,8 @@ export default function App() {
     handleBuiltInSetAll,
     handleCautionToggle,
     handleCautionSetAll,
+    handleSpacingFolderToggle,
+    handleSpacingFolderSetAll,
     flushPendingRuleSetsSave,
     flushPendingRuleSetsSaveAsync,
   } = useRuleSets(
@@ -572,10 +574,13 @@ export default function App() {
       cautionEnabled={
         activeSet.cautionEnabled ?? defaultCautionEnabled()
       }
+      spacingFolderEnabled={activeSet.spacingFolderEnabled}
       onBuiltInToggle={handleBuiltInToggle}
       onBuiltInSetAll={handleBuiltInSetAll}
       onCautionToggle={handleCautionToggle}
       onCautionSetAll={handleCautionSetAll}
+      onSpacingFolderToggle={handleSpacingFolderToggle}
+      onSpacingFolderSetAll={handleSpacingFolderSetAll}
       onCustomRulesChange={(customRules, extra) =>
         updateActiveSet({
           customRules: ensureDefaultAuxiliaryVerbs(customRules),

@@ -2,6 +2,22 @@ import { describe, expect, it } from 'vitest';
 import { normalizeRuleSet } from './ruleSetNormalize.js';
 
 describe('normalizeRuleSet project meta', () => {
+  it('spacingFolderEnabled를 기본 끔으로 정규화한다', () => {
+    const normalized = normalizeRuleSet({
+      id: 'set_1',
+      name: '테스트',
+      builtInEnabled: {},
+      cautionEnabled: {},
+      customRules: [],
+      spacingFolderEnabled: { numberUnit: true, futureKey: true },
+    });
+    expect(normalized.spacingFolderEnabled).toEqual({
+      numberUnit: true,
+      dependentRieulKka: false,
+      placeAffix: false,
+    });
+  });
+
   it('tags·memo·projectContext를 정규화한다', () => {
     const normalized = normalizeRuleSet({
       id: 'set_1',

@@ -19,6 +19,7 @@ import {
 import { normalizeWorkHistory } from './projectWorkHistory.js';
 import { normalizeConsistencyDecisions } from './consistencyDecisions.js';
 import { buildCriteriaCheckpoint } from './criteriaCheckpoint.js';
+import { normalizeSpacingFolderEnabled } from './spacingFolderBundles.js';
 
 /**
  * @param {Record<string, unknown>} set
@@ -38,6 +39,9 @@ export function normalizeRuleSet(set) {
     set.cautionRulesFingerprint,
     set.cautionEnabledPolicyVersion,
   );
+  const spacingFolderEnabled = normalizeSpacingFolderEnabled(
+    set.spacingFolderEnabled,
+  );
   const normalizedCustomRules = ensureDefaultAuxiliaryVerbs(customRules);
   const globalExcludePhrases = set.globalExcludePhrases ?? [];
   const projectContext = normalizeProjectContext(set.projectContext);
@@ -53,6 +57,7 @@ export function normalizeRuleSet(set) {
         ? buildCriteriaCheckpoint({
             builtInEnabled,
             cautionEnabled,
+            spacingFolderEnabled,
             customRules: normalizedCustomRules,
             globalExcludePhrases,
             consistencyDecisions,
@@ -62,6 +67,7 @@ export function normalizeRuleSet(set) {
   return {
     ...set,
     builtInEnabled,
+    spacingFolderEnabled,
     spellingRulesFingerprint: SPELLING_RULES_FP,
     customRules: normalizedCustomRules,
     compoundMigrateVersion,

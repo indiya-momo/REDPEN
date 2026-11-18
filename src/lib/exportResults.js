@@ -410,10 +410,15 @@ export function buildSpellingExportModel({
 
   for (const { group, source } of orderedEntries) {
     const isCaution = group.category === 'caution';
-    const category = isCaution ? '편집자 검토 필요' : '맞춤법 규칙';
+    const isSpacing = String(group.category ?? '').startsWith('spacing:');
+    const category = isCaution
+      ? '편집자 검토 필요'
+      : isSpacing
+        ? '띄어쓰기'
+        : '맞춤법 규칙';
     const tipText =
       (group.tip || '').trim() ||
-      (source === 'spelling' && !isCaution
+      (source === 'spelling' && !isCaution && !isSpacing
         ? getBuiltInTip(group.find, group.replace, group.spellingRuleId) || ''
         : '');
     const visMode = groupVisibilityMode ? groupVisibilityMode(source, group) : 'visible';

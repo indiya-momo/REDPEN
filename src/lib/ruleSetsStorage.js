@@ -208,6 +208,7 @@ export function duplicateRuleSet(source) {
     name: `${baseName} (복사)`,
     builtInEnabled: structuredClone(source.builtInEnabled ?? {}),
     cautionEnabled: structuredClone(source.cautionEnabled ?? {}),
+    spacingFolderEnabled: structuredClone(source.spacingFolderEnabled ?? {}),
     customRules: structuredClone(source.customRules ?? []),
     globalExcludePhrases: [...(source.globalExcludePhrases ?? [])],
     cautionRulesFingerprint: source.cautionRulesFingerprint,
