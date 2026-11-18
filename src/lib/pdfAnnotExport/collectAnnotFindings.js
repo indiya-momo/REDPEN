@@ -18,6 +18,8 @@ import { classifyAnnotStyle } from './annotClassify.js';
  * @property {number} end
  * @property {string} found
  * @property {string} replacement
+ * @property {string} [matchedText] 화면 overlay 기준 원문 (기호 자리)
+ * @property {string} [overlayReplace] 화면과 같은 →…∨… 오버레이
  * @property {string} label 주석 위 빨간 글씨 (교정 기호는 빈 문자열)
  * @property {string} contents /Contents
  * @property {string} subject /Subj
@@ -52,6 +54,7 @@ function rangeForInstance(page, group, inst, isCaution) {
 /**
  * @param {{
  *   spellingEntries?: Array<{ group: object, source: string }>,
+ *   consistencyEntries?: Array<{ group: object, source: string }>,
  *   unifyGroups?: object[],
  *   pageTexts: import('../pdfService.js').PageData[],
  *   isInstanceVisible?: (source: string, group: object, inst: object) => boolean,
@@ -60,6 +63,7 @@ function rangeForInstance(page, group, inst, isCaution) {
  */
 export function collectAnnotFindings({
   spellingEntries = [],
+  consistencyEntries = [],
   unifyGroups = [],
   pageTexts,
   isInstanceVisible,
@@ -78,18 +82,31 @@ export function collectAnnotFindings({
     out.push(f);
   };
 
-  for (const { group, source } of spellingEntries) {
-    if (source !== 'spelling' || !group) continue;
+  /** 맞춤법·검토 + 표기통일 기준 검수(본+보 등) — 화면과 같은 인스턴스 */
+  const ruleEntries = [
+    ...spellingEntries,
+    ...consistencyEntries,
+  ];
+  for (const { group, source } of ruleEntries) {
+    if (!group) continue;
+    if (source !== 'spelling' && source !== 'consistency') continue;
     const isCaution = group.category === 'caution';
     for (const inst of group.instances ?? []) {
-      if (isInstanceVisible && !isInstanceVisible('spelling', group, inst)) continue;
+      if (isInstanceVisible && !isInstanceVisible(source, group, inst)) continue;
       const page = pageByNum.get(inst.pageNum);
       if (!page?.text) continue;
       const range = rangeForInstance(page, group, inst, isCaution);
       if (!range || range.end <= range.start) continue;
       const found = page.text.slice(range.start, range.end);
       const replacement = String(inst.suggestedText ?? '').trim();
-      const style = classifyAnnotStyle({ source: 'spelling', group, inst, found, replacement });
+      // 분류는 맞춤법과 동일(띄움만→기호, 검토→review). AnnotFinding.source는 스키마상 spelling|unify.
+      const style = classifyAnnotStyle({
+        source: 'spelling',
+        group,
+        inst,
+        found,
+        replacement,
+      });
       const tip = String(group.tip ?? '').trim();
       const oneLine = found.replace(/\s*\n\s*/g, ' ');
       let label = '';
@@ -105,7 +122,25 @@ export function collectAnnotFindings({
         contents = `[검토] ${group.label ?? ''}${tip ? `\n${tip}` : ''}\n찾은 말: ${oneLine}`;
       } else {
         label = style === 'strike' ? replacement : '';
-        contents = `${oneLine} → ${replacement}${tip ? `\n${tip}` : ''}`;
+        const tag =
+          source === 'consistency'
+            ? group.patternKind === 'auxiliary-verb'
+              ? '본용언+보조용언'
+              : '표기 통일'
+            : '';
+        contents = tag
+          ? `[${tag}] ${oneLine} → ${replacement}${tip ? `\n${tip}` : ''}`
+          : `${oneLine} → ${replacement}${tip ? `\n${tip}` : ''}`;
+      }
+      let overlayReplace = '';
+      if (style === 'spacing-mark' || style === 'review') {
+        try {
+          overlayReplace = String(
+            getHighlightOverlayReplace(inst, { group }) ?? '',
+          ).trim();
+        } catch {
+          overlayReplace = '';
+        }
       }
       push({
         pageNum: inst.pageNum,
@@ -115,9 +150,18 @@ export function collectAnnotFindings({
         end: range.end,
         found,
         replacement,
+        matchedText: String(inst.matchedText ?? found),
+        overlayReplace,
         label,
         contents,
-        subject: style === 'review' ? '검토' : categoryName(group.category),
+        subject:
+          style === 'review'
+            ? '검토'
+            : source === 'consistency'
+              ? group.patternKind === 'auxiliary-verb'
+                ? '본용언+보조용언'
+                : '표기 통일'
+              : categoryName(group.category),
       });
     }
   }

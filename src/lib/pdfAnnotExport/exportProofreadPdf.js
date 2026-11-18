@@ -21,6 +21,7 @@ export function buildProofreadPdfFilename(pdfFileName) {
  *   pdfDoc: import('pdfjs-dist').PDFDocumentProxy,
  *   pageTexts: import('../pdfService.js').PageData[],
  *   spellingEntries?: Array<{ group: object, source: string }>,
+ *   consistencyEntries?: Array<{ group: object, source: string }>,
  *   unifyGroups?: object[],
  *   isInstanceVisible?: (source: string, group: object, inst: object) => boolean,
  *   pdfFileName?: string,
@@ -31,12 +32,14 @@ export async function exportProofreadPdf({
   pdfDoc,
   pageTexts,
   spellingEntries = [],
+  consistencyEntries = [],
   unifyGroups = [],
   isInstanceVisible,
   pdfFileName = '',
 }) {
   const findings = collectAnnotFindings({
     spellingEntries,
+    consistencyEntries,
     unifyGroups,
     pageTexts,
     isInstanceVisible,
@@ -44,13 +47,15 @@ export async function exportProofreadPdf({
   if (!findings.length) {
     return { filename: '', counts: {}, total: 0 };
   }
-  // 화면과 같은 글자 위치(캔버스 기준)를 주석 페이지에만 미리 계산 — 실패 시 비율 분할
+  // 화면과 같은 글자 위치 — 내보내기마다 force로 다시 잰다(실패 null 캐시·페이지 프록시 불일치 방지)
   const findingPages = [...new Set(findings.map((f) => f.pageNum))];
   for (const n of findingPages) {
     const pd = pageTexts.find((p) => p?.pageNum === n);
     if (!pd?.items?.length) continue;
     try {
-      await ensureGlyphOffsetsForPage(await pdfDoc.getPage(n), pd.items);
+      await ensureGlyphOffsetsForPage(await pdfDoc.getPage(n), pd.items, {
+        force: true,
+      });
     } catch {
       /* 폴백 */
     }

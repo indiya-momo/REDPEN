@@ -14,6 +14,7 @@ import {
   sub,
 } from './annotGeometry.js';
 import { spacingEditOps } from './annotClassify.js';
+import { spacingOnlyMarks } from '../highlightOverlayReplace.js';
 
 export const ANNOT_AUTHOR = '인디야';
 /** pdf.js PermissionFlag.MODIFY_ANNOTATIONS */
@@ -220,7 +221,22 @@ export async function writeAnnotatedPdf({
     }
 
     if (f.style === 'spacing-mark') {
-      const ops = spacingEditOps(f.found, f.replacement);
+      // 화면 PdfViewer와 동일: overlay → spacingOnlyMarks, 없으면 found/replacement diff
+      const overlayMarks = spacingOnlyMarks(
+        f.matchedText || f.found,
+        f.overlayReplace,
+      );
+      const ops = overlayMarks?.length
+        ? overlayMarks.map((m) =>
+            m.type === 'insert'
+              ? {
+                  type: 'insert',
+                  before: Math.max(0, m.s - 1),
+                  after: m.s < (f.matchedText || f.found).length ? m.s : m.s - 1,
+                }
+              : { type: 'join', before: Math.max(0, m.s - 1), after: m.e },
+          )
+        : spacingEditOps(f.found, f.replacement);
       let drew = 0;
       for (const op of ops) {
         const A = segmentsForTextRange(pd, f.start + op.before, f.start + op.before + 1, charEm)[0];

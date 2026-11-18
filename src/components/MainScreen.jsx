@@ -1484,6 +1484,7 @@ export default function MainScreen({
       visibleInstanceCount: ruleCheck.visibleInstanceCount,
       isInstanceVisible: ruleCheck.isInstanceVisible,
       onToggleInstanceVisibility: ruleCheck.toggleInstanceVisibility,
+      onSetInstancesVisibility: ruleCheck.setInstancesVisibility,
       onSelectInstance: ruleCheck.selectInstance,
     }),
     [
@@ -1491,6 +1492,7 @@ export default function MainScreen({
       ruleCheck.visibleInstanceCount,
       ruleCheck.isInstanceVisible,
       ruleCheck.toggleInstanceVisibility,
+      ruleCheck.setInstancesVisibility,
       ruleCheck.selectInstance,
     ],
   );
@@ -1688,7 +1690,7 @@ export default function MainScreen({
 
   const [proofreadPdfBusy, setProofreadPdfBusy] = useState(false);
 
-  /** 「PDF 교정본 다운로드」 — 화면에 보이는 맞춤법·검토·표기 통일(고른 통일형) 결과를 원본 PDF에 주석으로 */
+  /** 「PDF 교정본 다운로드」 — 화면에 보이는 맞춤법·표기통일 기준 검수(본+보 등)·고른 통일형 */
   const handleProofreadPdfExport = useCallback(async (exportTab = 'spelling') => {
     if (guestBrowseBlocksResultExport()) {
       void showAppAlert({
@@ -1711,6 +1713,9 @@ export default function MainScreen({
         pdfDoc: pdf.pdf,
         pageTexts: pdf.pageTexts,
         spellingEntries: ruleCheck.spellingCheckDone ? spellingTabEntries : [],
+        consistencyEntries: ruleCheck.consistencyCheckDone
+          ? consistencyTabEntries
+          : [],
         unifyGroups: unifyBuildSessionExportGroups(),
         isInstanceVisible: ruleCheck.isInstanceVisible,
         pdfFileName: pdf.pdfFileName,
@@ -1762,8 +1767,10 @@ export default function MainScreen({
     pdf.pdfFileName,
     proofreadPdfBusy,
     ruleCheck.spellingCheckDone,
+    ruleCheck.consistencyCheckDone,
     ruleCheck.isInstanceVisible,
     spellingTabEntries,
+    consistencyTabEntries,
     unifyBuildSessionExportGroups,
   ]);
 
@@ -2449,7 +2456,7 @@ export default function MainScreen({
                         !unifySessionActive) ||
                       proofreadPdfBusy
                     }
-                    title="보이는 맞춤법 결과와 고른 표기 통일을 원본 PDF에 교정 주석으로 달아 새 파일로 받습니다"
+                    title="보이는 맞춤법·표기통일 기준 검수(본+보 등)·고른 통일형을 원본 PDF에 교정 주석으로 달아 새 파일로 받습니다"
                   >
                     {proofreadPdfBusy ? 'PDF 교정본 만드는 중…' : 'PDF 교정본 다운로드'}
                   </button>

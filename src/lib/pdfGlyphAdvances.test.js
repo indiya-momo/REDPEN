@@ -115,5 +115,12 @@ describe('pdfGlyphAdvances', () => {
     await ensurePageGlyphOffsets(good, [item2], OPS);
     expect(getItemGlyphOffsets(item2)).toEqual([0, 10, 20]);
     expect(calls).toBe(1);
+
+    // force: null 캐시를 지우고 다시 잰다
+    const item3 = { str: '가나', transform: [10, 0, 0, 10, 105, 50] };
+    await ensurePageGlyphOffsets(bad, [item3], OPS);
+    expect(getItemGlyphOffsets(item3)).toBeNull();
+    await ensurePageGlyphOffsets(good, [item3], OPS, { force: true });
+    expect(getItemGlyphOffsets(item3)).toEqual([0, 10, 20]);
   });
 });

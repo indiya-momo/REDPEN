@@ -210,6 +210,34 @@ describe('pdf 문자열·파일 쓰기', () => {
     expect(findings).toHaveLength(0);
   });
 
+  it('표기통일 기준 검수(본+보)도 교정본에 넣는다', () => {
+    const findings = collectAnnotFindings({
+      consistencyEntries: [{
+        source: 'consistency',
+        group: {
+          patternKind: 'auxiliary-verb',
+          bonBojoItemId: 'verb-malda',
+          auxNonAeoSpace: true,
+          label: '말다',
+          instances: [
+            {
+              pageNum: 1,
+              index: 2,
+              matchedText: '할때',
+              suggestedText: '할 때',
+              itemIndexes: [0],
+            },
+          ],
+        },
+      }],
+      pageTexts,
+    });
+    expect(findings).toHaveLength(1);
+    expect(findings[0].style).toBe('spacing-mark');
+    expect(findings[0].subject).toBe('본용언+보조용언');
+    expect(findings[0].contents).toContain('본용언+보조용언');
+  });
+
   it('주석 제한 PDF는 풀지 않고 멈춘다', async () => {
     await expect(writeAnnotatedPdf({
       pdfBytes: await samplePdf(),
