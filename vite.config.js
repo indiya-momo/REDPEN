@@ -6,6 +6,7 @@ import { stdictDevProxyPlugin } from './scripts/stdictDevProxyPlugin.js';
 import { kornormsDevProxyPlugin } from './scripts/kornormsDevProxyPlugin.js';
 import { kiwiDevModelsPlugin } from './scripts/kiwiDevModelsPlugin.js';
 import { kiwiAnalyzeDevPlugin } from './scripts/kiwiAnalyzeDevPlugin.js';
+import { bareunAnalyzeDevPlugin } from './scripts/bareunAnalyzeDevPlugin.js';
 
 for (const name of ['pdf-empty.png', 'pdf-momo.png', 'pdf-full.png']) {
   const fromPublic = path.resolve('public/momo', name);
@@ -89,6 +90,8 @@ export default defineConfig(({ mode }) => {
     kiwiDevModelsPlugin(),
     // 시나리오 C: POST /api/kiwi/analyze (Node Kiwi, 브라우저에 wasm 미전송)
     kiwiAnalyzeDevPlugin(),
+    // Kiwi 폴백: POST /api/bareun/analyze (키는 BAREUN_API_KEY)
+    bareunAnalyzeDevPlugin(),
   ],
   test: {
     environment: 'node',

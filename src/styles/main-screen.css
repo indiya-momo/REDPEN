@@ -1351,6 +1351,14 @@
   min-width: 0;
 }
 
+.panel-left .aux-spacing-pages__toggle {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 0.2rem;
+}
+
 .panel-left .aux-spacing-pages__mark {
   flex: 0 0 auto;
   display: inline-flex;
@@ -1374,6 +1382,32 @@
 .panel-left .aux-solid-count {
   color: #c0392b;
   font-weight: 400;
+}
+
+.panel-left .aux-solid-fold {
+  margin-top: 4px;
+  width: 100%;
+  min-width: 0;
+}
+
+.panel-left .aux-solid-fold__summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  list-style: none;
+  color: #c0392b;
+  font-size: 0.85em;
+  font-weight: 600;
+}
+
+.panel-left .aux-solid-fold__summary::-webkit-details-marker {
+  display: none;
+}
+
+.panel-left .aux-solid-fold__body {
+  margin-top: 6px;
+  min-width: 0;
 }
 
 .panel-left .results-panel--consistency .page-chip.page-chip--aux-solid,

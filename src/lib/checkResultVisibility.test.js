@@ -9,6 +9,7 @@ import {
   normalizeResultVisibilityState,
   pruneResultVisibility,
   serializeResultVisibility,
+  setInstancesVisibilityState,
   toggleGroupVisibilityState,
   toggleInstanceVisibilityState,
 } from './checkResultUtils.js';
@@ -81,6 +82,47 @@ describe('result instance visibility', () => {
     state = toggleGroupVisibilityState(state, source, group);
     expect(getGroupVisibilityMode(state, source, group)).toBe('visible');
     expect(countVisibleInstances(state, source, group)).toBe(3);
+  });
+
+  it('setInstancesVisibilityState — 묶음만 숨기고, 그룹 숨김에서도 묶음만 복원', () => {
+    let state = emptyResultVisibilityState();
+    state = setInstancesVisibilityState(
+      state,
+      source,
+      group,
+      [group.instances[0], group.instances[1]],
+      false,
+    );
+    expect(isInstanceVisible(state, source, group, group.instances[0])).toBe(
+      false,
+    );
+    expect(isInstanceVisible(state, source, group, group.instances[1])).toBe(
+      false,
+    );
+    expect(isInstanceVisible(state, source, group, group.instances[2])).toBe(
+      true,
+    );
+
+    state = toggleGroupVisibilityState(state, source, group); // partial → 전체 표시
+    state = toggleGroupVisibilityState(state, source, group); // visible → 그룹 숨김
+    expect(getGroupVisibilityMode(state, source, group)).toBe('hidden');
+
+    state = setInstancesVisibilityState(
+      state,
+      source,
+      group,
+      [group.instances[0]],
+      true,
+    );
+    expect(isInstanceVisible(state, source, group, group.instances[0])).toBe(
+      true,
+    );
+    expect(isInstanceVisible(state, source, group, group.instances[1])).toBe(
+      false,
+    );
+    expect(isInstanceVisible(state, source, group, group.instances[2])).toBe(
+      false,
+    );
   });
 
   it('pruneResultVisibility — 없어진 그룹·instance 키를 제거한다', () => {

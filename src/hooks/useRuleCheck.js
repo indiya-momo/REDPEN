@@ -28,6 +28,7 @@ import {
   finalizeConsistencyCheckResults,
   normalizeResultVisibilityState,
   pruneResultVisibility,
+  setInstancesVisibilityState,
   toggleGroupVisibilityState,
   toggleInstanceVisibilityState,
 } from '../lib/checkResultUtils.js';
@@ -376,7 +377,7 @@ export function useRuleCheck({
         const withZeroRows = finalizeConsistencyCheckResults(
           await enrichAuxiliaryDictSolid(
             await enrichAuxiliaryNonAeoSpace(
-              enrichAuxiliaryGluedFromSpaced(
+              await enrichAuxiliaryGluedFromSpaced(
                 finalizeConsistencyCheckResults(
                   grouped,
                   consistencyCriteriaActiveRules,
@@ -605,7 +606,7 @@ export function useRuleCheck({
       const enrichedResults = finalizeConsistencyCheckResults(
         await enrichAuxiliaryDictSolid(
           await enrichAuxiliaryNonAeoSpace(
-            enrichAuxiliaryGluedFromSpaced(
+            await enrichAuxiliaryGluedFromSpaced(
               finalizeConsistencyCheckResults(
                 [...kept, ...withZeroRows],
                 rules,
@@ -809,6 +810,21 @@ export function useRuleCheck({
     );
   }, []);
 
+  const setInstancesVisibility = useCallback(
+    (source, group, instances, visible) => {
+      setResultVisibility((prev) =>
+        setInstancesVisibilityState(
+          normalizeResultVisibilityState(prev),
+          source,
+          group,
+          instances,
+          visible,
+        ),
+      );
+    },
+    [],
+  );
+
   const isGroupVisible = useCallback(
     (source, group) => isResultGroupVisible(resultVisibility, source, group),
     [resultVisibility],
@@ -959,6 +975,7 @@ export function useRuleCheck({
     isSameGroupAsSelected,
     toggleResultVisibility,
     toggleInstanceVisibility,
+    setInstancesVisibility,
     isGroupVisible,
     isInstanceVisible: checkInstanceVisible,
     groupVisibilityMode,

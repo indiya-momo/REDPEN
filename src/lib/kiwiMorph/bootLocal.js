@@ -52,7 +52,10 @@ function mayBootKiwi(opts = {}) {
 export async function bootKiwiIfNeeded(opts = {}) {
   if (!mayBootKiwi(opts)) return false;
   if (isKiwiServerMode()) {
-    if (import.meta.env.DEV) await ensureDevLocalWasm(opts);
+    // 본조 sync analyze는 로컬 wasm이 있어야 안정. DEV·auxMorph는 보강.
+    if (import.meta.env.DEV || opts.auxMorph === true) {
+      await ensureDevLocalWasm(opts);
+    }
     return true;
   }
   try {
@@ -66,18 +69,24 @@ export async function bootKiwiIfNeeded(opts = {}) {
     const ready = await pingKiwiAnalyze(endpoint);
     if (ready) {
       setKiwiServerMode(true);
-      if (import.meta.env.DEV) await ensureDevLocalWasm(opts);
+      if (import.meta.env.DEV || opts.auxMorph === true) {
+        await ensureDevLocalWasm(opts);
+      }
       return true;
     }
   }
 
+  // 본조 morph는 서버 ping 실패 시에도 로컬 wasm을 시도(프로덕션 포함)
+  if (opts.auxMorph === true) {
+    return bootKiwiLocalWasm(opts);
+  }
   if (!import.meta.env.DEV) return false;
   return bootKiwiLocalWasm(opts);
 }
 
 /**
- * DEV — 서버 C만 ready면 analyzeLine이 remoteCache 미스로 fail-open.
- * 잡음 필터 등 동기 morph를 위해 wasm을 보강. 대기는 maxWaitMs로 끊음.
+ * 로컬 wasm 보강 — 서버 C만 ready면 analyzeLine이 remoteCache 미스 → 본조 fail-closed.
+ * 잡음 필터·본조 동기 morph용. 대기는 maxWaitMs로 끊음.
  * @param {{ maxWaitMs?: number }} [opts]
  */
 async function ensureDevLocalWasm(opts = {}) {

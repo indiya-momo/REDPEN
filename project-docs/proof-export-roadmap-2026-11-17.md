@@ -132,6 +132,11 @@
 
 PDF 글자 수정·브라우저→인디자인 직접 연동은 하지 않는다.
 
+**병행 후보 (설계만, 2026-11-18):** Acrobat Replace/Insert/StrikeOut 주석 PDF를 인디자인이 가져와 **Accept** 하는 경로.  
+1차 성공 = Accept로 본문 반영. 화면용 Ink 교정본과 출구 분리. 구현 전 문서:  
+[indesign-pdf-comment-accept-design-2026-11-18.md](./indesign-pdf-comment-accept-design-2026-11-18.md).  
+스파이크 실패 시 본 절 TSV가 주력.
+
 ---
 
 ## 5. 하지 않는 일 (전 단계 공통)

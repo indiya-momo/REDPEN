@@ -6,7 +6,10 @@
 import { AUXILIARY_FLEX_SPACE } from './compoundPatternCommon.js';
 import { compileRuleRegex } from './regexFromFind.js';
 import { isGloballyExcluded, shouldSkipMatch } from './matchFilters.js';
-import { pruneAuxiliaryFalseMorph } from './auxiliaryMorphFilter.js';
+import {
+  pruneAuxiliaryFalseMorph,
+  warmAuxiliaryMorphCache,
+} from './auxiliaryMorphFilter.js';
 
 /**
  * @param {import('./ruleEngine.js').MatchInstance[]} instances
@@ -54,9 +57,16 @@ export function spacedSuggestionFromGluedAuxMatch(match) {
  * @param {{
  *   rules?: readonly import('./ruleTypes.js').Rule[],
  *   globalExcludePhrases?: string[],
+ *   analyze?: import('./kiwiMorph/analyze.js').analyzeLine,
+ *   morphPrefetchMaxMs?: number,
  * }} [opts]
+ * @returns {Promise<import('./ruleEngine.js').GroupedResult[]>}
  */
-export function enrichAuxiliaryGluedFromSpaced(groups, pageTexts, opts = {}) {
+export async function enrichAuxiliaryGluedFromSpaced(
+  groups,
+  pageTexts,
+  opts = {},
+) {
   const list = [...(groups ?? [])];
   const pages = pageTexts ?? [];
   const rules = (opts.rules ?? []).filter(
@@ -66,9 +76,14 @@ export function enrichAuxiliaryGluedFromSpaced(groups, pageTexts, opts = {}) {
       !rule.auxSplitLongCompound &&
       gluedFindFromSpacedAuxFind(rule.find),
   );
-  if (!list.length && !rules.length) return pruneAuxiliaryFalseMorph(list, opts);
+  if (!list.length && !rules.length) {
+    await warmAuxiliaryMorphCache(list, opts);
+    return pruneAuxiliaryFalseMorph(list, opts);
+  }
   if (!pages.length || !rules.length) {
-    return pruneAuxiliaryFalseMorph(groups ?? [], opts);
+    const base = groups ?? [];
+    await warmAuxiliaryMorphCache(base, opts);
+    return pruneAuxiliaryFalseMorph(base, opts);
   }
 
   /** @type {Map<string, import('./ruleEngine.js').GroupedResult>} */
@@ -156,5 +171,6 @@ export function enrichAuxiliaryGluedFromSpaced(groups, pageTexts, opts = {}) {
     if (itemId) byItem.set(itemId, nextGroup);
   }
 
+  await warmAuxiliaryMorphCache(list, opts);
   return pruneAuxiliaryFalseMorph(list, opts);
 }

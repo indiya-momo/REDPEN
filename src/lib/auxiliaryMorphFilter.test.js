@@ -52,6 +52,49 @@ describe('isConfirmedAuxiliaryMorph', () => {
       }),
     ).toBe(false);
   });
+
+  it('VA만(어두운)은 인정하지 않고, VA+VX(예뻐 둬)는 인정한다', () => {
+    expect(
+      isConfirmedAuxiliaryMorph({
+        tokens: [
+          { str: '어둡', tag: 'VA' },
+          { str: 'ㄴ', tag: 'ETM' },
+        ],
+      }),
+    ).toBe(false);
+    expect(
+      isConfirmedAuxiliaryMorph({
+        tokens: [
+          { str: '예쁘', tag: 'VA' },
+          { str: '어', tag: 'EC' },
+          { str: '두', tag: 'VX' },
+          { str: '어', tag: 'EF' },
+        ],
+      }),
+    ).toBe(true);
+  });
+
+  it('VCP만(아들인)은 인정하지 않고, VV+보이(이어보이다)는 인정한다', () => {
+    expect(
+      isConfirmedAuxiliaryMorph({
+        tokens: [
+          { str: '아들', tag: 'NNG' },
+          { str: '이', tag: 'VCP' },
+          { str: 'ᆫ', tag: 'ETM' },
+        ],
+      }),
+    ).toBe(false);
+    expect(
+      isConfirmedAuxiliaryMorph({
+        tokens: [
+          { str: '잇', tag: 'VV' },
+          { str: '어', tag: 'EC' },
+          { str: '보이', tag: 'VV' },
+          { str: '다', tag: 'EF' },
+        ],
+      }),
+    ).toBe(true);
+  });
 });
 
 describe('isFalseDeuldaAuxiliaryMorph (legacy)', () => {
@@ -164,7 +207,7 @@ describe('pruneAuxiliaryFalseMorph', () => {
     expect(next[2].instances.map((i) => i.matchedText)).toEqual(['해보이는']);
   });
 
-  it('분석 불가면 유지(fail-open)', () => {
+  it('분석 불가면 버린다(fail-closed)', () => {
     const next = pruneAuxiliaryFalseMorph(
       [
         {
@@ -175,7 +218,7 @@ describe('pruneAuxiliaryFalseMorph', () => {
       ],
       { analyze: () => null },
     );
-    expect(next[0].instances).toHaveLength(1);
+    expect(next[0].instances).toHaveLength(0);
   });
 
   it('들다 그룹 판별은 유지', () => {
