@@ -53,22 +53,32 @@ function auxiliarySpacedGlueOverlay(inst) {
 }
 
 /**
+ * 잘못된 붙임 → 띄움만 고칠 때 ∨ (`십년`→`십 년` → `→십∨년`).
+ * @param {string} matched
+ * @param {string} suggested
+ * @returns {string | null}
+ */
+export function spacingInsertOverlay(matched, suggested) {
+  const a = String(matched ?? '');
+  const b = String(suggested ?? '').trim();
+  if (!a || /\s/.test(a)) return null;
+  if (!b || !/\s/.test(b)) return null;
+  if (a.replace(/\s+/g, '') !== b.replace(/\s+/g, '')) return null;
+  return `→${b.replace(/\s+/g, SPACE_INSERT_MARK)}`;
+}
+
+/**
  * 띄어쓰기 필수 — 잘못된 붙임만 ∨. 이미 띄운 올바른 표면은 기호 없음.
  * @param {import('./ruleEngine.js').MatchInstance} inst
  * @returns {string | null}
  */
 function auxiliarySpaceInsertOverlay(inst) {
-  const matched = String(inst?.matchedText ?? '');
-  const suggested = String(inst?.suggestedText ?? '').trim();
-  if (!matched || /\s/.test(matched)) return null;
-  if (
-    suggested &&
-    /\s/.test(suggested) &&
-    suggested.replace(/\s+/g, '') === matched.replace(/\s+/g, '')
-  ) {
-    return `→${suggested.replace(/\s+/g, SPACE_INSERT_MARK)}`;
-  }
-  return null;
+  return spacingInsertOverlay(inst?.matchedText, inst?.suggestedText);
+}
+
+/** 맞춤법 탭 「띄어쓰기」 폴더 결과 (`spacing:numberUnit` 등) */
+function isSpacingFolderGroup(group) {
+  return String(group?.category ?? '').startsWith('spacing:');
 }
 
 /**
@@ -183,8 +193,16 @@ export function getHighlightOverlayReplace(inst, options = {}) {
   if (text) return spellingGlueOverlay(text);
 
   const suggested = String(inst.suggestedText ?? '').trim();
-  if (isSpellingOverlayGroup(group) || group?.category === 'spelling') {
-    return spacingGlueOverlay(inst.matchedText, suggested);
+  if (
+    isSpellingOverlayGroup(group) ||
+    group?.category === 'spelling' ||
+    isSpacingFolderGroup(group)
+  ) {
+    // 붙임(⁀) 또는 띄움(∨) — 수·단위 등 띄어쓰기 폴더도 같은 빨간 표시
+    return (
+      spacingGlueOverlay(inst.matchedText, suggested) ||
+      spacingInsertOverlay(inst.matchedText, suggested)
+    );
   }
   // 검토(caution): 교정 오버레이가 없고 후보 라벨(group.label)만 있다.
   // collectAnnotFindings의 `overlay || group.label`과 같게 화면도 이 라벨을 쓴다.

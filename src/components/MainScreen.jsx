@@ -94,7 +94,12 @@ import { useBetaDailyQuota } from '../hooks/useBetaDailyQuota.js';
 import { useRewardNotice } from '../hooks/useRewardNotice.js';
 import { daysSinceJoin, syncProfileBadges } from '../lib/badgeGrants.js';
 import { isCheckAuthBlocked } from '../lib/checkAuthGate.js';
-import { resolveQuotaAuthEmail, assertBetaDailyExportOrAlert } from '../lib/betaDailyQuota.js';
+import {
+  resolveQuotaAuthEmail,
+  assertBetaDailyExportOrAlert,
+  confirmProofreadExportOrCancel,
+  chooseProofreadExportFormat,
+} from '../lib/betaDailyQuota.js';
 import {
   countLoanwordActiveRules,
   countSpacingReviewActiveRules,
@@ -1524,287 +1529,268 @@ export default function MainScreen({
     ],
   );
 
-  const handleSpellingExport = useCallback(() => {
-    if (!spellingExportEnabled) return;
-    const filename = buildProofreadExportFilename(
-      pdf.pdfFileName,
-      proofreadExportLabelForKind('spelling'),
-    );
+  const [proofreadPdfBusy, setProofreadPdfBusy] = useState(false);
 
-    assertBetaDailyExportOrAlert(authUid, {
-      authEmail,
-      exportTab: 'spelling',
-    })
-      .then((allowed) => {
-        if (!allowed) return;
-        return exportSpellingResults({
-          entries: spellingTabEntries,
-          formatPageLabel: pageDisplay.formatLabel,
-          isInstanceVisible: ruleCheck.isInstanceVisible,
-          groupVisibilityMode: ruleCheck.groupVisibilityMode,
-          visibleInstanceCount: ruleCheck.visibleInstanceCount,
-          cautionCriteriaCount: spellingGroupsWithFindings.cautionWithFindings,
-          cautionFindingsCount: spellingFindingsByCategory.editorReview,
-          builtinCriteriaCount: spellingGroupsWithFindings.builtinWithFindings,
-          builtinFindingsCount: spellingFindingsByCategory.spelling,
-          loanwordCriteriaCount:
-            spellingGroupsWithFindings.loanwordWithFindings,
-          loanwordFindingsCount: spellingFindingsByCategory.loanword,
-          totalFindings: spellingTabTotalFindings,
-          cautionSelected: spellingCriteriaSelection.cautionSelected,
-          builtinSelected: spellingCriteriaSelection.builtinSelected,
-          loanwordSelected: spellingCriteriaSelection.loanwordSelected,
-          filename,
-        });
-      })
-      .catch((err) => console.error('엑셀보내기 오류:', err));
-  }, [
-    spellingExportEnabled,
-    authUid,
-    authEmail,
-    pdf.pdfFileName,
-    spellingTabEntries,
-    pageDisplay.formatLabel,
-    ruleCheck.isInstanceVisible,
-    ruleCheck.groupVisibilityMode,
-    ruleCheck.visibleInstanceCount,
-    spellingGroupsWithFindings.cautionWithFindings,
-    spellingGroupsWithFindings.builtinWithFindings,
-    spellingGroupsWithFindings.loanwordWithFindings,
-    spellingFindingsByCategory.editorReview,
-    spellingFindingsByCategory.spelling,
-    spellingFindingsByCategory.loanword,
-    spellingTabTotalFindings,
-    spellingCriteriaSelection.cautionSelected,
-    spellingCriteriaSelection.builtinSelected,
-    spellingCriteriaSelection.loanwordSelected,
-  ]);
-
-  const handleConsistencyExport = useCallback(() => {
-    if (guestWorkGuide.showRuleSetSaveGuide) {
-      guestWorkGuide.dismiss(WORK_GUIDE_KEYS.RULE_SET_SAVE);
-    }
-    if (guestBrowseBlocksResultExport()) {
-      void showAppAlert({
-        title: '검수 결과 다운로드',
-        message:
-          '둘러보기에서는 엑셀 파일을 저장할 수 없습니다.\n로그인 후 이용해 주세요.',
-      });
-      return;
-    }
-    if (!spellingExportEnabled) return;
-    // 현재 세션(1차 또는 2차) 전체 — PDF Preview 쪽 조각(groups) 아님
-    const recommendEntries = unifyBuildSessionExportGroups().map((group) => ({
-      group,
-      source: 'consistency',
-    }));
-    if (
-      !ruleCheck.consistencyCheckDone &&
-      recommendEntries.length === 0
-    ) {
-      void showAppAlert({
-        title: '검수 결과 다운로드',
-        message:
-          '표기 통일 추천 찾기 또는 기준 검수가 끝난 뒤 받을 수 있습니다.',
-      });
-      return;
-    }
-    const filename = buildProofreadExportFilename(
-      pdf.pdfFileName,
-      proofreadExportLabelForKind('consistency'),
-    );
-
-    assertBetaDailyExportOrAlert(authUid, {
-      authEmail,
-      exportTab: 'consistency',
-    })
-      .then(async (allowed) => {
-        if (!allowed) return;
-        const model = await exportConsistencyResults({
-          entries: ruleCheck.consistencyCheckDone
-            ? consistencyTabEntries
-            : [],
-          recommendEntries,
-          formatPageLabel: pageDisplay.formatLabel,
-          isInstanceVisible: ruleCheck.isInstanceVisible,
-          groupVisibilityMode: ruleCheck.groupVisibilityMode,
-          visibleInstanceCount: ruleCheck.visibleInstanceCount,
-          literalCriteriaCount:
-            consistencyGroupsWithFindings.literalWithFindings,
-          literalFindingsCount: consistencyFindingsByType.find,
-          unifyCriteriaCount: consistencyGroupsWithFindings.unifyWithFindings,
-          unifyFindingsCount: consistencyFindingsByType.unify,
-          commonStringCriteriaCount:
-            consistencyGroupsWithFindings.commonStringWithFindings,
-          commonStringFindingsCount: consistencyFindingsByType.commonString,
-          auxiliaryCriteriaCount:
-            consistencyGroupsWithFindings.auxiliaryWithFindings,
-          auxiliaryFindingsCount: consistencyFindingsByType.bonBojo,
-          totalFindings: ruleCheck.consistencyCheckDone
-            ? consistencyTabTotalFindings
-            : 0,
-          literalSelected: consistencyCriteriaSelection.literalSelected,
-          unifySelected: consistencyCriteriaSelection.unifySelected,
-          commonStringSelected:
-            consistencyCriteriaSelection.commonStringSelected,
-          auxiliarySelected: consistencyCriteriaSelection.auxiliarySelected,
-          customRules,
-          filename,
-        });
-        const hasRecommend = Boolean(model?.recommend?.rows?.length);
-        const hasRegistered = (model?.rows ?? []).length > 0;
-        if (!hasRecommend && !hasRegistered) {
-          await showAppAlert({
-            title: '검수 결과 다운로드',
-            message: '내보낼 검수 결과가 없습니다.',
-          });
-        }
-      })
-      .catch((err) => {
-        console.error('일관성 엑셀보내기 오류:', err);
+  /** 「검수 결과 다운로드(EXCEL, PDF)」 — 1차 한도 확인 → 2차 형식 선택 */
+  const handleResultsDownload = useCallback(
+    async (exportTab = 'spelling') => {
+      if (exportTab === 'consistency' && guestWorkGuide.showRuleSetSaveGuide) {
+        guestWorkGuide.dismiss(WORK_GUIDE_KEYS.RULE_SET_SAVE);
+      }
+      if (guestBrowseBlocksResultExport()) {
         void showAppAlert({
           title: '검수 결과 다운로드',
           message:
-            '엑셀 파일을 만드는 중 오류가 났습니다. 잠시 후 다시 시도해 주세요.',
+            '둘러보기에서는 검수 결과를 저장할 수 없습니다.\n로그인 후 이용해 주세요.',
         });
-      });
-  }, [
-    guestWorkGuide.showRuleSetSaveGuide,
-    guestWorkGuide.dismiss,
-    spellingExportEnabled,
-    authUid,
-    authEmail,
-    pdf.pdfFileName,
-    consistencyTabEntries,
-    unifyBuildSessionExportGroups,
-    pageDisplay.formatLabel,
-    ruleCheck.isInstanceVisible,
-    ruleCheck.groupVisibilityMode,
-    ruleCheck.visibleInstanceCount,
-    ruleCheck.consistencyCheckDone,
-    consistencyGroupsWithFindings.literalWithFindings,
-    consistencyGroupsWithFindings.unifyWithFindings,
-    consistencyGroupsWithFindings.commonStringWithFindings,
-    consistencyGroupsWithFindings.auxiliaryWithFindings,
-    consistencyFindingsByType.find,
-    consistencyFindingsByType.unify,
-    consistencyFindingsByType.commonString,
-    consistencyFindingsByType.bonBojo,
-    consistencyTabTotalFindings,
-    consistencyCriteriaSelection.literalSelected,
-    consistencyCriteriaSelection.unifySelected,
-    consistencyCriteriaSelection.commonStringSelected,
-    consistencyCriteriaSelection.auxiliarySelected,
-    customRules,
-  ]);
+        return;
+      }
+      if (!spellingExportEnabled) return;
 
-  const [proofreadPdfBusy, setProofreadPdfBusy] = useState(false);
+      const recommendEntries =
+        exportTab === 'consistency'
+          ? unifyBuildSessionExportGroups().map((group) => ({
+              group,
+              source: 'consistency',
+            }))
+          : [];
+      if (
+        exportTab === 'consistency' &&
+        !ruleCheck.consistencyCheckDone &&
+        recommendEntries.length === 0
+      ) {
+        void showAppAlert({
+          title: '검수 결과 다운로드',
+          message:
+            '표기 통일 추천 찾기 또는 기준 검수가 끝난 뒤 받을 수 있습니다.',
+        });
+        return;
+      }
 
-  /** 「PDF 교정본 다운로드」 — proof | indesignReplace */
-  const handleProofreadPdfExport = useCallback(async (exportTab = 'spelling') => {
-    if (guestBrowseBlocksResultExport()) {
-      void showAppAlert({
-        title: 'PDF 교정본 다운로드',
-        message:
-          '둘러보기에서는 PDF 교정본을 저장할 수 없습니다.\n로그인 후 이용해 주세요.',
-      });
-      return;
-    }
-    if (!pdf.pdf || proofreadPdfBusy) return;
+      if (!(await confirmProofreadExportOrCancel(exportTab))) return;
+      const format = await chooseProofreadExportFormat();
+      if (!format) return;
 
-    // 베타 기본 = 지금 교정본(확인). 인디자인용은 명시 선택만.
-    const wantProof = await showAppConfirm({
-      title: 'PDF 다운로드',
-      message:
-        '어떤 PDF로 받을까요?\n\n' +
-        '· 확인 → 지금 교정본(화면과 같은 표시)\n' +
-        '· 인디자인용 → Acrobat Replace(자동 반영은 조건에 따라 달라질 수 있음)',
-      confirmLabel: '지금 교정본',
-      cancelLabel: '인디자인용',
-    });
-    /** @type {'proof' | 'indesignReplace'} */
-    const mode = wantProof ? 'proof' : 'indesignReplace';
-    const title =
-      mode === 'indesignReplace' ? '인디자인용 PDF 다운로드' : 'PDF 교정본 다운로드';
+      if (format !== 'xlsx') {
+        if (!pdf.pdf || proofreadPdfBusy) return;
+      }
 
-    setProofreadPdfBusy(true);
-    try {
-      const [{ exportProofreadPdf }, { PdfAnnotExportError }, { collectAnnotFindings }] =
-        await Promise.all([
+      /** PDF는 한도 차감 전에 넣을 결과가 있는지 확인 */
+      let pdfModules = null;
+      let pdfExportInput = null;
+      if (format !== 'xlsx') {
+        pdfModules = await Promise.all([
           import('../lib/pdfAnnotExport/exportProofreadPdf.js'),
           import('../lib/pdfAnnotExport/writeAnnotatedPdf.js'),
           import('../lib/pdfAnnotExport/collectAnnotFindings.js'),
         ]);
-      const exportInput = {
-        pdfDoc: pdf.pdf,
-        pageTexts: pdf.pageTexts,
-        spellingEntries: ruleCheck.spellingCheckDone ? spellingTabEntries : [],
-        consistencyEntries: ruleCheck.consistencyCheckDone
-          ? consistencyTabEntries
-          : [],
-        unifyGroups: unifyBuildSessionExportGroups(),
-        isInstanceVisible: ruleCheck.isInstanceVisible,
-        pdfFileName: pdf.pdfFileName,
-        mode,
-      };
-      if (!collectAnnotFindings(exportInput).length) {
-        await showAppAlert({
-          title,
-          message: '교정본에 넣을 검수 결과가 없습니다.',
-        });
-        return;
-      }
-      const allowed = await assertBetaDailyExportOrAlert(authUid, {
-        authEmail,
-        exportTab,
-        format: 'pdf',
-      });
-      if (!allowed) return;
-      try {
-        const result = await exportProofreadPdf(exportInput);
-        if (!result.total) {
+        const mode =
+          format === 'indesignReplace' ? 'indesignReplace' : 'proof';
+        pdfExportInput = {
+          pdfDoc: pdf.pdf,
+          pageTexts: pdf.pageTexts,
+          spellingEntries: ruleCheck.spellingCheckDone
+            ? spellingTabEntries
+            : [],
+          consistencyEntries: ruleCheck.consistencyCheckDone
+            ? consistencyTabEntries
+            : [],
+          unifyGroups: unifyBuildSessionExportGroups(),
+          isInstanceVisible: ruleCheck.isInstanceVisible,
+          pdfFileName: pdf.pdfFileName,
+          mode,
+        };
+        const title =
+          mode === 'indesignReplace'
+            ? '인디자인 주석 내보내기용 PDF 다운로드'
+            : '교정용 PDF 다운로드';
+        if (!pdfModules[2].collectAnnotFindings(pdfExportInput).length) {
           await showAppAlert({
             title,
-            message:
-              mode === 'indesignReplace' && result.notice
-                ? result.notice
-                : '교정본에 넣을 검수 결과가 없습니다.',
+            message: '교정본에 넣을 검수 결과가 없습니다.',
           });
           return;
         }
-        if (mode === 'indesignReplace' && result.notice) {
-          await showAppAlert({ title, message: result.notice });
+      }
+
+      const allowed = await assertBetaDailyExportOrAlert(authUid, {
+        authEmail,
+        exportTab,
+        skipConfirm: true,
+      });
+      if (!allowed) return;
+
+      if (format === 'xlsx') {
+        try {
+          if (exportTab === 'spelling') {
+            await exportSpellingResults({
+              entries: spellingTabEntries,
+              formatPageLabel: pageDisplay.formatLabel,
+              isInstanceVisible: ruleCheck.isInstanceVisible,
+              groupVisibilityMode: ruleCheck.groupVisibilityMode,
+              visibleInstanceCount: ruleCheck.visibleInstanceCount,
+              cautionCriteriaCount:
+                spellingGroupsWithFindings.cautionWithFindings,
+              cautionFindingsCount: spellingFindingsByCategory.editorReview,
+              builtinCriteriaCount:
+                spellingGroupsWithFindings.builtinWithFindings,
+              builtinFindingsCount: spellingFindingsByCategory.spelling,
+              loanwordCriteriaCount:
+                spellingGroupsWithFindings.loanwordWithFindings,
+              loanwordFindingsCount: spellingFindingsByCategory.loanword,
+              totalFindings: spellingTabTotalFindings,
+              cautionSelected: spellingCriteriaSelection.cautionSelected,
+              builtinSelected: spellingCriteriaSelection.builtinSelected,
+              loanwordSelected: spellingCriteriaSelection.loanwordSelected,
+              filename: buildProofreadExportFilename(
+                pdf.pdfFileName,
+                proofreadExportLabelForKind('spelling'),
+              ),
+            });
+            return;
+          }
+
+          const model = await exportConsistencyResults({
+            entries: ruleCheck.consistencyCheckDone
+              ? consistencyTabEntries
+              : [],
+            recommendEntries,
+            formatPageLabel: pageDisplay.formatLabel,
+            isInstanceVisible: ruleCheck.isInstanceVisible,
+            groupVisibilityMode: ruleCheck.groupVisibilityMode,
+            visibleInstanceCount: ruleCheck.visibleInstanceCount,
+            literalCriteriaCount:
+              consistencyGroupsWithFindings.literalWithFindings,
+            literalFindingsCount: consistencyFindingsByType.find,
+            unifyCriteriaCount: consistencyGroupsWithFindings.unifyWithFindings,
+            unifyFindingsCount: consistencyFindingsByType.unify,
+            commonStringCriteriaCount:
+              consistencyGroupsWithFindings.commonStringWithFindings,
+            commonStringFindingsCount: consistencyFindingsByType.commonString,
+            auxiliaryCriteriaCount:
+              consistencyGroupsWithFindings.auxiliaryWithFindings,
+            auxiliaryFindingsCount: consistencyFindingsByType.bonBojo,
+            totalFindings: ruleCheck.consistencyCheckDone
+              ? consistencyTabTotalFindings
+              : 0,
+            literalSelected: consistencyCriteriaSelection.literalSelected,
+            unifySelected: consistencyCriteriaSelection.unifySelected,
+            commonStringSelected:
+              consistencyCriteriaSelection.commonStringSelected,
+            auxiliarySelected: consistencyCriteriaSelection.auxiliarySelected,
+            customRules,
+            filename: buildProofreadExportFilename(
+              pdf.pdfFileName,
+              proofreadExportLabelForKind('consistency'),
+            ),
+          });
+          const hasRecommend = Boolean(model?.recommend?.rows?.length);
+          const hasRegistered = (model?.rows ?? []).length > 0;
+          if (!hasRecommend && !hasRegistered) {
+            await showAppAlert({
+              title: '검수 결과 다운로드',
+              message: '내보낼 검수 결과가 없습니다.',
+            });
+          }
+        } catch (err) {
+          console.error('엑셀보내기 오류:', err);
+          void showAppAlert({
+            title: '검수 결과 다운로드',
+            message:
+              '엑셀 파일을 만드는 중 오류가 났습니다. 잠시 후 다시 시도해 주세요.',
+          });
+        }
+        return;
+      }
+
+      /** @type {'proof' | 'indesignReplace'} */
+      const mode = pdfExportInput.mode;
+      const title =
+        mode === 'indesignReplace'
+          ? '인디자인 주석 내보내기용 PDF 다운로드'
+          : '교정용 PDF 다운로드';
+
+      setProofreadPdfBusy(true);
+      try {
+        const [{ exportProofreadPdf }, { PdfAnnotExportError }] = pdfModules;
+        try {
+          const result = await exportProofreadPdf(pdfExportInput);
+          if (!result.total) {
+            await showAppAlert({
+              title,
+              message:
+                mode === 'indesignReplace' && result.notice
+                  ? result.notice
+                  : '교정본에 넣을 검수 결과가 없습니다.',
+            });
+            return;
+          }
+          if (mode === 'indesignReplace' && result.notice) {
+            await showAppAlert({ title, message: result.notice });
+          }
+        } catch (err) {
+          if (err instanceof PdfAnnotExportError) {
+            await showAppAlert({ title, message: err.message });
+            return;
+          }
+          throw err;
         }
       } catch (err) {
-        if (err instanceof PdfAnnotExportError) {
-          await showAppAlert({ title, message: err.message });
-          return;
-        }
-        throw err;
+        console.error('PDF 교정본 오류:', err);
+        void showAppAlert({
+          title: '검수 결과 다운로드',
+          message:
+            'PDF를 만드는 중 오류가 났습니다. 잠시 후 다시 시도해 주세요.',
+        });
+      } finally {
+        setProofreadPdfBusy(false);
       }
-    } catch (err) {
-      console.error('PDF 교정본 오류:', err);
-      void showAppAlert({
-        title: 'PDF 교정본 다운로드',
-        message: 'PDF 교정본을 만드는 중 오류가 났습니다. 잠시 후 다시 시도해 주세요.',
-      });
-    } finally {
-      setProofreadPdfBusy(false);
-    }
-  }, [
-    authUid,
-    authEmail,
-    pdf.pdf,
-    pdf.pageTexts,
-    pdf.pdfFileName,
-    proofreadPdfBusy,
-    ruleCheck.spellingCheckDone,
-    ruleCheck.consistencyCheckDone,
-    ruleCheck.isInstanceVisible,
-    spellingTabEntries,
-    consistencyTabEntries,
-    unifyBuildSessionExportGroups,
-  ]);
+    },
+    [
+      guestWorkGuide.showRuleSetSaveGuide,
+      guestWorkGuide.dismiss,
+      spellingExportEnabled,
+      authUid,
+      authEmail,
+      pdf.pdf,
+      pdf.pageTexts,
+      pdf.pdfFileName,
+      proofreadPdfBusy,
+      pageDisplay.formatLabel,
+      ruleCheck.isInstanceVisible,
+      ruleCheck.groupVisibilityMode,
+      ruleCheck.visibleInstanceCount,
+      ruleCheck.spellingCheckDone,
+      ruleCheck.consistencyCheckDone,
+      spellingTabEntries,
+      consistencyTabEntries,
+      unifyBuildSessionExportGroups,
+      spellingGroupsWithFindings.cautionWithFindings,
+      spellingGroupsWithFindings.builtinWithFindings,
+      spellingGroupsWithFindings.loanwordWithFindings,
+      spellingFindingsByCategory.editorReview,
+      spellingFindingsByCategory.spelling,
+      spellingFindingsByCategory.loanword,
+      spellingTabTotalFindings,
+      spellingCriteriaSelection.cautionSelected,
+      spellingCriteriaSelection.builtinSelected,
+      spellingCriteriaSelection.loanwordSelected,
+      consistencyGroupsWithFindings.literalWithFindings,
+      consistencyGroupsWithFindings.unifyWithFindings,
+      consistencyGroupsWithFindings.commonStringWithFindings,
+      consistencyGroupsWithFindings.auxiliaryWithFindings,
+      consistencyFindingsByType.find,
+      consistencyFindingsByType.unify,
+      consistencyFindingsByType.commonString,
+      consistencyFindingsByType.bonBojo,
+      consistencyTabTotalFindings,
+      consistencyCriteriaSelection.literalSelected,
+      consistencyCriteriaSelection.unifySelected,
+      consistencyCriteriaSelection.commonStringSelected,
+      consistencyCriteriaSelection.auxiliarySelected,
+      customRules,
+    ],
+  );
 
   const spellingResultsPanel =
     workTab === 'spelling' && ruleCheck.spellingCheckDone ? (
@@ -1915,19 +1901,13 @@ export default function MainScreen({
           <button
             type="button"
             className="btn-add panel-section-run-btn btn-export-results"
-            onClick={handleSpellingExport}
-            disabled={!ruleCheck.spellingCheckDone}
-          >
-            검수 결과 다운로드
-          </button>
-          <button
-            type="button"
-            className="btn-add panel-section-run-btn btn-export-results btn-export-proofread-pdf"
-            onClick={() => handleProofreadPdfExport('spelling')}
+            onClick={() => void handleResultsDownload('spelling')}
             disabled={!ruleCheck.spellingCheckDone || proofreadPdfBusy}
-            title="보이는 검수 결과를 원본 PDF에 교정 주석으로 달아 새 파일로 받습니다"
+            title="엑셀·교정용 PDF·인디자인용 PDF 중 형식을 골라 받습니다"
           >
-            {proofreadPdfBusy ? 'PDF 교정본 만드는 중…' : 'PDF 교정본 다운로드'}
+            {proofreadPdfBusy
+              ? 'PDF 만드는 중…'
+              : '검수 결과 다운로드(EXCEL, PDF)'}
           </button>
         </div>
       ) : null}
@@ -2470,33 +2450,22 @@ export default function MainScreen({
                     type="button"
                     className="btn-add panel-section-run-btn btn-export-results"
                     data-work-guide="consistency-export"
-                    onClick={handleConsistencyExport}
+                    onClick={() => void handleResultsDownload('consistency')}
                     disabled={
-                      !ruleCheck.consistencyCheckDone &&
-                      !unifySessionActive
+                      (!ruleCheck.consistencyCheckDone &&
+                        !unifySessionActive) ||
+                      proofreadPdfBusy
                     }
                     title={
                       !ruleCheck.consistencyCheckDone &&
                       !unifySessionActive
                         ? '표기 통일 추천 찾기 또는 기준 검수 후 받을 수 있습니다'
-                        : undefined
+                        : '엑셀·교정용 PDF·인디자인용 PDF 중 형식을 골라 받습니다'
                     }
                   >
-                    검수 결과 다운로드
-                  </button>
-                  <button
-                    type="button"
-                    className="btn-add panel-section-run-btn btn-export-results btn-export-proofread-pdf"
-                    onClick={() => handleProofreadPdfExport('consistency')}
-                    disabled={
-                      (!ruleCheck.spellingCheckDone &&
-                        !ruleCheck.consistencyCheckDone &&
-                        !unifySessionActive) ||
-                      proofreadPdfBusy
-                    }
-                    title="보이는 맞춤법·표기통일 기준 검수(본+보 등)·고른 통일형을 원본 PDF에 교정 주석으로 달아 새 파일로 받습니다"
-                  >
-                    {proofreadPdfBusy ? 'PDF 교정본 만드는 중…' : 'PDF 교정본 다운로드'}
+                    {proofreadPdfBusy
+                      ? 'PDF 만드는 중…'
+                      : '검수 결과 다운로드(EXCEL, PDF)'}
                   </button>
                 </div>
                 ) : null}

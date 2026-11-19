@@ -443,7 +443,7 @@ export function trackFeedbackOpened() {
 }
 
 /**
- * 본조 결과 「합성어」접힌 칸 토글.
+ * 본조 결과 「합성어」접힌 칸 토글(레거시 · UI는 합 행으로 바뀜).
  * 원고 텍스트는 보내지 않음 — 펼침 여부·건수 버킷만.
  * @param {{ open: boolean, count: number }} input
  */

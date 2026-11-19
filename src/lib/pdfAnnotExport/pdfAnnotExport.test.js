@@ -147,12 +147,12 @@ describe('pdf 문자열·파일 쓰기', () => {
     expect(PDFHexString.of(s.slice(1, -1)).decodeText()).toBe('인디야');
   });
 
-  it('하루 다운로드 확인 문구 — PDF 교정본도 같은 횟수', () => {
-    const msg = buildProofreadExportConfirmMessage('spelling', 'pdf');
-    expect(msg.startsWith('[PDF 교정본 다운로드]')).toBe(true);
+  it('하루 다운로드 확인 문구 — 형식 공통 1회', () => {
+    const msg = buildProofreadExportConfirmMessage('spelling');
+    expect(msg.startsWith('[검수 결과 다운로드]')).toBe(true);
     expect(msg).toContain('1회');
+    expect(msg).toContain('다운로드를 진행할까요?');
     expect(msg).not.toContain('준비중');
-    expect(buildProofreadExportConfirmMessage('spelling')).toContain('엑셀(.xlsx)');
   });
 
   it('파일 이름', () => {
