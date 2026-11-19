@@ -1,7 +1,7 @@
 # 인디자인용 PDF · Acrobat Replace 내보내기 설계
 
 **작성:** 2026-11-19  
-**상태:** 합의 · **구현됨** (형식 단위 테스트 통과 · Accept 품질은 Tw 반영 후)  
+**상태:** 합의 · **구현됨** (형식·Tw 경로 반영 · Accept 본문 판정은 골든 게이트 수동)
 **상위:** [project-docs/indesign-pdf-comment-accept-design-2026-11-18.md](../../../project-docs/indesign-pdf-comment-accept-design-2026-11-18.md)  
 **관련:** [proof-export-roadmap-2026-11-17.md](../../../project-docs/proof-export-roadmap-2026-11-17.md), 샘플 `261117_경주멍-본문 2교지_131.pdf`  
 **골든:** [project-docs/indesign-replace-golden-2026-11-19/](../../../project-docs/indesign-replace-golden-2026-11-19/)
@@ -74,7 +74,7 @@
 | 「어긋나면 미수락」은 **Accept 시점** 일 → 제품이 미리 알 수 없음 | 제품 안전장치는 **내보내기 직전** `page.text` 구간↔원문 일치 점검 |
 | ID 내보내기 전제 vs ezPDF·한글 PDF | UI 고지. ezPDF·비-ID는 보장 밖·결과만 기록 |
 | Tw·공백 폭 오차 → QuadPoints 어긋남 | 공유 글리프 경로 수정 **반영 후** Accept 품질 판정. ID 골든 원본에서 Tw 전후 **별도** 측정 |
-| Tw 수정 방식이 공유 경로에 들어가는지는 수정안 확정 후 재확인 | §5 검증 4 |
+| Tw 수정은 공유 경로에 반영됨(eef79a9). Accept 본문 판정·ezPDF 한계는 §5 | §5 검증 4 |
 | 순수 Insert 미검증 | 샘플 확보 전 미사용 |
 | Contents에 지시문 | 테스트로 고침만 강제 |
 
@@ -108,7 +108,7 @@
 ### 좌표 경로
 
 `segmentsForTextRange` → `getItemGlyphOffsets` ?? `charOffsetsInItem` (**화면 하이라이트와 공유**).  
-Tw 수정이 이 경로에 실제로 들어가는지는 수정안 확정 후 재확인.
+Tw/isSpace 보정은 이 공유 경로에 반영됨. Accept 품질은 본문 대조로 판정.
 
 ### 안내 문구 (약속 없이)
 
@@ -134,7 +134,7 @@ collectAnnotFindings
 1. **가져오기 스모크:** ID 내보내기 PDF에 Acrobat Replace 1건 vs **같은 원본을 인디야가 pdf-lib로 저장·Replace 합성** — 각각 Import·Accept·**본문↔기대 대조**.  
 2. **ezPDF 경로:** 이번 샘플류는 보장 밖, 결과만 기록.  
 3. **Insert:** 필요 시에만 Acrobat Insert 샘플 덤프 후 스펙 추가.  
-4. **QuadPoints / Tw:** 공유 글리프 경로 수정 반영 후, **ID 골든 원본**에서 Tw 전후를 따로 측정한 뒤 Accept 품질 판정. 그 전은 **형식 스파이크만**.
+4. **QuadPoints / Tw:** 공유 글리프 경로(**Tw/isSpace 보정 eef79a9 반영됨**). Accept 품질 판정은 **본문 대조**가 기준이고 QuadPoints 가로는 진단. 측정: project-docs/indesign-replace-golden-2026-11-19/accept-quality-gate.json.
 
 ---
 
@@ -144,11 +144,11 @@ collectAnnotFindings
 |-------|------|------|
 | 0 | 본 문서 합의 | ✅ |
 | 1 | ID 원본 + Acrobat Replace 골든 덤프·Accept 수동 | ✅ 필드 표 (`replace-pairs.json`) · Accept는 수동 |
-| 2 | pdf-lib Replace 1건 합성 → Accept 재현 | ✅ 형식 단위 테스트 · Accept는 Tw 후 |
+| 2 | pdf-lib Replace 1건 합성 → Accept 재현 | ✅ 형식 단위 테스트 · 인디야 합성 Accept는 수동 게이트 |
 | 3 | `indesignReplace` 모드 + 자체 점검 + UI 건수·안내 | ✅ |
-| 4 | 겹침·줄바꿈·품질 | ✅ 코드·문서 · Tw 품질 판정은 유보 |
+| 4 | 겹침·줄바꿈·품질 | ✅ 코드·문서 · Tw **코드 반영됨** · Accept 본문 판정은 골든 README |
 
-Tw 등 좌표 수정이 미승인이면 Phase 2 형식만, Accept 품질은 수정 이후로 미룬다.
+Tw/isSpace 보정은 공유 경로에 반영됨. Accept 합격은 인디자인 본문 대조로 판정한다.
 
 ---
 
