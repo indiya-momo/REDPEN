@@ -91,11 +91,18 @@ function renderDialogMessage(message) {
  *   message?: string,
  *   messageNode?: import('react').ReactNode,
  *   copyableUrl?: string,
- *   mode?: 'alert' | 'confirm',
+ *   mode?: 'alert' | 'confirm' | 'choice',
  *   confirmLabel?: string,
  *   cancelLabel?: string,
+ *   options?: Array<{
+ *     id: string,
+ *     label: string,
+ *     description?: string,
+ *     note?: string,
+ *   }>,
  *   onConfirm: () => void,
  *   onCancel?: () => void,
+ *   onChoice?: (id: string) => void,
  *   onClose?: () => void,
  *   showGuideHand?: boolean,
  *   titleAlign?: 'start' | 'center',
@@ -110,8 +117,10 @@ export default function AppDialog({
   mode = 'alert',
   confirmLabel = '확인',
   cancelLabel = '취소',
+  options = [],
   onConfirm,
   onCancel,
+  onChoice,
   onClose,
   showGuideHand = false,
   titleAlign = 'center',
@@ -119,6 +128,7 @@ export default function AppDialog({
   const titleId = useId();
   const dialogRef = useRef(/** @type {HTMLDialogElement | null} */ (null));
   const isConfirm = mode === 'confirm';
+  const isChoice = mode === 'choice';
   const [copyState, setCopyState] = useState(
     /** @type {'idle' | 'ok' | 'error'} */ ('idle'),
   );
@@ -188,7 +198,7 @@ export default function AppDialog({
       onCancel={(e) => {
         e.preventDefault();
         if (requireConfirmClick) return;
-        if (isConfirm) {
+        if (isConfirm || isChoice) {
           onCancel?.();
         } else {
           handleClose();
@@ -196,10 +206,10 @@ export default function AppDialog({
       }}
       onClose={() => {
         if (requireConfirmClick) return;
-        if (!isConfirm) handleClose();
+        if (!isConfirm && !isChoice) handleClose();
       }}
     >
-      <div className="app-dialog__panel">
+      <div className={`app-dialog__panel${isChoice ? ' app-dialog__panel--choice' : ''}`}>
         <header className="app-dialog__header">
           <h2 id={titleId} className="app-dialog__title">
             {title}
@@ -209,7 +219,7 @@ export default function AppDialog({
               type="button"
               className="btn-icon app-dialog__close"
               onClick={() => {
-                if (isConfirm) {
+                if (isConfirm || isChoice) {
                   onCancel?.();
                 } else {
                   handleClose();
@@ -226,9 +236,35 @@ export default function AppDialog({
           <div className="app-dialog__message app-dialog__message--rich">
             {messageNode}
           </div>
-        ) : (
+        ) : message ? (
           <p className="app-dialog__message">{renderDialogMessage(message)}</p>
-        )}
+        ) : null}
+
+        {isChoice ? (
+          <div className="app-dialog__choice-list" role="list">
+            {options.map((opt) => (
+              <div key={opt.id} className="app-dialog__choice-item" role="listitem">
+                <button
+                  type="button"
+                  className="btn-run app-dialog__choice-btn"
+                  onClick={() => onChoice?.(opt.id)}
+                >
+                  {opt.label}
+                </button>
+                {opt.description || opt.note ? (
+                  <div className="app-dialog__choice-meta">
+                    {opt.description ? (
+                      <p className="app-dialog__choice-desc">{opt.description}</p>
+                    ) : null}
+                    {opt.note ? (
+                      <p className="app-dialog__choice-note">{opt.note}</p>
+                    ) : null}
+                  </div>
+                ) : null}
+              </div>
+            ))}
+          </div>
+        ) : null}
 
         {url ? (
           <div className="app-dialog__link-row">
@@ -248,18 +284,39 @@ export default function AppDialog({
           </div>
         ) : null}
 
-        <footer
-          className={`app-dialog__footer${isConfirm ? ' app-dialog__footer--confirm' : ''}`}
-        >
-          {isConfirm ? (
-            <>
-              <button
-                type="button"
-                className="app-dialog__cancel"
-                onClick={() => onCancel?.()}
-              >
-                {cancelLabel}
-              </button>
+        {isChoice ? null : (
+          <footer
+            className={`app-dialog__footer${isConfirm ? ' app-dialog__footer--confirm' : ''}`}
+          >
+            {isConfirm ? (
+              <>
+                <button
+                  type="button"
+                  className="app-dialog__cancel"
+                  onClick={() => onCancel?.()}
+                >
+                  {cancelLabel}
+                </button>
+                <span className="app-dialog__confirm-hand-wrap">
+                  <button
+                    type="button"
+                    className="btn-run app-dialog__confirm"
+                    data-work-guide="app-dialog-confirm"
+                    onClick={onConfirm}
+                  >
+                    {confirmLabel}
+                  </button>
+                  {showGuideHand ? (
+                    <span
+                      className="guide-click-hand guide-click-hand--label-gap app-dialog__guide-hand"
+                      aria-hidden
+                    >
+                      <span className="guide-click-hand__emoji">👆</span>
+                    </span>
+                  ) : null}
+                </span>
+              </>
+            ) : (
               <span className="app-dialog__confirm-hand-wrap">
                 <button
                   type="button"
@@ -278,28 +335,9 @@ export default function AppDialog({
                   </span>
                 ) : null}
               </span>
-            </>
-          ) : (
-            <span className="app-dialog__confirm-hand-wrap">
-              <button
-                type="button"
-                className="btn-run app-dialog__confirm"
-                data-work-guide="app-dialog-confirm"
-                onClick={onConfirm}
-              >
-                {confirmLabel}
-              </button>
-              {showGuideHand ? (
-                <span
-                  className="guide-click-hand guide-click-hand--label-gap app-dialog__guide-hand"
-                  aria-hidden
-                >
-                  <span className="guide-click-hand__emoji">👆</span>
-                </span>
-              ) : null}
-            </span>
-          )}
-        </footer>
+            )}
+          </footer>
+        )}
       </div>
     </dialog>
   );

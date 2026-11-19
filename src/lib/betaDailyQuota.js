@@ -17,6 +17,7 @@ import { assertLoggedInForCheckOrAlert } from './checkAuthGate.js';
 import {
   parseBracketTitleMessage,
   showAppAlert,
+  showAppChoice,
   showAppConfirm,
 } from './appDialog.js';
 import {
@@ -105,34 +106,59 @@ export function proofreadExportTabShortLabel(exportTab = 'spelling') {
 /**
  * @param {'spelling' | 'consistency'} [exportTab]
  */
-export function buildProofreadExportConfirmMessage(exportTab = 'spelling', format = 'xlsx') {
+export function buildProofreadExportConfirmMessage(exportTab = 'spelling') {
   const tabLabel = proofreadExportTabShortLabel(exportTab);
-  if (format === 'pdf') {
-    return (
-      '[PDF 교정본 다운로드]\n' +
-      `오늘 ${tabLabel} 검수 결과 다운로드는 1회 가능합니다.\n` +
-      '(엑셀 다운로드와 PDF 교정본을 합쳐 1회로 셉니다.)\n\n' +
-      '다운로드를 진행할까요?\n\n' +
-      '※ 화면에 보이는 검수 결과를 원본 PDF에 교정 주석으로 넣은 파일입니다'
-    );
-  }
   return (
-    `[${tabLabel} 검수 결과 다운로드]\n` +
+    '[검수 결과 다운로드]\n' +
     `오늘 ${tabLabel} 검수 결과 다운로드는 1회 가능합니다.\n\n` +
-    '다운로드를 진행할까요?\n\n' +
-    '※ 엑셀(.xlsx)파일로 진행되며, PDF 다운로드는 준비중입니다'
+    '다운로드를 진행할까요?'
   );
 }
 
+/** 검수 결과 다운로드 — 형식 선택(2차 팝업) */
+export const PROOFREAD_EXPORT_FORMAT_OPTIONS = [
+  {
+    id: 'xlsx',
+    label: '교정 EXCEL',
+    description: '화면의 수정안을 리스트로 작성',
+  },
+  {
+    id: 'proof',
+    label: '교정용 PDF',
+    description: '화면의 수정안과 동일한 PDF',
+  },
+  {
+    id: 'indesignReplace',
+    label: '인디자인용 PDF',
+    description: '화면의 수정안을 인디자인에서 바로 적용하는 PDF',
+    note: '※인디자인의 [PDF 주석 가져오기]기능으로 자동 반영이 가능합니다',
+  },
+];
+
 /**
  * @param {'spelling' | 'consistency'} [exportTab]
- * @param {'xlsx' | 'pdf'} [format]
  */
-async function confirmProofreadExportOrCancel(exportTab = 'spelling', format = 'xlsx') {
+export async function confirmProofreadExportOrCancel(exportTab = 'spelling') {
   const { title, message } = parseBracketTitleMessage(
-    buildProofreadExportConfirmMessage(exportTab, format),
+    buildProofreadExportConfirmMessage(exportTab),
   );
   return showAppConfirm({ title, message });
+}
+
+/**
+ * 2차: Excel / 교정용 PDF / 인디자인용 PDF
+ * @returns {Promise<'xlsx' | 'proof' | 'indesignReplace' | null>}
+ */
+export async function chooseProofreadExportFormat() {
+  const picked = await showAppChoice({
+    title: '파일 다운로드',
+    message: '어떤 형식으로 받을까요?',
+    options: PROOFREAD_EXPORT_FORMAT_OPTIONS,
+  });
+  if (picked === 'xlsx' || picked === 'proof' || picked === 'indesignReplace') {
+    return picked;
+  }
+  return null;
 }
 
 /** 피드백 제출 후 작업 탭 새로고침 — 8번 말풍선 (돌아오기만으로는 안 뜸) */
@@ -1506,13 +1532,20 @@ export async function consumeBetaDailyExport(uid, email = '', exportTab = 'spell
 /**
  *보내기 전 시도 확인·차감·알림
  * @param {string} uid
- * @param {{ authEmail?: string, exportTab?: ExportTab, onConsumed?: () => void }} [options]
+ * @param {{
+ *   authEmail?: string,
+ *   exportTab?: ExportTab,
+ *   onConsumed?: () => void,
+ *   skipConfirm?: boolean,
+ * }} [options]
  * @returns {Promise<boolean>} 진행 가능하면 true
  */
 export async function assertBetaDailyExportOrAlert(uid, options = {}) {
   const exportTab = options.exportTab ?? 'spelling';
-  if (!(await confirmProofreadExportOrCancel(exportTab, options.format ?? 'xlsx'))) {
-    return false;
+  if (!options.skipConfirm) {
+    if (!(await confirmProofreadExportOrCancel(exportTab))) {
+      return false;
+    }
   }
   if (!assertLoggedInForCheckOrAlert(uid)) {
     return false;

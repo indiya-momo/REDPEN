@@ -149,6 +149,47 @@ describe('getHighlightOverlayReplace', () => {
     ).toBeNull();
   });
 
+  it('띄어쓰기 폴더 수·단위 — 십년에 ∨', () => {
+    expect(
+      getHighlightOverlayReplace(
+        {
+          find: '십년',
+          matchedText: '십년',
+          suggestedText: '십 년',
+          pageNum: 18,
+          index: 0,
+        },
+        {
+          group: {
+            category: 'spacing:numberUnit',
+            moduleId: 'digit-unit',
+            label: '숫자·단위 띄어쓰기',
+          },
+        },
+      ),
+    ).toBe('→십\u2228년');
+  });
+
+  it('띄어쓰기 폴더 — 붙임도 ⁀', () => {
+    expect(
+      getHighlightOverlayReplace(
+        {
+          find: '4 명',
+          matchedText: '4 명',
+          suggestedText: '4명',
+          pageNum: 1,
+          index: 0,
+        },
+        {
+          group: {
+            category: 'spacing:numberUnit',
+            moduleId: 'digit-unit',
+          },
+        },
+      ),
+    ).toBe('→4\u2040명');
+  });
+
   it('findReplaces 붙여쓰기 행은 →손⁀끝 형태로 보인다', () => {
     expect(
       getHighlightOverlayReplace(

@@ -67,7 +67,7 @@ export function isAuxiliaryDictSolidInstance(inst) {
 
 /**
  * 이미 붙여 쓴·사전 등재만 (`auxDictSolid`).
- * 띄움→붙임 제안(spaced solid)은 포함하지 않는다 — 접힌 「합성어」칸용.
+ * 띄움→붙임 제안(spaced solid)은 포함하지 않는다 — 「합」행용.
  * @param {import('./ruleEngine.js').MatchInstance | null | undefined} inst
  */
 export function isAuxiliaryGluedDictSolidInstance(inst) {

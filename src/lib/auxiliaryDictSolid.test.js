@@ -118,7 +118,7 @@ function analyzeHead(head) {
 }
 
 describe('auxiliaryDictSolid', () => {
-  it('접힌 합성어 칸은 auxDictSolid(붙임 등재)만 본다', () => {
+  it('합 행은 auxDictSolid(붙임 등재)만 본다', () => {
     expect(
       isAuxiliaryGluedDictSolidInstance({
         matchedText: '들여다보니',
