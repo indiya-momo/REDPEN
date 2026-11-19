@@ -6,6 +6,13 @@
 /** @typedef {import('react').ReactNode} ReactNode */
 
 /** @typedef {{
+ *   id: string,
+ *   label: string,
+ *   description?: string,
+ *   note?: string,
+ * }} AppDialogChoiceOption */
+
+/** @typedef {{
  *   title?: string,
  *   message?: string,
  *   messageNode?: ReactNode,
@@ -14,6 +21,7 @@
  *   cancelLabel?: string,
  *   showGuideHand?: boolean,
  *   titleAlign?: 'start' | 'center',
+ *   options?: AppDialogChoiceOption[],
  * }} AppDialogOptions */
 
 const HOST_REGISTRY_KEY = Symbol.for('pdf-publish-proofread.appDialogHost');
@@ -21,6 +29,7 @@ const HOST_REGISTRY_KEY = Symbol.for('pdf-publish-proofread.appDialogHost');
 /** @type {{
  *   alert: (opts: AppDialogOptions) => Promise<void>,
  *   confirm: (opts: AppDialogOptions) => Promise<boolean>,
+ *   choice: (opts: AppDialogOptions) => Promise<string | null>,
  * } | null} */
 let moduleHost = null;
 
@@ -45,6 +54,7 @@ function resolveHost() {
  * @param {{
  *   alert: (opts: AppDialogOptions) => Promise<void>,
  *   confirm: (opts: AppDialogOptions) => Promise<boolean>,
+ *   choice: (opts: AppDialogOptions) => Promise<string | null>,
  * }} api
  */
 export function registerAppDialogHost(api) {
@@ -56,6 +66,7 @@ export function registerAppDialogHost(api) {
  * @param {{
  *   alert: (opts: AppDialogOptions) => Promise<void>,
  *   confirm: (opts: AppDialogOptions) => Promise<boolean>,
+ *   choice: (opts: AppDialogOptions) => Promise<string | null>,
  * } | undefined} [api]
  */
 export function unregisterAppDialogHost(api) {
@@ -122,4 +133,36 @@ export async function showAppConfirm(opts) {
     return confirmFn(text);
   }
   throw new Error('showAppConfirm: no dialog host and confirm() unavailable');
+}
+
+/**
+ * 여러 형식 중 하나 선택. 취소·닫기면 null.
+ * @param {AppDialogOptions} opts
+ * @returns {Promise<string | null>}
+ */
+export async function showAppChoice(opts) {
+  const normalized = { ...opts };
+  const activeHost = resolveHost();
+  if (activeHost?.choice) {
+    return activeHost.choice(normalized);
+  }
+  const options = Array.isArray(normalized.options) ? normalized.options : [];
+  if (options.length === 0) return null;
+  const promptFn = globalThis.prompt;
+  if (typeof promptFn === 'function') {
+    const lines = options.map(
+      (opt, i) =>
+        `${i + 1}. ${opt.label}${opt.description ? ` — ${opt.description}` : ''}`,
+    );
+    const title = normalized.title?.trim() || '선택';
+    const body = normalized.message ?? '';
+    const picked = promptFn(
+      `${title}\n\n${body}\n\n${lines.join('\n')}\n\n번호를 입력하세요`,
+      '1',
+    );
+    if (picked == null) return null;
+    const index = Number.parseInt(String(picked).trim(), 10) - 1;
+    return options[index]?.id ?? null;
+  }
+  throw new Error('showAppChoice: no dialog host and prompt() unavailable');
 }

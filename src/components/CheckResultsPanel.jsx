@@ -4,11 +4,6 @@ import {
   isAuxiliaryGluedDictSolidInstance,
 } from '../lib/auxiliaryDictSolid.js';
 import {
-  buildAuxiliaryDocOnlyResultGroups,
-  buildBonBojoDocStemCountsByItemId,
-  enabledBonBojoItemIdsFromRules,
-} from '../lib/auxiliaryVerbDocStemScan.js';
-import {
   AUXILIARY_SPACING_BREAKDOWN_TIP,
   countAuxiliaryMatchedSpacingSurfaces,
   listAuxiliarySpacingLineParts,
@@ -35,7 +30,6 @@ import {
   SPELLING_RULE_BADGE_LABEL,
   LOANWORD_BADGE_LABEL,
 } from '../lib/checkResultSummaryFormat.js';
-import { trackAuxSolidFold } from '../lib/analytics.js';
 import {
   defaultOpenConsistencyCategory,
   defaultOpenSpellingCategory,
@@ -231,8 +225,12 @@ function AuxiliarySpacingPageRows(props) {
     if (isAuxiliaryGluedDictSolidInstance(inst)) gluedSolid.push(inst);
     else primary.push(inst);
   }
-  const rows = auxiliarySpacingBadgeRows(primary);
-  if (!rows.length && !gluedSolid.length) return null;
+  /** @type {[string, import('../lib/ruleEngine.js').MatchInstance[]][]} */
+  const rows = [
+    ...auxiliarySpacingBadgeRows(primary),
+    ...(gluedSolid.length > 0 ? [['합', gluedSolid]] : []),
+  ];
+  if (!rows.length) return null;
   return (
     <div className="aux-spacing-pages">
       {rows.map(([mark, list]) => {
@@ -245,6 +243,7 @@ function AuxiliarySpacingPageRows(props) {
             : visibleCount < list.length
               ? 'partial'
               : 'visible';
+        const toggleLabel = mark === '합' ? '합성어' : `${mark}어 쓴`;
         return (
           <div className="aux-spacing-pages__row" key={mark}>
             {onSetInstancesVisibility ? (
@@ -255,7 +254,7 @@ function AuxiliarySpacingPageRows(props) {
               >
                 <GroupVisibilityCheckbox
                   mode={mode}
-                  label={`${mark}어 쓴`}
+                  label={toggleLabel}
                   onToggle={() =>
                     onSetInstancesVisibility(list, mode !== 'visible')
                   }
@@ -271,34 +270,6 @@ function AuxiliarySpacingPageRows(props) {
           </div>
         );
       })}
-      {gluedSolid.length > 0 ? (
-        <details
-          className="aux-solid-fold"
-          onClick={(e) => e.stopPropagation()}
-          onToggle={(e) => {
-            const el = /** @type {HTMLDetailsElement} */ (e.currentTarget);
-            trackAuxSolidFold({
-              open: el.open,
-              count: gluedSolid.length,
-            });
-          }}
-        >
-          <summary className="aux-solid-fold__summary">
-            합성어
-            <ResultFindingsCountCircle
-              count={gluedSolid.length}
-              ariaLabel={`합성어 ${gluedSolid.length}`}
-            />
-          </summary>
-          <div className="aux-solid-fold__body">
-            <ResultPageSummary
-              {...summaryProps}
-              instances={gluedSolid}
-              isInstanceVisible={isInstanceVisible}
-            />
-          </div>
-        </details>
-      ) : null}
     </div>
   );
 }
@@ -351,31 +322,12 @@ export default function CheckResultsPanel({
   selectedInstance = null,
   formatPageLabel: formatPageLabelProp,
   customRules = [],
-  pageTexts = [],
+  pageTexts: _pageTexts = [],
 }) {
   const pageLabel = formatPageLabelProp ?? formatSystemPageLabel;
 
-  const bonBojoDocStemCounts = useMemo(() => {
-    if (viewSource !== 'consistency' || !pageTexts?.length) return null;
-    return buildBonBojoDocStemCountsByItemId(
-      pageTexts,
-      enabledBonBojoItemIdsFromRules(customRules),
-    );
-  }, [viewSource, pageTexts, customRules]);
-
-  const displayEntries = useMemo(() => {
-    if (viewSource !== 'consistency') return entries;
-    const docOnly = buildAuxiliaryDocOnlyResultGroups({
-      customRules,
-      existingGroups: entries.map((e) => e.group),
-      docCounts: bonBojoDocStemCounts,
-    });
-    if (!docOnly.length) return entries;
-    return [
-      ...entries,
-      ...docOnly.map((group) => ({ group, source: /** @type {const} */ ('consistency') })),
-    ];
-  }, [viewSource, entries, customRules, bonBojoDocStemCounts]);
+  /** 검사에 잡힌 항목만 — stem 집계만 있는 doc-only 행은 목록에 넣지 않음 */
+  const displayEntries = entries;
 
   const spellingTone =
     viewSource === 'consistency'
