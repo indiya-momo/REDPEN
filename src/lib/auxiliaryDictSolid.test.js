@@ -366,6 +366,25 @@ describe('auxiliaryDictSolid', () => {
     expect(missing[0].tip).toBe('');
   });
 
+  it('줄기 기본형을 못 만들어도 활용형 유일이면 등재로 본다', async () => {
+    const verbForms = { lemmas: { 들어오다: ['들어와'] } };
+    setStdictVerbFormsForTests(verbForms);
+    const groups = [auxGroup('verb-unknown', '(아/어) + 없다', '들어와')];
+    const next = await enrichAuxiliaryDictSolid(groups, { verbForms });
+    expect(next[0].instances[0].auxDictSolid).toBe(true);
+    expect(next[0].instances[0].tip).toBe('표준국어대사전 「들어오다」 등재');
+    expect(auxiliaryDictSolidStdictCallCount().lastRun).toBe(0);
+  });
+
+  it('붙인 표면이 활용형 유일이면 띄운 발견도 붙인다', async () => {
+    const verbForms = { lemmas: { 들어오다: ['들어와'] } };
+    setStdictVerbFormsForTests(verbForms);
+    const groups = [auxGroup('verb-unknown', '(아/어) + 없다', '들어 와')];
+    const next = await enrichAuxiliaryDictSolid(groups, { verbForms });
+    expect(next[0].instances[0].suggestedText).toBe('들어와');
+    expect(next[0].instances[0].tip).toBe('표준국어대사전 「들어오다」 등재');
+  });
+
   it.skipIf(
     !fs.existsSync(
       new URL('../../tmp/kiwi-models/models/cong/base/cong.mdl', import.meta.url),

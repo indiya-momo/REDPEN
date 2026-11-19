@@ -3,7 +3,7 @@
  * 번들에 넣지 않고 `/data/`에서 한 번 불러 기본형·활용형 집합을 만든다.
  *
  * 「띄움 필수」= 3음절 이상 활용형이고 후보 기본형이 전부 복합어인 경우.
- * 본용언+보조 2차 등재 판정은 기본형 키 소속으로 본다.
+ * 본용언+보조 2차 등재 판정은 기본형 키, 없으면 활용형 역인덱스(유일 기본형)를 본다.
  */
 
 /**
@@ -117,6 +117,24 @@ export function lemmasForSpaceRequiredForm(form) {
   const q = String(form ?? '').trim();
   if (!q || !formToLemmas) return [];
   return formToLemmas.get(q) ?? [];
+}
+
+/**
+ * 기본형이 추출본에 있으면 그대로. 없으면 활용형 표면이 유일 기본형에만 매이면 그 기본형.
+ * 후보가 둘 이상이면 빈 문자열(단정하지 않음).
+ * @param {string} lemma
+ * @param {string} [surface]
+ */
+export function resolveSpaceRequiredLemma(lemma, surface = '') {
+  const q = String(lemma ?? '').trim();
+  if (q && lemmaSet?.has(q)) return q;
+  const form = String(surface ?? '')
+    .trim()
+    .replace(/[^\uAC00-\uD7A3]/g, '');
+  if (!form || !formToLemmas) return '';
+  const list = formToLemmas.get(form);
+  if (!list || list.length !== 1) return '';
+  return list[0];
 }
 
 export function stdictVerbFormsLemmaCount() {

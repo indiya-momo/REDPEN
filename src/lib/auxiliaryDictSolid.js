@@ -17,7 +17,7 @@ import { fetchStdictExact } from './unifyStdictPos.js';
 import {
   clearStdictVerbFormsCache,
   ensureStdictVerbFormsLoaded,
-  isSpaceRequiredCompoundLemma,
+  resolveSpaceRequiredLemma,
 } from './stdictVerbForms.js';
 
 const DICT_TIP = (lemma) => `표준국어대사전 「${lemma}」 등재`;
@@ -302,15 +302,13 @@ async function loadStdict(q, opts = {}) {
 }
 
 /**
- * 추출본 기본형 키에 있으면 등재(복합어·띄움 필수 묶음).
+ * 추출본 기본형 키, 또는 활용형 표면→유일 기본형으로 등재.
  * @param {string} lemma
- * @param {{ verbForms?: import('./stdictVerbForms.js').StdictVerbFormsData, fetchImpl?: typeof fetch, dataUrl?: string }} [opts]
+ * @param {{ verbForms?: object, fetchImpl?: typeof fetch, dataUrl?: string, surface?: string }} [opts]
  */
 export async function isRegisteredPredicateLemma(lemma, opts = {}) {
-  const q = String(lemma ?? '').trim();
-  if (!q) return false;
   await ensureStdictVerbFormsLoaded(opts);
-  return isSpaceRequiredCompoundLemma(q);
+  return Boolean(resolveSpaceRequiredLemma(lemma, opts.surface));
 }
 
 /**
@@ -320,9 +318,8 @@ export async function isRegisteredPredicateLemma(lemma, opts = {}) {
 export async function enrichAuxiliaryDictSolid(groups, opts = {}) {
   const list = groups ?? [];
   await ensureStdictVerbFormsLoaded(opts);
-  /** @type {{ groupIndex: number, instIndex: number, lemma: string, kind: 'solid' | 'glued-solid' | 'registered' | 'plain', solid?: string }[]} */
+  /** @type {{ groupIndex: number, instIndex: number, lemma: string, kind: 'solid' | 'glued-solid' | 'registered' | 'plain', solid?: string, surface?: string, ok?: boolean }[]} */
   const jobs = [];
-  const lemmas = new Set();
   /** @type {{ groupIndex: number, instIndex: number, suggestedText: string }[]} */
   const pendingSplit = [];
   const analyze = opts.analyze ?? analyzeLine;
@@ -346,15 +343,27 @@ export async function enrichAuxiliaryDictSolid(groups, opts = {}) {
       if (/\s/.test(matched)) {
         const lemma = compoundLemma(matched, itemId, displayLabel);
         const solid = solidSurface(matched);
-        if (!lemma || !solid || solid === matched.trim()) return;
-        jobs.push({ groupIndex, instIndex, lemma, kind: 'solid', solid });
-        lemmas.add(lemma);
+        if (!solid || solid === matched.trim()) return;
+        jobs.push({
+          groupIndex,
+          instIndex,
+          lemma: lemma || '',
+          kind: 'solid',
+          solid,
+          surface: solid,
+        });
         return;
       }
+      const surface = matched.replace(/[^\uAC00-\uD7A3]/g, '');
       const lemma = gluedCompoundLemma(matched, itemId, displayLabel);
-      if (!lemma) return;
-      jobs.push({ groupIndex, instIndex, lemma, kind: 'glued-solid' });
-      lemmas.add(lemma);
+      if (!lemma && !surface) return;
+      jobs.push({
+        groupIndex,
+        instIndex,
+        lemma: lemma || '',
+        kind: 'glued-solid',
+        surface,
+      });
     });
   });
 
@@ -381,8 +390,7 @@ export async function enrichAuxiliaryDictSolid(groups, opts = {}) {
     }
     const lemma = longCompoundSplitLemma(row.suggestedText);
     if (!lemma) continue;
-    jobs.push({ ...row, lemma, kind: 'registered' });
-    lemmas.add(lemma);
+    jobs.push({ ...row, lemma, kind: 'registered', surface: lemma });
   }
 
   if (!jobs.length) {
@@ -390,19 +398,20 @@ export async function enrichAuxiliaryDictSolid(groups, opts = {}) {
     return list;
   }
 
-  /** @type {Map<string, boolean>} */
-  const registered = new Map();
-  for (const lemma of lemmas) {
-    registered.set(lemma, await isRegisteredPredicateLemma(lemma, opts));
+  for (const job of jobs) {
+    if (job.kind === 'plain') continue;
+    const resolved = resolveSpaceRequiredLemma(job.lemma, job.surface || '');
+    if (resolved) {
+      job.lemma = resolved;
+      job.ok = true;
+    }
   }
   lastRunStdictCalls = sessionStdictCalls - callsAtStart;
   console.info(`[auxiliaryDictSolid] stdictCalls=${lastRunStdictCalls}`);
 
-  const hitLemmas = new Set(
-    [...registered.entries()].filter(([, ok]) => ok).map(([lemma]) => lemma),
-  );
+  const hasHit = jobs.some((job) => job.ok);
   const hasPlain = jobs.some((job) => job.kind === 'plain');
-  if (!hitLemmas.size && !hasPlain) return list;
+  if (!hasHit && !hasPlain) return list;
 
   return list.flatMap((group, groupIndex) => {
     const plainIndexes = new Set(
@@ -411,10 +420,7 @@ export async function enrichAuxiliaryDictSolid(groups, opts = {}) {
         .map((job) => job.instIndex),
     );
     const registeredHits = jobs.filter(
-      (job) =>
-        job.groupIndex === groupIndex &&
-        job.kind !== 'plain' &&
-        hitLemmas.has(job.lemma),
+      (job) => job.groupIndex === groupIndex && job.kind !== 'plain' && job.ok,
     );
     if (!plainIndexes.size && !registeredHits.length) return [group];
     const instances = (group.instances ?? [])
