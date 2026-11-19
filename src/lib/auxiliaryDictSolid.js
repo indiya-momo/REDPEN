@@ -121,7 +121,8 @@ export function auxiliaryBaseForm(itemId, displayLabel) {
 export function compoundLemma(matchedText, itemId, displayLabel) {
   const head = headEojeol(matchedText);
   const aux = auxiliaryBaseForm(itemId, displayLabel);
-  if (head.length < 2 || !aux) return '';
+  // 한 글자 본용언도 본다(해 보다→해보다, 커 지다→커지다). 사전에 있을 때만 쓰인다.
+  if (head.length < 1 || !aux) return '';
   return `${head}${aux}`;
 }
 
@@ -173,7 +174,8 @@ export function gluedCompoundLemma(matchedText, itemId, displayLabel) {
   if (solid.length < 3 || !aux) return '';
   for (const onset of stemOnsetsForItem(itemId)) {
     if (!onset) continue;
-    for (let i = 2; i <= solid.length - onset.length; i += 1) {
+    // i=1: 한 글자 본용언(해보다·커졌다). 사전 표제어일 때만 결과가 쓰인다.
+    for (let i = 1; i <= solid.length - onset.length; i += 1) {
       if (solid.startsWith(onset, i)) {
         return `${solid.slice(0, i)}${aux}`;
       }
