@@ -41,7 +41,7 @@
 - 파일: 바탕화면 `261117_경주멍-본문_인디야Replace스모크.pdf` (기존 주석 제거 후 Caret+StrikeOut 2쌍)
 - 고침: p1 `경주멍`→`경주멍멍`, p2 `경주멍`→`경 주멍`
 - QuadPoints 가로 vs Acrobat 골든: dx0/dx1 ≈ 0 (±0.01pt) — 진단상 가로 정합 양호
-- **Accept 본문 대조:** `pending_manual` — 인디자인에서 Import→Accept 후 README에 결과 기입
+- **Accept 본문 대조:** `passed_manual` — 사용자 확인 통과(경주멍·유물멍)
 
 ### 폴백 목록
 
