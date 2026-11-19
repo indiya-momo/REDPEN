@@ -62,9 +62,24 @@ async function main() {
     process.exit(1);
   }
 
+  /** 다른 행이 이미 찾을 말로 가진 표면은 전개로 넣지 않는다(중복 find·잘못된 교정 방지). */
+  /** @type {Map<string, Set<number>>} */
+  const ownersByForm = new Map();
+  rules.forEach((r, idx) => {
+    const forms = [r?.find, ...(Array.isArray(r?.finds) ? r.finds : [])];
+    for (const f of forms) {
+      const k = String(f ?? '').trim();
+      if (!k) continue;
+      if (!ownersByForm.has(k)) ownersByForm.set(k, new Set());
+      ownersByForm.get(k).add(idx);
+    }
+  });
+  const ownedByOtherRow = (form, idx) =>
+    [...(ownersByForm.get(form) ?? [])].some((o) => o !== idx);
+
   let changedRows = 0;
   let skipped = 0;
-  const next = rules.map((row) => {
+  const next = rules.map((row, idx) => {
     if (String(row?.dividerGroup ?? '').trim() !== 'B1') return row;
     const reason = b1ExpandSkipReason(row);
     if (reason && reason !== 'not-B1') {
@@ -79,6 +94,16 @@ async function main() {
       return row;
     }
     if (!result.changed) return row;
+    const dropped = (result.added ?? []).filter((f) => ownedByOtherRow(f, idx));
+    if (dropped.length) {
+      console.log(`[expand-skip-dup] ${row.find}: ${dropped.join(', ')} (다른 행 find)`);
+      result.added = result.added.filter((f) => !dropped.includes(f));
+      result.row = {
+        ...result.row,
+        finds: (result.row.finds ?? []).filter((f) => !dropped.includes(f)),
+      };
+      if (!result.added.length) return row;
+    }
     changedRows += 1;
     const addPreview = (result.added ?? []).slice(0, 8).join(', ');
     console.log(
