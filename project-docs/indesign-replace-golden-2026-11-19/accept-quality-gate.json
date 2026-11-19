@@ -56,7 +56,7 @@
       "quadCount": 1,
       "acrobatX0": 319.7300109863281,
       "acrobatX1": 356.1470031738281,
-      "dx0": -0.000010986328106810106,
+      "dx0": -1.0986328106810106e-05,
       "dx1": 0.0029968261718522626,
       "goldenContents": "경주몽",
       "indiyaReplacement": "경주멍멍"
@@ -91,7 +91,12 @@
     }
   ],
   "acceptVerdict": {
-    "status": "pending_manual",
-    "criteria": "InDesign Import→Accept 후 본문이 경주멍멍 / 경 주멍과 일치하면 합격. QuadPoints 수치 일치는 비합격 조건."
+    "status": "passed_manual",
+    "at": "2026-11-19T12:20:39.867497+00:00",
+    "criteria": "InDesign Import→Accept 후 본문↔고침 일치",
+    "notes": [
+      "Contents 교체 스모크(경주멍) Accept 통과",
+      "인디야 Replace 합성(경주멍·유물멍 차례 대체2/22/2233) Accept 통과 — 사용자 확인 2026-11-19"
+    ]
   }
 }
