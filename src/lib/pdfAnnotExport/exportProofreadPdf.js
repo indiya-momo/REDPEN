@@ -1,10 +1,16 @@
 /**
  * 「PDF 교정본 다운로드」 — 브라우저 진입점.
  * 지금 화면에 보이는 검수 결과(숨긴 항목 제외)를 원본 PDF에 주석으로 달아 새 파일로 받는다.
+ * mode: proof | indesignReplace
  */
 import { collectAnnotFindings } from './collectAnnotFindings.js';
 import { createCharEmMeasurer } from './annotGeometry.js';
 import { writeAnnotatedPdf } from './writeAnnotatedPdf.js';
+import {
+  countExcluded,
+  formatIndesignReplaceNotice,
+  prepareIndesignReplaceFindings,
+} from './indesignReplaceFindings.js';
 import { ensureGlyphOffsetsForPage } from '../pdfService.js';
 
 /** 라벨 글꼴 — 앱이 이미 싣는 학교안심 바른바탕 R (fontkit 부분집합이 깨지지 않음) */
@@ -16,6 +22,12 @@ export function buildProofreadPdfFilename(pdfFileName) {
   return `${base}_교정본.pdf`.replace(/[\\/:*?"<>|]/g, '_');
 }
 
+/** @param {string} pdfFileName */
+export function buildIndesignReplacePdfFilename(pdfFileName) {
+  const base = String(pdfFileName || 'document').replace(/\.pdf$/i, '');
+  return `${base}_인디자인용.pdf`.replace(/[\\/:*?"<>|]/g, '_');
+}
+
 /**
  * @param {{
  *   pdfDoc: import('pdfjs-dist').PDFDocumentProxy,
@@ -25,8 +37,15 @@ export function buildProofreadPdfFilename(pdfFileName) {
  *   unifyGroups?: object[],
  *   isInstanceVisible?: (source: string, group: object, inst: object) => boolean,
  *   pdfFileName?: string,
+ *   mode?: 'proof' | 'indesignReplace',
  * }} input
- * @returns {Promise<{ filename: string, counts: Record<string, number>, total: number }>}
+ * @returns {Promise<{
+ *   filename: string,
+ *   counts: Record<string, number>,
+ *   total: number,
+ *   excluded?: import('./indesignReplaceFindings.js').IndesignReplacePrepareResult['excluded'],
+ *   notice?: string,
+ * }>}
  */
 export async function exportProofreadPdf({
   pdfDoc,
@@ -36,17 +55,54 @@ export async function exportProofreadPdf({
   unifyGroups = [],
   isInstanceVisible,
   pdfFileName = '',
+  mode = 'proof',
 }) {
-  const findings = collectAnnotFindings({
+  const rawFindings = collectAnnotFindings({
     spellingEntries,
     consistencyEntries,
     unifyGroups,
     pageTexts,
     isInstanceVisible,
   });
-  if (!findings.length) {
-    return { filename: '', counts: {}, total: 0 };
+
+  /** @type {import('./collectAnnotFindings.js').AnnotFinding[]} */
+  let findings = rawFindings;
+  /** @type {import('./indesignReplaceFindings.js').IndesignReplacePrepareResult['excluded'] | undefined} */
+  let excluded;
+  let notice;
+
+  if (mode === 'indesignReplace') {
+    const prepared = prepareIndesignReplaceFindings(rawFindings, pageTexts);
+    findings = prepared.included;
+    excluded = prepared.excluded;
+    notice = formatIndesignReplaceNotice({
+      included: findings.length,
+      excluded: prepared.excluded,
+    });
   }
+
+  if (!findings.length) {
+    return {
+      filename: '',
+      counts: {},
+      total: 0,
+      excluded,
+      notice:
+        notice ??
+        (mode === 'indesignReplace'
+          ? formatIndesignReplaceNotice({
+              included: 0,
+              excluded: excluded ?? {
+                noReplacement: 0,
+                textMismatch: 0,
+                overlap: 0,
+                reviewOnly: 0,
+              },
+            })
+          : undefined),
+    };
+  }
+
   // 화면과 같은 글자 위치 — 내보내기마다 force로 다시 잰다(실패 null 캐시·페이지 프록시 불일치 방지)
   const findingPages = [...new Set(findings.map((f) => f.pageNum))];
   for (const n of findingPages) {
@@ -73,14 +129,23 @@ export async function exportProofreadPdf({
     pageTexts,
     charEm: createCharEmMeasurer(),
     pdfjsPermissions: permissions,
-    loadLabelFont: async (doc) => {
-      doc.registerFontkit(fontkit);
-      const res = await fetch(`${base}${LABEL_FONT_PATH}`);
-      if (!res.ok) throw new Error(`label font ${res.status}`);
-      return doc.embedFont(new Uint8Array(await res.arrayBuffer()), { subset: true });
-    },
+    mode,
+    loadLabelFont:
+      mode === 'proof'
+        ? async (doc) => {
+            doc.registerFontkit(fontkit);
+            const res = await fetch(`${base}${LABEL_FONT_PATH}`);
+            if (!res.ok) throw new Error(`label font ${res.status}`);
+            return doc.embedFont(new Uint8Array(await res.arrayBuffer()), {
+              subset: true,
+            });
+          }
+        : undefined,
   });
-  const filename = buildProofreadPdfFilename(pdfFileName);
+  const filename =
+    mode === 'indesignReplace'
+      ? buildIndesignReplacePdfFilename(pdfFileName)
+      : buildProofreadPdfFilename(pdfFileName);
   const blob = new Blob([bytes], { type: 'application/pdf' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -94,5 +159,23 @@ export async function exportProofreadPdf({
   const total = Object.entries(counts)
     .filter(([k]) => k !== 'skipped')
     .reduce((s, [, v]) => s + v, 0);
-  return { filename, counts, total };
+  return {
+    filename,
+    counts,
+    total,
+    excluded,
+    notice:
+      mode === 'indesignReplace'
+        ? formatIndesignReplaceNotice({
+            included: total,
+            excluded: excluded ?? {
+              noReplacement: 0,
+              textMismatch: 0,
+              overlap: 0,
+              reviewOnly: 0,
+            },
+          })
+        : undefined,
+    excludedTotal: excluded ? countExcluded(excluded) : 0,
+  };
 }

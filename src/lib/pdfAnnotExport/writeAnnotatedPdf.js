@@ -84,6 +84,27 @@ export function assertAnnotatable(doc, pdfjsPermissions) {
 }
 
 /**
+ * Caret 삽입점 Rect — 교체 구간의 끝(오른쪽)에 얇게.
+ * @param {import('./annotGeometry.js').Seg[]} segs
+ * @returns {[number, number, number, number]}
+ */
+export function caretRectFromSegs(segs) {
+  const last = segs[segs.length - 1];
+  const h = Math.max(segHeight(last), 4);
+  const tip = last.ur;
+  const base = last.lr;
+  const midY = (tip[1] + base[1]) / 2;
+  const half = h * 0.45;
+  const w = Math.max(4, h * 0.35);
+  return [
+    round2(tip[0]),
+    round2(midY - half),
+    round2(tip[0] + w),
+    round2(midY + half),
+  ];
+}
+
+/**
  * @param {{
  *   pdfBytes: Uint8Array | ArrayBuffer,
  *   findings: import('./collectAnnotFindings.js').AnnotFinding[],
@@ -92,6 +113,7 @@ export function assertAnnotatable(doc, pdfjsPermissions) {
  *   pdfjsPermissions?: number[] | null,
  *   loadLabelFont?: (doc: PDFDocument) => Promise<import('pdf-lib').PDFFont>,
  *   now?: Date,
+ *   mode?: 'proof' | 'indesignReplace',
  * }} input
  * @returns {Promise<{ bytes: Uint8Array, counts: Record<string, number> }>}
  */
@@ -103,6 +125,7 @@ export async function writeAnnotatedPdf({
   pdfjsPermissions = null,
   loadLabelFont,
   now = new Date(),
+  mode = 'proof',
 }) {
   const doc = await PDFDocument.load(pdfBytes, {
     ignoreEncryption: true,
@@ -112,13 +135,17 @@ export async function writeAnnotatedPdf({
   const ctx = doc.context;
   const pages = doc.getPages();
   const pageByNum = new Map((pageTexts ?? []).map((p) => [p.pageNum, p]));
-  const needsFont = findings.some((f) => f.label && f.style !== 'spacing-mark');
+  const isReplace = mode === 'indesignReplace';
+  const needsFont =
+    !isReplace && findings.some((f) => f.label && f.style !== 'spacing-mark');
   const font = needsFont && loadLabelFont ? await loadLabelFont(doc) : null;
   const date = PDFString.of(pdfDateString(now));
   /** @type {Map<number, Array<[number, number, number, number]>>} */
   const labelRectsByPage = new Map();
   /** @type {Record<string, number>} */
-  const counts = { 'spacing-mark': 0, strike: 0, 'unify-box': 0, review: 0, skipped: 0 };
+  const counts = isReplace
+    ? { replace: 0, skipped: 0 }
+    : { 'spacing-mark': 0, strike: 0, 'unify-box': 0, review: 0, skipped: 0 };
   let serial = 0;
 
   /** @param {object} dict */
@@ -217,6 +244,60 @@ export async function writeAnnotatedPdf({
     const segs = segmentsForTextRange(pd, f.start, f.end, charEm);
     if (!segs.length) {
       counts.skipped += 1;
+      continue;
+    }
+
+    if (isReplace) {
+      const replacement = String(f.replacement ?? '').trim();
+      if (!replacement) {
+        counts.skipped += 1;
+        continue;
+      }
+      const strikeRect = rectEnclosing(segs, 1);
+      const caretR = caretRectFromSegs(segs);
+      const strikeBody = (() => {
+        let body = `${rgbStr(ANNOT_COLORS.red)} RG\n`;
+        for (const q of segs) {
+          const h = segHeight(q);
+          const a = [
+            q.ll[0] + (q.ul[0] - q.ll[0]) * 0.5,
+            q.ll[1] + (q.ul[1] - q.ll[1]) * 0.5,
+          ];
+          const b = [
+            q.lr[0] + (q.ur[0] - q.lr[0]) * 0.5,
+            q.lr[1] + (q.ur[1] - q.lr[1]) * 0.5,
+          ];
+          body += `${round2(Math.max(0.6, h * 0.07))} w ${round2(a[0])} ${round2(a[1])} m ${round2(b[0])} ${round2(b[1])} l S\n`;
+        }
+        return body;
+      })();
+      // Caret 먼저 — StrikeOut /IRT가 가리킴 (Acrobat Replace 쌍)
+      const caretW = round2(caretR[2] - caretR[0]);
+      const caretH = round2(caretR[3] - caretR[1]);
+      const caretApBody = `q ${rgbStr(ANNOT_COLORS.red)} RG 1 w ${round2(caretR[0] + caretW * 0.5)} ${round2(caretR[1] + 1)} m ${round2(caretR[0] + caretW * 0.5)} ${round2(caretR[3] - 1)} l S Q`;
+      const caretRef = addAnnot(page, {
+        ...common(page, '삽입된 텍스트', replacement),
+        Subtype: 'Caret',
+        Rect: caretR,
+        C: ANNOT_COLORS.red.map(round2),
+        CA: 1,
+        IT: 'Replace',
+        Sy: 'None',
+        AP: { N: formXObject(caretApBody, caretR) },
+      });
+      addAnnot(page, {
+        ...common(page, '취소선', ''),
+        Subtype: 'StrikeOut',
+        Rect: strikeRect,
+        QuadPoints: quadPointsAcrobatOrder(segs),
+        C: ANNOT_COLORS.red.map(round2),
+        CA: 1,
+        IT: 'StrikeOutTextEdit',
+        IRT: caretRef,
+        RT: 'Group',
+        AP: { N: formXObject(strikeBody, strikeRect) },
+      });
+      counts.replace += 1;
       continue;
     }
 
