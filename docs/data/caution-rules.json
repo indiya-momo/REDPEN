@@ -58,7 +58,7 @@
           "matchMode": "spaced-before",
           "inventoryOnly": false,
           "displayLabel": "밖에(조사)",
-          "tip": "보조사 '밖에'는 붙여 쓴다",
+          "tip": "보조사 '밖에'는 붙여 쓴다. 뒤에는 부정 표현이 온다",
           "groupLabel": "붙여 쓰는 경우"
         }
       ]
@@ -159,24 +159,30 @@
           ],
           "tip": "체언 뒤는 조사로 붙이고(이것뿐), \n용언 뒤는 의존명사라 띄어 쓴다(갈 뿐)",
           "groupLabel": "앞말에 따라 띄어쓰기가 달라지는 경우"
+        },
+        {
+          "id": "josa-uinoun-daero",
+          "label": "대로",
+          "enabled": true,
+          "matchMode": "any-before",
+          "inventoryOnly": false,
+          "displayLabel": "대로(조사 또는 의존명사)",
+          "tip": "체언 뒤는 조사로 붙이고(마대로), \n용언 뒤는 의존명사라 띄어 쓴다(갈 대로)",
+          "groupLabel": "앞말에 따라 띄어쓰기가 달라지는 경우"
         }
       ]
     },
     {
       "id": "josa-busa",
-      "tip": "'같이(같은)'가 명사·대명사 뒤 비교(~처럼)나 동시(때)일 떄는 조사로 붙이고, \n동반(함께)을 뜻할 때는 부사로 띄어 쓴다",
+      "tip": "'같이'가 명사·대명사 뒤 비교(~처럼)나 동시(때)일 떄는 조사로 붙이고, \n동반(함께)을 뜻할 때는 부사로 띄어 쓴다",
       "title": "띄어쓰기로 뜻이 달라지는 경우",
       "items": [
         {
           "id": "josa-busa-gachi",
-          "label": "같이(같은)",
+          "label": "같이",
           "enabled": true,
           "matchMode": "any-before",
           "inventoryOnly": false,
-          "stems": [
-            "같이",
-            "같은"
-          ],
           "displayLabel": "같이(조사 또는 부사)",
           "except": [
             "감쪽같이",
@@ -208,7 +214,16 @@
             "벼락같은",
             "득달같은"
           ],
-          "tip": "'같이(같은)'가 명사·대명사 뒤 비교(~처럼)나 동시(때)일 떄는 조사로 붙이고, \n동반(함께)을 뜻할 때는 부사로 띄어 쓴다",
+          "tip": "'같이'가 명사·대명사 뒤 비교(~처럼)나 동시(때)일 떄는 조사로 붙이고, \n동반(함께)을 뜻할 때는 부사로 띄어 쓴다",
+          "groupLabel": "띄어쓰기로 뜻이 달라지는 경우"
+        },
+        {
+          "id": "josa-busa-같은",
+          "label": "같은",
+          "enabled": false,
+          "matchMode": "any-before",
+          "inventoryOnly": false,
+          "tip": "'같이'가 명사·대명사 뒤 비교(~처럼)나 동시(때)일 떄는 조사로 붙이고, \n동반(함께)을 뜻할 때는 부사로 띄어 쓴다",
           "groupLabel": "띄어쓰기로 뜻이 달라지는 경우"
         }
       ]
