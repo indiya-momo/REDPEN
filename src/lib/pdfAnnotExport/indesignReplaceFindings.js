@@ -132,7 +132,7 @@ export function countExcluded(excluded) {
 }
 
 /**
- * 인디자인용 내려받기 안내 (Accept 성공 약속 없음).
+ * 인디자인용 내려받기 안내 (기술 용어·Accept 약속 없음).
  * @param {{
  *   included: number,
  *   excluded: IndesignReplacePrepareResult['excluded'],
@@ -148,8 +148,8 @@ export function formatIndesignReplaceNotice({ included, excluded }) {
   ];
   return (
     `${parts.join(' · ')}\n\n` +
-    '내보내기 직전 자체 점검은 page.text 구간과 원문 문자열이 같은지만 확인합니다. 좌표(QuadPoints)·Tw 정확도는 보증하지 않습니다.\n' +
-    '검토용 PDF를 만든 뒤에는 인디자인 문서를 수정하지 마세요. 수정하면 주석 위치가 맞지 않아 Accept가 어긋날 수 있습니다.\n' +
-    '자동 반영은 인디자인·원본 PDF 조건에 따라 달라질 수 있으며, Accept 성공을 약속하지 않습니다.'
+    'PDF를 다운로드한 뒤에는 가급적 주석을 수정하지 마세요.\n' +
+    '위치가 변경되어 인디자인 적용 시 어긋날 수 있습니다.\n' +
+    'PDF 주석 가져오기를 통한 자동 반영은 인디자인·원본 PDF에 따라 정확도가 달라질 수 있습니다.'
   );
 }
