@@ -5,6 +5,7 @@ import {
   auxiliarySearchTailsFromBonBojoItem,
   isBonBojoLogicOnlyItem,
   isBonBojoGateOnlyItem,
+  isBonBojoNonAeoAuxItem,
   isBonBojoRequiredItem,
   listBonBojoBundleDefinitions,
   BON_BOJO_LONG_COMPOUND_SPLIT_ID,
@@ -157,8 +158,25 @@ export function ensureDefaultAuxiliaryVerbs(customRules) {
   let next = rebuildAuxiliaryVerbRulesFromSheet(nonAux, enabledByItem);
 
   return applyBonBojoDisplayLabels(
-    forceLogicOnlyAuxiliaryEnabled(next),
+    forceRetiredNonAeoAuxiliaryDisabled(forceLogicOnlyAuxiliaryEnabled(next)),
   );
+}
+
+/**
+ * 비아/어 줄(말다·게이트)은 2026-11-19부터 본조 탭에서 검사하지 않는다.
+ * 옛 저장에 켜져 있어도 끈다 — 맞춤법 탭 「띄어쓰기」 폴더가 대신 낸다.
+ * @param {import('./ruleTypes.js').Rule[]} rules
+ */
+function forceRetiredNonAeoAuxiliaryDisabled(rules) {
+  return rules.map((r) => {
+    if (r.patternKind !== 'auxiliary-verb') return r;
+    const itemId = r.bonBojoItemId?.trim();
+    if (!itemId) return r;
+    if (isBonBojoGateOnlyItem(itemId) || isBonBojoNonAeoAuxItem(itemId)) {
+      return r.enabled === false ? r : { ...r, enabled: false };
+    }
+    return r;
+  });
 }
 
 /**

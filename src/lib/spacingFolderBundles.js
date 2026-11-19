@@ -4,7 +4,7 @@
  * @see docs/superpowers/specs/2026-11-19-spacing-folder-in-spelling-tab-design.md
  */
 
-/** @typedef {'numberUnit' | 'dependentRieulKka' | 'placeAffix' | 'punct'} SpacingFolderBundleId */
+/** @typedef {'numberUnit' | 'dependentRieulKka' | 'placeAffix' | 'punct' | 'nonAeoAux'} SpacingFolderBundleId */
 
 /**
  * @typedef {{
@@ -51,6 +51,17 @@ export const SPACING_FOLDER_BUNDLES = Object.freeze([
     moduleIds: Object.freeze(['punct']),
     tipLines: Object.freeze(['종결·쉼표 뒤 띄어', '닫는 부호와 조사 붙임']),
   }),
+  // 2026-11-19: 본조 탭의 비아/어 띄움 필수 줄을 옮겨 옴. 기본 켜짐(아래 default).
+  Object.freeze({
+    bundleId: 'nonAeoAux',
+    label: '본용언+보조용언(-아/-어 아닌 경우)',
+    moduleIds: Object.freeze(['non-aeo-aux']),
+    tipLines: Object.freeze([
+      '-지·-고·-게·-도록·-다(가)·-(으)러·-(으)라 + 보조용언은 띄어 씀',
+      '먹지마 → 먹지 마 · 먹다보니 → 먹다 보니 · 먹으러갔다 → 먹으러 갔다',
+      '사전 한 단어(내다보다·들여다보다)는 제외',
+    ]),
+  }),
 ]);
 
 /** @type {readonly SpacingFolderBundleId[]} */
@@ -70,11 +81,13 @@ export function defaultSpacingFolderEnabled() {
     dependentRieulKka: false,
     placeAffix: false,
     punct: false,
+    // 본조 탭에서 보이던 카드를 대신하므로 기본 켜짐.
+    nonAeoAux: true,
   };
 }
 
 /**
- * 알려진 묶음 키만 · 비-boolean → false · 알 수 없는 키 무시.
+ * 알려진 묶음 키만 · 비-boolean·없는 키 → 묶음 기본값(대부분 false) · 알 수 없는 키 무시.
  * @param {unknown} raw
  * @returns {Record<SpacingFolderBundleId, boolean>}
  */
@@ -84,7 +97,7 @@ export function normalizeSpacingFolderEnabled(raw) {
   /** @type {Record<string, unknown>} */
   const obj = /** @type {Record<string, unknown>} */ (raw);
   for (const id of SPACING_FOLDER_BUNDLE_IDS) {
-    base[id] = obj[id] === true;
+    if (typeof obj[id] === 'boolean') base[id] = obj[id];
   }
   return base;
 }

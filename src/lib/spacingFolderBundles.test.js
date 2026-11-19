@@ -16,6 +16,7 @@ describe('spacingFolderBundles', () => {
       'dependentRieulKka',
       'placeAffix',
       'punct',
+      'nonAeoAux',
     ]);
     expect(getSpacingFolderBundle('numberUnit')?.moduleIds).toEqual([
       'numeral',
@@ -32,18 +33,22 @@ describe('spacingFolderBundles', () => {
       'place-affix',
     ]);
     expect(getSpacingFolderBundle('punct')?.moduleIds).toEqual(['punct']);
+    expect(getSpacingFolderBundle('nonAeoAux')?.moduleIds).toEqual([
+      'non-aeo-aux',
+    ]);
   });
 
-  it('defaults all bundles off', () => {
+  it('defaults all bundles off except nonAeoAux (본조 탭에서 옮겨 옴)', () => {
     expect(defaultSpacingFolderEnabled()).toEqual({
       numberUnit: false,
       dependentRieulKka: false,
       placeAffix: false,
       punct: false,
+      nonAeoAux: true,
     });
   });
 
-  it('normalize ignores unknown keys and coerces non-boolean to false', () => {
+  it('normalize ignores unknown keys and coerces non-boolean to the bundle default', () => {
     expect(
       normalizeSpacingFolderEnabled({
         numberUnit: true,
@@ -56,16 +61,27 @@ describe('spacingFolderBundles', () => {
       dependentRieulKka: false,
       placeAffix: false,
       punct: false,
+      nonAeoAux: true,
     });
+    expect(normalizeSpacingFolderEnabled({ nonAeoAux: 'no' }).nonAeoAux).toBe(
+      true,
+    );
+    expect(normalizeSpacingFolderEnabled({ nonAeoAux: false }).nonAeoAux).toBe(
+      false,
+    );
     expect(normalizeSpacingFolderEnabled(null)).toEqual(
       defaultSpacingFolderEnabled(),
     );
   });
 
   it('isAnySpacingFolderEnabled reflects known keys only', () => {
-    expect(isAnySpacingFolderEnabled({})).toBe(false);
+    // nonAeoAux는 기본 켜짐 — 끈 것만 false
+    expect(isAnySpacingFolderEnabled({})).toBe(true);
+    expect(isAnySpacingFolderEnabled({ nonAeoAux: false })).toBe(false);
     expect(isAnySpacingFolderEnabled({ numberUnit: true })).toBe(true);
-    expect(isAnySpacingFolderEnabled({ futureKey: true })).toBe(false);
+    expect(
+      isAnySpacingFolderEnabled({ futureKey: true, nonAeoAux: false }),
+    ).toBe(false);
   });
 
   it('listEnabledSpacingModuleRefs expands in bundle then module order', () => {
@@ -73,6 +89,7 @@ describe('spacingFolderBundles', () => {
       placeAffix: true,
       numberUnit: true,
       dependentRieulKka: false,
+      nonAeoAux: false,
     });
     expect(refs.map((r) => r.moduleId)).toEqual([
       'numeral',

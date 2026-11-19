@@ -16,6 +16,7 @@ describe('normalizeRuleSet project meta', () => {
       dependentRieulKka: false,
       placeAffix: false,
       punct: false,
+      nonAeoAux: true,
     });
   });
 

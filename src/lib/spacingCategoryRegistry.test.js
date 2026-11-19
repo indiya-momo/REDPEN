@@ -22,6 +22,7 @@ describe('spacingCategoryRegistry', () => {
       'official-aux',
       'place-affix',
       'punct',
+      'non-aeo-aux',
     ]);
     for (const def of SPACING_CATEGORY_DEFS) {
       expect(typeof def.label).toBe('string');

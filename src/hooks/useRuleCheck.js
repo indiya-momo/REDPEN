@@ -81,6 +81,7 @@ import {
   normalizeSpacingFolderEnabled,
 } from '../lib/spacingFolderBundles.js';
 import { mergeSpacingFolderIntoSpellingResults } from '../lib/spacingFolderCheck.js';
+import { prepareNonAeoAuxSpacing } from '../lib/nonAeoAuxSpacing.js';
 
 /** @param {{
  *   builtInEnabled: Record<string, boolean>,
@@ -371,6 +372,13 @@ export function useRuleCheck({
         allErrors.push(...errors);
         let merged = grouped;
         if (spacingModulesMayRun) {
+          if (spacingEnabledMap.nonAeoAux) {
+            // 비아/어+보조 findHits는 동기 — 사전 추출본·Kiwi 형태소를 먼저 채운다(본조와 같은 판정).
+            await prepareNonAeoAuxSpacing(pageTexts, {
+              bootKiwi: () =>
+                bootKiwiIfNeeded({ auxMorph: true, maxWaitMs: 12_000 }),
+            });
+          }
           const spacingGroups = mergeSpacingFolderIntoSpellingResults(
             pageTexts,
             grouped,
