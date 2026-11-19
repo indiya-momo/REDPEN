@@ -30,10 +30,7 @@ import { setStdictVerbFormsForTests } from './stdictVerbForms.js';
  * 아직 고치지 않는 것(데이터·별건). 카드 종류/solid를 검사하지 않고 건너뛴다.
  * @type {Record<string, string>}
  */
-const PENDING = {
-  'aeo-boda-grae-sp': "시트에 '래' 줄기가 없음(그러다→그래). 시트 데이터 보강 필요",
-  'aeo-boda-grae-gl': "시트에 '래' 줄기가 없음(그러다→그래). 시트 데이터 보강 필요",
-};
+const PENDING = {};
 
 /**
  * 카드 종류는 맞고 solid 표시만 아직 다른 것.

@@ -45,13 +45,14 @@ describe('auxiliaryVerbMatchFilters', () => {
     expect(ruleMatches(rule, '먹어 보았다')).toBe(true);
   });
 
-  it('bon_allow — 동사 표면형만(기다려·깨트려), 명사+해는 제외', () => {
+  it('bon_allow — 동사 표면형만(깨트려·깨뜨려), 명사+해는 제외', () => {
     const allow = bonVerbAllowForItemId('verb-boda1');
-    expect(allow).toContain('기다려');
+    expect(allow).not.toContain('기다려');
     expect(allow).toContain('깨트려');
     expect(allow).not.toContain('생각해');
     expect(allow).not.toContain('사랑해');
-    expect(isBonVerbHeadOnAllowList('기다려', '어', allow)).toBe(true);
+    expect(isBonVerbHeadOnAllowList('깨트려', '어', allow)).toBe(true);
+    expect(isBonVerbHeadOnAllowList('기다려', '어', allow)).toBe(false);
     expect(isBonVerbHeadOnAllowList('생각해', '해', allow)).toBe(false);
     expect(isBonVerbHeadOnAllowList('매달려', '어', allow)).toBe(false);
   });
