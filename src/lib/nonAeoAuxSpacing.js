@@ -101,12 +101,13 @@ export function listNonAeoAuxOnsets() {
  * 본용언 어절이 명시적 비아/어 연결어미로 끝나는가.
  * `classifyConnectiveBeforeAux`가 non-aeo여도 연결어미 꼴이 없으면(학교·사고) 후보가 아니다.
  * @param {string} head
+ * @param {string} [auxItemId]
  */
-export function hasExplicitNonAeoConnective(head) {
+export function hasExplicitNonAeoConnective(head, auxItemId = '') {
   const h = String(head ?? '');
   if (h.length < 2) return false;
-  if (classifyConnectiveBeforeAux(h) !== 'non-aeo') return false;
-  if (h.endsWith('라') || h.endsWith('러')) return true;
+  if (classifyConnectiveBeforeAux(h, auxItemId) !== 'non-aeo') return false;
+  if (h.endsWith('라') || h.endsWith('러') || h.endsWith('려')) return true;
   return NON_AEO_ENDINGS.some((ending) => h.endsWith(ending));
 }
 
@@ -181,9 +182,9 @@ export function collectNonAeoAuxCandidates(text) {
     for (let cut = word.length - 1; cut >= 2; cut -= 1) {
       const head = word.slice(0, cut);
       const tail = word.slice(cut);
-      if (!hasExplicitNonAeoConnective(head)) continue;
       const hit = onsets.find(({ onset }) => tail.startsWith(onset));
       if (!hit) continue;
+      if (!hasExplicitNonAeoConnective(head, hit.itemId)) continue;
       if (head.endsWith('다') && DA_GA_CONNECTIVE_TAILS.has(tail)) continue;
       out.push({
         index: start,

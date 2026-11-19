@@ -75,6 +75,14 @@ export const EU_DROP_AEO_TAILS = new Set([
  */
 export const RA_STEM_AEO_SURFACES = Object.freeze(['자라', '바라', '놀라', '모자라']);
 
+/**
+ * 의도의 -(으)려 뒤에 오는 보조용언(하려 하다·먹으려 들다).
+ * '려'는 -리다 + -어(가려·오려·버려·내려)가 훨씬 흔해 기본은 -아/-어로 보고,
+ * 뒤가 이 항목일 때만 비아/어로 본다(-리다 + -어 + 하다·들다는 사실상 없음).
+ * @type {ReadonlySet<string>}
+ */
+export const RYEO_INTENT_AUX_ITEM_IDS = new Set(['verb-hada', 'verb-delda']);
+
 /** 앞에서부터 먼저 본다. 긴 것 우선. */
 export const NON_AEO_ENDINGS = Object.freeze([
   '다가',
@@ -139,11 +147,15 @@ export function isAeoRaReoHead(head) {
 /**
  * 보조용언 바로 앞 본용언 어절(한글만)의 연결형.
  * @param {string} head — `먹어`, `먹다가`, `먹으러`, `따라`, `해`
+ * @param {string} [auxItemId] — 뒤 보조용언 항목 id(하려 하다 판정용)
  * @returns {'aeo' | 'non-aeo' | ''} 빈 문자열은 판단 불가(어절 없음)
  */
-export function classifyConnectiveBeforeAux(head) {
+export function classifyConnectiveBeforeAux(head, auxItemId = '') {
   const h = String(head ?? '').replace(/[^\uAC00-\uD7A3]/g, '');
   if (!h) return '';
+  if (h.endsWith('려') && RYEO_INTENT_AUX_ITEM_IDS.has(String(auxItemId ?? '').trim())) {
+    return 'non-aeo';
+  }
   if (h.endsWith('라') || h.endsWith('러')) {
     if (h.endsWith('으라') || h.endsWith('으러')) return 'non-aeo';
     return isAeoRaReoHead(h) ? 'aeo' : 'non-aeo';
