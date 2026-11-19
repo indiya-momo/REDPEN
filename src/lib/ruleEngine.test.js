@@ -73,7 +73,7 @@ describe('ruleEngine', () => {
     expect(results[0]?.instances.length ?? 0).toBe(0);
   });
 
-  it('auxiliary-verb — 3음절 …해 앞말(상상해)은 제외, 1음절 해 왔은 포함', () => {
+  it('auxiliary-verb — 3음절 …해 앞말(상상해)은 1차에서 포함하고, 1음절 해 왔도 포함', () => {
     const items = [
       { str: '상상해', transform: [10, 0, 0, 10, 0, 100], width: 22 },
       { str: '왔다', transform: [10, 0, 0, 10, 22.6, 100], width: 22 },
@@ -88,7 +88,7 @@ describe('ruleEngine', () => {
       rules,
     );
     const hits = results.flatMap((g) => g.instances.map((i) => i.matchedText));
-    expect(hits.some((h) => /상상해\s+왔/.test(h))).toBe(false);
+    expect(hits.some((h) => /상상해\s+왔/.test(h))).toBe(true);
 
     const shortResults = runRuleCheck(
       [{ pageNum: 2, text: '해 왔다', items: [], itemRefs: [] }],
@@ -169,7 +169,7 @@ describe('ruleEngine', () => {
     const { results } = runRuleCheck([page], rules);
     const hits = results.flatMap((g) => g.instances.map((i) => i.matchedText));
     expect(hits.some((h) => /대해\s+보/.test(h))).toBe(false);
-    expect(hits.some((h) => /상상해\s+보/.test(h))).toBe(false);
+    expect(hits.some((h) => /상상해\s+보/.test(h))).toBe(true);
   });
 
   it('auxiliary-verb — PDF 줄 검사에서 붙임(만들어내) 오탐 없음', () => {

@@ -5,8 +5,10 @@ import { matches } from '../test/matchText.js';
 import {
   auxiliaryDictSolidStdictCallCount,
   auxiliarySolidHitLabel,
+  bonVerbHeadFromAuxInstance,
   clearAuxiliaryDictSolidCache,
   bonVerbCitation,
+  citationOfSplitRow,
   compoundLemma,
   enrichAuxiliaryDictSolid,
   gluedCompoundLemma,
@@ -14,10 +16,13 @@ import {
   isAuxiliaryDictSolidInstance,
   isAuxiliaryGluedDictSolidInstance,
   longCompoundSplitLemma,
+  pruneCompoundHeadsFromGlueOptional,
   resetAuxiliaryDictSolidStdictCallCount,
   solidSurface,
 } from './auxiliaryDictSolid.js';
 import { setStdictVerbFormsForTests } from './stdictVerbForms.js';
+import bonBojoJson from '../data/bon-bojo-rules.json';
+import { replaceBonBojoRulesData } from './bonBojoRules.js';
 
 /** 추출본 대신 쓰는 작은 fixture. 등재 판정만 본다. */
 const FIXTURE_VERB_FORMS = {
@@ -254,6 +259,22 @@ describe('auxiliaryDictSolid', () => {
     expect(longCompoundSplitLemma('만져 주세요')).toBe('');
   });
 
+  it('citationOfSplitRow는 analyze가 null·throw여도 원본과 같이 빈 문자열이다', () => {
+    expect(citationOfSplitRow({ suggestedText: '어루만져 주세요' }, analyzeHead)).toBe(
+      '어루만지다',
+    );
+    expect(
+      citationOfSplitRow({ suggestedText: '어루만져 주세요' }, () => null),
+    ).toBe('');
+    expect(
+      citationOfSplitRow({ suggestedText: '어루만져 주세요' }, () => {
+        throw new Error('kiwi down');
+      }),
+    ).toBe('');
+    expect(citationOfSplitRow({ suggestedText: '' }, analyzeHead)).toBe('');
+    expect(citationOfSplitRow({ suggestedText: '   ' }, analyzeHead)).toBe('');
+  });
+
   it('표제어에 붙임표가 있으면 띄우고, 없으면 뺀다', async () => {
     const group = {
       patternKind: 'auxiliary-verb',
@@ -383,6 +404,148 @@ describe('auxiliaryDictSolid', () => {
     const next = await enrichAuxiliaryDictSolid(groups, { verbForms });
     expect(next[0].instances[0].suggestedText).toBe('들어와');
     expect(next[0].instances[0].tip).toBe('표준국어대사전 「들어오다」 등재');
+  });
+
+
+  it('본용언 머리가 띄움 필수 활용형이면 붙여쓰기 가능 칸에서 빼고, 단일어·허용 목록은 남긴다', async () => {
+    const verbForms = {
+      lemmas: {
+        덤벼들다: ['덤벼들어'],
+        깨뜨리다: ['깨뜨려'],
+      },
+    };
+    setStdictVerbFormsForTests(verbForms);
+    const groups = [
+      auxGroup('verb-boda1', '(아/어) + 보다', '기다려 보았다'),
+      {
+        ...auxGroup('verb-boda1', '(아/어) + 보다', '기다려보았다'),
+        instances: [
+          {
+            pageNum: 1,
+            matchedText: '기다려보았다',
+            suggestedText: '기다려 보았다',
+            start: 0,
+            end: 6,
+          },
+        ],
+      },
+      auxGroup('verb-boda1', '(아/어) + 보다', '덤벼들어 보았다'),
+      {
+        ...auxGroup('verb-boda1', '(아/어) + 보다', '덤벼들어보았다'),
+        instances: [
+          {
+            pageNum: 1,
+            matchedText: '덤벼들어보았다',
+            suggestedText: '덤벼들어 보았다',
+            start: 0,
+            end: 7,
+          },
+        ],
+      },
+      auxGroup('verb-boda1', '(아/어) + 보다', '깨뜨려 보았다'),
+      auxGroup('verb-boda1', '(아/어) + 보다', '걸려 보았다'),
+    ];
+    const next = await enrichAuxiliaryDictSolid(groups, { verbForms });
+    const kept = next.flatMap((g) =>
+      (g.instances ?? []).map((i) => i.matchedText),
+    );
+    expect(kept).toEqual([
+      '기다려 보았다',
+      '기다려보았다',
+      '깨뜨려 보았다',
+      '걸려 보았다',
+    ]);
+  });
+
+  it('bon_allow에서 기다려를 빼도 단일어는 붙여쓰기 가능 칸에 남고 3음절 칸에서는 빠진다', async () => {
+    const verbForms = {
+      lemmas: {
+        덤벼들다: ['덤벼들어'],
+        깨뜨리다: ['깨뜨려'],
+      },
+    };
+    setStdictVerbFormsForTests(verbForms);
+    const original = JSON.parse(JSON.stringify(bonBojoJson));
+    const reduced = JSON.parse(JSON.stringify(bonBojoJson));
+    for (const group of reduced.groups ?? []) {
+      if (group.id === 'verb-bon') {
+        group.bonVerbAllow = (group.bonVerbAllow ?? []).filter(
+          (s) => s !== '기다려' && s !== '만들어' && s !== '그러다',
+        );
+      }
+    }
+    replaceBonBojoRulesData(reduced);
+    try {
+      expect(bonVerbHeadFromAuxInstance({ matchedText: '기다려 보았다' })).toBe(
+        '기다려',
+      );
+      const glue = [
+        auxGroup('verb-boda1', '(아/어) + 보다', '기다려 보았다'),
+        {
+          ...auxGroup('verb-boda1', '(아/어) + 보다', '기다려보았다'),
+          instances: [
+            {
+              pageNum: 1,
+              matchedText: '기다려보았다',
+              suggestedText: '기다려 보았다',
+              start: 0,
+              end: 6,
+            },
+          ],
+        },
+        auxGroup('verb-boda1', '(아/어) + 보다', '깨뜨려 보았다'),
+        auxGroup('verb-boda1', '(아/어) + 보다', '덤벼들어 보았다'),
+      ];
+      const afterGlue = await enrichAuxiliaryDictSolid(glue, { verbForms });
+      expect(
+        afterGlue.flatMap((g) => (g.instances ?? []).map((i) => i.matchedText)),
+      ).toEqual(['기다려 보았다', '기다려보았다', '깨뜨려 보았다']);
+
+      const split = {
+        patternKind: 'auxiliary-verb',
+        auxSplitLongCompound: true,
+        bonBojoItemId: 'verb-long-compound-split',
+        instances: [
+          { matchedText: '기다려보았다', suggestedText: '기다려 보았다' },
+          { matchedText: '덤벼들어보았다', suggestedText: '덤벼들어 보았다' },
+        ],
+      };
+      const afterSplit = await enrichAuxiliaryDictSolid([split], {
+        verbForms,
+        analyze: (head) => {
+          if (head === '기다려') {
+            return { tokens: [{ str: '기다리', tag: 'VV' }, { str: '어', tag: 'EF' }] };
+          }
+          if (head === '덤벼들어') {
+            return { tokens: [{ str: '덤벼들', tag: 'VV' }, { str: '어', tag: 'EF' }] };
+          }
+          return null;
+        },
+        fetchImpl: dictByQuery({
+          기다리다: { word: '기다리다', pos: '동사' },
+          덤벼들다: { word: '덤벼-들다', pos: '동사' },
+        }),
+      });
+      expect(
+        afterSplit.flatMap((g) => (g.instances ?? []).map((i) => i.matchedText)),
+      ).toEqual(['덤벼들어보았다']);
+    } finally {
+      replaceBonBojoRulesData(original);
+    }
+  });
+
+  it('pruneCompoundHeadsFromGlueOptional는 허용 목록 복합어를 남긴다', () => {
+    setStdictVerbFormsForTests({
+      lemmas: { 깨뜨리다: ['깨뜨려'], 덤벼들다: ['덤벼들어'] },
+    });
+    const pruned = pruneCompoundHeadsFromGlueOptional([
+      auxGroup('verb-boda1', '(아/어) + 보다', '깨뜨려 보았다'),
+      auxGroup('verb-boda1', '(아/어) + 보다', '덤벼들어 보았다'),
+      auxGroup('verb-boda1', '(아/어) + 보다', '기다려 보았다'),
+    ]);
+    expect(
+      pruned.flatMap((g) => (g.instances ?? []).map((i) => i.matchedText)),
+    ).toEqual(['깨뜨려 보았다', '기다려 보았다']);
   });
 
   it.skipIf(

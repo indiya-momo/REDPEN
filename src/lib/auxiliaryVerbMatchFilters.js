@@ -70,8 +70,8 @@ export function bonVerbHeadForSyllableLimit(headCapture, stemHead = '') {
 }
 
 /**
- * 본용언 3음절 이상인지(길면 표기 검사 대상에서 빼기 전 단계).
- * 실제 포함 여부는 bon_allow — 기다려(있음)=포함, 매달려·주장해(없음)=제외.
+ * 본용언 3음절 이상인지.
+ * 1차는 길이만으로 일반 본조 검사를 빼지 않는다. 칸 분리는 enrichAuxiliaryDictSolid.
  * @param {string} headCapture
  * @param {string} [stemHead]
  */
@@ -218,21 +218,12 @@ export function shouldSkipAuxiliaryVerbMatch(rule, match) {
   const headCapture = String(match[1] ?? '').trim();
   if (headCapture && isNounRootHaeHead(headCapture)) return true;
 
-  const tailNorm = rule.tailWord?.trim().replace(/\s+/g, '') ?? '';
+  // 3음절+도 1차에서 넓게 받는다. 추출본(/data/stdict-verb-forms.json)은
+  // 비동기 로드라 여기선 단일어·복합어를 나누지 않고, dict solid가 칸을 나눈다.
   const tail = rule.tailWord?.trim() ?? '';
   const parts = tail.split(/\s+/).filter(Boolean);
   const stemHead =
     parts.length === 2 ? parts[0] : isHaeBoPattern(tail) ? '해' : '';
-
-  /** 아는체하다 — 관형어(은·는·ㄴ) 2음절 허용 */
-  if (
-    tailNorm !== '체하' &&
-    headCapture &&
-    isBonVerbHeadTooLongForAuxiliary(headCapture, stemHead)
-  ) {
-    const allow = bonVerbAllowForItemId(rule.bonBojoItemId);
-    if (!isBonVerbHeadOnAllowList(headCapture, stemHead, allow)) return true;
-  }
 
   if (parts.length !== 2) return false;
   if (!headCapture) return false;

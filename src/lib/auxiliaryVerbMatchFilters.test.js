@@ -67,36 +67,41 @@ describe('auxiliaryVerbMatchFilters', () => {
     expect(ruleMatches(rule, '역할을해 왔다.')).toBe(true);
     expect(isBonVerbHeadTooLongForAuxiliary('주장해', '해')).toBe(true);
     expect(bonVerbHeadForSyllableLimit('주장해', '해')).toBe('주장해');
-    expect(ruleMatches(rule, '주장해 왔다.')).toBe(false);
+    // 블록리스트 밖 명사+해는 1차에서 받고, 칸 분리는 dict solid
+    expect(ruleMatches(rule, '주장해 왔다.')).toBe(true);
   });
 
   it('명사 어근+해(생각해 보다) — 본조 검사 제외', () => {
     const haeBo = buildAuxiliaryVerbFindRules('해 보')[0];
     expect(ruleMatches(haeBo, '생각해 보았다')).toBe(false);
     expect(ruleMatches(haeBo, '사랑해 보았다')).toBe(false);
-    expect(ruleMatches(haeBo, '상상해 보았다')).toBe(false);
-    expect(ruleMatches(haeBo, '주장해 보았다')).toBe(false);
+    // 블록리스트에 없는 상상해·주장해는 1차에서 받고, 칸 분리는 dict solid
+    expect(ruleMatches(haeBo, '상상해 보았다')).toBe(true);
+    expect(ruleMatches(haeBo, '주장해 보았다')).toBe(true);
   });
 
-  it('본용언 3음절 이상 — bon_allow만 포함(기다려), 나머지 제외(매달려·주장해)', () => {
+  it('본용언 3음절 이상 — 1차는 단일어·복합어를 넓게 받고, 명사+해는 제외', () => {
     expect(isBonVerbHeadTooLongForAuxiliary('매달려', '어')).toBe(true);
     expect(isBonVerbHeadTooLongForAuxiliary('기다려', '어')).toBe(true);
     expect(isBonVerbHeadTooLongForAuxiliary('주장해', '해')).toBe(true);
     expect(isBonVerbHeadTooLongForAuxiliary('상상해', '해')).toBe(true);
-    expect(isBonVerbHeadTooLongForAuxiliary('만들어', '어')).toBe(true); // bon_allow에 있으면 검사 포함
+    expect(isBonVerbHeadTooLongForAuxiliary('만들어', '어')).toBe(true);
     expect(isBonVerbHeadTooLongForAuxiliary('먹어', '어')).toBe(false);
     expect(isBonVerbHeadTooLongForAuxiliary('가져다', '다')).toBe(true);
 
     const eoBo = buildAuxiliaryVerbFindRules('어 보')[0];
+    const ryeoBo = buildAuxiliaryVerbFindRules('려 보')[0];
     const haeBo = buildAuxiliaryVerbFindRules('해 보')[0];
     expect(ruleMatches(eoBo, '먹어 보았다')).toBe(true);
-    expect(ruleMatches(haeBo, '상상해 보았다')).toBe(false);
+    expect(ruleMatches(ryeoBo, '기다려 보았다')).toBe(true);
+    expect(ruleMatches(haeBo, '상상해 보았다')).toBe(true);
     expect(ruleMatches(haeBo, '주장해 왔다')).toBe(false);
 
     const daNoh = buildAuxiliaryVerbFindRules('다 놓')[0];
     daNoh.bonBojoItemId = 'verb-notda';
-    expect(ruleMatches(daNoh, '가져다 놓았다')).toBe(false);
-    expect(ruleMatches(daNoh, '가져다 놓다')).toBe(false);
+    // 3음절 복합 후보는 1차에서 받고, 칸 분리는 dict solid
+    expect(ruleMatches(daNoh, '가져다 놓았다')).toBe(true);
+    expect(ruleMatches(daNoh, '가져다 놓다')).toBe(true);
 
     const allowRule = {
       patternKind: 'auxiliary-verb',
@@ -111,12 +116,12 @@ describe('auxiliaryVerbMatchFilters', () => {
     });
     expect(shouldSkipAuxiliaryVerbMatch(allowRule, allowMatch)).toBe(false);
     /** @type {RegExpExecArray} */
-    const blockMatch = Object.assign(['매달려 보았다', '매달려'], {
+    const compoundMatch = Object.assign(['매달려 보았다', '매달려'], {
       index: 0,
       input: '매달려 보았다',
       groups: undefined,
     });
-    expect(shouldSkipAuxiliaryVerbMatch(allowRule, blockMatch)).toBe(true);
+    expect(shouldSkipAuxiliaryVerbMatch(allowRule, compoundMatch)).toBe(false);
   });
 
   it('띄어 쓴 하다 — 싶어·않아·에 들어는 여섯 활용에서 제외', () => {

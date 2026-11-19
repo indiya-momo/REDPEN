@@ -53,7 +53,8 @@ describe('auxiliaryVerbPattern', () => {
     expect(matches(ga, '통해 가치를')).toBe(false);
     expect(matchesRegex(bo, '상상해 보자')).toBe(true);
     expect(matches(ga, '먹어 가')).toBe(false);
-    expect(matches(ga, '상상해 가')).toBe(false);
+    // 3음절 상상해는 1차에서 받고, 칸 분리는 dict solid
+    expect(matches(ga, '상상해 가')).toBe(true);
   });
 
   it('해 보 — 보이다 활용(보이는·보일·보여)은 보다로 잡지 않는다', () => {
@@ -102,7 +103,7 @@ describe('auxiliaryVerbPattern', () => {
     const rule = rules[0];
     expect(matchesRegex(rule, '상상해 왔다')).toBe(true);
     expect(matchesRegex(rule, '상상해\n왔다')).toBe(true);
-    expect(matches(rule, '상상해 왔다')).toBe(false);
+    expect(matches(rule, '상상해 왔다')).toBe(true);
     expect(matchesRegex(rule, '해왔')).toBe(false);
   });
 
@@ -110,7 +111,8 @@ describe('auxiliaryVerbPattern', () => {
     const rules = buildAuxiliaryVerbFindRules('아 하');
     expect(rules).toHaveLength(1);
     expect(matches(rules[0], '아하루')).toBe(false);
-    expect(matches(rules[0], '보라아 하다')).toBe(false);
+    // 3음절 미등재는 1차에서 통과, 2차 형태소 필터가 비용언을 걸러 낸다
+    expect(matches(rules[0], '보라아 하다')).toBe(true);
     expect(matches(rules[0], '보라아하다')).toBe(false);
   });
 
@@ -125,7 +127,7 @@ describe('auxiliaryVerbPattern', () => {
     const rules = buildAuxiliaryVerbFindRules('해 보');
     expect(rules.length).toBe(1);
     expect(matchesRegex(rules[0], '상상해 보자')).toBe(true);
-    expect(matches(rules[0], '상상해 보자')).toBe(false);
+    expect(matches(rules[0], '상상해 보자')).toBe(true);
     expect(matchesRegex(rules[0], '상상해보자')).toBe(false);
     expect(matchesRegex(rules[0], '통해보장')).toBe(false);
   });
@@ -134,7 +136,7 @@ describe('auxiliaryVerbPattern', () => {
     const rules = buildAuxiliaryVerbFindRules('해보');
     expect(rules.length).toBe(1);
     expect(matchesRegex(rules[0], '상상해 보아요')).toBe(true);
-    expect(matches(rules[0], '상상해 보아요')).toBe(false);
+    expect(matches(rules[0], '상상해 보아요')).toBe(true);
     expect(matchesRegex(rules[0], '상상해보아요')).toBe(false);
     expect(matchesRegex(rules[0], '해보세요')).toBe(false);
   });
