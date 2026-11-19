@@ -12,6 +12,7 @@
  *   label: string,
  *   moduleIds: readonly string[],
  *   tipLines: readonly string[],
+ *   example?: { find: string, replace: string },
  * }} SpacingFolderBundleDef
  */
 
@@ -20,12 +21,14 @@ export const SPACING_FOLDER_BUNDLES = Object.freeze([
   Object.freeze({
     bundleId: 'numberUnit',
     label: '수·단위',
+    example: Object.freeze({ find: '이억삼천만', replace: '이억 삼천만' }),
     moduleIds: Object.freeze(['numeral', 'man-eok-jo', 'digit-unit']),
     tipLines: Object.freeze(['수사', '만·억·조', '숫자·단위']),
   }),
   Object.freeze({
     bundleId: 'dependentRieulKka',
-    label: '의존명사·-ㄹ까 보다',
+    label: '관형사형 뒤 의존명사',
+    example: Object.freeze({ find: '할수 있다', replace: '할 수 있다' }),
     moduleIds: Object.freeze([
       'adnominal-dep',
       'n-ji',
@@ -42,19 +45,22 @@ export const SPACING_FOLDER_BUNDLES = Object.freeze([
   Object.freeze({
     bundleId: 'placeAffix',
     label: '지명·접미',
+    example: Object.freeze({ find: '남 인도', replace: '남인도' }),
     moduleIds: Object.freeze(['place-affix']),
     tipLines: Object.freeze(['지명·외자 접미']),
   }),
   Object.freeze({
     bundleId: 'punct',
-    label: '문장부호',
+    label: '문장부호 뒤 띄움',
+    example: Object.freeze({ find: '갔다.또', replace: '갔다. 또' }),
     moduleIds: Object.freeze(['punct']),
     tipLines: Object.freeze(['종결·쉼표 뒤 띄어', '닫는 부호와 조사 붙임']),
   }),
   // 2026-11-19: 본조 탭의 비아/어 띄움 필수 줄을 옮겨 옴. 기본 켜짐(아래 default).
   Object.freeze({
     bundleId: 'nonAeoAux',
-    label: '본용언+보조용언(-아/-어 아닌 경우)',
+    label: '본(-아/-어) + 보조용언 아닌 경우',
+    example: Object.freeze({ find: '먹지마', replace: '먹지 마' }),
     moduleIds: Object.freeze(['non-aeo-aux']),
     tipLines: Object.freeze([
       '-지·-고·-게·-도록·-다(가)·-(으)러·-(으)라 + 보조용언은 띄어 씀',

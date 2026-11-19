@@ -10,7 +10,7 @@
 export const ADNOMINAL_DEP_CATEGORY = '관형사형+의존명사';
 export const ADNOMINAL_DEP_LABEL = '관형사형+의존명사';
 export const ADNOMINAL_DEP_TIP =
-  '한글 맞춤법: 관형사형 어미 뒤 의존명사(수·것·거·만큼…)는 띄어 씁니다.';
+  '한글 맞춤법 제42항: 관형사형 어미 뒤 의존명사(수·것·거·만큼…)는 띄어 씀';
 
 /** 부사 등재 — 의존명사 만큼과 구분 */
 const MANGKEUM_ADVERB = new Set([

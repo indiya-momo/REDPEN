@@ -65,6 +65,9 @@ export function collectSpacingFolderGroups(pageTexts, spacingFolderEnabled) {
   const defById = new Map(SPACING_CATEGORY_DEFS.map((d) => [d.id, d]));
   /** @type {import('./ruleEngine.js').RuleResultGroup[]} */
   const groups = [];
+  /** 묶음·모듈당 결과 그룹 1개 — 발견은 instances로 모은다(시트 규칙 결과와 같은 모양). */
+  /** @type {Map<string, import('./ruleEngine.js').RuleResultGroup>} */
+  const groupByKey = new Map();
 
   for (const ref of listEnabledSpacingModuleRefs(enabled)) {
     const def = defById.get(ref.moduleId);
@@ -92,15 +95,23 @@ export function collectSpacingFolderGroups(pageTexts, spacingFolderEnabled) {
           index,
           moduleId: ref.moduleId,
         };
-        groups.push({
+        const key = `${ref.bundleId}:${ref.moduleId}`;
+        const existing = groupByKey.get(key);
+        if (existing) {
+          existing.instances.push(instance);
+          continue;
+        }
+        const group = {
           find: matchedText,
           replace: suggestedText,
           label: def.label,
           category,
-          tip: SPACING_SOURCE_TIP,
+          tip: String(def.tip ?? '').trim() || SPACING_SOURCE_TIP,
           moduleId: ref.moduleId,
           instances: [instance],
-        });
+        };
+        groupByKey.set(key, group);
+        groups.push(group);
       }
     }
   }

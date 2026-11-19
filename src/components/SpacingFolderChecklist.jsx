@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   listSpacingFolderBundles,
   normalizeSpacingFolderEnabled,
@@ -7,6 +7,7 @@ import DetailsChevron from './DetailsChevron.jsx';
 
 /**
  * 맞춤법 탭 「띄어쓰기」 폴더 — 묶음 on/off.
+ * 행 마크업은 BuiltinSpellingPanel 규칙 행과 같다(체크박스 · 이름 · 찾을 말 → 바꿀 말 · 클릭 팁).
  * @param {{
  *   spacingFolderEnabled?: Record<string, boolean>,
  *   onSpacingFolderToggle: (bundleId: string) => void,
@@ -19,6 +20,7 @@ export default function SpacingFolderChecklist({
   onSpacingFolderSetAll,
 }) {
   const selectAllRef = useRef(/** @type {HTMLInputElement | null} */ (null));
+  const [openTipId, setOpenTipId] = useState(/** @type {string | null} */ (null));
   const bundles = useMemo(() => listSpacingFolderBundles(), []);
   const enabled = useMemo(
     () => normalizeSpacingFolderEnabled(spacingFolderEnabled),
@@ -62,22 +64,59 @@ export default function SpacingFolderChecklist({
           </span>
         </span>
       </summary>
-      <ul className="spacing-folder-checklist caution-checklist">
-        {bundles.map((bundle) => {
-          const tip = bundle.tipLines.join('\n');
-          return (
-            <li key={bundle.bundleId} className="spacing-folder-row">
-              <label className="spacing-folder-chip caution-chip" title={tip}>
-                <input
-                  type="checkbox"
-                  checked={enabled[bundle.bundleId] === true}
-                  onChange={() => onSpacingFolderToggle(bundle.bundleId)}
-                />
-                <span className="caution-chip-label">{bundle.label}</span>
-              </label>
-            </li>
-          );
-        })}
+      <ul className="rule-list builtin-rule-list spacing-folder-checklist caution-checklist">
+        <li>
+          <div className="builtin-rule-group builtin-rule-group--cols-1">
+            {bundles.map((bundle) => {
+              const tipOpen = openTipId === bundle.bundleId;
+              const toggleTip = () =>
+                setOpenTipId((prev) => (prev === bundle.bundleId ? null : bundle.bundleId));
+              return (
+                <div key={bundle.bundleId} className="builtin-rule-entry-wrap">
+                  <div className="builtin-rule-entry">
+                    <div className="builtin-rule-row-wrap builtin-rule-item">
+                      <div className="rule-row builtin-rule-row">
+                        <input
+                          type="checkbox"
+                          checked={enabled[bundle.bundleId] === true}
+                          onChange={() => onSpacingFolderToggle(bundle.bundleId)}
+                          aria-label={bundle.label}
+                        />
+                        <div className="rule-text builtin-rule-text">
+                          <span
+                            className={`builtin-rule-label caution-inline-tip-trigger${tipOpen ? ' caution-inline-tip-trigger--open' : ''}`}
+                            role="button"
+                            tabIndex={0}
+                            onClick={toggleTip}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                toggleTip();
+                              }
+                            }}
+                            aria-expanded={tipOpen}
+                          >
+                            <span className="spacing-folder-label">{bundle.label}</span>
+                            {bundle.example ? (
+                              <span className="spacing-folder-example">
+                                <span className="find">{bundle.example.find}</span>
+                                <span className="arrow">→</span>
+                                <span className="replace">{bundle.example.replace}</span>
+                              </span>
+                            ) : null}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  {tipOpen ? (
+                    <div className="builtin-rule-tip-inline">{bundle.tipLines.join('\n')}</div>
+                  ) : null}
+                </div>
+              );
+            })}
+          </div>
+        </li>
       </ul>
     </details>
   );

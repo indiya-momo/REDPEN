@@ -11,7 +11,7 @@
 export const PUNCT_SPACING_CATEGORY = '문장부호';
 export const PUNCT_SPACING_LABEL = '문장부호 띄어쓰기';
 export const PUNCT_SPACING_TIP =
-  '한글 맞춤법: 문장 부호 뒤는 띄고, 닫는 부호·따옴표와 조사(라고)는 붙이며, 하고·하며·하는는 띄어 씁니다.';
+  '한글 맞춤법 부록(문장 부호): 문장 부호 뒤는 띄고, 닫는 부호·따옴표와 조사(라고)는 붙여 씀';
 
 const UNIT_ALT = '킬로미터|센티미터|밀리미터|킬로그램|밀리그램|퍼센트|그램|리터|미터|센티|밀리|cm|mm|kg|km|m|g';
 
