@@ -1,6 +1,12 @@
 /**
  * 본조 2차 — 닫힌 비아/어 연결어미 + 켠 보조용언 붙임 → 띄어쓰기 필수.
  * 1차 ruleEngine·stem 찾기는 건드리지 않는다.
+ *
+ * 1차·붙임보강이 붙여쓰기 칸(가능·필수)에 넣은 발견도 여기서 다시 본다.
+ * 본용언 연결이 -아/-어가 아니면(-다(가)·-(으)라·-(으)러·-지·-고 …, `auxiliaryConnective.js`)
+ * - 띄어 쓴 것은 올바른 표기라 카드에서 뺀다.
+ * - 붙여 쓴 것은 띄움 필수 줄(`verb-non-aeo-space`)로 옮긴다.
+ * 붙인 전체가 사전 한 단어(내다보다·들여다보다)면 그대로 둔다.
  */
 import {
   STEM_TAIL_BOUNDARY,
@@ -10,16 +16,23 @@ import {
 import {
   BON_BOJO_LONG_COMPOUND_SPLIT_ID,
   BON_BOJO_NON_AEO_SPACE_ID,
+  BON_BOJO_NON_AEO_SPACE_LABEL,
+  BON_BOJO_UI_GROUP,
   auxiliarySearchTailsFromBonBojoItem,
   bonBojoDisplayLabelForItem,
+  bonBojoUiGroupForItemId,
   getBonBojoGroups,
   isBonBojoGateOnlyItem,
   isBonBojoLogicOnlyItem,
+  isBonBojoNonAeoAuxItem,
 } from './bonBojoRules.js';
 import {
+  bonVerbHeadFromAuxInstance,
+  compoundLemma,
   gluedCompoundLemma,
   isRegisteredPredicateLemma,
 } from './auxiliaryDictSolid.js';
+import { classifyConnectiveBeforeAux } from './auxiliaryConnective.js';
 import { isGloballyExcluded } from './matchFilters.js';
 
 /** 긴 것 우선 — 직전 슬라이스 매칭 */
@@ -289,6 +302,145 @@ export function collectNonAeoGluedHits(
 }
 
 /**
+ * 비아/어 발견이 갈 줄. 말다는 자기 줄(이미 띄움 필수 칸), 나머지는 게이트 줄.
+ * 보다·가다 줄에 두면 붙여쓰기 가능·필수 칸으로 합쳐지므로 따로 모은다.
+ * @param {string} itemId
+ */
+export function nonAeoTargetItemId(itemId) {
+  const id = String(itemId ?? '').trim();
+  return isBonBojoNonAeoAuxItem(id) ? id : BON_BOJO_NON_AEO_SPACE_ID;
+}
+
+/** @param {string} targetId */
+function nonAeoTargetDisplay(targetId) {
+  return (
+    bonBojoDisplayLabelForItem(targetId) ||
+    (targetId === BON_BOJO_NON_AEO_SPACE_ID
+      ? BON_BOJO_NON_AEO_SPACE_LABEL
+      : `(비아/어) + ${targetId}`)
+  );
+}
+
+/**
+ * 붙인 표면 → 본용언·보조 사이 띄움 제안. 붙임보강이 만든 띄움 제안이 있으면 그대로 쓴다.
+ * @param {import('./ruleEngine.js').MatchInstance} inst
+ * @param {string} head
+ */
+function spacedSuggestionForGlued(inst, head) {
+  const matched = String(inst?.matchedText ?? '');
+  const suggested = String(inst?.suggestedText ?? '').trim();
+  if (
+    /\s/.test(suggested) &&
+    suggested.replace(/\s+/g, '') === matched.replace(/\s+/g, '')
+  ) {
+    return suggested;
+  }
+  const at = head ? matched.indexOf(head) : -1;
+  if (at < 0) return '';
+  const cut = at + head.length;
+  if (cut >= matched.length) return '';
+  return `${matched.slice(0, cut)} ${matched.slice(cut)}`;
+}
+
+/**
+ * 붙여쓰기 가능·필수 칸의 발견 중 본용언 연결이 -아/-어가 아닌 것을 정리한다.
+ * - 띄어 씀(`먹다 보니`) → 올바른 표기라 뺀다.
+ * - 붙여 씀(`먹다보니`) → `moved`로 돌려준다(띄움 필수 줄로 옮길 것).
+ * - 붙인 전체가 사전 한 단어(`내다보다`)면 둘 다 그대로 둔다.
+ * @param {import('./ruleEngine.js').GroupedResult[]} groups
+ * @param {{ fetchImpl?: typeof fetch }} [opts]
+ * @returns {Promise<{
+ *   groups: import('./ruleEngine.js').GroupedResult[],
+ *   moved: { itemId: string, inst: import('./ruleEngine.js').MatchInstance }[],
+ * }>}
+ */
+export async function reclassifyNonAeoAuxInstances(groups, opts = {}) {
+  /** @type {{ itemId: string, inst: import('./ruleEngine.js').MatchInstance }[]} */
+  const moved = [];
+  const out = [];
+  for (const group of groups ?? []) {
+    const itemId = String(group?.bonBojoItemId ?? '').trim();
+    const ui = bonBojoUiGroupForItemId(itemId);
+    if (
+      group?.patternKind !== 'auxiliary-verb' ||
+      !itemId ||
+      group.auxSplitLongCompound ||
+      group.auxNonAeoSpace ||
+      (ui !== BON_BOJO_UI_GROUP.GLUE_OPTIONAL &&
+        ui !== BON_BOJO_UI_GROUP.GLUE_REQUIRED)
+    ) {
+      out.push(group);
+      continue;
+    }
+    const display = group.groupDisplayLabel || group.label || '';
+    /** @type {import('./ruleEngine.js').MatchInstance[]} */
+    const kept = [];
+    let changed = false;
+    for (const inst of group.instances ?? []) {
+      if (inst?.auxNonAeoSpace) {
+        kept.push(inst);
+        continue;
+      }
+      const head = bonVerbHeadFromAuxInstance(inst, itemId);
+      if (classifyConnectiveBeforeAux(head) !== 'non-aeo') {
+        kept.push(inst);
+        continue;
+      }
+      const matched = String(inst?.matchedText ?? '');
+      const spaced = /\s/.test(matched.trim());
+      const surface = matched.replace(/[^\uAC00-\uD7A3]/g, '');
+      const lemma = spaced
+        ? compoundLemma(matched, itemId, display)
+        : gluedCompoundLemma(matched, itemId, display);
+      if (lemma || surface) {
+        const registered = await isRegisteredPredicateLemma(lemma, {
+          fetchImpl: opts.fetchImpl,
+          surface,
+        });
+        if (registered) {
+          kept.push(inst);
+          continue;
+        }
+      }
+      changed = true;
+      if (spaced) continue;
+      const suggestedText = spacedSuggestionForGlued(inst, head);
+      if (!suggestedText) continue;
+      const { tip: _tip, auxDictSolid: _solid, ...rest } = inst;
+      moved.push({
+        itemId,
+        inst: {
+          ...rest,
+          find: `auxiliary:non-aeo:${itemId}`,
+          replace: suggestedText,
+          suggestedText,
+          auxNonAeoSpace: true,
+        },
+      });
+    }
+    out.push(changed ? { ...group, instances: kept } : group);
+  }
+  return { groups: out, moved };
+}
+
+/**
+ * 같은 쪽에서 글자 범위가 겹치면 같은 발견으로 본다.
+ * @param {import('./ruleEngine.js').MatchInstance[]} instances
+ * @param {number} pageNum
+ * @param {number} start
+ * @param {string} matchedText
+ */
+function overlapsInstance(instances, pageNum, start, matchedText) {
+  const end = start + String(matchedText ?? '').length;
+  return (instances ?? []).some((inst) => {
+    if (inst.pageNum !== pageNum) return false;
+    const s = inst.index ?? 0;
+    const e = s + String(inst.matchedText ?? '').length;
+    return s < end && start < e;
+  });
+}
+
+/**
  * @param {import('./ruleEngine.js').GroupedResult[]} groups
  * @param {readonly { pageNum?: number, text?: string }[]} pageTexts
  * @param {{
@@ -298,19 +450,20 @@ export function collectNonAeoGluedHits(
  * }} [opts]
  */
 export async function enrichAuxiliaryNonAeoSpace(groups, pageTexts, opts = {}) {
-  const list = [...(groups ?? [])];
   const rules = opts.rules ?? [];
-  if (!isNonAeoSpaceGateEnabled(rules)) return groups ?? [];
+  const gateOn = isNonAeoSpaceGateEnabled(rules);
+  // 게이트와 상관없이 붙여쓰기 칸의 비아/어는 정리한다(허용 카드로 남지 않게).
+  const reclassified = await reclassifyNonAeoAuxInstances(groups ?? [], {
+    fetchImpl: opts.fetchImpl,
+  });
+  const list = reclassified.groups;
+  if (!gateOn) return list;
 
   const itemIds = enabledAuxItemIdsForNonAeo(rules);
-  if (!itemIds.length) return groups ?? [];
-
   const pages = pageTexts ?? [];
-  if (!pages.length) return groups ?? [];
-
   const excludes = opts.globalExcludePhrases ?? [];
 
-  /** 1차·붙임보강으로 이미 있는 같은 item 줄에 합친다 (말다 이중 카드 방지) */
+  /** 1차·붙임보강으로 이미 있는 같은 줄에 합친다 (말다 이중 카드 방지) */
   /** @type {Map<string, import('./ruleEngine.js').GroupedResult>} */
   const byItem = new Map();
   for (const group of list) {
@@ -323,10 +476,62 @@ export async function enrichAuxiliaryNonAeoSpace(groups, pageTexts, opts = {}) {
   /** @type {Map<string, import('./ruleEngine.js').GroupedResult>} */
   const created = new Map();
 
+  /**
+   * @param {string} targetId
+   * @param {import('./ruleEngine.js').MatchInstance} nextInst
+   */
+  const addToTarget = (targetId, nextInst) => {
+    let group = byItem.get(targetId) ?? created.get(targetId) ?? null;
+    if (!group) {
+      const display = nonAeoTargetDisplay(targetId);
+      group = {
+        find: `auxiliary:non-aeo:${targetId}`,
+        replace: '$0',
+        label: display,
+        category: 'consistency',
+        patternKind: 'auxiliary-verb',
+        bonBojoItemId: targetId,
+        groupDisplayLabel: display,
+        auxNonAeoSpace: true,
+        tip: '본용언 연결이 -아/-어가 아니면 보조용언을 띄어 씁니다.',
+        instances: [],
+      };
+      created.set(targetId, group);
+      byItem.set(targetId, group);
+    }
+    if (
+      overlapsInstance(
+        group.instances,
+        nextInst.pageNum ?? 0,
+        nextInst.index ?? 0,
+        nextInst.matchedText,
+      )
+    ) {
+      return;
+    }
+    const existingAt = list.indexOf(group);
+    if (existingAt >= 0) {
+      const nextGroup = {
+        ...group,
+        instances: [...(group.instances ?? []), nextInst],
+      };
+      list[existingAt] = nextGroup;
+      byItem.set(targetId, nextGroup);
+      if (created.has(targetId)) created.set(targetId, nextGroup);
+    } else {
+      group.instances.push(nextInst);
+    }
+  };
+
+  for (const { itemId, inst } of reclassified.moved) {
+    addToTarget(nonAeoTargetItemId(itemId), inst);
+  }
+
   for (const itemId of itemIds) {
     const display =
       bonBojoDisplayLabelForItem(itemId) ||
       `(비아/어) + ${itemId}`;
+    const targetId = nonAeoTargetItemId(itemId);
     for (const page of pages) {
       const pageNum = page.pageNum ?? 0;
       const text = page.text ?? '';
@@ -339,32 +544,7 @@ export async function enrichAuxiliaryNonAeoSpace(groups, pageTexts, opts = {}) {
           });
           if (registered) continue;
         }
-        let group = byItem.get(itemId) ?? created.get(itemId) ?? null;
-        if (!group) {
-          group = {
-            find: `auxiliary:non-aeo:${itemId}`,
-            replace: '$0',
-            label: display,
-            category: 'consistency',
-            patternKind: 'auxiliary-verb',
-            bonBojoItemId: itemId,
-            groupDisplayLabel: display,
-            auxNonAeoSpace: true,
-            tip: '본용언 연결이 -아/-어가 아니면 보조용언을 띄어 씁니다.',
-            instances: [],
-          };
-          created.set(itemId, group);
-          byItem.set(itemId, group);
-        }
-        const dup = (group.instances ?? []).some(
-          (inst) =>
-            inst.pageNum === pageNum &&
-            Math.abs((inst.index ?? 0) - hit.start) <= 4 &&
-            String(inst.matchedText ?? '').replace(/\s+/g, '') ===
-              hit.matchedText.replace(/\s+/g, ''),
-        );
-        if (dup) continue;
-        const nextInst = {
+        addToTarget(targetId, {
           find: `auxiliary:non-aeo:${itemId}`,
           replace: hit.suggestedText,
           matchedText: hit.matchedText,
@@ -372,19 +552,7 @@ export async function enrichAuxiliaryNonAeoSpace(groups, pageTexts, opts = {}) {
           pageNum,
           index: hit.start,
           auxNonAeoSpace: true,
-        };
-        const existingAt = list.indexOf(group);
-        if (existingAt >= 0) {
-          const nextGroup = {
-            ...group,
-            instances: [...(group.instances ?? []), nextInst],
-          };
-          list[existingAt] = nextGroup;
-          byItem.set(itemId, nextGroup);
-          if (created.has(itemId)) created.set(itemId, nextGroup);
-        } else {
-          group.instances.push(nextInst);
-        }
+        });
       }
     }
   }
