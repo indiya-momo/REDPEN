@@ -1,12 +1,14 @@
 import { describe, expect, it, beforeEach } from 'vitest';
 import data from '../../public/data/stdict-verb-forms.json';
 import {
+  citationHasCompoundHyphen,
   clearStdictVerbFormsCache,
   isSpaceRequiredCompoundLemma,
   isSpaceRequiredVerbForm,
   lemmasForSpaceRequiredForm,
   resolveSpaceRequiredLemma,
   setStdictVerbFormsForTests,
+  stdictHyphenOutsideKCount,
   stdictVerbFormsLemmaCount,
 } from './stdictVerbForms.js';
 
@@ -28,6 +30,20 @@ describe('stdict-verb-forms.json', () => {
     expect(data.meta.lemmaCount).toBe(Object.keys(data.lemmas).length);
     expect(data.meta.spaceRequiredFormCount).toBe(162375);
     expect(stdictVerbFormsLemmaCount()).toBe(data.meta.lemmaCount);
+    expect(Array.isArray(data.hyphenLemmasOutsideK)).toBe(true);
+    expect(data.meta.hyphenOutsideKCount).toBe(data.hyphenLemmasOutsideK.length);
+    expect(data.meta.hyphenLemmaCount).toBe(
+      data.meta.lemmaCount + data.hyphenLemmasOutsideK.length,
+    );
+    expect(stdictHyphenOutsideKCount()).toBe(data.hyphenLemmasOutsideK.length);
+  });
+
+  it('붙임표 게이트는 K∪(H∖K)이고 API 정규화와 같은 기본형을 쓴다', () => {
+    expect(citationHasCompoundHyphen('어루만지다')).toBe(true);
+    expect(citationHasCompoundHyphen('생각하다')).toBe(true);
+    expect(citationHasCompoundHyphen('가르치다')).toBe(false);
+    expect(citationHasCompoundHyphen('눈여기다')).toBe(true);
+    expect(citationHasCompoundHyphen('')).toBe(false);
   });
 
   it('덤벼들어·쫓아내·집어넣어·공부해는 복합어로 띄움 필수이다', () => {

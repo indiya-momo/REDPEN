@@ -4,16 +4,23 @@
  *
  * 「띄움 필수」= 3음절 이상 활용형이고 후보 기본형이 전부 복합어인 경우.
  * 본용언+보조 2차 등재 판정은 기본형 키, 없으면 활용형 역인덱스(유일 기본형)를 본다.
+ * 긴 합성어 붙임표 게이트는 K ∪ hyphenLemmasOutsideK (= H).
  */
 
 /**
- * @typedef {{ meta?: Record<string, unknown>, lemmas?: Record<string, string[]> }} StdictVerbFormsData
+ * @typedef {{
+ *   meta?: Record<string, unknown>,
+ *   lemmas?: Record<string, string[]>,
+ *   hyphenLemmasOutsideK?: string[],
+ * }} StdictVerbFormsData
  */
 
 /** @type {Set<string> | null} */
 let lemmaSet = null;
 /** @type {Map<string, string[]> | null} */
 let formToLemmas = null;
+/** @type {Set<string> | null} */
+let hyphenOutsideKSet = null;
 /** @type {Promise<void> | null} */
 let loadPromise = null;
 
@@ -44,13 +51,24 @@ function applyData(data) {
       }
     }
   }
+  /** @type {Set<string>} */
+  const outside = new Set();
+  const outsideList = Array.isArray(data?.hyphenLemmasOutsideK)
+    ? data.hyphenLemmasOutsideK
+    : [];
+  for (const raw of outsideList) {
+    const key = String(raw ?? '').trim();
+    if (key) outside.add(key);
+  }
   lemmaSet = lemmas;
   formToLemmas = byForm;
+  hyphenOutsideKSet = outside;
 }
 
 export function clearStdictVerbFormsCache() {
   lemmaSet = null;
   formToLemmas = null;
+  hyphenOutsideKSet = null;
   loadPromise = null;
 }
 
@@ -137,6 +155,31 @@ export function resolveSpaceRequiredLemma(lemma, surface = '') {
   return list[0];
 }
 
+/**
+ * 긴 합성어 붙임표 게이트 — citation ∈ H (= K ∪ H∖K).
+ * 추출본이 비어 있으면 false(닫힘). API 폴백 없음.
+ * @param {string} citation
+ */
+export function citationHasCompoundHyphen(citation) {
+  const q = String(citation ?? '').trim();
+  if (!q) return false;
+  if (lemmaSet?.has(q)) return true;
+  if (hyphenOutsideKSet?.has(q)) return true;
+  return false;
+}
+
+/** 붙임표 게이트용 데이터가 하나라도 있는지 (실패·미로드 구분) */
+export function hasCompoundHyphenIndex() {
+  return (
+    (lemmaSet != null && lemmaSet.size > 0) ||
+    (hyphenOutsideKSet != null && hyphenOutsideKSet.size > 0)
+  );
+}
+
 export function stdictVerbFormsLemmaCount() {
   return lemmaSet?.size ?? 0;
+}
+
+export function stdictHyphenOutsideKCount() {
+  return hyphenOutsideKSet?.size ?? 0;
 }

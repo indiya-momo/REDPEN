@@ -24,7 +24,7 @@ import { setStdictVerbFormsForTests } from './stdictVerbForms.js';
 import bonBojoJson from '../data/bon-bojo-rules.json';
 import { replaceBonBojoRulesData } from './bonBojoRules.js';
 
-/** 추출본 대신 쓰는 작은 fixture. 등재 판정만 본다. */
+/** 추출본 대신 쓰는 작은 fixture. 등재·붙임표(H∖K) 판정. */
 const FIXTURE_VERB_FORMS = {
   meta: { source: 'test' },
   lemmas: {
@@ -33,6 +33,7 @@ const FIXTURE_VERB_FORMS = {
     날아오르다: ['날아올라'],
     정리해주다: ['정리해줘'],
   },
+  hyphenLemmasOutsideK: ['어루만지다', '생각하다', '제출하다'],
 };
 
 beforeEach(() => {
@@ -290,11 +291,6 @@ describe('auxiliaryDictSolid', () => {
     const next = await enrichAuxiliaryDictSolid([group], {
       analyze: analyzeHead,
       verbForms: FIXTURE_VERB_FORMS,
-      fetchImpl: dictByQuery({
-        어루만지다: { word: '어루-만지다', pos: '동사' },
-        생각하다: { word: '생각-하다', pos: '동사' },
-        가르치다: { word: '가르치다', pos: '동사' },
-      }),
     });
     expect(next).toHaveLength(1);
     expect(next[0].instances).toEqual([
@@ -314,10 +310,13 @@ describe('auxiliaryDictSolid', () => {
     };
     const next = await enrichAuxiliaryDictSolid([group], {
       analyze: analyzeHead,
-      verbForms: FIXTURE_VERB_FORMS,
-      fetchImpl: dictByQuery({
-        정리하다: { word: '정리-하다', pos: '동사' },
-      }),
+      verbForms: {
+        ...FIXTURE_VERB_FORMS,
+        hyphenLemmasOutsideK: [
+          ...(FIXTURE_VERB_FORMS.hyphenLemmasOutsideK ?? []),
+          '정리하다',
+        ],
+      },
     });
     expect(next).toEqual([]);
   });
@@ -333,31 +332,25 @@ describe('auxiliaryDictSolid', () => {
     const next = await enrichAuxiliaryDictSolid([group], {
       analyze: () => null,
       verbForms: FIXTURE_VERB_FORMS,
-      fetchImpl: dictFetch('생각하다', '동사'),
     });
     expect(next).toEqual([]);
     expect(auxiliaryDictSolidStdictCallCount().lastRun).toBe(0);
   });
 
-  it('본용언 조회가 실패하면 음절 수만으로 띄우지 않는다', async () => {
+  it('H에 없으면 음절 수만으로 띄우지 않는다', async () => {
     const group = {
       patternKind: 'auxiliary-verb',
       auxSplitLongCompound: true,
       instances: [
-        { matchedText: '제출해주세요', suggestedText: '제출해 주세요' },
+        { matchedText: '가르쳐주세요', suggestedText: '가르쳐 주세요' },
       ],
     };
     const next = await enrichAuxiliaryDictSolid([group], {
       analyze: analyzeHead,
       verbForms: FIXTURE_VERB_FORMS,
-      fetchImpl: async () => ({
-        status: 503,
-        ok: false,
-        text: async () => 'STDICT_KEY_MISSING',
-      }),
     });
     expect(next).toEqual([]);
-    expect(auxiliaryDictSolidStdictCallCount().lastRun).toBe(1);
+    expect(auxiliaryDictSolidStdictCallCount().lastRun).toBe(0);
   });
 
   it('붙임표가 확인된 뒤 합성 표제어가 추출본에 없으면 띄운 제안을 남긴다', async () => {
@@ -371,9 +364,6 @@ describe('auxiliaryDictSolid', () => {
     const next = await enrichAuxiliaryDictSolid([group], {
       analyze: analyzeHead,
       verbForms: FIXTURE_VERB_FORMS,
-      fetchImpl: dictByQuery({
-        제출하다: { word: '제출-하다', pos: '동사' },
-      }),
     });
     expect(next[0].instances[0].suggestedText).toBe('제출해 주세요');
   });
@@ -511,7 +501,10 @@ describe('auxiliaryDictSolid', () => {
         ],
       };
       const afterSplit = await enrichAuxiliaryDictSolid([split], {
-        verbForms,
+        verbForms: {
+          ...verbForms,
+          hyphenLemmasOutsideK: [],
+        },
         analyze: (head) => {
           if (head === '기다려') {
             return { tokens: [{ str: '기다리', tag: 'VV' }, { str: '어', tag: 'EF' }] };
@@ -521,11 +514,9 @@ describe('auxiliaryDictSolid', () => {
           }
           return null;
         },
-        fetchImpl: dictByQuery({
-          기다리다: { word: '기다리다', pos: '동사' },
-          덤벼들다: { word: '덤벼-들다', pos: '동사' },
-        }),
       });
+      // 덤벼들다∈K → 붙임표 OK, 합성 표제어(덤벼들어보다)는 추출본 밖 → 띄움 제안 유지
+      // 기다리다는 H 밖 → plain 제거
       expect(
         afterSplit.flatMap((g) => (g.instances ?? []).map((i) => i.matchedText)),
       ).toEqual(['덤벼들어보았다']);

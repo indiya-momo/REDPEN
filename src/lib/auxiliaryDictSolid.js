@@ -1,7 +1,7 @@
 /**
  * 본용언+보조용언 2차.
  * 합성 기본형이 추출본(`stdict-verb-forms.json`)에 있으면 띄운 발견은 붙여 쓰라고 표시한다.
- * 3음절 띄어쓰기 칸은 본용언 기본형의 사전 표제어에 `-`가 있을 때만 남긴다(붙임표만 API).
+ * 3음절 띄어쓰기 칸은 본용언 citation이 H(K∪H∖K)에 있을 때만 남긴다(로컬, API 없음).
  * 붙여쓰기 가능 칸에서는 추출본 띄움 필수 활용형(복합 본용언)을 빼고,
  * 단일어·mixed·미등재와 bon_allow 예외(깨뜨려 등)는 남긴다.
  * 키위는 긴 합성어 기본형을 만들 때만 쓴다. 1차 찾기(ruleEngine)는 건드리지 않는다.
@@ -17,23 +17,18 @@ import {
 } from './bonBojoRules.js';
 import { isBonVerbHeadOnAllowList } from './auxiliaryVerbMatchFilters.js';
 import { analyzeLine } from './kiwiMorph/analyze.js';
-import { fetchStdictExact } from './unifyStdictPos.js';
 import {
+  citationHasCompoundHyphen,
   clearStdictVerbFormsCache,
   ensureStdictVerbFormsLoaded,
+  hasCompoundHyphenIndex,
   isSpaceRequiredVerbForm,
   resolveSpaceRequiredLemma,
 } from './stdictVerbForms.js';
 
 const DICT_TIP = (lemma) => `표준국어대사전 「${lemma}」 등재`;
 
-/**
- * 붙임표(긴 합성어) 조회 캐시. 등재 판정은 `stdict-verb-forms.json`을 쓴다.
- * @type {Map<string, { error: string | null, hits: { word: string, pos: string }[], headwords: { word: string, pos: string }[] }>}
- */
-const rawCache = new Map();
-
-/** 합성어 등재가 실제로 보낸 사전 호출. 표제어 문자열은 남기지 않는다. */
+/** @deprecated 붙임표는 로컬 H. 카운터는 0으로 유지(호환). */
 let sessionStdictCalls = 0;
 let lastRunStdictCalls = 0;
 
@@ -299,30 +294,7 @@ export function citationOfSplitRow(row, analyze) {
 }
 
 export function clearAuxiliaryDictSolidCache() {
-  rawCache.clear();
   clearStdictVerbFormsCache();
-}
-
-/**
- * 긴 합성어 붙임표 확인용. 등재 여부는 `isRegisteredPredicateLemma`를 쓴다.
- * @param {string} q
- * @param {{ fetchImpl?: typeof fetch, timeoutMs?: number }} [opts]
- */
-async function loadStdict(q, opts = {}) {
-  const query = String(q ?? '').trim();
-  if (!query) return { error: 'EMPTY', hits: [], headwords: [] };
-  if (!opts.fetchImpl && rawCache.has(query)) {
-    return rawCache.get(query);
-  }
-  sessionStdictCalls += 1;
-  const result = await fetchStdictExact(query, opts);
-  const packed = {
-    error: result.error ?? null,
-    hits: result.hits ?? [],
-    headwords: result.headwords ?? [],
-  };
-  if (!opts.fetchImpl && !packed.error) rawCache.set(query, packed);
-  return packed;
 }
 
 /**
@@ -433,15 +405,14 @@ export async function enrichAuxiliaryDictSolid(groups, opts = {}) {
     });
   });
 
-  const callsAtStart = sessionStdictCalls;
+  if (pendingSplit.length && !hasCompoundHyphenIndex()) {
+    console.warn(
+      '[auxiliaryDictSolid] 붙임표 인덱스 없음 — 긴 합성어 칸을 닫습니다',
+    );
+  }
   for (const row of pendingSplit) {
     const citation = citationOfSplitRow(row, analyze);
-    if (!citation) {
-      jobs.push({ ...row, lemma: '', kind: 'plain' });
-      continue;
-    }
-    const packed = await loadStdict(citation, opts);
-    if (packed.error || !headwordHasCompoundHyphen(packed.headwords, citation)) {
+    if (!citation || !citationHasCompoundHyphen(citation)) {
       jobs.push({ ...row, lemma: '', kind: 'plain' });
       continue;
     }
@@ -451,7 +422,7 @@ export async function enrichAuxiliaryDictSolid(groups, opts = {}) {
   }
 
   if (!jobs.length) {
-    lastRunStdictCalls = sessionStdictCalls - callsAtStart;
+    lastRunStdictCalls = 0;
     return pruneCompoundHeadsFromGlueOptional(list);
   }
 
@@ -463,8 +434,7 @@ export async function enrichAuxiliaryDictSolid(groups, opts = {}) {
       job.ok = true;
     }
   }
-  lastRunStdictCalls = sessionStdictCalls - callsAtStart;
-  console.info(`[auxiliaryDictSolid] stdictCalls=${lastRunStdictCalls}`);
+  lastRunStdictCalls = 0;
 
   const hasHit = jobs.some((job) => job.ok);
   const hasPlain = jobs.some((job) => job.kind === 'plain');
