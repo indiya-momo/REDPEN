@@ -1,0 +1,97 @@
+{
+  "at": "2026-11-19T11:03:53.947Z",
+  "srcPdf": "C:\\Users\\gikan\\OneDrive\\바탕 화면\\261117_경주멍-본문 2교지_131.pdf",
+  "desktopOut": "C:\\Users\\gikan\\OneDrive\\바탕 화면\\261117_경주멍-본문_인디야Replace스모크.pdf",
+  "source": {
+    "producer": "ezPDF Maker",
+    "creator": "ezPDF Maker",
+    "kind": "ezPDF_resave",
+    "note": "스펙 §5.2: ezPDF 경로는 보장 밖·결과만 기록. ID 내보내기 원본이 있으면 그걸 우선."
+  },
+  "tw": {
+    "setWordSpacingNonZeroOps": 2,
+    "note": "Tw 연산 있음 → isSpace일 때만 Tw 가산 경로가 의미 있음."
+  },
+  "glyphCoverage": {
+    "itemsTotal": 2,
+    "glyphHit": 2,
+    "glyphMiss": 0,
+    "leadingSpaceItems": 0,
+    "fallbackListed": 0
+  },
+  "fallbacks": [],
+  "findings": [
+    {
+      "pageNum": 1,
+      "start": 0,
+      "end": 3,
+      "found": "경주멍",
+      "replacement": "경주멍멍",
+      "style": "strike",
+      "label": "",
+      "contents": "",
+      "subject": "맞춤법"
+    },
+    {
+      "pageNum": 2,
+      "start": 0,
+      "end": 3,
+      "found": "경주멍",
+      "replacement": "경 주멍",
+      "style": "strike",
+      "label": "",
+      "contents": "",
+      "subject": "맞춤법"
+    }
+  ],
+  "writeCounts": {
+    "replace": 2,
+    "skipped": 0
+  },
+  "quadPointsXDiagnostic": [
+    {
+      "page": 1,
+      "indiyaX0": 319.73,
+      "indiyaX1": 356.15,
+      "quadCount": 1,
+      "acrobatX0": 319.7300109863281,
+      "acrobatX1": 356.1470031738281,
+      "dx0": -0.000010986328106810106,
+      "dx1": 0.0029968261718522626,
+      "goldenContents": "경주몽",
+      "indiyaReplacement": "경주멍멍"
+    },
+    {
+      "page": 2,
+      "indiyaX0": 662.25,
+      "indiyaX1": 720.92,
+      "quadCount": 1,
+      "acrobatX0": 662.2490234375,
+      "acrobatX1": 720.9169921875,
+      "dx0": 0.0009765625,
+      "dx1": 0.0030078124999590727,
+      "goldenContents": "경주 멍",
+      "indiyaReplacement": "경 주멍"
+    }
+  ],
+  "segmentXFromSharedPath": [
+    {
+      "page": 1,
+      "found": "경주멍",
+      "segX0": 319.73,
+      "segX1": 356.15,
+      "usedGlyph": true
+    },
+    {
+      "page": 2,
+      "found": "경주멍",
+      "segX0": 662.25,
+      "segX1": 720.92,
+      "usedGlyph": true
+    }
+  ],
+  "acceptVerdict": {
+    "status": "pending_manual",
+    "criteria": "InDesign Import→Accept 후 본문이 경주멍멍 / 경 주멍과 일치하면 합격. QuadPoints 수치 일치는 비합격 조건."
+  }
+}
