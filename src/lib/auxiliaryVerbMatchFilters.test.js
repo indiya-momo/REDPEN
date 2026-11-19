@@ -182,5 +182,23 @@ describe('auxiliaryVerbMatchFilters', () => {
     });
     expect(shouldSkipAuxiliaryVerbMatch(rule, match)).toBe(true);
   });
+
+  it('B — 종결 -ㄴ가 + 보다(사랑인가 봐)는 제외, 가 보다 본조는 유지', () => {
+    const gaBwa = buildAuxiliaryVerbFindRules('가 봐')[0];
+    expect(ruleMatches(gaBwa, '사랑인가 봐')).toBe(false);
+    expect(ruleMatches(gaBwa, '좋은가 봐')).toBe(false);
+    expect(ruleMatches(gaBwa, '들어가 봐')).toBe(true);
+
+    const gaBo = buildAuxiliaryVerbFindRules('가 보')[0];
+    expect(ruleMatches(gaBo, '사랑인가 본다')).toBe(false);
+    expect(ruleMatches(gaBo, '들어가 보았다')).toBe(true);
+  });
+
+  it('A — 담겨있어 보기만 해도 제외, 먹어 보기만은 유지', () => {
+    const eoBo = buildAuxiliaryVerbFindRules('어 보')[0];
+    expect(ruleMatches(eoBo, '담겨있어 보기만 해도')).toBe(false);
+    expect(ruleMatches(eoBo, '먹어 보기만 했다')).toBe(true);
+    expect(ruleMatches(eoBo, '먹어 보았다')).toBe(true);
+  });
 });
 

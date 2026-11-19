@@ -374,7 +374,7 @@ describe('indesignReplace', () => {
     expect(qp.size()).toBe(16);
   });
 
-  it('안내 문구에 Accept 약속 없음', () => {
+  it('안내 문구는 짧게 · 실제 건수 · Accept 약속 없음', () => {
     const notice = formatIndesignReplaceNotice({
       included: 2,
       excluded: { noReplacement: 1, textMismatch: 0, overlap: 1, reviewOnly: 0 },
@@ -382,10 +382,12 @@ describe('indesignReplace', () => {
     expect(notice).toContain('포함 2건');
     expect(notice).toContain('제외 2건');
     expect(notice).toContain('겹침 1');
-    expect(notice).toContain('좌표(QuadPoints)·Tw 정확도는 보증하지 않습니다');
-    expect(notice).toContain('인디자인 문서를 수정하지 마세요');
-    expect(notice).toContain('Accept가 어긋날 수 있습니다');
-    expect(notice).toContain('Accept 성공을 약속하지 않습니다');
+    expect(notice).toContain('가급적 주석을 수정하지 마세요');
+    expect(notice).toContain('인디자인 적용 시 어긋날 수 있습니다');
+    expect(notice).toContain('인디자인·원본 PDF에 따라 정확도가 달라질 수 있습니다');
+    expect(notice).not.toContain('page.text');
+    expect(notice).not.toContain('QuadPoints');
+    expect(notice).not.toContain('Accept');
   });
 });
 
