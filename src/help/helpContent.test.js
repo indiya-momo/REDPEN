@@ -58,6 +58,17 @@ describe('help content bundle', () => {
     expect(article?.body).toContain('기준 검수');
   });
 
+  it('loads stdict license article under reference', () => {
+    const nav = getHelpNav();
+    const ref = nav.groups.find((g) => g.id === 'reference');
+    expect(ref?.items.some((i) => i.slug === 'reference/stdict-license')).toBe(
+      true,
+    );
+    const article = getHelpArticle('reference/stdict-license');
+    expect(article?.meta.title).toBe('표준국어대사전 데이터 출처');
+    expect(article?.body).toContain('CC BY-SA 2.0 KR');
+  });
+
   it('resolves breadcrumb trail for nested highlight article', () => {
     const nav = getHelpNav();
     const trail = findNavTrail(nav.groups, 'spelling/highlights/spacing');

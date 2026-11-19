@@ -94,11 +94,11 @@
 
 ## 4. 배관·보안
 
-- 브라우저에 키 노출 금지. Vite 프록시 또는 `api/` 라우트  
-  예: `/api/stdict` → `https://stdict.korean.go.kr/api/search.do`  
-  서버 env: `STDICT_API_KEY` (사용자가 발급한 표준국어대사전 키).
-- `.env.example`에 이름만 문서화. 실키 커밋 금지.
-- 플래그: `VITE_UNIFY_STDICT=true` 일 때만 호출 (기본 off 권장 → 키 있는 로컬·스테이징에서 on).
+**개정 (2026-11-19):** 제품 조회는 로컬 색인으로 대체.  
+→ `unify-stdict-local-pos-index-design-2026-11-19.md` · `public/data/stdict-pos-index.json` · 고지 `public/data/STDICT-NOTICE.md`.
+
+- 플래그: `VITE_UNIFY_STDICT=true` 일 때만 2차 호출 (기본 off). 호출 시 **API·키 불필요**.
+- `/api/stdict`·`STDICT_API_KEY`는 측정·잔존용. 브라우저에 키 넣지 말 것.
 
 ---
 

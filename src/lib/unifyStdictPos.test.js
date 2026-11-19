@@ -1,13 +1,20 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
+import { clearStdictPosIndexCache } from './stdictPosIndex.js';
 import {
   buildStdictQueryList,
   enqueueStdictPosTargets,
+  fetchStdictExact,
   lemmaCandidatesForConjugation,
   parseStdictSearchHits,
   queryStemForCluster,
+  resolveStdictPosForTarget,
   runStdictPosReviewOnClusterGroups,
   verdictFromStdictHits,
 } from './unifyStdictPos.js';
+
+afterEach(() => {
+  clearStdictPosIndexCache();
+});
 
 describe('lemmaCandidatesForConjugation', () => {
   it('활용형 → 사전형', () => {
@@ -164,28 +171,46 @@ describe('enqueueStdictPosTargets', () => {
   });
 });
 
+describe('fetchStdictExact (로컬 색인)', () => {
+  const fixture = {
+    index: {
+      모르다: [{ word: '모르다', pos: '동사' }],
+      가교: [
+        { word: '가교01', pos: '품사 없음' },
+        { word: '가교02', pos: '명사' },
+      ],
+      깨트리다: [{ word: '깨-트리다', pos: '동사' }],
+      사: [
+        { word: '사01', pos: '명사' },
+        { word: '사10', pos: '수사' },
+        { word: '사10', pos: '관형사' },
+      ],
+    },
+  };
+
+  it('exact → hits/headwords, 붙임표는 hits에서만 제거', async () => {
+    const r = await fetchStdictExact('깨트리다', { posIndex: fixture });
+    expect(r.error).toBeNull();
+    expect(r.hits).toEqual([{ word: '깨트리다', pos: '동사' }]);
+    expect(r.headwords).toEqual([{ word: '깨-트리다', pos: '동사' }]);
+    expect(verdictFromStdictHits(r.hits)).toBe('predicate');
+  });
+
+  it('동형 전량을 돌려준다 (num=10 절단 없음)', async () => {
+    const r = await fetchStdictExact('가교', { posIndex: fixture });
+    expect(r.hits.map((h) => h.word)).toEqual(['가교01', '가교02']);
+    expect(verdictFromStdictHits(r.hits)).toBe('noun');
+  });
+});
+
 describe('runStdictPosReviewOnClusterGroups', () => {
   it('명사 계열 그러다만 용언 구간으로 옮긴다', async () => {
-    const fetchImpl = vi.fn(async (url) => {
-      const q = decodeURIComponent(String(url).split('q=')[1] || '');
-      const body =
-        q === '그러다'
-          ? {
-              channel: {
-                item: { word: '그러다', sense: { pos: '동사' } },
-              },
-            }
-          : {
-              channel: {
-                item: { word: q, sense: { pos: '명사' } },
-              },
-            };
-      return {
-        ok: true,
-        status: 200,
-        text: async () => JSON.stringify(body),
-      };
-    });
+    const posIndex = {
+      index: {
+        그러다: [{ word: '그러다', pos: '동사' }],
+        공개: [{ word: '공개', pos: '명사' }],
+      },
+    };
 
     const groups = [
       {
@@ -206,7 +231,7 @@ describe('runStdictPosReviewOnClusterGroups', () => {
 
     const { groups: next, summary } = await runStdictPosReviewOnClusterGroups(
       groups,
-      { fetchImpl },
+      { posIndex },
     );
     const geuruda = next.find((g) => g.type === 'series' && g.affix === '그러다');
     const gonggae = next.find((g) => g.type === 'series' && g.affix === '공개');
@@ -220,27 +245,14 @@ describe('runStdictPosReviewOnClusterGroups', () => {
   });
 
   it('용언은 사전형(날다·대다)으로 조회하고 명사 exact에 안 묶인다', async () => {
-    const seen = [];
-    const fetchImpl = vi.fn(async (url) => {
-      const q = decodeURIComponent(String(url).split('q=')[1] || '');
-      seen.push(q);
-      /** @type {Record<string, { word: string, pos: string }>} */
-      const table = {
-        날다: { word: '날다', pos: '동사' },
-        대다: { word: '대다', pos: '동사' },
-        대어: { word: '대어', pos: '명사' },
-        공개: { word: '공개', pos: '명사' },
-      };
-      const hit = table[q];
-      const body = hit
-        ? { channel: { item: { word: hit.word, pos: hit.pos, sense: {} } } }
-        : { channel: { item: [] } };
-      return {
-        ok: true,
-        status: 200,
-        text: async () => JSON.stringify(body),
-      };
-    });
+    const posIndex = {
+      index: {
+        날다: [{ word: '날다', pos: '동사' }],
+        대다: [{ word: '대다', pos: '동사' }],
+        대어: [{ word: '대어', pos: '명사' }],
+        공개: [{ word: '공개', pos: '명사' }],
+      },
+    };
 
     const { summary } = await runStdictPosReviewOnClusterGroups(
       [
@@ -269,14 +281,23 @@ describe('runStdictPosReviewOnClusterGroups', () => {
           clusters: [{ key: '대어보', variants: ['대어 보'] }],
         },
       ],
-      { fetchImpl },
+      { posIndex },
     );
 
-    expect(seen).toContain('날다');
-    expect(seen).toContain('대다');
-    expect(seen).toContain('공개');
-    // 용언 경로는 사전형 히트 시 활용형·명사 exact에 안 묶임
-    expect(seen.filter((q) => q === '대어')).toHaveLength(0);
+    const daeeo = await resolveStdictPosForTarget(
+      {
+        id: 'series:prefix:대어',
+        q: '대어',
+        allowLemmaTry: true,
+        kind: 'series',
+        label: '대어@',
+        ruleKind: 'ambiguous',
+      },
+      { posIndex },
+    );
+    expect(daeeo.q).toBe('대다');
+    expect(daeeo.verdict).toBe('predicate');
+
     expect(summary.confirmedPredicate.map((x) => x.label).sort()).toEqual([
       '날아@',
       '대어@',
