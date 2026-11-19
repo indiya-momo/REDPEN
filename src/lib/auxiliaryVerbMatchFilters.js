@@ -130,6 +130,30 @@ const DEP_NOUN_JOSA_ON_HEAD =
   /(?:체를|체를|듯도|듯이|만은|만도|것을|줄을|줄은|듯을|체는|체가)$/u;
 
 /**
+ * 종결 `-ㄴ가/-은가/-는가/-던가` + 보다(보·봐…) — 해설: 이미 띄어 쓰는 올바른 표기.
+ * stem `가 봐` 등이 `사랑인가 봐`를 본조로 오인하지 않게.
+ */
+const INTERROGATIVE_GA_BEFORE_BODA = /(?:인|은|는|던)가$/u;
+
+/** 보다 계열 onset (stem 뒤절) */
+const BODA_TAIL_ONSETS = new Set([
+  '보',
+  '본',
+  '볼',
+  '봐',
+  '봤',
+  '봐서',
+  '보니',
+]);
+
+/**
+ * 이미 완결된 `있어/없어` 뒤의 「보기만」— 명사 「보기」, 보조 보다 아님.
+ * (`먹어 보기만`은 본용언 `먹어`라 유지)
+ */
+const COMPLETE_ITDA_BEFORE_BOGI =
+  /(?:있어|없어|있었다|없었다|있으니|없으니|있으면|없으면)$/u;
+
+/**
  * @param {string} headCapture
  */
 export function headEndsWithParticleBeforeAux(headCapture) {
@@ -141,6 +165,34 @@ export function headEndsWithParticleBeforeAux(headCapture) {
  */
 export function headEndsWithDepNounJosa(headCapture) {
   return DEP_NOUN_JOSA_ON_HEAD.test(headCapture.trim());
+}
+
+/**
+ * @param {string} stemHead
+ * @param {string} stemTail
+ * @param {string} headCapture
+ */
+export function isInterrogativeGaBeforeBoda(stemHead, stemTail, headCapture) {
+  if (stemHead !== '가') return false;
+  const onset = String(stemTail ?? '').charAt(0);
+  if (!BODA_TAIL_ONSETS.has(onset) && !BODA_TAIL_ONSETS.has(stemTail)) {
+    return false;
+  }
+  return INTERROGATIVE_GA_BEFORE_BODA.test(headCapture.trim());
+}
+
+/**
+ * @param {string} stemHead
+ * @param {string} stemTail
+ * @param {string} headCapture
+ * @param {RegExpExecArray} match
+ */
+export function isNounBogiManAfterItda(stemHead, stemTail, headCapture, match) {
+  if (stemHead !== '어' && stemHead !== '아') return false;
+  if (stemTail !== '보' && stemTail !== '봐') return false;
+  if (!COMPLETE_ITDA_BEFORE_BOGI.test(headCapture.trim())) return false;
+  const tailCapture = String(match[2] ?? '').trim();
+  return /^보기만/.test(tailCapture);
 }
 
 /**
@@ -240,10 +292,16 @@ export function shouldSkipAuxiliaryVerbMatch(rule, match) {
     if (headEndsWithParticleBeforeAux(headCapture)) return true;
     if (headEndsWithDepNounJosa(headCapture)) return true;
     if (isPhraseBoundBeforeHada(stemHead, stemTail, headCapture)) return true;
-  } else if (
-    isSpacedPhraseBoundBeforeHada(stemHead, stemTail, headCapture, match)
-  ) {
-    return true;
+  } else {
+    if (isSpacedPhraseBoundBeforeHada(stemHead, stemTail, headCapture, match)) {
+      return true;
+    }
+    if (isInterrogativeGaBeforeBoda(stemHead, stemTail, headCapture)) {
+      return true;
+    }
+    if (isNounBogiManAfterItda(stemHead, stemTail, headCapture, match)) {
+      return true;
+    }
   }
 
   return false;

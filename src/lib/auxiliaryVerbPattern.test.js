@@ -116,6 +116,15 @@ describe('auxiliaryVerbPattern', () => {
     expect(matches(rules[0], '보라아하다')).toBe(false);
   });
 
+  it('라 지·아 진 — 지붕을·진지하게 명사·부사 오탐 없음', () => {
+    const raJi = buildAuxiliaryVerbFindRules('라 지')[0];
+    expect(matches(raJi, '따라 지붕을')).toBe(false);
+    expect(matches(raJi, '따라 지다')).toBe(true);
+
+    const aJin = buildAuxiliaryVerbFindRules('아 진')[0];
+    expect(matches(aJin, '앉아 진지하게')).toBe(false);
+  });
+
   it('어 보 — 띄움만(먹어 보)', () => {
     const rules = buildAuxiliaryVerbFindRules('어 보');
     expect(rules.length).toBe(1);
