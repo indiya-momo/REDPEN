@@ -1700,7 +1700,7 @@ export default function MainScreen({
 
   const [proofreadPdfBusy, setProofreadPdfBusy] = useState(false);
 
-  /** 「PDF 교정본 다운로드」 — 화면에 보이는 맞춤법·표기통일 기준 검수(본+보 등)·고른 통일형 */
+  /** 「PDF 교정본 다운로드」 — proof | indesignReplace */
   const handleProofreadPdfExport = useCallback(async (exportTab = 'spelling') => {
     if (guestBrowseBlocksResultExport()) {
       void showAppAlert({
@@ -1711,6 +1711,22 @@ export default function MainScreen({
       return;
     }
     if (!pdf.pdf || proofreadPdfBusy) return;
+
+    // 베타 기본 = 지금 교정본(확인). 인디자인용은 명시 선택만.
+    const wantProof = await showAppConfirm({
+      title: 'PDF 다운로드',
+      message:
+        '어떤 PDF로 받을까요?\n\n' +
+        '· 확인 → 지금 교정본(화면과 같은 표시)\n' +
+        '· 인디자인용 → Acrobat Replace(자동 반영은 조건에 따라 달라질 수 있음)',
+      confirmLabel: '지금 교정본',
+      cancelLabel: '인디자인용',
+    });
+    /** @type {'proof' | 'indesignReplace'} */
+    const mode = wantProof ? 'proof' : 'indesignReplace';
+    const title =
+      mode === 'indesignReplace' ? '인디자인용 PDF 다운로드' : 'PDF 교정본 다운로드';
+
     setProofreadPdfBusy(true);
     try {
       const [{ exportProofreadPdf }, { PdfAnnotExportError }, { collectAnnotFindings }] =
@@ -1729,16 +1745,15 @@ export default function MainScreen({
         unifyGroups: unifyBuildSessionExportGroups(),
         isInstanceVisible: ruleCheck.isInstanceVisible,
         pdfFileName: pdf.pdfFileName,
+        mode,
       };
-      // 넣을 결과가 없으면 하루 다운로드 횟수를 쓰지 않는다
       if (!collectAnnotFindings(exportInput).length) {
         await showAppAlert({
-          title: 'PDF 교정본 다운로드',
+          title,
           message: '교정본에 넣을 검수 결과가 없습니다.',
         });
         return;
       }
-      // 베타 하루 다운로드 한도 — 「검수 결과 다운로드」(엑셀)와 같은 횟수·안내
       const allowed = await assertBetaDailyExportOrAlert(authUid, {
         authEmail,
         exportTab,
@@ -1749,13 +1764,20 @@ export default function MainScreen({
         const result = await exportProofreadPdf(exportInput);
         if (!result.total) {
           await showAppAlert({
-            title: 'PDF 교정본 다운로드',
-            message: '교정본에 넣을 검수 결과가 없습니다.',
+            title,
+            message:
+              mode === 'indesignReplace' && result.notice
+                ? result.notice
+                : '교정본에 넣을 검수 결과가 없습니다.',
           });
+          return;
+        }
+        if (mode === 'indesignReplace' && result.notice) {
+          await showAppAlert({ title, message: result.notice });
         }
       } catch (err) {
         if (err instanceof PdfAnnotExportError) {
-          await showAppAlert({ title: 'PDF 교정본 다운로드', message: err.message });
+          await showAppAlert({ title, message: err.message });
           return;
         }
         throw err;
