@@ -6,7 +6,7 @@ import {
 import DetailsChevron from './DetailsChevron.jsx';
 
 /**
- * 맞춤법 탭 「띄어쓰기」 폴더 — 묶음 3개 on/off.
+ * 맞춤법 탭 「띄어쓰기」 폴더 — 묶음 on/off.
  * @param {{
  *   spacingFolderEnabled?: Record<string, boolean>,
  *   onSpacingFolderToggle: (bundleId: string) => void,

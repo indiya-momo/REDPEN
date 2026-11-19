@@ -15,6 +15,7 @@ describe('normalizeRuleSet project meta', () => {
       numberUnit: true,
       dependentRieulKka: false,
       placeAffix: false,
+      punct: false,
     });
   });
 
