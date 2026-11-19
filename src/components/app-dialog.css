@@ -378,3 +378,52 @@
   background: #fff;
   border-color: #a8a8a8;
 }
+
+.app-dialog__panel--choice {
+  min-width: min(22rem, calc(100vw - 2rem));
+}
+
+.app-dialog__choice-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  width: 100%;
+  align-self: stretch;
+}
+
+.app-dialog__choice-item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.65rem 0.75rem;
+  align-items: start;
+  text-align: start;
+}
+
+.app-dialog__choice-btn {
+  flex: 0 0 auto;
+  min-width: 7.5rem;
+  width: max-content;
+  max-width: 100%;
+  white-space: nowrap;
+}
+
+.app-dialog__choice-meta {
+  min-width: 0;
+  padding-top: 0.2rem;
+}
+
+.app-dialog__choice-desc,
+.app-dialog__choice-note {
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.45;
+  color: var(--color-text-secondary);
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.app-dialog__choice-note {
+  margin-top: 0.25rem;
+  font-size: 0.8rem;
+  color: var(--color-text-muted, #7a7168);
+}

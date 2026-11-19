@@ -6,11 +6,21 @@ import {
 } from '../lib/appDialog.js';
 
 /**
- * @typedef {import('react').ReactNode} ReactNode */
+ * @typedef {import('react').ReactNode} ReactNode
+ */
 
 /**
  * @typedef {{
- *   mode: 'alert' | 'confirm',
+ *   id: string,
+ *   label: string,
+ *   description?: string,
+ *   note?: string,
+ * }} ChoiceOption
+ */
+
+/**
+ * @typedef {{
+ *   mode: 'alert' | 'confirm' | 'choice',
  *   title?: string,
  *   message?: string,
  *   messageNode?: ReactNode,
@@ -19,12 +29,17 @@ import {
  *   cancelLabel?: string,
  *   showGuideHand?: boolean,
  *   titleAlign?: 'start' | 'center',
+ *   options?: ChoiceOption[],
  * }} DialogState
  */
 
 export default function AppDialogHost() {
   const [state, setState] = useState(/** @type {DialogState | null} */ (null));
-  const resolverRef = useRef(/** @type {{ resolve: (v: boolean | void) => void } | null} */ (null));
+  const resolverRef = useRef(
+    /** @type {{ resolve: (v: boolean | void | string | null) => void } | null} */ (
+      null
+    ),
+  );
   const setStateRef = useRef(setState);
   setStateRef.current = setState;
 
@@ -54,6 +69,18 @@ export default function AppDialogHost() {
           confirmLabel: opts.confirmLabel || '확인',
           cancelLabel: opts.cancelLabel || '취소',
           showGuideHand: Boolean(opts.showGuideHand),
+          titleAlign: opts.titleAlign === 'start' ? 'start' : 'center',
+        });
+      }),
+    choice: (opts) =>
+      new Promise((resolve) => {
+        resolverRef.current = { resolve };
+        setStateRef.current({
+          mode: 'choice',
+          title: opts.title || '선택',
+          message: opts.message ?? '',
+          messageNode: opts.messageNode,
+          options: Array.isArray(opts.options) ? opts.options : [],
           titleAlign: opts.titleAlign === 'start' ? 'start' : 'center',
         });
       }),
@@ -90,10 +117,12 @@ export default function AppDialogHost() {
       copyableUrl={state.copyableUrl}
       confirmLabel={state.confirmLabel}
       cancelLabel={state.cancelLabel}
+      options={state.options}
       showGuideHand={Boolean(state.showGuideHand)}
       titleAlign={state.titleAlign === 'start' ? 'start' : 'center'}
       onConfirm={() => finish(state.mode === 'confirm')}
-      onCancel={() => finish(false)}
+      onCancel={() => finish(state.mode === 'choice' ? null : false)}
+      onChoice={(id) => finish(id)}
     />
   );
 }
