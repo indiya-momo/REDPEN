@@ -162,17 +162,19 @@ describe('featureFlags', () => {
     expect(isUnifyStdictPosReviewEnabled()).toBe(true);
   });
 
-  it('띄어쓰기 범주는 dev·프로덕션 모두 env가 true일 때만 켜진다', () => {
+  it('띄어쓰기 범주는 dev·프로덕션 모두 기본 켜짐, env가 false일 때만 꺼진다', () => {
     import.meta.env.DEV = true;
     import.meta.env.VITE_SPACING_CATEGORY = undefined;
+    expect(isSpacingCategoryEnabled()).toBe(true);
+    import.meta.env.VITE_SPACING_CATEGORY = 'false';
     expect(isSpacingCategoryEnabled()).toBe(false);
     import.meta.env.VITE_SPACING_CATEGORY = 'true';
     expect(isSpacingCategoryEnabled()).toBe(true);
 
     import.meta.env.DEV = false;
     import.meta.env.VITE_SPACING_CATEGORY = undefined;
-    expect(isSpacingCategoryEnabled()).toBe(false);
-    import.meta.env.VITE_SPACING_CATEGORY = 'true';
     expect(isSpacingCategoryEnabled()).toBe(true);
+    import.meta.env.VITE_SPACING_CATEGORY = 'false';
+    expect(isSpacingCategoryEnabled()).toBe(false);
   });
 });

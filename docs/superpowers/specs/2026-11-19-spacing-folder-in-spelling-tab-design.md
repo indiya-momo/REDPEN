@@ -269,3 +269,18 @@
 - 실험 UI: `src/components/SpacingCategoryPanel.jsx` (제거 대상)
 - 결과 분류: `src/lib/checkResultsAccordion.js` — `partitionSpellingResultEntries`
 - 세트 복제·criteria: `src/hooks/useRuleSets.js`, `src/lib/sharePackage.js`
+
+---
+
+## 결정 변경 메모 (2026-11-19 추가) — 보조용언 비아/어 → 띄어쓰기 폴더
+
+위 「비목표」의 「보조용언 일반 모듈 — 본조 탭·나중 범위」 중 **비아/어 연결 + 보조용언**만 앞당겨 이 폴더로 옮겼다.
+
+- **이유:** 보조용언을 붙여 쓸 수 있는 것은 본용언이 -아/-어일 때뿐(제47항). -지·-고·-게·-도록·-다(가)·-(으)러·-(으)라 뒤 붙임(먹지마·먹다보니·먹으러갔다)은 「선택」이 아니라 띄어쓰기 오류라, 본조(표기 통일) 탭보다 맞춤법 띄어쓰기에 맞다.
+- **묶음:** `nonAeoAux` 「본용언+보조용언(-아/-어 아닌 경우)」 → 모듈 `non-aeo-aux` (`src/lib/nonAeoAuxSpacing.js`). 묶음 순서는 맨 뒤.
+- **기본값:** 다른 묶음과 달리 **기본 켜짐**(본조 탭에서 보이던 카드를 대신하므로). 저장값에 키가 없거나 boolean이 아니면 묶음 기본값을 쓴다(나머지 묶음은 그대로 false).
+- **판정 공유:** 연결형 `auxiliaryConnective.js`, 보조용언 onset은 시트 `bon-bojo-rules.json`, 사전 한 단어(내다보다·들여다보다) 제외는 `stdict-verb-forms.json`, 형태소 확인은 Kiwi(fail-closed) — 본조와 같은 판정. 호출 지점만 `findHits(text)`.
+  `findHits`가 동기라 맞춤법 검수 직전 `prepareNonAeoAuxSpacing`이 사전 추출본·Kiwi를 준비한다.
+- **본조 쪽:** 「본용언이 (-아/-어) 가 아닌 경우 : 띄어쓰기 필수」 체크 줄(말다·게이트)을 없앴다. 붙여쓰기 칸의 비아/어 발견은 붙임·띄움 모두 본조 결과에서 뺀다(두 탭 중복 방지). 시트의 `verb-malda` 항목은 남아 있지만 규칙은 항상 꺼진다.
+- **플래그:** `VITE_SPACING_CATEGORY`는 기본 켜짐으로 바꿨다(`=false`일 때만 끔). 특정 항목만 플래그를 우회하는 특례는 두지 않는다.
+- `official-aux`(고시 보조용언 일반)는 여전히 폴더 밖이다.

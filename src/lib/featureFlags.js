@@ -144,11 +144,12 @@ export function isUnifyStdictPosReviewEnabled() {
 }
 
 /**
- * 띄어쓰기 탭(세종·수사 등 범주 검사).
- * - useRuleCheck·ruleEngine에 넣지 않음. 탭·패널만.
- * - dev·프로덕션 모두 기본 꺼짐. `VITE_SPACING_CATEGORY=true` 일 때만.
- * - 꺼져 있으면 탭·검사·하이라이트를 만들지 않는다.
+ * 맞춤법 탭 「띄어쓰기」 폴더(세종·수사·비아/어 보조용언 등 범주 검사).
+ * - ruleEngine에 넣지 않음. 시트 결과 뒤에 붙인다(`spacingFolderCheck.js`).
+ * - 2026-11-19부터 dev·프로덕션 모두 기본 켜짐(본조 탭의 비아/어 카드를 이 폴더로 옮김).
+ *   `VITE_SPACING_CATEGORY=false` 일 때만 끔.
+ * - 꺼져 있으면 폴더·검사·하이라이트를 만들지 않는다.
  */
 export function isSpacingCategoryEnabled() {
-  return import.meta.env.VITE_SPACING_CATEGORY === 'true';
+  return import.meta.env.VITE_SPACING_CATEGORY !== 'false';
 }
