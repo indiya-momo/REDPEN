@@ -2,21 +2,26 @@
  * 본용언+보조용언 2차.
  * 합성 기본형이 추출본(`stdict-verb-forms.json`)에 있으면 띄운 발견은 붙여 쓰라고 표시한다.
  * 3음절 띄어쓰기 칸은 본용언 기본형의 사전 표제어에 `-`가 있을 때만 남긴다(붙임표만 API).
- * 키위는 그 기본형을 만들 때만 쓴다. 1차 찾기(ruleEngine)는 건드리지 않는다.
+ * 붙여쓰기 가능 칸에서는 추출본 띄움 필수 활용형(복합 본용언)을 빼고,
+ * 단일어·mixed·미등재와 bon_allow 예외(깨뜨려 등)는 남긴다.
+ * 키위는 긴 합성어 기본형을 만들 때만 쓴다. 1차 찾기(ruleEngine)는 건드리지 않는다.
  */
 
 import {
   auxiliarySearchTailsFromBonBojoItem,
   bonBojoDisplayLabelForItem,
   bonBojoListItem,
+  bonVerbAllowForItemId,
   getBonBojoGroups,
   BON_BOJO_LONG_COMPOUND_SPLIT_ID,
 } from './bonBojoRules.js';
+import { isBonVerbHeadOnAllowList } from './auxiliaryVerbMatchFilters.js';
 import { analyzeLine } from './kiwiMorph/analyze.js';
 import { fetchStdictExact } from './unifyStdictPos.js';
 import {
   clearStdictVerbFormsCache,
   ensureStdictVerbFormsLoaded,
+  isSpaceRequiredVerbForm,
   resolveSpaceRequiredLemma,
 } from './stdictVerbForms.js';
 
@@ -274,6 +279,25 @@ function splitHead(suggestedText) {
   return head.replace(/[^\uAC00-\uD7A3]/g, '');
 }
 
+/**
+ * 긴 합성어 띄어쓰기 제안에서 사전 질의용 기본형(citation)을 만든다.
+ * API·로컬 게이트 측정이 같은 앞단을 쓰도록 루프에서 분리한다.
+ * @param {{ suggestedText?: string }} row
+ * @param {typeof analyzeLine} analyze
+ */
+export function citationOfSplitRow(row, analyze) {
+  const head = splitHead(row?.suggestedText);
+  let tokens = null;
+  if (head) {
+    try {
+      tokens = analyze(head)?.tokens ?? null;
+    } catch {
+      tokens = null;
+    }
+  }
+  return bonVerbCitation(tokens);
+}
+
 export function clearAuxiliaryDictSolidCache() {
   rawCache.clear();
   clearStdictVerbFormsCache();
@@ -309,6 +333,48 @@ async function loadStdict(q, opts = {}) {
 export async function isRegisteredPredicateLemma(lemma, opts = {}) {
   await ensureStdictVerbFormsLoaded(opts);
   return Boolean(resolveSpaceRequiredLemma(lemma, opts.surface));
+}
+
+
+/**
+ * 붙여쓰기 가능 칸에서 본용언 활용형. 띄운 제안·표면의 첫 어절, 없으면 보조 onset으로 자른다.
+ * @param {import('./ruleEngine.js').MatchInstance | null | undefined} inst
+ * @param {string} [itemId]
+ */
+export function bonVerbHeadFromAuxInstance(inst, itemId = '') {
+  const suggested = String(inst?.suggestedText ?? '').trim();
+  if (/\s/.test(suggested)) return headEojeol(suggested);
+  const matched = String(inst?.matchedText ?? '').trim();
+  if (/\s/.test(matched)) return headEojeol(matched);
+  const solid = matched.replace(/[^\uAC00-\uD7A3]/g, '');
+  if (!solid) return '';
+  for (const onset of stemOnsetsForItem(itemId)) {
+    if (!onset) continue;
+    for (let i = 2; i <= solid.length - onset.length; i += 1) {
+      if (solid.startsWith(onset, i)) return solid.slice(0, i);
+    }
+  }
+  return '';
+}
+
+/**
+ * 추출본에 있는 3음절+ 복합 본용언은 띄움 필수 칸으로 보내고,
+ * 단일어·mixed·미등재와 bon_allow 예외는 붙여쓰기 가능 칸에 남긴다.
+ * @param {import('./ruleEngine.js').GroupedResult[]} groups
+ */
+export function pruneCompoundHeadsFromGlueOptional(groups) {
+  return (groups ?? []).map((group) => {
+    if (group?.patternKind !== 'auxiliary-verb') return group;
+    if (group.auxSplitLongCompound || group.auxNonAeoSpace) return group;
+    const allow = bonVerbAllowForItemId(group.bonBojoItemId);
+    const instances = (group.instances ?? []).filter((inst) => {
+      const head = bonVerbHeadFromAuxInstance(inst, group.bonBojoItemId);
+      if (!head) return true;
+      if (isBonVerbHeadOnAllowList(head, '', allow)) return true;
+      return !isSpaceRequiredVerbForm(head);
+    });
+    return { ...group, instances };
+  });
 }
 
 /**
@@ -369,16 +435,7 @@ export async function enrichAuxiliaryDictSolid(groups, opts = {}) {
 
   const callsAtStart = sessionStdictCalls;
   for (const row of pendingSplit) {
-    const head = splitHead(row.suggestedText);
-    let tokens = null;
-    if (head) {
-      try {
-        tokens = analyze(head)?.tokens ?? null;
-      } catch {
-        tokens = null;
-      }
-    }
-    const citation = bonVerbCitation(tokens);
+    const citation = citationOfSplitRow(row, analyze);
     if (!citation) {
       jobs.push({ ...row, lemma: '', kind: 'plain' });
       continue;
@@ -395,7 +452,7 @@ export async function enrichAuxiliaryDictSolid(groups, opts = {}) {
 
   if (!jobs.length) {
     lastRunStdictCalls = sessionStdictCalls - callsAtStart;
-    return list;
+    return pruneCompoundHeadsFromGlueOptional(list);
   }
 
   for (const job of jobs) {
@@ -411,9 +468,10 @@ export async function enrichAuxiliaryDictSolid(groups, opts = {}) {
 
   const hasHit = jobs.some((job) => job.ok);
   const hasPlain = jobs.some((job) => job.kind === 'plain');
-  if (!hasHit && !hasPlain) return list;
-
-  return list.flatMap((group, groupIndex) => {
+  const next =
+    !jobs.length || (!hasHit && !hasPlain)
+      ? list
+      : list.flatMap((group, groupIndex) => {
     const plainIndexes = new Set(
       jobs
         .filter((job) => job.kind === 'plain' && job.groupIndex === groupIndex)
@@ -446,4 +504,5 @@ export async function enrichAuxiliaryDictSolid(groups, opts = {}) {
     if (group.auxSplitLongCompound && instances.length === 0) return [];
     return [{ ...group, instances }];
   });
+  return pruneCompoundHeadsFromGlueOptional(next);
 }
