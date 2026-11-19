@@ -1,10 +1,25 @@
 {
   "chips": [
-    { "slug": "getting-started/first-check", "label": "첫 검수" },
-    { "slug": "spelling/highlights", "label": "하이라이트" },
-    { "slug": "reference/privacy", "label": "원고 저장" },
-    { "slug": "account/quota", "label": "검수권" },
-    { "slug": "reference/supported-pdf", "label": "PDF 형식" }
+    {
+      "slug": "getting-started/first-check",
+      "label": "첫 검수"
+    },
+    {
+      "slug": "spelling/highlights",
+      "label": "하이라이트"
+    },
+    {
+      "slug": "reference/privacy",
+      "label": "원고 저장"
+    },
+    {
+      "slug": "account/quota",
+      "label": "검수권"
+    },
+    {
+      "slug": "reference/supported-pdf",
+      "label": "PDF 형식"
+    }
   ],
   "popular": [
     {
@@ -43,8 +58,14 @@
       "id": "getting-started",
       "label": "시작하기",
       "items": [
-        { "slug": "getting-started/first-check", "label": "첫 검수하기" },
-        { "slug": "getting-started/panels", "label": "검수 화면 읽는 법" }
+        {
+          "slug": "getting-started/first-check",
+          "label": "첫 검수하기"
+        },
+        {
+          "slug": "getting-started/panels",
+          "label": "검수 화면 읽는 법"
+        }
       ]
     },
     {
@@ -88,33 +109,62 @@
             }
           ]
         },
-        { "slug": "spelling/export", "label": "결과 다운로드" }
+        {
+          "slug": "spelling/export",
+          "label": "결과 다운로드"
+        }
       ]
     },
     {
       "id": "consistency",
       "label": "표기 통일",
       "items": [
-        { "slug": "consistency/tabs", "label": "맞춤법과 표기 통일" },
-        { "slug": "consistency/unify", "label": "통일형·여러 항목 찾기" }
+        {
+          "slug": "consistency/tabs",
+          "label": "맞춤법과 표기 통일"
+        },
+        {
+          "slug": "consistency/unify",
+          "label": "통일형·여러 항목 찾기"
+        }
       ]
     },
     {
       "id": "project",
       "label": "프로젝트·기준",
-      "items": [{ "slug": "project/what-is-project", "label": "프로젝트란" }]
+      "items": [
+        {
+          "slug": "project/what-is-project",
+          "label": "프로젝트란"
+        }
+      ]
     },
     {
       "id": "account",
       "label": "계정·검수권",
-      "items": [{ "slug": "account/quota", "label": "검수권·피드백" }]
+      "items": [
+        {
+          "slug": "account/quota",
+          "label": "검수권·피드백"
+        }
+      ]
     },
     {
       "id": "reference",
       "label": "환경·자료",
       "items": [
-        { "slug": "reference/privacy", "label": "원고 저장 여부" },
-        { "slug": "reference/supported-pdf", "label": "지원 PDF·환경" }
+        {
+          "slug": "reference/privacy",
+          "label": "원고 저장 여부"
+        },
+        {
+          "slug": "reference/supported-pdf",
+          "label": "지원 PDF·환경"
+        },
+        {
+          "slug": "reference/stdict-license",
+          "label": "표준국어대사전 출처"
+        }
       ]
     }
   ]

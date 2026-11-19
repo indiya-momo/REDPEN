@@ -137,7 +137,8 @@ export function isUnifyPredicateSlmReviewEnabled() {
 /**
  * 표기 통일 추천 — 표준국어대사전 품사 2차 (규칙 후 보완, 목록 이동).
  * - 기본 꺼짐 (`VITE_UNIFY_STDICT=true` 일 때만)
- * @see project-docs/unify-stdict-pos-review-design-2026-07-31.md
+ * - 조회는 로컬 `stdict-pos-index.json` (API 폴백 없음)
+ * @see project-docs/unify-stdict-local-pos-index-design-2026-11-19.md
  */
 export function isUnifyStdictPosReviewEnabled() {
   return import.meta.env.VITE_UNIFY_STDICT === 'true';

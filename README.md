@@ -15,6 +15,8 @@
 
 기획·시트 문서는 [`project-docs/`](project-docs/) 에 있습니다.
 
+표준국어대사전 추출·색인(`public/data/stdict-*.json`) 출처·라이선스: [`public/data/STDICT-NOTICE.md`](public/data/STDICT-NOTICE.md) (CC BY-SA 2.0 KR).
+
 조판 PDF에서 맞춤법·표기 일관성 규칙을 **탐지**하고 위치를 **하이라이트**하는 브라우저 로컬 도구.
 
 **기획 뼈대:** [project-docs/product-spine.md](project-docs/product-spine.md)

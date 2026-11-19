@@ -6,6 +6,25 @@
 import { looksLikePredicateKey } from './unifyPredicateBucket.js';
 import { classifyUnifyListStem } from './unifyListStemTriage.js';
 import { sortClusterGroups } from './unifyCandidateGrouping.js';
+import {
+  ensureStdictPosIndexLoaded,
+  lookupStdictPosHits,
+  stdictPosIndexLoadError,
+} from './stdictPosIndex.js';
+
+/** 색인 로드 실패 — API로 넘기지 않음 (구 STDICT_KEY_MISSING 자리). */
+const STDICT_HARD_ERRORS = new Set([
+  'STDICT_INDEX_LOAD_FAILED',
+  'STDICT_INDEX_EMPTY',
+  'STDICT_KEY_MISSING',
+]);
+
+/**
+ * @param {string | null | undefined} error
+ */
+function isStdictHardError(error) {
+  return Boolean(error && STDICT_HARD_ERRORS.has(error));
+}
 
 /**
  * @param {string} key
@@ -282,35 +301,40 @@ export function enqueueStdictPosTargets(groups) {
 }
 
 /**
+ * 로컬 품사 색인 exact. API 폴백 없음.
  * @param {string} q
- * @param {{ fetchImpl?: typeof fetch, timeoutMs?: number }} [opts]
+ * @param {{
+ *   fetchImpl?: typeof fetch,
+ *   timeoutMs?: number,
+ *   posIndex?: import('./stdictPosIndex.js').StdictPosIndexData,
+ *   dataUrl?: string,
+ * }} [opts]
  */
 export async function fetchStdictExact(q, opts = {}) {
-  const fetchImpl = opts.fetchImpl ?? fetch;
-  const timeoutMs = opts.timeoutMs ?? 15_000;
-  const url = `/api/stdict?q=${encodeURIComponent(q)}`;
-  const res = await fetchImpl(url, {
-    method: 'GET',
-    signal: AbortSignal.timeout(timeoutMs),
+  await ensureStdictPosIndexLoaded({
+    posIndex: opts.posIndex,
+    fetchImpl: opts.fetchImpl,
+    dataUrl: opts.dataUrl,
   });
-  if (res.status === 503) {
-    return { error: 'STDICT_KEY_MISSING', hits: [], headwords: [] };
+  const hard = stdictPosIndexLoadError();
+  if (hard) {
+    return { error: hard, hits: [], headwords: [] };
   }
-  if (!res.ok) {
-    return { error: `HTTP_${res.status}`, hits: [], headwords: [] };
+  const bare = hangulOnlyKey(q);
+  if (!bare) {
+    return { error: null, hits: [], headwords: [] };
   }
-  const text = await res.text();
-  let data;
-  try {
-    data = JSON.parse(text);
-  } catch {
-    return { error: 'BAD_JSON', hits: [], headwords: [] };
-  }
-  return {
-    hits: parseStdictSearchHits(data),
-    headwords: parseStdictSearchHits(data, { keepMarks: true }),
-    error: null,
-  };
+  const raw = lookupStdictPosHits(bare);
+  /** @type {{ word: string, pos: string }[]} */
+  const headwords = raw.map((h) => ({ word: h.word, pos: h.pos }));
+  /** @type {{ word: string, pos: string }[]} */
+  const hits = raw.map((h) => ({
+    word: String(h.word ?? '')
+      .replace(/[-^]/g, '')
+      .trim() || '?',
+    pos: h.pos,
+  }));
+  return { error: null, hits, headwords };
 }
 
 /**
@@ -340,7 +364,7 @@ export async function resolveStdictPosForTarget(target, opts = {}) {
 
   for (const usedQ of queries) {
     const result = await fetchStdictExact(usedQ, opts);
-    if (result.error === 'STDICT_KEY_MISSING') {
+    if (isStdictHardError(result.error)) {
       return {
         id: target.id,
         q: usedQ,
@@ -530,8 +554,12 @@ export async function runStdictPosReviewOnClusterGroups(groups, opts = {}) {
       confirmedNoun,
       confirmedPredicate,
       missing,
-      ...(resolved.some((r) => r.error === 'STDICT_KEY_MISSING')
-        ? { error: 'STDICT_KEY_MISSING' }
+      ...(resolved.some((r) => isStdictHardError(r.error))
+        ? {
+            error:
+              resolved.find((r) => isStdictHardError(r.error))?.error ??
+              'STDICT_INDEX_LOAD_FAILED',
+          }
         : {}),
     },
     marks: {
