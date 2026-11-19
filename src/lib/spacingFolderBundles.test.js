@@ -14,7 +14,6 @@ describe('spacingFolderBundles', () => {
     expect(SPACING_FOLDER_BUNDLES.map((b) => b.bundleId)).toEqual([
       'numberUnit',
       'dependentRieulKka',
-      'placeAffix',
       'punct',
       'nonAeoAux',
     ]);
@@ -29,9 +28,6 @@ describe('spacingFolderBundles', () => {
       'n-ba',
       'rieul-kka',
     ]);
-    expect(getSpacingFolderBundle('placeAffix')?.moduleIds).toEqual([
-      'place-affix',
-    ]);
     expect(getSpacingFolderBundle('punct')?.moduleIds).toEqual(['punct']);
     expect(getSpacingFolderBundle('nonAeoAux')?.moduleIds).toEqual([
       'non-aeo-aux',
@@ -42,7 +38,6 @@ describe('spacingFolderBundles', () => {
     expect(defaultSpacingFolderEnabled()).toEqual({
       numberUnit: false,
       dependentRieulKka: false,
-      placeAffix: false,
       punct: false,
       nonAeoAux: true,
     });
@@ -53,13 +48,11 @@ describe('spacingFolderBundles', () => {
       normalizeSpacingFolderEnabled({
         numberUnit: true,
         dependentRieulKka: 'yes',
-        placeAffix: 1,
         futureKey: true,
       }),
     ).toEqual({
       numberUnit: true,
       dependentRieulKka: false,
-      placeAffix: false,
       punct: false,
       nonAeoAux: true,
     });
@@ -86,7 +79,7 @@ describe('spacingFolderBundles', () => {
 
   it('listEnabledSpacingModuleRefs expands in bundle then module order', () => {
     const refs = listEnabledSpacingModuleRefs({
-      placeAffix: true,
+      punct: true,
       numberUnit: true,
       dependentRieulKka: false,
       nonAeoAux: false,
@@ -95,10 +88,10 @@ describe('spacingFolderBundles', () => {
       'numeral',
       'man-eok-jo',
       'digit-unit',
-      'place-affix',
+      'punct',
     ]);
     expect(refs[0].bundleId).toBe('numberUnit');
-    expect(refs[3].bundleId).toBe('placeAffix');
+    expect(refs[3].bundleId).toBe('punct');
   });
 
   it('spacingCategoryForBundle matches spacing:{bundleId}', () => {

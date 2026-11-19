@@ -20,7 +20,6 @@ describe('spacingCategoryRegistry', () => {
       'han-beon',
       'daeum-nal',
       'official-aux',
-      'place-affix',
       'punct',
       'non-aeo-aux',
     ]);

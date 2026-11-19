@@ -14,7 +14,6 @@ describe('normalizeRuleSet project meta', () => {
     expect(normalized.spacingFolderEnabled).toEqual({
       numberUnit: true,
       dependentRieulKka: false,
-      placeAffix: false,
       punct: false,
       nonAeoAux: true,
     });

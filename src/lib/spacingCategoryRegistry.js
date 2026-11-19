@@ -60,11 +60,6 @@ import {
   findOfficialAuxSpacingHits,
 } from './officialAuxSpacing.js';
 import {
-  PLACE_AFFIX_LABEL,
-  PLACE_AFFIX_TIP,
-  findPlaceAffixSpacingHits,
-} from './placeAffixSpacing.js';
-import {
   PUNCT_SPACING_LABEL,
   PUNCT_SPACING_TIP,
   findPunctSpacingHits,
@@ -151,12 +146,6 @@ export const SPACING_CATEGORY_DEFS = [
     label: OFFICIAL_AUX_LABEL,
     tip: OFFICIAL_AUX_TIP,
     findHits: findOfficialAuxSpacingHits,
-  },
-  {
-    id: 'place-affix',
-    label: PLACE_AFFIX_LABEL,
-    tip: PLACE_AFFIX_TIP,
-    findHits: findPlaceAffixSpacingHits,
   },
   {
     id: 'punct',
