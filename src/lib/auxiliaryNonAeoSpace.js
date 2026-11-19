@@ -219,7 +219,7 @@ export async function reclassifyNonAeoAuxInstances(groups, opts = {}) {
     let changed = false;
     for (const inst of group.instances ?? []) {
       const head = bonVerbHeadFromAuxInstance(inst, itemId);
-      if (classifyConnectiveBeforeAux(head) !== 'non-aeo') {
+      if (classifyConnectiveBeforeAux(head, itemId) !== 'non-aeo') {
         kept.push(inst);
         continue;
       }
