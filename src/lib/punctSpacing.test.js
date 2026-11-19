@@ -47,6 +47,57 @@ describe('findPunctSpacingHits — 종결·쉼표 뒤 공백', () => {
   });
 });
 
+describe('findPunctSpacingHits — 따옴표 라고·하고', () => {
+  it('"가자." 라고 → "가자."라고', () => {
+    expect(findPunctSpacingHits('"가자." 라고 했다')).toEqual([
+      expect.objectContaining({
+        matchedText: '" 라고',
+        suggestedText: '"라고',
+        kind: 'quote-rago',
+      }),
+    ]);
+  });
+
+  it('“안녕.” 이라고 → “안녕.”이라고 · 이미 붙인 것은 KEEP', () => {
+    expect(findPunctSpacingHits('“안녕.” 이라고 했다')).toEqual([
+      expect.objectContaining({
+        matchedText: '” 이라고',
+        suggestedText: '”이라고',
+        kind: 'quote-rago',
+      }),
+    ]);
+    expect(findPunctSpacingHits('“가자.”라고 했다')).toEqual([]);
+  });
+
+  it('"가자."하고 → "가자." 하고 · 이미 띈 것은 KEEP', () => {
+    expect(findPunctSpacingHits('"가자."하고 나섰다')).toEqual([
+      expect.objectContaining({
+        matchedText: '"하고',
+        suggestedText: '" 하고',
+        kind: 'quote-hago',
+      }),
+    ]);
+    expect(findPunctSpacingHits('"가자." 하고 나섰다')).toEqual([]);
+  });
+
+  it('하며·하는도 띄움', () => {
+    expect(findPunctSpacingHits('‘가자.’하며')).toEqual([
+      expect.objectContaining({
+        matchedText: '’하며',
+        suggestedText: '’ 하며',
+        kind: 'quote-hago',
+      }),
+    ]);
+    expect(findPunctSpacingHits('"끝."하는 순간')).toEqual([
+      expect.objectContaining({
+        matchedText: '"하는',
+        suggestedText: '" 하는',
+        kind: 'quote-hago',
+      }),
+    ]);
+  });
+});
+
 describe('findPunctSpacingHits — 닫는 부호·가운뎃점·단위 점', () => {
   it('《경주멍》 은 → 《경주멍》은', () => {
     expect(findPunctSpacingHits('《경주멍》 은 마음 가는')).toEqual([
