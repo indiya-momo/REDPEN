@@ -5,6 +5,7 @@ import {
   isSpaceRequiredCompoundLemma,
   isSpaceRequiredVerbForm,
   lemmasForSpaceRequiredForm,
+  resolveSpaceRequiredLemma,
   setStdictVerbFormsForTests,
   stdictVerbFormsLemmaCount,
 } from './stdictVerbForms.js';
@@ -51,5 +52,11 @@ describe('stdict-verb-forms.json', () => {
   it('들어오다처럼 본보조 등재 기본형을 추출본에서 본다', () => {
     expect(isSpaceRequiredCompoundLemma('들어오다')).toBe(true);
     expect(lemmasForSpaceRequiredForm('들어와')).toEqual(['들어오다']);
+  });
+
+  it('기본형이 없어도 활용형 유일이면 기본형을 돌려준다', () => {
+    expect(resolveSpaceRequiredLemma('', '들어와')).toBe('들어오다');
+    expect(resolveSpaceRequiredLemma('들어오다', '')).toBe('들어오다');
+    expect(resolveSpaceRequiredLemma('', '기다려')).toBe('');
   });
 });
