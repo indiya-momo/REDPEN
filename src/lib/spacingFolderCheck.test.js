@@ -176,7 +176,8 @@ describe('spacingFolderCheck', () => {
     expect(groups.length).toBeGreaterThan(0);
     expect(groups[0].category).toBe('spacing:dependentRieulKka');
     expect(groups[0].moduleId).toBe('rieul-kka');
-    expect(groups[0].tip).toContain('띄어쓰기');
+    // 결과 카드 설명 = 모듈 팁 (고정 문구 아님)
+    expect(groups[0].tip).toContain('-ㄹ까 보다');
     expect(groups[0].instances[0].moduleId).toBe('rieul-kka');
   });
 });

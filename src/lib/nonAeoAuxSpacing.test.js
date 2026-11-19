@@ -212,7 +212,7 @@ describe.skipIf(!kiwiReady)('맞춤법 탭 병합 — 실제 Kiwi', () => {
     });
     expect(groups.every((g) => g.category === 'spacing:nonAeoAux')).toBe(true);
     expect(
-      groups.map((g) => [g.instances[0].matchedText, g.instances[0].suggestedText]),
+      groups.flatMap((g) => g.instances.map((i) => [i.matchedText, i.suggestedText])),
     ).toEqual([
       ['그러다보니', '그러다 보니'],
       ['먹으러갔다', '먹으러 갔다'],

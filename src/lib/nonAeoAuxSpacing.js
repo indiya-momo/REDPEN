@@ -43,8 +43,7 @@ import { warmAuxiliaryMorphCache } from './auxiliaryMorphFilter.js';
 
 export const NON_AEO_AUX_SPACING_LABEL = '본용언+보조용언(-아/-어 아닌 경우)';
 export const NON_AEO_AUX_SPACING_TIP =
-  '한글 맞춤법 제47항: 보조용언은 본용언이 -아/-어일 때만 붙여 쓸 수 있습니다. ' +
-  '-지·-고·-게·-도록·-다(가)·-(으)러·-(으)라 뒤의 보조용언은 띄어 씁니다(먹지 마, 먹다 보니).';
+  '한글 맞춤법 제47항: 보조용언은 본용언이 -아/-어일 때만 붙여 씀';
 
 /**
  * '-다' + '가…'는 연결어미 -다가(먹다가·놀다간)와 겹친다. 보조 가다로 보지 않는다.
