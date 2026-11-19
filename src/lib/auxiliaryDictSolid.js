@@ -1,7 +1,7 @@
 /**
  * 본용언+보조용언 2차.
- * 합성 기본형이 사전에 용언으로 있으면 띄운 발견은 붙여 쓰라고 표시한다.
- * 3음절 띄어쓰기 칸은 본용언 기본형의 사전 표제어에 `-`가 있을 때만 남긴다.
+ * 합성 기본형이 추출본(`stdict-verb-forms.json`)에 있으면 띄운 발견은 붙여 쓰라고 표시한다.
+ * 3음절 띄어쓰기 칸은 본용언 기본형의 사전 표제어에 `-`가 있을 때만 남긴다(붙임표만 API).
  * 키위는 그 기본형을 만들 때만 쓴다. 1차 찾기(ruleEngine)는 건드리지 않는다.
  */
 
@@ -13,18 +13,17 @@ import {
   BON_BOJO_LONG_COMPOUND_SPLIT_ID,
 } from './bonBojoRules.js';
 import { analyzeLine } from './kiwiMorph/analyze.js';
+import { fetchStdictExact } from './unifyStdictPos.js';
 import {
-  fetchStdictExact,
-  verdictFromStdictHits,
-} from './unifyStdictPos.js';
+  clearStdictVerbFormsCache,
+  ensureStdictVerbFormsLoaded,
+  isSpaceRequiredCompoundLemma,
+} from './stdictVerbForms.js';
 
 const DICT_TIP = (lemma) => `표준국어대사전 「${lemma}」 등재`;
 
-/** @type {Map<string, boolean>} */
-const predicateCache = new Map();
-
 /**
- * 질의 → 사전 원문. 등재 판정과 붙임표 판정이 같은 조회를 다시 보내지 않게 한다.
+ * 붙임표(긴 합성어) 조회 캐시. 등재 판정은 `stdict-verb-forms.json`을 쓴다.
  * @type {Map<string, { error: string | null, hits: { word: string, pos: string }[], headwords: { word: string, pos: string }[] }>}
  */
 const rawCache = new Map();
@@ -276,11 +275,12 @@ function splitHead(suggestedText) {
 }
 
 export function clearAuxiliaryDictSolidCache() {
-  predicateCache.clear();
   rawCache.clear();
+  clearStdictVerbFormsCache();
 }
 
 /**
+ * 긴 합성어 붙임표 확인용. 등재 여부는 `isRegisteredPredicateLemma`를 쓴다.
  * @param {string} q
  * @param {{ fetchImpl?: typeof fetch, timeoutMs?: number }} [opts]
  */
@@ -302,41 +302,24 @@ async function loadStdict(q, opts = {}) {
 }
 
 /**
- * exact 히트 중 표제어가 lemma이고 품사가 용언이면 등재.
+ * 추출본 기본형 키에 있으면 등재(복합어·띄움 필수 묶음).
  * @param {string} lemma
- * @param {{ fetchImpl?: typeof fetch, timeoutMs?: number }} [opts]
+ * @param {{ verbForms?: import('./stdictVerbForms.js').StdictVerbFormsData, fetchImpl?: typeof fetch, dataUrl?: string }} [opts]
  */
 export async function isRegisteredPredicateLemma(lemma, opts = {}) {
   const q = String(lemma ?? '').trim();
   if (!q) return false;
-  if (!opts.fetchImpl && predicateCache.has(q)) return predicateCache.get(q);
-
-  const result = await loadStdict(q, opts);
-  if (result.error) return false;
-
-  const exactPred = (result.hits ?? []).some((hit) => {
-    const word = String(hit.word ?? '').replace(/[^\uAC00-\uD7A3]/g, '');
-    return word === q && /동사|형용사|보조/.test(hit.pos || '');
-  });
-  const verdict = verdictFromStdictHits(result.hits ?? []);
-  const yes =
-    exactPred ||
-    ((verdict === 'predicate' || verdict === 'mixed') &&
-      (result.hits ?? []).some((hit) => {
-        const word = String(hit.word ?? '').replace(/[^\uAC00-\uD7A3]/g, '');
-        return word === q;
-      }));
-
-  if (!opts.fetchImpl) predicateCache.set(q, yes);
-  return yes;
+  await ensureStdictVerbFormsLoaded(opts);
+  return isSpaceRequiredCompoundLemma(q);
 }
 
 /**
  * @param {import('./ruleEngine.js').GroupedResult[]} groups
- * @param {{ fetchImpl?: typeof fetch, timeoutMs?: number }} [opts]
+ * @param {{ fetchImpl?: typeof fetch, timeoutMs?: number, analyze?: typeof analyzeLine, verbForms?: object, dataUrl?: string }} [opts]
  */
 export async function enrichAuxiliaryDictSolid(groups, opts = {}) {
   const list = groups ?? [];
+  await ensureStdictVerbFormsLoaded(opts);
   /** @type {{ groupIndex: number, instIndex: number, lemma: string, kind: 'solid' | 'glued-solid' | 'registered' | 'plain', solid?: string }[]} */
   const jobs = [];
   const lemmas = new Set();

@@ -17,20 +17,24 @@ import {
   resetAuxiliaryDictSolidStdictCallCount,
   solidSurface,
 } from './auxiliaryDictSolid.js';
-import deureoodaRecord from './auxiliaryDictSolid.stdict-deureooda-2026-11-17.json';
+import { setStdictVerbFormsForTests } from './stdictVerbForms.js';
+
+/** 추출본 대신 쓰는 작은 fixture. 등재 판정만 본다. */
+const FIXTURE_VERB_FORMS = {
+  meta: { source: 'test' },
+  lemmas: {
+    들어오다: ['들어오니', '들어와'],
+    쉬어가다: ['쉬어가'],
+    날아오르다: ['날아올라'],
+    정리해주다: ['정리해줘'],
+  },
+};
 
 beforeEach(() => {
   clearAuxiliaryDictSolidCache();
   resetAuxiliaryDictSolidStdictCallCount();
+  setStdictVerbFormsForTests(FIXTURE_VERB_FORMS);
 });
-
-function recordedDeureoodaFetch() {
-  return async () => ({
-    status: 200,
-    ok: true,
-    text: async () => JSON.stringify(deureoodaRecord.body),
-  });
-}
 
 function dictFetch(word, pos, status = 200) {
   const body =
@@ -165,16 +169,17 @@ describe('auxiliaryDictSolid', () => {
     );
   });
 
-  it('붙여 쓴 표면도 사전 등재면 합성어로 표시한다', async () => {
+  it('붙여 쓴 표면도 추출본 등재면 합성어로 표시한다', async () => {
     const groups = [
       auxGroup('verb-gada', '(아/어) + 가다', '쉬어가라고'),
     ];
     const next = await enrichAuxiliaryDictSolid(groups, {
-      fetchImpl: dictFetch('쉬어가다', '동사'),
+      verbForms: FIXTURE_VERB_FORMS,
     });
     expect(isAuxiliaryDictSolidInstance(next[0].instances[0])).toBe(true);
     expect(next[0].instances[0].matchedText).toBe('쉬어가라고');
     expect(next[0].instances[0].tip).toBe('표준국어대사전 「쉬어가다」 등재');
+    expect(auxiliaryDictSolidStdictCallCount().lastRun).toBe(0);
   });
 
   it('날아 올라 → 날아오르다 / 날아올라, 1차 규칙이 잡는다', () => {
@@ -189,20 +194,19 @@ describe('auxiliaryDictSolid', () => {
     expect(matches({ ...rule, enabled: true }, '높이 날아 올라갔다.')).toBe(true);
   });
 
-  it('사전 용언 등재면 수정안과 설명을 붙인다', async () => {
+  it('추출본 용언 등재면 수정안과 설명을 붙인다', async () => {
     const groups = [
       auxGroup('verb-oda', '(아/어) + 오다', '들어 온'),
     ];
     const next = await enrichAuxiliaryDictSolid(groups, {
-      fetchImpl: dictFetch('들어오다', '동사'),
+      verbForms: FIXTURE_VERB_FORMS,
     });
     expect(next[0].instances[0].suggestedText).toBe('들어온');
     expect(next[0].instances[0].tip).toBe('표준국어대사전 「들어오다」 등재');
+    expect(auxiliaryDictSolidStdictCallCount().lastRun).toBe(0);
   });
 
-  it('오래 들어 온 노래와 방으로 들어 온을 고정 사전 응답만으로는 가르지 못한다', async () => {
-    expect(deureoodaRecord.recordedOn).toBe('2026-11-17');
-    expect(deureoodaRecord.body.channel.lastbuilddate).toBe('20261117200851');
+  it('오래 들어 온 노래와 방으로 들어 온을 추출본만으로는 가르지 못한다', async () => {
     const groups = [
       {
         ...auxGroup('verb-oda', '(아/어) + 오다', '들어 온'),
@@ -214,14 +218,14 @@ describe('auxiliaryDictSolid', () => {
       },
     ];
     const next = await enrichAuxiliaryDictSolid(groups, {
-      fetchImpl: recordedDeureoodaFetch(),
+      verbForms: FIXTURE_VERB_FORMS,
     });
     expect(next[0].instances[0].suggestedText).toBe('들어온');
     expect(next[0].instances[0].tip).toBe('표준국어대사전 「들어오다」 등재');
     expect(next[1].instances[0].suggestedText).toBe('들어온');
     expect(next[1].sourceText).toBe('방으로 들어 온 사람');
     const stats = auxiliaryDictSolidStdictCallCount();
-    expect(stats).toEqual({ lastRun: 1, session: 1 });
+    expect(stats).toEqual({ lastRun: 0, session: 0 });
   });
 
   it('3음절 띄어쓰기 표제어는 보조 기본형을 붙인다', () => {
@@ -264,6 +268,7 @@ describe('auxiliaryDictSolid', () => {
     };
     const next = await enrichAuxiliaryDictSolid([group], {
       analyze: analyzeHead,
+      verbForms: FIXTURE_VERB_FORMS,
       fetchImpl: dictByQuery({
         어루만지다: { word: '어루-만지다', pos: '동사' },
         생각하다: { word: '생각-하다', pos: '동사' },
@@ -278,7 +283,7 @@ describe('auxiliaryDictSolid', () => {
     expect(next[0].tip).toBe('띄어 씀');
   });
 
-  it('붙임표가 있어도 본용언+보조가 표제어로 등재되면 뺀다', async () => {
+  it('붙임표가 있어도 본용언+보조가 추출본에 있으면 뺀다', async () => {
     const group = {
       patternKind: 'auxiliary-verb',
       auxSplitLongCompound: true,
@@ -288,9 +293,9 @@ describe('auxiliaryDictSolid', () => {
     };
     const next = await enrichAuxiliaryDictSolid([group], {
       analyze: analyzeHead,
+      verbForms: FIXTURE_VERB_FORMS,
       fetchImpl: dictByQuery({
         정리하다: { word: '정리-하다', pos: '동사' },
-        정리해주다: { word: '정리해주다', pos: '동사' },
       }),
     });
     expect(next).toEqual([]);
@@ -306,6 +311,7 @@ describe('auxiliaryDictSolid', () => {
     };
     const next = await enrichAuxiliaryDictSolid([group], {
       analyze: () => null,
+      verbForms: FIXTURE_VERB_FORMS,
       fetchImpl: dictFetch('생각하다', '동사'),
     });
     expect(next).toEqual([]);
@@ -322,6 +328,7 @@ describe('auxiliaryDictSolid', () => {
     };
     const next = await enrichAuxiliaryDictSolid([group], {
       analyze: analyzeHead,
+      verbForms: FIXTURE_VERB_FORMS,
       fetchImpl: async () => ({
         status: 503,
         ok: false,
@@ -332,7 +339,7 @@ describe('auxiliaryDictSolid', () => {
     expect(auxiliaryDictSolidStdictCallCount().lastRun).toBe(1);
   });
 
-  it('붙임표가 확인된 뒤 합성 표제어 조회가 실패하면 띄운 제안을 남긴다', async () => {
+  it('붙임표가 확인된 뒤 합성 표제어가 추출본에 없으면 띄운 제안을 남긴다', async () => {
     const group = {
       patternKind: 'auxiliary-verb',
       auxSplitLongCompound: true,
@@ -342,30 +349,21 @@ describe('auxiliaryDictSolid', () => {
     };
     const next = await enrichAuxiliaryDictSolid([group], {
       analyze: analyzeHead,
+      verbForms: FIXTURE_VERB_FORMS,
       fetchImpl: dictByQuery({
         제출하다: { word: '제출-하다', pos: '동사' },
-        제출해주다: { status: 503, text: 'STDICT_KEY_MISSING' },
       }),
     });
     expect(next[0].instances[0].suggestedText).toBe('제출해 주세요');
   });
 
-  it('미등재·키 없음이면 그대로 둔다', async () => {
+  it('미등재면 그대로 둔다', async () => {
     const groups = [auxGroup('verb-gada', '(아/어) + 가다', '되어 간다')];
     const missing = await enrichAuxiliaryDictSolid(groups, {
-      fetchImpl: dictFetch('', ''),
+      verbForms: FIXTURE_VERB_FORMS,
     });
     expect(missing[0].instances[0].suggestedText).toBeUndefined();
     expect(missing[0].tip).toBe('');
-
-    const noKey = await enrichAuxiliaryDictSolid(groups, {
-      fetchImpl: async () => ({
-        status: 503,
-        ok: false,
-        text: async () => 'STDICT_KEY_MISSING',
-      }),
-    });
-    expect(noKey[0]).toBe(groups[0]);
   });
 
   it.skipIf(
