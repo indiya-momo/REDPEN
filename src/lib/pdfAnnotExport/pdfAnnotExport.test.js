@@ -21,7 +21,15 @@ import {
   pdfTextString,
   writeAnnotatedPdf,
 } from './writeAnnotatedPdf.js';
-import { buildProofreadPdfFilename } from './exportProofreadPdf.js';
+import {
+  buildIndesignReplacePdfFilename,
+  buildProofreadPdfFilename,
+} from './exportProofreadPdf.js';
+import {
+  formatIndesignReplaceNotice,
+  prepareIndesignReplaceFindings,
+  resolveOverlappingFindings,
+} from './indesignReplaceFindings.js';
 import { buildProofreadExportConfirmMessage } from '../betaDailyQuota.js';
 
 /** 10pt 가로 글자, 한글은 1em 폭 */
@@ -149,6 +157,7 @@ describe('pdf 문자열·파일 쓰기', () => {
 
   it('파일 이름', () => {
     expect(buildProofreadPdfFilename('원고 3교.pdf')).toBe('원고 3교_교정본.pdf');
+    expect(buildIndesignReplacePdfFilename('원고 3교.pdf')).toBe('원고 3교_인디자인용.pdf');
   });
 
   async function samplePdf() {
@@ -248,3 +257,135 @@ describe('pdf 문자열·파일 쓰기', () => {
     })).rejects.toBeInstanceOf(PdfAnnotExportError);
   });
 });
+
+describe('indesignReplace', () => {
+  const pageTexts = [{
+    pageNum: 1,
+    text: '방문할때면 마음 속',
+    items: [item('방문할때면 마음 속', 50, 500)],
+    itemRefs: [{ start: 0, end: 10, itemIndex: 0 }],
+  }];
+
+  async function samplePdf() {
+    const doc = await PDFDocument.create();
+    doc.addPage([400, 600]);
+    return doc.save();
+  }
+
+  it('자체 점검·고침없음·검토만 제외', () => {
+    const findings = [
+      { pageNum: 1, start: 2, end: 4, found: '할때', replacement: '할 때', style: 'spacing-mark' },
+      { pageNum: 1, start: 0, end: 2, found: '방문', replacement: '', style: 'strike' },
+      { pageNum: 1, start: 6, end: 10, found: '마음 속', replacement: '마음 속', style: 'review' },
+      { pageNum: 1, start: 2, end: 4, found: '다른', replacement: '할 때', style: 'strike' },
+    ];
+    const { included, excluded } = prepareIndesignReplaceFindings(findings, pageTexts);
+    expect(included).toHaveLength(1);
+    expect(included[0].found).toBe('할때');
+    expect(excluded.noReplacement).toBe(1);
+    expect(excluded.reviewOnly).toBe(1);
+    expect(excluded.textMismatch).toBe(1);
+  });
+
+  it('겹침은 더 긴 구간 우선', () => {
+    const { kept, dropped } = resolveOverlappingFindings([
+      { pageNum: 1, start: 0, end: 2, found: 'ab', replacement: 'x' },
+      { pageNum: 1, start: 0, end: 4, found: 'abcd', replacement: 'y' },
+      { pageNum: 1, start: 1, end: 3, found: 'bc', replacement: 'z' },
+    ]);
+    expect(kept).toHaveLength(1);
+    expect(kept[0].found).toBe('abcd');
+    expect(dropped).toBe(2);
+  });
+
+  it('Caret+StrikeOut 쌍 · Contents=고침만', async () => {
+    const findings = [{
+      pageNum: 1,
+      start: 2,
+      end: 4,
+      found: '할때',
+      replacement: '할 때',
+      style: 'spacing-mark',
+      label: '',
+      contents: '할때 → 할 때',
+      subject: '맞춤법',
+    }];
+    const { bytes, counts } = await writeAnnotatedPdf({
+      pdfBytes: await samplePdf(),
+      findings,
+      pageTexts,
+      charEm: fallbackCharEm,
+      mode: 'indesignReplace',
+    });
+    expect(counts.replace).toBe(1);
+    const out = await PDFDocument.load(bytes);
+    const annots = out.getPages()[0].node.lookup(PDFName.of('Annots'), PDFArray);
+    expect(annots.size()).toBe(2);
+    const caret = out.context.lookup(annots.get(0));
+    const strike = out.context.lookup(annots.get(1));
+    expect(caret.get(PDFName.of('Subtype')).toString()).toBe('/Caret');
+    expect(caret.get(PDFName.of('IT')).toString()).toBe('/Replace');
+    expect(caret.lookup(PDFName.of('Contents')).decodeText()).toBe('할 때');
+    expect(caret.lookup(PDFName.of('Contents')).decodeText()).not.toContain('→');
+    expect(strike.get(PDFName.of('Subtype')).toString()).toBe('/StrikeOut');
+    expect(strike.get(PDFName.of('IT')).toString()).toBe('/StrikeOutTextEdit');
+    expect(strike.get(PDFName.of('RT')).toString()).toBe('/Group');
+    expect(strike.get(PDFName.of('IRT'))).toEqual(annots.get(0));
+    expect(strike.get(PDFName.of('QuadPoints'))).toBeTruthy();
+    expect(strike.lookup(PDFName.of('Contents')).decodeText()).toBe('');
+  });
+
+  it('줄바꿈 구간은 QuadPoints 복수', async () => {
+    const pageTexts = [{
+      pageNum: 1,
+      text: '그는 가녀린 손\n끝에',
+      items: [item('그는 가녀린 손', 50, 700), item('끝에', 50, 680)],
+      itemRefs: [
+        { start: 0, end: 8, itemIndex: 0 },
+        { start: 9, end: 11, itemIndex: 1 },
+      ],
+    }];
+    const findings = [{
+      pageNum: 1,
+      start: 7,
+      end: 11,
+      found: '손\n끝에',
+      replacement: '손끝에',
+      style: 'spacing-mark',
+      label: '',
+      contents: '',
+      subject: '맞춤법',
+    }];
+    const { included } = prepareIndesignReplaceFindings(findings, pageTexts);
+    expect(included).toHaveLength(1);
+    const { bytes, counts } = await writeAnnotatedPdf({
+      pdfBytes: await samplePdf(),
+      findings: included,
+      pageTexts,
+      charEm: fallbackCharEm,
+      mode: 'indesignReplace',
+    });
+    expect(counts.replace).toBe(1);
+    const out = await PDFDocument.load(bytes);
+    const annots = out.getPages()[0].node.lookup(PDFName.of('Annots'), PDFArray);
+    const strike = out.context.lookup(annots.get(1));
+    const qp = strike.lookup(PDFName.of('QuadPoints'), PDFArray);
+    // 세그먼트 2개 × 8 숫자
+    expect(qp.size()).toBe(16);
+  });
+
+  it('안내 문구에 Accept 약속 없음', () => {
+    const notice = formatIndesignReplaceNotice({
+      included: 2,
+      excluded: { noReplacement: 1, textMismatch: 0, overlap: 1, reviewOnly: 0 },
+    });
+    expect(notice).toContain('포함 2건');
+    expect(notice).toContain('제외 2건');
+    expect(notice).toContain('겹침 1');
+    expect(notice).toContain('좌표(QuadPoints)·Tw 정확도는 보증하지 않습니다');
+    expect(notice).toContain('인디자인 문서를 수정하지 마세요');
+    expect(notice).toContain('Accept가 어긋날 수 있습니다');
+    expect(notice).toContain('Accept 성공을 약속하지 않습니다');
+  });
+});
+

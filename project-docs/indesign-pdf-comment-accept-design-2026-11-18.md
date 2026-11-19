@@ -1,8 +1,11 @@
 # 인디자인 PDF 주석 Accept · 설계 (문서만)
 
 **작성:** 2026-11-18  
-**상태:** 설계 초안 · **구현 금지** (스파이크·제품 코드 없음)  
-**1차 성공 기준:** 인디자인이 PDF 주석을 가져와 **Accept** 하면 레이아웃 글자가 바뀐다.  
+**개정:** 2026-11-19 — 합의 정본은  
+[`docs/superpowers/specs/2026-11-19-indesign-replace-export-design.md`](../docs/superpowers/specs/2026-11-19-indesign-replace-export-design.md)  
+(형식 재현 ≠ Accept 약속 분리, 내려받기 분기, 자체 점검, 검증 게이트).  
+**상태:** 초안 유지 · **구현은 정본·검증 게이트 후**  
+**1차 성공 기준(검증 후):** 인디자인이 PDF 주석을 가져와 **Accept** 하면 레이아웃 글자가 바뀐다.  
 **관련:** [proof-export-roadmap-2026-11-17.md](./proof-export-roadmap-2026-11-17.md) §4(TSV+스크립트), [pdf-annot-spike-2026-11-17.md](./pdf-annot-spike-2026-11-17.md)
 
 ---

@@ -1,0 +1,155 @@
+/**
+ * 인디자인용 Acrobat Replace 내보내기 — finding 선별·겹침·원문 자체 점검.
+ * @see docs/superpowers/specs/2026-11-19-indesign-replace-export-design.md
+ */
+
+/**
+ * @typedef {import('./collectAnnotFindings.js').AnnotFinding} AnnotFinding
+ * @typedef {{
+ *   included: AnnotFinding[],
+ *   excluded: { noReplacement: number, textMismatch: number, overlap: number, reviewOnly: number },
+ * }} IndesignReplacePrepareResult
+ */
+
+/**
+ * slice와 found 비교 — 줄바꿈·연속 공백만 느슨히.
+ * @param {string} a
+ * @param {string} b
+ */
+export function normalizeFindingText(a, b) {
+  const norm = (s) =>
+    String(s ?? '')
+      .replace(/\s*\n\s*/g, '\n')
+      .replace(/[ \t]+/g, ' ');
+  return norm(a) === norm(b);
+}
+
+/**
+ * 구간 [start,end)가 page.text에서 기대 원문과 같은지.
+ * QuadPoints·글리프 좌표를 읽지 않는다 — finding 인덱스↔문자열 매핑만 본다.
+ * Tw 등 좌표 모델 오차는 이 점검으로 걸리지 않는다.
+ * @param {import('../pdfService.js').PageData | undefined} page
+ * @param {AnnotFinding} f
+ */
+export function findingTextMatchesPage(page, f) {
+  if (!page?.text) return false;
+  const sliced = page.text.slice(f.start, f.end);
+  const expect = String(f.found ?? f.matchedText ?? '');
+  if (!expect) return false;
+  if (sliced === expect) return true;
+  return normalizeFindingText(sliced, expect);
+}
+
+/**
+ * @param {AnnotFinding} a
+ * @param {AnnotFinding} b
+ */
+function rangesOverlap(a, b) {
+  if (a.pageNum !== b.pageNum) return false;
+  return a.start < b.end && b.start < a.end;
+}
+
+/**
+ * 겹치면 더 긴 구간 우선, 동길이면 앞선(수집 순·start) 유지.
+ * @param {AnnotFinding[]} items
+ * @returns {{ kept: AnnotFinding[], dropped: number }}
+ */
+export function resolveOverlappingFindings(items) {
+  const sorted = [...items].sort((a, b) => {
+    if (a.pageNum !== b.pageNum) return a.pageNum - b.pageNum;
+    const la = a.end - a.start;
+    const lb = b.end - b.start;
+    if (la !== lb) return lb - la;
+    return a.start - b.start;
+  });
+  /** @type {AnnotFinding[]} */
+  const kept = [];
+  let dropped = 0;
+  for (const f of sorted) {
+    if (kept.some((k) => rangesOverlap(k, f))) {
+      dropped += 1;
+      continue;
+    }
+    kept.push(f);
+  }
+  kept.sort((a, b) =>
+    a.pageNum !== b.pageNum ? a.pageNum - b.pageNum : a.start - b.start,
+  );
+  return { kept, dropped };
+}
+
+/**
+ * @param {AnnotFinding[]} findings
+ * @param {import('../pdfService.js').PageData[]} pageTexts
+ * @returns {IndesignReplacePrepareResult}
+ */
+export function prepareIndesignReplaceFindings(findings, pageTexts) {
+  const pageByNum = new Map((pageTexts ?? []).map((p) => [p.pageNum, p]));
+  /** @type {AnnotFinding[]} */
+  const withRep = [];
+  let noReplacement = 0;
+  let textMismatch = 0;
+  let reviewOnly = 0;
+
+  for (const f of findings ?? []) {
+    if (f.style === 'review') {
+      reviewOnly += 1;
+      continue;
+    }
+    const rep = String(f.replacement ?? '').trim();
+    if (!rep) {
+      noReplacement += 1;
+      continue;
+    }
+    const page = pageByNum.get(f.pageNum);
+    if (!findingTextMatchesPage(page, f)) {
+      textMismatch += 1;
+      continue;
+    }
+    withRep.push(f);
+  }
+
+  const { kept, dropped } = resolveOverlappingFindings(withRep);
+  return {
+    included: kept,
+    excluded: {
+      noReplacement,
+      textMismatch,
+      overlap: dropped,
+      reviewOnly,
+    },
+  };
+}
+
+/** @param {IndesignReplacePrepareResult['excluded']} excluded */
+export function countExcluded(excluded) {
+  return (
+    (excluded?.noReplacement ?? 0) +
+    (excluded?.textMismatch ?? 0) +
+    (excluded?.overlap ?? 0) +
+    (excluded?.reviewOnly ?? 0)
+  );
+}
+
+/**
+ * 인디자인용 내려받기 안내 (Accept 성공 약속 없음).
+ * @param {{
+ *   included: number,
+ *   excluded: IndesignReplacePrepareResult['excluded'],
+ * }} counts
+ */
+export function formatIndesignReplaceNotice({ included, excluded }) {
+  const excl = countExcluded(excluded);
+  const parts = [
+    `포함 ${included}건`,
+    excl
+      ? `제외 ${excl}건(고침 없음 ${excluded.noReplacement}, 검토만 ${excluded.reviewOnly}, 원문 불일치 ${excluded.textMismatch}, 겹침 ${excluded.overlap})`
+      : '제외 0건',
+  ];
+  return (
+    `${parts.join(' · ')}\n\n` +
+    '내보내기 직전 자체 점검은 page.text 구간과 원문 문자열이 같은지만 확인합니다. 좌표(QuadPoints)·Tw 정확도는 보증하지 않습니다.\n' +
+    '검토용 PDF를 만든 뒤에는 인디자인 문서를 수정하지 마세요. 수정하면 주석 위치가 맞지 않아 Accept가 어긋날 수 있습니다.\n' +
+    '자동 반영은 인디자인·원본 PDF 조건에 따라 달라질 수 있으며, Accept 성공을 약속하지 않습니다.'
+  );
+}
