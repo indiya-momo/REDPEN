@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "hooks": {
+    "beforeSubmitPrompt": [
+      {
+        "command": "node .cursor/hooks/gg-from-chat.mjs",
+        "failClosed": false
+      }
+    ],
+    "preToolUse": [
+      {
+        "command": "node .cursor/hooks/require-gg.mjs",
+        "matcher": "Write|StrReplace|Delete|EditNotebook",
+        "failClosed": true
+      }
+    ],
+    "beforeShellExecution": [
+      {
+        "command": "node .cursor/hooks/block-gg-touch.mjs",
+        "failClosed": true
+      }
+    ],
+    "sessionStart": [
+      {
+        "command": "node .cursor/hooks/gg-reminder.mjs"
+      }
+    ]
+  }
+}
