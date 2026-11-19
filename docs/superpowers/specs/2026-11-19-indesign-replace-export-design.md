@@ -1,10 +1,11 @@
 # 인디자인용 PDF · Acrobat Replace 내보내기 설계
 
 **작성:** 2026-11-19  
-**상태:** 합의 · **구현됨** (형식·Tw 경로 반영 · Accept 본문 판정은 골든 게이트 수동)
+**상태:** 합의 · **구현됨** (형식·Tw 반영 · Accept 본문 스모크 **통과** 2026-11-19)
 **상위:** [project-docs/indesign-pdf-comment-accept-design-2026-11-18.md](../../../project-docs/indesign-pdf-comment-accept-design-2026-11-18.md)  
 **관련:** [proof-export-roadmap-2026-11-17.md](../../../project-docs/proof-export-roadmap-2026-11-17.md), 샘플 `261117_경주멍-본문 2교지_131.pdf`  
-**골든:** [project-docs/indesign-replace-golden-2026-11-19/](../../../project-docs/indesign-replace-golden-2026-11-19/)
+**골든:** [project-docs/indesign-replace-golden-2026-11-19/](../../../project-docs/indesign-replace-golden-2026-11-19/)  
+**묶음 분할:** [보류·불필요](./2026-11-19-indesign-replace-batch-export-design.md) (하나씩 Accept 가능)
 
 ---
 
