@@ -6,5 +6,7 @@
 - 원본 내려받기: 2026-11-06
 - 라이선스: [CC BY-SA 2.0 KR](https://creativecommons.org/licenses/by-sa/2.0/kr/)
 - 생성: `node scripts/build-stdict-verb-forms.mjs "<verbs.tsv 경로>"`
+- `lemmas`: 띄움 필수 기본형→활용형 (K)
+- `hyphenLemmasOutsideK`: 붙임표 표제어 중 K에 없는 기본형 (H∖K). 긴 합성어 붙임표 게이트는 K∪이 목록.
 
 재배포하거나 수정할 때는 위 라이선스에 따라 출처를 밝히고, 같은 라이선스로 공유해야 합니다.
