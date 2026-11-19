@@ -10,11 +10,12 @@ import {
 } from './spacingFolderBundles.js';
 
 describe('spacingFolderBundles', () => {
-  it('defines three bundles in spec order with expected moduleIds', () => {
+  it('defines bundles in spec order with expected moduleIds', () => {
     expect(SPACING_FOLDER_BUNDLES.map((b) => b.bundleId)).toEqual([
       'numberUnit',
       'dependentRieulKka',
       'placeAffix',
+      'punct',
     ]);
     expect(getSpacingFolderBundle('numberUnit')?.moduleIds).toEqual([
       'numeral',
@@ -30,6 +31,7 @@ describe('spacingFolderBundles', () => {
     expect(getSpacingFolderBundle('placeAffix')?.moduleIds).toEqual([
       'place-affix',
     ]);
+    expect(getSpacingFolderBundle('punct')?.moduleIds).toEqual(['punct']);
   });
 
   it('defaults all bundles off', () => {
@@ -37,6 +39,7 @@ describe('spacingFolderBundles', () => {
       numberUnit: false,
       dependentRieulKka: false,
       placeAffix: false,
+      punct: false,
     });
   });
 
@@ -52,6 +55,7 @@ describe('spacingFolderBundles', () => {
       numberUnit: true,
       dependentRieulKka: false,
       placeAffix: false,
+      punct: false,
     });
     expect(normalizeSpacingFolderEnabled(null)).toEqual(
       defaultSpacingFolderEnabled(),

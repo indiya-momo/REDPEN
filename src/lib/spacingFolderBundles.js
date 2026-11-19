@@ -4,7 +4,7 @@
  * @see docs/superpowers/specs/2026-11-19-spacing-folder-in-spelling-tab-design.md
  */
 
-/** @typedef {'numberUnit' | 'dependentRieulKka' | 'placeAffix'} SpacingFolderBundleId */
+/** @typedef {'numberUnit' | 'dependentRieulKka' | 'placeAffix' | 'punct'} SpacingFolderBundleId */
 
 /**
  * @typedef {{
@@ -45,6 +45,12 @@ export const SPACING_FOLDER_BUNDLES = Object.freeze([
     moduleIds: Object.freeze(['place-affix']),
     tipLines: Object.freeze(['지명·외자 접미']),
   }),
+  Object.freeze({
+    bundleId: 'punct',
+    label: '문장부호',
+    moduleIds: Object.freeze(['punct']),
+    tipLines: Object.freeze(['종결·쉼표 뒤 띄어', '닫는 부호와 조사 붙임']),
+  }),
 ]);
 
 /** @type {readonly SpacingFolderBundleId[]} */
@@ -63,11 +69,12 @@ export function defaultSpacingFolderEnabled() {
     numberUnit: false,
     dependentRieulKka: false,
     placeAffix: false,
+    punct: false,
   };
 }
 
 /**
- * 알려진 세 키만 · 비-boolean → false · 알 수 없는 키 무시.
+ * 알려진 묶음 키만 · 비-boolean → false · 알 수 없는 키 무시.
  * @param {unknown} raw
  * @returns {Record<SpacingFolderBundleId, boolean>}
  */

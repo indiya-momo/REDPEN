@@ -21,6 +21,7 @@ describe('spacingCategoryRegistry', () => {
       'daeum-nal',
       'official-aux',
       'place-affix',
+      'punct',
     ]);
     for (const def of SPACING_CATEGORY_DEFS) {
       expect(typeof def.label).toBe('string');

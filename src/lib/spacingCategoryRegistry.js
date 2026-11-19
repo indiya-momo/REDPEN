@@ -64,6 +64,11 @@ import {
   PLACE_AFFIX_TIP,
   findPlaceAffixSpacingHits,
 } from './placeAffixSpacing.js';
+import {
+  PUNCT_SPACING_LABEL,
+  PUNCT_SPACING_TIP,
+  findPunctSpacingHits,
+} from './punctSpacing.js';
 
 /**
  * @typedef {{
@@ -147,6 +152,12 @@ export const SPACING_CATEGORY_DEFS = [
     label: PLACE_AFFIX_LABEL,
     tip: PLACE_AFFIX_TIP,
     findHits: findPlaceAffixSpacingHits,
+  },
+  {
+    id: 'punct',
+    label: PUNCT_SPACING_LABEL,
+    tip: PUNCT_SPACING_TIP,
+    findHits: findPunctSpacingHits,
   },
 ];
 

@@ -34,13 +34,14 @@ describe('3음절 이상 복합어 띄어쓰기', () => {
     expect(hits('생각해주세요')).toEqual([['생각해주세요', '생각해 주세요']]);
   });
 
-  it('허용 목록의 기다려는 띄우지 않는다', () => {
-    const matched = '기다려보았다';
-    const re = new RegExp(rule.find, 'gu');
-    const m = re.exec(matched);
-    expect(m?.[0]).toBe(matched);
-    expect(shouldSkipLongCompoundSplit(rule, m)).toBe(true);
-    expect(hits(matched)).toEqual([]);
+  it('허용 목록의 깨트려·깨뜨려는 3음절 칸 1차에서 빼 둔다', () => {
+    for (const matched of ['깨트려보았다', '깨뜨려보았다']) {
+      const re = new RegExp(rule.find, 'gu');
+      const m = re.exec(matched);
+      expect(m?.[0], matched).toBe(matched);
+      expect(shouldSkipLongCompoundSplit(rule, m), matched).toBe(true);
+      expect(hits(matched), matched).toEqual([]);
+    }
   });
 
   it('체크는 본용언 목록 맨 뒤에 있고 기본은 꺼져 있다', () => {

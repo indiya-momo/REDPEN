@@ -1,15 +1,39 @@
 /**
- * 세종 S2-2-1 · 맞춤법 제41·42항 — 관형사형+의존명사 띄어쓰기 (닫힌 표면).
+ * 한글 맞춤법 제41·42항 — 관형사형+의존명사 띄어쓰기 (닫힌 표면).
  * PR #3 골든「관형사형+의존명사」FIX(F01–F03) 정밀도 우선. Kiwi 없음.
  * ruleEngine·시트 핫패스에 붙이지 않는다.
  *
  * KEEP(고의 미검출): 할수록, 끝난걸, 할걸, 어떤지, 말한바, 이미 띄운 「한 걸」
+ * 체언+만큼(키만큼 등)은 이번 범위 밖.
  */
 
 export const ADNOMINAL_DEP_CATEGORY = '관형사형+의존명사';
 export const ADNOMINAL_DEP_LABEL = '관형사형+의존명사';
 export const ADNOMINAL_DEP_TIP =
-  '한글 맞춤법: 관형사형 어미 뒤 의존명사(수·것·거…)는 띄어 씁니다.';
+  '한글 맞춤법: 관형사형 어미 뒤 의존명사(수·것·거·만큼…)는 띄어 씁니다.';
+
+/** 부사 등재 — 의존명사 만큼과 구분 */
+const MANGKEUM_ADVERB = new Set([
+  '이만큼',
+  '그만큼',
+  '저만큼',
+  '요만큼',
+  '고만큼',
+  '얼마만큼',
+]);
+
+/** 명사+있다 붙임 → 띄어 (닫힌 표면). 재미있다 등은 여기 없음. */
+const NOUN_ITDA_SPLIT = [{ find: '위엄있', replace: '위엄 있' }];
+
+/** 관형사형 어미(은/는/을/던) 또는 ㄴ·ㄹ 받침(한·할). */
+function isAdnominalStem(stem) {
+  if (!stem) return false;
+  if (/(?:을|은|는|던)$/.test(stem)) return true;
+  const last = stem.charCodeAt(stem.length - 1) - 0xac00;
+  if (last < 0 || last > 11171) return false;
+  const jong = last % 28;
+  return jong === 4 || jong === 8;
+}
 
 /** 「…수」가 한 단어인 명사 — 의존명사 수와 구분 */
 const SU_AS_NOUN = new Set([
@@ -98,6 +122,29 @@ export function findAdnominalDependentNounHits(text) {
       if (THING_COMPOUND.test(m[0])) continue;
       if (m[1].length < 2) continue;
       take(m.index, m.index + m[0].length, m[0], `${m[1]} 것`, '것');
+    }
+  }
+
+  // 관형사형 + 만큼 (잊을만큼 → 잊을 만큼). 이만큼·그만큼 등 부사는 제외.
+  {
+    const re = /([가-힣]+)만큼/g;
+    let m;
+    while ((m = re.exec(text)) !== null) {
+      const whole = m[0];
+      if (MANGKEUM_ADVERB.has(whole)) continue;
+      const stem = m[1];
+      if (!isAdnominalStem(stem)) continue;
+      take(m.index, m.index + whole.length, whole, `${stem} 만큼`, '만큼');
+    }
+  }
+
+  for (const row of NOUN_ITDA_SPLIT) {
+    let from = 0;
+    while (from < text.length) {
+      const idx = text.indexOf(row.find, from);
+      if (idx === -1) break;
+      take(idx, idx + row.find.length, row.find, row.replace, '있');
+      from = idx + row.find.length;
     }
   }
 
