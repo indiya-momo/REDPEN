@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
+import fs from 'node:fs';
 import { classifyConnectiveBeforeAux, isAeoRaReoHead } from './auxiliaryConnective.js';
-import { collectNonAeoAuxCandidates } from './nonAeoAuxSpacing.js';
+import {
+  collectNonAeoAuxCandidates,
+  findNonAeoAuxSpacingHits,
+} from './nonAeoAuxSpacing.js';
 
 describe('auxiliaryConnective — 라/러 어절의 -아/-어 판정', () => {
   it('르 불규칙 -아/-어는 -아/-어로 본다 (잘라·얼러 포함)', () => {
@@ -35,4 +39,30 @@ describe('auxiliaryConnective — -려 + 하다·들다', () => {
     expect(heads('종이를 오려붙여보다')).toEqual([]);
     expect(heads('하려 하다')).toEqual([]);
   });
+});
+
+describe('띄어쓰기 — -아서/-어서 + 보조용언(형태소 확인)', () => {
+  it.skipIf(
+    !fs.existsSync(
+      new URL('../../tmp/kiwi-models/models/cong/base/cong.mdl', import.meta.url),
+    ),
+  )(
+    '어미 어서/아서면 잡고, 서다 계열 + -어(일어서·나서)는 안 잡는다',
+    async () => {
+      const { loadKiwiNode } = await import('./kiwiMorph/loadNode.js');
+      const { analyzeLine } = await import('./kiwiMorph/analyze.js');
+      await loadKiwiNode({ register: true });
+      const hit = (text) =>
+        findNonAeoAuxSpacingHits(text, { requireDictionary: false, analyze: analyzeLine }).map(
+          (h) => h.suggestedText,
+        );
+      expect(hit('밥을 먹어서보다')).toEqual(['먹어서 보다']);
+      expect(hit('그걸 해서주다')).toEqual(['해서 주다']);
+      expect(hit('의자에 앉아서보다')).toEqual(['앉아서 보다']);
+      expect(hit('자리에서 일어서보다')).toEqual([]);
+      expect(hit('앞에 나서주다')).toEqual([]);
+      expect(hit('맞서보다')).toEqual([]);
+    },
+    120000,
+  );
 });

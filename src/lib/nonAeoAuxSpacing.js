@@ -111,6 +111,16 @@ export function hasExplicitNonAeoConnective(head, auxItemId = '') {
   return NON_AEO_ENDINGS.some((ending) => h.endsWith(ending));
 }
 
+/**
+ * '서'로 끝나는 본용언 어절 — -아서/-어서(먹어서·해서)일 수도, 서다 계열 + -어(일어서·나서)일 수도 있다.
+ * 글자만으로는 못 가르므로 후보로만 두고, 형태소에서 어미 '어서/아서'가 확인될 때만 잡는다.
+ * @param {string} head
+ */
+export function isSeoEndingHead(head) {
+  const h = String(head ?? '');
+  return h.length >= 2 && h.endsWith('서');
+}
+
 /** @param {string} surface */
 function isAllowGlueSurface(surface) {
   return NON_AEO_ALLOW_GLUE_SURFACES.some((key) => surface.includes(key));
@@ -132,8 +142,9 @@ function isTailBoundary(text, end) {
  * 분석이 없으면 false(fail-closed, 본조 `pruneAuxiliaryFalseMorph`와 같음).
  * @param {{ tokens?: { str?: string, tag?: string, position?: number, length?: number }[] } | null | undefined} analyzed
  * @param {number} headLength
+ * @param {{ requireSeoEnding?: boolean }} [opts] — '서' 어절: 끝 어미가 '아서/어서'여야 한다(일어서/VV+어/EC는 아님)
  */
-export function isConfirmedNonAeoAuxMorph(analyzed, headLength) {
+export function isConfirmedNonAeoAuxMorph(analyzed, headLength, opts = {}) {
   const tokens = analyzed?.tokens ?? [];
   if (!tokens.length) return false;
   let endingEndsAtHead = false;
@@ -142,7 +153,11 @@ export function isConfirmedNonAeoAuxMorph(analyzed, headLength) {
     const pos = Number(t?.position);
     const len = Number(t?.length);
     if (!Number.isFinite(pos)) continue;
-    if (tag.startsWith('E') && pos + (Number.isFinite(len) ? len : 0) === headLength) {
+    if (
+      tag.startsWith('E') &&
+      pos + (Number.isFinite(len) ? len : 0) === headLength &&
+      (!opts.requireSeoEnding || String(t?.str ?? '').endsWith('서'))
+    ) {
       endingEndsAtHead = true;
       continue;
     }
@@ -158,11 +173,11 @@ export function isConfirmedNonAeoAuxMorph(analyzed, headLength) {
  * 붙여 쓴 비아/어 + 보조용언 후보(형태소·사전 확인 전).
  * 한 어절에서 여러 자리가 걸리면 긴 본용언부터 둔다(먹다가보니 → 먹다가|보니 먼저).
  * @param {string} text
- * @returns {{ index: number, end: number, matchedText: string, suggestedText: string, head: string, itemId: string }[]}
+ * @returns {{ index: number, end: number, matchedText: string, suggestedText: string, head: string, itemId: string, requireSeoEnding?: boolean }[]}
  */
 export function collectNonAeoAuxCandidates(text) {
   const t = String(text ?? '');
-  /** @type {{ index: number, end: number, matchedText: string, suggestedText: string, head: string, itemId: string }[]} */
+  /** @type {{ index: number, end: number, matchedText: string, suggestedText: string, head: string, itemId: string, requireSeoEnding?: boolean }[]} */
   const out = [];
   if (!t) return out;
   const onsets = listNonAeoAuxOnsets();
@@ -184,7 +199,8 @@ export function collectNonAeoAuxCandidates(text) {
       const tail = word.slice(cut);
       const hit = onsets.find(({ onset }) => tail.startsWith(onset));
       if (!hit) continue;
-      if (!hasExplicitNonAeoConnective(head, hit.itemId)) continue;
+      const seoHead = isSeoEndingHead(head);
+      if (!seoHead && !hasExplicitNonAeoConnective(head, hit.itemId)) continue;
       if (head.endsWith('다') && DA_GA_CONNECTIVE_TAILS.has(tail)) continue;
       out.push({
         index: start,
@@ -193,6 +209,7 @@ export function collectNonAeoAuxCandidates(text) {
         suggestedText: `${head} ${tail}`,
         head,
         itemId: hit.itemId,
+        ...(seoHead ? { requireSeoEnding: true } : {}),
       });
     }
   }
@@ -242,7 +259,13 @@ export function findNonAeoAuxSpacingHits(text, opts = {}) {
     } catch {
       analyzed = null;
     }
-    if (!isConfirmedNonAeoAuxMorph(analyzed, c.head.length)) continue;
+    if (
+      !isConfirmedNonAeoAuxMorph(analyzed, c.head.length, {
+        requireSeoEnding: Boolean(c.requireSeoEnding),
+      })
+    ) {
+      continue;
+    }
     doneWords.add(c.index);
     hits.push({
       index: c.index,
