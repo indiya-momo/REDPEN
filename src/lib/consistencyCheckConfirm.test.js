@@ -143,7 +143,8 @@ describe('confirmConsistencyCheckBeforeRun', () => {
         commonStringTotal: 1,
         excludeActive: 0,
         auxiliaryActive: 0,
-        auxiliaryTotal: 4,
+        // 본조 체크 묶음 3개(비아/어 줄은 2026-11-19 띄어쓰기 폴더로 이관)
+        auxiliaryTotal: 3,
       });
     const { title, message } = parseBracketTitleMessage(msg);
     expect(confirmMock).toHaveBeenCalledWith(`${title}\n\n${message}`);

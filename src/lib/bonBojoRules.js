@@ -318,15 +318,23 @@ export const BON_BOJO_UI_GROUP_TITLES = {
     '본용언이 3음절 이상 복합어·파생어, (아/어)+보이다 : 띄어쓰기 필수',
 };
 
-/** @type {readonly string[]} */
+/**
+ * 일관성 탭 체크 줄 순서.
+ * 2026-11-19: 「본용언이 (-아/-어) 가 아닌 경우 : 띄어쓰기 필수」 줄(말다·게이트)은 뺐다.
+ * 비아/어 붙임은 맞춤법 탭 「띄어쓰기」 폴더(`nonAeoAuxSpacing.js`)가 낸다.
+ * `SPACE_REQUIRED_NON_AEO` 상수·제목은 옛 결과·저장 호환용으로 남긴다.
+ * @type {readonly string[]}
+ */
 export const BON_BOJO_UI_GROUP_ORDER = [
   BON_BOJO_UI_GROUP.GLUE_OPTIONAL,
   BON_BOJO_UI_GROUP.GLUE_REQUIRED,
-  BON_BOJO_UI_GROUP.SPACE_REQUIRED_NON_AEO,
   BON_BOJO_UI_GROUP.SPACE_REQUIRED,
 ];
 
-/** 비아/어 띄어쓰기 줄에 묶는 보조 (말다 등) */
+/**
+ * 비아/어 띄어쓰기 줄에 묶던 보조 (말다 등).
+ * 2026-11-19부터 본조 탭에서 검사하지 않는다(규칙은 만들되 항상 꺼짐, 결과에서도 뺌).
+ */
 export const BON_BOJO_NON_AEO_AUX_ITEM_IDS = Object.freeze(['verb-malda']);
 
 /** @param {string | undefined} itemId */

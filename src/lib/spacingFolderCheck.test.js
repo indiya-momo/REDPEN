@@ -161,7 +161,8 @@ describe('spacingFolderCheck', () => {
       mergeSpacingFolderIntoSpellingResults(
         [{ pageNum: 1, text: '할까보다' }],
         [],
-        {},
+        // nonAeoAux는 기본 켜짐이라 명시적으로 끈다
+        { nonAeoAux: false },
       ),
     ).toEqual([]);
   });

@@ -69,6 +69,11 @@ import {
   PUNCT_SPACING_TIP,
   findPunctSpacingHits,
 } from './punctSpacing.js';
+import {
+  NON_AEO_AUX_SPACING_LABEL,
+  NON_AEO_AUX_SPACING_TIP,
+  findNonAeoAuxSpacingHits,
+} from './nonAeoAuxSpacing.js';
 
 /**
  * @typedef {{
@@ -158,6 +163,12 @@ export const SPACING_CATEGORY_DEFS = [
     label: PUNCT_SPACING_LABEL,
     tip: PUNCT_SPACING_TIP,
     findHits: findPunctSpacingHits,
+  },
+  {
+    id: 'non-aeo-aux',
+    label: NON_AEO_AUX_SPACING_LABEL,
+    tip: NON_AEO_AUX_SPACING_TIP,
+    findHits: (text) => findNonAeoAuxSpacingHits(text),
   },
 ];
 

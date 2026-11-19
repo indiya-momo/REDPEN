@@ -1,21 +1,23 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
+import verbForms from '../../public/data/stdict-verb-forms.json';
 import {
   AEO_CONTRACTED_FRONTS,
   auxOnsetsForItem,
-  collectNonAeoGluedHits,
   enrichAuxiliaryNonAeoSpace,
   isAeoFrontAtEnd,
-  isNonAeoSpaceGateEnabled,
+  isRetiredNonAeoAuxGroup,
   isWordBoundedTail,
   listAeoConnectiveFrontsFromSheet,
   clearAeoConnectiveFrontCache,
   nonAeoConnectiveAtEnd,
-  enabledAuxItemIdsForNonAeo,
 } from './auxiliaryNonAeoSpace.js';
-import { BON_BOJO_NON_AEO_SPACE_ID } from './bonBojoRules.js';
+import {
+  BON_BOJO_NON_AEO_SPACE_ID,
+  listBonBojoBundleDefinitions,
+  BON_BOJO_UI_GROUP,
+} from './bonBojoRules.js';
 import { ensureDefaultAuxiliaryVerbs } from './defaultAuxiliaryVerbs.js';
-import { toggleAuxiliaryVerbBundle } from './auxiliaryVerbRegister.js';
-import { BON_BOJO_UI_GROUP } from './bonBojoRules.js';
+import { setStdictVerbFormsForTests } from './stdictVerbForms.js';
 
 describe('auxiliaryNonAeoSpace helpers', () => {
   it('닫힌 연결어미·아/어 축약 집합', () => {
@@ -37,80 +39,6 @@ describe('auxiliaryNonAeoSpace helpers', () => {
   });
 });
 
-describe('collectNonAeoGluedHits', () => {
-  it('고+보 붙임은 잡고 해봐·공부하다는 안 잡음', () => {
-    const hits = collectNonAeoGluedHits('한번먹고봐 해봐 공부하다', 'verb-boda1');
-    expect(hits.some((h) => h.matchedText.includes('먹고봐'))).toBe(true);
-    expect(hits.every((h) => !h.matchedText.includes('공부'))).toBe(true);
-    expect(hits.every((h) => h.matchedText !== '해봐')).toBe(true);
-  });
-});
-
-describe('enrichAuxiliaryNonAeoSpace', () => {
-  it('게이트 off면 그대로', async () => {
-    const rules = ensureDefaultAuxiliaryVerbs([]);
-    expect(isNonAeoSpaceGateEnabled(rules)).toBe(false);
-    const groups = [{ find: 'x', instances: [], patternKind: 'auxiliary-verb' }];
-    const out = await enrichAuxiliaryNonAeoSpace(groups, [{ pageNum: 1, text: '뛰지마라' }], {
-      rules,
-    });
-    expect(out).toEqual(groups);
-  });
-
-  it('게이트 on + 켠 보다 — 고+보 붙임(먹고봐)', async () => {
-    let rules = ensureDefaultAuxiliaryVerbs([]);
-    rules = toggleAuxiliaryVerbBundle(
-      rules,
-      BON_BOJO_UI_GROUP.SPACE_REQUIRED_NON_AEO,
-      true,
-    );
-    rules = toggleAuxiliaryVerbBundle(rules, BON_BOJO_UI_GROUP.GLUE_OPTIONAL, true);
-    expect(isNonAeoSpaceGateEnabled(rules)).toBe(true);
-    expect(enabledAuxItemIdsForNonAeo(rules)).toContain('verb-boda1');
-
-    const fetchImpl = vi.fn(async () => ({
-      ok: true,
-      status: 200,
-      text: async () => JSON.stringify({ channel: '', item: [] }),
-    }));
-    const out = await enrichAuxiliaryNonAeoSpace(
-      [],
-      [{ pageNum: 1, text: '한번먹고봐' }],
-      { rules, fetchImpl },
-    );
-    const nonAeo = out.filter((g) => g.auxNonAeoSpace);
-    expect(nonAeo.length).toBeGreaterThan(0);
-    const inst = nonAeo[0].instances[0];
-    expect(inst.matchedText).toContain('먹고봐');
-    expect(inst.suggestedText).toContain(' ');
-    expect(inst.suggestedText.replace(/\s+/g, '')).toBe(
-      inst.matchedText.replace(/\s+/g, ''),
-    );
-  });
-
-  it('공부하다·해봐는 후보에 안 넣음', async () => {
-    let rules = ensureDefaultAuxiliaryVerbs([]);
-    rules = toggleAuxiliaryVerbBundle(
-      rules,
-      BON_BOJO_UI_GROUP.SPACE_REQUIRED_NON_AEO,
-      true,
-    );
-    rules = toggleAuxiliaryVerbBundle(rules, BON_BOJO_UI_GROUP.GLUE_REQUIRED, true);
-    rules = toggleAuxiliaryVerbBundle(rules, BON_BOJO_UI_GROUP.GLUE_OPTIONAL, true);
-    const fetchImpl = vi.fn(async () => ({
-      ok: true,
-      status: 200,
-      text: async () => JSON.stringify({ channel: '', item: [] }),
-    }));
-    const out = await enrichAuxiliaryNonAeoSpace(
-      [],
-      [{ pageNum: 1, text: '공부하다 해봐 줘봐' }],
-      { rules, fetchImpl },
-    );
-    expect(out.filter((g) => g.auxNonAeoSpace)).toEqual([]);
-  });
-});
-
 describe('auxOnsetsForItem', () => {
   it('보다 항목 onset에 보', () => {
     expect(auxOnsetsForItem('verb-boda1')).toContain('보');
@@ -123,106 +51,88 @@ describe('auxOnsetsForItem', () => {
   });
 });
 
-describe('제47항·픽스처 후보', () => {
-  it('듯하다·만하다·체하다는 하다 꼬리여도 제외', () => {
-    const hits = collectNonAeoGluedHits(
-      '비가올듯하다 도울만하다 아는체하다 할법하다',
-      'verb-hada',
-    );
-    expect(hits).toEqual([]);
+/** @param {string} matchedText @param {string} suggestedText */
+function inst(matchedText, suggestedText = matchedText, index = 0) {
+  return { find: 'x', replace: '$0', matchedText, suggestedText, pageNum: 1, index };
+}
+
+describe('enrichAuxiliaryNonAeoSpace — 비아/어는 본조 탭에서 뺀다(2026-11-19)', () => {
+  it('붙여쓰기 가능 칸의 비아/어는 붙임·띄움 모두 빠지고 -아/-어·사전 단어는 남는다', async () => {
+    setStdictVerbFormsForTests(verbForms);
+    const group = {
+      find: 'auxiliary-item:보다',
+      replace: '$0',
+      label: '(아/어) + 보다',
+      groupDisplayLabel: '(아/어) + 보다',
+      category: 'consistency',
+      patternKind: 'auxiliary-verb',
+      bonBojoItemId: 'verb-boda1',
+      instances: [
+        inst('먹다보니', '먹다 보니', 0),
+        inst('먹다 보니', '먹다 보니', 10),
+        inst('먹어보다', '먹어 보다', 20),
+        inst('내다보다', '내다 보다', 30),
+      ],
+    };
+    const out = await enrichAuxiliaryNonAeoSpace([group], [], { rules: [] });
+    expect(out).toHaveLength(1);
+    expect(out[0].instances.map((i) => i.matchedText)).toEqual([
+      '먹어보다',
+      '내다보다',
+    ]);
+    expect(out.some((g) => g.auxNonAeoSpace)).toBe(false);
   });
 
-  it('연결어미 필터: 양성은 남고 해봐·공부하다·듯하다는 탈락', () => {
-    const page =
-      '여기서는뛰지말라 한번먹고봐 해봐 공부하다 비가올듯하다';
-    const hits = [
-      ...collectNonAeoGluedHits(page, 'verb-malda'),
-      ...collectNonAeoGluedHits(page, 'verb-boda1'),
-      ...collectNonAeoGluedHits(page, 'verb-hada'),
-    ];
-    expect(hits.some((h) => h.matchedText.includes('뛰지말'))).toBe(true);
-    expect(hits.some((h) => h.matchedText.includes('먹고봐'))).toBe(true);
-    expect(hits.every((h) => !/듯하|공부하|^해봐$/.test(h.matchedText))).toBe(
-      true,
-    );
-  });
-});
-
-describe('말다 non-aeo', () => {
-  it('게이트+말다 on이면 뛰지말라를 띄움 필수로 잡는다', async () => {
-    let rules = ensureDefaultAuxiliaryVerbs([]);
-    rules = toggleAuxiliaryVerbBundle(
-      rules,
-      BON_BOJO_UI_GROUP.SPACE_REQUIRED_NON_AEO,
-      true,
-    );
-    expect(enabledAuxItemIdsForNonAeo(rules)).toContain('verb-malda');
-
-    const fetchImpl = vi.fn(async () => ({
-      ok: true,
-      status: 200,
-      text: async () => JSON.stringify({ channel: '', item: [] }),
-    }));
-    const out = await enrichAuxiliaryNonAeoSpace(
-      [],
-      [{ pageNum: 1, text: '여기서는뛰지말라' }],
-      { rules, fetchImpl },
-    );
-    const nonAeo = out.filter((g) => g.auxNonAeoSpace);
-    expect(nonAeo.length).toBeGreaterThan(0);
-    const inst = nonAeo.flatMap((g) => g.instances).find((i) =>
-      String(i.matchedText).includes('뛰지말'),
-    );
-    expect(inst).toBeTruthy();
-    expect(inst.suggestedText).toContain(' ');
-    expect(inst.suggestedText.replace(/\s+/g, '')).toBe(
-      inst.matchedText.replace(/\s+/g, ''),
-    );
-  });
-
-  it('1차 말다 줄이 있으면 새 카드를 만들지 않고 같은 줄에 붙인다', async () => {
-    let rules = ensureDefaultAuxiliaryVerbs([]);
-    rules = toggleAuxiliaryVerbBundle(
-      rules,
-      BON_BOJO_UI_GROUP.SPACE_REQUIRED_NON_AEO,
-      true,
-    );
-    const fetchImpl = vi.fn(async () => ({
-      ok: true,
-      status: 200,
-      text: async () => JSON.stringify({ channel: '', item: [] }),
-    }));
-    const existing = {
+  it('말다 줄·옛 게이트 줄·옛 2차 생성 줄은 결과에서 뺀다', async () => {
+    const malda = {
       find: '지 말',
       replace: '$0',
       label: '(-지/게/고) + 말다',
-      groupDisplayLabel: '(-지/게/고) + 말다',
       category: 'consistency',
       patternKind: 'auxiliary-verb',
       bonBojoItemId: 'verb-malda',
-      instances: [
-        {
-          find: '지 말',
-          replace: '$0',
-          matchedText: '뛰지 말고',
-          suggestedText: '뛰지 말고',
-          pageNum: 1,
-          index: 10,
-        },
-      ],
+      instances: [inst('뛰지말라', '뛰지 말라')],
     };
-    const out = await enrichAuxiliaryNonAeoSpace(
-      [existing],
-      [{ pageNum: 32, text: '여기서는뛰지말라' }],
-      { rules, fetchImpl },
+    const gate = {
+      find: 'auxiliary:non-aeo:verb-non-aeo-space',
+      replace: '$0',
+      category: 'consistency',
+      patternKind: 'auxiliary-verb',
+      bonBojoItemId: BON_BOJO_NON_AEO_SPACE_ID,
+      auxNonAeoSpace: true,
+      instances: [inst('먹고봐', '먹고 봐')],
+    };
+    const other = { find: 'x', category: 'consistency', instances: [] };
+    expect(isRetiredNonAeoAuxGroup(malda)).toBe(true);
+    expect(isRetiredNonAeoAuxGroup(gate)).toBe(true);
+    expect(isRetiredNonAeoAuxGroup(other)).toBe(false);
+    const out = await enrichAuxiliaryNonAeoSpace([malda, gate, other], [], {
+      rules: [],
+    });
+    expect(out).toEqual([other]);
+  });
+});
+
+describe('본조 체크 목록에서 비아/어 줄 폐지', () => {
+  it('체크 묶음에 띄어쓰기 필수(비아/어) 줄이 없다', () => {
+    const ids = listBonBojoBundleDefinitions().map((b) => b.id);
+    expect(ids).not.toContain(BON_BOJO_UI_GROUP.SPACE_REQUIRED_NON_AEO);
+  });
+
+  it('옛 저장에서 말다·게이트를 켰어도 규칙은 꺼진다', () => {
+    const on = ensureDefaultAuxiliaryVerbs([]).map((r) =>
+      r.patternKind === 'auxiliary-verb' ? { ...r, enabled: true } : r,
     );
-    const malda = out.filter((g) => g.bonBojoItemId === 'verb-malda');
-    expect(malda).toHaveLength(1);
-    expect(malda[0].instances.some((i) => i.matchedText.includes('뛰지말'))).toBe(
-      true,
+    const rules = ensureDefaultAuxiliaryVerbs(on);
+    const retired = rules.filter(
+      (r) =>
+        r.bonBojoItemId === 'verb-malda' ||
+        r.bonBojoItemId === BON_BOJO_NON_AEO_SPACE_ID,
     );
-    expect(malda[0].instances.some((i) => i.matchedText === '뛰지 말고')).toBe(
-      true,
-    );
+    expect(retired.length).toBeGreaterThan(0);
+    expect(retired.every((r) => r.enabled === false)).toBe(true);
+    expect(
+      rules.some((r) => r.bonBojoItemId === 'verb-boda1' && r.enabled === true),
+    ).toBe(true);
   });
 });

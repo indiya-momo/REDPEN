@@ -14,9 +14,9 @@ import {
 } from './bonBojoRules.js';
 
 describe('auxiliaryVerbBundles', () => {
-  it('4개 묶음·전체 on/off', () => {
+  it('3개 묶음·전체 on/off (비아/어 줄은 2026-11-19 띄어쓰기 폴더로 이관)', () => {
     const bundles = listAuxiliaryVerbBundles();
-    expect(bundles).toHaveLength(4);
+    expect(bundles).toHaveLength(3);
     expect(bundles[0].bundleId).toBe(BON_BOJO_UI_GROUP.GLUE_OPTIONAL);
     expect(bundles[0].itemIds.length).toBeGreaterThan(10);
 
@@ -37,54 +37,41 @@ describe('auxiliaryVerbBundles', () => {
     ).toBe(false);
   });
 
-  it('non-aeo 줄은 전용 게이트 item만 — 3음절과 분리·기본 off', () => {
+  it('비아/어 줄(말다·게이트)은 묶음에 없고 규칙은 항상 꺼짐', () => {
     const bundles = listAuxiliaryVerbBundles();
-    const nonAeo = bundles.find(
-      (b) => b.bundleId === BON_BOJO_UI_GROUP.SPACE_REQUIRED_NON_AEO,
-    );
+    expect(
+      bundles.find((b) => b.bundleId === BON_BOJO_UI_GROUP.SPACE_REQUIRED_NON_AEO),
+    ).toBeUndefined();
     const longSplit = bundles.find(
       (b) => b.bundleId === BON_BOJO_UI_GROUP.SPACE_REQUIRED,
     );
-    expect(nonAeo?.itemIds).toEqual([
-      'verb-malda',
-      BON_BOJO_NON_AEO_SPACE_ID,
-    ]);
     expect(longSplit?.itemIds).toEqual([
       'verb-boida',
       BON_BOJO_LONG_COMPOUND_SPLIT_ID,
     ]);
+    expect(bundles.flatMap((b) => b.itemIds)).not.toContain('verb-malda');
+    expect(bundles.flatMap((b) => b.itemIds)).not.toContain(
+      BON_BOJO_NON_AEO_SPACE_ID,
+    );
 
     let rules = ensureDefaultAuxiliaryVerbs([]);
-    expect(
-      isAuxiliaryVerbBundleEnabled(rules, BON_BOJO_UI_GROUP.SPACE_REQUIRED_NON_AEO),
-    ).toBe(false);
-
     const gate = rules.find((r) => r.bonBojoItemId === BON_BOJO_NON_AEO_SPACE_ID);
     expect(gate?.auxNonAeoGate).toBe(true);
     expect(gate?.enabled).toBe(false);
 
-    rules = toggleAuxiliaryVerbBundle(
-      rules,
-      BON_BOJO_UI_GROUP.SPACE_REQUIRED_NON_AEO,
-      true,
-    );
+    rules = setAllAuxiliaryVerbBundles(rules, true);
+    rules = ensureDefaultAuxiliaryVerbs(rules);
     expect(
-      isAuxiliaryVerbBundleEnabled(rules, BON_BOJO_UI_GROUP.SPACE_REQUIRED_NON_AEO),
+      rules
+        .filter(
+          (r) =>
+            r.bonBojoItemId === 'verb-malda' ||
+            r.bonBojoItemId === BON_BOJO_NON_AEO_SPACE_ID,
+        )
+        .every((r) => r.enabled === false),
     ).toBe(true);
     expect(
       isAuxiliaryVerbBundleEnabled(rules, BON_BOJO_UI_GROUP.SPACE_REQUIRED),
-    ).toBe(false);
-
-    rules = toggleAuxiliaryVerbBundle(
-      rules,
-      BON_BOJO_UI_GROUP.SPACE_REQUIRED,
-      true,
-    );
-    expect(
-      isAuxiliaryVerbBundleEnabled(rules, BON_BOJO_UI_GROUP.SPACE_REQUIRED),
-    ).toBe(true);
-    expect(
-      isAuxiliaryVerbBundleEnabled(rules, BON_BOJO_UI_GROUP.SPACE_REQUIRED_NON_AEO),
     ).toBe(true);
   });
 
