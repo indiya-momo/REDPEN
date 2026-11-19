@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { findDigitUnitSpacingHits } from './digitUnitSpacing.js';
 
-describe('findDigitUnitSpacingHits — S3-5 digit attach', () => {
+describe('findDigitUnitSpacingHits — 제43항 digit attach', () => {
   it('4 명 → 4명', () => {
     expect(findDigitUnitSpacingHits('참가자 4 명')).toEqual([
       expect.objectContaining({
@@ -28,7 +28,7 @@ describe('findDigitUnitSpacingHits — S3-5 digit attach', () => {
   });
 });
 
-describe('findDigitUnitSpacingHits — S3-5b hangul-number space', () => {
+describe('findDigitUnitSpacingHits — 제43항 hangul-number space', () => {
   it('15만명 → 15만 명', () => {
     expect(findDigitUnitSpacingHits('대군 15만명')).toEqual([
       expect.objectContaining({

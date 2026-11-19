@@ -1,16 +1,16 @@
 /**
- * 세종 S3-5 / S3-5b · 맞춤법 제43항 — 숫자·단위 띄어쓰기.
+ * 한글 맞춤법 제43항 — 숫자·단위 띄어쓰기.
  * - 아라비아 숫자+단위는 붙여: 4 명 → 4명
- * - 우리말 수(만·억·조 병용)+단위는 띄어: 15만명 → 15만 명
+ * - 한글로 적은 수(만·억·조 병용 포함)+단위는 띄어: 15만명 → 15만 명
  * - 한글 수사+단위도 띄어(가드·except): 천년 → 천 년, 삼백명 → 삼백 명
- * ruleEngine·시트·맞춤법 핫패스에 붙이지 않는다.
+ * ruleEngine·시트 핫패스에 붙이지 않는다.
  * @see docs/superpowers/specs/2026-11-19-digit-unit-hangul-guard-design.md
  */
 
 export const DIGIT_UNIT_CATEGORY = '수·단위';
 export const DIGIT_UNIT_LABEL = '숫자·단위 띄어쓰기';
 export const DIGIT_UNIT_TIP =
-  '맞춤법 제43항·세종: 아라비아 숫자와 단위는 붙이고, 한글로 적은 수와 단위는 띄어 씁니다.';
+  '한글 맞춤법 제43항: 아라비아 숫자와 단위는 붙이고, 한글로 적은 수와 단위는 띄어 씁니다.';
 
 /** @typedef {'A'|'B'|'C'|'D'|'Y'} UnitGroup */
 /** @typedef {'N1'|'N2'|'N3_MULTI'|'N3_ALONE'} NumeralClass */
@@ -172,7 +172,7 @@ export function findDigitUnitSpacingHits(text) {
     hits.push({ index: start, matchedText, suggestedText, kind });
   };
 
-  // 1) 숫자 + 공백 + 단위 → 붙임 (S3-5)
+  // 1) 숫자 + 공백 + 단위 → 붙임 (제43항)
   {
     const re = new RegExp(
       `(\\d{1,3}(?:,\\d{3})*|\\d+)\\s+(${UNIT_ALT})(?=\\s|$|[^가-힣0-9])`,
@@ -184,7 +184,7 @@ export function findDigitUnitSpacingHits(text) {
     }
   }
 
-  // 2) (숫자|수|몇…)?만|억|조 + 단위 붙여짐 → 띄어 (S3-5b)
+  // 2) (숫자|수|몇…)?만|억|조 + 단위 붙여짐 → 띄어 (제43항)
   {
     const re = new RegExp(
       `${LEFT_BOUND}((?:\\d{1,3}(?:,\\d{3})*|\\d+)?(?:수|몇)?(?:십|백|천)?(만|억|조))(${UNIT_ALT})${RIGHT_BOUND}`,
