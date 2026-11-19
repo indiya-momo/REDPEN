@@ -62,8 +62,8 @@ describe('spacingFolderCheck', () => {
   it('keeps module hit that only overlaps caution', () => {
     const spacing = [
       {
-        category: 'spacing:placeAffix',
-        moduleId: 'place-affix',
+        category: 'spacing:punct',
+        moduleId: 'punct',
         instances: [{ pageNum: 1, index: 0, matchedText: '서울시' }],
       },
     ];
@@ -98,7 +98,6 @@ describe('spacingFolderCheck', () => {
     const enabled = {
       numberUnit: true,
       dependentRieulKka: true,
-      placeAffix: false,
     };
     // numberUnit first module numeral, then dependent first adnominal-dep, then n-ji
     const groups = [
@@ -129,7 +128,6 @@ describe('spacingFolderCheck', () => {
     const enabled = {
       numberUnit: true,
       dependentRieulKka: true,
-      placeAffix: false,
     };
     const spacing = [
       {
