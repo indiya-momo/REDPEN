@@ -24,6 +24,7 @@ import {
 } from '../lib/highlightOverlayLayers.js';
 import { textLayerItemBoxes } from '../lib/manuscriptWorkbench/pageGeometry.js';
 import { resolveTextSelection } from '../lib/manuscriptWorkbench/resolveTextSelection.js';
+import { suppressTipEditSideClicks } from '../lib/manuscriptWorkbench/tipEditGuard.js';
 
 /** 하이라이트 높이 대비 오버레이↔원문 위·아래 패딩 (기준 0.05 → ×1.8, index.css 변수와 동일) */
 const PDF_OVERLAY_PAD_Y_RATIO = 0.09;
@@ -106,6 +107,10 @@ export default function PdfViewer({
   const [error, setError] = useState(null);
   /** @type {{ id: string, tip: string, matchedText: string, left: number, top: number } | null} */
   const [openTip, setOpenTip] = useState(null);
+  /** @type {React.MutableRefObject<object | null>} */
+  const tipEditPayloadRef = useRef(null);
+  /** tip 상자 클릭 직후 하이라이트/모드 버튼으로 클릭이 새는 것 막기 */
+  const suppressTipEditClickRef = useRef(false);
   const [pickedLayerByBase, setPickedLayerByBase] = useState({});
   const highlightsKey = JSON.stringify(highlights);
   const visibleHighlights = useMemo(
@@ -147,6 +152,7 @@ export default function PdfViewer({
   }, [highlights]);
 
   useEffect(() => {
+    tipEditPayloadRef.current = null;
     setOpenTip(null);
   }, [pageNum, highlightsKey]);
 
@@ -436,6 +442,7 @@ export default function PdfViewer({
     const requireConfirmClick = Boolean(tipConfirmGuideAttr);
 
     function dismissTip() {
+      tipEditPayloadRef.current = null;
       setOpenTip(null);
       onHighlightTipDismiss?.();
     }
@@ -523,16 +530,123 @@ export default function PdfViewer({
     return highlightToManualEditPayload(highlight, pageData, layer);
   }
 
-  function handleOverlayDoubleClick(highlight, layer, event) {
-    event.stopPropagation();
-    event.preventDefault();
+  function clearPdfTextSelection() {
+    window.getSelection()?.removeAllRanges();
+  }
+
+  function openOverlayEdit(highlight, layer) {
     if (highlight?.id && layer?.id) pickLayer(highlight.id, layer.id);
     const payload = overlayEditPayload(highlight, layer);
     if (payload) onOverlayEdit?.(payload);
   }
 
+  function handleOverlayDoubleClick(highlight, layer, event) {
+    event.stopPropagation();
+    event.preventDefault();
+    clearPdfTextSelection();
+    requestAnimationFrame(() => clearPdfTextSelection());
+    openOverlayEdit(highlight, layer);
+  }
+
+  function tipEditFallbackPayload(matchedTextRaw) {
+    const matchedText = String(matchedTextRaw || '').trim();
+    const pn = Number(pageData?.pageNum ?? pageNum);
+    if (!matchedText || !Number.isFinite(pn)) return null;
+    const text = String(pageData?.text ?? pageData?.visualText ?? '');
+    const index = text.indexOf(matchedText);
+    const start = index >= 0 ? index : 0;
+    return {
+      pageNum: pn,
+      index: start,
+      start,
+      end: start + matchedText.length,
+      matchedText,
+      find: matchedText,
+      suggestedText: '',
+      replace: '',
+      tip: '',
+      fromHighlight: true,
+    };
+  }
+
+  function beginTipSideClickGuard() {
+    suppressTipEditSideClicks(500);
+    suppressTipEditClickRef.current = true;
+    window.setTimeout(() => {
+      suppressTipEditClickRef.current = false;
+    }, 500);
+  }
+
+  function handleTipEdit(boxText) {
+    if (!onOverlayEdit) return;
+    const boxMatched = String(
+      boxText || openTip?.matchedText || '',
+    ).trim();
+    let payload = tipEditPayloadRef.current || openTip?.editPayload || null;
+    if (!payload && openTip) {
+      const live =
+        liveById.get(openTip.id) ||
+        highlights.find((h) => h.id === openTip.id);
+      const layers = resolveOverlayChoiceLayers(live);
+      payload = overlayEditPayload(
+        live,
+        layers.length === 1 ? layers[0] : null,
+      );
+    }
+    if (!payload) {
+      payload = tipEditFallbackPayload(boxMatched);
+    }
+    if (payload && boxMatched && !String(payload.matchedText || '').trim()) {
+      payload = { ...payload, matchedText: boxMatched, find: boxMatched };
+    }
+    tipEditPayloadRef.current = null;
+    beginTipSideClickGuard();
+    if (payload) onOverlayEdit(payload);
+    setOpenTip(null);
+  }
+
+  function handleTipPickChoice(layerId) {
+    if (!openTip || !layerId) return;
+    pickLayer(openTip.id, layerId);
+    const choice = (openTip.choices || []).find((row) => row.id === layerId);
+    const replaceText = stripOverlayArrow(choice?.label || '').trim();
+    const boxMatched = String(openTip.matchedText || '').trim();
+    const live =
+      liveById.get(openTip.id) ||
+      highlights.find((h) => h.id === openTip.id);
+    const layers = resolveOverlayChoiceLayers(live);
+    const layer = layers.find((row) => row.id === layerId) || null;
+    let payload =
+      tipEditPayloadRef.current ||
+      openTip.editPayload ||
+      overlayEditPayload(live, layer) ||
+      tipEditFallbackPayload(boxMatched);
+    if (payload) {
+      if (boxMatched) {
+        payload = {
+          ...payload,
+          matchedText: boxMatched,
+          find: boxMatched,
+        };
+      }
+      if (replaceText) {
+        payload = {
+          ...payload,
+          suggestedText: replaceText,
+          replace: replaceText,
+        };
+      }
+      payload = { ...payload, fromHighlight: true };
+    }
+    tipEditPayloadRef.current = null;
+    beginTipSideClickGuard();
+    if (payload && onOverlayEdit) onOverlayEdit(payload);
+    setOpenTip(null);
+  }
+
   function handleHighlightClick(rect, event) {
     event.stopPropagation();
+    if (suppressTipEditClickRef.current) return;
     const tip = (rect.tip || '').trim();
     const choices = overlayChoicesFor(rect.highlightId);
     if (!tip && choices.length < 2) return;
@@ -546,19 +660,37 @@ export default function PdfViewer({
     const hit = el.getBoundingClientRect();
     const left = hit.left - wrapBox.left + hit.width / 2;
     const top = hit.top - wrapBox.top - 6;
+    const live =
+      liveById.get(rect.highlightId) ||
+      highlights.find((h) => h.id === rect.highlightId);
+    const layers = resolveOverlayChoiceLayers(live);
+    const matchedText = String(
+      rect.matchedText || live?.matchedText || '',
+    ).trim();
+    const editPayload =
+      overlayEditPayload(
+        live,
+        layers.length === 1 ? layers[0] : null,
+      ) || tipEditFallbackPayload(matchedText);
 
-    setOpenTip((prev) =>
-      prev?.id === rect.highlightId
-        ? null
-        : {
-            id: rect.highlightId,
-            tip,
-            matchedText: rect.matchedText ?? '',
-            choices,
-            left,
-            top,
-          },
-    );
+    if (openTip?.id === rect.highlightId) {
+      tipEditPayloadRef.current = null;
+      setOpenTip(null);
+      return;
+    }
+
+    tipEditPayloadRef.current = editPayload;
+    setOpenTip({
+      id: rect.highlightId,
+      tip,
+      matchedText: String(
+        editPayload?.matchedText || matchedText || '',
+      ).trim(),
+      choices,
+      editPayload,
+      left,
+      top,
+    });
   }
 
   if (!pdf) {
@@ -764,10 +896,8 @@ export default function PdfViewer({
               top={openTip.top}
               choices={openTip.choices}
               confirmGuideAttr={tipConfirmGuideAttr}
-              onPickChoice={(layerId) => {
-                pickLayer(openTip.id, layerId);
-                setOpenTip(null);
-              }}
+              onPickChoice={handleTipPickChoice}
+              onEdit={onOverlayEdit ? handleTipEdit : undefined}
               onClose={() => {
                 setOpenTip(null);
                 onHighlightTipConfirm?.();

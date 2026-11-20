@@ -208,8 +208,36 @@ export function useManuscriptWorkbench({
 
   const openManualFromOverlay = useCallback(
     (inst) => {
-      const edit = instanceToEditDraft(inst);
-      if (!edit) return;
+      let edit = instanceToEditDraft(inst);
+      if (!edit) {
+        const matchedText = String(inst?.matchedText ?? inst?.find ?? '').trim();
+        const pageNum = Number(inst?.pageNum);
+        if (!matchedText || !Number.isFinite(pageNum)) return;
+        const startRaw = Number(inst?.start ?? inst?.index);
+        const start = Number.isFinite(startRaw) ? startRaw : 0;
+        const endRaw = Number(inst?.end);
+        const end =
+          Number.isFinite(endRaw) && endRaw > start
+            ? endRaw
+            : start + matchedText.length;
+        edit = {
+          draft: {
+            pageNum,
+            start,
+            end,
+            matchedText,
+            fromHighlight: true,
+          },
+          replace: String(inst?.suggestedText ?? inst?.replace ?? ''),
+          tip: String(inst?.tip ?? ''),
+          editingTarget: {
+            pageNum,
+            index: Number.isFinite(Number(inst?.index))
+              ? Number(inst.index)
+              : start,
+          },
+        };
+      }
       const already = (manualGroups ?? []).some((group) =>
         (group.instances ?? []).some(
           (row) =>
