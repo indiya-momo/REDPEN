@@ -23,6 +23,7 @@ import ConsistencyPanel from './ConsistencyPanel.jsx';
 import PanelSectionRunButton from './PanelSectionRunButton.jsx';
 import CriteriaHoverTip from './CriteriaHoverTip.jsx';
 import PdfPreviewBar from './PdfPreviewBar.jsx';
+import ManuscriptToolbox from './ManuscriptToolbox.jsx';
 import FaqFabButton from './FaqFabButton.jsx';
 import PdfZoomBar from './PdfZoomBar.jsx';
 import CheckResultsPanel from './CheckResultsPanel.jsx';
@@ -71,6 +72,14 @@ import {
 import { getWorkGuideMessages } from '../lib/workGuideMessages.js';
 import GuideClickHand from './GuideClickHand.jsx';
 import { useHighlights } from '../hooks/useHighlights.js';
+import { useManuscriptWorkbench } from '../hooks/useManuscriptWorkbench.js';
+import {
+  MANUAL_LEAVE_CONFIRM,
+  MANUAL_LEAVE_END_EXTRA,
+  SEARCH_CATEGORY,
+  isManuscriptSearchGroup,
+} from '../lib/manuscriptWorkbench/types.js';
+import { instancesMatch } from '../lib/checkResultUtils.js';
 import {
   PANEL_LEFT_MAX_WIDTH,
   PANEL_LEFT_MIN_WIDTH,
@@ -646,8 +655,10 @@ export default function MainScreen({
   const resetUiForNewPdfRef = useRef(
     /** @type {null | (() => void)} */ (null),
   );
+  const confirmManualsLeaveRef = useRef(async () => true);
   const session = useWorkSession(pdf, ruleCheck, tocCheck, {
     onClearedForNewPdf: () => resetUiForNewPdfRef.current?.(),
+    confirmBeforeReconnect: () => confirmManualsLeaveRef.current(),
   });
   afterCheckRef.current = session.persistSession;
 
@@ -687,10 +698,83 @@ export default function MainScreen({
     clearSpellingTabWork();
   }, [activeSetId, clearConsistencyTabWork, clearSpellingTabWork]);
 
+  const goToPdfPageRef = useRef((pageNum) => {});
+  const manuscript = useManuscriptWorkbench({
+    pageTexts: pdf.pageTexts,
+    currentPage: pdf.currentPage,
+    resetKey: pdf.pdf,
+    goToPdfPage: (pageNum) => goToPdfPageRef.current(pageNum),
+  });
+  const spellingResultsWithManual = useMemo(
+    () => [...(ruleCheck.spellingResults ?? []), ...manuscript.manualGroups],
+    [ruleCheck.spellingResults, manuscript.manualGroups],
+  );
+  const spellingResultsForUi = useMemo(
+    () => [...spellingResultsWithManual, ...manuscript.searchGroups],
+    [spellingResultsWithManual, manuscript.searchGroups],
+  );
+  const confirmManualsLeave = useCallback(async () => {
+    if (!manuscript.manualGroups.length) return true;
+    return showAppConfirm({
+      title: '수정 추가',
+      message: MANUAL_LEAVE_CONFIRM,
+    });
+  }, [manuscript.manualGroups.length]);
+  const openWelcomeGuarded = useCallback(async () => {
+    if (!(await confirmManualsLeave())) return;
+    onOpenWelcome();
+  }, [confirmManualsLeave, onOpenWelcome]);
+  const logoutGuarded = useCallback(async () => {
+    if (!(await confirmManualsLeave())) return;
+    await onLogout();
+  }, [confirmManualsLeave, onLogout]);
+  const openPickerGuarded = useCallback(async () => {
+    if (!(await confirmManualsLeave())) return;
+    await session.openPdfWithPicker();
+  }, [confirmManualsLeave, session.openPdfWithPicker]);
+  const handleFileChangeGuarded = useCallback(
+    async (event) => {
+      if (!(await confirmManualsLeave())) {
+        if (event?.target) event.target.value = '';
+        return;
+      }
+      await session.handleFileChange(event);
+    },
+    [confirmManualsLeave, session.handleFileChange],
+  );
+  const loadPdfFileGuarded = useCallback(
+    async (file) => {
+      if (!(await confirmManualsLeave())) return;
+      await session.loadPdfFile(file);
+    },
+    [confirmManualsLeave, session.loadPdfFile],
+  );
+  const handleClearSessionGuarded = useCallback(async () => {
+    await session.handleClearSession({
+      extraMessage: manuscript.manualGroups.length
+        ? MANUAL_LEAVE_END_EXTRA
+        : undefined,
+    });
+  }, [session.handleClearSession, manuscript.manualGroups.length]);
+  const handleEndWorkGuarded = useCallback(async () => {
+    await session.handleEndWork({
+      extraMessage: manuscript.manualGroups.length
+        ? MANUAL_LEAVE_END_EXTRA
+        : undefined,
+    });
+  }, [session.handleEndWork, manuscript.manualGroups.length]);
+  confirmManualsLeaveRef.current = confirmManualsLeave;
+
+  useEffect(() => {
+    const group = manuscript.searchGroups[0];
+    if (!group?.instances?.length) return;
+    ruleCheck.selectGroup(group, 'spelling');
+  }, [manuscript.searchGroups, ruleCheck.selectGroup]);
+
   const ruleHighlights = useHighlights({
     currentPage: pdf.currentPage,
     currentPageData: pdf.currentPageData,
-    spellingResults: ruleCheck.spellingResults,
+    spellingResults: spellingResultsForUi,
     consistencyResults: [
       ...ruleCheck.consistencyResults,
       ...unifyCandidatePreviewResults,
@@ -732,11 +816,18 @@ export default function MainScreen({
     () =>
       buildTabEntries(
         'spelling',
-        ruleCheck.spellingResults,
+        spellingResultsForUi,
         ruleCheck.consistencyResults,
         pdf.pageTexts,
       ),
-    [ruleCheck.spellingResults, ruleCheck.consistencyResults, pdf.pageTexts],
+    [spellingResultsForUi, ruleCheck.consistencyResults, pdf.pageTexts],
+  );
+  const spellingTabEntriesForExport = useMemo(
+    () =>
+      spellingTabEntries.filter(
+        (entry) => !isManuscriptSearchGroup(entry.group),
+      ),
+    [spellingTabEntries],
   );
 
   const consistencyTabEntries = useMemo(
@@ -1010,7 +1101,7 @@ export default function MainScreen({
     const exportOptions =
       scope === 'spelling'
         ? {
-            entries: spellingTabEntries,
+            entries: spellingTabEntriesForExport,
             formatPageLabel: pageDisplay.formatLabel,
             isInstanceVisible: ruleCheck.isInstanceVisible,
             groupVisibilityMode: ruleCheck.groupVisibilityMode,
@@ -1448,6 +1539,7 @@ export default function MainScreen({
       ruleCheck.goToPage(page);
     }
   };
+  goToPdfPageRef.current = goToPdfPage;
 
   useEffect(() => {
     if (!import.meta.env.DEV || pdf.pdf) return undefined;
@@ -1589,9 +1681,10 @@ export default function MainScreen({
         pdfExportInput = {
           pdfDoc: pdf.pdf,
           pageTexts: pdf.pageTexts,
-          spellingEntries: ruleCheck.spellingCheckDone
-            ? spellingTabEntries
-            : [],
+          spellingEntries:
+            ruleCheck.spellingCheckDone || manuscript.manualGroups.length > 0
+              ? spellingTabEntriesForExport
+              : [],
           consistencyEntries: ruleCheck.consistencyCheckDone
             ? consistencyTabEntries
             : [],
@@ -1624,7 +1717,7 @@ export default function MainScreen({
         try {
           if (exportTab === 'spelling') {
             await exportSpellingResults({
-              entries: spellingTabEntries,
+              entries: spellingTabEntriesForExport,
               formatPageLabel: pageDisplay.formatLabel,
               isInstanceVisible: ruleCheck.isInstanceVisible,
               groupVisibilityMode: ruleCheck.groupVisibilityMode,
@@ -1792,8 +1885,23 @@ export default function MainScreen({
     ],
   );
 
+  const isSameSpellingGroupAsSelected = (group, source) => {
+    if (
+      source === 'spelling' &&
+      (group?.category === 'manual' || group?.category === SEARCH_CATEGORY) &&
+      ruleCheck.spellingSelected
+    ) {
+      return group.instances.some((inst) => instancesMatch(inst, ruleCheck.spellingSelected));
+    }
+    return ruleCheck.isSameGroupAsSelected(group, source);
+  };
+
+  const spellingListOpen =
+    ruleCheck.spellingCheckDone ||
+    manuscript.manualGroups.length > 0 ||
+    manuscript.searchGroups.length > 0;
   const spellingResultsPanel =
-    workTab === 'spelling' && ruleCheck.spellingCheckDone ? (
+    workTab === 'spelling' && spellingListOpen ? (
       <CheckResultsPanel
         entries={spellingTabEntries}
         viewSource="spelling"
@@ -1801,15 +1909,16 @@ export default function MainScreen({
         activeGroup={ruleCheck.activeGroup}
         totalFindings={spellingTabTotalFindings}
         ruleCount={spellingTabEntries.length}
-        spellingCheckDone={ruleCheck.spellingCheckDone}
+        spellingCheckDone={spellingListOpen}
         isGroupVisible={ruleCheck.isGroupVisible}
         onToggleVisibility={ruleCheck.toggleResultVisibility}
         {...ruleCheckInstanceVisibilityProps}
-        isSameGroupAsSelected={ruleCheck.isSameGroupAsSelected}
+        isSameGroupAsSelected={isSameSpellingGroupAsSelected}
         selectedInstance={ruleCheck.spellingSelected}
         onSelectGroup={ruleCheck.selectGroup}
         onSelectPageInGroup={ruleCheck.selectPageInGroup}
         formatPageLabel={pageDisplay.formatLabel}
+        onRemoveManualInstance={manuscript.removeManual}
       />
     ) : null;
 
@@ -1902,7 +2011,12 @@ export default function MainScreen({
             type="button"
             className="btn-add panel-section-run-btn btn-export-results"
             onClick={() => void handleResultsDownload('spelling')}
-            disabled={!ruleCheck.spellingCheckDone || proofreadPdfBusy}
+            disabled={
+              !(
+                ruleCheck.spellingCheckDone ||
+                manuscript.manualGroups.length > 0
+              ) || proofreadPdfBusy
+            }
             title="엑셀·교정용 PDF·인디자인용 PDF 중 형식을 골라 받습니다"
           >
             {proofreadPdfBusy
@@ -2188,7 +2302,7 @@ export default function MainScreen({
               <button
                 type="button"
                 className="btn-ghost btn-ghost--compact panel-header-home"
-                onClick={onOpenWelcome}
+                onClick={() => void openWelcomeGuarded()}
                 aria-label="홈 화면으로"
               >
                 <House size={18} />
@@ -2815,7 +2929,7 @@ export default function MainScreen({
                         });
                         return;
                       }
-                      void session.handleEndWork();
+                      void handleEndWorkGuarded();
                     }}
                   >
                     <FilePlus size={16} aria-hidden />
@@ -2852,7 +2966,7 @@ export default function MainScreen({
                             isGuestBrowseActive() ? '로그아웃' : '메인 화면으로'
                           }
                           onClick={() => {
-                            void onLogout();
+                            void logoutGuarded();
                           }}
                         >
                           <LogOut size={16} aria-hidden />
@@ -2878,7 +2992,7 @@ export default function MainScreen({
                             : '메인 화면으로'
                         }
                         onClick={() => {
-                          void onLogout();
+                          void logoutGuarded();
                         }}
                       >
                         <LogOut size={16} aria-hidden />
@@ -2956,10 +3070,10 @@ export default function MainScreen({
               <>
             <PdfCenterStage
               fileRef={pdf.fileRef}
-              onOpenPicker={session.openPdfWithPicker}
-              onFileChange={session.handleFileChange}
-              onLoadPdfFile={session.loadPdfFile}
-              onClearSession={session.handleClearSession}
+              onOpenPicker={openPickerGuarded}
+              onFileChange={handleFileChangeGuarded}
+              onLoadPdfFile={loadPdfFileGuarded}
+              onClearSession={handleClearSessionGuarded}
               onRunCheck={
                 workTab === 'spelling'
                   ? ruleCheck.runSpellingCheck
@@ -3024,8 +3138,14 @@ export default function MainScreen({
                 pdf={pdf.pdf}
                 pageNum={pdf.currentPage}
                 pageData={pdf.currentPageData}
-                highlights={highlights.pageHighlights}
+                highlights={[
+                  ...highlights.pageHighlights,
+                  ...manuscript.previewPageHighlights,
+                ]}
                 showPageMeta={false}
+                textLayerEnabled={manuscript.textLayerEnabled}
+                onTextSelected={manuscript.onTextSelected}
+                onTextSelectionCancel={manuscript.cancelTextSelection}
                 zoomFactor={pdfZoom.zoomFactor}
                 onZoomFactorChange={pdfZoom.setZoomFactor}
                 guideHighlightActive={guestResultGuideActive}
@@ -3056,6 +3176,31 @@ export default function MainScreen({
                 formatPageText={pageDisplay.formatPageText}
                 toSystemPageFromInput={pageDisplay.toSystemPageFromInput}
                 pageStatus={pdfPageStatus}
+                toolbox={
+                  <ManuscriptToolbox
+                    mode={manuscript.mode}
+                    onModeChange={manuscript.setMode}
+                    query={manuscript.query}
+                    onQueryChange={manuscript.setQuery}
+                    onSearch={() => {
+                      if (workTab !== 'spelling') setWorkTab('spelling');
+                      manuscript.runSearch();
+                    }}
+                    hitCount={manuscript.hits.length}
+                    draft={manuscript.draft}
+                    replace={manuscript.replace}
+                    onReplaceChange={manuscript.setReplace}
+                    tip={manuscript.tip}
+                    onTipChange={manuscript.setTip}
+                    onCommit={manuscript.commitManual}
+                    canCommit={manuscript.canCommit}
+                    commitBlockedReason={manuscript.commitBlockedReason}
+                    longRangeHint={manuscript.longRangeHint}
+                    searchAttempted={manuscript.searchAttempted}
+                    persistNotice={manuscript.persistNotice}
+                    currentPageHasText={manuscript.currentPageHasText}
+                  />
+                }
                 pageMatch={{
                   currentSystemPage: pdf.currentPage,
                   active: pageDisplay.active,

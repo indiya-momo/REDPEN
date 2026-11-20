@@ -31,6 +31,11 @@ import {
   LOANWORD_BADGE_LABEL,
 } from '../lib/checkResultSummaryFormat.js';
 import {
+  MANUAL_BADGE_LABEL,
+  SEARCH_BADGE_LABEL,
+} from '../lib/manuscriptWorkbench/types.js';
+import { manualResultCardTip } from '../lib/manuscriptWorkbench/textPartDiff.js';
+import {
   defaultOpenConsistencyCategory,
   defaultOpenSpellingCategory,
   partitionConsistencyResultEntries,
@@ -298,6 +303,7 @@ function AuxiliarySpacingPageRows(props) {
  *   formatPageLabel?: (systemPage: number) => string,
  *   customRules?: import('../lib/ruleTypes.js').Rule[],
  *   pageTexts?: { text?: string }[],
+ *   onRemoveManualInstance?: (inst: import('../lib/ruleEngine.js').MatchInstance) => void,
  * }} props
  */
 export default function CheckResultsPanel({
@@ -323,6 +329,7 @@ export default function CheckResultsPanel({
   formatPageLabel: formatPageLabelProp,
   customRules = [],
   pageTexts: _pageTexts = [],
+  onRemoveManualInstance,
 }) {
   const pageLabel = formatPageLabelProp ?? formatSystemPageLabel;
 
@@ -371,11 +378,14 @@ export default function CheckResultsPanel({
     const consistencyPartsForCard = isConsistency
       ? getConsistencyResultCardParts(group, customRules)
       : null;
+    const isSearch = group.category === 'manuscript-search';
     const tipText =
-      (group.tip || '').trim() ||
-      (source === 'spelling' && !isCaution
-        ? getBuiltInTip(group.find, group.replace, group.spellingRuleId)
-        : '');
+      group.category === 'manual'
+        ? manualResultCardTip(group)
+        : (group.tip || '').trim() ||
+          (source === 'spelling' && !isCaution && !isSearch
+            ? getBuiltInTip(group.find, group.replace, group.spellingRuleId)
+            : '');
     const selected = isSameGroupAsSelected(group, source);
     const auxiliarySpacing =
       group.patternKind === 'auxiliary-verb'
@@ -494,6 +504,20 @@ export default function CheckResultsPanel({
               shownCount={shownCount}
               className="result-card-head__findings-count"
             />
+            {group.category === 'manual' && onRemoveManualInstance ? (
+              <button
+                type="button"
+                className="result-card-remove-manual"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  for (const inst of group.instances ?? []) {
+                    onRemoveManualInstance(inst);
+                  }
+                }}
+              >
+                지우기
+              </button>
+            ) : null}
           </div>
           {(tipText && (!isConsistency || count === 0)) ||
           group.instances.length > 0 ? (
@@ -606,6 +630,34 @@ export default function CheckResultsPanel({
   /** @type {{ id: string, label: string, criteriaCount: number, findingsCount: number, findingsTotal: number, entries: ResultEntry[] }[]} */
   const spellingSections = [
     {
+      id: 'search',
+      label: SEARCH_BADGE_LABEL,
+      criteriaCount: countGroupsWithVisibleFindings(
+        spellingParts.search,
+        visibleInstanceCount,
+      ),
+      findingsCount: sumVisibleFindings(
+        spellingParts.search,
+        visibleInstanceCount,
+      ),
+      findingsTotal: sumVisibleFindings(spellingParts.search),
+      entries: spellingParts.search,
+    },
+    {
+      id: 'manual',
+      label: MANUAL_BADGE_LABEL,
+      criteriaCount: countGroupsWithVisibleFindings(
+        spellingParts.manual,
+        visibleInstanceCount,
+      ),
+      findingsCount: sumVisibleFindings(
+        spellingParts.manual,
+        visibleInstanceCount,
+      ),
+      findingsTotal: sumVisibleFindings(spellingParts.manual),
+      entries: spellingParts.manual,
+    },
+    {
       id: 'caution',
       label: EDITOR_REVIEW_BADGE_LABEL,
       criteriaCount: countGroupsWithVisibleFindings(
@@ -710,6 +762,8 @@ export default function CheckResultsPanel({
   ].filter((section) => section.entries.length > 0);
 
   const spellingEntriesAll = [
+    ...spellingParts.search,
+    ...spellingParts.manual,
     ...spellingParts.caution,
     ...spellingParts.builtin,
     ...spellingParts.loanword,

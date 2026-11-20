@@ -25,12 +25,17 @@ import {
  * @param {ReturnType<import('./usePdfDocument.js').usePdfDocument>} pdf
  * @param {ReturnType<import('./useRuleCheck.js').useRuleCheck>} ruleCheck
  * @param {ReturnType<import('../toc-body/hooks/useTocBodyCheck.js').useTocBodyCheck>} tocCheck
- * @param {{ onClearedForNewPdf?: () => void }} [options]
+ * @param {{
+ *   onClearedForNewPdf?: () => void,
+ *   confirmBeforeReconnect?: () => boolean | Promise<boolean>,
+ * }} [options]
  */
 export function useWorkSession(pdf, ruleCheck, tocCheck, options = {}) {
-  const { onClearedForNewPdf } = options;
+  const { onClearedForNewPdf, confirmBeforeReconnect } = options;
   const onClearedForNewPdfRef = useRef(onClearedForNewPdf);
   onClearedForNewPdfRef.current = onClearedForNewPdf;
+  const confirmBeforeReconnectRef = useRef(confirmBeforeReconnect);
+  confirmBeforeReconnectRef.current = confirmBeforeReconnect;
   const [sessionHint, setSessionHint] = useState(null);
   const [isRestoring, setIsRestoring] = useState(true);
   const restoreGenerationRef = useRef(0);
@@ -405,6 +410,11 @@ export function useWorkSession(pdf, ruleCheck, tocCheck, options = {}) {
   ]);
 
   const reconnectPdfFile = useCallback(async () => {
+    const confirmReconnect = confirmBeforeReconnectRef.current;
+    if (confirmReconnect) {
+      const ok = await confirmReconnect();
+      if (!ok) return;
+    }
     if (!fileHandleRef.current) {
       await openPdfWithPicker();
       return;
@@ -489,23 +499,23 @@ export function useWorkSession(pdf, ruleCheck, tocCheck, options = {}) {
     [loadPdfFile, pdf.fileRef],
   );
 
-  const handleClearSession = useCallback(async () => {
-    if (
-      !confirm(
-        '저장된 PDF와 검사 결과를 이 브라우저에서 삭제합니다. 계속할까요?',
-      )
-    ) {
+  const handleClearSession = useCallback(async ({ extraMessage } = {}) => {
+    const body =
+      '저장된 PDF와 검사 결과를 이 브라우저에서 삭제합니다. 계속할까요?' +
+      (extraMessage ? `\n${extraMessage}` : '');
+    if (!confirm(body)) {
       return;
     }
     await discardWorkSessionOnLeave();
   }, [discardWorkSessionOnLeave]);
 
   /** 로그인 사용자 「새 업로드」— AppDialog 확인 후 세션 종료 */
-  const handleEndWork = useCallback(async () => {
+  const handleEndWork = useCallback(async ({ extraMessage } = {}) => {
     const ok = await showAppConfirm({
       title: '안내',
       message:
-        '현재 작업을 종료하고 업로드 대기 화면으로 돌아가시겠습니까?\nPDF는 삭제되며 작업 내용은 저장되지 않습니다',
+        '현재 작업을 종료하고 업로드 대기 화면으로 돌아가시겠습니까?\nPDF는 삭제되며 작업 내용은 저장되지 않습니다' +
+        (extraMessage ? `\n${extraMessage}` : ''),
     });
     if (!ok) return;
     await discardWorkSessionOnLeave();

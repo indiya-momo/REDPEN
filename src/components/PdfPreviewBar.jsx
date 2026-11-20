@@ -56,6 +56,7 @@ export default function PdfPreviewBar({
   toSystemPageFromInput = () => null,
   pageMatch = null,
   pageStatus = null,
+  toolbox = null,
 }) {
   const displayCurrent = formatPageText(currentPage);
   const displayTotal = formatPageText(numPages);
@@ -180,6 +181,7 @@ export default function PdfPreviewBar({
           </div>
 
           <div className="pdf-preview-bar__actions-col">
+            {toolbox}
             {pageMatch ? <PrintedPageMatchControl {...pageMatch} /> : null}
             {onToggleThumbStrip ? (
               <CriteriaHoverTip
