@@ -1,4 +1,6 @@
 import { Minus, X } from 'lucide-react';
+import { useLayoutEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   MANUAL_LIST_MODE,
   MANUSCRIPT_TOOLBOX_MODES,
@@ -11,7 +13,6 @@ import {
   MANUAL_LONG_RANGE_HINT,
   MANUAL_PERSIST_NOTICE,
   MANUAL_SEARCH_EMPTY,
-  MANUAL_SEARCH_HINT,
   manualListButtonLabel,
 } from '../lib/manuscriptWorkbench/types.js';
 import {
@@ -40,13 +41,14 @@ function SpaceMarks({ text }) {
 }
 
 export default function ManuscriptToolbox(props) {
+  const rootRef = useRef(/** @type {HTMLDivElement | null} */ (null));
   const listCount = countManualInstances(props.manualGroups);
   const panelOpen =
     props.mode === 'search' ||
     props.mode === 'manual-add' ||
     props.mode === MANUAL_LIST_MODE;
   return (
-    <div className="manuscript-toolbox">
+    <div className="manuscript-toolbox" ref={rootRef}>
       {MANUSCRIPT_TOOLBOX_MODES.map((item) => (
         <ModeButton
           key={item.id}
@@ -65,7 +67,13 @@ export default function ManuscriptToolbox(props) {
           {MANUAL_PERSIST_NOTICE}
         </p>
       ) : null}
-      {panelOpen ? <ToolboxPanel {...props} listCount={listCount} /> : null}
+      {panelOpen ? (
+        <ToolboxPanel
+          {...props}
+          listCount={listCount}
+          anchorRef={rootRef}
+        />
+      ) : null}
     </div>
   );
 }
@@ -122,11 +130,59 @@ function ListModeButton({ count, mode, onModeChange }) {
 
 function ToolboxPanel(props) {
   const listOpen = props.mode === MANUAL_LIST_MODE;
-  return (
+  const [pos, setPos] = useState(
+    /** @type {{ left: number, bottom: number } | null} */ (null),
+  );
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const onDragStart = (e) => {
+    if (e.button !== 0) return;
+    if (e.target.closest('input, textarea, select, button, a, [contenteditable="true"]')) return;
+    e.preventDefault();
+    const startX = e.clientX - offset.x;
+    const startY = e.clientY - offset.y;
+    const move = (ev) => setOffset({ x: ev.clientX - startX, y: ev.clientY - startY });
+    const up = () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+  };
+
+  useLayoutEffect(() => {
+    const anchor = props.anchorRef?.current;
+    if (!anchor) return undefined;
+
+    const place = () => {
+      const box = anchor.getBoundingClientRect();
+      setPos({
+        left: Math.max(8, Math.min(box.left, window.innerWidth - 368)),
+        bottom: Math.max(8, window.innerHeight - box.top + 8),
+      });
+    };
+
+    place();
+    window.addEventListener('resize', place);
+    window.addEventListener('scroll', place, true);
+    return () => {
+      window.removeEventListener('resize', place);
+      window.removeEventListener('scroll', place, true);
+    };
+  }, [props.anchorRef, props.mode, listOpen]);
+
+  if (typeof document === 'undefined' || !pos) return null;
+
+  return createPortal(
     <div
-      className={`manuscript-toolbox__panel${
-        listOpen ? ' manuscript-toolbox__panel--list' : ''
+      className={`manuscript-toolbox__panel manuscript-toolbox__panel--portal${
+        listOpen ? ' manuscript-toolbox__panel--list' : props.mode === 'search' ? ' manuscript-toolbox__panel--search' : ''
       }`}
+      style={{
+        left: `${pos.left}px`,
+        bottom: `${pos.bottom}px`,
+        transform: `translate(${offset.x}px, ${offset.y}px)`,
+      }}
+      onPointerDown={onDragStart}
       role="region"
       aria-label={listOpen ? '수정 리스트' : '원고 작업대'}
     >
@@ -140,7 +196,8 @@ function ToolboxPanel(props) {
       {listOpen ? (
         <ManualListPanel {...props} onModeChange={props.onModeChange} />
       ) : null}
-    </div>
+    </div>,
+    document.body,
   );
 }
 
@@ -169,7 +226,7 @@ function SearchForm({
     ? hitCount > 0
       ? ''
       : MANUAL_SEARCH_EMPTY
-    : MANUAL_SEARCH_HINT;
+    : '';
   return (
     <div>
       <SearchFields query={query} onQueryChange={onQueryChange} onSearch={onSearch} />
@@ -185,10 +242,9 @@ function SearchFields({ query, onQueryChange, onSearch }) {
         className="manuscript-toolbox__input"
         value={query}
         onChange={(e) => onQueryChange(e.target.value)}
-        placeholder="원고에서 찾기"
         aria-label="원고에서 찾기"
       />
-      <button type="submit" className="pdf-work-pane__aux-btn">찾기</button>
+      <button type="submit" className="pdf-work-pane__aux-btn manuscript-toolbox__commit">찾기</button>
     </form>
   );
 }
@@ -213,9 +269,9 @@ function ManualBody({
 }) {
   const hint = currentPageHasText ? (
     <>
-      {MANUAL_ADD_HINT}
+      {MANUAL_ADD_HINT}({MANUAL_ADD_CANCEL_HINT})
       <br />
-      {MANUAL_ADD_HINT_REST}({MANUAL_ADD_CANCEL_HINT})
+      {MANUAL_ADD_HINT_REST}
     </>
   ) : (
     '이 페이지는 선택할 텍스트가 없습니다. 스캔본은 읽지 않습니다.'
@@ -249,6 +305,23 @@ function ManualBody({
   );
 }
 
+/** 빈 수정 안내. 버튼 비활성은 유지하고, 창 아래 상태 문구로는 보여 주지 않는다. */
+const BLANK_REPLACE_STATUS_HINT = '수정을 입력하세요.';
+
+const DRAFT_ROWS_STYLE = {
+  display: 'grid',
+  gridTemplateColumns: 'auto minmax(0, 1fr) auto',
+  columnGap: 8,
+  rowGap: 8,
+  alignItems: 'center',
+};
+
+const DRAFT_LABEL_STYLE = {
+  margin: 0,
+  fontSize: '0.82rem',
+  whiteSpace: 'nowrap',
+};
+
 function DraftFields({
   draft,
   replace,
@@ -261,6 +334,9 @@ function DraftFields({
   longRangeHint,
   editing = false,
 }) {
+  const showCommitReason =
+    Boolean(commitBlockedReason) &&
+    commitBlockedReason !== BLANK_REPLACE_STATUS_HINT;
   return (
     <div className="manuscript-toolbox__draft">
       <p className="manuscript-toolbox__found">
@@ -274,13 +350,23 @@ function DraftFields({
       {longRangeHint ? (
         <p className="manuscript-toolbox__hint">{MANUAL_LONG_RANGE_HINT}</p>
       ) : null}
-      <label className="manuscript-toolbox__field">
-        수정
-        <span className="manuscript-toolbox__space-field">
+      <div className="manuscript-toolbox__draft-rows" style={DRAFT_ROWS_STYLE}>
+        <label
+          htmlFor="manuscript-toolbox-replace"
+          className="manuscript-toolbox__field-label"
+          style={{ ...DRAFT_LABEL_STYLE, gridColumn: 1, gridRow: 1 }}
+        >
+          수정
+        </label>
+        <span
+          className="manuscript-toolbox__space-field"
+          style={{ gridColumn: '2 / -1', gridRow: 1, minWidth: 0 }}
+        >
           <span className="manuscript-toolbox__space-mirror" aria-hidden>
             <SpaceMarks text={replace} />
           </span>
           <input
+            id="manuscript-toolbox-replace"
             className="manuscript-toolbox__input manuscript-toolbox__space-field-input"
             value={encodeSpacesVisible(replace)}
             onChange={(e) => onReplaceChange(decodeSpacesVisible(e.target.value))}
@@ -289,24 +375,32 @@ function DraftFields({
             aria-label="수정"
           />
         </span>
-      </label>
-      <label className="manuscript-toolbox__field">
-        메모
+        <label
+          htmlFor="manuscript-toolbox-tip"
+          className="manuscript-toolbox__field-label"
+          style={{ ...DRAFT_LABEL_STYLE, gridColumn: 1, gridRow: 2 }}
+        >
+          메모
+        </label>
         <input
+          id="manuscript-toolbox-tip"
           className="manuscript-toolbox__input"
+          style={{ gridColumn: 2, gridRow: 2, minWidth: 0, width: '100%' }}
           value={tip}
           onChange={(e) => onTipChange(e.target.value)}
+          aria-label="메모"
         />
-      </label>
-      <button
-        type="button"
-        className="pdf-work-pane__aux-btn manuscript-toolbox__commit"
-        onClick={onCommit}
-        disabled={!canCommit}
-      >
-        {editing ? '리스트에 반영' : '리스트에 추가'}
-      </button>
-      {commitBlockedReason ? (
+        <button
+          type="button"
+          className="pdf-work-pane__aux-btn manuscript-toolbox__commit"
+          style={{ gridColumn: 3, gridRow: 2 }}
+          onClick={onCommit}
+          disabled={!canCommit}
+        >
+          {editing ? '리스트에 반영' : '리스트에 추가'}
+        </button>
+      </div>
+      {showCommitReason ? (
         <p className="manuscript-toolbox__hint">{commitBlockedReason}</p>
       ) : null}
     </div>
