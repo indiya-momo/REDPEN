@@ -87,6 +87,7 @@ describe('getHighlightOverlayReplace', () => {
           group: {
             patternKind: 'auxiliary-verb',
             bonBojoItemId: 'verb-boida',
+            category: 'spacing:nonAeoAux',
             label: '(아/어) + 보이다',
           },
         },

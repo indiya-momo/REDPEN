@@ -35,7 +35,7 @@ describe('bonBojoUiGroupForItemId', () => {
       BON_BOJO_UI_GROUP.SPACE_REQUIRED,
     );
     expect(bonBojoUiGroupForItemId('verb-boida')).toBe(
-      BON_BOJO_UI_GROUP.SPACE_REQUIRED,
+      BON_BOJO_UI_GROUP.SPACE_REQUIRED_NON_AEO,
     );
   });
 });
