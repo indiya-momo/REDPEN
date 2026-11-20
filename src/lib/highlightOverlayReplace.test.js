@@ -483,6 +483,40 @@ describe('getHighlightOverlayReplace', () => {
       ),
     ).toBe('한 번, 한번');
   });
+
+  it('만큼·뿐·대로·같이 검토는 띄움(∨)·붙임(⁀) 두 형태로 보여 준다', () => {
+    const inst = {
+      find: '뿐',
+      replace: '(검토)',
+      matchedText: '뿐',
+      suggestedText: '뿐',
+      pageNum: 1,
+      index: 0,
+    };
+    const cases = [
+      ['josa-uinoun-mankum', '만큼(조사 또는 의존명사)', '만큼'],
+      ['josa-uinoun-ppun', '뿐(조사 또는 의존명사)', '뿐'],
+      ['josa-uinoun-daero', '대로(조사 또는 의존명사)', '대로'],
+      ['josa-busa-gachi', '같이(조사 또는 부사)', '같이'],
+    ];
+    for (const [cautionId, label, word] of cases) {
+      expect(
+        getHighlightOverlayReplace(inst, {
+          group: { category: 'caution', label, cautionId, instances: [] },
+        }),
+      ).toBe(`∨${word} ⁀${word}`);
+    }
+    // cautionId가 없어도 라벨 앞 단어로 알아챈다
+    expect(
+      getHighlightOverlayReplace(inst, {
+        group: {
+          category: 'caution',
+          label: '뿐(조사 또는 의존명사)',
+          instances: [],
+        },
+      }),
+    ).toBe('∨뿐 ⁀뿐');
+  });
 });
 
 describe('markCandidateSpacing', () => {
