@@ -5,11 +5,33 @@ alwaysApply: true
 
 # 베타 freeze (사용자 승인 없이 금지)
 
-- `ruleEngine`, regex, spelling/caution 매칭 로직 변경
-- `MainScreen` dead props 제거·props 시그니처 변경
-- rule-set CRUD UI 복구·대규모 `index.css` monolith 분해
-- `docs/` 배포물 수동 수정 (CI push 후 갱신됨)
+**마지막 갱신:** 2026-11-20 (코드 v1.304 · [`project-docs/PRD.md`](../../project-docs/PRD.md) §6 기준). 이전 갱신 2026-06-01.
+
+> **확인 필요:** 이 freeze가 지금도 그대로 유효한지. 2026-06-01 이후 아래 대상도 승인 작업으로 여러 번 바뀜 (커밋 수: `ruleEngine.js` 24 · `MainScreen.jsx` 127 · `index.css` 74 · `cautionRules.js` 6).
+
+- `ruleEngine`(`src/lib/ruleEngine.js`), regex, spelling/caution 매칭 로직(`src/lib/cautionRules.js` 등) 변경
+- `MainScreen`(`src/components/MainScreen.jsx`, `App.jsx`에서 렌더) dead props 제거·props 시그니처 변경
+- rule-set CRUD UI 복구·대규모 `index.css`(`src/index.css`) monolith 분해
+- `docs/` 배포물 수동 수정 (main push 후 `.github/workflows/deploy-pages.yml`이 갱신)
+
+### 2026-06 이후 추가 기능 — freeze 범위 (확인 필요)
+
+아래는 위 목록에 이름이 없음. 매칭 로직(ruleEngine·regex·spelling/caution)에 해당하는지 **확인 필요** — 여기서 정하지 않음.
+
+- 띄어쓰기 폴더 묶음 `src/lib/spacingFolderBundles.js` · `spacingCategoryRegistry.js` (4묶음, 지명·접미는 v1.299에서 삭제)
+- 본조·표기 통일의 표준국어대사전 판정 `auxiliaryDictSolid.js` · `stdictVerbForms.js` · `stdictPosIndex.js` · `unifyStdictPos.js`
+- 사전 정적 색인 `public/data/stdict-pos-index.json` · `stdict-verb-forms.json` (CC BY-SA 2.0 KR, `STDICT-NOTICE.md`)
+- 내보내기 `src/lib/exportResults.js`(엑셀) · `src/lib/pdfAnnotExport/*`(주석 PDF: 교정본·인디자인용) — 원본 PDF에 주석만 덧붙이고 본문은 고치지 않음
+- 마이페이지 `MyPageWindowScreen.jsx` · `src/components/projectHub/*` (구조 규칙: `mypage-project-hub-split.mdc`)
+
+### 진행 중 작업과의 관계 (미커밋 원고 작업대 · 기술만, 판단 아님)
+
+원고 작업대(검색·수정 추가: `ManuscriptToolbox.jsx`, `useManuscriptWorkbench.js`, `src/lib/manuscriptWorkbench/*`) 미커밋 diff 기준:
+
+- `MainScreen` **자기 props**(`App.jsx` → `MainScreen`)는 바뀌지 않음. 내부 상태·핸들러와 하위 컴포넌트에 넘기는 값만 추가.
+- 하위 컴포넌트에 새 선택(optional) props 추가: `PdfViewer`(`textLayerEnabled`, `onTextSelected`) · `CheckResultsPanel`(`onRemoveManualInstance`) · `PdfPreviewBar`(`toolbox`).
+- 위 하위 컴포넌트 props가 freeze 대상인지(현재 문구는 `MainScreen`만 명시), 반자동 편집기(사전 패널·주석)가 `MainScreen` props를 바꿔야 할 때 허용하는지 — **확인 필요**.
 
 ## 허용 (낮은 위험)
 
-- `welcome-pc` UI/CSS, momo-room 시각 튜닝, smoke용 문서, husky/test 통과하는 작은 fix
+- `welcome-pc`(`src/welcome/pc/*`) UI/CSS — PC 대문 하단 국립국어원 저작권 문구 포함, momo-room(`MomoRoomScreen.jsx`, `momo-room-mobile.css`) 시각 튜닝, smoke용 문서, husky(`.husky/pre-commit`: `npm test` + 버전 올림)/test 통과하는 작은 fix
