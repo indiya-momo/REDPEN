@@ -23,7 +23,7 @@ export const SPACING_FOLDER_BUNDLES = Object.freeze([
     label: '수·단위 (맞춤법 제43항)',
     example: Object.freeze({ find: '이억삼천만', replace: '이억˅삼천만' }),
     moduleIds: Object.freeze(['numeral', 'man-eok-jo', 'digit-unit']),
-    tipLines: Object.freeze(['한글 맞춤법 제43항: 아라비아 숫자와 단위는 붙이고, 한글로 적은 수와 단위는 띄어 씀']),
+    tipLines: Object.freeze(['아라비아 숫자와 단위는 붙이고, 한글로 적은 수와 단위는 띄어 씀']),
   }),
   Object.freeze({
     bundleId: 'dependentRieulKka',
@@ -35,14 +35,14 @@ export const SPACING_FOLDER_BUNDLES = Object.freeze([
       'n-ba',
       'rieul-kka',
     ]),
-    tipLines: Object.freeze(['한글 맞춤법 제42항: 관형사형 어미 뒤 의존명사(수·것·거·만큼…)는 띄어 씀']),
+    tipLines: Object.freeze(['관형사형 어미 뒤 의존명사(수·것·거·만큼…)는 띄어 씀']),
   }),
   Object.freeze({
     bundleId: 'punct',
     label: '문장부호 뒤 띄움 (맞춤법 부록)',
     example: Object.freeze({ find: '갔다.또', replace: '갔다.˅또' }),
     moduleIds: Object.freeze(['punct']),
-    tipLines: Object.freeze(['한글 맞춤법 부록(문장 부호): 문장 부호 뒤는 띄고, 닫는 부호·따옴표와 조사(라고)는 붙여 씀']),
+    tipLines: Object.freeze(['문장 부호 뒤는 띄고, 닫는 부호·따옴표와 조사(라고)는 붙여 씀']),
   }),
   // 2026-11-19: 본조 탭의 비아/어 띄움 필수 줄을 옮겨 옴. 기본 켜짐(아래 default).
   Object.freeze({
@@ -50,7 +50,7 @@ export const SPACING_FOLDER_BUNDLES = Object.freeze([
     label: '본(-아/-어) + 보조용언 아닌 경우 (맞춤법 제47항)',
     example: Object.freeze({ find: '먹지마', replace: '먹지˅마' }),
     moduleIds: Object.freeze(['non-aeo-aux']),
-    tipLines: Object.freeze(['한글 맞춤법 제47항: 보조용언은 본용언이 -아/-어일 때만 붙여 씀']),
+    tipLines: Object.freeze(['보조용언은 본용언이 -아/-어일 때만 붙여 씀']),
   }),
 ]);
 
