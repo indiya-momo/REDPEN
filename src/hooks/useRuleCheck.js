@@ -82,6 +82,11 @@ import {
 } from '../lib/spacingFolderBundles.js';
 import { mergeSpacingFolderIntoSpellingResults } from '../lib/spacingFolderCheck.js';
 import { prepareNonAeoAuxSpacing } from '../lib/nonAeoAuxSpacing.js';
+import {
+  finalizeVerbBoidaSpacingGroups,
+  isVerbBoidaItem,
+  verbBoidaRulesForSpacingCheck,
+} from '../lib/verbBoidaSpacingFolder.js';
 
 /** @param {{
  *   builtInEnabled: Record<string, boolean>,
@@ -170,7 +175,8 @@ export function useRuleCheck({
     () =>
       resolvedCustomRules
         // 비아/어 게이트는 enabled 토글만 — 1차 ruleEngine에 넣지 않음
-        .filter((r) => r.enabled && !r.auxNonAeoGate)
+        // 보이다는 맞춤법 탭 제47항 칸에서 검사한다
+        .filter((r) => r.enabled && !r.auxNonAeoGate && !isVerbBoidaItem(r))
         .map((r) => ({
           ...r,
           category:
@@ -386,6 +392,28 @@ export function useRuleCheck({
           );
           if (spacingGroups.length) {
             merged = [...grouped, ...spacingGroups];
+          }
+        }
+        const boidaRules = verbBoidaRulesForSpacingCheck(
+          resolvedCustomRules,
+          spacingEnabledMap,
+        );
+        if (boidaRules.length) {
+          await bootKiwiIfNeeded({ auxMorph: true, maxWaitMs: 12_000 });
+          const { results: boidaGrouped, errors: boidaErrors } =
+            await runRuleCheckAsync(pageTexts, boidaRules, {
+              globalExcludePhrases,
+              onProgress: reportCheckProgress,
+            });
+          allErrors.push(...boidaErrors);
+          const boidaGroups = await finalizeVerbBoidaSpacingGroups(
+            boidaGrouped,
+            boidaRules,
+            pageTexts,
+            { globalExcludePhrases },
+          );
+          if (boidaGroups.length) {
+            merged = [...merged, ...boidaGroups];
           }
         }
         scopeResults = sortSpellingResultsForDisplay(merged, pageTexts);

@@ -315,7 +315,7 @@ export const BON_BOJO_UI_GROUP_TITLES = {
   [BON_BOJO_UI_GROUP.GLUE_REQUIRED]: '본용언(-아/-어) + 지다· 하다 :붙여쓰기 필수',
   [BON_BOJO_UI_GROUP.SPACE_REQUIRED_NON_AEO]: BON_BOJO_NON_AEO_SPACE_LABEL,
   [BON_BOJO_UI_GROUP.SPACE_REQUIRED]:
-    '본용언이 3음절 이상 복합어·파생어, (아/어)+보이다 : 띄어쓰기 필수',
+    '용언이 3음절 이상 복합어·파생어 : 띄어쓰기 필수',
 };
 
 /**
@@ -349,10 +349,11 @@ export function bonBojoUiGroupForItemId(itemId) {
   if (id === BON_BOJO_NON_AEO_SPACE_ID || isBonBojoNonAeoAuxItem(id)) {
     return BON_BOJO_UI_GROUP.SPACE_REQUIRED_NON_AEO;
   }
-  if (
-    id === BON_BOJO_LONG_COMPOUND_SPLIT_ID ||
-    id === 'verb-boida'
-  ) {
+  if (id === 'verb-boida') {
+    // 화면은 맞춤법 탭 띄어쓰기 제47항 칸. 검사는 띄움 필수(∨) 유지.
+    return BON_BOJO_UI_GROUP.SPACE_REQUIRED_NON_AEO;
+  }
+  if (id === BON_BOJO_LONG_COMPOUND_SPLIT_ID) {
     return BON_BOJO_UI_GROUP.SPACE_REQUIRED;
   }
   if (isBonBojoRequiredItem(id)) {
