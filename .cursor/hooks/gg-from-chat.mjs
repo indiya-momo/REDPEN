@@ -13,6 +13,17 @@ function extractPrompt(payload) {
   return "";
 }
 
+/** @param {unknown} mode */
+export function normalizeComposerMode(mode) {
+  const m = String(mode ?? "").trim().toLowerCase();
+  if (!m) return "";
+  if (m === "plan" || m.includes("plan")) return "plan";
+  if (m === "agent" || m.includes("agent")) return "agent";
+  if (m === "ask" || m.includes("ask")) return "ask";
+  if (m === "edit" || m.includes("edit")) return "edit";
+  return m;
+}
+
 try {
   const rawBuf = await readStdinBuffer();
   let rawText = rawBuf.toString("utf8");
@@ -27,15 +38,20 @@ try {
 
   const root = workspaceRoot(payload);
   const prompt = extractPrompt(payload);
-  const on = promptHasGg(prompt, rawBuf);
-  setGg(root, on);
+  const composerMode = normalizeComposerMode(payload.composer_mode);
+  const saidGg = promptHasGg(prompt, rawBuf);
+  const gateOn = composerMode === "plan" ? saidGg : true;
+  setGg(root, gateOn);
 
   try {
     fs.writeFileSync(
       path.resolve(root, ".cursor", "hooks", "last-gg-from-chat.json"),
       JSON.stringify({
         at: new Date().toISOString(),
-        on,
+        on: gateOn,
+        saidGg,
+        composer_mode: payload.composer_mode ?? null,
+        composerMode,
         root,
         promptPreview: prompt.slice(0, 200),
         promptHex: Buffer.from(prompt, "utf8").toString("hex").slice(0, 120),
