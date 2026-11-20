@@ -2586,7 +2586,7 @@ html[data-build='prod'] .unify-candidate-find__list {
   align-items: center;
   gap: 6px;
   flex-shrink: 0;
-  z-index: 5;
+  z-index: 45;
 }
 
 .manuscript-toolbox__mode--on {
@@ -2605,11 +2605,42 @@ html[data-build='prod'] .unify-candidate-find__list {
   border-radius: var(--radius-ui, 8px);
   background: var(--color-surface, #fff);
   box-shadow: 0 8px 28px rgba(40, 32, 24, 0.16);
-  z-index: 20;
+  z-index: 50;
+}
+
+/* overflow·dialog 뒤로 가리지 않게 body 포털 */
+.manuscript-toolbox__panel--portal {
+  position: fixed;
+  z-index: 12000;
 }
 
 .manuscript-toolbox__panel--list {
-  width: min(420px, calc(100vw - 48px));
+  width: min(294px, calc(100vw - 48px));
+}
+
+.manuscript-toolbox__panel--portal {
+  cursor: move;
+}
+
+.manuscript-toolbox__panel--portal :is(input, textarea) {
+  cursor: text;
+}
+
+.manuscript-toolbox__panel--portal :is(button, a) {
+  cursor: pointer;
+}
+
+.manuscript-toolbox__panel--search {
+  width: auto;
+}
+
+.manuscript-toolbox__panel--search .manuscript-toolbox__input {
+  flex: 0 0 160px;
+  width: 160px;
+}
+
+.manuscript-toolbox__panel--search .manuscript-toolbox__commit {
+  align-self: center;
 }
 
 .manuscript-toolbox__list-head {
@@ -2722,6 +2753,8 @@ html[data-build='prod'] .unify-candidate-find__list {
 .manuscript-toolbox__list-meta {
   color: var(--color-text-secondary, #5c564c);
   font-size: 0.78rem;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .pdf-work-pane__aux-btn.manuscript-toolbox__mode:disabled {
@@ -3760,6 +3793,8 @@ html[data-build='prod'] .unify-candidate-find__list {
   transform-origin: center;
   pointer-events: auto;
   cursor: default;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .pdf-highlight--pillar-spelling {
@@ -4030,6 +4065,28 @@ html[data-build='prod'] .unify-candidate-find__list {
   color: var(--editor-red);
 }
 
+.pdf-highlight-tip__box {
+  display: inline-block;
+  margin: 0 0 6px;
+  padding: 3px 8px;
+  border: 1.5px solid var(--editor-red-ink);
+  border-radius: 4px;
+  background: var(--pdf-highlight-fill-spelling, rgb(248 113 113 / 28%));
+  color: var(--editor-red);
+  font-size: 0.82rem;
+  font-weight: 800;
+  line-height: 1.35;
+  cursor: pointer;
+  text-align: left;
+  word-break: keep-all;
+}
+
+.pdf-highlight-tip__box:hover,
+.pdf-highlight-tip__box:focus-visible {
+  outline: 1px solid var(--editor-red-ink);
+  outline-offset: 1px;
+}
+
 .pdf-highlight-tip__body {
   margin: 0;
   font-size: 0.88rem;
@@ -4143,10 +4200,8 @@ html[data-build='prod'] .unify-candidate-find__list {
 }
 
 .pdf-preview-bar:not(.pdf-preview-bar--chrome-only) {
-  overflow-x: auto;
-  overflow-y: visible;
-  overscroll-behavior-x: contain;
-  scrollbar-width: thin;
+  /* overflow-x:auto 는 y도 auto로 바뀌어 작업대 패널이 잘림 → 스트립만 가로 스크롤 */
+  overflow: visible;
 }
 
 /* 노션형 FAQ — 미리보기 바 위 오른쪽 원형 발바닥 */
@@ -4154,6 +4209,8 @@ html[data-build='prod'] .unify-candidate-find__list {
   position: relative;
   flex-shrink: 0;
   min-width: 0;
+  overflow: visible;
+  z-index: 40;
 }
 
 .pdf-faq-fab {
@@ -4493,7 +4550,10 @@ html[data-build='prod'] .unify-candidate-find__list {
   width: 100%;
   min-width: 0;
   box-sizing: border-box;
-  overflow: visible;
+  overflow-x: auto;
+  overflow-y: visible;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
 }
 
 .pdf-preview-bar__strip-shell--collapsed {
