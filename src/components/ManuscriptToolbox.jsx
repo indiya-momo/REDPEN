@@ -25,6 +25,7 @@ import {
   encodeSpacesVisible,
 } from '../lib/spaceVisibleText.js';
 import { formatSystemPageLabel } from '../lib/printedPageDisplay.js';
+import { isTipEditSideClickSuppressed } from '../lib/manuscriptWorkbench/tipEditGuard.js';
 
 function SpaceMarks({ text }) {
   const encoded = encodeSpacesVisible(text ?? '');
@@ -88,7 +89,10 @@ function ModeButton({ item, mode, onModeChange }) {
       type="button"
       className={className}
       aria-pressed={on}
-      onClick={() => onModeChange(on ? null : item.id)}
+      onClick={() => {
+        if (isTipEditSideClickSuppressed()) return;
+        onModeChange(on ? null : item.id);
+      }}
     >
       {item.label}
     </button>
