@@ -84,6 +84,7 @@ function placePdfHighlightTip(el) {
  *   confirmGuideAttr?: string,
  *   choices?: { id: string, label: string }[],
  *   onPickChoice?: (id: string) => void,
+ *   onEdit?: () => void,
  * }} props
  */
 export default function PdfHighlightTipBubble({
@@ -95,6 +96,7 @@ export default function PdfHighlightTipBubble({
   confirmGuideAttr,
   choices = [],
   onPickChoice,
+  onEdit,
 }) {
   const ref = useRef(null);
 
@@ -115,7 +117,27 @@ export default function PdfHighlightTipBubble({
       role="dialog"
       aria-label="검수 안내"
     >
-      {matchedText ? (
+      {onEdit ? (
+        <button
+          type="button"
+          className="pdf-highlight-tip__box"
+          onPointerDown={(event) => {
+            if (event.button != null && event.button !== 0) return;
+            event.preventDefault();
+            event.stopPropagation();
+            onEdit(matchedText || '');
+          }}
+          onClick={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+          }}
+          aria-label={
+            matchedText ? `${matchedText} 수정` : '내용 수정'
+          }
+        >
+          {matchedText || '내용 수정'}
+        </button>
+      ) : matchedText ? (
         <p className="pdf-highlight-tip__match">{matchedText}</p>
       ) : null}
       {tip ? <p className="pdf-highlight-tip__body">{tip}</p> : null}
@@ -136,7 +158,9 @@ export default function PdfHighlightTipBubble({
           ))}
         </div>
       ) : null}
-      <p className="pdf-highlight-tip__hint">{PDF_HIGHLIGHT_TIP_EDIT_HINT}</p>
+      {onEdit ? (
+        <p className="pdf-highlight-tip__hint">{PDF_HIGHLIGHT_TIP_EDIT_HINT}</p>
+      ) : null}
       <button
         type="button"
         className="pdf-highlight-tip__close"
