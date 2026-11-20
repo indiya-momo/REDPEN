@@ -558,6 +558,8 @@ export default function ConsistencyPanel({
           </summary>
           <p className="auxiliary-checklist-intro hint">
             ｢한글 맞춤법｣에 따라 본+보조용언의 붙여쓰기 · 띄어쓰기 · 표기 통일을 검사합니다
+            <br />
+            보조용언의 쓰임이 맞는지는 편집자의 검토가 필요합니다
           </p>
           <AuxiliaryVerbBundleChecklist
             customRules={customRules}
