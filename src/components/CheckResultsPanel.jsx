@@ -333,8 +333,10 @@ export default function CheckResultsPanel({
 }) {
   const pageLabel = formatPageLabelProp ?? formatSystemPageLabel;
 
-  /** 검사에 잡힌 항목만 — stem 집계만 있는 doc-only 행은 목록에 넣지 않음 */
-  const displayEntries = entries;
+  /** 검사에 잡힌 항목만 — 직접 추가는 하단 수정 리스트에서만 */
+  const displayEntries = (entries ?? []).filter(
+    (entry) => entry?.group?.category !== 'manual',
+  );
 
   const spellingTone =
     viewSource === 'consistency'

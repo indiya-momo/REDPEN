@@ -126,6 +126,8 @@ export function useRuleSets(authUid = '', authEmail = '', options = {}) {
   const cloudSyncTimerRef = useRef(null);
   const cloudHydratedUidRef = useRef('');
   const loadedAuthUidRef = useRef('');
+  /** 이 훅이 방금 쓴 동기화 이벤트는 다시 불러오지 않는다(저장 직후 화면 리셋 방지). */
+  const suppressLocalSyncRef = useRef(0);
 
   activeSetIdRef.current = activeSetId;
   ruleSetsRef.current = ruleSets;
@@ -180,8 +182,13 @@ export function useRuleSets(authUid = '', authEmail = '', options = {}) {
       if (JSON.stringify(merged) !== JSON.stringify(sets)) {
         setRuleSets(merged);
       }
-      saveRuleSets(merged, uid);
-      if (setId) saveActiveSetId(setId, uid);
+      suppressLocalSyncRef.current += 1;
+      try {
+        saveRuleSets(merged, uid);
+        if (setId) saveActiveSetId(setId, uid);
+      } finally {
+        suppressLocalSyncRef.current -= 1;
+      }
       scheduleCloudRuleSetsSync();
     },
     [scheduleCloudRuleSetsSync],
@@ -402,6 +409,7 @@ export function useRuleSets(authUid = '', authEmail = '', options = {}) {
     };
 
     const onLocalSync = (event) => {
+      if (suppressLocalSyncRef.current > 0) return;
       const detailUid = String(
         /** @type {CustomEvent<{ uid?: string }>} */ (event).detail?.uid ?? '',
       ).trim();
@@ -433,7 +441,8 @@ export function useRuleSets(authUid = '', authEmail = '', options = {}) {
             patch.cautionEnabled !== undefined ||
             patch.spacingFolderEnabled !== undefined ||
             patch.customRules !== undefined ||
-            patch.consistencyDecisions !== undefined;
+            patch.consistencyDecisions !== undefined ||
+            patch.manualFindings !== undefined;
           const savedAtBump =
             s.savedAt && touchesCriteria
               ? { savedAt: new Date().toISOString() }

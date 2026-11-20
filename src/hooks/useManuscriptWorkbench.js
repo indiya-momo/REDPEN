@@ -1,23 +1,40 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { searchManuscript } from '../lib/manuscriptWorkbench/searchManuscript.js';
 import {
   addManualFinding,
   canAddManualFinding,
   manualAddRejectReason,
 } from '../lib/manuscriptWorkbench/addManualFinding.js';
-import { removeManualInstance } from '../lib/manuscriptWorkbench/findingsSink.js';
+import {
+  commitEditedManual,
+  instanceToEditDraft,
+} from '../lib/manuscriptWorkbench/editManualFinding.js';
+import {
+  countManualInstances,
+  removeManualInstance,
+} from '../lib/manuscriptWorkbench/findingsSink.js';
 import { searchHitsToGroups } from '../lib/manuscriptWorkbench/searchFindings.js';
+import { MANUAL_LIST_MODE } from '../lib/manuscriptWorkbench/modes.js';
 import {
   MANUAL_LONG_RANGE_HINT_CHARS,
   MANUAL_SOURCE,
 } from '../lib/manuscriptWorkbench/types.js';
+import {
+  hydrateManualGroups,
+  manualFindingsEqual,
+  serializeManualGroups,
+} from '../lib/manuscriptWorkbench/persistManualFindings.js';
 
 /**
  * 원고 작업대 상태. 선택·검색은 setGroups/publish를 부르지 않는다.
+ * 수정 리스트는 프로젝트(ruleSet.manualFindings)에 저장한다.
  * @param {{
  *   pageTexts: import('../lib/pdfService.js').PageData[],
  *   currentPage: number,
  *   resetKey?: unknown,
+ *   projectId?: string,
+ *   savedManualFindings?: unknown,
+ *   onManualFindingsChange?: (rows: import('../lib/manuscriptWorkbench/persistManualFindings.js').StoredManualFinding[]) => void,
  *   goToPdfPage: (pageNum: number) => void,
  * }} options
  */
@@ -25,6 +42,9 @@ export function useManuscriptWorkbench({
   pageTexts,
   currentPage,
   resetKey,
+  projectId,
+  savedManualFindings,
+  onManualFindingsChange,
   goToPdfPage,
 }) {
   const [mode, setMode] = useState(/** @type {string | null} */ (null));
@@ -43,15 +63,59 @@ export function useManuscriptWorkbench({
   );
   const [replace, setReplace] = useState('');
   const [tip, setTip] = useState('');
+  const [editingTarget, setEditingTarget] = useState(
+    /** @type {{ pageNum: number, index: number } | null} */ (null),
+  );
+
+  const persistRef = useRef(onManualFindingsChange);
+  persistRef.current = onManualFindingsChange;
+  const skipPersistRef = useRef(true);
+  const lastSerializedRef = useRef('');
+  const hydratedProjectRef = useRef(/** @type {string | null} */ (null));
+  const groupsCountRef = useRef(0);
+  groupsCountRef.current = countManualInstances(manualGroups);
 
   useEffect(() => {
-    setManualGroups([]);
+    const id = String(projectId ?? '');
+    skipPersistRef.current = true;
+    hydratedProjectRef.current = id;
+    const next = hydrateManualGroups(savedManualFindings);
+    lastSerializedRef.current = JSON.stringify(serializeManualGroups(next));
+    setManualGroups(next);
+  }, [projectId]);
+
+  useEffect(() => {
+    const stored = serializeManualGroups(manualGroups);
+    const key = JSON.stringify(stored);
+    if (skipPersistRef.current) {
+      skipPersistRef.current = false;
+      lastSerializedRef.current = key;
+      return;
+    }
+    if (key === lastSerializedRef.current) return;
+    lastSerializedRef.current = key;
+    persistRef.current?.(stored);
+  }, [manualGroups]);
+
+  useEffect(() => {
+    const id = String(projectId ?? '');
+    if (hydratedProjectRef.current !== id) return;
+    if (groupsCountRef.current > 0) return;
+    if (manualFindingsEqual(savedManualFindings, [])) return;
+    skipPersistRef.current = true;
+    const next = hydrateManualGroups(savedManualFindings);
+    lastSerializedRef.current = JSON.stringify(serializeManualGroups(next));
+    setManualGroups(next);
+  }, [projectId, savedManualFindings]);
+
+  useEffect(() => {
     setHits([]);
     setActiveHit(null);
     setDraft(null);
     setQuery('');
     setReplace('');
     setTip('');
+    setEditingTarget(null);
     setMode(null);
     setSearchAttempted(false);
     setSearchedQuery('');
@@ -91,8 +155,8 @@ export function useManuscriptWorkbench({
   }, []);
 
   const cancelTextSelection = useCallback(() => {
-    setDraft(null);
-    setActiveHit(null);
+    setDraft((prev) => (prev?.fromHighlight ? prev : null));
+    setActiveHit((prev) => (prev?.fromHighlight ? prev : null));
   }, []);
 
   const draftPage = useMemo(() => {
@@ -114,6 +178,56 @@ export function useManuscriptWorkbench({
     draft && draft.end - draft.start >= MANUAL_LONG_RANGE_HINT_CHARS,
   );
 
+  const changeMode = useCallback((next) => {
+    setMode(next);
+    if (next === 'manual-add') {
+      setEditingTarget(null);
+      setDraft(null);
+      setActiveHit(null);
+      setReplace('');
+      setTip('');
+      return;
+    }
+    setEditingTarget(null);
+  }, []);
+
+  const beginEditManual = useCallback(
+    (inst) => {
+      const edit = instanceToEditDraft(inst);
+      if (!edit) return;
+      setDraft(edit.draft);
+      setActiveHit(edit.draft);
+      setReplace(edit.replace);
+      setTip(edit.tip);
+      setEditingTarget(edit.editingTarget);
+      setMode('manual-add');
+      goToPdfPage(edit.draft.pageNum);
+    },
+    [goToPdfPage],
+  );
+
+  const openManualFromOverlay = useCallback(
+    (inst) => {
+      const edit = instanceToEditDraft(inst);
+      if (!edit) return;
+      const already = (manualGroups ?? []).some((group) =>
+        (group.instances ?? []).some(
+          (row) =>
+            Number(row.pageNum) === edit.editingTarget.pageNum &&
+            Number(row.index) === edit.editingTarget.index,
+        ),
+      );
+      setDraft(edit.draft);
+      setActiveHit(edit.draft);
+      setReplace(edit.replace);
+      setTip(edit.tip);
+      setEditingTarget(already ? edit.editingTarget : null);
+      setMode('manual-add');
+      goToPdfPage(edit.draft.pageNum);
+    },
+    [goToPdfPage, manualGroups],
+  );
+
   const commitManual = useCallback(() => {
     if (!draft) return;
     const page = (pageTexts ?? []).find((p) => p.pageNum === draft.pageNum);
@@ -124,15 +238,28 @@ export function useManuscriptWorkbench({
       source: MANUAL_SOURCE,
     };
     if (!canAddManualFinding(manual, page)) return;
-    setManualGroups((groups) => addManualFinding(groups, manual, page));
+    const target = editingTarget;
+    setManualGroups((groups) =>
+      target
+        ? commitEditedManual(groups, target, manual, page)
+        : addManualFinding(groups, manual, page),
+    );
     setReplace('');
     setTip('');
     setDraft(null);
     setActiveHit(null);
-  }, [draft, replace, tip, pageTexts]);
+    setEditingTarget(null);
+    setMode(MANUAL_LIST_MODE);
+  }, [draft, replace, tip, pageTexts, editingTarget]);
 
   const removeManual = useCallback((inst) => {
-    setManualGroups((groups) => removeManualInstance(groups, inst));
+    setManualGroups((groups) => {
+      const next = removeManualInstance(groups, inst);
+      if (countManualInstances(next) === 0) {
+        setMode((prev) => (prev === MANUAL_LIST_MODE ? null : prev));
+      }
+      return next;
+    });
   }, []);
 
   const searchGroups = useMemo(
@@ -166,7 +293,10 @@ export function useManuscriptWorkbench({
 
   return {
     mode,
-    setMode,
+    setMode: changeMode,
+    beginEditManual,
+    openManualFromOverlay,
+    editing: Boolean(editingTarget),
     query,
     setQuery: updateQuery,
     searchAttempted,
@@ -190,7 +320,7 @@ export function useManuscriptWorkbench({
     removeManual,
     previewPageHighlights,
     currentPageHasText,
-    persistNotice: manualGroups.length > 0,
+    persistNotice: false,
     textLayerEnabled: mode === 'manual-add',
   };
 }

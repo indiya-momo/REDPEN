@@ -13,6 +13,7 @@
   --pillar-spelling: #a86b45;
   --pillar-consistency: #5c6b7a;
   --pillar-auxiliary: #6b7c5e;
+  --pillar-manual: #c9a227;
   --sheet-shadow: 0 8px 24px rgba(28, 25, 23, 0.06);
   --sheet-shadow-active: 0 10px 28px rgba(168, 107, 69, 0.18);
   font-family: var(--sheet-font);
@@ -543,6 +544,10 @@
 
 .sheet-card__section--auxiliary {
   border-left: 3px solid var(--pillar-auxiliary);
+}
+
+.sheet-card__section--manual {
+  border-left: 3px solid var(--pillar-manual);
 }
 
 .sheet-card__section--summary {

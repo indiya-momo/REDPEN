@@ -7,6 +7,9 @@ import {
   isInstanceVisible,
 } from '../lib/checkResultUtils.js';
 import { getHighlightOverlayReplace } from '../lib/highlightOverlayReplace.js';
+import { applyHighlightOverlayLayers } from '../lib/highlightOverlayLayers.js';
+import { coveredByManualFinding } from '../lib/manuscriptWorkbench/findingsSink.js';
+import { MANUAL_CATEGORY } from '../lib/manuscriptWorkbench/types.js';
 import { manualUserMemo } from '../lib/manuscriptWorkbench/textPartDiff.js';
 import { isConsistencyUnifyTailWord } from '../lib/consistencyUnifyRegister.js';
 import {
@@ -36,6 +39,7 @@ import {
  *   selectedInstance: import('../lib/ruleEngine.js').MatchInstance | null,
  *   customRules?: import('../lib/ruleTypes.js').Rule[],
  *   pageTexts?: import('../lib/pdfService.js').PageData[],
+ *   manualGroups?: import('../lib/ruleEngine.js').GroupedResult[],
  * }} options
  */
 export function useHighlights({
@@ -49,6 +53,7 @@ export function useHighlights({
   selectedInstance,
   customRules = [],
   pageTexts = [],
+  manualGroups = [],
 }) {
   const pageByNum = useMemo(() => buildPageByNum(pageTexts), [pageTexts]);
   const compareOnPage = useMemo(
@@ -82,6 +87,13 @@ export function useHighlights({
                   : '');
         for (const inst of group.instances) {
           if (inst.pageNum !== currentPage) continue;
+          if (
+            group.category !== MANUAL_CATEGORY &&
+            !inst.manual &&
+            coveredByManualFinding(inst, manualGroups)
+          ) {
+            continue;
+          }
           if (!isInstanceVisible(resultVisibility, source, group, inst)) continue;
           const tipText = String(inst.tip ?? '').trim() || groupTip;
           onPage.push({
@@ -95,7 +107,7 @@ export function useHighlights({
       }
     }
     onPage.sort((a, b) => compareOnPage(a.inst, b.inst));
-    return onPage
+    const mapped = onPage
       .map(({ inst, tip, isCaution, source, group }) => {
         const hasItemIndexes =
           Array.isArray(inst.itemIndexes) && inst.itemIndexes.length > 0;
@@ -121,6 +133,9 @@ export function useHighlights({
                 customRules,
                 group,
               });
+        const highlightedText = String(
+          currentPageData.text ?? currentPageData.visualText ?? '',
+        ).slice(range.start, range.end);
         const pillarTone = resultPillarTone(source, group);
         const badgeTone = resultBadgeTone(source, {
           category: group.category,
@@ -130,12 +145,17 @@ export function useHighlights({
             (isConsistencyUnifyTailWord(customRules, group.tailWord) ||
               Boolean(group.overlayReplace)),
         });
+        const boxText =
+          highlightedText ||
+          String(inst.highlightText ?? '').trim() ||
+          String(inst.matchedText ?? inst.find ?? '');
         return {
           ...range,
           primary,
           id: `${inst.pageNum}-${inst.index}-${inst.find}`,
           tip,
-          matchedText: inst.matchedText,
+          // 말풍선·오버레이 기준은 하이라이트 상자 글자 (앞말+stem 전체 matchedText 아님)
+          matchedText: boxText,
           ...(hasItemIndexes ? { itemIndexes: inst.itemIndexes } : {}),
           pillarTone,
           pillarClass: [
@@ -145,9 +165,31 @@ export function useHighlights({
             .filter(Boolean)
             .join(' '),
           ...(overlayReplace ? { overlayReplace } : {}),
+          // 쉼표 이중 후보(얇다, 가늘다) — 레이어 전개 실패해도 말풍선 선택용
+          ...(group.category === 'caution' &&
+          String(group.label ?? '').includes(',')
+            ? { overlayChoiceSource: String(group.label).trim() }
+            : {}),
+          editPayload: {
+            pageNum: inst.pageNum,
+            index: inst.index,
+            start: range.start,
+            end: range.end,
+            matchedText: boxText,
+            find: String(inst.find ?? inst.matchedText ?? ''),
+            suggestedText: String(
+              inst.suggestedText ?? inst.replace ?? group.replace ?? '',
+            ),
+            replace: String(
+              inst.suggestedText ?? inst.replace ?? group.replace ?? '',
+            ),
+            tip,
+            category: group.category,
+          },
         };
       })
       .filter(Boolean);
+    return applyHighlightOverlayLayers(mapped);
   }, [
     highlightTab,
     spellingResults,
@@ -158,6 +200,7 @@ export function useHighlights({
     selectedInstance,
     customRules,
     compareOnPage,
+    manualGroups,
   ]);
 
   const sortedFindings = useMemo(() => {
@@ -170,6 +213,13 @@ export function useHighlights({
     for (const [source, results] of sources) {
       for (const group of results) {
         for (const inst of group.instances) {
+          if (
+            group.category !== MANUAL_CATEGORY &&
+            !inst.manual &&
+            coveredByManualFinding(inst, manualGroups)
+          ) {
+            continue;
+          }
           if (!isInstanceVisible(resultVisibility, source, group, inst)) continue;
           all.push(inst);
         }
@@ -185,6 +235,7 @@ export function useHighlights({
     consistencyResults,
     resultVisibility,
     compareOnPage,
+    manualGroups,
   ]);
 
   const currentFindingIndex = useMemo(() => {

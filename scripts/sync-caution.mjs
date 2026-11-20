@@ -8,7 +8,7 @@
  *   except: 쉼표 구분 — 매칭된 문구 전체가 목록과 같으면 검사 제외 (예: 여름가지,산가지)
  *   stems: 쉼표 구분 어간 (예: 주,준 → ^주다 한 칸에 주다·준다)
  *   inventory: TRUE = 시트 추적용 변이형(체크 없음). 비우면 stems 묶음에 포함된 어간 행은 자동 추적 처리
- *   match_mode: spaced-before = 앞말+공백+label. attached-before = 앞말+label 붙임. stem-list = stems 나열 형태 그대로. fixed-phrase = 문구+어미. 비우면 any-before
+ *   match_mode: spaced-before = 앞말+공백+label. attached-before = 앞말+label 붙임. stem-list = stems 나열 형태 그대로. fixed-phrase = 문구+어미. sentence-end = 문장 끝(마침표·줄끝·문서 끝)만. numeral-det-before = 수관형사+label 붙임. 비우면 any-before
  *
  * 표기 B — 한 행에 여러 label
  *   group_id | labels | tip | enabled
@@ -213,6 +213,22 @@ function parseMatchMode(value) {
   }
   if (v === 'ap-any' || v === 'any-before' || v === 'any') {
     return 'any-before';
+  }
+  if (
+    v === 'sentence-end' ||
+    v === 'sent-end' ||
+    v === 'end' ||
+    v === '문장끝'
+  ) {
+    return 'sentence-end';
+  }
+  if (
+    v === 'numeral-det-before' ||
+    v === 'num-det-before' ||
+    v === 'mmn-before' ||
+    v === '수관형사'
+  ) {
+    return 'numeral-det-before';
   }
   if (v === 'space') {
     return 'spaced-before';
