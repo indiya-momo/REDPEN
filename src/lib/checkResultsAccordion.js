@@ -8,6 +8,8 @@ import { isConsistencyUnifyResultGroup } from './consistencyUnifyRegister.js';
  *   caution: typeof entries,
  *   builtin: typeof entries,
  *   loanword: typeof entries,
+ *   manual: typeof entries,
+ *   search: typeof entries,
  * }}
  */
 export function partitionSpellingResultEntries(entries) {
@@ -17,24 +19,32 @@ export function partitionSpellingResultEntries(entries) {
   const builtin = [];
   /** @type {typeof entries} */
   const loanword = [];
+  /** @type {typeof entries} */
+  const manual = [];
+  /** @type {typeof entries} */
+  const search = [];
 
   for (const entry of entries ?? []) {
     if (entry?.source !== 'spelling') continue;
     const cat = entry.group?.category;
     if (cat === 'caution') caution.push(entry);
     else if (cat === 'loanword') loanword.push(entry);
+    else if (cat === 'manual') manual.push(entry);
+    else if (cat === 'manuscript-search') search.push(entry);
     else builtin.push(entry);
   }
 
-  return { caution, builtin, loanword };
+  return { caution, builtin, loanword, manual, search };
 }
 
 /**
- * 기본으로 펼칠 카테고리 — 편집자 검토 우선, 없으면 첫 비어 있지 않은 칸.
- * @param {{ caution: unknown[], builtin: unknown[], loanword: unknown[] }} parts
- * @returns {'caution' | 'builtin' | 'loanword' | null}
+ * 기본으로 펼칠 카테고리 — 수정 추가가 있으면 그 칸, 아니면 편집자 검토 우선.
+ * @param {{ caution: unknown[], builtin: unknown[], loanword: unknown[], manual?: unknown[], search?: unknown[] }} parts
+ * @returns {'caution' | 'builtin' | 'loanword' | 'manual' | 'search' | null}
  */
 export function defaultOpenSpellingCategory(parts) {
+  if (parts.search?.length) return 'search';
+  if (parts.manual?.length) return 'manual';
   if (parts.caution.length) return 'caution';
   if (parts.builtin.length) return 'builtin';
   if (parts.loanword.length) return 'loanword';

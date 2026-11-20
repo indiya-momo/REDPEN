@@ -151,6 +151,14 @@ export function getHighlightOverlayReplace(inst, options = {}) {
   if (!inst?.find) return null;
 
   const { customRules = [], group = null } = options;
+  if (group?.category === 'manual') {
+    let suggested = String(
+      inst.suggestedText ?? inst.replace ?? group.replace ?? '',
+    ).trim();
+    if (!suggested) return null;
+    if (suggested.startsWith('→')) return suggested;
+    return `→ ${suggested}`;
+  }
   if (group?.patternKind === 'auxiliary-verb') {
     // 4칸 공통: 잘못된 표면에만 기호.
     // 띄어쓰기 필수(3·비아/어) → 잘못 붙인 것만 ∨. 이미 띄운 올바른 표면은 없음.
