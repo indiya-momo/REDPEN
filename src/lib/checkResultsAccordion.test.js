@@ -20,6 +20,23 @@ describe('partitionSpellingResultEntries', () => {
     expect(parts.caution).toHaveLength(1);
     expect(parts.builtin).toHaveLength(1);
     expect(parts.loanword).toHaveLength(1);
+    expect(parts.manual).toHaveLength(0);
+  });
+
+  it('manuscript-search 카테고리는 검색 칸', () => {
+    const parts = partitionSpellingResultEntries([
+      { source: 'spelling', group: { category: 'manuscript-search', label: '토끼' } },
+    ]);
+    expect(parts.search).toHaveLength(1);
+    expect(parts.builtin).toHaveLength(0);
+  });
+
+  it('manual 카테고리는 수정 추가 칸', () => {
+    const parts = partitionSpellingResultEntries([
+      { source: 'spelling', group: { category: 'manual', label: '직접' } },
+    ]);
+    expect(parts.manual).toHaveLength(1);
+    expect(parts.builtin).toHaveLength(0);
   });
 
   it('category 없는 spelling은 builtin으로', () => {
@@ -43,12 +60,36 @@ describe('partitionSpellingResultEntries', () => {
 });
 
 describe('defaultOpenSpellingCategory', () => {
-  it('편집자 검토를 우선 펼친다', () => {
+  it('검색이 있으면 그 칸을 우선 펼친다', () => {
     expect(
       defaultOpenSpellingCategory({
         caution: [{}],
         builtin: [{}],
         loanword: [],
+        manual: [{}],
+        search: [{}],
+      }),
+    ).toBe('search');
+  });
+
+  it('수정 추가가 있으면 그 칸을 우선 펼친다', () => {
+    expect(
+      defaultOpenSpellingCategory({
+        caution: [{}],
+        builtin: [{}],
+        loanword: [],
+        manual: [{}],
+      }),
+    ).toBe('manual');
+  });
+
+  it('수정 추가 없으면 편집자 검토를 펼친다', () => {
+    expect(
+      defaultOpenSpellingCategory({
+        caution: [{}],
+        builtin: [{}],
+        loanword: [],
+        manual: [],
       }),
     ).toBe('caution');
   });
@@ -59,8 +100,20 @@ describe('defaultOpenSpellingCategory', () => {
         caution: [],
         builtin: [{}],
         loanword: [{}],
+        manual: [],
       }),
     ).toBe('builtin');
+  });
+
+  it('수정 추가만 있으면 그 칸을 연다', () => {
+    expect(
+      defaultOpenSpellingCategory({
+        caution: [],
+        builtin: [],
+        loanword: [],
+        manual: [{}],
+      }),
+    ).toBe('manual');
   });
 });
 

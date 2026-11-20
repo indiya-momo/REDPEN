@@ -8,6 +8,7 @@ import {
 } from '../pdfHighlightRange.js';
 import { markCandidateSpacing, getHighlightOverlayReplace } from '../highlightOverlayReplace.js';
 import { classifyAnnotStyle } from './annotClassify.js';
+import { manualUserMemo } from '../manuscriptWorkbench/textPartDiff.js';
 
 /**
  * @typedef {Object} AnnotFinding
@@ -29,6 +30,7 @@ import { classifyAnnotStyle } from './annotClassify.js';
 function categoryName(category) {
   if (category === 'caution') return '검토';
   if (category === 'loanword') return '외래어 표기';
+  if (category === 'manual') return '수정 추가';
   return '맞춤법';
 }
 
@@ -90,6 +92,7 @@ export function collectAnnotFindings({
   for (const { group, source } of ruleEntries) {
     if (!group) continue;
     if (source !== 'spelling' && source !== 'consistency') continue;
+    if (group.category === 'manuscript-search') continue;
     const isCaution = group.category === 'caution';
     for (const inst of group.instances ?? []) {
       if (isInstanceVisible && !isInstanceVisible(source, group, inst)) continue;
@@ -98,7 +101,10 @@ export function collectAnnotFindings({
       const range = rangeForInstance(page, group, inst, isCaution);
       if (!range || range.end <= range.start) continue;
       const found = page.text.slice(range.start, range.end);
-      const replacement = String(inst.suggestedText ?? '').trim();
+      const replacement =
+        group.category === 'manual'
+          ? String(inst.suggestedText ?? inst.replace ?? '')
+          : String(inst.suggestedText ?? '').trim();
       // 분류는 맞춤법과 동일(띄움만→기호, 검토→review). AnnotFinding.source는 스키마상 spelling|unify.
       const style = classifyAnnotStyle({
         source: 'spelling',
@@ -107,7 +113,10 @@ export function collectAnnotFindings({
         found,
         replacement,
       });
-      const tip = String(group.tip ?? '').trim();
+      const tip =
+        group.category === 'manual'
+          ? manualUserMemo(inst.tip) || manualUserMemo(group.tip)
+          : String(group.tip ?? '').trim();
       const oneLine = found.replace(/\s*\n\s*/g, ' ');
       let label = '';
       let contents = '';
@@ -162,6 +171,7 @@ export function collectAnnotFindings({
                 ? '본용언+보조용언'
                 : '표기 통일'
               : categoryName(group.category),
+        fromManual: group.category === 'manual',
       });
     }
   }

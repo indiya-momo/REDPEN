@@ -202,6 +202,8 @@ export function countSpellingGroupsWithFindings(groups) {
       cautionWithFindings += 1;
     } else if (group.category === 'loanword') {
       loanwordWithFindings += 1;
+    } else if (group.category === 'manual') {
+      continue;
     } else {
       builtinWithFindings += 1;
     }
@@ -224,6 +226,8 @@ export function countSpellingFindingsByCategory(groups) {
       editorReview += count;
     } else if (group.category === 'loanword') {
       loanword += count;
+    } else if (group.category === 'manual') {
+      continue;
     } else {
       spelling += count;
     }

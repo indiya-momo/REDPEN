@@ -43,9 +43,15 @@ export function sortSpellingResultsForDisplay(groups, pagesOrByNum) {
   const caution = [];
   /** @type {GroupedResult[]} */
   const loanword = [];
+  /** @type {GroupedResult[]} */
+  const manual = [];
+  /** @type {GroupedResult[]} */
+  const search = [];
   for (const g of groups) {
     if (g.category === 'caution') caution.push(g);
     else if (g.category === 'loanword') loanword.push(g);
+    else if (g.category === 'manual') manual.push(g);
+    else if (g.category === 'manuscript-search') search.push(g);
     else builtin.push(g);
   }
   const pageByNum =
@@ -56,7 +62,9 @@ export function sortSpellingResultsForDisplay(groups, pagesOrByNum) {
   builtin.sort(cmp);
   caution.sort(cmp);
   loanword.sort(cmp);
-  return [...caution, ...builtin, ...loanword];
+  manual.sort(cmp);
+  search.sort(cmp);
+  return [...search, ...caution, ...builtin, ...loanword, ...manual];
 }
 
 /**

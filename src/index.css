@@ -2580,6 +2580,206 @@ html[data-build='prod'] .unify-candidate-find__list {
   z-index: 20;
 }
 
+.manuscript-toolbox {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  z-index: 5;
+}
+
+.manuscript-toolbox__mode--on {
+  background: var(--btn-secondary-hover-bg);
+}
+
+.manuscript-toolbox__panel {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 8px);
+  width: min(360px, calc(100vw - 48px));
+  max-height: min(420px, 50vh);
+  overflow: auto;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border, #d8d4cc);
+  border-radius: var(--radius-ui, 8px);
+  background: var(--color-surface, #fff);
+  box-shadow: 0 8px 28px rgba(40, 32, 24, 0.16);
+  z-index: 20;
+}
+
+.manuscript-toolbox__search,
+.manuscript-toolbox__draft {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.manuscript-toolbox__draft {
+  margin-top: 1.35em;
+}
+
+.manuscript-toolbox__search {
+  flex-direction: row;
+  align-items: center;
+}
+
+.manuscript-toolbox__input {
+  flex: 1;
+  min-width: 0;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--color-border, #d8d4cc);
+  border-radius: 6px;
+  font: inherit;
+}
+
+.manuscript-toolbox__space-mark {
+  color: #b91c1c;
+  font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+}
+
+.manuscript-toolbox__space-field {
+  position: relative;
+  display: block;
+  background: #fff;
+  border-radius: 6px;
+}
+
+.manuscript-toolbox__space-mirror {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  box-sizing: border-box;
+  padding: 6px 8px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  pointer-events: none;
+  overflow: hidden;
+  white-space: pre;
+  color: var(--color-text, #333);
+  font: inherit;
+  font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+  line-height: inherit;
+}
+
+.manuscript-toolbox__space-field-input {
+  position: relative;
+  z-index: 1;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  caret-color: var(--color-text, #333);
+  background: transparent;
+  font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+}
+
+.manuscript-toolbox__space-field .manuscript-toolbox__input {
+  border-color: #c4bfb6;
+  background: transparent;
+}
+
+.manuscript-toolbox__hits {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  max-height: 220px;
+  overflow: auto;
+}
+
+.manuscript-toolbox__hit {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  margin: 0;
+  padding: 6px 4px;
+  border: none;
+  background: transparent;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+
+.manuscript-toolbox__hit--on,
+.manuscript-toolbox__hit:hover {
+  background: var(--btn-secondary-hover-bg);
+}
+
+.manuscript-toolbox__hit-page {
+  flex-shrink: 0;
+  color: var(--color-text-secondary);
+  font-size: 0.82rem;
+}
+
+.manuscript-toolbox__hit-snip,
+.manuscript-toolbox__hint,
+.manuscript-toolbox__found {
+  font-size: 0.85rem;
+  line-height: 1.35;
+}
+
+.manuscript-toolbox__field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.82rem;
+}
+
+.manuscript-toolbox__quote {
+  font-weight: 600;
+}
+
+.manuscript-toolbox__persist {
+  margin: 0 0 8px;
+  font-size: 0.8rem;
+  line-height: 1.35;
+  color: var(--color-text-secondary, #5c564c);
+}
+
+.manuscript-toolbox__persist--float {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 8px);
+  width: min(320px, calc(100vw - 48px));
+  margin: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--color-border, #d8d4cc);
+  border-radius: var(--radius-ui, 8px);
+  background: var(--color-surface, #fff);
+  box-shadow: 0 8px 28px rgba(40, 32, 24, 0.16);
+  z-index: 19;
+}
+
+.pdf-work-pane__aux-btn.manuscript-toolbox__commit {
+  align-self: flex-end;
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+  border: none;
+  font-weight: 700;
+}
+
+.pdf-work-pane__aux-btn.manuscript-toolbox__commit:hover:not(:disabled) {
+  background: var(--btn-primary-hover-bg);
+  color: var(--btn-primary-hover-text);
+}
+
+.pdf-work-pane__aux-btn.manuscript-toolbox__commit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.result-card-remove-manual {
+  flex-shrink: 0;
+  margin-left: 4px;
+  padding: 0 4px;
+  border: none;
+  background: transparent;
+  color: var(--color-text-secondary, #5c564c);
+  font: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
 .printed-page-match__popover::after {
   content: '';
   position: absolute;
@@ -3387,6 +3587,47 @@ html[data-build='prod'] .unify-candidate-find__list {
   bottom: 0;
   pointer-events: none;
   overflow: visible;
+}
+
+.pdf-text-layer {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  overflow: hidden;
+  cursor: text;
+  caret-color: transparent;
+  forced-color-adjust: none;
+}
+
+.pdf-text-layer__item {
+  position: absolute;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  white-space: pre;
+  line-height: 1;
+  overflow: hidden;
+  user-select: text;
+  cursor: text;
+  transform-origin: 0 0;
+}
+
+/* Chrome은 color:transparent여도 선택 중 HTML 글자를 그려 PDF 본문을 덮는다. */
+.pdf-text-layer ::selection {
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  background: var(--pdf-highlight-fill-spelling);
+}
+
+.pdf-text-layer ::-moz-selection {
+  color: transparent;
+  background: var(--pdf-highlight-fill-spelling);
+}
+
+.pdf-highlight--search-preview {
+  pointer-events: none;
 }
 
 .pdf-highlight {

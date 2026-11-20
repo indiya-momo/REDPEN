@@ -64,10 +64,11 @@ export function resolveOverlappingFindings(items) {
   });
   /** @type {AnnotFinding[]} */
   const kept = [];
-  let dropped = 0;
+  /** @type {AnnotFinding[]} */
+  const droppedItems = [];
   for (const f of sorted) {
     if (kept.some((k) => rangesOverlap(k, f))) {
-      dropped += 1;
+      droppedItems.push(f);
       continue;
     }
     kept.push(f);
@@ -75,7 +76,7 @@ export function resolveOverlappingFindings(items) {
   kept.sort((a, b) =>
     a.pageNum !== b.pageNum ? a.pageNum - b.pageNum : a.start - b.start,
   );
-  return { kept, dropped };
+  return { kept, dropped: droppedItems.length, droppedItems };
 }
 
 /**
@@ -109,9 +110,14 @@ export function prepareIndesignReplaceFindings(findings, pageTexts) {
     withRep.push(f);
   }
 
-  const { kept, dropped } = resolveOverlappingFindings(withRep);
+  const { kept, dropped, droppedItems } = resolveOverlappingFindings(withRep);
+  const includedManual = kept.filter((f) => f.fromManual).length;
+  const overlapManual = (droppedItems ?? []).filter((f) => f.fromManual).length;
   return {
     included: kept,
+    includedManual,
+    overlapManual,
+    overlapEngine: dropped - overlapManual,
     excluded: {
       noReplacement,
       textMismatch,
@@ -138,12 +144,24 @@ export function countExcluded(excluded) {
  *   excluded: IndesignReplacePrepareResult['excluded'],
  * }} counts
  */
-export function formatIndesignReplaceNotice({ included, excluded }) {
+export function formatIndesignReplaceNotice({
+  included,
+  includedManual = 0,
+  excluded,
+  overlapManual = 0,
+  overlapEngine,
+}) {
   const excl = countExcluded(excluded);
+  const overlapEngineN =
+    overlapEngine ?? Math.max(0, (excluded?.overlap ?? 0) - overlapManual);
+  const overlapBit =
+    excluded.overlap > 0
+      ? `겹침 ${excluded.overlap}(수동 ${overlapManual}, 엔진 ${overlapEngineN})`
+      : `겹침 ${excluded.overlap}`;
   const parts = [
-    `포함 ${included}건`,
+    `포함 ${included}건(수동 ${includedManual})`,
     excl
-      ? `제외 ${excl}건(고침 없음 ${excluded.noReplacement}, 검토만 ${excluded.reviewOnly}, 원문 불일치 ${excluded.textMismatch}, 겹침 ${excluded.overlap})`
+      ? `제외 ${excl}건(고침 없음 ${excluded.noReplacement}, 검토만 ${excluded.reviewOnly}, 원문 불일치 ${excluded.textMismatch}, ${overlapBit})`
       : '제외 0건',
   ];
   return (

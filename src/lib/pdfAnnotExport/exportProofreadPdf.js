@@ -70,14 +70,23 @@ export async function exportProofreadPdf({
   /** @type {import('./indesignReplaceFindings.js').IndesignReplacePrepareResult['excluded'] | undefined} */
   let excluded;
   let notice;
+  let includedManual = 0;
+  let overlapManual = 0;
+  let overlapEngine = 0;
 
   if (mode === 'indesignReplace') {
     const prepared = prepareIndesignReplaceFindings(rawFindings, pageTexts);
     findings = prepared.included;
     excluded = prepared.excluded;
+    includedManual = prepared.includedManual ?? 0;
+    overlapManual = prepared.overlapManual ?? 0;
+    overlapEngine = prepared.overlapEngine ?? prepared.excluded.overlap;
     notice = formatIndesignReplaceNotice({
       included: findings.length,
+      includedManual,
       excluded: prepared.excluded,
+      overlapManual,
+      overlapEngine,
     });
   }
 
@@ -92,12 +101,15 @@ export async function exportProofreadPdf({
         (mode === 'indesignReplace'
           ? formatIndesignReplaceNotice({
               included: 0,
+              includedManual,
               excluded: excluded ?? {
                 noReplacement: 0,
                 textMismatch: 0,
                 overlap: 0,
                 reviewOnly: 0,
               },
+              overlapManual,
+              overlapEngine,
             })
           : undefined),
     };
@@ -168,12 +180,15 @@ export async function exportProofreadPdf({
       mode === 'indesignReplace'
         ? formatIndesignReplaceNotice({
             included: total,
+            includedManual,
             excluded: excluded ?? {
               noReplacement: 0,
               textMismatch: 0,
               overlap: 0,
               reviewOnly: 0,
             },
+            overlapManual,
+            overlapEngine,
           })
         : undefined,
     excludedTotal: excluded ? countExcluded(excluded) : 0,

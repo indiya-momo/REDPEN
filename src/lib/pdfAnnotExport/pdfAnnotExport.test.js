@@ -379,15 +379,55 @@ describe('indesignReplace', () => {
       included: 2,
       excluded: { noReplacement: 1, textMismatch: 0, overlap: 1, reviewOnly: 0 },
     });
-    expect(notice).toContain('포함 2건');
+    expect(notice).toContain('포함 2건(수동 0)');
     expect(notice).toContain('제외 2건');
-    expect(notice).toContain('겹침 1');
+    expect(notice).toContain('겹침 1(수동 0, 엔진 1)');
     expect(notice).toContain('가급적 주석을 수정하지 마세요');
     expect(notice).toContain('인디자인 적용 시 어긋날 수 있습니다');
     expect(notice).toContain('인디자인·원본 PDF에 따라 정확도가 달라질 수 있습니다');
     expect(notice).not.toContain('page.text');
     expect(notice).not.toContain('QuadPoints');
     expect(notice).not.toContain('Accept');
+  });
+
+  it('겹침 안내에 수동·엔진을 나눈다', () => {
+    const prepared = prepareIndesignReplaceFindings(
+      [
+        {
+          pageNum: 1,
+          start: 0,
+          end: 5,
+          found: '방문할때면',
+          replacement: '방문할 때면',
+          style: 'strike',
+          fromManual: true,
+        },
+        {
+          pageNum: 1,
+          start: 2,
+          end: 4,
+          found: '할때',
+          replacement: '할 때',
+          style: 'spacing-mark',
+        },
+      ],
+      pageTexts,
+    );
+    expect(prepared.included).toHaveLength(1);
+    expect(prepared.included[0].fromManual).toBe(true);
+    expect(prepared.includedManual).toBe(1);
+    expect(prepared.excluded.overlap).toBe(1);
+    expect(prepared.overlapManual).toBe(0);
+    expect(prepared.overlapEngine).toBe(1);
+    const notice = formatIndesignReplaceNotice({
+      included: prepared.included.length,
+      includedManual: prepared.includedManual,
+      excluded: prepared.excluded,
+      overlapManual: prepared.overlapManual,
+      overlapEngine: prepared.overlapEngine,
+    });
+    expect(notice).toContain('포함 1건(수동 1)');
+    expect(notice).toContain('겹침 1(수동 0, 엔진 1)');
   });
 });
 

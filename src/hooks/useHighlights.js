@@ -7,6 +7,7 @@ import {
   isInstanceVisible,
 } from '../lib/checkResultUtils.js';
 import { getHighlightOverlayReplace } from '../lib/highlightOverlayReplace.js';
+import { manualUserMemo } from '../lib/manuscriptWorkbench/textPartDiff.js';
 import { isConsistencyUnifyTailWord } from '../lib/consistencyUnifyRegister.js';
 import {
   pdfHighlightHasOutline,
@@ -69,12 +70,16 @@ export function useHighlights({
     for (const [source, results] of sources) {
       for (const group of results) {
         const groupTip =
-          (group.tip || '').trim() ||
-          (source === 'spelling' && group.category !== 'caution'
-            ? getBuiltInTip(group.find, group.replace, group.spellingRuleId)
-            : source === 'consistency'
-              ? getConsistencyHighlightTip(group, customRules)
-              : '');
+          group.category === 'manual'
+            ? manualUserMemo(group.tip)
+            : (group.tip || '').trim() ||
+              (source === 'spelling' &&
+              group.category !== 'caution' &&
+              group.category !== 'manuscript-search'
+                ? getBuiltInTip(group.find, group.replace, group.spellingRuleId)
+                : source === 'consistency'
+                  ? getConsistencyHighlightTip(group, customRules)
+                  : '');
         for (const inst of group.instances) {
           if (inst.pageNum !== currentPage) continue;
           if (!isInstanceVisible(resultVisibility, source, group, inst)) continue;
@@ -109,10 +114,13 @@ export function useHighlights({
           selectedInstance != null &&
             instancesMatch(inst, selectedInstance),
         );
-        const overlayReplace = getHighlightOverlayReplace(inst, {
-          customRules,
-          group,
-        });
+        const overlayReplace =
+          group.category === 'manuscript-search'
+            ? null
+            : getHighlightOverlayReplace(inst, {
+                customRules,
+                group,
+              });
         const pillarTone = resultPillarTone(source, group);
         const badgeTone = resultBadgeTone(source, {
           category: group.category,
