@@ -1,4 +1,4 @@
-import { Minimize2, X } from 'lucide-react';
+import { Minus, X } from 'lucide-react';
 import {
   MANUAL_LIST_MODE,
   MANUSCRIPT_TOOLBOX_MODES,
@@ -341,7 +341,7 @@ function ManualListPanel({
           onClick={() => onModeChange?.(null)}
           aria-label="작은 창으로 접기"
         >
-          <Minimize2 size={16} strokeWidth={2.25} aria-hidden />
+          <Minus size={16} strokeWidth={2.25} aria-hidden />
         </button>
       </div>
       <ul className="manuscript-toolbox__list">
