@@ -10,6 +10,32 @@ const AUX_GLUE_MARK = '\u2040';
 /** 띄움 표시. `뛰지말라` → `→뛰지∨말라` */
 const SPACE_INSERT_MARK = '\u2228';
 
+/** 앞말에 따라 띄움/붙임이 갈리는 검토 항목 (PDF 오버레이만) */
+const CAUTION_SPACE_OR_ATTACH_WORD_BY_ID = Object.freeze({
+  'josa-uinoun-mankum': '만큼',
+  'josa-uinoun-ppun': '뿐',
+  'josa-uinoun-daero': '대로',
+  'josa-busa-gachi': '같이',
+});
+
+/**
+ * 검토 라벨 `뿐(조사 또는 의존명사)` 등을 PDF에서는 `∨뿐 ⁀뿐`처럼 두 형태로 보여 준다.
+ * 기호는 맞춤법 오버레이와 같은 띄움(∨)·붙임(⁀).
+ * @param {import('./ruleEngine.js').GroupedResult | null | undefined} group
+ * @returns {string | null}
+ */
+function cautionSpaceOrAttachOverlay(group) {
+  const id = String(group?.cautionId ?? '').trim();
+  let word = CAUTION_SPACE_OR_ATTACH_WORD_BY_ID[id] ?? '';
+  if (!word) {
+    const label = String(group?.label ?? '').trim();
+    const m = /^(만큼|뿐|대로|같이)(?:\(|$)/.exec(label);
+    word = m ? m[1] : '';
+  }
+  if (!word) return null;
+  return `${SPACE_INSERT_MARK}${word} ${AUX_GLUE_MARK}${word}`;
+}
+
 /**
  * 맞춤법 시트 붙임 표시 `^`를 PDF에서 `⁀`로 보여 준다. `∨`는 띄움이라 그대로 둔다.
  * @param {string} text
@@ -215,8 +241,7 @@ export function getHighlightOverlayReplace(inst, options = {}) {
   // 검토(caution): 교정 오버레이가 없고 후보 라벨(group.label)만 있다.
   // collectAnnotFindings의 `overlay || group.label`과 같게 화면도 이 라벨을 쓴다.
   if (group?.category === 'caution') {
-    const label = String(group.label ?? '').trim();
-    return label || null;
+    return cautionSpaceOrAttachOverlay(group) || String(group.label ?? '').trim() || null;
   }
   return null;
 }
