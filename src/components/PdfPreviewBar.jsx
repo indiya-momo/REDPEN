@@ -105,11 +105,14 @@ export default function PdfPreviewBar({
       >
         <div className="pdf-preview-bar__toolbar">
           <div className="pdf-preview-bar__status-col">
+            {toolbox}
             {pageStatus ? (
-              <CurrentPageStatus
-                {...pageStatus}
-                className="current-page-status--in-preview-bar"
-              />
+              <div className="pdf-preview-bar__status-col-meta">
+                <CurrentPageStatus
+                  {...pageStatus}
+                  className="current-page-status--in-preview-bar"
+                />
+              </div>
             ) : null}
           </div>
 
@@ -181,7 +184,6 @@ export default function PdfPreviewBar({
           </div>
 
           <div className="pdf-preview-bar__actions-col">
-            {toolbox}
             {pageMatch ? <PrintedPageMatchControl {...pageMatch} /> : null}
             {onToggleThumbStrip ? (
               <CriteriaHoverTip

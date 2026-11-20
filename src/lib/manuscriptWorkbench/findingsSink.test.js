@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { addManualFinding, manualAddRejectReason } from './addManualFinding.js';
-import { removeManualInstance } from './findingsSink.js';
+import {
+  countManualInstances,
+  coveredByManualFinding,
+  removeManualInstance,
+} from './findingsSink.js';
+import { manualListButtonLabel } from './types.js';
+import { isManuscriptToolboxMode, MANUAL_LIST_MODE } from './modes.js';
 import { collectAnnotFindings } from '../pdfAnnotExport/collectAnnotFindings.js';
 
 const pageTexts = [
@@ -111,6 +117,26 @@ describe('addManualFinding', () => {
     ).toEqual([]);
   });
 
+  it('건수는 카드가 아니라 인스턴스', () => {
+    const groups = addManualFinding(
+      [],
+      {
+        pageNum: 1,
+        start: 2,
+        end: 4,
+        matchedText: '할때',
+        replace: '할 때',
+        source: 'manual',
+      },
+      pageTexts[0],
+    );
+    expect(countManualInstances(groups)).toBe(1);
+    expect(countManualInstances([])).toBe(0);
+    expect(manualListButtonLabel(0)).toBe('수정 리스트');
+    expect(manualListButtonLabel(3)).toBe('수정 리스트 3');
+    expect(isManuscriptToolboxMode(MANUAL_LIST_MODE)).toBe(true);
+  });
+
   it('인스턴스를 지우면 빈 그룹도 빠진다', () => {
     const groups = addManualFinding(
       [],
@@ -144,5 +170,27 @@ describe('addManualFinding', () => {
       manualAddRejectReason({ ...base, start: 0, replace: '할 때' }, page),
     ).toBe('선택한 구간이 원문과 맞지 않습니다.');
     expect(manualAddRejectReason({ ...base, replace: '할 때' }, page)).toBe('');
+  });
+});
+
+describe('coveredByManualFinding', () => {
+  it('수정 리스트에 넣은 자리는 원래 발견을 가린다', () => {
+    const groups = addManualFinding(
+      [],
+      {
+        pageNum: 1,
+        start: 2,
+        end: 4,
+        matchedText: '할때',
+        replace: '할 때',
+        source: 'manual',
+      },
+      pageTexts[0],
+    );
+    expect(coveredByManualFinding({ pageNum: 1, index: 2 }, groups)).toBe(true);
+    expect(coveredByManualFinding({ pageNum: 1, index: 3 }, groups)).toBe(false);
+    expect(
+      coveredByManualFinding({ pageNum: 1, index: 2, manual: true }, groups),
+    ).toBe(false);
   });
 });

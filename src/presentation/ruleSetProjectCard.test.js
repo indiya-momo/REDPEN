@@ -56,6 +56,20 @@ describe('buildProjectCardViewModelFromRuleSet', () => {
     const card = buildProjectCardViewModelFromRuleSet(makeSet());
     expect(card.headline).toBe('맞춤법·표기 통일 기준을 설정하세요');
     expect(card.counts.find).toBe(0);
+    expect(card.counts.manual).toBe(0);
+  });
+
+  it('수정 리스트 건수를 카드에 넣는다', () => {
+    const card = buildProjectCardViewModelFromRuleSet(
+      makeSet({
+        manualFindings: [
+          { pageNum: 1, start: 0, matchedText: '할때', replace: '할 때' },
+          { pageNum: 2, start: 4, matchedText: '마음', replace: '맘' },
+        ],
+      }),
+    );
+    expect(card.counts.manual).toBe(2);
+    expect(card.headline).toContain('수정 리스트 2건');
   });
 
   it('tags·projectContext를 ViewModel에 매핑한다', () => {

@@ -2595,7 +2595,7 @@ html[data-build='prod'] .unify-candidate-find__list {
 
 .manuscript-toolbox__panel {
   position: absolute;
-  right: 0;
+  left: 0;
   bottom: calc(100% + 8px);
   width: min(360px, calc(100vw - 48px));
   max-height: min(420px, 50vh);
@@ -2606,6 +2606,127 @@ html[data-build='prod'] .unify-candidate-find__list {
   background: var(--color-surface, #fff);
   box-shadow: 0 8px 28px rgba(40, 32, 24, 0.16);
   z-index: 20;
+}
+
+.manuscript-toolbox__panel--list {
+  width: min(420px, calc(100vw - 48px));
+}
+
+.manuscript-toolbox__list-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 8px;
+}
+
+.manuscript-toolbox__form-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0 0 8px;
+}
+
+.manuscript-toolbox__form-head .manuscript-toolbox__hint {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+}
+
+.manuscript-toolbox__list-title {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28em;
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--color-text-secondary, #5c564c);
+}
+
+.manuscript-toolbox__list-dock {
+  flex-shrink: 0;
+  width: 1.85rem;
+  height: 1.85rem;
+  color: var(--color-text-secondary, #5c564c);
+}
+
+.manuscript-toolbox .result-findings-count-circle {
+  min-width: 1.65em;
+  min-height: 1.2em;
+  font-size: 0.85em;
+}
+
+.manuscript-toolbox__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.manuscript-toolbox__list-item {
+  position: relative;
+  display: block;
+}
+
+.manuscript-toolbox__list-card {
+  width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  margin: 0;
+  padding: 8px 2rem 8px 10px;
+  border: 1px solid var(--color-border, #d8d4cc);
+  border-radius: var(--radius-ui-sm, 6px);
+  background: var(--panel-result-surface, #fff);
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+
+.manuscript-toolbox__list-remove {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-ui-sm, 6px);
+  background: transparent;
+  color: var(--color-text-muted, #7a746a);
+  cursor: pointer;
+}
+
+.manuscript-toolbox__list-remove:hover {
+  color: var(--accent-terracotta-deep, #8c4a3a);
+  background: var(--panel-accordion-bg, #f4efe6);
+}
+
+.manuscript-toolbox__list-card:hover {
+  background: var(--btn-secondary-hover-bg);
+}
+
+.manuscript-toolbox__list-pair {
+  min-width: 0;
+  word-break: break-word;
+}
+
+.manuscript-toolbox__list-meta {
+  color: var(--color-text-secondary, #5c564c);
+  font-size: 0.78rem;
+}
+
+.pdf-work-pane__aux-btn.manuscript-toolbox__mode:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .manuscript-toolbox__search,
@@ -3688,7 +3809,8 @@ html[data-build='prod'] .unify-candidate-find__list {
   outline-offset: -1px;
 }
 
-.pdf-highlight--has-tip {
+.pdf-highlight--has-tip,
+.pdf-highlight--choice {
   cursor: pointer;
 }
 
@@ -3726,18 +3848,70 @@ html[data-build='prod'] .unify-candidate-find__list {
   position: absolute;
   left: 0;
   top: 0;
-  max-width: calc(100% + 4px);
+  /* 짧은 하이라이트(가는)에 →가늘다가 잘려 →가다로 보이지 않게 */
+  max-width: none;
+  min-width: 0;
+  width: max-content;
   padding: var(--pdf-overlay-pad-y, 0px) 0;
   margin: 0;
+  margin-bottom: 0;
   line-height: 1;
   transform: translateY(-100%);
   background: transparent;
   box-shadow: none;
   white-space: nowrap;
-  pointer-events: none;
+  overflow: visible;
+  pointer-events: auto;
+  cursor: pointer;
   text-align: left;
   grid-column: unset;
+  font-weight: 500;
+  color: var(--editor-red);
+}
+
+.pdf-highlight__overlay-replace:hover,
+.pdf-highlight__overlay-replace:focus-visible {
+  outline: 1px solid var(--editor-red-ink);
+  outline-offset: 1px;
+}
+
+.pdf-highlight__overlay-layers {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: flex-end;
+  gap: 4px;
+  transform: translateY(-100%);
+  pointer-events: none;
+  z-index: 3;
+  line-height: 1;
+  padding: 0;
+}
+
+.pdf-highlight__overlay-arrow {
+  flex-shrink: 0;
+  color: #b91c1c;
+  pointer-events: none;
+  line-height: 1;
+  font-weight: 500;
+  padding: var(--pdf-overlay-pad-y, 0px) 0;
+}
+
+.pdf-highlight__overlay-replace.pdf-highlight__overlay-replace--choice {
+  position: relative;
+  left: auto;
+  top: auto;
+  transform: none;
+  pointer-events: auto;
+  cursor: pointer;
   min-width: 0;
+  max-width: none;
+  margin: 0;
+  line-height: 1;
+  padding: var(--pdf-overlay-pad-y, 0px) 2px;
 }
 
 /* 편집자 빨간펜 — 선택 1건: 박스 밖 하단에 밑줄(글씨·받침 비침) */
@@ -3798,9 +3972,14 @@ html[data-build='prod'] .unify-candidate-find__list {
 }
 
 .pdf-highlight-tip {
+  --pdf-tip-nudge-x: 0px;
+  --pdf-tip-nudge-y: 0px;
   position: absolute;
   z-index: 30;
-  transform: translate(-50%, calc(-100% - 10px));
+  transform: translate(
+    calc(-50% + var(--pdf-tip-nudge-x)),
+    calc(-100% - 10px + var(--pdf-tip-nudge-y))
+  );
   width: max-content;
   max-width: min(22rem, calc(100% - 16px));
   padding: 12px 14px 10px;
@@ -3812,10 +3991,17 @@ html[data-build='prod'] .unify-candidate-find__list {
   pointer-events: auto;
 }
 
+.pdf-highlight-tip--below {
+  transform: translate(
+    calc(-50% + var(--pdf-tip-nudge-x)),
+    calc(10px + var(--pdf-tip-nudge-y))
+  );
+}
+
 .pdf-highlight-tip::after {
   content: '';
   position: absolute;
-  left: 50%;
+  left: clamp(14px, calc(50% - var(--pdf-tip-nudge-x)), calc(100% - 14px));
   bottom: -10px;
   width: 14px;
   height: 14px;
@@ -3825,6 +4011,16 @@ html[data-build='prod'] .unify-candidate-find__list {
   border-bottom: 1.5px solid var(--editor-red-ink);
   transform: rotate(45deg);
   box-shadow: 2px 2px 6px rgb(0 0 0 / 6%);
+}
+
+.pdf-highlight-tip--below::after {
+  top: -7px;
+  bottom: auto;
+  border-right: none;
+  border-bottom: none;
+  border-left: 1.5px solid var(--editor-red-ink);
+  border-top: 1.5px solid var(--editor-red-ink);
+  box-shadow: -2px -2px 6px rgb(0 0 0 / 6%);
 }
 
 .pdf-highlight-tip__match {
@@ -3841,6 +4037,48 @@ html[data-build='prod'] .unify-candidate-find__list {
   color: var(--color-text);
   word-break: keep-all;
   overflow-wrap: break-word;
+}
+
+.pdf-highlight-tip__choices {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0 0;
+}
+
+.pdf-highlight-tip__choices-arrow {
+  flex-shrink: 0;
+  color: var(--editor-red-ink);
+  font-weight: 500;
+}
+
+.pdf-highlight-tip__hint {
+  margin: 8px 0 0;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--color-text-muted);
+  word-break: keep-all;
+}
+
+.pdf-highlight-tip__choice {
+  margin: 0;
+  padding: 3px 8px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 6px;
+  background: var(--color-surface-raised);
+  color: var(--editor-red);
+  font-size: 0.82rem;
+  line-height: 1.3;
+  cursor: pointer;
+}
+
+.pdf-highlight-tip__choice:hover,
+.pdf-highlight-tip__choice:focus-visible {
+  outline: 1px solid var(--editor-red-ink);
+  outline-offset: 1px;
+  border-color: var(--editor-red-ink);
 }
 
 .pdf-highlight-tip__close {
@@ -4011,11 +4249,16 @@ html[data-build='prod'] .unify-candidate-find__list {
   align-self: center;
   min-width: 0;
   max-width: 100%;
-  overflow: hidden;
+  overflow: visible;
   display: flex;
   align-items: center;
   gap: 10px;
   z-index: 2;
+}
+
+.pdf-preview-bar__status-col-meta {
+  min-width: 0;
+  overflow: hidden;
 }
 
 .pdf-preview-bar__status-col .current-page-status--in-preview-bar {
@@ -4110,16 +4353,17 @@ html[data-build='prod'] .unify-candidate-find__list {
   z-index: 2;
 }
 
-@container preview-toolbar (max-width: 720px) {
+@container preview-toolbar (max-width: 840px) {
   .pdf-preview-bar__toolbar {
     grid-template-columns: minmax(0, 1fr) auto;
     grid-template-rows: auto auto;
     row-gap: 6px;
   }
 
-  .pdf-preview-bar__status-col {
-    grid-column: 1;
+  .pdf-preview-bar__jump-row {
+    grid-column: 1 / -1;
     grid-row: 1;
+    justify-self: stretch;
   }
 
   .pdf-preview-bar__actions-col {
@@ -4127,10 +4371,9 @@ html[data-build='prod'] .unify-candidate-find__list {
     grid-row: 1;
   }
 
-  .pdf-preview-bar__jump-row {
+  .pdf-preview-bar__status-col {
     grid-column: 1 / -1;
     grid-row: 2;
-    justify-self: stretch;
   }
 }
 

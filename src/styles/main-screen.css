@@ -2180,6 +2180,20 @@
   flex-wrap: wrap;
 }
 
+/* 표기 통일하기 「직접 지정」 — 오표기 찾기 박스·제목 재사용, 접기 표시만 */
+.panel-left .unify-candidate-find__direct-unify > summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.panel-left .unify-candidate-find__direct-unify > summary::-webkit-details-marker {
+  display: none;
+}
+
+.panel-left .unify-candidate-find__direct-unify:not([open]) > summary {
+  margin-bottom: 0;
+}
+
 .panel-left .unify-candidate-find__ortho-spike-hint {
   margin: 0 0 8px;
 }

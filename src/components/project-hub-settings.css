@@ -79,6 +79,10 @@
   border-left: 3px solid var(--pillar-auxiliary);
 }
 
+.project-hub-settings__nav-btn--manual {
+  border-left: 3px solid var(--pillar-manual, #c9a227);
+}
+
 .project-hub-settings__nav-btn:hover {
   color: var(--color-text);
   border-color: var(--color-border);
@@ -101,6 +105,10 @@
 
 .project-hub-settings__nav-btn--active.project-hub-settings__nav-btn--auxiliary {
   border-left-color: var(--pillar-auxiliary);
+}
+
+.project-hub-settings__nav-btn--active.project-hub-settings__nav-btn--manual {
+  border-left-color: var(--pillar-manual, #c9a227);
 }
 
 .project-hub-settings__main {
@@ -1144,4 +1152,69 @@
   .work-history-panel__criteria-group--tall {
     min-height: 9rem;
   }
+}
+
+.project-hub-settings__card--manual-list {
+  padding: 0.15rem 0 0.35rem;
+}
+
+.project-hub-settings__manual-count {
+  margin-left: 0.2rem;
+  color: var(--pillar-manual, #c9a227);
+}
+
+.project-hub-settings__manual-list {
+  margin: 0.65rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.project-hub-settings__manual-item {
+  position: relative;
+  margin: 0;
+  padding: 0.55rem 2rem 0.55rem 0.65rem;
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--pillar-manual, #c9a227);
+  background: #fff;
+}
+
+.project-hub-settings__manual-body {
+  min-width: 0;
+}
+
+.project-hub-settings__manual-pair {
+  margin: 0;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--color-text);
+  word-break: break-word;
+}
+
+.project-hub-settings__manual-meta {
+  margin: 0.2rem 0 0;
+  font-size: 0.74rem;
+  color: var(--color-text-subtle);
+}
+
+.project-hub-settings__manual-remove {
+  position: absolute;
+  top: 0.35rem;
+  right: 0.35rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.project-hub-settings__manual-remove:hover {
+  color: var(--color-text);
 }

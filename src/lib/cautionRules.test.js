@@ -32,6 +32,21 @@ describe('cautionFindPattern', () => {
     expect(matches(find, '소비자물가지수')).toBe(false);
   });
 
+  it('numeral-det-before: 수관형사+가지만, 동사·명사 붙임·이미 띄움은 제외', () => {
+    const find = cautionFindPattern('가지', 'numeral-det-before');
+    expect(matches(find, '두가지')).toBe(true);
+    expect(matches(find, '세가지')).toBe(true);
+    expect(matches(find, '몇가지')).toBe(true);
+    expect(matches(find, '한가지를')).toBe(true);
+    expect(matches(find, '한두가지')).toBe(true);
+    expect(matches(find, '열가지.')).toBe(true);
+    expect(matches(find, '두 가지')).toBe(false);
+    expect(matches(find, '따라가지')).toBe(false);
+    expect(matches(find, '여름가지')).toBe(false);
+    expect(matches(find, '들어가지')).toBe(false);
+    expect(matches(find, '물가지수')).toBe(false);
+  });
+
   it('attached-before: 토큰 끝 뒤 문장부호·닫는 따옴표는 허용, 글자가 이어지면 제외', () => {
     const find = cautionFindPattern('데요', 'attached-before');
     expect(matches(find, '물리치려고 했데요.')).toBe(true);
@@ -75,6 +90,20 @@ describe('cautionFindPattern', () => {
     expect(matches(find, '이중적인')).toBe(false);
   });
 
+  it('sentence-end: 문장 끝(마침표·줄끝·문서 끝)만, 중간·어미 연결 제외', () => {
+    const findDoe = cautionFindPattern('되', 'sentence-end');
+    const findDwae = cautionFindPattern('돼', 'sentence-end');
+    expect(matches(findDoe, '그게 되.')).toBe(true);
+    expect(matches(findDwae, '그게 돼.')).toBe(true);
+    expect(matches(findDwae, '돼!')).toBe(true);
+    expect(matches(findDoe, '되')).toBe(true);
+    expect(matches(findDoe, '되\n다음 줄')).toBe(true);
+    expect(matches(findDoe, '그렇게 되요.')).toBe(false);
+    expect(matches(findDoe, '되어 있다.')).toBe(false);
+    expect(matches(findDwae, '돼요.')).toBe(false);
+    expect(matches(findDwae, '안돼.')).toBe(false);
+    expect(matches(findDoe, '문장 중간에 되 있다.')).toBe(false);
+  });
   it('any-before: 붙임·띄움 모두 잡음', () => {
     const find = cautionFindPattern('정도', 'any-before');
     expect(matches(find, '오른정도')).toBe(true);
@@ -143,6 +172,15 @@ describe('cautionHighlightSpan', () => {
       text: '가량',
     });
   });
+
+  it('끝 공백이 있어도 가는 stem을 잡는다', () => {
+    expect(
+      cautionHighlightSpan('가는 ', ['얇다', '가늘다', '가는']),
+    ).toEqual({ indexOffset: 0, text: '가는' });
+    expect(
+      cautionHighlightSpan('마음 가는', ['가는', '가늘다']),
+    ).toEqual({ indexOffset: 3, text: '가는' });
+  });
 });
 
 describe('normalizeMatchMode (시트 별칭)', () => {
@@ -151,6 +189,10 @@ describe('normalizeMatchMode (시트 별칭)', () => {
     expect(normalizeMatchMode('ap-space')).toBe('spaced-before');
     expect(normalizeMatchMode('ap-attach')).toBe('attached-before');
     expect(normalizeMatchMode('stem-list')).toBe('stem-list');
+    expect(normalizeMatchMode('sentence-end')).toBe('sentence-end');
+    expect(normalizeMatchMode('sent-end')).toBe('sentence-end');
+    expect(normalizeMatchMode('numeral-det-before')).toBe('numeral-det-before');
+    expect(normalizeMatchMode('수관형사')).toBe('numeral-det-before');
     expect(normalizeMatchMode('spaced-stem')).toBe('stem-list');
   });
 
@@ -234,6 +276,54 @@ describe('jubsa-garyang spaced-before', () => {
       rules,
     ).results.flatMap((g) => g.instances.map((i) => i.matchedText));
     expect(spaced).toContain('년 쯤');
+  });
+});
+
+describe('dannoun-space-gaji numeral-det-before', () => {
+  it('두가지·몇가지는 잡고 따라가지·여름가지는 제외', () => {
+    const gaji = CAUTION_RULES.find((r) => r.id === 'dannoun-space-gaji');
+    expect(gaji?.matchMode).toBe('numeral-det-before');
+    const rules = buildCautionCheckRules({ 'dannoun-space-gaji': true });
+    const { results, errors } = runRuleCheck(
+      [
+        {
+          pageNum: 1,
+          text: '두가지가 있다. 몇가지. 따라가지 마. 여름가지, 두 가지.',
+        },
+      ],
+      rules,
+    );
+    expect(errors).toEqual([]);
+    const hits = results.flatMap((g) => g.instances.map((i) => i.matchedText));
+    expect(hits).toEqual(expect.arrayContaining(['두가지', '몇가지']));
+    expect(hits.some((h) => h.includes('따라가지'))).toBe(false);
+    expect(hits.some((h) => h.includes('여름가지'))).toBe(false);
+    expect(hits).not.toContain('두 가지');
+  });
+});
+
+describe('josa-uinoun-daero except', () => {
+  it('그대로·절대로·반대로는 제외하고 마대로·갈 대로는 잡음', () => {
+    const daero = CAUTION_RULES.find((r) => r.id === 'josa-uinoun-daero');
+    expect(daero?.except).toEqual(
+      expect.arrayContaining(['그대로', '절대로', '반대로']),
+    );
+    const rules = buildCautionCheckRules({ 'josa-uinoun-daero': true });
+    const { results, errors } = runRuleCheck(
+      [
+        {
+          pageNum: 1,
+          text: '그대로 가라. 절대로 가지 마. 반대로 갔다. 마대로 했다. 갈 대로 가라.',
+        },
+      ],
+      rules,
+    );
+    expect(errors).toEqual([]);
+    const hits = results.flatMap((g) => g.instances.map((i) => i.matchedText));
+    expect(hits).toEqual(expect.arrayContaining(['마대로', '갈 대로']));
+    expect(hits.some((h) => h.includes('그대로'))).toBe(false);
+    expect(hits.some((h) => h.includes('절대로'))).toBe(false);
+    expect(hits.some((h) => h.includes('반대로'))).toBe(false);
   });
 });
 

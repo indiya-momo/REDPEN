@@ -600,6 +600,10 @@ export default function App() {
       onSaveCriteriaPreset={handleSaveCriteriaPreset}
       onDeleteCriteriaPreset={handleDeleteCriteriaPreset}
       onTouchActiveProjectContext={touchActiveProjectContext}
+      savedManualFindings={activeSet.manualFindings}
+      onManualFindingsChange={(manualFindings) =>
+        updateActiveSet({ manualFindings })
+      }
       onOpenWelcome={() => {
         welcomeManualReturnRef.current = true;
         const wasGuest = isGuestBrowseActive();

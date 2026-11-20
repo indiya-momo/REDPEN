@@ -2,11 +2,14 @@ import cautionRulesJson from '../data/caution-rules.json';
 import { tailRegexFragmentForFind } from './compoundPatternCommon.js';
 
 /**
- * @typedef {'any-before' | 'spaced-before' | 'attached-before' | 'stem-list' | 'fixed-phrase'} CautionMatchMode
+ * @typedef {'any-before' | 'spaced-before' | 'attached-before' | 'stem-list' | 'fixed-phrase' | 'sentence-end' | 'numeral-det-before'} CautionMatchMode
  * @typedef {{ id: string, label: string, stems?: string[], tip?: string, enabled?: boolean, matchMode?: CautionMatchMode, displayLabel?: string, groupLabel?: string, inventoryOnly?: boolean, except?: string[] }} CautionItem
  * @typedef {{ id: string, title?: string, tip?: string, hideGroupTitle?: boolean, tipInline?: boolean, items: CautionItem[] }} CautionGroup
  * @typedef {{ id: string, label: string, stems: string[], tip: string, groupId: string, enabled: boolean, matchMode: CautionMatchMode, displayLabel: string, inventoryOnly: boolean, except?: string[] }} CautionRule
  */
+/** 고유어 수관형사 (긴 것 우선). 한글 맞춤법 제43항 N1 + 몇·한두·두세·서너 */
+const NUMERAL_DETERMINER_ALT =
+  '예닐곱|대여섯|한두|두세|서너|네댓|너댓|다섯|여섯|일곱|여덟|아홉|스무|스물|서른|마흔|예순|일흔|여든|아흔|한|두|세|네|석|넉|열|몇|쉰';
 
 /** @param {unknown} raw */
 function normalizeGroups(raw) {
@@ -124,6 +127,22 @@ export function normalizeMatchMode(mode) {
   }
   if (v === 'ap-any' || v === 'any-before' || v === 'any') {
     return 'any-before';
+  }
+  if (
+    v === 'sentence-end' ||
+    v === 'sent-end' ||
+    v === 'end' ||
+    v === '문장끝'
+  ) {
+    return 'sentence-end';
+  }
+  if (
+    v === 'numeral-det-before' ||
+    v === 'num-det-before' ||
+    v === 'mmn-before' ||
+    v === '수관형사'
+  ) {
+    return 'numeral-det-before';
   }
   // 레거시: space 단독 = ap-space 와 동일
   if (v === 'space') {
@@ -352,6 +371,14 @@ export function cautionFindPattern(label, matchMode) {
     // 토큰 끝 뒤 문장부호·닫는 따옴표·괄호는 허용(예: 했데요. / 여름가지,)
     return String.raw`([^\s]{1,}${esc})(?![^\s.,!?…:;"'”’」』）)\]])`;
   }
+  if (matchMode === 'numeral-det-before') {
+    // 수관형사+label이 한 토큰 (두가지 O, 따라가지·여름가지 X)
+    return String.raw`(?<![가-힣0-9])((?:${NUMERAL_DETERMINER_ALT})+${esc})(?=$|[^가-힣]|(?:이|가|을|를|은|는|의|에|도|만|씩|로|와|과|부터|까지|이나|으로)(?![가-힣]))`;
+  }
+  if (matchMode === 'sentence-end') {
+    // sentence-end: space/start before; period/newline/EOS after
+    return String.raw`(?:^|(?<=\s))${esc}(?=(?:[」』”’"')\]]*[.!?…。]|\s*\r?\n|$))`;
+  }
   if (matchMode === 'fixed-phrase') {
     const parts = label.trim().split(/\s+/).filter(Boolean);
     if (parts.length >= 2) {
@@ -379,17 +406,20 @@ export function cautionResultChipLabel(groupOrLabel) {
 
 /** @param {string} matchedText @param {string[]} stems */
 export function cautionHighlightSpan(matchedText, stems) {
-  const text = String(matchedText ?? '');
-  if (!text || !stems?.length) {
-    return { indexOffset: 0, text };
+  const raw = String(matchedText ?? '');
+  if (!raw || !stems?.length) {
+    return { indexOffset: 0, text: raw };
   }
+  // spaced-before may append trailing space — trim right before stem match
+  const trail = raw.match(/\s+$/)?.[0] ?? '';
+  const text = trail ? raw.slice(0, -trail.length) : raw;
   const ordered = [...stems].sort((a, b) => b.length - a.length);
   for (const stem of ordered) {
     if (stem && text.endsWith(stem)) {
       return { indexOffset: text.length - stem.length, text: stem };
     }
   }
-  return { indexOffset: 0, text };
+  return { indexOffset: 0, text: raw };
 }
 
 export function buildCautionCheckRules(cautionEnabled) {
