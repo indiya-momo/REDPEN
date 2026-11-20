@@ -23,6 +23,7 @@ import { MAX_PROJECT_TAGS } from '../lib/projectMeta.js';
  *   find: number,
  *   commonString: number,
  *   auxiliary: number,
+ *   manual?: number,
  * }} ProjectCardCounts
  */
 
@@ -41,7 +42,7 @@ import { MAX_PROJECT_TAGS } from '../lib/projectMeta.js';
  */
 
 /**
- * @typedef {'spelling' | 'consistency' | 'auxiliary'} ProjectCardPillarKey
+ * @typedef {'spelling' | 'consistency' | 'auxiliary' | 'manual'} ProjectCardPillarKey
  */
 
 /**
@@ -167,6 +168,7 @@ const PILLAR_META = [
   { key: 'spelling', label: '맞춤법' },
   { key: 'consistency', label: '표기 통일' },
   { key: 'auxiliary', label: '본용언(-아/어) + 보조용언' },
+  { key: 'manual', label: '수정 리스트' },
 ];
 
 /** @param {ProjectCardViewModel} card @param {ProjectCardPillarKey} key */
@@ -181,6 +183,9 @@ function pillarCount(card, key) {
   if (key === 'consistency') {
     return card.counts.find + card.counts.commonString;
   }
+  if (key === 'manual') {
+    return card.counts.manual ?? 0;
+  }
   return card.counts.auxiliary;
 }
 
@@ -188,6 +193,7 @@ const PILLAR_CHIP_PREVIEW_LIMIT = {
   spelling: 2,
   consistency: 1,
   auxiliary: 2,
+  manual: 0,
 };
 
 /**

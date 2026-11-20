@@ -492,6 +492,55 @@ export function phraseLocalRangesInItems(items, itemIndexes, phrase) {
 }
 
 /**
+ * 줄바꿈에 걸친 매칭은 item 전체가 아니라 앞줄 끝·뒷줄 앞 글자만.
+ * @param {import('pdfjs-dist').TextItem[]} items
+ * @param {TextItemRef[]} itemRefs
+ * @param {number} matchStart
+ * @param {number} matchEnd
+ * @param {string} [phrase]
+ * @returns {{ itemIndex: number, localStart: number, localEnd: number }[]}
+ */
+export function clipMatchToItemLocals(
+  items,
+  itemRefs,
+  matchStart,
+  matchEnd,
+  phrase = '',
+) {
+  const overlapping = [];
+  for (const ref of itemRefs ?? []) {
+    if (ref.end <= matchStart || ref.start >= matchEnd) continue;
+    overlapping.push(ref);
+  }
+  const indexes = overlapping.map((ref) => ref.itemIndex);
+  const phraseRanges = phrase
+    ? phraseLocalRangesInItems(items, indexes, phrase)
+    : null;
+  /** @type {{ itemIndex: number, localStart: number, localEnd: number }[]} */
+  const out = [];
+  for (const ref of overlapping) {
+    const item = items[ref.itemIndex];
+    if (!item || !('str' in item) || !item.str) continue;
+    const fromPhrase = phraseRanges?.get(ref.itemIndex);
+    if (fromPhrase) {
+      out.push({
+        itemIndex: ref.itemIndex,
+        localStart: fromPhrase.start,
+        localEnd: fromPhrase.end,
+      });
+      continue;
+    }
+    if (phraseRanges && overlapping.length > 1) continue;
+    const spanLen = Math.max(ref.end - ref.start, 0);
+    const localStart = Math.max(0, matchStart - ref.start);
+    const localEnd = Math.min(spanLen || item.str.length, matchEnd - ref.start);
+    if (localEnd <= localStart) continue;
+    out.push({ itemIndex: ref.itemIndex, localStart, localEnd });
+  }
+  return out;
+}
+
+/**
  * TextItem 인덱스로 직접 하이라이트 (깨진 itemRefs 우회).
  * @param {import('pdfjs-dist').PDFPageProxy} page
  * @param {import('pdfjs-dist').PageViewport} viewport
@@ -558,28 +607,31 @@ export function highlightRectsForTextRange(
 ) {
   /** @type {Array<{ left: number, top: number, width: number, height: number }>} */
   const rects = [];
+  const phrase = pageData
+    ? String(pageData.text ?? pageData.visualText ?? '').slice(
+        matchStart,
+        matchEnd,
+      )
+    : '';
+  const locals = clipMatchToItemLocals(
+    items,
+    itemRefs,
+    matchStart,
+    matchEnd,
+    phrase,
+  );
 
-  for (const ref of itemRefs) {
-    if (ref.end <= matchStart || ref.start >= matchEnd) continue;
-
-    const item = items[ref.itemIndex];
+  for (const loc of locals) {
+    const item = items[loc.itemIndex];
     if (!item || !('str' in item) || !item.str) continue;
-
-    const spanLen = Math.max(ref.end - ref.start, 0);
-    const localStart = Math.max(0, matchStart - ref.start);
-    const localEnd = Math.min(spanLen || item.str.length, matchEnd - ref.start);
-    if (localEnd <= localStart) {
-      // 공백 구간만 걸치거나 오프셋 드리프트 — 글자 item 전체라도 칠한다
-      if (spanLen > 0 || item.str.length > 0) {
-        rects.push(
-          viewportBoxForTextItem(page, viewport, item, 0, item.str.length),
-        );
-      }
-      continue;
-    }
-
     rects.push(
-      viewportBoxForTextItem(page, viewport, item, localStart, localEnd),
+      viewportBoxForTextItem(
+        page,
+        viewport,
+        item,
+        loc.localStart,
+        loc.localEnd,
+      ),
     );
   }
 

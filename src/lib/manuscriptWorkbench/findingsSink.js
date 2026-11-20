@@ -13,6 +13,35 @@ export function manualGroupKey(find, replace) {
 }
 
 /**
+ * 수정 리스트에 같은 자리(쪽·시작)가 있으면 원래 발견은 개수·레이어에서 뺀다.
+ * @param {{ pageNum?: number, index?: number, manual?: boolean } | null | undefined} inst
+ * @param {import('../ruleEngine.js').GroupedResult[] | null | undefined} manualGroups
+ */
+export function coveredByManualFinding(inst, manualGroups) {
+  if (!inst || inst.manual) return false;
+  const pageNum = Number(inst.pageNum);
+  const index = Number(inst.index);
+  if (!Number.isFinite(pageNum) || !Number.isFinite(index)) return false;
+  for (const group of manualGroups ?? []) {
+    for (const row of group.instances ?? []) {
+      if (Number(row.pageNum) === pageNum && Number(row.index) === index) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+/** 수정 리스트 버튼 건수 — 카드가 아니라 인스턴스. */
+export function countManualInstances(groups) {
+  let n = 0;
+  for (const group of groups ?? []) {
+    n += group.instances?.length ?? 0;
+  }
+  return n;
+}
+
+/**
  * @param {import('./types.js').ManualFinding} manual
  * @returns {import('../ruleEngine.js').MatchInstance}
  */

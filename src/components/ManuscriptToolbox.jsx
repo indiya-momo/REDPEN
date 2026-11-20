@@ -1,18 +1,29 @@
-import { MANUSCRIPT_TOOLBOX_MODES } from '../lib/manuscriptWorkbench/modes.js';
+import { Minimize2, X } from 'lucide-react';
+import {
+  MANUAL_LIST_MODE,
+  MANUSCRIPT_TOOLBOX_MODES,
+} from '../lib/manuscriptWorkbench/modes.js';
+import { countManualInstances } from '../lib/manuscriptWorkbench/findingsSink.js';
 import {
   MANUAL_ADD_CANCEL_HINT,
   MANUAL_ADD_HINT,
+  MANUAL_ADD_HINT_REST,
   MANUAL_LONG_RANGE_HINT,
   MANUAL_PERSIST_NOTICE,
   MANUAL_SEARCH_EMPTY,
   MANUAL_SEARCH_HINT,
+  manualListButtonLabel,
 } from '../lib/manuscriptWorkbench/types.js';
+import {
+  formatReplaceDiff,
+  manualUserMemo,
+} from '../lib/manuscriptWorkbench/textPartDiff.js';
 import {
   SPACE_VISIBLE_CHAR,
   decodeSpacesVisible,
   encodeSpacesVisible,
 } from '../lib/spaceVisibleText.js';
-import { formatReplaceDiff } from '../lib/manuscriptWorkbench/textPartDiff.js';
+import { formatSystemPageLabel } from '../lib/printedPageDisplay.js';
 
 function SpaceMarks({ text }) {
   const encoded = encodeSpacesVisible(text ?? '');
@@ -29,7 +40,11 @@ function SpaceMarks({ text }) {
 }
 
 export default function ManuscriptToolbox(props) {
-  const panelOpen = props.mode === 'search' || props.mode === 'manual-add';
+  const listCount = countManualInstances(props.manualGroups);
+  const panelOpen =
+    props.mode === 'search' ||
+    props.mode === 'manual-add' ||
+    props.mode === MANUAL_LIST_MODE;
   return (
     <div className="manuscript-toolbox">
       {MANUSCRIPT_TOOLBOX_MODES.map((item) => (
@@ -40,12 +55,17 @@ export default function ManuscriptToolbox(props) {
           onModeChange={props.onModeChange}
         />
       ))}
+      <ListModeButton
+        count={listCount}
+        mode={props.mode}
+        onModeChange={props.onModeChange}
+      />
       {props.persistNotice && !panelOpen ? (
         <p className="manuscript-toolbox__persist manuscript-toolbox__persist--float" role="status">
           {MANUAL_PERSIST_NOTICE}
         </p>
       ) : null}
-      {panelOpen ? <ToolboxPanel {...props} /> : null}
+      {panelOpen ? <ToolboxPanel {...props} listCount={listCount} /> : null}
     </div>
   );
 }
@@ -67,16 +87,59 @@ function ModeButton({ item, mode, onModeChange }) {
   );
 }
 
-function ToolboxPanel(props) {
+function FindingsCountCircle({ count }) {
+  const n = Number(count) || 0;
   return (
-    <div className="manuscript-toolbox__panel" role="region" aria-label="원고 작업대">
-      {props.persistNotice ? (
+    <span className="result-findings-count-circle" aria-label={`${n}건`}>
+      {n}
+    </span>
+  );
+}
+
+function ListModeButton({ count, mode, onModeChange }) {
+  const on = mode === MANUAL_LIST_MODE;
+  const empty = count <= 0;
+  const className = on
+    ? 'pdf-work-pane__aux-btn manuscript-toolbox__mode manuscript-toolbox__mode--on'
+    : 'pdf-work-pane__aux-btn manuscript-toolbox__mode';
+  return (
+    <button
+      type="button"
+      className={className}
+      aria-pressed={on}
+      aria-label={manualListButtonLabel(count)}
+      disabled={empty}
+      onClick={() => {
+        if (empty) return;
+        onModeChange(on ? null : MANUAL_LIST_MODE);
+      }}
+    >
+      수정 리스트
+      {empty ? null : <FindingsCountCircle count={count} />}
+    </button>
+  );
+}
+
+function ToolboxPanel(props) {
+  const listOpen = props.mode === MANUAL_LIST_MODE;
+  return (
+    <div
+      className={`manuscript-toolbox__panel${
+        listOpen ? ' manuscript-toolbox__panel--list' : ''
+      }`}
+      role="region"
+      aria-label={listOpen ? '수정 리스트' : '원고 작업대'}
+    >
+      {props.persistNotice && !listOpen ? (
         <p className="manuscript-toolbox__persist" role="status">
           {MANUAL_PERSIST_NOTICE}
         </p>
       ) : null}
       {props.mode === 'search' ? <SearchPanel {...props} /> : null}
       {props.mode === 'manual-add' ? <ManualAddPanel {...props} /> : null}
+      {listOpen ? (
+        <ManualListPanel {...props} onModeChange={props.onModeChange} />
+      ) : null}
     </div>
   );
 }
@@ -145,13 +208,31 @@ function ManualBody({
   canCommit,
   commitBlockedReason,
   longRangeHint,
+  editing = false,
+  onModeChange,
 }) {
-  const hint = currentPageHasText
-    ? `${MANUAL_ADD_HINT}(${MANUAL_ADD_CANCEL_HINT})`
-    : '이 페이지는 선택할 텍스트가 없습니다. 스캔본은 읽지 않습니다.';
+  const hint = currentPageHasText ? (
+    <>
+      {MANUAL_ADD_HINT}
+      <br />
+      {MANUAL_ADD_HINT_REST}({MANUAL_ADD_CANCEL_HINT})
+    </>
+  ) : (
+    '이 페이지는 선택할 텍스트가 없습니다. 스캔본은 읽지 않습니다.'
+  );
   return (
     <div>
-      <p className="manuscript-toolbox__hint">{hint}</p>
+      <div className="manuscript-toolbox__form-head">
+        <p className="manuscript-toolbox__hint">{hint}</p>
+        <button
+          type="button"
+          className="pdf-work-pane__aux-btn pdf-work-pane__aux-btn--icon manuscript-toolbox__list-dock"
+          onClick={() => onModeChange?.(null)}
+          aria-label="창 닫기"
+        >
+          <X size={16} strokeWidth={2.25} aria-hidden />
+        </button>
+      </div>
       <DraftFields
         draft={draft}
         replace={replace}
@@ -162,6 +243,7 @@ function ManualBody({
         canCommit={canCommit}
         commitBlockedReason={commitBlockedReason}
         longRangeHint={longRangeHint}
+        editing={editing}
       />
     </div>
   );
@@ -177,6 +259,7 @@ function DraftFields({
   canCommit,
   commitBlockedReason,
   longRangeHint,
+  editing = false,
 }) {
   return (
     <div className="manuscript-toolbox__draft">
@@ -221,11 +304,112 @@ function DraftFields({
         onClick={onCommit}
         disabled={!canCommit}
       >
-        리스트에 추가
+        {editing ? '리스트에 반영' : '리스트에 추가'}
       </button>
       {commitBlockedReason ? (
         <p className="manuscript-toolbox__hint">{commitBlockedReason}</p>
       ) : null}
     </div>
+  );
+}
+
+function ManualListPanel({
+  manualGroups,
+  listCount,
+  formatPageLabel,
+  onSelectInstance,
+  onRemoveManualInstance,
+  onModeChange,
+}) {
+  const pageLabel = formatPageLabel ?? formatSystemPageLabel;
+  const rows = [];
+  for (const group of manualGroups ?? []) {
+    for (const inst of group.instances ?? []) {
+      rows.push({ group, inst });
+    }
+  }
+  return (
+    <div>
+      <div className="manuscript-toolbox__list-head">
+        <p className="manuscript-toolbox__list-title">
+          수정 리스트
+          <FindingsCountCircle count={listCount} />
+        </p>
+        <button
+          type="button"
+          className="pdf-work-pane__aux-btn pdf-work-pane__aux-btn--icon manuscript-toolbox__list-dock"
+          onClick={() => onModeChange?.(null)}
+          aria-label="작은 창으로 접기"
+        >
+          <Minimize2 size={16} strokeWidth={2.25} aria-hidden />
+        </button>
+      </div>
+      <ul className="manuscript-toolbox__list">
+        {rows.map(({ group, inst }) => (
+          <ManualListRow
+            key={`${inst.pageNum}-${inst.index}-${inst.find}`}
+            group={group}
+            inst={inst}
+            pageLabel={pageLabel}
+            onSelectInstance={onSelectInstance}
+            onRemoveManualInstance={onRemoveManualInstance}
+          />
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function ManualListRow({
+  group,
+  inst,
+  pageLabel,
+  onSelectInstance,
+  onRemoveManualInstance,
+}) {
+  const find = String(inst.matchedText ?? group.find ?? '');
+  const replace = String(inst.suggestedText ?? inst.replace ?? group.replace ?? '');
+  const memo = manualUserMemo(inst.tip ?? group.tip);
+  return (
+    <li className="manuscript-toolbox__list-item">
+      <button
+        type="button"
+        className="manuscript-toolbox__list-card"
+        onClick={() =>
+          onSelectInstance?.({
+            ...inst,
+            matchedText: find,
+            find,
+            suggestedText: replace,
+            replace,
+            tip: inst.tip ?? group.tip ?? '',
+          })
+        }
+      >
+        <span className="manuscript-toolbox__list-pair">
+          <SpaceMarks text={find} />
+          {' → '}
+          <SpaceMarks text={replace} />
+        </span>
+        <span className="manuscript-toolbox__list-meta">
+          {memo || '메모 없음'}
+          {' · '}
+          쪽 {pageLabel(inst.pageNum)}
+        </span>
+      </button>
+      {onRemoveManualInstance ? (
+        <button
+          type="button"
+          className="manuscript-toolbox__list-remove"
+          onClick={(event) => {
+            event.stopPropagation();
+            onRemoveManualInstance(inst);
+          }}
+          aria-label="이 수정 지우기"
+        >
+          <X size={14} strokeWidth={2.25} aria-hidden />
+        </button>
+      ) : null}
+    </li>
   );
 }

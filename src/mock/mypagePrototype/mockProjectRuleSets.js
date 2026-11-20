@@ -247,6 +247,9 @@ export function applyMockProjectMeta(projects, id, patch) {
       ...set,
       ...(patch.tags !== undefined ? { tags: patch.tags } : {}),
       ...(patch.memo !== undefined ? { memo: patch.memo } : {}),
+      ...(patch.manualFindings !== undefined
+        ? { manualFindings: patch.manualFindings }
+        : {}),
       ...(projectContext !== undefined ? { projectContext } : {}),
     });
   });

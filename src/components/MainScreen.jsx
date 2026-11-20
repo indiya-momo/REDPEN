@@ -74,11 +74,10 @@ import GuideClickHand from './GuideClickHand.jsx';
 import { useHighlights } from '../hooks/useHighlights.js';
 import { useManuscriptWorkbench } from '../hooks/useManuscriptWorkbench.js';
 import {
-  MANUAL_LEAVE_CONFIRM,
-  MANUAL_LEAVE_END_EXTRA,
   SEARCH_CATEGORY,
   isManuscriptSearchGroup,
 } from '../lib/manuscriptWorkbench/types.js';
+import { coveredByManualFinding } from '../lib/manuscriptWorkbench/findingsSink.js';
 import { instancesMatch } from '../lib/checkResultUtils.js';
 import {
   PANEL_LEFT_MAX_WIDTH,
@@ -350,6 +349,8 @@ export default function MainScreen({
   onSaveCriteriaPreset,
   onDeleteCriteriaPreset,
   onTouchActiveProjectContext,
+  savedManualFindings = [],
+  onManualFindingsChange,
   onOpenWelcome,
   onLogout,
   onOpenMyPageWindow,
@@ -685,24 +686,14 @@ export default function MainScreen({
   }, [ruleCheck, workTab, unifyPreviewClear]);
   resetUiForNewPdfRef.current = resetUiForNewPdf;
 
-  const prevActiveSetIdRef = useRef(null);
-  useEffect(() => {
-    if (!activeSetId) return;
-    if (prevActiveSetIdRef.current === null) {
-      prevActiveSetIdRef.current = activeSetId;
-      return;
-    }
-    if (prevActiveSetIdRef.current === activeSetId) return;
-    prevActiveSetIdRef.current = activeSetId;
-    clearConsistencyTabWork();
-    clearSpellingTabWork();
-  }, [activeSetId, clearConsistencyTabWork, clearSpellingTabWork]);
-
   const goToPdfPageRef = useRef((pageNum) => {});
   const manuscript = useManuscriptWorkbench({
     pageTexts: pdf.pageTexts,
     currentPage: pdf.currentPage,
     resetKey: pdf.pdf,
+    projectId: activeSetId,
+    savedManualFindings,
+    onManualFindingsChange,
     goToPdfPage: (pageNum) => goToPdfPageRef.current(pageNum),
   });
   const spellingResultsWithManual = useMemo(
@@ -713,13 +704,7 @@ export default function MainScreen({
     () => [...spellingResultsWithManual, ...manuscript.searchGroups],
     [spellingResultsWithManual, manuscript.searchGroups],
   );
-  const confirmManualsLeave = useCallback(async () => {
-    if (!manuscript.manualGroups.length) return true;
-    return showAppConfirm({
-      title: '수정 추가',
-      message: MANUAL_LEAVE_CONFIRM,
-    });
-  }, [manuscript.manualGroups.length]);
+  const confirmManualsLeave = useCallback(async () => true, []);
   const openWelcomeGuarded = useCallback(async () => {
     if (!(await confirmManualsLeave())) return;
     onOpenWelcome();
@@ -750,19 +735,11 @@ export default function MainScreen({
     [confirmManualsLeave, session.loadPdfFile],
   );
   const handleClearSessionGuarded = useCallback(async () => {
-    await session.handleClearSession({
-      extraMessage: manuscript.manualGroups.length
-        ? MANUAL_LEAVE_END_EXTRA
-        : undefined,
-    });
-  }, [session.handleClearSession, manuscript.manualGroups.length]);
+    await session.handleClearSession();
+  }, [session.handleClearSession]);
   const handleEndWorkGuarded = useCallback(async () => {
-    await session.handleEndWork({
-      extraMessage: manuscript.manualGroups.length
-        ? MANUAL_LEAVE_END_EXTRA
-        : undefined,
-    });
-  }, [session.handleEndWork, manuscript.manualGroups.length]);
+    await session.handleEndWork();
+  }, [session.handleEndWork]);
   confirmManualsLeaveRef.current = confirmManualsLeave;
 
   useEffect(() => {
@@ -790,6 +767,7 @@ export default function MainScreen({
         : ruleCheck.consistencySelected,
     customRules,
     pageTexts: pdf.pageTexts,
+    manualGroups: manuscript.manualGroups,
   });
 
   const tocHighlights = useTocBodyHighlights({
@@ -1585,22 +1563,80 @@ export default function MainScreen({
     });
   };
 
-  const ruleCheckInstanceVisibilityProps = useMemo(
-    () => ({
-      groupVisibilityMode: ruleCheck.groupVisibilityMode,
-      visibleInstanceCount: ruleCheck.visibleInstanceCount,
-      isInstanceVisible: ruleCheck.isInstanceVisible,
+  const ruleCheckInstanceVisibilityProps = useMemo(() => {
+    const manuals = manuscript.manualGroups;
+    const isInstanceVisible = (source, group, inst) => {
+      if (
+        group?.category !== 'manual' &&
+        !inst?.manual &&
+        coveredByManualFinding(inst, manuals)
+      ) {
+        return false;
+      }
+      return ruleCheck.isInstanceVisible(source, group, inst);
+    };
+    const visibleInstanceCount = (source, group) => {
+      if (group?.category === 'manual') {
+        return ruleCheck.visibleInstanceCount(source, group);
+      }
+      return (group?.instances ?? []).filter((inst) =>
+        isInstanceVisible(source, group, inst),
+      ).length;
+    };
+    const groupVisibilityMode = (source, group) => {
+      if (group?.category === 'manual') {
+        return ruleCheck.groupVisibilityMode(source, group);
+      }
+      const n = group?.instances?.length ?? 0;
+      const v = visibleInstanceCount(source, group);
+      if (n === 0) return ruleCheck.groupVisibilityMode(source, group);
+      if (v === 0) return 'hidden';
+      if (v < n) return 'partial';
+      return ruleCheck.groupVisibilityMode(source, group);
+    };
+    return {
+      groupVisibilityMode,
+      visibleInstanceCount,
+      isInstanceVisible,
       onToggleInstanceVisibility: ruleCheck.toggleInstanceVisibility,
       onSetInstancesVisibility: ruleCheck.setInstancesVisibility,
       onSelectInstance: ruleCheck.selectInstance,
-    }),
+    };
+  }, [
+    manuscript.manualGroups,
+    ruleCheck.groupVisibilityMode,
+    ruleCheck.visibleInstanceCount,
+    ruleCheck.isInstanceVisible,
+    ruleCheck.toggleInstanceVisibility,
+    ruleCheck.setInstancesVisibility,
+    ruleCheck.selectInstance,
+  ]);
+
+  const isGroupVisibleWithManuals = useCallback(
+    (source, group) => {
+      if (group?.category === 'manual') {
+        return ruleCheck.isGroupVisible(source, group);
+      }
+      const instances = group?.instances ?? [];
+      if (instances.length === 0) {
+        return ruleCheck.isGroupVisible(source, group);
+      }
+      const visible = instances.filter((inst) => {
+        if (
+          !inst?.manual &&
+          coveredByManualFinding(inst, manuscript.manualGroups)
+        ) {
+          return false;
+        }
+        return ruleCheck.isInstanceVisible(source, group, inst);
+      }).length;
+      if (visible === 0) return false;
+      return ruleCheck.isGroupVisible(source, group);
+    },
     [
-      ruleCheck.groupVisibilityMode,
-      ruleCheck.visibleInstanceCount,
+      ruleCheck.isGroupVisible,
       ruleCheck.isInstanceVisible,
-      ruleCheck.toggleInstanceVisibility,
-      ruleCheck.setInstancesVisibility,
-      ruleCheck.selectInstance,
+      manuscript.manualGroups,
     ],
   );
 
@@ -1735,6 +1771,9 @@ export default function MainScreen({
               cautionSelected: spellingCriteriaSelection.cautionSelected,
               builtinSelected: spellingCriteriaSelection.builtinSelected,
               loanwordSelected: spellingCriteriaSelection.loanwordSelected,
+              pdfFileName: pdf.pdfFileName,
+              pdfPages: pdf.pdf?.numPages,
+              pageTexts: pdf.pageTexts,
               filename: buildProofreadExportFilename(
                 pdf.pdfFileName,
                 proofreadExportLabelForKind('spelling'),
@@ -1772,6 +1811,9 @@ export default function MainScreen({
               consistencyCriteriaSelection.commonStringSelected,
             auxiliarySelected: consistencyCriteriaSelection.auxiliarySelected,
             customRules,
+            pdfFileName: pdf.pdfFileName,
+            pdfPages: pdf.pdf?.numPages,
+            pageTexts: pdf.pageTexts,
             filename: buildProofreadExportFilename(
               pdf.pdfFileName,
               proofreadExportLabelForKind('consistency'),
@@ -1898,7 +1940,6 @@ export default function MainScreen({
 
   const spellingListOpen =
     ruleCheck.spellingCheckDone ||
-    manuscript.manualGroups.length > 0 ||
     manuscript.searchGroups.length > 0;
   const spellingResultsPanel =
     workTab === 'spelling' && spellingListOpen ? (
@@ -1910,7 +1951,7 @@ export default function MainScreen({
         totalFindings={spellingTabTotalFindings}
         ruleCount={spellingTabEntries.length}
         spellingCheckDone={spellingListOpen}
-        isGroupVisible={ruleCheck.isGroupVisible}
+        isGroupVisible={isGroupVisibleWithManuals}
         onToggleVisibility={ruleCheck.toggleResultVisibility}
         {...ruleCheckInstanceVisibilityProps}
         isSameGroupAsSelected={isSameSpellingGroupAsSelected}
@@ -2667,7 +2708,7 @@ export default function MainScreen({
                 totalFindings={consistencyTabTotalFindings}
                 ruleCount={consistencyTabEntries.length}
                 spellingCheckDone={ruleCheck.consistencyCheckDone}
-                isGroupVisible={ruleCheck.isGroupVisible}
+                isGroupVisible={isGroupVisibleWithManuals}
                 onToggleVisibility={ruleCheck.toggleResultVisibility}
                 {...ruleCheckInstanceVisibilityProps}
                 isSameGroupAsSelected={ruleCheck.isSameGroupAsSelected}
@@ -3146,6 +3187,7 @@ export default function MainScreen({
                 textLayerEnabled={manuscript.textLayerEnabled}
                 onTextSelected={manuscript.onTextSelected}
                 onTextSelectionCancel={manuscript.cancelTextSelection}
+                onOverlayEdit={manuscript.openManualFromOverlay}
                 zoomFactor={pdfZoom.zoomFactor}
                 onZoomFactorChange={pdfZoom.setZoomFactor}
                 guideHighlightActive={guestResultGuideActive}
@@ -3196,9 +3238,14 @@ export default function MainScreen({
                     canCommit={manuscript.canCommit}
                     commitBlockedReason={manuscript.commitBlockedReason}
                     longRangeHint={manuscript.longRangeHint}
+                    editing={manuscript.editing}
                     searchAttempted={manuscript.searchAttempted}
                     persistNotice={manuscript.persistNotice}
                     currentPageHasText={manuscript.currentPageHasText}
+                    manualGroups={manuscript.manualGroups}
+                    formatPageLabel={pageDisplay.formatLabel}
+                    onSelectInstance={manuscript.beginEditManual}
+                    onRemoveManualInstance={manuscript.removeManual}
                   />
                 }
                 pageMatch={{
