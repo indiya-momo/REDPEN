@@ -25,6 +25,7 @@ import { formatProjectCardDotDateFromIso } from './projectCardViewModel.js';
 import { normalizeProjectTags } from '../lib/projectMeta.js';
 import { buildWorkHistoryDecisionLedger } from './workHistoryDecisionLedger.js';
 import { isRuleSetCriteriaDirty } from '../lib/criteriaCheckpoint.js';
+import { countStoredManualFindings } from '../lib/manuscriptWorkbench/persistManualFindings.js';
 
 /** @param {import('../lib/ruleSetsStorage.js').RuleSet} set */
 function projectTitle(set) {
@@ -104,6 +105,7 @@ function buildHeadline(counts, excludePhrases) {
   const consistencyTotal = counts.find + counts.commonString;
   if (consistencyTotal > 0) parts.push(`일관성 ${consistencyTotal}건`);
   if (counts.auxiliary > 0) parts.push(`본보조 ${counts.auxiliary}쌍`);
+  if ((counts.manual ?? 0) > 0) parts.push(`수정 리스트 ${counts.manual}건`);
   const excludeCount = (excludePhrases ?? []).filter((p) => String(p).trim()).length;
   if (excludeCount > 0) parts.push(`찾기 제외 ${excludeCount}개`);
   return parts.length
@@ -155,6 +157,7 @@ export function buildProjectCardViewModelFromRuleSet(set, options = {}) {
     find: consistencyCounts.find,
     commonString: consistencyCounts.commonString,
     auxiliary: auxiliaryWords.length,
+    manual: countStoredManualFindings(set.manualFindings),
   };
 
   const chipPreview = {

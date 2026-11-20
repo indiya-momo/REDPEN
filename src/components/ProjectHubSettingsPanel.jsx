@@ -14,15 +14,17 @@ import { isPaidUser } from '../lib/paidPlanGate.js';
 import ProjectHubCriteriaPanel from './projectHub/ProjectHubCriteriaPanel.jsx';
 import ProjectHubCheckResultsPanel from './projectHub/ProjectHubCheckResultsPanel.jsx';
 import ProjectWorkHistoryChart from './projectHub/ProjectWorkHistoryChart.jsx';
+import ProjectHubManualListSection from './projectHub/ProjectHubManualListSection.jsx';
 import './project-hub-settings.css';
 
-/** @typedef {'meta' | 'spelling' | 'consistency' | 'auxiliary' | 'actions'} ProjectHubSettingsSection */
+/** @typedef {'meta' | 'spelling' | 'consistency' | 'auxiliary' | 'manual' | 'actions'} ProjectHubSettingsSection */
 
 const NAV_ITEMS = [
   { id: 'meta', label: '프로젝트 정보' },
   { id: 'spelling', label: '맞춤법', pillarKey: 'spelling' },
   { id: 'consistency', label: '표기 통일', pillarKey: 'consistency' },
   { id: 'auxiliary', label: '본용언 + 보조용언', pillarKey: 'auxiliary' },
+  { id: 'manual', label: '수정 리스트', pillarKey: 'manual' },
   { id: 'actions', label: '작업 이력' },
 ];
 
@@ -118,6 +120,7 @@ function buildCardMetaSyncKey(card) {
  *     },
  *   ) => void | Promise<void>,
  *   onStartWork?: () => void,
+ *   onManualFindingsChange?: (rows: import('../lib/manuscriptWorkbench/persistManualFindings.js').StoredManualFinding[]) => void,
  *   uid?: string,
  * }} props
  */
@@ -132,6 +135,7 @@ export default function ProjectHubSettingsPanel({
   onSave,
   onCriteriaChange,
   onStartWork,
+  onManualFindingsChange,
   uid = '',
 }) {
   const tagsInputId = useId();
@@ -561,6 +565,13 @@ export default function ProjectHubSettingsPanel({
                 ) : null}
               </div>
             </div>
+          ) : null}
+
+          {activeSection === 'manual' ? (
+            <ProjectHubManualListSection
+              rows={ruleSet?.manualFindings}
+              onChange={onManualFindingsChange}
+            />
           ) : null}
 
           {activeSection === 'actions' ? (

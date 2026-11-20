@@ -30,6 +30,7 @@ describe('projectCardViewModel helpers', () => {
       find: 0,
       commonString: 0,
       auxiliary: 0,
+      manual: 2,
     },
     savedDate: '6/1',
     isActive: false,
@@ -115,11 +116,14 @@ describe('projectCardViewModel helpers', () => {
 
   it('buildProjectCardPillarPreviews', () => {
     const previews = buildProjectCardPillarPreviews(sample);
-    expect(previews).toHaveLength(3);
+    expect(previews).toHaveLength(4);
     expect(previews[0].chips).toHaveLength(1);
     expect(previews[1].chips).toHaveLength(1);
     expect(previews[1].hasMore).toBe(true);
     expect(previews[2].count).toBe(0);
+    expect(previews[3].key).toBe('manual');
+    expect(previews[3].label).toBe('수정 리스트');
+    expect(previews[3].count).toBe(2);
   });
 
   it('collectProjectTags and filterProjectsByTag', () => {

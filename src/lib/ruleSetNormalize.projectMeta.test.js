@@ -75,4 +75,30 @@ describe('normalizeRuleSet project meta', () => {
       { kind: 'find', id: 'x', at: '2026-07-10T00:00:00.000Z', query: 'a' },
     ]);
   });
+
+  it('manualFindings를 정규화한다', () => {
+    const normalized = normalizeRuleSet({
+      id: 'set_1',
+      name: '테스트',
+      builtInEnabled: {},
+      cautionEnabled: {},
+      customRules: [],
+      manualFindings: [
+        { pageNum: 3, start: 2, matchedText: '할때', replace: '할 때', tip: '띄어' },
+        { pageNum: 3, start: 2, matchedText: '할때', replace: '할 때' },
+        { matchedText: '' },
+      ],
+    });
+    expect(normalized.manualFindings).toEqual([
+      {
+        pageNum: 3,
+        start: 2,
+        end: 4,
+        matchedText: '할때',
+        replace: '할 때',
+        tip: '띄어',
+        source: 'manual',
+      },
+    ]);
+  });
 });

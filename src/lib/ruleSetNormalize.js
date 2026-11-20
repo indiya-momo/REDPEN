@@ -20,6 +20,7 @@ import { normalizeWorkHistory } from './projectWorkHistory.js';
 import { normalizeConsistencyDecisions } from './consistencyDecisions.js';
 import { buildCriteriaCheckpoint } from './criteriaCheckpoint.js';
 import { normalizeSpacingFolderEnabled } from './spacingFolderBundles.js';
+import { normalizeManualFindings } from './manuscriptWorkbench/persistManualFindings.js';
 
 /**
  * @param {Record<string, unknown>} set
@@ -93,6 +94,7 @@ export function normalizeRuleSet(set) {
     pillarMemos: normalizeProjectPillarMemos(set.pillarMemos),
     projectContext,
     workHistory: normalizeWorkHistory(set.workHistory),
+    manualFindings: normalizeManualFindings(set.manualFindings),
     consistencyDecisions,
     criteriaCheckpoint,
     savedAt,

@@ -202,6 +202,9 @@ export default function ProjectHubEditorPage({
             criteriaSaving={criteriaSavePending}
             onSave={handleSaveMeta}
             onCriteriaChange={handleCriteriaChange}
+            onManualFindingsChange={(manualFindings) => {
+              void updateProjectMeta(selectedCard.id, { manualFindings });
+            }}
             onStartWork={() => void actions.handleStartWork(selectedCard.id)}
           />
         ) : null}

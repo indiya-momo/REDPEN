@@ -493,13 +493,17 @@ export function useMyPageProjects(uid = '', email = '', options = {}) {
         patch.tags !== undefined ||
         patch.memo !== undefined ||
         patch.pillarMemos !== undefined ||
-        patch.formatLabel !== undefined;
+        patch.formatLabel !== undefined ||
+        patch.manualFindings !== undefined;
       const nextSet = normalizeRuleSet({
         ...current,
         ...(patch.tags !== undefined ? { tags: patch.tags } : {}),
         ...(patch.memo !== undefined ? { memo: patch.memo } : {}),
         ...(patch.pillarMemos !== undefined
           ? { pillarMemos: patch.pillarMemos }
+          : {}),
+        ...(patch.manualFindings !== undefined
+          ? { manualFindings: patch.manualFindings }
           : {}),
         ...(nextProjectContext !== undefined
           ? { projectContext: nextProjectContext }

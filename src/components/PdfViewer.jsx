@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   cancelRenderTask,
   computePdfRenderScale,
@@ -16,6 +16,12 @@ import {
 } from '../lib/highlightOverlayReplace.js';
 import pdfEmptyIcon from '../assets/momo/pdf-empty.png';
 import PdfHighlightTipBubble from './PdfHighlightTipBubble.jsx';
+import {
+  filterPickedHighlightLayers,
+  highlightToManualEditPayload,
+  resolveOverlayChoiceLayers,
+  stripOverlayArrow,
+} from '../lib/highlightOverlayLayers.js';
 import { textLayerItemBoxes } from '../lib/manuscriptWorkbench/pageGeometry.js';
 import { resolveTextSelection } from '../lib/manuscriptWorkbench/resolveTextSelection.js';
 
@@ -62,6 +68,10 @@ function closestTextItemSpan(node, root) {
  *   onHighlightTipConfirm?: () => void,
  *   onHighlightTipDismiss?: () => void,
  *   tipConfirmGuideAttr?: string,
+ *   textLayerEnabled?: boolean,
+ *   onTextSelected?: (hit: object) => void,
+ *   onTextSelectionCancel?: () => void,
+ *   onOverlayEdit?: (payload: object) => void,
  * }} props
  */
 export default function PdfViewer({
@@ -82,6 +92,7 @@ export default function PdfViewer({
   textLayerEnabled = false,
   onTextSelected,
   onTextSelectionCancel,
+  onOverlayEdit,
 }) {
   const canvasRef = useRef(null);
   const stageRef = useRef(null);
@@ -95,7 +106,45 @@ export default function PdfViewer({
   const [error, setError] = useState(null);
   /** @type {{ id: string, tip: string, matchedText: string, left: number, top: number } | null} */
   const [openTip, setOpenTip] = useState(null);
+  const [pickedLayerByBase, setPickedLayerByBase] = useState({});
   const highlightsKey = JSON.stringify(highlights);
+  const visibleHighlights = useMemo(
+    () => filterPickedHighlightLayers(highlights, pickedLayerByBase),
+    [highlights, pickedLayerByBase],
+  );
+  const liveById = useMemo(() => {
+    const map = new Map();
+    for (const row of visibleHighlights) {
+      if (row?.id) map.set(row.id, row);
+    }
+    return map;
+  }, [visibleHighlights]);
+
+  useEffect(() => {
+    setPickedLayerByBase({});
+  }, [pageNum]);
+
+  useEffect(() => {
+    setPickedLayerByBase((prev) => {
+      const keys = Object.keys(prev);
+      if (!keys.length) return prev;
+      let changed = false;
+      const next = { ...prev };
+      for (const baseId of keys) {
+        const layerId = next[baseId];
+        const still = highlights.some(
+          (h) =>
+            (h.baseId ?? h.id) === baseId &&
+            resolveOverlayChoiceLayers(h).some((layer) => layer.id === layerId),
+        );
+        if (!still) {
+          delete next[baseId];
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
+    });
+  }, [highlights]);
 
   useEffect(() => {
     setOpenTip(null);
@@ -286,9 +335,12 @@ export default function PdfViewer({
             // 띄어쓰기만 바꾸는 교정은 라벨 대신 그 자리에 붙임표 ⌒ / 띄움표 ∨만
             // 밑줄과 동일 highlightRects 글자 박스 경계만 사용 (별도 추정 없음)
             const glueMarks = [];
-            const glueRuns = Number.isFinite(h.start)
-              ? spacingOnlyMarks(h.matchedText, h.overlayReplace)
-              : null;
+            const glueRuns =
+              Array.isArray(h.overlayLayers) && h.overlayLayers.length > 1
+                ? null
+                : Number.isFinite(h.start)
+                  ? spacingOnlyMarks(h.matchedText, h.overlayReplace)
+                  : null;
             if (glueRuns) {
               for (const { type, s, e } of glueRuns) {
                 const rectAt = (idx) =>
@@ -331,6 +383,7 @@ export default function PdfViewer({
                 matchedText: h.matchedText ?? '',
                 overlayReplace:
                   boxIndex === 0 && !useGlueMarks ? (h.overlayReplace ?? '') : '',
+                showOverlay: boxIndex === 0 && !useGlueMarks,
                 glueMarks: boxIndex === 0 && useGlueMarks ? glueMarks : null,
                 pillarClass: h.pillarClass ?? '',
               });
@@ -451,10 +504,38 @@ export default function PdfViewer({
     onTextSelectionCancel?.();
   }
 
+  function pickLayer(highlightId, layerId) {
+    if (!highlightId || !layerId) return;
+    setPickedLayerByBase((prev) => ({ ...prev, [highlightId]: layerId }));
+  }
+
+  function overlayChoicesFor(highlightId) {
+    const raw = highlights.find((h) => h.id === highlightId);
+    const layers = resolveOverlayChoiceLayers(raw);
+    if (layers.length < 2) return [];
+    return layers.map((layer) => ({
+      id: layer.id,
+      label: layer.overlayLabel || stripOverlayArrow(layer.overlayReplace),
+    }));
+  }
+
+  function overlayEditPayload(highlight, layer) {
+    return highlightToManualEditPayload(highlight, pageData, layer);
+  }
+
+  function handleOverlayDoubleClick(highlight, layer, event) {
+    event.stopPropagation();
+    event.preventDefault();
+    if (highlight?.id && layer?.id) pickLayer(highlight.id, layer.id);
+    const payload = overlayEditPayload(highlight, layer);
+    if (payload) onOverlayEdit?.(payload);
+  }
+
   function handleHighlightClick(rect, event) {
     event.stopPropagation();
     const tip = (rect.tip || '').trim();
-    if (!tip) return;
+    const choices = overlayChoicesFor(rect.highlightId);
+    if (!tip && choices.length < 2) return;
 
     const wrap = wrapRef.current;
     if (!wrap) return;
@@ -473,6 +554,7 @@ export default function PdfViewer({
             id: rect.highlightId,
             tip,
             matchedText: rect.matchedText ?? '',
+            choices,
             left,
             top,
           },
@@ -510,9 +592,9 @@ export default function PdfViewer({
       {showPageMeta && (
         <div className="pdf-page-meta">
           페이지 {pageNum} / {pdf.numPages}
-          {highlights.length > 0 && (
+          {visibleHighlights.length > 0 && (
             <span className="pdf-page-meta-count">
-              · 이 페이지 {highlights.length}곳 표시
+              · 이 페이지 {visibleHighlights.length}곳 표시
             </span>
           )}
         </div>
@@ -523,7 +605,27 @@ export default function PdfViewer({
           <canvas ref={canvasRef} className="pdf-canvas" />
           <div className="pdf-highlight-layer">
             {rects.map((r, i) => {
-              const overlayReplace = (r.overlayReplace || '').trim();
+              const live = liveById.get(r.highlightId);
+              const overlayLayers = r.showOverlay
+                ? resolveOverlayChoiceLayers(live)
+                : [];
+              const hasChoices = overlayLayers.length > 1;
+              const overlayReplace = r.showOverlay
+                ? hasChoices
+                  ? ''
+                  : String(
+                      overlayLayers[0]?.overlayReplace ??
+                        live?.overlayReplace ??
+                        r.overlayReplace ??
+                        '',
+                    ).trim()
+                : '';
+              const hasTip = Boolean((r.tip || '').trim());
+              const hasOverlay = hasChoices || Boolean(overlayReplace);
+              const overlayFont = {
+                fontSize: `${Math.max(5, Math.round(r.height * 0.69))}px`,
+                ['--pdf-overlay-pad-y']: `${Math.max(1, Math.round(r.height * PDF_OVERLAY_PAD_Y_RATIO))}px`,
+              };
               const isGuidePdfAnchor =
                 guideHighlightActive &&
                 r.primary &&
@@ -539,8 +641,8 @@ export default function PdfViewer({
                     r.pillarClass || '',
                     r.primary ? 'pdf-highlight--primary' : '',
                     openTip?.id === r.highlightId ? 'pdf-highlight--tip-open' : '',
-                    (r.tip || '').trim() ? 'pdf-highlight--has-tip' : '',
-                    overlayReplace ? 'pdf-highlight--overlay-replace' : '',
+                    hasTip || hasChoices ? 'pdf-highlight--has-tip' : '',
+                    hasOverlay ? 'pdf-highlight--overlay-replace' : '',
                   ]
                     .filter(Boolean)
                     .join(' ')}
@@ -550,26 +652,47 @@ export default function PdfViewer({
                     width: r.width,
                     height: r.height,
                   }}
-                  role={(r.tip || '').trim() ? 'button' : undefined}
-                  tabIndex={(r.tip || '').trim() ? 0 : undefined}
+                  role={hasTip || hasChoices ? 'button' : undefined}
+                  tabIndex={hasTip || hasChoices ? 0 : undefined}
                   {...(isGuidePdfAnchor
                     ? { 'data-work-guide-pdf-highlight': '' }
                     : {})}
                   onClick={(e) => handleHighlightClick(r, e)}
+                  onDoubleClick={(e) =>
+                    handleOverlayDoubleClick(
+                      live,
+                      overlayLayers.length === 1 ? overlayLayers[0] : null,
+                      e,
+                    )
+                  }
                   onKeyDown={(e) => {
                     if (e.key !== 'Enter' && e.key !== ' ') return;
                     e.preventDefault();
                     handleHighlightClick(r, e);
                   }}
                 >
-                  {overlayReplace ? (
+                  {overlayLayers.length > 1 ? (
+                    <span className="pdf-highlight__overlay-layers" style={overlayFont}>
+                      <span className="pdf-highlight__overlay-arrow" aria-hidden>
+                        →
+                      </span>
+                    </span>
+                  ) : overlayReplace ? (
                     <span
-                      className="pdf-highlight__overlay-replace builtin-rule-tip-inline"
-                      style={{
-                        fontSize: `${Math.max(5, Math.round(r.height * 0.69))}px`,
-                        ['--pdf-overlay-pad-y']: `${Math.max(1, Math.round(r.height * PDF_OVERLAY_PAD_Y_RATIO))}px`,
-                      }}
-                      aria-hidden
+                      className="pdf-highlight__overlay-replace"
+                      style={overlayFont}
+                      role={onOverlayEdit ? 'button' : undefined}
+                      tabIndex={onOverlayEdit ? 0 : undefined}
+                      onDoubleClick={(e) => handleOverlayDoubleClick(live, null, e)}
+                      onKeyDown={
+                        onOverlayEdit
+                          ? (e) => {
+                              if (e.key !== 'Enter' && e.key !== ' ') return;
+                              e.preventDefault();
+                              handleOverlayDoubleClick(live, null, e);
+                            }
+                          : undefined
+                      }
                     >
                       {markCandidateSpacing(overlayReplace)}
                     </span>
@@ -639,7 +762,12 @@ export default function PdfViewer({
               matchedText={openTip.matchedText}
               left={openTip.left}
               top={openTip.top}
+              choices={openTip.choices}
               confirmGuideAttr={tipConfirmGuideAttr}
+              onPickChoice={(layerId) => {
+                pickLayer(openTip.id, layerId);
+                setOpenTip(null);
+              }}
               onClose={() => {
                 setOpenTip(null);
                 onHighlightTipConfirm?.();

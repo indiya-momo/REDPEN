@@ -66,6 +66,7 @@ export function ruleSetsDeletedStorageKey(uid) {
  *   metaUpdatedAt?: string,
  *   projectContext?: import('./projectMeta.js').ProjectContext,
  *   workHistory?: import('./projectWorkHistory.js').WorkHistoryEntry[],
+ *   manualFindings?: import('./manuscriptWorkbench/persistManualFindings.js').StoredManualFinding[],
  *   consistencyDecisions?: import('./consistencyDecisions.js').ConsistencyDecision[],
  *   criteriaCheckpoint?: string,
  * }} RuleSet
@@ -226,6 +227,9 @@ export function duplicateRuleSet(source) {
       : undefined,
     workHistory: source.workHistory
       ? structuredClone(source.workHistory)
+      : undefined,
+    manualFindings: source.manualFindings
+      ? structuredClone(source.manualFindings)
       : undefined,
     consistencyDecisions: source.consistencyDecisions
       ? structuredClone(source.consistencyDecisions)
