@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
   cancelRenderTask,
   computePdfRenderScale,
@@ -16,9 +16,33 @@ import {
 } from '../lib/highlightOverlayReplace.js';
 import pdfEmptyIcon from '../assets/momo/pdf-empty.png';
 import PdfHighlightTipBubble from './PdfHighlightTipBubble.jsx';
+import { textLayerItemBoxes } from '../lib/manuscriptWorkbench/pageGeometry.js';
+import { resolveTextSelection } from '../lib/manuscriptWorkbench/resolveTextSelection.js';
 
 /** 하이라이트 높이 대비 오버레이↔원문 위·아래 패딩 (기준 0.05 → ×1.8, index.css 변수와 동일) */
 const PDF_OVERLAY_PAD_Y_RATIO = 0.09;
+
+function fitTextLayerItemScale(root) {
+  if (!root) return;
+  for (const span of root.querySelectorAll('.pdf-text-layer__item')) {
+    if (!(span instanceof HTMLElement)) continue;
+    const desired = Number(span.dataset.targetWidth);
+    span.style.transform = 'none';
+    const actual = span.offsetWidth;
+    if (desired > 0 && actual > 0) {
+      span.style.transform = `scaleX(${desired / actual})`;
+    }
+  }
+}
+
+function closestTextItemSpan(node, root) {
+  let el = node && node.nodeType === 3 ? node.parentElement : node;
+  while (el && el !== root) {
+    if (el instanceof HTMLElement && el.dataset.itemIndex != null) return el;
+    el = el.parentElement;
+  }
+  return null;
+}
 
 /**
  * @typedef {import('../hooks/useHighlights.js').PageHighlight} PageHighlight
@@ -55,14 +79,19 @@ export default function PdfViewer({
   onHighlightTipConfirm,
   onHighlightTipDismiss,
   tipConfirmGuideAttr,
+  textLayerEnabled = false,
+  onTextSelected,
+  onTextSelectionCancel,
 }) {
   const canvasRef = useRef(null);
   const stageRef = useRef(null);
   const wrapRef = useRef(null);
+  const textLayerRef = useRef(null);
   /** @type {React.MutableRefObject<import('pdfjs-dist').RenderTask | null>} */
   const renderTaskRef = useRef(null);
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
   const [rects, setRects] = useState([]);
+  const [textLayerBoxes, setTextLayerBoxes] = useState([]);
   const [error, setError] = useState(null);
   /** @type {{ id: string, tip: string, matchedText: string, left: number, top: number } | null} */
   const [openTip, setOpenTip] = useState(null);
@@ -227,7 +256,7 @@ export default function PdfViewer({
           return;
         }
 
-        if (highlights.length && pageData) {
+        if ((highlights.length || textLayerEnabled) && pageData) {
           // 캔버스와 같은 글자 위치 (첫 회만 연산자 목록 1회 — 실패 시 비율 분할)
           await ensureGlyphOffsetsForPage(page, pageData.items);
           if (cancelled) return;
@@ -312,6 +341,12 @@ export default function PdfViewer({
           setRects([]);
         }
 
+        if (textLayerEnabled && pageData) {
+          setTextLayerBoxes(textLayerItemBoxes(page, viewport, pageData));
+        } else {
+          setTextLayerBoxes([]);
+        }
+
         if (!cancelled) {
           syncPdfStageScrollAfterLayout(stageRef.current, wrapRef.current);
         }
@@ -339,6 +374,7 @@ export default function PdfViewer({
     stageSize.width,
     stageSize.height,
     zoomFactor,
+    textLayerEnabled,
   ]);
 
   useEffect(() => {
@@ -380,6 +416,40 @@ export default function PdfViewer({
       document.removeEventListener('pointerdown', onPointerDown, true);
     };
   }, [openTip, onHighlightTipDismiss, tipConfirmGuideAttr]);
+
+  useLayoutEffect(() => {
+    if (!textLayerEnabled) return;
+    fitTextLayerItemScale(textLayerRef.current);
+  }, [textLayerBoxes, textLayerEnabled]);
+
+  function handleTextLayerMouseUp(event) {
+    if (event?.button === 2) return;
+    if (!textLayerEnabled || !onTextSelected || !pageData) return;
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
+    const range = sel.getRangeAt(0);
+    const root = textLayerRef.current;
+    if (!root || !root.contains(range.commonAncestorContainer)) return;
+    const startEl = closestTextItemSpan(range.startContainer, root);
+    const endEl = closestTextItemSpan(range.endContainer, root);
+    if (!startEl || !endEl) return;
+    const hit = resolveTextSelection(pageData, {
+      startItemIndex: Number(startEl.dataset.itemIndex),
+      startOffset: range.startOffset,
+      endItemIndex: Number(endEl.dataset.itemIndex),
+      endOffset: range.endOffset,
+    });
+    if (hit) {
+      onTextSelected(hit);
+      sel.removeAllRanges();
+    }
+  }
+
+  function handleTextLayerContextMenu(event) {
+    event.preventDefault();
+    window.getSelection()?.removeAllRanges();
+    onTextSelectionCancel?.();
+  }
 
   function handleHighlightClick(rect, event) {
     event.stopPropagation();
@@ -537,6 +607,32 @@ export default function PdfViewer({
               )),
             )}
           </div>
+          {textLayerEnabled ? (
+            <div
+              ref={textLayerRef}
+              className="pdf-text-layer"
+              onMouseUp={handleTextLayerMouseUp}
+              onContextMenu={handleTextLayerContextMenu}
+            >
+              {textLayerBoxes.map((box) => (
+                <span
+                  key={box.itemIndex}
+                  className="pdf-text-layer__item"
+                  data-item-index={box.itemIndex}
+                  data-start={box.start}
+                  data-end={box.end}
+                  data-target-width={box.width}
+                  style={{
+                    left: box.left,
+                    top: box.top,
+                    fontSize: `${Math.max(6, box.height)}px`,
+                  }}
+                >
+                  {box.str}
+                </span>
+              ))}
+            </div>
+          ) : null}
           {openTip ? (
             <PdfHighlightTipBubble
               tip={openTip.tip}
