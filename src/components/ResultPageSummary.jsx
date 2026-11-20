@@ -582,8 +582,8 @@ function InstancePill({
 
   const tip = onToggleInstanceVisibility
     ? visible
-      ? '좌클릭: 해당 위치로 이동 · 우클릭: 표시 제외'
-      : '좌클릭: 해당 위치로 이동 · 우클릭: 표시 복원'
+      ? '좌클릭: 해당 위치로 이동 · 우클릭: 표시 제외 · 빨간 글씨 더블클릭: 내용 수정'
+      : '좌클릭: 해당 위치로 이동 · 우클릭: 표시 복원 · 빨간 글씨 더블클릭: 내용 수정'
     : undefined;
 
   return (
