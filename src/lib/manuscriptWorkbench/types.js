@@ -50,8 +50,8 @@ export const MANUAL_SEARCH_EMPTY =
   '찾은 곳이 없습니다. 입력한 글자 그대로만 찾습니다.';
 export const MANUAL_SEARCH_HINT = '원고 본문에서 찾습니다.';
 export const MANUAL_ADD_HINT =
-  '수정할 텍스트 원본을 드래그로 선택한 뒤,';
-export const MANUAL_ADD_HINT_REST = '수정할 내용을 입력하세요.';
+  '수정할 텍스트를 드래그해';
+export const MANUAL_ADD_HINT_REST = '수정할 내용을 입력하세요';
 export const MANUAL_ADD_CANCEL_HINT = '취소: 마우스 우클릭';
 export const MANUAL_LONG_RANGE_HINT =
   '이 구간이 깁니다. 인디자인에서 다른 수정과 겹치면 한쪽만 남을 수 있습니다.';
