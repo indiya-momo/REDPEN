@@ -8,6 +8,7 @@ import { enrichAuxiliaryDictSolid } from '../lib/auxiliaryDictSolid.js';
 import { enrichAuxiliaryGluedFromSpaced } from '../lib/auxiliaryGluedFromSpaced.js';
 import { enrichAuxiliaryNonAeoSpace } from '../lib/auxiliaryNonAeoSpace.js';
 import { buildCautionCheckRules } from '../lib/cautionRules.js';
+import { enrichCautionYaldaGaneMorph } from '../lib/cautionYaldaGaneMorphFilter.js';
 import { sortSpellingResultsForDisplay } from '../utils/main-screen-helpers.js';
 import {
   BUILT_IN_RULES,
@@ -416,6 +417,7 @@ export function useRuleCheck({
             merged = [...merged, ...boidaGroups];
           }
         }
+        merged = await enrichCautionYaldaGaneMorph(merged, pageTexts);
         scopeResults = sortSpellingResultsForDisplay(merged, pageTexts);
         setSpellingResults(scopeResults);
         setSpellingCheckDone(true);

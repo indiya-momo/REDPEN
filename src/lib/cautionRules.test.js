@@ -173,13 +173,13 @@ describe('cautionHighlightSpan', () => {
     });
   });
 
-  it('끝 공백이 있어도 가는+명사 stem 끝을 잡는다', () => {
+  it('끝 공백이 있어도 가는 stem을 잡는다', () => {
     expect(
-      cautionHighlightSpan('가는 실 ', ['얇다', '가늘다', '가는 실']),
-    ).toEqual({ indexOffset: 0, text: '가는 실' });
+      cautionHighlightSpan('가는 ', ['얇다', '가늘다', '가는']),
+    ).toEqual({ indexOffset: 0, text: '가는' });
     expect(
-      cautionHighlightSpan('아주 가는 금실', ['가는 금실', '가늘다']),
-    ).toEqual({ indexOffset: 3, text: '가는 금실' });
+      cautionHighlightSpan('마음 가는', ['가는', '가늘다']),
+    ).toEqual({ indexOffset: 3, text: '가는' });
   });
 });
 
