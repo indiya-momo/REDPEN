@@ -1,4 +1,4 @@
-import { FLEX_SPACE, isHaeBoPattern } from './compoundPatternCommon.js';
+import { isHaeBoPattern } from './compoundPatternCommon.js';
 import { bonVerbAllowForItemId } from './bonBojoRules.js';
 import { isNounRootHaeHead } from './bonNounHaeBlocklist.js';
 
@@ -108,7 +108,8 @@ export function isBonVerbHeadOnAllowList(headCapture, stemHead, allowList) {
 /** @param {RegExpExecArray} match */
 export function isGluedAuxiliaryMatch(match) {
   const m = String(match[0] ?? '');
-  return m.length > 0 && !/\s/.test(m);
+  // ZWSP·BOM은 본조 띄움 gap인데 JS `\s`에 안 들어가 붙임으로 오인됨
+  return m.length > 0 && !/[\s\u200B\uFEFF]/u.test(m);
 }
 
 /** 국어원 (1) 구 결합 — …싶어 하다 / …들어 하다 (붙임 ×). 띄어 쓴 경로와 공유하지 않음. */
@@ -117,9 +118,6 @@ const PHRASE_BOUND_TAIL_BEFORE_HADA =
 
 /** 띄어 쓴 하다 여섯 활용. `하`만 빼면 `싶어 했다`가 남는다. */
 const SPACED_HADA_TAILS = new Set(['하', '한', '합', '할', '해', '했']);
-
-const SPACED_EOJEOL_GAP = new RegExp(FLEX_SPACE, 'u');
-const SPACED_EOJEOL_GAP_END = new RegExp(`${FLEX_SPACE}$`, 'u');
 
 /** 조사가 앞말에 붙은 뒤 보조 — 먹어도 보다 (붙임 ×) */
 const PARTICLE_SUFFIX_ON_HEAD =
@@ -195,6 +193,42 @@ export function isNounBogiManAfterItda(stemHead, stemTail, headCapture, match) {
   return /^보기만/.test(tailCapture);
 }
 
+/** 명사 「줄」+조사 — 앞다투어 줄을 서다 (주다 「어 줄」 오인) */
+const NOUN_JUL_WITH_JOSA = /^줄(?:을|은|이|도|만)$/u;
+
+/**
+ * @param {string} stemHead
+ * @param {string} stemTail
+ * @param {RegExpExecArray} match
+ */
+export function isNounJulWithJosa(stemHead, stemTail, match) {
+  if (
+    stemHead !== '어' &&
+    stemHead !== '아' &&
+    stemHead !== '여' &&
+    stemHead !== '혀'
+  ) {
+    return false;
+  }
+  if (stemTail !== '줄') return false;
+  return NOUN_JUL_WITH_JOSA.test(String(match[2] ?? '').trim());
+}
+
+/**
+ * 「해질 무렵」(해가 지다) — 하다+지다 오인. ZWSP·일반 공백 「해 질 무렵」 포함.
+ * @param {string} stemHead
+ * @param {string} headCapture
+ * @param {RegExpExecArray} match
+ */
+export function isHaeJilMuryeop(stemHead, headCapture, match) {
+  if (stemHead !== '해' || headCapture !== '해') return false;
+  const matched = String(match[0] ?? '');
+  const after = String(match.input ?? '').slice(
+    (match.index ?? 0) + matched.length,
+  );
+  return /^[\s\u00A0\u200B\uFEFF\r\n]*무렵/u.test(after);
+}
+
 /**
  * @param {string} stemHead
  * @param {string} stemTail
@@ -206,16 +240,20 @@ export function isPhraseBoundBeforeHada(stemHead, stemTail, headCapture) {
   return PHRASE_BOUND_TAIL_BEFORE_HADA.test(headCapture.trim());
 }
 
+/** 앞 어절 분리 — 일반 공백·줄바꿈 모두 (본조 줄 단위 검색·소프트랩) */
+const PREV_EOJEOL_GAP = /[\s\u00A0\u1680\u2000-\u200A\u202F\u205F\u3000\u200B\uFEFF]+/u;
+const PREV_EOJEOL_GAP_END = /[\s\u00A0\u1680\u2000-\u200A\u202F\u205F\u3000\u200B\uFEFF]+$/u;
+
 /**
- * 매치 바로 앞 어절. 줄 단위 검색이라 같은 줄만 본다.
+ * 매치 바로 앞 어절. match.input이 페이지 전체면 윗줄도 본다.
  * @param {RegExpExecArray} match
  */
 function previousEojeol(match) {
   const input = String(match.input ?? '');
   const index = match.index ?? 0;
-  const before = input.slice(0, index).replace(SPACED_EOJEOL_GAP_END, '');
+  const before = input.slice(0, index).replace(PREV_EOJEOL_GAP_END, '');
   if (!before) return '';
-  const parts = before.split(SPACED_EOJEOL_GAP);
+  const parts = before.split(PREV_EOJEOL_GAP);
   return parts[parts.length - 1] ?? '';
 }
 
@@ -249,8 +287,9 @@ export function shouldSkipLongCompoundSplit(rule, match) {
   const head = String(match[1] ?? '').trim();
   const tail = String(match[2] ?? '').trim();
   if (!head) return true;
-  /** 연결 `-다가`를 보조 `가다` onset `가`로 오인 (관람하다가 등) */
-  if (matched.endsWith('다가') && head.endsWith('다') && tail === '가') {
+  // 연결 `-다가`(도/는/면/…) — 보조 가다로 오인 (관람하다가·찾아오다가도)
+  // nonAeoAuxSpacing DA_GA_CONNECTIVE_TAILS와 같은 취지. tail은 STEM_TAIL_END로 가도·가는 등.
+  if (head.endsWith('다') && /^가/.test(tail)) {
     return true;
   }
   if (bonVerbHeadSyllableCount(head) <= BON_VERB_HEAD_MAX_SYLLABLES) return true;
@@ -288,11 +327,23 @@ export function shouldSkipAuxiliaryVerbMatch(rule, match) {
     if (AUX_FALSE_HAE_HEAD_CAPTURES.has(headCapture)) return true;
   }
 
+  // 띄움·ZWSP 공통
+  if (isNounJulWithJosa(stemHead, stemTail, match)) return true;
+  if (isHaeJilMuryeop(stemHead, headCapture, match)) return true;
+
   if (glued) {
     if (headEndsWithParticleBeforeAux(headCapture)) return true;
     if (headEndsWithDepNounJosa(headCapture)) return true;
     if (isPhraseBoundBeforeHada(stemHead, stemTail, headCapture)) return true;
   } else {
+    // 앞 어절이 의존명사+조사(줄을·것을…)면 단독 「해」보조 아님
+    if (
+      stemHead === '해' &&
+      headCapture === '해' &&
+      headEndsWithDepNounJosa(previousEojeol(match))
+    ) {
+      return true;
+    }
     if (isSpacedPhraseBoundBeforeHada(stemHead, stemTail, headCapture, match)) {
       return true;
     }
