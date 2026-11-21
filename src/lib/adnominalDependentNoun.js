@@ -1,71 +1,126 @@
 /**
- * 한글 맞춤법 제41·42항 — 관형사형+의존명사 띄어쓰기 (닫힌 표면).
- * PR #3 골든「관형사형+의존명사」FIX(F01–F03) 정밀도 우선. Kiwi 없음.
- * ruleEngine·시트 핫패스에 붙이지 않는다.
+ * 한글 맞춤법 제42항 — 관형사형 어미(ETM) 뒤 의존명사(NNB) 붙임 → 띄어.
+ * 후보 어절만 Kiwi로 보고, ETM 직후 NNB가 확인될 때만 제안(fail-closed).
+ * ruleEngine·시트 핫패스에 붙이지 않는다. 띄어쓰기 폴더 findHits만.
  *
- * KEEP(고의 미검출): 할수록, 끝난걸, 할걸, 어떤지, 말한바, 이미 띄운 「한 걸」
- * 체언+만큼(키만큼 등)은 이번 범위 밖.
+ * KEEP: 할수록(EC) · 끝난걸/할걸(거+JKO·EF) · 그만큼(MAG) · 키만큼(JKB) · 말한바(바는 n-ba)
  */
+
+import { analyzeLine } from './kiwiMorph/analyze.js';
+import { getKiwiInstance } from './kiwiMorph/runtime.js';
 
 export const ADNOMINAL_DEP_CATEGORY = '관형사형+의존명사';
 export const ADNOMINAL_DEP_LABEL = '관형사형+의존명사';
 export const ADNOMINAL_DEP_TIP =
-  '한글 맞춤법 제42항: 관형사형 어미 뒤 의존명사(수·것·거·만큼…)는 띄어 씀';
+  '한글 맞춤법 제42항: 관형사형 어미 뒤 의존명사(수·것·거·만큼·지…)는 띄어 씀';
 
-/** 부사 등재 — 의존명사 만큼과 구분 */
-const MANGKEUM_ADVERB = new Set([
-  '이만큼',
-  '그만큼',
-  '저만큼',
-  '요만큼',
-  '고만큼',
-  '얼마만큼',
-]);
+/** 붙임 후보로만 훑는 의존명사 표면 (형태소 NNB 확인 전 필터). 걸=거+ㄹ 시각형 포함. */
+const NNB_SURFACE_HINT = /수|것|거|걸|만큼|지/;
 
-/** 명사+있다 붙임 → 띄어 (닫힌 표면). 재미있다 등은 여기 없음. */
-const NOUN_ITDA_SPLIT = [{ find: '위엄있', replace: '위엄 있' }];
-
-/** 관형사형 어미(은/는/을/던) 또는 ㄴ·ㄹ 받침(한·할). */
-function isAdnominalStem(stem) {
-  if (!stem) return false;
-  if (/(?:을|은|는|던)$/.test(stem)) return true;
-  const last = stem.charCodeAt(stem.length - 1) - 0xac00;
-  if (last < 0 || last > 11171) return false;
-  const jong = last % 28;
-  return jong === 4 || jong === 8;
+/** @param {string | undefined} tag */
+function tagBase(tag) {
+  return String(tag ?? '').split('-')[0];
 }
 
-/** 「…수」가 한 단어인 명사 — 의존명사 수와 구분 */
-const SU_AS_NOUN = new Set([
-  '선수',
-  '횟수',
-  '개수',
-  '다수',
-  '소수',
-  '고수',
-  '명수',
-  '점수',
-  '함수',
-  '변수',
-  '상수',
-  '실수',
-  '우수',
-  '강수',
-  '강수량',
-  '지수',
-  '계수',
-  '비수',
-  '선수금',
-]);
+/**
+ * @param {string} surface
+ * @returns {boolean}
+ */
+export function looksLikeGluedAdnominalNnb(surface) {
+  const s = String(surface ?? '');
+  if (s.length < 2) return false;
+  return NNB_SURFACE_HINT.test(s);
+}
 
-const THING_COMPOUND = /^(그것|이것|저것|아무것)/;
+/**
+ * @param {string} surface
+ * @param {{ tokens?: { str: string, tag: string, position: number, length: number }[], surface1to1?: boolean } | null} analyzed
+ * @returns {{ matchedText: string, suggestedText: string, kind: string, insertAt: number } | null}
+ */
+export function decideAdnominalDependentSplit(surface, analyzed) {
+  const s = String(surface ?? '');
+  if (!s || !analyzed) return null;
+  const tokens = analyzed.tokens ?? [];
+  if (tokens.length < 2) return null;
+
+  for (let i = 0; i < tokens.length - 1; i += 1) {
+    const etm = tokens[i];
+    const nnb = tokens[i + 1];
+    if (tagBase(etm?.tag) !== 'ETM') continue;
+    if (tagBase(nnb?.tag) !== 'NNB') continue;
+
+    const nnbStr = String(nnb.str ?? '');
+    // 바 — 연결어미성 「말한바」 KEEP (n-ba 모듈 담당)
+    if (nnbStr === '바') continue;
+
+    const next = tokens[i + 2];
+    // 거 + 조사(걸) — 「끝난걸」「한걸」 KEEP
+    if (
+      nnbStr === '거' &&
+      next &&
+      tagBase(next.tag).startsWith('J') &&
+      Number(next.position) === Number(nnb.position)
+    ) {
+      continue;
+    }
+
+    const insertAt = Number(nnb.position);
+    if (!Number.isFinite(insertAt) || insertAt <= 0 || insertAt >= s.length) {
+      continue;
+    }
+    // 이미 띈 경우
+    if (/\s/.test(s[insertAt - 1] ?? '')) continue;
+
+    let end = insertAt + Math.max(Number(nnb.length) || 0, 1);
+    // 걸까 — 거+이+ㄹ까가 같은 시각 위치에 붙음 → 매치 끝을 「걸까」까지
+    if (nnbStr === '거') {
+      const rest = s.slice(insertAt);
+      const geolkka = rest.match(/^걸까/);
+      if (geolkka) {
+        end = insertAt + geolkka[0].length;
+      } else {
+        // 단독 「거」 음절
+        end = insertAt + 1;
+      }
+    } else if (nnbStr === '만큼') {
+      end = insertAt + 2;
+    } else if (nnbStr === '것' || nnbStr === '수' || nnbStr === '지') {
+      end = insertAt + 1;
+    } else {
+      // 기타 NNB: 표면에서 nnb.str 길이만큼 (자모 토큰이면 최소 1)
+      const visual = s.slice(insertAt);
+      if (visual.startsWith(nnbStr) && nnbStr.length > 0) {
+        end = insertAt + nnbStr.length;
+      }
+    }
+
+    if (end <= insertAt || end > s.length) continue;
+    const matchedText = s.slice(0, end);
+    const suggestedText = `${s.slice(0, insertAt)} ${s.slice(insertAt, end)}`;
+    if (!matchedText || matchedText === suggestedText) continue;
+
+    return {
+      matchedText,
+      suggestedText,
+      kind: nnbStr || 'NNB',
+      insertAt,
+    };
+  }
+  return null;
+}
 
 /**
  * @param {string} text
+ * @param {{
+ *   kiwi?: { ready?: () => boolean, analyze: Function } | null,
+ * }} [opts]
  * @returns {{ index: number, matchedText: string, suggestedText: string, kind: string }[]}
  */
-export function findAdnominalDependentNounHits(text) {
+export function findAdnominalDependentNounHits(text, opts = {}) {
   if (!text) return [];
+  const kiwi = opts.kiwi !== undefined ? opts.kiwi : getKiwiInstance();
+  if (!kiwi?.ready?.()) return [];
+
   /** @type {{ index: number, matchedText: string, suggestedText: string, kind: string }[]} */
   const hits = [];
   const occupied = [];
@@ -73,79 +128,24 @@ export function findAdnominalDependentNounHits(text) {
   const overlaps = (start, end) =>
     occupied.some(([a, b]) => start < b && end > a);
 
-  const take = (start, end, matchedText, suggestedText, kind) => {
-    if (matchedText === suggestedText) return;
-    if (overlaps(start, end)) return;
+  const re = /[\uAC00-\uD7A3]+/g;
+  let m;
+  while ((m = re.exec(text)) !== null) {
+    const surface = m[0];
+    if (!looksLikeGluedAdnominalNnb(surface)) continue;
+    const analyzed = analyzeLine(surface, { kiwi });
+    const decided = decideAdnominalDependentSplit(surface, analyzed);
+    if (!decided) continue;
+    const start = m.index;
+    const end = start + decided.matchedText.length;
+    if (overlaps(start, end)) continue;
     occupied.push([start, end]);
-    hits.push({ index: start, matchedText, suggestedText, kind });
-  };
-
-  // F01: 될수 있 → 될 수 (…수 + 있/없). 선수 등 명사 제외
-  {
-    // 「없이」는 제외(별수 없이). 있다/없다 계열만.
-    const re = /([가-힣]+수)(?=\s*(?:있|없(?!이)))/g;
-    let m;
-    while ((m = re.exec(text)) !== null) {
-      const whole = m[1];
-      if (SU_AS_NOUN.has(whole)) continue;
-      if (!whole.endsWith('수') || whole.length < 2) continue;
-      const stem = whole.slice(0, -1);
-      take(m.index, m.index + whole.length, whole, `${stem} 수`, '수');
-    }
-  }
-
-  // F03: 생각한걸까 → 생각한 걸까 (걸까만 — 끝난걸·할걸 제외)
-  {
-    const re = /([가-힣]+)걸까/g;
-    let m;
-    while ((m = re.exec(text)) !== null) {
-      take(m.index, m.index + m[0].length, m[0], `${m[1]} 걸까`, '걸까');
-    }
-  }
-
-  // F02: 봤을거 → 봤을 거 (…을거 / …은거). 할거·갈거(2음절) 스킵
-  {
-    const re = /([가-힣]+(?:을|은))거(?=$|[^가-힣]|야|요|다|죠|지|고|면|니|을|를|이|가|은|는|도|만)/g;
-    let m;
-    while ((m = re.exec(text)) !== null) {
-      const stem = m[1];
-      // 「할거」「갈거」는 「을」이 없어 이 패턴에 안 걸림. 「봤을」(2음절)은 포함.
-      take(m.index, m.index + m[0].length, m[0], `${stem} 거`, '거');
-    }
-  }
-
-  // 보강: 관형 어미 음절(는/은/던/을)+것
-  {
-    const re = /([가-힣]+(?:는|은|던|을))것(?=[가-힣]|$|[^가-힣])/g;
-    let m;
-    while ((m = re.exec(text)) !== null) {
-      if (THING_COMPOUND.test(m[0])) continue;
-      if (m[1].length < 2) continue;
-      take(m.index, m.index + m[0].length, m[0], `${m[1]} 것`, '것');
-    }
-  }
-
-  // 관형사형 + 만큼 (잊을만큼 → 잊을 만큼). 이만큼·그만큼 등 부사는 제외.
-  {
-    const re = /([가-힣]+)만큼/g;
-    let m;
-    while ((m = re.exec(text)) !== null) {
-      const whole = m[0];
-      if (MANGKEUM_ADVERB.has(whole)) continue;
-      const stem = m[1];
-      if (!isAdnominalStem(stem)) continue;
-      take(m.index, m.index + whole.length, whole, `${stem} 만큼`, '만큼');
-    }
-  }
-
-  for (const row of NOUN_ITDA_SPLIT) {
-    let from = 0;
-    while (from < text.length) {
-      const idx = text.indexOf(row.find, from);
-      if (idx === -1) break;
-      take(idx, idx + row.find.length, row.find, row.replace, '있');
-      from = idx + row.find.length;
-    }
+    hits.push({
+      index: start,
+      matchedText: decided.matchedText,
+      suggestedText: decided.suggestedText,
+      kind: decided.kind,
+    });
   }
 
   hits.sort((a, b) => a.index - b.index);
@@ -154,14 +154,15 @@ export function findAdnominalDependentNounHits(text) {
 
 /**
  * @param {{ pageNum: number, text?: string }[]} pages
+ * @param {{ kiwi?: { ready?: () => boolean, analyze: Function } | null }} [opts]
  */
-export function findAdnominalDependentNounInPages(pages) {
+export function findAdnominalDependentNounInPages(pages, opts = {}) {
   /** @type {{ pageNum: number, index: number, matchedText: string, suggestedText: string, kind: string }[]} */
   const out = [];
   for (const page of pages ?? []) {
     const text = String(page?.text ?? '');
     if (!text) continue;
-    for (const hit of findAdnominalDependentNounHits(text)) {
+    for (const hit of findAdnominalDependentNounHits(text, opts)) {
       out.push({ pageNum: page.pageNum, ...hit });
     }
   }

@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
+import { buildCautionCheckRules, CAUTION_RULES } from './cautionRules.js';
+import { runRuleCheck } from './ruleEngine.js';
 import {
   ganeAnalyzeSurface,
   isGanuldaGaneMorph,
+  isYaldaCautionGroup,
   isYaldaGaneInstance,
   pruneYaldaGaneFalseMorph,
   YALDA_CAUTION_ID,
@@ -147,5 +150,31 @@ describe('pruneYaldaGaneFalseMorph', () => {
     ]);
     expect(isYaldaGaneInstance(next[0].instances[0])).toBe(true);
     expect(next[0].instances[0].highlightIndex).toBe(secondGane);
+  });
+
+  it('cautionId 없어도 라벨 얇다·가늘다면 yalda 그룹으로 본다', () => {
+    expect(
+      isYaldaCautionGroup({ label: '얇다, 가늘다', instances: [] }),
+    ).toBe(true);
+    expect(isYaldaCautionGroup({ label: '그러다', instances: [] })).toBe(false);
+  });
+});
+
+describe('yalda 1차 stems — 단독 가는 제외', () => {
+  it('규칙 stems에 가는이 없고 마음 가는은 매칭되지 않는다', () => {
+    const yalda = CAUTION_RULES.find((r) => r.id === YALDA_CAUTION_ID);
+    expect(yalda?.stems ?? []).not.toContain('가는');
+    const rules = buildCautionCheckRules({ [YALDA_CAUTION_ID]: true });
+    const page = {
+      pageNum: 1,
+      text: '《경주멍》은 마음 가는 곳부터 펼쳐도 좋은 책입니다. 가느다란 금실.',
+    };
+    const { results } = runRuleCheck([page], rules);
+    const group = results.find((g) => g.cautionId === YALDA_CAUTION_ID);
+    const texts = (group?.instances ?? []).map((i) => i.matchedText);
+    expect(texts.some((t) => String(t).includes('마음') && String(t).includes('가는'))).toBe(
+      false,
+    );
+    expect(texts.some((t) => String(t).includes('가느다란'))).toBe(true);
   });
 });

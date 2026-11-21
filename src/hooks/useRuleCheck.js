@@ -386,6 +386,10 @@ export function useRuleCheck({
                 bootKiwiIfNeeded({ auxMorph: true, maxWaitMs: 12_000 }),
             });
           }
+          // 관형사형+의존명사(findHits 동기) — 후보 어절 Kiwi ETM→NNB 확인.
+          if (spacingEnabledMap.dependentRieulKka) {
+            await bootKiwiIfNeeded({ auxMorph: true, maxWaitMs: 12_000 });
+          }
           const spacingGroups = mergeSpacingFolderIntoSpellingResults(
             pageTexts,
             grouped,
