@@ -1,11 +1,13 @@
 /**
  * 주의「얇다, 가늘다」— stem `가는` 동형(가다 vs 가늘다) 2차 필터.
- * 1차 문자열 찾기는 그대로. 바른(→Kiwi shape)으로 가늘다(VA)만 남기고
+ * 1차 기본 stems에는 단독 `가는`을 두지 않는다(마음 가는=가다 오탐).
+ * 시트가 `가는`을 다시 넣으면 이 필터가 가늘다(VA)만 남기고
  * 가다(VV)·분석 실패는 버린다(fail-closed).
  */
 
 import { prefetchBareunAnalyze } from './bareunMorph/prefetch.js';
 import { analyzeLine } from './kiwiMorph/analyze.js';
+import { bootKiwiIfNeeded } from './kiwiMorph/bootLocal.js';
 import { getRemoteAnalyze } from './kiwiMorph/remoteCache.js';
 import { getKiwiInstance } from './kiwiMorph/runtime.js';
 import { prefetchKiwiAnalyze } from './kiwiMorph/serverRunner.js';
@@ -26,6 +28,14 @@ export function isYaldaGaneInstance(inst) {
   if (stem === GANE_STEM) return true;
   const matched = String(inst?.matchedText ?? '').trim();
   return matched === GANE_STEM || matched.endsWith(GANE_STEM);
+}
+
+/** @param {import('./ruleEngine.js').GroupedResult | null | undefined} group */
+export function isYaldaCautionGroup(group) {
+  if (!group) return false;
+  if (group.cautionId === YALDA_CAUTION_ID) return true;
+  const label = String(group.label ?? '').replace(/\s+/g, '');
+  return label.includes('얇다') && label.includes('가늘다');
 }
 
 /**
@@ -113,7 +123,7 @@ export function collectYaldaGaneSurfaces(groups, pages) {
   /** @type {string[]} */
   const out = [];
   for (const group of groups ?? []) {
-    if (group?.cautionId !== YALDA_CAUTION_ID) continue;
+    if (!isYaldaCautionGroup(group)) continue;
     for (const inst of group.instances ?? []) {
       if (!isYaldaGaneInstance(inst)) continue;
       const pageText = byPage.get(Number(inst.pageNum)) ?? '';
@@ -163,7 +173,7 @@ export function pruneYaldaGaneFalseMorph(groups, pages, opts = {}) {
   }
 
   return (groups ?? []).map((group) => {
-    if (group?.cautionId !== YALDA_CAUTION_ID) return group;
+    if (!isYaldaCautionGroup(group)) return group;
     const instances = (group.instances ?? []).filter((inst) => {
       if (!isYaldaGaneInstance(inst)) return true;
       const pageText = byPage.get(Number(inst.pageNum)) ?? '';
@@ -182,6 +192,18 @@ export function pruneYaldaGaneFalseMorph(groups, pages, opts = {}) {
  * @param {{ analyze?: typeof analyzeLine, morphPrefetchMaxMs?: number }} [opts]
  */
 export async function enrichCautionYaldaGaneMorph(groups, pages, opts = {}) {
+  // 맞춤법만 돌릴 때도 Kiwi를 먼저 켠다. 안 켜면 remote만 보고,
+  // 세션 복원·Bareun 키 없음이면 동형 판정이 비어 오탐이 남을 수 있다.
+  if (typeof opts.analyze !== 'function') {
+    try {
+      await bootKiwiIfNeeded({
+        auxMorph: true,
+        maxWaitMs: opts.morphPrefetchMaxMs ?? 12_000,
+      });
+    } catch {
+      /* fail-closed prune */
+    }
+  }
   await warmYaldaGaneMorphCache(groups, pages, opts);
   return pruneYaldaGaneFalseMorph(groups, pages, opts);
 }
