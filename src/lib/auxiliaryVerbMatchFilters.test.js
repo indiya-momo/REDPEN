@@ -183,6 +183,30 @@ describe('auxiliaryVerbMatchFilters', () => {
     expect(shouldSkipAuxiliaryVerbMatch(rule, match)).toBe(true);
   });
 
+  it('띄움 해 지 — 앞 어절이 줄을·것이면 제외, 역할은·깨끗해는 유지', () => {
+    const haeJi = buildAuxiliaryVerbFindRules('해 지')[0];
+    expect(ruleMatches(haeJi, '그런 것을 해 지는')).toBe(false);
+    expect(ruleMatches(haeJi, '역할을 해 지는')).toBe(true);
+    expect(ruleMatches(haeJi, '깨끗해 지는')).toBe(true);
+    expect(ruleMatches(haeJi, '상상해 지는')).toBe(true);
+  });
+
+  it('앞다투어 줄을 서다 — 명사 줄+을을 주다 「어 줄」로 보지 않는다', () => {
+    const eoJul = buildAuxiliaryVerbFindRules('어 줄')[0];
+    const waJul = buildAuxiliaryVerbFindRules('와 줄')[0];
+    expect(
+      ruleMatches(eoJul, '해야 할 일들이 머릿속에서 앞다투어 줄을 서는데'),
+    ).toBe(false);
+    expect(ruleMatches(waJul, '도와 줄 수 있다')).toBe(true);
+  });
+
+  it('해질 무렵 — 해가 지다이지 하다+지다가 아니다', () => {
+    const haeJil = buildAuxiliaryVerbFindRules('해 질')[0];
+    expect(ruleMatches(haeJil, '해 질 무렵 가장 멋진')).toBe(false);
+    expect(ruleMatches(haeJil, '해\u200B질 무렵')).toBe(false);
+    expect(ruleMatches(haeJil, '일이 해 질 때')).toBe(true);
+  });
+
   it('B — 종결 -ㄴ가 + 보다(사랑인가 봐)는 제외, 가 보다 본조는 유지', () => {
     const gaBwa = buildAuxiliaryVerbFindRules('가 봐')[0];
     expect(ruleMatches(gaBwa, '사랑인가 봐')).toBe(false);
