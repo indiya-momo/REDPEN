@@ -59,17 +59,20 @@ describe('3음절 이상 복합어 띄어쓰기', () => {
     expect(row?.find).toBeTruthy();
   });
 
-  it('연결 어미 -다가는 가다 보조로 보지 않는다', () => {
+  it('연결 어미 -다가·-다가도는 가다 보조로 보지 않는다', () => {
     const rules = ensureDefaultAuxiliaryVerbs([]).map((r) =>
       r.bonBojoItemId === BON_BOJO_LONG_COMPOUND_SPLIT_ID
         ? { ...r, enabled: true }
         : { ...r, enabled: false },
     );
-    const { results } = runRuleCheck(
-      [{ pageNum: 1, text: '관람하다가 집에 갔다.' }],
-      rules,
-    );
-    expect(results).toEqual([]);
+    for (const text of [
+      '관람하다가 집에 갔다.',
+      '찾아오다가도 문을 두드렸다.',
+      '들어오다가도 발길을 돌렸다.',
+    ]) {
+      const { results } = runRuleCheck([{ pageNum: 1, text }], rules);
+      expect(results, text).toEqual([]);
+    }
   });
 
   it('시트로 켠 규칙도 어루만져주세요를 찾는다', () => {

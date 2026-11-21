@@ -278,13 +278,19 @@ function applyCompoundFindByLines(rule, page, byKey, globalExcludePhrases) {
         re.lastIndex += 1;
         continue;
       }
+      const globalIndex = lineStart + match.index;
+      // 본조 필터(앞 어절·의존명사)가 윗줄을 보도록 페이지 좌표로 넘긴다.
+      const matchForSkip = Object.assign([match[0], match[1], match[2]], {
+        index: globalIndex,
+        input: searchText,
+        groups: match.groups,
+      });
       if (
         isGloballyExcluded(match[0], globalExcludePhrases) ||
-        shouldSkipMatch(rule, match, line)
+        shouldSkipMatch(rule, matchForSkip, searchText)
       ) {
         continue;
       }
-      const globalIndex = lineStart + match.index;
       if (ruleRequiresLeadingBoundary(rule) && match.index > 0) {
         let atLineStart = false;
         if (searchRefs?.length) {
