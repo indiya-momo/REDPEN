@@ -1,5 +1,5 @@
 /**
- * 경주멍 시스템 갭 §2·§3 닫힌 표면 (정규식·사전 게이트 없음).
+ * 닫힌 표면 (정규식·사전 게이트 없음).
  * ruleEngine 비부착. 띄어쓰기 폴더 findHits만.
  */
 
@@ -8,13 +8,27 @@ export const CLOSED_SPACING_FIXES_LABEL = '닫힌 띄어·오자';
 export const CLOSED_SPACING_FIXES_TIP =
   '한글 맞춤법 제2항(단어 띄어쓰기)·오자 교정. 닫힌 표면만.';
 
-/** @type {{ find: string, replace: string, kind: string }[]} */
-const LITERAL_ROWS = [
+const BASE_LITERAL_ROWS = [
   { find: '오래 된', replace: '오래된', kind: 'attach' },
   { find: '다보면', replace: '다 보면', kind: 'split' },
   { find: '무릎위에', replace: '무릎 위에', kind: 'split' },
-  { find: '나뭇가지모양', replace: '나뭇가지 모양', kind: 'split' },
 ];
+
+/** Sheet parity for haejil surfaces (equality test). Dual-report risk if folder wires this module. */
+export const CLOSED_HAE_JIL_LITERAL_ROWS = Object.freeze([
+  // leading Hangul boundary. residual FP: haejida(wear)+rieul
+  { find: "해질 무렵", replace: "해 질 무렵", kind: "split", leadingHangulBoundary: true },
+  { find: "해질녘", replace: "해 질 녘", kind: "split", leadingHangulBoundary: true },
+  { find: "해질무렵", replace: "해 질 무렵", kind: "split", leadingHangulBoundary: true },
+]);
+
+/** @type {{ find: string, replace: string, kind: string, leadingHangulBoundary?: boolean }[]} */
+const LITERAL_ROWS = [...BASE_LITERAL_ROWS, ...CLOSED_HAE_JIL_LITERAL_ROWS];
+
+/** @param {string} ch */
+function isHangulSyllable(ch) {
+  return ch.length === 1 && ch >= '\uAC00' && ch <= '\uD7A3';
+}
 
 /**
  * `넘어 서` → `넘어서` (연결어미 붙임).
@@ -72,6 +86,13 @@ export function findClosedSpacingFixHits(text) {
         (row.find === '다보면' || row.find === '다보니') &&
         idx >= 2 &&
         text.slice(idx - 2, idx) === '들여'
+      ) {
+        continue;
+      }
+      if (
+        row.leadingHangulBoundary &&
+        idx > 0 &&
+        isHangulSyllable(text[idx - 1] ?? '')
       ) {
         continue;
       }
