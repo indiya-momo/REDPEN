@@ -4,6 +4,7 @@ import {
   PARAGRAPH_EXCEPTION_LIMIT,
   classifyParagraphPair,
   paragraphJoinGlue,
+  particleAttachKind,
 } from './pdfTxtParagraph.js';
 
 /**
@@ -30,6 +31,45 @@ describe('paragraphJoinGlue', () => {
     expect(paragraphJoinGlue('그는', '사과를')).toBe(' ');
     expect(paragraphJoinGlue('봤을 때', '손잡이')).toBe(' ');
     expect(paragraphJoinGlue('임금과 물가 간', '악순환으로')).toBe(' ');
+  });
+
+  it('지시어·용언 뒤에는 띄우고, 체언 뒤 조사만 붙인다', () => {
+    expect(paragraphJoinGlue('무늬를 새기기보다', '이 도장으로 균일하게')).toBe(' ');
+    expect(paragraphJoinGlue('웃고 있는데', '이 부처님은')).toBe(' ');
+    expect(paragraphJoinGlue('(통일신라시대 1석', '은 약 52ℓ이며')).toBe('');
+    expect(paragraphJoinGlue('있는데', '은 그렇다')).toBe(' ');
+    expect(paragraphJoinGlue('아름답다', '가 보인다')).toBe(' ');
+    expect(paragraphJoinGlue('그 자리', '저 산은')).toBe(' ');
+    expect(paragraphJoinGlue('보기보다', '는 낫다')).toBe(' ');
+    expect(particleAttachKind('보기보다', '는 낫다')).toBe('uncertain');
+    expect(particleAttachKind('무늬를 새기기보다', '이 도장으로')).toBe(null);
+    expect(particleAttachKind('(통일신라시대 1석', '은 약')).toBe('sure');
+    const shown = findLinebreakCandidates([
+      {
+        pageNum: 1,
+        lines: ['보기보다', '는 낫다.'],
+        lineLayout: [lay(48, 400, 700), lay(48, 400, 684)],
+      },
+    ]);
+    expect(shown.some((c) => c.reason === 'josa' && c.defaultDecision === 'space')).toBe(true);
+    const hidden = findLinebreakCandidates([
+      {
+        pageNum: 22,
+        lines: ['무늬를 새기기보다', '이 도장으로 균일하게'],
+        lineLayout: [lay(48, 400, 700), lay(48, 400, 684)],
+      },
+      {
+        pageNum: 57,
+        lines: ['웃고 있는데', '이 부처님은'],
+        lineLayout: [lay(48, 400, 700), lay(48, 400, 684)],
+      },
+      {
+        pageNum: 59,
+        lines: ['(통일신라시대 1석', '은 약 52ℓ이며'],
+        lineLayout: [lay(48, 400, 700), lay(48, 400, 684)],
+      },
+    ]);
+    expect(hidden.some((c) => c.reason === 'josa')).toBe(false);
   });
 
   it('다음 줄이 조사이면 붙여 쓰고, 조사로 시작하는 단어는 한 칸이다', () => {
@@ -281,7 +321,7 @@ describe('applyLinebreakDecisions 문단 재조립', () => {
     );
     expect(joinPagesWithMarkers(pages)).toContain('유명한 명\n\n--- p.2 ---\n지 계곡의');
     const candidates = findLinebreakCandidates(pages);
-    expect(candidates.some((c) => c.id === '2:1' && c.reason === 'josa' && c.defaultDecision === 'nospace')).toBe(true);
+    expect(candidates.some((c) => c.reason === 'josa')).toBe(false);
     expect(applyLinebreakDecisions(pages, { '2:1': 'space' })).toContain('바다 가 아름답다.');
   });
 
