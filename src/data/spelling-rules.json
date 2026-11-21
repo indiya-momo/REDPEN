@@ -4940,5 +4940,81 @@
     "dividerGroup": "S2",
     "dividerLabel": "경주멍 시스템 갭",
     "displayLabel": "다보면"
+  },
+  {
+    "find": "다보니",
+    "replace": "다 보니",
+    "enabled": true,
+    "tip": "부사 다 + 보니는 띄어 씀. '-다(가) 보다' 보조는 -아/-어가 아니면 띄어 씀(맞춤법 제47항)",
+    "dividerGroup": "S2",
+    "dividerLabel": "경주멍 시스템 갭",
+    "displayLabel": "다보니"
+  },
+  {
+    "find": "쉬어가",
+    "replace": "쉬어 가",
+    "finds": [
+      "쉬어가",
+      "쉬어가는",
+      "쉬어가고",
+      "쉬어가라고"
+    ],
+    "findReplaces": {
+      "쉬어가는": "쉬어 가는",
+      "쉬어가고": "쉬어 가고",
+      "쉬어가라고": "쉬어 가라고"
+    },
+    "enabled": true,
+    "tip": "'쉬다'와 '가다'가 각각 본용언이면 띄어 씀(맞춤법 제47항)",
+    "dividerGroup": "S2",
+    "dividerLabel": "경주멍 시스템 갭",
+    "displayLabel": "쉬어가"
+  },
+  {
+    "find": "지 못 하",
+    "replace": "지 못하",
+    "finds": [
+      "지 못 하",
+      "지 못 할",
+      "지 못 한",
+      "지 못 했"
+    ],
+    "findReplaces": {
+      "지 못 할": "지 못할",
+      "지 못 한": "지 못한",
+      "지 못 했": "지 못했"
+    },
+    "enabled": true,
+    "tip": "'-지 못하다'의 '못하다'는 한 단어로 붙여 씀(앞 '-지'와는 띄어 씀)",
+    "dividerGroup": "S2",
+    "dividerLabel": "경주멍 시스템 갭",
+    "displayLabel": "지 못 하"
+  },
+  {
+    "find": "모른 채",
+    "replace": "모르는 채",
+    "enabled": true,
+    "tip": "'모르다'의 관형사형은 '모르는'",
+    "dividerGroup": "S2",
+    "dividerLabel": "경주멍 시스템 갭",
+    "displayLabel": "모른 채"
+  },
+  {
+    "find": "실감케",
+    "replace": "실감하게",
+    "enabled": true,
+    "tip": "'실감케'는 '실감하게'로 씀",
+    "dividerGroup": "S2",
+    "dividerLabel": "경주멍 시스템 갭",
+    "displayLabel": "실감케"
+  },
+  {
+    "find": "누군진",
+    "replace": "누군지는",
+    "enabled": true,
+    "tip": "'누군진'은 '누군지는'의 비표준 축약",
+    "dividerGroup": "S2",
+    "dividerLabel": "경주멍 시스템 갭",
+    "displayLabel": "누군진"
   }
 ]
