@@ -4,6 +4,13 @@ import {
   findAdnominalDependentNounHits,
   looksLikeGluedAdnominalNnb,
 } from './adnominalDependentNoun.js';
+import {
+  clearDeHeadwordGate,
+  getDeHeadwordGateStatus,
+  matchDeHeadwordGate,
+  setDeHeadwordGateError,
+  setDeHeadwordsForTests,
+} from './stdictDeHeadwords.js';
 import { resolveKiwiNodePaths, loadKiwiNode } from './kiwiMorph/loadNode.js';
 import { clearKiwiInstance } from './kiwiMorph/runtime.js';
 import { analyzeLine } from './kiwiMorph/analyze.js';
@@ -193,5 +200,307 @@ describe.skipIf(!kiwiReady)('golden KEEP · 실제 Kiwi', () => {
   it('분석 표본: 할수록은 EC', () => {
     const a = analyzeLine('할수록', { kiwi });
     expect(a?.tokens?.some((t) => t.tag === 'EC')).toBe(true);
+  });
+});
+
+
+describe('데 · 목 토큰 (kiwi-nlp@0.23.0 기록용 목)', () => {
+  it('looksLikeGluedAdnominalNnb: 갈데', () => {
+    expect(looksLikeGluedAdnominalNnb('갈데')).toBe(true);
+  });
+
+  it('갈데: 가/VV + ㄹ/ETM + 데/NNB → 갈 데', () => {
+    expect(
+      decideAdnominalDependentSplit('갈데', {
+        tokens: [
+          { str: '가', tag: 'VV', position: 0, length: 1 },
+          { str: 'ᆯ', tag: 'ETM', position: 0, length: 1 },
+          { str: '데', tag: 'NNB', position: 1, length: 1 },
+        ],
+      }),
+    ).toEqual(
+      expect.objectContaining({
+        matchedText: '갈데',
+        suggestedText: '갈 데',
+        kind: '데',
+      }),
+    );
+  });
+
+  it('하는데: 하/VV + 는데/EC → 없음', () => {
+    expect(
+      decideAdnominalDependentSplit('하는데', {
+        tokens: [
+          { str: '하', tag: 'VV', position: 0, length: 1 },
+          { str: '는데', tag: 'EC', position: 1, length: 2 },
+        ],
+      }),
+    ).toBeNull();
+  });
+
+  it('하는데다: 는/ETM + 데/NNB + 다/JX → 하는 데', () => {
+    expect(
+      decideAdnominalDependentSplit('하는데다', {
+        tokens: [
+          { str: '하', tag: 'VV', position: 0, length: 1 },
+          { str: '는', tag: 'ETM', position: 1, length: 1 },
+          { str: '데', tag: 'NNB', position: 2, length: 1 },
+          { str: '다', tag: 'JX', position: 3, length: 1 },
+        ],
+      }),
+    ).toEqual(
+      expect.objectContaining({
+        matchedText: '하는데',
+        suggestedText: '하는 데',
+        kind: '데',
+      }),
+    );
+  });
+
+  it('하는데에도: 데/NNB + 에/JKB + 도/JX → 하는 데', () => {
+    expect(
+      decideAdnominalDependentSplit('하는데에도', {
+        tokens: [
+          { str: '하', tag: 'VV', position: 0, length: 1 },
+          { str: '는', tag: 'ETM', position: 1, length: 1 },
+          { str: '데', tag: 'NNB', position: 2, length: 1 },
+          { str: '에', tag: 'JKB', position: 3, length: 1 },
+          { str: '도', tag: 'JX', position: 4, length: 1 },
+        ],
+      }),
+    ).toEqual(
+      expect.objectContaining({
+        matchedText: '하는데',
+        suggestedText: '하는 데',
+        kind: '데',
+      }),
+    );
+  });
+
+  it('좋은데가: 은/ETM + 데/NNB + 가/JKS → 좋은 데', () => {
+    expect(
+      decideAdnominalDependentSplit('좋은데가', {
+        tokens: [
+          { str: '좋', tag: 'VA', position: 0, length: 1 },
+          { str: '은', tag: 'ETM', position: 1, length: 1 },
+          { str: '데', tag: 'NNB', position: 2, length: 1 },
+          { str: '가', tag: 'JKS', position: 3, length: 1 },
+        ],
+      }),
+    ).toEqual(
+      expect.objectContaining({
+        matchedText: '좋은데',
+        suggestedText: '좋은 데',
+        kind: '데',
+      }),
+    );
+  });
+
+  it('앉은데를: 은/ETM + 데/NNB + 를/JKO → 앉은 데', () => {
+    expect(
+      decideAdnominalDependentSplit('앉은데를', {
+        tokens: [
+          { str: '앉', tag: 'VV', position: 0, length: 1 },
+          { str: '은', tag: 'ETM', position: 1, length: 1 },
+          { str: '데', tag: 'NNB', position: 2, length: 1 },
+          { str: '를', tag: 'JKO', position: 3, length: 1 },
+        ],
+      }),
+    ).toEqual(
+      expect.objectContaining({
+        matchedText: '앉은데',
+        suggestedText: '앉은 데',
+        kind: '데',
+      }),
+    );
+  });
+
+  it('간데: ㄴ/ETM + 데/NNB, 조사 없음 → 없음(가드 4)', () => {
+    expect(
+      decideAdnominalDependentSplit('간데', {
+        tokens: [
+          { str: '가', tag: 'VV', position: 0, length: 1 },
+          { str: 'ᆫ', tag: 'ETM', position: 0, length: 1 },
+          { str: '데', tag: 'NNB', position: 1, length: 1 },
+        ],
+      }),
+    ).toBeNull();
+  });
+
+  it('없는데·없는데도 → 없음(가드)', () => {
+    expect(
+      decideAdnominalDependentSplit('없는데', {
+        tokens: [
+          { str: '없', tag: 'VA', position: 0, length: 1 },
+          { str: '는', tag: 'ETM', position: 1, length: 1 },
+          { str: '데', tag: 'NNB', position: 2, length: 1 },
+        ],
+      }),
+    ).toBeNull();
+    expect(
+      decideAdnominalDependentSplit('없는데도', {
+        tokens: [
+          { str: '없', tag: 'VA', position: 0, length: 1 },
+          { str: '는', tag: 'ETM', position: 1, length: 1 },
+          { str: '데', tag: 'NNB', position: 2, length: 1 },
+          { str: '도', tag: 'JX', position: 3, length: 1 },
+        ],
+      }),
+    ).toBeNull();
+  });
+
+  it('그럴듯한데도: 첫 쌍 듯/NNB는 힌트 밖, 데는 EC → 없음', () => {
+    expect(
+      decideAdnominalDependentSplit('그럴듯한데도', {
+        tokens: [
+          { str: '그렇', tag: 'VA-I', position: 0, length: 2 },
+          { str: 'ᆯ', tag: 'ETM', position: 1, length: 1 },
+          { str: '듯', tag: 'NNB', position: 2, length: 1 },
+          { str: '하', tag: 'XSA', position: 3, length: 1 },
+          { str: 'ᆫ데', tag: 'EC', position: 4, length: 1 },
+          { str: '도', tag: 'JX', position: 5, length: 1 },
+        ],
+      }),
+    ).toBeNull();
+  });
+
+  it('듯/NNB 다음의 조사 없는 한/ETM + 데/NNB → 없음(건너뛴 뒤에도 가드 4)', () => {
+    expect(
+      decideAdnominalDependentSplit('예쁜듯한데', {
+        tokens: [
+          { str: '예쁘', tag: 'VA', position: 0, length: 2 },
+          { str: 'ᆫ', tag: 'ETM', position: 1, length: 1 },
+          { str: '듯', tag: 'NNB', position: 2, length: 1 },
+          { str: '한', tag: 'ETM', position: 3, length: 1 },
+          { str: '데', tag: 'NNB', position: 4, length: 1 },
+        ],
+      }),
+    ).toBeNull();
+  });
+
+  it('아무데: 아무/MM + 데/NNB → 없음', () => {
+    expect(
+      decideAdnominalDependentSplit('아무데', {
+        tokens: [
+          { str: '아무', tag: 'MM', position: 0, length: 2 },
+          { str: '데', tag: 'NNB', position: 2, length: 1 },
+        ],
+      }),
+    ).toBeNull();
+  });
+});
+
+describe('데 표제어 게이트', () => {
+  afterAll(() => {
+    clearDeHeadwordGate();
+  });
+
+  it('주입: 쓸데없는은 어간 쓸데없으로 맞음', () => {
+    setDeHeadwordsForTests({
+      meta: { sourceDate: '20261106' },
+      entries: [
+        { raw: '쓸데-없다', surface: '쓸데없다', stem: '쓸데없', poses: '형용사' },
+      ],
+    });
+    expect(matchDeHeadwordGate('쓸데없는')?.how).toBe('접두');
+    expect(matchDeHeadwordGate('갈데')).toBeNull();
+    expect(getDeHeadwordGateStatus().ok).toBe(true);
+    expect(getDeHeadwordGateStatus().count).toBe(1);
+  });
+
+  it('로드 실패 시 조용히 끄지 않고 표시', () => {
+    setDeHeadwordGateError('데 표제어 게이트를 읽지 못했다 (404).');
+    const st = getDeHeadwordGateStatus();
+    expect(st.ok).toBe(false);
+    expect(st.state).toBe('error');
+    expect(st.message).toMatch(/읽지 못했다/);
+  });
+});
+
+
+describe.skipIf(!kiwiReady)('데 · 실제 Kiwi (kiwi-nlp@0.23.0)', () => {
+  /** @type {import('kiwi-nlp').Kiwi | null} */
+  let kiwi = null;
+
+  beforeAll(async () => {
+    setDeHeadwordsForTests({
+      meta: { sourceDate: '20261106' },
+      entries: [
+        { raw: '쓸데-없다', surface: '쓸데없다', stem: '쓸데없', poses: '형용사' },
+        { raw: '쓸데없-이', surface: '쓸데없이', stem: '쓸데없이', poses: '부사' },
+        { raw: '난데-없다', surface: '난데없다', stem: '난데없', poses: '형용사' },
+        { raw: '난데없-이', surface: '난데없이', stem: '난데없이', poses: '부사' },
+        { raw: '간데-없다', surface: '간데없다', stem: '간데없', poses: '형용사' },
+        { raw: '간데없-이', surface: '간데없이', stem: '간데없이', poses: '부사' },
+        { raw: '온데간데-없다', surface: '온데간데없다', stem: '온데간데없', poses: '형용사' },
+        { raw: '온데간데없-이', surface: '온데간데없이', stem: '온데간데없이', poses: '부사' },
+      ],
+    });
+    kiwi = await loadKiwiNode({ register: false });
+    expect(kiwi?.ready?.()).toBe(true);
+  }, 60_000);
+
+  afterAll(() => {
+    clearDeHeadwordGate();
+  });
+
+  it.each([
+    ['갈데', '갈 데'],
+    ['있을데', '있을 데'],
+    ['먹을데', '먹을 데'],
+    ['할데', '할 데'],
+    ['갈데가', '갈 데'],
+    ['거부한데다', '거부한 데'],
+    ['늘어난데다', '늘어난 데'],
+    ['산적한데다', '산적한 데'],
+    ['하는데다', '하는 데'],
+    ['좋은데가', '좋은 데'],
+    ['앉은데를', '앉은 데'],
+    ['하는데에도', '하는 데'],
+  ])('잡을 것 %s → %s', (input, suggested) => {
+    const hits = findAdnominalDependentNounHits(input, { kiwi });
+    expect(hits.length).toBeGreaterThanOrEqual(1);
+    expect(hits[0]).toEqual(
+      expect.objectContaining({
+        suggestedText: suggested,
+        kind: '데',
+      }),
+    );
+  });
+
+  it.each([
+    '하는데',
+    '있는데',
+    '좋은데',
+    '그런데',
+    '근데',
+    '한데',
+    '있던데',
+    '갈텐데',
+    '예쁜데',
+    '갔는데',
+    '간데',
+  ])('안 잡을 것 %s', (input) => {
+    expect(findAdnominalDependentNounHits(input, { kiwi })).toEqual([]);
+  });
+
+  it.each([
+    '없는데',
+    '없는데도',
+    '형편없는데',
+    '심화되는데도',
+    '그럴듯한데도',
+  ])('회귀 오탐 표면 %s → 없음', (input) => {
+    expect(findAdnominalDependentNounHits(input, { kiwi })).toEqual([]);
+  });
+
+  it.each([
+    '쓸데없는',
+    '쓸데없이',
+    '난데없이',
+    '간데없이',
+    '온데간데없이',
+  ])('게이트 %s → 없음', (input) => {
+    expect(findAdnominalDependentNounHits(input, { kiwi })).toEqual([]);
   });
 });
