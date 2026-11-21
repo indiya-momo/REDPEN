@@ -3,6 +3,7 @@ import { ArrowLeft, BookOpen, Volume2, VolumeX, X } from 'lucide-react';
 import roomLibraryImg from '../assets/welcome/welcome_library_16.png';
 import EventRewardLayer from './EventRewardLayer.jsx';
 import { momoRoomStoryPages } from '../data/momoRoomStory.js';
+import { formatNoticeDate, listNotices } from '../lib/notices.js';
 import { syncMomoRoomBadge } from '../lib/badgeGrants.js';
 import { publicAssetUrl } from '../lib/publicAssetUrl.js';
 import CriteriaHoverTip from './CriteriaHoverTip.jsx';
@@ -71,9 +72,13 @@ function loadGuestbookUserId() {
 }
 
 /**
- * @param {{ onClose: () => void, authUid?: string }} props
+ * @param {{ onClose: () => void, authUid?: string, focusLatestNotice?: boolean }} props
  */
-export default function MomoRoomScreen({ onClose, authUid = '' }) {
+export default function MomoRoomScreen({
+  onClose,
+  authUid = '',
+  focusLatestNotice = false,
+}) {
   const [eventRewardTick, setEventRewardTick] = useState(0);
   const [isClosing, setIsClosing] = useState(false);
   const [storyOpen, setStoryOpen] = useState(false);
@@ -85,7 +90,39 @@ export default function MomoRoomScreen({ onClose, authUid = '' }) {
   const [guestbookNotice, setGuestbookNotice] = useState('');
   const [bookGlow, setBookGlow] = useState(null);
   const [ambientMuted, setAmbientMuted] = useState(() => loadAmbientMuted());
+  const notices = listNotices();
+  const latestNotice = notices[0] ?? null;
+  const [openNoticeId, setOpenNoticeId] = useState(
+    /** @type {string | null} */ (
+      focusLatestNotice && latestNotice ? latestNotice.id : null
+    ),
+  );
+  const [highlightNotice, setHighlightNotice] = useState(() =>
+    Boolean(focusLatestNotice && latestNotice),
+  );
+  const noticeBoardRef = useRef(null);
+  const noticeHighlightRef = useRef(null);
   const candleAudioRef = useRef(null);
+
+  useEffect(() => {
+    if (!focusLatestNotice || !latestNotice) return undefined;
+
+    const frame = window.requestAnimationFrame(() => {
+      noticeBoardRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+      });
+      noticeHighlightRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+      });
+    });
+    const timer = window.setTimeout(() => setHighlightNotice(false), 1600);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.clearTimeout(timer);
+    };
+  }, [focusLatestNotice, latestNotice?.id]);
 
   const page = momoRoomStoryPages[storyPage];
   const isLastPage = storyPage >= momoRoomStoryPages.length - 1;
@@ -366,6 +403,70 @@ export default function MomoRoomScreen({ onClose, authUid = '' }) {
               <footer>-모모 집사-</footer>
             </blockquote>
           </div>
+
+          <section
+            className="momo-room__notice"
+            aria-label="공지"
+            ref={noticeBoardRef}
+          >
+            <p className="momo-room__notice-label">공지</p>
+            {notices.length === 0 ? (
+              <p className="momo-room__notice-empty">아직 올라온 공지가 없어요.</p>
+            ) : (
+              <ul className="momo-room__notice-list">
+                {notices.map((notice) => {
+                  const open = openNoticeId === notice.id;
+                  return (
+                    <li
+                      key={notice.id}
+                      ref={
+                        notice.id === latestNotice?.id
+                          ? noticeHighlightRef
+                          : undefined
+                      }
+                      className={
+                        [
+                          'momo-room__notice-item',
+                          open ? 'momo-room__notice-item--open' : '',
+                          highlightNotice && notice.id === latestNotice?.id
+                            ? 'momo-room__notice-item--highlight'
+                            : '',
+                        ]
+                          .filter(Boolean)
+                          .join(' ')
+                      }
+                    >
+                      <button
+                        type="button"
+                        className="momo-room__notice-item-toggle"
+                        aria-expanded={open}
+                        onClick={() =>
+                          setOpenNoticeId(open ? null : notice.id)
+                        }
+                      >
+                        {notice.date ? (
+                          <time
+                            className="momo-room__notice-item-date"
+                            dateTime={notice.date}
+                          >
+                            {formatNoticeDate(notice.date)}
+                          </time>
+                        ) : null}
+                        <span className="momo-room__notice-item-title">
+                          {notice.title}
+                        </span>
+                      </button>
+                      {open && notice.body ? (
+                        <p className="momo-room__notice-item-body">
+                          {notice.body}
+                        </p>
+                      ) : null}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </section>
 
           <span className="momo-room__title-actions">
             <CriteriaHoverTip
