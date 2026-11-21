@@ -24,6 +24,7 @@ import {
   hasCompoundHyphenIndex,
   isSpaceRequiredVerbForm,
   resolveSpaceRequiredLemma,
+  shouldSilenceLongCompoundHostAsRegisteredLemma,
 } from './stdictVerbForms.js';
 
 const DICT_TIP = (lemma) => `표준국어대사전 「${lemma}」 등재`;
@@ -413,6 +414,17 @@ export async function enrichAuxiliaryDictSolid(groups, opts = {}) {
     );
   }
   for (const row of pendingSplit) {
+    const splitHeadSurface = splitHead(row.suggestedText);
+    // head itself registered lemma (...da): connective false split
+    if (shouldSilenceLongCompoundHostAsRegisteredLemma(splitHeadSurface)) {
+      jobs.push({
+        ...row,
+        lemma: splitHeadSurface,
+        kind: 'registered',
+        surface: splitHeadSurface,
+      });
+      continue;
+    }
     const citation = citationOfSplitRow(row, analyze);
     if (!citation || !citationHasCompoundHyphen(citation)) {
       jobs.push({ ...row, lemma: '', kind: 'plain' });

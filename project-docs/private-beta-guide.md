@@ -225,6 +225,7 @@ A. **아니요.** 검수는 브라우저 로컬입니다. (통계·피드백만 
 
 - [ ] PostHog `.env` / Pages 빌드 시 `VITE_PUBLIC_POSTHOG_*` (선택)
 - [ ] Feedback Form `VITE_FEEDBACK_FORM_*` (`feedback-form.md`)
+- [ ] 추출본 로드 확인 (`/data/stdict-verb-forms.json` 200 · 콘솔에 「붙임표 인덱스 없음」 경고 없음)
 - [ ] 대문·검수 1회 smoke (PDF 업로드 → 검수 실행)
 - [ ] 테스터에게 **본 가이드 §7 Known Issues** 공유
 

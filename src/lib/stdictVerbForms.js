@@ -155,6 +155,43 @@ export function resolveSpaceRequiredLemma(lemma, surface = '') {
   return list[0];
 }
 
+/** @param {string} raw */
+function hangulOnly(raw) {
+  return String(raw ?? '')
+    .trim()
+    .replace(/[^\uAC00-\uD7A3]/g, '');
+}
+
+/**
+ * Host surface -> registered lemma (lookup facade).
+ * Unique reverse lemma, else host+da in lemmaSet. 0/2+ -> "".
+ * Do not use for silence; use shouldSilenceLongCompoundHostAsRegisteredLemma.
+ * @param {string} host
+ */
+export function resolveRegisteredVerbLemmaFromHost(host) {
+  if (!lemmaSet) return '';
+  const form = hangulOnly(host);
+  if (!form) return '';
+  if (lemmaSet.has(form)) return form;
+  const list = formToLemmas?.get(form);
+  if (list?.length === 1) return list[0];
+  if (list && list.length > 1) return '';
+  const asLemma = form + '\uB2E4';
+  if (lemmaSet.has(asLemma)) return asLemma;
+  return '';
+}
+
+/**
+ * Long-compound silence: head itself is registered lemma (...da) only.
+ * @param {string} head
+ */
+export function shouldSilenceLongCompoundHostAsRegisteredLemma(head) {
+  if (!lemmaSet) return false;
+  const h = hangulOnly(head);
+  if (!h || !h.endsWith('\uB2E4')) return false;
+  return lemmaSet.has(h);
+}
+
 /**
  * 긴 합성어 붙임표 게이트 — citation ∈ H (= K ∪ H∖K).
  * 추출본이 비어 있으면 false(닫힘). API 폴백 없음.
