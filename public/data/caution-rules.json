@@ -318,6 +318,28 @@
           "groupLabel": "띄어쓰기로 뜻이 달라지는 경우"
         },
         {
+          "id": "bon-bojo-swieogada",
+          "label": "쉬어 가다, 쉬어가다",
+          "enabled": true,
+          "matchMode": "spaced-before",
+          "inventoryOnly": false,
+          "stems": [
+            "쉬어 가",
+            "쉬어가",
+            "쉬어 가는",
+            "쉬어가는",
+            "쉬어 가고",
+            "쉬어가고",
+            "쉬어 가라고",
+            "쉬어가라고",
+            "쉬어 가곤",
+            "쉬어가곤"
+          ],
+          "displayLabel": "쉬어 가다, 쉬어가다",
+          "tip": "쉬어 가다: '쉬다'와 '가다'가 각각 본용언(맞춤법 제47항)\n쉬어가다: 한 동작으로 묶인 경우(들렀다 가다 등)",
+          "groupLabel": "띄어쓰기로 뜻이 달라지는 경우"
+        },
+        {
           "id": "bon-bojo-jalhada",
           "label": "잘 하다, 잘하다",
           "enabled": false,
