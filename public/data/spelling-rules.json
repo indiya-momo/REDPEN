@@ -4936,7 +4936,7 @@
     "find": "다보면",
     "replace": "다 보면",
     "enabled": true,
-    "tip": "부사 다 + 보면은 띄어 씀",
+    "tip": "부사 「다」+「보면」·연결 「-다 보면」은 띄어 씀(맞춤법 제47항). 「들여다보면」(동사 들여다보다)은 제외",
     "dividerGroup": "S2",
     "dividerLabel": "경주멍 시스템 갭",
     "displayLabel": "다보면"
@@ -4945,7 +4945,7 @@
     "find": "다보니",
     "replace": "다 보니",
     "enabled": true,
-    "tip": "부사 다 + 보니는 띄어 씀. '-다(가) 보다' 보조는 -아/-어가 아니면 띄어 씀(맞춤법 제47항)",
+    "tip": "부사 「다」+「보니」·연결 「-다 보니」는 띄어 씀(맞춤법 제47항). 「들여다보니」(동사 들여다보다)는 제외",
     "dividerGroup": "S2",
     "dividerLabel": "경주멍 시스템 갭",
     "displayLabel": "다보니"
@@ -4957,12 +4957,14 @@
       "쉬어가",
       "쉬어가는",
       "쉬어가고",
-      "쉬어가라고"
+      "쉬어가라고",
+      "쉬어가곤"
     ],
     "findReplaces": {
       "쉬어가는": "쉬어 가는",
       "쉬어가고": "쉬어 가고",
-      "쉬어가라고": "쉬어 가라고"
+      "쉬어가라고": "쉬어 가라고",
+      "쉬어가곤": "쉬어 가곤"
     },
     "enabled": true,
     "tip": "'쉬다'와 '가다'가 각각 본용언이면 띄어 씀(맞춤법 제47항)",
@@ -5016,5 +5018,32 @@
     "dividerGroup": "S2",
     "dividerLabel": "경주멍 시스템 갭",
     "displayLabel": "누군진"
+  },
+  {
+    "find": "오래 된",
+    "replace": "오래된",
+    "enabled": true,
+    "tip": "「오래되다」는 한 단어로 붙여 씀",
+    "dividerGroup": "S2",
+    "dividerLabel": "경주멍 시스템 갭",
+    "displayLabel": "오래 된"
+  },
+  {
+    "find": "무릎위에",
+    "replace": "무릎 위에",
+    "enabled": true,
+    "tip": "의존명사 「위」는 앞말과 띄어 씀(맞춤법 제41항)",
+    "dividerGroup": "S2",
+    "dividerLabel": "경주멍 시스템 갭",
+    "displayLabel": "무릎위에"
+  },
+  {
+    "find": "나뭇가지모양",
+    "replace": "나뭇가지 모양",
+    "enabled": true,
+    "tip": "의존명사 「모양」은 앞말과 띄어 씀(맞춤법 제41항)",
+    "dividerGroup": "S2",
+    "dividerLabel": "경주멍 시스템 갭",
+    "displayLabel": "나뭇가지모양"
   }
 ]

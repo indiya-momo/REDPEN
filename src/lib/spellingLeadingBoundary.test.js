@@ -172,4 +172,25 @@ describe('맞춤법 띄어쓰기 규칙 — 앞 한글 경계', () => {
     expect(isHangulSyllable(' ')).toBe(false);
     expect(isHangulSyllable(undefined)).toBe(false);
   });
+  describe('다보면·다보니 — 들여다보다 부분일치 제외', () => {
+    const dabomyeon = buildSpellingCheckRuleFromBuiltIn({
+      ...BUILT_IN_RULES.find((r) => r.find === '다보면'),
+      enabled: true,
+    });
+    const daboni = buildSpellingCheckRuleFromBuiltIn({
+      ...BUILT_IN_RULES.find((r) => r.find === '다보니'),
+      enabled: true,
+    });
+
+    it('들여다보면·들여다보니는 잡지 않는다', () => {
+      expect(hits([dabomyeon], '유심히 들여다보면')).toEqual([]);
+      expect(hits([daboni], '사정을 들여다보니')).toEqual([]);
+    });
+
+    it('읽다보면·그러다보니·단독 다보면은 잡는다', () => {
+      expect(hits([dabomyeon], '책을 읽다보면')).toEqual(['다보면']);
+      expect(hits([daboni], '그러다보니 우리는')).toEqual(['다보니']);
+      expect(hits([dabomyeon], '다보면 알 수 있다')).toEqual(['다보면']);
+    });
+  });
 });
