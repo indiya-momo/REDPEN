@@ -65,6 +65,109 @@ const COMPLETE_ONE_SYLLABLE_EOJEOL = new Set([
 const COMPLETE_SHORT_EOJEOL = new Set(['아래']);
 
 /**
+ * 다음 줄 첫 어절이 이 말과 같으면 앞 말에 붙는 조사로 본다.
+ * `가을`·`도로`·`만약`처럼 조사로 시작만 하는 단어는 넣지 않는다.
+ */
+const PARTICLE_EOJEOL = new Set([
+  '가',
+  '이',
+  '은',
+  '는',
+  '을',
+  '를',
+  '에',
+  '의',
+  '로',
+  '와',
+  '과',
+  '도',
+  '만',
+  '에서',
+  '으로',
+  '까지',
+  '부터',
+  '에게',
+  '한테',
+  '처럼',
+  '보다',
+  '에는',
+  '에도',
+  '로는',
+  '로도',
+  '와는',
+  '과는',
+  '와도',
+  '과도',
+  '에서는',
+  '에서도',
+  '으로는',
+  '으로도',
+  '에게는',
+  '에게도',
+  '한테는',
+  '한테도',
+  '까지는',
+  '까지도',
+  '부터는',
+  '부터도',
+  '에서부터',
+  '으로부터',
+  '에게서',
+  '한테서',
+  '에게서는',
+  '한테서는',
+]);
+
+/** 한 음절·`보다`는 새 단어일 수 있어 모달에 올린다. */
+const AMBIGUOUS_PARTICLE = new Set([
+  '가',
+  '이',
+  '은',
+  '는',
+  '을',
+  '를',
+  '에',
+  '의',
+  '로',
+  '와',
+  '과',
+  '도',
+  '만',
+  '보다',
+]);
+
+/** 앞 어절이 이미 조사로 끝난 것으로 보는 한 음절. `사과`·`포도`의 끝음절은 빼 둔다. */
+const CLOSED_EOJEOL_JOSA = new Set(['은', '는', '이', '가', '을', '를', '에']);
+
+const CLOSED_EOJEOL_PARTICLE = [
+  '에서부터',
+  '으로부터',
+  '에게서는',
+  '한테서는',
+  '에게서',
+  '한테서',
+  '에서는',
+  '에서도',
+  '으로는',
+  '으로도',
+  '에게는',
+  '에게도',
+  '한테는',
+  '한테도',
+  '까지는',
+  '까지도',
+  '부터는',
+  '부터도',
+  '에서',
+  '으로',
+  '까지',
+  '부터',
+  '에게',
+  '한테',
+  '처럼',
+];
+
+/**
  * @typedef {'join' | 'keep'} ParagraphAction
  * @typedef {'' | ' ' | 'dehyphen'} ParagraphGlue
  * @typedef {'keep' | 'nospace' | 'space' | 'dehyphen' | 'join'} ParagraphDecision
@@ -133,6 +236,30 @@ export function buildParagraphContext(lines, layouts = []) {
 }
 
 /**
+ * 다음 줄 첫 어절이 앞 말에 붙는 조사인지.
+ * `sure`는 붙여 쓰고 모달에 올리지 않는다. `uncertain`은 붙여 쓰되 모달에 올린다.
+ * @param {string} left
+ * @param {string} right
+ * @returns {'sure' | 'uncertain' | null}
+ */
+export function particleAttachKind(left, right) {
+  const L = String(left ?? '').replace(/\s+$/u, '');
+  const R = String(right ?? '').replace(/^\s+/u, '');
+  if (!L || !R) return null;
+  const last = L[L.length - 1];
+  const first = R[0];
+  if (!isHangulSyllableChar(last) || !isHangulSyllableChar(first)) return null;
+  const firstEojeol = R.split(/\s+/u).filter(Boolean)[0] ?? '';
+  if (!PARTICLE_EOJEOL.has(firstEojeol)) return null;
+  const lastEojeol = L.split(/\s+/u).filter(Boolean).pop() ?? '';
+  if (CLOSED_EOJEOL_JOSA.has(lastEojeol[lastEojeol.length - 1] ?? '')) return null;
+  if (CLOSED_EOJEOL_PARTICLE.some((particle) => lastEojeol.endsWith(particle) && lastEojeol.length > particle.length)) {
+    return null;
+  }
+  return AMBIGUOUS_PARTICLE.has(firstEojeol) ? 'uncertain' : 'sure';
+}
+
+/**
  * 붙일 때 경계 처리. 문단을 나눌지는 여기서 정하지 않는다.
  * @param {string} left
  * @param {string} right
@@ -151,6 +278,7 @@ export function paragraphJoinGlue(left, right, hints = {}) {
   const first = R[0];
   if (isHangulSyllableChar(last) && isHangulSyllableChar(first)) {
     if (hints.trailSpace) return ' ';
+    if (particleAttachKind(L, R)) return '';
     if (isLikelyHangulEojeolBoundary(L, R)) return ' ';
     const lastEojeol = L.split(/\s+/u).filter(Boolean).pop() ?? '';
     if (
@@ -212,6 +340,8 @@ function lineFullness(text, layout, context) {
  * @param {TxtLineLayout | null | undefined} leftLayout
  * @param {TxtLineLayout | null | undefined} rightLayout
  * @param {{ byCol: Map<number, { fullEndX: number | null, fullChars: number }> } | null} [context]
+ * @param {{ crossPage?: boolean }} [opts]
+ *   쪽·단이 바뀌면 y·x는 비교하지 않는다. 문장 끝·짧은 줄·제목·조사 규칙은 그대로다.
  * @returns {ParagraphVerdict}
  */
 export function classifyParagraphPair(
@@ -220,13 +350,15 @@ export function classifyParagraphPair(
   leftLayout = null,
   rightLayout = null,
   context = null,
+  opts = {},
 ) {
   const L = String(left ?? '').replace(/\s+$/u, '');
   const R = String(right ?? '').replace(/^\s+/u, '');
   const glue = paragraphJoinGlue(L, R, {
     trailSpace: Boolean(leftLayout?.trailSpace),
   });
-  const midWord = glue === '';
+  const particle = leftLayout?.trailSpace ? null : particleAttachKind(L, R);
+  const midWord = glue === '' && !particle;
   const dehyphen = glue === 'dehyphen';
 
   const keep = (reason, uncertain = false) => ({
@@ -241,11 +373,12 @@ export function classifyParagraphPair(
   if (LIST_START_RE.test(R)) return keep('list', false);
 
   const sameCol =
-    !leftLayout ||
-    !rightLayout ||
-    !Number.isFinite(leftLayout.col) ||
-    !Number.isFinite(rightLayout.col) ||
-    leftLayout.col === rightLayout.col;
+    !opts.crossPage &&
+    (!leftLayout ||
+      !rightLayout ||
+      !Number.isFinite(leftLayout.col) ||
+      !Number.isFinite(rightLayout.col) ||
+      leftLayout.col === rightLayout.col);
 
   if (
     sameCol &&
@@ -293,9 +426,10 @@ export function classifyParagraphPair(
     return keep('short', L.length <= 22 || midWord || dehyphen);
   }
 
-  let uncertain = midWord || dehyphen || fullness === 'border';
+  let uncertain = midWord || dehyphen || fullness === 'border' || particle === 'uncertain';
   let reason = 'wrap';
-  if (midWord) reason = 'midword';
+  if (particle === 'uncertain') reason = 'josa';
+  else if (midWord) reason = 'midword';
   else if (dehyphen) reason = 'hyphen';
   else if (fullness === 'border') reason = 'border';
 
@@ -319,12 +453,20 @@ export function autoDecisionForVerdict(verdict) {
 }
 
 const EXCEPTION_RANK = {
-  midword: 0,
-  hyphen: 1,
-  border: 2,
-  heading: 3,
-  short: 4,
+  josa: 0,
+  midword: 1,
+  hyphen: 2,
+  border: 3,
+  heading: 4,
+  short: 5,
 };
+
+/**
+ * @param {{ pageNum?: number, lines?: string[] }[]} pages
+ */
+function pagesWithLines(pages) {
+  return (pages ?? []).filter((page) => (page.lines ?? []).length > 0);
+}
 
 /**
  * @param {{ pageNum: number, lines: string[], lineLayout?: TxtLineLayout[] }[]} pages
@@ -362,6 +504,39 @@ export function analyzeParagraphFlow(pages) {
         rank: EXCEPTION_RANK[verdict.reason] ?? 9,
       });
     }
+  }
+
+  const filled = pagesWithLines(pages);
+  for (let p = 0; p < filled.length - 1; p += 1) {
+    const page = filled[p];
+    const next = filled[p + 1];
+    const lines = page.lines ?? [];
+    const nextLines = next.lines ?? [];
+    const layouts = page.lineLayout ?? [];
+    const nextLayouts = next.lineLayout ?? [];
+    const context = buildParagraphContext(lines, layouts);
+    const verdict = classifyParagraphPair(
+      lines[lines.length - 1],
+      nextLines[0],
+      layouts[lines.length - 1],
+      nextLayouts[0],
+      context,
+      { crossPage: true },
+    );
+    if (verdict.action === 'join') joined += 1;
+    else kept += 1;
+    if (!verdict.uncertain) continue;
+    exceptions.push({
+      id: `${page.pageNum}:page`,
+      pageNum: page.pageNum,
+      lineIndex: lines.length - 1,
+      left: lines[lines.length - 1],
+      right: nextLines[0],
+      defaultDecision: autoDecisionForVerdict(verdict),
+      glue: verdict.glue,
+      reason: verdict.reason,
+      rank: EXCEPTION_RANK[verdict.reason] ?? 9,
+    });
   }
 
   exceptions.sort((a, b) => a.rank - b.rank || a.pageNum - b.pageNum || a.lineIndex - b.lineIndex);

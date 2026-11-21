@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import AppDialog from './AppDialog.jsx';
 
 const REASON_LABEL = {
+  josa: '조사로 보임',
   midword: '단어 중간',
   hyphen: '영문 하이픈',
   border: '끝선에 못 미친 줄',

@@ -29,8 +29,18 @@ describe('paragraphJoinGlue', () => {
   it('어절 경계는 한 칸이다', () => {
     expect(paragraphJoinGlue('그는', '사과를')).toBe(' ');
     expect(paragraphJoinGlue('봤을 때', '손잡이')).toBe(' ');
-    expect(paragraphJoinGlue('바다', '가 아름답다')).toBe(' ');
     expect(paragraphJoinGlue('임금과 물가 간', '악순환으로')).toBe(' ');
+  });
+
+  it('다음 줄이 조사이면 붙여 쓰고, 조사로 시작하는 단어는 한 칸이다', () => {
+    expect(paragraphJoinGlue('바다', '가 아름답다')).toBe('');
+    expect(paragraphJoinGlue('바다', '에서 만났다')).toBe('');
+    expect(paragraphJoinGlue('바다', '으로 갔다')).toBe('');
+    expect(paragraphJoinGlue('사과', '를 샀다')).toBe('');
+    expect(paragraphJoinGlue('바다', '가을이 왔다')).toBe(' ');
+    expect(paragraphJoinGlue('마을', '도로를 따라')).toBe(' ');
+    expect(paragraphJoinGlue('오늘은', '만약 비가')).toBe(' ');
+    expect(paragraphJoinGlue('그는', '가 왔다')).toBe(' ');
   });
 
   it('줄 끝 공백이 있으면 어절 경계로 본다', () => {
@@ -229,19 +239,83 @@ describe('applyLinebreakDecisions 문단 재조립', () => {
     );
   });
 
-  it('쪽과 쪽 사이는 빈 줄로 나누고 검수전은 조판 줄바꿈을 유지한다', () => {
+  it('쪽 끝 문장이 끝나면 문단을 나누고, 검수전은 조판 줄바꿈을 유지한다', () => {
     const pages = [
       { pageNum: 1, lines: ['그는 시장에 가서', '사과를 샀다.'] },
       { pageNum: 2, lines: ['그리고 집에 왔다.'] },
     ];
     expect(applyLinebreakDecisions(pages, {})).toBe(
-      '그는 시장에 가서 사과를 샀다.\n\n그리고 집에 왔다.',
+      '그는 시장에 가서 사과를 샀다.\n그리고 집에 왔다.',
     );
     expect(joinPagesWithMarkers(pages)).toBe(
       '그는 시장에 가서\n사과를 샀다.\n\n--- p.2 ---\n그리고 집에 왔다.',
     );
     expect(applyLinebreakDecisions(pages, {}, { autoParagraph: false })).toBe(
       '그는 시장에 가서\n사과를 샀다.\n\n그리고 집에 왔다.',
+    );
+  });
+
+  it('다음 쪽 첫 줄이 이어지면 붙이고, 조사·단어 중간도 공백 규칙이 같다', () => {
+    const full = (x, endX, y, col = 0) => ({
+      x,
+      endX,
+      y,
+      fontH: 12,
+      col,
+      trailSpace: false,
+    });
+    const pages = [
+      {
+        pageNum: 1,
+        lines: ['그는 어제 시장을', '유명한 명'],
+        lineLayout: [full(48, 400, 200, 1), full(48, 400, 180, 1)],
+      },
+      {
+        pageNum: 2,
+        lines: ['지 계곡의', '바다', '가 아름답다.'],
+        lineLayout: [full(48, 400, 700, 0), full(48, 400, 680, 0), full(48, 400, 660, 0)],
+      },
+    ];
+    expect(applyLinebreakDecisions(pages, {})).toBe(
+      '그는 어제 시장을 유명한 명지 계곡의 바다가 아름답다.',
+    );
+    expect(joinPagesWithMarkers(pages)).toContain('유명한 명\n\n--- p.2 ---\n지 계곡의');
+    const candidates = findLinebreakCandidates(pages);
+    expect(candidates.some((c) => c.id === '2:1' && c.reason === 'josa' && c.defaultDecision === 'nospace')).toBe(true);
+    expect(applyLinebreakDecisions(pages, { '2:1': 'space' })).toContain('바다 가 아름답다.');
+  });
+
+  it('앞 쪽 오른쪽 단 끝과 다음 쪽 왼쪽 단 처음을 잇고, 문장 끝이면 나눈다', () => {
+    const full = (x, endX, y, col) => ({ x, endX, y, fontH: 12, col, trailSpace: false });
+    const continued = [
+      {
+        pageNum: 1,
+        lines: ['왼쪽 단의 마지막은', '오른쪽 단에서 이어'],
+        lineLayout: [full(48, 360, 120, 0), full(420, 760, 120, 1)],
+      },
+      {
+        pageNum: 2,
+        lines: ['지는 문장이다.'],
+        lineLayout: [full(48, 400, 700, 0)],
+      },
+    ];
+    expect(applyLinebreakDecisions(continued, {})).toBe(
+      '왼쪽 단의 마지막은 오른쪽 단에서 이어지는 문장이다.',
+    );
+    const ended = [
+      {
+        pageNum: 1,
+        lines: ['오른쪽 단이 여기서 끝난다.'],
+        lineLayout: [full(420, 760, 120, 1)],
+      },
+      {
+        pageNum: 2,
+        lines: ['다음 쪽은 새 문단이다.'],
+        lineLayout: [full(48, 400, 700, 0)],
+      },
+    ];
+    expect(applyLinebreakDecisions(ended, {})).toBe(
+      '오른쪽 단이 여기서 끝난다.\n다음 쪽은 새 문단이다.',
     );
   });
 

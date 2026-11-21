@@ -12,6 +12,28 @@ import {
 } from './pdfTxtParagraph.js';
 
 /**
+ * @param {string} id
+ * @param {import('./pdfTxtParagraph.js').ParagraphVerdict} verdict
+ * @param {Record<string, LinebreakDecision>} decisions
+ * @param {boolean} autoParagraph
+ * @returns {LinebreakDecision}
+ */
+function resolveDecision(id, verdict, decisions, autoParagraph) {
+  if (!autoParagraph) return 'keep';
+  const chosen = decisions[id];
+  if (
+    chosen === 'keep' ||
+    chosen === 'nospace' ||
+    chosen === 'space' ||
+    chosen === 'dehyphen' ||
+    chosen === 'join'
+  ) {
+    return chosen;
+  }
+  return autoDecisionForVerdict(verdict);
+}
+
+/**
  * @typedef {'keep' | 'nospace' | 'space' | 'dehyphen' | 'join'} LinebreakDecision
  * @typedef {{
  *   id: string,
@@ -55,7 +77,7 @@ export function findLinebreakCandidates(pages) {
  */
 export function applyLinebreakDecisions(pages, decisions = {}, options = {}) {
   const autoParagraph = options.autoParagraph !== false;
-  /** @type {string[]} */
+  /** @type {{ pageNum: number, buf: string, lastLine: string, lastLayout: object | undefined, firstLine: string, firstLayout: object | undefined, context: ReturnType<typeof buildParagraphContext> }[]} */
   const blocks = [];
   for (const page of pages ?? []) {
     const lines = page.lines ?? [];
@@ -71,28 +93,51 @@ export function applyLinebreakDecisions(pages, decisions = {}, options = {}) {
         layouts[i + 1],
         context,
       );
-      const id = `${page.pageNum}:${i}`;
-      /** @type {LinebreakDecision} */
-      let decision = 'keep';
-      if (autoParagraph) {
-        const chosen = decisions[id];
-        if (
-          chosen === 'keep' ||
-          chosen === 'nospace' ||
-          chosen === 'space' ||
-          chosen === 'dehyphen' ||
-          chosen === 'join'
-        ) {
-          decision = chosen;
-        } else {
-          decision = autoDecisionForVerdict(verdict);
-        }
-      }
+      const decision = resolveDecision(
+        `${page.pageNum}:${i}`,
+        verdict,
+        decisions,
+        autoParagraph,
+      );
       buf = appendParagraphPiece(buf, lines[i + 1], decision, verdict.glue);
     }
-    blocks.push(buf.replace(/[ \t\u00A0]+$/u, ''));
+    blocks.push({
+      pageNum: page.pageNum,
+      buf: buf.replace(/[ \t\u00A0]+$/u, ''),
+      lastLine: lines[lines.length - 1],
+      lastLayout: layouts[lines.length - 1],
+      firstLine: lines[0],
+      firstLayout: layouts[0],
+      context,
+    });
   }
-  return blocks.filter(Boolean).join('\n\n');
+  if (!blocks.length) return '';
+  let out = blocks[0].buf;
+  for (let i = 0; i < blocks.length - 1; i += 1) {
+    const left = blocks[i];
+    const right = blocks[i + 1];
+    if (!autoParagraph) {
+      out += `\n\n${right.buf}`;
+      continue;
+    }
+    const verdict = classifyParagraphPair(
+      left.lastLine,
+      right.firstLine,
+      left.lastLayout,
+      right.firstLayout,
+      left.context,
+      { crossPage: true },
+    );
+    const decision = resolveDecision(
+      `${left.pageNum}:page`,
+      verdict,
+      decisions,
+      true,
+    );
+    if (decision === 'keep') out += `\n${right.buf}`;
+    else out = appendParagraphPiece(out, right.buf, decision, verdict.glue);
+  }
+  return out;
 }
 
 /**
