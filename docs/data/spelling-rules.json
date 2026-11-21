@@ -2131,6 +2131,20 @@
     "dividerLabel": "잘못된 표현(동사 · 형용사)"
   },
   {
+    "find": "뜯겨지",
+    "replace": "뜯기",
+    "finds": [
+      "뜯겨지",
+      "뜯겨진",
+      "뜯겨졌",
+      "뜯겨질"
+    ],
+    "enabled": true,
+    "tip": "이중피동, 과거형은 '뜯겼다'",
+    "dividerGroup": "B1",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)"
+  },
+  {
     "find": "본따",
     "replace": "본떠",
     "finds": [
@@ -4917,5 +4931,14 @@
     "dividerGroup": "F",
     "dividerLabel": "교육부 개정 용어",
     "overlayReplace": "→뒤통수엽"
+  },
+  {
+    "find": "다보면",
+    "replace": "다 보면",
+    "enabled": true,
+    "tip": "부사 다 + 보면은 띄어 씀",
+    "dividerGroup": "S2",
+    "dividerLabel": "경주멍 시스템 갭",
+    "displayLabel": "다보면"
   }
 ]
