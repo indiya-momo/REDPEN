@@ -122,6 +122,9 @@ export function spellingRuleNeedsLeadingHangulBoundary(rule) {
   return variants.every(findHasInnerSpace);
 }
 
+/** 동사 들여다보다 활용 안의 부분일치만 빼는 닫힌 표면 */
+const SPELLING_EXCLUDE_PRECEDING_DEULYEO = new Set(['다보면', '다보니']);
+
 /**
  * 시트 행 → 검사용 Rule (finds 없으면 입력 그대로)
  * @param {import('./ruleTypes.js').Rule} rule
@@ -134,6 +137,21 @@ export function buildSpellingCheckRuleFromBuiltIn(rule) {
     : {};
 
   if (finds.length < 2) {
+    const surface = String(rule.find ?? '').trim();
+    // 들여다보면·들여다보니 오탐 방지. enabled 키·표시용 find는 시트 표면 유지.
+    if (
+      SPELLING_EXCLUDE_PRECEDING_DEULYEO.has(surface) &&
+      rule.pattern !== 'regex'
+    ) {
+      return {
+        ...rule,
+        find: '(?<!들여)' + surface,
+        pattern: 'regex',
+        spellingRuleId: String(rule.ruleId ?? '').trim() || surface,
+        label,
+        ...boundary,
+      };
+    }
     return { ...rule, label, ...boundary };
   }
 
