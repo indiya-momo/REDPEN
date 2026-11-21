@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach } from 'vitest';
+import { describe, expect, it, beforeEach, vi } from 'vitest';
 import fs from 'node:fs';
 import { ensureDefaultAuxiliaryVerbs } from './defaultAuxiliaryVerbs.js';
 import { matches } from '../test/matchText.js';
@@ -20,7 +20,10 @@ import {
   resetAuxiliaryDictSolidStdictCallCount,
   solidSurface,
 } from './auxiliaryDictSolid.js';
-import { setStdictVerbFormsForTests } from './stdictVerbForms.js';
+import {
+  setStdictVerbFormsForTests,
+  shouldSilenceLongCompoundHostAsRegisteredLemma,
+} from './stdictVerbForms.js';
 import bonBojoJson from '../data/bon-bojo-rules.json';
 import { replaceBonBojoRulesData } from './bonBojoRules.js';
 
@@ -29,6 +32,8 @@ const FIXTURE_VERB_FORMS = {
   meta: { source: 'test' },
   lemmas: {
     들어오다: ['들어오니', '들어와'],
+    찾아오다: ['찾아오니', '찾아와'],
+    관람하다: ['관람하니'],
     쉬어가다: ['쉬어가'],
     날아오르다: ['날아올라'],
     정리해주다: ['정리해줘'],
@@ -101,6 +106,10 @@ function analyzeHead(head) {
     가르쳐: [
       { str: '가르치', tag: 'VV' },
       { str: '어', tag: 'EF' },
+    ],
+    들어와: [
+      { str: '들어오', tag: 'VV' },
+      { str: '아', tag: 'EF' },
     ],
     정리해: [
       { str: '정리', tag: 'NNG' },
@@ -299,6 +308,71 @@ describe('auxiliaryDictSolid', () => {
     ]);
     expect(next[0].tip).toBe('띄어 씀');
   });
+
+
+  it('등재 기본형 head(찾아오다·들어오다)는 긴 합성 칸에서 빼고, 어루만져·들어와 주는 남긴다', async () => {
+    const group = {
+      patternKind: 'auxiliary-verb',
+      auxSplitLongCompound: true,
+      tip: '띄어 씀',
+      instances: [
+        { matchedText: '찾아오다가도', suggestedText: '찾아오다 가도' },
+        { matchedText: '들어오다가도', suggestedText: '들어오다 가도' },
+        { matchedText: '관람하다가', suggestedText: '관람하다 가' },
+        { matchedText: '어루만져주세요', suggestedText: '어루만져 주세요' },
+        { matchedText: '들어와주세요', suggestedText: '들어와 주세요' },
+      ],
+    };
+    const next = await enrichAuxiliaryDictSolid([group], {
+      analyze: analyzeHead,
+      verbForms: FIXTURE_VERB_FORMS,
+    });
+    expect(next).toHaveLength(1);
+    const texts = next[0].instances.map((i) => i.matchedText);
+    expect(texts).toEqual(['어루만져주세요', '들어와주세요']);
+  });
+
+  it('추출본 로드 시 찾아오다가도는 빼고, 미로드면 침묵은 false·칸 닫힘 경고가 난다', async () => {
+    const group = {
+      patternKind: 'auxiliary-verb',
+      auxSplitLongCompound: true,
+      instances: [
+        { matchedText: '찾아오다가도', suggestedText: '찾아오다 가도' },
+      ],
+    };
+    const loaded = await enrichAuxiliaryDictSolid([group], {
+      analyze: () => null,
+      verbForms: FIXTURE_VERB_FORMS,
+    });
+    expect(loaded).toEqual([]);
+
+    clearAuxiliaryDictSolidCache();
+    expect(shouldSilenceLongCompoundHostAsRegisteredLemma('찾아오다')).toBe(
+      false,
+    );
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      const unloaded = await enrichAuxiliaryDictSolid(
+        [
+          {
+            ...group,
+            instances: [
+              { matchedText: '찾아오다가도', suggestedText: '찾아오다 가도' },
+            ],
+          },
+        ],
+        { analyze: () => null },
+      );
+      expect(Array.isArray(unloaded)).toBe(true);
+      expect(warn).toHaveBeenCalledWith(
+        expect.stringContaining('붙임표 인덱스 없음'),
+      );
+    } finally {
+      warn.mockRestore();
+    }
+  });
+
+
 
   it('붙임표가 있어도 본용언+보조가 추출본에 있으면 뺀다', async () => {
     const group = {
