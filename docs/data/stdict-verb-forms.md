@@ -10,5 +10,3 @@
 - 생성: `node scripts/build-stdict-verb-forms.mjs "<verbs.tsv 경로>"`
 - `lemmas`: 띄움 필수 기본형→활용형 (K)
 - `hyphenLemmasOutsideK`: 붙임표 표제어 중 K에 없는 기본형 (H∖K). 긴 합성어 붙임표 게이트는 K∪이 목록.
-
-- 배포 점검: 배포 URL에서 `/data/stdict-verb-forms.json`이 열리는지 확인. 실패 시 긴 합성어 칸이 fail-closed로 비고 콘솔에 「붙임표 인덱스 없음」이 난다.
