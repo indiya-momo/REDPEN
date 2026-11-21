@@ -6,8 +6,10 @@ import {
   isSpaceRequiredCompoundLemma,
   isSpaceRequiredVerbForm,
   lemmasForSpaceRequiredForm,
+  resolveRegisteredVerbLemmaFromHost,
   resolveSpaceRequiredLemma,
   setStdictVerbFormsForTests,
+  shouldSilenceLongCompoundHostAsRegisteredLemma,
   stdictHyphenOutsideKCount,
   stdictVerbFormsLemmaCount,
 } from './stdictVerbForms.js';
@@ -74,5 +76,49 @@ describe('stdict-verb-forms.json', () => {
     expect(resolveSpaceRequiredLemma('', '들어와')).toBe('들어오다');
     expect(resolveSpaceRequiredLemma('들어오다', '')).toBe('들어오다');
     expect(resolveSpaceRequiredLemma('', '기다려')).toBe('');
+  });
+
+  describe('resolveRegisteredVerbLemmaFromHost', () => {
+    it('찾아오·들어와·생각해를 해소하고, 침묵은 lemma형 head만', () => {
+      expect(resolveRegisteredVerbLemmaFromHost('찾아오')).toBe('찾아오다');
+      expect(resolveRegisteredVerbLemmaFromHost('들어와')).toBe('들어오다');
+      // 역색인 유일 — host+다 단계와 무관하게 해소됨
+      expect(resolveRegisteredVerbLemmaFromHost('생각해')).toBe('생각하다');
+      expect(resolveRegisteredVerbLemmaFromHost('어루만져')).toBe('어루만지다');
+      expect(resolveRegisteredVerbLemmaFromHost('찾아오는')).toBe('');
+      expect(resolveRegisteredVerbLemmaFromHost('찾아오면')).toBe('');
+    });
+
+    it('침묵은 등재 기본형 head(…다)만 — 활용형 본+보조는 유지', () => {
+      expect(shouldSilenceLongCompoundHostAsRegisteredLemma('찾아오다')).toBe(
+        true,
+      );
+      expect(shouldSilenceLongCompoundHostAsRegisteredLemma('들어오다')).toBe(
+        true,
+      );
+      expect(shouldSilenceLongCompoundHostAsRegisteredLemma('관람하다')).toBe(
+        true,
+      );
+      expect(shouldSilenceLongCompoundHostAsRegisteredLemma('어루만져')).toBe(
+        false,
+      );
+      expect(shouldSilenceLongCompoundHostAsRegisteredLemma('들어와')).toBe(
+        false,
+      );
+      expect(shouldSilenceLongCompoundHostAsRegisteredLemma('생각해')).toBe(
+        false,
+      );
+      expect(shouldSilenceLongCompoundHostAsRegisteredLemma('찾아오')).toBe(
+        false,
+      );
+    });
+
+    it('추출본 미로드면 해소·침묵 모두 빈다', () => {
+      clearStdictVerbFormsCache();
+      expect(resolveRegisteredVerbLemmaFromHost('찾아오')).toBe('');
+      expect(shouldSilenceLongCompoundHostAsRegisteredLemma('찾아오다')).toBe(
+        false,
+      );
+    });
   });
 });
