@@ -51,6 +51,7 @@ describe('linesFromPdfItems', () => {
       '오른아래',
       '하는',
     ]);
+    expect(lines.map((line) => line.col)).toEqual([0, 0, 0, 0, 1, 1, 1, 1]);
   });
 
   it('단면은 위→아래, 같은 줄은 왼쪽→오른쪽으로 그대로 둔다', () => {
