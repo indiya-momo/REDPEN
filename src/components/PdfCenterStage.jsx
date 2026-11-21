@@ -121,12 +121,16 @@ export default function PdfCenterStage({
   }, []);
 
   const onTxtReviewConfirm = useCallback(
-    (decisions) => {
+    (payload) => {
       if (!txtReview) {
         closeTxtReview();
         return;
       }
-      const text = buildFinalTxt(txtReview.cleanedPages, decisions);
+      const decisions = payload?.decisions ?? {};
+      const autoParagraph = payload?.autoParagraph !== false;
+      const text = buildFinalTxt(txtReview.cleanedPages, decisions, {
+        autoParagraph,
+      });
       downloadTextFile(text, txtReview.finalFilename);
       closeTxtReview();
     },
@@ -286,7 +290,7 @@ export default function PdfCenterStage({
                       className="btn-upload-secondary pdf-dropzone__txt"
                       onClick={openTxtPicker}
                       disabled={isProcessing || txtConverting}
-                      aria-label="PDF를 검수 전 TXT로 변환"
+                      aria-label="PDF를 원고 TXT로 변환"
                     >
                       <FileText size={16} />
                       {txtConverting ? '변환 중…' : 'TXT 변환'}
@@ -297,7 +301,7 @@ export default function PdfCenterStage({
                       100MB 이하 권장 · 신국판 300페이지 내외
                     </p>
                     <p className="pdf-dropzone__txt-note">
-                      TXT 변환 후 줄바꿈을 확인하고 최종 파일을 받습니다
+                      문단 줄바꿈을 정리한 뒤 최종 TXT를 받습니다. 검수전 추출본도 받을 수 있습니다
                     </p>
                     <p className="pdf-dropzone__scan-note">
                       <span className="pdf-support-msg__scan">
@@ -334,7 +338,7 @@ export default function PdfCenterStage({
                 className="btn-upload-secondary pdf-dropzone__txt"
                 onClick={openTxtPicker}
                 disabled={isProcessing || txtConverting}
-                aria-label="PDF를 검수 전 TXT로 변환"
+                aria-label="PDF를 원고 TXT로 변환"
               >
                 <FileText size={16} />
                 {txtConverting ? '변환 중…' : 'TXT 변환'}
@@ -345,7 +349,7 @@ export default function PdfCenterStage({
                 100MB 이하 권장 · 신국판 300페이지 내외
               </p>
               <p className="pdf-dropzone__txt-note">
-                TXT 변환 후 줄바꿈을 확인하고 최종 파일을 받습니다
+                문단 줄바꿈을 정리한 뒤 최종 TXT를 받습니다. 검수전 추출본도 받을 수 있습니다
               </p>
               <p className="pdf-dropzone__scan-note">
                 <span className="pdf-support-msg__scan">스캔 PDF는 읽을 수 없어요ㅠ</span>
@@ -496,6 +500,7 @@ export default function PdfCenterStage({
         open={Boolean(txtReview)}
         sourceName={txtReview?.sourceName ?? ''}
         candidates={txtReview?.candidates ?? []}
+        paragraphStats={txtReview?.paragraphStats}
         onCancel={closeTxtReview}
         onConfirm={onTxtReviewConfirm}
         onDownloadDraft={onTxtDownloadDraft}

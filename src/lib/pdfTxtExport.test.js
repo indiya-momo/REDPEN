@@ -158,29 +158,30 @@ describe('pdfTxtBodyClean', () => {
 });
 
 describe('pdfTxtLinebreakReview', () => {
-  it('한글 중간 soft-wrap만 후보이고 기본은 줄 유기다', () => {
-    expect(classifyLinebreakPair('유명한 명', '지 계곡')).toBe('keep');
-    expect(classifyLinebreakPair('봤을 때', '손잡이 윗부분')).toBe(null);
+  it('단어 중간은 붙이고 문장 끝은 줄을 유지한다', () => {
+    expect(classifyLinebreakPair('유명한 명', '지 계곡')).toBe('join');
+    expect(classifyLinebreakPair('봤을 때', '손잡이 윗부분')).toBe('join');
+    expect(classifyLinebreakPair('끝났다.', '다음')).toBe('keep');
   });
 
-  it('문장 끝·비한글은 후보가 아니다', () => {
-    expect(classifyLinebreakPair('끝났다.', '다음')).toBe(null);
-    expect(classifyLinebreakPair('Hello', 'world')).toBe(null);
-  });
-
-  it('결정을 반영해 최종 본문을 만든다', () => {
+  it('최종 본문은 문단 안 줄바꿈을 잇고, 쪽은 빈 줄로 나눈다', () => {
     const pages = [
-      { pageNum: 1, lines: ['유명한 명', '지 계곡이다.', '다음 문단'] },
+      { pageNum: 1, lines: ['유명한 명', '지 계곡이다.', '다음 글은'] },
+      { pageNum: 2, lines: ['이어서 둘째 쪽이다.'] },
     ];
     const candidates = findLinebreakCandidates(pages);
-    expect(candidates.some((c) => c.id === '1:0' && c.defaultDecision === 'keep')).toBe(
-      true,
-    );
-    expect(applyLinebreakDecisions(pages, {})).toBe(
-      '유명한 명\n지 계곡이다.\n다음 문단',
-    );
     expect(
-      applyLinebreakDecisions(pages, { '1:0': 'join', '1:1': 'keep' }),
-    ).toBe('유명한 명지 계곡이다.\n다음 문단');
+      candidates.some((c) => c.id === '1:0' && c.defaultDecision === 'nospace'),
+    ).toBe(true);
+    expect(candidates.some((c) => c.id === '1:1')).toBe(false);
+    expect(applyLinebreakDecisions(pages, {})).toBe(
+      '유명한 명지 계곡이다.\n다음 글은 이어서 둘째 쪽이다.',
+    );
+    expect(applyLinebreakDecisions(pages, { '1:0': 'keep', '1:page': 'keep' })).toBe(
+      '유명한 명\n지 계곡이다.\n다음 글은\n이어서 둘째 쪽이다.',
+    );
+    expect(applyLinebreakDecisions(pages, {}, { autoParagraph: false })).toBe(
+      '유명한 명\n지 계곡이다.\n다음 글은\n\n이어서 둘째 쪽이다.',
+    );
   });
 });
