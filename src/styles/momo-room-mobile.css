@@ -91,8 +91,14 @@
     box-sizing: border-box;
   }
 
-.momo-room__title-actions {
+.momo-room__notice {
     order: 6;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+.momo-room__title-actions {
+    order: 7;
     display: flex;
     justify-content: center;
     width: 100%;

@@ -89,6 +89,7 @@ export default function App() {
   const [authSession, setAuthSession] = useState(() => getCurrentUserSession());
   const [authReady, setAuthReady] = useState(false);
   const [authBootstrapError, setAuthBootstrapError] = useState('');
+  const [roomNoticeFocus, setRoomNoticeFocus] = useState(false);
   const [screen, setScreen] = useState(() => {
     if (
       import.meta.env.DEV &&
@@ -480,8 +481,12 @@ export default function App() {
     return (
       <>
         <MomoRoomScreen
-          onClose={() => setScreen('welcome')}
+          onClose={() => {
+            setRoomNoticeFocus(false);
+            setScreen('welcome');
+          }}
           authUid={authSession?.uid ?? ''}
+          focusLatestNotice={roomNoticeFocus}
         />
         <AppDialogHost />
       </>
@@ -525,7 +530,10 @@ export default function App() {
               setScreen('main');
             });
         }}
-        onOpenRoom={() => setScreen('room')}
+        onOpenRoom={(opts) => {
+          setRoomNoticeFocus(Boolean(opts?.focusNotice));
+          setScreen('room');
+        }}
       />
       <AppDialogHost />
       </>

@@ -25,6 +25,7 @@ import {
   markSignupBonusNoticePending,
 } from '../../lib/signupBonusNotice.js';
 import WelcomeProfileOnboarding from './WelcomeProfileOnboarding.jsx';
+import WelcomePcNotice from './WelcomePcNotice.jsx';
 import { publicAssetUrl } from '../../lib/publicAssetUrl.js';
 import './welcome-pc.css';
 
@@ -56,7 +57,7 @@ function WelcomePcShield({ className }) {
 /** @param {{
  *   onStart: () => void,
  *   onBrowse?: () => void,
- *   onOpenRoom: () => void,
+ *   onOpenRoom: (opts?: { focusNotice?: boolean }) => void,
  *   authSession: { uid: string, email?: string, displayName?: string } | null,
  *   authReady: boolean,
  *   authBootstrapError?: string,
@@ -442,6 +443,7 @@ export default function WelcomePcScreen({
         .join(' ')}
     >
       <section className="welcome-pc__hero" aria-label="서비스 소개">
+        <WelcomePcNotice onOpen={() => onOpenRoom({ focusNotice: true })} />
         <div className="welcome-pc__hero-left">
           {landingHeaderBlock}
           {perfBlock}
