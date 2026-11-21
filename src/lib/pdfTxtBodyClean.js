@@ -64,38 +64,46 @@ export function linesFromPdfItems(items) {
   const spread = splitSpreadColumns(source);
   if (spread) {
     return [
-      ...linesFromPdfItemsInColumn(spread.left.map((row) => row.item)),
-      ...linesFromPdfItemsInColumn(spread.right.map((row) => row.item)),
+      ...linesFromPdfItemsInColumn(spread.left.map((row) => row.item), 0),
+      ...linesFromPdfItemsInColumn(spread.right.map((row) => row.item), 1),
     ];
   }
   const columns = splitPageColumns(source);
   if (columns) {
     return [
-      ...linesFromPdfItemsInColumn(columns.left.map((row) => row.item)),
-      ...linesFromPdfItemsInColumn(columns.right.map((row) => row.item)),
+      ...linesFromPdfItemsInColumn(columns.left.map((row) => row.item), 0),
+      ...linesFromPdfItemsInColumn(columns.right.map((row) => row.item), 1),
     ];
   }
-  return linesFromPdfItemsInColumn(source);
+  return linesFromPdfItemsInColumn(source, 0);
 }
 
 /**
  * 한 단(또는 단일 열) 안에서만 y 내림차순·같은 줄은 x 오름차순으로 줄을 만든다.
  * @param {import('pdfjs-dist').TextItem[]} items
- * @returns {{ text: string, y: number }[]}
+ * @param {number} [col]
+ * @returns {{ text: string, y: number, x: number, endX: number, fontH: number, col: number, trailSpace: boolean }[]}
  */
-function linesFromPdfItemsInColumn(items) {
-  /** @type {{ str: string, x: number, y: number, fontH: number, hasEOL?: boolean }[]} */
+function linesFromPdfItemsInColumn(items, col = 0) {
+  /** @type {{ str: string, x: number, y: number, fontH: number, width: number, hasEOL?: boolean }[]} */
   const glyphs = [];
   for (const item of items ?? []) {
     if (!item || !('str' in item) || !item.str) continue;
     const t = item.transform;
     if (!Array.isArray(t) || t.length < 6) continue;
     const fontH = Math.hypot(t[2], t[3]) || Math.abs(t[3]) || 12;
+    const estimate = Math.max(item.str.length, 1) * fontH;
+    const reported = Number(item.width);
+    const width =
+      Number.isFinite(reported) && reported > 0 && reported <= estimate * 1.75
+        ? reported
+        : estimate;
     glyphs.push({
       str: item.str,
       x: t[4],
       y: t[5],
       fontH,
+      width,
       hasEOL: Boolean(item.hasEOL),
     });
   }
@@ -113,9 +121,28 @@ function linesFromPdfItemsInColumn(items) {
   const flush = () => {
     if (!bucket.length) return;
     bucket.sort((a, b) => a.x - b.x);
-    const text = bucket.map((g) => g.str).join('').replace(/\s+$/u, '');
+    const raw = bucket.map((g) => g.str).join('');
+    const trailSpace = /[\t \u00A0\u1680\u2000-\u200A\u202F\u205F\u3000]$/u.test(raw);
+    const text = raw.replace(/[\t \u00A0\u1680\u2000-\u200A\u202F\u205F\u3000]+$/u, '');
     if (text.trim()) {
-      lines.push({ text: text.normalize('NFC'), y: bucketY });
+      let x = Infinity;
+      let endX = -Infinity;
+      let fontH = 0;
+      for (const g of bucket) {
+        if (g.x < x) x = g.x;
+        const right = g.x + g.width;
+        if (right > endX) endX = right;
+        if (g.fontH > fontH) fontH = g.fontH;
+      }
+      lines.push({
+        text: text.normalize('NFC'),
+        y: bucketY,
+        x,
+        endX,
+        fontH: fontH || bucketFont,
+        col,
+        trailSpace,
+      });
     }
     bucket = [];
   };
@@ -180,7 +207,7 @@ function bandOf(y, yMin, yMax) {
 
 /**
  * @param {{ items?: import('pdfjs-dist').TextItem[], visualText?: string, text?: string, pageNum?: number }[]} pages
- * @returns {{ pageNum: number, lines: string[] }[]}
+ * @returns {{ pageNum: number, lines: string[], lineLayout: { x?: number, y?: number, endX?: number, fontH?: number, col?: number, trailSpace?: boolean }[] }[]}
  */
 export function cleanPageLinesForTxt(pages) {
   const list = pages ?? [];
@@ -195,11 +222,17 @@ export function cleanPageLinesForTxt(pages) {
     const fallback = String(page.visualText ?? page.text ?? '')
       .normalize('NFC')
       .split(/\n/u)
-      .map((text) => text.replace(/\s+$/u, ''))
-      .filter((text) => text.trim().length > 0)
-      .map((text, idx, arr) => ({
-        text,
+      .map((raw) => {
+        const trailSpace = /[\t \u00A0\u3000]$/u.test(raw);
+        const text = raw.replace(/\s+$/u, '');
+        return { text, trailSpace };
+      })
+      .filter((line) => line.text.trim().length > 0)
+      .map((line, idx, arr) => ({
+        text: line.text,
         y: arr.length - idx,
+        col: 0,
+        trailSpace: line.trailSpace,
       }));
     return { pageNum: page.pageNum ?? i + 1, lines: fallback };
   });
@@ -235,21 +268,36 @@ export function cleanPageLinesForTxt(pages) {
 
   return pageLines.map((page) => {
     if (!page.lines.length) {
-      return { pageNum: page.pageNum, lines: /** @type {string[]} */ ([]) };
+      return {
+        pageNum: page.pageNum,
+        lines: /** @type {string[]} */ ([]),
+        lineLayout: [],
+      };
     }
     const { yMin, yMax } = yExtent(page.lines);
-    const kept = page.lines
-      .filter((line) => {
-        const key = normalizeTxtLineKey(line.text);
-        if (!key) return false;
-        const band = bandOf(line.y, yMin, yMax);
-        if (band !== 'mid' && chromeKeys.has(key)) return false;
-        if (band !== 'mid' && isLikelyPageNumberLine(key)) return false;
-        return true;
-      })
-      .map((line) => stripGluedPageNumber(line.text.normalize('NFC')))
-      .filter((text) => text.length > 0);
-    return { pageNum: page.pageNum, lines: kept };
+    /** @type {string[]} */
+    const kept = [];
+    /** @type {{ x?: number, y?: number, endX?: number, fontH?: number, col?: number, trailSpace?: boolean }[]} */
+    const lineLayout = [];
+    for (const line of page.lines) {
+      const key = normalizeTxtLineKey(line.text);
+      if (!key) continue;
+      const band = bandOf(line.y, yMin, yMax);
+      if (band !== 'mid' && chromeKeys.has(key)) continue;
+      if (band !== 'mid' && isLikelyPageNumberLine(key)) continue;
+      const text = stripGluedPageNumber(line.text.normalize('NFC'));
+      if (!text) continue;
+      kept.push(text);
+      lineLayout.push({
+        x: line.x,
+        y: line.y,
+        endX: line.endX,
+        fontH: line.fontH,
+        col: line.col ?? 0,
+        trailSpace: Boolean(line.trailSpace),
+      });
+    }
+    return { pageNum: page.pageNum, lines: kept, lineLayout };
   });
 }
 
