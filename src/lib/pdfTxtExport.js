@@ -1,6 +1,6 @@
 /**
  * PDF → TXT 내려받기 (브라우저 로컬).
- * 검수전 추출 → 줄바꿈 확인 → 최종 TXT.
+ * 검수전 추출 → 문단 정리 → 최종 TXT.
  */
 import { extractAllPagesText, loadPdfFromBuffer } from './pdfService.js';
 import {
@@ -8,9 +8,9 @@ import {
   PDF_SIZE_MAX_MESSAGE_TERMINAL,
 } from './pdfSizeLimits.js';
 import { cleanPageLinesForTxt } from './pdfTxtBodyClean.js';
+import { analyzeParagraphFlow } from './pdfTxtParagraph.js';
 import {
   applyLinebreakDecisions,
-  findLinebreakCandidates,
   joinPagesWithMarkers,
 } from './pdfTxtLinebreakReview.js';
 
@@ -92,6 +92,7 @@ export function joinPagesAsTxt(pages) {
  *   cleanedPages: { pageNum: number, lines: string[] }[],
  *   draftWithMarkers: string,
  *   candidates: import('./pdfTxtLinebreakReview.js').LinebreakCandidate[],
+ *   paragraphStats: { joined: number, kept: number, omitted: number },
  *   draftFilename: string,
  *   finalFilename: string,
  * }>}
@@ -111,6 +112,7 @@ export async function preparePdfTxtReview(file, opts = {}) {
   try {
     const pages = await extractAllPagesText(pdf, opts.onProgress);
     const cleanedPages = cleanPageLinesForTxt(pages);
+    const flow = analyzeParagraphFlow(cleanedPages);
     const draftWithMarkers = joinPagesWithMarkers(cleanedPages);
     if (!draftWithMarkers.trim()) {
       throw new Error(
@@ -122,7 +124,8 @@ export async function preparePdfTxtReview(file, opts = {}) {
       pageCount: pages.length,
       cleanedPages,
       draftWithMarkers,
-      candidates: findLinebreakCandidates(cleanedPages),
+      candidates: flow.candidates,
+      paragraphStats: flow.stats,
       draftFilename: txtFilenameFromPdfName(file.name),
       finalFilename: finalTxtFilenameFromPdfName(file.name),
     };
@@ -132,12 +135,13 @@ export async function preparePdfTxtReview(file, opts = {}) {
 }
 
 /**
- * @param {{ pageNum: number, lines: string[] }[]} cleanedPages
- * @param {Record<string, 'join' | 'keep'>} decisions
+ * @param {{ pageNum: number, lines: string[], lineLayout?: object[] }[]} cleanedPages
+ * @param {Record<string, import('./pdfTxtLinebreakReview.js').LinebreakDecision>} decisions
+ * @param {{ autoParagraph?: boolean }} [options]
  * @returns {string}
  */
-export function buildFinalTxt(cleanedPages, decisions) {
-  return applyLinebreakDecisions(cleanedPages, decisions);
+export function buildFinalTxt(cleanedPages, decisions, options) {
+  return applyLinebreakDecisions(cleanedPages, decisions, options);
 }
 
 /**

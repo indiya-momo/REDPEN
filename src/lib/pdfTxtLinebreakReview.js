@@ -1,124 +1,102 @@
 /**
- * TXT 줄바꿈 확인 — 애매한 줄 이음만 모아 사람이 붙임/줄유지를 고른다.
+ * TXT 최종본 문단 정리.
+ * 기본은 문단 안 줄바꿈을 잇고, 애매한 곳만 모달에 올린다.
+ * 검수전 쪽 표식 본문(`joinPagesWithMarkers`)은 조판 줄바꿈을 유지한다.
  */
 import {
-  isHangulSyllableChar,
-  isLikelyHangulEojeolBoundary,
-  isUnifyHangulMidWordSoftWrap,
-} from './pdfPageText.js';
-
-const SENTENCE_END_RE = /[.!?…。」』》]$/u;
-const MAX_CANDIDATES = 80;
-/** 1음절이어도 줄 끝 어절로 완결된 말로 보는 것 — 모달 후보에서 제외 */
-const COMPLETE_ONE_SYLLABLE_EOJEOL = new Set([
-  '때',
-  '것',
-  '수',
-  '중',
-  '후',
-  '전',
-  '등',
-  '및',
-  '또',
-  '더',
-  '곧',
-  '단',
-  '속',
-  '안',
-  '밖',
-  '위',
-  '아래',
-]);
+  analyzeParagraphFlow,
+  appendParagraphPiece,
+  autoDecisionForVerdict,
+  classifyParagraphPair,
+  buildParagraphContext,
+} from './pdfTxtParagraph.js';
 
 /**
+ * @typedef {'keep' | 'nospace' | 'space' | 'dehyphen' | 'join'} LinebreakDecision
  * @typedef {{
  *   id: string,
  *   pageNum: number,
  *   lineIndex: number,
  *   left: string,
  *   right: string,
- *   defaultDecision: 'join' | 'keep',
+ *   defaultDecision: LinebreakDecision,
+ *   glue?: '' | ' ' | 'dehyphen',
+ *   reason?: string,
+ *   rank?: number,
  * }} LinebreakCandidate
  */
 
 /**
- * 모달에 올릴 후보만. 기본은 줄 유지 — 사용자가 고른 붙이기만 적용.
  * @param {string} left
  * @param {string} right
- * @returns {'join' | 'keep' | null} null = 후보 아님
+ * @returns {'join' | 'keep' | null}
  */
 export function classifyLinebreakPair(left, right) {
   const L = String(left ?? '').replace(/\s+$/u, '');
   const R = String(right ?? '').replace(/^\s+/u, '');
   if (!L || !R) return null;
-  if (SENTENCE_END_RE.test(L)) return null;
-
-  const last = L[L.length - 1];
-  const first = R[0];
-  if (!isHangulSyllableChar(last) || !isHangulSyllableChar(first)) return null;
-
-  // 단어 중간 soft-wrap(명|지)만 후보. 기본 keep — 때|손 같은 완결 어절은 제외.
-  if (!isUnifyHangulMidWordSoftWrap(L, R)) return null;
-  if (isLikelyHangulEojeolBoundary(L, R)) return null;
-  const lastEojeol = L.split(/\s+/u).filter(Boolean).pop() ?? '';
-  if (COMPLETE_ONE_SYLLABLE_EOJEOL.has(lastEojeol)) return null;
-  return 'keep';
+  return classifyParagraphPair(L, R).action;
 }
 
 /**
- * @param {{ pageNum: number, lines: string[] }[]} pages
+ * @param {{ pageNum: number, lines: string[], lineLayout?: object[] }[]} pages
  * @returns {LinebreakCandidate[]}
  */
 export function findLinebreakCandidates(pages) {
-  /** @type {LinebreakCandidate[]} */
-  const out = [];
-  for (const page of pages ?? []) {
-    const lines = page.lines ?? [];
-    for (let i = 0; i < lines.length - 1; i += 1) {
-      const def = classifyLinebreakPair(lines[i], lines[i + 1]);
-      if (!def) continue;
-      out.push({
-        id: `${page.pageNum}:${i}`,
-        pageNum: page.pageNum,
-        lineIndex: i,
-        left: lines[i],
-        right: lines[i + 1],
-        defaultDecision: def,
-      });
-      if (out.length >= MAX_CANDIDATES) return out;
-    }
-  }
-  return out;
+  return analyzeParagraphFlow(pages).candidates;
 }
 
 /**
- * @param {{ pageNum: number, lines: string[] }[]} pages
- * @param {Record<string, 'join' | 'keep'>} decisions
+ * @param {{ pageNum: number, lines: string[], lineLayout?: object[] }[]} pages
+ * @param {Record<string, LinebreakDecision>} [decisions]
+ * @param {{ autoParagraph?: boolean }} [options]
+ *   autoParagraph false면 조판 줄바꿈을 그대로 둔다 (검수전과 달리 쪽 표식은 없음).
  * @returns {string}
  */
-export function applyLinebreakDecisions(pages, decisions = {}) {
+export function applyLinebreakDecisions(pages, decisions = {}, options = {}) {
+  const autoParagraph = options.autoParagraph !== false;
   /** @type {string[]} */
   const blocks = [];
   for (const page of pages ?? []) {
     const lines = page.lines ?? [];
+    const layouts = page.lineLayout ?? [];
     if (!lines.length) continue;
+    const context = buildParagraphContext(lines, layouts);
     let buf = lines[0];
     for (let i = 0; i < lines.length - 1; i += 1) {
+      const verdict = classifyParagraphPair(
+        lines[i],
+        lines[i + 1],
+        layouts[i],
+        layouts[i + 1],
+        context,
+      );
       const id = `${page.pageNum}:${i}`;
-      const decision = decisions[id] ?? 'keep';
-      if (decision === 'join') {
-        buf += lines[i + 1];
-      } else {
-        buf += `\n${lines[i + 1]}`;
+      /** @type {LinebreakDecision} */
+      let decision = 'keep';
+      if (autoParagraph) {
+        const chosen = decisions[id];
+        if (
+          chosen === 'keep' ||
+          chosen === 'nospace' ||
+          chosen === 'space' ||
+          chosen === 'dehyphen' ||
+          chosen === 'join'
+        ) {
+          decision = chosen;
+        } else {
+          decision = autoDecisionForVerdict(verdict);
+        }
       }
+      buf = appendParagraphPiece(buf, lines[i + 1], decision, verdict.glue);
     }
-    blocks.push(buf.replace(/\s+$/u, ''));
+    blocks.push(buf.replace(/[ \t\u00A0]+$/u, ''));
   }
   return blocks.filter(Boolean).join('\n\n');
 }
 
 /**
- * 검수전(쪽 표식 포함) 본문.
+ * 검수전(쪽 표식 포함) 본문. 조판 줄바꿈을 유지한다.
  * @param {{ pageNum: number, lines: string[] }[]} pages
  * @returns {string}
  */
