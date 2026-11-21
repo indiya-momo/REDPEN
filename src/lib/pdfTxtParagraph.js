@@ -118,24 +118,6 @@ const PARTICLE_EOJEOL = new Set([
   '한테서는',
 ]);
 
-/** 한 음절·`보다`는 새 단어일 수 있어 모달에 올린다. */
-const AMBIGUOUS_PARTICLE = new Set([
-  '가',
-  '이',
-  '은',
-  '는',
-  '을',
-  '를',
-  '에',
-  '의',
-  '로',
-  '와',
-  '과',
-  '도',
-  '만',
-  '보다',
-]);
-
 /** 앞 어절이 이미 조사로 끝난 것으로 보는 한 음절. `사과`·`포도`의 끝음절은 빼 둔다. */
 const CLOSED_EOJEOL_JOSA = new Set(['은', '는', '이', '가', '을', '를', '에']);
 
@@ -235,9 +217,113 @@ export function buildParagraphContext(lines, layouts = []) {
   return { byCol };
 }
 
+/** 이/그/저 + 띄어쓰기 + 명사면 지시어. 조사가 아니다. */
+const DETERMINER_SYLLABLE = new Set(['이', '그', '저']);
+
 /**
- * 다음 줄 첫 어절이 앞 말에 붙는 조사인지.
- * `sure`는 붙여 쓰고 모달에 올리지 않는다. `uncertain`은 붙여 쓰되 모달에 올린다.
+ * 용언·연결 어미. 이 뒤의 `이/은`은 조사가 아니라 띄운다.
+ * `바다`(2음절)처럼 짧은 `-다` 명사는 넣지 않는다.
+ */
+const PREDICATE_ENDINGS = [
+  '습니다',
+  '입니다',
+  '합니다',
+  '됩니다',
+  '는데',
+  '은데',
+  '인데',
+  '지만',
+  '으며',
+  '면서',
+  '어서',
+  '아서',
+  '해서',
+  '여서',
+  '으면',
+  '다면',
+  '라면',
+  '려면',
+  '으니까',
+  '니까',
+  '어도',
+  '아도',
+  '해도',
+  '여도',
+  '거나',
+  '든지',
+  '도록',
+  '듯이',
+  '려고',
+  '다가',
+];
+
+/** @param {string} text */
+function hangulCount(text) {
+  return (String(text ?? '').match(/[가-힣]/gu) || []).length;
+}
+
+/** @param {string} text */
+function lastEojeolOf(text) {
+  return String(text ?? '').split(/\s+/u).filter(Boolean).pop() ?? '';
+}
+
+/**
+ * @param {string} eojeol
+ * @returns {boolean}
+ */
+function isComparativeHost(eojeol) {
+  return eojeol.endsWith('보다') && eojeol.length > '보다'.length;
+}
+
+/**
+ * @param {string} eojeol
+ * @returns {boolean}
+ */
+function isPredicateEojeol(eojeol) {
+  if (!eojeol || isComparativeHost(eojeol)) return false;
+  if (PREDICATE_ENDINGS.some((ending) => eojeol.endsWith(ending) && eojeol.length > ending.length)) {
+    return true;
+  }
+  if (/(?:하|되|어|아|여|워|져|쳐|러)고$/u.test(eojeol)) return true;
+  if (/(?:하|되|으|어|아)며$/u.test(eojeol)) return true;
+  if (/(?:하|어|아|여|으)서$/u.test(eojeol) && !eojeol.endsWith('에서')) return true;
+  if (/(?:하|으|느)니$/u.test(eojeol)) return true;
+  if (/(?:하|되|으|다|라)면$/u.test(eojeol)) return true;
+  if (eojeol.endsWith('다') && hangulCount(eojeol) >= 3) return true;
+  return false;
+}
+
+/**
+ * 조사 앞에 올 수 있는 체언·숫자·닫는 괄호.
+ * @param {string} eojeol
+ * @returns {boolean}
+ */
+function isNominalHost(eojeol) {
+  if (!eojeol || isPredicateEojeol(eojeol) || isComparativeHost(eojeol)) return false;
+  const last = eojeol[eojeol.length - 1];
+  if (/[0-9０-９A-Za-z]/u.test(last)) return true;
+  if ('」』》〉)）\\]】"”’'.includes(last)) return true;
+  return isHangulSyllableChar(last);
+}
+
+/**
+ * `이 도장`·`그 사람`·`저 산` — 다음 어절이 명사일 때만.
+ * @param {string} right
+ * @returns {boolean}
+ */
+function isDeterminerPhrase(right) {
+  const parts = String(right ?? '').split(/\s+/u).filter(Boolean);
+  if (parts.length < 2 || !DETERMINER_SYLLABLE.has(parts[0])) return false;
+  const next = parts[1];
+  if (PARTICLE_EOJEOL.has(next) || isPredicateEojeol(next)) return false;
+  return /[가-힣]/u.test(next);
+}
+
+/**
+ * 다음 줄 첫 어절이 앞 체언에 붙는 조사인지.
+ * `sure`는 붙여 쓰고 모달에 올리지 않는다.
+ * `uncertain`은 띄어 쓰되 모달에 올린다 (`-기보다` + 조사, 줄 첫 `보다`).
+ * 용언·연결 어미 뒤와 `이/그/저`+명사는 null (한 칸, 모달 없음).
  * @param {string} left
  * @param {string} right
  * @returns {'sure' | 'uncertain' | null}
@@ -245,18 +331,24 @@ export function buildParagraphContext(lines, layouts = []) {
 export function particleAttachKind(left, right) {
   const L = String(left ?? '').replace(/\s+$/u, '');
   const R = String(right ?? '').replace(/^\s+/u, '');
-  if (!L || !R) return null;
+  if (!L || !R || isDeterminerPhrase(R)) return null;
   const last = L[L.length - 1];
   const first = R[0];
-  if (!isHangulSyllableChar(last) || !isHangulSyllableChar(first)) return null;
+  if (!isHangulSyllableChar(last) && !/[0-9０-９A-Za-z」』》〉)）\]】"”’]/u.test(last)) {
+    return null;
+  }
+  if (!isHangulSyllableChar(first)) return null;
   const firstEojeol = R.split(/\s+/u).filter(Boolean)[0] ?? '';
   if (!PARTICLE_EOJEOL.has(firstEojeol)) return null;
-  const lastEojeol = L.split(/\s+/u).filter(Boolean).pop() ?? '';
+  const lastEojeol = lastEojeolOf(L);
   if (CLOSED_EOJEOL_JOSA.has(lastEojeol[lastEojeol.length - 1] ?? '')) return null;
   if (CLOSED_EOJEOL_PARTICLE.some((particle) => lastEojeol.endsWith(particle) && lastEojeol.length > particle.length)) {
     return null;
   }
-  return AMBIGUOUS_PARTICLE.has(firstEojeol) ? 'uncertain' : 'sure';
+  if (isPredicateEojeol(lastEojeol)) return null;
+  if (isComparativeHost(lastEojeol) || firstEojeol === '보다') return 'uncertain';
+  if (isNominalHost(lastEojeol)) return 'sure';
+  return null;
 }
 
 /**
@@ -278,9 +370,13 @@ export function paragraphJoinGlue(left, right, hints = {}) {
   const first = R[0];
   if (isHangulSyllableChar(last) && isHangulSyllableChar(first)) {
     if (hints.trailSpace) return ' ';
-    if (particleAttachKind(L, R)) return '';
+    if (isDeterminerPhrase(R)) return ' ';
+    const particle = particleAttachKind(L, R);
+    if (particle === 'sure') return '';
+    if (particle === 'uncertain') return ' ';
+    const lastEojeol = lastEojeolOf(L);
+    if (isPredicateEojeol(lastEojeol) || isComparativeHost(lastEojeol)) return ' ';
     if (isLikelyHangulEojeolBoundary(L, R)) return ' ';
-    const lastEojeol = L.split(/\s+/u).filter(Boolean).pop() ?? '';
     if (
       COMPLETE_ONE_SYLLABLE_EOJEOL.has(lastEojeol) ||
       COMPLETE_SHORT_EOJEOL.has(lastEojeol)
