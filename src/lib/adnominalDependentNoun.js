@@ -8,14 +8,21 @@
 
 import { analyzeLine } from './kiwiMorph/analyze.js';
 import { getKiwiInstance } from './kiwiMorph/runtime.js';
+import { matchDeHeadwordGate } from './stdictDeHeadwords.js';
 
 export const ADNOMINAL_DEP_CATEGORY = '관형사형+의존명사';
 export const ADNOMINAL_DEP_LABEL = '관형사형+의존명사';
 export const ADNOMINAL_DEP_TIP =
-  '한글 맞춤법 제42항: 관형사형 어미 뒤 의존명사(수·것·거·만큼·지…)는 띄어 씀';
+  '한글 맞춤법 제42항: 관형사형 어미 뒤 의존명사(수·것·거·만큼·지·데…)는 띄어 씀. 조사가 붙은 하는데다·좋은데가는 잡고, 연결어미로 쓰인 하는데·없는데·없는데도는 잡지 않는다.';
 
 /** 붙임 후보로만 훑는 의존명사 표면 (형태소 NNB 확인 전 필터). 걸=거+ㄹ 시각형 포함. */
-const NNB_SURFACE_HINT = /수|것|거|걸|만큼|지/;
+const NNB_SURFACE_HINT = /수|것|거|걸|만큼|지|데/;
+/** 힌트 집합은 위 정규식에서 그대로 가져온다. */
+const NNB_HINT_SET = new Set(['수', '것', '거', '걸', '만큼', '지', '데']);
+
+/** 는·은·ㄴ(+ 한) 뒤 데: 뜻을 가르는 조사가 있을 때만 잡음. 도·는은 침묵. */
+const DE_ETM_GUARD = new Set(['는', '은', 'ㄴ', 'ᆫ', '한']);
+const DE_OK_PARTICLES = new Set(['에', '가', '를', '다', '다가']);
 
 /** @param {string | undefined} tag */
 function tagBase(tag) {
@@ -30,6 +37,20 @@ export function looksLikeGluedAdnominalNnb(surface) {
   const s = String(surface ?? '');
   if (s.length < 2) return false;
   return NNB_SURFACE_HINT.test(s);
+}
+
+/**
+ * @param {{ str?: string, tag?: string }[]} tokens
+ * @param {number} etmIndex
+ */
+function deParticleAllowsSplit(tokens, etmIndex) {
+  const next = tokens[etmIndex + 2];
+  const nextStr = String(next?.str ?? '');
+  if (DE_OK_PARTICLES.has(nextStr)) return true;
+  if (nextStr === '다' && String(tokens[etmIndex + 3]?.str ?? '') === '가') {
+    return true;
+  }
+  return false;
 }
 
 /**
@@ -52,6 +73,8 @@ export function decideAdnominalDependentSplit(surface, analyzed) {
     const nnbStr = String(nnb.str ?? '');
     // 바 — 연결어미성 「말한바」 KEEP (n-ba 모듈 담당)
     if (nnbStr === '바') continue;
+    // 힌트 밖 NNB(듯·뿐·대로 등)는 건너뛰고 다음 힌트 쌍을 본다.
+    if (!NNB_HINT_SET.has(nnbStr)) continue;
 
     const next = tokens[i + 2];
     // 거 + 조사(걸) — 「끝난걸」「한걸」 KEEP
@@ -62,6 +85,11 @@ export function decideAdnominalDependentSplit(surface, analyzed) {
       Number(next.position) === Number(nnb.position)
     ) {
       continue;
+    }
+
+    // 가드 4: 는·은·ㄴ(+한) + 데는 에·가·를·다(가)가 있을 때만. 건너뛰어 고른 쌍에도 적용.
+    if (nnbStr === '데' && DE_ETM_GUARD.has(String(etm.str ?? ''))) {
+      if (!deParticleAllowsSplit(tokens, i)) continue;
     }
 
     const insertAt = Number(nnb.position);
@@ -84,7 +112,12 @@ export function decideAdnominalDependentSplit(surface, analyzed) {
       }
     } else if (nnbStr === '만큼') {
       end = insertAt + 2;
-    } else if (nnbStr === '것' || nnbStr === '수' || nnbStr === '지') {
+    } else if (
+      nnbStr === '것' ||
+      nnbStr === '수' ||
+      nnbStr === '지' ||
+      nnbStr === '데'
+    ) {
       end = insertAt + 1;
     } else {
       // 기타 NNB: 표면에서 nnb.str 길이만큼 (자모 토큰이면 최소 1)
@@ -133,6 +166,8 @@ export function findAdnominalDependentNounHits(text, opts = {}) {
   while ((m = re.exec(text)) !== null) {
     const surface = m[0];
     if (!looksLikeGluedAdnominalNnb(surface)) continue;
+    // 게이트는 접두 비교라 Kiwi보다 앞에 둔다.
+    if (matchDeHeadwordGate(surface)) continue;
     const analyzed = analyzeLine(surface, { kiwi });
     const decided = decideAdnominalDependentSplit(surface, analyzed);
     if (!decided) continue;

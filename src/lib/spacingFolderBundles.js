@@ -36,7 +36,8 @@ export const SPACING_FOLDER_BUNDLES = Object.freeze([
       'rieul-kka',
     ]),
     tipLines: Object.freeze([
-      '관형사형 어미 뒤 의존명사(수·것·거·만큼·지…)는 띄어 씀 (맞춤법 제42항·형태소 확인)',
+      '관형사형 어미 뒤 의존명사(수·것·거·만큼·지·데…)는 띄어 씀 (맞춤법 제42항·형태소 확인)',
+      '조사가 붙은 하는데다·좋은데가는 잡고, 연결어미로 쓰인 하는데·없는데·없는데도는 잡지 않는다.',
     ]),
   }),
   Object.freeze({
