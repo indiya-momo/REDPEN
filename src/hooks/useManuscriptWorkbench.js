@@ -14,7 +14,11 @@ import {
   removeManualInstance,
 } from '../lib/manuscriptWorkbench/findingsSink.js';
 import { searchHitsToGroups } from '../lib/manuscriptWorkbench/searchFindings.js';
-import { MANUAL_LIST_MODE } from '../lib/manuscriptWorkbench/modes.js';
+import {
+  isLayoutMarkMode,
+  layoutKindFromMode,
+  MANUAL_LIST_MODE,
+} from '../lib/manuscriptWorkbench/modes.js';
 import {
   MANUAL_LONG_RANGE_HINT_CHARS,
   MANUAL_SOURCE,
@@ -24,6 +28,11 @@ import {
   manualFindingsEqual,
   serializeManualGroups,
 } from '../lib/manuscriptWorkbench/persistManualFindings.js';
+import {
+  appendLayoutMark,
+  removeLayoutMarkById,
+} from '../lib/layoutMark/addLayoutMark.js';
+import { LAYOUT_MARK_LABELS } from '../lib/layoutMark/layoutMarkTypes.js';
 
 /**
  * 원고 작업대 상태. 선택·검색은 setGroups/publish를 부르지 않는다.
@@ -66,6 +75,9 @@ export function useManuscriptWorkbench({
   const [editingTarget, setEditingTarget] = useState(
     /** @type {{ pageNum: number, index: number } | null} */ (null),
   );
+  const [layoutMarks, setLayoutMarks] = useState(
+    /** @type {import('../lib/layoutMark/layoutMarkTypes.js').LayoutMark[]} */ ([]),
+  );
 
   const persistRef = useRef(onManualFindingsChange);
   persistRef.current = onManualFindingsChange;
@@ -74,6 +86,10 @@ export function useManuscriptWorkbench({
   const hydratedProjectRef = useRef(/** @type {string | null} */ (null));
   const groupsCountRef = useRef(0);
   groupsCountRef.current = countManualInstances(manualGroups);
+
+  useEffect(() => {
+    setLayoutMarks([]);
+  }, [resetKey]);
 
   useEffect(() => {
     const id = String(projectId ?? '');
@@ -147,12 +163,29 @@ export function useManuscriptWorkbench({
     [goToPdfPage, mode],
   );
 
-  const onTextSelected = useCallback((hit) => {
-    if (!hit) return;
-    setDraft(hit);
-    setActiveHit(hit);
-    setMode((prev) => prev ?? 'manual-add');
-  }, []);
+  const onTextSelected = useCallback(
+    (hit) => {
+      if (!hit) return;
+      const kind = layoutKindFromMode(mode);
+      if (kind) {
+        const page = (pageTexts ?? []).find((p) => p.pageNum === hit.pageNum);
+        setLayoutMarks((prev) => {
+          const next = appendLayoutMark(
+            prev,
+            { pageNum: hit.pageNum, index: hit.start, kind },
+            page,
+          );
+          return next ?? prev;
+        });
+        setActiveHit(hit);
+        return;
+      }
+      setDraft(hit);
+      setActiveHit(hit);
+      setMode((prev) => prev ?? 'manual-add');
+    },
+    [mode, pageTexts],
+  );
 
   const cancelTextSelection = useCallback(() => {
     setDraft((prev) => (prev?.fromHighlight ? prev : null));
@@ -296,10 +329,11 @@ export function useManuscriptWorkbench({
   );
 
   const previewPageHighlights = useMemo(() => {
+    /** @type {object[]} */
+    const rows = [];
     const hit = draft;
-    if (!hit || hit.pageNum !== currentPage) return [];
-    return [
-      {
+    if (hit && hit.pageNum === currentPage) {
+      rows.push({
         start: hit.start,
         end: hit.end,
         primary: true,
@@ -308,9 +342,29 @@ export function useManuscriptWorkbench({
         matchedText: hit.matchedText,
         pillarClass:
           'pdf-highlight--pillar-spelling pdf-highlight--search-preview',
-      },
-    ];
-  }, [draft, currentPage]);
+      });
+    }
+    for (const m of layoutMarks) {
+      if (Number(m.pageNum) !== currentPage) continue;
+      const w = String(m.after ?? '');
+      if (!w) continue;
+      rows.push({
+        start: m.index,
+        end: m.index + w.length,
+        primary: false,
+        id: `layout-${m.id}`,
+        tip: LAYOUT_MARK_LABELS[m.kind] ?? m.kind,
+        matchedText: w,
+        pillarClass:
+          'pdf-highlight--pillar-spelling pdf-highlight--search-preview',
+      });
+    }
+    return rows;
+  }, [draft, currentPage, layoutMarks]);
+
+  const removeLayoutMark = useCallback((id) => {
+    setLayoutMarks((prev) => removeLayoutMarkById(prev, id));
+  }, []);
 
   const currentPageHasText = useMemo(() => {
     const page = (pageTexts ?? []).find((p) => p.pageNum === currentPage);
@@ -346,9 +400,11 @@ export function useManuscriptWorkbench({
     manualGroups,
     searchGroups,
     removeManual,
+    layoutMarks,
+    removeLayoutMark,
     previewPageHighlights,
     currentPageHasText,
     persistNotice: false,
-    textLayerEnabled: mode === 'manual-add',
+    textLayerEnabled: mode === 'manual-add' || isLayoutMarkMode(mode),
   };
 }

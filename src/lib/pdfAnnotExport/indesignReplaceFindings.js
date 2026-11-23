@@ -150,6 +150,7 @@ export function formatIndesignReplaceNotice({
   excluded,
   overlapManual = 0,
   overlapEngine,
+  layoutExcludedOverlap = 0,
 }) {
   const excl = countExcluded(excluded);
   const overlapEngineN =
@@ -164,6 +165,11 @@ export function formatIndesignReplaceNotice({
       ? `제외 ${excl}건(고침 없음 ${excluded.noReplacement}, 검토만 ${excluded.reviewOnly}, 원문 불일치 ${excluded.textMismatch}, ${overlapBit})`
       : '제외 0건',
   ];
+  if (layoutExcludedOverlap > 0) {
+    parts.push(
+      `조판 기호 ${layoutExcludedOverlap}건 제외(문자 고침과 겹침)`,
+    );
+  }
   return (
     `${parts.join(' · ')}\n\n` +
     'PDF를 다운로드한 뒤에는 가급적 주석을 수정하지 마세요.\n' +
