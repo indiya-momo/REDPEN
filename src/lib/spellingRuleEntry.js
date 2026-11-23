@@ -122,8 +122,14 @@ export function spellingRuleNeedsLeadingHangulBoundary(rule) {
   return variants.every(findHasInnerSpace);
 }
 
-/** 동사 들여다보다 활용 안의 부분일치만 빼는 닫힌 표면 */
-const SPELLING_EXCLUDE_PRECEDING_DEULYEO = new Set(['다보면', '다보니']);
+/**
+ * 「해질 무렵」— literal find의 어절 안 글자 GAP이 바른 「해 질 무렵」까지 잡음. 정확 정규식 + 어절 시작.
+ * 다보면·다보니 KEEP은 `daboInsideCompoundKeep` 2차(추출본·Kiwi).
+ */
+const SPELLING_EXACT_HAE_JIL_MURYEOP = '해질 무렵';
+const SPELLING_EXACT_HAE_JIL_MURYEOP_RE =
+  String.raw`해질[\s\u00A0\u200B\uFEFF]+무렵`;
+
 
 /**
  * 시트 행 → 검사용 Rule (finds 없으면 입력 그대로)
@@ -138,18 +144,14 @@ export function buildSpellingCheckRuleFromBuiltIn(rule) {
 
   if (finds.length < 2) {
     const surface = String(rule.find ?? '').trim();
-    // 들여다보면·들여다보니 오탐 방지. enabled 키·표시용 find는 시트 표면 유지.
-    if (
-      SPELLING_EXCLUDE_PRECEDING_DEULYEO.has(surface) &&
-      rule.pattern !== 'regex'
-    ) {
+    if (surface === SPELLING_EXACT_HAE_JIL_MURYEOP && rule.pattern !== 'regex') {
       return {
         ...rule,
-        find: '(?<!들여)' + surface,
+        find: SPELLING_EXACT_HAE_JIL_MURYEOP_RE,
         pattern: 'regex',
+        requireLeadingBoundary: true,
         spellingRuleId: String(rule.ruleId ?? '').trim() || surface,
         label,
-        ...boundary,
       };
     }
     return { ...rule, label, ...boundary };

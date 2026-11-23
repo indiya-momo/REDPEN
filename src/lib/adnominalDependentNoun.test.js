@@ -6,6 +6,7 @@ import {
 } from './adnominalDependentNoun.js';
 import {
   clearDeHeadwordGate,
+  ensureDeHeadwordsLoaded,
   getDeHeadwordGateStatus,
   matchDeHeadwordGate,
   setDeHeadwordGateError,
@@ -414,6 +415,23 @@ describe('데 표제어 게이트', () => {
     expect(st.ok).toBe(false);
     expect(st.state).toBe('error');
     expect(st.message).toMatch(/읽지 못했다/);
+  });
+
+  it('ensureDeHeadwordsLoaded: 주입 후 쓸데 게이트가 맞는다', async () => {
+    clearDeHeadwordGate();
+    expect(getDeHeadwordGateStatus().ok).toBe(false);
+    await ensureDeHeadwordsLoaded({
+      data: {
+        meta: { sourceDate: '20261106' },
+        entries: [
+          { raw: '쓸-데', surface: '쓸데', stem: '쓸데', poses: '명사' },
+          { raw: '쓸데-없다', surface: '쓸데없다', stem: '쓸데없', poses: '형용사' },
+        ],
+      },
+    });
+    expect(getDeHeadwordGateStatus().ok).toBe(true);
+    expect(matchDeHeadwordGate('쓸데')?.how).toBe('정확');
+    expect(matchDeHeadwordGate('쓸데없는')?.how).toBe('접두');
   });
 });
 
