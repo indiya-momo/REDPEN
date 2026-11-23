@@ -9,6 +9,7 @@ import { enrichAuxiliaryGluedFromSpaced } from '../lib/auxiliaryGluedFromSpaced.
 import { enrichAuxiliaryNonAeoSpace } from '../lib/auxiliaryNonAeoSpace.js';
 import { buildCautionCheckRules } from '../lib/cautionRules.js';
 import { enrichCautionYaldaGaneMorph } from '../lib/cautionYaldaGaneMorphFilter.js';
+import { enrichSpellingDaboInsideCompoundKeep } from '../lib/daboInsideCompoundKeep.js';
 import { sortSpellingResultsForDisplay } from '../utils/main-screen-helpers.js';
 import {
   BUILT_IN_RULES,
@@ -83,6 +84,7 @@ import {
 } from '../lib/spacingFolderBundles.js';
 import { mergeSpacingFolderIntoSpellingResults } from '../lib/spacingFolderCheck.js';
 import { prepareNonAeoAuxSpacing } from '../lib/nonAeoAuxSpacing.js';
+import { ensureDeHeadwordsLoaded } from '../lib/stdictDeHeadwords.js';
 import {
   finalizeVerbBoidaSpacingGroups,
   isVerbBoidaItem,
@@ -386,9 +388,12 @@ export function useRuleCheck({
                 bootKiwiIfNeeded({ auxMorph: true, maxWaitMs: 12_000 }),
             });
           }
-          // 관형사형+의존명사(findHits 동기) — 후보 어절 Kiwi ETM→NNB 확인.
+          // 관형사형+의존명사(findHits 동기) — 데 표국 게이트 + Kiwi ETM→NNB.
           if (spacingEnabledMap.dependentRieulKka) {
-            await bootKiwiIfNeeded({ auxMorph: true, maxWaitMs: 12_000 });
+            await Promise.all([
+              ensureDeHeadwordsLoaded(),
+              bootKiwiIfNeeded({ auxMorph: true, maxWaitMs: 12_000 }),
+            ]);
           }
           const spacingGroups = mergeSpacingFolderIntoSpellingResults(
             pageTexts,
@@ -422,6 +427,7 @@ export function useRuleCheck({
           }
         }
         merged = await enrichCautionYaldaGaneMorph(merged, pageTexts);
+        merged = await enrichSpellingDaboInsideCompoundKeep(merged, pageTexts);
         scopeResults = sortSpellingResultsForDisplay(merged, pageTexts);
         setSpellingResults(scopeResults);
         setSpellingCheckDone(true);

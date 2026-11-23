@@ -1,12 +1,20 @@
-import { describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import spellingRulesJson from '../data/spelling-rules.json';
 import { BUILT_IN_RULES } from './builtInRules.js';
+import {
+  pruneDaboInsideCompoundHits,
+  shouldKeepDaboInsideCompound,
+} from './daboInsideCompoundKeep.js';
 import { runRuleCheck } from './ruleEngine.js';
 import {
   buildSpellingCheckRuleFromBuiltIn,
   isHangulSyllable,
   spellingRuleNeedsLeadingHangulBoundary,
 } from './spellingRuleEntry.js';
+import {
+  clearStdictVerbFormsCache,
+  setStdictVerbFormsForTests,
+} from './stdictVerbForms.js';
 
 /** @param {import('./ruleTypes.js').Rule[]} rules @param {string} text */
 function hits(rules, text) {
@@ -172,7 +180,7 @@ describe('맞춤법 띄어쓰기 규칙 — 앞 한글 경계', () => {
     expect(isHangulSyllable(' ')).toBe(false);
     expect(isHangulSyllable(undefined)).toBe(false);
   });
-  describe('다보면·다보니 — 들여다보다 부분일치 제외', () => {
+  describe('다보면·다보니 — 들여다보다 2차 KEEP', () => {
     const dabomyeon = buildSpellingCheckRuleFromBuiltIn({
       ...BUILT_IN_RULES.find((r) => r.find === '다보면'),
       enabled: true,
@@ -182,15 +190,103 @@ describe('맞춤법 띄어쓰기 규칙 — 앞 한글 경계', () => {
       enabled: true,
     });
 
-    it('들여다보면·들여다보니는 잡지 않는다', () => {
-      expect(hits([dabomyeon], '유심히 들여다보면')).toEqual([]);
-      expect(hits([daboni], '사정을 들여다보니')).toEqual([]);
+    beforeAll(() => {
+      setStdictVerbFormsForTests({
+        lemmas: {
+          들여다보다: ['들여다보니', '들여다보아', '들여다봐'],
+        },
+      });
+    });
+
+    afterAll(() => {
+      clearStdictVerbFormsCache();
+    });
+
+    it('1차는 시트 표면 그대로 두고 lookbehind를 쓰지 않는다', () => {
+      expect(dabomyeon.find).toBe('다보면');
+      expect(dabomyeon.pattern).not.toBe('regex');
+      expect(daboni.find).toBe('다보니');
+    });
+
+    it('들여다보면·들여다보니는 2차에서 KEEP', () => {
+      expect(shouldKeepDaboInsideCompound('들여다보면')).toBe(true);
+      expect(shouldKeepDaboInsideCompound('들여다보니')).toBe(true);
+      const pages = [
+        { pageNum: 1, text: '유심히 들여다보면' },
+        { pageNum: 2, text: '사정을 들여다보니' },
+      ];
+      const groups = [
+        {
+          label: '다보면',
+          instances: [
+            {
+              pageNum: 1,
+              index: pages[0].text.indexOf('다보면'),
+              matchedText: '다보면',
+            },
+          ],
+        },
+        {
+          label: '다보니',
+          instances: [
+            {
+              pageNum: 2,
+              index: pages[1].text.indexOf('다보니'),
+              matchedText: '다보니',
+            },
+          ],
+        },
+      ];
+      expect(pruneDaboInsideCompoundHits(groups, pages, { analyze: () => null })).toEqual([]);
     });
 
     it('읽다보면·그러다보니·단독 다보면은 잡는다', () => {
       expect(hits([dabomyeon], '책을 읽다보면')).toEqual(['다보면']);
       expect(hits([daboni], '그러다보니 우리는')).toEqual(['다보니']);
       expect(hits([dabomyeon], '다보면 알 수 있다')).toEqual(['다보면']);
+      expect(shouldKeepDaboInsideCompound('읽다보면')).toBe(false);
+      expect(shouldKeepDaboInsideCompound('그러다보니')).toBe(false);
+      expect(shouldKeepDaboInsideCompound('다보면')).toBe(false);
     });
   });
+
+  describe('해질녘·해질 무렵 — 어절 시작 경계', () => {
+    const nyeok = buildSpellingCheckRuleFromBuiltIn({
+      ...BUILT_IN_RULES.find((r) => r.find === '해질녘'),
+      enabled: true,
+    });
+    const muryeop = buildSpellingCheckRuleFromBuiltIn({
+      ...BUILT_IN_RULES.find((r) => r.find === '해질 무렵'),
+      enabled: true,
+    });
+    const glued = buildSpellingCheckRuleFromBuiltIn({
+      ...BUILT_IN_RULES.find((r) => r.find === '해질무렵'),
+      enabled: true,
+    });
+
+    it('붙여 쓴 해질녘·해질무렵은 requireLeadingBoundary', () => {
+      expect(nyeok.requireLeadingBoundary).toBe(true);
+      expect(glued.requireLeadingBoundary).toBe(true);
+      expect(nyeok.spellingLeadingHangulBoundary).toBeUndefined();
+    });
+
+    it('띄어 쓴 해질 무렵은 정확 정규식 + requireLeadingBoundary (바른 「해 질 무렵」 제외)', () => {
+      expect(muryeop.pattern).toBe('regex');
+      expect(muryeop.requireLeadingBoundary).toBe(true);
+      expect(muryeop.spellingLeadingHangulBoundary).toBeUndefined();
+    });
+
+    it('양성: 해질녘·해질 무렵', () => {
+      expect(hits([nyeok], '해질녘 바람이')).toEqual(['해질녘']);
+      expect(hits([muryeop], '해질 무렵 가장')).toEqual(['해질 무렵']);
+    });
+
+    it('음성: 해 질 무렵·따뜻해질 무렵·깨끗해질 때', () => {
+      expect(hits([muryeop, nyeok, glued], '해 질 무렵')).toEqual([]);
+      expect(hits([muryeop, nyeok, glued], '따뜻해질 무렵')).toEqual([]);
+      expect(hits([muryeop, nyeok, glued], '선선해질 무렵')).toEqual([]);
+      expect(hits([muryeop, nyeok, glued], '깨끗해질 때')).toEqual([]);
+    });
+  });
+
 });
