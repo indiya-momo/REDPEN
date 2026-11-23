@@ -248,7 +248,9 @@ export async function writeAnnotatedPdf({
     }
 
     if (isReplace) {
-      const replacement = String(f.replacement ?? '').trim();
+      // 조판 기호는 선행 \n·전각 공백이 Contents에 남아야 한다(trim 금지).
+      const rawRep = String(f.replacement ?? '');
+      const replacement = f.fromLayoutMark ? rawRep : rawRep.trim();
       if (!replacement) {
         counts.skipped += 1;
         continue;

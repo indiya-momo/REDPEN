@@ -11,6 +11,10 @@ import {
   formatIndesignReplaceNotice,
   prepareIndesignReplaceFindings,
 } from './indesignReplaceFindings.js';
+import {
+  filterLayoutFindingsAgainstTextReplaces,
+  layoutMarksToAnnotFindings,
+} from '../layoutMark/layoutMarkAnnotFindings.js';
 import { ensureGlyphOffsetsForPage } from '../pdfService.js';
 
 /** 라벨 글꼴 — 앱이 이미 싣는 학교안심 바른바탕 R (fontkit 부분집합이 깨지지 않음) */
@@ -38,6 +42,7 @@ export function buildIndesignReplacePdfFilename(pdfFileName) {
  *   isInstanceVisible?: (source: string, group: object, inst: object) => boolean,
  *   pdfFileName?: string,
  *   mode?: 'proof' | 'indesignReplace',
+ *   layoutMarks?: import('../layoutMark/layoutMarkTypes.js').LayoutMark[],
  * }} input
  * @returns {Promise<{
  *   filename: string,
@@ -56,6 +61,7 @@ export async function exportProofreadPdf({
   isInstanceVisible,
   pdfFileName = '',
   mode = 'proof',
+  layoutMarks = [],
 }) {
   const rawFindings = collectAnnotFindings({
     spellingEntries,
@@ -73,6 +79,7 @@ export async function exportProofreadPdf({
   let includedManual = 0;
   let overlapManual = 0;
   let overlapEngine = 0;
+  let layoutExcludedOverlap = 0;
 
   if (mode === 'indesignReplace') {
     const prepared = prepareIndesignReplaceFindings(rawFindings, pageTexts);
@@ -81,12 +88,20 @@ export async function exportProofreadPdf({
     includedManual = prepared.includedManual ?? 0;
     overlapManual = prepared.overlapManual ?? 0;
     overlapEngine = prepared.overlapEngine ?? prepared.excluded.overlap;
+
+    const layoutRaw = layoutMarksToAnnotFindings(layoutMarks, pageTexts);
+    const { kept: layoutKept, excludedOverlap } =
+      filterLayoutFindingsAgainstTextReplaces(layoutRaw, findings);
+    layoutExcludedOverlap = excludedOverlap;
+    findings = [...findings, ...layoutKept];
+
     notice = formatIndesignReplaceNotice({
       included: findings.length,
       includedManual,
       excluded: prepared.excluded,
       overlapManual,
       overlapEngine,
+      layoutExcludedOverlap,
     });
   }
 
@@ -110,6 +125,7 @@ export async function exportProofreadPdf({
               },
               overlapManual,
               overlapEngine,
+              layoutExcludedOverlap,
             })
           : undefined),
     };

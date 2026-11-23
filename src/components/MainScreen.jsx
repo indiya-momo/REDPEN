@@ -1728,12 +1728,18 @@ export default function MainScreen({
           isInstanceVisible: ruleCheck.isInstanceVisible,
           pdfFileName: pdf.pdfFileName,
           mode,
+          layoutMarks:
+            mode === 'indesignReplace' ? manuscript.layoutMarks ?? [] : [],
         };
         const title =
           mode === 'indesignReplace'
             ? '인디자인 주석 내보내기용 PDF 다운로드'
             : '교정용 PDF 다운로드';
-        if (!pdfModules[2].collectAnnotFindings(pdfExportInput).length) {
+        const hasFindings =
+          pdfModules[2].collectAnnotFindings(pdfExportInput).length > 0 ||
+          (mode === 'indesignReplace' &&
+            (manuscript.layoutMarks?.length ?? 0) > 0);
+        if (!hasFindings) {
           await showAppAlert({
             title,
             message: '교정본에 넣을 검수 결과가 없습니다.',
@@ -3243,6 +3249,8 @@ export default function MainScreen({
                     persistNotice={manuscript.persistNotice}
                     currentPageHasText={manuscript.currentPageHasText}
                     manualGroups={manuscript.manualGroups}
+                    layoutMarks={manuscript.layoutMarks}
+                    onRemoveLayoutMark={manuscript.removeLayoutMark}
                     formatPageLabel={pageDisplay.formatLabel}
                     onSelectInstance={manuscript.beginEditManual}
                     onRemoveManualInstance={manuscript.removeManual}

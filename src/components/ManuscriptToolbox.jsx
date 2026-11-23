@@ -2,9 +2,11 @@ import { Minus, X } from 'lucide-react';
 import { useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
+  isLayoutMarkMode,
   MANUAL_LIST_MODE,
   MANUSCRIPT_TOOLBOX_MODES,
 } from '../lib/manuscriptWorkbench/modes.js';
+import { LAYOUT_MARK_LABELS } from '../lib/layoutMark/layoutMarkTypes.js';
 import { countManualInstances } from '../lib/manuscriptWorkbench/findingsSink.js';
 import {
   MANUAL_ADD_CANCEL_HINT,
@@ -44,6 +46,8 @@ function SpaceMarks({ text }) {
 export default function ManuscriptToolbox(props) {
   const rootRef = useRef(/** @type {HTMLDivElement | null} */ (null));
   const listCount = countManualInstances(props.manualGroups);
+  const layoutCount = (props.layoutMarks ?? []).length;
+  const layoutMode = isLayoutMarkMode(props.mode);
   const panelOpen =
     props.mode === 'search' ||
     props.mode === 'manual-add' ||
@@ -67,6 +71,29 @@ export default function ManuscriptToolbox(props) {
         <p className="manuscript-toolbox__persist manuscript-toolbox__persist--float" role="status">
           {MANUAL_PERSIST_NOTICE}
         </p>
+      ) : null}
+      {layoutMode ? (
+        <p className="manuscript-toolbox__persist manuscript-toolbox__persist--float" role="status">
+          본문에서 어절을 드래그해 찍습니다. 조판 {layoutCount}건
+        </p>
+      ) : null}
+      {layoutMode && layoutCount > 0 ? (
+        <ul className="manuscript-toolbox__layout-list" aria-label="조판 기호">
+          {(props.layoutMarks ?? []).map((m) => (
+            <li key={m.id}>
+              <span>
+                {LAYOUT_MARK_LABELS[m.kind] ?? m.kind} · {m.after || '—'}
+              </span>
+              <button
+                type="button"
+                className="pdf-work-pane__aux-btn"
+                onClick={() => props.onRemoveLayoutMark?.(m.id)}
+              >
+                삭제
+              </button>
+            </li>
+          ))}
+        </ul>
       ) : null}
       {panelOpen ? (
         <ToolboxPanel
