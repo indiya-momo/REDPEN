@@ -135,3 +135,31 @@ describe('findPunctSpacingHits — 닫는 부호·가운뎃점·단위 점', () 
     expect(findPunctSpacingHits('높이 16.5cm')).toEqual([]);
   });
 });
+
+describe('findPunctSpacingHits — 닫는 괄호·이다 · 여는 따옴표', () => {
+  it('(상황) 입니다 → (상황)입니다 · 이미 붙인 것은 KEEP', () => {
+    expect(findPunctSpacingHits('(상황) 입니다.')).toEqual([
+      expect.objectContaining({
+        matchedText: ') 입니다',
+        suggestedText: ')입니다',
+        kind: 'close-josa',
+      }),
+    ]);
+    expect(findPunctSpacingHits('(상황)입니다.')).toEqual([]);
+  });
+
+  it(') 다음은 KEEP(이다·조사가 아님)', () => {
+    expect(findPunctSpacingHits('(상황) 다음')).toEqual([]);
+  });
+
+  it('워진다는‘덕 → 워진다는 ‘덕 · 이미 띄 것은 KEEP', () => {
+    expect(findPunctSpacingHits('워진다는‘덕업일신\'')).toEqual([
+      expect.objectContaining({
+        matchedText: '‘',
+        suggestedText: ' ‘',
+        kind: 'open-quote-space',
+      }),
+    ]);
+    expect(findPunctSpacingHits('워진다는 ‘덕업일신\'')).toEqual([]);
+  });
+});

@@ -1,8 +1,9 @@
 /**
  * 한글 맞춤법 — 문장부호와 붙임·띄어.
  * - 종결·쉼표 뒤 한글은 한 칸
- * - 닫는 부호·따옴표와 조사(라고 포함)는 붙임
+ * - 닫는 부호·따옴표와 조사·이다(라고 포함)는 붙임
  * - 닫는 따옴표와 하고·하며·하는는 띄움
+ * - 여는 따옴표 앞은 한 칸
  * - 가운뎃점 뒤 불필요 공백 제거
  * - 소수+단위 사이 중복 점 제거
  * ruleEngine·시트 핫패스에 붙이지 않는다.
@@ -15,14 +16,17 @@ export const PUNCT_SPACING_TIP =
 
 const UNIT_ALT = '킬로미터|센티미터|밀리미터|킬로그램|밀리그램|퍼센트|그램|리터|미터|센티|밀리|cm|mm|kg|km|m|g';
 
-const JOSA_ALT =
-  '으로|부터|까지|은|는|이|가|을|를|의|에|도|만|와|과|께|로';
+/** 닫는 부호 뒤 붙임 — 긴 것 먼저(이/가보다 입니다·인가요). */
+const AFTER_CLOSE_ALT =
+  '으로부터|으로|부터|까지|입니다|인가요|인가|인지|이며|이고|이면|이에요|예요|이었다|였다|이다|은|는|이|가|을|를|의|에|도|만|와|과|께|로';
 
 /** 닫는 따옴표·겹낫표 (직선·둥근·」』) — 문자 클래스 안쪽만 */
 const CLOSE_QUOTE_CHARS = `"'”’」』`;
 const CLOSE_QUOTE_CLASS = `[${CLOSE_QUOTE_CHARS}]`;
-/** 일반 조사 붙임용 — 따옴표 + 》 ) 】 */
+/** 일반 조사·이다 붙임용 — 따옴표 + 》 ) 】 */
 const CLOSE_MARK_CLASS = `[${CLOSE_QUOTE_CHARS}》\\)】]`;
+/** 여는 따옴표·낧표 (직선 " ' 는 개·폐 구분이 애매해 제외) */
+const OPEN_QUOTE_CLASS = `[‘“「『]`;
 
 /**
  * @param {string} text
@@ -101,10 +105,10 @@ export function findPunctSpacingHits(text) {
     }
   }
 
-  // 3c) 닫는 부호·따옴표 + 공백 + 조사 (조사 뒤 한글 이어짐 제외)
+  // 3c) 닫는 부호·따옴표 + 공백 + 조사·이다 (뒤 한글 이어짐 제외)
   {
     const re = new RegExp(
-      `(${CLOSE_MARK_CLASS})[ \\t]+(${JOSA_ALT})(?![가-힣])`,
+      `(${CLOSE_MARK_CLASS})[ \\t]+(${AFTER_CLOSE_ALT})(?![가-힣])`,
       'g',
     );
     let m;
@@ -128,6 +132,21 @@ export function findPunctSpacingHits(text) {
     let m;
     while ((m = re.exec(text)) !== null) {
       take(m.index, m.index + m[0].length, m[0], `${m[1]}${m[2]}`, 'unit-dot');
+    }
+  }
+
+  // 6) 한글 + 붙여 쓴 여는 따옴표·낧표 → 한 칸
+  {
+    const re = new RegExp(`(?<=[가-힣])(${OPEN_QUOTE_CLASS})`, 'g');
+    let m;
+    while ((m = re.exec(text)) !== null) {
+      take(
+        m.index,
+        m.index + m[0].length,
+        m[0],
+        ` ${m[1]}`,
+        'open-quote-space',
+      );
     }
   }
 
