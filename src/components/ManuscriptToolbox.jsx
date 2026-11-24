@@ -80,7 +80,10 @@ export default function ManuscriptToolbox(props) {
       ) : null}
       {layoutMode ? (
         <p className="manuscript-toolbox__persist manuscript-toolbox__persist--float" role="status">
-          본문에서 어절을 드래그해 찍습니다. 조판 {layoutCount}건
+          {props.mode === 'layout-indent' || props.mode === 'layout-paraGap'
+            ? '줄의 첫 어절만 찍을 수 있습니다.'
+            : '본문에서 어절을 드래그해 찍습니다.'}{' '}
+          조판 {layoutCount}건
         </p>
       ) : null}
       {layoutMode && layoutCount > 0 ? (

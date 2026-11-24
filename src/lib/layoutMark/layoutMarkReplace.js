@@ -52,16 +52,20 @@ export function lineStartIndex(pageText, index) {
 }
 
 /**
+ * 들여·행갈이·내어는 **그 줄의 첫 어절**만. 중간 어절이면 null (줄 머리로 스냅하지 않음).
+ * 줄바꿈(paraSplit)은 줄 어디 어절이든 가능.
  * @param {string} pageText
  * @param {number} index
  * @param {import('./layoutMarkTypes.js').LayoutMarkKind} kind
  */
 export function resolveAnchorEojeol(pageText, index, kind) {
-  const idx =
-    kind === 'indent' || kind === 'outdent'
-      ? lineStartIndex(pageText, index)
-      : Number(index) || 0;
-  return extractStartEojeol(pageText, idx);
+  const hit = extractStartEojeol(pageText, Number(index) || 0);
+  if (!hit) return null;
+  if (kind === 'indent' || kind === 'outdent' || kind === 'paraGap') {
+    const first = extractStartEojeol(pageText, lineStartIndex(pageText, hit.start));
+    if (!first || first.start !== hit.start) return null;
+  }
+  return hit;
 }
 
 /**

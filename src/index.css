@@ -2633,7 +2633,7 @@ html[data-build='prod'] .unify-candidate-find__list {
   padding: 0;
   border: none;
   border-radius: 2px;
-  background: #8a8a8a;
+  background: #f0f0f0;
   cursor: grab;
   touch-action: none;
 }
@@ -2662,7 +2662,7 @@ html[data-build='prod'] .unify-candidate-find__list {
   border-radius: 3px;
   background: transparent;
   border: none;
-  color: #fff;
+  color: #ffffff;
   box-shadow: none;
 }
 
@@ -2680,6 +2680,12 @@ html[data-build='prod'] .unify-candidate-find__list {
 
 .manuscript-toolbox__mode--icon svg {
   display: block;
+}
+
+.manuscript-toolbox__rail .pdf-work-pane__aux-btn.manuscript-toolbox__mode--icon svg,
+.manuscript-toolbox__rail .manuscript-toolbox__mode--icon svg {
+  color: #ffffff;
+  stroke: #ffffff;
 }
 
 .manuscript-toolbox__mode--on {
@@ -3928,6 +3934,54 @@ html[data-build='prod'] .unify-candidate-find__list {
 
 .pdf-highlight--search-preview {
   pointer-events: none;
+}
+
+/* 조판 교정 부호 — 화면 기호 (줄바꿈·행갈이·들여쓰기) */
+.pdf-highlight--layout-mark {
+  background: color-mix(in srgb, #e11d8f 16%, transparent);
+  box-shadow: none;
+}
+
+.pdf-layout-mark {
+  position: absolute;
+  color: #e11d8f;
+  pointer-events: none;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pdf-layout-mark svg {
+  display: block;
+  overflow: visible;
+}
+
+.pdf-layout-mark--indent {
+  left: 0;
+  top: 50%;
+  /* 열린 ㄷ이 첫 글자를 감싸도록 어절에 붙임 */
+  transform: translate(-12%, -50%);
+}
+
+.pdf-layout-mark--paraSplit {
+  left: 0;
+  top: 50%;
+  transform: translate(-56%, -50%); /* 어절 쪽으로 ~30% */
+}
+
+.pdf-layout-mark--paraGap {
+  left: 0;
+  top: 50%;
+  transform: translate(-90%, -50%);
+  inset: auto;
+  width: auto;
+  height: auto;
+}
+
+.pdf-layout-mark--paraGap svg {
+  width: auto;
+  height: auto;
 }
 
 .pdf-highlight {
