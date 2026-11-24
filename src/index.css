@@ -2589,6 +2589,99 @@ html[data-build='prod'] .unify-candidate-find__list {
   z-index: 45;
 }
 
+.manuscript-toolbox__slot {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  min-height: 32px;
+}
+
+.manuscript-toolbox__slot--empty {
+  width: 28px;
+  min-height: 32px;
+  border-radius: 8px;
+  border: 1px dashed color-mix(in srgb, var(--color-border, #d8d4cc) 80%, transparent);
+  opacity: 0.7;
+}
+
+.manuscript-toolbox__rail {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 3px;
+  padding: 3px;
+  border-radius: 4px;
+  background: #2b2b2b;
+  border: 1px solid #3a3a3a;
+  color: #fff;
+}
+
+.manuscript-toolbox__rail--floating {
+  position: fixed;
+  z-index: 12010;
+  flex-direction: column;
+  padding: 6px 3px 8px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+  background: #2b2b2b;
+}
+
+.manuscript-toolbox__handle {
+  flex-shrink: 0;
+  width: 8px;
+  height: 22px;
+  margin: 0 4px 0 2px;
+  padding: 0;
+  border: none;
+  border-radius: 2px;
+  background: #8a8a8a;
+  cursor: grab;
+  touch-action: none;
+}
+
+.manuscript-toolbox__rail--floating .manuscript-toolbox__handle {
+  width: 28px;
+  height: 8px;
+  margin: 0 0 4px;
+  align-self: center;
+  border-radius: 2px;
+}
+
+.manuscript-toolbox__handle:active {
+  cursor: grabbing;
+}
+
+.manuscript-toolbox__rail .pdf-work-pane__aux-btn.manuscript-toolbox__mode--icon,
+.manuscript-toolbox__rail .manuscript-toolbox__mode--icon {
+  width: 32px;
+  min-width: 32px;
+  height: 32px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+  background: transparent;
+  border: none;
+  color: #fff;
+  box-shadow: none;
+}
+
+.manuscript-toolbox__rail .pdf-work-pane__aux-btn.manuscript-toolbox__mode--icon:hover,
+.manuscript-toolbox__rail .manuscript-toolbox__mode--icon:hover {
+  background: #3a3a3a;
+  color: #fff;
+}
+
+.manuscript-toolbox__rail .pdf-work-pane__aux-btn.manuscript-toolbox__mode--icon.manuscript-toolbox__mode--on,
+.manuscript-toolbox__rail .manuscript-toolbox__mode--icon.manuscript-toolbox__mode--on {
+  background: #2f6fed;
+  color: #fff;
+}
+
+.manuscript-toolbox__mode--icon svg {
+  display: block;
+}
+
 .manuscript-toolbox__mode--on {
   background: var(--btn-secondary-hover-bg);
 }
