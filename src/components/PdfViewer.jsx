@@ -22,6 +22,8 @@ import {
   resolveOverlayChoiceLayers,
   stripOverlayArrow,
 } from '../lib/highlightOverlayLayers.js';
+import { LayoutMarkGlyph } from '../lib/layoutMark/layoutMarkGlyphs.jsx';
+import { indentMarkGeometryFromPage } from '../lib/layoutMark/indentMarkGeometry.js';
 import { textLayerItemBoxes } from '../lib/manuscriptWorkbench/pageGeometry.js';
 import { resolveTextSelection } from '../lib/manuscriptWorkbench/resolveTextSelection.js';
 import { suppressTipEditSideClicks } from '../lib/manuscriptWorkbench/tipEditGuard.js';
@@ -392,6 +394,17 @@ export default function PdfViewer({
                 showOverlay: boxIndex === 0 && !useGlueMarks,
                 glueMarks: boxIndex === 0 && useGlueMarks ? glueMarks : null,
                 pillarClass: h.pillarClass ?? '',
+                layoutKind: boxIndex === 0 ? (h.layoutKind ?? null) : null,
+                indentGeom:
+                  boxIndex === 0 && h.layoutKind === 'indent'
+                    ? indentMarkGeometryFromPage({
+                        page,
+                        viewport,
+                        pageData,
+                        textIndex: h.start,
+                        highlightRectsForTextRange,
+                      })
+                    : null,
               });
             });
           }
@@ -803,6 +816,34 @@ export default function PdfViewer({
                     handleHighlightClick(r, e);
                   }}
                 >
+                  {r.layoutKind && r.layoutKind !== 'indent' ? (
+                    <span
+                      className={`pdf-layout-mark pdf-layout-mark--${r.layoutKind}`}
+                      aria-hidden
+                    >
+                      {(() => {
+                        const markSize = Math.max(
+                          14,
+                          Math.round(
+                            r.height *
+                              (r.layoutKind === 'paraSplit' ? 1.5 : 2.2),
+                          ),
+                        );
+                        return (
+                          <LayoutMarkGlyph
+                            kind={r.layoutKind}
+                            size={markSize}
+                            height={
+                              r.layoutKind === 'paraSplit'
+                                ? Math.round(markSize * 1.3)
+                                : markSize
+                            }
+                            strokeWidth={Math.max(1, r.height * 0.08)}
+                          />
+                        );
+                      })()}
+                    </span>
+                  ) : null}
                   {overlayLayers.length > 1 ? (
                     <span className="pdf-highlight__overlay-layers" style={overlayFont}>
                       <span className="pdf-highlight__overlay-arrow" aria-hidden>
@@ -861,6 +902,37 @@ export default function PdfViewer({
                 </svg>
               )),
             )}
+            {rects.map((r, i) => {
+              const g = r.indentGeom;
+              if (!g) return null;
+              return (
+                <svg
+                  key={`indent-${r.highlightId}-${i}`}
+                  className="pdf-indent-mark"
+                  aria-hidden
+                  style={{
+                    position: 'absolute',
+                    left: 0,
+                    top: 0,
+                    width: '100%',
+                    height: '100%',
+                    overflow: 'visible',
+                    pointerEvents: 'none',
+                  }}
+                >
+                  <path
+                    d={g.pathD}
+                    fill="none"
+                    stroke="#e11d8f"
+                    strokeWidth={g.strokeWidth}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    vectorEffect="non-scaling-stroke"
+                  />
+                </svg>
+              );
+            })}
+
           </div>
           {textLayerEnabled ? (
             <div

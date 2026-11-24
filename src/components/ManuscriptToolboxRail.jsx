@@ -1,6 +1,7 @@
 import { createPortal } from 'react-dom';
 import { useRef } from 'react';
 import { MANUSCRIPT_TOOLBOX_MODES } from '../lib/manuscriptWorkbench/modes.js';
+import { LayoutMarkGlyph } from '../lib/layoutMark/layoutMarkGlyphs.jsx';
 import { isTipEditSideClickSuppressed } from '../lib/manuscriptWorkbench/tipEditGuard.js';
 
 export const RAIL_STORAGE_KEY = 'indiya.manuscriptToolbox.rail';
@@ -68,29 +69,16 @@ export function ModeIcon({ iconId }) {
       </svg>
     );
   }
-  /* 교정 부호: 줄을 바꿀 때 (계단) */
   if (iconId === 'paraSplit') {
-    return (
-      <svg {...common}>
-        <path d="M3.5 12.5h5.5V5.5h5.5" />
-      </svg>
-    );
+    return <LayoutMarkGlyph kind="paraSplit" />;
   }
-  /* 행갈이: 이전 들여쓰기 아이콘(줄+들여 화살) */
   if (iconId === 'paraGap') {
-    return (
-      <svg {...common}>
-        <path d="M3.5 4.5h11M8 9h6.5M8 13.5h6.5" />
-        <path d="M3.5 8.25 6.25 10.5 3.5 12.75" />
-      </svg>
-    );
+    return <LayoutMarkGlyph kind="paraGap" />;
   }
-  /* 교정 부호: ㄷ + 위아래 세로선 */
-  return (
-    <svg {...common}>
-      <path d="M9 2.5V6.5h5v5H9V15.5" />
-    </svg>
-  );
+  if (iconId === 'indent') {
+    return <LayoutMarkGlyph kind="indent" />;
+  }
+  return null;
 }
 
 function ModeButton({ item, mode, onModeChange }) {

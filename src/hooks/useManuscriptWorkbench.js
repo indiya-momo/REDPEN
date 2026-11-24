@@ -355,8 +355,9 @@ export function useManuscriptWorkbench({
         id: `layout-${m.id}`,
         tip: LAYOUT_MARK_LABELS[m.kind] ?? m.kind,
         matchedText: w,
+        layoutKind: m.kind,
         pillarClass:
-          'pdf-highlight--pillar-spelling pdf-highlight--search-preview',
+          `pdf-highlight--layout-mark pdf-highlight--layout-${m.kind} pdf-highlight--search-preview`,
       });
     }
     return rows;

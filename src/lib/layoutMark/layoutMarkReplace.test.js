@@ -29,10 +29,23 @@ describe('extractStartEojeol', () => {
   });
 });
 
-describe('lineStartIndex / indent 앵커', () => {
-  it('줄 머리로 스냅', () => {
+describe('lineStartIndex / indent·행갈이 첫 어절', () => {
+  it('줄 머리 인덱스', () => {
     const t = '첫째줄\n둘째줄시작';
     expect(lineStartIndex(t, 8)).toBe(4);
+  });
+
+  it('들여·행갈이는 줄 첫 어절만', () => {
+    const t = '요즘 말로는\n다음줄';
+    expect(resolveAnchorEojeol(t, 0, 'indent')?.w).toBe('요즘');
+    expect(resolveAnchorEojeol(t, 3, 'indent')).toBe(null);
+    expect(resolveAnchorEojeol(t, 0, 'paraGap')?.w).toBe('요즘');
+    expect(resolveAnchorEojeol(t, 3, 'paraGap')).toBe(null);
+    expect(resolveAnchorEojeol(t, 3, 'paraSplit')?.w).toBe('말로는');
+  });
+
+  it('첫 어절 글자 중간 클릭은 그 어절로 허용', () => {
+    const t = '첫째줄\n둘째줄시작';
     expect(resolveAnchorEojeol(t, 8, 'indent')?.w).toBe('둘째줄시작');
   });
 });
