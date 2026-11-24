@@ -10,8 +10,6 @@ export const CLOSED_SPACING_FIXES_TIP =
 
 const BASE_LITERAL_ROWS = [
   { find: '오래 된', replace: '오래된', kind: 'attach' },
-  { find: '다보면', replace: '다 보면', kind: 'split' },
-  { find: '무릎위에', replace: '무릎 위에', kind: 'split' },
 ];
 
 /** Sheet parity for haejil surfaces (equality test). Dual-report risk if folder wires this module. */
@@ -81,14 +79,6 @@ export function findClosedSpacingFixHits(text) {
       if (idx === -1) break;
       const end = idx + row.find.length;
       from = end;
-      // 들여다보다 활용 안의 「다보면」부분일치 제외
-      if (
-        (row.find === '다보면' || row.find === '다보니') &&
-        idx >= 2 &&
-        text.slice(idx - 2, idx) === '들여'
-      ) {
-        continue;
-      }
       if (
         row.leadingHangulBoundary &&
         idx > 0 &&
