@@ -1426,6 +1426,21 @@
     "displayLabel": "^모르다"
   },
   {
+    "find": "오래 된",
+    "replace": "오래된",
+    "finds": [
+      "오래 된",
+      "오래 될",
+      "오래 되",
+      "오래 됨"
+    ],
+    "enabled": true,
+    "tip": "표준국어대사전 '오래되다' 등재",
+    "dividerGroup": "A",
+    "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
+    "overlayReplace": "→오래 된"
+  },
+  {
     "find": "자신만만 하",
     "replace": "자신만만하",
     "finds": [
@@ -4825,35 +4840,6 @@
     "dividerGroup": "F",
     "dividerLabel": "교육부 개정 용어",
     "overlayReplace": "→뒤통수엽"
-  },
-  {
-    "find": "지 못 하",
-    "replace": "지 못하",
-    "finds": [
-      "지 못 하",
-      "지 못 할",
-      "지 못 한",
-      "지 못 했"
-    ],
-    "findReplaces": {
-      "지 못 할": "지 못할",
-      "지 못 한": "지 못한",
-      "지 못 했": "지 못했"
-    },
-    "enabled": true,
-    "tip": "'-지 못하다'의 '못하다'는 한 단어로 붙여 씀(앞 '-지'와는 띄어 씀)",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사 · 형용사)",
-    "displayLabel": "지 못 하"
-  },
-  {
-    "find": "오래 된",
-    "replace": "오래된",
-    "enabled": true,
-    "tip": "「오래되다」는 한 단어로 붙여 씀",
-    "dividerGroup": "A",
-    "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
-    "displayLabel": "오래 된"
   },
   {
     "find": "해질녘",
