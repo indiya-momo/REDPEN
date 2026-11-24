@@ -4,7 +4,6 @@ import { createPortal } from 'react-dom';
 import {
   isLayoutMarkMode,
   MANUAL_LIST_MODE,
-  MANUSCRIPT_TOOLBOX_MODES,
 } from '../lib/manuscriptWorkbench/modes.js';
 import { LAYOUT_MARK_LABELS } from '../lib/layoutMark/layoutMarkTypes.js';
 import { countManualInstances } from '../lib/manuscriptWorkbench/findingsSink.js';
@@ -27,7 +26,9 @@ import {
   encodeSpacesVisible,
 } from '../lib/spaceVisibleText.js';
 import { formatSystemPageLabel } from '../lib/printedPageDisplay.js';
-import { isTipEditSideClickSuppressed } from '../lib/manuscriptWorkbench/tipEditGuard.js';
+import ManuscriptToolboxRail, {
+  readRailPlacement,
+} from './ManuscriptToolboxRail.jsx';
 
 function SpaceMarks({ text }) {
   const encoded = encodeSpacesVisible(text ?? '');
@@ -45,6 +46,9 @@ function SpaceMarks({ text }) {
 
 export default function ManuscriptToolbox(props) {
   const rootRef = useRef(/** @type {HTMLDivElement | null} */ (null));
+  const slotRef = useRef(/** @type {HTMLDivElement | null} */ (null));
+  const railRef = useRef(/** @type {HTMLDivElement | null} */ (null));
+  const [placement, setPlacement] = useState(readRailPlacement);
   const listCount = countManualInstances(props.manualGroups);
   const layoutCount = (props.layoutMarks ?? []).length;
   const layoutMode = isLayoutMarkMode(props.mode);
@@ -52,16 +56,18 @@ export default function ManuscriptToolbox(props) {
     props.mode === 'search' ||
     props.mode === 'manual-add' ||
     props.mode === MANUAL_LIST_MODE;
+  const panelAnchorRef = placement.docked ? rootRef : railRef;
+
   return (
     <div className="manuscript-toolbox" ref={rootRef}>
-      {MANUSCRIPT_TOOLBOX_MODES.map((item) => (
-        <ModeButton
-          key={item.id}
-          item={item}
-          mode={props.mode}
-          onModeChange={props.onModeChange}
-        />
-      ))}
+      <ManuscriptToolboxRail
+        mode={props.mode}
+        onModeChange={props.onModeChange}
+        placement={placement}
+        setPlacement={setPlacement}
+        slotRef={slotRef}
+        railRef={railRef}
+      />
       <ListModeButton
         count={listCount}
         mode={props.mode}
@@ -99,30 +105,11 @@ export default function ManuscriptToolbox(props) {
         <ToolboxPanel
           {...props}
           listCount={listCount}
-          anchorRef={rootRef}
+          anchorRef={panelAnchorRef}
+          railPlacement={placement}
         />
       ) : null}
     </div>
-  );
-}
-
-function ModeButton({ item, mode, onModeChange }) {
-  const on = mode === item.id;
-  const className = on
-    ? 'pdf-work-pane__aux-btn manuscript-toolbox__mode manuscript-toolbox__mode--on'
-    : 'pdf-work-pane__aux-btn manuscript-toolbox__mode';
-  return (
-    <button
-      type="button"
-      className={className}
-      aria-pressed={on}
-      onClick={() => {
-        if (isTipEditSideClickSuppressed()) return;
-        onModeChange(on ? null : item.id);
-      }}
-    >
-      {item.label}
-    </button>
   );
 }
 
@@ -199,7 +186,14 @@ function ToolboxPanel(props) {
       window.removeEventListener('resize', place);
       window.removeEventListener('scroll', place, true);
     };
-  }, [props.anchorRef, props.mode, listOpen]);
+  }, [
+    props.anchorRef,
+    props.mode,
+    listOpen,
+    props.railPlacement?.docked,
+    props.railPlacement?.x,
+    props.railPlacement?.y,
+  ]);
 
   if (typeof document === 'undefined' || !pos) return null;
 

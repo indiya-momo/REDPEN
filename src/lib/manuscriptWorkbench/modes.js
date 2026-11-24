@@ -1,13 +1,38 @@
 /** 원고 작업대 모드 레지스트리 — 1차는 검색·수정 추가·조판 기호. */
 export const MANUAL_LIST_MODE = 'manual-list';
 
-/** @type {readonly { id: string, label: string, layoutKind?: import('../layoutMark/layoutMarkTypes.js').LayoutMarkKind }[]} */
+/**
+ * @typedef {'search' | 'add' | 'paraSplit' | 'paraGap' | 'indent'} ManuscriptToolboxIconId
+ * @typedef {{
+ *   id: string,
+ *   label: string,
+ *   iconId: ManuscriptToolboxIconId,
+ *   layoutKind?: import('../layoutMark/layoutMarkTypes.js').LayoutMarkKind,
+ * }} ManuscriptToolboxMode
+ */
+
+/** @type {readonly ManuscriptToolboxMode[]} */
 export const MANUSCRIPT_TOOLBOX_MODES = Object.freeze([
-  { id: 'search', label: '검색' },
-  { id: 'manual-add', label: '수정 추가' },
-  { id: 'layout-paraSplit', label: '줄바꿈', layoutKind: 'paraSplit' },
-  { id: 'layout-paraGap', label: '행갈이', layoutKind: 'paraGap' },
-  { id: 'layout-indent', label: '들여쓰기', layoutKind: 'indent' },
+  { id: 'search', label: '검색', iconId: 'search' },
+  { id: 'manual-add', label: '수정 추가', iconId: 'add' },
+  {
+    id: 'layout-paraSplit',
+    label: '줄바꿈',
+    iconId: 'paraSplit',
+    layoutKind: 'paraSplit',
+  },
+  {
+    id: 'layout-paraGap',
+    label: '행갈이',
+    iconId: 'paraGap',
+    layoutKind: 'paraGap',
+  },
+  {
+    id: 'layout-indent',
+    label: '들여쓰기',
+    iconId: 'indent',
+    layoutKind: 'indent',
+  },
 ]);
 
 /** @param {string | null | undefined} modeId */
