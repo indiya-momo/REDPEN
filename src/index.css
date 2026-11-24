@@ -3920,6 +3920,17 @@ html[data-build='prod'] .unify-candidate-find__list {
   transform-origin: 0 0;
 }
 
+/* 조판 점 찍기: 네이티브 선택(노란 ::selection)이 왼쪽부터 늘어나지 않게 */
+.pdf-text-layer--layout-point,
+.pdf-text-layer--layout-point .pdf-text-layer__item {
+  user-select: none;
+  -webkit-user-select: none;
+}
+.pdf-text-layer--layout-point ::selection,
+.pdf-text-layer--layout-point ::-moz-selection {
+  background: transparent;
+}
+
 /* Chrome은 color:transparent여도 선택 중 HTML 글자를 그려 PDF 본문을 덮는다. */
 .pdf-text-layer ::selection {
   color: transparent;

@@ -29,6 +29,22 @@ describe('phraseLocalRangesInItems', () => {
       '명지 계곡',
     );
   });
+
+  it('한 줄에 그리와 그가 있으면 matchStart의 그를 쓴다', () => {
+    const str = '에서 어찌 그리 차분하신지요. 그 모습을 보고';
+    const items = [{ str }];
+    const ranges = phraseLocalRangesInItems(
+      items,
+      [0],
+      '그',
+      str.indexOf('그 모습'),
+      [{ itemIndex: 0, start: 0, end: str.length }],
+    );
+    expect(ranges.get(0).start).toBe(str.indexOf('그 모습'));
+    expect(str.slice(ranges.get(0).start, ranges.get(0).start + 2)).not.toBe(
+      '그리',
+    );
+  });
 });
 
 describe('clipMatchToItemLocals', () => {
@@ -54,5 +70,22 @@ describe('clipMatchToItemLocals', () => {
     expect(a.slice(locals[0].localStart, locals[0].localEnd)).toBe('푸른');
     expect(b.slice(locals[1].localStart, locals[1].localEnd)).toBe('빛');
     expect(locals[0].localStart).toBeGreaterThan(0);
+  });
+
+  it('그 모습을 찍으면 앞의 그리로 가지 않는다', () => {
+    const str = '에서 어찌 그리 차분하신지요. 그 모습을 보고';
+    const items = [{ str }];
+    const itemRefs = [{ itemIndex: 0, start: 0, end: str.length }];
+    const matchStart = str.indexOf('그 모습');
+    const locals = clipMatchToItemLocals(
+      items,
+      itemRefs,
+      matchStart,
+      matchStart + 1,
+      '그',
+    );
+    expect(locals).toHaveLength(1);
+    expect(str.slice(locals[0].localStart, locals[0].localEnd)).toBe('그');
+    expect(locals[0].localStart).toBe(matchStart);
   });
 });

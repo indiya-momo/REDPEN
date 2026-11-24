@@ -24,8 +24,16 @@ import {
 } from '../lib/highlightOverlayLayers.js';
 import { LayoutMarkGlyph } from '../lib/layoutMark/layoutMarkGlyphs.jsx';
 import { indentMarkGeometryFromPage } from '../lib/layoutMark/indentMarkGeometry.js';
-import { textLayerItemBoxes } from '../lib/manuscriptWorkbench/pageGeometry.js';
+import {
+  pointerToTextIndex,
+  textLayerItemBoxes,
+} from '../lib/manuscriptWorkbench/pageGeometry.js';
 import { resolveTextSelection } from '../lib/manuscriptWorkbench/resolveTextSelection.js';
+import {
+  closestTextItemSpan,
+  hitFromSingleIndex,
+  layoutIndexFromClientPoint,
+} from '../lib/manuscriptWorkbench/textLayerHitFromClient.js';
 import { suppressTipEditSideClicks } from '../lib/manuscriptWorkbench/tipEditGuard.js';
 
 /** 하이라이트 높이 대비 오버레이↔원문 위·아래 패딩 (기준 0.05 → ×1.8, index.css 변수와 동일) */
@@ -42,15 +50,6 @@ function fitTextLayerItemScale(root) {
       span.style.transform = `scaleX(${desired / actual})`;
     }
   }
-}
-
-function closestTextItemSpan(node, root) {
-  let el = node && node.nodeType === 3 ? node.parentElement : node;
-  while (el && el !== root) {
-    if (el instanceof HTMLElement && el.dataset.itemIndex != null) return el;
-    el = el.parentElement;
-  }
-  return null;
 }
 
 /**
@@ -72,6 +71,7 @@ function closestTextItemSpan(node, root) {
  *   onHighlightTipDismiss?: () => void,
  *   tipConfirmGuideAttr?: string,
  *   textLayerEnabled?: boolean,
+ *   textHitMode?: 'layout-point' | 'range',
  *   onTextSelected?: (hit: object) => void,
  *   onTextSelectionCancel?: () => void,
  *   onOverlayEdit?: (payload: object) => void,
@@ -93,6 +93,7 @@ export default function PdfViewer({
   onHighlightTipDismiss,
   tipConfirmGuideAttr,
   textLayerEnabled = false,
+  textHitMode = 'range',
   onTextSelected,
   onTextSelectionCancel,
   onOverlayEdit,
@@ -103,6 +104,12 @@ export default function PdfViewer({
   const textLayerRef = useRef(null);
   /** @type {React.MutableRefObject<import('pdfjs-dist').RenderTask | null>} */
   const renderTaskRef = useRef(null);
+  /** 레이아웃 단일 점 히트용 page/viewport */
+  const geometryRef = useRef(
+    /** @type {{ page: import('pdfjs-dist').PDFPageProxy, viewport: import('pdfjs-dist').PageViewport } | null} */ (
+      null
+    ),
+  );
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
   const [rects, setRects] = useState([]);
   const [textLayerBoxes, setTextLayerBoxes] = useState([]);
@@ -413,6 +420,7 @@ export default function PdfViewer({
           setRects([]);
         }
 
+        geometryRef.current = { page, viewport };
         if (textLayerEnabled && pageData) {
           setTextLayerBoxes(textLayerItemBoxes(page, viewport, pageData));
         } else {
@@ -495,14 +503,135 @@ export default function PdfViewer({
     fitTextLayerItemScale(textLayerRef.current);
   }, [textLayerBoxes, textLayerEnabled]);
 
+  function clientToWrapLocal(clientX, clientY) {
+    const wrap = wrapRef.current;
+    if (!wrap) return null;
+    const r = wrap.getBoundingClientRect();
+    return { x: clientX - r.left, y: clientY - r.top };
+  }
+
+  function resolveLayoutPointHit(event) {
+    const root = textLayerRef.current;
+    const local = clientToWrapLocal(event.clientX, event.clientY);
+    const geom = geometryRef.current;
+    /** @type {import('../lib/manuscriptWorkbench/types.js').TextHit | null} */
+    let hit = null;
+    let rawIndex = /** @type {number | null} */ (null);
+    let source = '';
+    // 우선순위 고정(동작 변경 금지): DOM → 실패 시 glyph. conflict 로그용으로만 glyph를 병행 계산.
+    const domIndex = layoutIndexFromClientPoint({
+      root,
+      wrap: wrapRef.current,
+      itemBoxes: textLayerBoxes,
+      clientX: event.clientX,
+      clientY: event.clientY,
+      eventTarget: event.target,
+    });
+    let glyphIndex = /** @type {number | null} */ (null);
+    if (local && geom?.page && geom?.viewport) {
+      glyphIndex = pointerToTextIndex(
+        geom.page,
+        geom.viewport,
+        pageData,
+        local.x,
+        local.y,
+        textLayerBoxes,
+      );
+    }
+    rawIndex = domIndex;
+    hit = hitFromSingleIndex(pageData, rawIndex);
+    if (hit) source = 'dom';
+    if (!hit && glyphIndex != null) {
+      rawIndex = glyphIndex;
+      hit = hitFromSingleIndex(pageData, rawIndex);
+      if (hit) source = 'glyph';
+    }
+    if (import.meta.env.DEV) {
+      const t = String(pageData.visualText ?? pageData.text ?? '');
+      const chAt = (i) => {
+        if (!Number.isFinite(i)) return null;
+        const c = t[/** @type {number} */ (i)] ?? '';
+        return c === ' ' ? '␠' : c;
+      };
+      const aroundAt = (i) => {
+        if (!Number.isFinite(i)) return null;
+        const n = /** @type {number} */ (i);
+        return t.slice(Math.max(0, n - 4), Math.min(t.length, n + 5));
+      };
+      // 1단: 클릭 → index (채택 source는 위 우선순위와 동일)
+      console.log('[layout-hit-1-index]', {
+        source: hit ? source : null,
+        rawIndex: hit ? rawIndex : null,
+        rawCh: hit ? chAt(rawIndex) : null,
+        around: hit ? aroundAt(rawIndex) : null,
+        hitStart: hit?.start ?? null,
+        matched: hit?.matchedText ?? null,
+        clientX: event.clientX,
+        clientY: event.clientY,
+        isTrusted: event.isTrusted === true,
+      });
+      if (
+        Number.isFinite(domIndex) &&
+        Number.isFinite(glyphIndex) &&
+        domIndex !== glyphIndex
+      ) {
+        console.log('[layout-hit-conflict]', {
+          domIndex,
+          domCh: chAt(domIndex),
+          domAround: aroundAt(domIndex),
+          glyphIndex,
+          glyphCh: chAt(glyphIndex),
+          glyphAround: aroundAt(glyphIndex),
+          chosen: hit ? source : null,
+          isTrusted: event.isTrusted === true,
+        });
+      }
+    }
+    return hit;
+  }
+
+  function handleTextLayerPointerDown(event) {
+    if (event?.button !== 0) return;
+    if (!textLayerEnabled || textHitMode !== 'layout-point') return;
+    // 조판은 한 점만. 드래그 선택이 맞춤법과 같은 노란 ::selection으로
+    // 왼쪽부터 늘어나 「왼쪽 어절 → 오른쪽으로 끌어야 이동」처럼 보인다.
+    event.preventDefault();
+    window.getSelection()?.removeAllRanges();
+    try {
+      event.currentTarget.setPointerCapture?.(event.pointerId);
+    } catch {
+      /* ignore */
+    }
+  }
+
   function handleTextLayerMouseUp(event) {
     if (event?.button === 2) return;
     if (!textLayerEnabled || !onTextSelected || !pageData) return;
+    const root = textLayerRef.current;
+    if (!root) return;
+
+    // 레이아웃: mouseup 한 점만. min(드래그 양끝) 금지. 클릭(collapsed) 허용.
+    if (textHitMode === 'layout-point') {
+      const hit = resolveLayoutPointHit(event);
+      if (hit) {
+        onTextSelected(hit);
+        window.getSelection()?.removeAllRanges();
+      }
+      try {
+        if (event.currentTarget?.hasPointerCapture?.(event.pointerId)) {
+          event.currentTarget.releasePointerCapture(event.pointerId);
+        }
+      } catch {
+        /* ignore */
+      }
+      return;
+    }
+
     const sel = window.getSelection();
     if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
     const range = sel.getRangeAt(0);
-    const root = textLayerRef.current;
-    if (!root || !root.contains(range.commonAncestorContainer)) return;
+    if (!root.contains(range.commonAncestorContainer)) return;
+
     const startEl = closestTextItemSpan(range.startContainer, root);
     const endEl = closestTextItemSpan(range.endContainer, root);
     if (!startEl || !endEl) return;
@@ -937,8 +1066,13 @@ export default function PdfViewer({
           {textLayerEnabled ? (
             <div
               ref={textLayerRef}
-              className="pdf-text-layer"
-              onMouseUp={handleTextLayerMouseUp}
+              className={
+                textHitMode === 'layout-point'
+                  ? 'pdf-text-layer pdf-text-layer--layout-point'
+                  : 'pdf-text-layer'
+              }
+              onPointerDown={handleTextLayerPointerDown}
+              onPointerUp={handleTextLayerMouseUp}
               onContextMenu={handleTextLayerContextMenu}
             >
               {textLayerBoxes.map((box) => (

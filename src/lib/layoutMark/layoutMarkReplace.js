@@ -20,6 +20,12 @@ function isWordChar(ch) {
 
 /**
  * `index`에서 시작 어절 W와 구간 [start, end).
+ *
+ * 공백 처리(의도적 비대칭 · 조판 클릭용):
+ * - 직전이 어절 글자 → 그 어절 (「그 」trailing → 「그」. 「그」→「모습이」오앵커 방지)
+ * - 아니면 앞으로 스킵 (leading / `그  모습이` 둘째 공백 → 「모습이」)
+ * 공백은 앞·뒤 어절 경계이지만, 1글자 어절 직후 오클릭이 더 흔해 trailing을 우선한다.
+ *
  * @param {string} pageText
  * @param {number} index
  * @returns {{ w: string, start: number, end: number } | null}
@@ -28,8 +34,14 @@ export function extractStartEojeol(pageText, index) {
   const text = String(pageText ?? '');
   if (!text) return null;
   let i = Math.max(0, Math.min(Number(index) || 0, text.length));
-  while (i < text.length && !isWordChar(text[i] ?? '')) i += 1;
-  if (i >= text.length) return null;
+  if (i >= text.length || !isWordChar(text[i] ?? '')) {
+    if (i > 0 && isWordChar(text[i - 1] ?? '')) {
+      i -= 1;
+    } else {
+      while (i < text.length && !isWordChar(text[i] ?? '')) i += 1;
+      if (i >= text.length) return null;
+    }
+  }
   let start = i;
   while (start > 0 && isWordChar(text[start - 1] ?? '')) start -= 1;
   let end = i + 1;
