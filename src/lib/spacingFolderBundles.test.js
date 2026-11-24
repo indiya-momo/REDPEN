@@ -16,6 +16,7 @@ describe('spacingFolderBundles', () => {
       'dependentRieulKka',
       'punct',
       'nonAeoAux',
+      'unlistedNounNoun',
     ]);
     expect(getSpacingFolderBundle('numberUnit')?.moduleIds).toEqual([
       'numeral',
@@ -32,6 +33,12 @@ describe('spacingFolderBundles', () => {
     expect(getSpacingFolderBundle('nonAeoAux')?.moduleIds).toEqual([
       'non-aeo-aux',
     ]);
+    expect(getSpacingFolderBundle('unlistedNounNoun')?.moduleIds).toEqual([
+      'unlisted-noun-noun',
+    ]);
+    expect(getSpacingFolderBundle('unlistedNounNoun')?.tipLines.join('')).toContain(
+      '제2항',
+    );
   });
 
   it('defaults all bundles off except nonAeoAux (본조 탭에서 옮겨 옴)', () => {
@@ -40,6 +47,7 @@ describe('spacingFolderBundles', () => {
       dependentRieulKka: false,
       punct: false,
       nonAeoAux: true,
+      unlistedNounNoun: false,
     });
   });
 
@@ -55,6 +63,7 @@ describe('spacingFolderBundles', () => {
       dependentRieulKka: false,
       punct: false,
       nonAeoAux: true,
+      unlistedNounNoun: false,
     });
     expect(normalizeSpacingFolderEnabled({ nonAeoAux: 'no' }).nonAeoAux).toBe(
       true,

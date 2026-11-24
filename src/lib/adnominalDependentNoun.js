@@ -9,16 +9,59 @@
 import { analyzeLine } from './kiwiMorph/analyze.js';
 import { getKiwiInstance } from './kiwiMorph/runtime.js';
 import { matchDeHeadwordGate } from './stdictDeHeadwords.js';
+import {
+  lookupStdictPosHits,
+  stdictPosIndexBareKeyCount,
+} from './stdictPosIndex.js';
 
 export const ADNOMINAL_DEP_CATEGORY = '관형사형+의존명사';
 export const ADNOMINAL_DEP_LABEL = '관형사형+의존명사';
 export const ADNOMINAL_DEP_TIP =
-  '한글 맞춤법 제42항: 관형사형 어미 뒤 의존명사(수·것·거·만큼·지·데…)는 띄어 씀. 조사가 붙은 하는데다·좋은데가는 잡고, 연결어미로 쓰인 하는데·없는데·없는데도는 잡지 않는다.';
+  '한글 맞춤법 제42항: 관형사형 어미 뒤 의존명사(수·것·거·만큼·지·데·무렵·녘·때문·동안)는 띄어 씀. 무렵·녘·때문·동안은 붙여 쓴 전체가 표준국어대사전 표제어이면 잡지 않음. 조사가 붙은 하는데다·좋은데가는 잡고, 연결어미로 쓰인 하는데·없는데·없는데도는 잡지 않는다.';
 
 /** 붙임 후보로만 훑는 의존명사 표면 (형태소 NNB 확인 전 필터). 걸=거+ㄹ 시각형 포함. */
-const NNB_SURFACE_HINT = /수|것|거|걸|만큼|지|데/;
+const NNB_SURFACE_HINT = /수|것|거|걸|만큼|지|데|무렵|녘|때문|동안/;
 /** 힌트 집합은 위 정규식에서 그대로 가져온다. */
-const NNB_HINT_SET = new Set(['수', '것', '거', '걸', '만큼', '지', '데']);
+const NNB_HINT_SET = new Set([
+  '수',
+  '것',
+  '거',
+  '걸',
+  '만큼',
+  '지',
+  '데',
+  '무렵',
+  '녘',
+  '때문',
+  '동안',
+]);
+
+/**
+ * 표제어 게이트를 거는 의존명사. 색인이 없으면 이 네 가지는 내지 않는다.
+ * 수·것·거·만큼·지·데는 기존과 같이 형태소만 본다.
+ */
+const DICT_GATED_NNB = new Set(['무렵', '녘', '때문', '동안']);
+
+/** 표제어 조회 전에 어절 끝에서 한 번만 떼는 조사. 긴 것 우선. */
+const HEADWORD_GATE_PARTICLES = Object.freeze([
+  '에서는',
+  '에서도',
+  '에서',
+  '으로',
+  '은',
+  '는',
+  '을',
+  '를',
+  '이',
+  '가',
+  '의',
+  '에',
+  '도',
+  '만',
+  '와',
+  '과',
+  '로',
+]);
 
 /** 는·은·ㄴ(+ 한) 뒤 데: 뜻을 가르는 조사가 있을 때만 잡음. 도·는은 침묵. */
 const DE_ETM_GUARD = new Set(['는', '은', 'ㄴ', 'ᆫ', '한']);
@@ -27,6 +70,26 @@ const DE_OK_PARTICLES = new Set(['에', '가', '를', '다', '다가']);
 /** @param {string | undefined} tag */
 function tagBase(tag) {
   return String(tag ?? '').split('-')[0];
+}
+
+/**
+ * 붙여 쓴 표면·제안 구간·조사 한 겹을 뗀 어간이 표제어이면 복합어로 본다.
+ * @param {string} surface
+ * @param {string} matchedText
+ * @returns {boolean}
+ */
+function isRegisteredCompoundSurface(surface, matchedText) {
+  const word = String(surface ?? '').normalize('NFC');
+  const matched = String(matchedText ?? '').normalize('NFC');
+  if (lookupStdictPosHits(word).length > 0) return true;
+  if (matched && matched !== word && lookupStdictPosHits(matched).length > 0) {
+    return true;
+  }
+  for (const particle of HEADWORD_GATE_PARTICLES) {
+    if (word.length <= particle.length || !word.endsWith(particle)) continue;
+    if (lookupStdictPosHits(word.slice(0, -particle.length)).length > 0) return true;
+  }
+  return false;
 }
 
 /**
@@ -171,6 +234,11 @@ export function findAdnominalDependentNounHits(text, opts = {}) {
     const analyzed = analyzeLine(surface, { kiwi });
     const decided = decideAdnominalDependentSplit(surface, analyzed);
     if (!decided) continue;
+    if (DICT_GATED_NNB.has(decided.kind)) {
+      // 색인이 없으면 저물녘 같은 표제어를 잘못 띄울 수 있어 내지 않는다.
+      if (stdictPosIndexBareKeyCount() === 0) continue;
+      if (isRegisteredCompoundSurface(surface, decided.matchedText)) continue;
+    }
     const start = m.index;
     const end = start + decided.matchedText.length;
     if (overlaps(start, end)) continue;

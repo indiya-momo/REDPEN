@@ -22,6 +22,7 @@ describe('spacingCategoryRegistry', () => {
       'official-aux',
       'punct',
       'non-aeo-aux',
+      'unlisted-noun-noun',
     ]);
     for (const def of SPACING_CATEGORY_DEFS) {
       expect(typeof def.label).toBe('string');
