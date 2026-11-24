@@ -1,8 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  CLOSED_HAE_JIL_LITERAL_ROWS,
-  findClosedSpacingFixHits,
-} from './closedSpacingFixes.js';
+import { findClosedSpacingFixHits } from './closedSpacingFixes.js';
 import spellingRulesJson from '../data/spelling-rules.json';
 
 describe('findClosedSpacingFixHits', () => {
@@ -49,15 +46,10 @@ describe('findClosedSpacingFixHits', () => {
     expect(by('깨끗해질 때')).toEqual({});
   });
 
-  it('해질 spelling rows and CLOSED_HAE_JIL_LITERAL_ROWS stay in parity', () => {
-    const sheet = spellingRulesJson
-      .filter((r) => String(r.find ?? '').startsWith('\uD574\uC9C8'))
-      .map((r) => ({ find: r.find, replace: r.replace }))
-      .toSorted((a, b) => a.find.localeCompare(b.find, 'ko'));
-    const mod = CLOSED_HAE_JIL_LITERAL_ROWS.map((r) => ({
-      find: r.find,
-      replace: r.replace,
-    })).toSorted((a, b) => a.find.localeCompare(b.find, 'ko'));
-    expect(mod).toEqual(sheet);
+  it('맞춤법 시트에는 해질 행이 없다', () => {
+    const finds = spellingRulesJson
+      .map((r) => r.find)
+      .filter((find) => find === '해질녘' || find === '해질 무렵' || find === '해질무렵');
+    expect(finds).toEqual([]);
   });
 });
