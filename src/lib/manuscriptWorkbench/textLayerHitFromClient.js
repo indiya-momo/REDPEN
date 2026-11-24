@@ -6,6 +6,7 @@
 import {
   expandCharBoxesVoronoiX,
   nearestCharIndexAtPoint,
+  pickCandidateItemBoxes,
 } from './pageGeometry.js';
 
 /**
@@ -20,37 +21,6 @@ export function closestTextItemSpan(node, root) {
     el = el.parentElement;
   }
   return null;
-}
-
-/**
- * @param {Array<{ left: number, top: number, width: number, height: number }>} boxes
- * @param {number} x
- * @param {number} y
- */
-function pickCandidateItemBoxes(boxes, x, y) {
-  if (!Array.isArray(boxes) || !boxes.length) return [];
-  // 같은 줄 전부 — 최근접 1개만 쓰면 「하고」옆 「인사」만 잡히는 것과 같은 문제
-  const sameLine = boxes
-    .filter((b) => {
-      const pad = Math.max(4, (Number(b.height) || 0) * 0.25);
-      return y >= b.top - pad && y <= b.top + Math.max(b.height, 1) + pad;
-    })
-    .slice()
-    .sort((a, b) => a.left - b.left);
-  if (sameLine.length) return sameLine;
-
-  let best = null;
-  let bestDist = Infinity;
-  for (const b of boxes) {
-    const cx = b.left + Math.max(b.width, 1) / 2;
-    const cy = b.top + Math.max(b.height, 1) / 2;
-    const d = (x - cx) ** 2 + (y - cy) ** 2;
-    if (d < bestDist) {
-      bestDist = d;
-      best = b;
-    }
-  }
-  return best ? [best] : [];
 }
 
 /**
@@ -153,7 +123,6 @@ export function findTextLayerSpanAtClient(root, clientX, clientY) {
  */
 function indexFromSpanCharRects(span, start, clientX, clientY) {
   const node = span?.firstChild;
-  if (!node || node.nodeType !== 3) return null;
   if (!node || node.nodeType !== 3) return null;
   const text = node.nodeValue ?? '';
   if (!text) return null;

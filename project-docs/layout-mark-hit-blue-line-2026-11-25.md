@@ -205,13 +205,14 @@ DOM Range 중심 synthetic `pointerup` 시점(참고용, 성공 근거 아님):
 
 ## 12. 관련 파일
 
-- `src/components/PdfViewer.jsx`
+- `src/components/PdfViewer.jsx` (좌표·이벤트만 → `resolveLayoutPointHit`)
 - `src/components/MainScreen.jsx` (`textHitMode`)
 - `src/hooks/useManuscriptWorkbench.js` (`onTextSelected` / `appendLayoutMark`)
 - `src/lib/layoutMark/addLayoutMark.js`
 - `src/lib/layoutMark/layoutMarkReplace.js` (`extractStartEojeol`)
+- `src/lib/manuscriptWorkbench/resolveLayoutPointHit.js` (DOM→glyph 정책)
 - `src/lib/manuscriptWorkbench/textLayerHitFromClient.js`
-- `src/lib/manuscriptWorkbench/pageGeometry.js`
+- `src/lib/manuscriptWorkbench/pageGeometry.js` (`pickCandidateItemBoxes` 단일)
 - `src/lib/pdfService.js` (`phraseLocalRangesInItems` / `clipMatchToItemLocals`)
 
 ---

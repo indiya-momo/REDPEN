@@ -24,16 +24,10 @@ import {
 } from '../lib/highlightOverlayLayers.js';
 import { LayoutMarkGlyph } from '../lib/layoutMark/layoutMarkGlyphs.jsx';
 import { indentMarkGeometryFromPage } from '../lib/layoutMark/indentMarkGeometry.js';
-import {
-  pointerToTextIndex,
-  textLayerItemBoxes,
-} from '../lib/manuscriptWorkbench/pageGeometry.js';
+import { textLayerItemBoxes } from '../lib/manuscriptWorkbench/pageGeometry.js';
+import { resolveLayoutPointHit as resolveLayoutPointHitCore } from '../lib/manuscriptWorkbench/resolveLayoutPointHit.js';
 import { resolveTextSelection } from '../lib/manuscriptWorkbench/resolveTextSelection.js';
-import {
-  closestTextItemSpan,
-  hitFromSingleIndex,
-  layoutIndexFromClientPoint,
-} from '../lib/manuscriptWorkbench/textLayerHitFromClient.js';
+import { closestTextItemSpan } from '../lib/manuscriptWorkbench/textLayerHitFromClient.js';
 import { suppressTipEditSideClicks } from '../lib/manuscriptWorkbench/tipEditGuard.js';
 
 /** 하이라이트 높이 대비 오버레이↔원문 위·아래 패딩 (기준 0.05 → ×1.8, index.css 변수와 동일) */
@@ -511,83 +505,22 @@ export default function PdfViewer({
   }
 
   function resolveLayoutPointHit(event) {
-    const root = textLayerRef.current;
     const local = clientToWrapLocal(event.clientX, event.clientY);
     const geom = geometryRef.current;
-    /** @type {import('../lib/manuscriptWorkbench/types.js').TextHit | null} */
-    let hit = null;
-    let rawIndex = /** @type {number | null} */ (null);
-    let source = '';
-    // 우선순위 고정(동작 변경 금지): DOM → 실패 시 glyph. conflict 로그용으로만 glyph를 병행 계산.
-    const domIndex = layoutIndexFromClientPoint({
-      root,
+    return resolveLayoutPointHitCore({
+      pageData,
+      root: textLayerRef.current,
       wrap: wrapRef.current,
       itemBoxes: textLayerBoxes,
       clientX: event.clientX,
       clientY: event.clientY,
       eventTarget: event.target,
+      localX: local?.x ?? null,
+      localY: local?.y ?? null,
+      page: geom?.page ?? null,
+      viewport: geom?.viewport ?? null,
+      isTrusted: event.isTrusted === true,
     });
-    let glyphIndex = /** @type {number | null} */ (null);
-    if (local && geom?.page && geom?.viewport) {
-      glyphIndex = pointerToTextIndex(
-        geom.page,
-        geom.viewport,
-        pageData,
-        local.x,
-        local.y,
-        textLayerBoxes,
-      );
-    }
-    rawIndex = domIndex;
-    hit = hitFromSingleIndex(pageData, rawIndex);
-    if (hit) source = 'dom';
-    if (!hit && glyphIndex != null) {
-      rawIndex = glyphIndex;
-      hit = hitFromSingleIndex(pageData, rawIndex);
-      if (hit) source = 'glyph';
-    }
-    if (import.meta.env.DEV) {
-      const t = String(pageData.visualText ?? pageData.text ?? '');
-      const chAt = (i) => {
-        if (!Number.isFinite(i)) return null;
-        const c = t[/** @type {number} */ (i)] ?? '';
-        return c === ' ' ? '␠' : c;
-      };
-      const aroundAt = (i) => {
-        if (!Number.isFinite(i)) return null;
-        const n = /** @type {number} */ (i);
-        return t.slice(Math.max(0, n - 4), Math.min(t.length, n + 5));
-      };
-      // 1단: 클릭 → index (채택 source는 위 우선순위와 동일)
-      console.log('[layout-hit-1-index]', {
-        source: hit ? source : null,
-        rawIndex: hit ? rawIndex : null,
-        rawCh: hit ? chAt(rawIndex) : null,
-        around: hit ? aroundAt(rawIndex) : null,
-        hitStart: hit?.start ?? null,
-        matched: hit?.matchedText ?? null,
-        clientX: event.clientX,
-        clientY: event.clientY,
-        isTrusted: event.isTrusted === true,
-      });
-      if (
-        Number.isFinite(domIndex) &&
-        Number.isFinite(glyphIndex) &&
-        domIndex !== glyphIndex
-      ) {
-        console.log('[layout-hit-conflict]', {
-          domIndex,
-          domCh: chAt(domIndex),
-          domAround: aroundAt(domIndex),
-          glyphIndex,
-          glyphCh: chAt(glyphIndex),
-          glyphAround: aroundAt(glyphIndex),
-          chosen: hit ? source : null,
-          isTrusted: event.isTrusted === true,
-        });
-      }
-    }
-    return hit;
   }
 
   function handleTextLayerPointerDown(event) {

@@ -182,7 +182,7 @@ export function nearestCharIndexAtPoint(charBoxes, x, y) {
  * @param {number} x
  * @param {number} y
  */
-function pickCandidateItemBoxes(boxes, x, y) {
+export function pickCandidateItemBoxes(boxes, x, y) {
   // 같은 줄 item을 모두 후보에 넣는다.
   // 최근접 1개만 쓰면 「하고」item 박스 밖 클릭이 「인사」item만 잡혀 rawCh=인 이 된다.
   const padY = (b) => Math.max(4, (Number(b.height) || 0) * 0.25);
