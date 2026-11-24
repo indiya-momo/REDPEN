@@ -74,13 +74,23 @@ export function resolvePdfJsPublicUrl(relativePath) {
 }
 
 /**
+ * pdf.js 워커가 typedArray를 transfer하면 원본 ArrayBuffer가 detach된다.
+ * 세션 저장용 버퍼는 절대 그대로 넘기지 말고, 여기서 복사본만 넘긴다.
+ * @param {ArrayBuffer | Uint8Array} buffer
+ * @returns {Uint8Array}
+ */
+export function copyPdfBytesForDocument(buffer) {
+  if (buffer instanceof Uint8Array) {
+    return buffer.slice();
+  }
+  return new Uint8Array(buffer).slice();
+}
+
+/**
  * @param {ArrayBuffer | Uint8Array} buffer
  */
 export function buildPdfDocumentInit(buffer) {
-  const data =
-    buffer instanceof Uint8Array
-      ? buffer
-      : new Uint8Array(buffer);
+  const data = copyPdfBytesForDocument(buffer);
   return {
     data,
     cMapUrl: resolvePdfJsPublicUrl('pdfjs/cmaps/'),
@@ -450,14 +460,74 @@ function highlightRectsFromLineContext(pageData, page, viewport, matchStart, mat
 }
 
 /**
+ * compact map에서 preferPageIndex에 가장 가까운 칸.
+ * @param {{ itemIndex: number, local: number }[]} map
+ * @param {TextItemRef[] | null | undefined} itemRefs
+ * @param {number} preferPageIndex
+ */
+function compactIndexNearPage(map, itemRefs, preferPageIndex) {
+  if (!(preferPageIndex >= 0) || !map.length) return -1;
+  const refByItem = new Map(
+    (itemRefs ?? []).map((ref) => [ref.itemIndex, ref]),
+  );
+  let bestK = 0;
+  let bestDist = Infinity;
+  for (let k = 0; k < map.length; k += 1) {
+    const row = map[k];
+    const ref = refByItem.get(row.itemIndex);
+    const pageI = ref ? ref.start + row.local : k;
+    const dist = Math.abs(pageI - preferPageIndex);
+    if (dist < bestDist) {
+      bestDist = dist;
+      bestK = k;
+    }
+  }
+  return bestK;
+}
+
+/**
+ * 「그」가 한 줄에 두 번이면 matchStart에 가까운 쪽 (그리 ← 그 모습 방지).
+ * @param {string} compact
+ * @param {string} needle
+ * @param {number} preferCompact
+ */
+function needleIndexNear(compact, needle, preferCompact) {
+  const first = compact.indexOf(needle);
+  if (first < 0) return -1;
+  if (!(preferCompact >= 0)) return first;
+  let pos = 0;
+  let best = first;
+  let bestDist = Infinity;
+  while (pos <= compact.length - needle.length) {
+    const at = compact.indexOf(needle, pos);
+    if (at < 0) break;
+    const dist = Math.abs(at - preferCompact);
+    if (dist < bestDist) {
+      bestDist = dist;
+      best = at;
+    }
+    pos = at + 1;
+  }
+  return best;
+}
+
+/**
  * itemIndexes에 걸친 phrase(공백 무시)의 item별 문자 구간.
  * soft-wrap(명|지 계곡)에서 줄 전체 박스를 막기 위함.
  * @param {import('pdfjs-dist').TextItem[]} items
  * @param {number[]} itemIndexes
  * @param {string} phrase
+ * @param {number} [preferPageIndex]
+ * @param {TextItemRef[] | null} [itemRefs]
  * @returns {Map<number, { start: number, end: number }> | null}
  */
-export function phraseLocalRangesInItems(items, itemIndexes, phrase) {
+export function phraseLocalRangesInItems(
+  items,
+  itemIndexes,
+  phrase,
+  preferPageIndex = -1,
+  itemRefs = null,
+) {
   const needle = String(phrase ?? '').replace(/\s+/g, '');
   if (!needle || !items?.length || !itemIndexes?.length) return null;
 
@@ -472,7 +542,12 @@ export function phraseLocalRangesInItems(items, itemIndexes, phrase) {
       compact += str[c];
     }
   }
-  const at = compact.indexOf(needle);
+  const preferCompact = compactIndexNearPage(
+    map,
+    itemRefs,
+    preferPageIndex,
+  );
+  const at = needleIndexNear(compact, needle, preferCompact);
   if (at < 0) return null;
 
   /** @type {Map<number, { start: number, end: number }>} */
@@ -514,7 +589,13 @@ export function clipMatchToItemLocals(
   }
   const indexes = overlapping.map((ref) => ref.itemIndex);
   const phraseRanges = phrase
-    ? phraseLocalRangesInItems(items, indexes, phrase)
+    ? phraseLocalRangesInItems(
+        items,
+        indexes,
+        phrase,
+        matchStart,
+        itemRefs,
+      )
     : null;
   /** @type {{ itemIndex: number, localStart: number, localEnd: number }[]} */
   const out = [];

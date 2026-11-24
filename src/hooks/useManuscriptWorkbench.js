@@ -407,5 +407,6 @@ export function useManuscriptWorkbench({
     currentPageHasText,
     persistNotice: false,
     textLayerEnabled: mode === 'manual-add' || isLayoutMarkMode(mode),
+    textHitMode: isLayoutMarkMode(mode) ? 'layout-point' : 'range',
   };
 }

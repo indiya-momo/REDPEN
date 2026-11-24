@@ -24,8 +24,40 @@ describe('extractStartEojeol', () => {
     expect(extractStartEojeol(t, 0)?.w).toBe('끝어절');
   });
 
-  it('공백 뒤 다음 어절', () => {
-    expect(extractStartEojeol('요즘 말로는', 2)?.w).toBe('말로는');
+  it('어절 직후 공백은 앞 어절(그 → 모습이 오앵커 방지)', () => {
+    expect(extractStartEojeol('요즘 말로는', 2)?.w).toBe('요즘');
+    const t = '그 모습이';
+    const space = t.indexOf(' ');
+    expect(extractStartEojeol(t, space)?.w).toBe('그');
+    expect(extractStartEojeol(t, space)?.w).not.toBe('모습이');
+  });
+
+  it('그·모습이 각각의 글자 클릭', () => {
+    const t = '그 모습이';
+    expect(extractStartEojeol(t, 0)?.w).toBe('그');
+    expect(extractStartEojeol(t, t.indexOf('모'))?.w).toBe('모습이');
+  });
+
+  it('leading 공백만 있으면 다음 어절', () => {
+    expect(extractStartEojeol(' 말로는', 0)?.w).toBe('말로는');
+  });
+
+  it('연속 공백: 첫 공백=앞 어절, 둘째 공백=뒤 어절(의도적 비대칭)', () => {
+    const t = '그  모습이';
+    expect(extractStartEojeol(t, 1)?.w).toBe('그'); // first space after 그
+    expect(extractStartEojeol(t, 2)?.w).toBe('모습이'); // second space, prev is space
+  });
+
+  it('서: 어절 중간 vs 1글자 어절', () => {
+    expect(extractStartEojeol('먼 곳에서 건너온', '먼 곳에서'.indexOf('서'))?.w).toBe(
+      '곳에서',
+    );
+    expect(extractStartEojeol('곳 서 건너', '곳 서'.indexOf('서'))?.w).toBe('서');
+  });
+
+  it('줄끝 \\n 직전 공백은 앞 어절', () => {
+    const t = '그 \n다음';
+    expect(extractStartEojeol(t, 1)?.w).toBe('그');
   });
 });
 

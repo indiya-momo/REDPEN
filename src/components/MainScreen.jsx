@@ -3191,6 +3191,7 @@ export default function MainScreen({
                 ]}
                 showPageMeta={false}
                 textLayerEnabled={manuscript.textLayerEnabled}
+                textHitMode={manuscript.textHitMode}
                 onTextSelected={manuscript.onTextSelected}
                 onTextSelectionCancel={manuscript.cancelTextSelection}
                 onOverlayEdit={manuscript.openManualFromOverlay}

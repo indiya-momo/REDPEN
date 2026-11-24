@@ -32,8 +32,22 @@ export function appendLayoutMark(marks, input, page) {
   if (!isPhase1LayoutKind(input?.kind)) return null;
   const pageNum = Number(input.pageNum);
   if (!Number.isFinite(pageNum)) return null;
-  const text = String(page?.text ?? '');
-  const hit = resolveAnchorEojeol(text, input.index, input.kind);
+  const text = String(page?.visualText ?? page?.text ?? '');
+  const inputIndex = Number(input.index) || 0;
+  const hit = resolveAnchorEojeol(text, inputIndex, input.kind);
+  if (import.meta.env.DEV) {
+    // 2단: index → 앵커 어절 W (히트 우선순위와 무관, 관측만)
+    console.log('[layout-hit-2-anchor]', {
+      pageNum,
+      kind: input.kind,
+      inputIndex,
+      inputCh: text[inputIndex] === ' ' ? '␠' : (text[inputIndex] ?? null),
+      w: hit?.w ?? null,
+      start: hit?.start ?? null,
+      end: hit?.end ?? null,
+      pageTextLen: text.length,
+    });
+  }
   if (!hit) return null;
   const before = text.slice(Math.max(0, hit.start - 8), hit.start);
   const after = hit.w;
@@ -48,6 +62,16 @@ export function appendLayoutMark(marks, input, page) {
     after,
     source: LAYOUT_MARK_SOURCE,
   };
+  if (import.meta.env.DEV) {
+    // 3단: W → 하이라이트에 넘길 구간 (실제 paint rect는 PdfViewer; 여기는 의도 구간만)
+    console.log('[layout-hit-3-box-range]', {
+      pageNum,
+      kind: row.kind,
+      w: row.after,
+      start: row.index,
+      end: row.index + row.after.length,
+    });
+  }
   return [...(marks ?? []), row];
 }
 
