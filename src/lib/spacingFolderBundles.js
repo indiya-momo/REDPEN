@@ -4,7 +4,7 @@
  * @see docs/superpowers/specs/2026-11-19-spacing-folder-in-spelling-tab-design.md
  */
 
-/** @typedef {'numberUnit' | 'dependentRieulKka' | 'punct' | 'nonAeoAux'} SpacingFolderBundleId */
+/** @typedef {'numberUnit' | 'dependentRieulKka' | 'punct' | 'nonAeoAux' | 'unlistedNounNoun'} SpacingFolderBundleId */
 
 /**
  * @typedef {{
@@ -36,7 +36,8 @@ export const SPACING_FOLDER_BUNDLES = Object.freeze([
       'rieul-kka',
     ]),
     tipLines: Object.freeze([
-      '관형사형 어미 뒤 의존명사(수·것·거·만큼·지·데…)는 띄어 씀 (맞춤법 제42항·형태소 확인)',
+      '관형사형 어미 뒤 의존명사(수·것·거·만큼·지·데·무렵·녘·때문·동안)는 띄어 씀 (맞춤법 제42항·형태소 확인)',
+      '무렵·녘·때문·동안은 붙여 쓴 전체가 표준국어대사전 표제어이면 잡지 않는다. 관형사(그·이)나 명사 뒤의 때문·동안은 잡지 않는다.',
       '조사가 붙은 하는데다·좋은데가는 잡고, 연결어미로 쓰인 하는데·없는데·없는데도는 잡지 않는다.',
     ]),
   }),
@@ -53,7 +54,20 @@ export const SPACING_FOLDER_BUNDLES = Object.freeze([
     label: '본(-아/-어) + 보조용언 아닌 경우 (맞춤법 제47항)',
     example: Object.freeze({ find: '먹지마', replace: '먹지˅마' }),
     moduleIds: Object.freeze(['non-aeo-aux']),
-    tipLines: Object.freeze(['보조용언은 본용언이 -아/-어일 때만 붙여 씀']),
+    tipLines: Object.freeze([
+      '보조용언은 본용언이 -아/-어일 때만 붙여 씀',
+      '-다 뒤 보다를 붙인 살다보니·하다보면은 띄어 씀. 들여다보다처럼 사전에 한 단어인 경우는 잡지 않음.',
+    ]),
+  }),
+  Object.freeze({
+    bundleId: 'unlistedNounNoun',
+    label: '사전에 등재되지 않은 명사+명사 (맞춤법 제2항)',
+    example: Object.freeze({ find: '무릎위에', replace: '무릎˅위에' }),
+    moduleIds: Object.freeze(['unlisted-noun-noun']),
+    tipLines: Object.freeze([
+      '사전에 없는 명사+위치 명사(위·아래·앞·뒤·안·밖·옆·속·밑)는 띄어 씀 (맞춤법 제2항)',
+      '붙여 쓴 전체가 표준국어대사전 표제어이면 잡지 않음(눈앞·손위·윗사람).',
+    ]),
   }),
 ]);
 
@@ -75,6 +89,7 @@ export function defaultSpacingFolderEnabled() {
     punct: false,
     // 본조 탭에서 보이던 카드를 대신하므로 기본 켜짐.
     nonAeoAux: true,
+    unlistedNounNoun: false,
   };
 }
 
