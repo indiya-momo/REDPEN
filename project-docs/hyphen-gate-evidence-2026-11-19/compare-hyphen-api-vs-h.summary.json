@@ -1,0 +1,23 @@
+{
+  "runDate": "2026-11-19",
+  "downloaded": "2026-11-06",
+  "origin": "http://127.0.0.1:5173",
+  "totals": {
+    "targets": 148,
+    "errors": 0,
+    "ok": 148,
+    "mismatches": 0
+  },
+  "groupSizes": {
+    "measured": 10,
+    "noForms": 30,
+    "mixedAndShort": 48,
+    "inK": 30,
+    "negativeNonH": 30
+  },
+  "hitDist": {
+    "1": 98,
+    "2": 50
+  },
+  "mismatchesByGroup": {}
+}

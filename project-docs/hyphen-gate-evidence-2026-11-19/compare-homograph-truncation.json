@@ -1,0 +1,174 @@
+{
+  "runDate": "2026-11-19",
+  "heavyLemmaCount": 9,
+  "sampleSize": 9,
+  "totals": {
+    "ok": 9,
+    "errors": 0,
+    "mismatches": 0,
+    "truncatedSuspect": 0
+  },
+  "hitDist": {
+    "1": 6,
+    "2": 3
+  },
+  "topHeavy": [
+    {
+      "c": "뜨다",
+      "tsvRows": 13,
+      "inH": false
+    },
+    {
+      "c": "정정하다",
+      "tsvRows": 13,
+      "inH": true
+    },
+    {
+      "c": "조사하다",
+      "tsvRows": 13,
+      "inH": true
+    },
+    {
+      "c": "치다",
+      "tsvRows": 13,
+      "inH": false
+    },
+    {
+      "c": "고사하다",
+      "tsvRows": 12,
+      "inH": true
+    },
+    {
+      "c": "요요하다",
+      "tsvRows": 12,
+      "inH": true
+    },
+    {
+      "c": "수사하다",
+      "tsvRows": 11,
+      "inH": true
+    },
+    {
+      "c": "감수하다",
+      "tsvRows": 10,
+      "inH": true
+    },
+    {
+      "c": "교수하다",
+      "tsvRows": 10,
+      "inH": true
+    }
+  ],
+  "mismatches": [],
+  "truncatedSuspects": [],
+  "rows": [
+    {
+      "c": "요요하다",
+      "tsvRows": 12,
+      "h": true,
+      "k": true,
+      "bucket": "inK",
+      "err": null,
+      "api": true,
+      "hits": 2,
+      "truncatedSuspect": false,
+      "mismatch": false
+    },
+    {
+      "c": "정정하다",
+      "tsvRows": 13,
+      "h": true,
+      "k": true,
+      "bucket": "inK",
+      "err": null,
+      "api": true,
+      "hits": 2,
+      "truncatedSuspect": false,
+      "mismatch": false
+    },
+    {
+      "c": "뜨다",
+      "tsvRows": 13,
+      "h": false,
+      "k": false,
+      "bucket": "outsideH",
+      "err": null,
+      "api": false,
+      "hits": 1,
+      "truncatedSuspect": false,
+      "mismatch": false
+    },
+    {
+      "c": "조사하다",
+      "tsvRows": 13,
+      "h": true,
+      "k": true,
+      "bucket": "inK",
+      "err": null,
+      "api": true,
+      "hits": 1,
+      "truncatedSuspect": false,
+      "mismatch": false
+    },
+    {
+      "c": "수사하다",
+      "tsvRows": 11,
+      "h": true,
+      "k": true,
+      "bucket": "inK",
+      "err": null,
+      "api": true,
+      "hits": 1,
+      "truncatedSuspect": false,
+      "mismatch": false
+    },
+    {
+      "c": "치다",
+      "tsvRows": 13,
+      "h": false,
+      "k": false,
+      "bucket": "outsideH",
+      "err": null,
+      "api": false,
+      "hits": 1,
+      "truncatedSuspect": false,
+      "mismatch": false
+    },
+    {
+      "c": "감수하다",
+      "tsvRows": 10,
+      "h": true,
+      "k": true,
+      "bucket": "inK",
+      "err": null,
+      "api": true,
+      "hits": 1,
+      "truncatedSuspect": false,
+      "mismatch": false
+    },
+    {
+      "c": "교수하다",
+      "tsvRows": 10,
+      "h": true,
+      "k": true,
+      "bucket": "inK",
+      "err": null,
+      "api": true,
+      "hits": 2,
+      "truncatedSuspect": false,
+      "mismatch": false
+    },
+    {
+      "c": "고사하다",
+      "tsvRows": 12,
+      "h": true,
+      "k": true,
+      "bucket": "inK",
+      "err": null,
+      "api": true,
+      "hits": 1,
+      "truncatedSuspect": false,
+      "mismatch": false
+    }
+  ]
+}

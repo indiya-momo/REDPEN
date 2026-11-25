@@ -1,0 +1,1482 @@
+[
+ {
+  "group": "measured",
+  "c": "들이다",
+  "h": true,
+  "k": true,
+  "bucket": "inK",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "measured",
+  "c": "가지다",
+  "h": false,
+  "k": false,
+  "bucket": "outsideH",
+  "err": null,
+  "api": false,
+  "hits": 1
+ },
+ {
+  "group": "measured",
+  "c": "내리다",
+  "h": false,
+  "k": false,
+  "bucket": "outsideH",
+  "err": null,
+  "api": false,
+  "hits": 2
+ },
+ {
+  "group": "measured",
+  "c": "어루만지다",
+  "h": true,
+  "k": true,
+  "bucket": "inK",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "measured",
+  "c": "눈여기다",
+  "h": true,
+  "k": false,
+  "bucket": "noForms",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "measured",
+  "c": "들어오다",
+  "h": true,
+  "k": true,
+  "bucket": "inK",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "measured",
+  "c": "떠올리다",
+  "h": false,
+  "k": false,
+  "bucket": "outsideH",
+  "err": null,
+  "api": false,
+  "hits": 1
+ },
+ {
+  "group": "measured",
+  "c": "베풀다",
+  "h": false,
+  "k": false,
+  "bucket": "outsideH",
+  "err": null,
+  "api": false,
+  "hits": 1
+ },
+ {
+  "group": "measured",
+  "c": "이루다",
+  "h": false,
+  "k": false,
+  "bucket": "outsideH",
+  "err": null,
+  "api": false,
+  "hits": 1
+ },
+ {
+  "group": "measured",
+  "c": "찾아오다",
+  "h": true,
+  "k": true,
+  "bucket": "inK",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "noForms",
+  "c": "배비대다",
+  "h": true,
+  "k": false,
+  "bucket": "noForms",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "noForms",
+  "c": "법받다",
+  "h": true,
+  "k": false,
+  "bucket": "noForms",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "noForms",
+  "c": "이믜롭다",
+  "h": true,
+  "k": false,
+  "bucket": "noForms",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "noForms",
+  "c": "녹느지러지다",
+  "h": true,
+  "k": false,
+  "bucket": "noForms",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "noForms",
+  "c": "중긋거리다",
+  "h": true,
+  "k": false,
+  "bucket": "noForms",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "noForms",
+  "c": "뭉그뜨리다",
+  "h": true,
+  "k": false,
+  "bucket": "noForms",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "noForms",
+  "c": "바즈런하다",
+  "h": true,
+  "k": false,
+  "bucket": "noForms",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "noForms",
+  "c": "안서럽다",
+  "h": true,
+  "k": false,
+  "bucket": "noForms",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "noForms",
+  "c": "시뻘개지다",
+  "h": true,
+  "k": false,
+  "bucket": "noForms",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "noForms",
+  "c": "때맞추다",
+  "h": true,
+  "k": false,
+  "bucket": "noForms",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "noForms",
+  "c": "선드리다",
+  "h": true,
+  "k": false,
+  "bucket": "noForms",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "noForms",
+  "c": "깡깡거리다",
+  "h": true,
+  "k": false,
+  "bucket": "noForms",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "noForms",
+  "c": "오죽하다",
+  "h": true,
+  "k": false,
+  "bucket": "noForms",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "noForms",
+  "c": "덮어놓다",
+  "h": true,
+  "k": false,
+  "bucket": "noForms",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "noForms",
+  "c": "쏟치다",
+  "h": true,
+  "k": false,
+  "bucket": "noForms",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "noForms",
+  "c": "짓닥이다",
+  "h": true,
+  "k": false,
+  "bucket": "noForms",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "noForms",
+  "c": "야말스럽다",
+  "h": true,
+  "k": false,
+  "bucket": "noForms",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "noForms",
+  "c": "여지러떠리다",
+  "h": true,
+  "k": false,
+  "bucket": "noForms",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "noForms",
+  "c": "휘둥그래지다",
+  "h": true,
+  "k": false,
+  "bucket": "noForms",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "noForms",
+  "c": "말짱말짱하다",
+  "h": true,
+  "k": false,
+  "bucket": "noForms",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "noForms",
+  "c": "똑하다",
+  "h": true,
+  "k": false,
+  "bucket": "noForms",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "noForms",
+  "c": "녹히다",
+  "h": true,
+  "k": false,
+  "bucket": "noForms",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "noForms",
+  "c": "좀하다",
+  "h": true,
+  "k": false,
+  "bucket": "noForms",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "noForms",
+  "c": "매끈덕하다",
+  "h": true,
+  "k": false,
+  "bucket": "noForms",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "noForms",
+  "c": "끄떽없다",
+  "h": true,
+  "k": false,
+  "bucket": "noForms",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "noForms",
+  "c": "부디치다",
+  "h": true,
+  "k": false,
+  "bucket": "noForms",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "noForms",
+  "c": "맞갖다",
+  "h": true,
+  "k": false,
+  "bucket": "noForms",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "noForms",
+  "c": "가만하다",
+  "h": true,
+  "k": false,
+  "bucket": "noForms",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "noForms",
+  "c": "알안곳하다",
+  "h": true,
+  "k": false,
+  "bucket": "noForms",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "noForms",
+  "c": "녹짝지근하다",
+  "h": true,
+  "k": false,
+  "bucket": "noForms",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "mixedAndShort",
+  "c": "떠들다",
+  "h": true,
+  "k": false,
+  "bucket": "mixedHomograph",
+  "err": null,
+  "api": true,
+  "hits": 2
+ },
+ {
+  "group": "mixedAndShort",
+  "c": "맞결리다",
+  "h": true,
+  "k": false,
+  "bucket": "mixedHomograph",
+  "err": null,
+  "api": true,
+  "hits": 2
+ },
+ {
+  "group": "mixedAndShort",
+  "c": "몽글리다",
+  "h": true,
+  "k": false,
+  "bucket": "mixedHomograph",
+  "err": null,
+  "api": true,
+  "hits": 2
+ },
+ {
+  "group": "mixedAndShort",
+  "c": "내둘리다",
+  "h": true,
+  "k": false,
+  "bucket": "mixedHomograph",
+  "err": null,
+  "api": true,
+  "hits": 2
+ },
+ {
+  "group": "mixedAndShort",
+  "c": "갈리다",
+  "h": true,
+  "k": false,
+  "bucket": "shortAndMixed",
+  "err": null,
+  "api": true,
+  "hits": 2
+ },
+ {
+  "group": "mixedAndShort",
+  "c": "감치다",
+  "h": true,
+  "k": false,
+  "bucket": "shortAndMixed",
+  "err": null,
+  "api": true,
+  "hits": 2
+ },
+ {
+  "group": "mixedAndShort",
+  "c": "돌리다",
+  "h": true,
+  "k": false,
+  "bucket": "shortAndMixed",
+  "err": null,
+  "api": true,
+  "hits": 2
+ },
+ {
+  "group": "mixedAndShort",
+  "c": "뒤지다",
+  "h": true,
+  "k": false,
+  "bucket": "shortAndMixed",
+  "err": null,
+  "api": true,
+  "hits": 2
+ },
+ {
+  "group": "mixedAndShort",
+  "c": "들리다",
+  "h": true,
+  "k": false,
+  "bucket": "shortAndMixed",
+  "err": null,
+  "api": true,
+  "hits": 2
+ },
+ {
+  "group": "mixedAndShort",
+  "c": "말리다",
+  "h": true,
+  "k": false,
+  "bucket": "shortAndMixed",
+  "err": null,
+  "api": true,
+  "hits": 2
+ },
+ {
+  "group": "mixedAndShort",
+  "c": "메우다",
+  "h": true,
+  "k": false,
+  "bucket": "shortAndMixed",
+  "err": null,
+  "api": true,
+  "hits": 2
+ },
+ {
+  "group": "mixedAndShort",
+  "c": "면내다",
+  "h": true,
+  "k": false,
+  "bucket": "shortAndMixed",
+  "err": null,
+  "api": true,
+  "hits": 2
+ },
+ {
+  "group": "mixedAndShort",
+  "c": "물리다",
+  "h": true,
+  "k": false,
+  "bucket": "shortAndMixed",
+  "err": null,
+  "api": true,
+  "hits": 2
+ },
+ {
+  "group": "mixedAndShort",
+  "c": "밀리다",
+  "h": true,
+  "k": false,
+  "bucket": "shortAndMixed",
+  "err": null,
+  "api": true,
+  "hits": 2
+ },
+ {
+  "group": "mixedAndShort",
+  "c": "박이다",
+  "h": true,
+  "k": false,
+  "bucket": "shortAndMixed",
+  "err": null,
+  "api": true,
+  "hits": 2
+ },
+ {
+  "group": "mixedAndShort",
+  "c": "벌리다",
+  "h": true,
+  "k": false,
+  "bucket": "shortAndMixed",
+  "err": null,
+  "api": true,
+  "hits": 2
+ },
+ {
+  "group": "mixedAndShort",
+  "c": "불리다",
+  "h": true,
+  "k": false,
+  "bucket": "shortAndMixed",
+  "err": null,
+  "api": true,
+  "hits": 2
+ },
+ {
+  "group": "mixedAndShort",
+  "c": "삭이다",
+  "h": true,
+  "k": false,
+  "bucket": "shortAndMixed",
+  "err": null,
+  "api": true,
+  "hits": 2
+ },
+ {
+  "group": "mixedAndShort",
+  "c": "걸리다",
+  "h": true,
+  "k": false,
+  "bucket": "shortAndMixed",
+  "err": null,
+  "api": true,
+  "hits": 2
+ },
+ {
+  "group": "mixedAndShort",
+  "c": "설치다",
+  "h": true,
+  "k": false,
+  "bucket": "shortAndMixed",
+  "err": null,
+  "api": true,
+  "hits": 2
+ },
+ {
+  "group": "mixedAndShort",
+  "c": "쏘이다",
+  "h": true,
+  "k": false,
+  "bucket": "shortAndMixed",
+  "err": null,
+  "api": true,
+  "hits": 2
+ },
+ {
+  "group": "mixedAndShort",
+  "c": "쓸리다",
+  "h": true,
+  "k": false,
+  "bucket": "shortAndMixed",
+  "err": null,
+  "api": true,
+  "hits": 2
+ },
+ {
+  "group": "mixedAndShort",
+  "c": "얼리다",
+  "h": true,
+  "k": false,
+  "bucket": "shortAndMixed",
+  "err": null,
+  "api": true,
+  "hits": 2
+ },
+ {
+  "group": "mixedAndShort",
+  "c": "외대다",
+  "h": true,
+  "k": false,
+  "bucket": "shortAndMixed",
+  "err": null,
+  "api": true,
+  "hits": 2
+ },
+ {
+  "group": "mixedAndShort",
+  "c": "울리다",
+  "h": true,
+  "k": false,
+  "bucket": "shortAndMixed",
+  "err": null,
+  "api": true,
+  "hits": 2
+ },
+ {
+  "group": "mixedAndShort",
+  "c": "잡히다",
+  "h": true,
+  "k": false,
+  "bucket": "shortAndMixed",
+  "err": null,
+  "api": true,
+  "hits": 2
+ },
+ {
+  "group": "mixedAndShort",
+  "c": "접치다",
+  "h": true,
+  "k": false,
+  "bucket": "shortAndMixed",
+  "err": null,
+  "api": true,
+  "hits": 2
+ },
+ {
+  "group": "mixedAndShort",
+  "c": "젖히다",
+  "h": true,
+  "k": false,
+  "bucket": "shortAndMixed",
+  "err": null,
+  "api": true,
+  "hits": 2
+ },
+ {
+  "group": "mixedAndShort",
+  "c": "지우다",
+  "h": true,
+  "k": false,
+  "bucket": "shortAndMixed",
+  "err": null,
+  "api": true,
+  "hits": 2
+ },
+ {
+  "group": "mixedAndShort",
+  "c": "쪼이다",
+  "h": true,
+  "k": false,
+  "bucket": "shortAndMixed",
+  "err": null,
+  "api": true,
+  "hits": 2
+ },
+ {
+  "group": "mixedAndShort",
+  "c": "치대다",
+  "h": true,
+  "k": false,
+  "bucket": "shortAndMixed",
+  "err": null,
+  "api": true,
+  "hits": 2
+ },
+ {
+  "group": "mixedAndShort",
+  "c": "치뜨다",
+  "h": true,
+  "k": false,
+  "bucket": "shortAndMixed",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "mixedAndShort",
+  "c": "치이다",
+  "h": true,
+  "k": false,
+  "bucket": "shortAndMixed",
+  "err": null,
+  "api": true,
+  "hits": 2
+ },
+ {
+  "group": "mixedAndShort",
+  "c": "튀기다",
+  "h": true,
+  "k": false,
+  "bucket": "shortAndMixed",
+  "err": null,
+  "api": true,
+  "hits": 2
+ },
+ {
+  "group": "mixedAndShort",
+  "c": "틀리다",
+  "h": true,
+  "k": false,
+  "bucket": "shortAndMixed",
+  "err": null,
+  "api": true,
+  "hits": 2
+ },
+ {
+  "group": "mixedAndShort",
+  "c": "꺼지다",
+  "h": true,
+  "k": false,
+  "bucket": "shortAndMixed",
+  "err": null,
+  "api": true,
+  "hits": 2
+ },
+ {
+  "group": "mixedAndShort",
+  "c": "꼬이다",
+  "h": true,
+  "k": false,
+  "bucket": "shortAndMixed",
+  "err": null,
+  "api": true,
+  "hits": 2
+ },
+ {
+  "group": "mixedAndShort",
+  "c": "끼이다",
+  "h": true,
+  "k": false,
+  "bucket": "shortAndMixed",
+  "err": null,
+  "api": true,
+  "hits": 2
+ },
+ {
+  "group": "mixedAndShort",
+  "c": "내키다",
+  "h": true,
+  "k": false,
+  "bucket": "shortAndMixed",
+  "err": null,
+  "api": true,
+  "hits": 2
+ },
+ {
+  "group": "mixedAndShort",
+  "c": "널리다",
+  "h": true,
+  "k": false,
+  "bucket": "shortAndMixed",
+  "err": null,
+  "api": true,
+  "hits": 2
+ },
+ {
+  "group": "mixedAndShort",
+  "c": "놀리다",
+  "h": true,
+  "k": false,
+  "bucket": "shortAndMixed",
+  "err": null,
+  "api": true,
+  "hits": 2
+ },
+ {
+  "group": "mixedAndShort",
+  "c": "농치다",
+  "h": true,
+  "k": false,
+  "bucket": "shortAndMixed",
+  "err": null,
+  "api": true,
+  "hits": 2
+ },
+ {
+  "group": "mixedAndShort",
+  "c": "누이다",
+  "h": true,
+  "k": false,
+  "bucket": "shortAndMixed",
+  "err": null,
+  "api": true,
+  "hits": 2
+ },
+ {
+  "group": "mixedAndShort",
+  "c": "늘이다",
+  "h": true,
+  "k": false,
+  "bucket": "shortAndMixed",
+  "err": null,
+  "api": true,
+  "hits": 2
+ },
+ {
+  "group": "mixedAndShort",
+  "c": "달리다",
+  "h": true,
+  "k": false,
+  "bucket": "shortAndMixed",
+  "err": null,
+  "api": true,
+  "hits": 2
+ },
+ {
+  "group": "mixedAndShort",
+  "c": "담기다",
+  "h": true,
+  "k": false,
+  "bucket": "shortAndMixed",
+  "err": null,
+  "api": true,
+  "hits": 2
+ },
+ {
+  "group": "mixedAndShort",
+  "c": "못나다",
+  "h": true,
+  "k": false,
+  "bucket": "onlyShort",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "mixedAndShort",
+  "c": "잘나다",
+  "h": true,
+  "k": false,
+  "bucket": "onlyShort",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "inK",
+  "c": "조마하다",
+  "h": true,
+  "k": true,
+  "bucket": "inK",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "inK",
+  "c": "짐작되다",
+  "h": true,
+  "k": true,
+  "bucket": "inK",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "inK",
+  "c": "입질하다",
+  "h": true,
+  "k": true,
+  "bucket": "inK",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "inK",
+  "c": "피난살이하다",
+  "h": true,
+  "k": true,
+  "bucket": "inK",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "inK",
+  "c": "쓰르륵대다",
+  "h": true,
+  "k": true,
+  "bucket": "inK",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "inK",
+  "c": "함께하다",
+  "h": true,
+  "k": true,
+  "bucket": "inK",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "inK",
+  "c": "모순되다",
+  "h": true,
+  "k": true,
+  "bucket": "inK",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "inK",
+  "c": "생끗뱅끗거리다",
+  "h": true,
+  "k": true,
+  "bucket": "inK",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "inK",
+  "c": "때깍대다",
+  "h": true,
+  "k": true,
+  "bucket": "inK",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "inK",
+  "c": "서풋거리다",
+  "h": true,
+  "k": true,
+  "bucket": "inK",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "inK",
+  "c": "방저하다",
+  "h": true,
+  "k": true,
+  "bucket": "inK",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "inK",
+  "c": "데꺽거리다",
+  "h": true,
+  "k": true,
+  "bucket": "inK",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "inK",
+  "c": "출급하다",
+  "h": true,
+  "k": true,
+  "bucket": "inK",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "inK",
+  "c": "위핍하다",
+  "h": true,
+  "k": true,
+  "bucket": "inK",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "inK",
+  "c": "도끼질하다",
+  "h": true,
+  "k": true,
+  "bucket": "inK",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "inK",
+  "c": "소스락소스락하다",
+  "h": true,
+  "k": true,
+  "bucket": "inK",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "inK",
+  "c": "어름적거리다",
+  "h": true,
+  "k": true,
+  "bucket": "inK",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "inK",
+  "c": "찌뻑거리다",
+  "h": true,
+  "k": true,
+  "bucket": "inK",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "inK",
+  "c": "방추하다",
+  "h": true,
+  "k": true,
+  "bucket": "inK",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "inK",
+  "c": "신행하다",
+  "h": true,
+  "k": true,
+  "bucket": "inK",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "inK",
+  "c": "벽하다",
+  "h": true,
+  "k": true,
+  "bucket": "inK",
+  "err": null,
+  "api": true,
+  "hits": 2
+ },
+ {
+  "group": "inK",
+  "c": "오무락거리다",
+  "h": true,
+  "k": true,
+  "bucket": "inK",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "inK",
+  "c": "제수되다",
+  "h": true,
+  "k": true,
+  "bucket": "inK",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "inK",
+  "c": "반영하다",
+  "h": true,
+  "k": true,
+  "bucket": "inK",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "inK",
+  "c": "꽹그랑하다",
+  "h": true,
+  "k": true,
+  "bucket": "inK",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "inK",
+  "c": "검실거리다",
+  "h": true,
+  "k": true,
+  "bucket": "inK",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "inK",
+  "c": "떠세하다",
+  "h": true,
+  "k": true,
+  "bucket": "inK",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "inK",
+  "c": "능란하다",
+  "h": true,
+  "k": true,
+  "bucket": "inK",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "inK",
+  "c": "휴무하다",
+  "h": true,
+  "k": true,
+  "bucket": "inK",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "inK",
+  "c": "반작하다",
+  "h": true,
+  "k": true,
+  "bucket": "inK",
+  "err": null,
+  "api": true,
+  "hits": 1
+ },
+ {
+  "group": "negativeNonH",
+  "c": "비싸다",
+  "h": false,
+  "k": false,
+  "bucket": "outsideH",
+  "err": null,
+  "api": false,
+  "hits": 1
+ },
+ {
+  "group": "negativeNonH",
+  "c": "별르다",
+  "h": false,
+  "k": false,
+  "bucket": "outsideH",
+  "err": null,
+  "api": false,
+  "hits": 1
+ },
+ {
+  "group": "negativeNonH",
+  "c": "고달프다",
+  "h": false,
+  "k": false,
+  "bucket": "outsideH",
+  "err": null,
+  "api": false,
+  "hits": 1
+ },
+ {
+  "group": "negativeNonH",
+  "c": "공그르다",
+  "h": false,
+  "k": false,
+  "bucket": "outsideH",
+  "err": null,
+  "api": false,
+  "hits": 1
+ },
+ {
+  "group": "negativeNonH",
+  "c": "사로다",
+  "h": false,
+  "k": false,
+  "bucket": "outsideH",
+  "err": null,
+  "api": false,
+  "hits": 1
+ },
+ {
+  "group": "negativeNonH",
+  "c": "놀라다",
+  "h": false,
+  "k": false,
+  "bucket": "outsideH",
+  "err": null,
+  "api": false,
+  "hits": 1
+ },
+ {
+  "group": "negativeNonH",
+  "c": "뚱기다",
+  "h": false,
+  "k": false,
+  "bucket": "outsideH",
+  "err": null,
+  "api": false,
+  "hits": 1
+ },
+ {
+  "group": "negativeNonH",
+  "c": "줍다",
+  "h": false,
+  "k": false,
+  "bucket": "outsideH",
+  "err": null,
+  "api": false,
+  "hits": 1
+ },
+ {
+  "group": "negativeNonH",
+  "c": "쓰라리다",
+  "h": false,
+  "k": false,
+  "bucket": "outsideH",
+  "err": null,
+  "api": false,
+  "hits": 1
+ },
+ {
+  "group": "negativeNonH",
+  "c": "제키다",
+  "h": false,
+  "k": false,
+  "bucket": "outsideH",
+  "err": null,
+  "api": false,
+  "hits": 1
+ },
+ {
+  "group": "negativeNonH",
+  "c": "추슬르다",
+  "h": false,
+  "k": false,
+  "bucket": "outsideH",
+  "err": null,
+  "api": false,
+  "hits": 1
+ },
+ {
+  "group": "negativeNonH",
+  "c": "제리다",
+  "h": false,
+  "k": false,
+  "bucket": "outsideH",
+  "err": null,
+  "api": false,
+  "hits": 1
+ },
+ {
+  "group": "negativeNonH",
+  "c": "다조지다",
+  "h": false,
+  "k": false,
+  "bucket": "outsideH",
+  "err": null,
+  "api": false,
+  "hits": 1
+ },
+ {
+  "group": "negativeNonH",
+  "c": "단지럽다",
+  "h": false,
+  "k": false,
+  "bucket": "outsideH",
+  "err": null,
+  "api": false,
+  "hits": 1
+ },
+ {
+  "group": "negativeNonH",
+  "c": "아처롭다",
+  "h": false,
+  "k": false,
+  "bucket": "outsideH",
+  "err": null,
+  "api": false,
+  "hits": 1
+ },
+ {
+  "group": "negativeNonH",
+  "c": "쓸다",
+  "h": false,
+  "k": false,
+  "bucket": "outsideH",
+  "err": null,
+  "api": false,
+  "hits": 2
+ },
+ {
+  "group": "negativeNonH",
+  "c": "닳다",
+  "h": false,
+  "k": false,
+  "bucket": "outsideH",
+  "err": null,
+  "api": false,
+  "hits": 1
+ },
+ {
+  "group": "negativeNonH",
+  "c": "덩그렇다",
+  "h": false,
+  "k": false,
+  "bucket": "outsideH",
+  "err": null,
+  "api": false,
+  "hits": 1
+ },
+ {
+  "group": "negativeNonH",
+  "c": "잘다",
+  "h": false,
+  "k": false,
+  "bucket": "outsideH",
+  "err": null,
+  "api": false,
+  "hits": 1
+ },
+ {
+  "group": "negativeNonH",
+  "c": "가즈럽다",
+  "h": false,
+  "k": false,
+  "bucket": "outsideH",
+  "err": null,
+  "api": false,
+  "hits": 1
+ },
+ {
+  "group": "negativeNonH",
+  "c": "호비다",
+  "h": false,
+  "k": false,
+  "bucket": "outsideH",
+  "err": null,
+  "api": false,
+  "hits": 1
+ },
+ {
+  "group": "negativeNonH",
+  "c": "저믈다",
+  "h": false,
+  "k": false,
+  "bucket": "outsideH",
+  "err": null,
+  "api": false,
+  "hits": 1
+ },
+ {
+  "group": "negativeNonH",
+  "c": "어질다",
+  "h": false,
+  "k": false,
+  "bucket": "outsideH",
+  "err": null,
+  "api": false,
+  "hits": 1
+ },
+ {
+  "group": "negativeNonH",
+  "c": "올리다",
+  "h": false,
+  "k": false,
+  "bucket": "outsideH",
+  "err": null,
+  "api": false,
+  "hits": 1
+ },
+ {
+  "group": "negativeNonH",
+  "c": "헤치다",
+  "h": false,
+  "k": false,
+  "bucket": "outsideH",
+  "err": null,
+  "api": false,
+  "hits": 1
+ },
+ {
+  "group": "negativeNonH",
+  "c": "대끼다",
+  "h": false,
+  "k": false,
+  "bucket": "outsideH",
+  "err": null,
+  "api": false,
+  "hits": 2
+ },
+ {
+  "group": "negativeNonH",
+  "c": "점잖다",
+  "h": false,
+  "k": false,
+  "bucket": "outsideH",
+  "err": null,
+  "api": false,
+  "hits": 1
+ },
+ {
+  "group": "negativeNonH",
+  "c": "누리다",
+  "h": false,
+  "k": false,
+  "bucket": "outsideH",
+  "err": null,
+  "api": false,
+  "hits": 2
+ },
+ {
+  "group": "negativeNonH",
+  "c": "시리다",
+  "h": false,
+  "k": false,
+  "bucket": "outsideH",
+  "err": null,
+  "api": false,
+  "hits": 1
+ },
+ {
+  "group": "negativeNonH",
+  "c": "사르다",
+  "h": false,
+  "k": false,
+  "bucket": "outsideH",
+  "err": null,
+  "api": false,
+  "hits": 1
+ }
+]
