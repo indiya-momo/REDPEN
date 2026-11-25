@@ -20,9 +20,11 @@ const BORDER_RATIO = 0.84;
 const SHORT_CHAR_GAP = 6;
 const BORDER_CHAR_GAP = 4;
 /** 다음 줄 시작이 이 em 이상 들여쓰기면 새 문단. */
-const INDENT_EM = 0.75;
+const INDENT_EM = 0.55;
+/** 다음 줄이 이 em 이상 왼쪽으로 물러나면 표 칸·다른 덩어리. */
+const OUTDENT_EM = 0.55;
 /** 줄간격이 글자 크기의 이 배보다 크면 문단 간격. */
-const GAP_RATIO = 1.85;
+const GAP_RATIO = 1.75;
 /** 글자 크기 차이가 이 배보다 크면 제목·본문 경계. */
 const FONT_RATIO = 1.18;
 
@@ -35,6 +37,9 @@ const SENTENCE_END_RE =
 
 const LIST_START_RE =
   /^(?:[-–—*•·∙▪◦‣●○■□▶►]\s+|\d{1,3}[.)、]\s*|[①-⑳]\s*|[㉠-㉻]\s*|[가나다라마바사아자차카타파하][.)]\s+)/u;
+
+/** 표 셀이 y만 같고 x 간격 없이 섞일 때 흔한 조각(한 글자 띄어쓰기 나열). */
+const SPACED_SYLLABLE_JUNK_RE = /(?:[가-힣]\s+){3,}[가-힣]/u;
 
 /**
  * 한 음절이어도 독립 어절인 말. 다음 줄과 붙여 쓰지 않는다.
@@ -371,6 +376,9 @@ export function classifyParagraphPair(
   if (!L || !R) return keep('empty', false);
   if (SENTENCE_END_RE.test(L)) return keep('sentence', false);
   if (LIST_START_RE.test(R)) return keep('list', false);
+  if (SPACED_SYLLABLE_JUNK_RE.test(L) || SPACED_SYLLABLE_JUNK_RE.test(R)) {
+    return keep('table', true);
+  }
 
   const sameCol =
     !opts.crossPage &&
@@ -415,7 +423,13 @@ export function classifyParagraphPair(
     Number.isFinite(rightLayout.x)
   ) {
     const em = Math.max(leftLayout.fontH || 0, rightLayout.fontH || 0, 8);
-    if (rightLayout.x > leftLayout.x + em * INDENT_EM) return keep('indent', false);
+    if (rightLayout.x > leftLayout.x + em * INDENT_EM) {
+      return keep('indent', false);
+    }
+    // 다음 줄이 왼쪽으로 크게 물러나면 표 칸·다른 열.
+    if (rightLayout.x < leftLayout.x - em * OUTDENT_EM) {
+      return keep('outdent', true);
+    }
   }
 
   const fullness = lineFullness(L, leftLayout, context);
@@ -424,6 +438,25 @@ export function classifyParagraphPair(
   // (맞춘 조판에서 단어 중간 줄바꿈은 오른쪽 끝선까지 찬 줄에서 난다.)
   if (fullness === 'short') {
     return keep('short', L.length <= 22 || midWord || dehyphen);
+  }
+
+  // border만으로 끊지 않는다(본문 soft-wrap 오측). 들여쓰기·짧은 다음 줄이 있으면 문단 끝.
+  if (
+    fullness === 'border' &&
+    !midWord &&
+    !dehyphen &&
+    !particle &&
+    leftLayout &&
+    rightLayout &&
+    Number.isFinite(leftLayout.x) &&
+    Number.isFinite(rightLayout.x)
+  ) {
+    const emB = Math.max(leftLayout.fontH || 0, rightLayout.fontH || 0, 8);
+    const softIndent = rightLayout.x > leftLayout.x + emB * 0.35;
+    const nextShortish = R.length <= 16 && L.length >= 20;
+    if (softIndent || nextShortish) {
+      return keep('border', true);
+    }
   }
 
   let uncertain = midWord || dehyphen || fullness === 'border' || particle === 'uncertain';
@@ -457,6 +490,8 @@ const EXCEPTION_RANK = {
   midword: 1,
   hyphen: 2,
   border: 3,
+  outdent: 3,
+  table: 3,
   heading: 4,
   short: 5,
 };
