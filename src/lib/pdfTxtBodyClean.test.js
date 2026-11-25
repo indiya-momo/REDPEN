@@ -68,6 +68,36 @@ describe('linesFromPdfItems', () => {
     );
   });
 
+  it('같은 y에서 가로로 먼 표 칸은 한 줄로 합치지 않는다', () => {
+    const font = 10;
+    const items = [
+      item('만족: 싸게', 100, 400, 60, font),
+      item('불만족: 덜 산다', 280, 400, 80, font),
+      item('다음줄', 100, 380, 40, font),
+    ];
+    expect(linesFromPdfItems(items).map((line) => line.text)).toEqual([
+      '만족: 싸게',
+      '불만족: 덜 산다',
+      '다음줄',
+    ]);
+  });
+
+  it('같은 y에서 칸이 좁게 붙어도 두꺼운 셀은 나눈다', () => {
+    const font = 8;
+    const items = [
+      item('비용 감소와 안정적인', 97, 533, 68, font),
+      item('원 자 재 가 격 상 승', 170, 533, 68, font),
+      item('기업은 투입 비용의 상', 243, 533, 68, font),
+      item('근로자들이 실질 임금', 318, 533, 68, font),
+    ];
+    expect(linesFromPdfItems(items).map((line) => line.text)).toEqual([
+      '비용 감소와 안정적인',
+      '원 자 재 가 격 상 승',
+      '기업은 투입 비용의 상',
+      '근로자들이 실질 임금',
+    ]);
+  });
+
   it('펼침면에서도 상단 반복 머리말은 걷어 낸다', () => {
     const mk = (pageNum) => ({
       pageNum,
@@ -89,4 +119,27 @@ describe('linesFromPdfItems', () => {
       ['왼본문 3', '왼쪽중', '왼아래 3', '오른본문 3', '오른중', '오른아래 3'],
     ]);
   });
+
+  it('text fallback synthesizes lineLayout for paragraph fullness', () => {
+    const cleaned = cleanPageLinesForTxt([
+      {
+        pageNum: 1,
+        text: '그는 어제 시장에 가서\n사과를 샀다.\n그리고 집에 왔다.',
+      },
+    ]);
+    expect(cleaned).toHaveLength(1);
+    expect(cleaned[0].lines).toEqual([
+      '그는 어제 시장에 가서',
+      '사과를 샀다.',
+      '그리고 집에 왔다.',
+    ]);
+    expect(cleaned[0].lineLayout).toHaveLength(3);
+    for (const lay of cleaned[0].lineLayout) {
+      expect(Number.isFinite(lay.x)).toBe(true);
+      expect(Number.isFinite(lay.endX)).toBe(true);
+      expect(Number.isFinite(lay.fontH)).toBe(true);
+      expect(lay.endX).toBeGreaterThan(lay.x);
+    }
+  });
+
 });

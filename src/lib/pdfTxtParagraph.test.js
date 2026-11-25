@@ -239,6 +239,28 @@ describe('applyLinebreakDecisions 문단 재조립', () => {
     );
   });
 
+  it('같은 단에서 다음 줄이 왼쪽으로 물러나면 표 칸으로 유지한다', () => {
+    const v = classifyParagraphPair(
+      '총이익170,78243.3%제품과 서비스를 판매하는지',
+      '총이익률 매출394,328 보여주는 지표',
+      lay(170, 386, 140, 13, 0),
+      lay(124, 341, 125, 13, 0),
+    );
+    expect(v.action).toBe('keep');
+    expect(v.reason).toBe('outdent');
+  });
+
+  it('한 글자 띄어쓰기가 이어진 표 조각 줄은 유지한다', () => {
+    const v = classifyParagraphPair(
+      '안정적인원 자 재 가 격 상 승기업은 투입 비용의 상근로자들이 실질 임금',
+      '가격 덕분에 이익률이과 공급망 병목 때문승 상황에서 이익률을손실을 회복하',
+      lay(96, 386, 532, 8, 0),
+      lay(96, 386, 519, 8, 0),
+    );
+    expect(v.action).toBe('keep');
+    expect(v.reason).toBe('table');
+  });
+
   it('쪽 끝 문장이 끝나면 문단을 나누고, 검수전은 조판 줄바꿈을 유지한다', () => {
     const pages = [
       { pageNum: 1, lines: ['그는 시장에 가서', '사과를 샀다.'] },
@@ -326,6 +348,43 @@ describe('applyLinebreakDecisions 문단 재조립', () => {
     expect(candidates).toHaveLength(PARAGRAPH_EXCEPTION_LIMIT);
     expect(candidates.every((c) => c.defaultDecision === 'nospace')).toBe(true);
     expect(applyLinebreakDecisions(pages, {})).not.toContain('\n');
+  });
+
+  it('layout이 있으면 들여쓰기·행간 keep이 살아나고, 같은 폭 soft-wrap은 잇는다', () => {
+    const ctx = contextOf([
+      '그는 어제 시장에 가서 긴 문장을 이어서',
+      '사과를 샀다.',
+      '그리고 새 문단이다.',
+    ]);
+    const soft = classifyParagraphPair(
+      '그는 어제 시장에 가서 긴 문장을 이어서',
+      '사과를 샀다.',
+      lay(48, 400, 700),
+      lay(48, 400, 684),
+      ctx,
+    );
+    expect(soft.action).toBe('join');
+    expect(soft.reason).toBe('wrap');
+
+    const indented = classifyParagraphPair(
+      '앞 문단이 여기서 이어지던 말',
+      '새 문단이 들여쓰기로 시작한다.',
+      lay(48, 360, 700),
+      lay(72, 400, 684),
+      ctx,
+    );
+    expect(indented.action).toBe('keep');
+    expect(indented.reason).toBe('indent');
+
+    const gapped = classifyParagraphPair(
+      '짧은 소제목 아래',
+      '본문이 큰 간격 뒤에 온다.',
+      lay(48, 280, 700),
+      lay(48, 400, 640),
+      ctx,
+    );
+    expect(gapped.action).toBe('keep');
+    expect(gapped.reason).toBe('gap');
   });
 });
 

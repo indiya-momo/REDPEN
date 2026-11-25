@@ -154,3 +154,13 @@ export function isUnifyStdictPosReviewEnabled() {
 export function isSpacingCategoryEnabled() {
   return import.meta.env.VITE_SPACING_CATEGORY !== 'false';
 }
+
+/**
+ * TXT 문단 uncertain 후보 전용 줄바꿈 분석기 (키위→바른 등).
+ * - 기본 꺼짐 (`VITE_TXT_LINEBREAK_ANALYZER=true` 일 때만)
+ * - Pages·프로덕션은 폴백(현행 glue). `analyzeParagraphFlow` 핫패스 호출 금지.
+ * @see handoff/runs/2026-11-25-txt-linebreak-analyzer/phase3-analyzer-gate.md
+ */
+export function isTxtLinebreakAnalyzerEnabled() {
+  return import.meta.env.VITE_TXT_LINEBREAK_ANALYZER === 'true';
+}

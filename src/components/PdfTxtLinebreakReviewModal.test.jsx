@@ -64,14 +64,14 @@ describe('PdfTxtLinebreakReviewModal', () => {
 
     expect(host.textContent).toContain('문단 정리');
     expect(host.textContent).toContain('문단 안의 줄바꿈 4곳');
-    expect(host.textContent).toContain('단어 중간');
-    expect(buttonByText(host, '붙여 씀').className).toContain('is-active');
+    expect(host.textContent).toContain('형태소 이음');
+    expect(buttonByText(host, '붙임').className).toContain('is-active');
 
     await act(async () => {
-      buttonByText(host, '띄어 씀').click();
+      buttonByText(host, '띄움').click();
     });
-    expect(buttonByText(host, '띄어 씀').className).toContain('is-active');
-    expect(buttonByText(host, '붙여 씀').className).not.toContain('is-active');
+    expect(buttonByText(host, '띄움').className).toContain('is-active');
+    expect(buttonByText(host, '붙임').className).not.toContain('is-active');
 
     await act(async () => {
       buttonByText(host, '최종 TXT 받기').click();
@@ -81,10 +81,19 @@ describe('PdfTxtLinebreakReviewModal', () => {
       autoParagraph: true,
     });
 
+    expect(host.textContent).toContain('추천형으로 받기');
+    expect(host.textContent).toContain('화면 그대로 받기');
+    const modeBoxes = [...host.querySelectorAll('input[type="checkbox"]')];
+    expect(modeBoxes).toHaveLength(2);
+    expect(modeBoxes[0].checked).toBe(true);
+    expect(modeBoxes[1].checked).toBe(false);
+
     await act(async () => {
-      host.querySelector('input[type="checkbox"]').click();
+      modeBoxes[1].click();
     });
-    expect(host.textContent).toContain('조판에 보이던 줄바꿈');
+    expect(host.textContent).toContain('화면에 보이던 줄바꿈');
+    expect(modeBoxes[0].checked).toBe(false);
+    expect(modeBoxes[1].checked).toBe(true);
 
     await act(async () => {
       buttonByText(host, '검수전 추출본도 받기').click();
@@ -97,6 +106,61 @@ describe('PdfTxtLinebreakReviewModal', () => {
     expect(onConfirm).toHaveBeenLastCalledWith({
       decisions: { '1:0': 'space' },
       autoParagraph: false,
+    });
+
+    await act(async () => {
+      root.unmount();
+    });
+    host.remove();
+  });
+
+  it('softwrap Y 과도붙임 표본을 단어 중간으로 보여 주고 띄어 씀으로 고친다', async () => {
+    const host = document.createElement('div');
+    document.body.appendChild(host);
+    const root = createRoot(host);
+    const onConfirm = vi.fn();
+
+    await act(async () => {
+      root.render(
+        <PdfTxtLinebreakReviewModal
+          open
+          sourceName="표본.pdf"
+          paragraphStats={{ joined: 1, kept: 0, omitted: 0 }}
+          candidates={[
+            {
+              id: '1:0',
+              pageNum: 1,
+              lineIndex: 0,
+              left: '에 고개를 끄덕여야 할 것처럼 느끼게 된다. 그러나 꼭',
+              right: '그렇게 생각할 필요는 없다. 세상은 여러 퍼즐 조각으로',
+              defaultDecision: 'nospace',
+              glue: '',
+              reason: 'midword',
+            },
+          ]}
+          onCancel={() => {}}
+          onConfirm={onConfirm}
+        />,
+      );
+    });
+
+    expect(host.textContent).toContain('형태소 이음');
+    expect(host.textContent).toContain('그러나 꼭');
+    expect(host.textContent).toContain('그렇게 생각할');
+    expect(buttonByText(host, '붙임').className).toContain('is-active');
+    expect(host.textContent).toContain(
+      '자동 판정이 어려운 줄바꿈 1곳을 표시합니다. 붙임, 띄움, 유지 중 골라 주세요.',
+    );
+
+    await act(async () => {
+      buttonByText(host, '띄움').click();
+    });
+    await act(async () => {
+      buttonByText(host, '최종 TXT 받기').click();
+    });
+    expect(onConfirm).toHaveBeenCalledWith({
+      decisions: { '1:0': 'space' },
+      autoParagraph: true,
     });
 
     await act(async () => {

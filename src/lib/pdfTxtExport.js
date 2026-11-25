@@ -13,6 +13,11 @@ import {
   applyLinebreakDecisions,
   joinPagesWithMarkers,
 } from './pdfTxtLinebreakReview.js';
+import {
+  applyUncertainSuggestionsToCandidates,
+  isTxtLinebreakAnalyzerEnabled,
+  suggestUncertainLinebreakDecisions,
+} from './pdfTxtUncertainAnalyzer.js';
 
 /**
  * @param {string} filename
@@ -113,6 +118,14 @@ export async function preparePdfTxtReview(file, opts = {}) {
     const pages = await extractAllPagesText(pdf, opts.onProgress);
     const cleanedPages = cleanPageLinesForTxt(pages);
     const flow = analyzeParagraphFlow(cleanedPages);
+    let candidates = flow.candidates;
+    // uncertain 배치만. 플래그 OFF·Kiwi 없으면 현행 그대로.
+    if (isTxtLinebreakAnalyzerEnabled()) {
+      const { bootKiwiIfNeeded } = await import('./kiwiMorph/bootLocal.js');
+      await bootKiwiIfNeeded({ auxMorph: true });
+      const analyzed = suggestUncertainLinebreakDecisions(candidates);
+      candidates = applyUncertainSuggestionsToCandidates(candidates, analyzed);
+    }
     const draftWithMarkers = joinPagesWithMarkers(cleanedPages);
     if (!draftWithMarkers.trim()) {
       throw new Error(
@@ -124,7 +137,7 @@ export async function preparePdfTxtReview(file, opts = {}) {
       pageCount: pages.length,
       cleanedPages,
       draftWithMarkers,
-      candidates: flow.candidates,
+      candidates,
       paragraphStats: flow.stats,
       draftFilename: txtFilenameFromPdfName(file.name),
       finalFilename: finalTxtFilenameFromPdfName(file.name),

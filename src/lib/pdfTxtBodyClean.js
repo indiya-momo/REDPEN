@@ -121,14 +121,52 @@ function linesFromPdfItemsInColumn(items, col = 0) {
   const flush = () => {
     if (!bucket.length) return;
     bucket.sort((a, b) => a.x - b.x);
-    const raw = bucket.map((g) => g.str).join('');
-    const trailSpace = /[\t \u00A0\u1680\u2000-\u200A\u202F\u205F\u3000]$/u.test(raw);
-    const text = raw.replace(/[\t \u00A0\u1680\u2000-\u200A\u202F\u205F\u3000]+$/u, '');
-    if (text.trim()) {
+    // Same-y: wide gutters always split; tight table cells (wide chunks + modest gap) also split.
+    const gutterMin = Math.max(bucketFont * 1.35, 14);
+    const cellGapMin = Math.max(bucketFont * 0.45, 3.5);
+    const cellMinW = bucketFont * 2.5;
+    /** @type {(typeof glyphs)[]} */
+    const runs = [];
+    /** @type {typeof glyphs} */
+    let run = [];
+    let runEnd = -Infinity;
+    let runWidth = 0;
+    for (const g of bucket) {
+      const gap = g.x - runEnd;
+      if (run.length) {
+        const prevSubstantial =
+          runWidth >= cellMinW && run.map((x) => x.str).join('').trim().length >= 2;
+        const nextSubstantial =
+          g.width >= cellMinW && String(g.str).trim().length >= 2;
+        const split =
+          gap >= gutterMin ||
+          (gap >= cellGapMin && prevSubstantial && nextSubstantial);
+        if (split) {
+          runs.push(run);
+          run = [];
+          runWidth = 0;
+        }
+      }
+      run.push(g);
+      runEnd = g.x + g.width;
+      if (run.length === 1) runWidth = g.width;
+      else runWidth = runEnd - run[0].x;
+    }
+    if (run.length) runs.push(run);
+
+    for (const part of runs) {
+      const raw = part.map((g) => g.str).join('');
+      const trailSpace =
+        /[\t \u00A0\u1680\u2000-\u200A\u202F\u205F\u3000]$/u.test(raw);
+      const text = raw.replace(
+        /[\t \u00A0\u1680\u2000-\u200A\u202F\u205F\u3000]+$/u,
+        '',
+      );
+      if (!text.trim()) continue;
       let x = Infinity;
       let endX = -Infinity;
       let fontH = 0;
-      for (const g of bucket) {
+      for (const g of part) {
         if (g.x < x) x = g.x;
         const right = g.x + g.width;
         if (right > endX) endX = right;
@@ -228,12 +266,20 @@ export function cleanPageLinesForTxt(pages) {
         return { text, trailSpace };
       })
       .filter((line) => line.text.trim().length > 0)
-      .map((line, idx, arr) => ({
-        text: line.text,
-        y: arr.length - idx,
-        col: 0,
-        trailSpace: line.trailSpace,
-      }));
+      .map((line, idx, arr) => {
+        const fontH = 12;
+        const x = 0;
+        const endX = Math.max(line.text.length, 1) * fontH * 0.55;
+        return {
+          text: line.text,
+          y: arr.length - idx,
+          x,
+          endX,
+          fontH,
+          col: 0,
+          trailSpace: line.trailSpace,
+        };
+      });
     return { pageNum: page.pageNum ?? i + 1, lines: fallback };
   });
 
