@@ -1,0 +1,13 @@
+---
+description: 「/카」「카나나 켜기」— 로컬 SLM 서버 기동
+alwaysApply: true
+---
+
+# /카 — 카나나 로컬
+
+사용자가 **`/카`**, **「카나나 켜기」**라고 하면 `.cursor/commands/카.md` 절차를 **실행**한다 (설명만 금지).
+
+- 서버: `.\.venv-kanana\Scripts\python scripts\kanana-openai-server.py` → `:8000`
+- 플래그: `.env.local` `VITE_UNIFY_JOSA_SLM=true` (+ 필요 시 Vite 재시작)
+- 끄기 요청 시: `:8000` 종료 + 플래그 `false`
+- 클라우드 GPU 등록·서버리스는 하지 않음

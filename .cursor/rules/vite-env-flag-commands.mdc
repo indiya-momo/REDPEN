@@ -1,0 +1,31 @@
+---
+description: Vite 플래그는 .env.local 수동 편집 안내 금지 — 명령어만
+alwaysApply: true
+---
+
+# Vite 플래그 — 명령어로만
+
+사용자에게 `VITE_*` 플래그(예: `VITE_SPACING_CATEGORY`)를 켜거나 끄라고 할 때:
+
+- **금지:** 「`.env.local`에 `VITE_…=true`를 넣으세요」처럼 **파일을 직접 고치라는 안내**
+- **필수:** 복사해 실행할 **PowerShell 명령**을 준다. (에이전트가 사용자 요청 없이 `.env.local`을 바꾸지 않는 규칙은 유지)
+
+## 켜기 (upsert)
+
+워크스페이스 루트에서:
+
+```powershell
+$p='.env.local'; if (-not (Test-Path $p)) { New-Item -ItemType File -Path $p | Out-Null }; $c = if (Test-Path $p) { Get-Content $p -Raw } else { '' }; if ($c -match '(?m)^VITE_SPACING_CATEGORY=') { $c = $c -replace '(?m)^VITE_SPACING_CATEGORY=.*$','VITE_SPACING_CATEGORY=true' } else { if ($c -and -not $c.EndsWith("`n")) { $c += "`n" }; $c += "VITE_SPACING_CATEGORY=true`n" }; Set-Content -Path $p -Value $c -NoNewline
+```
+
+다른 플래그도 같은 패턴으로 `VITE_SPACING_CATEGORY`만 해당 이름으로 바꾼다.
+
+## 끄기
+
+```powershell
+$p='.env.local'; if (Test-Path $p) { $c = Get-Content $p -Raw; $c = $c -replace '(?m)^VITE_SPACING_CATEGORY=.*$','VITE_SPACING_CATEGORY=false'; Set-Content -Path $p -Value $c -NoNewline }
+```
+
+## 적용
+
+플래그 변경 후 **Vite 전체 재시작**이 필요하다고 짧게 알린다 (`npm run dev` · `http://127.0.0.1:5173`).

@@ -1,0 +1,39 @@
+---
+description: 사용자가 붙이거나 실행할 산출물은 그 작업에 맞는 형태로 먼저 준다
+alwaysApply: true
+---
+
+# 산출물 — 사용자 작업 형태
+
+사용자에게 파일·붙여넣기·명령을 줄 때 **에이전트가 쓰기 쉬운 덤프가 아니라, 사용자가 바로 할 그 동작**에 맞춘다. 형태는 주기 전에 정한다. 「나중에 고치자」로 긴 한 줄을 먼저 주지 않는다.
+
+## 먼저 (내부)
+
+사용자가 다음에 하는 일이 뭔가. 시트 칸에 붙이기 / 터미널에 붙이기 / 파일 열기. 그 동작이 막히면 형태가 틀린 것이다.
+
+## 필수
+
+- **붙여넣기 본문만.** 표시 이름·열 제목·TSV 두 칸을 본문에 넣지 않는다.
+- **길면 파일.** 채팅에 한 덩어리로 붙이지 않는다. **행마다 파일**, **항목마다 줄**.
+- **선택·복사가 끝까지 되게.** 한 칸에 쉼표로 이어 붙인 긴 문자열 금지.
+- **명령이면 명령.** 파일을 직접 고치라는 안내 대신 복사해 실행할 PowerShell.
+- 바탕화면 파일은 **클릭 가능한 경로 링크**.
+- **파일은 위치와 함께.** 이름·상대 경로만 적지 않는다. Explorer에서 찾아 복사할 수 있게 **클릭 가능한 `file:///` 링크**와 **복사할 절대 경로**를 같이 준다. 저장소 안 파일도 같다. 여러 개면 **파일마다 줄**.
+
+```text
+❌ 2026-11-20-manuscript-toolbox-design.md
+❌ docs/superpowers/specs/2026-11-20-manuscript-toolbox-design.md
+
+✅ [2026-11-20-manuscript-toolbox-design.md](file:///C:/Users/gikan/Documents/pdf-publish-proofread/docs/superpowers/specs/2026-11-20-manuscript-toolbox-design.md)
+   `C:\Users\gikan\Documents\pdf-publish-proofread\docs\superpowers\specs\2026-11-20-manuscript-toolbox-design.md`
+```
+
+## 이미 있는 구체 규칙
+
+- 시트 `finds`: `.cursor/rules/sheet-finds-paste.mdc`
+- `VITE_*` 플래그: `.cursor/rules/vite-env-flag-commands.mdc`
+
+```text
+❌ 경제^\t경제 관념, 경제 생활, … (두 열·한 줄)
+✅ 경제.txt — 한 줄에 하나, 마지막만 빼고 쉼표. 시트 finds 칸을 더블클릭한 뒤에 붙인다.
+```
