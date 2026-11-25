@@ -43,6 +43,7 @@ import {
   globalExcludeRegistrationBlockedMessage,
   phraseSlotRegistrationBlockedMessage,
   LITERAL_FIND_FEATURE_LABEL,
+  listConsistencyUnifyEntries,
 } from '../lib/consistencyRuleLimit.js';
 import ConsistencyRegisterField from './consistency/ConsistencyRegisterField.jsx';
 import ConsistencyHintExample from './consistency/ConsistencyHintExample.jsx';
@@ -60,7 +61,7 @@ import {
 import TocBodySetupPanel from '../toc-body/components/TocBodySetupPanel.jsx';
 import { isTocBodyCheckEnabled, isUnifyCandidateFindEnabled } from '../lib/featureFlags.js';
 import { isGuestBrowseActive } from '../lib/guestBrowsePolicy.js';
-import DetailsChevron from './DetailsChevron.jsx';
+import DetailsChevron, { detailsOpenOnceRef } from './DetailsChevron.jsx';
 import TooltipGuide from './TooltipGuide.jsx';
 
 /**
@@ -222,6 +223,21 @@ export default function ConsistencyPanel({
     }
   }, [auxiliarySomeChecked]);
 
+  /** 표기 통일하기 「직접 통일형 지정하기」 — 등록 항목이 있거나 📌 가이드 중이면 펼침 */
+  const unifyEntryCount = listConsistencyUnifyEntries(customRules).length;
+  const directUnifyShouldOpen =
+    unifyEntryCount > 0 || guidePinTailWord != null;
+  const directUnifyDetailsRef = useRef(
+    /** @type {HTMLDetailsElement | null} */ (null),
+  );
+  const openDirectUnifyOnMount = detailsOpenOnceRef(directUnifyShouldOpen);
+
+  useEffect(() => {
+    if (directUnifyShouldOpen && directUnifyDetailsRef.current) {
+      directUnifyDetailsRef.current.open = true;
+    }
+  }, [directUnifyShouldOpen]);
+
   function applyCustomRules(nextRules, extra) {
     const count = countActiveRules({
       builtInEnabled,
@@ -337,9 +353,39 @@ export default function ConsistencyPanel({
     );
   }
 
+  /** 표기 통일하기 — 설명·입력·등록 목록 (추천 카드 「직접 통일형 지정하기」 또는 기존 자리) */
+  const unifyBlockBody = (
+    <div className="consistency-subsection consistency-subsection--first">
+      <p className="hint consistency-hint-block">
+        여러 단어를 입력하고 하나를 📌통일형으로 지정하세요(명사 외 가능)
+        <br />
+        <ConsistencyHintExample>
+          <span className="consistency-hint-batang">
+            조선시대, 조선˅시대
+          </span>{' '}
+          등록 후{' '}
+          <span className="consistency-hint-batang">조선시대</span>{' '}
+          📌사용자 지정 →{' '}
+          <span className="consistency-hint-batang">조선˅시대</span> 찾아
+          변경 표시
+        </ConsistencyHintExample>
+      </p>
+      <ConsistencyUnifySection
+        customRules={customRules}
+        onApplyRules={applyCustomRules}
+        consistencyDecisions={consistencyDecisions}
+        decisionByUid={decisionByUid}
+        guidePinTailWord={guidePinTailWord}
+        onGuidePinClick={onGuidePinClick}
+        hideHeading
+      />
+    </div>
+  );
+  const unifyCandidateFindOn = isUnifyCandidateFindEnabled();
+
   return (
     <div className="consistency-embed">
-      {isUnifyCandidateFindEnabled() ? (
+      {unifyCandidateFindOn ? (
         <UnifyCandidateFindPanel
           hasPdf={hasPdf}
           pageTexts={pageTexts}
@@ -367,45 +413,50 @@ export default function ConsistencyPanel({
             seriesSpacingGuideActive ? 'unify-series-spacing' : undefined
           }
           onSeriesSpacingGuideSelect={onSeriesSpacingGuideSelect}
+          directUnifySlot={
+            <details
+              ref={(el) => {
+                directUnifyDetailsRef.current = el;
+                openDirectUnifyOnMount(el);
+              }}
+              className="unify-candidate-find__ortho-spike unify-candidate-find__direct-unify consistency-unified-box"
+            >
+              <summary className="unify-candidate-find__ortho-spike-title">
+                <DetailsChevron />
+                직접 통일형 지정하기
+                {unifyEntryCount > 0 ? (
+                  <span className="panel-criteria-heading-meta">
+                    {`(${unifyEntryCount})`}
+                  </span>
+                ) : null}
+              </summary>
+              <div>
+                <div
+                  className="consistency-unify-block"
+                  data-work-guide="consistency-unify-hero"
+                >
+                  {unifyBlockBody}
+                </div>
+              </div>
+            </details>
+          }
         />
       ) : null}
       <section
         className="consistency-unified-box"
         aria-label="표기 통일 검수 기준"
       >
-        <div
-          className="consistency-unify-block"
-          data-work-guide="consistency-unify-hero"
-        >
-          <p className="printed-page-setup__title consistency-panel-section-title panel-criteria-heading">
-            표기 통일하기
-          </p>
-          <div className="consistency-subsection consistency-subsection--first">
-            <p className="hint consistency-hint-block">
-              여러 단어를 입력하고 하나를 📌통일형으로 지정하세요
-              <br />
-              <ConsistencyHintExample>
-                <span className="consistency-hint-batang">
-                  조선시대, 조선˅시대
-                </span>{' '}
-                등록 후{' '}
-                <span className="consistency-hint-batang">조선시대</span>{' '}
-                📌사용자 지정 →{' '}
-                <span className="consistency-hint-batang">조선˅시대</span> 찾아
-                변경 표시
-              </ConsistencyHintExample>
+        {unifyCandidateFindOn ? null : (
+          <div
+            className="consistency-unify-block"
+            data-work-guide="consistency-unify-hero"
+          >
+            <p className="printed-page-setup__title consistency-panel-section-title panel-criteria-heading">
+              표기 통일하기
             </p>
-            <ConsistencyUnifySection
-              customRules={customRules}
-              onApplyRules={applyCustomRules}
-              consistencyDecisions={consistencyDecisions}
-              decisionByUid={decisionByUid}
-              guidePinTailWord={guidePinTailWord}
-              onGuidePinClick={onGuidePinClick}
-              hideHeading
-            />
+            {unifyBlockBody}
           </div>
-        </div>
+        )}
 
         <p className="printed-page-setup__title consistency-panel-section-title panel-criteria-heading">
           {LITERAL_FIND_FEATURE_LABEL}
