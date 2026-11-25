@@ -83,7 +83,7 @@ describe('exportResults compose', () => {
     expect(JSON.parse(JSON.stringify(model))).toEqual(model);
   });
 
-  it('buildSpellingExportModel: hidden 그룹은 페이지 - 로 조판', () => {
+  it('buildSpellingExportModel: hidden 그룹은 행을 넣지 않는다', () => {
     const group = makeSpellingGroup();
     const model = buildSpellingExportModel({
       entries: [{ group, source: 'spelling' }],
@@ -97,9 +97,51 @@ describe('exportResults compose', () => {
       builtinFindingsCount: 1,
       totalFindings: 1,
     });
-    expect(model.rows).toHaveLength(1);
-    expect(model.rows[0].pagesHidden).toBe(true);
-    expect(model.rows[0].pageText).toBe('');
+    expect(model.rows).toHaveLength(0);
+  });
+
+  it('buildSpellingExportModel: 기계용 위치 열과 검토 빈 수정안', () => {
+    const caution = makeSpellingGroup({
+      category: 'caution',
+      find: '검토어',
+      replace: '고침',
+      pageNum: 2,
+    });
+    caution.instances[0].index = 4;
+    const builtin = makeSpellingGroup({ pageNum: 1 });
+    builtin.instances[0].index = 0;
+    const model = buildSpellingExportModel({
+      entries: [
+        { group: builtin, source: 'spelling' },
+        { group: caution, source: 'spelling' },
+      ],
+      formatPageLabel,
+      isInstanceVisible: alwaysVisible,
+      groupVisibilityMode: allVisibleMode,
+      visibleInstanceCount: visibleCount,
+      cautionCriteriaCount: 1,
+      cautionFindingsCount: 1,
+      builtinCriteriaCount: 1,
+      builtinFindingsCount: 1,
+      totalFindings: 2,
+      pdfFileName: 'sample.pdf',
+      pdfPages: 10,
+      pageTexts: [
+        { pageNum: 1, text: '되요입니다' },
+        { pageNum: 2, text: 'xxxx검토어yyyy' },
+      ],
+    });
+    const ruleRow = model.rows.find((r) => r.category === '맞춤법 규칙');
+    const cautionRow = model.rows.find((r) => r.category === '편집자 검토 필요');
+    expect(ruleRow?.suggestedText).toBe('돼요');
+    expect(ruleRow?.pageNum).toBe(1);
+    expect(ruleRow?.start).toBe(0);
+    expect(ruleRow?.end).toBe(2);
+    expect(ruleRow?.pdfName).toBe('sample.pdf');
+    expect(ruleRow?.pdfPages).toBe(10);
+    expect(ruleRow?.rowId).toContain('1:0:2:');
+    expect(ruleRow?.pageFp).toBeTruthy();
+    expect(cautionRow?.suggestedText).toBe('');
   });
 
   it('buildSpellingExportModel: 발견 문구·페이지를 건별 행으로 푼다', () => {
@@ -178,6 +220,7 @@ describe('exportResults compose', () => {
     expect(model.rows).toHaveLength(1);
     expect(model.rows[0].label).toBe('컴퓨터');
     expect(model.rows[0].matchedText).toBe('컴퓨터');
+    expect(model.rows[0].suggestedText).toBe('');
     expect(model.rows[0].pageText).toBe('3P');
     expect(JSON.parse(JSON.stringify(model))).toEqual(model);
   });

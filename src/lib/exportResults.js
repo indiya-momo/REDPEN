@@ -18,6 +18,13 @@ import {
 import { formatAuxiliaryVerbResultLabel } from './patternDisplayLabels.js';
 import { groupPhraseSlotInstancesByFill } from './phraseSlotResultGroups.js';
 import { encodeSpacesVisible } from './spaceVisibleText.js';
+import {
+  EXCEL_ROUNDTRIP_EDIT_GUIDE,
+  MACHINE_COL_HEADERS,
+  buildMachineExportFields,
+  buildPageFingerprintMap,
+  setExcelTextCell,
+} from './exportExcelRoundtrip.js';
 
 const AUXILIARY_EXPORT_CATEGORY = AUXILIARY_VERB_BADGE_LABEL;
 const UNIFY_CANDIDATE_EXPORT_CATEGORY = '표기 통일 추천';
@@ -28,6 +35,7 @@ const HEADER_BG = 'FF3E2723';
 const HEADER_FG = 'FFFFFFFF';
 const CAUTION_BG = 'FFD7CCC8';
 const BUILTIN_BG = 'FFEFEBE9';
+const MACHINE_HEADER_BG = 'FF5D4037';
 const THIN_BORDER_COLOR = 'FFBBBBBB';
 
 const THIN = { style: 'thin', color: { argb: THIN_BORDER_COLOR } };
@@ -35,10 +43,14 @@ const CELL_BORDER = { top: THIN, bottom: THIN, left: THIN, right: THIN };
 
 const EXCEL_GUIDE_FONT = { name: 'Arial', size: 9, color: { argb: 'FF555555' } };
 
-/** 엑셀 1행 안내 — 잘림 시 행·열 자동 맞춤 (굵은 구간 = 단축키~열 너비) */
+/** 엑셀 1행 안내 — roundtrip + 잘림 시 행·열 자동 맞춤 */
 const EXCEL_CLIP_GUIDE_RICHTEXT = [
   {
-    text: '※ 내용이 잘려 보이면 ',
+    text: `${EXCEL_ROUNDTRIP_EDIT_GUIDE} `,
+    font: { ...EXCEL_GUIDE_FONT, bold: true },
+  },
+  {
+    text: '내용이 잘려 보이면 ',
     font: { ...EXCEL_GUIDE_FONT, bold: false },
   },
   {
@@ -49,6 +61,24 @@ const EXCEL_CLIP_GUIDE_RICHTEXT = [
     text: ' 이용하세요',
     font: { ...EXCEL_GUIDE_FONT, bold: false },
   },
+];
+
+const SPELLING_HUMAN_HEADERS = [
+  '구분',
+  '묶음',
+  '기준',
+  '설명',
+  '발견 문구',
+  '수정안',
+  '페이지',
+];
+const CONSISTENCY_HUMAN_HEADERS = [
+  '구분',
+  '기준',
+  '설명',
+  '발견 문구',
+  '수정안',
+  '페이지',
 ];
 
 // ── 행 높이 계산 ──────────────────────────────────────────────────
@@ -321,8 +351,54 @@ export function downloadXlsxBuffer(buffer, filename) {
  *   pageStrike: boolean,
  *   isCaution: boolean,
  *   pagesHidden: boolean,
+ *   rowId?: string,
+ *   pageNum?: number | '',
+ *   start?: number | '',
+ *   end?: number | '',
+ *   pdfName?: string,
+ *   pdfPages?: number | '',
+ *   pageFp?: string,
  * }} SpellingExportRow
  */
+
+/**
+ * @param {object} options
+ * @returns {{
+ *   pdfName: string,
+ *   pdfPages: number | '',
+ *   pageFpByNum: Map<number, string>,
+ * }}
+ */
+function exportPdfMetaFromOptions(options = {}) {
+  const pdfName = String(options.pdfFileName ?? options.pdfName ?? '').trim();
+  const pagesRaw = options.pdfPages ?? options.numPages;
+  const pdfPages =
+    pagesRaw === '' || pagesRaw == null || !Number.isFinite(Number(pagesRaw))
+      ? ''
+      : Number(pagesRaw);
+  const pageFpByNum =
+    options.pageFpByNum instanceof Map
+      ? options.pageFpByNum
+      : buildPageFingerprintMap(options.pageTexts);
+  return { pdfName, pdfPages, pageFpByNum };
+}
+
+/**
+ * @param {SpellingExportRow | object} row
+ * @param {ReturnType<typeof buildMachineExportFields>} machine
+ */
+function withMachineFields(row, machine) {
+  return {
+    ...row,
+    rowId: machine.rowId,
+    pageNum: machine.pageNum,
+    start: machine.start,
+    end: machine.end,
+    pdfName: machine.pdfName,
+    pdfPages: machine.pdfPages,
+    pageFp: machine.pageFp,
+  };
+}
 
 /**
  * @param {import('../lib/ruleEngine.js').MatchInstance} inst
@@ -378,21 +454,23 @@ function formatInstancePageText(inst, indexOnPage, totalOnPage, formatPageLabel)
  * }} options
  * @returns {SpellingExportModel}
  */
-export function buildSpellingExportModel({
-  entries,
-  formatPageLabel,
-  isInstanceVisible,
-  groupVisibilityMode,
-  visibleInstanceCount,
-  cautionCriteriaCount,
-  cautionFindingsCount,
-  builtinCriteriaCount,
-  builtinFindingsCount,
-  totalFindings,
-  cautionSelected = true,
-  builtinSelected = true,
-  filename = '맞춤법_검사결과.xlsx',
-}) {
+export function buildSpellingExportModel(options) {
+  const {
+    entries,
+    formatPageLabel,
+    isInstanceVisible,
+    groupVisibilityMode,
+    visibleInstanceCount,
+    cautionCriteriaCount,
+    cautionFindingsCount,
+    builtinCriteriaCount,
+    builtinFindingsCount,
+    totalFindings,
+    cautionSelected = true,
+    builtinSelected = true,
+    filename = '맞춤법_검사결과.xlsx',
+  } = options;
+  const { pdfName, pdfPages, pageFpByNum } = exportPdfMetaFromOptions(options);
   const summary = {
     cautionCriteriaCount,
     cautionFindingsCount,
@@ -409,43 +487,70 @@ export function buildSpellingExportModel({
   void visibleInstanceCount;
 
   for (const { group, source } of orderedEntries) {
+    if (group.category === 'manuscript-search') {
+      const hasReplace = (group.instances ?? []).some((inst) =>
+        String(inst.suggestedText ?? inst.replace ?? group.replace ?? '').trim(),
+      );
+      if (!hasReplace) continue;
+    }
     const isCaution = group.category === 'caution';
+    const isManual = group.category === 'manual';
     const isSpacing = String(group.category ?? '').startsWith('spacing:');
     const category = isCaution
       ? '편집자 검토 필요'
-      : isSpacing
-        ? '띄어쓰기'
-        : '맞춤법 규칙';
+      : isManual
+        ? '수정 추가'
+        : isSpacing
+          ? '띄어쓰기'
+          : '맞춤법 규칙';
     const tipText =
       (group.tip || '').trim() ||
-      (source === 'spelling' && !isCaution && !isSpacing
+      (source === 'spelling' && !isCaution && !isSpacing && !isManual
         ? getBuiltInTip(group.find, group.replace, group.spellingRuleId) || ''
         : '');
     const visMode = groupVisibilityMode ? groupVisibilityMode(source, group) : 'visible';
-    const pagesHidden = visMode === 'hidden';
+    if (visMode === 'hidden') continue;
     const criteriaLabel = getEntryLabel(group, source);
     const pills = buildInstancePills(group.instances ?? []);
     const fallbackSuggested = String(group.replace ?? '').trim();
+    const sourceKey = `${category}|${criteriaLabel}|${group.cautionId ?? group.find ?? ''}`;
 
     for (const { inst, indexOnPage, totalOnPage } of pills) {
-      const hiddenInst = isInstanceVisible
-        ? !isInstanceVisible(source, group, inst)
-        : false;
-      rows.push({
-        category,
-        groupLabel: group.dividerLabel || '-',
-        dividerGroupKey: String(group.dividerGroup ?? ''),
-        label: criteriaLabel,
-        tip: tipText,
-        matchedText: String(inst.matchedText ?? '').trim(),
-        suggestedText: String(inst.suggestedText ?? fallbackSuggested).trim(),
-        pageText: pagesHidden
-          ? ''
-          : formatInstancePageText(inst, indexOnPage, totalOnPage, formatPageLabel),
-        pageStrike: pagesHidden ? false : hiddenInst,
-        isCaution,
-        pagesHidden,
+      if (isInstanceVisible && !isInstanceVisible(source, group, inst)) continue;
+      const matchedText = String(inst.matchedText ?? '').trim();
+      const suggestedText = isCaution
+        ? ''
+        : String(inst.suggestedText ?? fallbackSuggested).trim();
+      const machine = buildMachineExportFields({
+        inst,
+        sourceKey,
+        pdfName,
+        pdfPages,
+        pageFpByNum,
       });
+      rows.push(
+        withMachineFields(
+          {
+            category,
+            groupLabel: group.dividerLabel || '-',
+            dividerGroupKey: String(group.dividerGroup ?? ''),
+            label: criteriaLabel,
+            tip: tipText,
+            matchedText,
+            suggestedText,
+            pageText: formatInstancePageText(
+              inst,
+              indexOnPage,
+              totalOnPage,
+              formatPageLabel,
+            ),
+            pageStrike: false,
+            isCaution,
+            pagesHidden: false,
+          },
+          machine,
+        ),
+      );
     }
   }
 
@@ -464,9 +569,31 @@ export function buildSpellingExportModel({
  * @param {object} row
  * @returns {SpellingExportRow}
  */
+function emptyMachineFields() {
+  return {
+    rowId: '',
+    pageNum: /** @type {number | ''} */ (''),
+    start: /** @type {number | ''} */ (''),
+    end: /** @type {number | ''} */ (''),
+    pdfName: '',
+    pdfPages: /** @type {number | ''} */ (''),
+    pageFp: '',
+  };
+}
+
 function normalizeSpellingExportRow(row) {
   if (row && typeof row.matchedText === 'string' && 'pageText' in row) {
-    return /** @type {SpellingExportRow} */ (row);
+    return /** @type {SpellingExportRow} */ ({
+      ...emptyMachineFields(),
+      ...row,
+      rowId: String(row.rowId ?? ''),
+      pageNum: row.pageNum ?? '',
+      start: row.start ?? '',
+      end: row.end ?? '',
+      pdfName: String(row.pdfName ?? ''),
+      pdfPages: row.pdfPages ?? '',
+      pageFp: String(row.pageFp ?? ''),
+    });
   }
   const pageRuns = Array.isArray(row?.pageRuns) ? row.pageRuns : [];
   return {
@@ -481,7 +608,84 @@ function normalizeSpellingExportRow(row) {
     pageStrike: false,
     isCaution: Boolean(row?.isCaution),
     pagesHidden: Boolean(row?.pagesHidden),
+    ...emptyMachineFields(),
   };
+}
+
+/**
+ * @param {import('exceljs').Worksheet} ws
+ * @param {number} colCount
+ * @param {string} summaryLine
+ */
+function writeExportGuideRows(ws, colCount, summaryLine) {
+  const lastCol = colCount;
+  ws.mergeCells(1, 1, 1, lastCol);
+  const guideCell = ws.getCell('A1');
+  guideCell.value = { richText: EXCEL_CLIP_GUIDE_RICHTEXT };
+  guideCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFF9C4' } };
+  guideCell.alignment = { horizontal: 'center', vertical: 'center', wrapText: true };
+  guideCell.border = CELL_BORDER;
+  ws.getRow(1).height = 36;
+
+  ws.mergeCells(2, 1, 2, lastCol);
+  const summaryCell = ws.getCell('A2');
+  summaryCell.value = summaryLine;
+  summaryCell.font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FF000000' } };
+  summaryCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFFFF' } };
+  summaryCell.alignment = { horizontal: 'left', vertical: 'center', indent: 1, wrapText: false };
+  summaryCell.border = CELL_BORDER;
+  ws.getRow(2).height = 30;
+}
+
+/**
+ * @param {import('exceljs').Row} headerRow
+ * @param {string[]} humanHeaders
+ */
+function writeExportHeaderRow(headerRow, humanHeaders) {
+  humanHeaders.forEach((h, i) => {
+    const cell = headerRow.getCell(i + 1);
+    cell.value = h;
+    applyStyle(cell, { bg: HEADER_BG, fg: HEADER_FG, bold: true, hAlign: 'center' });
+  });
+  MACHINE_COL_HEADERS.forEach((h, i) => {
+    const cell = headerRow.getCell(humanHeaders.length + i + 1);
+    cell.value = h;
+    applyStyle(cell, {
+      bg: MACHINE_HEADER_BG,
+      fg: HEADER_FG,
+      bold: true,
+      hAlign: 'center',
+      size: 8,
+    });
+  });
+  headerRow.height = 34;
+}
+
+/**
+ * @param {import('exceljs').Row} row
+ * @param {number} startCol
+ * @param {object} rowData
+ * @param {string} bg
+ */
+function writeMachineExportCells(row, startCol, rowData, bg) {
+  const values = [
+    rowData.rowId ?? '',
+    rowData.pageNum ?? '',
+    rowData.start ?? '',
+    rowData.end ?? '',
+    rowData.pdfName ?? '',
+    rowData.pdfPages ?? '',
+    rowData.pageFp ?? '',
+  ];
+  values.forEach((value, i) => {
+    const cell = row.getCell(startCol + i);
+    if (typeof value === 'number') {
+      cell.value = value;
+    } else {
+      setExcelTextCell(cell, value);
+    }
+    applyStyle(cell, { bg, hAlign: 'left', vAlign: 'top', wrap: true, size: 9 });
+  });
 }
 
 /**
@@ -490,7 +694,18 @@ function normalizeSpellingExportRow(row) {
  */
 function normalizeConsistencyExportRow(row) {
   if (row && typeof row.matchedText === 'string' && 'pageText' in row) {
-    return /** @type {ConsistencyExportRow} */ (row);
+    return /** @type {ConsistencyExportRow} */ ({
+      ...emptyMachineFields(),
+      ...row,
+      suggestedText: String(row.suggestedText ?? ''),
+      rowId: String(row.rowId ?? ''),
+      pageNum: row.pageNum ?? '',
+      start: row.start ?? '',
+      end: row.end ?? '',
+      pdfName: String(row.pdfName ?? ''),
+      pdfPages: row.pdfPages ?? '',
+      pageFp: String(row.pageFp ?? ''),
+    });
   }
   const pageRuns = Array.isArray(row?.pageRuns) ? row.pageRuns : [];
   return {
@@ -498,10 +713,12 @@ function normalizeConsistencyExportRow(row) {
     label: String(row?.label ?? ''),
     tip: String(row?.tip ?? ''),
     matchedText: String(row?.label ?? ''),
+    suggestedText: '',
     pageText: pageRunsToPlainText(pageRuns),
     pageStrike: false,
     isAuxiliary: Boolean(row?.isAuxiliary),
     pagesHidden: Boolean(row?.pagesHidden),
+    ...emptyMachineFields(),
   };
 }
 
@@ -515,103 +732,47 @@ export async function writeSpellingWorkbook(model) {
   const wb = new ExcelJS.Workbook();
   wb.creator = '인디야';
   const ws = wb.addWorksheet(model.sheetName || '맞춤법 확인');
+  const colCount = SPELLING_HUMAN_HEADERS.length + MACHINE_COL_HEADERS.length;
 
   ws.columns = [
     { width: 14 },
-    { width: 18 },
+    { width: 14 },
+    { width: 24 },
     { width: 28 },
-    { width: 36 },
-    { width: 22 },
+    { width: 18 },
     { width: 16 },
+    { width: 12 },
+    { width: 22 },
+    { width: 10 },
+    { width: 10 },
+    { width: 10 },
+    { width: 18 },
+    { width: 10 },
     { width: 12 },
   ];
 
-  ws.mergeCells('A1:G1');
-  const guideCell = ws.getCell('A1');
-  guideCell.value = { richText: EXCEL_CLIP_GUIDE_RICHTEXT };
-  guideCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFF9C4' } };
-  guideCell.alignment = { horizontal: 'center', vertical: 'center', wrapText: false };
-  guideCell.border = CELL_BORDER;
-  ws.getRow(1).height = 30;
+  writeExportGuideRows(ws, colCount, model.summaryLine || '');
+  writeExportHeaderRow(ws.getRow(3), SPELLING_HUMAN_HEADERS);
 
-  ws.mergeCells('A2:G2');
-  const summaryCell = ws.getCell('A2');
-  summaryCell.value = model.summaryLine;
-  summaryCell.font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FF000000' } };
-  summaryCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFFFF' } };
-  summaryCell.alignment = { horizontal: 'left', vertical: 'center', indent: 1, wrapText: false };
-  summaryCell.border = CELL_BORDER;
-  ws.getRow(2).height = 30;
-
-  ['구분', '묶음', '기준', '설명', '발견 문구', '수정안', '페이지'].forEach((h, i) => {
-    const cell = ws.getRow(3).getCell(i + 1);
-    cell.value = h;
-    applyStyle(cell, { bg: HEADER_BG, fg: HEADER_FG, bold: true, hAlign: 'center' });
-  });
-  ws.getRow(3).height = 30;
-
-  const categoryRanges = [];
-  let currentRange = null;
-  const groupRanges = [];
-  let currentGroupRange = null;
-  const criteriaRanges = [];
-  let currentCriteriaRange = null;
   const rows = (model.rows ?? []).map(normalizeSpellingExportRow);
 
   for (let i = 0; i < rows.length; i++) {
     const excelRowNum = i + 4;
     const rowData = rows[i];
     const bg = rowData.isCaution ? CAUTION_BG : BUILTIN_BG;
-    const groupKey = `${rowData.category}\0${rowData.dividerGroupKey ?? ''}`;
-    const criteriaKey = `${groupKey}\0${rowData.label}\0${rowData.tip}`;
-
-    if (!currentRange || currentRange.category !== rowData.category) {
-      if (currentRange) categoryRanges.push(currentRange);
-      currentRange = { start: excelRowNum, end: excelRowNum, category: rowData.category, bg };
-    } else {
-      currentRange.end = excelRowNum;
-    }
-
-    if (!currentGroupRange || currentGroupRange.key !== groupKey) {
-      if (currentGroupRange) groupRanges.push(currentGroupRange);
-      currentGroupRange = {
-        start: excelRowNum,
-        end: excelRowNum,
-        key: groupKey,
-        label: rowData.groupLabel,
-        bg,
-      };
-    } else {
-      currentGroupRange.end = excelRowNum;
-    }
-
-    if (!currentCriteriaRange || currentCriteriaRange.key !== criteriaKey) {
-      if (currentCriteriaRange) criteriaRanges.push(currentCriteriaRange);
-      currentCriteriaRange = {
-        start: excelRowNum,
-        end: excelRowNum,
-        key: criteriaKey,
-        label: rowData.label,
-        tip: rowData.tip,
-        bg,
-      };
-    } else {
-      currentCriteriaRange.end = excelRowNum;
-    }
-
-    const linesMatch = estimateLines(rowData.matchedText, 22);
+    const linesMatch = estimateLines(rowData.matchedText, 18);
     const linesSuggest = estimateLines(rowData.suggestedText, 16);
-    const linesPage = estimateLines(rowData.pagesHidden ? '-' : rowData.pageText, 12);
+    const linesPage = estimateLines(rowData.pageText, 12);
     const row = ws.getRow(excelRowNum);
     row.height = rowHeightPt(linesMatch, linesSuggest, linesPage, 2);
 
     const catCell = row.getCell(1);
     catCell.value = rowData.category;
-    applyStyle(catCell, { bg, hAlign: 'center', vAlign: 'center' });
+    applyStyle(catCell, { bg, hAlign: 'center', vAlign: 'top' });
 
     const groupCell = row.getCell(2);
     groupCell.value = rowData.groupLabel;
-    applyStyle(groupCell, { bg, hAlign: 'center', vAlign: 'center' });
+    applyStyle(groupCell, { bg, hAlign: 'center', vAlign: 'top' });
 
     const labelCell = row.getCell(3);
     labelCell.value = rowData.label;
@@ -622,64 +783,18 @@ export async function writeSpellingWorkbook(model) {
     applyStyle(tipCell, { bg, hAlign: 'left', vAlign: 'top', wrap: true });
 
     const matchCell = row.getCell(5);
-    matchCell.value = rowData.matchedText;
+    setExcelTextCell(matchCell, rowData.matchedText);
     applyStyle(matchCell, { bg, hAlign: 'left', vAlign: 'top', wrap: true });
 
     const suggestCell = row.getCell(6);
-    suggestCell.value = rowData.suggestedText;
+    setExcelTextCell(suggestCell, rowData.suggestedText);
     applyStyle(suggestCell, { bg, hAlign: 'left', vAlign: 'top', wrap: true });
 
     const pagesCell = row.getCell(7);
-    if (rowData.pagesHidden) {
-      pagesCell.value = '-';
-    } else if (rowData.pageStrike) {
-      pagesCell.value = {
-        richText: [
-          {
-            text: rowData.pageText,
-            font: { name: 'Arial', size: 10, strike: true, color: { argb: 'FF999999' } },
-          },
-        ],
-      };
-    } else {
-      pagesCell.value = rowData.pageText;
-    }
+    pagesCell.value = rowData.pageText || '';
     applyStyle(pagesCell, { bg, hAlign: 'left', vAlign: 'top', wrap: true });
-  }
 
-  if (currentRange) categoryRanges.push(currentRange);
-  if (currentGroupRange) groupRanges.push(currentGroupRange);
-  if (currentCriteriaRange) criteriaRanges.push(currentCriteriaRange);
-
-  for (const range of categoryRanges) {
-    if (range.start < range.end) {
-      ws.mergeCells(range.start, 1, range.end, 1);
-    }
-    const cell = ws.getCell(range.start, 1);
-    cell.value = range.category;
-    applyStyle(cell, { bg: range.bg, hAlign: 'center', vAlign: 'middle' });
-  }
-
-  for (const range of groupRanges) {
-    if (range.start < range.end) {
-      ws.mergeCells(range.start, 2, range.end, 2);
-    }
-    const cell = ws.getCell(range.start, 2);
-    cell.value = range.label;
-    applyStyle(cell, { bg: range.bg, hAlign: 'center', vAlign: 'middle' });
-  }
-
-  for (const range of criteriaRanges) {
-    if (range.start < range.end) {
-      ws.mergeCells(range.start, 3, range.end, 3);
-      ws.mergeCells(range.start, 4, range.end, 4);
-    }
-    const labelCell = ws.getCell(range.start, 3);
-    labelCell.value = range.label;
-    applyStyle(labelCell, { bg: range.bg, hAlign: 'left', vAlign: 'middle', wrap: true });
-    const tipCell = ws.getCell(range.start, 4);
-    tipCell.value = range.tip;
-    applyStyle(tipCell, { bg: range.bg, hAlign: 'left', vAlign: 'middle', wrap: true });
+    writeMachineExportCells(row, SPELLING_HUMAN_HEADERS.length + 1, rowData, bg);
   }
 
   return wb.xlsx.writeBuffer();
@@ -794,12 +909,33 @@ function consistencyEntryLabel(group) {
  *   label: string,
  *   tip: string,
  *   matchedText: string,
+ *   suggestedText: string,
  *   pageText: string,
  *   pageStrike: boolean,
  *   isAuxiliary: boolean,
  *   pagesHidden: boolean,
+ *   rowId?: string,
+ *   pageNum?: number | '',
+ *   start?: number | '',
+ *   end?: number | '',
+ *   pdfName?: string,
+ *   pdfPages?: number | '',
+ *   pageFp?: string,
  * }} ConsistencyExportRow
  */
+
+/**
+ * 표기 통일 수정안 — 📌통일형만 채움. 나머지는 빈 칸.
+ * @param {string} tipText
+ * @param {object} group
+ * @param {object} inst
+ * @param {import('./ruleTypes.js').Rule[]} customRules
+ */
+function consistencySuggestedForExport(tipText, group, inst, customRules) {
+  if (tipText !== UNIFY_PINNED_EXPORT_TIP) return '';
+  const pinned = getConsistencyUnifyPinnedTailWord(customRules);
+  return String(inst.suggestedText ?? pinned ?? group.replace ?? '').trim();
+}
 
 /**
  * @typedef {{
@@ -869,29 +1005,31 @@ export function formatUnifyCandidateExcelSummaryLine(itemCount, findingsCount) {
  * }} options
  * @returns {ConsistencyExportModel}
  */
-export function buildConsistencyExportModel({
-  entries,
-  formatPageLabel,
-  isInstanceVisible,
-  groupVisibilityMode,
-  visibleInstanceCount,
-  literalCriteriaCount,
-  literalFindingsCount,
-  unifyCriteriaCount = 0,
-  unifyFindingsCount = 0,
-  commonStringCriteriaCount,
-  commonStringFindingsCount,
-  auxiliaryCriteriaCount,
-  auxiliaryFindingsCount,
-  totalFindings,
-  literalSelected = true,
-  unifySelected = true,
-  commonStringSelected = true,
-  auxiliarySelected = true,
-  customRules = [],
-  recommendEntries = [],
-  filename = '표기통일_검사결과.xlsx',
-}) {
+export function buildConsistencyExportModel(options) {
+  const {
+    entries,
+    formatPageLabel,
+    isInstanceVisible,
+    groupVisibilityMode,
+    visibleInstanceCount,
+    literalCriteriaCount,
+    literalFindingsCount,
+    unifyCriteriaCount = 0,
+    unifyFindingsCount = 0,
+    commonStringCriteriaCount,
+    commonStringFindingsCount,
+    auxiliaryCriteriaCount,
+    auxiliaryFindingsCount,
+    totalFindings,
+    literalSelected = true,
+    unifySelected = true,
+    commonStringSelected = true,
+    auxiliarySelected = true,
+    customRules = [],
+    recommendEntries = [],
+    filename = '표기통일_검사결과.xlsx',
+  } = options;
+  const { pdfName, pdfPages, pageFpByNum } = exportPdfMetaFromOptions(options);
   const summary = {
     literalCriteriaCount,
     literalFindingsCount,
@@ -915,7 +1053,7 @@ export function buildConsistencyExportModel({
     const category = consistencyCategoryOf(group, customRules);
     const isAuxiliary = category === AUXILIARY_EXPORT_CATEGORY;
     const visMode = groupVisibilityMode ? groupVisibilityMode(source, group) : 'visible';
-    const pagesHidden = visMode === 'hidden';
+    if (visMode === 'hidden') continue;
     const tipText = consistencyExportTip(group, customRules);
 
     // 공통 항목 — 채워진 표기별로 기준을 나누고, 발견은 건별 행
@@ -924,22 +1062,44 @@ export function buildConsistencyExportModel({
       for (const fill of fills) {
         const pills = buildInstancePills(fill.instances);
         const fillLabel = encodeSpacesVisible(fill.text);
+        const sourceKey = `${category}|${fillLabel}`;
         for (const { inst, indexOnPage, totalOnPage } of pills) {
-          const hiddenInst = isInstanceVisible
-            ? !isInstanceVisible(source, group, inst)
-            : false;
-          rows.push({
-            category,
-            label: fillLabel,
-            tip: tipText,
-            matchedText: String(inst.matchedText ?? fill.text ?? '').trim(),
-            pageText: pagesHidden
-              ? ''
-              : formatInstancePageText(inst, indexOnPage, totalOnPage, formatPageLabel),
-            pageStrike: pagesHidden ? false : hiddenInst,
-            isAuxiliary: false,
-            pagesHidden,
+          if (isInstanceVisible && !isInstanceVisible(source, group, inst)) {
+            continue;
+          }
+          const machine = buildMachineExportFields({
+            inst,
+            sourceKey,
+            pdfName,
+            pdfPages,
+            pageFpByNum,
           });
+          rows.push(
+            withMachineFields(
+              {
+                category,
+                label: fillLabel,
+                tip: tipText,
+                matchedText: String(inst.matchedText ?? fill.text ?? '').trim(),
+                suggestedText: consistencySuggestedForExport(
+                  tipText,
+                  group,
+                  inst,
+                  customRules,
+                ),
+                pageText: formatInstancePageText(
+                  inst,
+                  indexOnPage,
+                  totalOnPage,
+                  formatPageLabel,
+                ),
+                pageStrike: false,
+                isAuxiliary: false,
+                pagesHidden: false,
+              },
+              machine,
+            ),
+          );
         }
       }
       continue;
@@ -947,22 +1107,42 @@ export function buildConsistencyExportModel({
 
     const pills = buildInstancePills(group.instances ?? []);
     const criteriaLabel = consistencyEntryLabel(group);
+    const sourceKey = `${category}|${criteriaLabel}`;
     for (const { inst, indexOnPage, totalOnPage } of pills) {
-      const hiddenInst = isInstanceVisible
-        ? !isInstanceVisible(source, group, inst)
-        : false;
-      rows.push({
-        category,
-        label: criteriaLabel,
-        tip: tipText,
-        matchedText: String(inst.matchedText ?? '').trim(),
-        pageText: pagesHidden
-          ? ''
-          : formatInstancePageText(inst, indexOnPage, totalOnPage, formatPageLabel),
-        pageStrike: pagesHidden ? false : hiddenInst,
-        isAuxiliary,
-        pagesHidden,
+      if (isInstanceVisible && !isInstanceVisible(source, group, inst)) continue;
+      const machine = buildMachineExportFields({
+        inst,
+        sourceKey,
+        pdfName,
+        pdfPages,
+        pageFpByNum,
       });
+      rows.push(
+        withMachineFields(
+          {
+            category,
+            label: criteriaLabel,
+            tip: tipText,
+            matchedText: String(inst.matchedText ?? '').trim(),
+            suggestedText: consistencySuggestedForExport(
+              tipText,
+              group,
+              inst,
+              customRules,
+            ),
+            pageText: formatInstancePageText(
+              inst,
+              indexOnPage,
+              totalOnPage,
+              formatPageLabel,
+            ),
+            pageStrike: false,
+            isAuxiliary,
+            pagesHidden: false,
+          },
+          machine,
+        ),
+      );
     }
   }
 
@@ -977,23 +1157,37 @@ export function buildConsistencyExportModel({
       consistencyEntryLabel(group) || group.label || group.find || '';
     const tip = String(group.tip ?? '').trim();
     const pills = buildInstancePills(group.instances);
+    const sourceKey = `${UNIFY_CANDIDATE_EXPORT_CATEGORY}|${criteriaLabel}`;
     for (const { inst, indexOnPage, totalOnPage } of pills) {
       recommendFindings += 1;
-      recommendRows.push({
-        category: UNIFY_CANDIDATE_EXPORT_CATEGORY,
-        label: criteriaLabel,
-        tip,
-        matchedText: String(inst.matchedText ?? '').trim(),
-        pageText: formatInstancePageText(
-          inst,
-          indexOnPage,
-          totalOnPage,
-          formatPageLabel,
-        ),
-        pageStrike: false,
-        isAuxiliary: false,
-        pagesHidden: false,
+      const machine = buildMachineExportFields({
+        inst,
+        sourceKey,
+        pdfName,
+        pdfPages,
+        pageFpByNum,
       });
+      recommendRows.push(
+        withMachineFields(
+          {
+            category: UNIFY_CANDIDATE_EXPORT_CATEGORY,
+            label: criteriaLabel,
+            tip,
+            matchedText: String(inst.matchedText ?? '').trim(),
+            suggestedText: '',
+            pageText: formatInstancePageText(
+              inst,
+              indexOnPage,
+              totalOnPage,
+              formatPageLabel,
+            ),
+            pageStrike: false,
+            isAuxiliary: false,
+            pagesHidden: false,
+          },
+          machine,
+        ),
+      );
     }
   }
 
@@ -1031,80 +1225,42 @@ export function buildConsistencyExportModel({
  */
 function addConsistencyWorksheet(wb, sheet) {
   const ws = wb.addWorksheet(sheet.sheetName || '표기 통일 확인');
+  const colCount = CONSISTENCY_HUMAN_HEADERS.length + MACHINE_COL_HEADERS.length;
 
   ws.columns = [
-    { width: 18 },
+    { width: 16 },
+    { width: 24 },
     { width: 28 },
-    { width: 36 },
+    { width: 18 },
+    { width: 16 },
+    { width: 12 },
     { width: 22 },
+    { width: 10 },
+    { width: 10 },
+    { width: 10 },
+    { width: 18 },
+    { width: 10 },
     { width: 12 },
   ];
 
-  ws.mergeCells('A1:E1');
-  const guideCell = ws.getCell('A1');
-  guideCell.value = { richText: EXCEL_CLIP_GUIDE_RICHTEXT };
-  guideCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFF9C4' } };
-  guideCell.alignment = { horizontal: 'center', vertical: 'center', wrapText: false };
-  guideCell.border = CELL_BORDER;
-  ws.getRow(1).height = 30;
+  writeExportGuideRows(ws, colCount, sheet.summaryLine || '');
+  writeExportHeaderRow(ws.getRow(3), CONSISTENCY_HUMAN_HEADERS);
 
-  ws.mergeCells('A2:E2');
-  const summaryCell = ws.getCell('A2');
-  summaryCell.value = sheet.summaryLine;
-  summaryCell.font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FF000000' } };
-  summaryCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFFFF' } };
-  summaryCell.alignment = { horizontal: 'left', vertical: 'center', indent: 1, wrapText: false };
-  summaryCell.border = CELL_BORDER;
-  ws.getRow(2).height = 30;
-
-  ['구분', '기준', '설명', '발견 문구', '페이지'].forEach((h, i) => {
-    const cell = ws.getRow(3).getCell(i + 1);
-    cell.value = h;
-    applyStyle(cell, { bg: HEADER_BG, fg: HEADER_FG, bold: true, hAlign: 'center' });
-  });
-  ws.getRow(3).height = 30;
-
-  const categoryRanges = [];
-  let currentRange = null;
-  const criteriaRanges = [];
-  let currentCriteriaRange = null;
   const rows = (sheet.rows ?? []).map(normalizeConsistencyExportRow);
 
   for (let i = 0; i < rows.length; i++) {
     const excelRowNum = i + 4;
     const rowData = rows[i];
     const bg = rowData.isAuxiliary ? CAUTION_BG : BUILTIN_BG;
-    const criteriaKey = `${rowData.category}\0${rowData.label}\0${rowData.tip}`;
-
-    if (!currentRange || currentRange.category !== rowData.category) {
-      if (currentRange) categoryRanges.push(currentRange);
-      currentRange = { start: excelRowNum, end: excelRowNum, category: rowData.category, bg };
-    } else {
-      currentRange.end = excelRowNum;
-    }
-
-    if (!currentCriteriaRange || currentCriteriaRange.key !== criteriaKey) {
-      if (currentCriteriaRange) criteriaRanges.push(currentCriteriaRange);
-      currentCriteriaRange = {
-        start: excelRowNum,
-        end: excelRowNum,
-        key: criteriaKey,
-        label: rowData.label,
-        tip: rowData.tip,
-        bg,
-      };
-    } else {
-      currentCriteriaRange.end = excelRowNum;
-    }
-
-    const linesMatch = estimateLines(rowData.matchedText, 22);
-    const linesPage = estimateLines(rowData.pagesHidden ? '-' : rowData.pageText, 12);
+    const linesMatch = estimateLines(rowData.matchedText, 18);
+    const linesSuggest = estimateLines(rowData.suggestedText, 16);
+    const linesPage = estimateLines(rowData.pageText, 12);
     const row = ws.getRow(excelRowNum);
-    row.height = rowHeightPt(linesMatch, linesPage, 2);
+    row.height = rowHeightPt(linesMatch, linesSuggest, linesPage, 2);
 
     const catCell = row.getCell(1);
     catCell.value = rowData.category;
-    applyStyle(catCell, { bg, hAlign: 'center', vAlign: 'center' });
+    applyStyle(catCell, { bg, hAlign: 'center', vAlign: 'top' });
 
     const labelCell = row.getCell(2);
     labelCell.value = rowData.label;
@@ -1115,50 +1271,18 @@ function addConsistencyWorksheet(wb, sheet) {
     applyStyle(tipCell, { bg, hAlign: 'left', vAlign: 'top', wrap: true });
 
     const matchCell = row.getCell(4);
-    matchCell.value = rowData.matchedText;
+    setExcelTextCell(matchCell, rowData.matchedText);
     applyStyle(matchCell, { bg, hAlign: 'left', vAlign: 'top', wrap: true });
 
-    const pagesCell = row.getCell(5);
-    if (rowData.pagesHidden) {
-      pagesCell.value = '-';
-    } else if (rowData.pageStrike) {
-      pagesCell.value = {
-        richText: [
-          {
-            text: rowData.pageText,
-            font: { name: 'Arial', size: 10, strike: true, color: { argb: 'FF999999' } },
-          },
-        ],
-      };
-    } else {
-      pagesCell.value = rowData.pageText;
-    }
+    const suggestCell = row.getCell(5);
+    setExcelTextCell(suggestCell, rowData.suggestedText);
+    applyStyle(suggestCell, { bg, hAlign: 'left', vAlign: 'top', wrap: true });
+
+    const pagesCell = row.getCell(6);
+    pagesCell.value = rowData.pageText || '';
     applyStyle(pagesCell, { bg, hAlign: 'left', vAlign: 'top', wrap: true });
-  }
 
-  if (currentRange) categoryRanges.push(currentRange);
-  if (currentCriteriaRange) criteriaRanges.push(currentCriteriaRange);
-
-  for (const range of categoryRanges) {
-    if (range.start < range.end) {
-      ws.mergeCells(range.start, 1, range.end, 1);
-    }
-    const cell = ws.getCell(range.start, 1);
-    cell.value = range.category;
-    applyStyle(cell, { bg: range.bg, hAlign: 'center', vAlign: 'middle' });
-  }
-
-  for (const range of criteriaRanges) {
-    if (range.start < range.end) {
-      ws.mergeCells(range.start, 2, range.end, 2);
-      ws.mergeCells(range.start, 3, range.end, 3);
-    }
-    const labelCell = ws.getCell(range.start, 2);
-    labelCell.value = range.label;
-    applyStyle(labelCell, { bg: range.bg, hAlign: 'left', vAlign: 'middle', wrap: true });
-    const tipCell = ws.getCell(range.start, 3);
-    tipCell.value = range.tip;
-    applyStyle(tipCell, { bg: range.bg, hAlign: 'left', vAlign: 'middle', wrap: true });
+    writeMachineExportCells(row, CONSISTENCY_HUMAN_HEADERS.length + 1, rowData, bg);
   }
 }
 
