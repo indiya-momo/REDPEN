@@ -34,7 +34,11 @@ import {
 } from './unifyCandidateDiscover.js';
 import { normalizeSpacingClusters } from './unifyCandidateCollapse.js';
 import { highlightRangeForSpelling } from './pdfHighlightRange.js';
-import { buildPageText } from './pdfPageText.js';
+import {
+  buildPageText,
+  isLikelyHangulEojeolBoundary,
+  isUnifyHangulMidWordSoftWrap,
+} from './pdfPageText.js';
 
 /** discover 후 정규화(공통 접두·짧은 단위 흡수) */
 function discoverNormalized(pageTexts) {
@@ -115,6 +119,108 @@ describe('mergeUnifyHangulSoftWrapScanLines', () => {
       '악순환으로 보이는',
     ]);
   });
+});
+
+/**
+ * 2026-11-25 줄 끝 건 집계: A(어두) 다수·B(독립) 1건.
+ * 건을 독립 목록에 넣지 않음 — 맞는 이어붙임을 깨기 때문.
+ * 한계: 독립 건도 이어붙임 → 표기 통일 키 오염(끄는 건|쇠뿔).
+ */
+describe('줄 끝 건 soft-wrap — 현행 KEEP·알려진 한계', () => {
+  it('어두 갈라짐 KEEP: 건|물 · 건|강 · 건|축 · 건|너 이어붙임', () => {
+    expect(isUnifyHangulMidWordSoftWrap('불황기에 건', '물을 지으려는')).toBe(
+      true,
+    );
+    expect(
+      isUnifyHangulMidWordSoftWrap('경제적 건', '강을 결정짓는'),
+    ).toBe(true);
+    expect(
+      isUnifyHangulMidWordSoftWrap('지속가능한 건', '축 공법을 채택'),
+    ).toBe(true);
+    expect(isUnifyHangulMidWordSoftWrap('길을 건', '너가서')).toBe(true);
+  });
+
+  it('기존 독립 목록 간·및·등은 띄움 유지', () => {
+    expect(isLikelyHangulEojeolBoundary('임금과 물가 간', '악순환으로')).toBe(
+      true,
+    );
+    expect(isUnifyHangulMidWordSoftWrap('임금과 물가 간', '악순환으로')).toBe(
+      false,
+    );
+    expect(isUnifyHangulMidWordSoftWrap('사과 및', '배도')).toBe(false);
+    expect(isUnifyHangulMidWordSoftWrap('학생 등', '참석했다')).toBe(false);
+  });
+
+  it('공허 방지: 같은 자리라도 건은 이어붙임·간은 띄움으로 갈린다', () => {
+    expect(isUnifyHangulMidWordSoftWrap('앞에 건', '물을')).toBe(true);
+    expect(isUnifyHangulMidWordSoftWrap('앞에 간', '물을')).toBe(false);
+  });
+
+  it('기준선: 끄는 건|쇠뿔 은 현재 이어붙임(건쇠뿔)', () => {
+    expect(
+      isUnifyHangulMidWordSoftWrap(
+        '동그란 항아리 중에서 눈길을 끄는 건',
+        '쇠뿔 모양의 손잡이가 달린 항아리.',
+      ),
+    ).toBe(true);
+    const merged = mergeUnifyHangulSoftWrapScanLines([
+      {
+        line: '동그란 항아리 중에서 눈길을 끄는 건',
+        absIndex: (i) => i,
+      },
+      {
+        line: '쇠뿔 모양의 손잡이가 달린 항아리.',
+        absIndex: (i) => 100 + i,
+      },
+    ]);
+    expect(merged).toHaveLength(1);
+    expect(merged[0].line.includes('건쇠뿔')).toBe(true);
+  });
+
+  it.fails(
+    '목표: 있는 건|전혀 는 띄움 유지 (현행은 이어붙임 — 알려진 한계)',
+    () => {
+      expect(
+        isUnifyHangulMidWordSoftWrap(
+          '취소시킬 수 있는 건',
+          '전혀 아니므로',
+        ),
+      ).toBe(false);
+    },
+  );
+
+  it('대조: 앞줄이 끈다이면 같은 조회로 쇠뿔모양 충돌 후보가 잡힌다', () => {
+    const text = [
+      '동그란 항아리 중에서 눈길을 끈다',
+      '쇠뿔 모양의 손잡이가 달린 항아리.',
+      '',
+      '쇠뿔모양 손잡이 항아리',
+      '',
+    ].join('\n');
+    const clusters = discoverSpacingUnifyCandidates([
+      { pageNum: 20, text, textLayout: text },
+    ]);
+    const hit = clusters.find((c) => c.key === '쇠뿔모양');
+    expect(hit?.variants?.sort()).toEqual(['쇠뿔 모양', '쇠뿔모양'].sort());
+  });
+
+  it.fails(
+    '목표: 끄는 건 + 쇠뿔모양 → spacing 충돌 후보 (현행 soft-wrap이 키를 깨뜨림)',
+    () => {
+      const text = [
+        '동그란 항아리 중에서 눈길을 끄는 건',
+        '쇠뿔 모양의 손잡이가 달린 항아리.',
+        '',
+        '쇠뿔모양 손잡이 항아리',
+        '',
+      ].join('\n');
+      const clusters = discoverSpacingUnifyCandidates([
+        { pageNum: 20, text, textLayout: text },
+      ]);
+      const hit = clusters.find((c) => c.key === '쇠뿔모양');
+      expect(hit?.variants?.sort()).toEqual(['쇠뿔 모양', '쇠뿔모양'].sort());
+    },
+  );
 });
 
 describe('prepareUnifyScanText', () => {
