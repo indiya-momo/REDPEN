@@ -27,7 +27,7 @@ export const SPACING_FOLDER_BUNDLES = Object.freeze([
   }),
   Object.freeze({
     bundleId: 'dependentRieulKka',
-    label: '관형사형 뒤 의존명사 (맞춤법 제42항)',
+    label: '관형사형 뒤 의존명사(것, 수, 만큼 등)',
     example: Object.freeze({ find: '할수 있다', replace: '할˅수 있다' }),
     moduleIds: Object.freeze([
       'adnominal-dep',
