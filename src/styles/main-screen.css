@@ -7025,6 +7025,9 @@
   line-height: inherit;
   color: var(--c-soft);
   white-space: nowrap;
+  /* nowrap만 있으면 좁을 때 글자가 링크(표준국어대사전 등) 위로 그려져 겹쳐 보임 */
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .panel-left .caution-checklist-summary,
