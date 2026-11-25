@@ -9,6 +9,7 @@ import {
   extractAllPagesText,
   loadPdfFromBuffer,
 } from '../lib/pdfService.js';
+import { saveWorkSession } from '../lib/sessionStore.js';
 import {
   getPdfProducerHints,
   validatePublishablePdf,
@@ -29,8 +30,10 @@ export function usePdfDocument() {
 
   const [pdf, setPdf] = useState(null);
   const [pdfFileName, setPdfFileName] = useState(null);
+  const pdfFileNameRef = useRef(null);
   const [pdfByteLength, setPdfByteLength] = useState(null);
   const [pageTexts, setPageTexts] = useState([]);
+  const pageTextsRef = useRef([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(null);
@@ -57,6 +60,7 @@ export function usePdfDocument() {
         destroyPdfDocument(prev);
         return null;
       });
+      pageTextsRef.current = [];
       setPageTexts([]);
       return { ok: false, validation, producerHints };
     }
@@ -65,24 +69,35 @@ export function usePdfDocument() {
       destroyPdfDocument(prev);
       return doc;
     });
+    pageTextsRef.current = pages;
     setPageTexts(pages);
     return { ok: true, validation, producerHints };
   }, []);
 
   const loadPdfFromFile = useCallback(async (file) => {
     setLoadError(null);
+    pdfFileNameRef.current = file.name;
     setPdfFileName(file.name);
     setPdfByteLength(file.size);
     setPdf((prev) => {
       destroyPdfDocument(prev);
       return null;
     });
+    pageTextsRef.current = [];
     setPageTexts([]);
     setCurrentPage(1);
 
     const buffer = await file.arrayBuffer();
-    pdfBufferRef.current = buffer;
-    const doc = await loadPdfFromBuffer(buffer);
+    // pdf.js가 워커로 transfer해도 세션 저장용 원본은 남긴다
+    const keep = buffer.slice(0);
+    pdfBufferRef.current = keep;
+    // 추출 전에 바이트를 저장 — F5가 긴 추출 중에도 PDF를 살린다
+    await saveWorkSession({
+      fileName: file.name,
+      pdfBuffer: keep,
+      pageTexts: [],
+    });
+    const doc = await loadPdfFromBuffer(keep.slice(0));
     setIsProcessing(true);
     setProgress({ current: 0, total: doc.numPages, phase: 'extract' });
 
@@ -108,8 +123,10 @@ export function usePdfDocument() {
       destroyPdfDocument(prev);
       return null;
     });
+    pdfFileNameRef.current = null;
     setPdfFileName(null);
     setPdfByteLength(null);
+    pageTextsRef.current = [];
     setPageTexts([]);
     setCurrentPage(1);
     setLoadError(null);
@@ -136,8 +153,8 @@ export function usePdfDocument() {
     pageTexts.find((p) => p.pageNum === currentPage) ?? null;
 
   const canPersist =
-    Boolean(pdfFileName) &&
-    pageTexts.length > 0 &&
+    Boolean(pdfFileNameRef.current || pdfFileName) &&
+    (pageTextsRef.current.length > 0 || pageTexts.length > 0) &&
     Boolean(fileHandleRef.current || pdfBufferRef.current);
 
   return {
@@ -146,9 +163,11 @@ export function usePdfDocument() {
     fileHandleRef,
     pdf,
     pdfFileName,
+    pdfFileNameRef,
     pdfByteLength,
     setPdfByteLength,
     pageTexts,
+    pageTextsRef,
     currentPage,
     setCurrentPage,
     isProcessing,

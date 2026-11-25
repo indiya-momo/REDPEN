@@ -3147,6 +3147,7 @@ export default function MainScreen({
               sessionHint={session.sessionHint}
               runLabel={centerRunLabel}
               showReady={Boolean(pdf.pdf)}
+              isRestoring={session.isRestoring}
               checkQuotaBlocked={checkSessionBlocked}
               showUploadGuide={guestWorkGuide.showPreUploadGuide}
               uploadGuideStorageKey={guestWorkGuide.storageKey(

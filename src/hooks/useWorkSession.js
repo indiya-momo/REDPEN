@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { SPELLING_RULES_FP } from '../lib/builtInRules.js';
 import { CAUTION_RULES_FP } from '../lib/cautionRules.js';
+import { enrichCautionYaldaGaneMorph } from '../lib/cautionYaldaGaneMorphFilter.js';
 import {
   restoreCheckResults,
   serializeResultVisibility,
@@ -59,6 +60,8 @@ export function useWorkSession(pdf, ruleCheck, tocCheck, options = {}) {
     setPdfFileName,
     setPdfByteLength,
     setPageTexts,
+    pageTextsRef,
+    pdfFileNameRef,
     setCurrentPage,
     setIsProcessing,
     setProgress,
@@ -118,13 +121,26 @@ export function useWorkSession(pdf, ruleCheck, tocCheck, options = {}) {
   ]);
 
   const persistSession = useCallback(async () => {
-    if (!canPersist) return false;
+    // pageTexts/fileName은 setState 직후 클로저가 비어 있을 수 있음 → ref 우선
+    const pages =
+      pageTextsRef.current?.length > 0 ? pageTextsRef.current : pageTexts;
+    const name = pdfFileNameRef.current || pdfFileName;
+    const handle = fileHandleRef.current;
+    const buffer = pdfBufferRef.current;
+    let bufferOk = false;
+    try {
+      bufferOk = Boolean(buffer && buffer.byteLength > 0);
+    } catch {
+      bufferOk = false;
+    }
+    if (!name || !(handle || bufferOk)) return false;
 
     const result = await saveWorkSession({
-      fileName: pdfFileName,
-      fileHandle: fileHandleRef.current,
-      pdfBuffer: fileHandleRef.current ? undefined : pdfBufferRef.current,
-      pageTexts: pageTexts.map((p) => ({ pageNum: p.pageNum, text: p.text })),
+      fileName: name,
+      fileHandle: handle,
+      // handle만 저장하면 F5 후 권한 제스처가 없어 복원 실패 → 버퍼도 항상 같이 둔다
+      pdfBuffer: buffer ?? undefined,
+      pageTexts: pages.map((p) => ({ pageNum: p.pageNum, text: p.text })),
       groupedResults: spellingResults,
       consistencyGroupedResults: consistencyResults,
       tocBodyGroupedResults: tocBodyResults,
@@ -143,7 +159,9 @@ export function useWorkSession(pdf, ruleCheck, tocCheck, options = {}) {
     });
 
     if (result.ok) {
-      setSessionHint(null);
+      setSessionHint(
+        import.meta.env.DEV ? '로컬에 저장됨 · 새로고침해도 PDF 유지' : null,
+      );
     } else {
       setSessionHint('업로드 실패');
       const missingPdfData =
@@ -161,9 +179,10 @@ export function useWorkSession(pdf, ruleCheck, tocCheck, options = {}) {
     }
     return result.ok;
   }, [
-    canPersist,
     pdfFileName,
     pageTexts,
+    pageTextsRef,
+    pdfFileNameRef,
     currentPage,
     fileHandleRef,
     pdfBufferRef,
@@ -197,6 +216,7 @@ export function useWorkSession(pdf, ruleCheck, tocCheck, options = {}) {
       if (saved.needFilePermission && saved.fileHandle) {
         clearAllCheckState();
         fileHandleRef.current = saved.fileHandle;
+        pdfFileNameRef.current = saved.fileName;
         setPdfFileName(saved.fileName);
         setPdfByteLength(saved.pdfByteLength ?? null);
         setSessionHint('이전 PDF — 아래 「PDF 다시 연결」을 누르세요');
@@ -205,15 +225,8 @@ export function useWorkSession(pdf, ruleCheck, tocCheck, options = {}) {
         return;
       }
 
-      const savedSize =
-        saved.pdfByteLength ?? saved.pdfBuffer?.byteLength ?? 0;
-      if (isPdfSizeOverMax(savedSize)) {
-        setLoadError(PDF_SIZE_MAX_MESSAGE);
-        setSessionHint(null);
-        await clearWorkSession();
-        setIsRestoring(false);
-        return;
-      }
+      // 이미 열어 둔 PDF는 용량 상한으로 저장본을 지우지 않는다.
+      // (PDF 열기는 100MB를 넘겨도 열리고, F5 때만 드롭존으로 떨어지던 원인)
 
       setIsProcessing(true);
       setProgress({ current: 0, total: 1, phase: 'restore' });
@@ -221,13 +234,16 @@ export function useWorkSession(pdf, ruleCheck, tocCheck, options = {}) {
       clearAllCheckState();
 
       try {
-        pdfBufferRef.current = saved.pdfBuffer;
+        // 워커 transfer 대비: ref에는 복사본, getDocument에도 별도 복사( loadPdfFromBuffer 내부 )
+        const kept = saved.pdfBuffer.slice(0);
+        pdfBufferRef.current = kept;
         if (saved.fileHandle) fileHandleRef.current = saved.fileHandle;
+        pdfFileNameRef.current = saved.fileName;
         setPdfFileName(saved.fileName);
         setPdfByteLength(
           saved.pdfByteLength ?? saved.pdfBuffer?.byteLength ?? null,
         );
-        const doc = await loadPdfFromBuffer(saved.pdfBuffer);
+        const doc = await loadPdfFromBuffer(kept);
         if (!mounted.current || isRestoreStale(generation)) return;
 
         const page = Math.min(
@@ -249,7 +265,7 @@ export function useWorkSession(pdf, ruleCheck, tocCheck, options = {}) {
         if (!mounted.current || isRestoreStale(generation)) return;
         if (!applied.ok) {
           setSessionHint(null);
-          await clearWorkSession();
+          // 게이트 실패 시에도 저장본은 유지 — 잘못된 프로브 PDF가 실PDF를 지우는 일 방지
           return;
         }
 
@@ -262,8 +278,17 @@ export function useWorkSession(pdf, ruleCheck, tocCheck, options = {}) {
         });
 
         if (!restoredChecks.staleRules) {
+          // 저장본에 남은 가는(가다) 오탐을 복원 직후 다시 걷는다.
+          const spellingResults =
+            restoredChecks.spelling.length > 0
+              ? await enrichCautionYaldaGaneMorph(
+                  restoredChecks.spelling,
+                  pages,
+                )
+              : restoredChecks.spelling;
+          if (!mounted.current || isRestoreStale(generation)) return;
           restoreRuleCheckFromSession({
-            spellingResults: restoredChecks.spelling,
+            spellingResults,
             consistencyResults: restoredChecks.consistency,
             resultVisibility: saved.resultVisibility ?? undefined,
             spellingSelected: saved.selectedInstance ?? null,
@@ -303,7 +328,7 @@ export function useWorkSession(pdf, ruleCheck, tocCheck, options = {}) {
           );
           setSessionHint(null);
         }
-        await clearWorkSession();
+        // 복원 실패해도 저장본은 지우지 않는다 — F5 재시도·재연결 여지
       } finally {
         if (mounted.current && !isRestoreStale(generation)) {
           setIsProcessing(false);
@@ -316,45 +341,33 @@ export function useWorkSession(pdf, ruleCheck, tocCheck, options = {}) {
     return () => {
       mounted.current = false;
     };
-  }, [
-    clearAllCheckState,
-    restoreRuleCheckFromSession,
-    restoreTocCheckFromSession,
-    fileHandleRef,
-    pdfBufferRef,
-    setPdf,
-    setPdfFileName,
-    setPageTexts,
-    setCurrentPage,
-    setIsProcessing,
-    setProgress,
-    setLoadError,
-    applyExtractValidation,
-    isRestoreStale,
-  ]);
+    // 마운트 1회만. deps에 넣으면 StrictMode·부모 렌더마다 복원이 끊긴다.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional mount-once restore
+  }, []);
+
+  const persistSessionRef = useRef(persistSession);
+  persistSessionRef.current = persistSession;
 
   useEffect(() => {
     if (isRestoring || !pdfBufferRef.current || !pageTexts.length) return;
 
     const t = setTimeout(() => {
-      void persistSession();
+      void persistSessionRef.current();
     }, 300);
 
     const onHide = () => {
-      if (canPersist) {
-        void persistSession();
-      }
+      void persistSessionRef.current();
     };
     window.addEventListener('pagehide', onHide);
+    window.addEventListener('beforeunload', onHide);
 
     return () => {
       clearTimeout(t);
       window.removeEventListener('pagehide', onHide);
+      window.removeEventListener('beforeunload', onHide);
     };
   }, [
     isRestoring,
-    persistSession,
-    canPersist,
     pdfBufferRef,
     pageTexts.length,
     spellingResults,
