@@ -71,7 +71,13 @@ import {
   RETURN_TO_MAIN_STORAGE_KEY,
   shouldReopenMainWorkspace,
 } from './lib/returnToWorkspace.js';
-import { clearTabSessionMarker, clearWorkSession } from './lib/sessionStore.js';
+import {
+  clearTabSessionMarker,
+  clearWorkSession,
+  isTabSessionActive,
+  isWorkResumeAvailable,
+  isWorkSessionRestoreEnabled,
+} from './lib/sessionStore.js';
 import { clearTooltipGuideDismissed } from './lib/tooltipGuideStorage.js';
 import { shouldAutoEnterMainFromWelcome } from './lib/welcomeViewport.js';
 import AppDialogHost from './components/AppDialogHost.jsx';
@@ -94,6 +100,14 @@ export default function App() {
     if (
       import.meta.env.DEV &&
       new URLSearchParams(window.location.search).get('devPdf')
+    ) {
+      return 'main';
+    }
+    // DEV: 저장된 PDF가 있으면 F5 직후 welcome을 건너뛰고 바로 복원
+    if (
+      isWorkSessionRestoreEnabled() &&
+      shouldAutoEnterMainFromWelcome() &&
+      (isTabSessionActive() || isWorkResumeAvailable())
     ) {
       return 'main';
     }
@@ -190,7 +204,15 @@ export default function App() {
       return;
     }
     if (guestBrowseAllowsWorkspaceStay()) return;
-    void clearWorkSession();
+    // F5 직후 Firebase uid가 아직 없으면 여기로 온다.
+    // 예전엔 clearWorkSession()까지 해서 저장된 PDF가 날아갔다.
+    // 대문으로만 돌리고, PDF는 로그인 후 main 재진입 때 복원한다.
+    if (
+      isWorkSessionRestoreEnabled() &&
+      (isTabSessionActive() || isWorkResumeAvailable())
+    ) {
+      return;
+    }
     setScreen('welcome');
   }, [authReady, auxWindow, screen, authSession]);
 
