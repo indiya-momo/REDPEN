@@ -40,6 +40,7 @@ import PdfTxtLinebreakReviewModal from './PdfTxtLinebreakReviewModal.jsx';
  *   sessionHint: string | null,
  *   runLabel: string,
  *   showReady: boolean,
+ *   isRestoring?: boolean,
  *   showUploadGuide?: boolean,
  *   uploadGuideStorageKey?: string,
  *   uploadGuidePinned?: boolean,
@@ -70,6 +71,7 @@ export default function PdfCenterStage({
   sessionHint,
   runLabel,
   showReady,
+  isRestoring = false,
   showUploadGuide = true,
   uploadGuideStorageKey = 'work-pre-upload-v1',
   uploadGuidePinned = false,
@@ -236,7 +238,18 @@ export default function PdfCenterStage({
       )}
 
       <div className="pdf-center-stage__stack">
-        {!showReady ? (
+        {isRestoring && !showReady ? (
+          <div className="pdf-center-stage__preupload" role="status" aria-live="polite">
+            <p className="pdf-dropzone__drag">이전 PDF를 다시 여는 중…</p>
+            {progressLabel ? (
+              <p className="pdf-dropzone__limit">{progressLabel}</p>
+            ) : (
+              <p className="pdf-dropzone__limit">
+                {pdfFileName ? pdfFileName : "저장된 원고"}
+              </p>
+            )}
+          </div>
+        ) : !showReady ? (
           <div className="pdf-center-stage__preupload">
             <div className="pdf-center-stage__hero pdf-center-stage__hero--idle">
               <img

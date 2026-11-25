@@ -230,7 +230,7 @@ describe('session store smoke', () => {
       currentPage: 1,
     });
     expect(saved.ok).toBe(true);
-    expect(saved.mode).toBe('chunks');
+    expect(saved.mode).toBe('idb-blob');
 
     const loaded = await loadWorkSession();
     expect(loaded).not.toBeNull();

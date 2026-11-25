@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
   clearWorkSession,
+  isTabSessionActive,
   isWorkSessionRestoreEnabled,
   loadWorkSession,
   markTabSessionActive,
@@ -144,17 +145,50 @@ describe('sessionStore defensive', () => {
     await expect(loadWorkSession()).resolves.toBeNull();
   });
 
-  it('탭 sessionStorage 마커가 없으면 IndexedDB 데이터도 복원하지 않는다', async () => {
-    await seedSessionRow({
-      id: 'current',
-      fileName: 'stale.pdf',
-      pdfStorage: 'opfs',
-      groupedResults: [],
+  it('탭 마커가 없어도 IndexedDB에 PDF가 있으면 복원하고 마커를 다시 켠다', async () => {
+    const bytes = new Uint8Array([1, 2, 3, 4]).buffer;
+    await saveWorkSession({
+      fileName: 'keep-on-f5.pdf',
+      pdfBuffer: bytes,
+      pageTexts: [{ pageNum: 1, text: '가' }],
     });
+    // F5·다른 탭에서 sessionStorage 마커만 비운 상황
+    try {
+      sessionStorage.removeItem('pdf-proofread-work-tab');
+    } catch {
+      /* ignore */
+    }
 
-    await expect(loadWorkSession()).resolves.toBeNull();
-    markTabSessionActive();
-    await expect(loadWorkSession()).resolves.toBeNull();
+    const loaded = await loadWorkSession();
+    expect(loaded).not.toBeNull();
+    expect(loaded?.fileName).toBe('keep-on-f5.pdf');
+    expect(isTabSessionActive()).toBe(true);
+  });
+
+  it('fileHandle이 있어도 pdfBuffer가 있으면 바이트로 저장해 F5에 권한 없이 복원된다', async () => {
+    const bytes = new Uint8Array([9, 8, 7, 6]).buffer;
+    const fileHandle = {
+      queryPermission: async () => 'denied',
+      requestPermission: async () => 'denied',
+      getFile: async () => {
+        throw new Error('should not use handle');
+      },
+    };
+
+    const saved = await saveWorkSession({
+      fileName: 'buffer-wins.pdf',
+      fileHandle,
+      pdfBuffer: bytes,
+      pageTexts: [{ pageNum: 1, text: '나' }],
+    });
+    expect(saved.ok).toBe(true);
+    expect(saved.mode).toBe('idb-blob');
+
+    const loaded = await loadWorkSession();
+    expect(loaded).not.toBeNull();
+    expect(loaded?.fileName).toBe('buffer-wins.pdf');
+    expect(loaded?.needFilePermission).toBeFalsy();
+    expect(loaded?.pdfBuffer?.byteLength).toBe(4);
   });
 
   it('saveWorkSession은 PDF 없이 ok:false를 반환한다', async () => {

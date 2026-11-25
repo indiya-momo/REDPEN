@@ -1,11 +1,12 @@
 /**
- * 작업 세션 — 우선순위:
- * 1) FileSystemFileHandle (PDF 복사 없음, 새로고침에 가장 안정)
- * 2) OPFS → Cache API → IndexedDB 청크
+ * 작업 세션 — DEV/로컬 F5 복원.
+ * 1순위: IndexedDB 행에 pdfBlob (권한·OPFS 없이 F5 가능)
+ * 보조: OPFS / Cache / 청크 / fileHandle
  */
 
 const DB_NAME = 'pdf-proofread-session';
-const DB_VERSION = 3;
+/** v4: 빈 v1 DB·스토어 누락 복구 + idb-blob 저장 */
+const DB_VERSION = 4;
 const STORE = 'session';
 const SESSION_KEY = 'current';
 const OPFS_PDF_NAME = 'current-session.pdf';
@@ -14,21 +15,41 @@ const CACHE_KEY = 'https://pdf-proofread.local/session.pdf';
 const CHUNK_PREFIX = 'pdf-chunk-';
 const CHUNK_SIZE = 512 * 1024;
 
-/** 같은 탭·F5 동안만 복원. 탭/브라우저를 닫으면 sessionStorage가 비워져 복원하지 않음 */
+/** 같은 탭·F5 힌트 (sessionStorage — 탭을 닫으면 비움) */
 export const WORK_TAB_SESSION_KEY = 'pdf-proofread-work-tab';
 
 /**
+ * DEV 복원용 — 탭을 닫아도 localStorage에 남아 F5·재진입 시 main으로 복귀.
+ * clearWorkSession / 대문 복귀에서만 지운다.
+ */
+export const WORK_RESUME_KEY = 'pdf-proofread-work-resume';
+
+/**
  * 이전 PDF·검수 자동 복원.
- * - 로컬 `npm run dev` 만 허용 (F5 편의)
- * - 배포(PROD): 로그인·리다이렉트·새로고침 후 복원하지 않음
+ * - Vite DEV 또는 localhost / 127.0.0.1 (preview 포함)
+ * - 배포 호스트에서는 복원하지 않음
  */
 export function isWorkSessionRestoreEnabled() {
-  return import.meta.env.DEV === true;
+  if (import.meta.env.DEV === true) return true;
+  try {
+    const host = globalThis.location?.hostname ?? '';
+    return host === 'localhost' || host === '127.0.0.1';
+  } catch {
+    return false;
+  }
 }
 
 export function isTabSessionActive() {
   try {
     return sessionStorage.getItem(WORK_TAB_SESSION_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+export function isWorkResumeAvailable() {
+  try {
+    return localStorage.getItem(WORK_RESUME_KEY) === '1';
   } catch {
     return false;
   }
@@ -40,11 +61,21 @@ export function markTabSessionActive() {
   } catch {
     /* ignore */
   }
+  try {
+    localStorage.setItem(WORK_RESUME_KEY, '1');
+  } catch {
+    /* ignore */
+  }
 }
 
 export function clearTabSessionMarker() {
   try {
     sessionStorage.removeItem(WORK_TAB_SESSION_KEY);
+  } catch {
+    /* ignore */
+  }
+  try {
+    localStorage.removeItem(WORK_RESUME_KEY);
   } catch {
     /* ignore */
   }
@@ -58,12 +89,32 @@ function openDb() {
   return new Promise((resolve, reject) => {
     const req = indexedDB.open(DB_NAME, DB_VERSION);
     req.onerror = () => reject(req.error);
-    req.onsuccess = () => resolve(req.result);
+    req.onblocked = () => {
+      console.warn('작업 세션 IndexedDB 업그레이드가 다른 탭에 막혔습니다.');
+    };
     req.onupgradeneeded = (e) => {
       const db = e.target.result;
       if (!db.objectStoreNames.contains(STORE)) {
         db.createObjectStore(STORE, { keyPath: 'id' });
       }
+    };
+    req.onsuccess = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains(STORE)) {
+        const nextVersion = db.version + 1;
+        db.close();
+        const req2 = indexedDB.open(DB_NAME, nextVersion);
+        req2.onerror = () => reject(req2.error);
+        req2.onupgradeneeded = (e) => {
+          const upgradeDb = e.target.result;
+          if (!upgradeDb.objectStoreNames.contains(STORE)) {
+            upgradeDb.createObjectStore(STORE, { keyPath: 'id' });
+          }
+        };
+        req2.onsuccess = () => resolve(req2.result);
+        return;
+      }
+      resolve(db);
     };
   });
 }
@@ -267,7 +318,7 @@ export async function saveWorkSession(data) {
   try {
     const db = await openDb();
 
-    if (data.fileHandle) {
+    if (!data.pdfBuffer?.byteLength && data.fileHandle) {
       await removeBlobStores(db);
       const payload = {
         id: SESSION_KEY,
@@ -306,52 +357,36 @@ export async function saveWorkSession(data) {
     }
 
     const bytes = new Uint8Array(data.pdfBuffer);
-    const sizeMb = (bytes.byteLength / (1024 * 1024)).toFixed(1);
 
     await removeBlobStores(db);
 
-    let pdfStorage = '';
-    let chunkCount = 0;
-    const errors = [];
-
-    if (typeof navigator.storage?.getDirectory === 'function') {
-      try {
-        await savePdfToOpfs(data.pdfBuffer);
-        pdfStorage = 'opfs';
-      } catch (e) {
-        errors.push(`OPFS: ${e instanceof Error ? e.message : e}`);
-      }
+    // OPFS는 보조. Cursor 내장 브라우저 등에서는 쓴 뒤 다시 읽히지 않는 경우가 있어
+    // 복원 본선은 IndexedDB Blob으로 둔다 (122MB 경주멍도 이 경로).
+    try {
+      await savePdfToOpfs(data.pdfBuffer);
+    } catch {
+      /* ignore */
     }
 
-    if (!pdfStorage) {
-      try {
-        await savePdfToCache(data.pdfBuffer);
-        pdfStorage = 'cache';
-      } catch (e) {
-        errors.push(`Cache: ${e instanceof Error ? e.message : e}`);
-      }
-    }
-
-    if (!pdfStorage) {
-      try {
-        chunkCount = await savePdfChunks(db, bytes);
-        pdfStorage = 'chunks';
-      } catch (e) {
-        const hint = await getStorageHint();
-        db.close();
-        return {
-          ok: false,
-          error: `PDF 저장 실패 (${sizeMb}MB). Chrome/Edge에서 「PDF 열기」를 사용해 보세요. ${hint ?? ''} ${errors.join('; ')}`,
-        };
-      }
+    let pdfBlob;
+    try {
+      pdfBlob = new Blob([bytes], { type: 'application/pdf' });
+    } catch (e) {
+      db.close();
+      return {
+        ok: false,
+        error: e instanceof Error ? e.message : 'PDF Blob 저장 실패',
+      };
     }
 
     const payload = {
       id: SESSION_KEY,
       fileName: data.fileName,
-      pdfStorage,
+      pdfStorage: 'idb-blob',
+      pdfBlob,
       pdfByteLength: bytes.byteLength,
-      chunkCount,
+      chunkCount: 0,
+      ...(data.fileHandle ? { fileHandle: data.fileHandle } : {}),
       pageCount: data.pageTexts?.length ?? 0,
       groupedResults: trimResults(data.groupedResults),
       consistencyGroupedResults: trimResults(data.consistencyGroupedResults),
@@ -377,7 +412,7 @@ export async function saveWorkSession(data) {
     db.close();
 
     markTabSessionActive();
-    return { ok: true, mode: pdfStorage };
+    return { ok: true, mode: 'idb-blob' };
   } catch (e) {
     console.error('작업 세션 저장 실패', e);
     return {
@@ -393,10 +428,9 @@ export async function loadWorkSession() {
     return null;
   }
 
-  if (!isTabSessionActive()) {
-    await clearWorkSession();
-    return null;
-  }
+  // 예전: 탭 마커 없으면 clearWorkSession()까지 해서 IDB를 지웠다.
+  // 다른 탭·마커 유실·F5 직후 레이스에서 저장본이 통째로 사라졌다.
+  // DEV에서는 저장된 세션이 있으면 복원하고, 성공 시 마커를 다시 켠다.
 
   try {
     const db = await openDb();
@@ -434,14 +468,24 @@ export async function loadWorkSession() {
       pageTexts: [],
     };
 
-    if (raw.pdfStorage === 'handle' && raw.fileHandle) {
+    let pdfBuffer = null;
+
+    if (raw.pdfBlob instanceof Blob && raw.pdfBlob.size > 0) {
+      pdfBuffer = await raw.pdfBlob.arrayBuffer();
+    } else if (raw.pdfStorage === 'idb-blob' && raw.pdfBlob) {
+      pdfBuffer = await new Blob([raw.pdfBlob]).arrayBuffer();
+    }
+
+    if (!pdfBuffer?.byteLength && raw.pdfStorage === 'handle' && raw.fileHandle) {
       const ok = await ensureFileReadPermission(raw.fileHandle);
       if (!ok) {
         db.close();
+        markTabSessionActive();
         return { ...meta, needFilePermission: true, fileHandle: raw.fileHandle };
       }
       const file = await raw.fileHandle.getFile();
       db.close();
+      markTabSessionActive();
       return {
         ...meta,
         fileName: file.name,
@@ -450,22 +494,31 @@ export async function loadWorkSession() {
       };
     }
 
-    let pdfBuffer = null;
-    if (raw.pdfStorage === 'opfs') {
-      pdfBuffer = await loadPdfFromOpfs();
-    } else if (raw.pdfStorage === 'cache') {
-      pdfBuffer = await loadPdfFromCache();
-    } else if (raw.pdfStorage === 'chunks' && raw.chunkCount > 0) {
-      pdfBuffer = await loadPdfChunks(db, raw.chunkCount);
+    if (!pdfBuffer?.byteLength) {
+      if (raw.pdfStorage === 'opfs') {
+        pdfBuffer = await loadPdfFromOpfs();
+      } else if (raw.pdfStorage === 'cache') {
+        pdfBuffer = await loadPdfFromCache();
+      } else if (raw.pdfStorage === 'chunks' && raw.chunkCount > 0) {
+        pdfBuffer = await loadPdfChunks(db, raw.chunkCount);
+      } else {
+        // 저장 표기가 깨져도 보조 저장소에서 한 번 더 시도
+        pdfBuffer =
+          (await loadPdfFromOpfs()) ||
+          (await loadPdfFromCache()) ||
+          null;
+      }
     }
 
     db.close();
     if (!pdfBuffer?.byteLength) return null;
 
+    markTabSessionActive();
     return {
       ...meta,
       pdfBuffer,
       pdfByteLength: meta.pdfByteLength ?? pdfBuffer.byteLength,
+      ...(raw.fileHandle ? { fileHandle: raw.fileHandle } : {}),
     };
   } catch (e) {
     console.error('작업 세션 불러오기 실패', e);
