@@ -2131,20 +2131,6 @@
     "dividerLabel": "잘못된 표현(동사 · 형용사)"
   },
   {
-    "find": "뜯겨지",
-    "replace": "뜯기",
-    "finds": [
-      "뜯겨지",
-      "뜯겨진",
-      "뜯겨졌",
-      "뜯겨질"
-    ],
-    "enabled": true,
-    "tip": "이중피동, 과거형은 '뜯겼다'",
-    "dividerGroup": "B1",
-    "dividerLabel": "잘못된 표현(동사 · 형용사)"
-  },
-  {
     "find": "본따",
     "replace": "본떠",
     "finds": [
@@ -2550,65 +2536,6 @@
     "overlayReplace": "→애걔 또는 에계"
   },
   {
-    "find": "아무데",
-    "replace": "아무 데",
-    "enabled": true,
-    "tip": "데'는 의존명사로 앞말과 띄어 쓴다",
-    "dividerGroup": "B2",
-    "dividerLabel": "잘못된 표현(그 외)",
-    "overlayReplace": "→아무∨데"
-  },
-  {
-    "find": "모난것",
-    "replace": "모난 것",
-    "enabled": true,
-    "tip": "것'은 의존명사로 앞말과 띄어 쓴다",
-    "dividerGroup": "B2",
-    "dividerLabel": "잘못된 표현(그 외)",
-    "overlayReplace": "→모난∨것"
-  },
-  {
-    "find": "할때",
-    "replace": "할 때",
-    "finds": [
-      "할때",
-      "갈때",
-      "올때",
-      "될때",
-      "있을때",
-      "없을때",
-      "했을때",
-      "왔을때",
-      "봤을때"
-    ],
-    "findReplaces": {
-      "갈때": "갈 때",
-      "올때": "올 때",
-      "될때": "될 때",
-      "있을때": "있을 때",
-      "없을때": "없을 때",
-      "했을때": "했을 때",
-      "왔을때": "왔을 때",
-      "봤을때": "봤을 때"
-    },
-    "enabled": true,
-    "tip": "때'는 명사로 관형사형(-ㄹ) 뒤에서 띄어 쓴다",
-    "dividerGroup": "B2",
-    "dividerLabel": "잘못된 표현(그 외)",
-    "displayLabel": "(관형사형-ㄹ)^때"
-  },
-  {
-    "find": "에 틀림없",
-    "replace": "이 틀림없",
-    "enabled": true,
-    "tip": "조사는 '이 틀림없다'(세종 표기법·표준 용법). '에 틀림없다'는 틀림",
-    "dividerGroup": "B2",
-    "dividerLabel": "잘못된 표현(그 외)",
-    "overlayReplace": "→이 틀림없",
-    "ruleId": "sejong-teullimeop",
-    "displayLabel": "에 틀림없 → 이 틀림없"
-  },
-  {
     "find": "하게끔",
     "replace": "하도록",
     "enabled": true,
@@ -2631,10 +2558,10 @@
     "displayLabel": "시험을 쳤 → 시험을 치렀"
   },
   {
-    "find": "차에 치었",
-    "replace": "차에 치였",
+    "find": "치었",
+    "replace": "치였",
     "enabled": true,
-    "tip": "치이다'의 피동. '차에 치였다'(세종 오용 사례)",
+    "tip": "치다'의 피동은 '치여'",
     "dividerGroup": "B2",
     "dividerLabel": "잘못된 표현(그 외)",
     "overlayReplace": "→차에 치였",
@@ -2642,38 +2569,16 @@
     "displayLabel": "차에 치었 → 차에 치였"
   },
   {
-    "find": "어른마냥",
-    "replace": "어른처럼",
-    "enabled": true,
-    "tip": "마냥' 대신 '처럼·모양'으로 적는다(세종 오용 사례)",
-    "dividerGroup": "B2",
-    "dividerLabel": "잘못된 표현(그 외)",
-    "overlayReplace": "→어른처럼",
-    "ruleId": "sejong-eoreunmanyang",
-    "displayLabel": "어른마냥 → 어른처럼"
-  },
-  {
-    "find": "수출을 늘여",
-    "replace": "수출을 늘려",
-    "enabled": true,
-    "tip": "수량을 늘릴 때는 '늘리다'(세종 오용 사례). '늘이다'는 길이·공간",
-    "dividerGroup": "B2",
-    "dividerLabel": "잘못된 표현(그 외)",
-    "overlayReplace": "→수출을 늘려",
-    "ruleId": "sejong-suchul-neullyeo",
-    "displayLabel": "수출을 늘여 → 수출을 늘려"
-  },
-  {
-    "find": "물을 덥혔",
-    "replace": "물을 데웠",
+    "find": "덥혔",
+    "replace": "데웠",
     "finds": [
-      "물을 덥혔",
-      "물을 덥혀",
-      "물을 덥히"
+      "덥혔",
+      "덥혀",
+      "덥히"
     ],
     "findReplaces": {
-      "물을 덥혀": "물을 데워",
-      "물을 덥히": "물을 데우"
+      "덥혀": "데워",
+      "덥히": "데우"
     },
     "enabled": true,
     "tip": "물을 데우다'. '덥히다'는 분위기·기온을 따뜻하게 할 때(세종 오용 사례)",
@@ -2692,17 +2597,6 @@
     "overlayReplace": "→갠 날",
     "ruleId": "sejong-gaen-nal",
     "displayLabel": "개인 날 → 갠 날"
-  },
-  {
-    "find": "에 대신하",
-    "replace": "을 대신하",
-    "enabled": true,
-    "tip": "-을 대신하다'가 옳고 '-에 대신하다'는 틀림(세종 표기법)",
-    "dividerGroup": "B2",
-    "dividerLabel": "잘못된 표현(그 외)",
-    "overlayReplace": "→을 대신하",
-    "ruleId": "sejong-daesinha",
-    "displayLabel": "에 대신하 → 을 대신하"
   },
   {
     "find": "가디건",
@@ -4937,17 +4831,17 @@
     "replace": "다 보면",
     "enabled": true,
     "tip": "부사 「다」+「보면」·연결 「-다 보면」은 띄어 씀(맞춤법 제47항). 「들여다보면」(동사 들여다보다)은 제외",
-    "dividerGroup": "S2",
-    "dividerLabel": "경주멍 시스템 갭",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
     "displayLabel": "다보면"
   },
   {
     "find": "다보니",
     "replace": "다 보니",
     "enabled": true,
-    "tip": "부사 「다」+「보니」·연결 「-다 보니」는 띄어 씀(맞춤법 제47항). 「들여다보니」(동사 들여다보다)는 제외",
-    "dividerGroup": "S2",
-    "dividerLabel": "경주멍 시스템 갭",
+    "tip": "부사 「다」+「보니」·연결 「-다 보니」는 띄어 씀(맞춤법 제47항). 「들여다보니」(동사 들여다보다)은 제외",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
     "displayLabel": "다보니"
   },
   {
@@ -4966,44 +4860,17 @@
     },
     "enabled": true,
     "tip": "'-지 못하다'의 '못하다'는 한 단어로 붙여 씀(앞 '-지'와는 띄어 씀)",
-    "dividerGroup": "S2",
-    "dividerLabel": "경주멍 시스템 갭",
+    "dividerGroup": "B1",
+    "dividerLabel": "잘못된 표현(동사 · 형용사)",
     "displayLabel": "지 못 하"
-  },
-  {
-    "find": "모른 채",
-    "replace": "모르는 채",
-    "enabled": true,
-    "tip": "'모르다'의 관형사형은 '모르는'",
-    "dividerGroup": "S2",
-    "dividerLabel": "경주멍 시스템 갭",
-    "displayLabel": "모른 채"
-  },
-  {
-    "find": "실감케",
-    "replace": "실감하게",
-    "enabled": true,
-    "tip": "'실감케'는 '실감하게'로 씀",
-    "dividerGroup": "S2",
-    "dividerLabel": "경주멍 시스템 갭",
-    "displayLabel": "실감케"
-  },
-  {
-    "find": "누군진",
-    "replace": "누군지는",
-    "enabled": true,
-    "tip": "'누군진'은 '누군지는'의 비표준 축약",
-    "dividerGroup": "S2",
-    "dividerLabel": "경주멍 시스템 갭",
-    "displayLabel": "누군진"
   },
   {
     "find": "오래 된",
     "replace": "오래된",
     "enabled": true,
     "tip": "「오래되다」는 한 단어로 붙여 씀",
-    "dividerGroup": "S2",
-    "dividerLabel": "경주멍 시스템 갭",
+    "dividerGroup": "A",
+    "dividerLabel": "표준국어대사전 등재(동사 · 형용사)",
     "displayLabel": "오래 된"
   },
   {
@@ -5011,17 +4878,35 @@
     "replace": "무릎 위에",
     "enabled": true,
     "tip": "의존명사 「위」는 앞말과 띄어 씀(맞춤법 제41항)",
-    "dividerGroup": "S2",
-    "dividerLabel": "경주멍 시스템 갭",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
     "displayLabel": "무릎위에"
   },
   {
-    "find": "나뭇가지모양",
-    "replace": "나뭇가지 모양",
+    "find": "해질녘",
+    "replace": "해 질 녘",
     "enabled": true,
-    "tip": "의존명사 「모양」은 앞말과 띄어 씀(맞춤법 제41항)",
-    "dividerGroup": "S2",
-    "dividerLabel": "경주멍 시스템 갭",
-    "displayLabel": "나뭇가지모양"
+    "tip": "「해 지다」는 한 단어가 아님. 표준국어대사전·우리말샘 표제어 없음(확인 2026-11-21). 온라인가나다 2026-02-24·새국어생활 17-2(2007) 인용 답변 → 「해 질 녘」. 어절 시작만(따뜻해질… 제외). 알려진 잔여 오탐: 해지다(닳다)+ㄹ 「신발이 해질 무렵」류(드묾).",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "displayLabel": "해질녘"
+  },
+  {
+    "find": "해질 무렵",
+    "replace": "해 질 무렵",
+    "enabled": true,
+    "tip": "「해 지다」+의존명사 「무렵」. 표준국어대사전 미등재·온라인가나다 2026-02(확인 2026-11-21). 「해질 무렵」→「해 질 무렵」(정확 매칭·어절 시작; 따뜻해질 무렵 제외). 알려진 잔여 오탐: 해지다(닳다)+ㄹ 「신발이 해질 무렵」.",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "displayLabel": "해질 무렵"
+  },
+  {
+    "find": "해질무렵",
+    "replace": "해 질 무렵",
+    "enabled": true,
+    "tip": "「해 지다」+의존명사 「무렵」 붙임형. 확인 2026-11-21(표국·우리말샘 미등재·온라인가나다 2026-02). 어절 시작만. 알려진 잔여 오탐: 해지다(닳다)+ㄹ.",
+    "dividerGroup": "B2",
+    "dividerLabel": "잘못된 표현(그 외)",
+    "displayLabel": "해질무렵"
   }
 ]
