@@ -1,0 +1,260 @@
+{
+  "summary": {
+    "locked": {
+      "population": "4817",
+      "intervention": "merge identity",
+      "product": "conflict clusters"
+    },
+    "totals": {
+      "clusterOn": 205,
+      "clusterOff": 202,
+      "onlyOn": 4,
+      "onlyOff": 1,
+      "both": 201,
+      "deltaIfDisable": -3,
+      "rawOn": 58715,
+      "rawOff": 59484,
+      "rawDeltaIfDisable": 769
+    },
+    "labeled200": {
+      "n": 200,
+      "eyeHit": {
+        "Y": {
+          "onlyOn": 0,
+          "onlyOff": 0,
+          "both": 0,
+          "none": 19
+        },
+        "A": {
+          "onlyOn": 0,
+          "onlyOff": 0,
+          "both": 0,
+          "none": 169
+        },
+        "other": {
+          "onlyOn": 0,
+          "onlyOff": 0,
+          "both": 0,
+          "none": 12
+        }
+      },
+      "hits": []
+    },
+    "byBook": [
+      {
+        "name": "경주멍",
+        "clusterOn": 0,
+        "clusterOff": 0,
+        "onlyOn": 0,
+        "onlyOff": 0,
+        "both": 0,
+        "rawOn": 119,
+        "rawOff": 121,
+        "onlyOnKeys": [],
+        "onlyOffKeys": []
+      },
+      {
+        "name": "관장님",
+        "clusterOn": 0,
+        "clusterOff": 0,
+        "onlyOn": 0,
+        "onlyOff": 0,
+        "both": 0,
+        "rawOn": 389,
+        "rawOff": 398,
+        "onlyOnKeys": [],
+        "onlyOffKeys": []
+      },
+      {
+        "name": "진정환",
+        "clusterOn": 0,
+        "clusterOff": 0,
+        "onlyOn": 0,
+        "onlyOff": 0,
+        "both": 0,
+        "rawOn": 281,
+        "rawOff": 289,
+        "onlyOnKeys": [],
+        "onlyOffKeys": []
+      },
+      {
+        "name": "유물멍2",
+        "clusterOn": 4,
+        "clusterOff": 4,
+        "onlyOn": 0,
+        "onlyOff": 0,
+        "both": 4,
+        "rawOn": 5923,
+        "rawOff": 5866,
+        "onlyOnKeys": [],
+        "onlyOffKeys": []
+      },
+      {
+        "name": "스트리트이코노미",
+        "clusterOn": 59,
+        "clusterOff": 57,
+        "onlyOn": 2,
+        "onlyOff": 0,
+        "both": 57,
+        "rawOn": 14265,
+        "rawOff": 14427,
+        "onlyOnKeys": [
+          "이전지출",
+          "장기채권"
+        ],
+        "onlyOffKeys": []
+      },
+      {
+        "name": "세이노",
+        "clusterOn": 141,
+        "clusterOff": 140,
+        "onlyOn": 2,
+        "onlyOff": 1,
+        "both": 139,
+        "rawOn": 31878,
+        "rawOff": 32471,
+        "onlyOnKeys": [
+          "서류작성",
+          "고객서비스"
+        ],
+        "onlyOffKeys": [
+          "발송작업"
+        ]
+      },
+      {
+        "name": "과학교과서",
+        "clusterOn": 0,
+        "clusterOff": 0,
+        "onlyOn": 0,
+        "onlyOff": 0,
+        "both": 0,
+        "rawOn": 0,
+        "rawOff": 0,
+        "onlyOnKeys": [],
+        "onlyOffKeys": []
+      },
+      {
+        "name": "날개",
+        "clusterOn": 1,
+        "clusterOff": 1,
+        "onlyOn": 0,
+        "onlyOff": 0,
+        "both": 1,
+        "rawOn": 2195,
+        "rawOff": 2217,
+        "onlyOnKeys": [],
+        "onlyOffKeys": []
+      },
+      {
+        "name": "박제",
+        "clusterOn": 0,
+        "clusterOff": 0,
+        "onlyOn": 0,
+        "onlyOff": 0,
+        "both": 0,
+        "rawOn": 1511,
+        "rawOff": 1532,
+        "onlyOnKeys": [],
+        "onlyOffKeys": []
+      },
+      {
+        "name": "운수좋은날",
+        "clusterOn": 0,
+        "clusterOff": 0,
+        "onlyOn": 0,
+        "onlyOff": 0,
+        "both": 0,
+        "rawOn": 839,
+        "rawOff": 843,
+        "onlyOnKeys": [],
+        "onlyOffKeys": []
+      },
+      {
+        "name": "제4원칙",
+        "clusterOn": 0,
+        "clusterOff": 0,
+        "onlyOn": 0,
+        "onlyOff": 0,
+        "both": 0,
+        "rawOn": 1315,
+        "rawOff": 1320,
+        "onlyOnKeys": [],
+        "onlyOffKeys": []
+      }
+    ]
+  },
+  "onlyOnAll": [
+    {
+      "book": "스트리트이코노미",
+      "key": "이전지출",
+      "variants": [
+        "이전지출",
+        "이전 지출"
+      ],
+      "counts": {
+        "이전지출": 1,
+        "이전 지출": 1
+      },
+      "totalCount": 2,
+      "recommendedUnify": "이전지출"
+    },
+    {
+      "book": "스트리트이코노미",
+      "key": "장기채권",
+      "variants": [
+        "장기채권",
+        "장기 채권"
+      ],
+      "counts": {
+        "장기채권": 1,
+        "장기 채권": 1
+      },
+      "totalCount": 2,
+      "recommendedUnify": "장기채권"
+    },
+    {
+      "book": "세이노",
+      "key": "서류작성",
+      "variants": [
+        "서류 작성",
+        "서류작성"
+      ],
+      "counts": {
+        "서류 작성": 1,
+        "서류작성": 1
+      },
+      "totalCount": 2,
+      "recommendedUnify": "서류작성"
+    },
+    {
+      "book": "세이노",
+      "key": "고객서비스",
+      "variants": [
+        "고객 서비스",
+        "고객서비스"
+      ],
+      "counts": {
+        "고객 서비스": 1,
+        "고객서비스": 1
+      },
+      "totalCount": 2,
+      "recommendedUnify": "고객서비스"
+    }
+  ],
+  "onlyOffAll": [
+    {
+      "book": "세이노",
+      "key": "발송작업",
+      "variants": [
+        "발송 작업",
+        "발송작업"
+      ],
+      "counts": {
+        "발송 작업": 2,
+        "발송작업": 1
+      },
+      "totalCount": 3,
+      "recommendedUnify": "발송 작업"
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "n": 200,
+  "same": 196,
+  "disagree": 4,
+  "wasmReady": true,
+  "disagreeRows": [
+    {
+      "id": "M149",
+      "wasm": "JOIN",
+      "python": "SPACE",
+      "match": false,
+      "wasmReason": "span",
+      "wasmNext": "한번쯤/NNG",
+      "pyReason": "indep-next",
+      "pyNext": "번/NNB",
+      "book": "세이노",
+      "syl": "한",
+      "first": "번쯤"
+    },
+    {
+      "id": "M154",
+      "wasm": "JOIN",
+      "python": "SPACE",
+      "match": false,
+      "wasmReason": "span",
+      "wasmNext": "더이상/MAG",
+      "pyReason": "indep-next",
+      "pyNext": "이상/NNG",
+      "book": "세이노",
+      "syl": "더",
+      "first": "이상"
+    },
+    {
+      "id": "M186",
+      "wasm": "SPACE",
+      "python": "JOIN",
+      "match": false,
+      "wasmReason": "indep-next",
+      "wasmNext": "잇/VV-I",
+      "pyReason": "dep-next",
+      "pyNext": "이/VCP",
+      "book": "세이노",
+      "syl": "것",
+      "first": "이었다."
+    },
+    {
+      "id": "M195",
+      "wasm": "SPACE",
+      "python": "JOIN",
+      "match": false,
+      "wasmReason": "indep-next",
+      "wasmNext": "쪽/NNB",
+      "pyReason": "span",
+      "pyNext": "한쪽/NNG",
+      "book": "유물멍2",
+      "syl": "한",
+      "first": "쪽으로"
+    }
+  ]
+}
