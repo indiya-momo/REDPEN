@@ -1,0 +1,2763 @@
+{
+  "label": "on",
+  "expectedMerge": 4817,
+  "byBook": [
+    {
+      "name": "경주멍",
+      "skipped": false,
+      "pageCount": 1,
+      "clusterCount": 0,
+      "rawKeyCount": 119,
+      "clusters": []
+    },
+    {
+      "name": "관장님",
+      "skipped": false,
+      "pageCount": 3,
+      "clusterCount": 0,
+      "rawKeyCount": 389,
+      "clusters": []
+    },
+    {
+      "name": "진정환",
+      "skipped": false,
+      "pageCount": 3,
+      "clusterCount": 0,
+      "rawKeyCount": 281,
+      "clusters": []
+    },
+    {
+      "name": "유물멍2",
+      "skipped": false,
+      "pageCount": 140,
+      "clusterCount": 4,
+      "rawKeyCount": 5923,
+      "clusters": [
+        {
+          "key": "두꺼비무늬",
+          "variants": [
+            "두꺼비무늬",
+            "두꺼비 무늬"
+          ],
+          "counts": {
+            "두꺼비무늬": 3,
+            "두꺼비 무늬": 1
+          },
+          "totalCount": 4,
+          "recommendedUnify": "두꺼비무늬"
+        },
+        {
+          "key": "문화유산",
+          "variants": [
+            "문화유산",
+            "문화 유산"
+          ],
+          "counts": {
+            "문화유산": 4,
+            "문화 유산": 1
+          },
+          "totalCount": 5,
+          "recommendedUnify": "문화유산"
+        },
+        {
+          "key": "오리모양",
+          "variants": [
+            "오리모양",
+            "오리 모양"
+          ],
+          "counts": {
+            "오리모양": 6,
+            "오리 모양": 1
+          },
+          "totalCount": 7,
+          "recommendedUnify": "오리모양"
+        },
+        {
+          "key": "조선시대",
+          "variants": [
+            "조선시대",
+            "조선 시대"
+          ],
+          "counts": {
+            "조선시대": 17,
+            "조선 시대": 2
+          },
+          "totalCount": 19,
+          "recommendedUnify": "조선시대"
+        }
+      ]
+    },
+    {
+      "name": "스트리트이코노미",
+      "skipped": false,
+      "pageCount": 199,
+      "clusterCount": 59,
+      "rawKeyCount": 14265,
+      "clusters": [
+        {
+          "key": "개인소득",
+          "variants": [
+            "개인소득",
+            "개인 소득"
+          ],
+          "counts": {
+            "개인소득": 1,
+            "개인 소득": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "개인소득"
+        },
+        {
+          "key": "경기침체",
+          "variants": [
+            "경기침체",
+            "경기 침체"
+          ],
+          "counts": {
+            "경기침체": 72,
+            "경기 침체": 2
+          },
+          "totalCount": 74,
+          "recommendedUnify": "경기침체"
+        },
+        {
+          "key": "경제왕국",
+          "variants": [
+            "경제 왕국",
+            "경제왕국"
+          ],
+          "counts": {
+            "경제 왕국": 21,
+            "경제왕국": 4
+          },
+          "totalCount": 25,
+          "recommendedUnify": "경제 왕국"
+        },
+        {
+          "key": "경제시스템",
+          "variants": [
+            "경제 시스템",
+            "경제시스템"
+          ],
+          "counts": {
+            "경제 시스템": 1,
+            "경제시스템": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "경제시스템"
+        },
+        {
+          "key": "경제이론",
+          "variants": [
+            "경제이론",
+            "경제 이론"
+          ],
+          "counts": {
+            "경제이론": 10,
+            "경제 이론": 3
+          },
+          "totalCount": 13,
+          "recommendedUnify": "경제이론"
+        },
+        {
+          "key": "경제지표",
+          "variants": [
+            "경제지표",
+            "경제 지표"
+          ],
+          "counts": {
+            "경제지표": 7,
+            "경제 지표": 1
+          },
+          "totalCount": 8,
+          "recommendedUnify": "경제지표"
+        },
+        {
+          "key": "경제활동참가율",
+          "variants": [
+            "경제활동참가율",
+            "경제활동 참가율"
+          ],
+          "counts": {
+            "경제활동참가율": 7,
+            "경제활동 참가율": 4
+          },
+          "totalCount": 11,
+          "recommendedUnify": "경제활동참가율"
+        },
+        {
+          "key": "공개시장",
+          "variants": [
+            "공개시장",
+            "공개 시장"
+          ],
+          "counts": {
+            "공개시장": 6,
+            "공개 시장": 1
+          },
+          "totalCount": 7,
+          "recommendedUnify": "공개시장"
+        },
+        {
+          "key": "공공서비스",
+          "variants": [
+            "공공서비스",
+            "공공 서비스"
+          ],
+          "counts": {
+            "공공서비스": 1,
+            "공공 서비스": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "공공서비스"
+        },
+        {
+          "key": "국가채무상한선",
+          "variants": [
+            "국가채무 상한선",
+            "국가채무상한선"
+          ],
+          "counts": {
+            "국가채무 상한선": 1,
+            "국가채무상한선": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "국가채무상한선"
+        },
+        {
+          "key": "국채시장",
+          "variants": [
+            "국채 시장",
+            "국채시장"
+          ],
+          "counts": {
+            "국채 시장": 3,
+            "국채시장": 1
+          },
+          "totalCount": 4,
+          "recommendedUnify": "국채 시장"
+        },
+        {
+          "key": "규제당국",
+          "variants": [
+            "규제당국",
+            "규제 당국"
+          ],
+          "counts": {
+            "규제당국": 1,
+            "규제 당국": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "규제당국"
+        },
+        {
+          "key": "근무환경",
+          "variants": [
+            "근무환경",
+            "근무 환경"
+          ],
+          "counts": {
+            "근무환경": 1,
+            "근무 환경": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "근무환경"
+        },
+        {
+          "key": "금리인상",
+          "variants": [
+            "금리인상",
+            "금리 인상"
+          ],
+          "counts": {
+            "금리인상": 21,
+            "금리 인상": 1
+          },
+          "totalCount": 22,
+          "recommendedUnify": "금리인상"
+        },
+        {
+          "key": "금융위기",
+          "variants": [
+            "금융위기",
+            "금융 위기"
+          ],
+          "counts": {
+            "금융위기": 17,
+            "금융 위기": 1
+          },
+          "totalCount": 18,
+          "recommendedUnify": "금융위기"
+        },
+        {
+          "key": "기술발전",
+          "variants": [
+            "기술 발전",
+            "기술발전"
+          ],
+          "counts": {
+            "기술 발전": 8,
+            "기술발전": 1
+          },
+          "totalCount": 9,
+          "recommendedUnify": "기술 발전"
+        },
+        {
+          "key": "기술분야",
+          "variants": [
+            "기술 분야",
+            "기술분야"
+          ],
+          "counts": {
+            "기술 분야": 1,
+            "기술분야": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "기술분야"
+        },
+        {
+          "key": "노동환경",
+          "variants": [
+            "노동환경",
+            "노동 환경"
+          ],
+          "counts": {
+            "노동환경": 1,
+            "노동 환경": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "노동환경"
+        },
+        {
+          "key": "뉴욕타임스",
+          "variants": [
+            "뉴욕타임스",
+            "뉴욕 타임스"
+          ],
+          "counts": {
+            "뉴욕타임스": 2,
+            "뉴욕 타임스": 2
+          },
+          "totalCount": 4,
+          "recommendedUnify": "뉴욕타임스"
+        },
+        {
+          "key": "단기국채",
+          "variants": [
+            "단기 국채",
+            "단기국채"
+          ],
+          "counts": {
+            "단기 국채": 3,
+            "단기국채": 1
+          },
+          "totalCount": 4,
+          "recommendedUnify": "단기 국채"
+        },
+        {
+          "key": "단기자금",
+          "variants": [
+            "단기 자금",
+            "단기자금"
+          ],
+          "counts": {
+            "단기 자금": 2,
+            "단기자금": 1
+          },
+          "totalCount": 3,
+          "recommendedUnify": "단기 자금"
+        },
+        {
+          "key": "독립혁명",
+          "variants": [
+            "독립혁명",
+            "독립 혁명"
+          ],
+          "counts": {
+            "독립혁명": 2,
+            "독립 혁명": 1
+          },
+          "totalCount": 3,
+          "recommendedUnify": "독립혁명"
+        },
+        {
+          "key": "명목임금",
+          "variants": [
+            "명목임금",
+            "명목 임금"
+          ],
+          "counts": {
+            "명목임금": 1,
+            "명목 임금": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "명목임금"
+        },
+        {
+          "key": "미국정부",
+          "variants": [
+            "미국정부",
+            "미국 정부"
+          ],
+          "counts": {
+            "미국정부": 16,
+            "미국 정부": 1
+          },
+          "totalCount": 17,
+          "recommendedUnify": "미국정부"
+        },
+        {
+          "key": "비상장기업",
+          "variants": [
+            "비상장 기업",
+            "비상장기업"
+          ],
+          "counts": {
+            "비상장 기업": 1,
+            "비상장기업": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "비상장기업"
+        },
+        {
+          "key": "상환능력",
+          "variants": [
+            "상환 능력",
+            "상환능력"
+          ],
+          "counts": {
+            "상환 능력": 1,
+            "상환능력": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "상환능력"
+        },
+        {
+          "key": "생활방식",
+          "variants": [
+            "생활 방식",
+            "생활방식"
+          ],
+          "counts": {
+            "생활 방식": 2,
+            "생활방식": 1
+          },
+          "totalCount": 3,
+          "recommendedUnify": "생활 방식"
+        },
+        {
+          "key": "생활수준",
+          "variants": [
+            "생활수준",
+            "생활 수준"
+          ],
+          "counts": {
+            "생활수준": 1,
+            "생활 수준": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "생활수준"
+        },
+        {
+          "key": "세계최대",
+          "variants": [
+            "세계 최대",
+            "세계최대"
+          ],
+          "counts": {
+            "세계 최대": 3,
+            "세계최대": 1
+          },
+          "totalCount": 4,
+          "recommendedUnify": "세계 최대"
+        },
+        {
+          "key": "세계경제",
+          "variants": [
+            "세계경제",
+            "세계 경제"
+          ],
+          "counts": {
+            "세계경제": 4,
+            "세계 경제": 2
+          },
+          "totalCount": 6,
+          "recommendedUnify": "세계경제"
+        },
+        {
+          "key": "소규모기업",
+          "variants": [
+            "소규모 기업",
+            "소규모기업"
+          ],
+          "counts": {
+            "소규모 기업": 1,
+            "소규모기업": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "소규모기업"
+        },
+        {
+          "key": "수출물량",
+          "variants": [
+            "수출 물량",
+            "수출물량"
+          ],
+          "counts": {
+            "수출 물량": 1,
+            "수출물량": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "수출물량"
+        },
+        {
+          "key": "스위스은행",
+          "variants": [
+            "스위스은행",
+            "스위스 은행"
+          ],
+          "counts": {
+            "스위스은행": 2,
+            "스위스 은행": 1
+          },
+          "totalCount": 3,
+          "recommendedUnify": "스위스은행"
+        },
+        {
+          "key": "실업상태",
+          "variants": [
+            "실업상태",
+            "실업 상태"
+          ],
+          "counts": {
+            "실업상태": 1,
+            "실업 상태": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "실업상태"
+        },
+        {
+          "key": "실질임금",
+          "variants": [
+            "실질 임금",
+            "실질임금"
+          ],
+          "counts": {
+            "실질 임금": 3,
+            "실질임금": 3
+          },
+          "totalCount": 6,
+          "recommendedUnify": "실질임금"
+        },
+        {
+          "key": "언론기사",
+          "variants": [
+            "언론기사",
+            "언론 기사"
+          ],
+          "counts": {
+            "언론기사": 1,
+            "언론 기사": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "언론기사"
+        },
+        {
+          "key": "에너지시장",
+          "variants": [
+            "에너지시장",
+            "에너지 시장"
+          ],
+          "counts": {
+            "에너지시장": 2,
+            "에너지 시장": 2
+          },
+          "totalCount": 4,
+          "recommendedUnify": "에너지시장"
+        },
+        {
+          "key": "원자재시장",
+          "variants": [
+            "원자재시장",
+            "원자재 시장"
+          ],
+          "counts": {
+            "원자재시장": 2,
+            "원자재 시장": 1
+          },
+          "totalCount": 3,
+          "recommendedUnify": "원자재시장"
+        },
+        {
+          "key": "월스트리트저널",
+          "variants": [
+            "월스트리트 저널",
+            "월스트리트저널"
+          ],
+          "counts": {
+            "월스트리트 저널": 2,
+            "월스트리트저널": 1
+          },
+          "totalCount": 3,
+          "recommendedUnify": "월스트리트 저널"
+        },
+        {
+          "key": "의료서비스",
+          "variants": [
+            "의료서비스",
+            "의료 서비스"
+          ],
+          "counts": {
+            "의료서비스": 14,
+            "의료 서비스": 1
+          },
+          "totalCount": 15,
+          "recommendedUnify": "의료서비스"
+        },
+        {
+          "key": "의사결정",
+          "variants": [
+            "의사 결정",
+            "의사결정"
+          ],
+          "counts": {
+            "의사 결정": 7,
+            "의사결정": 1
+          },
+          "totalCount": 8,
+          "recommendedUnify": "의사 결정"
+        },
+        {
+          "key": "이전지출",
+          "variants": [
+            "이전지출",
+            "이전 지출"
+          ],
+          "counts": {
+            "이전지출": 1,
+            "이전 지출": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "이전지출"
+        },
+        {
+          "key": "인구조사",
+          "variants": [
+            "인구조사",
+            "인구 조사"
+          ],
+          "counts": {
+            "인구조사": 3,
+            "인구 조사": 1
+          },
+          "totalCount": 4,
+          "recommendedUnify": "인구조사"
+        },
+        {
+          "key": "자산규모",
+          "variants": [
+            "자산 규모",
+            "자산규모"
+          ],
+          "counts": {
+            "자산 규모": 4,
+            "자산규모": 2
+          },
+          "totalCount": 6,
+          "recommendedUnify": "자산 규모"
+        },
+        {
+          "key": "장기채권",
+          "variants": [
+            "장기채권",
+            "장기 채권"
+          ],
+          "counts": {
+            "장기채권": 1,
+            "장기 채권": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "장기채권"
+        },
+        {
+          "key": "재정운용",
+          "variants": [
+            "재정운용",
+            "재정 운용"
+          ],
+          "counts": {
+            "재정운용": 1,
+            "재정 운용": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "재정운용"
+        },
+        {
+          "key": "재정정책",
+          "variants": [
+            "재정정책",
+            "재정 정책"
+          ],
+          "counts": {
+            "재정정책": 22,
+            "재정 정책": 1
+          },
+          "totalCount": 23,
+          "recommendedUnify": "재정정책"
+        },
+        {
+          "key": "재정지출",
+          "variants": [
+            "재정지출",
+            "재정 지출"
+          ],
+          "counts": {
+            "재정지출": 4,
+            "재정 지출": 2
+          },
+          "totalCount": 6,
+          "recommendedUnify": "재정지출"
+        },
+        {
+          "key": "정부기관",
+          "variants": [
+            "정부 기관",
+            "정부기관"
+          ],
+          "counts": {
+            "정부 기관": 3,
+            "정부기관": 1
+          },
+          "totalCount": 4,
+          "recommendedUnify": "정부 기관"
+        },
+        {
+          "key": "정부지출",
+          "variants": [
+            "정부 지출",
+            "정부지출"
+          ],
+          "counts": {
+            "정부 지출": 18,
+            "정부지출": 1
+          },
+          "totalCount": 19,
+          "recommendedUnify": "정부 지출"
+        },
+        {
+          "key": "제로금리",
+          "variants": [
+            "제로금리",
+            "제로 금리"
+          ],
+          "counts": {
+            "제로금리": 2,
+            "제로 금리": 2
+          },
+          "totalCount": 4,
+          "recommendedUnify": "제로금리"
+        },
+        {
+          "key": "주식거래",
+          "variants": [
+            "주식거래",
+            "주식 거래"
+          ],
+          "counts": {
+            "주식거래": 2,
+            "주식 거래": 1
+          },
+          "totalCount": 3,
+          "recommendedUnify": "주식거래"
+        },
+        {
+          "key": "진행중인",
+          "variants": [
+            "진행중인",
+            "진행 중인"
+          ],
+          "counts": {
+            "진행중인": 3,
+            "진행 중인": 1
+          },
+          "totalCount": 4,
+          "recommendedUnify": "진행중인"
+        },
+        {
+          "key": "집단심리",
+          "variants": [
+            "집단 심리",
+            "집단심리"
+          ],
+          "counts": {
+            "집단 심리": 1,
+            "집단심리": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "집단심리"
+        },
+        {
+          "key": "채권수익률",
+          "variants": [
+            "채권 수익률",
+            "채권수익률"
+          ],
+          "counts": {
+            "채권 수익률": 2,
+            "채권수익률": 1
+          },
+          "totalCount": 3,
+          "recommendedUnify": "채권 수익률"
+        },
+        {
+          "key": "파급효과",
+          "variants": [
+            "파급 효과",
+            "파급효과"
+          ],
+          "counts": {
+            "파급 효과": 2,
+            "파급효과": 1
+          },
+          "totalCount": 3,
+          "recommendedUnify": "파급 효과"
+        },
+        {
+          "key": "학자금대출",
+          "variants": [
+            "학자금 대출",
+            "학자금대출"
+          ],
+          "counts": {
+            "학자금 대출": 1,
+            "학자금대출": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "학자금대출"
+        },
+        {
+          "key": "현금흐름",
+          "variants": [
+            "현금흐름",
+            "현금 흐름"
+          ],
+          "counts": {
+            "현금흐름": 9,
+            "현금 흐름": 2
+          },
+          "totalCount": 11,
+          "recommendedUnify": "현금흐름"
+        },
+        {
+          "key": "현실세계",
+          "variants": [
+            "현실세계",
+            "현실 세계"
+          ],
+          "counts": {
+            "현실세계": 2,
+            "현실 세계": 1
+          },
+          "totalCount": 3,
+          "recommendedUnify": "현실세계"
+        }
+      ]
+    },
+    {
+      "name": "세이노",
+      "skipped": false,
+      "pageCount": 369,
+      "clusterCount": 141,
+      "rawKeyCount": 31878,
+      "clusters": [
+        {
+          "key": "가정환경",
+          "variants": [
+            "가정 환경",
+            "가정환경"
+          ],
+          "counts": {
+            "가정 환경": 2,
+            "가정환경": 1
+          },
+          "totalCount": 3,
+          "recommendedUnify": "가정 환경"
+        },
+        {
+          "key": "가족관계",
+          "variants": [
+            "가족 관계",
+            "가족관계"
+          ],
+          "counts": {
+            "가족 관계": 1,
+            "가족관계": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "가족관계"
+        },
+        {
+          "key": "결혼생활",
+          "variants": [
+            "결혼 생활",
+            "결혼생활"
+          ],
+          "counts": {
+            "결혼 생활": 3,
+            "결혼생활": 1
+          },
+          "totalCount": 4,
+          "recommendedUnify": "결혼 생활"
+        },
+        {
+          "key": "경력사원",
+          "variants": [
+            "경력 사원",
+            "경력사원"
+          ],
+          "counts": {
+            "경력 사원": 2,
+            "경력사원": 1
+          },
+          "totalCount": 3,
+          "recommendedUnify": "경력 사원"
+        },
+        {
+          "key": "경리직원",
+          "variants": [
+            "경리 직원",
+            "경리직원"
+          ],
+          "counts": {
+            "경리 직원": 2,
+            "경리직원": 1
+          },
+          "totalCount": 3,
+          "recommendedUnify": "경리 직원"
+        },
+        {
+          "key": "경제전쟁",
+          "variants": [
+            "경제 전쟁",
+            "경제전쟁"
+          ],
+          "counts": {
+            "경제 전쟁": 3,
+            "경제전쟁": 3
+          },
+          "totalCount": 6,
+          "recommendedUnify": "경제전쟁"
+        },
+        {
+          "key": "경제정책",
+          "variants": [
+            "경제 정책",
+            "경제정책"
+          ],
+          "counts": {
+            "경제 정책": 1,
+            "경제정책": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "경제정책"
+        },
+        {
+          "key": "경제활동",
+          "variants": [
+            "경제 활동",
+            "경제활동"
+          ],
+          "counts": {
+            "경제 활동": 1,
+            "경제활동": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "경제활동"
+        },
+        {
+          "key": "고객서비스",
+          "variants": [
+            "고객 서비스",
+            "고객서비스"
+          ],
+          "counts": {
+            "고객 서비스": 1,
+            "고객서비스": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "고객서비스"
+        },
+        {
+          "key": "고교시절",
+          "variants": [
+            "고교 시절",
+            "고교시절"
+          ],
+          "counts": {
+            "고교 시절": 5,
+            "고교시절": 2
+          },
+          "totalCount": 7,
+          "recommendedUnify": "고교 시절"
+        },
+        {
+          "key": "고시공부",
+          "variants": [
+            "고시 공부",
+            "고시공부"
+          ],
+          "counts": {
+            "고시 공부": 1,
+            "고시공부": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "고시공부"
+        },
+        {
+          "key": "공무원시험",
+          "variants": [
+            "공무원 시험",
+            "공무원시험"
+          ],
+          "counts": {
+            "공무원 시험": 4,
+            "공무원시험": 3
+          },
+          "totalCount": 7,
+          "recommendedUnify": "공무원 시험"
+        },
+        {
+          "key": "공장제품",
+          "variants": [
+            "공장제품",
+            "공장 제품"
+          ],
+          "counts": {
+            "공장제품": 1,
+            "공장 제품": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "공장제품"
+        },
+        {
+          "key": "공통답변",
+          "variants": [
+            "공통답변",
+            "공통 답변"
+          ],
+          "counts": {
+            "공통답변": 4,
+            "공통 답변": 2
+          },
+          "totalCount": 6,
+          "recommendedUnify": "공통답변"
+        },
+        {
+          "key": "과학교사",
+          "variants": [
+            "과학 교사",
+            "과학교사"
+          ],
+          "counts": {
+            "과학 교사": 1,
+            "과학교사": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "과학교사"
+        },
+        {
+          "key": "광고대행업",
+          "variants": [
+            "광고대행업",
+            "광고 대행업"
+          ],
+          "counts": {
+            "광고대행업": 3,
+            "광고 대행업": 2
+          },
+          "totalCount": 5,
+          "recommendedUnify": "광고대행업"
+        },
+        {
+          "key": "국민정서",
+          "variants": [
+            "국민 정서",
+            "국민정서"
+          ],
+          "counts": {
+            "국민 정서": 1,
+            "국민정서": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "국민정서"
+        },
+        {
+          "key": "금융지식",
+          "variants": [
+            "금융 지식",
+            "금융지식"
+          ],
+          "counts": {
+            "금융 지식": 3,
+            "금융지식": 1
+          },
+          "totalCount": 4,
+          "recommendedUnify": "금융 지식"
+        },
+        {
+          "key": "금융회사",
+          "variants": [
+            "금융 회사",
+            "금융회사"
+          ],
+          "counts": {
+            "금융 회사": 2,
+            "금융회사": 1
+          },
+          "totalCount": 3,
+          "recommendedUnify": "금융 회사"
+        },
+        {
+          "key": "금융기관",
+          "variants": [
+            "금융기관",
+            "금융 기관"
+          ],
+          "counts": {
+            "금융기관": 14,
+            "금융 기관": 1
+          },
+          "totalCount": 15,
+          "recommendedUnify": "금융기관"
+        },
+        {
+          "key": "금융상품",
+          "variants": [
+            "금융 상품",
+            "금융상품"
+          ],
+          "counts": {
+            "금융 상품": 1,
+            "금융상품": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "금융상품"
+        },
+        {
+          "key": "기록재판",
+          "variants": [
+            "기록 재판",
+            "기록재판"
+          ],
+          "counts": {
+            "기록 재판": 1,
+            "기록재판": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "기록재판"
+        },
+        {
+          "key": "다가구주택",
+          "variants": [
+            "다가구 주택",
+            "다가구주택"
+          ],
+          "counts": {
+            "다가구 주택": 3,
+            "다가구주택": 1
+          },
+          "totalCount": 4,
+          "recommendedUnify": "다가구 주택"
+        },
+        {
+          "key": "단독주택",
+          "variants": [
+            "단독주택",
+            "단독 주택"
+          ],
+          "counts": {
+            "단독주택": 4,
+            "단독 주택": 1
+          },
+          "totalCount": 5,
+          "recommendedUnify": "단독주택"
+        },
+        {
+          "key": "단합대회",
+          "variants": [
+            "단합대회",
+            "단합 대회"
+          ],
+          "counts": {
+            "단합대회": 2,
+            "단합 대회": 1
+          },
+          "totalCount": 3,
+          "recommendedUnify": "단합대회"
+        },
+        {
+          "key": "담당공무원",
+          "variants": [
+            "담당공무원",
+            "담당 공무원"
+          ],
+          "counts": {
+            "담당공무원": 13,
+            "담당 공무원": 9
+          },
+          "totalCount": 22,
+          "recommendedUnify": "담당공무원"
+        },
+        {
+          "key": "대학교육",
+          "variants": [
+            "대학교육",
+            "대학 교육"
+          ],
+          "counts": {
+            "대학교육": 1,
+            "대학 교육": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "대학교육"
+        },
+        {
+          "key": "동종업계",
+          "variants": [
+            "동종업계",
+            "동종 업계"
+          ],
+          "counts": {
+            "동종업계": 5,
+            "동종 업계": 2
+          },
+          "totalCount": 7,
+          "recommendedUnify": "동종업계"
+        },
+        {
+          "key": "뒈져버려라",
+          "variants": [
+            "뒈져 버려라",
+            "뒈져버려라"
+          ],
+          "counts": {
+            "뒈져 버려라": 2,
+            "뒈져버려라": 1
+          },
+          "totalCount": 3,
+          "recommendedUnify": "뒈져 버려라"
+        },
+        {
+          "key": "땅콩사건",
+          "variants": [
+            "땅콩 사건",
+            "땅콩사건"
+          ],
+          "counts": {
+            "땅콩 사건": 2,
+            "땅콩사건": 2
+          },
+          "totalCount": 4,
+          "recommendedUnify": "땅콩사건"
+        },
+        {
+          "key": "라이프스타일",
+          "variants": [
+            "라이프 스타일",
+            "라이프스타일"
+          ],
+          "counts": {
+            "라이프 스타일": 2,
+            "라이프스타일": 1
+          },
+          "totalCount": 3,
+          "recommendedUnify": "라이프 스타일"
+        },
+        {
+          "key": "라임펀드",
+          "variants": [
+            "라임 펀드",
+            "라임펀드"
+          ],
+          "counts": {
+            "라임 펀드": 2,
+            "라임펀드": 1
+          },
+          "totalCount": 3,
+          "recommendedUnify": "라임 펀드"
+        },
+        {
+          "key": "롯데백화점",
+          "variants": [
+            "롯데백화점",
+            "롯데 백화점"
+          ],
+          "counts": {
+            "롯데백화점": 1,
+            "롯데 백화점": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "롯데백화점"
+        },
+        {
+          "key": "머니게임",
+          "variants": [
+            "머니게임",
+            "머니 게임"
+          ],
+          "counts": {
+            "머니게임": 1,
+            "머니 게임": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "머니게임"
+        },
+        {
+          "key": "무엇무엇",
+          "variants": [
+            "무엇무엇",
+            "무엇 무엇"
+          ],
+          "counts": {
+            "무엇무엇": 1,
+            "무엇 무엇": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "무엇무엇"
+        },
+        {
+          "key": "문서작성",
+          "variants": [
+            "문서작성",
+            "문서 작성"
+          ],
+          "counts": {
+            "문서작성": 1,
+            "문서 작성": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "문서작성"
+        },
+        {
+          "key": "문제해결",
+          "variants": [
+            "문제 해결",
+            "문제해결"
+          ],
+          "counts": {
+            "문제 해결": 7,
+            "문제해결": 3
+          },
+          "totalCount": 10,
+          "recommendedUnify": "문제 해결"
+        },
+        {
+          "key": "미국대학",
+          "variants": [
+            "미국 대학",
+            "미국대학"
+          ],
+          "counts": {
+            "미국 대학": 2,
+            "미국대학": 1
+          },
+          "totalCount": 3,
+          "recommendedUnify": "미국 대학"
+        },
+        {
+          "key": "미국변호사들",
+          "variants": [
+            "미국변호사들",
+            "미국 변호사들"
+          ],
+          "counts": {
+            "미국변호사들": 2,
+            "미국 변호사들": 1
+          },
+          "totalCount": 3,
+          "recommendedUnify": "미국변호사들"
+        },
+        {
+          "key": "미래가치",
+          "variants": [
+            "미래가치",
+            "미래 가치"
+          ],
+          "counts": {
+            "미래가치": 2,
+            "미래 가치": 1
+          },
+          "totalCount": 3,
+          "recommendedUnify": "미래가치"
+        },
+        {
+          "key": "민간기업",
+          "variants": [
+            "민간기업",
+            "민간 기업"
+          ],
+          "counts": {
+            "민간기업": 3,
+            "민간 기업": 2
+          },
+          "totalCount": 5,
+          "recommendedUnify": "민간기업"
+        },
+        {
+          "key": "박사과정",
+          "variants": [
+            "박사과정",
+            "박사 과정"
+          ],
+          "counts": {
+            "박사과정": 1,
+            "박사 과정": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "박사과정"
+        },
+        {
+          "key": "박사학위",
+          "variants": [
+            "박사학위",
+            "박사 학위"
+          ],
+          "counts": {
+            "박사학위": 6,
+            "박사 학위": 1
+          },
+          "totalCount": 7,
+          "recommendedUnify": "박사학위"
+        },
+        {
+          "key": "법률사무소",
+          "variants": [
+            "법률사무소",
+            "법률 사무소"
+          ],
+          "counts": {
+            "법률사무소": 1,
+            "법률 사무소": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "법률사무소"
+        },
+        {
+          "key": "법인자금",
+          "variants": [
+            "법인 자금",
+            "법인자금"
+          ],
+          "counts": {
+            "법인 자금": 1,
+            "법인자금": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "법인자금"
+        },
+        {
+          "key": "보통사람",
+          "variants": [
+            "보통 사람",
+            "보통사람"
+          ],
+          "counts": {
+            "보통 사람": 14,
+            "보통사람": 2
+          },
+          "totalCount": 16,
+          "recommendedUnify": "보통 사람"
+        },
+        {
+          "key": "보통사람들",
+          "variants": [
+            "보통 사람들",
+            "보통사람들"
+          ],
+          "counts": {
+            "보통 사람들": 11,
+            "보통사람들": 2
+          },
+          "totalCount": 13,
+          "recommendedUnify": "보통 사람들"
+        },
+        {
+          "key": "부동산경매",
+          "variants": [
+            "부동산 경매",
+            "부동산경매"
+          ],
+          "counts": {
+            "부동산 경매": 6,
+            "부동산경매": 2
+          },
+          "totalCount": 8,
+          "recommendedUnify": "부동산 경매"
+        },
+        {
+          "key": "부산시장",
+          "variants": [
+            "부산 시장",
+            "부산시장"
+          ],
+          "counts": {
+            "부산 시장": 1,
+            "부산시장": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "부산시장"
+        },
+        {
+          "key": "부자고객",
+          "variants": [
+            "부자고객",
+            "부자 고객"
+          ],
+          "counts": {
+            "부자고객": 1,
+            "부자 고객": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "부자고객"
+        },
+        {
+          "key": "부자동네",
+          "variants": [
+            "부자 동네",
+            "부자동네"
+          ],
+          "counts": {
+            "부자 동네": 1,
+            "부자동네": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "부자동네"
+        },
+        {
+          "key": "부자아빠",
+          "variants": [
+            "부자아빠",
+            "부자 아빠"
+          ],
+          "counts": {
+            "부자아빠": 10,
+            "부자 아빠": 6
+          },
+          "totalCount": 16,
+          "recommendedUnify": "부자아빠"
+        },
+        {
+          "key": "부장판사",
+          "variants": [
+            "부장 판사",
+            "부장판사"
+          ],
+          "counts": {
+            "부장 판사": 1,
+            "부장판사": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "부장판사"
+        },
+        {
+          "key": "부하직원",
+          "variants": [
+            "부하 직원",
+            "부하직원"
+          ],
+          "counts": {
+            "부하 직원": 2,
+            "부하직원": 1
+          },
+          "totalCount": 3,
+          "recommendedUnify": "부하 직원"
+        },
+        {
+          "key": "분석내용",
+          "variants": [
+            "분석 내용",
+            "분석내용"
+          ],
+          "counts": {
+            "분석 내용": 1,
+            "분석내용": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "분석내용"
+        },
+        {
+          "key": "분양대행",
+          "variants": [
+            "분양대행",
+            "분양 대행"
+          ],
+          "counts": {
+            "분양대행": 5,
+            "분양 대행": 1
+          },
+          "totalCount": 6,
+          "recommendedUnify": "분양대행"
+        },
+        {
+          "key": "분양호텔",
+          "variants": [
+            "분양호텔",
+            "분양 호텔"
+          ],
+          "counts": {
+            "분양호텔": 1,
+            "분양 호텔": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "분양호텔"
+        },
+        {
+          "key": "비교심리",
+          "variants": [
+            "비교심리",
+            "비교 심리"
+          ],
+          "counts": {
+            "비교심리": 4,
+            "비교 심리": 3
+          },
+          "totalCount": 7,
+          "recommendedUnify": "비교심리"
+        },
+        {
+          "key": "비행시간",
+          "variants": [
+            "비행시간",
+            "비행 시간"
+          ],
+          "counts": {
+            "비행시간": 2,
+            "비행 시간": 1
+          },
+          "totalCount": 3,
+          "recommendedUnify": "비행시간"
+        },
+        {
+          "key": "사고방식",
+          "variants": [
+            "사고방식",
+            "사고 방식"
+          ],
+          "counts": {
+            "사고방식": 7,
+            "사고 방식": 3
+          },
+          "totalCount": 10,
+          "recommendedUnify": "사고방식"
+        },
+        {
+          "key": "사업자금",
+          "variants": [
+            "사업 자금",
+            "사업자금"
+          ],
+          "counts": {
+            "사업 자금": 1,
+            "사업자금": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "사업자금"
+        },
+        {
+          "key": "사용내역",
+          "variants": [
+            "사용 내역",
+            "사용내역"
+          ],
+          "counts": {
+            "사용 내역": 1,
+            "사용내역": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "사용내역"
+        },
+        {
+          "key": "사용능력",
+          "variants": [
+            "사용능력",
+            "사용 능력"
+          ],
+          "counts": {
+            "사용능력": 2,
+            "사용 능력": 1
+          },
+          "totalCount": 3,
+          "recommendedUnify": "사용능력"
+        },
+        {
+          "key": "서류작성",
+          "variants": [
+            "서류 작성",
+            "서류작성"
+          ],
+          "counts": {
+            "서류 작성": 1,
+            "서류작성": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "서류작성"
+        },
+        {
+          "key": "서류전형",
+          "variants": [
+            "서류 전형",
+            "서류전형"
+          ],
+          "counts": {
+            "서류 전형": 1,
+            "서류전형": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "서류전형"
+        },
+        {
+          "key": "소득격차",
+          "variants": [
+            "소득격차",
+            "소득 격차"
+          ],
+          "counts": {
+            "소득격차": 2,
+            "소득 격차": 1
+          },
+          "totalCount": 3,
+          "recommendedUnify": "소득격차"
+        },
+        {
+          "key": "소비생활",
+          "variants": [
+            "소비생활",
+            "소비 생활"
+          ],
+          "counts": {
+            "소비생활": 5,
+            "소비 생활": 5
+          },
+          "totalCount": 10,
+          "recommendedUnify": "소비생활"
+        },
+        {
+          "key": "수임계약",
+          "variants": [
+            "수임 계약",
+            "수임계약"
+          ],
+          "counts": {
+            "수임 계약": 1,
+            "수임계약": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "수임계약"
+        },
+        {
+          "key": "시계골목",
+          "variants": [
+            "시계골목",
+            "시계 골목"
+          ],
+          "counts": {
+            "시계골목": 1,
+            "시계 골목": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "시계골목"
+        },
+        {
+          "key": "신문기사",
+          "variants": [
+            "신문 기사",
+            "신문기사"
+          ],
+          "counts": {
+            "신문 기사": 2,
+            "신문기사": 1
+          },
+          "totalCount": 3,
+          "recommendedUnify": "신문 기사"
+        },
+        {
+          "key": "신용카드",
+          "variants": [
+            "신용카드",
+            "신용 카드"
+          ],
+          "counts": {
+            "신용카드": 5,
+            "신용 카드": 2
+          },
+          "totalCount": 7,
+          "recommendedUnify": "신용카드"
+        },
+        {
+          "key": "신입사원",
+          "variants": [
+            "신입 사원",
+            "신입사원"
+          ],
+          "counts": {
+            "신입 사원": 10,
+            "신입사원": 1
+          },
+          "totalCount": 11,
+          "recommendedUnify": "신입 사원"
+        },
+        {
+          "key": "신호위반",
+          "variants": [
+            "신호 위반",
+            "신호위반"
+          ],
+          "counts": {
+            "신호 위반": 3,
+            "신호위반": 1
+          },
+          "totalCount": 4,
+          "recommendedUnify": "신호 위반"
+        },
+        {
+          "key": "실내장식",
+          "variants": [
+            "실내 장식",
+            "실내장식"
+          ],
+          "counts": {
+            "실내 장식": 1,
+            "실내장식": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "실내장식"
+        },
+        {
+          "key": "실물경제",
+          "variants": [
+            "실물경제",
+            "실물 경제"
+          ],
+          "counts": {
+            "실물경제": 3,
+            "실물 경제": 1
+          },
+          "totalCount": 4,
+          "recommendedUnify": "실물경제"
+        },
+        {
+          "key": "업무개선",
+          "variants": [
+            "업무 개선",
+            "업무개선"
+          ],
+          "counts": {
+            "업무 개선": 2,
+            "업무개선": 1
+          },
+          "totalCount": 3,
+          "recommendedUnify": "업무 개선"
+        },
+        {
+          "key": "업무능력",
+          "variants": [
+            "업무 능력",
+            "업무능력"
+          ],
+          "counts": {
+            "업무 능력": 1,
+            "업무능력": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "업무능력"
+        },
+        {
+          "key": "영상자료",
+          "variants": [
+            "영상 자료",
+            "영상자료"
+          ],
+          "counts": {
+            "영상 자료": 2,
+            "영상자료": 1
+          },
+          "totalCount": 3,
+          "recommendedUnify": "영상 자료"
+        },
+        {
+          "key": "영어실력",
+          "variants": [
+            "영어 실력",
+            "영어실력"
+          ],
+          "counts": {
+            "영어 실력": 4,
+            "영어실력": 1
+          },
+          "totalCount": 5,
+          "recommendedUnify": "영어 실력"
+        },
+        {
+          "key": "영어회화",
+          "variants": [
+            "영어회화",
+            "영어 회화"
+          ],
+          "counts": {
+            "영어회화": 1,
+            "영어 회화": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "영어회화"
+        },
+        {
+          "key": "영업방식",
+          "variants": [
+            "영업 방식",
+            "영업방식"
+          ],
+          "counts": {
+            "영업 방식": 2,
+            "영업방식": 1
+          },
+          "totalCount": 3,
+          "recommendedUnify": "영업 방식"
+        },
+        {
+          "key": "영업사원",
+          "variants": [
+            "영업사원",
+            "영업 사원"
+          ],
+          "counts": {
+            "영업사원": 13,
+            "영업 사원": 2
+          },
+          "totalCount": 15,
+          "recommendedUnify": "영업사원"
+        },
+        {
+          "key": "옛날이야기",
+          "variants": [
+            "옛날 이야기",
+            "옛날이야기"
+          ],
+          "counts": {
+            "옛날 이야기": 1,
+            "옛날이야기": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "옛날이야기"
+        },
+        {
+          "key": "외환위기",
+          "variants": [
+            "외환위기",
+            "외환 위기"
+          ],
+          "counts": {
+            "외환위기": 18,
+            "외환 위기": 3
+          },
+          "totalCount": 21,
+          "recommendedUnify": "외환위기"
+        },
+        {
+          "key": "원두커피",
+          "variants": [
+            "원두 커피",
+            "원두커피"
+          ],
+          "counts": {
+            "원두 커피": 1,
+            "원두커피": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "원두커피"
+        },
+        {
+          "key": "으쌰으쌰",
+          "variants": [
+            "으쌰으쌰",
+            "으쌰 으쌰"
+          ],
+          "counts": {
+            "으쌰으쌰": 2,
+            "으쌰 으쌰": 1
+          },
+          "totalCount": 3,
+          "recommendedUnify": "으쌰으쌰"
+        },
+        {
+          "key": "은행대출",
+          "variants": [
+            "은행 대출",
+            "은행대출"
+          ],
+          "counts": {
+            "은행 대출": 6,
+            "은행대출": 2
+          },
+          "totalCount": 8,
+          "recommendedUnify": "은행 대출"
+        },
+        {
+          "key": "이용시간",
+          "variants": [
+            "이용시간",
+            "이용 시간"
+          ],
+          "counts": {
+            "이용시간": 1,
+            "이용 시간": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "이용시간"
+        },
+        {
+          "key": "인생선배",
+          "variants": [
+            "인생선배",
+            "인생 선배"
+          ],
+          "counts": {
+            "인생선배": 1,
+            "인생 선배": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "인생선배"
+        },
+        {
+          "key": "일제시대",
+          "variants": [
+            "일제시대",
+            "일제 시대"
+          ],
+          "counts": {
+            "일제시대": 2,
+            "일제 시대": 1
+          },
+          "totalCount": 3,
+          "recommendedUnify": "일제시대"
+        },
+        {
+          "key": "임대주택",
+          "variants": [
+            "임대 주택",
+            "임대주택"
+          ],
+          "counts": {
+            "임대 주택": 1,
+            "임대주택": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "임대주택"
+        },
+        {
+          "key": "장례비용",
+          "variants": [
+            "장례 비용",
+            "장례비용"
+          ],
+          "counts": {
+            "장례 비용": 2,
+            "장례비용": 1
+          },
+          "totalCount": 3,
+          "recommendedUnify": "장례 비용"
+        },
+        {
+          "key": "장학사업",
+          "variants": [
+            "장학사업",
+            "장학 사업"
+          ],
+          "counts": {
+            "장학사업": 4,
+            "장학 사업": 1
+          },
+          "totalCount": 5,
+          "recommendedUnify": "장학사업"
+        },
+        {
+          "key": "재산증식",
+          "variants": [
+            "재산 증식",
+            "재산증식"
+          ],
+          "counts": {
+            "재산 증식": 1,
+            "재산증식": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "재산증식"
+        },
+        {
+          "key": "전제조건",
+          "variants": [
+            "전제조건",
+            "전제 조건"
+          ],
+          "counts": {
+            "전제조건": 1,
+            "전제 조건": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "전제조건"
+        },
+        {
+          "key": "접대문화",
+          "variants": [
+            "접대문화",
+            "접대 문화"
+          ],
+          "counts": {
+            "접대문화": 1,
+            "접대 문화": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "접대문화"
+        },
+        {
+          "key": "정보화시대",
+          "variants": [
+            "정보화 시대",
+            "정보화시대"
+          ],
+          "counts": {
+            "정보화 시대": 5,
+            "정보화시대": 1
+          },
+          "totalCount": 6,
+          "recommendedUnify": "정보화 시대"
+        },
+        {
+          "key": "정부기관",
+          "variants": [
+            "정부기관",
+            "정부 기관"
+          ],
+          "counts": {
+            "정부기관": 1,
+            "정부 기관": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "정부기관"
+        },
+        {
+          "key": "정부지원금",
+          "variants": [
+            "정부 지원금",
+            "정부지원금"
+          ],
+          "counts": {
+            "정부 지원금": 1,
+            "정부지원금": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "정부지원금"
+        },
+        {
+          "key": "정신건강",
+          "variants": [
+            "정신 건강",
+            "정신건강"
+          ],
+          "counts": {
+            "정신 건강": 1,
+            "정신건강": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "정신건강"
+        },
+        {
+          "key": "제왕절개수술",
+          "variants": [
+            "제왕절개 수술",
+            "제왕절개수술"
+          ],
+          "counts": {
+            "제왕절개 수술": 1,
+            "제왕절개수술": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "제왕절개수술"
+        },
+        {
+          "key": "존재의미",
+          "variants": [
+            "존재 의미",
+            "존재의미"
+          ],
+          "counts": {
+            "존재 의미": 1,
+            "존재의미": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "존재의미"
+        },
+        {
+          "key": "종합병원",
+          "variants": [
+            "종합병원",
+            "종합 병원"
+          ],
+          "counts": {
+            "종합병원": 5,
+            "종합 병원": 2
+          },
+          "totalCount": 7,
+          "recommendedUnify": "종합병원"
+        },
+        {
+          "key": "주무부서",
+          "variants": [
+            "주무부서",
+            "주무 부서"
+          ],
+          "counts": {
+            "주무부서": 1,
+            "주무 부서": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "주무부서"
+        },
+        {
+          "key": "주변인식",
+          "variants": [
+            "주변인식",
+            "주변 인식"
+          ],
+          "counts": {
+            "주변인식": 3,
+            "주변 인식": 1
+          },
+          "totalCount": 4,
+          "recommendedUnify": "주변인식"
+        },
+        {
+          "key": "주상복합아파트",
+          "variants": [
+            "주상 복합 아파트",
+            "주상복합아파트"
+          ],
+          "counts": {
+            "주상 복합 아파트": 2,
+            "주상복합아파트": 1
+          },
+          "totalCount": 3,
+          "recommendedUnify": "주상 복합 아파트"
+        },
+        {
+          "key": "주식시장",
+          "variants": [
+            "주식시장",
+            "주식 시장"
+          ],
+          "counts": {
+            "주식시장": 3,
+            "주식 시장": 3
+          },
+          "totalCount": 6,
+          "recommendedUnify": "주식시장"
+        },
+        {
+          "key": "증권회사",
+          "variants": [
+            "증권회사",
+            "증권 회사"
+          ],
+          "counts": {
+            "증권회사": 2,
+            "증권 회사": 1
+          },
+          "totalCount": 3,
+          "recommendedUnify": "증권회사"
+        },
+        {
+          "key": "지분비율",
+          "variants": [
+            "지분비율",
+            "지분 비율"
+          ],
+          "counts": {
+            "지분비율": 8,
+            "지분 비율": 1
+          },
+          "totalCount": 9,
+          "recommendedUnify": "지분비율"
+        },
+        {
+          "key": "지식수준",
+          "variants": [
+            "지식수준",
+            "지식 수준"
+          ],
+          "counts": {
+            "지식수준": 1,
+            "지식 수준": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "지식수준"
+        },
+        {
+          "key": "지옥훈련",
+          "variants": [
+            "지옥 훈련",
+            "지옥훈련"
+          ],
+          "counts": {
+            "지옥 훈련": 1,
+            "지옥훈련": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "지옥훈련"
+        },
+        {
+          "key": "직업순위",
+          "variants": [
+            "직업 순위",
+            "직업순위"
+          ],
+          "counts": {
+            "직업 순위": 1,
+            "직업순위": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "직업순위"
+        },
+        {
+          "key": "직원교육용",
+          "variants": [
+            "직원 교육용",
+            "직원교육용"
+          ],
+          "counts": {
+            "직원 교육용": 2,
+            "직원교육용": 1
+          },
+          "totalCount": 3,
+          "recommendedUnify": "직원 교육용"
+        },
+        {
+          "key": "철야예배",
+          "variants": [
+            "철야예배",
+            "철야 예배"
+          ],
+          "counts": {
+            "철야예배": 1,
+            "철야 예배": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "철야예배"
+        },
+        {
+          "key": "최소시간",
+          "variants": [
+            "최소시간",
+            "최소 시간"
+          ],
+          "counts": {
+            "최소시간": 1,
+            "최소 시간": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "최소시간"
+        },
+        {
+          "key": "컨설팅회사",
+          "variants": [
+            "컨설팅회사",
+            "컨설팅 회사"
+          ],
+          "counts": {
+            "컨설팅회사": 4,
+            "컨설팅 회사": 3
+          },
+          "totalCount": 7,
+          "recommendedUnify": "컨설팅회사"
+        },
+        {
+          "key": "투자대상",
+          "variants": [
+            "투자 대상",
+            "투자대상"
+          ],
+          "counts": {
+            "투자 대상": 2,
+            "투자대상": 1
+          },
+          "totalCount": 3,
+          "recommendedUnify": "투자 대상"
+        },
+        {
+          "key": "투자비용",
+          "variants": [
+            "투자 비용",
+            "투자비용"
+          ],
+          "counts": {
+            "투자 비용": 1,
+            "투자비용": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "투자비용"
+        },
+        {
+          "key": "투자수익",
+          "variants": [
+            "투자수익",
+            "투자 수익"
+          ],
+          "counts": {
+            "투자수익": 2,
+            "투자 수익": 1
+          },
+          "totalCount": 3,
+          "recommendedUnify": "투자수익"
+        },
+        {
+          "key": "투자회사",
+          "variants": [
+            "투자회사",
+            "투자 회사"
+          ],
+          "counts": {
+            "투자회사": 4,
+            "투자 회사": 1
+          },
+          "totalCount": 5,
+          "recommendedUnify": "투자회사"
+        },
+        {
+          "key": "특급호텔",
+          "variants": [
+            "특급호텔",
+            "특급 호텔"
+          ],
+          "counts": {
+            "특급호텔": 6,
+            "특급 호텔": 3
+          },
+          "totalCount": 9,
+          "recommendedUnify": "특급호텔"
+        },
+        {
+          "key": "특별대우",
+          "variants": [
+            "특별 대우",
+            "특별대우"
+          ],
+          "counts": {
+            "특별 대우": 2,
+            "특별대우": 2
+          },
+          "totalCount": 4,
+          "recommendedUnify": "특별대우"
+        },
+        {
+          "key": "파생상품",
+          "variants": [
+            "파생상품",
+            "파생 상품"
+          ],
+          "counts": {
+            "파생상품": 2,
+            "파생 상품": 1
+          },
+          "totalCount": 3,
+          "recommendedUnify": "파생상품"
+        },
+        {
+          "key": "판매수당",
+          "variants": [
+            "판매 수당",
+            "판매수당"
+          ],
+          "counts": {
+            "판매 수당": 1,
+            "판매수당": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "판매수당"
+        },
+        {
+          "key": "편집과정",
+          "variants": [
+            "편집 과정",
+            "편집과정"
+          ],
+          "counts": {
+            "편집 과정": 1,
+            "편집과정": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "편집과정"
+        },
+        {
+          "key": "프로선수",
+          "variants": [
+            "프로 선수",
+            "프로선수"
+          ],
+          "counts": {
+            "프로 선수": 2,
+            "프로선수": 1
+          },
+          "totalCount": 3,
+          "recommendedUnify": "프로 선수"
+        },
+        {
+          "key": "하급직원들",
+          "variants": [
+            "하급 직원들",
+            "하급직원들"
+          ],
+          "counts": {
+            "하급 직원들": 3,
+            "하급직원들": 1
+          },
+          "totalCount": 4,
+          "recommendedUnify": "하급 직원들"
+        },
+        {
+          "key": "하드디스크",
+          "variants": [
+            "하드 디스크",
+            "하드디스크"
+          ],
+          "counts": {
+            "하드 디스크": 1,
+            "하드디스크": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "하드디스크"
+        },
+        {
+          "key": "학창시절",
+          "variants": [
+            "학창 시절",
+            "학창시절"
+          ],
+          "counts": {
+            "학창 시절": 5,
+            "학창시절": 1
+          },
+          "totalCount": 6,
+          "recommendedUnify": "학창 시절"
+        },
+        {
+          "key": "한겨레신문",
+          "variants": [
+            "한겨레신문",
+            "한겨레 신문"
+          ],
+          "counts": {
+            "한겨레신문": 3,
+            "한겨레 신문": 1
+          },
+          "totalCount": 4,
+          "recommendedUnify": "한겨레신문"
+        },
+        {
+          "key": "한국경제",
+          "variants": [
+            "한국경제",
+            "한국 경제"
+          ],
+          "counts": {
+            "한국경제": 2,
+            "한국 경제": 2
+          },
+          "totalCount": 4,
+          "recommendedUnify": "한국경제"
+        },
+        {
+          "key": "한국경제신문",
+          "variants": [
+            "한국경제 신문",
+            "한국경제신문"
+          ],
+          "counts": {
+            "한국경제 신문": 1,
+            "한국경제신문": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "한국경제신문"
+        },
+        {
+          "key": "한국영화",
+          "variants": [
+            "한국 영화",
+            "한국영화"
+          ],
+          "counts": {
+            "한국 영화": 1,
+            "한국영화": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "한국영화"
+        },
+        {
+          "key": "해결방안",
+          "variants": [
+            "해결 방안",
+            "해결방안"
+          ],
+          "counts": {
+            "해결 방안": 2,
+            "해결방안": 1
+          },
+          "totalCount": 3,
+          "recommendedUnify": "해결 방안"
+        },
+        {
+          "key": "해외유학",
+          "variants": [
+            "해외 유학",
+            "해외유학"
+          ],
+          "counts": {
+            "해외 유학": 1,
+            "해외유학": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "해외유학"
+        },
+        {
+          "key": "헬렌피터슨",
+          "variants": [
+            "헬렌 피터슨",
+            "헬렌피터슨"
+          ],
+          "counts": {
+            "헬렌 피터슨": 1,
+            "헬렌피터슨": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "헬렌피터슨"
+        },
+        {
+          "key": "현실세계",
+          "variants": [
+            "현실 세계",
+            "현실세계"
+          ],
+          "counts": {
+            "현실 세계": 1,
+            "현실세계": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "현실세계"
+        },
+        {
+          "key": "형사사건",
+          "variants": [
+            "형사 사건",
+            "형사사건"
+          ],
+          "counts": {
+            "형사 사건": 3,
+            "형사사건": 1
+          },
+          "totalCount": 4,
+          "recommendedUnify": "형사 사건"
+        },
+        {
+          "key": "형사소송",
+          "variants": [
+            "형사 소송",
+            "형사소송"
+          ],
+          "counts": {
+            "형사 소송": 1,
+            "형사소송": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "형사소송"
+        },
+        {
+          "key": "회식자리",
+          "variants": [
+            "회식 자리",
+            "회식자리"
+          ],
+          "counts": {
+            "회식 자리": 1,
+            "회식자리": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "회식자리"
+        },
+        {
+          "key": "흘려버려라",
+          "variants": [
+            "흘려 버려라",
+            "흘려버려라"
+          ],
+          "counts": {
+            "흘려 버려라": 1,
+            "흘려버려라": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "흘려버려라"
+        }
+      ]
+    },
+    {
+      "name": "과학교과서",
+      "skipped": true,
+      "pageCount": 0,
+      "clusterCount": 0,
+      "rawKeyCount": 0,
+      "clusters": []
+    },
+    {
+      "name": "날개",
+      "skipped": false,
+      "pageCount": 21,
+      "clusterCount": 1,
+      "rawKeyCount": 2195,
+      "clusters": [
+        {
+          "key": "골덴양복",
+          "variants": [
+            "골덴양복",
+            "골덴 양복"
+          ],
+          "counts": {
+            "골덴양복": 1,
+            "골덴 양복": 1
+          },
+          "totalCount": 2,
+          "recommendedUnify": "골덴양복"
+        }
+      ]
+    },
+    {
+      "name": "박제",
+      "skipped": false,
+      "pageCount": 8,
+      "clusterCount": 0,
+      "rawKeyCount": 1511,
+      "clusters": []
+    },
+    {
+      "name": "운수좋은날",
+      "skipped": false,
+      "pageCount": 6,
+      "clusterCount": 0,
+      "rawKeyCount": 839,
+      "clusters": []
+    },
+    {
+      "name": "제4원칙",
+      "skipped": false,
+      "pageCount": 8,
+      "clusterCount": 0,
+      "rawKeyCount": 1315,
+      "clusters": []
+    }
+  ]
+}
