@@ -56,7 +56,12 @@ function builtInRuleFromRow(row) {
     ...(finds ? { finds } : {}),
     ...(findReplaces ? { findReplaces } : {}),
     ...(displayLabel ? { displayLabel } : {}),
-    ...(row.find === '쳐지' ? { requireLeadingBoundary: true } : {}),
+    // 붙여 쓴 find는 spellingLeadingHangulBoundary가 안 켜짐 → 어절 시작만
+    ...(row.find === '쳐지' ||
+    row.find === '해질녘' ||
+    row.find === '해질무렵'
+      ? { requireLeadingBoundary: true }
+      : {}),
     ...(row.allowAttachedPrefix === true ? { allowAttachedPrefix: true } : {}),
   };
 }
