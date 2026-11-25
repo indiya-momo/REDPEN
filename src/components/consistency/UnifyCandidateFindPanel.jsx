@@ -873,6 +873,7 @@ function Phase2ConditionSummary({
  *   onFindButtonClick?: () => void,
  *   seriesSpacingGuideAttr?: string,
  *   onSeriesSpacingGuideSelect?: () => void,
+ *   directUnifySlot?: import('react').ReactNode,
  * }} props
  */
 export default function UnifyCandidateFindPanel({
@@ -900,6 +901,7 @@ export default function UnifyCandidateFindPanel({
   onFindButtonClick,
   seriesSpacingGuideAttr,
   onSeriesSpacingGuideSelect,
+  directUnifySlot = null,
 }) {
   const [finding, setFinding] = useState(false);
   const [slmReviewing, setSlmReviewing] = useState(false);
@@ -1981,6 +1983,9 @@ export default function UnifyCandidateFindPanel({
         </div>
         {finding ? <UnifyFindLoadingStatus /> : null}
       </div>
+
+      {/* 표기 통일하기 — 「직접 지정」 접기 (ConsistencyPanel에서 전달) */}
+      {directUnifySlot}
 
       {import.meta.env.DEV ? (
         <OrthoSpikeDevPanel
