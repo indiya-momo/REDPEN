@@ -1,0 +1,161 @@
+{
+  "smoke": {
+    "rules": 1,
+    "find": true,
+    "smokeRows": 2,
+    "smokeCitations": [
+      "어루만지다",
+      "생각하다"
+    ]
+  },
+  "measure": {
+    "hNotPosOk": 0,
+    "caretRows": 0,
+    "H": 56437,
+    "K": 55042,
+    "perBook": [
+      {
+        "book": "경주멍",
+        "numPages": 116,
+        "rows": 16,
+        "emptyCitation": 0,
+        "distinctCitation": 9
+      },
+      {
+        "book": "book_part2",
+        "numPages": 34,
+        "rows": 6,
+        "emptyCitation": 0,
+        "distinctCitation": 5
+      }
+    ],
+    "totals": {
+      "distinctCitation": 10,
+      "occurrences": 22,
+      "emptyCitation": 0,
+      "rows": 22
+    },
+    "buckets": {
+      "inK": {
+        "distinct": 4,
+        "occurrences": 14
+      },
+      "noForms": {
+        "distinct": 1,
+        "occurrences": 1
+      },
+      "onlyShort": {
+        "distinct": 0,
+        "occurrences": 0
+      },
+      "mixedHomograph": {
+        "distinct": 0,
+        "occurrences": 0
+      },
+      "mixedOtherOnly": {
+        "distinct": 0,
+        "occurrences": 0
+      },
+      "shortAndMixed": {
+        "distinct": 0,
+        "occurrences": 0
+      },
+      "outsideH": {
+        "distinct": 5,
+        "occurrences": 7
+      }
+    },
+    "allCitations": [
+      {
+        "citation": "들이다",
+        "count": 10,
+        "bucket": "inK",
+        "samples": [
+          "경주멍 p.4: 들여다 보며",
+          "경주멍 p.5: 들여다 보게",
+          "경주멍 p.5: 들여다 봐도"
+        ]
+      },
+      {
+        "citation": "가지다",
+        "count": 2,
+        "bucket": "outsideH",
+        "samples": [
+          "경주멍 p.39: 가져다 준",
+          "book_part2 p.11: 가져다 준"
+        ]
+      },
+      {
+        "citation": "내리다",
+        "count": 2,
+        "bucket": "outsideH",
+        "samples": [
+          "경주멍 p.72: 내려다 볼",
+          "book_part2 p.27: 내려다 볼"
+        ]
+      },
+      {
+        "citation": "어루만지다",
+        "count": 2,
+        "bucket": "inK",
+        "samples": [
+          "경주멍 p.76: 어루만져 주세요",
+          "book_part2 p.32: 어루만져 주세요"
+        ]
+      },
+      {
+        "citation": "눈여기다",
+        "count": 1,
+        "bucket": "noForms",
+        "samples": [
+          "경주멍 p.110: 눈여겨 볼"
+        ]
+      },
+      {
+        "citation": "들어오다",
+        "count": 1,
+        "bucket": "inK",
+        "samples": [
+          "경주멍 p.47: 들어오다 가도"
+        ]
+      },
+      {
+        "citation": "떠올리다",
+        "count": 1,
+        "bucket": "outsideH",
+        "samples": [
+          "경주멍 p.21: 떠올려 본다"
+        ]
+      },
+      {
+        "citation": "베풀다",
+        "count": 1,
+        "bucket": "outsideH",
+        "samples": [
+          "book_part2 p.32: 베풀어 주세요"
+        ]
+      },
+      {
+        "citation": "이루다",
+        "count": 1,
+        "bucket": "outsideH",
+        "samples": [
+          "경주멍 p.109: 이루어 낼"
+        ]
+      },
+      {
+        "citation": "찾아오다",
+        "count": 1,
+        "bucket": "inK",
+        "samples": [
+          "경주멍 p.91: 찾아온다고 들"
+        ]
+      }
+    ]
+  },
+  "books": [
+    "경주멍 261117_경주멍-본문 2교지_검토중_.pdf",
+    "book_part2 새 폴더/book_part2.pdf"
+  ],
+  "note": "tmp/ 덮어쓰기 방지를 위해 2026-11-19 스냅샷"
+}

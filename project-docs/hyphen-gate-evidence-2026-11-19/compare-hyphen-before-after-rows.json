@@ -1,0 +1,57 @@
+{
+  "runDate": "2026-11-19",
+  "origin": "http://127.0.0.1:5173",
+  "note": "before=API headwordHasCompoundHyphen, after=local H. visible=게이트 통과 후 본+보 띄움필수면 제외(제품과 동일).",
+  "perBook": [
+    {
+      "book": "경주멍",
+      "path": "C:\\Users\\gikan\\OneDrive\\바탕 화면\\261117_경주멍-본문 2교지_교정완료.pdf",
+      "note": "검토중_ 없음 → 교정완료로 대체",
+      "numPages": 116,
+      "candidates": 18,
+      "emptyCitation": 0,
+      "apiErrors": 0,
+      "afterGate": {
+        "beforeApi": 12,
+        "afterH": 12,
+        "delta": 0
+      },
+      "visibleFindings": {
+        "beforeApi": 3,
+        "afterH": 3,
+        "delta": 0
+      }
+    },
+    {
+      "book": "book_part2",
+      "path": "C:\\Users\\gikan\\OneDrive\\바탕 화면\\새 폴더\\book_part2.pdf",
+      "note": null,
+      "numPages": 34,
+      "candidates": 7,
+      "emptyCitation": 0,
+      "apiErrors": 0,
+      "afterGate": {
+        "beforeApi": 3,
+        "afterH": 3,
+        "delta": 0
+      },
+      "visibleFindings": {
+        "beforeApi": 1,
+        "afterH": 1,
+        "delta": 0
+      }
+    }
+  ],
+  "totals": {
+    "candidates": 25,
+    "afterGateBefore": 15,
+    "afterGateAfter": 15,
+    "visibleBefore": 4,
+    "visibleAfter": 4,
+    "afterGateDelta": 0,
+    "visibleDelta": 0
+  },
+  "diffCount": 0,
+  "diffs": [],
+  "apiCacheSize": 11
+}
