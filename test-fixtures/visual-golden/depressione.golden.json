@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "book": {
+    "id": "depressione",
+    "pdfFileName": "depressione_PDF_v1.pdf",
+    "pageCount": 284
+  },
+  "labeledBy": "human",
+  "labeledAt": "2026-11-26",
+  "labelSource": "depressione-pdf-visual-order-sample.md · PDF 시각 읽기",
+  "labelEvidence": [
+    "depressione-p12-13-visual-order.md"
+  ],
+  "labelBasis": "pdf-visual",
+  "checks": {
+    "visualAdjacency": [
+      {
+        "id": "불치병→의_희생자",
+        "pages": [12, 13],
+        "note": "p.12 끝 「이 새로운 불치병」 다음 시각 본문은 「의 희생자가 되었다…」",
+        "leftNeedle": "이 새로운 불치병",
+        "expectNextPrefix": "의 희생자",
+        "forbidNextPrefix": "지 않는다면",
+        "expectContiguous": { "source": "불치병\\s*의\\s*희생자" },
+        "forbidContiguous": { "source": "불치병\\s*지\\s*않는다면" }
+      },
+      {
+        "id": "그러→지_않는다면",
+        "pages": [12, 13],
+        "note": "같은 인용 「…한다. 그러」 다음 시각 본문은 「지 않는다면…」",
+        "leftNeedle": "세워야만 한다. 그러",
+        "expectNextPrefix": "지 않는다면",
+        "forbidNextPrefix": "의 희생자",
+        "expectContiguous": { "source": "그러\\s*지\\s*않는다면" },
+        "forbidContiguous": { "source": "그러\\s*의\\s*희생자" }
+      }
+    ]
+  }
+}

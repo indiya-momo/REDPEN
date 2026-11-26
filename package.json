@@ -1,7 +1,7 @@
 {
   "name": "pdf-publish-proofread",
   "private": true,
-  "version": "1.352",
+  "version": "1.353",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -12,6 +12,7 @@
     "build": "vite build",
     "test": "vitest run && npm run validate-data",
     "test:watch": "vitest",
+    "test:golden": "npx vite-node scripts/_test_visual_golden.mjs",
     "validate-data": "node scripts/validate-data-json.mjs",
     "bench:reading-order": "node scripts/bench-reading-order.mjs",
     "kiwi:spike": "node scripts/kiwi-p0-spike.mjs",

@@ -1,0 +1,10 @@
+{
+  "note": "V4 센티넬 — 옛 오산출물. 평가기가 FAIL을 낼 수 있는지만 본다. 골든 출처는 보증하지 않음.",
+  "extractLines": [
+    { "pageNum": 12, "lineIndex": 0, "text": "대책을 세워야만 한다. 그러" },
+    { "pageNum": 12, "lineIndex": 1, "text": "이 새로운 불치병" },
+    { "pageNum": 13, "lineIndex": 0, "text": "지 않는다면 정말 어리석은 일일 것이다." },
+    { "pageNum": 13, "lineIndex": 1, "text": "의 희생자가 되었다." }
+  ],
+  "finalTxt": "대책을 세워야만 한다. 그러의 희생자가 되었다. 이 새로운 불치병지 않는다면 정말 어리석은 일일 것이다."
+}
