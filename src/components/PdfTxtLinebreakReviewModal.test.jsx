@@ -168,4 +168,42 @@ describe('PdfTxtLinebreakReviewModal', () => {
     });
     host.remove();
   });
+
+  it('쪽 넘김 불확실 후보는 사유와 설명 문구를 보여 준다', async () => {
+    const host = document.createElement('div');
+    document.body.appendChild(host);
+    const root = createRoot(host);
+
+    await act(async () => {
+      root.render(
+        <PdfTxtLinebreakReviewModal
+          open
+          sourceName="쪽넘김.pdf"
+          paragraphStats={{ joined: 0, kept: 1, omitted: 0 }}
+          candidates={[
+            {
+              id: '12:9:page',
+              pageNum: 12,
+              lineIndex: 9,
+              left: '그러',
+              right: '지 못한 것은 아니었다',
+              defaultDecision: 'keep',
+              glue: '',
+              reason: 'page-layout',
+            },
+          ]}
+          onCancel={() => {}}
+          onConfirm={() => {}}
+        />,
+      );
+    });
+
+    expect(host.textContent).toContain('12쪽 · 쪽 넘김 불확실 · 자동: 유지');
+    expect(host.textContent).toContain('쪽이 바뀌는 자리에서 앞뒤 줄이');
+
+    await act(async () => {
+      root.unmount();
+    });
+    host.remove();
+  });
 });

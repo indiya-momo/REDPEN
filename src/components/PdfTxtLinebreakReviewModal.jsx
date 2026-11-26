@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import AppDialog from './AppDialog.jsx';
 
 const REASON_LABEL = {
+  'page-layout': '쪽 넘김 불확실',
   josa: '조사',
   midword: '형태소 이음',
   hyphen: '영문 하이픈',
@@ -65,6 +66,7 @@ export default function PdfTxtLinebreakReviewModal({
   const count = candidates?.length ?? 0;
   const joined = paragraphStats?.joined ?? 0;
   const kept = paragraphStats?.kept ?? 0;
+  const hasPageLayout = (candidates ?? []).some((c) => c.reason === 'page-layout');
 
   const messageNode = (
     <div className="pdf-txt-linebreak-review">
@@ -107,6 +109,11 @@ export default function PdfTxtLinebreakReviewModal({
             : '확인할 예외가 없습니다. 최종 TXT를 받을 수 있습니다.'}
         </p>
       )}
+      {hasPageLayout && !keepVisualBreaks ? (
+        <p className="pdf-txt-linebreak-review__note">
+          「쪽 넘김 불확실」은 쪽이 바뀌는 자리에서 앞뒤 줄이 한 문단으로 이어지는지 확신하기 어려워 자동으로 줄을 유지한 곳입니다. 이어지는 문장이면 붙임이나 띄움을 골라 주세요.
+        </p>
+      ) : null}
       {count > 0 ? (
         <ul
           className={
