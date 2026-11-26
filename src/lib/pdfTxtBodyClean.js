@@ -3,7 +3,10 @@
  * 찾기/하이라이트 핫패스와 무관.
  */
 import { splitSpreadColumns } from './spreadColumnSplit.js';
-import { splitPageColumns } from './pageColumnSplit.js';
+import {
+  explainPageColumns,
+  splitPageColumns,
+} from './pageColumnSplit.js';
 
 /** 상·하단 띠 (쪽 y 범위 대비, PDF y는 위로 큼) */
 const BAND_RATIO = 0.12;
@@ -244,17 +247,86 @@ function bandOf(y, yMin, yMax) {
 }
 
 /**
+ * 시각 기준 본문 첫·끝 줄 인덱스 (측정 정답이 아니라 쪽 넘김 신뢰용).
+ * @param {{ y?: number, col?: number }[]} lineLayout
+ * @param {'single' | 'two'} kind
+ * @returns {{ bodyHeadIndex: number, bodyTailIndex: number }}
+ */
+export function bodyBoundaryIndices(lineLayout, kind = 'single') {
+  const layouts = lineLayout ?? [];
+  if (!layouts.length) return { bodyHeadIndex: 0, bodyTailIndex: -1 };
+
+  if (kind === 'two') {
+    let head = -1;
+    let headY = -Infinity;
+    let tail = -1;
+    let tailY = Infinity;
+    for (let i = 0; i < layouts.length; i += 1) {
+      const col = layouts[i]?.col ?? 0;
+      const y = layouts[i]?.y;
+      if (!Number.isFinite(y)) continue;
+      if (col === 0 && y >= headY) {
+        headY = y;
+        head = i;
+      }
+      if (col === 1 && y <= tailY) {
+        tailY = y;
+        tail = i;
+      }
+    }
+    if (head < 0) head = 0;
+    if (tail < 0) tail = layouts.length - 1;
+    return { bodyHeadIndex: head, bodyTailIndex: tail };
+  }
+
+  let head = 0;
+  let tail = 0;
+  let headY = -Infinity;
+  let tailY = Infinity;
+  for (let i = 0; i < layouts.length; i += 1) {
+    const y = layouts[i]?.y;
+    if (!Number.isFinite(y)) continue;
+    if (y >= headY) {
+      headY = y;
+      head = i;
+    }
+    if (y <= tailY) {
+      tailY = y;
+      tail = i;
+    }
+  }
+  return { bodyHeadIndex: head, bodyTailIndex: tail };
+}
+
+/**
  * @param {{ items?: import('pdfjs-dist').TextItem[], visualText?: string, text?: string, pageNum?: number }[]} pages
- * @returns {{ pageNum: number, lines: string[], lineLayout: { x?: number, y?: number, endX?: number, fontH?: number, col?: number, trailSpace?: boolean }[] }[]}
+ * @returns {{
+ *   pageNum: number,
+ *   lines: string[],
+ *   lineLayout: { x?: number, y?: number, endX?: number, fontH?: number, col?: number, trailSpace?: boolean }[],
+ *   column?: import('./pageColumnSplit.js').ColumnDecision,
+ *   bodyHeadIndex?: number,
+ *   bodyTailIndex?: number,
+ * }[]}
  */
 export function cleanPageLinesForTxt(pages) {
   const list = pages ?? [];
   const pageLines = list.map((page, i) => {
-    const fromItems = linesFromPdfItems(page.items ?? []);
+    const items = page.items ?? [];
+    const column = items.length
+      ? explainPageColumns(items)
+      : {
+          kind: /** @type {'single'} */ ('single'),
+          reason: /** @type {'no-gap'} */ ('no-gap'),
+          margin: /** @type {'clear'} */ ('clear'),
+          deferred: false,
+        };
+    const fromItems = linesFromPdfItems(items);
     if (fromItems.length) {
       return {
         pageNum: page.pageNum ?? i + 1,
         lines: fromItems,
+        column,
       };
     }
     const fallback = String(page.visualText ?? page.text ?? '')
@@ -280,7 +352,7 @@ export function cleanPageLinesForTxt(pages) {
           trailSpace: line.trailSpace,
         };
       });
-    return { pageNum: page.pageNum ?? i + 1, lines: fallback };
+    return { pageNum: page.pageNum ?? i + 1, lines: fallback, column };
   });
 
   /** @type {Map<string, number>} */
@@ -313,11 +385,20 @@ export function cleanPageLinesForTxt(pages) {
   }
 
   return pageLines.map((page) => {
+    const column = page.column ?? {
+      kind: /** @type {'single'} */ ('single'),
+      reason: /** @type {'no-gap'} */ ('no-gap'),
+      margin: /** @type {'clear'} */ ('clear'),
+      deferred: false,
+    };
     if (!page.lines.length) {
       return {
         pageNum: page.pageNum,
         lines: /** @type {string[]} */ ([]),
         lineLayout: [],
+        column,
+        bodyHeadIndex: 0,
+        bodyTailIndex: -1,
       };
     }
     const { yMin, yMax } = yExtent(page.lines);
@@ -343,7 +424,18 @@ export function cleanPageLinesForTxt(pages) {
         trailSpace: Boolean(line.trailSpace),
       });
     }
-    return { pageNum: page.pageNum, lines: kept, lineLayout };
+    const { bodyHeadIndex, bodyTailIndex } = bodyBoundaryIndices(
+      lineLayout,
+      column.kind === 'two' ? 'two' : 'single',
+    );
+    return {
+      pageNum: page.pageNum,
+      lines: kept,
+      lineLayout,
+      column,
+      bodyHeadIndex,
+      bodyTailIndex,
+    };
   });
 }
 

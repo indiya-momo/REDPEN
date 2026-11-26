@@ -11,6 +11,20 @@ import { getPdfItemXSpan } from './spreadColumnSplit.js';
 /** @typedef {{ x0: number, x1: number, cx: number, y: number, fs: number, chars: number }} Span */
 
 /**
+ * @typedef {'accepted' | 'too-few-items' | 'spread-shape' | 'no-gap' | 'cross-gutter' | 'unbalanced' | 'short-y-span' | 'ambiguous'} ColumnReason
+ * @typedef {'clear' | 'near'} ColumnMargin
+ * @typedef {{
+ *   kind: 'single' | 'two',
+ *   gutterX?: number,
+ *   gutterGap?: number,
+ *   pageWidth?: number,
+ *   reason: ColumnReason,
+ *   margin: ColumnMargin,
+ *   deferred: boolean,
+ * }} ColumnDecision
+ */
+
+/**
  * gutter / pageWidth — 절대 pt보다 비율.
  * 교재 점선 단 구분(~5–8%)도 잡되, 표 격자 오탐은 후보 점수·밸런스로 막는다.
  */
@@ -36,6 +50,44 @@ const SPREAD_MIN_WIDTH_PT = 360;
 const SPREAD_WIDTH_HEIGHT_RATIO = 1.15;
 /** 점수 비슷한 유효 후보가 2개 이상이면 표/격자 — 분리하지 않음 */
 const AMBIGUOUS_SCORE_RATIO = 0.82;
+/**
+ * O5 잠정값 — 임계의 이 비율 안이면 margin='near'.
+ * 실PDF 측정 후 확정 (DECISION 미룸).
+ */
+const NEAR_THRESHOLD_RATIO = 0.2;
+
+const DEFERRED_NEAR_REASONS = new Set([
+  'cross-gutter',
+  'unbalanced',
+  'short-y-span',
+]);
+
+/**
+ * @param {ColumnReason} reason
+ * @param {ColumnMargin} margin
+ * @param {'single' | 'two'} kind
+ */
+function isDeferred(reason, margin, kind) {
+  if (reason === 'ambiguous') return true;
+  if (kind === 'single' && margin === 'near' && DEFERRED_NEAR_REASONS.has(reason)) {
+    return true;
+  }
+  return false;
+}
+
+/**
+ * @param {number} value
+ * @param {number} limit
+ * @param {'above' | 'below'} side — above: value>=limit 실패, below: value<limit 실패
+ */
+function nearLimit(value, limit, side) {
+  if (!(limit > 0) || !Number.isFinite(value)) return false;
+  const band = limit * NEAR_THRESHOLD_RATIO;
+  if (side === 'above') {
+    return value >= limit && value <= limit + band;
+  }
+  return value < limit && value >= limit - band;
+}
 
 /**
  * @param {{ y: number, fs: number }[]} spans
@@ -61,11 +113,16 @@ function countYBands(spans) {
  * @param {number} gap
  * @param {number} height
  * @returns {{
- *   ok: boolean,
+ *   ok: true,
  *   score: number,
  *   gutterX: number,
  *   gutterGap: number,
- * } | null}
+ *   margin: ColumnMargin,
+ * } | {
+ *   ok: false,
+ *   reason: ColumnReason,
+ *   margin: ColumnMargin,
+ * }}
  */
 function scoreGutterCandidate(spans, gutterX, gap, height) {
   const margin = Math.max(gap * 0.1, 3);
@@ -75,15 +132,27 @@ function scoreGutterCandidate(spans, gutterX, gap, height) {
     (s) => s.cx >= gutterX - margin && s.cx < gutterX + margin,
   );
 
-  if (left.length < spans.length * MIN_SIDE_ITEM_RATIO) return null;
-  if (right.length < spans.length * MIN_SIDE_ITEM_RATIO) return null;
-  if (gutterBand.length > spans.length * MAX_GUTTER_BAND_ITEM_RATIO) return null;
+  const minSideItems = spans.length * MIN_SIDE_ITEM_RATIO;
+  if (left.length < minSideItems || right.length < minSideItems) {
+    const near =
+      nearLimit(left.length, minSideItems, 'below') ||
+      nearLimit(right.length, minSideItems, 'below');
+    return { ok: false, reason: 'unbalanced', margin: near ? 'near' : 'clear' };
+  }
+  if (gutterBand.length > spans.length * MAX_GUTTER_BAND_ITEM_RATIO) {
+    return { ok: false, reason: 'unbalanced', margin: 'clear' };
+  }
 
   const totalChars = spans.reduce((s, x) => s + x.chars, 0);
   const leftChars = left.reduce((s, x) => s + x.chars, 0);
   const rightChars = right.reduce((s, x) => s + x.chars, 0);
-  if (leftChars < totalChars * MIN_SIDE_CHAR_RATIO) return null;
-  if (rightChars < totalChars * MIN_SIDE_CHAR_RATIO) return null;
+  const minSideChars = totalChars * MIN_SIDE_CHAR_RATIO;
+  if (leftChars < minSideChars || rightChars < minSideChars) {
+    const near =
+      nearLimit(leftChars, minSideChars, 'below') ||
+      nearLimit(rightChars, minSideChars, 'below');
+    return { ok: false, reason: 'unbalanced', margin: near ? 'near' : 'clear' };
+  }
 
   // 전폭 본문 줄이 gutter를 가로지르면 가짜 2단(짧은 줄 cx vs 긴 줄 cx).
   let crossItems = 0;
@@ -94,11 +163,15 @@ function scoreGutterCandidate(spans, gutterX, gap, height) {
       crossChars += s.chars;
     }
   }
-  if (crossChars / Math.max(totalChars, 1) >= MAX_CROSS_GUTTER_CHAR_RATIO) {
-    return null;
+  const crossCharRatio = crossChars / Math.max(totalChars, 1);
+  const crossItemRatio = crossItems / Math.max(spans.length, 1);
+  if (crossCharRatio >= MAX_CROSS_GUTTER_CHAR_RATIO) {
+    const near = nearLimit(crossCharRatio, MAX_CROSS_GUTTER_CHAR_RATIO, 'above');
+    return { ok: false, reason: 'cross-gutter', margin: near ? 'near' : 'clear' };
   }
-  if (crossItems / Math.max(spans.length, 1) >= MAX_CROSS_GUTTER_ITEM_RATIO) {
-    return null;
+  if (crossItemRatio >= MAX_CROSS_GUTTER_ITEM_RATIO) {
+    const near = nearLimit(crossItemRatio, MAX_CROSS_GUTTER_ITEM_RATIO, 'above');
+    return { ok: false, reason: 'cross-gutter', margin: near ? 'near' : 'clear' };
   }
 
   const ySpan = (list) => {
@@ -106,12 +179,19 @@ function scoreGutterCandidate(spans, gutterX, gap, height) {
     return Math.max(...list.map((s) => s.y)) - Math.min(...list.map((s) => s.y));
   };
   const minYSpan = height * MIN_COLUMN_Y_SPAN_RATIO;
-  if (ySpan(left) < minYSpan || ySpan(right) < minYSpan) return null;
+  const leftY = ySpan(left);
+  const rightY = ySpan(right);
+  if (leftY < minYSpan || rightY < minYSpan) {
+    const near =
+      nearLimit(leftY, minYSpan, 'below') || nearLimit(rightY, minYSpan, 'below');
+    return { ok: false, reason: 'short-y-span', margin: near ? 'near' : 'clear' };
+  }
 
   const leftBands = countYBands(left);
   const rightBands = countYBands(right);
-  if (leftBands < MIN_SIDE_Y_BANDS) return null;
-  if (rightBands < MIN_SIDE_Y_BANDS) return null;
+  if (leftBands < MIN_SIDE_Y_BANDS || rightBands < MIN_SIDE_Y_BANDS) {
+    return { ok: false, reason: 'unbalanced', margin: 'clear' };
+  }
 
   const itemBalance =
     Math.min(left.length, right.length) / Math.max(left.length, right.length);
@@ -122,14 +202,21 @@ function scoreGutterCandidate(spans, gutterX, gap, height) {
   // 표 안쪽 칸 경계는 한쪽에 글이 몰려 balance가 낮고, 본문 2단 gutter는 높다.
   const score = gap * (0.45 * itemBalance + 0.35 * charBalance + 0.2 * bandBalance);
 
-  return { ok: true, score, gutterX, gutterGap: gap };
+  const gapNear = nearLimit(gap / Math.max(height, 1), MIN_GUTTER_WIDTH_RATIO, 'below');
+  return {
+    ok: true,
+    score,
+    gutterX,
+    gutterGap: gap,
+    margin: gapNear ? 'near' : 'clear',
+  };
 }
 
 /**
- * @param {PdfTextItem[]} sourceItems — dedupeOverlayTextItems 이후
- * @returns {{ gutterX: number, gutterGap: number, pageWidth: number } | null}
+ * @param {PdfTextItem[]} sourceItems
+ * @returns {{ spans: Span[], width: number, height: number } | null}
  */
-export function detectPageColumns(sourceItems) {
+function collectSpans(sourceItems) {
   /** @type {Span[]} */
   const spans = [];
   let minX = Infinity;
@@ -154,10 +241,34 @@ export function detectPageColumns(sourceItems) {
   const width = maxX - minX;
   const height = Math.max(maxY - minY, 1);
   if (width < 80) return null;
+  return { spans, width, height, minX };
+}
 
-  // 펼침면 후보는 비공유 — spread 모듈에 맡김
+/**
+ * 단 판정 설명. 분할 여부는 현행 detectPageColumns와 같다.
+ * @param {PdfTextItem[]} sourceItems — dedupeOverlayTextItems 이후
+ * @returns {ColumnDecision}
+ */
+export function explainPageColumns(sourceItems) {
+  const collected = collectSpans(sourceItems ?? []);
+  if (!collected) {
+    return {
+      kind: 'single',
+      reason: 'too-few-items',
+      margin: 'clear',
+      deferred: false,
+    };
+  }
+  const { spans, width, height, minX } = collected;
+
   if (width >= SPREAD_MIN_WIDTH_PT && width / height >= SPREAD_WIDTH_HEIGHT_RATIO) {
-    return null;
+    return {
+      kind: 'single',
+      reason: 'spread-shape',
+      margin: 'clear',
+      deferred: false,
+      pageWidth: width,
+    };
   }
 
   const xs = spans.map((s) => s.cx).sort((a, b) => a - b);
@@ -174,9 +285,16 @@ export function detectPageColumns(sourceItems) {
     if (gap / width < MIN_GUTTER_WIDTH_RATIO) continue;
     midGaps.push({ gap, mid });
   }
-  if (!midGaps.length) return null;
+  if (!midGaps.length) {
+    return {
+      kind: 'single',
+      reason: 'no-gap',
+      margin: 'clear',
+      deferred: false,
+      pageWidth: width,
+    };
+  }
 
-  // 같은 mid 근처 중복 gap은 최대만 남김
   midGaps.sort((a, b) => b.gap - a.gap);
   /** @type {{ gap: number, mid: number }[]} */
   const uniqueGaps = [];
@@ -185,28 +303,70 @@ export function detectPageColumns(sourceItems) {
     uniqueGaps.push(g);
   }
 
-  /** @type {{ ok: boolean, score: number, gutterX: number, gutterGap: number }[]} */
+  /** @type {{ ok: true, score: number, gutterX: number, gutterGap: number, margin: ColumnMargin }[]} */
   const scored = [];
+  /** @type {{ reason: ColumnReason, margin: ColumnMargin }[]} */
+  const rejects = [];
   for (const g of uniqueGaps) {
     const result = scoreGutterCandidate(spans, g.mid, g.gap, height);
-    if (result) scored.push(result);
+    if (result.ok) scored.push(result);
+    else rejects.push({ reason: result.reason, margin: result.margin });
   }
-  if (!scored.length) return null;
+  if (!scored.length) {
+    const prefer =
+      rejects.find((r) => r.reason === 'cross-gutter') ||
+      rejects.find((r) => r.reason === 'short-y-span') ||
+      rejects.find((r) => r.reason === 'unbalanced') ||
+      rejects[0];
+    const reason = prefer?.reason ?? 'no-gap';
+    const margin = prefer?.margin ?? 'clear';
+    return {
+      kind: 'single',
+      reason,
+      margin,
+      deferred: isDeferred(reason, margin, 'single'),
+      pageWidth: width,
+    };
+  }
 
   scored.sort((a, b) => b.score - a.score);
   const best = scored[0];
-  // 점수 비슷한 유효 분할이 여럿이면 표/격자 — 오분할 위험이 큼
   if (
     scored.length >= 2 &&
     scored[1].score >= best.score * AMBIGUOUS_SCORE_RATIO
   ) {
-    return null;
+    return {
+      kind: 'single',
+      reason: 'ambiguous',
+      margin: 'clear',
+      deferred: true,
+      pageWidth: width,
+    };
   }
 
+  const acceptedMargin = best.margin;
   return {
+    kind: 'two',
     gutterX: best.gutterX,
     gutterGap: best.gutterGap,
     pageWidth: width,
+    reason: 'accepted',
+    margin: acceptedMargin,
+    deferred: false,
+  };
+}
+
+/**
+ * @param {PdfTextItem[]} sourceItems — dedupeOverlayTextItems 이후
+ * @returns {{ gutterX: number, gutterGap: number, pageWidth: number } | null}
+ */
+export function detectPageColumns(sourceItems) {
+  const decision = explainPageColumns(sourceItems);
+  if (decision.kind !== 'two') return null;
+  return {
+    gutterX: decision.gutterX,
+    gutterGap: decision.gutterGap,
+    pageWidth: decision.pageWidth,
   };
 }
 

@@ -8,6 +8,7 @@ import {
   appendParagraphPiece,
   autoDecisionForVerdict,
   classifyParagraphPair,
+  crossPageLayoutTrust,
   buildParagraphContext,
 } from './pdfTxtParagraph.js';
 
@@ -77,7 +78,19 @@ export function findLinebreakCandidates(pages) {
  */
 export function applyLinebreakDecisions(pages, decisions = {}, options = {}) {
   const autoParagraph = options.autoParagraph !== false;
-  /** @type {{ pageNum: number, buf: string, lastLine: string, lastLayout: object | undefined, firstLine: string, firstLayout: object | undefined, context: ReturnType<typeof buildParagraphContext> }[]} */
+  /** @type {{
+   *   pageNum: number,
+   *   buf: string,
+   *   lastLine: string,
+   *   lastLayout: object | undefined,
+   *   firstLine: string,
+   *   firstLayout: object | undefined,
+   *   context: ReturnType<typeof buildParagraphContext>,
+   *   lines: string[],
+   *   column: object | undefined,
+   *   bodyHeadIndex: number | undefined,
+   *   bodyTailIndex: number | undefined,
+   * }[]} */
   const blocks = [];
   for (const page of pages ?? []) {
     const lines = page.lines ?? [];
@@ -109,6 +122,10 @@ export function applyLinebreakDecisions(pages, decisions = {}, options = {}) {
       firstLine: lines[0],
       firstLayout: layouts[0],
       context,
+      lines,
+      column: page.column,
+      bodyHeadIndex: page.bodyHeadIndex,
+      bodyTailIndex: page.bodyTailIndex,
     });
   }
   if (!blocks.length) return '';
@@ -120,13 +137,14 @@ export function applyLinebreakDecisions(pages, decisions = {}, options = {}) {
       out += `\n\n${right.buf}`;
       continue;
     }
+    const crossOpts = crossPageLayoutTrust(left, right);
     const verdict = classifyParagraphPair(
       left.lastLine,
       right.firstLine,
       left.lastLayout,
       right.firstLayout,
       left.context,
-      { crossPage: true },
+      crossOpts,
     );
     const decision = resolveDecision(
       `${left.pageNum}:page`,

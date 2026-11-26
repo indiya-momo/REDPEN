@@ -340,13 +340,103 @@ function lineFullness(text, layout, context) {
 }
 
 /**
+ * 쪽 넘김 이음이 믿을 수 있는지. analyzeParagraphFlow·applyLinebreakDecisions 공용.
+ * column/body* 필드가 없는 옛 입력은 trusted(현행과 동일).
+ * @param {{
+ *   lines?: string[],
+ *   column?: { kind?: string, deferred?: boolean, margin?: string },
+ *   bodyHeadIndex?: number,
+ *   bodyTailIndex?: number,
+ * } | null | undefined} leftPage
+ * @param {{
+ *   lines?: string[],
+ *   column?: { kind?: string, deferred?: boolean, margin?: string },
+ *   bodyHeadIndex?: number,
+ *   bodyTailIndex?: number,
+ * } | null | undefined} rightPage
+ * @returns {{
+ *   crossPage: true,
+ *   layoutTrust: 'trusted' | 'untrusted',
+ *   untrustedWhy?: string,
+ * }}
+ */
+export function crossPageLayoutTrust(leftPage, rightPage) {
+  const leftHas =
+    leftPage &&
+    leftPage.column != null &&
+    Number.isFinite(leftPage.bodyHeadIndex) &&
+    Number.isFinite(leftPage.bodyTailIndex);
+  const rightHas =
+    rightPage &&
+    rightPage.column != null &&
+    Number.isFinite(rightPage.bodyHeadIndex) &&
+    Number.isFinite(rightPage.bodyTailIndex);
+  if (!leftHas || !rightHas) {
+    return { crossPage: true, layoutTrust: 'trusted' };
+  }
+
+  if (leftPage.column.deferred === true) {
+    return {
+      crossPage: true,
+      layoutTrust: 'untrusted',
+      untrustedWhy: 'left-deferred',
+    };
+  }
+  if (rightPage.column.deferred === true) {
+    return {
+      crossPage: true,
+      layoutTrust: 'untrusted',
+      untrustedWhy: 'right-deferred',
+    };
+  }
+  if (leftPage.column.kind === 'two' && leftPage.column.margin === 'near') {
+    return {
+      crossPage: true,
+      layoutTrust: 'untrusted',
+      untrustedWhy: 'left-near-two',
+    };
+  }
+  if (rightPage.column.kind === 'two' && rightPage.column.margin === 'near') {
+    return {
+      crossPage: true,
+      layoutTrust: 'untrusted',
+      untrustedWhy: 'right-near-two',
+    };
+  }
+
+  const leftLen = (leftPage.lines ?? []).length;
+  const rightLen = (rightPage.lines ?? []).length;
+  if (leftLen > 0 && leftPage.bodyTailIndex !== leftLen - 1) {
+    return {
+      crossPage: true,
+      layoutTrust: 'untrusted',
+      untrustedWhy: 'tail-mismatch',
+    };
+  }
+  if (rightLen > 0 && rightPage.bodyHeadIndex !== 0) {
+    return {
+      crossPage: true,
+      layoutTrust: 'untrusted',
+      untrustedWhy: 'head-mismatch',
+    };
+  }
+
+  return { crossPage: true, layoutTrust: 'trusted' };
+}
+
+/**
  * @param {string} left
  * @param {string} right
  * @param {TxtLineLayout | null | undefined} leftLayout
  * @param {TxtLineLayout | null | undefined} rightLayout
  * @param {{ byCol: Map<number, { fullEndX: number | null, fullChars: number }> } | null} [context]
- * @param {{ crossPage?: boolean }} [opts]
+ * @param {{
+ *   crossPage?: boolean,
+ *   layoutTrust?: 'trusted' | 'untrusted',
+ *   untrustedWhy?: string,
+ * }} [opts]
  *   쪽·단이 바뀌면 y·x는 비교하지 않는다. 문장 끝·짧은 줄·제목·조사 규칙은 그대로다.
+ *   layoutTrust=untrusted이면 잇기 후보를 page-layout keep으로 막는다.
  * @returns {ParagraphVerdict}
  */
 export function classifyParagraphPair(
@@ -459,6 +549,11 @@ export function classifyParagraphPair(
     }
   }
 
+  // 잇기로 갈 수 있을 때만 page-layout keep (이미 keep인 sentence·short 등은 유지).
+  if (opts.crossPage && opts.layoutTrust === 'untrusted') {
+    return keep('page-layout', true);
+  }
+
   let uncertain = midWord || dehyphen || fullness === 'border' || particle === 'uncertain';
   let reason = 'wrap';
   if (particle === 'uncertain') reason = 'josa';
@@ -486,6 +581,8 @@ export function autoDecisionForVerdict(verdict) {
 }
 
 const EXCEPTION_RANK = {
+  // O5: −1은 설계 제안값(실PDF 측정 전 잠정). 미등록(9)이면 상한에서 잘린다.
+  'page-layout': -1,
   josa: 0,
   midword: 1,
   hyphen: 2,
@@ -550,13 +647,14 @@ export function analyzeParagraphFlow(pages) {
     const layouts = page.lineLayout ?? [];
     const nextLayouts = next.lineLayout ?? [];
     const context = buildParagraphContext(lines, layouts);
+    const crossOpts = crossPageLayoutTrust(page, next);
     const verdict = classifyParagraphPair(
       lines[lines.length - 1],
       nextLines[0],
       layouts[lines.length - 1],
       nextLayouts[0],
       context,
-      { crossPage: true },
+      crossOpts,
     );
     if (verdict.action === 'join') joined += 1;
     else kept += 1;
