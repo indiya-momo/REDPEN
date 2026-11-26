@@ -88,6 +88,20 @@ describe('nonAeoAuxSpacing 후보', () => {
     );
   });
 
+  it('-다 보다 붙임은 띄운다. 다보탑은 후보가 아니다', () => {
+    const got = collectNonAeoAuxCandidates(
+      '살다보니 하다보면 읽다보면 다보탑',
+    ).map((c) => [c.matchedText, c.suggestedText]);
+    expect(got).toEqual(
+      expect.arrayContaining([
+        ['살다보니', '살다 보니'],
+        ['하다보면', '하다 보면'],
+        ['읽다보면', '읽다 보면'],
+      ]),
+    );
+    expect(got.map((pair) => pair[0])).not.toContain('다보탑');
+  });
+
   it('먹다가보니는 먹다가|보니를 먼저 둔다', () => {
     const c = collectNonAeoAuxCandidates('먹다가보니.');
     expect(c[0].suggestedText).toBe('먹다가 보니');
@@ -153,6 +167,18 @@ describe('findNonAeoAuxSpacingHits', () => {
         analyze: permissive,
       }),
     ).toEqual([]);
+  });
+
+  it('-다 보다는 띄우고 사전 한 단어·다보탑은 내지 않는다', () => {
+    const text = '살다보니 하다보면. 다보탑을 보고 들여다보면 끝이 보인다.';
+    const hits = findNonAeoAuxSpacingHits(text, { analyze: permissive });
+    const by = Object.fromEntries(
+      hits.map((hit) => [hit.matchedText, hit.suggestedText]),
+    );
+    expect(by['살다보니']).toBe('살다 보니');
+    expect(by['하다보면']).toBe('하다 보면');
+    expect(by['다보탑을']).toBeUndefined();
+    expect(by['들여다보면']).toBeUndefined();
   });
 
   it('어절마다 hit 하나 · index는 어절 시작', () => {
