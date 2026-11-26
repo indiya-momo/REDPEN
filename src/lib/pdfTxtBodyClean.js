@@ -247,6 +247,27 @@ function bandOf(y, yMin, yMax) {
 }
 
 /**
+ * 줄 배열이 실제로 왼·오른 단을 이어 붙였으면 two.
+ * explainPageColumns는 펼침면을 spread-shape(single)로 둘 수 있어,
+ * column.kind만 보면 body 경계가 어긋나 page-layout이 과다해진다 (O5 실측).
+ * @param {{ col?: number }[]} lineLayout
+ * @param {{ kind?: string } | null | undefined} column
+ * @returns {'single' | 'two'}
+ */
+export function readingOrderKind(lineLayout, column) {
+  const layouts = lineLayout ?? [];
+  let has0 = false;
+  let has1 = false;
+  for (const row of layouts) {
+    const col = row?.col ?? 0;
+    if (col === 0) has0 = true;
+    if (col === 1) has1 = true;
+    if (has0 && has1) return 'two';
+  }
+  return column?.kind === 'two' ? 'two' : 'single';
+}
+
+/**
  * 시각 기준 본문 첫·끝 줄 인덱스 (측정 정답이 아니라 쪽 넘김 신뢰용).
  * @param {{ y?: number, col?: number }[]} lineLayout
  * @param {'single' | 'two'} kind
@@ -426,7 +447,7 @@ export function cleanPageLinesForTxt(pages) {
     }
     const { bodyHeadIndex, bodyTailIndex } = bodyBoundaryIndices(
       lineLayout,
-      column.kind === 'two' ? 'two' : 'single',
+      readingOrderKind(lineLayout, column),
     );
     return {
       pageNum: page.pageNum,

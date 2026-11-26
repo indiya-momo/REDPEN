@@ -82,6 +82,7 @@ export async function measureBookFromGolden(goldenPath, opts) {
     pdf: sample.path,
     goldenPath,
     report,
+    pageLayoutStats: pipe.pageLayoutStats,
     pageCandidates: (pipe.candidates ?? [])
       .filter((c) => String(c.id).endsWith(':page'))
       .slice(0, 20)

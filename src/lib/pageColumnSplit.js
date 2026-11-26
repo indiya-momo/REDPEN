@@ -51,8 +51,8 @@ const SPREAD_WIDTH_HEIGHT_RATIO = 1.15;
 /** 점수 비슷한 유효 후보가 2개 이상이면 표/격자 — 분리하지 않음 */
 const AMBIGUOUS_SCORE_RATIO = 0.82;
 /**
- * O5 잠정값 — 임계의 이 비율 안이면 margin='near'.
- * 실PDF 측정 후 확정 (DECISION 미룸).
+ * O5 확정(2026-11-26 실측): 임계의 이 비율 안이면 margin='near'.
+ * depressione deferred≈33/284. 더 조이지 않고 0.2 유지.
  */
 const NEAR_THRESHOLD_RATIO = 0.2;
 

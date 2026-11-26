@@ -1,7 +1,11 @@
 /**
  * TXT 파이프라인 실행 (측정·골든용). pdfTxtExport 흐름 재사용.
  */
-import { analyzeParagraphFlow } from '../../src/lib/pdfTxtParagraph.js';
+import {
+  analyzeParagraphFlow,
+  classifyParagraphPair,
+  crossPageLayoutTrust,
+} from '../../src/lib/pdfTxtParagraph.js';
 import { applyLinebreakDecisions } from '../../src/lib/pdfTxtLinebreakReview.js';
 import {
   applyUncertainSuggestionsToCandidates,
@@ -60,6 +64,28 @@ export function runTxtPipeline(cleaned, options = {}) {
     margin: page.column?.margin,
   }));
 
+  // O5/F4: 쪽 넘김 page-layout 비율 (후보 상한과 무관하게 전 쪽 경계 집계)
+  const filled = (cleaned ?? []).filter((p) => (p.lines ?? []).length > 0);
+  let pageLayoutKeeps = 0;
+  for (let i = 0; i < filled.length - 1; i += 1) {
+    const trust = crossPageLayoutTrust(filled[i], filled[i + 1]);
+    const leftLines = filled[i].lines ?? [];
+    const rightLines = filled[i + 1].lines ?? [];
+    const leftLayouts = filled[i].lineLayout ?? [];
+    const rightLayouts = filled[i + 1].lineLayout ?? [];
+    const verdict = classifyParagraphPair(
+      leftLines[leftLines.length - 1],
+      rightLines[0],
+      leftLayouts[leftLines.length - 1],
+      rightLayouts[0],
+      null,
+      trust,
+    );
+    if (verdict.reason === 'page-layout') pageLayoutKeeps += 1;
+  }
+  const pageCount = filled.length;
+  const pageLayoutPerPage = pageCount ? pageLayoutKeeps / pageCount : 0;
+
   return {
     mode,
     decisionsMode,
@@ -68,5 +94,11 @@ export function runTxtPipeline(cleaned, options = {}) {
     finalTxt,
     extractLines,
     columnDecisions,
+    pageLayoutStats: {
+      pageCount,
+      pageLayoutKeeps,
+      pageLayoutPerPage: Number(pageLayoutPerPage.toFixed(4)),
+      over10pct: pageLayoutPerPage > 0.1,
+    },
   };
 }

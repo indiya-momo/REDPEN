@@ -581,7 +581,8 @@ export function autoDecisionForVerdict(verdict) {
 }
 
 const EXCEPTION_RANK = {
-  // O5: −1은 설계 제안값(실PDF 측정 전 잠정). 미등록(9)이면 상한에서 잘린다.
+  // O5 확정(2026-11-26): page-layout을 모달 맨 앞(−1). 미등록(9)이면 상한에서 잘린다.
+  // 「쪽 수의 10%」 관측은 F4 보고용; 최종 TXT keep은 상한과 무관.
   'page-layout': -1,
   josa: 0,
   midword: 1,
