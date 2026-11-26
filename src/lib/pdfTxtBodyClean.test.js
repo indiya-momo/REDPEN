@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
+  bodyBoundaryIndices,
   cleanPageLinesForTxt,
   cleanPagesForTxt,
   linesFromPdfItems,
+  readingOrderKind,
 } from './pdfTxtBodyClean.js';
 
 /**
@@ -142,4 +144,18 @@ describe('linesFromPdfItems', () => {
     }
   });
 
+  it('펼침면 줄(col 0·1)은 column이 single이어도 two 경계로 본다', () => {
+    const cleaned = cleanPageLinesForTxt([
+      { pageNum: 1, items: mockSpreadItems() },
+    ]);
+    const page = cleaned[0];
+    expect(readingOrderKind(page.lineLayout, page.column)).toBe('two');
+    expect(page.bodyHeadIndex).toBe(0);
+    expect(page.bodyTailIndex).toBe(page.lines.length - 1);
+    const bounds = bodyBoundaryIndices(page.lineLayout, 'two');
+    expect(bounds).toEqual({
+      bodyHeadIndex: page.bodyHeadIndex,
+      bodyTailIndex: page.bodyTailIndex,
+    });
+  });
 });
