@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   detectPageColumns,
+  explainPageColumns,
   splitPageColumns,
 } from './pageColumnSplit.js';
 import { buildPageText } from './pdfPageText.js';
@@ -167,6 +168,19 @@ describe('pageColumnSplit', () => {
     }
     expect(detectPageColumns(items)).toBeNull();
     expect(splitPageColumns(items)).toBeNull();
+    const explained = explainPageColumns(items);
+    expect(explained.kind).toBe('single');
+    expect(explained.reason).toBe('cross-gutter');
+  });
+
+  it('교재형 2단 explain은 accepted이며 detect와 같다', () => {
+    const items = mockTextbookTwoColumns();
+    const explained = explainPageColumns(items);
+    expect(explained.kind).toBe('two');
+    expect(explained.reason).toBe('accepted');
+    expect(explained.deferred).toBe(false);
+    const detected = detectPageColumns(items);
+    expect(detected?.gutterX).toBe(explained.gutterX);
   });
 });
 

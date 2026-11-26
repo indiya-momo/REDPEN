@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { joinPagesWithMarkers, applyLinebreakDecisions, findLinebreakCandidates } from './pdfTxtLinebreakReview.js';
 import {
   PARAGRAPH_EXCEPTION_LIMIT,
+  analyzeParagraphFlow,
   classifyParagraphPair,
+  crossPageLayoutTrust,
   paragraphJoinGlue,
 } from './pdfTxtParagraph.js';
 
@@ -385,6 +387,98 @@ describe('applyLinebreakDecisions 문단 재조립', () => {
     );
     expect(gapped.action).toBe('keep');
     expect(gapped.reason).toBe('gap');
+  });
+});
+
+describe('V10 page-layout keep (후보·최종 일치)', () => {
+  const deferredCol = {
+    kind: 'single',
+    reason: 'ambiguous',
+    margin: 'clear',
+    deferred: true,
+  };
+  const clearCol = {
+    kind: 'single',
+    reason: 'no-gap',
+    margin: 'clear',
+    deferred: false,
+  };
+
+  function twoPages(rightColumn = deferredCol) {
+    return [
+      {
+        pageNum: 1,
+        lines: ['이 새로운 불치병'],
+        lineLayout: [lay(48, 400, 120)],
+        column: clearCol,
+        bodyHeadIndex: 0,
+        bodyTailIndex: 0,
+      },
+      {
+        pageNum: 2,
+        lines: ['지 않는다면 어리석다.'],
+        lineLayout: [lay(48, 400, 700)],
+        column: rightColumn,
+        bodyHeadIndex: 0,
+        bodyTailIndex: 0,
+      },
+    ];
+  }
+
+  it('다음 쪽 deferred면 후보 :page가 page-layout keep이다', () => {
+    const pages = twoPages(deferredCol);
+    const trust = crossPageLayoutTrust(pages[0], pages[1]);
+    expect(trust.layoutTrust).toBe('untrusted');
+    const flow = analyzeParagraphFlow(pages);
+    const pageCand = flow.candidates.find((c) => c.id === '1:page');
+    expect(pageCand).toBeTruthy();
+    expect(pageCand.reason).toBe('page-layout');
+    expect(pageCand.defaultDecision).toBe('keep');
+  });
+
+  it('빈 결정 맵 최종 조립도 쪽 사이를 줄바꿈으로 남긴다', () => {
+    const pages = twoPages(deferredCol);
+    const out = applyLinebreakDecisions(pages, {});
+    expect(out).toBe('이 새로운 불치병\n지 않는다면 어리석다.');
+  });
+
+  it('필드 없는 옛 입력은 현행처럼 이을 수 있다', () => {
+    const legacy = [
+      { pageNum: 1, lines: ['이 새로운 불치'] },
+      { pageNum: 2, lines: ['병의 희생자'] },
+    ];
+    expect(crossPageLayoutTrust(legacy[0], legacy[1]).layoutTrust).toBe(
+      'trusted',
+    );
+    expect(applyLinebreakDecisions(legacy, {})).toBe('이 새로운 불치병의 희생자');
+  });
+
+  it('사용자가 :page=space를 고르면 잇는다', () => {
+    const pages = twoPages(deferredCol);
+    expect(applyLinebreakDecisions(pages, { '1:page': 'space' })).toBe(
+      '이 새로운 불치병 지 않는다면 어리석다.',
+    );
+  });
+
+  it('page-layout 후보가 상한 밖으로 밀려도 최종은 keep이다', () => {
+    /** @type {{ pageNum: number, lines: string[], column: object, bodyHeadIndex: number, bodyTailIndex: number }[]} */
+    const pages = [];
+    for (let p = 1; p <= 82; p += 1) {
+      pages.push({
+        pageNum: p,
+        lines: [`쪽${p}끝음절이어`, `쪽${p}둘째`],
+        column: deferredCol,
+        bodyHeadIndex: 0,
+        bodyTailIndex: 1,
+      });
+    }
+    const flow = analyzeParagraphFlow(pages);
+    const pageCands = flow.candidates.filter((c) => c.id.endsWith(':page'));
+    // 순위 −1이라 쪽 경계 후보가 앞쪽에 남는다. 잘린 경계가 있어도 최종 keep.
+    expect(pageCands.length).toBeGreaterThan(0);
+    const out = applyLinebreakDecisions(pages, {});
+    // 쪽1끝 ↔ 쪽2첫 이 midword여도 untrusted keep
+    expect(out).toContain('쪽1끝음절이어쪽1둘째\n쪽2끝음절이어');
   });
 });
 
