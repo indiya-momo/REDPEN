@@ -67,6 +67,8 @@ export function runTxtPipeline(cleaned, options = {}) {
   // O5/F4: 쪽 넘김 page-layout 비율 (후보 상한과 무관하게 전 쪽 경계 집계)
   const filled = (cleaned ?? []).filter((p) => (p.lines ?? []).length > 0);
   let pageLayoutKeeps = 0;
+  // 바닥글("글자 + 쪽번호")이 다음 쪽 본문에 이어붙은 경계 수 — 골든 회귀 센서
+  let footerJoins = 0;
   for (let i = 0; i < filled.length - 1; i += 1) {
     const trust = crossPageLayoutTrust(filled[i], filled[i + 1]);
     const leftLines = filled[i].lines ?? [];
@@ -82,6 +84,12 @@ export function runTxtPipeline(cleaned, options = {}) {
       trust,
     );
     if (verdict.reason === 'page-layout') pageLayoutKeeps += 1;
+    if (
+      verdict.action === 'join' &&
+      /\s\d{1,3}$/u.test(String(leftLines[leftLines.length - 1] ?? '').trim())
+    ) {
+      footerJoins += 1;
+    }
   }
   const pageCount = filled.length;
   const pageLayoutPerPage = pageCount ? pageLayoutKeeps / pageCount : 0;
@@ -97,6 +105,7 @@ export function runTxtPipeline(cleaned, options = {}) {
     pageLayoutStats: {
       pageCount,
       pageLayoutKeeps,
+      footerJoins,
       pageLayoutPerPage: Number(pageLayoutPerPage.toFixed(4)),
       over10pct: pageLayoutPerPage > 0.1,
     },

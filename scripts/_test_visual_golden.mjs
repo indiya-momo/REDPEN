@@ -18,6 +18,9 @@ const files = ['street.golden.json', 'depressione.golden.json'].map((n) =>
   join(goldenDir, n),
 );
 
+/** 바닥글이 본문에 붙은 쪽 경계 허용 상한 (depressione 실측 2건) */
+const MAX_FOOTER_JOINS = 5;
+
 let measured = 0;
 let failedBooks = 0;
 let skipped = 0;
@@ -40,7 +43,15 @@ for (const goldenPath of files) {
     continue;
   }
   measured += 1;
-  if ((result.report?.totals?.fail ?? 0) > 0) failedBooks += 1;
+  const stats = result.pageLayoutStats;
+  const layoutFail =
+    stats && (stats.over10pct || (stats.footerJoins ?? 0) > MAX_FOOTER_JOINS);
+  if (layoutFail) {
+    console.log(
+      JSON.stringify({ bookId: result.bookId, layoutFail: true, ...stats }),
+    );
+  }
+  if ((result.report?.totals?.fail ?? 0) > 0 || layoutFail) failedBooks += 1;
 }
 
 console.log(
