@@ -8,7 +8,7 @@ import { getPdfItemXSpan } from './spreadColumnSplit.js';
 
 /** @typedef {import('pdfjs-dist').TextItem} PdfTextItem */
 /** @typedef {{ item: PdfTextItem, itemIndex: number }} TextEntry */
-/** @typedef {{ cx: number, y: number, fs: number, chars: number }} Span */
+/** @typedef {{ x0: number, x1: number, cx: number, y: number, fs: number, chars: number }} Span */
 
 /**
  * gutter / pageWidth — 절대 pt보다 비율.
@@ -22,6 +22,12 @@ const MAX_GUTTER_BAND_ITEM_RATIO = 0.1;
 const MIN_COLUMN_Y_SPAN_RATIO = 0.22;
 /** 각 단에 최소 몇 개의 독립 y 밴드(줄)가 있어야 본문 덩어리로 본다 */
 const MIN_SIDE_Y_BANDS = 3;
+/**
+ * 1단 본문에서 짧은 줄·긴 줄의 cx 차이로 가짜 gutter가 생길 때,
+ * 실제로는 줄이 gutter를 가로지른다. 그 비율이 높으면 2단이 아니다.
+ */
+const MAX_CROSS_GUTTER_CHAR_RATIO = 0.15;
+const MAX_CROSS_GUTTER_ITEM_RATIO = 0.18;
 /**
  * 펼침면 후보는 이 모듈에서 다루지 않음 (spreadColumnSplit 전담).
  * width/height·최소 폭이 펼침면 쪽과 겹치면 null.
@@ -79,6 +85,22 @@ function scoreGutterCandidate(spans, gutterX, gap, height) {
   if (leftChars < totalChars * MIN_SIDE_CHAR_RATIO) return null;
   if (rightChars < totalChars * MIN_SIDE_CHAR_RATIO) return null;
 
+  // 전폭 본문 줄이 gutter를 가로지르면 가짜 2단(짧은 줄 cx vs 긴 줄 cx).
+  let crossItems = 0;
+  let crossChars = 0;
+  for (const s of spans) {
+    if (s.x0 < gutterX - margin && s.x1 > gutterX + margin) {
+      crossItems += 1;
+      crossChars += s.chars;
+    }
+  }
+  if (crossChars / Math.max(totalChars, 1) >= MAX_CROSS_GUTTER_CHAR_RATIO) {
+    return null;
+  }
+  if (crossItems / Math.max(spans.length, 1) >= MAX_CROSS_GUTTER_ITEM_RATIO) {
+    return null;
+  }
+
   const ySpan = (list) => {
     if (!list.length) return 0;
     return Math.max(...list.map((s) => s.y)) - Math.min(...list.map((s) => s.y));
@@ -120,7 +142,7 @@ export function detectPageColumns(sourceItems) {
     const { x0, x1, cx, fs } = getPdfItemXSpan(item);
     const y = item.transform[5] ?? 0;
     const chars = String(item.str).replace(/\s+/g, '').length;
-    spans.push({ cx, y, fs, chars: Math.max(chars, 1) });
+    spans.push({ x0, x1, cx, y, fs, chars: Math.max(chars, 1) });
     minX = Math.min(minX, x0);
     maxX = Math.max(maxX, x1);
     minY = Math.min(minY, y);
