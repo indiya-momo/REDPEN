@@ -76,7 +76,7 @@ export function ModeIcon({ iconId }) {
     return <LayoutMarkGlyph kind="paraGap" />;
   }
   if (iconId === 'indent') {
-    return <LayoutMarkGlyph kind="indent" />;
+    return <LayoutMarkGlyph kind="indent" strokeWidth={2.25} />;
   }
   return null;
 }

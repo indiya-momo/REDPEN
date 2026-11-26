@@ -49,8 +49,9 @@ export default function ManuscriptToolbox(props) {
   const slotRef = useRef(/** @type {HTMLDivElement | null} */ (null));
   const railRef = useRef(/** @type {HTMLDivElement | null} */ (null));
   const [placement, setPlacement] = useState(readRailPlacement);
-  const listCount = countManualInstances(props.manualGroups);
+  const manualCount = countManualInstances(props.manualGroups);
   const layoutCount = (props.layoutMarks ?? []).length;
+  const listCount = manualCount + layoutCount;
   const layoutMode = isLayoutMarkMode(props.mode);
   const panelOpen =
     props.mode === 'search' ||
@@ -86,28 +87,12 @@ export default function ManuscriptToolbox(props) {
           조판 {layoutCount}건
         </p>
       ) : null}
-      {layoutMode && layoutCount > 0 ? (
-        <ul className="manuscript-toolbox__layout-list" aria-label="조판 기호">
-          {(props.layoutMarks ?? []).map((m) => (
-            <li key={m.id}>
-              <span>
-                {LAYOUT_MARK_LABELS[m.kind] ?? m.kind} · {m.after || '—'}
-              </span>
-              <button
-                type="button"
-                className="pdf-work-pane__aux-btn"
-                onClick={() => props.onRemoveLayoutMark?.(m.id)}
-              >
-                삭제
-              </button>
-            </li>
-          ))}
-        </ul>
-      ) : null}
       {panelOpen ? (
         <ToolboxPanel
           {...props}
           listCount={listCount}
+          manualCount={manualCount}
+          layoutCount={layoutCount}
           anchorRef={panelAnchorRef}
           railPlacement={placement}
         />
@@ -437,10 +422,14 @@ function DraftFields({
 
 function ManualListPanel({
   manualGroups,
+  layoutMarks,
   listCount,
+  manualCount,
+  layoutCount,
   formatPageLabel,
   onSelectInstance,
   onRemoveManualInstance,
+  onRemoveLayoutMark,
   onModeChange,
 }) {
   const pageLabel = formatPageLabel ?? formatSystemPageLabel;
@@ -450,6 +439,7 @@ function ManualListPanel({
       rows.push({ group, inst });
     }
   }
+  const marks = layoutMarks ?? [];
   return (
     <div>
       <div className="manuscript-toolbox__list-head">
@@ -466,19 +456,68 @@ function ManualListPanel({
           <Minus size={16} strokeWidth={2.25} aria-hidden />
         </button>
       </div>
-      <ul className="manuscript-toolbox__list">
-        {rows.map(({ group, inst }) => (
-          <ManualListRow
-            key={`${inst.pageNum}-${inst.index}-${inst.find}`}
-            group={group}
-            inst={inst}
-            pageLabel={pageLabel}
-            onSelectInstance={onSelectInstance}
-            onRemoveManualInstance={onRemoveManualInstance}
-          />
-        ))}
-      </ul>
+      {manualCount > 0 ? (
+        <section className="manuscript-toolbox__list-section" aria-label="내용 수정">
+          <h3 className="manuscript-toolbox__list-section-title">내용 수정</h3>
+          <ul className="manuscript-toolbox__list">
+            {rows.map(({ group, inst }) => (
+              <ManualListRow
+                key={`${inst.pageNum}-${inst.index}-${inst.find}`}
+                group={group}
+                inst={inst}
+                pageLabel={pageLabel}
+                onSelectInstance={onSelectInstance}
+                onRemoveManualInstance={onRemoveManualInstance}
+              />
+            ))}
+          </ul>
+        </section>
+      ) : null}
+      {layoutCount > 0 ? (
+        <section className="manuscript-toolbox__list-section" aria-label="조판 기호">
+          <h3 className="manuscript-toolbox__list-section-title">조판 기호</h3>
+          <ul className="manuscript-toolbox__list">
+            {marks.map((m) => (
+              <LayoutListRow
+                key={m.id}
+                mark={m}
+                pageLabel={pageLabel}
+                onRemoveLayoutMark={onRemoveLayoutMark}
+              />
+            ))}
+          </ul>
+        </section>
+      ) : null}
     </div>
+  );
+}
+
+function LayoutListRow({ mark, pageLabel, onRemoveLayoutMark }) {
+  const kindLabel = LAYOUT_MARK_LABELS[mark.kind] ?? mark.kind;
+  const after = String(mark.after ?? '').trim() || '—';
+  return (
+    <li className="manuscript-toolbox__list-item">
+      <div className="manuscript-toolbox__list-card manuscript-toolbox__list-card--static">
+        <span className="manuscript-toolbox__list-pair">
+          {kindLabel}
+          {' · '}
+          <SpaceMarks text={after} />
+        </span>
+        <span className="manuscript-toolbox__list-meta">
+          쪽 {pageLabel(mark.pageNum)}
+        </span>
+      </div>
+      {onRemoveLayoutMark ? (
+        <button
+          type="button"
+          className="manuscript-toolbox__list-remove"
+          onClick={() => onRemoveLayoutMark(mark.id)}
+          aria-label={`${kindLabel} 지우기`}
+        >
+          <X size={14} strokeWidth={2.25} aria-hidden />
+        </button>
+      ) : null}
+    </li>
   );
 }
 

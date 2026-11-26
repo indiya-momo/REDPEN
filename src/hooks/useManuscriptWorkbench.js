@@ -313,10 +313,18 @@ export function useManuscriptWorkbench({
     setMode(MANUAL_LIST_MODE);
   }, [draft, replace, tip, pageTexts, editingTarget]);
 
+  const layoutMarksRef = useRef(layoutMarks);
+  layoutMarksRef.current = layoutMarks;
+  const manualGroupsRef = useRef(manualGroups);
+  manualGroupsRef.current = manualGroups;
+
   const removeManual = useCallback((inst) => {
     setManualGroups((groups) => {
       const next = removeManualInstance(groups, inst);
-      if (countManualInstances(next) === 0) {
+      if (
+        countManualInstances(next) === 0 &&
+        layoutMarksRef.current.length === 0
+      ) {
         setMode((prev) => (prev === MANUAL_LIST_MODE ? null : prev));
       }
       return next;
@@ -364,7 +372,16 @@ export function useManuscriptWorkbench({
   }, [draft, currentPage, layoutMarks]);
 
   const removeLayoutMark = useCallback((id) => {
-    setLayoutMarks((prev) => removeLayoutMarkById(prev, id));
+    setLayoutMarks((prev) => {
+      const next = removeLayoutMarkById(prev, id);
+      if (
+        next.length === 0 &&
+        countManualInstances(manualGroupsRef.current) === 0
+      ) {
+        setMode((m) => (m === MANUAL_LIST_MODE ? null : m));
+      }
+      return next;
+    });
   }, []);
 
   const currentPageHasText = useMemo(() => {

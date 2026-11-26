@@ -44,10 +44,10 @@ export function LayoutMarkGlyph({
     );
   }
   if (kind === 'indent') {
-    /* 오른자리 옮김표 — 참고 SVG M45 6 V36 H15 V94 H45 V124 */
+    /* 오른자리 옮김표 — 툴바 다른 아이콘과 같은 18 viewBox·선 두께 */
     return (
-      <svg {...common} viewBox="0 0 60 130">
-        <path d="M45 6 V36 H15 V94 H45 V124" />
+      <svg {...common}>
+        <path d="M12.75 2.4 V5.6 H5.25 V12.4 H12.75 V15.6" />
       </svg>
     );
   }
