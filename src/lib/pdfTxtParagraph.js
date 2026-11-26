@@ -502,7 +502,11 @@ export function classifyParagraphPair(
   ) {
     const dy = leftLayout.y - rightLayout.y;
     const ref = Math.max(leftLayout.fontH || 0, rightLayout.fontH || 0, 8);
-    if (dy > ref * GAP_RATIO) return keep('gap', false);
+    // 단어 중간·조사 붙임·하이픈 soft-wrap은 행간이 넓어도 잇는다.
+    // (depressione 「그러|지 않는다면」: dy≈2.1em → 옛 gap keep 오판)
+    if (dy > ref * GAP_RATIO && !midWord && !dehyphen && !particle) {
+      return keep('gap', false);
+    }
   }
 
   if (

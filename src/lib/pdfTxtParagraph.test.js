@@ -388,6 +388,37 @@ describe('applyLinebreakDecisions 문단 재조립', () => {
     expect(gapped.action).toBe('keep');
     expect(gapped.reason).toBe('gap');
   });
+
+  it('행간이 넓어도 단어 중간 soft-wrap(그러|지)은 잇는다', () => {
+    const left = '라도 다음번 희생자가 되지 않기 위한 대책을 세워야만 한다. 그러';
+    const right = '지 않는다면 정말 어리석은 일일 것이다.”';
+    // fontH 10.5, dy≈22 → GAP_RATIO 1.75면 예전이 keep('gap')
+    const v = classifyParagraphPair(
+      left,
+      right,
+      { x: 105, endX: 380, y: 514.5, fontH: 10.5, col: 0, trailSpace: false },
+      { x: 105, endX: 276, y: 492.5, fontH: 10.5, col: 0, trailSpace: false },
+      contextOf([left, right]),
+    );
+    expect(v.action).toBe('join');
+    expect(v.glue).toBe('');
+    expect(v.reason).toBe('midword');
+    expect(
+      applyLinebreakDecisions(
+        [
+          {
+            pageNum: 13,
+            lines: [left, right],
+            lineLayout: [
+              { x: 105, endX: 380, y: 514.5, fontH: 10.5, col: 0 },
+              { x: 105, endX: 276, y: 492.5, fontH: 10.5, col: 0 },
+            ],
+          },
+        ],
+        {},
+      ),
+    ).toBe('라도 다음번 희생자가 되지 않기 위한 대책을 세워야만 한다. 그러지 않는다면 정말 어리석은 일일 것이다.”');
+  });
 });
 
 describe('V10 page-layout keep (후보·최종 일치)', () => {
