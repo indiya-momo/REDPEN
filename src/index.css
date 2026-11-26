@@ -2686,6 +2686,13 @@ html[data-build='prod'] .unify-candidate-find__list {
 .manuscript-toolbox__rail .manuscript-toolbox__mode--icon svg {
   color: #ffffff;
   stroke: #ffffff;
+  opacity: 1;
+}
+
+.manuscript-toolbox__rail .pdf-work-pane__aux-btn.manuscript-toolbox__mode--icon svg path,
+.manuscript-toolbox__rail .manuscript-toolbox__mode--icon svg path {
+  stroke: #ffffff;
+  stroke-opacity: 1;
 }
 
 .manuscript-toolbox__mode--on {
@@ -2785,6 +2792,22 @@ html[data-build='prod'] .unify-candidate-find__list {
   font-size: 0.85em;
 }
 
+.manuscript-toolbox__list-section {
+  margin: 0 0 12px;
+}
+
+.manuscript-toolbox__list-section:last-child {
+  margin-bottom: 0;
+}
+
+.manuscript-toolbox__list-section-title {
+  margin: 0 0 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--color-text-muted, #7a746a);
+}
+
 .manuscript-toolbox__list {
   list-style: none;
   margin: 0;
@@ -2792,6 +2815,10 @@ html[data-build='prod'] .unify-candidate-find__list {
   display: flex;
   flex-direction: column;
   gap: 6px;
+}
+
+.manuscript-toolbox__list-card--static {
+  cursor: default;
 }
 
 .manuscript-toolbox__list-item {
