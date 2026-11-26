@@ -215,10 +215,7 @@ export function isNounJulWithJosa(stemHead, stemTail, match) {
 }
 
 /**
- * 「해 질 무렵」(해가 지다) — 본용언+보조용언이 아닌 문형.
- * stem `해 질` 오인만 본조에서 뺀다. 침묵 ≠ 맞춤법 OK
- * (붙여 쓴 「해질녘」「해질 무렵」은 맞춤법 S2가 담당).
- * ZWSP·일반 공백 「해 질 무렵」 포함.
+ * 「해질 무렵」(해가 지다) — 하다+지다 오인. ZWSP·일반 공백 「해 질 무렵」 포함.
  * @param {string} stemHead
  * @param {string} headCapture
  * @param {RegExpExecArray} match
@@ -330,7 +327,7 @@ export function shouldSkipAuxiliaryVerbMatch(rule, match) {
     if (AUX_FALSE_HAE_HEAD_CAPTURES.has(headCapture)) return true;
   }
 
-  // 본용언+보조용언이 아닌 문형 — 본조 목록에서만 제외. 맞춤법 판정 아님. 후속: 칸 분리 UI.
+  // 띄움·ZWSP 공통
   if (isNounJulWithJosa(stemHead, stemTail, match)) return true;
   if (isHaeJilMuryeop(stemHead, headCapture, match)) return true;
 

@@ -69,6 +69,11 @@ import {
   NON_AEO_AUX_SPACING_TIP,
   findNonAeoAuxSpacingHits,
 } from './nonAeoAuxSpacing.js';
+import {
+  UNLISTED_POS_NOUN_LABEL,
+  UNLISTED_POS_NOUN_TIP,
+  findUnlistedPosNounSpacingHits,
+} from './unlistedPosNounSpacing.js';
 
 /**
  * @typedef {{
@@ -158,6 +163,12 @@ export const SPACING_CATEGORY_DEFS = [
     label: NON_AEO_AUX_SPACING_LABEL,
     tip: NON_AEO_AUX_SPACING_TIP,
     findHits: (text) => findNonAeoAuxSpacingHits(text),
+  },
+  {
+    id: 'unlisted-noun-noun',
+    label: UNLISTED_POS_NOUN_LABEL,
+    tip: UNLISTED_POS_NOUN_TIP,
+    findHits: findUnlistedPosNounSpacingHits,
   },
 ];
 

@@ -3,8 +3,6 @@
  * ruleEngine 비부착. 띄어쓰기 폴더 findHits만.
  */
 
-import { shouldKeepDaboMatchInText } from './daboInsideCompoundKeep.js';
-
 export const CLOSED_SPACING_FIXES_CATEGORY = '닫힌 띄어·오자';
 export const CLOSED_SPACING_FIXES_LABEL = '닫힌 띄어·오자';
 export const CLOSED_SPACING_FIXES_TIP =
@@ -12,8 +10,6 @@ export const CLOSED_SPACING_FIXES_TIP =
 
 const BASE_LITERAL_ROWS = [
   { find: '오래 된', replace: '오래된', kind: 'attach' },
-  { find: '다보면', replace: '다 보면', kind: 'split' },
-  { find: '무릎위에', replace: '무릎 위에', kind: 'split' },
 ];
 
 /** Sheet parity for haejil surfaces (equality test). Dual-report risk if folder wires this module. */
@@ -83,12 +79,6 @@ export function findClosedSpacingFixHits(text) {
       if (idx === -1) break;
       const end = idx + row.find.length;
       from = end;
-      if (
-        (row.find === '다보면' || row.find === '다보니') &&
-        shouldKeepDaboMatchInText(text, idx, row.find)
-      ) {
-        continue;
-      }
       if (
         row.leadingHangulBoundary &&
         idx > 0 &&

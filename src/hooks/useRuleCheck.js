@@ -85,6 +85,7 @@ import {
 import { mergeSpacingFolderIntoSpellingResults } from '../lib/spacingFolderCheck.js';
 import { prepareNonAeoAuxSpacing } from '../lib/nonAeoAuxSpacing.js';
 import { ensureDeHeadwordsLoaded } from '../lib/stdictDeHeadwords.js';
+import { ensureStdictPosIndexLoaded } from '../lib/stdictPosIndex.js';
 import {
   finalizeVerbBoidaSpacingGroups,
   isVerbBoidaItem,
@@ -394,6 +395,13 @@ export function useRuleCheck({
               ensureDeHeadwordsLoaded(),
               bootKiwiIfNeeded({ auxMorph: true, maxWaitMs: 12_000 }),
             ]);
+          }
+          // 명사+위치 명사·무렵/녘/때문/동안 표제어 게이트. 색인이 없으면 해당 묶음은 내지 않는다.
+          if (
+            spacingEnabledMap.unlistedNounNoun ||
+            spacingEnabledMap.dependentRieulKka
+          ) {
+            await ensureStdictPosIndexLoaded();
           }
           const spacingGroups = mergeSpacingFolderIntoSpellingResults(
             pageTexts,

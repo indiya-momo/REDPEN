@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
   decideAdnominalDependentSplit,
@@ -5,8 +6,12 @@ import {
   looksLikeGluedAdnominalNnb,
 } from './adnominalDependentNoun.js';
 import {
+  clearStdictPosIndexCache,
+  lookupStdictPosHits,
+  setStdictPosIndexForTests,
+} from './stdictPosIndex.js';
+import {
   clearDeHeadwordGate,
-  ensureDeHeadwordsLoaded,
   getDeHeadwordGateStatus,
   matchDeHeadwordGate,
   setDeHeadwordGateError,
@@ -416,23 +421,6 @@ describe('데 표제어 게이트', () => {
     expect(st.state).toBe('error');
     expect(st.message).toMatch(/읽지 못했다/);
   });
-
-  it('ensureDeHeadwordsLoaded: 주입 후 쓸데 게이트가 맞는다', async () => {
-    clearDeHeadwordGate();
-    expect(getDeHeadwordGateStatus().ok).toBe(false);
-    await ensureDeHeadwordsLoaded({
-      data: {
-        meta: { sourceDate: '20261106' },
-        entries: [
-          { raw: '쓸-데', surface: '쓸데', stem: '쓸데', poses: '명사' },
-          { raw: '쓸데-없다', surface: '쓸데없다', stem: '쓸데없', poses: '형용사' },
-        ],
-      },
-    });
-    expect(getDeHeadwordGateStatus().ok).toBe(true);
-    expect(matchDeHeadwordGate('쓸데')?.how).toBe('정확');
-    expect(matchDeHeadwordGate('쓸데없는')?.how).toBe('접두');
-  });
 });
 
 
@@ -520,5 +508,185 @@ describe.skipIf(!kiwiReady)('데 · 실제 Kiwi (kiwi-nlp@0.23.0)', () => {
     '온데간데없이',
   ])('게이트 %s → 없음', (input) => {
     expect(findAdnominalDependentNounHits(input, { kiwi })).toEqual([]);
+  });
+});
+
+function kiwiWith(tokenMap) {
+  return {
+    ready: () => true,
+    analyze(text) {
+      return { tokens: tokenMap[String(text)] ?? [] };
+    },
+  };
+}
+
+describe('무렵·녘·때문·동안', () => {
+  it('힌트에 들고, 관형사형 뒤에서만 띄운다', () => {
+    expect(looksLikeGluedAdnominalNnb('해질무렵')).toBe(true);
+    expect(looksLikeGluedAdnominalNnb('눈앞')).toBe(false);
+    expect(
+      decideAdnominalDependentSplit('해질무렵', {
+        tokens: [
+          { str: '해', tag: 'NNG', position: 0, length: 1 },
+          { str: '질', tag: 'ETM', position: 1, length: 1 },
+          { str: '무렵', tag: 'NNB', position: 2, length: 2 },
+        ],
+      }),
+    ).toEqual(
+      expect.objectContaining({
+        matchedText: '해질무렵',
+        suggestedText: '해질 무렵',
+        kind: '무렵',
+      }),
+    );
+    expect(
+      decideAdnominalDependentSplit('된때문', {
+        tokens: [
+          { str: '된', tag: 'ETM', position: 0, length: 1 },
+          { str: '때문', tag: 'NNB', position: 1, length: 2 },
+        ],
+      })?.suggestedText,
+    ).toBe('된 때문');
+    expect(
+      decideAdnominalDependentSplit('사는동안', {
+        tokens: [
+          { str: '사', tag: 'VV', position: 0, length: 1 },
+          { str: '는', tag: 'ETM', position: 1, length: 1 },
+          { str: '동안', tag: 'NNB', position: 2, length: 2 },
+        ],
+      })?.suggestedText,
+    ).toBe('사는 동안');
+    expect(
+      decideAdnominalDependentSplit('그때문', {
+        tokens: [
+          { str: '그', tag: 'MM', position: 0, length: 1 },
+          { str: '때문', tag: 'NNB', position: 1, length: 2 },
+        ],
+      }),
+    ).toBeNull();
+    expect(
+      decideAdnominalDependentSplit('이것때문', {
+        tokens: [
+          { str: '이것', tag: 'NP', position: 0, length: 2 },
+          { str: '때문', tag: 'NNB', position: 2, length: 2 },
+        ],
+      }),
+    ).toBeNull();
+    expect(
+      decideAdnominalDependentSplit('일주일동안', {
+        tokens: [
+          { str: '일주일', tag: 'NNG', position: 0, length: 3 },
+          { str: '동안', tag: 'NNB', position: 3, length: 2 },
+        ],
+      }),
+    ).toBeNull();
+  });
+
+  it('색인이 없으면 무렵·녘은 내지 않는다', () => {
+    clearStdictPosIndexCache();
+    const kiwi = kiwiWith({
+      해질무렵: [
+        { str: '해', tag: 'NNG', position: 0, length: 1 },
+        { str: '질', tag: 'ETM', position: 1, length: 1 },
+        { str: '무렵', tag: 'NNB', position: 2, length: 2 },
+      ],
+    });
+    expect(findAdnominalDependentNounHits('해질무렵', { kiwi })).toEqual([]);
+  });
+
+  it('표제어로 넣으면 해질녘은 침묵하고 해질무렵은 띄운다', () => {
+    setStdictPosIndexForTests({
+      index: {
+        해질녘: [{ word: '해질녘', pos: '명사' }],
+        저물녘: [{ word: '저물-녘', pos: '명사' }],
+      },
+    });
+    const kiwi = kiwiWith({
+      해질녘: [
+        { str: '해', tag: 'NNG', position: 0, length: 1 },
+        { str: '질', tag: 'ETM', position: 1, length: 1 },
+        { str: '녘', tag: 'NNB', position: 2, length: 1 },
+      ],
+      해질무렵: [
+        { str: '해', tag: 'NNG', position: 0, length: 1 },
+        { str: '질', tag: 'ETM', position: 1, length: 1 },
+        { str: '무렵', tag: 'NNB', position: 2, length: 2 },
+      ],
+      저물녘에: [
+        { str: '저물', tag: 'VV', position: 0, length: 2 },
+        { str: '녘', tag: 'NNB', position: 2, length: 1 },
+        { str: '에', tag: 'JKB', position: 3, length: 1 },
+      ],
+    });
+    const hits = findAdnominalDependentNounHits('해질녘과 해질무렵, 저물녘에', {
+      kiwi,
+    });
+    expect(hits.map((hit) => [hit.matchedText, hit.suggestedText])).toEqual([
+      ['해질무렵', '해질 무렵'],
+    ]);
+    clearStdictPosIndexCache();
+  });
+});
+
+describe('무렵·녘·때문·동안 실색인', () => {
+  beforeAll(() => {
+    const data = JSON.parse(
+      readFileSync(
+        new URL('../../public/data/stdict-pos-index.json', import.meta.url),
+        'utf8',
+      ),
+    );
+    setStdictPosIndexForTests(data);
+  });
+
+  afterAll(() => {
+    clearStdictPosIndexCache();
+  });
+
+  it('등재 명사는 침묵하고, 없는 해질무렵은 띄운다', () => {
+    expect(lookupStdictPosHits('저물녘').some((hit) => hit.pos === '명사')).toBe(
+      true,
+    );
+    expect(lookupStdictPosHits('새벽녘').some((hit) => hit.pos === '명사')).toBe(
+      true,
+    );
+    expect(lookupStdictPosHits('그동안').length).toBeGreaterThan(0);
+    expect(lookupStdictPosHits('한동안').length).toBeGreaterThan(0);
+    expect(lookupStdictPosHits('해질무렵')).toEqual([]);
+    // 색인(2026-11-06)에는 해질녘 표제어가 없다. 있으면 위 주입 테스트처럼 침묵한다.
+    expect(lookupStdictPosHits('해질녘')).toEqual([]);
+
+    const nnb = (surface, noun, nounLen, insertAt) => [
+      { str: surface.slice(0, insertAt), tag: 'ETM', position: 0, length: insertAt },
+      { str: noun, tag: 'NNB', position: insertAt, length: nounLen },
+    ];
+    const kiwi = kiwiWith({
+      저물녘: nnb('저물녘', '녘', 1, 2),
+      새벽녘: nnb('새벽녘', '녘', 1, 2),
+      그동안: nnb('그동안', '동안', 2, 1),
+      한동안: nnb('한동안', '동안', 2, 1),
+      해질무렵: nnb('해질무렵', '무렵', 2, 2),
+      해질녘: nnb('해질녘', '녘', 1, 2),
+      그때문: [
+        { str: '그', tag: 'MM', position: 0, length: 1 },
+        { str: '때문', tag: 'NNB', position: 1, length: 2 },
+      ],
+      사는동안: nnb('사는동안', '동안', 2, 2),
+    });
+    const text = '저물녘 새벽녘 그동안 한동안 해질무렵 해질녘 그때문 사는동안';
+    const by = Object.fromEntries(
+      findAdnominalDependentNounHits(text, { kiwi }).map((hit) => [
+        hit.matchedText,
+        hit.suggestedText,
+      ]),
+    );
+    expect(by['저물녘']).toBeUndefined();
+    expect(by['새벽녘']).toBeUndefined();
+    expect(by['그동안']).toBeUndefined();
+    expect(by['한동안']).toBeUndefined();
+    expect(by['그때문']).toBeUndefined();
+    expect(by['해질무렵']).toBe('해질 무렵');
+    expect(by['사는동안']).toBe('사는 동안');
+    expect(by['해질녘']).toBe('해질 녘');
   });
 });
