@@ -319,6 +319,53 @@ export function bodyBoundaryIndices(lineLayout, kind = 'single') {
   return { bodyHeadIndex: head, bodyTailIndex: tail };
 }
 
+/** 쪽번호가 붙은 머리말·바닥글을 반복으로 인정하는 최소 쪽 수. */
+const NUMBERED_CHROME_MIN_PAGES = 5;
+
+/**
+ * "들어가는 말 13"처럼 글자와 쪽번호가 한 줄에 붙은 머리말·바닥글의 반복 키.
+ * 글자가 같고 (인쇄 쪽번호 − PDF 쪽 위치) 차이가 같으면 같은 머리말이다.
+ * "Chapter 6"처럼 번호가 쪽 위치와 무관한 제목은 차이가 제각각이라 같은 키가 되지 않는다.
+ * @param {string} key normalizeTxtLineKey 결과
+ * @param {number} pageNum
+ * @returns {string} 해당 없으면 ''
+ */
+export function numberedChromeKey(key, pageNum) {
+  const text = String(key ?? '');
+  const tail = text.match(/^(.*\S)\s+([0-9０-９]{1,4})$/u);
+  const head = tail ? null : text.match(/^([0-9０-９]{1,4})\s+(\S.*)$/u);
+  const label = tail ? tail[1] : head ? head[2] : '';
+  const numStr = tail ? tail[2] : head ? head[1] : '';
+  if (label.trim().length < 2 || !Number.isFinite(pageNum)) return '';
+  const printed = Number(numStr.normalize('NFKC'));
+  if (!Number.isFinite(printed)) return '';
+  return `${label.trim()}|${printed - pageNum}`;
+}
+
+/** 책 단위 판형 판정에 필요한 최소 확정 쪽 수. 이보다 적으면 책 단위로 판단하지 않는다. */
+const BOOK_MIN_DECIDED_PAGES = 20;
+/** 확정된 쪽 중 1단 비율이 이 이상이면 1단 책으로 본다. */
+const BOOK_SINGLE_RATIO = 0.9;
+
+/**
+ * 판형은 쪽이 아니라 책 단위로 정한다.
+ * 책 대부분이 1단으로 확정되면, 단 판정이 임계 근처라 보류(deferred)된 쪽도 1단으로 확정한다.
+ * 2단 쪽이 상당수 섞인 책은 그대로 둔다(보류 유지).
+ * @param {{ lines: unknown[], column?: { kind?: string, deferred?: boolean } }[]} pages
+ */
+export function resolveDeferredColumnsByBook(pages) {
+  const withText = (pages ?? []).filter((p) => (p.lines ?? []).length > 0 && p.column);
+  const decided = withText.filter((p) => p.column.deferred !== true);
+  if (decided.length < BOOK_MIN_DECIDED_PAGES) return pages;
+  const single = decided.filter((p) => p.column.kind === 'single').length;
+  if (single / decided.length < BOOK_SINGLE_RATIO) return pages;
+  return pages.map((p) =>
+    p.column?.deferred === true
+      ? { ...p, column: { ...p.column, deferred: false, resolvedByBook: true } }
+      : p,
+  );
+}
+
 /**
  * @param {{ items?: import('pdfjs-dist').TextItem[], visualText?: string, text?: string, pageNum?: number }[]} pages
  * @returns {{
@@ -332,7 +379,7 @@ export function bodyBoundaryIndices(lineLayout, kind = 'single') {
  */
 export function cleanPageLinesForTxt(pages) {
   const list = pages ?? [];
-  const pageLines = list.map((page, i) => {
+  const pageLines = resolveDeferredColumnsByBook(list.map((page, i) => {
     const items = page.items ?? [];
     const column = items.length
       ? explainPageColumns(items)
@@ -374,20 +421,29 @@ export function cleanPageLinesForTxt(pages) {
         };
       });
     return { pageNum: page.pageNum ?? i + 1, lines: fallback, column };
-  });
+  }));
 
   /** @type {Map<string, number>} */
   const bandKeyCounts = new Map();
+  /** @type {Map<string, number>} */
+  const numberedCounts = new Map();
   for (const page of pageLines) {
     if (!page.lines.length) continue;
     const { yMin, yMax } = yExtent(page.lines);
     /** @type {Set<string>} */
     const seen = new Set();
+    /** @type {Set<string>} */
+    const seenNumbered = new Set();
     for (const line of page.lines) {
       const band = bandOf(line.y, yMin, yMax);
       if (band === 'mid') continue;
       const key = normalizeTxtLineKey(line.text);
       if (!key || key.length > 80) continue;
+      const numbered = numberedChromeKey(key, page.pageNum);
+      if (numbered && !seenNumbered.has(numbered)) {
+        seenNumbered.add(numbered);
+        numberedCounts.set(numbered, (numberedCounts.get(numbered) ?? 0) + 1);
+      }
       if (seen.has(key)) continue;
       seen.add(key);
       bandKeyCounts.set(key, (bandKeyCounts.get(key) ?? 0) + 1);
@@ -403,6 +459,11 @@ export function cleanPageLinesForTxt(pages) {
   const chromeKeys = new Set();
   for (const [key, count] of bandKeyCounts) {
     if (count >= repeatNeed) chromeKeys.add(key);
+  }
+  /** @type {Set<string>} */
+  const numberedChromeKeys = new Set();
+  for (const [key, count] of numberedCounts) {
+    if (count >= NUMBERED_CHROME_MIN_PAGES) numberedChromeKeys.add(key);
   }
 
   return pageLines.map((page) => {
@@ -432,6 +493,12 @@ export function cleanPageLinesForTxt(pages) {
       if (!key) continue;
       const band = bandOf(line.y, yMin, yMax);
       if (band !== 'mid' && chromeKeys.has(key)) continue;
+      if (
+        band !== 'mid' &&
+        numberedChromeKeys.has(numberedChromeKey(key, page.pageNum))
+      ) {
+        continue;
+      }
       if (band !== 'mid' && isLikelyPageNumberLine(key)) continue;
       const text = stripGluedPageNumber(line.text.normalize('NFC'));
       if (!text) continue;

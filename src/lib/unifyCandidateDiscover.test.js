@@ -204,8 +204,8 @@ describe('줄 끝 건 soft-wrap — 현행 KEEP·알려진 한계', () => {
     expect(hit?.variants?.sort()).toEqual(['쇠뿔 모양', '쇠뿔모양'].sort());
   });
 
-  it.fails(
-    '목표: 끄는 건 + 쇠뿔모양 → spacing 충돌 후보 (현행 soft-wrap이 키를 깨뜨림)',
+  it(
+    '끄는 건|쇠뿔 모양 + 쇠뿔모양 → spacing 충돌 후보 (이어붙인 뒷줄을 보조 줄로 한 번 더 스캔)',
     () => {
       const text = [
         '동그란 항아리 중에서 눈길을 끄는 건',

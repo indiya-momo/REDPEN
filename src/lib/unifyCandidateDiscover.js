@@ -1508,7 +1508,7 @@ export function resolveAndSnapUnifyHighlightIndex(
  * @param {string} pageText
  * @returns {{ line: string, absIndex: (i: number) => number }[]}
  */
-function splitUnifyScanLinesWithAbs(pageText) {
+function splitUnifyScanLinesWithAbs(pageText, withSupplement = false) {
   const prepared = prepareUnifyScanText(pageText);
   /** @type {{ line: string, absIndex: (i: number) => number }[]} */
   const out = [];
@@ -1550,18 +1550,24 @@ function splitUnifyScanLinesWithAbs(pageText) {
       },
     });
   }
-  return mergeUnifyHangulSoftWrapScanLines(out);
+  return mergeUnifyHangulSoftWrapScanLines(out, {
+    keepRightLine: withSupplement,
+  });
 }
 
 /**
  * 줄끝·줄머리 한글 음절이 맞닿은 soft-wrap만 스캔용으로 이음.
  * 어절 경계(수도|있다 등)는 붙이지 않음. 단어 중간 갈라짐(명|지 계곡)만 이음.
  * @param {{ line: string, absIndex: (i: number) => number }[]} lines
+ * @param {{ keepRightLine?: boolean }} [options] keepRightLine: 이어붙인 뒷줄 원문을 보조 줄(supplement)로
+ *   한 번 더 내보낸다. 끄는 건|쇠뿔 → 건쇠뿔 때문에 `쇠뿔 모양` 키가 가려지는 것을 막기 위함.
  */
-export function mergeUnifyHangulSoftWrapScanLines(lines) {
+export function mergeUnifyHangulSoftWrapScanLines(lines, options = {}) {
   if (!lines?.length) return [];
   /** @type {{ line: string, absIndex: (i: number) => number }[]} */
   const out = [];
+  /** @type {{ line: string, absIndex: (i: number) => number, supplement?: boolean }[]} */
+  const pendingSupplement = [];
   let cur = lines[0];
   for (let i = 1; i < lines.length; i += 1) {
     const next = lines[i];
@@ -1578,12 +1584,20 @@ export function mergeUnifyHangulSoftWrapScanLines(lines) {
           return bAbs(idx - aLen);
         },
       };
+      if (options.keepRightLine) {
+        pendingSupplement.push({ ...next, supplement: true });
+      }
       continue;
     }
     out.push(cur);
+    if (pendingSupplement.length) {
+      out.push(...pendingSupplement);
+      pendingSupplement.length = 0;
+    }
     cur = next;
   }
   out.push(cur);
+  if (pendingSupplement.length) out.push(...pendingSupplement);
   return out;
 }
 
@@ -1649,20 +1663,31 @@ function accumulateUnifyPageOccurrences(byKey, page, minHangul) {
     recordUnifyOccurrence(byKey, pageNum, index, prepared);
   };
 
-  for (const { line, absIndex } of splitUnifyScanLinesWithAbs(sourceText)) {
+  /** @type {Set<string>} 이미 센 (원문@위치) — 보조 줄이 같은 토큰을 다시 세지 않게 */
+  const scannedSpans = new Set();
+  for (const { line, absIndex, supplement } of splitUnifyScanLinesWithAbs(
+    sourceText,
+    true,
+  )) {
+    const addOnce = (raw, near) => {
+      const spanKey = `${raw}@${near}`;
+      if (supplement && scannedSpans.has(spanKey)) return;
+      scannedSpans.add(spanKey);
+      tryAdd(raw, near);
+    };
     const tokens = extractTokensWithIndex(line);
     for (let i = 0; i < tokens.length; i += 1) {
       const tokenRaw = sliceUnifyRaw(line, tokens[i], tokens[i]);
       const preferNear = usingLayout
         ? mapLayoutIndexToVisualIndex(page, absIndex(tokens[i].index))
         : absIndex(tokens[i].index);
-      tryAdd(tokenRaw, preferNear);
+      addOnce(tokenRaw, preferNear);
       const maxN = Math.min(UNIFY_MAX_NGRAM_TOKENS, tokens.length - i);
       for (let n = 2; n <= maxN; n += 1) {
         const last = tokens[i + n - 1];
         const raw = sliceUnifyRaw(line, tokens[i], last);
         // n-gram 시작 오프셋 = 첫 토큰과 동일 — layout 매핑 재계산 불필요
-        tryAdd(raw, preferNear);
+        addOnce(raw, preferNear);
       }
     }
   }
@@ -1753,19 +1778,30 @@ async function accumulateUnifyPageOccurrencesAsync(
     recordUnifyOccurrence(byKey, pageNum, index, prepared);
   };
 
-  for (const { line, absIndex } of splitUnifyScanLinesWithAbs(sourceText)) {
+  /** @type {Set<string>} 이미 센 (원문@위치) — 보조 줄이 같은 토큰을 다시 세지 않게 */
+  const scannedSpans = new Set();
+  for (const { line, absIndex, supplement } of splitUnifyScanLinesWithAbs(
+    sourceText,
+    true,
+  )) {
+    const addOnce = (raw, near) => {
+      const spanKey = `${raw}@${near}`;
+      if (supplement && scannedSpans.has(spanKey)) return;
+      scannedSpans.add(spanKey);
+      tryAdd(raw, near);
+    };
     const tokens = extractTokensWithIndex(line);
     for (let i = 0; i < tokens.length; i += 1) {
       const tokenRaw = sliceUnifyRaw(line, tokens[i], tokens[i]);
       const preferNear = usingLayout
         ? mapLayoutIndexToVisualIndex(page, absIndex(tokens[i].index))
         : absIndex(tokens[i].index);
-      tryAdd(tokenRaw, preferNear);
+      addOnce(tokenRaw, preferNear);
       await maybeYield();
       const maxN = Math.min(UNIFY_MAX_NGRAM_TOKENS, tokens.length - i);
       for (let n = 2; n <= maxN; n += 1) {
         const raw = sliceUnifyRaw(line, tokens[i], tokens[i + n - 1]);
-        tryAdd(raw, preferNear);
+        addOnce(raw, preferNear);
         await maybeYield();
       }
     }
