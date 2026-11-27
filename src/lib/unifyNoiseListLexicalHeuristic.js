@@ -282,6 +282,9 @@ const SPACED_VERBAL_CONNECTIVE_TAILS = Object.freeze(
   ].toSorted((a, b) => b.length - a.length),
 );
 
+/** `자`로 끝나지만 용언 어미가 아닌 명사 꼬리 — 연결어미 판정에서 제외 */
+const SPACED_NOUN_JA_TAILS = Object.freeze(['투자', '이자', '전자', '부자', '경영자']);
+
 /** 꼬리별 최소 어간 — `자`·`고`·`면`·`며`는 투자·사고·화면·며느리 등 명사 오탐 방지 */
 const SPACED_VERBAL_CONNECTIVE_MIN_STEM = Object.freeze({
   자: 2,
@@ -300,6 +303,8 @@ export function isSpacedVerbalConnectiveNoiseEojeol(eojeol) {
   if (!h || h.length < 2) return false;
   for (const tail of SPACED_VERBAL_CONNECTIVE_TAILS) {
     if (!h.endsWith(tail)) continue;
+    // -자가 연결어미가 아니라 명사 끝인 복합어 (주식투자·은행이자·전기전자·선한부자·최고경영자)
+    if (tail === '자' && SPACED_NOUN_JA_TAILS.some((t) => h.endsWith(t))) continue;
     // OCR·단독 어미 조각(는다·었고) — 완전일치도 DROP
     if (h.length === tail.length) return true;
     const stemLen = hangulOnlyNoise(h.slice(0, -tail.length)).length;
