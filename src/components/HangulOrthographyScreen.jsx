@@ -5,8 +5,54 @@ import {
   groupHangulOrthographyTree,
   searchHangulOrthographyArticles,
 } from '../lib/hangulOrthographyArticles.js';
+import { HANGUL_ORTHOGRAPHY_APPENDIX } from '../lib/hangulOrthographyAppendix.js';
 import { HANGUL_ORTHOGRAPHY_URL } from '../lib/koreanNormsLinks.js';
 import './hangul-orthography.css';
+
+/**
+ * 고시 원문의 예문 불릿(U+F00DA)은 글꼴에 없어 □로 깨진다.
+ * 데이터는 원문 그대로 두고, 화면에 그릴 때만 ▪로 바꾼다.
+ * @param {unknown} text
+ */
+function ob(text) {
+  return boldMarkup(String(text ?? '')
+    .replace(/\s*\u{F00DA}\s*/gu, ' ▪ ')
+    .trim());
+}
+
+/**
+ * 부록 줄 목록 — 불릿마다 예문 한 줄, 「ㄴ.」은 들여쓰기, 「[붙임]」은 주석 줄.
+ * @param {{ lines: string[] }} props
+ */
+function AppendixLines({ lines }) {
+  return (
+    <div className="hangul-ortho__appx-lines">
+      {lines.flatMap((line, i) => {
+        if (line.includes('\u{F00DA}')) {
+          return line
+            .split(/\u{F00DA}/u)
+            .map((s) => s.trim())
+            .filter(Boolean)
+            .map((s, j) => (
+              <p key={`${i}-${j}`} className="hangul-ortho__appx-ex">
+                {s}
+              </p>
+            ));
+        }
+        const cls = /^ㄴ\./u.test(line)
+          ? 'hangul-ortho__appx-sub'
+          : /^\[붙임/u.test(line)
+            ? 'hangul-ortho__appx-note'
+            : 'hangul-ortho__appx-text';
+        return [
+          <p key={i} className={cls}>
+            {line}
+          </p>,
+        ];
+      })}
+    </div>
+  );
+}
 
 function scrollToHash() {
   const id = decodeURIComponent(window.location.hash.replace(/^#/, ''));
@@ -86,7 +132,7 @@ function PairTable({ rows, pairLabel }) {
         {rows.map((row) => (
           <tr key={row.join('/')}>
             {heads.map((_, i) => (
-              <td key={i}>{row[i] ?? ''}</td>
+              <td key={i}>{ob(row[i] ?? '')}</td>
             ))}
           </tr>
         ))}
@@ -118,6 +164,62 @@ function RuleGroups({ groups }) {
   );
 }
 
+/** `**굵게**` 표시를 <strong>으로 바꾼다. */
+function boldMarkup(text) {
+  return String(text)
+    .split(/\*\*(.+?)\*\*/)
+    .map((part, i) => (i % 2 === 1 ? <strong key={i}>{part}</strong> : part));
+}
+
+/**
+ * 원문 표 여러 개가 가운데 세로선으로 나뉘어 나란히 있는 배치 (제6항).
+ * 머리글과 칸은 `**…**`로 굵게 표시.
+ * @param {{ tables: { header: string[], rows: string[][] }[] }} props
+ */
+function RuleTables({ tables }) {
+  return (
+    <div className="hangul-ortho__examples-box hangul-ortho__rule-tables">
+      {tables.map((t, ti) => (
+        <table key={ti} className="hangul-ortho__rule-table">
+          <thead>
+            <tr>
+              {t.header.map((h, i) => (
+                <th key={i}>{boldMarkup(h)}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {t.rows.map((r, ri) => (
+              <tr key={ri}>
+                {r.map((c, ci) => (
+                  <td key={ci}>{boldMarkup(c)}</td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * 원문 격자 (해설서 제43항처럼 한 줄에 여러 칸). 칸은 원문 순서대로, 굵은 글씨는 `**…**`.
+ * @param {{ rows: string[][] }} props
+ */
+function RuleGrid({ rows }) {
+  const cols = Math.max(...rows.map((r) => r.length));
+  return (
+    <div className="hangul-ortho__examples-box hangul-ortho__rule-grid" style={{ '--rule-cols': cols }}>
+      {rows.flat().map((cell, i) => (
+        <span key={i} className="hangul-ortho__rule-cell">
+          {boldMarkup(cell)}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 /**
  * @param {{ items: string[], pairLabel?: [string, string], allowPair?: boolean }} props
  */
@@ -133,14 +235,14 @@ function ExampleBlock({ items, pairLabel, allowPair = true }) {
           <PairTable key={index} rows={segment.rows} pairLabel={segment.label ?? pairLabel} />
         ) : (
           <div key={index} className="hangul-ortho__examples-box">
-            {segment.items.map((item) => (
+            {segment.items.map((item, itemIndex) => (
               <span
-                key={item}
+                key={`${itemIndex}-${item}`}
                 className={
                   /^(\[붙임|\(\d+\)|\d+\s?\.\s)/u.test(item) ? 'hangul-ortho__note-line' : undefined
                 }
               >
-                {item}
+                {ob(item)}
               </span>
             ))}
           </div>
@@ -289,6 +391,64 @@ function HangulOrthographySearch() {
   );
 }
 
+/**
+ * 묶음별 「규정 → 해설」 (제18·57항 등). 해설 문단과 용례는 원문 순서 그대로 묶음 안에 둔다.
+ * @param {{ groups: { heading?: string, heads?: string[], rules: string[], commentary: string[] }[] }} props
+ */
+function WordGroups({ groups }) {
+  return (
+    <div className="hangul-ortho__word-groups">
+      {groups.map((group, gi) => (
+        <section key={gi} className="hangul-ortho__word-group">
+          {group.heading ? (
+            <p className="hangul-ortho__word-heading">{ob(group.heading)}</p>
+          ) : null}
+          <div className="hangul-ortho__word-rules">
+            {group.rules.map((rule, ri) => (
+              <p key={ri}>{ob(rule)}</p>
+            ))}
+          </div>
+          {group.commentary.length ? (
+            <div className="hangul-ortho__word-commentary">
+              {group.commentary.map((para, pi) => (
+                <p key={pi}>{ob(para)}</p>
+              ))}
+            </div>
+          ) : null}
+        </section>
+      ))}
+    </div>
+  );
+}
+
+/** 부록 · 문장 부호 (고시 원문, 21개 항목) — 목차·「부록」 링크는 #appendix */
+function AppendixSection() {
+  const app = HANGUL_ORTHOGRAPHY_APPENDIX;
+  return (
+    <section className="hangul-ortho__chapter hangul-ortho__appendix" id={app.anchor}>
+      <h2 className="hangul-ortho__chapter-title">{app.title}</h2>
+      <p className="hangul-ortho__appendix-intro">{app.intro}</p>
+      {app.items.map((item) => (
+        <article key={item.anchor} id={item.anchor} className="hangul-ortho__article">
+          <h4>
+            <span className="hangul-ortho__art-no">{item.number}.</span>
+            {item.title}
+          </h4>
+          {item.body.length ? <AppendixLines lines={item.body} /> : null}
+          {item.rules.map((rule) => (
+            <div key={rule.number} className="hangul-ortho__appendix-rule">
+              <p className="hangul-ortho__appendix-rule-text">
+                ({rule.number}) {rule.text}
+              </p>
+              {rule.body.length ? <AppendixLines lines={rule.body} /> : null}
+            </div>
+          ))}
+        </article>
+      ))}
+    </section>
+  );
+}
+
 export default function HangulOrthographyScreen() {
   const tree = groupHangulOrthographyTree(HANGUL_ORTHOGRAPHY_ARTICLES);
 
@@ -338,9 +498,7 @@ export default function HangulOrthographyScreen() {
           </ol>
           <p className="hangul-ortho__tree-label">부록</p>
           <p className="hangul-ortho__toc-appendix">
-            <a href={HANGUL_ORTHOGRAPHY_URL} target="_blank" rel="noopener noreferrer">
-              문장 부호
-            </a>
+            <a href={`#${HANGUL_ORTHOGRAPHY_APPENDIX.anchor}`}>{HANGUL_ORTHOGRAPHY_APPENDIX.title}</a>
           </p>
         </aside>
         <main className="hangul-ortho__main">
@@ -352,6 +510,7 @@ export default function HangulOrthographyScreen() {
               {chapter.sections.map((section) => (
                 <div key={section.section || chapter.chapter}>
                   {section.articles.map((article, index) => {
+                    // 묶음(wordGroups)이 있으면 묶음별 해설은 묶음 안에 있고, 여기에는 항 전체 해설만 있다.
                     const commentaryQuotes = article.commentary?.quotes ?? [];
                     const commentaryExamples = article.commentary?.examples ?? [];
                     const hasCommentary =
@@ -367,10 +526,30 @@ export default function HangulOrthographyScreen() {
                         ) : null}
                         <h4>
                           <span className="hangul-ortho__art-no">제{article.number}항</span>
-                          {article.text}
+                          {ob(article.text)}
                         </h4>
-                        {article.ruleGroups?.length ? (
+                        {article.wordGroups?.length ? (
+                          <WordGroups groups={article.wordGroups} />
+                        ) : article.ruleTables?.length ? (
+                          <>
+                            <RuleTables tables={article.ruleTables} />
+                            <ExampleBlock
+                              items={article.ruleExamples
+                                .slice(article.ruleTables[0].rows.length)
+                                .filter((item) => item !== article.proviso && !(article.provisoExamples ?? []).includes(item))}
+                              pairLabel={pairLabelFor(article)}
+                            />
+                          </>
+                        ) : article.ruleGroups?.length ? (
                           <RuleGroups groups={article.ruleGroups} />
+                        ) : article.ruleGrid?.length ? (
+                          <>
+                            <RuleGrid rows={article.ruleGrid} />
+                            <ExampleBlock
+                              items={article.ruleExamples.slice(article.ruleGrid.length)}
+                              pairLabel={pairLabelFor(article)}
+                            />
+                          </>
                         ) : (
                           <ExampleBlock
                             items={article.ruleExamples}
@@ -379,7 +558,7 @@ export default function HangulOrthographyScreen() {
                         )}
                         {article.proviso ? (
                           <>
-                            <p className="hangul-ortho__proviso">{article.proviso}</p>
+                            <p className="hangul-ortho__proviso">{ob(article.proviso)}</p>
                             <ExampleBlock items={article.provisoExamples ?? []} />
                           </>
                         ) : null}
@@ -388,7 +567,7 @@ export default function HangulOrthographyScreen() {
                             <summary>해설</summary>
                             <div className="hangul-ortho__commentary-body">
                               {commentaryQuotes.map((quote) => (
-                                <p key={quote}>{quote}</p>
+                                <p key={quote}>{ob(quote)}</p>
                               ))}
                               <ExampleBlock items={commentaryExamples} allowPair={false} />
                             </div>
@@ -401,6 +580,7 @@ export default function HangulOrthographyScreen() {
               ))}
             </div>
           ))}
+          <AppendixSection />
           <footer className="hangul-ortho__footer">
             <p>
               {HANGUL_ORTHOGRAPHY_SOURCE.publisher} {HANGUL_ORTHOGRAPHY_SOURCE.title}{' '}

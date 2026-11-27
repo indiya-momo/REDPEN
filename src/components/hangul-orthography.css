@@ -291,6 +291,91 @@
   color: var(--ortho-example-text);
 }
 
+.hangul-ortho__appendix-intro {
+  margin: 0.4rem 0 0.8rem;
+}
+
+.hangul-ortho__appendix-rule {
+  margin-top: 0.6rem;
+}
+
+.hangul-ortho__appendix-rule-text {
+  font-weight: 600;
+  margin: 0;
+}
+
+.hangul-ortho__word-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  margin: 0.5rem 0;
+}
+
+.hangul-ortho__word-group {
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.hangul-ortho__word-heading {
+  margin: 0 0 0.3rem;
+  font-weight: 700;
+  line-height: 1.6;
+}
+
+.hangul-ortho__word-rules p {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.hangul-ortho__word-commentary {
+  margin-top: 0.4rem;
+  padding: 0.5rem 0.8rem;
+  background: rgba(0, 0, 0, 0.035);
+  border-radius: 4px;
+}
+
+.hangul-ortho__word-commentary p {
+  margin: 0.25rem 0;
+  line-height: 1.6;
+}
+
+.hangul-ortho__appx-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin: 0.4rem 0 0.6rem;
+  padding: 0.6rem 0.9rem;
+  background: rgba(0, 0, 0, 0.035);
+  border-radius: 4px;
+}
+
+.hangul-ortho__appx-lines p {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.hangul-ortho__appx-ex {
+  position: relative;
+  padding-left: 1.1em;
+}
+
+.hangul-ortho__appx-ex::before {
+  content: '▪';
+  position: absolute;
+  left: 0;
+  color: var(--c-soft, #666);
+}
+
+.hangul-ortho__appx-sub {
+  padding-left: 2.2em;
+}
+
+.hangul-ortho__appx-note {
+  padding-left: 0.6em;
+  font-size: 0.95em;
+  color: var(--c-soft, #555);
+}
+
 .hangul-ortho__note-line {
   flex-basis: 100%;
 }
@@ -318,6 +403,59 @@
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 0.2rem 0.8rem;
   margin: 0 0 0.2rem;
+}
+
+/* 원문 격자 (제43항): 4열 · 칸마다 한 줄, 굵은 글씨는 단위 명사 */
+.hangul-ortho__rule-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--rule-cols, 4), minmax(0, 1fr));
+  gap: 0.35rem 1.2rem;
+}
+
+.hangul-ortho__rule-cell {
+  line-height: 1.6;
+  white-space: nowrap;
+}
+
+.hangul-ortho__rule-cell strong {
+  font-weight: 700;
+}
+
+@media (max-width: 640px) {
+  .hangul-ortho__rule-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* 원문 표 여러 개가 세로선으로 나뉘어 나란히 있는 배치 (제6항) */
+.hangul-ortho__rule-tables {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 0;
+}
+
+.hangul-ortho__rule-table {
+  border-collapse: collapse;
+  margin-right: 1.4rem;
+}
+
+.hangul-ortho__rule-table + .hangul-ortho__rule-table {
+  border-left: 1px solid var(--ortho-border-strong);
+  padding-left: 1.4rem;
+}
+
+.hangul-ortho__rule-table th,
+.hangul-ortho__rule-table td {
+  padding: 0.2rem 1.6rem 0.2rem 0;
+  text-align: left;
+  line-height: 1.6;
+  white-space: nowrap;
+  font-weight: 400;
+}
+
+.hangul-ortho__rule-table th {
+  font-weight: 700;
 }
 
 .hangul-ortho__proviso {
