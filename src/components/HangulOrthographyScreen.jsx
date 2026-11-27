@@ -364,8 +364,8 @@ function HangulOrthographySearch() {
         }}
         onFocus={() => setOpen(true)}
         onKeyDown={onKeyDown}
-        placeholder="이 규정에서 찾기"
-        aria-label="한글 맞춤법 이 페이지에서 찾기"
+        placeholder="검색"
+        aria-label="한글 맞춤법 검색"
         aria-autocomplete="list"
         aria-controls={listId}
         aria-expanded={showList}
@@ -516,6 +516,11 @@ export default function HangulOrthographyScreen() {
           </p>
         </div>
         <HangulOrthographySearch />
+        <img
+          className="hangul-ortho__license"
+          src="/hangul-orthography/kogl-open.png"
+          alt="공공누리 출처표시 자유이용허락 마크"
+        />
       </header>
       <div className="hangul-ortho__shell">
         <aside className="hangul-ortho__nav" aria-label="한글 맞춤법 목차">
@@ -523,23 +528,34 @@ export default function HangulOrthographyScreen() {
           <ol className="hangul-ortho__toc">
             {tree.map((chapter) => (
               <li key={chapter.chapter} className="hangul-ortho__toc-chapter">
-                <span>{chapter.chapter}</span>
-                <ol>
-                  {chapter.sections.map((section) => (
-                    <li key={section.section || chapter.chapter}>
-                      {section.section ? (
-                        <span className="hangul-ortho__toc-section">{section.section}</span>
-                      ) : null}
-                      <ol>
-                        {section.articles.map((article) => (
-                          <li key={article.anchor}>
-                            <a href={`#${article.anchor}`}>제{article.number}항</a>
-                          </li>
-                        ))}
-                      </ol>
-                    </li>
-                  ))}
-                </ol>
+                <details className="hangul-ortho__toc-group" open>
+                  <summary>{chapter.chapter}</summary>
+                  <ol>
+                    {chapter.sections.map((section) => {
+                      const articles = (
+                        <ol>
+                          {section.articles.map((article) => (
+                            <li key={article.anchor}>
+                              <a href={`#${article.anchor}`}>제{article.number}항</a>
+                            </li>
+                          ))}
+                        </ol>
+                      );
+                      return (
+                        <li key={section.section || chapter.chapter}>
+                          {section.section ? (
+                            <details className="hangul-ortho__toc-group" open>
+                              <summary className="hangul-ortho__toc-section">{section.section}</summary>
+                              {articles}
+                            </details>
+                          ) : (
+                            articles
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ol>
+                </details>
               </li>
             ))}
           </ol>
