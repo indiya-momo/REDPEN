@@ -62,7 +62,7 @@ export const SPACING_FOLDER_BUNDLES = Object.freeze([
   Object.freeze({
     bundleId: 'unlistedNounNoun',
     label: '사전에 등재되지 않은 명사+명사 (맞춤법 제2항)',
-    example: Object.freeze({ find: '무릎위에', replace: '무릎˅위에' }),
+    example: Object.freeze({ find: '무릎위', replace: '무릎˅위' }),
     moduleIds: Object.freeze(['unlisted-noun-noun']),
     tipLines: Object.freeze([
       '사전에 없는 명사+위치 명사(위·아래·앞·뒤·안·밖·옆·속·밑)는 띄어 씀 (맞춤법 제2항)',

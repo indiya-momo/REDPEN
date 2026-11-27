@@ -1,5 +1,5 @@
 /**
- * 맞춤법 탭 「띄어쓰기」 폴더 — 본용언+보조용언(-아/-어 아닌 경우).
+ * 맞춤법 탭 「띄어쓰기」 폴더 — 본(-아/-어) + 보조용언 아닌 경우 (맞춤법 제47항).
  *
  * 설계(2026-11-19 결정, 본조 탭에서 이관):
  * - 보조용언과 붙여 쓸 수 있는 것은 본용언이 -아/-어일 때뿐이다(한글 맞춤법 제47항).
@@ -41,7 +41,8 @@ import {
 import { analyzeLine } from './kiwiMorph/analyze.js';
 import { warmAuxiliaryMorphCache } from './auxiliaryMorphFilter.js';
 
-export const NON_AEO_AUX_SPACING_LABEL = '본용언+보조용언(-아/-어 아닌 경우)';
+export const NON_AEO_AUX_SPACING_LABEL =
+  '본(-아/-어) + 보조용언 아닌 경우 (맞춤법 제47항)';
 export const NON_AEO_AUX_SPACING_TIP =
   '한글 맞춤법 제47항: 보조용언은 본용언이 -아/-어일 때만 붙여 씀. -다 뒤 보다(살다보니·하다보면)는 띄어 씀. 들여다보다처럼 사전에 한 단어인 경우는 잡지 않음.';
 

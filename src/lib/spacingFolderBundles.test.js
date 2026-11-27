@@ -39,6 +39,20 @@ describe('spacingFolderBundles', () => {
     expect(getSpacingFolderBundle('unlistedNounNoun')?.tipLines.join('')).toContain(
       '제2항',
     );
+    expect(getSpacingFolderBundle('nonAeoAux')?.label).toBe(
+      '본(-아/-어) + 보조용언 아닌 경우 (맞춤법 제47항)',
+    );
+    expect(getSpacingFolderBundle('nonAeoAux')?.example).toEqual({
+      find: '먹지마',
+      replace: '먹지˅마',
+    });
+    expect(getSpacingFolderBundle('unlistedNounNoun')?.label).toBe(
+      '사전에 등재되지 않은 명사+명사 (맞춤법 제2항)',
+    );
+    expect(getSpacingFolderBundle('unlistedNounNoun')?.example).toEqual({
+      find: '무릎위',
+      replace: '무릎˅위',
+    });
   });
 
   it('defaults all bundles off except nonAeoAux (본조 탭에서 옮겨 옴)', () => {
