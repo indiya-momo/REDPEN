@@ -15,16 +15,10 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    /** 공지 관리자 — VITE_BETA_QUOTA_ADMIN_UIDS / EMAILS 와 동일 */
+    /** 공지 관리자 — Firestore 콘솔에서 noticeAdmins/{본인 UID} 문서를 만들면 관리자 (코드에 UID·이메일 없음) */
     function isNoticeAdmin() {
       return isSignedIn()
-        && (
-          request.auth.uid == 'test-uid-admin'
-          || (
-            request.auth.token.email == 'admin@example.com'
-            && request.auth.token.email_verified == true
-          )
-        );
+        && exists(/databases/$(database)/documents/noticeAdmins/$(request.auth.uid));
     }
 
     /** profile.plan / paid* — Admin SDK(Callable)만 변경 가능 */
