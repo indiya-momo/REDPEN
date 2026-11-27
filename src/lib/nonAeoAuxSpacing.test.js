@@ -204,7 +204,7 @@ describe('띄어쓰기 폴더 등록', () => {
   it('registry·묶음에 non-aeo-aux가 있고 묶음은 기본 켜짐', () => {
     const def = SPACING_CATEGORY_DEFS.find((d) => d.id === 'non-aeo-aux');
     expect(NON_AEO_AUX_SPACING_LABEL).toBe(
-      '본(-아/-어) + 보조용언 아닌 경우 (맞춤법 제47항)',
+      '본(-아/-어) + 보조용언 아닌 경우 (47항)',
     );
     expect(def?.label).toBe(NON_AEO_AUX_SPACING_LABEL);
     expect(typeof def?.findHits).toBe('function');

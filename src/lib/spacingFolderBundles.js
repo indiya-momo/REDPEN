@@ -20,14 +20,14 @@
 export const SPACING_FOLDER_BUNDLES = Object.freeze([
   Object.freeze({
     bundleId: 'numberUnit',
-    label: '수·단위 (맞춤법 제43항)',
+    label: '수·단위 (43항)',
     example: Object.freeze({ find: '이억삼천만', replace: '이억˅삼천만' }),
     moduleIds: Object.freeze(['numeral', 'man-eok-jo', 'digit-unit']),
     tipLines: Object.freeze(['아라비아 숫자와 단위는 붙이고, 한글로 적은 수와 단위는 띄어 씀']),
   }),
   Object.freeze({
     bundleId: 'dependentRieulKka',
-    label: '관형사형 뒤 의존명사 (맞춤법 제42항)',
+    label: '관형사형 뒤 의존명사 (42항)',
     example: Object.freeze({ find: '할수 있다', replace: '할˅수 있다' }),
     moduleIds: Object.freeze([
       'adnominal-dep',
@@ -51,7 +51,7 @@ export const SPACING_FOLDER_BUNDLES = Object.freeze([
   // 2026-11-19: 본조 탭의 비아/어 띄움 필수 줄을 옮겨 옴. 기본 켜짐(아래 default).
   Object.freeze({
     bundleId: 'nonAeoAux',
-    label: '본(-아/-어) + 보조용언 아닌 경우 (맞춤법 제47항)',
+    label: '본(-아/-어) + 보조용언 아닌 경우 (47항)',
     example: Object.freeze({ find: '먹지마', replace: '먹지˅마' }),
     moduleIds: Object.freeze(['non-aeo-aux']),
     tipLines: Object.freeze([
@@ -61,7 +61,7 @@ export const SPACING_FOLDER_BUNDLES = Object.freeze([
   }),
   Object.freeze({
     bundleId: 'unlistedNounNoun',
-    label: '사전에 등재되지 않은 명사+명사 (맞춤법 제2항)',
+    label: '사전에 등재되지 않은 명사+명사 (2항)',
     example: Object.freeze({ find: '무릎위', replace: '무릎˅위' }),
     moduleIds: Object.freeze(['unlisted-noun-noun']),
     tipLines: Object.freeze([
