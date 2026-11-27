@@ -35,6 +35,14 @@ import {
   SEARCH_BADGE_LABEL,
 } from '../lib/manuscriptWorkbench/types.js';
 import { manualResultCardTip } from '../lib/manuscriptWorkbench/textPartDiff.js';
+import StdictCorrectionLink from './StdictCorrectionLink.jsx';
+import CautionDictLabel from './CautionDictLabel.jsx';
+import CautionDictTip from './CautionDictTip.jsx';
+import { useStdictLinkIndex } from '../hooks/useStdictLinkIndex.js';
+import {
+  correctionPairsOfGroup,
+  isDictBundleGroup,
+} from '../lib/stdictLinkPairs.js';
 import {
   defaultOpenConsistencyCategory,
   defaultOpenSpellingCategory,
@@ -332,6 +340,8 @@ export default function CheckResultsPanel({
   onRemoveManualInstance,
 }) {
   const pageLabel = formatPageLabelProp ?? formatSystemPageLabel;
+  /** 표준국어대사전 색인(없거나 읽기 실패면 null → 링크 없이 글자만) */
+  const stdictLinkIndex = useStdictLinkIndex();
 
   /** 검사에 잡힌 항목만 — 직접 추가는 하단 수정 리스트에서만 */
   const displayEntries = (entries ?? []).filter(
@@ -381,6 +391,11 @@ export default function CheckResultsPanel({
       ? getConsistencyResultCardParts(group, customRules)
       : null;
     const isSearch = group.category === 'manuscript-search';
+    /** 표준국어대사전 등재 묶음 카드의 찾은 말 → 고칠 말 쌍 (인스턴스 값 기준) */
+    const dictPairs =
+      source === 'spelling' && isDictBundleGroup(group)
+        ? correctionPairsOfGroup(group)
+        : [];
     const tipText =
       group.category === 'manual'
         ? manualResultCardTip(group)
@@ -482,7 +497,10 @@ export default function CheckResultsPanel({
                   </>
                 ) : isCaution ? (
                   <span className="caution-result-chip">
-                    {cautionResultChipLabel(group)}
+                    <CautionDictLabel
+                      text={cautionResultChipLabel(group)}
+                      index={stdictLinkIndex}
+                    />
                   </span>
                 ) : isLoanword ? (
                   <span className="spelling-result-chip">
@@ -490,6 +508,19 @@ export default function CheckResultsPanel({
                       (first
                         ? `${first.matchedText} → ${first.suggestedText}`
                         : '')}
+                  </span>
+                ) : dictPairs.length > 0 ? (
+                  <span className="spelling-result-chip">
+                    {dictPairs.map((pair, i) => (
+                      <span key={`${pair.find}\u0000${pair.replace}`}>
+                        {i > 0 ? ', ' : null}
+                        {pair.find} →{' '}
+                        <StdictCorrectionLink
+                          word={pair.replace}
+                          index={stdictLinkIndex}
+                        />
+                      </span>
+                    ))}
                   </span>
                 ) : (
                   <span className="spelling-result-chip">
@@ -525,7 +556,17 @@ export default function CheckResultsPanel({
           group.instances.length > 0 ? (
             <div className="result-card-detail">
               {tipText && (!isConsistency || count === 0) ? (
-                <span className="result-card-tip-inline">{tipText}</span>
+                <span className="result-card-tip-inline">
+                  {isCaution ? (
+                    <CautionDictTip
+                      text={tipText}
+                      chipLabel={cautionResultChipLabel(group)}
+                      index={stdictLinkIndex}
+                    />
+                  ) : (
+                    tipText
+                  )}
+                </span>
               ) : null}
               {group.patternKind === 'phrase-slot-find' ? (
                 <PhraseSlotResultSummary

@@ -7074,6 +7074,25 @@
   text-decoration-color: var(--c-ink);
 }
 
+/* 결과 카드 고칠 말 → 표준국어대사전 링크 (카드 글자 크기·색을 그대로 물려받음) */
+.panel-left .spelling-dict-link {
+  font: inherit;
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+  text-decoration-color: color-mix(in srgb, currentColor 50%, transparent);
+  cursor: pointer;
+}
+.panel-left .spelling-dict-link:hover {
+  text-decoration-color: currentColor;
+}
+.panel-left .spelling-dict-link:focus-visible {
+  outline: 2px solid color-mix(in srgb, currentColor 45%, transparent);
+  outline-offset: 1px;
+  border-radius: 2px;
+}
+
 .panel-left .panel-criteria-source-link:focus-visible {
   color: var(--c-ink);
   background-color: rgba(15, 23, 42, 0.1);

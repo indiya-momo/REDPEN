@@ -7,6 +7,9 @@ import {
   cautionItemTip,
 } from '../lib/cautionRules.js';
 import { STANDARD_KOREAN_DICT_TIP, STANDARD_KOREAN_DICT_URL } from '../lib/koreanNormsLinks.js';
+import { useStdictLinkIndex } from '../hooks/useStdictLinkIndex.js';
+import CautionDictLabel from './CautionDictLabel.jsx';
+import CautionDictTip from './CautionDictTip.jsx';
 import DetailsChevron from './DetailsChevron.jsx';
 import CriteriaHoverTip from './CriteriaHoverTip.jsx';
 import { SPELLING_CRITERIA_HEADING_DESCRIPTIONS } from '../lib/spellingCriteriaHeadingTips.js';
@@ -34,6 +37,7 @@ export default function CautionChecklist({
   guideSpotlight = false,
 }) {
   const selectAllRef = useRef(/** @type {HTMLInputElement | null} */ (null));
+  const stdictLinkIndex = useStdictLinkIndex();
   const [activeTipByBundle, setActiveTipByBundle] = useState(
     /** @type {Record<string, string | null>} */ ({}),
   );
@@ -98,10 +102,12 @@ export default function CautionChecklist({
                 }}
                 aria-expanded={tipOpen}
               >
-                {label}
+                <CautionDictLabel text={label} index={stdictLinkIndex} />
               </span>
             ) : (
-              <span className="caution-chip-label">{label}</span>
+              <span className="caution-chip-label">
+                <CautionDictLabel text={label} index={stdictLinkIndex} />
+              </span>
             )}
           </div>
         </div>
@@ -150,7 +156,13 @@ export default function CautionChecklist({
                 })),
               )}
               {activeTip && afterId === item.id ? (
-                <div className="caution-tip-inline">{activeTip}</div>
+                <div className="caution-tip-inline">
+                  <CautionDictTip
+                    text={activeTip}
+                    chipLabel={cautionDisplayLabel(activeEntry.item)}
+                    index={stdictLinkIndex}
+                  />
+                </div>
               ) : null}
             </Fragment>
           );
