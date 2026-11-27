@@ -96,6 +96,29 @@ function PairTable({ rows, pairLabel }) {
 }
 
 /**
+ * 묶음 머리(소제목) + 줄마다 5열 격자 (해설서 제51항 배치).
+ * @param {{ groups: { heading: string, rows: string[] }[] }} props
+ */
+function RuleGroups({ groups }) {
+  return (
+    <div className="hangul-ortho__examples-box hangul-ortho__rule-groups">
+      {groups.map((group) => (
+        <section key={group.heading} className="hangul-ortho__rule-group">
+          <h5 className="hangul-ortho__rule-group-title">{group.heading}</h5>
+          {group.rows.map((row) => (
+            <div key={row} className="hangul-ortho__rule-row">
+              {row.split(/\s+/).map((word) => (
+                <span key={word}>{word}</span>
+              ))}
+            </div>
+          ))}
+        </section>
+      ))}
+    </div>
+  );
+}
+
+/**
  * @param {{ items: string[], pairLabel?: [string, string], allowPair?: boolean }} props
  */
 function ExampleBlock({ items, pairLabel, allowPair = true }) {
@@ -111,7 +134,14 @@ function ExampleBlock({ items, pairLabel, allowPair = true }) {
         ) : (
           <div key={index} className="hangul-ortho__examples-box">
             {segment.items.map((item) => (
-              <span key={item}>{item}</span>
+              <span
+                key={item}
+                className={
+                  /^(\[붙임|\(\d+\)|\d+\s?\.\s)/u.test(item) ? 'hangul-ortho__note-line' : undefined
+                }
+              >
+                {item}
+              </span>
             ))}
           </div>
         ),
@@ -339,10 +369,14 @@ export default function HangulOrthographyScreen() {
                           <span className="hangul-ortho__art-no">제{article.number}항</span>
                           {article.text}
                         </h4>
-                        <ExampleBlock
-                          items={article.ruleExamples}
-                          pairLabel={pairLabelFor(article)}
-                        />
+                        {article.ruleGroups?.length ? (
+                          <RuleGroups groups={article.ruleGroups} />
+                        ) : (
+                          <ExampleBlock
+                            items={article.ruleExamples}
+                            pairLabel={pairLabelFor(article)}
+                          />
+                        )}
                         {article.proviso ? (
                           <>
                             <p className="hangul-ortho__proviso">{article.proviso}</p>

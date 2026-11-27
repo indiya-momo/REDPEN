@@ -28,6 +28,11 @@ describe('hangulOrthographyArticles', () => {
       '한 개 차 한 대 금 서 돈 소 한 마리',
       '옷 한 벌 열 살 조기 한 손 연필 한 자루',
       '버선 한 죽 집 한 채 신 두 켤레 북어 한 쾌',
+      '다만, 순서를 나타내는 경우나 숫자와 어울리어 쓰이는 경우에는 붙여 쓸 수 있다.',
+      '두시 삼십분 오초 제일과 삼학년',
+      '육층 1446년 10월 9일 2대대',
+      '16동 502호 제1실습실 80원',
+      '10개 7미터',
     ]);
     expect(art.ruleExamples.join('')).not.toMatch(/의존 명사이든/);
     expect(art.commentary.quotes[0]).toBe(

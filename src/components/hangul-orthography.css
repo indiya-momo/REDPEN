@@ -291,6 +291,35 @@
   color: var(--ortho-example-text);
 }
 
+.hangul-ortho__note-line {
+  flex-basis: 100%;
+}
+
+.hangul-ortho__rule-groups {
+  display: block;
+}
+
+.hangul-ortho__rule-group {
+  margin: 0 0 0.9rem;
+}
+
+.hangul-ortho__rule-group:last-child {
+  margin-bottom: 0;
+}
+
+.hangul-ortho__rule-group-title {
+  margin: 0 0 0.35rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.hangul-ortho__rule-row {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.2rem 0.8rem;
+  margin: 0 0 0.2rem;
+}
+
 .hangul-ortho__proviso {
   margin: 0.6rem 0 0.5rem;
 }
