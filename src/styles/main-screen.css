@@ -7087,6 +7087,15 @@
 .panel-left .spelling-dict-link:hover {
   text-decoration-color: currentColor;
 }
+/* 번호별 직결 어깨번호(§12-10-1): 말 글자는 링크가 아니고 번호만 링크 */
+.panel-left .spelling-dict-no-group {
+  font-size: 0.72em;
+  line-height: 0;
+  margin-left: 1px;
+}
+.panel-left .spelling-dict-numbered__item + .spelling-dict-numbered__item {
+  margin-left: 0.5em;
+}
 .panel-left .spelling-dict-link:focus-visible {
   outline: 2px solid color-mix(in srgb, currentColor 45%, transparent);
   outline-offset: 1px;

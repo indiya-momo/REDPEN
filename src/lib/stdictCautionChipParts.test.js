@@ -56,6 +56,14 @@ describe('cautionChipLinkParts', () => {
 });
 
 describe('cautionTipLinkTerms · cautionTipLinkParts', () => {
+  it('같은 말은 설명에서 처음 나온 자리만 링크하고, 뒤에 나오면 평문으로 둔다', () => {
+    const tip = '조사로 붙이고, 다시 조사로 쓴다';
+    const specs = [{ text: '조사', lookup: '대로', pos: '조사' }];
+    const words = cautionTipLinkParts(tip, specs).filter((p) => p.kind === 'word');
+    expect(words.map((p) => p.text)).toEqual(['조사']);
+    expect(cautionTipLinkParts(tip, specs).map((p) => p.text).join('')).toBe(tip);
+  });
+
   it('대로 설명에서 조사와 의존명사를 각각 링크로 뽑고 대로는 빼 둔다', () => {
     const tip =
       '체언 뒤는 조사로 붙이고(마대로), \n용언 뒤는 의존명사라 띄어 쓴다(갈 대로)';

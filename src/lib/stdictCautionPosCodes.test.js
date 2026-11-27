@@ -67,13 +67,13 @@ describe('§12-3 자동 판정 표', () => {
 });
 
 describe('§12-4 수동 지정표', () => {
-  it('지정표가 설계안과 같다', () => {
-    expect(CAUTION_MANUAL_WORD_NO).toEqual({
+  it('지정표에 §12-4 카드가 모두 들어 있다', () => {
+    expect(CAUTION_MANUAL_WORD_NO).toMatchObject({
       'uinoun-jungdo': { 명사: 479967 },
       'noun-ttae': { 명사: 98401 },
-      'jubsa-garyang': { 가량: 387733, 쯤: 321212 },
       'josa-attach-keonyeong': { 보조사: 490407 },
       'josa-attach-bakke': { 보조사: 131192 },
+      'jubsa-garyang': { 가량: 387733, 쯤: 321212 },
     });
   });
 
@@ -85,10 +85,48 @@ describe('§12-4 수동 지정표', () => {
     expect(linkedWords('noun-ttae')).toEqual([['명사', 98401]]);
   });
 
-  it('가량·쯤은 따옴표 단어 자리에 각각 달고 「접사」에는 달지 않는다', () => {
+  it('가량·쯤은 제목과 같은 말이라도 설명에서 처음 나온 자리에 단다(§12-2 예외)', () => {
     expect(linkedWords('jubsa-garyang')).toEqual([
       ['가량', 387733],
       ['쯤', 321212],
+    ]);
+  });
+
+  it('견본: 잘하다는 제목과 같은 말 「잘하다」(둘째 줄)에 단다', () => {
+    expect(linkedWords('bon-bojo-jalhada')).toEqual([['잘하다', 475843]]);
+  });
+
+  it('-던지·-든지: 「-든지」는 글자 하나에 번호 둘이라 「조사」→94197, 「-든지」→417515로 나눠 단다', () => {
+    expect(linkedWords('eomi-eomi-deongi')).toEqual([
+      ['-더라', 412877],
+      ['-던', 416298],
+      ['-던지', 83003],
+      ['조사', 94197],
+      ['-든지', 417515],
+    ]);
+  });
+
+  it('수동 지정표의 자리는 모두 설명에서 찾아져 링크가 된다', () => {
+    for (const [itemId, table] of Object.entries(CAUTION_MANUAL_WORD_NO)) {
+      expect(linkedWords(itemId).length, itemId).toBe(Object.keys(table).length);
+    }
+  });
+
+  it('견본: 안되다는 번호가 아니라 뜻풀이 말에 단다', () => {
+    expect(linkedWords('bon-bojo-anda')).toEqual([
+      ['좋게 이루어지지 않다', 219149],
+      ['사람이 보기에 가엾다', 222730],
+    ]);
+  });
+
+  it('견본: 붙이다·부치다는 한 설명에 여러 자리를 설명 순서대로 단다', () => {
+    expect(linkedWords('verb-verbi-but')).toEqual([
+      ['붙이다', 153137],
+      ['붙다', 158587],
+      ['미달하다', 438761],
+      ['보내다', 438538],
+      ['음식을 만들다', 154384],
+      ['바람을 만들어내다', 154385],
     ]);
   });
 

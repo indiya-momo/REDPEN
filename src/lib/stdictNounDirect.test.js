@@ -25,7 +25,21 @@ describe('pickNounCodes', () => {
     expect(pickNounCodes('그중', [{ code: 9 }, { code: 3 }])).toEqual([3, 9]);
   });
 
-  it('등재 명사 19개는 번호가 있다', () => {
-    expect(Object.keys(NOUN_DIRECT_WORD_NO)).toHaveLength(19);
+  it('하나로 직결하는 등재 명사는 번호가 있다(번호별 링크로 옮긴 말은 뺀다)', () => {
+    expect(Object.keys(NOUN_DIRECT_WORD_NO)).toHaveLength(14);
+    for (const w of ['신소리', '애저녁', '경제권', '호박색', '선소리']) {
+      expect(NOUN_DIRECT_WORD_NO[w], w).toBeUndefined();
+    }
+  });
+
+  it('번호별 링크 5개는 후보를 모두 남긴다', () => {
+    expect(pickNounCodes('선소리', [{ code: 178012 }, { code: 178008 }, { code: 178010 }])).toEqual([
+      178008, 178010, 178012,
+    ]);
+    expect(pickNounCodes('경제권', [{ code: 21153 }, { code: 21152 }])).toEqual([21152, 21153]);
+  });
+
+  it('신소리는 후보를 고르지 않고 둘 다 남긴다', () => {
+    expect(pickNounCodes('신소리', [{ code: 453792 }, { code: 209783 }])).toEqual([209783, 453792]);
   });
 });
