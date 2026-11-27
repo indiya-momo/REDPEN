@@ -3,6 +3,7 @@ import {
   listSpacingFolderBundles,
   normalizeSpacingFolderEnabled,
 } from '../lib/spacingFolderBundles.js';
+import OrthographyRefText from './OrthographyRefText.jsx';
 import DetailsChevron from './DetailsChevron.jsx';
 
 /**
@@ -96,7 +97,9 @@ export default function SpacingFolderChecklist({
                             }}
                             aria-expanded={tipOpen}
                           >
-                            <span className="spacing-folder-label">{bundle.label}</span>
+                            <span className="spacing-folder-label">
+                              <OrthographyRefText text={bundle.label} />
+                            </span>
                             {bundle.example ? (
                               <span className="spacing-folder-example">
                                 <span className="find">{bundle.example.find}</span>
@@ -123,7 +126,9 @@ export default function SpacingFolderChecklist({
                     </div>
                   ) : null}
                   {tipOpen ? (
-                    <div className="builtin-rule-tip-inline">{bundle.tipLines.join('\n')}</div>
+                    <div className="builtin-rule-tip-inline">
+                      <OrthographyRefText text={bundle.tipLines.join('\n')} />
+                    </div>
                   ) : null}
                 </div>
               );

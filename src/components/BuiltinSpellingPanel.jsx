@@ -12,6 +12,7 @@ import {
 } from '../lib/spellingRuleBundles.js';
 import DetailsChevron from './DetailsChevron.jsx';
 import CriteriaHoverTip from './CriteriaHoverTip.jsx';
+import OrthographyRefText from './OrthographyRefText.jsx';
 import { spellingRuleChecklistParts } from '../lib/spellingRuleEntry.js';
 
 /**
@@ -182,7 +183,9 @@ export default function BuiltinSpellingPanel({
                 </div>
               </div>
               {activeTip && afterKey === rowKey ? (
-                <div className="builtin-rule-tip-inline">{activeTip}</div>
+                <div className="builtin-rule-tip-inline">
+                  <OrthographyRefText text={activeTip} />
+                </div>
               ) : null}
             </Fragment>
           );
