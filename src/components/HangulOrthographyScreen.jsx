@@ -452,6 +452,19 @@ function WordGroups({ groups }) {
   );
 }
 
+/** 부록 해설 — 있을 때만 접힘 블록으로 표시 (본문 해설과 같은 모양) */
+function AppendixCommentary({ lines }) {
+  if (!lines || !lines.length) return null;
+  return (
+    <details className="hangul-ortho__commentary">
+      <summary>해설</summary>
+      <div className="hangul-ortho__commentary-body">
+        <AppendixLines lines={lines} />
+      </div>
+    </details>
+  );
+}
+
 /** 부록 · 문장 부호 (고시 원문, 21개 항목) — 목차·「부록」 링크는 #appendix */
 function AppendixSection() {
   const app = HANGUL_ORTHOGRAPHY_APPENDIX;
@@ -459,6 +472,7 @@ function AppendixSection() {
     <section className="hangul-ortho__chapter hangul-ortho__appendix" id={app.anchor}>
       <h2 className="hangul-ortho__chapter-title">{app.title}</h2>
       <p className="hangul-ortho__appendix-intro">{app.intro}</p>
+      <AppendixCommentary lines={app.commentary} />
       {app.items.map((item) => (
         <article key={item.anchor} id={item.anchor} className="hangul-ortho__article">
           <h4>
@@ -472,8 +486,10 @@ function AppendixSection() {
                 ({rule.number}) {rule.text}
               </p>
               {rule.body.length ? <AppendixLines lines={rule.body} /> : null}
+              <AppendixCommentary lines={rule.commentary} />
             </div>
           ))}
+          <AppendixCommentary lines={item.commentary} />
         </article>
       ))}
     </section>
