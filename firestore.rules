@@ -15,6 +15,12 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
+    /** 공지 관리자 — Firestore 콘솔에서 noticeAdmins/{본인 UID} 문서를 만들면 관리자 (코드에 UID·이메일 없음) */
+    function isNoticeAdmin() {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/noticeAdmins/$(request.auth.uid));
+    }
+
     /** profile.plan / paid* — Admin SDK(Callable)만 변경 가능 */
     function profilePlanIsFreeOrAbsent() {
       let p = request.resource.data.get('profile', {});
@@ -204,6 +210,43 @@ service cloud.firestore {
       allow update: if false;
       allow delete: if isSignedIn()
         && resource.data.createdByUid == request.auth.uid;
+    }
+
+    /**
+     * 공지 게시판 — 누구나 읽기, 쓰기는 관리자만.
+     */
+    match /notices/{noticeId} {
+      allow read: if true;
+
+      allow create: if isNoticeAdmin()
+        && request.resource.data.keys().hasOnly([
+          'title', 'body', 'pinned', 'createdAt', 'updatedAt', 'createdByUid'
+        ])
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.title.size() <= 200
+        && request.resource.data.body is string
+        && request.resource.data.body.size() <= 5000
+        && request.resource.data.pinned is bool
+        && request.resource.data.createdByUid == request.auth.uid
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.updatedAt is timestamp;
+
+      allow update: if isNoticeAdmin()
+        && request.resource.data.keys().hasOnly([
+          'title', 'body', 'pinned', 'createdAt', 'updatedAt', 'createdByUid'
+        ])
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.title.size() <= 200
+        && request.resource.data.body is string
+        && request.resource.data.body.size() <= 5000
+        && request.resource.data.pinned is bool
+        && request.resource.data.createdByUid == resource.data.createdByUid
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.updatedAt is timestamp;
+
+      allow delete: if isNoticeAdmin();
     }
 
     /** 위에 명시되지 않은 경로 — 전부 거부 */

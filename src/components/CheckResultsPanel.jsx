@@ -12,6 +12,7 @@ import {
 import PhraseSlotResultSummary from './PhraseSlotResultSummary.jsx';
 import GroupVisibilityCheckbox from './GroupVisibilityCheckbox.jsx';import DetailsChevron, { detailsOpenOnceRef } from './DetailsChevron.jsx';
 import CriteriaHoverTip from './CriteriaHoverTip.jsx';
+import OrthographyRefText from './OrthographyRefText.jsx';
 import { Fragment, useEffect, useMemo, useRef } from 'react';
 import { getBuiltInTip } from '../lib/builtInRules.js';
 import { formatSystemPageLabel } from '../lib/printedPageDisplay.js';
@@ -576,7 +577,7 @@ export default function CheckResultsPanel({
                       index={stdictLinkIndex}
                     />
                   ) : (
-                    tipText
+                    <OrthographyRefText text={tipText} />
                   )}
                 </span>
               ) : null}

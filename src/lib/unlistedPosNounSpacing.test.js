@@ -83,7 +83,7 @@ describe('사전에 없는 명사+위치 명사', () => {
     expect(groups[0].category).toBe('spacing:unlistedNounNoun');
     expect(groups[0].label).toBe(UNLISTED_POS_NOUN_LABEL);
     expect(UNLISTED_POS_NOUN_LABEL).toBe(
-      '사전에 등재되지 않은 명사+명사 (맞춤법 제2항)',
+      '사전에 등재되지 않은 명사+명사 (2항)',
     );
     expect(groups[0].tip).toContain('제2항');
     expect(groups[0].instances[0].suggestedText).toBe('무릎 위에');

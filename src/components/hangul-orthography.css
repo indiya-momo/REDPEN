@@ -49,6 +49,16 @@
   font-size: 0.88rem;
 }
 
+/* 공공누리 마크: 헤더 높이를 바꾸지 않도록 헤더 아래 본문 오른쪽 빈 자리에 띄운다. */
+.hangul-ortho__license {
+  position: absolute;
+  top: calc(100% + 0.6rem);
+  right: 1.4rem;
+  width: 8rem;
+  height: auto;
+  pointer-events: none;
+}
+
 .hangul-ortho__search {
   position: relative;
   flex: 0 1 22rem;
@@ -179,12 +189,35 @@
   border-left: 1px solid var(--ortho-border);
 }
 
-.hangul-ortho__toc-chapter > span,
-.hangul-ortho__toc-section {
+.hangul-ortho__toc-group > summary {
   display: block;
   padding: 0.22rem 0;
   color: var(--ortho-text);
   font-size: 0.88rem;
+  cursor: pointer;
+  list-style: none;
+}
+
+.hangul-ortho__toc-group > summary::-webkit-details-marker {
+  display: none;
+}
+
+.hangul-ortho__toc-group > summary::before {
+  content: '▾';
+  display: inline-block;
+  width: 0.9em;
+  margin-right: 0.15em;
+  color: var(--ortho-muted);
+  font-size: 0.8em;
+}
+
+.hangul-ortho__toc-group:not([open]) > summary::before {
+  content: '▸';
+}
+
+.hangul-ortho__toc-group > summary:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--ortho-accent) 30%, transparent);
+  outline-offset: 1px;
 }
 
 .hangul-ortho__toc-section {

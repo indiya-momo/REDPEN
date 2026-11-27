@@ -40,14 +40,14 @@ describe('spacingFolderBundles', () => {
       '제2항',
     );
     expect(getSpacingFolderBundle('nonAeoAux')?.label).toBe(
-      '본(-아/-어) + 보조용언 아닌 경우 (맞춤법 제47항)',
+      '본(-아/-어) + 보조용언 아닌 경우 (47항)',
     );
     expect(getSpacingFolderBundle('nonAeoAux')?.example).toEqual({
       find: '먹지마',
       replace: '먹지˅마',
     });
     expect(getSpacingFolderBundle('unlistedNounNoun')?.label).toBe(
-      '사전에 등재되지 않은 명사+명사 (맞춤법 제2항)',
+      '사전에 등재되지 않은 명사+명사 (2항)',
     );
     expect(getSpacingFolderBundle('unlistedNounNoun')?.example).toEqual({
       find: '무릎위',

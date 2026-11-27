@@ -14,7 +14,7 @@ import {
 } from './stdictPosIndex.js';
 
 export const UNLISTED_POS_NOUN_LABEL =
-  '사전에 등재되지 않은 명사+명사 (맞춤법 제2항)';
+  '사전에 등재되지 않은 명사+명사 (2항)';
 export const UNLISTED_POS_NOUN_TIP =
   '한글 맞춤법 제2항: 사전에 없는 명사+위치 명사(위·아래·앞·뒤·안·밖·옆·속·밑)는 띄어 씀. 표준국어대사전 표제어(눈앞·손위·윗사람)는 잡지 않음.';
 

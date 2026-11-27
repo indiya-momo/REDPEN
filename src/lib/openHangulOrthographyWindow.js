@@ -16,7 +16,8 @@ export function buildHangulOrthographyUrl(anchor) {
  */
 export function openHangulOrthographyWindow(anchor) {
   const url = buildHangulOrthographyUrl(anchor).toString();
-  const win = window.open(url, 'indiya-orthography', 'noopener,noreferrer');
+  // 고정 창 이름을 쓰면 기존 맞춤법 창이 이동만 한다. 링크를 누를 때마다 새 창을 연다.
+  const win = window.open(url, '_blank', 'noopener,noreferrer');
   if (win && !win.closed) {
     try {
       win.focus();
