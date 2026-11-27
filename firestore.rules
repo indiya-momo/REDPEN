@@ -15,6 +15,18 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
+    /** 공지 관리자 — VITE_BETA_QUOTA_ADMIN_UIDS / EMAILS 와 동일 */
+    function isNoticeAdmin() {
+      return isSignedIn()
+        && (
+          request.auth.uid == 'test-uid-admin'
+          || (
+            request.auth.token.email == 'admin@example.com'
+            && request.auth.token.email_verified == true
+          )
+        );
+    }
+
     /** profile.plan / paid* — Admin SDK(Callable)만 변경 가능 */
     function profilePlanIsFreeOrAbsent() {
       let p = request.resource.data.get('profile', {});
@@ -204,6 +216,43 @@ service cloud.firestore {
       allow update: if false;
       allow delete: if isSignedIn()
         && resource.data.createdByUid == request.auth.uid;
+    }
+
+    /**
+     * 공지 게시판 — 누구나 읽기, 쓰기는 관리자만.
+     */
+    match /notices/{noticeId} {
+      allow read: if true;
+
+      allow create: if isNoticeAdmin()
+        && request.resource.data.keys().hasOnly([
+          'title', 'body', 'pinned', 'createdAt', 'updatedAt', 'createdByUid'
+        ])
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.title.size() <= 200
+        && request.resource.data.body is string
+        && request.resource.data.body.size() <= 5000
+        && request.resource.data.pinned is bool
+        && request.resource.data.createdByUid == request.auth.uid
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.updatedAt is timestamp;
+
+      allow update: if isNoticeAdmin()
+        && request.resource.data.keys().hasOnly([
+          'title', 'body', 'pinned', 'createdAt', 'updatedAt', 'createdByUid'
+        ])
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.title.size() <= 200
+        && request.resource.data.body is string
+        && request.resource.data.body.size() <= 5000
+        && request.resource.data.pinned is bool
+        && request.resource.data.createdByUid == resource.data.createdByUid
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.updatedAt is timestamp;
+
+      allow delete: if isNoticeAdmin();
     }
 
     /** 위에 명시되지 않은 경로 — 전부 거부 */

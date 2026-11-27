@@ -1,14 +1,31 @@
 /**
  * PC 대문 히어로 오른쪽 위 공지 알약.
- * 누르면 모모의 방 공지 게시판으로 이동한다. 공지가 없으면 그리지 않는다.
+ * Firestore에서 최신 공지를 읽어 모모의 방 게시판으로 보낸다.
+ * 공지가 없거나 불러오지 못하면 그리지 않는다.
  */
-import { getLatestNotice } from '../../lib/notices.js';
+import { useEffect, useState } from 'react';
+import { fetchLatestNotice } from '../../lib/noticesCloud.js';
 
 /**
  * @param {{ onOpen?: () => void }} props
  */
 export default function WelcomePcNotice({ onOpen }) {
-  const latest = getLatestNotice();
+  const [latest, setLatest] = useState(/** @type {{ title: string } | null} */ (null));
+
+  useEffect(() => {
+    let cancelled = false;
+    void fetchLatestNotice()
+      .then((notice) => {
+        if (!cancelled) setLatest(notice);
+      })
+      .catch(() => {
+        if (!cancelled) setLatest(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   if (!latest) return null;
 
   return (
