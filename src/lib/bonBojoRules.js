@@ -57,7 +57,7 @@ const BON_BOJO_GATE_ONLY_GROUP = {
 export const BON_BOJO_LONG_COMPOUND_SPLIT_ID = 'verb-long-compound-split';
 
 export const BON_BOJO_LONG_COMPOUND_SPLIT_LABEL =
-  '본용언이 3음절 이상 복합어/파생어(띄어쓰기 필수)';
+  '본용언이 3음절 이상 복합어 : 띄어쓰기 필수';
 
 /** 시트 sync에 안 지워지게 런타임만 주입 */
 const BON_BOJO_LONG_COMPOUND_GROUP = {
@@ -314,8 +314,7 @@ export const BON_BOJO_UI_GROUP_TITLES = {
     '본용언(-아/-어) + 보조용언 : 붙여쓰기 가능, 합성어는 붙여쓰기 필수',
   [BON_BOJO_UI_GROUP.GLUE_REQUIRED]: '본용언(-아/-어) + 지다· 하다 :붙여쓰기 필수',
   [BON_BOJO_UI_GROUP.SPACE_REQUIRED_NON_AEO]: BON_BOJO_NON_AEO_SPACE_LABEL,
-  [BON_BOJO_UI_GROUP.SPACE_REQUIRED]:
-    '용언이 3음절 이상 복합어·파생어 : 띄어쓰기 필수',
+  [BON_BOJO_UI_GROUP.SPACE_REQUIRED]: BON_BOJO_LONG_COMPOUND_SPLIT_LABEL,
 };
 
 /**

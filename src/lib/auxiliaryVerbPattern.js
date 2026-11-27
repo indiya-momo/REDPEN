@@ -9,6 +9,7 @@ import {
   isHaeBoPattern,
 } from './compoundPatternCommon.js';
 import { buildAdjectiveCheHadaRules, isAdjectiveCheHadaTail } from './adjectiveCheHadaPattern.js';
+import { BON_BOJO_LONG_COMPOUND_SPLIT_LABEL } from './bonBojoRules.js';
 import { encodeSpacesVisible } from './spaceVisibleText.js';
 
 const AUX_SPACE = AUXILIARY_FLEX_SPACE;
@@ -86,9 +87,9 @@ export function buildLongCompoundSplitRules(stems) {
       pattern: 'regex',
       patternKind: 'auxiliary-verb',
       auxSplitLongCompound: true,
-      tailWord: '본용언이 3음절 이상 복합어/파생어(띄어쓰기 필수)',
+      tailWord: BON_BOJO_LONG_COMPOUND_SPLIT_LABEL,
       replace: '$1 $2',
-      label: '본용언이 3음절 이상 복합어/파생어(띄어쓰기 필수)',
+      label: BON_BOJO_LONG_COMPOUND_SPLIT_LABEL,
       tip: '본용언 활용형이 3음절 이상인 복합어·파생어는 보조용언을 띄어 씁니다.',
       find,
     },

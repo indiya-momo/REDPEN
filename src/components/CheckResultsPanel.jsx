@@ -12,7 +12,7 @@ import {
 import PhraseSlotResultSummary from './PhraseSlotResultSummary.jsx';
 import GroupVisibilityCheckbox from './GroupVisibilityCheckbox.jsx';import DetailsChevron, { detailsOpenOnceRef } from './DetailsChevron.jsx';
 import CriteriaHoverTip from './CriteriaHoverTip.jsx';
-import { useEffect, useMemo, useRef } from 'react';
+import { Fragment, useEffect, useMemo, useRef } from 'react';
 import { getBuiltInTip } from '../lib/builtInRules.js';
 import { formatSystemPageLabel } from '../lib/printedPageDisplay.js';
 import { cautionResultChipLabel } from '../lib/cautionRules.js';
@@ -77,6 +77,19 @@ function ResultFindingsCountCircle({
       </span>
     </CriteriaHoverTip>
   );
+}
+
+/** 라벨 속 '필수'를 기존 뱃지로 보여 준다. @param {string} text */
+function renderLabelWithRequiredBadge(text) {
+  const parts = String(text ?? '').split('필수');
+  return parts.map((part, i) => (
+    <Fragment key={i}>
+      {part}
+      {i < parts.length - 1 ? (
+        <span className="bon-bojo-required-badge">필수</span>
+      ) : null}
+    </Fragment>
+  ));
 }
 
 /**
@@ -451,9 +464,11 @@ export default function CheckResultsPanel({
                 {isConsistency ? (
                   <>
                     <span className="consistency-result-chip">
-                      {consistencyPartsForCard?.label ||
-                        group.label ||
-                        ''}
+                      {renderLabelWithRequiredBadge(
+                        consistencyPartsForCard?.label ||
+                          group.label ||
+                          '',
+                      )}
                     </span>
                     {group.patternKind === 'auxiliary-verb' &&
                     isBonBojoRequiredItem(group.bonBojoItemId) ? (
