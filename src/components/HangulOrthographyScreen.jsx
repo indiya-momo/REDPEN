@@ -223,13 +223,20 @@ function RuleGrid({ rows }) {
 /**
  * @param {{ items: string[], pairLabel?: [string, string], allowPair?: boolean }} props
  */
+/** 원문 표의 가운데 세로선 — divider는 세로선이 시작되는 칸 번호(0부터). */
+function dividerStyle(index, divider) {
+  return divider !== undefined && index === divider
+    ? { borderLeft: '1px solid var(--ortho-border-strong)', paddingLeft: '0.8rem' }
+    : undefined;
+}
+
 /** 해설 안의 표 예시 — 상자 없이 열만 맞춘다 (원문: 꽃이[꼬치] … [꼬ㅊ]). */
-function CommentaryGrid({ rows }) {
+function CommentaryGrid({ rows, divider }) {
   const cols = Math.max(...rows.map((r) => r.length));
   return (
     <div className="hangul-ortho__rule-grid hangul-ortho__commentary-grid" style={{ '--rule-cols': cols }}>
       {rows.flat().map((cell, i) => (
-        <span key={i} className="hangul-ortho__rule-cell">{boldMarkup(cell)}</span>
+        <span key={i} className="hangul-ortho__rule-cell" style={dividerStyle(i % cols, divider)}>{boldMarkup(cell)}</span>
       ))}
     </div>
   );
@@ -426,7 +433,7 @@ function WordGroups({ groups }) {
                   style={rule.cols ? { '--rule-cols': rule.cols } : undefined}
                 >
                   {rule.cells.map((cell, ci) => (
-                    <span key={ci}>{boldMarkup(cell)}</span>
+                    <span key={ci} style={dividerStyle(ci, rule.divider)}>{boldMarkup(cell)}</span>
                   ))}
                 </div>
               ),
@@ -594,7 +601,7 @@ export default function HangulOrthographyScreen() {
                                 typeof quote === 'string' ? (
                                   <p key={quote}>{ob(quote)}</p>
                                 ) : (
-                                  <CommentaryGrid key={qi} rows={quote.grid} />
+                                  <CommentaryGrid key={qi} rows={quote.grid} divider={quote.divider} />
                                 ),
                               )}
                               <ExampleBlock items={commentaryExamples} allowPair={false} />
