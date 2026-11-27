@@ -8,6 +8,7 @@ import MainScreen from './components/MainScreen.jsx';
 import WelcomeScreen from './components/WelcomeScreen.jsx';
 import MomoRoomScreen from './components/MomoRoomScreen.jsx';
 import GuideWindowScreen from './components/GuideWindowScreen.jsx';
+import HangulOrthographyScreen from './components/HangulOrthographyScreen.jsx';
 import MyPageWindowScreen from './components/MyPageWindowScreen.jsx';
 import MyPagePrototypeScreen from './mock/mypagePrototype/MyPagePrototypeScreen.jsx';
 import WorkHistoryPrototypeScreen from './mock/workHistoryPrototype/WorkHistoryPrototypeScreen.jsx';
@@ -497,6 +498,9 @@ export default function App() {
         <AppDialogHost />
       </>
     );
+  }
+  if (auxWindow === 'orthography') {
+    return <HangulOrthographyScreen />;
   }
 
   if (screen === 'room') {

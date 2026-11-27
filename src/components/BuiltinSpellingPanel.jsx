@@ -27,6 +27,7 @@ import { spellingRuleChecklistParts } from '../lib/spellingRuleEntry.js';
  *   sourceHref?: string,
  *   sourceLabel?: string,
  *   sourceTip?: string,
+ *   sourceOnClick?: (event: import('react').MouseEvent<HTMLAnchorElement>) => void,
  *   classPrefix?: string,
  *   dataWorkGuide?: string,
  *   selectAllAriaLabel?: string,
@@ -44,6 +45,7 @@ export default function BuiltinSpellingPanel({
   sourceHref = '',
   sourceLabel = '',
   sourceTip = '',
+  sourceOnClick,
   classPrefix = 'builtin-spelling',
   dataWorkGuide = 'criteria-spelling-heading',
   selectAllAriaLabel = '맞춤법 확인 규칙 전체 선택',
@@ -283,9 +285,15 @@ export default function BuiltinSpellingPanel({
               <a
                 className="panel-criteria-source-link"
                 href={sourceHref}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={(e) => e.stopPropagation()}
+                target={sourceOnClick ? undefined : '_blank'}
+                rel={sourceOnClick ? undefined : 'noopener noreferrer'}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (sourceOnClick) {
+                    e.preventDefault();
+                    sourceOnClick(e);
+                  }
+                }}
               >
                 {sourceLabel}
               </a>

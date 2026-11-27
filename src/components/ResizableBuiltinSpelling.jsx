@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { isSpacingCategoryEnabled } from '../lib/featureFlags.js';
-import { HANGUL_ORTHOGRAPHY_TIP, HANGUL_ORTHOGRAPHY_URL } from '../lib/koreanNormsLinks.js';
+import { openHangulOrthographyWindow } from '../lib/openHangulOrthographyWindow.js';
 import { SPELLING_CRITERIA_HEADING_DESCRIPTIONS } from '../lib/spellingCriteriaHeadingTips.js';
 import BuiltinSpellingPanel from './BuiltinSpellingPanel.jsx';
 import CautionChecklist from './CautionChecklist.jsx';
@@ -202,9 +202,10 @@ export default function ResizableBuiltinSpelling({
               onBuiltInSetAll={onBuiltInSetAll}
               guideSpotlight={guideSpotlight}
               description={SPELLING_CRITERIA_HEADING_DESCRIPTIONS.spelling}
-              sourceHref={HANGUL_ORTHOGRAPHY_URL}
+              sourceHref="?window=orthography"
               sourceLabel="한글 맞춤법"
-              sourceTip={HANGUL_ORTHOGRAPHY_TIP}
+              sourceTip="한글 맞춤법(문화체육관광부 고시 제2017-12호)"
+              sourceOnClick={() => openHangulOrthographyWindow()}
             />
           </div>
           <div className="builtin-spelling-loanword-scroll">

@@ -34,6 +34,7 @@ import {
 } from '../lib/phraseSlotRegister.js';
 import { parseCommaList } from '../lib/matchFilters.js';
 import { AUXILIARY_VERB_FEATURE_LABEL } from '../lib/bonBojoRules.js';
+import { openHangulOrthographyWindow } from '../lib/openHangulOrthographyWindow.js';
 import {
   countPhraseSlotRegisteredEntries,
   MAX_PHRASE_SLOT_REGISTERED_ENTRIES,
@@ -608,7 +609,17 @@ export default function ConsistencyPanel({
             </span>
           </summary>
           <p className="auxiliary-checklist-intro hint">
-            ｢한글 맞춤법｣에 따라 본+보조용언의 붙여쓰기 · 띄어쓰기 · 표기 통일을 검사합니다
+            <a
+              className="panel-criteria-source-link"
+              href="#art-47"
+              onClick={(e) => {
+                e.preventDefault();
+                openHangulOrthographyWindow('art-47');
+              }}
+            >
+              ｢한글 맞춤법｣
+            </a>
+            에 따라 본+보조용언의 붙여쓰기 · 띄어쓰기 · 표기 통일을 검사합니다
             <br />
             보조용언의 쓰임이 맞는지는 편집자의 검토가 필요합니다
           </p>
