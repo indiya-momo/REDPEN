@@ -223,6 +223,18 @@ function RuleGrid({ rows }) {
 /**
  * @param {{ items: string[], pairLabel?: [string, string], allowPair?: boolean }} props
  */
+/** 해설 안의 표 예시 — 상자 없이 열만 맞춘다 (원문: 꽃이[꼬치] … [꼬ㅊ]). */
+function CommentaryGrid({ rows }) {
+  const cols = Math.max(...rows.map((r) => r.length));
+  return (
+    <div className="hangul-ortho__rule-grid hangul-ortho__commentary-grid" style={{ '--rule-cols': cols }}>
+      {rows.flat().map((cell, i) => (
+        <span key={i} className="hangul-ortho__rule-cell">{boldMarkup(cell)}</span>
+      ))}
+    </div>
+  );
+}
+
 function ExampleBlock({ items, pairLabel, allowPair = true }) {
   if (!items?.length) return null;
   const segments = allowPair
@@ -574,9 +586,13 @@ export default function HangulOrthographyScreen() {
                           <details className="hangul-ortho__commentary">
                             <summary>해설</summary>
                             <div className="hangul-ortho__commentary-body">
-                              {commentaryQuotes.map((quote) => (
-                                <p key={quote}>{ob(quote)}</p>
-                              ))}
+                              {commentaryQuotes.map((quote, qi) =>
+                                typeof quote === 'string' ? (
+                                  <p key={quote}>{ob(quote)}</p>
+                                ) : (
+                                  <CommentaryGrid key={qi} rows={quote.grid} />
+                                ),
+                              )}
                               <ExampleBlock items={commentaryExamples} allowPair={false} />
                             </div>
                           </details>

@@ -527,3 +527,5 @@
 .hangul-ortho__footer a {
   color: var(--ortho-accent);
 }
+
+.hangul-ortho__commentary-grid { margin: 0.55rem 0.85rem 0.8rem; }
