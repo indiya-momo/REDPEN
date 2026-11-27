@@ -149,16 +149,6 @@ export function cautionTipLinkSpecs(chipLabel, tip, itemId) {
     });
   };
 
-  const manual = cautionManualPlaces(itemId);
-  if (manual.length) {
-    const tipText = String(tip ?? '');
-    for (const [place, wordNo] of manual) {
-      const surface = findPlaceInTip(tipText, place);
-      if (surface) add({ text: surface, lookup: place, wordNo });
-    }
-    return specs;
-  }
-
   /** @type {string[]} */
   const titleList = [];
   /** @type {string[]} */
@@ -172,6 +162,17 @@ export function cautionTipLinkSpecs(chipLabel, tip, itemId) {
         if (pos) labelPos.push(pos);
       }
     }
+  }
+
+  const manual = cautionManualPlaces(itemId);
+  if (manual.length) {
+    // 수동 지정 카드(§12-10 · 가량·쯤)는 제목과 같은 말이라도 설명에서 처음 나온 자리에 단다(§12-2 예외).
+    const tipText = String(tip ?? '');
+    for (const [place, wordNo] of manual) {
+      const surface = findPlaceInTip(tipText, place);
+      if (surface) add({ text: surface, lookup: place, wordNo });
+    }
+    return specs;
   }
 
   const tipStr = String(tip ?? '');
@@ -223,6 +224,8 @@ export function cautionTipLinkParts(raw, specs) {
       buf = '';
     }
   };
+  // 순서대로 처음 나온 자리만 링크한다. 같은 말은 한 번만 링크(§12, 2026-11-27 지시).
+  const linked = new Set();
   while (i < text.length) {
     let hit = '';
     for (const t of sorted) {
@@ -238,7 +241,13 @@ export function cautionTipLinkParts(raw, specs) {
       i += 1;
       continue;
     }
+    if (hit && linked.has(hit)) {
+      buf += hit;
+      i += hit.length;
+      continue;
+    }
     if (hit) {
+      linked.add(hit);
       const spec = byText.get(hit);
       flush();
       parts.push({
