@@ -76,6 +76,15 @@ describe('stdictLinkFor — 세 경우', () => {
     expect(r.kind).toBe('direct');
     expect(r.url).toBe(stdictViewUrl(1848));
   });
+
+  it('wordNo가 있으면 검색어와 상관없이 그 항으로 직결한다', () => {
+    const r = stdictLinkFor('조사', fakeIndex, { fallback: 'search', wordNo: 78254 });
+    expect(r).toEqual({
+      kind: 'direct',
+      url: stdictViewUrl(78254),
+      codes: [78254],
+    });
+  });
 });
 
 describe('실제 색인 파일 대조', () => {

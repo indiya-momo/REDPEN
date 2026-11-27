@@ -36,7 +36,6 @@ import {
 } from '../lib/manuscriptWorkbench/types.js';
 import { manualResultCardTip } from '../lib/manuscriptWorkbench/textPartDiff.js';
 import StdictCorrectionLink from './StdictCorrectionLink.jsx';
-import CautionDictLabel from './CautionDictLabel.jsx';
 import CautionDictTip from './CautionDictTip.jsx';
 import { useStdictLinkIndex } from '../hooks/useStdictLinkIndex.js';
 import {
@@ -497,10 +496,7 @@ export default function CheckResultsPanel({
                   </>
                 ) : isCaution ? (
                   <span className="caution-result-chip">
-                    <CautionDictLabel
-                      text={cautionResultChipLabel(group)}
-                      index={stdictLinkIndex}
-                    />
+                    {cautionResultChipLabel(group)}
                   </span>
                 ) : isLoanword ? (
                   <span className="spelling-result-chip">
@@ -561,6 +557,7 @@ export default function CheckResultsPanel({
                     <CautionDictTip
                       text={tipText}
                       chipLabel={cautionResultChipLabel(group)}
+                      itemId={group.cautionId}
                       index={stdictLinkIndex}
                     />
                   ) : (

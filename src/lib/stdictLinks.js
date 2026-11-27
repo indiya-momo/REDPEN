@@ -37,12 +37,19 @@ export function stdictSearchUrl(word) {
  *
  * @param {string} correction 고칠 말(색인 키)
  * @param {Record<string, number[]> | null | undefined} index 색인의 entries
- * @param {{ fallback?: 'search' }} [opts] 색인에 없을 때 검색 화면으로 보낼지
+ * @param {{ fallback?: 'search', wordNo?: number | string }} [opts]
+ *   wordNo가 있으면 그 항으로 직결한다. fallback은 색인에 없을 때 검색 화면으로 보낼지.
  * @returns {{ kind: 'direct', url: string, codes: number[] }
  *   | { kind: 'search', url: string, codes: number[] }
  *   | { kind: 'none' }}
  */
 export function stdictLinkFor(correction, index, opts = {}) {
+  if (opts.wordNo != null && opts.wordNo !== '') {
+    const n = Number(opts.wordNo);
+    if (Number.isFinite(n)) {
+      return { kind: 'direct', url: stdictViewUrl(n), codes: [n] };
+    }
+  }
   const word = String(correction ?? '').trim();
   const codes = index?.[word];
   if (Array.isArray(codes) && codes.length === 1) {

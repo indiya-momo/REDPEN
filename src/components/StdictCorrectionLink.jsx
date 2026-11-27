@@ -6,12 +6,11 @@ import { STANDARD_KOREAN_DICT_TIP } from '../lib/koreanNormsLinks.js';
  * 색인에 있으면 직결·검색, fallback="search"이면 색인에 없어도 검색 화면.
  * 링크 클릭·Enter가 카드 선택으로 번지지 않도록 막습니다.
  */
-export default function StdictCorrectionLink({ word, index, fallback }) {
-  const link = stdictLinkFor(
-    word,
-    index ?? null,
-    fallback === 'search' ? { fallback: 'search' } : undefined,
-  );
+export default function StdictCorrectionLink({ word, index, fallback, wordNo }) {
+  const link = stdictLinkFor(word, index ?? null, {
+    ...(fallback === 'search' ? { fallback: 'search' } : {}),
+    ...(wordNo != null && wordNo !== '' ? { wordNo } : {}),
+  });
   if (link.kind === 'none') {
     return <span>{word}</span>;
   }

@@ -8,7 +8,6 @@ import {
 } from '../lib/cautionRules.js';
 import { STANDARD_KOREAN_DICT_TIP, STANDARD_KOREAN_DICT_URL } from '../lib/koreanNormsLinks.js';
 import { useStdictLinkIndex } from '../hooks/useStdictLinkIndex.js';
-import CautionDictLabel from './CautionDictLabel.jsx';
 import CautionDictTip from './CautionDictTip.jsx';
 import DetailsChevron from './DetailsChevron.jsx';
 import CriteriaHoverTip from './CriteriaHoverTip.jsx';
@@ -102,11 +101,11 @@ export default function CautionChecklist({
                 }}
                 aria-expanded={tipOpen}
               >
-                <CautionDictLabel text={label} index={stdictLinkIndex} />
+                {label}
               </span>
             ) : (
               <span className="caution-chip-label">
-                <CautionDictLabel text={label} index={stdictLinkIndex} />
+                {label}
               </span>
             )}
           </div>
@@ -160,6 +159,7 @@ export default function CautionChecklist({
                   <CautionDictTip
                     text={activeTip}
                     chipLabel={cautionDisplayLabel(activeEntry.item)}
+                    itemId={activeEntry.item.id}
                     index={stdictLinkIndex}
                   />
                 </div>
