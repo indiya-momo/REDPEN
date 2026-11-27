@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { buildPageByNum } from './matchReadingOrder.js';
+import { clearStdictPosIndexCache, setStdictPosIndexForTests } from './stdictPosIndex.js';
 import {
   discoverSpacingUnifyCandidates,
+  mergeSubjectJosaClusterKeys,
+  stripSubjectJosaIByDict,
   formatUnifyClusterRegisterInput,
   formatUnifySpacingDecisionOverlay,
   buildUnifyCandidatePreviewGroups,
@@ -221,6 +224,56 @@ describe('줄 끝 건 soft-wrap — 현행 KEEP·알려진 한계', () => {
       expect(hit?.variants?.sort()).toEqual(['쇠뿔 모양', '쇠뿔모양'].sort());
     },
   );
+});
+
+describe('끝 조사 이로 갈라진 키 합치기', () => {
+  it('사전이 있으면 주택 거품이 + 주택거품은 → 한 키(주택거품)로 묶임', () => {
+    setStdictPosIndexForTests({ index: { 고양이: [{ word: '고양이', pos: '명사' }] } });
+    try {
+      const text = [
+        '그러나 주택 거품이 일기 전까지 있었다',
+        '',
+        '이 때 주택거품은 뚜렷하게 보였다',
+        '',
+      ].join('\n');
+      const clusters = discoverSpacingUnifyCandidates([
+        { pageNum: 1, text, textLayout: text },
+      ]);
+      const hit = clusters.find((c) => c.key === '주택거품');
+      expect(hit?.variants?.sort()).toEqual(['주택 거품', '주택거품'].sort());
+    } finally {
+      clearStdictPosIndexCache();
+    }
+  });
+
+  it('사전이 있으면 어간이 책에 없어도 이를 떼고, 표제어(손잡이)는 그대로 둠', () => {
+    setStdictPosIndexForTests({
+      index: {
+        손잡이: [{ word: '손잡이', pos: '명사' }],
+        고양이: [{ word: '고양이', pos: '명사' }],
+      },
+    });
+    try {
+      expect(stripSubjectJosaIByDict('주택 거품이')).toBe('주택 거품');
+      expect(stripSubjectJosaIByDict('자본유입이')).toBe('자본유입');
+      expect(stripSubjectJosaIByDict('손잡이')).toBe('손잡이');
+      expect(stripSubjectJosaIByDict('고양이')).toBe('고양이');
+    } finally {
+      clearStdictPosIndexCache();
+    }
+  });
+
+  it('사전 없으면 이를 떼지 않음', () => {
+    expect(stripSubjectJosaIByDict('주택 거품이')).toBe('주택 거품이');
+  });
+
+  it('어간이 짧은 이 명사(고양이)는 합치지 않음', () => {
+    const text = ['고양이가 왔다', '', '고양 이가 왔다', ''].join('\n');
+    const clusters = discoverSpacingUnifyCandidates([
+      { pageNum: 1, text, textLayout: text },
+    ]);
+    expect(clusters.some((c) => c.key === '고양')).toBe(false);
+  });
 });
 
 describe('prepareUnifyScanText', () => {

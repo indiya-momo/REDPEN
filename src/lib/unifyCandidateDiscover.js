@@ -53,6 +53,7 @@ import { stripTrailingJosaFromTokens } from './kiwiMorph/stripTrailingJosa.js';
 import { analyzeLine } from './kiwiMorph/analyze.js';
 import { isKiwiReady } from './kiwiMorph/runtime.js';
 import { hangulSyllableCount } from './unifyHangulBasics.js';
+import { lookupStdictPosHits, stdictPosIndexBareKeyCount } from './stdictPosIndex.js';
 import {
   isExcludedUnifyCandidateRaw,
   isValidSpacedUnifyVariant,
@@ -281,6 +282,7 @@ function prepareUnifyOccurrenceCandidate(rawMatched, minHangul) {
   // 끝 조사: JOSA/BOUNDARY/NOISE morph 활성일 때만 Kiwi (플래그 없이 ready만으로 전량 금지).
   // 동일 표면 analyze 1회로 strip·이다·동사화 게이트에 재사용.
   let variant = stripTrailingJosaHeuristic(withPunctStripped, minHangul);
+  variant = stripSubjectJosaIByDict(variant, minHangul);
   /** @type {import('./kiwiMorph/tokens.js').KiwiToken[] | null} */
   let punctTokens = null;
   if (shouldAnalyzeUnifyOccurrenceWithKiwi() && isKiwiReady()) {
@@ -1895,6 +1897,53 @@ function snapUnifyOccurrenceIndices(occs, pageByNum) {
 }
 
 /**
+ * 끝 조사 이는 명사를 망가뜨릴 수 있어(고양이→고양) 휴리스틱으로는 못 뗀다.
+ * 표준국어대사전 색인이 로드돼 있을 때만, 마지막 어절이 명사 표제어가 아니면 이를 뗀다.
+ * (`주택 거품이`→`주택 거품`, `자본유입이`→`자본유입`; `고양이`·`손잡이`는 표제어라 유지)
+ * @param {string} variant
+ * @param {number} minStemHangul
+ * @returns {string}
+ */
+export function stripSubjectJosaIByDict(variant, minStemHangul = 2) {
+  if (stdictPosIndexBareKeyCount() === 0) return variant;
+  const parts = String(variant ?? '').split(/\s+/).filter(Boolean);
+  const last = parts[parts.length - 1] ?? '';
+  if (!last.endsWith('이')) return variant;
+  const stem = last.slice(0, -1);
+  if (hangulSyllableCount(stem) < minStemHangul) return variant;
+  const bare = last.replace(/[^\uAC00-\uD7A3]/g, '');
+  if (lookupStdictPosHits(bare).some((h) => h.pos === '명사')) return variant;
+  parts[parts.length - 1] = stem;
+  return parts.join(' ');
+}
+
+/**
+ * 사전이 없을 때의 대체: `주택거품이`처럼 4음절 이상 이로 끝나는 키는
+ * 뗀 키(`주택거품`)가 같은 책에 이미 있을 때만 그 키로 합친다.
+ * @param {Map<string, ClusterAcc>} byKey
+ */
+export function mergeSubjectJosaClusterKeys(byKey) {
+  for (const key of [...byKey.keys()]) {
+    const last = key[key.length - 1];
+    // 가는 평가·분석가·화가·전문가처럼 명사 끝인 경우가 많아 합치지 않는다 (이만 대상).
+    if (last !== '이') continue;
+    if (hangulSyllableCount(key) < 4) continue;
+    const baseKey = key.slice(0, -1);
+    const base = byKey.get(baseKey);
+    const acc = byKey.get(key);
+    if (!base || !acc) continue;
+    for (const [variant, count] of acc.counts) {
+      const merged = variant.endsWith(last) ? variant.slice(0, -1) : variant;
+      base.counts.set(merged, (base.counts.get(merged) || 0) + count);
+      const list = base.occurrences.get(merged) ?? [];
+      list.push(...(acc.occurrences.get(variant) ?? []));
+      base.occurrences.set(merged, list);
+    }
+    byKey.delete(key);
+  }
+}
+
+/**
  * @param {{ pageNum?: number, text?: string, textLayout?: string }[]} pageTexts
  * @param {{ minHangulSyllables?: number }} [opts]
  * @returns {Map<string, ClusterAcc>}
@@ -1908,6 +1957,7 @@ export function buildUnifyOccurrenceIndex(pageTexts, opts = {}) {
     accumulateUnifyPageOccurrences(byKey, page, minHangul);
   }
 
+  mergeSubjectJosaClusterKeys(byKey);
   finalizeConflictOccurrencesOnly(byKey, pageTexts ?? []);
   return byKey;
 }
@@ -2015,6 +2065,7 @@ export async function buildUnifyOccurrenceIndexAsync(pageTexts, opts = {}) {
       yieldState,
     );
   }
+  mergeSubjectJosaClusterKeys(byKey);
   finalizeConflictOccurrencesOnly(byKey, pages);
   // morphFilterActive: 2차 가능 여부(이미 ready). 1차 스캔은 항상 리스트.
   const morphFilterActive =
