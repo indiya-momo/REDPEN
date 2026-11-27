@@ -404,9 +404,17 @@ function WordGroups({ groups }) {
             <p className="hangul-ortho__word-heading">{ob(group.heading)}</p>
           ) : null}
           <div className="hangul-ortho__word-rules">
-            {group.rules.map((rule, ri) => (
-              <p key={ri}>{ob(rule)}</p>
-            ))}
+            {group.rules.map((rule, ri) =>
+              typeof rule === 'string' ? (
+                <p key={ri}>{ob(rule)}</p>
+              ) : (
+                <div key={ri} className="hangul-ortho__rule-row">
+                  {rule.cells.map((cell, ci) => (
+                    <span key={ci}>{boldMarkup(cell)}</span>
+                  ))}
+                </div>
+              ),
+            )}
           </div>
           {group.commentary.length ? (
             <div className="hangul-ortho__word-commentary">
