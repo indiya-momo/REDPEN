@@ -400,7 +400,7 @@
 
 .hangul-ortho__rule-row {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(var(--rule-cols, 5), minmax(0, 1fr));
   gap: 0.2rem 0.8rem;
   margin: 0 0 0.2rem;
 }

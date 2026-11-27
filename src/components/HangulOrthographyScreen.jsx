@@ -420,7 +420,11 @@ function WordGroups({ groups }) {
               typeof rule === 'string' ? (
                 <p key={ri}>{ob(rule)}</p>
               ) : (
-                <div key={ri} className="hangul-ortho__rule-row">
+                <div
+                  key={ri}
+                  className="hangul-ortho__rule-row"
+                  style={rule.cols ? { '--rule-cols': rule.cols } : undefined}
+                >
                   {rule.cells.map((cell, ci) => (
                     <span key={ci}>{boldMarkup(cell)}</span>
                   ))}
