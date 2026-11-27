@@ -92,14 +92,14 @@ function rebuildAuxiliaryVerbRulesFromSheet(nonAux, enabledByItem) {
 
       const logicOnly = isBonBojoLogicOnlyItem(itemId);
       const gateOnly = isBonBojoGateOnlyItem(itemId);
-      // 게이트·일반: 저장값 없으면 필수 item만 기본 on (게이트는 기본 off)
+      // 게이트: 기본 off. 그 외: 저장값 없으면 시트 enabled(하다·지다 + 주다·보다·두다).
       const enabled = logicOnly
         ? true
         : enabledByItem.has(itemId)
           ? enabledByItem.get(itemId)
           : gateOnly
             ? false
-            : isBonBojoRequiredItem(itemId);
+            : item.enabled === true || isBonBojoRequiredItem(itemId);
 
       if (gateOnly) {
         aux.push({

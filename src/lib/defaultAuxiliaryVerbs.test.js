@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { isBonBojoRequiredItem } from './bonBojoRules.js';
 import { ensureDefaultAuxiliaryVerbs } from './defaultAuxiliaryVerbs.js';
+import { enrichAuxiliaryGluedFromSpaced } from './auxiliaryGluedFromSpaced.js';
 
 import {
   isAuxiliaryVerbEntryEnabled,
@@ -13,6 +14,21 @@ import { ruleDisplayLabel } from './regexFromFind.js';
 
 import { matches } from '../test/matchText.js';
 
+const DEFAULT_ON_BON_BOJO_ITEM_IDS = new Set([
+  'verb-jida',
+  'verb-hada',
+  'verb-juda1',
+  'verb-boda1',
+  'verb-duda',
+]);
+
+/** 테스트용 — 표면을 용언으로 인정 (실 Kiwi 없이 glue 경로 검증) */
+function confirmAll(text) {
+  const t = String(text ?? '');
+  if (!t) return null;
+  return { tokens: [{ str: t, tag: 'VV' }] };
+}
+
 
 
 describe('bonBojoRules', () => {
@@ -20,23 +36,46 @@ describe('bonBojoRules', () => {
     expect(isBonBojoRequiredItem('verb-hada')).toBe(true);
     expect(isBonBojoRequiredItem('verb-jida')).toBe(true);
     expect(isBonBojoRequiredItem('verb-boda1')).toBe(false);
+    expect(isBonBojoRequiredItem('verb-juda1')).toBe(false);
+    expect(isBonBojoRequiredItem('verb-duda')).toBe(false);
   });
 
 });
 
 describe('ensureDefaultAuxiliaryVerbs', () => {
 
-  it('기본 선택은 필수 본조(하다·지다)만 켜진다', () => {
+  it('기본 선택은 하다·지다·주다·보다·두다만 켜진다', () => {
     const rules = ensureDefaultAuxiliaryVerbs([]);
     const list = listAuxiliaryVerbEntries(rules);
     for (const entry of list) {
       const on = isAuxiliaryVerbEntryEnabled(rules, entry);
-      if (isBonBojoRequiredItem(entry.bonBojoItemId)) {
-        expect(on).toBe(true);
-      } else {
-        expect(on).toBe(false);
-      }
+      expect(on).toBe(DEFAULT_ON_BON_BOJO_ITEM_IDS.has(entry.bonBojoItemId));
     }
+  });
+
+  it('주다·보다·두다 기본 켬 — 보여 주다·가정해 보자·알아 두어라', async () => {
+    const rules = ensureDefaultAuxiliaryVerbs([]);
+    const enabled = rules.filter(
+      (r) => r.patternKind === 'auxiliary-verb' && r.enabled === true,
+    );
+    const hit = (text) => enabled.some((r) => matches(r, text));
+
+    expect(hit('보여 주다')).toBe(true);
+    expect(hit('가정해 보자')).toBe(true);
+    expect(hit('알아 두어라')).toBe(true);
+    expect(hit('보여주다')).toBe(false);
+
+    const juda = enabled.filter((r) => r.bonBojoItemId === 'verb-juda1');
+    const glued = await enrichAuxiliaryGluedFromSpaced(
+      [],
+      [{ pageNum: 1, text: '결과를 보여주다' }],
+      { rules: juda, analyze: confirmAll },
+    );
+    expect(
+      glued.some((g) =>
+        (g.instances ?? []).some((i) => i.matchedText === '보여주다'),
+      ),
+    ).toBe(true);
   });
 
   it('필수 본조(하다·지다)도 사용자가 끌 수 있다', () => {

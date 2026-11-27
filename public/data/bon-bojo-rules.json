@@ -290,7 +290,7 @@
         {
           "id": "verb-duda",
           "label": "두",
-          "enabled": false,
+          "enabled": true,
           "stems": [
             "해 두",
             "해 둔",
@@ -418,7 +418,7 @@
         {
           "id": "verb-boda1",
           "label": "보",
-          "enabled": false,
+          "enabled": true,
           "stems": [
             "어 보",
             "어 본",
@@ -649,7 +649,7 @@
         {
           "id": "verb-juda1",
           "label": "주",
-          "enabled": false,
+          "enabled": true,
           "stems": [
             "해 주",
             "해 준",
