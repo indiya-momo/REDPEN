@@ -60,7 +60,7 @@ export default function SpacingFolderChecklist({
             {`(${activeCount}/${total})`}
           </span>
           <span className="panel-criteria-heading-desc">
-            ｢한글 맞춤법｣에 따라 띄어쓰기가 필요한 맞춤법
+            한글 맞춤법에 따라 띄어쓰기가 필요한 맞춤법
           </span>
         </span>
       </summary>
