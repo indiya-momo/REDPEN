@@ -48,11 +48,16 @@ const GLUED_PAGE_TAIL_RE = /(?<=[가-힣A-Za-z」』”"')])[0-9０-９]{2,3}$/u
  * @param {string} text
  * @returns {string}
  */
-export function stripGluedPageNumber(text) {
+export function stripGluedPageNumber(text, pageNum, folioOffset) {
   let s = String(text ?? '').normalize('NFC').trim();
   if (!s) return '';
-  s = s.replace(GLUED_PAGE_LEAD_RE, '');
-  s = s.replace(GLUED_PAGE_TAIL_RE, '');
+  /** 책 단위 쪽번호 오프셋이 잡혔으면, 그 오프셋과 맞는 숫자만 쪽수로 떼어 낸다. */
+  const isFolio = (digits) =>
+    folioOffset === undefined ||
+    !Number.isFinite(pageNum) ||
+    Number(digits.normalize('NFKC')) - pageNum === folioOffset;
+  s = s.replace(GLUED_PAGE_LEAD_RE, (m) => (isFolio(m) ? '' : m));
+  s = s.replace(GLUED_PAGE_TAIL_RE, (m) => (isFolio(m) ? '' : m));
   return s.trim();
 }
 
@@ -321,6 +326,9 @@ export function bodyBoundaryIndices(lineLayout, kind = 'single') {
 
 /** 쪽번호가 붙은 머리말·바닥글을 반복으로 인정하는 최소 쪽 수. */
 const NUMBERED_CHROME_MIN_PAGES = 5;
+/** 숫자만 있는 쪽번호 줄을 인정하는 데 필요한 최소 쪽 수 (책 단위 오프셋 판정). */
+const BARE_FOLIO_MIN_PAGES = 5;
+const BARE_DIGITS_RE = /^[0-9０-９]{1,4}$/u;
 
 /**
  * "들어가는 말 13"처럼 글자와 쪽번호가 한 줄에 붙은 머리말·바닥글의 반복 키.
@@ -427,6 +435,44 @@ export function cleanPageLinesForTxt(pages) {
   const bandKeyCounts = new Map();
   /** @type {Map<string, number>} */
   const numberedCounts = new Map();
+  /** @type {Map<number, number>} 숫자만 있는 머리말·바닥글 줄의 (인쇄 쪽 − PDF 쪽) 오프셋별 쪽 수 */
+  const bareFolioOffsets = new Map();
+  /** @type {Map<string, number>} 머리말·바닥글 줄에서 쪽수를 뗀 라벨별 쪽 수 */
+  const gluedLabelCounts = new Map();
+  for (const page of pageLines) {
+    const { yMin: bYMin, yMax: bYMax } = yExtent(page.lines);
+    const bareSeen = new Set();
+    const labelSeen = new Set();
+    for (const line of page.lines) {
+      if (bandOf(line.y, bYMin, bYMax) === 'mid') continue;
+      const bare = normalizeTxtLineKey(line.text);
+      if (BARE_DIGITS_RE.test(bare) && Number.isFinite(page.pageNum)) {
+        const offset = Number(bare.normalize('NFKC')) - page.pageNum;
+        if (!bareSeen.has(offset)) {
+          bareSeen.add(offset);
+          bareFolioOffsets.set(offset, (bareFolioOffsets.get(offset) ?? 0) + 1);
+        }
+      }
+      const raw = line.text.normalize('NFC').trim();
+      const label = stripGluedPageNumber(raw);
+      if (label && label !== raw && !labelSeen.has(label)) {
+        labelSeen.add(label);
+        gluedLabelCounts.set(label, (gluedLabelCounts.get(label) ?? 0) + 1);
+      }
+    }
+  }
+  const gluedChromeLabels = new Set();
+  for (const [label, count] of gluedLabelCounts) {
+    if (count >= NUMBERED_CHROME_MIN_PAGES) gluedChromeLabels.add(label);
+  }
+  /** 책 전체에서 가장 많이 맞는 오프셋 — 이 값과 맞는 숫자 줄만 쪽번호로 버린다. */
+  let dominantFolioOffset = null;
+  for (const [offset, count] of bareFolioOffsets) {
+    if (count < BARE_FOLIO_MIN_PAGES) continue;
+    if (dominantFolioOffset === null || count > bareFolioOffsets.get(dominantFolioOffset)) {
+      dominantFolioOffset = offset;
+    }
+  }
   for (const page of pageLines) {
     if (!page.lines.length) continue;
     const { yMin, yMax } = yExtent(page.lines);
@@ -499,8 +545,26 @@ export function cleanPageLinesForTxt(pages) {
       ) {
         continue;
       }
-      if (band !== 'mid' && isLikelyPageNumberLine(key)) continue;
-      const text = stripGluedPageNumber(line.text.normalize('NFC'));
+      if (band !== 'mid' && BARE_DIGITS_RE.test(key) && dominantFolioOffset !== null) {
+        // 책 단위 쪽번호 오프셋이 잡힌 책: 숫자만 있는 줄은 그 오프셋과 맞을 때만 쪽번호로 본다 (표 칸 숫자 보존).
+        const folioOffset = Number(key.normalize('NFKC')) - page.pageNum;
+        if (folioOffset === dominantFolioOffset) continue;
+      } else if (band !== 'mid' && isLikelyPageNumberLine(key)) {
+        continue;
+      }
+      // 본문 가운데 줄(mid)은 쪽수가 붙어 있다고 보지 않는다. 표 칸 숫자(`16동`) 보존.
+      // 쪽번호 오프셋이 잡힌 책은 그 오프셋과 맞는 숫자만 뗀다.
+      // 오프셋이 없는 책은 여러 쪽에 반복되는 머리말(같은 글자 라벨)만 뗀다.
+      const raw = line.text.normalize('NFC');
+      let text;
+      if (band === 'mid') {
+        text = raw.trim();
+      } else if (dominantFolioOffset !== null) {
+        text = stripGluedPageNumber(raw, page.pageNum, dominantFolioOffset);
+      } else {
+        const label = stripGluedPageNumber(raw);
+        text = label !== raw.trim() && gluedChromeLabels.has(label) ? label : raw.trim();
+      }
       if (!text) continue;
       kept.push(text);
       lineLayout.push({
