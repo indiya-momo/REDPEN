@@ -7,6 +7,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, Pencil } from 'lucide-react';
 import { returnToWorkspace } from '../lib/returnToWorkspace.js';
 import { openGuideWindow } from '../lib/openGuideWindow.js';
+import { openHangulOrthographyWindow } from '../lib/openHangulOrthographyWindow.js';
 import CriteriaHoverTip from './CriteriaHoverTip.jsx';
 import {
   resolveSessionEmail,
@@ -57,6 +58,7 @@ const SIDEBAR_NAV = [
   { id: 'projects', label: '나의 프로젝트' },
   { id: 'badges', label: '배지 모음집' },
   { id: 'guide', label: '인디야 가이드북', opensGuide: true },
+  { id: 'orthography', label: '한글 맞춤법', opensOrthography: true },
 ];
 
 /** @returns {'overview' | 'projects' | 'profile' | 'badges' | 'paid-admin'} */
@@ -776,11 +778,15 @@ export default function MyPageWindowScreen({ authSession, authReady }) {
               <li key={item.id}>
                 <button
                   type="button"
-                  className={`mypage__nav-btn${!item.opensGuide && resolvedNav === resolveMypageNav(item.id, isAdmin) ? ' mypage__nav-btn--active' : ''}${item.disabled ? ' mypage__nav-btn--disabled' : ''}`}
+                  className={`mypage__nav-btn${!item.opensGuide && !item.opensOrthography && resolvedNav === resolveMypageNav(item.id, isAdmin) ? ' mypage__nav-btn--active' : ''}${item.disabled ? ' mypage__nav-btn--disabled' : ''}`}
                   onClick={() => {
                     if (item.disabled) return;
                     if (item.opensGuide) {
                       openGuideWindow();
+                      return;
+                    }
+                    if (item.opensOrthography) {
+                      openHangulOrthographyWindow();
                       return;
                     }
                     if (item.id === 'projects') {

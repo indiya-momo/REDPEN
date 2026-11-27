@@ -1,13 +1,16 @@
 .hangul-ortho {
-  --ortho-bg: #ffffff;
-  --ortho-nav: #f7f8fa;
-  --ortho-border: #d9dee5;
-  --ortho-text: #222;
-  --ortho-muted: #667085;
-  --ortho-blue: #1b6bb5;
-  --ortho-example: #eef6fb;
-  --ortho-head: #f3f4f6;
-  --ortho-top: 4.25rem;
+  --ortho-bg: #fdfbf7;
+  --ortho-surface: #f8f5ef;
+  --ortho-border: #e0d6c4;
+  --ortho-border-strong: #cfc4ae;
+  --ortho-text: #1a1510;
+  --ortho-muted: #6b6258;
+  --ortho-accent: #734b32;
+  --ortho-accent-soft: #8c6246;
+  --ortho-example: #f4efea;
+  --ortho-example-text: #5a3d2b;
+  --ortho-head: #f0ebe0;
+  --ortho-mark: #ecd9a8;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -19,16 +22,25 @@
 }
 
 .hangul-ortho__header {
-  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
+  position: relative;
+  z-index: 3;
   padding: 0.7rem 1.4rem 0.65rem;
-  border-bottom: 1px solid var(--ortho-border);
   background: var(--ortho-bg);
+}
+
+.hangul-ortho__brand {
+  min-width: 0;
 }
 
 .hangul-ortho__header h1 {
   margin: 0 0 0.15rem;
   font-size: 1.45rem;
   font-weight: 800;
+  color: var(--ortho-text);
 }
 
 .hangul-ortho__header p {
@@ -37,25 +49,122 @@
   font-size: 0.88rem;
 }
 
+.hangul-ortho__search {
+  position: relative;
+  flex: 0 1 22rem;
+  width: 22rem;
+  max-width: 42%;
+}
+
+.hangul-ortho__search input {
+  box-sizing: border-box;
+  width: 100%;
+  height: 2.3rem;
+  padding: 0 0.8rem;
+  border: 1px solid var(--ortho-border-strong);
+  border-radius: 4px;
+  background: #fff;
+  color: var(--ortho-text);
+  font: inherit;
+  font-size: 0.9rem;
+}
+
+.hangul-ortho__search input:focus {
+  outline: 2px solid color-mix(in srgb, var(--ortho-accent) 30%, transparent);
+  outline-offset: 1px;
+  border-color: var(--ortho-accent-soft);
+}
+
+.hangul-ortho__search-list {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  left: 0;
+  z-index: 4;
+  max-height: min(24rem, 70vh);
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid var(--ortho-border);
+  box-shadow: 0 8px 24px rgba(60, 40, 20, 0.12);
+}
+
+.hangul-ortho__search-count,
+.hangul-ortho__search-empty {
+  margin: 0;
+  padding: 0.45rem 0.8rem;
+  color: var(--ortho-muted);
+  font-size: 0.8rem;
+}
+
+.hangul-ortho__search-hit {
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+  width: 100%;
+  margin: 0;
+  padding: 0.45rem 0.8rem 0.55rem;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+
+.hangul-ortho__search-hit:hover,
+.hangul-ortho__search-hit.is-active {
+  background: var(--ortho-example);
+}
+
+.hangul-ortho__search-hit-kicker {
+  color: var(--ortho-accent);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.hangul-ortho__search-hit-snippet {
+  color: var(--ortho-muted);
+  font-size: 0.82rem;
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hangul-ortho__search-hit-snippet mark {
+  background: var(--ortho-mark);
+  color: inherit;
+  padding: 0;
+}
+
+/* 페이지 전체가 한 번만 스크롤된다. 안쪽 스크롤 칸·구분선 없음. */
 .hangul-ortho__shell {
   display: flex;
+  align-items: flex-start;
+  gap: 2rem;
   flex: 1;
-  min-height: 0;
+  padding: 0 1.4rem;
 }
 
 .hangul-ortho__nav {
-  flex: 0 0 260px;
-  height: calc(100vh - var(--ortho-top));
+  flex: 0 0 240px;
+  position: sticky;
+  top: 0.75rem;
+  max-height: calc(100vh - 1.5rem);
   overflow-y: auto;
-  background: var(--ortho-nav);
-  border-right: 1px solid var(--ortho-border);
-  padding: 0.85rem 0.9rem 2rem;
+  scrollbar-width: none;
+  padding: 0.85rem 0 2rem;
+}
+
+.hangul-ortho__nav::-webkit-scrollbar {
+  display: none;
 }
 
 .hangul-ortho__tree-label {
   margin: 0.85rem 0 0.35rem;
   font-weight: 700;
   font-size: 0.92rem;
+  color: var(--ortho-text);
 }
 
 .hangul-ortho__toc,
@@ -67,7 +176,7 @@
 
 .hangul-ortho__toc {
   padding-left: 0.2rem;
-  border-left: 1px solid #c5ccd4;
+  border-left: 1px solid var(--ortho-border);
 }
 
 .hangul-ortho__toc-chapter > span,
@@ -79,7 +188,7 @@
 }
 
 .hangul-ortho__toc-section {
-  color: var(--ortho-blue);
+  color: var(--ortho-accent);
   font-weight: 600;
 }
 
@@ -93,7 +202,7 @@
 
 .hangul-ortho__toc a:hover,
 .hangul-ortho__toc a:focus-visible {
-  color: var(--ortho-blue);
+  color: var(--ortho-accent);
   outline: none;
 }
 
@@ -109,10 +218,9 @@
 
 .hangul-ortho__main {
   flex: 1;
-  max-width: 52rem;
-  height: calc(100vh - var(--ortho-top));
-  overflow-y: auto;
-  padding: 1.25rem 2rem 4rem;
+  min-width: 0;
+  max-width: 64rem;
+  padding: 1.25rem 0 4rem;
 }
 
 .hangul-ortho__chapter {
@@ -127,11 +235,12 @@
   margin: 0 0 0.75rem;
   font-size: 1.2rem;
   font-weight: 800;
+  color: var(--ortho-text);
 }
 
 .hangul-ortho__section-title {
   margin: 1.4rem 0 0.6rem;
-  color: var(--ortho-blue);
+  color: var(--ortho-accent);
   font-size: 1.05rem;
   font-weight: 700;
 }
@@ -150,7 +259,7 @@
 
 .hangul-ortho__art-no {
   margin-right: 0.4rem;
-  color: var(--ortho-blue);
+  color: var(--ortho-accent);
 }
 
 .hangul-ortho__pair {
@@ -162,7 +271,7 @@
 
 .hangul-ortho__pair th,
 .hangul-ortho__pair td {
-  border: 1px solid #d0d7de;
+  border: 1px solid var(--ortho-border);
   padding: 0.4rem 0.7rem;
   text-align: center;
 }
@@ -179,7 +288,7 @@
   margin: 0 0 0.75rem;
   padding: 0.7rem 0.9rem;
   background: var(--ortho-example);
-  color: #2a5f8a;
+  color: var(--ortho-example-text);
 }
 
 .hangul-ortho__proviso {
@@ -188,23 +297,51 @@
 
 .hangul-ortho__commentary {
   margin-top: 0.7rem;
-  border: 1px solid #cfd6dd;
+  border: 1px solid var(--ortho-border-strong);
 }
 
-.hangul-ortho__commentary h5 {
-  margin: 0;
+.hangul-ortho__commentary > summary {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
   padding: 0.35rem 0.75rem;
   background: var(--ortho-head);
+  color: var(--ortho-accent);
   font-size: 0.92rem;
   font-weight: 700;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
 }
 
-.hangul-ortho__commentary p,
-.hangul-ortho__commentary ul {
+.hangul-ortho__commentary > summary::-webkit-details-marker {
+  display: none;
+}
+
+.hangul-ortho__commentary > summary::before {
+  content: '▸';
+  display: inline-block;
+  width: 0.9rem;
+  font-size: 0.8rem;
+  transition: transform 0.15s ease;
+}
+
+.hangul-ortho__commentary[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+.hangul-ortho__commentary > summary:hover,
+.hangul-ortho__commentary > summary:focus-visible {
+  background: var(--ortho-example);
+  outline: none;
+}
+
+.hangul-ortho__commentary-body p,
+.hangul-ortho__commentary-body ul {
   margin: 0.55rem 0.85rem;
 }
 
-.hangul-ortho__commentary ul {
+.hangul-ortho__commentary-body ul {
   padding-left: 1.2rem;
 }
 
@@ -221,5 +358,5 @@
 }
 
 .hangul-ortho__footer a {
-  color: var(--ortho-blue);
+  color: var(--ortho-accent);
 }
