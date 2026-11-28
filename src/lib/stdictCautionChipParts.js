@@ -2,7 +2,7 @@
  * 편집자 검토 카드·기준 칩 문구 (설계안 §12).
  * 제목은 링크로 만들지 않습니다. 설명에서 항목 이름의 품사 이름이 나온 자리에만 답니다.
  */
-import { cautionManualPlaces } from './stdictCautionPosCodes.js';
+import { CAUTION_SEARCH, cautionManualPlaces } from './stdictCautionPosCodes.js';
 
 /**
  * @param {string} raw
@@ -95,7 +95,7 @@ export function findPosSurfaceInTip(tip, pos) {
 }
 
 /**
- * @typedef {{ text: string, lookup: string, pos?: string, wordNo?: number }} CautionTipLinkSpec
+  * @typedef {{ text: string, lookup: string, pos?: string, wordNo?: number, search?: boolean }} CautionTipLinkSpec
  */
 
 /**
@@ -137,8 +137,9 @@ export function cautionTipLinkSpecs(chipLabel, tip, itemId) {
     const lookup = String(spec?.lookup ?? '').trim();
     const pos = spec.pos ? String(spec.pos).trim() : '';
     const wordNo = Number.isFinite(spec.wordNo) ? spec.wordNo : undefined;
-    if (!text || !lookup || (!pos && wordNo == null)) return;
-    const key = `${text}\0${lookup}\0${pos}\0${wordNo ?? ''}`;
+    const search = spec.search === true;
+    if (!text || !lookup || (!pos && wordNo == null && !search)) return;
+    const key = `${text}\0${lookup}\0${pos}\0${wordNo ?? ''}\0${search}`;
     if (seen.has(key)) return;
     seen.add(key);
     specs.push({
@@ -146,6 +147,7 @@ export function cautionTipLinkSpecs(chipLabel, tip, itemId) {
       lookup,
       ...(pos ? { pos } : {}),
       ...(wordNo != null ? { wordNo } : {}),
+      ...(search ? { search: true } : {}),
     });
   };
 
@@ -170,7 +172,9 @@ export function cautionTipLinkSpecs(chipLabel, tip, itemId) {
     const tipText = String(tip ?? '');
     for (const [place, wordNo] of manual) {
       const surface = findPlaceInTip(tipText, place);
-      if (surface) add({ text: surface, lookup: place, wordNo });
+      if (!surface) continue;
+      if (wordNo === CAUTION_SEARCH) add({ text: surface, lookup: place, search: true });
+      else add({ text: surface, lookup: place, wordNo });
     }
     return specs;
   }
@@ -256,6 +260,7 @@ export function cautionTipLinkParts(raw, specs) {
         lookup: spec?.lookup || hit,
         ...(spec?.pos ? { pos: spec.pos } : {}),
         ...(Number.isFinite(spec?.wordNo) ? { wordNo: spec.wordNo } : {}),
+        ...(spec?.search ? { search: true } : {}),
       });
       i += hit.length;
     } else {

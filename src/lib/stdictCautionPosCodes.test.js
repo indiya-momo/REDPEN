@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { stdictViewUrl } from './stdictLinks.js';
+import { stdictSearchUrl, stdictViewUrl } from './stdictLinks.js';
 import {
   CAUTION_MANUAL_WORD_NO,
   CAUTION_POS_WORD_NO,
@@ -24,11 +24,11 @@ function linkedWords(itemId) {
       const label = cautionDisplayLabel(item);
       const tip = cautionItemTip(item, group);
       const specs = cautionTipLinkSpecs(label, tip, item.id).filter(
-        (s) => resolveCautionTipWordNo(s) != null,
+        (s) => s.search === true || resolveCautionTipWordNo(s) != null,
       );
       return cautionTipLinkParts(tip, specs)
         .filter((p) => p.kind === 'word')
-        .map((p) => [p.text, resolveCautionTipWordNo(p)]);
+        .map((p) => [p.text, p.search ? 'search' : resolveCautionTipWordNo(p)]);
     }
   }
   throw new Error(`항목 없음: ${itemId}`);
@@ -119,15 +119,14 @@ describe('§12-4 수동 지정표', () => {
     ]);
   });
 
-  it('견본: 붙이다·부치다는 한 설명에 여러 자리를 설명 순서대로 단다', () => {
+  it('붙이다·부치다: 「붙이다」는 153137 직결, 「부치다」는 검색 화면(번호 미정). 붙다·뜻풀이 말은 달지 않는다', () => {
     expect(linkedWords('verb-verbi-but')).toEqual([
       ['붙이다', 153137],
-      ['붙다', 158587],
-      ['미달하다', 438761],
-      ['보내다', 438538],
-      ['음식을 만들다', 154384],
-      ['바람을 만들어내다', 154385],
+      ['부치다', 'search'],
     ]);
+    expect(stdictSearchUrl('부치다')).toBe(
+      'https://kdict.korean.go.kr/standard/search/searchResult.do?pageSize=10&searchKeyword=%EB%B6%80%EC%B9%98%EB%8B%A4',
+    );
   });
 
   it('커녕·밖에는 설명의 「보조사」에서 직결한다', () => {
