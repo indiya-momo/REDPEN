@@ -8,6 +8,7 @@ import { resolveCautionTipWordNo } from '../lib/stdictCautionPosCodes.js';
 /**
  * 편집자 검토 카드 아래 설명 (설계안 §12).
  * 제목은 링크 없음. 설명의 품사 이름만 해당 표제어로 직결한다. 검색으로 보내지 않는다.
+ * 설명의 줄바꿈(\n)은 줄을 바꿔 보여 준다.
  */
 export default function CautionDictTip({ text, chipLabel, itemId, index }) {
   const specs = cautionTipLinkSpecs(chipLabel, text, itemId).filter(
@@ -28,6 +29,15 @@ export default function CautionDictTip({ text, chipLabel, itemId, index }) {
         />
       );
     }
-    return <span key={`t:${i}`}>{part.text}</span>;
+    return (
+      <span key={`t:${i}`}>
+        {part.text.split('\n').map((line, j) => (
+          <span key={j}>
+            {j > 0 ? <br /> : null}
+            {line}
+          </span>
+        ))}
+      </span>
+    );
   });
 }
