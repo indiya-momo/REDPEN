@@ -8,7 +8,7 @@
 export const MAN_EOK_JO_CATEGORY = '수·만억조';
 export const MAN_EOK_JO_LABEL = '만·억·조 띄어쓰기';
 export const MAN_EOK_JO_TIP =
-  '세종 표기법 제3장·맞춤법 수 표기: 만·억·조 단위로 띄고, 숫자와 단위 말은 병용 시 붙입니다.';
+  "한글 맞춤법 제44항: 수를 적을 때는 '만(萬)' 단위로 띄어 씁니다. 아라비아 숫자 뒤의 단위는 붙여 쓸 수 있습니다.";
 
 /** 병용으로 숫자에 붙는 단위(긴 것 우선) */
 const ATTACH_UNITS = ['천만', '백만', '천억', '조', '억', '만', '천', '백'];

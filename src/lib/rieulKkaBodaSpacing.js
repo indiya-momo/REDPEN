@@ -8,7 +8,7 @@
 export const RIEUL_KKA_BODA_CATEGORY = 'ㄹ까 보다';
 export const RIEUL_KKA_BODA_LABEL = '-ㄹ까 보다 띄어쓰기';
 export const RIEUL_KKA_BODA_TIP =
-  '세종 표기법: -ㄹ까 보다, -나 보다, -는가 보다 등은 띄어 씁니다.';
+  "한글 맞춤법 제47항: 보조 용언 앞에 '-(으)ㄴ가, -나, -는가, -(으)ㄹ까' 등 종결 어미가 있으면 보조 용언은 앞말에 붙여 쓰지 않습니다. 예) -ㄹ까 보다 → 갈까 보다";
 
 const ROWS = [
   { find: '할까보다', replace: '할까 보다' },

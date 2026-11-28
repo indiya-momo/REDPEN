@@ -2558,60 +2558,21 @@
     "dividerGroup": "B2",
     "dividerLabel": "잘못된 표현(그 외)",
     "overlayReplace": "→하도록",
-    "ruleId": "sejong-gekkeum",
     "displayLabel": "하게끔 → 하도록"
-  },
-  {
-    "find": "시험을 쳤",
-    "replace": "시험을 치렀",
-    "enabled": true,
-    "tip": "시험을 치르다'. '치다'가 아님",
-    "dividerGroup": "B2",
-    "dividerLabel": "잘못된 표현(그 외)",
-    "overlayReplace": "→시험을 치렀",
-    "ruleId": "sejong-siheom-chyeot",
-    "displayLabel": "시험을 쳤 → 시험을 치렀"
   },
   {
     "find": "치었",
     "replace": "치였",
-    "enabled": true,
-    "tip": "치다'의 피동은 '치여'",
-    "dividerGroup": "B2",
-    "dividerLabel": "잘못된 표현(그 외)",
-    "overlayReplace": "→차에 치였",
-    "ruleId": "sejong-chaye-chiyeot",
-    "displayLabel": "차에 치었 → 차에 치였"
-  },
-  {
-    "find": "덥혔",
-    "replace": "데웠",
     "finds": [
-      "덥혔",
-      "덥혀",
-      "덥히"
+      "치어",
+      "치었"
     ],
-    "findReplaces": {
-      "덥혀": "데워",
-      "덥히": "데우"
-    },
     "enabled": true,
-    "tip": "물을 데우다'. '덥히다'는 분위기·기온을 따뜻하게 할 때(세종 오용 사례)",
+    "tip": "치다'의 피동은 '치여(쳐)'",
     "dividerGroup": "B2",
     "dividerLabel": "잘못된 표현(그 외)",
-    "ruleId": "sejong-mul-deopyeot",
-    "displayLabel": "물을 덥혔 → 물을 데웠"
-  },
-  {
-    "find": "개인 날",
-    "replace": "갠 날",
-    "enabled": true,
-    "tip": "갠 날'(날이 갬). '개인 날'은 오용(세종 오용 사례)",
-    "dividerGroup": "B2",
-    "dividerLabel": "잘못된 표현(그 외)",
-    "overlayReplace": "→갠 날",
-    "ruleId": "sejong-gaen-nal",
-    "displayLabel": "개인 날 → 갠 날"
+    "overlayReplace": "→치였",
+    "displayLabel": "치었 → 치였"
   },
   {
     "find": "가디건",
