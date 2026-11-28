@@ -206,8 +206,13 @@ describe('분류 이름 display_label(→ 없음) — 결과 문구', () => {
   });
 
   it('내장 데이터: 분류 이름 행은 결과 문구가 「찾은 말 → 고칠 말」이다', () => {
+    // 표준국어대사전 등재 묶음은 display_label(경제^)을 카드 이름으로 쓰므로 제외
     const rows = BUILT_IN_RULES.filter(
-      (r) => r.displayLabel && !r.displayLabel.includes('→') && !r.findReplaces,
+      (r) =>
+        r.displayLabel &&
+        !r.displayLabel.includes('→') &&
+        !r.findReplaces &&
+        !String(r.dividerLabel ?? '').startsWith('표준국어대사전 등재'),
     );
     for (const row of rows) {
       const rule = build(row);
@@ -217,6 +222,14 @@ describe('분류 이름 display_label(→ 없음) — 결과 문구', () => {
       expect(res[0].label).toContain(' → ');
       expect(res[0].label).not.toBe(row.displayLabel);
     }
+  });
+
+  it('표준국어대사전 등재 묶음 행은 결과 카드 이름이 display_label(경제^)이다', () => {
+    const row = BUILT_IN_RULES.find((r) => r.displayLabel === '경제^');
+    expect(row).toBeDefined();
+    const [g] = run(build(row), '경제 관념을 말했다');
+    expect(g.label).toBe('경제^');
+    expect(g.instances[0].suggestedText).toBe('경제관념');
   });
 });
 

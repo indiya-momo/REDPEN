@@ -12,6 +12,7 @@ import {
 } from './matchReadingOrder.js';
 import { cautionHighlightSpan } from './cautionRules.js';
 import { isHangulSyllable } from './spellingRuleEntry.js';
+import { isDictBundleGroup } from './stdictLinkPairs.js';
 import {
   compileSpellingFindReplacesRegex,
   formatVariantPairsLabel,
@@ -441,7 +442,10 @@ function applyRuleToPages(rule, pages, byKey, globalExcludePhrases, errors) {
           ...(String(rule.overlayReplace ?? '').trim() && !variant
             ? { overlayReplace: String(rule.overlayReplace).trim() }
             : {}),
-          ...(variant || labelPair ? { variantPairsLabel: true } : {}),
+          // 표준국어대사전 등재 묶음은 display_label(경제^)을 카드 이름으로 쓴다(쌍 목록으로 덮지 않음)
+          ...(variant || (labelPair && !isDictBundleGroup(rule))
+            ? { variantPairsLabel: true }
+            : {}),
           instances: [],
         });
       }

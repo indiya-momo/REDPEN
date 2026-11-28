@@ -33,22 +33,6 @@ describe('findClosedSpacingFixHits', () => {
     expect(findClosedSpacingFixHits('담을 넘어 서 있는 나무')).toEqual([]);
   });
 
-  it('해질녘·해질 무렵 — 어절 시작만 (따뜻해질·깨끗해질 제외)', () => {
-    const by = (text) =>
-      Object.fromEntries(
-        findClosedSpacingFixHits(text).map((h) => [
-          h.matchedText,
-          h.suggestedText,
-        ]),
-      );
-    expect(by('해질녘 바람이')).toEqual({ 해질녘: '해 질 녘' });
-    expect(by('해질 무렵 가장')).toEqual({ '해질 무렵': '해 질 무렵' });
-    expect(by('해 질 무렵')).toEqual({});
-    expect(by('따뜻해질 무렵')).toEqual({});
-    expect(by('선선해질 무렵')).toEqual({});
-    expect(by('깨끗해질 때')).toEqual({});
-  });
-
   it('해질 spelling rows and CLOSED_HAE_JIL_LITERAL_ROWS stay in parity', () => {
     const sheet = spellingRulesJson
       .filter((r) => String(r.find ?? '').startsWith('\uD574\uC9C8'))

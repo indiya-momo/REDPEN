@@ -15,9 +15,6 @@ const BASE_LITERAL_ROWS = [
 /** Sheet parity for haejil surfaces (equality test). Dual-report risk if folder wires this module. */
 export const CLOSED_HAE_JIL_LITERAL_ROWS = Object.freeze([
   // leading Hangul boundary. residual FP: haejida(wear)+rieul
-  { find: "해질 무렵", replace: "해 질 무렵", kind: "split", leadingHangulBoundary: true },
-  { find: "해질녘", replace: "해 질 녘", kind: "split", leadingHangulBoundary: true },
-  { find: "해질무렵", replace: "해 질 무렵", kind: "split", leadingHangulBoundary: true },
 ]);
 
 /** @type {{ find: string, replace: string, kind: string, leadingHangulBoundary?: boolean }[]} */
