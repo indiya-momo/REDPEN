@@ -1,5 +1,5 @@
 ---
-title: 맞춤법 검수와 표기 통일은 무엇이 다른가요?
+title: 표기 통일은 무엇인가요?
 order: 10
 readMinutes: 3
 group: 표기 통일

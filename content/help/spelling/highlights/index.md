@@ -1,13 +1,16 @@
 ---
-title: 하이라이트는 무엇을 뜻하나요?
+title: 하이라이트는 무슨 뜻인가요?
 index: true
 order: 10
 readMinutes: 2
-group: 맞춤법 검수
-related: spelling/highlights/spacing, spelling/highlights/notation
+group: 시작하기
+related: spelling/highlights/spacing
 ---
 
 하이라이트는 「확인해 볼 곳」이라는 표시입니다. 반드시 틀렸다는 뜻이 아니며, 선택한 기준에 따라 확인을 권하는 구간입니다. 문맥이나 원고의 의도, 출판사 표기 원칙에 따라 선택해 주세요.
+
+![하이라이트 예시](help-image:01-highlights.png)
+*왼쪽 「구별, 구분」 카드와 오른쪽 원고의 「구분」 하이라이트. + 버튼으로 원고를 확대하면 더 잘 보입니다 (원고 출처: 한국관광공사)*
 
 ## 권장 작업 방식
 

@@ -3,7 +3,7 @@ title: 인디야는 어떤 서비스인가요?
 order: 5
 readMinutes: 2
 group: 시작하기
-related: reference/supported-pdf, getting-started/first-check, account/quota
+related: getting-started/first-check, account/quota
 ---
 
 인디야(Indiya)는 출판 편집자가 만든 출판 편집 서비스입니다. 인디자인, 한글에서 내보낸 PDF를 브라우저에서 열어 맞춤법, 표기 통일 등을 점검하고 교정교열을 추가할 수 있습니다.
@@ -20,6 +20,14 @@ related: reference/supported-pdf, getting-started/first-check, account/quota
 - **결과 다운로드 및 공유** — 편집 결과를 공유하거나 파일로 내려받아 활용합니다.
 
 인디야는 문장을 자동으로 고치지 않습니다. 확인할 곳을 찾아 표시하고, 판단과 수정은 담당자가 합니다.
+
+## 어떤 PDF를 검수할 수 있나요?
+
+텍스트를 선택할 수 있는 인디자인 PDF, 한글 PDF를 PC의 Chrome(권장), Edge에서 검수할 수 있습니다.
+
+- **지원** — 텍스트를 선택·복사할 수 있는 인디자인·한글 PDF(100MB 이하)
+- **미지원** — 스캔한 이미지 PDF
+- **기기** — PC 브라우저(Chrome, Edge). 모바일에서는 검수할 수 없습니다.
 
 ## 원고는 안전한가요?
 

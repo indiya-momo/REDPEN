@@ -54,13 +54,13 @@ describe('help content bundle', () => {
 
     const article = getHelpArticle('getting-started/first-check');
     expect(article).not.toBeNull();
-    expect(article?.meta.title).toBe('처음 검수는 어떻게 하나요?');
+    expect(article?.meta.title).toBe('검수는 어떻게 하나요?');
     expect(article?.body).toContain('기준 검수');
   });
 
-  it('loads stdict license article under reference', () => {
+  it('loads stdict license article under getting-started', () => {
     const nav = getHelpNav();
-    const ref = nav.groups.find((g) => g.id === 'reference');
+    const ref = nav.groups.find((g) => g.id === 'getting-started');
     expect(ref?.items.some((i) => i.slug === 'reference/stdict-license')).toBe(
       true,
     );
@@ -74,7 +74,6 @@ describe('help content bundle', () => {
     const trail = findNavTrail(nav.groups, 'spelling/highlights/spacing');
     expect(trail?.groupLabel).toBe('맞춤법 검수');
     expect(trail?.crumbs.map((c) => c.slug)).toEqual([
-      'spelling/highlights',
       'spelling/highlights/spacing',
     ]);
   });
