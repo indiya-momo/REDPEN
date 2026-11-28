@@ -151,12 +151,12 @@ describe('§12-4 수동 지정표', () => {
     ]);
   });
 
-  it('2026-11-28 승인 10개 카드: 설명 속 그 말 자리에 단다(커녕·밖에·투성이·가지·같은·같이·것)', () => {
+  it('2026-11-28 승인 10개 카드: 설명 속 그 말 자리에 단다(커녕·밖에·투성이·가지·같다·같이·것)', () => {
     expect(linkedWords('josa-attach-keonyeong')).toEqual([['커녕', 490407]]);
     expect(linkedWords('josa-attach-bakke')).toEqual([['밖에', 131192]]);
     expect(linkedWords('jubsa-attach-tuseongi')).toEqual([['투성이', 343647]]);
     expect(linkedWords('dannoun-space-gaji')).toEqual([['가지', 6053]]);
-    expect(linkedWords('eogan-katten')).toEqual([['같은', 391368]]);
+    expect(linkedWords('eogan-katten')).toEqual([['같다', 391368]]);
     expect(linkedWords('josa-busa-gachi')).toEqual([['같이', 389853]]);
     expect(linkedWords('uinoun-geot')).toEqual([['것', 390852]]);
   });

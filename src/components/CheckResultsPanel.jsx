@@ -36,13 +36,8 @@ import {
   SEARCH_BADGE_LABEL,
 } from '../lib/manuscriptWorkbench/types.js';
 import { manualResultCardTip } from '../lib/manuscriptWorkbench/textPartDiff.js';
-import StdictCorrectionLink from './StdictCorrectionLink.jsx';
 import CautionDictTip from './CautionDictTip.jsx';
 import { useStdictLinkIndex } from '../hooks/useStdictLinkIndex.js';
-import {
-  correctionPairsOfGroup,
-  isDictBundleGroup,
-} from '../lib/stdictLinkPairs.js';
 import {
   defaultOpenConsistencyCategory,
   defaultOpenSpellingCategory,
@@ -404,11 +399,6 @@ export default function CheckResultsPanel({
       ? getConsistencyResultCardParts(group, customRules)
       : null;
     const isSearch = group.category === 'manuscript-search';
-    /** 표준국어대사전 등재 묶음 카드의 찾은 말 → 고칠 말 쌍 (인스턴스 값 기준) */
-    const dictPairs =
-      source === 'spelling' && isDictBundleGroup(group)
-        ? correctionPairsOfGroup(group)
-        : [];
     const tipText =
       group.category === 'manual'
         ? manualResultCardTip(group)
@@ -520,19 +510,6 @@ export default function CheckResultsPanel({
                       (first
                         ? `${first.matchedText} → ${first.suggestedText}`
                         : '')}
-                  </span>
-                ) : dictPairs.length > 0 ? (
-                  <span className="spelling-result-chip">
-                    {dictPairs.map((pair, i) => (
-                      <span key={`${pair.find}\u0000${pair.replace}`}>
-                        {i > 0 ? ', ' : null}
-                        {pair.find} →{' '}
-                        <StdictCorrectionLink
-                          word={pair.replace}
-                          index={stdictLinkIndex}
-                        />
-                      </span>
-                    ))}
                   </span>
                 ) : (
                   <span className="spelling-result-chip">
