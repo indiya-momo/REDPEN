@@ -44,6 +44,7 @@ import {
   saveRuleSets,
 } from '../lib/ruleSetsStorage.js';
 import BadgeCollectionGrid from './BadgeCollectionGrid.jsx';
+import StdictDataDownloadCard from './StdictDataDownloadCard.jsx';
 import ProjectHubEditorPage from './projectHub/ProjectHubEditorPage.jsx';
 import ProjectHubEditorShell from './projectHub/ProjectHubEditorShell.jsx';
 import ProjectHubLibraryPanel from './projectHub/ProjectHubLibraryPanel.jsx';
@@ -557,6 +558,8 @@ function ProfileSection({
         earnedCount={earnedCount}
         totalLabel={totalLabel}
       />
+
+      <StdictDataDownloadCard />
 
       <InquiryPlaceholderCard />
     </div>
