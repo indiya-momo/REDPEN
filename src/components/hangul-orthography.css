@@ -399,8 +399,25 @@
   color: var(--c-soft, #666);
 }
 
+/* 「ㄴ.」은 앞 줄의 「ㄱ.」과 같은 세로줄에 놓는다(불릿 자리만큼 들여쓰기). */
 .hangul-ortho__appx-sub {
-  padding-left: 2.2em;
+  padding-left: 1.1em;
+}
+
+/* 「ㄱ.」「ㄴ.」 표지 뒤 본문: 줄이 넘어가도 본문 시작 위치에 맞춘다. */
+.hangul-ortho__appx-mark-row {
+  display: flex;
+  align-items: baseline;
+}
+
+.hangul-ortho__appx-mark {
+  flex: 0 0 auto;
+  margin-right: 0.45em;
+}
+
+.hangul-ortho__appx-mark-text {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .hangul-ortho__appx-note {

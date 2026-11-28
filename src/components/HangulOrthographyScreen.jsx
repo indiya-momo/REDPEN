@@ -21,6 +21,22 @@ function ob(text) {
 }
 
 /**
+ * 「ㄱ.」「ㄴ.」처럼 표지로 시작하는 줄은 표지와 본문을 나란히 놓아,
+ * 줄이 넘어갈 때 둘째 줄이 본문 시작 위치에 맞도록 한다.
+ * @param {{ className: string, text: string }} props
+ */
+function AppxP({ className, text }) {
+  const m = /^([\u3131-\u314E])\.\s*([\s\S]*)$/u.exec(text);
+  if (!m) return <p className={className}>{text}</p>;
+  return (
+    <p className={`${className} hangul-ortho__appx-mark-row`}>
+      <span className="hangul-ortho__appx-mark">{m[1]}.</span>
+      <span className="hangul-ortho__appx-mark-text">{m[2]}</span>
+    </p>
+  );
+}
+
+/**
  * 부록 줄 목록 — 불릿마다 예문 한 줄, 「ㄴ.」은 들여쓰기, 「[붙임]」은 주석 줄.
  * @param {{ lines: string[] }} props
  */
@@ -34,9 +50,7 @@ function AppendixLines({ lines }) {
             .map((s) => s.trim())
             .filter(Boolean)
             .map((s, j) => (
-              <p key={`${i}-${j}`} className="hangul-ortho__appx-ex">
-                {s}
-              </p>
+              <AppxP key={`${i}-${j}`} className="hangul-ortho__appx-ex" text={s} />
             ));
         }
         const cls = /^ㄴ\./u.test(line)
@@ -44,11 +58,7 @@ function AppendixLines({ lines }) {
           : /^\[붙임/u.test(line)
             ? 'hangul-ortho__appx-note'
             : 'hangul-ortho__appx-text';
-        return [
-          <p key={i} className={cls}>
-            {line}
-          </p>,
-        ];
+        return [<AppxP key={i} className={cls} text={line} />];
       })}
     </div>
   );
