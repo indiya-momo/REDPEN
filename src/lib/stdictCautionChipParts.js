@@ -95,7 +95,8 @@ export function findPosSurfaceInTip(tip, pos) {
 }
 
 /**
-  * @typedef {{ text: string, lookup: string, pos?: string, wordNo?: number, search?: boolean }} CautionTipLinkSpec
+  * @typedef {{ no: number, wordNo: number, gloss: string }} CautionNumberedEntry
+ * @typedef {{ text: string, lookup: string, pos?: string, wordNo?: number, search?: boolean, at?: number, numbered?: CautionNumberedEntry[] }} CautionTipLinkSpec
  */
 
 /**
@@ -120,6 +121,27 @@ function findPlaceInTip(tip, place) {
 }
 
 /**
+ * 「말|뒤 글」 자리: 말이 「뒤 글」 바로 앞에 적힌 곳을 찾는다. 같은 글자가 설명에 여럿일 때 쓴다.
+ * 예: 「뿐|'은 조사」 → 「'뿐'은 조사로」의 뿐.
+ * @param {string} tip
+ * @param {string} place
+ * @returns {{ text: string, at: number } | null}
+ */
+function findAnchoredPlace(tip, place) {
+  const raw = String(place ?? '');
+  const bar = raw.indexOf('|');
+  if (bar < 0) return null;
+  const word = raw.slice(0, bar).trim();
+  const ctx = raw.slice(bar + 1);
+  if (!word || !ctx) return null;
+  const c = String(tip ?? '').indexOf(ctx);
+  if (c < word.length) return null;
+  const at = c - word.length;
+  if (String(tip).slice(at, c) !== word) return null;
+  return { text: word, at };
+}
+
+/**
  * 설명에 링크로 넣을 자리.
  * 수동 지정(§12-4)이 있으면 그것만 쓰고, 없으면 항목 이름의 품사로 자동 판정한다(§12-1).
  * 제목은 링크로 만들지 않고, 따옴표 말·사전형은 넣지 않는다(§12-2, §12-5).
@@ -138,8 +160,11 @@ export function cautionTipLinkSpecs(chipLabel, tip, itemId) {
     const pos = spec.pos ? String(spec.pos).trim() : '';
     const wordNo = Number.isFinite(spec.wordNo) ? spec.wordNo : undefined;
     const search = spec.search === true;
-    if (!text || !lookup || (!pos && wordNo == null && !search)) return;
-    const key = `${text}\0${lookup}\0${pos}\0${wordNo ?? ''}\0${search}`;
+    const at = Number.isFinite(spec.at) ? spec.at : undefined;
+    const numbered = Array.isArray(spec.numbered) && spec.numbered.length ? spec.numbered : undefined;
+    if (!text || !lookup || (!pos && wordNo == null && !search && !numbered)) return;
+    const numberedKey = numbered ? numbered.map((n) => n.wordNo).join('+') : '';
+    const key = `${text}\0${lookup}\0${pos}\0${wordNo ?? ''}\0${search}\0${at ?? ''}\0${numberedKey}`;
     if (seen.has(key)) return;
     seen.add(key);
     specs.push({
@@ -148,6 +173,8 @@ export function cautionTipLinkSpecs(chipLabel, tip, itemId) {
       ...(pos ? { pos } : {}),
       ...(wordNo != null ? { wordNo } : {}),
       ...(search ? { search: true } : {}),
+      ...(at != null ? { at } : {}),
+      ...(numbered ? { numbered } : {}),
     });
   };
 
@@ -171,9 +198,21 @@ export function cautionTipLinkSpecs(chipLabel, tip, itemId) {
     // 수동 지정 카드(§12-10 · 가량·쯤)는 제목과 같은 말이라도 설명에서 처음 나온 자리에 단다(§12-2 예외).
     const tipText = String(tip ?? '');
     for (const [place, wordNo] of manual) {
+      const numbered = Array.isArray(wordNo) ? wordNo : undefined;
+      const anchored = findAnchoredPlace(tipText, place);
+      if (anchored) {
+        add({
+          text: anchored.text,
+          lookup: anchored.text,
+          ...(numbered ? { numbered } : { wordNo }),
+          at: anchored.at,
+        });
+        continue;
+      }
       const surface = findPlaceInTip(tipText, place);
       if (!surface) continue;
       if (wordNo === CAUTION_SEARCH) add({ text: surface, lookup: place, search: true });
+      else if (numbered) add({ text: surface, lookup: place, numbered });
       else add({ text: surface, lookup: place, wordNo });
     }
     return specs;
@@ -203,17 +242,25 @@ export function cautionTipLinkTerms(chipLabel, tip, itemId) {
  * 설명 문자열을 링크할 말과 나머지로 나눈다. 긴 말부터 맞춘다.
  * @param {string} raw
  * @param {Array<CautionTipLinkSpec | string>} specs
- * @returns {{ kind: 'word' | 'text', text: string, lookup?: string, pos?: string, wordNo?: number }[]}
+  * @returns {{ kind: 'word' | 'text', text: string, lookup?: string, pos?: string, wordNo?: number, search?: boolean, numbered?: CautionNumberedEntry[] }[]}
  */
 export function cautionTipLinkParts(raw, specs) {
   const text = String(raw ?? '');
   if (!text) return [];
   /** @type {Map<string, CautionTipLinkSpec>} */
   const byText = new Map();
+  /** 위치(at)가 정해진 자리: 같은 글자라도 자리마다 따로 링크한다. */
+  /** @type {Map<number, CautionTipLinkSpec>} */
+  const byAt = new Map();
   for (const item of specs ?? []) {
     const spec =
       typeof item === 'string' ? { text: item, lookup: item } : item;
-    if (spec?.text && !byText.has(spec.text)) byText.set(spec.text, spec);
+    if (!spec?.text) continue;
+    if (Number.isFinite(spec.at)) {
+      if (!byAt.has(spec.at)) byAt.set(spec.at, spec);
+      continue;
+    }
+    if (!byText.has(spec.text)) byText.set(spec.text, spec);
   }
   const sorted = [...byText.keys()].sort(
     (a, b) => b.length - a.length || a.localeCompare(b),
@@ -231,6 +278,20 @@ export function cautionTipLinkParts(raw, specs) {
   // 순서대로 처음 나온 자리만 링크한다. 같은 말은 한 번만 링크(§12, 2026-11-27 지시).
   const linked = new Set();
   while (i < text.length) {
+    const atSpec = byAt.get(i);
+    if (atSpec && text.startsWith(atSpec.text, i)) {
+      flush();
+      parts.push({
+        kind: 'word',
+        text: atSpec.text,
+        lookup: atSpec.lookup || atSpec.text,
+        ...(Number.isFinite(atSpec.wordNo) ? { wordNo: atSpec.wordNo } : {}),
+        ...(atSpec.search ? { search: true } : {}),
+        ...(atSpec.numbered ? { numbered: atSpec.numbered } : {}),
+      });
+      i += atSpec.text.length;
+      continue;
+    }
     let hit = '';
     for (const t of sorted) {
       if (t && text.startsWith(t, i)) {
@@ -261,6 +322,7 @@ export function cautionTipLinkParts(raw, specs) {
         ...(spec?.pos ? { pos: spec.pos } : {}),
         ...(Number.isFinite(spec?.wordNo) ? { wordNo: spec.wordNo } : {}),
         ...(spec?.search ? { search: true } : {}),
+        ...(spec?.numbered ? { numbered: spec.numbered } : {}),
       });
       i += hit.length;
     } else {

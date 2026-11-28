@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { stdictSearchUrl, stdictViewUrl } from './stdictLinks.js';
+import { stdictViewUrl } from './stdictLinks.js';
 import {
   CAUTION_MANUAL_WORD_NO,
   CAUTION_POS_WORD_NO,
@@ -24,11 +24,14 @@ function linkedWords(itemId) {
       const label = cautionDisplayLabel(item);
       const tip = cautionItemTip(item, group);
       const specs = cautionTipLinkSpecs(label, tip, item.id).filter(
-        (s) => s.search === true || resolveCautionTipWordNo(s) != null,
+        (s) => s.search === true || Array.isArray(s.numbered) || resolveCautionTipWordNo(s) != null,
       );
       return cautionTipLinkParts(tip, specs)
         .filter((p) => p.kind === 'word')
-        .map((p) => [p.text, p.search ? 'search' : resolveCautionTipWordNo(p)]);
+        .map((p) => [
+          p.text,
+          p.numbered ? p.numbered.map((n) => n.wordNo) : p.search ? 'search' : resolveCautionTipWordNo(p),
+        ]);
     }
   }
   throw new Error(`항목 없음: ${itemId}`);
@@ -69,20 +72,28 @@ describe('§12-3 자동 판정 표', () => {
 describe('§12-4 수동 지정표', () => {
   it('지정표에 §12-4 카드가 모두 들어 있다', () => {
     expect(CAUTION_MANUAL_WORD_NO).toMatchObject({
-      'uinoun-jungdo': { 명사: 479967 },
-      'noun-ttae': { 명사: 98401 },
-      'josa-attach-keonyeong': { 보조사: 490407 },
-      'josa-attach-bakke': { 보조사: 131192 },
+      'uinoun-jungdo': { 정도: 479967 },
+      'noun-ttae': { 때: 98401 },
+      'josa-attach-keonyeong': { 커녕: 490407 },
+      'josa-uinoun-mankum': { "만큼|'은 조사": 423733, "만큼|'은 의존명사": 423733 },
+      'josa-attach-bakke': { 밖에: 131192 },
       'jubsa-garyang': { 가량: 387733, 쯤: 321212 },
     });
   });
 
-  it('정도는 설명의 「명사」에서 정도11로 간다', () => {
-    expect(linkedWords('uinoun-jungdo')).toEqual([['명사', 479967]]);
+  it('정도는 설명의 「정도」에서 정도11(479967)로 간다', () => {
+    expect(linkedWords('uinoun-jungdo')).toEqual([['정도', 479967]]);
+  });
+
+  it('만큼: 따옴표 속 「만큼」마다 — 조사·의존명사 모두 423733', () => {
+    expect(linkedWords('josa-uinoun-mankum')).toEqual([
+      ['만큼', 423733],
+      ['만큼', 423733],
+    ]);
   });
 
   it('때는 설명의 「명사」에서 때01로 간다', () => {
-    expect(linkedWords('noun-ttae')).toEqual([['명사', 98401]]);
+    expect(linkedWords('noun-ttae')).toEqual([['때', 98401]]);
   });
 
   it('가량·쯤은 제목과 같은 말이라도 설명에서 처음 나온 자리에 단다(§12-2 예외)', () => {
@@ -119,19 +130,35 @@ describe('§12-4 수동 지정표', () => {
     ]);
   });
 
-  it('붙이다·부치다: 「붙이다」는 153137 직결, 「부치다」는 검색 화면(번호 미정). 붙다·뜻풀이 말은 달지 않는다', () => {
+  it('붙이다·부치다: 「붙이다」는 153137 직결, 「부치다」는 어깨번호 01·02·04·05로 번호별 직결(§14-2). 붙다·뜻풀이 말은 달지 않는다', () => {
     expect(linkedWords('verb-verbi-but')).toEqual([
       ['붙이다', 153137],
-      ['부치다', 'search'],
+      ['부치다', [438761, 438538, 154384, 154385]],
     ]);
-    expect(stdictSearchUrl('부치다')).toBe(
-      'https://kdict.korean.go.kr/standard/search/searchResult.do?pageSize=10&searchKeyword=%EB%B6%80%EC%B9%98%EB%8B%A4',
-    );
   });
 
-  it('커녕·밖에는 설명의 「보조사」에서 직결한다', () => {
-    expect(linkedWords('josa-attach-keonyeong')).toEqual([['보조사', 490407]]);
-    expect(linkedWords('josa-attach-bakke')).toEqual([['보조사', 131192]]);
+  it('대로: 따옴표 속 「대로」마다 링크 — 조사 자리 78254, 의존명사 자리 411247', () => {
+    expect(linkedWords('josa-uinoun-daero')).toEqual([
+      ['대로', 78254],
+      ['대로', 411247],
+    ]);
+  });
+
+  it('뿐: 따옴표 속 「뿐」마다 링크 — 조사 자리 156866, 의존명사 자리 443239', () => {
+    expect(linkedWords('josa-uinoun-ppun')).toEqual([
+      ['뿐', 156866],
+      ['뿐', 443239],
+    ]);
+  });
+
+  it('2026-11-28 승인 10개 카드: 설명 속 그 말 자리에 단다(커녕·밖에·투성이·가지·같은·같이·것)', () => {
+    expect(linkedWords('josa-attach-keonyeong')).toEqual([['커녕', 490407]]);
+    expect(linkedWords('josa-attach-bakke')).toEqual([['밖에', 131192]]);
+    expect(linkedWords('jubsa-attach-tuseongi')).toEqual([['투성이', 343647]]);
+    expect(linkedWords('dannoun-space-gaji')).toEqual([['가지', 6053]]);
+    expect(linkedWords('eogan-katten')).toEqual([['같은', 391368]]);
+    expect(linkedWords('josa-busa-gachi')).toEqual([['같이', 389853]]);
+    expect(linkedWords('uinoun-geot')).toEqual([['것', 390852]]);
   });
 
   it('수동 지정은 설명에 자리가 없으면 달지 않는다', () => {

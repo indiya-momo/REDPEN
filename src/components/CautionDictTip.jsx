@@ -12,11 +12,21 @@ import { resolveCautionTipWordNo } from '../lib/stdictCautionPosCodes.js';
  */
 export default function CautionDictTip({ text, chipLabel, itemId, index }) {
   const specs = cautionTipLinkSpecs(chipLabel, text, itemId).filter(
-    (s) => s.search === true || resolveCautionTipWordNo(s) != null,
+    (s) => s.search === true || Array.isArray(s.numbered) || resolveCautionTipWordNo(s) != null,
   );
   const parts = cautionTipLinkParts(text, specs);
   if (!parts.length) return text;
   return parts.map((part, i) => {
+    if (part.kind === 'word' && part.numbered) {
+      return (
+        <StdictCorrectionLink
+          key={`${part.text}:${i}`}
+          word={part.text}
+          index={index}
+          numbered={part.numbered}
+        />
+      );
+    }
     if (part.kind === 'word' && part.search) {
       return (
         <StdictCorrectionLink

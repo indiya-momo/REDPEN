@@ -6,7 +6,7 @@
 
 /**
  * 수동 지정에서 번호 대신 쓰는 표시: 이 자리는 표준국어대사전 검색 화면으로 보낸다.
- * 번호를 정하지 못한 말에만 쓴다(2026-11-28 모모집사 지시: 「부치다」).
+ * 번호를 정하지 못한 말에만 쓴다. 현재 쓰는 항목은 없다(부치다는 번호별 직결로 바뀜, §14-2).
  */
 export const CAUTION_SEARCH = 'search';
 
@@ -23,23 +23,47 @@ export const CAUTION_POS_WORD_NO = {
 };
 
 /**
+ * 설명 속 말을 사전 표제어 번호(01, 02…)별로 직결하는 목록. 어깨번호를 붙인다(§12-10-1, §14-2).
+ * gloss는 번호에 마우스를 올릴 때 보이는 짧은 뜻풀이(사전 JSON 2026-11-06).
+ */
+export const CAUTION_NUMBERED_PLACE = {
+  부치다: [
+    { no: 1, wordNo: 438761, gloss: '모자라거나 미치지 못하다' },
+    { no: 2, wordNo: 438538, gloss: '편지나 물건을 보내다' },
+    { no: 4, wordNo: 154384, gloss: '빈대떡 따위 음식을 익혀 만들다' },
+    { no: 5, wordNo: 154385, gloss: '부채를 흔들어 바람을 일으키다' },
+  ],
+};
+
+/**
  * §12-4 수동 지정표 — 자동 판정보다 먼저 쓴다. { item_id: { "설명 속 자리": target_code } }
+ * 값은 target_code(숫자), CAUTION_SEARCH, 또는 CAUTION_NUMBERED_PLACE 목록 중 하나다.
  * 수동 지정이 있는 항목은 자동 판정을 쓰지 않는다.
  * (가량·쯤은 「접사」 자리에 달지 않고, 설명 속 따옴표 단어 자리에 각각 단다.)
  */
 export const CAUTION_MANUAL_WORD_NO = {
-  'uinoun-jungdo': { 명사: 479967 },
-  'noun-ttae': { 명사: 98401 },
+  'uinoun-jungdo': { 정도: 479967 },
+  'noun-ttae': { 때: 98401 },
   'jubsa-garyang': { 가량: 387733, 쯤: 321212 },
-  'josa-attach-keonyeong': { 보조사: 490407 },
-  'josa-attach-bakke': { 보조사: 131192 },
+  'josa-attach-keonyeong': { 커녕: 490407 },
+  'josa-attach-bakke': { 밖에: 131192 },
   // §12-10 견본(§12-10-4, 2026-11-27 22:04 결정): 제목과 같은 말이라도 설명에서 처음 나온 자리에 단다.
   'bon-bojo-jalhada': { 잘하다: 475843 },
   'bon-bojo-anda': { '좋게 이루어지지 않다': 219149, '사람이 보기에 가엾다': 222730 },
   'verb-verbi-but': {
     붙이다: 153137,
-    부치다: CAUTION_SEARCH,
+    부치다: CAUTION_NUMBERED_PLACE.부치다,
   },
+  // 2026-11-28 모모집사 지시: 「대로」「뿐」은 따옴표 속 말마다 링크한다. 키 「말|뒤 글」은 「말」이 「뒤 글」 바로 앞에 적힌 자리(같은 글자가 둘이라 구분).
+  'josa-uinoun-daero': { "대로|'는 조사": 78254, "대로|'는 의존명사": 411247 },
+  'josa-uinoun-ppun': { "뿐|'은 조사": 156866, "뿐|'은 의존명사": 443239 },
+  'josa-uinoun-mankum': { "만큼|'은 조사": 423733, "만큼|'은 의존명사": 423733 },
+  // 2026-11-28 모모집사 승인: 품사 이름 자리 → 그 말 자리(설명 속 처음 나온 자리). 같은은 「같은」에만 달고 「같다」에는 달지 않는다.
+  'jubsa-attach-tuseongi': { 투성이: 343647 },
+  'dannoun-space-gaji': { 가지: 6053 },
+  'eogan-katten': { 같은: 391368 },
+  'josa-busa-gachi': { 같이: 389853 },
+  'uinoun-geot': { 것: 390852 },
   // §12-10-2 A·B·C 표 전체(견본 승인 2026-11-27 22:08). 자리 글자는 설명에 적힌 그대로.
   'bon-bojo-eojuda': { 들어주다: 93665 },
   'bon-bojo-gui': { 귀신같다: 42639 },
