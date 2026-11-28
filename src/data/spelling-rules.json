@@ -3632,6 +3632,14 @@
   {
     "find": "루즈",
     "replace": "루주",
+    "excludeWords": [
+      "크루즈",
+      "블루즈",
+      "드루즈",
+      "라페루즈",
+      "뮐루즈",
+      "툴루즈"
+    ],
     "enabled": true,
     "tip": "프랑스어 rouge. 'ge'는 [주]라 '루주'",
     "dividerGroup": "C1",

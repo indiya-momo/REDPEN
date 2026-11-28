@@ -76,6 +76,15 @@ export function shouldSkipMatch(rule, match, sourceText) {
   const matchedRaw = match[0] ?? '';
   const matched = normalizeSpaces(matchedRaw);
 
+  if (
+    rule.excludeWords?.length &&
+    sourceText != null &&
+    match.index != null &&
+    isInsideExcludedWord(sourceText, match.index, matchedRaw.length, rule.excludeWords)
+  ) {
+    return true;
+  }
+
   if (rule.excludePrefixes?.length) {
     const normalizedPrefixes = rule.excludePrefixes.map(normalizeSpaces);
     if (normalizedPrefixes.includes(normalizeSpaces(prefix))) {
@@ -116,6 +125,26 @@ export function shouldSkipMatch(rule, match, sourceText) {
     }
   }
 
+  return false;
+}
+
+/**
+ * 매칭 글자가 「제외어」 안에 통째로 들어 있는지. 예: 「루즈」 ⊂ 「크루즈」.
+ * @param {string} text
+ * @param {number} matchIndex
+ * @param {number} matchLength
+ * @param {string[]} words
+ */
+export function isInsideExcludedWord(text, matchIndex, matchLength, words) {
+  const end = matchIndex + matchLength;
+  for (const word of words) {
+    if (!word) continue;
+    let start = text.indexOf(word, Math.max(0, matchIndex - word.length + 1));
+    while (start !== -1 && start <= matchIndex) {
+      if (start + word.length >= end) return true;
+      start = text.indexOf(word, start + 1);
+    }
+  }
   return false;
 }
 

@@ -164,6 +164,35 @@ describe('맞춤법 띄어쓰기 규칙 — 앞 한글 경계', () => {
     expect(flagged.some((r) => r.find === '듯 하')).toBe(false);
   });
 
+  describe('루즈 → 루주: 시트 except 칸 제외어', () => {
+    const luju = BUILT_IN_RULES.find((r) => r.find === '루즈');
+
+    it('규칙 행에 시트 제외어가 들어간다', () => {
+      expect(luju).toBeTruthy();
+      expect(luju.excludeWords).toEqual(
+        expect.arrayContaining(['크루즈', '블루즈', '드루즈', '라페루즈', '뮐루즈', '툴루즈']),
+      );
+    });
+
+    it.each([
+      ['크루즈 여행을 떠났다'],
+      ['블루즈 음악을 들었다'],
+      ['툴루즈에서 만났다'],
+      ['산타크루즈 제도'],
+    ])('「%s」는 잡지 않는다', (text) => {
+      expect(hits([luju], text)).toEqual([]);
+    });
+
+    it.each([
+      ['루즈 색 립스틱', '루즈'],
+      ['그녀는 루즈를 발랐다', '루즈'],
+      ['루즈\n색', '루즈'],
+      ['립루즈를 고른다', '루즈'],
+    ])('「%s」는 잡는다', (text, expected) => {
+      expect(hits([luju], text)).toEqual([expected]);
+    });
+  });
+
   it('isHangulSyllable', () => {
     expect(isHangulSyllable('가')).toBe(true);
     expect(isHangulSyllable('힣')).toBe(true);

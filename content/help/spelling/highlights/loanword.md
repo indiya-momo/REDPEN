@@ -1,5 +1,5 @@
 ---
-title: 외래어 표기 하이라이트는 무엇을 뜻하나요?
+title: 외래어 표기 하이라이트는 무슨 뜻인가요?
 order: 40
 readMinutes: 2
 group: 맞춤법 검수

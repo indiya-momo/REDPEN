@@ -131,6 +131,10 @@ const SPELLING_HEADER_ALIASES = {
   'display label': 'display_label',
   'allow attached prefix': 'allow_attached_prefix',
   앞말붙임허용: 'allow_attached_prefix',
+  except: 'exclude_words',
+  제외어: 'exclude_words',
+  '제외 단어': 'exclude_words',
+  'exclude words': 'exclude_words',
   // 관리용 열 — normalize에서 무시
   흥미도: '_interest',
   interest: '_interest',
@@ -232,6 +236,14 @@ function postProcessSpellingRules(rules) {
   return rules;
 }
 
+/** 제외어 칸: 쉼표·줄바꿈 구분. 이 말 안에 든 매칭은 잡지 않는다 (예: 루즈 → 크루즈, 블루즈) */
+function parseExcludeWords(value) {
+  return String(value ?? '')
+    .split(/[,，\n]+/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
 function normalizeRow(row) {
   const find = String(row.find || '').trim();
   const replace = String(row.replace || '').trim();
@@ -258,8 +270,10 @@ function normalizeRow(row) {
   }
   const allowAttachedPrefix =
     String(row.allow_attached_prefix ?? '').trim().toLowerCase() === 'true';
+  const excludeWords = parseExcludeWords(row.exclude_words);
 
   const shared = {
+    ...(excludeWords.length ? { excludeWords } : {}),
     enabled,
     ...(tip ? { tip } : {}),
     ...(memo ? { memo } : {}),

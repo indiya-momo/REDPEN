@@ -63,6 +63,9 @@ function builtInRuleFromRow(row) {
       ? { requireLeadingBoundary: true }
       : {}),
     ...(row.allowAttachedPrefix === true ? { allowAttachedPrefix: true } : {}),
+    ...(Array.isArray(row.excludeWords) && row.excludeWords.length
+      ? { excludeWords: row.excludeWords }
+      : {}),
   };
 }
 
