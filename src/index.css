@@ -6533,6 +6533,24 @@ html[data-build='prod'] .unify-candidate-find__list {
   margin-top: 1rem;
 }
 
+/* 공지 글쓰기·수정 폼(팝업 안): 본문 칸이 남은 높이를 채우고, 스크롤은 본문 칸 안에서만 한다 */
+.momo-room__notice-modal-main:has(.momo-room__notice-form) {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.momo-room__notice-modal .momo-room__notice-form {
+  flex: 1 1 auto;
+  min-height: 0;
+  margin-bottom: 0;
+}
+
+.momo-room__notice-modal .momo-room__notice-form-body {
+  flex: 1 1 16rem;
+  min-height: 6rem;
+}
+
 .momo-room__notice-modal-nav {
   display: flex;
   flex-direction: column;
