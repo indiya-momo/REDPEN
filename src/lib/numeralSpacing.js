@@ -9,7 +9,7 @@
 export const NUMERAL_SPACING_CATEGORY = '수사';
 export const NUMERAL_SPACING_LABEL = '수사 띄어쓰기';
 export const NUMERAL_SPACING_TIP =
-  '한글 맞춤법 제44항: 수는 만 단위로 띄어 씁니다.';
+  '「한글 맞춤법」 제44항: 수는 만 단위로 띄어 씁니다.';
 
 const DIGITS = new Set(['일', '이', '삼', '사', '오', '육', '칠', '팔', '구']);
 const SMALL_UNITS = ['천', '백', '십'];

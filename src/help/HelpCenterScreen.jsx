@@ -212,16 +212,13 @@ function HelpArticleView({ slug, onNavigate }) {
   }
 
   const title = String(article.meta.title ?? slug);
-  const readMinutes = article.meta.readMinutes;
   const isIndex = article.meta.index === true;
   const children = navItem?.children ?? [];
   const related = Array.isArray(article.meta.related) ? article.meta.related : [];
 
   const metaLine = isIndex && children.length
     ? `주제 묶음 · 하위 항목 ${children.length}개`
-    : readMinutes
-      ? `읽는 데 약 ${readMinutes}분`
-      : null;
+    : null;
 
   return (
     <article className="help-center__article">

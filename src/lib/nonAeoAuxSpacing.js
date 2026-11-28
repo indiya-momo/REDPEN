@@ -44,7 +44,7 @@ import { warmAuxiliaryMorphCache } from './auxiliaryMorphFilter.js';
 export const NON_AEO_AUX_SPACING_LABEL =
   '본(-아/-어) + 보조용언 아닌 경우 (47항)';
 export const NON_AEO_AUX_SPACING_TIP =
-  "한글 맞춤법 제47항: 보조용언은 본용언이 -아/-어일 때만 붙여 씀. ('들여다보다'처럼 한 단어인 경우는 잡지 않음)";
+  "「한글 맞춤법」 제47항: 보조용언은 본용언이 -아/-어일 때만 붙여 씀. ('들여다보다'처럼 한 단어인 경우는 잡지 않음)";
 
 /**
  * '-다' + '가…'는 연결어미 -다가(먹다가·놀다간)와 겹친다. 보조 가다로 보지 않는다.

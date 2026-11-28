@@ -27,7 +27,7 @@ import {
   shouldSilenceLongCompoundHostAsRegisteredLemma,
 } from './stdictVerbForms.js';
 
-const DICT_TIP = (lemma) => `표준국어대사전 「${lemma}」 등재`;
+const DICT_TIP = (lemma) => `『표준국어대사전』 「${lemma}」 등재`;
 
 /** @deprecated 붙임표는 로컬 H. 카운터는 0으로 유지(호환). */
 let sessionStdictCalls = 0;

@@ -7,8 +7,8 @@
   --help-text-muted: #8a877f;
   --help-accent: #6b4f2a;
   --help-accent-soft: #f0ebe3;
-  --help-sidebar-w: 620px;
-  --help-content-max: 1040px;
+  --help-sidebar-w: 310px;
+  --help-content-max: 760px;
   --help-radius: 10px;
   --help-shadow: 0 1px 2px rgba(28, 27, 25, 0.06);
   /* 작업 가이드 말풍선 UI 모사 — 도움말 본문 크기에 맞춤 */
@@ -19,7 +19,7 @@
   background: var(--help-bg);
   color: var(--help-text);
   font-family: 'Noto Sans KR', system-ui, sans-serif;
-  font-size: 30px;
+  font-size: 15px;
   line-height: 1.65;
   -webkit-font-smoothing: antialiased;
 }
@@ -56,7 +56,7 @@
   text-align: left;
   color: var(--help-text);
   font-weight: 700;
-  font-size: 1.9rem;
+  font-size: 0.95rem;
   letter-spacing: -0.02em;
   cursor: pointer;
 }
@@ -64,7 +64,7 @@
 .help-center__sidebar-brand span {
   display: block;
   margin-top: 0.2rem;
-  font-size: 1.5rem;
+  font-size: 0.75rem;
   font-weight: 500;
   color: var(--help-text-muted);
 }
@@ -75,8 +75,8 @@
 
 .help-center__nav-group-label {
   padding: 0.35rem 1.25rem;
-  font-size: 1.36rem;
-  font-weight: 600;
+  font-size: 1.02rem;
+  font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--help-text-muted);
@@ -90,7 +90,7 @@
   background: none;
   text-align: left;
   font: inherit;
-  font-size: 1.76rem;
+  font-size: 0.88rem;
   color: var(--help-text-secondary);
   cursor: pointer;
   border-left: 2px solid transparent;
@@ -138,7 +138,7 @@
   border: none;
   background: none;
   color: var(--help-text-muted);
-  font-size: 1.44rem;
+  font-size: 0.72rem;
   cursor: pointer;
   border-radius: 4px;
 }
@@ -164,7 +164,7 @@
   background: none;
   text-align: left;
   font: inherit;
-  font-size: 1.76rem;
+  font-size: 0.88rem;
   color: var(--help-text-secondary);
   cursor: pointer;
   border-left: 2px solid transparent;
@@ -196,7 +196,7 @@
   background: none;
   text-align: left;
   font: inherit;
-  font-size: 1.64rem;
+  font-size: 0.82rem;
   color: var(--help-text-muted);
   cursor: pointer;
   border-left: 2px solid transparent;
@@ -232,7 +232,7 @@
 .help-center__topic-dl-term {
   margin: 0;
   padding: 0.75rem 1rem 0.35rem;
-  font-size: 1.84rem;
+  font-size: 0.92rem;
   font-weight: 600;
   letter-spacing: -0.02em;
   color: var(--help-text);
@@ -241,7 +241,7 @@
 .help-center__topic-dl-desc {
   margin: 0;
   padding: 0 1rem 0.85rem;
-  font-size: 1.76rem;
+  font-size: 0.88rem;
   color: var(--help-text-secondary);
   line-height: 1.55;
 }
@@ -258,7 +258,7 @@
   border: none;
   background: none;
   font: inherit;
-  font-size: 1.72rem;
+  font-size: 0.86rem;
   font-weight: 500;
   color: var(--help-accent);
   cursor: pointer;
@@ -268,7 +268,7 @@
 
 .help-center__topic-dl-link::after {
   content: '→';
-  font-size: 1.56rem;
+  font-size: 0.78rem;
   text-decoration: none;
 }
 
@@ -299,7 +299,7 @@
 
 .help-center__hub-title {
   margin: 0 0 0.35rem;
-  font-size: 3.5rem;
+  font-size: 1.75rem;
   font-weight: 700;
   letter-spacing: -0.03em;
   line-height: 1.25;
@@ -308,7 +308,7 @@
 .help-center__hub-lead {
   margin: 0 0 1.75rem;
   color: var(--help-text-secondary);
-  font-size: 1.9rem;
+  font-size: 0.95rem;
 }
 
 .help-center__search {
@@ -328,7 +328,7 @@
   border: none;
   background: none;
   font: inherit;
-  font-size: 1.84rem;
+  font-size: 0.92rem;
   outline: none;
 }
 
@@ -358,7 +358,7 @@
 }
 
 .help-center__search-hit-title {
-  font-size: 1.8rem;
+  font-size: 0.9rem;
   font-weight: 500;
 }
 
@@ -374,7 +374,7 @@
   border-radius: 999px;
   border: 1px solid var(--help-border);
   background: var(--help-surface);
-  font-size: 1.56rem;
+  font-size: 0.78rem;
   color: var(--help-text-secondary);
   cursor: pointer;
 }
@@ -386,7 +386,7 @@
 
 .help-center__section-label {
   margin: 0 0 0.85rem;
-  font-size: 1.56rem;
+  font-size: 0.78rem;
   font-weight: 600;
   color: var(--help-text-muted);
   letter-spacing: 0.04em;
@@ -418,21 +418,21 @@
 
 .help-center__topic-card h3 {
   margin: 0 0 0.35rem;
-  font-size: 1.9rem;
+  font-size: 0.95rem;
   font-weight: 600;
   letter-spacing: -0.02em;
 }
 
 .help-center__topic-card p {
   margin: 0;
-  font-size: 1.64rem;
+  font-size: 0.82rem;
   color: var(--help-text-secondary);
   line-height: 1.5;
 }
 
 .help-center__breadcrumb {
   margin: 0 0 0.5rem;
-  font-size: 1.56rem;
+  font-size: 0.78rem;
   color: var(--help-text-muted);
 }
 
@@ -449,7 +449,7 @@
 
 .help-center__article h1 {
   margin: 0 0 0.75rem;
-  font-size: 3.1rem;
+  font-size: 1.55rem;
   font-weight: 700;
   letter-spacing: -0.03em;
   line-height: 1.3;
@@ -459,21 +459,32 @@
   margin: 0 0 1.5rem;
   padding-bottom: 1rem;
   border-bottom: 1px solid var(--help-border);
-  font-size: 1.64rem;
+  font-size: 0.82rem;
   color: var(--help-text-muted);
 }
 
 .help-center__h2 {
   margin: 1.75rem 0 0.6rem;
-  font-size: 2.1rem;
+  font-size: 1.05rem;
   font-weight: 600;
   letter-spacing: -0.02em;
 }
 
 .help-center__h3 {
   margin: 1.25rem 0 0.5rem;
-  font-size: 1.96rem;
+  font-size: 0.98rem;
   font-weight: 600;
+}
+
+/* 본문 속 UI 모양 — 모양은 유지하고 글자 크기는 문장과 같게 */
+.help-center__main .tooltip-guide__work-tab-chip,
+.help-center__main .tooltip-guide__criteria-heading-look,
+.help-center__main .tooltip-guide__criteria-summary-label,
+.help-center__main .tooltip-guide__run-btn-look,
+.help-center__main .tooltip-guide__export-btn-look,
+.help-center__main .tooltip-guide__pdf-highlight-look,
+.help-center__main .tooltip-guide__gothic-label {
+  font-size: 1em;
 }
 
 .help-center__p {
@@ -576,7 +587,7 @@
 
 .help-center__related h2 {
   margin: 0 0 0.65rem;
-  font-size: 1.7rem;
+  font-size: 0.85rem;
   font-weight: 600;
   color: var(--help-text-muted);
 }
@@ -592,7 +603,7 @@
   background: none;
   padding: 0;
   font: inherit;
-  font-size: 1.76rem;
+  font-size: 0.88rem;
   color: var(--help-accent);
   text-align: left;
   cursor: pointer;

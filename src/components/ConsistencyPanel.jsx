@@ -616,7 +616,7 @@ export default function ConsistencyPanel({
                 openHangulOrthographyWindow('art-47');
               }}
             >
-              ｢한글 맞춤법｣
+              「한글 맞춤법」
             </a>
             을 기준으로 붙여쓰기 · 띄어쓰기 · 표기 통일을 검사합니다(보조용언이 맞는지 문맥 검토 필요)
           </p>

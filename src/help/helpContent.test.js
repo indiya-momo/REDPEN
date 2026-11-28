@@ -54,7 +54,7 @@ describe('help content bundle', () => {
 
     const article = getHelpArticle('getting-started/first-check');
     expect(article).not.toBeNull();
-    expect(article?.meta.title).toBe('첫 검수하기');
+    expect(article?.meta.title).toBe('처음 검수는 어떻게 하나요?');
     expect(article?.body).toContain('기준 검수');
   });
 
@@ -65,7 +65,7 @@ describe('help content bundle', () => {
       true,
     );
     const article = getHelpArticle('reference/stdict-license');
-    expect(article?.meta.title).toBe('표준국어대사전 데이터 출처');
+    expect(article?.meta.title).toBe('편집 기준은 무엇인가요?');
     expect(article?.body).toContain('CC BY-SA 2.0 KR');
   });
 

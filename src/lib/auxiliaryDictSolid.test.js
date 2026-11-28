@@ -193,7 +193,7 @@ describe('auxiliaryDictSolid', () => {
     });
     expect(isAuxiliaryDictSolidInstance(next[0].instances[0])).toBe(true);
     expect(next[0].instances[0].matchedText).toBe('쉬어가라고');
-    expect(next[0].instances[0].tip).toBe('표준국어대사전 「쉬어가다」 등재');
+    expect(next[0].instances[0].tip).toBe('『표준국어대사전』 「쉬어가다」 등재');
     expect(auxiliaryDictSolidStdictCallCount().lastRun).toBe(0);
   });
 
@@ -217,7 +217,7 @@ describe('auxiliaryDictSolid', () => {
       verbForms: FIXTURE_VERB_FORMS,
     });
     expect(next[0].instances[0].suggestedText).toBe('들어온');
-    expect(next[0].instances[0].tip).toBe('표준국어대사전 「들어오다」 등재');
+    expect(next[0].instances[0].tip).toBe('『표준국어대사전』 「들어오다」 등재');
     expect(auxiliaryDictSolidStdictCallCount().lastRun).toBe(0);
   });
 
@@ -236,7 +236,7 @@ describe('auxiliaryDictSolid', () => {
       verbForms: FIXTURE_VERB_FORMS,
     });
     expect(next[0].instances[0].suggestedText).toBe('들어온');
-    expect(next[0].instances[0].tip).toBe('표준국어대사전 「들어오다」 등재');
+    expect(next[0].instances[0].tip).toBe('『표준국어대사전』 「들어오다」 등재');
     expect(next[1].instances[0].suggestedText).toBe('들어온');
     expect(next[1].sourceText).toBe('방으로 들어 온 사람');
     const stats = auxiliaryDictSolidStdictCallCount();
@@ -457,7 +457,7 @@ describe('auxiliaryDictSolid', () => {
     const groups = [auxGroup('verb-unknown', '(아/어) + 없다', '들어와')];
     const next = await enrichAuxiliaryDictSolid(groups, { verbForms });
     expect(next[0].instances[0].auxDictSolid).toBe(true);
-    expect(next[0].instances[0].tip).toBe('표준국어대사전 「들어오다」 등재');
+    expect(next[0].instances[0].tip).toBe('『표준국어대사전』 「들어오다」 등재');
     expect(auxiliaryDictSolidStdictCallCount().lastRun).toBe(0);
   });
 
@@ -467,7 +467,7 @@ describe('auxiliaryDictSolid', () => {
     const groups = [auxGroup('verb-unknown', '(아/어) + 없다', '들어 와')];
     const next = await enrichAuxiliaryDictSolid(groups, { verbForms });
     expect(next[0].instances[0].suggestedText).toBe('들어와');
-    expect(next[0].instances[0].tip).toBe('표준국어대사전 「들어오다」 등재');
+    expect(next[0].instances[0].tip).toBe('『표준국어대사전』 「들어오다」 등재');
   });
 
 

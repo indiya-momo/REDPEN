@@ -10,7 +10,7 @@
 export const DIGIT_UNIT_CATEGORY = '수·단위';
 export const DIGIT_UNIT_LABEL = '숫자·단위 띄어쓰기';
 export const DIGIT_UNIT_TIP =
-  '한글 맞춤법 제43항: 아라비아 숫자와 단위는 붙이고, 한글로 적은 수와 단위는 띄어 씀';
+  '「한글 맞춤법」 제43항: 아라비아 숫자와 단위는 붙이고, 한글로 적은 수와 단위는 띄어 씀';
 
 /** @typedef {'A'|'B'|'C'|'D'|'Y'} UnitGroup */
 /** @typedef {'N1'|'N2'|'N3_MULTI'|'N3_ALONE'} NumeralClass */

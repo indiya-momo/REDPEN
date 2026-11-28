@@ -25,6 +25,13 @@ export function renderHelpMarkdown(markdown, onHelpLink, articleSlug) {
   while (i < lines.length) {
     const line = lines[i];
 
+    // HTML 주석(스크린샷·동영상 자리 표시)은 화면에 그리지 않는다
+    if (line.trimStart().startsWith('<!--')) {
+      while (i < lines.length && !lines[i].includes('-->')) i += 1;
+      i += 1;
+      continue;
+    }
+
     if (line.startsWith('### ')) {
       nodes.push(
         <h3 key={key++} className="help-center__h3">
@@ -203,6 +210,31 @@ function isBlockStart(line) {
  * @param {number} keyBase
  */
 function renderInlineContent(text, onHelpLink, keyBase) {
+  // **굵게**·링크를 먼저 떼어 내야 그 안의 문구가 UI 모양으로 쪼개지지 않는다
+  /** @type {import('react').ReactNode[]} */
+  const out = [];
+  const tokenPattern = /(\*\*[^*]+\*\*|\[[^\]]+\]\(help:[^)]+\))/g;
+  let last = 0;
+  let seg = 0;
+  for (const match of text.matchAll(tokenPattern)) {
+    const index = match.index ?? 0;
+    if (index > last) {
+      out.push(...renderLookText(text.slice(last, index), `${keyBase}-t${seg++}`));
+    }
+    out.push(...renderMarkdownTokens(match[0], onHelpLink, `${keyBase}-m${seg++}`));
+    last = index + match[0].length;
+  }
+  if (last < text.length) {
+    out.push(...renderLookText(text.slice(last), `${keyBase}-t${seg++}`));
+  }
+  return out;
+}
+
+/**
+ * @param {string} text
+ * @param {string} keyBase
+ */
+function renderLookText(text, keyBase) {
   const parts = splitTextByInlineLooks(text);
   /** @type {import('react').ReactNode[]} */
   const nodes = [];
@@ -218,7 +250,7 @@ function renderInlineContent(text, onHelpLink, keyBase) {
       continue;
     }
 
-    nodes.push(...renderMarkdownTokens(part.value, onHelpLink, `${keyBase}-${partKey++}`));
+    nodes.push(part.value);
   }
 
   return nodes;

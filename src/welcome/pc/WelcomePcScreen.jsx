@@ -426,7 +426,7 @@ export default function WelcomePcScreen({
       </p>
       <p className="welcome-pc__footer-line">
         <span className="welcome-pc__footer-part">
-          본 서비스의 사전 데이터는 국립국어원 표준국어대사전의 오픈 API를 활용하여 제공되며, 저작권은 국립국어원에 있습니다.
+          본 서비스의 사전 데이터는 국립국어원 『표준국어대사전』의 오픈 API를 활용하여 제공되며, 저작권은 국립국어원에 있습니다.
         </span>
       </p>
     </div>

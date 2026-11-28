@@ -665,7 +665,7 @@ export default function HangulOrthographyScreen() {
             </p>
             <p>
               <a href={HANGUL_ORTHOGRAPHY_URL} target="_blank" rel="noopener noreferrer">
-                국립국어원 한글 맞춤법 고시
+                국립국어원 「한글 맞춤법」 고시
               </a>
             </p>
             <p>

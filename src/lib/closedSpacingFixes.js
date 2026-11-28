@@ -6,7 +6,7 @@
 export const CLOSED_SPACING_FIXES_CATEGORY = '닫힌 띄어·오자';
 export const CLOSED_SPACING_FIXES_LABEL = '닫힌 띄어·오자';
 export const CLOSED_SPACING_FIXES_TIP =
-  '한글 맞춤법 제2항(단어 띄어쓰기)·오자 교정. 닫힌 표면만.';
+  '「한글 맞춤법」 제2항(단어 띄어쓰기)·오자 교정. 닫힌 표면만.';
 
 const BASE_LITERAL_ROWS = [
   { find: '오래 된', replace: '오래된', kind: 'attach' },

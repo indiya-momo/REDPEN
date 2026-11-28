@@ -15,7 +15,7 @@ import {
 export const DETERMINER_NOUN_CATEGORY = '관형사+체언';
 export const DETERMINER_NOUN_LABEL = '관형사+체언';
 export const DETERMINER_NOUN_TIP =
-  '한글 맞춤법 제2항: 관형사(이·그·저)와 체언은 띄어 씀';
+  '「한글 맞춤법」 제2항: 관형사(이·그·저)와 체언은 띄어 씀';
 
 const DET = new Set(['그', '이', '저']);
 

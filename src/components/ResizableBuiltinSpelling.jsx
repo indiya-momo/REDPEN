@@ -204,7 +204,7 @@ export default function ResizableBuiltinSpelling({
               description={SPELLING_CRITERIA_HEADING_DESCRIPTIONS.spelling}
               sourceHref="?window=orthography"
               sourceLabel="한글 맞춤법"
-              sourceTip="한글 맞춤법(문화체육관광부 고시 제2017-12호)"
+              sourceTip="「한글 맞춤법」(문화체육관광부 고시 제2017-12호)"
               sourceOnClick={() => openHangulOrthographyWindow()}
             />
           </div>
