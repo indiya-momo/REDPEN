@@ -112,19 +112,6 @@ export default function SpacingFolderChecklist({
                       </div>
                     </div>
                   </div>
-                  {bundle.bundleId === 'nonAeoAux' ? (
-                    <div
-                      className="spacing-folder-member"
-                      style={{
-                        paddingLeft: 28,
-                        marginTop: 2,
-                        fontSize: '0.92em',
-                        color: '#444',
-                      }}
-                    >
-                      (아/어) + 보이다
-                    </div>
-                  ) : null}
                   {tipOpen ? (
                     <div className="builtin-rule-tip-inline">
                       <OrthographyRefText text={bundle.tipLines.join('\n')} />

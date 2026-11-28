@@ -7397,13 +7397,13 @@
 
 /* 본용언·보조용언 안내문의 「한글 맞춤법」 출처 링크: 눈에 띄게 (크기·색·굵기) */
 .panel-left .auxiliary-checklist-intro .panel-criteria-source-link {
-  font-size: 1em;
+  font-size: 0.9em;
   font-weight: 700;
   color: var(--accent-spelling);
   text-decoration-color: var(--accent-spelling);
-  text-decoration-thickness: 2px;
-  padding: 0.1em 0.4em;
-  margin-inline: 0.1em;
+  text-decoration-thickness: 1px;
+  padding: 0.1em 0 0.1em 0.4em;
+  margin-inline: 0.1em 0;
   border-radius: 4px;
   background-color: transparent;
 }
@@ -7420,7 +7420,7 @@
   color: var(--accent-spelling);
   text-decoration: underline;
   text-decoration-color: var(--accent-spelling);
-  text-decoration-thickness: 2px;
+  text-decoration-thickness: 1px;
   text-underline-offset: 2px;
   cursor: pointer;
 }

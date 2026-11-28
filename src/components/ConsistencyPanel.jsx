@@ -33,7 +33,6 @@ import {
   togglePhraseSlotEntry,
 } from '../lib/phraseSlotRegister.js';
 import { parseCommaList } from '../lib/matchFilters.js';
-import { AUXILIARY_VERB_FEATURE_LABEL } from '../lib/bonBojoRules.js';
 import { openHangulOrthographyWindow } from '../lib/openHangulOrthographyWindow.js';
 import {
   countPhraseSlotRegisteredEntries,
@@ -596,11 +595,11 @@ export default function ConsistencyPanel({
                     ),
                   )
                 }
-                aria-label={`${AUXILIARY_VERB_FEATURE_LABEL} 전체 선택`}
+                aria-label="본용언(-아/어) + 보조용언 전체 선택"
               />
             </label>
             <span className="caution-checklist-summary-title">
-              {AUXILIARY_VERB_FEATURE_LABEL}
+              본용언(-아/어) + 보조용언
               {auxiliaryTotal > 0 ? (
                 <span className="panel-criteria-heading-meta">
                   {`(${auxiliaryActiveCount}/${auxiliaryTotal})`}
@@ -619,7 +618,7 @@ export default function ConsistencyPanel({
             >
               ｢한글 맞춤법｣
             </a>
-            에 따라 본+보조용언의 붙여쓰기 · 띄어쓰기 · 표기 통일을 검사합니다(보조용언이 맞는지는 문맥 검토 필요)
+            을 기준으로 붙여쓰기 · 띄어쓰기 · 표기 통일을 검사합니다(보조용언이 맞는지 문맥 검토 필요)
           </p>
           <AuxiliaryVerbBundleChecklist
             customRules={customRules}

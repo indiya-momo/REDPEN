@@ -8,6 +8,11 @@ html:has(.welcome-pc) {
   overflow: hidden;
 }
 
+/* 링크 밑줄은 모두 1px로 통일 */
+a {
+  text-decoration-thickness: 1px;
+}
+
 body:has(.welcome-pc) {
   overflow: hidden;
 }
