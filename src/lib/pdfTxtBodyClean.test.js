@@ -122,6 +122,28 @@ describe('linesFromPdfItems', () => {
     ]);
   });
 
+  it('홀수 쪽에만 반복되는 머리말도 홀짝 쪽 기준으로 걷어 낸다', () => {
+    // 100쪽 중 홀수 쪽 25쪽에만 같은 머리말 (책 전체 40%엔 못 미치고, 홀수 쪽 안에서는 50%)
+    const mk = (pageNum) => {
+      const items = [
+        item(`본문 ${pageNum}`, 72, 700, 60, 11),
+        item(`마지막 ${pageNum}`, 72, 300, 60, 11),
+      ];
+      if (pageNum % 2 === 1 && pageNum <= 49) {
+        items.push(item('Ⅰ. 해설', 72, 40, 40, 9));
+      }
+      return { pageNum, items };
+    };
+    const pages = Array.from({ length: 100 }, (_, i) => mk(i + 1));
+    const cleaned = cleanPageLinesForTxt(pages);
+    // 홀수 쪽 머리말은 사라지고, 쪽마다 다른 본문 줄은 남는다.
+    expect(cleaned[0].lines).not.toContain('Ⅰ. 해설');
+    expect(cleaned[2].lines).not.toContain('Ⅰ. 해설');
+    expect(cleaned[0].lines.length).toBeGreaterThan(0);
+    expect(cleaned[0].lines.at(-1)).toBe('마지막 1');
+    expect(cleaned[2].lines.at(-1)).toBe('마지막 3');
+  });
+
   it('text fallback synthesizes lineLayout for paragraph fullness', () => {
     const cleaned = cleanPageLinesForTxt([
       {

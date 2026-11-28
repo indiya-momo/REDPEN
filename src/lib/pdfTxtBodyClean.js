@@ -15,6 +15,15 @@ const REPEAT_RATIO = 0.4;
 /** 반복 판정 최소 쪽 수 */
 const REPEAT_MIN_PAGES = 2;
 
+/**
+ * 쪽 홀짝 (0 = 짝수 쪽, 1 = 홀수 쪽). 쪽 번호가 없으면 짝수 쪽으로 본다.
+ * @param {number} pageNum
+ * @returns {0 | 1}
+ */
+function pageParity(pageNum) {
+  return Number.isFinite(pageNum) && Math.abs(pageNum) % 2 === 1 ? 1 : 0;
+}
+
 const PAGE_NUM_RE =
   /^(?:(?:쪽|p\.?|page)\s*)?[\d０-９]+(?:\s*(?:쪽|page))?$|^[ivxlcdmIVXLCDM]+$|^[—\-–·•]\s*[\d０-９]+\s*[—\-–·•]$/u;
 
@@ -433,6 +442,8 @@ export function cleanPageLinesForTxt(pages) {
 
   /** @type {Map<string, number>} */
   const bandKeyCounts = new Map();
+  /** @type {Map<string, number>} 쪽 홀짝별 띠 반복 수. 키는 `홀짝|줄`. */
+  const bandKeyCountsByParity = new Map();
   /** @type {Map<string, number>} */
   const numberedCounts = new Map();
   /** @type {Map<number, number>} 숫자만 있는 머리말·바닥글 줄의 (인쇄 쪽 − PDF 쪽) 오프셋별 쪽 수 */
@@ -493,6 +504,8 @@ export function cleanPageLinesForTxt(pages) {
       if (seen.has(key)) continue;
       seen.add(key);
       bandKeyCounts.set(key, (bandKeyCounts.get(key) ?? 0) + 1);
+      const parityKey = `${pageParity(page.pageNum)}|${key}`;
+      bandKeyCountsByParity.set(parityKey, (bandKeyCountsByParity.get(parityKey) ?? 0) + 1);
     }
   }
 
@@ -505,6 +518,17 @@ export function cleanPageLinesForTxt(pages) {
   const chromeKeys = new Set();
   for (const [key, count] of bandKeyCounts) {
     if (count >= repeatNeed) chromeKeys.add(key);
+  }
+  // 홀수 쪽·짝수 쪽 머리말이 각각 따로 반복되는 책(좌·우 쪽 머리말). 같은 홀짝 쪽 안에서 기준을 다시 잰다.
+  const pageCountByParity = [0, 0];
+  for (const page of pageLines) pageCountByParity[pageParity(page.pageNum)] += 1;
+  for (const [parityKey, count] of bandKeyCountsByParity) {
+    const parity = Number(parityKey[0]);
+    const need = Math.max(
+      REPEAT_MIN_PAGES,
+      Math.ceil(Math.max(pageCountByParity[parity], 1) * REPEAT_RATIO),
+    );
+    if (count >= need) chromeKeys.add(parityKey.slice(2));
   }
   /** @type {Set<string>} */
   const numberedChromeKeys = new Set();
