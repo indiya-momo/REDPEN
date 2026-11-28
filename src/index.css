@@ -6112,7 +6112,7 @@ html[data-build='prod'] .unify-candidate-find__list {
         var(--momo-room-journal-v-scale)
     );
   font-size: calc(
-    0.72rem * var(--momo-room-scale) * var(--momo-room-journal-box-scale) *
+    1.44rem * var(--momo-room-scale) * var(--momo-room-journal-box-scale) *
       var(--momo-room-journal-v-scale)
   );
   font-weight: 700;

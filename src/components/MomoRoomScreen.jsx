@@ -304,7 +304,9 @@ export default function MomoRoomScreen({
             </CriteriaHoverTip>
           </div>
           <p className="momo-room__lead">
-            이곳은 모모와 집사의 비밀 공간입니다
+            모모와 집사의 공간입니다
+            <br />
+            찾아오신 분에게는 가끔 선물이 있을지도?
           </p>
 
           <section className="momo-room__guestbook" aria-label="방명록">
@@ -364,14 +366,6 @@ export default function MomoRoomScreen({
               ))}
             </ul>
           </section>
-
-          <div className="momo-room__journal" aria-label="오늘의 기록">
-            <p className="momo-room__journal-label">오늘의 기록</p>
-            <blockquote className="momo-room__journal-quote">
-              개발은 편집을 100번 쪼개서 하는 일 같아요....
-              <footer>-모모 집사-</footer>
-            </blockquote>
-          </div>
 
           <MomoRoomNoticeBoard
             authUid={authUid}
