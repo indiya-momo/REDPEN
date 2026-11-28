@@ -75,6 +75,38 @@ describe('사전에 없는 명사+위치 명사', () => {
     expect(lookupStdictPosHits('무릎위')).toEqual([]);
   });
 
+  it('숫자+단위+위치 명사는 단위에서 끊는다', () => {
+    expect(bySuggested('3일뒤')).toEqual({ 일뒤: '일 뒤' });
+    expect(bySuggested('5분뒤에')).toEqual({ 분뒤에: '분 뒤에' });
+    expect(bySuggested('3시간안에')).toEqual({ 시간안에: '시간 안에' });
+    expect(bySuggested('시간동안')).toEqual({ 시간동안: '시간 동안' });
+    expect(bySuggested('시간밖')).toEqual({ 시간밖: '시간 밖' });
+  });
+
+  it('숫자+1음절 단위+동안은 숫자까지 잡아 단위와 동안 사이만 띄운다(일동 안으로 쪼개지 않음)', () => {
+    expect(findUnlistedPosNounSpacingHits('기간은 3일동안 걸렸다.')).toEqual([
+      { index: 4, matchedText: '3일동안', suggestedText: '3일 동안' },
+    ]);
+    expect(bySuggested('2년동안')).toEqual({ '2년동안': '2년 동안' });
+    expect(bySuggested('3일동안의 일이다.')).toEqual({ '3일동안의': '3일 동안의' });
+    expect(bySuggested('10분동안')).toEqual({ '10분동안': '10분 동안' });
+    expect(bySuggested('1,000년동안')).toEqual({ '1,000년동안': '1,000년 동안' });
+  });
+
+  it('숫자 뒤가 아니면 1음절 단위는 풀지 않고, 띄어 쓴 것·등재어·표제어 게이트는 침묵한다', () => {
+    for (const word of ['일동안', '3일 동안', '그동안', '한동안', '3일안', '3일안에']) {
+      expect(findUnlistedPosNounSpacingHits(word), word).toEqual([]);
+    }
+  });
+
+  it('조사 「밖에」는 위치 명사로 끊지 않는다', () => {
+    for (const word of ['사람밖에 없다', '시간밖에 못 잤다', '3일밖에', '5분밖에 안 남았다']) {
+      expect(findUnlistedPosNounSpacingHits(word), word).toEqual([]);
+    }
+    expect(bySuggested('창문밖에서 봤다')).toEqual({ 창문밖에서: '창문 밖에서' });
+    expect(bySuggested('창문밖')).toEqual({ 창문밖: '창문 밖' });
+  });
+
   it('띄어쓰기 폴더에 켜면 제2항 카드로 붙고, 시트와 겹치면 빠진다', () => {
     const pages = [{ pageNum: 1, text: '무릎위에 앉았다.' }];
     const enabled = { unlistedNounNoun: true, nonAeoAux: false };

@@ -7,6 +7,7 @@ import {
 import { getAllHelpArticles, getHelpArticle, getHelpNav } from './loadHelpContent.js';
 import { renderHelpMarkdown } from './renderMarkdown.jsx';
 import { getHelpSlugFromUrl, setHelpSlugInUrl } from './helpUrl.js';
+import { openMyPageWindow } from '../lib/openMyPageWindow.js';
 import './help-center.css';
 
 /**
@@ -289,6 +290,7 @@ export default function HelpCenterScreen() {
   const nav = getHelpNav();
   const [slug, setSlug] = useState(getHelpSlugFromUrl);
   const [expanded, setExpanded] = useState(() => new Set());
+  const [openGroups, setOpenGroups] = useState(() => new Set());
 
   const navigate = useCallback((nextSlug) => {
     setSlug(nextSlug);
@@ -314,6 +316,27 @@ export default function HelpCenterScreen() {
     });
   }, [nav.groups, slug]);
 
+  useEffect(() => {
+    if (!slug) return;
+    const group = nav.groups.find((g) => g.items.some((it) => it.slug === slug));
+    if (!group) return;
+    setOpenGroups((prev) => {
+      if (prev.has(group.id)) return prev;
+      const next = new Set(prev);
+      next.add(group.id);
+      return next;
+    });
+  }, [nav.groups, slug]);
+
+  const toggleGroup = useCallback((id) => {
+    setOpenGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
   const toggleExpand = useCallback((id) => {
     setExpanded((prev) => {
       const next = new Set(prev);
@@ -333,7 +356,23 @@ export default function HelpCenterScreen() {
             <button type="button" className="help-center__brand-link" onClick={() => navigate('')}>
               인디야 도움말
             </button>
-            <span>출판 PDF 검수 가이드</span>
+            <button
+              type="button"
+              className="help-center__brand-back"
+              aria-label="마이페이지로 돌아가기"
+              title="마이페이지로 돌아가기"
+              onClick={() => openMyPageWindow()}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path
+                  d="M10 7 5 12l5 5M5 12h14"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
           </div>
 
           <nav>
@@ -345,9 +384,25 @@ export default function HelpCenterScreen() {
               도움말 홈
             </button>
 
-            {nav.groups.map((group) => (
+            {nav.groups.map((group) => {
+              const isOpen = openGroups.has(group.id);
+              const groupId = `help-nav-group-${group.id}`;
+              return (
               <div key={group.id} className="help-center__nav-group">
-                <div className="help-center__nav-group-label">{group.label}</div>
+                <button
+                  type="button"
+                  className="help-center__nav-group-toggle"
+                  aria-expanded={isOpen}
+                  aria-controls={groupId}
+                  onClick={() => toggleGroup(group.id)}
+                >
+                  <span>{group.label}</span>
+                  <span className="help-center__nav-group-chev" aria-hidden="true">
+                    {isOpen ? '∨' : '›'}
+                  </span>
+                </button>
+                {isOpen ? (
+                <div id={groupId}>
                 {group.items.map((item) =>
                   item.children?.length ? (
                     <ul key={item.slug} className="help-center__nav-tree">
@@ -370,8 +425,11 @@ export default function HelpCenterScreen() {
                     </button>
                   ),
                 )}
+                </div>
+                ) : null}
               </div>
-            ))}
+              );
+            })}
           </nav>
         </aside>
 

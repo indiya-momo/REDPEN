@@ -30,6 +30,7 @@ import {
   EDITOR_REVIEW_BADGE_LABEL,
   SPELLING_RULE_BADGE_LABEL,
   LOANWORD_BADGE_LABEL,
+  SPACING_BADGE_LABEL,
 } from '../lib/checkResultSummaryFormat.js';
 import {
   MANUAL_BADGE_LABEL,
@@ -732,6 +733,20 @@ export default function CheckResultsPanel({
       findingsTotal: sumVisibleFindings(spellingParts.loanword),
       entries: spellingParts.loanword,
     },
+    {
+      id: 'spacing',
+      label: SPACING_BADGE_LABEL,
+      criteriaCount: countGroupsWithVisibleFindings(
+        spellingParts.spacing,
+        visibleInstanceCount,
+      ),
+      findingsCount: sumVisibleFindings(
+        spellingParts.spacing,
+        visibleInstanceCount,
+      ),
+      findingsTotal: sumVisibleFindings(spellingParts.spacing),
+      entries: spellingParts.spacing,
+    },
   ].filter((section) => section.entries.length > 0);
 
   /** @type {{ id: string, label: string, criteriaCount: number, findingsCount: number, findingsTotal: number, entries: ResultEntry[] }[]} */
@@ -800,6 +815,7 @@ export default function CheckResultsPanel({
     ...spellingParts.caution,
     ...spellingParts.builtin,
     ...spellingParts.loanword,
+    ...spellingParts.spacing,
   ];
   const consistencyEntriesAll = [
     ...consistencyParts.unify,

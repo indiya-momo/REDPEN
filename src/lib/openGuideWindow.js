@@ -19,7 +19,7 @@ export function buildGuideWindowUrl(helpSlug) {
  */
 export function openGuideWindow(helpSlug) {
   const url = buildGuideWindowUrl(helpSlug).toString();
-  const win = window.open(url, 'indiya-guide', 'noopener,noreferrer');
+  const win = window.open(url, 'indiya-guide');
   if (win && !win.closed) {
     try {
       win.focus();

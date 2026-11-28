@@ -46,20 +46,32 @@ describe('partitionSpellingResultEntries', () => {
     expect(parts.builtin).toHaveLength(1);
   });
 
-  it('spacing:* 는 builtin 칸에 넣는다', () => {
+  it('spacing:* 는 띄어쓰기 칸에만 넣는다', () => {
     const parts = partitionSpellingResultEntries([
       {
         source: 'spelling',
         group: { category: 'spacing:numberUnit', label: '수사' },
       },
     ]);
-    expect(parts.builtin).toHaveLength(1);
+    expect(parts.spacing).toHaveLength(1);
+    expect(parts.builtin).toHaveLength(0);
     expect(parts.caution).toHaveLength(0);
     expect(parts.loanword).toHaveLength(0);
   });
 });
 
 describe('defaultOpenSpellingCategory', () => {
+  it('띄어쓰기만 있으면 띄어쓰기 칸을 펼친다', () => {
+    expect(
+      defaultOpenSpellingCategory({
+        caution: [],
+        builtin: [],
+        loanword: [],
+        spacing: [{}],
+      }),
+    ).toBe('spacing');
+  });
+
   it('검색이 있으면 그 칸을 우선 펼친다', () => {
     expect(
       defaultOpenSpellingCategory({

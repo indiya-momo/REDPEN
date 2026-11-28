@@ -75,6 +75,22 @@ describe('returnToWorkspace', () => {
     expect(replaceMock).toHaveBeenCalledWith('http://127.0.0.1:5173/');
   });
 
+  it('opener가 도움말 창이면 focus·close 없이 메인 URL로 replace한다', () => {
+    const focusMock = vi.fn();
+    vi.stubGlobal('opener', {
+      closed: false,
+      focus: focusMock,
+      location: { search: '?window=guide&help=getting-started' },
+    });
+    vi.stubGlobal('close', vi.fn());
+
+    returnToWorkspace();
+
+    expect(focusMock).not.toHaveBeenCalled();
+    expect(window.close).not.toHaveBeenCalled();
+    expect(replaceMock).toHaveBeenCalledWith('http://127.0.0.1:5173/');
+  });
+
   it('opener가 닫혀 있으면 popup close 없이 replace만 한다', () => {
     vi.stubGlobal('opener', { closed: true, focus: vi.fn() });
     vi.stubGlobal('close', vi.fn());

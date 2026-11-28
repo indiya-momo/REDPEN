@@ -33,7 +33,7 @@ export function isMyPageProjectHubEnabled() {
 }
 
 /**
- * 마이페이지 「인디야 가이드북」 메뉴.
+ * 마이페이지 「인디야 도움말」 메뉴.
  * - `npm run dev` 로컬만 표시
  * - 프로덕션·Pages 빌드: 숨김
  */

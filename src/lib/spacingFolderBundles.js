@@ -65,8 +65,7 @@ export const SPACING_FOLDER_BUNDLES = Object.freeze([
     example: Object.freeze({ find: '무릎위', replace: '무릎˅위' }),
     moduleIds: Object.freeze(['unlisted-noun-noun']),
     tipLines: Object.freeze([
-      '사전에 없는 명사+위치 명사(위·아래·앞·뒤·안·밖·옆·속·밑)는 띄어 씀 (맞춤법 제2항)',
-      '붙여 쓴 전체가 『표준국어대사전』 표제어이면 잡지 않음(눈앞·손위·윗사람).',
+      '「한글 맞춤법」 제2항: 사전에 없는 명사+명사는 띄어 씀',
     ]),
   }),
 ]);

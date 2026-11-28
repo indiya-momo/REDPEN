@@ -1,6 +1,6 @@
 /**
  * 마이페이지 보조 창 열기 (?window=mypage).
- * @param {'overview' | 'projects' | 'profile' | 'badges' | string} [section]
+ * @param {'overview' | 'projects' | 'profile' | string} [section]
  */
 export function buildMyPageWindowUrl(section) {
   const url = new URL(import.meta.env.BASE_URL || '/', window.location.origin);
@@ -15,7 +15,7 @@ export function buildMyPageWindowUrl(section) {
 }
 
 /**
- * @param {'overview' | 'projects' | 'profile' | 'badges' | string} [section]
+ * @param {'overview' | 'projects' | 'profile' | string} [section]
  */
 export function openMyPageWindow(section) {
   const url = buildMyPageWindowUrl(section).toString();

@@ -12,6 +12,9 @@ export const SPELLING_RULE_BADGE_LABEL = '맞춤법 규칙';
 /** 결과 헤더·팝업·카드 뱃지 — 외래어 표기법 */
 export const LOANWORD_BADGE_LABEL = LOANWORD_FEATURE_LABEL;
 
+/** 결과 패널 1단 폴더 — 띄어쓰기 */
+export const SPACING_BADGE_LABEL = '띄어쓰기';
+
 /** confirm 등 — 활성 기준 개수 표기 */
 export function formatCategoryFindingCount(count) {
   return `(${count}기준)`;

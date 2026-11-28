@@ -50,6 +50,13 @@ function buildMainWorkspaceUrl() {
 function getAliveOpener() {
   const opener = window.opener;
   if (!opener || opener === window || opener.closed) return null;
+  // 도움말 창에서 「마이페이지로 돌아가기」로 연 마이페이지는 opener가 도움말 창이다. 검수 화면이 아니므로 제외.
+  try {
+    const auxWindow = new URLSearchParams(opener.location?.search ?? '').get('window');
+    if (auxWindow === 'guide' || auxWindow === 'mypage') return null;
+  } catch {
+    /* cross-origin */
+  }
   return opener;
 }
 

@@ -56,12 +56,11 @@ import './projectHub/project-library.css';
 const SIDEBAR_NAV = [
   { id: 'profile', label: '회원 정보' },
   { id: 'projects', label: '나의 프로젝트' },
-  { id: 'badges', label: '배지 모음집' },
-  { id: 'guide', label: '인디야 가이드북', opensGuide: true },
+  { id: 'guide', label: '인디야 도움말', opensGuide: true },
   { id: 'orthography', label: '한글 맞춤법', opensOrthography: true },
 ];
 
-/** @returns {'overview' | 'projects' | 'profile' | 'badges' | 'paid-admin'} */
+/** @returns {'overview' | 'projects' | 'profile' | 'paid-admin'} */
 function readInitialMypageNav(isAdmin = false) {
   try {
     const section = new URLSearchParams(window.location.search).get('mypageSection');
@@ -78,13 +77,9 @@ function readInitialMypageNav(isAdmin = false) {
  */
 function resolveMypageNav(nav, isAdmin = false) {
   if (nav === 'home') return 'overview';
+  if (nav === 'badges') return 'profile';
   if (nav === 'paid-admin') return isAdmin ? 'paid-admin' : 'overview';
-  if (
-    nav === 'overview' ||
-    nav === 'projects' ||
-    nav === 'profile' ||
-    nav === 'badges'
-  ) {
+  if (nav === 'overview' || nav === 'projects' || nav === 'profile') {
     return nav;
   }
   return 'overview';
@@ -306,27 +301,25 @@ function BadgeCollectionTitleRow({ titleId, titleClassName, earnedCount, totalLa
   );
 }
 
-function BadgeCollectionSection({ badges, earnedCount, totalLabel }) {
+function BadgeCollectionCard({ badges, earnedCount, totalLabel }) {
   return (
-    <div className="mypage__main-inner mypage__main-inner--section">
-      <section
-        className="mypage__card mypage__badge-card"
-        aria-labelledby="mypage-badge-title"
-      >
-        <div className="mypage__badge-head">
-          <BadgeCollectionTitleRow
-            titleId="mypage-badge-title"
-            titleClassName="mypage__page-title mypage__page-title--in-card"
-            earnedCount={earnedCount}
-            totalLabel={totalLabel}
-          />
-          <p className="mypage__badge-lead">
-            이벤트·활동으로 모은 배지를 확인할 수 있습니다.
-          </p>
-        </div>
-        <BadgeCollectionGrid badges={badges} />
-      </section>
-    </div>
+    <section
+      className="mypage__card mypage__badge-card"
+      aria-labelledby="mypage-badge-title"
+    >
+      <div className="mypage__badge-head">
+        <BadgeCollectionTitleRow
+          titleId="mypage-badge-title"
+          titleClassName="mypage__card-title"
+          earnedCount={earnedCount}
+          totalLabel={totalLabel}
+        />
+        <p className="mypage__badge-lead">
+          이벤트·활동으로 모은 배지를 확인할 수 있습니다.
+        </p>
+      </div>
+      <BadgeCollectionGrid badges={badges} />
+    </section>
   );
 }
 
@@ -369,7 +362,6 @@ function MyPageOverviewSection({
   projectEmail,
   profileSyncDone,
   onOpenProfile,
-  onOpenBadges,
   onOpenProjects,
 }) {
   return (
@@ -396,7 +388,7 @@ function MyPageOverviewSection({
           badges={badges}
           earnedCount={earnedCount}
           totalLabel={totalLabel}
-          onOpen={onOpenBadges}
+          onOpen={onOpenProfile}
         />
         <MyPageFaq />
       </div>
@@ -497,7 +489,15 @@ function MyPageFaq() {
   );
 }
 
-function ProfileSection({ displayName, email, daysWithMomo, loginAtMs }) {
+function ProfileSection({
+  displayName,
+  email,
+  daysWithMomo,
+  loginAtMs,
+  badges,
+  earnedCount,
+  totalLabel,
+}) {
   const recentUsage = useMemo(
     () => getRecentUsageEntries(loginAtMs),
     [loginAtMs],
@@ -551,6 +551,12 @@ function ProfileSection({ displayName, email, daysWithMomo, loginAtMs }) {
         </div>
         <RecentUsageTable entries={recentUsage} />
       </section>
+
+      <BadgeCollectionCard
+        badges={badges}
+        earnedCount={earnedCount}
+        totalLabel={totalLabel}
+      />
 
       <InquiryPlaceholderCard />
     </div>
@@ -823,7 +829,6 @@ export default function MyPageWindowScreen({ authSession, authReady }) {
             projectEmail={quotaEmail}
             profileSyncDone={profileSyncDone}
             onOpenProfile={() => setActiveNav('profile')}
-            onOpenBadges={() => setActiveNav('badges')}
             onOpenProjects={(cardId) => {
               setProjectsEntryCardId(cardId ?? null);
               setActiveNav('projects');
@@ -843,17 +848,14 @@ export default function MyPageWindowScreen({ authSession, authReady }) {
             email={email}
             daysWithMomo={daysWithMomo}
             loginAtMs={loginAtMs}
+            badges={badges}
+            earnedCount={badgeStats.earnedCount}
+            totalLabel={badgeStats.totalLabel}
           />
         ) : resolvedNav === 'paid-admin' && isAdmin ? (
           <PaidPlanAdminSection
             authUid={authSession.uid}
             onSelfPlanChanged={bumpProfileRev}
-          />
-        ) : resolvedNav === 'badges' ? (
-          <BadgeCollectionSection
-            badges={badges}
-            earnedCount={badgeStats.earnedCount}
-            totalLabel={badgeStats.totalLabel}
           />
         ) : null}
       </main>
