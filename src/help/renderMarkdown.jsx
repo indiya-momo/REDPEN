@@ -150,7 +150,10 @@ function renderHelpFigure(image, articleSlug, key, caption) {
 
   return (
     <figure key={key} className="help-center__figure">
-      <img src={src} alt={image.alt || caption || ''} loading="lazy" decoding="async" />
+      {/* 누르면 원본 크기로 새 탭에서 연다 */}
+      <a href={src} target="_blank" rel="noopener noreferrer" className="help-center__figure-link">
+        <img src={src} alt={image.alt || caption || ''} loading="lazy" decoding="async" />
+      </a>
       {caption ? (
         <figcaption className="help-center__figure-caption">{caption}</figcaption>
       ) : null}

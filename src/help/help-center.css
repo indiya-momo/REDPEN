@@ -553,6 +553,11 @@
   overflow: hidden;
 }
 
+.help-center__figure-link {
+  display: block;
+  cursor: zoom-in;
+}
+
 .help-center__figure img {
   display: block;
   width: auto;
