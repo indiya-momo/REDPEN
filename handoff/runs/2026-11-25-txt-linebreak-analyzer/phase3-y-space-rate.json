@@ -1,0 +1,12 @@
+{
+  "source": "src/lib/fixtures/txt-softwrap-glue-regression.json#Y_known_wrong_nospace",
+  "measuredAt": "2026-11-25",
+  "note": "분석기 OFF·목록 미확장 기준. space로 바뀐 비율이 올라간 뒤에만 기본 ON 논의.",
+  "total": 7,
+  "alreadySpaceByCurrentGlue": 1,
+  "stillNospace": 6,
+  "spaceRate": 0.14285714285714285,
+  "idsStillNospace": ["M017", "M028", "M042", "M088", "M095", "M106"],
+  "idsAlreadySpace": ["M099"],
+  "analyzerDefaultOn": false
+}
